@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* purgecss start ignore */
+
+@font-face {
+  font-family: 'IBM_VGA';
+  src: url('IBM_VGA.ttf')
+}
+
+html,
+body {
+  background-color: black;
+}
+
+html,
+body,
+#engine {
+  height: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+}
+
+#vtuber-input {
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  position: absolute;
+}
+
+#vtuber-face {
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  position: absolute;
+}
+
+/* #engine {
+  position: relative;
+} */
+
+#overflow-widgets {
+  z-index: 20000000;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+#overflow-widgets.monaco-editor {
+  background: transparent;
+}
+
+.mtext {
+  font-family: 'Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+}
+
+.yRemoteSelection {
+  background-color: rgb(250, 129, 0, .5)
+}
+
+.yRemoteSelectionHead {
+  position: absolute;
+  border-left: orange solid 2px;
+  border-top: orange solid 2px;
+  border-bottom: orange solid 2px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.yRemoteSelectionHead::after {
+  position: absolute;
+  content: ' ';
+  border: 3px solid orange;
+  border-radius: 4px;
+  left: -4px;
+  top: -5px;
+}
+
+/* .y-remote-selection {
+  background-color: rgb(250, 129, 0, .5)
+}
+
+.y-remote-selection-head {
+  position: absolute;
+  border-left: orange solid 2px;
+  border-top: orange solid 2px;
+  border-bottom: orange solid 2px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.y-remote-selection-head::after {
+  position: absolute;
+  content: ' ';
+  border: 3px solid orange;
+  border-radius: 4px;
+  left: -4px;
+  top: -5px;
+} */
+
+.error-line {
+  background-color: rgba(179, 10, 10, 0.25);
+}
+
+.error-text {
+  font-weight: 300;
+  color: rgb(179, 80, 80) !important;
+}
+
+/* purgecss end ignore */
