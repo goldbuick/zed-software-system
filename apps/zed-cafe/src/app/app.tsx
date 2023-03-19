@@ -1,3 +1,3 @@
 export function App() {
-  return <div className="container">Hello</div>
+  return <div className="text-6xl text-white">Hello</div>
 }

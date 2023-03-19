@@ -11,7 +11,10 @@ module.exports = {
     ...createGlobPatternsForDependencies(__dirname),
   ],
   theme: {
-    extend: {},
+    fontFamily: {
+      sans: ['IBM_VGA'],
+      serif: ['IBM_VGA'],
+    },
   },
   plugins: [],
 }
