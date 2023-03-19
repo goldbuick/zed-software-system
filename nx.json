@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "npmScope": "zed-software-system-2",
+  "npmScope": "zed-software-system",
   "tasksRunnerOptions": {
     "default": {
       "runner": "@nrwl/nx-cloud",
