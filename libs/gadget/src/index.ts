@@ -1,1 +1,3 @@
-export * from './lib/gadget'
+export function thing() {
+  // doot
+}
