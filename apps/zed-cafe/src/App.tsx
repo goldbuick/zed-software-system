@@ -36,6 +36,7 @@ function handleFilter(intersects: THREE.Intersection[]) {
       cursor = item.object.userData.cursor
       return true
     }
+    return false
   })
 
   document.querySelectorAll<HTMLElement>('html, body').forEach((node) => {
