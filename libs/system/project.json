@@ -1,7 +1,7 @@
 {
-  "name": "gadget",
+  "name": "system",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/gadget/src",
+  "sourceRoot": "libs/system/src",
   "projectType": "library",
   "tags": [],
   "targets": {
@@ -12,7 +12,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "libs/gadget/**/*.{ts,tsx,js,jsx}"
+          "libs/system/**/*.ts"
         ]
       }
     },
@@ -21,27 +21,18 @@
       "outputs": [
         "{options.outputPath}"
       ],
-      "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/libs/gadget"
-      },
-      "configurations": {
-        "development": {
-          "mode": "development"
-        },
-        "production": {
-          "mode": "production"
-        }
+        "outputPath": "dist/libs/system"
       }
     },
     "test": {
       "executor": "@nrwl/vite:test",
       "outputs": [
-        "coverage/libs/gadget"
+        "coverage/libs/system"
       ],
       "options": {
         "passWithNoTests": true,
-        "reportsDirectory": "../../coverage/libs/gadget"
+        "reportsDirectory": "../../coverage/libs/system"
       }
     }
   }

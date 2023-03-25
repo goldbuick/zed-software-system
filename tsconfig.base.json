@@ -10,13 +10,27 @@
     "importHelpers": true,
     "target": "es2015",
     "module": "esnext",
-    "lib": ["es2017", "dom"],
+    "lib": [
+      "es2017",
+      "dom"
+    ],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@zed-software-system/gadget": ["libs/gadget/src/index.ts"]
-    }
+      "@zss/gadget": [
+        "libs/gadget/src/index.ts"
+      ],
+      "@zss/system/*": [
+        "libs/system/src/*"
+      ]
+    },
+    "types": [
+      "vite/client"
+    ]
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
 }

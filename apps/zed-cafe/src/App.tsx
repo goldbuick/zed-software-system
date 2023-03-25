@@ -1,82 +1,125 @@
 import { OrthographicCamera, Stats, Loader } from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, events, RootState } from '@react-three/fiber'
 import * as THREE from 'three'
+import { Gadget } from '@zss/gadget'
+import useMeasure from 'react-use-measure'
+import { makeEven } from '@zss/system/mapping/number'
+import { Framing } from './components/Framing'
 
 const target = new THREE.Vector3()
 const facing = new THREE.Vector3()
 
-function handleFilter(intersects: THREE.Intersection[]) {
-  const list = intersects.filter((item) => {
-    if (!item.object.visible) {
-      return false
-    }
+const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
+  state,
+) => ({
+  // Default configuration
+  ...events(state),
 
-    const clippingPlanes: THREE.Plane[] =
-      item.object.userData.clippingPlanes ?? []
-    if (
-      clippingPlanes.some((plane) => {
-        plane.projectPoint(item.point, target)
-        facing.subVectors(item.point, target).normalize().round()
-        return plane.normal.equals(facing) === false
-      })
-    ) {
-      return false
-    }
+  // The filter can re-order or re-structure the intersections
+  filter: (items: THREE.Intersection[], state: RootState) => {
+    const list = items.filter((item) => {
+      if (!item.object.visible) {
+        return false
+      }
 
-    return true
-  })
+      const clippingPlanes: THREE.Plane[] =
+        item.object.userData.clippingPlanes ?? []
+      if (
+        clippingPlanes.some((plane) => {
+          plane.projectPoint(item.point, target)
+          facing.subVectors(item.point, target).normalize().round()
+          return plane.normal.equals(facing) === false
+        })
+      ) {
+        return false
+      }
 
-  const blockingIndex = list.findIndex((item) => item.object.userData.blocking)
-
-  const result = blockingIndex === -1 ? list : list.slice(0, blockingIndex + 1)
-
-  let cursor = 'default'
-  result.some((item) => {
-    if (item.object.userData.cursor) {
-      cursor = item.object.userData.cursor
       return true
-    }
-    return false
-  })
+    })
 
-  document.querySelectorAll<HTMLElement>('html, body').forEach((node) => {
-    node.style.cursor = cursor
-  })
+    const blockingIndex = list.findIndex(
+      (item) => item.object.userData.blocking,
+    )
 
-  return result
-}
+    const result =
+      blockingIndex === -1 ? list : list.slice(0, blockingIndex + 1)
+
+    let cursor = 'default'
+    result.some((item) => {
+      if (item.object.userData.cursor) {
+        cursor = item.object.userData.cursor
+        return true
+      }
+      return false
+    })
+
+    document.querySelectorAll<HTMLElement>('html, body').forEach((node) => {
+      node.style.cursor = cursor
+    })
+
+    return result
+  },
+})
 
 export function App() {
+  const [ref, bounds] = useMeasure()
+
+  const boundsWidth = makeEven(bounds.width)
+  const boundsHeight = makeEven(bounds.height)
+
   return (
-    <Canvas
-      id="sim-display"
-      flat
-      linear
-      dpr={1}
-      shadows={false}
-      touch-action="none"
-      gl={{
-        alpha: false,
-        stencil: false,
-        antialias: false,
-        // preserveDrawingBuffer: true,
-        powerPreference: 'high-performance',
-      }}
-      style={{
-        imageRendering: 'pixelated',
-      }}
-      raycaster={{ filter: handleFilter }}
-      onCreated={({ gl }) => {
-        gl.localClippingEnabled = true
-      }}
-    >
-      <OrthographicCamera
-        makeDefault
-        near={1}
-        far={2000}
-        position={[0, 0, 1000]}
-        zoom={5}
-      />
-    </Canvas>
+    <>
+      <div
+        ref={ref}
+        className="fixed inset-0"
+        onContextMenuCapture={(event) => {
+          event.preventDefault()
+        }}
+      >
+        <div
+          className="absolute mx-auto"
+          style={{
+            width: boundsWidth,
+            height: boundsHeight,
+          }}
+        >
+          <Canvas
+            id="sim-display"
+            flat
+            linear
+            dpr={1}
+            shadows={false}
+            touch-action="none"
+            gl={{
+              alpha: false,
+              stencil: false,
+              antialias: false,
+              // preserveDrawingBuffer: true,
+              powerPreference: 'high-performance',
+            }}
+            style={{
+              imageRendering: 'pixelated',
+            }}
+            events={eventManagerFactory}
+            onCreated={({ gl }) => {
+              gl.localClippingEnabled = true
+            }}
+          >
+            <OrthographicCamera
+              makeDefault
+              near={1}
+              far={2000}
+              position={[0, 0, 1000]}
+              zoom={5}
+            />
+            <Framing>
+              <Gadget />
+            </Framing>
+            <Stats />
+          </Canvas>
+        </div>
+      </div>
+      <Loader />
+    </>
   )
 }

@@ -1,3 +1,1 @@
-export function Gadget() {
-  // doot
-}
+export * from './Gadget'

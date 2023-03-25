@@ -1,0 +1,14 @@
+{
+  "name": "@zss/system",
+  "version": "0.0.1",
+  "exports": {
+    "./mapping/array": {
+      "import": "./mapping/array.mjs",
+      "require": "./mapping/array.js"
+    },
+    "./mapping/number": {
+      "import": "./mapping/number.mjs",
+      "require": "./mapping/number.js"
+    }
+  }
+}
