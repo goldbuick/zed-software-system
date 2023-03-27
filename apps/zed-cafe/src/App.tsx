@@ -5,6 +5,7 @@ import { Gadget } from '@zss/gadget'
 import useMeasure from 'react-use-measure'
 import { makeEven } from '@zss/system/mapping/number'
 import { Framing } from './components/Framing'
+import '@zss/network/peer'
 
 const target = new THREE.Vector3()
 const facing = new THREE.Vector3()
