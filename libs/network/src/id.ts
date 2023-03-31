@@ -1,6 +1,6 @@
-import { nanoid } from 'nanoid'
+import { range } from '@zss/system/mapping/array'
+import { randomInteger } from '@zss/system/mapping/number'
 
 export function createId() {
-  const text = new TextEncoder()
-  return text.encode(nanoid())
+  return new Uint8Array(range(32).map(() => randomInteger(0, 255)))
 }
