@@ -5,7 +5,7 @@ import { Gadget } from '@zss/gadget'
 import useMeasure from 'react-use-measure'
 import { makeEven } from '@zss/system/mapping/number'
 import { Framing } from './components/Framing'
-import '@zss/network/peer'
+import { Gateway } from '@zss/network/gateway'
 
 const target = new THREE.Vector3()
 const facing = new THREE.Vector3()
@@ -61,6 +61,8 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
     return result
   },
 })
+
+const gateway = new Gateway()
 
 export function App() {
   const [ref, bounds] = useMeasure()

@@ -17,19 +17,43 @@ Idea for how client/server routing would work
 */
 
 import Peer from 'peerjs'
-import { nanoid } from 'nanoid'
-import { PEER_JS_OPTIONS } from './types'
-import { MESSAGE } from './message'
+import { nanoid, customAlphabet } from 'nanoid'
+import { nolookalikes } from 'nanoid-dictionary'
+import { KBuckets } from './k-buckets'
 
-type GatewayMessage = {
-  msg: MESSAGE
-  data: any
+const createPeerId = customAlphabet(nolookalikes, 32)
+
+const BOOSTRAP_ID = '5loXSIFThHidEIEh6h89NQEZpdqI4X4B'
+
+const PEER_JS_OPTIONS = {
+  // host: 'zed-cafe-connect.herokuapp.com',
+  // secure: true,
+  // port: 443,
+  debug: 0,
+  // config: {
+  //   iceServers: [
+  //     { urls: 'stun:stun.l.google.com:19302' },
+  //     // {
+  //     //   urls: [
+  //     //     'turn:eu-0.turn.peerjs.com:3478',
+  //     //     'turn:us-0.turn.peerjs.com:3478',
+  //     //   ],
+  //     //   username: 'peerjs',
+  //     //   credential: 'peerjsp',
+  //     // },
+  //   ],
+  //   sdpSemantics: 'unified-plan',
+  // },
 }
 
 export class Gateway {
   private peer: Peer
 
-  constructor(private boostrapId: string) {
+  static createPeerId() {
+    return createPeerId()
+  }
+
+  constructor() {
     this.peer = this.host()
     window.addEventListener('beforeunload', this.destroy)
   }
@@ -39,30 +63,26 @@ export class Gateway {
     window.removeEventListener('beforeunload', this.destroy)
   }
 
-  host() {
-    // default is to create as host
-    this.peer = new Peer(this.boostrapId, PEER_JS_OPTIONS)
+  host = () => {
+    // reset
+    if (this.peer) {
+      this.peer.destroy()
+    }
 
-    this.peer.on('error', (error) => {
-      if (error.type === 'unavailable-id') {
-        // fallback to join
-        this.join()
-        // onHostExists()
-      } else if (error.type !== 'invalid-id') {
-        // signal reset here
-      } else {
-        console.error(error)
-      }
-    })
+    // default is to create as host
+    this.peer = new Peer(BOOSTRAP_ID, PEER_JS_OPTIONS)
 
     this.peer.on('open', () => {
-      this.peer.on('close', () => [
-        // signal reset here ...
-      ])
+      console.info('host: ready on', this.peer.id)
+      this.peer.on('close', () =>
+        this.retry('connection to handshake server lost'),
+      )
     })
 
     this.peer.on('connection', (dataConnection) => {
       dataConnection.on('open', () => {
+        console.info('host: connection from', dataConnection.peer)
+
         dataConnection.on('close', () => {
           // clean up
         })
@@ -73,15 +93,34 @@ export class Gateway {
       })
     })
 
+    this.peer.on('error', (error) => {
+      console.error('host: error', error.type, error)
+      // if (error.type === 'unavailable-id') {
+      // fallback to join
+      // }
+      this.join()
+    })
+
     return this.peer
   }
 
   join() {
-    this.peer = new Peer(nanoid())
+    // reset
+    if (this.peer) {
+      this.peer.destroy()
+    }
+
+    // try to join gateway node
+    this.peer = new Peer('', PEER_JS_OPTIONS)
 
     this.peer.on('open', () => {
-      const dataConnection = this.peer.connect(this.boostrapId)
+      console.info('join: ready on', this.peer.id)
+      console.info('join: trying', BOOSTRAP_ID)
+      const dataConnection = this.peer.connect(BOOSTRAP_ID)
+
       dataConnection.on('open', () => {
+        console.info('join: connection from', dataConnection.peer)
+
         dataConnection.on('close', () => {
           // signal retry
         })
@@ -90,16 +129,24 @@ export class Gateway {
           // handle messages here
         })
       })
-    })
 
-    this.peer.on('close', () => {
-      // signal retry
+      this.peer.on('close', () =>
+        this.retry('connection to handshake server lost'),
+      )
     })
 
     this.peer.on('error', (error) => {
-      // signal retry
+      console.error('join: error', error.type, error)
+      if (error.type === 'peer-unavailable') {
+        this.retry('unable to connect to host')
+      }
     })
 
     return this.peer
+  }
+
+  retry = (reason: string) => {
+    console.info('retrying', reason)
+    setTimeout(this.host, 5000)
   }
 }

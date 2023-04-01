@@ -7,9 +7,12 @@
   "dependencies": {
     "@react-three/drei": "^9.57.3",
     "@react-three/fiber": "^8.12.0",
+    "@types/nanoid-dictionary": "^4.2.0",
     "alea": "^1.0.1",
     "animejs": "^3.2.1",
     "jsfxr": "^1.2.1",
+    "mitt": "^3.0.0",
+    "nanoid-dictionary": "^4.3.0",
     "peerjs": "^1.4.7",
     "react": "18.2.0",
     "react-dom": "18.2.0",
