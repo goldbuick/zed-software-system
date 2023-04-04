@@ -15,7 +15,7 @@ import Peer, { DataConnection, PeerJSOption } from 'peerjs'
 import { range } from '@zss/system/mapping/array'
 import Alea from 'alea'
 
-const prng = Alea(Date.now())
+const prng = Alea(Date.now() + Math.round(Math.random() * 10000000))
 
 export function randomInteger(a: number, b: number) {
   const min = Math.min(a, b)
@@ -24,8 +24,10 @@ export function randomInteger(a: number, b: number) {
   return min + Math.floor(prng() * delta)
 }
 
+const PEER_ID_SIZE = 16
+
 const PEER_JS_OPTIONS: PeerJSOption = {
-  debug: 1,
+  debug: 0,
   port: 443,
   secure: true,
   key: 'peerjs',
@@ -60,7 +62,9 @@ export class Gateway {
   }
 
   static randomBytes() {
-    return Uint8Array.from(range(31).map(() => randomInteger(0, 255)))
+    return Uint8Array.from(
+      range(PEER_ID_SIZE - 1).map(() => randomInteger(0, 255)),
+    )
   }
 
   static bytesToPeerId(id: Uint8Array) {
@@ -131,14 +135,17 @@ export class Gateway {
     try {
       // request a list of all available peers to connect to
       const response = await fetch(Gateway.getPeerJSUrl('/peers'))
-      const result: string[] = await response.json()
+
       // sort by xor distance
+      const result: string[] = await response.json()
       const sortedIds = Gateway.orderByDistanceToId(
         this.id,
         result.map(Gateway.peerIdToBytes),
       )
+
       // start the connection process
       this.connectTo = sortedIds.map(Gateway.bytesToPeerId)
+      this.connectTo.unshift('zss-rrrrrrrrrrrrr')
       this.connectToNextPeer()
     } catch (error) {
       console.info('gateway: error fetching peer list', error)
@@ -146,28 +153,29 @@ export class Gateway {
   }
 
   connectToNextPeer() {
+    // this.peer.
     const peerId = this.connectTo.pop()
     if (!peerId) {
       return
     }
-    console.info('gateway: trying', peerId)
 
-    // we have to add our own data connection logic here ..
-    this.onDataConnection(
-      this.peer.connect(peerId, {
-        reliable: true,
-      }),
-    )
+    console.info('gateway: trying', peerId)
+    const dataConnection = this.peer.connect(peerId, { reliable: true })
+    this.onDataConnection(dataConnection)
   }
 
-  onDataConnection(dataConnection: DataConnection) {
-    let didConnect = true
+  onDataConnection = (dataConnection: DataConnection) => {
+    // let didConnect = true
 
-    dataConnection.on('open', () => {
-      console.info('gateway: connection from', dataConnection.peer)
-      didConnect = true
-      this.connectToNextPeer()
-    })
+    function onOpen() {
+      console.info('dataConnection: connection from', dataConnection.peer)
+    }
+
+    if (dataConnection.open) {
+      onOpen()
+    } else {
+      dataConnection.on('open', onOpen)
+    }
 
     dataConnection.on('close', () => {
       console.error('dataConnection: close')
