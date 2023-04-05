@@ -172,14 +172,16 @@ export class Gateway {
   }
 
   connectToNextPeer() {
-    // do we need to connect to more peers?
-    if (Object.keys(this.connections).length >= 3) {
-      return
-    }
-
     // do we have a next peerId to try
     const peerId = this.connectTo.pop()
     if (!peerId) {
+      return
+    }
+
+    // do we need to connect to more peers?
+    if (Object.keys(this.connections).length >= 3) {
+      // reset
+      this.connectTo = []
       return
     }
 
