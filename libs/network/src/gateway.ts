@@ -117,7 +117,7 @@ export class Gateway {
       })
 
       console.info('gateway: ready on', this.peer.id)
-      this.bootstrap()
+      setTimeout(this.bootstrap, 1000)
     })
 
     this.peer.on('connection', this.onDataConnection)
@@ -135,7 +135,7 @@ export class Gateway {
           break
         }
         default:
-          console.error('gateway: error', type)
+          console.error('gateway: error', type, error)
           break
       }
     })
@@ -146,7 +146,7 @@ export class Gateway {
     window.removeEventListener('beforeunload', this.destroy)
   }
 
-  async bootstrap() {
+  bootstrap = async () => {
     try {
       // request a list of all available peers to connect to
       const response = await fetch(Gateway.getPeerJSUrl('/peers'))
