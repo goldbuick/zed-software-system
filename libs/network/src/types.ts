@@ -1,35 +1,77 @@
-export enum MESSAGE {
-  PEER_UPDATE = 1,
+import { PeerJSOption } from 'peerjs'
+
+export const PEER_ID_SIZE = 32
+
+export const PEER_JS_OPTIONS: PeerJSOption = {
+  debug: 0,
+  port: 443,
+  secure: true,
+  key: 'peerjs',
+  host: 'nest.ili.ac',
 }
 
-export interface MESSAGE_DATA {
-  [MESSAGE.PEER_UPDATE]: {
+export type MESSAGE = {
+  // ready to connect to peers
+  GATEWAY_READY: {
+    id: string
+  }
+  // error from peer list server
+  GATEWAY_ERROR: {
+    id: string
+    type: string
+    message: string
+  }
+  // disconnected from peer list server
+  GATEWAY_LOST: {
+    id: string
+  }
+  // error from peer
+  PEER_ERROR: {
+    gateway: string
+    id: string
+    message: string
+  }
+  // updated list of known peer ids
+  PEER_UPDATE: {
+    gateway: string
     ids: string[]
   }
+  // updated list of connected peer ids
+  PEER_CONNECTIONS: {
+    gateway: string
+    ids: string[]
+  }
+  // peer subscribe
+  PEER_SUB: {
+    gateway: string
+  }
 }
 
-export enum ROUTE {
+export type ROUTE = {
   // send a message to all peers
-  SND_ALL = 1,
-  // send a message to target id
-  SND_TO,
-  // subscribe to a target id
-  SUB_TO,
-  // send a message to anyone subscribed to your id
-  PUB_TO,
-}
-
-export interface ROUTE_DATA {
-  [ROUTE.SND_ALL]: {
+  SND_ALL: {
     received: string[]
   }
-  [ROUTE.SND_TO]: {
+  // send a message to target id
+  SND_TO: {
     id: string
   }
-  [ROUTE.SUB_TO]: {
+  // subscribe to a target id
+  SUB_TO: {
     id: string
   }
-  [ROUTE.PUB_TO]: {
+  // send a message to anyone subscribed to your id
+  PUB_TO: {
     id: string
   }
+}
+
+export type ROUTE_MESSAGE<
+  RouteType extends keyof ROUTE,
+  MessageType extends keyof MESSAGE,
+> = {
+  route: RouteType
+  routeData: ROUTE[RouteType]
+  message: MessageType
+  messageData: MESSAGE[MessageType]
 }

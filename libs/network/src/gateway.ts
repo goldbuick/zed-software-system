@@ -1,19 +1,14 @@
-/*
-
-Do we even need k-buckets ??
-Is XOR distance a sufficient metric ?
-
-v1 approach
-  We poll for an updated list of peers
-  We connect to the 3 closest to our ID
-  We route messages accordingly
-    We still need PUB/SUB tables
-
-*/
-
-import Peer, { DataConnection, PeerJSOption } from 'peerjs'
+import Peer, { DataConnection } from 'peerjs'
 import { range } from '@zss/system/mapping/array'
 import Alea from 'alea'
+import {
+  MESSAGE,
+  PEER_ID_SIZE,
+  PEER_JS_OPTIONS,
+  ROUTE,
+  ROUTE_MESSAGE,
+} from './types'
+import { sendMessage } from './message'
 
 const prng = Alea(Date.now() + Math.round(Math.random() * 10000000))
 
@@ -22,16 +17,6 @@ export function randomInteger(a: number, b: number) {
   const max = Math.max(a, b)
   const delta = max - min + 1
   return min + Math.floor(prng() * delta)
-}
-
-const PEER_ID_SIZE = 32
-
-const PEER_JS_OPTIONS: PeerJSOption = {
-  debug: 0,
-  port: 443,
-  secure: true,
-  key: 'peerjs',
-  host: 'nest.ili.ac',
 }
 
 // build conversion tables
@@ -43,6 +28,94 @@ range(0, 255).forEach((value) => {
   convertToBytes[hex] = value
 })
 
+function getPeerJSUrl(route: string) {
+  return [
+    PEER_JS_OPTIONS.secure ? 'https' : 'http',
+    '://',
+    PEER_JS_OPTIONS.host,
+    '/',
+    PEER_JS_OPTIONS.key,
+    route,
+  ].join('')
+}
+
+function randomByteId() {
+  return Uint8Array.from(
+    range(PEER_ID_SIZE - 1).map(() => randomInteger(0, 255)),
+  )
+}
+
+function byteIdToPeerId(id: Uint8Array) {
+  return `zss-${[...id].map((value) => convertToHex[value]).join('')}`
+}
+
+function peerIdToByteId(hex: string) {
+  const bytes = hex.replace('zss-', '').match(/.{1,2}/g)
+  if (!bytes) {
+    return Uint8Array.from(new Array(32).fill(0))
+  }
+  return Uint8Array.from(bytes.map((value) => convertToBytes[value]))
+}
+
+function compareByteIds(id1: Uint8Array, id2: Uint8Array) {
+  const len = Math.min(id1.length, id2.length)
+  for (let i = 0; i < len; ++i) {
+    if (id1[i] !== id2[i]) {
+      return id1[i] < id2[i] ? -1 : 1
+    }
+  }
+  return 0
+}
+
+function xorDistance(id1: Uint8Array, id2: Uint8Array) {
+  const distance: number[] = []
+  const len = Math.min(id1.length, id2.length)
+
+  for (let i = 0; i < len; ++i) {
+    distance.push(id1[i] ^ id2[i])
+  }
+
+  return Uint8Array.from(distance)
+}
+
+function orderByDistanceToByteId(id: Uint8Array, list: Uint8Array[]) {
+  const pairs: [Uint8Array, Uint8Array][] = list.map((item) => [
+    item,
+    xorDistance(id, item),
+  ])
+
+  pairs.sort((pair1, pair2) => {
+    return compareByteIds(pair1[1], pair2[1])
+  })
+
+  return pairs.map((item) => item[0])
+}
+
+function nearestByteId(
+  id: Uint8Array,
+  list: Uint8Array[],
+): Uint8Array | undefined {
+  const [nearest] = orderByDistanceToByteId(id, list)
+  return nearest
+}
+
+function nearestPeerId(id: string, list: string[]) {
+  const nearest = nearestByteId(peerIdToByteId(id), list.map(peerIdToByteId))
+  return nearest ? byteIdToPeerId(nearest) : undefined
+}
+
+function createMessage<
+  RouteType extends keyof ROUTE,
+  MessageType extends keyof MESSAGE,
+>(
+  route: RouteType,
+  routeData: ROUTE[RouteType],
+  message: MessageType,
+  messageData: MESSAGE[MessageType],
+): ROUTE_MESSAGE<RouteType, MessageType> {
+  return { route, routeData, message, messageData }
+}
+
 export class Gateway {
   private id: Uint8Array
   private peer: Peer
@@ -51,91 +124,54 @@ export class Gateway {
   // connection queue
   private connectTo: string[] = []
 
-  static getPeerJSUrl(route: string) {
-    return [
-      PEER_JS_OPTIONS.secure ? 'https' : 'http',
-      '://',
-      PEER_JS_OPTIONS.host,
-      '/',
-      PEER_JS_OPTIONS.key,
-      route,
-    ].join('')
-  }
-
-  static randomBytes() {
-    return Uint8Array.from(
-      range(PEER_ID_SIZE - 1).map(() => randomInteger(0, 255)),
-    )
-  }
-
-  static bytesToPeerId(id: Uint8Array) {
-    return `zss-${[...id].map((value) => convertToHex[value]).join('')}`
-  }
-
-  static peerIdToBytes(hex: string) {
-    const bytes = hex.replace('zss-', '').match(/.{1,2}/g)
-    if (!bytes) {
-      return Uint8Array.from(new Array(32).fill(0))
-    }
-    return Uint8Array.from(bytes.map((value) => convertToBytes[value]))
-  }
-
-  static compareIds(id1: Uint8Array, id2: Uint8Array) {
-    const len = Math.min(id1.length, id2.length)
-    for (let i = 0; i < len; ++i) {
-      if (id1[i] !== id2[i]) {
-        return id1[i] < id2[i] ? -1 : 1
-      }
-    }
-    return 0
-  }
-
-  static xorDistance(id1: Uint8Array, id2: Uint8Array) {
-    const distance: number[] = []
-    const len = Math.min(id1.length, id2.length)
-
-    for (let i = 0; i < len; ++i) {
-      distance.push(id1[i] ^ id2[i])
-    }
-
-    return Uint8Array.from(distance)
-  }
-
-  static orderByDistanceToId(id: Uint8Array, list: Uint8Array[]) {
-    return list.sort(Gateway.compareIds)
-  }
+  // subscription tables
+  private subscriptions: {
+    [k: string]: Set<string>
+  } = {}
 
   constructor() {
     window.addEventListener('beforeunload', this.destroy)
 
-    this.id = Gateway.randomBytes()
-    this.peer = new Peer(Gateway.bytesToPeerId(this.id), PEER_JS_OPTIONS)
+    this.id = randomByteId()
+    this.peer = new Peer(byteIdToPeerId(this.id), PEER_JS_OPTIONS)
 
     this.peer.on('open', () => {
-      this.peer.on('close', () => {
-        // signal something ??
+      sendMessage('GATEWAY_READY', {
+        id: this.peer.id,
       })
 
-      console.info('gateway: ready on', this.peer.id)
-      setTimeout(this.bootstrap, 1000)
+      this.peer.on('close', () => {
+        sendMessage('GATEWAY_LOST', {
+          id: this.peer.id,
+        })
+      })
+
+      // start connecting
+      this.bootstrap()
     })
 
     this.peer.on('connection', this.onDataConnection)
 
     this.peer.on('error', (error) => {
-      const type = error.type as string
+      const { type, message } = error as unknown as {
+        type: string
+        message: string
+      }
       switch (type) {
         case 'peer-unavailable': {
           const peerId = error.message
             .replace('Could not connect to peer ', '')
             .trim()
-          console.log('gateway: failed to connect to', peerId)
           delete this.connections[peerId]
           this.connectToNextPeer()
           break
         }
         default:
-          console.error('gateway: error', type, error)
+          sendMessage('GATEWAY_ERROR', {
+            id: this.peer.id,
+            type,
+            message,
+          })
           break
       }
     })
@@ -146,32 +182,89 @@ export class Gateway {
     window.removeEventListener('beforeunload', this.destroy)
   }
 
-  bootstrap = async () => {
+  sendAll<Key extends keyof MESSAGE>(message: Key, data: MESSAGE[Key]) {
+    Object.values(this.connections).forEach((dataConnection) => {
+      dataConnection.send(
+        createMessage('SND_ALL', { received: [this.peer.id] }, message, data),
+      )
+    })
+  }
+
+  sendTo<Key extends keyof MESSAGE>(
+    id: string,
+    message: Key,
+    data: MESSAGE[Key],
+  ) {
+    const peer = this.connectionNearestToPeerId(id)
+    peer?.send(createMessage('SND_TO', { id }, message, data))
+  }
+
+  subscribeTo(id: string) {
+    const peer = this.connectionNearestToPeerId(id)
+    peer?.send(
+      createMessage('SUB_TO', { id }, 'PEER_SUB', {
+        gateway: this.peer.id,
+      }),
+    )
+  }
+
+  publishTo<Key extends keyof MESSAGE>(
+    id: string,
+    message: Key,
+    data: MESSAGE[Key],
+  ) {
+    const ids = this.subscriptions[id] ?? []
+    ids.forEach((item) => {
+      const peer: DataConnection | undefined = this.connections[item]
+      peer?.send(createMessage('PUB_TO', { id }, message, data))
+    })
+  }
+
+  private connectedPeerIds() {
+    return Object.keys(this.connections)
+  }
+
+  private connectedByteIds() {
+    return this.connectedPeerIds().map((item) => peerIdToByteId(item))
+  }
+
+  private connectionNearestToPeerId(id: string): DataConnection | undefined {
+    const nearest = nearestPeerId(id, this.connectedPeerIds()) ?? ''
+    return this.connections[nearest]
+  }
+
+  private bootstrap = async () => {
     try {
       // request a list of all available peers to connect to
-      const response = await fetch(Gateway.getPeerJSUrl('/peers'))
+      const response = await fetch(getPeerJSUrl('/peers'))
 
       // sort by xor distance
       const result: string[] = await response.json()
-      const sortedIds = Gateway.orderByDistanceToId(
+      const sortedIds = orderByDistanceToByteId(
         this.id,
-        result.map(Gateway.peerIdToBytes),
+        result.map(peerIdToByteId),
       )
 
-      if (Gateway.compareIds(this.id, sortedIds[0]) === 0) {
+      if (compareByteIds(this.id, sortedIds[0]) === 0) {
         // remove our id
         sortedIds.shift()
       }
 
       // start the connection process
-      this.connectTo = sortedIds.map(Gateway.bytesToPeerId)
+      this.connectTo = sortedIds.map(byteIdToPeerId)
       this.connectToNextPeer()
-    } catch (error) {
-      console.info('gateway: error fetching peer list', error)
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      sendMessage('GATEWAY_ERROR', {
+        id: this.peer.id,
+        type: 'fetch-peers',
+        message: error.message,
+      })
     }
   }
 
-  connectToNextPeer() {
+  private connectToNextPeer() {
     // do we have a next peerId to try
     const peerId = this.connectTo.pop()
     if (!peerId) {
@@ -185,23 +278,26 @@ export class Gateway {
       return
     }
 
-    console.info(
-      `gateway: trying (1 of ${this.connectTo.length + 1}) ${peerId}`,
-    )
     const dataConnection = this.peer.connect(peerId, { reliable: true })
     this.onDataConnection(dataConnection)
   }
 
-  onDataConnectionClose(dataConnection: DataConnection) {
-    console.error('dataConnection: close')
+  private onDataConnectionClose(dataConnection: DataConnection) {
     delete this.connections[dataConnection.peer]
+    sendMessage('PEER_CONNECTIONS', {
+      gateway: this.peer.id,
+      ids: Object.keys(this.connections),
+    })
   }
 
-  onDataConnection = (dataConnection: DataConnection) => {
+  private onDataConnection = (dataConnection: DataConnection) => {
     const onOpen = () => {
-      console.info('dataConnection: connection from', dataConnection.peer)
       this.connections[dataConnection.peer] = dataConnection
       this.connectToNextPeer()
+      sendMessage('PEER_CONNECTIONS', {
+        gateway: this.peer.id,
+        ids: Object.keys(this.connections),
+      })
     }
 
     if (dataConnection.open) {
@@ -212,12 +308,78 @@ export class Gateway {
 
     dataConnection.on('close', () => this.onDataConnectionClose(dataConnection))
 
-    dataConnection.on('data', ({ msg, data }) => {
-      // handle messages here
+    dataConnection.on('data', (netMessage) => {
+      const { route, message, messageData } = netMessage as {
+        route: keyof ROUTE
+        message: keyof MESSAGE
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        messageData: any
+      }
+
+      switch (route) {
+        case 'SND_ALL': {
+          const { routeData } = netMessage as { routeData: ROUTE[typeof route] }
+          const received = new Set(routeData.received)
+          received.add(this.peer.id)
+
+          Object.values(this.connections).forEach((dataConnection) => {
+            if (received.has(dataConnection.peer)) {
+              return
+            }
+            dataConnection.send(
+              createMessage(
+                'SND_ALL',
+                { received: [...received] },
+                message,
+                messageData,
+              ),
+            )
+          })
+          break
+        }
+        case 'SND_TO': {
+          const { routeData } = netMessage as { routeData: ROUTE[typeof route] }
+          if (routeData.id === this.peer.id) {
+            sendMessage(message, messageData)
+          } else {
+            const peer = this.connectionNearestToPeerId(routeData.id)
+            peer?.send(netMessage)
+          }
+          break
+        }
+        case 'SUB_TO': {
+          const { routeData } = netMessage as { routeData: ROUTE[typeof route] }
+          // record reverse route
+          if (!this.subscriptions[routeData.id]) {
+            this.subscriptions[routeData.id] = new Set()
+          }
+          this.subscriptions[routeData.id].add(dataConnection.peer)
+          // route towards target id
+          if (routeData.id !== this.peer.id) {
+            const peer = this.connectionNearestToPeerId(routeData.id)
+            peer?.send(netMessage)
+          }
+          break
+        }
+        case 'PUB_TO': {
+          const { routeData } = netMessage as { routeData: ROUTE[typeof route] }
+          // forward to reverse route
+          const nextPeerIds = [...(this.subscriptions[routeData.id] ?? [])]
+          nextPeerIds.forEach((peerId) => {
+            const nextDataConnection = this.connections[peerId]
+            nextDataConnection?.send(netMessage)
+          })
+          break
+        }
+      }
     })
 
     dataConnection.on('error', (error) => {
-      console.error('dataConnection: error', error.type, error)
+      sendMessage('PEER_ERROR', {
+        gateway: this.peer.id,
+        id: dataConnection.peer,
+        message: error.message,
+      })
     })
   }
 }
