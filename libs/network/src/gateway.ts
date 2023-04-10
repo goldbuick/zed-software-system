@@ -5,6 +5,8 @@ import {
   MESSAGE,
   PEER_ID_SIZE,
   PEER_JS_OPTIONS,
+  PEER_SUB_INTERVAL,
+  PEER_SUB_TIMEOUT,
   ROUTE,
   ROUTE_MESSAGE,
 } from './types'
@@ -104,7 +106,7 @@ function nearestPeerId(id: string, list: string[]) {
   return nearest ? byteIdToPeerId(nearest) : undefined
 }
 
-function createMessage<
+function createNetworkMessage<
   RouteType extends keyof ROUTE,
   MessageType extends keyof MESSAGE,
 >(
@@ -125,8 +127,10 @@ export class Gateway {
   private connectTo: string[] = []
 
   // subscription tables
-  private subscriptions: {
-    [k: string]: Set<string>
+  private subIds: Set<string> = new Set()
+  private subIdTimer: NodeJS.Timer
+  private subForwardIds: {
+    [k: string]: Record<string, number>
   } = {}
 
   constructor() {
@@ -134,6 +138,7 @@ export class Gateway {
 
     this.id = randomByteId()
     this.peer = new Peer(byteIdToPeerId(this.id), PEER_JS_OPTIONS)
+    this.subIdTimer = setInterval(this.pingSubIds, PEER_SUB_INTERVAL * 1000)
 
     this.peer.on('open', () => {
       sendMessage('GATEWAY_READY', {
@@ -178,14 +183,20 @@ export class Gateway {
   }
 
   destroy = () => {
-    this.peer.destroy()
     window.removeEventListener('beforeunload', this.destroy)
+    clearInterval(this.subIdTimer)
+    this.peer.destroy()
   }
 
   sendAll<Key extends keyof MESSAGE>(message: Key, data: MESSAGE[Key]) {
     Object.values(this.connections).forEach((dataConnection) => {
       dataConnection.send(
-        createMessage('SND_ALL', { received: [this.peer.id] }, message, data),
+        createNetworkMessage(
+          'SND_ALL',
+          { received: [this.peer.id] },
+          message,
+          data,
+        ),
       )
     })
   }
@@ -196,27 +207,25 @@ export class Gateway {
     data: MESSAGE[Key],
   ) {
     const peer = this.connectionNearestToPeerId(id)
-    peer?.send(createMessage('SND_TO', { id }, message, data))
+    peer?.send(createNetworkMessage('SND_TO', { id }, message, data))
   }
 
   subscribeTo(id: string) {
+    this.subIds.add(id)
     const peer = this.connectionNearestToPeerId(id)
-    peer?.send(
-      createMessage('SUB_TO', { id }, 'PEER_SUB', {
-        gateway: this.peer.id,
-      }),
-    )
+    peer?.send(createNetworkMessage('SUB_TO', { id }, 'ROUTE_SUB', null))
   }
 
-  publishTo<Key extends keyof MESSAGE>(
-    id: string,
-    message: Key,
-    data: MESSAGE[Key],
-  ) {
-    const ids = this.subscriptions[id] ?? []
-    ids.forEach((item) => {
+  unsubscribeTo(id: string) {
+    this.subIds.delete(id)
+  }
+
+  publish<Key extends keyof MESSAGE>(message: Key, data: MESSAGE[Key]) {
+    const id = this.peer.id
+    const ids = this.subForwardIds[id] ?? {}
+    Object.keys(ids).forEach((item) => {
       const peer: DataConnection | undefined = this.connections[item]
-      peer?.send(createMessage('PUB_TO', { id }, message, data))
+      peer?.send(createNetworkMessage('PUB_TO', { id }, message, data))
     })
   }
 
@@ -282,6 +291,14 @@ export class Gateway {
     this.onDataConnection(dataConnection)
   }
 
+  private pingSubIds = () => {
+    const subForwardIds = [...this.subIds]
+    subForwardIds.forEach((id) => {
+      const peer = this.connectionNearestToPeerId(id)
+      peer?.send(createNetworkMessage('SUB_TO', { id }, 'ROUTE_SUB', null))
+    })
+  }
+
   private onDataConnectionClose(dataConnection: DataConnection) {
     delete this.connections[dataConnection.peer]
     sendMessage('PEER_CONNECTIONS', {
@@ -316,8 +333,15 @@ export class Gateway {
         messageData: any
       }
 
+      sendMessage('GATEWAY_ROUTE', {
+        route,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        routeData: (netMessage as any).routeData,
+      })
+
       switch (route) {
         case 'SND_ALL': {
+          // route to everyone
           const { routeData } = netMessage as { routeData: ROUTE[typeof route] }
           const received = new Set(routeData.received)
           received.add(this.peer.id)
@@ -327,7 +351,7 @@ export class Gateway {
               return
             }
             dataConnection.send(
-              createMessage(
+              createNetworkMessage(
                 'SND_ALL',
                 { received: [...received] },
                 message,
@@ -339,6 +363,7 @@ export class Gateway {
         }
         case 'SND_TO': {
           const { routeData } = netMessage as { routeData: ROUTE[typeof route] }
+          // route to id
           if (routeData.id === this.peer.id) {
             sendMessage(message, messageData)
           } else {
@@ -350,10 +375,10 @@ export class Gateway {
         case 'SUB_TO': {
           const { routeData } = netMessage as { routeData: ROUTE[typeof route] }
           // record reverse route
-          if (!this.subscriptions[routeData.id]) {
-            this.subscriptions[routeData.id] = new Set()
+          if (!this.subForwardIds[routeData.id]) {
+            this.subForwardIds[routeData.id] = {}
           }
-          this.subscriptions[routeData.id].add(dataConnection.peer)
+          this.subForwardIds[routeData.id][dataConnection.peer] = Date.now()
           // route towards target id
           if (routeData.id !== this.peer.id) {
             const peer = this.connectionNearestToPeerId(routeData.id)
@@ -363,11 +388,22 @@ export class Gateway {
         }
         case 'PUB_TO': {
           const { routeData } = netMessage as { routeData: ROUTE[typeof route] }
-          // forward to reverse route
-          const nextPeerIds = [...(this.subscriptions[routeData.id] ?? [])]
+          // lookup reverse route
+          const nextPeerIds = Object.keys(
+            this.subForwardIds[routeData.id] ?? {},
+          )
           nextPeerIds.forEach((peerId) => {
-            const nextDataConnection = this.connections[peerId]
-            nextDataConnection?.send(netMessage)
+            const delta =
+              (Date.now() - (this.subForwardIds[routeData.id][peerId] ?? 0)) /
+              1000
+            if (delta > PEER_SUB_TIMEOUT) {
+              // prune old sub signals
+              delete this.subForwardIds[routeData.id][peerId]
+            } else {
+              // forward along reverse route
+              const nextDataConnection = this.connections[peerId]
+              nextDataConnection?.send(netMessage)
+            }
           })
           break
         }

@@ -10,7 +10,13 @@ export const PEER_JS_OPTIONS: PeerJSOption = {
   host: 'nest.ili.ac',
 }
 
+export const PEER_SUB_INTERVAL = 60
+export const PEER_SUB_TIMEOUT = PEER_SUB_INTERVAL * 2
+
 export type MESSAGE = {
+  // internal router messages
+  ROUTE_SUB: null
+  // network messages
   // ready to connect to peers
   GATEWAY_READY: {
     id: string
@@ -24,6 +30,12 @@ export type MESSAGE = {
   // disconnected from peer list server
   GATEWAY_LOST: {
     id: string
+  }
+  // logging routing info
+  GATEWAY_ROUTE: {
+    route: keyof ROUTE
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    routeData: any
   }
   // error from peer
   PEER_ERROR: {

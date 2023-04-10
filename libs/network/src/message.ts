@@ -4,14 +4,15 @@ import { MESSAGE } from './types'
 const emitter = mitt<MESSAGE>()
 
 export type MessageCallback<Key extends keyof MESSAGE> = (
-  data: MESSAGE[Key],
+  messageData: MESSAGE[Key],
 ) => void
 
 export function sendMessage<Key extends keyof MESSAGE>(
   message: Key,
-  data: MESSAGE[Key],
+  messageData: MESSAGE[Key],
 ) {
-  emitter.emit(message, data)
+  console.log('sendMessage', message, messageData)
+  emitter.emit(message, messageData)
 }
 
 export function onMessage<Key extends keyof MESSAGE>(
