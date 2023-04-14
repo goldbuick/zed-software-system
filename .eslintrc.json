@@ -7,6 +7,9 @@
     "@nrwl/nx"
   ],
   "extends": [
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript",
     "plugin:prettier/recommended",
     "prettier"
   ],
@@ -19,6 +22,9 @@
         "*.jsx"
       ],
       "rules": {
+        "import/no-unresolved": [
+          "off"
+        ],
         "@nrwl/nx/enforce-module-boundaries": [
           "error",
           {

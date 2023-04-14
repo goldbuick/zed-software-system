@@ -1,4 +1,4 @@
-import { randomNumber } from '/cc/mapping/number'
+import { randomNumber } from '@zss/system/mapping/number'
 
 const audioContext = new AudioContext()
 const mediaStreamAudioDestination = audioContext.createMediaStreamDestination()
