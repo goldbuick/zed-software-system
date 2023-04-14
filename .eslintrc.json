@@ -25,6 +25,24 @@
         "import/no-unresolved": [
           "off"
         ],
+        "import/order": [
+          "error",
+          {
+            "newlines-between": "always",
+            "alphabetize": {
+              "order": "asc",
+              "caseInsensitive": true
+            },
+            "groups": [
+              "builtin",
+              "external",
+              "internal",
+              "parent",
+              "sibling",
+              "index"
+            ]
+          }
+        ],
         "@nrwl/nx/enforce-module-boundaries": [
           "error",
           {

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { range } from '@zss/system/mapping/array'
 
-import { CharSet } from './display/CharSet'
+import { CharSet } from './display/charSet'
 import defaultCharSetUrl from './img/charset.png'
 import usePaddedTexture from './img/usePaddedTexture'
 

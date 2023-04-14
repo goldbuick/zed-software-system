@@ -2,6 +2,7 @@ import { MeshProps } from '@react-three/fiber'
 import { forwardRef, useRef, useLayoutEffect, useMemo, useEffect } from 'react'
 import { BufferGeometry, CanvasTexture, Mesh } from 'three'
 
+import { useClipping } from '../Clipping'
 import {
   flatMaterial,
   outlineMaterial,
@@ -9,19 +10,12 @@ import {
   updateTiles,
   cloneMaterial,
 } from '../img/tiles'
-
-import { useClipping } from '../Clipping'
-import { COLOR } from '../img/colors'
-
-export type Char = {
-  color?: COLOR
-  code?: number
-}
+import { CHARS } from '../types'
 
 export type CharSetProps = {
   width?: number
   height?: number
-  chars?: (Char | undefined | null)[]
+  chars?: CHARS
   dimmed?: boolean // puts this at half opacity
   outline?: boolean // objects use outlined chars
   map: CanvasTexture

@@ -11,7 +11,17 @@ What is a gadget ??
 
 */
 
+import { COLOR } from './img/colors'
+
+export type CHAR = {
+  color?: COLOR
+  code?: number
+}
+
+export type CHARS = (CHAR | undefined | null)[]
+
 export enum GADGET_LAYER {
+  BLANK,
   TILES,
   OBJECT,
   GUI,
