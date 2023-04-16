@@ -1,7 +1,7 @@
 import { YKeyValue } from 'y-utility/y-keyvalue'
 import * as Y from 'yjs'
 
-import { CHARS, GADGET_LAYER } from '../types'
+import { GADGET_LAYER } from '../types'
 
 import { createKeyValue } from './keyvalue'
 
@@ -33,31 +33,27 @@ export function setLDimmed(data: YKeyValue<number>, dimmed: boolean) {
 
 // TILES LAYER
 
-function createChar() {
-  // thing
-}
-
 type TLDefault = {
   id?: string
   width: number
   height: number
-  chars?: CHARS
 }
 
 export function createTL(create: TLDefault) {
   const { id, data, keyValue } = createKeyValue()
 
+  keyValue.set('keyvalue', id)
   keyValue.set('id', create.id || id)
-  keyValue.set('source', id)
   keyValue.set('width', create.width)
   keyValue.set('height', create.height)
 
-  const size = create.width * create.height
-  // if (chars) {
-  // map them through createChar()
-  // } else {
-  // we can run createChar with defaults
-  // }
+  const colors = createKeyValue()
+  keyValue.set('colors', colors.id)
+  keyValue.set('colorsMap', colors.data)
+
+  const codes = createKeyValue()
+  keyValue.set('codes', codes.id)
+  keyValue.set('codesMap', codes.data)
 
   return { id, data }
 }
@@ -90,13 +86,18 @@ export function setTLColor(
 
 // OBJECT LAYER
 
+type OLDefault = {
+  id?: string
+}
+
+export function createOL(create: OLDefault) {
+  const { id, data, keyValue } = createKeyValue()
+
+  return { id, data }
+}
+
 type OLObjectDefault = {
   id?: string
-  x?: number
-  y?: number
-  char?: number
-  color?: number
-  dimmed?: boolean
 }
 
 export function createOLObject(
