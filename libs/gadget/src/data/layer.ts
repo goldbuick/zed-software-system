@@ -1,9 +1,8 @@
 import { YKeyValue } from 'y-utility/y-keyvalue'
-import * as Y from 'yjs'
 
 import { GADGET_LAYER } from '../types'
 
-import { createKeyValue } from './keyvalue'
+import { createKeyValuePair, getKeyValuePair } from './keyvalue'
 
 /*
  * there are different kinds of layers
@@ -27,8 +26,8 @@ export function setLCharSet(data: YKeyValue<number>, id: string) {
   //
 }
 
-export function setLDimmed(data: YKeyValue<number>, dimmed: boolean) {
-  //
+export function setLDimmed(data: YKeyValue<boolean>, dimmed: boolean) {
+  data.set('dimmed', dimmed)
 }
 
 // TILES LAYER
@@ -40,48 +39,72 @@ type TLDefault = {
 }
 
 export function createTL(create: TLDefault) {
-  const { id, data, keyValue } = createKeyValue()
+  const { id, pair, keyValue } = createKeyValuePair()
 
-  keyValue.set('keyvalue', id)
   keyValue.set('id', create.id || id)
   keyValue.set('width', create.width)
   keyValue.set('height', create.height)
+  keyValue.set('chars', createKeyValuePair().pair)
+  keyValue.set('colors', createKeyValuePair().pair)
 
-  const colors = createKeyValue()
-  keyValue.set('colors', colors.id)
-  keyValue.set('colorsMap', colors.data)
-
-  const codes = createKeyValue()
-  keyValue.set('codes', codes.id)
-  keyValue.set('codesMap', codes.data)
-
-  return { id, data }
+  return pair
 }
 
-export function setTLWidth(data: YKeyValue<number>, width: number) {
+export function setTLSize(
+  data: YKeyValue<number>,
+  width: number,
+  height: number,
+) {
   data.set('width', width)
-}
-
-export function setTLHeight(data: YKeyValue<number>, width: number) {
-  data.set('width', width)
+  data.set('height', height)
+  // do we do shit with chars & colors ??
+  // essentially do a remap ?
 }
 
 export function setTLChar(
-  data: YKeyValue<number>,
+  data: YKeyValue<any>,
   x: number,
   y: number,
   char: number,
 ) {
-  // TODO
+  const width = data.get('width') ?? 0
+  const height = data.get('height') ?? 0
+  const chars = getKeyValuePair(data.get('chars'))
+  if (
+    chars === undefined ||
+    width < 1 ||
+    height < 1 ||
+    x < 0 ||
+    x >= width ||
+    y < 0 ||
+    y >= height
+  ) {
+    return
+  }
+  chars.set(`${x + y * width}`, char)
 }
 
 export function setTLColor(
-  data: YKeyValue<number>,
+  data: YKeyValue<any>,
   x: number,
   y: number,
   color: number,
 ) {
-  // TODO
+  const width = data.get('width') ?? 0
+  const height = data.get('height') ?? 0
+  const colors = getKeyValuePair(data.get('colors'))
+  if (
+    colors === undefined ||
+    width < 1 ||
+    height < 1 ||
+    x < 0 ||
+    x >= width ||
+    y < 0 ||
+    y >= height
+  ) {
+    return
+  }
+  colors.set(`${x + y * width}`, color)
 }
 
 // OBJECT LAYER
@@ -91,9 +114,9 @@ type OLDefault = {
 }
 
 export function createOL(create: OLDefault) {
-  const { id, data, keyValue } = createKeyValue()
+  const { id, pair, keyValue } = createKeyValuePair()
 
-  return { id, data }
+  return pair
 }
 
 type OLObjectDefault = {
