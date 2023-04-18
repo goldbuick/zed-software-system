@@ -23,6 +23,6 @@ export type CHARS = (CHAR | undefined | null)[]
 export enum GADGET_LAYER {
   BLANK,
   TILES,
-  OBJECT,
+  SPRITES,
   GUI,
 }

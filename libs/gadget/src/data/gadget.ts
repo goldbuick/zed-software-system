@@ -1,0 +1,85 @@
+import { nanoid } from 'nanoid'
+import * as Y from 'yjs'
+
+import { GADGET_LAYER } from '../types'
+
+import {
+  SLDefault,
+  TLDefault,
+  createSL,
+  createTL,
+  destroyTL,
+  getLId,
+  getLType,
+} from './Layer'
+
+type GadgetDefault = {
+  id?: string
+}
+
+export function createGadget(create: GadgetDefault) {
+  const gadget = new Y.Map<any>()
+
+  gadget.set('id', create.id || nanoid())
+  gadget.set('layers', new Y.Map<any>())
+
+  return gadget
+}
+
+export function destroyGadget(gadget: Y.Map<any>) {
+  // TODO: iterate through layers and destroy them
+}
+
+type LayerDefaults = {
+  [GADGET_LAYER.BLANK]: void
+  [GADGET_LAYER.TILES]: TLDefault
+  [GADGET_LAYER.SPRITES]: SLDefault
+  [GADGET_LAYER.GUI]: void
+}
+
+const layerCreate = {
+  [GADGET_LAYER.BLANK]: undefined,
+  [GADGET_LAYER.TILES]: createTL,
+  [GADGET_LAYER.SPRITES]: createSL,
+  [GADGET_LAYER.GUI]: undefined,
+}
+
+const layerDestroy = {
+  [GADGET_LAYER.BLANK]: undefined,
+  [GADGET_LAYER.TILES]: destroyTL,
+  [GADGET_LAYER.SPRITES]: undefined,
+  [GADGET_LAYER.GUI]: undefined,
+}
+
+export type LayerCreate<T extends keyof LayerDefaults> = LayerDefaults[T]
+
+export function createGL<T extends keyof LayerDefaults>(
+  gadget: Y.Map<any>,
+  type: T,
+  create: LayerCreate<T>,
+) {
+  const func = layerCreate[type]
+  if (!func || !create) {
+    return
+  }
+
+  // @ts-expect-error i tried
+  const layer = func(create)
+
+  gadget.get('layers').set(getLId(layer), layer)
+}
+
+export function destroyGL(gadget: Y.Map<any>, id: string) {
+  const layer = gadget.get('layers').get(id)
+  if (!layer) {
+    return
+  }
+
+  const type = getLType(layer)
+  const func = layerDestroy[type]
+  if (!func) {
+    return
+  }
+
+  func(layer)
+}

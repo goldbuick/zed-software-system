@@ -1,4 +1,4 @@
-import { DIR, POINT } from '@zss/system/types'
+import { DIR, POINT } from '../types'
 
 export function dirDelta(dir: DIR): POINT {
   switch (dir) {
