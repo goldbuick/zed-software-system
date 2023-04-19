@@ -11,7 +11,7 @@ import {
   destroyTL,
   getLId,
   getLType,
-} from './Layer'
+} from './layer'
 
 type GadgetDefault = {
   id?: string
@@ -27,7 +27,10 @@ export function createGadget(create: GadgetDefault) {
 }
 
 export function destroyGadget(gadget: Y.Map<any>) {
-  // TODO: iterate through layers and destroy them
+  const layers: Y.Map<any> = gadget.get('layers')
+  layers.forEach((value, key) => {
+    destroyGL(gadget, key)
+  })
 }
 
 type LayerDefaults = {

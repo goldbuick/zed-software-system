@@ -1,1 +1,1 @@
-export * from './gadget'
+export * from './display/gadget'
