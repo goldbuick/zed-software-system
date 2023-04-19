@@ -3,12 +3,6 @@ import * as Y from 'yjs'
 
 import { GADGET_LAYER } from '../types'
 
-import {
-  createKeyValuePair,
-  destroyKeyValuePair,
-  getKeyValuePair,
-} from './keyvalue'
-
 /*
  * there are different kinds of layers
  * tiles (xy coords that match width & height of gadget)
@@ -50,15 +44,10 @@ export function createTL(create: TLDefault) {
   layer.set('type', GADGET_LAYER.TILES)
   layer.set('width', create.width)
   layer.set('height', create.height)
-  layer.set('chars', createKeyValuePair().pair)
-  layer.set('colors', createKeyValuePair().pair)
+  layer.set('chars', new Y.Map<any>())
+  layer.set('colors', new Y.Map<any>())
 
   return layer
-}
-
-export function destroyTL(layer: Y.Map<any>) {
-  destroyKeyValuePair(layer.get('chars'))
-  destroyKeyValuePair(layer.get('colors'))
 }
 
 export function setTLSize(layer: Y.Map<any>, width: number, height: number) {
@@ -76,7 +65,7 @@ export function setTLChar(
 ) {
   const width: number = layer.get('width')
   const height: number = layer.get('height')
-  const chars = getKeyValuePair(layer.get('chars'))
+  const chars: Y.Map<any> = layer.get('chars')
   if (
     chars === undefined ||
     width < 1 ||
@@ -99,7 +88,7 @@ export function setTLColor(
 ) {
   const width: number = layer.get('width')
   const height: number = layer.get('height')
-  const colors = getKeyValuePair(layer.get('colors'))
+  const colors: Y.Map<any> = layer.get('colors')
   if (
     colors === undefined ||
     width < 1 ||
@@ -162,15 +151,3 @@ export function setSLSpriteChar(sprite: Y.Map<any>, char: number) {
 export function setSLSpriteColor(sprite: Y.Map<any>, color: number) {
   sprite.set('color', color)
 }
-
-// TODO set animation / deco state etc..
-
-// UI LAYER
-
-// width?: number
-// height?: number
-// chars?: (Char | undefined | null)[]
-// dimmed?: boolean // puts this at half opacity
-// outline?: boolean // objects use outlined chars
-// map: CanvasTexture
-// alt: CanvasTexture

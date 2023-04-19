@@ -1,10 +1,12 @@
 import { range } from '@zss/system/mapping/array'
-import { useMemo } from 'react'
+import { useRenderOnChange } from '@zss/yjs/binding'
+import { useEffect, useMemo } from 'react'
 import * as Y from 'yjs'
 
-import { useRenderOnChange } from '../data/binding'
+import { createGadget, createGL } from '../data/gadget'
 import defaultCharSetUrl from '../img/charset.png'
 import usePaddedTexture from '../img/usePaddedTexture'
+import { GADGET_LAYER } from '../types'
 
 import { CharSet } from './charSet'
 
@@ -24,12 +26,21 @@ even for buttons being pressed etc, a text input etc ..
 
 */
 
-interface GadgetProps {
-  gadget: Y.Map<any>
-}
+const doc = new Y.Doc()
 
-export function Gadget({ gadget }: GadgetProps) {
+const gadget = createGadget(doc, {})
+
+export function Gadget() {
   useRenderOnChange(gadget)
+
+  useEffect(() => {
+    const testLayer = createGL(gadget, GADGET_LAYER.TILES, {
+      width: 16,
+      height: 16,
+    })
+  }, [])
+
+  console.info('did render!')
 
   return null
 }

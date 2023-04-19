@@ -1,27 +1,24 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { nanoid } from 'nanoid'
 import * as Y from 'yjs'
 
 import { GADGET_LAYER } from '../types'
 
-import {
-  SLDefault,
-  TLDefault,
-  createSL,
-  createTL,
-  destroyTL,
-  getLId,
-  getLType,
-} from './layer'
+import { SLDefault, TLDefault, createSL, createTL, getLId } from './layer'
 
 type GadgetDefault = {
   id?: string
 }
 
-export function createGadget(create: GadgetDefault) {
+export function createGadget(doc: Y.Doc, create: GadgetDefault) {
   const gadget = new Y.Map<any>()
 
   gadget.set('id', create.id || nanoid())
   gadget.set('layers', new Y.Map<any>())
+
+  // add to document
+  const gadgets = doc.getMap('gadgets')
+  gadgets.set(gadget.get('id'), gadget)
 
   return gadget
 }
@@ -47,13 +44,6 @@ const layerCreate = {
   [GADGET_LAYER.GUI]: undefined,
 }
 
-const layerDestroy = {
-  [GADGET_LAYER.BLANK]: undefined,
-  [GADGET_LAYER.TILES]: destroyTL,
-  [GADGET_LAYER.SPRITES]: undefined,
-  [GADGET_LAYER.GUI]: undefined,
-}
-
 export type LayerCreate<T extends keyof LayerDefaults> = LayerDefaults[T]
 
 export function createGL<T extends keyof LayerDefaults>(
@@ -73,16 +63,9 @@ export function createGL<T extends keyof LayerDefaults>(
 }
 
 export function destroyGL(gadget: Y.Map<any>, id: string) {
-  const layer = gadget.get('layers').get(id)
-  if (!layer) {
+  const layers: Y.Map<any> = gadget.get('layers')
+  if (!layers) {
     return
   }
-
-  const type = getLType(layer)
-  const func = layerDestroy[type]
-  if (!func) {
-    return
-  }
-
-  func(layer)
+  layers.delete(id)
 }

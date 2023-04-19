@@ -1,29 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as Y from 'yjs'
 
 type AnyType = Y.Map<any> | Y.Array<any> | Y.Text | undefined
 
-type ObservableCallback = {
+type ObservableCallback = ({
+  events,
+  transaction,
+}: {
   events?: Y.YEvent<any>
   transaction?: Y.Transaction
-}
+}) => void
 
 export function useObservable<T extends AnyType>(
   ytype: T,
-  callback: ({ events, transaction }: ObservableCallback) => void,
+  callback: ObservableCallback,
 ): T {
-  const handler = useCallback(
-    function (
+  const callbackRef = useRef<ObservableCallback>()
+
+  useEffect(() => {
+    callbackRef.current = callback
+  }, [callback])
+
+  useEffect(() => {
+    function handler(
       arg0: Y.YEvent<any> | undefined,
       arg1: Y.Transaction | undefined,
     ) {
-      callback({ events: arg0, transaction: arg1 })
-    },
-    [callback],
-  )
+      callbackRef.current?.({ events: arg0, transaction: arg1 })
+    }
 
-  useEffect(() => {
     // trigger on initial state
     handler(undefined, undefined)
 
@@ -33,7 +39,7 @@ export function useObservable<T extends AnyType>(
     return () => {
       ytype?.unobserve(handler)
     }
-  }, [ytype, handler])
+  }, [ytype])
 
   return ytype
 }
@@ -48,26 +54,32 @@ export function useRenderOnChange<T extends AnyType>(ytype: T): T {
   return ytype
 }
 
-type ObservableDeepCallback = {
+type ObservableDeepCallback = ({
+  events,
+  transaction,
+}: {
   events?: Array<Y.YEvent<any>>
   transaction?: Y.Transaction
-}
+}) => void
 
 export function useObservableDeep<T extends AnyType>(
-  ytype: T | undefined,
-  callback: ({ events, transaction }: ObservableDeepCallback) => void,
-): T | undefined {
-  const handler = useCallback(
-    function (
+  ytype: T,
+  callback: ObservableDeepCallback,
+): T {
+  const callbackRef = useRef<ObservableDeepCallback>()
+
+  useEffect(() => {
+    callbackRef.current = callback
+  }, [callback])
+
+  useEffect(() => {
+    function handler(
       arg0: Array<Y.YEvent<any>> | undefined,
       arg1: Y.Transaction | undefined,
     ) {
-      callback({ events: arg0, transaction: arg1 })
-    },
-    [callback],
-  )
+      callbackRef.current?.({ events: arg0, transaction: arg1 })
+    }
 
-  useEffect(() => {
     // trigger on initial state
     handler(undefined, undefined)
 
@@ -77,7 +89,7 @@ export function useObservableDeep<T extends AnyType>(
     return () => {
       ytype?.unobserveDeep(handler)
     }
-  }, [ytype, handler])
+  }, [ytype])
 
   return ytype
 }

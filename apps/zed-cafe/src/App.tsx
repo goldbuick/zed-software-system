@@ -1,11 +1,12 @@
 import { OrthographicCamera, Stats, Loader } from '@react-three/drei'
 import { Canvas, events, RootState } from '@react-three/fiber'
-import * as THREE from 'three'
 import { Gadget } from '@zss/gadget'
-import useMeasure from 'react-use-measure'
-import { makeEven } from '@zss/system/mapping/number'
-import { Framing } from './components/Framing'
 import { Gateway } from '@zss/network/gateway'
+import { makeEven } from '@zss/system/mapping/number'
+import useMeasure from 'react-use-measure'
+import * as THREE from 'three'
+
+import { Framing } from './components/Framing'
 
 const target = new THREE.Vector3()
 const facing = new THREE.Vector3()
