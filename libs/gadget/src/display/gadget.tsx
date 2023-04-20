@@ -1,10 +1,12 @@
 import { range } from '@zss/system/mapping/array'
 import { useRenderOnChange } from '@zss/yjs/binding'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
+import * as THREE from 'three'
 import * as Y from 'yjs'
 
 import { createGadget, createGL } from '../data/gadget'
 import defaultCharSetUrl from '../img/charset.png'
+import { createTilemap } from '../img/tilemap'
 import usePaddedTexture from '../img/usePaddedTexture'
 import { GADGET_LAYER } from '../types'
 
@@ -30,7 +32,18 @@ const doc = new Y.Doc()
 
 const gadget = createGadget(doc, {})
 
+const material = new THREE.MeshBasicMaterial({
+  color: 0xff0000,
+  side: THREE.DoubleSide,
+})
+
 export function Gadget() {
+  const bgRef = useRef<THREE.BufferGeometry>(null)
+  const chars = useMemo(
+    () => range(16 * 16).map((code) => ({ code, color: 1 + (code % 16) })),
+    [],
+  )
+
   useRenderOnChange(gadget)
 
   useEffect(() => {
@@ -38,11 +51,30 @@ export function Gadget() {
       width: 16,
       height: 16,
     })
+
+    if (!bgRef.current) {
+      return
+    }
+
+    createTilemap(
+      bgRef.current,
+      10,
+      10,
+      16,
+      16,
+      chars.map((item) => item.code),
+      chars.map((item) => item.color),
+    )
+    console.info(bgRef.current)
   }, [])
 
   console.info('did render!')
 
-  return null
+  return (
+    <mesh material={material} position={[0, 0, 10]}>
+      <bufferGeometry ref={bgRef} />
+    </mesh>
+  )
 }
 
 /*
