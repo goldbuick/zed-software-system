@@ -2,14 +2,13 @@ import { MeshProps } from '@react-three/fiber'
 import { forwardRef, useRef, useLayoutEffect, useMemo, useEffect } from 'react'
 import { BufferGeometry, CanvasTexture, Mesh } from 'three'
 
-import { useClipping } from '../Clipping'
+import { useClipping } from '../clipping'
 import {
-  flatMaterial,
-  outlineMaterial,
-  makeTiles,
-  updateTiles,
-  cloneMaterial,
-} from '../img/tiles'
+  createTilemapBufferGeometry,
+  createTilemapDataTexture,
+  createTilemapMaterial,
+  updateTilemapDataTexture,
+} from '../img/tilemap'
 import { CHARS } from '../types'
 
 export type CharSetProps = {
@@ -21,10 +20,6 @@ export type CharSetProps = {
   map: CanvasTexture
   alt: CanvasTexture
 } & Omit<MeshProps, 'clear'>
-
-// We should be able to apply "filters" to chars before they're passed
-// to a CharSet
-// We could do a Context / Hook to add/remove filters
 
 export const CharSet = forwardRef<Mesh, CharSetProps>(function (
   {
@@ -39,52 +34,59 @@ export const CharSet = forwardRef<Mesh, CharSetProps>(function (
   }: CharSetProps,
   forwardedRef,
 ) {
-  const clippingPlanes = useClipping()
-  const bgRef = useRef<BufferGeometry>(null)
-  const { width: imageWidth = 0, height: imageHeight = 0 } = map.image ?? {}
-
+  const material = useMemo(() => createTilemapMaterial(), [])
+  // update data texture with current chars
   useLayoutEffect(() => {
-    const tiles = chars.map((block) => block?.code)
+    const codes = chars.map((block) => block?.code)
     const colors = chars.map((block) => block?.color)
 
-    if (bgRef.current && map) {
-      const { width: imageWidth, height: imageHeight } = map.image
-      if (bgRef.current.attributes.position?.count === width * height * 4) {
-        updateTiles(
-          bgRef.current,
-          imageWidth,
-          imageHeight,
-          width,
-          height,
-          tiles,
-          colors,
-        )
-      } else {
-        makeTiles(
-          bgRef.current,
-          imageWidth,
-          imageHeight,
-          width,
-          height,
-          tiles,
-          colors,
-        )
-      }
+    if (material.uniforms.data.value) {
+      updateTilemapDataTexture(
+        material.uniforms.data.value,
+        width,
+        height,
+        codes,
+        colors,
+      )
+    } else {
+      material.uniforms.data.value = createTilemapDataTexture(
+        width,
+        height,
+        codes,
+        colors,
+      )
     }
-  }, [map, width, height, chars])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [width, height, chars])
 
-  const material = useMemo(() => {
-    return cloneMaterial(outline ? outlineMaterial : flatMaterial)
-  }, [outline])
+  const bgRef = useRef<BufferGeometry>(null)
+  // update single quad to proper size
+  useLayoutEffect(() => {
+    if (
+      !bgRef.current ||
+      bgRef.current.attributes.position?.count === width * height * 4
+    ) {
+      return
+    }
 
+    createTilemapBufferGeometry(bgRef.current, width, height)
+  }, [width, height])
+
+  const clippingPlanes = useClipping()
+  const { width: imageWidth = 0, height: imageHeight = 0 } = map.image ?? {}
+  // config material
   useEffect(() => {
-    const strokeWidth = 0.7
+    const strokeWidth = 0.8
     if (map && alt) {
       material.transparent = dimmed || outline
       material.uniforms.map.value = map
       material.uniforms.alt.value = alt
       material.uniforms.dimmed.value = dimmed
       material.uniforms.transparent.value = outline
+      material.uniforms.size.value.x = 1 / width
+      material.uniforms.size.value.y = 1 / height
+      material.uniforms.step.value.x = 1 / 16
+      material.uniforms.step.value.y = 1 / 16
       material.uniforms.ox.value = (1 / imageWidth) * strokeWidth
       material.uniforms.oy.value = (1 / imageHeight) * strokeWidth
       material.clipping = clippingPlanes.length > 0
@@ -95,8 +97,10 @@ export const CharSet = forwardRef<Mesh, CharSetProps>(function (
     map,
     alt,
     material,
-    outline,
     dimmed,
+    outline,
+    width,
+    height,
     imageWidth,
     imageHeight,
     clippingPlanes,

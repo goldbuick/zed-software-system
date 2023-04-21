@@ -40,8 +40,8 @@ const gadget = createGadget(doc, {})
 const charsWidth = 2048
 const charsHeight = 1024
 const chars = range(charsWidth * charsHeight).map((code) => ({
-  code: code % 5 === 0 ? 0 : 1 + (code % 8),
-  color: 1 + (code % 31),
+  code: 0,
+  color: 0,
 }))
 
 const codesAndColors = createTilemapDataTexture(
@@ -142,16 +142,10 @@ export const material = new THREE.ShaderMaterial({
       float bottom = clamp(uv.y + oy, miny, maxy);
 
       return (
-        texture2D(txt, vec2(left, top)).r == 0.0 &&
         texture2D(txt, vec2(uv.x, top)).r == 0.0 &&
-        texture2D(txt, vec2(right, top)).r == 0.0 &&
-        
         texture2D(txt, vec2(left, uv.y)).r == 0.0 &&
         texture2D(txt, vec2(right, uv.y)).r == 0.0 &&
-
-        texture2D(txt, vec2(left, bottom)).r == 0.0 &&
-        texture2D(txt, vec2(uv.x, bottom)).r == 0.0 &&
-        texture2D(txt, vec2(right, bottom)).r == 0.0 
+        texture2D(txt, vec2(uv.x, bottom)).r == 0.0 
       );
     }
 
@@ -235,12 +229,12 @@ export function Gadget() {
     const outline = 0.8
     const imageWidth = 16 * 10
     const imageHeight = 16 * 10
-    material.transparent = true
+    material.transparent = false
     material.uniforms.map.value = map
     material.uniforms.alt.value = map
     material.uniforms.data.value = codesAndColors
     material.uniforms.dimmed.value = 0
-    material.uniforms.transparent.value = true
+    material.uniforms.transparent.value = false
     material.uniforms.size.value.x = 1 / charsWidth
     material.uniforms.size.value.y = 1 / charsHeight
     material.uniforms.step.value.x = 1 / 16

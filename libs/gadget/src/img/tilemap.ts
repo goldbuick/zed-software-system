@@ -1,21 +1,8 @@
 import * as THREE from 'three'
 
+import { threeColors } from '../img/colors'
+
 import { TILE_SIZE } from './tiles'
-
-/*
-
-the goal of this is to render an entire set of chars with a single quad
-
-What data do we need? which char, what color ?
-
-an array of colors
-
-r = x
-g = y
-b = color index
-a = ?
-
-*/
 
 export const TILE_FIXED_WIDTH = 16
 
@@ -117,4 +104,146 @@ export function createTilemapBufferGeometry(
 
   bg.computeBoundingBox()
   bg.computeBoundingSphere()
+}
+
+const epoch = Date.now()
+
+const time = {
+  get value() {
+    return ((Date.now() - epoch) / 1000) % 10000.0
+  },
+}
+
+// flip ever _other_ beat
+const INTERVAL_RATE = 120
+
+let intervalValue = 0
+export function setAltInterval(bpm: number) {
+  intervalValue = INTERVAL_RATE / bpm
+}
+
+// default to 150
+setAltInterval(150)
+
+const interval = {
+  get value() {
+    return intervalValue
+  },
+}
+
+export const tilemapMaterial = new THREE.ShaderMaterial({
+  // settings
+  transparent: true,
+  uniforms: {
+    time,
+    interval,
+    dimmed: { value: 0 },
+    transparent: { value: false },
+    map: { value: null },
+    alt: { value: null },
+    data: { value: null },
+    colors: { value: threeColors },
+    size: { value: new THREE.Vector2() },
+    step: { value: new THREE.Vector2() },
+    ox: { value: 0 },
+    oy: { value: 0 },
+  },
+  // vertex shader
+  vertexShader: `
+    #include <clipping_planes_pars_vertex>
+
+    varying vec2 vUv;
+  
+    void main() {
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * mvPosition;
+      
+      vUv = uv;
+      
+      #include <clipping_planes_vertex>
+    }
+  `,
+  // fragment shader
+  fragmentShader: `
+    #include <clipping_planes_pars_fragment>
+
+    uniform float time;
+    uniform float dimmed;
+    uniform float interval;
+    uniform bool transparent;
+    uniform sampler2D map;
+    uniform sampler2D alt;
+    uniform sampler2D data;
+    uniform vec3 colors[32];
+    uniform vec2 size;
+    uniform vec2 step;
+    uniform float ox;
+    uniform float oy;
+
+    varying vec2 vUv;
+
+    bool isEmpty(sampler2D txt, vec2 uv, vec2 lookup) {
+      float tx = floor(uv.x / step.x);
+      float minx = tx * step.x + ox;
+      float maxx = (tx + 1.0) * step.x - ox;
+
+      float ty = floor(uv.y / step.y);
+      float miny = ty * step.y + oy;
+      float maxy = (ty + 1.0) * step.y - oy;
+
+      float left = clamp(uv.x - ox, minx, maxx);
+      float right = clamp(uv.x + ox, minx, maxx);
+      float top = clamp(uv.y - oy, miny, maxy);
+      float bottom = clamp(uv.y + oy, miny, maxy);
+
+      return (
+        texture2D(txt, vec2(uv.x, top)).r == 0.0 &&
+        texture2D(txt, vec2(left, uv.y)).r == 0.0 &&
+        texture2D(txt, vec2(right, uv.y)).r == 0.0 &&
+        texture2D(txt, vec2(uv.x, bottom)).r == 0.0 
+      );
+    }
+
+    void main() {
+      #include <clipping_planes_fragment>
+
+      vec4 lookupRange = texture2D(data, vUv);
+      
+      vec2 lookup;
+      lookup.x = floor(lookupRange.x * 255.0);
+      lookup.y = floor(lookupRange.y * 255.0);
+      int ci = int(floor(lookupRange.z * 255.0));
+
+      vec2 charPosition = mod(vUv, size) / size;
+      vec2 uv = vec2(charPosition.x * step.x, charPosition.y * step.y);
+      vec3 color = colors[ci];
+
+      uv += step * lookup;
+      uv.y = 1.0 - uv.y;
+
+      bool useAlt = mod(time, interval * 2.0) > interval;
+      vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
+
+      if (transparent && blip.r == 0.0) {
+        bool empty = useAlt ? isEmpty(alt, uv, lookup) : isEmpty(map, uv, lookup));
+        if (empty) {
+          discard;
+        }
+      }
+
+      gl_FragColor.rgb = blip * color;
+      gl_FragColor.a = dimmed != 0.0 ? dimmed : 1.0;
+    }
+  `,
+})
+
+function cloneMaterial(material: THREE.ShaderMaterial) {
+  const clone = material.clone()
+  clone.uniforms.time = time
+  clone.uniforms.interval = interval
+  return clone
+}
+
+export function createTilemapMaterial() {
+  return cloneMaterial(tilemapMaterial)
 }
