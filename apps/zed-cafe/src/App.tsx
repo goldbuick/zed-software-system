@@ -95,10 +95,11 @@ export function App() {
             shadows={false}
             touch-action="none"
             gl={{
-              alpha: false,
+              alpha: true,
               stencil: false,
               antialias: false,
-              // preserveDrawingBuffer: true,
+              precision: 'highp',
+              preserveDrawingBuffer: true,
               powerPreference: 'high-performance',
             }}
             style={{

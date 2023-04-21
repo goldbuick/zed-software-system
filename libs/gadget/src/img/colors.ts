@@ -83,7 +83,9 @@ const dimColors = [
 ]
 
 const colors = [baseColors, dimColors].flat()
-const threeColors: THREE.Color[] = colors.map((color) => new THREE.Color(color))
+export const threeColors: THREE.Color[] = colors.map(
+  (color) => new THREE.Color(color),
+)
 
 export enum COLOR {
   BLACK,

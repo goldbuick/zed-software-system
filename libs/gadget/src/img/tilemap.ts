@@ -40,12 +40,13 @@ const QUAD_UVS = new Float32Array([
   ...BOTTOM_LEFT.slice(0, 2),
   ...TOP_RIGHT.slice(0, 2),
   ...BOTTOM_RIGHT.slice(0, 2),
+
   ...BOTTOM_LEFT.slice(0, 2),
   ...TOP_LEFT.slice(0, 2),
   ...TOP_RIGHT.slice(0, 2),
 ])
 
-export function updateTilemapLookup(
+export function updateTilemapDataTexture(
   texture: THREE.DataTexture,
   width: number,
   height: number,
@@ -62,9 +63,10 @@ export function updateTilemapLookup(
     i++
   }
   texture.needsUpdate = true
+  return texture
 }
 
-export function createTilemapLookup(
+export function createTilemapDataTexture(
   width: number,
   height: number,
   tcodes: TILE_CODES,
@@ -72,11 +74,10 @@ export function createTilemapLookup(
 ) {
   const data = new Uint8Array(4 * width * height)
   const texture = new THREE.DataTexture(data, width, height)
-  updateTilemapLookup(texture, width, height, tcodes, tcolors)
-  return texture
+  return updateTilemapDataTexture(texture, width, height, tcodes, tcolors)
 }
 
-export function createTilemapQuad(
+export function createTilemapBufferGeometry(
   bg: THREE.BufferGeometry,
   width: number,
   height: number,

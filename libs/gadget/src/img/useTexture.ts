@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { useAsset } from 'use-asset'
 
-import imgLoad, { updateTexture } from '/cc/game/img/load'
+import imgLoad, { updateTexture } from './load'
 
 export function textureFromImage(image: HTMLImageElement) {
   const canvas = document.createElement('canvas')

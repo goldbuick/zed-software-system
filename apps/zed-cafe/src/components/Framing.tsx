@@ -1,4 +1,5 @@
 import { GroupProps } from '@react-three/fiber'
+
 import useViewport from '../hooks/useViewport'
 
 export function Framing({ children, ...props }: GroupProps) {
