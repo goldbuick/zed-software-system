@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 
 import { TILE_SIZE } from './tiles'
+
 /*
 
 the goal of this is to render an entire set of chars with a single quad
@@ -15,6 +16,8 @@ b = color index
 a = ?
 
 */
+
+export const TILE_FIXED_WIDTH = 16
 
 type TILE_CODES = (number | null | undefined)[]
 type TILE_COLORS = (number | undefined)[]
@@ -42,11 +45,24 @@ const QUAD_UVS = new Float32Array([
   ...TOP_RIGHT.slice(0, 2),
 ])
 
-// imageWidth: number,
-// imageHeight: number,
-// tcodes: TILE_CODES,
-// tcolors: TILE_COLORS,
-// TILE_IMAGE_SIZE
+export function updateTilemapLookup(
+  texture: THREE.DataTexture,
+  width: number,
+  height: number,
+  tcodes: TILE_CODES,
+  tcolors: TILE_COLORS,
+) {
+  const size = width * height * 4
+  for (let i = 0, t = 0; i < size; ++t) {
+    const code = tcodes[t] ?? 0
+    // x, y, color
+    texture.image.data[i++] = code % TILE_FIXED_WIDTH
+    texture.image.data[i++] = Math.floor(code / TILE_FIXED_WIDTH)
+    texture.image.data[i++] = tcolors[t] ?? 0
+    i++
+  }
+  texture.needsUpdate = true
+}
 
 export function createTilemapLookup(
   width: number,
@@ -54,16 +70,10 @@ export function createTilemapLookup(
   tcodes: TILE_CODES,
   tcolors: TILE_COLORS,
 ) {
-  //
-}
-
-export function updateTilemapLookup(
-  width: number,
-  height: number,
-  tcodes: TILE_CODES,
-  tcolors: TILE_COLORS,
-) {
-  //
+  const data = new Uint8Array(4 * width * height)
+  const texture = new THREE.DataTexture(data, width, height)
+  updateTilemapLookup(texture, width, height, tcodes, tcolors)
+  return texture
 }
 
 export function createTilemapQuad(
@@ -90,15 +100,3 @@ export function createTilemapQuad(
   bg.computeBoundingBox()
   bg.computeBoundingSphere()
 }
-
-// export function updateTilemap(
-//   bg: THREE.BufferGeometry,
-//   imageWidth: number,
-//   imageHeight: number,
-//   width: number,
-//   height: number,
-//   tcodes: TILE_CODES,
-//   tcolors: TILE_COLORS,
-// ) {
-//   //
-// }
