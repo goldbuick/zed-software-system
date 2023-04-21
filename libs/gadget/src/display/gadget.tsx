@@ -1,4 +1,5 @@
 import { range } from '@zss/system/mapping/array'
+import { randomInteger } from '@zss/system/mapping/number'
 import { useRenderOnChange } from '@zss/yjs/binding'
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
@@ -7,10 +8,11 @@ import * as Y from 'yjs'
 import { useClipping } from '../clipping'
 import { createGadget, createGL } from '../data/gadget'
 import defaultCharSetUrl from '../img/charset.png'
-import { threeColors } from '../img/colors'
+import { COLOR, threeColors } from '../img/colors'
 import {
   createTilemapBufferGeometry,
   createTilemapDataTexture,
+  writeTilemapDataTexture,
 } from '../img/tilemap'
 import useTexture from '../img/useTexture'
 import { GADGET_LAYER } from '../types'
@@ -35,14 +37,16 @@ const doc = new Y.Doc()
 
 const gadget = createGadget(doc, {})
 
-const chars = range(16 * 16).map((code) => ({
-  code: code % 5 === 0 ? 0 : 1 + (code % 17),
+const charsWidth = 2048
+const charsHeight = 1024
+const chars = range(charsWidth * charsHeight).map((code) => ({
+  code: code % 5 === 0 ? 0 : 1 + (code % 8),
   color: 1 + (code % 31),
 }))
 
 const codesAndColors = createTilemapDataTexture(
-  16,
-  16,
+  charsWidth,
+  charsHeight,
   chars.map((c) => c.code),
   chars.map((c) => c.color),
 )
@@ -84,6 +88,7 @@ export const material = new THREE.ShaderMaterial({
     alt: { value: null },
     data: { value: null },
     colors: { value: threeColors },
+    size: { value: new THREE.Vector2() },
     step: { value: new THREE.Vector2() },
     ox: { value: 0 },
     oy: { value: 0 },
@@ -115,6 +120,7 @@ export const material = new THREE.ShaderMaterial({
     uniform sampler2D alt;
     uniform sampler2D data;
     uniform vec3 colors[32];
+    uniform vec2 size;
     uniform vec2 step;
     uniform float ox;
     uniform float oy;
@@ -122,11 +128,13 @@ export const material = new THREE.ShaderMaterial({
     varying vec2 vUv;
 
     bool isEmpty(sampler2D txt, vec2 uv, vec2 lookup) {
-      float minx = floor(uv.x / step.x) * step.x + ox;
-      float maxx = (floor(uv.x / step.x) + 1.0) * step.x - ox;
+      float tx = floor(uv.x / step.x);
+      float minx = tx * step.x + ox;
+      float maxx = (tx + 1.0) * step.x - ox;
 
-      float miny = floor(uv.y / step.y) * step.y + oy;
-      float maxy = (floor(uv.y / step.y) + 1.0) * step.y - oy;
+      float ty = floor(uv.y / step.y);
+      float miny = ty * step.y + oy;
+      float maxy = (ty + 1.0) * step.y - oy;
 
       float left = clamp(uv.x - ox, minx, maxx);
       float right = clamp(uv.x + ox, minx, maxx);
@@ -157,7 +165,8 @@ export const material = new THREE.ShaderMaterial({
       lookup.y = floor(lookupRange.y * 255.0);
       int ci = int(floor(lookupRange.z * 255.0));
 
-      vec2 uv = mod(vUv, step);
+      vec2 charPosition = mod(vUv, size) / size;
+      vec2 uv = vec2(charPosition.x * step.x, charPosition.y * step.y);
       vec3 color = colors[ci];
 
       uv.x += step.x * lookup.x;
@@ -194,9 +203,30 @@ export function Gadget() {
       return
     }
 
-    createTilemapBufferGeometry(bgRef.current, 16, 16)
+    createTilemapBufferGeometry(bgRef.current, charsWidth, charsHeight)
 
     console.info(bgRef.current, codesAndColors)
+  }, [])
+
+  useEffect(() => {
+    function doot() {
+      for (let i = 0; i < 50000; ++i) {
+        writeTilemapDataTexture(
+          codesAndColors,
+          charsWidth,
+          charsHeight,
+          randomInteger(0, charsWidth - 1),
+          randomInteger(0, charsHeight - 1),
+          randomInteger(0, 255),
+          randomInteger(0, COLOR.MAX - 1),
+        )
+      }
+    }
+
+    const timer = setInterval(doot, 10)
+    return () => {
+      clearInterval(timer)
+    }
   }, [])
 
   const clippingPlanes = useClipping()
@@ -211,6 +241,8 @@ export function Gadget() {
     material.uniforms.data.value = codesAndColors
     material.uniforms.dimmed.value = 0
     material.uniforms.transparent.value = true
+    material.uniforms.size.value.x = 1 / charsWidth
+    material.uniforms.size.value.y = 1 / charsHeight
     material.uniforms.step.value.x = 1 / 16
     material.uniforms.step.value.y = 1 / 16
     material.uniforms.ox.value = (1 / imageWidth) * outline
@@ -220,10 +252,13 @@ export function Gadget() {
     material.needsUpdate = true
   }, [map, clippingPlanes])
 
-  console.info('did render!')
-
+  const scale = 1 //0.03122
   return (
-    <mesh material={material} position={[0, 0, 10]}>
+    <mesh
+      material={material}
+      position={[0, 0, 10]}
+      scale={[scale, scale, scale]}
+    >
       <bufferGeometry ref={bgRef} />
     </mesh>
   )

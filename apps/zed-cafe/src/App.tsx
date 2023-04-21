@@ -120,7 +120,7 @@ export function App() {
             <Framing>
               <Gadget />
             </Framing>
-            {/* <Stats /> */}
+            <Stats />
           </Canvas>
         </div>
       </div>

@@ -19,7 +19,7 @@ a = ?
 
 export const TILE_FIXED_WIDTH = 16
 
-type TILE_CODES = (number | null | undefined)[]
+type TILE_CODES = (number | undefined)[]
 type TILE_COLORS = (number | undefined)[]
 
 const BOTTOM_LEFT = [0, 1, 0]
@@ -46,6 +46,23 @@ const QUAD_UVS = new Float32Array([
   ...TOP_RIGHT.slice(0, 2),
 ])
 
+export function writeTilemapDataTexture(
+  texture: THREE.DataTexture,
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+  tcode: number | undefined,
+  tcolor: number | undefined,
+) {
+  let i = (x + y * width) * 4
+  const code = tcode ?? 0
+  texture.image.data[i++] = code % TILE_FIXED_WIDTH
+  texture.image.data[i++] = Math.floor(code / TILE_FIXED_WIDTH)
+  texture.image.data[i++] = tcolor ?? 16
+  texture.needsUpdate = true
+}
+
 export function updateTilemapDataTexture(
   texture: THREE.DataTexture,
   width: number,
@@ -59,7 +76,7 @@ export function updateTilemapDataTexture(
     // x, y, color
     texture.image.data[i++] = code % TILE_FIXED_WIDTH
     texture.image.data[i++] = Math.floor(code / TILE_FIXED_WIDTH)
-    texture.image.data[i++] = tcolors[t] ?? 0
+    texture.image.data[i++] = tcolors[t] ?? 16
     i++
   }
   texture.needsUpdate = true
