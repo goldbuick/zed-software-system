@@ -2,7 +2,10 @@ import * as THREE from 'three'
 
 import { threeColors } from '../img/colors'
 
-import { TILE_SIZE } from './tiles'
+export const TILE_SIZE = 6
+export const HALF_TILE_SIZE = TILE_SIZE * 0.5
+
+export const TILE_IMAGE_SIZE = 10
 
 export const TILE_FIXED_WIDTH = 16
 
@@ -225,7 +228,7 @@ export const tilemapMaterial = new THREE.ShaderMaterial({
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
 
       if (transparent && blip.r == 0.0) {
-        bool empty = useAlt ? isEmpty(alt, uv, lookup) : isEmpty(map, uv, lookup));
+        bool empty = useAlt ? isEmpty(alt, uv, lookup) : isEmpty(map, uv, lookup);
         if (empty) {
           discard;
         }

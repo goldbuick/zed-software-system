@@ -95,7 +95,7 @@ export function App() {
             shadows={false}
             touch-action="none"
             gl={{
-              alpha: true,
+              alpha: false,
               stencil: false,
               antialias: false,
               precision: 'highp',

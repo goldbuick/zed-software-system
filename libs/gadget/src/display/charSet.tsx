@@ -12,9 +12,9 @@ import {
 import { CHARS } from '../types'
 
 export type CharSetProps = {
-  width?: number
-  height?: number
-  chars?: CHARS
+  width: number
+  height: number
+  chars: CHARS
   dimmed?: boolean // puts this at half opacity
   outline?: boolean // objects use outlined chars
   map: CanvasTexture
@@ -23,9 +23,9 @@ export type CharSetProps = {
 
 export const CharSet = forwardRef<Mesh, CharSetProps>(function (
   {
-    width = 1,
-    height = 1,
-    chars = [],
+    width,
+    height,
+    chars,
     dimmed = false,
     outline = false,
     map,
@@ -35,12 +35,12 @@ export const CharSet = forwardRef<Mesh, CharSetProps>(function (
   forwardedRef,
 ) {
   const material = useMemo(() => createTilemapMaterial(), [])
-  // update data texture with current chars
+  // create/update data texture with current chars
   useLayoutEffect(() => {
     const codes = chars.map((block) => block?.code)
     const colors = chars.map((block) => block?.color)
-
     if (material.uniforms.data.value) {
+      // console.info('update data texture with current chars')
       updateTilemapDataTexture(
         material.uniforms.data.value,
         width,
@@ -49,6 +49,7 @@ export const CharSet = forwardRef<Mesh, CharSetProps>(function (
         colors,
       )
     } else {
+      // console.info('create data texture with current chars')
       material.uniforms.data.value = createTilemapDataTexture(
         width,
         height,
@@ -62,37 +63,36 @@ export const CharSet = forwardRef<Mesh, CharSetProps>(function (
   const bgRef = useRef<BufferGeometry>(null)
   // update single quad to proper size
   useLayoutEffect(() => {
-    if (
-      !bgRef.current ||
-      bgRef.current.attributes.position?.count === width * height * 4
-    ) {
-      return
+    // console.info('update single quad to proper size')
+    const count = bgRef.current?.attributes.position?.count ?? 0
+    if (bgRef.current && count !== width * height * 4) {
+      createTilemapBufferGeometry(bgRef.current, width, height)
     }
-
-    createTilemapBufferGeometry(bgRef.current, width, height)
   }, [width, height])
 
   const clippingPlanes = useClipping()
   const { width: imageWidth = 0, height: imageHeight = 0 } = map.image ?? {}
   // config material
   useEffect(() => {
-    const strokeWidth = 0.8
-    if (map && alt) {
-      material.transparent = dimmed || outline
-      material.uniforms.map.value = map
-      material.uniforms.alt.value = alt
-      material.uniforms.dimmed.value = dimmed
-      material.uniforms.transparent.value = outline
-      material.uniforms.size.value.x = 1 / width
-      material.uniforms.size.value.y = 1 / height
-      material.uniforms.step.value.x = 1 / 16
-      material.uniforms.step.value.y = 1 / 16
-      material.uniforms.ox.value = (1 / imageWidth) * strokeWidth
-      material.uniforms.oy.value = (1 / imageHeight) * strokeWidth
-      material.clipping = clippingPlanes.length > 0
-      material.clippingPlanes = clippingPlanes
-      material.needsUpdate = true
+    if (!map || !alt) {
+      return
     }
+    // console.info('config material')
+    const strokeWidth = 0.8
+    material.transparent = dimmed || outline
+    material.uniforms.map.value = map
+    material.uniforms.alt.value = alt
+    material.uniforms.dimmed.value = dimmed ? 0.5 : 0
+    material.uniforms.transparent.value = outline
+    material.uniforms.size.value.x = 1 / width
+    material.uniforms.size.value.y = 1 / height
+    material.uniforms.step.value.x = 1 / 16
+    material.uniforms.step.value.y = 1 / 16
+    material.uniforms.ox.value = (1 / imageWidth) * strokeWidth
+    material.uniforms.oy.value = (1 / imageHeight) * strokeWidth
+    material.clipping = clippingPlanes.length > 0
+    material.clippingPlanes = clippingPlanes
+    material.needsUpdate = true
   }, [
     map,
     alt,
