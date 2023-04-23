@@ -84,6 +84,7 @@ $ message text " message text
 
   hyperlink = this.RULE('hyperlink', () => {
     this.CONSUME(lexer.HyperLink)
+    this.CONSUME(lexer.HyperLinkText)
   })
 
   words = this.RULE('words', () => {

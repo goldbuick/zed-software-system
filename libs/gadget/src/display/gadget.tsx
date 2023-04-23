@@ -59,9 +59,9 @@ $This is an object named Fred!
 #if contact then !all:bingo;Test A
 #take gems 1000 !fooB;Test B
 #try n !fooC;Test C
-#send self:label
-#self:label
-#label
+#send self:doot
+#self:doot
+#doot
 `)
 console.info(test)
 
