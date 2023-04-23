@@ -115,7 +115,7 @@ export function App() {
               near={1}
               far={2000}
               position={[0, 0, 1000]}
-              zoom={5}
+              zoom={2}
             />
             <Framing>
               <Gadget />

@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 import { threeColors } from '../img/colors'
 
-export const TILE_SIZE = 6
+export const TILE_SIZE = 10
 export const HALF_TILE_SIZE = TILE_SIZE * 0.5
 
 export const TILE_IMAGE_SIZE = 10

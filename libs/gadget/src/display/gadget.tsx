@@ -1,3 +1,4 @@
+import { parser, tokenize } from '@zss/lang'
 import { range } from '@zss/system/mapping/array'
 import { randomInteger } from '@zss/system/mapping/number'
 import { useRenderOnChange } from '@zss/yjs/binding'
@@ -41,6 +42,32 @@ const gadget = createGadget(doc, {})
 
 const charsWidth = 2048
 const charsHeight = 1024
+
+const test = tokenize(`@Fred
+'Objects run their programs right away;
+'the following command will temporarily
+'halt program execution.
+#end
+:touch
+$This is an object named Fred!
+!move;Tell Fred to move around.
+#end
+:move
+/rndp rndne/rndp rndne
+?n?n?n?n?s?s?s?s
+"FRED: I moved around!
+#if contact then !all:bingo;Test A
+#take gems 1000 !fooB;Test B
+#try n !fooC;Test C
+#send self:label
+#self:label
+#label
+`)
+console.info(test)
+
+parser.input = test.tokens
+const cst = parser.program()
+console.info(cst, parser.errors)
 
 export function Gadget() {
   useRenderOnChange(gadget)
@@ -88,6 +115,7 @@ export function Gadget() {
       chars={chars}
       width={charsWidth}
       height={charsHeight}
+      outline
     />
   )
 }

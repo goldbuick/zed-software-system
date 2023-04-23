@@ -5,23 +5,43 @@
     "strict": true,
     "sourceMap": true,
     "declaration": false,
+    "esModuleInterop": true,
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "es2015",
+    "target": "es2020",
     "module": "esnext",
-    "lib": ["es2017", "dom"],
+    "lib": [
+      "es2017",
+      "dom"
+    ],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@zss/gadget": ["libs/gadget/src/index.ts"],
-      "@zss/network/*": ["libs/network/src/*"],
-      "@zss/system/*": ["libs/system/src/*"],
-      "@zss/yjs/*": ["libs/yjs/src/*"]
+      "@zss/gadget": [
+        "libs/gadget/src/index.ts"
+      ],
+      "@zss/lang": [
+        "libs/lang/src/index.ts"
+      ],
+      "@zss/network/*": [
+        "libs/network/src/*"
+      ],
+      "@zss/system/*": [
+        "libs/system/src/*"
+      ],
+      "@zss/yjs/*": [
+        "libs/yjs/src/*"
+      ]
     },
-    "types": ["vite/client"]
+    "types": [
+      "vite/client"
+    ]
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
 }
