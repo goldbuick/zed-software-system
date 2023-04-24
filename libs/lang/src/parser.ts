@@ -23,6 +23,7 @@ class ScriptParser extends CstParser {
   line = this.RULE('line', () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.stmt) },
+      { ALT: () => this.SUBRULE(this.block_lines) },
       { ALT: () => this.CONSUME(lexer.Newline) },
     ])
   })
@@ -31,7 +32,7 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.Indent)
     this.MANY1(() => this.CONSUME2(lexer.Newline))
     this.AT_LEAST_ONE(() => {
-      this.SUBRULE(this.stmt)
+      this.SUBRULE(this.line)
       this.MANY2(() => this.CONSUME4(lexer.Newline))
     })
     this.CONSUME(lexer.Outdent)

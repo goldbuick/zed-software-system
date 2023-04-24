@@ -298,6 +298,8 @@ export const Word = createToken({
 
 function createTokenSet(whitespaceTokens: TokenType[]) {
   return [
+    // structure
+    ...whitespaceTokens,
     // primary tokens
     Attribute,
     Command,
@@ -309,8 +311,6 @@ function createTokenSet(whitespaceTokens: TokenType[]) {
     Label,
     HyperLink,
     HyperLinkText,
-    // structure
-    ...whitespaceTokens,
     // words
     Word,
   ]

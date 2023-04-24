@@ -44,16 +44,11 @@ const charsWidth = 2048
 const charsHeight = 1024
 
 const test = tokenize(`@Fred
-'Objects run their programs right away;
-'the following command will temporarily
-'halt program execution.
-#end
-:touch
-$This is an object named Fred!
-!move;Tell Fred to move around.
-#end
-:move
-/rndp rndne/rndp rndne
+#repeat 3
+  /rndp rndne
+  /rndp rndne
+    /rndp rndne
+    /rndp rndne
 ?n?n?n?n?s?s?s?s
 "FRED: I moved around!
 #if contact then !all:bingo;Test A
