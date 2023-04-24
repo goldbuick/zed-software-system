@@ -57,6 +57,7 @@ const test = tokenize(`@Fred
 #send self:doot
 #self:doot
 #doot
+#set chest 100
 `)
 console.info(test)
 
@@ -110,7 +111,6 @@ export function Gadget() {
       chars={chars}
       width={charsWidth}
       height={charsHeight}
-      outline
     />
   )
 }

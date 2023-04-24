@@ -283,7 +283,7 @@ export const HyperLinkText = createToken({
 
 /*
 
-the remainder is a composition of words
+the remainder is a composition of words and expressions
 
 note to self: ( expressions ) are always within parens 
 cool trick, add expression support to strings: "Hello (player), how are you today? 
@@ -292,13 +292,90 @@ cool trick, add expression support to strings: "Hello (player), how are you toda
 
 export const Word = createToken({
   name: 'Word',
-  pattern: /[^\n\s@#/?$"':!;]+\w*/,
+  pattern: /[_a-zA-Z]\w*/,
   start_chars_hint: all_chars,
+})
+
+export const NumberLiteral = createToken({
+  name: 'NumberLiteral',
+  pattern: /-?(\d*\.)?\d+([eE][+-]?\d+)?[jJ]?[lL]?/,
+})
+
+// comparision
+
+export const IsEq = createToken({
+  name: 'IsEq',
+  pattern: /=|eq/,
+  longer_alt: Word,
+})
+export const IsNotEq = createToken({
+  name: 'IsNotEq',
+  pattern: /!=|noteq/,
+  longer_alt: Word,
+})
+export const IsLessThan = createToken({
+  name: 'IsLessThan',
+  pattern: /<|below/,
+  longer_alt: Word,
+})
+export const IsGreaterThan = createToken({
+  name: 'IsGreaterThan',
+  pattern: />|above/,
+  longer_alt: Word,
+})
+export const IsLessThanOrEqual = createToken({
+  name: 'IsLessThanOrEqual',
+  pattern: /<=|lteq/,
+  longer_alt: Word,
+})
+export const IsGreaterThanOrEqual = createToken({
+  name: 'IsGreaterThanOrEqual',
+  pattern: />=|gteq/,
+  longer_alt: Word,
+})
+
+// logical
+
+export const Or = createToken({
+  name: 'Or',
+  pattern: /or/i,
+  longer_alt: Word,
+})
+export const Not = createToken({
+  name: 'Not',
+  pattern: /not/i,
+  longer_alt: Word,
+})
+export const And = createToken({
+  name: 'And',
+  pattern: /and/i,
+  longer_alt: Word,
+})
+
+// math ops
+
+export const Plus = createToken({ name: 'Plus', pattern: /\+/ })
+export const Minus = createToken({ name: 'Minus', pattern: /-/ })
+export const Power = createToken({ name: 'Power', pattern: /\*\*/ })
+export const Multiply = createToken({ name: 'Multiply', pattern: /\*/ })
+export const ModDivide = createToken({ name: 'ModDivide', pattern: /%/ })
+export const FloorDivide = createToken({ name: 'FloorDivide', pattern: /%%/ })
+
+// grouping
+
+export const LParen = createToken({
+  name: 'LParen',
+  pattern: /\(/,
+  push_mode: 'ignore_newlines',
+})
+export const RParen = createToken({
+  name: 'RParen',
+  pattern: /\)/,
+  pop_mode: true,
 })
 
 function createTokenSet(whitespaceTokens: TokenType[]) {
   return [
-    // structure
     ...whitespaceTokens,
     // primary tokens
     Attribute,
@@ -311,8 +388,24 @@ function createTokenSet(whitespaceTokens: TokenType[]) {
     Label,
     HyperLink,
     HyperLinkText,
-    // words
+    // expressions
+    // logical
+    Or,
+    Not,
+    And,
+    // math ops
+    Plus,
+    Minus,
+    Power,
+    Multiply,
+    FloorDivide,
+    ModDivide,
+    // grouping
+    LParen,
+    RParen,
+    // content
     Word,
+    NumberLiteral,
   ]
 }
 

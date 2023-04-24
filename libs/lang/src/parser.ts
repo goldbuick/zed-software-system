@@ -88,11 +88,155 @@ $ message text " message text
     this.CONSUME(lexer.HyperLinkText)
   })
 
+  word = this.RULE('word', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.Word) },
+      { ALT: () => this.CONSUME(lexer.NumberLiteral) },
+      { ALT: () => this.SUBRULE(this.expr) },
+    ])
+  })
+
   words = this.RULE('words', () => {
-    this.AT_LEAST_ONE(() => {
-      this.CONSUME(lexer.Word)
+    this.AT_LEAST_ONE(() => this.SUBRULE(this.word))
+  })
+
+  // expressions
+
+  // expr root is or_test
+  expr = this.RULE('expr', () => {
+    this.CONSUME(lexer.LParen)
+    this.SUBRULE1(this.and_test)
+    this.MANY(() => {
+      this.CONSUME(lexer.Or)
+      this.SUBRULE2(this.and_test)
+    })
+    this.CONSUME(lexer.RParen)
+  })
+
+  and_test = this.RULE('and_test', () => {
+    this.SUBRULE1(this.not_test)
+    this.MANY(() => {
+      this.CONSUME(lexer.And)
+      this.SUBRULE2(this.not_test)
     })
   })
+
+  not_test = this.RULE('not_test', () => {
+    this.OR([
+      {
+        ALT: () => {
+          this.CONSUME(lexer.Not)
+          this.SUBRULE1(this.not_test)
+        },
+      },
+      { ALT: () => this.SUBRULE2(this.comparison) },
+    ])
+  })
+
+  comparison = this.RULE('comparison', () => {
+    this.SUBRULE1(this.arith_expr)
+    this.MANY(() => {
+      this.SUBRULE(this.comp_op)
+      this.SUBRULE2(this.arith_expr)
+    })
+  })
+
+  comp_op = this.RULE('comp_op', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.IsEq) },
+      { ALT: () => this.CONSUME(lexer.IsNotEq) },
+      { ALT: () => this.CONSUME(lexer.IsLessThan) },
+      { ALT: () => this.CONSUME(lexer.IsGreaterThan) },
+      { ALT: () => this.CONSUME(lexer.IsLessThanOrEqual) },
+      { ALT: () => this.CONSUME(lexer.IsGreaterThanOrEqual) },
+    ])
+  })
+
+  expr_value = this.RULE('expr_value', () => {
+    this.SUBRULE1(this.and_test_value)
+    this.MANY(() => {
+      this.CONSUME(lexer.Or)
+      this.SUBRULE2(this.and_test_value)
+    })
+  })
+
+  and_test_value = this.RULE('and_test_value', () => {
+    this.SUBRULE1(this.not_test_value)
+    this.MANY(() => {
+      this.CONSUME(lexer.And)
+      this.SUBRULE2(this.not_test_value)
+    })
+  })
+
+  not_test_value = this.RULE('not_test_value', () => {
+    this.OR([
+      {
+        ALT: () => {
+          this.CONSUME(lexer.Not)
+          this.SUBRULE1(this.not_test_value)
+        },
+      },
+      { ALT: () => this.SUBRULE2(this.arith_expr) },
+    ])
+  })
+
+  arith_expr = this.RULE('arith_expr', () => {
+    this.SUBRULE1(this.term)
+    this.MANY(() => this.SUBRULE2(this.arith_expr_item))
+  })
+
+  arith_expr_item = this.RULE('arith_expr_item', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.Plus) },
+      { ALT: () => this.CONSUME(lexer.Minus) },
+    ])
+    this.SUBRULE(this.term)
+  })
+
+  term = this.RULE('term', () => {
+    this.SUBRULE1(this.factor)
+    this.MANY(() => this.SUBRULE2(this.term_item))
+  })
+
+  term_item = this.RULE('term_item', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.Multiply) },
+      { ALT: () => this.CONSUME(lexer.Go) },
+      { ALT: () => this.CONSUME(lexer.ModDivide) },
+      { ALT: () => this.CONSUME(lexer.FloorDivide) },
+    ])
+    this.SUBRULE(this.factor)
+  })
+
+  factor = this.RULE('factor', () => {
+    this.OR1([
+      {
+        ALT: () => {
+          this.OR2([
+            { ALT: () => this.CONSUME(lexer.Plus) },
+            { ALT: () => this.CONSUME(lexer.Minus) },
+          ])
+          this.SUBRULE(this.factor)
+        },
+      },
+      { ALT: () => this.SUBRULE(this.power) },
+    ])
+  })
+
+  power = this.RULE('power', () => {
+    this.SUBRULE(this.words)
+    this.OPTION(() => {
+      this.CONSUME(lexer.Power)
+      this.SUBRULE(this.factor)
+    })
+  })
+
+  // atom = this.RULE('atom', () => {
+  //   this.OR([
+  //     { ALT: () => this.SUBRULE(this.expr) },
+  //     { ALT: () => this.SUBRULE(this.words) },
+  //   ])
+  // })
 }
 
 export const parser = new ScriptParser()
