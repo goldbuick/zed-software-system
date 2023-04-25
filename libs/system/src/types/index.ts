@@ -1,3 +1,8 @@
+import { Map as YMap } from 'yjs'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type MAYBE_MAP = YMap<any> | undefined
+
 export enum DIR {
   NONE,
   UP,

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { MAYBE_MAP } from '@zss/system/types'
 import { nanoid } from 'nanoid'
 import * as Y from 'yjs'
 
@@ -12,21 +14,21 @@ import { GADGET_LAYER } from '../types'
 
 // COMMON for all layers
 
-export function getLId(layer: Y.Map<any>): string {
-  return layer.get('id') || ''
+export function getLId(layer: MAYBE_MAP): string {
+  return layer?.get('id') || ''
 }
 
-export function getLType(layer: Y.Map<any>): GADGET_LAYER {
-  return layer.get('type') || GADGET_LAYER.BLANK
+export function getLType(layer: MAYBE_MAP): GADGET_LAYER {
+  return layer?.get('type') || GADGET_LAYER.BLANK
 }
 
 // COMMON for TILES & SPRITES LAYERS
-export function setLCharSet(layer: Y.Map<number>, id: string) {
+export function setLCharSet(layer: MAYBE_MAP, id: string) {
   //
 }
 
-export function setLDimmed(layer: Y.Map<boolean>, dimmed: boolean) {
-  layer.set('dimmed', dimmed)
+export function setLDimmed(layer: MAYBE_MAP, dimmed: boolean) {
+  layer?.set('dimmed', dimmed)
 }
 
 // TILES LAYER
@@ -35,22 +37,46 @@ export type TLDefault = {
   id?: string
   width: number
   height: number
+  chars?: number[]
+  colors?: number[]
 }
 
-export function createTL(create: TLDefault) {
+function createMapFromArray(values?: number[]) {
+  const map = new Y.Map<any>()
+  if (!values) {
+    return map
+  }
+
+  for (let i = 0; i < values.length; ++i) {
+    map.set(i.toString(), values[i])
+  }
+  return map
+}
+
+export function createTL(layers: MAYBE_MAP, create: TLDefault) {
+  if (!layers) {
+    return
+  }
+
+  const id = create.id || nanoid()
   const layer = new Y.Map<any>()
 
-  layer.set('id', create.id || nanoid())
+  layer.set('id', id)
   layer.set('type', GADGET_LAYER.TILES)
   layer.set('width', create.width)
   layer.set('height', create.height)
-  layer.set('chars', new Y.Map<any>())
-  layer.set('colors', new Y.Map<any>())
+  layer.set('chars', createMapFromArray(create.chars))
+  layer.set('colors', createMapFromArray(create.colors))
 
+  layers.set(id, layer)
   return layer
 }
 
-export function setTLSize(layer: Y.Map<any>, width: number, height: number) {
+export function setTLSize(layer: MAYBE_MAP, width: number, height: number) {
+  if (!layer) {
+    return
+  }
+
   layer.set('width', width)
   layer.set('height', height)
   // do we do shit with chars & colors ??
@@ -58,11 +84,15 @@ export function setTLSize(layer: Y.Map<any>, width: number, height: number) {
 }
 
 export function setTLChar(
-  layer: Y.Map<any>,
+  layer: MAYBE_MAP,
   x: number,
   y: number,
   char: number,
 ) {
+  if (!layer) {
+    return
+  }
+
   const width: number = layer.get('width')
   const height: number = layer.get('height')
   const chars: Y.Map<any> = layer.get('chars')
@@ -77,15 +107,19 @@ export function setTLChar(
   ) {
     return
   }
-  chars.set(`${x + y * width}`, char)
+  chars.set((x + y * width).toString(), char)
 }
 
 export function setTLColor(
-  layer: Y.Map<any>,
+  layer: MAYBE_MAP,
   x: number,
   y: number,
   color: number,
 ) {
+  if (!layer) {
+    return
+  }
+
   const width: number = layer.get('width')
   const height: number = layer.get('height')
   const colors: Y.Map<any> = layer.get('colors')
@@ -100,7 +134,7 @@ export function setTLColor(
   ) {
     return
   }
-  colors.set(`${x + y * width}`, color)
+  colors.set((x + y * width).toString(), color)
 }
 
 // SPRITES LAYER
@@ -109,13 +143,19 @@ export type SLDefault = {
   id?: string
 }
 
-export function createSL(create: SLDefault) {
+export function createSL(layers: MAYBE_MAP, create: SLDefault) {
+  if (!layers) {
+    return
+  }
+
+  const id = create.id || nanoid()
   const layer = new Y.Map<any>()
 
-  layer.set('id', create.id || nanoid())
+  layer.set('id', id)
   layer.set('type', GADGET_LAYER.SPRITES)
   layer.set('sprites', new Y.Map<any>())
 
+  layers.set(id, layer)
   return layer
 }
 
@@ -127,27 +167,33 @@ type SLSpriteDefault = {
   color: number
 }
 
-export function createSLSprite(create: SLSpriteDefault) {
-  const layer = new Y.Map<any>()
+export function createSLSprite(layer: MAYBE_MAP, create: SLSpriteDefault) {
+  if (!layer) {
+    return
+  }
 
-  layer.set('id', create.id || nanoid())
-  layer.set('x', create.x)
-  layer.set('y', create.y)
-  layer.set('char', create.char)
-  layer.set('color', create.color)
+  const id = create.id || nanoid()
+  const sprite = new Y.Map<any>()
 
-  return layer
+  sprite.set('id', id)
+  sprite.set('x', create.x)
+  sprite.set('y', create.y)
+  sprite.set('char', create.char)
+  sprite.set('color', create.color)
+
+  layer.set(id, sprite)
+  return sprite
 }
 
-export function setSLSpriteXY(sprite: Y.Map<any>, x: number, y: number) {
-  sprite.set('x', x)
-  sprite.set('y', y)
+export function setSLSpriteXY(sprite: MAYBE_MAP, x: number, y: number) {
+  sprite?.set('x', x)
+  sprite?.set('y', y)
 }
 
-export function setSLSpriteChar(sprite: Y.Map<any>, char: number) {
-  sprite.set('char', char)
+export function setSLSpriteChar(sprite: MAYBE_MAP, char: number) {
+  sprite?.set('char', char)
 }
 
-export function setSLSpriteColor(sprite: Y.Map<any>, color: number) {
-  sprite.set('color', color)
+export function setSLSpriteColor(sprite: MAYBE_MAP, color: number) {
+  sprite?.set('color', color)
 }

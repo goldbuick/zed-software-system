@@ -1,24 +1,14 @@
-import { parser, tokenize } from '@zss/lang'
-import { range } from '@zss/system/mapping/array'
-import { randomInteger } from '@zss/system/mapping/number'
 import { useRenderOnChange } from '@zss/yjs/binding'
-import { useEffect, useRef, useState } from 'react'
-import * as THREE from 'three'
+import React, { useLayoutEffect } from 'react'
 import * as Y from 'yjs'
 
-import { useClipping } from '../clipping'
-import { createGadget, createGL } from '../data/gadget'
-import defaultCharSetUrl from '../img/charset.png'
-import { COLOR, threeColors } from '../img/colors'
-import {
-  createTilemapBufferGeometry,
-  createTilemapDataTexture,
-  writeTilemapDataTexture,
-} from '../img/tilemap'
-import useTexture from '../img/useTexture'
+import { createGadget, getGLids, getGLs, getGL } from '../data/gadget'
+import { createTL, getLType } from '../data/layer'
 import { GADGET_LAYER } from '../types'
 
-import { CharSet } from './charSet'
+import { Gui } from './gui'
+import { Sprites } from './sprites'
+import { Tiles } from './tiles'
 
 /*
 
@@ -28,7 +18,8 @@ What is a gadget ??
 * a collection of layers
 * there are different kinds of layers
   * tilemap (xy coords that match width & height of gadget)
-  * objects (indivial outlined chars with xy coords with animated transitions)
+  * objects (indivial outlined chars with xy coords with animated transitions) 
+    * (going to try and use point sprite material for this)
   * input elements (button, radio button, text input, code edit, with animated transitions)
 
 For the input elements, the point IS for them to manipulate the state of the Y.Map
@@ -37,80 +28,39 @@ even for buttons being pressed etc, a text input etc ..
 */
 
 const doc = new Y.Doc()
-
 const gadget = createGadget(doc, {})
-
-const charsWidth = 2048
-const charsHeight = 1024
-
-const test = tokenize(`@Fred
-#repeat 3
-  /rndp rndne
-  /rndp rndne
-    /rndp rndne
-    /rndp rndne
-?n?n?n?n?s?s?s?s
-"FRED: I moved around!
-#if contact then !all:bingo;Test A
-#take gems 1000 !fooB;Test B
-#try n !fooC;Test C
-#send self:doot
-#self:doot
-#doot
-#set chest 100
-`)
-console.info(test)
-
-parser.input = test.tokens
-const cst = parser.program()
-console.info(cst, parser.errors)
 
 export function Gadget() {
   useRenderOnChange(gadget)
 
-  const [chars, setChars] = useState(() =>
-    range(charsWidth * charsHeight).map((code) => ({
-      code: 33 + (code % 200),
-      color: 1 + (code % 15),
-    })),
-  )
-
-  useEffect(() => {
-    const testLayer = createGL(gadget, GADGET_LAYER.TILES, {
+  useLayoutEffect(() => {
+    const testLayer = createTL(getGLs(gadget), {
       width: 16,
       height: 16,
+      chars: new Array(16 * 16).fill(1),
+      colors: new Array(16 * 16).fill(1),
     })
   }, [])
 
-  useEffect(() => {
-    function doot() {
-      // setChars((state) => {
-      //   for (let i = 0; i < 100000; ++i) {
-      //     const x = randomInteger(0, charsWidth - 1)
-      //     const y = randomInteger(0, charsHeight - 1)
-      //     const c = x + y * charsWidth
-      //     state[c].code = randomInteger(0, 255)
-      //     state[c].color = randomInteger(1, COLOR.MAX - 1)
-      //   }
-      //   return state.slice()
-      // })
-    }
+  // const map = useTexture(defaultCharSetUrl)
 
-    const timer = setInterval(doot, 1000)
-    return () => {
-      clearInterval(timer)
-    }
-  }, [])
-
-  const map = useTexture(defaultCharSetUrl)
-
+  const layerIds = getGLids(gadget)
   return (
-    <CharSet
-      map={map}
-      alt={map}
-      chars={chars}
-      width={charsWidth}
-      height={charsHeight}
-    />
+    <>
+      {layerIds.map((id) => {
+        const layer = getGL(gadget, id)
+        switch (getLType(layer)) {
+          case GADGET_LAYER.GUI:
+            return <Gui key={id} id={id} layer={layer} />
+          case GADGET_LAYER.TILES:
+            return <Tiles key={id} id={id} layer={layer} />
+          case GADGET_LAYER.SPRITES:
+            return <Sprites key={id} id={id} layer={layer} />
+          default:
+          case GADGET_LAYER.BLANK:
+            return <React.Fragment key={id} />
+        }
+      })}
+    </>
   )
 }
