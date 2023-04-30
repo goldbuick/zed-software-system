@@ -38,16 +38,6 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.Outdent)
   })
 
-  /*
-@ attribute
-# command
-/ movement ? movement
-$ message text " message text 
-' comment
-: label
-! hyperlink
-  */
-
   stmt = this.RULE('stmt', () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.multi_stmt) },
@@ -230,13 +220,6 @@ $ message text " message text
       this.SUBRULE(this.factor)
     })
   })
-
-  // atom = this.RULE('atom', () => {
-  //   this.OR([
-  //     { ALT: () => this.SUBRULE(this.expr) },
-  //     { ALT: () => this.SUBRULE(this.words) },
-  //   ])
-  // })
 }
 
 export const parser = new ScriptParser()
