@@ -2,14 +2,14 @@ import * as THREE from 'three'
 
 import { threeColors } from '../img/colors'
 
-export const TILE_SIZE = 10
+export const TILE_SIZE = 20
 export const HALF_TILE_SIZE = TILE_SIZE * 0.5
 
 export const TILE_IMAGE_SIZE = 10
 
 export const TILE_FIXED_WIDTH = 16
 
-type TILE_CODES = (number | undefined)[]
+type TILE_CHARS = (number | undefined)[]
 type TILE_COLORS = (number | undefined)[]
 
 const BOTTOM_LEFT = [0, 1, 0]
@@ -42,13 +42,13 @@ export function writeTilemapDataTexture(
   height: number,
   x: number,
   y: number,
-  tcode: number | undefined,
+  tchar: number | undefined,
   tcolor: number | undefined,
 ) {
   let i = (x + y * width) * 4
-  const code = tcode ?? 0
-  texture.image.data[i++] = code % TILE_FIXED_WIDTH
-  texture.image.data[i++] = Math.floor(code / TILE_FIXED_WIDTH)
+  const char = tchar ?? 0
+  texture.image.data[i++] = char % TILE_FIXED_WIDTH
+  texture.image.data[i++] = Math.floor(char / TILE_FIXED_WIDTH)
   texture.image.data[i++] = tcolor ?? 16
   texture.needsUpdate = true
 }
@@ -57,15 +57,15 @@ export function updateTilemapDataTexture(
   texture: THREE.DataTexture,
   width: number,
   height: number,
-  tcodes: TILE_CODES,
+  tchars: TILE_CHARS,
   tcolors: TILE_COLORS,
 ) {
   const size = width * height * 4
   for (let i = 0, t = 0; i < size; ++t) {
-    const code = tcodes[t] ?? 0
+    const char = tchars[t] ?? 0
     // x, y, color
-    texture.image.data[i++] = code % TILE_FIXED_WIDTH
-    texture.image.data[i++] = Math.floor(code / TILE_FIXED_WIDTH)
+    texture.image.data[i++] = char % TILE_FIXED_WIDTH
+    texture.image.data[i++] = Math.floor(char / TILE_FIXED_WIDTH)
     texture.image.data[i++] = tcolors[t] ?? 16
     i++
   }
@@ -76,12 +76,12 @@ export function updateTilemapDataTexture(
 export function createTilemapDataTexture(
   width: number,
   height: number,
-  tcodes: TILE_CODES,
+  tchars: TILE_CHARS,
   tcolors: TILE_COLORS,
 ) {
   const data = new Uint8Array(4 * width * height)
   const texture = new THREE.DataTexture(data, width, height)
-  return updateTilemapDataTexture(texture, width, height, tcodes, tcolors)
+  return updateTilemapDataTexture(texture, width, height, tchars, tcolors)
 }
 
 export function createTilemapBufferGeometry(

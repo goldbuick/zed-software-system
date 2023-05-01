@@ -1,10 +1,12 @@
+import { randomInteger } from '@zss/system/mapping/number'
 import { useRenderOnChange } from '@zss/yjs/binding'
 import React, { useLayoutEffect } from 'react'
 import * as Y from 'yjs'
 
 import { createGadget, getGLids, getGLs, getGL } from '../data/gadget'
-import { createTL, getLType } from '../data/layer'
-import { GADGET_LAYER } from '../types'
+import { createTL, getLType, setTLChar, setTLColor } from '../data/layer'
+import { GADGET_LAYER } from '../data/types'
+import { COLOR } from '../img/colors'
 
 import { Gui } from './gui'
 import { Sprites } from './sprites'
@@ -31,19 +33,46 @@ const doc = new Y.Doc()
 const gadget = createGadget(doc, {})
 
 export function Gadget() {
-  useRenderOnChange(gadget)
-
+  // test code begin
   useLayoutEffect(() => {
     const testLayer = createTL(getGLs(gadget), {
       width: 16,
       height: 16,
       chars: new Array(16 * 16).fill(1),
-      colors: new Array(16 * 16).fill(1),
+      colors: new Array(16 * 16).fill(COLOR.DARK_GREY),
     })
+
+    const ds = 0.01
+    const os = 0.005
+    let offset = 0
+    const timer = setInterval(() => {
+      doc.transact(() => {
+        for (let i = 0; i < 50; ++i) {
+          setTLColor(
+            testLayer,
+            randomInteger(0, 15),
+            randomInteger(0, 15),
+            randomInteger(1, COLOR.MAX - 1),
+          )
+          const x = randomInteger(0, 15)
+          const y = randomInteger(0, 15)
+          setTLChar(
+            testLayer,
+            x,
+            y,
+            Math.round(Math.cos(x * ds + y * 0.5 * ds + offset * os) * 255),
+          )
+        }
+      })
+      ++offset
+    }, 10)
+    return () => {
+      clearInterval(timer)
+    }
   }, [])
+  // test code end
 
-  // const map = useTexture(defaultCharSetUrl)
-
+  useRenderOnChange(getGLs(gadget))
   const layerIds = getGLids(gadget)
   return (
     <>
@@ -64,3 +93,5 @@ export function Gadget() {
     </>
   )
 }
+
+// const map = useTexture(defaultCharSetUrl)

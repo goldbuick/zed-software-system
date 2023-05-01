@@ -9,12 +9,12 @@ import {
   createTilemapMaterial,
   updateTilemapDataTexture,
 } from '../img/tilemap'
-import { CHARS } from '../types'
 
 export type CharSetProps = {
   width: number
   height: number
-  chars: CHARS
+  chars: number[]
+  colors: number[]
   dimmed?: boolean // puts this at half opacity
   outline?: boolean // objects use outlined chars
   map: CanvasTexture
@@ -26,6 +26,7 @@ export const CharSet = forwardRef<Mesh, CharSetProps>(function (
     width,
     height,
     chars,
+    colors,
     dimmed = false,
     outline = false,
     map,
@@ -37,15 +38,13 @@ export const CharSet = forwardRef<Mesh, CharSetProps>(function (
   const material = useMemo(() => createTilemapMaterial(), [])
   // create/update data texture with current chars
   useLayoutEffect(() => {
-    const codes = chars.map((block) => block?.code)
-    const colors = chars.map((block) => block?.color)
     if (material.uniforms.data.value) {
       // console.info('update data texture with current chars')
       updateTilemapDataTexture(
         material.uniforms.data.value,
         width,
         height,
-        codes,
+        chars,
         colors,
       )
     } else {
@@ -53,12 +52,12 @@ export const CharSet = forwardRef<Mesh, CharSetProps>(function (
       material.uniforms.data.value = createTilemapDataTexture(
         width,
         height,
-        codes,
+        chars,
         colors,
       )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [width, height, chars])
+  }, [width, height, chars, colors])
 
   const bgRef = useRef<BufferGeometry>(null)
   // update single quad to proper size

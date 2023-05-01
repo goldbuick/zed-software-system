@@ -3,7 +3,7 @@ import { MAYBE_MAP } from '@zss/system/types'
 import { nanoid } from 'nanoid'
 import * as Y from 'yjs'
 
-import { GADGET_LAYER } from '../types'
+import { GADGET_LAYER } from './types'
 
 /*
  * there are different kinds of layers
@@ -23,12 +23,20 @@ export function getLType(layer: MAYBE_MAP): GADGET_LAYER {
 }
 
 // COMMON for TILES & SPRITES LAYERS
-export function setLCharSet(layer: MAYBE_MAP, id: string) {
-  //
+export function setLCharSet(layer: MAYBE_MAP, charSet: string) {
+  layer?.set('charSet', charSet)
+}
+
+export function getLCharSet(layer: MAYBE_MAP): string {
+  return layer?.get('charSet') || ''
 }
 
 export function setLDimmed(layer: MAYBE_MAP, dimmed: boolean) {
   layer?.set('dimmed', dimmed)
+}
+
+export function getLDimmed(layer: MAYBE_MAP): boolean {
+  return layer?.get('dimmed') || false
 }
 
 // TILES LAYER
