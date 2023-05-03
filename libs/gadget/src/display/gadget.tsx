@@ -35,37 +35,48 @@ const gadget = createGadget(doc, {})
 export function Gadget() {
   // test code begin
   useLayoutEffect(() => {
-    const testLayer = createTL(getGLs(gadget), {
+    const test = createTL({
       width: 16,
       height: 16,
       chars: new Array(16 * 16).fill(1),
       colors: new Array(16 * 16).fill(COLOR.DARK_GREY),
     })
+    getGLs(gadget)?.set(test.id, test.layer)
 
     const ds = 0.01
     const os = 0.005
     let offset = 0
     const timer = setInterval(() => {
-      doc.transact(() => {
-        for (let i = 0; i < 50; ++i) {
-          setTLColor(
-            testLayer,
-            randomInteger(0, 15),
-            randomInteger(0, 15),
-            randomInteger(1, COLOR.MAX - 1),
-          )
-          const x = randomInteger(0, 15)
-          const y = randomInteger(0, 15)
-          setTLChar(
-            testLayer,
-            x,
-            y,
-            Math.round(Math.cos(x * ds + y * 0.5 * ds + offset * os) * 255),
-          )
-        }
-      })
+      // doc.transact(() => {
+      // for (let i = 0; i < 50; ++i) {
+      //   setTLColor(
+      //     test.layer,
+      //     randomInteger(0, 15),
+      //     randomInteger(0, 15),
+      //     randomInteger(1, COLOR.MAX - 1),
+      //   )
+      //   const x = randomInteger(0, 15)
+      //   const y = randomInteger(0, 15)
+      //   setTLChar(
+      //     test.layer,
+      //     x,
+      //     y,
+      //     Math.round(Math.cos(x * ds + y * 0.5 * ds + offset * os) * 255),
+      //   )
+      // }
+      // })
       ++offset
     }, 10)
+    setTimeout(() => {
+      doc.transact(() => {
+        setTLChar(
+          test.layer,
+          randomInteger(0, 15),
+          randomInteger(0, 15),
+          randomInteger(1, 15),
+        )
+      })
+    }, 5000)
     return () => {
       clearInterval(timer)
     }
