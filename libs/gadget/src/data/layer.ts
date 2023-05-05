@@ -115,7 +115,8 @@ export function setTLColor(
   ) {
     return
   }
-  setMapGridValue(colors, width, x, y, colors)
+
+  setMapGridValue(colors, width, x, y, color)
 }
 
 // SPRITES LAYER

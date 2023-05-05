@@ -1,6 +1,6 @@
 import { randomInteger } from '@zss/system/mapping/number'
 import { useRenderOnChange } from '@zss/yjs/binding'
-import React, { useLayoutEffect } from 'react'
+import React, { useEffect, useLayoutEffect } from 'react'
 import * as Y from 'yjs'
 
 import { createGadget, getGLids, getGLs, getGL } from '../data/gadget'
@@ -47,43 +47,28 @@ export function Gadget() {
     const os = 0.005
     let offset = 0
     const timer = setInterval(() => {
-      // doc.transact(() => {
-      // for (let i = 0; i < 50; ++i) {
-      //   setTLColor(
-      //     test.layer,
-      //     randomInteger(0, 15),
-      //     randomInteger(0, 15),
-      //     randomInteger(1, COLOR.MAX - 1),
-      //   )
-      //   const x = randomInteger(0, 15)
-      //   const y = randomInteger(0, 15)
-      //   setTLChar(
-      //     test.layer,
-      //     x,
-      //     y,
-      //     Math.round(Math.cos(x * ds + y * 0.5 * ds + offset * os) * 255),
-      //   )
-      // }
-      // })
-      ++offset
-    }, 10)
-    setTimeout(() => {
       doc.transact(() => {
-        setTLChar(
-          test.layer,
-          randomInteger(0, 15),
-          randomInteger(0, 15),
-          randomInteger(1, 15),
-        )
+        for (let i = 0; i < 5000; ++i) {
+          const x = randomInteger(0, 15)
+          const y = randomInteger(0, 15)
+          setTLColor(test.layer, x, y, randomInteger(1, COLOR.MAX - 1))
+          setTLChar(
+            test.layer,
+            x,
+            y,
+            Math.round(Math.cos(x * ds + y * 0.5 * ds + offset * os) * 255),
+          )
+        }
       })
-    }, 5000)
-    return () => {
-      clearInterval(timer)
-    }
+      ++offset
+      console.log(offset)
+    }, 10)
+    return () => clearInterval(timer)
   }, [])
   // test code end
 
   useRenderOnChange(getGLs(gadget))
+
   const layerIds = getGLids(gadget)
   return (
     <>

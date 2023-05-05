@@ -52,8 +52,9 @@ export function setMapGridValue<T>(
   y: number,
   value: T,
 ) {
-  const map = grid?.get(`${x + y * width}`) as MAYBE_MAP
-  map?.set('value', value)
+  // const map = grid?.get(`${x + y * width}`) as MAYBE_MAP
+  // map?.set('value', value)
+  grid?.set(`${x + y * width}`, createMapFromObject({ value }))
 }
 
 export function getMapGridValuesFromJSON(json: JSON | undefined) {
