@@ -1,7 +1,10 @@
-import { Map as YMap } from 'yjs'
+import * as Y from 'yjs'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type MAYBE_MAP = YMap<any> | undefined
+export type MAYBE_MAP = Y.Map<any> | undefined
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type MAYBE_ARRAY = Y.Array<any> | undefined
 
 export enum DIR {
   NONE,

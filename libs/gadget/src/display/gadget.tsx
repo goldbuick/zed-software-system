@@ -48,7 +48,7 @@ export function Gadget() {
     let offset = 0
     const timer = setInterval(() => {
       doc.transact(() => {
-        for (let i = 0; i < 5000; ++i) {
+        for (let i = 0; i < 1; ++i) {
           const x = randomInteger(0, 15)
           const y = randomInteger(0, 15)
           setTLColor(test.layer, x, y, randomInteger(1, COLOR.MAX - 1))
@@ -61,7 +61,7 @@ export function Gadget() {
         }
       })
       ++offset
-      console.log(offset)
+      // console.log(offset)
     }, 10)
     return () => clearInterval(timer)
   }, [])
