@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as Y from 'yjs'
 
-import { MAYBE_ARRAY, MAYBE_MAP } from '../types'
+import { MAYBE_ARRAY, MAYBE_MAP } from './types'
 
 export function createMapFromObject(object: any) {
   const map = new Y.Map<any>()
@@ -15,10 +15,6 @@ export function createMapFromObject(object: any) {
   return map
 }
 
-// static from<T_1 extends string | number | any[] | Uint8Array | {
-//   [x: string]: any;
-// } | null>(items: T_1[]): YArray<T_1>;
-
 export function createMapGrid<T extends string | number | null>(
   width: number,
   height: number,
@@ -31,8 +27,8 @@ export function createMapGrid<T extends string | number | null>(
   map.set(
     'values',
     Y.Array.from(
-      data.map((item) => {
-        return Y.Array.from([item])
+      data.map((value, index) => {
+        return { value, index }
       }),
     ),
   )
@@ -68,19 +64,23 @@ export function setMapGridValue<T>(
 ) {
   const index = x + y * width
   const values = grid?.get('values') as MAYBE_ARRAY
-  const items = values?.get(index) as MAYBE_ARRAY
-  const length = items?.length ?? 0
-  items?.push([value])
-  if (length > 5) {
-    items?.delete(0, length - 1)
-  }
-  // todo add cleanup
+  // @ts-expect-error doot
+  values?.push({ value, index })
 }
 
-export function getMapGridValuesFromJSON(json: any): any[] {
-  if (json?.values !== undefined) {
-    const values = json.values as [[number]]
-    return values.map((item) => item.slice(-1)[0])
+export function getMapGridValues<T>(grid: MAYBE_MAP) {
+  const width = getMapGridWidth(grid)
+  const height = getMapGridHeight(grid)
+  const array = grid?.get('values') as MAYBE_ARRAY
+
+  const values: T[] = new Array(width * height || 1).fill(undefined)
+
+  if (array) {
+    for (const item of array) {
+      // todo, detect dupes
+      values[item.index] = item.value
+    }
   }
-  return []
+
+  return values
 }

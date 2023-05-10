@@ -1,6 +1,6 @@
 import { randomInteger } from '@zss/system/mapping/number'
 import { useRenderOnChange } from '@zss/yjs/binding'
-import React, { useEffect, useLayoutEffect } from 'react'
+import React, { useLayoutEffect } from 'react'
 import * as Y from 'yjs'
 
 import { createGadget, getGLids, getGLs, getGL } from '../data/gadget'

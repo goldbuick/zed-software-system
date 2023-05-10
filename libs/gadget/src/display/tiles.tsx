@@ -1,5 +1,5 @@
-import { getMapGridValuesFromJSON } from '@zss/system/mapping/yjs'
 import { useRenderOnChangeDeep } from '@zss/yjs/binding'
+import { getMapGridValues } from '@zss/yjs/mapping'
 
 import useTexture from '../img/useTexture'
 
@@ -13,12 +13,12 @@ export function Tiles({ id, layer }: LayerProps) {
   // test code end
   useRenderOnChangeDeep(layer)
 
-  const data = layer?.toJSON()
-  const width = data?.width ?? 1
-  const height = data?.height ?? 1
-  const dimmed = data?.dimmed ?? false
-  const chars: number[] = getMapGridValuesFromJSON(data?.chars)
-  const colors: number[] = getMapGridValuesFromJSON(data?.colors)
+  // const data = layer?.toJSON()
+  // const width = data?.width ?? 1
+  // const height = data?.height ?? 1
+  // const dimmed = data?.dimmed ?? false
+  // const chars: number[] = getMapGridValuesFromJSON(data?.chars)
+  // const colors: number[] = getMapGridValuesFromJSON(data?.colors)
 
   return (
     <CharSet

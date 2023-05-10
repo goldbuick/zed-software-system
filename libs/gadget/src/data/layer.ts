@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createMapGrid, setMapGridValue } from '@zss/system/mapping/yjs'
-import { MAYBE_MAP } from '@zss/system/types'
+import { createMapGrid, setMapGridValue } from '@zss/yjs/mapping'
+import { MAYBE_MAP } from '@zss/yjs/types'
 import { nanoid } from 'nanoid'
 import * as Y from 'yjs'
 
