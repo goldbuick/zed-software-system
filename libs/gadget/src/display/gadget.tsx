@@ -4,7 +4,13 @@ import React, { useLayoutEffect } from 'react'
 import * as Y from 'yjs'
 
 import { createGadget, getGLids, getGLs, getGL } from '../data/gadget'
-import { createTL, getLType, setTLChar, setTLColor } from '../data/layer'
+import {
+  createTL,
+  getLType,
+  setTLChar,
+  setTLColor,
+  writeTL,
+} from '../data/layer'
 import { GADGET_LAYER } from '../data/types'
 import { COLOR } from '../img/colors'
 
@@ -32,37 +38,53 @@ even for buttons being pressed etc, a text input etc ..
 const doc = new Y.Doc()
 const gadget = createGadget(doc, {})
 
+const TEST_RATE = 100
+const TEST_WIDTH = 80
+const TEST_HEIGHT = 45
+
 export function Gadget() {
   // test code begin
   useLayoutEffect(() => {
     const test = createTL({
-      width: 16,
-      height: 16,
-      chars: new Array(16 * 16).fill(1),
-      colors: new Array(16 * 16).fill(COLOR.DARK_GREY),
+      width: TEST_WIDTH,
+      height: TEST_HEIGHT,
+      chars: new Array(TEST_WIDTH * TEST_HEIGHT).fill(1),
+      colors: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.DARK_GREY),
     })
     getGLs(gadget)?.set(test.id, test.layer)
 
     const ds = 0.01
     const os = 0.005
+    let writes = 0
     let offset = 0
     const timer = setInterval(() => {
-      doc.transact(() => {
-        for (let i = 0; i < 1; ++i) {
-          const x = randomInteger(0, 15)
-          const y = randomInteger(0, 15)
-          setTLColor(test.layer, x, y, randomInteger(1, COLOR.MAX - 1))
-          setTLChar(
-            test.layer,
+      writeTL(test.layer, ({ width, height, colors, chars }) => {
+        for (let i = 0; i < TEST_RATE; ++i) {
+          const x = randomInteger(0, width - 1)
+          const y = randomInteger(0, height - 1)
+          setTLColor(
+            colors,
+            width,
+            height,
             x,
             y,
-            Math.round(Math.cos(x * ds + y * 0.5 * ds + offset * os) * 255),
+            randomInteger(1, COLOR.MAX - 1),
           )
+          setTLChar(
+            chars,
+            width,
+            height,
+            x,
+            y,
+            1 +
+              Math.round(Math.cos(x * ds + y * 0.25 * ds + offset * os) * 253),
+          )
+          writes += 2
         }
       })
       ++offset
-      // console.log(offset)
-    }, 10)
+      console.log(writes)
+    }, 70)
     return () => clearInterval(timer)
   }, [])
   // test code end

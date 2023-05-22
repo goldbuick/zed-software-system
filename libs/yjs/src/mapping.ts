@@ -24,14 +24,7 @@ export function createMapGrid<T extends string | number | null>(
 
   map.set('width', width)
   map.set('height', height)
-  map.set(
-    'values',
-    Y.Array.from(
-      data.map((value, index) => {
-        return { value, index }
-      }),
-    ),
-  )
+  map.set('values', Y.Array.from(data))
 
   return map
 }
@@ -44,43 +37,30 @@ export function getMapGridHeight(grid: MAYBE_MAP): number {
   return grid?.get('height') ?? 0
 }
 
-export function getMapGridValue<T>(
-  grid: MAYBE_MAP,
-  width: number,
-  x: number,
-  y: number,
-): T | undefined {
-  const index = x + y * width
-  const array = grid?.get('values') as MAYBE_ARRAY
-  return array?.get(index) as T | undefined
+export function getMapGridValues(grid: MAYBE_MAP): MAYBE_ARRAY {
+  return grid?.get('values')
 }
 
 export function setMapGridValue<T>(
-  grid: MAYBE_MAP,
+  values: MAYBE_ARRAY,
   width: number,
   x: number,
   y: number,
   value: T,
 ) {
-  const index = x + y * width
-  const values = grid?.get('values') as MAYBE_ARRAY
-  // @ts-expect-error doot
-  values?.push({ value, index })
+  values?.doc?.transact(() => {
+    const index = x + y * width
+    values.delete(index)
+    values.insert(index, [value])
+  })
 }
 
-export function getMapGridValues<T>(grid: MAYBE_MAP) {
-  const width = getMapGridWidth(grid)
-  const height = getMapGridHeight(grid)
+export function getMapGridValuesArray<T>(grid: MAYBE_MAP): T[] {
   const array = grid?.get('values') as MAYBE_ARRAY
+  return array?.toArray() ?? []
+}
 
-  const values: T[] = new Array(width * height || 1).fill(undefined)
-
-  if (array) {
-    for (const item of array) {
-      // todo, detect dupes
-      values[item.index] = item.value
-    }
-  }
-
-  return values
+export function recycleMapGridValues(grid: MAYBE_MAP) {
+  const array = grid?.get('values') as MAYBE_ARRAY
+  grid?.set('values', array?.clone())
 }

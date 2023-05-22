@@ -1,6 +1,7 @@
+import useInterval from '@use-it/interval/dist'
 import { useRenderOnChangeDeep } from '@zss/yjs/binding'
-import { getMapGridValues } from '@zss/yjs/mapping'
 
+import { getTLState, recycleTLState } from '../data/layer'
 import useTexture from '../img/useTexture'
 
 import { CharSet } from './charSet'
@@ -13,13 +14,11 @@ export function Tiles({ id, layer }: LayerProps) {
   // test code end
   useRenderOnChangeDeep(layer)
 
-  // const data = layer?.toJSON()
-  // const width = data?.width ?? 1
-  // const height = data?.height ?? 1
-  // const dimmed = data?.dimmed ?? false
-  // const chars: number[] = getMapGridValuesFromJSON(data?.chars)
-  // const colors: number[] = getMapGridValuesFromJSON(data?.colors)
+  useInterval(() => {
+    recycleTLState(layer)
+  }, 1000)
 
+  const { width, height, dimmed, chars, colors } = getTLState(layer)
   return (
     <CharSet
       map={map}

@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createMapGrid, setMapGridValue } from '@zss/yjs/mapping'
-import { MAYBE_MAP } from '@zss/yjs/types'
+import {
+  getMapGridValuesArray,
+  createMapGrid,
+  getMapGridValues,
+  setMapGridValue,
+  recycleMapGridValues,
+} from '@zss/yjs/mapping'
+import { MAYBE_ARRAY, MAYBE_MAP } from '@zss/yjs/types'
 import { nanoid } from 'nanoid'
 import * as Y from 'yjs'
 
@@ -64,19 +70,50 @@ export function createTL(create: TLDefault) {
   return { id, layer }
 }
 
-export function setTLChar(
-  layer: MAYBE_MAP,
-  x: number,
-  y: number,
-  char: number,
-) {
+type WriteTLFunc = ({
+  width,
+  height,
+  chars,
+  colors,
+}: {
+  width: number
+  height: number
+  chars: MAYBE_ARRAY
+  colors: MAYBE_ARRAY
+}) => void
+
+export function writeTL(layer: MAYBE_MAP, func: WriteTLFunc) {
   if (!layer) {
     return
   }
 
-  const width: number = layer.get('width')
-  const height: number = layer.get('height')
+  const width: number = layer.get('width') ?? 0
+  const height: number = layer.get('height') ?? 0
   const chars: Y.Map<any> = layer.get('chars')
+  const colors: Y.Map<any> = layer.get('colors')
+
+  layer.doc?.transact(() => {
+    func({
+      width,
+      height,
+      chars: getMapGridValues(chars),
+      colors: getMapGridValues(colors),
+    })
+  })
+}
+
+export function setTLChar(
+  chars: MAYBE_ARRAY,
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+  char: number,
+) {
+  if (!chars) {
+    return
+  }
+
   if (
     chars === undefined ||
     width < 1 ||
@@ -88,22 +125,22 @@ export function setTLChar(
   ) {
     return
   }
+
   setMapGridValue(chars, width, x, y, char)
 }
 
 export function setTLColor(
-  layer: MAYBE_MAP,
+  colors: MAYBE_ARRAY,
+  width: number,
+  height: number,
   x: number,
   y: number,
   color: number,
 ) {
-  if (!layer) {
+  if (!colors) {
     return
   }
 
-  const width: number = layer.get('width')
-  const height: number = layer.get('height')
-  const colors: Y.Map<any> = layer.get('colors')
   if (
     colors === undefined ||
     width < 1 ||
@@ -117,6 +154,44 @@ export function setTLColor(
   }
 
   setMapGridValue(colors, width, x, y, color)
+}
+
+export function recycleTLState(layer: MAYBE_MAP) {
+  if (!layer) {
+    return
+  }
+
+  const chars: Y.Map<any> = layer.get('chars')
+  const colors: Y.Map<any> = layer.get('colors')
+
+  recycleMapGridValues(chars)
+  recycleMapGridValues(colors)
+}
+
+export function getTLState(layer: MAYBE_MAP): {
+  width: number
+  height: number
+  dimmed: boolean
+  colors: number[]
+  chars: number[]
+} {
+  if (!layer) {
+    return { width: 1, height: 1, dimmed: false, colors: [0], chars: [0] }
+  }
+
+  const width: number = layer.get('width')
+  const height: number = layer.get('height')
+  const dimmed: boolean = layer.get('width')
+  const chars: Y.Map<any> = layer.get('chars')
+  const colors: Y.Map<any> = layer.get('colors')
+
+  return {
+    width,
+    height,
+    dimmed,
+    chars: getMapGridValuesArray(chars),
+    colors: getMapGridValuesArray(colors),
+  }
 }
 
 // SPRITES LAYER

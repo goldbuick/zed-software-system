@@ -10,6 +10,7 @@
     "@react-three/drei": "^9.57.3",
     "@react-three/fiber": "^8.12.0",
     "@types/nanoid-dictionary": "^4.2.0",
+    "@use-it/interval": "^1.0.0",
     "alea": "^1.0.1",
     "animejs": "^3.2.1",
     "case": "^1.6.3",
