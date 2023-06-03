@@ -1,4 +1,4 @@
-import { nanoid } from 'nanoid'
+import { createGuid } from '@zss/system/mapping/guid'
 
 import imgLoad from './load'
 
@@ -140,7 +140,7 @@ export function copyBitmap(
 
 export default function create(width: number, height: number): Bitmap {
   return {
-    id: nanoid(),
+    id: createGuid(),
     width,
     height,
     size: width * height,

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import * as Y from 'yjs'
 
 type AnyType = Y.Map<any> | Y.Array<any> | Y.Text | undefined
@@ -44,16 +44,6 @@ export function useObservable<T extends AnyType>(
   return ytype
 }
 
-export function useRenderOnChange<T extends AnyType>(ytype: T): T {
-  const [, setDidChange] = useState(0)
-
-  useObservable(ytype, function () {
-    setDidChange((state) => 1 - state)
-  })
-
-  return ytype
-}
-
 type ObservableDeepCallback = ({
   events,
   transaction,
@@ -90,16 +80,6 @@ export function useObservableDeep<T extends AnyType>(
       ytype?.unobserveDeep(handler)
     }
   }, [ytype])
-
-  return ytype
-}
-
-export function useRenderOnChangeDeep<T extends AnyType>(ytype: T): T {
-  const [, setDidChange] = useState(0)
-
-  useObservableDeep(ytype, function () {
-    setDidChange((state) => 1 - state)
-  })
 
   return ytype
 }

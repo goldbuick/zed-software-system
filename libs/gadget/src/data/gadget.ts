@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MAYBE_MAP } from '@zss/system/types'
-import { nanoid } from 'nanoid'
+import { createGuid } from '@zss/system/mapping/guid'
+import { MAYBE_MAP } from '@zss/yjs/types'
 import * as Y from 'yjs'
 
 type GadgetDefault = {
@@ -8,7 +8,7 @@ type GadgetDefault = {
 }
 
 export function createGadget(doc: Y.Doc, create: GadgetDefault) {
-  const id = create.id || nanoid()
+  const id = create.id || createGuid()
 
   const gadget = new Y.Map<any>()
   gadget.set('id', id)
@@ -38,6 +38,11 @@ export function getGLids(gadget: MAYBE_MAP): string[] {
     return []
   }
   return [...layers.keys()]
+}
+
+export function addGL(gadget: MAYBE_MAP, id: string, layer: MAYBE_MAP) {
+  const layers = getGLs(gadget)
+  layers?.set(id, layer)
 }
 
 export function getGL(gadget: MAYBE_MAP, id: string): MAYBE_MAP {

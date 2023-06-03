@@ -1,6 +1,8 @@
-import Peer, { DataConnection } from 'peerjs'
 import { range } from '@zss/system/mapping/array'
 import Alea from 'alea'
+import Peer, { DataConnection } from 'peerjs'
+
+import { sendMessage } from './message'
 import {
   MESSAGE,
   PEER_ID_SIZE,
@@ -10,7 +12,6 @@ import {
   ROUTE,
   ROUTE_MESSAGE,
 } from './types'
-import { sendMessage } from './message'
 
 const prng = Alea(Date.now() + Math.round(Math.random() * 10000000))
 

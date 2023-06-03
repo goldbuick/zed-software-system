@@ -2,12 +2,8 @@ import * as THREE from 'three'
 
 import { threeColors } from '../img/colors'
 
-export const TILE_SIZE = 20
-export const HALF_TILE_SIZE = TILE_SIZE * 0.5
-
-export const TILE_IMAGE_SIZE = 10
-
-export const TILE_FIXED_WIDTH = 16
+import { cloneMaterial, interval, time } from './anim'
+import { TILE_FIXED_WIDTH, TILE_SIZE } from './types'
 
 type TILE_CHARS = (number | undefined)[]
 type TILE_COLORS = (number | undefined)[]
@@ -109,32 +105,7 @@ export function createTilemapBufferGeometry(
   bg.computeBoundingSphere()
 }
 
-const epoch = Date.now()
-
-const time = {
-  get value() {
-    return ((Date.now() - epoch) / 1000) % 10000.0
-  },
-}
-
-// flip ever _other_ beat
-const INTERVAL_RATE = 120
-
-let intervalValue = 0
-export function setAltInterval(bpm: number) {
-  intervalValue = INTERVAL_RATE / bpm
-}
-
-// default to 150
-setAltInterval(150)
-
-const interval = {
-  get value() {
-    return intervalValue
-  },
-}
-
-export const tilemapMaterial = new THREE.ShaderMaterial({
+const tilemapMaterial = new THREE.ShaderMaterial({
   // settings
   transparent: true,
   uniforms: {
@@ -235,17 +206,10 @@ export const tilemapMaterial = new THREE.ShaderMaterial({
       }
 
       gl_FragColor.rgb = blip * color;
-      gl_FragColor.a = dimmed != 0.0 ? dimmed : 1.0;
+      gl_FragColor.a = dimmed > 0.0 ? dimmed : 1.0;
     }
   `,
 })
-
-function cloneMaterial(material: THREE.ShaderMaterial) {
-  const clone = material.clone()
-  clone.uniforms.time = time
-  clone.uniforms.interval = interval
-  return clone
-}
 
 export function createTilemapMaterial() {
   return cloneMaterial(tilemapMaterial)

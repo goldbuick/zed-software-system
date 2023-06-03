@@ -1,10 +1,11 @@
 import { randomInteger } from '@zss/system/mapping/number'
-import { useRenderOnChange } from '@zss/yjs/binding'
-import React, { useLayoutEffect } from 'react'
+import { useObservable } from '@zss/yjs/binding'
+import React, { useLayoutEffect, useState } from 'react'
 import * as Y from 'yjs'
 
-import { createGadget, getGLids, getGLs, getGL } from '../data/gadget'
+import { createGadget, getGLids, getGLs, getGL, addGL } from '../data/gadget'
 import {
+  createSL,
   createTL,
   getLType,
   setTLChar,
@@ -39,26 +40,39 @@ const doc = new Y.Doc()
 const gadget = createGadget(doc, {})
 
 const TEST_RATE = 100
-const TEST_WIDTH = 80
-const TEST_HEIGHT = 45
+const TEST_WIDTH = 50
+const TEST_HEIGHT = 30
 
 export function Gadget() {
   // test code begin
   useLayoutEffect(() => {
-    const test = createTL({
+    // create test layers
+    const tileTest = createTL({
       width: TEST_WIDTH,
       height: TEST_HEIGHT,
       chars: new Array(TEST_WIDTH * TEST_HEIGHT).fill(1),
-      colors: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.DARK_GREY),
+      colors: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.RED),
     })
-    getGLs(gadget)?.set(test.id, test.layer)
+    addGL(gadget, tileTest.id, tileTest.layer)
+
+    const spriteTest = createSL({
+      sprites: new Array(128).fill(0).map((v, i) => ({
+        x: randomInteger(0, TEST_WIDTH - 1),
+        y: randomInteger(0, TEST_HEIGHT - 1),
+        char: randomInteger(1, 15),
+        color: COLOR.MAGENTA,
+      })),
+    })
+    addGL(gadget, spriteTest.id, spriteTest.layer)
+
+    // getGLs(gadget)?.set(test.id, test.layer)
 
     const ds = 0.01
     const os = 0.005
-    let writes = 0
+    // let writes = 0
     let offset = 0
     const timer = setInterval(() => {
-      writeTL(test.layer, ({ width, height, colors, chars }) => {
+      writeTL(tileTest.layer, ({ width, height, colors, chars }) => {
         for (let i = 0; i < TEST_RATE; ++i) {
           const x = randomInteger(0, width - 1)
           const y = randomInteger(0, height - 1)
@@ -79,19 +93,22 @@ export function Gadget() {
             1 +
               Math.round(Math.cos(x * ds + y * 0.25 * ds + offset * os) * 253),
           )
-          writes += 2
+          // writes += 2
         }
       })
       ++offset
-      console.log(writes)
+      // console.log(writes)
     }, 70)
     return () => clearInterval(timer)
   }, [])
   // test code end
 
-  useRenderOnChange(getGLs(gadget))
+  const [layerIds, setLayerIds] = useState<string[]>([])
 
-  const layerIds = getGLids(gadget)
+  useObservable(getGLs(gadget), () => {
+    setLayerIds(getGLids(gadget))
+  })
+
   return (
     <>
       {layerIds.map((id) => {
@@ -111,5 +128,3 @@ export function Gadget() {
     </>
   )
 }
-
-// const map = useTexture(defaultCharSetUrl)
