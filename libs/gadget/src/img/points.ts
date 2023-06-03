@@ -10,6 +10,7 @@ const pointsMaterial = new THREE.ShaderMaterial({
   uniforms: {
     time,
     interval,
+    rate: { value: 15.0 },
     map: { value: null },
     alt: { value: null },
     pointSize: { value: 1 },
@@ -23,22 +24,32 @@ const pointsMaterial = new THREE.ShaderMaterial({
   vertexShader: `
     #include <clipping_planes_pars_vertex>
 
+    // todo, add dimmed
+    attribute vec3 offset;
+    attribute vec3 lastPosition;
+    attribute vec2 lastColor;
+
+    uniform float rate;
     uniform float time;
     uniform float interval;
     uniform float pointSize;
+    uniform vec3 colors[32];
 
-    attribute vec3 offset;
     varying vec3 vOffset;
-
-    // todo, add dimmed
+    varying vec3 vColor;
   
     void main() {
+      float deltaPosition = clamp((time - lastPosition.z) * rate, 0.0, 1.0);
+      vec2 animPosition = mix(lastPosition.xy, position.xy, deltaPosition) + vec2(0.5, 0.5);
 
-      // todo, need to lerp between positions over time
+      float deltaColor = clamp((time - lastColor.y) * rate * 0.4, 0.0, 1.0);
+      vec3 sourceColor = colors[int(lastColor.x)];
+      vec3 destColor = colors[int(offset.z)];
+      vColor = mix(sourceColor, destColor, deltaColor);
 
-      vec4 mvPosition = modelViewMatrix * vec4(position * pointSize, 1.0);
-      gl_Position = projectionMatrix * mvPosition;
-      
+      vec4 mvPosition = modelViewMatrix * vec4(animPosition * pointSize, 0.0, 1.0);
+      gl_Position = projectionMatrix * mvPosition;      
+
       gl_PointSize = pointSize;
 
       vOffset = offset;
@@ -54,13 +65,13 @@ const pointsMaterial = new THREE.ShaderMaterial({
     uniform float interval;
     uniform sampler2D map;
     uniform sampler2D alt;
-    uniform vec3 colors[32];
     uniform float rows;
     uniform vec2 step;
     uniform float ox;
     uniform float oy;
 
     varying vec3 vOffset;
+    varying vec3 vColor;
 
     bool isEmpty(sampler2D txt, vec2 uv, vec2 lookup) {
       float tx = floor(uv.x / step.x);
@@ -88,7 +99,6 @@ const pointsMaterial = new THREE.ShaderMaterial({
       #include <clipping_planes_fragment>
       
       vec2 lookup = vec2(vOffset.x, vOffset.y);
-      vec3 color = colors[int(vOffset.z)];
 
       vec2 idx = vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y);
       vec2 char = vec2(lookup.x * step.x, (15.0 - lookup.y) * step.y);
@@ -104,7 +114,7 @@ const pointsMaterial = new THREE.ShaderMaterial({
         }
       }
 
-      gl_FragColor.rgb = blip * color;
+      gl_FragColor.rgb = blip * vColor;
       gl_FragColor.a = 1.0; // dimmed != 0.0 ? dimmed : 1.0;
     }
   `,

@@ -8,6 +8,9 @@ import * as THREE from 'three'
 
 import { Framing } from './components/Framing'
 
+const urlParams = new URLSearchParams(window.location.search)
+const showStats = urlParams.get('stats') !== null
+
 const target = new THREE.Vector3()
 const facing = new THREE.Vector3()
 
@@ -119,7 +122,7 @@ export function App() {
             <Framing>
               <Gadget />
             </Framing>
-            <Stats />
+            {showStats && <Stats />}
           </Canvas>
         </div>
       </div>

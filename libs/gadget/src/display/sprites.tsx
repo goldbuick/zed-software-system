@@ -4,6 +4,7 @@ import { BufferAttribute, BufferGeometry } from 'three'
 
 import { useClipping } from '../clipping'
 import { getSLState } from '../data/layer'
+import { time } from '../img/anim'
 import { createPointsMaterial } from '../img/points'
 import { TILE_FIXED_WIDTH, TILE_IMAGE_SIZE, TILE_SIZE } from '../img/types'
 import useTexture from '../img/useTexture'
@@ -25,24 +26,80 @@ export function Sprites({ id, layer }: LayerProps) {
       return
     }
 
+    // get sprite count
     const state = getSLState(layer)
     const countData = state.sprites.length
-    const position = new Float32Array(countData * 3)
-    const offset = new Float32Array(countData * 3)
 
-    // config attributes
-    for (let i = 0, p = 0, o = 0; i < state.sprites.length; ++i) {
-      const sprite = state.sprites[i]
-      position[p++] = sprite.x + 0.5
-      position[p++] = sprite.y + 0.5
-      position[p++] = 0
-      offset[o++] = sprite.char % TILE_FIXED_WIDTH
-      offset[o++] = Math.floor(sprite.char / TILE_FIXED_WIDTH)
-      offset[o++] = sprite.color
+    // get data
+    let position = current.getAttribute('position') as
+      | BufferAttribute
+      | undefined
+    let offset = current.getAttribute('offset') as BufferAttribute | undefined
+    let lastPosition = current.getAttribute('lastPosition') as
+      | BufferAttribute
+      | undefined
+    let lastColor = current.getAttribute('lastColor') as
+      | BufferAttribute
+      | undefined
+
+    if (!position || !offset || !lastPosition || !lastColor) {
+      // init data
+      position = new BufferAttribute(new Float32Array(countData * 3), 3)
+      offset = new BufferAttribute(new Float32Array(countData * 3), 3)
+      lastPosition = new BufferAttribute(new Float32Array(countData * 3), 3)
+      lastColor = new BufferAttribute(new Float32Array(countData * 3), 3)
+
+      for (let i = 0; i < state.sprites.length; ++i) {
+        const sprite = state.sprites[i]
+        position.setXY(i, sprite.x, sprite.y)
+        offset.setXYZ(
+          i,
+          sprite.char % TILE_FIXED_WIDTH,
+          Math.floor(sprite.char / TILE_FIXED_WIDTH),
+          sprite.color,
+        )
+        lastPosition.setXYZ(i, sprite.x, sprite.y, time.value)
+        lastColor.setXY(i, sprite.color, time.value)
+      }
+
+      current.setAttribute('position', position)
+      current.setAttribute('offset', offset)
+      current.setAttribute('lastPosition', lastPosition)
+      current.setAttribute('lastColor', lastColor)
+    } else {
+      // update data
+      for (let i = 0; i < state.sprites.length; ++i) {
+        const sprite = state.sprites[i]
+        const cx = position.getX(i)
+        const cy = position.getY(i)
+        const ccharu = offset.getX(i)
+        const ccharv = offset.getY(i)
+        const ccolor = offset.getZ(i)
+
+        if (cx !== sprite.x || cy !== sprite.y) {
+          lastPosition.setXYZ(i, cx, cy, time.value)
+          lastPosition.needsUpdate = true
+
+          position.setXY(i, sprite.x, sprite.y)
+          position.needsUpdate = true
+        }
+
+        if (ccolor !== sprite.color) {
+          lastColor.setXY(i, ccolor, time.value)
+          lastColor.needsUpdate = true
+
+          offset.setZ(i, sprite.color)
+          offset.needsUpdate = true
+        }
+
+        const ncharu = sprite.char % TILE_FIXED_WIDTH
+        const ncharv = Math.floor(sprite.char / TILE_FIXED_WIDTH)
+        if (ccharu !== ncharu || ccharv !== ncharv) {
+          offset.setXY(i, ncharu, ncharv)
+          offset.needsUpdate = true
+        }
+      }
     }
-
-    current.setAttribute('position', new BufferAttribute(position, 3))
-    current.setAttribute('offset', new BufferAttribute(offset, 3))
   })
 
   const clippingPlanes = useClipping()

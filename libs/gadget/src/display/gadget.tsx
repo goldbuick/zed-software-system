@@ -1,3 +1,4 @@
+import { select } from '@zss/system/mapping/array'
 import { randomInteger } from '@zss/system/mapping/number'
 import { useObservable } from '@zss/yjs/binding'
 import React, { useLayoutEffect, useState } from 'react'
@@ -8,6 +9,10 @@ import {
   createSL,
   createTL,
   getLType,
+  getSLSprite,
+  getSLSpriteIds,
+  setSLSpriteColor,
+  setSLSpriteXY,
   setTLChar,
   setTLColor,
   writeTL,
@@ -39,9 +44,12 @@ even for buttons being pressed etc, a text input etc ..
 const doc = new Y.Doc()
 const gadget = createGadget(doc, {})
 
-const TEST_RATE = 100
-const TEST_WIDTH = 50
-const TEST_HEIGHT = 30
+const TEST_RATE = 64
+const TEST_WIDTH = 96
+const TEST_HEIGHT = 54
+
+const TEST_RATE_2 = 16
+const TEST_SPRITES = 1024
 
 export function Gadget() {
   // test code begin
@@ -51,12 +59,12 @@ export function Gadget() {
       width: TEST_WIDTH,
       height: TEST_HEIGHT,
       chars: new Array(TEST_WIDTH * TEST_HEIGHT).fill(1),
-      colors: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.RED),
+      colors: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.DARK_BLUE),
     })
     addGL(gadget, tileTest.id, tileTest.layer)
 
     const spriteTest = createSL({
-      sprites: new Array(128).fill(0).map((v, i) => ({
+      sprites: new Array(TEST_SPRITES).fill(0).map((v, i) => ({
         x: randomInteger(0, TEST_WIDTH - 1),
         y: randomInteger(0, TEST_HEIGHT - 1),
         char: randomInteger(1, 15),
@@ -65,25 +73,17 @@ export function Gadget() {
     })
     addGL(gadget, spriteTest.id, spriteTest.layer)
 
-    // getGLs(gadget)?.set(test.id, test.layer)
-
-    const ds = 0.01
-    const os = 0.005
-    // let writes = 0
     let offset = 0
+    const ds = 0.01
+    const os = 0.0005
     const timer = setInterval(() => {
+      const phase = Math.round(1 + Math.abs(Math.sin(offset * 0.001) * 14))
+
       writeTL(tileTest.layer, ({ width, height, colors, chars }) => {
         for (let i = 0; i < TEST_RATE; ++i) {
           const x = randomInteger(0, width - 1)
           const y = randomInteger(0, height - 1)
-          setTLColor(
-            colors,
-            width,
-            height,
-            x,
-            y,
-            randomInteger(1, COLOR.MAX - 1),
-          )
+          setTLColor(colors, width, height, x, y, phase + 16)
           setTLChar(
             chars,
             width,
@@ -93,21 +93,34 @@ export function Gadget() {
             1 +
               Math.round(Math.cos(x * ds + y * 0.25 * ds + offset * os) * 253),
           )
-          // writes += 2
         }
       })
+
+      const ids = getSLSpriteIds(spriteTest.layer)
+      spriteTest.layer.doc?.transact(function () {
+        for (let i = 0; i < TEST_RATE_2; ++i) {
+          const id = select(ids)
+          const sprite = getSLSprite(spriteTest.layer, id)
+          const x = sprite?.get('x') ?? 0
+          const y = sprite?.get('y') ?? 0
+          setSLSpriteXY(
+            sprite,
+            randomInteger(Math.max(0, x - 1), Math.min(TEST_WIDTH - 1, x + 1)),
+            randomInteger(Math.max(0, y - 1), Math.min(TEST_HEIGHT - 1, y + 1)),
+          )
+          setSLSpriteColor(sprite, phase)
+        }
+      })
+
       ++offset
-      // console.log(writes)
-    }, 70)
+    }, Math.round(1000 / 15))
     return () => clearInterval(timer)
   }, [])
   // test code end
 
   const [layerIds, setLayerIds] = useState<string[]>([])
 
-  useObservable(getGLs(gadget), () => {
-    setLayerIds(getGLids(gadget))
-  })
+  useObservable(getGLs(gadget), () => setLayerIds(getGLids(gadget)))
 
   return (
     <>

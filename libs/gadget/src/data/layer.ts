@@ -250,11 +250,21 @@ export function createSL(create: SLDefault) {
   return { id, layer }
 }
 
+export function getSLSprites(layer: MAYBE_MAP) {
+  return layer?.get('sprites') as MAYBE_MAP
+}
+
+export function getSLSpriteIds(layer: MAYBE_MAP) {
+  return [...(getSLSprites(layer)?.keys() ?? [])] as string[]
+}
+
+export function getSLSprite(layer: MAYBE_MAP, id: string) {
+  return getSLSprites(layer)?.get(id) as MAYBE_MAP
+}
+
 export type SLSpriteState = SLSpriteDefault & { id: string }
 
-export function getSLState(layer: MAYBE_MAP): {
-  sprites: SLSpriteState[]
-} {
+export function getSLState(layer: MAYBE_MAP) {
   if (!layer) {
     return { sprites: [] }
   }

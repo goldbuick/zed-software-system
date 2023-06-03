@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { BufferGeometry } from 'three'
 
 import { useClipping } from '../clipping'
-import { getTLState, recycleTLState } from '../data/layer'
+import { getTLState } from '../data/layer'
 import {
   createTilemapBufferGeometry,
   createTilemapDataTexture,
@@ -21,7 +21,6 @@ export function Tiles({ id, layer }: LayerProps) {
   const map = useTexture(defaultCharSetUrl)
   // test code end
 
-  const updateRef = useRef(0)
   const bgRef = useRef<BufferGeometry>(null)
   const [dimmed, setDimmed] = useState(false)
   const [width, setWidth] = useState(0)
@@ -71,14 +70,6 @@ export function Tiles({ id, layer }: LayerProps) {
     const count = bgRef.current?.attributes.position?.count ?? 0
     if (bgRef.current && count !== state.width * state.height * 4) {
       createTilemapBufferGeometry(bgRef.current, state.width, state.height)
-    }
-
-    // TODO - recycle X number of individual edits
-    // recycle every X number of edits
-    ++updateRef.current
-    if (updateRef.current > 10) {
-      recycleTLState(layer)
-      updateRef.current = 0
     }
   })
 
