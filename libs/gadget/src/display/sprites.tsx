@@ -34,25 +34,42 @@ export function Sprites({ id, layer }: LayerProps) {
     let position = current.getAttribute('position') as
       | BufferAttribute
       | undefined
-    let offset = current.getAttribute('offset') as BufferAttribute | undefined
+    let charData = current.getAttribute('charData') as
+      | BufferAttribute
+      | undefined
     let lastPosition = current.getAttribute('lastPosition') as
       | BufferAttribute
       | undefined
     let lastColor = current.getAttribute('lastColor') as
       | BufferAttribute
       | undefined
+    let animShake = current.getAttribute('animShake') as
+      | BufferAttribute
+      | undefined
+    let animBounce = current.getAttribute('animBounce') as
+      | BufferAttribute
+      | undefined
 
-    if (!position || !offset || !lastPosition || !lastColor) {
+    if (
+      !position ||
+      !charData ||
+      !lastPosition ||
+      !lastColor ||
+      !animShake ||
+      !animBounce
+    ) {
       // init data
       position = new BufferAttribute(new Float32Array(countData * 3), 3)
-      offset = new BufferAttribute(new Float32Array(countData * 3), 3)
+      charData = new BufferAttribute(new Float32Array(countData * 3), 3)
       lastPosition = new BufferAttribute(new Float32Array(countData * 3), 3)
       lastColor = new BufferAttribute(new Float32Array(countData * 3), 3)
+      animShake = new BufferAttribute(new Float32Array(countData * 2), 2)
+      animBounce = new BufferAttribute(new Float32Array(countData * 2), 2)
 
       for (let i = 0; i < state.sprites.length; ++i) {
         const sprite = state.sprites[i]
         position.setXY(i, sprite.x, sprite.y)
-        offset.setXYZ(
+        charData.setXYZ(
           i,
           sprite.char % TILE_FIXED_WIDTH,
           Math.floor(sprite.char / TILE_FIXED_WIDTH),
@@ -60,21 +77,25 @@ export function Sprites({ id, layer }: LayerProps) {
         )
         lastPosition.setXYZ(i, sprite.x, sprite.y, time.value)
         lastColor.setXY(i, sprite.color, time.value)
+        animShake.setXY(i, 0, time.value - 1000000)
+        animBounce.setXY(i, 0, time.value - 1000000)
       }
 
       current.setAttribute('position', position)
-      current.setAttribute('offset', offset)
+      current.setAttribute('charData', charData)
       current.setAttribute('lastPosition', lastPosition)
       current.setAttribute('lastColor', lastColor)
+      current.setAttribute('animShake', animShake)
+      current.setAttribute('animBounce', animBounce)
     } else {
       // update data
       for (let i = 0; i < state.sprites.length; ++i) {
         const sprite = state.sprites[i]
         const cx = position.getX(i)
         const cy = position.getY(i)
-        const ccharu = offset.getX(i)
-        const ccharv = offset.getY(i)
-        const ccolor = offset.getZ(i)
+        const ccharu = charData.getX(i)
+        const ccharv = charData.getY(i)
+        const ccolor = charData.getZ(i)
 
         if (cx !== sprite.x || cy !== sprite.y) {
           lastPosition.setXYZ(i, cx, cy, time.value)
@@ -88,15 +109,26 @@ export function Sprites({ id, layer }: LayerProps) {
           lastColor.setXY(i, ccolor, time.value)
           lastColor.needsUpdate = true
 
-          offset.setZ(i, sprite.color)
-          offset.needsUpdate = true
+          charData.setZ(i, sprite.color)
+          charData.needsUpdate = true
+        }
+
+        // todo, detect animBounce & animShake triggers
+        if (Math.random() * 1000 < 10) {
+          if (Math.random() * 10 <= 5) {
+            animShake.setXY(i, Math.random(), time.value)
+            animShake.needsUpdate = true
+          } else {
+            animBounce.setXY(i, Math.random(), time.value)
+            animBounce.needsUpdate = true
+          }
         }
 
         const ncharu = sprite.char % TILE_FIXED_WIDTH
         const ncharv = Math.floor(sprite.char / TILE_FIXED_WIDTH)
         if (ccharu !== ncharu || ccharv !== ncharv) {
-          offset.setXY(i, ncharu, ncharv)
-          offset.needsUpdate = true
+          charData.setXY(i, ncharu, ncharv)
+          charData.needsUpdate = true
         }
       }
     }

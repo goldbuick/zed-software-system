@@ -25,9 +25,11 @@ const pointsMaterial = new THREE.ShaderMaterial({
     #include <clipping_planes_pars_vertex>
 
     // todo, add dimmed
-    attribute vec3 offset;
+    attribute vec3 charData;
     attribute vec3 lastPosition;
     attribute vec2 lastColor;
+    attribute vec2 animShake;
+    attribute vec2 animBounce;
 
     uniform float rate;
     uniform float time;
@@ -35,24 +37,39 @@ const pointsMaterial = new THREE.ShaderMaterial({
     uniform float pointSize;
     uniform vec3 colors[32];
 
-    varying vec3 vOffset;
+    varying vec3 vCharData;
     varying vec3 vColor;
-  
+    
+    float rand(float co) {
+      return fract(sin(co*(91.3458)) * 47453.5453);
+    }
+
     void main() {
       float deltaPosition = clamp((time - lastPosition.z) * rate, 0.0, 1.0);
-      vec2 animPosition = mix(lastPosition.xy, position.xy, deltaPosition) + vec2(0.5, 0.5);
+      vec2 animPosition = mix(lastPosition.xy, position.xy, deltaPosition);
+
+      animPosition += vec2(0.5, 0.5);
+
+      float deltaShake = 1.0 - clamp((time - animShake.y) * rate * 0.5, 0.0, 1.0);
+      animPosition += vec2(
+        deltaShake - rand(cos(time) + animShake.x) * deltaShake * 2.0,
+        deltaShake - rand(sin(time) + animShake.x) * deltaShake * 2.0
+      ) * 0.5;
+
+      float deltaBounce = 1.0 - abs(1.0 - clamp((time - animBounce.y) * rate, 0.0, 2.0));
+      animPosition.y -= smoothstep(0.0, 1.0, deltaBounce);
 
       float deltaColor = clamp((time - lastColor.y) * rate * 0.4, 0.0, 1.0);
       vec3 sourceColor = colors[int(lastColor.x)];
-      vec3 destColor = colors[int(offset.z)];
+      vec3 destColor = colors[int(charData.z)];
       vColor = mix(sourceColor, destColor, deltaColor);
+
+      vCharData = charData;
 
       vec4 mvPosition = modelViewMatrix * vec4(animPosition * pointSize, 0.0, 1.0);
       gl_Position = projectionMatrix * mvPosition;      
 
       gl_PointSize = pointSize;
-
-      vOffset = offset;
       
       #include <clipping_planes_vertex>
     }
@@ -70,7 +87,7 @@ const pointsMaterial = new THREE.ShaderMaterial({
     uniform float ox;
     uniform float oy;
 
-    varying vec3 vOffset;
+    varying vec3 vCharData;
     varying vec3 vColor;
 
     bool isEmpty(sampler2D txt, vec2 uv, vec2 lookup) {
@@ -98,7 +115,7 @@ const pointsMaterial = new THREE.ShaderMaterial({
     void main() {
       #include <clipping_planes_fragment>
       
-      vec2 lookup = vec2(vOffset.x, vOffset.y);
+      vec2 lookup = vec2(vCharData.x, vCharData.y);
 
       vec2 idx = vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y);
       vec2 char = vec2(lookup.x * step.x, (15.0 - lookup.y) * step.y);
