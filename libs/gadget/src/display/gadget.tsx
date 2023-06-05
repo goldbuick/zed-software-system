@@ -45,8 +45,8 @@ const doc = new Y.Doc()
 const gadget = createGadget(doc, {})
 
 const TEST_RATE = 64
-const TEST_WIDTH = 96
-const TEST_HEIGHT = 54
+const TEST_WIDTH = 60
+const TEST_HEIGHT = 40
 
 const TEST_RATE_2 = 16
 const TEST_SPRITES = 1024

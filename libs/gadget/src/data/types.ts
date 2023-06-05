@@ -6,8 +6,9 @@ What is a gadget ??
 * a collection of layers
 * there are different kinds of layers
   * tilemap (xy coords that match width & height of gadget)
-  * objects (indivial outlined chars with xy coords with animated transitions)
-  * input elements (button, radio button, text input, code edit, with animated transitions)
+  * sprites (indivial outlined chars with xy coords with animated transitions)
+  * gui (button, radio button, text input, code edit, with animated transitions)
+  * media (sfxr, beepbox, youtube, tiktok, png, gif)
 
 */
 
@@ -16,4 +17,5 @@ export enum GADGET_LAYER {
   TILES,
   SPRITES,
   GUI,
+  MEDIA,
 }

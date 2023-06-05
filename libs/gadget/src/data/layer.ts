@@ -54,6 +54,7 @@ export type TLDefault = {
   height: number
   chars: number[]
   colors: number[]
+  bgs: number[]
 }
 
 export function createTL(create: TLDefault) {
@@ -66,6 +67,7 @@ export function createTL(create: TLDefault) {
   layer.set('height', create.height)
   layer.set('chars', createMapGrid(create.width, create.height, create.chars))
   layer.set('colors', createMapGrid(create.width, create.height, create.colors))
+  layer.set('bgs', createMapGrid(create.width, create.height, create.bgs))
 
   return { id, layer }
 }
