@@ -1,22 +1,20 @@
 import { select } from '@zss/system/mapping/array'
 import { randomInteger } from '@zss/system/mapping/number'
 import { useObservable } from '@zss/yjs/binding'
+import { setMapGridValue } from '@zss/yjs/mapping'
 import React, { useLayoutEffect, useState } from 'react'
 import * as Y from 'yjs'
 
 import { createGadget, getGLids, getGLs, getGL, addGL } from '../data/gadget'
+import { getLType } from '../data/layer'
 import {
   createSL,
-  createTL,
-  getLType,
   getSLSprite,
   getSLSpriteIds,
   setSLSpriteColor,
   setSLSpriteXY,
-  setTLChar,
-  setTLColor,
-  writeTL,
-} from '../data/layer'
+} from '../data/sprites'
+import { createTL, writeTL } from '../data/tiles'
 import { GADGET_LAYER } from '../data/types'
 import { COLOR } from '../img/colors'
 
@@ -58,8 +56,9 @@ export function Gadget() {
     const tileTest = createTL({
       width: TEST_WIDTH,
       height: TEST_HEIGHT,
-      chars: new Array(TEST_WIDTH * TEST_HEIGHT).fill(1),
-      colors: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.DARK_BLUE),
+      char: new Array(TEST_WIDTH * TEST_HEIGHT).fill(1),
+      color: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.BLUE),
+      bg: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.DARK_BLUE),
     })
     addGL(gadget, tileTest.id, tileTest.layer)
 
@@ -68,7 +67,8 @@ export function Gadget() {
         x: randomInteger(0, TEST_WIDTH - 1),
         y: randomInteger(0, TEST_HEIGHT - 1),
         char: randomInteger(1, 15),
-        color: COLOR.MAGENTA,
+        color: COLOR.GREEN,
+        bg: COLOR.MAGENTA,
       })),
     })
     addGL(gadget, spriteTest.id, spriteTest.layer)
@@ -79,15 +79,15 @@ export function Gadget() {
     const timer = setInterval(() => {
       const phase = Math.round(1 + Math.abs(Math.sin(offset * 0.001) * 14))
 
-      writeTL(tileTest.layer, ({ width, height, colors, chars }) => {
+      writeTL(tileTest.layer, ({ width, height, color, char, bg }) => {
         for (let i = 0; i < TEST_RATE; ++i) {
           const x = randomInteger(0, width - 1)
           const y = randomInteger(0, height - 1)
-          setTLColor(colors, width, height, x, y, phase + 16)
-          setTLChar(
-            chars,
+          setMapGridValue(color, width, x, y, phase + 16)
+          setMapGridValue(bg, width, x, y, COLOR.MAX - phase)
+          setMapGridValue(
+            char,
             width,
-            height,
             x,
             y,
             1 +

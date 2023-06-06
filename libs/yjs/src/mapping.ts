@@ -42,12 +42,18 @@ export function getMapGridValues(grid: MAYBE_MAP): MAYBE_ARRAY {
   return grid?.get('values')
 }
 
+function recycleMapGridValues(grid: MAYBE_MAP) {
+  // console.info('recycled', grid)
+  const array = grid?.get('values') as MAYBE_ARRAY
+  grid?.set('values', array?.clone())
+}
+
 function markedForRecycle(event: Y.YArrayEvent<any>) {
   const grid = event.target.parent as MAYBE_MAP
   recycleMapGridValues(grid)
 }
 
-const RECYCLE_START = 1024
+const RECYCLE_START = 512
 const RECYCLE_END = RECYCLE_START + 512
 
 export function setMapGridValue<T>(
@@ -87,10 +93,4 @@ export function setMapGridValue<T>(
 export function getMapGridValuesArray<T>(grid: MAYBE_MAP): T[] {
   const array = grid?.get('values') as MAYBE_ARRAY
   return array?.toArray() ?? []
-}
-
-export function recycleMapGridValues(grid: MAYBE_MAP) {
-  // console.info('recycled', grid)
-  const array = grid?.get('values') as MAYBE_ARRAY
-  grid?.set('values', array?.clone())
 }

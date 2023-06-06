@@ -3,13 +3,13 @@ import { useEffect, useMemo, useRef } from 'react'
 import { BufferAttribute, BufferGeometry } from 'three'
 
 import { useClipping } from '../clipping'
-import { getSLState } from '../data/layer'
+import { getSLState } from '../data/sprites'
 import { time } from '../img/anim'
-import { createPointsMaterial } from '../img/points'
+import defaultCharSetUrl from '../img/charSet.png'
+import { createPointsMaterial } from '../img/sprites'
 import { TILE_FIXED_WIDTH, TILE_IMAGE_SIZE, TILE_SIZE } from '../img/types'
 import useTexture from '../img/useTexture'
 
-import defaultCharSetUrl from './charSet.png'
 import { LayerProps } from './types'
 
 export function Sprites({ id, layer }: LayerProps) {

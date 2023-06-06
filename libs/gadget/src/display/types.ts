@@ -1,4 +1,4 @@
-import { MAYBE_MAP } from '@zss/system/types'
+import { MAYBE_MAP } from '@zss/yjs/types'
 
 export interface LayerProps {
   id: string

@@ -3,17 +3,17 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { BufferGeometry } from 'three'
 
 import { useClipping } from '../clipping'
-import { getTLState } from '../data/layer'
+import { getTLState } from '../data/tiles'
+import defaultCharSetUrl from '../img/charSet.png'
 import {
   createTilemapBufferGeometry,
   createTilemapDataTexture,
   createTilemapMaterial,
   updateTilemapDataTexture,
-} from '../img/tilemap'
+} from '../img/tiles'
 import { TILE_IMAGE_SIZE } from '../img/types'
 import useTexture from '../img/useTexture'
 
-import defaultCharSetUrl from './charSet.png'
 import { LayerProps } from './types'
 
 export function Tiles({ id, layer }: LayerProps) {
@@ -53,16 +53,16 @@ export function Tiles({ id, layer }: LayerProps) {
         material.uniforms.data.value,
         state.width,
         state.height,
-        state.chars,
-        state.colors,
+        state.char,
+        state.color,
       )
     } else {
       // create data texture with current chars
       material.uniforms.data.value = createTilemapDataTexture(
         state.width,
         state.height,
-        state.chars,
-        state.colors,
+        state.char,
+        state.color,
       )
     }
 

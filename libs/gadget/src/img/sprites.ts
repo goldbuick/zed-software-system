@@ -1,8 +1,7 @@
 import * as THREE from 'three'
 
-import { threeColors } from '../img/colors'
-
 import { cloneMaterial, interval, time } from './anim'
+import { threeColors } from './colors'
 
 const pointsMaterial = new THREE.ShaderMaterial({
   // settings

@@ -1,8 +1,7 @@
 import * as THREE from 'three'
 
-import { threeColors } from '../img/colors'
-
 import { cloneMaterial, interval, time } from './anim'
+import { threeColors } from './colors'
 import { TILE_FIXED_WIDTH, TILE_SIZE } from './types'
 
 type TILE_CHARS = (number | undefined)[]
