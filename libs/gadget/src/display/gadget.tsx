@@ -11,6 +11,7 @@ import {
   createSL,
   getSLSprite,
   getSLSpriteIds,
+  setSLSpriteBg,
   setSLSpriteColor,
   setSLSpriteXY,
 } from '../data/sprites'
@@ -42,12 +43,14 @@ even for buttons being pressed etc, a text input etc ..
 const doc = new Y.Doc()
 const gadget = createGadget(doc, {})
 
-const TEST_RATE = 64
+const TEST_RATE = 16
 const TEST_WIDTH = 60
 const TEST_HEIGHT = 40
 
-const TEST_RATE_2 = 16
-const TEST_SPRITES = 1024
+const TEST_RATE_2 = 1
+const TEST_SPRITES = 128
+
+const fade = [32, 176, 177, 178, 219]
 
 export function Gadget() {
   // test code begin
@@ -56,9 +59,9 @@ export function Gadget() {
     const tileTest = createTL({
       width: TEST_WIDTH,
       height: TEST_HEIGHT,
-      char: new Array(TEST_WIDTH * TEST_HEIGHT).fill(1),
-      color: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.BLUE),
-      bg: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.DARK_BLUE),
+      char: new Array(TEST_WIDTH * TEST_HEIGHT).fill(176),
+      color: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.DARK_SKYBLUE),
+      bg: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.DARK_GREEN),
     })
     addGL(gadget, tileTest.id, tileTest.layer)
 
@@ -83,16 +86,19 @@ export function Gadget() {
         for (let i = 0; i < TEST_RATE; ++i) {
           const x = randomInteger(0, width - 1)
           const y = randomInteger(0, height - 1)
-          setMapGridValue(color, width, x, y, phase + 16)
-          setMapGridValue(bg, width, x, y, COLOR.MAX - phase)
+          const slider = Math.cos(x * ds + y * 0.25 * ds + offset * os)
           setMapGridValue(
             char,
             width,
             x,
             y,
-            1 +
-              Math.round(Math.cos(x * ds + y * 0.25 * ds + offset * os) * 253),
+            fade[Math.abs(Math.round(slider * (fade.length - 1)))],
           )
+          if (randomInteger(0, 50) < 25) {
+            setMapGridValue(color, width, x, y, phase + 16)
+          } else {
+            setMapGridValue(bg, width, x, y, COLOR.MAX - phase)
+          }
         }
       })
 
@@ -109,6 +115,7 @@ export function Gadget() {
             randomInteger(Math.max(0, y - 1), Math.min(TEST_HEIGHT - 1, y + 1)),
           )
           setSLSpriteColor(sprite, phase)
+          setSLSpriteBg(sprite, 16 - phase)
         }
       })
 

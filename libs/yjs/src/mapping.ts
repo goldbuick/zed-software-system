@@ -53,7 +53,7 @@ function markedForRecycle(event: Y.YArrayEvent<any>) {
   recycleMapGridValues(grid)
 }
 
-const RECYCLE_START = 512
+const RECYCLE_START = 1024
 const RECYCLE_END = RECYCLE_START + 512
 
 export function setMapGridValue<T>(
@@ -85,8 +85,8 @@ export function setMapGridValue<T>(
     values.writeLimit = writeLimit
 
     // write data
-    values.delete(index)
     values.insert(index, [value])
+    values.delete(index + 1)
   })
 }
 

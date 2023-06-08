@@ -43,6 +43,7 @@ export function Sprites({ id, layer }: LayerProps) {
     let lastColor = current.getAttribute('lastColor') as
       | BufferAttribute
       | undefined
+    let lastBg = current.getAttribute('lastBg') as BufferAttribute | undefined
     let animShake = current.getAttribute('animShake') as
       | BufferAttribute
       | undefined
@@ -55,28 +56,32 @@ export function Sprites({ id, layer }: LayerProps) {
       !charData ||
       !lastPosition ||
       !lastColor ||
+      !lastBg ||
       !animShake ||
       !animBounce
     ) {
       // init data
       position = new BufferAttribute(new Float32Array(countData * 3), 3)
-      charData = new BufferAttribute(new Float32Array(countData * 3), 3)
+      charData = new BufferAttribute(new Float32Array(countData * 4), 4)
       lastPosition = new BufferAttribute(new Float32Array(countData * 3), 3)
-      lastColor = new BufferAttribute(new Float32Array(countData * 3), 3)
+      lastColor = new BufferAttribute(new Float32Array(countData * 2), 2)
+      lastBg = new BufferAttribute(new Float32Array(countData * 2), 2)
       animShake = new BufferAttribute(new Float32Array(countData * 2), 2)
       animBounce = new BufferAttribute(new Float32Array(countData * 2), 2)
 
       for (let i = 0; i < state.sprites.length; ++i) {
         const sprite = state.sprites[i]
         position.setXY(i, sprite.x, sprite.y)
-        charData.setXYZ(
+        charData.setXYZW(
           i,
           sprite.char % TILE_FIXED_WIDTH,
           Math.floor(sprite.char / TILE_FIXED_WIDTH),
           sprite.color,
+          sprite.bg,
         )
         lastPosition.setXYZ(i, sprite.x, sprite.y, time.value)
         lastColor.setXY(i, sprite.color, time.value)
+        lastBg.setXY(i, sprite.bg, time.value)
         animShake.setXY(i, 0, time.value - 1000000)
         animBounce.setXY(i, 0, time.value - 1000000)
       }
@@ -85,6 +90,7 @@ export function Sprites({ id, layer }: LayerProps) {
       current.setAttribute('charData', charData)
       current.setAttribute('lastPosition', lastPosition)
       current.setAttribute('lastColor', lastColor)
+      current.setAttribute('lastBg', lastBg)
       current.setAttribute('animShake', animShake)
       current.setAttribute('animBounce', animBounce)
     } else {
@@ -96,6 +102,7 @@ export function Sprites({ id, layer }: LayerProps) {
         const ccharu = charData.getX(i)
         const ccharv = charData.getY(i)
         const ccolor = charData.getZ(i)
+        const cbg = charData.getW(i)
 
         if (cx !== sprite.x || cy !== sprite.y) {
           lastPosition.setXYZ(i, cx, cy, time.value)
@@ -110,6 +117,14 @@ export function Sprites({ id, layer }: LayerProps) {
           lastColor.needsUpdate = true
 
           charData.setZ(i, sprite.color)
+          charData.needsUpdate = true
+        }
+
+        if (cbg !== sprite.bg) {
+          lastBg.setXY(i, cbg, time.value)
+          lastBg.needsUpdate = true
+
+          charData.setW(i, sprite.bg)
           charData.needsUpdate = true
         }
 

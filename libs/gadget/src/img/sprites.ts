@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 import { cloneMaterial, interval, time } from './anim'
-import { threeColors } from './colors'
+import { COLOR, threeColors } from './colors'
 
 const pointsMaterial = new THREE.ShaderMaterial({
   // settings
@@ -18,15 +18,16 @@ const pointsMaterial = new THREE.ShaderMaterial({
     step: { value: new THREE.Vector2() },
     ox: { value: 0 },
     oy: { value: 0 },
+    tindex: { value: COLOR.MAGENTA },
   },
   // vertex shader
   vertexShader: `
     #include <clipping_planes_pars_vertex>
 
-    // todo, add dimmed
-    attribute vec3 charData;
+    attribute vec4 charData;
     attribute vec3 lastPosition;
     attribute vec2 lastColor;
+    attribute vec2 lastBg;
     attribute vec2 animShake;
     attribute vec2 animBounce;
 
@@ -35,12 +36,30 @@ const pointsMaterial = new THREE.ShaderMaterial({
     uniform float interval;
     uniform float pointSize;
     uniform vec3 colors[32];
+    uniform float tindex;
 
-    varying vec3 vCharData;
+    varying vec2 vCharData;
     varying vec3 vColor;
+    varying vec4 vBg;
     
     float rand(float co) {
       return fract(sin(co*(91.3458)) * 47453.5453);
+    }
+
+    vec3 colorFromIndex(float index) {
+      return colors[int(index)];
+    }
+
+    vec4 empty;
+
+    vec4 bgFromIndex(float index) {
+      if (index == tindex) {
+        return empty;
+      }
+      vec4 bg;
+      bg.rgb = colorFromIndex(index);
+      bg.a = 1.0;
+      return bg;
     }
 
     void main() {
@@ -59,11 +78,16 @@ const pointsMaterial = new THREE.ShaderMaterial({
       animPosition.y -= smoothstep(0.0, 1.0, deltaBounce);
 
       float deltaColor = clamp((time - lastColor.y) * rate * 0.4, 0.0, 1.0);
-      vec3 sourceColor = colors[int(lastColor.x)];
-      vec3 destColor = colors[int(charData.z)];
+      vec3 sourceColor = colorFromIndex(lastColor.x);
+      vec3 destColor = colorFromIndex(charData.z);
       vColor = mix(sourceColor, destColor, deltaColor);
 
-      vCharData = charData;
+      float deltaBg = clamp((time - lastBg.y) * rate * 0.4, 0.0, 1.0);
+      vec4 sourceBg = bgFromIndex(lastBg.x);
+      vec4 destBg = bgFromIndex(charData.w);
+      vBg = mix(sourceBg, destBg, deltaBg);
+
+      vCharData.xy = charData.xy;
 
       vec4 mvPosition = modelViewMatrix * vec4(animPosition * pointSize, 0.0, 1.0);
       gl_Position = projectionMatrix * mvPosition;      
@@ -86,8 +110,9 @@ const pointsMaterial = new THREE.ShaderMaterial({
     uniform float ox;
     uniform float oy;
 
-    varying vec3 vCharData;
+    varying vec2 vCharData;
     varying vec3 vColor;
+    varying vec4 vBg;
 
     bool isEmpty(sampler2D txt, vec2 uv, vec2 lookup) {
       float tx = floor(uv.x / step.x);
@@ -124,14 +149,18 @@ const pointsMaterial = new THREE.ShaderMaterial({
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
-        bool empty = useAlt ? isEmpty(alt, uv, lookup) : isEmpty(map, uv, lookup);
-        if (empty) {
-          discard;
+        if (vBg.a < 0.1) {
+          bool empty = useAlt ? isEmpty(alt, uv, lookup) : isEmpty(map, uv, lookup);
+          if (empty) {
+            discard;
+          }
+        } else {
+          gl_FragColor = vBg;
         }
+      } else {
+        gl_FragColor.rgb = vColor;
+        gl_FragColor.a = 1.0;
       }
-
-      gl_FragColor.rgb = blip * vColor;
-      gl_FragColor.a = 1.0; // dimmed != 0.0 ? dimmed : 1.0;
     }
   `,
 })

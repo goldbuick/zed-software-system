@@ -55,6 +55,7 @@ export function Tiles({ id, layer }: LayerProps) {
         state.height,
         state.char,
         state.color,
+        state.bg,
       )
     } else {
       // create data texture with current chars
@@ -63,6 +64,7 @@ export function Tiles({ id, layer }: LayerProps) {
         state.height,
         state.char,
         state.color,
+        state.bg,
       )
     }
 
@@ -82,22 +84,14 @@ export function Tiles({ id, layer }: LayerProps) {
     if (!map) {
       return
     }
-    // console.info('config material')
-    const strokeWidth = 0.8
-    const outline = false
-    material.transparent = dimmed || outline
     material.uniforms.map.value = map
     material.uniforms.alt.value = map // alt
-    material.uniforms.dimmed.value = dimmed ? 0.5 : 0
-    material.uniforms.transparent.value = outline
     material.uniforms.size.value.x = 1 / width
     material.uniforms.size.value.y = 1 / height
     material.uniforms.step.value.x =
       1 / Math.round(imageWidth / TILE_IMAGE_SIZE)
     material.uniforms.step.value.y =
       1 / Math.round(imageHeight / TILE_IMAGE_SIZE)
-    material.uniforms.ox.value = (1 / imageWidth) * strokeWidth
-    material.uniforms.oy.value = (1 / imageHeight) * strokeWidth
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true

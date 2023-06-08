@@ -4,8 +4,9 @@ import { cloneMaterial, interval, time } from './anim'
 import { threeColors } from './colors'
 import { TILE_FIXED_WIDTH, TILE_SIZE } from './types'
 
-type TILE_CHARS = (number | undefined)[]
-type TILE_COLORS = (number | undefined)[]
+type MAYBE_NUMBER = number | undefined
+type TILE_CHARS = MAYBE_NUMBER[]
+type TILE_COLORS = MAYBE_NUMBER[]
 
 const BOTTOM_LEFT = [0, 1, 0]
 const BOTTOM_RIGHT = [1, 1, 0]
@@ -31,38 +32,22 @@ const QUAD_UVS = new Float32Array([
   ...TOP_RIGHT.slice(0, 2),
 ])
 
-export function writeTilemapDataTexture(
-  texture: THREE.DataTexture,
-  width: number,
-  height: number,
-  x: number,
-  y: number,
-  tchar: number | undefined,
-  tcolor: number | undefined,
-) {
-  let i = (x + y * width) * 4
-  const char = tchar ?? 0
-  texture.image.data[i++] = char % TILE_FIXED_WIDTH
-  texture.image.data[i++] = Math.floor(char / TILE_FIXED_WIDTH)
-  texture.image.data[i++] = tcolor ?? 16
-  texture.needsUpdate = true
-}
-
 export function updateTilemapDataTexture(
   texture: THREE.DataTexture,
   width: number,
   height: number,
-  tchars: TILE_CHARS,
-  tcolors: TILE_COLORS,
+  tchar: TILE_CHARS,
+  tcolor: TILE_COLORS,
+  tbg: TILE_COLORS,
 ) {
   const size = width * height * 4
   for (let i = 0, t = 0; i < size; ++t) {
-    const char = tchars[t] ?? 0
-    // x, y, color
+    const char = tchar[t] ?? 0
+    // x, y, color, bg
     texture.image.data[i++] = char % TILE_FIXED_WIDTH
     texture.image.data[i++] = Math.floor(char / TILE_FIXED_WIDTH)
-    texture.image.data[i++] = tcolors[t] ?? 16
-    i++
+    texture.image.data[i++] = tcolor[t] ?? 16
+    texture.image.data[i++] = tbg[t] ?? 16
   }
   texture.needsUpdate = true
   return texture
@@ -71,12 +56,13 @@ export function updateTilemapDataTexture(
 export function createTilemapDataTexture(
   width: number,
   height: number,
-  tchars: TILE_CHARS,
-  tcolors: TILE_COLORS,
+  tchar: TILE_CHARS,
+  tcolor: TILE_COLORS,
+  tbg: TILE_COLORS,
 ) {
   const data = new Uint8Array(4 * width * height)
   const texture = new THREE.DataTexture(data, width, height)
-  return updateTilemapDataTexture(texture, width, height, tchars, tcolors)
+  return updateTilemapDataTexture(texture, width, height, tchar, tcolor, tbg)
 }
 
 export function createTilemapBufferGeometry(
@@ -106,20 +92,16 @@ export function createTilemapBufferGeometry(
 
 const tilemapMaterial = new THREE.ShaderMaterial({
   // settings
-  transparent: true,
+  transparent: false,
   uniforms: {
     time,
     interval,
-    dimmed: { value: 0 },
-    transparent: { value: false },
     map: { value: null },
     alt: { value: null },
     data: { value: null },
     colors: { value: threeColors },
     size: { value: new THREE.Vector2() },
     step: { value: new THREE.Vector2() },
-    ox: { value: 0 },
-    oy: { value: 0 },
   },
   // vertex shader
   vertexShader: `
@@ -141,41 +123,15 @@ const tilemapMaterial = new THREE.ShaderMaterial({
     #include <clipping_planes_pars_fragment>
 
     uniform float time;
-    uniform float dimmed;
     uniform float interval;
-    uniform bool transparent;
     uniform sampler2D map;
     uniform sampler2D alt;
     uniform sampler2D data;
     uniform vec3 colors[32];
     uniform vec2 size;
     uniform vec2 step;
-    uniform float ox;
-    uniform float oy;
 
     varying vec2 vUv;
-
-    bool isEmpty(sampler2D txt, vec2 uv, vec2 lookup) {
-      float tx = floor(uv.x / step.x);
-      float minx = tx * step.x + ox;
-      float maxx = (tx + 1.0) * step.x - ox;
-
-      float ty = floor(uv.y / step.y);
-      float miny = ty * step.y + oy;
-      float maxy = (ty + 1.0) * step.y - oy;
-
-      float left = clamp(uv.x - ox, minx, maxx);
-      float right = clamp(uv.x + ox, minx, maxx);
-      float top = clamp(uv.y - oy, miny, maxy);
-      float bottom = clamp(uv.y + oy, miny, maxy);
-
-      return (
-        texture2D(txt, vec2(uv.x, top)).r == 0.0 &&
-        texture2D(txt, vec2(left, uv.y)).r == 0.0 &&
-        texture2D(txt, vec2(right, uv.y)).r == 0.0 &&
-        texture2D(txt, vec2(uv.x, bottom)).r == 0.0 
-      );
-    }
 
     void main() {
       #include <clipping_planes_fragment>
@@ -186,6 +142,7 @@ const tilemapMaterial = new THREE.ShaderMaterial({
       lookup.x = floor(lookupRange.x * 255.0);
       lookup.y = floor(lookupRange.y * 255.0);
       int ci = int(floor(lookupRange.z * 255.0));
+      int bgi = int(floor(lookupRange.w * 255.0));
 
       vec2 charPosition = mod(vUv, size) / size;
       vec2 uv = vec2(charPosition.x * step.x, charPosition.y * step.y);
@@ -197,15 +154,12 @@ const tilemapMaterial = new THREE.ShaderMaterial({
       bool useAlt = mod(time, interval * 2.0) > interval;
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
 
-      if (transparent && blip.r == 0.0) {
-        bool empty = useAlt ? isEmpty(alt, uv, lookup) : isEmpty(map, uv, lookup);
-        if (empty) {
-          discard;
-        }
+      if (blip.r == 0.0) {
+        color = colors[bgi];
       }
 
-      gl_FragColor.rgb = blip * color;
-      gl_FragColor.a = dimmed > 0.0 ? dimmed : 1.0;
+      gl_FragColor.rgb = color;
+      gl_FragColor.a = 1.0;
     }
   `,
 })
