@@ -6,7 +6,7 @@ import { useClipping } from '../clipping'
 import { getSLState } from '../data/sprites'
 import { time } from '../img/anim'
 import defaultCharSetUrl from '../img/charSet.png'
-import { createPointsMaterial } from '../img/sprites'
+import { createSpritesMaterial } from '../img/sprites'
 import { TILE_FIXED_COLS, TILE_IMAGE_SIZE } from '../img/types'
 import useTexture from '../img/useTexture'
 
@@ -150,7 +150,7 @@ export function Sprites({ id, layer }: LayerProps) {
   })
 
   const clippingPlanes = useClipping()
-  const material = useMemo(() => createPointsMaterial(), [])
+  const material = useMemo(() => createSpritesMaterial(), [])
   const { width: imageWidth = 0, height: imageHeight = 0 } = map.image ?? {}
 
   // config material

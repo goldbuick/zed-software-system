@@ -4,7 +4,7 @@ import { cloneMaterial, interval, time } from './anim'
 import { COLOR, threeColors } from './colors'
 import { TILE_SIZE } from './types'
 
-const pointsMaterial = new THREE.ShaderMaterial({
+const spritesMaterial = new THREE.ShaderMaterial({
   // settings
   transparent: true,
   uniforms: {
@@ -133,6 +133,6 @@ const pointsMaterial = new THREE.ShaderMaterial({
   `,
 })
 
-export function createPointsMaterial() {
-  return cloneMaterial(pointsMaterial)
+export function createSpritesMaterial() {
+  return cloneMaterial(spritesMaterial)
 }

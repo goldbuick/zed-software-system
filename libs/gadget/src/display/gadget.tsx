@@ -59,22 +59,28 @@ export function Gadget() {
     const tileTest = createTL({
       width: TEST_WIDTH,
       height: TEST_HEIGHT,
-      char: new Array(TEST_WIDTH * TEST_HEIGHT).fill(176),
-      color: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.DARK_SKYBLUE),
-      bg: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.DARK_GREEN),
+      char: new Array(TEST_WIDTH * TEST_HEIGHT).fill(219).map((c, i) => {
+        const chart = i - TEST_WIDTH * 5
+        if (chart >= 0 && chart <= 255) {
+          return chart
+        }
+        return c
+      }),
+      color: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.PURPLE),
+      bg: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.BLACK),
     })
     addGL(gadget, tileTest.id, tileTest.layer)
 
-    const spriteTest = createSL({
-      sprites: new Array(TEST_SPRITES).fill(0).map((v, i) => ({
-        x: randomInteger(0, TEST_WIDTH - 1),
-        y: randomInteger(0, TEST_HEIGHT - 1),
-        char: randomInteger(1, 15),
-        color: COLOR.GREEN,
-        bg: COLOR.MAGENTA,
-      })),
-    })
-    addGL(gadget, spriteTest.id, spriteTest.layer)
+    // const spriteTest = createSL({
+    //   sprites: new Array(TEST_SPRITES).fill(0).map((v, i) => ({
+    //     x: randomInteger(0, TEST_WIDTH - 1),
+    //     y: randomInteger(0, TEST_HEIGHT - 1),
+    //     char: randomInteger(1, 15),
+    //     color: COLOR.GREEN,
+    //     bg: COLOR.MAGENTA,
+    //   })),
+    // })
+    // addGL(gadget, spriteTest.id, spriteTest.layer)
 
     let offset = 0
     const ds = 0.01
@@ -82,42 +88,42 @@ export function Gadget() {
     const timer = setInterval(() => {
       const phase = Math.round(1 + Math.abs(Math.sin(offset * 0.001) * 14))
 
-      writeTL(tileTest.layer, ({ width, height, color, char, bg }) => {
-        for (let i = 0; i < TEST_RATE; ++i) {
-          const x = randomInteger(0, width - 1)
-          const y = randomInteger(0, height - 1)
-          const slider = Math.cos(x * ds + y * 0.25 * ds + offset * os)
-          setMapGridValue(
-            char,
-            width,
-            x,
-            y,
-            fade[Math.abs(Math.round(slider * (fade.length - 1)))],
-          )
-          if (randomInteger(0, 50) < 25) {
-            setMapGridValue(color, width, x, y, phase + 16)
-          } else {
-            setMapGridValue(bg, width, x, y, COLOR.MAX - phase)
-          }
-        }
-      })
+      // writeTL(tileTest.layer, ({ width, height, color, char, bg }) => {
+      //   for (let i = 0; i < TEST_RATE; ++i) {
+      //     const x = randomInteger(0, width - 1)
+      //     const y = randomInteger(0, height - 1)
+      //     const slider = Math.cos(x * ds + y * 0.25 * ds + offset * os)
+      //     setMapGridValue(
+      //       char,
+      //       width,
+      //       x,
+      //       y,
+      //       fade[Math.abs(Math.round(slider * (fade.length - 1)))],
+      //     )
+      //     if (randomInteger(0, 50) < 25) {
+      //       setMapGridValue(color, width, x, y, phase + 16)
+      //     } else {
+      //       setMapGridValue(bg, width, x, y, COLOR.MAX - phase)
+      //     }
+      //   }
+      // })
 
-      const ids = getSLSpriteIds(spriteTest.layer)
-      spriteTest.layer.doc?.transact(function () {
-        for (let i = 0; i < TEST_RATE_2; ++i) {
-          const id = select(ids)
-          const sprite = getSLSprite(spriteTest.layer, id)
-          const x = sprite?.get('x') ?? 0
-          const y = sprite?.get('y') ?? 0
-          setSLSpriteXY(
-            sprite,
-            randomInteger(Math.max(0, x - 1), Math.min(TEST_WIDTH - 1, x + 1)),
-            randomInteger(Math.max(0, y - 1), Math.min(TEST_HEIGHT - 1, y + 1)),
-          )
-          setSLSpriteColor(sprite, phase)
-          setSLSpriteBg(sprite, 16 - phase)
-        }
-      })
+      // const ids = getSLSpriteIds(spriteTest.layer)
+      // spriteTest.layer.doc?.transact(function () {
+      //   for (let i = 0; i < TEST_RATE_2; ++i) {
+      //     const id = select(ids)
+      //     const sprite = getSLSprite(spriteTest.layer, id)
+      //     const x = sprite?.get('x') ?? 0
+      //     const y = sprite?.get('y') ?? 0
+      //     setSLSpriteXY(
+      //       sprite,
+      //       randomInteger(Math.max(0, x - 1), Math.min(TEST_WIDTH - 1, x + 1)),
+      //       randomInteger(Math.max(0, y - 1), Math.min(TEST_HEIGHT - 1, y + 1)),
+      //     )
+      //     setSLSpriteColor(sprite, phase)
+      //     setSLSpriteBg(sprite, 16 - phase)
+      //   }
+      // })
 
       ++offset
     }, Math.round(1000 / 15))
