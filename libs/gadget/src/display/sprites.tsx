@@ -7,7 +7,7 @@ import { getSLState } from '../data/sprites'
 import { time } from '../img/anim'
 import defaultCharSetUrl from '../img/charSet.png'
 import { createPointsMaterial } from '../img/sprites'
-import { TILE_FIXED_WIDTH, TILE_IMAGE_SIZE, TILE_SIZE } from '../img/types'
+import { TILE_FIXED_COLS, TILE_IMAGE_SIZE } from '../img/types'
 import useTexture from '../img/useTexture'
 
 import { LayerProps } from './types'
@@ -74,8 +74,8 @@ export function Sprites({ id, layer }: LayerProps) {
         position.setXY(i, sprite.x, sprite.y)
         charData.setXYZW(
           i,
-          sprite.char % TILE_FIXED_WIDTH,
-          Math.floor(sprite.char / TILE_FIXED_WIDTH),
+          sprite.char % TILE_FIXED_COLS,
+          Math.floor(sprite.char / TILE_FIXED_COLS),
           sprite.color,
           sprite.bg,
         )
@@ -139,8 +139,8 @@ export function Sprites({ id, layer }: LayerProps) {
           }
         }
 
-        const ncharu = sprite.char % TILE_FIXED_WIDTH
-        const ncharv = Math.floor(sprite.char / TILE_FIXED_WIDTH)
+        const ncharu = sprite.char % TILE_FIXED_COLS
+        const ncharv = Math.floor(sprite.char / TILE_FIXED_COLS)
         if (ccharu !== ncharu || ccharv !== ncharv) {
           charData.setXY(i, ncharu, ncharv)
           charData.needsUpdate = true
@@ -158,8 +158,6 @@ export function Sprites({ id, layer }: LayerProps) {
     if (!map) {
       return
     }
-    // console.info('config material')
-    const strokeWidth = 0.8
     const imageCols = Math.round(imageWidth / TILE_IMAGE_SIZE)
     const imageRows = Math.round(imageHeight / TILE_IMAGE_SIZE)
     material.transparent = true
@@ -168,9 +166,6 @@ export function Sprites({ id, layer }: LayerProps) {
     material.uniforms.rows.value = imageRows - 1
     material.uniforms.step.value.x = 1 / imageCols
     material.uniforms.step.value.y = 1 / imageRows
-    material.uniforms.pointSize.value = TILE_SIZE
-    material.uniforms.ox.value = (1 / imageWidth) * strokeWidth
-    material.uniforms.oy.value = (1 / imageHeight) * strokeWidth
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true

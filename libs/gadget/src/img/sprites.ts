@@ -2,6 +2,7 @@ import * as THREE from 'three'
 
 import { cloneMaterial, interval, time } from './anim'
 import { COLOR, threeColors } from './colors'
+import { TILE_SIZE } from './types'
 
 const pointsMaterial = new THREE.ShaderMaterial({
   // settings
@@ -12,12 +13,10 @@ const pointsMaterial = new THREE.ShaderMaterial({
     rate: { value: 15.0 },
     map: { value: null },
     alt: { value: null },
-    pointSize: { value: 1 },
+    pointSize: { value: TILE_SIZE },
     colors: { value: threeColors },
     rows: { value: 1 },
     step: { value: new THREE.Vector2() },
-    ox: { value: 0 },
-    oy: { value: 0 },
     tindex: { value: COLOR.MAGENTA },
   },
   // vertex shader
@@ -107,34 +106,10 @@ const pointsMaterial = new THREE.ShaderMaterial({
     uniform sampler2D alt;
     uniform float rows;
     uniform vec2 step;
-    uniform float ox;
-    uniform float oy;
 
     varying vec2 vCharData;
     varying vec3 vColor;
     varying vec4 vBg;
-
-    bool isEmpty(sampler2D txt, vec2 uv, vec2 lookup) {
-      float tx = floor(uv.x / step.x);
-      float minx = tx * step.x + ox;
-      float maxx = (tx + 1.0) * step.x - ox;
-
-      float ty = floor(uv.y / step.y);
-      float miny = ty * step.y + oy;
-      float maxy = (ty + 1.0) * step.y - oy;
-
-      float left = clamp(uv.x - ox, minx, maxx);
-      float right = clamp(uv.x + ox, minx, maxx);
-      float top = clamp(uv.y - oy, miny, maxy);
-      float bottom = clamp(uv.y + oy, miny, maxy);
-
-      return (
-        texture2D(txt, vec2(uv.x, top)).r == 0.0 &&
-        texture2D(txt, vec2(left, uv.y)).r == 0.0 &&
-        texture2D(txt, vec2(right, uv.y)).r == 0.0 &&
-        texture2D(txt, vec2(uv.x, bottom)).r == 0.0 
-      );
-    }
 
     void main() {
       #include <clipping_planes_fragment>
@@ -149,14 +124,7 @@ const pointsMaterial = new THREE.ShaderMaterial({
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
-        if (vBg.a < 0.1) {
-          bool empty = useAlt ? isEmpty(alt, uv, lookup) : isEmpty(map, uv, lookup);
-          if (empty) {
-            discard;
-          }
-        } else {
-          gl_FragColor = vBg;
-        }
+        gl_FragColor = vBg;
       } else {
         gl_FragColor.rgb = vColor;
         gl_FragColor.a = 1.0;

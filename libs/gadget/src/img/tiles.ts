@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 import { cloneMaterial, interval, time } from './anim'
 import { threeColors } from './colors'
-import { TILE_FIXED_WIDTH, TILE_SIZE } from './types'
+import { TILE_FIXED_COLS, TILE_SIZE } from './types'
 
 type MAYBE_NUMBER = number | undefined
 type TILE_CHARS = MAYBE_NUMBER[]
@@ -44,8 +44,8 @@ export function updateTilemapDataTexture(
   for (let i = 0, t = 0; i < size; ++t) {
     const char = tchar[t] ?? 0
     // x, y, color, bg
-    texture.image.data[i++] = char % TILE_FIXED_WIDTH
-    texture.image.data[i++] = Math.floor(char / TILE_FIXED_WIDTH)
+    texture.image.data[i++] = char % TILE_FIXED_COLS
+    texture.image.data[i++] = Math.floor(char / TILE_FIXED_COLS)
     texture.image.data[i++] = tcolor[t] ?? 16
     texture.image.data[i++] = tbg[t] ?? 16
   }
