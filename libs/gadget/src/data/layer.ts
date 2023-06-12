@@ -28,11 +28,3 @@ export function setLCharSet(layer: MAYBE_MAP, charSet: string) {
 export function getLCharSet(layer: MAYBE_MAP): string {
   return layer?.get('charSet') || ''
 }
-
-export function setLDimmed(layer: MAYBE_MAP, dimmed: boolean) {
-  layer?.set('dimmed', dimmed)
-}
-
-export function getLDimmed(layer: MAYBE_MAP): boolean {
-  return layer?.get('dimmed') || false
-}
