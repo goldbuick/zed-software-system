@@ -2,7 +2,7 @@
 import { createGuid } from '@zss/system/mapping/guid'
 import * as Y from 'yjs'
 
-import { GADGET_LAYER } from './types'
+import { GADGET_LAYER } from './layer'
 
 export type GLDefault = {
   id?: string

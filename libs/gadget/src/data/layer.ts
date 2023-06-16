@@ -1,6 +1,13 @@
 import { MAYBE_MAP } from '@zss/yjs/types'
 
-import { GADGET_LAYER } from './types'
+export enum GADGET_LAYER {
+  BLANK,
+  TILES,
+  SPRITES,
+  DITHER,
+  GUI,
+  MEDIA,
+}
 
 /*
  * there are different kinds of layers

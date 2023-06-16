@@ -3,7 +3,7 @@ import { createGuid } from '@zss/system/mapping/guid'
 import { MAYBE_MAP } from '@zss/yjs/types'
 import * as Y from 'yjs'
 
-import { GADGET_LAYER } from './types'
+import { GADGET_LAYER } from './layer'
 
 type SLSpriteDefault = {
   id?: string

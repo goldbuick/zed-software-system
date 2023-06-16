@@ -3,8 +3,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { BufferGeometry } from 'three'
 
 import { useClipping } from '../clipping'
-import { getTLState } from '../data/tiles'
-import defaultCharSetUrl from '../img/charSet.png'
+import { getDLState } from '../data/dither'
+import {
+  createDitherDataTexture,
+  createDitherMaterial,
+  updateDitherDataTexture,
+} from '../img/dither'
 import {
   createTilemapBufferGeometry,
   createTilemapDataTexture,
@@ -17,10 +21,6 @@ import useTexture from '../img/useTexture'
 import { LayerProps } from './types'
 
 export function Tiles({ id, layer }: LayerProps) {
-  // test code begin
-  const map = useTexture(defaultCharSetUrl)
-  // test code end
-
   const bgRef = useRef<BufferGeometry>(null)
   const [width, setWidth] = useState(0)
   const [height, setHeight] = useState(0)
@@ -31,7 +31,7 @@ export function Tiles({ id, layer }: LayerProps) {
       return
     }
 
-    const state = getTLState(layer)
+    const state = getDLState(layer)
     // console.info(state)
 
     if (state.width !== width) {
@@ -44,22 +44,18 @@ export function Tiles({ id, layer }: LayerProps) {
 
     if (material.uniforms.data.value) {
       // update data texture with current chars
-      updateTilemapDataTexture(
+      updateDitherDataTexture(
         material.uniforms.data.value,
         state.width,
         state.height,
-        state.char,
-        state.color,
-        state.bg,
+        state.alpha,
       )
     } else {
       // create data texture with current chars
-      material.uniforms.data.value = createTilemapDataTexture(
+      material.uniforms.data.value = createDitherDataTexture(
         state.width,
         state.height,
-        state.char,
-        state.color,
-        state.bg,
+        state.alpha,
       )
     }
 
@@ -71,26 +67,16 @@ export function Tiles({ id, layer }: LayerProps) {
   })
 
   const clippingPlanes = useClipping()
-  const material = useMemo(() => createTilemapMaterial(), [])
-  const { width: imageWidth = 0, height: imageHeight = 0 } = map.image ?? {}
+  const material = useMemo(() => createDitherMaterial(), [])
 
   // config material
   useEffect(() => {
-    if (!map) {
-      return
-    }
-    material.uniforms.map.value = map
-    material.uniforms.alt.value = map // alt
     material.uniforms.size.value.x = 1 / width
     material.uniforms.size.value.y = 1 / height
-    material.uniforms.step.value.x =
-      1 / Math.round(imageWidth / TILE_IMAGE_SIZE)
-    material.uniforms.step.value.y =
-      1 / Math.round(imageHeight / TILE_IMAGE_SIZE)
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
-  }, [map, material, width, height, imageWidth, imageHeight, clippingPlanes])
+  }, [material, width, height, clippingPlanes])
 
   return (
     <mesh material={material}>

@@ -6,7 +6,7 @@ import React, { useLayoutEffect, useState } from 'react'
 import * as Y from 'yjs'
 
 import { createGadget, getGLids, getGLs, getGL, addGL } from '../data/gadget'
-import { getLType } from '../data/layer'
+import { getLType, GADGET_LAYER } from '../data/layer'
 import {
   createSL,
   getSLSprite,
@@ -16,7 +16,6 @@ import {
   setSLSpriteXY,
 } from '../data/sprites'
 import { createTL, writeTL } from '../data/tiles'
-import { GADGET_LAYER } from '../data/types'
 import { COLOR } from '../img/colors'
 
 import { Gui } from './gui'
