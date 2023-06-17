@@ -65,6 +65,12 @@ const spritesMaterial = new THREE.ShaderMaterial({
       float deltaPosition = clamp((time - lastPosition.z) * rate, 0.0, 1.0);
       vec2 animPosition = mix(lastPosition.xy, position.xy, deltaPosition);
 
+      // todo fix clock wrapping issues
+      // time - b = # of seconds
+      // time wraps back to 0
+      // so we have to invalidate / rest anim timestamps
+      // when we detect a wrap around ...
+
       animPosition += vec2(0.5, 0.5);
 
       float deltaShake = 1.0 - clamp((time - animShake.y) * rate * 0.5, 0.0, 1.0);

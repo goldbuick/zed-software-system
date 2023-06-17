@@ -96,25 +96,25 @@ export function Gadget() {
     const timer = setInterval(() => {
       const phase = Math.round(1 + Math.abs(Math.sin(offset * 0.001) * 14))
 
-      writeTL(tileTest.layer, ({ width, height, color, char, bg }) => {
-        for (let i = 0; i < TEST_RATE; ++i) {
-          const x = randomInteger(0, width - 1)
-          const y = randomInteger(0, height - 1)
-          const slider = Math.cos(x * ds + y * 0.25 * ds + offset * os)
-          setMapGridValue(
-            char,
-            width,
-            x,
-            y,
-            fade[Math.abs(Math.round(slider * (fade.length - 1)))],
-          )
-          if (randomInteger(0, 50) < 25) {
-            setMapGridValue(color, width, x, y, phase + 16)
-          } else {
-            setMapGridValue(bg, width, x, y, COLOR.MAX - phase)
-          }
-        }
-      })
+      // writeTL(tileTest.layer, ({ width, height, color, char, bg }) => {
+      //   for (let i = 0; i < TEST_RATE; ++i) {
+      //     const x = randomInteger(0, width - 1)
+      //     const y = randomInteger(0, height - 1)
+      //     const slider = Math.cos(x * ds + y * 0.25 * ds + offset * os)
+      //     setMapGridValue(
+      //       char,
+      //       width,
+      //       x,
+      //       y,
+      //       fade[Math.abs(Math.round(slider * (fade.length - 1)))],
+      //     )
+      //     if (randomInteger(0, 50) < 25) {
+      //       setMapGridValue(color, width, x, y, phase + 16)
+      //     } else {
+      //       setMapGridValue(bg, width, x, y, COLOR.MAX - phase)
+      //     }
+      //   }
+      // })
 
       const ids = getSLSpriteIds(spriteTest.layer)
       spriteTest.layer.doc?.transact(function () {
@@ -133,26 +133,31 @@ export function Gadget() {
         }
       })
 
-      writeDL(ditherTest.layer, ({ width, height, alpha }) => {
-        const alphas = [0.8, 0.75, 0.75, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0, 0.0, 0.0]
-        const scale = 0.2
-        const slide = 0.01
-        const range = alphas.length - 1
+      if (offset % 15 === 0) {
+        writeDL(ditherTest.layer, ({ width, height, alpha }) => {
+          const alphas = [
+            0.8, 0.75, 0.65, 0.55, 0.5, 0.45, 0.4, 0.3, 0.2, 0.2, 0.1, 0.1, 0.0,
+            0.0, 0.0,
+          ]
+          const scale = 0.125
+          const slide = 0.003
+          const range = alphas.length - 1
 
-        if (alpha) {
-          alpha.toArray().forEach((v, i) => {
-            const x = i % TEST_WIDTH
-            const y = Math.floor(i / TEST_WIDTH)
-            const dx = x - TEST_WIDTH * 0.5
-            const dy = y - TEST_HEIGHT * 0.5
-            const dist = Math.sqrt(dx * dx + dy * dy)
-            const phase = Math.round(
-              Math.abs(Math.sin(dist * scale + offset * slide)) * range,
-            )
-            setMapGridValue(alpha, width, x, y, alphas[phase] ?? 0)
-          })
-        }
-      })
+          if (alpha) {
+            alpha.toArray().forEach((v, i) => {
+              const x = i % TEST_WIDTH
+              const y = Math.floor(i / TEST_WIDTH)
+              const dx = x - TEST_WIDTH * 0.5
+              const dy = y - TEST_HEIGHT * 0.5
+              const dist = Math.sqrt(dx * dx + dy * dy)
+              const phase = Math.round(
+                Math.abs(Math.sin(dist * scale + offset * slide)) * range,
+              )
+              setMapGridValue(alpha, width, x, y, alphas[phase] ?? 0)
+            })
+          }
+        })
+      }
 
       ++offset
     }, Math.round(1000 / 15))

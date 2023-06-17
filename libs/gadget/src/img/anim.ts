@@ -2,7 +2,7 @@ const epoch = Date.now()
 
 export const time = {
   get value() {
-    return ((Date.now() - epoch) / 1000) % 10000.0
+    return ((Date.now() - epoch) / 1000) % 1000000.0
   },
 }
 
