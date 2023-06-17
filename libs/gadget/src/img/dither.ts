@@ -1,8 +1,6 @@
 import * as THREE from 'three'
 
 import { cloneMaterial, interval, time } from './anim'
-import { threeColors } from './colors'
-import { TILE_FIXED_COLS, TILE_SIZE } from './types'
 
 export function updateDitherDataTexture(
   texture: THREE.DataTexture,
@@ -12,8 +10,8 @@ export function updateDitherDataTexture(
 ) {
   const size = width * height * 4
   for (let i = 0, t = 0; i < size; ++t) {
-    // x, y, color, bg
-    texture.image.data[i++] = alpha[t]
+    // alpha, skip, skip, skip
+    texture.image.data[i++] = alpha[t] * 255
     i += 3
   }
   texture.needsUpdate = true
@@ -36,12 +34,7 @@ const ditherMaterial = new THREE.ShaderMaterial({
   uniforms: {
     time,
     interval,
-    map: { value: null },
-    alt: { value: null },
     data: { value: null },
-    colors: { value: threeColors },
-    size: { value: new THREE.Vector2() },
-    step: { value: new THREE.Vector2() },
   },
   // vertex shader
   vertexShader: `
@@ -64,42 +57,33 @@ const ditherMaterial = new THREE.ShaderMaterial({
   
       uniform float time;
       uniform float interval;
-      uniform sampler2D map;
-      uniform sampler2D alt;
       uniform sampler2D data;
-      uniform vec3 colors[32];
-      uniform vec2 size;
-      uniform vec2 step;
   
       varying vec2 vUv;
-  
+
+      // adapted from https://www.shadertoy.com/view/Mlt3z8
+      float bayerDither2x2( vec2 v ) {
+        return mod( 3.0 * v.y + 2.0 * v.x, 4.0 );
+      }
+
+      float bayerDither4x4( vec2 v ) {
+        vec2 P1 = mod( v, 2.0 );
+        vec2 P2 = mod( floor( 0.5  * v ), 2.0 );
+        return 4.0 * bayerDither2x2( P1 ) + bayerDither2x2( P2 );
+      }
+
       void main() {
         #include <clipping_planes_fragment>
   
-        vec4 lookupRange = texture2D(data, vUv);
-        
-        vec2 lookup;
-        lookup.x = floor(lookupRange.x * 255.0);
-        lookup.y = floor(lookupRange.y * 255.0);
-        int ci = int(floor(lookupRange.z * 255.0));
-        int bgi = int(floor(lookupRange.w * 255.0));
-  
-        vec2 charPosition = mod(vUv, size) / size;
-        vec2 uv = vec2(charPosition.x * step.x, charPosition.y * step.y);
-        vec3 color = colors[ci];
-  
-        uv += step * lookup;
-        uv.y = 1.0 - uv.y;
-  
-        bool useAlt = mod(time, interval * 2.0) > interval;
-        vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
-  
-        if (blip.r == 0.0) {
-          color = colors[bgi];
+        float alpha = texture2D(data, vUv).r;
+        if (alpha < 1.0) {
+          vec2 ditherCoord = floor( mod( gl_FragCoord.xy, 4.0 ) );
+          if ( bayerDither4x4( ditherCoord ) / 16.0 >= alpha ) {
+            discard;
+          }
         }
-  
-        gl_FragColor.rgb = color;
-        gl_FragColor.a = 1.0;
+
+        gl_FragColor.rgba = vec4(0.0, 0.0, 0.0, 1.0);
       }
     `,
 })

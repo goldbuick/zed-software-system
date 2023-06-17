@@ -9,18 +9,11 @@ import {
   createDitherMaterial,
   updateDitherDataTexture,
 } from '../img/dither'
-import {
-  createTilemapBufferGeometry,
-  createTilemapDataTexture,
-  createTilemapMaterial,
-  updateTilemapDataTexture,
-} from '../img/tiles'
-import { TILE_IMAGE_SIZE } from '../img/types'
-import useTexture from '../img/useTexture'
+import { createTilemapBufferGeometry } from '../img/tiles'
 
 import { LayerProps } from './types'
 
-export function Tiles({ id, layer }: LayerProps) {
+export function Dither({ id, layer }: LayerProps) {
   const bgRef = useRef<BufferGeometry>(null)
   const [width, setWidth] = useState(0)
   const [height, setHeight] = useState(0)
@@ -71,12 +64,10 @@ export function Tiles({ id, layer }: LayerProps) {
 
   // config material
   useEffect(() => {
-    material.uniforms.size.value.x = 1 / width
-    material.uniforms.size.value.y = 1 / height
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
-  }, [material, width, height, clippingPlanes])
+  }, [material, clippingPlanes])
 
   return (
     <mesh material={material}>

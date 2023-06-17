@@ -19,12 +19,12 @@ export type DLDefault = {
   alpha: number[]
 }
 
-export function createTL(create: DLDefault) {
+export function createDL(create: DLDefault) {
   const id = create.id || createGuid()
   const layer = new Y.Map<any>()
 
   layer.set('id', id)
-  layer.set('type', GADGET_LAYER.TILES)
+  layer.set('type', GADGET_LAYER.DITHER)
   layer.set('alpha', createMapGrid(create.width, create.height, create.alpha))
 
   return { id, layer }
