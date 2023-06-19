@@ -61,33 +61,35 @@ const spritesMaterial = new THREE.ShaderMaterial({
       return bg;
     }
 
+    float animDelta(float startTime, float deltaMod, float maxDelta) {
+      float delta = time - startTime;
+      if (delta < 0.0) {
+        return maxDelta;
+      }
+      return clamp(delta * deltaMod, 0.0, maxDelta);
+    }
+
     void main() {
       float deltaPosition = clamp((time - lastPosition.z) * rate, 0.0, 1.0);
       vec2 animPosition = mix(lastPosition.xy, position.xy, deltaPosition);
 
-      // todo fix clock wrapping issues
-      // time - b = # of seconds
-      // time wraps back to 0
-      // so we have to invalidate / rest anim timestamps
-      // when we detect a wrap around ...
-
       animPosition += vec2(0.5, 0.5);
 
-      float deltaShake = 1.0 - clamp((time - animShake.y) * rate * 0.5, 0.0, 1.0);
+      float deltaShake = 1.0 - animDelta(animShake.y, rate * 0.5, 1.0); 
       animPosition += vec2(
         deltaShake - rand(cos(time) + animShake.x) * deltaShake * 2.0,
         deltaShake - rand(sin(time) + animShake.x) * deltaShake * 2.0
       ) * 0.5;
 
-      float deltaBounce = 1.0 - abs(1.0 - clamp((time - animBounce.y) * rate, 0.0, 2.0));
+      float deltaBounce = 1.0 - abs(1.0 - animDelta(animBounce.y, rate, 2.0));
       animPosition.y -= smoothstep(0.0, 1.0, deltaBounce);
 
-      float deltaColor = clamp((time - lastColor.y) * rate * 0.4, 0.0, 1.0);
+      float deltaColor = animDelta(lastColor.y, rate * 0.4, 1.0);
       vec3 sourceColor = colorFromIndex(lastColor.x);
       vec3 destColor = colorFromIndex(charData.z);
       vColor = mix(sourceColor, destColor, deltaColor);
 
-      float deltaBg = clamp((time - lastBg.y) * rate * 0.4, 0.0, 1.0);
+      float deltaBg = animDelta(lastBg.y, rate * 0.4, 1.0);
       vec4 sourceBg = bgFromIndex(lastBg.x);
       vec4 destBg = bgFromIndex(charData.w);
       vBg = mix(sourceBg, destBg, deltaBg);
