@@ -16,6 +16,14 @@ export function createMapFromObject(object: any) {
   return map
 }
 
+export function getValueFromMap<T extends string | number | null>(
+  map: MAYBE_MAP,
+  key: string,
+  defaultValue: T,
+): T {
+  return map?.get(key) ?? defaultValue
+}
+
 export function createMapGrid<T extends string | number | null>(
   width: number,
   height: number,

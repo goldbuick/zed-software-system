@@ -16,7 +16,7 @@ import useTexture from '../img/useTexture'
 
 import { LayerProps } from './types'
 
-export function Tiles({ id, layer }: LayerProps) {
+export function Tiles({ layer }: LayerProps) {
   // test code begin
   const map = useTexture(defaultCharSetUrl)
   // test code end

@@ -13,7 +13,7 @@ import { createTilemapBufferGeometry } from '../img/tiles'
 
 import { LayerProps } from './types'
 
-export function Dither({ id, layer }: LayerProps) {
+export function Dither({ layer }: LayerProps) {
   const bgRef = useRef<BufferGeometry>(null)
   const [width, setWidth] = useState(0)
   const [height, setHeight] = useState(0)

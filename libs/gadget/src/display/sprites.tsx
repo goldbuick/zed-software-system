@@ -12,7 +12,7 @@ import useTexture from '../img/useTexture'
 
 import { LayerProps } from './types'
 
-export function Sprites({ id, layer }: LayerProps) {
+export function Sprites({ layer }: LayerProps) {
   // test code begin
   const map = useTexture(defaultCharSetUrl)
   // test code end

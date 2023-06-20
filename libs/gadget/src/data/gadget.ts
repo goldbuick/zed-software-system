@@ -7,18 +7,14 @@ type GadgetDefault = {
   id?: string
 }
 
-export function createGadget(doc: Y.Doc, create: GadgetDefault) {
+export function createGadget(create: GadgetDefault) {
   const id = create.id || createGuid()
 
   const gadget = new Y.Map<any>()
   gadget.set('id', id)
   gadget.set('layers', new Y.Map<any>())
 
-  // add to document
-  const gadgets = doc.getMap('gadgets')
-  gadgets.set(id, gadget)
-
-  return gadget
+  return { id, gadget }
 }
 
 export function destroyGadget(gadget: MAYBE_MAP) {

@@ -1,0 +1,12 @@
+import { COLOR } from '../../img/colors'
+
+export enum THEME_COLOR {
+  PRIMARY = COLOR.PURPLE,
+  PRIMARY_TEXT = COLOR.DARK_PURPLE,
+  PRIMARY_TEXT_ACTIVE = COLOR.WHITE,
+  SECONDARY = COLOR.LIME,
+}
+
+export enum FRAME {
+  PANEL = 219,
+}
