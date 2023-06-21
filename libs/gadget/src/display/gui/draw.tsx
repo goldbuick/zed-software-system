@@ -27,8 +27,14 @@ export const theme = {
     text: COLOR.WHITE,
   },
   edit: {
-    text: COLOR.WHITE,
-    color: COLOR.BLACK,
+    odd: {
+      text: COLOR.WHITE,
+      color: COLOR.DARK_GREY,
+    },
+    even: {
+      text: COLOR.WHITE,
+      color: COLOR.BLACK,
+    },
   },
   button: {
     disabled: COLOR.DARK_GREY,

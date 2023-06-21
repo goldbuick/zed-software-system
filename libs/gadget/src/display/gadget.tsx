@@ -1,9 +1,8 @@
 import { useObservable } from '@zss/yjs/binding'
 import { MAYBE_MAP } from '@zss/yjs/types'
-import { useLayoutEffect, useState } from 'react'
+import { useState } from 'react'
 
-import { getGLids, getGLs, getGL, addGL } from '../data/gadget'
-import { GUI_ELEMENT, createGL } from '../data/gui'
+import { getGLids, getGLs, getGL } from '../data/gadget'
 import { getLType, GADGET_LAYER } from '../data/layer'
 
 import { Dither } from './dither'

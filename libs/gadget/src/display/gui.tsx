@@ -11,7 +11,7 @@ import {
 } from '../data/gui'
 
 import { Button } from './gui/button'
-import { LayoutCursor } from './gui/context'
+import { LayoutCursor, MoveCursor } from './gui/context'
 import { Draw, theme } from './gui/draw'
 import { Label } from './gui/label'
 import { TextEdit } from './gui/textedit'
@@ -59,6 +59,8 @@ export function Gui({ layer }: LayerProps) {
                   return <Button element={element} />
                 case GUI_ELEMENT.TEXT_EDIT:
                   return <TextEdit element={element} />
+                case GUI_ELEMENT.EOL:
+                  return <MoveCursor eol />
                 default:
                   return null
               }

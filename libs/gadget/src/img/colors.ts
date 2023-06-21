@@ -34,7 +34,7 @@ const baseColors = [
   '#EB8931', // PUMPKIN
   '#F4B990', // TAUPE
   '#F7E26B', // YELLOW
-  '#808080', // GREY // 50
+  '#606060', // GREY // 50
   '#FFFFFF', // WHITE // 100
 ]
 
@@ -78,7 +78,7 @@ const dimColors = [
   '#331B05', // PUMPKIN
   '#493C2B', // TAUPE
   '#433903', // YELLOW
-  '#404040', // DARK_GREY // 25
+  '#101010', // DARK_GREY // 25
   '#bfbfbf', // LIGHT_GREY // 75
 ]
 

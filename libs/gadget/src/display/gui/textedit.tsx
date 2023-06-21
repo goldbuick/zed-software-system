@@ -1,7 +1,7 @@
 import { GUI_ELEMENT } from '../../data/gui'
 import { ElementProps } from '../types'
 
-import { MoveCursor } from './context'
+import { MoveCursorRender } from './context'
 import { theme, Draw, drawStringPadEnd } from './draw'
 import { ElementState } from './elementstate'
 
@@ -17,21 +17,29 @@ export function TextEdit({ element }: ElementProps) {
         const height = 1
         const count = width * height
 
-        const chars = drawStringPadEnd(state.value, width)
-        const colors = Array(count).fill(theme.edit.text)
-        const bgs = Array(count).fill(theme.edit.color)
-
         return (
-          <MoveCursor width={width + 1} height={height}>
-            <Draw
-              key={count}
-              width={width}
-              height={height}
-              chars={chars}
-              colors={colors}
-              bgs={bgs}
-            ></Draw>
-          </MoveCursor>
+          <MoveCursorRender width={width + 1} height={height}>
+            {({ even }) => {
+              const chars = drawStringPadEnd(state.value, width)
+              const colors = Array(count).fill(
+                even ? theme.edit.even.text : theme.edit.odd.text,
+              )
+              const bgs = Array(count).fill(
+                even ? theme.edit.even.color : theme.edit.odd.color,
+              )
+
+              return (
+                <Draw
+                  key={count}
+                  width={width}
+                  height={height}
+                  chars={chars}
+                  colors={colors}
+                  bgs={bgs}
+                />
+              )
+            }}
+          </MoveCursorRender>
         )
       }}
     </ElementState>

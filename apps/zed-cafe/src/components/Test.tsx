@@ -56,12 +56,17 @@ export function Test() {
     // addGL(test.gadget, ditherTest.id, ditherTest.layer)
 
     const guiTest = data.createGL({
-      maxWidth: 30,
+      maxWidth: 40,
       elements: [
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.LABEL, width: 5, label: ' rad:' },
+        { type: data.GUI_ELEMENT.TEXT_EDIT, width: 14, value: 'woah' },
         { type: data.GUI_ELEMENT.BUTTON, label: 'boot' },
-        { type: data.GUI_ELEMENT.LABEL, width: 5, label: 'rad:' },
-        { type: data.GUI_ELEMENT.TEXT_EDIT, width: 10, value: 'woah' },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.LABEL, width: 5, label: ' sad:' },
+        { type: data.GUI_ELEMENT.TEXT_EDIT, width: 14, value: 'alt' },
         { type: data.GUI_ELEMENT.BUTTON, label: 'doot' },
+        { type: data.GUI_ELEMENT.EOL },
       ],
     })
     data.addGL(test.gadget, guiTest.id, guiTest.layer)

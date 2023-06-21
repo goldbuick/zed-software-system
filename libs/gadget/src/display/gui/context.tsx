@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid'
 import React, {
   ReactNode,
+  ReactElement,
   useContext,
   useLayoutEffect,
   useRef,
@@ -43,24 +44,29 @@ export function LayoutCursor({
         let maxHeight = 0
 
         ref.current.traverse((obj: THREE.Object3D) => {
-          const { parentId, width, height, onSetY } = (obj?.userData ?? {}) as {
+          const { parentId, width, height, eol, onEven } = (obj?.userData ??
+            {}) as {
             parentId: string | undefined
             width: number | undefined
             height: number | undefined
-            onSetY: ((y: number) => void) | undefined
+            eol: boolean | undefined
+            onEven: ((even: boolean) => void) | undefined
           }
           if (parentId === parent.id) {
             const useWidth = width ?? 0
             const useHeight = height ?? 0
-            if (cursorX + useWidth > maxWidth) {
+
+            if (eol || cursorX + useWidth > maxWidth) {
               cursorX = 0
               cursorY += Math.max(1, maxHeight)
               maxHeight = 0
             }
-            onSetY?.(cursorY)
+
+            onEven?.(cursorY % 2 === 0)
             obj.position.x = cursorX * TILE_SIZE
             obj.position.y = cursorY * TILE_SIZE
-            cursorX += useWidth
+
+            cursorX += eol ? 0 : useWidth
             maxHeight = Math.max(useHeight, maxHeight)
           }
         })
@@ -80,18 +86,20 @@ export function LayoutCursor({
   )
 }
 
-export interface MoveCursorProps {
-  width: number
-  height: number
+interface MoveCursorProps {
+  width?: number
+  height?: number
+  eol?: boolean
   children?: ReactNode
-  onSetY?: (y: number) => void
+  onEven?: (even: boolean) => void
 }
 
 export function MoveCursor({
-  width,
-  height,
+  width = 0,
+  height = 0,
+  eol = false,
   children,
-  onSetY,
+  onEven,
   ...props
 }: MoveCursorProps) {
   const parent = useContext(LayoutCursorContext)
@@ -108,9 +116,37 @@ export function MoveCursor({
   return (
     <group
       {...props}
-      userData={{ parentId: parent?.id, width, height, onSetY }}
+      userData={{ parentId: parent?.id, width, height, eol, onEven }}
     >
       {children}
     </group>
+  )
+}
+
+interface MoveCursorRenderArgs {
+  width: number
+  height: number
+  eol: boolean
+  even: boolean
+}
+
+interface MoveCursorRenderProps {
+  width: number
+  height: number
+  eol: boolean
+  children: (args: MoveCursorRenderArgs) => ReactElement | null
+}
+
+export function MoveCursorRender({
+  width,
+  height,
+  eol,
+  children,
+}: MoveCursorRenderProps) {
+  const [even, setEven] = useState(true)
+  return (
+    <MoveCursor width={width} height={height} onEven={setEven}>
+      {children({ width, height, eol, even })}
+    </MoveCursor>
   )
 }
