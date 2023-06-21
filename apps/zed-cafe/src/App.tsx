@@ -1,8 +1,13 @@
 import { OrthographicCamera, Stats, Loader } from '@react-three/drei'
 import { Canvas, events, RootState } from '@react-three/fiber'
+import {
+  EffectComposer,
+  ChromaticAberration,
+} from '@react-three/postprocessing'
 import { Gadget } from '@zss/gadget'
 import { Gateway } from '@zss/network/gateway'
 import { makeEven } from '@zss/system/mapping/number'
+import { BlendFunction } from 'postprocessing'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
 
@@ -123,6 +128,12 @@ export function App() {
               <Gadget />
             </Framing>
             {showStats && <Stats />}
+            <EffectComposer>
+              <ChromaticAberration
+                blendFunction={BlendFunction.NORMAL} // blend mode
+                offset={[0.0007, 0.0]} // color offset
+              />
+            </EffectComposer>
           </Canvas>
         </div>
       </div>

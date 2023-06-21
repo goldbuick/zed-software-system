@@ -12,11 +12,14 @@ import {
 
 import { Button } from './gui/button'
 import { LayoutCursor } from './gui/context'
+import { Draw, theme } from './gui/draw'
 import { Label } from './gui/label'
 import { TextEdit } from './gui/textedit'
 import { LayerProps } from './types'
 
 export function Gui({ layer }: LayerProps) {
+  const [width, setWidth] = useState(1)
+  const [height, setHeight] = useState(1)
   const [elementIds, setElementIds] = useState<string[]>([])
 
   useObservable(getGLElements(layer), () =>
@@ -24,8 +27,27 @@ export function Gui({ layer }: LayerProps) {
   )
 
   const maxWidth = getValueFromMap(layer, 'maxWidth', 0)
+  const count = width * height
+  const chars = Array(count).fill(32)
+  const colors = Array(count).fill(theme.empty)
+  const bgs = Array(count).fill(theme.panel.color)
+
   return (
-    <LayoutCursor maxWidth={maxWidth}>
+    <LayoutCursor
+      maxWidth={maxWidth}
+      onSize={(w, h) => {
+        console.info({ w, h })
+        setWidth(w)
+        setHeight(h)
+      }}
+    >
+      <Draw
+        width={width}
+        height={height}
+        chars={chars}
+        colors={colors}
+        bgs={bgs}
+      ></Draw>
       {elementIds.map((id) => {
         const element = getGLElement(layer, id)
         return (

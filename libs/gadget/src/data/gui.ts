@@ -30,6 +30,7 @@ type GLBlankDefault = GLElementCommon & {
 
 type GLLabelDefault = GLElementCommon & {
   type: GUI_ELEMENT.LABEL
+  width: number
   label: string
 }
 
@@ -44,6 +45,7 @@ export function setGLButtonPress(button: MAYBE_MAP) {
 
 type GLTextEditDefault = GLElementCommon & {
   type: GUI_ELEMENT.TEXT_EDIT
+  width: number
   value: string
 }
 
@@ -69,11 +71,15 @@ export function createGLElement(create: GLElementDefault) {
 
   element.set('type', create.type)
   switch (create.type) {
+    case GUI_ELEMENT.LABEL:
+      element.set('width', create.width)
+      element.set('label', create.label)
+      break
     case GUI_ELEMENT.BUTTON:
       element.set('label', create.label)
-      element.set('pressed', new Y.Map<boolean>())
       break
     case GUI_ELEMENT.TEXT_EDIT:
+      element.set('width', create.width)
       element.set('value', create.value)
       break
     default:
@@ -141,16 +147,24 @@ export function getGLElementState(element: MAYBE_MAP): GLElementState {
   )
 
   switch (type) {
+    case GUI_ELEMENT.LABEL:
+      return {
+        id,
+        type,
+        width: getValueFromMap(element, 'width', 0),
+        label: getValueFromMap(element, 'label', ''),
+      }
     case GUI_ELEMENT.BUTTON:
       return {
         id,
-        type: GUI_ELEMENT.BUTTON,
+        type,
         label: getValueFromMap(element, 'label', ''),
       }
     case GUI_ELEMENT.TEXT_EDIT:
       return {
         id,
-        type: GUI_ELEMENT.TEXT_EDIT,
+        type,
+        width: getValueFromMap(element, 'width', 0),
         value: getValueFromMap(element, 'value', ''),
       }
     default:

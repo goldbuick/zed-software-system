@@ -103,6 +103,8 @@ export function Gadget({ z = 0 }: GadgetProps) {
       maxWidth: 30,
       elements: [
         { type: GUI_ELEMENT.BUTTON, label: 'boot' },
+        { type: GUI_ELEMENT.LABEL, width: 5, label: 'rad:' },
+        { type: GUI_ELEMENT.TEXT_EDIT, width: 10, value: 'woah' },
         { type: GUI_ELEMENT.BUTTON, label: 'doot' },
       ],
     })

@@ -9,6 +9,7 @@
   "dependencies": {
     "@react-three/drei": "^9.57.3",
     "@react-three/fiber": "^8.12.0",
+    "@react-three/postprocessing": "^2.14.11",
     "@types/nanoid-dictionary": "^4.2.0",
     "@use-it/interval": "^1.0.0",
     "alea": "^1.0.1",

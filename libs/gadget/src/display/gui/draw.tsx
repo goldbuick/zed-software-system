@@ -3,6 +3,7 @@ import { BufferGeometry } from 'three'
 
 import { useClipping } from '../../clipping'
 import defaultCharSetUrl from '../../img/charSet.png'
+import { COLOR } from '../../img/colors'
 import {
   createTilemapBufferGeometry,
   createTilemapDataTexture,
@@ -12,7 +13,41 @@ import {
 import { TILE_IMAGE_SIZE } from '../../img/types'
 import useTexture from '../../img/useTexture'
 
-export function writeString(str: string) {
+export const theme = {
+  empty: COLOR.DARK_SKYBLUE,
+  text: COLOR.WHITE,
+  focus: COLOR.MAGENTA,
+  active: COLOR.YELLOW,
+  inactive: COLOR.GREY,
+  panel: {
+    color: COLOR.DARK_PURPLE,
+    border: COLOR.PURPLE,
+  },
+  label: {
+    text: COLOR.WHITE,
+  },
+  edit: {
+    text: COLOR.WHITE,
+    color: COLOR.BLACK,
+  },
+  button: {
+    disabled: COLOR.DARK_GREY,
+    odd: {
+      text: COLOR.DARK_LIME,
+      color: COLOR.LIME,
+    },
+    even: {
+      text: COLOR.DARK_TEAL,
+      color: COLOR.TEAL,
+    },
+    remove: {
+      text: COLOR.DARK_RED,
+      color: COLOR.RED,
+    },
+  },
+}
+
+export function drawString(str: string) {
   const chars: number[] = []
 
   for (let i = 0; i < str.length; ++i) {
@@ -22,7 +57,19 @@ export function writeString(str: string) {
   return chars
 }
 
-type ElementProps = {
+export function drawStringPadEnd(str: string, targetLength: number, pad = ' ') {
+  return drawString(str.padEnd(targetLength, pad))
+}
+
+export function drawStringPadStart(
+  str: string,
+  targetLength: number,
+  pad = ' ',
+) {
+  return drawString(str.padStart(targetLength, pad))
+}
+
+type DrawProps = {
   width: number
   height: number
   chars: number[]
@@ -30,14 +77,14 @@ type ElementProps = {
   bgs: number[]
 } & JSX.IntrinsicElements['mesh']
 
-export function Element({
+export function Draw({
   width,
   height,
   chars,
   colors,
   bgs,
   ...props
-}: ElementProps) {
+}: DrawProps) {
   const map = useTexture(defaultCharSetUrl)
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)

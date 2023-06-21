@@ -19,10 +19,15 @@ const LayoutCursorContext = React.createContext<Partial<LayoutCursorType>>({})
 
 interface LayoutCursorProps {
   maxWidth: number
+  onSize: (width: number, height: number) => void
   children?: ReactNode
 }
 
-export function LayoutCursor({ maxWidth, children }: LayoutCursorProps) {
+export function LayoutCursor({
+  maxWidth,
+  onSize,
+  children,
+}: LayoutCursorProps) {
   const ref = useRef<THREE.Group>(null)
   const [parent] = useState(
     (): LayoutCursorType => ({
@@ -36,25 +41,31 @@ export function LayoutCursor({ maxWidth, children }: LayoutCursorProps) {
         let cursorX = 0
         let cursorY = 0
         let maxHeight = 0
+
         ref.current.traverse((obj: THREE.Object3D) => {
-          const { parentId, width, height } = (obj?.userData ?? {}) as {
+          const { parentId, width, height, onSetY } = (obj?.userData ?? {}) as {
             parentId: string | undefined
             width: number | undefined
             height: number | undefined
+            onSetY: ((y: number) => void) | undefined
           }
           if (parentId === parent.id) {
+            const useWidth = width ?? 0
+            const useHeight = height ?? 0
+            if (cursorX + useWidth > maxWidth) {
+              cursorX = 0
+              cursorY += Math.max(1, maxHeight)
+              maxHeight = 0
+            }
+            onSetY?.(cursorY)
             obj.position.x = cursorX * TILE_SIZE
             obj.position.y = cursorY * TILE_SIZE
-            cursorX += width ?? 0
-            if (height !== undefined) {
-              maxHeight = Math.max(height, maxHeight)
-            }
-            if (cursorX > maxWidth) {
-              cursorX = 0
-              cursorY += 1
-            }
+            cursorX += useWidth
+            maxHeight = Math.max(useHeight, maxHeight)
           }
         })
+
+        onSize(maxWidth, cursorY + Math.max(1, maxHeight))
       },
     }),
   )
@@ -73,12 +84,14 @@ export interface MoveCursorProps {
   width: number
   height: number
   children?: ReactNode
+  onSetY?: (y: number) => void
 }
 
 export function MoveCursor({
   width,
   height,
   children,
+  onSetY,
   ...props
 }: MoveCursorProps) {
   const parent = useContext(LayoutCursorContext)
@@ -93,7 +106,10 @@ export function MoveCursor({
   }, [width, height, parent])
 
   return (
-    <group {...props} userData={{ parentId: parent?.id, width, height }}>
+    <group
+      {...props}
+      userData={{ parentId: parent?.id, width, height, onSetY }}
+    >
       {children}
     </group>
   )
