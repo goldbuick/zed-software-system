@@ -1,6 +1,6 @@
-import { useRef, useEffect } from 'react'
 import { onMessage, offMessage, MessageCallback } from '@zss/network/message'
 import { MESSAGE } from '@zss/network/types'
+import { useRef, useEffect } from 'react'
 
 export function useMessage<Key extends keyof MESSAGE>(
   message: Key,

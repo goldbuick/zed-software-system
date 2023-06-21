@@ -35,10 +35,9 @@ export function Gui({ layer }: LayerProps) {
   return (
     <LayoutCursor
       maxWidth={maxWidth}
-      onSize={(w, h) => {
-        console.info({ w, h })
-        setWidth(w)
-        setHeight(h)
+      onSize={(newWidth, newHeight) => {
+        setWidth(newWidth)
+        setHeight(newHeight)
       }}
     >
       <Draw
@@ -47,7 +46,7 @@ export function Gui({ layer }: LayerProps) {
         chars={chars}
         colors={colors}
         bgs={bgs}
-      ></Draw>
+      />
       {elementIds.map((id) => {
         const element = getGLElement(layer, id)
         return (
