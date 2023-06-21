@@ -133,14 +133,14 @@ interface MoveCursorRenderArgs {
 interface MoveCursorRenderProps {
   width: number
   height: number
-  eol: boolean
+  eol?: boolean
   children: (args: MoveCursorRenderArgs) => ReactElement | null
 }
 
 export function MoveCursorRender({
   width,
   height,
-  eol,
+  eol = false,
   children,
 }: MoveCursorRenderProps) {
   const [even, setEven] = useState(true)
