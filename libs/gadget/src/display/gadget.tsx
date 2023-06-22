@@ -44,7 +44,7 @@ export function Gadget({ gadget, z = 0 }: GadgetProps) {
       {layerIds.map((id, index) => {
         const layer = getGL(gadget, id)
         return (
-          <group key={id} position-z={index}>
+          <group key={id} position-z={index * 8}>
             {(() => {
               switch (getLType(layer)) {
                 case GADGET_LAYER.GUI:

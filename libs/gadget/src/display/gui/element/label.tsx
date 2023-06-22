@@ -1,9 +1,8 @@
-import { GUI_ELEMENT } from '../../data/gui'
-import { ElementProps } from '../types'
-
-import { MoveCursor } from './context'
-import { theme, Draw, drawStringPadEnd } from './draw'
-import { ElementState } from './elementstate'
+import { GUI_ELEMENT } from '../../../data/gui'
+import { ElementProps } from '../../types'
+import { MoveCursor } from '../context'
+import { theme, Draw, drawStringPadEnd } from '../draw'
+import { ElementState } from '../elementstate'
 
 export function Label({ element }: ElementProps) {
   return (

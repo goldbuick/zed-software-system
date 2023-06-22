@@ -131,7 +131,7 @@ export function App() {
             <EffectComposer>
               <ChromaticAberration
                 blendFunction={BlendFunction.NORMAL} // blend mode
-                offset={[0.0007, 0.0]} // color offset
+                offset={[-0.0004, 0.0004]} // color offset
               />
             </EffectComposer>
           </Canvas>

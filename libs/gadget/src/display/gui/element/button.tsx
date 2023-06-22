@@ -1,9 +1,8 @@
-import { GUI_ELEMENT } from '../../data/gui'
-import { ElementProps } from '../types'
-
-import { MoveCursorRender } from './context'
-import { theme, Draw, drawString } from './draw'
-import { ElementState } from './elementstate'
+import { GUI_ELEMENT } from '../../../data/gui'
+import { ElementProps } from '../../types'
+import { MoveCursorRender } from '../context'
+import { theme, Draw, drawString } from '../draw'
+import { ElementState } from '../elementstate'
 
 export function Button({ element }: ElementProps) {
   return (
