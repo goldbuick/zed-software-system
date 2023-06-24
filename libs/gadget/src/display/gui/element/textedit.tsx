@@ -1,5 +1,8 @@
+import React from 'react'
+
 import { GUI_ELEMENT } from '../../../data/gui'
 import { ElementProps } from '../../types'
+import { Clickable } from '../clickable'
 import { MoveCursorRender } from '../context'
 import { theme, Draw, drawStringPadEnd } from '../draw'
 import { ElementState } from '../elementstate'
@@ -28,14 +31,17 @@ export function TextEdit({ element }: ElementProps) {
               )
 
               return (
-                <Draw
-                  key={count}
-                  width={width}
-                  height={height}
-                  chars={chars}
-                  colors={colors}
-                  bgs={bgs}
-                />
+                <React.Fragment>
+                  <Draw
+                    key={count}
+                    width={width}
+                    height={height}
+                    chars={chars}
+                    colors={colors}
+                    bgs={bgs}
+                  />
+                  <Clickable width={width} height={height} cursor="text" />
+                </React.Fragment>
               )
             }}
           </MoveCursorRender>
