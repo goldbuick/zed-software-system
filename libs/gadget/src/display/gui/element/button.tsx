@@ -19,6 +19,8 @@ export function Button({ element }: ElementProps) {
         const height = 1
         const count = width * height
 
+        console.info(state)
+
         return (
           <MoveCursorRender width={width + 1} height={height}>
             {({ even }) => {
@@ -40,7 +42,13 @@ export function Button({ element }: ElementProps) {
                     colors={colors}
                     bgs={bgs}
                   />
-                  <Clickable width={width} height={height} />
+                  <Clickable
+                    width={width}
+                    height={height}
+                    onClick={() => {
+                      console.info('hi')
+                    }}
+                  />
                 </React.Fragment>
               )
             }}

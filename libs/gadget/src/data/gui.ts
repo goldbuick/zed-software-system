@@ -15,7 +15,6 @@ export enum GUI_ELEMENT {
   // content
   TEXT_EDIT,
   // layout
-  FILL,
   EOL,
   // paging ?
 }
@@ -39,18 +38,19 @@ type GLButtonDefault = GLElementCommon & {
   label: string
 }
 
-export function setGLButtonPress(button: MAYBE_MAP) {
-  //
+export function setGLButtonPress(
+  button: MAYBE_MAP,
+  id: string,
+  value: boolean,
+) {
+  const press: MAYBE_MAP = button?.get('press')
+  press?.set(id, value)
 }
 
 type GLTextEditDefault = GLElementCommon & {
   type: GUI_ELEMENT.TEXT_EDIT
   width: number
   value: string
-}
-
-type GLFillDefault = GLElementCommon & {
-  type: GUI_ELEMENT.FILL
 }
 
 type GLEOLDefault = GLElementCommon & {
@@ -62,7 +62,6 @@ type GLElementDefault =
   | GLLabelDefault
   | GLButtonDefault
   | GLTextEditDefault
-  | GLFillDefault
   | GLEOLDefault
 
 export function createGLElement(create: GLElementDefault) {
@@ -77,6 +76,7 @@ export function createGLElement(create: GLElementDefault) {
       break
     case GUI_ELEMENT.BUTTON:
       element.set('label', create.label)
+      element.set('press', new Y.Map<any>())
       break
     case GUI_ELEMENT.TEXT_EDIT:
       element.set('width', create.width)
@@ -136,7 +136,36 @@ export function getGLElement(gui: MAYBE_MAP, id: string): MAYBE_MAP {
   return elements.get(id)
 }
 
-export type GLElementState = GLElementDefault & { id: string }
+type GLBlankState = {
+  type: GUI_ELEMENT.BLANK
+}
+type GLLabelState = {
+  type: GUI_ELEMENT.LABEL
+  width: number
+  label: string
+}
+type GLButtonState = {
+  type: GUI_ELEMENT.BUTTON
+  label: string
+  press: Record<string, boolean>
+}
+type GLTextEditState = {
+  type: GUI_ELEMENT.TEXT_EDIT
+  width: number
+  value: string
+}
+type GLEOLState = {
+  type: GUI_ELEMENT.EOL
+}
+
+export type GLElementAll =
+  | GLBlankState
+  | GLLabelState
+  | GLButtonState
+  | GLTextEditState
+  | GLEOLState
+
+export type GLElementState = GLElementAll & { id: string }
 
 export function getGLElementState(element: MAYBE_MAP): GLElementState {
   const id = getValueFromMap(element, 'id', '')
@@ -154,12 +183,15 @@ export function getGLElementState(element: MAYBE_MAP): GLElementState {
         width: getValueFromMap(element, 'width', 0),
         label: getValueFromMap(element, 'label', ''),
       }
-    case GUI_ELEMENT.BUTTON:
+    case GUI_ELEMENT.BUTTON: {
+      const press: MAYBE_MAP = element?.get('press')
       return {
         id,
         type,
+        press: press ? press.toJSON() : {},
         label: getValueFromMap(element, 'label', ''),
       }
+    }
     case GUI_ELEMENT.TEXT_EDIT:
       return {
         id,
