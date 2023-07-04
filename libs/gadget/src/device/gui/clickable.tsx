@@ -1,4 +1,5 @@
 import { Plane } from '@react-three/drei'
+import { useRef } from 'react'
 
 import { useClipping } from '../../clipping'
 import { TILE_SIZE } from '../../img/types'
@@ -8,6 +9,7 @@ type ClickableProps = {
   height: number
   cursor?: 'pointer' | 'text'
   onClick?: () => void
+  onPressed?: (pressed: boolean) => void
 }
 
 function noop() {
@@ -18,38 +20,39 @@ export function Clickable({
   width,
   height,
   cursor = 'pointer',
-  onClick = () => {
-    //
-  },
+  onClick = noop,
+  onPressed = noop,
 }: ClickableProps) {
   const clippingPlanes = useClipping()
   const twidth = width * TILE_SIZE
   const theight = height * TILE_SIZE
+  const pressed = useRef(false)
   return (
     <Plane
       args={[twidth, theight]}
       userData={{ cursor, clippingPlanes, blocking: true }}
-      onClick={onClick}
+      onClick={noop}
       onPointerMove={noop}
+      onPointerDown={() => {
+        onPressed(true)
+        pressed.current = true
+      }}
+      onPointerUp={() => {
+        if (pressed.current) {
+          onClick()
+          onPressed(false)
+          pressed.current = false
+        }
+      }}
+      onPointerOut={() => {
+        if (pressed.current) {
+          onPressed(false)
+          pressed.current = false
+        }
+      }}
       position={[twidth * 0.5, theight * 0.5, 0]}
     >
       <meshBasicMaterial visible={false} clippingPlanes={clippingPlanes} />
     </Plane>
   )
 }
-
-/*
-    onClick?: (event: ThreeEvent<MouseEvent>) => void;
-    onContextMenu?: (event: ThreeEvent<MouseEvent>) => void;
-    onDoubleClick?: (event: ThreeEvent<MouseEvent>) => void;
-    onPointerUp?: (event: ThreeEvent<PointerEvent>) => void;
-    onPointerDown?: (event: ThreeEvent<PointerEvent>) => void;
-    onPointerOver?: (event: ThreeEvent<PointerEvent>) => void;
-    onPointerOut?: (event: ThreeEvent<PointerEvent>) => void;
-    onPointerEnter?: (event: ThreeEvent<PointerEvent>) => void;
-    onPointerLeave?: (event: ThreeEvent<PointerEvent>) => void;
-    onPointerMove?: (event: ThreeEvent<PointerEvent>) => void;
-    onPointerMissed?: (event: MouseEvent) => void;
-    onPointerCancel?: (event: ThreeEvent<PointerEvent>) => void;
-    onWheel?: (event: ThreeEvent<WheelEvent>) => void;
-*/

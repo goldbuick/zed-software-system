@@ -37,6 +37,7 @@ export const theme = {
     },
   },
   button: {
+    pressed: COLOR.WHITE,
     disabled: COLOR.DARK_GREY,
     odd: {
       text: COLOR.DARK_LIME,

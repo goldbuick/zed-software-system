@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createGuid } from '@zss/system/mapping/guid'
 import { getValueFromMap } from '@zss/yjs/mapping'
-import { MAYBE_MAP } from '@zss/yjs/types'
+import { MAYBE_TEXT, MAYBE_MAP } from '@zss/yjs/types'
 import * as Y from 'yjs'
 
 import { GADGET_LAYER } from './layer'
@@ -36,6 +36,7 @@ type GLLabelDefault = GLElementCommon & {
 type GLButtonDefault = GLElementCommon & {
   type: GUI_ELEMENT.BUTTON
   label: string
+  message: string
 }
 
 export function setGLButtonPress(
@@ -51,6 +52,10 @@ type GLTextEditDefault = GLElementCommon & {
   type: GUI_ELEMENT.TEXT_EDIT
   width: number
   value: string
+}
+
+export function getTextFromGLTextEdit(textEdit: MAYBE_MAP): MAYBE_TEXT {
+  return textEdit?.get('value')
 }
 
 type GLEOLDefault = GLElementCommon & {
@@ -76,11 +81,12 @@ export function createGLElement(create: GLElementDefault) {
       break
     case GUI_ELEMENT.BUTTON:
       element.set('label', create.label)
+      element.set('message', create.message)
       element.set('press', new Y.Map<any>())
       break
     case GUI_ELEMENT.TEXT_EDIT:
       element.set('width', create.width)
-      element.set('value', create.value)
+      element.set('value', new Y.Text(create.value))
       break
     default:
       break
@@ -136,25 +142,23 @@ export function getGLElement(gui: MAYBE_MAP, id: string): MAYBE_MAP {
   return elements.get(id)
 }
 
-type GLBlankState = {
+export type GLBlankState = {
   type: GUI_ELEMENT.BLANK
 }
-type GLLabelState = {
+export type GLLabelState = {
   type: GUI_ELEMENT.LABEL
   width: number
   label: string
 }
-type GLButtonState = {
-  type: GUI_ELEMENT.BUTTON
-  label: string
+export type GLButtonState = GLButtonDefault & {
   press: Record<string, boolean>
 }
-type GLTextEditState = {
+export type GLTextEditState = {
   type: GUI_ELEMENT.TEXT_EDIT
   width: number
   value: string
 }
-type GLEOLState = {
+export type GLEOLState = {
   type: GUI_ELEMENT.EOL
 }
 
@@ -189,6 +193,7 @@ export function getGLElementState(element: MAYBE_MAP): GLElementState {
         id,
         type,
         press: press ? press.toJSON() : {},
+        message: getValueFromMap(element, 'message', ''),
         label: getValueFromMap(element, 'label', ''),
       }
     }
@@ -197,7 +202,7 @@ export function getGLElementState(element: MAYBE_MAP): GLElementState {
         id,
         type,
         width: getValueFromMap(element, 'width', 0),
-        value: getValueFromMap(element, 'value', ''),
+        value: (element?.get('value') as MAYBE_TEXT)?.toJSON() ?? '',
       }
     default:
       return {
