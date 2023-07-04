@@ -110,8 +110,8 @@ function TextEditContent({
     <div
       ref={ref}
       style={{
-        // top: -100000,
-        top: 200,
+        top: -100000,
+        // top: 200,
         position: 'absolute',
         width: width * TILE_SIZE,
         height: (height + 3) * TILE_SIZE,
@@ -199,6 +199,7 @@ export function TextEditDisplay({
           setCycle(2)
           setFocused(true)
           editor.focus()
+          editor.setPosition({ lineNumber: 1, column: width })
         }}
       />
       <Html position={[0, 0, 0]}>
