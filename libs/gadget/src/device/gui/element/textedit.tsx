@@ -1,6 +1,6 @@
 import { Html } from '@react-three/drei'
 import useInterval from '@use-it/interval/dist/index'
-import { MAYBE_MAP, MAYBE_TEXT } from '@zss/yjs/types'
+import { MAYBE_TEXT } from '@zss/yjs/types'
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
 import React, { useEffect, useRef, useState } from 'react'
 
@@ -160,11 +160,22 @@ export function TextEditDisplay({
     editor?.getSelections()?.forEach((selection) => {
       let left = Math.min(selection.startColumn - 1, selection.endColumn - 1)
       let right = Math.max(selection.startColumn - 1, selection.endColumn - 1)
+
+      // selection mode vs cursor mode
+      if (selection.startColumn !== selection.endColumn) {
+        right -= 1
+      }
+
+      // skip out of bounds
       if (left >= colors.length || right < 0) {
         return
       }
+
+      // clip to bounds
       left = Math.max(left, 0)
       right = Math.min(right, colors.length - 1)
+
+      // flip colors
       for (let i = left; i <= right; ++i) {
         const t = colors[i]
         colors[i] = bgs[i]
@@ -193,7 +204,7 @@ export function TextEditDisplay({
         height={height}
         cursor="text"
         onPressed={(pressed) => {
-          if (!editor) {
+          if (!editor || pressed) {
             return
           }
           setCycle(2)
