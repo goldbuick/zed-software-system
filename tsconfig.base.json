@@ -32,6 +32,9 @@
       "@zss/system/*": [
         "libs/system/src/*"
       ],
+      "@zss/terminal": [
+        "libs/terminal/src/index.tsx"
+      ],
       "@zss/yjs/*": [
         "libs/yjs/src/*"
       ]

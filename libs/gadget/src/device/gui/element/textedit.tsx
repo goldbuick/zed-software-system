@@ -207,8 +207,6 @@ export function TextEditDisplay({
           if (!editor || pressed) {
             return
           }
-          setCycle(2)
-          setFocused(true)
           editor.focus()
           editor.setPosition({ lineNumber: 1, column: width })
         }}
@@ -218,7 +216,10 @@ export function TextEditDisplay({
           width={width}
           height={height}
           onEditor={setEditor}
-          onFocus={() => setCycle(2)}
+          onFocus={() => {
+            setCycle(2)
+            setFocused(true)
+          }}
           onCursor={() => setCycle(2)}
           onBlur={() => setFocused(false)}
         />

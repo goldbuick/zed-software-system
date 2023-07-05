@@ -6,12 +6,12 @@ import {
 } from '@react-three/postprocessing'
 import { Gateway } from '@zss/network/gateway'
 import { makeEven } from '@zss/system/mapping/number'
+import { Terminal } from '@zss/terminal'
 import { BlendFunction } from 'postprocessing'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
 
 import { Framing } from './components/Framing'
-import { Test } from './components/Test'
 
 const urlParams = new URLSearchParams(window.location.search)
 const showStats = urlParams.get('stats') !== null
@@ -125,7 +125,7 @@ export function App() {
               position={[0, 0, 1000]}
             />
             <Framing>
-              <Test />
+              <Terminal />
             </Framing>
             {showStats && <Stats />}
             <EffectComposer>

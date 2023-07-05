@@ -21,52 +21,78 @@ const TEST_SPRITES = 128
 
 const fade = [32, 176, 177, 178, 219]
 
-export function Test() {
+export function Terminal() {
   // test code begin
   useLayoutEffect(() => {
     // create test layers
-    const tileTest = data.createTL({
-      width: TEST_WIDTH,
-      height: TEST_HEIGHT,
-      char: new Array(TEST_WIDTH * TEST_HEIGHT).fill(219).map((c, i) => {
-        const chart = i - TEST_WIDTH * 5
-        if (chart >= 0 && chart <= 255) {
-          return chart
-        }
-        return c
-      }),
-      color: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.PURPLE),
-      bg: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.BLACK),
-    })
-    data.addGL(test.gadget, tileTest.id, tileTest.layer)
+    // const tileTest = data.createTL({
+    //   width: TEST_WIDTH,
+    //   height: TEST_HEIGHT,
+    //   char: new Array(TEST_WIDTH * TEST_HEIGHT).fill(219).map((c, i) => {
+    //     const chart = i - TEST_WIDTH * 5
+    //     if (chart >= 0 && chart <= 255) {
+    //       return chart
+    //     }
+    //     return c
+    //   }),
+    //   color: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.PURPLE),
+    //   bg: new Array(TEST_WIDTH * TEST_HEIGHT).fill(COLOR.BLACK),
+    // })
+    // data.addGL(test.gadget, tileTest.id, tileTest.layer)
 
-    const spriteTest = data.createSL({
-      sprites: new Array(TEST_SPRITES).fill(0).map((v, i) => ({
-        x: randomInteger(0, TEST_WIDTH - 1),
-        y: randomInteger(0, TEST_HEIGHT - 1),
-        char: randomInteger(1, 15),
-        color: COLOR.GREEN,
-        bg: COLOR.MAGENTA,
-      })),
-    })
-    data.addGL(test.gadget, spriteTest.id, spriteTest.layer)
+    // const spriteTest = data.createSL({
+    //   sprites: new Array(TEST_SPRITES).fill(0).map((v, i) => ({
+    //     x: randomInteger(0, TEST_WIDTH - 1),
+    //     y: randomInteger(0, TEST_HEIGHT - 1),
+    //     char: randomInteger(1, 15),
+    //     color: COLOR.GREEN,
+    //     bg: COLOR.MAGENTA,
+    //   })),
+    // })
+    // data.addGL(test.gadget, spriteTest.id, spriteTest.layer)
 
     const guiTest = data.createGL({
-      maxWidth: 40,
+      maxWidth: 80,
       elements: [
         { type: data.GUI_ELEMENT.EOL },
-        { type: data.GUI_ELEMENT.LABEL, width: 5, label: ' rad:' },
-        { type: data.GUI_ELEMENT.TEXT_EDIT, width: 14, value: 'woah' },
-        { type: data.GUI_ELEMENT.BUTTON, label: 'b*oot', message: 'door:open' },
         { type: data.GUI_ELEMENT.EOL },
-        { type: data.GUI_ELEMENT.LABEL, width: 5, label: ' sad:' },
-        { type: data.GUI_ELEMENT.TEXT_EDIT, width: 14, value: 'alt' },
-        {
-          type: data.GUI_ELEMENT.BUTTON,
-          label: 'd*oot',
-          message: 'door:close',
-        },
         { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.EOL },
+        { type: data.GUI_ELEMENT.LABEL, width: 7, label: 'prompt:' },
+        { type: data.GUI_ELEMENT.TEXT_EDIT, width: 14, value: '' },
+        { type: data.GUI_ELEMENT.EOL },
+        // { type: data.GUI_ELEMENT.BUTTON, label: 'b*oot', message: 'door:open' },
+        // { type: data.GUI_ELEMENT.EOL },
+        // { type: data.GUI_ELEMENT.LABEL, width: 5, label: ' sad:' },
+        // { type: data.GUI_ELEMENT.TEXT_EDIT, width: 14, value: 'alt' },
+        // {
+        //   type: data.GUI_ELEMENT.BUTTON,
+        //   label: 'd*oot',
+        //   message: 'door:close',
+        // },
+        // { type: data.GUI_ELEMENT.EOL },
       ],
     })
     data.addGL(test.gadget, guiTest.id, guiTest.layer)
