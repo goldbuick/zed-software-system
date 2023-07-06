@@ -27,12 +27,11 @@ even for buttons being pressed etc, a text input etc ..
 
 */
 
-interface GadgetProps {
+type GadgetProps = {
   gadget: MAYBE_MAP
-  z?: number
-}
+} & JSX.IntrinsicElements['group']
 
-export function Gadget({ gadget, z = 0 }: GadgetProps) {
+export function Gadget({ gadget, ...props }: GadgetProps) {
   const [layerIds, setLayerIds] = useState<string[]>([])
 
   useObservable(getGLs(gadget), () => {
@@ -40,7 +39,7 @@ export function Gadget({ gadget, z = 0 }: GadgetProps) {
   })
 
   return (
-    <group position-z={z}>
+    <group {...props}>
       {layerIds.map((id, index) => {
         const layer = getGL(gadget, id)
         return (
