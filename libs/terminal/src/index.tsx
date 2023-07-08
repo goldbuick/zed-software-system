@@ -1,5 +1,4 @@
-import { COLOR, Gadget, TILE_SIZE, data } from '@zss/gadget'
-import { useLayoutEffect } from 'react'
+import { Gadget, TILE_SIZE, data } from '@zss/gadget'
 import * as Y from 'yjs'
 
 import useViewport from './useViewport'
@@ -11,6 +10,8 @@ const test = data.createGadget({})
 const gadgets = doc.getMap('gadgets')
 gadgets.set(test.id, test.gadget)
 
+// should we construct a default software bundle and pass it to Terminal ?
+
 export function Terminal() {
   const { width, height } = useViewport()
 
@@ -20,31 +21,29 @@ export function Terminal() {
   const xmargin = Math.round((width - cols * TILE_SIZE) * 0.5)
   const ymargin = Math.round((height - rows * TILE_SIZE) * 0.5)
 
-  useLayoutEffect(() => {
-    const tileTest = data.createTL({
-      width: cols,
-      height: rows,
-      char: new Array(cols * rows).fill(219).map((c, i) => {
-        const chart = i - cols * 5
-        if (chart >= 0 && chart <= 255) {
-          return chart
-        }
-        return c
-      }),
-      color: new Array(cols * rows).fill(COLOR.PURPLE),
-      bg: new Array(cols * rows).fill(COLOR.BLACK),
-    })
-    data.addGL(test.gadget, tileTest.id, tileTest.layer)
-
-    return () => {
-      data.destroyGL(test.gadget, tileTest.id)
-    }
-  }, [cols, rows])
+  console.info({ cols, rows, xmargin, ymargin })
 
   return <Gadget gadget={test.gadget} position={[xmargin, ymargin, 0]} />
 }
 
 /*
+
+we have 3 pillars of content here ?
+
+step 1: plain old object format (storing & describing software)
+
+step 2: runtime format (running software)
+
+step 3: yjs format (modifying software)
+
+we do not have software running software, but it would be interesting to explore mods ?
+
+basically when you play a game you've made, you run the bundle(s)
+
+and why not have a default bundle, and when creating a new project
+
+pick a source bundle ??
+
 
 terminal is a set of named slots for gadgets ... 
   and you create a gadget from a code page 
@@ -71,4 +70,37 @@ And you can specfiy a gadget area from one to many cells
 
 I think for v1 we can have a set of pre-canned layouts with pre-named slots
   for v2 we can create community suggested layouts
+
+ACTUALLY THE LAYOUT engine is progressive loading
+
+#gadget start
+#gadget left 100 "codepage"
+#gadget main "codepage"
+
+this creates a two column layout with main taking up the remaining area
+
+so we load the "boot" codepage connected to the terminal api
+  and it's the boot codepage's job to select a gadget layout
+  and load the layout's slots with code pages
+
+bundles of code pages
+
+rpg.bot
+
+
+what do we need to run a terminal ?
+
+a software bundle, which is a collection of codepages
+
+what is a software bundle?
+
+can we load multiple softare bundles?
+  yes, use @bundle.codepage to address it
+
+
+
+boot program comes from local storage,
+  however zed.cafe should provide a default boot program
+
+
 */

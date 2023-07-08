@@ -73,6 +73,8 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
 
 const gateway = new Gateway()
 
+const PHASE = 0.0005
+
 export function App() {
   const [ref, bounds] = useMeasure()
 
@@ -96,7 +98,6 @@ export function App() {
           }}
         >
           <Canvas
-            id="sim-display"
             flat
             linear
             dpr={1}
@@ -131,7 +132,7 @@ export function App() {
             <EffectComposer>
               <ChromaticAberration
                 blendFunction={BlendFunction.NORMAL} // blend mode
-                offset={[-0.0004, 0.0004]} // color offset
+                offset={[-PHASE, PHASE]} // color offset
               />
             </EffectComposer>
           </Canvas>

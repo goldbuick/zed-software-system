@@ -17,6 +17,7 @@
     "case": "^1.6.3",
     "jsfxr": "^1.2.1",
     "lib0": "^0.2.78",
+    "localforage": "^1.10.0",
     "mitt": "^3.0.0",
     "monaco-editor": "^0.39.0",
     "nanoid-dictionary": "^4.3.0",
