@@ -1,6 +1,8 @@
 import { Gadget, TILE_SIZE, data } from '@zss/gadget'
+import { useEffect } from 'react'
 import * as Y from 'yjs'
 
+import { createWorkspace, loadWorkspace } from './data'
 import useViewport from './useViewport'
 
 const doc = new Y.Doc()
@@ -12,6 +14,11 @@ gadgets.set(test.id, test.gadget)
 
 // should we construct a default software bundle and pass it to Terminal ?
 
+async function workspaceTesting() {
+  const workspace = createWorkspace('zed-cafe@0')
+  await loadWorkspace(workspace)
+}
+
 export function Terminal() {
   const { width, height } = useViewport()
 
@@ -22,6 +29,10 @@ export function Terminal() {
   const ymargin = Math.round((height - rows * TILE_SIZE) * 0.5)
 
   console.info({ cols, rows, xmargin, ymargin })
+
+  useEffect(() => {
+    workspaceTesting()
+  }, [])
 
   return <Gadget gadget={test.gadget} position={[xmargin, ymargin, 0]} />
 }

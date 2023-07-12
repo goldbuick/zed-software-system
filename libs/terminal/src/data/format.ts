@@ -119,6 +119,7 @@ export type CODEPAGE =
 export type PACKAGE = {
   name: string
   author: string
+  version: number
   description: string
   codepages: CODEPAGE[]
   // here we can alias / include other packages
