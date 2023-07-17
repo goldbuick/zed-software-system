@@ -15,8 +15,8 @@ gadgets.set(test.id, test.gadget)
 // should we construct a default software bundle and pass it to Terminal ?
 
 async function workspaceTesting() {
-  const workspace = createWorkspace('zed-cafe@0')
-  await loadWorkspace(workspace)
+  const workspace = createWorkspace()
+  await loadWorkspace(workspace, 'zed-cafe', 0)
 }
 
 export function Terminal() {
