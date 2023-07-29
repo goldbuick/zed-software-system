@@ -9,14 +9,24 @@ const content: PACKAGE = {
     {
       type: TYPE.ZSS,
       zss: `@main
-#gadget start
-#gadget right 100
-"<-= HELLO =->" !all:start;Press me
-"<-= WORLD =->" !player:name;text;Player Name
-"<-= WOOOT =->" !player:collision;walk,swim,fly;Collision
+
+#gadget clear
+' we have different regions top right bottom left scroll and main
+' with each of these commands you "slice" a section of the screen
+
+#gadget right
+"Dooot and hello"
+!all:doot;Doot
+
+#gadget scroll
+"Your name:"
+#input player:name
+!player:begin;Begin
+
 #gadget main
 ' does this make sense ?
 ' nothing here for now ...
+
 `,
     },
   ],
