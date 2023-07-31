@@ -2,6 +2,7 @@ import { CstParser } from 'chevrotain'
 
 import * as lexer from './lexer'
 
+// @ts-expect-error env is okay
 const DEV = import.meta.env.DEV ?? false
 
 class ScriptParser extends CstParser {
@@ -82,7 +83,7 @@ class ScriptParser extends CstParser {
     this.OR([
       { ALT: () => this.CONSUME(lexer.Word) },
       { ALT: () => this.CONSUME(lexer.NumberLiteral) },
-      { ALT: () => this.SUBRULE(this.expr) },
+      // { ALT: () => this.SUBRULE(this.expr) },
     ])
   })
 

@@ -1,22 +1,25 @@
 import { Gadget, TILE_SIZE, data } from '@zss/gadget'
+import { langTest } from '@zss/lang'
 import { useEffect } from 'react'
-import * as Y from 'yjs'
+// import * as Y from 'yjs'
 
 import { createWorkspace, loadWorkspace } from './data'
 import useViewport from './useViewport'
 
-const doc = new Y.Doc()
-const test = data.createGadget({})
+// const doc = new Y.Doc()
+// const test = data.createGadget({})
 
-// add to document
-const gadgets = doc.getMap('gadgets')
-gadgets.set(test.id, test.gadget)
+// // add to document
+// const gadgets = doc.getMap('gadgets')
+// gadgets.set(test.id, test.gadget)
 
 // should we construct a default software bundle and pass it to Terminal ?
 
 async function workspaceTesting() {
   const workspace = createWorkspace()
   await loadWorkspace(workspace, 'zed-cafe', 0)
+
+  langTest()
 }
 
 export function Terminal() {
@@ -34,7 +37,8 @@ export function Terminal() {
     workspaceTesting()
   }, [])
 
-  return <Gadget gadget={test.gadget} position={[xmargin, ymargin, 0]} />
+  // return <Gadget gadget={test.gadget} position={[xmargin, ymargin, 0]} />
+  return null
 }
 
 /*

@@ -292,7 +292,7 @@ cool trick, add expression support to strings: "Hello (player), how are you toda
 
 export const Word = createToken({
   name: 'Word',
-  pattern: /[_a-zA-Z]\w*/,
+  pattern: /[_a-zA-Z]\S*/,
   start_chars_hint: all_chars,
 })
 
