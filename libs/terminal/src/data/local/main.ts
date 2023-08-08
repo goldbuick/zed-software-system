@@ -15,11 +15,11 @@ const content: PACKAGE = {
 ' with each of these commands you "slice" a section of the screen
 
 #gadget right
-"Dooot and hello"
+"Dooot and hello
 !all:doot;Doot
 
 #gadget scroll
-"Your name:"
+"Your name:
 #input player:name
 !player:begin;Begin
 
