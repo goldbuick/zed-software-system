@@ -1,0 +1,1 @@
+{"version":3,"file":"format-file.js","sourceRoot":"","sources":["../../../../../packages/react/src/utils/format-file.ts"],"names":[],"mappings":";;;AAAA,uCAAkC;AAClC,yCAA4C;AAE5C,SAAgB,UAAU,CAAC,OAAO,EAAE,GAAG,MAAM;IAC3C,OAAO,IAAA,iBAAM,EAAC,IAAA,qBAAY,EAAC,OAAO,EAAE,MAAM,CAAC,EAAE;QAC3C,WAAW,EAAE,IAAI;QACjB,MAAM,EAAE,YAAY;KACrB,CAAC,CAAC;AACL,CAAC;AALD,gCAKC"}
