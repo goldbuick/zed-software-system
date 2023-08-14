@@ -10,6 +10,8 @@ export function compileAST(text: string) {
     }
   }
 
+  console.info('tokens', tokens.tokens)
+
   parser.input = tokens.tokens
   const cst = parser.program()
   if (parser.errors.length > 0) {
@@ -17,6 +19,8 @@ export function compileAST(text: string) {
       errors: parser.errors,
     }
   }
+
+  console.info('cst', cst)
 
   const ast = visitor.visit(cst) as CodeNode
   if (!ast) {

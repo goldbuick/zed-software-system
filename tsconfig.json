@@ -2,7 +2,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "/zss/*": [ "./zss/*" ],
+      "/zss/*": [
+        "./zss/*"
+      ],
     },
     "lib": [
       "dom",
@@ -29,7 +31,10 @@
   ],
   "include": [
     ".eslintrc.js",
+    ".prettierrc",
+    "parcel.d.ts",
     "tsconfig.json",
+    "tailwind.config.js",
     "zss/**/*",
   ]
 }

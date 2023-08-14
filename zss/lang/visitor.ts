@@ -1,4 +1,3 @@
-// import { COLOR } from '@zss/gadget'
 import {
   CstChildrenDictionary,
   CstElement,
@@ -7,137 +6,109 @@ import {
   IToken,
 } from 'chevrotain'
 
-import { parser } from './parser'
+import { DEV } from '/zss/config'
 
-// @ts-expect-error env is okay
-const DEV = import.meta.env.DEV ?? false
+import { parser } from './parser'
 
 const CstVisitor = parser.getBaseCstVisitorConstructor()
 
 export enum NODE {
   PROGRAM,
+  TEXT,
   LABEL,
   HYPERLINK,
-  IF,
-  ELIF,
-  ELSE,
-  FOR,
-  FUNC,
-  WHILE,
-  BREAK,
-  CONTINUE,
-  REPEAT,
-  MATH_OP,
-  ARRAY_OP,
-  OR,
-  AND,
-  NOT,
-  COMPARE,
-  OPERATOR,
-  OPERATOR_ITEM,
-  GROUP,
-  LITERAL,
-  STRING_IDENTIFIER,
-  IDENTIFIER,
+  ATTRIBUTE,
   COMMAND,
-  MESSAGE,
-  COLOR,
-  KIND,
-  COLLISION,
-  SND,
-  TARGET,
-  QUERY,
-  QUERY_OP,
-  DIRECTION,
+  LITERAL,
 }
 
-export enum COMPARE {
-  IS_EQ,
-  IS_NOT_EQ,
-  IS_LESS_THAN,
-  IS_GREATER_THAN,
-  IS_LESS_THAN_OR_EQ,
-  IS_GREATER_THAN_OR_EQ,
-}
+// export enum COMPARE {
+//   IS_EQ,
+//   IS_NOT_EQ,
+//   IS_LESS_THAN,
+//   IS_GREATER_THAN,
+//   IS_LESS_THAN_OR_EQ,
+//   IS_GREATER_THAN_OR_EQ,
+// }
 
-export enum OPERATOR {
-  PLUS,
-  MINUS,
-  POWER,
-  MULTIPLY,
-  DIVIDE,
-  MOD_DIVIDE,
-  FLOOR_DIVIDE,
-  UNI_PLUS,
-  UNI_MINUS,
-}
+// export enum OPERATOR {
+//   PLUS,
+//   MINUS,
+//   POWER,
+//   MULTIPLY,
+//   DIVIDE,
+//   MOD_DIVIDE,
+//   FLOOR_DIVIDE,
+//   UNI_PLUS,
+//   UNI_MINUS,
+// }
 
 export enum LITERAL {
   NUMBER,
   STRING,
 }
 
-export enum DIR {
-  NONE,
-  UP,
-  DOWN,
-  LEFT,
-  RIGHT,
-  BY,
-  AT,
-  FROM,
-  FLOW,
-  SEEK,
-  RNDNS,
-  RNDNE,
-  RND,
-  // modifiers
-  CW,
-  CCW,
-  OPP,
-  RNDP,
-  // aliases
-  IDLE = NONE,
-  U = UP,
-  NORTH = UP,
-  N = UP,
-  D = DOWN,
-  SOUTH = DOWN,
-  S = DOWN,
-  L = LEFT,
-  WEST = LEFT,
-  W = LEFT,
-  R = RIGHT,
-  EAST = RIGHT,
-  E = RIGHT,
-}
+// export enum DIR {
+//   NONE,
+//   UP,
+//   DOWN,
+//   LEFT,
+//   RIGHT,
+//   BY,
+//   AT,
+//   FROM,
+//   FLOW,
+//   SEEK,
+//   RNDNS,
+//   RNDNE,
+//   RND,
+//   // modifiers
+//   CW,
+//   CCW,
+//   OPP,
+//   RNDP,
+//   // aliases
+//   IDLE = NONE,
+//   U = UP,
+//   NORTH = UP,
+//   N = UP,
+//   D = DOWN,
+//   SOUTH = DOWN,
+//   S = DOWN,
+//   L = LEFT,
+//   WEST = LEFT,
+//   W = LEFT,
+//   R = RIGHT,
+//   EAST = RIGHT,
+//   E = RIGHT,
+// }
 
-export type DirParam = {
-  dir: DIR
-  x?: CodeNode
-  y?: CodeNode
-}
+// export type DirParam = {
+//   dir: DIR
+//   x?: CodeNode
+//   y?: CodeNode
+// }
 
-export enum ARRAY {
-  SELECT,
-  RANGE,
-  CREATE,
-  INDEX,
-  LENGTH,
-  POP,
-  PUSH,
-  SHIFT,
-}
+// export enum ARRAY {
+//   SELECT,
+//   RANGE,
+//   CREATE,
+//   INDEX,
+//   LENGTH,
+//   POP,
+//   PUSH,
+//   SHIFT,
+// }
 
-export enum MATH {
-  RND,
-  ABS,
-  CEIL,
-  FLOOR,
-  MIN,
-  MAX,
-  ROUND,
-}
+// export enum MATH {
+//   RND,
+//   ABS,
+//   CEIL,
+//   FLOOR,
+//   MIN,
+//   MAX,
+//   ROUND,
+// }
 
 function asIToken(thing: CstNode | CstElement): IToken {
   return thing as unknown as IToken
@@ -151,23 +122,164 @@ function strValue(image: string): string {
   return image.substring(1, image.length - 1)
 }
 
+function makeString(ctx: CstChildrenDictionary, value: string) {
+  return makeNode(ctx, {
+    type: NODE.LITERAL,
+    literal: LITERAL.STRING,
+    value,
+  })
+}
+
 function makeNumber(ctx: CstChildrenDictionary, value: number) {
-  return makeNode(ctx, NODE.LITERAL, {
+  return makeNode(ctx, {
+    type: NODE.LITERAL,
     literal: LITERAL.NUMBER,
     value,
   })
 }
 
-function makeIdentifier(ctx: CstChildrenDictionary, value: string) {
-  return makeNode(ctx, NODE.IDENTIFIER, {
-    value,
-  })
-}
+// function makeIdentifier(ctx: CstChildrenDictionary, value: string) {
+//   return makeNode(ctx, {
+//     type: NODE.IDENTIFIER,
+//     value,
+//   })
+// }
 
-export type CodeNode = (
+/*
+  // | {
+  //     type: NODE.IF
+  //     test?: CodeNode
+  //     block?: CodeNode[]
+  //     elif?: CodeNode[]
+  //     else?: CodeNode
+  //   }
+  // | {
+  //     type: NODE.ELIF
+  //     test?: CodeNode
+  //     block?: CodeNode[]
+  //   }
+  // | {
+  //     type: NODE.ELSE
+  //     block?: CodeNode[]
+  //   }
+  // | {
+  //     type: NODE.FOR
+  //     var?: CodeNode
+  //     list?: CodeNode
+  //     block?: CodeNode[]
+  //   }
+  // | {
+  //     type: NODE.FUNC
+  //     params: CodeNode[]
+  //   }
+  // | {
+  //     type: NODE.WHILE
+  //     test?: CodeNode
+  //     block?: CodeNode[]
+  //   }
+  // | { type: NODE.BREAK }
+  // | { type: NODE.CONTINUE }
+  // | {
+  //     type: NODE.REPEAT
+  //     count: CodeNode
+  //     block: CodeNode[]
+  //   }
+  // | {
+  //     type: NODE.MATH_OP
+  //     math: MATH
+  //     items: CodeNode[]
+  //   }
+  // | {
+  //     type: NODE.ARRAY_OP
+  //     array: ARRAY
+  //     items: CodeNode[]
+  //   }
+  // | {
+  //     type: NODE.OR
+  //     items: CodeNode[]
+  //   }
+  // | {
+  //     type: NODE.AND
+  //     items: CodeNode[]
+  //   }
+  // | {
+  //     type: NODE.NOT
+  //     value: CodeNode
+  //   }
+  // | {
+  //     type: NODE.COMPARE
+  //     lhs: CodeNode
+  //     compare: COMPARE
+  //     rhs: CodeNode
+  //   }
+  // | {
+  //     type: NODE.OPERATOR
+  //     lhs: CodeNode | undefined
+  //     items: CodeNode[]
+  //   }
+  // | {
+  //     type: NODE.OPERATOR_ITEM
+  //     operator: OPERATOR
+  //     rhs: CodeNode
+  //   }
+  // | {
+  //     type: NODE.GROUP
+  //     items: CodeNode[]
+  //   }
+  // | {
+  //     type: NODE.LITERAL
+  //     literal: LITERAL.NUMBER
+  //     value: number
+  //   }
+  // | {
+  //     type: NODE.LITERAL
+  //     literal: LITERAL.STRING
+  //     value: string
+  //   }
+  // | {
+  //     type: NODE.STRING_IDENTIFIER
+  //     value: string
+  //   }
+  // | {
+  //     type: NODE.IDENTIFIER
+  //     value: string
+  //   }
+  // | {
+  //     type: NODE.COMMAND
+  //     name: string
+  //     params: CodeNode[]
+  //     block?: CodeNode[]
+  //     else?: CodeNode
+  //   }
+  // | {
+  //     type: NODE.MESSAGE
+  //     message: CodeNode[]
+  //     data?: CodeNode
+  //   }
+  // | {
+  //     type: NODE.COLOR
+  //     color: number
+  //   }
+  // | {
+  //     type: NODE.KIND
+  //     color?: CodeNode
+  //     name: CodeNode
+  //   }
+  // | {
+  //     type: NODE.DIRECTION
+  //     params: DirParam[]
+  //   }
+*/
+
+type CodeNodeData =
   | {
       type: NODE.PROGRAM
       lines: CodeNode[]
+    }
+  | {
+      type: NODE.TEXT
+      value: string
+      center: boolean
     }
   | {
       type: NODE.LABEL
@@ -180,86 +292,6 @@ export type CodeNode = (
       label: string
     }
   | {
-      type: NODE.IF
-      test?: CodeNode
-      block?: CodeNode[]
-      elif?: CodeNode[]
-      else?: CodeNode
-    }
-  | {
-      type: NODE.ELIF
-      test?: CodeNode
-      block?: CodeNode[]
-    }
-  | {
-      type: NODE.ELSE
-      block?: CodeNode[]
-    }
-  | {
-      type: NODE.FOR
-      var?: CodeNode
-      list?: CodeNode
-      block?: CodeNode[]
-    }
-  | {
-      type: NODE.FUNC
-      params: CodeNode[]
-    }
-  | {
-      type: NODE.WHILE
-      test?: CodeNode
-      block?: CodeNode[]
-    }
-  | { type: NODE.BREAK }
-  | { type: NODE.CONTINUE }
-  | {
-      type: NODE.REPEAT
-      count: CodeNode
-      block: CodeNode[]
-    }
-  | {
-      type: NODE.MATH_OP
-      math: MATH
-      items: CodeNode[]
-    }
-  | {
-      type: NODE.ARRAY_OP
-      array: ARRAY
-      items: CodeNode[]
-    }
-  | {
-      type: NODE.OR
-      items: CodeNode[]
-    }
-  | {
-      type: NODE.AND
-      items: CodeNode[]
-    }
-  | {
-      type: NODE.NOT
-      value: CodeNode
-    }
-  | {
-      type: NODE.COMPARE
-      lhs: CodeNode
-      compare: COMPARE
-      rhs: CodeNode
-    }
-  | {
-      type: NODE.OPERATOR
-      lhs: CodeNode | undefined
-      items: CodeNode[]
-    }
-  | {
-      type: NODE.OPERATOR_ITEM
-      operator: OPERATOR
-      rhs: CodeNode
-    }
-  | {
-      type: NODE.GROUP
-      items: CodeNode[]
-    }
-  | {
       type: NODE.LITERAL
       literal: LITERAL.NUMBER
       value: number
@@ -270,45 +302,22 @@ export type CodeNode = (
       value: string
     }
   | {
-      type: NODE.STRING_IDENTIFIER
-      value: string
-    }
-  | {
-      type: NODE.IDENTIFIER
-      value: string
+      type: NODE.ATTRIBUTE
+      words: CodeNode[]
     }
   | {
       type: NODE.COMMAND
-      name: string
-      params: CodeNode[]
-      block?: CodeNode[]
-      else?: CodeNode
+      words: CodeNode[]
     }
-  | {
-      type: NODE.MESSAGE
-      message: CodeNode[]
-      data?: CodeNode
+
+export type CodeNode = CodeNodeData &
+  CstNodeLocation & {
+    parent: CodeNode | undefined
+    range?: {
+      start: number
+      end: number
     }
-  | {
-      type: NODE.COLOR
-      color: number
-    }
-  | {
-      type: NODE.KIND
-      color?: CodeNode
-      name: CodeNode
-    }
-  | {
-      type: NODE.DIRECTION
-      params: DirParam[]
-    }
-) & {
-  parent: CodeNode | undefined
-  range?: {
-    start: number
-    end: number
   }
-} & CstNodeLocation
 
 function isToken(obj: CstNode | IToken): obj is IToken {
   return (obj as IToken)?.tokenType ? true : false
@@ -358,15 +367,11 @@ function getLocation(obj: CstChildrenDictionary): CstNodeLocation {
   }
 }
 
-function makeNode(
-  ctx: CstChildrenDictionary,
-  type: NODE,
-  props?: any,
-): CodeNode {
+function makeNode(ctx: CstChildrenDictionary, node: CodeNodeData): CodeNode {
   return {
-    type,
+    parent: undefined,
+    ...node,
     ...getLocation(ctx),
-    ...props,
   }
 }
 
@@ -379,8 +384,11 @@ class ScriptVisitor extends CstVisitor {
   }
 
   program(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
-    return makeNode(ctx, NODE.PROGRAM, { lines: asList(this, ctx.line).flat() })
+    return makeNode(ctx, {
+      type: NODE.PROGRAM,
+      // @ts-expect-error cst element
+      lines: asList(this, ctx.line).flat(),
+    })
   }
 
   line(ctx: CstChildrenDictionary) {
@@ -423,45 +431,112 @@ class ScriptVisitor extends CstVisitor {
   }
 
   multi_stmt(ctx: CstChildrenDictionary) {
-    // this.OR([
-    //   { ALT: () => this.CONSUME(lexer.Attribute) },
-    //   { ALT: () => this.CONSUME(lexer.Command) },
-    //   { ALT: () => this.CONSUME(lexer.Go) },
-    //   { ALT: () => this.CONSUME(lexer.Try) },
-    // ])
-    // this.SUBRULE(this.words)
+    // @ts-expect-error cst element
+    return asList(this, ctx.cmd_stmt).flat()
+  }
+
+  cmd_stmt(ctx: CstChildrenDictionary) {
+    if (ctx.Attribute) {
+      return makeNode(ctx, {
+        type: NODE.ATTRIBUTE,
+        // @ts-expect-error cst element
+        words: asList(this, ctx.words).flat(),
+      })
+    }
+
+    if (ctx.Go) {
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        words: [
+          makeString(ctx, 'go'),
+          // @ts-expect-error cst element
+          ...asList(this, ctx.words).flat(),
+        ],
+      })
+    }
+
+    if (ctx.Try) {
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        words: [
+          makeString(ctx, 'try'),
+          // @ts-expect-error cst element
+          ...asList(this, ctx.words).flat(),
+        ],
+      })
+    }
+
+    return makeNode(ctx, {
+      type: NODE.COMMAND,
+      // @ts-expect-error cst element
+      words: asList(this, ctx.words).flat(),
+    })
   }
 
   text(ctx: CstChildrenDictionary) {
-    // this.OR([
-    //   { ALT: () => this.CONSUME(lexer.Text) },
-    //   { ALT: () => this.CONSUME(lexer.CenterText) },
-    // ])
+    if (ctx.CenterText) {
+      return makeNode(ctx, {
+        type: NODE.TEXT,
+        center: true,
+        value: strValue(asIToken(ctx.CenterText[0]).image),
+      })
+    }
+    return makeNode(ctx, {
+      type: NODE.TEXT,
+      center: false,
+      value: strValue(asIToken(ctx.Text[0]).image),
+    })
   }
 
   comment(ctx: CstChildrenDictionary) {
     // this.CONSUME(lexer.Comment)
+    return makeNode(ctx, {
+      type: NODE.LABEL,
+      active: false,
+      name: strValue(asIToken(ctx.Comment[0]).image),
+    })
   }
 
   label(ctx: CstChildrenDictionary) {
-    // this.CONSUME(lexer.Label)
+    return makeNode(ctx, {
+      type: NODE.LABEL,
+      active: true,
+      name: strValue(asIToken(ctx.Label[0]).image),
+    })
   }
 
   hyperlink(ctx: CstChildrenDictionary) {
+    console.info('|||', ctx)
     // this.CONSUME(lexer.HyperLink)
     // this.CONSUME(lexer.HyperLinkText)
   }
 
+  words(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    return asList(this, ctx.word).flat()
+  }
+
   word(ctx: CstChildrenDictionary) {
+    if (ctx.StringLiteral) {
+      return makeNode(ctx, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: asIToken(ctx.StringLiteral[0]).image,
+      })
+    }
+    if (ctx.NumberLiteral) {
+      return makeNode(ctx, {
+        type: NODE.LITERAL,
+        literal: LITERAL.NUMBER,
+        value: parseFloat(asIToken(ctx.NumberLiteral[0]).image),
+      })
+    }
     // this.OR([
-    //   { ALT: () => this.CONSUME(lexer.Word) },
+    //   { ALT: () => this.CONSUME(lexer.StringLiteral) },
     //   { ALT: () => this.CONSUME(lexer.NumberLiteral) },
     //   { ALT: () => this.SUBRULE(this.expr) },
     // ])
-  }
-
-  words(ctx: CstChildrenDictionary) {
-    // this.AT_LEAST_ONE(() => this.SUBRULE(this.word))
+    console.info('|||', ctx)
   }
 
   expr() {

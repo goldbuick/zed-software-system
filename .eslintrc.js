@@ -13,8 +13,6 @@ const srcFolders = prefixes
   .concat(prefixes.map((folder) => `/${folder}`))
   .flat()
 
-console.info('eslint ORG !!!!', { prefixes, srcFolders })
-
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
@@ -25,12 +23,16 @@ module.exports = {
     react: {
       version: 'detect', // Tells eslint-plugin-react to automatically detect the version of React to use
     },
+    'import/ignore': ['chevrotain'],
     'import/parsers': {
-      '@typescript-eslint/parser': ['.ts', '.tsx'],
+      '@typescript-eslint/parser': ['.ts', '.tsx', '.js', '.jsx', '.json'],
     },
     'import/resolver': {
       alias: {
-        map: prefixes.map((item) => [`/${item}`, `./${item}`]),
+        map: [
+          ...prefixes.map((item) => [`/${item}`, `./${item}`]),
+          ['chevrotain', '.'],
+        ],
         extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
       },
     },
@@ -66,6 +68,7 @@ module.exports = {
       2,
       { namedComponents: 'function-declaration' },
     ],
+    'import/no-unresolved': 'off',
     'import/order': [
       'error',
       {

@@ -1,9 +1,8 @@
 import { CstParser } from 'chevrotain'
 
-import * as lexer from './lexer'
+import { DEV } from '/zss/config'
 
-// @ts-expect-error env is okay
-const DEV = import.meta.env.DEV ?? false
+import * as lexer from './lexer'
 
 class ScriptParser extends CstParser {
   constructor() {
@@ -47,9 +46,14 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.label) },
       { ALT: () => this.SUBRULE(this.hyperlink) },
     ])
+    this.CONSUME(lexer.Newline)
   })
 
   multi_stmt = this.RULE('multi_stmt', () => {
+    this.AT_LEAST_ONE(() => this.SUBRULE(this.cmd_stmt))
+  })
+
+  cmd_stmt = this.RULE('cmd_stmt', () => {
     this.OR([
       { ALT: () => this.CONSUME(lexer.Attribute) },
       { ALT: () => this.CONSUME(lexer.Command) },
@@ -81,7 +85,7 @@ class ScriptParser extends CstParser {
 
   word = this.RULE('word', () => {
     this.OR([
-      { ALT: () => this.CONSUME(lexer.Word) },
+      { ALT: () => this.CONSUME(lexer.StringLiteral) },
       { ALT: () => this.CONSUME(lexer.NumberLiteral) },
       // { ALT: () => this.SUBRULE(this.expr) },
     ])

@@ -1,4 +1,3 @@
-import Case from 'case'
 import {
   createToken,
   createTokenInstance,
@@ -8,6 +7,8 @@ import {
 } from 'chevrotain'
 
 import { range } from '/zss/mapping/array'
+
+import { DEV } from '/zss/config'
 
 // State required for matching the indentations
 let indentStack = [0]
@@ -291,11 +292,21 @@ cool trick, add expression support to strings: "Hello (player), how are you toda
 
 */
 
-export const Word = createToken({
-  name: 'Word',
-  pattern: /[_a-zA-Z]\S*/,
+export const StringLiteral = createToken({
+  name: 'StringLiteral',
+  pattern: /[_a-zA-Z][^@#/?\s]*/,
   start_chars_hint: all_chars,
 })
+
+// @ attributes
+// # command
+// / movement
+// ? movement
+// $ message text
+// " message text
+// ' comment
+// : label
+// ! hyperlink
 
 export const NumberLiteral = createToken({
   name: 'NumberLiteral',
@@ -307,32 +318,32 @@ export const NumberLiteral = createToken({
 export const IsEq = createToken({
   name: 'IsEq',
   pattern: /=|eq/,
-  longer_alt: Word,
+  longer_alt: StringLiteral,
 })
 export const IsNotEq = createToken({
   name: 'IsNotEq',
   pattern: /!=|noteq/,
-  longer_alt: Word,
+  longer_alt: StringLiteral,
 })
 export const IsLessThan = createToken({
   name: 'IsLessThan',
   pattern: /<|below/,
-  longer_alt: Word,
+  longer_alt: StringLiteral,
 })
 export const IsGreaterThan = createToken({
   name: 'IsGreaterThan',
   pattern: />|above/,
-  longer_alt: Word,
+  longer_alt: StringLiteral,
 })
 export const IsLessThanOrEqual = createToken({
   name: 'IsLessThanOrEqual',
   pattern: /<=|lteq/,
-  longer_alt: Word,
+  longer_alt: StringLiteral,
 })
 export const IsGreaterThanOrEqual = createToken({
   name: 'IsGreaterThanOrEqual',
   pattern: />=|gteq/,
-  longer_alt: Word,
+  longer_alt: StringLiteral,
 })
 
 // logical
@@ -340,17 +351,17 @@ export const IsGreaterThanOrEqual = createToken({
 export const Or = createToken({
   name: 'Or',
   pattern: /or/i,
-  longer_alt: Word,
+  longer_alt: StringLiteral,
 })
 export const Not = createToken({
   name: 'Not',
   pattern: /not/i,
-  longer_alt: Word,
+  longer_alt: StringLiteral,
 })
 export const And = createToken({
   name: 'And',
   pattern: /and/i,
-  longer_alt: Word,
+  longer_alt: StringLiteral,
 })
 
 // math ops
@@ -405,14 +416,12 @@ function createTokenSet(whitespaceTokens: TokenType[]) {
     LParen,
     RParen,
     // content
-    Word,
+    StringLiteral,
     NumberLiteral,
   ]
 }
 
 export const allTokens = createTokenSet([Newline, Outdent, Indent, Whitespace])
-
-const DEV = import.meta.env.DEV ?? false
 
 const scriptLexer = new Lexer(
   {
