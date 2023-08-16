@@ -119,7 +119,7 @@ function asList(thing: ScriptVisitor, node: CstNode[] | undefined): CodeNode[] {
 }
 
 function strValue(image: string): string {
-  return image.substring(1, image.length - 1)
+  return image.substring(1)
 }
 
 function makeString(ctx: CstChildrenDictionary, value: string) {
@@ -489,7 +489,6 @@ class ScriptVisitor extends CstVisitor {
   }
 
   comment(ctx: CstChildrenDictionary) {
-    // this.CONSUME(lexer.Comment)
     return makeNode(ctx, {
       type: NODE.LABEL,
       active: false,
@@ -506,9 +505,14 @@ class ScriptVisitor extends CstVisitor {
   }
 
   hyperlink(ctx: CstChildrenDictionary) {
-    console.info('|||', ctx)
-    // this.CONSUME(lexer.HyperLink)
-    // this.CONSUME(lexer.HyperLinkText)
+    console.info('***', ctx)
+    return makeNode(ctx, {
+      type: NODE.HYPERLINK,
+      message: ctx.HyperLink ? strValue(asIToken(ctx.HyperLink[0]).image) : '',
+      label: ctx.HyperLinkText
+        ? strValue(asIToken(ctx.HyperLinkText[0]).image)
+        : '',
+    })
   }
 
   words(ctx: CstChildrenDictionary) {
@@ -531,12 +535,7 @@ class ScriptVisitor extends CstVisitor {
         value: parseFloat(asIToken(ctx.NumberLiteral[0]).image),
       })
     }
-    // this.OR([
-    //   { ALT: () => this.CONSUME(lexer.StringLiteral) },
-    //   { ALT: () => this.CONSUME(lexer.NumberLiteral) },
-    //   { ALT: () => this.SUBRULE(this.expr) },
-    // ])
-    console.info('|||', ctx)
+    // TODO: ctx.expr
   }
 
   expr() {
