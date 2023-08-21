@@ -118,9 +118,13 @@ function asList(thing: ScriptVisitor, node: CstNode[] | undefined): CodeNode[] {
   return node?.map((item) => thing.visit(item)).filter((item) => item) || []
 }
 
-function strValue(image: string): string {
-  return image.substring(1)
+function strImage(thing: CstNode | CstElement): string {
+  return asIToken(thing).image
 }
+
+// function strValue(image: string): string {
+//   return image.substring(1)
+// }
 
 function makeString(ctx: CstChildrenDictionary, value: string) {
   return makeNode(ctx, {
@@ -130,13 +134,13 @@ function makeString(ctx: CstChildrenDictionary, value: string) {
   })
 }
 
-function makeNumber(ctx: CstChildrenDictionary, value: number) {
-  return makeNode(ctx, {
-    type: NODE.LITERAL,
-    literal: LITERAL.NUMBER,
-    value,
-  })
-}
+// function makeNumber(ctx: CstChildrenDictionary, value: number) {
+//   return makeNode(ctx, {
+//     type: NODE.LITERAL,
+//     literal: LITERAL.NUMBER,
+//     value,
+//   })
+// }
 
 // function makeIdentifier(ctx: CstChildrenDictionary, value: string) {
 //   return makeNode(ctx, {
@@ -312,7 +316,7 @@ type CodeNodeData =
 
 export type CodeNode = CodeNodeData &
   CstNodeLocation & {
-    parent: CodeNode | undefined
+    // parent: CodeNode | undefined
     range?: {
       start: number
       end: number
@@ -369,7 +373,7 @@ function getLocation(obj: CstChildrenDictionary): CstNodeLocation {
 
 function makeNode(ctx: CstChildrenDictionary, node: CodeNodeData): CodeNode {
   return {
-    parent: undefined,
+    // parent: undefined,
     ...node,
     ...getLocation(ctx),
   }
@@ -478,13 +482,13 @@ class ScriptVisitor extends CstVisitor {
       return makeNode(ctx, {
         type: NODE.TEXT,
         center: true,
-        value: strValue(asIToken(ctx.CenterText[0]).image),
+        value: strImage(ctx.CenterText[0]).slice(1),
       })
     }
     return makeNode(ctx, {
       type: NODE.TEXT,
       center: false,
-      value: strValue(asIToken(ctx.Text[0]).image),
+      value: strImage(ctx.Text[0]).slice(1),
     })
   }
 
@@ -492,7 +496,7 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.LABEL,
       active: false,
-      name: strValue(asIToken(ctx.Comment[0]).image),
+      name: strImage(ctx.Comment[0]).slice(1),
     })
   }
 
@@ -500,7 +504,7 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.LABEL,
       active: true,
-      name: strValue(asIToken(ctx.Label[0]).image),
+      name: strImage(ctx.Label[0]).slice(1),
     })
   }
 
@@ -508,10 +512,8 @@ class ScriptVisitor extends CstVisitor {
     console.info('***', ctx)
     return makeNode(ctx, {
       type: NODE.HYPERLINK,
-      message: ctx.HyperLink ? strValue(asIToken(ctx.HyperLink[0]).image) : '',
-      label: ctx.HyperLinkText
-        ? strValue(asIToken(ctx.HyperLinkText[0]).image)
-        : '',
+      message: ctx.HyperLink ? strImage(ctx.HyperLink[0]).slice(1) : '',
+      label: ctx.HyperLinkText ? strImage(ctx.HyperLinkText[0]).slice(1) : '',
     })
   }
 
