@@ -24,5 +24,5 @@ $Freeeeeet
 #all:banana
   `)
 
-  console.info('###', result)
+  console.info('result', result)
 }
