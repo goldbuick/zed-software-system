@@ -49,7 +49,7 @@ export function compileAST(text: string) {
     }
   }
 
-  console.info('tokens', tokens.tokens)
+  // console.info('tokens', tokens.tokens)
 
   parser.input = tokens.tokens
   const cst = parser.program()
@@ -59,7 +59,7 @@ export function compileAST(text: string) {
     }
   }
 
-  console.info('cst', cst)
+  // console.info('cst', cst)
 
   const ast = visitor.visit(cst) as CodeNode
   if (!ast) {
@@ -71,5 +71,5 @@ export function compileAST(text: string) {
   // need this for code completion
   addRange(ast)
 
-  return ast
+  return { ast }
 }

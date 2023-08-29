@@ -496,7 +496,7 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.LABEL,
       active: false,
-      name: strImage(ctx.Comment[0]).slice(1),
+      name: strImage(ctx.Comment[0]).slice(1).trim(),
     })
   }
 
@@ -504,12 +504,11 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.LABEL,
       active: true,
-      name: strImage(ctx.Label[0]).slice(1),
+      name: strImage(ctx.Label[0]).slice(1).trim(),
     })
   }
 
   hyperlink(ctx: CstChildrenDictionary) {
-    console.info('***', ctx)
     return makeNode(ctx, {
       type: NODE.HYPERLINK,
       message: ctx.HyperLink ? strImage(ctx.HyperLink[0]).slice(1) : '',

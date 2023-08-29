@@ -1,7 +1,10 @@
 import { compileAST } from './ast'
+import transformAst from './transformer'
 
 export function langTest() {
-  const result = compileAST(`@main @terrain
+  const astResult = compileAST(`@main @terrain
+@wavy 3 24
+@target link
 /w/w/w/w/down
 #gadget clear
 ' we have different regions top right bottom left scroll and main
@@ -9,7 +12,7 @@ export function langTest() {
 
 #gadget right 20
 "Dooot and hello
-$Freeeeeet
+$Freeeeeet's
 !all:doot;Doot
 
 #gadget scroll
@@ -24,5 +27,12 @@ $Freeeeeet
 #all:banana
   `)
 
-  console.info('result', result)
+  if (astResult.errors) {
+    return { errors: astResult.errors }
+  }
+
+  const jsCode = transformAst(astResult.ast)
+
+  console.info('jsCode', jsCode)
+  console.info(jsCode.code)
 }
