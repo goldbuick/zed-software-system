@@ -298,6 +298,14 @@ export const StringLiteral = createToken({
   start_chars_hint: all_chars,
 })
 
+function createWordToken(word: string) {
+  return createToken({
+    name: word,
+    pattern: new RegExp(word.toLowerCase(), 'i'),
+    longer_alt: StringLiteral,
+  })
+}
+
 // @ attributes
 // # command
 // / movement
@@ -386,6 +394,17 @@ export const RParen = createToken({
   pop_mode: true,
 })
 
+// structure commands
+
+export const Command_if = createWordToken('if')
+export const Command_elif = createWordToken('elif')
+export const Command_else = createWordToken('else')
+export const Command_for = createWordToken('for')
+export const Command_while = createWordToken('while')
+export const Command_repeat = createWordToken('repeat')
+export const Command_break = createWordToken('break')
+export const Command_continue = createWordToken('continue')
+
 function createTokenSet(whitespaceTokens: TokenType[]) {
   return [
     ...whitespaceTokens,
@@ -415,6 +434,15 @@ function createTokenSet(whitespaceTokens: TokenType[]) {
     // grouping
     LParen,
     RParen,
+    // structure commands
+    Command_if,
+    Command_elif,
+    Command_else,
+    Command_for,
+    Command_while,
+    Command_repeat,
+    Command_break,
+    Command_continue,
     // content
     StringLiteral,
     NumberLiteral,

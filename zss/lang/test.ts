@@ -2,9 +2,20 @@ import { compileAST } from './ast'
 import transformAst from './transformer'
 
 export function langTest() {
-  const astResult = compileAST(`@main @terrain
+  const astResult = compileAST(`
+
+#cycle 32
+#if any red fish repeat all:flash
+
+@main @terrain
 @wavy 3 24
 @target link
+
+#if frogs
+  "Let's razzle dazzle !
+#elif grapes banana
+#else all:doot
+
 /w/w/w/w/down
 #gadget clear
 ' we have different regions top right bottom left scroll and main
@@ -28,11 +39,11 @@ $Freeeeeet's
   `)
 
   if (astResult.errors) {
-    return { errors: astResult.errors }
+    return console.info(astResult)
   }
 
   const jsCode = transformAst(astResult.ast)
 
-  console.info('jsCode', jsCode)
   console.info(jsCode.code)
+  console.info(jsCode.labels)
 }

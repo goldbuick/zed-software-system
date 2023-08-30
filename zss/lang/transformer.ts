@@ -148,6 +148,71 @@ function transformNode(ast: CodeNode): SourceNode {
         writeApi(ast, `${HIDE}command`, transformNodes(ast.words)),
         `) { ${WAIT_CODE} }; ${JUMP_CODE}`,
       ])
+    case NODE.IF: {
+      console.info(ast)
+
+      const source = write(ast, [
+        `if (`,
+        writeApi(ast, `${HIDE}eval`, transformNodes(ast.words)),
+        `) {\n`,
+      ])
+
+      if (ast.block_lines) {
+        ast.block_lines.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
+
+      if (ast.elif) {
+        ast.elif.forEach((item) => {
+          source.add([transformNode(item), `\n`])
+        })
+      }
+
+      if (ast.else) {
+        source.add([transformNode(ast.else), `\n`])
+      }
+
+      source.add('}')
+
+      return source
+    }
+    case NODE.ELIF: {
+      const source = write(ast, [
+        `} else if (`,
+        writeApi(ast, `${HIDE}eval`, transformNodes(ast.words)),
+        `) {\n`,
+      ])
+
+      if (ast.block_lines) {
+        ast.block_lines.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
+
+      return source
+    }
+    case NODE.ELSE: {
+      const source = write(ast, `} else {\n`)
+
+      if (ast.block_lines) {
+        ast.block_lines.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
+
+      return source
+    }
+    case NODE.FOR:
+      return blank(ast)
+    case NODE.WHILE:
+      return blank(ast)
+    case NODE.REPEAT:
+      return blank(ast)
+    case NODE.BREAK:
+      return write(ast, `break;`)
+    case NODE.CONTINUE:
+      return write(ast, `continue;`)
     default:
       console.error(`<unsupported node>`, ast)
       return blank(ast)

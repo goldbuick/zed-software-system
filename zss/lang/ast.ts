@@ -55,6 +55,7 @@ export function compileAST(text: string) {
   const cst = parser.program()
   if (parser.errors.length > 0) {
     return {
+      tokens: tokens.tokens,
       errors: parser.errors,
     }
   }
@@ -64,6 +65,8 @@ export function compileAST(text: string) {
   const ast = visitor.visit(cst) as CodeNode
   if (!ast) {
     return {
+      tokens: tokens.tokens,
+      cst,
       errors: ['no ast output'],
     }
   }
@@ -71,5 +74,9 @@ export function compileAST(text: string) {
   // need this for code completion
   addRange(ast)
 
-  return { ast }
+  return {
+    tokens: tokens.tokens,
+    cst,
+    ast,
+  }
 }
