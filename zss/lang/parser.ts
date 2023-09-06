@@ -9,7 +9,7 @@ class ScriptParser extends CstParser {
 
   constructor() {
     super(lexer.allTokens, {
-      maxLookahead: 2,
+      maxLookahead: 3,
       traceInitPerf: DEV,
       skipValidations: !DEV,
       recoveryEnabled: !DEV,
@@ -128,32 +128,35 @@ class ScriptParser extends CstParser {
 
   Command_if = this.RULED('Command_if', () => {
     this.CONSUME(lexer.Command_if)
-    this.OPTION1(() => this.SUBRULE(this.words))
-
+    this.SUBRULE(this.words)
     this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
-    this.OPTION2(() => this.SUBRULE(this.block_lines))
+
+    this.OPTION1(() => this.SUBRULE(this.block_lines))
 
     this.MANY(() => this.SUBRULE(this.Command_elif))
 
-    this.OPTION3(() => this.SUBRULE(this.Command_else))
+    this.OPTION2(() => this.SUBRULE(this.Command_else))
   })
 
   Command_elif = this.RULED('Command_elif', () => {
     this.CONSUME(lexer.Command)
-    this.CONSUME(lexer.Command_elif)
-
-    this.OPTION1(() => this.SUBRULE(this.words))
+    this.CONSUME(lexer.Command_else)
+    this.CONSUME(lexer.Command_if)
+    this.SUBRULE(this.words)
     this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
-    this.OPTION2(() => this.SUBRULE(this.block_lines))
+
+    // this.OPTION2(() => this.SUBRULE(this.block_lines))
   })
 
   Command_else = this.RULED('Command_else', () => {
     this.CONSUME(lexer.Command)
     this.CONSUME(lexer.Command_else)
-
-    this.OPTION1(() => this.SUBRULE(this.words))
+    this.SUBRULE(this.words)
     this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
-    this.OPTION2(() => this.SUBRULE(this.block_lines))
+
+    // this.OPTION1(() => this.SUBRULE(this.words))
+    // this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
+    // this.OPTION2(() => this.SUBRULE(this.block_lines))
   })
 
   Command_for = this.RULED('Command_for', () => {

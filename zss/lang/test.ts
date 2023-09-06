@@ -4,6 +4,61 @@ import transformAst from './transformer'
 export function langTest() {
   const astResult = compileAST(`
 
+' compact branching
+#if frogs all:shit
+#else if apples all:doot
+#else other:awesome
+
+' block branching
+#if frogs
+  #char 2
+  #all:shit
+#else if apples
+  #char 24
+  #all:doot
+#else
+  #char 32
+  #other:awesome
+
+' mixed branching
+#if frogs all:shit
+#else if apples
+  #char 24
+  #all:doot
+#else
+  #char 32
+  #other:awesome
+ 
+#if frogs
+  #char 2
+  #all:shit
+#else if apples all:doot
+#else
+  #char 32
+  #other:awesome
+
+#if frogs
+  #char 2
+  #all:shit
+#else if apples
+  #char 24
+  #all:doot
+#else other:awesome
+
+  `)
+
+  if (astResult.errors) {
+    return console.info(astResult)
+  }
+
+  const jsCode = transformAst(astResult.ast)
+
+  console.info(jsCode.code)
+  console.info(jsCode.labels)
+}
+
+/*
+
 #cycle 32
 #if any red fish repeat all:flash
 
@@ -36,14 +91,5 @@ $Freeeeeet's
 ' nothing here for now ...
 
 #all:banana
-  `)
 
-  if (astResult.errors) {
-    return console.info(astResult)
-  }
-
-  const jsCode = transformAst(astResult.ast)
-
-  console.info(jsCode.code)
-  console.info(jsCode.labels)
-}
+*/

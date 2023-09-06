@@ -397,7 +397,6 @@ export const RParen = createToken({
 // structure commands
 
 export const Command_if = createWordToken('if')
-export const Command_elif = createWordToken('elif')
 export const Command_else = createWordToken('else')
 export const Command_for = createWordToken('for')
 export const Command_while = createWordToken('while')
@@ -436,7 +435,6 @@ function createTokenSet(whitespaceTokens: TokenType[]) {
     RParen,
     // structure commands
     Command_if,
-    Command_elif,
     Command_else,
     Command_for,
     Command_while,
