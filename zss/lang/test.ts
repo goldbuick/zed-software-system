@@ -92,4 +92,35 @@ $Freeeeeet's
 
 #all:banana
 
+
+    // have to find a smooth way to define an external set of command keywords
+    // the idea that nested commands do not need # before
+    // and how do we determine if its a message ?
+    // we can nest #if commands, #break, and #continue ..
+
+    so we have a linear chaining 
+
+    any OG command that does  #a eval execute 
+
+    I think we only care about nesting when it comes to control flow commands
+    ie: try, take, give, if, for, while, repeat, break, continue
+    I think everything else can be handled internally with the __command(...) invoke
+
+    ' valid
+    #if any red fish break
+    #else all:gogogo
+
+    ' valid
+    #if any red fish #break
+    #else #all:gogogo
+
+    ' valid
+    #if any red fish if any blue fish break
+    #else #all:gogogo
+
+    ' valid
+    #if any red fish if any blue fish #break
+    #else #all:gogogo
+
+
 */

@@ -4,9 +4,11 @@ import { DEV } from '/zss/config'
 
 import * as lexer from './lexer'
 
-class ScriptParser extends CstParser {
-  private _RULE: any
+let incId = 0
+let incIndent = 0
+const highlight = ['Command', 'block']
 
+class ScriptParser extends CstParser {
   constructor() {
     super(lexer.allTokens, {
       maxLookahead: 3,
@@ -23,16 +25,22 @@ class ScriptParser extends CstParser {
     implementation: F,
     config?: IRuleConfig<CstNode>,
   ): ParserMethod<Parameters<F>, CstNode> {
+    const bold = highlight.some((check) => name.includes(check))
     return this.RULE(
       name,
       () => {
+        const useId = incId++
+        const useIndent = incIndent++
+        const strIndent = '  '.repeat(useIndent)
+        const style = bold ? 'font-weight: bold;' : ''
         if (DEV && !this.RECORDING_PHASE) {
-          console.info('>', name)
+          console.info(`%c${strIndent}> ${name} ${useId}`, style)
         }
         implementation()
         if (DEV && !this.RECORDING_PHASE) {
-          console.info('     <', name)
+          console.info(`%c${strIndent}< ${name} ${useId}`, style)
         }
+        incIndent--
       },
       config,
     )
@@ -65,37 +73,6 @@ class ScriptParser extends CstParser {
   })
 
   simple_cmd = this.RULED('simple_cmd', () => {
-    // have to find a smooth way to define an external set of command keywords
-    // the idea that nested commands do not need # before
-    // and how do we determine if its a message ?
-    // we can nest #if commands, #break, and #continue ..
-    /*
-
-    so we have a linear chaining 
-
-    any OG command that does  #a eval execute 
-
-    I think we only care about nesting when it comes to control flow commands
-    ie: try, take, give, if, for, while, repeat, break, continue
-    I think everything else can be handled internally with the __command(...) invoke
-
-    ' valid
-    #if any red fish break
-    #else all:gogogo
-
-    ' valid
-    #if any red fish #break
-    #else #all:gogogo
-
-    ' valid
-    #if any red fish if any blue fish break
-    #else #all:gogogo
-
-    ' valid
-    #if any red fish if any blue fish #break
-    #else #all:gogogo
-
-    */
     this.OR([
       { ALT: () => this.CONSUME(lexer.Go) },
       { ALT: () => this.CONSUME(lexer.Try) },
@@ -109,9 +86,10 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.Indent)
     this.AT_LEAST_ONE1(() => {
       this.SUBRULE(this.line)
-      this.AT_LEAST_ONE2(() => this.CONSUME(lexer.Newline))
+      this.AT_LEAST_ONE2(() => this.CONSUME2(lexer.Newline))
     })
     this.CONSUME(lexer.Outdent)
+    this.MANY(() => this.CONSUME3(lexer.Newline))
   })
 
   struct_cmd = this.RULED('struct_cmd', () => {
@@ -145,42 +123,42 @@ class ScriptParser extends CstParser {
     this.SUBRULE(this.words)
     this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
 
-    // this.OPTION2(() => this.SUBRULE(this.block_lines))
+    this.OPTION(() => this.SUBRULE(this.block_lines))
   })
 
   Command_else = this.RULED('Command_else', () => {
     this.CONSUME(lexer.Command)
     this.CONSUME(lexer.Command_else)
-    this.SUBRULE(this.words)
+    this.OPTION1(() => this.SUBRULE(this.words))
     this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
 
-    // this.OPTION1(() => this.SUBRULE(this.words))
-    // this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
-    // this.OPTION2(() => this.SUBRULE(this.block_lines))
+    this.OPTION2(() => this.SUBRULE(this.block_lines))
   })
 
   Command_for = this.RULED('Command_for', () => {
     this.CONSUME(lexer.Command_for)
-
-    this.OPTION1(() => this.SUBRULE(this.words))
+    this.CONSUME(lexer.StringLiteral)
+    this.CONSUME(lexer.Command_in)
+    this.SUBRULE(this.word)
     this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
-    this.OPTION2(() => this.SUBRULE(this.block_lines))
+
+    this.SUBRULE(this.block_lines)
   })
 
   Command_while = this.RULED('Command_while', () => {
     this.CONSUME(lexer.Command_while)
-
-    this.OPTION1(() => this.SUBRULE(this.words))
+    this.OPTION1(() => this.SUBRULE(this.word))
     this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
-    this.OPTION2(() => this.SUBRULE(this.block_lines))
+
+    this.SUBRULE(this.block_lines)
   })
 
   Command_repeat = this.RULED('Command_repeat', () => {
     this.CONSUME(lexer.Command_repeat)
-
-    this.OPTION1(() => this.SUBRULE(this.words))
+    this.OPTION1(() => this.SUBRULE(this.word))
     this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
-    this.OPTION2(() => this.SUBRULE(this.block_lines))
+
+    this.SUBRULE(this.block_lines)
   })
 
   Command_break = this.RULED('Command_break', () => {
