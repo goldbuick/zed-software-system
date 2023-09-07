@@ -4,6 +4,8 @@ import transformAst from './transformer'
 export function langTest() {
   const astResult = compileAST(`
 
+#if banana all:doot
+
 ' compact branching
 #if frogs all:shit
 #else if apples all:doot
@@ -58,6 +60,18 @@ export function langTest() {
 }
 
 /*
+
+
+' outcome branching
+#take health 5 endgame
+#try n char 32
+
+
+stats @
+flags (ie: stats on the currently focused player)
+
+all stat/flag identifiers are player by default, 
+have to declare a local @stat 
 
 #cycle 32
 #if any red fish repeat all:flash

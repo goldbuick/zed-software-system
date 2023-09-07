@@ -396,7 +396,7 @@ export const RParen = createToken({
 
 // structure commands
 
-export const Command_if = createWordToken('if')
+export const Command_if = createWordToken('if|try|take')
 export const Command_else = createWordToken('else')
 export const Command_for = createWordToken('for')
 export const Command_in = createWordToken('in')
