@@ -4,7 +4,29 @@ import transformAst from './transformer'
 export function langTest() {
   const astResult = compileAST(`
 
-#if banana all:doot
+#if banana1 all:doot
+#if banana2 all:doot
+#else all:yeeee
+
+#if banana2 all:doot
+#else if apples44 all:yeeee
+
+  `)
+
+  if (astResult.errors) {
+    console.info(astResult.tokens)
+    console.info(astResult.errors)
+    return
+  }
+
+  const jsCode = transformAst(astResult.ast)
+
+  console.info(jsCode.code)
+  console.info(jsCode.labels)
+}
+
+/*
+
 
 ' compact branching
 #if frogs all:shit
@@ -47,19 +69,6 @@ export function langTest() {
   #all:doot
 #else other:awesome
 
-  `)
-
-  if (astResult.errors) {
-    return console.info(astResult)
-  }
-
-  const jsCode = transformAst(astResult.ast)
-
-  console.info(jsCode.code)
-  console.info(jsCode.labels)
-}
-
-/*
 
 
 ' outcome branching

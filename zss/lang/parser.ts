@@ -111,28 +111,47 @@ class ScriptParser extends CstParser {
 
     this.OPTION1(() => this.SUBRULE(this.block_lines))
 
-    this.MANY(() => this.SUBRULE(this.Command_elif))
+    this.SUBRULE(this.Command_elif)
 
-    this.OPTION2(() => this.SUBRULE(this.Command_else))
+    this.SUBRULE(this.Command_else)
   })
 
   Command_elif = this.RULED('Command_elif', () => {
-    this.CONSUME(lexer.Command)
-    this.CONSUME(lexer.Command_else)
-    this.CONSUME(lexer.Command_if)
-    this.SUBRULE(this.words)
-    this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
+    this.OPTION1({
+      GATE: () => {
+        console.info('Command_elif gate', this.LA(1), this.LA(2), this.LA(3))
+        return (
+          this.LA(2).tokenType === lexer.Command_else &&
+          this.LA(2).tokenType === lexer.Command_if
+        )
+      },
+      DEF: () => {
+        this.CONSUME(lexer.Command)
+        this.CONSUME(lexer.Command_else)
+        this.CONSUME(lexer.Command_if)
+        this.SUBRULE(this.words)
+        this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
 
-    this.OPTION(() => this.SUBRULE(this.block_lines))
+        this.OPTION2(() => this.SUBRULE(this.block_lines))
+      },
+    })
   })
 
   Command_else = this.RULED('Command_else', () => {
-    this.CONSUME(lexer.Command)
-    this.CONSUME(lexer.Command_else)
-    this.OPTION1(() => this.SUBRULE(this.words))
-    this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
+    this.OPTION({
+      GATE: () => {
+        console.info('Command_else gate', this.LA(1), this.LA(2), this.LA(3))
+        return this.LA(2).tokenType === lexer.Command_else
+      },
+      DEF: () => {
+        this.CONSUME(lexer.Command)
+        this.CONSUME(lexer.Command_else)
+        this.OPTION1(() => this.SUBRULE(this.words))
+        this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
 
-    this.OPTION2(() => this.SUBRULE(this.block_lines))
+        this.OPTION2(() => this.SUBRULE(this.block_lines))
+      },
+    })
   })
 
   Command_for = this.RULED('Command_for', () => {
