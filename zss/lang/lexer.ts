@@ -223,8 +223,8 @@ $ message text
 
 */
 
-export const Attribute = createToken({
-  name: 'Attribute',
+export const Stat = createToken({
+  name: 'Stat',
   pattern: /@/,
   start_chars_hint: ['@'],
 })
@@ -298,9 +298,9 @@ export const StringLiteral = createToken({
   start_chars_hint: all_chars,
 })
 
-function createWordToken(word: string) {
+function createWordToken(word: string, name = '') {
   return createToken({
-    name: word,
+    name: name || word,
     pattern: new RegExp(word.toLowerCase(), 'i'),
     longer_alt: StringLiteral,
   })
@@ -396,7 +396,7 @@ export const RParen = createToken({
 
 // structure commands
 
-export const Command_if = createWordToken('if|try|take')
+export const Command_if = createWordToken('if|try|take|give', 'if')
 export const Command_else = createWordToken('else')
 export const Command_for = createWordToken('for')
 export const Command_in = createWordToken('in')
@@ -409,7 +409,7 @@ function createTokenSet(whitespaceTokens: TokenType[]) {
   return [
     ...whitespaceTokens,
     // primary tokens
-    Attribute,
+    Stat,
     Command,
     Go,
     Try,

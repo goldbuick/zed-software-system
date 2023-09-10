@@ -3,30 +3,16 @@ import transformAst from './transformer'
 
 export function langTest() {
   const astResult = compileAST(`
+@main @terrain
+@wavy 3 24
+@target link
 
-#if banana1 all:doot
-#if banana2 all:doot
-#else all:yeeee
+/n/n/n/n/n/i
 
-#if banana2 all:doot
-#else if apples44 all:yeeee
-
-  `)
-
-  if (astResult.errors) {
-    console.info(astResult.tokens)
-    console.info(astResult.errors)
-    return
-  }
-
-  const jsCode = transformAst(astResult.ast)
-
-  console.info(jsCode.code)
-  console.info(jsCode.labels)
-}
-
-/*
-
+' zzt branching
+#if banana1 all:doot1
+#try n endgame
+#take health 10 all:butts
 
 ' compact branching
 #if frogs all:shit
@@ -69,11 +55,27 @@ export function langTest() {
   #all:doot
 #else other:awesome
 
+' alt branching
+#take health (5 + 23)
+#else take group 5
+#else endgame
+
+  `)
+
+  if (astResult.errors) {
+    console.info(astResult.tokens)
+    console.info(astResult.errors[0])
+    return
+  }
+
+  const jsCode = transformAst(astResult.ast)
+  console.info(jsCode.code)
+  console.info(jsCode.labels)
+}
+
+/*
 
 
-' outcome branching
-#take health 5 endgame
-#try n char 32
 
 
 stats @

@@ -126,9 +126,9 @@ function transformNode(ast: CodeNode): SourceNode {
         ])
       }
       return writeApi(ast, `${HIDE}text`, [`'${escapeString(ast.value)}'`])
-    case NODE.ATTRIBUTE:
+    case NODE.STAT:
       console.info(ast)
-      return writeApi(ast, `${HIDE}attribute`, transformNodes(ast.words))
+      return writeApi(ast, `${HIDE}stat`, transformNodes(ast.words))
     case NODE.LABEL: {
       const index = context.labelIndex++
       if (!context.labels[ast.name]) {
@@ -146,11 +146,9 @@ function transformNode(ast: CodeNode): SourceNode {
       return write(ast, [
         `while (`,
         writeApi(ast, `${HIDE}command`, transformNodes(ast.words)),
-        `) { ${WAIT_CODE} }; ${JUMP_CODE}`,
+        `) { ${WAIT_CODE} };`,
       ])
     case NODE.IF: {
-      console.info(ast)
-
       const source = write(ast, [
         `if (`,
         writeApi(ast, `${HIDE}eval`, transformNodes(ast.words)),
@@ -163,21 +161,23 @@ function transformNode(ast: CodeNode): SourceNode {
         })
       }
 
-      if (ast.elif) {
-        ast.elif.forEach((item) => {
+      if (ast.else_if) {
+        ast.else_if.forEach((item) => {
           source.add([transformNode(item), `\n`])
         })
       }
 
       if (ast.else) {
-        source.add([transformNode(ast.else), `\n`])
+        ast.else.forEach((item) => {
+          source.add([transformNode(item), `\n`])
+        })
       }
 
       source.add('}')
 
       return source
     }
-    case NODE.ELIF: {
+    case NODE.ELSE_IF: {
       const source = write(ast, [
         `} else if (`,
         writeApi(ast, `${HIDE}eval`, transformNodes(ast.words)),

@@ -6,12 +6,13 @@ import * as lexer from './lexer'
 
 let incId = 0
 let incIndent = 0
+const useDEV = DEV && false
 const highlight = ['Command', 'block']
 
 class ScriptParser extends CstParser {
   constructor() {
     super(lexer.allTokens, {
-      maxLookahead: 3,
+      maxLookahead: 2,
       traceInitPerf: DEV,
       skipValidations: !DEV,
       recoveryEnabled: !DEV,
@@ -33,11 +34,11 @@ class ScriptParser extends CstParser {
         const useIndent = incIndent++
         const strIndent = '  '.repeat(useIndent)
         const style = bold ? 'font-weight: bold;' : ''
-        if (DEV && !this.RECORDING_PHASE) {
+        if (useDEV && !this.RECORDING_PHASE) {
           console.info(`%c${strIndent}> ${name} ${useId}`, style)
         }
         implementation()
-        if (DEV && !this.RECORDING_PHASE) {
+        if (useDEV && !this.RECORDING_PHASE) {
           console.info(`%c${strIndent}< ${name} ${useId}`, style)
         }
         incIndent--
@@ -77,7 +78,7 @@ class ScriptParser extends CstParser {
       { ALT: () => this.CONSUME(lexer.Go) },
       { ALT: () => this.CONSUME(lexer.Try) },
       { ALT: () => this.CONSUME(lexer.Command) },
-      { ALT: () => this.CONSUME(lexer.Attribute) },
+      { ALT: () => this.CONSUME(lexer.Stat) },
     ])
     this.SUBRULE(this.words)
   })
@@ -111,18 +112,16 @@ class ScriptParser extends CstParser {
 
     this.OPTION1(() => this.SUBRULE(this.block_lines))
 
-    this.SUBRULE(this.Command_elif)
-
+    this.SUBRULE(this.Command_else_if)
     this.SUBRULE(this.Command_else)
   })
 
-  Command_elif = this.RULED('Command_elif', () => {
-    this.OPTION1({
+  Command_else_if = this.RULED('Command_else_if', () => {
+    this.MANY({
       GATE: () => {
-        console.info('Command_elif gate', this.LA(1), this.LA(2), this.LA(3))
         return (
           this.LA(2).tokenType === lexer.Command_else &&
-          this.LA(2).tokenType === lexer.Command_if
+          this.LA(3).tokenType === lexer.Command_if
         )
       },
       DEF: () => {
@@ -140,8 +139,10 @@ class ScriptParser extends CstParser {
   Command_else = this.RULED('Command_else', () => {
     this.OPTION({
       GATE: () => {
-        console.info('Command_else gate', this.LA(1), this.LA(2), this.LA(3))
-        return this.LA(2).tokenType === lexer.Command_else
+        return (
+          this.LA(2).tokenType === lexer.Command_else &&
+          this.LA(3).tokenType !== lexer.Command_if
+        )
       },
       DEF: () => {
         this.CONSUME(lexer.Command)

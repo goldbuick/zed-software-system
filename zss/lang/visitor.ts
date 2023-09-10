@@ -17,12 +17,12 @@ export enum NODE {
   TEXT,
   LABEL,
   HYPERLINK,
-  ATTRIBUTE,
+  STAT,
   COMMAND,
   LITERAL,
   // structure
   IF,
-  ELIF,
+  ELSE_IF,
   ELSE,
   FOR,
   FUNC,
@@ -30,6 +30,20 @@ export enum NODE {
   BREAK,
   CONTINUE,
   REPEAT,
+}
+
+export enum IF_METHOD {
+  IF,
+  TRY,
+  TAKE,
+  GIVE,
+}
+
+const IF_METHOD_MAP: Record<string, IF_METHOD> = {
+  if: IF_METHOD.IF,
+  try: IF_METHOD.TRY,
+  take: IF_METHOD.TAKE,
+  give: IF_METHOD.GIVE,
 }
 
 export enum COMPARE {
@@ -314,7 +328,7 @@ type CodeNodeData =
       value: string
     }
   | {
-      type: NODE.ATTRIBUTE
+      type: NODE.STAT
       words: CodeNode[]
     }
   | {
@@ -323,18 +337,20 @@ type CodeNodeData =
     }
   | {
       type: NODE.IF
+      method: IF_METHOD
       words: CodeNode[]
       block_lines?: CodeNode[]
-      elif?: CodeNode[]
-      else?: CodeNode
+      else_if: CodeNode[]
+      else: CodeNode[]
     }
   | {
-      type: NODE.ELIF
+      type: NODE.ELSE_IF
       words: CodeNode[]
       block_lines?: CodeNode[]
     }
   | {
       type: NODE.ELSE
+      words: CodeNode[]
       block_lines?: CodeNode[]
     }
   | {
@@ -482,9 +498,9 @@ class ScriptVisitor extends CstVisitor {
   }
 
   simple_cmd(ctx: CstChildrenDictionary) {
-    if (ctx.Attribute) {
+    if (ctx.Stat) {
       return makeNode(ctx, {
-        type: NODE.ATTRIBUTE,
+        type: NODE.STAT,
         // @ts-expect-error cst element
         words: asList(this, ctx.words),
       })
@@ -544,38 +560,54 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error cst element
       return this.visit(ctx.Command_continue)
     }
-    console.info(ctx)
   }
 
   Command_if(ctx: CstChildrenDictionary) {
+    const method = asIToken(ctx.if[0]).image.toLowerCase()
+
     return makeNode(ctx, {
       type: NODE.IF,
+      method: IF_METHOD_MAP[method] || IF_METHOD.IF,
       // @ts-expect-error cst element
       words: asList(this, ctx.words),
       // @ts-expect-error cst element
       block_lines: this.visit(ctx.block_lines),
       // @ts-expect-error cst element
-      elif: asList(this, ctx.Command_elif),
+      else_if: asList(this, ctx.Command_else_if),
       // @ts-expect-error cst element
-      else: this.visit(ctx.Command_else),
+      else: asList(this, ctx.Command_else),
     })
   }
 
-  Command_elif(ctx: CstChildrenDictionary) {
+  Command_else_if(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words)
+    // @ts-expect-error cst element
+    const block_lines = this.visit(ctx.block_lines)
+    // bail on empty else if
+    if (words.length === 0 && block_lines === undefined) {
+      return
+    }
     return makeNode(ctx, {
-      type: NODE.ELIF,
-      // @ts-expect-error cst element
-      words: asList(this, ctx.words),
-      // @ts-expect-error cst element
-      block_lines: this.visit(ctx.block_lines),
+      type: NODE.ELSE_IF,
+      words,
+      block_lines,
     })
   }
 
   Command_else(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words)
+    // @ts-expect-error cst element
+    const block_lines = this.visit(ctx.block_lines)
+    // bail on empty else if
+    if (words.length === 0 && block_lines === undefined) {
+      return
+    }
     return makeNode(ctx, {
       type: NODE.ELSE,
-      // @ts-expect-error cst element
-      block_lines: this.visit(ctx.block_lines),
+      words,
+      block_lines,
     })
   }
 
@@ -662,11 +694,13 @@ class ScriptVisitor extends CstVisitor {
   }
 
   words(ctx: CstChildrenDictionary) {
+    // console.info({ words: ctx })
     // @ts-expect-error cst element
     return asList(this, ctx.word).flat()
   }
 
   word(ctx: CstChildrenDictionary) {
+    // console.info({ word: ctx })
     if (ctx.StringLiteral) {
       return makeNode(ctx, {
         type: NODE.LITERAL,
