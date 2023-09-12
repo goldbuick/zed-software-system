@@ -1,8 +1,7 @@
 import { compileAST } from './ast'
 import transformAst from './transformer'
 
-export function langTest() {
-  const astResult = compileAST(`
+/*
 @main @terrain
 @wavy 3 24
 @target link
@@ -13,6 +12,14 @@ export function langTest() {
 #if banana1 all:doot1
 #try n endgame
 #take health 10 all:butts
+
+*/
+
+export function langTest() {
+  const astResult = compileAST(`
+
+' zzt nested branching / movement
+#if grapes if apples /w/w/w/w/w try n all:doot
 
 ' compact branching
 #if frogs all:shit
@@ -29,6 +36,22 @@ export function langTest() {
 #else
   #char 32
   #other:awesome
+
+  `)
+
+  if (astResult.errors) {
+    console.info(astResult.tokens)
+    console.info(astResult.errors[0])
+    return
+  }
+
+  const jsCode = transformAst(astResult.ast)
+  console.info(jsCode.code)
+  console.info(jsCode.labels)
+}
+
+/*
+
 
 ' mixed branching
 #if frogs all:shit
@@ -59,23 +82,6 @@ export function langTest() {
 #take health (5 + 23)
 #else take group 5
 #else endgame
-
-  `)
-
-  if (astResult.errors) {
-    console.info(astResult.tokens)
-    console.info(astResult.errors[0])
-    return
-  }
-
-  const jsCode = transformAst(astResult.ast)
-  console.info(jsCode.code)
-  console.info(jsCode.labels)
-}
-
-/*
-
-
 
 
 stats @

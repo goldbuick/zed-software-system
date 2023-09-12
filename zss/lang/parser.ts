@@ -93,6 +93,30 @@ class ScriptParser extends CstParser {
     this.MANY(() => this.CONSUME3(lexer.Newline))
   })
 
+  nested_cmd = this.RULED('nested_cmd', () => {
+    this.OR([
+      {
+        ALT: () => {
+          this.CONSUME(lexer.Go)
+          this.SUBRULE1(this.words)
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.Try)
+          this.SUBRULE2(this.words)
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.Command_if)
+          this.SUBRULE3(this.words)
+          this.MANY(() => this.SUBRULE(this.nested_cmd))
+        },
+      },
+    ])
+  })
+
   struct_cmd = this.RULED('struct_cmd', () => {
     this.CONSUME(lexer.Command)
     this.OR([
@@ -108,12 +132,24 @@ class ScriptParser extends CstParser {
   Command_if = this.RULED('Command_if', () => {
     this.CONSUME(lexer.Command_if)
     this.SUBRULE(this.words)
-    this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
 
-    this.OPTION1(() => this.SUBRULE(this.block_lines))
+    this.OR([
+      {
+        ALT: () => {
+          this.AT_LEAST_ONE1(() => this.SUBRULE(this.nested_cmd))
+        },
+      },
+      {
+        ALT: () => {
+          this.AT_LEAST_ONE2(() => this.CONSUME(lexer.Newline))
 
-    this.SUBRULE(this.Command_else_if)
-    this.SUBRULE(this.Command_else)
+          this.OPTION1(() => this.SUBRULE(this.block_lines))
+
+          this.SUBRULE(this.Command_else_if)
+          this.SUBRULE(this.Command_else)
+        },
+      },
+    ])
   })
 
   Command_else_if = this.RULED('Command_else_if', () => {
@@ -158,9 +194,9 @@ class ScriptParser extends CstParser {
   Command_for = this.RULED('Command_for', () => {
     this.CONSUME(lexer.Command_for)
     this.CONSUME(lexer.StringLiteral)
-    this.CONSUME(lexer.Command_in)
+    this.OPTION(() => this.CONSUME(lexer.Command_in))
     this.SUBRULE(this.word)
-    this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
+    this.AT_LEAST_ONE(() => this.CONSUME(lexer.Newline))
 
     this.SUBRULE(this.block_lines)
   })

@@ -506,6 +506,10 @@ class ScriptVisitor extends CstVisitor {
       })
     }
 
+    return this.nested_cmd(ctx)
+  }
+
+  nested_cmd(ctx: CstChildrenDictionary) {
     if (ctx.Go) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
@@ -563,19 +567,26 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_if(ctx: CstChildrenDictionary) {
+    console.info(ctx)
     const method = asIToken(ctx.if[0]).image.toLowerCase()
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words)
+    // @ts-expect-error cst element
+    const nested_cmd = asList(this, ctx.nested_cmd)
+    // @ts-expect-error cst element
+    const block_lines = this.visit(ctx.block_lines)
+    // @ts-expect-error cst element
+    const else_if = asList(this, ctx.Command_else_if)
+    // @ts-expect-error cst element
+    const else_case = asList(this, ctx.Command_else)
 
     return makeNode(ctx, {
       type: NODE.IF,
       method: IF_METHOD_MAP[method] || IF_METHOD.IF,
-      // @ts-expect-error cst element
-      words: asList(this, ctx.words),
-      // @ts-expect-error cst element
-      block_lines: this.visit(ctx.block_lines),
-      // @ts-expect-error cst element
-      else_if: asList(this, ctx.Command_else_if),
-      // @ts-expect-error cst element
-      else: asList(this, ctx.Command_else),
+      words,
+      block_lines,
+      else_if,
+      else: else_case,
     })
   }
 
@@ -588,6 +599,7 @@ class ScriptVisitor extends CstVisitor {
     if (words.length === 0 && block_lines === undefined) {
       return
     }
+
     return makeNode(ctx, {
       type: NODE.ELSE_IF,
       words,
@@ -604,6 +616,7 @@ class ScriptVisitor extends CstVisitor {
     if (words.length === 0 && block_lines === undefined) {
       return
     }
+
     return makeNode(ctx, {
       type: NODE.ELSE,
       words,

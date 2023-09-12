@@ -400,6 +400,7 @@ export const Command_if = createWordToken('if|try|take|give', 'if')
 export const Command_else = createWordToken('else')
 export const Command_for = createWordToken('for')
 export const Command_in = createWordToken('in')
+export const Command_then = createWordToken('then')
 export const Command_while = createWordToken('while')
 export const Command_repeat = createWordToken('repeat')
 export const Command_break = createWordToken('break')
@@ -439,6 +440,7 @@ function createTokenSet(whitespaceTokens: TokenType[]) {
     Command_else,
     Command_for,
     Command_in,
+    Command_then,
     Command_while,
     Command_repeat,
     Command_break,
