@@ -37,22 +37,6 @@ export function langTest() {
   #char 32
   #other:awesome
 
-  `)
-
-  if (astResult.errors) {
-    console.info(astResult.tokens)
-    console.info(astResult.errors[0])
-    return
-  }
-
-  const jsCode = transformAst(astResult.ast)
-  console.info(jsCode.code)
-  console.info(jsCode.labels)
-}
-
-/*
-
-
 ' mixed branching
 #if frogs all:shit
 #else if apples
@@ -82,6 +66,22 @@ export function langTest() {
 #take health (5 + 23)
 #else take group 5
 #else endgame
+
+  `)
+
+  if (astResult.errors) {
+    console.info(astResult.tokens)
+    console.info(astResult.errors[0])
+    return
+  }
+
+  const jsCode = transformAst(astResult.ast)
+  console.info(jsCode.code)
+  console.info(jsCode.labels)
+}
+
+/*
+
 
 
 stats @

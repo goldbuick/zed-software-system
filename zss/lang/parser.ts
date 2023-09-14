@@ -71,6 +71,7 @@ class ScriptParser extends CstParser {
 
   multi_stmt = this.RULED('multi_stmt', () => {
     this.AT_LEAST_ONE(() => this.SUBRULE(this.simple_cmd))
+    this.MANY(() => this.SUBRULE(this.nested_cmd))
   })
 
   simple_cmd = this.RULED('simple_cmd', () => {
@@ -142,7 +143,6 @@ class ScriptParser extends CstParser {
       {
         ALT: () => {
           this.AT_LEAST_ONE2(() => this.CONSUME(lexer.Newline))
-
           this.OPTION1(() => this.SUBRULE(this.block_lines))
 
           this.SUBRULE(this.Command_else_if)
@@ -165,9 +165,20 @@ class ScriptParser extends CstParser {
         this.CONSUME(lexer.Command_else)
         this.CONSUME(lexer.Command_if)
         this.SUBRULE(this.words)
-        this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
 
-        this.OPTION2(() => this.SUBRULE(this.block_lines))
+        this.OR([
+          {
+            ALT: () => {
+              this.AT_LEAST_ONE1(() => this.SUBRULE(this.nested_cmd))
+            },
+          },
+          {
+            ALT: () => {
+              this.AT_LEAST_ONE2(() => this.CONSUME(lexer.Newline))
+              this.OPTION1(() => this.SUBRULE(this.block_lines))
+            },
+          },
+        ])
       },
     })
   })

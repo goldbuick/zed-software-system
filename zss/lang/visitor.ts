@@ -39,13 +39,6 @@ export enum IF_METHOD {
   GIVE,
 }
 
-const IF_METHOD_MAP: Record<string, IF_METHOD> = {
-  if: IF_METHOD.IF,
-  try: IF_METHOD.TRY,
-  take: IF_METHOD.TAKE,
-  give: IF_METHOD.GIVE,
-}
-
 export enum COMPARE {
   IS_EQ,
   IS_NOT_EQ,
@@ -337,15 +330,18 @@ type CodeNodeData =
     }
   | {
       type: NODE.IF
-      method: IF_METHOD
+      method: string
       words: CodeNode[]
+      nested_cmd?: CodeNode[]
       block_lines?: CodeNode[]
       else_if: CodeNode[]
       else: CodeNode[]
     }
   | {
       type: NODE.ELSE_IF
+      method: string
       words: CodeNode[]
+      nested_cmd?: CodeNode[]
       block_lines?: CodeNode[]
     }
   | {
@@ -493,8 +489,12 @@ class ScriptVisitor extends CstVisitor {
   }
 
   multi_stmt(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
-    return asList(this, ctx.simple_cmd)
+    return [
+      // @ts-expect-error cst element
+      ...asList(this, ctx.simple_cmd),
+      // @ts-expect-error cst element
+      ...asList(this, ctx.nested_cmd),
+    ].flat()
   }
 
   simple_cmd(ctx: CstChildrenDictionary) {
@@ -532,11 +532,17 @@ class ScriptVisitor extends CstVisitor {
       })
     }
 
-    return makeNode(ctx, {
-      type: NODE.COMMAND,
-      // @ts-expect-error cst element
-      words: asList(this, ctx.words),
-    })
+    if (ctx.Command) {
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        words: [
+          // @ts-expect-error cst element
+          ...asList(this, ctx.words),
+        ],
+      })
+    }
+
+    return this.Command_if(ctx)
   }
 
   struct_cmd(ctx: CstChildrenDictionary) {
@@ -567,23 +573,28 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_if(ctx: CstChildrenDictionary) {
-    console.info(ctx)
     const method = asIToken(ctx.if[0]).image.toLowerCase()
+
     // @ts-expect-error cst element
     const words = asList(this, ctx.words)
+
     // @ts-expect-error cst element
     const nested_cmd = asList(this, ctx.nested_cmd)
+
     // @ts-expect-error cst element
     const block_lines = this.visit(ctx.block_lines)
+
     // @ts-expect-error cst element
     const else_if = asList(this, ctx.Command_else_if)
+
     // @ts-expect-error cst element
     const else_case = asList(this, ctx.Command_else)
 
     return makeNode(ctx, {
       type: NODE.IF,
-      method: IF_METHOD_MAP[method] || IF_METHOD.IF,
+      method,
       words,
+      nested_cmd,
       block_lines,
       else_if,
       else: else_case,
@@ -591,18 +602,31 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_else_if(ctx: CstChildrenDictionary) {
+    const method = asIToken(ctx.if[0]).image.toLowerCase()
+
     // @ts-expect-error cst element
     const words = asList(this, ctx.words)
+
+    // @ts-expect-error cst element
+    const nested_cmd = asList(this, ctx.nested_cmd)
+
     // @ts-expect-error cst element
     const block_lines = this.visit(ctx.block_lines)
+
     // bail on empty else if
-    if (words.length === 0 && block_lines === undefined) {
+    if (
+      words.length === 0 &&
+      nested_cmd.length === 0 &&
+      block_lines === undefined
+    ) {
       return
     }
 
     return makeNode(ctx, {
       type: NODE.ELSE_IF,
+      method,
       words,
+      nested_cmd,
       block_lines,
     })
   }

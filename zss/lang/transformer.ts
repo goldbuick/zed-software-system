@@ -151,9 +151,15 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.IF: {
       const source = write(ast, [
         `if (`,
-        writeApi(ast, `${HIDE}eval`, transformNodes(ast.words)),
+        writeApi(ast, `${HIDE}${ast.method}`, transformNodes(ast.words)),
         `) {\n`,
       ])
+
+      if (ast.nested_cmd) {
+        ast.nested_cmd.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
 
       if (ast.block_lines) {
         ast.block_lines.forEach((item) => {
@@ -178,9 +184,10 @@ function transformNode(ast: CodeNode): SourceNode {
       return source
     }
     case NODE.ELSE_IF: {
+      // console.info(ast)
       const source = write(ast, [
         `} else if (`,
-        writeApi(ast, `${HIDE}eval`, transformNodes(ast.words)),
+        writeApi(ast, `${HIDE}${ast.method}`, transformNodes(ast.words)),
         `) {\n`,
       ])
 
