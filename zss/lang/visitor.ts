@@ -30,6 +30,14 @@ export enum NODE {
   BREAK,
   CONTINUE,
   REPEAT,
+  // expressions
+  OR,
+  AND,
+  NOT,
+  COMPARE,
+  OPERATOR,
+  OPERATOR_ITEM,
+  GROUP,
 }
 
 export enum IF_METHOD {
@@ -64,68 +72,6 @@ export enum LITERAL {
   NUMBER,
   STRING,
 }
-
-// export enum DIR {
-//   NONE,
-//   UP,
-//   DOWN,
-//   LEFT,
-//   RIGHT,
-//   BY,
-//   AT,
-//   FROM,
-//   FLOW,
-//   SEEK,
-//   RNDNS,
-//   RNDNE,
-//   RND,
-//   // modifiers
-//   CW,
-//   CCW,
-//   OPP,
-//   RNDP,
-//   // aliases
-//   IDLE = NONE,
-//   U = UP,
-//   NORTH = UP,
-//   N = UP,
-//   D = DOWN,
-//   SOUTH = DOWN,
-//   S = DOWN,
-//   L = LEFT,
-//   WEST = LEFT,
-//   W = LEFT,
-//   R = RIGHT,
-//   EAST = RIGHT,
-//   E = RIGHT,
-// }
-
-// export type DirParam = {
-//   dir: DIR
-//   x?: CodeNode
-//   y?: CodeNode
-// }
-
-// export enum ARRAY {
-//   SELECT,
-//   RANGE,
-//   CREATE,
-//   INDEX,
-//   LENGTH,
-//   POP,
-//   PUSH,
-//   SHIFT,
-// }
-
-// export enum MATH {
-//   RND,
-//   ABS,
-//   CEIL,
-//   FLOOR,
-//   MIN,
-//   MAX,
-//   ROUND,
-// }
 
 function asIToken(thing: CstNode | CstElement): IToken {
   return thing as unknown as IToken
@@ -163,132 +109,6 @@ function makeString(ctx: CstChildrenDictionary, value: string) {
 //     value,
 //   })
 // }
-
-/*
-  // | {
-  //     type: NODE.IF
-  //     test?: CodeNode
-  //     block?: CodeNode[]
-  //     elif?: CodeNode[]
-  //     else?: CodeNode
-  //   }
-  // | {
-  //     type: NODE.ELIF
-  //     test?: CodeNode
-  //     block?: CodeNode[]
-  //   }
-  // | {
-  //     type: NODE.ELSE
-  //     block?: CodeNode[]
-  //   }
-  // | {
-  //     type: NODE.FOR
-  //     var?: CodeNode
-  //     list?: CodeNode
-  //     block?: CodeNode[]
-  //   }
-  // | {
-  //     type: NODE.FUNC
-  //     params: CodeNode[]
-  //   }
-  // | {
-  //     type: NODE.WHILE
-  //     test?: CodeNode
-  //     block?: CodeNode[]
-  //   }
-  // | { type: NODE.BREAK }
-  // | { type: NODE.CONTINUE }
-  // | {
-  //     type: NODE.REPEAT
-  //     count: CodeNode
-  //     block: CodeNode[]
-  //   }
-  // | {
-  //     type: NODE.MATH_OP
-  //     math: MATH
-  //     items: CodeNode[]
-  //   }
-  // | {
-  //     type: NODE.ARRAY_OP
-  //     array: ARRAY
-  //     items: CodeNode[]
-  //   }
-  // | {
-  //     type: NODE.OR
-  //     items: CodeNode[]
-  //   }
-  // | {
-  //     type: NODE.AND
-  //     items: CodeNode[]
-  //   }
-  // | {
-  //     type: NODE.NOT
-  //     value: CodeNode
-  //   }
-  // | {
-  //     type: NODE.COMPARE
-  //     lhs: CodeNode
-  //     compare: COMPARE
-  //     rhs: CodeNode
-  //   }
-  // | {
-  //     type: NODE.OPERATOR
-  //     lhs: CodeNode | undefined
-  //     items: CodeNode[]
-  //   }
-  // | {
-  //     type: NODE.OPERATOR_ITEM
-  //     operator: OPERATOR
-  //     rhs: CodeNode
-  //   }
-  // | {
-  //     type: NODE.GROUP
-  //     items: CodeNode[]
-  //   }
-  // | {
-  //     type: NODE.LITERAL
-  //     literal: LITERAL.NUMBER
-  //     value: number
-  //   }
-  // | {
-  //     type: NODE.LITERAL
-  //     literal: LITERAL.STRING
-  //     value: string
-  //   }
-  // | {
-  //     type: NODE.STRING_IDENTIFIER
-  //     value: string
-  //   }
-  // | {
-  //     type: NODE.IDENTIFIER
-  //     value: string
-  //   }
-  // | {
-  //     type: NODE.COMMAND
-  //     name: string
-  //     params: CodeNode[]
-  //     block?: CodeNode[]
-  //     else?: CodeNode
-  //   }
-  // | {
-  //     type: NODE.MESSAGE
-  //     message: CodeNode[]
-  //     data?: CodeNode
-  //   }
-  // | {
-  //     type: NODE.COLOR
-  //     color: number
-  //   }
-  // | {
-  //     type: NODE.KIND
-  //     color?: CodeNode
-  //     name: CodeNode
-  //   }
-  // | {
-  //     type: NODE.DIRECTION
-  //     params: DirParam[]
-  //   }
-*/
 
 type CodeNodeData =
   | {
@@ -366,6 +186,38 @@ type CodeNodeData =
       type: NODE.REPEAT
       words: CodeNode[]
       block_lines: CodeNode[]
+    }
+  | {
+      type: NODE.OR
+      items: CodeNode[]
+    }
+  | {
+      type: NODE.AND
+      items: CodeNode[]
+    }
+  | {
+      type: NODE.NOT
+      value: CodeNode
+    }
+  | {
+      type: NODE.COMPARE
+      lhs: CodeNode
+      compare: COMPARE
+      rhs: CodeNode
+    }
+  | {
+      type: NODE.OPERATOR
+      lhs: CodeNode | undefined
+      items: CodeNode[]
+    }
+  | {
+      type: NODE.OPERATOR_ITEM
+      operator: OPERATOR
+      rhs: CodeNode
+    }
+  | {
+      type: NODE.GROUP
+      items: CodeNode[]
     }
 
 export type CodeNode = CodeNodeData &
@@ -731,40 +583,19 @@ class ScriptVisitor extends CstVisitor {
   }
 
   words(ctx: CstChildrenDictionary) {
-    // console.info({ words: ctx })
     // @ts-expect-error cst element
-    return asList(this, ctx.word).flat()
+    return asList(this, ctx.expr).flat()
   }
 
-  word(ctx: CstChildrenDictionary) {
-    // console.info({ word: ctx })
-    if (ctx.StringLiteral) {
-      return makeNode(ctx, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value: asIToken(ctx.StringLiteral[0]).image,
-      })
+  expr(ctx: CstChildrenDictionary) {
+    if (ctx.and_test.length === 1) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.and_test)
     }
-
-    if (ctx.NumberLiteral) {
-      return makeNode(ctx, {
-        type: NODE.LITERAL,
-        literal: LITERAL.NUMBER,
-        value: parseFloat(asIToken(ctx.NumberLiteral[0]).image),
-      })
-    }
-
-    // TODO: ctx.expr
-  }
-
-  expr() {
-    // this.CONSUME(lexer.LParen)
-    // this.SUBRULE1(this.and_test)
-    // this.MANY(() => {
-    //   this.CONSUME(lexer.Or)
-    //   this.SUBRULE2(this.and_test)
-    // })
-    // this.CONSUME(lexer.RParen)
+    return makeNode(ctx, NODE.OR, {
+      // @ts-expect-error cst element
+      items: asList(this, ctx.and_test),
+    })
   }
 
   and_test() {
@@ -817,6 +648,33 @@ class ScriptVisitor extends CstVisitor {
 
   power() {
     //
+  }
+
+  word(ctx: CstChildrenDictionary) {
+    // console.info({ word: ctx })
+    if (ctx.StringLiteral) {
+      return makeNode(ctx, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: asIToken(ctx.StringLiteral[0]).image,
+      })
+    }
+
+    if (ctx.NumberLiteral) {
+      return makeNode(ctx, {
+        type: NODE.LITERAL,
+        literal: LITERAL.NUMBER,
+        value: parseFloat(asIToken(ctx.NumberLiteral[0]).image),
+      })
+    }
+
+    if (ctx.LParen) {
+      return makeNode(ctx, {
+        type: NODE.GROUP,
+        // @ts-expect-error cst element
+        items: asList(this, ctx.expr),
+      })
+    }
   }
 }
 

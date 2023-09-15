@@ -256,29 +256,19 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.HyperLinkText)
   })
 
-  word = this.RULED('word', () => {
-    this.OR([
-      { ALT: () => this.CONSUME(lexer.StringLiteral) },
-      { ALT: () => this.CONSUME(lexer.NumberLiteral) },
-      { ALT: () => this.SUBRULE(this.expr) },
-    ])
-  })
-
   words = this.RULED('words', () =>
-    this.AT_LEAST_ONE(() => this.SUBRULE(this.word)),
+    this.AT_LEAST_ONE(() => this.SUBRULE(this.expr)),
   )
 
   // expressions
 
   // expr root is or_test
   expr = this.RULED('expr', () => {
-    this.CONSUME(lexer.LParen)
     this.SUBRULE1(this.and_test)
     this.MANY(() => {
       this.CONSUME(lexer.Or)
       this.SUBRULE2(this.and_test)
     })
-    this.CONSUME(lexer.RParen)
   })
 
   and_test = this.RULED('and_test', () => {
@@ -397,6 +387,20 @@ class ScriptParser extends CstParser {
       this.CONSUME(lexer.Power)
       this.SUBRULE(this.factor)
     })
+  })
+
+  word = this.RULED('word', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.StringLiteral) },
+      { ALT: () => this.CONSUME(lexer.NumberLiteral) },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.LParen)
+          this.SUBRULE(this.expr)
+          this.CONSUME(lexer.RParen)
+        },
+      },
+    ])
   })
 }
 
