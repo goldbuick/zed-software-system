@@ -207,7 +207,6 @@ function transformNode(ast: CodeNode): SourceNode {
       }
       return writeApi(ast, `text`, [`'${escapeString(ast.value)}'`])
     case NODE.STAT:
-      console.info(ast)
       return writeApi(ast, `stat`, transformNodes(ast.words))
     case NODE.LABEL: {
       const index = context.labelIndex++
@@ -291,9 +290,48 @@ function transformNode(ast: CodeNode): SourceNode {
 
       return source
     }
-    case NODE.FOR:
-      return blank(ast)
-    case NODE.WHILE:
+    case NODE.FOR: {
+      const keyName = `___key${context.internal}`
+      const listName = `___list${context.internal}`
+      const indexName = `___index${context.internal}`
+      const keysOfName = `___keys${context.internal}`
+      context.internal += 1
+
+      const varName =
+        ast.var && ast.var.type === NODE.LITERAL ? ast.var.value : 'err'
+
+      const source = write(ast, [
+        'while (',
+        writeApi(ast, 'while', transformNodes(ast.words)),
+        ') {',
+        `\n${END_OF_LINE_CODE}\n`,
+      ])
+
+      //
+
+      source.add('}\n')
+
+      // const varName = extractString(ast.var).toLowerCase()
+      // if (ast.var) {
+      //   createVar(ast.var, varName)
+      // }
+
+      // return write(ast, [
+      //   `const ${listName} = `,
+      //   ast.list ? transformNode(ast.list) : '[]',
+      //   '\n',
+      //   `const ${keysOfName} = api.___keysof(${listName})\n`,
+      //   `for (let ${indexName} = 0; ${indexName} < ${keysOfName}.length; ${indexName}++) {\n`,
+      //   `${endOfLineCode}\n`,
+      //   `const ${keyName} = ${keysOfName}[${indexName}]\n`,
+      //   `api.local('${varName}', ${listName}[${keyName}])\n`,
+      //   ...(ast.block ?? [])
+      //     .map((item) => [`\n${endOfLineCode}\n`, transformNode(item)])
+      //     .flat(),
+      //   '\n}',
+      // ])
+    }
+    case NODE.WHILE: {
       const source = write(ast, [
         'while (',
         writeApi(ast, 'while', transformNodes(ast.words)),
@@ -310,23 +348,49 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add('}\n')
 
       return source
-
-    // return write(ast, [
-    //   'while (',
-    //   writeApi(ast, 'while', transformNodes(ast.words)),
-    //   ') {',
-    //   `\n${END_OF_LINE_CODE}\n`,
-    //   ...(ast.block ?? [])
-    //     .map((item) => [transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-    //     .flat(),
-    //   '\n}\n',
-    // ])
+    }
     case NODE.REPEAT:
-      return blank(ast)
+      if (ast.words.length === 0) {
+        const source = write(ast, 'while (true) {')
+
+        ast.block_lines.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+
+        source.add('}\n')
+
+        return source
+      } else {
+        // loop X number of times
+        const totalName = `___total${context.internal}`
+        const indexName = `___index${context.internal}`
+        context.internal += 1
+
+        const source = write(ast, [
+          `const ${totalName} = `,
+          writeApi(ast, 'repeat', transformNodes(ast.words)),
+          `;\n`,
+        ])
+
+        source.add([
+          `\n${END_OF_LINE_CODE}\n`,
+          `for (let ${indexName} = 0; ${indexName} < ${totalName}; ${indexName} += 1 ) {\n`,
+        ])
+
+        if (ast.block_lines) {
+          ast.block_lines.forEach((item) => {
+            source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+          })
+        }
+
+        source.add('}\n')
+
+        return source
+      }
     case NODE.BREAK:
-      return write(ast, `break;`)
+      return write(ast, `break;\n`)
     case NODE.CONTINUE:
-      return write(ast, `continue;`)
+      return write(ast, `continue;\n`)
     // expressions
     case NODE.OR:
       return write(ast, joinChunks(ast.items.map(transformNode), ' || '))

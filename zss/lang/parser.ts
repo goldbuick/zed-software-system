@@ -6,7 +6,7 @@ import * as lexer from './lexer'
 
 let incId = 0
 let incIndent = 0
-const useDEV = DEV && false
+const enableTracing = DEV && false
 const highlight = ['Command', 'block']
 
 class ScriptParser extends CstParser {
@@ -34,11 +34,11 @@ class ScriptParser extends CstParser {
         const useIndent = incIndent++
         const strIndent = '  '.repeat(useIndent)
         const style = bold ? 'font-weight: bold;' : ''
-        if (useDEV && !this.RECORDING_PHASE) {
+        if (enableTracing && !this.RECORDING_PHASE) {
           console.info(`%c${strIndent}> ${name} ${useId}`, style)
         }
         implementation()
-        if (useDEV && !this.RECORDING_PHASE) {
+        if (enableTracing && !this.RECORDING_PHASE) {
           console.info(`%c${strIndent}< ${name} ${useId}`, style)
         }
         incIndent--

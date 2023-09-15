@@ -97,21 +97,6 @@ function makeString(ctx: CstChildrenDictionary, value: string) {
   })
 }
 
-// function makeNumber(ctx: CstChildrenDictionary, value: number) {
-//   return makeNode(ctx, {
-//     type: NODE.LITERAL,
-//     literal: LITERAL.NUMBER,
-//     value,
-//   })
-// }
-
-// function makeIdentifier(ctx: CstChildrenDictionary, value: string) {
-//   return makeNode(ctx, {
-//     type: NODE.IDENTIFIER,
-//     value,
-//   })
-// }
-
 type CodeNodeData =
   | {
       type: NODE.PROGRAM
@@ -505,6 +490,13 @@ class ScriptVisitor extends CstVisitor {
   Command_for(ctx: CstChildrenDictionary) {
     return makeNode(ctx, {
       type: NODE.FOR,
+      var: ctx.StringLiteral
+        ? makeNode(ctx, {
+            type: NODE.LITERAL,
+            literal: LITERAL.STRING,
+            value: asIToken(ctx.StringLiteral[0]).image,
+          })
+        : undefined,
       // @ts-expect-error cst element
       words: asList(this, ctx.words),
       // @ts-expect-error cst element
