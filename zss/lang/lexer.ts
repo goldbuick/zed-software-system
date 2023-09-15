@@ -421,6 +421,12 @@ function createTokenSet(whitespaceTokens: TokenType[]) {
     HyperLink,
     HyperLinkText,
     // expressions
+    IsEq,
+    IsNotEq,
+    IsLessThanOrEqual,
+    IsLessThan,
+    IsGreaterThanOrEqual,
+    IsGreaterThan,
     // logical
     Or,
     Not,

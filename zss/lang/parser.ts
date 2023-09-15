@@ -214,7 +214,7 @@ class ScriptParser extends CstParser {
 
   Command_while = this.RULED('Command_while', () => {
     this.CONSUME(lexer.Command_while)
-    this.OPTION1(() => this.SUBRULE(this.word))
+    this.OPTION1(() => this.SUBRULE(this.expr))
     this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
 
     this.SUBRULE(this.block_lines)

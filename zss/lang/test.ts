@@ -18,11 +18,14 @@ import transformAst from './transformer'
 export function langTest() {
   const astResult = compileAST(`
 
+#while a < 23
+  #char 67
+
 ' zzt nested branching / movement
 #if grapes if apples /w/w/w/w/w try n all:doot
 
 ' compact branching
-#if frogs all:shit
+#if frogs eq 32 all:shit
 #else if apples all:doot
 #else other:awesome
 
@@ -63,7 +66,7 @@ export function langTest() {
 #else other:awesome
 
 ' alt branching
-#take health (5 + 23)
+#take health 5 + 23 ohno
 #else take group 5
 #else endgame
 

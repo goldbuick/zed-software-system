@@ -13,6 +13,7 @@ import { parser } from './parser'
 const CstVisitor = parser.getBaseCstVisitorConstructor()
 
 export enum NODE {
+  // categories
   PROGRAM,
   TEXT,
   LABEL,
@@ -57,6 +58,7 @@ export enum COMPARE {
 }
 
 export enum OPERATOR {
+  EMPTY,
   PLUS,
   MINUS,
   POWER,
@@ -514,7 +516,7 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.WHILE,
       // @ts-expect-error cst element
-      words: asList(this, ctx.words),
+      words: asList(this, ctx.expr),
       // @ts-expect-error cst element
       block_lines: this.visit(ctx.block_lines),
     })
@@ -592,62 +594,223 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error cst element
       return this.visit(ctx.and_test)
     }
-    return makeNode(ctx, NODE.OR, {
+    return makeNode(ctx, {
+      type: NODE.OR,
       // @ts-expect-error cst element
       items: asList(this, ctx.and_test),
     })
   }
 
-  and_test() {
-    //
+  and_test(ctx: CstChildrenDictionary) {
+    if (ctx.not_test.length === 1) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.not_test)
+    }
+    return makeNode(ctx, {
+      type: NODE.AND,
+      // @ts-expect-error cst element
+      items: asList(this, ctx.not_test),
+    })
   }
 
-  not_test() {
-    //
+  not_test(ctx: CstChildrenDictionary) {
+    if (ctx.comparison) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.comparison)
+    }
+    if (ctx.not_test) {
+      return makeNode(ctx, {
+        type: NODE.NOT,
+        // @ts-expect-error cst element
+        value: this.visit(ctx.not_test),
+      })
+    }
   }
 
-  comparison() {
-    //
+  comparison(ctx: CstChildrenDictionary) {
+    if (ctx.arith_expr.length === 1) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.arith_expr)
+    }
+    return makeNode(ctx, {
+      type: NODE.COMPARE,
+      // @ts-expect-error cst element
+      lhs: this.visit(ctx.arith_expr[0]),
+      // @ts-expect-error cst element
+      compare: this.visit(ctx.comp_op),
+      // @ts-expect-error cst element
+      rhs: this.visit(ctx.arith_expr[1]),
+    })
   }
 
-  comp_op() {
-    //
+  comp_op(ctx: CstChildrenDictionary) {
+    if (ctx.is || ctx.IsEq) {
+      return COMPARE.IS_EQ
+    }
+    if (ctx.IsNotEq) {
+      return COMPARE.IS_NOT_EQ
+    }
+    if (ctx.IsLessThan) {
+      return COMPARE.IS_LESS_THAN
+    }
+    if (ctx.IsGreaterThan) {
+      return COMPARE.IS_GREATER_THAN
+    }
+    if (ctx.IsLessThanOrEqual) {
+      return COMPARE.IS_LESS_THAN_OR_EQ
+    }
+    if (ctx.IsGreaterThanOrEqual) {
+      return COMPARE.IS_GREATER_THAN_OR_EQ
+    }
   }
 
-  expr_value() {
-    //
+  expr_value(ctx: CstChildrenDictionary) {
+    if (ctx.and_test_value.length === 1) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.and_test_value)
+    }
+    return makeNode(ctx, {
+      type: NODE.OR,
+      // @ts-expect-error cst element
+      items: asList(this, ctx.and_test_value),
+    })
   }
 
-  and_test_value() {
-    //
+  and_test_value(ctx: CstChildrenDictionary) {
+    if (ctx.not_test_value.length === 1) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.not_test_value)
+    }
+    return makeNode(ctx, {
+      type: NODE.AND,
+      // @ts-expect-error cst element
+      items: asList(this, ctx.not_test_value),
+    })
   }
 
-  not_test_value() {
-    //
+  not_test_value(ctx: CstChildrenDictionary) {
+    if (ctx.arith_expr) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.arith_expr)
+    }
+    if (ctx.not_test) {
+      return makeNode(ctx, {
+        type: NODE.NOT,
+        // @ts-expect-error cst element
+        value: this.visit(ctx.not_test),
+      })
+    }
   }
 
-  arith_expr() {
-    //
+  arith_expr(ctx: CstChildrenDictionary) {
+    if (!ctx.arith_expr_item) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.term)
+    }
+    return makeNode(ctx, {
+      type: NODE.OPERATOR,
+      // @ts-expect-error cst element
+      lhs: this.visit(ctx.term),
+      // @ts-expect-error cst element
+      items: asList(this, ctx.arith_expr_item),
+    })
   }
 
-  arith_expr_item() {
-    //
+  arith_expr_item(ctx: CstChildrenDictionary) {
+    return makeNode(ctx, {
+      type: NODE.OPERATOR_ITEM,
+      operator: ctx.Plus ? OPERATOR.PLUS : OPERATOR.MINUS,
+      // @ts-expect-error cst element
+      rhs: this.visit(ctx.term),
+    })
   }
 
-  term() {
-    //
+  term(ctx: CstChildrenDictionary) {
+    if (!ctx.term_item) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.factor)
+    }
+    return makeNode(ctx, {
+      type: NODE.OPERATOR,
+      // @ts-expect-error cst element
+      lhs: this.visit(ctx.factor),
+      // @ts-expect-error cst element
+      items: asList(this, ctx.term_item),
+    })
   }
 
-  term_item() {
-    //
+  term_item(ctx: CstChildrenDictionary) {
+    let operator = OPERATOR.EMPTY
+
+    if (ctx.Multiply) {
+      operator = OPERATOR.MULTIPLY
+    }
+    if (ctx.Divide) {
+      operator = OPERATOR.DIVIDE
+    }
+    if (ctx.ModDivide) {
+      operator = OPERATOR.MOD_DIVIDE
+    }
+    if (ctx.FloorDivide) {
+      operator = OPERATOR.FLOOR_DIVIDE
+    }
+
+    return makeNode(ctx, {
+      type: NODE.OPERATOR_ITEM,
+      operator,
+      // @ts-expect-error cst element
+      rhs: this.visit(ctx.factor),
+    })
   }
 
-  factor() {
-    //
+  factor(ctx: CstChildrenDictionary) {
+    if (ctx.power) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.power)
+    }
+
+    let operator = OPERATOR.EMPTY
+    if (ctx.Plus) {
+      operator = OPERATOR.UNI_PLUS
+    }
+    if (ctx.Minus) {
+      operator = OPERATOR.UNI_MINUS
+    }
+
+    return makeNode(ctx, {
+      type: NODE.OPERATOR,
+      lhs: undefined,
+      items: [
+        makeNode(ctx, {
+          type: NODE.OPERATOR_ITEM,
+          operator,
+          // @ts-expect-error cst element
+          rhs: this.visit(ctx.factor),
+        }),
+      ],
+    })
   }
 
-  power() {
-    //
+  power(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    const word = this.visit(ctx.word)
+
+    if (ctx.factor) {
+      return makeNode(ctx, {
+        type: NODE.OPERATOR,
+        lhs: word,
+        items: [
+          makeNode(ctx, {
+            type: NODE.OPERATOR_ITEM,
+            operator: OPERATOR.POWER,
+            // @ts-expect-error cst element
+            rhs: this.visit(ctx.factor),
+          }),
+        ],
+      })
+    }
+
+    return word
   }
 
   word(ctx: CstChildrenDictionary) {
