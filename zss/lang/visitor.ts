@@ -157,12 +157,6 @@ type CodeNodeData =
       block_lines?: CodeNode[]
     }
   | {
-      type: NODE.FOR
-      var?: CodeNode
-      words: CodeNode[]
-      block_lines?: CodeNode[]
-    }
-  | {
       type: NODE.WHILE
       words: CodeNode[]
       block_lines?: CodeNode[]
@@ -389,10 +383,6 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error cst element
       return this.visit(ctx.Command_if)
     }
-    if (ctx.Command_for) {
-      // @ts-expect-error cst element
-      return this.visit(ctx.Command_for)
-    }
     if (ctx.Command_while) {
       // @ts-expect-error cst element
       return this.visit(ctx.Command_while)
@@ -484,23 +474,6 @@ class ScriptVisitor extends CstVisitor {
       type: NODE.ELSE,
       words,
       block_lines,
-    })
-  }
-
-  Command_for(ctx: CstChildrenDictionary) {
-    return makeNode(ctx, {
-      type: NODE.FOR,
-      var: ctx.StringLiteral
-        ? makeNode(ctx, {
-            type: NODE.LITERAL,
-            literal: LITERAL.STRING,
-            value: asIToken(ctx.StringLiteral[0]).image,
-          })
-        : undefined,
-      // @ts-expect-error cst element
-      words: asList(this, ctx.words),
-      // @ts-expect-error cst element
-      block_lines: this.visit(ctx.block_lines),
     })
   }
 
@@ -806,7 +779,6 @@ class ScriptVisitor extends CstVisitor {
   }
 
   word(ctx: CstChildrenDictionary) {
-    // console.info({ word: ctx })
     if (ctx.StringLiteral) {
       return makeNode(ctx, {
         type: NODE.LITERAL,

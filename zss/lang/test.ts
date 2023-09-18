@@ -18,7 +18,7 @@ import transformAst from './transformer'
 export function langTest() {
   const astResult = compileAST(`
 
-#while a < 23
+#while a < (23 * 1000) % bart
   #char 67
 
 ' zzt nested branching / movement

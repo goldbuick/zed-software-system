@@ -122,7 +122,6 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.Command)
     this.OR([
       { ALT: () => this.SUBRULE(this.Command_if) },
-      { ALT: () => this.SUBRULE(this.Command_for) },
       { ALT: () => this.SUBRULE(this.Command_while) },
       { ALT: () => this.SUBRULE(this.Command_repeat) },
       { ALT: () => this.SUBRULE(this.Command_break) },
@@ -194,22 +193,28 @@ class ScriptParser extends CstParser {
       DEF: () => {
         this.CONSUME(lexer.Command)
         this.CONSUME(lexer.Command_else)
-        this.OPTION1(() => this.SUBRULE(this.words))
-        this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
 
-        this.OPTION2(() => this.SUBRULE(this.block_lines))
+        this.OR([
+          {
+            ALT: () => {
+              this.AT_LEAST_ONE1(() => this.SUBRULE(this.nested_cmd))
+            },
+          },
+          {
+            ALT: () => {
+              this.AT_LEAST_ONE2(() => this.CONSUME2(lexer.Newline))
+              this.OPTION1(() => this.SUBRULE(this.block_lines))
+            },
+          },
+          {
+            ALT: () => {
+              this.SUBRULE(this.words)
+              this.AT_LEAST_ONE3(() => this.CONSUME3(lexer.Newline))
+            },
+          },
+        ])
       },
     })
-  })
-
-  Command_for = this.RULED('Command_for', () => {
-    this.CONSUME(lexer.Command_for)
-    this.CONSUME(lexer.StringLiteral)
-    this.OPTION(() => this.CONSUME(lexer.Command_in))
-    this.SUBRULE(this.word)
-    this.AT_LEAST_ONE(() => this.CONSUME(lexer.Newline))
-
-    this.SUBRULE(this.block_lines)
   })
 
   Command_while = this.RULED('Command_while', () => {

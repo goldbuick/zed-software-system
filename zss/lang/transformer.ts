@@ -81,7 +81,7 @@ function writeApi(
   method: string,
   params: Array<string | SourceNode>,
 ) {
-  return write(ast, [`api.${HIDE}${method}(`, ...joinChunks(params, ', '), `)`])
+  return write(ast, [`api.${method}(`, ...joinChunks(params, ', '), `)`])
 }
 
 function transformCompare(ast: CodeNode) {
@@ -98,27 +98,23 @@ function transformCompare(ast: CodeNode) {
           transformNode(ast.rhs),
         ])
       case COMPARE.IS_LESS_THAN:
-        return write(ast, [
+        return writeApi(ast, 'isLessThan', [
           transformNode(ast.lhs),
-          ' < ',
           transformNode(ast.rhs),
         ])
       case COMPARE.IS_GREATER_THAN:
-        return write(ast, [
+        return writeApi(ast, 'isGreaterThan', [
           transformNode(ast.lhs),
-          ' > ',
           transformNode(ast.rhs),
         ])
       case COMPARE.IS_LESS_THAN_OR_EQ:
-        return write(ast, [
+        return writeApi(ast, 'isLessThanOrEq', [
           transformNode(ast.lhs),
-          ' <= ',
           transformNode(ast.rhs),
         ])
       case COMPARE.IS_GREATER_THAN_OR_EQ:
-        return write(ast, [
+        return writeApi(ast, 'isGreaterThanOrEq', [
           transformNode(ast.lhs),
-          ' >= ',
           transformNode(ast.rhs),
         ])
     }
@@ -126,29 +122,34 @@ function transformCompare(ast: CodeNode) {
   return write(ast, '')
 }
 
+function prefixApi(operation: SourceNode, method: string, rhs: CodeNode) {
+  operation.prepend(`api.${method}(`)
+  return operation.add([', ', transformNode(rhs), ')'])
+}
+
 function transformOperatorItem(operation: SourceNode, ast: CodeNode) {
   if (ast.type === NODE.OPERATOR_ITEM) {
     switch (ast.operator) {
       case OPERATOR.PLUS:
-        return operation.add([' + ', transformNode(ast.rhs)])
+        return prefixApi(operation, 'opPlus', ast.rhs)
       case OPERATOR.MINUS:
-        return operation.add([' - ', transformNode(ast.rhs)])
+        return prefixApi(operation, 'opMinus', ast.rhs)
       case OPERATOR.POWER:
-        operation.prepend('Math.pow(')
-        return operation.add([', ', transformNode(ast.rhs), ')'])
+        return prefixApi(operation, 'opPower', ast.rhs)
       case OPERATOR.MULTIPLY:
-        return operation.add([' * ', transformNode(ast.rhs)])
+        return prefixApi(operation, 'opMultiply', ast.rhs)
       case OPERATOR.DIVIDE:
-        return operation.add([' / ', transformNode(ast.rhs)])
+        return prefixApi(operation, 'opDivide', ast.rhs)
       case OPERATOR.MOD_DIVIDE:
-        return operation.add([' % ', transformNode(ast.rhs)])
+        return prefixApi(operation, 'opModDivide', ast.rhs)
       case OPERATOR.FLOOR_DIVIDE:
-        operation.prepend('Math.floor(')
-        return operation.add([' / ', transformNode(ast.rhs), ')'])
+        return prefixApi(operation, 'opFloorDivide', ast.rhs)
       case OPERATOR.UNI_PLUS:
-        return operation.add(['+', transformNode(ast.rhs)])
+        operation.prepend(`api.opUniPlus(`)
+        return operation.add([transformNode(ast.rhs), ')'])
       case OPERATOR.UNI_MINUS:
-        return operation.add(['-', transformNode(ast.rhs)])
+        operation.prepend(`api.opUniMinus(`)
+        return operation.add([transformNode(ast.rhs), ')'])
     }
   }
   return write(ast, '')
@@ -202,10 +203,9 @@ function transformNode(ast: CodeNode): SourceNode {
       }
       return blank(ast)
     case NODE.TEXT:
-      if (ast.center) {
-        return writeApi(ast, `textCenter`, [`'${escapeString(ast.value)}'`])
-      }
-      return writeApi(ast, `text`, [`'${escapeString(ast.value)}'`])
+      return writeApi(ast, ast.center ? 'textCenter' : 'text', [
+        `'${escapeString(ast.value)}'`,
+      ])
     case NODE.STAT:
       return writeApi(ast, `stat`, transformNodes(ast.words))
     case NODE.LABEL: {
@@ -264,7 +264,6 @@ function transformNode(ast: CodeNode): SourceNode {
       return source
     }
     case NODE.ELSE_IF: {
-      // console.info(ast)
       const source = write(ast, [
         `} else if (`,
         writeApi(ast, ast.method, transformNodes(ast.words)),
@@ -282,6 +281,14 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.ELSE: {
       const source = write(ast, `} else {\n`)
 
+      if (ast.words.length) {
+        source.add([
+          `while (`,
+          writeApi(ast, `command`, transformNodes(ast.words)),
+          `) { ${WAIT_CODE} };`,
+        ])
+      }
+
       if (ast.block_lines) {
         ast.block_lines.forEach((item) => {
           source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
@@ -289,47 +296,6 @@ function transformNode(ast: CodeNode): SourceNode {
       }
 
       return source
-    }
-    case NODE.FOR: {
-      const keyName = `___key${context.internal}`
-      const listName = `___list${context.internal}`
-      const indexName = `___index${context.internal}`
-      const keysOfName = `___keys${context.internal}`
-      context.internal += 1
-
-      const varName =
-        ast.var && ast.var.type === NODE.LITERAL ? ast.var.value : 'err'
-
-      const source = write(ast, [
-        'while (',
-        writeApi(ast, 'while', transformNodes(ast.words)),
-        ') {',
-        `\n${END_OF_LINE_CODE}\n`,
-      ])
-
-      //
-
-      source.add('}\n')
-
-      // const varName = extractString(ast.var).toLowerCase()
-      // if (ast.var) {
-      //   createVar(ast.var, varName)
-      // }
-
-      // return write(ast, [
-      //   `const ${listName} = `,
-      //   ast.list ? transformNode(ast.list) : '[]',
-      //   '\n',
-      //   `const ${keysOfName} = api.___keysof(${listName})\n`,
-      //   `for (let ${indexName} = 0; ${indexName} < ${keysOfName}.length; ${indexName}++) {\n`,
-      //   `${endOfLineCode}\n`,
-      //   `const ${keyName} = ${keysOfName}[${indexName}]\n`,
-      //   `api.local('${varName}', ${listName}[${keyName}])\n`,
-      //   ...(ast.block ?? [])
-      //     .map((item) => [`\n${endOfLineCode}\n`, transformNode(item)])
-      //     .flat(),
-      //   '\n}',
-      // ])
     }
     case NODE.WHILE: {
       const source = write(ast, [
@@ -393,11 +359,11 @@ function transformNode(ast: CodeNode): SourceNode {
       return write(ast, `continue;\n`)
     // expressions
     case NODE.OR:
-      return write(ast, joinChunks(ast.items.map(transformNode), ' || '))
+      return writeApi(ast, 'or', ast.items.map(transformNode))
     case NODE.AND:
-      return write(ast, joinChunks(ast.items.map(transformNode), ' && '))
+      return writeApi(ast, 'and', ast.items.map(transformNode))
     case NODE.NOT:
-      return write(ast, ['!', ast.value ? transformNode(ast.value) : ''])
+      return writeApi(ast, 'not', [ast.value ? transformNode(ast.value) : ''])
     case NODE.COMPARE:
       return transformCompare(ast)
     case NODE.OPERATOR:
