@@ -295,10 +295,6 @@ class ScriptVisitor extends CstVisitor {
   }
 
   stmt(ctx: CstChildrenDictionary) {
-    if (ctx.struct_cmd) {
-      // @ts-expect-error cst element
-      return this.visit(ctx.struct_cmd)
-    }
     if (ctx.multi_stmt) {
       // @ts-expect-error cst element
       return this.visit(ctx.multi_stmt)
@@ -331,18 +327,6 @@ class ScriptVisitor extends CstVisitor {
   }
 
   simple_cmd(ctx: CstChildrenDictionary) {
-    if (ctx.Stat) {
-      return makeNode(ctx, {
-        type: NODE.STAT,
-        // @ts-expect-error cst element
-        words: asList(this, ctx.words),
-      })
-    }
-
-    return this.nested_cmd(ctx)
-  }
-
-  nested_cmd(ctx: CstChildrenDictionary) {
     if (ctx.Go) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
@@ -365,10 +349,47 @@ class ScriptVisitor extends CstVisitor {
       })
     }
 
+    if (ctx.struct_cmd) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.struct_cmd)
+    }
+
     if (ctx.Command) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
         words: [
+          // @ts-expect-error cst element
+          ...asList(this, ctx.words),
+        ],
+      })
+    }
+
+    if (ctx.Stat) {
+      return makeNode(ctx, {
+        type: NODE.STAT,
+        // @ts-expect-error cst element
+        words: asList(this, ctx.words),
+      })
+    }
+  }
+
+  nested_cmd(ctx: CstChildrenDictionary) {
+    if (ctx.Go) {
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        words: [
+          makeString(ctx, 'go'),
+          // @ts-expect-error cst element
+          ...asList(this, ctx.words),
+        ],
+      })
+    }
+
+    if (ctx.Try) {
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        words: [
+          makeString(ctx, 'try'),
           // @ts-expect-error cst element
           ...asList(this, ctx.words),
         ],
@@ -431,6 +452,11 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_else_if(ctx: CstChildrenDictionary) {
+    // bail on empty
+    if (!ctx.if) {
+      return
+    }
+
     const method = asIToken(ctx.if[0]).image.toLowerCase()
 
     // @ts-expect-error cst element
@@ -481,7 +507,7 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.WHILE,
       // @ts-expect-error cst element
-      words: asList(this, ctx.expr),
+      words: asList(this, ctx.words),
       // @ts-expect-error cst element
       block_lines: this.visit(ctx.block_lines),
     })

@@ -369,7 +369,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.OPERATOR:
       return transformOperator(ast)
     case NODE.GROUP:
-      return write(ast, ['(', ...ast.items.map(transformNode), ')'])
+      return write(ast, ast.items.map(transformNode))
     default:
       console.error(`<unsupported node>`, ast)
       return blank(ast)

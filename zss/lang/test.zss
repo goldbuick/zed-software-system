@@ -1,0 +1,1617 @@
+@aaaa
+#run aaaadeck
+
+
+
+@BarrierDead
+:enter
+#if not x set x 4
+#if not j set j 2
+#if j above guild end
+#give y
+#_give j
+#give x
+#put at x 3 12 0 blinkew
+#give x
+#put at x 4 7 12 blinkew
+#give x
+#put at x 4 12 7 blinkew
+#give x
+#put at x 5 0 12 blinkew
+#color by 0 -2 y 3
+/i/i/i/i/i#enter
+
+
+
+@BossDead
+:enter
+#clear j
+#set i maxgain
+#take i 15
+:a
+#take i 5 b
+#give j
+#a
+:b
+#set x 29
+#set y 3
+#set ix 11
+#set iy 23
+#set hp 11
+#color by 0 -2 j 3
+:c
+#if not j end
+#put at x y 0 12 blinkew
+#put to at x y e 12 0 blinkew
+#put to at x y by 2 1 0 12 blinkew
+#put to at x y by 3 1 12 0 blinkew
+#put to at x y by 4 2 0 12 blinkew
+#put to at x y by 5 2 12 0 blinkew
+#take j
+#give x 8
+#give hp
+#if x below 60 c
+
+
+
+@Deaths
+:enter
+#shove player at 3 22
+#run wipeflag
+#load at 60 1 flcolor
+#give deaths
+#give visited
+#run playrvis
+#clear rounds
+#clear escape
+#clear byebye
+#clear sneaky
+#clear dodead
+#clear boskil
+#clear deck1
+#clear deck4
+#clear deck7
+#clear deck8
+#clear score
+#give score 100
+#clear score
+#give score 10
+#clear score
+#if rare1 set memory1 rare1
+#if rare2 set memory2 rare2
+#if rare3 set memory3 rare3
+#clear rare1
+#clear rare2
+#clear rare3
+/i/i#unlock player
+
+
+
+@Trink
+:enter
+#if not array set array
+#if visited below dp color i 8
+#_and clear trinket^
+#_else set i array
+#_else give i 8
+#_else color i i
+#_else set trinket^
+
+
+
+@trnk
+#set array 2
+#set dp 10
+#bind Trink
+
+
+
+@trnk
+#set array 3
+#set dp 18
+#bind Trink
+
+
+
+@trnk
+#set array 4
+#set dp 26
+#bind Trink
+
+
+
+@trnk
+#set array 5
+#set dp 37
+#bind Trink
+
+
+
+@trnk
+#set array 6
+#set dp 50
+#bind Trink
+
+
+
+@trnk
+#set array 7
+#set dp 45
+#bind Trink
+
+
+
+@Scard
+#load i scard
+
+
+
+@Scard
+#set array 4
+#load i scard
+
+
+
+@Scard
+#set array 7
+#load i scard
+
+
+
+@Scard
+#set array 8
+#load i scard
+
+
+
+@Newdeck
+#load i newdeck
+
+
+
+@Newdeck
+#load i newdeck
+
+
+
+@Respawn
+#load i respawn
+
+
+
+@BonusHP
+:enter
+#clear j
+#if not hp set hp 10
+#set i xp
+#take i hp
+#give i deaths
+:a
+#give hp
+#take i 2 b
+#a
+:b
+#set xp hp
+#if xp above 60 set xp 60
+#set i xp
+#take i 10
+:c
+#take i 10 d
+#give j
+#c
+:d
+#if j color by -1 -2 j 3
+#color by 0 -2 i 3
+#set health 10
+#give health i
+#give health j
+
+
+
+@Newdeck
+#load i newdeck
+
+
+
+@Newdeck
+#load i newdeck
+
+
+
+@Newdeck
+#load i newdeck
+
+
+
+@Newdeck
+#load i newdeck
+
+
+
+@INP
+#end
+:viewdeck
+:usetrinket
+:journal
+:savegame
+"Can't do that while respawning!
+
+
+
+@Newdeck
+#load i newdeck
+
+
+
+@htpnewg
+#load i htpnewg
+
+
+
+@Timenum
+#set j 5
+#load i timenum
+
+
+
+@Timenum
+#set j 4
+#load i timenum
+
+
+
+@Timenum
+#set j 3
+#load i timenum
+
+
+
+@Timenum
+#set j 2
+#load i timenum
+
+
+
+@Timenum
+#set j 1
+#load i timenum
+
+
+
+@healthtens
+:enter
+#if health above 99 set health 99
+#clear ix
+#set i health
+:b
+#take i 10 c
+#give ix
+#b
+:c
+#if ix give ix 48
+#_and char ix
+#_else char 32
+
+
+
+@healthones
+:enter
+#if health above 99 set health 99
+#set i health
+:b
+#take i 10 c
+#b
+:c
+#give i 48
+#char i
+
+
+
+@decktens
+:enter
+#set iy 48
+#set i run deckleft
+#if i above 9 give iy
+#if i above 19 give iy
+#if iy above 48 char iy
+#_else char 32
+
+
+
+@deckones
+:enter
+#set iy 48
+#set i run deckleft
+#take i 10
+#take i 10
+#give iy i
+#char iy
+
+
+
+@deathtens
+:enter
+#if deaths above 99 set deaths 99
+#clear ix
+#set i deaths
+:b
+#take i 10 c
+#give ix
+#b
+:c
+#if ix give ix 48
+#_and char ix
+#_else char 32
+
+
+
+@deathones
+:enter
+#if deaths above 99 set deaths 99
+#set i deaths
+:b
+#take i 10 c
+#b
+:c
+#give i 48
+#char i
+
+
+
+#set j
+#load i guildmsg
+
+
+
+#set j 2
+#load i guildmsg
+
+
+
+#set j 3
+#load i guildmsg
+
+
+
+#set j 4
+#load i guildmsg
+
+
+
+#set j 5
+#load i guildmsg
+
+
+
+#set j 6
+#load i guildmsg
+
+
+
+@SaveGame
+#load i savegame
+
+
+
+@xptens
+:enter
+#if xp above 99 set xp 99
+#clear ix
+#set i xp
+#if i below 10 set i 10
+:b
+#take i 10 c
+#give ix
+#b
+:c
+#give ix 48
+#char ix
+
+
+
+@xpones
+:enter
+#if xp above 99 set xp 99
+#set i xp
+#if i below 10 set i 10
+:b
+#take i 10 c
+#b
+:c
+#give i 48
+#char i
+
+
+
+@t
+:a
+/i/i/i/i#if not torches char 224
+#_else char 150
+#a
+
+
+
+@t
+:a
+/i/i/i/i#if not gems char 225
+#_else char 150
+#a
+
+
+
+#char 196
+
+
+
+#char 196
+
+
+
+@decktens
+:render
+#set iy 48
+#set i run deckleft
+#if i above 9 give iy
+#if i above 19 give iy
+#char iy
+
+
+
+@deckones
+:render
+#set iy 48
+#set i run deckleft
+#take i 10
+#take i 10
+#give iy i
+#char iy
+
+
+
+@disctens
+:render
+#lock
+#set ix 48
+#set i discpile
+#if i above 200 clear i
+#if i above 9 give ix
+#if i above 19 give ix
+#char ix
+/i/i/i#unlock
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i#render
+
+
+
+@discones
+:render
+#lock
+#set ix 48
+#set i discpile
+#if i above 200 clear i
+#take i 10
+#take i 10
+#if i above 9 color e 43
+#_and set i 9
+#_else color e 32
+#give ix i
+#char ix
+/i/i/i#unlock
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i#render
+
+
+
+@heaptens
+:render
+#lock
+#set ix 48
+#set i heap
+#if i above 200 clear i
+#if i above 9 give ix
+#if i above 19 give ix
+#char ix
+/i/i/i#unlock
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i#render
+
+
+
+@heapones
+:render
+#lock
+#set ix 48
+#set i heap
+#if i above 200 clear i
+#take i 10
+#take i 10
+#if i above 9 color e 43
+#_and set i 9
+#_else color e 32
+#give ix i
+#char ix
+/i/i/i#unlock
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i#render
+
+
+
+#char 196
+
+
+
+#char 194
+
+
+
+#char 196
+
+
+
+#load i loader
+
+
+
+#char 196
+
+
+
+#char 32
+#set j 2
+
+
+
+#char 32
+#set j 1
+
+
+
+#char 32
+#set j 3
+
+
+
+#load i card
+
+
+
+#load i card
+
+
+
+#load i card
+
+
+
+#load i card
+
+
+
+#load i card
+
+
+
+#load i card
+
+
+
+#load i card
+
+
+
+#char 196
+
+
+
+#char 196
+
+
+
+@healthtens
+:a
+/i/i/i/i/i
+#if health above 99 set health 99
+#if health is j a
+#set j health
+#set i health
+#set ix 9
+#take i 40 take ix 4
+#take i 20 take ix 2
+#take i 20 take ix 2
+#take i 10 take ix
+#give ix 48
+#give i 48
+#char ix
+#pset e p1 i
+#color e 4 0
+#a
+
+
+
+@healthones
+
+
+
+#char 32
+#set array portrait
+#give array
+#load i portdraw
+
+
+
+#load i pdefshow
+
+
+
+#char 196
+#load i ampenemy
+
+
+
+#char 196
+
+
+
+#char 196
+#load i skipturn
+
+
+
+#char 196
+
+
+
+@TTActiv
+:enter
+#color i 9 0
+#char 32
+#end
+:a
+#if not trinket1 end
+#if not gems end
+/i#char 250
+/i#char 249
+/i#char 9
+/i#char 229
+/i#color i 0 9
+/i#color i 9 0
+/i#color i 0 9
+/i#color i 9 0
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i#char 9
+/i#char 7
+/i#char 249
+/i#char 250
+/i#char 32
+
+
+
+@TTActiv
+:enter
+#color i 11 0
+#char 32
+#end
+:a
+#if not trinket3 end
+#char 250
+/i#char 249
+/i#char 9
+/i#char 233
+/i#color i 0 11
+/i#color i 11 0
+/i#color i 0 11
+/i#color i 11 0
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i#char 9
+/i#char 7
+/i#char 249
+/i#char 250
+/i#char 32
+
+
+
+@TTActiv
+:enter
+#color i 13 0
+#char 32
+#end
+:a
+#if not trinket5 end
+#if not torches end
+/i/i/i/i/i/i/i/i/i/i#char 250
+/i#char 249
+/i#char 9
+/i#char 237
+/i#color i 0 13
+/i#color i 13 0
+/i#color i 0 13
+/i#color i 13 0
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i#char 9
+/i#char 7
+/i#char 249
+/i#char 250
+/i#char 32
+
+
+
+@WTActiv
+:enter
+#color i 15 0
+#char 32
+#end
+:a
+#char 250
+/i#char 249
+/i#char 9
+/i#char 241
+/i#color i 0 15
+/i#color i 15 0
+/i#color i 0 15
+/i#color i 15 0
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i#color i 0 15
+/i#color i 15 0
+/i#color i 0 15
+/i#color i 15 0
+/i/i/i/i/i/i/i/i/i#char 9
+/i#char 7
+/i#char 249
+/i#char 250
+/i#char 32
+
+
+
+@GTActiv
+:enter
+#color i 10 0
+#char 32
+#end
+:a
+#char 250
+/i#char 249
+/i#char 9
+/i#char 231
+/i#color i 0 10
+/i#color i 10 0
+/i#color i 0 10
+/i#color i 10 0
+/i/i/i/i/i/i/i/i/i#char 9
+/i#char 7
+/i#char 249
+/i#char 250
+/i#char 32
+
+
+
+@TTActiv
+:enter
+#color i 12 0
+#char 32
+#end
+:a
+#if not trinket4 end
+#char 250
+/i#char 249
+/i#char 9
+/i#char 235
+/i#color i 0 12
+/i#color i 12 0
+/i#color i 0 12
+/i#color i 12 0
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i#char 9
+/i#char 7
+/i#char 249
+/i#char 250
+/i#char 32
+
+
+
+@TTActiv
+:enter
+#color i 14 0
+#char 32
+#end
+:a
+#if not trinket6 end
+#char 250
+/i/i#char 249
+/i/i#char 9
+/i/i#char 239
+/i#color i 0 14
+/i#color i 14 0
+/i#color i 0 14
+/i#color i 14 0
+/i#color i 0 14
+/i#color i 14 0
+/i/i/i/i/i/i/i/i/i#char 9
+/i/i#char 7
+/i/i#char 249
+/i/i#char 250
+/i/i#char 32
+
+
+
+@t
+:a
+/i/i/i/i#if not torches char 32
+#_else if torches is 1 char 224
+#_else char 150
+#a
+
+
+
+@t
+:a
+/i/i/i/i#if torches below 2 char 32
+#_else if torches is 2 char 224
+#_else char 150
+#a
+
+
+
+@t
+:enter
+/i#run palnone
+:a
+/i/i/i/i#if torches is j if j below 4 a
+#set j torches
+#if j above 3 set torches 3
+#_and card:render
+#if j below 3 char 32
+#_else char 224
+#a
+
+
+
+@t
+:a
+/i/i/i/i#if gems is j if j below 4 a
+#set j gems
+#if j above 3 set gems 3
+#_and card:render
+#if j below 3 char 32
+#_else char 225
+#a
+
+
+
+@t
+:a
+/i/i/i/i#if gems below 2 char 32
+#_else if gems is 2 char 225
+#_else char 150
+#a
+
+
+
+@t
+:a
+/i/i/i/i#if not gems char 32
+#_else if gems is 1 char 225
+#_else char 150
+#a
+
+
+
+@EscapeBar
+:enter
+#if not evade clear y
+#_and char 179
+#_else char 180
+#_else color w 86
+#_else color by -2 0 69
+#_else set y
+:z
+#color by -1 y 0 0
+#color by -2 y 0 0
+#give y
+#take y 6 z
+#if not evade end
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+:a
+#set hp evade
+#set i evade
+#take i 10000
+#take i 10000
+#set x xp
+#take x 8
+#set j
+:e
+#take x 3 clear x
+#if x give j
+#_and e
+#set y 5
+:b
+#take i j c
+#color by -1 y 5 5
+#color by -2 y 5 5
+#take y
+#if y b
+#clear i
+:c
+#if j above 30 take i 8 clear i
+#if j above 10 take i 3
+#take i
+#take i
+#if i color by -1 y 5 0
+#_and color by -2 y 5 0
+:d
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+#if hp above evade enter
+#if hp is evade d
+#a
+
+
+
+@mai
+#load i ModAI
+
+
+
+@mbi
+#load i ModBI
+
+
+
+@y
+:a
+#if squeez color i 13 0
+#_and if rnd color i 5 0
+/i/i/i#color i 0 0
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i#a
+
+
+
+@y
+:a
+/i/i/i#if squeez color i 13 0
+#_and if rnd color i 5 0
+/i/i/i#color i 0 0
+/i/i/i/i/i/i/i/i/i#if squeez color i 13 0
+#_and if rnd color i 5 0
+/i/i/i#color i 0 0
+#a
+
+
+
+
+@y
+:a
+/i/i/i/i/i/i#if squeez color i 13 0
+#_and if rnd color i 5 0
+/i/i/i#color i 0 0
+/i/i/i#if squeez color i 13 0
+#_and if rnd color i 5 0
+/i/i/i#color i 0 0
+/i/i/i#a
+
+
+
+@y
+:a
+/i/i/i/i/i/i/i/i/i#if squeez color i 13 0
+#_and if rnd color i 5 0
+/i/i/i#color i 0 0
+/i/i/i/i/i/i#a
+
+
+
+#char 196
+
+
+
+#char 196
+
+
+
+#char 196
+
+
+
+#char 196
+
+
+
+@fadem
+#color i 0
+#load i fademsg
+
+
+
+@fm2
+#color i 0
+/i/i#bind FadeMsg
+
+
+
+@fm2
+#color i 0
+/i/i#bind FadeMsg
+
+
+
+@fm2
+#color i 0
+/i/i#bind FadeMsg
+
+
+
+@fm2
+#color i 0
+/i/i#bind FadeMsg
+
+
+
+@fm2
+#color i 0
+/i/i#bind FadeMsg
+
+
+
+@fm2
+#color i 0
+/i/i#bind FadeMsg
+
+
+
+@weakm
+#load i weakmsg
+
+
+
+@wm2
+#color i 0
+/i/i#bind WeakMsg
+
+
+
+@wm2
+#color i 0
+/i/i#bind WeakMsg
+
+
+
+@wm2
+#color i 0
+/i/i#bind WeakMsg
+
+
+
+@wm2
+#color i 0
+/i/i#bind WeakMsg
+
+
+
+@wm2
+#color i 0
+/i/i#bind WeakMsg
+
+
+
+@wm2
+#color i 0
+/i/i#bind WeakMsg
+
+
+
+@attkm
+#load i attkmsg
+
+
+
+@am2
+#color i 0
+/i/i#bind AttkMsg
+
+
+
+@am2
+#color i 0
+/i/i#bind AttkMsg
+
+
+
+@am2
+#color i 0
+/i/i#bind AttkMsg
+
+
+
+@am2
+#color i 0
+/i/i#bind AttkMsg
+
+
+
+@am2
+#color i 0
+/i/i#bind AttkMsg
+
+
+
+@am2
+#color i 0
+/i/i#bind AttkMsg
+
+
+
+@am2
+#color i 0
+/i/i#bind AttkMsg
+
+
+
+@am2
+#color i 0
+/i/i#bind AttkMsg
+
+
+
+@am2
+#color i 0
+/i/i#bind AttkMsg
+
+
+
+@am2
+#color i 0
+/i/i#bind AttkMsg
+
+
+
+@am2
+#color i 0
+/i/i#bind AttkMsg
+
+
+
+@squez
+#color i 0
+#load i squezmsg
+
+
+
+@sm2
+#color i 0
+/i/i#bind SquezMsg
+
+
+
+@sm2
+#color i 0
+/i/i#bind SquezMsg
+
+
+
+@sm2
+#color i 0
+/i/i#bind SquezMsg
+
+
+
+@sm2
+#color i 0
+/i/i#bind SquezMsg
+
+
+
+@sm2
+#color i 0
+/i/i#bind SquezMsg
+
+
+
+@sm2
+#color i 0
+/i/i#bind SquezMsg
+
+
+
+@sm2
+#color i 0
+/i/i#bind SquezMsg
+
+
+
+@sm2
+#color i 0
+/i/i#bind SquezMsg
+
+
+
+@blind
+#color i 0
+#load i blindmsg
+
+
+
+@bm2
+#color i 0
+/i/i#bind BlindMsg
+
+
+
+@bm2
+#color i 0
+/i/i#bind BlindMsg
+
+
+
+@bm2
+#color i 0
+/i/i#bind BlindMsg
+
+
+
+@bm2
+#color i 0
+/i/i#bind BlindMsg
+
+
+
+@bm2
+#color i 0
+/i/i#bind BlindMsg
+
+
+
+@bm2
+#color i 0
+/i/i#bind BlindMsg
+
+
+
+@sleep
+#color i 0
+#load i sleepmsg
+
+
+
+@sl2
+#color i 0
+/i/i#bind SleepMsg
+
+
+
+@sl2
+#color i 0
+/i/i#bind SleepMsg
+
+
+
+@sl2
+#color i 0
+/i/i#bind SleepMsg
+
+
+
+@sl2
+#color i 0
+/i/i#bind SleepMsg
+
+
+
+@sl2
+#color i 0
+/i/i#bind SleepMsg
+
+
+
+@sl2
+#color i 0
+/i/i#bind SleepMsg
+
+
+
+@GLoader
+#load i GLoader
+
+
+
+#load i coiner
+
+
+
+#load i coiner
+
+
+
+@RLoader
+#load i rloader
+
+
+
+@GTrnk
+:enter
+#if trinket2 color i 10 0
+#_else color i 0 0
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#load i usegtrnk
+
+
+
+@freshgame
+:enter
+#if deaths is dp end
+#set dp deaths
+#set brdtmp 99
+
+
+
+@htprewd
+#load i htprewd
+
+
+
+@RLoader
+#load i rloader
+
+
+
+#load i coiner
+
+
+
+@GTrnk
+:enter
+#if trinket2 color i 10 0
+#_else color i 0 0
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#bind GTrnk
+
+
+
+#load i usegtrnk
+
+
+
+@freshgame
+:enter
+#if deaths is dp end
+#set dp deaths
+#set brdtmp 99
+
+
+
+@htprewd
+#load i htprewd
+
+
+
+@rst
+#load i rest
+
+
+
+@mrch
+#load i merch
+
+
+
+@y
+#end
+:enter
+$
+
+
+
+@vwr
+#set j
+#load i viewer
+
+
+
+@rstr
+#load i rester
+
+
+
+@htprest
+#load at 60 1 append htprest
+
+
+
+@ShootStr
+#load i ShootStr

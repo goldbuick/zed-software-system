@@ -17,6 +17,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@parcel/transformer-inline-string": "2.9.3",
     "@react-three/drei": "^9.80.2",
     "@react-three/fiber": "^8.13.6",
     "@react-three/postprocessing": "^2.15.0",
