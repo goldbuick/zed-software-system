@@ -240,18 +240,38 @@ class ScriptParser extends CstParser {
 
   Command_while = this.RULED('Command_while', () => {
     this.CONSUME(lexer.Command_while)
-    this.OPTION1(() => this.SUBRULE(this.words))
-    this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
-
-    this.SUBRULE(this.block_lines)
+    this.SUBRULE(this.words)
+    this.OR([
+      {
+        ALT: () => {
+          this.AT_LEAST_ONE1(() => this.SUBRULE(this.nested_cmd))
+        },
+      },
+      {
+        ALT: () => {
+          this.AT_LEAST_ONE2(() => this.CONSUME(lexer.Newline))
+          this.OPTION1(() => this.SUBRULE(this.block_lines))
+        },
+      },
+    ])
   })
 
   Command_repeat = this.RULED('Command_repeat', () => {
     this.CONSUME(lexer.Command_repeat)
-    this.OPTION1(() => this.SUBRULE(this.words))
-    this.AT_LEAST_ONE1(() => this.CONSUME(lexer.Newline))
-
-    this.SUBRULE(this.block_lines)
+    this.SUBRULE(this.words)
+    this.OR([
+      {
+        ALT: () => {
+          this.AT_LEAST_ONE1(() => this.SUBRULE(this.nested_cmd))
+        },
+      },
+      {
+        ALT: () => {
+          this.AT_LEAST_ONE2(() => this.CONSUME(lexer.Newline))
+          this.OPTION1(() => this.SUBRULE(this.block_lines))
+        },
+      },
+    ])
   })
 
   Command_break = this.RULED('Command_break', () => {
@@ -263,10 +283,11 @@ class ScriptParser extends CstParser {
   })
 
   text = this.RULED('text', () => {
-    this.OR([
-      { ALT: () => this.CONSUME(lexer.Text) },
-      { ALT: () => this.CONSUME(lexer.CenterText) },
-    ])
+    this.CONSUME(lexer.Text)
+    // this.OR([
+    //   { ALT: () => this.CONSUME(lexer.Text) },
+    //   { ALT: () => this.CONSUME(lexer.CenterText) },
+    // ])
   })
 
   comment = this.RULED('comment', () => {

@@ -9,7 +9,14 @@
 #try n endgame
 #take health 10 all:butts
 
+' looping commands
 #repeat 10 others:dink
+
+#repeat 10
+  #others:dink
+  #idle
+  #others:donk
+  #idle
 
 #while a < (23 * 1000) % bart
   #char 67

@@ -221,6 +221,8 @@ $ message text
 : label
 ! hyperlink
 
+@#/?':!
+
 */
 
 export const Stat = createToken({
@@ -247,27 +249,43 @@ export const Try = createToken({
   start_chars_hint: ['?'],
 })
 
+const notText = `@#/?':!`
+
+function matchText(text: string, startOffset: number) {
+  const previousChar = text[startOffset - 1]
+  if (previousChar !== '\n' && previousChar !== undefined) {
+    return null
+  }
+
+  const currentChar = text[startOffset]
+  if (notText.includes(currentChar)) {
+    return null
+  }
+
+  // scan until EOL
+  let i = startOffset
+  while (i < text.length && text[i] !== '\n') {
+    i++
+  }
+
+  return [text.substring(startOffset, i)] as RegExpExecArray
+}
+
 export const Text = createToken({
   name: 'Text',
-  pattern: /".*/, // update to consume the line
-  start_chars_hint: ['"'],
-})
-
-export const CenterText = createToken({
-  name: 'CenterText',
-  pattern: /\$.*/, // update to consume the line
-  start_chars_hint: ['$'],
+  pattern: matchText,
+  start_chars_hint: all_chars.filter((ch) => notText.includes(ch) === false),
 })
 
 export const Comment = createToken({
   name: 'Comment',
-  pattern: /'.*/, // update to consume the line
+  pattern: /'.*/,
   start_chars_hint: [`'`],
 })
 
 export const Label = createToken({
   name: 'Label',
-  pattern: /:[^;:\n]*/, // update to consume the line ?? maybe ??
+  pattern: /:[^;:\n]*/,
   start_chars_hint: [':'],
 })
 
@@ -279,22 +297,13 @@ export const HyperLink = createToken({
 
 export const HyperLinkText = createToken({
   name: 'HyperLinkText',
-  pattern: /;.*/, // update to consume the remainder of the line
+  pattern: /;.*/,
   start_chars_hint: [';'],
 })
 
-/*
-
-the remainder is a composition of words and expressions
-
-note to self: ( expressions ) are always within parens 
-cool trick, add expression support to strings: "Hello (player), how are you today? 
-
-*/
-
 export const StringLiteral = createToken({
   name: 'StringLiteral',
-  pattern: /[_a-zA-Z][^@#/?\s]*/,
+  pattern: /[_a-zA-Z"][^@#/?\s]*/,
   start_chars_hint: all_chars,
 })
 
@@ -310,11 +319,12 @@ function createWordToken(word: string, name = '') {
 // # command
 // / movement
 // ? movement
-// $ message text
-// " message text
 // ' comment
 // : label
 // ! hyperlink
+
+// $ message text
+// [everything else] message text
 
 export const NumberLiteral = createToken({
   name: 'NumberLiteral',
@@ -412,8 +422,6 @@ function createTokenSet(whitespaceTokens: TokenType[]) {
     Command,
     Go,
     Try,
-    Text,
-    CenterText,
     Comment,
     Label,
     HyperLink,
@@ -450,6 +458,8 @@ function createTokenSet(whitespaceTokens: TokenType[]) {
     // content
     StringLiteral,
     NumberLiteral,
+    // catch all
+    Text,
   ]
 }
 

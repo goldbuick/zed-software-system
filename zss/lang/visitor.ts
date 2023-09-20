@@ -139,7 +139,7 @@ type CodeNodeData =
       type: NODE.IF
       method: string
       words: CodeNode[]
-      nested_cmd?: CodeNode[]
+      nested_cmd: CodeNode[]
       block_lines?: CodeNode[]
       else_if: CodeNode[]
       else: CodeNode[]
@@ -148,7 +148,7 @@ type CodeNodeData =
       type: NODE.ELSE_IF
       method: string
       words: CodeNode[]
-      nested_cmd?: CodeNode[]
+      nested_cmd: CodeNode[]
       block_lines?: CodeNode[]
     }
   | {
@@ -159,6 +159,7 @@ type CodeNodeData =
   | {
       type: NODE.WHILE
       words: CodeNode[]
+      nested_cmd: CodeNode[]
       block_lines?: CodeNode[]
     }
   | { type: NODE.BREAK }
@@ -166,7 +167,8 @@ type CodeNodeData =
   | {
       type: NODE.REPEAT
       words: CodeNode[]
-      block_lines: CodeNode[]
+      nested_cmd: CodeNode[]
+      block_lines?: CodeNode[]
     }
   | {
       type: NODE.OR
@@ -489,8 +491,10 @@ class ScriptVisitor extends CstVisitor {
   Command_else(ctx: CstChildrenDictionary) {
     // @ts-expect-error cst element
     const words = asList(this, ctx.words)
+
     // @ts-expect-error cst element
     const block_lines = this.visit(ctx.block_lines)
+
     // bail on empty else if
     if (words.length === 0 && block_lines === undefined) {
       return
@@ -504,22 +508,38 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_while(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words)
+
+    // @ts-expect-error cst element
+    const nested_cmd = asList(this, ctx.nested_cmd)
+
+    // @ts-expect-error cst element
+    const block_lines = this.visit(ctx.block_lines)
+
     return makeNode(ctx, {
       type: NODE.WHILE,
-      // @ts-expect-error cst element
-      words: asList(this, ctx.words),
-      // @ts-expect-error cst element
-      block_lines: this.visit(ctx.block_lines),
+      words,
+      nested_cmd,
+      block_lines,
     })
   }
 
   Command_repeat(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words)
+
+    // @ts-expect-error cst element
+    const nested_cmd = asList(this, ctx.nested_cmd)
+
+    // @ts-expect-error cst element
+    const block_lines = this.visit(ctx.block_lines)
+
     return makeNode(ctx, {
       type: NODE.REPEAT,
-      // @ts-expect-error cst element
-      words: asList(this, ctx.words),
-      // @ts-expect-error cst element
-      block_lines: this.visit(ctx.block_lines),
+      words,
+      nested_cmd,
+      block_lines,
     })
   }
 

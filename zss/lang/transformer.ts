@@ -305,6 +305,12 @@ function transformNode(ast: CodeNode): SourceNode {
         `\n${END_OF_LINE_CODE}\n`,
       ])
 
+      if (ast.nested_cmd) {
+        ast.nested_cmd.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
+
       if (ast.block_lines) {
         ast.block_lines.forEach((item) => {
           source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
@@ -315,44 +321,39 @@ function transformNode(ast: CodeNode): SourceNode {
 
       return source
     }
-    case NODE.REPEAT:
-      if (ast.words.length === 0) {
-        const source = write(ast, 'while (true) {')
+    case NODE.REPEAT: {
+      // note this is a repeat counter
+      // id: number => number of iterations left
+      // and if zero, re-eval the given words to calc number of repeats
+      // repeatStart should naturally reset the repeat counter before looping
+      const source = write(ast, [
+        writeApi(ast, 'repeatStart', [`${context.internal}`]),
+        '\nwhile (',
+        writeApi(ast, 'repeat', [
+          `${context.internal}`,
+          ...transformNodes(ast.words),
+        ]),
+        ') {',
+        `\n${END_OF_LINE_CODE}\n`,
+      ])
+      context.internal += 1
 
+      if (ast.nested_cmd) {
+        ast.nested_cmd.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
+
+      if (ast.block_lines) {
         ast.block_lines.forEach((item) => {
           source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
         })
-
-        source.add('}\n')
-
-        return source
-      } else {
-        // loop X number of times
-        const totalName = `___total${context.internal}`
-        const indexName = `___index${context.internal}`
-        context.internal += 1
-
-        const source = write(ast, [
-          `const ${totalName} = `,
-          writeApi(ast, 'repeat', transformNodes(ast.words)),
-          `;\n`,
-        ])
-
-        source.add([
-          `\n${END_OF_LINE_CODE}\n`,
-          `for (let ${indexName} = 0; ${indexName} < ${totalName}; ${indexName} += 1 ) {\n`,
-        ])
-
-        if (ast.block_lines) {
-          ast.block_lines.forEach((item) => {
-            source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-          })
-        }
-
-        source.add('}\n')
-
-        return source
       }
+
+      source.add('}\n')
+
+      return source
+    }
     case NODE.BREAK:
       return write(ast, `break;\n`)
     case NODE.CONTINUE:
