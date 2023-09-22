@@ -296,13 +296,22 @@ class ScriptVisitor extends CstVisitor {
   }
 
   stmt(ctx: CstChildrenDictionary) {
-    if (ctx.multi_stmt) {
-      // @ts-expect-error cst element
-      return this.visit(ctx.multi_stmt)
+    if (ctx.play) {
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        words: [
+          makeString(ctx, 'play'),
+          makeString(ctx, strImage(ctx.play[0]).replace('#play', '').trim()),
+        ],
+      })
     }
     if (ctx.text) {
       // @ts-expect-error cst element
       return this.visit(ctx.text)
+    }
+    if (ctx.multi_stmt) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.multi_stmt)
     }
     if (ctx.comment) {
       // @ts-expect-error cst element
@@ -434,7 +443,7 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_if(ctx: CstChildrenDictionary) {
-    const method = asIToken(ctx.if[0]).image.toLowerCase()
+    const method = strImage(ctx.if[0]).toLowerCase()
 
     // @ts-expect-error cst element
     const words = asList(this, ctx.words)
@@ -468,7 +477,7 @@ class ScriptVisitor extends CstVisitor {
       return
     }
 
-    const method = asIToken(ctx.if[0]).image.toLowerCase()
+    const method = strImage(ctx.if[0]).toLowerCase()
 
     // @ts-expect-error cst element
     const words = asList(this, ctx.words)
@@ -830,7 +839,7 @@ class ScriptVisitor extends CstVisitor {
       return makeNode(ctx, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value: asIToken(ctx.StringLiteral[0]).image,
+        value: strImage(ctx.StringLiteral[0]),
       })
     }
 
@@ -838,7 +847,7 @@ class ScriptVisitor extends CstVisitor {
       return makeNode(ctx, {
         type: NODE.LITERAL,
         literal: LITERAL.NUMBER,
-        value: parseFloat(asIToken(ctx.NumberLiteral[0]).image),
+        value: parseFloat(strImage(ctx.NumberLiteral[0])),
       })
     }
 

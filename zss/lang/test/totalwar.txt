@@ -1,11 +1,27 @@
 files/totalwar.ZZT
 
 @Mission Impossible
+
 :touch
 #cycle 1
 /i
-#play -qgixqgix
-#play -qb!
+
+#if any red fish
+  #char 32
+  Testing the forever stars !!!
+  #play -qgixqgix
+  #play -qb!
+
+
+      Name: Keith
+Race: Human
+ Class: Knight
+    Origin: Jaconia
+S   pecial Moves:
+Sonic Slice
+High Jump
+ Iron Kick
+
 #play qc-qgsxqgsxqf
 #play -qf#
 #play -qg

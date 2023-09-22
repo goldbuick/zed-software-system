@@ -60,8 +60,8 @@ class ScriptParser extends CstParser {
 
   stmt = this.RULED('stmt', () => {
     this.OR([
-      { ALT: () => this.SUBRULE(this.text) },
       { ALT: () => this.CONSUME(lexer.Command_play) },
+      { ALT: () => this.SUBRULE(this.text) },
       { ALT: () => this.SUBRULE(this.multi_stmt) },
       { ALT: () => this.SUBRULE(this.comment) },
       { ALT: () => this.SUBRULE(this.label) },
