@@ -105,7 +105,6 @@ type CodeNodeData =
   | {
       type: NODE.TEXT
       value: string
-      center: boolean
     }
   | {
       type: NODE.LABEL
@@ -398,6 +397,16 @@ class ScriptVisitor extends CstVisitor {
       })
     }
 
+    if (ctx.Command) {
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        words: [
+          // @ts-expect-error cst element
+          ...asList(this, ctx.words),
+        ],
+      })
+    }
+
     return this.Command_if(ctx)
   }
 
@@ -556,18 +565,10 @@ class ScriptVisitor extends CstVisitor {
   }
 
   text(ctx: CstChildrenDictionary) {
-    if (ctx.CenterText) {
-      return makeNode(ctx, {
-        type: NODE.TEXT,
-        center: true,
-        value: strImage(ctx.CenterText[0]).slice(1),
-      })
-    }
-
+    // need to keep all the matched indent tokens as well ..
     return makeNode(ctx, {
       type: NODE.TEXT,
-      center: false,
-      value: strImage(ctx.Text[0]).slice(1),
+      value: strImage(ctx.Text[0]),
     })
   }
 

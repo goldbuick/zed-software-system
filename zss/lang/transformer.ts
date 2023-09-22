@@ -203,9 +203,7 @@ function transformNode(ast: CodeNode): SourceNode {
       }
       return blank(ast)
     case NODE.TEXT:
-      return writeApi(ast, ast.center ? 'textCenter' : 'text', [
-        `'${escapeString(ast.value)}'`,
-      ])
+      return writeApi(ast, 'text', [`'${escapeString(ast.value)}'`])
     case NODE.STAT:
       return writeApi(ast, `stat`, transformNodes(ast.words))
     case NODE.LABEL: {

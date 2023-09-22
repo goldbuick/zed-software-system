@@ -60,8 +60,9 @@ class ScriptParser extends CstParser {
 
   stmt = this.RULED('stmt', () => {
     this.OR([
-      { ALT: () => this.SUBRULE(this.multi_stmt) },
       { ALT: () => this.SUBRULE(this.text) },
+      { ALT: () => this.CONSUME(lexer.Command_play) },
+      { ALT: () => this.SUBRULE(this.multi_stmt) },
       { ALT: () => this.SUBRULE(this.comment) },
       { ALT: () => this.SUBRULE(this.label) },
       { ALT: () => this.SUBRULE(this.hyperlink) },
@@ -131,8 +132,14 @@ class ScriptParser extends CstParser {
       },
       {
         ALT: () => {
-          this.CONSUME(lexer.Command_if)
+          this.CONSUME(lexer.Command)
           this.SUBRULE3(this.words)
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.Command_if)
+          this.SUBRULE4(this.words)
           this.MANY(() => this.SUBRULE(this.nested_cmd))
         },
       },
@@ -283,11 +290,10 @@ class ScriptParser extends CstParser {
   })
 
   text = this.RULED('text', () => {
+    this.MANY1(() => this.CONSUME(lexer.Indent))
     this.CONSUME(lexer.Text)
-    // this.OR([
-    //   { ALT: () => this.CONSUME(lexer.Text) },
-    //   { ALT: () => this.CONSUME(lexer.CenterText) },
-    // ])
+    this.AT_LEAST_ONE(() => this.CONSUME(lexer.Newline))
+    this.MANY2(() => this.CONSUME(lexer.Outdent))
   })
 
   comment = this.RULED('comment', () => {

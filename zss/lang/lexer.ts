@@ -250,31 +250,51 @@ export const Try = createToken({
 })
 
 const notText = `@#/?':!`
+const text_start_chars = all_chars.filter(
+  (ch) => notText.includes(ch) === false,
+)
 
-function matchText(text: string, startOffset: number) {
-  const previousChar = text[startOffset - 1]
-  if (previousChar !== '\n' && previousChar !== undefined) {
+let matchTextEnabled = false
+
+function matchText(text: string, startOffset: number, matchedTokens: IToken[]) {
+  if (!matchTextEnabled) {
     return null
   }
 
   const currentChar = text[startOffset]
+
+  if (matchedTokens.length) {
+    for (let i = matchedTokens.length - 1; i >= 0; i--) {
+      const { tokenType } = matchedTokens[i]
+      if (tokenType === Newline) {
+        break
+      }
+      if (tokenType !== Indent && tokenType !== Outdent) {
+        return null
+      }
+    }
+  }
+
+  // detect beginning of text
   if (notText.includes(currentChar)) {
     return null
   }
 
   // scan until EOL
-  let i = startOffset
+  let i = startOffset + 1
   while (i < text.length && text[i] !== '\n') {
     i++
   }
 
-  return [text.substring(startOffset, i)] as RegExpExecArray
+  const match = text.substring(startOffset, i)
+  return [match] as RegExpExecArray
 }
 
 export const Text = createToken({
   name: 'Text',
   pattern: matchText,
-  start_chars_hint: all_chars.filter((ch) => notText.includes(ch) === false),
+  line_breaks: false,
+  start_chars_hint: text_start_chars,
 })
 
 export const Comment = createToken({
@@ -404,28 +424,31 @@ export const RParen = createToken({
   pop_mode: true,
 })
 
+// media command
+
+export const Command_play = createToken({
+  name: 'play',
+  pattern: /#play.*/,
+  start_chars_hint: all_chars,
+})
+
 // structure commands
 
 export const Command_if = createWordToken('if|try|take|give', 'if')
 export const Command_else = createWordToken('else')
-export const Command_then = createWordToken('then')
 export const Command_while = createWordToken('while')
 export const Command_repeat = createWordToken('repeat')
 export const Command_break = createWordToken('break')
 export const Command_continue = createWordToken('continue')
 
-function createTokenSet(whitespaceTokens: TokenType[]) {
+function createTokenSet(
+  whitespaceTokens: TokenType[],
+  primaryTokens: TokenType[],
+) {
   return [
     ...whitespaceTokens,
     // primary tokens
-    Stat,
-    Command,
-    Go,
-    Try,
-    Comment,
-    Label,
-    HyperLink,
-    HyperLinkText,
+    ...primaryTokens,
     // expressions
     IsEq,
     IsNotEq,
@@ -450,7 +473,6 @@ function createTokenSet(whitespaceTokens: TokenType[]) {
     // structure commands
     Command_if,
     Command_else,
-    Command_then,
     Command_while,
     Command_repeat,
     Command_break,
@@ -458,19 +480,30 @@ function createTokenSet(whitespaceTokens: TokenType[]) {
     // content
     StringLiteral,
     NumberLiteral,
-    // catch all
-    Text,
   ]
 }
 
-export const allTokens = createTokenSet([Newline, Outdent, Indent, Whitespace])
+export const allTokens = createTokenSet(
+  [Newline, Outdent, Indent, Whitespace, Text],
+  [
+    Stat,
+    Command_play,
+    Command,
+    Go,
+    Try,
+    Comment,
+    Label,
+    HyperLink,
+    HyperLinkText,
+  ],
+)
 
 const scriptLexer = new Lexer(
   {
     defaultMode: 'use_newlines',
     modes: {
       use_newlines: allTokens,
-      ignore_newlines: createTokenSet([WhitespaceAndNewline]),
+      ignore_newlines: createTokenSet([WhitespaceAndNewline], []),
     },
   },
   {
@@ -480,6 +513,8 @@ const scriptLexer = new Lexer(
 )
 
 export function tokenize(text: string) {
+  matchTextEnabled = true
+
   indentStack = [0]
   const lexResult = scriptLexer.tokenize(text)
 
