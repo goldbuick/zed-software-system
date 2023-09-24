@@ -164,12 +164,13 @@ export const Outdent = createToken({
   start_chars_hint: all_chars,
 })
 
-const newlineRegExp = / *\n|\r\n?/y
+const newlineRegExp = /\n|\r\n?/y
 export const Newline = createToken({
   name: 'Newline',
   group: 'newline',
   line_breaks: true,
-  start_chars_hint: [' ', '\n', '\r'],
+  // start_chars_hint: [' ', '\n', '\r'],
+  start_chars_hint: ['\n', '\r'],
   pattern(text: string, offset: number, tokens: IToken[]) {
     const lastToken = tokens.slice(-1)[0]
     newlineRegExp.lastIndex = offset
@@ -256,27 +257,25 @@ const text_start_chars = all_chars.filter(
 
 let matchTextEnabled = false
 
-function matchText(text: string, startOffset: number, matchedTokens: IToken[]) {
+function matchText(text: string, startOffset: number, matched: IToken[]) {
   if (!matchTextEnabled) {
     return null
   }
 
-  const currentChar = text[startOffset]
+  // check for beginning of line
+  const [lastMatched] = matched.slice(-1)
+  if (lastMatched && lastMatched.tokenType !== Newline) {
+    return null
+  }
 
-  if (matchedTokens.length) {
-    for (let i = matchedTokens.length - 1; i >= 0; i--) {
-      const { tokenType } = matchedTokens[i]
-      if (tokenType === Newline) {
-        break
-      }
-      if (tokenType !== Indent && tokenType !== Outdent) {
-        return null
-      }
-    }
+  // scan beginning of line whitespace
+  let cursor = startOffset
+  while (text[cursor] === ' ' || text[cursor] === '\t') {
+    cursor++
   }
 
   // detect beginning of text
-  if (notText.includes(currentChar)) {
+  if (notText.includes(text[cursor])) {
     return null
   }
 
@@ -287,6 +286,7 @@ function matchText(text: string, startOffset: number, matchedTokens: IToken[]) {
   }
 
   const match = text.substring(startOffset, i)
+  // console.info('>>', match)
   return [match] as RegExpExecArray
 }
 
@@ -441,14 +441,10 @@ export const Command_repeat = createWordToken('repeat')
 export const Command_break = createWordToken('break')
 export const Command_continue = createWordToken('continue')
 
-function createTokenSet(
-  whitespaceTokens: TokenType[],
-  primaryTokens: TokenType[],
-) {
+function createTokenSet(primary: TokenType[]) {
   return [
-    ...whitespaceTokens,
     // primary tokens
-    ...primaryTokens,
+    ...primary,
     // expressions
     IsEq,
     IsNotEq,
@@ -483,27 +479,29 @@ function createTokenSet(
   ]
 }
 
-export const allTokens = createTokenSet(
-  [Newline, Outdent, Indent, Whitespace, Text],
-  [
-    Stat,
-    Command_play,
-    Command,
-    Go,
-    Try,
-    Comment,
-    Label,
-    HyperLink,
-    HyperLinkText,
-  ],
-)
+export const allTokens = createTokenSet([
+  Text,
+  Stat,
+  Command_play,
+  Command,
+  Go,
+  Try,
+  Comment,
+  Label,
+  HyperLink,
+  HyperLinkText,
+  Newline,
+  Outdent,
+  Indent,
+  Whitespace,
+])
 
 const scriptLexer = new Lexer(
   {
     defaultMode: 'use_newlines',
     modes: {
       use_newlines: allTokens,
-      ignore_newlines: createTokenSet([WhitespaceAndNewline], []),
+      ignore_newlines: createTokenSet([WhitespaceAndNewline]),
     },
   },
   {

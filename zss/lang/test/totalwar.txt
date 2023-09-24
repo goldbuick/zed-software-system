@@ -1,17 +1,10 @@
-files/totalwar.ZZT
-
-@Mission Impossible
-
-:touch
-#cycle 1
-/i
+      Name: Keith
 
 #if any red fish
   #char 32
   Testing the forever stars !!!
   #play -qgixqgix
   #play -qb!
-
 
       Name: Keith
 Race: Human
@@ -21,6 +14,15 @@ S   pecial Moves:
 Sonic Slice
 High Jump
  Iron Kick
+
+
+files/totalwar.ZZT
+
+@Mission Impossible
+
+:touch
+#cycle 1
+/i
 
 #play qc-qgsxqgsxqf
 #play -qf#
