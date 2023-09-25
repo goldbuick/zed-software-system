@@ -1,4 +1,4 @@
-import test_zss from 'bundle-text:./test/blocks.txt'
+import test_zss from 'bundle-text:./test/totalwar.txt'
 
 import { compileAST } from './ast'
 import transformAst from './transformer'

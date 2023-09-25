@@ -476,42 +476,9 @@ export function tokenize(text: string) {
   indentStack = [0]
   const lexResult = scriptLexer.tokenize(text)
 
-  // fix newline tokens
-  // const newlineLookup: Record<number, IToken> = {}
-  // lexResult.groups['newline'].forEach((token) => {
-  //   newlineLookup[token.startOffset] = token
-  // })
-  // lexResult.tokens
-  //   .filter((token) => token.tokenType.name === 'Newline')
-  //   .forEach((token) => {
-  //     const fixer = newlineLookup[token.startOffset]
-  //     if (fixer) {
-  //       Object.keys(fixer).forEach((key) => {
-  //         // @ts-expect-error cst element
-  //         token[key] = fixer[key]
-  //       })
-  //     }
-  //   })
-
-  // add final new line ?
-  const lastToken = last(lexResult.tokens)
+  let lastToken = last(lexResult.tokens)
   if (!lastToken) {
     return lexResult
-  }
-
-  if (lastToken.tokenType.name !== 'Newline') {
-    lexResult.tokens.push(
-      createTokenInstance(
-        Newline,
-        '\n',
-        lastToken.startOffset,
-        lastToken.endOffset ?? NaN,
-        lastToken.startLine ?? NaN,
-        lastToken.endLine ?? NaN,
-        lastToken.startColumn ?? NaN,
-        lastToken.endColumn ?? NaN,
-      ),
-    )
   }
 
   // add remaining Outdents
@@ -529,6 +496,23 @@ export function tokenize(text: string) {
       ),
     )
     indentStack.pop()
+  }
+
+  // add final new line ?
+  lastToken = last(lexResult.tokens)
+  if (lastToken && lastToken.tokenType.name !== 'Newline') {
+    lexResult.tokens.push(
+      createTokenInstance(
+        Newline,
+        '\n',
+        lastToken.startOffset,
+        lastToken.endOffset ?? NaN,
+        lastToken.startLine ?? NaN,
+        lastToken.endLine ?? NaN,
+        lastToken.startColumn ?? NaN,
+        lastToken.endColumn ?? NaN,
+      ),
+    )
   }
 
   return lexResult
