@@ -11,9 +11,9 @@ export function langTest() {
   const astResult = compileAST(test_zss)
 
   if (astResult.errors) {
-    console.info(astResult)
-    // console.info(astResult.tokens)
-    // console.info(astResult.errors)
+    // console.info(astResult)
+    console.info(astResult.tokens)
+    console.info(astResult.errors)
     return
   }
 
