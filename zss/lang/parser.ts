@@ -6,7 +6,7 @@ import * as lexer from './lexer'
 
 let incId = 0
 let incIndent = 0
-const enableTracing = DEV && false
+const enableTracing = DEV && true
 const highlight = ['Command', 'block']
 
 class ScriptParser extends CstParser {
