@@ -1,6 +1,4 @@
 #if any red fish
   #char 32
-  #char 250
-Does text still work?
-maybe?
-/i
+  #char 250 "Super ### Grooooovy ###"
+

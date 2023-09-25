@@ -436,6 +436,7 @@ class ScriptParser extends CstParser {
 
   word = this.RULED('word', () => {
     this.OR([
+      { ALT: () => this.CONSUME(lexer.StringLiteralDouble) },
       { ALT: () => this.CONSUME(lexer.StringLiteral) },
       { ALT: () => this.CONSUME(lexer.NumberLiteral) },
       {

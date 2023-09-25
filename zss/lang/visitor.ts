@@ -835,6 +835,15 @@ class ScriptVisitor extends CstVisitor {
   }
 
   word(ctx: CstChildrenDictionary) {
+    if (ctx.StringLiteralDouble) {
+      const str = strImage(ctx.StringLiteralDouble[0])
+      return makeNode(ctx, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: str.substring(1, str.length - 1),
+      })
+    }
+
     if (ctx.StringLiteral) {
       return makeNode(ctx, {
         type: NODE.LITERAL,

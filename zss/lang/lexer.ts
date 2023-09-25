@@ -168,24 +168,6 @@ export const WhitespaceAndNewline = createToken({
   group: Lexer.SKIPPED,
 })
 
-/*
-
-lines should start with these primary tokens
-
-@ attributes
-# command
-/ movement
-? movement
-$ message text
-" message text 
-' comment
-: label
-! hyperlink
-
-@#/?':!
-
-*/
-
 export const Stat = createToken({
   name: 'Stat',
   pattern: /@/,
@@ -287,6 +269,11 @@ export const StringLiteral = createToken({
   start_chars_hint: all_chars,
 })
 
+export const StringLiteralDouble = createToken({
+  name: 'StringLiteralDouble',
+  pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}))*"/,
+})
+
 function createWordToken(word: string, name = '') {
   return createToken({
     name: name || word,
@@ -294,17 +281,6 @@ function createWordToken(word: string, name = '') {
     longer_alt: StringLiteral,
   })
 }
-
-// @ attributes
-// # command
-// / movement
-// ? movement
-// ' comment
-// : label
-// ! hyperlink
-
-// $ message text
-// [everything else] message text
 
 export const NumberLiteral = createToken({
   name: 'NumberLiteral',
@@ -434,6 +410,7 @@ function createTokenSet(primary: TokenType[]) {
     Command_break,
     Command_continue,
     // content
+    StringLiteralDouble,
     StringLiteral,
     NumberLiteral,
   ]
