@@ -1,10 +1,18 @@
+import { CstNode, IToken } from 'chevrotain'
+
 import { compileAST } from './ast'
 import { transformAst } from './transformer'
+import { CodeNode } from './visitor'
 
 // eslint-disable-next-line func-names, @typescript-eslint/no-empty-function
 const GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor
 
-export function createGenerator(text: string) {
+export function createGenerator(text: string): {
+  errors?: any[]
+  tokens?: IToken[]
+  cst?: CstNode
+  ast?: CodeNode
+} {
   const astResult = compileAST(text)
   if (astResult.errors && astResult.errors.length > 0) {
     return {
@@ -18,13 +26,14 @@ export function createGenerator(text: string) {
     }
   }
 
-  const jsCode = transformAst(astResult.ast)
-  if (jsCode.code) {
+  const transformResult = transformAst(astResult.ast)
+  if (transformResult.code) {
     try {
-      console.info(jsCode.code)
+      console.info(transformResult.code)
       return {
-        ...jsCode,
-        code: new GeneratorFunction('api', jsCode.code),
+        ...astResult,
+        ...transformResult,
+        code: new GeneratorFunction('api', transformResult.code),
       }
     } catch (error) {
       return {
@@ -40,7 +49,8 @@ export function createGenerator(text: string) {
   }
 
   return {
-    ...jsCode,
+    ...astResult,
+    ...transformResult,
     code: new GeneratorFunction('api', 'const empty = true;'),
   }
 }

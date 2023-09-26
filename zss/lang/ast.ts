@@ -1,3 +1,5 @@
+import { CstNode, IToken } from 'chevrotain'
+
 import { tokenize } from './lexer'
 import { parser } from './parser'
 import { CodeNode, visitor } from './visitor'
@@ -41,11 +43,17 @@ function addRange(node: CodeNode | undefined): OffsetRange | undefined {
   return node.range
 }
 
-export function compileAST(text: string) {
+export function compileAST(text: string): {
+  errors?: any[]
+  tokens?: IToken[]
+  cst?: CstNode
+  ast?: CodeNode
+} {
   const tokens = tokenize(`${text}\n`)
   if (tokens.errors.length > 0) {
     return {
       errors: tokens.errors,
+      tokens: [],
     }
   }
 
