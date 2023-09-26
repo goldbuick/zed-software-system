@@ -1,13 +1,17 @@
 import test_zss from 'bundle-text:./test/blocks.txt'
 
-import { compile } from './api'
-
-/*
-
-*/
+import { createGenerator } from './generator'
 
 export function langTest() {
-  console.info(compile(test_zss))
+  const gen = createGenerator(test_zss)
+  console.info(gen)
+
+  const brain = gen.code({
+    // api ref goes here ...
+  })
+
+  console.info(brain.next())
+
   // const astResult = compileAST(test_zss)
 
   // if (astResult.errors) {
