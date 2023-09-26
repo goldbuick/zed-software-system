@@ -1,37 +1,23 @@
-import { SourceMapGenerator, SourceNode } from 'source-map'
+import { CodeWithSourceMap, SourceMapGenerator, SourceNode } from 'source-map'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
-
-// type GenCompileError = {
-//   msg: string
-//   error: CodeNode
-// }
 
 type GenContext = {
   internal: number
   labels: Record<string, number[]>
   labelIndex: number
-  // variables: Set<string>
-  // customStats: CustomStat[]
-  // compileErrors: GenCompileError[]
-  // badVariableDeclares: CodeNode[]
 }
 
 export const context: GenContext = {
   internal: 0,
   labels: {},
   labelIndex: 0,
-  // variables: new Set(),
-  // customStats: [],
-  // compileErrors: [],
-  // badVariableDeclares: [],
 }
 
-const HIDE = `___`
-const JUMP_CODE = `if (api.${HIDE}message()) { continue jump; }`
+const JUMP_CODE = `if (api.hasmessage()) { continue jump; }`
 const WAIT_CODE = `yield 1; ${JUMP_CODE}`
-const SPACER = `                                                       `
-const END_OF_LINE_CODE = `${SPACER}if (api.${HIDE}yield()) { yield 1; }; ${JUMP_CODE}`
+const SPACER = `      `
+const END_OF_LINE_CODE = `${SPACER}if (api.shouldyield()) { yield 1; }; ${JUMP_CODE}`
 
 export const GENERATED_FILENAME = 'zss.js'
 
@@ -127,6 +113,11 @@ function prefixApi(operation: SourceNode, method: string, rhs: CodeNode) {
   return operation.add([', ', transformNode(rhs), ')'])
 }
 
+function prefixUniApi(operation: SourceNode, method: string, rhs: CodeNode) {
+  operation.prepend(`api.${method}(`)
+  return operation.add([transformNode(rhs), ')'])
+}
+
 function transformOperatorItem(operation: SourceNode, ast: CodeNode) {
   if (ast.type === NODE.OPERATOR_ITEM) {
     switch (ast.operator) {
@@ -145,11 +136,9 @@ function transformOperatorItem(operation: SourceNode, ast: CodeNode) {
       case OPERATOR.FLOOR_DIVIDE:
         return prefixApi(operation, 'opFloorDivide', ast.rhs)
       case OPERATOR.UNI_PLUS:
-        operation.prepend(`api.opUniPlus(`)
-        return operation.add([transformNode(ast.rhs), ')'])
+        return prefixUniApi(operation, 'opUniPlus', ast.rhs)
       case OPERATOR.UNI_MINUS:
-        operation.prepend(`api.opUniMinus(`)
-        return operation.add([transformNode(ast.rhs), ')'])
+        return prefixUniApi(operation, 'opUniMinus', ast.rhs)
     }
   }
   return write(ast, '')
@@ -171,22 +160,21 @@ function transformNode(ast: CodeNode): SourceNode {
     // categories
     case NODE.PROGRAM:
       return write(ast, [
-        `let ${HIDE}active = true; // first-line\n`,
-        `try {\n`,
+        `try { // first-line\n`,
         `jump: while (true) {\n`,
-        `switch (api.${HIDE}case()) {\n`,
+        `switch (api.getcase()) {\n`,
         `default:\n`,
         `case 1: \n`,
         ...ast.lines
           .map((item) => [transformNode(item), `\n${END_OF_LINE_CODE}\n`])
           .flat(),
         `}\n`,
-        `api.${HIDE}end();\n`, // end of program has been reached
-        `while(true) { yield 1; if (api.${HIDE}message()) { continue jump; } }\n`,
+        `api.endofprogram();\n`, // end of program has been reached
+        `while(true) { yield 1; if (api.hasmessage()) { continue jump; } }\n`,
         `}\n`,
         `} catch (e) {\n`,
         // `debugger;\n`,
-        `const source = api.${HIDE}stacktrace(e);\n`,
+        `const source = api.stacktrace(e);\n`,
         `const err = new Error(e.message);\n`,
         `err.name = 'GameError';\n`,
         `err.meta = { line: source.line, column: source.column };\n`,
@@ -375,26 +363,18 @@ function transformNode(ast: CodeNode): SourceNode {
   }
 }
 
-export type GenContextAndCode = GenContext & {
+export type GenContextAndCode = {
   ast?: CodeNode
-  code: string
-  map: SourceMapGenerator
-  errors: any[]
-}
+} & GenContext &
+  CodeWithSourceMap
 
-export default function transformAst(
-  ast: CodeNode,
-  // variables: string[],
-): GenContextAndCode {
+export function transformAst(ast: CodeNode): GenContextAndCode {
   // setup context
   context.internal = 0
   context.labels = {
     restart: [1],
   }
   context.labelIndex = 2
-  // context.variables = new Set([...builtins, ...variables])
-  // context.customStats = []
-  // context.badVariableDeclares = []
 
   // translate into js
   const source = transformNode(ast)
@@ -404,11 +384,8 @@ export default function transformAst(
     file: `${GENERATED_FILENAME}.map`,
   })
 
-  // console.info('customStats', { customStats: context.customStats })
-
   return {
     ...output,
-    errors: [],
     ...context,
   }
 }

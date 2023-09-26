@@ -1,23 +1,23 @@
 import test_zss from 'bundle-text:./test/blocks.txt'
 
-import { compileAST } from './ast'
-import transformAst from './transformer'
+import { compile } from './api'
 
 /*
 
 */
 
 export function langTest() {
-  const astResult = compileAST(test_zss)
+  console.info(compile(test_zss))
+  // const astResult = compileAST(test_zss)
 
-  if (astResult.errors) {
-    // console.info(astResult)
-    console.info(astResult.tokens)
-    console.info(astResult.errors)
-    return
-  }
+  // if (astResult.errors) {
+  //   // console.info(astResult)
+  //   console.info(astResult.tokens)
+  //   console.info(astResult.errors)
+  //   return
+  // }
 
-  const jsCode = transformAst(astResult.ast)
-  console.info(jsCode.code)
-  console.info(jsCode.labels)
+  // const jsCode = transformAst(astResult.ast)
+  // console.info(jsCode.code)
+  // console.info(jsCode.labels)
 }
