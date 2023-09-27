@@ -1,18 +1,17 @@
-import { CstNode, IToken } from 'chevrotain'
+import { IToken } from 'chevrotain'
 
 import { compileAST } from './ast'
-import { transformAst } from './transformer'
-import { CodeNode } from './visitor'
+import { GenContextAndCode, transformAst } from './transformer'
 
 // eslint-disable-next-line func-names, @typescript-eslint/no-empty-function
 const GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor
 
-export function createGenerator(text: string): {
+export type GeneratorBuild = {
   errors?: any[]
   tokens?: IToken[]
-  cst?: CstNode
-  ast?: CodeNode
-} {
+} & Partial<GenContextAndCode>
+
+export function createGenerator(text: string): GeneratorBuild {
   const astResult = compileAST(text)
   if (astResult.errors && astResult.errors.length > 0) {
     return {
@@ -29,7 +28,6 @@ export function createGenerator(text: string): {
   const transformResult = transformAst(astResult.ast)
   if (transformResult.code) {
     try {
-      console.info(transformResult.code)
       return {
         ...astResult,
         ...transformResult,
@@ -43,7 +41,7 @@ export function createGenerator(text: string): {
             message: error.message,
           },
         ],
-        code: new GeneratorFunction('api', 'const empty = true;'),
+        code: new GeneratorFunction('api', ' '),
       }
     }
   }
@@ -51,6 +49,6 @@ export function createGenerator(text: string): {
   return {
     ...astResult,
     ...transformResult,
-    code: new GeneratorFunction('api', 'const empty = true;'),
+    code: new GeneratorFunction('api', ' '),
   }
 }

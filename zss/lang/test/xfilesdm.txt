@@ -1,0 +1,3201 @@
+files/XFILESDM.ZZT
+
+@glib
+#play d++dde-de-d+d++dde-dde
+#restart
+#end
+
+
+
+#end
+:touch
+It's a weird little document, err donut!
+#play xxxxxxxxfexd-xxxxxc+xxgfxes
+#end
+
+
+
+@Water fountain
+#end
+:touch
+It's a water fountain! Drippy drip drip!
+#play 12255555555555
+#end
+
+
+
+@Scully's Scroll Crystals
+You found one of Dana Scully's crystals!
+#play ei!eesa-ceia-cesaec+aec+a-t
+#end
+
+
+
+@Friendly Robot
+#end
+:touch
+Mulder: The FBI built you to clean up
+my donuts. Not to just barge in here
+unexpectedly. 
+
+Robot: Oh, sorry. Well Mulder it looks
+like you and Scully have a TON
+of X files to catch up on.
+
+Mulder: What's that supposed to mean?
+
+Robot: Hell if I know.
+
+
+
+@Ammo thingy
+#end
+:touch
+you got lots of ammo!
+#give ammo 300
+#die
+#end
+
+
+
+@The Other Friendly Robot
+#end
+:touch
+#play D99tthg--c+-3rit0-erop
+Welcome to the X-Files Game! 
+#end
+
+
+
+@Robert Frost Poem
+#end
+:touch
+#play cegcegceg
+The Road Not Taken:
+
+Two roads diverged in a yellow wood,
+And sorry I could not travel both
+And be one traveler, long I stood
+And looked down one as fas as I could
+To where it bent in the underrowth;
+
+Then took the other, as just as fair,
+And havin perhaps the better claim,
+Because it was grassy and wanted wear;
+Though as for that the passing there
+Had worn them really about the same,
+
+And both that morning equally lay
+In leaves no step had trodden black
+Oh, I kept the first for another day!
+Yet knowing how way leads on to way,
+I doubted if I should ever come back.
+
+I shall be telling this with a sigh
+Somewhere ages and ages hence:
+Two roads diverged in a wood, and I
+I took the one less traveled by,
+And that has made all the difference.
+
+Mulder: I love Robert Frost poems
+
+
+
+@X-Cabinet
+#end
+:touch
+Mulder: I just can't find that
+one X-file! Damn it! where is it?
+
+Scully: The proverbial macrocosm
+of all existence? No wait, let me
+guess, the one about Jimmy Hoffa's body
+being buried under SEction 107 of
+the Giants Stadium in East Rutherfurd
+New Jersey, or the one where
+DB Cooper was spotted at a gas
+station demanding pork skins,
+fifty eight bourbons and everything
+in the cash register while the Zodiac
+killer walked in with a machete as
+John Wilkes Booth and Lee Harvey Oswald
+played piano! Or how about the squirrels
+on the Kamikaze planes? Zero the Kamikaze
+Squirrel? The space alien who hacked
+into an episode of Monty Python?
+Jeremiah really WAS a bullfrog?
+AM I GETTING SOMEWHERE MULDER?
+FROSTY THE BLEEPING SNOWMAN?
+#end
+
+
+
+@Water fountain
+#end
+:touch
+It's a water fountain! Drippy drip drip!
+#play 12255555555555
+#end
+
+
+
+@Scully's Scroll Crystals
+You found one of Dana Scully's crystals!
+#play ei!eesa-ceia-cesaec+aec+a-t
+#end
+
+
+
+@An X-File
+#end
+:touch
+Upon further examination it IS an X-File!
+#play d++dde-dde-ddedd+ddd+e-eddded
+#end
+
+
+
+@An X-File
+#end
+:touch
+Upon further examination it IS an X-File!
+#play d++dde-dde-ddedd+ddd+e-eddded
+#end
+
+
+
+@An X-File
+#end
+:touch
+Upon further examination it IS an X-File!
+#play d++dde-dde-ddedd+ddd+e-eddded
+#end
+
+
+
+@Scullys plant
+#end
+:touch
+It's Mission Implantable!
+Scully: No missions for you today,
+Mr. Plant.
+#play -qgixqgix
+#play -ab!
+#play qc-qgsxqgsxqf
+#play -qf#
+#end
+
+
+
+@Dana Scully
+#end
+:touch
+Hi Mulder. Sorry about that bad dream
+you had. Assistant Deputy Director
+Skinner called us in. We should meet
+with him immediately. The Syndicate
+has attempted to take over the
+FBI and shut down the X-Files.
+We need to solve the remaining
+X Files to get to the bottom
+of this. And Mulder? Trust me,
+aliens and ghosts have nothing
+to do with any of this. These
+things are all the result of
+hallucinations and government
+nerds with nothing better to do
+than dress up as monsters!
+
+Mulder: Whatever you say, Scully
+but I think your computer might
+be posessed.
+
+Scully: I could actually buy that,
+as it's almost reduced to smulder,
+Mulder.
+#end
+ 
+
+
+
+@Scully's Diary
+#end
+:touch
+
+Entry 3000 in Scully's diary:
+Mulder, the earth can't be flat 
+because the southern cross rotates
+around the southern celestial pole
+in the same manner as the big
+dipper rotates around the northern
+celestial pole.
+On a flat earth, the southern
+cross would have to move from east
+to west around the flat earth ice
+wall at fifteen degrees per hour  in 
+order to make one revolution and be
+back at the same spot as the day before.
+on a flat earth, if iis daylight in
+Australia then its dark in 
+south Africa and south America
+at the same time.
+How is it possible that both Africa
+and south america can see the southern
+crossat the same time looking directly
+south when they are in different
+locations next to the ice wall?
+
+Mulder: Wow, I was joking
+about the earth being flat, Scully.
+
+Entry 5000 in Scully's diary:
+Said it many times before, I'll say it 
+once more...........
+I have a strong background in medical
+science. It is for this reason that
+I decided to push all that aside
+and set my sights on the X-Files.
+In actuality I was in a desperate search
+for just one good looking guy in the
+FBI. That's when I met Mulder.
+I had been told I was assigned
+to debunk Mulder's work on the
+X-Files to cut the worm cake in the
+proverbial soup of knowledge, to 
+put an end to his program of 
+paranoia and intrigue. But alas,
+Mulder was well.....dorky yes,
+but kinda cute. So I decided
+to just humor him and make him
+think he was really finding
+aliens and things and with
+the right funding we were....I'd better
+go.
+
+Mulder: @_@
+
+
+
+
+
+@Mr Botany
+#end
+:touch
+Most photosynthetic organisms are
+photoautotrophs, which means that they
+are able to synthesize food directly
+from carbon dioxide and water sourcing
+the power from light itself. 
+Not every living creature uses
+carbon dioxide as a source of carbon
+atoms to carry out photosynthesis;
+photoheterotrophs use organic
+compounds, rather than carbon dioxide,
+as a source of carbon. In plants,
+algae, and cyanobacteria, photosynthesis
+frees the oxygen from its proverbial
+programs. This oxygenic photosynthesis
+is the most common kind of photosynthesis
+used by living organisms. Although there
+are some differences between oxygenic
+photosynthesis in plants, algae, and
+cyanobacteria, the overall process is
+quite similar in these organisms.
+
+Scully: This piece of paper needs
+to be put in the trash. Looks
+like it's from my high school 
+science book, yuck.
+#end
+
+
+
+@Information on the hippocampus
+#end
+:touch
+#play ceg+ceg+ceg
+The hippocampus, including thedentate
+gurus, has the shape of a curved tube,
+which has been likened to that of
+the fashion of a seahorse, and to
+a ram's horn, after which the ancient
+Egyptian godooften portrayed as such
+takes the name Cornu Ammonis. 
+Its abbreviation CA is used in naming
+the hippocampal subfield's various 
+programs such as CA1, CA2, CA3,
+and CA4. It can be distinguished as
+an area where the corrtex narrows into
+a single layer of densely packed
+pyramidal neurons, which curl into
+a tight U shape.
+#end
+
+
+
+@Information on TransCranial Magnetic 
+#end
+:touch 
+Scully:
+Transcranial magnetic stimuli?
+This looks lit! Interesting!
+
+Transcranial magnetic stimulation
+or TMS as it is called frequently
+happens to be a noninvasive form of 
+brain stimulation in which a changing
+magnetic field is used to induce
+an electric current at a specific
+area of the brain through electromagnetic
+induction. An electronic pulse generator,
+or stimulation program of sorts,
+is connected to a magnetic coil 
+connected to the scalp. The stimulator
+generates a changing electric current
+within the coyl which creates
+varying magnetic fields, inducing
+a current within a region
+in the brain itself.
+
+Cigarette Smoking Man's voice:
+What are you reading out loud
+to yourself Scully? Sounds
+interesting.
+
+Scully: Uhh....nothing
+about your evil plans.
+
+Smoking Man: What?
+
+Scully: Nothing
+#end
+
+
+
+@Information
+#end
+:touch
+The second law of thermodynamics requires
+that heat is transferred from one
+body to another body only if the
+two bodies are at different temperatures,
+and that the heat flows from
+the body at the highest temperature
+to the body at the lowest temperature.
+
+Scully: Sound familiar, Mulder?
+
+Mulder: Well, our methods are certainly
+of varying temperatures.
+#end
+
+
+
+@Info Box
+#end
+:touch
+Scully: Relax Dana, it's probly
+just the hand of Eugene H. Tooms
+yes, just Eugene Tooms, and he's
+nothing more than a harmless
+mutant now that he's been
+exonerated of all his crimes.....
+or am I dreaming?
+#end
+
+
+
+Mulder: Blue skadoo, we can too!
+
+Scully: You are such a child
+
+
+
+not till sequel!
+
+
+
+Scully: Look, I can astral project.
+Of course it's probably just 
+a trick of the mind. I do it 
+every night though. At will.
+
+
+
+Mulder: AUGH! SCULLY! Having
+a nightmare! Wake me up and
+tell me your dog QuegQueg is
+still alive.....even though he
+likely isn't
+
+Scully: Your sister showed up
+in the office today drinking coffee
+and root beer and chatting with
+the FBI folks.
+
+Mulder: Really? Oh thank god.
+
+Scully: Uhh---yeah.
+Just a dream, Mulder.
+There's no such thing as
+cigarette smoking men.
+They all vape now, for
+better or worse.
+
+
+
+@geei
+#play c+d-C=d-c+D_c.s
+#die
+#end
+
+
+
+@ammo pack
+#end
+:touch
+#give ammo 500
+#give health 340
+#die
+#end
+
+
+
+Mulder: wait didn't we quit the
+FBI long ago to work for mufon?
+
+Scully: what is that
+weird ghost version of me?
+Was the cigarette man cloned
+or something? Is he giving us
+weird visions to confuse us
+on our mission through his
+powers given to him by alien dna?
+Wait i'm starting to sound like
+you Mulder.
+
+
+
+@Skinner, the FBI Dude
+#end
+:touch
+Agent Mulder, Agent Scully, please
+be seated.
+
+
+Mulder: What you define as being seated
+I define as simply my 
+posterior being confined
+to a common furniture item
+for temporary comfort of which
+is viewed as proper posture and
+polite behavior but in reality is
+an artificial custom created by
+people who have a bias against
+standing up. The Greek word
+for the posterior is Gaidaros,
+which kind of sounds like 
+the ancient legend of Gaidorumbus,
+the giant bird who devoured half
+the planet in the ancient BC's,
+if you divide the number of 
+years since then by......
+
+Scully: Mulder, shut the hell up
+sweetie.
+
+Mulder: OK.
+
+
+Skinner: Are you two familiar with
+Operation Moon Spit?
+
+Scully: A United States Army Special
+Operations unit that cleans up
+space junk and satelites. Nothing new.
+
+Skinner: Right. Officially that's all it
+is. We think there might be more to it.
+We suspect a rogue organization within
+the military known simply as The
+Syndicate is attempting to shield
+the real purposes of these operations.
+I could be breaking a security oath
+even telling you this stuff.
+You know what? Just go do yo thang
+and solve the X-Files like old times.
+
+Scully: I'm gonna need to slip 
+into something more comfortable first.
+
+
+
+@geei
+#play c+d-C=d-c+D_c.s
+#die
+#end
+
+
+
+@Bigfoot
+#shoot w
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+GWIB GWIB GWIB! ME TAKE SCULLY AS WIFE!
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+Mulder: You know Scully, I think he
+likes us so much he wants to eat us
+
+Scully: Keep firing, Mulder!
+#shoot w
+#throwstar w
+#restart
+#end
+:shot
+#zap shot
+ME BIGFOOT! ME FOR REAL! ME KILL YOU!
+Scully: This thing talks like a robot!
+This isn't what killed Darin's uncle,
+I'd bet my ten french poodles on it!
+
+Mulder: You have ten french poodles?
+Since when, Scully?
+
+Scully: Since yesterday Mulder,
+but they'll never replace Queegqueg.
+At least I can visit him astrally 
+now, whatever that means, not sure
+I believe in it!
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+ME HUNGRY! ME WANT YOGURT!
+#shoot w
+#restart
+#end
+:shot
+Congrats! You defeated Darin Oswald's
+bigfoot robot!
+Mulder: I still think that might have
+been a real bigfoot that killed
+Oswald's uncle, Scully.
+
+Scully: This robot was the patsy!!!!
+Nothing more!
+#change solid empty
+#play C)$#tt033i54333
+#die
+
+
+
+@regreep
+#end
+:shot
+UH OH! 
+#endgame
+
+
+
+@Thingy
+#end
+:touch
+#play yeroohhttyeeo$##T))23-
+#become key yellow
+#end
+
+
+
+#cycle 1
+/i
+#give ammo 150
+#die
+
+
+
+@Queegqueg
+#end
+:touch
+Speep speep! Behold, I am Queegqueg!
+
+Scully: QUEEGQUEG!!!!
+
+Queegqueg: I am here in the astral
+realms to give you two goods
+for your travels!
+!Ammo for twenty gems;Ammo for twenty gems
+!torches five gems;torches five gems
+#end
+:Ammo for twenty gems
+#give ammo 300
+Good choice, prudent customer wallup!
+#die
+:torches five gems
+Good purchase, prudent customer!
+#give torches 20
+#end
+
+
+
+@Scruffy
+#end
+:touch
+Your scientists have yet to discover
+how neural networks create 
+self-conciousness---let alone how the
+human brain processes two dimensional
+retinal images into the three
+dimensional phenomenon known
+as perception. Once your scientists
+figure this out you will see our
+noses!
+
+Mulder: Excuse me, what?
+
+Scully: It's just a talking dog,
+Mulder. It's not like that's unusual
+or anything.
+#end
+
+
+
+@Henchman for Cigarette Boy
+#shoot s
+#shoot s
+#shoot s
+#shoot s
+#shoot s
+#end
+:shot
+#zap shot
+BAHA! I am a talented Cigarette Man stooge
+#shoot s
+#shoot s
+#restart
+#end
+:shot
+#zap shot
+Don't think that's enough, punk!
+#shoot s
+#shoot s
+#restart
+#end
+:shot
+#zap shot
+Ain't giving up yet scwooballs!
+#throwstar s
+#shoot s
+#restart
+#end
+:shot
+#play cegcegceg
+YAAAAAAAAAAAAAAAAAAU! I GIVE UP ALREADY!
+#die
+#end
+
+
+
+@Freemason Chuck
+#end
+:touch
+Hi Mulder. You probably already know this
+but us Masons love black and white
+checkerboard patterns. So I've been
+decorating this forest head to toe in 
+them.
+
+Mulder: Way to go, I hope when it's
+all done we can play Wizard Chess.
+
+Scully: Really Mulder? Really?
+You meet a freemason and that's
+what you say?
+
+
+
+@Corpse
+#end
+:touch
+#play #$dcd.c.d
+This guy was murdered by Slenderman
+#end
+
+
+
+Investigation: Find Slender Man
+who has been murdering people
+in the forest and take him out
+with lethal force if necessary
+
+
+
+@Syndicate Baddie
+Stop! This is beyond your jurisdiction!
+#shoot w
+#shoot s
+/e/e
+/w/w
+#restart
+#end
+:shot
+#play ceg+DDD
+AAAAAAAAAAAAAUGH!
+#die
+#end
+
+
+
+@Syndicate Baddie
+Stop! This is beyond your jurisdiction!
+#shoot w
+#shoot s
+/e/e
+/w/w
+#restart
+#end
+:shot
+#play ceg+DDD
+AAAAAAAAAAAAAUGH!
+#die
+#end
+
+
+
+@Syndicate Baddie
+Stop! This is beyond your jurisdiction!
+#shoot w
+#shoot s
+/e/e
+/w/w
+#restart
+#end
+:shot
+#play ceg+DDD
+AAAAAAAAAAAAAUGH!
+#die
+#end
+
+
+
+@Slender
+#shoot w
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+I would love to wrap my arms around Dana!
+#shoot w
+#shoot w
+#shoot w
+#shoot w
+#restart
+:shot
+#zap shot
+This isn't over, my love for Dana burns!
+
+Scully: Don't I get a say in this lover
+boy?
+#shoot w
+#shoot w
+#restart
+#end
+:shot
+GAAAAUH! WHAT IS THIS NET YOU GOT ME IN?
+Mulder: we're taking you back
+where you belong, we're gonna 
+make you a model with such a slender
+figure!
+
+Scully: Haha. We didn't tell him
+we're taking him into FBI custody
+#change solid empty
+#die
+
+
+
+@Ring
+#end
+:Touch
+Scully: Is that a gold ring on Slendermans
+finger? OH MY GOSH HE'S MARRIED!
+
+
+Slender: Getting a divorce, after
+seeing your lovely face Dana!
+
+Dana Scully: And that's supposed
+to make me-------happy?
+#end
+
+
+
+@Billy Jim
+#end
+:touch
+#lock
+So to make a long story short I reckon
+I lost mah wallet. It fell into a 
+puddle of that god forsaken blue slime!
+
+Scully: Blue slime----of course he
+mentions blue slime.
+
+Billy Jim: Yeah, and if you don't
+get it back it might end up perma 
+slimed!
+/i/i/i/i/i
+It had important data that might be
+useful to you FBI types!
+/i/i/i/i/i
+Please, I implore you agents, mah wallet!
+/i/i/i/i/i
+#unlock
+#if wallet then ok
+#lock
+/i/i/i/i/i
+Mah wallet, needz it!
+#unlock
+#end
+:ok
+You got mah wallet back!
+/i/i/i/i/i
+Thank you Miss Dana Scully
+/i/i/i/i/i
+And uhh...whatever your name is, sir
+/i/i/i/i/i
+Here's a reward for the two of yez!
+#become yellow key
+#end
+
+
+
+@Gloobox
+#end
+:touch
+You got the FOX MULDER Relic!
+#play ae+a-ae-d+c#g+ae+a-aeec+aec+a-s
+#play s-gb+ddd@#gbdc-g-g+dgbdg-g+dg
+#die
+#end
+
+
+
+@Tavern Entry
+#play #erwtr4-cegcegceg-segsegseg
+Scully: Doesn't look very postmodern 2 me
+#die
+#end
+
+
+
+@Jose Chung
+#end
+:touch
+#play cegegsd+-f
+I have developed a new genre
+/i/i/i/i/i
+NON FICTION SCIENCE FICTION! 
+/i/i/i/i/i
+FINALLY! AM I RIGHT? YES. FINALLY, TODAY
+BOOKS TOMORROW THE WORLD!
+#end
+
+
+
+Investigation: Guy in sunglasses
+who looked like one of the men in black
+took a lot of money and jumped out
+of a plane.
+
+
+
+@Fuzzbear Statue
+#end
+:touch
+#play ceg++33%#%#@90essokkpperr
+Hello there Mulder, Scully.
+I am a Fuzzbear Statue. 
+Find us scattered throughout the lands
+and whatnot!
+We are of much benefit!
+#give health 200
+#give ammo 198
+#die
+#end
+
+
+
+@wallet
+#end
+:touch
+#play ds++d0aadd
+#give gems 500
+You got a magic recipe to cure all ails
+#set wallet
+#die
+#end
+
+
+
+@Evil Wallet
+#shoot w
+#shoot w
+#shoot w
+#change solid empty
+Mulder: OH NO! A cereal killer!
+Scully: Oh boy...go join the Lone Punmen
+Dogget: Well, now we know this ain't
+your typical juvenile junkie just lookin' 
+for a quick fix. We got some real
+pieces of woik here. Man I need
+a hot duag!
+/e/e/e
+#die
+#change solid empty
+
+
+
+@Witch
+#end
+:Touch
+Hey! I need that wallet for my 
+ritual! I'm gonna try to make
+it come to life with voodoo
+and eat everybody for supper!
+
+Mulder: Why do that?
+I'm with the Federal Beaureu Of
+Investigation I'm returning
+this missing wallet.
+
+Scully: Take your crazy pills, Miss
+#end
+
+
+
+@Badge
+#end
+:touch
+#play cedcedced
+You got the badge!
+#set badge
+#die
+#end
+
+
+
+@Flukeman
+#shoot w
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+ZURGOOBOOZOOBOO! DO NOT SHOOT FLUKEMAN!
+#shoot w
+#shoot w
+#end
+:shot
+#zap shot
+ZURGOOBOOZOOBOO! YOU HAVE BEEN WARNED!
+#shoot w
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+You cannot defeat the Flukeman!
+The Flukeman will live on
+Mulder and Scully tried to 
+defeat the Flukeman
+But they were smite,
+as they were STRUCK to the
+ground! Monica Reyes and Agent Dogget
+tried to kill the Flukeman,
+they failled as they were 
+stricken down to the ground
+#shoot w 
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+I am just a result of Cigarette Man's
+vaporizer being left on all night
+under a radioactive can of spagetti!
+#shoot w
+#shoot w
+#restart
+#end
+:shot
+AAAAAAAAAAAAAAAAAAZAAABBAA! IMPOSSIBLE!
+#change solid empty
+#die
+
+
+
+@Guy who was trapped in Flukeman
+#end
+:touch
+Mulder: You poor man. You must
+have been trapped by some sort
+of strange fluke
+
+Scully: Teehee, very funny, Mulder.
+
+Man who was trapped:
+Mulder? Scully? Thanks you two!
+Well, I'd best be off. Got
+another plane to catch.
+
+
+Mulder: You know something Scully?
+I just realized we finished our
+mission but we didn't apprehend
+DB Cooper.
+
+Scully: Yeah, at least we found
+that nice guy's wallet though.
+He had the funniest sunglasses.....
+wait a minute....
+
+Mulder: HEY, STOP, FREEZE....
+ahh....forget it.
+More power to him he was
+probly an FBI agent, one of us.
+What we'll do is we'll frame Flukeman
+for hijacking the planes and stealing
+the two hundred bourbons and whiskeys
+and moneys and then explain that
+Flukeman can shapeshift after
+bringing in the dead body of the monster
+no one will be able to deny monsters exist
+
+Scully: Fair enough. Although
+as a scientist......
+
+Mulder: Yeah yeah whatever.
+#die
+#end
+
+
+
+Investigation: Bring the Loveland
+Frog whom has been terrorizing residents
+of Ohio for decades.
+BACK TO OHIO!
+to defeat...
+A giant monster frog,
+who had NO PRIDE!
+
+
+
+@Snail Eye
+/e
+/w
+#end
+
+
+
+Hi Mulder and Scully
+
+
+
+@Loveland Frog
+BLURBIT! RIBBIT!
+#shoot w
+#shoot w
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+BLEEP BLEEP! BLEEP BLEEP!
+#shoot w 
+#restart
+#end
+:shot
+#zap shot
+You bet your blankity blank bleep!
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+You can bet your blankity blank bleep
+I'm the loveland frog, baby.
+I'm gonna steal Dana Scully
+from you, Mulder
+HAHAAAHAHAHAHAAHAHAHAHAHAAHAHAHAHAHAH
+BWHAHAHAHAHAHAAHAHAHA
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+Ribbit! Gonna take more than that to
+croak me!
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+Taste the fury of the frog!
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+#shoot w 
+#throwstar w
+#restart
+#end
+:shot
+#zap shot
+Frogs are champions!
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+You'll never defeat me Mulder and Scully
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+Watch your back! RIBBIT!
+#shoot w
+#end
+:shot
+#zap shot
+Go to the Town of ZZT, get yourself
+some pancakes and beer!
+#shoot w
+#end
+:shot
+#zap shot
+BLRUP!
+#shoot w
+#end
+:shot
+#zap shot
+GLURRRB! This is more fun than
+saying ribbit while watching
+Christopher Walken read the three
+little pigs! REally, it's on youtube,
+watch it!
+#shoot w
+#end
+:shot
+#zap shot
+Ribbit!
+#shoot w
+#shoot w
+#shoot w
+#zap shot
+#shoot w
+#end
+:shot
+#zap shot
+SPROO!
+#shoot w
+#end
+:shot
+#zap shot
+They're gonna be closing down 
+the X Files pretty soon! No one's
+gonna believe that you were
+killed by a frog!
+#shoot w
+#end
+:shot
+#zap shot
+Froggy went a shootin and he did win!
+#shoot w
+#end
+:shot
+#zap shot
+RIBBIT!
+#shoot w
+#end
+:shot
+#zap shot
+BAHAHAHAAHAHAAHAAA!
+#shoot w
+#end
+:shot
+#zap shot
+Ribbit ribbit ribbit! My cousin is Frogger
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+ribbit!
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+Face it the FBI should be reorganized
+and named the FROG INVESTIGATION
+BEAURAU. That's how foolish you're
+making yourselves look!
+#shoot n
+#shoot n
+#restart
+#end
+:shot
+#zap shot
+HAHAHA! RIBBIT!
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+SPROO! SPROO! I DEFY YOU!
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+sprooie sproo sproo!
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+sprooooooooooooobert!
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+So that's what the FBI does? Investigates
+frogs?
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+Beh! A mere flesh wound! 
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+STOP IT MULDER! 
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+This is foolish!
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+Dr. They controls everything, not me
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+Blurrrrrrrrrrrrrrrrrrrbit!
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+PLEEEEE!
+#shoot w
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+Go solve a real case for once, clowns!
+#shoot seek
+#end
+:shot
+#zap shot
+HEY MULDER, SCULLY IS YOUR SISTER!
+#shoot w
+#shoot n
+#restart
+#end
+:shot
+Bye cruel worlds! And universes!
+#change solid empty
+#die
+#end
+
+
+
+@Death 2
+#end
+:shot
+Goodbye, Mr. Bond. 
+He's dead, Mayday.
+That's rather neat,
+don't you think?
+#endgame
+
+
+
+@Death
+#end
+:shot
+#zap shot
+Not good enough!
+#shoot e
+#end
+:shot
+#zap shot
+Still not good enough!
+#shoot e
+#shoot e
+#restart
+#end
+:shot
+#zap shot
+woops!
+#end
+:shot
+#zap shot
+One more!
+#shot e
+#end
+:shot
+#zap shot
+Better leave the room quickly or you die!
+#shoot n
+#shoot e
+#restart
+#end
+:shot
+#zap shot
+Not yet mr. zorin!
+#shoot n
+#restart
+#end
+:shot
+#zap shot
+UGH! Zorin you cannot defeat Bond!
+#shoot e
+#restart
+#end
+:shot
+#zap shot
+LEAVE THE ROOM BOND WHILE YOU STILL CAN!
+SERIOUSLY!
+#shoot e
+#end
+:shot
+Goodbye, Mr. Bond. Rather neat, think?
+#endgame
+
+
+
+Mulder: I've never seen you look
+so SCARY, Scully!
+
+
+
+Investigation: Find the bleepin
+grey alien and defeat it
+
+
+
+@Grey Alien
+#end
+:touch
+Scully: We're looking for a guy
+with a giant head insanely out of
+proportion to his body. Big black eyes.
+You seen him round these parts?
+
+Grey Alien: SPROO!
+
+Scully: I'll take that as a no.
+Oh well, thank you for trying
+sweetie
+
+Mulder: I think that might have
+been the alien Scully.
+
+Scully: You're nuts, Mulder
+#end
+
+
+
+@Duane Berry
+Duane Berry don't fool around!
+#shoot w
+#shoot w
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+Dweeeeeeeznle!
+#shoot s
+#shoot s
+#shoot e
+#shoot w
+#shoot w
+#throwstar e
+#throwstar s
+#throwstar seek
+#restart
+#end
+:shot
+#zap shot
+#shoot s
+#shoot w
+#shoot e
+#end
+:shot
+#zap shot
+Ol Duane Berry gonna capture Scully!
+#shoot seek
+#restart
+#end
+:shot
+#zap shot
+Duane Berry is serious!
+#shoot seek
+/n/n
+/s/s
+#shoot w
+#shoot w
+#shoot w
+#shoot e
+#shoot e
+#shoot e
+#shoot n
+#shoot s
+#shoot s
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+Duane Berry gonna kill that alien not you
+#shoot seek
+#restart
+#end
+:shot
+#zap shot 
+#play cegcegceg
+DUANE BERRY GONNA GET SCARY!
+#shoot seek
+#restart
+#end
+:shot
+#zap shot
+Ol' Duane Berry. Scully he gonna marry!
+#shoot w
+#shoot w
+#shoot w
+#end
+:shot
+#zap shot
+That's a bleepin' alien if I ever
+bleepin saw one! Duane gonna have
+proof. Ain't nobody gonna laugh
+at Duane no more.
+#shoot w
+#shoot e
+#restart
+#end
+:shot
+IT'S GONE!!!! YA'LL SEE THAT?
+
+Mulder: It probably ran away
+cuz you were mean to it.
+
+Scully: HEY! COME BACK!
+WE NEED PROOF!
+
+Mulder: We'll never have proof!
+The proof is out there!
+#change solid empty
+#die
+#end
+
+
+
+@Chrissie Kloel
+#end
+:touch
+I swear to God there is a literal
+cartoon creature in that trash can.
+He moves around. He rumbles.
+He flies. He sings.
+Horrible 1940's cartoon music
+starts playing when you get too
+close to that can. I swear guys,
+I am not making this up.
+
+
+Scully: I'm.......sure........
+
+
+Mulder: Scully, she's clearly
+frightened of something real.
+
+
+
+Investigation:
+Defeat Sirenhead.
+
+
+
+Scully: Not much of a boss really!
+
+
+
+@Mrs. Peacock
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+SQUAH! BWAHAHAA!
+Mulder: Um, hi Grandma!
+#shoot w
+#restart
+#end
+:shot
+Mulder: Sorry grandma!
+Peacock: SQUAAAAAAAAAAAAAAUGH!
+#change solid empty
+#die
+
+
+
+@Cigarette Smoking Man
+#shoot s
+#shoot s
+#shoot s
+#restart
+#end
+:shot
+#zap shot
+Mulder, you're making a foolish mistake!
+#shoot s
+#shoot s
+#shoot s
+#restart
+#end
+:shot
+#zap shot
+It breaks my heart to have to kill you son
+#shoot s
+#restart
+#end
+:shot
+#zap shot
+I'm so sorry you couldn't join the 
+Syndicate conference room for coffee
+#shoot s
+#shoot s
+#restart
+#end
+:shot
+#zap shot
+Did you really think I would be defeated
+so easily?
+#shoot s
+#throwstar s
+#shoot s
+#restart
+#end
+:shot
+#zap shot
+May I offer you a cigarette?
+#shoot s
+#shoot s
+#shoot s
+#shoot s
+#restart
+#end
+:shot
+#zap shot
+I was just a clone. You killed me 
+long ago. Dr. They over there,
+he runs the show, from the episode
+Lost Art of Forehead Sweat!
+BWAHAHAAHAHA!
+#shoot s
+#restart
+#end
+:shot
+AAAAAAAAAAAAAAUGH! YOU KILLED ME MULDER!
+THERE IS BLOOD ON YOUR HANDS!
+#die
+#end
+
+
+
+@dgoerro
+#play gea+c-bgae+c-gfgh
+#end
+
+
+
+@Dr. They
+#shoot w
+#end
+:shot
+BAH! You awoke me from my nap!
+I was dreaming of world domination.
+So it just so happens that 
+your entire reality is a contrived
+simulation created by me. How else
+could there be so many Samanthas,
+how else could there be fake aliens,
+real aliens, dead bleeping fake alien
+bodies who are actually air force
+officers in disguise?
+How could Scully possibly get pregnant
+with alien babies so often?
+ The only
+way any of this makes sense is
+if it does NOT make sense, which
+is what I long for. I long
+for a world with no purpose, no meaning,
+and nothing that constitutes any
+sort of coherent consistency.
+They hauled your friend Reggie
+away, you thought you didn't know him?
+HA! I erased all your memories of knowing
+him for I AM THE ULTIMATE MOST 
+POWERFUL BEING! now i will destroy
+the entire universe with help from
+The Greys and the evil robots from
+Planet Grezlar 10 Ziklex!
+Say goodnight, Mulder and Scully!
+#shoot w
+#shoot w
+#throwstar w
+#restart
+#end
+:shot
+#zap shot
+What's this? You want closure? You
+want peace? Serenity? Free will?
+All illusion!
+#shoot w
+#shoot w
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+Fake news you worry of? ALL NEWS
+SHALL SOON BE FAKE WHEN I TAKE OVER
+THE WORLD! BWAHAHAHAHHAHAHAAAAHAHA!
+You will NEVER know what's real
+and what isn't and I will laugh
+at your species until you all die!
+
+Mulder: You're an evil alien?
+
+Dr They: Evil is such a strong word,
+but yes I am a space alien
+#shoot w
+#restart
+#end
+:shot
+AAAAAAAAAAAAAAAAAAAAAAAAAAUGH!
+You win this time.
+But I'll get you next time, Mulder.
+I WILL! BWAHAHAHAHHAHHHAAH!
+You didn't even have to defeat me!
+That's how stupid your species is!
+#die 
+
+
+
+Scully: Wait, didn't you already
+kill the Smoking Man long ago?
+
+Cigarette Smoking Man:
+Mulder did indeed kill me.
+I am a ressurected alien clone
+with alien DNA, twice as strong!
+Twice as powerful.
+
+Dr. They: That's what he thinks.
+I gave him the weakest alien DNA
+batch ever.
+
+
+
+#cycle 1
+#char 249
+#restore thud
+#walk e
+#end
+:thud
+#char 32
+#zap thud
+#walk w
+#end
+:thud
+#restart
+
+
+
+#cycle 1
+#char 249
+#restore thud
+#walk e
+#end
+:thud
+#char 32
+#zap thud
+#walk w
+#end
+:thud
+#restart
+
+
+
+#cycle 1
+#char 249
+#restore thud
+#walk e
+#end
+:thud
+#char 32
+#zap thud
+#walk w
+#end
+:thud
+#restart
+
+
+
+#cycle 1
+#char 249
+#restore thud
+#walk e
+#end
+:thud
+#char 32
+#zap thud
+#walk w
+#end
+:thud
+#restart
+
+
+
+#cycle 1
+#char 249
+#restore thud
+#walk e
+#end
+:thud
+#char 32
+#zap thud
+#walk w
+#end
+:thud
+#restart
+
+
+
+@Samantha
+#end
+:touch
+MULDER!!!! I'm so happy to see you again
+I just turned eighteen in this reality
+somehow and I don't think that even
+works chronologically but at least
+we can see each other again.
+You wouldn't believe what a wonderful
+time I've had. In this reality i was
+taken in by the most cute and adorable
+little friendly space aliens.
+They let me chill out to my favorite
+rock music all the time!
+
+Mulder: Awww. Good to have you back,
+Samantha. This is true closure
+#end
+
+
+
+@DB Cooper
+I want seventy bourbons, four hundred
+million dollars and a McDonald's
+happy meal!
+/e/e
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Zombie
+Blurg! We are Zombie!
+/e/e/e
+/w/w/w
+/s/s/s
+/n/n/n
+#shoot seek
+#restart
+#end
+:shot
+#play q#dh--+
+BLAGURGA WURGAH!
+#die
+#end
+
+
+
+@Uncle Billeh Bob
+#end
+:touch
+#play d+#g
+It's a dead body.
+#end
+
+
+
+@Darin Peter Oswald
+#end
+:touch
+Holy spitballs! My uncle was murdered
+by Bigfoot!
+
+Scully: FBI! FEDERAL AGENTS, FREEZE!
+DON'T EVEN FLINCH AN EYE!
+
+Darin Peter Oswald: Well jeepers Mam,
+what the flyin' flip did I do?
+In the name of FLipper the whale
+tell me!
+
+Scully: We have reason to believe
+you murdered your uncle
+
+Mulder: Good faith? what's
+your reasoning Scully?
+There's a lot of different possiblities
+you haven't even examined the body
+yet it looks like there's huge tracks
+outside.
+
+Scully: THIS IS NO TIME FOR YOUR
+NONSENSE MULD----wow I guess there
+really ARE tracks outside.
+We'll be back later. You're
+being watched around the clock
+like a big jawk of a hawk 
+just so you know!
+#end
+
+
+
+@Jennsouhaite
+#end
+:touch
+Youuu realllly don't want to 
+run into me. *takes a puff from
+a cigarette*
+
+I'm unhinged. But I can give you
+what you want------so long as 
+it's mixed in with a little of
+what I want. I'll cut to the chase.
+I'm a genie. I feel like I've
+met you two, a loooooooong time
+ago
+#end
+
+
+
+@Rocky Bronzino
+#end
+:touch
+Scully: Hello? How are you still
+alive I swear you died?
+
+Rocky:
+
+I'm a world famous entomologyst,
+just enjoying the view, Scully.
+
+Scully: 
+*backs away slowly*
+I----I---I see.
+#end
+
+
+
+@Kersh
+#end
+:touch
+Just here to spread government
+disinformation to various governments.
+What's your day been like?
+#end
+
+
+
+@Ted
+#end
+:touch
+I sure hope this place has Grimmace
+shakes!
+
+
+
+@Samantha
+#end
+:touch
+Hi, my name is Samantha. 
+
+Scully: Just how many Samanthas
+do you know Mulder? They
+can't ALL be your sister.
+Do you just have a thing
+for women with that name?
+#end
+
+
+
+@Samantha 3
+#end
+:touch
+Hi, my name is Samantha
+#end
+
+
+
+@Samantha 2
+#end
+:touch
+Hi my name is Samantha
+#end
+
+
+
+@Eve Clone
+#end
+:touch
+Bwahaha! It Is I------EVE! MWAHAHA
+#end
+
+
+
+@Billeh
+#end
+:touch
+Hi I'm Bonzai Billeh and I don't
+serve your kind around here.
+
+Mulder and Scully: ????
+
+Billeh: AREN'T MY TAX DOLLARS
+ENOUGH? WHAT IS WITH YOU TWO?
+#end
+
+
+
+@Dylan
+#end
+:touch
+BZZZZZZZZZZZZZZZZZT!!!!
+I AM DYLAN I HAVE COME TO YOUR PLANET
+TO FIND RAISINS AND SWEAT GLANDS,
+AND COFFEE MACHINES!
+OH, AND SOUP! I REALLY LOVE SOUP,
+DON'T TELL YOUR WAITERS AND
+WAITRESSES!
+
+Voice from afar:
+You have to keep it secret
+that we're a family of flies,
+Dylan
+#end
+
+
+
+@Dylan's Mom
+#end
+:touch
+Don't tell Mulder and Scully that
+we're flies, Dylan dearest!
+
+
+
+@man who saw a ufo
+#end
+:touch
+I saw a UFO!
+
+
+
+@Weirdo
+#end
+:touch
+Twenty five lighters on mah dressah
+dresser dressah, and I gots to get
+paiiiid!
+
+Mulder: Uhh...Mac, this is ZZT
+not ZZTOP.
+#end
+
+
+
+@Federal Bird Agent
+#end
+:touch
+#lock
+Yeah, so I just came into town and
+I was peckin' some mung beans
+and some pistachios and some prelenes
+and cream ice cream and all of
+a sudden I lost mah badge!
+/i/i/i/i/i
+Now I don't get access to 
+mah benefits as a BIRD agent
+/i/i/i/i/i
+Can yaz get mah badge back?
+/i/i/i/i/i
+#unlock
+#if badge then ok
+#lock
+/i/i/i/i/i
+SPROO! I want mah badge! 
+#unlock
+#end
+:ok
+SPROO! I don't know how to say SPROO
+enough! I wish I could say SPROO
+so many times!
+
+Scully: You've already outsprooed
+yourself, dear.
+
+Mulder: Hey, I like this guy!
+/i/i/i/i/i
+Good work you two spooks!
+/i/i/i/i/i
+Tankies!
+/i/i/i/i/i
+You can see me in uniform if you go right!
+#become key green
+#end
+
+
+
+@cyan wall
+#if contact then toocold
+#restart
+#end
+:toocold
+#if warm then pass
+you look around realizing how very frigid
+everything looks and start to freeze to 
+death...
+:kill
+#take health 10
+/i/i/i
+#send kill
+#end
+:pass
+you've got a hot potato so you're warm 
+enough for this level
+#clear warm
+#become solid
+#end
+
+
+
+@breakable wall
+#end
+:touch
+A strange sand wall...
+#die
+#end
+
+
+
+@breakable wall
+#end
+:touch
+A strange sand wall...
+#die
+#end
+
+
+
+@breakable wall
+#end
+:touch
+A strange sand wall...
+#die
+#end
+
+
+
+STUPID!
+
+
+
+@Fake Exit
+#end
+:Touch
+HAHAHA! YOU FELL FOR IT MULDER AND SCULLY!
+A FAKE PASSAGE! Unless you count
+your passageway to the very bowels
+of HELL!
+#endgame
+#end
+
+
+
+@Krychek
+#shoot w
+#restart
+#end
+:shot
+You failed to see the glory of Flukeman
+and you failed to see zeh glory
+of me!
+#die
+#end
+
+
+
+Tip: Hit Zorin with a melee by
+touching him. 
+
+
+
+@Jumple
+#if zoop then change solid empty
+#if zoop then change fake empty
+#if zoop then change water empty
+#end
+:zoop
+#change solid empty
+#change fake empty
+#change water empty
+#play c+++++++++++++
+#die
+
+
+
+@Thingy
+#end
+:shot
+#play #d.h.c.c
+#die
+
+
+
+@Thingy
+#end
+:shot
+#play #d.h.c.c
+#die
+
+
+
+@Thingy
+#end
+:shot
+#play #d.h.c.c
+#die
+
+
+
+@Door
+#end
+:touch
+Think on your feet but shoot for the stars
+#play zcd.h.h@##
+#die
+
+
+
+@thingz
+#end
+:shot
+#send Jumple:zoop
+#die
+
+
+
+@Yellow Ruffian
+#end
+:shot
+#play C++decded d#+
+#play @@@@@@@@@@@t3tt
+/w/w
+#become fake blue
+#play k+++eeedddccdcdcdc
+#end
+
+
+
+@Yellow Ruffian
+#end
+:shot
+#give health 120
+#play C++decded d#+
+#die
+#end
+
+
+
+@Yellow Ruffian
+#end
+:shot
+#play C++decded d#+
+#play @@@@@@@@@@@t3tt
+/w/w
+#become fake blue
+#play k+++eeedddccdcdcdc
+#end
+
+
+
+@Yellow Ruffian
+#end
+:shot
+#give health 130
+#play C++decded d#+
+#play @@@@@@@@@@@t3tt
+#die
+#end
+
+
+
+@Thingie
+#end
+:touch
+#give health 250
+Here's some health!
+#die
+#end
+
+
+
+@It'saWoosh
+#end
+:shot
+WOW!
+#play cd+eg+cegcegcegt+++t++i++i++
+#become green key
+#end
+
+
+
+@Sherrif
+#end
+:touch
+THE FBI? Get the hell outta here!
+Keep yer warnings to the cassette
+and VHS tapes of yore!
+#end
+
+
+
+@KROZ
+#end
+:touch
+#play c+b-c+e.e.c
+Name's Kroz. Yeah I'm a cult leader.
+What's it to you? 
+
+Scully: Some cults are......kinda
+spruced up at least.
+
+Mulder: I joined a cult once.
+
+Scully: I'm sure you did, Mulder.
+Probably more than once.
+
+
+Kroz: All life on this dimension,
+this particular version of Earth?
+
+Scully: uhhhhh....yeah?
+
+Kroz: It is known as ZZT.
+
+Scully: Go on cutie I'm fascinated.
+
+Kroz: ZZT itself stands for Zoo
+of Zero Tolerance. That's why
+it's up to us as ZZT objects
+to make this world a more loving
+and tolerant place.
+ZZT itself would never have existed
+were it not for KROZ.
+
+
+Mulder: KROZ?
+
+Kroz: I AM KROZ INCARNATE.
+YOU MUST PAY TRIBUTE TO KROZ.
+KROZ IS WHAT THE WORLD ONCE WAS
+AND SHOULD BE.
+
+
+Scully: This guy's nuttier than
+that Reggie guy with the forehead
+sweat. Let's run!
+
+Mulder: Right behind ya, hottie!
+#end
+
+
+
+Mulder: Weirdest water tower ever,
+Scully. You think it might actually
+be a signal gatherer for an 
+alien intelligence?
+
+Scully: Let me guess------no?
+
+
+
+@FreeDay Weirdo
+#end
+:touch
+Howdy pawtnut! It's FREE DAY!
+EVERYTHING'S FREE! How would
+you like a free pancake?
+
+Mulder: We're looking for a 
+cigarette smoking------
+
+Guy at the counter:
+SAY NO MORE! Will that be Newports,
+or our famous oldports or Camels
+or Marlboros? Or Parliaments
+we have more parliaments than England
+does, boy!
+
+Mulder: On second thought I think
+the little lady and I will both
+pass.
+
+Scully: Call me a little lady
+again and I'll pop a cap in your
+toe, Mulder the mud head.
+
+Mulder: Not my favorite toe, Scully,
+I sing songs to that one
+
+#end
+
+
+
+@Duane Berry
+#end
+:touch
+Old Duane Berry sees them gray aliens
+from Roswell all the time. Old
+Duane Berry knows telepathically you
+two don't believe me.
+/n
+#shoot e
+DUANEDARES SOMEONE ELSE TO NOT BELIEVE ME!
+#shoot w
+#shoot e
+#shoot n
+OOF! SEE? THE GREY ALIENS GOT ME AGAIN!
+#die
+#end
+
+
+
+@Agent Reyes
+#end
+:touch
+Oh hi you guys! Nice to see you two!
+I got some horoscopes done for 
+you two.
+
+Scully: Awwwww, that's so cuuuuute,
+Agent Reyes. Tell Agent Dogget
+his horoscope. 
+
+Mulder: Her chart may square mine,
+but she fares just fine!
+#end
+
+
+
+@Agent Dogget
+#end
+:touch
+I don't get what it is about this Oldport
+town. It's like it just attracts 
+spooks up to the moon and there
+ain't no cows to contain the spooks,
+count me in I'm a spook too, ya know?
+Gonna go get myself a hot duag.
+
+Scully: Yeah, uhh, are you okay 
+Agent Dogget?
+
+
+Mulder: He's been drinking too much
+beer. 
+#end
+
+
+
+@Lady in Red
+#end
+:touch
+#play t.40o3ti-03iy
+I am the Lady in Red. 
+#end
+
+
+
+@Dylan
+#end
+:touch
+#play cegcegsegsegseg
+Yep. Buzz buzz buzz! Hey what's the buzz?
+#end
+
+
+
+@Amy Picksworth
+#end
+:touch
+Oh, Dylan, mmhm, you kiss so well
+but----you're a fly?
+#end
+
+
+
+@Secret
+#end
+:shot
+#play cegcegcegsegsegseg+c
+You found a secret Dana Scully crystal!
+#give health 400
+#give ammo 2000
+#die
+#end
+
+
+
+@Tessa
+#end
+:touch
+Aww, don't know nothing do yez.
+
+Scully: We can prove it Tessa,
+and we can prove that Greg was
+the father.
+
+Tessa: So what if he was the father!
+
+Scully: Mam, this is very very serious.
+Do you understand how serious this is?
+Now that you've gathered up the goose
+and sung lullabyes to it you've waived
+the right to an attorney, so if you
+lie here and now you've committed
+perjury.
+
+Tessa: Promised me we'd be in L.A.
+by Christmas. 
+
+Scully: You said that he and Ruby
+were seeing each other.
+You said they were planning to
+meet at the lake!!!
+Why was that? To go fishing
+for bluegills Tessa? Is that
+why you were meeting at the lake
+you rotten wicked witch of the
+west?
+
+Tessa: Look cupcake, I was nowhere
+near the lake that night alright?
+
+Mulder: YOU MET HIM THERE AND WHEN
+YOU WERE THERE YOU WERE WAITING
+FOR DR. THEM. Dr. Them came and
+then you shot him in the back!
+I'll hit this desk like a petulant
+angry child if I have to to
+demonstrate. BAM! Just like
+what the Food Network guy would say.
+
+Tessa: I didn't shoot anyone.
+I didn't kill her.
+
+Mulder: Where is she buried 
+Tessa?
+Hey wait a minute.....
+we already did this interrogation
+a long long time ago Scully.
+
+Scully: Oh yeah.....
+
+Mulder: I think this is the result
+of a time warp, what say you
+Scully?
+
+Scully: Well time warps are
+theoretical Mulder they've never
+been proven they're a bit like
+the Cookie Monster Legends
+or the Black Bear of Mars
+although anything's possible
+these days with high tech CGI
+and computer fakery, we could
+be living in a simulation that
+makes us think we're in a time warp.
+
+Mulder: Nothing will ever sustain
+the fires of my suppositions about
+you, Scully.
+
+Scully: Ditto buster.
+#die
+#end
+
+
+
+@Blockageway
+#end
+:shot
+#play 494949sx9x9xxx0xxx0i
+You defeated the blockageway!
+#die
+#end
+
+
+
+@Blockeageway 2
+#end
+:shot
+#play c.id.s#d.i+690x0x0x0x0-c+.s
+You defeated another blockageway, M&S!
+#die
+
+
+
+@An annoying blockageway
+#end
+:shot
+Good job M&S! Keep shooting blockageways!
+#give ammo 150
+#play GGHSDfsYOSHMP3gtoeifx
+#play t+c-gec
+#play t+cegcegceg+sc
+#play sc+gecgecgec+
+#die
+#end
+
+
+
+Investigation: Determine who killed
+the uncle of Darin Peter Oswald,
+and bring the murderer to swift
+and elegant justice. Was it Darin
+himself? Or was it Bigfoot?
+
+
+
+@Darin Peter Oswald
+YA'LL BEST BEHAVE YERSELVES!
+#shoot w
+#shoot w
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+YEEHAW! I AM THE PRINCE OF LIGHTNING!
+Scully: What did you do with the body?
+That's called tampering with evidence,
+tampering with a crime scene, that's
+serious stuff, bud!
+
+Oswald: I got bud, ya want some?
+WAM! BAM! SLAM!! LIGHTNING BABY!
+The body's still here it's just
+in the other corner of this room!
+#shoot s
+#shoot s
+#shoot e
+#shoot w
+#shoot w
+#throwstar e
+#throwstar s
+#throwstar seek
+#restart
+#end
+:shot
+#zap shot
+DID YALL KNOW LIGHTNING NEVER STRIKES
+WHEN A WITCH TURNS IT INTO COFFE
+BEANS? ON RARE OCCASIONS IT DOES,
+IF IT'S ON THE GROUNDS.
+Scully: It's shocking how bad
+that joke was!
+#shoot s
+#shoot w
+#shoot e
+#end
+:shot
+#zap shot
+Hey it just STRUCK me how dumb ya'll are!
+#shoot seek
+#restart
+#end
+:shot
+#zap shot
+DARIN PETER FLIPPIN' OSWALD BEETCHES!
+#shoot seek
+/n/n
+/s/s
+#shoot w
+#shoot w
+#shoot w
+#shoot e
+#shoot e
+#shoot e
+#shoot n
+#shoot s
+#shoot s
+#shoot w
+#restart
+#end
+:shot
+#zap shot
+Ya'll don't know how to conduct yourselves
+so ya'll gonna get STRUCK down by 
+the power of the Pokemon in the sky
+who eats chili and STRIKES DOWN
+foes with impenetrable power baby!
+#shoot seek
+#restart
+#end
+:shot
+#zap shot 
+Pardon me if the sky is a bit FLASHY
+here!
+#shoot seek
+#restart
+#end
+:shot
+#zap shot
+Ya'll best stop trying to defeat me,
+or I'm gonna go on a strike!
+get it? HAHAHAHA!
+A lightning strike ya dumb deviled
+sheep puppy poodle pellets!
+#shoot w
+#shoot w
+#shoot w
+#end
+:shot
+#zap shot
+JEEPERS! Girls love me cuz I got 
+greased hair! GREASED IN LIGHTNING!
+Scully: I don't like you
+Darin Oswald: WHAAAAAAAAAAUUUUT?
+#shoot w
+#shoot e
+#restart
+#end
+:shot
+That's it I'm gettin' outta here!
+Scully: No you're not. You're under
+arrest. 
+Oswald: Take me away, but just
+so you know you'll never be able
+to prove a damn thing. The courts
+will laugh you off the stage
+and the legal system will be
+chuckling its way to the bank!
+Scully: Your DNA was found on the
+lightning that killed your uncle.
+You foolishly used ZZT water as
+lightning and this remained in your
+room unlike regular lightning.
+
+Mulder: You heard the lady.
+Your goose is cooked.
+
+Scully: And justice is served 
+as a well done goose. Goodbye,
+Darin Peter Oswald you little
+rascal. Write to me in jail why
+don't you?
+
+Oswald: I think I will. 
+I'll write you a love poem ur
+so dang beautiful Scully!
+Even if you do hate me!
+
+The cops drag Oswald away down
+to the station.
+#become key white
+#end
+
+
+
+@body
+#end
+:touch
+#play dgrett
+it's a dead body.
+#end
+
+
+
+@Toilet
+#end
+:touch
+#play cegcxeg
+It's a toilet. You put it in your case
+#die
+#end
+
+
+
+@DAughter Rebecca
+#end
+:touch
+SPROO!
+#play cegcegceg+segsegseg
+#endgame
+
+
+
+#cycle 1
+/i
+#give ammo 150
+#die
+
+
+
+@Queegqueg
+#end
+:touch
+Speep speep! WE FINALLY HAVE NOSES!
+#endgame
+
+
+
+@Scruffy
+#end
+:touch
+PRAISE THE VCR!
+WE HAVE NOSES AGAIN!
+#end
+
+
