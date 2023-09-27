@@ -1,44 +1,47 @@
+import ErrorStackParser from 'error-stack-parser'
 import { klona } from 'klona/json'
 
 import { GeneratorBuild } from './generator'
+import { GENERATED_FILENAME } from './transformer'
 
 export const HALT_AT_COUNT = 32
 
-export type EVENT = {
+// id or x, y coords
+export type MESSAGE_SOURCE = string | { x: number; y: number }
+
+export type MESSAGE = {
   to: string
-  from: string | { x: number; y: number }
+  from: MESSAGE_SOURCE
   name: string
   value: any
   playerId: string
 }
 
+export type WORD = string | number
+
 // lifecycle and control flow api
-export function createChip(build: GeneratorBuild) {
-  /*
-
-export type ObjectState = {
-  labels: Record<string, number[]>
-  cycle: number
-  event?: EVENT
-  inputs: INPUT[]
-  busy: string
-  yield: boolean
-  paused: boolean
-  locked: boolean
-  completed: boolean
-  code?: BrainCode
-  skripto?: string
-  logic?: IterableIterator<unknown>
-}
-
-  */
-
+export function createChip(build: GeneratorBuild, firmware: any) {
+  // entry point state
   const labels = klona(build.labels ?? {})
-  let event: EVENT | undefined = undefined
+
+  // incoming message state
+  let message: MESSAGE | undefined = undefined
+
+  // prevent infinite loop lockup
   let loops = 0
+
+  // pause until next tick
   let yieldState = false
 
-  return {
+  // chip values
+  const values = {
+    player: '',
+    sender: '' as MESSAGE_SOURCE,
+    data: undefined as any,
+  }
+
+  const chip = {
+    // lifecycle api
     begin() {
       loops = 0
       yieldState = false
@@ -47,153 +50,165 @@ export type ObjectState = {
       return loops++ > HALT_AT_COUNT
     },
     hasmessage() {
-      const name = event?.name ?? ''
+      const name = message?.name ?? ''
       const result = labels[name]?.find((item) => item > 0) ?? 0
       return result
     },
+    yield() {
+      yieldState = true
+    },
     shouldyield() {
-      return yieldState || this.shouldhalt()
+      return yieldState || chip.shouldhalt()
+    },
+    message(incoming: MESSAGE) {
+      message = incoming
+    },
+    zap(label: string) {
+      const labelset = labels[label]
+      if (labelset) {
+        const index = labelset.findIndex((item) => item > 0)
+        if (index >= 0) {
+          labelset[index] *= -1
+        }
+      }
+    },
+    restore(label: string) {
+      const labelset = labels[label]
+      if (labelset) {
+        for (let i = 0; i < labelset.length; i++) {
+          labelset[i] = Math.abs(labelset[i])
+        }
+      }
     },
     getcase() {
-      if (event) {
-        const label = this.hasmessage()
-        if (event.playerId) {
-          // this send sets player aggro
-          // coreAPI.self.values.player = event.playerId
-        }
-        // coreAPI.self.values.sender = event.from
-        // coreAPI.self.values.data = event.value
-        // coreAPI.selfState.event = undefined
+      if (message) {
+        const label = chip.hasmessage()
 
-        // clear event
-        event = undefined
+        // update chip value state based on incoming message
+        values.sender = message.from
+        values.data = message.value
+        // this sets player focus
+        if (message.playerId) {
+          values.player = message.playerId
+        }
+
+        // clear message
+        message = undefined
+
+        // return entry point
         return label
       }
       return 0
     },
     endofprogram() {
+      // what does this do ?
+      chip.yield()
+    },
+    stacktrace(error: Error) {
+      const stack = ErrorStackParser.parse(error)
+      const [entry] = stack.filter(
+        (item) => item.fileName === GENERATED_FILENAME,
+      )
+      return {
+        line: entry?.lineNumber ?? 0,
+        column: entry?.columnNumber ?? 0,
+      }
+    },
+
+    // logic api
+    text(value: string) {
+      // should these be rolled into #commands ?
+      // thus having a single DSL to describe commands ?
+      // ie: like the default lib for objects etc..
+      // hmm because of try / take / give etc..
+      // I think defining a firmware layer that covers
+      // all these core invokes
+    },
+    stat(words: WORD[]) {
       //
     },
-    stacktrace() {
+    hyperlink(message: string, label: string) {
       //
     },
-    text() {
+    command(words: WORD[]) {
       //
     },
-    stat() {
+    if(words: WORD[]) {
       //
     },
-    hyperlink() {
+    try(words: WORD[]) {
       //
     },
-    command() {
+    take(words: WORD[]) {
       //
     },
-    if() {
+    give(words: WORD[]) {
       //
     },
-    while() {
+    while(words: WORD[]) {
       //
     },
-    repeatStart() {
+    repeatStart(index: number) {
       //
     },
-    repeat() {
+    repeat(index: number, words: WORD) {
       //
     },
-    or() {
+    or(words: WORD[]) {
       //
     },
-    and() {
+    and(words: WORD[]) {
       //
     },
-    not() {
+    not(words: WORD[]) {
       //
     },
-    isEq() {
+    isEq(lhs: WORD, rhs: WORD) {
       //
     },
-    isNotEq() {
+    isNotEq(lhs: WORD, rhs: WORD) {
       //
     },
-    isLessThan() {
+    isLessThan(lhs: WORD, rhs: WORD) {
       //
     },
-    isGreaterThan() {
+    isGreaterThan(lhs: WORD, rhs: WORD) {
       //
     },
-    isLessThanOrEq() {
+    isLessThanOrEq(lhs: WORD, rhs: WORD) {
       //
     },
-    isGreaterThanOrEq() {
+    isGreaterThanOrEq(lhs: WORD, rhs: WORD) {
       //
     },
-    opPlus() {
+    opPlus(lhs: WORD, rhs: WORD) {
       //
     },
-    opMinus() {
+    opMinus(lhs: WORD, rhs: WORD) {
       //
     },
-    opPower() {
+    opPower(lhs: WORD, rhs: WORD) {
       //
     },
-    opMultiply() {
+    opMultiply(lhs: WORD, rhs: WORD) {
       //
     },
-    opDivide() {
+    opDivide(lhs: WORD, rhs: WORD) {
       //
     },
-    opModDivide() {
+    opModDivide(lhs: WORD, rhs: WORD) {
       //
     },
-    opFloorDivide() {
+    opFloorDivide(lhs: WORD, rhs: WORD) {
       //
     },
-    opUniPlus() {
+    opUniPlus(rhs: WORD) {
       //
     },
-    opUniMinus() {
+    opUniMinus(rhs: WORD) {
       //
     },
   }
+
+  return chip
 }
-
-/*
-
-hasmessage
-shouldyield
-getcase
-endofprogram
-
-
-text value
-stat words
-hyperlink message label
-command words
-if|try|take|give words
-while words
-repeatStart index
-repeat index words
-or words
-and words
-not words
-isEq lhs rhs
-isNotEq lhs rhs
-isLessThan lhs rhs
-isGreaterThan lhs rhs
-isLessThanOrEq lhs rhs
-isGreaterThanOrEq lhs rhs
-opPlus rhs
-opMinus rhs
-opPower rhs
-opMultiply rhs
-opDivide rhs
-opModDivide rhs
-opFloorDivide rhs
-opUniPlus rhs
-opUniMinus rhs
-
-
-
-
-*/
