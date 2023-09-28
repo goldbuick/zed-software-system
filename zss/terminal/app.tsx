@@ -1,15 +1,15 @@
 import { OrthographicCamera, Stats, Loader } from '@react-three/drei'
-import { Canvas, events, RootState } from '@react-three/fiber'
+import { Canvas, events } from '@react-three/fiber'
 import {
   EffectComposer,
   ChromaticAberration,
 } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
+import React from 'react'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
 
-import { langTest } from '/zss/lang/test'
-
+import { langTest } from '/zss/test'
 
 const urlParams = new URLSearchParams(window.location.search)
 const showStats = urlParams.get('stats') !== null
@@ -26,7 +26,7 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   ...events(state),
 
   // The filter can re-order or re-structure the intersections
-  filter: (items: THREE.Intersection[], state: RootState) => {
+  filter: (items: THREE.Intersection[]) => {
     const list = items.filter((item) => {
       if (!item.object.visible) {
         return false

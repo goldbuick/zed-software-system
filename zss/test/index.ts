@@ -1,8 +1,8 @@
-import test_zss from 'bundle-text:./test/blocks.txt'
+import test_zss from 'bundle-text:./blocks.txt'
 
-import { createChip } from './chip'
-import { createFirmware } from './firmware'
-import { compile } from './generator'
+import { createChip } from '../lang/chip'
+import { createFirmware } from '../lang/firmware'
+import { compile } from '../lang/generator'
 
 export function langTest() {
   // define commands

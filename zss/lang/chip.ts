@@ -57,7 +57,7 @@ export function createChip(build: GeneratorBuild) {
   function invokecommand(name: string, words: WORD[]) {
     const command = invokes[name]
     if (!command) {
-      throw new Error(`Unknown chip command ${name}`)
+      throw new Error(`unknown firmware command ${name}`)
     }
     return command(words)
   }
