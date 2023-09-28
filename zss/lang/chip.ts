@@ -19,6 +19,7 @@ export type MESSAGE = {
 
 // may need to expand on this to encapsulate more complex values
 export type WORD = string | number
+export type WORD_VALUE = WORD | MESSAGE_SOURCE | undefined
 export type CHIP_COMMAND = (words: WORD[]) => number
 export type CHIP_COMMANDS = Record<string, CHIP_COMMAND>
 
@@ -48,7 +49,7 @@ export function createChip(build: GeneratorBuild) {
   const values = {
     player: '',
     sender: '' as MESSAGE_SOURCE,
-    data: undefined as any,
+    data: undefined as WORD_VALUE,
   }
 
   // chip invokes
@@ -67,6 +68,7 @@ export function createChip(build: GeneratorBuild) {
     define(incoming: CHIP_COMMANDS) {
       invokes = incoming
     },
+
     // lifecycle api
     tick() {
       // reset state
@@ -148,6 +150,21 @@ export function createChip(build: GeneratorBuild) {
         line: entry?.lineNumber ?? 0,
         column: entry?.columnNumber ?? 0,
       }
+    },
+
+    // values api
+    eval(word: WORD): WORD_VALUE {
+      if (typeof word === 'string') {
+        switch (word.toLowerCase()) {
+          case 'player':
+            return values.player
+          case 'sender':
+            return values.sender
+          case 'data':
+            return values.data
+        }
+      }
+      return word
     },
 
     // logic api
