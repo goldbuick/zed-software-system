@@ -29,6 +29,7 @@ export function createChip(build: GeneratorBuild) {
   const labels = klona(build.labels ?? {})
 
   // ref to generator instance
+  // eslint-disable-next-line prefer-const
   let logic: Generator<number> | undefined
 
   // incoming message state
