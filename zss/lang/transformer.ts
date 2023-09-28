@@ -1,4 +1,4 @@
-import { CodeWithSourceMap, SourceMapGenerator, SourceNode } from 'source-map'
+import { CodeWithSourceMap, SourceNode } from 'source-map'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
 
@@ -313,12 +313,12 @@ function transformNode(ast: CodeNode): SourceNode {
       // and if zero, re-eval the given words to calc number of repeats
       // repeatStart should naturally reset the repeat counter before looping
       const source = write(ast, [
-        writeApi(ast, 'repeatStart', [`${context.internal}`]),
-        '\nwhile (',
-        writeApi(ast, 'repeat', [
+        writeApi(ast, 'repeatStart', [
           `${context.internal}`,
           ...transformNodes(ast.words),
         ]),
+        '\nwhile (',
+        writeApi(ast, 'repeat', [`${context.internal}`]),
         ') {',
         `\n${END_OF_LINE_CODE}\n`,
       ])

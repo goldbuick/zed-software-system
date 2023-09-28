@@ -1,7 +1,9 @@
-import { IToken } from 'chevrotain'
+import { CstNode, IToken } from 'chevrotain'
+import { SourceMapGenerator } from 'source-map'
 
 import { compileAST } from './ast'
-import { GenContextAndCode, transformAst } from './transformer'
+import { transformAst } from './transformer'
+import { CodeNode } from './visitor'
 
 // eslint-disable-next-line func-names, @typescript-eslint/no-empty-function
 const GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor
@@ -9,9 +11,14 @@ const GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor
 export type GeneratorBuild = {
   errors?: any[]
   tokens?: IToken[]
-} & Partial<GenContextAndCode>
+  cst?: CstNode
+  ast?: CodeNode
+  labels?: Record<string, number[]>
+  map?: SourceMapGenerator
+  code?: GeneratorFunction
+}
 
-export function createGenerator(text: string): GeneratorBuild {
+export function compile(text: string): GeneratorBuild {
   const astResult = compileAST(text)
   if (astResult.errors && astResult.errors.length > 0) {
     return {
