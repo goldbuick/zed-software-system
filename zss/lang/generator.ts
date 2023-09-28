@@ -2,6 +2,7 @@ import { CstNode, IToken } from 'chevrotain'
 import { SourceMapGenerator } from 'source-map'
 
 import { compileAST } from './ast'
+import { CHIP } from './chip'
 import { transformAst } from './transformer'
 import { CodeNode } from './visitor'
 
@@ -15,7 +16,7 @@ export type GeneratorBuild = {
   ast?: CodeNode
   labels?: Record<string, number[]>
   map?: SourceMapGenerator
-  code?: GeneratorFunction
+  code?: (api: CHIP) => Generator<number>
 }
 
 export function compile(text: string): GeneratorBuild {

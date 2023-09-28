@@ -241,5 +241,8 @@ export function createChip(build: GeneratorBuild) {
     },
   }
 
+  // create generator instance for chip
+  logic = build.code?.(chip)
+
   return chip
 }
