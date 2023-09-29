@@ -5,13 +5,26 @@ import { createFirmware } from '../lang/firmware'
 import { compile } from '../lang/generator'
 
 export function langTest() {
+  const values: Record<string, number> = {}
+
   // define commands
   const firmware = createFirmware()
-    .command('print', (args: WORD[]) => {
-      console.info(args)
+    .command('print', (chip, args: WORD[]) => {
+      console.info(...args)
       return 0
     })
-    .command('stat', () => {
+    .command('set', (chip, args: WORD[]) => {
+      const [name, value] = args
+      if (chip.isString(name)) {
+        values[name] = chip.evalToNumber(value)
+      }
+      return 0
+    })
+    .command('get', (chip, args: WORD[]) => {
+      const [name] = args
+      if (chip.isString(name)) {
+        return values[name] ?? 0
+      }
       return 0
     })
 

@@ -18,13 +18,13 @@ export type MESSAGE = {
 }
 
 // may need to expand on this to encapsulate more complex values
+export type CHIP = ReturnType<typeof createChip>
 export type WORD = string | number
 export type WORD_VALUE = WORD | MESSAGE_SOURCE | undefined
-export type CHIP_COMMAND = (words: WORD[]) => number
+export type CHIP_COMMAND = (chip: CHIP, words: WORD[]) => WORD_VALUE
 export type CHIP_COMMANDS = Record<string, CHIP_COMMAND>
 
 // lifecycle and control flow api
-export type CHIP = ReturnType<typeof createChip>
 export function createChip(build: GeneratorBuild) {
   // entry point state
   const labels = klona(build.labels ?? {})
@@ -49,7 +49,7 @@ export function createChip(build: GeneratorBuild) {
   const values = {
     player: '',
     sender: '' as MESSAGE_SOURCE,
-    data: undefined as WORD_VALUE,
+    data: '' as WORD_VALUE,
   }
 
   // chip invokes
@@ -60,7 +60,7 @@ export function createChip(build: GeneratorBuild) {
     if (!command) {
       throw new Error(`unknown firmware command ${name}`)
     }
-    return command(words)
+    return command(chip, words)
   }
 
   const chip = {
@@ -97,7 +97,7 @@ export function createChip(build: GeneratorBuild) {
     shouldyield() {
       return yieldState || chip.shouldhalt()
     },
-    message(incoming: MESSAGE) {
+    send(incoming: MESSAGE) {
       message = incoming
     },
     zap(label: string) {
@@ -162,9 +162,32 @@ export function createChip(build: GeneratorBuild) {
             return values.sender
           case 'data':
             return values.data
+          default:
+            return invokecommand('get', [word])
         }
       }
       return word
+    },
+    isNumber(word: any): word is number {
+      return typeof word === 'number'
+    },
+    isString(word: any): word is string {
+      return typeof word === 'string'
+    },
+    isNumberOrString(word: any): word is number | string {
+      return chip.isNumber(word) || chip.isString(word)
+    },
+    evalToNumber(word: any) {
+      if (chip.isNumber(word)) {
+        return word
+      }
+      if (chip.isString(word)) {
+        const value = chip.eval(word)
+        if (chip.isNumber(value)) {
+          return value
+        }
+      }
+      return 0
     },
 
     // logic api
@@ -180,25 +203,31 @@ export function createChip(build: GeneratorBuild) {
     command(...words: WORD[]) {
       const [name, ...args] = words
       const command = invokes[name]
-      return command ? command(args) : invokecommand('send', args)
+      return command ? command(chip, args) : invokecommand('send', args)
     },
     if(...words: WORD[]) {
-      return invokecommand('if', words)
+      // words
     },
     try(...words: WORD[]) {
-      return invokecommand('try', words)
+      // words
     },
     take(...words: WORD[]) {
-      return invokecommand('take', words)
+      // str words
     },
     give(...words: WORD[]) {
-      return invokecommand('give', words)
+      // str words
     },
     while(...words: WORD[]) {
-      return invokecommand('while', words)
+      // words
     },
     repeatStart(index: number, ...words: WORD[]) {
-      repeats[index] = invokecommand('repeat', words)
+      const value = invokecommand('repeat', words)
+      if (chip.isNumber(value)) {
+        repeats[index] = value
+      } else {
+        // throw error ?
+      }
+      return 0
     },
     repeat(index: number) {
       const count = repeats[index] ?? 0
@@ -206,58 +235,63 @@ export function createChip(build: GeneratorBuild) {
       return count > 0
     },
     or(...words: WORD[]) {
-      return 0
+      return words.map(chip.evalToNumber).find((value) => value)
     },
     and(...words: WORD[]) {
-      return 0
+      const values = words.map(chip.evalToNumber)
+      const index = values.findIndex((value) => !value)
+      if (index === -1) {
+        return values[values.length - 1]
+      }
+      return values[index]
     },
-    not(...words: WORD[]) {
-      return 0
+    not(word: WORD) {
+      return chip.evalToNumber(word) ? 0 : 1
     },
     isEq(lhs: WORD, rhs: WORD) {
-      return 0
+      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs)
     },
     isNotEq(lhs: WORD, rhs: WORD) {
-      return 0
+      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs)
     },
     isLessThan(lhs: WORD, rhs: WORD) {
-      return 0
+      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs)
     },
     isGreaterThan(lhs: WORD, rhs: WORD) {
-      return 0
+      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs)
     },
     isLessThanOrEq(lhs: WORD, rhs: WORD) {
-      return 0
+      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs)
     },
     isGreaterThanOrEq(lhs: WORD, rhs: WORD) {
-      return 0
+      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs)
     },
-    opPlus(lhs: WORD, rhs: WORD) {
-      return 0
+    opPlus(lhs: WORD, rhs: WORD): WORD_VALUE {
+      return chip.evalToNumber(lhs) + chip.evalToNumber(rhs)
     },
-    opMinus(lhs: WORD, rhs: WORD) {
-      return 0
+    opMinus(lhs: WORD, rhs: WORD): WORD_VALUE {
+      return chip.evalToNumber(lhs) - chip.evalToNumber(rhs)
     },
-    opPower(lhs: WORD, rhs: WORD) {
-      return 0
+    opPower(lhs: WORD, rhs: WORD): WORD_VALUE {
+      return chip.evalToNumber(lhs) + chip.evalToNumber(rhs)
     },
-    opMultiply(lhs: WORD, rhs: WORD) {
-      return 0
+    opMultiply(lhs: WORD, rhs: WORD): WORD_VALUE {
+      return chip.evalToNumber(lhs) + chip.evalToNumber(rhs)
     },
-    opDivide(lhs: WORD, rhs: WORD) {
-      return 0
+    opDivide(lhs: WORD, rhs: WORD): WORD_VALUE {
+      return chip.evalToNumber(lhs) + chip.evalToNumber(rhs)
     },
-    opModDivide(lhs: WORD, rhs: WORD) {
-      return 0
+    opModDivide(lhs: WORD, rhs: WORD): WORD_VALUE {
+      return chip.evalToNumber(lhs) + chip.evalToNumber(rhs)
     },
-    opFloorDivide(lhs: WORD, rhs: WORD) {
-      return 0
+    opFloorDivide(lhs: WORD, rhs: WORD): WORD_VALUE {
+      return chip.evalToNumber(lhs) + chip.evalToNumber(rhs)
     },
-    opUniPlus(rhs: WORD) {
-      return 0
+    opUniPlus(rhs: WORD): WORD_VALUE {
+      return +chip.evalToNumber(rhs)
     },
-    opUniMinus(rhs: WORD) {
-      return 0
+    opUniMinus(rhs: WORD): WORD_VALUE {
+      return -chip.evalToNumber(rhs)
     },
   }
 

@@ -1,1 +1,5 @@
-#print 3 or 10
+#set a 16
+#set b 32
+#set c b + 1
+#print a + b
+#print a + c
