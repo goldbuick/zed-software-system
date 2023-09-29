@@ -35,6 +35,7 @@ export function compile(text: string): GeneratorBuild {
 
   const transformResult = transformAst(astResult.ast)
   if (transformResult.code) {
+    console.info(transformResult.code)
     try {
       return {
         ...astResult,

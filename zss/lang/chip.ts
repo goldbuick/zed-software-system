@@ -178,7 +178,9 @@ export function createChip(build: GeneratorBuild) {
       return invokecommand('hyperlink', [message, label])
     },
     command(...words: WORD[]) {
-      return invokecommand('command', words)
+      const [name, ...args] = words
+      const command = invokes[name]
+      return command ? command(args) : invokecommand('send', args)
     },
     if(...words: WORD[]) {
       return invokecommand('if', words)
@@ -204,58 +206,58 @@ export function createChip(build: GeneratorBuild) {
       return count > 0
     },
     or(...words: WORD[]) {
-      return invokecommand('or', words)
+      return 0
     },
     and(...words: WORD[]) {
-      return invokecommand('and', words)
+      return 0
     },
     not(...words: WORD[]) {
-      return invokecommand('not', words)
+      return 0
     },
     isEq(lhs: WORD, rhs: WORD) {
-      return invokecommand('isEq', [lhs, rhs])
+      return 0
     },
     isNotEq(lhs: WORD, rhs: WORD) {
-      return invokecommand('isNotEq', [lhs, rhs])
+      return 0
     },
     isLessThan(lhs: WORD, rhs: WORD) {
-      return invokecommand('isLessThan', [lhs, rhs])
+      return 0
     },
     isGreaterThan(lhs: WORD, rhs: WORD) {
-      return invokecommand('isGreaterThan', [lhs, rhs])
+      return 0
     },
     isLessThanOrEq(lhs: WORD, rhs: WORD) {
-      return invokecommand('isLessThanOrEq', [lhs, rhs])
+      return 0
     },
     isGreaterThanOrEq(lhs: WORD, rhs: WORD) {
-      return invokecommand('isGreaterThanOrEq', [lhs, rhs])
+      return 0
     },
     opPlus(lhs: WORD, rhs: WORD) {
-      return invokecommand('opPlus', [lhs, rhs])
+      return 0
     },
     opMinus(lhs: WORD, rhs: WORD) {
-      return invokecommand('opMinus', [lhs, rhs])
+      return 0
     },
     opPower(lhs: WORD, rhs: WORD) {
-      return invokecommand('opPower', [lhs, rhs])
+      return 0
     },
     opMultiply(lhs: WORD, rhs: WORD) {
-      return invokecommand('opMultiply', [lhs, rhs])
+      return 0
     },
     opDivide(lhs: WORD, rhs: WORD) {
-      return invokecommand('opDivide', [lhs, rhs])
+      return 0
     },
     opModDivide(lhs: WORD, rhs: WORD) {
-      return invokecommand('opModDivide', [lhs, rhs])
+      return 0
     },
     opFloorDivide(lhs: WORD, rhs: WORD) {
-      return invokecommand('opFloorDivide', [lhs, rhs])
+      return 0
     },
     opUniPlus(rhs: WORD) {
-      return invokecommand('opUniPlus', [rhs])
+      return 0
     },
     opUniMinus(rhs: WORD) {
-      return invokecommand('opUniMinus', [rhs])
+      return 0
     },
   }
 

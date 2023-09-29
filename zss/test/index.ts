@@ -1,13 +1,14 @@
-import test_zss from 'bundle-text:./blocks.txt'
+import test_zss from 'bundle-text:./doot.txt'
 
-import { createChip } from '../lang/chip'
+import { WORD, createChip } from '../lang/chip'
 import { createFirmware } from '../lang/firmware'
 import { compile } from '../lang/generator'
 
 export function langTest() {
   // define commands
   const firmware = createFirmware()
-    .command('text', () => {
+    .command('print', (args: WORD[]) => {
+      console.info(args)
       return 0
     })
     .command('stat', () => {
