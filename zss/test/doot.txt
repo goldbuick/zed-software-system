@@ -1,5 +1,6 @@
-#set a 16
-#set b 32
-#set c b + 1
-#print a + b
-#print a + c
+#set a 12
+#set b 2
+#if a above 10
+  #set b 30
+#repeat a print a + b
+

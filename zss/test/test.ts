@@ -27,6 +27,14 @@ export function langTest() {
       }
       return 0
     })
+    .command('if', (chip, args: WORD[]) => {
+      const [value] = args
+      return value
+    })
+    .command('send', (chip, args) => {
+      console.info('send', args)
+      return 0
+    })
 
   // compile script into runnable code
   const build = compile(test_zss)
@@ -37,6 +45,6 @@ export function langTest() {
   // install firmware on chip
   firmware.install(chip)
 
-  // run chip
+  // run chip one tick
   chip.tick()
 }

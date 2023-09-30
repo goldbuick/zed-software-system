@@ -218,7 +218,7 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, [
         `if (`,
         writeApi(ast, `${ast.method}`, transformNodes(ast.words)),
-        `) {\n`,
+        `) {\n${END_OF_LINE_CODE}\n`,
       ])
 
       if (ast.nested_cmd) {
@@ -253,7 +253,7 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, [
         `} else if (`,
         writeApi(ast, ast.method, transformNodes(ast.words)),
-        `) {\n`,
+        `) {\n${END_OF_LINE_CODE}\n`,
       ])
 
       if (ast.block_lines) {
@@ -287,8 +287,7 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, [
         'while (',
         writeApi(ast, 'while', transformNodes(ast.words)),
-        ') {',
-        `\n${END_OF_LINE_CODE}\n`,
+        `) {\n${END_OF_LINE_CODE}\n`,
       ])
 
       if (ast.nested_cmd) {
@@ -319,8 +318,7 @@ function transformNode(ast: CodeNode): SourceNode {
         ]),
         '\nwhile (',
         writeApi(ast, 'repeat', [`${context.internal}`]),
-        ') {',
-        `\n${END_OF_LINE_CODE}\n`,
+        `) {\n${END_OF_LINE_CODE}\n`,
       ])
       context.internal += 1
 

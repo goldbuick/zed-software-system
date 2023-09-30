@@ -41,6 +41,7 @@ export function createChip(build: GeneratorBuild) {
 
   // tracking for repeats
   const repeats: Record<number, number> = {}
+  const repeatsCmd: Record<number, undefined | WORD[]> = {}
 
   // pause until next tick
   let yieldState = false
@@ -190,6 +191,15 @@ export function createChip(build: GeneratorBuild) {
       return 0
     },
 
+    parseValue(words: WORD[]) {
+      const [first] = words
+      // todo, leverage firmeware for this
+      return {
+        value: chip.evalToNumber(first),
+        resumeIndex: 1,
+      }
+    },
+
     // logic api
     text(value: string) {
       return invokecommand('text', [value])
@@ -201,38 +211,73 @@ export function createChip(build: GeneratorBuild) {
       return invokecommand('hyperlink', [message, label])
     },
     command(...words: WORD[]) {
+      if (words.length < 1) {
+        return 0
+      }
+
       const [name, ...args] = words
       const command = invokes[name]
       return command ? command(chip, args) : invokecommand('send', args)
     },
     if(...words: WORD[]) {
-      // words
+      const check = chip.parseValue(words)
+      const result = invokecommand('if', [check.value])
+      if (result) {
+        chip.command(...words.slice(check.resumeIndex))
+      }
+      return result
     },
     try(...words: WORD[]) {
-      // words
+      const check = chip.parseValue(words)
+      const result = invokecommand('try', [check.value])
+      if (result) {
+        chip.command(...words.slice(check.resumeIndex))
+      }
+      return result
     },
     take(...words: WORD[]) {
-      // str words
+      const check = chip.parseValue(words)
+      const result = invokecommand('take', [check.value])
+      if (result) {
+        chip.command(...words.slice(check.resumeIndex))
+      }
+      return result
     },
     give(...words: WORD[]) {
-      // str words
+      const check = chip.parseValue(words)
+      const result = invokecommand('give', [check.value])
+      if (result) {
+        chip.command(...words.slice(check.resumeIndex))
+      }
+      return result
     },
     while(...words: WORD[]) {
-      // words
+      const check = chip.parseValue(words)
+      const result = invokecommand('if', [check.value])
+      if (result) {
+        chip.command(...words.slice(check.resumeIndex))
+      }
+      return result
     },
     repeatStart(index: number, ...words: WORD[]) {
-      const value = invokecommand('repeat', words)
-      if (chip.isNumber(value)) {
-        repeats[index] = value
-      } else {
-        // throw error ?
-      }
+      const check = chip.parseValue(words)
+
+      repeats[index] = check.value
+      repeatsCmd[index] = words.slice(check.resumeIndex)
+
       return 0
     },
     repeat(index: number) {
       const count = repeats[index] ?? 0
       repeats[index] = count - 1
-      return count > 0
+
+      const result = count > 0
+      const repeatCmd = repeatsCmd[index]
+      if (result && repeatCmd) {
+        chip.command(...repeatCmd)
+      }
+
+      return result
     },
     or(...words: WORD[]) {
       return words.map(chip.evalToNumber).find((value) => value)
@@ -249,22 +294,22 @@ export function createChip(build: GeneratorBuild) {
       return chip.evalToNumber(word) ? 0 : 1
     },
     isEq(lhs: WORD, rhs: WORD) {
-      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs)
+      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs) ? 1 : 0
     },
     isNotEq(lhs: WORD, rhs: WORD) {
-      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs)
+      return chip.evalToNumber(lhs) !== chip.evalToNumber(rhs) ? 1 : 0
     },
     isLessThan(lhs: WORD, rhs: WORD) {
-      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs)
+      return chip.evalToNumber(lhs) < chip.evalToNumber(rhs) ? 1 : 0
     },
     isGreaterThan(lhs: WORD, rhs: WORD) {
-      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs)
+      return chip.evalToNumber(lhs) > chip.evalToNumber(rhs) ? 1 : 0
     },
     isLessThanOrEq(lhs: WORD, rhs: WORD) {
-      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs)
+      return chip.evalToNumber(lhs) <= chip.evalToNumber(rhs) ? 1 : 0
     },
     isGreaterThanOrEq(lhs: WORD, rhs: WORD) {
-      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs)
+      return chip.evalToNumber(lhs) >= chip.evalToNumber(rhs) ? 1 : 0
     },
     opPlus(lhs: WORD, rhs: WORD): WORD_VALUE {
       return chip.evalToNumber(lhs) + chip.evalToNumber(rhs)
@@ -273,19 +318,19 @@ export function createChip(build: GeneratorBuild) {
       return chip.evalToNumber(lhs) - chip.evalToNumber(rhs)
     },
     opPower(lhs: WORD, rhs: WORD): WORD_VALUE {
-      return chip.evalToNumber(lhs) + chip.evalToNumber(rhs)
+      return Math.pow(chip.evalToNumber(lhs), chip.evalToNumber(rhs))
     },
     opMultiply(lhs: WORD, rhs: WORD): WORD_VALUE {
-      return chip.evalToNumber(lhs) + chip.evalToNumber(rhs)
+      return chip.evalToNumber(lhs) * chip.evalToNumber(rhs)
     },
     opDivide(lhs: WORD, rhs: WORD): WORD_VALUE {
-      return chip.evalToNumber(lhs) + chip.evalToNumber(rhs)
+      return chip.evalToNumber(lhs) / chip.evalToNumber(rhs)
     },
     opModDivide(lhs: WORD, rhs: WORD): WORD_VALUE {
-      return chip.evalToNumber(lhs) + chip.evalToNumber(rhs)
+      return chip.evalToNumber(lhs) % chip.evalToNumber(rhs)
     },
     opFloorDivide(lhs: WORD, rhs: WORD): WORD_VALUE {
-      return chip.evalToNumber(lhs) + chip.evalToNumber(rhs)
+      return Math.floor(chip.evalToNumber(lhs) / chip.evalToNumber(rhs))
     },
     opUniPlus(rhs: WORD): WORD_VALUE {
       return +chip.evalToNumber(rhs)

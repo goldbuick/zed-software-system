@@ -9,7 +9,7 @@ import React from 'react'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
 
-import { langTest } from '/zss/test'
+import { langTest } from '/zss/test/test'
 
 const urlParams = new URLSearchParams(window.location.search)
 const showStats = urlParams.get('stats') !== null
