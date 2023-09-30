@@ -1,4 +1,4 @@
-import test_zss from 'bundle-text:./doot.txt'
+import test_zss from 'bundle-text:./branch.txt'
 
 import { WORD, createChip } from '../lang/chip'
 import { createFirmware } from '../lang/firmware'
@@ -38,6 +38,9 @@ export function langTest() {
 
   // compile script into runnable code
   const build = compile(test_zss)
+  if (build.errors) {
+    console.info(build)
+  }
 
   // create chip from compiled zss
   const chip = createChip(build)

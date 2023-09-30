@@ -211,7 +211,9 @@ export function createChip(build: GeneratorBuild) {
       return invokecommand('hyperlink', [message, label])
     },
     command(...words: WORD[]) {
+      console.info('cmd', words)
       if (words.length < 1) {
+        // bail on empty commands
         return 0
       }
 
@@ -221,42 +223,68 @@ export function createChip(build: GeneratorBuild) {
     },
     if(...words: WORD[]) {
       const check = chip.parseValue(words)
+
       const result = invokecommand('if', [check.value])
       if (result) {
         chip.command(...words.slice(check.resumeIndex))
       }
+
       return result
     },
     try(...words: WORD[]) {
       const check = chip.parseValue(words)
+
       const result = invokecommand('try', [check.value])
       if (result) {
         chip.command(...words.slice(check.resumeIndex))
       }
+
       return result
     },
     take(...words: WORD[]) {
-      const check = chip.parseValue(words)
-      const result = invokecommand('take', [check.value])
-      if (result) {
-        chip.command(...words.slice(check.resumeIndex))
+      const [name, ...valuewords] = words
+
+      // todo throw error
+      if (!chip.isString(name)) {
+        return 0
       }
+
+      const check = chip.parseValue(valuewords)
+
+      // returns true when take fails
+      const result = invokecommand('take', [name, check.value])
+      if (result) {
+        chip.command(...valuewords.slice(check.resumeIndex))
+      }
+
       return result
     },
     give(...words: WORD[]) {
-      const check = chip.parseValue(words)
-      const result = invokecommand('give', [check.value])
-      if (result) {
-        chip.command(...words.slice(check.resumeIndex))
+      const [name, ...valuewords] = words
+
+      // todo throw error
+      if (!chip.isString(name)) {
+        return 0
       }
+
+      const check = chip.parseValue(valuewords)
+
+      // returns true when give creates a new flag
+      const result = invokecommand('give', [name, check.value])
+      if (result) {
+        chip.command(...valuewords.slice(check.resumeIndex))
+      }
+
       return result
     },
     while(...words: WORD[]) {
       const check = chip.parseValue(words)
+
       const result = invokecommand('if', [check.value])
       if (result) {
         chip.command(...words.slice(check.resumeIndex))
       }
+
       return result
     },
     repeatStart(index: number, ...words: WORD[]) {

@@ -22,13 +22,12 @@ export type GeneratorBuild = {
 export function compile(text: string): GeneratorBuild {
   const astResult = compileAST(text)
   if (astResult.errors && astResult.errors.length > 0) {
-    return {
-      errors: astResult.errors,
-    }
+    return astResult
   }
 
   if (!astResult.ast) {
     return {
+      ...astResult,
       errors: ['no ast output'],
     }
   }

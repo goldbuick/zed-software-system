@@ -1,39 +1,4 @@
 
-
-@Scroll
-#end
-:Touch
-This "block" moves a number of times, and
-after around seven, begins to steal 10
-health each time it is touched.
-#end
-
-
-
-This takes you to a Pre-Made Boss!
-
-
-
-This takes you the POPE enemy forum!
-
-
-
-@Fountain of Youth
-#end
-:touch
-500 energies shall be yours for the Boss
-fighting 
-#give health 500
-#die
-#end
-
-
-
-@Ammo Shed
-#end
-:touch
-#give ammo 2100
-Luv ya!
-#die
-#end
-
+#take shield 10
+#else take health 10
+#else endgame
