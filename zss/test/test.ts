@@ -39,7 +39,8 @@ export function langTest() {
   // compile script into runnable code
   const build = compile(test_zss)
   if (build.errors) {
-    console.info(build)
+    console.info(build.errors)
+    console.info(build.tokens)
   }
 
   // create chip from compiled zss

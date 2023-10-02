@@ -290,7 +290,36 @@ class ScriptVisitor extends CstVisitor {
     }
   }
 
+  no_indent_lines(ctx: CstChildrenDictionary) {
+    if (ctx.text) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.text)
+    }
+    if (ctx.comment) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.comment)
+    }
+    if (ctx.label) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.label)
+    }
+    if (ctx.hyperlink) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.hyperlink)
+    }
+  }
+
   block_lines(ctx: CstChildrenDictionary) {
+    if (ctx.Text) {
+      return [
+        makeNode(ctx, {
+          type: NODE.TEXT,
+          value: strImage(ctx.Text[0]),
+        }),
+        // @ts-expect-error cst element
+        ...asList(this, ctx.line),
+      ]
+    }
     // @ts-expect-error cst element
     return asList(this, ctx.line)
   }

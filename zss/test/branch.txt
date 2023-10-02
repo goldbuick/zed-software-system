@@ -1,4 +1,8 @@
-
-#take shield 10
-#else take health 10
-#else endgame
+#if health above 10
+  Do you REALLY like jazz ??? 1
+  Do you REALLY like jazz ??? 2
+  Do you REALLY like jazz ??? 3
+  Do you REALLY like jazz ??? 4
+#char 32
+#char 64
+FARTS !!!!
