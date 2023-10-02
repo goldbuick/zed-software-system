@@ -1,4 +1,11 @@
-#if any red fish
-  #char 32
-  #char 250 "Super ### Grooooovy ###"
 
+#if any red fish
+  |$David's rad fishshop
+  |Hello and welcome to my shop
+  |Hope you find everything okay
+  !all:doot;DOOT IT!
+  #end
+#else skipped
+
+:skipped
+(Hint, there should be red fish around)

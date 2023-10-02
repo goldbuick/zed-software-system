@@ -1,4 +1,4 @@
-import test_zss from 'bundle-text:./branch.txt'
+import test_zss from 'bundle-text:./blocks.txt'
 
 import { WORD, createChip } from '../lang/chip'
 import { createFirmware } from '../lang/firmware'

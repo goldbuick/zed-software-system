@@ -193,19 +193,21 @@ export const Try = createToken({
 })
 
 const notText = `@#/?':!`
+const maybeText = `${notText}|`
 const text_start_chars = all_chars.filter(
   (ch) => notText.includes(ch) === false,
 )
 
 let matchTextEnabled = false
 
-function matchText(text: string, startOffset: number, matched: IToken[]) {
+function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
   if (!matchTextEnabled) {
     return null
   }
 
-  // check for beginning of line
   const [lastMatched] = matched.slice(-1)
+
+  // check for newline
   if (lastMatched && lastMatched.tokenType !== Newline) {
     return null
   }
@@ -217,7 +219,7 @@ function matchText(text: string, startOffset: number, matched: IToken[]) {
   }
 
   // detect beginning of text
-  if (notText.includes(text[cursor])) {
+  if (maybeText.includes(text[cursor])) {
     return null
   }
 
@@ -227,14 +229,49 @@ function matchText(text: string, startOffset: number, matched: IToken[]) {
     i++
   }
 
+  // return match
   const match = text.substring(startOffset, i)
-  // console.info('>>', match)
   return [match] as RegExpExecArray
 }
 
-export const Text = createToken({
-  name: 'Text',
-  pattern: matchText,
+function matchIndentText(text: string, startOffset: number, matched: IToken[]) {
+  if (!matchTextEnabled) {
+    return null
+  }
+
+  const [lastMatched] = matched.slice(-1)
+
+  // check for indent, then pipe |
+  if (!lastMatched || lastMatched.tokenType !== Indent) {
+    return null
+  }
+
+  // detect beginning of text
+  if (text[startOffset] !== '|') {
+    return null
+  }
+
+  // scan until EOL
+  let i = startOffset + 1
+  while (i < text.length && text[i] !== '\n') {
+    i++
+  }
+
+  // return match
+  const match = text.substring(startOffset, i)
+  return [match] as RegExpExecArray
+}
+
+export const BasicText = createToken({
+  name: 'BasicText',
+  pattern: matchBasicText,
+  line_breaks: false,
+  start_chars_hint: text_start_chars,
+})
+
+export const IndentText = createToken({
+  name: 'IndentText',
+  pattern: matchIndentText,
   line_breaks: false,
   start_chars_hint: text_start_chars,
 })
@@ -291,12 +328,12 @@ export const NumberLiteral = createToken({
 
 export const IsEq = createToken({
   name: 'IsEq',
-  pattern: /=|eq/,
+  pattern: /=|eq|equal/,
   longer_alt: StringLiteral,
 })
 export const IsNotEq = createToken({
   name: 'IsNotEq',
-  pattern: /!=|noteq/,
+  pattern: /!=|not ?eq|not ?equal/,
   longer_alt: StringLiteral,
 })
 export const IsLessThan = createToken({
@@ -311,12 +348,12 @@ export const IsGreaterThan = createToken({
 })
 export const IsLessThanOrEqual = createToken({
   name: 'IsLessThanOrEqual',
-  pattern: /<=|lteq/,
+  pattern: /<=|below ?or ?eq|below ?or ?equal/,
   longer_alt: StringLiteral,
 })
 export const IsGreaterThanOrEqual = createToken({
   name: 'IsGreaterThanOrEqual',
-  pattern: />=|gteq/,
+  pattern: />=|above ?or ?eq|above ?or ?equal/,
   longer_alt: StringLiteral,
 })
 
@@ -419,7 +456,8 @@ function createTokenSet(primary: TokenType[]) {
 export const allTokens = createTokenSet([
   Outdent,
   Indent,
-  Text,
+  BasicText,
+  IndentText,
   Stat,
   Command_play,
   Command,
