@@ -21,7 +21,6 @@ function last<T>(arr: T[] | undefined) {
 }
 
 const indentRegExp = / +/y
-const lineStartChars = `@#/?':!|`
 
 function measureIndent(
   text: string,
@@ -48,11 +47,16 @@ function measureIndent(
   indentRegExp.lastIndex = offset
   const match = indentRegExp.exec(text)
   const indentLevel = match?.[0].length ?? 0
-
-  // ignore text lines
   const lineStart = text[offset + indentLevel]
-  if (lineStartChars.includes(lineStart) === false) {
+
+  // lines composed of only spaces are ignored
+  if (lineStart === '\n') {
     return [-1, null]
+  }
+
+  // basic text is always indentLevel 0
+  if (`@#/?':!|`.includes(lineStart) === false) {
+    return [0, null]
   }
 
   // return measured indentation
@@ -125,6 +129,17 @@ export const Outdent = createToken({
           createTokenInstance(
             Outdent,
             '<'.repeat(depth),
+            lastToken?.startOffset ?? NaN,
+            lastToken?.endOffset ?? NaN,
+            lastToken?.startLine ?? NaN,
+            lastToken?.endLine ?? NaN,
+            lastToken?.startColumn ?? NaN,
+            lastToken?.endColumn ?? NaN,
+          ),
+          // newline always follows an outdent
+          createTokenInstance(
+            Newline,
+            '\n',
             lastToken?.startOffset ?? NaN,
             lastToken?.endOffset ?? NaN,
             lastToken?.startLine ?? NaN,

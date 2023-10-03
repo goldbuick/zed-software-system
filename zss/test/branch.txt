@@ -1,8 +1,17 @@
-#if health above 10
-  Do you REALLY like jazz ??? 1
-  Do you REALLY like jazz ??? 2
-  Do you REALLY like jazz ??? 3
-  Do you REALLY like jazz ??? 4
-#char 32
-#char 64
-FARTS !!!!
+      Name: Keith
+
+#if any red fish
+  #char 32
+  |Testing the forever stars !!!
+  #play -qgixqgix
+  #play -qb!
+
+      Name: Keith
+Race: Human
+ Class: Knight
+    Origin: Jaconia
+S   pecial Moves:
+Sonic Slice
+High Jump
+ Iron Kick
+

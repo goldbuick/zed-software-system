@@ -12,7 +12,7 @@ import * as lexer from './lexer'
 
 let incId = 0
 let incIndent = 0
-const enableTracing = DEV && true
+const enableTracing = DEV && false
 const highlight = ['Command', 'block']
 
 class ScriptParser extends CstParser {
@@ -133,8 +133,10 @@ class ScriptParser extends CstParser {
   })
 
   block_lines_gate = () => {
-    const match = this.LA(2).tokenType === lexer.Indent
-    this.PEEK('block_lines_gate', match, this.LA(1), this.LA(2), this.LA(3))
+    const match =
+      this.LA(1).tokenType === lexer.Indent ||
+      this.LA(2).tokenType === lexer.Indent
+    // this.PEEK('block_lines_gate', match, this.LA(1), this.LA(2), this.LA(3))
     return match
   }
 
@@ -191,20 +193,20 @@ class ScriptParser extends CstParser {
 
     this.OR([
       {
-        GATE: () => {
-          const match =
-            this.LA(1).tokenType === lexer.Command &&
-            this.LA(2).tokenType === lexer.Command_else &&
-            this.LA(3).tokenType === lexer.Command_if
-          this.PEEK(
-            'nested_cmd_gate',
-            match,
-            this.LA(1),
-            this.LA(2),
-            this.LA(3),
-          )
-          return match
-        },
+        // GATE: () => {
+        //   const match =
+        //     this.LA(1).tokenType === lexer.Command &&
+        //     this.LA(2).tokenType === lexer.Command_else &&
+        //     this.LA(3).tokenType === lexer.Command_if
+        //   this.PEEK(
+        //     'nested_cmd_gate',
+        //     match,
+        //     this.LA(1),
+        //     this.LA(2),
+        //     this.LA(3),
+        //   )
+        //   return match
+        // },
         ALT: () => {
           this.AT_LEAST_ONE1(() => this.SUBRULE(this.nested_cmd))
         },
@@ -222,15 +224,15 @@ class ScriptParser extends CstParser {
           this.OPTION2({
             GATE: () => this.Command_else_if_gate(),
             DEF: () => {
-              this.CONSUME2(lexer.Newline)
+              this.OPTION3(() => this.CONSUME3(lexer.Newline))
               this.SUBRULE(this.Command_else_if)
             },
           })
 
-          this.OPTION3({
+          this.OPTION4({
             GATE: () => this.Command_else_gate(),
             DEF: () => {
-              this.CONSUME3(lexer.Newline)
+              this.OPTION5(() => this.CONSUME5(lexer.Newline))
               this.SUBRULE(this.Command_else)
             },
           })
@@ -240,11 +242,12 @@ class ScriptParser extends CstParser {
   })
 
   Command_else_if_gate = () => {
+    const i = this.LA(1).tokenType === lexer.Command ? 0 : 1
     const match =
-      this.LA(1).tokenType === lexer.Command &&
-      this.LA(2).tokenType === lexer.Command_else &&
-      this.LA(3).tokenType === lexer.Command_if
-    this.PEEK('Command_else_if_gate', match, this.LA(1), this.LA(2), this.LA(3))
+      this.LA(i + 1).tokenType === lexer.Command &&
+      this.LA(i + 2).tokenType === lexer.Command_else &&
+      this.LA(i + 3).tokenType === lexer.Command_if
+    // this.PEEK('Command_else_if_gate', match, this.LA(1), this.LA(2), this.LA(3))
     return match
   }
 
@@ -275,11 +278,12 @@ class ScriptParser extends CstParser {
   })
 
   Command_else_gate = () => {
+    const i = this.LA(1).tokenType === lexer.Command ? 0 : 1
     const match =
-      this.LA(1).tokenType === lexer.Command &&
-      this.LA(2).tokenType === lexer.Command_else &&
-      this.LA(3).tokenType !== lexer.Command_if
-    this.PEEK('Command_else_gate', match, this.LA(1), this.LA(2), this.LA(3))
+      this.LA(i + 1).tokenType === lexer.Command &&
+      this.LA(i + 2).tokenType === lexer.Command_else &&
+      this.LA(i + 3).tokenType !== lexer.Command_if
+    // this.PEEK('Command_else_gate', match, this.LA(1), this.LA(2), this.LA(3))
     return match
   }
 
