@@ -21,6 +21,7 @@ function last<T>(arr: T[] | undefined) {
 }
 
 const indentRegExp = / +/y
+const lineStartChars = `@#/?':!|`
 
 function measureIndent(
   text: string,
@@ -50,7 +51,7 @@ function measureIndent(
 
   // ignore text lines
   const lineStart = text[offset + indentLevel]
-  if (!notText.includes(lineStart)) {
+  if (lineStartChars.includes(lineStart) === false) {
     return [-1, null]
   }
 
@@ -192,12 +193,6 @@ export const Try = createToken({
   start_chars_hint: ['?'],
 })
 
-const notText = `@#/?':!`
-const maybeText = `${notText}|`
-const text_start_chars = all_chars.filter(
-  (ch) => notText.includes(ch) === false,
-)
-
 let matchTextEnabled = false
 
 function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
@@ -219,7 +214,7 @@ function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
   }
 
   // detect beginning of text
-  if (maybeText.includes(text[cursor])) {
+  if (`@#/?':!|`.includes(text[cursor])) {
     return null
   }
 
@@ -234,7 +229,7 @@ function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
   return [match] as RegExpExecArray
 }
 
-function matchIndentText(text: string, startOffset: number, matched: IToken[]) {
+function matchNestedText(text: string, startOffset: number, matched: IToken[]) {
   if (!matchTextEnabled) {
     return null
   }
@@ -242,12 +237,18 @@ function matchIndentText(text: string, startOffset: number, matched: IToken[]) {
   const [lastMatched] = matched.slice(-1)
 
   // check for indent, then pipe |
-  if (!lastMatched || lastMatched.tokenType !== Indent) {
+  if (
+    lastMatched &&
+    lastMatched.tokenType !== Indent &&
+    lastMatched.tokenType !== Newline
+  ) {
     return null
   }
 
+  const currentChar = text[startOffset]
+
   // detect beginning of text
-  if (text[startOffset] !== '|') {
+  if (currentChar !== '|') {
     return null
   }
 
@@ -266,14 +267,14 @@ export const BasicText = createToken({
   name: 'BasicText',
   pattern: matchBasicText,
   line_breaks: false,
-  start_chars_hint: text_start_chars,
+  start_chars_hint: all_chars.filter((ch) => `@#/?':!|`.includes(ch) === false),
 })
 
-export const IndentText = createToken({
-  name: 'IndentText',
-  pattern: matchIndentText,
+export const NestedText = createToken({
+  name: 'NestedText',
+  pattern: matchNestedText,
   line_breaks: false,
-  start_chars_hint: text_start_chars,
+  start_chars_hint: ['|'],
 })
 
 export const Comment = createToken({
@@ -439,13 +440,6 @@ function createTokenSet(primary: TokenType[]) {
     // grouping
     LParen,
     RParen,
-    // structure commands
-    Command_if,
-    Command_else,
-    Command_while,
-    Command_repeat,
-    Command_break,
-    Command_continue,
     // content
     StringLiteralDouble,
     StringLiteral,
@@ -454,21 +448,32 @@ function createTokenSet(primary: TokenType[]) {
 }
 
 export const allTokens = createTokenSet([
+  // block lines
   Outdent,
   Indent,
+  // text output
   BasicText,
-  IndentText,
+  NestedText,
+  // commands
   Stat,
   Command_play,
   Command,
   Go,
   Try,
+  // flow
   Comment,
   Label,
   HyperLink,
   HyperLinkText,
   Newline,
   Whitespace,
+  // structure commands
+  Command_if,
+  Command_else,
+  Command_while,
+  Command_repeat,
+  Command_break,
+  Command_continue,
 ])
 
 const scriptLexer = new Lexer(

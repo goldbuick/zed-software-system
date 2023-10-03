@@ -279,21 +279,34 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.PROGRAM,
       // @ts-expect-error cst element
-      lines: asList(this, ctx.line),
+      lines: asList(this, ctx.basic_line),
     })
   }
 
-  line(ctx: CstChildrenDictionary) {
-    if (ctx.stmt) {
+  basic_line(ctx: CstChildrenDictionary) {
+    if (ctx.basic_stmt) {
       // @ts-expect-error cst element
-      return this.visit(ctx.stmt)
+      return this.visit(ctx.basic_stmt)
     }
   }
 
-  no_indent_lines(ctx: CstChildrenDictionary) {
-    if (ctx.text) {
+  basic_stmt(ctx: CstChildrenDictionary) {
+    if (ctx.play) {
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        words: [
+          makeString(ctx, 'play'),
+          makeString(ctx, strImage(ctx.play[0]).replace('#play', '').trim()),
+        ],
+      })
+    }
+    if (ctx.basic_text) {
       // @ts-expect-error cst element
-      return this.visit(ctx.text)
+      return this.visit(ctx.basic_text)
+    }
+    if (ctx.multi_stmt) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.multi_stmt)
     }
     if (ctx.comment) {
       // @ts-expect-error cst element
@@ -309,22 +322,14 @@ class ScriptVisitor extends CstVisitor {
     }
   }
 
-  block_lines(ctx: CstChildrenDictionary) {
-    if (ctx.Text) {
-      return [
-        makeNode(ctx, {
-          type: NODE.TEXT,
-          value: strImage(ctx.Text[0]),
-        }),
-        // @ts-expect-error cst element
-        ...asList(this, ctx.line),
-      ]
+  nested_line(ctx: CstChildrenDictionary) {
+    if (ctx.nested_stmt) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.nested_stmt)
     }
-    // @ts-expect-error cst element
-    return asList(this, ctx.line)
   }
 
-  stmt(ctx: CstChildrenDictionary) {
+  nested_stmt(ctx: CstChildrenDictionary) {
     if (ctx.play) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
@@ -334,21 +339,13 @@ class ScriptVisitor extends CstVisitor {
         ],
       })
     }
-    if (ctx.text) {
+    if (ctx.nested_text) {
       // @ts-expect-error cst element
-      return this.visit(ctx.text)
+      return this.visit(ctx.nested_text)
     }
     if (ctx.multi_stmt) {
       // @ts-expect-error cst element
       return this.visit(ctx.multi_stmt)
-    }
-    if (ctx.comment) {
-      // @ts-expect-error cst element
-      return this.visit(ctx.comment)
-    }
-    if (ctx.label) {
-      // @ts-expect-error cst element
-      return this.visit(ctx.label)
     }
     if (ctx.hyperlink) {
       // @ts-expect-error cst element
@@ -410,6 +407,12 @@ class ScriptVisitor extends CstVisitor {
         words: asList(this, ctx.words),
       })
     }
+  }
+
+  block_lines(ctx: CstChildrenDictionary) {
+    console.info(ctx)
+    // @ts-expect-error cst element
+    return asList(this, ctx.nested_line)
   }
 
   nested_cmd(ctx: CstChildrenDictionary) {
@@ -602,12 +605,23 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
-  text(ctx: CstChildrenDictionary) {
-    // need to keep all the matched indent tokens as well ..
-    return makeNode(ctx, {
-      type: NODE.TEXT,
-      value: strImage(ctx.Text[0]),
-    })
+  basic_text(ctx: CstChildrenDictionary) {
+    if (ctx.BasicText) {
+      return makeNode(ctx, {
+        type: NODE.TEXT,
+        value: strImage(ctx.BasicText[0]),
+      })
+    }
+  }
+
+  nested_text(ctx: CstChildrenDictionary) {
+    if (ctx.NestedText) {
+      return makeNode(ctx, {
+        type: NODE.TEXT,
+        // chop off pipe |
+        value: strImage(ctx.NestedText[0]).substring(1),
+      })
+    }
   }
 
   comment(ctx: CstChildrenDictionary) {
