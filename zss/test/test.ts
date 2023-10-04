@@ -1,7 +1,14 @@
 import test_zss from 'bundle-text:./blocks.txt'
+import { loadDefaultCharset, loadDefaultPalette } from 'zss/gadget/file'
 import { compile, createChip, createFirmware } from 'zss/lang'
 
 export function langTest() {
+  const pal = loadDefaultPalette()
+  const chr = loadDefaultCharset()
+
+  console.info({ pal, chr })
+
+  return
   const values: Record<string, number> = {}
 
   // define commands
