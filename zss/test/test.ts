@@ -1,33 +1,30 @@
 import test_zss from 'bundle-text:./blocks.txt'
-
-import { WORD, createChip } from '../lang/chip'
-import { createFirmware } from '../lang/firmware'
-import { compile } from '../lang/generator'
+import { compile, createChip, createFirmware } from 'zss/lang'
 
 export function langTest() {
   const values: Record<string, number> = {}
 
   // define commands
   const firmware = createFirmware()
-    .command('print', (chip, args: WORD[]) => {
+    .command('print', (chip, args) => {
       console.info(...args)
       return 0
     })
-    .command('set', (chip, args: WORD[]) => {
+    .command('set', (chip, args) => {
       const [name, value] = args
       if (chip.isString(name)) {
         values[name] = chip.evalToNumber(value)
       }
       return 0
     })
-    .command('get', (chip, args: WORD[]) => {
+    .command('get', (chip, args) => {
       const [name] = args
       if (chip.isString(name)) {
         return values[name] ?? 0
       }
       return 0
     })
-    .command('if', (chip, args: WORD[]) => {
+    .command('if', (chip, args) => {
       const [value] = args
       return value
     })

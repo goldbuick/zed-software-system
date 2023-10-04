@@ -37,6 +37,7 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-react": "^7.33.1",
     "klona": "^2.0.6",
+    "mitt": "^3.0.1",
     "nanoid": "^4.0.2",
     "nanoid-dictionary": "^4.3.0",
     "parcel": "^2.9.3",
