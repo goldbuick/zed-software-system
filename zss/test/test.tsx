@@ -1,6 +1,13 @@
 import test_zss from 'bundle-text:./blocks.txt'
+import React from 'react'
 import { loadDefaultCharset, loadDefaultPalette } from 'zss/gadget/file'
 import { compile, createChip, createFirmware } from 'zss/lang'
+
+import { Tiles } from '../gadget/components/tiles'
+
+export function ComponentTest() {
+  return <Tiles />
+}
 
 export function langTest() {
   const pal = loadDefaultPalette()

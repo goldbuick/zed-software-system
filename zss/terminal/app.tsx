@@ -9,15 +9,15 @@ import React from 'react'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
 
-import { langTest } from '/zss/test/test'
+import { ComponentTest } from '../test/test'
+
+import { Framing } from './components/Framing'
 
 const urlParams = new URLSearchParams(window.location.search)
 const showStats = urlParams.get('stats') !== null
 
 const target = new THREE.Vector3()
 const facing = new THREE.Vector3()
-
-langTest()
 
 const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   state,
@@ -123,9 +123,9 @@ export function App() {
               far={2000}
               position={[0, 0, 1000]}
             />
-            {/* <Framing>
-              <Terminal />
-            </Framing> */}
+            <Framing>
+              <ComponentTest />
+            </Framing>
             {showStats && <Stats />}
             <EffectComposer>
               <ChromaticAberration

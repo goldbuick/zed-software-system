@@ -1,12 +1,16 @@
 import DEFAULT_CHR from 'data-url:./default.chr'
 import DEFAULT_PAL from 'data-url:./default.pal'
-import { nanoid } from 'nanoid'
+
+import { createGuid } from '/zss/mapping/guid'
 
 import {
-  BYTES_PER_CHAR,
   BYTES_PER_COLOR,
-  CHARSET_BYTES,
-  PALETTE_BYTES,
+  CHARSET_BITMAP,
+  CHARS_PER_ROW,
+  CHAR_HEIGHT,
+  CHAR_WIDTH,
+  PALETTE_BITMAP,
+  createBitmap,
 } from '../data'
 
 // export function loadCharsetFrom
@@ -17,11 +21,10 @@ function base64ToBytes(base64: string) {
   } catch (err) {
     console.error(err)
   }
-  return ''
+  return new Uint8Array([])
 }
 
 function dataUrlToBytes(dataUrl: string) {
-  console.info({ dataUrl })
   const [, base64] = dataUrl.split(',')
   if (!base64) {
     return new Uint8Array([])
@@ -31,7 +34,7 @@ function dataUrlToBytes(dataUrl: string) {
 
 export function loadPaletteFromBytes(
   bytes: Uint8Array,
-): PALETTE_BYTES | undefined {
+): PALETTE_BITMAP | undefined {
   const count = Math.floor(bytes.length / BYTES_PER_COLOR)
 
   // data must be multiples of 3
@@ -39,10 +42,16 @@ export function loadPaletteFromBytes(
     return undefined
   }
 
+  const bitmap = createBitmap(3, count)
+
+  for (let i = 0; i < bitmap.bits.length; ++i) {
+    bitmap.bits[i] = bytes[i]
+  }
+
   return {
-    id: nanoid(),
+    id: createGuid(),
     count,
-    bytes,
+    bitmap,
   }
 }
 
@@ -53,12 +62,12 @@ export function loadDefaultPalette() {
 const FILE_BYTES_PER_CHAR = 14
 
 function isBitOn(value: number, index: number) {
-  return Boolean(value & (1 << index)) ? 1 : 0
+  return Boolean(value & (1 << index)) ? 255 : 0
 }
 
 export function loadCharsetFromBytes(
   data: Uint8Array,
-): CHARSET_BYTES | undefined {
+): CHARSET_BITMAP | undefined {
   const count = Math.floor(data.length / FILE_BYTES_PER_CHAR)
 
   // data must be multiples of 14
@@ -66,21 +75,38 @@ export function loadCharsetFromBytes(
     return undefined
   }
 
-  const bytes = new Uint8Array(count * BYTES_PER_CHAR)
+  const rows = Math.ceil(count / CHARS_PER_ROW)
+  const rowWidth = CHAR_WIDTH * CHARS_PER_ROW
+  const bitmap = createBitmap(rowWidth, CHAR_HEIGHT * rows)
 
   // unpack data so this is the only place bitmasking happens
-  let cursor = 0
+  let cx = 0
+  let cy = 0
+  let ri = 0
   for (let i = 0; i < data.length; ++i) {
+    const y = cy * CHAR_HEIGHT + ri
+
     const value = data[i]
-    for (let b = 7; b >= 0; --b) {
-      bytes[cursor++] = isBitOn(value, b)
+    for (let b = 0; b < CHAR_WIDTH; ++b) {
+      const x = cx * CHAR_WIDTH + b
+      bitmap.bits[x + y * rowWidth] = isBitOn(value, 7 - b)
+    }
+
+    ++ri
+    if (ri === CHAR_HEIGHT) {
+      ri = 0
+      ++cx
+      if (cx === CHARS_PER_ROW) {
+        cx = 0
+        ++cy
+      }
     }
   }
 
   return {
-    id: nanoid(),
+    id: createGuid(),
     count,
-    bytes,
+    bitmap,
   }
 }
 

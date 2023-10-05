@@ -1,19 +1,24 @@
+import { BITMAP } from './bitmap'
+
 export const BYTES_PER_COLOR = 3
 
-export type PALETTE_BYTES = {
+export const PALETTE_COLOR_RANGE = 63
+
+export type PALETTE_BITMAP = {
   id: string
   count: number
-  bytes: Uint8Array
+  bitmap: BITMAP
 }
 
 export const CHAR_WIDTH = 8
 export const CHAR_HEIGHT = 14
 export const BYTES_PER_CHAR = CHAR_WIDTH * CHAR_HEIGHT
+export const CHARS_PER_ROW = 16
 
-export type CHARSET_BYTES = {
+export type CHARSET_BITMAP = {
   id: string
   count: number
-  bytes: Uint8Array
+  bitmap: BITMAP
 }
 
 export enum GADGET_LAYER {
