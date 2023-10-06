@@ -1,4 +1,4 @@
-import DEFAULT_CHR from 'data-url:./default.chr'
+import DEFAULT_CHR from 'data-url:./alt.chr'
 import DEFAULT_PAL from 'data-url:./default.pal'
 
 import { createGuid } from '/zss/mapping/guid'
