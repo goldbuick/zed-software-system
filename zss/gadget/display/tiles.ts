@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-import { CHARS_PER_ROW, CHAR_HEIGHT, CHAR_WIDTH } from '../data'
+import { CHARS_PER_ROW, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data'
 
 import { cloneMaterial, interval, time } from './anim'
 
@@ -70,8 +70,8 @@ export function createTilemapBufferGeometry(
   width: number,
   height: number,
 ) {
-  const right = width * CHAR_WIDTH * 2
-  const bottom = height * CHAR_HEIGHT * 2
+  const right = width * DRAW_CHAR_WIDTH
+  const bottom = height * DRAW_CHAR_HEIGHT
   const positions = QUAD_POSITIONS.map((v, index) => {
     switch (index % 3) {
       case 0:
@@ -99,7 +99,7 @@ const tilemapMaterial = new THREE.ShaderMaterial({
     map: { value: null },
     alt: { value: null },
     data: { value: null },
-    palette: { value: [new THREE.Color('red'), new THREE.Color('red')] },
+    palette: { value: null },
     size: { value: new THREE.Vector2() },
     step: { value: new THREE.Vector2() },
   },

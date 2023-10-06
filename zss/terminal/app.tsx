@@ -9,6 +9,7 @@ import React from 'react'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
 
+import { makeEven } from '../mapping/number'
 import { ComponentTest } from '../test/test'
 
 import { Framing } from './components/Framing'
@@ -76,8 +77,8 @@ const PHASE = 0.0005
 export function App() {
   const [ref, bounds] = useMeasure()
 
-  const boundsWidth = bounds.width // makeEven(bounds.width)
-  const boundsHeight = bounds.height // makeEven(bounds.height)
+  const boundsWidth = makeEven(bounds.width)
+  const boundsHeight = makeEven(bounds.height)
 
   return (
     <>

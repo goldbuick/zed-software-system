@@ -12,6 +12,8 @@ export type PALETTE_BITMAP = {
 
 export const CHAR_WIDTH = 8
 export const CHAR_HEIGHT = 14
+export const DRAW_CHAR_WIDTH = CHAR_WIDTH * 3
+export const DRAW_CHAR_HEIGHT = CHAR_HEIGHT * 3
 export const BYTES_PER_CHAR = CHAR_WIDTH * CHAR_HEIGHT
 export const CHARS_PER_ROW = 16
 
@@ -35,9 +37,24 @@ type LAYER_COMMON = {
 }
 
 export type LAYER_TILES = LAYER_COMMON & {
+  type: GADGET_LAYER.TILES
   width: number
   height: number
   char: number[]
   color: number[]
   bg: number[]
+}
+
+export type SPRITES_SPRITE = {
+  // id: string
+  x: number
+  y: number
+  char: number
+  color: number
+  bg: number
+}
+
+export type LAYER_SPRITES = LAYER_COMMON & {
+  type: GADGET_LAYER.SPRITES
+  sprites: SPRITES_SPRITE[]
 }

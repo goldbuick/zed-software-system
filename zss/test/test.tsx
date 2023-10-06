@@ -3,10 +3,20 @@ import React from 'react'
 import { loadDefaultCharset, loadDefaultPalette } from 'zss/gadget/file'
 import { compile, createChip, createFirmware } from 'zss/lang'
 
+import { Sprites } from '../gadget/components/sprites'
 import { Tiles } from '../gadget/components/tiles'
 
 export function ComponentTest() {
-  return <Tiles />
+  return (
+    <group>
+      <group position={[0, 0, 0]}>
+        <Tiles />
+      </group>
+      <group position={[0, 0, 10]}>
+        <Sprites />
+      </group>
+    </group>
+  )
 }
 
 export function langTest() {

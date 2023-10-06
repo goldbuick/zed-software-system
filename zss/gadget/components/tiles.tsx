@@ -16,17 +16,22 @@ import { loadDefaultCharset, loadDefaultPalette } from '../file'
 import { useClipping } from './clipping'
 
 // start with hand typed data
-const width = 16
-const height = 16
-const chars = range(width * height - 1).map((i) => i % 256)
-const colors = range(width * height - 1).map((i) => 1 + (i % 15))
+const width = 80
+const height = 25
+const fiddle = [177, 178, 178]
+const chars = range(width * height - 1).map((i) => fiddle[i % fiddle.length])
+const colors = range(width * height - 1).map((i) => {
+  const x = i % width
+  const y = Math.floor(i / width)
+  return x === 0 || x === width - 1 || y === 0 || y === height - 1 ? 10 : 4
+})
 const bgs = range(width * height - 1).map(() => 0)
+
 const charset = loadDefaultCharset()
 const palette = loadDefaultPalette()
 
 export function Tiles() {
   const charsetTexture = useBitmapTexture(charset?.bitmap)
-
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
   const material = useMemo(() => createTilemapMaterial(), [])
@@ -71,13 +76,9 @@ export function Tiles() {
     clippingPlanes,
   ])
 
-  console.info(material)
-
   return (
-    <group position={[CHAR_WIDTH * 2, CHAR_HEIGHT * 2, 0]}>
-      <mesh material={material}>
-        <bufferGeometry ref={bgRef} />
-      </mesh>
-    </group>
+    <mesh material={material}>
+      <bufferGeometry ref={bgRef} />
+    </mesh>
   )
 }
