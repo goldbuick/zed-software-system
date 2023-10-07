@@ -1,34 +1,14 @@
 import test_zss from 'bundle-text:./blocks.txt'
 import React from 'react'
-import { loadDefaultCharset, loadDefaultPalette } from 'zss/gadget/file'
 import { compile, createChip, createFirmware } from 'zss/lang'
 
-import { Dither } from '../gadget/components/dither'
-import { Sprites } from '../gadget/components/sprites'
-import { Tiles } from '../gadget/components/tiles'
+import { Layout } from '../gadget/components/layout'
 
 export function ComponentTest() {
-  return (
-    <group>
-      <group position={[0, 0, 0]}>
-        <Tiles />
-      </group>
-      <group position={[0, 0, 1]}>
-        <Sprites />
-      </group>
-      <group position={[0, 0, 2]}>
-        <Dither />
-      </group>
-    </group>
-  )
+  return <Layout />
 }
 
 export function langTest() {
-  const pal = loadDefaultPalette()
-  const chr = loadDefaultCharset()
-
-  console.info({ pal, chr })
-
   return
   const values: Record<string, number> = {}
 

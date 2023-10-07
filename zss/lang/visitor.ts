@@ -6,7 +6,7 @@ import {
   IToken,
 } from 'chevrotain'
 
-import { DEV } from '/zss/config'
+import { LANG_DEV } from '../config'
 
 import { parser } from './parser'
 
@@ -270,7 +270,7 @@ function makeNode(ctx: CstChildrenDictionary, node: CodeNodeData): CodeNode {
 class ScriptVisitor extends CstVisitor {
   constructor() {
     super()
-    if (DEV) {
+    if (LANG_DEV) {
       this.validateVisitor()
     }
   }

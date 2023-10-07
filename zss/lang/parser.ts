@@ -6,22 +6,22 @@ import {
   ParserMethod,
 } from 'chevrotain'
 
-import { DEV } from '/zss/config'
+import { LANG_DEV } from '../config'
 
 import * as lexer from './lexer'
 
 let incId = 0
 let incIndent = 0
-const enableTracing = DEV && false
+const enableTracing = LANG_DEV
 const highlight = ['Command', 'block']
 
 class ScriptParser extends CstParser {
   constructor() {
     super(lexer.allTokens, {
       maxLookahead: 2,
-      traceInitPerf: DEV,
-      skipValidations: !DEV,
-      recoveryEnabled: !DEV,
+      traceInitPerf: LANG_DEV,
+      skipValidations: !LANG_DEV,
+      recoveryEnabled: !LANG_DEV,
       nodeLocationTracking: 'full',
     })
     this.performSelfAnalysis()

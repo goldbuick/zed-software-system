@@ -1,9 +1,12 @@
 import React, { useEffect, useMemo, useRef } from 'react'
 import { BufferGeometry } from 'three'
 
-import { range } from '/zss/mapping/array'
-
-import { CHAR_HEIGHT, CHAR_WIDTH } from '../data'
+import {
+  CHARSET_BITMAP,
+  CHAR_HEIGHT,
+  CHAR_WIDTH,
+  PALETTE_BITMAP,
+} from '../data'
 import { convertPaletteToColors } from '../data/palette'
 import useBitmapTexture from '../display/textures'
 import {
@@ -11,26 +14,28 @@ import {
   createTilemapDataTexture,
   createTilemapMaterial,
 } from '../display/tiles'
-import { loadDefaultCharset, loadDefaultPalette } from '../file'
 
 import { useClipping } from './clipping'
 
-// start with hand typed data
-const width = 80
-const height = 25
-const fiddle = [176, 177, 219]
-const chars = range(width * height - 1).map((i) => fiddle[i % fiddle.length])
-const colors = range(width * height - 1).map((i) => {
-  const x = i % width
-  const y = Math.floor(i / width)
-  return x === 0 || x === width - 1 || y === 0 || y === height - 1 ? 10 : 4
-})
-const bgs = range(width * height - 1).map(() => 0)
+interface TilesProps {
+  width: number
+  height: number
+  char: number[]
+  color: number[]
+  bg: number[]
+  charset: CHARSET_BITMAP
+  palette: PALETTE_BITMAP
+}
 
-const charset = loadDefaultCharset()
-const palette = loadDefaultPalette()
-
-export function Tiles() {
+export function Tiles({
+  width,
+  height,
+  char,
+  color,
+  bg,
+  charset,
+  palette,
+}: TilesProps) {
   const charsetTexture = useBitmapTexture(charset?.bitmap)
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
@@ -47,9 +52,9 @@ export function Tiles() {
     material.uniforms.data.value = createTilemapDataTexture(
       width,
       height,
-      chars,
-      colors,
-      bgs,
+      char,
+      color,
+      bg,
     )
 
     createTilemapBufferGeometry(bgRef.current, width, height)

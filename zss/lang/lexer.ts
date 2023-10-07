@@ -8,7 +8,7 @@ import {
 
 import { range } from '/zss/mapping/array'
 
-import { DEV } from '/zss/config'
+import { LANG_DEV } from '../config'
 
 // State required for matching the indentations
 let indentStack = [0]
@@ -500,8 +500,8 @@ const scriptLexer = new Lexer(
     },
   },
   {
-    skipValidations: !DEV,
-    ensureOptimizations: DEV,
+    skipValidations: !LANG_DEV,
+    ensureOptimizations: LANG_DEV,
   },
 )
 

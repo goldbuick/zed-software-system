@@ -9,13 +9,11 @@ import React from 'react'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
 
+import { STATS_DEV } from '../config'
 import { makeEven } from '../mapping/number'
 import { ComponentTest } from '../test/test'
 
 import { Framing } from './components/Framing'
-
-const urlParams = new URLSearchParams(window.location.search)
-const showStats = urlParams.get('stats') !== null
 
 const target = new THREE.Vector3()
 const facing = new THREE.Vector3()
@@ -127,7 +125,7 @@ export function App() {
             <Framing>
               <ComponentTest />
             </Framing>
-            {showStats && <Stats />}
+            {STATS_DEV && <Stats />}
             <EffectComposer>
               <ChromaticAberration
                 blendFunction={BlendFunction.NORMAL} // blend mode
