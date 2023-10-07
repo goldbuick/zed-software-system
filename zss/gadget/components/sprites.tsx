@@ -6,7 +6,7 @@ import {
   InterleavedBufferAttribute,
 } from 'three'
 
-import { range } from '/zss/mapping/array'
+import { range, select } from '/zss/mapping/array'
 import { clamp, randomInteger } from '/zss/mapping/number'
 
 import { CHARS_PER_ROW, CHAR_HEIGHT, CHAR_WIDTH, SPRITES_SPRITE } from '../data'
@@ -27,7 +27,7 @@ const sprites: SPRITES_SPRITE[] = range(100 - 1).map(() => ({
   y: randomInteger(0, rangeY),
   char: randomInteger(1, 15),
   color: randomInteger(8, 15),
-  bg: 0,
+  bg: select(-1, -1, 0),
 }))
 
 const charset = loadDefaultCharset()
@@ -88,7 +88,7 @@ export function Sprites() {
     let animShake: MaybeBufferAttr = current.getAttribute('animShake')
     let animBounce: MaybeBufferAttr = current.getAttribute('animBounce')
 
-    for (let i = 0; i < 10; ++i) {
+    for (let i = 0; i < 32; ++i) {
       const e = randomInteger(0, sprites.length - 1)
       sprites[e].x = clamp(sprites[e].x + randomInteger(-1, 1), 0, rangeX)
       sprites[e].y = clamp(sprites[e].y + randomInteger(-1, 1), 0, rangeY)

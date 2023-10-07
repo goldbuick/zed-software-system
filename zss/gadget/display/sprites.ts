@@ -73,8 +73,6 @@ const spritesMaterial = new THREE.ShaderMaterial({
       float deltaPosition = clamp((time - lastPosition.z) * rate, 0.0, 1.0);
       vec2 animPosition = mix(lastPosition.xy, position.xy, deltaPosition);
 
-      animPosition += vec2(0.5, 0.5);
-
       float deltaShake = 1.0 - animDelta(animShake.y, rate * 0.5, 1.0); 
       animPosition += vec2(
         deltaShake - rand(cos(time) + animShake.x) * deltaShake * 2.0,
@@ -96,10 +94,14 @@ const spritesMaterial = new THREE.ShaderMaterial({
 
       vCharData.xy = charData.xy;
 
-      vec4 mvPosition = modelViewMatrix * vec4(animPosition * pointSize, 0.0, 1.0);
+      animPosition = animPosition * pointSize;
+      animPosition += pointSize * 0.5;
+      animPosition.x += (pointSize.y - pointSize.x) * 0.5;
+
+      vec4 mvPosition = modelViewMatrix * vec4(animPosition, 0.0, 1.0);
       gl_Position = projectionMatrix * mvPosition;      
 
-      gl_PointSize = max(pointSize.x, pointSize.y);
+      gl_PointSize = pointSize.y;
       
       #include <clipping_planes_vertex>
     }
@@ -123,9 +125,10 @@ const spritesMaterial = new THREE.ShaderMaterial({
     void main() {
       #include <clipping_planes_fragment>
 
-      float px = 0.5 - (0.5 - gl_PointCoord.x + 0.1) * 2.0;
+      float xscale = pointSize.y / pointSize.x;
+      float px = gl_PointCoord.x * xscale;
       
-      if (px <= 0.0 || px > 1.0) {
+      if (px > 1.0) {
         discard;
       }
 

@@ -3,6 +3,7 @@ import React from 'react'
 import { loadDefaultCharset, loadDefaultPalette } from 'zss/gadget/file'
 import { compile, createChip, createFirmware } from 'zss/lang'
 
+import { Dither } from '../gadget/components/dither'
 import { Sprites } from '../gadget/components/sprites'
 import { Tiles } from '../gadget/components/tiles'
 
@@ -12,8 +13,11 @@ export function ComponentTest() {
       <group position={[0, 0, 0]}>
         <Tiles />
       </group>
-      <group position={[0, 0, 10]}>
+      <group position={[0, 0, 1]}>
         <Sprites />
+      </group>
+      <group position={[0, 0, 2]}>
+        <Dither />
       </group>
     </group>
   )

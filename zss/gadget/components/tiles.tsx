@@ -18,7 +18,7 @@ import { useClipping } from './clipping'
 // start with hand typed data
 const width = 80
 const height = 25
-const fiddle = [177, 178, 178]
+const fiddle = [176, 177, 219]
 const chars = range(width * height - 1).map((i) => fiddle[i % fiddle.length])
 const colors = range(width * height - 1).map((i) => {
   const x = i % width
