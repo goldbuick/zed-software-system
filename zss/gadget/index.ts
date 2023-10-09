@@ -15,3 +15,5 @@ Object<string, any>
  * /
 
 */
+
+export * from './firmware'

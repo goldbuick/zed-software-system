@@ -1,10 +1,27 @@
-import test_zss from 'bundle-text:./blocks.txt'
-import React from 'react'
+import test_zss from 'bundle-text:./layout.txt'
+import React, { useEffect } from 'react'
 import { compile, createChip, createFirmware } from 'zss/lang'
 
+import { GadgetFirmware } from '../gadget'
 import { Layout } from '../gadget/components/layout'
 
+// compile script into runnable code
+const build = compile(test_zss)
+if (build.errors) {
+  console.info(build.errors)
+  console.info(build.tokens)
+}
+
+const chip = createChip(build, { test: true })
+
 export function ComponentTest() {
+  useEffect(() => {
+    GadgetFirmware.install(chip)
+  }, [])
+
+  const snap = chip.snapshot()
+  console.info({ snap })
+
   return <Layout />
 }
 

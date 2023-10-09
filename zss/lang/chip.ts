@@ -1,5 +1,6 @@
 import ErrorStackParser from 'error-stack-parser'
 import { klona } from 'klona/json'
+import { proxy, useSnapshot } from 'valtio'
 
 import { GeneratorBuild } from './generator'
 import { GENERATED_FILENAME } from './transformer'
@@ -18,7 +19,68 @@ export type MESSAGE = {
 }
 
 // may need to expand on this to encapsulate more complex values
-export type CHIP = ReturnType<typeof createChip>
+export type CHIP = {
+  // invokes api
+  define: (incoming: CHIP_COMMANDS) => void
+
+  // internal state api
+  state: (name: string) => object
+  snapshot: (name: string) => ReturnType<typeof useSnapshot<object>>
+
+  // lifecycle api
+  tick: () => void
+  shouldhalt: () => boolean
+  hasmessage: () => number
+  yield: () => void
+  shouldyield: () => boolean
+  send: (incoming: MESSAGE) => void
+  zap: (label: string) => void
+  restore: (label: string) => void
+  getcase: () => number
+  endofprogram: () => void
+  stacktrace: (error: Error) => void
+
+  // values api
+  eval: (word: WORD) => WORD_VALUE
+  isNumber: (word: any) => word is number
+  isString: (word: any) => word is string
+  isNumberOrString: (word: any) => word is number | string
+  evalToNumber: (word: any) => number
+
+  parseValue: (words: WORD[]) => { value: number; resumeIndex: number }
+
+  // logic api
+  text: (value: string) => WORD_VALUE
+  stat: (...words: WORD[]) => WORD_VALUE
+  hyperlink: (message: string, label: string) => WORD_VALUE
+  command: (...words: WORD[]) => WORD_VALUE
+  if: (...words: WORD[]) => WORD_VALUE
+  try: (...words: WORD[]) => WORD_VALUE
+  take: (...words: WORD[]) => WORD_VALUE
+  give: (...words: WORD[]) => WORD_VALUE
+  while: (...words: WORD[]) => WORD_VALUE
+  repeatStart: (index: number, ...words: WORD[]) => number
+  repeat: (index: number) => boolean
+  or: (...words: WORD[]) => WORD_VALUE
+  and: (...words: WORD[]) => WORD_VALUE
+  not: (word: WORD) => WORD_VALUE
+  isEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  isNotEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  isLessThan: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  isGreaterThan: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  isLessThanOrEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  isGreaterThanOrEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opPlus: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opMinus: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opPower: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opMultiply: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opDivide: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opModDivide: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opFloorDivide: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opUniPlus: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opUniMinus: (lhs: WORD, rhs: WORD) => WORD_VALUE
+}
+
 export type WORD = string | number
 export type WORD_VALUE = WORD | MESSAGE_SOURCE | undefined
 export type CHIP_COMMAND = (chip: CHIP, words: WORD[]) => WORD_VALUE
@@ -46,17 +108,20 @@ export function createChip(build: GeneratorBuild) {
   // pause until next tick
   let yieldState = false
 
-  // chip values
-  const values = {
+  // chip public stats
+  const stats = {
     player: '',
     sender: '' as MESSAGE_SOURCE,
     data: '' as WORD_VALUE,
   }
 
+  // chip internal state
+  const state = proxy<Record<string, object>>({})
+
   // chip invokes
   let invokes: Record<string, CHIP_COMMAND> = {}
 
-  function invokecommand(name: string, words: WORD[]) {
+  function invokecommand(name: string, words: WORD[]): WORD_VALUE {
     const command = invokes[name]
     if (!command) {
       throw new Error(`unknown firmware command ${name}`)
@@ -64,10 +129,18 @@ export function createChip(build: GeneratorBuild) {
     return command(chip, words)
   }
 
-  const chip = {
+  const chip: CHIP = {
     // invokes api
     define(incoming: CHIP_COMMANDS) {
       invokes = incoming
+    },
+
+    // internal state api
+    state(name) {
+      return (state[name] = state[name] || {})
+    },
+    snapshot(name) {
+      return useSnapshot(chip.state(name))
     },
 
     // lifecycle api
@@ -123,11 +196,11 @@ export function createChip(build: GeneratorBuild) {
         const label = chip.hasmessage()
 
         // update chip value state based on incoming message
-        values.sender = message.from
-        values.data = message.value
+        stats.sender = message.from
+        stats.data = message.value
         // this sets player focus
         if (message.playerId) {
-          values.player = message.playerId
+          stats.player = message.playerId
         }
 
         // clear message
@@ -158,11 +231,11 @@ export function createChip(build: GeneratorBuild) {
       if (typeof word === 'string') {
         switch (word.toLowerCase()) {
           case 'player':
-            return values.player
+            return stats.player
           case 'sender':
-            return values.sender
+            return stats.sender
           case 'data':
-            return values.data
+            return stats.data
           default:
             return invokecommand('get', [word])
         }
