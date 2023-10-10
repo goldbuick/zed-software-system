@@ -24,11 +24,15 @@ export type CHIP = {
   define: (incoming: CHIP_COMMANDS) => void
 
   // internal state api
-  state: (name: string) => object
-  snapshot: (name: string) => ReturnType<typeof useSnapshot<object>>
+  state: (name: string) => Record<string, any>
+  snapshot: (
+    name: string,
+  ) => ReturnType<typeof useSnapshot<Record<string, any>>>
 
   // lifecycle api
+  run: () => void
   tick: () => void
+  shouldtick: () => boolean
   shouldhalt: () => boolean
   hasmessage: () => number
   yield: () => void
@@ -45,6 +49,7 @@ export type CHIP = {
   isNumber: (word: any) => word is number
   isString: (word: any) => word is string
   isNumberOrString: (word: any) => word is number | string
+  wordToString: (word: any) => string
   evalToNumber: (word: any) => number
 
   parseValue: (words: WORD[]) => { value: number; resumeIndex: number }
@@ -108,6 +113,9 @@ export function createChip(build: GeneratorBuild) {
   // pause until next tick
   let yieldState = false
 
+  // chip is in ended state awaiting any messages
+  let endedState = false
+
   // chip public stats
   const stats = {
     player: '',
@@ -132,18 +140,27 @@ export function createChip(build: GeneratorBuild) {
   const chip: CHIP = {
     // invokes api
     define(incoming: CHIP_COMMANDS) {
-      invokes = incoming
+      invokes = {
+        ...invokes,
+        ...incoming,
+      }
     },
 
     // internal state api
     state(name) {
-      return (state[name] = state[name] || {})
+      state[name] = state[name] ?? {}
+      return state[name]
     },
     snapshot(name) {
       return useSnapshot(chip.state(name))
     },
 
     // lifecycle api
+    run() {
+      while (chip.shouldtick()) {
+        chip.tick()
+      }
+    },
     tick() {
       // reset state
       loops = 0
@@ -151,11 +168,15 @@ export function createChip(build: GeneratorBuild) {
       try {
         const result = logic?.next()
         if (result?.done) {
-          console.error('we crashed?')
+          console.error('we crashed?', build.source)
+          endedState = true
         }
       } catch (err: any) {
         console.error(err)
       }
+    },
+    shouldtick() {
+      return endedState === false || chip.hasmessage() !== 0
     },
     shouldhalt() {
       return loops++ > HALT_AT_COUNT
@@ -212,8 +233,8 @@ export function createChip(build: GeneratorBuild) {
       return 0
     },
     endofprogram() {
-      // what does this do ?
       chip.yield()
+      endedState = true
     },
     stacktrace(error: Error) {
       const stack = ErrorStackParser.parse(error)
@@ -251,6 +272,9 @@ export function createChip(build: GeneratorBuild) {
     isNumberOrString(word: any): word is number | string {
       return chip.isNumber(word) || chip.isString(word)
     },
+    wordToString(word: any) {
+      return `${word ?? ''}`
+    },
     evalToNumber(word: any) {
       if (chip.isNumber(word)) {
         return word
@@ -284,7 +308,6 @@ export function createChip(build: GeneratorBuild) {
       return invokecommand('hyperlink', [message, label])
     },
     command(...words: WORD[]) {
-      console.info('cmd', words)
       if (words.length < 1) {
         // bail on empty commands
         return 0

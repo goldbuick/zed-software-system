@@ -1,1 +1,7 @@
-'Testing ...
+' Here is a simple layout in gadget
+
+#set wiggle 22
+
+#gadget start
+#gadget right wiggle menu
+#gadget bottom 1

@@ -17,6 +17,7 @@ export type GeneratorBuild = {
   labels?: Record<string, number[]>
   map?: SourceMapGenerator
   code?: (api: CHIP) => Generator<number>
+  source?: string
 }
 
 export function compile(text: string): GeneratorBuild {
@@ -34,11 +35,12 @@ export function compile(text: string): GeneratorBuild {
 
   const transformResult = transformAst(astResult.ast)
   if (transformResult.code) {
-    console.info(transformResult.code)
+    // console.info(transformResult.code)
     try {
       return {
         ...astResult,
         ...transformResult,
+        source: transformResult.code,
         code: new GeneratorFunction('api', transformResult.code),
       }
     } catch (error) {
@@ -49,6 +51,7 @@ export function compile(text: string): GeneratorBuild {
             message: error.message,
           },
         ],
+        source: 'there was an error',
         code: new GeneratorFunction('api', ' '),
       }
     }
@@ -57,6 +60,7 @@ export function compile(text: string): GeneratorBuild {
   return {
     ...astResult,
     ...transformResult,
+    source: 'there was an error',
     code: new GeneratorFunction('api', ' '),
   }
 }

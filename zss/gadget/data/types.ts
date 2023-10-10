@@ -66,10 +66,19 @@ export type LAYER_SPRITES = LAYER_COMMON & {
 }
 
 export enum PANEL_EDGE {
+  START,
   LEFT,
   RIGHT,
   TOP,
   BOTTOM,
+}
+
+export const PANEL_EDGE_MAP: Record<string, PANEL_EDGE> = {
+  start: PANEL_EDGE.START,
+  left: PANEL_EDGE.LEFT,
+  right: PANEL_EDGE.RIGHT,
+  top: PANEL_EDGE.TOP,
+  bottom: PANEL_EDGE.BOTTOM,
 }
 
 export type PANEL = {
