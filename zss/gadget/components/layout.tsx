@@ -15,10 +15,10 @@ type RECT = {
 }
 
 interface LayoutProps {
-  panel?: PANEL
+  panels?: PANEL[]
 }
 
-export function Layout({ panel }: LayoutProps) {
+export function Layout({ panels }: LayoutProps) {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
@@ -33,7 +33,7 @@ export function Layout({ panel }: LayoutProps) {
 
   // starting area
   const frame: RECT = {
-    id: 'root',
+    id: 'main',
     x: 0,
     y: 0,
     width,
@@ -42,56 +42,58 @@ export function Layout({ panel }: LayoutProps) {
   }
 
   // iterate layout
-  const rects: RECT[] = []
-  let cursor: PANEL | undefined = panel
-  while (cursor) {
-    switch (cursor.edge) {
-      case PANEL_EDGE.LEFT:
-        rects.push({
-          id: cursor.id,
-          x: frame.x,
-          y: frame.y,
-          width: cursor.size,
-          height: frame.height,
-        })
-        frame.x += cursor.size
-        frame.width -= cursor.size
-        break
-      case PANEL_EDGE.RIGHT:
-        rects.push({
-          id: cursor.id,
-          x: frame.x + frame.width - cursor.size,
-          y: frame.y,
-          width: cursor.size,
-          height: frame.height,
-        })
-        frame.width -= cursor.size
-        break
-      case PANEL_EDGE.TOP:
-        rects.push({
-          id: cursor.id,
-          x: frame.x,
-          y: frame.y,
-          width: frame.width,
-          height: cursor.size,
-        })
-        frame.y += cursor.size
-        frame.height -= cursor.size
-        break
-      case PANEL_EDGE.BOTTOM:
-        rects.push({
-          id: cursor.id,
-          x: frame.x,
-          y: frame.y + frame.height - cursor.size,
-          width: frame.width,
-          height: cursor.size,
-        })
-        frame.height -= cursor.size
-        break
-    }
-    cursor = cursor.next
-  }
+  const rects: RECT[] =
+    panels?.map((panel) => {
+      let rect: RECT
+      switch (panel.edge) {
+        case PANEL_EDGE.LEFT:
+          rect = {
+            id: panel.id,
+            x: frame.x,
+            y: frame.y,
+            width: panel.size,
+            height: frame.height,
+          }
+          frame.x += panel.size
+          frame.width -= panel.size
+          break
+        default:
+        case PANEL_EDGE.RIGHT:
+          rect = {
+            id: panel.id,
+            x: frame.x + frame.width - panel.size,
+            y: frame.y,
+            width: panel.size,
+            height: frame.height,
+          }
+          frame.width -= panel.size
+          break
+        case PANEL_EDGE.TOP:
+          rect = {
+            id: panel.id,
+            x: frame.x,
+            y: frame.y,
+            width: frame.width,
+            height: panel.size,
+          }
+          frame.y += panel.size
+          frame.height -= panel.size
+          break
+        case PANEL_EDGE.BOTTOM:
+          rect = {
+            id: panel.id,
+            x: frame.x,
+            y: frame.y + frame.height - panel.size,
+            width: frame.width,
+            height: panel.size,
+          }
+          frame.height -= panel.size
+          break
+      }
+      return rect
+    }) ?? []
 
+  // ending region is main
   rects.push(frame)
 
   return (

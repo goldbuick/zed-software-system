@@ -23,7 +23,7 @@ export function ComponentTest() {
 
   const snap = chip.snapshot('gadget')
 
-  return <Layout panel={snap.layout} />
+  return <Layout panels={snap.layout} />
 }
 
 // export function langTest() {

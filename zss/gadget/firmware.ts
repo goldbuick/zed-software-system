@@ -33,15 +33,15 @@ export const GadgetFirmware = createFirmware('gadget')
       case PANEL_EDGE.RIGHT:
       case PANEL_EDGE.TOP:
       case PANEL_EDGE.BOTTOM:
-        if (state.layout) {
-          const panel: PANEL = {
-            id: createGuid(),
-            name: name || edge,
-            edge: edgeConst,
-            size,
-          }
-          state.layout = panel
+        if (!state.layout) {
+          state.layout = []
         }
+        state.layout.push({
+          id: createGuid(),
+          name: name || edge,
+          edge: edgeConst,
+          size,
+        })
         break
       default:
         // todo: raise runtime error
