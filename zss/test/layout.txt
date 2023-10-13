@@ -1,7 +1,12 @@
 ' Here is a simple layout in gadget
-
-#set wiggle 22
-
 #gadget start
-#gadget right wiggle menu
+#gadget right 22
 #gadget bottom 1
+
+#gadget right
+     - - - - - 
+  $bggrey        ZZT
+     - - - - - 
+
+#gadget bottom
+You are 3 steps away.

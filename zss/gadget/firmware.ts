@@ -14,6 +14,10 @@ export const GadgetFirmware = createFirmware('gadget')
     state[name] = args[1]
     return 0
   })
+  .command('text', (state, chip, args) => {
+    console.info({ args })
+    return 0
+  })
   .command('gadget', (state, chip, args) => {
     const edge = chip.wordToString(args[0])
     const size = chip.evalToNumber(args[1])
@@ -23,31 +27,22 @@ export const GadgetFirmware = createFirmware('gadget')
 
     switch (edgeConst) {
       case PANEL_EDGE.START:
-        state.layout = undefined
-        state.layoutPanel = undefined
+        state.layout = []
         break
       case PANEL_EDGE.LEFT:
       case PANEL_EDGE.RIGHT:
       case PANEL_EDGE.TOP:
-      case PANEL_EDGE.BOTTOM: {
-        const panel: PANEL = {
-          id: createGuid(),
-          name: name || edge,
-          edge: edgeConst,
-          size,
-          next: undefined,
-        }
-        if (state.layoutPanel) {
-          // chain onto prior panel ??
-          // why not just make this a list ??
-          state.layoutPanel.next = panel
-          state.layoutPanel = panel
-        } else {
+      case PANEL_EDGE.BOTTOM:
+        if (state.layout) {
+          const panel: PANEL = {
+            id: createGuid(),
+            name: name || edge,
+            edge: edgeConst,
+            size,
+          }
           state.layout = panel
-          state.layoutPanel = panel
         }
         break
-      }
       default:
         // todo: raise runtime error
         // probably make a chip api to do it

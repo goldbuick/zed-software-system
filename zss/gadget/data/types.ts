@@ -86,5 +86,4 @@ export type PANEL = {
   name: string
   edge: PANEL_EDGE
   size: number
-  next: PANEL | undefined
 }
