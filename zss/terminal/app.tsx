@@ -70,7 +70,7 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   },
 })
 
-const PHASE = 0.0005
+const PHASE = 0.0006
 
 export function App() {
   const [ref, bounds] = useMeasure()

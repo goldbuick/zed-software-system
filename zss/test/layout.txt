@@ -1,13 +1,10 @@
 ' Here is a simple layout in gadget
 #gadget start
-#gadget right 22
+#gadget right 20
 #gadget bottom 1
+You are $red3 $whitesteps away. $2
 
 #gadget right
      - - - - - 
-  $bggrey        ZZT
+  $black$ongrey      ZZT      
      - - - - - 
-     ^ ^ ^ ^ ^ 
-
-#gadget bottom
-You are 3 steps away.

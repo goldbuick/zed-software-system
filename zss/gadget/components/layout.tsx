@@ -115,7 +115,8 @@ export function Layout({ panels }: LayoutProps) {
             <Panel
               width={rect.width}
               height={rect.height}
-              color={rect.frame ? 5 : 1}
+              color={15}
+              bg={rect.frame ? 5 : 1}
               text={rect.text}
             />
           )}

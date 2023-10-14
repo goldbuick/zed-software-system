@@ -30,7 +30,6 @@ export type CHIP = {
   ) => ReturnType<typeof useSnapshot<Record<string, any>>>
 
   // lifecycle api
-  run: () => void
   tick: () => void
   shouldtick: () => boolean
   shouldhalt: () => boolean
@@ -162,15 +161,17 @@ export function createChip(build: GeneratorBuild) {
     },
 
     // lifecycle api
-    run() {
-      while (chip.shouldtick()) {
-        chip.tick()
-      }
-    },
     tick() {
+      // should we bail ?
+      if (!chip.shouldtick()) {
+        return
+      }
+
       // reset state
       loops = 0
       yieldState = false
+
+      // invoke generator
       try {
         const result = logic?.next()
         if (result?.done) {

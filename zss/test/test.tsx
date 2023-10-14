@@ -17,8 +17,7 @@ GadgetFirmware.install(chip)
 
 export function ComponentTest() {
   useEffect(() => {
-    // do something here to setup state ?
-    chip.run()
+    chip.tick()
   }, [])
 
   const snap = chip.snapshot('gadget')
