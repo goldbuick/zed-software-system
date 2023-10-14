@@ -1,10 +1,31 @@
 ' Here is a simple layout in gadget
 #gadget start
 #gadget right 20
+
 #gadget bottom 1
-You are $red3 $whitesteps away. $2
+You are  $red3 $whitesteps away. $2 $ondkred$red$3$3$black$3$3
+
+#gadget top 1
+You are $red12 $whitesteps away. $5 $ondkred$red$3$3$3$black$3
 
 #gadget right
      - - - - - 
   $black$ongrey      ZZT      
      - - - - - 
+$ondkblue dkblue $ondkblue$dkblue dkblue
+$ondkgreen dkgreen $ondkblue$dkgreen dkgreen
+$ondkcyan dkcyan $ondkblue$dkcyan dkcyan
+$ondkred dkred $ondkblue$dkred dkred
+$ondkpurple dkpurple $ondkblue$dkpurple dkpurple
+$onbrown brown $ondkblue$brown brown
+$ongray gray $ondkblue$gray gray
+$ondkgray dkgray $ondkblue$dkgray dkgray
+$onblue blue $ondkblue$blue blue
+$ongreen green $ondkblue$green green
+$oncyan cyan $ondkblue$cyan cyan
+$onred red $ondkblue$red red
+$onpurple purple $ondkblue$purple purple
+$onyellow yellow $ondkblue$yellow yellow
+$onwhite white $ondkblue$white white
+$onblack black $ondkblue$black black
+
