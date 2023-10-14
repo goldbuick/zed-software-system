@@ -1,12 +1,28 @@
 ' Here is a simple layout in gadget
+#set health1 3
+#set health2 5
+#set maxhealth1 5
+#set maxhealth2 8
+#set steps1 6
+#set steps2 26
 #gadget start
 #gadget right 20
 
 #gadget bottom 1
-You are  $red3 $whitesteps away. $2 $ondkred$red$3$3$black$3$3
+You are $redsteps1 $whitesteps away. $2 $ondkred\
+#repeat health1
+   |$red$3\
+#repeat maxhealth1 - health1
+   |$black$3\
+$white$ondkblue 
 
 #gadget top 1
-You are $red12 $whitesteps away. $5 $ondkred$red$3$3$3$black$3
+You are $redsteps2 $whitesteps away. $5 $ondkred\
+#repeat health2
+   |$red$3\
+#repeat maxhealth2 - health2
+   |$black$3\
+$white$ondkblue 
 
 #gadget right
      - - - - - 

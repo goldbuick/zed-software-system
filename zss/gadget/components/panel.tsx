@@ -24,17 +24,28 @@ export function Panel({ width, height, color, bg, text }: PanelProps) {
     const colors = new Array(size).fill(color)
     const bgs = new Array(size).fill(bg)
 
-    text.forEach((line, y) => {
+    let x = 0
+    let y = 0
+    let activeColor: number | undefined
+    let activeBg: number | undefined
+    text.forEach((line) => {
       if (y < height) {
         const tokens = tokenize(line)
-        writeTextFormat(tokens.tokens, 0, y, width, chars, colors, bgs)
-        // for (let x = 0; x < line.length; ++x) {
-        //   if (x < width) {
-        //     const char = line.charCodeAt(x)
-        //     chars[x + y * width] = char
-        //   }
-        // }
-        // Array.from(line).forEach((char, x) => {})
+        const next = writeTextFormat(
+          tokens.tokens,
+          x,
+          y,
+          activeColor,
+          activeBg,
+          width,
+          chars,
+          colors,
+          bgs,
+        )
+        x = next.x
+        y = next.y
+        activeColor = next.activeColor
+        activeBg = next.activeBg
       }
     })
 

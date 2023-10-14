@@ -1564,6 +1564,16 @@
     postprocessing "^6.32.1"
     three-stdlib "^2.23.4"
 
+"@rwh/keystrokes@^1.2.3":
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/@rwh/keystrokes/-/keystrokes-1.2.3.tgz#be614a86fab283ad683d5540ddc41c9cb03801be"
+  integrity sha512-ZXmOz/mmGzvhEuA7WtAOMt0Q7d9U+i6cvtesSakh+yXcL1m+O2Uy/iOveoaHp+Ybep3AT2pslAo4yPXzEDvUJQ==
+
+"@rwh/react-keystrokes@^1.2.3":
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/@rwh/react-keystrokes/-/react-keystrokes-1.2.3.tgz#74c84e3dabea37667d907c4968c8244353b86783"
+  integrity sha512-ZNt53a55L7eFnJSMr+4MKCqCASiXpT5Hm7+cwbrFEZ9VpbXhjpJ7r+DPhMpYQjP6+PTjI+z8BWQGSHRa2Alt1w==
+
 "@sinclair/typebox@^0.27.8":
   version "0.27.8"
   resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.27.8.tgz#6667fac16c436b5434a387a34dedb013198f6e6e"

@@ -23,6 +23,8 @@
     "@react-three/drei": "^9.80.2",
     "@react-three/fiber": "^8.13.6",
     "@react-three/postprocessing": "^2.15.0",
+    "@rwh/keystrokes": "^1.2.3",
+    "@rwh/react-keystrokes": "^1.2.3",
     "@types/jest": "^29.5.5",
     "@types/nanoid-dictionary": "^4.2.0",
     "@types/node": "^20.4.10",

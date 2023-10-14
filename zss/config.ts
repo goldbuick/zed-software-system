@@ -9,5 +9,6 @@ function paramIsEnabled(name: string) {
 
 const LANG_DEV = paramIsEnabled('lang')
 const STATS_DEV = paramIsEnabled('stats')
+const SHOW_CODE = paramIsEnabled('code')
 
-export { LANG_DEV, STATS_DEV }
+export { LANG_DEV, STATS_DEV, SHOW_CODE }

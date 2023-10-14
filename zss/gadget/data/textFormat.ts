@@ -27,6 +27,11 @@ export const NumberLiteral = createToken({
   pattern: /\$-?(\d*\.)?\d+([eE][+-]?\d+)?[jJ]?[lL]?/,
 })
 
+export const ContinueLine = createToken({
+  name: 'ContinueLine',
+  pattern: /\\/,
+})
+
 function createWordToken(word: string, name = '') {
   return createToken({
     name: name || word,
@@ -54,6 +59,7 @@ const colors = [
 ]
 
 const colorIndex = {
+  black: 0,
   dkblue: 1,
   dkgreen: 2,
   dkcyan: 3,
@@ -62,14 +68,13 @@ const colorIndex = {
   brown: 6,
   gray: 7,
   dkgray: 8,
-  blue: 1 + 8,
-  green: 2 + 8,
-  cyan: 3 + 8,
-  red: 4 + 8,
-  purple: 5 + 8,
-  yellow: 6 + 8,
-  white: 7 + 8,
-  black: 0,
+  blue: 9,
+  green: 10,
+  cyan: 11,
+  red: 12,
+  purple: 13,
+  yellow: 14,
+  white: 15,
 }
 
 const allColors = colors.map(([clr, name]) =>
@@ -81,6 +86,7 @@ const allBgColors = colors.map(([clr, name]) =>
 
 export const allTokens = [
   Whitespace,
+  ContinueLine,
   ...allColors,
   ...allBgColors,
   StringLiteral,
@@ -102,14 +108,13 @@ export function writeTextFormat(
   tokens: IToken[],
   x: number,
   y: number,
+  activeColor: number | undefined,
+  activeBg: number | undefined,
   width: number,
   chars: number[],
   colors: number[],
   bgs: number[],
 ) {
-  let activeColor: number | undefined
-  let activeBg: number | undefined
-
   function incCursor() {
     ++x
     if (x >= width) {
@@ -184,9 +189,14 @@ export function writeTextFormat(
         break
       }
 
+      case ContinueLine:
+        return { x, y, activeColor, activeBg }
+
       default:
         writeStr(token.image)
         break
     }
   }
+
+  return { x: 0, y: y + 1, activeColor: undefined, activeBg: undefined }
 }

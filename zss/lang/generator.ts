@@ -1,6 +1,8 @@
 import { CstNode, IToken } from 'chevrotain'
 import { SourceMapGenerator } from 'source-map'
 
+import { SHOW_CODE } from '../config'
+
 import { compileAST } from './ast'
 import { CHIP } from './chip'
 import { transformAst } from './transformer'
@@ -35,7 +37,9 @@ export function compile(text: string): GeneratorBuild {
 
   const transformResult = transformAst(astResult.ast)
   if (transformResult.code) {
-    // console.info(transformResult.code)
+    if (SHOW_CODE) {
+      console.info(transformResult.code)
+    }
     try {
       return {
         ...astResult,

@@ -34,7 +34,7 @@ export function write(
 }
 
 function escapeString(value: string): string {
-  return value.replace(/'/g, "\\'")
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 }
 
 function writeString(value: string): string {
