@@ -51,6 +51,7 @@ export type CHIP = {
   isNumberOrString: (word: any) => word is number | string
   wordToString: (word: any) => string
   evalToNumber: (word: any) => number
+  mapArgs: (args: WORD[], ...values: ARG[]) => (string | number)[]
 
   parseValue: (words: WORD[]) => { value: number; resumeIndex: number }
 
@@ -90,6 +91,11 @@ export type WORD = string | number
 export type WORD_VALUE = WORD | MESSAGE_SOURCE | undefined
 export type CHIP_COMMAND = (chip: CHIP, words: WORD[]) => WORD_VALUE
 export type CHIP_COMMANDS = Record<string, CHIP_COMMAND>
+
+export enum ARG {
+  STRING,
+  NUMBER,
+}
 
 // lifecycle and control flow api
 export function createChip(build: GeneratorBuild) {
@@ -286,6 +292,16 @@ export function createChip(build: GeneratorBuild) {
         }
       }
       return 0
+    },
+    mapArgs(args, ...values) {
+      return values.map((value, i) => {
+        switch (value) {
+          case ARG.STRING:
+            return chip.wordToString(args[i])
+          case ARG.NUMBER:
+            return chip.evalToNumber(args[i])
+        }
+      })
     },
 
     parseValue(words: WORD[]) {

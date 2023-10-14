@@ -12,6 +12,7 @@ type RECT = {
   width: number
   height: number
   frame?: boolean
+  text: string[]
 }
 
 interface LayoutProps {
@@ -39,6 +40,7 @@ export function Layout({ panels }: LayoutProps) {
     width,
     height,
     frame: true,
+    text: [],
   }
 
   // iterate layout
@@ -53,6 +55,7 @@ export function Layout({ panels }: LayoutProps) {
             y: frame.y,
             width: panel.size,
             height: frame.height,
+            text: panel.text,
           }
           frame.x += panel.size
           frame.width -= panel.size
@@ -65,6 +68,7 @@ export function Layout({ panels }: LayoutProps) {
             y: frame.y,
             width: panel.size,
             height: frame.height,
+            text: panel.text,
           }
           frame.width -= panel.size
           break
@@ -75,6 +79,7 @@ export function Layout({ panels }: LayoutProps) {
             y: frame.y,
             width: frame.width,
             height: panel.size,
+            text: panel.text,
           }
           frame.y += panel.size
           frame.height -= panel.size
@@ -86,6 +91,7 @@ export function Layout({ panels }: LayoutProps) {
             y: frame.y + frame.height - panel.size,
             width: frame.width,
             height: panel.size,
+            text: panel.text,
           }
           frame.height -= panel.size
           break
@@ -103,11 +109,16 @@ export function Layout({ panels }: LayoutProps) {
           key={rect.id}
           position={[rect.x * DRAW_CHAR_WIDTH, rect.y * DRAW_CHAR_HEIGHT, 0]}
         >
-          <Panel
-            width={rect.width}
-            height={rect.height}
-            color={rect.frame ? 5 : 1}
-          />
+          {rect.frame ? (
+            <React.Fragment />
+          ) : (
+            <Panel
+              width={rect.width}
+              height={rect.height}
+              color={rect.frame ? 5 : 1}
+              text={rect.text}
+            />
+          )}
         </group>
       ))}
     </group>

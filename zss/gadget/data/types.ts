@@ -71,6 +71,7 @@ export enum PANEL_EDGE {
   RIGHT,
   TOP,
   BOTTOM,
+  SCROLL,
 }
 
 export const PANEL_EDGE_MAP: Record<string, PANEL_EDGE> = {
@@ -79,6 +80,7 @@ export const PANEL_EDGE_MAP: Record<string, PANEL_EDGE> = {
   right: PANEL_EDGE.RIGHT,
   top: PANEL_EDGE.TOP,
   bottom: PANEL_EDGE.BOTTOM,
+  scroll: PANEL_EDGE.SCROLL,
 }
 
 export type PANEL = {
@@ -86,4 +88,5 @@ export type PANEL = {
   name: string
   edge: PANEL_EDGE
   size: number
+  text: string[]
 }
