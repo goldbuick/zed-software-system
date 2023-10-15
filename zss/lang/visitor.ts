@@ -410,7 +410,6 @@ class ScriptVisitor extends CstVisitor {
   }
 
   block_lines(ctx: CstChildrenDictionary) {
-    console.info(ctx)
     // @ts-expect-error cst element
     return asList(this, ctx.nested_line)
   }

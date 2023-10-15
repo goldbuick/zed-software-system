@@ -58,7 +58,7 @@ const colors = [
   ['black'],
 ]
 
-const colorIndex = {
+const colorIndex: Record<string, number> = {
   black: 0,
   dkblue: 1,
   dkgreen: 2,
@@ -89,8 +89,8 @@ export const allTokens = [
   ContinueLine,
   ...allColors,
   ...allBgColors,
-  StringLiteral,
   StringLiteralDouble,
+  StringLiteral,
   NumberLiteral,
 ]
 
@@ -155,9 +155,11 @@ export function writeTextFormat(
       case allColors[12]:
       case allColors[13]:
       case allColors[14]:
-      case allColors[15]:
-        activeColor = colorIndex[token.tokenType.name] ?? 0
+      case allColors[15]: {
+        const colorName = token.tokenType.name
+        activeColor = colorIndex[colorName] ?? 0
         break
+      }
       case allBgColors[0]:
       case allBgColors[1]:
       case allBgColors[2]:
@@ -173,9 +175,11 @@ export function writeTextFormat(
       case allBgColors[12]:
       case allBgColors[13]:
       case allBgColors[14]:
-      case allBgColors[15]:
-        activeBg = colorIndex[token.tokenType.name.replace('on', '')] ?? 0
+      case allBgColors[15]: {
+        const colorName = token.tokenType.name.replace('on', '')
+        activeBg = colorIndex[colorName] ?? 0
         break
+      }
       case NumberLiteral: {
         const i = x + y * width
         chars[i] = parseFloat(token.image.replace('$', ''))
@@ -188,6 +192,10 @@ export function writeTextFormat(
         incCursor()
         break
       }
+
+      case StringLiteralDouble:
+        writeStr(token.image.substring(1, token.image.length - 1))
+        break
 
       case ContinueLine:
         return { x, y, activeColor, activeBg }

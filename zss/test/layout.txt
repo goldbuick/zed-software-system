@@ -2,14 +2,14 @@
 #set health1 3
 #set health2 5
 #set maxhealth1 5
-#set maxhealth2 8
+#set maxhealth2 5
 #set steps1 6
 #set steps2 26
 #gadget start
 #gadget right 20
 
 #gadget bottom 1
-You are $redsteps1 $whitesteps away. $2 $ondkred\
+You are $red$steps1 $whitesteps away. $2 $ondkred\
 #repeat health1
    |$red$3\
 #repeat maxhealth1 - health1
@@ -17,7 +17,7 @@ You are $redsteps1 $whitesteps away. $2 $ondkred\
 $white$ondkblue 
 
 #gadget top 1
-You are $redsteps2 $whitesteps away. $5 $ondkred\
+You are $red$steps2 $whitesteps away. $5 $ondkred\
 #repeat health2
    |$red$3\
 #repeat maxhealth2 - health2
@@ -28,20 +28,5 @@ $white$ondkblue
      - - - - - 
   $black$ongrey      ZZT      
      - - - - - 
-$ondkblue dkblue $ondkblue$dkblue dkblue
-$ondkgreen dkgreen $ondkblue$dkgreen dkgreen
-$ondkcyan dkcyan $ondkblue$dkcyan dkcyan
-$ondkred dkred $ondkblue$dkred dkred
-$ondkpurple dkpurple $ondkblue$dkpurple dkpurple
-$onbrown brown $ondkblue$brown brown
-$ongray gray $ondkblue$gray gray
-$ondkgray dkgray $ondkblue$dkgray dkgray
-$onblue blue $ondkblue$blue blue
-$ongreen green $ondkblue$green green
-$oncyan cyan $ondkblue$cyan cyan
-$onred red $ondkblue$red red
-$onpurple purple $ondkblue$purple purple
-$onyellow yellow $ondkblue$yellow yellow
-$onwhite white $ondkblue$white white
-$onblack black $ondkblue$black black
+"$$$Hello does this work?"
 
