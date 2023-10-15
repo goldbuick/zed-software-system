@@ -205,6 +205,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.HYPERLINK:
       return writeApi(ast, `hyperlink`, [
         writeString(ast.message),
+        writeString(ast.input),
         writeString(ast.label),
       ])
     case NODE.COMMAND:

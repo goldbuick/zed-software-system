@@ -390,7 +390,7 @@ class ScriptParser extends CstParser {
 
   hyperlink = this.RULED('hyperlink', () => {
     this.CONSUME(lexer.HyperLink)
-    this.CONSUME(lexer.HyperLinkText)
+    this.AT_LEAST_ONE(() => this.CONSUME(lexer.HyperLinkText))
   })
 
   words = this.RULED('words', () =>

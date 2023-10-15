@@ -8,9 +8,8 @@ import { Layout } from '../gadget/components/layout'
 // compile script into runnable code
 const build = compile(test_zss)
 if (build.errors) {
-  console.info(build)
-  console.info(build.errors)
   console.info(build.tokens)
+  console.info(build.errors)
 }
 
 const chip = createChip(build)

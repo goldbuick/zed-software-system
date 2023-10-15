@@ -312,7 +312,7 @@ export const HyperLink = createToken({
 
 export const HyperLinkText = createToken({
   name: 'HyperLinkText',
-  pattern: /;.*/,
+  pattern: /;[^;\n]*/,
   start_chars_hint: [';'],
 })
 

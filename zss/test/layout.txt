@@ -30,3 +30,5 @@ $white$ondkblue
      - - - - - 
 "$$$Hello does this work?"
 
+!all:doot;select a b c;Here is the text for the button!
+

@@ -114,6 +114,7 @@ type CodeNodeData =
   | {
       type: NODE.HYPERLINK
       message: string
+      input: string
       label: string
     }
   | {
@@ -640,10 +641,12 @@ class ScriptVisitor extends CstVisitor {
   }
 
   hyperlink(ctx: CstChildrenDictionary) {
+    const [input, label] = ctx.HyperLinkText ?? []
     return makeNode(ctx, {
       type: NODE.HYPERLINK,
       message: ctx.HyperLink ? strImage(ctx.HyperLink[0]).slice(1) : '',
-      label: ctx.HyperLinkText ? strImage(ctx.HyperLinkText[0]).slice(1) : '',
+      input: strImage(input).slice(1),
+      label: strImage(label).slice(1),
     })
   }
 
