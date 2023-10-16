@@ -7,7 +7,7 @@ export type WORKER_HOST = {
   destroy: () => void
 }
 
-export function createWorkerHost(bootcode: string, bootdata: any) {
+export function createWorkerHost(bootcode: string) {
   const webworker = new Worker(new URL('worker.ts', import.meta.url), {
     type: 'module',
   })
@@ -19,7 +19,7 @@ export function createWorkerHost(bootcode: string, bootdata: any) {
   const device = createDevice('workerhost', [], (message, data) => {
     switch (message) {
       case 'ready':
-        sendToWebWorker(bootcode, bootdata)
+        sendToWebWorker('worker:boot', bootcode)
         break
       default:
         // flag unsupported message

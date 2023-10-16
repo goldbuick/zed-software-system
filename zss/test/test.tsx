@@ -5,7 +5,7 @@ import { useSnapshot } from 'valtio'
 import { Layout } from '../gadget/components/layout'
 import { createWorkerHost } from '../network/device/workerhost'
 
-const workerhost = createWorkerHost('webworker:boot', zsscode)
+const workerhost = createWorkerHost(zsscode)
 
 export function ComponentTest() {
   useEffect(() => {
