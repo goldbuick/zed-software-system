@@ -8,7 +8,7 @@ export type OS = {
   halt: (id: string) => boolean
   active: (id: string) => boolean
   tick: (id: string) => void
-  state: (id: string, name: string) => Record<string, object>
+  state: (id: string, name?: string) => Record<string, object>
 }
 
 export function createOS(): OS {

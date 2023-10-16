@@ -9,6 +9,8 @@ export type DEVICE = {
   match: (target: string) => boolean
   handle: (message: string, data: any) => void
   send: MESSAGE_FUNC
+  fromParent: MESSAGE_FUNC
+  linkParent: (handler: MESSAGE_FUNC) => void
   connect: (device: DEVICE) => void
   disconnect: (device: DEVICE) => void
 }
@@ -21,7 +23,6 @@ export function parseMessage(message: string) {
 export function createDevice(
   name: string,
   tags: string[],
-  onParent: MESSAGE_FUNC,
   onMessage: MESSAGE_FUNC,
 ) {
   const id = createGuid()
@@ -29,6 +30,7 @@ export function createDevice(
   const itags = tags.map((tag) => tag.toLowerCase())
 
   let branches: DEVICE[] = []
+  let onParent: MESSAGE_FUNC | undefined
 
   const device: DEVICE = {
     id() {
@@ -45,6 +47,7 @@ export function createDevice(
       return (
         id === target ||
         iname === itarget ||
+        'all' === itarget ||
         itags.findIndex((tag) => tag === itarget) !== -1
       )
     },
@@ -65,17 +68,30 @@ export function createDevice(
     },
     send(message, data) {
       const { target, path } = parseMessage(message)
+      const matched = device.match(target)
 
-      if (device.match(target)) {
+      if (matched) {
         // we match target
         device.handle(path, data)
       } else {
         // send to parent device
-        onParent(message, data)
+        onParent?.(message, data)
       }
     },
+    fromParent(message, data) {
+      const { target, path } = parseMessage(message)
+      const matched = device.match(target)
+
+      if (matched) {
+        // we match target
+        device.handle(path, data)
+      }
+    },
+    linkParent(handler) {
+      onParent = handler
+    },
     connect(device) {
-      // TODO, this should set onParent for this device
+      device.linkParent(device.send)
       branches.push(device)
     },
     disconnect(device) {

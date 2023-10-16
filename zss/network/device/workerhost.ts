@@ -1,21 +1,41 @@
 import { DEVICE, MESSAGE_FUNC, createDevice } from '../device'
 
-export type WORKER = {
+export type WORKER_HOST = {
+  setParentHandler: (handler: MESSAGE_FUNC) => void
   send: (message: string, data: any) => void
   device: () => DEVICE
   destroy: () => void
 }
 
-export function createWorker(onParent: MESSAGE_FUNC): WORKER {
-  const webworker = new Worker(new URL('worker.js', import.meta.url), {
+export function createWorkerHost(bootcode: string, bootdata: any) {
+  const webworker = new Worker(new URL('worker.ts', import.meta.url), {
     type: 'module',
   })
 
-  const device = createDevice('worker', [], onParent, (message, data) => {
+  function sendToWebWorker(message: string, data: any) {
     webworker.postMessage([message, data])
+  }
+
+  const device = createDevice('workerhost', [], (message, data) => {
+    switch (message) {
+      case 'ready':
+        sendToWebWorker(bootcode, bootdata)
+        break
+      default:
+        // flag unsupported message
+        break
+    }
   })
 
-  const worker: WORKER = {
+  webworker.addEventListener('message', (event) => {
+    const [message, data] = event.data
+    device.send(message, data)
+  })
+
+  const workerhost: WORKER_HOST = {
+    setParentHandler(handler) {
+      device.linkParent(handler)
+    },
     send(message, data) {
       device.send(message, data)
     },
@@ -27,11 +47,5 @@ export function createWorker(onParent: MESSAGE_FUNC): WORKER {
     },
   }
 
-  return worker
+  return workerhost
 }
-
-/*
-
-this network device runs a rack in a webworker
-
-*/

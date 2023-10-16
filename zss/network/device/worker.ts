@@ -1,14 +1,23 @@
 import { createDevice } from '../device'
 
-function onParent(message: string, data: any) {
-  postMessage([message, data])
-}
+const device = createDevice('webworker', [], (message, data) => {
+  switch (message.toLowerCase()) {
+    case 'run':
+      console.info(data)
+      break
+    default:
+      // error unknown message ?
+      break
+  }
+})
 
-const device = createDevice('worker', [], onParent, (message, data) => {
-  console.info({ message, data })
+device.linkParent((message, data) => {
+  postMessage([message, data])
 })
 
 onmessage = function handleMessage(event) {
   const [message, data] = event.data
-  device.handle(message, data)
+  device.fromParent(message, data)
 }
+
+device.send('workerhost:ready', undefined)
