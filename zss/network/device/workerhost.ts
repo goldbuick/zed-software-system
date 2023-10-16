@@ -1,6 +1,7 @@
 import { DEVICE, MESSAGE_FUNC, createDevice } from '../device'
 
 export type WORKER = {
+  send: (message: string, data: any) => void
   device: () => DEVICE
   destroy: () => void
 }
@@ -15,6 +16,9 @@ export function createWorker(onParent: MESSAGE_FUNC): WORKER {
   })
 
   const worker: WORKER = {
+    send(message, data) {
+      device.send(message, data)
+    },
     device() {
       return device
     },

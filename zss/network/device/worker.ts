@@ -1,17 +1,14 @@
-import { DEVICE, parseMessage } from '../device'
+import { createDevice } from '../device'
 
-const devices: DEVICE[] = []
+function onParent(message: string, data: any) {
+  postMessage([message, data])
+}
+
+const device = createDevice('worker', [], onParent, (message, data) => {
+  console.info({ message, data })
+})
 
 onmessage = function handleMessage(event) {
-  const [msg, data] = event.data
-
-  // route to target device
-  const { target } = parseMessage(msg)
-  devices.forEach((device) => {
-    if (device.match(target)) {
-      device.send(msg, data)
-    }
-  })
-
-  // console.info({ target, path, data })
+  const [message, data] = event.data
+  device.handle(message, data)
 }

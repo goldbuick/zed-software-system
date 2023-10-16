@@ -7,7 +7,10 @@ export type DEVICE = {
   name: () => string
   tags: () => string[]
   match: (target: string) => boolean
+  handle: (message: string, data: any) => void
   send: MESSAGE_FUNC
+  connect: (device: DEVICE) => void
+  disconnect: (device: DEVICE) => void
 }
 
 export function parseMessage(message: string) {
@@ -24,6 +27,8 @@ export function createDevice(
   const id = createGuid()
   const iname = name.toLowerCase()
   const itags = tags.map((tag) => tag.toLowerCase())
+
+  let branches: DEVICE[] = []
 
   const device: DEVICE = {
     id() {
@@ -43,32 +48,40 @@ export function createDevice(
         itags.findIndex((tag) => tag === itarget) !== -1
       )
     },
+    handle(message, data) {
+      const { target, path } = parseMessage(message)
+
+      // does target match branches ?
+      const matched = branches.filter((branch) => {
+        if (branch.match(target)) {
+          branch.handle(path, data)
+        }
+      })
+
+      // otherwise US
+      if (matched.length === 0) {
+        onMessage(message, data)
+      }
+    },
     send(message, data) {
       const { target, path } = parseMessage(message)
 
-      // we match target
       if (device.match(target)) {
-        onMessage(path, data)
-        return
+        // we match target
+        device.handle(path, data)
+      } else {
+        // send to parent device
+        onParent(message, data)
       }
-
-      // send to parent device
-      onParent(message, data)
+    },
+    connect(device) {
+      // TODO, this should set onParent for this device
+      branches.push(device)
+    },
+    disconnect(device) {
+      branches = branches.filter((item) => item !== device)
     },
   }
 
   return device
 }
-
-/*
-
-what is a network device ??
-
-a name
-a list of tags
-a function to handle a message for device
-a function to send a message to parent
-
-will need to figure out how to bridge parent network devices ?
-
-*/
