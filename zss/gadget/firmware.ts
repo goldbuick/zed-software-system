@@ -16,6 +16,7 @@ function defaultState(state: any) {
     initState(state)
   }
 }
+
 function findPanel(state: any) {
   // find slot
   const panel = state.layout.find(

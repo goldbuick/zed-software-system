@@ -24,7 +24,7 @@ $white$ondkblue
 !demo1; Game Mode;select a b c
 !demo2;$blue GEEP;range F S
 !demo3; Limit;number 16
-!demo4; Team Name;text
+!demo4; $12Team Name;text
 ""
 !empty;Move;hotkey stub "       $24$25$26$27"
 !empty;Shoot;hotkey stub " Shift $24$25$26$27"
