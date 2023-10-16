@@ -645,8 +645,8 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.HYPERLINK,
       message: ctx.HyperLink ? strImage(ctx.HyperLink[0]).slice(1) : '',
-      input: strImage(input).slice(1),
-      label: strImage(label).slice(1),
+      input: input ? strImage(input).slice(1) : '',
+      label: label ? strImage(label).slice(1) : '',
     })
   }
 

@@ -11,6 +11,12 @@ export const Whitespace = createToken({
   pattern: / +/,
 })
 
+export const WhitespaceSkipped = createToken({
+  name: 'WhitespaceSkipped',
+  pattern: / +/,
+  group: Lexer.SKIPPED,
+})
+
 export const StringLiteral = createToken({
   name: 'StringLiteral',
   pattern: /[^ $]+/,
@@ -99,39 +105,61 @@ const scriptLexer = new Lexer(allTokens, {
   ensureOptimizations: LANG_DEV,
 })
 
-export function tokenize(text: string) {
-  const lexResult = scriptLexer.tokenize(text)
-  return lexResult
+const scriptLexerNoWhitespace = new Lexer(
+  [
+    WhitespaceSkipped,
+    ContinueLine,
+    ...allColors,
+    ...allBgColors,
+    StringLiteralDouble,
+    StringLiteral,
+    NumberLiteral,
+  ],
+  {
+    skipValidations: !LANG_DEV,
+    ensureOptimizations: LANG_DEV,
+  },
+)
+
+export function tokenize(text: string, noWhitespace = false) {
+  if (noWhitespace) {
+    return scriptLexerNoWhitespace.tokenize(text)
+  }
+  return scriptLexer.tokenize(text)
+}
+
+export type WRITE_TEXT_CONTEXT = {
+  x: number
+  y: number
+  activeColor: number | undefined
+  activeBg: number | undefined
+  width: number
+  chars: number[]
+  colors: number[]
+  bgs: number[]
 }
 
 export function writeTextFormat(
   tokens: IToken[],
-  x: number,
-  y: number,
-  activeColor: number | undefined,
-  activeBg: number | undefined,
-  width: number,
-  chars: number[],
-  colors: number[],
-  bgs: number[],
-) {
+  context: WRITE_TEXT_CONTEXT,
+): boolean {
   function incCursor() {
-    ++x
-    if (x >= width) {
-      x = 0
-      ++y
+    ++context.x
+    if (context.x >= context.width) {
+      context.x = 0
+      ++context.y
     }
   }
 
   function writeStr(str: string) {
     for (let t = 0; t < str.length; ++t) {
-      const i = x + y * width
-      chars[i] = str.charCodeAt(t)
-      if (activeColor !== undefined) {
-        colors[i] = activeColor
+      const i = context.x + context.y * context.width
+      context.chars[i] = str.charCodeAt(t)
+      if (context.activeColor !== undefined) {
+        context.colors[i] = context.activeColor
       }
-      if (activeBg !== undefined) {
-        bgs[i] = activeBg
+      if (context.activeBg !== undefined) {
+        context.bgs[i] = context.activeBg
       }
       incCursor()
     }
@@ -157,7 +185,7 @@ export function writeTextFormat(
       case allColors[14]:
       case allColors[15]: {
         const colorName = token.tokenType.name
-        activeColor = colorIndex[colorName] ?? 0
+        context.activeColor = colorIndex[colorName] ?? 0
         break
       }
       case allBgColors[0]:
@@ -177,17 +205,17 @@ export function writeTextFormat(
       case allBgColors[14]:
       case allBgColors[15]: {
         const colorName = token.tokenType.name.replace('on', '')
-        activeBg = colorIndex[colorName] ?? 0
+        context.activeBg = colorIndex[colorName] ?? 0
         break
       }
       case NumberLiteral: {
-        const i = x + y * width
-        chars[i] = parseFloat(token.image.replace('$', ''))
-        if (activeColor !== undefined) {
-          colors[i] = activeColor
+        const i = context.x + context.y * context.width
+        context.chars[i] = parseFloat(token.image.replace('$', ''))
+        if (context.activeColor !== undefined) {
+          context.colors[i] = context.activeColor
         }
-        if (activeBg !== undefined) {
-          bgs[i] = activeBg
+        if (context.activeBg !== undefined) {
+          context.bgs[i] = context.activeBg
         }
         incCursor()
         break
@@ -198,7 +226,7 @@ export function writeTextFormat(
         break
 
       case ContinueLine:
-        return { x, y, activeColor, activeBg }
+        return false
 
       default:
         writeStr(token.image)
@@ -206,5 +234,20 @@ export function writeTextFormat(
     }
   }
 
-  return { x: 0, y: y + 1, activeColor: undefined, activeBg: undefined }
+  // move to next line
+  context.x = 0
+  ++context.y
+  return true
+}
+
+export function tokenizeAndWriteTextFormat(
+  text: string,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  const result = tokenize(text)
+  if (result.tokens?.length < 1) {
+    return true
+  }
+
+  return writeTextFormat(result.tokens, context)
 }

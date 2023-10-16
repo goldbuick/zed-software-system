@@ -16,19 +16,21 @@ You are $red$steps1 $whitesteps away. $2 $ondkred\
    |$black$3\
 $white$ondkblue 
 
-#gadget top 1
-You are $red$steps2 $whitesteps away. $5 $ondkred\
-#repeat health2
-   |$red$3\
-#repeat maxhealth2 - health2
-   |$black$3\
-$white$ondkblue 
-
 #gadget right
-     - - - - - 
+  $white   - - - - - 
   $black$ongrey      ZZT      
-     - - - - - 
-"$$$Hello does this work?"
-
-!all:doot;select a b c;Here is the text for the button!
+  $white   - - - - - 
+""
+!demo1; Game Mode;select a b c
+!demo2;$blue GEEP;range F S
+!demo3; Limit;number 16
+!demo4; Team Name;text
+""
+!empty;Move;hotkey stub "       $24$25$26$27"
+!empty;Shoot;hotkey stub " Shift $24$25$26$27"
+""
+!all:doot;Fart!;hotkey f " f"
+!all:doot;$yellowZart!;hotkey z " z"
+""
+!all:doot;Hyperlink
 

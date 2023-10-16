@@ -5,6 +5,39 @@ import { createGuid } from '../mapping/guid'
 
 import { PANEL, PANEL_EDGE, PANEL_EDGE_MAP } from './data'
 
+function initState(state: any) {
+  state.layout = []
+  state.layoutReset = true
+  state.layoutFocus = 'scroll'
+}
+
+function defaultState(state: any) {
+  if (!state.layout) {
+    initState(state)
+  }
+}
+function findPanel(state: any) {
+  // find slot
+  const panel = state.layout.find(
+    (panel: PANEL) => panel.name === state.layoutFocus,
+  )
+
+  if (!panel) {
+    const newPanel: PANEL = {
+      id: createGuid(),
+      name: state.layoutFocus,
+      edge: PANEL_EDGE.RIGHT,
+      size: 20,
+      text: [],
+    }
+    state.layout.push(newPanel)
+    state.layoutReset = false
+    return newPanel
+  }
+
+  return panel
+}
+
 export const GadgetFirmware = createFirmware('gadget')
   .command('get', (state, chip, args) => {
     const name = chip.wordToString(args[0])
@@ -18,47 +51,44 @@ export const GadgetFirmware = createFirmware('gadget')
   .command('text', (state, chip, args) => {
     const [text] = chip.mapArgs(args, ARG.STRING) as [string]
 
-    if (!state.layout) {
-      state.layout = []
-      state.layoutReset = true
-      state.layoutFocus = 'scroll'
-    }
+    // default state
+    defaultState(state)
 
-    const panel = state.layout.find(
-      (panel: PANEL) => panel.name === state.layoutFocus,
-    )
+    // find slot
+    const panel = findPanel(state)
 
-    if (!panel) {
-      const newPanel: PANEL = {
-        id: createGuid(),
-        name: state.layoutFocus,
-        edge: PANEL_EDGE.RIGHT,
-        size: 20,
-        text: [text],
-      }
-      state.layout.push(newPanel)
-      state.layoutReset = false
-      return 0
-    }
-
+    // add text
     if (state.layoutReset) {
       state.layoutReset = false
-      panel.text = [text]
-    } else {
-      panel.text.push(text)
+      panel.text = []
     }
+    panel.text.push(text)
 
     return 0
   })
   .command('hyperlink', (state, chip, args) => {
-    console.info(args)
-    const [target, input, label] = chip.mapArgs(
+    const [target, label, input] = chip.mapArgs(
       args,
+      1,
       ARG.STRING,
       ARG.STRING,
       ARG.STRING,
     ) as [string, string, string]
-    console.info({ target, input, label })
+
+    // default state
+    defaultState(state)
+
+    // find slot
+    const panel = findPanel(state)
+
+    // add hypertext
+    if (state.layoutReset) {
+      state.layoutReset = false
+      panel.text = []
+    }
+    panel.text.push([target, label, input])
+
+    return 0
   })
   .command('gadget', (state, chip, args) => {
     const [edge, size, name] = chip.mapArgs(
@@ -72,11 +102,7 @@ export const GadgetFirmware = createFirmware('gadget')
     const edgeConst = PANEL_EDGE_MAP[`${edge}`.toLowerCase()]
 
     // default state
-    if (!state.layout) {
-      state.layout = []
-      state.layoutReset = true
-      state.layoutFocus = 'scroll'
-    }
+    defaultState(state)
 
     const panelState: PANEL | undefined = state.layout.find(
       (panel: PANEL) => panel.name === panelName,
@@ -89,9 +115,7 @@ export const GadgetFirmware = createFirmware('gadget')
     } else {
       switch (edgeConst) {
         case PANEL_EDGE.START:
-          state.layout = []
-          state.layoutReset = true
-          state.layoutFocus = 'scroll'
+          initState(state)
           break
         case PANEL_EDGE.LEFT:
         case PANEL_EDGE.RIGHT:
