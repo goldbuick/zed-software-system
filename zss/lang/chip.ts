@@ -5,7 +5,7 @@ import { proxy } from 'valtio'
 import { GeneratorBuild } from './generator'
 import { GENERATED_FILENAME } from './transformer'
 
-export const HALT_AT_COUNT = 256
+export const HALT_AT_COUNT = 64
 
 // id or x, y coords
 export type MESSAGE_SOURCE = string | { x: number; y: number }

@@ -17,12 +17,13 @@ export function parseMessage(message: string) {
 
 export function createDevice(
   name: string,
+  tags: string[],
+  onParent: MESSAGE_FUNC,
   onMessage: MESSAGE_FUNC,
-  sendToParent: MESSAGE_FUNC,
-  ...tags: string[]
 ) {
   const id = createGuid()
-  const children: DEVICE[] = []
+  const iname = name.toLowerCase()
+  const itags = tags.map((tag) => tag.toLowerCase())
 
   const device: DEVICE = {
     id() {
@@ -38,8 +39,8 @@ export function createDevice(
       const itarget = target.toLowerCase()
       return (
         id === target ||
-        name.toLowerCase() === itarget ||
-        tags.findIndex((tag) => tag.toLowerCase() === itarget) !== -1
+        iname === itarget ||
+        itags.findIndex((tag) => tag === itarget) !== -1
       )
     },
     send(message, data) {
@@ -51,15 +52,8 @@ export function createDevice(
         return
       }
 
-      // send to matched child
-      const route = children.find((child) => child.match(target))
-      if (route) {
-        route.send(path, data)
-        return
-      }
-
       // send to parent device
-      sendToParent(message, data)
+      onParent(message, data)
     },
   }
 
@@ -72,7 +66,7 @@ what is a network device ??
 
 a name
 a list of tags
-a list refs to children network devices
+a function to handle a message for device
 a function to send a message to parent
 
 will need to figure out how to bridge parent network devices ?
