@@ -49,6 +49,7 @@
     "nanoid-dictionary": "^4.3.0",
     "parcel": "^2.9.3",
     "path-browserify": "^1.0.0",
+    "peerjs": "^1.5.1",
     "postcss": "^8.4.27",
     "prettier": "^3.0.1",
     "process": "^0.11.10",

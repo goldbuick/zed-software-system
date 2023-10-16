@@ -21,5 +21,21 @@ going to have different network transport methods ??
 
 8. we want to make a "homepage"
 
+side-note:
+  there is no global cache of packages, you simply collect read only keys to your friends packages
+  which presist even if they're offline
+
+network addressing is like a folder structure 
+  a folder can also have tags
+
+  you can send messages up the folder structure by name
+  /peer-id/session-id-1/holding/groups/group-id-1 is running code
+
+  /peer-id/session-id-2/holding/groups/group-id-1 is running code
+  sends a message to #holding:stop group-id-1
+
+  /peer-id/session-id-3/holding/groups/group-id-1 is running code
+
+  do we care about all or others here ???
 
 */

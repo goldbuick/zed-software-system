@@ -1,11 +1,11 @@
 import ErrorStackParser from 'error-stack-parser'
 import { klona } from 'klona/json'
-import { proxy, useSnapshot } from 'valtio'
+import { proxy } from 'valtio'
 
 import { GeneratorBuild } from './generator'
 import { GENERATED_FILENAME } from './transformer'
 
-export const HALT_AT_COUNT = 32
+export const HALT_AT_COUNT = 256
 
 // id or x, y coords
 export type MESSAGE_SOURCE = string | { x: number; y: number }
@@ -24,10 +24,7 @@ export type CHIP = {
   define: (incoming: CHIP_COMMANDS) => void
 
   // internal state api
-  state: (name: string) => Record<string, any>
-  snapshot: (
-    name: string,
-  ) => ReturnType<typeof useSnapshot<Record<string, any>>>
+  state: (name?: string) => Record<string, any>
 
   // lifecycle api
   tick: () => void
@@ -152,12 +149,9 @@ export function createChip(build: GeneratorBuild) {
     },
 
     // internal state api
-    state(name) {
+    state(name = 'shared') {
       state[name] = state[name] ?? {}
       return state[name]
-    },
-    snapshot(name) {
-      return useSnapshot(chip.state(name))
     },
 
     // lifecycle api

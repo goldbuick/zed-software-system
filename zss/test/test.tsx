@@ -1,28 +1,21 @@
 import test_zss from 'bundle-text:./layout.txt'
 import React, { useEffect } from 'react'
-import { compile, createChip } from 'zss/lang'
+import { useSnapshot } from 'valtio'
 
 import { GadgetFirmware } from '../gadget'
 import { Layout } from '../gadget/components/layout'
+import { createOS } from '../os'
 
-// compile script into runnable code
-const build = compile(test_zss)
-if (build.errors) {
-  console.info(build.tokens)
-  console.info(build.errors)
-}
+const os = createOS()
 
-const chip = createChip(build)
-GadgetFirmware.install(chip)
+const chipID = os.boot(test_zss, GadgetFirmware)
 
 export function ComponentTest() {
   useEffect(() => {
-    for (let i = 0; i < 10; ++i) {
-      chip.tick()
-    }
+    os.tick(chipID)
   }, [])
 
-  const snap = chip.snapshot('gadget')
+  const snap = useSnapshot<Record<string, any>>(os.state(chipID, 'gadget'))
 
   return <Layout panels={snap.layout} />
 }
