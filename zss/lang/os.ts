@@ -5,6 +5,7 @@ import { createGuid } from '../mapping/guid'
 
 export type OS = {
   boot: (code: string, ...firmwares: FIRMWARE[]) => string
+  ids: () => string[]
   halt: (id: string) => boolean
   active: (id: string) => boolean
   tick: (id: string) => void
@@ -42,22 +43,22 @@ export function createOS(): OS {
 
       return id
     },
+    ids() {
+      return Object.keys(chips)
+    },
     halt(id) {
       const chip = chips[id]
       delete chips[id]
       return !!chip
     },
     active(id) {
-      const chip = chips[id]
-      return chip?.shouldtick() ?? false
+      return chips[id]?.shouldtick() ?? false
     },
     tick(id) {
-      const chip = chips[id]
-      chip?.tick()
+      chips[id]?.tick()
     },
     state(id, name) {
-      const chip = chips[id]
-      return chip.state(name)
+      return chips[id]?.state(name) ?? {}
     },
   }
 
