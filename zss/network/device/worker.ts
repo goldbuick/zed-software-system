@@ -41,7 +41,7 @@ const TICK_FPS = Math.round(1000 / TICK_RATE)
 console.info({ TICK_FPS })
 
 // mainloop
-const frame = 0
+// const frame = 0
 function tick() {
   // console.info('tick', frame++)
   os.ids().forEach((id) => os.tick(id))
