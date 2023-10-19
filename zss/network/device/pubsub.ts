@@ -2,6 +2,8 @@ import { MESSAGE_FUNC, createDevice, createMessage } from '../device'
 
 export type PUBLISHER = {
   send: MESSAGE_FUNC
+  fromParent: MESSAGE_FUNC
+  linkParent: (handler: MESSAGE_FUNC) => void
   publish: (target: string, data: any) => void
 }
 
@@ -22,6 +24,12 @@ export function createPublisher(name: string, handler: MESSAGE_FUNC) {
   const publisher: PUBLISHER = {
     send(message) {
       device.send(message)
+    },
+    fromParent(message) {
+      device.fromParent(message)
+    },
+    linkParent(handler) {
+      device.linkParent(handler)
     },
     publish(target, data) {
       const now = Date.now()
@@ -44,12 +52,15 @@ export function createPublisher(name: string, handler: MESSAGE_FUNC) {
 
 export type SUBSCRIBE = {
   send: MESSAGE_FUNC
+  fromParent: MESSAGE_FUNC
+  linkParent: (handler: MESSAGE_FUNC) => void
   subscribe: (target: string) => void
   unsubscribe: () => void
 }
 
 export function createSubscribe(name: string, handler: MESSAGE_FUNC) {
   let publisher = ''
+
   const device = createDevice(name, [], handler)
 
   function sendSubscribe() {
@@ -63,6 +74,12 @@ export function createSubscribe(name: string, handler: MESSAGE_FUNC) {
   const subscribe: SUBSCRIBE = {
     send(message) {
       device.send(message)
+    },
+    fromParent(message) {
+      device.fromParent(message)
+    },
+    linkParent(handler) {
+      device.linkParent(handler)
     },
     subscribe(target) {
       publisher = target

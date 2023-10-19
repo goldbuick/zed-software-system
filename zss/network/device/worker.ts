@@ -3,13 +3,15 @@ import { createOS } from '/zss/lang/os'
 
 import { GadgetFirmware } from '/zss/gadget'
 
-import { MESSAGE, createDevice, createMessage } from '../device'
+import { MESSAGE, createMessage } from '../device'
+
+import { createPublisher } from './pubsub'
 
 const os = createOS()
 
 const firmwares: FIRMWARE[] = [GadgetFirmware]
 
-const device = createDevice('worker', [], (message) => {
+const device = createPublisher('worker', (message) => {
   switch (message.target.toLowerCase()) {
     case 'boot':
       device.send(
@@ -34,6 +36,7 @@ const device = createDevice('worker', [], (message) => {
 })
 
 device.linkParent((message) => {
+  console.info('sendToWebMain', message)
   postMessage(message)
 })
 
@@ -42,9 +45,9 @@ onmessage = function handleMessage(event) {
 }
 
 const TICK_RATE = 66.666 // 100 is 10 fps, 66.666 is ~15 fps, 50 is 20 fps, 40 is 25 fps  1000 / x = 15
-const TICK_FPS = Math.round(1000 / TICK_RATE)
+// const TICK_FPS = Math.round(1000 / TICK_RATE)
 
-console.info({ TICK_FPS })
+// console.info({ TICK_FPS })
 
 // mainloop
 // const frame = 0
@@ -63,11 +66,11 @@ function wake() {
   acc += delta
   if (acc >= TICK_RATE) {
     acc %= TICK_RATE
-    queueMicrotask(tick)
+    tick()
   }
 
   previous = now
-  queueMicrotask(wake)
+  setTimeout(wake, 0)
 }
 
 // server is ready
