@@ -1,23 +1,43 @@
 import { createGuid } from '../mapping/guid'
 
-export type MESSAGE_FUNC = (message: string, data: any) => void
+export type MESSAGE = {
+  origin: string
+  target: string
+  data?: any
+}
+
+export function createMessage(target: string, data?: any): MESSAGE {
+  if (data !== undefined) {
+    return { origin: '', target, data }
+  }
+  return { origin: '', target }
+}
+
+export type MESSAGE_FUNC = (message: MESSAGE) => void
 
 export type DEVICE = {
   id: () => string
   name: () => string
   tags: () => string[]
   match: (target: string) => boolean
-  handle: (message: string, data: any) => void
   send: MESSAGE_FUNC
+  handle: MESSAGE_FUNC
   fromParent: MESSAGE_FUNC
   linkParent: (handler: MESSAGE_FUNC) => void
   connect: (device: DEVICE) => void
   disconnect: (device: DEVICE) => void
 }
 
-export function parseMessage(message: string) {
-  const [target, ...path] = message.split(':')
+export function parseTarget(targetString: string) {
+  const [target, ...path] = targetString.split(':')
   return { target, path: path.join(':') }
+}
+
+function updateOrigin(origin: string, name: string) {
+  if (!origin) {
+    return name
+  }
+  return `${name}:${origin}`
 }
 
 export function createDevice(
@@ -46,45 +66,51 @@ export function createDevice(
       const itarget = target.toLowerCase()
       return (
         id === target ||
-        iname === itarget ||
         'all' === itarget ||
+        iname === itarget ||
         itags.findIndex((tag) => tag === itarget) !== -1
       )
     },
-    handle(message, data) {
-      const { target, path } = parseMessage(message)
+    send(message) {
+      const { target, path } = parseTarget(message.target)
+      const matched = device.match(target)
+
+      // we match target
+      if (matched) {
+        device.handle({ ...message, target: path })
+        return
+      }
+
+      // send to parent device
+      onParent?.({
+        ...message,
+        origin: updateOrigin(message.origin, name),
+      })
+    },
+    handle(message) {
+      const { target, path } = parseTarget(message.target)
 
       // does target match branches ?
       const matched = branches.filter((branch) => {
         if (branch.match(target)) {
-          branch.handle(path, data)
+          branch.handle({ ...message, target: path })
+          return true
         }
+        return false
       })
 
       // otherwise US
       if (matched.length === 0) {
-        onMessage(message, data)
+        onMessage(message)
       }
     },
-    send(message, data) {
-      const { target, path } = parseMessage(message)
+    fromParent(message) {
+      const { target, path } = parseTarget(message.target)
       const matched = device.match(target)
 
+      // we match target
       if (matched) {
-        // we match target
-        device.handle(path, data)
-      } else {
-        // send to parent device
-        onParent?.(message, data)
-      }
-    },
-    fromParent(message, data) {
-      const { target, path } = parseMessage(message)
-      const matched = device.match(target)
-
-      if (matched) {
-        // we match target
-        device.handle(path, data)
+        device.handle({ ...message, target: path })
       }
     },
     linkParent(handler) {

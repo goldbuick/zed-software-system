@@ -2,12 +2,14 @@ import * as jsonpatch from 'fast-json-patch'
 
 import { createGuid } from '/zss/mapping/guid'
 
-import { createDevice } from '../device'
+import { createDevice, createMessage } from '../device'
+
+import { createPublisher, createSubscribe } from './pubsub'
 
 export type JSON_SYNC_SERVER = {
   id: () => string
   state: () => Record<string, any>
-  diff: () => jsonpatch.Operation[]
+  sync: () => void
 }
 
 export function createJsonSyncServer() {
@@ -15,7 +17,9 @@ export function createJsonSyncServer() {
   const local: Record<string, any> = {
     state: {},
   }
-  const remote: Record<string, any> = {}
+  const remote: Record<string, any> = {
+    state: {},
+  }
 
   const server: JSON_SYNC_SERVER = {
     id() {
@@ -24,15 +28,18 @@ export function createJsonSyncServer() {
     state() {
       return local.state
     },
-    diff() {
-      return jsonpatch.compare(remote, local)
+    sync() {
+      const newRemote = jsonpatch.deepClone(local.state)
+      const patch = jsonpatch.compare(remote.state, newRemote)
+      device.publish('sync', patch)
+      remote.state = newRemote
     },
   }
 
-  const device = createDevice('jss', [], (message, args) => {
-    switch (message) {
+  const device = createPublisher('jss', (message) => {
+    switch (message.target) {
       case 'reset':
-        device.send(`jsc:${args}:reset`, remote)
+        device.send(createMessage(`${message.origin}:reset`, remote.state))
         break
       default:
         break
@@ -44,65 +51,54 @@ export function createJsonSyncServer() {
 
 export type JSON_SYNC_CLIENT = {
   id: () => string
-  state: () => Record<string, any>
-  read: (diff: jsonpatch.Operation[]) => boolean
-  reset: (newState: Record<string, any>) => void
+  destroy: () => void
 }
 
-export function createJsonSyncClient(serverId: string) {
+export type JSON_SYNC_CLIENT_CHANGE_FUNC = (state: Record<string, any>) => void
+
+export function createJsonSyncClient(
+  serverTarget: string,
+  onChange: JSON_SYNC_CLIENT_CHANGE_FUNC,
+) {
   const id = createGuid()
   let state: Record<string, any> = {}
   let needsReset = false
 
-  const client: JSON_SYNC_CLIENT = {
-    id() {
-      return id
-    },
-    state() {
-      return state
-    },
-    read(diff) {
-      if (needsReset) {
-        // we drop diffs while we wait for reset
-        return true
-      }
-
-      try {
-        jsonpatch.applyPatch(state, jsonpatch.deepClone(diff), true)
-      } catch (err) {
-        if (err instanceof jsonpatch.JsonPatchError) {
-          // we are out of sync and need to request a refresh
-          return false
-        }
-      }
-
-      return true
-    },
-    reset(newState) {
-      state = newState
-      needsReset = false
-    },
-  }
-
-  const device = createDevice('jsc', [], (message, args) => {
-    switch (message) {
-      case 'read': {
-        if (!client.read(args)) {
-          device.send(`jss:${serverId}:reset`, id)
+  const device = createSubscribe('jsc', (message) => {
+    switch (message.target) {
+      case 'sync':
+        if (!needsReset) {
+          try {
+            jsonpatch.applyPatch(state, jsonpatch.deepClone(message.data), true)
+            onChange(state)
+          } catch (err) {
+            if (err instanceof jsonpatch.JsonPatchError) {
+              // we are out of sync and need to request a refresh
+              needsReset = true
+              device.send(createMessage(`${serverTarget}:reset`))
+            }
+          }
         }
         break
-      }
+      case 'reset':
+        state = jsonpatch.deepClone(message.data)
+        onChange(state)
+        break
       default:
         break
     }
   })
 
+  device.subscribe(serverTarget)
+
+  const client: JSON_SYNC_CLIENT = {
+    id() {
+      return id
+    },
+    destroy() {
+      device.unsubscribe()
+    },
+  }
+
   return client
 }
-
-/*
-
-jsonsync is a simple server -> client proto
-clients are read only and this is used to keep a display model in sync
-
-*/

@@ -1,8 +1,14 @@
-import { DEVICE, MESSAGE_FUNC, createDevice } from '../device'
+import {
+  DEVICE,
+  MESSAGE,
+  MESSAGE_FUNC,
+  createDevice,
+  createMessage,
+} from '../device'
 
 export type WORKER_HOST = {
-  setParentHandler: (handler: MESSAGE_FUNC) => void
-  send: (message: string, data: any) => void
+  linkParent: (handler: MESSAGE_FUNC) => void
+  send: (message: MESSAGE) => void
   device: () => DEVICE
   destroy: () => void
 }
@@ -12,14 +18,14 @@ export function createWorkerHost(bootcode: string) {
     type: 'module',
   })
 
-  function sendToWebWorker(message: string, data: any) {
-    webworker.postMessage([message, data])
+  function sendToWebWorker(message: MESSAGE) {
+    webworker.postMessage(message)
   }
 
-  const device = createDevice('workerhost', [], (message, data) => {
-    switch (message) {
+  const device = createDevice('workerhost', [], (message) => {
+    switch (message.target) {
       case 'ready':
-        sendToWebWorker('worker:boot', bootcode)
+        sendToWebWorker(createMessage('worker:boot', bootcode))
         break
       default:
         // flag unsupported message
@@ -28,16 +34,15 @@ export function createWorkerHost(bootcode: string) {
   })
 
   webworker.addEventListener('message', (event) => {
-    const [message, data] = event.data
-    device.send(message, data)
+    device.send(event.data as MESSAGE)
   })
 
   const workerhost: WORKER_HOST = {
-    setParentHandler(handler) {
+    linkParent(handler) {
       device.linkParent(handler)
     },
-    send(message, data) {
-      device.send(message, data)
+    send(message) {
+      device.send(message)
     },
     device() {
       return device

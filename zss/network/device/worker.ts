@@ -3,22 +3,29 @@ import { createOS } from '/zss/lang/os'
 
 import { GadgetFirmware } from '/zss/gadget'
 
-import { createDevice } from '../device'
+import { MESSAGE, createDevice, createMessage } from '../device'
 
 const os = createOS()
 
 const firmwares: FIRMWARE[] = [GadgetFirmware]
 
-const device = createDevice('worker', [], (message, data) => {
-  switch (message.toLowerCase()) {
+const device = createDevice('worker', [], (message) => {
+  switch (message.target.toLowerCase()) {
     case 'boot':
-      device.send('workerhost:chipboot', os.boot(data, ...firmwares))
+      device.send(
+        createMessage(
+          'workerhost:chipboot',
+          os.boot(message.data, ...firmwares),
+        ),
+      )
       break
     case 'halt':
-      device.send('workerhost:chiphalt', os.halt(data))
+      device.send(createMessage('workerhost:chiphalt', os.halt(message.data)))
       break
     case 'active':
-      device.send('workerhost:chipactive', os.active(data))
+      device.send(
+        createMessage('workerhost:chipactive', os.active(message.data)),
+      )
       break
     default:
       // error unknown message ?
@@ -26,13 +33,12 @@ const device = createDevice('worker', [], (message, data) => {
   }
 })
 
-device.linkParent((message, data) => {
-  postMessage([message, data])
+device.linkParent((message) => {
+  postMessage(message)
 })
 
 onmessage = function handleMessage(event) {
-  const [message, data] = event.data
-  device.fromParent(message, data)
+  device.fromParent(event.data as MESSAGE)
 }
 
 const TICK_RATE = 66.666 // 100 is 10 fps, 66.666 is ~15 fps, 50 is 20 fps, 40 is 25 fps  1000 / x = 15
@@ -66,4 +72,4 @@ function wake() {
 
 // server is ready
 wake()
-device.send('workerhost:ready', undefined)
+device.send(createMessage('workerhost:ready'))
