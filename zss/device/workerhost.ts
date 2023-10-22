@@ -1,4 +1,4 @@
-import { DEVICE, MESSAGE, MESSAGE_FUNC, createMessage } from '../device'
+import { DEVICE, MESSAGE, MESSAGE_FUNC, createMessage } from '../network/device'
 
 import { createSubscribe } from './pubsub'
 

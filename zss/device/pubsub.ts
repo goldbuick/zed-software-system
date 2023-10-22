@@ -1,4 +1,4 @@
-import { MESSAGE_FUNC, createDevice, createMessage } from '../device'
+import { MESSAGE_FUNC, createDevice, createMessage } from '../network/device'
 
 export type PUBLISHER = {
   send: MESSAGE_FUNC

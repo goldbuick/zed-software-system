@@ -2,8 +2,8 @@ import zsscode from 'bundle-text:./layout.txt'
 import React, { useEffect } from 'react'
 import { useSnapshot } from 'valtio'
 
+import { createWorkerHost } from '../device/workerhost'
 import { Layout } from '../gadget/components/layout'
-import { createWorkerHost } from '../network/device/workerhost'
 
 const workerhost = createWorkerHost(zsscode)
 

@@ -1,23 +1,25 @@
 import * as jsonpatch from 'fast-json-patch'
 
+import { STATE } from '/zss/lang/chip'
+
 import { createGuid } from '/zss/mapping/guid'
 
-import { createDevice, createMessage } from '../device'
+import { createMessage } from '../network/device'
 
 import { createPublisher, createSubscribe } from './pubsub'
 
 export type JSON_SYNC_SERVER = {
   id: () => string
-  state: () => Record<string, any>
+  state: () => STATE
   sync: () => void
 }
 
 export function createJsonSyncServer() {
   const id = createGuid()
-  const local: Record<string, any> = {
+  const local: STATE = {
     state: {},
   }
-  const remote: Record<string, any> = {
+  const remote: STATE = {
     state: {},
   }
 
@@ -54,14 +56,14 @@ export type JSON_SYNC_CLIENT = {
   destroy: () => void
 }
 
-export type JSON_SYNC_CLIENT_CHANGE_FUNC = (state: Record<string, any>) => void
+export type JSON_SYNC_CLIENT_CHANGE_FUNC = (state: STATE) => void
 
 export function createJsonSyncClient(
   serverTarget: string,
   onChange: JSON_SYNC_CLIENT_CHANGE_FUNC,
 ) {
   const id = createGuid()
-  let state: Record<string, any> = {}
+  let state: STATE = {}
   let needsReset = false
 
   const device = createSubscribe('jsc', (message) => {

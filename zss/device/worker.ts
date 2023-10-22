@@ -3,13 +3,15 @@ import { createOS } from '/zss/lang/os'
 
 import { GadgetFirmware } from '/zss/gadget'
 
-import { MESSAGE, createMessage } from '../device'
+import { MESSAGE, createMessage } from '../network/device'
 
 import { createPublisher } from './pubsub'
 
 const os = createOS()
 
 const firmwares: FIRMWARE[] = [GadgetFirmware]
+
+// do we actually run multilpe sessions here ??
 
 const device = createPublisher('worker', (message) => {
   switch (message.target.toLowerCase()) {
@@ -76,3 +78,15 @@ function wake() {
 // server is ready
 wake()
 device.send(createMessage('workerhost:ready'))
+
+/*
+
+We need a way for multiple chips to write to gadget
+since we are only syncing one data model for gadget
+we do not need multiple pub / sub for it
+
+so in this case firmware should also have singleton state
+
+because after each tick, we sync() on changes to the gadget data model
+
+*/
