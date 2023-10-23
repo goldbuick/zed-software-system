@@ -1,32 +1,19 @@
-import { FIRMWARE } from 'zss/system/firmware'
-import { GadgetFirmware } from 'zss/system/firmware/gadget'
 import { createOS } from 'zss/system/os'
 
-import { MESSAGE, createMessage } from '../device'
-
-import { createPublisher } from './pubsub'
+import { MESSAGE, createDevice, createMessage } from '../device'
 
 const os = createOS()
 
-const firmwares: FIRMWARE[] = [GadgetFirmware]
-
-const device = createPublisher('worker', (message) => {
+const device = createDevice('worker', [], (message) => {
   switch (message.target.toLowerCase()) {
     case 'boot':
-      device.send(
-        createMessage(
-          'workerhost:chipboot',
-          os.boot(message.data, ...firmwares),
-        ),
-      )
+      device.send(createMessage('workerhost:boot', os.boot(message.data)))
       break
     case 'halt':
-      device.send(createMessage('workerhost:chiphalt', os.halt(message.data)))
+      device.send(createMessage('workerhost:halt', os.halt(message.data)))
       break
     case 'active':
-      device.send(
-        createMessage('workerhost:chipactive', os.active(message.data)),
-      )
+      device.send(createMessage('workerhost:active', os.active(message.data)))
       break
     default:
       // error unknown message ?
@@ -48,6 +35,7 @@ const TICK_RATE = 66.666 // 100 is 10 fps, 66.666 is ~15 fps, 50 is 20 fps, 40 i
 // mainloop
 function tick() {
   os.ids().forEach((id) => os.tick(id))
+  // we need to sync gadget here
 }
 
 // timer acc

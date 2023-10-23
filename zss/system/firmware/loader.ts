@@ -18,6 +18,9 @@ export const LoaderFirmware = createFirmware('loader').command(
       case 'gadget':
         GadgetFirmware.install(chip)
         break
+      default:
+        console.error(`unknown firmware ${name}`)
+        break
     }
 
     return 0

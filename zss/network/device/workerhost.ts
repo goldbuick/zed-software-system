@@ -1,6 +1,9 @@
-import { MESSAGE, MESSAGE_FUNC, createMessage } from 'zss/network/device'
-
-import { createSubscribe } from './pubsub'
+import {
+  MESSAGE,
+  MESSAGE_FUNC,
+  createDevice,
+  createMessage,
+} from 'zss/network/device'
 
 export type WORKER_HOST = {
   linkParent: (handler: MESSAGE_FUNC) => void
@@ -18,11 +21,9 @@ export function createWorkerHost(bootcode: string) {
     webworker.postMessage(message)
   }
 
-  const device = createSubscribe('workerhost', (message) => {
+  const device = createDevice('workerhost', [], (message) => {
     switch (message.target.toLowerCase()) {
       case 'ready':
-        // subscribe to jss
-        device.subscribe('workerhost:worker')
         // send worker boot code
         sendToWebWorker(createMessage('worker:boot', bootcode))
         break
@@ -45,7 +46,6 @@ export function createWorkerHost(bootcode: string) {
       device.send(message)
     },
     destroy() {
-      device.unsubscribe()
       webworker.terminate()
     },
   }

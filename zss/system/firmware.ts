@@ -1,32 +1,26 @@
 import { CHIP, CHIP_COMMANDS, STATE, WORD } from './chip'
 
 export type FIRMWARE = {
-  shared: () => STATE
   command: (name: string, func: FIRMWARE_COMMAND) => FIRMWARE
   install: (chip: CHIP) => void
   state: (chip: CHIP) => STATE
   value: (chip: CHIP, key: string) => any
 }
 
-export type FIRMWARE_COMMAND = (
-  shared: any,
-  state: any,
-  chip: CHIP,
-  words: WORD[],
-) => number
+export type FIRMWARE_INIT = (shared: any) => void
 
-export function createFirmware(name: string): FIRMWARE {
+export type FIRMWARE_COMMAND = (state: any, chip: CHIP, words: WORD[]) => number
+
+export function createFirmware(name: string, onInit?: FIRMWARE_INIT): FIRMWARE {
   const commands: CHIP_COMMANDS = {}
 
   const shared: STATE = {}
+  onInit?.(shared)
 
   const firmware: FIRMWARE = {
-    shared() {
-      return shared
-    },
     command(name, func): FIRMWARE {
       commands[name] = (chip: CHIP, words: WORD[]) =>
-        func(shared, firmware.state(chip), chip, words)
+        func(firmware.state(chip), chip, words)
       return firmware
     },
     install(chip) {

@@ -83,10 +83,12 @@ export const PANEL_EDGE_MAP: Record<string, PANEL_EDGE> = {
   scroll: PANEL_EDGE.SCROLL,
 }
 
+export type PANEL_ITEM = string | [string, string, string?]
+
 export type PANEL = {
   id: string
   name: string
   edge: PANEL_EDGE
   size: number
-  text: string[]
+  text: PANEL_ITEM[]
 }
