@@ -10,7 +10,7 @@
     "test": "yarn jest",
     "update": "node version",
     "clear": "rimraf dist && rimraf .parcel-cache",
-    "start": "yarn clear && PORT=7777 parcel"
+    "start": "yarn && yarn clear && PORT=7777 parcel"
   },
   "private": true,
   "@parcel/resolver-default": {
