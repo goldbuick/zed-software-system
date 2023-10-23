@@ -6,7 +6,7 @@ import {
   WRITE_TEXT_CONTEXT,
   tokenizeAndWriteTextFormat,
 } from '../data/textFormat'
-import { loadDefaultCharset, loadDefaultPalette } from '../file'
+import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { Tiles } from './tiles'
 

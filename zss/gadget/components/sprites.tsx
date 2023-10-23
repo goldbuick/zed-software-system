@@ -13,7 +13,7 @@ import { convertPaletteToColors } from '../data/palette'
 import { time } from '../display/anim'
 import { createSpritesMaterial } from '../display/sprites'
 import useBitmapTexture from '../display/textures'
-import { loadDefaultCharset, loadDefaultPalette } from '../file'
+import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { useClipping } from './clipping'
 
