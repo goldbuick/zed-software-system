@@ -1,3 +1,4 @@
+@gadget
 ' Here is a simple layout in gadget
 #set health1 3
 #set health2 5

@@ -1,4 +1,4 @@
-import { MESSAGE_FUNC, createDevice, createMessage } from '../network/device'
+import { MESSAGE_FUNC, createDevice, createMessage } from '/zss/network/device'
 
 export type PUBLISHER = {
   send: MESSAGE_FUNC
@@ -89,6 +89,7 @@ export function createSubscribe(name: string, handler: MESSAGE_FUNC) {
     },
     unsubscribe() {
       publisher = ''
+      clearInterval(timer)
     },
   }
 

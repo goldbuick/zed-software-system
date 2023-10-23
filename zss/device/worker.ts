@@ -1,5 +1,5 @@
-import { FIRMWARE } from '/zss/lang/firmware'
-import { createOS } from '/zss/lang/os'
+import { FIRMWARE } from '/zss/firmware/firmware'
+import { createOS } from '/zss/firmware/os'
 
 import { GadgetFirmware } from '/zss/gadget'
 
@@ -10,8 +10,6 @@ import { createPublisher } from './pubsub'
 const os = createOS()
 
 const firmwares: FIRMWARE[] = [GadgetFirmware]
-
-// do we actually run multilpe sessions here ??
 
 const device = createPublisher('worker', (message) => {
   switch (message.target.toLowerCase()) {
@@ -38,7 +36,6 @@ const device = createPublisher('worker', (message) => {
 })
 
 device.linkParent((message) => {
-  console.info('sendToWebMain', message)
   postMessage(message)
 })
 
@@ -49,12 +46,8 @@ onmessage = function handleMessage(event) {
 const TICK_RATE = 66.666 // 100 is 10 fps, 66.666 is ~15 fps, 50 is 20 fps, 40 is 25 fps  1000 / x = 15
 // const TICK_FPS = Math.round(1000 / TICK_RATE)
 
-// console.info({ TICK_FPS })
-
 // mainloop
-// const frame = 0
 function tick() {
-  // console.info('tick', frame++)
   os.ids().forEach((id) => os.tick(id))
 }
 

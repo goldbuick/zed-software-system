@@ -1,3 +1,5 @@
+import { DEVICE } from '/zss/network/device'
+
 import { CHIP, CHIP_COMMANDS, WORD } from './chip'
 
 export type FIRMWARE = {
@@ -5,11 +7,12 @@ export type FIRMWARE = {
   install: (chip: CHIP) => void
   state: (chip: CHIP) => Record<string, any>
   value: (chip: CHIP, key: string) => any
+  device: () => DEVICE | undefined
 }
 
 export type FIRMWARE_COMMAND = (state: any, chip: CHIP, words: WORD[]) => number
 
-export function createFirmware(name: string): FIRMWARE {
+export function createFirmware(name: string, device?: DEVICE): FIRMWARE {
   const commands: CHIP_COMMANDS = {}
 
   const firmware: FIRMWARE = {
@@ -26,6 +29,9 @@ export function createFirmware(name: string): FIRMWARE {
     },
     value(chip, key) {
       return chip.state(name)[key]
+    },
+    device() {
+      return device
     },
   }
 

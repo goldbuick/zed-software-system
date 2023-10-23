@@ -2,8 +2,8 @@ import ErrorStackParser from 'error-stack-parser'
 import { klona } from 'klona/json'
 import { proxy } from 'valtio'
 
-import { GeneratorBuild } from './generator'
-import { GENERATED_FILENAME } from './transformer'
+import { GeneratorBuild } from '../lang/generator'
+import { GENERATED_FILENAME } from '../lang/transformer'
 
 export const HALT_AT_COUNT = 64
 

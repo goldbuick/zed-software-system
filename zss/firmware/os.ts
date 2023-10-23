@@ -1,7 +1,8 @@
-import { CHIP, createChip } from '../lang/chip'
-import { FIRMWARE } from '../lang/firmware'
 import { GeneratorBuild, compile } from '../lang/generator'
 import { createGuid } from '../mapping/guid'
+
+import { CHIP, createChip } from './chip'
+import { FIRMWARE } from './firmware'
 
 export type OS = {
   boot: (code: string, ...firmwares: FIRMWARE[]) => string
