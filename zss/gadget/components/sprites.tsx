@@ -5,9 +5,8 @@ import {
   BufferGeometry,
   InterleavedBufferAttribute,
 } from 'three'
-
-import { range, select } from '/zss/mapping/array'
-import { clamp, randomInteger } from '/zss/mapping/number'
+import { range, select } from 'zss/mapping/array'
+import { clamp, randomInteger } from 'zss/mapping/number'
 
 import { CHARS_PER_ROW, CHAR_HEIGHT, CHAR_WIDTH, SPRITES_SPRITE } from '../data'
 import { convertPaletteToColors } from '../data/palette'

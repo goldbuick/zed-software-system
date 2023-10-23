@@ -1,9 +1,8 @@
-import { FIRMWARE } from '/zss/firmware/firmware'
-import { createOS } from '/zss/firmware/os'
+import { FIRMWARE } from 'zss/system/firmware'
+import { GadgetFirmware } from 'zss/system/firmware/gadget'
+import { createOS } from 'zss/system/os'
 
-import { GadgetFirmware } from '/zss/gadget'
-
-import { MESSAGE, createMessage } from '../network/device'
+import { MESSAGE, createMessage } from '../device'
 
 import { createPublisher } from './pubsub'
 

@@ -1,6 +1,5 @@
 import { createToken, IToken, Lexer } from 'chevrotain'
-
-import { range } from '/zss/mapping/array'
+import { range } from 'zss/mapping/array'
 
 import { LANG_DEV } from '../../config'
 

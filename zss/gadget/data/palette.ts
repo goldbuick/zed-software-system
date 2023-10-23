@@ -1,6 +1,5 @@
 import { Color } from 'three'
-
-import { range } from '/zss/mapping/array'
+import { range } from 'zss/mapping/array'
 
 import { BYTES_PER_COLOR, PALETTE_BITMAP } from './types'
 

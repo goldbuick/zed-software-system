@@ -1,4 +1,4 @@
-import { createGuid } from '/zss/mapping/guid'
+import { createGuid } from 'zss/mapping/guid'
 
 export type BITMAP = {
   id: string

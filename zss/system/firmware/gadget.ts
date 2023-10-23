@@ -1,11 +1,10 @@
-import { createFirmware } from 'zss/lang'
+import { createGuid } from 'zss/mapping/guid'
 
-import { ARG, STATE } from '../lang/chip'
-import { createGuid } from '../mapping/guid'
+import { PANEL, PANEL_EDGE, PANEL_EDGE_MAP } from '/zss/gadget/data'
 
-import { PANEL, PANEL_EDGE, PANEL_EDGE_MAP } from './data'
+import { ARG } from '/zss/system/chip'
 
-const sharedState: STATE = {}
+import { createFirmware } from '../firmware'
 
 function initState(state: any) {
   state.layout = []
@@ -42,34 +41,34 @@ function findPanel(state: any) {
 }
 
 export const GadgetFirmware = createFirmware('gadget')
-  .command('get', (state, chip, args) => {
+  .command('get', (shared, state, chip, args) => {
     const name = chip.wordToString(args[0])
     return state[name] ?? 0
   })
-  .command('set', (state, chip, args) => {
+  .command('set', (shared, state, chip, args) => {
     const name = chip.wordToString(args[0])
     state[name] = args[1]
     return 0
   })
-  .command('text', (state, chip, args) => {
+  .command('text', (shared, state, chip, args) => {
     const [text] = chip.mapArgs(args, ARG.STRING) as [string]
 
     // default state
-    defaultState(sharedState)
+    defaultState(shared)
 
     // find slot
-    const panel = findPanel(sharedState)
+    const panel = findPanel(shared)
 
     // add text
-    if (sharedState.layoutReset) {
-      sharedState.layoutReset = false
+    if (shared.layoutReset) {
+      shared.layoutReset = false
       panel.text = []
     }
     panel.text.push(text)
 
     return 0
   })
-  .command('hyperlink', (state, chip, args) => {
+  .command('hyperlink', (shared, state, chip, args) => {
     const [target, label, input] = chip.mapArgs(
       args,
       1,
@@ -79,21 +78,21 @@ export const GadgetFirmware = createFirmware('gadget')
     ) as [string, string, string]
 
     // default state
-    defaultState(sharedState)
+    defaultState(shared)
 
     // find slot
-    const panel = findPanel(sharedState)
+    const panel = findPanel(shared)
 
     // add hypertext
-    if (sharedState.layoutReset) {
-      sharedState.layoutReset = false
+    if (shared.layoutReset) {
+      shared.layoutReset = false
       panel.text = []
     }
     panel.text.push([target, label, input])
 
     return 0
   })
-  .command('gadget', (state, chip, args) => {
+  .command('gadget', (shared, state, chip, args) => {
     const [edge, size, name] = chip.mapArgs(
       args,
       ARG.STRING,
@@ -105,20 +104,20 @@ export const GadgetFirmware = createFirmware('gadget')
     const edgeConst = PANEL_EDGE_MAP[`${edge}`.toLowerCase()]
 
     // default state
-    defaultState(sharedState)
+    defaultState(shared)
 
-    const panelState: PANEL | undefined = sharedState.layout.find(
+    const panelState: PANEL | undefined = shared.layout.find(
       (panel: PANEL) => panel.name === panelName,
     )
 
     if (panelState) {
       // set focus to panel and mark for reset
-      sharedState.layoutReset = true
-      sharedState.layoutFocus = panelName
+      shared.layoutReset = true
+      shared.layoutFocus = panelName
     } else {
       switch (edgeConst) {
         case PANEL_EDGE.START:
-          initState(sharedState)
+          initState(shared)
           break
         case PANEL_EDGE.LEFT:
         case PANEL_EDGE.RIGHT:
@@ -132,8 +131,8 @@ export const GadgetFirmware = createFirmware('gadget')
             size,
             text: [],
           }
-          sharedState.layout.push(panel)
-          sharedState.layoutFocus = panelName
+          shared.layout.push(panel)
+          shared.layoutFocus = panelName
           break
         default:
           // todo: raise runtime error

@@ -1,10 +1,8 @@
 import * as jsonpatch from 'fast-json-patch'
+import { createGuid } from 'zss/mapping/guid'
+import { createMessage } from 'zss/network/device'
 
-import { STATE } from '/zss/firmware/chip'
-
-import { createGuid } from '/zss/mapping/guid'
-
-import { createMessage } from '/zss/network/device'
+import { STATE } from '../../system/chip'
 
 import { createPublisher, createSubscribe } from './pubsub'
 

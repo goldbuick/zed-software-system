@@ -1,7 +1,6 @@
 import DEFAULT_CHR from 'data-url:./default.chr'
 import DEFAULT_PAL from 'data-url:./default.pal'
-
-import { createGuid } from '/zss/mapping/guid'
+import { createGuid } from 'zss/mapping/guid'
 
 import {
   BYTES_PER_COLOR,

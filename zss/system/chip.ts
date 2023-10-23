@@ -1,9 +1,7 @@
 import ErrorStackParser from 'error-stack-parser'
 import { klona } from 'klona/json'
-import { proxy } from 'valtio'
-
-import { GeneratorBuild } from '../lang/generator'
-import { GENERATED_FILENAME } from '../lang/transformer'
+import { GeneratorBuild } from 'zss/lang/generator'
+import { GENERATED_FILENAME } from 'zss/lang/transformer'
 
 export const HALT_AT_COUNT = 64
 
@@ -128,7 +126,7 @@ export function createChip(build: GeneratorBuild) {
   }
 
   // chip internal state
-  const state = proxy<Record<string, object>>({})
+  const state: STATE = {}
 
   // chip invokes
   let invokes: Record<string, CHIP_COMMAND> = {}

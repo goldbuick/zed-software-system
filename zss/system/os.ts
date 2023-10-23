@@ -1,11 +1,11 @@
-import { GeneratorBuild, compile } from '../lang/generator'
-import { createGuid } from '../mapping/guid'
+import { GeneratorBuild, compile } from 'zss/lang/generator'
+import { createGuid } from 'zss/mapping/guid'
 
 import { CHIP, createChip } from './chip'
-import { FIRMWARE } from './firmware'
+import { LoaderFirmware } from './firmware/loader'
 
 export type OS = {
-  boot: (code: string, ...firmwares: FIRMWARE[]) => string
+  boot: (code: string) => string
   ids: () => string[]
   halt: (id: string) => boolean
   active: (id: string) => boolean
@@ -30,7 +30,7 @@ export function createOS(): OS {
   }
 
   const os: OS = {
-    boot(code, ...firmwares) {
+    boot(code) {
       const id = createGuid()
 
       const result = build(code)
@@ -40,7 +40,7 @@ export function createOS(): OS {
       }
 
       const chip = (chips[id] = createChip(result))
-      firmwares.forEach((firmware) => firmware.install(chip))
+      LoaderFirmware.install(chip)
 
       return id
     },

@@ -1,8 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import React, { useEffect, useMemo, useRef } from 'react'
 import { BufferGeometry } from 'three'
-
-import { range } from '/zss/mapping/array'
+import { range } from 'zss/mapping/array'
 
 import { time } from '../display/anim'
 import {

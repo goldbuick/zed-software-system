@@ -1,19 +1,12 @@
-import { OrthographicCamera, Stats, Loader } from '@react-three/drei'
+import { Loader } from '@react-three/drei'
 import { Canvas, events } from '@react-three/fiber'
-import {
-  EffectComposer,
-  ChromaticAberration,
-} from '@react-three/postprocessing'
-import { BlendFunction } from 'postprocessing'
 import React from 'react'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
 
-import { STATS_DEV } from '../config'
 import { makeEven } from '../mapping/number'
-import { ComponentTest } from '../test/test'
 
-import { Framing } from './components/Framing'
+import { Terminal } from './components/Terminal'
 
 const target = new THREE.Vector3()
 const facing = new THREE.Vector3()
@@ -70,8 +63,6 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   },
 })
 
-const PHASE = 0.001
-
 export function App() {
   const [ref, bounds] = useMeasure()
 
@@ -116,22 +107,7 @@ export function App() {
               gl.localClippingEnabled = true
             }}
           >
-            <OrthographicCamera
-              makeDefault
-              near={1}
-              far={2000}
-              position={[0, 0, 1000]}
-            />
-            <Framing>
-              <ComponentTest />
-            </Framing>
-            {STATS_DEV && <Stats />}
-            <EffectComposer>
-              <ChromaticAberration
-                blendFunction={BlendFunction.NORMAL} // blend mode
-                offset={[-PHASE, PHASE]} // color offset
-              />
-            </EffectComposer>
+            <Terminal />
           </Canvas>
         </div>
       </div>

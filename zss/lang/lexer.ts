@@ -5,8 +5,7 @@ import {
   IToken,
   TokenType,
 } from 'chevrotain'
-
-import { range } from '/zss/mapping/array'
+import { range } from 'zss/mapping/array'
 
 import { LANG_DEV } from '../config'
 
