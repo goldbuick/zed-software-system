@@ -5,6 +5,8 @@ import {
   createMessage,
 } from 'zss/network/device'
 
+import { createJsonSyncClient } from './jsonsync'
+
 export type WORKER_HOST = {
   device: DEVICE
   destroy: () => void
@@ -16,30 +18,39 @@ export function createWorkerHost(bootcode: string) {
   })
 
   function sendToWebWorker(message: MESSAGE) {
+    console.info('sendToWebWorker', message)
     webworker.postMessage(message)
   }
+
+  const gadgetclient = createJsonSyncClient('gadgetclient', (state) => {
+    console.info('gadgetclient', state)
+  })
 
   const device = createDevice('workerhost', [], (message) => {
     switch (message.target.toLowerCase()) {
       case 'ready':
+        // subscribe
+        gadgetclient.subscribe('workerhost:gadgetserver')
         // send worker boot code
         sendToWebWorker(createMessage('worker:boot', bootcode))
         break
       case 'boot':
-        console.info('did boot', message.data)
         break
       case 'halt':
         break
       case 'active':
         break
       default:
-        // show unsupported message
-        console.info(message)
+        // forward to worker
+        sendToWebWorker(message)
         break
     }
   })
 
+  device.connect(gadgetclient.device)
+
   webworker.addEventListener('message', (event) => {
+    console.info('fromWorker', event.data)
     device.send(event.data as MESSAGE)
   })
 

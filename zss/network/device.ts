@@ -24,8 +24,8 @@ export type DEVICE = {
   handle: MESSAGE_FUNC
   fromParent: MESSAGE_FUNC
   linkParent: (handler: MESSAGE_FUNC) => void
-  connect: (device: DEVICE) => void
-  disconnect: (device: DEVICE) => void
+  connect: (child: DEVICE) => void
+  disconnect: (child: DEVICE) => void
 }
 
 export function parseTarget(targetString: string) {
@@ -73,9 +73,9 @@ export function createDevice(
     },
     send(message) {
       const { target, path } = parseTarget(message.target)
-      console.info(name, { target, path })
-
       const matched = device.match(target)
+
+      console.info(name, { origin: message.origin, target, path, matched })
 
       // we match target
       if (matched) {
@@ -108,22 +108,31 @@ export function createDevice(
     },
     fromParent(message) {
       const { target, path } = parseTarget(message.target)
-      const matched = device.match(target)
+
+      // does target match branches ?
+      const didhandle = branches.filter((branch) => {
+        if (branch.match(target)) {
+          branch.handle({ ...message, target: path })
+          return true
+        }
+        return false
+      })
 
       // we match target
-      if (matched) {
+      if (!didhandle && device.match(target)) {
         device.handle({ ...message, target: path })
+        return
       }
     },
     linkParent(handler) {
       onParent = handler
     },
-    connect(device) {
-      device.linkParent(device.send)
-      branches.push(device)
+    connect(child) {
+      child.linkParent(device.send)
+      branches.push(child)
     },
-    disconnect(device) {
-      branches = branches.filter((item) => item !== device)
+    disconnect(child) {
+      branches = branches.filter((item) => item !== child)
     },
   }
 

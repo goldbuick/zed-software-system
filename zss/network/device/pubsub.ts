@@ -36,10 +36,12 @@ export function createPublisher(
     switch (message.target.toLowerCase()) {
       case 'sub': {
         trimOrigins()
+
         // detect new sub
-        if (subscribers[message.origin]) {
+        if (subscribers[message.origin] === undefined) {
           onSub(message.origin)
         }
+
         // update timestamp
         subscribers[message.origin] = Date.now()
         break
@@ -74,11 +76,9 @@ export type SUBSCRIBE = {
 export function createSubscribe(name: string, handler: MESSAGE_FUNC) {
   let publisher = ''
 
-  console.info('createSubscribe', name)
   const device = createDevice(name, [], handler)
 
   function sendSubscribe() {
-    console.info('sendSubscribe', publisher)
     if (publisher) {
       device.send(createMessage(`${publisher}:sub`))
       setTimeout(sendSubscribe, 8000)

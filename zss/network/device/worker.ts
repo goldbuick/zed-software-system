@@ -8,7 +8,7 @@ import { createJsonSyncServer } from './jsonsync'
 
 const os = createOS()
 
-const gadgetsync = createJsonSyncServer('gadgetsync')
+const gadgetserver = createJsonSyncServer('gadgetserver')
 
 const device = createDevice('worker', [], (message) => {
   switch (message.target.toLowerCase()) {
@@ -32,11 +32,12 @@ device.linkParent((message) => {
 })
 
 onmessage = function handleMessage(event) {
+  console.info('fromParent', event.data)
   device.fromParent(event.data as MESSAGE)
 }
 
 // link in gadget sync
-device.connect(gadgetsync.device)
+device.connect(gadgetserver.device)
 
 const TICK_RATE = 66.666 // 100 is 10 fps, 66.666 is ~15 fps, 50 is 20 fps, 40 is 25 fps  1000 / x = 15
 // const TICK_FPS = Math.round(1000 / TICK_RATE)
@@ -45,7 +46,7 @@ const TICK_RATE = 66.666 // 100 is 10 fps, 66.666 is ~15 fps, 50 is 20 fps, 40 i
 function tick() {
   os.ids().forEach((id) => os.tick(id))
   // we need to sync gadget here
-  gadgetsync.sync(GadgetFirmware.shared)
+  gadgetserver.sync(GadgetFirmware.shared)
 }
 
 // timer acc

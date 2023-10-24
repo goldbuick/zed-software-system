@@ -17,7 +17,6 @@ export function createJsonSyncServer(name: string) {
   const publisher = createPublisher(
     name,
     (origin) => {
-      console.info('new origin', origin)
       publisher.device.send(createMessage(`${origin}:reset`, remote.state))
     },
     (message) => {
@@ -51,6 +50,7 @@ export function createJsonSyncServer(name: string) {
 
 export type JSON_SYNC_CLIENT = {
   device: DEVICE
+  subscribe: (target: string) => void
   destroy: () => void
 }
 
@@ -58,13 +58,13 @@ export type JSON_SYNC_CLIENT_CHANGE_FUNC = (state: STATE) => void
 
 export function createJsonSyncClient(
   name: string,
-  serverTarget: string,
   onChange: JSON_SYNC_CLIENT_CHANGE_FUNC,
 ) {
   let state: STATE = {}
   let needsReset = false
 
   const sub = createSubscribe(name, (message) => {
+    console.info('sub', message)
     switch (message.target) {
       case 'sync':
         if (!needsReset) {
@@ -75,7 +75,7 @@ export function createJsonSyncClient(
             if (err instanceof jsonpatch.JsonPatchError) {
               // we are out of sync and need to request a refresh
               needsReset = true
-              sub.device.send(createMessage(`${serverTarget}:reset`))
+              sub.device.send(createMessage(`${message.origin}:reset`))
             }
           }
         }
@@ -89,10 +89,11 @@ export function createJsonSyncClient(
     }
   })
 
-  sub.subscribe(serverTarget)
-
   const client: JSON_SYNC_CLIENT = {
     device: sub.device,
+    subscribe(target) {
+      sub.subscribe(target)
+    },
     destroy() {
       sub.unsubscribe()
     },
