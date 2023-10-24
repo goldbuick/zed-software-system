@@ -10,16 +10,42 @@ export type PUBLISHER = {
   publish: (target: string, data: any) => void
 }
 
-export function createPublisher(name: string, handler: MESSAGE_FUNC) {
+export type PUBLISHER_NEW_SUB_FUNC = (origin: string) => void
+
+export function createPublisher(
+  name: string,
+  onSub: PUBLISHER_NEW_SUB_FUNC,
+  onMessage: MESSAGE_FUNC,
+) {
   const subscribers: Record<string, number> = {}
+
+  function trimOrigins() {
+    const now = Date.now()
+    const origins = Object.keys(subscribers)
+
+    origins.forEach((origin) => {
+      const seconds = Math.floor((now - subscribers[origin]) / 1000)
+      // dead sub
+      if (seconds > 16) {
+        delete subscribers[origin]
+      }
+    })
+  }
 
   const device = createDevice(name, [], (message) => {
     switch (message.target.toLowerCase()) {
-      case 'sub':
+      case 'sub': {
+        trimOrigins()
+        // detect new sub
+        if (subscribers[message.origin]) {
+          onSub(message.origin)
+        }
+        // update timestamp
         subscribers[message.origin] = Date.now()
         break
+      }
       default:
-        handler(message)
+        onMessage(message)
         break
     }
   })
@@ -27,17 +53,11 @@ export function createPublisher(name: string, handler: MESSAGE_FUNC) {
   const publisher: PUBLISHER = {
     device,
     publish(target, data) {
-      const now = Date.now()
-      const origins = Object.keys(subscribers)
+      trimOrigins()
 
+      const origins = Object.keys(subscribers)
       origins.forEach((origin) => {
-        const seconds = Math.floor((now - subscribers[origin]) / 1000)
-        if (seconds < 16) {
-          device.send(createMessage(`${origin}:${target}`, data))
-        } else {
-          // dead sub
-          delete subscribers[origin]
-        }
+        device.send(createMessage(`${origin}:${target}`, data))
       })
     },
   }
@@ -54,27 +74,25 @@ export type SUBSCRIBE = {
 export function createSubscribe(name: string, handler: MESSAGE_FUNC) {
   let publisher = ''
 
+  console.info('createSubscribe', name)
   const device = createDevice(name, [], handler)
 
   function sendSubscribe() {
+    console.info('sendSubscribe', publisher)
     if (publisher) {
       device.send(createMessage(`${publisher}:sub`))
+      setTimeout(sendSubscribe, 8000)
     }
   }
-
-  let timer = 0
 
   const subscribe: SUBSCRIBE = {
     device,
     subscribe(target) {
       publisher = target
       sendSubscribe()
-      clearInterval(timer)
-      timer = window.setInterval(sendSubscribe, 8000)
     },
     unsubscribe() {
       publisher = ''
-      clearInterval(timer)
     },
   }
 

@@ -73,6 +73,8 @@ export function createDevice(
     },
     send(message) {
       const { target, path } = parseTarget(message.target)
+      console.info(name, { target, path })
+
       const matched = device.match(target)
 
       // we match target
