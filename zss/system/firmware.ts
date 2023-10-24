@@ -7,15 +7,10 @@ export type FIRMWARE = {
   value: (chip: CHIP, key: string) => any
 }
 
-export type FIRMWARE_INIT = (shared: any) => void
-
 export type FIRMWARE_COMMAND = (state: any, chip: CHIP, words: WORD[]) => number
 
-export function createFirmware(name: string, onInit?: FIRMWARE_INIT): FIRMWARE {
+export function createFirmware(name: string): FIRMWARE {
   const commands: CHIP_COMMANDS = {}
-
-  const shared: STATE = {}
-  onInit?.(shared)
 
   const firmware: FIRMWARE = {
     command(name, func): FIRMWARE {

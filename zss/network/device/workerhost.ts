@@ -1,13 +1,12 @@
 import {
+  DEVICE,
   MESSAGE,
-  MESSAGE_FUNC,
   createDevice,
   createMessage,
 } from 'zss/network/device'
 
 export type WORKER_HOST = {
-  linkParent: (handler: MESSAGE_FUNC) => void
-  send: (message: MESSAGE) => void
+  device: DEVICE
   destroy: () => void
 }
 
@@ -17,7 +16,6 @@ export function createWorkerHost(bootcode: string) {
   })
 
   function sendToWebWorker(message: MESSAGE) {
-    console.info('sendToWebWorker', message)
     webworker.postMessage(message)
   }
 
@@ -26,6 +24,13 @@ export function createWorkerHost(bootcode: string) {
       case 'ready':
         // send worker boot code
         sendToWebWorker(createMessage('worker:boot', bootcode))
+        break
+      case 'boot':
+        console.info('did boot', message.data)
+        break
+      case 'halt':
+        break
+      case 'active':
         break
       default:
         // show unsupported message
@@ -39,12 +44,7 @@ export function createWorkerHost(bootcode: string) {
   })
 
   const workerhost: WORKER_HOST = {
-    linkParent(handler) {
-      device.linkParent(handler)
-    },
-    send(message) {
-      device.send(message)
-    },
+    device,
     destroy() {
       webworker.terminate()
     },

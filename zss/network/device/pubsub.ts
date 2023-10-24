@@ -1,9 +1,12 @@
-import { MESSAGE_FUNC, createDevice, createMessage } from 'zss/network/device'
+import {
+  DEVICE,
+  MESSAGE_FUNC,
+  createDevice,
+  createMessage,
+} from 'zss/network/device'
 
 export type PUBLISHER = {
-  send: MESSAGE_FUNC
-  fromParent: MESSAGE_FUNC
-  linkParent: (handler: MESSAGE_FUNC) => void
+  device: DEVICE
   publish: (target: string, data: any) => void
 }
 
@@ -22,15 +25,7 @@ export function createPublisher(name: string, handler: MESSAGE_FUNC) {
   })
 
   const publisher: PUBLISHER = {
-    send(message) {
-      device.send(message)
-    },
-    fromParent(message) {
-      device.fromParent(message)
-    },
-    linkParent(handler) {
-      device.linkParent(handler)
-    },
+    device,
     publish(target, data) {
       const now = Date.now()
       const origins = Object.keys(subscribers)
@@ -51,9 +46,7 @@ export function createPublisher(name: string, handler: MESSAGE_FUNC) {
 }
 
 export type SUBSCRIBE = {
-  send: MESSAGE_FUNC
-  fromParent: MESSAGE_FUNC
-  linkParent: (handler: MESSAGE_FUNC) => void
+  device: DEVICE
   subscribe: (target: string) => void
   unsubscribe: () => void
 }
@@ -72,15 +65,7 @@ export function createSubscribe(name: string, handler: MESSAGE_FUNC) {
   let timer = 0
 
   const subscribe: SUBSCRIBE = {
-    send(message) {
-      device.send(message)
-    },
-    fromParent(message) {
-      device.fromParent(message)
-    },
-    linkParent(handler) {
-      device.linkParent(handler)
-    },
+    device,
     subscribe(target) {
       publisher = target
       sendSubscribe()

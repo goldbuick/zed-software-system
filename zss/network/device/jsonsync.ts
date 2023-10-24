@@ -1,15 +1,14 @@
 import * as jsonpatch from 'fast-json-patch'
 import { createGuid } from 'zss/mapping/guid'
-import { createMessage } from 'zss/network/device'
-
-import { STATE } from '../../system/chip'
+import { DEVICE, createMessage } from 'zss/network/device'
+import { STATE } from 'zss/system/chip'
 
 import { createPublisher, createSubscribe } from './pubsub'
 
 export type JSON_SYNC_SERVER = {
+  device: DEVICE
   id: () => string
-  state: () => STATE
-  sync: () => void
+  sync: (state: STATE) => void
 }
 
 export function createJsonSyncServer() {
@@ -21,35 +20,36 @@ export function createJsonSyncServer() {
     state: {},
   }
 
-  const server: JSON_SYNC_SERVER = {
-    id() {
-      return id
-    },
-    state() {
-      return local.state
-    },
-    sync() {
-      const newRemote = jsonpatch.deepClone(local.state)
-      const patch = jsonpatch.compare(remote.state, newRemote)
-      device.publish('sync', patch)
-      remote.state = newRemote
-    },
-  }
-
-  const device = createPublisher('jss', (message) => {
+  const publisher = createPublisher('jss', (message) => {
     switch (message.target) {
       case 'reset':
-        device.send(createMessage(`${message.origin}:reset`, remote.state))
+        publisher.device.send(
+          createMessage(`${message.origin}:reset`, remote.state),
+        )
         break
       default:
         break
     }
   })
 
+  const server: JSON_SYNC_SERVER = {
+    device: publisher.device,
+    id() {
+      return id
+    },
+    sync() {
+      const newRemote = jsonpatch.deepClone(local.state)
+      const patch = jsonpatch.compare(remote.state, newRemote)
+      publisher.publish('sync', patch)
+      remote.state = newRemote
+    },
+  }
+
   return server
 }
 
 export type JSON_SYNC_CLIENT = {
+  device: DEVICE
   id: () => string
   destroy: () => void
 }
@@ -64,7 +64,7 @@ export function createJsonSyncClient(
   let state: STATE = {}
   let needsReset = false
 
-  const device = createSubscribe('jsc', (message) => {
+  const sub = createSubscribe('jsc', (message) => {
     switch (message.target) {
       case 'sync':
         if (!needsReset) {
@@ -75,7 +75,7 @@ export function createJsonSyncClient(
             if (err instanceof jsonpatch.JsonPatchError) {
               // we are out of sync and need to request a refresh
               needsReset = true
-              device.send(createMessage(`${serverTarget}:reset`))
+              sub.device.send(createMessage(`${serverTarget}:reset`))
             }
           }
         }
@@ -89,14 +89,15 @@ export function createJsonSyncClient(
     }
   })
 
-  device.subscribe(serverTarget)
+  sub.subscribe(serverTarget)
 
   const client: JSON_SYNC_CLIENT = {
+    device: sub.device,
     id() {
       return id
     },
     destroy() {
-      device.unsubscribe()
+      sub.unsubscribe()
     },
   }
 

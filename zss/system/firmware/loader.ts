@@ -11,7 +11,7 @@ can we use dynamic imports here ??
 
 export const LoaderFirmware = createFirmware('loader').command(
   'stat',
-  (shared, state, chip, args) => {
+  (state, chip, args) => {
     const [name] = chip.mapArgs(args, ARG.STRING) as [string]
 
     switch (name.toLowerCase()) {
