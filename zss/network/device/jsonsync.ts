@@ -17,7 +17,8 @@ export function createJsonSyncServer(name: string) {
   const publisher = createPublisher(
     name,
     (origin) => {
-      publisher.device.send(createMessage(`${origin}:reset`, remote.state))
+      const message = createMessage(`${origin}:reset`, remote.state)
+      publisher.device.send(message)
     },
     (message) => {
       switch (message.target) {
@@ -27,7 +28,7 @@ export function createJsonSyncServer(name: string) {
           )
           break
         default:
-          console.info(message)
+          console.error(message)
           break
       }
     },
@@ -39,6 +40,7 @@ export function createJsonSyncServer(name: string) {
       const newRemote = jsonpatch.deepClone(next)
       const patch = jsonpatch.compare(remote.state, newRemote)
       if (patch.length) {
+        console.info('sync', next, patch)
         publisher.publish('sync', patch)
         remote.state = newRemote
       }
@@ -64,7 +66,6 @@ export function createJsonSyncClient(
   let needsReset = false
 
   const sub = createSubscribe(name, (message) => {
-    console.info('sub', message)
     switch (message.target) {
       case 'sync':
         if (!needsReset) {

@@ -20,6 +20,7 @@ export type DEVICE = {
   name: () => string
   tags: () => string[]
   match: (target: string) => boolean
+  updateOrigin: (message: MESSAGE) => MESSAGE
   send: MESSAGE_FUNC
   handle: MESSAGE_FUNC
   fromParent: MESSAGE_FUNC
@@ -33,11 +34,12 @@ export function parseTarget(targetString: string) {
   return { target, path: path.join(':') }
 }
 
-function updateOrigin(origin: string, name: string) {
-  if (!origin) {
-    return name
+export function updateOrigin(message: MESSAGE, name: string): MESSAGE {
+  const origin = message.origin ? `${name}:${message.origin}` : name
+  return {
+    ...message,
+    origin,
   }
-  return `${name}:${origin}`
 }
 
 export function createDevice(
@@ -71,11 +73,14 @@ export function createDevice(
         itags.findIndex((tag) => tag === itarget) !== -1
       )
     },
+    updateOrigin(message) {
+      return updateOrigin(message, name)
+    },
     send(message) {
       const { target, path } = parseTarget(message.target)
       const matched = device.match(target)
 
-      console.info(name, { origin: message.origin, target, path, matched })
+      // console.info(name, { origin: message.origin, target, path, matched })
 
       // we match target
       if (matched) {
@@ -84,10 +89,7 @@ export function createDevice(
       }
 
       // send to parent device
-      onParent?.({
-        ...message,
-        origin: updateOrigin(message.origin, name),
-      })
+      onParent?.(updateOrigin(message, name))
     },
     handle(message) {
       const { target, path } = parseTarget(message.target)

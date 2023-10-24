@@ -32,7 +32,7 @@ device.linkParent((message) => {
 })
 
 onmessage = function handleMessage(event) {
-  console.info('fromParent', event.data)
+  // console.info('fromParent', event.data)
   device.fromParent(event.data as MESSAGE)
 }
 

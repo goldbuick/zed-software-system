@@ -18,12 +18,11 @@ export function createWorkerHost(bootcode: string) {
   })
 
   function sendToWebWorker(message: MESSAGE) {
-    console.info('sendToWebWorker', message)
-    webworker.postMessage(message)
+    webworker.postMessage(device.updateOrigin(message))
   }
 
   const gadgetclient = createJsonSyncClient('gadgetclient', (state) => {
-    console.info('gadgetclient', state)
+    console.info('??gadgetclient', state)
   })
 
   const device = createDevice('workerhost', [], (message) => {
@@ -50,7 +49,7 @@ export function createWorkerHost(bootcode: string) {
   device.connect(gadgetclient.device)
 
   webworker.addEventListener('message', (event) => {
-    console.info('fromWorker', event.data)
+    // console.info('fromWorker', event.data)
     device.send(event.data as MESSAGE)
   })
 
