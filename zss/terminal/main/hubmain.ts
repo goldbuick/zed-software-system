@@ -1,6 +1,5 @@
-import { hub } from '/zss/network/hub'
+import { hub } from 'zss/network/hub'
 
-import './gadgetclient'
 import './test'
 
 const webworker = new Worker(

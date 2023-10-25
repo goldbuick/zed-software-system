@@ -1,20 +1,46 @@
+import * as jsonpatch from 'fast-json-patch'
+import { createDevice } from 'zss/network/device'
+import { hub } from 'zss/network/hub'
+import { GadgetFirmware } from 'zss/system/firmware/gadget'
 import { createOS } from 'zss/system/os'
 
-import { createDevice } from '/zss/network/device'
+import { STATE } from '/zss/system/chip'
 
 const os = createOS()
 
-const platform = createDevice('platform', [], (message) => {
-  console.info({ message })
+let gadgetstate: STATE = {}
+
+createDevice('gadgetserver', [], (message) => {
+  switch (message.target) {
+    case 'desync':
+      hub.emit('gadgetclient:reset', GadgetFirmware.shared)
+      break
+  }
+})
+
+createDevice('platform', [], (message) => {
+  switch (message.target) {
+    case 'boot':
+      break
+  }
 })
 
 const TICK_RATE = 66.666 // 100 is 10 fps, 66.666 is ~15 fps, 50 is 20 fps, 40 is 25 fps  1000 / x = 15
-// const TICK_FPS = Math.round(1000 / TICK_RATE)
+const TICK_FPS = Math.round(1000 / TICK_RATE)
+
+console.info('running at', TICK_FPS)
 
 // mainloop
 function tick() {
+  // tick all chips
   os.ids().forEach((id) => os.tick(id))
+
   // we need to sync gadget here
+  const patch = jsonpatch.compare(gadgetstate, GadgetFirmware.shared)
+  if (patch.length) {
+    gadgetstate = jsonpatch.deepClone(GadgetFirmware.shared)
+    hub.emit('gadgetclient:patch', patch)
+  }
 }
 
 // timer acc

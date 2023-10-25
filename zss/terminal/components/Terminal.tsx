@@ -6,7 +6,7 @@ import {
 import { BlendFunction } from 'postprocessing'
 import React from 'react'
 
-import { STATS_DEV } from '/zss/config'
+import { STATS_DEV } from 'zss/config'
 
 import { Framing } from './Framing'
 import { Gadget } from './Gadget'

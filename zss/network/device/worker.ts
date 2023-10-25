@@ -1,6 +1,6 @@
 import { createOS } from 'zss/system/os'
 
-import { GadgetFirmware } from '/zss/system/firmware/gadget'
+import { GadgetFirmware } from 'zss/system/firmware/gadget'
 
 import { MESSAGE, createDevice, createMessage } from '../device'
 

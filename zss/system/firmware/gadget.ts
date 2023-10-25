@@ -1,8 +1,6 @@
+import { PANEL, PANEL_EDGE, PANEL_EDGE_MAP } from 'zss/gadget/data'
 import { createGuid } from 'zss/mapping/guid'
-
-import { PANEL, PANEL_EDGE, PANEL_EDGE_MAP } from '/zss/gadget/data'
-
-import { ARG, STATE } from '/zss/system/chip'
+import { ARG, STATE } from 'zss/system/chip'
 
 import { createFirmware } from '../firmware'
 
