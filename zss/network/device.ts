@@ -1,5 +1,7 @@
 import { createGuid } from '../mapping/guid'
 
+import { hub } from './hub'
+
 export type MESSAGE = {
   target: string
   data?: any
@@ -57,14 +59,23 @@ export function createDevice(
     },
     handle(message) {
       const { target, path } = parseTarget(message.target)
-      // console.info(name, { target, path, data: message.data })
+      // console.info(id, name, tags, { target, path, data: message.data })
 
-      // we match target
-      if (device.match(target)) {
+      const itarget = target.toLowerCase()
+
+      // we match by tags
+      if (itags.findIndex((tag) => tag === itarget) !== -1) {
+        onMessage(message)
+      }
+
+      // we match by id, all, name
+      if (id === target || 'all' === itarget || iname === itarget) {
         onMessage({ ...message, target: path })
       }
     },
   }
+
+  hub.connect(device)
 
   return device
 }

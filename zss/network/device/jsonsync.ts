@@ -2,8 +2,6 @@ import * as jsonpatch from 'fast-json-patch'
 import { DEVICE, createMessage } from 'zss/network/device'
 import { STATE } from 'zss/system/chip'
 
-import { createPublisher, createSubscribe } from './pubsub'
-
 export type JSON_SYNC_SERVER = {
   device: DEVICE
   sync: (state: STATE) => void
