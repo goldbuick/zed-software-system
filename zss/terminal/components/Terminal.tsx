@@ -6,11 +6,10 @@ import {
 import { BlendFunction } from 'postprocessing'
 import React from 'react'
 
-import { ComponentTest } from '/zss/test/test'
-
 import { STATS_DEV } from '/zss/config'
 
 import { Framing } from './Framing'
+import { Gadget } from './Gadget'
 
 const PHASE = 0.001
 
@@ -24,7 +23,7 @@ export function Terminal() {
         position={[0, 0, 1000]}
       />
       <Framing>
-        <ComponentTest />
+        <Gadget />
       </Framing>
       {STATS_DEV && <Stats />}
       <EffectComposer>

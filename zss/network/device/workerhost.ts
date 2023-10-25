@@ -5,14 +5,17 @@ import {
   createMessage,
 } from 'zss/network/device'
 
-import { createJsonSyncClient } from './jsonsync'
+import { createJsonSyncClient, JSON_SYNC_CLIENT_CHANGE_FUNC } from './jsonsync'
 
 export type WORKER_HOST = {
   device: DEVICE
   destroy: () => void
 }
 
-export function createWorkerHost(bootcode: string) {
+export function createWorkerHost(
+  bootcode: string,
+  onChange: JSON_SYNC_CLIENT_CHANGE_FUNC,
+) {
   const webworker = new Worker(new URL('worker.ts', import.meta.url), {
     type: 'module',
   })
@@ -21,9 +24,7 @@ export function createWorkerHost(bootcode: string) {
     webworker.postMessage(device.updateOrigin(message))
   }
 
-  const gadgetclient = createJsonSyncClient('gadgetclient', (state) => {
-    console.info('??gadgetclient', state)
-  })
+  const gadgetclient = createJsonSyncClient('gadgetclient', onChange)
 
   const device = createDevice('workerhost', [], (message) => {
     switch (message.target.toLowerCase()) {

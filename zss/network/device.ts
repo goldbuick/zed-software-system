@@ -1,16 +1,15 @@
 import { createGuid } from '../mapping/guid'
 
 export type MESSAGE = {
-  origin: string
   target: string
   data?: any
 }
 
 export function createMessage(target: string, data?: any): MESSAGE {
-  if (data !== undefined) {
-    return { origin: '', target, data }
+  if (data === undefined) {
+    return { target }
   }
-  return { origin: '', target }
+  return { target, data }
 }
 
 export type MESSAGE_FUNC = (message: MESSAGE) => void
@@ -20,26 +19,12 @@ export type DEVICE = {
   name: () => string
   tags: () => string[]
   match: (target: string) => boolean
-  updateOrigin: (message: MESSAGE) => MESSAGE
-  send: MESSAGE_FUNC
   handle: MESSAGE_FUNC
-  fromParent: MESSAGE_FUNC
-  linkParent: (handler: MESSAGE_FUNC) => void
-  connect: (child: DEVICE) => void
-  disconnect: (child: DEVICE) => void
 }
 
 export function parseTarget(targetString: string) {
   const [target, ...path] = targetString.split(':')
   return { target, path: path.join(':') }
-}
-
-export function updateOrigin(message: MESSAGE, name: string): MESSAGE {
-  const origin = message.origin ? `${name}:${message.origin}` : name
-  return {
-    ...message,
-    origin,
-  }
 }
 
 export function createDevice(
@@ -50,9 +35,6 @@ export function createDevice(
   const id = createGuid()
   const iname = name.toLowerCase()
   const itags = tags.map((tag) => tag.toLowerCase())
-
-  let branches: DEVICE[] = []
-  let onParent: MESSAGE_FUNC | undefined
 
   const device: DEVICE = {
     id() {
@@ -73,68 +55,14 @@ export function createDevice(
         itags.findIndex((tag) => tag === itarget) !== -1
       )
     },
-    updateOrigin(message) {
-      return updateOrigin(message, name)
-    },
-    send(message) {
-      const { target, path } = parseTarget(message.target)
-      const matched = device.match(target)
-
-      // console.info(name, { origin: message.origin, target, path, matched })
-
-      // we match target
-      if (matched) {
-        device.handle({ ...message, target: path })
-        return
-      }
-
-      // send to parent device
-      onParent?.(updateOrigin(message, name))
-    },
     handle(message) {
       const { target, path } = parseTarget(message.target)
-
-      // does target match branches ?
-      const matched = branches.filter((branch) => {
-        if (branch.match(target)) {
-          branch.handle({ ...message, target: path })
-          return true
-        }
-        return false
-      })
-
-      // otherwise US
-      if (matched.length === 0) {
-        onMessage(message)
-      }
-    },
-    fromParent(message) {
-      const { target, path } = parseTarget(message.target)
-
-      // does target match branches ?
-      const didhandle = branches.filter((branch) => {
-        if (branch.match(target)) {
-          branch.handle({ ...message, target: path })
-          return true
-        }
-        return false
-      })
+      // console.info(name, { target, path, data: message.data })
 
       // we match target
-      if (!didhandle && device.match(target)) {
-        device.handle({ ...message, target: path })
-        return
+      if (device.match(target)) {
+        onMessage({ ...message, target: path })
       }
-    },
-    linkParent(handler) {
-      onParent = handler
-    },
-    connect(child) {
-      child.linkParent(device.send)
-      branches.push(child)
-    },
-    disconnect(child) {
-      branches = branches.filter((item) => item !== child)
     },
   }
 
