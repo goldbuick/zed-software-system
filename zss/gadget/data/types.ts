@@ -65,7 +65,7 @@ export type LAYER_SPRITES = LAYER_COMMON & {
   sprites: SPRITES_SPRITE[]
 }
 
-export enum PANEL_EDGE {
+export enum PANEL_TYPE {
   START,
   LEFT,
   RIGHT,
@@ -74,13 +74,13 @@ export enum PANEL_EDGE {
   SCROLL,
 }
 
-export const PANEL_EDGE_MAP: Record<string, PANEL_EDGE> = {
-  start: PANEL_EDGE.START,
-  left: PANEL_EDGE.LEFT,
-  right: PANEL_EDGE.RIGHT,
-  top: PANEL_EDGE.TOP,
-  bottom: PANEL_EDGE.BOTTOM,
-  scroll: PANEL_EDGE.SCROLL,
+export const PANEL_TYPE_MAP: Record<string, PANEL_TYPE> = {
+  start: PANEL_TYPE.START,
+  left: PANEL_TYPE.LEFT,
+  right: PANEL_TYPE.RIGHT,
+  top: PANEL_TYPE.TOP,
+  bottom: PANEL_TYPE.BOTTOM,
+  scroll: PANEL_TYPE.SCROLL,
 }
 
 export type PANEL_ITEM = string | [string, string, string?]
@@ -88,7 +88,7 @@ export type PANEL_ITEM = string | [string, string, string?]
 export type PANEL = {
   id: string
   name: string
-  edge: PANEL_EDGE
+  edge: PANEL_TYPE
   size: number
   text: PANEL_ITEM[]
 }

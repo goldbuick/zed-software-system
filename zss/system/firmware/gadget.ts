@@ -1,4 +1,4 @@
-import { PANEL, PANEL_EDGE, PANEL_EDGE_MAP } from 'zss/gadget/data'
+import { PANEL, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data'
 import { createGuid } from 'zss/mapping/guid'
 import { ARG, STATE } from 'zss/system/chip'
 
@@ -20,7 +20,7 @@ function findPanel(state: STATE): PANEL {
     const newPanel: PANEL = {
       id: createGuid(),
       name: state.layoutFocus,
-      edge: PANEL_EDGE.RIGHT,
+      edge: PANEL_TYPE.RIGHT,
       size: 20,
       text: [],
     }
@@ -87,7 +87,7 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
     ) as [string, number, string]
 
     const panelName = name || edge
-    const edgeConst = PANEL_EDGE_MAP[`${edge}`.toLowerCase()]
+    const edgeConst = PANEL_TYPE_MAP[`${edge}`.toLowerCase()]
 
     const panelState: PANEL | undefined = GADGET_FIRMWARE.shared.layout.find(
       (panel: PANEL) => panel.name === panelName,
@@ -99,14 +99,14 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
       GADGET_FIRMWARE.shared.layoutFocus = panelName
     } else {
       switch (edgeConst) {
-        case PANEL_EDGE.START:
+        case PANEL_TYPE.START:
           initState(GADGET_FIRMWARE.shared)
           break
-        case PANEL_EDGE.LEFT:
-        case PANEL_EDGE.RIGHT:
-        case PANEL_EDGE.TOP:
-        case PANEL_EDGE.BOTTOM:
-        case PANEL_EDGE.SCROLL:
+        case PANEL_TYPE.LEFT:
+        case PANEL_TYPE.RIGHT:
+        case PANEL_TYPE.TOP:
+        case PANEL_TYPE.BOTTOM:
+        case PANEL_TYPE.SCROLL:
           const panel: PANEL = {
             id: createGuid(),
             name: panelName,

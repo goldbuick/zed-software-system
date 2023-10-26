@@ -47,6 +47,5 @@ const device = createDevice('gadgetclient', [], (message) => {
 
 export function Gadget() {
   const model = useSnapshot(syncstate.state)
-
   return <Layout panels={model.layout} />
 }

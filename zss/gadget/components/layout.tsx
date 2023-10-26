@@ -5,7 +5,7 @@ import {
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
   PANEL,
-  PANEL_EDGE,
+  PANEL_TYPE,
   PANEL_ITEM,
 } from '../data'
 
@@ -54,7 +54,7 @@ export function Layout({ panels }: LayoutProps) {
     panels?.map((panel) => {
       let rect: RECT
       switch (panel.edge) {
-        case PANEL_EDGE.LEFT:
+        case PANEL_TYPE.LEFT:
           rect = {
             id: panel.id,
             x: frame.x,
@@ -67,7 +67,7 @@ export function Layout({ panels }: LayoutProps) {
           frame.width -= panel.size
           break
         default:
-        case PANEL_EDGE.RIGHT:
+        case PANEL_TYPE.RIGHT:
           rect = {
             id: panel.id,
             x: frame.x + frame.width - panel.size,
@@ -78,7 +78,7 @@ export function Layout({ panels }: LayoutProps) {
           }
           frame.width -= panel.size
           break
-        case PANEL_EDGE.TOP:
+        case PANEL_TYPE.TOP:
           rect = {
             id: panel.id,
             x: frame.x,
@@ -90,7 +90,7 @@ export function Layout({ panels }: LayoutProps) {
           frame.y += panel.size
           frame.height -= panel.size
           break
-        case PANEL_EDGE.BOTTOM:
+        case PANEL_TYPE.BOTTOM:
           rect = {
             id: panel.id,
             x: frame.x,
