@@ -1,5 +1,6 @@
 import { GeneratorBuild, compile } from 'zss/lang/generator'
 import { createGuid } from 'zss/mapping/guid'
+import { MESSAGE_FUNC } from 'zss/network/device'
 
 import { CHIP, createChip } from './chip'
 import { LoaderFirmware } from './firmware/loader'
@@ -8,8 +9,9 @@ export type OS = {
   boot: (code: string) => string
   ids: () => string[]
   halt: (id: string) => boolean
-  active: (id: string) => boolean
+  active: () => Record<string, boolean>
   tick: (id: string) => void
+  send: MESSAGE_FUNC
   state: (id: string, name?: string) => Record<string, object>
 }
 
@@ -52,11 +54,20 @@ export function createOS(): OS {
       delete chips[id]
       return !!chip
     },
-    active(id) {
-      return chips[id]?.shouldtick() ?? false
+    active() {
+      const chipstate: Record<string, boolean> = {}
+
+      os.ids().forEach((id) => {
+        chipstate[id] = chips[id]?.shouldtick() ?? false
+      })
+
+      return chipstate
     },
     tick(id) {
       chips[id]?.tick()
+    },
+    send(message) {
+      //
     },
     state(id, name) {
       return chips[id]?.state(name) ?? {}

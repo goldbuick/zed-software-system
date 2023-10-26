@@ -32,7 +32,7 @@ function findPanel(state: STATE): PANEL {
   return panel
 }
 
-export const GadgetFirmware = createFirmware('gadget')
+export const GADGET_FIRMWARE = createFirmware('gadget')
   .command('get', (state, chip, args) => {
     const name = chip.wordToString(args[0])
     return state[name] ?? 0
@@ -46,11 +46,11 @@ export const GadgetFirmware = createFirmware('gadget')
     const [text] = chip.mapArgs(args, ARG.STRING) as [string]
 
     // find slot
-    const panel = findPanel(GadgetFirmware.shared)
+    const panel = findPanel(GADGET_FIRMWARE.shared)
 
     // add text
-    if (GadgetFirmware.shared.layoutReset) {
-      GadgetFirmware.shared.layoutReset = false
+    if (GADGET_FIRMWARE.shared.layoutReset) {
+      GADGET_FIRMWARE.shared.layoutReset = false
       panel.text = []
     }
     panel.text.push(text)
@@ -67,11 +67,11 @@ export const GadgetFirmware = createFirmware('gadget')
     ) as [string, string, string]
 
     // find slot
-    const panel = findPanel(GadgetFirmware.shared)
+    const panel = findPanel(GADGET_FIRMWARE.shared)
 
     // add hypertext
-    if (GadgetFirmware.shared.layoutReset) {
-      GadgetFirmware.shared.layoutReset = false
+    if (GADGET_FIRMWARE.shared.layoutReset) {
+      GADGET_FIRMWARE.shared.layoutReset = false
       panel.text = []
     }
     panel.text.push([target, label, input])
@@ -89,18 +89,18 @@ export const GadgetFirmware = createFirmware('gadget')
     const panelName = name || edge
     const edgeConst = PANEL_EDGE_MAP[`${edge}`.toLowerCase()]
 
-    const panelState: PANEL | undefined = GadgetFirmware.shared.layout.find(
+    const panelState: PANEL | undefined = GADGET_FIRMWARE.shared.layout.find(
       (panel: PANEL) => panel.name === panelName,
     )
 
     if (panelState) {
       // set focus to panel and mark for reset
-      GadgetFirmware.shared.layoutReset = true
-      GadgetFirmware.shared.layoutFocus = panelName
+      GADGET_FIRMWARE.shared.layoutReset = true
+      GADGET_FIRMWARE.shared.layoutFocus = panelName
     } else {
       switch (edgeConst) {
         case PANEL_EDGE.START:
-          initState(GadgetFirmware.shared)
+          initState(GADGET_FIRMWARE.shared)
           break
         case PANEL_EDGE.LEFT:
         case PANEL_EDGE.RIGHT:
@@ -114,8 +114,8 @@ export const GadgetFirmware = createFirmware('gadget')
             size,
             text: [],
           }
-          GadgetFirmware.shared.layout.push(panel)
-          GadgetFirmware.shared.layoutFocus = panelName
+          GADGET_FIRMWARE.shared.layout.push(panel)
+          GADGET_FIRMWARE.shared.layoutFocus = panelName
           break
         default:
           // todo: raise runtime error
@@ -127,4 +127,4 @@ export const GadgetFirmware = createFirmware('gadget')
     return 0
   })
 
-initState(GadgetFirmware.shared)
+initState(GADGET_FIRMWARE.shared)

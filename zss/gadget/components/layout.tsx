@@ -1,7 +1,13 @@
 import { useThree } from '@react-three/fiber'
 import React from 'react'
 
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL, PANEL_EDGE } from '../data'
+import {
+  DRAW_CHAR_HEIGHT,
+  DRAW_CHAR_WIDTH,
+  PANEL,
+  PANEL_EDGE,
+  PANEL_ITEM,
+} from '../data'
 
 import { Panel } from './panel'
 
@@ -12,7 +18,7 @@ type RECT = {
   width: number
   height: number
   frame?: boolean
-  text: string[]
+  text: PANEL_ITEM[]
 }
 
 interface LayoutProps {

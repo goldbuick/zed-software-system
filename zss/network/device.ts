@@ -5,13 +5,15 @@ import { hub } from './hub'
 export type MESSAGE = {
   target: string
   data?: any
+  reply?: any
 }
 
-export function createMessage(target: string, data?: any): MESSAGE {
-  if (data === undefined) {
-    return { target }
-  }
-  return { target, data }
+export function createMessage(
+  target: string,
+  data?: any,
+  reply?: any,
+): MESSAGE {
+  return { target, data, reply }
 }
 
 export type MESSAGE_FUNC = (message: MESSAGE) => void

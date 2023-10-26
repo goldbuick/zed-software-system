@@ -1,13 +1,7 @@
 import { ARG } from '../chip'
 import { createFirmware } from '../firmware'
 
-import { GadgetFirmware } from './gadget'
-
-/*
-
-can we use dynamic imports here ??
-
-*/
+import { GADGET_FIRMWARE } from './gadget'
 
 export const LoaderFirmware = createFirmware('loader').command(
   'stat',
@@ -16,7 +10,7 @@ export const LoaderFirmware = createFirmware('loader').command(
 
     switch (name.toLowerCase()) {
       case 'gadget':
-        GadgetFirmware.install(chip)
+        GADGET_FIRMWARE.install(chip)
         break
       default:
         console.error(`unknown firmware ${name}`)
