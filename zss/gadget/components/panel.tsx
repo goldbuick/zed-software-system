@@ -14,6 +14,7 @@ const palette = loadDefaultPalette()
 const charset = loadDefaultCharset()
 
 interface PanelProps {
+  id: string
   width: number
   height: number
   color: number
@@ -21,7 +22,7 @@ interface PanelProps {
   text: (string | [string, string, string?])[]
 }
 
-export function Panel({ width, height, color, bg, text }: PanelProps) {
+export function Panel({ id, width, height, color, bg, text }: PanelProps) {
   const tiles: TILES = useMemo(() => {
     const size = width * height
     const context: WRITE_TEXT_CONTEXT = {

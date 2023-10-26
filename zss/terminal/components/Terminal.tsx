@@ -1,17 +1,10 @@
 import { OrthographicCamera, Stats } from '@react-three/drei'
-import {
-  EffectComposer,
-  ChromaticAberration,
-} from '@react-three/postprocessing'
-import { BlendFunction } from 'postprocessing'
 import React from 'react'
-
 import { STATS_DEV } from 'zss/config'
 
 import { Framing } from './Framing'
+import { FX } from './FX'
 import { Gadget } from './Gadget'
-
-const PHASE = 0.001
 
 export function Terminal() {
   return (
@@ -25,13 +18,8 @@ export function Terminal() {
       <Framing>
         <Gadget />
       </Framing>
+      <FX />
       {STATS_DEV && <Stats />}
-      <EffectComposer>
-        <ChromaticAberration
-          blendFunction={BlendFunction.NORMAL} // blend mode
-          offset={[-PHASE, PHASE]} // color offset
-        />
-      </EffectComposer>
     </>
   )
 }

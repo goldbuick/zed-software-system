@@ -1,10 +1,9 @@
 import * as jsonpatch from 'fast-json-patch'
 import { createDevice } from 'zss/network/device'
 import { hub } from 'zss/network/hub'
+import { STATE } from 'zss/system/chip'
 import { GADGET_FIRMWARE } from 'zss/system/firmware/gadget'
 import { createOS } from 'zss/system/os'
-
-import { STATE } from '/zss/system/chip'
 
 const os = createOS()
 

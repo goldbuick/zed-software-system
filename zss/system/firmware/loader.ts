@@ -3,7 +3,7 @@ import { createFirmware } from '../firmware'
 
 import { GADGET_FIRMWARE } from './gadget'
 
-export const LoaderFirmware = createFirmware('loader').command(
+export const LOADER_FIRMWARE = createFirmware('loader').command(
   'stat',
   (state, chip, args) => {
     const [name] = chip.mapArgs(args, ARG.STRING) as [string]

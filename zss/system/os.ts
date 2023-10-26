@@ -3,7 +3,7 @@ import { createGuid } from 'zss/mapping/guid'
 import { MESSAGE_FUNC } from 'zss/network/device'
 
 import { CHIP, createChip } from './chip'
-import { LoaderFirmware } from './firmware/loader'
+import { LOADER_FIRMWARE } from './firmware/loader'
 
 export type OS = {
   boot: (code: string) => string
@@ -42,7 +42,7 @@ export function createOS(): OS {
       }
 
       const chip = (chips[id] = createChip(result))
-      LoaderFirmware.install(chip)
+      LOADER_FIRMWARE.install(chip)
 
       return id
     },
