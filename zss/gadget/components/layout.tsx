@@ -12,7 +12,7 @@ import {
 import { Panel } from './panel'
 
 type RECT = {
-  id: string
+  name: string
   x: number
   y: number
   width: number
@@ -40,7 +40,7 @@ export function Layout({ panels }: LayoutProps) {
 
   // starting area
   const frame: RECT = {
-    id: 'main',
+    name: 'main',
     x: 0,
     y: 0,
     width,
@@ -56,7 +56,7 @@ export function Layout({ panels }: LayoutProps) {
       switch (panel.edge) {
         case PANEL_TYPE.LEFT:
           rect = {
-            id: panel.id,
+            name: panel.name,
             x: frame.x,
             y: frame.y,
             width: panel.size,
@@ -69,7 +69,7 @@ export function Layout({ panels }: LayoutProps) {
         default:
         case PANEL_TYPE.RIGHT:
           rect = {
-            id: panel.id,
+            name: panel.name,
             x: frame.x + frame.width - panel.size,
             y: frame.y,
             width: panel.size,
@@ -80,7 +80,7 @@ export function Layout({ panels }: LayoutProps) {
           break
         case PANEL_TYPE.TOP:
           rect = {
-            id: panel.id,
+            name: panel.name,
             x: frame.x,
             y: frame.y,
             width: frame.width,
@@ -92,7 +92,7 @@ export function Layout({ panels }: LayoutProps) {
           break
         case PANEL_TYPE.BOTTOM:
           rect = {
-            id: panel.id,
+            name: panel.name,
             x: frame.x,
             y: frame.y + frame.height - panel.size,
             width: frame.width,
@@ -112,13 +112,14 @@ export function Layout({ panels }: LayoutProps) {
     <group position={[marginX * 0.5, marginY * 0.5, 0]}>
       {rects.map((rect) => (
         <group
-          key={rect.id}
+          key={rect.name}
           position={[rect.x * DRAW_CHAR_WIDTH, rect.y * DRAW_CHAR_HEIGHT, 0]}
         >
           {rect.frame ? (
             <React.Fragment />
           ) : (
             <Panel
+              name={rect.name}
               width={rect.width}
               height={rect.height}
               color={15}

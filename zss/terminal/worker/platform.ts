@@ -30,6 +30,9 @@ createDevice('platform', [], (message) => {
         hub.emit(message.reply, os.active())
       }
       break
+    default:
+      os.send(message)
+      break
   }
 })
 
@@ -70,3 +73,17 @@ function wake() {
 
 // server is ready
 wake()
+
+/*
+
+I want to be able to run multiple chips to drive gadget based ui
+
+chips should have names, default to object
+
+we have to group chips "by board" by some context ?
+
+we need to have codepages, with multiple entries and resource types
+
+the codepage content needs to be accessible from webworker
+
+*/

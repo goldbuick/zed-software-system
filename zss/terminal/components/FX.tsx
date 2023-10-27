@@ -16,8 +16,8 @@ export function FX() {
         blendFunction={BlendFunction.NORMAL} // blend mode
         offset={[-PHASE, PHASE]} // color offset
       />
-      <Noise opacity={0.25} blendFunction={BlendFunction.SUBTRACT} />
       <Vignette offset={0.025} darkness={0.6} />
+      <Noise opacity={0.125} blendFunction={BlendFunction.SUBTRACT} />
     </EffectComposer>
   )
 }

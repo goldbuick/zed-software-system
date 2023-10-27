@@ -1,5 +1,6 @@
 import { hub } from 'zss/network/hub'
 
+import './input'
 import './test'
 
 const webworker = new Worker(

@@ -1,6 +1,6 @@
 import { GeneratorBuild, compile } from 'zss/lang/generator'
 import { createGuid } from 'zss/mapping/guid'
-import { MESSAGE_FUNC } from 'zss/network/device'
+import { MESSAGE_FUNC, parseTarget } from 'zss/network/device'
 
 import { CHIP, createChip } from './chip'
 import { LOADER_FIRMWARE } from './firmware/loader'
@@ -67,7 +67,8 @@ export function createOS(): OS {
       chips[id]?.tick()
     },
     send(message) {
-      //
+      const { target, path } = parseTarget(message.target)
+      console.info('os send', { target, path, data: message.data })
     },
     state(id, name) {
       return chips[id]?.state(name) ?? {}
