@@ -1,4 +1,4 @@
-import { PANEL, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data'
+import { PANEL, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { createGuid } from 'zss/mapping/guid'
 import { ARG, STATE } from 'zss/system/chip'
 
@@ -33,6 +33,13 @@ function findPanel(state: STATE): PANEL {
 }
 
 export const GADGET_FIRMWARE = createFirmware('gadget')
+  .command('stat', (state, chip, args) => {
+    const parts = args.map((arg) => chip.wordToString(arg))
+
+    console.info({ parts })
+
+    return 0
+  })
   .command('get', (state, chip, args) => {
     const name = chip.wordToString(args[0])
     return state[name] ?? 0

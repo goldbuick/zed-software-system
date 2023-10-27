@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data'
+import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 
 import { cloneMaterial, interval, time } from './anim'
 

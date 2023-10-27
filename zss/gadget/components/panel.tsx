@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react'
 
-import { TILES } from '../data'
 import {
   tokenize,
   WRITE_TEXT_CONTEXT,
   tokenizeAndWriteTextFormat,
 } from '../data/textFormat'
+import { TILES } from '../data/types'
 import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { Tiles } from './tiles'

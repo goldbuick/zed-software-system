@@ -1,22 +1,14 @@
-import { ARG } from '../chip'
-import { createFirmware } from '../firmware'
+import { CHIP } from '../chip'
 
 import { GADGET_FIRMWARE } from './gadget'
 
-export const LOADER_FIRMWARE = createFirmware('loader').command(
-  'stat',
-  (state, chip, args) => {
-    const [name] = chip.mapArgs(args, ARG.STRING) as [string]
-
-    switch (name.toLowerCase()) {
-      case 'gadget':
-        GADGET_FIRMWARE.install(chip)
-        break
-      default:
-        console.error(`unknown firmware ${name}`)
-        break
-    }
-
-    return 0
-  },
-)
+export function loadFirmware(chip: CHIP, firmware: string) {
+  switch (firmware.toLowerCase()) {
+    case 'gadget':
+      GADGET_FIRMWARE.install(chip)
+      break
+    default:
+      // log unknown firmware
+      break
+  }
+}

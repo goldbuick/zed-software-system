@@ -19,9 +19,11 @@ createDevice('gadgetserver', [], (message) => {
 
 createDevice('platform', [], (message) => {
   switch (message.target) {
-    case 'boot':
-      os.boot(message.data)
+    case 'boot': {
+      const [firmware, code] = message.data
+      os.boot(firmware, code)
       break
+    }
     case 'halt':
       os.halt(message.data)
       break

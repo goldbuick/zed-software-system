@@ -33,7 +33,7 @@ export type CHIP = {
   hasmessage: () => number
   yield: () => void
   shouldyield: () => boolean
-  send: (incoming: MESSAGE) => void
+  message: (incoming: MESSAGE) => void
   zap: (label: string) => void
   restore: (label: string) => void
   getcase: () => number
@@ -193,7 +193,7 @@ export function createChip(build: GeneratorBuild) {
     shouldyield() {
       return yieldState || chip.shouldhalt()
     },
-    send(incoming) {
+    message(incoming) {
       message = incoming
     },
     zap(label) {

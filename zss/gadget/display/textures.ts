@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
 
-import { BITMAP, bitmapToCanvas } from '../data'
+import { BITMAP, bitmapToCanvas } from '../data/bitmap'
 
 export function updateTexture<T extends THREE.Texture | THREE.CanvasTexture>(
   texture: T,

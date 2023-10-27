@@ -5,7 +5,7 @@ import { hub } from 'zss/network/hub'
 createDevice('test', ['ready'], (message) => {
   switch (message.target) {
     case 'ready':
-      hub.emit('platform:boot', zsscode)
+      hub.emit('platform:boot', ['gadget', zsscode])
       break
   }
 })

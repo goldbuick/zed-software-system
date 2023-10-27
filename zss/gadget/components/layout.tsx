@@ -7,7 +7,7 @@ import {
   PANEL,
   PANEL_TYPE,
   PANEL_ITEM,
-} from '../data'
+} from '../data/types'
 
 import { Panel } from './panel'
 

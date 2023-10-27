@@ -3,10 +3,11 @@ import { createGuid } from 'zss/mapping/guid'
 import { MESSAGE_FUNC, parseTarget } from 'zss/network/device'
 
 import { CHIP, createChip } from './chip'
-import { LOADER_FIRMWARE } from './firmware/loader'
+import { GADGET_FIRMWARE } from './firmware/gadget'
+import { loadFirmware } from './firmware/loader'
 
 export type OS = {
-  boot: (code: string) => string
+  boot: (firmware: string, code: string) => string
   ids: () => string[]
   halt: (id: string) => boolean
   active: () => Record<string, boolean>
@@ -32,7 +33,7 @@ export function createOS(): OS {
   }
 
   const os: OS = {
-    boot(code) {
+    boot(firmware, code) {
       const id = createGuid()
 
       const result = build(code)
@@ -42,7 +43,7 @@ export function createOS(): OS {
       }
 
       const chip = (chips[id] = createChip(result))
-      LOADER_FIRMWARE.install(chip)
+      loadFirmware(chip, firmware)
 
       return id
     },

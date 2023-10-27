@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useRef } from 'react'
 import { BufferGeometry } from 'three'
 
+import { convertPaletteToColors } from '../data/palette'
 import {
   CHARSET_BITMAP,
   CHAR_HEIGHT,
   CHAR_WIDTH,
   PALETTE_BITMAP,
-} from '../data'
-import { convertPaletteToColors } from '../data/palette'
+} from '../data/types'
 import useBitmapTexture from '../display/textures'
 import {
   createTilemapBufferGeometry,

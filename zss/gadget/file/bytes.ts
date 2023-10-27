@@ -2,6 +2,7 @@ import DEFAULT_CHR from 'data-url:./default.chr'
 import DEFAULT_PAL from 'data-url:./default.pal'
 import { createGuid } from 'zss/mapping/guid'
 
+import { createBitmap } from '../data/bitmap'
 import {
   BYTES_PER_COLOR,
   CHARSET_BITMAP,
@@ -9,8 +10,7 @@ import {
   CHAR_HEIGHT,
   CHAR_WIDTH,
   PALETTE_BITMAP,
-  createBitmap,
-} from '../data'
+} from '../data/types'
 
 // export function loadCharsetFrom
 function base64ToBytes(base64: string) {
