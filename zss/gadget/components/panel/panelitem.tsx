@@ -22,7 +22,6 @@ interface PanelItemProps {
 }
 
 export function PanelItem({ item, context }: PanelItemProps) {
-  console.info('render panel item')
   if (typeof item === 'string') {
     return <PanelItemText item={item} context={context} />
   } else {

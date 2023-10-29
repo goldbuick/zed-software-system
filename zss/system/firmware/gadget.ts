@@ -67,7 +67,6 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
   .command('hyperlink', (state, chip, args) => {
     const [target, label, input] = chip.mapArgs(
       args,
-      1,
       ARG.STRING,
       ARG.STRING,
       ARG.STRING,
