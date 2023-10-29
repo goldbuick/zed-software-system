@@ -122,8 +122,8 @@ export function Layout({ panels }: LayoutProps) {
               name={rect.name}
               width={rect.width}
               height={rect.height}
-              color={15}
-              bg={rect.frame ? 5 : 1}
+              color={14}
+              bg={1}
               text={rect.text}
             />
           )}

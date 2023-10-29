@@ -130,12 +130,20 @@ export function tokenize(text: string, noWhitespace = false) {
 export type WRITE_TEXT_CONTEXT = {
   x: number
   y: number
+  isEven: boolean
+  resetColor: number
+  resetBg: number
   activeColor: number | undefined
   activeBg: number | undefined
   width: number
-  chars: number[]
-  colors: number[]
-  bgs: number[]
+  char: number[]
+  color: number[]
+  bg: number[]
+}
+
+export function writeTextColorReset(context: WRITE_TEXT_CONTEXT) {
+  context.activeColor = context.resetColor
+  context.activeBg = context.resetBg
 }
 
 export function writeTextFormat(
@@ -153,12 +161,12 @@ export function writeTextFormat(
   function writeStr(str: string) {
     for (let t = 0; t < str.length; ++t) {
       const i = context.x + context.y * context.width
-      context.chars[i] = str.charCodeAt(t)
+      context.char[i] = str.charCodeAt(t)
       if (context.activeColor !== undefined) {
-        context.colors[i] = context.activeColor
+        context.color[i] = context.activeColor
       }
       if (context.activeBg !== undefined) {
-        context.bgs[i] = context.activeBg
+        context.bg[i] = context.activeBg
       }
       incCursor()
     }
@@ -209,12 +217,12 @@ export function writeTextFormat(
       }
       case NumberLiteral: {
         const i = context.x + context.y * context.width
-        context.chars[i] = parseFloat(token.image.replace('$', ''))
+        context.char[i] = parseFloat(token.image.replace('$', ''))
         if (context.activeColor !== undefined) {
-          context.colors[i] = context.activeColor
+          context.color[i] = context.activeColor
         }
         if (context.activeBg !== undefined) {
-          context.bgs[i] = context.activeBg
+          context.bg[i] = context.activeBg
         }
         incCursor()
         break

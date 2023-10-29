@@ -30,7 +30,7 @@ $white$ondkblue
 !empty;Move;hotkey stub "       $24$25$26$27"
 !empty;Shoot;hotkey stub " Shift $24$25$26$27"
 ""
-!all:doot;Fart!;hotkey f " f"
+!all:doot;Bart!;hotkey b " b"
 !all:doot;$yellowZart!;hotkey z " z"
 ""
 !all:doot;Hyperlink

@@ -3,14 +3,20 @@ import { proxy } from 'valtio'
 
 import { TILES } from '../data/types'
 
-export function useTiles(width: number, height: number): TILES {
+export function useTiles(
+  width: number,
+  height: number,
+  char: number,
+  color: number,
+  bg: number,
+) {
   const size = width * height
 
   const tiles = useMemo(() => {
     return proxy<TILES>({
-      char: new Array(size).fill(0),
-      color: new Array(size).fill(0),
-      bg: new Array(size).fill(0),
+      char: new Array(size).fill(char),
+      color: new Array(size).fill(color),
+      bg: new Array(size).fill(bg),
     })
   }, [width, height])
 

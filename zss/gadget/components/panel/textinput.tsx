@@ -3,22 +3,19 @@ import {
   tokenizeAndWriteTextFormat,
 } from '../../data/textFormat'
 
-interface PanelItemSelectProps {
+interface PanelItemInputTextProps {
   target: string
   label: string
   args: string[]
   context: WRITE_TEXT_CONTEXT
 }
 
-export function PanelItemSelect({
+export function PanelItemInputText({
   target,
   label,
   args,
   context,
-}: PanelItemSelectProps) {
-  tokenizeAndWriteTextFormat(
-    `$white${label} $green${(args[0] ?? '').toUpperCase()}`,
-    context,
-  )
+}: PanelItemInputTextProps) {
+  tokenizeAndWriteTextFormat(`$white${label} $greenKrupts`, context)
   return null
 }
