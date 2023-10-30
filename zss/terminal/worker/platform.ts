@@ -9,31 +9,31 @@ const os = createOS()
 
 let gadgetstate: STATE = {}
 
-createDevice('gadgetserver', [], (message) => {
+const gadget = createDevice('gadgetserver', [], (message) => {
   switch (message.target) {
     case 'desync':
-      hub.emit('gadgetclient:reset', GADGET_FIRMWARE.shared)
+      hub.emit('gadgetclient:reset', gadget.name(), GADGET_FIRMWARE.shared)
       break
   }
 })
 
-createDevice('platform', [], (message) => {
+const platform = createDevice('platform', [], (message) => {
   switch (message.target) {
     case 'boot': {
       const [firmware, code] = message.data
-      os.boot(firmware, code)
+      os.boot({ group: '', firmware, code })
       break
     }
     case 'halt':
       os.halt(message.data)
       break
     case 'active':
-      if (message.reply) {
-        hub.emit(message.reply, os.active())
+      if (message.from) {
+        hub.emit(message.from, platform.name(), os.active())
       }
       break
     default:
-      os.send(message)
+      os.message(message)
       break
   }
 })
@@ -52,7 +52,7 @@ function tick() {
   const patch = jsonpatch.compare(gadgetstate, GADGET_FIRMWARE.shared)
   if (patch.length) {
     gadgetstate = jsonpatch.deepClone(GADGET_FIRMWARE.shared)
-    hub.emit('gadgetclient:patch', patch)
+    hub.emit('gadgetclient:patch', gadget.name(), patch)
   }
 }
 

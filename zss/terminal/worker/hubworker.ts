@@ -13,4 +13,4 @@ hub.setSyncHandler((hubmessage) => {
   postMessage(hubmessage)
 })
 
-hub.emit('ready')
+hub.emit('ready', 'hubworker')

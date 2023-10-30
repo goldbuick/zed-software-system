@@ -34,8 +34,8 @@ export function PanelItemHotkey({
 
   useHotkeys(
     shortcut,
-    (event) => {
-      hub.emit(target)
+    () => {
+      hub.emit(target, 'gadget')
     },
     [target],
   )

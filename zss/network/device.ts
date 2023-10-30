@@ -1,19 +1,15 @@
 import { createGuid } from '../mapping/guid'
+import { MESSAGE } from '../system/chip'
 
 import { hub } from './hub'
 
-export type MESSAGE = {
-  target: string
-  data?: any
-  reply?: any
-}
-
 export function createMessage(
   target: string,
+  from: string,
   data?: any,
-  reply?: any,
+  playerId?: string,
 ): MESSAGE {
-  return { target, data, reply }
+  return { target, from, data, playerId }
 }
 
 export type MESSAGE_FUNC = (message: MESSAGE) => void

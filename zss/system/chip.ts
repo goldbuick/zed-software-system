@@ -5,21 +5,22 @@ import { GENERATED_FILENAME } from 'zss/lang/transformer'
 
 export const HALT_AT_COUNT = 64
 
-// id or x, y coords
-export type MESSAGE_SOURCE = string | { x: number; y: number }
-
 export type MESSAGE = {
-  to: string
-  from: MESSAGE_SOURCE
-  name: string
-  value: any
-  playerId: string
+  target: string
+  data?: any
+  from: string
+  playerId?: string
 }
 
 export type STATE = Record<string, any>
 
 // may need to expand on this to encapsulate more complex values
 export type CHIP = {
+  // id
+  id: string
+  name: () => string
+  setName: (name: string) => void
+
   // invokes api
   define: (incoming: CHIP_COMMANDS) => void
 
@@ -84,7 +85,7 @@ export type CHIP = {
 }
 
 export type WORD = string | number
-export type WORD_VALUE = WORD | MESSAGE_SOURCE | undefined
+export type WORD_VALUE = WORD | undefined
 export type CHIP_COMMAND = (chip: CHIP, words: WORD[]) => WORD_VALUE
 export type CHIP_COMMANDS = Record<string, CHIP_COMMAND>
 
@@ -94,7 +95,10 @@ export enum ARG {
 }
 
 // lifecycle and control flow api
-export function createChip(build: GeneratorBuild) {
+export function createChip(id: string, build: GeneratorBuild) {
+  // naming
+  let name = 'object'
+
   // entry point state
   const labels = klona(build.labels ?? {})
 
@@ -121,7 +125,7 @@ export function createChip(build: GeneratorBuild) {
   // chip public stats
   const stats = {
     player: '',
-    sender: '' as MESSAGE_SOURCE,
+    sender: '',
     data: '' as WORD_VALUE,
   }
 
@@ -140,6 +144,15 @@ export function createChip(build: GeneratorBuild) {
   }
 
   const chip: CHIP = {
+    // id
+    id,
+    name() {
+      return name
+    },
+    setName(incoming) {
+      name = incoming
+    },
+
     // invokes api
     define(incoming) {
       invokes = {
@@ -183,8 +196,8 @@ export function createChip(build: GeneratorBuild) {
       return loops++ > HALT_AT_COUNT
     },
     hasmessage() {
-      const name = message?.name ?? ''
-      const result = labels[name]?.find((item) => item > 0) ?? 0
+      const target = message?.target ?? ''
+      const result = labels[target]?.find((item) => item > 0) ?? 0
       return result
     },
     yield() {
@@ -219,7 +232,7 @@ export function createChip(build: GeneratorBuild) {
 
         // update chip value state based on incoming message
         stats.sender = message.from
-        stats.data = message.value
+        stats.data = message.data
         // this sets player focus
         if (message.playerId) {
           stats.player = message.playerId

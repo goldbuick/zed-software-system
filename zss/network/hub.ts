@@ -1,6 +1,7 @@
 import { createGuid } from '../mapping/guid'
+import { MESSAGE } from '../system/chip'
 
-import { DEVICE, MESSAGE, createMessage } from './device'
+import { DEVICE, createMessage } from './device'
 
 export type HUB_MESSAGE = {
   id: string
@@ -10,7 +11,7 @@ export type HUB_MESSAGE = {
 type SYNC_HANDLER = (hubmessage: HUB_MESSAGE) => void
 
 export type HUB = {
-  emit: (target: string, data?: any) => void
+  emit: (target: string, from: string, data: any, playerId: string) => void
   handle: (message: MESSAGE) => void
   sync: (hubmessage: HUB_MESSAGE) => void
   connect: (device: DEVICE) => void
@@ -24,8 +25,11 @@ const devices = new Set<DEVICE>()
 let syncHandler: SYNC_HANDLER | undefined
 
 export const hub: HUB = {
-  emit(target: string, data?: any) {
-    hub.sync({ id: createGuid(), message: createMessage(target, data) })
+  emit(target, from, data, playerId) {
+    hub.sync({
+      id: createGuid(),
+      message: createMessage(target, from, data, playerId),
+    })
   },
   handle(message) {
     devices.forEach((device) => device.handle(message))

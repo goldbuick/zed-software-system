@@ -3,22 +3,22 @@ import { createGuid } from 'zss/mapping/guid'
 import { MESSAGE_FUNC, parseTarget } from 'zss/network/device'
 
 import { CHIP, createChip } from './chip'
-import { GADGET_FIRMWARE } from './firmware/gadget'
 import { loadFirmware } from './firmware/loader'
 
 export type OS = {
-  boot: (firmware: string, code: string) => string
+  boot: (opts: { group: string; firmware: string; code: string }) => string
   ids: () => string[]
   halt: (id: string) => boolean
   active: () => Record<string, boolean>
   tick: (id: string) => void
-  send: MESSAGE_FUNC
+  message: MESSAGE_FUNC
   state: (id: string, name?: string) => Record<string, object>
 }
 
 export function createOS(): OS {
   const builds: Record<string, GeneratorBuild> = {}
   const chips: Record<string, CHIP> = {}
+  const groups: Record<string, Set<CHIP>> = {}
 
   function build(code: string) {
     const cache = builds[code]
@@ -33,17 +33,23 @@ export function createOS(): OS {
   }
 
   const os: OS = {
-    boot(firmware, code) {
+    boot(opts) {
       const id = createGuid()
+      const group = opts.group.toLowerCase()
 
-      const result = build(code)
+      const result = build(opts.code)
       if (result.errors?.length) {
         // log it ???
         return ''
       }
 
-      const chip = (chips[id] = createChip(result))
-      loadFirmware(chip, firmware)
+      // create chip from build and load
+      const chip = (chips[id] = createChip(id, result))
+      loadFirmware(chip, opts.firmware)
+
+      // make sure we have a set to add to
+      groups[group] = groups[group] || new Set()
+      groups[group].add(chip)
 
       return id
     },
@@ -67,9 +73,22 @@ export function createOS(): OS {
     tick(id) {
       chips[id]?.tick()
     },
-    send(message) {
-      const { target, path } = parseTarget(message.target)
-      console.info('os send', { target, path, data: message.data })
+    message(incoming) {
+      const { target, path } = parseTarget(incoming.target)
+      const itarget = target.toLowerCase()
+
+      // check group
+      if (groups[itarget]) {
+      }
+
+      // check id / name
+      os.ids().forEach((id) => {
+        if (itarget === id) {
+          chips[id].message({ ...incoming, target: path })
+        }
+      })
+
+      // console.info('os message', { target, path, data: message.data })
     },
     state(id, name) {
       return chips[id]?.state(name) ?? {}

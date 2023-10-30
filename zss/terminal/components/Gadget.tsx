@@ -33,7 +33,7 @@ const device = createDevice('gadgetclient', [], (message) => {
           if (err instanceof jsonpatch.JsonPatchError) {
             // we are out of sync and need to request a refresh
             needsReset = true
-            hub.emit('gadgetserver:desync', device.id())
+            hub.emit('gadgetserver:desync', device.name(), device.id(), '')
           }
         }
       }
