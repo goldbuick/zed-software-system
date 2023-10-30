@@ -2,6 +2,8 @@ import { PANEL, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { createGuid } from 'zss/mapping/guid'
 import { ARG, STATE } from 'zss/system/chip'
 
+import { hub } from '/zss/network/hub'
+
 import { createFirmware } from '../firmware'
 
 function initState(state: STATE) {
@@ -40,6 +42,14 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
 
     return 0
   })
+  .command('end', (state, chip) => {
+    chip.endofprogram()
+    return 0
+  })
+  .command('send', (state, chip, args) => {
+    hub.emit(chip.parseTarget(chip.wordToString(args[0])), chip.id, args[1])
+    return 0
+  })
   .command('get', (state, chip, args) => {
     const name = chip.wordToString(args[0])
     return state[name] ?? 0
@@ -60,6 +70,7 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
       GADGET_FIRMWARE.shared.layoutReset = false
       panel.text = []
     }
+
     panel.text.push(text)
 
     return 0
@@ -80,7 +91,8 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
       GADGET_FIRMWARE.shared.layoutReset = false
       panel.text = []
     }
-    panel.text.push([target, label, input])
+
+    panel.text.push([chip.parseTarget(target), label, input])
 
     return 0
   })

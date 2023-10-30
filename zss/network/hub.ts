@@ -11,7 +11,7 @@ export type HUB_MESSAGE = {
 type SYNC_HANDLER = (hubmessage: HUB_MESSAGE) => void
 
 export type HUB = {
-  emit: (target: string, from: string, data: any, playerId: string) => void
+  emit: (target: string, from: string, data?: any, playerId?: string) => void
   handle: (message: MESSAGE) => void
   sync: (hubmessage: HUB_MESSAGE) => void
   connect: (device: DEVICE) => void

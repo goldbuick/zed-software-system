@@ -3,6 +3,8 @@ import { klona } from 'klona/json'
 import { GeneratorBuild } from 'zss/lang/generator'
 import { GENERATED_FILENAME } from 'zss/lang/transformer'
 
+import { parseTarget } from '../network/device'
+
 export const HALT_AT_COUNT = 64
 
 export type MESSAGE = {
@@ -34,6 +36,7 @@ export type CHIP = {
   hasmessage: () => number
   yield: () => void
   shouldyield: () => boolean
+  parseTarget: (targetString: string) => string
   message: (incoming: MESSAGE) => void
   zap: (label: string) => void
   restore: (label: string) => void
@@ -95,7 +98,7 @@ export enum ARG {
 }
 
 // lifecycle and control flow api
-export function createChip(id: string, build: GeneratorBuild) {
+export function createChip(id: string, group: string, build: GeneratorBuild) {
   // naming
   let name = 'object'
 
@@ -206,6 +209,11 @@ export function createChip(id: string, build: GeneratorBuild) {
     shouldyield() {
       return yieldState || chip.shouldhalt()
     },
+    parseTarget(targetString) {
+      const { target, path } = parseTarget(targetString)
+      // always prefix with route back to this chip
+      return `platform:${group}:${id}:${target}${path ? `:${path}` : ''}`
+    },
     message(incoming) {
       message = incoming
     },
@@ -233,6 +241,7 @@ export function createChip(id: string, build: GeneratorBuild) {
         // update chip value state based on incoming message
         stats.sender = message.from
         stats.data = message.data
+
         // this sets player focus
         if (message.playerId) {
           stats.player = message.playerId
@@ -240,6 +249,10 @@ export function createChip(id: string, build: GeneratorBuild) {
 
         // clear message
         message = undefined
+
+        // reset ended state
+        yieldState = false
+        endedState = false
 
         // return entry point
         return label
@@ -339,7 +352,9 @@ export function createChip(id: string, build: GeneratorBuild) {
 
       const [name, ...args] = words
       const command = invokes[name]
-      return command ? command(chip, args) : invokecommand('send', args)
+      return command
+        ? command(chip, args)
+        : invokecommand('send', [name, ...args])
     },
     if(...words) {
       const check = chip.parseValue(words)

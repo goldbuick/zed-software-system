@@ -15,7 +15,7 @@ sent worker side
 createDevice('input', [], (message) => {
   switch (message.target) {
     case 'key':
-      console.info('key', message.data)
+      // console.info('key', message.data)
       break
   }
 })

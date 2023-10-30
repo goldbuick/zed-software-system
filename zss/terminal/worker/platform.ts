@@ -20,8 +20,8 @@ const gadget = createDevice('gadgetserver', [], (message) => {
 const platform = createDevice('platform', [], (message) => {
   switch (message.target) {
     case 'boot': {
-      const [firmware, code] = message.data
-      os.boot({ group: '', firmware, code })
+      const [group, firmware, code] = message.data
+      os.boot({ group, firmware, code })
       break
     }
     case 'halt':
