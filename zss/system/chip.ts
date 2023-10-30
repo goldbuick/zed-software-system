@@ -36,7 +36,7 @@ export type CHIP = {
   hasmessage: () => number
   yield: () => void
   shouldyield: () => boolean
-  parseTarget: (targetString: string) => string
+  addSelfId: (targetString: string) => string
   message: (incoming: MESSAGE) => void
   zap: (label: string) => void
   restore: (label: string) => void
@@ -209,10 +209,10 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     shouldyield() {
       return yieldState || chip.shouldhalt()
     },
-    parseTarget(targetString) {
+    addSelfId(targetString) {
       const { target, path } = parseTarget(targetString)
       // always prefix with route back to this chip
-      return `platform:${group}:${id}:${target}${path ? `:${path}` : ''}`
+      return `platform:${id}:${target}${path ? `:${path}` : ''}`
     },
     message(incoming) {
       message = incoming

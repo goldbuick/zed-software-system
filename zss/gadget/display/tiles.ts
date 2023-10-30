@@ -53,16 +53,10 @@ export function updateTilemapDataTexture(
   return texture
 }
 
-export function createTilemapDataTexture(
-  width: number,
-  height: number,
-  tchar: TILE_CHARS,
-  tcolor: TILE_COLORS,
-  tbg: TILE_COLORS,
-) {
+export function createTilemapDataTexture(width: number, height: number) {
   const data = new Uint8Array(4 * width * height)
   const texture = new THREE.DataTexture(data, width, height)
-  return updateTilemapDataTexture(texture, width, height, tchar, tcolor, tbg)
+  return texture
 }
 
 export function createTilemapBufferGeometry(

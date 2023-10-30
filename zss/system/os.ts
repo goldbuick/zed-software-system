@@ -85,7 +85,7 @@ export function createOS(): OS {
 
       // check id / name
       os.ids().forEach((id) => {
-        if (itarget === id) {
+        if (target === id) {
           chips[id].message({ ...incoming, target: path })
         }
       })

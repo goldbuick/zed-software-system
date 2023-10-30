@@ -13,6 +13,7 @@ import {
   createTilemapBufferGeometry,
   createTilemapDataTexture,
   createTilemapMaterial,
+  updateTilemapDataTexture,
 } from '../display/tiles'
 
 import { useClipping } from './clipping'
@@ -43,19 +44,28 @@ export function Tiles({
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charsetTexture?.image ?? {}
 
-  // create / config material
+  // create data texture
   useEffect(() => {
-    if (!charsetTexture || !bgRef.current) {
-      return
-    }
+    material.uniforms.data.value = createTilemapDataTexture(width, height)
+  }, [width, height])
 
-    material.uniforms.data.value = createTilemapDataTexture(
+  // set data texture
+  useEffect(() => {
+    updateTilemapDataTexture(
+      material.uniforms.data.value,
       width,
       height,
       char,
       color,
       bg,
     )
+  }, [width, height, char, color, bg])
+
+  // create / config material
+  useEffect(() => {
+    if (!charsetTexture || !bgRef.current) {
+      return
+    }
 
     createTilemapBufferGeometry(bgRef.current, width, height)
 

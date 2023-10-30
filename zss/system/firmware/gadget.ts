@@ -47,7 +47,7 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
     return 0
   })
   .command('send', (state, chip, args) => {
-    hub.emit(chip.parseTarget(chip.wordToString(args[0])), chip.id, args[1])
+    hub.emit(chip.addSelfId(chip.wordToString(args[0])), chip.id, args[1])
     return 0
   })
   .command('get', (state, chip, args) => {
@@ -92,7 +92,7 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
       panel.text = []
     }
 
-    panel.text.push([chip.parseTarget(target), label, input])
+    panel.text.push([chip.addSelfId(target), label, input])
 
     return 0
   })
