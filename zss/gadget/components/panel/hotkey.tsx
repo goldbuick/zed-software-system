@@ -7,6 +7,7 @@ import {
 } from '../../data/textFormat'
 
 interface PanelItemHotkeyProps {
+  systemId: string
   target: string
   label: string
   args: string[]
@@ -14,6 +15,7 @@ interface PanelItemHotkeyProps {
 }
 
 export function PanelItemHotkey({
+  systemId,
   target,
   label,
   args,
@@ -35,7 +37,7 @@ export function PanelItemHotkey({
   useHotkeys(
     shortcut,
     () => {
-      hub.emit(target, 'gadget')
+      hub.emit(target, 'gadget', undefined, systemId)
     },
     [target],
   )

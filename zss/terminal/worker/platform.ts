@@ -12,25 +12,26 @@ let gadgetstate: STATE = {}
 const gadget = createDevice('gadgetserver', [], (message) => {
   switch (message.target) {
     case 'desync':
-      hub.emit('gadgetclient:reset', gadget.name(), GADGET_FIRMWARE.shared)
+      hub.emit(
+        'gadgetclient:reset',
+        gadget.name(),
+        GADGET_FIRMWARE.shared[message.playerId ?? ''],
+        message.playerId,
+      )
       break
   }
 })
 
 const platform = createDevice('platform', [], (message) => {
   switch (message.target) {
-    case 'boot': {
-      const [group, firmware, code] = message.data
-      os.boot({ group, firmware, code })
+    case 'login':
+      console.info(message)
       break
-    }
     case 'halt':
       os.halt(message.data)
       break
     case 'active':
-      if (message.from) {
-        hub.emit(message.from, platform.name(), os.active())
-      }
+      hub.emit(message.from, platform.name(), os.active())
       break
     default:
       os.message(message)

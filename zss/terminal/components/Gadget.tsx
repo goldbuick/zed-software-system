@@ -6,16 +6,24 @@ import { createDevice } from 'zss/network/device'
 import { hub } from 'zss/network/hub'
 import { STATE } from 'zss/system/chip'
 
+import { systemId } from '../main/id'
+
 let needsReset = false
 
 type SYNC_STATE = {
   state: STATE
 }
+
 const syncstate = proxy<SYNC_STATE>({
   state: {},
 })
 
 const device = createDevice('gadgetclient', [], (message) => {
+  // filter by playerId
+  if (message.playerId !== systemId) {
+    return
+  }
+
   switch (message.target) {
     case 'reset':
       syncstate.state = message.data
@@ -33,7 +41,12 @@ const device = createDevice('gadgetclient', [], (message) => {
           if (err instanceof jsonpatch.JsonPatchError) {
             // we are out of sync and need to request a refresh
             needsReset = true
-            hub.emit('gadgetserver:desync', device.name(), device.id(), '')
+            hub.emit(
+              'gadgetserver:desync',
+              device.name(),
+              device.id(),
+              systemId,
+            )
           }
         }
       }
