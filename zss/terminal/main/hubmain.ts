@@ -1,7 +1,7 @@
 import { hub } from 'zss/network/hub'
 
 import './input'
-import './login'
+import './playerId'
 
 const webworker = new Worker(
   new URL('../worker/hubworker.ts', import.meta.url),
