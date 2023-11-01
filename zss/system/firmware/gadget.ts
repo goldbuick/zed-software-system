@@ -63,6 +63,7 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
   })
   .command('get', (state, chip, args) => {
     const name = chip.wordToString(args[0])
+    // do we really only need group mem, and sim mem ??
     return state[name] ?? 0
   })
   .command('set', (state, chip, args) => {

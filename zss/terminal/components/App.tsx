@@ -3,11 +3,11 @@ import { Canvas, events } from '@react-three/fiber'
 import React from 'react'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
-import './main/hubmain'
+import '../main/hubmain'
 
-import { makeEven } from '../mapping/number'
+import { makeEven } from '../../mapping/number'
 
-import { Terminal } from './components/Terminal'
+import { Terminal } from './Terminal'
 
 const target = new THREE.Vector3()
 const facing = new THREE.Vector3()
