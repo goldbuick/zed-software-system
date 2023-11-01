@@ -19,7 +19,8 @@ export type STATE = Record<string, any>
 // may need to expand on this to encapsulate more complex values
 export type CHIP = {
   // id
-  id: string
+  id: () => string
+  group: () => string
   name: () => string
   setName: (name: string) => void
 
@@ -148,7 +149,12 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
 
   const chip: CHIP = {
     // id
-    id,
+    id() {
+      return id
+    },
+    group() {
+      return group
+    },
     name() {
       return name
     },
@@ -210,9 +216,8 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       return yieldState || chip.shouldhalt()
     },
     addSelfId(targetString) {
-      const { target, path } = parseTarget(targetString)
       // always prefix with route back to this chip
-      return `platform:${id}:${target}${path ? `:${path}` : ''}`
+      return `platform:${id}:${targetString}`
     },
     message(incoming) {
       message = incoming

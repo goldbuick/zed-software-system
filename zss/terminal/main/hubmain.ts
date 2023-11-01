@@ -11,11 +11,9 @@ const webworker = new Worker(
 )
 
 hub.setSyncHandler((hubmessage) => {
-  // console.info('hubmain sync handler', hubmessage)
   webworker.postMessage(hubmessage)
 })
 
 webworker.addEventListener('message', (event) => {
-  // console.info('hubmain addEventListener', event.data)
   hub.sync(event.data)
 })

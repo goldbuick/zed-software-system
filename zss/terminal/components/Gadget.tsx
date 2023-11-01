@@ -26,17 +26,14 @@ const device = createDevice('gadgetclient', [], (message) => {
 
   switch (message.target) {
     case 'reset':
+      needsReset = false
       syncstate.state = message.data
       break
 
     case 'patch': {
       if (!needsReset) {
         try {
-          jsonpatch.applyPatch(
-            syncstate.state,
-            jsonpatch.deepClone(message.data),
-            true,
-          )
+          jsonpatch.applyPatch(syncstate.state, message.data, true)
         } catch (err) {
           if (err instanceof jsonpatch.JsonPatchError) {
             // we are out of sync and need to request a refresh
@@ -53,7 +50,7 @@ const device = createDevice('gadgetclient', [], (message) => {
       break
     }
     default:
-      console.info(message)
+      console.error(message)
       break
   }
 })

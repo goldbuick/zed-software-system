@@ -9,8 +9,10 @@ export type OS = {
   boot: (opts: { group: string; firmware: string; code: string }) => string
   ids: () => string[]
   halt: (id: string) => boolean
+  haltGroup: (group: string) => boolean[]
   active: () => Record<string, boolean>
   tick: (id: string) => void
+  tickGroup: (group: string) => void
   message: MESSAGE_FUNC
   messageForGroup: (group: string, message: MESSAGE) => void
   state: (id: string, name?: string) => Record<string, object>
@@ -49,9 +51,12 @@ export function createOS(): OS {
       loadFirmware(chip, opts.firmware)
 
       // make sure we have a set to add to
-      groups[group] = groups[group] || new Set()
-      groups[group].add(chip)
+      if (!groups[group]) {
+        groups[group] = new Set()
+      }
 
+      // add to group and return id
+      groups[group].add(chip)
       return id
     },
     ids() {
@@ -59,8 +64,15 @@ export function createOS(): OS {
     },
     halt(id) {
       const chip = chips[id]
-      delete chips[id]
+      if (chip) {
+        delete chips[id]
+        groups[chip.group()]?.delete(chip)
+      }
       return !!chip
+    },
+    haltGroup(group) {
+      const chips = groups[group]
+      return [...(chips ?? [])].map((chip) => os.halt(chip.id()))
     },
     active() {
       const chipstate: Record<string, boolean> = {}
@@ -73,6 +85,10 @@ export function createOS(): OS {
     },
     tick(id) {
       chips[id]?.tick()
+    },
+    tickGroup(group) {
+      const chips = groups[group]
+      chips?.forEach((chip) => chip.tick())
     },
     message(incoming) {
       const { target, path } = parseTarget(incoming.target)
@@ -92,10 +108,11 @@ export function createOS(): OS {
     },
     messageForGroup(groupName, incoming) {
       const { target, path } = parseTarget(incoming.target)
+
       // match against chips in group
       const group = groups[groupName]
       group.forEach((chip) => {
-        if (target === chip.id) {
+        if (target === chip.id()) {
           chip.message({ ...incoming, target: path })
         }
       })
