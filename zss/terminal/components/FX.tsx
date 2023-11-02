@@ -6,18 +6,10 @@ import {
 import { ChromaticAberrationEffect } from 'postprocessing'
 import React from 'react'
 
-let PHASE = 0.005
+let offset = 0
+const PHASE = 0.005
 
 export function FX() {
-  // useEffect(() => {
-  //   const timer = setInterval(() => {
-  //     PHASE = Math.max(0.1, Math.min(0.01, PHASE + Math.random() * 0.001))
-  //   }, 100)
-  //   return () => {
-  //     clearInterval(timer)
-  //   }
-  // }, [])
-
   const ref = React.createRef<typeof ChromaticAberrationEffect>()
 
   useFrame((state, delta) => {
@@ -25,15 +17,14 @@ export function FX() {
       return
     }
 
-    PHASE = PHASE + (1 - Math.random() * 2) * delta * 0.01
-    PHASE = Math.max(0.0001, Math.min(0.007, PHASE))
-    console.info(PHASE)
+    // PHASE = PHASE + (1 - Math.random() * 2) * delta * 1.0125
+    // PHASE = Math.max(0.0001, Math.min(0.004, PHASE))
 
-    ref.current.offset = [
-      -PHASE / window.devicePixelRatio,
-      PHASE / window.devicePixelRatio,
-    ]
-    ref.current.modulationOffset = PHASE
+    // ref.current.offset = [Math.cos(offset) * PHASE, Math.sin(offset) * PHASE]
+
+    ref.current.modulationOffset = 0.1 //Math.abs(Math.cos(offset * 10) * 2)
+
+    offset += delta * 0.1
   })
 
   return (
@@ -41,7 +32,7 @@ export function FX() {
       <ChromaticAberration
         ref={ref}
         radialModulation
-        modulationOffset={0.5}
+        modulationOffset={0.8}
         // @ts-expect-error numbers !
         offset={[-PHASE, PHASE]} // color offset
       />
