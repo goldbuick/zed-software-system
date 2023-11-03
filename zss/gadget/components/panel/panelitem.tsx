@@ -22,6 +22,8 @@ interface PanelItemProps {
 }
 
 export function PanelItem({ item, context }: PanelItemProps) {
+  context.isEven = context.y % 2 === 0
+
   if (typeof item === 'string') {
     return <PanelItemText item={item} context={context} />
   } else {

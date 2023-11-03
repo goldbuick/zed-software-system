@@ -7,7 +7,7 @@ import { ChromaticAberrationEffect } from 'postprocessing'
 import React from 'react'
 
 let offset = 0
-const PHASE = 0.005
+const PHASE = 0.001
 
 export function FX() {
   const ref = React.createRef<typeof ChromaticAberrationEffect>()
@@ -16,14 +16,11 @@ export function FX() {
     if (!ref.current) {
       return
     }
-
-    // PHASE = PHASE + (1 - Math.random() * 2) * delta * 1.0125
-    // PHASE = Math.max(0.0001, Math.min(0.004, PHASE))
-
-    // ref.current.offset = [Math.cos(offset) * PHASE, Math.sin(offset) * PHASE]
-
-    ref.current.modulationOffset = 0.1 //Math.abs(Math.cos(offset * 10) * 2)
-
+    // @ts-expect-error why??
+    ref.current.offset = [Math.cos(offset) * PHASE, Math.sin(offset) * PHASE]
+    // @ts-expect-error why??
+    ref.current.modulationOffset = Math.sin(offset * 0.1)
+    // bump anim
     offset += delta * 0.1
   })
 
@@ -32,7 +29,7 @@ export function FX() {
       <ChromaticAberration
         ref={ref}
         radialModulation
-        modulationOffset={0.8}
+        modulationOffset={1}
         // @ts-expect-error numbers !
         offset={[-PHASE, PHASE]} // color offset
       />

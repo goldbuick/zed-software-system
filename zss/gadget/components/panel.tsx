@@ -63,7 +63,6 @@ export function Panel({ name, width, height, color, bg, text }: PanelProps) {
     charset && (
       <>
         {text.map((item, index) => {
-          context.isEven = context.y % 2 === 0
           return <PanelItem key={index} item={item} context={context} />
         })}
         <PanelRender width={width} height={height} tiles={tiles} />
