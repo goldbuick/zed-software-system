@@ -4,6 +4,7 @@ import {
 } from '../../data/textFormat'
 
 interface PanelItemHyperTextProps {
+  playerId: string
   target: string
   label: string
   args: string[]
@@ -11,6 +12,7 @@ interface PanelItemHyperTextProps {
 }
 
 export function PanelItemHyperText({
+  playerId,
   target,
   label,
   args,

@@ -1,8 +1,7 @@
 import { PANEL, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { createGuid } from 'zss/mapping/guid'
+import { hub } from 'zss/network/hub'
 import { ARG, STATE } from 'zss/system/chip'
-
-import { hub } from '/zss/network/hub'
 
 import { createFirmware } from '../firmware'
 

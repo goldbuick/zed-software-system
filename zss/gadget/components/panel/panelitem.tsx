@@ -18,14 +18,15 @@ import { PanelItemInputText } from './textinput'
 
 interface PanelItemProps {
   item: PANEL_ITEM
+  playerId: string
   context: WRITE_TEXT_CONTEXT
 }
 
-export function PanelItem({ item, context }: PanelItemProps) {
+export function PanelItem({ item, playerId, context }: PanelItemProps) {
   context.isEven = context.y % 2 === 0
 
   if (typeof item === 'string') {
-    return <PanelItemText item={item} context={context} />
+    return <PanelItemText playerId={playerId} item={item} context={context} />
   } else {
     // handle hypertext
     const [target, label, maybeInput] = item
@@ -44,6 +45,7 @@ export function PanelItem({ item, context }: PanelItemProps) {
         case 'hotkey':
           return (
             <PanelItemHotkey
+              playerId={playerId}
               target={target}
               label={label}
               args={args}
@@ -53,6 +55,7 @@ export function PanelItem({ item, context }: PanelItemProps) {
         case 'hypertext':
           return (
             <PanelItemHyperText
+              playerId={playerId}
               target={target}
               label={label}
               args={args}
@@ -62,6 +65,7 @@ export function PanelItem({ item, context }: PanelItemProps) {
         case 'range':
           return (
             <PanelItemRange
+              playerId={playerId}
               target={target}
               label={label}
               args={args}
@@ -71,6 +75,7 @@ export function PanelItem({ item, context }: PanelItemProps) {
         case 'select':
           return (
             <PanelItemSelect
+              playerId={playerId}
               target={target}
               label={label}
               args={args}
@@ -80,6 +85,7 @@ export function PanelItem({ item, context }: PanelItemProps) {
         case 'number':
           return (
             <PanelItemNumber
+              playerId={playerId}
               target={target}
               label={label}
               args={args}
@@ -89,6 +95,7 @@ export function PanelItem({ item, context }: PanelItemProps) {
         case 'text':
           return (
             <PanelItemInputText
+              playerId={playerId}
               target={target}
               label={label}
               args={args}

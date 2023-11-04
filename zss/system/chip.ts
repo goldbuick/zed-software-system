@@ -3,8 +3,6 @@ import { klona } from 'klona/json'
 import { GeneratorBuild } from 'zss/lang/generator'
 import { GENERATED_FILENAME } from 'zss/lang/transformer'
 
-import { parseTarget } from '../network/device'
-
 export const HALT_AT_COUNT = 64
 
 export type MESSAGE = {

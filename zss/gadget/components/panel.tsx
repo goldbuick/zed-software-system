@@ -35,6 +35,7 @@ function PanelRender({ width, height, tiles }: PanelRenderProps) {
   )
 }
 interface PanelProps {
+  playerId: string
   name: string
   width: number
   height: number
@@ -43,7 +44,15 @@ interface PanelProps {
   text: PANEL_ITEM[]
 }
 
-export function Panel({ name, width, height, color, bg, text }: PanelProps) {
+export function Panel({
+  playerId,
+  name,
+  width,
+  height,
+  color,
+  bg,
+  text,
+}: PanelProps) {
   const tiles = useTiles(width, height, 0, color, bg)
 
   const context: WRITE_TEXT_CONTEXT = {
@@ -63,7 +72,14 @@ export function Panel({ name, width, height, color, bg, text }: PanelProps) {
     charset && (
       <>
         {text.map((item, index) => {
-          return <PanelItem key={index} item={item} context={context} />
+          return (
+            <PanelItem
+              key={index}
+              playerId={playerId}
+              item={item}
+              context={context}
+            />
+          )
         })}
         <PanelRender width={width} height={height} tiles={tiles} />
       </>

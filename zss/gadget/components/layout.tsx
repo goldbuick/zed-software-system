@@ -22,10 +22,11 @@ type RECT = {
 }
 
 interface LayoutProps {
+  playerId: string
   panels?: PANEL[]
 }
 
-export function Layout({ panels }: LayoutProps) {
+export function Layout({ playerId, panels }: LayoutProps) {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
@@ -119,6 +120,7 @@ export function Layout({ panels }: LayoutProps) {
             <React.Fragment />
           ) : (
             <Panel
+              playerId={playerId}
               name={rect.name}
               width={rect.width}
               height={rect.height}

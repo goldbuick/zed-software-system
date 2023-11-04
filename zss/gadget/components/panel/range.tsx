@@ -4,6 +4,7 @@ import {
 } from '../../data/textFormat'
 
 interface PanelItemRangeProps {
+  playerId: string
   target: string
   label: string
   args: string[]
@@ -11,6 +12,7 @@ interface PanelItemRangeProps {
 }
 
 export function PanelItemRange({
+  playerId,
   target,
   label,
   args,
