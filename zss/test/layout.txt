@@ -1,19 +1,17 @@
-@gadget
 ' Here is a simple layout in gadget
-#set health1 3
-#set health2 5
-#set maxhealth1 5
-#set maxhealth2 5
-#set steps1 6
-#set steps2 26
+#set health 3
+#set maxhealth 5
+#set steps 6
+
+:nukeit
 #gadget start
 #gadget right 20
 
 #gadget bottom 1
-You are $red$steps1 $whitesteps away. $2 $ondkred\
-#repeat health1
+You are $red$steps $whitesteps away. $2 $ondkred\
+#repeat health
    |$red$3\
-#repeat maxhealth1 - health1
+#repeat maxhealth - health
    |$black$3\
 $white$ondkblue 
 
@@ -30,8 +28,13 @@ $white$ondkblue
 !empty;Move;hotkey stub "       $24$25$26$27"
 !empty;Shoot;hotkey stub " Shift $24$25$26$27"
 ""
-!all:doot;Bart!;hotkey b " b"
+!trash;Bart!;hotkey b " b"
 !all:doot;$yellowZart!;hotkey z " z"
 ""
 !all:doot;Hyperlink
 
+#end
+
+:trash
+#set health health - 1
+#nukeit

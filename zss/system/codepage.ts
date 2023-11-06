@@ -1,19 +1,27 @@
-/*
-
-what is a codepage ??
-named with key value pairs
-
-*/
+import { BOARD } from './board'
 
 export enum CODE_PAGE_TYPE {
-  ZSS,
+  CODE,
+  BOARD,
 }
 
-type CODE_PAGE_CONTENT = {
-  type: CODE_PAGE_TYPE.ZSS
-  code: string
-}
+type CODE_PAGE_DATA =
+  | {
+      type: CODE_PAGE_TYPE.CODE
+      code: string
+    }
+  | {
+      type: CODE_PAGE_TYPE.BOARD
+      board: BOARD
+    }
 
-export type CODE_PAGE = CODE_PAGE_CONTENT & {
+export type CODE_PAGE_ENTRY = {
+  id: string
   name: string
+} & CODE_PAGE_DATA
+
+export type CODE_PAGE = {
+  id: string
+  name: string
+  entries: CODE_PAGE_ENTRY[]
 }

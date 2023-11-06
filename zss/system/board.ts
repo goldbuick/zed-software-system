@@ -1,13 +1,13 @@
 import { WORD_VALUE } from './chip'
 
 // generics
-type BOARD_BUCKET = {
+export type BOARD_STATS = {
   [key: string]: WORD_VALUE
 }
 
-export type BOARD_ELEMENT = BOARD_BUCKET & {
-  // instance / lookup info
-  id: string
+export type BOARD_ELEMENT = {
+  // this element has a chip associated with it
+  chip?: string
   // this element is an instance of an element type
   kind?: string
   // this is a unique name for this instance
@@ -19,6 +19,8 @@ export type BOARD_ELEMENT = BOARD_BUCKET & {
   // interaction
   pushable?: number
   collision?: number
+  // custom
+  stats?: BOARD_STATS
 }
 
 export type MAYBE_BOARD_ELEMENT = BOARD_ELEMENT | undefined
@@ -30,11 +32,10 @@ export type BOARD_RECT = {
   height: number
 }
 
-export type BOARD = BOARD_BUCKET &
-  BOARD_RECT & {
-    // specifics
-    id: string
-    name: string
-    terrain: MAYBE_BOARD_ELEMENT[]
-    objects: MAYBE_BOARD_ELEMENT[]
-  }
+export type BOARD = BOARD_RECT & {
+  // specifics
+  terrain: MAYBE_BOARD_ELEMENT[]
+  objects: MAYBE_BOARD_ELEMENT[]
+  // custom
+  stats?: BOARD_STATS
+}

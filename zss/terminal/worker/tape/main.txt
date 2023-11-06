@@ -1,40 +1,9 @@
-' Here is a simple layout in gadget
-#set health 3
-#set maxhealth 5
-#set steps 6
-
-:nukeit
 #gadget start
 #gadget right 20
 
-#gadget bottom 1
-You are $red$steps $whitesteps away. $2 $ondkred\
-#repeat health
-   |$red$3\
-#repeat maxhealth - health
-   |$black$3\
-$white$ondkblue 
-
+:update
 #gadget right
   $white   - - - - - 
-  $black$ongrey      ZZT      
+  $black$ongrey      TAPE      
   $white   - - - - - 
 ""
-!demo1; Game Mode;select a b c
-!demo2;$blue GEEP;range F S
-!demo3; Limit;number 16
-!demo4; $12Team Name;text
-""
-!empty;Move;hotkey stub "       $24$25$26$27"
-!empty;Shoot;hotkey stub " Shift $24$25$26$27"
-""
-!trash;Bart!;hotkey b " b"
-!all:doot;$yellowZart!;hotkey z " z"
-""
-!all:doot;Hyperlink
-
-#end
-
-:trash
-#set health health - 1
-#nukeit

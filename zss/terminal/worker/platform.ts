@@ -1,4 +1,3 @@
-import tapeMain from 'bundle-text:./tape/main.txt'
 import * as jsonpatch from 'fast-json-patch'
 import { createDevice } from 'zss/network/device'
 import { hub } from 'zss/network/hub'
@@ -26,16 +25,13 @@ const gadget = createDevice('gadgetserver', [], (message) => {
 })
 
 const platform = createDevice('platform', [], (message) => {
-  console.info(message)
+  // console.info(message)
   switch (message.target) {
     case 'login':
       if (message.playerId) {
         tracking[message.playerId] = 0
-        os.boot({
-          group: message.playerId,
-          firmware: 'gadget',
-          code: tapeMain,
-        })
+        // this is a function of creating a new chip
+        // group for the player, and then starting a chip for them
       }
       break
     case 'doot':
@@ -106,17 +102,3 @@ function wake() {
 
 // server is ready
 wake()
-
-/*
-
-I want to be able to run multiple chips to drive gadget based ui
-
-chips should have names, default to object
-
-we have to group chips "by board" by some context ?
-
-we need to have codepages, with multiple entries and resource types
-
-the codepage content needs to be accessible from webworker
-
-*/
