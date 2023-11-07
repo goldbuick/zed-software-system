@@ -12,6 +12,10 @@ we need to get main gadget code
 import { BOARD } from './board'
 import { CODE_PAGE, CODE_PAGE_TYPE } from './codepage'
 
+export type VM_PLAYER = {
+  id: string
+}
+
 export type VM = {
   load: (codepages: CODE_PAGE[]) => void
   get: (idOrName: string) => CODE_PAGE[]
@@ -31,7 +35,7 @@ export function createVM() {
   let boardByName: Record<string, BOARD[]> = {}
 
   // players/pilots
-  // ??
+  const players: Record<string, VM_PLAYER> = {}
 
   const vm: VM = {
     load(incoming) {
