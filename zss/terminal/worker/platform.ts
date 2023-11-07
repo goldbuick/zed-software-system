@@ -4,8 +4,15 @@ import { hub } from 'zss/network/hub'
 import { STATE } from 'zss/system/chip'
 import { GADGET_FIRMWARE, gadgetState } from 'zss/system/firmware/gadget'
 import { createOS } from 'zss/system/os'
+import { createVM } from 'zss/system/vm'
+
+import { TAPE_PAGES } from './tape/content'
 
 const os = createOS()
+const vm = createVM()
+
+// load default software
+vm.load(TAPE_PAGES)
 
 // tracking active player ids
 const tracking: Record<string, number> = {}

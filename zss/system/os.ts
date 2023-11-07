@@ -18,7 +18,7 @@ export type OS = {
   state: (id: string, name?: string) => Record<string, object>
 }
 
-export function createOS(): OS {
+export function createOS() {
   const builds: Record<string, GeneratorBuild> = {}
   const chips: Record<string, CHIP> = {}
   const groups: Record<string, Set<CHIP>> = {}
