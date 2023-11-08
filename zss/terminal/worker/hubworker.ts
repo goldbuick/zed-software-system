@@ -11,4 +11,5 @@ hub.setSyncHandler((hubmessage) => {
   postMessage(hubmessage)
 })
 
+// signal front-end
 hub.emit('ready', 'hubworker')

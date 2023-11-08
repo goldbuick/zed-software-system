@@ -9,17 +9,18 @@ we need to get main gadget code
 
 */
 
-import { BOARD } from './board'
-import { CODE_PAGE, CODE_PAGE_TYPE } from './codepage'
+import { select } from '../mapping/array'
+
+import { CODE_PAGE, CODE_PAGE_ENTRY, CODE_PAGE_TYPE } from './codepage'
 
 export type VM_PLAYER = {
-  id: string
+  playerId: string
+  boardId: string
 }
 
 export type VM = {
   load: (codepages: CODE_PAGE[]) => void
-  get: (idOrName: string) => CODE_PAGE[]
-  board: (idOrName: string) => BOARD[]
+  get: (name: string) => CODE_PAGE_ENTRY[]
   login: (playerId: string) => void
   logout: (playerId: string) => void
 }
@@ -30,75 +31,51 @@ export function createVM() {
 
   // lookups
   let byId: Record<string, CODE_PAGE> = {}
-  let byName: Record<string, CODE_PAGE[]> = {}
-  let boardById: Record<string, BOARD> = {}
-  let boardByName: Record<string, BOARD[]> = {}
+  let byEntryId: Record<string, CODE_PAGE_ENTRY> = {}
+  let byEntryName: Record<string, CODE_PAGE_ENTRY[]> = {}
 
   // players/pilots
-  const players: Record<string, VM_PLAYER> = {}
+  let players: Record<string, VM_PLAYER> = {}
 
   const vm: VM = {
     load(incoming) {
       byId = {}
-      byName = {}
-      boardById = {}
-      boardByName = {}
-
+      byEntryId = {}
+      byEntryName = {}
+      players = {}
       codepages = incoming
 
+      // create lookups
       codepages.forEach((codepage) => {
-        const name = codepage.name.toLowerCase()
-
-        // create lookups
+        // create code page lookups
         byId[codepage.id] = codepage
-        if (!byName[name]) {
-          byName[name] = []
-        }
-        byName[name].push(codepage)
-
+        // create code page entry lookups
         codepage.entries.forEach((entry) => {
-          switch (entry.type) {
-            case CODE_PAGE_TYPE.BOARD: {
-              const boardname = entry.name.toLowerCase()
-
-              // create lookups
-              boardById[entry.id] = entry.board
-              if (!boardByName[boardname]) {
-                boardByName[boardname] = []
-              }
-              boardByName[boardname].push(entry.board)
-              break
-            }
-          }
+          // id lookup
+          byEntryId[entry.id] = entry
+          // named lookup
+          const entryname = `${codepage.name.toLowerCase()}:${entry.name.toLowerCase()}`
+          byEntryName[entryname] = byEntryName[entryname] || []
+          byEntryName[entryname].push(entry)
         })
       })
+
+      // ahhh, what do here ??
     },
-    get(idOrName) {
-      if (byId[idOrName] !== undefined) {
-        return [byId[idOrName]]
-      }
-
-      const name = idOrName.toLowerCase()
-      if (byName[name] !== undefined) {
-        return byName[name]
-      }
-
-      return []
-    },
-    board(idOrName) {
-      if (boardById[idOrName] !== undefined) {
-        return [boardById[idOrName]]
-      }
-
-      const name = idOrName.toLowerCase()
-      if (boardByName[name] !== undefined) {
-        return boardByName[name]
-      }
-
-      return []
+    get(name) {
+      return byEntryName[name]
     },
     login(playerId) {
-      //
+      const apptitle = select(vm.get('app:title'))
+      if (!apptitle || apptitle.type !== CODE_PAGE_TYPE.BOARD) {
+        return // raise error
+      }
+
+      // create player
+      players[playerId] = {
+        playerId,
+        boardId: apptitle.id,
+      }
     },
     logout(playerId) {
       //

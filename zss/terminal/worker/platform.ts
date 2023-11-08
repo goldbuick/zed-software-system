@@ -1,10 +1,13 @@
 import * as jsonpatch from 'fast-json-patch'
+import { select } from 'zss/mapping/array'
 import { createDevice } from 'zss/network/device'
 import { hub } from 'zss/network/hub'
 import { STATE } from 'zss/system/chip'
 import { GADGET_FIRMWARE, gadgetState } from 'zss/system/firmware/gadget'
 import { createOS } from 'zss/system/os'
 import { createVM } from 'zss/system/vm'
+
+import { CODE_PAGE_TYPE } from '/zss/system/codepage'
 
 import { TAPE_PAGES } from './tape/content'
 
@@ -21,6 +24,7 @@ const tracking: Record<string, number> = {}
 const syncstate: Record<string, STATE> = {}
 
 const gadget = createDevice('gadgetserver', [], (message) => {
+  // console.info(message)
   switch (message.target) {
     case 'desync':
       if (message.playerId) {
@@ -36,21 +40,22 @@ const platform = createDevice('platform', [], (message) => {
   switch (message.target) {
     case 'login':
       if (message.playerId) {
-        tracking[message.playerId] = 0
-        // this is a function of creating a new chip
-        // group for the player, and then starting a chip for them
+        const appgadget = select(vm.get('app:gadget'))
+        if (appgadget?.type === CODE_PAGE_TYPE.CODE) {
+          tracking[message.playerId] = 0
+          vm.login(message.playerId)
+          os.boot({
+            group: message.playerId,
+            firmware: 'gadget',
+            code: appgadget.code,
+          })
+        }
       }
       break
     case 'doot':
       if (message.playerId) {
         tracking[message.playerId] = 0
       }
-      break
-    case 'halt':
-      os.halt(message.data)
-      break
-    case 'active':
-      hub.emit(message.from, platform.name(), os.active())
       break
     default:
       os.message(message)
@@ -66,28 +71,32 @@ const LOOP_TIMEOUT = 32 * 15
 function tick() {
   // tick player groups, and drop dead players
   Object.keys(tracking).forEach((playerId) => {
-    tracking[playerId] = (tracking[playerId] ?? 0) + 1
+    // tick group
+    os.tickGroup(playerId)
+
+    // inc player idle time
+    tracking[playerId] = tracking[playerId] || 0
+    ++tracking[playerId]
+    // nuke it
     if (tracking[playerId] > LOOP_TIMEOUT) {
-      console.error('discard', playerId, tracking[playerId])
-      // nuke it
-      os.haltGroup(playerId)
+      vm.logout(playerId)
       delete tracking[playerId]
       delete syncstate[playerId]
-    } else {
-      // tick group
-      os.tickGroup(playerId)
-      // we need to sync gadget here
-      const shared = gadgetState(GADGET_FIRMWARE.shared, playerId)
-      const patch = jsonpatch.compare(syncstate[playerId] ?? {}, shared)
-      if (patch.length) {
-        syncstate[playerId] = jsonpatch.deepClone(shared)
-        hub.emit('gadgetclient:patch', gadget.name(), patch, playerId)
-      }
     }
   })
 
   // tick active board groups
-  // TODO: write this ...
+  //
+
+  // we need to sync gadget here
+  Object.keys(tracking).forEach((playerId) => {
+    const shared = gadgetState(GADGET_FIRMWARE.shared, playerId)
+    const patch = jsonpatch.compare(syncstate[playerId] ?? {}, shared)
+    if (patch.length) {
+      syncstate[playerId] = jsonpatch.deepClone(shared)
+      hub.emit('gadgetclient:patch', gadget.name(), patch, playerId)
+    }
+  })
 }
 
 // timer acc

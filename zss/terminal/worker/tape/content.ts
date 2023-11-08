@@ -1,27 +1,23 @@
-import maincode from 'bundle-text:./main.txt'
+import gadgetcode from 'bundle-text:./gadget.txt'
 import { indexToX, indexToY } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { createGuid } from 'zss/mapping/guid'
 import { CODE_PAGE, CODE_PAGE_TYPE } from 'zss/system/codepage'
 
-/*
-collection of hand created code pages
-*/
-
 export const TAPE_PAGES: CODE_PAGE[] = [
   {
     id: createGuid(),
-    name: 'main',
+    name: 'app',
     entries: [
       {
         id: createGuid(),
-        name: 'main',
+        name: 'gadget',
         type: CODE_PAGE_TYPE.CODE,
-        code: maincode,
+        code: gadgetcode,
       },
       {
         id: createGuid(),
-        name: 'main',
+        name: 'title',
         type: CODE_PAGE_TYPE.BOARD,
         board: {
           x: 0,
