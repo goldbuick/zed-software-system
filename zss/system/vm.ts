@@ -1,14 +1,3 @@
-/*
-
-What is a VM? a vm runs / executes a collection of code pages
-and includes needed run-time state
-
-we need the concept of players & pilots here
-we need to get the list of active boards to run
-we need to get main gadget code
-
-*/
-
 import { select } from '../mapping/array'
 
 import { CODE_PAGE, CODE_PAGE_ENTRY, CODE_PAGE_TYPE } from './codepage'
@@ -19,10 +8,12 @@ export type VM_PLAYER = {
 }
 
 export type VM = {
-  load: (codepages: CODE_PAGE[]) => void
   get: (name: string) => CODE_PAGE_ENTRY[]
+  load: (codepages: CODE_PAGE[]) => void
   login: (playerId: string) => void
   logout: (playerId: string) => void
+  active: () => string[]
+  player: (playerId: string) => VM_PLAYER | undefined
 }
 
 export function createVM() {
@@ -38,6 +29,9 @@ export function createVM() {
   let players: Record<string, VM_PLAYER> = {}
 
   const vm: VM = {
+    get(name) {
+      return byEntryName[name]
+    },
     load(incoming) {
       byId = {}
       byEntryId = {}
@@ -59,11 +53,6 @@ export function createVM() {
           byEntryName[entryname].push(entry)
         })
       })
-
-      // ahhh, what do here ??
-    },
-    get(name) {
-      return byEntryName[name]
     },
     login(playerId) {
       const apptitle = select(vm.get('app:title'))
@@ -78,7 +67,21 @@ export function createVM() {
       }
     },
     logout(playerId) {
-      //
+      const player = players[playerId]
+      if (player) {
+        // remove player from board
+
+        // remove player from tracking
+        delete players[playerId]
+      }
+    },
+    active() {
+      const boardids = new Set<string>()
+      Object.values(players).forEach((player) => boardids.add(player.boardId))
+      return [...boardids]
+    },
+    player(playerId) {
+      return players[playerId]
     },
   }
 

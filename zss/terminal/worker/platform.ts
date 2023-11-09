@@ -35,7 +35,7 @@ const gadget = createDevice('gadgetserver', [], (message) => {
   }
 })
 
-const platform = createDevice('platform', [], (message) => {
+createDevice('platform', [], (message) => {
   // console.info(message)
   switch (message.target) {
     case 'login':
@@ -69,6 +69,11 @@ const TICK_RATE = 66.666 // 100 is 10 fps, 66.666 is ~15 fps, 50 is 20 fps, 40 i
 // mainloop
 const LOOP_TIMEOUT = 32 * 15
 function tick() {
+  // tick active board groups
+  vm.active().forEach((boardId) => {
+    //
+  })
+
   // tick player groups, and drop dead players
   Object.keys(tracking).forEach((playerId) => {
     // tick group
@@ -77,16 +82,17 @@ function tick() {
     // inc player idle time
     tracking[playerId] = tracking[playerId] || 0
     ++tracking[playerId]
-    // nuke it
+
+    // nuke it after too many ticks without a doot
     if (tracking[playerId] > LOOP_TIMEOUT) {
       vm.logout(playerId)
+      os.haltGroup(playerId)
       delete tracking[playerId]
       delete syncstate[playerId]
+      return
     }
+    // we need to render each player view
   })
-
-  // tick active board groups
-  //
 
   // we need to sync gadget here
   Object.keys(tracking).forEach((playerId) => {
