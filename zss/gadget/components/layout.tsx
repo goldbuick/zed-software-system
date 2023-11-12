@@ -13,6 +13,7 @@ import {
 import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { Panel } from './panel'
+import { Sprites } from './sprites'
 import { Tiles } from './tiles'
 
 const palette = loadDefaultPalette()
@@ -143,6 +144,8 @@ export function Layout({ playerId, layers, layout }: LayoutProps) {
                         />
                       )
                     )
+                  case LAYER_TYPE.SPRITES:
+                    return palette && charset && <Sprites />
                 }
               })}
             </React.Fragment>

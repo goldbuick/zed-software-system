@@ -9,32 +9,40 @@ import { range, select } from 'zss/mapping/array'
 import { clamp, randomInteger } from 'zss/mapping/number'
 
 import { convertPaletteToColors } from '../data/palette'
-import { CHARS_PER_ROW, CHAR_HEIGHT, CHAR_WIDTH, SPRITE } from '../data/types'
+import {
+  CHARSET_BITMAP,
+  CHARS_PER_ROW,
+  CHAR_HEIGHT,
+  CHAR_WIDTH,
+  PALETTE_BITMAP,
+} from '../data/types'
 import { time } from '../display/anim'
 import { createSpritesMaterial } from '../display/sprites'
 import useBitmapTexture from '../display/textures'
-import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { useClipping } from './clipping'
 
-const rate = 0.1
-let tick = rate
-const rangeX = 79
-const rangeY = 24
-const sprites: SPRITE[] = range(100 - 1).map(() => ({
-  x: randomInteger(0, rangeX),
-  y: randomInteger(0, rangeY),
-  char: randomInteger(1, 15),
-  color: randomInteger(8, 15),
-  bg: select(-1, -1, 0),
-}))
-
-const charset = loadDefaultCharset()
-const palette = loadDefaultPalette()
-
 type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
-export function Sprites() {
+interface SpritesProps {
+  x: number
+  y: number
+  char: number[]
+  color: number[]
+  bg: number[]
+  charset: CHARSET_BITMAP
+  palette: PALETTE_BITMAP
+}
+
+export function Sprites({
+  x,
+  y,
+  char,
+  color,
+  bg,
+  charset,
+  palette,
+}: SpritesProps) {
   const charsetTexture = useBitmapTexture(charset?.bitmap)
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
@@ -70,13 +78,6 @@ export function Sprites() {
     if (!current) {
       return
     }
-
-    // trigger at rate
-    tick += delta
-    if (tick < rate) {
-      return
-    }
-    tick -= rate
 
     // get data
     let position: MaybeBufferAttr = current.getAttribute('position')
@@ -174,15 +175,15 @@ export function Sprites() {
         }
 
         // todo, detect animBounce & animShake triggers
-        if (Math.random() * 1000 < 10) {
-          if (Math.random() * 10 <= 5) {
-            animShake.setXY(i, Math.random(), time.value)
-            animShake.needsUpdate = true
-          } else {
-            animBounce.setXY(i, Math.random(), time.value)
-            animBounce.needsUpdate = true
-          }
-        }
+        // if (Math.random() * 1000 < 10) {
+        //   if (Math.random() * 10 <= 5) {
+        //     animShake.setXY(i, Math.random(), time.value)
+        //     animShake.needsUpdate = true
+        //   } else {
+        //     animBounce.setXY(i, Math.random(), time.value)
+        //     animBounce.needsUpdate = true
+        //   }
+        // }
 
         const ncharu = sprite.char % CHARS_PER_ROW
         const ncharv = Math.floor(sprite.char / CHARS_PER_ROW)
