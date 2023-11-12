@@ -9,12 +9,7 @@ import { range, select } from 'zss/mapping/array'
 import { clamp, randomInteger } from 'zss/mapping/number'
 
 import { convertPaletteToColors } from '../data/palette'
-import {
-  CHARS_PER_ROW,
-  CHAR_HEIGHT,
-  CHAR_WIDTH,
-  SPRITES_SPRITE,
-} from '../data/types'
+import { CHARS_PER_ROW, CHAR_HEIGHT, CHAR_WIDTH, SPRITE } from '../data/types'
 import { time } from '../display/anim'
 import { createSpritesMaterial } from '../display/sprites'
 import useBitmapTexture from '../display/textures'
@@ -26,7 +21,7 @@ const rate = 0.1
 let tick = rate
 const rangeX = 79
 const rangeY = 24
-const sprites: SPRITES_SPRITE[] = range(100 - 1).map(() => ({
+const sprites: SPRITE[] = range(100 - 1).map(() => ({
   x: randomInteger(0, rangeX),
   y: randomInteger(0, rangeY),
   char: randomInteger(1, 15),

@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useRef } from 'react'
 import { BufferGeometry } from 'three'
 import { range } from 'zss/mapping/array'
 
-import { time } from '../display/anim'
 import {
   createDitherDataTexture,
   createDitherMaterial,

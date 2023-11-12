@@ -7,9 +7,16 @@ import {
   PANEL,
   PANEL_TYPE,
   PANEL_ITEM,
+  LAYER,
+  LAYER_TYPE,
 } from '../data/types'
+import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { Panel } from './panel'
+import { Tiles } from './tiles'
+
+const palette = loadDefaultPalette()
+const charset = loadDefaultCharset()
 
 type RECT = {
   name: string
@@ -23,10 +30,11 @@ type RECT = {
 
 interface LayoutProps {
   playerId: string
-  panels?: PANEL[]
+  layers: LAYER[]
+  layout: PANEL[]
 }
 
-export function Layout({ playerId, panels }: LayoutProps) {
+export function Layout({ playerId, layers, layout }: LayoutProps) {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
@@ -35,7 +43,7 @@ export function Layout({ playerId, panels }: LayoutProps) {
   const marginX = viewWidth % DRAW_CHAR_WIDTH
   const marginY = viewHeight % DRAW_CHAR_HEIGHT
 
-  if (width < 1 || height < 1) {
+  if (width < 1 || height < 1 || layers === undefined || layout === undefined) {
     return null
   }
 
@@ -52,7 +60,7 @@ export function Layout({ playerId, panels }: LayoutProps) {
 
   // iterate layout
   const rects: RECT[] =
-    panels?.map((panel) => {
+    layout.map((panel) => {
       let rect: RECT
       switch (panel.edge) {
         case PANEL_TYPE.LEFT:
@@ -117,7 +125,27 @@ export function Layout({ playerId, panels }: LayoutProps) {
           position={[rect.x * DRAW_CHAR_WIDTH, rect.y * DRAW_CHAR_HEIGHT, 0]}
         >
           {rect.frame ? (
-            <React.Fragment />
+            <React.Fragment>
+              {layers.map((layer) => {
+                switch (layer.type) {
+                  default:
+                  case LAYER_TYPE.BLANK:
+                    return null
+                  case LAYER_TYPE.TILES:
+                    return (
+                      palette &&
+                      charset && (
+                        <Tiles
+                          {...layer}
+                          key={layer.id}
+                          palette={palette}
+                          charset={charset}
+                        />
+                      )
+                    )
+                }
+              })}
+            </React.Fragment>
           ) : (
             <Panel
               playerId={playerId}

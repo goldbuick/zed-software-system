@@ -25,34 +25,13 @@ export type CHARSET_BITMAP = {
   bitmap: BITMAP
 }
 
-export enum LAYER {
-  BLANK,
-  TILES,
-  SPRITES,
-  DITHER,
-  GUI,
-  MEDIA,
-}
-
-type LAYER_COMMON = {
-  id: string
-}
-
 export type TILES = {
   char: number[]
   color: number[]
   bg: number[]
 }
 
-export type LAYER_TILES = LAYER_COMMON &
-  TILES & {
-    type: LAYER.TILES
-    width: number
-    height: number
-  }
-
-export type SPRITES_SPRITE = {
-  // id: string
+export type SPRITE = {
   x: number
   y: number
   char: number
@@ -60,10 +39,43 @@ export type SPRITES_SPRITE = {
   bg: number
 }
 
-export type LAYER_SPRITES = LAYER_COMMON & {
-  type: LAYER.SPRITES
-  sprites: SPRITES_SPRITE[]
+export enum LAYER_TYPE {
+  BLANK,
+  TILES,
+  SPRITES,
+  DITHER,
+  MEDIA,
 }
+
+export type LAYER =
+  | {
+      id: string
+      type: LAYER_TYPE.BLANK
+    }
+  | {
+      id: string
+      type: LAYER_TYPE.TILES
+      width: number
+      height: number
+      char: number[]
+      color: number[]
+      bg: number[]
+    }
+  | {
+      id: string
+      type: LAYER_TYPE.SPRITES
+      sprites: SPRITE[]
+    }
+  | {
+      id: string
+      type: LAYER_TYPE.DITHER
+      alpha: number[]
+    }
+  | {
+      id: string
+      type: LAYER_TYPE.MEDIA
+      media: string
+    }
 
 export enum PANEL_TYPE {
   START,

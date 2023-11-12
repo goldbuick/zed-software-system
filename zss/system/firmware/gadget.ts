@@ -1,15 +1,23 @@
-import { PANEL, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
+import { LAYER, PANEL, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { createGuid } from 'zss/mapping/guid'
 import { hub } from 'zss/network/hub'
 import { ARG, STATE } from 'zss/system/chip'
 
 import { createFirmware } from '../firmware'
 
-function initState(state: STATE) {
+export type GADGET_STATE = {
+  layers: LAYER[]
+  layout: PANEL[]
+  layoutReset: boolean
+  layoutFocus: string
+}
+
+function initState(state: STATE): GADGET_STATE {
+  state.layers = []
   state.layout = []
   state.layoutReset = true
   state.layoutFocus = 'scroll'
-  return state
+  return state as GADGET_STATE
 }
 
 function findPanel(state: STATE): PANEL {
@@ -34,12 +42,11 @@ function findPanel(state: STATE): PANEL {
   return panel
 }
 
-export function gadgetState(state: STATE, group: string): STATE {
-  let value = state[group]
+export function gadgetState(state: STATE, group: string) {
+  let value: GADGET_STATE = state[group]
 
   if (value === undefined) {
-    state[group] = {}
-    value = initState(state[group])
+    state[group] = value = initState({})
   }
 
   return value

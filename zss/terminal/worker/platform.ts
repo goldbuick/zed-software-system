@@ -1,13 +1,14 @@
 import * as jsonpatch from 'fast-json-patch'
+import { LAYER_TYPE, SPRITE } from 'zss/gadget/data/types'
+import { indexToX, indexToY } from 'zss/mapping/2d'
 import { select } from 'zss/mapping/array'
 import { createDevice } from 'zss/network/device'
 import { hub } from 'zss/network/hub'
 import { STATE } from 'zss/system/chip'
+import { CODE_PAGE_TYPE } from 'zss/system/codepage'
 import { GADGET_FIRMWARE, gadgetState } from 'zss/system/firmware/gadget'
 import { createOS } from 'zss/system/os'
 import { createVM } from 'zss/system/vm'
-
-import { CODE_PAGE_TYPE } from '/zss/system/codepage'
 
 import { TAPE_PAGES } from './tape/content'
 
@@ -71,7 +72,7 @@ const LOOP_TIMEOUT = 32 * 15
 function tick() {
   // tick active board groups
   vm.active().forEach((boardId) => {
-    //
+    os.tickGroup(boardId)
   })
 
   // tick player groups, and drop dead players
@@ -89,9 +90,59 @@ function tick() {
       os.haltGroup(playerId)
       delete tracking[playerId]
       delete syncstate[playerId]
+      // TODO: raise warning
       return
     }
+
     // we need to render each player view
+    const player = vm.player(playerId)
+    if (!player) {
+      // TODO: raise error
+      return
+    }
+
+    const [boardPage] = vm.get(player.boardId)
+    if (boardPage.type !== CODE_PAGE_TYPE.BOARD) {
+      // TODO: raise error
+      return
+    }
+
+    // write tiles layer, then write sprites layer
+    const shared = gadgetState(GADGET_FIRMWARE.shared, playerId)
+    shared.layers = []
+
+    // write terrain
+    shared.layers.push({
+      id: `${boardPage.id}_terrain`,
+      type: LAYER_TYPE.TILES,
+      width: boardPage.board.width,
+      height: boardPage.board.height,
+      char: boardPage.board.terrain.map((i) => i?.char ?? 0),
+      color: boardPage.board.terrain.map((i) => i?.color ?? 0),
+      bg: boardPage.board.terrain.map((i) => i?.bg ?? 0),
+    })
+
+    // write objects
+    shared.layers.push({
+      id: `${boardPage.id}_objects`,
+      type: LAYER_TYPE.SPRITES,
+      sprites: boardPage.board.objects
+        .filter((obj) => obj)
+        .sort((a, b) => {
+          const ida = a?.id as string
+          const idb = b?.id as string
+          return ida.localeCompare(idb)
+        })
+        .map((obj, index) => {
+          return {
+            x: indexToX(index, boardPage.board.width),
+            y: indexToY(index, boardPage.board.width),
+            char: obj?.char,
+            color: obj?.color,
+            bg: obj?.bg,
+          } as SPRITE
+        }),
+    })
   })
 
   // we need to sync gadget here

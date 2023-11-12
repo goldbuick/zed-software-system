@@ -2,9 +2,9 @@ import { CstNode, IToken } from 'chevrotain'
 import { SourceMapGenerator } from 'source-map'
 
 import { SHOW_CODE } from '../config'
+import { CHIP } from '../system/chip'
 
 import { compileAST } from './ast'
-import { CHIP } from './chip'
 import { transformAst } from './transformer'
 import { CodeNode } from './visitor'
 

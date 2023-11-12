@@ -8,7 +8,7 @@ export type VM_PLAYER = {
 }
 
 export type VM = {
-  get: (name: string) => CODE_PAGE_ENTRY[]
+  get: (nameOrId: string) => CODE_PAGE_ENTRY[]
   load: (codepages: CODE_PAGE[]) => void
   login: (playerId: string) => void
   logout: (playerId: string) => void
@@ -29,8 +29,12 @@ export function createVM() {
   let players: Record<string, VM_PLAYER> = {}
 
   const vm: VM = {
-    get(name) {
-      return byEntryName[name]
+    get(nameOrId) {
+      const entry = byEntryId[nameOrId]
+      if (entry) {
+        return [entry]
+      }
+      return byEntryName[nameOrId.toLowerCase()] ?? []
     },
     load(incoming) {
       byId = {}

@@ -6,6 +6,8 @@ import { createDevice } from 'zss/network/device'
 import { hub } from 'zss/network/hub'
 import { STATE } from 'zss/system/chip'
 
+import { GADGET_STATE } from '/zss/system/firmware/gadget'
+
 import { playerId } from '../main/playerId'
 
 let needsReset = false
@@ -56,6 +58,6 @@ const device = createDevice('gadgetclient', [], (message) => {
 })
 
 export function Gadget() {
-  const model = useSnapshot(syncstate.state)
-  return <Layout playerId={playerId} panels={model.layout} />
+  const model = useSnapshot(syncstate.state) as GADGET_STATE
+  return <Layout playerId={playerId} {...model} />
 }
