@@ -145,7 +145,16 @@ export function Layout({ playerId, layers, layout }: LayoutProps) {
                       )
                     )
                   case LAYER_TYPE.SPRITES:
-                    return palette && charset && <Sprites />
+                    return (
+                      palette &&
+                      charset && (
+                        <Sprites
+                          sprites={layer.sprites}
+                          palette={palette}
+                          charset={charset}
+                        />
+                      )
+                    )
                 }
               })}
             </React.Fragment>

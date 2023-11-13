@@ -1,12 +1,9 @@
-import { useFrame } from '@react-three/fiber'
 import React, { useEffect, useMemo, useRef } from 'react'
 import {
   BufferAttribute,
   BufferGeometry,
   InterleavedBufferAttribute,
 } from 'three'
-import { range, select } from 'zss/mapping/array'
-import { clamp, randomInteger } from 'zss/mapping/number'
 
 import { convertPaletteToColors } from '../data/palette'
 import {
@@ -15,6 +12,7 @@ import {
   CHAR_HEIGHT,
   CHAR_WIDTH,
   PALETTE_BITMAP,
+  SPRITE,
 } from '../data/types'
 import { time } from '../display/anim'
 import { createSpritesMaterial } from '../display/sprites'
@@ -25,24 +23,12 @@ import { useClipping } from './clipping'
 type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
 interface SpritesProps {
-  x: number
-  y: number
-  char: number[]
-  color: number[]
-  bg: number[]
+  sprites: SPRITE[]
   charset: CHARSET_BITMAP
   palette: PALETTE_BITMAP
 }
 
-export function Sprites({
-  x,
-  y,
-  char,
-  color,
-  bg,
-  charset,
-  palette,
-}: SpritesProps) {
+export function Sprites({ sprites, charset, palette }: SpritesProps) {
   const charsetTexture = useBitmapTexture(charset?.bitmap)
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
@@ -50,30 +36,7 @@ export function Sprites({
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charsetTexture?.image ?? {}
 
-  // config material
   useEffect(() => {
-    if (!charsetTexture || !bgRef.current) {
-      return
-    }
-
-    const imageCols = Math.round(imageWidth / CHAR_WIDTH)
-    const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
-    const paletteColors = convertPaletteToColors(palette)
-
-    material.transparent = true
-    material.uniforms.map.value = charsetTexture
-    material.uniforms.alt.value = charsetTexture // alt
-    material.uniforms.palette.value = paletteColors
-    material.uniforms.rows.value = imageRows - 1
-    material.uniforms.step.value.x = 1 / imageCols
-    material.uniforms.step.value.y = 1 / imageRows
-    material.clipping = clippingPlanes.length > 0
-    material.clippingPlanes = clippingPlanes
-    material.needsUpdate = true
-  }, [charsetTexture, material, imageWidth, imageHeight, clippingPlanes])
-
-  // config data
-  useFrame((state, delta) => {
     const { current } = bgRef
     if (!current) {
       return
@@ -88,20 +51,22 @@ export function Sprites({
     let animShake: MaybeBufferAttr = current.getAttribute('animShake')
     let animBounce: MaybeBufferAttr = current.getAttribute('animBounce')
 
-    for (let i = 0; i < 32; ++i) {
-      const e = randomInteger(0, sprites.length - 1)
-      sprites[e].x = clamp(sprites[e].x + randomInteger(-1, 1), 0, rangeX)
-      sprites[e].y = clamp(sprites[e].y + randomInteger(-1, 1), 0, rangeY)
-    }
-
+    // create
     if (
       !position ||
+      position.count !== sprites.length ||
       !charData ||
+      charData.count !== sprites.length ||
       !lastPosition ||
+      lastPosition.count !== sprites.length ||
       !lastColor ||
+      lastColor.count !== sprites.length ||
       !lastBg ||
+      lastBg.count !== sprites.length ||
       !animShake ||
-      !animBounce
+      animShake.count !== sprites.length ||
+      !animBounce ||
+      animBounce.count !== sprites.length
     ) {
       // init data
       position = new BufferAttribute(new Float32Array(sprites.length * 3), 3)
@@ -174,16 +139,8 @@ export function Sprites({
           charData.needsUpdate = true
         }
 
-        // todo, detect animBounce & animShake triggers
-        // if (Math.random() * 1000 < 10) {
-        //   if (Math.random() * 10 <= 5) {
-        //     animShake.setXY(i, Math.random(), time.value)
-        //     animShake.needsUpdate = true
-        //   } else {
-        //     animBounce.setXY(i, Math.random(), time.value)
-        //     animBounce.needsUpdate = true
-        //   }
-        // }
+        // todo, detect ??
+        // animBounce & animShake triggers
 
         const ncharu = sprite.char % CHARS_PER_ROW
         const ncharv = Math.floor(sprite.char / CHARS_PER_ROW)
@@ -193,7 +150,36 @@ export function Sprites({
         }
       }
     }
-  })
+  }, [sprites])
+
+  // update
+  useEffect(() => {
+    if (!!bgRef.current) {
+      return
+    }
+  }, [])
+
+  // config material
+  useEffect(() => {
+    if (!charsetTexture || !bgRef.current) {
+      return
+    }
+
+    const imageCols = Math.round(imageWidth / CHAR_WIDTH)
+    const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
+    const paletteColors = convertPaletteToColors(palette)
+
+    material.transparent = true
+    material.uniforms.map.value = charsetTexture
+    material.uniforms.alt.value = charsetTexture // alt
+    material.uniforms.palette.value = paletteColors
+    material.uniforms.rows.value = imageRows - 1
+    material.uniforms.step.value.x = 1 / imageCols
+    material.uniforms.step.value.y = 1 / imageRows
+    material.clipping = clippingPlanes.length > 0
+    material.clippingPlanes = clippingPlanes
+    material.needsUpdate = true
+  }, [charsetTexture, material, imageWidth, imageHeight, clippingPlanes])
 
   return (
     <points material={material}>
