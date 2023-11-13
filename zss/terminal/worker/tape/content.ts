@@ -31,6 +31,7 @@ export const TAPE_PAGES: CODE_PAGE[] = [
           objects: range(99).map((v, i) => {
             if (indexToX(i, 10) === 3 && indexToY(i, 10) === 4) {
               return {
+                id: createGuid(),
                 char: 1,
                 color: 15,
               }

@@ -32,6 +32,7 @@ export type TILES = {
 }
 
 export type SPRITE = {
+  id?: string
   x: number
   y: number
   char: number

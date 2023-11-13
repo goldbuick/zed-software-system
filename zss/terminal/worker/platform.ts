@@ -127,21 +127,24 @@ function tick() {
       id: `${boardPage.id}_objects`,
       type: LAYER_TYPE.SPRITES,
       sprites: boardPage.board.objects
+        .map((obj, index) => {
+          if (obj) {
+            return {
+              x: indexToX(index, boardPage.board.width),
+              y: indexToY(index, boardPage.board.width),
+              char: obj?.char,
+              color: obj?.color,
+              bg: obj?.bg,
+            } as SPRITE
+          }
+          return null
+        })
         .filter((obj) => obj)
         .sort((a, b) => {
           const ida = a?.id as string
           const idb = b?.id as string
           return ida.localeCompare(idb)
-        })
-        .map((obj, index) => {
-          return {
-            x: indexToX(index, boardPage.board.width),
-            y: indexToY(index, boardPage.board.width),
-            char: obj?.char,
-            color: obj?.color,
-            bg: obj?.bg,
-          } as SPRITE
-        }),
+        }) as SPRITE[],
     })
   })
 

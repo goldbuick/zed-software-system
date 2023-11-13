@@ -149,6 +149,7 @@ export function Layout({ playerId, layers, layout }: LayoutProps) {
                       palette &&
                       charset && (
                         <Sprites
+                          key={layer.id}
                           sprites={layer.sprites}
                           palette={palette}
                           charset={charset}
