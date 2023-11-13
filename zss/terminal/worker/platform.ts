@@ -24,19 +24,7 @@ const tracking: Record<string, number> = {}
 // tracking gadget state for individual players
 const syncstate: Record<string, STATE> = {}
 
-const gadget = createDevice('gadgetserver', [], (message) => {
-  // console.info(message)
-  switch (message.target) {
-    case 'desync':
-      if (message.playerId) {
-        const state = gadgetState(GADGET_FIRMWARE.shared, message.playerId)
-        hub.emit('gadgetclient:reset', gadget.name(), state, message.playerId)
-      }
-      break
-  }
-})
-
-createDevice('platform', [], (message) => {
+const platform = createDevice('platform', [], (message) => {
   // console.info(message)
   switch (message.target) {
     case 'login':
@@ -58,14 +46,22 @@ createDevice('platform', [], (message) => {
         tracking[message.playerId] = 0
       }
       break
+    case 'desync':
+      if (message.playerId) {
+        const state = gadgetState(GADGET_FIRMWARE.shared, message.playerId)
+        hub.emit('gadgetclient:reset', platform.name(), state, message.playerId)
+      }
+      break
     default:
       os.message(message)
       break
   }
 })
 
-const TICK_RATE = 66.666 // 100 is 10 fps, 66.666 is ~15 fps, 50 is 20 fps, 40 is 25 fps  1000 / x = 15
-// const TICK_FPS = Math.round(1000 / TICK_RATE)
+// 100 is 10 fps, 66.666 is ~15 fps, 50 is 20 fps, 40 is 25 fps  1000 / x = 15
+const TICK_RATE = 66.666
+const TICK_FPS = Math.round(1000 / TICK_RATE)
+console.info({ TICK_FPS })
 
 // mainloop
 const LOOP_TIMEOUT = 32 * 15
@@ -90,7 +86,7 @@ function tick() {
       os.haltGroup(playerId)
       delete tracking[playerId]
       delete syncstate[playerId]
-      // TODO: raise warning
+      // TODO: log info
       return
     }
 
@@ -154,7 +150,7 @@ function tick() {
     const patch = jsonpatch.compare(syncstate[playerId] ?? {}, shared)
     if (patch.length) {
       syncstate[playerId] = jsonpatch.deepClone(shared)
-      hub.emit('gadgetclient:patch', gadget.name(), patch, playerId)
+      hub.emit('gadgetclient:patch', platform.name(), patch, playerId)
     }
   })
 }
