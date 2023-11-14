@@ -8,8 +8,8 @@ export type BOARD_STATS = {
 export type BOARD_ELEMENT = {
   // objects get id
   id?: string
-  // this element has a chip associated with it
-  chip?: string
+  // this element has a code associated with it
+  code?: string
   // this element is an instance of an element type
   kind?: string
   // this is a unique name for this instance

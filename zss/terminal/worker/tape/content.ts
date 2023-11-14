@@ -1,4 +1,5 @@
 import gadgetcode from 'bundle-text:./gadget.txt'
+import playercode from 'bundle-text:./player.txt'
 import { indexToX, indexToY } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { createGuid } from 'zss/mapping/guid'
@@ -29,9 +30,10 @@ export const TAPE_PAGES: CODE_PAGE[] = [
             color: 1,
           })),
           objects: range(99).map((v, i) => {
-            if (indexToX(i, 10) === 3 && indexToY(i, 10) === 4) {
+            if (indexToX(i, 10) === 3 && indexToY(i, 10) === 7) {
               return {
                 id: createGuid(),
+                code: playercode,
                 char: 1,
                 color: 15,
               }
