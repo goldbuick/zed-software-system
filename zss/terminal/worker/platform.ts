@@ -9,8 +9,7 @@ import { CODE_PAGE_TYPE } from 'zss/system/codepage'
 import { GADGET_FIRMWARE, gadgetState } from 'zss/system/firmware/gadget'
 import { createOS } from 'zss/system/os'
 import { createVM } from 'zss/system/vm'
-
-import { TAPE_PAGES } from './tape/content'
+import { TAPE_PAGES } from 'zss/tape/content'
 
 const os = createOS()
 const vm = createVM()
