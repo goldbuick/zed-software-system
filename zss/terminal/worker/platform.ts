@@ -41,6 +41,11 @@ const platform = createDevice('platform', [], (message) => {
         }
       }
       break
+    case 'keydown':
+      if (message.playerId) {
+        console.info(message)
+      }
+      break
     case 'doot':
       if (message.playerId) {
         tracking[message.playerId] = 0

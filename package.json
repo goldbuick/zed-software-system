@@ -44,7 +44,6 @@
     "eslint-plugin-react": "^7.33.1",
     "fast-json-patch": "^3.1.1",
     "jest": "^29.7.0",
-    "joypad.js": "^2.3.5",
     "klona": "^2.0.6",
     "localforage": "^1.10.0",
     "mitt": "^3.0.1",

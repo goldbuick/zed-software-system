@@ -1,7 +1,7 @@
 import { hub } from 'zss/network/hub'
 
 import './input'
-import './playerId'
+import './player'
 import './gadgetclient'
 
 const webworker = new Worker(

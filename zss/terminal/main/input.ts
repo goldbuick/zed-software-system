@@ -1,6 +1,6 @@
 import { hub } from 'zss/network/hub'
 
-import { playerId } from './playerId'
+import { playerId } from './player'
 
 document.addEventListener('keydown', (event) => {
   event.preventDefault()
