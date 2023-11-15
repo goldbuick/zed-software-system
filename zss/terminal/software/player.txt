@@ -1,0 +1,9 @@
+#cycle 1
+:think
+
+#if playermove 
+  ?from playermove
+#else
+  #idle
+
+#think

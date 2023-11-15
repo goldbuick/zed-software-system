@@ -1,6 +1,5 @@
 import { hub } from 'zss/network/hub'
 
-import './input'
 import './platform'
 
 onmessage = function handleMessage(event) {
