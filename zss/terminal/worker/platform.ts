@@ -1,4 +1,6 @@
 import * as jsonpatch from 'fast-json-patch'
+import { customAlphabet } from 'nanoid'
+import { numbers, lowercase } from 'nanoid-dictionary'
 import { LAYER_TYPE, SPRITE } from 'zss/gadget/data/types'
 import { indexToX, indexToY } from 'zss/mapping/2d'
 import { select } from 'zss/mapping/array'
@@ -10,7 +12,14 @@ import { GADGET_FIRMWARE, gadgetState } from 'zss/system/firmware/gadget'
 import { createOS } from 'zss/system/os'
 import { createVM } from 'zss/system/vm'
 
+const justNumberChars = customAlphabet(numbers, 4)
+
+const mixedChars = customAlphabet(`${numbers}${lowercase}`, 16)
+
 import { TAPE_PAGES } from '../software'
+
+// this should be unique every time the worker is created
+export const sessionId = `sid_${justNumberChars()}_${mixedChars()}`
 
 const os = createOS()
 const vm = createVM()
@@ -29,16 +38,16 @@ const platform = createDevice('platform', [], (message) => {
   switch (message.target) {
     case 'login':
       if (message.playerId) {
-        const appgadget = select(vm.get('app:gadget'))
-        if (appgadget?.type === CODE_PAGE_TYPE.CODE) {
-          tracking[message.playerId] = 0
-          vm.login(message.playerId)
-          os.boot({
-            group: message.playerId,
-            firmware: 'gadget',
-            code: appgadget.code,
-          })
-        }
+        // const appgadget = select(vm.get('app:gadget'))
+        // if (appgadget?.type === CODE_PAGE_TYPE.CODE) {
+        //   tracking[message.playerId] = 0
+        //   vm.login(message.playerId)
+        //   os.boot({
+        //     group: message.playerId,
+        //     firmware: 'gadget',
+        //     code: appgadget.code,
+        //   })
+        // }
       }
       break
     case 'keydown':

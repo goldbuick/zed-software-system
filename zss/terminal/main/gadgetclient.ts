@@ -5,7 +5,7 @@ import { hub } from 'zss/network/hub'
 import { STATE } from 'zss/system/chip'
 import { GADGET_STATE } from 'zss/system/firmware/gadget'
 
-import { playerId } from '../main/player'
+import { playerId } from '../main/session'
 
 let needsReset = false
 

@@ -18,7 +18,17 @@ const device = createDevice('player', ['ready'], (message) => {
   }
 })
 
-// browser input
+// activity ping
+function keepAlive() {
+  hub.emit('platform:doot', device.name(), undefined, playerId)
+  setTimeout(keepAlive, 8 * 1000)
+}
+
+keepAlive()
+
+// user input
+
+// keyboard
 document.addEventListener('keydown', (event) => {
   event.preventDefault()
   hub.emit(
@@ -29,10 +39,8 @@ document.addEventListener('keydown', (event) => {
   )
 })
 
-// activity ping
-function keepAlive() {
-  hub.emit('platform:doot', device.name(), undefined, playerId)
-  setTimeout(keepAlive, 8 * 1000)
-}
+// gamepad
 
-keepAlive()
+// mouse
+
+// touch
