@@ -29,6 +29,10 @@ how do we manage what is running in the current session ?
   1. cli that lists code pages to run
   2. ui that lists code pages to run, or create new code page
 
+  is the thought here to have a bios? 
+  so we can write a complete bios.
+  how does bios pull in software to run?
+
 */
 
 export const TAPE_PAGES: CODE_PAGE[] = [
