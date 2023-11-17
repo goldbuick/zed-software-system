@@ -1,7 +1,0 @@
-#cycle 1
-:tick
-#if playermove
-  ?from playermove
-#else
-  #idle
-#tick
