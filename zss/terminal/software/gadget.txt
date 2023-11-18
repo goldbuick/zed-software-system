@@ -1,5 +1,5 @@
 #gadget start
-#gadget left (10 + 10)
+#gadget left 10 + 10
 
 :update
 #gadget left

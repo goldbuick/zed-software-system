@@ -38,7 +38,7 @@ export enum NODE {
   COMPARE,
   OPERATOR,
   OPERATOR_ITEM,
-  PARSE,
+  GROUP,
 }
 
 export enum IF_METHOD {
@@ -199,7 +199,7 @@ type CodeNodeData =
       rhs: CodeNode
     }
   | {
-      type: NODE.PARSE
+      type: NODE.GROUP
       items: CodeNode[]
     }
 
@@ -910,7 +910,7 @@ class ScriptVisitor extends CstVisitor {
 
     if (ctx.LParen) {
       return makeNode(ctx, {
-        type: NODE.PARSE,
+        type: NODE.GROUP,
         // @ts-expect-error cst element
         items: asList(this, ctx.words),
       })
