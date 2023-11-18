@@ -43,6 +43,7 @@ export function createOS() {
       const result = build(opts.code)
       if (result.errors?.length) {
         // log it ???
+        console.error(result)
         return ''
       }
 

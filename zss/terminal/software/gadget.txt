@@ -1,9 +1,13 @@
 #gadget start
-#gadget right 20
+#gadget left (10 + 10)
 
 :update
-#gadget right
+#gadget left
   $white   - - - - - 
   $black$ongrey      TAPE      
   $white   - - - - - 
 ""
+#read codepages
+#while codepages
+  ' comment ?
+  #pop codepages id name type

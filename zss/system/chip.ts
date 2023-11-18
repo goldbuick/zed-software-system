@@ -52,7 +52,7 @@ export type CHIP = {
   evalToNumber: (word: any) => number
   mapArgs: (args: WORD[], ...values: ARG[]) => (string | number)[]
 
-  parseValue: (words: WORD[]) => { value: number; resumeIndex: number }
+  parse: (...words: WORD[]) => { value: number; resumeIndex: number }
 
   // logic api
   text: (value: string) => WORD_VALUE
@@ -87,7 +87,7 @@ export type CHIP = {
 }
 
 export type WORD = string | number
-export type WORD_VALUE = WORD | undefined
+export type WORD_VALUE = WORD | WORD[] | undefined
 export type CHIP_COMMAND = (chip: CHIP, words: WORD[]) => WORD_VALUE
 export type CHIP_COMMANDS = Record<string, CHIP_COMMAND>
 
@@ -328,12 +328,20 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       })
     },
 
-    parseValue(words) {
-      const [first] = words
-      // todo, leverage firmeware for this
+    parse(...words) {
+      const result = invokecommand('parse', words)
+
+      if (Array.isArray(result)) {
+        const [value, resumeIndex] = result
+        return { value, resumeIndex } as { value: number; resumeIndex: number }
+      }
+
+      // fallback
+      const [value] = words
+      const resumeIndex = 1
       return {
-        value: chip.evalToNumber(first),
-        resumeIndex: 1,
+        value: chip.evalToNumber(value),
+        resumeIndex,
       }
     },
 
@@ -360,7 +368,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
         : invokecommand('send', [name, ...args])
     },
     if(...words) {
-      const check = chip.parseValue(words)
+      const check = chip.parse(...words)
 
       const result = invokecommand('if', [check.value])
       if (result) {
@@ -370,7 +378,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       return result
     },
     try(...words) {
-      const check = chip.parseValue(words)
+      const check = chip.parse(...words)
 
       const result = invokecommand('try', [check.value])
       if (result) {
@@ -387,7 +395,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
         return 0
       }
 
-      const check = chip.parseValue(valuewords)
+      const check = chip.parse(...valuewords)
 
       // returns true when take fails
       const result = invokecommand('take', [name, check.value])
@@ -405,7 +413,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
         return 0
       }
 
-      const check = chip.parseValue(valuewords)
+      const check = chip.parse(...valuewords)
 
       // returns true when give creates a new flag
       const result = invokecommand('give', [name, check.value])
@@ -416,7 +424,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       return result
     },
     while(...words) {
-      const check = chip.parseValue(words)
+      const check = chip.parse(...words)
 
       const result = invokecommand('if', [check.value])
       if (result) {
@@ -426,7 +434,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       return result
     },
     repeatStart(index, ...words) {
-      const check = chip.parseValue(words)
+      const check = chip.parse(...words)
 
       repeats[index] = check.value
       repeatsCmd[index] = words.slice(check.resumeIndex)

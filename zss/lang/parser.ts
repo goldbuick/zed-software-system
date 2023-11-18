@@ -92,6 +92,7 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.nested_text) },
       { ALT: () => this.SUBRULE(this.multi_stmt) },
       { ALT: () => this.SUBRULE(this.hyperlink) },
+      { ALT: () => this.SUBRULE(this.comment) },
     ])
   })
 
@@ -393,9 +394,9 @@ class ScriptParser extends CstParser {
     this.AT_LEAST_ONE(() => this.CONSUME(lexer.HyperLinkText))
   })
 
-  words = this.RULED('words', () =>
-    this.AT_LEAST_ONE(() => this.SUBRULE(this.expr)),
-  )
+  words = this.RULED('words', () => {
+    this.AT_LEAST_ONE(() => this.SUBRULE(this.expr))
+  })
 
   // expressions
 
@@ -534,7 +535,7 @@ class ScriptParser extends CstParser {
       {
         ALT: () => {
           this.CONSUME(lexer.LParen)
-          this.SUBRULE(this.expr)
+          this.SUBRULE(this.words)
           this.CONSUME(lexer.RParen)
         },
       },

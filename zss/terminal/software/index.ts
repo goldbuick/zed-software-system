@@ -33,6 +33,9 @@ how do we manage what is running in the current session ?
   so we can write a complete bios.
   how does bios pull in software to run?
 
+  so lets say the core code is the core editor
+  which allows you to make other software
+
 */
 
 export const TAPE_PAGES: CODE_PAGE[] = [

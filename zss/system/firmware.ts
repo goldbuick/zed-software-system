@@ -1,4 +1,4 @@
-import { CHIP, CHIP_COMMANDS, STATE, WORD } from './chip'
+import { CHIP, CHIP_COMMANDS, STATE, WORD, WORD_VALUE } from './chip'
 
 const shared: STATE = {}
 
@@ -10,7 +10,11 @@ export type FIRMWARE = {
   value: (chip: CHIP, key: string) => any
 }
 
-export type FIRMWARE_COMMAND = (state: any, chip: CHIP, words: WORD[]) => number
+export type FIRMWARE_COMMAND = (
+  state: any,
+  chip: CHIP,
+  words: WORD[],
+) => WORD_VALUE
 
 export function createFirmware(name: string): FIRMWARE {
   const commands: CHIP_COMMANDS = {}

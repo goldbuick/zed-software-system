@@ -38,16 +38,16 @@ const platform = createDevice('platform', [], (message) => {
   switch (message.target) {
     case 'login':
       if (message.playerId) {
-        // const appgadget = select(vm.get('app:gadget'))
-        // if (appgadget?.type === CODE_PAGE_TYPE.CODE) {
-        //   tracking[message.playerId] = 0
-        //   vm.login(message.playerId)
-        //   os.boot({
-        //     group: message.playerId,
-        //     firmware: 'gadget',
-        //     code: appgadget.code,
-        //   })
-        // }
+        const appgadget = select(vm.get('app:gadget'))
+        if (appgadget?.type === CODE_PAGE_TYPE.CODE) {
+          tracking[message.playerId] = 0
+          vm.login(message.playerId)
+          os.boot({
+            group: message.playerId,
+            firmware: 'gadget',
+            code: appgadget.code,
+          })
+        }
       }
       break
     case 'keydown':

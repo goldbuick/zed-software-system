@@ -38,7 +38,7 @@ export enum NODE {
   COMPARE,
   OPERATOR,
   OPERATOR_ITEM,
-  GROUP,
+  PARSE,
 }
 
 export enum IF_METHOD {
@@ -199,7 +199,7 @@ type CodeNodeData =
       rhs: CodeNode
     }
   | {
-      type: NODE.GROUP
+      type: NODE.PARSE
       items: CodeNode[]
     }
 
@@ -352,6 +352,9 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error cst element
       return this.visit(ctx.hyperlink)
     }
+    /*
+    skipping comment here as we cannot have case statements inside loops
+    */
   }
 
   multi_stmt(ctx: CstChildrenDictionary) {
@@ -907,9 +910,9 @@ class ScriptVisitor extends CstVisitor {
 
     if (ctx.LParen) {
       return makeNode(ctx, {
-        type: NODE.GROUP,
+        type: NODE.PARSE,
         // @ts-expect-error cst element
-        items: asList(this, ctx.expr),
+        items: asList(this, ctx.words),
       })
     }
   }

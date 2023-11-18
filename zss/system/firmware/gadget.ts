@@ -53,6 +53,15 @@ export function gadgetState(state: STATE, group: string) {
 }
 
 export const GADGET_FIRMWARE = createFirmware('gadget')
+  .command('parse', (state, chip, args) => {
+    const [value] = args
+    return [chip.evalToNumber(value), 1]
+    // return 0
+  })
+  .command('if', (state, chip, args) => {
+    console.info('if', args)
+    return 0
+  })
   .command('stat', (state, chip, args) => {
     const parts = args.map((arg) => chip.wordToString(arg))
     chip.setName(parts.join(' '))
