@@ -46,6 +46,7 @@
     "jest": "^29.7.0",
     "klona": "^2.0.6",
     "localforage": "^1.10.0",
+    "loro-crdt": "^0.4.3",
     "mitt": "^3.0.1",
     "nanoid": "^4.0.2",
     "nanoid-dictionary": "^4.3.0",

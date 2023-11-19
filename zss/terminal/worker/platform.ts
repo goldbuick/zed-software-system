@@ -44,7 +44,7 @@ const platform = createDevice('platform', [], (message) => {
           vm.login(message.playerId)
           os.boot({
             group: message.playerId,
-            firmware: 'gadget',
+            firmware: ['gadget', 'docs'],
             code: appgadget.code,
           })
         }
@@ -62,7 +62,7 @@ const platform = createDevice('platform', [], (message) => {
       break
     case 'desync':
       if (message.playerId) {
-        const state = gadgetState(GADGET_FIRMWARE.shared, message.playerId)
+        const state = gadgetState(GADGET_FIRMWARE.state(), message.playerId)
         hub.emit('gadgetclient:reset', platform.name(), state, message.playerId)
       }
       break
@@ -118,7 +118,7 @@ function tick() {
     }
 
     // write tiles layer, then write sprites layer
-    const shared = gadgetState(GADGET_FIRMWARE.shared, playerId)
+    const shared = gadgetState(GADGET_FIRMWARE.state(), playerId)
     shared.layers = []
 
     // write terrain
@@ -160,7 +160,7 @@ function tick() {
 
   // we need to sync gadget here
   Object.keys(tracking).forEach((playerId) => {
-    const shared = gadgetState(GADGET_FIRMWARE.shared, playerId)
+    const shared = gadgetState(GADGET_FIRMWARE.state(), playerId)
     const patch = jsonpatch.compare(syncstate[playerId] ?? {}, shared)
     if (patch.length) {
       syncstate[playerId] = jsonpatch.deepClone(shared)

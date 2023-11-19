@@ -26,7 +26,7 @@ export type CHIP = {
   define: (incoming: CHIP_COMMANDS) => void
 
   // internal state api
-  state: (name?: string) => STATE
+  state: () => STATE
 
   // lifecycle api
   tick: () => void

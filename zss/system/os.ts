@@ -6,7 +6,7 @@ import { CHIP, MESSAGE, createChip } from './chip'
 import { loadFirmware } from './firmware/loader'
 
 export type OS = {
-  boot: (opts: { group: string; firmware: string; code: string }) => string
+  boot: (opts: { group: string; firmware: string[]; code: string }) => string
   ids: () => string[]
   halt: (id: string) => boolean
   haltGroup: (group: string) => boolean[]
@@ -49,7 +49,7 @@ export function createOS() {
 
       // create chip from build and load
       const chip = (chips[id] = createChip(id, group, result))
-      loadFirmware(chip, opts.firmware)
+      opts.firmware.forEach((item) => loadFirmware(chip, item))
 
       // make sure we have a set to add to
       if (!groups[group]) {

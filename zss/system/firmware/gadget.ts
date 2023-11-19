@@ -57,7 +57,6 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
     console.info('parse', args)
     const [value] = args
     return [chip.evalToNumber(value), 1]
-    // return 0
   })
   .command('if', (state, chip, args) => {
     console.info('if', args)
@@ -75,6 +74,7 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
   .command('send', (state, chip, args) => {
     const target = chip.addSelfId(chip.wordToString(args[0]))
     hub.emit(target, chip.id(), args[1])
+    console.info('send', target)
     return 0
   })
   .command('get', (state, chip, args) => {
@@ -91,7 +91,7 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
     const [text] = chip.mapArgs(args, ARG.STRING) as [string]
 
     // get state
-    const shared = gadgetState(GADGET_FIRMWARE.shared, chip.group())
+    const shared = gadgetState(GADGET_FIRMWARE.state(), chip.group())
 
     // find slot
     const panel = findPanel(shared)
@@ -115,7 +115,7 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
     ) as [string, string, string]
 
     // get state
-    const shared = gadgetState(GADGET_FIRMWARE.shared, chip.group())
+    const shared = gadgetState(GADGET_FIRMWARE.state(), chip.group())
 
     // find slot
     const panel = findPanel(shared)
@@ -139,7 +139,7 @@ export const GADGET_FIRMWARE = createFirmware('gadget')
     ) as [string, number, string]
 
     // get state
-    const shared = gadgetState(GADGET_FIRMWARE.shared, chip.group())
+    const shared = gadgetState(GADGET_FIRMWARE.state(), chip.group())
 
     const panelName = name || edge
     const edgeConst = PANEL_TYPE_MAP[`${edge}`.toLowerCase()]

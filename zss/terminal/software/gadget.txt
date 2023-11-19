@@ -1,5 +1,5 @@
 #gadget start
-#gadget left 10 + 10
+#gadget left 20
 
 :update
 #gadget left
@@ -9,5 +9,4 @@
 ""
 #read codepages
 #while codepages
-  ' comment ?
   #pop codepages id name type

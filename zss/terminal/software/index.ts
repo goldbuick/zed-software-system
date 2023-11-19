@@ -60,7 +60,7 @@ export const TAPE_PAGES: CODE_PAGE[] = [
           height: 10,
           terrain: range(99).map(() => ({
             char: 176,
-            color: 1,
+            color: 2,
           })),
           objects: range(99).map((v, i) => {
             if (indexToX(i, 10) === 3 && indexToY(i, 10) === 7) {
@@ -68,7 +68,8 @@ export const TAPE_PAGES: CODE_PAGE[] = [
                 id: createGuid(),
                 code: playercode,
                 char: 1,
-                color: 15,
+                color: 14,
+                bg: -1,
               }
             }
             return undefined
