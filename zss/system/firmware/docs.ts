@@ -10,9 +10,20 @@ can we use https://www.loro.dev/ instead ?
 
 can we use a combo of snapshot / update messages ?
 
+arrays can be nested for tuples
+[a b c]
+[a b c]
+[a b c]
+
+or flat with single values
+a
+b
+c
+#write source var1 var2 var3
+
 */
 
-export const DOCS_FIRMWARE = createFirmware('docs')
+export const DOCS_FIRMWARE = createFirmware()
   .command('read', (state, chip, args) => {
     const [source, maybename] = chip.mapArgs(args, ARG.STRING, ARG.STRING) as [
       string,

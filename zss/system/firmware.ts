@@ -15,7 +15,7 @@ export type FIRMWARE_COMMAND = (
   words: WORD[],
 ) => WORD_VALUE
 
-export function createFirmware(name: string): FIRMWARE {
+export function createFirmware(): FIRMWARE {
   const commands: CHIP_COMMANDS = {}
 
   const firmware: FIRMWARE = {
@@ -30,7 +30,7 @@ export function createFirmware(name: string): FIRMWARE {
       chip.define(commands)
     },
     value(chip, key) {
-      return chip.state(name)[key]
+      return chip.state()[key]
     },
   }
 

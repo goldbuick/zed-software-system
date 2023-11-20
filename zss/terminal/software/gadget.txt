@@ -9,4 +9,5 @@
 ""
 #read codepages
 #while codepages
-  #pop codepages id name type
+  #write codepages id name type
+  |
