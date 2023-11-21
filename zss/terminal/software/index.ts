@@ -68,8 +68,8 @@ export const TAPE_PAGES: CODE_PAGE[] = [
                 id: createGuid(),
                 code: playercode,
                 char: 1,
-                color: 14,
-                bg: -1,
+                color: 12,
+                bg: 0,
               }
             }
             return undefined

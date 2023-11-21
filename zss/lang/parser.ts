@@ -194,20 +194,6 @@ class ScriptParser extends CstParser {
 
     this.OR([
       {
-        // GATE: () => {
-        //   const match =
-        //     this.LA(1).tokenType === lexer.Command &&
-        //     this.LA(2).tokenType === lexer.Command_else &&
-        //     this.LA(3).tokenType === lexer.Command_if
-        //   this.PEEK(
-        //     'nested_cmd_gate',
-        //     match,
-        //     this.LA(1),
-        //     this.LA(2),
-        //     this.LA(3),
-        //   )
-        //   return match
-        // },
         ALT: () => {
           this.AT_LEAST_ONE1(() => this.SUBRULE(this.nested_cmd))
         },

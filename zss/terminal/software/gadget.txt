@@ -7,7 +7,6 @@
   $black$ongrey      TAPE      
   $white   - - - - - 
 ""
-#read codepages
-#while codepages
-  #write codepages id name type
-  |
+#read codepages id name type
+  #if type is board !edit:board id;$name
+
