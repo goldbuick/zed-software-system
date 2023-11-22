@@ -339,6 +339,40 @@ function transformNode(ast: CodeNode): SourceNode {
 
       return source
     }
+    case NODE.READ: {
+      // note this is a read counter
+      // we do read loops over arrays of complex data
+      const [arraysource, ...words] = ast.words
+      const source = write(ast, [
+        writeApi(ast, 'readStart', [
+          `${context.internal}`,
+          transformNode(arraysource),
+        ]),
+        '\nwhile (',
+        writeApi(ast, 'read', [
+          `${context.internal}`,
+          ...transformNodes(words),
+        ]),
+        `) {\n${END_OF_LINE_CODE}\n`,
+      ])
+      context.internal += 1
+
+      if (ast.nested_cmd) {
+        ast.nested_cmd.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
+
+      if (ast.block_lines) {
+        ast.block_lines.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
+
+      source.add('}\n')
+
+      return source
+    }
     case NODE.BREAK:
       return write(ast, `break;\n`)
     case NODE.CONTINUE:

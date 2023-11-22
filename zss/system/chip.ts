@@ -68,6 +68,8 @@ export type CHIP = {
   while: (...words: WORD[]) => WORD_VALUE
   repeatStart: (index: number, ...words: WORD[]) => number
   repeat: (index: number) => boolean
+  readStart: (index: number, name: WORD) => number
+  read: (index: number, ...words: WORD[]) => boolean
   or: (...words: WORD[]) => WORD_VALUE
   and: (...words: WORD[]) => WORD_VALUE
   not: (word: WORD) => WORD_VALUE
@@ -119,6 +121,9 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
   // tracking for repeats
   const repeats: Record<number, number> = {}
   const repeatsCmd: Record<number, undefined | WORD[]> = {}
+
+  // tracking for reads
+  const reads: Record<number, WORD_VALUE> = {}
 
   // pause until next tick
   let yieldState = false
@@ -471,6 +476,26 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       }
 
       return result
+    },
+    readStart(index, name) {
+      const arraysource = chip.eval(name)
+
+      reads[index] = arraysource
+
+      return 0
+    },
+    read(index, ...words) {
+      // const count = repeats[index] ?? 0
+      // repeats[index] = count - 1
+
+      // const result = count > 0
+      // const repeatCmd = repeatsCmd[index]
+      // if (result && repeatCmd) {
+      //   chip.command(...repeatCmd)
+      // }
+
+      // return result
+      return false
     },
     or(...words) {
       return words.map(chip.evalToNumber).find((value) => value)

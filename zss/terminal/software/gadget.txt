@@ -8,5 +8,5 @@
   $white   - - - - - 
 ""
 #read codepages id name type
-  #if type is board !edit:board id;$name
+  #if type eq board !board;load $name;hypertext $id
 

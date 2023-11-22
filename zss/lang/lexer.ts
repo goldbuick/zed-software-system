@@ -426,6 +426,7 @@ export const Command_if = createWordToken('if|try|take|give', 'if')
 export const Command_else = createWordToken('else')
 export const Command_while = createWordToken('while')
 export const Command_repeat = createWordToken('repeat')
+export const Command_read = createWordToken('read')
 export const Command_break = createWordToken('break')
 export const Command_continue = createWordToken('continue')
 
@@ -486,6 +487,7 @@ export const allTokens = createTokenSet([
   Command_else,
   Command_while,
   Command_repeat,
+  Command_read,
   Command_break,
   Command_continue,
 ])

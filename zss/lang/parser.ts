@@ -149,6 +149,7 @@ class ScriptParser extends CstParser {
 
   nested_cmd = this.RULED('nested_cmd', () => {
     this.OR([
+      { ALT: () => this.SUBRULE(this.hyperlink) },
       {
         ALT: () => {
           this.CONSUME(lexer.Go)
@@ -183,6 +184,7 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.Command_if) },
       { ALT: () => this.SUBRULE(this.Command_while) },
       { ALT: () => this.SUBRULE(this.Command_repeat) },
+      { ALT: () => this.SUBRULE(this.Command_read) },
       { ALT: () => this.SUBRULE(this.Command_break) },
       { ALT: () => this.SUBRULE(this.Command_continue) },
     ])
@@ -329,6 +331,30 @@ class ScriptParser extends CstParser {
 
   Command_repeat = this.RULED('Command_repeat', () => {
     this.CONSUME(lexer.Command_repeat)
+    this.SUBRULE(this.words)
+
+    this.OR([
+      {
+        ALT: () => {
+          this.AT_LEAST_ONE(() => this.SUBRULE(this.nested_cmd))
+        },
+      },
+      {
+        ALT: () => {
+          this.OPTION1({
+            GATE: () => this.block_lines_gate(),
+            DEF: () => {
+              this.CONSUME(lexer.Newline)
+              this.SUBRULE(this.block_lines)
+            },
+          })
+        },
+      },
+    ])
+  })
+
+  Command_read = this.RULED('Command_read', () => {
+    this.CONSUME(lexer.Command_read)
     this.SUBRULE(this.words)
 
     this.OR([

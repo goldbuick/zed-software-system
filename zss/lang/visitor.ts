@@ -31,6 +31,7 @@ export enum NODE {
   BREAK,
   CONTINUE,
   REPEAT,
+  READ,
   // expressions
   OR,
   AND,
@@ -166,6 +167,12 @@ type CodeNodeData =
   | { type: NODE.CONTINUE }
   | {
       type: NODE.REPEAT
+      words: CodeNode[]
+      nested_cmd: CodeNode[]
+      block_lines?: CodeNode[]
+    }
+  | {
+      type: NODE.READ
       words: CodeNode[]
       nested_cmd: CodeNode[]
       block_lines?: CodeNode[]
@@ -419,6 +426,11 @@ class ScriptVisitor extends CstVisitor {
   }
 
   nested_cmd(ctx: CstChildrenDictionary) {
+    if (ctx.hyperlink) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.hyperlink)
+    }
+
     if (ctx.Go) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
@@ -466,6 +478,10 @@ class ScriptVisitor extends CstVisitor {
     if (ctx.Command_repeat) {
       // @ts-expect-error cst element
       return this.visit(ctx.Command_repeat)
+    }
+    if (ctx.Command_read) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.Command_read)
     }
     if (ctx.Command_break) {
       // @ts-expect-error cst element
@@ -590,6 +606,24 @@ class ScriptVisitor extends CstVisitor {
 
     return makeNode(ctx, {
       type: NODE.REPEAT,
+      words,
+      nested_cmd,
+      block_lines,
+    })
+  }
+
+  Command_read(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words)
+
+    // @ts-expect-error cst element
+    const nested_cmd = asList(this, ctx.nested_cmd)
+
+    // @ts-expect-error cst element
+    const block_lines = this.visit(ctx.block_lines)
+
+    return makeNode(ctx, {
+      type: NODE.READ,
       words,
       nested_cmd,
       block_lines,

@@ -27,6 +27,11 @@ export const StringLiteralDouble = createToken({
   pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}))*"/,
 })
 
+export const MaybeFlag = createToken({
+  name: 'MaybeFlag',
+  pattern: /\$[0-9a-fA-F]/,
+})
+
 export const NumberLiteral = createToken({
   name: 'NumberLiteral',
   pattern: /\$-?(\d*\.)?\d+([eE][+-]?\d+)?[jJ]?[lL]?/,
@@ -96,6 +101,7 @@ export const allTokens = [
   ...allBgColors,
   StringLiteralDouble,
   StringLiteral,
+  MaybeFlag,
   NumberLiteral,
 ]
 
@@ -112,6 +118,7 @@ const scriptLexerNoWhitespace = new Lexer(
     ...allBgColors,
     StringLiteralDouble,
     StringLiteral,
+    MaybeFlag,
     NumberLiteral,
   ],
   {
@@ -225,6 +232,10 @@ export function writeTextFormat(
           context.bg[i] = context.activeBg
         }
         incCursor()
+        break
+      }
+      case MaybeFlag: {
+        // how to we make this work ?
         break
       }
 
