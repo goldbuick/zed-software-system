@@ -19,7 +19,7 @@ const syncstate = proxy<SYNC_STATE>({
 
 const gadgetclient = createDevice('gadgetclient', [], (message) => {
   // filter by playerId
-  if (message.playerId !== playerId) {
+  if (message.player !== playerId) {
     return
   }
 

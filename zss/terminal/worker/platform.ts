@@ -8,7 +8,8 @@ import { createDevice } from 'zss/network/device'
 import { hub } from 'zss/network/hub'
 import { STATE } from 'zss/system/chip'
 import { CODE_PAGE_TYPE } from 'zss/system/codepage'
-import { GADGET_FIRMWARE, gadgetState } from 'zss/system/firmware/gadget'
+import { gadgetState } from 'zss/system/firmware/gadget'
+import { PLATFORM_SET } from 'zss/system/firmware/loader'
 import { createOS } from 'zss/system/os'
 import { createVM } from 'zss/system/vm'
 
@@ -37,33 +38,33 @@ const platform = createDevice('platform', [], (message) => {
   // console.info(message)
   switch (message.target) {
     case 'login':
-      if (message.playerId) {
+      if (message.player) {
         const appgadget = select(vm.get('app:gadget'))
         if (appgadget?.type === CODE_PAGE_TYPE.CODE) {
-          tracking[message.playerId] = 0
-          vm.login(message.playerId)
+          tracking[message.player] = 0
+          vm.login(message.player)
           os.boot({
-            group: message.playerId,
-            firmware: ['gadget', 'docs'],
+            group: message.player,
+            firmware: PLATFORM_SET,
             code: appgadget.code,
           })
         }
       }
       break
     case 'keydown':
-      if (message.playerId) {
+      if (message.player) {
         console.info(message)
       }
       break
     case 'doot':
-      if (message.playerId) {
-        tracking[message.playerId] = 0
+      if (message.player) {
+        tracking[message.player] = 0
       }
       break
     case 'desync':
-      if (message.playerId) {
-        const state = gadgetState(GADGET_FIRMWARE.state(), message.playerId)
-        hub.emit('gadgetclient:reset', platform.name(), state, message.playerId)
+      if (message.player) {
+        const state = gadgetState(message.player)
+        hub.emit('gadgetclient:reset', platform.name(), state, message.player)
       }
       break
     default:
@@ -118,7 +119,7 @@ function tick() {
     }
 
     // write tiles layer, then write sprites layer
-    const shared = gadgetState(GADGET_FIRMWARE.state(), playerId)
+    const shared = gadgetState(playerId)
     shared.layers = []
 
     // write terrain
@@ -159,12 +160,12 @@ function tick() {
   })
 
   // we need to sync gadget here
-  Object.keys(tracking).forEach((playerId) => {
-    const shared = gadgetState(GADGET_FIRMWARE.state(), playerId)
-    const patch = jsonpatch.compare(syncstate[playerId] ?? {}, shared)
+  Object.keys(tracking).forEach((player) => {
+    const shared = gadgetState(player)
+    const patch = jsonpatch.compare(syncstate[player] ?? {}, shared)
     if (patch.length) {
-      syncstate[playerId] = jsonpatch.deepClone(shared)
-      hub.emit('gadgetclient:patch', platform.name(), patch, playerId)
+      syncstate[player] = jsonpatch.deepClone(shared)
+      hub.emit('gadgetclient:patch', platform.name(), patch, player)
     }
   })
 }

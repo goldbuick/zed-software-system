@@ -42,56 +42,71 @@ function findPanel(state: STATE): PANEL {
   return panel
 }
 
-export function gadgetState(state: STATE, group: string) {
-  let value: GADGET_STATE = state[group]
+// function translateTextValues(state: STATE, text: string) {
+//   const result = tokenize(text)
+//   console.info(result)
+//   return text
+// }
+
+const allgadgetstate: STATE = {}
+
+export function gadgetState(group: string) {
+  let value: GADGET_STATE = allgadgetstate[group]
 
   if (value === undefined) {
-    state[group] = value = initState({})
+    allgadgetstate[group] = value = initState({})
   }
 
   return value
 }
 
-export const GADGET_FIRMWARE = createFirmware()
-  .command('parse', (state, chip, args) => {
+export const GADGET_FIRMWARE = createFirmware(
+  (chip, name) => {
+    return [false, undefined]
+  },
+  (chip, name, value) => {
+    return [false, undefined]
+  },
+)
+  .command('parse', (chip, args) => {
     console.info('parse', args)
     const [value] = args
     return [chip.evalToNumber(value), 1]
   })
-  .command('if', (state, chip, args) => {
+  .command('if', (chip, args) => {
     console.info('if', args)
     return 0
   })
-  .command('stat', (state, chip, args) => {
+  .command('stat', (chip, args) => {
     const parts = args.map((arg) => chip.wordToString(arg))
     chip.setName(parts.join(' '))
     return 0
   })
-  .command('end', (state, chip) => {
+  .command('end', (chip) => {
     chip.endofprogram()
     return 0
   })
-  .command('send', (state, chip, args) => {
+  .command('send', (chip, args) => {
     const target = chip.addSelfId(chip.wordToString(args[0]))
     hub.emit(target, chip.id(), args[1])
     console.info('send', target)
     return 0
   })
-  .command('get', (state, chip, args) => {
-    const name = chip.wordToString(args[0])
-    // do we really only need group mem, and sim mem ??
-    return state[name] ?? 0
-  })
-  .command('set', (state, chip, args) => {
-    const name = chip.wordToString(args[0])
-    state[name] = args[1]
-    return 0
-  })
-  .command('text', (state, chip, args) => {
+  // .command('get', (chip, args) => {
+  //   const name = chip.wordToString(args[0])
+  //   // do we really only need group mem, and sim mem ??
+  //   return state[name] ?? 0
+  // })
+  // .command('set', (chip, args) => {
+  //   const name = chip.wordToString(args[0])
+  //   state[name] = args[1]
+  //   return 0
+  // })
+  .command('text', (chip, args) => {
     const [text] = chip.mapArgs(args, ARG.STRING) as [string]
 
     // get state
-    const shared = gadgetState(GADGET_FIRMWARE.state(), chip.group())
+    const shared = gadgetState(chip.group())
 
     // find slot
     const panel = findPanel(shared)
@@ -103,10 +118,9 @@ export const GADGET_FIRMWARE = createFirmware()
     }
 
     panel.text.push(text)
-
     return 0
   })
-  .command('hyperlink', (state, chip, args) => {
+  .command('hyperlink', (chip, args) => {
     const [target, label, input] = chip.mapArgs(
       args,
       ARG.STRING,
@@ -115,7 +129,7 @@ export const GADGET_FIRMWARE = createFirmware()
     ) as [string, string, string]
 
     // get state
-    const shared = gadgetState(GADGET_FIRMWARE.state(), chip.group())
+    const shared = gadgetState(chip.group())
 
     // find slot
     const panel = findPanel(shared)
@@ -130,7 +144,7 @@ export const GADGET_FIRMWARE = createFirmware()
 
     return 0
   })
-  .command('gadget', (state, chip, args) => {
+  .command('gadget', (chip, args) => {
     const [edge, size, name] = chip.mapArgs(
       args,
       ARG.STRING,
@@ -139,7 +153,7 @@ export const GADGET_FIRMWARE = createFirmware()
     ) as [string, number, string]
 
     // get state
-    const shared = gadgetState(GADGET_FIRMWARE.state(), chip.group())
+    const shared = gadgetState(chip.group())
 
     const panelName = name || edge
     const edgeConst = PANEL_TYPE_MAP[`${edge}`.toLowerCase()]

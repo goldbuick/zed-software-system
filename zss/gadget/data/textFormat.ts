@@ -29,7 +29,7 @@ export const StringLiteralDouble = createToken({
 
 export const MaybeFlag = createToken({
   name: 'MaybeFlag',
-  pattern: /\$[0-9a-fA-F]/,
+  pattern: /\$[^ $]+/,
 })
 
 export const NumberLiteral = createToken({
@@ -101,8 +101,8 @@ export const allTokens = [
   ...allBgColors,
   StringLiteralDouble,
   StringLiteral,
-  MaybeFlag,
   NumberLiteral,
+  MaybeFlag,
 ]
 
 const scriptLexer = new Lexer(allTokens, {
@@ -118,8 +118,8 @@ const scriptLexerNoWhitespace = new Lexer(
     ...allBgColors,
     StringLiteralDouble,
     StringLiteral,
-    MaybeFlag,
     NumberLiteral,
+    MaybeFlag,
   ],
   {
     skipValidations: !LANG_DEV,

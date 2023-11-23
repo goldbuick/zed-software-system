@@ -7,9 +7,9 @@ export function createMessage(
   target: string,
   from: string,
   data?: any,
-  playerId?: string,
+  player?: string,
 ): MESSAGE {
-  return { target, from, data, playerId }
+  return { target, from, data, player }
 }
 
 export type MESSAGE_FUNC = (message: MESSAGE) => void

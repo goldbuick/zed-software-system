@@ -15,7 +15,6 @@ export type OS = {
   tickGroup: (group: string) => void
   message: MESSAGE_FUNC
   messageForGroup: (group: string, message: MESSAGE) => void
-  state: (id: string, name?: string) => Record<string, object>
 }
 
 export function createOS() {
@@ -117,9 +116,6 @@ export function createOS() {
           chip.message({ ...incoming, target: path })
         }
       })
-    },
-    state(id, name) {
-      return chips[id]?.state(name) ?? {}
     },
   }
 

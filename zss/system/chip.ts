@@ -3,13 +3,15 @@ import { klona } from 'klona/json'
 import { GeneratorBuild } from 'zss/lang/generator'
 import { GENERATED_FILENAME } from 'zss/lang/transformer'
 
+import { FIRMWARE } from './firmware'
+
 export const HALT_AT_COUNT = 64
 
 export type MESSAGE = {
   target: string
   data?: any
   from: string
-  playerId?: string
+  player?: string
 }
 
 export type STATE = Record<string, any>
@@ -20,13 +22,15 @@ export type CHIP = {
   id: () => string
   group: () => string
   name: () => string
+  player: () => string
   setName: (name: string) => void
 
-  // invokes api
-  define: (incoming: CHIP_COMMANDS) => void
+  // set firmware on chip
+  install: (firmware: FIRMWARE) => void
 
-  // internal state api
-  state: () => STATE
+  // state api
+  set: (name: string, value: any) => any
+  get: (name: string) => any
 
   // lifecycle api
   tick: () => void
@@ -45,6 +49,7 @@ export type CHIP = {
 
   // values api
   eval: (word: WORD) => WORD_VALUE
+  template: (...items: string[]) => string
   isNumber: (word: any) => word is number
   isString: (word: any) => word is string
   isNumberOrString: (word: any) => word is number | string
@@ -92,8 +97,6 @@ export type CHIP = {
 
 export type WORD = string | number
 export type WORD_VALUE = WORD | WORD[] | undefined
-export type CHIP_COMMAND = (chip: CHIP, words: WORD[]) => WORD_VALUE
-export type CHIP_COMMANDS = Record<string, CHIP_COMMAND>
 
 export enum ARG {
   STRING,
@@ -138,14 +141,17 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     data: '' as WORD_VALUE,
   }
 
-  // chip internal state
-  const state: STATE = {}
-
   // chip invokes
-  let invokes: Record<string, CHIP_COMMAND> = {}
+  const firmwares: FIRMWARE[] = []
+  function getcommand(name: string) {
+    const firmware = firmwares.find(
+      (item) => item.getcommand(name) !== undefined,
+    )
+    return firmware?.getcommand(name)
+  }
 
   function invokecommand(name: string, words: WORD[]): WORD_VALUE {
-    const command = invokes[name]
+    const command = getcommand(name)
     if (!command) {
       throw new Error(`unknown firmware command ${name}`)
     }
@@ -163,22 +169,38 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     name() {
       return name
     },
+    player() {
+      return stats.player || group
+    },
     setName(incoming) {
       name = incoming
     },
 
     // invokes api
-    define(incoming) {
-      invokes = {
-        ...invokes,
-        ...incoming,
-      }
+    install(firmware) {
+      firmwares.push(firmware)
     },
 
     // internal state api
-    state(name = 'shared') {
-      state[name] = state[name] ?? {}
-      return state[name]
+    set(name, value) {
+      for (let i = 0; i < firmwares.length; ++i) {
+        const result = firmwares[i].set(chip, name, value)
+        if (result) {
+          return value
+        }
+      }
+      // raise an error ??
+      return value
+    },
+    get(name) {
+      for (let i = 0; i < firmwares.length; ++i) {
+        const [result, value] = firmwares[i].get(chip, name)
+        if (result) {
+          return value
+        }
+      }
+      // raise an error ??
+      return 0
     },
 
     // lifecycle api
@@ -253,8 +275,8 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
         stats.data = message.data
 
         // this sets player focus
-        if (message.playerId) {
-          stats.player = message.playerId
+        if (message.player) {
+          stats.player = message.player
         }
 
         // clear message
@@ -295,10 +317,13 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
           case 'data':
             return stats.data
           default:
-            return invokecommand('get', [word])
+            return chip.get(word)
         }
       }
       return word
+    },
+    template(...items) {
+      return items.join('')
     },
     isNumber(word): word is number {
       return typeof word === 'number'
@@ -386,7 +411,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       }
 
       const [name, ...args] = words
-      const command = invokes[name]
+      const command = getcommand(chip.wordToString(name))
       return command
         ? command(chip, args)
         : invokecommand('send', [name, ...args])
@@ -479,20 +504,18 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     },
     readStart(index, name) {
       const arraysource = chip.eval(name)
-
       reads[index] = arraysource
-
       return 0
     },
     read(index, ...words) {
-      // const count = repeats[index] ?? 0
-      // repeats[index] = count - 1
+      const arraysource = reads[index]
+      if (!Array.isArray(arraysource)) {
+        // todo, raise error
+        return false
+      }
 
-      // const result = count > 0
-      // const repeatCmd = repeatsCmd[index]
-      // if (result && repeatCmd) {
-      //   chip.command(...repeatCmd)
-      // }
+      const next = arraysource.shift()
+      console.info({ index, next, words })
 
       // return result
       return false

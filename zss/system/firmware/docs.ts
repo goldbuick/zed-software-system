@@ -23,24 +23,31 @@ c
 
 */
 
-export const DOCS_FIRMWARE = createFirmware()
-  .command('read', (state, chip, args) => {
-    const [source, maybename] = chip.mapArgs(args, ARG.STRING, ARG.STRING) as [
-      string,
-      string,
-    ]
-    switch (source.toLowerCase()) {
-      case 'codepages':
-        break
-    }
-    const name = maybename || source
-    console.info('read', { source, name })
-    return 0
-  })
-  .command('pop', (state, chip, args) => {
-    const [maybename, ...names] = args.map((arg) => chip.wordToString(arg))
+export const DOCS_FIRMWARE = createFirmware(
+  (chip, name) => {
+    return [false, undefined]
+  },
+  (chip, name, value) => {
+    return [false, undefined]
+  },
+)
+// .command('read', (chip, args) => {
+//   const [source, maybename] = chip.mapArgs(args, ARG.STRING, ARG.STRING) as [
+//     string,
+//     string,
+//   ]
+//   switch (source.toLowerCase()) {
+//     case 'codepages':
+//       break
+//   }
+//   const name = maybename || source
+//   console.info('read', { source, name })
+//   return 0
+// })
+// .command('pop', (chip, args) => {
+//   const [maybename, ...names] = args.map((arg) => chip.wordToString(arg))
 
-    console.info('pop', { maybename, names })
+//   console.info('pop', { maybename, names })
 
-    return 0
-  })
+//   return 0
+// })

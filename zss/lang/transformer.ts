@@ -1,4 +1,5 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
+import { tokenize, MaybeFlag } from 'zss/gadget/data/textFormat'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
 
@@ -39,6 +40,20 @@ function escapeString(value: string): string {
 
 function writeString(value: string): string {
   return `'${escapeString(value)}'`
+}
+
+function writeTemplateString(value: string): string {
+  const result = tokenize(value)
+  if (result.errors.length) {
+    return value
+  }
+  const template = result.tokens.map((token) => {
+    if (token.tokenType === MaybeFlag) {
+      return `api.get('${escapeString(token.image.substring(1))}')`
+    }
+    return `'${escapeString(token.image)}'`
+  })
+  return `api.template(${template.join(', ')})`
 }
 
 function transformNodes(nodes: CodeNode[]) {
@@ -205,8 +220,8 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.HYPERLINK:
       return writeApi(ast, `hyperlink`, [
         writeString(ast.message),
-        writeString(ast.input),
-        writeString(ast.label),
+        writeTemplateString(ast.input),
+        writeTemplateString(ast.label),
       ])
     case NODE.COMMAND:
       return write(ast, [
