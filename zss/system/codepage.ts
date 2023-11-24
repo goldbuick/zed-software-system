@@ -1,11 +1,16 @@
 import { BOARD } from './board'
 
 export enum CODE_PAGE_TYPE {
+  ERROR,
   CODE,
   BOARD,
 }
 
 type CODE_PAGE_DATA =
+  | {
+      type: CODE_PAGE_TYPE.ERROR
+      error: string
+    }
   | {
       type: CODE_PAGE_TYPE.CODE
       code: string

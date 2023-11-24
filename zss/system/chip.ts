@@ -498,6 +498,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
 
       const result = count > 0
       const repeatCmd = repeatsCmd[index]
+
       if (result && repeatCmd) {
         chip.command(...repeatCmd)
       }
@@ -506,21 +507,54 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     },
     readStart(index, name) {
       const arraysource = chip.eval(name)
+
       reads[index] = arraysource
+
+      console.info('reading', index, name)
+
       return 0
     },
     read(index, ...words) {
       const arraysource = reads[index]
+
+      // todo, raise error
       if (!Array.isArray(arraysource)) {
-        // todo, raise error
         return false
       }
 
-      const next = arraysource.shift()
-      console.info({ index, next, words })
+      console.info('reading', index, arraysource)
 
-      // return result
-      return false
+      // read next value
+      const next = arraysource.shift()
+      if (next === undefined) {
+        return false
+      }
+
+      // map values from object or map number. string to counter
+      const names = words.map((word) => chip.wordToString(word))
+
+      console.info('reading', index, names, next)
+
+      switch (typeof next) {
+        case 'number':
+        case 'string':
+          names.forEach((key) => {
+            chip.set(key, next)
+          })
+          break
+        case 'object':
+          names.forEach((key) => {
+            const value = next[key]
+            // todo validate type on value
+            chip.set(key, value)
+          })
+          break
+        default:
+          // todo raise about not being able to read value
+          break
+      }
+
+      return true
     },
     or(...words) {
       return words.map(chip.evalToNumber).find((value) => value)

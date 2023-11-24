@@ -13,7 +13,8 @@ export const PLAYER_FIRMWARE = createFirmware(
     }
 
     // get
-    return [true, state[player][index] ?? 0]
+    const value = state[player][index] ?? 0
+    return [true, value]
   },
   (chip, name, value) => {
     const player = chip.player()

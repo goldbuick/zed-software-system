@@ -1,56 +1,54 @@
-import { Loro } from 'loro-crdt'
+import * as Y from 'yjs'
 
+import { CODE_PAGE_TYPE } from '../codepage'
 import { createFirmware } from '../firmware'
-/*
 
-What is the system docs firmware ?
-docs that are used to collab edit code page content
+const DOCS = new Y.Doc()
 
-can we use https://www.loro.dev/ instead ?
+function getCodePages() {
+  return DOCS.getMap<Y.Map<any>>()
+}
 
-can we use a combo of snapshot / update messages ?
+function mapToType<T>(map: Y.Map<any>, key: string) {
+  return map.get(key) as T
+}
 
-arrays can be nested for tuples
-[a b c]
-[a b c]
-[a b c]
-
-or flat with single values
-a
-b
-c
-#write source var1 var2 var3
-
-*/
-
-const editstate = new Loro()
+function mapToEntryLite(map: Y.Map<any>) {
+  return {
+    id: mapToType<string>(map, 'id'),
+    type: mapToType<CODE_PAGE_TYPE>(map, 'type'),
+    name: mapToType<Y.Text>(map, 'name').toString(),
+  }
+}
 
 export const DOCS_FIRMWARE = createFirmware(
   (chip, name) => {
-    //
+    switch (name) {
+      case 'codepages': {
+        const codepages: any[] = []
+        for (const value of getCodePages().values()) {
+          codepages.push({
+            id: mapToType<string>(value, 'id'),
+            name: mapToType<Y.Text>(value, 'name').toString(),
+            entries: mapToType<Y.Array<Y.Map<any>>>(value, 'entries').map(
+              mapToEntryLite,
+            ),
+          })
+        }
+        return [true, codepages]
+      }
+    }
     return [false, undefined]
   },
   (chip, name, value) => {
+    switch (name) {
+      case 'codepages':
+        // todo raise error about read only
+        return [true, 0]
+    }
     return [false, undefined]
   },
-)
-// .command('read', (chip, args) => {
-//   const [source, maybename] = chip.mapArgs(args, ARG.STRING, ARG.STRING) as [
-//     string,
-//     string,
-//   ]
-//   switch (source.toLowerCase()) {
-//     case 'codepages':
-//       break
-//   }
-//   const name = maybename || source
-//   console.info('read', { source, name })
-//   return 0
-// })
-// .command('pop', (chip, args) => {
-//   const [maybename, ...names] = args.map((arg) => chip.wordToString(arg))
-
-//   console.info('pop', { maybename, names })
-
-//   return 0
-// })
+).command('create', (chip, words) => {
+  console.info({ words })
+  return 0
+})
