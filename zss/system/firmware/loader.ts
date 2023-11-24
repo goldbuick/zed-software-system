@@ -13,7 +13,6 @@ const firmwares: Record<string, FIRMWARE> = {
 
 export function loadFirmware(chip: CHIP, name: string) {
   const firmware = firmwares[name.toLowerCase()]
-  console.info({ name, firmware })
   if (firmware) {
     chip.install(firmware)
   } else {

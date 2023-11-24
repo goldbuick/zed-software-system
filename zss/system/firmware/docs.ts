@@ -1,6 +1,6 @@
-import { ARG } from '../chip'
-import { createFirmware } from '../firmware'
+import { Loro } from 'loro-crdt'
 
+import { createFirmware } from '../firmware'
 /*
 
 What is the system docs firmware ?
@@ -23,8 +23,11 @@ c
 
 */
 
+const editstate = new Loro()
+
 export const DOCS_FIRMWARE = createFirmware(
   (chip, name) => {
+    //
     return [false, undefined]
   },
   (chip, name, value) => {
