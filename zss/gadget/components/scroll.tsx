@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { useHotkeys } from 'react-hotkeys-hook'
 
 import {
   createWriteTextContext,
@@ -33,9 +34,8 @@ export function Scroll({
   bg,
   text,
 }: ScrollProps) {
-  console.info('tets', text)
-
   const tiles = useTiles(width, height, 0, color, bg)
+
   // edges
   for (let x = 1; x < width - 1; ++x) {
     writeTile(tiles, width, height, x, 0, 'char', 205)
@@ -74,6 +74,20 @@ export function Scroll({
   }
   tokenizeAndWriteTextFormat(name, context)
 
+  // input cursor
+  const [cursor, setCursor] = useState(0)
+  writeTile(tiles, width, height, 1, 2 + cursor, 'char', 175)
+  writeTile(tiles, width, height, width - 2, 2 + cursor, 'char', 174)
+
+  useHotkeys(
+    'arrowup',
+    () => {
+      setCursor((state) => Math.max(0, state - 1))
+    },
+    { preventDefault: true },
+    [setCursor],
+  )
+
   return (
     <React.Fragment>
       {palette && charset && (
@@ -90,6 +104,7 @@ export function Scroll({
         position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 1]}
       >
         <Panel
+          margin={0}
           playerId={playerId}
           name={name}
           width={width - 4}

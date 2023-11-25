@@ -38,7 +38,7 @@ export function PanelItemHotkey({
       hub.emit(target, 'gadget', undefined, playerId)
     },
     { preventDefault: true },
-    [target],
+    [playerId, target],
   )
 
   return null

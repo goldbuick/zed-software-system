@@ -1,3 +1,4 @@
+import Case from 'case'
 import { LAYER, PANEL, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { createGuid } from 'zss/mapping/guid'
 import { hub } from 'zss/network/hub'
@@ -139,7 +140,7 @@ export const GADGET_FIRMWARE = createFirmware(
     // get state
     const shared = gadgetState(chip.group())
 
-    const panelName = name || edge
+    const panelName = name || ` ${Case.capital(edge)} `
     const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
 
     const panelState: PANEL | undefined = shared.layout.find(

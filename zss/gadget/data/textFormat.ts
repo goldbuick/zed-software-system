@@ -190,10 +190,7 @@ export function writeTextFormat(
 ): boolean {
   function incCursor() {
     ++context.x
-    if (
-      context.x >= context.width ||
-      (context.rightEdge !== undefined && context.x >= context.rightEdge)
-    ) {
+    if (context.x >= (context.rightEdge ?? context.width)) {
       context.x = context.leftEdge ?? 0
       ++context.y
     }
@@ -304,7 +301,7 @@ export function writeTextFormat(
 
   if (context.measureOnly !== true) {
     // move to next line
-    context.x = 0
+    context.x = context.leftEdge ?? 0
     ++context.y
   }
   return true

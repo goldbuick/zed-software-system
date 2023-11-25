@@ -44,13 +44,13 @@ export function writeTile(
   height: number,
   x: number,
   y: number,
-  key: keyof TILES,
-  value: number,
-): number {
+  value: Record<char | color | number, number>,
+) {
   if (x < 0 || x >= width || y < 0 || y >= height) {
     return -1
   }
   const index = x + y * width
-  tiles[key][index] = value
-  return tiles[key][index]
+  Object.keys(value).forEach((key) => {
+    tiles[key][index] = value[key]
+  })
 }

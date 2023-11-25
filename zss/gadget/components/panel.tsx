@@ -36,6 +36,7 @@ function PanelRender({ width, height, tiles }: PanelRenderProps) {
 }
 
 interface PanelProps {
+  margin?: number
   playerId: string
   name: string
   width: number
@@ -46,6 +47,7 @@ interface PanelProps {
 }
 
 export function Panel({
+  margin = 1,
   playerId,
   width,
   height,
@@ -59,6 +61,9 @@ export function Panel({
     ...createWriteTextContext(width, height, color, bg),
     ...tiles,
   }
+  context.x = margin
+  context.leftEdge = margin
+  context.rightEdge = context.width - margin
 
   return (
     palette &&

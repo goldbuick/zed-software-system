@@ -4,17 +4,16 @@
 
 :update
 #gadget right
-  $white   - - - - - 
-  $black$ongrey      TAPE      
-  $white   - - - - - 
+ $white   - - - - - 
+ $black$ongrey      TAPE      
+ $white   - - - - - 
 ""
-!codepage-select;Open Codepage;hotkey o
-!codepage-create;New Codepage;hotkey n "n  "
-!codepage-rad;Rad;range
+!codepage-select;Open Codepages;hotkey c
 #end
 
 :codepage-select
-#gadget scroll " Open Codepage $blue$3$1 "
+#gadget scroll 50 " Open Codepage $blue$3$1 "
+!codepage-create;New Codepage;hotkey n
 Here is some test text and yeah!
 !doot;This is super cool
 !boot;This is also cool
