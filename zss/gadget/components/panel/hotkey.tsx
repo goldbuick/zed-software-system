@@ -23,14 +23,12 @@ export function PanelItemHotkey({
 }: PanelItemHotkeyProps) {
   const [maybeShortcut, maybeText] = args
   const shortcut = maybeShortcut || ''
-  const text = maybeText || shortcut
-  const trimmedText = text.trim()
-  const indent = Math.max(0, text.length - trimmedText.length)
+  const text = maybeText || ` ${shortcut.toUpperCase()} `
 
   tokenizeAndWriteTextFormat(
-    `${' '.repeat(indent)}${
+    `${
       context.isEven ? '$black$onltgray' : '$black$ondkcyan'
-    } ${trimmedText.toUpperCase()} $white$ondkblue ${label}`,
+    }${text}$white$ondkblue ${label}`,
     context,
   )
 
@@ -39,6 +37,7 @@ export function PanelItemHotkey({
     () => {
       hub.emit(target, 'gadget', undefined, playerId)
     },
+    { preventDefault: true },
     [target],
   )
 

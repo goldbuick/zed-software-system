@@ -1,7 +1,7 @@
 import React from 'react'
 import { useSnapshot } from 'valtio'
 
-import { WRITE_TEXT_CONTEXT } from '../data/textFormat'
+import { WRITE_TEXT_CONTEXT, createWriteTextContext } from '../data/textFormat'
 import { PANEL_ITEM, TILES } from '../data/types'
 import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
@@ -34,6 +34,7 @@ function PanelRender({ width, height, tiles }: PanelRenderProps) {
     )
   )
 }
+
 interface PanelProps {
   playerId: string
   name: string
@@ -46,7 +47,6 @@ interface PanelProps {
 
 export function Panel({
   playerId,
-  name,
   width,
   height,
   color,
@@ -56,14 +56,7 @@ export function Panel({
   const tiles = useTiles(width, height, 0, color, bg)
 
   const context: WRITE_TEXT_CONTEXT = {
-    x: 0,
-    y: 0,
-    width,
-    isEven: true,
-    resetColor: color,
-    resetBg: bg,
-    activeColor: undefined,
-    activeBg: undefined,
+    ...createWriteTextContext(width, height, color, bg),
     ...tiles,
   }
 

@@ -22,3 +22,35 @@ export function useTiles(
 
   return tiles
 }
+
+export function readTile(
+  tiles: TILES,
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+  key: keyof TILES,
+): number {
+  if (x < 0 || x >= width || y < 0 || y >= height) {
+    return -1
+  }
+  const index = x + y * width
+  return tiles[key][index]
+}
+
+export function writeTile(
+  tiles: TILES,
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+  key: keyof TILES,
+  value: number,
+): number {
+  if (x < 0 || x >= width || y < 0 || y >= height) {
+    return -1
+  }
+  const index = x + y * width
+  tiles[key][index] = value
+  return tiles[key][index]
+}

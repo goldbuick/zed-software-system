@@ -135,6 +135,7 @@ export function tokenize(text: string, noWhitespace = false) {
 }
 
 export type WRITE_TEXT_CONTEXT = {
+  measureOnly: boolean
   x: number
   y: number
   isEven: boolean
@@ -143,9 +144,39 @@ export type WRITE_TEXT_CONTEXT = {
   activeColor: number | undefined
   activeBg: number | undefined
   width: number
+  height: number
+  leftEdge: number | undefined
+  rightEdge: number | undefined
+  bottomEdge: number | undefined
   char: number[]
   color: number[]
   bg: number[]
+}
+
+export function createWriteTextContext(
+  width: number,
+  height: number,
+  color: number,
+  bg: number,
+): WRITE_TEXT_CONTEXT {
+  return {
+    measureOnly: false,
+    x: 0,
+    y: 0,
+    isEven: true,
+    resetColor: color,
+    resetBg: bg,
+    activeColor: undefined,
+    activeBg: undefined,
+    width,
+    height,
+    leftEdge: undefined,
+    rightEdge: undefined,
+    bottomEdge: undefined,
+    char: [],
+    color: [],
+    bg: [],
+  }
 }
 
 export function writeTextColorReset(context: WRITE_TEXT_CONTEXT) {
@@ -159,21 +190,38 @@ export function writeTextFormat(
 ): boolean {
   function incCursor() {
     ++context.x
-    if (context.x >= context.width) {
-      context.x = 0
+    if (
+      context.x >= context.width ||
+      (context.rightEdge !== undefined && context.x >= context.rightEdge)
+    ) {
+      context.x = context.leftEdge ?? 0
       ++context.y
     }
   }
 
+  function isVisible() {
+    if (
+      context.x < (context.leftEdge ?? 0) ||
+      context.x >= (context.rightEdge ?? context.width) ||
+      context.y < 0 ||
+      context.y >= (context.bottomEdge ?? context.height)
+    ) {
+      return false
+    }
+    return true
+  }
+
   function writeStr(str: string) {
     for (let t = 0; t < str.length; ++t) {
-      const i = context.x + context.y * context.width
-      context.char[i] = str.charCodeAt(t)
-      if (context.activeColor !== undefined) {
-        context.color[i] = context.activeColor
-      }
-      if (context.activeBg !== undefined) {
-        context.bg[i] = context.activeBg
+      if (context.measureOnly !== true && isVisible()) {
+        const i = context.x + context.y * context.width
+        context.char[i] = str.charCodeAt(t)
+        if (context.activeColor !== undefined) {
+          context.color[i] = context.activeColor
+        }
+        if (context.activeBg !== undefined) {
+          context.bg[i] = context.activeBg
+        }
       }
       incCursor()
     }
@@ -222,22 +270,19 @@ export function writeTextFormat(
         context.activeBg = colorIndex[colorName] ?? 0
         break
       }
-      case NumberLiteral: {
-        const i = context.x + context.y * context.width
-        context.char[i] = parseFloat(token.image.replace('$', ''))
-        if (context.activeColor !== undefined) {
-          context.color[i] = context.activeColor
-        }
-        if (context.activeBg !== undefined) {
-          context.bg[i] = context.activeBg
+      case NumberLiteral:
+        if (context.measureOnly !== true && isVisible()) {
+          const i = context.x + context.y * context.width
+          context.char[i] = parseFloat(token.image.replace('$', ''))
+          if (context.activeColor !== undefined) {
+            context.color[i] = context.activeColor
+          }
+          if (context.activeBg !== undefined) {
+            context.bg[i] = context.activeBg
+          }
         }
         incCursor()
         break
-      }
-      case MaybeFlag: {
-        // how to we make this work ?
-        break
-      }
 
       case StringLiteralDouble:
         writeStr(token.image.substring(1, token.image.length - 1))
@@ -250,11 +295,18 @@ export function writeTextFormat(
         writeStr(token.image)
         break
     }
+
+    // basic boundry check
+    if (context.y >= context.height) {
+      return true
+    }
   }
 
-  // move to next line
-  context.x = 0
-  ++context.y
+  if (context.measureOnly !== true) {
+    // move to next line
+    context.x = 0
+    ++context.y
+  }
   return true
 }
 

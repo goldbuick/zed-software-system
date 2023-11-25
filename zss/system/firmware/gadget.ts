@@ -42,12 +42,6 @@ function findPanel(state: STATE): PANEL {
   return panel
 }
 
-// function translateTextValues(state: STATE, text: string) {
-//   const result = tokenize(text)
-//   console.info(result)
-//   return text
-// }
-
 const allgadgetstate: STATE = {}
 
 export function gadgetState(group: string) {
@@ -92,16 +86,6 @@ export const GADGET_FIRMWARE = createFirmware(
     console.info('send', target)
     return 0
   })
-  // .command('get', (chip, args) => {
-  //   const name = chip.wordToString(args[0])
-  //   // do we really only need group mem, and sim mem ??
-  //   return state[name] ?? 0
-  // })
-  // .command('set', (chip, args) => {
-  //   const name = chip.wordToString(args[0])
-  //   state[name] = args[1]
-  //   return 0
-  // })
   .command('text', (chip, args) => {
     const [text] = chip.mapArgs(args, ARG.STRING) as [string]
 
@@ -156,7 +140,7 @@ export const GADGET_FIRMWARE = createFirmware(
     const shared = gadgetState(chip.group())
 
     const panelName = name || edge
-    const edgeConst = PANEL_TYPE_MAP[`${edge}`.toLowerCase()]
+    const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
 
     const panelState: PANEL | undefined = shared.layout.find(
       (panel: PANEL) => panel.name === panelName,

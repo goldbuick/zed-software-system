@@ -1,12 +1,31 @@
 #gadget start
-#gadget left 20
+#gadget right 20
+#gadget bottom 1
 
 :update
-#gadget left
+#gadget right
   $white   - - - - - 
   $black$ongrey      TAPE      
   $white   - - - - - 
 ""
-#read codepages id name type
-  #if type eq board !board;load $name;hypertext $id
+!codepage-select;Open Codepage;hotkey o
+!codepage-create;New Codepage;hotkey n "n  "
+!codepage-rad;Rad;range
+#end
 
+:codepage-select
+#gadget scroll " Open Codepage $blue$3$1 "
+Here is some test text and yeah!
+!doot;This is super cool
+!boot;This is also cool
+#read codepages id name
+  !codepage-open;$name;hypertext $id
+#end
+
+:codepage-create
+#gadget bottom
+DOOT!!!
+#end
+
+:board-edit
+#end

@@ -36,6 +36,10 @@ how do we manage what is running in the current session ?
   so lets say the core code is the core editor
   which allows you to make other software
 
+  quick note, the idea is the main code page is the glue code
+  between other code pages
+  and it can define deps etc...
+
 */
 
 export const TAPE_PAGES: CODE_PAGE[] = [
