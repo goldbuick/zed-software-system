@@ -507,22 +507,22 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     },
     readStart(index, name) {
       const arraysource = chip.eval(name)
-
       reads[index] = arraysource
-
-      console.info('reading', index, name)
-
       return 0
     },
     read(index, ...words) {
       const arraysource = reads[index]
 
-      // todo, raise error
-      if (!Array.isArray(arraysource)) {
+      // todo raise error
+      if (arraysource === undefined) {
         return false
       }
 
-      console.info('reading', index, arraysource)
+      // repackage as array
+      if (!Array.isArray(arraysource)) {
+        reads[index] = [arraysource]
+        return chip.read(index, ...words)
+      }
 
       // read next value
       const next = arraysource.shift()

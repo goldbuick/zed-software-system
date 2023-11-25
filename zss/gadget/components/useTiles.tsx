@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { objectKeys } from 'ts-extras'
 import { proxy } from 'valtio'
 
 import { TILES } from '../data/types'
@@ -38,19 +39,28 @@ export function readTile(
   return tiles[key][index]
 }
 
+type WRITE_TILE_VALUE = {
+  char: number
+  color: number
+  bg: number
+}
+
 export function writeTile(
   tiles: TILES,
   width: number,
   height: number,
   x: number,
   y: number,
-  value: Record<char | color | number, number>,
+  value: Partial<WRITE_TILE_VALUE>,
 ) {
   if (x < 0 || x >= width || y < 0 || y >= height) {
     return -1
   }
   const index = x + y * width
-  Object.keys(value).forEach((key) => {
-    tiles[key][index] = value[key]
+  objectKeys(value).forEach((key) => {
+    const v = value[key]
+    if (v !== undefined) {
+      tiles[key][index] = v
+    }
   })
 }

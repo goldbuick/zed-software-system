@@ -38,24 +38,24 @@ export function Scroll({
 
   // edges
   for (let x = 1; x < width - 1; ++x) {
-    writeTile(tiles, width, height, x, 0, 'char', 205)
+    writeTile(tiles, width, height, x, 0, { char: 205 })
     if (x > 1 && x < width - 2) {
-      writeTile(tiles, width, height, x, 1, 'char', 196)
+      writeTile(tiles, width, height, x, 1, { char: 196 })
     }
-    writeTile(tiles, width, height, x, height - 1, 'char', 205)
+    writeTile(tiles, width, height, x, height - 1, { char: 205 })
   }
   for (let y = 1; y < height - 1; ++y) {
-    writeTile(tiles, width, height, 0, y, 'char', 179)
-    writeTile(tiles, width, height, width - 1, y, 'char', 179)
+    writeTile(tiles, width, height, 0, y, { char: 179 })
+    writeTile(tiles, width, height, width - 1, y, { char: 179 })
   }
 
   // corners
   // top left-right
-  writeTile(tiles, width, height, 0, 0, 'char', 213)
-  writeTile(tiles, width, height, width - 1, 0, 'char', 184)
+  writeTile(tiles, width, height, 0, 0, { char: 213 })
+  writeTile(tiles, width, height, width - 1, 0, { char: 184 })
   // bottom left-right
-  writeTile(tiles, width, height, 0, height - 1, 'char', 212)
-  writeTile(tiles, width, height, width - 1, height - 1, 'char', 190)
+  writeTile(tiles, width, height, 0, height - 1, { char: 212 })
+  writeTile(tiles, width, height, width - 1, height - 1, { char: 190 })
 
   // measure title
   let context = createWriteTextContext(width - 4, 1, color, bg)
@@ -76,8 +76,8 @@ export function Scroll({
 
   // input cursor
   const [cursor, setCursor] = useState(0)
-  writeTile(tiles, width, height, 1, 2 + cursor, 'char', 175)
-  writeTile(tiles, width, height, width - 2, 2 + cursor, 'char', 174)
+  writeTile(tiles, width, height, 1, 2 + cursor, { char: 175 })
+  writeTile(tiles, width, height, width - 2, 2 + cursor, { char: 174 })
 
   useHotkeys(
     'arrowup',
