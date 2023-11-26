@@ -32,6 +32,8 @@ const QUAD_UVS = new Float32Array([
   ...TOP_RIGHT.slice(0, 2),
 ])
 
+export const TILE_TINDEX = 16
+
 export function updateTilemapDataTexture(
   texture: THREE.DataTexture,
   width: number,
@@ -150,6 +152,9 @@ const tilemapMaterial = new THREE.ShaderMaterial({
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
+        if (bgi == ${TILE_TINDEX}) {
+          discard;
+        }
         color = palette[bgi];
       }
 

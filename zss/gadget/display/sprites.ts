@@ -4,6 +4,8 @@ import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 
 import { cloneMaterial, interval, time } from './anim'
 
+export const SPRITES_TINDEX = 16
+
 const spritesMaterial = new THREE.ShaderMaterial({
   // settings
   transparent: true,
@@ -17,7 +19,6 @@ const spritesMaterial = new THREE.ShaderMaterial({
     pointSize: { value: new THREE.Vector2(DRAW_CHAR_WIDTH, DRAW_CHAR_HEIGHT) },
     rows: { value: 1 },
     step: { value: new THREE.Vector2() },
-    tindex: { value: -1 },
   },
   // vertex shader
   vertexShader: `
@@ -52,7 +53,7 @@ const spritesMaterial = new THREE.ShaderMaterial({
     vec4 empty;
 
     vec4 bgFromIndex(float index) {
-      if (index == tindex) {
+      if (int(index) == ${SPRITES_TINDEX}) {
         return empty;
       }
       vec4 bg;

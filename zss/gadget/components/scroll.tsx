@@ -6,6 +6,7 @@ import {
   tokenizeAndWriteTextFormat,
 } from '../data/textFormat'
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from '../data/types'
+import { TILE_TINDEX } from '../display/tiles'
 
 import { Panel, PanelRender } from './panel'
 import { useTiles, writeTile } from './useTiles'
@@ -126,7 +127,7 @@ export function Scroll({
           width={width - 4}
           height={height - 3}
           color={color}
-          bg={bg}
+          bg={TILE_TINDEX}
           text={visibletext}
         />
       </group>
