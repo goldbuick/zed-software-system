@@ -6,14 +6,9 @@ import {
   tokenizeAndWriteTextFormat,
 } from '../data/textFormat'
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from '../data/types'
-import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
-import { Panel } from './panel'
-import { Tiles } from './tiles'
+import { Panel, PanelRender } from './panel'
 import { useTiles, writeTile } from './useTiles'
-
-const palette = loadDefaultPalette()
-const charset = loadDefaultCharset()
 
 interface ScrollProps {
   playerId: string
@@ -38,24 +33,29 @@ export function Scroll({
 
   // edges
   for (let x = 1; x < width - 1; ++x) {
-    writeTile(tiles, width, height, x, 0, { char: 205 })
+    writeTile(tiles, width, height, x, 0, { char: 205, color: 15 })
     if (x > 1 && x < width - 2) {
-      writeTile(tiles, width, height, x, 1, { char: 196 })
+      writeTile(tiles, width, height, x, 1, { char: 196, color: 15 })
     }
-    writeTile(tiles, width, height, x, height - 1, { char: 205 })
+    writeTile(tiles, width, height, x, height - 1, { char: 205, color: 15 })
   }
   for (let y = 1; y < height - 1; ++y) {
-    writeTile(tiles, width, height, 0, y, { char: 179 })
-    writeTile(tiles, width, height, width - 1, y, { char: 179 })
+    writeTile(tiles, width, height, 0, y, { char: 179, color: 15 })
+    writeTile(tiles, width, height, width - 1, y, { char: 179, color: 15 })
+    writeTile(tiles, width, height, 1, y, { char: 0, color: 15 })
+    writeTile(tiles, width, height, width - 2, y, { char: 0, color: 15 })
   }
 
   // corners
   // top left-right
-  writeTile(tiles, width, height, 0, 0, { char: 213 })
-  writeTile(tiles, width, height, width - 1, 0, { char: 184 })
+  writeTile(tiles, width, height, 0, 0, { char: 213, color: 15 })
+  writeTile(tiles, width, height, width - 1, 0, { char: 184, color: 15 })
   // bottom left-right
-  writeTile(tiles, width, height, 0, height - 1, { char: 212 })
-  writeTile(tiles, width, height, width - 1, height - 1, { char: 190 })
+  writeTile(tiles, width, height, 0, height - 1, { char: 212, color: 15 })
+  writeTile(tiles, width, height, width - 1, height - 1, {
+    char: 190,
+    color: 15,
+  })
 
   // measure title
   let context = createWriteTextContext(width - 4, 1, color, bg)
@@ -67,6 +67,7 @@ export function Scroll({
   context = {
     ...createWriteTextContext(width, height, color, bg),
     ...tiles,
+    activeColor: 14,
     x: Math.round(width * 0.5) - Math.round(titleWidth * 0.5),
     leftEdge: 2,
     rightEdge: width - 2,
@@ -75,43 +76,58 @@ export function Scroll({
   tokenizeAndWriteTextFormat(name, context)
 
   // input cursor
+  const panelheight = height - 3
   const [cursor, setCursor] = useState(0)
-  writeTile(tiles, width, height, 1, 2 + cursor, { char: 175 })
-  writeTile(tiles, width, height, width - 2, 2 + cursor, { char: 174 })
+
+  // display offset
+  let offset = cursor - Math.floor(panelheight * 0.5)
+  offset = Math.min(text.length - panelheight, Math.max(0, offset))
+
+  const visibletext = text.slice(offset, offset + panelheight)
+
+  // display cursor
+  const row = cursor - offset
+  writeTile(tiles, width, height, 1, 2 + row, { char: 175, color: 12 })
+  writeTile(tiles, width, height, width - 2, 2 + row, {
+    char: 174,
+    color: 12,
+  })
 
   useHotkeys(
-    'arrowup',
+    'up',
     () => {
+      console.info('up')
       setCursor((state) => Math.max(0, state - 1))
     },
     { preventDefault: true },
     [setCursor],
   )
 
+  useHotkeys(
+    'down',
+    () => {
+      console.info('down')
+      setCursor((state) => Math.min(text.length - 1, state + 1))
+    },
+    { preventDefault: true },
+    [setCursor, visibletext],
+  )
+
   return (
     <React.Fragment>
-      {palette && charset && (
-        <Tiles
-          {...tiles}
-          width={width}
-          height={height}
-          palette={palette}
-          charset={charset}
-        />
-      )}
+      <PanelRender tiles={tiles} width={width} height={height} />
       <group
         // eslint-disable-next-line react/no-unknown-property
         position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 1]}
       >
         <Panel
-          margin={0}
           playerId={playerId}
           name={name}
           width={width - 4}
           height={height - 3}
           color={color}
           bg={bg}
-          text={text}
+          text={visibletext}
         />
       </group>
     </React.Fragment>

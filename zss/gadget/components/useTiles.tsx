@@ -24,6 +24,17 @@ export function useTiles(
   return tiles
 }
 
+export function resetTiles(
+  tiles: TILES,
+  char: number,
+  color: number,
+  bg: number,
+) {
+  tiles.char = new Array(tiles.char.length).fill(char)
+  tiles.color = new Array(tiles.color.length).fill(color)
+  tiles.bg = new Array(tiles.bg.length).fill(bg)
+}
+
 export function readTile(
   tiles: TILES,
   width: number,

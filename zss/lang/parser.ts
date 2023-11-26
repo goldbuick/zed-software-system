@@ -293,7 +293,7 @@ class ScriptParser extends CstParser {
       },
       {
         ALT: () => {
-          this.OPTION1({
+          this.OPTION({
             GATE: () => this.block_lines_gate(),
             DEF: () => {
               this.CONSUME(lexer.Newline)
@@ -317,7 +317,7 @@ class ScriptParser extends CstParser {
       },
       {
         ALT: () => {
-          this.OPTION1({
+          this.OPTION({
             GATE: () => this.block_lines_gate(),
             DEF: () => {
               this.CONSUME(lexer.Newline)
@@ -341,7 +341,7 @@ class ScriptParser extends CstParser {
       },
       {
         ALT: () => {
-          this.OPTION1({
+          this.OPTION({
             GATE: () => this.block_lines_gate(),
             DEF: () => {
               this.CONSUME(lexer.Newline)
@@ -365,7 +365,7 @@ class ScriptParser extends CstParser {
       },
       {
         ALT: () => {
-          this.OPTION1({
+          this.OPTION({
             GATE: () => this.block_lines_gate(),
             DEF: () => {
               this.CONSUME(lexer.Newline)

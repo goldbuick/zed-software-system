@@ -7,7 +7,7 @@ import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { PanelItem } from './panel/panelitem'
 import { Tiles } from './tiles'
-import { useTiles } from './useTiles'
+import { resetTiles, useTiles } from './useTiles'
 
 const palette = loadDefaultPalette()
 const charset = loadDefaultCharset()
@@ -18,7 +18,7 @@ interface PanelRenderProps {
   tiles: TILES
 }
 
-function PanelRender({ width, height, tiles }: PanelRenderProps) {
+export function PanelRender({ width, height, tiles }: PanelRenderProps) {
   const snapshot = useSnapshot(tiles) as TILES
 
   return (
@@ -56,6 +56,7 @@ export function Panel({
   text,
 }: PanelProps) {
   const tiles = useTiles(width, height, 0, color, bg)
+  resetTiles(tiles, 0, color, bg)
 
   const context: WRITE_TEXT_CONTEXT = {
     ...createWriteTextContext(width, height, color, bg),

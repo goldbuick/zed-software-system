@@ -64,7 +64,7 @@ export const GADGET_FIRMWARE = createFirmware(
   },
 )
   .command('parse', (chip, args) => {
-    console.info('parse', args)
+    // this is to handle gadget specific consts and wording
     const [value] = args
     return [chip.evalToNumber(value), 1]
   })
@@ -126,7 +126,6 @@ export const GADGET_FIRMWARE = createFirmware(
     }
 
     panel.text.push([chip.addSelfId(target), label, input])
-
     return 0
   })
   .command('gadget', (chip, args) => {

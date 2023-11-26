@@ -14,11 +14,43 @@
 :codepage-select
 #gadget scroll 50 " Open Codepage $blue$3$1 "
 !codepage-create;New Codepage;hotkey n
+
 Here is some test text and yeah!
 !doot;This is super cool
 !boot;This is also cool
 #read codepages id name
   !codepage-open;$name;hypertext $id
+""
+A0
+A1
+A2
+A3
+A4
+A5
+A6
+A7
+A8
+A9
+A0
+A1
+A2
+A3
+A4
+A5
+A6
+A7
+A8
+A9
+A0
+A1
+A2
+A3
+A4
+A5
+A6
+A7
+A8
+A9
 #end
 
 :codepage-create
