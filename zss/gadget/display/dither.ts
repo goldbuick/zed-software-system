@@ -18,14 +18,10 @@ export function updateDitherDataTexture(
   return texture
 }
 
-export function createDitherDataTexture(
-  width: number,
-  height: number,
-  alpha: number[],
-) {
+export function createDitherDataTexture(width: number, height: number) {
   const data = new Uint8Array(4 * width * height)
   const texture = new THREE.DataTexture(data, width, height)
-  return updateDitherDataTexture(texture, width, height, alpha)
+  return texture
 }
 
 const ditherMaterial = new THREE.ShaderMaterial({
