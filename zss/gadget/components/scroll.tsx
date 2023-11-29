@@ -8,8 +8,9 @@ import {
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from '../data/types'
 import { TILE_TINDEX } from '../display/tiles'
 
-import { Panel, PanelRender } from './panel'
-import { useTiles, writeTile } from './useTiles'
+import { Panel } from './panel'
+import { DitherSnapshot, useDither, writeDither } from './useDither'
+import { TileSnapshot, useTiles, writeTile } from './useTiles'
 
 interface ScrollProps {
   playerId: string
@@ -31,6 +32,7 @@ export function Scroll({
   text,
 }: ScrollProps) {
   const tiles = useTiles(width, height, 0, color, bg)
+  const dither = useDither(width, height)
 
   // edges
   for (let x = 1; x < width - 1; ++x) {
@@ -94,6 +96,10 @@ export function Scroll({
     color: 12,
   })
 
+  for (let x = 2; x < width - 3; ++x) {
+    writeDither(dither, width, height, x, row, 1)
+  }
+
   useHotkeys(
     'up',
     () => {
@@ -111,15 +117,21 @@ export function Scroll({
       setCursor((state) => Math.min(text.length - 1, state + 1))
     },
     { preventDefault: true },
-    [setCursor, visibletext],
+    [setCursor, text],
   )
 
   return (
     <React.Fragment>
-      <PanelRender tiles={tiles} width={width} height={height} />
+      <TileSnapshot tiles={tiles} width={width} height={height} />
       <group
         // eslint-disable-next-line react/no-unknown-property
-        position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 1]}
+        position={[0, 0, 1]}
+      >
+        <DitherSnapshot dither={dither} width={width} height={height} />
+      </group>
+      <group
+        // eslint-disable-next-line react/no-unknown-property
+        position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 2]}
       >
         <Panel
           playerId={playerId}

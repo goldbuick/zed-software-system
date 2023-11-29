@@ -1,8 +1,11 @@
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { objectKeys } from 'ts-extras'
-import { proxy } from 'valtio'
+import { proxy, useSnapshot } from 'valtio'
 
 import { TILES } from '../data/types'
+import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
+
+import { Tiles } from './tiles'
 
 export function useTiles(
   width: number,
@@ -22,6 +25,32 @@ export function useTiles(
   }, [width, height])
 
   return tiles
+}
+
+const palette = loadDefaultPalette()
+const charset = loadDefaultCharset()
+
+interface TileSnapshotProps {
+  width: number
+  height: number
+  tiles: TILES
+}
+
+export function TileSnapshot({ width, height, tiles }: TileSnapshotProps) {
+  const snapshot = useSnapshot(tiles) as TILES
+
+  return (
+    palette &&
+    charset && (
+      <Tiles
+        {...snapshot}
+        width={width}
+        height={height}
+        palette={palette}
+        charset={charset}
+      />
+    )
+  )
 }
 
 export function resetTiles(
@@ -65,7 +94,7 @@ export function writeTile(
   value: Partial<WRITE_TILE_VALUE>,
 ) {
   if (x < 0 || x >= width || y < 0 || y >= height) {
-    return -1
+    return
   }
   const index = x + y * width
   objectKeys(value).forEach((key) => {

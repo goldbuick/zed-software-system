@@ -1,39 +1,10 @@
 import React from 'react'
-import { useSnapshot } from 'valtio'
 
 import { WRITE_TEXT_CONTEXT, createWriteTextContext } from '../data/textFormat'
-import { PANEL_ITEM, TILES } from '../data/types'
-import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
+import { PANEL_ITEM } from '../data/types'
 
 import { PanelItem } from './panel/panelitem'
-import { Tiles } from './tiles'
-import { resetTiles, useTiles } from './useTiles'
-
-const palette = loadDefaultPalette()
-const charset = loadDefaultCharset()
-
-interface PanelRenderProps {
-  width: number
-  height: number
-  tiles: TILES
-}
-
-export function PanelRender({ width, height, tiles }: PanelRenderProps) {
-  const snapshot = useSnapshot(tiles) as TILES
-
-  return (
-    palette &&
-    charset && (
-      <Tiles
-        {...snapshot}
-        width={width}
-        height={height}
-        palette={palette}
-        charset={charset}
-      />
-    )
-  )
-}
+import { TileSnapshot, resetTiles, useTiles } from './useTiles'
 
 interface PanelProps {
   margin?: number
@@ -67,21 +38,18 @@ export function Panel({
   context.rightEdge = context.width - margin
 
   return (
-    palette &&
-    charset && (
-      <>
-        {text.map((item, index) => {
-          return (
-            <PanelItem
-              key={index}
-              playerId={playerId}
-              item={item}
-              context={context}
-            />
-          )
-        })}
-        <PanelRender width={width} height={height} tiles={tiles} />
-      </>
-    )
+    <>
+      {text.map((item, index) => {
+        return (
+          <PanelItem
+            key={index}
+            playerId={playerId}
+            item={item}
+            context={context}
+          />
+        )
+      })}
+      <TileSnapshot width={width} height={height} tiles={tiles} />
+    </>
   )
 }

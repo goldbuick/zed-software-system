@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-import { cloneMaterial, interval, time } from './anim'
+import { cloneMaterial } from './anim'
 
 export function updateDitherDataTexture(
   texture: THREE.DataTexture,
@@ -8,11 +8,12 @@ export function updateDitherDataTexture(
   height: number,
   alpha: number[],
 ) {
+  console.info(1, { alpha })
   const size = width * height * 4
   for (let i = 0, t = 0; i < size; ++t) {
     // alpha, skip, skip, skip
-    texture.image.data[i++] = alpha[t] * 255
-    i += 3
+    texture.image.data[i] = alpha[t] * 255
+    i += 4
   }
   texture.needsUpdate = true
   return texture
@@ -21,6 +22,7 @@ export function updateDitherDataTexture(
 export function createDitherDataTexture(width: number, height: number) {
   const data = new Uint8Array(4 * width * height)
   const texture = new THREE.DataTexture(data, width, height)
+  console.info(2, { data })
   return texture
 }
 
@@ -28,8 +30,6 @@ const ditherMaterial = new THREE.ShaderMaterial({
   // settings
   transparent: false,
   uniforms: {
-    time,
-    interval,
     data: { value: null },
   },
   // vertex shader
@@ -51,8 +51,6 @@ const ditherMaterial = new THREE.ShaderMaterial({
   fragmentShader: `
       #include <clipping_planes_pars_fragment>
   
-      uniform float time;
-      uniform float interval;
       uniform sampler2D data;
   
       varying vec2 vUv;
