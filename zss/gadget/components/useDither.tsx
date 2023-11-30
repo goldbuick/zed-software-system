@@ -5,10 +5,9 @@ import { Dither } from './dither'
 
 export function useDither(width: number, height: number) {
   const size = width * height
-
   const dither = useMemo(() => {
     return proxy<number[]>(new Array(size).fill(0))
-  }, [width, height])
+  }, [size])
 
   return dither
 }
@@ -21,8 +20,6 @@ interface DitherSnapshotProps {
 
 export function DitherSnapshot({ width, height, dither }: DitherSnapshotProps) {
   const snapshot = useSnapshot(dither) as number[]
-
-  console.info(snapshot)
 
   return <Dither width={width} height={height} alphas={snapshot} />
 }

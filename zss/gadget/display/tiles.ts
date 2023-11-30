@@ -57,8 +57,7 @@ export function updateTilemapDataTexture(
 
 export function createTilemapDataTexture(width: number, height: number) {
   const data = new Uint8Array(4 * width * height)
-  const texture = new THREE.DataTexture(data, width, height)
-  return texture
+  return new THREE.DataTexture(data, width, height)
 }
 
 export function createTilemapBufferGeometry(

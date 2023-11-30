@@ -8,7 +8,6 @@ export function updateDitherDataTexture(
   height: number,
   alpha: number[],
 ) {
-  console.info(1, { alpha })
   const size = width * height * 4
   for (let i = 0, t = 0; i < size; ++t) {
     // alpha, skip, skip, skip
@@ -21,9 +20,7 @@ export function updateDitherDataTexture(
 
 export function createDitherDataTexture(width: number, height: number) {
   const data = new Uint8Array(4 * width * height)
-  const texture = new THREE.DataTexture(data, width, height)
-  console.info(2, { data })
-  return texture
+  return new THREE.DataTexture(data, width, height)
 }
 
 const ditherMaterial = new THREE.ShaderMaterial({

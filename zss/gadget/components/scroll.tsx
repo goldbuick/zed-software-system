@@ -9,7 +9,12 @@ import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from '../data/types'
 import { TILE_TINDEX } from '../display/tiles'
 
 import { Panel } from './panel'
-import { DitherSnapshot, useDither, writeDither } from './useDither'
+import {
+  DitherSnapshot,
+  resetDither,
+  useDither,
+  writeDither,
+} from './useDither'
 import { TileSnapshot, useTiles, writeTile } from './useTiles'
 
 interface ScrollProps {
@@ -96,14 +101,18 @@ export function Scroll({
     color: 12,
   })
 
-  for (let x = 2; x < width - 3; ++x) {
-    writeDither(dither, width, height, x, row, 1)
+  resetDither(dither)
+  for (let x = 2; x < width - 2; ++x) {
+    writeDither(dither, width, height, x, row - 2, 0.01)
+    writeDither(dither, width, height, x, row - 1, 0.1)
+    writeDither(dither, width, height, x, row, 0.2)
+    writeDither(dither, width, height, x, row + 1, 0.1)
+    writeDither(dither, width, height, x, row + 2, 0.01)
   }
 
   useHotkeys(
     'up',
     () => {
-      console.info('up')
       setCursor((state) => Math.max(0, state - 1))
     },
     { preventDefault: true },
@@ -113,7 +122,6 @@ export function Scroll({
   useHotkeys(
     'down',
     () => {
-      console.info('down')
       setCursor((state) => Math.min(text.length - 1, state + 1))
     },
     { preventDefault: true },
@@ -125,7 +133,7 @@ export function Scroll({
       <TileSnapshot tiles={tiles} width={width} height={height} />
       <group
         // eslint-disable-next-line react/no-unknown-property
-        position={[0, 0, 1]}
+        position={[0 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 1]}
       >
         <DitherSnapshot dither={dither} width={width} height={height} />
       </group>
