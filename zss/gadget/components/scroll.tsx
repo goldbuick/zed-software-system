@@ -41,7 +41,7 @@ export function Scroll({
   const panelwidth = width - 3
   const panelheight = height - 3
   const tiles = useTiles(width, height, 0, color, bg)
-  const dither = useDither(panelwidth, height - 3)
+  const dither = useDither(panelwidth, panelheight)
 
   // edges
   for (let x = 1; x < width - 1; ++x) {
@@ -126,10 +126,6 @@ export function Scroll({
         wither[i] * border,
       )
       writeDither(
-    }
-  }
-  for (let y = 0; y < height - 3; ++y) {
-    if (y !== row) {
         dither,
         panelwidth,
         panelheight,
@@ -139,13 +135,18 @@ export function Scroll({
       )
     }
   }
+  for (let y = 0; y < height - 3; ++y) {
+    if (y !== row) {
+      writeDither(dither, width, height, 1, y, WITHER_CENTER)
+      writeDither(dither, width, height, width - 2, y, WITHER_CENTER)
+    }
+  }
 
   useHotkeys(
     'up',
     () => {
       setCursor((state) => Math.max(0, state - 1))
     },
-    // { preventDefault: true },
     [setCursor],
   )
 
@@ -154,7 +155,6 @@ export function Scroll({
     () => {
       setCursor((state) => Math.max(0, state - 10))
     },
-    // { preventDefault: true },
     [setCursor],
   )
 
@@ -163,7 +163,6 @@ export function Scroll({
     () => {
       setCursor((state) => Math.min(text.length - 1, state + 1))
     },
-    // { preventDefault: true },
     [setCursor, text],
   )
 
@@ -172,7 +171,6 @@ export function Scroll({
     () => {
       setCursor((state) => Math.min(text.length - 1, state + 10))
     },
-    // { preventDefault: true },
     [setCursor, text],
   )
 
@@ -183,7 +181,7 @@ export function Scroll({
       return
     }
 
-    ref.current.position.y = -10000
+    ref.current.position.y = -5000
 
     anime({
       y: 0,
@@ -191,6 +189,23 @@ export function Scroll({
       targets: ref.current.position,
     })
   }, [])
+
+  useHotkeys(
+    'esc',
+    () => {
+      // send a message to trigger the close
+    },
+    [cursor],
+  )
+
+  useHotkeys(
+    'enter',
+    () => {
+      console.info({ cursor })
+      // send a message to trigger the close
+    },
+    [cursor],
+  )
 
   return (
     <group ref={ref}>
