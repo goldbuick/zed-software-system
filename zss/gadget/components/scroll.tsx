@@ -41,15 +41,27 @@ export function Scroll({
 
   // edges
   for (let x = 1; x < width - 1; ++x) {
-    writeTile(tiles, width, height, x, 0, { char: 205, color: 15 })
-    if (x > 1 && x < width - 2) {
-      writeTile(tiles, width, height, x, 1, { char: 196, color: 15 })
+    writeTile(tiles, width, height, x, 0, { char: 196, color: 15 })
+    if (x > 2 && x < width - 3) {
+      writeTile(tiles, width, height, x, 1, { char: 205, color: 15 })
     }
     writeTile(tiles, width, height, x, height - 1, { char: 205, color: 15 })
   }
+  writeTile(tiles, width, height, 1, 0, { char: 205, color: 15 })
+  writeTile(tiles, width, height, 2, 0, { char: 187, color: 15 })
+  writeTile(tiles, width, height, 1, 1, { char: 232, color: 15 })
+  writeTile(tiles, width, height, 2, 1, { char: 200, color: 15 })
+  writeTile(tiles, width, height, width - 2, 0, { char: 205, color: 15 })
+  writeTile(tiles, width, height, width - 3, 0, { char: 201, color: 15 })
+  writeTile(tiles, width, height, width - 2, 1, { char: 232, color: 15 })
+  writeTile(tiles, width, height, width - 3, 1, { char: 188, color: 15 })
+
   for (let y = 1; y < height - 1; ++y) {
     writeTile(tiles, width, height, 0, y, { char: 179, color: 15 })
     writeTile(tiles, width, height, width - 1, y, { char: 179, color: 15 })
+  }
+
+  for (let y = 2; y < height - 1; ++y) {
     writeTile(tiles, width, height, 1, y, { char: 0, color: 15 })
     writeTile(tiles, width, height, width - 2, y, { char: 0, color: 15 })
   }
@@ -95,21 +107,22 @@ export function Scroll({
 
   // display cursor
   const row = cursor - offset
-  writeTile(tiles, width, height, 1, 2 + row, { char: 175, color: 12 })
+  writeTile(tiles, width, height, 1, 2 + row, { char: 26, color: 11 })
   writeTile(tiles, width, height, width - 2, 2 + row, {
-    char: 174,
-    color: 12,
+    char: 27,
+    color: 11,
   })
 
-  const wither = [0.03, 0.1, 0.15]
+  const wither = [0.01, 0.06, 0.1, 0.15]
   const WITHER_CENTER = 0.3
   resetDither(dither)
   for (let x = 2; x < width - 2; ++x) {
+    const border = x === 2 || x === width - 3 ? 1.5 : 1
     writeDither(dither, width, height, x, row, WITHER_CENTER)
     for (let i = 0; i < wither.length; ++i) {
       const edge = wither.length - i
-      writeDither(dither, width, height, x, row - edge, wither[i])
-      writeDither(dither, width, height, x, row + edge, wither[i])
+      writeDither(dither, width, height, x, row - edge, wither[i] * border)
+      writeDither(dither, width, height, x, row + edge, wither[i] * border)
     }
   }
 
@@ -123,9 +136,27 @@ export function Scroll({
   )
 
   useHotkeys(
+    'alt+up',
+    () => {
+      setCursor((state) => Math.max(0, state - 10))
+    },
+    { preventDefault: true },
+    [setCursor],
+  )
+
+  useHotkeys(
     'down',
     () => {
       setCursor((state) => Math.min(text.length - 1, state + 1))
+    },
+    { preventDefault: true },
+    [setCursor, text],
+  )
+
+  useHotkeys(
+    'alt+down',
+    () => {
+      setCursor((state) => Math.min(text.length - 1, state + 10))
     },
     { preventDefault: true },
     [setCursor, text],

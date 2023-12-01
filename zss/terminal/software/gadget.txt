@@ -16,7 +16,7 @@
 !codepage-create;New Codepage;hotkey n
 
 Here is some test text and yeah!
-!doot;This is super cool
+!doot;This is super cool;hypertext 4 red
 !boot;This is also cool
 #read codepages id name
   !codepage-open;$name;hypertext $id
