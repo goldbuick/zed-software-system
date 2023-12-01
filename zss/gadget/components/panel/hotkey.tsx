@@ -28,7 +28,7 @@ export function PanelItemHotkey({
   tokenizeAndWriteTextFormat(
     `${
       context.isEven ? '$black$onltgray' : '$black$ondkcyan'
-    }${text}$white$ondkblue ${label}`,
+    }${text}$white$onempty ${label}`,
     context,
   )
 

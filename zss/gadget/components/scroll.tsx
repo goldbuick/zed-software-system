@@ -101,13 +101,16 @@ export function Scroll({
     color: 12,
   })
 
+  const wither = [0.03, 0.1, 0.15]
+  const WITHER_CENTER = 0.3
   resetDither(dither)
   for (let x = 2; x < width - 2; ++x) {
-    writeDither(dither, width, height, x, row - 2, 0.01)
-    writeDither(dither, width, height, x, row - 1, 0.1)
-    writeDither(dither, width, height, x, row, 0.2)
-    writeDither(dither, width, height, x, row + 1, 0.1)
-    writeDither(dither, width, height, x, row + 2, 0.01)
+    writeDither(dither, width, height, x, row, WITHER_CENTER)
+    for (let i = 0; i < wither.length; ++i) {
+      const edge = wither.length - i
+      writeDither(dither, width, height, x, row - edge, wither[i])
+      writeDither(dither, width, height, x, row + edge, wither[i])
+    }
   }
 
   useHotkeys(

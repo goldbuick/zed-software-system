@@ -85,14 +85,18 @@ const colorIndex: Record<string, number> = {
   purple: 13,
   yellow: 14,
   white: 15,
+  empty: -1,
 }
 
 const allColors = colors.map(([clr, name]) =>
   createWordToken(`\\$(${clr})`, name || clr),
 )
-const allBgColors = colors.map(([clr, name]) =>
-  createWordToken(`\\$on(${clr})`, `on${name || clr}`),
-)
+const allBgColors = [
+  ...colors.map(([clr, name]) =>
+    createWordToken(`\\$on(${clr})`, `on${name || clr}`),
+  ),
+  createWordToken(`\\$on(empty)`, `onempty`),
+]
 
 export const allTokens = [
   Whitespace,
@@ -267,6 +271,9 @@ export function writeTextFormat(
         context.activeBg = colorIndex[colorName] ?? 0
         break
       }
+      case allBgColors[16]:
+        context.activeBg = context.resetBg
+        break
       case NumberLiteral:
         if (context.measureOnly !== true && isVisible()) {
           const i = context.x + context.y * context.width
