@@ -114,7 +114,7 @@ export function Scroll({
   })
 
   const wither = [0.01, 0.06, 0.1, 0.15]
-  const WITHER_CENTER = 0.3
+  const WITHER_CENTER = 0.25
   resetDither(dither)
   for (let x = 2; x < width - 2; ++x) {
     const border = x === 2 || x === width - 3 ? 1.5 : 1
@@ -125,13 +125,19 @@ export function Scroll({
       writeDither(dither, width, height, x, row + edge, wither[i] * border)
     }
   }
+  for (let y = 0; y < height - 3; ++y) {
+    if (y !== row) {
+      writeDither(dither, width, height, 1, y, WITHER_CENTER)
+      writeDither(dither, width, height, width - 2, y, WITHER_CENTER)
+    }
+  }
 
   useHotkeys(
     'up',
     () => {
       setCursor((state) => Math.max(0, state - 1))
     },
-    { preventDefault: true },
+    // { preventDefault: true },
     [setCursor],
   )
 
@@ -140,7 +146,7 @@ export function Scroll({
     () => {
       setCursor((state) => Math.max(0, state - 10))
     },
-    { preventDefault: true },
+    // { preventDefault: true },
     [setCursor],
   )
 
@@ -149,7 +155,7 @@ export function Scroll({
     () => {
       setCursor((state) => Math.min(text.length - 1, state + 1))
     },
-    { preventDefault: true },
+    // { preventDefault: true },
     [setCursor, text],
   )
 
@@ -158,8 +164,25 @@ export function Scroll({
     () => {
       setCursor((state) => Math.min(text.length - 1, state + 10))
     },
-    { preventDefault: true },
+    // { preventDefault: true },
     [setCursor, text],
+  )
+
+  useHotkeys(
+    'esc',
+    () => {
+      // send a message to trigger the close
+    },
+    [cursor],
+  )
+
+  useHotkeys(
+    'enter',
+    () => {
+      console.info({ cursor })
+      // send a message to trigger the close
+    },
+    [cursor],
   )
 
   return (
