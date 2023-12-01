@@ -110,7 +110,7 @@ export function Scroll({
   writeTile(tiles, width, height, 1, 2 + row, { char: 26, color: 12 })
 
   const wither = [0.01, 0.06, 0.1, 0.15]
-  const WITHER_CENTER = 0.3
+  const WITHER_CENTER = 0.25
   resetDither(dither)
   for (let x = 0; x < panelwidth; ++x) {
     const border = x === 0 ? 1.5 : 1
@@ -126,6 +126,10 @@ export function Scroll({
         wither[i] * border,
       )
       writeDither(
+    }
+  }
+  for (let y = 0; y < height - 3; ++y) {
+    if (y !== row) {
         dither,
         panelwidth,
         panelheight,
@@ -141,7 +145,7 @@ export function Scroll({
     () => {
       setCursor((state) => Math.max(0, state - 1))
     },
-    { preventDefault: true },
+    // { preventDefault: true },
     [setCursor],
   )
 
@@ -150,7 +154,7 @@ export function Scroll({
     () => {
       setCursor((state) => Math.max(0, state - 10))
     },
-    { preventDefault: true },
+    // { preventDefault: true },
     [setCursor],
   )
 
@@ -159,7 +163,7 @@ export function Scroll({
     () => {
       setCursor((state) => Math.min(text.length - 1, state + 1))
     },
-    { preventDefault: true },
+    // { preventDefault: true },
     [setCursor, text],
   )
 
@@ -168,7 +172,7 @@ export function Scroll({
     () => {
       setCursor((state) => Math.min(text.length - 1, state + 10))
     },
-    { preventDefault: true },
+    // { preventDefault: true },
     [setCursor, text],
   )
 
