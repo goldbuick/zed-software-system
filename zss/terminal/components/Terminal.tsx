@@ -41,7 +41,6 @@ export function Terminal() {
       <Framing>
         <Gadget />
       </Framing>
-      <FX />
     </>
   )
 }

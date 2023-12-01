@@ -1,5 +1,7 @@
-import React, { useState } from 'react'
+import anime from 'animejs'
+import React, { useEffect, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
+import { Group } from 'three'
 
 import {
   createWriteTextContext,
@@ -36,13 +38,15 @@ export function Scroll({
   bg,
   text,
 }: ScrollProps) {
+  const panelwidth = width - 3
+  const panelheight = height - 3
   const tiles = useTiles(width, height, 0, color, bg)
-  const dither = useDither(width, height)
+  const dither = useDither(panelwidth, height - 3)
 
   // edges
   for (let x = 1; x < width - 1; ++x) {
     writeTile(tiles, width, height, x, 0, { char: 196, color: 15 })
-    if (x > 2 && x < width - 3) {
+    if (x > 2 && x < width - 1) {
       writeTile(tiles, width, height, x, 1, { char: 205, color: 15 })
     }
     writeTile(tiles, width, height, x, height - 1, { char: 205, color: 15 })
@@ -51,10 +55,6 @@ export function Scroll({
   writeTile(tiles, width, height, 2, 0, { char: 187, color: 15 })
   writeTile(tiles, width, height, 1, 1, { char: 232, color: 15 })
   writeTile(tiles, width, height, 2, 1, { char: 200, color: 15 })
-  writeTile(tiles, width, height, width - 2, 0, { char: 205, color: 15 })
-  writeTile(tiles, width, height, width - 3, 0, { char: 201, color: 15 })
-  writeTile(tiles, width, height, width - 2, 1, { char: 232, color: 15 })
-  writeTile(tiles, width, height, width - 3, 1, { char: 188, color: 15 })
 
   for (let y = 1; y < height - 1; ++y) {
     writeTile(tiles, width, height, 0, y, { char: 179, color: 15 })
@@ -69,7 +69,8 @@ export function Scroll({
   // corners
   // top left-right
   writeTile(tiles, width, height, 0, 0, { char: 213, color: 15 })
-  writeTile(tiles, width, height, width - 1, 0, { char: 184, color: 15 })
+  writeTile(tiles, width, height, width - 1, 0, { char: 191, color: 15 })
+  writeTile(tiles, width, height, width - 1, 1, { char: 181, color: 15 })
   // bottom left-right
   writeTile(tiles, width, height, 0, height - 1, { char: 212, color: 15 })
   writeTile(tiles, width, height, width - 1, height - 1, {
@@ -96,7 +97,6 @@ export function Scroll({
   tokenizeAndWriteTextFormat(name, context)
 
   // input cursor
-  const panelheight = height - 3
   const [cursor, setCursor] = useState(0)
 
   // display offset
@@ -107,22 +107,32 @@ export function Scroll({
 
   // display cursor
   const row = cursor - offset
-  writeTile(tiles, width, height, 1, 2 + row, { char: 26, color: 11 })
-  writeTile(tiles, width, height, width - 2, 2 + row, {
-    char: 27,
-    color: 11,
-  })
+  writeTile(tiles, width, height, 1, 2 + row, { char: 26, color: 12 })
 
   const wither = [0.01, 0.06, 0.1, 0.15]
   const WITHER_CENTER = 0.3
   resetDither(dither)
-  for (let x = 2; x < width - 2; ++x) {
-    const border = x === 2 || x === width - 3 ? 1.5 : 1
-    writeDither(dither, width, height, x, row, WITHER_CENTER)
+  for (let x = 0; x < panelwidth; ++x) {
+    const border = x === 0 ? 1.5 : 1
+    writeDither(dither, panelwidth, panelheight, x, row, WITHER_CENTER)
     for (let i = 0; i < wither.length; ++i) {
       const edge = wither.length - i
-      writeDither(dither, width, height, x, row - edge, wither[i] * border)
-      writeDither(dither, width, height, x, row + edge, wither[i] * border)
+      writeDither(
+        dither,
+        panelwidth,
+        panelheight,
+        x,
+        row - edge,
+        wither[i] * border,
+      )
+      writeDither(
+        dither,
+        panelwidth,
+        panelheight,
+        x,
+        row + edge,
+        wither[i] * border,
+      )
     }
   }
 
@@ -162,29 +172,44 @@ export function Scroll({
     [setCursor, text],
   )
 
+  const ref = useRef<Group>(null)
+
+  useEffect(() => {
+    if (!ref.current) {
+      return
+    }
+
+    ref.current.position.y = -10000
+
+    anime({
+      y: 0,
+      delay: 100,
+      targets: ref.current.position,
+    })
+  }, [])
+
   return (
-    <React.Fragment>
+    <group ref={ref}>
       <TileSnapshot tiles={tiles} width={width} height={height} />
       <group
         // eslint-disable-next-line react/no-unknown-property
-        position={[0 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 1]}
+        position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 0]}
       >
-        <DitherSnapshot dither={dither} width={width} height={height} />
-      </group>
-      <group
-        // eslint-disable-next-line react/no-unknown-property
-        position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 2]}
-      >
+        <DitherSnapshot
+          dither={dither}
+          width={panelwidth}
+          height={panelheight}
+        />
         <Panel
           playerId={playerId}
           name={name}
-          width={width - 4}
-          height={height - 3}
+          width={panelwidth}
+          height={panelheight}
           color={color}
           bg={TILE_TINDEX}
           text={visibletext}
         />
       </group>
-    </React.Fragment>
+    </group>
   )
 }

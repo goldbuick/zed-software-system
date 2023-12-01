@@ -25,6 +25,7 @@
     "@react-three/postprocessing": "^2.15.0",
     "@rwh/keystrokes": "^1.2.3",
     "@rwh/react-keystrokes": "^1.2.3",
+    "@types/animejs": "^3.1.12",
     "@types/jest": "^29.5.5",
     "@types/nanoid-dictionary": "^4.2.0",
     "@types/node": "^20.4.10",
