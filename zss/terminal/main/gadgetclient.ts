@@ -1,4 +1,4 @@
-import * as jsonpatch from 'fast-json-patch'
+import { JsonPatchError, applyPatch } from 'fast-json-patch'
 import { proxy, useSnapshot } from 'valtio'
 import { createDevice } from 'zss/network/device'
 import { hub } from 'zss/network/hub'
@@ -32,9 +32,9 @@ const gadgetclient = createDevice('gadgetclient', [], (message) => {
     case 'patch': {
       if (!needsReset) {
         try {
-          jsonpatch.applyPatch(syncstate.state, message.data, true)
+          applyPatch(syncstate.state, message.data, true)
         } catch (err) {
-          if (err instanceof jsonpatch.JsonPatchError) {
+          if (err instanceof JsonPatchError) {
             // we are out of sync and need to request a refresh
             needsReset = true
             hub.emit(

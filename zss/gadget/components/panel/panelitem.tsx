@@ -1,13 +1,14 @@
-import React from 'react'
+import React, { useContext } from 'react'
 
 import {
-  WRITE_TEXT_CONTEXT,
+  WriteTextContext,
   tokenize,
   tokenizeAndWriteTextFormat,
   writeTextColorReset,
 } from '../../data/textFormat'
 import { PANEL_ITEM } from '../../data/types'
 
+import { PlayerContext } from './common'
 import { PanelItemHotkey } from './hotkey'
 import { PanelItemHyperText } from './hypertext'
 import { PanelItemNumber } from './number'
@@ -19,11 +20,12 @@ import { PanelItemInputText } from './textinput'
 interface PanelItemProps {
   item: PANEL_ITEM
   active: boolean
-  player: string
-  context: WRITE_TEXT_CONTEXT
 }
 
-export function PanelItem({ item, active, player, context }: PanelItemProps) {
+export function PanelItem({ item, active }: PanelItemProps) {
+  const player = useContext(PlayerContext)
+  const context = useContext(WriteTextContext)
+
   context.isEven = context.y % 2 === 0
 
   if (typeof item === 'string') {

@@ -1,3 +1,4 @@
+import { useContext } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { hub } from 'zss/network/hub'
 
@@ -6,7 +7,7 @@ import {
   tokenizeAndWriteTextFormat,
 } from '../../data/textFormat'
 
-import { clearscroll } from './common'
+import { ScrollContext } from './common'
 
 interface PanelItemHyperTextProps {
   player: string
@@ -31,12 +32,14 @@ export function PanelItemHyperText({
 
   tokenizeAndWriteTextFormat(`  $${color}$${char}  $white${label}`, context)
 
+  const clearscroll = useContext(ScrollContext)
+
   useHotkeys(
     'enter',
     () => {
       // send link message
       hub.emit(target, 'gadget', undefined, player)
-      clearscroll(player)
+      clearscroll()
     },
     { enabled: !!active },
     [target, player],

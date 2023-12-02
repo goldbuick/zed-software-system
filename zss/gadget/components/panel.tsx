@@ -1,8 +1,13 @@
 import React from 'react'
 
-import { WRITE_TEXT_CONTEXT, createWriteTextContext } from '../data/textFormat'
+import {
+  WRITE_TEXT_CONTEXT,
+  WriteTextContext,
+  createWriteTextContext,
+} from '../data/textFormat'
 import { PANEL_ITEM } from '../data/types'
 
+import { PlayerContext } from './panel/common'
 import { PanelItem } from './panel/panelitem'
 import { TileSnapshot, resetTiles, useTiles } from './useTiles'
 
@@ -40,17 +45,13 @@ export function Panel({
   context.rightEdge = context.width - margin
 
   return (
-    <>
-      {text.map((item, index) => (
-        <PanelItem
-          key={index}
-          item={item}
-          context={context}
-          player={player}
-          active={index === selected}
-        />
-      ))}
-      <TileSnapshot width={width} height={height} tiles={tiles} />
-    </>
+    <PlayerContext.Provider value={player}>
+      <WriteTextContext.Provider value={context}>
+        {text.map((item, index) => (
+          <PanelItem key={index} item={item} active={index === selected} />
+        ))}
+        <TileSnapshot width={width} height={height} tiles={tiles} />
+      </WriteTextContext.Provider>
+    </PlayerContext.Provider>
   )
 }

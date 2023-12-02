@@ -13,7 +13,7 @@ import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from '../data/types'
 import { TILE_TINDEX } from '../display/tiles'
 
 import { Panel } from './panel'
-import { clearscroll } from './panel/common'
+import { ScrollContext, clearscroll } from './panel/common'
 import {
   DitherSnapshot,
   resetDither,
@@ -30,6 +30,7 @@ interface ScrollProps {
   color: number
   bg: number
   text: PANEL_ITEM[]
+  didclose?: () => void
 }
 
 export function Scroll({
@@ -40,6 +41,7 @@ export function Scroll({
   color,
   bg,
   text,
+  didclose,
 }: ScrollProps) {
   const panelwidth = width - 3
   const panelheight = height - 3
@@ -142,70 +144,59 @@ export function Scroll({
     })
   }, [])
 
-  useHotkeys(
-    'up',
-    () => {
-      setCursor((state) => Math.max(0, state - 1))
-    },
-    [setCursor],
-  )
+  useHotkeys('up', () => setCursor((state) => Math.max(0, state - 1)), [
+    setCursor,
+  ])
 
-  useHotkeys(
-    'alt+up',
-    () => {
-      setCursor((state) => Math.max(0, state - 10))
-    },
-    [setCursor],
-  )
+  useHotkeys('alt+up', () => setCursor((state) => Math.max(0, state - 10)), [
+    setCursor,
+  ])
 
   useHotkeys(
     'down',
-    () => {
-      setCursor((state) => Math.min(text.length - 1, state + 1))
-    },
+    () => setCursor((state) => Math.min(text.length - 1, state + 1)),
     [setCursor, text],
   )
 
   useHotkeys(
     'alt+down',
-    () => {
-      setCursor((state) => Math.min(text.length - 1, state + 10))
-    },
+    () => setCursor((state) => Math.min(text.length - 1, state + 10)),
     [setCursor, text],
   )
 
-  useHotkeys(
-    'esc',
-    () => {
-      clearscroll(player)
-    },
-    [cursor],
-  )
+  function clearscroll() {
+    // send a message to trigger the close
+    hub.emit('platform:clearscroll', 'gadget', undefined, player)
+  }
+
+  useHotkeys('esc', clearscroll, [cursor])
 
   return (
-    <group ref={groupref}>
-      <TileSnapshot tiles={tiles} width={width} height={height} />
-      <group
-        // eslint-disable-next-line react/no-unknown-property
-        position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 0]}
-      >
-        <DitherSnapshot
-          dither={dither}
-          width={panelwidth}
-          height={panelheight}
-        />
-        <Panel
-          player={player}
-          name={name}
-          width={panelwidth}
-          height={panelheight}
-          margin={0}
-          color={color}
-          bg={TILE_TINDEX}
-          text={visibletext}
-          selected={row}
-        />
+    <ScrollContext.Provider value={clearscroll}>
+      <group ref={groupref}>
+        <TileSnapshot tiles={tiles} width={width} height={height} />
+        <group
+          // eslint-disable-next-line react/no-unknown-property
+          position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 0]}
+        >
+          <DitherSnapshot
+            dither={dither}
+            width={panelwidth}
+            height={panelheight}
+          />
+          <Panel
+            player={player}
+            name={name}
+            width={panelwidth}
+            height={panelheight}
+            margin={0}
+            color={color}
+            bg={TILE_TINDEX}
+            text={visibletext}
+            selected={row}
+          />
+        </group>
       </group>
-    </group>
+    </ScrollContext.Provider>
   )
 }

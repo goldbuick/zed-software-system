@@ -1,5 +1,6 @@
 import { useThree } from '@react-three/fiber'
-import React from 'react'
+import { deepClone } from 'fast-json-patch'
+import React, { useState } from 'react'
 
 import { clamp } from '/zss/mapping/number'
 
@@ -127,6 +128,9 @@ export function Layout({ player, layers, layout }: LayoutProps) {
   const marginX = viewWidth % DRAW_CHAR_WIDTH
   const marginY = viewHeight % DRAW_CHAR_HEIGHT
 
+  // cache scroll
+  const [scroll, setScroll] = useState<RECT>()
+
   if (width < 1 || height < 1 || layers === undefined || layout === undefined) {
     return null
   }
@@ -143,78 +147,82 @@ export function Layout({ player, layers, layout }: LayoutProps) {
   }
 
   // iterate layout
-  const rects: RECT[] =
-    layout.map((panel) => {
-      let rect: RECT
-      switch (panel.edge) {
-        case PANEL_TYPE.LEFT:
-          rect = {
-            name: panel.name,
-            type: RECT_TYPE.PANEL,
-            x: frame.x,
-            y: frame.y,
-            width: panel.size,
-            height: frame.height,
-            text: panel.text,
-          }
-          frame.x += panel.size
-          frame.width -= panel.size
-          break
-        default:
-        case PANEL_TYPE.RIGHT:
-          rect = {
-            name: panel.name,
-            type: RECT_TYPE.PANEL,
-            x: frame.x + frame.width - panel.size,
-            y: frame.y,
-            width: panel.size,
-            height: frame.height,
-            text: panel.text,
-          }
-          frame.width -= panel.size
-          break
-        case PANEL_TYPE.TOP:
-          rect = {
-            name: panel.name,
-            type: RECT_TYPE.PANEL,
-            x: frame.x,
-            y: frame.y,
-            width: frame.width,
-            height: panel.size,
-            text: panel.text,
-          }
-          frame.y += panel.size
-          frame.height -= panel.size
-          break
-        case PANEL_TYPE.BOTTOM:
-          rect = {
-            name: panel.name,
-            type: RECT_TYPE.PANEL,
-            x: frame.x,
-            y: frame.y + frame.height - panel.size,
-            width: frame.width,
-            height: panel.size,
-            text: panel.text,
-          }
-          frame.height -= panel.size
-          break
-        case PANEL_TYPE.SCROLL: {
-          rect = {
-            name: panel.name,
-            type: RECT_TYPE.SCROLL,
-            x: 0,
-            y: 0,
-            width: clamp(panel.size || 50, 24, frame.width - 2),
-            height: clamp(18, 8, frame.height - 8),
-            text: panel.text,
-          }
-          rect.x = frame.x + Math.round((frame.width - rect.width) * 0.5)
-          rect.y = frame.y + Math.floor((frame.height - rect.height) * 0.5)
-          break
+  const rects: RECT[] = []
+
+  layout.forEach((panel) => {
+    let rect: RECT
+    switch (panel.edge) {
+      case PANEL_TYPE.LEFT:
+        rect = {
+          name: panel.name,
+          type: RECT_TYPE.PANEL,
+          x: frame.x,
+          y: frame.y,
+          width: panel.size,
+          height: frame.height,
+          text: panel.text,
         }
+        frame.x += panel.size
+        frame.width -= panel.size
+        break
+      default:
+      case PANEL_TYPE.RIGHT:
+        rect = {
+          name: panel.name,
+          type: RECT_TYPE.PANEL,
+          x: frame.x + frame.width - panel.size,
+          y: frame.y,
+          width: panel.size,
+          height: frame.height,
+          text: panel.text,
+        }
+        frame.width -= panel.size
+        break
+      case PANEL_TYPE.TOP:
+        rect = {
+          name: panel.name,
+          type: RECT_TYPE.PANEL,
+          x: frame.x,
+          y: frame.y,
+          width: frame.width,
+          height: panel.size,
+          text: panel.text,
+        }
+        frame.y += panel.size
+        frame.height -= panel.size
+        break
+      case PANEL_TYPE.BOTTOM:
+        rect = {
+          name: panel.name,
+          type: RECT_TYPE.PANEL,
+          x: frame.x,
+          y: frame.y + frame.height - panel.size,
+          width: frame.width,
+          height: panel.size,
+          text: panel.text,
+        }
+        frame.height -= panel.size
+        break
+      case PANEL_TYPE.SCROLL: {
+        rect = {
+          name: panel.name,
+          type: RECT_TYPE.SCROLL,
+          x: 0,
+          y: 0,
+          width: clamp(panel.size || 50, 24, frame.width - 2),
+          height: clamp(18, 8, frame.height - 8),
+          text: panel.text,
+        }
+        rect.x = frame.x + Math.round((frame.width - rect.width) * 0.5)
+        rect.y = frame.y + Math.floor((frame.height - rect.height) * 0.5)
+        // cache scroll
+        // don't add to render list
+        setScroll(deepClone(rect))
+        return
       }
-      return rect
-    }) ?? []
+    }
+    rects.push(rect)
+  })
 
   // ending region is main
   rects.push(frame)

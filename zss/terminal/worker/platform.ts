@@ -1,4 +1,4 @@
-import * as jsonpatch from 'fast-json-patch'
+import { compare, deepClone } from 'fast-json-patch'
 import { customAlphabet } from 'nanoid'
 import { numbers, lowercase } from 'nanoid-dictionary'
 import { LAYER_TYPE, SPRITE } from 'zss/gadget/data/types'
@@ -171,9 +171,9 @@ function tick() {
   // we need to sync gadget here
   Object.keys(tracking).forEach((player) => {
     const shared = gadgetstate(player)
-    const patch = jsonpatch.compare(syncstate[player] ?? {}, shared)
+    const patch = compare(syncstate[player] ?? {}, shared)
     if (patch.length) {
-      syncstate[player] = jsonpatch.deepClone(shared)
+      syncstate[player] = deepClone(shared)
       hub.emit('gadgetclient:patch', platform.name(), patch, player)
     }
   })

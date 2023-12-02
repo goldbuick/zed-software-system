@@ -1,3 +1,4 @@
+import { useContext } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { hub } from 'zss/network/hub'
 
@@ -6,7 +7,7 @@ import {
   tokenizeAndWriteTextFormat,
 } from '../../data/textFormat'
 
-import { clearscroll } from './common'
+import { ScrollContext } from './common'
 
 interface PanelItemHotkeyProps {
   player: string
@@ -36,9 +37,11 @@ export function PanelItemHotkey({
     context,
   )
 
+  const clearscroll = useContext(ScrollContext)
+
   function emit() {
     hub.emit(target, 'gadget', undefined, player)
-    clearscroll(player)
+    clearscroll()
   }
 
   useHotkeys(shortcut, emit, [target, player])
