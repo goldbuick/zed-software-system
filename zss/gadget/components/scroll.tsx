@@ -13,6 +13,7 @@ import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from '../data/types'
 import { TILE_TINDEX } from '../display/tiles'
 
 import { Panel } from './panel'
+import { clearscroll } from './panel/common'
 import {
   DitherSnapshot,
   resetDither,
@@ -176,8 +177,7 @@ export function Scroll({
   useHotkeys(
     'esc',
     () => {
-      // send a message to trigger the close
-      hub.emit('platform:clearscroll', 'gadget', undefined, player)
+      clearscroll(player)
     },
     [cursor],
   )
@@ -197,9 +197,9 @@ export function Scroll({
         <Panel
           player={player}
           name={name}
-          margin={0}
           width={panelwidth}
           height={panelheight}
+          margin={0}
           color={color}
           bg={TILE_TINDEX}
           text={visibletext}

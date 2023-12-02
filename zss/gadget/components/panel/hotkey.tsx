@@ -6,6 +6,8 @@ import {
   tokenizeAndWriteTextFormat,
 } from '../../data/textFormat'
 
+import { clearscroll } from './common'
+
 interface PanelItemHotkeyProps {
   player: string
   active: boolean
@@ -17,6 +19,7 @@ interface PanelItemHotkeyProps {
 
 export function PanelItemHotkey({
   player,
+  active,
   target,
   label,
   args,
@@ -33,13 +36,13 @@ export function PanelItemHotkey({
     context,
   )
 
-  useHotkeys(
-    shortcut,
-    () => {
-      hub.emit(target, 'gadget', undefined, player)
-    },
-    [target, player],
-  )
+  function emit() {
+    hub.emit(target, 'gadget', undefined, player)
+    clearscroll(player)
+  }
+
+  useHotkeys(shortcut, emit, [target, player])
+  useHotkeys('enter', emit, { enabled: !!active }, [target, player])
 
   return null
 }

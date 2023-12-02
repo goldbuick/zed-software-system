@@ -8,16 +8,15 @@ import { createDevice } from 'zss/network/device'
 import { hub } from 'zss/network/hub'
 import { STATE } from 'zss/system/chip'
 import { CODE_PAGE_TYPE } from 'zss/system/codepage'
-import { gadgetState } from 'zss/system/firmware/gadget'
+import { clearscroll, gadgetstate } from 'zss/system/firmware/gadget'
 import { PLATFORM_SET } from 'zss/system/firmware/loader'
 import { createOS } from 'zss/system/os'
+import { TAPE_PAGES } from 'zss/system/software'
 import { createVM } from 'zss/system/vm'
 
+// limited chars so peerjs doesn't get mad
 const justNumberChars = customAlphabet(numbers, 4)
-
 const mixedChars = customAlphabet(`${numbers}${lowercase}`, 16)
-
-import { TAPE_PAGES } from '../software'
 
 // this should be unique every time the worker is created
 export const sessionId = `sid_${justNumberChars()}_${mixedChars()}`
@@ -51,26 +50,32 @@ const platform = createDevice('platform', [], (message) => {
         }
       }
       break
+
     case 'keydown':
       if (message.player) {
         console.info(message)
       }
       break
+
     case 'doot':
       if (message.player) {
         tracking[message.player] = 0
       }
       break
+
     case 'desync':
       if (message.player) {
-        const state = gadgetState(message.player)
+        const state = gadgetstate(message.player)
         hub.emit('gadgetclient:reset', platform.name(), state, message.player)
       }
       break
+
     case 'clearscroll':
       if (message.player) {
+        clearscroll(message.player)
       }
       break
+
     default:
       os.message(message)
       break
@@ -123,7 +128,7 @@ function tick() {
     }
 
     // write tiles layer, then write sprites layer
-    const shared = gadgetState(id)
+    const shared = gadgetstate(id)
     shared.layers = []
 
     // write terrain
@@ -165,7 +170,7 @@ function tick() {
 
   // we need to sync gadget here
   Object.keys(tracking).forEach((player) => {
-    const shared = gadgetState(player)
+    const shared = gadgetstate(player)
     const patch = jsonpatch.compare(syncstate[player] ?? {}, shared)
     if (patch.length) {
       syncstate[player] = jsonpatch.deepClone(shared)

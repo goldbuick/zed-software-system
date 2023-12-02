@@ -6,6 +6,8 @@ import {
   tokenizeAndWriteTextFormat,
 } from '../../data/textFormat'
 
+import { clearscroll } from './common'
+
 interface PanelItemHyperTextProps {
   player: string
   active: boolean
@@ -34,8 +36,7 @@ export function PanelItemHyperText({
     () => {
       // send link message
       hub.emit(target, 'gadget', undefined, player)
-      // send a message to trigger the close
-      hub.emit('platform:clearscroll', 'gadget', undefined, player)
+      clearscroll(player)
     },
     { enabled: !!active },
     [target, player],

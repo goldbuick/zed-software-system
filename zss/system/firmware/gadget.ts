@@ -45,7 +45,7 @@ function findPanel(state: STATE): PANEL {
 
 const allgadgetstate: STATE = {}
 
-export function gadgetState(group: string) {
+export function gadgetstate(group: string) {
   let value: GADGET_STATE = allgadgetstate[group]
 
   if (value === undefined) {
@@ -53,6 +53,11 @@ export function gadgetState(group: string) {
   }
 
   return value
+}
+
+export function clearscroll(group: string) {
+  const state = gadgetstate(group)
+  state.layout = state.layout.filter((item) => item.edge !== PANEL_TYPE.SCROLL)
 }
 
 export const GADGET_FIRMWARE = createFirmware(
@@ -91,7 +96,7 @@ export const GADGET_FIRMWARE = createFirmware(
     const [text] = chip.mapArgs(args, ARG.STRING) as [string]
 
     // get state
-    const shared = gadgetState(chip.group())
+    const shared = gadgetstate(chip.group())
 
     // find slot
     const panel = findPanel(shared)
@@ -114,7 +119,7 @@ export const GADGET_FIRMWARE = createFirmware(
     ) as [string, string, string]
 
     // get state
-    const shared = gadgetState(chip.group())
+    const shared = gadgetstate(chip.group())
 
     // find slot
     const panel = findPanel(shared)
@@ -137,8 +142,8 @@ export const GADGET_FIRMWARE = createFirmware(
     const name = chip.wordToString(args[isScroll ? 1 : 2])
 
     // get state
-    const shared = gadgetState(chip.group())
-    const panelName = name || ` ${Case.capital(edge)} `
+    const shared = gadgetstate(chip.group())
+    const panelName = name || Case.capital(edge)
     const panelState: PANEL | undefined = shared.layout.find(
       (panel: PANEL) => panel.name === panelName,
     )

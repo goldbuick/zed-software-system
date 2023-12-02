@@ -44,9 +44,15 @@ A9
 A0
 #end
 
+:doot
 :codepage-create
 #gadget bottom
-DOOT!!!
+"      DOOT!!!"
+#end
+
+:boot
+#gadget bottom
+"      !!!BOOT"
 #end
 
 :board-edit
