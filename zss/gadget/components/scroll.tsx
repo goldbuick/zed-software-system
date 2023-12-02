@@ -109,36 +109,15 @@ export function Scroll({
   const row = cursor - offset
   writeTile(tiles, width, height, 1, 2 + row, { char: 26, color: 12 })
 
-  const wither = [0.01, 0.06, 0.1, 0.15]
-  const WITHER_CENTER = 0.25
+  const wither = [0.01, 0.06, 0.1, 0.2]
+  const WITHER_CENTER = 0.4
   resetDither(dither)
   for (let x = 0; x < panelwidth; ++x) {
-    const border = x === 0 ? 1.5 : 1
     writeDither(dither, panelwidth, panelheight, x, row, WITHER_CENTER)
     for (let i = 0; i < wither.length; ++i) {
       const edge = wither.length - i
-      writeDither(
-        dither,
-        panelwidth,
-        panelheight,
-        x,
-        row - edge,
-        wither[i] * border,
-      )
-      writeDither(
-        dither,
-        panelwidth,
-        panelheight,
-        x,
-        row + edge,
-        wither[i] * border,
-      )
-    }
-  }
-  for (let y = 0; y < height - 3; ++y) {
-    if (y !== row) {
-      writeDither(dither, width, height, 1, y, WITHER_CENTER)
-      writeDither(dither, width, height, width - 2, y, WITHER_CENTER)
+      writeDither(dither, panelwidth, panelheight, x, row - edge, wither[i])
+      writeDither(dither, panelwidth, panelheight, x, row + edge, wither[i])
     }
   }
 
