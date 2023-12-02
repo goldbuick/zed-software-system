@@ -1,9 +1,8 @@
 import { useThree } from '@react-three/fiber'
 import anime from 'animejs'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { Group } from 'three'
-import { hub } from 'zss/network/hub'
 
 import {
   createWriteTextContext,
@@ -13,7 +12,7 @@ import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from '../data/types'
 import { TILE_TINDEX } from '../display/tiles'
 
 import { Panel } from './panel'
-import { ScrollContext, clearscroll } from './panel/common'
+import { ScrollContext } from './panel/common'
 import {
   DitherSnapshot,
   resetDither,
@@ -30,6 +29,7 @@ interface ScrollProps {
   color: number
   bg: number
   text: PANEL_ITEM[]
+  shouldclose: boolean
   didclose?: () => void
 }
 
@@ -41,12 +41,13 @@ export function Scroll({
   color,
   bg,
   text,
-  didclose,
+  shouldclose,
 }: ScrollProps) {
   const panelwidth = width - 3
   const panelheight = height - 3
   const tiles = useTiles(width, height, 0, color, bg)
   const dither = useDither(panelwidth, panelheight)
+  const scroll = useContext(ScrollContext)
 
   // edges
   for (let x = 1; x < width - 1; ++x) {
@@ -135,14 +136,22 @@ export function Scroll({
     if (!groupref.current) {
       return
     }
-    groupref.current.position.y = viewheight
+
+    // start position
+    groupref.current.position.y = shouldclose ? 0 : viewheight
     anime({
-      y: 0,
-      duration: 500,
-      easing: 'easeOutElastic',
+      // end position
+      y: shouldclose ? viewheight : 0,
+      duration: shouldclose ? 400 : 300,
+      easing: shouldclose ? 'easeInBack' : 'easeOutExpo',
       targets: groupref.current.position,
+      complete() {
+        if (shouldclose) {
+          scroll.didclose()
+        }
+      },
     })
-  }, [])
+  }, [shouldclose, scroll])
 
   useHotkeys('up', () => setCursor((state) => Math.max(0, state - 1)), [
     setCursor,
@@ -164,39 +173,32 @@ export function Scroll({
     [setCursor, text],
   )
 
-  function clearscroll() {
-    // send a message to trigger the close
-    hub.emit('platform:clearscroll', 'gadget', undefined, player)
-  }
-
-  useHotkeys('esc', clearscroll, [cursor])
+  useHotkeys('esc', () => scroll.sendclose(), [cursor])
 
   return (
-    <ScrollContext.Provider value={clearscroll}>
-      <group ref={groupref}>
-        <TileSnapshot tiles={tiles} width={width} height={height} />
-        <group
-          // eslint-disable-next-line react/no-unknown-property
-          position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 0]}
-        >
-          <DitherSnapshot
-            dither={dither}
-            width={panelwidth}
-            height={panelheight}
-          />
-          <Panel
-            player={player}
-            name={name}
-            width={panelwidth}
-            height={panelheight}
-            margin={0}
-            color={color}
-            bg={TILE_TINDEX}
-            text={visibletext}
-            selected={row}
-          />
-        </group>
+    <group ref={groupref}>
+      <TileSnapshot tiles={tiles} width={width} height={height} />
+      <group
+        // eslint-disable-next-line react/no-unknown-property
+        position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 0]}
+      >
+        <DitherSnapshot
+          dither={dither}
+          width={panelwidth}
+          height={panelheight}
+        />
+        <Panel
+          player={player}
+          name={name}
+          width={panelwidth}
+          height={panelheight}
+          margin={0}
+          color={color}
+          bg={TILE_TINDEX}
+          text={visibletext}
+          selected={row}
+        />
       </group>
-    </ScrollContext.Provider>
+    </group>
   )
 }

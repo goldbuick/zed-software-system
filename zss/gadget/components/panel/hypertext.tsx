@@ -33,17 +33,10 @@ export function PanelItemHyperText({
   tokenizeAndWriteTextFormat(`  $${color}$${char}  $white${label}`, context)
 
   const clearscroll = useContext(ScrollContext)
-
-  useHotkeys(
-    'enter',
-    () => {
-      // send link message
-      hub.emit(target, 'gadget', undefined, player)
-      clearscroll()
-    },
-    { enabled: !!active },
-    [target, player],
-  )
+  useHotkeys('enter', () => clearscroll(target), { enabled: !!active }, [
+    target,
+    player,
+  ])
 
   return null
 }

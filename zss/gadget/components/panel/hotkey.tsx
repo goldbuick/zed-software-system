@@ -1,4 +1,4 @@
-import { useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { hub } from 'zss/network/hub'
 
@@ -37,15 +37,14 @@ export function PanelItemHotkey({
     context,
   )
 
-  const clearscroll = useContext(ScrollContext)
+  const scroll = useContext(ScrollContext)
+  const invoke = useCallback(() => {
+    scroll.sendmessage(target)
+    scroll.sendclose()
+  }, [scroll, target])
 
-  function emit() {
-    hub.emit(target, 'gadget', undefined, player)
-    clearscroll()
-  }
-
-  useHotkeys(shortcut, emit, [target, player])
-  useHotkeys('enter', emit, { enabled: !!active }, [target, player])
+  useHotkeys(shortcut, () => invoke(), [target, player])
+  useHotkeys('enter', () => invoke(), { enabled: !!active }, [target, player])
 
   return null
 }

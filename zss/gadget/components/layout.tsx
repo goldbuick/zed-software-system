@@ -1,8 +1,10 @@
 import { useThree } from '@react-three/fiber'
-import { deepClone } from 'fast-json-patch'
-import React, { useState } from 'react'
+import { deepClone, _areEquals } from 'fast-json-patch'
+import React, { useCallback, useState } from 'react'
 
 import { clamp } from '/zss/mapping/number'
+
+import { hub } from '/zss/network/hub'
 
 import {
   DRAW_CHAR_HEIGHT,
@@ -16,6 +18,7 @@ import {
 import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { Panel } from './panel'
+import { ScrollContext } from './panel/common'
 import { Scroll } from './scroll'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
@@ -43,9 +46,15 @@ interface LayoutRectProps {
   player: string
   layers: LAYER[]
   rect: RECT
+  shouldclose?: boolean
 }
 
-function LayoutRect({ player, layers, rect }: LayoutRectProps) {
+function LayoutRect({
+  player,
+  layers,
+  rect,
+  shouldclose = false,
+}: LayoutRectProps) {
   switch (rect.type) {
     case RECT_TYPE.PANEL:
       return (
@@ -70,6 +79,7 @@ function LayoutRect({ player, layers, rect }: LayoutRectProps) {
           color={14}
           bg={1}
           text={rect.text}
+          shouldclose={shouldclose}
         />
       )
 
@@ -131,6 +141,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
   // cache scroll
   const [scroll, setScroll] = useState<RECT>()
 
+  // bail on odd states
   if (width < 1 || height < 1 || layers === undefined || layout === undefined) {
     return null
   }
@@ -149,6 +160,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
   // iterate layout
   const rects: RECT[] = []
 
+  let noscroll = true
   layout.forEach((panel) => {
     let rect: RECT
     switch (panel.edge) {
@@ -164,6 +176,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
         }
         frame.x += panel.size
         frame.width -= panel.size
+        rects.push(rect)
         break
       default:
       case PANEL_TYPE.RIGHT:
@@ -177,6 +190,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
           text: panel.text,
         }
         frame.width -= panel.size
+        rects.push(rect)
         break
       case PANEL_TYPE.TOP:
         rect = {
@@ -190,6 +204,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
         }
         frame.y += panel.size
         frame.height -= panel.size
+        rects.push(rect)
         break
       case PANEL_TYPE.BOTTOM:
         rect = {
@@ -202,6 +217,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
           text: panel.text,
         }
         frame.height -= panel.size
+        rects.push(rect)
         break
       case PANEL_TYPE.SCROLL: {
         rect = {
@@ -217,34 +233,70 @@ export function Layout({ player, layers, layout }: LayoutProps) {
         rect.y = frame.y + Math.floor((frame.height - rect.height) * 0.5)
         // cache scroll
         // don't add to render list
-        setScroll(deepClone(rect))
-        return
+        noscroll = false
+        if (!_areEquals(scroll, rect)) {
+          setScroll(deepClone(rect))
+        }
       }
     }
-    rects.push(rect)
   })
 
   // ending region is main
   rects.push(frame)
 
   return (
-    // eslint-disable-next-line react/no-unknown-property
-    <group position={[marginX * 0.5, marginY * 0.5, 0]}>
-      {rects.map((rect) => {
-        return (
+    <ScrollContext.Provider
+      value={{
+        sendmessage(target) {
+          // send a hypertext message
+          hub.emit(target, 'gadget', undefined, player)
+        },
+        sendclose() {
+          // send a message to trigger the close
+          hub.emit('platform:clearscroll', 'gadget', undefined, player)
+        },
+        didclose() {
+          // clear scroll state
+          setScroll(undefined)
+        },
+      }}
+    >
+      {/* eslint-disable-next-line react/no-unknown-property */}
+      <group position={[marginX * 0.5, marginY * 0.5, 0]}>
+        {rects.map((rect) => {
+          return (
+            <group
+              key={rect.name}
+              // eslint-disable-next-line react/no-unknown-property
+              position={[
+                rect.x * DRAW_CHAR_WIDTH,
+                rect.y * DRAW_CHAR_HEIGHT,
+                0,
+              ]}
+            >
+              <LayoutRect player={player} layers={layers} rect={rect} />
+            </group>
+          )
+        })}
+        {scroll && (
           <group
-            key={rect.name}
+            key={scroll.name}
             // eslint-disable-next-line react/no-unknown-property
             position={[
-              rect.x * DRAW_CHAR_WIDTH,
-              rect.y * DRAW_CHAR_HEIGHT,
-              rect.type === RECT_TYPE.SCROLL ? 100 : 0,
+              scroll.x * DRAW_CHAR_WIDTH,
+              scroll.y * DRAW_CHAR_HEIGHT,
+              0,
             ]}
           >
-            <LayoutRect player={player} layers={layers} rect={rect} />
+            <LayoutRect
+              player={player}
+              layers={layers}
+              rect={scroll}
+              shouldclose={noscroll}
+            />
           </group>
-        )
-      })}
-    </group>
+        )}
+      </group>
+    </ScrollContext.Provider>
   )
 }
