@@ -4,7 +4,7 @@ import {
 } from '../../data/textFormat'
 
 interface PanelItemInputTextProps {
-  playerId: string
+  player: string
   active: boolean
   target: string
   label: string
@@ -13,7 +13,7 @@ interface PanelItemInputTextProps {
 }
 
 export function PanelItemInputText({
-  playerId,
+  player,
   active,
   target,
   label,

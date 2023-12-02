@@ -3,6 +3,7 @@ import anime from 'animejs'
 import React, { useEffect, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { Group } from 'three'
+import { hub } from 'zss/network/hub'
 
 import {
   createWriteTextContext,
@@ -21,7 +22,7 @@ import {
 import { TileSnapshot, useTiles, writeTile } from './useTiles'
 
 interface ScrollProps {
-  playerId: string
+  player: string
   name: string
   width: number
   height: number
@@ -31,7 +32,7 @@ interface ScrollProps {
 }
 
 export function Scroll({
-  playerId,
+  player,
   name,
   width,
   height,
@@ -176,6 +177,7 @@ export function Scroll({
     'esc',
     () => {
       // send a message to trigger the close
+      hub.emit('platform:clearscroll', 'gadget', undefined, player)
     },
     [cursor],
   )
@@ -193,7 +195,7 @@ export function Scroll({
           height={panelheight}
         />
         <Panel
-          playerId={playerId}
+          player={player}
           name={name}
           margin={0}
           width={panelwidth}

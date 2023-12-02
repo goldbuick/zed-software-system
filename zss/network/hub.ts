@@ -11,7 +11,7 @@ export type HUB_MESSAGE = {
 type SYNC_HANDLER = (hubmessage: HUB_MESSAGE) => void
 
 export type HUB = {
-  emit: (target: string, from: string, data?: any, playerId?: string) => void
+  emit: (target: string, from: string, data?: any, player?: string) => void
   handle: (message: MESSAGE) => void
   sync: (hubmessage: HUB_MESSAGE) => void
   connect: (device: DEVICE) => void
@@ -25,10 +25,10 @@ const devices = new Set<DEVICE>()
 let syncHandler: SYNC_HANDLER | undefined
 
 export const hub: HUB = {
-  emit(target, from, data, playerId) {
+  emit(target, from, data, player) {
     hub.sync({
       id: createGuid(),
-      message: createMessage(target, from, data, playerId),
+      message: createMessage(target, from, data, player),
     })
   },
   handle(message) {

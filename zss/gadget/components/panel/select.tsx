@@ -4,7 +4,7 @@ import {
 } from '../../data/textFormat'
 
 interface PanelItemSelectProps {
-  playerId: string
+  player: string
   active: boolean
   target: string
   label: string

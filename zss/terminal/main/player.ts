@@ -8,19 +8,19 @@ const justNumberChars = customAlphabet(numbers, 4)
 const mixedChars = customAlphabet(`${numbers}${lowercase}`, 16)
 
 // this should be unique every time the page loads
-export const playerId = `pid_${justNumberChars()}_${mixedChars()}`
+export const player = `pid_${justNumberChars()}_${mixedChars()}`
 
 const device = createDevice('player', ['ready'], (message) => {
   switch (message.target) {
     case 'ready':
-      hub.emit('platform:login', device.name(), undefined, playerId)
+      hub.emit('platform:login', device.name(), undefined, player)
       break
   }
 })
 
 // activity ping
 function keepAlive() {
-  hub.emit('platform:doot', device.name(), undefined, playerId)
+  hub.emit('platform:doot', device.name(), undefined, player)
   setTimeout(keepAlive, 8 * 1000)
 }
 
@@ -31,12 +31,12 @@ keepAlive()
 // keyboard
 document.addEventListener('keydown', (event) => {
   event.preventDefault()
-  hub.emit(
-    'platform:keydown',
-    device.name(),
-    [event.key.toLowerCase(), event.shiftKey, event.metaKey, event.altKey],
-    playerId,
-  )
+  // hub.emit(
+  //   'platform:keydown',
+  //   device.name(),
+  //   [event.key.toLowerCase(), event.shiftKey, event.metaKey, event.altKey],
+  //   player,
+  // )
 })
 
 // gamepad

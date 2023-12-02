@@ -3,17 +3,17 @@ import { select } from '../mapping/array'
 import { CODE_PAGE, CODE_PAGE_ENTRY, CODE_PAGE_TYPE } from './codepage'
 
 export type VM_PLAYER = {
-  playerId: string
+  player: string
   boardId: string
 }
 
 export type VM = {
   get: (nameOrId: string) => CODE_PAGE_ENTRY[]
   load: (codepages: CODE_PAGE[]) => void
-  login: (playerId: string) => void
-  logout: (playerId: string) => void
+  login: (player: string) => void
+  logout: (player: string) => void
   active: () => string[]
-  player: (playerId: string) => VM_PLAYER | undefined
+  player: (player: string) => VM_PLAYER | undefined
 }
 
 export function createVM() {
@@ -58,25 +58,25 @@ export function createVM() {
         })
       })
     },
-    login(playerId) {
+    login(player) {
       const apptitle = select(vm.get('app:title'))
       if (!apptitle || apptitle.type !== CODE_PAGE_TYPE.BOARD) {
         return // raise error
       }
 
       // create player
-      players[playerId] = {
-        playerId,
+      players[player] = {
+        player,
         boardId: apptitle.id,
       }
     },
-    logout(playerId) {
-      const player = players[playerId]
+    logout(id) {
+      const player = players[id]
       if (player) {
         // remove player from board
 
         // remove player from tracking
-        delete players[playerId]
+        delete players[id]
       }
     },
     active() {
@@ -84,8 +84,8 @@ export function createVM() {
       Object.values(players).forEach((player) => boardids.add(player.boardId))
       return [...boardids]
     },
-    player(playerId) {
-      return players[playerId]
+    player(player) {
+      return players[player]
     },
   }
 

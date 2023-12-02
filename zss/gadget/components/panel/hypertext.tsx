@@ -7,7 +7,7 @@ import {
 } from '../../data/textFormat'
 
 interface PanelItemHyperTextProps {
-  playerId: string
+  player: string
   active: boolean
   target: string
   label: string
@@ -16,7 +16,7 @@ interface PanelItemHyperTextProps {
 }
 
 export function PanelItemHyperText({
-  playerId,
+  player,
   active,
   target,
   label,
@@ -32,10 +32,13 @@ export function PanelItemHyperText({
   useHotkeys(
     'enter',
     () => {
-      hub.emit(target, 'gadget', undefined, playerId)
+      // send link message
+      hub.emit(target, 'gadget', undefined, player)
+      // send a message to trigger the close
+      hub.emit('platform:clearscroll', 'gadget', undefined, player)
     },
     { enabled: !!active },
-    [target, playerId],
+    [target, player],
   )
 
   return null

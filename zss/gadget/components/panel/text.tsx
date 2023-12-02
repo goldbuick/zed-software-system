@@ -6,7 +6,7 @@ import {
 
 interface PanelItemTextProps {
   item: string
-  playerId: string
+  player: string
   context: WRITE_TEXT_CONTEXT
 }
 

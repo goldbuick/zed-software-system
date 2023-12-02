@@ -19,15 +19,15 @@ import { PanelItemInputText } from './textinput'
 interface PanelItemProps {
   item: PANEL_ITEM
   active: boolean
-  playerId: string
+  player: string
   context: WRITE_TEXT_CONTEXT
 }
 
-export function PanelItem({ item, active, playerId, context }: PanelItemProps) {
+export function PanelItem({ item, active, player, context }: PanelItemProps) {
   context.isEven = context.y % 2 === 0
 
   if (typeof item === 'string') {
-    return <PanelItemText playerId={playerId} item={item} context={context} />
+    return <PanelItemText player={player} item={item} context={context} />
   } else {
     // handle hypertext
     const [target, label, maybeInput] = item
@@ -46,7 +46,7 @@ export function PanelItem({ item, active, playerId, context }: PanelItemProps) {
         case 'hotkey':
           return (
             <PanelItemHotkey
-              playerId={playerId}
+              player={player}
               active={active}
               target={target}
               label={label}
@@ -57,7 +57,7 @@ export function PanelItem({ item, active, playerId, context }: PanelItemProps) {
         case 'hypertext':
           return (
             <PanelItemHyperText
-              playerId={playerId}
+              player={player}
               active={active}
               target={target}
               label={label}
@@ -68,7 +68,7 @@ export function PanelItem({ item, active, playerId, context }: PanelItemProps) {
         case 'range':
           return (
             <PanelItemRange
-              playerId={playerId}
+              player={player}
               active={active}
               target={target}
               label={label}
@@ -79,7 +79,7 @@ export function PanelItem({ item, active, playerId, context }: PanelItemProps) {
         case 'select':
           return (
             <PanelItemSelect
-              playerId={playerId}
+              player={player}
               active={active}
               target={target}
               label={label}
@@ -90,7 +90,7 @@ export function PanelItem({ item, active, playerId, context }: PanelItemProps) {
         case 'number':
           return (
             <PanelItemNumber
-              playerId={playerId}
+              player={player}
               active={active}
               target={target}
               label={label}
@@ -101,7 +101,7 @@ export function PanelItem({ item, active, playerId, context }: PanelItemProps) {
         case 'text':
           return (
             <PanelItemInputText
-              playerId={playerId}
+              player={player}
               active={active}
               target={target}
               label={label}

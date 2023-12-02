@@ -7,7 +7,7 @@ import {
 } from '../../data/textFormat'
 
 interface PanelItemHotkeyProps {
-  playerId: string
+  player: string
   active: boolean
   target: string
   label: string
@@ -16,7 +16,7 @@ interface PanelItemHotkeyProps {
 }
 
 export function PanelItemHotkey({
-  playerId,
+  player,
   target,
   label,
   args,
@@ -36,9 +36,9 @@ export function PanelItemHotkey({
   useHotkeys(
     shortcut,
     () => {
-      hub.emit(target, 'gadget', undefined, playerId)
+      hub.emit(target, 'gadget', undefined, player)
     },
-    [target, playerId],
+    [target, player],
   )
 
   return null

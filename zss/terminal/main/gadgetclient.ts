@@ -5,7 +5,7 @@ import { hub } from 'zss/network/hub'
 import { STATE } from 'zss/system/chip'
 import { GADGET_STATE } from 'zss/system/firmware/gadget'
 
-import { playerId } from '../main/player'
+import { player } from '../main/player'
 
 let needsReset = false
 
@@ -18,8 +18,8 @@ const syncstate = proxy<SYNC_STATE>({
 })
 
 const gadgetclient = createDevice('gadgetclient', [], (message) => {
-  // filter by playerId
-  if (message.player !== playerId) {
+  // filter by player
+  if (message.player !== player) {
     return
   }
 
@@ -41,7 +41,7 @@ const gadgetclient = createDevice('gadgetclient', [], (message) => {
               'platform:desync',
               gadgetclient.name(),
               gadgetclient.id(),
-              playerId,
+              player,
             )
           }
         }

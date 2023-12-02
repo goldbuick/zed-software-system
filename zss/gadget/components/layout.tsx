@@ -39,17 +39,17 @@ type RECT = {
 }
 
 interface LayoutRectProps {
-  playerId: string
+  player: string
   layers: LAYER[]
   rect: RECT
 }
 
-function LayoutRect({ playerId, layers, rect }: LayoutRectProps) {
+function LayoutRect({ player, layers, rect }: LayoutRectProps) {
   switch (rect.type) {
     case RECT_TYPE.PANEL:
       return (
         <Panel
-          playerId={playerId}
+          player={player}
           name={rect.name}
           width={rect.width}
           height={rect.height}
@@ -62,7 +62,7 @@ function LayoutRect({ playerId, layers, rect }: LayoutRectProps) {
     case RECT_TYPE.SCROLL:
       return (
         <Scroll
-          playerId={playerId}
+          player={player}
           name={rect.name}
           width={rect.width}
           height={rect.height}
@@ -113,12 +113,12 @@ function LayoutRect({ playerId, layers, rect }: LayoutRectProps) {
 }
 
 interface LayoutProps {
-  playerId: string
+  player: string
   layers: LAYER[]
   layout: PANEL[]
 }
 
-export function Layout({ playerId, layers, layout }: LayoutProps) {
+export function Layout({ player, layers, layout }: LayoutProps) {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
@@ -233,7 +233,7 @@ export function Layout({ playerId, layers, layout }: LayoutProps) {
               rect.type === RECT_TYPE.SCROLL ? 100 : 0,
             ]}
           >
-            <LayoutRect playerId={playerId} layers={layers} rect={rect} />
+            <LayoutRect player={player} layers={layers} rect={rect} />
           </group>
         )
       })}

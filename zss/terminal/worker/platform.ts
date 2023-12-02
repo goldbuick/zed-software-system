@@ -67,6 +67,10 @@ const platform = createDevice('platform', [], (message) => {
         hub.emit('gadgetclient:reset', platform.name(), state, message.player)
       }
       break
+    case 'clearscroll':
+      if (message.player) {
+      }
+      break
     default:
       os.message(message)
       break
@@ -87,39 +91,39 @@ function tick() {
   })
 
   // tick player groups, and drop dead players
-  Object.keys(tracking).forEach((playerId) => {
+  Object.keys(tracking).forEach((id) => {
     // tick group
-    os.tickGroup(playerId)
+    os.tickGroup(id)
 
-    // inc player idle time
-    tracking[playerId] = tracking[playerId] || 0
-    ++tracking[playerId]
+    // inc id idle time
+    tracking[id] = tracking[id] || 0
+    ++tracking[id]
 
     // nuke it after too many ticks without a doot
-    if (tracking[playerId] > LOOP_TIMEOUT) {
-      vm.logout(playerId)
-      os.haltGroup(playerId)
-      delete tracking[playerId]
-      delete syncstate[playerId]
+    if (tracking[id] > LOOP_TIMEOUT) {
+      vm.logout(id)
+      os.haltGroup(id)
+      delete tracking[id]
+      delete syncstate[id]
       // TODO: log info
       return
     }
 
     // we need to render each player view
-    const player = vm.player(playerId)
-    if (!player) {
+    const playerstate = vm.player(id)
+    if (!playerstate) {
       // TODO: raise error
       return
     }
 
-    const [boardPage] = vm.get(player.boardId)
+    const [boardPage] = vm.get(playerstate.boardId)
     if (boardPage.type !== CODE_PAGE_TYPE.BOARD) {
       // TODO: raise error
       return
     }
 
     // write tiles layer, then write sprites layer
-    const shared = gadgetState(playerId)
+    const shared = gadgetState(id)
     shared.layers = []
 
     // write terrain
