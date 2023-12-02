@@ -8,6 +8,7 @@ import { TileSnapshot, resetTiles, useTiles } from './useTiles'
 
 interface PanelProps {
   margin?: number
+  selected?: number
   playerId: string
   name: string
   width: number
@@ -19,6 +20,7 @@ interface PanelProps {
 
 export function Panel({
   margin = 1,
+  selected = -1,
   playerId,
   width,
   height,
@@ -39,16 +41,15 @@ export function Panel({
 
   return (
     <>
-      {text.map((item, index) => {
-        return (
-          <PanelItem
-            key={index}
-            playerId={playerId}
-            item={item}
-            context={context}
-          />
-        )
-      })}
+      {text.map((item, index) => (
+        <PanelItem
+          key={index}
+          item={item}
+          context={context}
+          playerId={playerId}
+          active={index === selected}
+        />
+      ))}
       <TileSnapshot width={width} height={height} tiles={tiles} />
     </>
   )

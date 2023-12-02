@@ -5,6 +5,7 @@ import {
 
 interface PanelItemSelectProps {
   playerId: string
+  active: boolean
   target: string
   label: string
   args: string[]
@@ -12,8 +13,6 @@ interface PanelItemSelectProps {
 }
 
 export function PanelItemSelect({
-  playerId,
-  target,
   label,
   args,
   context,

@@ -1,3 +1,6 @@
+import { useHotkeys } from 'react-hotkeys-hook'
+import { hub } from 'zss/network/hub'
+
 import {
   WRITE_TEXT_CONTEXT,
   tokenizeAndWriteTextFormat,
@@ -5,6 +8,7 @@ import {
 
 interface PanelItemHyperTextProps {
   playerId: string
+  active: boolean
   target: string
   label: string
   args: string[]
@@ -13,6 +17,7 @@ interface PanelItemHyperTextProps {
 
 export function PanelItemHyperText({
   playerId,
+  active,
   target,
   label,
   args,
@@ -21,6 +26,17 @@ export function PanelItemHyperText({
   const [maybeChar, maybeColor] = args
   const char = maybeChar ?? 16
   const color = maybeColor ?? 'purple'
+
   tokenizeAndWriteTextFormat(`  $${color}$${char}  $white${label}`, context)
+
+  useHotkeys(
+    'enter',
+    () => {
+      hub.emit(target, 'gadget', undefined, playerId)
+    },
+    { enabled: !!active },
+    [target, playerId],
+  )
+
   return null
 }

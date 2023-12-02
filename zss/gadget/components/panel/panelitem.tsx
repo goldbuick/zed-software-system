@@ -18,11 +18,12 @@ import { PanelItemInputText } from './textinput'
 
 interface PanelItemProps {
   item: PANEL_ITEM
+  active: boolean
   playerId: string
   context: WRITE_TEXT_CONTEXT
 }
 
-export function PanelItem({ item, playerId, context }: PanelItemProps) {
+export function PanelItem({ item, active, playerId, context }: PanelItemProps) {
   context.isEven = context.y % 2 === 0
 
   if (typeof item === 'string') {
@@ -46,6 +47,7 @@ export function PanelItem({ item, playerId, context }: PanelItemProps) {
           return (
             <PanelItemHotkey
               playerId={playerId}
+              active={active}
               target={target}
               label={label}
               args={args}
@@ -56,6 +58,7 @@ export function PanelItem({ item, playerId, context }: PanelItemProps) {
           return (
             <PanelItemHyperText
               playerId={playerId}
+              active={active}
               target={target}
               label={label}
               args={args}
@@ -66,6 +69,7 @@ export function PanelItem({ item, playerId, context }: PanelItemProps) {
           return (
             <PanelItemRange
               playerId={playerId}
+              active={active}
               target={target}
               label={label}
               args={args}
@@ -76,6 +80,7 @@ export function PanelItem({ item, playerId, context }: PanelItemProps) {
           return (
             <PanelItemSelect
               playerId={playerId}
+              active={active}
               target={target}
               label={label}
               args={args}
@@ -86,6 +91,7 @@ export function PanelItem({ item, playerId, context }: PanelItemProps) {
           return (
             <PanelItemNumber
               playerId={playerId}
+              active={active}
               target={target}
               label={label}
               args={args}
@@ -96,6 +102,7 @@ export function PanelItem({ item, playerId, context }: PanelItemProps) {
           return (
             <PanelItemInputText
               playerId={playerId}
+              active={active}
               target={target}
               label={label}
               args={args}

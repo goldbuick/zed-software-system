@@ -20,6 +20,7 @@
     "@jest/globals": "^29.7.0",
     "@parcel/optimizer-data-url": "2.10.3",
     "@parcel/transformer-inline-string": "2.10.3",
+    "@react-spring/three": "^9.7.3",
     "@react-three/drei": "^9.80.2",
     "@react-three/fiber": "^8.13.6",
     "@react-three/postprocessing": "^2.15.0",

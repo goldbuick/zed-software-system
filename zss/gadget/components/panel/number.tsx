@@ -5,6 +5,7 @@ import {
 
 interface PanelItemNumberProps {
   playerId: string
+  active: boolean
   target: string
   label: string
   args: string[]

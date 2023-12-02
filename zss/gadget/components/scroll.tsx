@@ -1,3 +1,4 @@
+import { useThree } from '@react-three/fiber'
 import anime from 'animejs'
 import React, { useEffect, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -79,9 +80,10 @@ export function Scroll({
   })
 
   // measure title
-  let context = createWriteTextContext(width - 4, 1, color, bg)
+  const title = ` ${name} `
+  let context = createWriteTextContext(width - 6, 1, color, bg)
   context.measureOnly = true
-  tokenizeAndWriteTextFormat(name, context)
+  tokenizeAndWriteTextFormat(title, context)
 
   // center title
   const titleWidth = context.x
@@ -94,7 +96,7 @@ export function Scroll({
     rightEdge: width - 2,
     bottomEdge: 1,
   }
-  tokenizeAndWriteTextFormat(name, context)
+  tokenizeAndWriteTextFormat(title, context)
 
   // input cursor
   const [cursor, setCursor] = useState(0)
@@ -120,6 +122,23 @@ export function Scroll({
       writeDither(dither, panelwidth, panelheight, x, row + edge, wither[i])
     }
   }
+
+  const groupref = useRef<Group>(null)
+  const viewport = useThree((state) => state.viewport)
+  const { height: viewheight } = viewport.getCurrentViewport()
+
+  useEffect(() => {
+    if (!groupref.current) {
+      return
+    }
+    groupref.current.position.y = viewheight
+    anime({
+      y: 0,
+      duration: 500,
+      easing: 'easeOutElastic',
+      targets: groupref.current.position,
+    })
+  }, [])
 
   useHotkeys(
     'up',
@@ -153,22 +172,6 @@ export function Scroll({
     [setCursor, text],
   )
 
-  const ref = useRef<Group>(null)
-
-  useEffect(() => {
-    if (!ref.current) {
-      return
-    }
-
-    ref.current.position.y = -5000
-
-    anime({
-      y: 0,
-      delay: 100,
-      targets: ref.current.position,
-    })
-  }, [])
-
   useHotkeys(
     'esc',
     () => {
@@ -177,17 +180,8 @@ export function Scroll({
     [cursor],
   )
 
-  useHotkeys(
-    'enter',
-    () => {
-      console.info({ cursor })
-      // send a message to trigger the close
-    },
-    [cursor],
-  )
-
   return (
-    <group ref={ref}>
+    <group ref={groupref}>
       <TileSnapshot tiles={tiles} width={width} height={height} />
       <group
         // eslint-disable-next-line react/no-unknown-property
@@ -201,11 +195,13 @@ export function Scroll({
         <Panel
           playerId={playerId}
           name={name}
+          margin={0}
           width={panelwidth}
           height={panelheight}
           color={color}
           bg={TILE_TINDEX}
           text={visibletext}
+          selected={row}
         />
       </group>
     </group>

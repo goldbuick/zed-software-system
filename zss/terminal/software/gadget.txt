@@ -12,7 +12,7 @@
 #end
 
 :codepage-select
-#gadget scroll 50 " Open Codepage $blue$3$1 "
+#gadget scroll "Open Codepage $blue$3$1"
 !codepage-create;New Codepage;hotkey n
 
 Here is some test text and yeah!

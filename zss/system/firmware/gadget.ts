@@ -129,19 +129,16 @@ export const GADGET_FIRMWARE = createFirmware(
     return 0
   })
   .command('gadget', (chip, args) => {
-    const [edge, size, name] = chip.mapArgs(
-      args,
-      ARG.STRING,
-      ARG.NUMBER,
-      ARG.STRING,
-    ) as [string, number, string]
+    const edge = chip.wordToString(args[0])
+    const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
+    const isScroll = edgeConst === PANEL_TYPE.SCROLL
+
+    const size = chip.evalToNumber(args[isScroll ? 2 : 1])
+    const name = chip.wordToString(args[isScroll ? 1 : 2])
 
     // get state
     const shared = gadgetState(chip.group())
-
     const panelName = name || ` ${Case.capital(edge)} `
-    const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
-
     const panelState: PANEL | undefined = shared.layout.find(
       (panel: PANEL) => panel.name === panelName,
     )

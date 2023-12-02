@@ -8,6 +8,7 @@ import {
 
 interface PanelItemHotkeyProps {
   playerId: string
+  active: boolean
   target: string
   label: string
   args: string[]
@@ -37,8 +38,7 @@ export function PanelItemHotkey({
     () => {
       hub.emit(target, 'gadget', undefined, playerId)
     },
-    { preventDefault: true },
-    [playerId, target],
+    [target, playerId],
   )
 
   return null

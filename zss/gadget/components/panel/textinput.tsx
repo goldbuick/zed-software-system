@@ -5,6 +5,7 @@ import {
 
 interface PanelItemInputTextProps {
   playerId: string
+  active: boolean
   target: string
   label: string
   args: string[]
@@ -13,6 +14,7 @@ interface PanelItemInputTextProps {
 
 export function PanelItemInputText({
   playerId,
+  active,
   target,
   label,
   args,
