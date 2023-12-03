@@ -111,13 +111,6 @@ export const GADGET_FIRMWARE = createFirmware(
     return 0
   })
   .command('hyperlink', (chip, args) => {
-    const [target, label, input] = chip.mapArgs(
-      args,
-      ARG.STRING,
-      ARG.STRING,
-      ARG.STRING,
-    ) as [string, string, string]
-
     // get state
     const shared = gadgetstate(chip.group())
 
@@ -130,7 +123,38 @@ export const GADGET_FIRMWARE = createFirmware(
       panel.text = []
     }
 
-    panel.text.push([chip.addSelfId(target), label, input])
+    // package into a panel item
+    const [labelword, inputword, ...words] = args
+    const label = chip.wordToString(labelword)
+    const input = chip.wordToString(inputword)
+
+    switch (input.toLowerCase()) {
+      case 'hotkey':
+        panel.text.push([
+          label,
+          input,
+          ...chip.mapArgs(words, ARG.STRING, ARG.STRING),
+        ])
+        break
+
+      case 'range':
+        panel.text.push([label, input, ...words.map(chip.eval)])
+        break
+
+      case 'select':
+        panel.text.push([label, input, ...words.map(chip.eval)])
+        break
+
+      case 'number':
+        panel.text.push([label, input, ...words.map(chip.eval)])
+        break
+
+      case 'hypertext':
+      default:
+        panel.text.push([label, input, ...words.map(chip.eval)])
+        break
+    }
+
     return 0
   })
   .command('gadget', (chip, args) => {

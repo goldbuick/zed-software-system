@@ -1,3 +1,5 @@
+import { WORD_VALUE } from 'zss/system/chip'
+
 import { BITMAP } from './bitmap'
 
 export const BYTES_PER_COLOR = 3
@@ -96,7 +98,7 @@ export const PANEL_TYPE_MAP: Record<string, PANEL_TYPE> = {
   scroll: PANEL_TYPE.SCROLL,
 }
 
-export type PANEL_ITEM = string | [string, string, string?]
+export type PANEL_ITEM = WORD_VALUE | WORD_VALUE[]
 
 export type PANEL = {
   id: string

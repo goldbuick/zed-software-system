@@ -285,7 +285,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
             position={[
               scroll.x * DRAW_CHAR_WIDTH,
               scroll.y * DRAW_CHAR_HEIGHT,
-              0,
+              100,
             ]}
           >
             <LayoutRect

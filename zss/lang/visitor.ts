@@ -74,6 +74,7 @@ export enum OPERATOR {
 export enum LITERAL {
   NUMBER,
   STRING,
+  TEMPLATE,
 }
 
 function asIToken(thing: CstNode | CstElement): IToken {
@@ -114,9 +115,8 @@ type CodeNodeData =
     }
   | {
       type: NODE.HYPERLINK
-      message: string
       input: string
-      label: string
+      words: CodeNode[]
     }
   | {
       type: NODE.LITERAL
@@ -126,6 +126,11 @@ type CodeNodeData =
   | {
       type: NODE.LITERAL
       literal: LITERAL.STRING
+      value: string
+    }
+  | {
+      type: NODE.LITERAL
+      literal: LITERAL.TEMPLATE
       value: string
     }
   | {
@@ -673,17 +678,18 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.LABEL,
       active: true,
-      name: strImage(ctx.Label[0]).slice(1).trim(),
+      name: strImage(ctx.Label?.[0] ?? ':')
+        .slice(1)
+        .trim(),
     })
   }
 
   hyperlink(ctx: CstChildrenDictionary) {
-    const [input, label] = ctx.HyperLinkText ?? []
     return makeNode(ctx, {
       type: NODE.HYPERLINK,
-      message: ctx.HyperLink ? strImage(ctx.HyperLink[0]).slice(1) : '',
-      input: input ? strImage(input).slice(1) : '',
-      label: label ? strImage(label).slice(1) : '',
+      input: strImage(ctx.HyperLinkText?.[0] ?? ';').slice(1),
+      // @ts-expect-error cst element
+      words: asList(this, ctx.words),
     })
   }
 
@@ -921,7 +927,7 @@ class ScriptVisitor extends CstVisitor {
       const str = strImage(ctx.StringLiteralDouble[0])
       return makeNode(ctx, {
         type: NODE.LITERAL,
-        literal: LITERAL.STRING,
+        literal: LITERAL.TEMPLATE,
         value: str.substring(1, str.length - 1),
       })
     }

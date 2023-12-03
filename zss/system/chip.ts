@@ -64,7 +64,7 @@ export type CHIP = {
   // logic api
   text: (value: string) => WORD_VALUE
   stat: (...words: WORD[]) => WORD_VALUE
-  hyperlink: (message: string, input: string, label: string) => WORD_VALUE
+  hyperlink: (...words: WORD[]) => WORD_VALUE
   command: (...words: WORD[]) => WORD_VALUE
   if: (...words: WORD[]) => WORD_VALUE
   try: (...words: WORD[]) => WORD_VALUE
@@ -403,8 +403,8 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     stat(...words) {
       return invokecommand('stat', words)
     },
-    hyperlink(message, input, label) {
-      return invokecommand('hyperlink', [message, input, label])
+    hyperlink(...words) {
+      return invokecommand('hyperlink', words)
     },
     command(...words) {
       if (words.length < 1) {

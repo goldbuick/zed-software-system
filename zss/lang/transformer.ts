@@ -203,10 +203,12 @@ function transformNode(ast: CodeNode): SourceNode {
           return write(ast, `${ast.value}`)
         case LITERAL.STRING:
           return write(ast, writeString(ast.value))
+        case LITERAL.TEMPLATE:
+          return write(ast, writeTemplateString(ast.value))
       }
       return blank(ast)
     case NODE.TEXT:
-      return writeApi(ast, 'text', [`'${escapeString(ast.value)}'`])
+      return writeApi(ast, 'text', [writeTemplateString(ast.value)])
     case NODE.STAT:
       return writeApi(ast, `stat`, transformNodes(ast.words))
     case NODE.LABEL: {
@@ -219,9 +221,8 @@ function transformNode(ast: CodeNode): SourceNode {
     }
     case NODE.HYPERLINK:
       return writeApi(ast, `hyperlink`, [
-        writeString(ast.message),
         writeTemplateString(ast.input),
-        writeTemplateString(ast.label),
+        ...transformNodes(ast.words),
       ])
     case NODE.COMMAND:
       return write(ast, [

@@ -8,18 +8,20 @@
  $black$ongrey      TAPE      
  $white   - - - - - 
 ""
-!codepage-select;Open Codepages;hotkey c
+!hotkey codepage-select o;Open Codepages
 #end
 
 :codepage-select
 #gadget scroll "Open Codepage $blue$3$1"
-!codepage-create;New Codepage;hotkey n
+!hotkey codepage-create n;New Codepage
 
 Here is some test text and yeah!
-!doot;This is super cool;hypertext 4 red
+!doot 4 red;This is super cool 
 !boot;This is also cool
+
 #read codepages id name
-  !codepage-open;$name;hypertext $id
+  !codepage-open id;$name
+""
 ""
 A0
 A1
@@ -31,17 +33,6 @@ A6
 A7
 A8
 A9
-A0
-A1
-A2
-A3
-A4
-A5
-A6
-A7
-A8
-A9
-A0
 #end
 
 :doot
