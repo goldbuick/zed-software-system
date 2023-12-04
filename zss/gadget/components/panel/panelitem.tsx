@@ -1,7 +1,6 @@
 import React, { useContext } from 'react'
 import {
   WriteTextContext,
-  tokenize,
   tokenizeAndWriteTextFormat,
   writeTextColorReset,
 } from 'zss/gadget/data/textFormat'
@@ -29,97 +28,45 @@ export function PanelItem({ item, active }: PanelItemProps) {
 
   if (typeof item === 'string') {
     return <PanelItemText player={player} item={item} context={context} />
-  } else {
-    console.info('3333', item)
-    // handle hypertext
-    // const [label, maybeinput] = item
+  } else if (Array.isArray(item)) {
+    const [chip, label, input, ...args] = item
 
-    // maybe parse input
-    // const tokens = tokenize(maybeInput || 'hypertext', true)
-    // if (tokens.tokens?.length) {
-    //   const [inputType, ...args] = tokens.tokens.map((token) => {
-    //     if (token.image[0] === '"') {
-    //       return token.image.substring(1, token.image.length - 1)
-    //     }
-    //     return token.image
-    //   })
+    if (
+      typeof chip !== 'string' ||
+      typeof label !== 'string' ||
+      typeof input !== 'string'
+    ) {
+      return null
+    }
 
-    //   switch (inputType.toLowerCase()) {
-    //     case 'hotkey':
-    //       return (
-    //         <PanelItemHotkey
-    //           player={player}
-    //           active={active}
-    //           target={target}
-    //           label={label}
-    //           args={args}
-    //           context={context}
-    //         />
-    //       )
-    //     case 'hypertext':
-    //       return (
-    //         <PanelItemHyperText
-    //           player={player}
-    //           active={active}
-    //           target={target}
-    //           label={label}
-    //           args={args}
-    //           context={context}
-    //         />
-    //       )
-    //     case 'range':
-    //       return (
-    //         <PanelItemRange
-    //           player={player}
-    //           active={active}
-    //           target={target}
-    //           label={label}
-    //           args={args}
-    //           context={context}
-    //         />
-    //       )
-    //     case 'select':
-    //       return (
-    //         <PanelItemSelect
-    //           player={player}
-    //           active={active}
-    //           target={target}
-    //           label={label}
-    //           args={args}
-    //           context={context}
-    //         />
-    //       )
-    //     case 'number':
-    //       return (
-    //         <PanelItemNumber
-    //           player={player}
-    //           active={active}
-    //           target={target}
-    //           label={label}
-    //           args={args}
-    //           context={context}
-    //         />
-    //       )
-    //     case 'text':
-    //       return (
-    //         <PanelItemInputText
-    //           player={player}
-    //           active={active}
-    //           target={target}
-    //           label={label}
-    //           args={args}
-    //           context={context}
-    //         />
-    //       )
-    //     default:
-    //       // throw an unknown input type error ?
-    //       tokenizeAndWriteTextFormat(
-    //         `$red unknown input type ${inputType}`,
-    //         context,
-    //       )
-    //       break
-    //   }
-    // }
+    const props = {
+      player,
+      chip,
+      active,
+      label,
+      args,
+      context,
+    }
+
+    switch (input.toLowerCase()) {
+      case 'hotkey':
+        return <PanelItemHotkey {...props} />
+      case 'hypertext':
+        return <PanelItemHyperText {...props} />
+      case 'range':
+        return <PanelItemRange {...props} />
+      case 'select':
+        return <PanelItemSelect {...props} />
+      case 'number':
+        return <PanelItemNumber {...props} />
+      case 'text':
+        return <PanelItemInputText {...props} />
+      default:
+        // throw an unknown input type error ?
+        tokenizeAndWriteTextFormat(`$red unknown input type ${input}`, context)
+        break
+    }
+
     writeTextColorReset(context)
   }
   return null

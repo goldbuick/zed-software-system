@@ -1,32 +1,19 @@
 import { useContext } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
-import { hub } from 'zss/network/hub'
 
-import {
-  WRITE_TEXT_CONTEXT,
-  tokenizeAndWriteTextFormat,
-} from '../../data/textFormat'
+import { tokenizeAndWriteTextFormat } from '../../data/textFormat'
 
-import { ScrollContext } from './common'
-
-interface PanelItemHyperTextProps {
-  player: string
-  active: boolean
-  target: string
-  label: string
-  args: string[]
-  context: WRITE_TEXT_CONTEXT
-}
+import { PanelItemProps, ScrollContext, addSelfId } from './common'
 
 export function PanelItemHyperText({
   player,
+  chip,
   active,
-  target,
   label,
   args,
   context,
-}: PanelItemHyperTextProps) {
-  const [maybeChar, maybeColor] = args
+}: PanelItemProps) {
+  const [target, maybeChar, maybeColor] = args
   const char = maybeChar ?? 16
   const color = maybeColor ?? 'purple'
 
@@ -36,7 +23,7 @@ export function PanelItemHyperText({
   useHotkeys(
     'enter',
     () => {
-      scroll.sendmessage(target)
+      scroll.sendmessage(addSelfId(chip, target))
       scroll.sendclose()
     },
     { enabled: !!active },

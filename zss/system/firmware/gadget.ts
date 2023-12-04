@@ -2,7 +2,7 @@ import Case from 'case'
 import { LAYER, PANEL, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { createGuid } from 'zss/mapping/guid'
 import { hub } from 'zss/network/hub'
-import { ARG, STATE } from 'zss/system/chip'
+import { ARG, STATE, WORD_VALUE } from 'zss/system/chip'
 
 import { createFirmware } from '../firmware'
 
@@ -78,7 +78,7 @@ export const GADGET_FIRMWARE = createFirmware(
     return 0
   })
   .command('stat', (chip, args) => {
-    const parts = args.map((arg) => chip.wordToString(arg))
+    const parts = args.map((arg) => chip.evalToString(arg))
     chip.setName(parts.join(' '))
     return 0
   })
@@ -87,13 +87,13 @@ export const GADGET_FIRMWARE = createFirmware(
     return 0
   })
   .command('send', (chip, args) => {
-    const target = chip.addSelfId(chip.wordToString(args[0]))
+    const target = chip.addSelfId(chip.evalToString(args[0]))
     hub.emit(target, chip.id(), args[1])
     console.info('send', target)
     return 0
   })
   .command('text', (chip, args) => {
-    const [text] = chip.mapArgs(args, ARG.STRING) as [string]
+    const [text] = chip.evalArgs(args, ARG.STRING) as [string]
 
     // get state
     const shared = gadgetstate(chip.group())
@@ -125,45 +125,48 @@ export const GADGET_FIRMWARE = createFirmware(
 
     // package into a panel item
     const [labelword, inputword, ...words] = args
-    const label = chip.wordToString(labelword)
-    const input = chip.wordToString(inputword)
+    const label = chip.evalToString(labelword)
+    const input = chip.evalToString(inputword)
+    const hyperlink: WORD_VALUE[] = [chip.id(), label, input]
 
     switch (input.toLowerCase()) {
       case 'hotkey':
-        panel.text.push([
-          label,
-          input,
-          ...chip.mapArgs(words, ARG.STRING, ARG.STRING),
-        ])
+        hyperlink.push(...chip.evalArgs(words, ARG.STRING, ARG.STRING))
         break
 
       case 'range':
-        panel.text.push([label, input, ...words.map(chip.eval)])
+        hyperlink.push(...chip.evalArgs(words, ARG.STRING, ARG.STRING))
         break
 
       case 'select':
-        panel.text.push([label, input, ...words.map(chip.eval)])
+        hyperlink.push(...words.map(chip.evalToAny))
         break
 
       case 'number':
-        panel.text.push([label, input, ...words.map(chip.eval)])
+        hyperlink.push(...words.map(chip.evalToAny))
+        break
+
+      case 'text':
+        hyperlink.push(...words.map(chip.evalToAny))
         break
 
       case 'hypertext':
       default:
-        panel.text.push([label, input, ...words.map(chip.eval)])
+        hyperlink.push(...chip.evalArgs(words, ARG.STRING, ARG.STRING))
         break
     }
 
+    // add new row
+    panel.text.push(hyperlink)
     return 0
   })
   .command('gadget', (chip, args) => {
-    const edge = chip.wordToString(args[0])
+    const edge = chip.evalToString(args[0])
     const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
     const isScroll = edgeConst === PANEL_TYPE.SCROLL
 
     const size = chip.evalToNumber(args[isScroll ? 2 : 1])
-    const name = chip.wordToString(args[isScroll ? 1 : 2])
+    const name = chip.evalToString(args[isScroll ? 1 : 2])
 
     // get state
     const shared = gadgetstate(chip.group())

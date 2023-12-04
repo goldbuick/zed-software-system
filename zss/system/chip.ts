@@ -48,14 +48,14 @@ export type CHIP = {
   stacktrace: (error: Error) => void
 
   // values api
-  eval: (word: WORD) => WORD_VALUE
   template: (...items: string[]) => string
   isNumber: (word: any) => word is number
   isString: (word: any) => word is string
   isNumberOrString: (word: any) => word is number | string
-  wordToString: (word: any) => string
+  evalToAny: (word: WORD) => WORD_VALUE
+  evalToString: (word: any) => string
   evalToNumber: (word: any) => number
-  mapArgs: (args: WORD[], ...values: ARG[]) => (string | number)[]
+  evalArgs: (args: WORD[], ...values: ARG[]) => WORD_VALUE[]
 
   parse: (words: WORD[]) => { value: WORD_VALUE; resumeIndex: number }
   parseToWord: (words: WORD[]) => { value: WORD; resumeIndex: number }
@@ -101,6 +101,7 @@ export type WORD_VALUE = WORD | WORD[] | undefined
 export enum ARG {
   STRING,
   NUMBER,
+  ANY,
 }
 
 // lifecycle and control flow api
@@ -309,7 +310,19 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     },
 
     // values api
-    eval(word) {
+    template(...items) {
+      return items.join('')
+    },
+    isNumber(word): word is number {
+      return typeof word === 'number'
+    },
+    isString(word): word is string {
+      return typeof word === 'string'
+    },
+    isNumberOrString(word): word is number | string {
+      return chip.isNumber(word) || chip.isString(word)
+    },
+    evalToAny(word) {
       if (typeof word === 'string') {
         switch (word.toLowerCase()) {
           case 'player':
@@ -324,19 +337,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       }
       return word
     },
-    template(...items) {
-      return items.join('')
-    },
-    isNumber(word): word is number {
-      return typeof word === 'number'
-    },
-    isString(word): word is string {
-      return typeof word === 'string'
-    },
-    isNumberOrString(word): word is number | string {
-      return chip.isNumber(word) || chip.isString(word)
-    },
-    wordToString(word) {
+    evalToString(word) {
       return `${word ?? ''}`
     },
     evalToNumber(word) {
@@ -344,20 +345,22 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
         return word
       }
       if (chip.isString(word)) {
-        const value = chip.eval(word)
+        const value = chip.evalToAny(word)
         if (chip.isNumber(value)) {
           return value
         }
       }
       return 0
     },
-    mapArgs(args, ...values) {
+    evalArgs(args, ...values) {
       return values.map((value, i) => {
         switch (value) {
           case ARG.STRING:
-            return chip.wordToString(args[i])
+            return chip.evalToString(args[i])
           case ARG.NUMBER:
             return chip.evalToNumber(args[i])
+          case ARG.ANY:
+            return chip.evalToAny(args[i])
         }
       })
     },
@@ -413,7 +416,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       }
 
       const [name, ...args] = words
-      const command = getcommand(chip.wordToString(name))
+      const command = getcommand(chip.evalToString(name))
       return command
         ? command(chip, args)
         : invokecommand('send', [name, ...args])
@@ -506,7 +509,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       return result
     },
     readStart(index, name) {
-      const arraysource = chip.eval(name)
+      const arraysource = chip.evalToAny(name)
       reads[index] = arraysource
       return 0
     },
@@ -531,7 +534,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       }
 
       // map values from object or map number. string to counter
-      const names = words.map((word) => chip.wordToString(word))
+      const names = words.map((word) => chip.evalToString(word))
 
       console.info('reading', index, names, next)
 

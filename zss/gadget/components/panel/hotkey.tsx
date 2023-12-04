@@ -1,34 +1,26 @@
 import { useCallback, useContext } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
-import { hub } from 'zss/network/hub'
 
-import {
-  WRITE_TEXT_CONTEXT,
-  tokenizeAndWriteTextFormat,
-} from '../../data/textFormat'
+import { tokenizeAndWriteTextFormat } from '../../data/textFormat'
 
-import { ScrollContext } from './common'
-
-interface PanelItemHotkeyProps {
-  player: string
-  active: boolean
-  target: string
-  label: string
-  args: string[]
-  context: WRITE_TEXT_CONTEXT
-}
+import { PanelItemProps, ScrollContext, mapTo, addSelfId } from './common'
 
 export function PanelItemHotkey({
   player,
+  chip,
   active,
-  target,
   label,
   args,
   context,
-}: PanelItemHotkeyProps) {
-  const [maybeShortcut, maybeText] = args
-  const shortcut = maybeShortcut || ''
-  const text = maybeText || ` ${shortcut.toUpperCase()} `
+}: PanelItemProps) {
+  const [target, maybeshortcut, maybetext] = [
+    mapTo(args[0], ''),
+    mapTo(args[1], ''),
+    mapTo(args[2], ''),
+  ]
+
+  const shortcut = maybeshortcut || ''
+  const text = maybetext || ` ${shortcut} `
 
   tokenizeAndWriteTextFormat(
     `${
@@ -39,7 +31,7 @@ export function PanelItemHotkey({
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    scroll.sendmessage(target)
+    scroll.sendmessage(addSelfId(chip, target))
     scroll.sendclose()
   }, [scroll, target])
 
