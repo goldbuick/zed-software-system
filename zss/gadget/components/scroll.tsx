@@ -142,7 +142,7 @@ export function Scroll({
     anime({
       // end position
       y: shouldclose ? viewheight : 0,
-      duration: shouldclose ? 400 : 300,
+      duration: shouldclose ? 300 : 300,
       easing: shouldclose ? 'easeInBack' : 'easeOutExpo',
       targets: groupref.current.position,
       complete() {
