@@ -3,7 +3,7 @@ import { useHotkeys } from 'react-hotkeys-hook'
 
 import { tokenizeAndWriteTextFormat } from '../../data/textFormat'
 
-import { PanelItemProps, ScrollContext, addSelfId } from './common'
+import { PanelItemProps, ScrollContext, mapTo, chiptarget } from './common'
 
 export function PanelItemHyperText({
   player,
@@ -13,17 +13,20 @@ export function PanelItemHyperText({
   args,
   context,
 }: PanelItemProps) {
-  const [target, maybeChar, maybeColor] = args
-  const char = maybeChar ?? 16
-  const color = maybeColor ?? 'purple'
+  const [target, char, color] = [
+    mapTo(args[0], ''),
+    mapTo(args[1], 16),
+    mapTo(args[2], 'purple'),
+  ]
 
   tokenizeAndWriteTextFormat(`  $${color}$${char}  $white${label}`, context)
 
   const scroll = useContext(ScrollContext)
+
   useHotkeys(
     'enter',
     () => {
-      scroll.sendmessage(addSelfId(chip, target))
+      scroll.sendmessage(chiptarget(chip, target))
       scroll.sendclose()
     },
     { enabled: !!active },

@@ -47,7 +47,7 @@ export function mapTo<T>(arg: any, defaultvalue: T): T {
   return defaultvalue
 }
 
-export function addSelfId(id: string, target: string) {
+export function chiptarget(chip: string, target: string) {
   // always prefix with route back to this chip
-  return `platform:${id}:${target}`
+  return `platform:${chip}:${target}`
 }

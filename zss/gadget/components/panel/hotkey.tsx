@@ -3,7 +3,7 @@ import { useHotkeys } from 'react-hotkeys-hook'
 
 import { tokenizeAndWriteTextFormat } from '../../data/textFormat'
 
-import { PanelItemProps, ScrollContext, mapTo, addSelfId } from './common'
+import { PanelItemProps, ScrollContext, mapTo, chiptarget } from './common'
 
 export function PanelItemHotkey({
   player,
@@ -31,7 +31,7 @@ export function PanelItemHotkey({
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    scroll.sendmessage(addSelfId(chip, target))
+    scroll.sendmessage(chiptarget(chip, target))
     scroll.sendclose()
   }, [scroll, target])
 

@@ -202,8 +202,9 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
           return value
         }
       }
-      // raise an error ??
-      return 0
+
+      // no result, return passed in value
+      return name
     },
 
     // lifecycle api

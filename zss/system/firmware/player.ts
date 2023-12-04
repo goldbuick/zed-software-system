@@ -1,3 +1,5 @@
+import { isPresent } from 'ts-extras'
+
 import { STATE } from '../chip'
 import { createFirmware } from '../firmware'
 
@@ -13,8 +15,8 @@ export const PLAYER_FIRMWARE = createFirmware(
     }
 
     // get
-    const value = state[player][index] ?? 0
-    return [true, value]
+    const value = state[player][index]
+    return [isPresent(value), value]
   },
   (chip, name, value) => {
     const player = chip.player()

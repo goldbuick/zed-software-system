@@ -1,4 +1,5 @@
 import Case from 'case'
+import { deepClone } from 'fast-json-patch'
 import { LAYER, PANEL, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { createGuid } from 'zss/mapping/guid'
 import { hub } from 'zss/network/hub'
@@ -44,6 +45,8 @@ function findPanel(state: STATE): PANEL {
 }
 
 const allgadgetstate: STATE = {}
+
+const HYPERLINK_TYPES = ['hotkey', 'range', 'select', 'number', 'text']
 
 export function gadgetstate(group: string) {
   let value: GADGET_STATE = allgadgetstate[group]
@@ -125,39 +128,22 @@ export const GADGET_FIRMWARE = createFirmware(
 
     // package into a panel item
     const [labelword, inputword, ...words] = args
+
     const label = chip.evalToString(labelword)
     const input = chip.evalToString(inputword)
-    const hyperlink: WORD_VALUE[] = [chip.id(), label, input]
+    const linput = input.toLowerCase()
 
-    switch (input.toLowerCase()) {
-      case 'hotkey':
-        hyperlink.push(...chip.evalArgs(words, ARG.STRING, ARG.STRING))
-        break
+    const hyperlink: WORD_VALUE[] = [
+      chip.id(),
+      label,
+      ...(HYPERLINK_TYPES.indexOf(linput) === -1
+        ? ['hypertext', input]
+        : [linput]),
+      ...words.map(chip.evalToAny),
+    ]
 
-      case 'range':
-        hyperlink.push(...chip.evalArgs(words, ARG.STRING, ARG.STRING))
-        break
-
-      case 'select':
-        hyperlink.push(...words.map(chip.evalToAny))
-        break
-
-      case 'number':
-        hyperlink.push(...words.map(chip.evalToAny))
-        break
-
-      case 'text':
-        hyperlink.push(...words.map(chip.evalToAny))
-        break
-
-      case 'hypertext':
-      default:
-        hyperlink.push(...chip.evalArgs(words, ARG.STRING, ARG.STRING))
-        break
-    }
-
-    // add new row
     panel.text.push(hyperlink)
+
     return 0
   })
   .command('gadget', (chip, args) => {
