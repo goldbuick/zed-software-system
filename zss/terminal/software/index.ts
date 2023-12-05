@@ -42,6 +42,9 @@ how do we manage what is running in the current session ?
 
 */
 
+const TAPE_WIDTH = 60
+const TAPE_HEIGHT = 25
+
 export const TAPE_PAGES: CODE_PAGE[] = [
   {
     id: createGuid(),
@@ -60,24 +63,13 @@ export const TAPE_PAGES: CODE_PAGE[] = [
         board: {
           x: 0,
           y: 0,
-          width: 10,
-          height: 10,
-          terrain: range(99).map(() => ({
-            char: 176,
-            color: 2,
+          width: TAPE_WIDTH,
+          height: TAPE_HEIGHT,
+          terrain: range(TAPE_WIDTH * TAPE_HEIGHT - 1).map(() => ({
+            char: 0,
+            color: 0,
           })),
-          objects: range(99).map((v, i) => {
-            if (indexToX(i, 10) === 3 && indexToY(i, 10) === 7) {
-              return {
-                id: createGuid(),
-                code: playercode,
-                char: 1,
-                color: 12,
-                bg: 0,
-              }
-            }
-            return undefined
-          }),
+          objects: {},
         },
       },
     ],

@@ -34,10 +34,17 @@ export type BOARD_RECT = {
   height: number
 }
 
-export type BOARD = BOARD_RECT & {
+export type BOARD = {
+  // lookup
+  id?: string
+  // dimensions
+  x: number
+  y: number
+  width: number
+  height: number
   // specifics
   terrain: MAYBE_BOARD_ELEMENT[]
-  objects: MAYBE_BOARD_ELEMENT[]
+  objects: Record<string, BOARD_ELEMENT>
   // custom
   stats?: BOARD_STATS
 }

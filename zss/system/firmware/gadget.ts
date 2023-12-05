@@ -1,5 +1,4 @@
 import Case from 'case'
-import { deepClone } from 'fast-json-patch'
 import { LAYER, PANEL, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { createGuid } from 'zss/mapping/guid'
 import { hub } from 'zss/network/hub'

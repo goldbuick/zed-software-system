@@ -1,6 +1,6 @@
 import { useThree } from '@react-three/fiber'
 import { deepClone, _areEquals } from 'fast-json-patch'
-import React, { useCallback, useState } from 'react'
+import React, { useState } from 'react'
 
 import { clamp } from '/zss/mapping/number'
 
@@ -242,7 +242,8 @@ export function Layout({ player, layers, layout }: LayoutProps) {
   })
 
   // ending region is main
-  rects.push(frame)
+  // but we start with main
+  rects.unshift(frame)
 
   return (
     <ScrollContext.Provider
@@ -263,7 +264,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
     >
       {/* eslint-disable-next-line react/no-unknown-property */}
       <group position={[marginX * 0.5, marginY * 0.5, 0]}>
-        {rects.map((rect) => {
+        {rects.map((rect, i) => {
           return (
             <group
               key={rect.name}
@@ -271,7 +272,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
               position={[
                 rect.x * DRAW_CHAR_WIDTH,
                 rect.y * DRAW_CHAR_HEIGHT,
-                0,
+                i * 10,
               ]}
             >
               <LayoutRect player={player} layers={layers} rect={rect} />
@@ -285,7 +286,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
             position={[
               scroll.x * DRAW_CHAR_WIDTH,
               scroll.y * DRAW_CHAR_HEIGHT,
-              100,
+              900,
             ]}
           >
             <LayoutRect

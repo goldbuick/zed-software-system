@@ -11,8 +11,8 @@ import { CODE_PAGE_TYPE } from 'zss/system/codepage'
 import { clearscroll, gadgetstate } from 'zss/system/firmware/gadget'
 import { PLATFORM_SET } from 'zss/system/firmware/loader'
 import { createOS } from 'zss/system/os'
-import { TAPE_PAGES } from 'zss/system/software'
 import { createVM } from 'zss/system/vm'
+import { TAPE_PAGES } from 'zss/terminal/software'
 
 // limited chars so peerjs doesn't get mad
 const justNumberChars = customAlphabet(numbers, 4)
@@ -146,10 +146,11 @@ function tick() {
     shared.layers.push({
       id: `${boardPage.id}_objects`,
       type: LAYER_TYPE.SPRITES,
-      sprites: boardPage.board.objects
+      sprites: Object.values(boardPage.board.objects)
         .map((obj, index) => {
           if (obj) {
             return {
+              id: obj.id,
               x: indexToX(index, boardPage.board.width),
               y: indexToY(index, boardPage.board.width),
               char: obj?.char,

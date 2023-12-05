@@ -20,7 +20,7 @@ export function PanelItemHotkey({
   ]
 
   const shortcut = maybeshortcut || ''
-  const text = maybetext || ` ${shortcut} `
+  const text = maybetext || ` ${shortcut.toUpperCase()} `
 
   tokenizeAndWriteTextFormat(
     `${

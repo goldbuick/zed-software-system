@@ -3,6 +3,7 @@ import anime from 'animejs'
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { Group } from 'three'
+import { snap } from 'zss/mapping/number'
 
 import {
   createWriteTextContext,
@@ -116,7 +117,7 @@ export function Scroll({
   const row = cursor - offset
   writeTile(tiles, width, height, 1, 2 + row, { char: 26, color: 12 })
 
-  const wither = [0.01, 0.06, 0.1, 0.2]
+  const wither = [0.005, 0.05, 0.1, 0.2]
   const WITHER_CENTER = 0.4
   resetDither(dither)
   for (let x = 0; x < panelwidth; ++x) {
@@ -137,18 +138,28 @@ export function Scroll({
       return
     }
 
+    // tracking
+    const start = !shouldclose ? viewheight : 0
+    const end = !shouldclose ? 0 : height * -DRAW_CHAR_HEIGHT
+    const easing = !shouldclose ? 'easeOutBack' : 'easeInBack'
+
     // start position
-    groupref.current.position.y = shouldclose ? 0 : viewheight
+    const target = { y: start }
+    groupref.current.position.y = start
+
+    // run anim
     anime({
       // end position
-      y: shouldclose ? viewheight : 0,
-      duration: shouldclose ? 300 : 300,
-      easing: shouldclose ? 'easeInBack' : 'easeOutExpo',
-      targets: groupref.current.position,
-      complete() {
-        if (shouldclose) {
-          scroll.didclose()
+      y: end,
+      duration: 300,
+      easing,
+      targets: target,
+      complete: !shouldclose ? undefined : scroll.didclose,
+      update() {
+        if (!groupref.current) {
+          return
         }
+        groupref.current.position.y = snap(target.y, DRAW_CHAR_HEIGHT)
       },
     })
   }, [shouldclose, scroll])
