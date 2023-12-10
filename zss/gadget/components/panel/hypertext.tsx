@@ -1,7 +1,10 @@
-import { useContext } from 'react'
-import { useHotkeys } from 'react-hotkeys-hook'
+import React, { useCallback, useContext } from 'react'
 
-import { tokenizeAndWriteTextFormat } from '../../data/textFormat'
+import {
+  tokenizeAndWriteTextFormat,
+  writeTextColorReset,
+} from '../../data/textFormat'
+import { UserInput } from '../userinput'
 
 import { PanelItemProps, ScrollContext, mapTo, chiptarget } from './common'
 
@@ -19,19 +22,21 @@ export function PanelItemHyperText({
     mapTo(args[2], 'purple'),
   ]
 
-  tokenizeAndWriteTextFormat(`  $${color}$${char}  $white${label}`, context)
+  const tcolor = active ? 'grey' : 'white'
+  if (
+    tokenizeAndWriteTextFormat(
+      `  $${color}$${char}  $${tcolor}${label}`,
+      context,
+    )
+  ) {
+    writeTextColorReset(context)
+  }
 
   const scroll = useContext(ScrollContext)
+  const invoke = useCallback(() => {
+    scroll.sendmessage(chiptarget(chip, target))
+    scroll.sendclose()
+  }, [scroll, target])
 
-  useHotkeys(
-    'enter',
-    () => {
-      scroll.sendmessage(chiptarget(chip, target))
-      scroll.sendclose()
-    },
-    { enabled: !!active },
-    [scroll, target, player],
-  )
-
-  return null
+  return active && <UserInput OK_BUTTON={invoke} />
 }

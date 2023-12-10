@@ -25,22 +25,3 @@ function keepAlive() {
 }
 
 keepAlive()
-
-// user input
-
-// keyboard
-document.addEventListener('keydown', (event) => {
-  event.preventDefault()
-  hub.emit(
-    'platform:keydown',
-    device.name(),
-    [event.key.toLowerCase(), event.shiftKey, event.metaKey, event.altKey],
-    player,
-  )
-})
-
-// gamepad
-
-// mouse
-
-// touch

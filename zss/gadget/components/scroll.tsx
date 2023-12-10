@@ -1,7 +1,12 @@
 import { useThree } from '@react-three/fiber'
 import anime from 'animejs'
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import { useHotkeys } from 'react-hotkeys-hook'
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { Group } from 'three'
 import { snap } from 'zss/mapping/number'
 
@@ -20,6 +25,7 @@ import {
   useDither,
   writeDither,
 } from './useDither'
+import { INPUT_MOD, UserFocus, UserInput, UserInputHandler } from './userinput'
 import { TileSnapshot, useTiles, writeTile } from './useTiles'
 
 interface ScrollProps {
@@ -109,7 +115,8 @@ export function Scroll({
 
   // display offset
   let offset = cursor - Math.floor(panelheight * 0.5)
-  offset = Math.min(text.length - panelheight, Math.max(0, offset))
+  offset = Math.min(text.length - panelheight, offset)
+  offset = Math.max(0, offset)
 
   const visibletext = text.slice(offset, offset + panelheight)
 
@@ -117,7 +124,7 @@ export function Scroll({
   const row = cursor - offset
   writeTile(tiles, width, height, 1, 2 + row, { char: 26, color: 12 })
 
-  const wither = [0.005, 0.05, 0.1, 0.2]
+  const wither = [0.001, 0.05, 0.1, 0.2]
   const WITHER_CENTER = 0.4
   resetDither(dither)
   for (let x = 0; x < panelwidth; ++x) {
@@ -164,52 +171,53 @@ export function Scroll({
     })
   }, [shouldclose, scroll])
 
-  useHotkeys('up', () => setCursor((state) => Math.max(0, state - 1)), [
-    setCursor,
-  ])
-
-  useHotkeys('alt+up', () => setCursor((state) => Math.max(0, state - 10)), [
-    setCursor,
-  ])
-
-  useHotkeys(
-    'down',
-    () => setCursor((state) => Math.min(text.length - 1, state + 1)),
-    [setCursor, text],
+  const up = useCallback<UserInputHandler>(
+    (mods) => {
+      const step = mods?.alt ? 10 : 1
+      setCursor((state) => Math.max(0, state - step))
+    },
+    [setCursor],
   )
 
-  useHotkeys(
-    'alt+down',
-    () => setCursor((state) => Math.min(text.length - 1, state + 10)),
-    [setCursor, text],
+  const down = useCallback<UserInputHandler>(
+    (mods) => {
+      const step = mods?.alt ? 10 : 1
+      setCursor((state) => Math.min(text.length, state + step))
+    },
+    [setCursor],
   )
-
-  useHotkeys('esc', () => scroll.sendclose(), [cursor])
 
   return (
     <group ref={groupref}>
-      <TileSnapshot tiles={tiles} width={width} height={height} />
-      <group
-        // eslint-disable-next-line react/no-unknown-property
-        position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 0]}
-      >
-        <DitherSnapshot
-          dither={dither}
-          width={panelwidth}
-          height={panelheight}
+      <UserFocus>
+        <UserInput
+          MOVE_UP={up}
+          MOVE_DOWN={down}
+          CANCEL_BUTTON={scroll.sendclose}
         />
-        <Panel
-          player={player}
-          name={name}
-          width={panelwidth}
-          height={panelheight}
-          margin={0}
-          color={color}
-          bg={TILE_TINDEX}
-          text={visibletext}
-          selected={row}
-        />
-      </group>
+        <TileSnapshot tiles={tiles} width={width} height={height} />
+        <group
+          // eslint-disable-next-line react/no-unknown-property
+          position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 0]}
+        >
+          <DitherSnapshot
+            dither={dither}
+            width={panelwidth}
+            height={panelheight}
+          />
+          <Panel
+            player={player}
+            name={name}
+            width={panelwidth}
+            height={panelheight}
+            margin={0}
+            color={color}
+            bg={TILE_TINDEX}
+            text={visibletext}
+            selected={row}
+          />
+        </group>
+      </UserFocus>
     </group>
   )
 }

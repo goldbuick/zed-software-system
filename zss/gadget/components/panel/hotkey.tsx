@@ -1,7 +1,10 @@
-import { useCallback, useContext } from 'react'
-import { useHotkeys } from 'react-hotkeys-hook'
+import React, { useCallback, useContext } from 'react'
 
-import { tokenizeAndWriteTextFormat } from '../../data/textFormat'
+import {
+  tokenizeAndWriteTextFormat,
+  writeTextColorReset,
+} from '../../data/textFormat'
+import { UserHotkey, UserInput } from '../userinput'
 
 import { PanelItemProps, ScrollContext, mapTo, chiptarget } from './common'
 
@@ -13,21 +16,25 @@ export function PanelItemHotkey({
   args,
   context,
 }: PanelItemProps) {
-  const [target, maybeshortcut, maybetext] = [
+  const [target, shortcut, maybetext] = [
     mapTo(args[0], ''),
     mapTo(args[1], ''),
     mapTo(args[2], ''),
   ]
 
-  const shortcut = maybeshortcut || ''
   const text = maybetext || ` ${shortcut.toUpperCase()} `
+  const tcolor = active ? 'grey' : 'white'
 
-  tokenizeAndWriteTextFormat(
-    `${
-      context.isEven ? '$black$onltgray' : '$black$ondkcyan'
-    }${text}$white$onempty ${label}`,
-    context,
-  )
+  if (
+    tokenizeAndWriteTextFormat(
+      `${
+        context.isEven ? '$black$onltgray' : '$black$ondkcyan'
+      }${text}$${tcolor}$onempty ${label}`,
+      context,
+    )
+  ) {
+    writeTextColorReset(context)
+  }
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
@@ -35,8 +42,10 @@ export function PanelItemHotkey({
     scroll.sendclose()
   }, [scroll, target])
 
-  useHotkeys(shortcut, () => invoke(), [target, player])
-  useHotkeys('enter', () => invoke(), { enabled: !!active }, [target, player])
-
-  return null
+  return (
+    <>
+      {active && <UserInput OK_BUTTON={invoke} />}
+      <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey>
+    </>
+  )
 }

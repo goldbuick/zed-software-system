@@ -19,20 +19,8 @@ Here is some test text and yeah!
 !doot 4 red;This is super cool 
 !boot;This is also cool
 
-#read codepages id name
-  !codepage-open id;$name
-""
-""
-A0
-A1
-A2
-A3
-A4
-A5
-A6
-A7
-A8
-A9
+!number frank 100;Number test 
+
 #end
 
 :doot
