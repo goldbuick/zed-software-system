@@ -1,5 +1,5 @@
 import { createToken, IToken, Lexer } from 'chevrotain'
-import { createContext } from 'react'
+import { createContext, useMemo } from 'react'
 import { range } from 'zss/mapping/array'
 
 import { LANG_DEV } from '../../config'
@@ -35,7 +35,7 @@ export const MaybeFlag = createToken({
 
 export const NumberLiteral = createToken({
   name: 'NumberLiteral',
-  pattern: /\$-?(\d*\.)?\d+([eE][+-]?\d+)?[jJ]?[lL]?/,
+  pattern: /\$-?(\d*\.)?\d+([eE][+-]?\d+)?[jJ]?[lL]?\+?/,
 })
 
 export const ContinueLine = createToken({
@@ -141,6 +141,7 @@ export function tokenize(text: string, noWhitespace = false) {
 
 export type WRITE_TEXT_CONTEXT = {
   measureOnly: boolean
+  resetCheck: boolean
   x: number
   y: number
   isEven: boolean
@@ -166,6 +167,7 @@ export function createWriteTextContext(
 ): WRITE_TEXT_CONTEXT {
   return {
     measureOnly: false,
+    resetCheck: true,
     x: 0,
     y: 0,
     isEven: true,
@@ -182,6 +184,21 @@ export function createWriteTextContext(
     color: [],
     bg: [],
   }
+}
+
+export function applyWriteTextContext(
+  dest: WRITE_TEXT_CONTEXT,
+  source: WRITE_TEXT_CONTEXT,
+) {
+  dest.x = source.x
+  dest.y = source.y
+  dest.activeColor = source.activeColor
+  dest.activeBg = source.activeBg
+}
+
+export function cacheWriteTextContext(source: WRITE_TEXT_CONTEXT) {
+  const cache = useMemo(() => ({ ...source }), [source])
+  applyWriteTextContext(source, cache)
 }
 
 export const WriteTextContext = createContext(
@@ -328,5 +345,10 @@ export function tokenizeAndWriteTextFormat(
     return true
   }
 
-  return writeTextFormat(result.tokens, context)
+  const shouldreset = writeTextFormat(result.tokens, context)
+  if (context.resetCheck && shouldreset) {
+    writeTextColorReset(context)
+  }
+
+  return shouldreset
 }

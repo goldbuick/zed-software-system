@@ -1,9 +1,6 @@
 import React, { useCallback, useContext } from 'react'
 
-import {
-  tokenizeAndWriteTextFormat,
-  writeTextColorReset,
-} from '../../data/textFormat'
+import { tokenizeAndWriteTextFormat } from '../../data/textFormat'
 import { UserInput } from '../userinput'
 
 import { PanelItemProps, ScrollContext, mapTo, chiptarget } from './common'
@@ -23,14 +20,7 @@ export function PanelItemHyperText({
   ]
 
   const tcolor = active ? 'grey' : 'white'
-  if (
-    tokenizeAndWriteTextFormat(
-      `  $${color}$${char}  $${tcolor}${label}`,
-      context,
-    )
-  ) {
-    writeTextColorReset(context)
-  }
+  tokenizeAndWriteTextFormat(`  $${color}$${char} $${tcolor}${label}`, context)
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {

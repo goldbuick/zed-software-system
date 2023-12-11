@@ -40,6 +40,7 @@ function invoke(input: INPUT, mods: UserInputMods) {
 }
 
 // keyboard input
+export type KeyboardInputHandler = (event: KeyboardEvent) => void
 
 const isMac = window.navigator.userAgent.indexOf('Mac') !== -1
 
@@ -77,7 +78,7 @@ document.addEventListener('keydown', (event) => {
       invoke(INPUT.MENU_BUTTON, mods)
       break
     default:
-      console.info(key)
+      root.emit('keydown', event)
       break
   }
 })
@@ -100,7 +101,7 @@ export function UserHotkey({ hotkey, children }: UserHotkeyProps) {
   return null
 }
 
-export type UserInputHandler = (mods?: UserInputMods) => void
+export type UserInputHandler = (mods: UserInputMods) => void
 
 interface UserInputProps {
   MOVE_LEFT?: UserInputHandler
@@ -114,6 +115,7 @@ interface UserInputProps {
   OK_BUTTON?: UserInputHandler
   CANCEL_BUTTON?: UserInputHandler
   MENU_BUTTON?: UserInputHandler
+  keydown?: KeyboardInputHandler
 }
 
 export function UserInput(events: UserInputProps) {

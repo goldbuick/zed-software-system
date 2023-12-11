@@ -1,7 +1,22 @@
-import { createContext } from 'react'
+import { createContext, useCallback, useEffect, useState } from 'react'
 import { WORD_VALUE } from 'zss/system/chip'
 
 import { WRITE_TEXT_CONTEXT } from '../../data/textFormat'
+
+export function useBlink() {
+  const [blink, setBlink] = useState(0)
+
+  const callback = useCallback(() => setBlink((state) => 1 - state), [setBlink])
+
+  useEffect(() => {
+    const id = setInterval(callback, 300)
+    return () => {
+      clearInterval(id)
+    }
+  }, [])
+
+  return !!blink
+}
 
 export interface PanelItemProps {
   player: string

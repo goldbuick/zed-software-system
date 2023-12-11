@@ -1,7 +1,6 @@
 import {
   WRITE_TEXT_CONTEXT,
   tokenizeAndWriteTextFormat,
-  writeTextColorReset,
 } from '../../data/textFormat'
 
 interface PanelItemTextProps {
@@ -11,9 +10,6 @@ interface PanelItemTextProps {
 }
 
 export function PanelItemText({ item, context }: PanelItemTextProps) {
-  if (tokenizeAndWriteTextFormat(item, context)) {
-    writeTextColorReset(context)
-  }
-
+  tokenizeAndWriteTextFormat(item, context)
   return null
 }

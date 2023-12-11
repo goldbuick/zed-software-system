@@ -1,9 +1,6 @@
 import React, { useCallback, useContext } from 'react'
 
-import {
-  tokenizeAndWriteTextFormat,
-  writeTextColorReset,
-} from '../../data/textFormat'
+import { tokenizeAndWriteTextFormat } from '../../data/textFormat'
 import { UserHotkey, UserInput } from '../userinput'
 
 import { PanelItemProps, ScrollContext, mapTo, chiptarget } from './common'
@@ -25,16 +22,12 @@ export function PanelItemHotkey({
   const text = maybetext || ` ${shortcut.toUpperCase()} `
   const tcolor = active ? 'grey' : 'white'
 
-  if (
-    tokenizeAndWriteTextFormat(
-      `${
-        context.isEven ? '$black$onltgray' : '$black$ondkcyan'
-      }${text}$${tcolor}$onempty ${label}`,
-      context,
-    )
-  ) {
-    writeTextColorReset(context)
-  }
+  tokenizeAndWriteTextFormat(
+    `${
+      context.isEven ? '$black$onltgray' : '$black$ondkcyan'
+    }${text}$${tcolor}$onempty ${label}`,
+    context,
+  )
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {

@@ -27,6 +27,8 @@ const ditherMaterial = new THREE.ShaderMaterial({
   // settings
   transparent: false,
   uniforms: {
+    palette: { value: null },
+    color: { value: new THREE.Color(0, 0, 0) },
     data: { value: null },
   },
   // vertex shader
@@ -48,6 +50,7 @@ const ditherMaterial = new THREE.ShaderMaterial({
   fragmentShader: `
       #include <clipping_planes_pars_fragment>
   
+      uniform vec3 color;
       uniform sampler2D data;
   
       varying vec2 vUv;
@@ -74,7 +77,7 @@ const ditherMaterial = new THREE.ShaderMaterial({
           }
         }
 
-        gl_FragColor.rgba = vec4(0.0, 0.0, 0.0, 1.0);
+        gl_FragColor.rgba = vec4(color.xyz, 1.0);
       }
     `,
 })

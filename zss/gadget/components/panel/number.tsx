@@ -1,12 +1,12 @@
 import React, { useCallback, useState } from 'react'
 
 import {
+  cacheWriteTextContext,
   tokenizeAndWriteTextFormat,
-  writeTextColorReset,
 } from '../../data/textFormat'
-import { UserInput } from '../userinput'
+import { UserFocus, UserInput, UserInputHandler } from '../userinput'
 
-import { PanelItemProps, mapTo } from './common'
+import { PanelItemProps, mapTo, useBlink } from './common'
 
 export function PanelItemNumber({
   player,
@@ -36,20 +36,84 @@ export function PanelItemNumber({
   }
 
   // where does the current value live here ??
-  const [value, setValue] = useState(0)
-
+  const blink = useBlink()
+  const [value, setValue] = useState(100)
+  const [strvalue, setStrValue] = useState('')
+  const [cursor, setCursor] = useState(0)
+  const [focus, setFocus] = useState(false)
+  let tvalue = `${value}`
   const tcolor = active ? 'grey' : 'white'
-  if (
+
+  // keep stable re-renders
+  cacheWriteTextContext(context)
+
+  if (focus) {
+    tvalue = strvalue.padEnd(4)
+    if (blink) {
+      tvalue = [
+        tvalue.substring(0, cursor),
+        '$219+',
+        tvalue.substring(cursor + 1),
+      ].join('')
+    }
     tokenizeAndWriteTextFormat(
-      `$${tcolor}${label.trim()} $green${value}`,
+      `$green${tvalue}$${tcolor}${label.trim()}`,
       context,
     )
-  ) {
-    writeTextColorReset(context)
+  } else {
+    tokenizeAndWriteTextFormat(
+      `$green${tvalue.padStart(3).padEnd(4)}$${tcolor}${label.trim()}    `,
+      context,
+    )
   }
-  const invoke = useCallback(() => {
-    console.info({ min, max, value })
-  }, [min, max, value])
 
-  return active && <UserInput OK_BUTTON={invoke} />
+  const up = useCallback<UserInputHandler>(
+    (mods) => {
+      const step = mods.alt ? 10 : 1
+      setValue((state) => Math.min(max, state + step))
+    },
+    [max, value],
+  )
+
+  const down = useCallback<UserInputHandler>(
+    (mods) => {
+      const step = mods.alt ? 10 : 1
+      setValue((state) => Math.max(min, state - step))
+    },
+    [min, value],
+  )
+
+  const ok = useCallback(() => {
+    setFocus((state) => {
+      const next = !state
+      if (next) {
+        setStrValue(`${value}`)
+      }
+      return next
+    })
+  }, [setFocus, setStrValue, value])
+
+  return (
+    <>
+      {active && <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} OK_BUTTON={ok} />}
+      {focus && (
+        <UserFocus>
+          <UserInput
+            MOVE_LEFT={() => {
+              setCursor((state) => Math.max(0, state - 1))
+            }}
+            MOVE_RIGHT={() => {
+              setCursor((state) => Math.min(strvalue.length, state + 1))
+            }}
+            CANCEL_BUTTON={ok}
+            OK_BUTTON={ok}
+            keydown={(event) => {
+              //
+              console.info('XXX', event.key)
+            }}
+          />
+        </UserFocus>
+      )}
+    </>
+  )
 }

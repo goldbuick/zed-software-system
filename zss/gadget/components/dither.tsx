@@ -52,3 +52,17 @@ export function Dither({ width, height, alphas }: DitherProps) {
 
   return null
 }
+
+interface StaticDitherProps {
+  width: number
+  height: number
+  alpha: number
+}
+
+export function StaticDither({ width, height, alpha }: StaticDitherProps) {
+  const alphas = useMemo(
+    () => new Array(width * height).fill(alpha),
+    [width, height, alpha],
+  )
+  return <Dither width={width} height={height} alphas={alphas} />
+}

@@ -17,6 +17,7 @@ import {
 } from '../data/types'
 import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
+import { StaticDither } from './dither'
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'
 import { Scroll } from './scroll'
@@ -280,22 +281,29 @@ export function Layout({ player, layers, layout }: LayoutProps) {
           )
         })}
         {scroll && (
-          <group
-            key={scroll.name}
-            // eslint-disable-next-line react/no-unknown-property
-            position={[
-              scroll.x * DRAW_CHAR_WIDTH,
-              scroll.y * DRAW_CHAR_HEIGHT,
-              900,
-            ]}
-          >
-            <LayoutRect
-              player={player}
-              layers={layers}
-              rect={scroll}
-              shouldclose={noscroll}
-            />
-          </group>
+          <React.Fragment key={scroll.name}>
+            <group
+              // eslint-disable-next-line react/no-unknown-property
+              position={[0, 0, 800]}
+            >
+              <StaticDither width={width} height={height} alpha={0.25} />
+            </group>
+            <group
+              // eslint-disable-next-line react/no-unknown-property
+              position={[
+                scroll.x * DRAW_CHAR_WIDTH,
+                scroll.y * DRAW_CHAR_HEIGHT,
+                900,
+              ]}
+            >
+              <LayoutRect
+                player={player}
+                layers={layers}
+                rect={scroll}
+                shouldclose={noscroll}
+              />
+            </group>
+          </React.Fragment>
         )}
       </group>
     </ScrollContext.Provider>
