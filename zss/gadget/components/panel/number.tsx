@@ -3,6 +3,7 @@ import React, { useCallback, useState } from 'react'
 import {
   cacheWriteTextContext,
   tokenizeAndWriteTextFormat,
+  writeCharToEnd,
 } from '../../data/textFormat'
 import { UserFocus, UserInput, UserInputHandler } from '../userinput'
 
@@ -37,7 +38,7 @@ export function PanelItemNumber({
 
   // where does the current value live here ??
   const blink = useBlink()
-  const [value, setValue] = useState(100)
+  const [value, setValue] = useState(Math.round((min + max) * 0.5))
   const [strvalue, setStrValue] = useState('')
   const [cursor, setCursor] = useState(0)
   const [focus, setFocus] = useState(false)
@@ -50,23 +51,20 @@ export function PanelItemNumber({
 
   if (focus) {
     tvalue = strvalue.padEnd(4)
-    if (blink) {
-      tvalue = strsplice(tvalue, cursor, 1, '$219+')
-    } else if (strvalue.length > 3) {
+    if (strvalue.length > 3) {
       tvalue = `${tvalue} `
     }
-    tokenizeAndWriteTextFormat(
-      `$green${tvalue}$${tcolor}${tlabel}`.padEnd(context.width),
-      context,
-    )
+    if (blink) {
+      tvalue = strsplice(tvalue, cursor, 1, '$219+')
+    }
+    tokenizeAndWriteTextFormat(`$green${tvalue}$${tcolor}${tlabel} \\`, context)
   } else {
     tokenizeAndWriteTextFormat(
-      `$green${tvalue.padStart(3).padEnd(4)}$${tcolor}${tlabel}`.padEnd(
-        context.width,
-      ),
+      `$green${tvalue.padStart(3).padEnd(4)}$${tcolor}${tlabel} \\`,
       context,
     )
   }
+  writeCharToEnd(' ', context)
 
   const up = useCallback<UserInputHandler>(
     (mods) => {
@@ -89,10 +87,12 @@ export function PanelItemNumber({
       const next = !state
       if (next) {
         const str = `${value}`
-        setCursor(str.length)
         setStrValue(str)
+        setCursor(str.length)
       } else {
-        setValue(Math.min(max, Math.max(min, parseFloat(strvalue))))
+        const num = parseFloat(strvalue)
+        const newvalue = isNaN(num) ? 0 : num
+        setValue(Math.min(max, Math.max(min, newvalue)))
       }
       return next
     })
@@ -114,6 +114,11 @@ export function PanelItemNumber({
             OK_BUTTON={ok}
             keydown={(event) => {
               switch (event.key.toLowerCase()) {
+                case 'delete':
+                  if (strvalue.length > 0) {
+                    setStrValue((state) => strsplice(state, cursor, 1))
+                  }
+                  break
                 case 'backspace':
                   if (cursor > 0) {
                     setStrValue((state) => strsplice(state, cursor - 1, 1))
@@ -122,7 +127,10 @@ export function PanelItemNumber({
                   break
               }
 
-              if (event.key.length === 1) {
+              if (
+                event.key.length === 1 &&
+                strvalue.length < context.width * 0.5
+              ) {
                 setStrValue((state) => strsplice(state, cursor, 0, event.key))
                 setCursor((state) => state + 1)
               }

@@ -19,7 +19,8 @@ Here is some test text and yeah!
 !doot 4 red;This is super cool 
 !boot;This is also cool
 
-!number frank 100;Number test 
+!number frank 100;Number 
+!rn frank2;Range 
 
 #end
 

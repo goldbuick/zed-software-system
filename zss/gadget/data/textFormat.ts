@@ -328,11 +328,12 @@ export function writeTextFormat(
     }
   }
 
-  if (context.measureOnly !== true) {
-    // move to next line
+  // move to next line if needed
+  if (context.measureOnly !== true && context.x !== 0) {
     context.x = context.leftEdge ?? 0
     ++context.y
   }
+
   return true
 }
 
@@ -351,4 +352,12 @@ export function tokenizeAndWriteTextFormat(
   }
 
   return shouldreset
+}
+
+export function writeCharToEnd(char: string, context: WRITE_TEXT_CONTEXT) {
+  const delta = context.width - context.x
+  if (delta < 1) {
+    return
+  }
+  tokenizeAndWriteTextFormat(char.repeat(delta), context)
 }
