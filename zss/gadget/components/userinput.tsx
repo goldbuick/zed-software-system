@@ -33,6 +33,7 @@ type UserInputMods = {
 // focus
 
 let root = mitt()
+let ignorehotkeys = false
 export const UserInputContext = createContext(root)
 
 function invoke(input: INPUT, mods: UserInputMods) {
@@ -97,7 +98,11 @@ interface UserHotkeyProps {
 }
 
 export function UserHotkey({ hotkey, children }: UserHotkeyProps) {
-  useHotkeys(hotkey, children)
+  useHotkeys(hotkey, children, {
+    enabled() {
+      return ignorehotkeys === false
+    },
+  })
   return null
 }
 
@@ -135,20 +140,24 @@ export function UserInput(events: UserInputProps) {
 }
 
 interface UserFocusProps {
+  blockhotkeys?: boolean
   children?: ReactNode
 }
 
-export function UserFocus({ children }: UserFocusProps) {
+export function UserFocus({ blockhotkeys, children }: UserFocusProps) {
   // event entry point
   const [current] = useState(() => mitt())
 
   // re-write entry point
   useEffect(() => {
     const old = root
+    const oldconfig = ignorehotkeys
     root = current
+    ignorehotkeys = !!blockhotkeys
 
     return () => {
       root = old
+      ignorehotkeys = oldconfig
     }
   }, [])
 

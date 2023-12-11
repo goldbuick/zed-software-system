@@ -66,3 +66,14 @@ export function chiptarget(chip: string, target: string) {
   // always prefix with route back to this chip
   return `platform:${chip}:${target}`
 }
+
+export function strsplice(
+  source: string,
+  index: number,
+  removecount = 0,
+  insert = '',
+) {
+  return `${source.substring(0, index)}${insert}${source.substring(
+    index + removecount,
+  )}`
+}

@@ -45,7 +45,18 @@ function findPanel(state: STATE): PANEL {
 
 const allgadgetstate: STATE = {}
 
-const HYPERLINK_TYPES = ['hotkey', 'range', 'select', 'number', 'text']
+const HYPERLINK_TYPES = [
+  'hk',
+  'hotkey',
+  'rn',
+  'range',
+  'sl',
+  'select',
+  'nm',
+  'number',
+  'tx',
+  'text',
+]
 
 export function gadgetstate(group: string) {
   let value: GADGET_STATE = allgadgetstate[group]

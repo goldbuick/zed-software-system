@@ -8,7 +8,7 @@
  $black$ongrey      TAPE      
  $white   - - - - - 
 ""
-!hotkey codepage-select o;Open Codepages
+!hk codepage-select o;Open Codepages
 #end
 
 :codepage-select

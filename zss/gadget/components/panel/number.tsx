@@ -6,7 +6,7 @@ import {
 } from '../../data/textFormat'
 import { UserFocus, UserInput, UserInputHandler } from '../userinput'
 
-import { PanelItemProps, mapTo, useBlink } from './common'
+import { PanelItemProps, mapTo, strsplice, useBlink } from './common'
 
 export function PanelItemNumber({
   player,
@@ -42,6 +42,7 @@ export function PanelItemNumber({
   const [cursor, setCursor] = useState(0)
   const [focus, setFocus] = useState(false)
   let tvalue = `${value}`
+  const tlabel = label.trim()
   const tcolor = active ? 'grey' : 'white'
 
   // keep stable re-renders
@@ -50,19 +51,19 @@ export function PanelItemNumber({
   if (focus) {
     tvalue = strvalue.padEnd(4)
     if (blink) {
-      tvalue = [
-        tvalue.substring(0, cursor),
-        '$219+',
-        tvalue.substring(cursor + 1),
-      ].join('')
+      tvalue = strsplice(tvalue, cursor, 1, '$219+')
+    } else if (strvalue.length > 3) {
+      tvalue = `${tvalue} `
     }
     tokenizeAndWriteTextFormat(
-      `$green${tvalue}$${tcolor}${label.trim()}`,
+      `$green${tvalue}$${tcolor}${tlabel}`.padEnd(context.width),
       context,
     )
   } else {
     tokenizeAndWriteTextFormat(
-      `$green${tvalue.padStart(3).padEnd(4)}$${tcolor}${label.trim()}    `,
+      `$green${tvalue.padStart(3).padEnd(4)}$${tcolor}${tlabel}`.padEnd(
+        context.width,
+      ),
       context,
     )
   }
@@ -87,17 +88,21 @@ export function PanelItemNumber({
     setFocus((state) => {
       const next = !state
       if (next) {
-        setStrValue(`${value}`)
+        const str = `${value}`
+        setCursor(str.length)
+        setStrValue(str)
+      } else {
+        setValue(Math.min(max, Math.max(min, parseFloat(strvalue))))
       }
       return next
     })
-  }, [setFocus, setStrValue, value])
+  }, [setFocus, setStrValue, min, max, value, strvalue])
 
   return (
     <>
       {active && <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} OK_BUTTON={ok} />}
       {focus && (
-        <UserFocus>
+        <UserFocus blockhotkeys>
           <UserInput
             MOVE_LEFT={() => {
               setCursor((state) => Math.max(0, state - 1))
@@ -108,8 +113,19 @@ export function PanelItemNumber({
             CANCEL_BUTTON={ok}
             OK_BUTTON={ok}
             keydown={(event) => {
-              //
-              console.info('XXX', event.key)
+              switch (event.key.toLowerCase()) {
+                case 'backspace':
+                  if (cursor > 0) {
+                    setStrValue((state) => strsplice(state, cursor - 1, 1))
+                    setCursor((state) => Math.max(0, state - 1))
+                  }
+                  break
+              }
+
+              if (event.key.length === 1) {
+                setStrValue((state) => strsplice(state, cursor, 0, event.key))
+                setCursor((state) => state + 1)
+              }
             }}
           />
         </UserFocus>

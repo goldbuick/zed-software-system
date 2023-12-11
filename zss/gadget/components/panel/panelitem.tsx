@@ -49,16 +49,21 @@ export function PanelItem({ item, active }: PanelItemProps) {
     }
 
     switch (input.toLowerCase()) {
+      case 'hk':
       case 'hotkey':
         return <PanelItemHotkey {...props} />
       case 'hypertext':
         return <PanelItemHyperText {...props} />
+      case 'rn':
       case 'range':
         return <PanelItemRange {...props} />
+      case 'sl':
       case 'select':
         return <PanelItemSelect {...props} />
+      case 'nm':
       case 'number':
         return <PanelItemNumber {...props} />
+      case 'tx':
       case 'text':
         return <PanelItemInputText {...props} />
       default:
