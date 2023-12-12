@@ -13,14 +13,16 @@
 
 :codepage-select
 #gadget scroll "Open Codepage $blue$3$1"
-!hotkey codepage-create n;New Codepage
-
-Here is some test text and yeah!
-!doot 4 red;This is super cool 
-!boot;This is also cool
-
-!number frank 100;Number 
-!rn frank2;Range 
+$3Here is some test text and yeah!$3
+----------------------------------
+!hotkey codepage-create n  ;New Codepage
+----------------------------------
+!boot                      ;This is super cool
+!doot   4      red         ;This is also cool 
+!number frank1 100         ;Number Value 
+!rn     frank2             ;Slider 
+!select frank3 AA BB CC 33 ;Enum 
+!text   frank4             ;Text Value 
 
 #end
 
