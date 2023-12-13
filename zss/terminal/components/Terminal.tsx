@@ -5,7 +5,6 @@ import Stats from 'stats.js'
 import { STATS_DEV } from 'zss/config'
 
 import { Framing } from './Framing'
-import { FX } from './FX'
 import { Gadget } from './Gadget'
 
 export function Terminal() {

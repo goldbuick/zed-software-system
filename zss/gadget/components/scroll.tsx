@@ -24,9 +24,9 @@ import {
   resetDither,
   useDither,
   writeDither,
-} from './useDither'
+} from './usedither'
 import { INPUT_MOD, UserFocus, UserInput, UserInputHandler } from './userinput'
-import { TileSnapshot, useTiles, writeTile } from './useTiles'
+import { TileSnapshot, useTiles, writeTile } from './usetiles'
 
 interface ScrollProps {
   player: string

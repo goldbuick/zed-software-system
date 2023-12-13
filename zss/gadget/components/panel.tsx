@@ -9,7 +9,7 @@ import { PANEL_ITEM } from '../data/types'
 
 import { PlayerContext } from './panel/common'
 import { PanelItem } from './panel/panelitem'
-import { TileSnapshot, resetTiles, useTiles } from './useTiles'
+import { TileSnapshot, resetTiles, useTiles } from './usetiles'
 
 interface PanelProps {
   margin?: number

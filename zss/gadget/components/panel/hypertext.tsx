@@ -20,7 +20,7 @@ export function PanelItemHyperText({
   ]
 
   const tcolor = active ? 'grey' : 'white'
-  tokenizeAndWriteTextFormat(`  $${color}$${char} $${tcolor}${label}`, context)
+  tokenizeAndWriteTextFormat(` $${color}$${char}  $${tcolor}${label}`, context)
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
