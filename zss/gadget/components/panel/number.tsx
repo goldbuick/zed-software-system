@@ -4,8 +4,13 @@ import {
   cacheWriteTextContext,
   tokenizeAndWriteTextFormat,
   writeCharToEnd,
-} from '../../data/textFormat'
-import { UserFocus, UserInput, UserInputHandler } from '../userinput'
+} from '../../data/textformat'
+import {
+  UserFocus,
+  UserHotkey,
+  UserInput,
+  UserInputHandler,
+} from '../userinput'
 
 import { PanelItemProps, mapTo, strsplice, useBlink } from './common'
 
@@ -22,6 +27,8 @@ export function PanelItemNumber({
     mapTo(args[1], -1),
     mapTo(args[2], -1),
   ]
+
+  //
 
   let min: number
   let max: number
@@ -50,20 +57,13 @@ export function PanelItemNumber({
   cacheWriteTextContext(context)
 
   if (focus) {
-    tvalue = strvalue.padEnd(4)
-    if (strvalue.length > 3) {
-      tvalue = `${tvalue} `
-    }
-    if (blink) {
-      tvalue = strsplice(tvalue, cursor, 1, '$219+')
-    }
-    tokenizeAndWriteTextFormat(`$green${tvalue}$${tcolor}${tlabel} \\`, context)
-  } else {
-    tokenizeAndWriteTextFormat(
-      `$green${tvalue.padStart(3).padEnd(4)}$${tcolor}${tlabel} \\`,
-      context,
-    )
+    tvalue = blink ? strsplice(strvalue, cursor, 1, '$219+') : strvalue
   }
+
+  tokenizeAndWriteTextFormat(
+    `  # $${tcolor}${tlabel} $green${tvalue} \\`,
+    context,
+  )
   writeCharToEnd(' ', context)
 
   const up = useCallback<UserInputHandler>(
@@ -103,6 +103,21 @@ export function PanelItemNumber({
       {active && <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} OK_BUTTON={ok} />}
       {focus && (
         <UserFocus blockhotkeys>
+          <UserHotkey hotkey="ctrl+c">
+            {() => {
+              console.info('copy')
+            }}
+          </UserHotkey>
+          <UserHotkey hotkey="ctrl+v">
+            {() => {
+              console.info('paste')
+            }}
+          </UserHotkey>
+          <UserHotkey hotkey="ctrl+a">
+            {() => {
+              console.info('select all')
+            }}
+          </UserHotkey>
           <UserInput
             MOVE_LEFT={() => {
               setCursor((state) => Math.max(0, state - 1))

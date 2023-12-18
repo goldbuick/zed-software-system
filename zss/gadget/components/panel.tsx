@@ -4,7 +4,7 @@ import {
   WRITE_TEXT_CONTEXT,
   WriteTextContext,
   createWriteTextContext,
-} from '../data/textFormat'
+} from '../data/textformat'
 import { PANEL_ITEM } from '../data/types'
 
 import { PlayerContext } from './panel/common'

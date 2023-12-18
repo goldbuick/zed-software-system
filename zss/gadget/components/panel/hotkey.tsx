@@ -1,6 +1,6 @@
 import React, { useCallback, useContext } from 'react'
 
-import { tokenizeAndWriteTextFormat } from '../../data/textFormat'
+import { tokenizeAndWriteTextFormat } from '../../data/textformat'
 import { UserHotkey, UserInput } from '../userinput'
 
 import { PanelItemProps, ScrollContext, mapTo, chiptarget } from './common'

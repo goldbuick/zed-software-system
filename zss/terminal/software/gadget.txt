@@ -21,7 +21,7 @@ $3Here is some test text and yeah!$3
 !doot   4      red         ;This is also cool 
 !number frank1 100         ;Number Value 
 !rn     frank2             ;Slider 
-!select frank3 AA BB CC 33 ;Enum 
+!select frank3 A BB CC 333 ;Enum 
 !text   frank4             ;Text Value 
 
 #end

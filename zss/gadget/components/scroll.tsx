@@ -13,7 +13,7 @@ import { snap } from 'zss/mapping/number'
 import {
   createWriteTextContext,
   tokenizeAndWriteTextFormat,
-} from '../data/textFormat'
+} from '../data/textformat'
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from '../data/types'
 import { TILE_TINDEX } from '../display/tiles'
 
@@ -25,7 +25,7 @@ import {
   useDither,
   writeDither,
 } from './usedither'
-import { INPUT_MOD, UserFocus, UserInput, UserInputHandler } from './userinput'
+import { UserFocus, UserInput, UserInputHandler } from './userinput'
 import { TileSnapshot, useTiles, writeTile } from './usetiles'
 
 interface ScrollProps {

@@ -1,5 +1,5 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
-import { tokenize, MaybeFlag } from 'zss/gadget/data/textFormat'
+import { tokenize, MaybeFlag } from 'zss/gadget/data/textformat'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
 

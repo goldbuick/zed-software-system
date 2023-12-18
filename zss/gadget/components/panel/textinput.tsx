@@ -4,19 +4,23 @@ import {
   cacheWriteTextContext,
   tokenizeAndWriteTextFormat,
   writeCharToEnd,
-} from '../../data/textFormat'
+} from '../../data/textformat'
 import { UserFocus, UserInput } from '../userinput'
 
 import { PanelItemProps, mapTo, strsplice, useBlink } from './common'
 
 export function PanelItemInputText({
   player,
+  chip,
   active,
   label,
   args,
   context,
 }: PanelItemProps) {
   const target = mapTo(args[0], '')
+
+  // address
+  // chip - target is a key into a map based on chip id
 
   // where does the current value live here ??
   const blink = useBlink()
@@ -31,20 +35,13 @@ export function PanelItemInputText({
   // keep stable re-renders
   cacheWriteTextContext(context)
 
-  if (focus) {
-    if (blink) {
-      tvalue = strsplice(tvalue, cursor, 1, '$219+')
-    }
-    tokenizeAndWriteTextFormat(
-      `$green TX $${tcolor}${tlabel}$green ${tvalue} \\`,
-      context,
-    )
-  } else {
-    tokenizeAndWriteTextFormat(
-      `$green TX $${tcolor}${tlabel}$green ${tvalue} \\`,
-      context,
-    )
+  if (focus && blink) {
+    tvalue = strsplice(tvalue, cursor, 1, '$219+')
   }
+  tokenizeAndWriteTextFormat(
+    `$green  $20 $${tcolor}${tlabel}$green ${tvalue} \\`,
+    context,
+  )
   writeCharToEnd(' ', context)
 
   return (

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useEffect, useState } from 'react'
 import { WORD_VALUE } from 'zss/system/chip'
 
-import { WRITE_TEXT_CONTEXT } from '../../data/textFormat'
+import { WRITE_TEXT_CONTEXT } from '../../data/textformat'
 
 export function useBlink() {
   const [blink, setBlink] = useState(0)

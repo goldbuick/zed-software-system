@@ -4,7 +4,7 @@ import {
   cacheWriteTextContext,
   tokenizeAndWriteTextFormat,
   writeCharToEnd,
-} from '../../data/textFormat'
+} from '../../data/textformat'
 import { UserInput, UserInputHandler } from '../userinput'
 
 import { PanelItemProps, mapTo, strsplice, useBlink } from './common'
@@ -30,20 +30,18 @@ export function PanelItemSelect({
   // keep stable re-renders
   cacheWriteTextContext(context)
 
+  tokenizeAndWriteTextFormat(` $dkred ? $${tcolor}${tlabel} \\`, context)
+
+  // write range viewer
+  const knob = active ? (blink ? '$26' : '$27') : '/'
   tokenizeAndWriteTextFormat(
-    `$green${tvalue.padStart(3).padEnd(4)}$${tcolor}${tlabel} \\`,
+    `${value + 1}$green${knob}$${tcolor}${max + 1} \\`,
     context,
   )
 
-  // write range viewer
-  const knob = active ? (blink ? '$26' : '$27') : '$4'
-  const bar = strsplice(
-    '-'.repeat(values.length),
-    value,
-    1,
-    `$green${knob}$${tcolor}`,
-  ).replaceAll('-', '$7')
-  tokenizeAndWriteTextFormat(`${bar} \\`, context)
+  // write value
+  tokenizeAndWriteTextFormat(`$green${tvalue} \\`, context)
+
   writeCharToEnd(' ', context)
 
   const up = useCallback<UserInputHandler>(

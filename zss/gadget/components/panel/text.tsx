@@ -1,7 +1,7 @@
 import {
   WRITE_TEXT_CONTEXT,
   tokenizeAndWriteTextFormat,
-} from '../../data/textFormat'
+} from '../../data/textformat'
 
 interface PanelItemTextProps {
   item: string

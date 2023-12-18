@@ -3,7 +3,7 @@ import {
   WriteTextContext,
   tokenizeAndWriteTextFormat,
   writeTextColorReset,
-} from 'zss/gadget/data/textFormat'
+} from 'zss/gadget/data/textformat'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 
 import { PlayerContext } from './common'

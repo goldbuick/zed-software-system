@@ -26,7 +26,7 @@ export enum INPUT {
 
 type UserInputMods = {
   alt: boolean
-  cmd: boolean
+  ctrl: boolean
   shift: boolean
 }
 
@@ -51,7 +51,7 @@ document.addEventListener('keydown', (event) => {
   const key = event.key.toLowerCase()
   const mods: UserInputMods = {
     alt: event.altKey,
-    cmd: isMac ? event.metaKey : event.ctrlKey,
+    ctrl: isMac ? event.metaKey : event.ctrlKey,
     shift: event.shiftKey,
   }
 
@@ -98,7 +98,7 @@ interface UserHotkeyProps {
 }
 
 export function UserHotkey({ hotkey, children }: UserHotkeyProps) {
-  useHotkeys(hotkey, children, {
+  useHotkeys(hotkey.replaceAll('ctrl', isMac ? 'meta' : 'ctrl'), children, {
     enabled() {
       return ignorehotkeys === false
     },

@@ -4,7 +4,7 @@ import {
   cacheWriteTextContext,
   tokenizeAndWriteTextFormat,
   writeCharToEnd,
-} from '../../data/textFormat'
+} from '../../data/textformat'
 import { UserInput, UserInputHandler } from '../userinput'
 
 import { PanelItemProps, mapTo, strsplice, useBlink } from './common'
@@ -20,6 +20,8 @@ export function PanelItemRange({
     mapTo(args[1], ''),
     mapTo(args[2], ''),
   ]
+
+  // we need an address to a map to get a key -> value out of ?
 
   let labelmin: string
   let labelmax: string
@@ -47,17 +49,17 @@ export function PanelItemRange({
   // keep stable re-renders
   cacheWriteTextContext(context)
 
-  tokenizeAndWriteTextFormat(
-    `$green${tvalue.padStart(3).padEnd(4)}$${tcolor}${tlabel} \\`,
-    context,
-  )
+  tokenizeAndWriteTextFormat(` $red $29 $${tcolor}${tlabel} \\`, context)
 
   // write range viewer
   const knob = active ? (blink ? '$26' : '$27') : '$4'
   const bar = strsplice('----:----', value, 1, `$green${knob}$${tcolor}`)
     .replaceAll('-', '$7')
     .replaceAll(':', '$9')
-  tokenizeAndWriteTextFormat(`${labelmin}${bar}${labelmax} \\`, context)
+  tokenizeAndWriteTextFormat(
+    `$${tcolor}${labelmin}${bar}${labelmax} $green${tvalue} \\`,
+    context,
+  )
   writeCharToEnd(' ', context)
 
   const up = useCallback<UserInputHandler>(
