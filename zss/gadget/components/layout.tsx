@@ -249,9 +249,9 @@ export function Layout({ player, layers, layout }: LayoutProps) {
   return (
     <ScrollContext.Provider
       value={{
-        sendmessage(target) {
+        sendmessage(target, data) {
           // send a hypertext message
-          hub.emit(target, 'gadget', undefined, player)
+          hub.emit(target, 'gadget', data, player)
         },
         sendclose() {
           // send a message to trigger the close

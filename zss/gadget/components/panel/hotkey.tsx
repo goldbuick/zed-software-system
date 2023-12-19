@@ -3,7 +3,13 @@ import React, { useCallback, useContext } from 'react'
 import { tokenizeAndWriteTextFormat } from '../../data/textformat'
 import { UserHotkey, UserInput } from '../userinput'
 
-import { PanelItemProps, ScrollContext, mapTo, chiptarget } from './common'
+import {
+  PanelItemProps,
+  ScrollContext,
+  mapTo,
+  chiptarget,
+  inputcolor,
+} from './common'
 
 export function PanelItemHotkey({
   player,
@@ -20,7 +26,7 @@ export function PanelItemHotkey({
   ]
 
   const text = maybetext || ` ${shortcut.toUpperCase()} `
-  const tcolor = active ? 'grey' : 'white'
+  const tcolor = inputcolor(active)
 
   tokenizeAndWriteTextFormat(
     `${

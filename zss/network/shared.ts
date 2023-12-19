@@ -18,15 +18,15 @@ export type SHARED = {
   id: () => string
 }
 
-export function createShared(id: string) {
-  const doc = new Y.Doc({ guid: id })
+// export function createShared(id: string) {
+//   const doc = new Y.Doc({ guid: id })
 
-  const sync: SHARED = {
-    id() {
-      return id
-    },
-    //
-  }
+//   const sync: SHARED = {
+//     id() {
+//       return id
+//     },
+//     //
+//   }
 
-  return sync
-}
+//   return sync
+// }

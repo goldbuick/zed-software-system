@@ -28,7 +28,7 @@ export interface PanelItemProps {
 }
 
 type ScrollContextState = {
-  sendmessage: (target: string) => void
+  sendmessage: (target: string, data?: any) => void
   sendclose: () => void
   didclose: () => void
 }
@@ -40,6 +40,17 @@ export const ScrollContext = createContext<ScrollContextState>({
 })
 
 export const PlayerContext = createContext('')
+
+export const theme = {
+  input: {
+    color: 'white',
+    active: 'yellow',
+  },
+}
+
+export function inputcolor(active: boolean) {
+  return active ? theme.input.active : theme.input.color
+}
 
 export function mapToString(arg: any, defaultvalue: string) {
   if (typeof arg === 'string') {

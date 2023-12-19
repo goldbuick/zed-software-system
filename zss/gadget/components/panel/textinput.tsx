@@ -7,7 +7,13 @@ import {
 } from '../../data/textformat'
 import { UserFocus, UserInput } from '../userinput'
 
-import { PanelItemProps, mapTo, strsplice, useBlink } from './common'
+import {
+  PanelItemProps,
+  inputcolor,
+  mapTo,
+  strsplice,
+  useBlink,
+} from './common'
 
 export function PanelItemInputText({
   player,
@@ -30,7 +36,7 @@ export function PanelItemInputText({
   const [focus, setFocus] = useState(false)
   let tvalue = `${value} `
   const tlabel = label.trim()
-  const tcolor = active ? 'grey' : 'white'
+  const tcolor = inputcolor(active)
 
   // keep stable re-renders
   cacheWriteTextContext(context)

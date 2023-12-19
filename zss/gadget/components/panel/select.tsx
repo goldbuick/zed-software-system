@@ -7,7 +7,13 @@ import {
 } from '../../data/textformat'
 import { UserInput, UserInputHandler } from '../userinput'
 
-import { PanelItemProps, mapTo, strsplice, useBlink } from './common'
+import {
+  PanelItemProps,
+  inputcolor,
+  mapTo,
+  strsplice,
+  useBlink,
+} from './common'
 
 export function PanelItemSelect({
   active,
@@ -25,7 +31,7 @@ export function PanelItemSelect({
   const [value, setValue] = useState(0)
   const tvalue = `${values[value]}`
   const tlabel = label.trim()
-  const tcolor = active ? 'grey' : 'white'
+  const tcolor = inputcolor(active)
 
   // keep stable re-renders
   cacheWriteTextContext(context)

@@ -7,7 +7,13 @@ import {
 } from '../../data/textformat'
 import { UserInput, UserInputHandler } from '../userinput'
 
-import { PanelItemProps, mapTo, strsplice, useBlink } from './common'
+import {
+  PanelItemProps,
+  inputcolor,
+  mapTo,
+  strsplice,
+  useBlink,
+} from './common'
 
 export function PanelItemRange({
   active,
@@ -44,7 +50,7 @@ export function PanelItemRange({
   const [value, setValue] = useState(Math.round((min + max) * 0.5))
   const tvalue = `${value}`
   const tlabel = label.trim()
-  const tcolor = active ? 'grey' : 'white'
+  const tcolor = inputcolor(active)
 
   // keep stable re-renders
   cacheWriteTextContext(context)

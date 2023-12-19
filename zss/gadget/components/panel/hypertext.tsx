@@ -3,7 +3,13 @@ import React, { useCallback, useContext } from 'react'
 import { tokenizeAndWriteTextFormat } from '../../data/textformat'
 import { UserInput } from '../userinput'
 
-import { PanelItemProps, ScrollContext, mapTo, chiptarget } from './common'
+import {
+  PanelItemProps,
+  ScrollContext,
+  mapTo,
+  chiptarget,
+  inputcolor,
+} from './common'
 
 export function PanelItemHyperText({
   player,
@@ -13,18 +19,14 @@ export function PanelItemHyperText({
   args,
   context,
 }: PanelItemProps) {
-  const [target, char, color] = [
-    mapTo(args[0], ''),
-    mapTo(args[1], 16),
-    mapTo(args[2], 'purple'),
-  ]
+  const [target, data] = [mapTo(args[0], ''), args[1]]
 
-  const tcolor = active ? 'grey' : 'white'
-  tokenizeAndWriteTextFormat(`  $${color}$${char} $${tcolor}${label}`, context)
+  const tcolor = inputcolor(active)
+  tokenizeAndWriteTextFormat(`  $purple$16 $${tcolor}${label}`, context)
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    scroll.sendmessage(chiptarget(chip, target))
+    scroll.sendmessage(chiptarget(chip, target), data)
     scroll.sendclose()
   }, [scroll, target])
 
