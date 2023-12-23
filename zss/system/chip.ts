@@ -107,7 +107,7 @@ export enum ARG {
 // lifecycle and control flow api
 export function createChip(id: string, group: string, build: GeneratorBuild) {
   // naming
-  let name = 'object'
+  let chipname = 'object'
 
   // entry point state
   const labels = klona(build.labels ?? {})
@@ -135,8 +135,8 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
   // chip is in ended state awaiting any messages
   let endedState = false
 
-  // chip public stats
-  const stats = {
+  // chip internals
+  const internals = {
     player: '',
     sender: '',
     data: '' as WORD_VALUE,
@@ -168,13 +168,13 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       return group
     },
     name() {
-      return name
+      return chipname
     },
     player() {
-      return stats.player || group
+      return internals.player || group
     },
     setName(incoming) {
-      name = incoming
+      chipname = incoming
     },
 
     // invokes api
@@ -275,12 +275,12 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
         const label = chip.hasmessage()
 
         // update chip value state based on incoming message
-        stats.sender = message.from
-        stats.data = message.data
+        internals.sender = message.from
+        internals.data = message.data
 
         // this sets player focus
         if (message.player) {
-          stats.player = message.player
+          internals.player = message.player
         }
 
         // clear message
@@ -327,11 +327,11 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       if (typeof word === 'string') {
         switch (word.toLowerCase()) {
           case 'player':
-            return stats.player
+            return internals.player
           case 'sender':
-            return stats.sender
+            return internals.sender
           case 'data':
-            return stats.data
+            return internals.data
           default:
             return chip.get(word)
         }

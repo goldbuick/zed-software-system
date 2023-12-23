@@ -12,7 +12,6 @@ import {
 } from './common'
 
 export function PanelItemHyperText({
-  player,
   chip,
   active,
   label,

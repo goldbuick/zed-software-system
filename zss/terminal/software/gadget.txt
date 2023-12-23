@@ -13,12 +13,12 @@
 
 :codepage-select
 #gadget scroll "Open Codepage $blue$3$1"
-$3Here is some test text and yeah!$3
+$3 Here is some test text and yeah! $3
 ----------------------------------
 !hotkey codepage-create n  ;New Codepage
 ----------------------------------
-!boot                      ;This is super cool
-!doot   4      red         ;This is also cool 
+!boot   monk               ;This is super cool
+!boot   honk               ;This is also cool 
 !number frank1 100         ;Number Value 
 !rn     frank2             ;Slider 
 !select frank3 A BB CC 333 ;Enum 
@@ -26,7 +26,6 @@ $3Here is some test text and yeah!$3
 
 #end
 
-:doot
 :codepage-create
 #gadget bottom
 "      DOOT!!!"
@@ -34,8 +33,5 @@ $3Here is some test text and yeah!$3
 
 :boot
 #gadget bottom
-"      !!!BOOT"
-#end
-
-:board-edit
+"      !!!BOOT $data"
 #end

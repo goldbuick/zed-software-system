@@ -1,3 +1,4 @@
+import { UNOBSERVE_FUNC } from 'zss/network/shared'
 import { WORD_VALUE } from 'zss/system/chip'
 
 import { BITMAP } from './bitmap'
@@ -107,3 +108,5 @@ export type PANEL = {
   size: number
   text: PANEL_ITEM[]
 }
+
+export type PANEL_SHARED = Record<string, UNOBSERVE_FUNC>

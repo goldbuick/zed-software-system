@@ -1,7 +1,14 @@
 import Case from 'case'
-import { LAYER, PANEL, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
+import {
+  LAYER,
+  PANEL,
+  PANEL_SHARED,
+  PANEL_TYPE,
+  PANEL_TYPE_MAP,
+} from 'zss/gadget/data/types'
 import { createGuid } from 'zss/mapping/guid'
 import { hub } from 'zss/network/hub'
+import { observeShared, updateShared } from 'zss/network/shared'
 import { ARG, STATE, WORD_VALUE } from 'zss/system/chip'
 
 import { createFirmware } from '../firmware'
@@ -13,12 +20,23 @@ export type GADGET_STATE = {
   layoutFocus: string
 }
 
+const panelshared: Record<string, PANEL_SHARED> = {}
+
 function initState(state: STATE): GADGET_STATE {
   state.layers = []
   state.layout = []
   state.layoutReset = true
   state.layoutFocus = 'scroll'
   return state as GADGET_STATE
+}
+
+function resetpanel(panel: PANEL) {
+  // clear content
+  panel.text = []
+
+  // invoke unobserve(s)
+  Object.values(panelshared[panel.id] ?? {}).forEach((unobserve) => unobserve())
+  panelshared[panel.id] = {}
 }
 
 function findPanel(state: STATE): PANEL {
@@ -45,7 +63,7 @@ function findPanel(state: STATE): PANEL {
 
 const allgadgetstate: STATE = {}
 
-const HYPERLINK_TYPES = [
+const HYPERLINK_TYPES = new Set([
   'hk',
   'hotkey',
   'rn',
@@ -56,7 +74,20 @@ const HYPERLINK_TYPES = [
   'number',
   'tx',
   'text',
-]
+])
+
+const HYPERLINK_WITH_SHARED = new Set([
+  'rn',
+  'range',
+  'sl',
+  'select',
+  'nm',
+  'number',
+  'tx',
+  'text',
+])
+
+const HYPERLINK_WITH_SHARED_TEXT = new Set(['tx', 'text'])
 
 export function gadgetstate(group: string) {
   let value: GADGET_STATE = allgadgetstate[group]
@@ -74,10 +105,19 @@ export function clearscroll(group: string) {
 }
 
 export const GADGET_FIRMWARE = createFirmware(
-  (chip, name) => {
+  () => {
     return [false, undefined]
   },
   (chip, name, value) => {
+    // we watch for sets that match the shared state
+    console.info('set', name, value)
+    Object.values(panelshared).forEach((state) => {
+      const value = state[name]
+      if (value !== undefined) {
+        // we care about this value
+        updateShared(chip.id(), name, value)
+      }
+    })
     return [false, undefined]
   },
 )
@@ -117,7 +157,7 @@ export const GADGET_FIRMWARE = createFirmware(
     // add text
     if (shared.layoutReset) {
       shared.layoutReset = false
-      panel.text = []
+      resetpanel(panel)
     }
 
     panel.text.push(text)
@@ -133,7 +173,7 @@ export const GADGET_FIRMWARE = createFirmware(
     // add hypertext
     if (shared.layoutReset) {
       shared.layoutReset = false
-      panel.text = []
+      resetpanel(panel)
     }
 
     // package into a panel item
@@ -146,11 +186,35 @@ export const GADGET_FIRMWARE = createFirmware(
     const hyperlink: WORD_VALUE[] = [
       chip.id(),
       label,
-      ...(HYPERLINK_TYPES.indexOf(linput) === -1
-        ? ['hypertext', input]
-        : [linput]),
+      ...(HYPERLINK_TYPES.has(linput) ? [linput] : ['hypertext', input]),
       ...words.map(chip.evalToAny),
     ]
+
+    // type of target value to track
+    const type = hyperlink[2] as string
+
+    // do we care?
+    if (HYPERLINK_WITH_SHARED.has(type)) {
+      // name of target value to track
+      const target = `${hyperlink[3] ?? ''}`
+
+      // value tracking grouped by panel id
+      panelshared[panel.id] = panelshared[panel.id] ?? {}
+
+      // track changes to value
+      panelshared[panel.id][target] = observeShared(
+        chip.id(),
+        target,
+        (value) => {
+          // initial value ??
+          // console.info('gadget firmware', { target, value })
+          if (value === undefined) {
+            // HYPERLINK_WITH_SHARED_TEXT.has(type)
+            chip.set(target, HYPERLINK_WITH_SHARED_TEXT.has(type) ? '' : 0)
+          }
+        },
+      )
+    }
 
     panel.text.push(hyperlink)
 

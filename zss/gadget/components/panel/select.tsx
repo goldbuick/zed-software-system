@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback } from 'react'
+import { MAYBE_NUMBER, useShared } from 'zss/network/shared'
 
 import {
   cacheWriteTextContext,
@@ -7,15 +8,10 @@ import {
 } from '../../data/textformat'
 import { UserInput, UserInputHandler } from '../userinput'
 
-import {
-  PanelItemProps,
-  inputcolor,
-  mapTo,
-  strsplice,
-  useBlink,
-} from './common'
+import { PanelItemProps, inputcolor, mapTo, useBlink } from './common'
 
 export function PanelItemSelect({
+  chip,
   active,
   label,
   args,
@@ -26,10 +22,13 @@ export function PanelItemSelect({
   const min = 0
   const max = values.length - 1
 
-  // where does the current value live here ??
+  // state
+  const [value, setValue] = useShared<MAYBE_NUMBER>(chip, target)
+  const state = value ?? 0
+
   const blink = useBlink()
-  const [value, setValue] = useState(0)
-  const tvalue = `${values[value]}`
+
+  const tvalue = `${values[state]}`
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
@@ -41,7 +40,7 @@ export function PanelItemSelect({
   // write range viewer
   const knob = active ? (blink ? '$26' : '$27') : '/'
   tokenizeAndWriteTextFormat(
-    `${value + 1}$green${knob}$${tcolor}${max + 1} \\`,
+    `${state + 1}$green${knob}$${tcolor}${max + 1} \\`,
     context,
   )
 
@@ -53,7 +52,7 @@ export function PanelItemSelect({
   const up = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      setValue((state) => Math.min(max, state + step))
+      setValue(Math.min(max, state + step))
     },
     [max, value],
   )
@@ -61,7 +60,7 @@ export function PanelItemSelect({
   const down = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      setValue((state) => Math.max(min, state - step))
+      setValue(Math.max(min, state - step))
     },
     [min, value],
   )

@@ -12,7 +12,6 @@ import {
 } from './common'
 
 export function PanelItemHotkey({
-  player,
   chip,
   active,
   label,

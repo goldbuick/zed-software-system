@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback } from 'react'
+import { MAYBE_NUMBER, useShared } from 'zss/network/shared'
 
 import {
   cacheWriteTextContext,
@@ -16,6 +17,7 @@ import {
 } from './common'
 
 export function PanelItemRange({
+  chip,
   active,
   label,
   args,
@@ -26,8 +28,6 @@ export function PanelItemRange({
     mapTo(args[1], ''),
     mapTo(args[2], ''),
   ]
-
-  // we need an address to a map to get a key -> value out of ?
 
   let labelmin: string
   let labelmax: string
@@ -45,10 +45,11 @@ export function PanelItemRange({
   const min = 0
   const max = 8
 
-  // where does the current value live here ??
+  // state
+  const [value, setValue] = useShared<MAYBE_NUMBER>(chip, target)
+  const state = value ?? 0
+
   const blink = useBlink()
-  const [value, setValue] = useState(Math.round((min + max) * 0.5))
-  const tvalue = `${value}`
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
@@ -59,11 +60,11 @@ export function PanelItemRange({
 
   // write range viewer
   const knob = active ? (blink ? '$26' : '$27') : '$4'
-  const bar = strsplice('----:----', value, 1, `$green${knob}$${tcolor}`)
+  const bar = strsplice('----:----', state, 1, `$green${knob}$${tcolor}`)
     .replaceAll('-', '$7')
     .replaceAll(':', '$9')
   tokenizeAndWriteTextFormat(
-    `$${tcolor}${labelmin}${bar}${labelmax} $green${tvalue} \\`,
+    `$${tcolor}${labelmin}${bar}${labelmax} $green${state + 1} \\`,
     context,
   )
   writeCharToEnd(' ', context)
@@ -71,7 +72,7 @@ export function PanelItemRange({
   const up = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      setValue((state) => Math.min(max, state + step))
+      setValue(Math.min(max, state + step))
     },
     [max, value],
   )
@@ -79,7 +80,7 @@ export function PanelItemRange({
   const down = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      setValue((state) => Math.max(min, state - step))
+      setValue(Math.max(min, state - step))
     },
     [min, value],
   )

@@ -7,13 +7,13 @@ import {
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 
 import { PlayerContext } from './common'
+import { PanelItemContent } from './content'
 import { PanelItemHotkey } from './hotkey'
 import { PanelItemHyperText } from './hypertext'
 import { PanelItemNumber } from './number'
 import { PanelItemRange } from './range'
 import { PanelItemSelect } from './select'
 import { PanelItemText } from './text'
-import { PanelItemInputText } from './textinput'
 
 interface PanelItemProps {
   item: PANEL_ITEM
@@ -27,7 +27,7 @@ export function PanelItem({ item, active }: PanelItemProps) {
   context.isEven = context.y % 2 === 0
 
   if (typeof item === 'string') {
-    return <PanelItemText player={player} item={item} context={context} />
+    return <PanelItemContent player={player} item={item} context={context} />
   } else if (Array.isArray(item)) {
     const [chip, label, input, ...args] = item
 
@@ -65,7 +65,7 @@ export function PanelItem({ item, active }: PanelItemProps) {
         return <PanelItemNumber {...props} />
       case 'tx':
       case 'text':
-        return <PanelItemInputText {...props} />
+        return <PanelItemText {...props} />
       default:
         // throw an unknown input type error ?
         tokenizeAndWriteTextFormat(`$red unknown input type ${input}`, context)

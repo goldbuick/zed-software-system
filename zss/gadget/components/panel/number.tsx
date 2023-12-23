@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react'
+import { MAYBE_NUMBER, useShared } from 'zss/network/shared'
 
 import {
   cacheWriteTextContext,
@@ -21,7 +22,6 @@ import {
 } from './common'
 
 export function PanelItemNumber({
-  player,
   chip,
   active,
   label,
@@ -33,8 +33,6 @@ export function PanelItemNumber({
     mapTo(args[1], -1),
     mapTo(args[2], -1),
   ]
-
-  //
 
   let min: number
   let max: number
@@ -49,13 +47,15 @@ export function PanelItemNumber({
     max = maybemax
   }
 
-  // where does the current value live here ??
+  // state
+  const [value, setValue] = useShared<MAYBE_NUMBER>(chip, target)
+
   const blink = useBlink()
-  const [value, setValue] = useState(Math.round((min + max) * 0.5))
   const [strvalue, setStrValue] = useState('')
   const [cursor, setCursor] = useState(0)
   const [focus, setFocus] = useState(false)
-  let tvalue = `${value}`
+
+  let tvalue = `${value ?? 0}`
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
@@ -74,16 +74,18 @@ export function PanelItemNumber({
 
   const up = useCallback<UserInputHandler>(
     (mods) => {
+      const state = value ?? 0
       const step = mods.alt ? 10 : 1
-      setValue((state) => Math.min(max, state + step))
+      setValue(Math.min(max, state + step))
     },
     [max, value],
   )
 
   const down = useCallback<UserInputHandler>(
     (mods) => {
+      const state = value ?? 0
       const step = mods.alt ? 10 : 1
-      setValue((state) => Math.max(min, state - step))
+      setValue(Math.max(min, state - step))
     },
     [min, value],
   )
