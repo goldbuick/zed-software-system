@@ -145,7 +145,7 @@ export const GADGET_FIRMWARE = createFirmware(
     const [targetword, dataword] = args
     const target = chip.addSelfId(chip.evalToString(targetword))
     hub.emit(target, chip.id(), dataword)
-    console.info('send', target, chip.id(), dataword)
+    // console.info('send', target, chip.id(), dataword)
     return 0
   })
   .command('text', (chip, args) => {
@@ -210,10 +210,8 @@ export const GADGET_FIRMWARE = createFirmware(
         target,
         (value) => {
           const current = chip.get(target)
-          console.info({ current, value })
-
           // value changed in shared, update chip flag value
-          if (value !== undefined) {
+          if (value !== undefined && value !== current) {
             chip.set(target, value)
           }
         },

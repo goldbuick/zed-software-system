@@ -199,7 +199,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     // internal state api
     set(name, value) {
       const lname = name.toLowerCase()
-      console.info('>>>set', lname, value)
+      // console.info('>>>set', lname, value)
       for (let i = 0; i < firmwares.length; ++i) {
         const [result] = firmwares[i].set(chip, lname, value)
         if (result) {
@@ -211,7 +211,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     },
     get(name) {
       const lname = name.toLowerCase()
-      console.info('>>>get', lname)
+      // console.info('>>>get', lname)
       for (let i = 0; i < firmwares.length; ++i) {
         const [result, value] = firmwares[i].get(chip, lname)
         if (result) {
