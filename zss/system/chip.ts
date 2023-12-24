@@ -53,6 +53,7 @@ export type CHIP = {
   isString: (word: any) => word is string
   isNumberOrString: (word: any) => word is number | string
   evalToAny: (word: WORD) => WORD_VALUE
+  maybeToAny: (word: WORD) => WORD_VALUE
   evalToString: (word: any) => string
   evalToNumber: (word: any) => number
   evalArgs: (args: WORD[], ...values: ARG[]) => WORD_VALUE[]
@@ -159,6 +160,19 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     return command(chip, words)
   }
 
+  function getinternal(word: string) {
+    switch (word.toLowerCase()) {
+      case 'player':
+        return internals.player
+      case 'sender':
+        return internals.sender
+      case 'data':
+        return internals.data
+      default:
+        return chip.get(word)
+    }
+  }
+
   const chip: CHIP = {
     // id
     id() {
@@ -185,8 +199,9 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     // internal state api
     set(name, value) {
       const lname = name.toLowerCase()
+      console.info('>>>set', lname, value)
       for (let i = 0; i < firmwares.length; ++i) {
-        const result = firmwares[i].set(chip, lname, value)
+        const [result] = firmwares[i].set(chip, lname, value)
         if (result) {
           return value
         }
@@ -196,6 +211,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     },
     get(name) {
       const lname = name.toLowerCase()
+      console.info('>>>get', lname)
       for (let i = 0; i < firmwares.length; ++i) {
         const [result, value] = firmwares[i].get(chip, lname)
         if (result) {
@@ -203,8 +219,8 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
         }
       }
 
-      // no result, return passed in value
-      return name
+      // no result, return undefined
+      return undefined
     },
 
     // lifecycle api
@@ -325,16 +341,13 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     },
     evalToAny(word) {
       if (typeof word === 'string') {
-        switch (word.toLowerCase()) {
-          case 'player':
-            return internals.player
-          case 'sender':
-            return internals.sender
-          case 'data':
-            return internals.data
-          default:
-            return chip.get(word)
-        }
+        return getinternal(word)
+      }
+      return word
+    },
+    maybeToAny(word) {
+      if (typeof word === 'string') {
+        return getinternal(word) ?? word
       }
       return word
     },

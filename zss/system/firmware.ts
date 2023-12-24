@@ -2,21 +2,29 @@ import { CHIP, WORD, WORD_VALUE } from './chip'
 
 type FIRMWARE_GET = (chip: CHIP, name: string) => [boolean, any]
 type FIRMWARE_SET = (chip: CHIP, name: string, value: any) => [boolean, any]
+type FIRMWARE_PARSE = (chip: CHIP, words: WORD[]) => [boolean, any]
+
 export type FIRMWARE_COMMAND = (chip: CHIP, words: WORD[]) => WORD_VALUE
 
 export type FIRMWARE = {
   get: FIRMWARE_GET
   set: FIRMWARE_SET
+  parse?: FIRMWARE_PARSE
   getcommand: (name: string) => FIRMWARE_COMMAND | undefined
   command: (name: string, func: FIRMWARE_COMMAND) => FIRMWARE
 }
 
-export function createFirmware(get: FIRMWARE_GET, set: FIRMWARE_SET): FIRMWARE {
+export function createFirmware(
+  get: FIRMWARE_GET,
+  set: FIRMWARE_SET,
+  parse?: FIRMWARE_PARSE,
+): FIRMWARE {
   const commands: Record<string, FIRMWARE_COMMAND> = {}
 
   const firmware: FIRMWARE = {
     get,
     set,
+    parse,
     getcommand(name) {
       return commands[name]
     },

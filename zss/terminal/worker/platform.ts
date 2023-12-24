@@ -66,7 +66,7 @@ const platform = createDevice('platform', [], (message) => {
     case 'desync':
       if (message.player) {
         const state = gadgetstate(message.player)
-        hub.emit('gadgetclient:reset', platform.name(), state, message.player)
+        platform.emit('gadgetclient:reset', state, message.player)
       }
       break
 
@@ -175,7 +175,7 @@ function tick() {
     const patch = compare(syncstate[player] ?? {}, shared)
     if (patch.length) {
       syncstate[player] = deepClone(shared)
-      hub.emit('gadgetclient:patch', platform.name(), patch, player)
+      platform.emit('gadgetclient:patch', patch, player)
     }
   })
 }

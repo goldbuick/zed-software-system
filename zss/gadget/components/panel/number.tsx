@@ -49,6 +49,7 @@ export function PanelItemNumber({
 
   // state
   const [value, setValue] = useShared<MAYBE_NUMBER>(chip, target)
+  const state = value ?? 0
 
   const blink = useBlink()
   const [strvalue, setStrValue] = useState('')
@@ -74,7 +75,6 @@ export function PanelItemNumber({
 
   const up = useCallback<UserInputHandler>(
     (mods) => {
-      const state = value ?? 0
       const step = mods.alt ? 10 : 1
       setValue(Math.min(max, state + step))
     },
@@ -83,7 +83,6 @@ export function PanelItemNumber({
 
   const down = useCallback<UserInputHandler>(
     (mods) => {
-      const state = value ?? 0
       const step = mods.alt ? 10 : 1
       setValue(Math.max(min, state - step))
     },
@@ -107,60 +106,64 @@ export function PanelItemNumber({
   }, [setFocus, setStrValue, min, max, value, strvalue])
 
   return (
-    <>
-      {active && <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} OK_BUTTON={ok} />}
-      {focus && (
-        <UserFocus blockhotkeys>
-          <UserHotkey hotkey="ctrl+c">
-            {() => {
-              console.info('copy')
-            }}
-          </UserHotkey>
-          <UserHotkey hotkey="ctrl+v">
-            {() => {
-              console.info('paste')
-            }}
-          </UserHotkey>
-          <UserHotkey hotkey="ctrl+a">
-            {() => {
-              console.info('select all')
-            }}
-          </UserHotkey>
-          <UserInput
-            MOVE_LEFT={() => {
-              setCursor((state) => Math.max(0, state - 1))
-            }}
-            MOVE_RIGHT={() => {
-              setCursor((state) => Math.min(strvalue.length, state + 1))
-            }}
-            CANCEL_BUTTON={ok}
-            OK_BUTTON={ok}
-            keydown={(event) => {
-              switch (event.key.toLowerCase()) {
-                case 'delete':
-                  if (strvalue.length > 0) {
-                    setStrValue((state) => strsplice(state, cursor, 1))
-                  }
-                  break
-                case 'backspace':
-                  if (cursor > 0) {
-                    setStrValue((state) => strsplice(state, cursor - 1, 1))
-                    setCursor((state) => Math.max(0, state - 1))
-                  }
-                  break
-              }
+    value !== undefined && (
+      <>
+        {active && (
+          <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} OK_BUTTON={ok} />
+        )}
+        {focus && (
+          <UserFocus blockhotkeys>
+            <UserHotkey hotkey="ctrl+c">
+              {() => {
+                console.info('copy')
+              }}
+            </UserHotkey>
+            <UserHotkey hotkey="ctrl+v">
+              {() => {
+                console.info('paste')
+              }}
+            </UserHotkey>
+            <UserHotkey hotkey="ctrl+a">
+              {() => {
+                console.info('select all')
+              }}
+            </UserHotkey>
+            <UserInput
+              MOVE_LEFT={() => {
+                setCursor((state) => Math.max(0, state - 1))
+              }}
+              MOVE_RIGHT={() => {
+                setCursor((state) => Math.min(strvalue.length, state + 1))
+              }}
+              CANCEL_BUTTON={ok}
+              OK_BUTTON={ok}
+              keydown={(event) => {
+                switch (event.key.toLowerCase()) {
+                  case 'delete':
+                    if (strvalue.length > 0) {
+                      setStrValue((state) => strsplice(state, cursor, 1))
+                    }
+                    break
+                  case 'backspace':
+                    if (cursor > 0) {
+                      setStrValue((state) => strsplice(state, cursor - 1, 1))
+                      setCursor((state) => Math.max(0, state - 1))
+                    }
+                    break
+                }
 
-              if (
-                event.key.length === 1 &&
-                strvalue.length < context.width * 0.5
-              ) {
-                setStrValue((state) => strsplice(state, cursor, 0, event.key))
-                setCursor((state) => state + 1)
-              }
-            }}
-          />
-        </UserFocus>
-      )}
-    </>
+                if (
+                  event.key.length === 1 &&
+                  strvalue.length < context.width * 0.5
+                ) {
+                  setStrValue((state) => strsplice(state, cursor, 0, event.key))
+                  setCursor((state) => state + 1)
+                }
+              }}
+            />
+          </UserFocus>
+        )}
+      </>
+    )
   )
 }

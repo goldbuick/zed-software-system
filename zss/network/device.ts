@@ -18,6 +18,7 @@ export type DEVICE = {
   id: () => string
   name: () => string
   tags: () => string[]
+  emit: (target: string, data?: any, player?: string) => void
   handle: MESSAGE_FUNC
 }
 
@@ -44,6 +45,9 @@ export function createDevice(
     },
     tags() {
       return tags
+    },
+    emit(target, data, player) {
+      hub.emit(target, id, data, player)
     },
     handle(message) {
       const { target, path } = parseTarget(message.target)

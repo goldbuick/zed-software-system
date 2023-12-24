@@ -106,24 +106,26 @@ export function clearscroll(group: string) {
 
 export const GADGET_FIRMWARE = createFirmware(
   () => {
+    // we have no public gadget flags
     return [false, undefined]
   },
   (chip, name, value) => {
     // we watch for sets that match the shared state
-    console.info('set', name, value)
     Object.values(panelshared).forEach((state) => {
-      const value = state[name]
-      if (value !== undefined) {
-        // we care about this value
+      // we care about this value
+      if (state[name] !== undefined) {
         updateShared(chip.id(), name, value)
       }
     })
+
+    // we observe only
     return [false, undefined]
   },
 )
   .command('parse', (chip, args) => {
     // this is to handle gadget specific consts and wording
     const [value] = args
+    // should we make this a common invoke like the get / set handlers ?
     return [chip.evalToNumber(value), 1]
   })
   .command('if', (chip, args) => {
@@ -140,9 +142,10 @@ export const GADGET_FIRMWARE = createFirmware(
     return 0
   })
   .command('send', (chip, args) => {
-    const target = chip.addSelfId(chip.evalToString(args[0]))
-    hub.emit(target, chip.id(), args[1])
-    console.info('send', target)
+    const [targetword, dataword] = args
+    const target = chip.addSelfId(chip.evalToString(targetword))
+    hub.emit(target, chip.id(), dataword)
+    console.info('send', target, chip.id(), dataword)
     return 0
   })
   .command('text', (chip, args) => {
@@ -187,7 +190,7 @@ export const GADGET_FIRMWARE = createFirmware(
       chip.id(),
       label,
       ...(HYPERLINK_TYPES.has(linput) ? [linput] : ['hypertext', input]),
-      ...words.map(chip.evalToAny),
+      ...words,
     ]
 
     // type of target value to track
@@ -202,22 +205,35 @@ export const GADGET_FIRMWARE = createFirmware(
       panelshared[panel.id] = panelshared[panel.id] ?? {}
 
       // track changes to value
-      panelshared[panel.id][target] = observeShared(
+      panelshared[panel.id][target] = observeShared<number | string>(
         chip.id(),
         target,
         (value) => {
-          // initial value ??
-          // console.info('gadget firmware', { target, value })
-          if (value === undefined) {
-            // HYPERLINK_WITH_SHARED_TEXT.has(type)
-            chip.set(target, HYPERLINK_WITH_SHARED_TEXT.has(type) ? '' : 0)
+          const current = chip.get(target)
+          console.info({ current, value })
+
+          // value changed in shared, update chip flag value
+          if (value !== undefined) {
+            chip.set(target, value)
           }
         },
       )
+
+      // we need to set initial value in shared
+      const init = chip.get(target)
+
+      if (init !== undefined) {
+        // default to the current value in chip
+        updateShared(chip.id(), target, init)
+      } else {
+        // no value set, use sensible default
+        const initvalue = HYPERLINK_WITH_SHARED_TEXT.has(type) ? '' : 0
+        updateShared(chip.id(), target, initvalue)
+      }
     }
 
+    // add content
     panel.text.push(hyperlink)
-
     return 0
   })
   .command('gadget', (chip, args) => {
