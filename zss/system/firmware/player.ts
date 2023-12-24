@@ -28,7 +28,7 @@ export const PLAYER_FIRMWARE = createFirmware(
       state[player] = {}
     }
 
-    // console.info('###set', { name, value })
+    console.info('###set', { name, value })
 
     // set
     state[player][index] = value

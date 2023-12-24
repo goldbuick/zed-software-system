@@ -2,6 +2,9 @@
 #gadget right 20
 #gadget bottom 1
 
+#set frank2 2
+#set frank3 1
+
 :update
 #gadget right
  $white   - - - - - 
@@ -23,8 +26,8 @@ $3 Here is some test text and yeah! $3
 !boot   monk               ;This is super cool
 !boot   honk               ;This is also cool 
 !number frank1 100         ;Number Value 
-'!rn     frank2             ;Slider 
-'!select frank3 A BB CC 333 ;Enum 
+!rn     frank2             ;Slider 
+!select frank3 A BB CC 333 ;Enum 
 '!text   frank4             ;Text Value 
 
 #end
