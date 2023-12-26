@@ -9,7 +9,7 @@ import {
 import { createGuid } from 'zss/mapping/guid'
 import { hub } from 'zss/network/hub'
 import { observeShared, updateShared } from 'zss/network/shared'
-import { STATE, WORD_VALUE, mapToString } from 'zss/system/chip'
+import { STATE, WORD_VALUE, isString, mapToString } from 'zss/system/chip'
 
 import { createFirmware } from '../firmware'
 
@@ -39,7 +39,7 @@ function resetpanel(panel: PANEL) {
   panelshared[panel.id] = {}
 }
 
-function findPanel(state: STATE): PANEL {
+function findpanel(state: STATE): PANEL {
   // find slot
   const panel = state.layout.find(
     (panel: PANEL) => panel.name === state.layoutfocus,
@@ -122,12 +122,6 @@ export const GADGET_FIRMWARE = createFirmware(
     return [false, undefined]
   },
 )
-  // .command('parse', (chip, args) => {
-  //   // this is to handle gadget specific consts and wording
-  //   const [value] = args
-  //   // should we make this a common invoke like the get / set handlers ?
-  //   return [chip.evalToNumber(value), 1]
-  // })
   .command('if', (chip, args) => {
     console.info('if', args)
     return 0
@@ -143,9 +137,15 @@ export const GADGET_FIRMWARE = createFirmware(
   })
   .command('send', (chip, args) => {
     const [targetword, dataword] = args
-    const target = chip.addSelfId(mapToString(targetword))
-    hub.emit(target, chip.id(), dataword)
-    console.info('send', target, chip.id(), dataword)
+
+    // target should always be a string
+    const target = mapToString(targetword)
+
+    // check for flag name value
+    const data = isString(dataword) ? chip.get(dataword) : undefined
+
+    // default to original value of flag check fails
+    chip.send(target, data ?? dataword)
     return 0
   })
   .command('text', (chip, args) => {
@@ -155,7 +155,7 @@ export const GADGET_FIRMWARE = createFirmware(
     const shared = gadgetstate(chip.group())
 
     // find slot
-    const panel = findPanel(shared)
+    const panel = findpanel(shared)
 
     // add text
     if (shared.layoutreset) {
@@ -171,7 +171,7 @@ export const GADGET_FIRMWARE = createFirmware(
     const shared = gadgetstate(chip.group())
 
     // find slot
-    const panel = findPanel(shared)
+    const panel = findpanel(shared)
 
     // add hypertext
     if (shared.layoutreset) {

@@ -3,6 +3,8 @@ import { klona } from 'klona/json'
 import { GeneratorBuild } from 'zss/lang/generator'
 import { GENERATED_FILENAME } from 'zss/lang/transformer'
 
+import { hub } from '../network/hub'
+
 import { FIRMWARE } from './firmware'
 
 export const HALT_AT_COUNT = 64
@@ -40,6 +42,7 @@ export type CHIP = {
   yield: () => void
   shouldyield: () => boolean
   addSelfId: (targetString: string) => string
+  send: (target: string, data?: any) => void
   message: (incoming: MESSAGE) => void
   zap: (label: string) => void
   restore: (label: string) => void
@@ -273,6 +276,11 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       // always prefix with route back to this chip
       return `platform:${id}:${targetString}`
     },
+    send(target, data) {
+      const fulltarget = chip.addSelfId(target)
+      hub.emit(fulltarget, chip.id(), data)
+      console.info('send', fulltarget, chip.id(), data)
+    },
     message(incoming) {
       message = incoming
     },
@@ -357,7 +365,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       }
 
       // default behavior
-      const value = chip.tpi(words[0] ?? '')
+      const value = chip.tpi(words[0])
       return [value, words.slice(1)]
     },
     parsegroup(...words) {
@@ -386,6 +394,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
 
       const [name, ...args] = words
       const command = getcommand(mapToString(name))
+      console.info({ name, args, command })
       return command
         ? command(chip, args)
         : invokecommand('send', [name, ...args])
