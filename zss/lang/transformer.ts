@@ -43,17 +43,24 @@ function writeString(value: string): string {
 }
 
 function writeTemplateString(value: string): string {
+  if (value[0] === '"') {
+    return writeTemplateString(value.substring(1, value.length - 1))
+  }
+
   const result = tokenize(value)
   if (result.errors.length) {
     return value
   }
+
   const template = result.tokens.map((token) => {
     if (token.tokenType === MaybeFlag) {
-      return `api.get('${escapeString(token.image.substring(1))}')`
+      const name = escapeString(token.image.substring(1))
+      return `',api.tpi('${name}'),'`
     }
-    return `'${escapeString(token.image)}'`
+    return escapeString(token.image)
   })
-  return `api.template(${template.join(', ')})`
+
+  return `api.tp('${template.join('')}')`
 }
 
 function transformNodes(nodes: CodeNode[]) {
@@ -405,7 +412,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.OPERATOR:
       return transformOperator(ast)
     case NODE.GROUP:
-      return writeApi(ast, 'evalgroup', ast.items.map(transformNode))
+      return writeApi(ast, 'parsegroup', ast.items.map(transformNode))
     default:
       console.error(`<unsupported node>`, ast)
       return blank(ast)

@@ -9,15 +9,15 @@ import {
 import { createGuid } from 'zss/mapping/guid'
 import { hub } from 'zss/network/hub'
 import { observeShared, updateShared } from 'zss/network/shared'
-import { ARG, STATE, WORD_VALUE } from 'zss/system/chip'
+import { STATE, WORD_VALUE, mapToString } from 'zss/system/chip'
 
 import { createFirmware } from '../firmware'
 
 export type GADGET_STATE = {
   layers: LAYER[]
   layout: PANEL[]
-  layoutReset: boolean
-  layoutFocus: string
+  layoutreset: boolean
+  layoutfocus: string
 }
 
 const panelshared: Record<string, PANEL_SHARED> = {}
@@ -25,8 +25,8 @@ const panelshared: Record<string, PANEL_SHARED> = {}
 function initState(state: STATE): GADGET_STATE {
   state.layers = []
   state.layout = []
-  state.layoutReset = true
-  state.layoutFocus = 'scroll'
+  state.layoutreset = true
+  state.layoutfocus = 'scroll'
   return state as GADGET_STATE
 }
 
@@ -42,19 +42,19 @@ function resetpanel(panel: PANEL) {
 function findPanel(state: STATE): PANEL {
   // find slot
   const panel = state.layout.find(
-    (panel: PANEL) => panel.name === state.layoutFocus,
+    (panel: PANEL) => panel.name === state.layoutfocus,
   )
 
   if (!panel) {
     const newPanel: PANEL = {
       id: createGuid(),
-      name: state.layoutFocus,
+      name: state.layoutfocus,
       edge: PANEL_TYPE.RIGHT,
       size: 20,
       text: [],
     }
     state.layout.push(newPanel)
-    state.layoutReset = false
+    state.layoutreset = false
     return newPanel
   }
 
@@ -122,18 +122,18 @@ export const GADGET_FIRMWARE = createFirmware(
     return [false, undefined]
   },
 )
-  .command('parse', (chip, args) => {
-    // this is to handle gadget specific consts and wording
-    const [value] = args
-    // should we make this a common invoke like the get / set handlers ?
-    return [chip.evalToNumber(value), 1]
-  })
+  // .command('parse', (chip, args) => {
+  //   // this is to handle gadget specific consts and wording
+  //   const [value] = args
+  //   // should we make this a common invoke like the get / set handlers ?
+  //   return [chip.evalToNumber(value), 1]
+  // })
   .command('if', (chip, args) => {
     console.info('if', args)
     return 0
   })
   .command('stat', (chip, args) => {
-    const parts = args.map((arg) => chip.evalToString(arg))
+    const parts = args.map(chip.tpi)
     chip.setName(parts.join(' '))
     return 0
   })
@@ -143,13 +143,13 @@ export const GADGET_FIRMWARE = createFirmware(
   })
   .command('send', (chip, args) => {
     const [targetword, dataword] = args
-    const target = chip.addSelfId(chip.evalToString(targetword))
+    const target = chip.addSelfId(mapToString(targetword))
     hub.emit(target, chip.id(), dataword)
-    // console.info('send', target, chip.id(), dataword)
+    console.info('send', target, chip.id(), dataword)
     return 0
   })
   .command('text', (chip, args) => {
-    const [text] = chip.evalArgs(args, ARG.STRING) as [string]
+    const text = mapToString(args[0] ?? '')
 
     // get state
     const shared = gadgetstate(chip.group())
@@ -158,8 +158,8 @@ export const GADGET_FIRMWARE = createFirmware(
     const panel = findPanel(shared)
 
     // add text
-    if (shared.layoutReset) {
-      shared.layoutReset = false
+    if (shared.layoutreset) {
+      shared.layoutreset = false
       resetpanel(panel)
     }
 
@@ -174,16 +174,16 @@ export const GADGET_FIRMWARE = createFirmware(
     const panel = findPanel(shared)
 
     // add hypertext
-    if (shared.layoutReset) {
-      shared.layoutReset = false
+    if (shared.layoutreset) {
+      shared.layoutreset = false
       resetpanel(panel)
     }
 
     // package into a panel item
     const [labelword, inputword, ...words] = args
 
-    const label = chip.evalToString(labelword)
-    const input = chip.evalToString(inputword)
+    const label = mapToString(labelword)
+    const input = mapToString(inputword)
     const linput = input.toLowerCase()
 
     const hyperlink: WORD_VALUE[] = [
@@ -235,12 +235,14 @@ export const GADGET_FIRMWARE = createFirmware(
     return 0
   })
   .command('gadget', (chip, args) => {
-    const edge = chip.evalToString(args[0])
+    const edge = mapToString(args[0])
     const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
     const isScroll = edgeConst === PANEL_TYPE.SCROLL
 
-    const size = chip.evalToNumber(args[isScroll ? 2 : 1])
-    const name = chip.evalToString(args[isScroll ? 1 : 2])
+    const arg1 = args[isScroll ? 2 : 1]
+    const arg2 = args[isScroll ? 1 : 2]
+    const size = chip.tpn(arg1)
+    const name = mapToString(arg2)
 
     // get state
     const shared = gadgetstate(chip.group())
@@ -251,8 +253,8 @@ export const GADGET_FIRMWARE = createFirmware(
 
     if (panelState) {
       // set focus to panel and mark for reset
-      shared.layoutReset = true
-      shared.layoutFocus = panelName
+      shared.layoutreset = true
+      shared.layoutfocus = panelName
     } else {
       switch (edgeConst) {
         case PANEL_TYPE.START:
@@ -271,7 +273,7 @@ export const GADGET_FIRMWARE = createFirmware(
             text: [],
           }
           shared.layout.push(panel)
-          shared.layoutFocus = panelName
+          shared.layoutfocus = panelName
           break
         default:
           // todo: raise runtime error

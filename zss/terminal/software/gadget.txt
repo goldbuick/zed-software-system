@@ -2,13 +2,15 @@
 #gadget right 20
 #gadget bottom 1
 
+#set frank1 0
 #set frank2 2
 #set frank3 1
+#set frank4 blonky
 
 :update
 #gadget right
  $white   - - - - - 
- $black$ongrey      TAPE      
+ $black$ongrey      TAPE $donk     
  $white   - - - - - 
 ""
 !hk codepage-select o;Open Codepages
@@ -16,9 +18,6 @@
 
 :codepage-select
 #gadget scroll "Open Codepage $blue$3$1"
-
-#set frank1 32
-
 $3 Here is some test text and yeah! $3
 ----------------------------------
 !hotkey codepage-create n  ;New Codepage
@@ -28,16 +27,17 @@ $3 Here is some test text and yeah! $3
 !number frank1 100         ;Number Value 
 !rn     frank2             ;Slider 
 !select frank3 A BB CC 333 ;Enum 
-'!text   frank4             ;Text Value 
-
+!text   frank4             ;Text Value 
 #end
 
 :codepage-create
+#set frank1 32
 #gadget bottom
 "      DOOT!!!"
 #end
 
 :boot
+#set frank1 16
 #gadget bottom
 "      !!!BOOT $data"
 #end

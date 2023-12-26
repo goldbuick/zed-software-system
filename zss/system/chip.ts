@@ -47,20 +47,12 @@ export type CHIP = {
   endofprogram: () => void
   stacktrace: (error: Error) => void
 
-  // values api
-  template: (...items: string[]) => string
-  isNumber: (word: any) => word is number
-  isString: (word: any) => word is string
-  isNumberOrString: (word: any) => word is number | string
-  evalToAny: (word: WORD) => WORD_VALUE
-  maybeToAny: (word: WORD) => WORD_VALUE
-  evalToString: (word: any) => string
-  evalToNumber: (word: any) => number
-  evalArgs: (args: WORD[], ...values: ARG[]) => WORD_VALUE[]
-
-  parse: (words: WORD[]) => { value: WORD_VALUE; resumeIndex: number }
-  parseToWord: (words: WORD[]) => { value: WORD; resumeIndex: number }
-  evalgroup: (...words: WORD[]) => WORD_VALUE
+  // template / parse api
+  tp: (...items: string[]) => string
+  tpi: (word: WORD) => WORD_VALUE
+  tpn: (word: WORD) => number
+  parse: (words: WORD[]) => [WORD_VALUE, WORD[]]
+  parsegroup: (...words: WORD[]) => WORD_VALUE
 
   // logic api
   text: (value: string) => WORD_VALUE
@@ -72,9 +64,9 @@ export type CHIP = {
   take: (...words: WORD[]) => WORD_VALUE
   give: (...words: WORD[]) => WORD_VALUE
   while: (...words: WORD[]) => WORD_VALUE
-  repeatStart: (index: number, ...words: WORD[]) => number
+  repeatStart: (index: number, ...words: WORD[]) => void
   repeat: (index: number) => boolean
-  readStart: (index: number, name: WORD) => number
+  readStart: (index: number, name: WORD) => void
   read: (index: number, ...words: WORD[]) => boolean
   or: (...words: WORD[]) => WORD_VALUE
   and: (...words: WORD[]) => WORD_VALUE
@@ -99,10 +91,23 @@ export type CHIP = {
 export type WORD = string | number
 export type WORD_VALUE = WORD | WORD[] | undefined
 
-export enum ARG {
-  STRING,
-  NUMBER,
-  ANY,
+export function isNumber(word: any): word is number {
+  return typeof word === 'number'
+}
+
+export function isString(word: any): word is string {
+  return typeof word === 'string'
+}
+
+function mapToResult(value: WORD_VALUE): WORD {
+  if (Array.isArray(value)) {
+    return value.length > 0 ? 1 : 0
+  }
+  return value ?? 0
+}
+
+export function mapToString(value: any) {
+  return `${value ?? ''}`
 }
 
 // lifecycle and control flow api
@@ -125,16 +130,16 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
 
   // tracking for repeats
   const repeats: Record<number, number> = {}
-  const repeatsCmd: Record<number, undefined | WORD[]> = {}
+  const repeatscommand: Record<number, undefined | WORD[]> = {}
 
   // tracking for reads
   const reads: Record<number, WORD_VALUE> = {}
 
   // pause until next tick
-  let yieldState = false
+  let yieldstate = false
 
   // chip is in ended state awaiting any messages
-  let endedState = false
+  let endedstate = false
 
   // chip internals
   const internals = {
@@ -199,6 +204,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     // internal state api
     set(name, value) {
       const lname = name.toLowerCase()
+
       // console.info('>>>set', lname, value)
       for (let i = 0; i < firmwares.length; ++i) {
         const [result] = firmwares[i].set(chip, lname, value)
@@ -206,11 +212,13 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
           return value
         }
       }
+
       // raise an error ??
       return value
     },
     get(name) {
       const lname = name.toLowerCase()
+
       // console.info('>>>get', lname)
       for (let i = 0; i < firmwares.length; ++i) {
         const [result, value] = firmwares[i].get(chip, lname)
@@ -232,35 +240,34 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
 
       // reset state
       loops = 0
-      yieldState = false
+      yieldstate = false
 
       // invoke generator
       try {
         const result = logic?.next()
         if (result?.done) {
           console.error('we crashed?', build.source)
-          endedState = true
+          endedstate = true
         }
       } catch (err: any) {
         console.error(err)
       }
     },
     shouldtick() {
-      return endedState === false || chip.hasmessage() !== 0
+      return endedstate === false || chip.hasmessage() !== 0
     },
     shouldhalt() {
       return loops++ > HALT_AT_COUNT
     },
     hasmessage() {
       const target = message?.target ?? ''
-      const result = labels[target]?.find((item) => item > 0) ?? 0
-      return result
+      return labels[target]?.find((item) => item > 0) ?? 0
     },
     yield() {
-      yieldState = true
+      yieldstate = true
     },
     shouldyield() {
-      return yieldState || chip.shouldhalt()
+      return yieldstate || chip.shouldhalt()
     },
     addSelfId(targetString) {
       // always prefix with route back to this chip
@@ -303,8 +310,8 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
         message = undefined
 
         // reset ended state
-        yieldState = false
-        endedState = false
+        yieldstate = false
+        endedstate = false
 
         // return entry point
         return label
@@ -313,7 +320,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     },
     endofprogram() {
       chip.yield()
-      endedState = true
+      endedstate = true
     },
     stacktrace(error) {
       const stack = ErrorStackParser.parse(error)
@@ -327,90 +334,35 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     },
 
     // values api
-    template(...items) {
+    tp(...items) {
       return items.join('')
     },
-    isNumber(word): word is number {
-      return typeof word === 'number'
+    tpi(word) {
+      const result = typeof word === 'string' ? getinternal(word) : word
+      return result ?? ''
     },
-    isString(word): word is string {
-      return typeof word === 'string'
-    },
-    isNumberOrString(word): word is number | string {
-      return chip.isNumber(word) || chip.isString(word)
-    },
-    evalToAny(word) {
-      if (typeof word === 'string') {
-        return getinternal(word)
-      }
-      return word
-    },
-    maybeToAny(word) {
-      if (typeof word === 'string') {
-        return getinternal(word) ?? word
-      }
-      return word
-    },
-    evalToString(word) {
-      return `${word ?? ''}`
-    },
-    evalToNumber(word) {
-      if (chip.isNumber(word)) {
-        return word
-      }
-      if (chip.isString(word)) {
-        const value = chip.evalToAny(word)
-        if (chip.isNumber(value)) {
-          return value
-        }
-      }
-      return 0
-    },
-    evalArgs(args, ...values) {
-      return values.map((value, i) => {
-        switch (value) {
-          case ARG.STRING:
-            return chip.evalToString(args[i])
-          case ARG.NUMBER:
-            return chip.evalToNumber(args[i])
-          case ARG.ANY:
-            return chip.evalToAny(args[i])
-        }
-      })
+    tpn(word) {
+      const result = typeof word === 'string' ? getinternal(word) : word
+      return isNumber(result) ? result : 0
     },
 
     parse(words) {
-      const result = invokecommand('parse', words)
-
-      if (Array.isArray(result)) {
-        const [value, resumeIndex] = result
-        return { value, resumeIndex } as { value: number; resumeIndex: number }
-      }
-
-      // fallback
-      const [value] = words
-      const resumeIndex = 1
-      return {
-        value: chip.evalToNumber(value),
-        resumeIndex,
-      }
-    },
-    parseToWord(words) {
-      const result = chip.parse(words)
-      if (Array.isArray(result.value)) {
-        return {
-          ...result,
-          value: result.value.length > 0 ? 1 : 0,
+      // iterate through firmware to parse words
+      for (let i = 0; i < firmwares.length; ++i) {
+        const [result, resumeindex, value] =
+          firmwares[i].parse?.(chip, words) ?? []
+        if (result && resumeindex) {
+          return [value, words.slice(resumeindex)]
         }
       }
-      return {
-        ...result,
-        value: result.value ?? 0,
-      }
+
+      // default behavior
+      const value = chip.tpi(words[0] ?? '')
+      return [value, words.slice(1)]
     },
-    evalgroup(...words) {
-      const result = chip.parse(words)
-      return result.value
+    parsegroup(...words) {
+      const [value] = chip.parse(words)
+      return value
     },
 
     // logic api
@@ -424,97 +376,98 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       return invokecommand('hyperlink', words)
     },
     command(...words) {
+      // 0 - continue
+      // 1 - retry
+
       if (words.length < 1) {
         // bail on empty commands
         return 0
       }
 
       const [name, ...args] = words
-      const command = getcommand(chip.evalToString(name))
+      const command = getcommand(mapToString(name))
       return command
         ? command(chip, args)
         : invokecommand('send', [name, ...args])
     },
     if(...words) {
-      const check = chip.parseToWord(words)
+      const [value, next] = chip.parse(words)
 
-      const result = invokecommand('if', [check.value])
-      if (result) {
-        chip.command(...words.slice(check.resumeIndex))
+      const result = mapToResult(invokecommand('if', [value as WORD]))
+      if (result && next.length) {
+        chip.command(...next)
       }
 
       return result
     },
     try(...words) {
-      const check = chip.parseToWord(words)
+      const [value, next] = chip.parse(words)
 
-      const result = invokecommand('try', [check.value])
-      if (result) {
-        chip.command(...words.slice(check.resumeIndex))
+      const result = mapToResult(invokecommand('try', [value as WORD]))
+      if (result && next.length) {
+        chip.command(...next)
       }
 
       return result
     },
     take(...words) {
-      const [name, ...valuewords] = words
+      const [name, ...values] = words
 
       // todo throw error
-      if (!chip.isString(name)) {
+      if (!isString(name)) {
         return 0
       }
 
-      const check = chip.parseToWord(valuewords)
+      const [value, next] = chip.parse(values)
 
       // returns true when take fails
-      const result = invokecommand('take', [name, check.value])
-      if (result) {
-        chip.command(...valuewords.slice(check.resumeIndex))
+      const result = mapToResult(invokecommand('take', [name, value as WORD]))
+      if (result && next.length) {
+        chip.command(...next)
       }
 
       return result
     },
     give(...words) {
-      const [name, ...valuewords] = words
+      const [name, ...values] = words
 
       // todo throw error
-      if (!chip.isString(name)) {
+      if (!isString(name)) {
         return 0
       }
 
-      const check = chip.parseToWord(valuewords)
+      const [value, next] = chip.parse(values)
 
       // returns true when give creates a new flag
-      const result = invokecommand('give', [name, check.value])
-      if (result) {
-        chip.command(...valuewords.slice(check.resumeIndex))
+      const result = mapToResult(invokecommand('give', [name, value as WORD]))
+      if (result && next.length) {
+        chip.command(...next)
       }
 
       return result
     },
     while(...words) {
-      const check = chip.parseToWord(words)
+      const [value, next] = chip.parse(words)
 
-      const result = invokecommand('if', [check.value])
-      if (result) {
-        chip.command(...words.slice(check.resumeIndex))
+      const result = mapToResult(invokecommand('if', [value as WORD]))
+      if (result && next.length) {
+        chip.command(...next)
       }
 
       return result
     },
     repeatStart(index, ...words) {
-      const check = chip.parseToWord(words)
+      const [value, next] = chip.parse(words)
 
-      repeats[index] = chip.evalToNumber(check.value)
-      repeatsCmd[index] = words.slice(check.resumeIndex)
-
-      return 0
+      repeats[index] = isNumber(value) ? value : 0
+      repeatscommand[index] = next
     },
     repeat(index) {
       const count = repeats[index] ?? 0
       repeats[index] = count - 1
 
       const result = count > 0
-      const repeatCmd = repeatsCmd[index]
+      const repeatCmd = repeatscommand[index]
 
       if (result && repeatCmd) {
         chip.command(...repeatCmd)
@@ -523,22 +476,22 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       return result
     },
     readStart(index, name) {
-      const arraysource = chip.evalToAny(name)
-      reads[index] = arraysource
-      return 0
+      if (!isString(name)) {
+        // todo throw error
+        return
+      }
+
+      // expects name to be a string
+      const arraysource: any[] = getinternal(name) ?? []
+      // and chip.get(name) to return an object or an array
+      reads[index] = Array.isArray(arraysource) ? arraysource : [arraysource]
     },
     read(index, ...words) {
       const arraysource = reads[index]
 
       // todo raise error
-      if (arraysource === undefined) {
+      if (Array.isArray(arraysource) === false) {
         return false
-      }
-
-      // repackage as array
-      if (!Array.isArray(arraysource)) {
-        reads[index] = [arraysource]
-        return chip.read(index, ...words)
       }
 
       // read next value
@@ -548,7 +501,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       }
 
       // map values from object or map number. string to counter
-      const names = words.map((word) => chip.evalToString(word))
+      const names = words.map(mapToString)
 
       console.info('reading', index, names, next)
 
@@ -574,10 +527,10 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       return true
     },
     or(...words) {
-      return words.map(chip.evalToNumber).find((value) => value)
+      return words.map(chip.tpn).find((value) => value)
     },
     and(...words) {
-      const values = words.map(chip.evalToNumber)
+      const values = words.map(chip.tpn)
       const index = values.findIndex((value) => !value)
       if (index === -1) {
         return values[values.length - 1]
@@ -585,52 +538,122 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       return values[index]
     },
     not(word) {
-      return chip.evalToNumber(word) ? 0 : 1
+      return chip.tpn(word) ? 0 : 1
     },
     isEq(lhs, rhs) {
-      return chip.evalToNumber(lhs) === chip.evalToNumber(rhs) ? 1 : 0
+      return chip.tpn(lhs) === chip.tpn(rhs) ? 1 : 0
     },
     isNotEq(lhs, rhs) {
-      return chip.evalToNumber(lhs) !== chip.evalToNumber(rhs) ? 1 : 0
+      return chip.tpn(lhs) !== chip.tpn(rhs) ? 1 : 0
     },
     isLessThan(lhs, rhs) {
-      return chip.evalToNumber(lhs) < chip.evalToNumber(rhs) ? 1 : 0
+      return chip.tpn(lhs) < chip.tpn(rhs) ? 1 : 0
     },
     isGreaterThan(lhs, rhs) {
-      return chip.evalToNumber(lhs) > chip.evalToNumber(rhs) ? 1 : 0
+      return chip.tpn(lhs) > chip.tpn(rhs) ? 1 : 0
     },
     isLessThanOrEq(lhs, rhs) {
-      return chip.evalToNumber(lhs) <= chip.evalToNumber(rhs) ? 1 : 0
+      return chip.tpn(lhs) <= chip.tpn(rhs) ? 1 : 0
     },
     isGreaterThanOrEq(lhs, rhs) {
-      return chip.evalToNumber(lhs) >= chip.evalToNumber(rhs) ? 1 : 0
+      return chip.tpn(lhs) >= chip.tpn(rhs) ? 1 : 0
     },
     opPlus(lhs, rhs) {
-      return chip.evalToNumber(lhs) + chip.evalToNumber(rhs)
+      const left = chip.tpn(lhs)
+      const right = chip.tpn(rhs)
+      if (!isNumber(left)) {
+        // todo: raise error
+        return 0
+      }
+      if (!isNumber(right)) {
+        // todo: raise error
+        return 0
+      }
+      return left + right
     },
     opMinus(lhs, rhs) {
-      return chip.evalToNumber(lhs) - chip.evalToNumber(rhs)
+      const left = chip.tpn(lhs)
+      const right = chip.tpn(rhs)
+      if (!isNumber(left)) {
+        // todo: raise error
+        return 0
+      }
+      if (!isNumber(right)) {
+        // todo: raise error
+        return 0
+      }
+      return left - right
     },
     opPower(lhs, rhs) {
-      return Math.pow(chip.evalToNumber(lhs), chip.evalToNumber(rhs))
+      const left = chip.tpn(lhs)
+      const right = chip.tpn(rhs)
+      if (!isNumber(left)) {
+        // todo: raise error
+        return 0
+      }
+      if (!isNumber(right)) {
+        // todo: raise error
+        return 0
+      }
+      return Math.pow(left, right)
     },
     opMultiply(lhs, rhs) {
-      return chip.evalToNumber(lhs) * chip.evalToNumber(rhs)
+      const left = chip.tpn(lhs)
+      const right = chip.tpn(rhs)
+      if (!isNumber(left)) {
+        // todo: raise error
+        return 0
+      }
+      if (!isNumber(right)) {
+        // todo: raise error
+        return 0
+      }
+      return left * right
     },
     opDivide(lhs, rhs) {
-      return chip.evalToNumber(lhs) / chip.evalToNumber(rhs)
+      const left = chip.tpn(lhs)
+      const right = chip.tpn(rhs)
+      if (!isNumber(left)) {
+        // todo: raise error
+        return 0
+      }
+      if (!isNumber(right)) {
+        // todo: raise error
+        return 0
+      }
+      return left / right
     },
     opModDivide(lhs, rhs) {
-      return chip.evalToNumber(lhs) % chip.evalToNumber(rhs)
+      const left = chip.tpn(lhs)
+      const right = chip.tpn(rhs)
+      if (!isNumber(left)) {
+        // todo: raise error
+        return 0
+      }
+      if (!isNumber(right)) {
+        // todo: raise error
+        return 0
+      }
+      return left % right
     },
     opFloorDivide(lhs, rhs) {
-      return Math.floor(chip.evalToNumber(lhs) / chip.evalToNumber(rhs))
+      const left = chip.tpn(lhs)
+      const right = chip.tpn(rhs)
+      if (!isNumber(left)) {
+        // todo: raise error
+        return 0
+      }
+      if (!isNumber(right)) {
+        // todo: raise error
+        return 0
+      }
+      return Math.floor(left / right)
     },
     opUniPlus(rhs) {
-      return +chip.evalToNumber(rhs)
+      return +chip.tpn(rhs)
     },
     opUniMinus(rhs) {
-      return -chip.evalToNumber(rhs)
+      return -chip.tpn(rhs)
     },
   }
 

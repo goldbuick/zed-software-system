@@ -2,7 +2,10 @@ import { CHIP, WORD, WORD_VALUE } from './chip'
 
 type FIRMWARE_GET = (chip: CHIP, name: string) => [boolean, any]
 type FIRMWARE_SET = (chip: CHIP, name: string, value: any) => [boolean, any]
-type FIRMWARE_PARSE = (chip: CHIP, words: WORD[]) => [boolean, any]
+type FIRMWARE_PARSE = (
+  chip: CHIP,
+  words: WORD[],
+) => [boolean, number, WORD_VALUE]
 
 export type FIRMWARE_COMMAND = (chip: CHIP, words: WORD[]) => WORD_VALUE
 

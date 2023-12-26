@@ -16,8 +16,8 @@ export const PLAYER_FIRMWARE = createFirmware(
 
     // get
     const value = state[player][index]
-    // console.info('###get', { name, value })
 
+    console.info('###get', { name, value })
     return [isPresent(value), value]
   },
   (chip, name, value) => {
@@ -28,15 +28,10 @@ export const PLAYER_FIRMWARE = createFirmware(
       state[player] = {}
     }
 
-    console.info('###set', { name, value })
-
     // set
     state[player][index] = value
+
+    console.info('###set', { name, value })
     return [true, value]
   },
-).command('set', (chip, words) => {
-  const [nameword, ...args] = words
-  const name = chip.evalToString(nameword)
-  chip.set(name, chip.parse(args).value)
-  return 0
-})
+)
