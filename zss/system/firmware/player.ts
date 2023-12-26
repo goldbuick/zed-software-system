@@ -1,9 +1,15 @@
 import { isPresent } from 'ts-extras'
+import { STATE, isString, mapToString } from 'zss/system/chip'
 
-import { STATE } from '../chip'
 import { createFirmware } from '../firmware'
 
 const state: Record<string, STATE> = {}
+
+/*
+
+this is the standard core firmware for zss
+
+*/
 
 export const PLAYER_FIRMWARE = createFirmware(
   (chip, name) => {
@@ -35,3 +41,37 @@ export const PLAYER_FIRMWARE = createFirmware(
     return [true, value]
   },
 )
+  .command('set', (chip, words) => {
+    const [nameword, ...values] = words
+    const [value] = chip.parse(values)
+    const name = mapToString(nameword)
+    chip.set(name, value)
+
+    return 0
+  })
+  .command('if', (chip, args) => {
+    console.info('if', args)
+    return 0
+  })
+  .command('stat', (chip, args) => {
+    const parts = args.map(chip.tpi)
+    chip.setName(parts.join(' '))
+    return 0
+  })
+  .command('end', (chip) => {
+    chip.endofprogram()
+    return 0
+  })
+  .command('send', (chip, args) => {
+    const [targetword, dataword] = args
+
+    // target should always be a string
+    const target = mapToString(targetword)
+
+    // check for flag name value
+    const data = isString(dataword) ? chip.get(dataword) : undefined
+
+    // default to original value of flag check fails
+    chip.send(target, data ?? dataword)
+    return 0
+  })

@@ -7,9 +7,8 @@ import {
   PANEL_TYPE_MAP,
 } from 'zss/gadget/data/types'
 import { createGuid } from 'zss/mapping/guid'
-import { hub } from 'zss/network/hub'
 import { observeShared, updateShared } from 'zss/network/shared'
-import { STATE, WORD_VALUE, isString, mapToString } from 'zss/system/chip'
+import { STATE, WORD_VALUE, mapToString } from 'zss/system/chip'
 
 import { createFirmware } from '../firmware'
 
@@ -122,30 +121,54 @@ export const GADGET_FIRMWARE = createFirmware(
     return [false, undefined]
   },
 )
-  .command('if', (chip, args) => {
-    console.info('if', args)
-    return 0
-  })
-  .command('stat', (chip, args) => {
-    const parts = args.map(chip.tpi)
-    chip.setName(parts.join(' '))
-    return 0
-  })
-  .command('end', (chip) => {
-    chip.endofprogram()
-    return 0
-  })
-  .command('send', (chip, args) => {
-    const [targetword, dataword] = args
+  .command('gadget', (chip, args) => {
+    const edge = mapToString(args[0])
+    const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
+    const isScroll = edgeConst === PANEL_TYPE.SCROLL
 
-    // target should always be a string
-    const target = mapToString(targetword)
+    const arg1 = args[isScroll ? 2 : 1]
+    const arg2 = args[isScroll ? 1 : 2]
+    const size = chip.tpn(arg1)
+    const name = mapToString(arg2)
 
-    // check for flag name value
-    const data = isString(dataword) ? chip.get(dataword) : undefined
+    // get state
+    const shared = gadgetstate(chip.group())
+    const panelName = name || Case.capital(edge)
+    const panelState: PANEL | undefined = shared.layout.find(
+      (panel: PANEL) => panel.name === panelName,
+    )
 
-    // default to original value of flag check fails
-    chip.send(target, data ?? dataword)
+    if (panelState) {
+      // set focus to panel and mark for reset
+      shared.layoutreset = true
+      shared.layoutfocus = panelName
+    } else {
+      switch (edgeConst) {
+        case PANEL_TYPE.START:
+          initState(shared)
+          break
+        case PANEL_TYPE.LEFT:
+        case PANEL_TYPE.RIGHT:
+        case PANEL_TYPE.TOP:
+        case PANEL_TYPE.BOTTOM:
+        case PANEL_TYPE.SCROLL:
+          const panel: PANEL = {
+            id: createGuid(),
+            name: panelName,
+            edge: edgeConst,
+            size,
+            text: [],
+          }
+          shared.layout.push(panel)
+          shared.layoutfocus = panelName
+          break
+        default:
+          // todo: raise runtime error
+          // probably make a chip api to do it
+          break
+      }
+    }
+
     return 0
   })
   .command('text', (chip, args) => {
@@ -232,55 +255,5 @@ export const GADGET_FIRMWARE = createFirmware(
 
     // add content
     panel.text.push(hyperlink)
-    return 0
-  })
-  .command('gadget', (chip, args) => {
-    const edge = mapToString(args[0])
-    const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
-    const isScroll = edgeConst === PANEL_TYPE.SCROLL
-
-    const arg1 = args[isScroll ? 2 : 1]
-    const arg2 = args[isScroll ? 1 : 2]
-    const size = chip.tpn(arg1)
-    const name = mapToString(arg2)
-
-    // get state
-    const shared = gadgetstate(chip.group())
-    const panelName = name || Case.capital(edge)
-    const panelState: PANEL | undefined = shared.layout.find(
-      (panel: PANEL) => panel.name === panelName,
-    )
-
-    if (panelState) {
-      // set focus to panel and mark for reset
-      shared.layoutreset = true
-      shared.layoutfocus = panelName
-    } else {
-      switch (edgeConst) {
-        case PANEL_TYPE.START:
-          initState(shared)
-          break
-        case PANEL_TYPE.LEFT:
-        case PANEL_TYPE.RIGHT:
-        case PANEL_TYPE.TOP:
-        case PANEL_TYPE.BOTTOM:
-        case PANEL_TYPE.SCROLL:
-          const panel: PANEL = {
-            id: createGuid(),
-            name: panelName,
-            edge: edgeConst,
-            size,
-            text: [],
-          }
-          shared.layout.push(panel)
-          shared.layoutfocus = panelName
-          break
-        default:
-          // todo: raise runtime error
-          // probably make a chip api to do it
-          break
-      }
-    }
-
     return 0
   })

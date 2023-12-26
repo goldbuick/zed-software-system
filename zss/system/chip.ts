@@ -5,7 +5,7 @@ import { GENERATED_FILENAME } from 'zss/lang/transformer'
 
 import { hub } from '../network/hub'
 
-import { FIRMWARE } from './firmware'
+import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
 
 export const HALT_AT_COUNT = 64
 
@@ -153,11 +153,19 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
 
   // chip invokes
   const firmwares: FIRMWARE[] = []
+  let invokes: Record<string, FIRMWARE_COMMAND> = {}
+
   function getcommand(name: string) {
-    const firmware = firmwares.find(
-      (item) => item.getcommand(name) !== undefined,
-    )
-    return firmware?.getcommand(name)
+    if (invokes[name] === undefined) {
+      for (let i = 0; i < firmwares.length; ++i) {
+        const command = firmwares[i].getcommand(name)
+        if (command) {
+          invokes[name] = command
+        }
+      }
+    }
+
+    return invokes[name]
   }
 
   function invokecommand(name: string, words: WORD[]): WORD_VALUE {
@@ -201,6 +209,9 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
 
     // invokes api
     install(firmware) {
+      // clear invoke cache
+      invokes = {}
+      // add firmware
       firmwares.push(firmware)
     },
 
@@ -365,7 +376,12 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       }
 
       // default behavior
-      const value = chip.tpi(words[0])
+      const [first] = words
+      // see if we have been given a flag, otherwise treat it as a string
+      const value =
+        (typeof first === 'string' ? getinternal(first) : undefined) ?? first
+
+      // return parsed value, with remaining words
       return [value, words.slice(1)]
     },
     parsegroup(...words) {
@@ -394,10 +410,12 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
 
       const [name, ...args] = words
       const command = getcommand(mapToString(name))
-      console.info({ name, args, command })
-      return command
-        ? command(chip, args)
-        : invokecommand('send', [name, ...args])
+      if (command) {
+        return command(chip, args)
+      }
+
+      // unknown command defaults to send
+      return invokecommand('send', [name, ...args])
     },
     if(...words) {
       const [value, next] = chip.parse(words)
