@@ -42,15 +42,16 @@ export const PLAYER_FIRMWARE = createFirmware(
   },
 )
   .command('set', (chip, words) => {
-    const [nameword, ...values] = words
-    const [value] = chip.parse(values)
-    const name = mapToString(nameword)
-    chip.set(name, value)
-
+    const [value] = chip.parse(words.slice(1))
+    chip.set(mapToString(words[0]), value)
     return 0
   })
-  .command('if', (chip, args) => {
-    console.info('if', args)
+  .command('take', (chip, args) => {
+    // simple pass-through here ..
+    return 0
+  })
+  .command('give', (chip, args) => {
+    // simple pass-through here ..
     return 0
   })
   .command('stat', (chip, args) => {

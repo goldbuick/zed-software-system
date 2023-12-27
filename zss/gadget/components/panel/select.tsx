@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { MAYBE_NUMBER, useShared } from 'zss/network/shared'
+import { MAYBE_NUMBER, useSharedValue } from 'zss/network/shared'
 
 import {
   cacheWriteTextContext,
@@ -23,7 +23,7 @@ export function PanelItemSelect({
   const max = values.length - 1
 
   // state
-  const [value, setValue] = useShared<MAYBE_NUMBER>(chip, target)
+  const [value, setValue] = useSharedValue<MAYBE_NUMBER>(chip, target)
   const state = value ?? 0
 
   const blink = useBlink()

@@ -66,7 +66,6 @@ export type CHIP = {
   try: (...words: WORD[]) => WORD_VALUE
   take: (...words: WORD[]) => WORD_VALUE
   give: (...words: WORD[]) => WORD_VALUE
-  while: (...words: WORD[]) => WORD_VALUE
   repeatStart: (index: number, ...words: WORD[]) => void
   repeat: (index: number) => boolean
   readStart: (index: number, name: WORD) => void
@@ -419,8 +418,8 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     },
     if(...words) {
       const [value, next] = chip.parse(words)
+      const result = mapToResult(value)
 
-      const result = mapToResult(invokecommand('if', [value as WORD]))
       if (result && next.length) {
         chip.command(...next)
       }
@@ -467,16 +466,6 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
 
       // returns true when give creates a new flag
       const result = mapToResult(invokecommand('give', [name, value as WORD]))
-      if (result && next.length) {
-        chip.command(...next)
-      }
-
-      return result
-    },
-    while(...words) {
-      const [value, next] = chip.parse(words)
-
-      const result = mapToResult(invokecommand('if', [value as WORD]))
       if (result && next.length) {
         chip.command(...next)
       }

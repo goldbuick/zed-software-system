@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { MAYBE_TEXT, useShared } from 'zss/network/shared'
+import { MAYBE_TEXT, useSharedType } from 'zss/network/shared'
 
 import {
   cacheWriteTextContext,
@@ -26,7 +26,7 @@ export function PanelItemText({
   const target = mapTo(args[0], '')
 
   // state
-  const [value] = useShared<MAYBE_TEXT>(chip, target)
+  const [value] = useSharedType<MAYBE_TEXT>(chip, target)
   const state = value?.toJSON() ?? ''
 
   const blink = useBlink()
@@ -51,7 +51,16 @@ export function PanelItemText({
 
   return (
     <>
-      {active && <UserInput OK_BUTTON={() => value && setFocus(true)} />}
+      {active && (
+        <UserInput
+          OK_BUTTON={() => {
+            if (value) {
+              setFocus(true)
+              setCursor(value.length)
+            }
+          }}
+        />
+      )}
       {focus && (
         <UserFocus blockhotkeys>
           <UserInput

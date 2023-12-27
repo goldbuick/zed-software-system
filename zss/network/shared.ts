@@ -92,6 +92,7 @@ function getValueFromMap<T>(values: Y.Map<any>, key: string): T | undefined {
 }
 
 function setValueOnMap<T>(values: Y.Map<any>, key: string, value: T) {
+  console.info('setValueOnMap', key, value, typeof value)
   if (typeof value === 'string') {
     // how do we handle this ?
     values.set(key, new Y.Text(value))
@@ -109,6 +110,7 @@ export function joinShared(guid: string) {
 export function updateShared<T>(guid: string, key: string, value: T) {
   const values = getValues(guid)
   const current = getValueFromMap<T>(values, key)
+  console.info('updateShared', guid, key, current, '=>', value)
   if (current !== value) {
     setValueOnMap(values, key, value)
   }
@@ -124,6 +126,7 @@ export function observeShared<T>(
   function observehandler(events: Y.YEvent<any>[]) {
     const list = events as Y.YMapEvent<any>[]
     for (let i = 0; i < list.length; ++i) {
+      console.info(list[i])
       if (list[i].keysChanged.has(key)) {
         handler(getValueFromMap<T>(values, key))
       }
@@ -136,7 +139,7 @@ export function observeShared<T>(
   }
 }
 
-export function useShared<T>(
+export function useSharedValue<T>(
   guid: string,
   key: string,
 ): [T | undefined, (v: Exclude<T, undefined>) => void] {
@@ -167,4 +170,25 @@ export function useShared<T>(
   }
 
   return [value, updatevalue]
+}
+
+export function useSharedType<T>(guid: string, key: string): [T] {
+  const values = getValues(guid, true)
+  const type = values.get(key) as T
+  const [t, toggle] = useState(0)
+
+  useEffect(() => {
+    function observehandler() {
+      toggle(1 - t)
+    }
+
+    // @ts-expect-error will figure out how to type this later
+    type?.observeDeep(observehandler)
+    return () => {
+      // @ts-expect-error will figure out how to type this later
+      type?.unobserveDeep(observehandler)
+    }
+  }, [])
+
+  return [values.get(key) as T]
 }

@@ -310,7 +310,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.WHILE: {
       const source = write(ast, [
         'while (',
-        writeApi(ast, 'while', transformNodes(ast.words)),
+        writeApi(ast, 'if', transformNodes(ast.words)),
         `) {\n${END_OF_LINE_CODE}\n`,
       ])
 
