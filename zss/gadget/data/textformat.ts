@@ -214,6 +214,8 @@ export function writeTextFormat(
   tokens: IToken[],
   context: WRITE_TEXT_CONTEXT,
 ): boolean {
+  const starty = context.y
+
   function incCursor() {
     ++context.x
     if (context.x >= (context.rightEdge ?? context.width)) {
@@ -329,9 +331,11 @@ export function writeTextFormat(
   }
 
   // move to next line if needed
-  if (context.measureOnly !== true && context.x !== 0) {
-    context.x = context.leftEdge ?? 0
-    ++context.y
+  if (context.measureOnly !== true) {
+    if (context.x !== 0 || context.y === starty) {
+      context.x = context.leftEdge ?? 0
+      ++context.y
+    }
   }
 
   return true
@@ -342,7 +346,7 @@ export function tokenizeAndWriteTextFormat(
   context: WRITE_TEXT_CONTEXT,
 ) {
   const result = tokenize(text)
-  if (result.tokens?.length < 1) {
+  if (!result.tokens) {
     return true
   }
 
