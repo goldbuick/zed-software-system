@@ -54,8 +54,9 @@ const shareddevice = createDevice('shared', [], (message) => {
 })
 
 function getValues(guid: string, client?: boolean) {
-  if (!docs[guid]) {
-    docs[guid] = new Y.Doc({ guid })
+  let doc = docs[guid]
+  if (!doc) {
+    docs[guid] = doc = new Y.Doc({ guid })
 
     function handleupdates(update: Uint8Array) {
       const updateEncoder = encoding.createEncoder()
@@ -63,9 +64,12 @@ function getValues(guid: string, client?: boolean) {
       sendMessage('sync', guid, updateEncoder)
     }
 
-    docs[guid].on('update', handleupdates)
-    docs[guid].on('destroy', () => {
-      docs[guid].off('update', handleupdates)
+    // encode updates to send to other shared docs
+    doc.on('update', handleupdates)
+
+    // cleanup
+    doc.on('destroy', () => {
+      doc.off('update', handleupdates)
     })
 
     // send join message
@@ -73,7 +77,8 @@ function getValues(guid: string, client?: boolean) {
       joinShared(guid)
     }
   }
-  return docs[guid].getMap()
+
+  return doc.getMap()
 }
 
 function sendMessage(target: string, guid: string, encoder: encoding.Encoder) {
@@ -92,9 +97,8 @@ function getValueFromMap<T>(values: Y.Map<any>, key: string): T | undefined {
 }
 
 function setValueOnMap<T>(values: Y.Map<any>, key: string, value: T) {
-  console.info('setValueOnMap', key, value, typeof value)
+  // console.info('setValueOnMap', key, value, typeof value)
   if (typeof value === 'string') {
-    // how do we handle this ?
     values.set(key, new Y.Text(value))
   } else {
     values.set(key, value)
@@ -107,39 +111,70 @@ export function joinShared(guid: string) {
   shareddevice.emit('shared:join', guid)
 }
 
-export function updateShared<T>(guid: string, key: string, value: T) {
+// object change handlers
+
+export function initSharedValue<T>(guid: string, key: string, value: T) {
   const values = getValues(guid)
-  const current = getValueFromMap<T>(values, key)
-  console.info('updateShared', guid, key, current, '=>', value)
-  if (current !== value) {
+  const current = values.get(key)
+  if (current === undefined && value !== undefined) {
+    // console.info('initSharedValue', { key, value })
     setValueOnMap(values, key, value)
   }
 }
 
-export function observeShared<T>(
+export function checkSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
+  guid: string,
+  key: string,
+  value: T,
+) {
+  const values = getValues(guid)
+  const current = getValueFromMap<T>(values, key)
+  if (current === undefined || value !== current) {
+    // console.info('checkSharedValue', { key, value })
+    setValueOnMap(values, key, value)
+  }
+}
+
+export function observeSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   guid: string,
   key: string,
   handler: (value: T | undefined) => void,
 ): UNOBSERVE_FUNC {
   const values = getValues(guid)
 
-  function observehandler(events: Y.YEvent<any>[]) {
-    const list = events as Y.YMapEvent<any>[]
-    for (let i = 0; i < list.length; ++i) {
-      console.info(list[i])
-      if (list[i].keysChanged.has(key)) {
-        handler(getValueFromMap<T>(values, key))
-      }
+  function observehandler(event: Y.YMapEvent<any>) {
+    if (event.keysChanged.has(key)) {
+      handler(getValueFromMap<T>(values, key))
     }
   }
 
-  values.observeDeep(observehandler)
+  values.observe(observehandler)
   return () => {
-    values.unobserveDeep(observehandler)
+    values.unobserve(observehandler)
   }
 }
 
-export function useSharedValue<T>(
+export function observeSharedType<T extends MAYBE_TEXT | MAYBE_MAP>(
+  guid: string,
+  key: string,
+  handler: (value: T | undefined) => void,
+): UNOBSERVE_FUNC {
+  const values = getValues(guid, true)
+  const type = values.get(key) as T | undefined
+
+  function observehandler() {
+    handler(type)
+  }
+
+  type?.observeDeep(observehandler)
+  return () => {
+    type?.unobserveDeep(observehandler)
+  }
+}
+
+// react hooks
+
+export function useSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   guid: string,
   key: string,
 ): [T | undefined, (v: Exclude<T, undefined>) => void] {
@@ -149,19 +184,16 @@ export function useSharedValue<T>(
   )
 
   useEffect(() => {
-    function observehandler(events: Y.YEvent<any>[]) {
-      const list = events as Y.YMapEvent<any>[]
-      for (let i = 0; i < list.length; ++i) {
-        if (list[i].keysChanged.has(key)) {
-          const v = getValueFromMap<T>(values, key)
-          setvalue(v)
-        }
+    function observehandler(event: Y.YMapEvent<any>) {
+      if (event.keysChanged.has(key)) {
+        const v = getValueFromMap<T>(values, key)
+        setvalue(v)
       }
     }
 
-    values.observeDeep(observehandler)
+    values.observe(observehandler)
     return () => {
-      values.unobserveDeep(observehandler)
+      values.unobserve(observehandler)
     }
   }, [])
 

@@ -7,7 +7,14 @@ import {
   PANEL_TYPE_MAP,
 } from 'zss/gadget/data/types'
 import { createGuid } from 'zss/mapping/guid'
-import { observeShared, updateShared } from 'zss/network/shared'
+import {
+  observeSharedValue,
+  observeSharedType,
+  MAYBE_TEXT,
+  initSharedValue,
+  checkSharedValue,
+  MAYBE_NUMBER,
+} from 'zss/network/shared'
 import { STATE, WORD_VALUE, mapToString } from 'zss/system/chip'
 
 import { createFirmware } from '../firmware'
@@ -34,7 +41,9 @@ function resetpanel(panel: PANEL) {
   panel.text = []
 
   // invoke unobserve(s)
-  Object.values(panelshared[panel.id] ?? {}).forEach((unobserve) => unobserve())
+  Object.values(panelshared[panel.id] ?? {}).forEach(
+    (unobserve) => unobserve?.(),
+  )
   panelshared[panel.id] = {}
 }
 
@@ -113,7 +122,7 @@ export const GADGET_FIRMWARE = createFirmware(
     Object.values(panelshared).forEach((state) => {
       // we care about this value
       if (state[name] !== undefined) {
-        updateShared(chip.id(), name, value)
+        checkSharedValue(chip.id(), name, value)
       }
     })
 
@@ -221,35 +230,44 @@ export const GADGET_FIRMWARE = createFirmware(
 
     // do we care?
     if (HYPERLINK_WITH_SHARED.has(type)) {
-      // name of target value to track
-      const target = `${hyperlink[3] ?? ''}`
+      // track changes to flag
+      const name = `${hyperlink[3] ?? ''}`
 
       // value tracking grouped by panel id
       panelshared[panel.id] = panelshared[panel.id] ?? {}
 
-      // track changes to value
-      panelshared[panel.id][target] = observeShared<number | string>(
-        chip.id(),
-        target,
-        (value) => {
-          const current = chip.get(target)
-          // value changed in shared, update chip flag value
-          if (value !== undefined && value !== current) {
-            chip.set(target, value)
-          }
-        },
-      )
+      // get current flag value
+      const current = chip.get(name)
 
-      // we need to set initial value in shared
-      const init = chip.get(target)
+      // setup tracking if needed
+      if (panelshared[panel.id][name] === undefined) {
+        // this will init the value only if not already setup
+        initSharedValue(chip.id(), name, current)
 
-      if (init !== undefined) {
-        // default to the current value in chip
-        updateShared(chip.id(), target, init)
-      } else {
-        // no value set, use sensible default
-        const initvalue = HYPERLINK_WITH_SHARED_TEXT.has(type) ? '' : 0
-        updateShared(chip.id(), target, initvalue)
+        if (HYPERLINK_WITH_SHARED_TEXT.has(type)) {
+          panelshared[panel.id][name] = observeSharedType<MAYBE_TEXT>(
+            chip.id(),
+            name,
+            (value) => {
+              if (value !== undefined) {
+                const str = value.toJSON()
+                if (str !== chip.get(name)) {
+                  chip.set(name, str)
+                }
+              }
+            },
+          )
+        } else {
+          panelshared[panel.id][name] = observeSharedValue<MAYBE_NUMBER>(
+            chip.id(),
+            name,
+            (value) => {
+              if (value !== undefined && value !== chip.get(name)) {
+                chip.set(name, value)
+              }
+            },
+          )
+        }
       }
     }
 

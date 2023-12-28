@@ -23,7 +23,7 @@ export const PLAYER_FIRMWARE = createFirmware(
     // get
     const value = state[player][index]
 
-    console.info('###get', { name, value })
+    // console.info('###get', { name, value })
     return [isPresent(value), value]
   },
   (chip, name, value) => {
@@ -37,7 +37,7 @@ export const PLAYER_FIRMWARE = createFirmware(
     // set
     state[player][index] = value
 
-    console.info('###set', { name, value })
+    // console.info('###set', { name, value })
     return [true, value]
   },
 )
