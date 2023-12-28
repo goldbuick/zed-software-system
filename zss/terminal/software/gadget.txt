@@ -17,25 +17,26 @@
 #end
 
 :codepage-select
-#set frank4 blahhhhhh
-
 #gadget scroll "Open Codepage $blue$3$1"
+
 $3 Here is some test text and yeah! $3
 ----------------------------------
-!hotkey codepage-create n  ;New Codepage
+!hotkey          codepage-create n  ;New Codepage
 ----------------------------------
-!boot   monk               ;This is super cool
-!boot   honk               ;This is also cool 
-!number frank1 100         ;Number Value 
-!rn     frank2             ;Slider 
-!select frank3 A BB CC 333 ;Enum 
-!text   frank4             ;Text Value 
+!boot            monk               ;This is super cool
+!boot            honk               ;This is also cool 
+!number          frank1 100         ;Number Value 
+!rn              frank2             ;Slider 
+!select          frank3 A BB CC 333 ;Enum 
+!text            frank4             ;Text Value 
+!codepage-create chaos              ;DO NOT TOUCH
+
 #end
 
 :codepage-create
 #set frank1 32
 #gadget bottom
-"      DOOT!!!"
+      DOOT!!! $data
 #end
 
 :boot
