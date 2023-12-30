@@ -25,8 +25,9 @@ export enum NODE {
   IF,
   ELSE_IF,
   ELSE,
-  FOR,
-  FUNC,
+  // FOR,
+  // FUNC,
+  API,
   WHILE,
   BREAK,
   CONTINUE,
@@ -40,13 +41,6 @@ export enum NODE {
   OPERATOR,
   OPERATOR_ITEM,
   GROUP,
-}
-
-export enum IF_METHOD {
-  IF,
-  TRY,
-  TAKE,
-  GIVE,
 }
 
 export enum COMPARE {
@@ -161,6 +155,11 @@ type CodeNodeData =
       type: NODE.ELSE
       words: CodeNode[]
       block_lines?: CodeNode[]
+    }
+  | {
+      type: NODE.API
+      method: string
+      words: CodeNode[]
     }
   | {
       type: NODE.WHILE
@@ -476,6 +475,10 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error cst element
       return this.visit(ctx.Command_if)
     }
+    if (ctx.Command_set) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.Command_set)
+    }
     if (ctx.Command_while) {
       // @ts-expect-error cst element
       return this.visit(ctx.Command_while)
@@ -578,6 +581,16 @@ class ScriptVisitor extends CstVisitor {
       type: NODE.ELSE,
       words,
       block_lines,
+    })
+  }
+
+  Command_api(ctx: CstChildrenDictionary) {
+    const method = strImage(ctx.set[0]).toLowerCase()
+    return makeNode(ctx, {
+      type: NODE.API,
+      method,
+      // @ts-expect-error cst element
+      words: asList(this, ctx.words),
     })
   }
 

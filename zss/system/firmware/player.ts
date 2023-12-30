@@ -1,5 +1,5 @@
 import { isPresent } from 'ts-extras'
-import { STATE, isString, mapToString } from 'zss/system/chip'
+import { STATE, mapToString } from 'zss/system/chip'
 
 import { createFirmware } from '../firmware'
 
@@ -46,33 +46,46 @@ export const PLAYER_FIRMWARE = createFirmware(
     chip.set(mapToString(words[0]), value)
     return 0
   })
-  .command('take', (chip, args) => {
-    // simple pass-through here ..
+  .command('clear', (chip, words) => {
+    const name = mapToString(words[0])
+    chip.set(name, undefined)
     return 0
   })
-  .command('give', (chip, args) => {
-    // simple pass-through here ..
+  .command('endgame', (chip) => {
+    chip.set('health', 0)
     return 0
   })
-  .command('stat', (chip, args) => {
-    const parts = args.map(chip.tpi)
+  .command('stat', (chip, words) => {
+    const parts = words.map(chip.tpi)
     chip.setName(parts.join(' '))
+    return 0
+  })
+  .command('zap', (chip, words) => {
+    chip.zap(mapToString(words[0]))
+    return 0
+  })
+  .command('restore', (chip, words) => {
+    chip.restore(mapToString(words[0]))
     return 0
   })
   .command('end', (chip) => {
     chip.endofprogram()
     return 0
   })
-  .command('send', (chip, args) => {
-    const [targetword, dataword] = args
-
-    // target should always be a string
-    const target = mapToString(targetword)
-
-    // check for flag name value
-    const data = isString(dataword) ? chip.get(dataword) : undefined
-
-    // default to original value of flag check fails
-    chip.send(target, data ?? dataword)
+  .command('idle', (chip) => {
+    chip.yield()
+    return 0
+  })
+  .command('lock', (chip) => {
+    chip.lock(chip.id())
+    return 0
+  })
+  .command('unlock', (chip) => {
+    chip.unlock()
+    return 0
+  })
+  .command('send', (chip, words) => {
+    const [value] = chip.parse(words.slice(1))
+    chip.send(mapToString(words[0]), value)
     return 0
   })

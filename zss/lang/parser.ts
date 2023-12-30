@@ -182,6 +182,7 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.Command)
     this.OR([
       { ALT: () => this.SUBRULE(this.Command_if) },
+      // { ALT: () => this.SUBRULE(this.Command_api) },
       { ALT: () => this.SUBRULE(this.Command_while) },
       { ALT: () => this.SUBRULE(this.Command_repeat) },
       { ALT: () => this.SUBRULE(this.Command_read) },
@@ -303,6 +304,11 @@ class ScriptParser extends CstParser {
         },
       },
     ])
+  })
+
+  Command_api = this.RULED('Command_api', () => {
+    this.CONSUME(lexer.Command_api)
+    this.SUBRULE(this.words)
   })
 
   Command_while = this.RULED('Command_while', () => {

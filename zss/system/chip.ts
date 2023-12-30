@@ -41,8 +41,9 @@ export type CHIP = {
   hasmessage: () => number
   yield: () => void
   shouldyield: () => boolean
-  addSelfId: (targetString: string) => string
   send: (target: string, data?: any) => void
+  lock: (allowed: string) => void
+  unlock: () => void
   message: (incoming: MESSAGE) => void
   zap: (label: string) => void
   restore: (label: string) => void
@@ -125,6 +126,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
   let logic: Generator<number> | undefined
 
   // incoming message state
+  let locked = ''
   let message: MESSAGE | undefined = undefined
 
   // prevent infinite loop lockup
@@ -282,16 +284,22 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     shouldyield() {
       return yieldstate || chip.shouldhalt()
     },
-    addSelfId(targetString) {
-      // always prefix with route back to this chip
-      return `platform:${id}:${targetString}`
-    },
     send(target, data) {
-      const fulltarget = chip.addSelfId(target)
-      hub.emit(fulltarget, chip.id(), data)
-      console.info('send', fulltarget, chip.id(), data)
+      const fulltarget = `platform:${id}:${target}`
+      hub.emit(fulltarget, id, data)
+      console.info('send', fulltarget, id, data)
+    },
+    lock(allowed) {
+      locked = allowed
+    },
+    unlock() {
+      locked = ''
     },
     message(incoming) {
+      // internal messages while locked are allowed
+      if (locked && incoming.from !== locked) {
+        return
+      }
       message = incoming
     },
     zap(label) {
@@ -426,6 +434,67 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
 
       return result
     },
+    take(...words) {
+      const [name, ...values] = words
+
+      // todo throw error
+      if (!isString(name)) {
+        return 0
+      }
+
+      const current = chip.get(name)
+      const [maybevalue, next] = chip.parse(values)
+      const value = maybevalue ?? 1
+
+      // taking from an unset flag, or non-numerical value
+      if (!isNumber(current) || !isNumber(value)) {
+        // todo: raise warning ?
+        return 1
+      }
+
+      const newvalue = current - value
+
+      // returns true when take fails
+      if (newvalue < 0) {
+        if (next.length) {
+          chip.command(...next)
+        }
+        return 1
+      }
+
+      // update flag
+      chip.set(name, newvalue)
+      return 0
+    },
+    give(...words) {
+      const [name, ...values] = words
+
+      // todo throw error
+      if (!isString(name)) {
+        return 0
+      }
+
+      const maybecurrent = chip.get(name)
+      const current = isNumber(maybecurrent) ? maybecurrent : 0
+      const [maybevalue, next] = chip.parse(values)
+      const value = maybevalue ?? 1
+
+      // giving a non-numerical value
+      if (!isNumber(value)) {
+        // todo: raise warning ?
+        return 0
+      }
+
+      // returns true when setting an unset flag
+      const result = maybecurrent === undefined ? 1 : 0
+      if (result && next.length) {
+        chip.command(...next)
+      }
+
+      // update flag
+      chip.set(name, current + value)
+      return result
+    },
     try(...words) {
       const [value, next] = chip.parse(words)
 
@@ -436,46 +505,10 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
 
       return result
     },
-    take(...words) {
-      const [name, ...values] = words
-
-      // todo throw error
-      if (!isString(name)) {
-        return 0
-      }
-
-      const [value, next] = chip.parse(values)
-
-      // returns true when take fails
-      const result = mapToResult(invokecommand('take', [name, value as WORD]))
-      if (result && next.length) {
-        chip.command(...next)
-      }
-
-      return result
-    },
-    give(...words) {
-      const [name, ...values] = words
-
-      // todo throw error
-      if (!isString(name)) {
-        return 0
-      }
-
-      const [value, next] = chip.parse(values)
-
-      // returns true when give creates a new flag
-      const result = mapToResult(invokecommand('give', [name, value as WORD]))
-      if (result && next.length) {
-        chip.command(...next)
-      }
-
-      return result
-    },
     repeatStart(index, ...words) {
-      const [value, next] = chip.parse(words)
+      const [maybevalue, next] = chip.parse(words)
 
-      repeats[index] = isNumber(value) ? value : 0
+      repeats[index] = isNumber(maybevalue) ? maybevalue : 0
       repeatscommand[index] = next
     },
     repeat(index) {

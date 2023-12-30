@@ -237,7 +237,7 @@ function transformNode(ast: CodeNode): SourceNode {
         writeApi(ast, `command`, transformNodes(ast.words)),
         `) { ${WAIT_CODE} };`,
       ])
-    // structure
+    // core / structure
     case NODE.IF: {
       const source = write(ast, [
         `if (`,
@@ -307,6 +307,12 @@ function transformNode(ast: CodeNode): SourceNode {
 
       return source
     }
+    case NODE.API:
+      return write(ast, [
+        writeApi(ast, ast.method, transformNodes(ast.words)),
+        `\n${END_OF_LINE_CODE}\n`,
+      ])
+
     case NODE.WHILE: {
       const source = write(ast, [
         'while (',

@@ -420,9 +420,11 @@ export const Command_play = createToken({
   start_chars_hint: all_chars,
 })
 
-// structure commands
+// core / structure commands
 
 export const Command_if = createWordToken('if|try|take|give', 'if')
+// may not need this ?
+export const Command_api = createWordToken('set|clear', 'api')
 export const Command_else = createWordToken('else')
 export const Command_while = createWordToken('while')
 export const Command_repeat = createWordToken('repeat')
@@ -482,8 +484,9 @@ export const allTokens = createTokenSet([
   HyperLinkText,
   Newline,
   Whitespace,
-  // structure commands
+  // core / structure commands
   Command_if,
+  // Command_api,
   Command_else,
   Command_while,
   Command_repeat,
