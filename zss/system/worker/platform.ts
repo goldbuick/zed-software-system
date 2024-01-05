@@ -5,14 +5,13 @@ import { LAYER_TYPE, SPRITE } from 'zss/gadget/data/types'
 import { indexToX, indexToY } from 'zss/mapping/2d'
 import { select } from 'zss/mapping/array'
 import { createDevice } from 'zss/network/device'
-import { hub } from 'zss/network/hub'
 import { STATE } from 'zss/system/chip'
 import { CODE_PAGE_TYPE } from 'zss/system/codepage'
 import { clearscroll, gadgetstate } from 'zss/system/firmware/gadget'
-import { PLATFORM_SET } from 'zss/system/firmware/loader'
+import { LOGIN_SET } from 'zss/system/firmware/loader'
 import { createOS } from 'zss/system/os'
+import { TAPE_PAGES } from 'zss/system/software'
 import { createVM } from 'zss/system/vm'
-import { TAPE_PAGES } from '/zss/system/software'
 
 // limited chars so peerjs doesn't get mad
 const justNumberChars = customAlphabet(numbers, 4)
@@ -44,7 +43,7 @@ const platform = createDevice('platform', [], (message) => {
           vm.login(message.player)
           os.boot({
             group: message.player,
-            firmware: PLATFORM_SET,
+            firmware: LOGIN_SET,
             code: appgadget.code,
           })
         }
