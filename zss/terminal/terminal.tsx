@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { STATS_DEV } from 'zss/config'
 
-import { Framing } from './Framing'
-import { Gadget } from './Gadget'
+import { Framing } from './framing'
+import { Gadget } from './gadget'
 
 export function Terminal() {
   const [stats] = useState(() => new Stats())
