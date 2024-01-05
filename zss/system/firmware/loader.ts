@@ -1,14 +1,14 @@
 import { CHIP } from '../chip'
 import { FIRMWARE } from '../firmware'
 
-import { DOCS_FIRMWARE } from './docs'
+import { ASSEMBLER_FIRMWARE } from './assembler'
 import { GADGET_FIRMWARE } from './gadget'
 import { PLAYER_FIRMWARE } from './player'
 
 const firmwares: Record<string, FIRMWARE> = {
-  docs: DOCS_FIRMWARE,
   gadget: GADGET_FIRMWARE,
   player: PLAYER_FIRMWARE,
+  assembler: ASSEMBLER_FIRMWARE,
 }
 
 export function loadFirmware(chip: CHIP, name: string) {
@@ -24,7 +24,7 @@ export function loadFirmware(chip: CHIP, name: string) {
 export const PLATFORM_SET = [
   // when scanning for get/set/commands goes first to last
   'gadget',
-  'docs',
+  'assembler',
   // fallback to player global data
   'player',
 ]

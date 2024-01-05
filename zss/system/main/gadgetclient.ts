@@ -4,7 +4,7 @@ import { createDevice } from 'zss/network/device'
 import { STATE } from 'zss/system/chip'
 import { GADGET_STATE } from 'zss/system/firmware/gadget'
 
-import { player } from '../main/player'
+import { player } from './player'
 
 let needsReset = false
 

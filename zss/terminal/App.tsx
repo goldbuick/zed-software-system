@@ -3,9 +3,8 @@ import { Canvas, events } from '@react-three/fiber'
 import React from 'react'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
-import '../main/hubmain'
-
-import { makeEven } from '../../mapping/number'
+import { makeEven } from 'zss/mapping/number'
+import 'zss/system/main/hubmain'
 
 import { Terminal } from './Terminal'
 

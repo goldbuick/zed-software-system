@@ -12,7 +12,7 @@ import { clearscroll, gadgetstate } from 'zss/system/firmware/gadget'
 import { PLATFORM_SET } from 'zss/system/firmware/loader'
 import { createOS } from 'zss/system/os'
 import { createVM } from 'zss/system/vm'
-import { TAPE_PAGES } from 'zss/terminal/software'
+import { TAPE_PAGES } from '/zss/system/software'
 
 // limited chars so peerjs doesn't get mad
 const justNumberChars = customAlphabet(numbers, 4)

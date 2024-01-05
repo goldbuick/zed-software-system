@@ -1,6 +1,6 @@
 import { createFirmware } from '../firmware'
 
-export const STUB_FIRMWARE = createFirmware(
+export const READER_FIRMWARE = createFirmware(
   (chip, name) => {
     return [false, undefined]
   },
@@ -12,7 +12,9 @@ export const STUB_FIRMWARE = createFirmware(
 })
 
 /*
-What is world firmware ?
+
+What is reader firmware ?
 it is one of the engine firmwares
-that drives playing out created codepage content
+that drives playing out created books
+
 */
