@@ -2,12 +2,19 @@ import { createFirmware } from '../firmware'
 
 export const ASSEMBLER_FIRMWARE = createFirmware(
   (chip, name) => {
+    switch (name) {
+      case 'books':
+        // books is the entrypoint we can read from
+        // everything else is punching down nested data
+        break
+    }
     return [false, undefined]
   },
   (chip, name, value) => {
     return [false, undefined]
   },
-).command('stub', (chip, words) => {
+).command('open', (chip, words) => {
+  // open a book or page ?
   return 0
 })
 
@@ -24,5 +31,10 @@ zss has two types of content containers
 
 the assembler has a workspace that is a book container,
 and #commands are used to view and edit the book's state
+
+we want to open a book
+we want to open a page
+
+we want to edit an entry ?
 
 */

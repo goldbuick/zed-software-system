@@ -1,6 +1,6 @@
 import { createFirmware } from '../firmware'
 
-export const READER_FIRMWARE = createFirmware(
+export const PROC_FIRMWARE = createFirmware(
   (chip, name) => {
     return [false, undefined]
   },
@@ -13,7 +13,7 @@ export const READER_FIRMWARE = createFirmware(
 
 /*
 
-What is reader firmware ?
+What is processor firmware ?
 it is one of the engine firmwares
 that drives playing out created books
 
