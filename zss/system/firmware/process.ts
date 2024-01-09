@@ -1,6 +1,6 @@
 import { createFirmware } from '../firmware'
 
-export const PROC_FIRMWARE = createFirmware(
+export const PROCESS_FIRMWARE = createFirmware(
   (chip, name) => {
     return [false, undefined]
   },
@@ -13,7 +13,7 @@ export const PROC_FIRMWARE = createFirmware(
 
 /*
 
-What is processor firmware ?
+What is process firmware ?
 it is one of the engine firmwares
 that drives playing out created books
 
