@@ -1,24 +1,41 @@
 import { BOARD } from './board'
 
-export enum CODE_PAGE_TYPE {
+export enum CONTENT_TYPE {
   ERROR,
   CODE,
   BOARD,
+  CHARSET,
+  PALETTE,
 }
 
-type CODE_PAGE_DATA =
-  | {
-      type: CODE_PAGE_TYPE.ERROR
-      error: string
-    }
-  | {
-      type: CODE_PAGE_TYPE.CODE
-      code: string
-    }
-  | {
-      type: CODE_PAGE_TYPE.BOARD
-      board: BOARD
-    }
+type CODE_PAGE_META = {
+  id: string
+  name: string
+}
+
+export type CODE_PAGE_DATA = CODE_PAGE_META &
+  (
+    | {
+        type: CONTENT_TYPE.ERROR
+        error: string
+      }
+    | {
+        type: CONTENT_TYPE.CODE
+        code: string
+      }
+    | {
+        type: CONTENT_TYPE.BOARD
+        board: BOARD
+      }
+    | {
+        type: CONTENT_TYPE.CHARSET
+        charset: Uint8Array
+      }
+    | {
+        type: CONTENT_TYPE.PALETTE
+        palette: Uint8Array
+      }
+  )
 
 export type CODE_PAGE_ENTRY = {
   id: string

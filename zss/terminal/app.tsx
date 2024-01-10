@@ -4,9 +4,9 @@ import React from 'react'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
 import { makeEven } from 'zss/mapping/number'
-import 'zss/system/main/hubmain'
+import 'zss/system/hubmain'
 
-import { Terminal } from './Terminal'
+import { Terminal } from './terminal'
 
 const target = new THREE.Vector3()
 const facing = new THREE.Vector3()

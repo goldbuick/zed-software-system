@@ -6,12 +6,12 @@ import { indexToX, indexToY } from 'zss/mapping/2d'
 import { select } from 'zss/mapping/array'
 import { createDevice } from 'zss/network/device'
 import { STATE } from 'zss/system/chip'
-import { CODE_PAGE_TYPE } from 'zss/system/codepage'
 import { clearscroll, gadgetstate } from 'zss/system/firmware/gadget'
 import { LOGIN_SET } from 'zss/system/firmware/loader'
 import { createOS } from 'zss/system/os'
-import { TAPE_PAGES } from 'zss/system/software'
 import { createVM } from 'zss/system/vm'
+
+import { CONTENT_TYPE } from '../codepage'
 
 // limited chars so peerjs doesn't get mad
 const justNumberChars = customAlphabet(numbers, 4)
@@ -24,7 +24,7 @@ const os = createOS()
 const vm = createVM()
 
 // load default software
-vm.load(TAPE_PAGES)
+// vm.load(TAPE_PAGES)
 
 // tracking active player ids
 const tracking: Record<string, number> = {}
@@ -38,7 +38,7 @@ const platform = createDevice('platform', [], (message) => {
     case 'login':
       if (message.player) {
         const appgadget = select(vm.get('app:gadget'))
-        if (appgadget?.type === CODE_PAGE_TYPE.CODE) {
+        if (appgadget?.type === CONTENT_TYPE.CODE) {
           tracking[message.player] = 0
           vm.login(message.player)
           os.boot({
@@ -121,7 +121,7 @@ function tick() {
     }
 
     const [boardPage] = vm.get(playerstate.boardId)
-    if (boardPage.type !== CODE_PAGE_TYPE.BOARD) {
+    if (boardPage.type !== CONTENT_TYPE.BOARD) {
       // TODO: raise error
       return
     }

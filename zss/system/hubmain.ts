@@ -1,14 +1,11 @@
 import { hub } from 'zss/network/hub'
 
-import './gadgetclient'
-import './player'
+import './main/gadgetclient'
+import './main/player'
 
-const webworker = new Worker(
-  new URL('../worker/hubworker.ts', import.meta.url),
-  {
-    type: 'module',
-  },
-)
+const webworker = new Worker(new URL('./hubworker.ts', import.meta.url), {
+  type: 'module',
+})
 
 hub.setSyncHandler((hubmessage) => {
   webworker.postMessage(hubmessage)

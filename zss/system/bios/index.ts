@@ -3,7 +3,9 @@ import playercode from 'bundle-text:./player.txt'
 import { indexToX, indexToY } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { createGuid } from 'zss/mapping/guid'
-import { CODE_PAGE, CODE_PAGE_TYPE } from 'zss/system/codepage'
+
+import { BOOK } from '../book'
+import { CONTENT_TYPE } from '../codepage'
 
 /*
 
@@ -42,36 +44,42 @@ how do we manage what is running in the current session ?
 
 */
 
-const TAPE_WIDTH = 60
-const TAPE_HEIGHT = 25
+const BOARD_WIDTH = 60
+const BOARD_HEIGHT = 25
+const BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT
 
-export const TAPE_PAGES: CODE_PAGE[] = [
-  {
-    id: createGuid(),
-    name: 'app',
-    entries: [
-      {
-        id: createGuid(),
-        name: 'gadget',
-        type: CODE_PAGE_TYPE.CODE,
-        code: gadgetcode,
-      },
-      {
-        id: createGuid(),
-        name: 'title',
-        type: CODE_PAGE_TYPE.BOARD,
-        board: {
-          x: 0,
-          y: 0,
-          width: TAPE_WIDTH,
-          height: TAPE_HEIGHT,
-          terrain: range(TAPE_WIDTH * TAPE_HEIGHT - 1).map(() => ({
-            char: 0,
-            color: 0,
-          })),
-          objects: {},
+export const BIOS: BOOK = {
+  id: createGuid(),
+  name: 'BIOS',
+  pages: [
+    {
+      id: createGuid(),
+      name: 'app',
+      entries: [
+        {
+          id: createGuid(),
+          name: 'gadget',
+          type: CONTENT_TYPE.CODE,
+          code: gadgetcode,
         },
-      },
-    ],
-  },
-]
+        {
+          id: createGuid(),
+          name: 'title',
+          type: CONTENT_TYPE.BOARD,
+          board: {
+            x: 0,
+            y: 0,
+            width: BOARD_WIDTH,
+            height: BOARD_HEIGHT,
+            terrain: range(BOARD_SIZE - 1).map(() => ({
+              char: 0,
+              color: 0,
+            })),
+            objects: {},
+          },
+        },
+      ],
+    },
+  ],
+  config: [{ id: createGuid(), name: 'config', value: 'app:gadget' }],
+}
