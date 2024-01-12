@@ -1,12 +1,8 @@
 import { compare, deepClone } from 'fast-json-patch'
+import { GADGET_STATE } from 'zss/gadget/data/types'
 import { createDevice } from 'zss/network/device'
 
-import {
-  GADGET_STATE,
-  clearscroll,
-  gadgetgroups,
-  gadgetstate,
-} from '../firmware/gadget'
+import { clearscroll, gadgetgroups, gadgetstate } from '../firmware/gadget'
 
 // tracking gadget state for individual players
 const syncstate: Record<string, GADGET_STATE> = {}

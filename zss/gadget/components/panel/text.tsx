@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { MAYBE_TEXT, useSharedType } from 'zss/network/shared'
+import { MAYBE_TEXT, useSharedType } from 'zss/system/shared'
 
 import {
   cacheWriteTextContext,

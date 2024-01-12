@@ -7,6 +7,7 @@ import {
   PANEL_TYPE_MAP,
 } from 'zss/gadget/data/types'
 import { createGuid } from 'zss/mapping/guid'
+import { STATE, WORD_VALUE, mapToString } from 'zss/system/chip'
 import {
   observeSharedValue,
   observeSharedType,
@@ -14,8 +15,7 @@ import {
   initSharedValue,
   checkSharedValue,
   MAYBE_NUMBER,
-} from 'zss/network/shared'
-import { STATE, WORD_VALUE, mapToString } from 'zss/system/chip'
+} from 'zss/system/shared'
 
 import { createFirmware } from '../firmware'
 

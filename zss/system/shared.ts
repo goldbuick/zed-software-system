@@ -3,8 +3,7 @@ import * as encoding from 'lib0/encoding'
 import { useEffect, useState } from 'react'
 import * as syncprotocol from 'y-protocols/sync'
 import * as Y from 'yjs'
-
-import { createDevice } from './device'
+import { createDevice } from 'zss/network/device'
 
 export type MAYBE_MAP = Y.Map<any> | undefined
 export type MAYBE_TEXT = Y.Text | undefined

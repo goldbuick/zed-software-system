@@ -9,17 +9,17 @@ const mixedChars = customAlphabet(`${numbers}${lowercase}`, 16)
 // this should be unique every time the page loads
 export const player = `pid_${justNumberChars()}_${mixedChars()}`
 
-const playerdevice = createDevice('player', ['ready'], (message) => {
+const device = createDevice('player', ['ready'], (message) => {
   switch (message.target) {
     case 'ready':
-      playerdevice.emit('platform:login', undefined, player)
+      device.emit('vm:login', undefined, player)
       break
   }
 })
 
 // activity ping
 function keepAlive() {
-  playerdevice.emit('platform:doot', undefined, player)
+  device.emit('vm:doot', undefined, player)
   setTimeout(keepAlive, 8 * 1000)
 }
 

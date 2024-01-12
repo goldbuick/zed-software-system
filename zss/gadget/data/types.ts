@@ -1,5 +1,5 @@
-import { UNOBSERVE_FUNC } from 'zss/network/shared'
 import { WORD_VALUE } from 'zss/system/chip'
+import { UNOBSERVE_FUNC } from 'zss/system/shared'
 
 import { BITMAP } from './bitmap'
 

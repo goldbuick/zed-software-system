@@ -1,14 +1,8 @@
-import { createDevice } from 'zss/network/device'
+import { hub } from 'zss/network/hub'
 
-const clock = createDevice('clock', [], () => {
-  // no-op here, clock only emits
-})
-
-// main update tick
 // 100 is 10 fps, 66.666 is ~15 fps, 50 is 20 fps, 40 is 25 fps  1000 / x = 15
 const TICK_RATE = 66.666
-const TICK_FPS = Math.round(1000 / TICK_RATE)
-console.info({ TICK_FPS })
+// const TICK_FPS = Math.round(1000 / TICK_RATE)
 
 // timer acc
 let acc = 0
@@ -22,8 +16,8 @@ function wake() {
   acc += delta
   if (acc >= TICK_RATE) {
     acc %= TICK_RATE
-    clock.emit('tick')
-    clock.emit('tock')
+    hub.emit('tick', 'clock')
+    hub.emit('tock', 'clock')
   }
 
   previous = now

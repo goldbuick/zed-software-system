@@ -19,7 +19,7 @@ const os = createOS()
 const LOOP_TIMEOUT = 32 * 15
 const tracking: Record<string, number> = {}
 
-createDevice('vm', ['tick'], (message) => {
+const vm = createDevice('vm', ['tick'], (message) => {
   switch (message.target) {
     case 'tick':
       // update chips
@@ -40,6 +40,8 @@ createDevice('vm', ['tick'], (message) => {
           group: message.player,
           firmware: LOGIN_SET,
           // where does this code come from ?
+          // comes from the process firmware
+          // process firmware loads bios by default
           code: '"STUFF"',
         })
       }
@@ -53,46 +55,6 @@ createDevice('vm', ['tick'], (message) => {
       console.info({ message })
       break
   }
-  // if (message.player) {
-  //   switch (message.target) {
-  //     case 'login':
-  //       // const appgadget = select(vm.get('app:gadget'))
-  //       // if (appgadget?.type === CONTENT_TYPE.CODE) {
-  //       //   tracking[message.player] = 0
-  //       //   vm.login(message.player)
-  //       //   os.boot({
-  //       //     group: message.player,
-  //       //     firmware: LOGIN_SET,
-  //       //     code: appgadget.code,
-  //       //   })
-  //       // }
-  //       break
-
-  //     case 'keydown':
-  //       // console.info(message)
-  //       break
-
-  //     case 'doot':
-  //       // tracking[message.player] = 0
-  //       break
-
-  //     case 'desync':
-  //       // const state = gadgetstate(message.player)
-  //       // platform.emit('gadgetclient:reset', state, message.player)
-  //       break
-
-  //     case 'clearscroll':
-  //       // clearscroll(message.player)
-  //       break
-
-  //     default: //
-  //       break
-  //   }
-  //   return
-  // }
-
-  // switch (message.target) {
-
-  // }
-  // os.message(message)
 })
+
+queueMicrotask(() => vm.emit('ready'))
