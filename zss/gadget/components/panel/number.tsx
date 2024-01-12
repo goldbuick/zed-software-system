@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react'
-import { MAYBE_NUMBER, useSharedValue } from 'zss/system/shared'
+import { useSharedValue } from 'zss/system/device/sharedmain'
+import { MAYBE_NUMBER } from 'zss/system/shared'
 
 import {
   cacheWriteTextContext,
