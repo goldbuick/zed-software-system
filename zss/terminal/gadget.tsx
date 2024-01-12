@@ -1,6 +1,6 @@
 import React from 'react'
 import { Layout } from 'zss/gadget/components/layout'
-import { useGadgetState } from 'zss/system/main/gadgetclient'
+import { useGadgetState } from 'zss/system/main/gadgetmain'
 import { player } from 'zss/system/main/player'
 
 export function Gadget() {

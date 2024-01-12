@@ -1,6 +1,6 @@
 import Case from 'case'
 import {
-  LAYER,
+  GADGET_STATE,
   PANEL,
   PANEL_SHARED,
   PANEL_TYPE,
@@ -18,13 +18,6 @@ import {
 import { STATE, WORD_VALUE, mapToString } from 'zss/system/chip'
 
 import { createFirmware } from '../firmware'
-
-export type GADGET_STATE = {
-  layers: LAYER[]
-  layout: PANEL[]
-  layoutreset: boolean
-  layoutfocus: string
-}
 
 const panelshared: Record<string, PANEL_SHARED> = {}
 
@@ -105,6 +98,10 @@ export function gadgetstate(group: string) {
   }
 
   return value
+}
+
+export function gadgetgroups() {
+  return Object.keys(allgadgetstate)
 }
 
 export function clearscroll(group: string) {

@@ -1,8 +1,8 @@
 import { JsonPatchError, applyPatch } from 'fast-json-patch'
 import { proxy, useSnapshot } from 'valtio'
+import { GADGET_STATE } from 'zss/gadget/data/types'
 import { createDevice } from 'zss/network/device'
 import { STATE } from 'zss/system/chip'
-import { GADGET_STATE } from 'zss/system/firmware/gadget'
 
 import { player } from './player'
 
@@ -16,7 +16,7 @@ const syncstate = proxy<SYNC_STATE>({
   state: {},
 })
 
-const gadgetclient = createDevice('gadgetclient', [], (message) => {
+const gadgetmain = createDevice('gadgetmain', [], (message) => {
   // filter by player
   if (message.player !== player) {
     return
@@ -36,7 +36,7 @@ const gadgetclient = createDevice('gadgetclient', [], (message) => {
           if (err instanceof JsonPatchError) {
             // we are out of sync and need to request a refresh
             needsReset = true
-            gadgetclient.emit('platform:desync', gadgetclient.id(), player)
+            gadgetmain.emit('gadgetworker:desync', gadgetmain.id(), player)
           }
         }
       }

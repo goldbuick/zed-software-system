@@ -10,9 +10,10 @@ export type OS = {
   ids: () => string[]
   halt: (id: string) => boolean
   haltGroup: (group: string) => boolean[]
-  active: () => Record<string, boolean>
-  tick: (id: string) => void
-  tickGroup: (group: string) => void
+  pauseGroup: (group: string) => void
+  resumeGroup: (group: string) => void
+  activeGroups: () => string[]
+  tick: () => void
   message: MESSAGE_FUNC
   messageForGroup: (group: string, message: MESSAGE) => void
 }
@@ -21,6 +22,7 @@ export function createOS() {
   const builds: Record<string, GeneratorBuild> = {}
   const chips: Record<string, CHIP> = {}
   const groups: Record<string, Set<CHIP>> = {}
+  const activegroups: Record<string, boolean> = {}
 
   function build(code: string) {
     const cache = builds[code]
@@ -74,21 +76,20 @@ export function createOS() {
       const chips = groups[group]
       return [...(chips ?? [])].map((chip) => os.halt(chip.id()))
     },
-    active() {
-      const chipstate: Record<string, boolean> = {}
-
-      os.ids().forEach((id) => {
-        chipstate[id] = chips[id]?.shouldtick() ?? false
+    tick() {
+      os.activeGroups().forEach((group) => {
+        const chips = groups[group]
+        chips?.forEach((chip) => chip.tick())
       })
-
-      return chipstate
     },
-    tick(id) {
-      chips[id]?.tick()
+    pauseGroup(group) {
+      delete activegroups[group]
     },
-    tickGroup(group) {
-      const chips = groups[group]
-      chips?.forEach((chip) => chip.tick())
+    resumeGroup(group) {
+      activegroups[group] = true
+    },
+    activeGroups() {
+      return Object.keys(activegroups)
     },
     message(incoming) {
       const { target, path } = parseTarget(incoming.target)

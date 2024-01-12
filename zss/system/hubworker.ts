@@ -1,6 +1,7 @@
 import { hub } from 'zss/network/hub'
 
-import './worker/tick'
+import './worker/clock'
+import './worker/gadgetworker'
 import './worker/vm'
 
 onmessage = function handleMessage(event) {

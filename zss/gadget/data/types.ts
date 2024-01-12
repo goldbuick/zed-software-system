@@ -110,3 +110,10 @@ export type PANEL = {
 }
 
 export type PANEL_SHARED = Record<string, UNOBSERVE_FUNC>
+
+export type GADGET_STATE = {
+  layers: LAYER[]
+  layout: PANEL[]
+  layoutreset: boolean
+  layoutfocus: string
+}

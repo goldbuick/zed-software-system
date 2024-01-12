@@ -1,7 +1,7 @@
 import { createDevice } from 'zss/network/device'
 
-const device = createDevice('tick', [], () => {
-  //
+const clock = createDevice('clock', [], () => {
+  // no-op here, clock only emits
 })
 
 // main update tick
@@ -22,7 +22,8 @@ function wake() {
   acc += delta
   if (acc >= TICK_RATE) {
     acc %= TICK_RATE
-    device.emit('tick')
+    clock.emit('tick')
+    clock.emit('tock')
   }
 
   previous = now
