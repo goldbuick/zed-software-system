@@ -1,12 +1,12 @@
 import React, { useCallback } from 'react'
 
-import { MAYBE_NUMBER, useSharedValue } from '../../data/shared'
 import {
   cacheWriteTextContext,
   tokenizeAndWriteTextFormat,
   writeCharToEnd,
 } from '../../data/textformat'
 import { UserInput, UserInputHandler } from '../userinput'
+import { MAYBE_NUMBER, useSharedValue } from '../useshared'
 
 import {
   PanelItemProps,

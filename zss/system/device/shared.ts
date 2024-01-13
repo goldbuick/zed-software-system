@@ -51,7 +51,7 @@ const shareddevice = createDevice('shared', [], (message) => {
   }
 })
 
-export function getValues(guid: string, client?: boolean) {
+function getValues(guid: string, client?: boolean) {
   let doc = docs[guid]
   if (!doc) {
     docs[guid] = doc = new Y.Doc({ guid })
@@ -86,10 +86,7 @@ function sendMessage(target: string, guid: string, encoder: encoding.Encoder) {
   shareddevice.emit(`shared:${target}`, data)
 }
 
-export function getValueFromMap<T>(
-  values: Y.Map<any>,
-  key: string,
-): T | undefined {
+function getValueFromMap<T>(values: Y.Map<any>, key: string): T | undefined {
   const value = values.get(key)
   if (value?.toJSON) {
     return value.toJSON()
@@ -97,7 +94,7 @@ export function getValueFromMap<T>(
   return value
 }
 
-export function setValueOnMap<T>(values: Y.Map<any>, key: string, value: T) {
+function setValueOnMap<T>(values: Y.Map<any>, key: string, value: T) {
   // console.info('setValueOnMap', key, value, typeof value)
   if (typeof value === 'string') {
     values.set(key, new Y.Text(value))
@@ -143,19 +140,26 @@ export function observeSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
 ): UNOBSERVE_FUNC {
   const values = getValues(guid)
 
+  function invoke() {
+    handler(getValueFromMap<T>(values, key))
+  }
+
   function observehandler(event: Y.YMapEvent<any>) {
     if (event.keysChanged.has(key)) {
-      handler(getValueFromMap<T>(values, key))
+      invoke()
     }
   }
 
+  invoke()
   values.observe(observehandler)
   return () => {
     values.unobserve(observehandler)
   }
 }
 
-export function observeSharedType<T extends MAYBE_TEXT | MAYBE_MAP>(
+export function observeSharedType<
+  T extends MAYBE_MAP | MAYBE_TEXT | MAYBE_ARRAY,
+>(
   guid: string,
   key: string,
   handler: (value: T | undefined) => void,
@@ -167,6 +171,7 @@ export function observeSharedType<T extends MAYBE_TEXT | MAYBE_MAP>(
     handler(type)
   }
 
+  observehandler()
   type?.observeDeep(observehandler)
   return () => {
     type?.unobserveDeep(observehandler)

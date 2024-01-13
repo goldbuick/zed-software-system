@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
 
-import { MAYBE_TEXT, useSharedType } from '../../data/shared'
 import {
   cacheWriteTextContext,
   tokenizeAndWriteTextFormat,
   writeCharToEnd,
 } from '../../data/textformat'
 import { UserFocus, UserInput } from '../userinput'
+import { MAYBE_TEXT, useSharedType } from '../useshared'
 
 import {
   PanelItemProps,
