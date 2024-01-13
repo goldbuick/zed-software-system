@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
-import { MAYBE_NUMBER, useSharedValue } from 'zss/system/shared'
 
+import { MAYBE_NUMBER, useSharedValue } from '../../data/shared'
 import {
   cacheWriteTextContext,
   tokenizeAndWriteTextFormat,

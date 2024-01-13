@@ -8,6 +8,7 @@ import {
 } from 'zss/gadget/data/types'
 import { createGuid } from 'zss/mapping/guid'
 import { STATE, WORD_VALUE, mapToString } from 'zss/system/chip'
+
 import {
   observeSharedValue,
   observeSharedType,
@@ -15,8 +16,7 @@ import {
   initSharedValue,
   checkSharedValue,
   MAYBE_NUMBER,
-} from 'zss/system/shared'
-
+} from '../device/shared'
 import { createFirmware } from '../firmware'
 
 const panelshared: Record<string, PANEL_SHARED> = {}

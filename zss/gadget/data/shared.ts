@@ -1,13 +1,17 @@
-import * as decoding from 'lib0/decoding'
-import * as encoding from 'lib0/encoding'
 import { useEffect, useState } from 'react'
-import * as syncprotocol from 'y-protocols/sync'
 import * as Y from 'yjs'
-import { createDevice } from 'zss/network/device'
+import {
+  MAYBE_MAP,
+  MAYBE_TEXT,
+  MAYBE_ARRAY,
+  MAYBE_NUMBER,
+  MAYBE_STRING,
+  getValues,
+  getValueFromMap,
+  setValueOnMap,
+} from 'zss/system/device/shared'
 
-import { MAYBE_NUMBER, MAYBE_STRING } from '../shared'
-
-// react hooks
+export type { MAYBE_MAP, MAYBE_TEXT, MAYBE_ARRAY, MAYBE_NUMBER, MAYBE_STRING }
 
 export function useSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   guid: string,

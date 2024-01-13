@@ -2,6 +2,7 @@ import { hub } from 'zss/network/hub'
 
 import './device/clockworker'
 import './device/gadgetworker'
+import './device/shared'
 import './device/vmworker'
 
 onmessage = function handleMessage(event) {
