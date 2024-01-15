@@ -11,22 +11,25 @@ export type MAYBE_NUMBER = number | undefined
 export type MAYBE_STRING = string | undefined
 
 const docs: Record<string, Y.Doc> = {}
+const origin: Record<string, boolean> = {}
 
 const shareddevice = createDevice('shared', [], (message) => {
   switch (message.target) {
     case 'join': {
       const guid = message.data
       const doc = docs[guid]
-      if (doc) {
+      if (doc && origin[guid]) {
         // send sync step 1
         const syncEncoder = encoding.createEncoder()
         syncprotocol.writeSyncStep1(syncEncoder, doc)
-        sendMessage('sync', guid, syncEncoder)
+        const data = messageData(guid, syncEncoder)
+        shareddevice.reply(message.from, 'sync', data)
 
         // send sync step 2
         const syncEncoder2 = encoding.createEncoder()
         syncprotocol.writeSyncStep2(syncEncoder2, doc)
-        sendMessage('sync', guid, syncEncoder2)
+        const data2 = messageData(guid, syncEncoder2)
+        shareddevice.reply(message.from, 'sync', data2)
       }
       break
     }
@@ -43,7 +46,8 @@ const shareddevice = createDevice('shared', [], (message) => {
           shareddevice,
         )
         if (syncMessageType === syncprotocol.messageYjsSyncStep1) {
-          sendMessage('sync', guid, syncEncoder)
+          const data = messageData(guid, syncEncoder)
+          shareddevice.emit('shared:sync', data)
         }
       }
       break
@@ -51,7 +55,7 @@ const shareddevice = createDevice('shared', [], (message) => {
   }
 })
 
-function getValues(guid: string, client?: boolean) {
+function getValues(guid: string) {
   let doc = docs[guid]
   if (!doc) {
     docs[guid] = doc = new Y.Doc({ guid })
@@ -59,7 +63,7 @@ function getValues(guid: string, client?: boolean) {
     function handleupdates(update: Uint8Array) {
       const updateEncoder = encoding.createEncoder()
       syncprotocol.writeUpdate(updateEncoder, update)
-      sendMessage('sync', guid, updateEncoder)
+      shareddevice.emit('shared:sync', messageData(guid, updateEncoder))
     }
 
     // encode updates to send to other shared docs
@@ -69,21 +73,15 @@ function getValues(guid: string, client?: boolean) {
     doc.on('destroy', () => {
       doc.off('update', handleupdates)
     })
-
-    // send join message
-    if (client) {
-      joinShared(guid)
-    }
   }
 
   return doc.getMap()
 }
 
-function sendMessage(target: string, guid: string, encoder: encoding.Encoder) {
+function messageData(guid: string, encoder: encoding.Encoder) {
   const message = encoding.toUint8Array(encoder)
   // origin, doc guid, content
-  const data = [shareddevice.id(), guid, message]
-  shareddevice.emit(`shared:${target}`, data)
+  return [shareddevice.id(), guid, message]
 }
 
 function getValueFromMap<T>(values: Y.Map<any>, key: string): T | undefined {
@@ -109,9 +107,14 @@ export function joinShared(guid: string) {
   shareddevice.emit('shared:join', guid)
 }
 
+export function serveShared(guid: string) {
+  origin[guid] = true
+}
+
 // object change handlers
 
 export function initSharedValue<T>(guid: string, key: string, value: T) {
+  origin[guid] = true
   const values = getValues(guid)
   const current = values.get(key)
   if (current === undefined && value !== undefined) {
@@ -120,7 +123,7 @@ export function initSharedValue<T>(guid: string, key: string, value: T) {
   }
 }
 
-export function checkSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
+export function updateSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   guid: string,
   key: string,
   value: T,
@@ -128,7 +131,7 @@ export function checkSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   const values = getValues(guid)
   const current = getValueFromMap<T>(values, key)
   if (current === undefined || value !== current) {
-    // console.info('checkSharedValue', { key, value })
+    // console.info('updateSharedValue', { key, value })
     setValueOnMap(values, key, value)
   }
 }
@@ -164,7 +167,7 @@ export function observeSharedType<
   key: string,
   handler: (value: T | undefined) => void,
 ): UNOBSERVE_FUNC {
-  const values = getValues(guid, true)
+  const values = getValues(guid)
   const type = values.get(key) as T | undefined
 
   function observehandler() {

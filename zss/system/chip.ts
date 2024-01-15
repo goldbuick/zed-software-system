@@ -3,6 +3,7 @@ import { klona } from 'klona/json'
 import { GeneratorBuild } from 'zss/lang/generator'
 import { GENERATED_FILENAME } from 'zss/lang/transformer'
 
+import { isNumber, isString } from '../mapping/types'
 import { hub } from '../network/hub'
 
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
@@ -93,14 +94,6 @@ export type CHIP = {
 
 export type WORD = string | number
 export type WORD_VALUE = WORD | WORD[] | undefined
-
-export function isNumber(word: any): word is number {
-  return typeof word === 'number'
-}
-
-export function isString(word: any): word is string {
-  return typeof word === 'string'
-}
 
 function mapToResult(value: WORD_VALUE): WORD {
   if (Array.isArray(value)) {
@@ -285,9 +278,9 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       return yieldstate || chip.shouldhalt()
     },
     send(target, data) {
-      const fulltarget = `platform:${id}:${target}`
+      const fulltarget = `vm:${id}:${target}`
       hub.emit(fulltarget, id, data)
-      console.info('send', fulltarget, id, data)
+      // console.info('send', fulltarget, id, data)
     },
     lock(allowed) {
       locked = allowed

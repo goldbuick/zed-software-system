@@ -59,6 +59,10 @@ export function createOS() {
 
       // add to group and return id
       groups[group].add(chip)
+
+      // mark as active
+      os.resumeGroup(group)
+
       return id
     },
     ids() {
@@ -73,6 +77,10 @@ export function createOS() {
       return !!chip
     },
     haltGroup(group) {
+      // mark as inactive
+      os.pauseGroup(group)
+
+      // remove
       const chips = groups[group]
       return [...(chips ?? [])].map((chip) => os.halt(chip.id()))
     },

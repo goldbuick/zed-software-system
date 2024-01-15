@@ -16,7 +16,7 @@ const gadgetworker = createDevice('gadgetworker', ['tock'], (message) => {
         const patch = compare(syncstate[player] ?? {}, shared)
         if (patch.length) {
           syncstate[player] = deepClone(shared)
-          gadgetworker.emit('gadgetclient:patch', patch, player)
+          gadgetworker.emit('gadgetmain:patch', patch, player)
         }
       })
       break

@@ -255,7 +255,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
         },
         sendclose() {
           // send a message to trigger the close
-          hub.emit('platform:clearscroll', 'gadget', undefined, player)
+          hub.emit('gadgetworker:clearscroll', 'gadget', undefined, player)
         },
         didclose() {
           // clear scroll state

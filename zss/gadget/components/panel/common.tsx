@@ -75,7 +75,7 @@ export function mapTo<T>(arg: any, defaultvalue: T): T {
 
 export function chiptarget(chip: string, target: string) {
   // always prefix with route back to this chip
-  return `platform:${chip}:${target}`
+  return `vm:${chip}:${target}`
 }
 
 export function strsplice(

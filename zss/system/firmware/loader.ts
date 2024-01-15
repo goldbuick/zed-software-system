@@ -22,12 +22,3 @@ export function loadFirmware(chip: CHIP, name: string) {
     console.error(`unknown firmware ${name}`)
   }
 }
-
-// when scanning for get/set/commands goes first to last
-export const LOGIN_SET = [
-  'gadget',
-  'media',
-  'assembler',
-  // fallback to player global data
-  'player',
-]

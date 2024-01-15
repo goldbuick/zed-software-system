@@ -19,6 +19,7 @@ export type DEVICE = {
   name: () => string
   tags: () => string[]
   emit: (target: string, data?: any, player?: string) => void
+  reply: (to: string, target: string, data?: any, player?: string) => void
   handle: MESSAGE_FUNC
 }
 
@@ -48,6 +49,9 @@ export function createDevice(
     },
     emit(target, data, player) {
       hub.emit(target, id, data, player)
+    },
+    reply(to, target, data, player) {
+      device.emit(`${to}:${target}`, data, player)
     },
     handle(message) {
       const { target, path } = parseTarget(message.target)

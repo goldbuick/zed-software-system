@@ -14,8 +14,9 @@ import {
   observeSharedType,
   MAYBE_TEXT,
   initSharedValue,
-  checkSharedValue,
+  updateSharedValue,
   MAYBE_NUMBER,
+  serveShared,
 } from '../device/shared'
 import { createFirmware } from '../firmware'
 
@@ -119,7 +120,7 @@ export const GADGET_FIRMWARE = createFirmware(
     Object.values(panelshared).forEach((state) => {
       // we care about this value
       if (state[name] !== undefined) {
-        checkSharedValue(chip.id(), name, value)
+        updateSharedValue(chip.id(), name, value)
       }
     })
 
@@ -238,6 +239,8 @@ export const GADGET_FIRMWARE = createFirmware(
 
       // setup tracking if needed
       if (panelshared[panel.id][name] === undefined) {
+        // this will mark our device to handle join requests
+        serveShared(chip.id())
         // this will init the value only if not already setup
         initSharedValue(chip.id(), name, current)
 

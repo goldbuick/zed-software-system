@@ -1,8 +1,10 @@
 import { customAlphabet } from 'nanoid'
 import { numbers, lowercase } from 'nanoid-dictionary'
+import { isArray, isString } from 'zss/mapping/types'
 import { createDevice } from 'zss/network/device'
 
-import { LOGIN_SET } from '../firmware/loader'
+import { readcode, readconfig } from '../book'
+import { PROCESS_MEMORY } from '../firmware/process'
 import { createOS } from '../os'
 
 // limited chars so peerjs doesn't get mad
@@ -36,13 +38,28 @@ const vm = createDevice('vm', ['tick'], (message) => {
     case 'login':
       if (message.player) {
         tracking[message.player] = 0
+
+        const firmware = readconfig(PROCESS_MEMORY, 'firmware')
+        if (!isArray(firmware)) {
+          return
+        }
+
+        const login = readconfig(PROCESS_MEMORY, 'login')
+        if (!isString(login)) {
+          return
+        }
+
+        const [codepage, entry] = login.split(':')
+        const code = readcode(PROCESS_MEMORY, codepage, entry)
+        if (!isString(code)) {
+          return
+        }
+
+        console.info(message, { firmware, code })
         os.boot({
           group: message.player,
-          firmware: LOGIN_SET,
-          // where does this code come from ?
-          // comes from the process firmware
-          // process firmware loads bios by default
-          code: '"STUFF"',
+          firmware: firmware.filter(isString),
+          code,
         })
       }
       break
@@ -52,7 +69,7 @@ const vm = createDevice('vm', ['tick'], (message) => {
       }
       break
     default:
-      console.info({ message })
+      os.message(message)
       break
   }
 })

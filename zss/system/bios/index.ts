@@ -60,13 +60,13 @@ export const BIOS: BOOK = {
           id: createGuid(),
           name: 'gadget',
           type: CONTENT_TYPE.CODE,
-          code: gadgetcode,
+          value: gadgetcode,
         },
         {
           id: createGuid(),
           name: 'title',
           type: CONTENT_TYPE.BOARD,
-          board: {
+          value: {
             x: 0,
             y: 0,
             width: BOARD_WIDTH,
@@ -81,5 +81,18 @@ export const BIOS: BOOK = {
       ],
     },
   ],
-  config: [{ id: createGuid(), name: 'config', value: 'app:gadget' }],
+  config: [
+    { id: createGuid(), name: 'login', value: 'app:gadget' },
+    {
+      id: createGuid(),
+      name: 'firmware',
+      value: [
+        'gadget',
+        'media',
+        'assembler',
+        // fallback to player global data
+        'player',
+      ],
+    },
+  ],
 }

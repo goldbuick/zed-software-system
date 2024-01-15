@@ -6,7 +6,7 @@ import {
   MAYBE_NUMBER,
   MAYBE_STRING,
   observeSharedValue,
-  checkSharedValue,
+  updateSharedValue,
   observeSharedType,
 } from 'zss/system/device/shared'
 
@@ -19,7 +19,7 @@ export function useSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   const [value, setvalue] = useState<T | undefined>(undefined)
 
   function updatevalue(newvalue: Exclude<T, undefined>) {
-    checkSharedValue(guid, key, newvalue)
+    updateSharedValue(guid, key, newvalue)
   }
 
   useEffect(() => observeSharedValue<T>(guid, key, setvalue), [])
