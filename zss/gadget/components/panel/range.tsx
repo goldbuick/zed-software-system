@@ -46,7 +46,7 @@ export function PanelItemRange({
   const max = 8
 
   // state
-  const [value, setValue] = useSharedValue<MAYBE_NUMBER>(chip, target)
+  const [value, setvalue] = useSharedValue<MAYBE_NUMBER>(chip, target)
   const state = value ?? 0
 
   const blink = useBlink()
@@ -72,7 +72,7 @@ export function PanelItemRange({
   const up = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      setValue(Math.min(max, state + step))
+      setvalue(Math.min(max, state + step))
     },
     [max, value],
   )
@@ -80,7 +80,7 @@ export function PanelItemRange({
   const down = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      setValue(Math.max(min, state - step))
+      setvalue(Math.max(min, state - step))
     },
     [min, value],
   )

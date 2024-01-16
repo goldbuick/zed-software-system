@@ -103,8 +103,19 @@ function setValueOnMap<T>(values: Y.Map<any>, key: string, value: T) {
 
 export type UNOBSERVE_FUNC = () => void
 
+const tracking: Record<string, number> = {}
+
 export function joinShared(guid: string) {
-  shareddevice.emit('shared:join', guid)
+  const current = tracking[guid] ?? 0
+  if (current === 0) {
+    shareddevice.emit('shared:join', guid)
+  }
+  tracking[guid] = current + 1
+}
+
+export function leaveShared(guid: string) {
+  const current = tracking[guid] ?? 0
+  tracking[guid] = current - 1
 }
 
 export function serveShared(guid: string) {

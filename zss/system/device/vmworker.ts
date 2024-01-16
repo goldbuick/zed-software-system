@@ -55,7 +55,6 @@ const vm = createDevice('vm', ['tick'], (message) => {
           return
         }
 
-        console.info(message, { firmware, code })
         os.boot({
           group: message.player,
           firmware: firmware.filter(isString),
