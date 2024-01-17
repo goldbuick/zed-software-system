@@ -11,7 +11,7 @@ let previous = performance.now()
 let clock = 0
 function tick() {
   hub.emit('tick', 'clockworker')
-  hub.emit('tickend', 'clockworker')
+  hub.emit('tickack', 'clockworker')
   ++clock
   if (clock >= TICK_FPS) {
     clock %= TICK_FPS

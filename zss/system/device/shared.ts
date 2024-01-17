@@ -19,42 +19,71 @@ const lastactive: Record<string, number | undefined> = {}
 
 const shareddevice = createDevice('shared', ['clock'], (message) => {
   switch (message.target) {
-    case 'clock': {
+    case 'clock':
       // what guids do we care about?
-      const guids = Object.keys(tracking)
-      // what is the state of our connection to origin ?
-      guids.forEach((guid) => {
+      Object.keys(tracking).forEach((guid) => {
+        // what is the state of our connection to origin ?
         const lasttime = lastactive[guid]
         if (lasttime === undefined) {
+          // waiting to join
           shareddevice.emit('shared:join', guid)
+        } else if (lasttime < 10) {
+          // 10 second ish timeout
+          lastactive[guid] = lasttime + 1
         } else {
-          //T
+          // need to re-join
+          delete lastactive[guid]
         }
       })
+
+      // what guids are we origin for?
+      Object.keys(origin).forEach((guid) => {
+        shareddevice.emit('shared:active', guid)
+      })
       break
-    }
+
     case 'join': {
       const guid = message.data
       const doc = docs[guid]
       if (doc && origin[guid]) {
+        // signal to stop join message
+        shareddevice.reply(message, 'joinack', guid)
+
         // send sync step 1
-        const syncEncoder = encoding.createEncoder()
-        syncprotocol.writeSyncStep1(syncEncoder, doc)
-        const data = messageData(guid, syncEncoder)
-        shareddevice.reply(message, 'sync', data)
+        const syncEncoder1 = encoding.createEncoder()
+        syncprotocol.writeSyncStep1(syncEncoder1, doc)
+        shareddevice.reply(message, 'sync', messageData(guid, syncEncoder1))
 
         // send sync step 2
         const syncEncoder2 = encoding.createEncoder()
         syncprotocol.writeSyncStep2(syncEncoder2, doc)
-        const data2 = messageData(guid, syncEncoder2)
-        shareddevice.reply(message, 'sync', data2)
+        shareddevice.reply(message, 'sync', messageData(guid, syncEncoder2))
       }
       break
     }
+
+    case 'joinack': {
+      const guid = message.data
+      const doc = docs[guid]
+      if (doc && tracking[guid]) {
+        lastactive[guid] = 0
+      }
+      break
+    }
+
+    case 'active': {
+      const guid = message.data
+      const doc = docs[guid]
+      if (doc && tracking[guid]) {
+        lastactive[guid] = 0
+      }
+      break
+    }
+
     case 'sync': {
       const [origin, guid, content] = message.data
       const doc = docs[guid]
-      if (origin !== shareddevice.id() && doc !== undefined) {
+      if (doc && origin !== shareddevice.id()) {
         const decoder = decoding.createDecoder(content)
         const syncEncoder = encoding.createEncoder()
         const syncMessageType = syncprotocol.readSyncMessage(
@@ -92,7 +121,7 @@ function getDoc(guid: string) {
 
   // cleanup
   doc.on('destroy', () => {
-    doc.off('update', handleupdates)
+    doc?.off('update', handleupdates)
   })
 
   return doc
@@ -117,7 +146,6 @@ function getValueFromMap<T>(values: Y.Map<any>, key: string): T | undefined {
 }
 
 function setValueOnMap<T>(values: Y.Map<any>, key: string, value: T) {
-  // console.info('setValueOnMap', key, value, typeof value)
   if (typeof value === 'string') {
     values.set(key, new Y.Text(value))
   } else {
@@ -126,16 +154,21 @@ function setValueOnMap<T>(values: Y.Map<any>, key: string, value: T) {
 }
 
 function joinShared(guid: string) {
-  const current = tracking[guid] ?? 0
-  if (current === 0) {
+  tracking[guid] = (tracking[guid] ?? 0) + 1
+  if (tracking[guid] === 1) {
+    delete lastactive[guid]
     shareddevice.emit('shared:join', guid)
   }
-  tracking[guid] = current + 1
 }
 
 function leaveShared(guid: string) {
   const current = tracking[guid] ?? 0
-  tracking[guid] = current - 1
+  if (current <= 1) {
+    delete tracking[guid]
+    delete lastactive[guid]
+  } else {
+    tracking[guid] = current - 1
+  }
 }
 
 // object change handlers
@@ -147,7 +180,6 @@ export function serveSharedValue<T>(guid: string, key: string, value: T) {
   const values = getValues(guid)
   const current = values.get(key)
   if (current === undefined && value !== undefined) {
-    // console.info('serveSharedValue', { key, value })
     setValueOnMap(values, key, value)
   }
 }
@@ -160,7 +192,6 @@ export function updateSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   const values = getValues(guid)
   const current = getValueFromMap<T>(values, key)
   if (current === undefined || value !== current) {
-    // console.info('updateSharedValue', { key, value })
     setValueOnMap(values, key, value)
   }
 }
@@ -197,16 +228,38 @@ export function observeSharedType<
   handler: (value: T | undefined) => void,
 ): UNOBSERVE_FUNC {
   const values = getValues(guid)
-  const type = values.get(key) as T | undefined
+  let type = values.get(key) as T | undefined
 
   function observehandler() {
     handler(type)
   }
 
-  observehandler()
-  type?.observeDeep(observehandler)
+  function valueshandler(event: Y.YMapEvent<any>) {
+    if (event.keysChanged.has(key) && type === undefined) {
+      checktype()
+    }
+    if (type) {
+      values.unobserve(valueshandler)
+    }
+  }
+
+  function checktype() {
+    type = values.get(key) as T | undefined
+    if (type) {
+      type.observeDeep(observehandler)
+      observehandler()
+    } else {
+      values.observe(valueshandler)
+    }
+  }
+
+  checktype()
   return () => {
-    type?.unobserveDeep(observehandler)
+    if (type) {
+      type.unobserveDeep(observehandler)
+    } else {
+      values.unobserve(valueshandler)
+    }
   }
 }
 

@@ -39,18 +39,18 @@ const vm = createDevice('vm', ['tick'], (message) => {
       if (message.player) {
         tracking[message.player] = 0
 
-        const firmware = readconfig(PROCESS_MEMORY, 'firmware')
+        const firmware = readconfig(PROCESS_MEMORY.book, 'firmware')
         if (!isArray(firmware)) {
           return
         }
 
-        const login = readconfig(PROCESS_MEMORY, 'login')
+        const login = readconfig(PROCESS_MEMORY.book, 'login')
         if (!isString(login)) {
           return
         }
 
         const [codepage, entry] = login.split(':')
-        const code = readcode(PROCESS_MEMORY, codepage, entry)
+        const code = readcode(PROCESS_MEMORY.book, codepage, entry)
         if (!isString(code)) {
           return
         }

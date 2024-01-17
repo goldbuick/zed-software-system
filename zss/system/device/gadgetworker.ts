@@ -7,9 +7,9 @@ import { clearscroll, gadgetgroups, gadgetstate } from '../firmware/gadget'
 // tracking gadget state for individual players
 const syncstate: Record<string, GADGET_STATE> = {}
 
-const gadgetworker = createDevice('gadgetworker', ['tock'], (message) => {
+const gadgetworker = createDevice('gadgetworker', ['tickack'], (message) => {
   switch (message.target) {
-    case 'tock':
+    case 'tickack':
       // we need to sync gadget here
       gadgetgroups().forEach((player) => {
         const shared = gadgetstate(player)

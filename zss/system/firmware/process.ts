@@ -1,10 +1,11 @@
 import { proxy } from 'valtio'
 
 import { BIOS } from '../bios'
-import { BOOK } from '../book'
 import { createFirmware } from '../firmware'
 
-export const PROCESS_MEMORY = proxy<BOOK>(BIOS)
+export const PROCESS_MEMORY = proxy({ book: BIOS })
+
+// now we can overwrite memory with a new book
 
 export const PROCESS_FIRMWARE = createFirmware(
   (chip, name) => {
