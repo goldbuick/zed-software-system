@@ -2,11 +2,22 @@ import { hub } from 'zss/network/hub'
 
 // 100 is 10 fps, 66.666 is ~15 fps, 50 is 20 fps, 40 is 25 fps  1000 / x = 15
 const TICK_RATE = 66.666
-// const TICK_FPS = Math.round(1000 / TICK_RATE)
+const TICK_FPS = Math.round(1000 / TICK_RATE)
 
 // timer acc
 let acc = 0
 let previous = performance.now()
+
+let clock = 0
+function tick() {
+  hub.emit('tick', 'clockworker')
+  hub.emit('tickend', 'clockworker')
+  ++clock
+  if (clock >= TICK_FPS) {
+    clock %= TICK_FPS
+    hub.emit('clock', 'clockworker')
+  }
+}
 
 // timer trigger
 function wake() {
@@ -16,8 +27,7 @@ function wake() {
   acc += delta
   if (acc >= TICK_RATE) {
     acc %= TICK_RATE
-    hub.emit('tick', 'clock')
-    hub.emit('tock', 'clock')
+    tick()
   }
 
   previous = now

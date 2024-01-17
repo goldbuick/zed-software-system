@@ -5,11 +5,9 @@ import {
   MAYBE_ARRAY,
   MAYBE_NUMBER,
   MAYBE_STRING,
-  observeSharedValue,
   updateSharedValue,
-  observeSharedType,
-  joinShared,
-  leaveShared,
+  joinSharedType,
+  joinSharedValue,
 } from 'zss/system/device/shared'
 
 export type { MAYBE_MAP, MAYBE_TEXT, MAYBE_ARRAY, MAYBE_NUMBER, MAYBE_STRING }
@@ -24,14 +22,7 @@ export function useSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
     updateSharedValue(guid, key, newvalue)
   }
 
-  useEffect(() => {
-    joinShared(guid)
-    const done = observeSharedValue<T>(guid, key, setvalue)
-    return () => {
-      leaveShared(guid)
-      done()
-    }
-  }, [])
+  useEffect(() => joinSharedValue<T>(guid, key, setvalue), [])
 
   return [value, updatevalue]
 }
@@ -43,19 +34,18 @@ export function useSharedType<T extends MAYBE_MAP | MAYBE_TEXT | MAYBE_ARRAY>(
   const [value, setvalue] = useState<T | undefined>(undefined)
   const [t, toggle] = useState(0)
 
-  useEffect(() => {
-    const done = observeSharedType(guid, key, (type) => {
-      if (type !== undefined && value === undefined) {
-        // @ts-expect-error why?????
-        setvalue(type)
-      } else {
-        toggle(1 - t)
-      }
-    })
-    return () => {
-      done()
-    }
-  })
+  useEffect(
+    () =>
+      joinSharedType(guid, key, (type) => {
+        if (type !== undefined && value === undefined) {
+          // @ts-expect-error why?????
+          setvalue(type)
+        } else {
+          toggle(1 - t)
+        }
+      }),
+    [],
+  )
 
   return [value]
 }

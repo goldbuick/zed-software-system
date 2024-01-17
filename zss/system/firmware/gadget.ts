@@ -13,10 +13,9 @@ import {
   observeSharedValue,
   observeSharedType,
   MAYBE_TEXT,
-  initSharedValue,
+  serveSharedValue,
   updateSharedValue,
   MAYBE_NUMBER,
-  serveShared,
 } from '../device/shared'
 import { createFirmware } from '../firmware'
 
@@ -239,10 +238,9 @@ export const GADGET_FIRMWARE = createFirmware(
 
       // setup tracking if needed
       if (panelshared[panel.id][name] === undefined) {
-        // this will mark our device to handle join requests
-        serveShared(chip.id())
         // this will init the value only if not already setup
-        initSharedValue(chip.id(), name, current)
+        // and mark this guid as origin
+        serveSharedValue(chip.id(), name, current)
 
         if (HYPERLINK_WITH_SHARED_TEXT.has(type)) {
           panelshared[panel.id][name] = observeSharedType<MAYBE_TEXT>(
