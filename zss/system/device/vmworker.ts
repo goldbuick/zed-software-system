@@ -21,11 +21,15 @@ const os = createOS()
 const LOOP_TIMEOUT = 32 * 15
 const tracking: Record<string, number> = {}
 
-const vm = createDevice('vm', ['tick'], (message) => {
+// we need to manage "player" state
+
+const vm = createDevice('vm', ['tick', 'tickack'], (message) => {
   switch (message.target) {
     case 'tick':
       // update chips
       os.tick()
+      break
+    case 'tickack':
       Object.keys(tracking).forEach((player) => {
         ++tracking[player]
         // drop inactive players (logout)

@@ -24,3 +24,9 @@ function keepAlive() {
 }
 
 keepAlive()
+
+/*
+
+drop this in favor of a player id in shared ...
+
+*/
