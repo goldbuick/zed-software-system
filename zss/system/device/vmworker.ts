@@ -12,7 +12,7 @@ const justNumberChars = customAlphabet(numbers, 4)
 const mixedChars = customAlphabet(`${numbers}${lowercase}`, 16)
 
 // this should be unique every time the worker is created
-export const player = `sid_${justNumberChars()}_${mixedChars()}`
+const player = `sid_${justNumberChars()}_${mixedChars()}`
 
 // manages chips
 const os = createOS()
@@ -23,22 +23,8 @@ const tracking: Record<string, number> = {}
 
 // we need to manage "player" state
 
-const vm = createDevice('vm', ['tick', 'tickack'], (message) => {
+const vm = createDevice('vm', ['login', 'tick', 'tickack'], (message) => {
   switch (message.target) {
-    case 'tick':
-      // update chips
-      os.tick()
-      break
-    case 'tickack':
-      Object.keys(tracking).forEach((player) => {
-        ++tracking[player]
-        // drop inactive players (logout)
-        if (tracking[player] > LOOP_TIMEOUT) {
-          delete tracking[player]
-          os.haltGroup(player)
-        }
-      })
-      break
     case 'login':
       if (message.player) {
         tracking[message.player] = 0
@@ -66,6 +52,20 @@ const vm = createDevice('vm', ['tick', 'tickack'], (message) => {
         })
       }
       break
+    case 'tick':
+      // update chips
+      os.tick()
+      break
+    case 'tickack':
+      Object.keys(tracking).forEach((player) => {
+        ++tracking[player]
+        // drop inactive players (logout)
+        if (tracking[player] > LOOP_TIMEOUT) {
+          delete tracking[player]
+          os.haltGroup(player)
+        }
+      })
+      break
     case 'doot':
       if (message.player) {
         tracking[message.player] = 0
@@ -77,6 +77,6 @@ const vm = createDevice('vm', ['tick', 'tickack'], (message) => {
   }
 })
 
-// queueMicrotask(() => vm.emit('ready'))
-
-vm.emit('vm:login', undefined, player)
+queueMicrotask(() => {
+  vm.emit('login', undefined, player)
+})

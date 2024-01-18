@@ -19,13 +19,21 @@ const syncstate = proxy<SYNC_STATE>({
   },
 })
 
-const gadgetmain = createDevice('gadgetmain', [], (message) => {
-  // filter by player
-  if (message.player !== syncstate.state.player) {
+const gadgetmain = createDevice('gadgetmain', ['login'], (message) => {
+  // watch for login
+  if (
+    message.player &&
+    message.target === 'login' &&
+    syncstate.state.player === ''
+  ) {
+    syncstate.state.player = message.player
     return
   }
 
-  console.info('gadgetmain', gadgetmain.name(), message)
+  // only handle reset & patch messages we care about
+  if (message.player !== syncstate.state.player) {
+    return
+  }
 
   switch (message.target) {
     case 'reset':
@@ -33,7 +41,7 @@ const gadgetmain = createDevice('gadgetmain', [], (message) => {
       syncstate.state = message.data
       break
 
-    case 'patch': {
+    case 'patch':
       if (!needsReset) {
         try {
           applyPatch(syncstate.state, message.data, true)
@@ -50,10 +58,6 @@ const gadgetmain = createDevice('gadgetmain', [], (message) => {
           }
         }
       }
-      break
-    }
-    default:
-      console.error('gadgetmain', message)
       break
   }
 })
