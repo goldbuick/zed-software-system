@@ -49,6 +49,7 @@ export enum LAYER_TYPE {
   SPRITES,
   DITHER,
   MEDIA,
+  CONTROL,
 }
 
 export type LAYER =
@@ -79,6 +80,13 @@ export type LAYER =
       id: string
       type: LAYER_TYPE.MEDIA
       media: string
+    }
+  | {
+      id: string
+      type: LAYER_TYPE.CONTROL
+      focusx: number
+      focusy: number
+      focusrange: number
     }
 
 export enum PANEL_TYPE {

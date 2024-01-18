@@ -42,6 +42,9 @@ how do we manage what is running in the current session ?
   between other code pages
   and it can define deps etc...
 
+  we have software running gadget ui
+  
+
 */
 
 const BOARD_WIDTH = 60
