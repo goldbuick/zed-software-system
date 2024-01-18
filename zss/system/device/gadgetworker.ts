@@ -8,6 +8,7 @@ import { clearscroll, gadgetgroups, gadgetstate } from '../firmware/gadget'
 const syncstate: Record<string, GADGET_STATE> = {}
 
 const gadgetworker = createDevice('gadgetworker', ['tickack'], (message) => {
+  console.info('gadgetworker', gadgetworker.name(), message)
   switch (message.target) {
     case 'tickack':
       // we need to sync gadget here

@@ -112,6 +112,7 @@ export type PANEL = {
 export type PANEL_SHARED = Record<string, UNOBSERVE_FUNC>
 
 export type GADGET_STATE = {
+  player: string
   layers: LAYER[]
   layout: PANEL[]
   layoutreset: boolean

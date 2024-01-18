@@ -1,7 +1,6 @@
 import { hub } from 'zss/network/hub'
 
 import './device/gadgetmain'
-import './device/playermain'
 
 const webworker = new Worker(new URL('./hubworker.ts', import.meta.url), {
   type: 'module',

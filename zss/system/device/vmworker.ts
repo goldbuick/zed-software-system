@@ -12,7 +12,7 @@ const justNumberChars = customAlphabet(numbers, 4)
 const mixedChars = customAlphabet(`${numbers}${lowercase}`, 16)
 
 // this should be unique every time the worker is created
-export const sessionId = `sid_${justNumberChars()}_${mixedChars()}`
+export const player = `sid_${justNumberChars()}_${mixedChars()}`
 
 // manages chips
 const os = createOS()
@@ -77,4 +77,6 @@ const vm = createDevice('vm', ['tick', 'tickack'], (message) => {
   }
 })
 
-queueMicrotask(() => vm.emit('ready'))
+// queueMicrotask(() => vm.emit('ready'))
+
+vm.emit('vm:login', undefined, player)

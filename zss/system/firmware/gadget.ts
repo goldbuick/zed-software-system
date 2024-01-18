@@ -21,7 +21,8 @@ import { createFirmware } from '../firmware'
 
 const panelshared: Record<string, PANEL_SHARED> = {}
 
-function initState(state: STATE): GADGET_STATE {
+function initState(state: STATE, player: string): GADGET_STATE {
+  state.player = player
   state.layers = []
   state.layout = []
   state.layoutreset = true
@@ -94,7 +95,7 @@ export function gadgetstate(group: string) {
   let value: GADGET_STATE = allgadgetstate[group]
 
   if (value === undefined) {
-    allgadgetstate[group] = value = initState({})
+    allgadgetstate[group] = value = initState({}, group)
   }
 
   return value
@@ -138,7 +139,8 @@ export const GADGET_FIRMWARE = createFirmware(
     const name = mapToString(arg2)
 
     // get state
-    const shared = gadgetstate(chip.group())
+    const group = chip.group()
+    const shared = gadgetstate(group)
     const panelName = name || Case.capital(edge)
     const panelState: PANEL | undefined = shared.layout.find(
       (panel: PANEL) => panel.name === panelName,
@@ -151,7 +153,7 @@ export const GADGET_FIRMWARE = createFirmware(
     } else {
       switch (edgeConst) {
         case PANEL_TYPE.START:
-          initState(shared)
+          initState(shared, group)
           break
         case PANEL_TYPE.LEFT:
         case PANEL_TYPE.RIGHT:
