@@ -26,23 +26,15 @@ const vm = createDevice('vm', ['login', 'tick', 'tickack'], (message) => {
     case 'login':
       if (message.player) {
         tracking[message.player] = 0
-
-        const login = readconfig(PROCESS_MEMORY.book, 'login')
-        if (!isString(login)) {
-          return
+        // read starting code from app:login
+        const code = readcode(PROCESS_MEMORY.book, 'app', 'login')
+        if (isString(code)) {
+          os.boot({
+            group: message.player,
+            firmware: ['assembler', 'gadget', 'media', 'process'],
+            code,
+          })
         }
-
-        const [codepage, entry] = login.split(':')
-        const code = readcode(PROCESS_MEMORY.book, codepage, entry)
-        if (!isString(code)) {
-          return
-        }
-
-        os.boot({
-          group: message.player,
-          firmware: ['assembler', 'gadget', 'media', 'process'],
-          code,
-        })
       }
       break
     case 'tick':

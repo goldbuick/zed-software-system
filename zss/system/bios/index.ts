@@ -1,6 +1,4 @@
-import gadgetcode from 'bundle-text:./gadget.txt'
-import playercode from 'bundle-text:./player.txt'
-import { indexToX, indexToY } from 'zss/mapping/2d'
+import logincode from 'bundle-text:./login.txt'
 import { range } from 'zss/mapping/array'
 import { createGuid } from 'zss/mapping/guid'
 
@@ -21,9 +19,9 @@ export const BIOS: BOOK = {
       entries: [
         {
           id: createGuid(),
-          name: 'gadget',
+          name: 'login',
           type: CONTENT_TYPE.CODE,
-          value: gadgetcode,
+          value: logincode,
         },
         {
           id: createGuid(),
@@ -44,5 +42,5 @@ export const BIOS: BOOK = {
       ],
     },
   ],
-  config: [{ id: createGuid(), name: 'login', value: 'app:gadget' }],
+  config: [],
 }

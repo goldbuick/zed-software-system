@@ -13,6 +13,9 @@ const gadgetworker = createDevice('gadgetworker', ['tickack'], (message) => {
       // we need to sync gadget here
       gadgetgroups().forEach((player) => {
         const shared = gadgetstate(player)
+        // we need to write out layers here
+
+        // write patch
         const patch = compare(syncstate[player] ?? {}, shared)
         if (patch.length) {
           syncstate[player] = deepClone(shared)
