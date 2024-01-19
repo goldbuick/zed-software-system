@@ -10,6 +10,13 @@ export const PROCESS_MEMORY = proxy({
   flags: {} as Record<string, any>,
 })
 
+/*
+
+I think we need to make the distiction between content on disk vrs in memory
+BOOK & CODE_PAGES should be the in memory version
+
+*/
+
 export const PROCESS_FIRMWARE = createFirmware(
   (chip, name) => {
     const player = chip.player()

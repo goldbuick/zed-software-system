@@ -1,15 +1,12 @@
 import DEFAULT_CHR from 'data-url:./default.chr'
 import DEFAULT_PAL from 'data-url:./default.pal'
-import { createGuid } from 'zss/mapping/guid'
 
-import { createBitmap } from '../data/bitmap'
+import { BITMAP, createBitmap } from '../data/bitmap'
 import {
   BYTES_PER_COLOR,
-  CHARSET_BITMAP,
   CHARS_PER_ROW,
   CHAR_HEIGHT,
   CHAR_WIDTH,
-  PALETTE_BITMAP,
 } from '../data/types'
 
 // export function loadCharsetFrom
@@ -32,9 +29,7 @@ function dataUrlToBytes(dataUrl: string) {
   return base64ToBytes(decodeURIComponent(base64))
 }
 
-export function loadPaletteFromBytes(
-  bytes: Uint8Array,
-): PALETTE_BITMAP | undefined {
+export function loadPaletteFromBytes(bytes: Uint8Array): BITMAP | undefined {
   const count = Math.floor(bytes.length / BYTES_PER_COLOR)
 
   // data must be multiples of 3
@@ -48,11 +43,7 @@ export function loadPaletteFromBytes(
     bitmap.bits[i] = bytes[i]
   }
 
-  return {
-    id: createGuid(),
-    count,
-    bitmap,
-  }
+  return bitmap
 }
 
 export function loadDefaultPalette() {
@@ -65,9 +56,7 @@ function isBitOn(value: number, index: number) {
   return Boolean(value & (1 << index)) ? 255 : 0
 }
 
-export function loadCharsetFromBytes(
-  data: Uint8Array,
-): CHARSET_BITMAP | undefined {
+export function loadCharsetFromBytes(data: Uint8Array): BITMAP | undefined {
   const count = Math.floor(data.length / FILE_BYTES_PER_CHAR)
 
   // data must be multiples of 14
@@ -103,11 +92,7 @@ export function loadCharsetFromBytes(
     }
   }
 
-  return {
-    id: createGuid(),
-    count,
-    bitmap,
-  }
+  return bitmap
 }
 
 export function loadDefaultCharset() {

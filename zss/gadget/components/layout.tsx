@@ -17,7 +17,7 @@ import {
 } from '../data/types'
 import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
-import { StaticDither } from './dither'
+import { Dither, StaticDither } from './dither'
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'
 import { Scroll } from './scroll'
@@ -109,13 +109,15 @@ function LayoutRect({
                   palette &&
                   charset && (
                     <Sprites
+                      {...layer}
                       key={layer.id}
-                      sprites={layer.sprites}
                       palette={palette}
                       charset={charset}
                     />
                   )
                 )
+              case LAYER_TYPE.DITHER:
+                return <Dither {...layer} key={layer.id} />
             }
           })}
         </React.Fragment>

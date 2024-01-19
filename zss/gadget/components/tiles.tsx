@@ -1,13 +1,9 @@
 import React, { useEffect, useMemo, useRef } from 'react'
 import { BufferGeometry } from 'three'
 
+import { BITMAP } from '../data/bitmap'
 import { convertPaletteToColors } from '../data/palette'
-import {
-  CHARSET_BITMAP,
-  CHAR_HEIGHT,
-  CHAR_WIDTH,
-  PALETTE_BITMAP,
-} from '../data/types'
+import { CHAR_HEIGHT, CHAR_WIDTH } from '../data/types'
 import useBitmapTexture from '../display/textures'
 import {
   createTilemapBufferGeometry,
@@ -24,8 +20,8 @@ interface TilesProps {
   char: number[]
   color: number[]
   bg: number[]
-  charset: CHARSET_BITMAP
-  palette: PALETTE_BITMAP
+  charset: BITMAP
+  palette: BITMAP
 }
 
 export function Tiles({
@@ -37,7 +33,7 @@ export function Tiles({
   charset,
   palette,
 }: TilesProps) {
-  const charsetTexture = useBitmapTexture(charset?.bitmap)
+  const charsetTexture = useBitmapTexture(charset)
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
   const material = useMemo(() => createTilemapMaterial(), [])

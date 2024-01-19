@@ -5,15 +5,9 @@ import {
   InterleavedBufferAttribute,
 } from 'three'
 
+import { BITMAP } from '../data/bitmap'
 import { convertPaletteToColors } from '../data/palette'
-import {
-  CHARSET_BITMAP,
-  CHARS_PER_ROW,
-  CHAR_HEIGHT,
-  CHAR_WIDTH,
-  PALETTE_BITMAP,
-  SPRITE,
-} from '../data/types'
+import { CHARS_PER_ROW, CHAR_HEIGHT, CHAR_WIDTH, SPRITE } from '../data/types'
 import { time } from '../display/anim'
 import { createSpritesMaterial } from '../display/sprites'
 import useBitmapTexture from '../display/textures'
@@ -24,12 +18,12 @@ type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
 interface SpritesProps {
   sprites: SPRITE[]
-  charset: CHARSET_BITMAP
-  palette: PALETTE_BITMAP
+  charset: BITMAP
+  palette: BITMAP
 }
 
 export function Sprites({ sprites, charset, palette }: SpritesProps) {
-  const charsetTexture = useBitmapTexture(charset?.bitmap)
+  const charsetTexture = useBitmapTexture(charset)
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
   const material = useMemo(() => createSpritesMaterial(), [])

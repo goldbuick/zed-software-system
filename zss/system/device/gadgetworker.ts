@@ -7,14 +7,12 @@ import { clearscroll, gadgetgroups, gadgetstate } from '../firmware/gadget'
 // tracking gadget state for individual players
 const syncstate: Record<string, GADGET_STATE> = {}
 
-const gadgetworker = createDevice('gadgetworker', ['tickack'], (message) => {
+const gadgetworker = createDevice('gadgetworker', [], (message) => {
   switch (message.target) {
-    case 'tickack':
+    case 'sync':
       // we need to sync gadget here
       gadgetgroups().forEach((player) => {
         const shared = gadgetstate(player)
-        // we need to write out layers here
-
         // write patch
         const patch = compare(syncstate[player] ?? {}, shared)
         if (patch.length) {
@@ -23,14 +21,12 @@ const gadgetworker = createDevice('gadgetworker', ['tickack'], (message) => {
         }
       })
       break
-
     case 'desync':
       if (message.player) {
         const state = gadgetstate(message.player)
         gadgetworker.emit('gadgetmain:reset', state, message.player)
       }
       break
-
     case 'clearscroll':
       if (message.player) {
         clearscroll(message.player)

@@ -1,9 +1,9 @@
 import { customAlphabet } from 'nanoid'
 import { numbers, lowercase } from 'nanoid-dictionary'
-import { isArray, isString } from 'zss/mapping/types'
+import { isString } from 'zss/mapping/types'
 import { createDevice } from 'zss/network/device'
 
-import { readcode, readconfig } from '../book'
+import { readcode } from '../book'
 import { PROCESS_MEMORY } from '../firmware/process'
 import { createOS } from '../os'
 
@@ -50,6 +50,11 @@ const vm = createDevice('vm', ['login', 'tick', 'tickack'], (message) => {
           os.haltGroup(player)
         }
       })
+
+      // write frame layers
+
+      // signal sync
+      vm.emit('gadgetworker:sync')
       break
     case 'doot':
       // player keepalive

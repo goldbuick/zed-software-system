@@ -12,6 +12,7 @@ const BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT
 export const BIOS: BOOK = {
   id: createGuid(),
   name: 'BIOS',
+  flags: [],
   pages: [
     {
       id: createGuid(),
@@ -42,5 +43,4 @@ export const BIOS: BOOK = {
       ],
     },
   ],
-  config: [],
 }
