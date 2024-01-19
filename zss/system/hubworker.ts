@@ -2,7 +2,7 @@ import { hub } from 'zss/network/hub'
 
 import './device/clockworker'
 import './device/gadgetworker'
-import './device/vmworker'
+import { ready } from './device/vmworker'
 
 onmessage = function handleMessage(event) {
   hub.sync(event.data)
@@ -11,3 +11,5 @@ onmessage = function handleMessage(event) {
 hub.setSyncHandler((hubmessage) => {
   postMessage(hubmessage)
 })
+
+ready()

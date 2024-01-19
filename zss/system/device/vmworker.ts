@@ -12,7 +12,7 @@ const justNumberChars = customAlphabet(numbers, 4)
 const mixedChars = customAlphabet(`${numbers}${lowercase}`, 16)
 
 // this should be unique every time the worker is created
-const player = `sid_${justNumberChars()}_${mixedChars()}`
+const player = `pid_${justNumberChars()}_${mixedChars()}`
 
 // manages chips
 const os = createOS()
@@ -21,18 +21,11 @@ const os = createOS()
 const LOOP_TIMEOUT = 32 * 15
 const tracking: Record<string, number> = {}
 
-// we need to manage "player" state
-
 const vm = createDevice('vm', ['login', 'tick', 'tickack'], (message) => {
   switch (message.target) {
     case 'login':
       if (message.player) {
         tracking[message.player] = 0
-
-        const firmware = readconfig(PROCESS_MEMORY.book, 'firmware')
-        if (!isArray(firmware)) {
-          return
-        }
 
         const login = readconfig(PROCESS_MEMORY.book, 'login')
         if (!isString(login)) {
@@ -47,7 +40,7 @@ const vm = createDevice('vm', ['login', 'tick', 'tickack'], (message) => {
 
         os.boot({
           group: message.player,
-          firmware: firmware.filter(isString),
+          firmware: ['assembler', 'gadget', 'media', 'process'],
           code,
         })
       }
@@ -57,9 +50,9 @@ const vm = createDevice('vm', ['login', 'tick', 'tickack'], (message) => {
       os.tick()
       break
     case 'tickack':
+      // drop inactive players (logout)
       Object.keys(tracking).forEach((player) => {
         ++tracking[player]
-        // drop inactive players (logout)
         if (tracking[player] > LOOP_TIMEOUT) {
           delete tracking[player]
           os.haltGroup(player)
@@ -67,6 +60,7 @@ const vm = createDevice('vm', ['login', 'tick', 'tickack'], (message) => {
       })
       break
     case 'doot':
+      // player keepalive
       if (message.player) {
         tracking[message.player] = 0
       }
@@ -77,6 +71,6 @@ const vm = createDevice('vm', ['login', 'tick', 'tickack'], (message) => {
   }
 })
 
-queueMicrotask(() => {
+export function ready() {
   vm.emit('login', undefined, player)
-})
+}
