@@ -2,20 +2,30 @@ import { isPresent } from 'ts-extras'
 import { proxy } from 'valtio'
 
 import { BIOS } from '../bios'
+import { readaddress, readboard } from '../book'
 import { mapToString } from '../chip'
 import { createFirmware } from '../firmware'
 
-export const PROCESS_MEMORY = proxy({
-  book: BIOS,
-  flags: {} as Record<string, any>,
+const PROCESS_MEMORY = proxy({
+  book: BIOS, // starting software to run
+  flags: {} as Record<string, any>, // global flags by player
+  players: {} as Record<string, string>, // map of player to board
 })
 
-/*
+export function processbook() {
+  return PROCESS_MEMORY.book
+}
 
-I think we need to make the distiction between content on disk vrs in memory
-BOOK & CODE_PAGES should be the in memory version
+export function setprocessboard(player: string, board: string) {
+  PROCESS_MEMORY.players[player] = board
+}
 
-*/
+export function getprocessboard(player: string) {
+  const [pagename, entryname] = readaddress(
+    PROCESS_MEMORY.players[player] || '',
+  )
+  return readboard(PROCESS_MEMORY.book, pagename, entryname)
+}
 
 export const PROCESS_FIRMWARE = createFirmware(
   (chip, name) => {

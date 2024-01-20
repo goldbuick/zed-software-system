@@ -24,6 +24,11 @@ export function readflags(
   return flags?.value
 }
 
+export function readaddress(address: string) {
+  const [entryname, pagename = 'app'] = address.split(':').toReversed()
+  return [pagename, entryname]
+}
+
 function readpage(book: BOOK, pagename: string): CODE_PAGE | undefined {
   const lpagename = pagename.toLowerCase()
   return book.pages.find((item) => item.name.toLowerCase() === lpagename)

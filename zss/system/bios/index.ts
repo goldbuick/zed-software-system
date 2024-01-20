@@ -33,9 +33,9 @@ export const BIOS: BOOK = {
             y: 0,
             width: BOARD_WIDTH,
             height: BOARD_HEIGHT,
-            terrain: range(BOARD_SIZE - 1).map(() => ({
-              char: 0,
-              color: 0,
+            terrain: range(BOARD_SIZE - 1).map((v) => ({
+              char: v % 256,
+              color: 15,
             })),
             objects: {},
           },

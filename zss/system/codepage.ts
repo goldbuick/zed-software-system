@@ -1,3 +1,5 @@
+import { BITMAP } from '../gadget/data/bitmap'
+
 import { BOARD } from './board'
 
 export enum CONTENT_TYPE {
@@ -33,14 +35,14 @@ export type CODE_PAGE_CHARSET = {
   id: string
   name: string
   type: CONTENT_TYPE.CHARSET
-  value: Uint8Array
+  value: BITMAP
 }
 
 export type CODE_PAGE_PALETTE = {
   id: string
   name: string
   type: CONTENT_TYPE.PALETTE
-  value: Uint8Array
+  value: BITMAP
 }
 
 export type CODE_PAGE_ENTRY =

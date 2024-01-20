@@ -21,7 +21,7 @@ export type TILES = {
 }
 
 export type SPRITE = {
-  id?: string
+  id: string
   x: number
   y: number
   char: number
@@ -38,44 +38,93 @@ export enum LAYER_TYPE {
   CONTROL,
 }
 
+export type LAYER_BLANK = {
+  id: string
+  type: LAYER_TYPE.BLANK
+}
+
+export type LAYER_TILES = {
+  id: string
+  type: LAYER_TYPE.TILES
+  width: number
+  height: number
+  char: number[]
+  color: number[]
+  bg: number[]
+}
+
+export type LAYER_SPRITES = {
+  id: string
+  type: LAYER_TYPE.SPRITES
+  sprites: SPRITE[]
+}
+
+export type LAYER_DITHER = {
+  id: string
+  type: LAYER_TYPE.DITHER
+  width: number
+  height: number
+  alphas: number[]
+}
+
+export type LAYER_MEDIA = {
+  id: string
+  type: LAYER_TYPE.MEDIA
+  media: string
+}
+
+export type LAYER_CONTROL = {
+  id: string
+  type: LAYER_TYPE.CONTROL
+  focusx: number
+  focusy: number
+  focusrange: number
+}
+
 export type LAYER =
-  | {
-      id: string
-      type: LAYER_TYPE.BLANK
-    }
-  | {
-      id: string
-      type: LAYER_TYPE.TILES
-      width: number
-      height: number
-      char: number[]
-      color: number[]
-      bg: number[]
-    }
-  | {
-      id: string
-      type: LAYER_TYPE.SPRITES
-      sprites: SPRITE[]
-    }
-  | {
-      id: string
-      type: LAYER_TYPE.DITHER
-      width: number
-      height: number
-      alphas: number[]
-    }
-  | {
-      id: string
-      type: LAYER_TYPE.MEDIA
-      media: string
-    }
-  | {
-      id: string
-      type: LAYER_TYPE.CONTROL
-      focusx: number
-      focusy: number
-      focusrange: number
-    }
+  | LAYER_BLANK
+  | LAYER_TILES
+  | LAYER_SPRITES
+  | LAYER_DITHER
+  | LAYER_MEDIA
+  | LAYER_CONTROL
+
+export function createtiles(
+  player: string,
+  index: number,
+  width: number,
+  height: number,
+): LAYER_TILES {
+  const size = width * height
+  return {
+    id: `tiles:${player}:${index}`,
+    type: LAYER_TYPE.TILES,
+    width,
+    height,
+    char: new Array<number>(size),
+    color: new Array<number>(size),
+    bg: new Array<number>(size),
+  }
+}
+
+export function createsprite(player: string, index: number, id: string) {
+  return {
+    id: `sprites:${player}:${index}:${id}`,
+    x: 0,
+    y: 0,
+    char: 0,
+    color: 0,
+    bg: 0,
+  }
+}
+
+export function createsprites(player: string, index: number): LAYER_SPRITES {
+  return {
+    id: `sprites:${player}:${index}`,
+    type: LAYER_TYPE.SPRITES,
+    sprites: [],
+  }
+}
 
 export enum PANEL_TYPE {
   START,

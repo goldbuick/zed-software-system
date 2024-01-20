@@ -4,7 +4,7 @@ import { isString } from 'zss/mapping/types'
 import { createDevice } from 'zss/network/device'
 
 import { readcode } from '../book'
-import { PROCESS_MEMORY } from '../firmware/process'
+import { processbook, setprocessboard } from '../firmware/process'
 import { createOS } from '../os'
 
 // limited chars so peerjs doesn't get mad
@@ -21,14 +21,17 @@ const os = createOS()
 const LOOP_TIMEOUT = 32 * 15
 const tracking: Record<string, number> = {}
 
-const vm = createDevice('vm', ['login', 'tick', 'tickack'], (message) => {
+const vm = createDevice('vm', ['login', 'tick', 'tock'], (message) => {
   switch (message.target) {
     case 'login':
       if (message.player) {
         tracking[message.player] = 0
         // read starting code from app:login
-        const code = readcode(PROCESS_MEMORY.book, 'app', 'login')
+        const code = readcode(processbook(), 'app', 'login')
         if (isString(code)) {
+          // start player out on title
+          setprocessboard(message.player, 'title')
+          // start ui for player
           os.boot({
             group: message.player,
             firmware: ['assembler', 'gadget', 'media', 'process'],
@@ -41,20 +44,16 @@ const vm = createDevice('vm', ['login', 'tick', 'tickack'], (message) => {
       // update chips
       os.tick()
       break
-    case 'tickack':
-      // drop inactive players (logout)
+    case 'tock':
+      // iterate over logged in players
       Object.keys(tracking).forEach((player) => {
         ++tracking[player]
         if (tracking[player] > LOOP_TIMEOUT) {
+          // drop inactive players (logout)
           delete tracking[player]
           os.haltGroup(player)
         }
       })
-
-      // write frame layers
-
-      // signal sync
-      vm.emit('gadgetworker:sync')
       break
     case 'doot':
       // player keepalive
