@@ -1,6 +1,5 @@
 #gadget start
 #gadget right 20
-#gadget bottom 1
 
 #set frank1 0
 #set frank2 2
@@ -35,13 +34,8 @@ $3 Here is some test text and yeah! $3
 
 :codepage-create
 #set frank1 32
-#gadget bottom
-DOOT!!! $data
 #end
 
 :boot
 #set frank1 16
-#gadget bottom
-' this is how you have text that starts with !
-"!!!BOOT $data"
 #end

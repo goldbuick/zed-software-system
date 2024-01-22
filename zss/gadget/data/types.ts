@@ -14,6 +14,8 @@ export const DRAW_CHAR_HEIGHT = CHAR_HEIGHT * CHAR_SCALE
 export const BYTES_PER_CHAR = CHAR_WIDTH * CHAR_HEIGHT
 export const CHARS_PER_ROW = 16
 
+export const CHAR_YSCALE = CHAR_WIDTH / CHAR_HEIGHT
+
 export type TILES = {
   char: number[]
   color: number[]
@@ -78,7 +80,7 @@ export type LAYER_CONTROL = {
   type: LAYER_TYPE.CONTROL
   focusx: number
   focusy: number
-  focusrange: number
+  viewscale: number
 }
 
 export type LAYER =
@@ -124,6 +126,28 @@ export function createsprites(player: string, index: number): LAYER_SPRITES {
     type: LAYER_TYPE.SPRITES,
     sprites: [],
   }
+}
+
+export function createcontrol(player: string, index: number): LAYER_CONTROL {
+  return {
+    id: `control:${player}:${index}`,
+    type: LAYER_TYPE.CONTROL,
+    focusx: 0,
+    focusy: 0,
+    viewscale: 1,
+  }
+}
+
+export function getlayerbounds(layers: LAYER[]) {
+  let width = 0
+  let height = 0
+  layers.forEach((layer) => {
+    if (layer.type === LAYER_TYPE.TILES) {
+      width = Math.max(width, layer.width)
+      height = Math.max(height, layer.height)
+    }
+  })
+  return { width, height }
 }
 
 export enum PANEL_TYPE {

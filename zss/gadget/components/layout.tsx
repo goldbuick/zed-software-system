@@ -14,6 +14,7 @@ import {
   PANEL_ITEM,
   LAYER,
   LAYER_TYPE,
+  getlayerbounds,
 } from '../data/types'
 import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
@@ -84,9 +85,22 @@ function LayoutRect({
         />
       )
 
-    case RECT_TYPE.FRAMED:
+    case RECT_TYPE.FRAMED: {
+      const content = getlayerbounds(layers)
+      const scale = 1.5
+      const chw = content.width * 0.5 * DRAW_CHAR_WIDTH * scale
+      const chh = content.height * 0.5 * DRAW_CHAR_HEIGHT * scale
+      const fx = (rect.width * 0.5 + rect.x) * DRAW_CHAR_WIDTH
+      const fy = (rect.height * 0.5 + rect.y) * DRAW_CHAR_HEIGHT
+      const left = fx - chw
+      const right = fy - chh
       return (
-        <React.Fragment>
+        // eslint-disable-next-line react/no-unknown-property
+        <group
+          scale={scale}
+          // eslint-disable-next-line react/no-unknown-property
+          position={[left, right, 0]}
+        >
           {layers.map((layer) => {
             switch (layer.type) {
               default:
@@ -120,8 +134,9 @@ function LayoutRect({
                 return <Dither {...layer} key={layer.id} />
             }
           })}
-        </React.Fragment>
+        </group>
       )
+    }
   }
   return null
 }

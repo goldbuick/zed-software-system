@@ -2,6 +2,7 @@ import { compare, deepClone } from 'fast-json-patch'
 import {
   GADGET_STATE,
   LAYER,
+  createcontrol,
   createsprite,
   createsprites,
   createtiles,
@@ -26,6 +27,12 @@ const gadgetworker = createDevice('gadgetworker', ['tock'], (message) => {
         const board = getprocessboard(player)
         if (board) {
           const tiles = createtiles(player, 0, board.width, board.height)
+          layers.push(tiles)
+          const objects = createsprites(player, 1)
+          layers.push(objects)
+          const control = createcontrol(player, 2)
+          layers.push(control)
+
           board.terrain.forEach((tile, i) => {
             if (tile) {
               tiles.char[i] = tile.char ?? 0
@@ -33,17 +40,22 @@ const gadgetworker = createDevice('gadgetworker', ['tock'], (message) => {
               tiles.bg[i] = tile.bg ?? 0
             }
           })
-          layers.push(tiles)
 
-          const objects = createsprites(player, 1)
           Object.values(board.objects).forEach((object) => {
-            const sprite = createsprite(player, 1, object.id ?? '')
+            // should we have bg transparent or match the bg color of the terrain ?
+            const id = object.id ?? ''
+            const sprite = createsprite(player, 1, id)
             sprite.char = object.char ?? 0
             sprite.color = object.color ?? 0
             sprite.bg = object.bg ?? -1
             objects.sprites.push(sprite)
+
+            // inform control layer where to focus
+            if (id === player) {
+              control.focusx = sprite.x
+              control.focusy = sprite.y
+            }
           })
-          layers.push(objects)
         }
 
         // update gadget

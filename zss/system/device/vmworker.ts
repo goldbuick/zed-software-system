@@ -3,7 +3,7 @@ import { numbers, lowercase } from 'nanoid-dictionary'
 import { isString } from 'zss/mapping/types'
 import { createDevice } from 'zss/network/device'
 
-import { readcode } from '../book'
+import { readboard, readcode } from '../book'
 import { processbook, setprocessboard } from '../firmware/process'
 import { createOS } from '../os'
 
@@ -28,9 +28,14 @@ const vm = createDevice('vm', ['login', 'tick', 'tock'], (message) => {
         tracking[message.player] = 0
         // read starting code from app:login
         const code = readcode(processbook(), 'app', 'login')
-        if (isString(code)) {
+        // read starting board from app:title
+        const board = readboard(processbook(), 'app', 'title')
+        if (code !== undefined && board !== undefined) {
           // start player out on title
-          setprocessboard(message.player, 'title')
+          setprocessboard(message.player, 'app:title')
+
+          // create object for player ??
+
           // start ui for player
           os.boot({
             group: message.player,
