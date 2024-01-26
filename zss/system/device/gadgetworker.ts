@@ -9,6 +9,9 @@ import {
 } from 'zss/gadget/data/types'
 import { createDevice } from 'zss/network/device'
 
+import { range } from '/zss/mapping/array'
+import { randomInteger } from '/zss/mapping/number'
+
 import { clearscroll, gadgetgroups, gadgetstate } from '../firmware/gadget'
 import { getprocessboard } from '../firmware/process'
 
@@ -56,6 +59,26 @@ const gadgetworker = createDevice('gadgetworker', ['tock'], (message) => {
               control.focusy = sprite.y
             }
           })
+
+          // temp alt
+          for (let i = 0; i < 1; ++i) {
+            const el = board.terrain[randomInteger(0, board.terrain.length - 1)]
+            if (el) {
+              el.char = randomInteger(0, 255)
+            }
+          }
+          for (let i = 0; i < 4; ++i) {
+            const el = board.terrain[randomInteger(0, board.terrain.length - 1)]
+            if (el) {
+              el.color = randomInteger(0, 15)
+            }
+          }
+          for (let i = 0; i < 8; ++i) {
+            const el = board.terrain[randomInteger(0, board.terrain.length - 1)]
+            if (el) {
+              el.bg = randomInteger(0, 15)
+            }
+          }
         }
 
         // update gadget

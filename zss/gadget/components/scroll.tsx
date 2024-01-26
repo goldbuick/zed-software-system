@@ -140,6 +140,14 @@ export function Scroll({
   const viewport = useThree((state) => state.viewport)
   const { height: viewheight } = viewport.getCurrentViewport()
 
+  console.info('shouldclose', shouldclose)
+
+  const didclose = useCallback(() => {
+    if (shouldclose) {
+      scroll.didclose()
+    }
+  }, [shouldclose, scroll])
+
   useEffect(() => {
     if (!groupref.current) {
       return
@@ -161,7 +169,7 @@ export function Scroll({
       duration: 300,
       easing,
       targets: target,
-      complete: !shouldclose ? undefined : scroll.didclose,
+      complete: didclose,
       update() {
         if (!groupref.current) {
           return
@@ -169,7 +177,7 @@ export function Scroll({
         groupref.current.position.y = snap(target.y, DRAW_CHAR_HEIGHT)
       },
     })
-  }, [shouldclose, scroll])
+  }, [shouldclose])
 
   const up = useCallback<UserInputHandler>(
     (mods) => {
