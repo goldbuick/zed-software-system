@@ -13,7 +13,7 @@ const firmwares: Record<string, FIRMWARE> = {
   process: PROCESS_FIRMWARE,
 }
 
-export function loadFirmware(chip: CHIP, name: string) {
+export function loadfirmware(chip: CHIP, name: string) {
   const firmware = firmwares[name.toLowerCase()]
   if (firmware) {
     chip.install(firmware)

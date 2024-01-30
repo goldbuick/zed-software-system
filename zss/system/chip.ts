@@ -4,13 +4,14 @@ import { GeneratorBuild } from 'zss/lang/generator'
 import { GENERATED_FILENAME } from 'zss/lang/transformer'
 
 import { isNumber, isString } from '../mapping/types'
-import { hub } from '../network/hub'
 
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
+import { hub } from './hub'
 
 export const HALT_AT_COUNT = 64
 
 export type MESSAGE = {
+  id: string
   target: string
   data?: any
   from: string
@@ -95,19 +96,19 @@ export type CHIP = {
 export type WORD = string | number
 export type WORD_VALUE = WORD | WORD[] | undefined
 
-function mapToResult(value: WORD_VALUE): WORD {
+function maptoresult(value: WORD_VALUE): WORD {
   if (Array.isArray(value)) {
     return value.length > 0 ? 1 : 0
   }
   return value ?? 0
 }
 
-export function mapToString(value: any) {
+export function maptostring(value: any) {
   return `${value ?? ''}`
 }
 
 // lifecycle and control flow api
-export function createChip(id: string, group: string, build: GeneratorBuild) {
+export function createchip(id: string, group: string, build: GeneratorBuild) {
   // naming
   let chipname = 'object'
 
@@ -409,7 +410,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       }
 
       const [name, ...args] = words
-      const command = getcommand(mapToString(name))
+      const command = getcommand(maptostring(name))
       if (command) {
         return command(chip, args)
       }
@@ -419,7 +420,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     },
     if(...words) {
       const [value, next] = chip.parse(words)
-      const result = mapToResult(value)
+      const result = maptoresult(value)
 
       if (result && next.length) {
         chip.command(...next)
@@ -491,7 +492,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
     try(...words) {
       const [value, next] = chip.parse(words)
 
-      const result = mapToResult(invokecommand('try', [value as WORD]))
+      const result = maptoresult(invokecommand('try', [value as WORD]))
       if (result && next.length) {
         chip.command(...next)
       }
@@ -543,7 +544,7 @@ export function createChip(id: string, group: string, build: GeneratorBuild) {
       }
 
       // map values from object or map number. string to counter
-      const names = words.map(mapToString)
+      const names = words.map(maptostring)
 
       console.info('reading', index, names, next)
 

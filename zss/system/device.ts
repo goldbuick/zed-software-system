@@ -1,15 +1,15 @@
-import { createGuid } from '../mapping/guid'
-import { MESSAGE } from '../system/chip'
+import { createguid } from '../mapping/guid'
 
+import { MESSAGE } from './chip'
 import { hub } from './hub'
 
-export function createMessage(
+export function createmessage(
   target: string,
   from: string,
   data?: any,
   player?: string,
 ): MESSAGE {
-  return { target, from, data, player }
+  return { id: createguid(), target, from, data, player }
 }
 
 export type MESSAGE_FUNC = (message: MESSAGE) => void
@@ -23,17 +23,17 @@ export type DEVICE = {
   handle: MESSAGE_FUNC
 }
 
-export function parseTarget(targetString: string) {
+export function parsetarget(targetString: string) {
   const [target, ...path] = targetString.split(':')
   return { target, path: path.join(':') }
 }
 
-export function createDevice(
+export function createdevice(
   name: string,
   tags: string[],
   onMessage: MESSAGE_FUNC,
 ) {
-  const id = createGuid()
+  const id = createguid()
   const iname = name.toLowerCase()
   const itags = tags.map((tag) => tag.toLowerCase())
 
@@ -54,11 +54,11 @@ export function createDevice(
       device.emit(`${to.from}:${target}`, data, player)
     },
     handle(message) {
-      const { target, path } = parseTarget(message.target)
+      const { target, path } = parsetarget(message.target)
       const itarget = target.toLowerCase()
 
       // we match by tags
-      if (itags.findIndex((tag) => tag === itarget) !== -1) {
+      if (itags.findIndex((tag) => tag === 'all' || tag === itarget) !== -1) {
         onMessage(message)
       }
 

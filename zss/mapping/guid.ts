@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid'
 
-export function createGuid() {
+export function createguid() {
   return nanoid()
 }

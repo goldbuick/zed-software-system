@@ -1,23 +1,23 @@
 import Case from 'case'
 import {
-  GADGET_STATE,
-  PANEL,
-  PANEL_SHARED,
-  PANEL_TYPE,
-  PANEL_TYPE_MAP,
-} from 'zss/gadget/data/types'
-import { createGuid } from 'zss/mapping/guid'
-import { STATE, WORD_VALUE, mapToString } from 'zss/system/chip'
-
-import {
   observeSharedValue,
   observeSharedType,
   MAYBE_TEXT,
   serveSharedValue,
   updateSharedValue,
   MAYBE_NUMBER,
-} from '../device/shared'
-import { createFirmware } from '../firmware'
+} from 'zss/device/shared'
+import { createguid } from 'zss/mapping/guid'
+import { STATE, WORD_VALUE, maptostring } from 'zss/system/chip'
+import { createFirmware } from 'zss/system/firmware'
+
+import {
+  GADGET_STATE,
+  PANEL,
+  PANEL_SHARED,
+  PANEL_TYPE,
+  PANEL_TYPE_MAP,
+} from '../gadget/data/types'
 
 const panelshared: Record<string, PANEL_SHARED> = {}
 
@@ -49,7 +49,7 @@ function findpanel(state: STATE): PANEL {
 
   if (!panel) {
     const newPanel: PANEL = {
-      id: createGuid(),
+      id: createguid(),
       name: state.layoutfocus,
       edge: PANEL_TYPE.RIGHT,
       size: 20,
@@ -129,14 +129,14 @@ export const GADGET_FIRMWARE = createFirmware(
   },
 )
   .command('gadget', (chip, args) => {
-    const edge = mapToString(args[0])
+    const edge = maptostring(args[0])
     const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
     const isScroll = edgeConst === PANEL_TYPE.SCROLL
 
     const arg1 = args[isScroll ? 2 : 1]
     const arg2 = args[isScroll ? 1 : 2]
     const size = chip.tpn(arg1)
-    const name = mapToString(arg2)
+    const name = maptostring(arg2)
 
     // get state
     const group = chip.group()
@@ -161,7 +161,7 @@ export const GADGET_FIRMWARE = createFirmware(
         case PANEL_TYPE.BOTTOM:
         case PANEL_TYPE.SCROLL:
           const panel: PANEL = {
-            id: createGuid(),
+            id: createguid(),
             name: panelName,
             edge: edgeConst,
             size,
@@ -180,7 +180,7 @@ export const GADGET_FIRMWARE = createFirmware(
     return 0
   })
   .command('text', (chip, args) => {
-    const text = mapToString(args[0] ?? '')
+    const text = maptostring(args[0] ?? '')
 
     // get state
     const shared = gadgetstate(chip.group())
@@ -213,8 +213,8 @@ export const GADGET_FIRMWARE = createFirmware(
     // package into a panel item
     const [labelword, inputword, ...words] = args
 
-    const label = mapToString(labelword)
-    const input = mapToString(inputword)
+    const label = maptostring(labelword)
+    const input = maptostring(inputword)
     const linput = input.toLowerCase()
 
     const hyperlink: WORD_VALUE[] = [

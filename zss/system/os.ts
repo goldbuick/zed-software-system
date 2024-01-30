@@ -1,9 +1,9 @@
+import { loadfirmware } from 'zss/firmware/loader'
 import { GeneratorBuild, compile } from 'zss/lang/generator'
-import { createGuid } from 'zss/mapping/guid'
-import { MESSAGE_FUNC, parseTarget } from 'zss/network/device'
+import { createguid } from 'zss/mapping/guid'
+import { MESSAGE_FUNC, parsetarget } from 'zss/system/device'
 
-import { CHIP, MESSAGE, createChip } from './chip'
-import { loadFirmware } from './firmware/loader'
+import { CHIP, MESSAGE, createchip } from './chip'
 
 export type OS = {
   boot: (opts: { group: string; firmware: string[]; code: string }) => string
@@ -38,7 +38,7 @@ export function createOS() {
 
   const os: OS = {
     boot(opts) {
-      const id = createGuid()
+      const id = createguid()
       const group = opts.group.toLowerCase()
 
       const result = build(opts.code)
@@ -49,8 +49,8 @@ export function createOS() {
       }
 
       // create chip from build and load
-      const chip = (chips[id] = createChip(id, group, result))
-      opts.firmware.forEach((item) => loadFirmware(chip, item))
+      const chip = (chips[id] = createchip(id, group, result))
+      opts.firmware.forEach((item) => loadfirmware(chip, item))
 
       // make sure we have a set to add to
       if (!groups[group]) {
@@ -100,7 +100,7 @@ export function createOS() {
       return Object.keys(activegroups)
     },
     message(incoming) {
-      const { target, path } = parseTarget(incoming.target)
+      const { target, path } = parsetarget(incoming.target)
       const itarget = target.toLowerCase()
 
       // check group
@@ -116,7 +116,7 @@ export function createOS() {
       })
     },
     messageForGroup(groupName, incoming) {
-      const { target, path } = parseTarget(incoming.target)
+      const { target, path } = parsetarget(incoming.target)
 
       // match against chips in group
       const group = groups[groupName]

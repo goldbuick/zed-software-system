@@ -8,7 +8,7 @@ import {
   updateSharedValue,
   joinSharedType,
   joinSharedValue,
-} from 'zss/system/device/shared'
+} from '../../system/device/shared'
 
 export type { MAYBE_MAP, MAYBE_TEXT, MAYBE_ARRAY, MAYBE_NUMBER, MAYBE_STRING }
 
