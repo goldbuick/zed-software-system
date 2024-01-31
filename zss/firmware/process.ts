@@ -1,42 +1,19 @@
 import { isPresent } from 'ts-extras'
-import { proxy } from 'valtio'
-import { BIOS } from 'zss/bios'
-import { readaddress, readboard } from 'zss/system/book'
+import { VM_MEMORY } from 'zss/device/vm'
 import { maptostring } from 'zss/system/chip'
-import { createFirmware } from 'zss/system/firmware'
+import { createfirmware } from 'zss/system/firmware'
 
-const PROCESS_MEMORY = proxy({
-  book: BIOS, // starting software to run
-  flags: {} as Record<string, any>, // global flags by player
-  players: {} as Record<string, string>, // map of player to board
-})
-
-export function processbook() {
-  return PROCESS_MEMORY.book
-}
-
-export function setprocessboard(player: string, board: string) {
-  PROCESS_MEMORY.players[player] = board
-}
-
-export function getprocessboard(player: string) {
-  const [pagename, entryname] = readaddress(
-    PROCESS_MEMORY.players[player] || '',
-  )
-  return readboard(PROCESS_MEMORY.book, pagename, entryname)
-}
-
-export const PROCESS_FIRMWARE = createFirmware(
+export const PROCESS_FIRMWARE = createfirmware(
   (chip, name) => {
     const player = chip.player()
     const index = name.toLowerCase()
 
-    if (PROCESS_MEMORY.flags[player] === undefined) {
-      PROCESS_MEMORY.flags[player] = {}
+    if (VM_MEMORY.flags[player] === undefined) {
+      VM_MEMORY.flags[player] = {}
     }
 
     // get
-    const value = PROCESS_MEMORY.flags[player][index]
+    const value = VM_MEMORY.flags[player][index]
 
     // console.info('###get', { name, value })
     return [isPresent(value), value]
@@ -45,12 +22,12 @@ export const PROCESS_FIRMWARE = createFirmware(
     const player = chip.player()
     const index = name.toLowerCase()
 
-    if (PROCESS_MEMORY.flags[player] === undefined) {
-      PROCESS_MEMORY.flags[player] = {}
+    if (VM_MEMORY.flags[player] === undefined) {
+      VM_MEMORY.flags[player] = {}
     }
 
     // set
-    PROCESS_MEMORY.flags[player][index] = value
+    VM_MEMORY.flags[player][index] = value
 
     // console.info('###set', { name, value })
     return [true, value]

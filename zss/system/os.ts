@@ -18,7 +18,7 @@ export type OS = {
   messageForGroup: (group: string, message: MESSAGE) => void
 }
 
-export function createOS() {
+export function createos() {
   const builds: Record<string, GeneratorBuild> = {}
   const chips: Record<string, CHIP> = {}
   const groups: Record<string, Set<CHIP>> = {}

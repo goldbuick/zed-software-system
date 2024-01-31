@@ -17,7 +17,7 @@ export type FIRMWARE = {
   command: (name: string, func: FIRMWARE_COMMAND) => FIRMWARE
 }
 
-export function createFirmware(
+export function createfirmware(
   get: FIRMWARE_GET,
   set: FIRMWARE_SET,
   parse?: FIRMWARE_PARSE,

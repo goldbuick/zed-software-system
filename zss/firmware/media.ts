@@ -1,6 +1,6 @@
-import { createFirmware } from '../firmware'
+import { createfirmware } from 'zss/system/firmware'
 
-export const MEDIA_FIRMWARE = createFirmware(
+export const MEDIA_FIRMWARE = createfirmware(
   (chip, name) => {
     return [false, undefined]
   },

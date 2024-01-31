@@ -1,15 +1,15 @@
 import Case from 'case'
 import {
-  observeSharedValue,
-  observeSharedType,
+  observesharedvalue,
+  observesharedtype,
   MAYBE_TEXT,
-  serveSharedValue,
-  updateSharedValue,
+  servesharedvalue,
+  updatesharedvalue,
   MAYBE_NUMBER,
 } from 'zss/device/shared'
 import { createguid } from 'zss/mapping/guid'
 import { STATE, WORD_VALUE, maptostring } from 'zss/system/chip'
-import { createFirmware } from 'zss/system/firmware'
+import { createfirmware } from 'zss/system/firmware'
 
 import {
   GADGET_STATE,
@@ -21,7 +21,7 @@ import {
 
 const panelshared: Record<string, PANEL_SHARED> = {}
 
-function initState(state: STATE, player: string): GADGET_STATE {
+function initstate(state: STATE, player: string): GADGET_STATE {
   state.player = player
   state.layers = []
   state.layout = []
@@ -95,7 +95,7 @@ export function gadgetstate(group: string) {
   let value: GADGET_STATE = allgadgetstate[group]
 
   if (value === undefined) {
-    allgadgetstate[group] = value = initState({}, group)
+    allgadgetstate[group] = value = initstate({}, group)
   }
 
   return value
@@ -110,7 +110,7 @@ export function clearscroll(group: string) {
   state.layout = state.layout.filter((item) => item.edge !== PANEL_TYPE.SCROLL)
 }
 
-export const GADGET_FIRMWARE = createFirmware(
+export const GADGET_FIRMWARE = createfirmware(
   () => {
     // we have no public gadget flags
     return [false, undefined]
@@ -120,7 +120,7 @@ export const GADGET_FIRMWARE = createFirmware(
     Object.values(panelshared).forEach((state) => {
       // we care about this value
       if (state[name] !== undefined) {
-        updateSharedValue(chip.id(), name, value)
+        updatesharedvalue(chip.id(), name, value)
       }
     })
 
@@ -153,7 +153,7 @@ export const GADGET_FIRMWARE = createFirmware(
     } else {
       switch (edgeConst) {
         case PANEL_TYPE.START:
-          initState(shared, group)
+          initstate(shared, group)
           break
         case PANEL_TYPE.LEFT:
         case PANEL_TYPE.RIGHT:
@@ -242,10 +242,10 @@ export const GADGET_FIRMWARE = createFirmware(
       if (panelshared[panel.id][name] === undefined) {
         // this will init the value only if not already setup
         // and mark this guid as origin
-        serveSharedValue(chip.id(), name, current)
+        servesharedvalue(chip.id(), name, current)
 
         if (HYPERLINK_WITH_SHARED_TEXT.has(type)) {
-          panelshared[panel.id][name] = observeSharedType<MAYBE_TEXT>(
+          panelshared[panel.id][name] = observesharedtype<MAYBE_TEXT>(
             chip.id(),
             name,
             (value) => {
@@ -258,7 +258,7 @@ export const GADGET_FIRMWARE = createFirmware(
             },
           )
         } else {
-          panelshared[panel.id][name] = observeSharedValue<MAYBE_NUMBER>(
+          panelshared[panel.id][name] = observesharedvalue<MAYBE_NUMBER>(
             chip.id(),
             name,
             (value) => {

@@ -1,10 +1,10 @@
-import 'zss/system/clock'
 import { customAlphabet } from 'nanoid'
 import { numbers, lowercase } from 'nanoid-dictionary'
-import { processbook, setprocessboard } from 'zss/firmware/process'
-import { readboard, readcode } from 'zss/system/book'
+import { proxy } from 'valtio'
+import { BIOS } from 'zss/bios'
+import { readboard } from 'zss/system/book'
 import { createdevice } from 'zss/system/device'
-import { createOS } from 'zss/system/os'
+import { createos } from 'zss/system/os'
 
 // limited chars so peerjs doesn't get mad
 const justNumberChars = customAlphabet(numbers, 4)
@@ -14,7 +14,14 @@ const mixedChars = customAlphabet(`${numbers}${lowercase}`, 16)
 const player = `pid_${justNumberChars()}_${mixedChars()}`
 
 // manages chips
-const os = createOS()
+const os = createos()
+
+// sim state
+export const VM_MEMORY = proxy({
+  book: BIOS, // starting software to run
+  flags: {} as Record<string, any>, // global flags by player
+  players: {} as Record<string, string>, // map of player to board
+})
 
 // tracking active player ids
 const LOOP_TIMEOUT = 32 * 15
@@ -25,30 +32,14 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
     case 'login':
       if (message.player) {
         tracking[message.player] = 0
+        const title = readboard()
+        console.info(message)
         /*
         new steps here:
         1. find title board
         2. create player on title board
         3. profit
         */
-
-        // // read starting code from app:login
-        // const code = readcode(processbook(), 'app', 'login')
-        // // read starting board from app:title
-        // const board = readboard(processbook(), 'app', 'title')
-        // if (code !== undefined && board !== undefined) {
-        //   // start player out on title
-        //   setprocessboard(message.player, 'app:title')
-
-        //   // create object for player ??
-
-        //   // start ui for player
-        //   os.boot({
-        //     group: message.player,
-        //     firmware: ['assembler', 'gadget', 'media', 'process'],
-        //     code,
-        //   })
-        // }
       }
       break
     case 'tick':

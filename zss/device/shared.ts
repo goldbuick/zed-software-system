@@ -173,7 +173,7 @@ function leaveShared(guid: string) {
 
 // object change handlers
 
-export function serveSharedValue<T>(guid: string, key: string, value: T) {
+export function servesharedvalue<T>(guid: string, key: string, value: T) {
   // mark this guid as origin
   origin[guid] = true
   // determine if we need to init value
@@ -184,7 +184,7 @@ export function serveSharedValue<T>(guid: string, key: string, value: T) {
   }
 }
 
-export function updateSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
+export function updatesharedvalue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   guid: string,
   key: string,
   value: T,
@@ -196,7 +196,7 @@ export function updateSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   }
 }
 
-export function observeSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
+export function observesharedvalue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   guid: string,
   key: string,
   handler: (value: T | undefined) => void,
@@ -220,7 +220,7 @@ export function observeSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   }
 }
 
-export function observeSharedType<
+export function observesharedtype<
   T extends MAYBE_MAP | MAYBE_TEXT | MAYBE_ARRAY,
 >(
   guid: string,
@@ -263,26 +263,26 @@ export function observeSharedType<
   }
 }
 
-export function joinSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
+export function joinsharedvalue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   guid: string,
   key: string,
   handler: (value: T | undefined) => void,
 ): UNOBSERVE_FUNC {
   joinShared(guid)
-  const done = observeSharedValue(guid, key, handler)
+  const done = observesharedvalue(guid, key, handler)
   return () => {
     done()
     leaveShared(guid)
   }
 }
 
-export function joinSharedType<T extends MAYBE_MAP | MAYBE_TEXT | MAYBE_ARRAY>(
+export function joinsharedtype<T extends MAYBE_MAP | MAYBE_TEXT | MAYBE_ARRAY>(
   guid: string,
   key: string,
   handler: (value: T | undefined) => void,
 ): UNOBSERVE_FUNC {
   joinShared(guid)
-  const done = observeSharedType(guid, key, handler)
+  const done = observesharedtype(guid, key, handler)
   return () => {
     done()
     leaveShared(guid)

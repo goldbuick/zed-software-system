@@ -1,6 +1,6 @@
-import { createFirmware } from 'zss/system/firmware'
+import { createfirmware } from 'zss/system/firmware'
 
-export const STUB_FIRMWARE = createFirmware(
+export const STUB_FIRMWARE = createfirmware(
   (chip, name) => {
     return [false, undefined]
   },

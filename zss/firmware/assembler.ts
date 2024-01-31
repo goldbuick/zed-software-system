@@ -1,6 +1,6 @@
-import { createFirmware } from 'zss/system/firmware'
+import { createfirmware } from 'zss/system/firmware'
 
-export const ASSEMBLER_FIRMWARE = createFirmware(
+export const ASSEMBLER_FIRMWARE = createfirmware(
   (chip, name) => {
     switch (name) {
       case 'books':

@@ -16,7 +16,7 @@ import { randomInteger } from '/zss/mapping/number'
 // tracking gadget state for individual players
 const syncstate: Record<string, GADGET_STATE> = {}
 
-const gadgetworker = createdevice('gadgetworker', ['tock'], (message) => {
+const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
   switch (message.target) {
     case 'tock':
       // we need to sync gadget here
@@ -86,14 +86,14 @@ const gadgetworker = createdevice('gadgetworker', ['tock'], (message) => {
         const patch = compare(syncstate[player] ?? {}, shared)
         if (patch.length) {
           syncstate[player] = deepClone(shared)
-          gadgetworker.emit('gadgetmain:patch', patch, player)
+          gadgetserverdevice.emit('gadgetmain:patch', patch, player)
         }
       })
       break
     case 'desync':
       if (message.player) {
         const state = gadgetstate(message.player)
-        gadgetworker.emit('gadgetmain:reset', state, message.player)
+        gadgetserverdevice.emit('gadgetmain:reset', state, message.player)
       }
       break
     case 'clearscroll':
