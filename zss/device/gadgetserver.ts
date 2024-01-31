@@ -1,10 +1,6 @@
 import { compare, deepClone } from 'fast-json-patch'
 import { clearscroll, gadgetgroups, gadgetstate } from 'zss/firmware/gadget'
 import { getprocessboard } from 'zss/firmware/process'
-import { createdevice } from 'zss/system/device'
-
-import { randomInteger } from '/zss/mapping/number'
-
 import {
   GADGET_STATE,
   LAYER,
@@ -12,7 +8,10 @@ import {
   createsprite,
   createsprites,
   createtiles,
-} from '../../gadget/data/types'
+} from 'zss/gadget/data/types'
+import { createdevice } from 'zss/system/device'
+
+import { randomInteger } from '/zss/mapping/number'
 
 // tracking gadget state for individual players
 const syncstate: Record<string, GADGET_STATE> = {}
