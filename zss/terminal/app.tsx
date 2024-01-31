@@ -5,7 +5,7 @@ import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
 import { makeEven } from 'zss/mapping/number'
 
-import 'zss/system/platform'
+import 'zss/platform'
 
 import { Terminal } from './terminal'
 

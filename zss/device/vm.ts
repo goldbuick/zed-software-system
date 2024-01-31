@@ -1,8 +1,8 @@
 import { customAlphabet } from 'nanoid'
 import { numbers, lowercase } from 'nanoid-dictionary'
-import { createdevice } from 'zss/system/device'
-import { vmreadboard, vmreadobject } from 'zss/system/memory'
-import { createos } from 'zss/system/os'
+import { createdevice } from 'zss/device'
+import { vmreadboard, vmreadobject } from 'zss/memory'
+import { createos } from 'zss/os'
 
 // limited chars so peerjs doesn't get mad
 const justNumberChars = customAlphabet(numbers, 4)

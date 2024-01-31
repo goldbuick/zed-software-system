@@ -1,4 +1,4 @@
-import { createdevice } from 'zss/system/device'
+import { createdevice } from 'zss/device'
 
 const clockdevice = createdevice('clock', [], () => {
   // no-op

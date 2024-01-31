@@ -1,10 +1,10 @@
-import { createforward } from 'zss/device/forward'
-import { ready } from 'zss/device/vm'
+import { createforward } from './device/forward'
+import { ready } from './device/vm'
 
 // devices that operate within the web worker
-import 'zss/device/clock'
-import 'zss/device/gadgetserver'
-import 'zss/device/shared'
+import './device/clock'
+import './device/gadgetserver'
+import './device/shared'
 
 const forward = createforward((message) => postMessage(message))
 

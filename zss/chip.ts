@@ -1,12 +1,11 @@
 import ErrorStackParser from 'error-stack-parser'
 import { klona } from 'klona/json'
-import { GeneratorBuild } from 'zss/lang/generator'
-import { GENERATED_FILENAME } from 'zss/lang/transformer'
-
-import { isNumber, isString } from '../mapping/types'
 
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
 import { hub } from './hub'
+import { GeneratorBuild } from './lang/generator'
+import { GENERATED_FILENAME } from './lang/transformer'
+import { isNumber, isString } from './mapping/types'
 
 export const HALT_AT_COUNT = 64
 

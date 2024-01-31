@@ -1,9 +1,8 @@
-import { loadfirmware } from 'zss/firmware/loader'
-import { GeneratorBuild, compile } from 'zss/lang/generator'
-import { createguid } from 'zss/mapping/guid'
-import { MESSAGE_FUNC, parsetarget } from 'zss/system/device'
-
 import { CHIP, MESSAGE, createchip } from './chip'
+import { MESSAGE_FUNC, parsetarget } from './device'
+import { loadfirmware } from './firmware/loader'
+import { GeneratorBuild, compile } from './lang/generator'
+import { createguid } from './mapping/guid'
 
 export type OS = {
   boot: (opts: { group: string; firmware: string[]; code: string }) => string

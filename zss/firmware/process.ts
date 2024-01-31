@@ -1,7 +1,7 @@
 import { isPresent } from 'ts-extras'
-import { maptostring } from 'zss/system/chip'
-import { createfirmware } from 'zss/system/firmware'
-import { vmplayerreadflag, vmplayersetflag } from 'zss/system/memory'
+import { maptostring } from 'zss/chip'
+import { createfirmware } from 'zss/firmware'
+import { vmplayerreadflag, vmplayersetflag } from 'zss/memory'
 
 export const PROCESS_FIRMWARE = createfirmware(
   (chip, name) => {

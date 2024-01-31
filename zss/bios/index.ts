@@ -1,8 +1,8 @@
 import playercode from 'bundle-text:./player.txt'
+import { createboard } from 'zss/board'
+import { BOOK } from 'zss/book'
+import { CONTENT_TYPE } from 'zss/codepage'
 import { createguid } from 'zss/mapping/guid'
-import { createboard } from 'zss/system/board'
-import { BOOK } from 'zss/system/book'
-import { CONTENT_TYPE } from 'zss/system/codepage'
 
 const BOARD_WIDTH = 60
 const BOARD_HEIGHT = 25

@@ -1,6 +1,5 @@
-import { BITMAP } from '../gadget/data/bitmap'
-
 import { BOARD, BOARD_ELEMENT } from './board'
+import { BITMAP } from './gadget/data/bitmap'
 
 export enum CONTENT_TYPE {
   ERROR,

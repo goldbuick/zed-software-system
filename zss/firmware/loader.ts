@@ -1,5 +1,5 @@
-import { CHIP } from 'zss/system/chip'
-import { FIRMWARE } from 'zss/system/firmware'
+import { CHIP } from 'zss/chip'
+import { FIRMWARE } from 'zss/firmware'
 
 import { ASSEMBLER_FIRMWARE } from './assembler'
 import { GADGET_FIRMWARE } from './gadget'

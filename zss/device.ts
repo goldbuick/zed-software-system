@@ -1,7 +1,6 @@
-import { createguid } from '../mapping/guid'
-
 import { MESSAGE } from './chip'
 import { hub } from './hub'
+import { createguid } from './mapping/guid'
 
 export function createmessage(
   target: string,

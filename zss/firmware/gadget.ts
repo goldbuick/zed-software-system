@@ -1,4 +1,5 @@
 import Case from 'case'
+import { STATE, WORD_VALUE, maptostring } from 'zss/chip'
 import {
   observesharedvalue,
   observesharedtype,
@@ -7,9 +8,8 @@ import {
   updatesharedvalue,
   MAYBE_NUMBER,
 } from 'zss/device/shared'
+import { createfirmware } from 'zss/firmware'
 import { createguid } from 'zss/mapping/guid'
-import { STATE, WORD_VALUE, maptostring } from 'zss/system/chip'
-import { createfirmware } from 'zss/system/firmware'
 
 import {
   GADGET_STATE,

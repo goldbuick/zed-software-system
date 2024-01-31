@@ -1,6 +1,6 @@
 import Case from 'case'
+import { STATE, WORD_VALUE, mapToString } from 'zss/chip'
 import { createguid } from 'zss/mapping/guid'
-import { STATE, WORD_VALUE, mapToString } from 'zss/system/chip'
 
 import {
   GADGET_STATE,

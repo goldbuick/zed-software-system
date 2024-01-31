@@ -1,5 +1,5 @@
+import { WORD_VALUE } from 'zss/chip'
 import { UNOBSERVE_FUNC } from 'zss/device/shared'
-import { WORD_VALUE } from 'zss/system/chip'
 
 export const BYTES_PER_COLOR = 3
 

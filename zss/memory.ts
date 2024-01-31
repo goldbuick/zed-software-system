@@ -5,9 +5,9 @@ this is an active sim state + API to change said state
 
 */
 import { proxy } from 'valtio'
-import { readaddress, readboard, readobject } from 'zss/system/book'
 
 import { BIOS } from './bios'
+import { readaddress, readboard, readobject } from './book'
 
 // sim state
 const VM_MEMORY = proxy({

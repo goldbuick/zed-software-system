@@ -1,7 +1,7 @@
 import { JsonPatchError, applyPatch } from 'fast-json-patch'
 import { proxy, useSnapshot } from 'valtio'
+import { createdevice } from 'zss/device'
 import { GADGET_STATE } from 'zss/gadget/data/types'
-import { createdevice } from 'zss/system/device'
 
 let desync = false
 

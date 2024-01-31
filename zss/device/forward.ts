@@ -1,6 +1,6 @@
-import { MESSAGE } from 'zss/system/chip'
-import { createdevice } from 'zss/system/device'
-import { hub } from 'zss/system/hub'
+import { MESSAGE } from 'zss/chip'
+import { createdevice } from 'zss/device'
+import { hub } from 'zss/hub'
 
 export function createforward(handler: (message: MESSAGE) => void) {
   const syncids = new Set<string>()

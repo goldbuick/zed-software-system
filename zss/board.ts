@@ -1,7 +1,6 @@
-import { range } from '../mapping/array'
-import { createguid } from '../mapping/guid'
-
 import { WORD_VALUE } from './chip'
+import { range } from './mapping/array'
+import { createguid } from './mapping/guid'
 
 // generics
 export type BOARD_STATS = {

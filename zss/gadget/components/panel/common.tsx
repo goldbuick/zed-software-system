@@ -1,5 +1,5 @@
 import { createContext, useCallback, useEffect, useState } from 'react'
-import { WORD_VALUE } from 'zss/system/chip'
+import { WORD_VALUE } from 'zss/chip'
 
 import { WRITE_TEXT_CONTEXT } from '../../data/textformat'
 
