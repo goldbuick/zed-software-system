@@ -1,9 +1,7 @@
 import { customAlphabet } from 'nanoid'
 import { numbers, lowercase } from 'nanoid-dictionary'
-import { proxy } from 'valtio'
-import { BIOS } from 'zss/bios'
-import { readboard } from 'zss/system/book'
 import { createdevice } from 'zss/system/device'
+import { vmreadboard, vmreadobject } from 'zss/system/memory'
 import { createos } from 'zss/system/os'
 
 // limited chars so peerjs doesn't get mad
@@ -16,13 +14,6 @@ const player = `pid_${justNumberChars()}_${mixedChars()}`
 // manages chips
 const os = createos()
 
-// sim state
-export const VM_MEMORY = proxy({
-  book: BIOS, // starting software to run
-  flags: {} as Record<string, any>, // global flags by player
-  players: {} as Record<string, string>, // map of player to board
-})
-
 // tracking active player ids
 const LOOP_TIMEOUT = 32 * 15
 const tracking: Record<string, number> = {}
@@ -32,14 +23,11 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
     case 'login':
       if (message.player) {
         tracking[message.player] = 0
-        const title = readboard()
-        console.info(message)
-        /*
-        new steps here:
-        1. find title board
-        2. create player on title board
-        3. profit
-        */
+        const title = vmreadboard('title')
+        const playerkind = vmreadobject('player')
+        if (title && playerkind) {
+          console.info({ title, playerkind })
+        }
       }
       break
     case 'tick':

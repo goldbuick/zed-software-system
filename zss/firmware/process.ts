@@ -1,19 +1,15 @@
 import { isPresent } from 'ts-extras'
-import { VM_MEMORY } from 'zss/device/vm'
 import { maptostring } from 'zss/system/chip'
 import { createfirmware } from 'zss/system/firmware'
+import { vmplayerreadflag, vmplayersetflag } from 'zss/system/memory'
 
 export const PROCESS_FIRMWARE = createfirmware(
   (chip, name) => {
     const player = chip.player()
     const index = name.toLowerCase()
 
-    if (VM_MEMORY.flags[player] === undefined) {
-      VM_MEMORY.flags[player] = {}
-    }
-
     // get
-    const value = VM_MEMORY.flags[player][index]
+    const value = vmplayerreadflag(player, index)
 
     // console.info('###get', { name, value })
     return [isPresent(value), value]
@@ -22,12 +18,8 @@ export const PROCESS_FIRMWARE = createfirmware(
     const player = chip.player()
     const index = name.toLowerCase()
 
-    if (VM_MEMORY.flags[player] === undefined) {
-      VM_MEMORY.flags[player] = {}
-    }
-
     // set
-    VM_MEMORY.flags[player][index] = value
+    vmplayersetflag(player, index, value)
 
     // console.info('###set', { name, value })
     return [true, value]

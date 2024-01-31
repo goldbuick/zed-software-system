@@ -8,25 +8,25 @@ export type BOARD_STATS = {
   [key: string]: WORD_VALUE
 }
 
-export type BOARD_ELEMENT = {
+export type BOARD_ELEMENT = Partial<{
   // objects get id
-  id?: string
+  id: string
   // this element has a code associated with it
-  code?: string
+  code: string
   // this element is an instance of an element type
-  kind?: string
+  kind: string
   // this is a unique name for this instance
-  name?: string
+  name: string
   // display
-  char?: number
-  color?: number
-  bg?: number
+  char: number
+  color: number
+  bg: number
   // interaction
-  pushable?: number
-  collision?: number
+  pushable: number
+  collision: number
   // custom
-  stats?: BOARD_STATS
-}
+  stats: BOARD_STATS
+}>
 
 export type MAYBE_BOARD_ELEMENT = BOARD_ELEMENT | undefined
 

@@ -1,3 +1,11 @@
+' setup ui
+#gadget start
+#gadget right 20
+
+ $white   - - - - - 
+ $black$ongrey      TEST
+ $white   - - - - - 
+
 #cycle 1
 :think
 
@@ -8,7 +16,7 @@
 
 #think
 
-'  // player input
+'  player input
 '  inputmove?: DirValue // for player object
 '  inputshoot?: DirValue // for player object
 '  input1?: boolean // for player object

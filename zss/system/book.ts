@@ -43,3 +43,13 @@ export function readboard(book: BOOK, pagename: string, entryname: string) {
   const page = readpage(book, pagename)
   return page ? readentry(page, CONTENT_TYPE.BOARD, entryname) : undefined
 }
+
+export function readobject(book: BOOK, pagename: string, entryname: string) {
+  const page = readpage(book, pagename)
+  return page ? readentry(page, CONTENT_TYPE.OBJECT, entryname) : undefined
+}
+
+export function readterrain(book: BOOK, pagename: string, entryname: string) {
+  const page = readpage(book, pagename)
+  return page ? readentry(page, CONTENT_TYPE.TERRAIN, entryname) : undefined
+}

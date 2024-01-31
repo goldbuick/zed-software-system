@@ -1,6 +1,5 @@
 import { compare, deepClone } from 'fast-json-patch'
 import { clearscroll, gadgetgroups, gadgetstate } from 'zss/firmware/gadget'
-import { getprocessboard } from 'zss/firmware/process'
 import {
   GADGET_STATE,
   LAYER,
@@ -10,8 +9,7 @@ import {
   createtiles,
 } from 'zss/gadget/data/types'
 import { createdevice } from 'zss/system/device'
-
-import { randomInteger } from '/zss/mapping/number'
+import { vmplayerreadboard } from 'zss/system/memory'
 
 // tracking gadget state for individual players
 const syncstate: Record<string, GADGET_STATE> = {}
@@ -25,7 +23,7 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
 
         // write frame layers
         const layers: LAYER[] = []
-        const board = getprocessboard(player)
+        const board = vmplayerreadboard(player)
         if (board) {
           const tiles = createtiles(player, 0, board.width, board.height)
           layers.push(tiles)
@@ -57,26 +55,6 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
               control.focusy = sprite.y
             }
           })
-
-          // temp alt
-          for (let i = 0; i < 1; ++i) {
-            const el = board.terrain[randomInteger(0, board.terrain.length - 1)]
-            if (el) {
-              el.char = randomInteger(0, 255)
-            }
-          }
-          for (let i = 0; i < 4; ++i) {
-            const el = board.terrain[randomInteger(0, board.terrain.length - 1)]
-            if (el) {
-              el.color = randomInteger(0, 15)
-            }
-          }
-          for (let i = 0; i < 8; ++i) {
-            const el = board.terrain[randomInteger(0, board.terrain.length - 1)]
-            if (el) {
-              el.bg = randomInteger(0, 15)
-            }
-          }
         }
 
         // update gadget
