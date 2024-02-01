@@ -10,7 +10,6 @@ const BOARD_HEIGHT = 25
 export const BIOS: BOOK = {
   id: createguid(),
   name: 'BIOS',
-  flags: [],
   pages: [
     {
       id: createguid(),

@@ -75,7 +75,7 @@ export type CODE_PAGE = {
   entries: CODE_PAGE_ENTRY[]
 }
 
-type readentrymap = {
+export type CONTENT_TYPE_MAP = {
   [CONTENT_TYPE.ERROR]: string
   [CONTENT_TYPE.CODE]: string
   [CONTENT_TYPE.BOARD]: BOARD
@@ -88,11 +88,13 @@ type readentrymap = {
 export function readentry<T extends CONTENT_TYPE>(
   page: CODE_PAGE,
   type: T,
-  name: string,
-): readentrymap[T] | undefined {
-  const lname = name.toLowerCase()
+  entryname: string,
+): CONTENT_TYPE_MAP[T] | undefined {
+  const lentryname = entryname.toLowerCase()
   const entry = page.entries.find(
-    (item) => item.type === type && item.name.toLowerCase() === lname,
+    (item) =>
+      item.type === type &&
+      (item.id === entryname || item.name.toLowerCase() === lentryname),
   )
-  return entry?.value as readentrymap[T] | undefined
+  return entry?.value as CONTENT_TYPE_MAP[T] | undefined
 }

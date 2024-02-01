@@ -1,7 +1,7 @@
 import { customAlphabet } from 'nanoid'
 import { numbers, lowercase } from 'nanoid-dictionary'
 import { createdevice } from 'zss/device'
-import { vmreadboard, vmreadobject } from 'zss/memory'
+import { vmplayerlogin, vmplayerlogout } from 'zss/memory'
 import { createos } from 'zss/os'
 
 // limited chars so peerjs doesn't get mad
@@ -23,11 +23,7 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
     case 'login':
       if (message.player) {
         tracking[message.player] = 0
-        const title = vmreadboard('title')
-        const playerkind = vmreadobject('player')
-        if (title && playerkind) {
-          console.info({ title, playerkind })
-        }
+        vmplayerlogin(message.player)
       }
       break
     case 'tick':
@@ -41,7 +37,7 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
         if (tracking[player] > LOOP_TIMEOUT) {
           // drop inactive players (logout)
           delete tracking[player]
-          os.haltGroup(player)
+          vmplayerlogout(player)
         }
       })
       break
