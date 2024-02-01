@@ -3,17 +3,17 @@ export type PT = {
   y: number
 }
 
-export function indexToX(index: number, width: number) {
+export function indextox(index: number, width: number) {
   return index % width
 }
 
-export function indexToY(index: number, width: number) {
+export function indextoy(index: number, width: number) {
   return Math.floor(index / width)
 }
 
-export function indexToPoint(index: number, width: number): PT {
+export function indextopt(index: number, width: number): PT {
   return {
-    x: indexToX(index, width),
-    y: indexToY(index, width),
+    x: indextox(index, width),
+    y: indextoy(index, width),
   }
 }

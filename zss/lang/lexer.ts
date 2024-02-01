@@ -5,9 +5,8 @@ import {
   IToken,
   TokenType,
 } from 'chevrotain'
+import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
-
-import { LANG_DEV } from '../config'
 
 // State required for matching the indentations
 let indentStack = [0]

@@ -5,8 +5,7 @@ import {
   CstNodeLocation,
   IToken,
 } from 'chevrotain'
-
-import { LANG_DEV } from '../config'
+import { LANG_DEV } from 'zss/config'
 
 import { parser } from './parser'
 

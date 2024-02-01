@@ -1,9 +1,3 @@
-/*
-
-what is system memory ?
-this is an active sim state + API to change said state
-
-*/
 import { proxy } from 'valtio'
 
 import { BIOS } from './bios'
@@ -18,11 +12,18 @@ const VM_MEMORY = proxy({
   players: {} as Record<string, string>, // map of player to board
 })
 
+const PLAYER_KIND = 'app:player'
+const PLAYER_START = 'app:title'
+
 export function vmplayerlogin(player: string) {
-  const title = vmreadboard('app:title')
-  const playerkind = vmreadobject('app:player')
+  const title = vmreadboard(PLAYER_START)
+  const playerkind = vmreadobject(PLAYER_KIND)
   if (title && playerkind) {
-    boardcreateobject(title, 0, 0, player)
+    const obj = boardcreateobject(title, 0, 0, player)
+    if (obj) {
+      obj.kind = PLAYER_KIND
+    }
+    console.info(obj)
   }
 }
 

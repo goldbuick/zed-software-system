@@ -1,8 +1,7 @@
 import { CstNode, IToken } from 'chevrotain'
 import { SourceMapGenerator } from 'source-map'
-
-import { SHOW_CODE } from '../config'
-import { CHIP } from '../system/chip'
+import { CHIP } from 'zss/chip'
+import { SHOW_CODE } from 'zss/config'
 
 import { compileAST } from './ast'
 import { transformAst } from './transformer'

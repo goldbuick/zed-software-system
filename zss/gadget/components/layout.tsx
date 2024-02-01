@@ -2,8 +2,7 @@ import { useThree } from '@react-three/fiber'
 import { deepClone, _areEquals } from 'fast-json-patch'
 import React, { useState } from 'react'
 import { hub } from 'zss/hub'
-
-import { clamp } from '/zss/mapping/number'
+import { clamp } from 'zss/mapping/number'
 
 import {
   DRAW_CHAR_HEIGHT,

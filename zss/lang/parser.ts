@@ -5,8 +5,7 @@ import {
   IToken,
   ParserMethod,
 } from 'chevrotain'
-
-import { LANG_DEV } from '../config'
+import { LANG_DEV } from 'zss/config'
 
 import * as lexer from './lexer'
 

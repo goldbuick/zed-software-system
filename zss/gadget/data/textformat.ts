@@ -1,8 +1,7 @@
 import { createToken, IToken, Lexer } from 'chevrotain'
 import { createContext, useMemo } from 'react'
+import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
-
-import { LANG_DEV } from '../../config'
 
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 

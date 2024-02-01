@@ -12,7 +12,7 @@ const mixedChars = customAlphabet(`${numbers}${lowercase}`, 16)
 const player = `pid_${justNumberChars()}_${mixedChars()}`
 
 // manages chips
-const os = createos()
+export const OS = createos()
 
 // tracking active player ids
 const LOOP_TIMEOUT = 32 * 15
@@ -28,7 +28,7 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
       break
     case 'tick':
       // update chips
-      os.tick()
+      OS.tick()
       break
     case 'tock':
       // iterate over logged in players
@@ -48,7 +48,7 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
       }
       break
     default:
-      os.message(message)
+      OS.message(message)
       break
   }
 })
