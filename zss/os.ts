@@ -1,27 +1,20 @@
-import { CHIP, MESSAGE, createchip } from './chip'
+import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { loadfirmware } from './firmware/loader'
 import { GeneratorBuild, compile } from './lang/generator'
 import { createguid } from './mapping/guid'
 
 export type OS = {
-  boot: (opts: { group: string; firmware: string[]; code: string }) => string
+  boot: (opts: { id?: string; firmware: string[]; code: string }) => string
   ids: () => string[]
   halt: (id: string) => boolean
-  haltGroup: (group: string) => boolean[]
-  pauseGroup: (group: string) => void
-  resumeGroup: (group: string) => void
-  activeGroups: () => string[]
-  tick: () => void
+  tick: (id: string) => boolean
   message: MESSAGE_FUNC
-  messageForGroup: (group: string, message: MESSAGE) => void
 }
 
 export function createos() {
   const builds: Record<string, GeneratorBuild> = {}
   const chips: Record<string, CHIP> = {}
-  const groups: Record<string, Set<CHIP>> = {}
-  const activegroups: Record<string, boolean> = {}
 
   function build(code: string) {
     const cache = builds[code]
@@ -37,8 +30,7 @@ export function createos() {
 
   const os: OS = {
     boot(opts) {
-      const id = createguid()
-      const group = opts.group.toLowerCase()
+      const id = opts.id ?? createguid()
 
       const result = build(opts.code)
       if (result.errors?.length) {
@@ -48,19 +40,8 @@ export function createos() {
       }
 
       // create chip from build and load
-      const chip = (chips[id] = createchip(id, group, result))
+      const chip = (chips[id] = createchip(id, result))
       opts.firmware.forEach((item) => loadfirmware(chip, item))
-
-      // make sure we have a set to add to
-      if (!groups[group]) {
-        groups[group] = new Set()
-      }
-
-      // add to group and return id
-      groups[group].add(chip)
-
-      // mark as active
-      os.resumeGroup(group)
 
       return id
     },
@@ -71,57 +52,19 @@ export function createos() {
       const chip = chips[id]
       if (chip) {
         delete chips[id]
-        groups[chip.group()]?.delete(chip)
       }
       return !!chip
     },
-    haltGroup(group) {
-      // mark as inactive
-      os.pauseGroup(group)
-
-      // remove
-      const chips = groups[group]
-      return [...(chips ?? [])].map((chip) => os.halt(chip.id()))
-    },
-    tick() {
-      os.activeGroups().forEach((group) => {
-        const chips = groups[group]
-        chips?.forEach((chip) => chip.tick())
-      })
-    },
-    pauseGroup(group) {
-      delete activegroups[group]
-    },
-    resumeGroup(group) {
-      activegroups[group] = true
-    },
-    activeGroups() {
-      return Object.keys(activegroups)
+    tick(id) {
+      return chips[id]?.tick()
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)
-      const itarget = target.toLowerCase()
-
-      // check group
-      if (groups[itarget]) {
-        os.messageForGroup(itarget, { ...incoming, target: path })
-      }
 
       // check id / name
       os.ids().forEach((id) => {
         if (target === id) {
           chips[id].message({ ...incoming, target: path })
-        }
-      })
-    },
-    messageForGroup(groupName, incoming) {
-      const { target, path } = parsetarget(incoming.target)
-
-      // match against chips in group
-      const group = groups[groupName]
-      group.forEach((chip) => {
-        if (target === chip.id()) {
-          chip.message({ ...incoming, target: path })
         }
       })
     },

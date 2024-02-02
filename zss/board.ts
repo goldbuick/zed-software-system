@@ -1,3 +1,6 @@
+import { isDefined } from 'ts-extras'
+import { ref } from 'valtio'
+
 import { WORD_VALUE } from './chip'
 import { range } from './mapping/array'
 import { createguid } from './mapping/guid'
@@ -51,6 +54,8 @@ export type BOARD = {
   objects: Record<string, BOARD_ELEMENT>
   // custom
   stats?: BOARD_STATS
+  // runtime only
+  lookup?: MAYBE_BOARD_ELEMENT[]
 }
 
 export function createboard(
@@ -72,17 +77,11 @@ export function createboard(
 
 export function boardcreateobject(
   board: BOARD,
-  x: number,
-  y: number,
-  withid?: string,
+  from: BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
   const object = {
-    id: withid ?? createguid(),
-    x,
-    y,
-    char: 1,
-    color: 15,
-    bg: -1,
+    ...from,
+    id: from.id ?? createguid(),
   }
 
   // add to board
@@ -102,4 +101,23 @@ export function boarddeleteobject(board: BOARD, id: string) {
     return true
   }
   return false
+}
+
+function boardsetlookup(board: BOARD) {
+  const lookup: MAYBE_BOARD_ELEMENT[] = new Array(
+    board.width * board.height,
+  ).fill(undefined)
+
+  Object.values(board.objects).forEach((object) => {
+    if (isDefined(object.x) && isDefined(object.y)) {
+      lookup[object.x + object.y * board.width] = object
+    }
+  })
+
+  board.lookup = ref(lookup)
+}
+
+export function boardtick(board: BOARD) {
+  // build object lookup pre-tick
+  boardsetlookup(board)
 }

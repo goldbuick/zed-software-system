@@ -1,12 +1,13 @@
+import { isDefined } from 'ts-extras'
 import { proxy } from 'valtio'
 
 import { BIOS } from './bios'
-import { boardcreateobject, boarddeleteobject } from './board'
+import { BOARD, boardcreateobject, boarddeleteobject, boardtick } from './board'
 import { readaddress } from './book'
 import { CONTENT_TYPE } from './codepage'
 
 // sim state
-const VM_MEMORY = proxy({
+const MEMORY = proxy({
   book: BIOS, // starting software to run
   flags: {} as Record<string, any>, // global flags by player
   players: {} as Record<string, string>, // map of player to board
@@ -15,49 +16,67 @@ const VM_MEMORY = proxy({
 const PLAYER_KIND = 'app:player'
 const PLAYER_START = 'app:title'
 
-export function vmplayerlogin(player: string) {
-  const title = vmreadboard(PLAYER_START)
-  const playerkind = vmreadobject(PLAYER_KIND)
+export function memoryplayerlogin(player: string) {
+  const title = memoryreadboard(PLAYER_START)
+  const playerkind = memoryreadobject(PLAYER_KIND)
   if (title && playerkind) {
-    const obj = boardcreateobject(title, 0, 0, player)
-    if (obj) {
-      obj.kind = PLAYER_KIND
+    const obj = boardcreateobject(title, {
+      id: player,
+      x: 0,
+      y: 0,
+      kind: PLAYER_KIND,
+    })
+    if (obj && obj.id) {
+      MEMORY.players[player] = obj.id
     }
-    console.info(obj)
   }
 }
 
-export function vmplayerlogout(player: string) {
-  const board = vmplayerreadboard(player)
+export function memoryplayerlogout(player: string) {
+  const board = memoryplayerreadboard(player)
   if (board) {
     boarddeleteobject(board, player)
   }
 }
 
-function vmplayercheckflags(player: string) {
-  if (!VM_MEMORY.flags[player]) {
-    VM_MEMORY.flags[player] = {}
+function memoryplayercheckflags(player: string) {
+  if (!MEMORY.flags[player]) {
+    MEMORY.flags[player] = {}
   }
 }
 
-export function vmplayerreadflag(player: string, flag: string) {
-  vmplayercheckflags(player)
-  return VM_MEMORY.flags[player][flag]
+export function memoryplayerreadflag(player: string, flag: string) {
+  memoryplayercheckflags(player)
+  return MEMORY.flags[player][flag]
 }
 
-export function vmplayersetflag(player: string, flag: string, value: any) {
-  vmplayercheckflags(player)
-  VM_MEMORY.flags[player][flag] = value
+export function memoryplayersetflag(player: string, flag: string, value: any) {
+  memoryplayercheckflags(player)
+  MEMORY.flags[player][flag] = value
 }
 
-export function vmreadboard(address: string) {
-  return readaddress(VM_MEMORY.book, CONTENT_TYPE.BOARD, address)
+export function memoryplayerreadboard(player: string) {
+  return memoryreadboard(MEMORY.players[player] ?? '')
 }
 
-export function vmplayerreadboard(player: string) {
-  return vmreadboard(VM_MEMORY.players[player] ?? '')
+export function memoryplayersetboard(player: string, board: string) {
+  if (memoryreadboard(board)) {
+    MEMORY.players[player] = board
+  }
 }
 
-export function vmreadobject(address: string) {
-  return readaddress(VM_MEMORY.book, CONTENT_TYPE.OBJECT, address)
+export function memoryreadboard(address: string) {
+  return readaddress(MEMORY.book, CONTENT_TYPE.BOARD, address)
+}
+
+export function memoryreadobject(address: string) {
+  return readaddress(MEMORY.book, CONTENT_TYPE.OBJECT, address)
+}
+
+export function memorytick() {
+  // get a list of active boards
+  const r = [...new Set(Object.values(MEMORY.players))]
+    .map((address) => memoryreadboard(address))
+    .filter(isDefined)
+    .forEach(boardtick)
 }

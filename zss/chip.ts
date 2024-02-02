@@ -23,7 +23,6 @@ export type STATE = Record<string, any>
 export type CHIP = {
   // id
   id: () => string
-  group: () => string
   name: () => string
   player: () => string
   setName: (name: string) => void
@@ -36,7 +35,7 @@ export type CHIP = {
   get: (name: string) => any
 
   // lifecycle api
-  tick: () => void
+  tick: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
   hasmessage: () => number
@@ -107,7 +106,7 @@ export function maptostring(value: any) {
 }
 
 // lifecycle and control flow api
-export function createchip(id: string, group: string, build: GeneratorBuild) {
+export function createchip(id: string, build: GeneratorBuild) {
   // naming
   let chipname = 'object'
 
@@ -188,14 +187,11 @@ export function createchip(id: string, group: string, build: GeneratorBuild) {
     id() {
       return id
     },
-    group() {
-      return group
-    },
     name() {
       return chipname
     },
     player() {
-      return internals.player || group
+      return internals.player
     },
     setName(incoming) {
       chipname = incoming
@@ -243,7 +239,7 @@ export function createchip(id: string, group: string, build: GeneratorBuild) {
     tick() {
       // should we bail ?
       if (!chip.shouldtick()) {
-        return
+        return false
       }
 
       // reset state
@@ -260,6 +256,8 @@ export function createchip(id: string, group: string, build: GeneratorBuild) {
       } catch (err: any) {
         console.error(err)
       }
+
+      return true
     },
     shouldtick() {
       return endedstate === false || chip.hasmessage() !== 0

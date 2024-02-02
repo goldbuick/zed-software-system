@@ -9,7 +9,7 @@ import {
   createsprites,
   createtiles,
 } from 'zss/gadget/data/types'
-import { vmplayerreadboard } from 'zss/memory'
+import { memoryplayerreadboard } from 'zss/memory'
 
 // tracking gadget state for individual players
 const syncstate: Record<string, GADGET_STATE> = {}
@@ -23,7 +23,7 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
 
         // write frame layers
         const layers: LAYER[] = []
-        const board = vmplayerreadboard(player)
+        const board = memoryplayerreadboard(player)
         if (board) {
           const tiles = createtiles(player, 0, board.width, board.height)
           layers.push(tiles)

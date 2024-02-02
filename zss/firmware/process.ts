@@ -1,7 +1,7 @@
 import { isPresent } from 'ts-extras'
 import { maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
-import { vmplayerreadflag, vmplayersetflag } from 'zss/memory'
+import { memoryplayerreadflag, memoryplayersetflag } from 'zss/memory'
 
 export const PROCESS_FIRMWARE = createfirmware(
   (chip, name) => {
@@ -9,7 +9,7 @@ export const PROCESS_FIRMWARE = createfirmware(
     const index = name.toLowerCase()
 
     // get
-    const value = vmplayerreadflag(player, index)
+    const value = memoryplayerreadflag(player, index)
 
     // console.info('###get', { name, value })
     return [isPresent(value), value]
@@ -19,7 +19,7 @@ export const PROCESS_FIRMWARE = createfirmware(
     const index = name.toLowerCase()
 
     // set
-    vmplayersetflag(player, index, value)
+    memoryplayersetflag(player, index, value)
 
     // console.info('###set', { name, value })
     return [true, value]

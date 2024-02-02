@@ -1,7 +1,7 @@
 import { customAlphabet } from 'nanoid'
 import { numbers, lowercase } from 'nanoid-dictionary'
 import { createdevice } from 'zss/device'
-import { vmplayerlogin, vmplayerlogout } from 'zss/memory'
+import { memoryplayerlogin, memoryplayerlogout, memorytick } from 'zss/memory'
 import { createos } from 'zss/os'
 
 // limited chars so peerjs doesn't get mad
@@ -23,12 +23,11 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
     case 'login':
       if (message.player) {
         tracking[message.player] = 0
-        vmplayerlogin(message.player)
+        memoryplayerlogin(message.player)
       }
       break
     case 'tick':
-      // update chips
-      OS.tick()
+      memorytick()
       break
     case 'tock':
       // iterate over logged in players
@@ -37,7 +36,7 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
         if (tracking[player] > LOOP_TIMEOUT) {
           // drop inactive players (logout)
           delete tracking[player]
-          vmplayerlogout(player)
+          memoryplayerlogout(player)
         }
       })
       break
