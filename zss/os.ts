@@ -40,8 +40,14 @@ export function createos() {
         return ''
       }
 
-      // create chip from build and load
-      const chip = (chips[id] = createchip(id, result, opts.target))
+      // create chip from build
+      const chip = (chips[id] = createchip({
+        id,
+        build: result,
+        target: opts.target,
+      }))
+
+      // load chip firmware
       loadfirmware(chip)
 
       return id

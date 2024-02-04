@@ -2,7 +2,7 @@
 #gadget start
 #gadget right 20
 
- $white   - - - - - 
- $black$ongrey   ZED.CAFE
- $white   - - - - - 
+ $white   - - - - -
+ $black$ongrey    ZED.CAFE    
+ $white    - - - - -
 ""

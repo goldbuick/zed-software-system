@@ -107,12 +107,14 @@ export function maptostring(value: any) {
   return `${value ?? ''}`
 }
 
+type createchipoptions = {
+  id: string
+  build: GeneratorBuild
+  target: BOARD_ELEMENT
+}
+
 // lifecycle and control flow api
-export function createchip(
-  id: string,
-  build: GeneratorBuild,
-  target: BOARD_ELEMENT,
-) {
+export function createchip({ id, build, target }: createchipoptions) {
   // naming
   let chipname = 'object'
 
@@ -128,9 +130,7 @@ export function createchip(
   let message: MESSAGE | undefined = undefined
 
   // internals
-  target.stats = target.stats ?? {
-    player: '',
-  }
+  target.stats = target.stats ?? {}
 
   // prevent infinite loop lockup
   let loops = 0
@@ -176,11 +176,11 @@ export function createchip(
   function getinternal(word: string) {
     switch (word.toLowerCase()) {
       case 'player':
-        return target.stats?.player
+        return target.stats?.player ?? ''
       case 'sender':
-        return target.stats?.sender
+        return target.stats?.sender ?? ''
       case 'data':
-        return target.stats?.data
+        return target.stats?.data ?? 0
       default:
         return chip.get(word)
     }

@@ -26,6 +26,9 @@ export function memoryplayerlogin(player: string) {
       x: 0,
       y: 0,
       kind: PLAYER_KIND,
+      stats: {
+        player,
+      },
     })
     if (obj && obj.id) {
       MEMORY.players[player] = PLAYER_START

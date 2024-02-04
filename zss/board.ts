@@ -11,7 +11,9 @@ import { OS } from './os'
 
 // generics
 export type BOARD_ELEMENT_STATS = {
-  player: string
+  player?: string
+  sender?: string
+  data?: any
   [key: string]: WORD_VALUE
 }
 

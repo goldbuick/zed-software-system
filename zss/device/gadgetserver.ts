@@ -64,14 +64,14 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
         const patch = compare(syncstate[player] ?? {}, shared)
         if (patch.length) {
           syncstate[player] = deepClone(shared)
-          gadgetserverdevice.emit('gadgetmain:patch', patch, player)
+          gadgetserverdevice.emit('gadgetclient:patch', patch, player)
         }
       })
       break
     case 'desync':
       if (message.player) {
         const state = gadgetstate(message.player)
-        gadgetserverdevice.emit('gadgetmain:reset', state, message.player)
+        gadgetserverdevice.emit('gadgetclient:reset', state, message.player)
       }
       break
     case 'clearscroll':
