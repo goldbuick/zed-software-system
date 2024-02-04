@@ -3,23 +3,6 @@
 #gadget right 20
 
  $white   - - - - - 
- $black$ongrey      TEST
+ $black$ongrey   ZED.CAFE
  $white   - - - - - 
-
-#cycle 1
-:think
-
-#if inputmove 
-  ?from inputmove
-#else
-  #idle
-
-#think
-
-'  player input
-'  inputmove?: DirValue // for player object
-'  inputshoot?: DirValue // for player object
-'  input1?: boolean // for player object
-'  input2?: boolean // for player object
-'  input3?: boolean // for player object
-'  input4?: boolean // for player object
+""

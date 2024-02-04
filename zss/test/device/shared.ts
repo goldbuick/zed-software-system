@@ -17,9 +17,9 @@ const origin: Record<string, boolean | undefined> = {}
 const tracking: Record<string, number | undefined> = {}
 const lastactive: Record<string, number | undefined> = {}
 
-const shareddevice = createDevice('shared', ['clock'], (message) => {
+const shareddevice = createDevice('shared', ['second'], (message) => {
   switch (message.target) {
-    case 'clock':
+    case 'second':
       // what guids do we care about?
       Object.keys(tracking).forEach((guid) => {
         // what is the state of our connection to origin ?

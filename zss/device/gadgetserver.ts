@@ -1,6 +1,6 @@
 import { compare, deepClone } from 'fast-json-patch'
 import { createdevice } from 'zss/device'
-import { clearscroll, gadgetgroups, gadgetstate } from 'zss/firmware/gadget'
+import { clearscroll, gadgetplayers, gadgetstate } from 'zss/firmware/gadget'
 import {
   GADGET_STATE,
   LAYER,
@@ -18,7 +18,7 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
   switch (message.target) {
     case 'tock':
       // we need to sync gadget here
-      gadgetgroups().forEach((player) => {
+      gadgetplayers().forEach((player) => {
         const shared = gadgetstate(player)
 
         // write frame layers

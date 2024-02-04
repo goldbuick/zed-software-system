@@ -13,12 +13,8 @@ const firmwares: Record<string, FIRMWARE> = {
   process: PROCESS_FIRMWARE,
 }
 
-export function loadfirmware(chip: CHIP, name: string) {
-  const firmware = firmwares[name.toLowerCase()]
-  if (firmware) {
+export function loadfirmware(chip: CHIP) {
+  Object.values(firmwares).forEach((firmware) => {
     chip.install(firmware)
-  } else {
-    // todo raise error
-    console.error(`unknown firmware ${name}`)
-  }
+  })
 }

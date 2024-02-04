@@ -37,7 +37,7 @@ export const BIOS: BOOK = {
           name: 'player',
           value: {
             name: 'player',
-            char: 1,
+            char: 2,
             color: 15,
             bg: -1,
             code: playercode,

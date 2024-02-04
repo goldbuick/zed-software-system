@@ -2,9 +2,10 @@ import { isDefined } from 'ts-extras'
 import { proxy } from 'valtio'
 
 import { BIOS } from './bios'
-import { BOARD, boardcreateobject, boarddeleteobject, boardtick } from './board'
+import { boardcreateobject, boarddeleteobject, boardtick } from './board'
 import { readaddress } from './book'
 import { CONTENT_TYPE } from './codepage'
+import { OS } from './os'
 
 // sim state
 const MEMORY = proxy({
@@ -27,7 +28,7 @@ export function memoryplayerlogin(player: string) {
       kind: PLAYER_KIND,
     })
     if (obj && obj.id) {
-      MEMORY.players[player] = obj.id
+      MEMORY.players[player] = PLAYER_START
     }
   }
 }
@@ -73,10 +74,11 @@ export function memoryreadobject(address: string) {
   return readaddress(MEMORY.book, CONTENT_TYPE.OBJECT, address)
 }
 
-export function memorytick() {
+export function memorytick(os: OS) {
   // get a list of active boards
-  const r = [...new Set(Object.values(MEMORY.players))]
+  const activelist = [...new Set(Object.values(MEMORY.players))]
+  activelist
     .map((address) => memoryreadboard(address))
     .filter(isDefined)
-    .forEach(boardtick)
+    .forEach((board) => boardtick(os, MEMORY.book, board))
 }

@@ -1,6 +1,7 @@
 import ErrorStackParser from 'error-stack-parser'
 import { klona } from 'klona/json'
 
+import { BOARD_ELEMENT } from './board'
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
@@ -25,6 +26,7 @@ export type CHIP = {
   id: () => string
   name: () => string
   player: () => string
+  target: () => BOARD_ELEMENT
   setName: (name: string) => void
 
   // set firmware on chip
@@ -106,7 +108,11 @@ export function maptostring(value: any) {
 }
 
 // lifecycle and control flow api
-export function createchip(id: string, build: GeneratorBuild) {
+export function createchip(
+  id: string,
+  build: GeneratorBuild,
+  target: BOARD_ELEMENT,
+) {
   // naming
   let chipname = 'object'
 
@@ -120,6 +126,11 @@ export function createchip(id: string, build: GeneratorBuild) {
   // incoming message state
   let locked = ''
   let message: MESSAGE | undefined = undefined
+
+  // internals
+  target.stats = target.stats ?? {
+    player: '',
+  }
 
   // prevent infinite loop lockup
   let loops = 0
@@ -136,13 +147,6 @@ export function createchip(id: string, build: GeneratorBuild) {
 
   // chip is in ended state awaiting any messages
   let endedstate = false
-
-  // chip internals
-  const internals = {
-    player: '',
-    sender: '',
-    data: '' as WORD_VALUE,
-  }
 
   // chip invokes
   const firmwares: FIRMWARE[] = []
@@ -172,11 +176,11 @@ export function createchip(id: string, build: GeneratorBuild) {
   function getinternal(word: string) {
     switch (word.toLowerCase()) {
       case 'player':
-        return internals.player
+        return target.stats?.player
       case 'sender':
-        return internals.sender
+        return target.stats?.sender
       case 'data':
-        return internals.data
+        return target.stats?.data
       default:
         return chip.get(word)
     }
@@ -191,7 +195,10 @@ export function createchip(id: string, build: GeneratorBuild) {
       return chipname
     },
     player() {
-      return internals.player
+      return getinternal('player')
+    },
+    target() {
+      return target
     },
     setName(incoming) {
       chipname = incoming
@@ -315,12 +322,14 @@ export function createchip(id: string, build: GeneratorBuild) {
         const label = chip.hasmessage()
 
         // update chip value state based on incoming message
-        internals.sender = message.from
-        internals.data = message.data
+        if (target.stats) {
+          target.stats.sender = message.from
+          target.stats.data = message.data
 
-        // this sets player focus
-        if (message.player) {
-          internals.player = message.player
+          // this sets player focus
+          if (message.player) {
+            target.stats.player = message.player
+          }
         }
 
         // clear message

@@ -1,12 +1,17 @@
 import { isDefined } from 'ts-extras'
 import { ref } from 'valtio'
 
+import { BOOK, readaddress } from './book'
 import { WORD_VALUE } from './chip'
+import { CONTENT_TYPE } from './codepage'
+import { MAYBE_STRING } from './device/shared'
 import { range } from './mapping/array'
 import { createguid } from './mapping/guid'
+import { OS } from './os'
 
 // generics
-export type BOARD_STATS = {
+export type BOARD_ELEMENT_STATS = {
+  player: string
   [key: string]: WORD_VALUE
 }
 
@@ -17,6 +22,8 @@ export type BOARD_ELEMENT = Partial<{
   y: number
   // this element has a code associated with it
   code: string
+  // this element has running chip
+  chip: string
   // this element is an instance of an element type
   kind: string
   // this is a unique name for this instance
@@ -29,7 +36,7 @@ export type BOARD_ELEMENT = Partial<{
   pushable: number
   collision: number
   // custom
-  stats: BOARD_STATS
+  stats: BOARD_ELEMENT_STATS
 }>
 
 export type MAYBE_BOARD_ELEMENT = BOARD_ELEMENT | undefined
@@ -39,6 +46,10 @@ export type BOARD_RECT = {
   y: number
   width: number
   height: number
+}
+
+export type BOARD_STATS = {
+  [key: string]: WORD_VALUE
 }
 
 export type BOARD = {
@@ -55,7 +66,7 @@ export type BOARD = {
   // custom
   stats?: BOARD_STATS
   // runtime only
-  lookup?: MAYBE_BOARD_ELEMENT[]
+  lookup?: MAYBE_STRING[]
 }
 
 export function createboard(
@@ -104,20 +115,53 @@ export function boarddeleteobject(board: BOARD, id: string) {
 }
 
 function boardsetlookup(board: BOARD) {
-  const lookup: MAYBE_BOARD_ELEMENT[] = new Array(
-    board.width * board.height,
-  ).fill(undefined)
+  const lookup: string[] = new Array(board.width * board.height).fill(undefined)
 
   Object.values(board.objects).forEach((object) => {
-    if (isDefined(object.x) && isDefined(object.y)) {
-      lookup[object.x + object.y * board.width] = object
+    if (isDefined(object.x) && isDefined(object.y) && isDefined(object.id)) {
+      lookup[object.x + object.y * board.width] = object.id
     }
   })
 
   board.lookup = ref(lookup)
 }
 
-export function boardtick(board: BOARD) {
+export function objectreadkind(
+  book: BOOK,
+  object: MAYBE_BOARD_ELEMENT,
+): MAYBE_BOARD_ELEMENT {
+  if (isDefined(object) && isDefined(object.kind)) {
+    return readaddress(book, CONTENT_TYPE.OBJECT, object.kind)
+  }
+  return undefined
+}
+
+export function boardtick(os: OS, book: BOOK, board: BOARD) {
   // build object lookup pre-tick
   boardsetlookup(board)
+
+  // iterate over the lookup
+  if (board.lookup) {
+    for (let i = 0; i < board.lookup.length; ++i) {
+      const target = board.objects[board.lookup[i] ?? '']
+      if (isDefined(target) && isDefined(target.id)) {
+        // lookup kind
+        const kind = objectreadkind(book, target)
+        // object code
+        const code = target.code ?? kind?.code ?? ''
+        // we have code to execute
+        if (code) {
+          // chip check
+          if (!target.chip) {
+            target.chip = os.boot({ id: target.id, code, target })
+          }
+          // run chip
+          if (target.chip) {
+            os.tick(target.chip)
+          }
+        }
+        // what else ???
+      }
+    }
+  }
 }

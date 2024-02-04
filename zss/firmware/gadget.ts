@@ -91,22 +91,22 @@ const HYPERLINK_WITH_SHARED = new Set([
 
 const HYPERLINK_WITH_SHARED_TEXT = new Set(['tx', 'text'])
 
-export function gadgetstate(group: string) {
-  let value: GADGET_STATE = allgadgetstate[group]
+export function gadgetstate(player: string) {
+  let value: GADGET_STATE = allgadgetstate[player]
 
   if (value === undefined) {
-    allgadgetstate[group] = value = initstate({}, group)
+    allgadgetstate[player] = value = initstate({}, player)
   }
 
   return value
 }
 
-export function gadgetgroups() {
+export function gadgetplayers() {
   return Object.keys(allgadgetstate)
 }
 
-export function clearscroll(group: string) {
-  const state = gadgetstate(group)
+export function clearscroll(player: string) {
+  const state = gadgetstate(player)
   state.layout = state.layout.filter((item) => item.edge !== PANEL_TYPE.SCROLL)
 }
 
@@ -139,8 +139,7 @@ export const GADGET_FIRMWARE = createfirmware(
     const name = maptostring(arg2)
 
     // get state
-    const group = chip.group()
-    const shared = gadgetstate(group)
+    const shared = gadgetstate(chip.player())
     const panelName = name || Case.capital(edge)
     const panelState: PANEL | undefined = shared.layout.find(
       (panel: PANEL) => panel.name === panelName,
@@ -153,7 +152,7 @@ export const GADGET_FIRMWARE = createfirmware(
     } else {
       switch (edgeConst) {
         case PANEL_TYPE.START:
-          initstate(shared, group)
+          initstate(shared, chip.player())
           break
         case PANEL_TYPE.LEFT:
         case PANEL_TYPE.RIGHT:
@@ -183,7 +182,7 @@ export const GADGET_FIRMWARE = createfirmware(
     const text = maptostring(args[0] ?? '')
 
     // get state
-    const shared = gadgetstate(chip.group())
+    const shared = gadgetstate(chip.player())
 
     // find slot
     const panel = findpanel(shared)
@@ -199,7 +198,7 @@ export const GADGET_FIRMWARE = createfirmware(
   })
   .command('hyperlink', (chip, args) => {
     // get state
-    const shared = gadgetstate(chip.group())
+    const shared = gadgetstate(chip.player())
 
     // find slot
     const panel = findpanel(shared)

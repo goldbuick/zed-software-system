@@ -1,3 +1,4 @@
+import { BOARD_ELEMENT } from './board'
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { loadfirmware } from './firmware/loader'
@@ -5,7 +6,7 @@ import { GeneratorBuild, compile } from './lang/generator'
 import { createguid } from './mapping/guid'
 
 export type OS = {
-  boot: (opts: { id?: string; firmware: string[]; code: string }) => string
+  boot: (opts: { id?: string; code: string; target: BOARD_ELEMENT }) => string
   ids: () => string[]
   halt: (id: string) => boolean
   tick: (id: string) => boolean
@@ -40,8 +41,8 @@ export function createos() {
       }
 
       // create chip from build and load
-      const chip = (chips[id] = createchip(id, result))
-      opts.firmware.forEach((item) => loadfirmware(chip, item))
+      const chip = (chips[id] = createchip(id, result, opts.target))
+      loadfirmware(chip)
 
       return id
     },
