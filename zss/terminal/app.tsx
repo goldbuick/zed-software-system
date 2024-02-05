@@ -89,6 +89,7 @@ export function App() {
           <Canvas
             flat
             linear
+            dpr={1}
             shadows={false}
             touch-action="none"
             gl={{

@@ -86,7 +86,6 @@ function LayoutRect({
 
     case RECT_TYPE.FRAMED: {
       const control = layersreadcontrol(layers)
-      console.info(control)
       // const chw = control.width * 0.5 * DRAW_CHAR_WIDTH * control.viewscale
       // const chh = control.height * 0.5 * DRAW_CHAR_HEIGHT * control.viewscale
       const fx = (rect.width * 0.5 + rect.x) * DRAW_CHAR_WIDTH
@@ -101,7 +100,7 @@ function LayoutRect({
           position={[fx, fy, 0]}
         >
           {/* eslint-disable-next-line react/no-unknown-property */}
-          <group position={[left - fx, top - fy, 0]}>
+          <group scale={control.viewscale} position={[left - fx, top - fy, 0]}>
             {layers.map((layer, i) => {
               switch (layer.type) {
                 default:
@@ -112,13 +111,8 @@ function LayoutRect({
                     palette &&
                     charset && (
                       // eslint-disable-next-line react/no-unknown-property
-                      <group position={[0, 0, i]}>
-                        <Tiles
-                          {...layer}
-                          key={layer.id}
-                          palette={palette}
-                          charset={charset}
-                        />
+                      <group key={layer.id} position={[0, 0, i]}>
+                        <Tiles {...layer} palette={palette} charset={charset} />
                       </group>
                     )
                   )
@@ -127,7 +121,7 @@ function LayoutRect({
                     palette &&
                     charset && (
                       // eslint-disable-next-line react/no-unknown-property
-                      <group position={[0, 0, i]}>
+                      <group key={layer.id} position={[0, 0, i]}>
                         <Sprites
                           {...layer}
                           key={layer.id}
@@ -140,8 +134,8 @@ function LayoutRect({
                 case LAYER_TYPE.DITHER:
                   return (
                     // eslint-disable-next-line react/no-unknown-property
-                    <group position={[0, 0, i]}>
-                      <Dither {...layer} key={layer.id} />
+                    <group key={layer.id} position={[0, 0, i]}>
+                      <Dither {...layer} />
                     </group>
                   )
               }
