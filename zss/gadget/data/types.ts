@@ -93,6 +93,10 @@ export type LAYER =
   | LAYER_MEDIA
   | LAYER_CONTROL
 
+function arrayof(size: number): number[] {
+  return new Array(size).fill(0)
+}
+
 export function createtiles(
   player: string,
   index: number,
@@ -105,9 +109,9 @@ export function createtiles(
     type: LAYER_TYPE.TILES,
     width,
     height,
-    char: new Array<number>(size),
-    color: new Array<number>(size),
-    bg: new Array<number>(size),
+    char: arrayof(size),
+    color: arrayof(size),
+    bg: arrayof(size),
   }
 }
 
@@ -127,6 +131,22 @@ export function createsprites(player: string, index: number): LAYER_SPRITES {
     id: `sprites:${player}:${index}`,
     type: LAYER_TYPE.SPRITES,
     sprites: [],
+  }
+}
+
+export function createdither(
+  player: string,
+  index: number,
+  width: number,
+  height: number,
+): LAYER_DITHER {
+  const size = width * height
+  return {
+    id: `dither:${player}:${index}`,
+    type: LAYER_TYPE.DITHER,
+    width,
+    height,
+    alphas: arrayof(size),
   }
 }
 

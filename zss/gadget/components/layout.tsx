@@ -86,12 +86,16 @@ function LayoutRect({
 
     case RECT_TYPE.FRAMED: {
       const control = layersreadcontrol(layers)
-      // const chw = control.width * 0.5 * DRAW_CHAR_WIDTH * control.viewscale
-      // const chh = control.height * 0.5 * DRAW_CHAR_HEIGHT * control.viewscale
+      const drawwidth = control.width * DRAW_CHAR_WIDTH * control.viewscale
+      const drawheight = control.height * DRAW_CHAR_HEIGHT * control.viewscale
+      const rectwidth = rect.width * DRAW_CHAR_WIDTH
+      const rectheight = rect.height * DRAW_CHAR_HEIGHT
+      const edgex = drawwidth - rectwidth
+      const edgey = drawheight - rectheight
       const fx = (rect.width * 0.5 + rect.x) * DRAW_CHAR_WIDTH
       const fy = (rect.height * 0.5 + rect.y) * DRAW_CHAR_HEIGHT
-      const left = 0 //-chw
-      const top = 0 //-chh
+      const left = Math.max(0, Math.min(edgex, rectwidth * -0.5))
+      const top = Math.max(0, Math.min(edgey, rectheight * -0.5))
       return (
         <Clipping
           width={rect.width * DRAW_CHAR_WIDTH}
@@ -132,6 +136,7 @@ function LayoutRect({
                     )
                   )
                 case LAYER_TYPE.DITHER:
+                  console.info({ dither: layer })
                   return (
                     // eslint-disable-next-line react/no-unknown-property
                     <group key={layer.id} position={[0, 0, i]}>

@@ -26,8 +26,8 @@ export const BIOS: BOOK = {
                 const i = x + y * board.width
                 board.terrain[i] = {
                   char: i % 256,
-                  color: 15,
-                  bg: 8,
+                  color: Math.round((x + y) * 0.25) % 2 ? 7 : 8,
+                  bg: 0,
                 }
               }
             }

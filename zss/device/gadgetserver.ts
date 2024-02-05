@@ -4,6 +4,7 @@ import { clearscroll, gadgetplayers, gadgetstate } from 'zss/firmware/gadget'
 import {
   GADGET_STATE,
   LAYER,
+  createdither,
   createlayercontrol,
   createsprite,
   createsprites,
@@ -27,9 +28,11 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
         if (board) {
           const tiles = createtiles(player, 0, board.width, board.height)
           layers.push(tiles)
-          const objects = createsprites(player, 1)
+          const shadow = createdither(player, 1, board.width, board.height)
+          layers.push(shadow)
+          const objects = createsprites(player, 2)
           layers.push(objects)
-          const control = createlayercontrol(player, 2)
+          const control = createlayercontrol(player, 3)
           layers.push(control)
 
           board.terrain.forEach((tile, i) => {
@@ -45,10 +48,15 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
             const id = object.id ?? ''
             const kind = memoryobjectreadkind(object)
             const sprite = createsprite(player, 1, id)
+            sprite.x = object.x ?? 0
+            sprite.y = object.y ?? 0
             sprite.char = object.char ?? kind?.char ?? 0
             sprite.color = object.color ?? kind?.color ?? 0
             sprite.bg = object.bg ?? kind?.bg ?? -1
             objects.sprites.push(sprite)
+
+            // plot shadow
+            shadow.alphas[sprite.x + sprite.y * board.width] = 0.75
 
             // inform control layer where to focus
             if (id === player) {

@@ -29,8 +29,8 @@ export function memoryplayerlogin(player: string) {
   if (title && playerkind) {
     const obj = createboardobject(title, {
       id: player,
-      x: 0,
-      y: 0,
+      x: 24,
+      y: 5,
       kind: PLAYER_KIND,
       stats: {
         player,
