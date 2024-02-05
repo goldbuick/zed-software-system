@@ -5,6 +5,8 @@ export const BYTES_PER_COLOR = 3
 
 export const PALETTE_COLOR_RANGE = 63
 
+export const SPRITES_TINDEX = 16
+
 const CHAR_SCALE = 2
 
 export const CHAR_WIDTH = 8
@@ -114,9 +116,9 @@ export function createsprite(player: string, index: number, id: string) {
     id: `sprites:${player}:${index}:${id}`,
     x: 0,
     y: 0,
-    char: 0,
-    color: 0,
-    bg: 0,
+    char: 1,
+    color: 15,
+    bg: SPRITES_TINDEX,
   }
 }
 
@@ -128,26 +130,45 @@ export function createsprites(player: string, index: number): LAYER_SPRITES {
   }
 }
 
-export function createcontrol(player: string, index: number): LAYER_CONTROL {
+export function createlayercontrol(
+  player: string,
+  index: number,
+): LAYER_CONTROL {
   return {
     id: `control:${player}:${index}`,
     type: LAYER_TYPE.CONTROL,
     focusx: 0,
     focusy: 0,
-    viewscale: 1,
+    viewscale: 1.5,
   }
 }
 
-export function getlayerbounds(layers: LAYER[]) {
+export function layersreadcontrol(layers: LAYER[]) {
   let width = 0
   let height = 0
+  let focusx = 0
+  let focusy = 0
+  let viewscale = 1
+
   layers.forEach((layer) => {
-    if (layer.type === LAYER_TYPE.TILES) {
-      width = Math.max(width, layer.width)
-      height = Math.max(height, layer.height)
+    switch (layer.type) {
+      case LAYER_TYPE.TILES:
+        width = Math.max(width, layer.width)
+        height = Math.max(height, layer.height)
+        break
+      case LAYER_TYPE.DITHER:
+        width = Math.max(width, layer.width)
+        height = Math.max(height, layer.height)
+        break
+      case LAYER_TYPE.CONTROL:
+        focusx = layer.focusx
+        focusy = layer.focusy
+        viewscale = layer.viewscale
+        break
     }
   })
-  return { width, height }
+
+  return { width, height, focusx, focusy, viewscale }
 }
 
 export enum PANEL_TYPE {

@@ -4,12 +4,12 @@ import { clearscroll, gadgetplayers, gadgetstate } from 'zss/firmware/gadget'
 import {
   GADGET_STATE,
   LAYER,
-  createcontrol,
+  createlayercontrol,
   createsprite,
   createsprites,
   createtiles,
 } from 'zss/gadget/data/types'
-import { memoryplayerreadboard } from 'zss/memory'
+import { memoryobjectreadkind, memoryplayerreadboard } from 'zss/memory'
 
 // tracking gadget state for individual players
 const syncstate: Record<string, GADGET_STATE> = {}
@@ -29,7 +29,7 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
           layers.push(tiles)
           const objects = createsprites(player, 1)
           layers.push(objects)
-          const control = createcontrol(player, 2)
+          const control = createlayercontrol(player, 2)
           layers.push(control)
 
           board.terrain.forEach((tile, i) => {
@@ -43,10 +43,11 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
           Object.values(board.objects).forEach((object) => {
             // should we have bg transparent or match the bg color of the terrain ?
             const id = object.id ?? ''
+            const kind = memoryobjectreadkind(object)
             const sprite = createsprite(player, 1, id)
-            sprite.char = object.char ?? 0
-            sprite.color = object.color ?? 0
-            sprite.bg = object.bg ?? -1
+            sprite.char = object.char ?? kind?.char ?? 0
+            sprite.color = object.color ?? kind?.color ?? 0
+            sprite.bg = object.bg ?? kind?.bg ?? -1
             objects.sprites.push(sprite)
 
             // inform control layer where to focus

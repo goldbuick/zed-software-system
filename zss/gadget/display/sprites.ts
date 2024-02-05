@@ -1,10 +1,12 @@
 import * as THREE from 'three'
 
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
+import {
+  DRAW_CHAR_HEIGHT,
+  DRAW_CHAR_WIDTH,
+  SPRITES_TINDEX,
+} from '../data/types'
 
 import { cloneMaterial, interval, time } from './anim'
-
-export const SPRITES_TINDEX = 16
 
 const spritesMaterial = new THREE.ShaderMaterial({
   // settings
@@ -16,7 +18,9 @@ const spritesMaterial = new THREE.ShaderMaterial({
     map: { value: null },
     alt: { value: null },
     palette: { value: null },
-    pointSize: { value: new THREE.Vector2(DRAW_CHAR_WIDTH, DRAW_CHAR_HEIGHT) },
+    pointSize: {
+      value: new THREE.Vector2(DRAW_CHAR_WIDTH, DRAW_CHAR_HEIGHT),
+    },
     rows: { value: 1 },
     step: { value: new THREE.Vector2() },
   },
@@ -102,7 +106,7 @@ const spritesMaterial = new THREE.ShaderMaterial({
       vec4 mvPosition = modelViewMatrix * vec4(animPosition, 0.0, 1.0);
       gl_Position = projectionMatrix * mvPosition;      
 
-      gl_PointSize = pointSize.y;
+      gl_PointSize = pointSize.y * 2.0;
       
       #include <clipping_planes_vertex>
     }
@@ -141,6 +145,9 @@ const spritesMaterial = new THREE.ShaderMaterial({
 
       bool useAlt = mod(time, interval * 2.0) > interval;
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
+
+      // gl_FragColor.rgb = vec3(1.0, 0.0, 1.0);
+      // gl_FragColor.a = 1.0;
 
       if (blip.r == 0.0) {
         gl_FragColor = vBg;

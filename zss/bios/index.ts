@@ -2,6 +2,7 @@ import playercode from 'bundle-text:./player.txt'
 import { createboard } from 'zss/board'
 import { BOOK } from 'zss/book'
 import { CONTENT_TYPE } from 'zss/codepage'
+import { SPRITES_TINDEX } from 'zss/gadget/data/types'
 import { createguid } from 'zss/mapping/guid'
 
 const BOARD_WIDTH = 60
@@ -25,6 +26,8 @@ export const BIOS: BOOK = {
                 const i = x + y * board.width
                 board.terrain[i] = {
                   char: i % 256,
+                  color: 15,
+                  bg: 8,
                 }
               }
             }
@@ -39,7 +42,7 @@ export const BIOS: BOOK = {
             name: 'player',
             char: 2,
             color: 15,
-            bg: -1,
+            bg: SPRITES_TINDEX,
             code: playercode,
           },
         },

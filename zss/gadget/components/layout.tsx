@@ -12,10 +12,11 @@ import {
   PANEL_ITEM,
   LAYER,
   LAYER_TYPE,
-  getlayerbounds,
+  layersreadcontrol,
 } from '../data/types'
 import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
+import Clipping from './clipping'
 import { Dither, StaticDither } from './dither'
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'
@@ -84,55 +85,69 @@ function LayoutRect({
       )
 
     case RECT_TYPE.FRAMED: {
-      const content = getlayerbounds(layers)
-      const scale = 1.5
-      const chw = content.width * 0.5 * DRAW_CHAR_WIDTH * scale
-      const chh = content.height * 0.5 * DRAW_CHAR_HEIGHT * scale
+      const control = layersreadcontrol(layers)
+      console.info(control)
+      // const chw = control.width * 0.5 * DRAW_CHAR_WIDTH * control.viewscale
+      // const chh = control.height * 0.5 * DRAW_CHAR_HEIGHT * control.viewscale
       const fx = (rect.width * 0.5 + rect.x) * DRAW_CHAR_WIDTH
       const fy = (rect.height * 0.5 + rect.y) * DRAW_CHAR_HEIGHT
-      const left = fx - chw
-      const right = fy - chh
+      const left = 0 //-chw
+      const top = 0 //-chh
       return (
-        // eslint-disable-next-line react/no-unknown-property
-        <group
-          scale={scale}
+        <Clipping
+          width={rect.width * DRAW_CHAR_WIDTH}
+          height={rect.height * DRAW_CHAR_HEIGHT}
           // eslint-disable-next-line react/no-unknown-property
-          position={[left, right, 0]}
+          position={[fx, fy, 0]}
         >
-          {layers.map((layer) => {
-            switch (layer.type) {
-              default:
-              case LAYER_TYPE.BLANK:
-                return null
-              case LAYER_TYPE.TILES:
-                return (
-                  palette &&
-                  charset && (
-                    <Tiles
-                      {...layer}
-                      key={layer.id}
-                      palette={palette}
-                      charset={charset}
-                    />
+          {/* eslint-disable-next-line react/no-unknown-property */}
+          <group position={[left - fx, top - fy, 0]}>
+            {layers.map((layer, i) => {
+              switch (layer.type) {
+                default:
+                case LAYER_TYPE.BLANK:
+                  return null
+                case LAYER_TYPE.TILES:
+                  return (
+                    palette &&
+                    charset && (
+                      // eslint-disable-next-line react/no-unknown-property
+                      <group position={[0, 0, i]}>
+                        <Tiles
+                          {...layer}
+                          key={layer.id}
+                          palette={palette}
+                          charset={charset}
+                        />
+                      </group>
+                    )
                   )
-                )
-              case LAYER_TYPE.SPRITES:
-                return (
-                  palette &&
-                  charset && (
-                    <Sprites
-                      {...layer}
-                      key={layer.id}
-                      palette={palette}
-                      charset={charset}
-                    />
+                case LAYER_TYPE.SPRITES:
+                  return (
+                    palette &&
+                    charset && (
+                      // eslint-disable-next-line react/no-unknown-property
+                      <group position={[0, 0, i]}>
+                        <Sprites
+                          {...layer}
+                          key={layer.id}
+                          palette={palette}
+                          charset={charset}
+                        />
+                      </group>
+                    )
                   )
-                )
-              case LAYER_TYPE.DITHER:
-                return <Dither {...layer} key={layer.id} />
-            }
-          })}
-        </group>
+                case LAYER_TYPE.DITHER:
+                  return (
+                    // eslint-disable-next-line react/no-unknown-property
+                    <group position={[0, 0, i]}>
+                      <Dither {...layer} key={layer.id} />
+                    </group>
+                  )
+              }
+            })}
+          </group>
+        </Clipping>
       )
     }
   }

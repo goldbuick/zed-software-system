@@ -21,7 +21,7 @@ const syncstate = proxy<SYNC_STATE>({
 
 const gadgetclientdevice = createdevice(
   'gadgetclient',
-  ['login'],
+  ['login', 'second'],
   (message) => {
     switch (message.target) {
       case 'login':
@@ -31,6 +31,11 @@ const gadgetclientdevice = createdevice(
           syncstate.state.player === ''
         ) {
           syncstate.state.player = message.player
+        }
+        break
+      case 'second':
+        if (syncstate.state.player) {
+          gadgetclientdevice.emit('vm:doot', undefined, syncstate.state.player)
         }
         break
       case 'reset':

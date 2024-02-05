@@ -2,7 +2,13 @@ import { isDefined } from 'ts-extras'
 import { proxy } from 'valtio'
 
 import { BIOS } from './bios'
-import { boardcreateobject, boarddeleteobject, boardtick } from './board'
+import {
+  createboardobject,
+  boarddeleteobject,
+  boardtick,
+  MAYBE_BOARD_ELEMENT,
+  objectreadkind,
+} from './board'
 import { readaddress } from './book'
 import { CONTENT_TYPE } from './codepage'
 import { OS } from './os'
@@ -21,7 +27,7 @@ export function memoryplayerlogin(player: string) {
   const title = memoryreadboard(PLAYER_START)
   const playerkind = memoryreadobject(PLAYER_KIND)
   if (title && playerkind) {
-    const obj = boardcreateobject(title, {
+    const obj = createboardobject(title, {
       id: player,
       x: 0,
       y: 0,
@@ -75,6 +81,10 @@ export function memoryreadboard(address: string) {
 
 export function memoryreadobject(address: string) {
   return readaddress(MEMORY.book, CONTENT_TYPE.OBJECT, address)
+}
+
+export function memoryobjectreadkind(object: MAYBE_BOARD_ELEMENT) {
+  return objectreadkind(MEMORY.book, object)
 }
 
 export function memorytick(os: OS) {

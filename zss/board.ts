@@ -88,7 +88,7 @@ export function createboard(
   return fn ? fn(board) : board
 }
 
-export function boardcreateobject(
+export function createboardobject(
   board: BOARD,
   from: BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
