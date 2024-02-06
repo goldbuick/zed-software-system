@@ -4,6 +4,7 @@ import { clearscroll, gadgetplayers, gadgetstate } from 'zss/firmware/gadget'
 import {
   GADGET_STATE,
   LAYER,
+  SPRITES_TINDEX,
   createdither,
   createlayercontrol,
   createsprite,
@@ -52,11 +53,13 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
             sprite.y = object.y ?? 0
             sprite.char = object.char ?? kind?.char ?? 0
             sprite.color = object.color ?? kind?.color ?? 0
-            sprite.bg = object.bg ?? kind?.bg ?? -1
+            sprite.bg = object.bg ?? kind?.bg ?? SPRITES_TINDEX
             objects.sprites.push(sprite)
 
             // plot shadow
-            shadow.alphas[sprite.x + sprite.y * board.width] = 0.75
+            // if (sprite.bg === SPRITES_TINDEX) {
+            //   shadow.alphas[sprite.x + sprite.y * board.width] = 0.75
+            // }
 
             // inform control layer where to focus
             if (id === player) {

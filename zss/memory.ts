@@ -30,7 +30,7 @@ export function memoryplayerlogin(player: string) {
     const obj = createboardobject(title, {
       id: player,
       x: 24,
-      y: 5,
+      y: 4,
       kind: PLAYER_KIND,
       stats: {
         player,

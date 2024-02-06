@@ -3,7 +3,7 @@ import { maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import { memoryplayerreadflag, memoryplayersetflag } from 'zss/memory'
 
-export const PROCESS_FIRMWARE = createfirmware(
+export const MEMORY_FIRMWARE = createfirmware(
   (chip, name) => {
     const player = chip.player()
     const index = name.toLowerCase()
