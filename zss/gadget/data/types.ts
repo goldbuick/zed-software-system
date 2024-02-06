@@ -228,3 +228,17 @@ export type GADGET_STATE = {
   layoutreset: boolean
   layoutfocus: string
 }
+
+export enum INPUT {
+  MOVE_LEFT,
+  MOVE_RIGHT,
+  MOVE_UP,
+  MOVE_DOWN,
+  SHOOT_LEFT,
+  SHOOT_RIGHT,
+  SHOOT_UP,
+  SHOOT_DOWN,
+  OK_BUTTON,
+  CANCEL_BUTTON,
+  MENU_BUTTON,
+}

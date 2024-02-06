@@ -46,6 +46,11 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
         tracking[message.player] = 0
       }
       break
+    case 'input':
+      // player input
+      if (message.player) {
+        console.info(message)
+      }
     default:
       os.message(message)
       break

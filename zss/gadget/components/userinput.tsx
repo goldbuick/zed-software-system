@@ -8,21 +8,9 @@ import React, {
 } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 
-// user input
+import { INPUT } from '../data/types'
 
-export enum INPUT {
-  MOVE_LEFT,
-  MOVE_RIGHT,
-  MOVE_UP,
-  MOVE_DOWN,
-  SHOOT_LEFT,
-  SHOOT_RIGHT,
-  SHOOT_UP,
-  SHOOT_DOWN,
-  OK_BUTTON,
-  CANCEL_BUTTON,
-  MENU_BUTTON,
-}
+// user input
 
 type UserInputMods = {
   alt: boolean

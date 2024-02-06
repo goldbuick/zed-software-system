@@ -11,21 +11,13 @@ import {
   PANEL_TYPE,
   PANEL_ITEM,
   LAYER,
-  LAYER_TYPE,
-  layersreadcontrol,
 } from '../data/types'
-import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
-import Clipping from './clipping'
-import { Dither, StaticDither } from './dither'
+import { StaticDither } from './dither'
+import { Framed } from './framed'
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'
 import { Scroll } from './scroll'
-import { Sprites } from './sprites'
-import { Tiles } from './tiles'
-
-const palette = loadDefaultPalette()
-const charset = loadDefaultCharset()
 
 enum RECT_TYPE {
   PANEL,
@@ -84,78 +76,15 @@ function LayoutRect({
         />
       )
 
-    case RECT_TYPE.FRAMED: {
-      const control = layersreadcontrol(layers)
-      const framex = rect.x * DRAW_CHAR_WIDTH
-      const framey = rect.y * DRAW_CHAR_HEIGHT
-      const viewwidth = rect.width * DRAW_CHAR_WIDTH
-      const viewheight = rect.height * DRAW_CHAR_HEIGHT
-      const drawwidth = control.width * DRAW_CHAR_WIDTH * control.viewscale
-      const drawheight = control.height * DRAW_CHAR_HEIGHT * control.viewscale
-      const marginx = drawwidth - viewwidth
-      const marginy = drawheight - viewheight
-      const offsetx = -control.focusx * DRAW_CHAR_WIDTH * control.viewscale
-      const offsety = -control.focusy * DRAW_CHAR_HEIGHT * control.viewscale
-      const left =
-        drawwidth < viewwidth
-          ? (viewwidth - drawwidth) * 0.5
-          : Math.max(-marginx, Math.min(0, viewwidth * 0.5 + offsetx))
-      const top =
-        drawheight < viewheight
-          ? (viewheight - drawheight) * 0.5
-          : Math.max(-marginy, Math.min(0, viewheight * 0.5 + offsety))
+    case RECT_TYPE.FRAMED:
       return (
-        <Clipping
-          width={viewwidth}
-          height={viewheight}
-          // eslint-disable-next-line react/no-unknown-property
-          position={[framex, framey, 0]}
-        >
-          {/* eslint-disable-next-line react/no-unknown-property */}
-          <group scale={control.viewscale} position={[left, top, 0]}>
-            {layers.map((layer, i) => {
-              switch (layer.type) {
-                default:
-                case LAYER_TYPE.BLANK:
-                  return null
-                case LAYER_TYPE.TILES:
-                  return (
-                    palette &&
-                    charset && (
-                      // eslint-disable-next-line react/no-unknown-property
-                      <group key={layer.id} position={[0, 0, i]}>
-                        <Tiles {...layer} palette={palette} charset={charset} />
-                      </group>
-                    )
-                  )
-                case LAYER_TYPE.SPRITES:
-                  return (
-                    palette &&
-                    charset && (
-                      // eslint-disable-next-line react/no-unknown-property
-                      <group key={layer.id} position={[0, 0, i]}>
-                        <Sprites
-                          {...layer}
-                          key={layer.id}
-                          palette={palette}
-                          charset={charset}
-                        />
-                      </group>
-                    )
-                  )
-                case LAYER_TYPE.DITHER:
-                  return (
-                    // eslint-disable-next-line react/no-unknown-property
-                    <group key={layer.id} position={[0, 0, i]}>
-                      <Dither {...layer} />
-                    </group>
-                  )
-              }
-            })}
-          </group>
-        </Clipping>
+        <Framed
+          player={player}
+          layers={layers}
+          framewidth={rect.width}
+          frameheight={rect.height}
+        />
       )
-    }
   }
   return null
 }
@@ -291,7 +220,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
         },
         sendclose() {
           // send a message to trigger the close
-          hub.emit('gadgetworker:clearscroll', 'gadget', undefined, player)
+          hub.emit('gadgetserver:clearscroll', 'gadget', undefined, player)
         },
         didclose() {
           // clear scroll state
