@@ -71,8 +71,12 @@ export default function Clipping({
 
   return (
     <ClippingContext.Provider value={clippingPlanes}>
-      <group ref={ref} {...props}>
-        {children}
+      {/* eslint-disable-next-line react/no-unknown-property */}
+      <group position={[width * 0.5, height * 0.5, 0]}>
+        <group ref={ref} {...props}>
+          {/* eslint-disable-next-line react/no-unknown-property */}
+          <group position={[width * -0.5, height * -0.5, 0]}>{children}</group>
+        </group>
       </group>
     </ClippingContext.Provider>
   )

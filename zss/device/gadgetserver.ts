@@ -48,7 +48,7 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
             // should we have bg transparent or match the bg color of the terrain ?
             const id = object.id ?? ''
             const kind = memoryobjectreadkind(object)
-            const sprite = createsprite(player, 1, id)
+            const sprite = createsprite(player, 2, id)
             sprite.x = object.x ?? 0
             sprite.y = object.y ?? 0
             sprite.char = object.char ?? kind?.char ?? 0

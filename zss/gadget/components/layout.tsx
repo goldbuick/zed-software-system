@@ -86,25 +86,33 @@ function LayoutRect({
 
     case RECT_TYPE.FRAMED: {
       const control = layersreadcontrol(layers)
+      const framex = rect.x * DRAW_CHAR_WIDTH
+      const framey = rect.y * DRAW_CHAR_HEIGHT
+      const viewwidth = rect.width * DRAW_CHAR_WIDTH
+      const viewheight = rect.height * DRAW_CHAR_HEIGHT
       const drawwidth = control.width * DRAW_CHAR_WIDTH * control.viewscale
       const drawheight = control.height * DRAW_CHAR_HEIGHT * control.viewscale
-      const rectwidth = rect.width * DRAW_CHAR_WIDTH
-      const rectheight = rect.height * DRAW_CHAR_HEIGHT
-      const edgex = drawwidth - rectwidth
-      const edgey = drawheight - rectheight
-      const fx = (rect.width * 0.5 + rect.x) * DRAW_CHAR_WIDTH
-      const fy = (rect.height * 0.5 + rect.y) * DRAW_CHAR_HEIGHT
-      const left = Math.max(0, Math.min(edgex, rectwidth * -0.5))
-      const top = Math.max(0, Math.min(edgey, rectheight * -0.5))
+      const marginx = drawwidth - viewwidth
+      const marginy = drawheight - viewheight
+      const offsetx = -control.focusx * DRAW_CHAR_WIDTH * control.viewscale
+      const offsety = -control.focusy * DRAW_CHAR_HEIGHT * control.viewscale
+      const left =
+        drawwidth < viewwidth
+          ? (viewwidth - drawwidth) * 0.5
+          : Math.max(-marginx, Math.min(0, viewwidth * 0.5 + offsetx))
+      const top =
+        drawheight < viewheight
+          ? (viewheight - drawheight) * 0.5
+          : Math.max(-marginy, Math.min(0, viewheight * 0.5 + offsety))
       return (
         <Clipping
-          width={rect.width * DRAW_CHAR_WIDTH}
-          height={rect.height * DRAW_CHAR_HEIGHT}
+          width={viewwidth}
+          height={viewheight}
           // eslint-disable-next-line react/no-unknown-property
-          position={[fx, fy, 0]}
+          position={[framex, framey, 0]}
         >
           {/* eslint-disable-next-line react/no-unknown-property */}
-          <group scale={control.viewscale} position={[left - fx, top - fy, 0]}>
+          <group scale={control.viewscale} position={[left, top, 0]}>
             {layers.map((layer, i) => {
               switch (layer.type) {
                 default:
@@ -136,7 +144,6 @@ function LayoutRect({
                     )
                   )
                 case LAYER_TYPE.DITHER:
-                  console.info({ dither: layer })
                   return (
                     // eslint-disable-next-line react/no-unknown-property
                     <group key={layer.id} position={[0, 0, i]}>
