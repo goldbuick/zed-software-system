@@ -13,6 +13,11 @@ import { OS } from './os'
 export type BOARD_ELEMENT_STATS = {
   player?: string
   sender?: string
+  inputmove?: number
+  inputshoot?: number
+  inputok?: number
+  inputcancel?: number
+  inputmenu?: number
   data?: any
   [key: string]: WORD_VALUE
 }

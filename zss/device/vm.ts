@@ -49,7 +49,7 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
     case 'input':
       // player input
       if (message.player) {
-        console.info(message)
+        os.input(message.player, message.data)
       }
     default:
       os.message(message)

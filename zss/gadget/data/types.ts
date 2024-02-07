@@ -230,6 +230,7 @@ export type GADGET_STATE = {
 }
 
 export enum INPUT {
+  NONE,
   MOVE_LEFT,
   MOVE_RIGHT,
   MOVE_UP,

@@ -2,6 +2,7 @@ import { BOARD_ELEMENT } from './board'
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { loadfirmware } from './firmware/loader'
+import { INPUT } from './gadget/data/types'
 import { GeneratorBuild, compile } from './lang/generator'
 import { createguid } from './mapping/guid'
 
@@ -10,6 +11,7 @@ export type OS = {
   ids: () => string[]
   halt: (id: string) => boolean
   tick: (id: string) => boolean
+  input: (id: string, input: INPUT) => void
   message: MESSAGE_FUNC
 }
 
@@ -64,6 +66,9 @@ export function createos() {
     },
     tick(id) {
       return chips[id]?.tick()
+    },
+    input(id, input) {
+      chips[id]?.input(input)
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)

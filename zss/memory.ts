@@ -8,9 +8,11 @@ import {
   boardtick,
   MAYBE_BOARD_ELEMENT,
   objectreadkind,
+  boardreadobject,
 } from './board'
 import { readaddress } from './book'
 import { CONTENT_TYPE } from './codepage'
+import { INPUT } from './gadget/data/types'
 import { OS } from './os'
 
 // sim state
@@ -29,8 +31,8 @@ export function memoryplayerlogin(player: string) {
   if (title && playerkind) {
     const obj = createboardobject(title, {
       id: player,
-      x: 55,
-      y: 24,
+      x: 5,
+      y: 5,
       kind: PLAYER_KIND,
       stats: {
         player,
@@ -73,6 +75,11 @@ export function memoryplayersetboard(player: string, board: string) {
   if (memoryreadboard(board)) {
     MEMORY.players[player] = board
   }
+}
+
+export function memoryplayerreadobject(player: string) {
+  const board = memoryplayerreadboard(player)
+  return board ? boardreadobject(board, player) : undefined
 }
 
 export function memoryreadboard(address: string) {

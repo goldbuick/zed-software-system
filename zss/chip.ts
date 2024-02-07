@@ -3,6 +3,7 @@ import { klona } from 'klona/json'
 
 import { BOARD_ELEMENT } from './board'
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
+import { INPUT } from './gadget/data/types'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
@@ -46,6 +47,7 @@ export type CHIP = {
   send: (target: string, data?: any) => void
   lock: (allowed: string) => void
   unlock: () => void
+  input: (incoming: INPUT) => void
   message: (incoming: MESSAGE) => void
   zap: (label: string) => void
   restore: (label: string) => void
@@ -125,6 +127,10 @@ export function createchip({ id, build, target }: createchipoptions) {
   // eslint-disable-next-line prefer-const
   let logic: Generator<number> | undefined
 
+  // input queue state
+  const inputqueue = new Set<INPUT>()
+  let input: INPUT | undefined = undefined
+
   // incoming message state
   let locked = ''
   let message: MESSAGE | undefined = undefined
@@ -173,7 +179,50 @@ export function createchip({ id, build, target }: createchipoptions) {
     return command(chip, words)
   }
 
+  function readinput() {
+    if (input === undefined) {
+      const [head = INPUT.NONE] = inputqueue
+      // ensure we have stats
+      if (target.stats === undefined) {
+        target.stats = {}
+      }
+      // write input state
+      target.stats.inputmove = 0
+      target.stats.inputshoot = 0
+      target.stats.inputok = 0
+      target.stats.inputcancel = 0
+      target.stats.inputmenu = 0
+      switch (head) {
+        case INPUT.MOVE_LEFT:
+        case INPUT.MOVE_RIGHT:
+        case INPUT.MOVE_UP:
+        case INPUT.MOVE_DOWN:
+          target.stats.inputmove = head - INPUT.MOVE_LEFT
+          break
+        case INPUT.SHOOT_LEFT:
+        case INPUT.SHOOT_RIGHT:
+        case INPUT.SHOOT_UP:
+        case INPUT.SHOOT_DOWN:
+          target.stats.inputshoot = head - INPUT.SHOOT_LEFT
+          break
+        case INPUT.OK_BUTTON:
+          target.stats.inputok = 1
+          break
+        case INPUT.CANCEL_BUTTON:
+          target.stats.inputcancel = 1
+          break
+        case INPUT.MENU_BUTTON:
+          target.stats.inputmenu = 1
+          break
+      }
+      // active input
+      input = head
+      inputqueue.delete(head)
+    }
+  }
+
   function getinternal(word: string) {
+    // read from input queue
     switch (word.toLowerCase()) {
       case 'player':
         return target.stats?.player ?? ''
@@ -181,6 +230,21 @@ export function createchip({ id, build, target }: createchipoptions) {
         return target.stats?.sender ?? ''
       case 'data':
         return target.stats?.data ?? 0
+      case 'inputmove':
+        readinput()
+        return target.stats?.inputmove ?? 0
+      case 'inputshoot':
+        readinput()
+        return target.stats?.inputshoot ?? 0
+      case 'inputok':
+        readinput()
+        return target.stats?.inputok ?? 0
+      case 'inputcancel':
+        readinput()
+        return target.stats?.inputcancel ?? 0
+      case 'inputmenu':
+        readinput()
+        return target.stats?.inputmenu ?? 0
       default:
         return chip.get(word)
     }
@@ -252,6 +316,7 @@ export function createchip({ id, build, target }: createchipoptions) {
       // reset state
       loops = 0
       yieldstate = false
+      input = undefined
 
       // invoke generator
       try {
@@ -292,6 +357,9 @@ export function createchip({ id, build, target }: createchipoptions) {
     },
     unlock() {
       locked = ''
+    },
+    input(incoming) {
+      inputqueue.add(incoming)
     },
     message(incoming) {
       // internal messages while locked are allowed
