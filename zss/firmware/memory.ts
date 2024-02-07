@@ -70,6 +70,7 @@ export const MEMORY_FIRMWARE = createfirmware(
   })
   .command('send', (chip, words) => {
     const [value] = chip.parse(words.slice(1))
+    // console.info('send', words)
     chip.send(maptostring(words[0]), value)
     return 0
   })

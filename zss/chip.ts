@@ -186,12 +186,13 @@ export function createchip({ id, build, target }: createchipoptions) {
       if (target.stats === undefined) {
         target.stats = {}
       }
-      // write input state
+      // clear input stats
       target.stats.inputmove = 0
       target.stats.inputshoot = 0
       target.stats.inputok = 0
       target.stats.inputcancel = 0
       target.stats.inputmenu = 0
+      // set active input stat
       switch (head) {
         case INPUT.MOVE_LEFT:
         case INPUT.MOVE_RIGHT:
@@ -217,6 +218,7 @@ export function createchip({ id, build, target }: createchipoptions) {
       }
       // active input
       input = head
+      // clear used input
       inputqueue.delete(head)
     }
   }
