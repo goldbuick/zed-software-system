@@ -11,6 +11,7 @@ import { OS } from './os'
 
 // generics
 export type BOARD_ELEMENT_STATS = {
+  cycle?: number
   player?: string
   sender?: string
   inputmove?: number
@@ -143,7 +144,7 @@ export function objectreadkind(
   return undefined
 }
 
-export function boardtick(os: OS, book: BOOK, board: BOARD) {
+export function boardtick(os: OS, pulse: number, book: BOOK, board: BOARD) {
   // build object lookup pre-tick
   boardsetlookup(board)
 
@@ -164,7 +165,7 @@ export function boardtick(os: OS, book: BOOK, board: BOARD) {
           }
           // run chip
           if (target.chip) {
-            os.tick(target.chip)
+            os.tick(target.chip, pulse)
           }
         }
         // what else ???

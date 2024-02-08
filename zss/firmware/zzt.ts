@@ -47,7 +47,8 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('cycle', (chip, words) => {
-    console.info(words)
+    const [value] = chip.parse(words)
+    chip.set('cycle', value)
     return 0
   })
   .command('die', (chip, words) => {

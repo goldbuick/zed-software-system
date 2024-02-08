@@ -38,7 +38,7 @@ export type CHIP = {
   get: (name: string) => any
 
   // lifecycle api
-  tick: () => boolean
+  tick: (pulse: number) => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
   hasmessage: () => number
@@ -150,6 +150,7 @@ export function createchip({ id, build, target }: createchipoptions) {
 
   // pause until next tick
   let yieldstate = false
+  // let
 
   // chip is in ended state awaiting any messages
   let endedstate = false
@@ -309,7 +310,9 @@ export function createchip({ id, build, target }: createchipoptions) {
     },
 
     // lifecycle api
-    tick() {
+    tick(pulse) {
+      //
+
       // should we bail ?
       if (!chip.shouldtick()) {
         return false

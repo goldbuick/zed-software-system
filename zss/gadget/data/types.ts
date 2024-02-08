@@ -6,6 +6,7 @@ export const BYTES_PER_COLOR = 3
 export const PALETTE_COLOR_RANGE = 63
 
 export const SPRITES_TINDEX = 16
+export const SPRITES_SINDEX = 17
 
 const CHAR_SCALE = 2
 

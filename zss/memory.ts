@@ -16,6 +16,7 @@ import { OS } from './os'
 
 // sim state
 const MEMORY = proxy({
+  pulse: 0,
   book: BIOS, // starting software to run
   flags: {} as Record<string, any>, // global flags by player
   players: {} as Record<string, string>, // map of player to board
@@ -99,5 +100,5 @@ export function memorytick(os: OS) {
   activelist
     .map((address) => memoryreadboard(address))
     .filter(isDefined)
-    .forEach((board) => boardtick(os, MEMORY.book, board))
+    .forEach((board) => boardtick(os, MEMORY.pulse, MEMORY.book, board))
 }

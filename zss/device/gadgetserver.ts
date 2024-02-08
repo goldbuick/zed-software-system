@@ -1,9 +1,14 @@
 import { compare, deepClone } from 'fast-json-patch'
 import { createdevice } from 'zss/device'
-import { clearscroll, gadgetplayers, gadgetstate } from 'zss/firmware/gadget'
+import {
+  gadgetclearscroll,
+  gadgetplayers,
+  gadgetstate,
+} from 'zss/gadget/data/api'
 import {
   GADGET_STATE,
   LAYER,
+  SPRITES_SINDEX,
   SPRITES_TINDEX,
   createdither,
   createlayercontrol,
@@ -57,9 +62,9 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
             objects.sprites.push(sprite)
 
             // plot shadow
-            // if (sprite.bg === SPRITES_TINDEX) {
-            //   shadow.alphas[sprite.x + sprite.y * board.width] = 0.75
-            // }
+            if (sprite.bg === SPRITES_SINDEX) {
+              shadow.alphas[sprite.x + sprite.y * board.width] = 0.75
+            }
 
             // inform control layer where to focus
             if (id === player) {
@@ -88,7 +93,7 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
       break
     case 'clearscroll':
       if (message.player) {
-        clearscroll(message.player)
+        gadgetclearscroll(message.player)
       }
       break
   }

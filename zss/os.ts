@@ -10,7 +10,7 @@ export type OS = {
   boot: (opts: { id?: string; code: string; target: BOARD_ELEMENT }) => string
   ids: () => string[]
   halt: (id: string) => boolean
-  tick: (id: string) => boolean
+  tick: (id: string, pulse: number) => boolean
   input: (id: string, input: INPUT) => void
   message: MESSAGE_FUNC
 }
@@ -64,8 +64,8 @@ export function createos() {
       }
       return !!chip
     },
-    tick(id) {
-      return chips[id]?.tick()
+    tick(id, pulse) {
+      return chips[id]?.tick(pulse)
     },
     input(id, input) {
       chips[id]?.input(input)
