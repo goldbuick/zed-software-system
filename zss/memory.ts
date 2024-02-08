@@ -12,7 +12,6 @@ import {
 } from './board'
 import { readaddress } from './book'
 import { CONTENT_TYPE } from './codepage'
-import { INPUT } from './gadget/data/types'
 import { OS } from './os'
 
 // sim state

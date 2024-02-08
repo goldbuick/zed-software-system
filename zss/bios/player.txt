@@ -11,6 +11,7 @@
 ' main loop
 #cycle 1
 #set inputrate 0
+
 :think
 #if inputmove
   ?inputmove
@@ -26,18 +27,21 @@
   #idle
 #take inputrate
 #think
+
 :thud
 #if sender is water 
   #give waterhint to self
     |Your way is blocked by water.
 #idle
 #think
+
 :shot
 "Ouch!"
 #play hit
 #anim shake
 #take health 10 kill
 #if health > 0 think
+
 :kill
 #lock
 #play death
