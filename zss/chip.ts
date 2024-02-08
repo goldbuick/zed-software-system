@@ -199,13 +199,13 @@ export function createchip({ id, build, target }: createchipoptions) {
         case INPUT.MOVE_RIGHT:
         case INPUT.MOVE_UP:
         case INPUT.MOVE_DOWN:
-          target.stats.inputmove = head - INPUT.MOVE_LEFT
+          target.stats.inputmove = head
           break
         case INPUT.SHOOT_LEFT:
         case INPUT.SHOOT_RIGHT:
         case INPUT.SHOOT_UP:
         case INPUT.SHOOT_DOWN:
-          target.stats.inputshoot = head - INPUT.SHOOT_LEFT
+          target.stats.inputshoot = head - INPUT.MOVE_DOWN
           break
         case INPUT.OK_BUTTON:
           target.stats.inputok = 1
