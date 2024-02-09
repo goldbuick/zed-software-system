@@ -1,17 +1,17 @@
-import { BOARD_ELEMENT } from './board'
+import { isDefined } from 'ts-extras'
+
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { loadfirmware } from './firmware/loader'
-import { INPUT } from './gadget/data/types'
 import { GeneratorBuild, compile } from './lang/generator'
 import { createguid } from './mapping/guid'
 
 export type OS = {
-  boot: (opts: { id?: string; code: string; target: BOARD_ELEMENT }) => string
+  boot: (id: string | undefined, code: string) => string
   ids: () => string[]
+  has: (id: string) => boolean
   halt: (id: string) => boolean
-  tick: (id: string, pulse: number) => boolean
-  input: (id: string, input: INPUT) => void
+  tick: (id: string) => boolean
   message: MESSAGE_FUNC
 }
 
@@ -32,10 +32,10 @@ export function createos() {
   }
 
   const os: OS = {
-    boot(opts) {
-      const id = opts.id ?? createguid()
+    boot(maybeid, code) {
+      const id = maybeid ?? createguid()
 
-      const result = build(opts.code)
+      const result = build(code)
       if (result.errors?.length) {
         // log it ???
         console.error(result)
@@ -43,11 +43,7 @@ export function createos() {
       }
 
       // create chip from build
-      const chip = (chips[id] = createchip({
-        id,
-        build: result,
-        target: opts.target,
-      }))
+      const chip = (chips[id] = createchip(id, result))
 
       // load chip firmware
       loadfirmware(chip)
@@ -57,6 +53,9 @@ export function createos() {
     ids() {
       return Object.keys(chips)
     },
+    has(id) {
+      return isDefined(chips[id])
+    },
     halt(id) {
       const chip = chips[id]
       if (chip) {
@@ -64,11 +63,8 @@ export function createos() {
       }
       return !!chip
     },
-    tick(id, pulse) {
-      return chips[id]?.tick(pulse)
-    },
-    input(id, input) {
-      chips[id]?.input(input)
+    tick(id) {
+      return chips[id]?.tick()
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)

@@ -9,18 +9,63 @@ import {
   MAYBE_BOARD_ELEMENT,
   objectreadkind,
   boardreadobject,
+  BOARD,
+  BOARD_ELEMENT,
 } from './board'
 import { readaddress } from './book'
+import { WORD_VALUE } from './chip'
 import { CONTENT_TYPE } from './codepage'
+import { INPUT, SPRITES_SINDEX } from './gadget/data/types'
+import { randomInteger } from './mapping/number'
 import { OS } from './os'
+
+// shared chip state
+type MEMORY_CHIP = {
+  board: BOARD | undefined
+  target: BOARD_ELEMENT | undefined
+  playerfocus: string
+  inputqueue: Set<INPUT>
+  activeinput: INPUT | undefined
+}
+
+// player state
+type MEMORY_FLAGS = Record<string, WORD_VALUE>
+
+// player tracking
+type MEMORY_PLAYER = string
 
 // sim state
 const MEMORY = proxy({
-  pulse: 0,
   book: BIOS, // starting software to run
-  flags: {} as Record<string, any>, // global flags by player
-  players: {} as Record<string, string>, // map of player to board
+  defaultplayer: '', // default player aggro
+  chips: {} as Record<string, MEMORY_CHIP>, // execution context for a chip
+  flags: {} as Record<string, MEMORY_FLAGS>, // global flags by player
+  players: {} as Record<string, MEMORY_PLAYER>, // map of player to board
 })
+
+export function memorysetdefaultplayer(player: string) {
+  MEMORY.defaultplayer = player
+}
+
+export function memoryreadchip(id: string) {
+  if (!MEMORY.chips[id]) {
+    MEMORY.chips[id] = {
+      board: undefined,
+      target: undefined,
+      playerfocus: MEMORY.defaultplayer,
+      inputqueue: new Set(),
+      activeinput: undefined,
+    }
+  }
+  return MEMORY.chips[id]
+}
+
+export function memoryreadflags(player: string) {
+  if (!MEMORY.flags[player]) {
+    MEMORY.flags[player] = {}
+  }
+  return MEMORY.flags[player]
+}
 
 const PLAYER_KIND = 'app:player'
 const PLAYER_START = 'app:title'
@@ -31,14 +76,14 @@ export function memoryplayerlogin(player: string) {
   if (title && playerkind) {
     const obj = createboardobject(title, {
       id: player,
-      x: 5,
-      y: 5,
+      x: randomInteger(0, title.width - 1),
+      y: randomInteger(0, title.height - 1),
       kind: PLAYER_KIND,
       stats: {
         player,
       },
     })
-    if (obj && obj.id) {
+    if (obj?.id) {
       MEMORY.players[player] = PLAYER_START
     }
   }
@@ -51,20 +96,14 @@ export function memoryplayerlogout(player: string) {
   }
 }
 
-function memoryplayercheckflags(player: string) {
-  if (!MEMORY.flags[player]) {
-    MEMORY.flags[player] = {}
-  }
-}
-
 export function memoryplayerreadflag(player: string, flag: string) {
-  memoryplayercheckflags(player)
-  return MEMORY.flags[player][flag]
+  const flags = memoryreadflags(player)
+  return flags[flag]
 }
 
 export function memoryplayersetflag(player: string, flag: string, value: any) {
-  memoryplayercheckflags(player)
-  MEMORY.flags[player][flag] = value
+  const flags = memoryreadflags(player)
+  flags[flag] = value
 }
 
 export function memoryplayerreadboard(player: string) {
@@ -100,5 +139,5 @@ export function memorytick(os: OS) {
   activelist
     .map((address) => memoryreadboard(address))
     .filter(isDefined)
-    .forEach((board) => boardtick(os, MEMORY.pulse, MEMORY.book, board))
+    .forEach((board) => boardtick(os, MEMORY.book, board))
 }

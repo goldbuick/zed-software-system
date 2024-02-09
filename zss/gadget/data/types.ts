@@ -244,3 +244,11 @@ export enum INPUT {
   CANCEL_BUTTON,
   MENU_BUTTON,
 }
+
+export enum INPUT_DIR {
+  NONE,
+  WEST,
+  EAST,
+  NORTH,
+  SOUTH,
+}

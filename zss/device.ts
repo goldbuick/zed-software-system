@@ -4,11 +4,11 @@ import { createguid } from './mapping/guid'
 
 export function createmessage(
   target: string,
-  from: string,
+  sender: string,
   data?: any,
   player?: string,
 ): MESSAGE {
-  return { id: createguid(), target, from, data, player }
+  return { id: createguid(), target, sender, data, player }
 }
 
 export type MESSAGE_FUNC = (message: MESSAGE) => void
@@ -50,7 +50,7 @@ export function createdevice(
       hub.emit(target, id, data, player)
     },
     reply(to, target, data, player) {
-      device.emit(`${to.from}:${target}`, data, player)
+      device.emit(`${to.sender}:${target}`, data, player)
     },
     handle(message) {
       const { target, path } = parsetarget(message.target)

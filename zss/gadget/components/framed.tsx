@@ -23,39 +23,41 @@ const charset = loadDefaultCharset()
 interface FramedProps {
   player: string
   layers: LAYER[]
-  framewidth: number
-  frameheight: number
+  width: number
+  height: number
 }
 
 function sendinput(player: string, input: INPUT) {
   hub.emit('vm:input', 'gadget', input, player)
 }
 
-export function Framed({
-  player,
-  layers,
-  framewidth,
-  frameheight,
-}: FramedProps) {
+export function Framed({ player, layers, width, height }: FramedProps) {
   const control = layersreadcontrol(layers)
-  const viewwidth = framewidth * DRAW_CHAR_WIDTH
-  const viewheight = frameheight * DRAW_CHAR_HEIGHT
+
+  const viewwidth = width * DRAW_CHAR_WIDTH
   const drawwidth = control.width * DRAW_CHAR_WIDTH * control.viewscale
-  const drawheight = control.height * DRAW_CHAR_HEIGHT * control.viewscale
   const marginx = drawwidth - viewwidth
+
+  const viewheight = height * DRAW_CHAR_HEIGHT
+  const drawheight = control.height * DRAW_CHAR_HEIGHT * control.viewscale
   const marginy = drawheight - viewheight
+
   const offsetx = -control.focusx * DRAW_CHAR_WIDTH * control.viewscale
-  const offsety = -control.focusy * DRAW_CHAR_HEIGHT * control.viewscale
   const centerx = viewwidth * 0.5 + offsetx
+
+  const offsety = -control.focusy * DRAW_CHAR_HEIGHT * control.viewscale
   const centery = viewheight * 0.5 + offsety
+
   const left =
     drawwidth < viewwidth
       ? (viewwidth - drawwidth) * 0.5
       : Math.max(-marginx, Math.min(0, centerx))
+
   const top =
     drawheight < viewheight
       ? (viewheight - drawheight) * 0.5
       : Math.max(-marginy, Math.min(0, centery))
+
   return (
     <UserFocus>
       <UserInput

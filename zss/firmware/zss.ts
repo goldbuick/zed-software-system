@@ -8,19 +8,25 @@ import {
   gadgethyperlink,
 } from '../gadget/data/api'
 import { PANEL_TYPE, PANEL_TYPE_MAP } from '../gadget/data/types'
+import { memoryreadchip } from '../memory'
 
 export const ZSS_FIRMWARE = createfirmware(
   () => {
     return [false, undefined]
   },
   (chip, name, value) => {
+    // we monitor changes on shared values here
     gadgetcheckset(chip, name, value)
+    // return has unhandled
     return [false, undefined]
   },
 )
   .command('stat', (chip, words) => {
-    const parts = words.map(chip.tpi)
-    chip.setName(parts.join(' '))
+    const memory = memoryreadchip(chip.id())
+    // all this command does for now is update name
+    if (memory.target) {
+      memory.target.name = words.map(chip.tpi).join(' ')
+    }
     return 0
   })
   .command('gadget', (chip, args) => {

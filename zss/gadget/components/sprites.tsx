@@ -144,14 +144,10 @@ export function Sprites({ sprites, charset, palette }: SpritesProps) {
         }
       }
     }
-  }, [sprites])
 
-  // update
-  useEffect(() => {
-    if (!!bgRef.current) {
-      return
-    }
-  }, [])
+    current.computeBoundingBox()
+    current.computeBoundingSphere()
+  }, [sprites])
 
   // config material
   useEffect(() => {
@@ -176,7 +172,7 @@ export function Sprites({ sprites, charset, palette }: SpritesProps) {
   }, [charsetTexture, material, imageWidth, imageHeight, clippingPlanes])
 
   return (
-    <points material={material}>
+    <points frustumCulled={false} material={material}>
       <bufferGeometry ref={bgRef} />
     </points>
   )

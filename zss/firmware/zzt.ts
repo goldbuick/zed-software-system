@@ -1,27 +1,133 @@
 import { isPresent } from 'ts-extras'
-import { maptostring } from 'zss/chip'
+import { WORD_VALUE, maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
-import { memoryplayerreadflag, memoryplayersetflag } from 'zss/memory'
+import { isNumber, isString } from 'zss/mapping/types'
+import {
+  memoryplayerreadflag,
+  memoryplayersetflag,
+  memoryreadchip,
+} from 'zss/memory'
+
+import { BOARD_ELEMENT } from '../board'
+import { INPUT, INPUT_DIR } from '../gadget/data/types'
+
+const STAT_NAMES = new Set([
+  'cycle',
+  'player',
+  'sender',
+  'inputmove',
+  'inputshoot',
+  'inputok',
+  'inputcancel',
+  'inputmenu',
+  'data',
+])
+
+const INPUT_STAT_NAMES = new Set([
+  'inputmove',
+  'inputshoot',
+  'inputok',
+  'inputcancel',
+  'inputmenu',
+])
+
+function readinput(target: BOARD_ELEMENT) {
+  const memory = memoryreadchip(target.id ?? '')
+
+  // already read input this tick
+  if (memory.activeinput !== undefined) {
+    return
+  }
+
+  const [head = INPUT.NONE] = memory.inputqueue
+
+  // ensure we have stats
+  if (target.stats === undefined) {
+    target.stats = {}
+  }
+
+  // clear input stats
+  target.stats.inputmove = 0
+  target.stats.inputshoot = 0
+  target.stats.inputok = 0
+  target.stats.inputcancel = 0
+  target.stats.inputmenu = 0
+
+  // set active input stat
+  switch (head) {
+    case INPUT.MOVE_LEFT:
+    case INPUT.MOVE_RIGHT:
+    case INPUT.MOVE_UP:
+    case INPUT.MOVE_DOWN:
+      target.stats.inputmove = (head - INPUT.NONE) as INPUT_DIR // 1 - 4, W-E-N-S
+      break
+    case INPUT.SHOOT_LEFT:
+    case INPUT.SHOOT_RIGHT:
+    case INPUT.SHOOT_UP:
+    case INPUT.SHOOT_DOWN:
+      target.stats.inputshoot = (head - INPUT.MOVE_DOWN) as INPUT_DIR // 1 - 4, W-E-N-S
+      break
+    case INPUT.OK_BUTTON:
+      target.stats.inputok = 1
+      break
+    case INPUT.CANCEL_BUTTON:
+      target.stats.inputcancel = 1
+      break
+    case INPUT.MENU_BUTTON:
+      target.stats.inputmenu = 1
+      break
+  }
+
+  // active input
+  memory.activeinput = head
+
+  // clear used input
+  memory.inputqueue.delete(head)
+}
 
 export const ZZT_FIRMWARE = createfirmware(
   (chip, name) => {
-    const player = chip.player()
-    const index = name.toLowerCase()
+    const memory = memoryreadchip(chip.id())
 
-    // get
-    const value = memoryplayerreadflag(player, index)
+    // we have to check the object's stats first
+    if (memory.target) {
+      // if we are reading from input, pull the next input
+      if (INPUT_STAT_NAMES.has(name)) {
+        readinput(memory.target)
+      }
+      // read stat
+      const value = memory.target.stats?.[name] as WORD_VALUE
+      const defined = isPresent(value)
+      // return result
+      if (defined || STAT_NAMES.has(name)) {
+        return [true, value]
+      }
+    }
 
-    // console.info('###get', { name, value })
+    // then global
+    const value = memoryplayerreadflag(memory.playerfocus, name)
+    // console.info('2??get', name, value)
     return [isPresent(value), value]
   },
   (chip, name, value) => {
-    const player = chip.player()
-    const index = name.toLowerCase()
+    const memory = memoryreadchip(chip.id())
 
-    // set
-    memoryplayersetflag(player, index, value)
+    // we have to check the object's stats first
+    if (memory.target) {
+      const defined = isPresent(memory.target?.stats?.[name])
+      if (defined || STAT_NAMES.has(name)) {
+        // console.info('??set', name, value)
+        if (!memory.target.stats) {
+          memory.target.stats = {}
+        }
+        memory.target.stats[name] = value
+        return [true, value]
+      }
+    }
 
-    // console.info('###set', { name, value })
+    // then global
+    memoryplayersetflag(memory.playerfocus, name, value)
+    // console.info('??set', name, value)
     return [true, value]
   },
 )
@@ -48,14 +154,18 @@ export const ZZT_FIRMWARE = createfirmware(
   })
   .command('cycle', (chip, words) => {
     const [value] = chip.parse(words)
-    chip.set('cycle', value)
+    const next = Math.round(value as number)
+    chip.cycle(Math.max(1, Math.min(255, next)))
     return 0
   })
   .command('die', (chip, words) => {
-    console.info(words)
+    const memory = memoryreadchip(chip.id())
+    // mark target for deletion
+    chip.endofprogram()
     return 0
   })
   .command('end', (chip) => {
+    // future, this will also afford giving a return value #end <value>
     chip.endofprogram()
     return 0
   })
@@ -69,6 +179,7 @@ export const ZZT_FIRMWARE = createfirmware(
   })
   .command('go', (chip, words) => {
     console.info('go', words)
+    chip.yield()
     return 0
   })
   .command('idle', (chip) => {
@@ -125,6 +236,7 @@ export const ZZT_FIRMWARE = createfirmware(
   })
   .command('try', (chip, words) => {
     console.info('try', words) // stub-only, this is a lang feature
+    chip.yield()
     return 0
   })
   .command('unlock', (chip) => {

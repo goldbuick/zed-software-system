@@ -81,8 +81,8 @@ function LayoutRect({
         <Framed
           player={player}
           layers={layers}
-          framewidth={rect.width}
-          frameheight={rect.height}
+          width={rect.width}
+          height={rect.height}
         />
       )
   }

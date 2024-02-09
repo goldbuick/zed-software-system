@@ -41,7 +41,7 @@ export const BIOS: BOOK = {
           value: {
             name: 'player',
             char: 2,
-            color: 15,
+            color: 10,
             bg: SPRITES_SINDEX,
             code: playercode,
           },

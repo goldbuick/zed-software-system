@@ -1,9 +1,7 @@
 import ErrorStackParser from 'error-stack-parser'
 import { klona } from 'klona/json'
 
-import { BOARD_ELEMENT } from './board'
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
-import { INPUT } from './gadget/data/types'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
@@ -15,7 +13,7 @@ export type MESSAGE = {
   id: string
   target: string
   data?: any
-  from: string
+  sender: string
   player?: string
 }
 
@@ -25,10 +23,6 @@ export type STATE = Record<string, any>
 export type CHIP = {
   // id
   id: () => string
-  name: () => string
-  player: () => string
-  target: () => BOARD_ELEMENT
-  setName: (name: string) => void
 
   // set firmware on chip
   install: (firmware: FIRMWARE) => void
@@ -38,7 +32,8 @@ export type CHIP = {
   get: (name: string) => any
 
   // lifecycle api
-  tick: (pulse: number) => boolean
+  cycle: (incoming: number) => void
+  tick: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
   hasmessage: () => number
@@ -47,7 +42,7 @@ export type CHIP = {
   send: (target: string, data?: any) => void
   lock: (allowed: string) => void
   unlock: () => void
-  input: (incoming: INPUT) => void
+  // input: (incoming: INPUT) => void
   message: (incoming: MESSAGE) => void
   zap: (label: string) => void
   restore: (label: string) => void
@@ -109,17 +104,8 @@ export function maptostring(value: any) {
   return `${value ?? ''}`
 }
 
-type createchipoptions = {
-  id: string
-  build: GeneratorBuild
-  target: BOARD_ELEMENT
-}
-
 // lifecycle and control flow api
-export function createchip({ id, build, target }: createchipoptions) {
-  // naming
-  let chipname = 'object'
-
+export function createchip(id: string, build: GeneratorBuild) {
   // entry point state
   const labels = klona(build.labels ?? {})
 
@@ -127,16 +113,9 @@ export function createchip({ id, build, target }: createchipoptions) {
   // eslint-disable-next-line prefer-const
   let logic: Generator<number> | undefined
 
-  // input queue state
-  const inputqueue = new Set<INPUT>()
-  let input: INPUT | undefined = undefined
-
   // incoming message state
   let locked = ''
   let message: MESSAGE | undefined = undefined
-
-  // internals
-  target.stats = target.stats ?? {}
 
   // prevent infinite loop lockup
   let loops = 0
@@ -150,7 +129,10 @@ export function createchip({ id, build, target }: createchipoptions) {
 
   // pause until next tick
   let yieldstate = false
-  // let
+
+  // execution frequency
+  let cycle = 3
+  let pulse = 0
 
   // chip is in ended state awaiting any messages
   let endedstate = false
@@ -180,95 +162,10 @@ export function createchip({ id, build, target }: createchipoptions) {
     return command(chip, words)
   }
 
-  function readinput() {
-    if (input === undefined) {
-      const [head = INPUT.NONE] = inputqueue
-      // ensure we have stats
-      if (target.stats === undefined) {
-        target.stats = {}
-      }
-      // clear input stats
-      target.stats.inputmove = 0
-      target.stats.inputshoot = 0
-      target.stats.inputok = 0
-      target.stats.inputcancel = 0
-      target.stats.inputmenu = 0
-      // set active input stat
-      switch (head) {
-        case INPUT.MOVE_LEFT:
-        case INPUT.MOVE_RIGHT:
-        case INPUT.MOVE_UP:
-        case INPUT.MOVE_DOWN:
-          target.stats.inputmove = head
-          break
-        case INPUT.SHOOT_LEFT:
-        case INPUT.SHOOT_RIGHT:
-        case INPUT.SHOOT_UP:
-        case INPUT.SHOOT_DOWN:
-          target.stats.inputshoot = head - INPUT.MOVE_DOWN
-          break
-        case INPUT.OK_BUTTON:
-          target.stats.inputok = 1
-          break
-        case INPUT.CANCEL_BUTTON:
-          target.stats.inputcancel = 1
-          break
-        case INPUT.MENU_BUTTON:
-          target.stats.inputmenu = 1
-          break
-      }
-      // active input
-      input = head
-      // clear used input
-      inputqueue.delete(head)
-    }
-  }
-
-  function getinternal(word: string) {
-    // read from input queue
-    switch (word.toLowerCase()) {
-      case 'player':
-        return target.stats?.player ?? ''
-      case 'sender':
-        return target.stats?.sender ?? ''
-      case 'data':
-        return target.stats?.data ?? 0
-      case 'inputmove':
-        readinput()
-        return target.stats?.inputmove ?? 0
-      case 'inputshoot':
-        readinput()
-        return target.stats?.inputshoot ?? 0
-      case 'inputok':
-        readinput()
-        return target.stats?.inputok ?? 0
-      case 'inputcancel':
-        readinput()
-        return target.stats?.inputcancel ?? 0
-      case 'inputmenu':
-        readinput()
-        return target.stats?.inputmenu ?? 0
-      default:
-        return chip.get(word)
-    }
-  }
-
   const chip: CHIP = {
     // id
     id() {
       return id
-    },
-    name() {
-      return chipname
-    },
-    player() {
-      return getinternal('player')
-    },
-    target() {
-      return target
-    },
-    setName(incoming) {
-      chipname = incoming
     },
 
     // invokes api
@@ -310,18 +207,24 @@ export function createchip({ id, build, target }: createchipoptions) {
     },
 
     // lifecycle api
-    tick(pulse) {
-      //
-
-      // should we bail ?
+    cycle(incoming) {
+      cycle = incoming
+    },
+    tick() {
+      // chip is yield / ended state
       if (!chip.shouldtick()) {
         return false
       }
 
+      // execution frequency
+      if (pulse % cycle !== 0) {
+        return false
+      }
+      ++pulse
+
       // reset state
       loops = 0
       yieldstate = false
-      input = undefined
 
       // invoke generator
       try {
@@ -331,7 +234,8 @@ export function createchip({ id, build, target }: createchipoptions) {
           endedstate = true
         }
       } catch (err: any) {
-        console.error(err)
+        console.error('we crashed?', err)
+        endedstate = true
       }
 
       return true
@@ -363,12 +267,9 @@ export function createchip({ id, build, target }: createchipoptions) {
     unlock() {
       locked = ''
     },
-    input(incoming) {
-      inputqueue.add(incoming)
-    },
     message(incoming) {
       // internal messages while locked are allowed
-      if (locked && incoming.from !== locked) {
+      if (locked && incoming.sender !== locked) {
         return
       }
       message = incoming
@@ -394,15 +295,13 @@ export function createchip({ id, build, target }: createchipoptions) {
       if (message) {
         const label = chip.hasmessage()
 
-        // update chip value state based on incoming message
-        if (target.stats) {
-          target.stats.sender = message.from
-          target.stats.data = message.data
+        // update chip state based on incoming message
+        chip.set('sender', message.sender)
+        chip.set('data', message.data)
 
-          // this sets player focus
-          if (message.player) {
-            target.stats.player = message.player
-          }
+        // this sets player focus
+        if (message.player) {
+          chip.set('player', message.player)
         }
 
         // clear message
@@ -437,11 +336,11 @@ export function createchip({ id, build, target }: createchipoptions) {
       return items.join('')
     },
     tpi(word) {
-      const result = typeof word === 'string' ? getinternal(word) : word
+      const result = typeof word === 'string' ? chip.get(word) : word
       return result ?? ''
     },
     tpn(word) {
-      const result = typeof word === 'string' ? getinternal(word) : word
+      const result = typeof word === 'string' ? chip.get(word) : word
       return isNumber(result) ? result : 0
     },
 
@@ -459,7 +358,7 @@ export function createchip({ id, build, target }: createchipoptions) {
       const [first] = words
       // see if we have been given a flag, otherwise treat it as a string
       const value =
-        (typeof first === 'string' ? getinternal(first) : undefined) ?? first
+        (typeof first === 'string' ? chip.get(first) : undefined) ?? first
 
       // return parsed value, with remaining words
       return [value, words.slice(1)]
@@ -604,7 +503,7 @@ export function createchip({ id, build, target }: createchipoptions) {
       }
 
       // expects name to be a string
-      const arraysource: any[] = getinternal(name) ?? []
+      const arraysource: any[] = chip.get(name) ?? []
       // and chip.get(name) to return an object or an array
       reads[index] = Array.isArray(arraysource) ? arraysource : [arraysource]
     },

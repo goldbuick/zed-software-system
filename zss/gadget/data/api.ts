@@ -121,7 +121,7 @@ export function gadgetpanel(
   name: string,
 ) {
   // get state
-  const shared = gadgetstate(chip.player())
+  const shared = gadgetstate(chip.id())
   const panelName = name || Case.capital(edge)
   const panelState: PANEL | undefined = shared.layout.find(
     (panel: PANEL) => panel.name === panelName,
@@ -134,7 +134,7 @@ export function gadgetpanel(
   } else {
     switch (edgeConst) {
       case PANEL_TYPE.START:
-        initstate(shared, chip.player())
+        initstate(shared, chip.id())
         break
       case PANEL_TYPE.LEFT:
       case PANEL_TYPE.RIGHT:
@@ -161,7 +161,7 @@ export function gadgetpanel(
 
 export function gadgettext(chip: CHIP, text: string) {
   // get state
-  const shared = gadgetstate(chip.player())
+  const shared = gadgetstate(chip.id())
 
   // find slot
   const panel = findpanel(shared)
@@ -182,7 +182,7 @@ export function gadgethyperlink(
   words: WORD[],
 ) {
   // get state
-  const shared = gadgetstate(chip.player())
+  const shared = gadgetstate(chip.id())
 
   // find slot
   const panel = findpanel(shared)

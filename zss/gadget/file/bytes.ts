@@ -46,8 +46,9 @@ export function loadPaletteFromBytes(bytes: Uint8Array): BITMAP | undefined {
   return bitmap
 }
 
+const defaultpalette = loadPaletteFromBytes(dataUrlToBytes(DEFAULT_PAL))
 export function loadDefaultPalette() {
-  return loadPaletteFromBytes(dataUrlToBytes(DEFAULT_PAL))
+  return defaultpalette
 }
 
 const FILE_BYTES_PER_CHAR = 14
@@ -95,6 +96,7 @@ export function loadCharsetFromBytes(data: Uint8Array): BITMAP | undefined {
   return bitmap
 }
 
+const defaultcharset = loadCharsetFromBytes(dataUrlToBytes(DEFAULT_CHR))
 export function loadDefaultCharset() {
-  return loadCharsetFromBytes(dataUrlToBytes(DEFAULT_CHR))
+  return defaultcharset
 }

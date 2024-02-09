@@ -7,6 +7,7 @@ import { CONTENT_TYPE } from './codepage'
 import { MAYBE_STRING } from './device/shared'
 import { range } from './mapping/array'
 import { createguid } from './mapping/guid'
+import { memoryreadchip } from './memory'
 import { OS } from './os'
 
 // generics
@@ -30,8 +31,6 @@ export type BOARD_ELEMENT = Partial<{
   y: number
   // this element has a code associated with it
   code: string
-  // this element has running chip
-  chip: string
   // this element is an instance of an element type
   kind: string
   // this is a unique name for this instance
@@ -144,32 +143,35 @@ export function objectreadkind(
   return undefined
 }
 
-export function boardtick(os: OS, pulse: number, book: BOOK, board: BOARD) {
+export function boardtick(os: OS, book: BOOK, board: BOARD) {
   // build object lookup pre-tick
   boardsetlookup(board)
 
-  // iterate over the lookup
-  if (board.lookup) {
-    for (let i = 0; i < board.lookup.length; ++i) {
-      const target = board.objects[board.lookup[i] ?? '']
-      if (isDefined(target) && isDefined(target.id)) {
-        // lookup kind
-        const kind = objectreadkind(book, target)
-        // object code
-        const code = target.code ?? kind?.code ?? ''
-        // we have code to execute
-        if (code) {
-          // chip check
-          if (!target.chip) {
-            target.chip = os.boot({ id: target.id, code, target })
-          }
-          // run chip
-          if (target.chip) {
-            os.tick(target.chip, pulse)
-          }
-        }
-        // what else ???
-      }
+  // iterate through objects
+  Object.values(board.objects).forEach((target) => {
+    if (!isDefined(target.id)) {
+      return
     }
-  }
+    // lookup kind
+    const kind = objectreadkind(book, target)
+    // object code
+    const code = target.code ?? kind?.code ?? ''
+    // we have code to execute
+    if (code) {
+      // chip check
+      if (!os.has(target.id)) {
+        os.boot(target.id, code)
+      }
+      // set context
+      const context = memoryreadchip(target.id)
+      context.activeinput = undefined
+      context.board = board
+      context.target = target
+      // run chip
+      os.tick(target.id)
+    }
+    // what else ???
+  })
+
+  // cleanup objects flagged for deletion
 }
