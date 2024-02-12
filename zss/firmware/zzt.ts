@@ -1,15 +1,15 @@
-import { isPresent } from 'ts-extras'
-import { WORD_VALUE, maptostring } from 'zss/chip'
+import { isDefined, isPresent } from 'ts-extras'
+import { WORD, WORD_VALUE, maptoconst, maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
-import { isNumber, isString } from 'zss/mapping/types'
+import { isArray, ispt } from 'zss/mapping/types'
 import {
   memoryplayerreadflag,
   memoryplayersetflag,
   memoryreadchip,
 } from 'zss/memory'
 
-import { BOARD_ELEMENT } from '../board'
-import { INPUT, INPUT_DIR } from '../gadget/data/types'
+import { BOARD_ELEMENT, boardmoveobject } from '../board'
+import { INPUT } from '../gadget/data/types'
 
 const STAT_NAMES = new Set([
   'cycle',
@@ -31,6 +31,68 @@ const INPUT_STAT_NAMES = new Set([
   'inputmenu',
 ])
 
+// these should be symbols ?
+// need a clear way to differentiate between these values
+// and other system values
+// need an easy way to map this ?
+// maybe a standard const object ?
+// how is this better than just keeping it as a string ?
+
+export enum COLOR {
+  BLACK,
+  DKBLUE,
+  DKGREEN,
+  DKCYAN,
+  DKRED,
+  DKPURPLE,
+  DKYELLOW,
+  LTGRAY,
+  DKGRAY,
+  BLUE,
+  GREEN,
+  CYAN,
+  RED,
+  PURPLE,
+  YELLOW,
+  WHITE,
+}
+
+export enum DIR {
+  IDLE,
+  NORTH,
+  SOUTH,
+  WEST,
+  EAST,
+  BY,
+  AT,
+  FLOW,
+  SEEK,
+  RNDNS,
+  RNDNE,
+  RND,
+  // modifiers
+  CW,
+  CCW,
+  OPP,
+  RNDP,
+}
+
+export enum COLLISION {
+  SOLID,
+  WALK,
+  SWIM,
+  BULLET,
+}
+
+export enum CATEGORY {
+  TERRAIN,
+  OBJECT,
+}
+
+export function checkdir(values: any): values is number[] {
+  return Array.isArray(values) && values[0] in DIR
+}
+
 function readinput(target: BOARD_ELEMENT) {
   const memory = memoryreadchip(target.id ?? '')
 
@@ -47,25 +109,25 @@ function readinput(target: BOARD_ELEMENT) {
   }
 
   // clear input stats
-  target.stats.inputmove = 0
-  target.stats.inputshoot = 0
+  target.stats.inputmove = []
+  target.stats.inputshoot = []
   target.stats.inputok = 0
   target.stats.inputcancel = 0
   target.stats.inputmenu = 0
 
   // set active input stat
   switch (head) {
-    case INPUT.MOVE_LEFT:
-    case INPUT.MOVE_RIGHT:
     case INPUT.MOVE_UP:
     case INPUT.MOVE_DOWN:
-      target.stats.inputmove = (head - INPUT.NONE) as INPUT_DIR // 1 - 4, W-E-N-S
+    case INPUT.MOVE_LEFT:
+    case INPUT.MOVE_RIGHT:
+      target.stats.inputmove = [head - INPUT.NONE] as [DIR] // 1 - 4, W-E-N-S
       break
-    case INPUT.SHOOT_LEFT:
-    case INPUT.SHOOT_RIGHT:
     case INPUT.SHOOT_UP:
     case INPUT.SHOOT_DOWN:
-      target.stats.inputshoot = (head - INPUT.MOVE_DOWN) as INPUT_DIR // 1 - 4, W-E-N-S
+    case INPUT.SHOOT_LEFT:
+    case INPUT.SHOOT_RIGHT:
+      target.stats.inputshoot = [head - INPUT.MOVE_RIGHT] as [DIR] // 1 - 4, W-E-N-S
       break
     case INPUT.OK_BUTTON:
       target.stats.inputok = 1
@@ -95,9 +157,11 @@ export const ZZT_FIRMWARE = createfirmware(
       if (INPUT_STAT_NAMES.has(name)) {
         readinput(memory.target)
       }
+
       // read stat
       const value = memory.target.stats?.[name] as WORD_VALUE
       const defined = isPresent(value)
+
       // return result
       if (defined || STAT_NAMES.has(name)) {
         return [true, value]
@@ -130,6 +194,108 @@ export const ZZT_FIRMWARE = createfirmware(
     // console.info('??set', name, value)
     return [true, value]
   },
+  (chip, start, words) => {
+    const categoryconsts: Record<string, CATEGORY> = {
+      terrain: CATEGORY.TERRAIN,
+      object: CATEGORY.OBJECT,
+    }
+    const iscategory = categoryconsts[start]
+    if (isDefined(iscategory)) {
+      return [true, 1, iscategory]
+    }
+
+    const collisionconsts: Record<string, COLLISION> = {
+      solid: COLLISION.SOLID,
+      walk: COLLISION.WALK,
+      swim: COLLISION.SWIM,
+      bullet: COLLISION.BULLET,
+      // aliases
+      walkable: COLLISION.WALK,
+      swimmable: COLLISION.SWIM,
+    }
+    const iscollision = collisionconsts[start]
+    if (isDefined(iscollision)) {
+      return [true, 1, iscollision]
+    }
+
+    const colorconsts: Record<string, COLOR> = {
+      black: COLOR.BLACK,
+      dkblue: COLOR.DKBLUE,
+      dkgreen: COLOR.DKGREEN,
+      dkcyan: COLOR.DKCYAN,
+      dkred: COLOR.DKRED,
+      dkpurple: COLOR.DKPURPLE,
+      dkyellow: COLOR.DKYELLOW,
+      ltgray: COLOR.LTGRAY,
+      dkgray: COLOR.DKGRAY,
+      blue: COLOR.BLUE,
+      green: COLOR.GREEN,
+      cyan: COLOR.CYAN,
+      red: COLOR.RED,
+      purple: COLOR.PURPLE,
+      yellow: COLOR.YELLOW,
+      white: COLOR.WHITE,
+      // aliases
+      brown: COLOR.DKYELLOW,
+      dkwhite: COLOR.LTGRAY,
+      ltgrey: COLOR.LTGRAY,
+      gray: COLOR.LTGRAY,
+      grey: COLOR.LTGRAY,
+      dkgrey: COLOR.DKGRAY,
+      ltblack: COLOR.DKGRAY,
+    }
+    const iscolor = colorconsts[start]
+    if (isDefined(iscolor)) {
+      return [true, 1, iscolor]
+    }
+
+    const dirconsts: Record<string, DIR> = {
+      idle: DIR.IDLE,
+      up: DIR.NORTH,
+      down: DIR.SOUTH,
+      left: DIR.WEST,
+      right: DIR.EAST,
+      by: DIR.BY,
+      at: DIR.AT,
+      flow: DIR.FLOW,
+      seek: DIR.SEEK,
+      rndns: DIR.RNDNS,
+      rndne: DIR.RNDNE,
+      rnd: DIR.RND,
+      // modifiers
+      cw: DIR.CW,
+      ccw: DIR.CCW,
+      opp: DIR.OPP,
+      rndp: DIR.RNDP,
+      // aliases
+      u: DIR.NORTH,
+      north: DIR.NORTH,
+      n: DIR.NORTH,
+      d: DIR.SOUTH,
+      south: DIR.SOUTH,
+      s: DIR.SOUTH,
+      l: DIR.WEST,
+      west: DIR.WEST,
+      w: DIR.WEST,
+      r: DIR.EAST,
+      east: DIR.EAST,
+      e: DIR.EAST,
+    }
+    const isdir = dirconsts[start]
+    if (isDefined(isdir)) {
+      const dir: DIR[] = []
+      for (let i = 0; i <= words.length; ++i) {
+        const mayberdir = dirconsts[maptoconst(words[i]) ?? '']
+        if (isDefined(mayberdir)) {
+          dir.push(mayberdir)
+        } else {
+          return [true, dir.length, dir]
+        }
+      }
+    }
+
+    return [false, 0, 0]
+  },
 )
   .command('become', (chip, words) => {
     console.info(words)
@@ -158,8 +324,7 @@ export const ZZT_FIRMWARE = createfirmware(
     chip.cycle(Math.max(1, Math.min(255, next)))
     return 0
   })
-  .command('die', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
+  .command('die', (chip) => {
     // mark target for deletion
     chip.endofprogram()
     return 0
@@ -178,9 +343,17 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('go', (chip, words) => {
-    console.info('go', words)
-    chip.yield()
-    return 0
+    const memory = memoryreadchip(chip.id())
+    const [dir] = chip.parse(words)
+    if (
+      memory.board &&
+      checkdir(dir) &&
+      boardmoveobject(memory.board, memory.target, dir)
+    ) {
+      return 0
+    }
+    // if blocked, return 1
+    return 1
   })
   .command('idle', (chip) => {
     chip.yield()
@@ -235,8 +408,10 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('try', (chip, words) => {
-    console.info('try', words) // stub-only, this is a lang feature
+    // try and move
+    chip.command('go', ...words)
     chip.yield()
+    // and yield regardless of the outcome
     return 0
   })
   .command('unlock', (chip) => {

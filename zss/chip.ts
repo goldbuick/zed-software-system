@@ -104,6 +104,10 @@ export function maptostring(value: any) {
   return `${value ?? ''}`
 }
 
+export function maptoconst(value: any) {
+  return typeof value === 'string' ? value.toLowerCase() : undefined
+}
+
 // lifecycle and control flow api
 export function createchip(id: string, build: GeneratorBuild) {
   // entry point state
@@ -154,7 +158,7 @@ export function createchip(id: string, build: GeneratorBuild) {
     return invokes[name]
   }
 
-  function invokecommand(name: string, words: WORD[]): WORD_VALUE {
+  function invokecommand(name: string, words: WORD[]): 0 | 1 {
     const command = getcommand(name)
     if (!command) {
       throw new Error(`unknown firmware command ${name}`)
@@ -345,20 +349,50 @@ export function createchip(id: string, build: GeneratorBuild) {
     },
 
     parse(words) {
+      // nothing to parse
+      if (words.length === 0) {
+        return [undefined, []]
+      }
+
+      // consts should be handled via get
+      // when we get to parse, we expect to be using
+      // actual consts to extra individual values
+      // out of a string of words
+
+      /*
+
+      process should be ->
+      string -> map to const symbol via get
+      value -> hand off to firmware to figure out if it knows this value
+      default behavior is pass-through
+
+      */
+
+      // always start with a const
+      const [first] = words
+      const start = maptoconst(first)
+
+      // nothing to parse
+      if (start === undefined) {
+        // console.info('pass', first, words.slice(1))
+        return [first, words.slice(1)]
+      }
+
       // iterate through firmware to parse words
       for (let i = 0; i < firmwares.length; ++i) {
-        const [result, resumeindex, value] =
-          firmwares[i].parse?.(chip, words) ?? []
+        const parsed = firmwares[i].parse?.(chip, start, words)
+        const [result, resumeindex, value] = parsed ?? []
         if (result && resumeindex) {
           return [value, words.slice(resumeindex)]
         }
       }
 
       // default behavior
-      const [first] = words
       // see if we have been given a flag, otherwise treat it as a string
       const value =
         (typeof first === 'string' ? chip.get(first) : undefined) ?? first
+
+      // console.info('default', first, value)
 
       // return parsed value, with remaining words
       return [value, words.slice(1)]
@@ -470,7 +504,10 @@ export function createchip(id: string, build: GeneratorBuild) {
     try(...words) {
       const [value, next] = chip.parse(words)
 
-      const result = maptoresult(invokecommand('try', [value as WORD]))
+      console.info('api try', value, next)
+
+      // we use go because it tries to move and returns 1 on failure
+      const result = invokecommand('go', [value as WORD]) ? 1 : 0
       if (result && next.length) {
         chip.command(...next)
       }

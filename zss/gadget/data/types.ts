@@ -232,23 +232,15 @@ export type GADGET_STATE = {
 
 export enum INPUT {
   NONE,
-  MOVE_LEFT,
-  MOVE_RIGHT,
   MOVE_UP,
   MOVE_DOWN,
-  SHOOT_LEFT,
-  SHOOT_RIGHT,
+  MOVE_LEFT,
+  MOVE_RIGHT,
   SHOOT_UP,
   SHOOT_DOWN,
+  SHOOT_LEFT,
+  SHOOT_RIGHT,
   OK_BUTTON,
   CANCEL_BUTTON,
   MENU_BUTTON,
-}
-
-export enum INPUT_DIR {
-  NONE,
-  WEST,
-  EAST,
-  NORTH,
-  SOUTH,
 }

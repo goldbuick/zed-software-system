@@ -15,9 +15,10 @@
 :think
 #if inputmove
   ?inputmove
+  ?opp flow
 #else if inputshoot and inputrate < 1
   #take ammo
-    #give emptyhint to self
+    #give emptyhint
       |You don't have any ammo!
   #else
     #give inputrate 3
@@ -30,7 +31,7 @@
 
 :thud
 #if sender is water 
-  #give waterhint to self
+  #give waterhint
     |Your way is blocked by water.
 #idle
 #think

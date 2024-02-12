@@ -15,7 +15,7 @@ import {
 import { readaddress } from './book'
 import { WORD_VALUE } from './chip'
 import { CONTENT_TYPE } from './codepage'
-import { INPUT, SPRITES_SINDEX } from './gadget/data/types'
+import { INPUT } from './gadget/data/types'
 import { randomInteger } from './mapping/number'
 import { OS } from './os'
 

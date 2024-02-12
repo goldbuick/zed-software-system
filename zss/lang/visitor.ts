@@ -449,7 +449,7 @@ class ScriptVisitor extends CstVisitor {
       return makeNode(ctx, {
         type: NODE.COMMAND,
         words: [
-          makeString(ctx, 'try'),
+          makeString(ctx, 'move'),
           // @ts-expect-error cst element
           ...asList(this, ctx.words),
         ],

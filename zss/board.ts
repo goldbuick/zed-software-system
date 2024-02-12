@@ -5,6 +5,8 @@ import { BOOK, readaddress } from './book'
 import { WORD_VALUE } from './chip'
 import { CONTENT_TYPE } from './codepage'
 import { MAYBE_STRING } from './device/shared'
+import { DIR } from './firmware/zzt'
+import { PT } from './mapping/2d'
 import { range } from './mapping/array'
 import { createguid } from './mapping/guid'
 import { memoryreadchip } from './memory'
@@ -15,8 +17,8 @@ export type BOARD_ELEMENT_STATS = {
   cycle?: number
   player?: string
   sender?: string
-  inputmove?: number
-  inputshoot?: number
+  inputmove?: DIR[]
+  inputshoot?: DIR[]
   inputok?: number
   inputcancel?: number
   inputmenu?: number
@@ -119,6 +121,23 @@ export function boarddeleteobject(board: BOARD, id: string) {
     return true
   }
   return false
+}
+
+export function boardmoveobject(
+  board: BOARD,
+  target: MAYBE_BOARD_ELEMENT,
+  dir: number[],
+) {
+  const object = boardreadobject(board, target?.id ?? '')
+  if (!object) {
+    return false
+  }
+
+  // eval dir
+  console.info('move', object, 'to', dir)
+  //
+
+  return true
 }
 
 function boardsetlookup(board: BOARD) {
