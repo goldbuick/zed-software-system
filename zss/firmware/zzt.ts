@@ -1,7 +1,6 @@
 import { isDefined, isPresent } from 'ts-extras'
-import { WORD, WORD_VALUE, maptoconst, maptostring } from 'zss/chip'
+import { WORD_VALUE, maptoconst, maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
-import { isArray, ispt } from 'zss/mapping/types'
 import {
   memoryplayerreadflag,
   memoryplayersetflag,
@@ -30,13 +29,6 @@ const INPUT_STAT_NAMES = new Set([
   'inputcancel',
   'inputmenu',
 ])
-
-// these should be symbols ?
-// need a clear way to differentiate between these values
-// and other system values
-// need an easy way to map this ?
-// maybe a standard const object ?
-// how is this better than just keeping it as a string ?
 
 export enum COLOR {
   BLACK,
@@ -87,6 +79,81 @@ export enum COLLISION {
 export enum CATEGORY {
   TERRAIN,
   OBJECT,
+}
+
+const categoryconsts: Record<string, string> = {
+  terrain: 'TERRAIN',
+  object: 'OBJECT',
+}
+
+const collisionconsts: Record<string, string> = {
+  solid: 'SOLID',
+  walk: 'WALK',
+  swim: 'SWIM',
+  bullet: 'BULLET',
+  // aliases
+  walkable: 'WALK',
+  swimmable: 'SWIM',
+}
+
+const colorconsts: Record<string, string> = {
+  black: 'BLACK',
+  dkblue: 'DKBLUE',
+  dkgreen: 'DKGREEN',
+  dkcyan: 'DKCYAN',
+  dkred: 'DKRED',
+  dkpurple: 'DKPURPLE',
+  dkyellow: 'DKYELLOW',
+  ltgray: 'LTGRAY',
+  dkgray: 'DKGRAY',
+  blue: 'BLUE',
+  green: 'GREEN',
+  cyan: 'CYAN',
+  red: 'RED',
+  purple: 'PURPLE',
+  yellow: 'YELLOW',
+  white: 'WHITE',
+  // aliases
+  brown: 'DKYELLOW',
+  dkwhite: 'LTGRAY',
+  ltgrey: 'LTGRAY',
+  gray: 'LTGRAY',
+  grey: 'LTGRAY',
+  dkgrey: 'DKGRAY',
+  ltblack: 'DKGRAY',
+}
+
+const dirconsts: Record<string, string> = {
+  idle: 'IDLE',
+  up: 'NORTH',
+  down: 'SOUTH',
+  left: 'WEST',
+  right: 'EAST',
+  by: 'BY',
+  at: 'AT',
+  flow: 'FLOW',
+  seek: 'SEEK',
+  rndns: 'RNDNS',
+  rndne: 'RNDNE',
+  rnd: 'RND',
+  // modifiers
+  cw: 'CW',
+  ccw: 'CCW',
+  opp: 'OPP',
+  rndp: 'RNDP',
+  // aliases
+  u: 'NORTH',
+  north: 'NORTH',
+  n: 'NORTH',
+  d: 'SOUTH',
+  south: 'SOUTH',
+  s: 'SOUTH',
+  l: 'WEST',
+  west: 'WEST',
+  w: 'WEST',
+  r: 'EAST',
+  east: 'EAST',
+  e: 'EAST',
 }
 
 export function checkdir(values: any): values is number[] {
@@ -149,9 +216,29 @@ function readinput(target: BOARD_ELEMENT) {
 
 export const ZZT_FIRMWARE = createfirmware(
   (chip, name) => {
-    const memory = memoryreadchip(chip.id())
+    // check consts first
+    const maybecategory = categoryconsts[name]
+    if (isDefined(maybecategory)) {
+      return [true, maybecategory]
+    }
 
-    // we have to check the object's stats first
+    const maybecollision = collisionconsts[name]
+    if (isDefined(maybecollision)) {
+      return [true, maybecollision]
+    }
+
+    const maybecolor = colorconsts[name]
+    if (isDefined(maybecolor)) {
+      return [true, maybecolor]
+    }
+
+    const maybedir = dirconsts[name]
+    if (isDefined(maybedir)) {
+      return [true, maybedir]
+    }
+
+    // we have to check the object's stats next
+    const memory = memoryreadchip(chip.id())
     if (memory.target) {
       // if we are reading from input, pull the next input
       if (INPUT_STAT_NAMES.has(name)) {
@@ -194,105 +281,27 @@ export const ZZT_FIRMWARE = createfirmware(
     // console.info('??set', name, value)
     return [true, value]
   },
-  (chip, start, words) => {
-    const categoryconsts: Record<string, CATEGORY> = {
-      terrain: CATEGORY.TERRAIN,
-      object: CATEGORY.OBJECT,
-    }
-    const iscategory = categoryconsts[start]
-    if (isDefined(iscategory)) {
-      return [true, 1, iscategory]
+  (chip, getword, wordcount) => {
+    // here we translate one to many words into a single WORD_VALUE
+    const value = getword(0)
+
+    // handle simple consts
+    if (
+      isDefined(colorconsts[value]) ||
+      isDefined(categoryconsts[value]) ||
+      isDefined(collisionconsts[value])
+    ) {
+      return [true, 1, value]
     }
 
-    const collisionconsts: Record<string, COLLISION> = {
-      solid: COLLISION.SOLID,
-      walk: COLLISION.WALK,
-      swim: COLLISION.SWIM,
-      bullet: COLLISION.BULLET,
-      // aliases
-      walkable: COLLISION.WALK,
-      swimmable: COLLISION.SWIM,
-    }
-    const iscollision = collisionconsts[start]
-    if (isDefined(iscollision)) {
-      return [true, 1, iscollision]
-    }
-
-    const colorconsts: Record<string, COLOR> = {
-      black: COLOR.BLACK,
-      dkblue: COLOR.DKBLUE,
-      dkgreen: COLOR.DKGREEN,
-      dkcyan: COLOR.DKCYAN,
-      dkred: COLOR.DKRED,
-      dkpurple: COLOR.DKPURPLE,
-      dkyellow: COLOR.DKYELLOW,
-      ltgray: COLOR.LTGRAY,
-      dkgray: COLOR.DKGRAY,
-      blue: COLOR.BLUE,
-      green: COLOR.GREEN,
-      cyan: COLOR.CYAN,
-      red: COLOR.RED,
-      purple: COLOR.PURPLE,
-      yellow: COLOR.YELLOW,
-      white: COLOR.WHITE,
-      // aliases
-      brown: COLOR.DKYELLOW,
-      dkwhite: COLOR.LTGRAY,
-      ltgrey: COLOR.LTGRAY,
-      gray: COLOR.LTGRAY,
-      grey: COLOR.LTGRAY,
-      dkgrey: COLOR.DKGRAY,
-      ltblack: COLOR.DKGRAY,
-    }
-    const iscolor = colorconsts[start]
-    if (isDefined(iscolor)) {
-      return [true, 1, iscolor]
-    }
-
-    const dirconsts: Record<string, DIR> = {
-      idle: DIR.IDLE,
-      up: DIR.NORTH,
-      down: DIR.SOUTH,
-      left: DIR.WEST,
-      right: DIR.EAST,
-      by: DIR.BY,
-      at: DIR.AT,
-      flow: DIR.FLOW,
-      seek: DIR.SEEK,
-      rndns: DIR.RNDNS,
-      rndne: DIR.RNDNE,
-      rnd: DIR.RND,
-      // modifiers
-      cw: DIR.CW,
-      ccw: DIR.CCW,
-      opp: DIR.OPP,
-      rndp: DIR.RNDP,
-      // aliases
-      u: DIR.NORTH,
-      north: DIR.NORTH,
-      n: DIR.NORTH,
-      d: DIR.SOUTH,
-      south: DIR.SOUTH,
-      s: DIR.SOUTH,
-      l: DIR.WEST,
-      west: DIR.WEST,
-      w: DIR.WEST,
-      r: DIR.EAST,
-      east: DIR.EAST,
-      e: DIR.EAST,
-    }
-    const isdir = dirconsts[start]
-    if (isDefined(isdir)) {
-      const dir: DIR[] = []
-      for (let i = 0; i <= words.length; ++i) {
-        const mayberdir = dirconsts[maptoconst(words[i]) ?? '']
-        if (isDefined(mayberdir)) {
-          dir.push(mayberdir)
-        } else {
-          return [true, dir.length, dir]
-        }
+    // parse direction
+    if (isDefined(dirconsts[value])) {
+      for (let i = 0; i < wordcount; ++i) {
+        //
       }
     }
+
+    //
 
     return [false, 0, 0]
   },

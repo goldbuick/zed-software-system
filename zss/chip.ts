@@ -1,5 +1,6 @@
 import ErrorStackParser from 'error-stack-parser'
 import { klona } from 'klona/json'
+import { isDefined } from 'ts-extras'
 
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
 import { hub } from './hub'
@@ -106,6 +107,22 @@ export function maptostring(value: any) {
 
 export function maptoconst(value: any) {
   return typeof value === 'string' ? value.toLowerCase() : undefined
+}
+
+export function wordreader(chip: CHIP, words: WORD[]) {
+  const values: Record<number, WORD_VALUE> = {}
+  return function (index: number) {
+    const item = values[index]
+    if (isDefined(item)) {
+      return item
+    }
+
+    const word = words[index]
+    const value = (values[index] =
+      (typeof word === 'string' ? chip.get(word) : undefined) ?? word)
+
+    return value
+  }
 }
 
 // lifecycle and control flow api
