@@ -157,8 +157,24 @@ const dirconsts: Record<string, string> = {
   e: 'EAST',
 }
 
-export function checkdir(values: any): values is number[] {
-  return Array.isArray(values) && values[0] in DIR
+function maptoconst(value: string) {
+  const maybecategory = categoryconsts[value]
+  if (isDefined(maybecategory)) {
+    return maybecategory
+  }
+  const maybecollision = collisionconsts[value]
+  if (isDefined(maybecollision)) {
+    return maybecollision
+  }
+  const maybecolor = colorconsts[value]
+  if (isDefined(maybecolor)) {
+    return maybecolor
+  }
+  const maybedir = dirconsts[value]
+  if (isDefined(maybedir)) {
+    return maybedir
+  }
+  return undefined
 }
 
 function readinput(target: BOARD_ELEMENT) {
@@ -217,25 +233,10 @@ function readinput(target: BOARD_ELEMENT) {
 
 export const ZZT_FIRMWARE = createfirmware(
   (chip, name) => {
-    // check consts first
-    const maybecategory = categoryconsts[name]
-    if (isDefined(maybecategory)) {
-      return [true, maybecategory]
-    }
-
-    const maybecollision = collisionconsts[name]
-    if (isDefined(maybecollision)) {
-      return [true, maybecollision]
-    }
-
-    const maybecolor = colorconsts[name]
-    if (isDefined(maybecolor)) {
-      return [true, maybecolor]
-    }
-
-    const maybedir = dirconsts[name]
-    if (isDefined(maybedir)) {
-      return [true, maybedir]
+    // check consts first (data normalization)
+    const maybeconst = maptoconst(name)
+    if (isDefined(maybeconst)) {
+      return [true, maybeconst]
     }
 
     // we have to check the object's stats next
@@ -258,7 +259,6 @@ export const ZZT_FIRMWARE = createfirmware(
 
     // then global
     const value = memoryplayerreadflag(memory.playerfocus, name)
-    // console.info('2??get', name, value)
     return [isPresent(value), value]
   },
   (chip, name, value) => {
@@ -282,23 +282,36 @@ export const ZZT_FIRMWARE = createfirmware(
     // console.info('??set', name, value)
     return [true, value]
   },
-  (chip, getword, wordcount) => {
-    // here we translate one to many words into a single WORD_VALUE
-    const value = getword(0)
+  (chip, words) => {
+    const [word] = words
+    if (typeof word === 'string') {
+      const maybeconst = word.toLowerCase()
 
-    // handle simple consts
-    if (
-      isDefined(colorconsts[value]) ||
-      isDefined(categoryconsts[value]) ||
-      isDefined(collisionconsts[value])
-    ) {
-      return [true, 1, value]
-    }
+      // parse color (maybe kind)
+      const maybecolor = colorconsts[maybeconst]
+      if (isDefined(maybecolor)) {
+        return [true, 1, [maybecolor]]
+      }
 
-    // parse direction
-    if (isDefined(dirconsts[value])) {
-      for (let i = 0; i < wordcount; ++i) {
-        //
+      // parse kind ??
+
+      // parse category
+      const maybecategory = categoryconsts[maybeconst]
+      if (isDefined(maybecategory)) {
+        return [true, 1, [maybecategory]]
+      }
+
+      // parse collision
+      const maybecollision = collisionconsts[maybeconst]
+      if (isDefined(maybecollision)) {
+        return [true, 1, [maybecollision]]
+      }
+
+      // parse direction
+      if (isDefined(dirconsts[maybeconst])) {
+        for (let i = 0; i < words.length; ++i) {
+          //
+        }
       }
     }
 

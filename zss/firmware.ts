@@ -1,13 +1,10 @@
-import { CHIP, WORD, WORD_VALUE, wordreader } from './chip'
+import { CHIP, WORD, WORD_VALUE } from './chip'
+
+export type FIRMWARE_PARSE_RESULT = [boolean, number, WORD_VALUE]
 
 type FIRMWARE_GET = (chip: CHIP, name: string) => [boolean, any]
 type FIRMWARE_SET = (chip: CHIP, name: string, value: any) => [boolean, any]
-export type FIRMWARE_PARSE_RESULT = [boolean, number, WORD_VALUE]
-type FIRMWARE_PARSE = (
-  chip: CHIP,
-  getword: ReturnType<typeof wordreader>,
-  wordcount: number,
-) => FIRMWARE_PARSE_RESULT
+type FIRMWARE_PARSE = (chip: CHIP, words: WORD[]) => FIRMWARE_PARSE_RESULT
 
 export type FIRMWARE_COMMAND = (chip: CHIP, words: WORD[]) => 0 | 1
 

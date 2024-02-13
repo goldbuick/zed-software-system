@@ -105,26 +105,6 @@ export function maptostring(value: any) {
   return `${value ?? ''}`
 }
 
-export function maptoconst(value: any) {
-  return typeof value === 'string' ? value.toLowerCase() : undefined
-}
-
-export function wordreader(chip: CHIP, words: WORD[]) {
-  const values: Record<number, WORD_VALUE> = {}
-  return function (index: number) {
-    const item = values[index]
-    if (isDefined(item)) {
-      return item
-    }
-
-    const word = words[index]
-    const value = (values[index] =
-      (typeof word === 'string' ? chip.get(word) : undefined) ?? word)
-
-    return value
-  }
-}
-
 // lifecycle and control flow api
 export function createchip(id: string, build: GeneratorBuild) {
   // entry point state
@@ -378,12 +358,10 @@ export function createchip(id: string, build: GeneratorBuild) {
       // command params / arguments
 
       // iterate through firmware to parse words
-      // not sure if there is a simpler way of doing this?
-      const getword = wordreader(chip, words)
       for (let i = 0; i < firmwares.length; ++i) {
         const firmware = firmwares[i]
         if (firmware.parse !== undefined) {
-          const parsed = firmware.parse(chip, getword, words.length)
+          const parsed = firmware.parse(chip, words)
           const [result, resumeindex, value] = parsed ?? []
           if (result && resumeindex) {
             // return parsed value, with remaining words
@@ -393,7 +371,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       }
 
       // return parsed value, with remaining words
-      return [getword(0), words.slice(1)]
+      return [words[0], words.slice(1)]
     },
     parsegroup(...words) {
       const [value] = chip.parse(words)
