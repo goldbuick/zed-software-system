@@ -1,5 +1,5 @@
 import { isDefined, isPresent } from 'ts-extras'
-import { WORD_VALUE, maptoconst, maptostring } from 'zss/chip'
+import { WORD_VALUE, maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import {
   memoryplayerreadflag,
@@ -8,6 +8,7 @@ import {
 } from 'zss/memory'
 
 import { BOARD_ELEMENT, boardmoveobject } from '../board'
+import { gadgethyperlink, gadgettext } from '../gadget/data/api'
 import { INPUT } from '../gadget/data/types'
 
 const STAT_NAMES = new Set([
@@ -433,5 +434,30 @@ export const ZZT_FIRMWARE = createfirmware(
   })
   .command('zap', (chip, words) => {
     chip.zap(maptostring(words[0]))
+    return 0
+  })
+  // zzt @
+  .command('stat', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
+    // all this command does for now is update name
+    if (memory.target) {
+      memory.target.name = words.map(chip.tpi).join(' ')
+    }
+    return 0
+  })
+  // zzt output
+  .command('text', (chip, args) => {
+    const text = maptostring(args[0] ?? '')
+
+    gadgettext(chip, text)
+    return 0
+  })
+  .command('hyperlink', (chip, args) => {
+    // package into a panel item
+    const [labelword, inputword, ...words] = args
+    const label = maptostring(labelword)
+    const input = maptostring(inputword)
+
+    gadgethyperlink(chip, label, input, words)
     return 0
   })

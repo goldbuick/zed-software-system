@@ -371,48 +371,29 @@ export function createchip(id: string, build: GeneratorBuild) {
         return [undefined, []]
       }
 
-      // consts should be handled via get
-      // when we get to parse, we expect to be using
-      // actual consts to extra individual values
-      // out of a string of words
+      // the whole point of this function is to group multi-word values
+      // ie: #put opp flow red onblack fish -> [opp, flow], [red onblack fish]
 
-      /*
-
-      process should be ->
-      string -> map to const symbol via get
-      value -> hand off to firmware to figure out if it knows this value
-      default behavior is pass-through
-
-      */
-
-      // always start with a const
-      const [first] = words
-      const start = maptoconst(first)
-
-      // nothing to parse
-      if (start === undefined) {
-        // console.info('pass', first, words.slice(1))
-        return [first, words.slice(1)]
-      }
+      // commands should use this function to read
+      // command params / arguments
 
       // iterate through firmware to parse words
+      // not sure if there is a simpler way of doing this?
+      const getword = wordreader(chip, words)
       for (let i = 0; i < firmwares.length; ++i) {
-        const parsed = firmwares[i].parse?.(chip, start, words)
-        const [result, resumeindex, value] = parsed ?? []
-        if (result && resumeindex) {
-          return [value, words.slice(resumeindex)]
+        const firmware = firmwares[i]
+        if (firmware.parse !== undefined) {
+          const parsed = firmware.parse(chip, getword, words.length)
+          const [result, resumeindex, value] = parsed ?? []
+          if (result && resumeindex) {
+            // return parsed value, with remaining words
+            return [value, words.slice(resumeindex)]
+          }
         }
       }
 
-      // default behavior
-      // see if we have been given a flag, otherwise treat it as a string
-      const value =
-        (typeof first === 'string' ? chip.get(first) : undefined) ?? first
-
-      // console.info('default', first, value)
-
       // return parsed value, with remaining words
-      return [value, words.slice(1)]
+      return [getword(0), words.slice(1)]
     },
     parsegroup(...words) {
       const [value] = chip.parse(words)
