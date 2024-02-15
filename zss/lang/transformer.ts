@@ -55,12 +55,12 @@ function writeTemplateString(value: string): string {
   const template = result.tokens.map((token) => {
     if (token.tokenType === MaybeFlag) {
       const name = escapeString(token.image.substring(1))
-      return `',api.tpi('${name}'),'`
+      return `', api.group('${name}'), '`
     }
     return escapeString(token.image)
   })
 
-  return `api.tp('${template.join('')}')`
+  return `'${template.join('')}'`
 }
 
 function transformNodes(nodes: CodeNode[]) {
@@ -92,75 +92,89 @@ function writeApi(
   return write(ast, [`api.${method}(`, ...joinChunks(params, ', '), `)`])
 }
 
+function writeArray(ast: CodeNode, array: Array<string | SourceNode>) {
+  return write(ast, [`[`, ...joinChunks(array, ', '), `]`])
+}
+
 function transformCompare(ast: CodeNode) {
   if (ast.type === NODE.COMPARE) {
     switch (ast.compare) {
       case COMPARE.IS_EQ:
         return writeApi(ast, 'isEq', [
-          transformNode(ast.lhs),
-          transformNode(ast.rhs),
+          writeArray(ast, transformNodes(ast.lhs)),
+          writeArray(ast, transformNodes(ast.rhs)),
         ])
       case COMPARE.IS_NOT_EQ:
         return writeApi(ast, 'isNotEq', [
-          transformNode(ast.lhs),
-          transformNode(ast.rhs),
+          writeArray(ast, transformNodes(ast.lhs)),
+          writeArray(ast, transformNodes(ast.rhs)),
         ])
       case COMPARE.IS_LESS_THAN:
         return writeApi(ast, 'isLessThan', [
-          transformNode(ast.lhs),
-          transformNode(ast.rhs),
+          writeArray(ast, transformNodes(ast.lhs)),
+          writeArray(ast, transformNodes(ast.rhs)),
         ])
       case COMPARE.IS_GREATER_THAN:
         return writeApi(ast, 'isGreaterThan', [
-          transformNode(ast.lhs),
-          transformNode(ast.rhs),
+          writeArray(ast, transformNodes(ast.lhs)),
+          writeArray(ast, transformNodes(ast.rhs)),
         ])
       case COMPARE.IS_LESS_THAN_OR_EQ:
         return writeApi(ast, 'isLessThanOrEq', [
-          transformNode(ast.lhs),
-          transformNode(ast.rhs),
+          writeArray(ast, transformNodes(ast.lhs)),
+          writeArray(ast, transformNodes(ast.rhs)),
         ])
       case COMPARE.IS_GREATER_THAN_OR_EQ:
         return writeApi(ast, 'isGreaterThanOrEq', [
-          transformNode(ast.lhs),
-          transformNode(ast.rhs),
+          writeArray(ast, transformNodes(ast.lhs)),
+          writeArray(ast, transformNodes(ast.rhs)),
         ])
     }
   }
   return write(ast, '')
 }
 
-function prefixApi(operation: SourceNode, method: string, rhs: CodeNode) {
+function prefixApi(
+  operation: SourceNode,
+  method: string,
+  ast: CodeNode,
+  rhs: CodeNode[],
+) {
   operation.prepend(`api.${method}(`)
-  return operation.add([', ', transformNode(rhs), ')'])
+  return operation.add([', ', writeApi(ast, 'group', transformNodes(rhs)), ')'])
 }
 
-function prefixUniApi(operation: SourceNode, method: string, rhs: CodeNode) {
+function prefixUniApi(
+  operation: SourceNode,
+  method: string,
+  ast: CodeNode,
+  rhs: CodeNode[],
+) {
   operation.prepend(`api.${method}(`)
-  return operation.add([transformNode(rhs), ')'])
+  return operation.add([writeApi(ast, 'group', transformNodes(rhs)), ')'])
 }
 
 function transformOperatorItem(operation: SourceNode, ast: CodeNode) {
   if (ast.type === NODE.OPERATOR_ITEM) {
     switch (ast.operator) {
       case OPERATOR.PLUS:
-        return prefixApi(operation, 'opPlus', ast.rhs)
+        return prefixApi(operation, 'opPlus', ast, ast.rhs)
       case OPERATOR.MINUS:
-        return prefixApi(operation, 'opMinus', ast.rhs)
+        return prefixApi(operation, 'opMinus', ast, ast.rhs)
       case OPERATOR.POWER:
-        return prefixApi(operation, 'opPower', ast.rhs)
+        return prefixApi(operation, 'opPower', ast, ast.rhs)
       case OPERATOR.MULTIPLY:
-        return prefixApi(operation, 'opMultiply', ast.rhs)
+        return prefixApi(operation, 'opMultiply', ast, ast.rhs)
       case OPERATOR.DIVIDE:
-        return prefixApi(operation, 'opDivide', ast.rhs)
+        return prefixApi(operation, 'opDivide', ast, ast.rhs)
       case OPERATOR.MOD_DIVIDE:
-        return prefixApi(operation, 'opModDivide', ast.rhs)
+        return prefixApi(operation, 'opModDivide', ast, ast.rhs)
       case OPERATOR.FLOOR_DIVIDE:
-        return prefixApi(operation, 'opFloorDivide', ast.rhs)
+        return prefixApi(operation, 'opFloorDivide', ast, ast.rhs)
       case OPERATOR.UNI_PLUS:
-        return prefixUniApi(operation, 'opUniPlus', ast.rhs)
+        return prefixUniApi(operation, 'opUniPlus', ast, ast.rhs)
       case OPERATOR.UNI_MINUS:
-        return prefixUniApi(operation, 'opUniMinus', ast.rhs)
+        return prefixUniApi(operation, 'opUniMinus', ast, ast.rhs)
     }
   }
   return write(ast, '')
@@ -408,17 +422,17 @@ function transformNode(ast: CodeNode): SourceNode {
       return write(ast, `continue;\n`)
     // expressions
     case NODE.OR:
-      return writeApi(ast, 'or', ast.items.map(transformNode))
+      return writeApi(ast, 'or', ast.words.map(transformNode))
     case NODE.AND:
-      return writeApi(ast, 'and', ast.items.map(transformNode))
+      return writeApi(ast, 'and', ast.words.map(transformNode))
     case NODE.NOT:
-      return writeApi(ast, 'not', [ast.value ? transformNode(ast.value) : ''])
+      return writeApi(ast, 'not', ast.words.map(transformNode))
     case NODE.COMPARE:
       return transformCompare(ast)
     case NODE.OPERATOR:
       return transformOperator(ast)
     case NODE.GROUP:
-      return writeApi(ast, 'group', ast.items.map(transformNode))
+      return writeApi(ast, 'group', ast.words.map(transformNode))
     default:
       console.error(`<unsupported node>`, ast)
       return blank(ast)

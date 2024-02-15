@@ -50,3 +50,7 @@
 #anim jwaap
 #idle
 #die
+
+:debug
+#if any red fish
+  |You see some red fish

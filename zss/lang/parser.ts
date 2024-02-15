@@ -546,6 +546,10 @@ class ScriptParser extends CstParser {
   })
 
   word = this.RULED('word', () => {
+    this.AT_LEAST_ONE(() => this.SUBRULE(this.token))
+  })
+
+  token = this.RULED('token', () => {
     this.OR([
       { ALT: () => this.CONSUME(lexer.StringLiteralDouble) },
       { ALT: () => this.CONSUME(lexer.StringLiteral) },

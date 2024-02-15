@@ -52,7 +52,7 @@ export type CHIP = {
   stacktrace: (error: Error) => void
 
   // logic api
-  text: (value: string) => WORD_VALUE
+  text: (...words: WORD[]) => WORD_VALUE
   stat: (...words: WORD[]) => WORD_VALUE
   hyperlink: (...words: WORD[]) => WORD_VALUE
   command: (...words: WORD[]) => WORD_VALUE
@@ -66,23 +66,23 @@ export type CHIP = {
   read: (index: number, ...words: WORD[]) => boolean
   or: (...words: WORD[]) => WORD_VALUE
   and: (...words: WORD[]) => WORD_VALUE
-  not: (word: WORD) => WORD_VALUE
+  not: (...words: WORD[]) => WORD_VALUE
   group: (...words: WORD[]) => WORD[]
-  isEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  isNotEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  isLessThan: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  isGreaterThan: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  isLessThanOrEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  isGreaterThanOrEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opPlus: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opMinus: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opPower: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opMultiply: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opDivide: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opModDivide: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opFloorDivide: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opUniPlus: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opUniMinus: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  isEq: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  isNotEq: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  isLessThan: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  isGreaterThan: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  isLessThanOrEq: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  isGreaterThanOrEq: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  opPlus: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  opMinus: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  opPower: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  opMultiply: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  opDivide: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  opModDivide: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  opFloorDivide: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  opUniPlus: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  opUniMinus: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
 }
 
 export type WORD = string | number
@@ -534,9 +534,9 @@ export function createchip(id: string, build: GeneratorBuild) {
       }
       return lastvalue
     },
-    not(word) {
-      const [value, next] = readexpr(chip, words, i)
-      return chip.tpn(word) ? 0 : 1
+    not(...words) {
+      const [value] = readexpr(chip, words, 0)
+      return value ? 0 : 1
     },
     group(...words) {
       return words
