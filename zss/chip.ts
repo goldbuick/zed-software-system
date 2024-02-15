@@ -511,30 +511,31 @@ export function createchip(id: string, build: GeneratorBuild) {
       return true
     },
     or(...words) {
+      let lastvalue = 0
       for (let i = 0; i < words.length; ) {
         const [value, next] = readexpr(chip, words, i)
-        if (value) {
-          return value
+        lastvalue = value
+        if (lastvalue) {
+          break // or returns the first truthy value
         }
         i = next
       }
-
-      // oops ?
-      return 0
+      return lastvalue
     },
     and(...words) {
+      let lastvalue = 0
       for (let i = 0; i < words.length; ) {
         const [value, next] = readexpr(chip, words, i)
-        if (value) {
-          return value
+        lastvalue = value
+        if (!lastvalue) {
+          break // and returns the first falsy value, or the last value
         }
         i = next
       }
-
-      // oops ?
-      return 0
+      return lastvalue
     },
     not(word) {
+      const [value, next] = readexpr(chip, words, i)
       return chip.tpn(word) ? 0 : 1
     },
     group(...words) {
