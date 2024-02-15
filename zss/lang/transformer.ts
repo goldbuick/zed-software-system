@@ -418,7 +418,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.OPERATOR:
       return transformOperator(ast)
     case NODE.GROUP:
-      return writeApi(ast, 'parsegroup', ast.items.map(transformNode))
+      return writeApi(ast, 'group', ast.items.map(transformNode))
     default:
       console.error(`<unsupported node>`, ast)
       return blank(ast)

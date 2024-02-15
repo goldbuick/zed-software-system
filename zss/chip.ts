@@ -3,6 +3,7 @@ import { klona } from 'klona/json'
 import { isDefined } from 'ts-extras'
 
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
+import { readexpr } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
@@ -50,13 +51,6 @@ export type CHIP = {
   endofprogram: () => void
   stacktrace: (error: Error) => void
 
-  // template / parse api
-  // tp: (...items: string[]) => string
-  // tpi: (word: WORD) => WORD_VALUE
-  // tpn: (word: WORD) => number
-  // parse: (words: WORD[]) => [WORD_VALUE, WORD[]]
-  // parsegroup: (...words: WORD[]) => WORD_VALUE
-
   // logic api
   text: (value: string) => WORD_VALUE
   stat: (...words: WORD[]) => WORD_VALUE
@@ -73,6 +67,7 @@ export type CHIP = {
   or: (...words: WORD[]) => WORD_VALUE
   and: (...words: WORD[]) => WORD_VALUE
   not: (word: WORD) => WORD_VALUE
+  group: (...words: WORD[]) => WORD[]
   isEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
   isNotEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
   isLessThan: (lhs: WORD, rhs: WORD) => WORD_VALUE
@@ -184,7 +179,6 @@ export function createchip(id: string, build: GeneratorBuild) {
     set(name, value) {
       const lname = name.toLowerCase()
 
-      // console.info('>>>set', lname, value)
       for (let i = 0; i < firmwares.length; ++i) {
         const [result] = firmwares[i].set(chip, lname, value)
         if (result) {
@@ -198,7 +192,6 @@ export function createchip(id: string, build: GeneratorBuild) {
     get(name) {
       const lname = name.toLowerCase()
 
-      // console.info('>>>get', lname)
       for (let i = 0; i < firmwares.length; ++i) {
         const [result, value] = firmwares[i].get(chip, lname)
         if (result) {
@@ -334,52 +327,6 @@ export function createchip(id: string, build: GeneratorBuild) {
         column: entry?.columnNumber ?? 0,
       }
     },
-
-    // values api
-    // tp(...items) {
-    //   return items.join('')
-    // },
-    // tpi(word) {
-    //   const result = typeof word === 'string' ? chip.get(word) : word
-    //   return result ?? ''
-    // },
-    // tpn(word) {
-    //   const result = typeof word === 'string' ? chip.get(word) : word
-    //   return isNumber(result) ? result : 0
-    // },
-
-    // parse(words) {
-    //   // nothing to parse
-    //   if (words.length === 0) {
-    //     return [undefined, []]
-    //   }
-
-    //   // the whole point of this function is to group multi-word values
-    //   // ie: #put opp flow red onblack fish -> [opp, flow], [red onblack fish]
-
-    //   // commands should use this function to read
-    //   // command params / arguments
-
-    //   // iterate through firmware to parse words
-    //   for (let i = 0; i < firmwares.length; ++i) {
-    //     const firmware = firmwares[i]
-    //     if (firmware.parse !== undefined) {
-    //       const parsed = firmware.parse(chip, words)
-    //       const [result, resumeindex, value] = parsed ?? []
-    //       if (result && resumeindex) {
-    //         // return parsed value, with remaining words
-    //         return [value, words.slice(resumeindex)]
-    //       }
-    //     }
-    //   }
-
-    //   // return parsed value, with remaining words
-    //   return [words[0], words.slice(1)]
-    // },
-    // parsegroup(...words) {
-    //   const [value] = chip.parse(words)
-    //   return value
-    // },
 
     // logic api
     text(value) {
@@ -564,18 +511,34 @@ export function createchip(id: string, build: GeneratorBuild) {
       return true
     },
     or(...words) {
-      return words.map(chip.tpn).find((value) => value)
+      for (let i = 0; i < words.length; ) {
+        const [value, next] = readexpr(chip, words, i)
+        if (value) {
+          return value
+        }
+        i = next
+      }
+
+      // oops ?
+      return 0
     },
     and(...words) {
-      const values = words.map(chip.tpn)
-      const index = values.findIndex((value) => !value)
-      if (index === -1) {
-        return values[values.length - 1]
+      for (let i = 0; i < words.length; ) {
+        const [value, next] = readexpr(chip, words, i)
+        if (value) {
+          return value
+        }
+        i = next
       }
-      return values[index]
+
+      // oops ?
+      return 0
     },
     not(word) {
       return chip.tpn(word) ? 0 : 1
+    },
+    group(...words) {
+      return words
     },
     isEq(lhs, rhs) {
       return chip.tpn(lhs) === chip.tpn(rhs) ? 1 : 0

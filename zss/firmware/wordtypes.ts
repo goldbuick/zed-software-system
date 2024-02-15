@@ -3,6 +3,8 @@ What is wordtypes?
 it is a set of helper functions that parse & identify multi-word data types
 */
 
+import { CHIP, WORD } from '../chip'
+
 export enum COLOR {
   BLACK,
   DKBLUE,
@@ -127,4 +129,27 @@ export const dirconsts: Record<string, string> = {
   r: 'EAST',
   east: 'EAST',
   e: 'EAST',
+}
+
+// read a numerical value from words
+export function readnumber(
+  chip: CHIP,
+  words: WORD[],
+  i: number,
+): [number, number] {
+  const value = words[i]
+  return [
+    (typeof value === 'string' ? chip.get(value) : undefined) ?? value,
+    i + 1,
+  ]
+}
+
+// read a numerical value from words
+export function readexpr(
+  chip: CHIP,
+  words: WORD[],
+  i: number,
+): [number, number] {
+  //
+  return [0, 0]
 }
