@@ -1,5 +1,5 @@
 import { isDefined, isPresent } from 'ts-extras'
-import { WORD_VALUE, maptostring } from 'zss/chip'
+import { WORD_VALUE, checkconst, maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import {
   memoryplayerreadflag,
@@ -10,6 +10,14 @@ import {
 import { BOARD_ELEMENT, boardmoveobject } from '../board'
 import { gadgethyperlink, gadgettext } from '../gadget/data/api'
 import { INPUT } from '../gadget/data/types'
+
+import {
+  DIR,
+  categoryconsts,
+  collisionconsts,
+  colorconsts,
+  dirconsts,
+} from './wordtypes'
 
 const STAT_NAMES = new Set([
   'cycle',
@@ -30,132 +38,6 @@ const INPUT_STAT_NAMES = new Set([
   'inputcancel',
   'inputmenu',
 ])
-
-export enum COLOR {
-  BLACK,
-  DKBLUE,
-  DKGREEN,
-  DKCYAN,
-  DKRED,
-  DKPURPLE,
-  DKYELLOW,
-  LTGRAY,
-  DKGRAY,
-  BLUE,
-  GREEN,
-  CYAN,
-  RED,
-  PURPLE,
-  YELLOW,
-  WHITE,
-}
-
-export enum DIR {
-  IDLE,
-  NORTH,
-  SOUTH,
-  WEST,
-  EAST,
-  BY,
-  AT,
-  FLOW,
-  SEEK,
-  RNDNS,
-  RNDNE,
-  RND,
-  // modifiers
-  CW,
-  CCW,
-  OPP,
-  RNDP,
-}
-
-export enum COLLISION {
-  SOLID,
-  WALK,
-  SWIM,
-  BULLET,
-}
-
-export enum CATEGORY {
-  TERRAIN,
-  OBJECT,
-}
-
-const categoryconsts: Record<string, string> = {
-  terrain: 'TERRAIN',
-  object: 'OBJECT',
-}
-
-const collisionconsts: Record<string, string> = {
-  solid: 'SOLID',
-  walk: 'WALK',
-  swim: 'SWIM',
-  bullet: 'BULLET',
-  // aliases
-  walkable: 'WALK',
-  swimmable: 'SWIM',
-}
-
-const colorconsts: Record<string, string> = {
-  black: 'BLACK',
-  dkblue: 'DKBLUE',
-  dkgreen: 'DKGREEN',
-  dkcyan: 'DKCYAN',
-  dkred: 'DKRED',
-  dkpurple: 'DKPURPLE',
-  dkyellow: 'DKYELLOW',
-  ltgray: 'LTGRAY',
-  dkgray: 'DKGRAY',
-  blue: 'BLUE',
-  green: 'GREEN',
-  cyan: 'CYAN',
-  red: 'RED',
-  purple: 'PURPLE',
-  yellow: 'YELLOW',
-  white: 'WHITE',
-  // aliases
-  brown: 'DKYELLOW',
-  dkwhite: 'LTGRAY',
-  ltgrey: 'LTGRAY',
-  gray: 'LTGRAY',
-  grey: 'LTGRAY',
-  dkgrey: 'DKGRAY',
-  ltblack: 'DKGRAY',
-}
-
-const dirconsts: Record<string, string> = {
-  idle: 'IDLE',
-  up: 'NORTH',
-  down: 'SOUTH',
-  left: 'WEST',
-  right: 'EAST',
-  by: 'BY',
-  at: 'AT',
-  flow: 'FLOW',
-  seek: 'SEEK',
-  rndns: 'RNDNS',
-  rndne: 'RNDNE',
-  rnd: 'RND',
-  // modifiers
-  cw: 'CW',
-  ccw: 'CCW',
-  opp: 'OPP',
-  rndp: 'RNDP',
-  // aliases
-  u: 'NORTH',
-  north: 'NORTH',
-  n: 'NORTH',
-  d: 'SOUTH',
-  south: 'SOUTH',
-  s: 'SOUTH',
-  l: 'WEST',
-  west: 'WEST',
-  w: 'WEST',
-  r: 'EAST',
-  east: 'EAST',
-  e: 'EAST',
-}
 
 function maptoconst(value: string) {
   const maybecategory = categoryconsts[value]
@@ -279,46 +161,59 @@ export const ZZT_FIRMWARE = createfirmware(
 
     // then global
     memoryplayersetflag(memory.playerfocus, name, value)
-    // console.info('??set', name, value)
     return [true, value]
   },
-  (chip, words) => {
-    const [word] = words
-    if (typeof word === 'string') {
-      const maybeconst = word.toLowerCase()
+  // (chip, words) => {
+  //   const [word] = words
+  //   if (typeof word === 'string') {
+  //     const maybeconst = word.toLowerCase()
 
-      // parse color (maybe kind)
-      const maybecolor = colorconsts[maybeconst]
-      if (isDefined(maybecolor)) {
-        return [true, 1, [maybecolor]]
-      }
+  //     // parse color (maybe kind)
+  //     const maybecolor = colorconsts[maybeconst]
+  //     if (isDefined(maybecolor)) {
+  //       return [true, 1, [maybecolor]]
+  //     }
 
-      // parse kind ??
+  //     // parse kind ??
 
-      // parse category
-      const maybecategory = categoryconsts[maybeconst]
-      if (isDefined(maybecategory)) {
-        return [true, 1, [maybecategory]]
-      }
+  //     // parse category
+  //     const maybecategory = categoryconsts[maybeconst]
+  //     if (isDefined(maybecategory)) {
+  //       return [true, 1, [maybecategory]]
+  //     }
 
-      // parse collision
-      const maybecollision = collisionconsts[maybeconst]
-      if (isDefined(maybecollision)) {
-        return [true, 1, [maybecollision]]
-      }
+  //     // parse collision
+  //     const maybecollision = collisionconsts[maybeconst]
+  //     if (isDefined(maybecollision)) {
+  //       return [true, 1, [maybecollision]]
+  //     }
 
-      // parse direction
-      if (isDefined(dirconsts[maybeconst])) {
-        for (let i = 0; i < words.length; ++i) {
-          //
-        }
-      }
-    }
+  //     // parse direction
+  //     if (isDefined(dirconsts[maybeconst])) {
+  //       const dirdata: string[] = []
+  //       for (let i = 0; i < words.length; ++i) {
+  //         const maybedir = dirconsts[checkconst(words[i]) ?? '']
+  //         // handle complex dirs
+  //         switch (maybedir) {
+  //           case 'BY':
+  //             break
+  //           case 'AT':
+  //             break
+  //           case 'SEEK':
+  //             break
+  //           default:
+  //             break
+  //         }
+  //       }
+  //       return [true, dirdata.length, dirdata]
+  //     }
+  //   }
 
-    //
+  //   //
 
-    return [false, 0, 0]
-  },
+  //   return [false, 0, 0]
+  // }
+  // ,
 )
   .command('become', (chip, words) => {
     console.info(words)
@@ -368,13 +263,13 @@ export const ZZT_FIRMWARE = createfirmware(
   .command('go', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [dir] = chip.parse(words)
-    if (
-      memory.board &&
-      checkdir(dir) &&
-      boardmoveobject(memory.board, memory.target, dir)
-    ) {
-      return 0
-    }
+    // if (
+    //   memory.board &&
+    //   checkdir(dir) &&
+    //   boardmoveobject(memory.board, memory.target, dir)
+    // ) {
+    //   return 0
+    // }
     // if blocked, return 1
     return 1
   })

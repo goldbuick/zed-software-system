@@ -43,7 +43,6 @@ export type CHIP = {
   send: (target: string, data?: any) => void
   lock: (allowed: string) => void
   unlock: () => void
-  // input: (incoming: INPUT) => void
   message: (incoming: MESSAGE) => void
   zap: (label: string) => void
   restore: (label: string) => void
@@ -52,11 +51,11 @@ export type CHIP = {
   stacktrace: (error: Error) => void
 
   // template / parse api
-  tp: (...items: string[]) => string
-  tpi: (word: WORD) => WORD_VALUE
-  tpn: (word: WORD) => number
-  parse: (words: WORD[]) => [WORD_VALUE, WORD[]]
-  parsegroup: (...words: WORD[]) => WORD_VALUE
+  // tp: (...items: string[]) => string
+  // tpi: (word: WORD) => WORD_VALUE
+  // tpn: (word: WORD) => number
+  // parse: (words: WORD[]) => [WORD_VALUE, WORD[]]
+  // parsegroup: (...words: WORD[]) => WORD_VALUE
 
   // logic api
   text: (value: string) => WORD_VALUE
@@ -103,6 +102,10 @@ function maptoresult(value: WORD_VALUE): WORD {
 
 export function maptostring(value: any) {
   return `${value ?? ''}`
+}
+
+export function checkconst(value: any) {
+  return typeof value === 'string' ? value : undefined
 }
 
 // lifecycle and control flow api
@@ -333,50 +336,50 @@ export function createchip(id: string, build: GeneratorBuild) {
     },
 
     // values api
-    tp(...items) {
-      return items.join('')
-    },
-    tpi(word) {
-      const result = typeof word === 'string' ? chip.get(word) : word
-      return result ?? ''
-    },
-    tpn(word) {
-      const result = typeof word === 'string' ? chip.get(word) : word
-      return isNumber(result) ? result : 0
-    },
+    // tp(...items) {
+    //   return items.join('')
+    // },
+    // tpi(word) {
+    //   const result = typeof word === 'string' ? chip.get(word) : word
+    //   return result ?? ''
+    // },
+    // tpn(word) {
+    //   const result = typeof word === 'string' ? chip.get(word) : word
+    //   return isNumber(result) ? result : 0
+    // },
 
-    parse(words) {
-      // nothing to parse
-      if (words.length === 0) {
-        return [undefined, []]
-      }
+    // parse(words) {
+    //   // nothing to parse
+    //   if (words.length === 0) {
+    //     return [undefined, []]
+    //   }
 
-      // the whole point of this function is to group multi-word values
-      // ie: #put opp flow red onblack fish -> [opp, flow], [red onblack fish]
+    //   // the whole point of this function is to group multi-word values
+    //   // ie: #put opp flow red onblack fish -> [opp, flow], [red onblack fish]
 
-      // commands should use this function to read
-      // command params / arguments
+    //   // commands should use this function to read
+    //   // command params / arguments
 
-      // iterate through firmware to parse words
-      for (let i = 0; i < firmwares.length; ++i) {
-        const firmware = firmwares[i]
-        if (firmware.parse !== undefined) {
-          const parsed = firmware.parse(chip, words)
-          const [result, resumeindex, value] = parsed ?? []
-          if (result && resumeindex) {
-            // return parsed value, with remaining words
-            return [value, words.slice(resumeindex)]
-          }
-        }
-      }
+    //   // iterate through firmware to parse words
+    //   for (let i = 0; i < firmwares.length; ++i) {
+    //     const firmware = firmwares[i]
+    //     if (firmware.parse !== undefined) {
+    //       const parsed = firmware.parse(chip, words)
+    //       const [result, resumeindex, value] = parsed ?? []
+    //       if (result && resumeindex) {
+    //         // return parsed value, with remaining words
+    //         return [value, words.slice(resumeindex)]
+    //       }
+    //     }
+    //   }
 
-      // return parsed value, with remaining words
-      return [words[0], words.slice(1)]
-    },
-    parsegroup(...words) {
-      const [value] = chip.parse(words)
-      return value
-    },
+    //   // return parsed value, with remaining words
+    //   return [words[0], words.slice(1)]
+    // },
+    // parsegroup(...words) {
+    //   const [value] = chip.parse(words)
+    //   return value
+    // },
 
     // logic api
     text(value) {
