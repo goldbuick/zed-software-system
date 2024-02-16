@@ -160,7 +160,7 @@ export function createlayercontrol(
     type: LAYER_TYPE.CONTROL,
     focusx: 0,
     focusy: 0,
-    viewscale: 1.5,
+    viewscale: 2,
   }
 }
 
