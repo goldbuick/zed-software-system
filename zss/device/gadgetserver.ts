@@ -54,6 +54,8 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
             const id = object.id ?? ''
             const kind = memoryobjectreadkind(object)
             const sprite = createsprite(player, 2, id)
+            const lx = object.lx ?? object.x ?? 0
+            const ly = object.ly ?? object.y ?? 0
             sprite.x = object.x ?? 0
             sprite.y = object.y ?? 0
             sprite.char = object.char ?? kind?.char ?? 0
@@ -63,7 +65,7 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
 
             // plot shadow
             if (sprite.bg === SPRITES_SINDEX) {
-              shadow.alphas[sprite.x + sprite.y * board.width] = 0.85
+              shadow.alphas[lx + ly * board.width] = 0.85
             }
 
             // inform control layer where to focus

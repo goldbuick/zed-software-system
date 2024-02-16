@@ -30,6 +30,8 @@ export type BOARD_ELEMENT = Partial<{
   id: string
   x: number
   y: number
+  lx: number
+  ly: number
   // this element has a code associated with it
   code: string
   // this element is an instance of an element type
@@ -245,6 +247,9 @@ export function boardtick(os: OS, book: BOOK, board: BOARD) {
     if (!isDefined(target.id)) {
       return
     }
+    // track last position
+    target.lx = target.x
+    target.ly = target.y
     // lookup kind
     const kind = objectreadkind(book, target)
     // object code
@@ -263,7 +268,6 @@ export function boardtick(os: OS, book: BOOK, board: BOARD) {
       // run chip
       os.tick(target.id)
     }
-    // what else ???
   })
 
   // cleanup objects flagged for deletion

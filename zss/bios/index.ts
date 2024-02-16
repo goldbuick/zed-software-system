@@ -2,7 +2,7 @@ import playercode from 'bundle-text:./player.txt'
 import { createboard } from 'zss/board'
 import { BOOK } from 'zss/book'
 import { CONTENT_TYPE } from 'zss/codepage'
-import { SPRITES_SINDEX, SPRITES_TINDEX } from 'zss/gadget/data/types'
+import { SPRITES_SINDEX } from 'zss/gadget/data/types'
 import { createguid } from 'zss/mapping/guid'
 
 import { COLOR } from '../firmware/wordtypes'
