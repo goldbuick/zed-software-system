@@ -1,6 +1,5 @@
 import ErrorStackParser from 'error-stack-parser'
 import { klona } from 'klona/json'
-import { isDefined } from 'ts-extras'
 
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
 import { readexpr } from './firmware/wordtypes'
@@ -357,11 +356,11 @@ export function createchip(id: string, build: GeneratorBuild) {
       return invokecommand('send', [name, ...args])
     },
     if(...words) {
-      const [value, next] = chip.parse(words)
+      const [value, i] = readexpr(chip, words, 0)
       const result = maptoresult(value)
 
-      if (result && next.length) {
-        chip.command(...next)
+      if (result && i < words.length) {
+        chip.command(...words.slice(i))
       }
 
       return result
@@ -375,7 +374,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       }
 
       const current = chip.get(name)
-      const [maybevalue, next] = chip.parse(values)
+      const [maybevalue, i] = readexpr(chip, values, 0)
       const value = maybevalue ?? 1
 
       // taking from an unset flag, or non-numerical value
@@ -384,12 +383,12 @@ export function createchip(id: string, build: GeneratorBuild) {
         return 1
       }
 
-      const newvalue = current - value
+      const newvalue = current - maybevalue
 
       // returns true when take fails
       if (newvalue < 0) {
-        if (next.length) {
-          chip.command(...next)
+        if (i < values.length) {
+          chip.command(...values.slice(i))
         }
         return 1
       }
@@ -408,7 +407,7 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       const maybecurrent = chip.get(name)
       const current = isNumber(maybecurrent) ? maybecurrent : 0
-      const [maybevalue, next] = chip.parse(values)
+      const [maybevalue, i] = readexpr(chip, values, 0)
       const value = maybevalue ?? 1
 
       // giving a non-numerical value
@@ -419,8 +418,8 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       // returns true when setting an unset flag
       const result = maybecurrent === undefined ? 1 : 0
-      if (result && next.length) {
-        chip.command(...next)
+      if (result && i < values.length) {
+        chip.command(...values.slice(i))
       }
 
       // update flag
@@ -428,23 +427,23 @@ export function createchip(id: string, build: GeneratorBuild) {
       return result
     },
     try(...words) {
-      const [value, next] = chip.parse(words)
+      const [value, i] = readexpr(chip, words, 0)
 
-      console.info('api try', value, next)
+      console.info('api try', value, i)
 
       // we use go because it tries to move and returns 1 on failure
       const result = invokecommand('go', [value as WORD]) ? 1 : 0
-      if (result && next.length) {
-        chip.command(...next)
+      if (result && i < words.length) {
+        chip.command(...words.slice(i))
       }
 
       return result
     },
     repeatStart(index, ...words) {
-      const [maybevalue, next] = chip.parse(words)
+      const [maybevalue, i] = readexpr(chip, words, 0)
 
       repeats[index] = isNumber(maybevalue) ? maybevalue : 0
-      repeatscommand[index] = next
+      repeatscommand[index] = i < words.length ? words.slice(i) : undefined
     },
     repeat(index) {
       const count = repeats[index] ?? 0
@@ -542,119 +541,77 @@ export function createchip(id: string, build: GeneratorBuild) {
       return words
     },
     isEq(lhs, rhs) {
-      return chip.tpn(lhs) === chip.tpn(rhs) ? 1 : 0
+      const [left] = readexpr(chip, lhs, 0)
+      const [right] = readexpr(chip, rhs, 0)
+      return left === right ? 1 : 0
     },
     isNotEq(lhs, rhs) {
-      return chip.tpn(lhs) !== chip.tpn(rhs) ? 1 : 0
+      const [left] = readexpr(chip, lhs, 0)
+      const [right] = readexpr(chip, rhs, 0)
+      return left !== right ? 1 : 0
     },
     isLessThan(lhs, rhs) {
-      return chip.tpn(lhs) < chip.tpn(rhs) ? 1 : 0
+      const [left] = readexpr(chip, lhs, 0)
+      const [right] = readexpr(chip, rhs, 0)
+      return left < right ? 1 : 0
     },
     isGreaterThan(lhs, rhs) {
-      return chip.tpn(lhs) > chip.tpn(rhs) ? 1 : 0
+      const [left] = readexpr(chip, lhs, 0)
+      const [right] = readexpr(chip, rhs, 0)
+      return left > right ? 1 : 0
     },
     isLessThanOrEq(lhs, rhs) {
-      return chip.tpn(lhs) <= chip.tpn(rhs) ? 1 : 0
+      const [left] = readexpr(chip, lhs, 0)
+      const [right] = readexpr(chip, rhs, 0)
+      return left <= right ? 1 : 0
     },
     isGreaterThanOrEq(lhs, rhs) {
-      return chip.tpn(lhs) >= chip.tpn(rhs) ? 1 : 0
+      const [left] = readexpr(chip, lhs, 0)
+      const [right] = readexpr(chip, rhs, 0)
+      return left >= right ? 1 : 0
     },
     opPlus(lhs, rhs) {
-      const left = chip.tpn(lhs)
-      const right = chip.tpn(rhs)
-      if (!isNumber(left)) {
-        // todo: raise error
-        return 0
-      }
-      if (!isNumber(right)) {
-        // todo: raise error
-        return 0
-      }
+      const [left] = readexpr(chip, lhs, 0)
+      const [right] = readexpr(chip, rhs, 0)
       return left + right
     },
     opMinus(lhs, rhs) {
-      const left = chip.tpn(lhs)
-      const right = chip.tpn(rhs)
-      if (!isNumber(left)) {
-        // todo: raise error
-        return 0
-      }
-      if (!isNumber(right)) {
-        // todo: raise error
-        return 0
-      }
+      const [left] = readexpr(chip, lhs, 0)
+      const [right] = readexpr(chip, rhs, 0)
       return left - right
     },
     opPower(lhs, rhs) {
-      const left = chip.tpn(lhs)
-      const right = chip.tpn(rhs)
-      if (!isNumber(left)) {
-        // todo: raise error
-        return 0
-      }
-      if (!isNumber(right)) {
-        // todo: raise error
-        return 0
-      }
+      const [left] = readexpr(chip, lhs, 0)
+      const [right] = readexpr(chip, rhs, 0)
       return Math.pow(left, right)
     },
     opMultiply(lhs, rhs) {
-      const left = chip.tpn(lhs)
-      const right = chip.tpn(rhs)
-      if (!isNumber(left)) {
-        // todo: raise error
-        return 0
-      }
-      if (!isNumber(right)) {
-        // todo: raise error
-        return 0
-      }
+      const [left] = readexpr(chip, lhs, 0)
+      const [right] = readexpr(chip, rhs, 0)
       return left * right
     },
     opDivide(lhs, rhs) {
-      const left = chip.tpn(lhs)
-      const right = chip.tpn(rhs)
-      if (!isNumber(left)) {
-        // todo: raise error
-        return 0
-      }
-      if (!isNumber(right)) {
-        // todo: raise error
-        return 0
-      }
+      const [left] = readexpr(chip, lhs, 0)
+      const [right] = readexpr(chip, rhs, 0)
       return left / right
     },
     opModDivide(lhs, rhs) {
-      const left = chip.tpn(lhs)
-      const right = chip.tpn(rhs)
-      if (!isNumber(left)) {
-        // todo: raise error
-        return 0
-      }
-      if (!isNumber(right)) {
-        // todo: raise error
-        return 0
-      }
+      const [left] = readexpr(chip, lhs, 0)
+      const [right] = readexpr(chip, rhs, 0)
       return left % right
     },
     opFloorDivide(lhs, rhs) {
-      const left = chip.tpn(lhs)
-      const right = chip.tpn(rhs)
-      if (!isNumber(left)) {
-        // todo: raise error
-        return 0
-      }
-      if (!isNumber(right)) {
-        // todo: raise error
-        return 0
-      }
+      const [left] = readexpr(chip, lhs, 0)
+      const [right] = readexpr(chip, rhs, 0)
       return Math.floor(left / right)
     },
     opUniPlus(rhs) {
-      return +chip.tpn(rhs)
+      const [right] = readexpr(chip, rhs, 0)
+      return +right
     },
     opUniMinus(rhs) {
-      return -chip.tpn(rhs)
+      const [right] = readexpr(chip, rhs, 0)
+      return -right
     },
   }
 

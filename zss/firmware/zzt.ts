@@ -17,6 +17,7 @@ import {
   collisionconsts,
   colorconsts,
   dirconsts,
+  readexpr,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
@@ -163,57 +164,6 @@ export const ZZT_FIRMWARE = createfirmware(
     memoryplayersetflag(memory.playerfocus, name, value)
     return [true, value]
   },
-  // (chip, words) => {
-  //   const [word] = words
-  //   if (typeof word === 'string') {
-  //     const maybeconst = word.toLowerCase()
-
-  //     // parse color (maybe kind)
-  //     const maybecolor = colorconsts[maybeconst]
-  //     if (isDefined(maybecolor)) {
-  //       return [true, 1, [maybecolor]]
-  //     }
-
-  //     // parse kind ??
-
-  //     // parse category
-  //     const maybecategory = categoryconsts[maybeconst]
-  //     if (isDefined(maybecategory)) {
-  //       return [true, 1, [maybecategory]]
-  //     }
-
-  //     // parse collision
-  //     const maybecollision = collisionconsts[maybeconst]
-  //     if (isDefined(maybecollision)) {
-  //       return [true, 1, [maybecollision]]
-  //     }
-
-  //     // parse direction
-  //     if (isDefined(dirconsts[maybeconst])) {
-  //       const dirdata: string[] = []
-  //       for (let i = 0; i < words.length; ++i) {
-  //         const maybedir = dirconsts[checkconst(words[i]) ?? '']
-  //         // handle complex dirs
-  //         switch (maybedir) {
-  //           case 'BY':
-  //             break
-  //           case 'AT':
-  //             break
-  //           case 'SEEK':
-  //             break
-  //           default:
-  //             break
-  //         }
-  //       }
-  //       return [true, dirdata.length, dirdata]
-  //     }
-  //   }
-
-  //   //
-
-  //   return [false, 0, 0]
-  // }
-  // ,
 )
   .command('become', (chip, words) => {
     console.info(words)
@@ -237,7 +187,7 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('cycle', (chip, words) => {
-    const [value] = chip.parse(words)
+    const [value] = readexpr(chip, words, 0)
     const next = Math.round(value as number)
     chip.cycle(Math.max(1, Math.min(255, next)))
     return 0
@@ -261,8 +211,8 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('go', (chip, words) => {
+    const [dir] = readexpr(chip, words, 0)
     const memory = memoryreadchip(chip.id())
-    const [dir] = chip.parse(words)
     // if (
     //   memory.board &&
     //   checkdir(dir) &&
@@ -293,23 +243,23 @@ export const ZZT_FIRMWARE = createfirmware(
     console.info(words)
     return 0
   })
-  .command('restart', (chip, words) => {
-    const [value] = chip.parse(words.slice(1))
-    chip.send('restart', value)
-    return 0
-  })
+  // .command('restart', (chip, words) => {
+  //   const [value] = chip.parse(words.slice(1))
+  //   chip.send('restart', value)
+  //   return 0, this is handled by a built-in 0 label
+  // })
   .command('restore', (chip, words) => {
     chip.restore(maptostring(words[0]))
     return 0
   })
   .command('send', (chip, words) => {
-    const [value] = chip.parse(words.slice(1))
+    const [value] = readexpr(chip, words, 1)
     // console.info('send', words)
     chip.send(maptostring(words[0]), value)
     return 0
   })
   .command('set', (chip, words) => {
-    const [value] = chip.parse(words.slice(1))
+    const [value] = readexpr(chip, words, 1)
     chip.set(maptostring(words[0]), value)
     return 0
   })
@@ -349,13 +299,13 @@ export const ZZT_FIRMWARE = createfirmware(
     const memory = memoryreadchip(chip.id())
     // all this command does for now is update name
     if (memory.target) {
-      memory.target.name = words.map(chip.tpi).join(' ')
+      memory.target.name = words.map(maptostring).join(' ')
     }
     return 0
   })
   // zzt output
-  .command('text', (chip, args) => {
-    const text = maptostring(args[0] ?? '')
+  .command('text', (chip, words) => {
+    const text = words.map(maptostring).join('')
 
     gadgettext(chip, text)
     return 0

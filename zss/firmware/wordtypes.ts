@@ -137,7 +137,7 @@ export function readnumber(
   words: WORD[],
   i: number,
 ): [number, number] {
-  const value = words[i]
+  const value: WORD | undefined = words[i]
   return [
     (typeof value === 'string' ? chip.get(value) : undefined) ?? value,
     i + 1,
