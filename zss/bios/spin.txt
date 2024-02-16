@@ -1,0 +1,5 @@
+@spin
+
+:think
+/up /right /down /left
+#think

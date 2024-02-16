@@ -1,5 +1,6 @@
 import playercode from 'bundle-text:./player.txt'
-import { createboard } from 'zss/board'
+import spincode from 'bundle-text:./spin.txt'
+import { createboard, createboardobject } from 'zss/board'
 import { BOOK } from 'zss/book'
 import { CONTENT_TYPE } from 'zss/codepage'
 import { SPRITES_SINDEX } from 'zss/gadget/data/types'
@@ -22,7 +23,10 @@ export const BIOS: BOOK = {
           id: createguid(),
           type: CONTENT_TYPE.BOARD,
           name: 'title',
-          value: createboard(BOARD_WIDTH, BOARD_HEIGHT),
+          value: createboard(BOARD_WIDTH, BOARD_HEIGHT, (board) => {
+            createboardobject(board, { x: 3, y: 3, kind: 'app:spin' })
+            return board
+          }),
         },
         {
           id: createguid(),
@@ -34,6 +38,18 @@ export const BIOS: BOOK = {
             color: COLOR.PURPLE,
             bg: SPRITES_SINDEX,
             code: playercode,
+          },
+        },
+        {
+          id: createguid(),
+          type: CONTENT_TYPE.OBJECT,
+          name: 'spin',
+          value: {
+            name: 'spin',
+            char: 15,
+            color: COLOR.RED,
+            bg: SPRITES_SINDEX,
+            code: spincode,
           },
         },
       ],
