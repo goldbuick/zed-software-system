@@ -15,7 +15,6 @@
 :think
 #if inputmove
   ?inputmove
-  ?opp flow
 #else if inputshoot and inputrate < 1
   #take ammo
     #give emptyhint

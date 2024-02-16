@@ -98,10 +98,6 @@ export function maptostring(value: any) {
   return `${value ?? ''}`
 }
 
-export function checkconst(value: any) {
-  return typeof value === 'string' ? value : undefined
-}
-
 // lifecycle and control flow api
 export function createchip(id: string, build: GeneratorBuild) {
   // entry point state
@@ -339,9 +335,8 @@ export function createchip(id: string, build: GeneratorBuild) {
     },
     command(...words) {
       // 0 - continue
-      // 1 - retry
-
-      if (words.length < 1) {
+      // 1 - retrys
+      if (words.length === 0) {
         // bail on empty commands
         return 0
       }

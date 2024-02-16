@@ -5,8 +5,7 @@ import { BOOK, readaddress } from './book'
 import { WORD_VALUE } from './chip'
 import { CONTENT_TYPE } from './codepage'
 import { MAYBE_STRING } from './device/shared'
-import { DIR } from './firmware/zzt'
-import { PT } from './mapping/2d'
+import { PT, DIR, STR_DIR } from './firmware/wordtypes'
 import { range } from './mapping/array'
 import { createguid } from './mapping/guid'
 import { memoryreadchip } from './memory'
@@ -17,8 +16,8 @@ export type BOARD_ELEMENT_STATS = {
   cycle?: number
   player?: string
   sender?: string
-  inputmove?: DIR[]
-  inputshoot?: DIR[]
+  inputmove?: string[]
+  inputshoot?: string[]
   inputok?: number
   inputcancel?: number
   inputmenu?: number
@@ -115,6 +114,74 @@ export function boardreadobject(board: BOARD, id: string): MAYBE_BOARD_ELEMENT {
   return board.objects[id]
 }
 
+export function boardevaldir(
+  board: BOARD,
+  target: MAYBE_BOARD_ELEMENT,
+  dir: STR_DIR,
+): PT {
+  let x = target?.x ?? 0
+  let y = target?.y ?? 0
+
+  // we need to know current flow etc..
+
+  for (let i = 0; i < dir.length; ++i) {
+    console.info(dir[i])
+    switch (DIR[dir[i]]) {
+      case DIR.IDLE:
+        // no-op
+        break
+      case DIR.NORTH:
+        --y
+        break
+      case DIR.SOUTH:
+        ++y
+        break
+      case DIR.WEST:
+        --x
+        break
+      case DIR.EAST:
+        ++x
+        break
+      case DIR.BY:
+        // skip
+        break
+      case DIR.AT:
+        // skip
+        break
+      case DIR.FLOW:
+        // skip
+        break
+      case DIR.SEEK:
+        // skip
+        break
+      case DIR.RNDNS:
+        // skip
+        break
+      case DIR.RNDNE:
+        // skip
+        break
+      case DIR.RND:
+        // skip
+        break
+      // modifiers
+      case DIR.CW:
+        // skip
+        break
+      case DIR.CCW:
+        // skip
+        break
+      case DIR.OPP:
+        // skip
+        break
+      case DIR.RNDP:
+        // skip
+        break
+    }
+  }
+
+  return [x, y]
+}
+
 export function boarddeleteobject(board: BOARD, id: string) {
   if (board.objects[id]) {
     delete board.objects[id]
@@ -126,16 +193,23 @@ export function boarddeleteobject(board: BOARD, id: string) {
 export function boardmoveobject(
   board: BOARD,
   target: MAYBE_BOARD_ELEMENT,
-  dir: number[],
+  dir: STR_DIR,
 ) {
   const object = boardreadobject(board, target?.id ?? '')
   if (!object) {
     return false
   }
 
-  // eval dir
-  console.info('move', object, 'to', dir)
-  //
+  const [dx, dy] = boardevaldir(board, object, dir)
+
+  // first pass clipping
+  if (dx < 0 || dx >= board.width || dy < 0 || dy >= board.height) {
+    return false
+  }
+
+  // todo - everything else ...
+  object.x = dx
+  object.y = dy
 
   return true
 }

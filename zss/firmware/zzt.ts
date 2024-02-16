@@ -1,5 +1,5 @@
 import { isDefined, isPresent } from 'ts-extras'
-import { WORD_VALUE, checkconst, maptostring } from 'zss/chip'
+import { WORD_VALUE, maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import {
   memoryplayerreadflag,
@@ -12,8 +12,8 @@ import { gadgethyperlink, gadgettext } from '../gadget/data/api'
 import { INPUT } from '../gadget/data/types'
 
 import {
-  DIR,
   categoryconsts,
+  checkdir,
   collisionconsts,
   colorconsts,
   dirconsts,
@@ -41,24 +41,26 @@ const INPUT_STAT_NAMES = new Set([
 ])
 
 function maptoconst(value: string) {
-  const maybecategory = categoryconsts[value]
+  const maybecategory = (categoryconsts as any)[value]
   if (isDefined(maybecategory)) {
     return maybecategory
   }
-  const maybecollision = collisionconsts[value]
+  const maybecollision = (collisionconsts as any)[value]
   if (isDefined(maybecollision)) {
     return maybecollision
   }
-  const maybecolor = colorconsts[value]
+  const maybecolor = (colorconsts as any)[value]
   if (isDefined(maybecolor)) {
     return maybecolor
   }
-  const maybedir = dirconsts[value]
+  const maybedir = (dirconsts as any)[value]
   if (isDefined(maybedir)) {
     return maybedir
   }
   return undefined
 }
+
+const readinputmap = ['NORTH', 'SOUTH', 'WEST', 'EAST']
 
 function readinput(target: BOARD_ELEMENT) {
   const memory = memoryreadchip(target.id ?? '')
@@ -88,13 +90,13 @@ function readinput(target: BOARD_ELEMENT) {
     case INPUT.MOVE_DOWN:
     case INPUT.MOVE_LEFT:
     case INPUT.MOVE_RIGHT:
-      target.stats.inputmove = [head - INPUT.NONE] as [DIR] // 1 - 4, W-E-N-S
+      target.stats.inputmove = [readinputmap[head - INPUT.MOVE_UP]]
       break
     case INPUT.SHOOT_UP:
     case INPUT.SHOOT_DOWN:
     case INPUT.SHOOT_LEFT:
     case INPUT.SHOOT_RIGHT:
-      target.stats.inputshoot = [head - INPUT.MOVE_RIGHT] as [DIR] // 1 - 4, W-E-N-S
+      target.stats.inputshoot = [readinputmap[head - INPUT.SHOOT_UP]]
       break
     case INPUT.OK_BUTTON:
       target.stats.inputok = 1
@@ -116,6 +118,8 @@ function readinput(target: BOARD_ELEMENT) {
 
 export const ZZT_FIRMWARE = createfirmware(
   (chip, name) => {
+    // console.info('get', name)
+
     // check consts first (data normalization)
     const maybeconst = maptoconst(name)
     if (isDefined(maybeconst)) {
@@ -213,13 +217,13 @@ export const ZZT_FIRMWARE = createfirmware(
   .command('go', (chip, words) => {
     const [dir] = readexpr(chip, words, 0)
     const memory = memoryreadchip(chip.id())
-    // if (
-    //   memory.board &&
-    //   checkdir(dir) &&
-    //   boardmoveobject(memory.board, memory.target, dir)
-    // ) {
-    //   return 0
-    // }
+    if (
+      memory.board &&
+      checkdir(dir) &&
+      boardmoveobject(memory.board, memory.target, dir)
+    ) {
+      return 0
+    }
     // if blocked, return 1
     return 1
   })
@@ -306,7 +310,6 @@ export const ZZT_FIRMWARE = createfirmware(
   // zzt output
   .command('text', (chip, words) => {
     const text = words.map(maptostring).join('')
-
     gadgettext(chip, text)
     return 0
   })
@@ -315,7 +318,6 @@ export const ZZT_FIRMWARE = createfirmware(
     const [labelword, inputword, ...words] = args
     const label = maptostring(labelword)
     const input = maptostring(inputword)
-
     gadgethyperlink(chip, label, input, words)
     return 0
   })
