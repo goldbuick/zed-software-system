@@ -22,19 +22,7 @@ export const BIOS: BOOK = {
           id: createguid(),
           type: CONTENT_TYPE.BOARD,
           name: 'title',
-          value: createboard(BOARD_WIDTH, BOARD_HEIGHT, (board) => {
-            for (let x = 0; x < board.width; ++x) {
-              for (let y = 0; y < board.height; ++y) {
-                const i = x + y * board.width
-                board.terrain[i] = {
-                  char: i % 256,
-                  color: Math.round((x + y) * 0.25) % 2 ? 7 : 8,
-                  bg: 0,
-                }
-              }
-            }
-            return board
-          }),
+          value: createboard(BOARD_WIDTH, BOARD_HEIGHT),
         },
         {
           id: createguid(),

@@ -6,8 +6,6 @@
  $black$ongrey    ZED.CAFE    
  $white    - - - - -
 ""
-!hk dosomething b;Boorf
-
 ' main loop
 #cycle 1
 #set inputrate 0
