@@ -384,6 +384,13 @@ export function readexpr(chip: CHIP, words: WORD[], i: number): [any, number] {
     // ANY <color> <item>
     // This flag is SET whenever the given kind is visible on the board
 
+    /*
+
+    port existing zed cafe expressions here ...
+    func, min, max, ceil, floor, etc...
+
+    */
+
     if (isDefined(maybeflag)) {
       return [maybeflag, i + 1]
     }
