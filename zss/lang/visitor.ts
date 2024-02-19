@@ -200,8 +200,8 @@ type CodeNodeData =
     }
   | {
       type: NODE.OPERATOR
-      lhs: CodeNode | undefined
-      items: CodeNode[]
+      lhs: CodeNode[]
+      words: CodeNode[]
     }
   | {
       type: NODE.OPERATOR_ITEM
@@ -378,12 +378,13 @@ class ScriptVisitor extends CstVisitor {
 
   simple_cmd(ctx: CstChildrenDictionary) {
     if (ctx.Go) {
+      console.info(ctx)
       return makeNode(ctx, {
         type: NODE.COMMAND,
         words: [
           makeString(ctx, 'go'),
           // @ts-expect-error cst element
-          ...asList(this, ctx.words),
+          ...asList(this, ctx.words).flat(),
         ],
       })
     }
@@ -394,7 +395,7 @@ class ScriptVisitor extends CstVisitor {
         words: [
           makeString(ctx, 'try'),
           // @ts-expect-error cst element
-          ...asList(this, ctx.words),
+          ...asList(this, ctx.words).flat(),
         ],
       })
     }
@@ -409,7 +410,7 @@ class ScriptVisitor extends CstVisitor {
         type: NODE.COMMAND,
         words: [
           // @ts-expect-error cst element
-          ...asList(this, ctx.words),
+          ...asList(this, ctx.words).flat(),
         ],
       })
     }
@@ -418,7 +419,7 @@ class ScriptVisitor extends CstVisitor {
       return makeNode(ctx, {
         type: NODE.STAT,
         // @ts-expect-error cst element
-        words: asList(this, ctx.words),
+        words: asList(this, ctx.words).flat(),
       })
     }
   }
@@ -440,7 +441,7 @@ class ScriptVisitor extends CstVisitor {
         words: [
           makeString(ctx, 'go'),
           // @ts-expect-error cst element
-          ...asList(this, ctx.words),
+          ...asList(this, ctx.words).flat(),
         ],
       })
     }
@@ -451,7 +452,7 @@ class ScriptVisitor extends CstVisitor {
         words: [
           makeString(ctx, 'move'),
           // @ts-expect-error cst element
-          ...asList(this, ctx.words),
+          ...asList(this, ctx.words).flat(),
         ],
       })
     }
@@ -461,7 +462,7 @@ class ScriptVisitor extends CstVisitor {
         type: NODE.COMMAND,
         words: [
           // @ts-expect-error cst element
-          ...asList(this, ctx.words),
+          ...asList(this, ctx.words).flat(),
         ],
       })
     }
@@ -504,7 +505,7 @@ class ScriptVisitor extends CstVisitor {
     const method = strImage(ctx.if[0]).toLowerCase()
 
     // @ts-expect-error cst element
-    const words = asList(this, ctx.words)
+    const words = asList(this, ctx.expr).flat()
 
     // @ts-expect-error cst element
     const nested_cmd = asList(this, ctx.nested_cmd)
@@ -538,7 +539,7 @@ class ScriptVisitor extends CstVisitor {
     const method = strImage(ctx.if[0]).toLowerCase()
 
     // @ts-expect-error cst element
-    const words = asList(this, ctx.words)
+    const words = asList(this, ctx.expr).flat()
 
     // @ts-expect-error cst element
     const nested_cmd = asList(this, ctx.nested_cmd)
@@ -566,7 +567,7 @@ class ScriptVisitor extends CstVisitor {
 
   Command_else(ctx: CstChildrenDictionary) {
     // @ts-expect-error cst element
-    const words = asList(this, ctx.words)
+    const words = asList(this, ctx.words).flat()
 
     // @ts-expect-error cst element
     const block_lines = this.visit(ctx.block_lines)
@@ -589,13 +590,13 @@ class ScriptVisitor extends CstVisitor {
       type: NODE.API,
       method,
       // @ts-expect-error cst element
-      words: asList(this, ctx.words),
+      words: asList(this, ctx.words).flat(),
     })
   }
 
   Command_while(ctx: CstChildrenDictionary) {
     // @ts-expect-error cst element
-    const words = asList(this, ctx.words)
+    const expr = asList(this, ctx.expr).flat()
 
     // @ts-expect-error cst element
     const nested_cmd = asList(this, ctx.nested_cmd)
@@ -605,7 +606,7 @@ class ScriptVisitor extends CstVisitor {
 
     return makeNode(ctx, {
       type: NODE.WHILE,
-      words,
+      words: expr,
       nested_cmd,
       block_lines,
     })
@@ -613,7 +614,7 @@ class ScriptVisitor extends CstVisitor {
 
   Command_repeat(ctx: CstChildrenDictionary) {
     // @ts-expect-error cst element
-    const words = asList(this, ctx.words)
+    const expr = asList(this, ctx.expr).flat()
 
     // @ts-expect-error cst element
     const nested_cmd = asList(this, ctx.nested_cmd)
@@ -623,7 +624,7 @@ class ScriptVisitor extends CstVisitor {
 
     return makeNode(ctx, {
       type: NODE.REPEAT,
-      words,
+      words: expr,
       nested_cmd,
       block_lines,
     })
@@ -631,7 +632,7 @@ class ScriptVisitor extends CstVisitor {
 
   Command_read(ctx: CstChildrenDictionary) {
     // @ts-expect-error cst element
-    const words = asList(this, ctx.words)
+    const words = asList(this, ctx.words).flat()
 
     // @ts-expect-error cst element
     const nested_cmd = asList(this, ctx.nested_cmd)
@@ -701,13 +702,8 @@ class ScriptVisitor extends CstVisitor {
       type: NODE.HYPERLINK,
       input: strImage(ctx.HyperLinkText?.[0] ?? ';').slice(1),
       // @ts-expect-error cst element
-      words: this.visit(ctx.words),
+      words: asList(this, ctx.words).flat(),
     })
-  }
-
-  words(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
-    return this.visit(ctx.expr)
   }
 
   expr(ctx: CstChildrenDictionary) {
@@ -831,9 +827,9 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.OPERATOR,
       // @ts-expect-error cst element
-      lhs: this.visit(ctx.term),
+      lhs: asList(this, ctx.term),
       // @ts-expect-error cst element
-      items: this.visit(ctx.arith_expr_item),
+      words: asList(this, ctx.arith_expr_item),
     })
   }
 
@@ -842,7 +838,7 @@ class ScriptVisitor extends CstVisitor {
       type: NODE.OPERATOR_ITEM,
       operator: ctx.Plus ? OPERATOR.PLUS : OPERATOR.MINUS,
       // @ts-expect-error cst element
-      rhs: this.visit(ctx.term),
+      rhs: asList(this, ctx.term),
     })
   }
 
@@ -854,9 +850,9 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.OPERATOR,
       // @ts-expect-error cst element
-      lhs: this.visit(ctx.factor),
+      lhs: asList(this, ctx.factor),
       // @ts-expect-error cst element
-      items: this.visit(ctx.term_item),
+      words: asList(this, ctx.term_item),
     })
   }
 
@@ -880,7 +876,7 @@ class ScriptVisitor extends CstVisitor {
       type: NODE.OPERATOR_ITEM,
       operator,
       // @ts-expect-error cst element
-      rhs: this.visit(ctx.factor),
+      rhs: asList(this, ctx.factor),
     })
   }
 
@@ -900,13 +896,13 @@ class ScriptVisitor extends CstVisitor {
 
     return makeNode(ctx, {
       type: NODE.OPERATOR,
-      lhs: undefined,
-      items: [
+      lhs: [],
+      words: [
         makeNode(ctx, {
           type: NODE.OPERATOR_ITEM,
           operator,
           // @ts-expect-error cst element
-          rhs: this.visit(ctx.factor),
+          rhs: asList(this, ctx.factor),
         }),
       ],
     })
@@ -914,27 +910,27 @@ class ScriptVisitor extends CstVisitor {
 
   power(ctx: CstChildrenDictionary) {
     // @ts-expect-error cst element
-    const word = this.visit(ctx.word)
+    const words = asList(this, ctx.words)
 
     if (ctx.factor) {
       return makeNode(ctx, {
         type: NODE.OPERATOR,
-        lhs: word,
-        items: [
+        lhs: words,
+        words: [
           makeNode(ctx, {
             type: NODE.OPERATOR_ITEM,
             operator: OPERATOR.POWER,
             // @ts-expect-error cst element
-            rhs: this.visit(ctx.factor),
+            rhs: asList(this, ctx.factor),
           }),
         ],
       })
     }
 
-    return word
+    return words
   }
 
-  word(ctx: CstChildrenDictionary) {
+  words(ctx: CstChildrenDictionary) {
     // @ts-expect-error cst element
     return asList(this, ctx.token)
   }
@@ -969,7 +965,7 @@ class ScriptVisitor extends CstVisitor {
       return makeNode(ctx, {
         type: NODE.GROUP,
         // @ts-expect-error cst element
-        items: asList(this, ctx.words),
+        words: asList(this, ctx.expr).flat(),
       })
     }
   }

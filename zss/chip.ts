@@ -50,10 +50,12 @@ export type CHIP = {
   endofprogram: () => void
   stacktrace: (error: Error) => void
 
-  // logic api
+  // output / config
   text: (...words: WORD[]) => WORD_VALUE
   stat: (...words: WORD[]) => WORD_VALUE
   hyperlink: (...words: WORD[]) => WORD_VALUE
+
+  // logic api
   command: (...words: WORD[]) => WORD_VALUE
   if: (...words: WORD[]) => WORD_VALUE
   try: (...words: WORD[]) => WORD_VALUE
@@ -208,11 +210,14 @@ export function createchip(id: string, build: GeneratorBuild) {
         return false
       }
 
+      // inc pulse after checking cycle
+      const activecycle = pulse % cycle === 0
+      ++pulse
+
       // execution frequency
-      if (pulse % cycle !== 0) {
+      if (!activecycle) {
         return false
       }
-      ++pulse
 
       // reset state
       loops = 0

@@ -1,5 +1,5 @@
 @spin
 
 :think
-/up /right /down /left
+?up?right?down?Left?rnd
 #think

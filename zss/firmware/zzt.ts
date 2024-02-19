@@ -13,11 +13,12 @@ import { INPUT } from '../gadget/data/types'
 
 import {
   categoryconsts,
-  checkdir,
+  isstrdir,
   collisionconsts,
   colorconsts,
   dirconsts,
   readexpr,
+  readdir,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
@@ -215,11 +216,11 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('go', (chip, words) => {
-    const [dir] = readexpr(chip, words, 0)
+    const [dir] = readdir(chip, words, 0)
     const memory = memoryreadchip(chip.id())
     if (
+      dir &&
       memory.board &&
-      checkdir(dir) &&
       boardmoveobject(memory.board, memory.target, dir)
     ) {
       return 0

@@ -68,13 +68,10 @@ export function createos() {
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)
-
-      // check id / name
-      os.ids().forEach((id) => {
-        if (target === id) {
-          chips[id].message({ ...incoming, target: path })
-        }
-      })
+      const targetchip: CHIP | undefined = chips[target]
+      if (isDefined(targetchip)) {
+        targetchip.message({ ...incoming, target: path })
+      }
     },
   }
 

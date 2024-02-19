@@ -135,9 +135,9 @@ function transformCompare(ast: CodeNode) {
 }
 
 function prefixApi(
+  ast: CodeNode,
   operation: SourceNode,
   method: string,
-  ast: CodeNode,
   rhs: CodeNode[],
 ) {
   operation.prepend(`api.${method}(`)
@@ -145,36 +145,36 @@ function prefixApi(
 }
 
 function prefixUniApi(
+  ast: CodeNode,
   operation: SourceNode,
   method: string,
-  ast: CodeNode,
   rhs: CodeNode[],
 ) {
   operation.prepend(`api.${method}(`)
   return operation.add([writeApi(ast, 'group', transformNodes(rhs)), ')'])
 }
 
-function transformOperatorItem(operation: SourceNode, ast: CodeNode) {
+function transformOperatorItem(ast: CodeNode, operation: SourceNode) {
   if (ast.type === NODE.OPERATOR_ITEM) {
     switch (ast.operator) {
       case OPERATOR.PLUS:
-        return prefixApi(operation, 'opPlus', ast, ast.rhs)
+        return prefixApi(ast, operation, 'opPlus', ast.rhs)
       case OPERATOR.MINUS:
-        return prefixApi(operation, 'opMinus', ast, ast.rhs)
+        return prefixApi(ast, operation, 'opMinus', ast.rhs)
       case OPERATOR.POWER:
-        return prefixApi(operation, 'opPower', ast, ast.rhs)
+        return prefixApi(ast, operation, 'opPower', ast.rhs)
       case OPERATOR.MULTIPLY:
-        return prefixApi(operation, 'opMultiply', ast, ast.rhs)
+        return prefixApi(ast, operation, 'opMultiply', ast.rhs)
       case OPERATOR.DIVIDE:
-        return prefixApi(operation, 'opDivide', ast, ast.rhs)
+        return prefixApi(ast, operation, 'opDivide', ast.rhs)
       case OPERATOR.MOD_DIVIDE:
-        return prefixApi(operation, 'opModDivide', ast, ast.rhs)
+        return prefixApi(ast, operation, 'opModDivide', ast.rhs)
       case OPERATOR.FLOOR_DIVIDE:
-        return prefixApi(operation, 'opFloorDivide', ast, ast.rhs)
+        return prefixApi(ast, operation, 'opFloorDivide', ast.rhs)
       case OPERATOR.UNI_PLUS:
-        return prefixUniApi(operation, 'opUniPlus', ast, ast.rhs)
+        return prefixUniApi(ast, operation, 'opUniPlus', ast.rhs)
       case OPERATOR.UNI_MINUS:
-        return prefixUniApi(operation, 'opUniMinus', ast, ast.rhs)
+        return prefixUniApi(ast, operation, 'opUniMinus', ast.rhs)
     }
   }
   return write(ast, '')
@@ -182,9 +182,9 @@ function transformOperatorItem(operation: SourceNode, ast: CodeNode) {
 
 function transformOperator(ast: CodeNode) {
   if (ast.type === NODE.OPERATOR) {
-    const operation = write(ast, ast.lhs ? transformNode(ast.lhs) : '')
-    ast.items.forEach((item) => {
-      transformOperatorItem(operation, item)
+    const operation = writeArray(ast, transformNodes(ast.lhs))
+    ast.words.forEach((item) => {
+      transformOperatorItem(item, operation)
     })
     return operation
   }

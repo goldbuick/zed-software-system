@@ -7,6 +7,7 @@ import { SPRITES_SINDEX } from 'zss/gadget/data/types'
 import { createguid } from 'zss/mapping/guid'
 
 import { COLOR } from '../firmware/wordtypes'
+import { randomInteger } from '../mapping/number'
 
 const BOARD_WIDTH = 60
 const BOARD_HEIGHT = 25
@@ -24,7 +25,13 @@ export const BIOS: BOOK = {
           type: CONTENT_TYPE.BOARD,
           name: 'title',
           value: createboard(BOARD_WIDTH, BOARD_HEIGHT, (board) => {
-            createboardobject(board, { x: 3, y: 3, kind: 'app:spin' })
+            for (let i = 0; i < 16; i++) {
+              createboardobject(board, {
+                x: randomInteger(0, board.width - 1),
+                y: randomInteger(0, board.height - 1),
+                kind: 'app:spin',
+              })
+            }
             return board
           }),
         },

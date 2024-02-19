@@ -5,8 +5,8 @@ import { BOOK, readaddress } from './book'
 import { WORD_VALUE } from './chip'
 import { CONTENT_TYPE } from './codepage'
 import { MAYBE_STRING } from './device/shared'
-import { PT, DIR, STR_DIR } from './firmware/wordtypes'
-import { range } from './mapping/array'
+import { PT, DIR, STR_DIR, dirfrompts } from './firmware/wordtypes'
+import { range, select } from './mapping/array'
 import { createguid } from './mapping/guid'
 import { memoryreadchip } from './memory'
 import { OS } from './os'
@@ -36,6 +36,7 @@ export type BOARD_ELEMENT = Partial<{
   code: string
   // this element is an instance of an element type
   kind: string
+  kinddata: BOARD_ELEMENT
   // this is a unique name for this instance
   name: string
   // display
@@ -123,11 +124,11 @@ export function boardevaldir(
 ): PT {
   let x = target?.x ?? 0
   let y = target?.y ?? 0
+  const flow = dirfrompts([target?.lx ?? x, target?.ly ?? y], [x, y])
 
   // we need to know current flow etc..
 
   for (let i = 0; i < dir.length; ++i) {
-    console.info(dir[i])
     switch (DIR[dir[i]]) {
       case DIR.IDLE:
         // no-op
@@ -145,25 +146,65 @@ export function boardevaldir(
         ++x
         break
       case DIR.BY:
-        // skip
+        // skip pt, pt
         break
       case DIR.AT:
-        // skip
+        // skip pt, pt
         break
       case DIR.FLOW:
-        // skip
+        switch (flow) {
+          case DIR.NORTH:
+            --y
+            break
+          case DIR.SOUTH:
+            ++y
+            break
+          case DIR.WEST:
+            --x
+            break
+          case DIR.EAST:
+            ++x
+            break
+        }
         break
       case DIR.SEEK:
         // skip
         break
       case DIR.RNDNS:
-        // skip
+        switch (select(DIR.NORTH, DIR.SOUTH)) {
+          case DIR.NORTH:
+            --y
+            break
+          case DIR.SOUTH:
+            ++y
+            break
+        }
         break
       case DIR.RNDNE:
-        // skip
+        switch (select(DIR.NORTH, DIR.EAST)) {
+          case DIR.NORTH:
+            --y
+            break
+          case DIR.EAST:
+            ++x
+            break
+        }
         break
       case DIR.RND:
-        // skip
+        switch (select(DIR.NORTH, DIR.SOUTH, DIR.WEST, DIR.EAST)) {
+          case DIR.NORTH:
+            --y
+            break
+          case DIR.SOUTH:
+            ++y
+            break
+          case DIR.WEST:
+            --x
+            break
+          case DIR.EAST:
+            ++x
+            break
+        }
         break
       // modifiers
       case DIR.CW:
@@ -228,12 +269,15 @@ function boardsetlookup(board: BOARD) {
   board.lookup = ref(lookup)
 }
 
-export function objectreadkind(
+export function bookobjectreadkind(
   book: BOOK,
   object: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
   if (isDefined(object) && isDefined(object.kind)) {
-    return readaddress(book, CONTENT_TYPE.OBJECT, object.kind)
+    if (!isDefined(object.kinddata)) {
+      object.kinddata = readaddress(book, CONTENT_TYPE.OBJECT, object.kind)
+    }
+    return object.kinddata
   }
   return undefined
 }
@@ -251,7 +295,7 @@ export function boardtick(os: OS, book: BOOK, board: BOARD) {
     target.lx = target.x
     target.ly = target.y
     // lookup kind
-    const kind = objectreadkind(book, target)
+    const kind = bookobjectreadkind(book, target)
     // object code
     const code = target.code ?? kind?.code ?? ''
     // we have code to execute

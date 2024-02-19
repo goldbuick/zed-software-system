@@ -8,11 +8,9 @@ import { isDefined } from 'ts-extras'
 import { CHIP, WORD } from '../chip'
 import { isArray, isNumber, isString } from '../mapping/types'
 
-export type PT = [number, number]
+type MAYBE_WORD = WORD | undefined
 
-export function checkpt(value: any): value is PT {
-  return isArray(value) && isNumber(value[0]) && isNumber(value[1])
-}
+export type PT = [number, number]
 
 export enum COLOR {
   BLACK,
@@ -65,6 +63,27 @@ export enum CATEGORY {
   OBJECT,
 }
 
+export function ispt(value: any): value is PT {
+  return isArray(value) && isNumber(value[0]) && isNumber(value[1])
+}
+
+export function dirfrompts(last: PT, current: PT) {
+  const dx = current[0] - last[0]
+  const dy = current[1] - last[1]
+  if (dx < 0) {
+    return DIR.WEST
+  }
+  if (dx > 0) {
+    return DIR.EAST
+  }
+  if (dy < 0) {
+    return DIR.NORTH
+  }
+  if (dy > 0) {
+    return DIR.SOUTH
+  }
+}
+
 export const categoryconsts = {
   terrain: 'TERRAIN',
   object: 'OBJECT',
@@ -73,8 +92,45 @@ export const categoryconsts = {
 export type STR_CATEGORY =
   (typeof categoryconsts)[keyof typeof categoryconsts][]
 
-export function checkcategory(value: any): value is STR_CATEGORY {
-  return isArray(value) && isDefined(CATEGORY[value[0]])
+function isstrcategoryconst(value: any) {
+  return isDefined(CATEGORY[value])
+}
+
+export function isstrcategory(value: any): value is STR_CATEGORY {
+  return isArray(value) && isstrcategoryconst(value[0])
+}
+
+export function readcategory(
+  chip: CHIP,
+  words: WORD[],
+  index: number,
+): [STR_CATEGORY | undefined, number] {
+  // already mapped
+  const maybestrcategory = words[index]
+  if (isstrcategory(maybestrcategory)) {
+    return [maybestrcategory, index + 1]
+  }
+
+  const categoryvalue: STR_CATEGORY = []
+
+  for (let i = index; i < words.length; ++i) {
+    const value: MAYBE_WORD = words[i]
+    if (typeof value === 'string') {
+      const maybecategory = chip.get(value)
+      if (!isstrcategoryconst(maybecategory)) {
+        break
+      }
+      categoryvalue.push(maybecategory)
+    } else {
+      break
+    }
+  }
+
+  if (categoryvalue.length === 0) {
+    return [undefined, index]
+  }
+
+  return [categoryvalue, index + categoryvalue.length]
 }
 
 export const collisionconsts = {
@@ -90,8 +146,45 @@ export const collisionconsts = {
 export type STR_COLLISION =
   (typeof collisionconsts)[keyof typeof collisionconsts][]
 
-export function checkcollision(value: any): value is STR_COLLISION {
-  return isArray(value) && isDefined(COLLISION[value[0]])
+function isstrcollisionconst(value: any) {
+  return isDefined(COLLISION[value])
+}
+
+export function isstrcollision(value: any): value is STR_COLLISION {
+  return isArray(value) && isstrcollisionconst(value[0])
+}
+
+export function readcollision(
+  chip: CHIP,
+  words: WORD[],
+  index: number,
+): [STR_COLLISION | undefined, number] {
+  // already mapped
+  const maybestrcollision = words[index]
+  if (isstrcollision(maybestrcollision)) {
+    return [maybestrcollision, index + 1]
+  }
+
+  const collisionvalue: STR_COLLISION = []
+
+  for (let i = index; i < words.length; ++i) {
+    const value: MAYBE_WORD = words[i]
+    if (typeof value === 'string') {
+      const maybecollision = chip.get(value)
+      if (!isstrcollisionconst(maybecollision)) {
+        break
+      }
+      collisionvalue.push(maybecollision)
+    } else {
+      break
+    }
+  }
+
+  if (collisionvalue.length === 0) {
+    return [undefined, index]
+  }
+
+  return [collisionvalue, index + collisionvalue.length]
 }
 
 export const colorconsts = {
@@ -123,8 +216,45 @@ export const colorconsts = {
 
 export type STR_COLOR = (typeof colorconsts)[keyof typeof colorconsts][]
 
-export function checkcolor(value: any): value is STR_COLOR {
-  return isArray(value) && isDefined(COLOR[value[0]])
+function isstrcolorconst(value: any) {
+  return isDefined(COLOR[value])
+}
+
+export function isstrcolor(value: any): value is STR_COLOR {
+  return isArray(value) && isstrcolorconst(value[0])
+}
+
+export function readcolor(
+  chip: CHIP,
+  words: WORD[],
+  index: number,
+): [STR_COLOR | undefined, number] {
+  // already mapped
+  const maybestrcolor = words[index]
+  if (isstrcolor(maybestrcolor)) {
+    return [maybestrcolor, index + 1]
+  }
+
+  const colorvalue: STR_COLOR = []
+
+  for (let i = index; i < words.length; ++i) {
+    const value: MAYBE_WORD = words[i]
+    if (typeof value === 'string') {
+      const maybecolor = chip.get(value)
+      if (!isstrcolorconst(maybecolor)) {
+        break
+      }
+      colorvalue.push(maybecolor)
+    } else {
+      break
+    }
+  }
+
+  if (colorvalue.length === 0) {
+    return [undefined, index]
+  }
+
+  return [colorvalue, index + colorvalue.length]
 }
 
 export const dirconsts = {
@@ -162,8 +292,45 @@ export const dirconsts = {
 
 export type STR_DIR = (typeof dirconsts)[keyof typeof dirconsts][]
 
-export function checkdir(value: any): value is STR_DIR {
-  return isArray(value) && isDefined(DIR[value[0]])
+function isstrdirconst(value: any) {
+  return isDefined(DIR[value])
+}
+
+export function isstrdir(value: any): value is STR_DIR {
+  return isArray(value) && isstrdirconst(value[0])
+}
+
+export function readdir(
+  chip: CHIP,
+  words: WORD[],
+  index: number,
+): [STR_DIR | undefined, number] {
+  // already mapped
+  const maybestrdir = words[index]
+  if (isstrdir(maybestrdir)) {
+    return [maybestrdir, index + 1]
+  }
+
+  const dirvalue: STR_DIR = []
+
+  for (let i = index; i < words.length; ++i) {
+    const value: MAYBE_WORD = words[i]
+    if (typeof value === 'string') {
+      const maybedir = chip.get(value)
+      if (!isstrdirconst(maybedir)) {
+        break
+      }
+      dirvalue.push(maybedir)
+    } else {
+      break
+    }
+  }
+
+  if (dirvalue.length === 0) {
+    return [undefined, index]
+  }
+
+  return [dirvalue, index + dirvalue.length]
 }
 
 // read a numerical value from words
@@ -179,12 +346,8 @@ export function readnumber(
   ]
 }
 
-// read a numerical value from words
-export function readexpr(
-  chip: CHIP,
-  words: WORD[],
-  i: number,
-): [number, number] {
+// read a value from words
+export function readexpr(chip: CHIP, words: WORD[], i: number): [any, number] {
   const maybevalue = words[i]
 
   // check for number
@@ -192,27 +355,42 @@ export function readexpr(
     return [maybevalue, i + 1]
   }
 
-  // check for flag
+  // check for wordtypes and flags
   if (isString(maybevalue)) {
-    const flagvalue = chip.get(maybevalue)
-    if (isDefined(flagvalue)) {
-      return [flagvalue, i + 1]
+    // check for flag
+    const maybeflag = chip.get(maybevalue)
+
+    // this will return the mapped const value string CAPS version
+
+    // handle the type of wordtypes that take more than one word
+
+    // DIR
+
+    // check for these ??
+
+    // ALLIGNED
+    // This flag is SET whenever the object is aligned with the player either horizontally or vertically.
+
+    // CONTACT
+    // This flag is SET whenever the object is adjacent to (touching) the player.
+
+    // BLOCKED <direction>
+    // This flag is SET when the object is not free to move in the given direction, and
+    // CLEAR when the object is free to move in the direction.
+
+    // ENERGIZED
+    // This flag is SET whenever the player has touched an energizer and can not be harmed by creatures and bullets.
+
+    // ANY <color> <item>
+    // This flag is SET whenever the given kind is visible on the board
+
+    if (isDefined(maybeflag)) {
+      return [maybeflag, i + 1]
     }
+
+    // check for wordtypes
   }
 
-  // check for these ??
-  /*
-ALLIGNED
-This flag is SET whenever the object is aligned with the player either horizontally or vertically.
-CONTACT
-This flag is SET whenever the object is adjacent to (touching) the player.
-BLOCKED <direction>
-This flag is SET when the object is not free to move in the given direction, and CLEAR when the object is free to move in the direction.
-ENERGIZED
-This flag is SET whenever the player has touched an energizer and can not be harmed by creatures and bullets.
-ANY <color> <item>
-  */
-
-  // ooops
-  return [0, 0]
+  // pass through everything else
+  return [maybevalue, i + 1]
 }

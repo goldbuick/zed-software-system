@@ -7,7 +7,7 @@ import {
   boarddeleteobject,
   boardtick,
   MAYBE_BOARD_ELEMENT,
-  objectreadkind,
+  bookobjectreadkind,
   boardreadobject,
   BOARD,
   BOARD_ELEMENT,
@@ -130,7 +130,7 @@ export function memoryreadobject(address: string) {
 }
 
 export function memoryobjectreadkind(object: MAYBE_BOARD_ELEMENT) {
-  return objectreadkind(MEMORY.book, object)
+  return bookobjectreadkind(MEMORY.book, object)
 }
 
 export function memorytick(os: OS) {

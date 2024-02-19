@@ -316,7 +316,7 @@ export const HyperLinkText = createToken({
 
 export const StringLiteral = createToken({
   name: 'StringLiteral',
-  pattern: /[_a-zA-Z"$][^!;@#/\s]*/,
+  pattern: /[_a-zA-Z"$][^!;@#/?\s]*/,
   start_chars_hint: all_chars,
 })
 
