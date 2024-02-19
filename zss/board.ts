@@ -122,13 +122,15 @@ export function boardevaldir(
   target: MAYBE_BOARD_ELEMENT,
   dir: STR_DIR,
 ): PT {
-  let x = target?.x ?? 0
-  let y = target?.y ?? 0
+  const tx = target?.x ?? 0
+  const ty = target?.y ?? 0
+  let x = tx
+  let y = ty
   const flow = dirfrompts([target?.lx ?? x, target?.ly ?? y], [x, y])
 
   // we need to know current flow etc..
 
-  for (let i = 0; i < dir.length; ++i) {
+  for (let i = 0; i < dir.length && x === tx && y === ty; ++i) {
     switch (DIR[dir[i]]) {
       case DIR.IDLE:
         // no-op
@@ -207,18 +209,74 @@ export function boardevaldir(
         }
         break
       // modifiers
-      case DIR.CW:
-        // skip
+      case DIR.CW: {
+        const modpt = boardevaldir(board, target, dir.slice(i + 1))
+        switch (dirfrompts([tx, ty], modpt)) {
+          case DIR.NORTH:
+            ++x
+            break
+          case DIR.SOUTH:
+            --x
+            break
+          case DIR.WEST:
+            --y
+            break
+          case DIR.EAST:
+            ++y
+            break
+        }
         break
-      case DIR.CCW:
-        // skip
+      }
+      case DIR.CCW: {
+        const modpt = boardevaldir(board, target, dir.slice(i + 1))
+        switch (dirfrompts([tx, ty], modpt)) {
+          case DIR.NORTH:
+            --x
+            break
+          case DIR.SOUTH:
+            ++x
+            break
+          case DIR.WEST:
+            ++y
+            break
+          case DIR.EAST:
+            --y
+            break
+        }
         break
-      case DIR.OPP:
-        // skip
+      }
+      case DIR.OPP: {
+        const modpt = boardevaldir(board, target, dir.slice(i + 1))
+        switch (dirfrompts([tx, ty], modpt)) {
+          case DIR.NORTH:
+            ++y
+            break
+          case DIR.SOUTH:
+            --y
+            break
+          case DIR.WEST:
+            ++x
+            break
+          case DIR.EAST:
+            --x
+            break
+        }
         break
-      case DIR.RNDP:
-        // skip
+      }
+      case DIR.RNDP: {
+        const modpt = boardevaldir(board, target, dir.slice(i + 1))
+        switch (dirfrompts([tx, ty], modpt)) {
+          case DIR.NORTH:
+          case DIR.SOUTH:
+            x += select(-1, 1)
+            break
+          case DIR.WEST:
+          case DIR.EAST:
+            y += select(-1, 1)
+            break
+        }
         break
+      }
     }
   }
 
