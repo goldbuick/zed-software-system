@@ -1,6 +1,6 @@
 @spin
 #cycle rnd 1 4
-#color rnd 1 15
+#char rnd 1 24
 
 :think
 ?up ?rnd

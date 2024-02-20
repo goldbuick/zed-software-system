@@ -10,6 +10,7 @@ import {
 import { BOARD_ELEMENT, boardmoveobject } from '../board'
 import { gadgethyperlink, gadgettext } from '../gadget/data/api'
 import { INPUT } from '../gadget/data/types'
+import { clamp } from '../mapping/number'
 import { isNumber } from '../mapping/types'
 
 import {
@@ -20,6 +21,8 @@ import {
   dirconsts,
   readexpr,
   readdir,
+  readargs,
+  ARG_TYPE,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
@@ -184,7 +187,11 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('char', (chip, words) => {
-    console.info(words)
+    const memory = memoryreadchip(chip.id())
+    const [charvalue] = readargs(chip, words, [ARG_TYPE.NUMBER])
+    if (isDefined(memory.target)) {
+      memory.target.char = charvalue
+    }
     return 0
   })
   .command('clear', (chip, words) => {
@@ -193,13 +200,8 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('cycle', (chip, words) => {
-    // todo log this ??
-    const [value] = readexpr(chip, words, 0)
-    if (!isNumber(value)) {
-      return 0
-    }
-    // clamped to 1 to 255
-    chip.cycle(Math.max(1, Math.min(255, Math.round(value as number))))
+    const [cyclevalue] = readargs(chip, words, [ARG_TYPE.NUMBER])
+    chip.cycle(clamp(Math.round(cyclevalue), 1, 255))
     return 0
   })
   .command('die', (chip) => {

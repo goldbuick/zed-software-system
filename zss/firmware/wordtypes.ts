@@ -6,8 +6,15 @@ it is a set of helper functions that parse & identify multi-word data types
 import { isDefined } from 'ts-extras'
 
 import { CHIP, WORD } from '../chip'
+import { SPRITES_SINDEX, SPRITES_TINDEX } from '../gadget/data/types'
 import { randomInteger } from '../mapping/number'
-import { isArray, isNumber, isString } from '../mapping/types'
+import {
+  isArray,
+  isMaybeNumber,
+  isMaybeString,
+  isNumber,
+  isString,
+} from '../mapping/types'
 
 type MAYBE_WORD = WORD | undefined
 
@@ -30,6 +37,8 @@ export enum COLOR {
   PURPLE,
   YELLOW,
   WHITE,
+  CLEAR = SPRITES_TINDEX,
+  SHADOW = SPRITES_SINDEX,
 }
 
 export enum DIR {
@@ -213,6 +222,33 @@ export const colorconsts = {
   grey: 'LTGRAY',
   dkgrey: 'DKGRAY',
   ltblack: 'DKGRAY',
+  // bg color
+  onblack: 'BLACK',
+  ondkblue: 'DKBLUE',
+  ondkgreen: 'DKGREEN',
+  ondkcyan: 'DKCYAN',
+  ondkred: 'DKRED',
+  ondkpurple: 'DKPURPLE',
+  ondkyellow: 'DKYELLOW',
+  onltgray: 'LTGRAY',
+  ondkgray: 'DKGRAY',
+  onblue: 'BLUE',
+  ongreen: 'GREEN',
+  oncyan: 'CYAN',
+  onred: 'RED',
+  onpurple: 'PURPLE',
+  onyellow: 'YELLOW',
+  onwhite: 'WHITE',
+  clear: 'CLEAR',
+  shadow: 'SHADOW',
+  // aliases
+  onbrown: 'DKYELLOW',
+  ondkwhite: 'LTGRAY',
+  onltgrey: 'LTGRAY',
+  ongray: 'LTGRAY',
+  ongrey: 'LTGRAY',
+  ondkgrey: 'DKGRAY',
+  onltblack: 'DKGRAY',
 } as const
 
 export type STR_COLOR = (typeof colorconsts)[keyof typeof colorconsts][]
@@ -348,6 +384,7 @@ export function readnumber(
 }
 
 // read a value from words
+// consider splitting out to own file
 export function readexpr(chip: CHIP, words: WORD[], i: number): [any, number] {
   const maybevalue = words[i]
   if (!isDefined(maybevalue)) {
@@ -417,3 +454,155 @@ export function readexpr(chip: CHIP, words: WORD[], i: number): [any, number] {
 
 // param parsing engine
 // a simple DSL to say string [number] [number] args
+
+export enum ARG_TYPE {
+  CATEGORY,
+  COLLISION,
+  COLOR,
+  KIND,
+  DIR,
+  NUMBER,
+  STRING,
+  MAYBE_CATEGORY,
+  MAYBE_COLLISION,
+  MAYBE_COLOR,
+  MAYBE_KIND,
+  MAYBE_DIR,
+  MAYBE_NUMBER,
+  MAYBE_STRING,
+  ANY,
+}
+
+export type ARG_TYPE_MAP = {
+  [ARG_TYPE.CATEGORY]: CATEGORY
+  [ARG_TYPE.COLLISION]: COLLISION
+  [ARG_TYPE.COLOR]: COLOR
+  [ARG_TYPE.KIND]: [string, string?, string?]
+  [ARG_TYPE.DIR]: PT
+  [ARG_TYPE.NUMBER]: number
+  [ARG_TYPE.STRING]: string
+  [ARG_TYPE.MAYBE_CATEGORY]: CATEGORY | undefined
+  [ARG_TYPE.MAYBE_COLLISION]: COLLISION | undefined
+  [ARG_TYPE.MAYBE_COLOR]: COLOR | undefined
+  [ARG_TYPE.MAYBE_KIND]: [string, string?, string?] | undefined
+  [ARG_TYPE.MAYBE_DIR]: PT | undefined
+  [ARG_TYPE.MAYBE_NUMBER]: number | undefined
+  [ARG_TYPE.MAYBE_STRING]: string | undefined
+  [ARG_TYPE.ANY]: any
+}
+
+type ARG_TYPES = [ARG_TYPE, ...ARG_TYPE[]]
+type ARG_TYPE_VALUES<T extends ARG_TYPES> = {
+  [P in keyof T]: ARG_TYPE_MAP[T[P]]
+}
+
+function didexpect(msg: string) {
+  throw new Error(`Invalid arg, expected: ${msg}`)
+}
+
+export function readargs<T extends ARG_TYPES>(
+  chip: CHIP,
+  words: WORD[],
+  args: T,
+): ARG_TYPE_VALUES<T> {
+  const values = []
+
+  let ii = 0
+  for (let i = 0; i < args.length; ++i) {
+    const [value, iii] = readexpr(chip, words, ii)
+    ii = iii
+    values.push(value)
+
+    switch (args[i]) {
+      case ARG_TYPE.CATEGORY:
+        if (!(value in CATEGORY)) {
+          didexpect('terrain or object')
+        }
+        break
+      case ARG_TYPE.COLLISION:
+        if (!(value in COLLISION)) {
+          didexpect('solid, walk, swim, bullet, walkable or swimmable')
+        }
+        break
+      case ARG_TYPE.COLOR:
+        if (!(value in COLOR)) {
+          didexpect('color')
+        }
+        break
+      case ARG_TYPE.KIND:
+        if (
+          !isArray(value) ||
+          !isString(value[0]) ||
+          !isMaybeString(value[1]) ||
+          !isMaybeString(value[2])
+        ) {
+          didexpect('kind')
+        }
+        break
+      case ARG_TYPE.DIR:
+        if (!ispt(value)) {
+          didexpect('direction')
+        }
+        break
+      case ARG_TYPE.NUMBER:
+        if (!isNumber(value)) {
+          didexpect('number')
+        }
+        break
+      case ARG_TYPE.STRING:
+        if (!isString(value)) {
+          didexpect('string')
+        }
+        break
+      case ARG_TYPE.MAYBE_CATEGORY:
+        if (value !== undefined && !(value in CATEGORY)) {
+          didexpect('optional terrain or object')
+        }
+        break
+      case ARG_TYPE.MAYBE_COLLISION:
+        if (value !== undefined && !(value in COLLISION)) {
+          didexpect('optional solid, walk, swim, bullet, walkable or swimmable')
+        }
+        break
+      case ARG_TYPE.MAYBE_COLOR:
+        if (value !== undefined && !(value in COLOR)) {
+          didexpect('optional color')
+        }
+        break
+      case ARG_TYPE.MAYBE_KIND:
+        if (
+          value !== undefined &&
+          (!isArray(value) ||
+            !isString(value[0]) ||
+            !isMaybeString(value[1]) ||
+            !isMaybeString(value[2]))
+        ) {
+          didexpect('optional kind')
+        }
+        break
+      case ARG_TYPE.MAYBE_DIR:
+        if (value !== undefined && !ispt(value)) {
+          didexpect('optional direction')
+        }
+        break
+      case ARG_TYPE.MAYBE_NUMBER:
+        if (!isMaybeNumber(value)) {
+          didexpect('optional number')
+        }
+        break
+      case ARG_TYPE.MAYBE_STRING:
+        if (!isMaybeString(value)) {
+          didexpect('optional string')
+        }
+        break
+      case ARG_TYPE.ANY:
+        if (isDefined(value)) {
+          didexpect('a value, but got empty')
+        }
+        break
+    }
+  }
+
+  // @ts-expect-error any[] doesn't work
+  return values
+}
