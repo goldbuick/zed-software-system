@@ -16,17 +16,26 @@ export const ZSS_FIRMWARE = createfirmware(
     // return has unhandled
     return [false, undefined]
   },
-).command('gadget', (chip, words) => {
-  const edge = maptostring(words[0])
-  const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
-  const isScroll = edgeConst === PANEL_TYPE.SCROLL
+)
+  .command('bg', (chip, words) => {
+    // update target's bg color
+    return 0
+  })
+  .command('color', (chip, words) => {
+    // update target's color
+    return 0
+  })
+  .command('gadget', (chip, words) => {
+    const edge = maptostring(words[0])
+    const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
+    const isScroll = edgeConst === PANEL_TYPE.SCROLL
 
-  const arg1 = words[isScroll ? 2 : 1]
-  const arg2 = words[isScroll ? 1 : 2]
-  const args = [arg1, arg2]
-  const [size] = readnumber(chip, args, 0)
-  const name = maptostring(arg2)
+    const arg1 = words[isScroll ? 2 : 1]
+    const arg2 = words[isScroll ? 1 : 2]
+    const args = [arg1, arg2]
+    const [size] = readnumber(chip, args, 0)
+    const name = maptostring(arg2)
 
-  gadgetpanel(chip, edge, edgeConst, size, name)
-  return 0
-})
+    gadgetpanel(chip, edge, edgeConst, size, name)
+    return 0
+  })

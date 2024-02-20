@@ -10,6 +10,7 @@ import {
 import { BOARD_ELEMENT, boardmoveobject } from '../board'
 import { gadgethyperlink, gadgettext } from '../gadget/data/api'
 import { INPUT } from '../gadget/data/types'
+import { isNumber } from '../mapping/types'
 
 import {
   categoryconsts,
@@ -192,9 +193,13 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('cycle', (chip, words) => {
+    // todo log this ??
     const [value] = readexpr(chip, words, 0)
-    const next = Math.round(value as number)
-    chip.cycle(Math.max(1, Math.min(255, next)))
+    if (!isNumber(value)) {
+      return 0
+    }
+    // clamped to 1 to 255
+    chip.cycle(Math.max(1, Math.min(255, Math.round(value as number))))
     return 0
   })
   .command('die', (chip) => {

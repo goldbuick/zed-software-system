@@ -6,6 +6,7 @@ it is a set of helper functions that parse & identify multi-word data types
 import { isDefined } from 'ts-extras'
 
 import { CHIP, WORD } from '../chip'
+import { randomInteger } from '../mapping/number'
 import { isArray, isNumber, isString } from '../mapping/types'
 
 type MAYBE_WORD = WORD | undefined
@@ -349,55 +350,70 @@ export function readnumber(
 // read a value from words
 export function readexpr(chip: CHIP, words: WORD[], i: number): [any, number] {
   const maybevalue = words[i]
+  if (!isDefined(maybevalue)) {
+    return [undefined, i]
+  }
 
-  // check for number
-  if (isNumber(maybevalue)) {
+  // check for number or array
+  if (isNumber(maybevalue) || isArray(maybevalue)) {
     return [maybevalue, i + 1]
   }
 
-  // check for wordtypes and flags
+  // check for flags and expressions
   if (isString(maybevalue)) {
+    const maybeexpr = maybevalue.toLowerCase()
+
+    // special case rnd
+    if (maybeexpr === 'rnd') {
+      // RND - returns 0 or 1
+      // RND <number> - return 0 to number
+      // RND <number> <number> - return number to number
+      const [min, ii] = readexpr(chip, words, i + 1)
+      const [max, iii] = readexpr(chip, words, ii)
+      if (isNumber(min) && isNumber(max)) {
+        return [randomInteger(min, max), iii]
+      }
+      if (isNumber(min)) {
+        return [randomInteger(0, min), ii]
+      }
+      return [randomInteger(0, 1), i + 1]
+    }
+
     // check for flag
     const maybeflag = chip.get(maybevalue)
-
-    // this will return the mapped const value string CAPS version
-
-    // handle the type of wordtypes that take more than one word
-
-    // DIR
-
-    // check for these ??
-
-    // ALLIGNED
-    // This flag is SET whenever the object is aligned with the player either horizontally or vertically.
-
-    // CONTACT
-    // This flag is SET whenever the object is adjacent to (touching) the player.
-
-    // BLOCKED <direction>
-    // This flag is SET when the object is not free to move in the given direction, and
-    // CLEAR when the object is free to move in the direction.
-
-    // ENERGIZED
-    // This flag is SET whenever the player has touched an energizer and can not be harmed by creatures and bullets.
-
-    // ANY <color> <item>
-    // This flag is SET whenever the given kind is visible on the board
-
-    /*
-
-    port existing zed cafe expressions here ...
-    func, min, max, ceil, floor, etc...
-
-    */
-
     if (isDefined(maybeflag)) {
       return [maybeflag, i + 1]
     }
 
-    // check for wordtypes
+    /*
+    port existing zed cafe expressions here ...
+    func, min, max, ceil, floor, etc...
+    */
+    switch (maybeexpr) {
+      case 'aligned':
+      case 'alligned':
+        // ALLIGNED
+        // This flag is SET whenever the object is aligned with the player either horizontally or vertically.
+        break
+      case 'contact':
+        // CONTACT
+        // This flag is SET whenever the object is adjacent to (touching) the player.
+        break
+      case 'blocked':
+        // BLOCKED <direction>
+        // This flag is SET when the object is not free to move in the given direction, and
+        // CLEAR when the object is free to move in the direction.
+        break
+      case 'any':
+        // ANY <color> <item>
+        // This flag is SET whenever the given kind is visible on the board
+        break
+    }
   }
 
   // pass through everything else
   return [maybevalue, i + 1]
 }
+
+// param parsing engine
+// a simple DSL to say string [number] [number] args

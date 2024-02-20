@@ -25,7 +25,7 @@ export const BIOS: BOOK = {
           type: CONTENT_TYPE.BOARD,
           name: 'title',
           value: createboard(BOARD_WIDTH, BOARD_HEIGHT, (board) => {
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < 2000; i++) {
               createboardobject(board, {
                 x: randomInteger(0, board.width - 1),
                 y: randomInteger(0, board.height - 1),
