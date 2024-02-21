@@ -1,20 +1,10 @@
-/*
-What is wordtypes?
-it is a set of helper functions that parse & identify multi-word data types
-*/
-
 import { isDefined } from 'ts-extras'
 
 import { CHIP, WORD } from '../chip'
 import { SPRITES_SINDEX, SPRITES_TINDEX } from '../gadget/data/types'
+import { select } from '../mapping/array'
 import { randomInteger } from '../mapping/number'
-import {
-  isArray,
-  isMaybeNumber,
-  isMaybeString,
-  isNumber,
-  isString,
-} from '../mapping/types'
+import { isArray, isMaybeString, isNumber, isString } from '../mapping/types'
 
 type MAYBE_WORD = WORD | undefined
 
@@ -115,32 +105,24 @@ export function readcategory(
   words: WORD[],
   index: number,
 ): [STR_CATEGORY | undefined, number] {
-  // already mapped
   const maybestrcategory = words[index]
+
+  // already mapped
   if (isstrcategory(maybestrcategory)) {
     return [maybestrcategory, index + 1]
   }
 
-  const categoryvalue: STR_CATEGORY = []
-
-  for (let i = index; i < words.length; ++i) {
-    const value: MAYBE_WORD = words[i]
-    if (typeof value === 'string') {
-      const maybecategory = chip.get(value)
-      if (!isstrcategoryconst(maybecategory)) {
-        break
-      }
-      categoryvalue.push(maybecategory)
-    } else {
-      break
+  // single string
+  const value: MAYBE_WORD = words[index]
+  if (typeof value === 'string') {
+    const maybecategory = chip.get(value)
+    if (isstrcategoryconst(maybecategory)) {
+      return [[maybecategory], index + 1]
     }
   }
 
-  if (categoryvalue.length === 0) {
-    return [undefined, index]
-  }
-
-  return [categoryvalue, index + categoryvalue.length]
+  // fail
+  return [undefined, index]
 }
 
 export const collisionconsts = {
@@ -169,32 +151,24 @@ export function readcollision(
   words: WORD[],
   index: number,
 ): [STR_COLLISION | undefined, number] {
-  // already mapped
   const maybestrcollision = words[index]
+
+  // already mapped
   if (isstrcollision(maybestrcollision)) {
     return [maybestrcollision, index + 1]
   }
 
-  const collisionvalue: STR_COLLISION = []
-
-  for (let i = index; i < words.length; ++i) {
-    const value: MAYBE_WORD = words[i]
-    if (typeof value === 'string') {
-      const maybecollision = chip.get(value)
-      if (!isstrcollisionconst(maybecollision)) {
-        break
-      }
-      collisionvalue.push(maybecollision)
-    } else {
-      break
+  // single string
+  const value: MAYBE_WORD = words[index]
+  if (typeof value === 'string') {
+    const maybecollision = chip.get(value)
+    if (isstrcollisionconst(maybecollision)) {
+      return [[maybecollision], index + 1]
     }
   }
 
-  if (collisionvalue.length === 0) {
-    return [undefined, index]
-  }
-
-  return [collisionvalue, index + collisionvalue.length]
+  // fail
+  return [undefined, index]
 }
 
 export const colorconsts = {
@@ -265,33 +239,24 @@ export function readcolor(
   chip: CHIP,
   words: WORD[],
   index: number,
-): [STR_COLOR | undefined, number] {
-  // already mapped
+): [STR_COLOR | number | undefined, number] {
   const maybestrcolor = words[index]
+
+  // already mapped
   if (isstrcolor(maybestrcolor)) {
     return [maybestrcolor, index + 1]
   }
 
-  const colorvalue: STR_COLOR = []
-
-  for (let i = index; i < words.length; ++i) {
-    const value: MAYBE_WORD = words[i]
-    if (typeof value === 'string') {
-      const maybecolor = chip.get(value)
-      if (!isstrcolorconst(maybecolor)) {
-        break
-      }
-      colorvalue.push(maybecolor)
-    } else {
-      break
+  // single string
+  const value: MAYBE_WORD = words[index]
+  if (typeof value === 'string') {
+    const maybecolor = chip.get(value)
+    if (isstrcolorconst(maybecolor)) {
+      return [[maybecolor], index + 1]
     }
   }
 
-  if (colorvalue.length === 0) {
-    return [undefined, index]
-  }
-
-  return [colorvalue, index + colorvalue.length]
+  return [undefined, index]
 }
 
 export const dirconsts = {
@@ -342,32 +307,25 @@ export function readdir(
   words: WORD[],
   index: number,
 ): [STR_DIR | undefined, number] {
-  // already mapped
   const maybestrdir = words[index]
+
+  // already mapped
   if (isstrdir(maybestrdir)) {
     return [maybestrdir, index + 1]
   }
 
-  const dirvalue: STR_DIR = []
-
-  for (let i = index; i < words.length; ++i) {
-    const value: MAYBE_WORD = words[i]
-    if (typeof value === 'string') {
-      const maybedir = chip.get(value)
-      if (!isstrdirconst(maybedir)) {
-        break
-      }
-      dirvalue.push(maybedir)
-    } else {
-      break
+  // single string
+  const value: MAYBE_WORD = words[index]
+  if (typeof value === 'string') {
+    const maybedir = chip.get(value)
+    if (isstrdirconst(maybedir)) {
+      // need to handle special case of by & at
+      return [[maybedir], index + 1]
     }
   }
 
-  if (dirvalue.length === 0) {
-    return [undefined, index]
-  }
-
-  return [dirvalue, index + dirvalue.length]
+  // fail
+  return [undefined, index]
 }
 
 // read a numerical value from words
@@ -385,41 +343,71 @@ export function readnumber(
 
 // read a value from words
 // consider splitting out to own file
-export function readexpr(chip: CHIP, words: WORD[], i: number): [any, number] {
-  const maybevalue = words[i]
+export function readexpr(
+  chip: CHIP,
+  words: WORD[],
+  index: number,
+): [any, number] {
+  const maybevalue = words[index]
+
+  // check consts
+  const [maybecategory, n1] = readcategory(chip, words, index)
+  if (isDefined(maybecategory)) {
+    return [maybecategory, n1]
+  }
+
+  const [maybecollision, n2] = readcollision(chip, words, index)
+  if (isDefined(maybecollision)) {
+    return [maybecollision, n2]
+  }
+
+  const [maybecolor, n3] = readcolor(chip, words, index)
+  if (isDefined(maybecolor)) {
+    return [maybecolor, n3]
+  }
+
+  // special case rnd
+  if (isString(maybevalue) && maybevalue.toLowerCase() === 'rnd') {
+    // RND - returns 0 or 1
+    // RND <number> - return 0 to number
+    // RND <number> <number> - return number to number
+    const [min, ii] = readexpr(chip, words, index + 1)
+    const [max, iii] = readexpr(chip, words, ii)
+    if (isNumber(min) && isNumber(max)) {
+      return [randomInteger(min, max), iii]
+    }
+    if (isNumber(min)) {
+      return [randomInteger(0, min), ii]
+    }
+    return [randomInteger(0, 1), index + 1]
+  }
+
+  const [maybedir, n4] = readdir(chip, words, index)
+  if (isDefined(maybedir)) {
+    return [maybedir, n4]
+  }
+
+  // check complex values
+
+  // empty is invalid
   if (!isDefined(maybevalue)) {
-    return [undefined, i]
+    return [undefined, index]
   }
 
   // check for number or array
-  if (isNumber(maybevalue) || isArray(maybevalue)) {
-    return [maybevalue, i + 1]
+  if (ispt(maybevalue) || isNumber(maybevalue) || isArray(maybevalue)) {
+    return [maybevalue, index + 1]
   }
 
   // check for flags and expressions
   if (isString(maybevalue)) {
     const maybeexpr = maybevalue.toLowerCase()
 
-    // special case rnd
-    if (maybeexpr === 'rnd') {
-      // RND - returns 0 or 1
-      // RND <number> - return 0 to number
-      // RND <number> <number> - return number to number
-      const [min, ii] = readexpr(chip, words, i + 1)
-      const [max, iii] = readexpr(chip, words, ii)
-      if (isNumber(min) && isNumber(max)) {
-        return [randomInteger(min, max), iii]
-      }
-      if (isNumber(min)) {
-        return [randomInteger(0, min), ii]
-      }
-      return [randomInteger(0, 1), i + 1]
-    }
-
     // check for flag
     const maybeflag = chip.get(maybevalue)
+    console.info({ maybevalue, maybeflag })
     if (isDefined(maybeflag)) {
-      return [maybeflag, i + 1]
+      return [maybeflag, index + 1]
     }
 
     /*
@@ -427,6 +415,7 @@ export function readexpr(chip: CHIP, words: WORD[], i: number): [any, number] {
     func, min, max, ceil, floor, etc...
     */
     switch (maybeexpr) {
+      // zzt
       case 'aligned':
       case 'alligned':
         // ALLIGNED
@@ -445,11 +434,22 @@ export function readexpr(chip: CHIP, words: WORD[], i: number): [any, number] {
         // ANY <color> <item>
         // This flag is SET whenever the given kind is visible on the board
         break
+      // zss
+      case 'pick': {
+        // PICK <a> <b> <c> <d>
+        const values: any[] = []
+        for (let ii = index + 1; ii < words.length; ) {
+          const [value, iii] = readexpr(chip, words, ii)
+          ii = iii
+          values.push(value)
+        }
+        return [select(values), words.length]
+      }
     }
   }
 
   // pass through everything else
-  return [maybevalue, i + 1]
+  return [maybevalue, index + 1]
 }
 
 // param parsing engine
@@ -496,8 +496,10 @@ type ARG_TYPE_VALUES<T extends ARG_TYPES> = {
   [P in keyof T]: ARG_TYPE_MAP[T[P]]
 }
 
-function didexpect(msg: string) {
-  throw new Error(`Invalid arg, expected: ${msg}`)
+function didexpect(msg: string, value: any) {
+  throw new Error(
+    `Invalid arg, expected: ${msg} but got ${JSON.stringify(value)}`,
+  )
 }
 
 export function readargs<T extends ARG_TYPES>(
@@ -509,67 +511,107 @@ export function readargs<T extends ARG_TYPES>(
 
   let ii = 0
   for (let i = 0; i < args.length; ++i) {
-    const [value, iii] = readexpr(chip, words, ii)
-    ii = iii
-    values.push(value)
-
     switch (args[i]) {
-      case ARG_TYPE.CATEGORY:
-        if (!(value in CATEGORY)) {
-          didexpect('terrain or object')
+      case ARG_TYPE.CATEGORY: {
+        const [value, iii] = readexpr(chip, words, ii)
+        if (!isstrcategory(value)) {
+          didexpect('terrain or object', value)
         }
+        ii = iii
+        values.push(CATEGORY[value[0]])
         break
-      case ARG_TYPE.COLLISION:
-        if (!(value in COLLISION)) {
-          didexpect('solid, walk, swim, bullet, walkable or swimmable')
+      }
+      case ARG_TYPE.COLLISION: {
+        const [value, iii] = readexpr(chip, words, ii)
+        if (!isstrcollision(value)) {
+          didexpect('solid, walk, swim, bullet, walkable or swimmable', value)
         }
+        ii = iii
+        values.push(COLLISION[value[0]])
         break
-      case ARG_TYPE.COLOR:
-        if (!(value in COLOR)) {
-          didexpect('color')
+      }
+      case ARG_TYPE.COLOR: {
+        const [value, iii] = readexpr(chip, words, ii)
+        if (!isstrcolor(value)) {
+          didexpect('color', value)
         }
+        ii = iii
+        values.push(COLOR[value[0]])
         break
-      case ARG_TYPE.KIND:
+      }
+      case ARG_TYPE.KIND: {
+        const [value, iii] = readexpr(chip, words, ii)
         if (
           !isArray(value) ||
           !isString(value[0]) ||
           !isMaybeString(value[1]) ||
           !isMaybeString(value[2])
         ) {
-          didexpect('kind')
+          didexpect('kind', value)
         }
+        ii = iii
+        values.push(value)
         break
-      case ARG_TYPE.DIR:
+      }
+      case ARG_TYPE.DIR: {
+        const [value, iii] = readdir(chip, words, ii)
         if (!ispt(value)) {
-          didexpect('direction')
+          didexpect('direction', value)
         }
+        ii = iii
+        values.push(value)
         break
-      case ARG_TYPE.NUMBER:
+      }
+      case ARG_TYPE.NUMBER: {
+        const [value, iii] = readexpr(chip, words, ii)
         if (!isNumber(value)) {
-          didexpect('number')
+          didexpect('number', value)
         }
+        ii = iii
+        values.push(value)
         break
-      case ARG_TYPE.STRING:
+      }
+      case ARG_TYPE.STRING: {
+        const value = words[i]
         if (!isString(value)) {
-          didexpect('string')
+          didexpect('string', value)
         }
+        ii = i + 1
+        values.push(value)
         break
-      case ARG_TYPE.MAYBE_CATEGORY:
-        if (value !== undefined && !(value in CATEGORY)) {
-          didexpect('optional terrain or object')
+      }
+      case ARG_TYPE.MAYBE_CATEGORY: {
+        const [value, iii] = readcategory(chip, words, ii)
+        if (value !== undefined && isstrcategory(value)) {
+          didexpect('optional terrain or object', value)
         }
+        ii = iii
+        values.push(value)
         break
-      case ARG_TYPE.MAYBE_COLLISION:
-        if (value !== undefined && !(value in COLLISION)) {
-          didexpect('optional solid, walk, swim, bullet, walkable or swimmable')
+      }
+      case ARG_TYPE.MAYBE_COLLISION: {
+        const [value, iii] = readcategory(chip, words, ii)
+        if (value !== undefined && isstrcollision(value)) {
+          didexpect(
+            'optional solid, walk, swim, bullet, walkable or swimmable',
+            value,
+          )
         }
+        ii = iii
+        values.push(value)
         break
-      case ARG_TYPE.MAYBE_COLOR:
-        if (value !== undefined && !(value in COLOR)) {
-          didexpect('optional color')
+      }
+      case ARG_TYPE.MAYBE_COLOR: {
+        const [value, iii] = readcolor(chip, words, ii)
+        if (value !== undefined && !isstrcolor(value)) {
+          didexpect('optional color', value)
         }
+        ii = iii
+        values.push(value)
         break
+      }
       case ARG_TYPE.MAYBE_KIND:
+        const [value, iii] = readexpr(chip, words, ii)
         if (
           value !== undefined &&
           (!isArray(value) ||
@@ -577,27 +619,41 @@ export function readargs<T extends ARG_TYPES>(
             !isMaybeString(value[1]) ||
             !isMaybeString(value[2]))
         ) {
-          didexpect('optional kind')
+          didexpect('optional kind', value)
         }
+        ii = iii
+        values.push(value)
         break
-      case ARG_TYPE.MAYBE_DIR:
+      case ARG_TYPE.MAYBE_DIR: {
+        const [value, iii] = readexpr(chip, words, ii)
         if (value !== undefined && !ispt(value)) {
-          didexpect('optional direction')
+          didexpect('optional direction', value)
         }
+        ii = iii
+        values.push(value)
         break
-      case ARG_TYPE.MAYBE_NUMBER:
-        if (!isMaybeNumber(value)) {
-          didexpect('optional number')
+      }
+      case ARG_TYPE.MAYBE_NUMBER: {
+        const [value, iii] = readexpr(chip, words, ii)
+        if (value !== undefined && !isNumber(value)) {
+          didexpect('optional number', value)
         }
+        ii = iii
+        values.push(value)
         break
-      case ARG_TYPE.MAYBE_STRING:
-        if (!isMaybeString(value)) {
-          didexpect('optional string')
+      }
+      case ARG_TYPE.MAYBE_STRING: {
+        const value = words[i]
+        if (value !== undefined && !isString(value)) {
+          didexpect('optional string', value)
         }
+        ii = i + 1
+        values.push(value)
         break
+      }
       case ARG_TYPE.ANY:
         if (isDefined(value)) {
-          didexpect('a value, but got empty')
+          didexpect('a value, but got empty', value)
         }
         break
     }

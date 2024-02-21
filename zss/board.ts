@@ -297,7 +297,7 @@ export function boardmoveobject(
   dir: STR_DIR,
 ) {
   const object = boardreadobject(board, target?.id ?? '')
-  if (!object) {
+  if (!object || !board.lookup) {
     return false
   }
 
@@ -308,23 +308,25 @@ export function boardmoveobject(
     return false
   }
 
+  const idx = dx + dy * board.width
+
+  // blocked by an object
+  const maybeobject = board.lookup[idx]
+  if (isDefined(maybeobject)) {
+    return false
+  }
+
   // todo - everything else ...
+  board.lookup[idx] = undefined
+
+  // update object location
   object.x = dx
   object.y = dy
 
+  // update lookup
+  board.lookup[object.x + object.y * board.width] = object.id ?? ''
+
   return true
-}
-
-function boardsetlookup(board: BOARD) {
-  const lookup: string[] = new Array(board.width * board.height).fill(undefined)
-
-  Object.values(board.objects).forEach((object) => {
-    if (isDefined(object.x) && isDefined(object.y) && isDefined(object.id)) {
-      lookup[object.x + object.y * board.width] = object.id
-    }
-  })
-
-  board.lookup = ref(lookup)
 }
 
 export function bookobjectreadkind(
@@ -340,37 +342,63 @@ export function bookobjectreadkind(
   return undefined
 }
 
+function boardsetlookup(board: BOARD) {
+  const lookup: string[] = new Array(board.width * board.height).fill(undefined)
+  const objects = Object.values(board.objects)
+
+  for (let i = 0; i < objects.length; ++i) {
+    const object = objects[i]
+    if (isDefined(object.x) && isDefined(object.y) && isDefined(object.id)) {
+      lookup[object.x + object.y * board.width] = object.id
+    }
+  }
+
+  board.lookup = ref(lookup)
+}
+
 export function boardtick(os: OS, book: BOOK, board: BOARD) {
   // build object lookup pre-tick
   boardsetlookup(board)
 
   // iterate through objects
-  Object.values(board.objects).forEach((target) => {
+  const targets = Object.values(board.objects)
+  for (let i = 0; i < targets.length; ++i) {
+    const target = targets[i]
+
+    // check that we have an id
     if (!isDefined(target.id)) {
       return
     }
+
     // track last position
     target.lx = target.x
     target.ly = target.y
+
     // lookup kind
     const kind = bookobjectreadkind(book, target)
+
     // object code
     const code = target.code ?? kind?.code ?? ''
-    // we have code to execute
-    if (code) {
-      // chip check
-      if (!os.has(target.id)) {
-        os.boot(target.id, code)
-      }
-      // set context
-      const context = memoryreadchip(target.id)
-      context.activeinput = undefined
-      context.board = board
-      context.target = target
-      // run chip
-      os.tick(target.id)
+
+    // check that we have code to execute
+    if (!code) {
+      return
     }
-  })
+
+    // chip check
+    if (!os.has(target.id)) {
+      os.boot(target.id, code)
+    }
+
+    // set context
+    const context = memoryreadchip(target.id)
+    context.activeinput = undefined
+    context.board = board
+    context.target = target
+
+    // run chip
+    os.tick(target.id)
+  }
 
   // cleanup objects flagged for deletion
 }

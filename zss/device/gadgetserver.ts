@@ -65,7 +65,7 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
 
             // plot shadow
             if (sprite.bg === SPRITES_SINDEX) {
-              shadow.alphas[lx + ly * board.width] = 0.85
+              shadow.alphas[lx + ly * board.width] = 0.5
             }
 
             // inform control layer where to focus

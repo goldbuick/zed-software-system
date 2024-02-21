@@ -11,11 +11,9 @@ import { BOARD_ELEMENT, boardmoveobject } from '../board'
 import { gadgethyperlink, gadgettext } from '../gadget/data/api'
 import { INPUT } from '../gadget/data/types'
 import { clamp } from '../mapping/number'
-import { isNumber } from '../mapping/types'
 
 import {
   categoryconsts,
-  isstrdir,
   collisionconsts,
   colorconsts,
   dirconsts,
@@ -188,9 +186,9 @@ export const ZZT_FIRMWARE = createfirmware(
   })
   .command('char', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [charvalue] = readargs(chip, words, [ARG_TYPE.NUMBER])
+    const [value] = readargs(chip, words, [ARG_TYPE.NUMBER])
     if (isDefined(memory.target)) {
-      memory.target.char = charvalue
+      memory.target.char = value
     }
     return 0
   })
@@ -256,10 +254,7 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   // .command('restart', (chip, words) => {
-  //   const [value] = chip.parse(words.slice(1))
-  //   chip.send('restart', value)
-  //   return 0, this is handled by a built-in 0 label
-  // })
+  // this is handled by a built-in 0 label
   .command('restore', (chip, words) => {
     chip.restore(maptostring(words[0]))
     return 0
@@ -279,10 +274,8 @@ export const ZZT_FIRMWARE = createfirmware(
     console.info(words)
     return 0
   })
-  .command('take', (chip, words) => {
-    console.info(words) // stub-only, this is a lang feature
-    return 0
-  })
+  // .command('take', (chip, words) => {
+  // stub-only, this is a lang feature
   .command('throwstar', (chip, words) => {
     console.info(words)
     return 0
