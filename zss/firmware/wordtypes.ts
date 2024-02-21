@@ -2,7 +2,7 @@ import { isDefined } from 'ts-extras'
 
 import { CHIP, WORD } from '../chip'
 import { SPRITES_SINDEX, SPRITES_TINDEX } from '../gadget/data/types'
-import { select } from '../mapping/array'
+import { range, select } from '../mapping/array'
 import { randomInteger } from '../mapping/number'
 import { isArray, isMaybeString, isNumber, isString } from '../mapping/types'
 
@@ -64,7 +64,12 @@ export enum CATEGORY {
 }
 
 export function ispt(value: any): value is PT {
-  return isArray(value) && isNumber(value[0]) && isNumber(value[1])
+  return (
+    isArray(value) &&
+    value.length === 2 &&
+    isNumber(value[0]) &&
+    isNumber(value[1])
+  )
 }
 
 export function dirfrompts(last: PT, current: PT) {
@@ -93,7 +98,7 @@ export type STR_CATEGORY =
   (typeof categoryconsts)[keyof typeof categoryconsts][]
 
 function isstrcategoryconst(value: any) {
-  return isDefined(CATEGORY[value])
+  return isDefined(CATEGORY[value]) && isString(value)
 }
 
 export function isstrcategory(value: any): value is STR_CATEGORY {
@@ -139,7 +144,7 @@ export type STR_COLLISION =
   (typeof collisionconsts)[keyof typeof collisionconsts][]
 
 function isstrcollisionconst(value: any) {
-  return isDefined(COLLISION[value])
+  return isDefined(COLLISION[value]) && isString(value)
 }
 
 export function isstrcollision(value: any): value is STR_COLLISION {
@@ -228,7 +233,7 @@ export const colorconsts = {
 export type STR_COLOR = (typeof colorconsts)[keyof typeof colorconsts][]
 
 function isstrcolorconst(value: any) {
-  return isDefined(COLOR[value])
+  return isDefined(COLOR[value]) && isString(value)
 }
 
 export function isstrcolor(value: any): value is STR_COLOR {
@@ -295,7 +300,7 @@ export const dirconsts = {
 export type STR_DIR = (typeof dirconsts)[keyof typeof dirconsts][]
 
 function isstrdirconst(value: any) {
-  return isDefined(DIR[value])
+  return isDefined(DIR[value]) && isString(value)
 }
 
 export function isstrdir(value: any): value is STR_DIR {
@@ -405,7 +410,6 @@ export function readexpr(
 
     // check for flag
     const maybeflag = chip.get(maybevalue)
-    console.info({ maybevalue, maybeflag })
     if (isDefined(maybeflag)) {
       return [maybeflag, index + 1]
     }
@@ -435,17 +439,88 @@ export function readexpr(
         // This flag is SET whenever the given kind is visible on the board
         break
       // zss
+      // numbers
+      case 'abs': {
+        // ABS <a>
+        const [a, ii] = readargs(chip, words, index + 1, [ARG_TYPE.NUMBER])
+        return [Math.abs(a), ii]
+      }
+      // array
       case 'pick': {
-        // PICK <a> <b> <c> <d>
+        // PICK <a> [b] [c] [d]
         const values: any[] = []
         for (let ii = index + 1; ii < words.length; ) {
           const [value, iii] = readexpr(chip, words, ii)
+          // if we're given array, we pick from it
+          if (
+            isArray(value) &&
+            !ispt(value) &&
+            !isstrdir(value) &&
+            !isstrcategory(value) &&
+            !isstrcollision(value) &&
+            !isstrcolor(value)
+          ) {
+            return [select(value), iii]
+          }
           ii = iii
           values.push(value)
         }
         return [select(values), words.length]
       }
+      case 'range': {
+        // RANGE <a> [b] [step]
+        const [a, b, step, ii] = readargs(chip, words, index + 1, [
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.MAYBE_NUMBER,
+          ARG_TYPE.MAYBE_NUMBER,
+        ])
+        return [range(a, b, step), ii]
+      }
+      // advanced
+      case 'func': {
+        break
+      }
     }
+    /*
+
+        ALT: () => {
+          this.CONSUME(lexer.Abs)
+          this.SUBRULE2(this.expr_value)
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.Ceil)
+          this.SUBRULE3(this.expr_value)
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.Floor)
+          this.SUBRULE4(this.expr_value)
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.Min)
+          this.AT_LEAST_ONE1(() => this.SUBRULE5(this.expr_value))
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.Max)
+          this.AT_LEAST_ONE2(() => this.SUBRULE6(this.expr_value))
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.Round)
+          this.SUBRULE7(this.expr_value)
+        },
+      },
+    ])
+  })
+    */
   }
 
   // pass through everything else
@@ -505,11 +580,12 @@ function didexpect(msg: string, value: any) {
 export function readargs<T extends ARG_TYPES>(
   chip: CHIP,
   words: WORD[],
+  index: number,
   args: T,
-): ARG_TYPE_VALUES<T> {
+): [...ARG_TYPE_VALUES<T>, number] {
   const values = []
 
-  let ii = 0
+  let ii = index
   for (let i = 0; i < args.length; ++i) {
     switch (args[i]) {
       case ARG_TYPE.CATEGORY: {
@@ -651,14 +727,18 @@ export function readargs<T extends ARG_TYPES>(
         values.push(value)
         break
       }
-      case ARG_TYPE.ANY:
+      case ARG_TYPE.ANY: {
+        const [value, iii] = readexpr(chip, words, ii)
         if (isDefined(value)) {
           didexpect('a value, but got empty', value)
         }
+        ii = iii
+        values.push(value)
         break
+      }
     }
   }
 
   // @ts-expect-error any[] doesn't work
-  return values
+  return [...values, ii]
 }

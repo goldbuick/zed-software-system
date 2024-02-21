@@ -210,6 +210,7 @@ function transformNode(ast: CodeNode): SourceNode {
         `}\n`,
         `} catch (e) {\n`,
         // `debugger;\n`,
+        `console.error(e);\n`,
         `const source = api.stacktrace(e);\n`,
         `const err = new Error(e.message);\n`,
         `err.name = 'GameError';\n`,

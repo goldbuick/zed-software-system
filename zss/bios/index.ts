@@ -1,12 +1,13 @@
 import playercode from 'bundle-text:./player.txt'
 import spincode from 'bundle-text:./spin.txt'
+import testercode from 'bundle-text:./tester.txt'
 import { createboard, createboardobject } from 'zss/board'
 import { BOOK } from 'zss/book'
 import { CONTENT_TYPE } from 'zss/codepage'
-import { SPRITES_SINDEX } from 'zss/gadget/data/types'
 import { createguid } from 'zss/mapping/guid'
 
 import { COLOR } from '../firmware/wordtypes'
+import { select } from '../mapping/array'
 import { randomInteger } from '../mapping/number'
 
 const BOARD_WIDTH = 60
@@ -31,11 +32,11 @@ export const BIOS: BOOK = {
                 color: COLOR.DKGRAY,
               }
             }
-            for (let i = 0; i < 512; i++) {
+            for (let i = 0; i < 16; i++) {
               createboardobject(board, {
                 x: randomInteger(0, board.width - 1),
                 y: randomInteger(0, board.height - 1),
-                kind: 'app:spin',
+                kind: select('app:spin', 'app:tester'),
               })
             }
             return board
@@ -49,7 +50,7 @@ export const BIOS: BOOK = {
             name: 'player',
             char: 2,
             color: COLOR.PURPLE,
-            bg: SPRITES_SINDEX,
+            bg: COLOR.CLEAR,
             code: playercode,
           },
         },
@@ -61,8 +62,20 @@ export const BIOS: BOOK = {
             name: 'spin',
             char: 15,
             color: COLOR.RED,
-            bg: SPRITES_SINDEX,
+            bg: COLOR.CLEAR,
             code: spincode,
+          },
+        },
+        {
+          id: createguid(),
+          type: CONTENT_TYPE.OBJECT,
+          name: 'tester',
+          value: {
+            name: 'tester',
+            char: 21,
+            color: COLOR.BLUE,
+            bg: COLOR.CLEAR,
+            code: testercode,
           },
         },
       ],

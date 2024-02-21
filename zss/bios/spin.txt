@@ -1,12 +1,6 @@
 @spin
-#cycle rnd 1 10
-#char rnd 1 24
+#cycle pick range 16
 #color pick red white blue
-#bg shadow
-
 :think
-?up ?rnd
-?right ?rnd
-?down ?rnd
-?left ?rnd
+?u?r?d?l
 #think

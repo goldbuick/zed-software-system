@@ -21,7 +21,7 @@ export const ZSS_FIRMWARE = createfirmware(
 )
   .command('bg', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [value] = readargs(chip, words, [ARG_TYPE.COLOR])
+    const [value] = readargs(chip, words, 0, [ARG_TYPE.COLOR])
     if (isDefined(memory.target)) {
       memory.target.bg = value
     }
@@ -29,7 +29,7 @@ export const ZSS_FIRMWARE = createfirmware(
   })
   .command('color', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [value] = readargs(chip, words, [ARG_TYPE.COLOR])
+    const [value] = readargs(chip, words, 0, [ARG_TYPE.COLOR])
     if (isDefined(memory.target)) {
       memory.target.color = value
     }

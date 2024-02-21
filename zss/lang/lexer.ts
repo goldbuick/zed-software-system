@@ -512,7 +512,7 @@ export function tokenize(text: string) {
   matchTextEnabled = true
 
   indentStack = [0]
-  const lexResult = scriptLexer.tokenize(text)
+  const lexResult = scriptLexer.tokenize(text || ' \n')
 
   let lastToken = last(lexResult.tokens)
   if (!lastToken) {

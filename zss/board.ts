@@ -117,6 +117,30 @@ export function boardreadobject(board: BOARD, id: string): MAYBE_BOARD_ELEMENT {
   return board.objects[id]
 }
 
+function moveptbydir(
+  pt: PT,
+  dir: DIR.NORTH | DIR.SOUTH | DIR.WEST | DIR.EAST | undefined,
+): PT {
+  switch (dir) {
+    case DIR.NORTH:
+      --pt[1]
+      break
+    case DIR.SOUTH:
+      ++pt[1]
+      break
+    case DIR.WEST:
+      --pt[0]
+      break
+    case DIR.EAST:
+      ++pt[0]
+      break
+    default:
+      // no-op
+      break
+  }
+  return pt
+}
+
 export function boardevaldir(
   board: BOARD,
   target: MAYBE_BOARD_ELEMENT,
@@ -124,28 +148,23 @@ export function boardevaldir(
 ): PT {
   const tx = target?.x ?? 0
   const ty = target?.y ?? 0
-  let x = tx
-  let y = ty
-  const flow = dirfrompts([target?.lx ?? x, target?.ly ?? y], [x, y])
+  const pt: PT = [tx, ty]
+  const start: PT = [...pt]
+  const flow = dirfrompts([target?.lx ?? pt[0], target?.ly ?? pt[1]], pt)
 
   // we need to know current flow etc..
 
-  for (let i = 0; i < dir.length && x === tx && y === ty; ++i) {
-    switch (DIR[dir[i]]) {
+  for (let i = 0; i < dir.length && pt[0] === tx && pt[1] === ty; ++i) {
+    const dirconst = DIR[dir[i]]
+    switch (dirconst) {
       case DIR.IDLE:
         // no-op
         break
       case DIR.NORTH:
-        --y
-        break
       case DIR.SOUTH:
-        ++y
-        break
       case DIR.WEST:
-        --x
-        break
       case DIR.EAST:
-        ++x
+        moveptbydir(pt, dirconst)
         break
       case DIR.BY:
         // skip pt, pt
@@ -154,125 +173,48 @@ export function boardevaldir(
         // skip pt, pt
         break
       case DIR.FLOW:
-        switch (flow) {
-          case DIR.NORTH:
-            --y
-            break
-          case DIR.SOUTH:
-            ++y
-            break
-          case DIR.WEST:
-            --x
-            break
-          case DIR.EAST:
-            ++x
-            break
-        }
+        moveptbydir(pt, flow)
         break
-      case DIR.SEEK:
+      case DIR.SEEK: {
+        const player = boardfindplayer(board, target)
         // skip
         break
+      }
       case DIR.RNDNS:
-        switch (select(DIR.NORTH, DIR.SOUTH)) {
-          case DIR.NORTH:
-            --y
-            break
-          case DIR.SOUTH:
-            ++y
-            break
-        }
+        moveptbydir(pt, select(DIR.NORTH, DIR.SOUTH))
         break
       case DIR.RNDNE:
-        switch (select(DIR.NORTH, DIR.EAST)) {
-          case DIR.NORTH:
-            --y
-            break
-          case DIR.EAST:
-            ++x
-            break
-        }
+        moveptbydir(pt, select(DIR.NORTH, DIR.EAST))
         break
       case DIR.RND:
-        switch (select(DIR.NORTH, DIR.SOUTH, DIR.WEST, DIR.EAST)) {
-          case DIR.NORTH:
-            --y
-            break
-          case DIR.SOUTH:
-            ++y
-            break
-          case DIR.WEST:
-            --x
-            break
-          case DIR.EAST:
-            ++x
-            break
-        }
+        moveptbydir(pt, select(DIR.NORTH, DIR.SOUTH, DIR.WEST, DIR.EAST))
         break
       // modifiers
       case DIR.CW: {
         const modpt = boardevaldir(board, target, dir.slice(i + 1))
-        switch (dirfrompts([tx, ty], modpt)) {
-          case DIR.NORTH:
-            ++x
-            break
-          case DIR.SOUTH:
-            --x
-            break
-          case DIR.WEST:
-            --y
-            break
-          case DIR.EAST:
-            ++y
-            break
-        }
+        moveptbydir(pt, dirfrompts(start, modpt))
         break
       }
       case DIR.CCW: {
         const modpt = boardevaldir(board, target, dir.slice(i + 1))
-        switch (dirfrompts([tx, ty], modpt)) {
-          case DIR.NORTH:
-            --x
-            break
-          case DIR.SOUTH:
-            ++x
-            break
-          case DIR.WEST:
-            ++y
-            break
-          case DIR.EAST:
-            --y
-            break
-        }
+        moveptbydir(pt, dirfrompts(start, modpt))
         break
       }
       case DIR.OPP: {
         const modpt = boardevaldir(board, target, dir.slice(i + 1))
-        switch (dirfrompts([tx, ty], modpt)) {
-          case DIR.NORTH:
-            ++y
-            break
-          case DIR.SOUTH:
-            --y
-            break
-          case DIR.WEST:
-            ++x
-            break
-          case DIR.EAST:
-            --x
-            break
-        }
+        moveptbydir(pt, dirfrompts(start, modpt))
         break
       }
       case DIR.RNDP: {
         const modpt = boardevaldir(board, target, dir.slice(i + 1))
-        switch (dirfrompts([tx, ty], modpt)) {
+        switch (dirfrompts(start, modpt)) {
           case DIR.NORTH:
           case DIR.SOUTH:
-            x += select(-1, 1)
+            pt[0] += select(-1, 1)
             break
           case DIR.WEST:
           case DIR.EAST:
-            y += select(-1, 1)
+            pt[1] += select(-1, 1)
             break
         }
         break
@@ -280,7 +222,7 @@ export function boardevaldir(
     }
   }
 
-  return [x, y]
+  return pt
 }
 
 export function boarddeleteobject(board: BOARD, id: string) {
@@ -327,6 +269,10 @@ export function boardmoveobject(
   board.lookup[object.x + object.y * board.width] = object.id ?? ''
 
   return true
+}
+
+export function boardfindplayer(board: BOARD, target: MAYBE_BOARD_ELEMENT) {
+  //
 }
 
 export function bookobjectreadkind(

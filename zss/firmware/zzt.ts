@@ -186,7 +186,7 @@ export const ZZT_FIRMWARE = createfirmware(
   })
   .command('char', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [value] = readargs(chip, words, [ARG_TYPE.NUMBER])
+    const [value] = readargs(chip, words, 0, [ARG_TYPE.NUMBER])
     if (isDefined(memory.target)) {
       memory.target.char = value
     }
@@ -198,7 +198,7 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('cycle', (chip, words) => {
-    const [cyclevalue] = readargs(chip, words, [ARG_TYPE.NUMBER])
+    const [cyclevalue] = readargs(chip, words, 0, [ARG_TYPE.NUMBER])
     chip.cycle(clamp(Math.round(cyclevalue), 1, 255))
     return 0
   })
