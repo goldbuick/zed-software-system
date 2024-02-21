@@ -1,5 +1,5 @@
 @spin
-#cycle pick range 16
+#cycle pick range 1 5
 #color pick red white blue
 :think
 ?u?r?d?l
