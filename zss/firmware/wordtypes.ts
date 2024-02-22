@@ -2,7 +2,7 @@ import { isDefined } from 'ts-extras'
 
 import { CHIP, WORD } from '../chip'
 import { SPRITES_SINDEX, SPRITES_TINDEX } from '../gadget/data/types'
-import { range, select } from '../mapping/array'
+import { range, pick } from '../mapping/array'
 import { randomInteger } from '../mapping/number'
 import { isArray, isMaybeString, isNumber, isString } from '../mapping/types'
 
@@ -468,12 +468,12 @@ export function readexpr(
             !isstrcollision(value) &&
             !isstrcolor(value)
           ) {
-            return [select(value), iii]
+            return [pick(value), iii]
           }
           ii = iii
           values.push(value)
         }
-        return [select(values), words.length]
+        return [pick(values), words.length]
       }
       case 'range': {
         // RANGE <a> [b] [step]

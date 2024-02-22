@@ -1,1 +1,6 @@
-
+@tester
+#cycle 1
+#color pick red white blue
+:think
+?rnd
+#think

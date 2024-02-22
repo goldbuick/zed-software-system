@@ -7,7 +7,7 @@ import { CONTENT_TYPE } from 'zss/codepage'
 import { createguid } from 'zss/mapping/guid'
 
 import { COLOR } from '../firmware/wordtypes'
-import { select } from '../mapping/array'
+import { pick } from '../mapping/array'
 import { randomInteger } from '../mapping/number'
 
 const BOARD_WIDTH = 60
@@ -28,17 +28,37 @@ export const BIOS: BOOK = {
           value: createboard(BOARD_WIDTH, BOARD_HEIGHT, (board) => {
             for (let i = 0; i < board.terrain.length; ++i) {
               board.terrain[i] = {
-                char: 178,
-                color: select(COLOR.DKGRAY, COLOR.LTGRAY),
+                char: pick(
+                  32,
+                  32,
+                  32,
+                  32,
+                  32,
+                  32,
+                  176,
+                  176,
+                  176,
+                  176,
+                  176,
+                  176,
+                  176,
+                  176,
+                  177,
+                  177,
+                  177,
+                  177,
+                  178,
+                ),
+                color: COLOR.DKGRAY,
               }
             }
-            // for (let i = 0; i < 16; i++) {
-            //   createboardobject(board, {
-            //     x: randomInteger(0, board.width - 1),
-            //     y: randomInteger(0, board.height - 1),
-            //     kind: select('app:spin', 'app:tester'),
-            //   })
-            // }
+            for (let i = 0; i < 16; i++) {
+              createboardobject(board, {
+                x: randomInteger(0, board.width - 1),
+                y: randomInteger(0, board.height - 1),
+                kind: pick('app:spin', 'app:tester'),
+              })
+            }
             return board
           }),
         },

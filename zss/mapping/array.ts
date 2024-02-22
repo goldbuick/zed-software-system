@@ -27,7 +27,7 @@ function randomItem<T>(array: T[]) {
   return array[randomInteger(0, array.length - 1)]
 }
 
-export function select<T>(...args: T[]) {
+export function pick<T>(...args: T[]) {
   return randomItem(args.flat())
 }
 

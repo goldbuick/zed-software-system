@@ -6,7 +6,7 @@ import { WORD_VALUE } from './chip'
 import { CONTENT_TYPE } from './codepage'
 import { MAYBE_STRING } from './device/shared'
 import { PT, DIR, STR_DIR, dirfrompts } from './firmware/wordtypes'
-import { range, select } from './mapping/array'
+import { range, pick } from './mapping/array'
 import { createguid } from './mapping/guid'
 import { memoryreadchip } from './memory'
 import { OS } from './os'
@@ -181,13 +181,13 @@ export function boardevaldir(
         break
       }
       case DIR.RNDNS:
-        moveptbydir(pt, select(DIR.NORTH, DIR.SOUTH))
+        moveptbydir(pt, pick(DIR.NORTH, DIR.SOUTH))
         break
       case DIR.RNDNE:
-        moveptbydir(pt, select(DIR.NORTH, DIR.EAST))
+        moveptbydir(pt, pick(DIR.NORTH, DIR.EAST))
         break
       case DIR.RND:
-        moveptbydir(pt, select(DIR.NORTH, DIR.SOUTH, DIR.WEST, DIR.EAST))
+        moveptbydir(pt, pick(DIR.NORTH, DIR.SOUTH, DIR.WEST, DIR.EAST))
         break
       // modifiers
       case DIR.CW: {
@@ -210,11 +210,11 @@ export function boardevaldir(
         switch (dirfrompts(start, modpt)) {
           case DIR.NORTH:
           case DIR.SOUTH:
-            pt[0] += select(-1, 1)
+            pt[0] += pick(-1, 1)
             break
           case DIR.WEST:
           case DIR.EAST:
-            pt[1] += select(-1, 1)
+            pt[1] += pick(-1, 1)
             break
         }
         break
