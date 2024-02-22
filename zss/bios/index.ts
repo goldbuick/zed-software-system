@@ -52,7 +52,7 @@ export const BIOS: BOOK = {
                 color: COLOR.DKGRAY,
               }
             }
-            for (let i = 0; i < 256; i++) {
+            for (let i = 0; i < 24; i++) {
               createboardobject(board, {
                 x: randomInteger(0, board.width - 1),
                 y: randomInteger(0, board.height - 1),

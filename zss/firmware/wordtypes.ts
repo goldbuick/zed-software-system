@@ -422,10 +422,7 @@ export function readexpr(
       return [maybeflag, index + 1]
     }
 
-    /*
-    port existing zed cafe expressions here ...
-    func, min, max, ceil, floor, etc...
-    */
+    // check for expressions
     switch (maybeexpr) {
       // zzt
       case 'aligned':
@@ -453,7 +450,64 @@ export function readexpr(
         const [a, ii] = readargs(chip, words, index + 1, [ARG_TYPE.NUMBER])
         return [Math.abs(a), ii]
       }
+      case 'ceil': {
+        // CEIL <a>
+        const [a, ii] = readargs(chip, words, index + 1, [ARG_TYPE.NUMBER])
+        return [Math.ceil(a), ii]
+      }
+      case 'floor': {
+        // FLOOR <a>
+        const [a, ii] = readargs(chip, words, index + 1, [ARG_TYPE.NUMBER])
+        return [Math.floor(a), ii]
+      }
+      case 'round': {
+        // ROUND <a>
+        const [a, ii] = readargs(chip, words, index + 1, [ARG_TYPE.NUMBER])
+        return [Math.round(a), ii]
+      }
       // array
+      case 'min': {
+        // MIN <a> [b] [c] [d]
+        const values: any[] = []
+        for (let ii = index + 1; ii < words.length; ) {
+          const [value, iii] = readexpr(chip, words, ii)
+          // if we're given array, we pick from it
+          if (
+            isArray(value) &&
+            !ispt(value) &&
+            !isstrdir(value) &&
+            !isstrcategory(value) &&
+            !isstrcollision(value) &&
+            !isstrcolor(value)
+          ) {
+            return [pick(value), iii]
+          }
+          ii = iii
+          values.push(value)
+        }
+        return [Math.min(...values), words.length]
+      }
+      case 'max': {
+        // MAX <a> [b] [c] [d]
+        const values: any[] = []
+        for (let ii = index + 1; ii < words.length; ) {
+          const [value, iii] = readexpr(chip, words, ii)
+          // if we're given array, we pick from it
+          if (
+            isArray(value) &&
+            !ispt(value) &&
+            !isstrdir(value) &&
+            !isstrcategory(value) &&
+            !isstrcollision(value) &&
+            !isstrcolor(value)
+          ) {
+            return [pick(value), iii]
+          }
+          ii = iii
+          values.push(value)
+        }
+        return [Math.max(...values), words.length]
+      }
       case 'pick': {
         // PICK <a> [b] [c] [d]
         const values: any[] = []
@@ -489,46 +543,6 @@ export function readexpr(
         break
       }
     }
-    /*
-
-        ALT: () => {
-          this.CONSUME(lexer.Abs)
-          this.SUBRULE2(this.expr_value)
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.Ceil)
-          this.SUBRULE3(this.expr_value)
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.Floor)
-          this.SUBRULE4(this.expr_value)
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.Min)
-          this.AT_LEAST_ONE1(() => this.SUBRULE5(this.expr_value))
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.Max)
-          this.AT_LEAST_ONE2(() => this.SUBRULE6(this.expr_value))
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.Round)
-          this.SUBRULE7(this.expr_value)
-        },
-      },
-    ])
-  })
-    */
   }
 
   // pass through everything else
