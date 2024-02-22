@@ -29,16 +29,16 @@ export const BIOS: BOOK = {
             for (let i = 0; i < board.terrain.length; ++i) {
               board.terrain[i] = {
                 char: 178,
-                color: COLOR.DKGRAY,
+                color: select(COLOR.DKGRAY, COLOR.LTGRAY),
               }
             }
-            for (let i = 0; i < 16; i++) {
-              createboardobject(board, {
-                x: randomInteger(0, board.width - 1),
-                y: randomInteger(0, board.height - 1),
-                kind: select('app:spin', 'app:tester'),
-              })
-            }
+            // for (let i = 0; i < 16; i++) {
+            //   createboardobject(board, {
+            //     x: randomInteger(0, board.width - 1),
+            //     y: randomInteger(0, board.height - 1),
+            //     kind: select('app:spin', 'app:tester'),
+            //   })
+            // }
             return board
           }),
         },

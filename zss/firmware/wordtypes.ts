@@ -110,17 +110,19 @@ export function readcategory(
   words: WORD[],
   index: number,
 ): [STR_CATEGORY | undefined, number] {
-  const maybestrcategory = words[index]
+  const value: MAYBE_WORD = words[index]
 
   // already mapped
-  if (isstrcategory(maybestrcategory)) {
-    return [maybestrcategory, index + 1]
+  if (isstrcategory(value)) {
+    return [value, index + 1]
   }
 
   // single string
-  const value: MAYBE_WORD = words[index]
   if (typeof value === 'string') {
     const maybecategory = chip.get(value)
+    if (isstrcategory(maybecategory)) {
+      return [maybecategory, index + 1]
+    }
     if (isstrcategoryconst(maybecategory)) {
       return [[maybecategory], index + 1]
     }
@@ -156,17 +158,19 @@ export function readcollision(
   words: WORD[],
   index: number,
 ): [STR_COLLISION | undefined, number] {
-  const maybestrcollision = words[index]
+  const value: MAYBE_WORD = words[index]
 
   // already mapped
-  if (isstrcollision(maybestrcollision)) {
-    return [maybestrcollision, index + 1]
+  if (isstrcollision(value)) {
+    return [value, index + 1]
   }
 
   // single string
-  const value: MAYBE_WORD = words[index]
   if (typeof value === 'string') {
     const maybecollision = chip.get(value)
+    if (isstrcollision(maybecollision)) {
+      return [maybecollision, index + 1]
+    }
     if (isstrcollisionconst(maybecollision)) {
       return [[maybecollision], index + 1]
     }
@@ -245,17 +249,19 @@ export function readcolor(
   words: WORD[],
   index: number,
 ): [STR_COLOR | number | undefined, number] {
-  const maybestrcolor = words[index]
+  const value: MAYBE_WORD = words[index]
 
   // already mapped
-  if (isstrcolor(maybestrcolor)) {
-    return [maybestrcolor, index + 1]
+  if (isstrcolor(value)) {
+    return [value, index + 1]
   }
 
   // single string
-  const value: MAYBE_WORD = words[index]
   if (typeof value === 'string') {
     const maybecolor = chip.get(value)
+    if (isstrcolor(maybecolor)) {
+      return [maybecolor, index + 1]
+    }
     if (isstrcolorconst(maybecolor)) {
       return [[maybecolor], index + 1]
     }
@@ -312,17 +318,19 @@ export function readdir(
   words: WORD[],
   index: number,
 ): [STR_DIR | undefined, number] {
-  const maybestrdir = words[index]
+  const value: MAYBE_WORD = words[index]
 
   // already mapped
-  if (isstrdir(maybestrdir)) {
-    return [maybestrdir, index + 1]
+  if (isstrdir(value)) {
+    return [value, index + 1]
   }
 
   // single string
-  const value: MAYBE_WORD = words[index]
   if (typeof value === 'string') {
     const maybedir = chip.get(value)
+    if (isstrdir(maybedir)) {
+      return [maybedir, index + 1]
+    }
     if (isstrdirconst(maybedir)) {
       // need to handle special case of by & at
       return [[maybedir], index + 1]
