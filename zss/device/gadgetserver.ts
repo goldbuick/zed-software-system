@@ -16,7 +16,14 @@ import {
   createsprites,
   createtiles,
 } from 'zss/gadget/data/types'
-import { memoryobjectreadkind, memoryplayerreadboard } from 'zss/memory'
+import {
+  memoryobjectreadkind,
+  memoryplayerreadboard,
+  memoryterrainreadkind,
+} from 'zss/memory'
+
+import { MAYBE_BOARD_ELEMENT } from '../board'
+import { COLOR } from '../firmware/wordtypes'
 
 // tracking gadget state for individual players
 const syncstate: Record<string, GADGET_STATE> = {}
@@ -43,9 +50,10 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
 
           board.terrain.forEach((tile, i) => {
             if (tile) {
-              tiles.char[i] = tile.char ?? 0
-              tiles.color[i] = tile.color ?? 0
-              tiles.bg[i] = tile.bg ?? 0
+              const kind = memoryterrainreadkind(tile)
+              tiles.char[i] = tile.char ?? kind?.char ?? 0
+              tiles.color[i] = tile.color ?? kind?.color ?? COLOR.BLACK
+              tiles.bg[i] = tile.bg ?? kind?.bg ?? COLOR.BLACK
             }
           })
 
@@ -58,9 +66,9 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
             const ly = object.ly ?? object.y ?? 0
             sprite.x = object.x ?? 0
             sprite.y = object.y ?? 0
-            sprite.char = object.char ?? kind?.char ?? 0
-            sprite.color = object.color ?? kind?.color ?? 0
-            sprite.bg = object.bg ?? kind?.bg ?? SPRITES_TINDEX
+            sprite.char = object.char ?? kind?.char ?? 1
+            sprite.color = object.color ?? kind?.color ?? COLOR.WHITE
+            sprite.bg = object.bg ?? kind?.bg ?? COLOR.CLEAR
             objects.sprites.push(sprite)
 
             // plot shadow

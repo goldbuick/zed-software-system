@@ -7,14 +7,16 @@ import {
   boarddeleteobject,
   boardtick,
   MAYBE_BOARD_ELEMENT,
-  bookobjectreadkind,
   boardreadobject,
   BOARD,
   BOARD_ELEMENT,
+  boardmoveobject,
+  MAYBE_BOARD,
 } from './board'
-import { readaddress } from './book'
+import { bookobjectreadkind, bookterrainreadkind, readaddress } from './book'
 import { WORD_VALUE } from './chip'
 import { CONTENT_TYPE } from './codepage'
+import { STR_DIR } from './firmware/wordtypes'
 import { INPUT } from './gadget/data/types'
 import { randomInteger } from './mapping/number'
 import { OS } from './os'
@@ -125,12 +127,27 @@ export function memoryreadboard(address: string) {
   return readaddress(MEMORY.book, CONTENT_TYPE.BOARD, address)
 }
 
+export function memoryterrainreadkind(terrain: MAYBE_BOARD_ELEMENT) {
+  return bookterrainreadkind(MEMORY.book, terrain)
+}
+
 export function memoryreadobject(address: string) {
   return readaddress(MEMORY.book, CONTENT_TYPE.OBJECT, address)
 }
 
 export function memoryobjectreadkind(object: MAYBE_BOARD_ELEMENT) {
   return bookobjectreadkind(MEMORY.book, object)
+}
+
+export function memoryboardmoveobject(
+  board: MAYBE_BOARD,
+  target: MAYBE_BOARD_ELEMENT,
+  dir: STR_DIR | undefined,
+) {
+  if (!isDefined(board) || !isDefined(dir)) {
+    return false
+  }
+  return boardmoveobject(MEMORY.book, board, target, dir)
 }
 
 export function memorytick(os: OS) {

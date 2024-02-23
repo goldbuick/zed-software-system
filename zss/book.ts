@@ -1,3 +1,6 @@
+import { isDefined } from 'ts-extras'
+
+import { MAYBE_BOARD_ELEMENT } from './board'
 import {
   CODE_PAGE,
   CONTENT_TYPE,
@@ -26,4 +29,30 @@ export function readaddress<T extends CONTENT_TYPE>(
   const [pagename, entryname] = address.split(':')
   const page = readpage(book, pagename)
   return page ? readentry(page, type, entryname) : undefined
+}
+
+export function bookobjectreadkind(
+  book: BOOK,
+  object: MAYBE_BOARD_ELEMENT,
+): MAYBE_BOARD_ELEMENT {
+  if (isDefined(object) && isDefined(object.kind)) {
+    if (!isDefined(object.kinddata)) {
+      object.kinddata = readaddress(book, CONTENT_TYPE.OBJECT, object.kind)
+    }
+    return object.kinddata
+  }
+  return undefined
+}
+
+export function bookterrainreadkind(
+  book: BOOK,
+  terrain: MAYBE_BOARD_ELEMENT,
+): MAYBE_BOARD_ELEMENT {
+  if (isDefined(terrain) && isDefined(terrain.kind)) {
+    if (!isDefined(terrain.kinddata)) {
+      terrain.kinddata = readaddress(book, CONTENT_TYPE.TERRAIN, terrain.kind)
+    }
+    return terrain.kinddata
+  }
+  return undefined
 }

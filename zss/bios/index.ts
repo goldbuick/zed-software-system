@@ -6,7 +6,7 @@ import { BOOK } from 'zss/book'
 import { CONTENT_TYPE } from 'zss/codepage'
 import { createguid } from 'zss/mapping/guid'
 
-import { COLOR } from '../firmware/wordtypes'
+import { COLLISION, COLOR } from '../firmware/wordtypes'
 import { pick } from '../mapping/array'
 import { randomInteger } from '../mapping/number'
 
@@ -28,28 +28,16 @@ export const BIOS: BOOK = {
           value: createboard(BOARD_WIDTH, BOARD_HEIGHT, (board) => {
             for (let i = 0; i < board.terrain.length; ++i) {
               board.terrain[i] = {
-                char: pick(
-                  32,
-                  32,
-                  32,
-                  32,
-                  32,
-                  32,
-                  176,
-                  176,
-                  176,
-                  176,
-                  176,
-                  176,
-                  176,
-                  176,
-                  177,
-                  177,
-                  177,
-                  177,
-                  178,
+                kind: pick(
+                  'app:field',
+                  'app:field',
+                  'app:field',
+                  'app:field',
+                  'app:field',
+                  'app:field',
+                  'app:field',
+                  'app:wall',
                 ),
-                color: COLOR.DKGRAY,
               }
             }
             for (let i = 0; i < 24; i++) {
@@ -96,6 +84,28 @@ export const BIOS: BOOK = {
             color: COLOR.BLUE,
             bg: COLOR.CLEAR,
             code: testercode,
+          },
+        },
+        {
+          id: createguid(),
+          type: CONTENT_TYPE.TERRAIN,
+          name: 'field',
+          value: {
+            name: 'field',
+            char: 176,
+            color: COLOR.DKYELLOW,
+            collision: COLLISION.WALK,
+          },
+        },
+        {
+          id: createguid(),
+          type: CONTENT_TYPE.TERRAIN,
+          name: 'wall',
+          value: {
+            name: 'wall',
+            char: 219,
+            color: COLOR.CYAN,
+            collision: COLLISION.SOLID,
           },
         },
       ],

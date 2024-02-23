@@ -2,12 +2,13 @@ import { isDefined, isPresent } from 'ts-extras'
 import { WORD_VALUE, maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import {
+  memoryboardmoveobject,
   memoryplayerreadflag,
   memoryplayersetflag,
   memoryreadchip,
 } from 'zss/memory'
 
-import { BOARD_ELEMENT, boardmoveobject } from '../board'
+import { BOARD_ELEMENT } from '../board'
 import { gadgethyperlink, gadgettext } from '../gadget/data/api'
 import { INPUT } from '../gadget/data/types'
 import { clamp } from '../mapping/number'
@@ -223,11 +224,7 @@ export const ZZT_FIRMWARE = createfirmware(
   .command('go', (chip, words) => {
     const [dir] = readdir(chip, words, 0)
     const memory = memoryreadchip(chip.id())
-    if (
-      dir &&
-      memory.board &&
-      boardmoveobject(memory.board, memory.target, dir)
-    ) {
+    if (memoryboardmoveobject(memory.board, memory.target, dir)) {
       return 0
     }
     // if blocked, return 1

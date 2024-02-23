@@ -1,11 +1,16 @@
 import { isDefined } from 'ts-extras'
 import { ref } from 'valtio'
 
-import { BOOK, readaddress } from './book'
+import {
+  BOOK,
+  bookobjectreadkind,
+  bookterrainreadkind,
+  readaddress,
+} from './book'
 import { WORD_VALUE } from './chip'
 import { CONTENT_TYPE } from './codepage'
 import { MAYBE_STRING } from './device/shared'
-import { PT, DIR, STR_DIR, dirfrompts } from './firmware/wordtypes'
+import { PT, DIR, STR_DIR, dirfrompts, COLLISION } from './firmware/wordtypes'
 import { range, pick } from './mapping/array'
 import { createguid } from './mapping/guid'
 import { memoryreadchip } from './memory'
@@ -79,6 +84,8 @@ export type BOARD = {
   // runtime only
   lookup?: MAYBE_STRING[]
 }
+
+export type MAYBE_BOARD = BOARD | undefined
 
 export function createboard(
   width: number,
@@ -233,7 +240,21 @@ export function boarddeleteobject(board: BOARD, id: string) {
   return false
 }
 
+export function boardcheckcollision(source: COLLISION, dest: COLLISION) {
+  switch (source) {
+    case COLLISION.WALK:
+      return dest !== COLLISION.WALK
+    case COLLISION.SWIM:
+      return dest !== COLLISION.SWIM
+    case COLLISION.SOLID:
+      return true // solid runs into everything
+    case COLLISION.BULLET:
+      return dest !== COLLISION.WALK && dest !== COLLISION.SWIM
+  }
+}
+
 export function boardmoveobject(
+  book: BOOK,
   board: BOARD,
   target: MAYBE_BOARD_ELEMENT,
   dir: STR_DIR,
@@ -251,11 +272,27 @@ export function boardmoveobject(
   }
 
   const idx = dx + dy * board.width
+  const targetkind = bookobjectreadkind(book, object)
+  const targetcollision =
+    object?.collision ?? targetkind?.collision ?? COLLISION.WALK
 
   // blocked by an object
   const maybeobject = board.lookup[idx]
   if (isDefined(maybeobject)) {
+    // touch & thud
     return false
+  }
+
+  // blocked by terrain
+  const mayberterrain = board.terrain[idx]
+  if (isDefined(mayberterrain)) {
+    const terrainkind = bookterrainreadkind(book, mayberterrain)
+    const terraincollision =
+      mayberterrain.collision ?? terrainkind?.collision ?? COLLISION.WALK
+    if (boardcheckcollision(targetcollision, terraincollision)) {
+      // touch & thud
+      return false
+    }
   }
 
   // todo - everything else ...
@@ -273,19 +310,6 @@ export function boardmoveobject(
 
 export function boardfindplayer(board: BOARD, target: MAYBE_BOARD_ELEMENT) {
   //
-}
-
-export function bookobjectreadkind(
-  book: BOOK,
-  object: MAYBE_BOARD_ELEMENT,
-): MAYBE_BOARD_ELEMENT {
-  if (isDefined(object) && isDefined(object.kind)) {
-    if (!isDefined(object.kinddata)) {
-      object.kinddata = readaddress(book, CONTENT_TYPE.OBJECT, object.kind)
-    }
-    return object.kinddata
-  }
-  return undefined
 }
 
 function boardsetlookup(board: BOARD) {
