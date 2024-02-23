@@ -67,6 +67,9 @@ document.addEventListener('keydown', (event) => {
       invoke(INPUT.MENU_BUTTON, mods)
       break
     default:
+      // we should have gamepad input that moves between hotkey inputs,
+      // which then can be activated with the ok button
+      // maybe d-pad ?
       root.emit('keydown', event)
       break
   }

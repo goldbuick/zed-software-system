@@ -36,15 +36,16 @@ export const ZSS_FIRMWARE = createfirmware(
     return 0
   })
   .command('gadget', (chip, words) => {
-    const edge = maptostring(words[0])
+    const [edge, arg1, arg2] = readargs(chip, words, 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.ANY,
+      ARG_TYPE.ANY,
+    ])
     const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
     const isScroll = edgeConst === PANEL_TYPE.SCROLL
 
-    const arg1 = words[isScroll ? 2 : 1]
-    const arg2 = words[isScroll ? 1 : 2]
-    const args = [arg1, arg2]
-    const [size] = readnumber(chip, args, 0)
-    const name = maptostring(arg2)
+    const [size] = readnumber(chip, [isScroll ? arg2 : arg1], 0)
+    const name = maptostring(isScroll ? arg1 : arg2)
 
     gadgetpanel(chip, edge, edgeConst, size, name)
     return 0

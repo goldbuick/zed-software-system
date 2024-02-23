@@ -751,9 +751,6 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.ANY: {
         const [value, iii] = readexpr(chip, words, ii)
-        if (isDefined(value)) {
-          didexpect('a value, but got empty', value)
-        }
         ii = iii
         values.push(value)
         break

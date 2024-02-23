@@ -9,6 +9,10 @@ how do codepages work?
 you start typing and it figures out the content type you want
 defaults to object typedef
 
+@code:name
+' rest of code goes here
+' note this is for use with func
+
 @board:name
 ' rest of board code goes here
 ' ie: after typing out @board:barftown
