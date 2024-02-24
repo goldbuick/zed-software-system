@@ -9,11 +9,12 @@ import {
   dirfrompts,
   COLLISION,
   ispt,
+  CATEGORY,
 } from 'zss/firmware/wordtypes'
 import { range, pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
 
-import { nearestpt } from './atomics'
+import { namedelements, nearestpt } from './atomics'
 import { BOOK, bookobjectreadkind, bookterrainreadkind } from './book'
 
 // generics
@@ -33,7 +34,6 @@ export type BOARD_ELEMENT_STATS = {
 export type BOARD_ELEMENT = Partial<{
   // this element is an instance of an element type
   kind: string
-  kinddata: BOARD_ELEMENT
   // objects only
   id: string
   x: number
@@ -54,7 +54,9 @@ export type BOARD_ELEMENT = Partial<{
   destructible: number
   // custom
   stats: BOARD_ELEMENT_STATS
-  // gc
+  // runtime
+  category: CATEGORY
+  kinddata: BOARD_ELEMENT
   removed: number
 }>
 
@@ -86,7 +88,7 @@ export type BOARD = {
   stats?: BOARD_STATS
   // runtime only
   lookup?: MAYBE_STRING[]
-  named?: Record<string, Set<string>>
+  named?: Record<string, Set<string | number>>
 }
 
 export type MAYBE_BOARD = BOARD | undefined
@@ -328,36 +330,36 @@ export function boardfindplayer(
     return undefined
   }
 
-  // target coords
-  const pt: PT = { x: target.x ?? 0, y: target.y ?? 0 }
-
-  // player aggro
-  const aggro = target?.stats?.player ?? ''
+  // check aggro
+  const aggro = target.stats?.player ?? ''
   const player = board.objects[aggro]
   if (isDefined(player)) {
     return player
   }
 
-  // nearest player
-  return nearestpt(
-    board,
-    pt,
-    [...(board.named?.['player']?.values() ?? [])].map(
-      (id) => board.objects[id],
-    ),
-  )
+  // check pt
+  if (!ispt(target)) {
+    return undefined
+  }
+
+  // nearest player to target
+  return nearestpt(board, target, namedelements(board, 'player'))
 }
 
 function boardsetlookup(book: BOOK, board: BOARD) {
   const lookup: string[] = new Array(board.width * board.height).fill(undefined)
-  const named: Record<string, Set<string>> = {}
+  const named: Record<string, Set<string | number>> = {}
 
+  // add objects to lookup & to named
   const objects = Object.values(board.objects)
   for (let i = 0; i < objects.length; ++i) {
     const object = objects[i]
     if (isDefined(object.x) && isDefined(object.y) && isDefined(object.id)) {
       // cache kind
       const kind = bookobjectreadkind(book, object)
+
+      // add category
+      object.category = CATEGORY.OBJECT
 
       // update lookup
       lookup[object.x + object.y * board.width] = object.id
@@ -368,6 +370,34 @@ function boardsetlookup(book: BOOK, board: BOARD) {
         named[name] = new Set<string>()
       }
       named[name].add(object.id)
+    }
+  }
+
+  // add terrain to named
+  let x = 0
+  let y = 0
+  for (let i = 0; i < board.terrain.length; ++i) {
+    const terrain = board.terrain[i]
+    if (isDefined(terrain)) {
+      // cache kind
+      const kind = bookobjectreadkind(book, terrain)
+
+      // add coords
+      terrain.x = x
+      terrain.y = y
+      terrain.category = CATEGORY.TERRAIN
+
+      // update named lookup
+      const name = (terrain.name ?? kind?.name ?? 'terrain').toLowerCase()
+      if (!named[name]) {
+        named[name] = new Set<string>()
+      }
+      named[name].add(i)
+    }
+    ++x
+    if (x >= board.width) {
+      x = 0
+      ++y
     }
   }
 
