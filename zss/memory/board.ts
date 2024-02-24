@@ -1,20 +1,20 @@
 import { isDefined } from 'ts-extras'
 import { ref } from 'valtio'
-
+import { WORD_VALUE } from 'zss/chip'
+import { MAYBE_STRING } from 'zss/device/shared'
 import {
-  BOOK,
-  bookobjectreadkind,
-  bookterrainreadkind,
-  readaddress,
-} from './book'
-import { WORD_VALUE } from './chip'
-import { CONTENT_TYPE } from './codepage'
-import { MAYBE_STRING } from './device/shared'
-import { PT, DIR, STR_DIR, dirfrompts, COLLISION } from './firmware/wordtypes'
-import { range, pick } from './mapping/array'
-import { createguid } from './mapping/guid'
-import { memoryreadchip } from './memory'
-import { OS } from './os'
+  PT,
+  DIR,
+  STR_DIR,
+  dirfrompts,
+  COLLISION,
+  ispt,
+} from 'zss/firmware/wordtypes'
+import { range, pick } from 'zss/mapping/array'
+import { createguid } from 'zss/mapping/guid'
+
+import { nearestpt } from './atomics'
+import { BOOK, bookobjectreadkind, bookterrainreadkind } from './book'
 
 // generics
 export type BOARD_ELEMENT_STATS = {
@@ -31,17 +31,17 @@ export type BOARD_ELEMENT_STATS = {
 }
 
 export type BOARD_ELEMENT = Partial<{
-  // objects get id & position
+  // this element is an instance of an element type
+  kind: string
+  kinddata: BOARD_ELEMENT
+  // objects only
   id: string
   x: number
   y: number
   lx: number
   ly: number
-  // this element has a code associated with it
+  walk: number
   code: string
-  // this element is an instance of an element type
-  kind: string
-  kinddata: BOARD_ELEMENT
   // this is a unique name for this instance
   name: string
   // display
@@ -51,8 +51,11 @@ export type BOARD_ELEMENT = Partial<{
   // interaction
   pushable: number
   collision: number
+  destructible: number
   // custom
   stats: BOARD_ELEMENT_STATS
+  // gc
+  removed: number
 }>
 
 export type MAYBE_BOARD_ELEMENT = BOARD_ELEMENT | undefined
@@ -83,6 +86,7 @@ export type BOARD = {
   stats?: BOARD_STATS
   // runtime only
   lookup?: MAYBE_STRING[]
+  named?: Record<string, Set<string>>
 }
 
 export type MAYBE_BOARD = BOARD | undefined
@@ -130,16 +134,16 @@ function moveptbydir(
 ): PT {
   switch (dir) {
     case DIR.NORTH:
-      --pt[1]
+      --pt.y
       break
     case DIR.SOUTH:
-      ++pt[1]
+      ++pt.y
       break
     case DIR.WEST:
-      --pt[0]
+      --pt.x
       break
     case DIR.EAST:
-      ++pt[0]
+      ++pt.x
       break
     default:
       // no-op
@@ -155,13 +159,19 @@ export function boardevaldir(
 ): PT {
   const tx = target?.x ?? 0
   const ty = target?.y ?? 0
-  const pt: PT = [tx, ty]
-  const start: PT = [...pt]
-  const flow = dirfrompts([target?.lx ?? pt[0], target?.ly ?? pt[1]], pt)
+  const pt: PT = { x: tx, y: ty }
+  const start: PT = { ...pt }
+  const flow = dirfrompts(
+    {
+      x: target?.lx ?? pt.x,
+      y: target?.ly ?? pt.y,
+    },
+    pt,
+  )
 
   // we need to know current flow etc..
 
-  for (let i = 0; i < dir.length && pt[0] === tx && pt[1] === ty; ++i) {
+  for (let i = 0; i < dir.length && pt.x === tx && pt.y === ty; ++i) {
     const dirconst = DIR[dir[i]]
     switch (dirconst) {
       case DIR.IDLE:
@@ -174,17 +184,19 @@ export function boardevaldir(
         moveptbydir(pt, dirconst)
         break
       case DIR.BY:
-        // skip pt, pt
+        // BY <x> <y>
         break
       case DIR.AT:
-        // skip pt, pt
+        // AT <x> <y>
         break
       case DIR.FLOW:
         moveptbydir(pt, flow)
         break
       case DIR.SEEK: {
         const player = boardfindplayer(board, target)
-        // skip
+        if (ispt(player)) {
+          moveptbydir(pt, dirfrompts(start, player))
+        }
         break
       }
       case DIR.RNDNS:
@@ -217,11 +229,11 @@ export function boardevaldir(
         switch (dirfrompts(start, modpt)) {
           case DIR.NORTH:
           case DIR.SOUTH:
-            pt[0] += pick(-1, 1)
+            pt.x += pick(-1, 1)
             break
           case DIR.WEST:
           case DIR.EAST:
-            pt[1] += pick(-1, 1)
+            pt.y += pick(-1, 1)
             break
         }
         break
@@ -264,7 +276,7 @@ export function boardmoveobject(
     return false
   }
 
-  const [dx, dy] = boardevaldir(board, object, dir)
+  const { x: dx, y: dy } = boardevaldir(board, object, dir)
 
   // first pass clipping
   if (dx < 0 || dx >= board.width || dy < 0 || dy >= board.height) {
@@ -274,7 +286,7 @@ export function boardmoveobject(
   const idx = dx + dy * board.width
   const targetkind = bookobjectreadkind(book, object)
   const targetcollision =
-    object?.collision ?? targetkind?.collision ?? COLLISION.WALK
+    object.collision ?? targetkind?.collision ?? COLLISION.WALK
 
   // blocked by an object
   const maybeobject = board.lookup[idx]
@@ -308,27 +320,73 @@ export function boardmoveobject(
   return true
 }
 
-export function boardfindplayer(board: BOARD, target: MAYBE_BOARD_ELEMENT) {
-  //
+export function boardfindplayer(
+  board: BOARD,
+  target: MAYBE_BOARD_ELEMENT,
+): MAYBE_BOARD_ELEMENT {
+  if (!isDefined(target)) {
+    return undefined
+  }
+
+  // target coords
+  const pt: PT = { x: target.x ?? 0, y: target.y ?? 0 }
+
+  // player aggro
+  const aggro = target?.stats?.player ?? ''
+  const player = board.objects[aggro]
+  if (isDefined(player)) {
+    return player
+  }
+
+  // nearest player
+  return nearestpt(
+    board,
+    pt,
+    [...(board.named?.['player']?.values() ?? [])].map(
+      (id) => board.objects[id],
+    ),
+  )
 }
 
-function boardsetlookup(board: BOARD) {
+function boardsetlookup(book: BOOK, board: BOARD) {
   const lookup: string[] = new Array(board.width * board.height).fill(undefined)
-  const objects = Object.values(board.objects)
+  const named: Record<string, Set<string>> = {}
 
+  const objects = Object.values(board.objects)
   for (let i = 0; i < objects.length; ++i) {
     const object = objects[i]
     if (isDefined(object.x) && isDefined(object.y) && isDefined(object.id)) {
+      // cache kind
+      const kind = bookobjectreadkind(book, object)
+
+      // update lookup
       lookup[object.x + object.y * board.width] = object.id
+
+      // update named lookup
+      const name = (object.name ?? kind?.name ?? 'object').toLowerCase()
+      if (!named[name]) {
+        named[name] = new Set<string>()
+      }
+      named[name].add(object.id)
     }
   }
 
   board.lookup = ref(lookup)
+  board.named = ref(named)
 }
 
-export function boardtick(os: OS, book: BOOK, board: BOARD) {
+export function boardtick(
+  book: BOOK,
+  board: BOARD,
+  oncode: (
+    board: BOARD,
+    target: BOARD_ELEMENT,
+    id: string,
+    code: string,
+  ) => void,
+) {
   // build object lookup pre-tick
-  boardsetlookup(board)
+  boardsetlookup(book, board)
 
   // iterate through objects
   const targets = Object.values(board.objects)
@@ -355,19 +413,8 @@ export function boardtick(os: OS, book: BOOK, board: BOARD) {
       return
     }
 
-    // chip check
-    if (!os.has(target.id)) {
-      os.boot(target.id, code)
-    }
-
-    // set context
-    const context = memoryreadchip(target.id)
-    context.activeinput = undefined
-    context.board = board
-    context.target = target
-
-    // run chip
-    os.tick(target.id)
+    // signal id & code
+    oncode(board, target, target.id, code)
   }
 
   // cleanup objects flagged for deletion

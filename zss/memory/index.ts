@@ -1,7 +1,12 @@
 import { isDefined } from 'ts-extras'
 import { proxy } from 'valtio'
+import { BIOS } from 'zss/bios'
+import { WORD_VALUE } from 'zss/chip'
+import { STR_DIR } from 'zss/firmware/wordtypes'
+import { INPUT } from 'zss/gadget/data/types'
+import { randomInteger } from 'zss/mapping/number'
+import { OS } from 'zss/os'
 
-import { BIOS } from './bios'
 import {
   createboardobject,
   boarddeleteobject,
@@ -13,13 +18,12 @@ import {
   boardmoveobject,
   MAYBE_BOARD,
 } from './board'
-import { bookobjectreadkind, bookterrainreadkind, readaddress } from './book'
-import { WORD_VALUE } from './chip'
+import {
+  bookobjectreadkind,
+  bookterrainreadkind,
+  bookreadaddress,
+} from './book'
 import { CONTENT_TYPE } from './codepage'
-import { STR_DIR } from './firmware/wordtypes'
-import { INPUT } from './gadget/data/types'
-import { randomInteger } from './mapping/number'
-import { OS } from './os'
 
 // shared chip state
 type MEMORY_CHIP = {
@@ -124,7 +128,7 @@ export function memoryplayerreadobject(player: string) {
 }
 
 export function memoryreadboard(address: string) {
-  return readaddress(MEMORY.book, CONTENT_TYPE.BOARD, address)
+  return bookreadaddress(MEMORY.book, CONTENT_TYPE.BOARD, address)
 }
 
 export function memoryterrainreadkind(terrain: MAYBE_BOARD_ELEMENT) {
@@ -132,7 +136,7 @@ export function memoryterrainreadkind(terrain: MAYBE_BOARD_ELEMENT) {
 }
 
 export function memoryreadobject(address: string) {
-  return readaddress(MEMORY.book, CONTENT_TYPE.OBJECT, address)
+  return bookreadaddress(MEMORY.book, CONTENT_TYPE.OBJECT, address)
 }
 
 export function memoryobjectreadkind(object: MAYBE_BOARD_ELEMENT) {
@@ -153,8 +157,31 @@ export function memoryboardmoveobject(
 export function memorytick(os: OS) {
   // get a list of active boards
   const activelist = [...new Set(Object.values(MEMORY.players))]
+
+  // glue code between memory and boardtick
+  function oncode(
+    board: BOARD,
+    target: BOARD_ELEMENT,
+    id: string,
+    code: string,
+  ) {
+    // chip check
+    if (!os.has(id)) {
+      os.boot(id, code)
+    }
+
+    // set context
+    const context = memoryreadchip(id)
+    context.activeinput = undefined
+    context.board = board
+    context.target = target
+
+    // run chip
+    os.tick(id)
+  }
+
   activelist
     .map((address) => memoryreadboard(address))
     .filter(isDefined)
-    .forEach((board) => boardtick(os, MEMORY.book, board))
+    .forEach((board) => boardtick(MEMORY.book, board, oncode))
 }

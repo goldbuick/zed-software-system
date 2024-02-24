@@ -8,7 +8,7 @@ import { isArray, isMaybeString, isNumber, isString } from '../mapping/types'
 
 type MAYBE_WORD = WORD | undefined
 
-export type PT = [number, number]
+export type PT = { x: number; y: number }
 
 export enum COLOR {
   BLACK,
@@ -64,17 +64,12 @@ export enum CATEGORY {
 }
 
 export function ispt(value: any): value is PT {
-  return (
-    isArray(value) &&
-    value.length === 2 &&
-    isNumber(value[0]) &&
-    isNumber(value[1])
-  )
+  return isDefined(value) && isDefined(value.x) && isDefined(value.y)
 }
 
 export function dirfrompts(last: PT, current: PT) {
-  const dx = current[0] - last[0]
-  const dy = current[1] - last[1]
+  const dx = current.x - last.x
+  const dy = current.y - last.y
   if (dx < 0) {
     return DIR.WEST
   }

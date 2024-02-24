@@ -14,20 +14,20 @@ export type BOOK = {
   pages: CODE_PAGE[]
 }
 
-function readpage(book: BOOK, pagename: string): CODE_PAGE | undefined {
+function bookreadpage(book: BOOK, pagename: string): CODE_PAGE | undefined {
   const lpagename = pagename.toLowerCase()
   return book.pages.find(
     (item) => item.id === pagename || item.name.toLowerCase() === lpagename,
   )
 }
 
-export function readaddress<T extends CONTENT_TYPE>(
+export function bookreadaddress<T extends CONTENT_TYPE>(
   book: BOOK,
   type: T,
   address: string,
 ): CONTENT_TYPE_MAP[T] | undefined {
   const [pagename, entryname] = address.split(':')
-  const page = readpage(book, pagename)
+  const page = bookreadpage(book, pagename)
   return page ? readentry(page, type, entryname) : undefined
 }
 
@@ -37,7 +37,7 @@ export function bookobjectreadkind(
 ): MAYBE_BOARD_ELEMENT {
   if (isDefined(object) && isDefined(object.kind)) {
     if (!isDefined(object.kinddata)) {
-      object.kinddata = readaddress(book, CONTENT_TYPE.OBJECT, object.kind)
+      object.kinddata = bookreadaddress(book, CONTENT_TYPE.OBJECT, object.kind)
     }
     return object.kinddata
   }
@@ -50,7 +50,11 @@ export function bookterrainreadkind(
 ): MAYBE_BOARD_ELEMENT {
   if (isDefined(terrain) && isDefined(terrain.kind)) {
     if (!isDefined(terrain.kinddata)) {
-      terrain.kinddata = readaddress(book, CONTENT_TYPE.TERRAIN, terrain.kind)
+      terrain.kinddata = bookreadaddress(
+        book,
+        CONTENT_TYPE.TERRAIN,
+        terrain.kind,
+      )
     }
     return terrain.kinddata
   }

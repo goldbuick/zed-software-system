@@ -1,14 +1,13 @@
 import playercode from 'bundle-text:./player.txt'
 import spincode from 'bundle-text:./spin.txt'
 import testercode from 'bundle-text:./tester.txt'
-import { createboard, createboardobject } from 'zss/board'
-import { BOOK } from 'zss/book'
-import { CONTENT_TYPE } from 'zss/codepage'
+import { COLLISION, COLOR } from 'zss/firmware/wordtypes'
+import { pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
-
-import { COLLISION, COLOR } from '../firmware/wordtypes'
-import { pick } from '../mapping/array'
-import { randomInteger } from '../mapping/number'
+import { randomInteger } from 'zss/mapping/number'
+import { createboard, createboardobject } from 'zss/memory/board'
+import { BOOK } from 'zss/memory/book'
+import { CONTENT_TYPE } from 'zss/memory/codepage'
 
 const BOARD_WIDTH = 60
 const BOARD_HEIGHT = 25

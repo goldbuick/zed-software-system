@@ -1,4 +1,4 @@
-import { PT } from '../firmware/wordtypes'
+import { PT } from 'zss/firmware/wordtypes'
 
 export function indextox(index: number, width: number) {
   return index % width
@@ -9,5 +9,8 @@ export function indextoy(index: number, width: number) {
 }
 
 export function indextopt(index: number, width: number): PT {
-  return [indextox(index, width), indextoy(index, width)]
+  return {
+    x: indextox(index, width),
+    y: indextoy(index, width),
+  }
 }

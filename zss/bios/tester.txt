@@ -1,7 +1,7 @@
 @tester
-#cycle 1
+#cycle 10
 :think
 #color pick dkgreen brown dkpurple
 #repeat 5
-  ?rnd
+  ?seek
 #think
