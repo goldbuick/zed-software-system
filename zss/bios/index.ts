@@ -92,7 +92,7 @@ export const BIOS: BOOK = {
           value: {
             name: 'field',
             char: 176,
-            color: COLOR.DKYELLOW,
+            color: COLOR.DKGRAY,
             collision: COLLISION.WALK,
           },
         },

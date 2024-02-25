@@ -3,7 +3,7 @@ import { isDefined } from 'ts-extras'
 import { CHIP, WORD } from '../chip'
 import { SPRITES_SINDEX, SPRITES_TINDEX } from '../gadget/data/types'
 import { range, pick } from '../mapping/array'
-import { randomInteger } from '../mapping/number'
+import { clamp, randomInteger } from '../mapping/number'
 import { isArray, isMaybeString, isNumber, isString } from '../mapping/types'
 
 type MAYBE_WORD = WORD | undefined
@@ -421,23 +421,27 @@ export function readexpr(
     switch (maybeexpr) {
       // zzt
       case 'aligned':
-      case 'alligned':
+      case 'alligned': {
         // ALLIGNED
         // This flag is SET whenever the object is aligned with the player either horizontally or vertically.
         break
-      case 'contact':
+      }
+      case 'contact': {
         // CONTACT
         // This flag is SET whenever the object is adjacent to (touching) the player.
         break
-      case 'blocked':
+      }
+      case 'blocked': {
         // BLOCKED <direction>
         // This flag is SET when the object is not free to move in the given direction, and
         // CLEAR when the object is free to move in the direction.
         break
-      case 'any':
+      }
+      case 'any': {
         // ANY <color> <item>
         // This flag is SET whenever the given kind is visible on the board
         break
+      }
       // zss
       // numbers
       case 'abs': {
@@ -502,6 +506,15 @@ export function readexpr(
           values.push(value)
         }
         return [Math.max(...values), words.length]
+      }
+      case 'clamp': {
+        // CLAMP <a> <min> <max>
+        const [a, min, max, ii] = readargs(chip, words, index + 1, [
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.NUMBER,
+        ])
+        return [clamp(a, min, max), ii]
       }
       case 'pick': {
         // PICK <a> [b] [c] [d]
