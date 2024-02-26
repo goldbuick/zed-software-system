@@ -1,13 +1,12 @@
 import ErrorStackParser from 'error-stack-parser'
 import { klona } from 'klona/json'
-import isEqual from 'lodash/isEqual'
 
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
 import { ARG_TYPE, chipreadcontext, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
-import { isNumber, isString } from './mapping/types'
+import { isequal, isnumber, isstring } from './mapping/types'
 
 export const HALT_AT_COUNT = 64
 
@@ -379,7 +378,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       const value = maybevalue ?? 1
 
       // taking from an unset flag, or non-numerical value
-      if (!isNumber(current)) {
+      if (!isnumber(current)) {
         // todo: raise warning ?
         return 1
       }
@@ -406,11 +405,11 @@ export function createchip(id: string, build: GeneratorBuild) {
       ])
 
       const maybecurrent = chip.get(name)
-      const current = isNumber(maybecurrent) ? maybecurrent : 0
+      const current = isnumber(maybecurrent) ? maybecurrent : 0
       const value = maybevalue ?? 1
 
       // giving a non-numerical value
-      if (!isNumber(value)) {
+      if (!isnumber(value)) {
         // todo: raise warning ?
         return 0
       }
@@ -458,7 +457,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       return result
     },
     readStart(index, name) {
-      if (!isString(name)) {
+      if (!isstring(name)) {
         // todo throw error
         return
       }
@@ -548,7 +547,7 @@ export function createchip(id: string, build: GeneratorBuild) {
     isEq(lhs, rhs) {
       const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.ANY])
       const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.ANY])
-      return isEqual(left, right) ? 1 : 0
+      return isequal(left, right) ? 1 : 0
     },
     isNotEq(lhs, rhs) {
       const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.ANY])

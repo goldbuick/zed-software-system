@@ -1,10 +1,10 @@
-import { isDefined } from 'ts-extras'
 import { proxy } from 'valtio'
 import { BIOS } from 'zss/bios'
 import { WORD_VALUE } from 'zss/chip'
 import { PT, ispt } from 'zss/firmware/wordtypes'
 import { INPUT } from 'zss/gadget/data/types'
 import { randomInteger } from 'zss/mapping/number'
+import { isdefined } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
@@ -161,7 +161,7 @@ export function memoryboardmoveobject(
   target: MAYBE_BOARD_ELEMENT,
   dest: PT | undefined,
 ) {
-  if (!isDefined(board) || !ispt(dest)) {
+  if (!isdefined(board) || !ispt(dest)) {
     return false
   }
   return boardmoveobject(MEMORY.book, board, target, dest)
@@ -195,6 +195,6 @@ export function memorytick(os: OS) {
 
   activelist
     .map((address) => memoryreadboard(address))
-    .filter(isDefined)
+    .filter(isdefined)
     .forEach((board) => boardtick(MEMORY.book, board, oncode))
 }

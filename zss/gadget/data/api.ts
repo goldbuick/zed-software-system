@@ -10,7 +10,7 @@ import {
   updatesharedvalue,
 } from 'zss/device/shared'
 import { createguid } from 'zss/mapping/guid'
-import { isNumber } from 'zss/mapping/types'
+import { isnumber } from 'zss/mapping/types'
 
 import {
   GADGET_STATE,
@@ -140,7 +140,7 @@ export function gadgetpanel(
     shared.layoutreset = true
     shared.layoutfocus = panelName
     // you can also resize panels
-    if (isNumber(size)) {
+    if (isnumber(size)) {
       panelState.size = size
     }
   } else {

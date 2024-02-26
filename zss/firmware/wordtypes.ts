@@ -1,15 +1,20 @@
-import { isDefined } from 'ts-extras'
 import { CHIP, WORD } from 'zss/chip'
 import { SPRITES_SINDEX, SPRITES_TINDEX } from 'zss/gadget/data/types'
 import { range, pick } from 'zss/mapping/array'
 import { clamp, randomInteger } from 'zss/mapping/number'
-import { isArray, isMaybeString, isNumber, isString } from 'zss/mapping/types'
+import {
+  isarray,
+  isdefined,
+  ismaybestring,
+  isnumber,
+  isstring,
+} from 'zss/mapping/types'
+import { memoryreadchip } from 'zss/memory'
 import {
   MAYBE_BOARD,
   MAYBE_BOARD_ELEMENT,
   boardevaldir,
 } from 'zss/memory/board'
-import { memoryreadchip } from '../memory'
 
 export interface READ_CONTEXT {
   chip: CHIP
@@ -76,7 +81,7 @@ export enum CATEGORY {
 }
 
 export function ispt(value: any): value is PT {
-  return isDefined(value) && isDefined(value.x) && isDefined(value.y)
+  return isdefined(value) && isdefined(value.x) && isdefined(value.y)
 }
 
 export function dirfrompts(last: PT, current: PT) {
@@ -105,11 +110,11 @@ export type STR_CATEGORY =
   (typeof categoryconsts)[keyof typeof categoryconsts][]
 
 function isstrcategoryconst(value: any) {
-  return isDefined(CATEGORY[value]) && isString(value)
+  return isdefined(CATEGORY[value]) && isstring(value)
 }
 
 export function isstrcategory(value: any): value is STR_CATEGORY {
-  return isArray(value) && isstrcategoryconst(value[0])
+  return isarray(value) && isstrcategoryconst(value[0])
 }
 
 export function readcategory(
@@ -152,11 +157,11 @@ export type STR_COLLISION =
   (typeof collisionconsts)[keyof typeof collisionconsts][]
 
 function isstrcollisionconst(value: any) {
-  return isDefined(COLLISION[value]) && isString(value)
+  return isdefined(COLLISION[value]) && isstring(value)
 }
 
 export function isstrcollision(value: any): value is STR_COLLISION {
-  return isArray(value) && isstrcollisionconst(value[0])
+  return isarray(value) && isstrcollisionconst(value[0])
 }
 
 export function readcollision(
@@ -242,11 +247,11 @@ export const colorconsts = {
 export type STR_COLOR = (typeof colorconsts)[keyof typeof colorconsts][]
 
 function isstrcolorconst(value: any) {
-  return isDefined(COLOR[value]) && isString(value)
+  return isdefined(COLOR[value]) && isstring(value)
 }
 
 export function isstrcolor(value: any): value is STR_COLOR {
-  return isArray(value) && isstrcolorconst(value[0])
+  return isarray(value) && isstrcolorconst(value[0])
 }
 
 export function readcolor(
@@ -310,11 +315,11 @@ export const dirconsts = {
 export type STR_DIR = (typeof dirconsts)[keyof typeof dirconsts][]
 
 function isstrdirconst(value: any) {
-  return isDefined(DIR[value]) && isString(value)
+  return isdefined(DIR[value]) && isstring(value)
 }
 
 export function isstrdir(value: any): value is STR_DIR {
-  return isArray(value) && isstrdirconst(value[0])
+  return isarray(value) && isstrdirconst(value[0])
 }
 
 export function readdir(
@@ -355,7 +360,7 @@ export function readnumber(read: READ_CONTEXT, i: number): [number, number] {
 
 export function chipreadcontext(chip: CHIP, words: WORD[]) {
   const memory = memoryreadchip(chip.id())
-  return {...memory, chip, words }
+  return { ...memory, chip, words }
 }
 
 // read a value from words
@@ -365,60 +370,60 @@ export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
 
   // check consts
   const [maybecategory, n1] = readcategory(read, index)
-  if (isDefined(maybecategory)) {
+  if (isdefined(maybecategory)) {
     return [maybecategory, n1]
   }
 
   const [maybecollision, n2] = readcollision(read, index)
-  if (isDefined(maybecollision)) {
+  if (isdefined(maybecollision)) {
     return [maybecollision, n2]
   }
 
   const [maybecolor, n3] = readcolor(read, index)
-  if (isDefined(maybecolor)) {
+  if (isdefined(maybecolor)) {
     return [maybecolor, n3]
   }
 
   // special case rnd
-  if (isString(maybevalue) && maybevalue.toLowerCase() === 'rnd') {
+  if (isstring(maybevalue) && maybevalue.toLowerCase() === 'rnd') {
     // RND - returns 0 or 1
     // RND <number> - return 0 to number
     // RND <number> <number> - return number to number
     const [min, ii] = readexpr(read, index + 1)
     const [max, iii] = readexpr(read, ii)
-    if (isNumber(min) && isNumber(max)) {
+    if (isnumber(min) && isnumber(max)) {
       return [randomInteger(min, max), iii]
     }
-    if (isNumber(min)) {
+    if (isnumber(min)) {
       return [randomInteger(0, min), ii]
     }
     return [randomInteger(0, 1), index + 1]
   }
 
   const [maybedir, n4] = readdir(read, index)
-  if (isDefined(maybedir)) {
+  if (isdefined(maybedir)) {
     return [maybedir, n4]
   }
 
   // check complex values
 
   // empty is invalid
-  if (!isDefined(maybevalue)) {
+  if (!isdefined(maybevalue)) {
     return [undefined, index]
   }
 
   // check for number or array
-  if (ispt(maybevalue) || isNumber(maybevalue) || isArray(maybevalue)) {
+  if (ispt(maybevalue) || isnumber(maybevalue) || isarray(maybevalue)) {
     return [maybevalue, index + 1]
   }
 
   // check for flags and expressions
-  if (isString(maybevalue)) {
+  if (isstring(maybevalue)) {
     const maybeexpr = maybevalue.toLowerCase()
 
     // check for flag
     const maybeflag = read.chip.get(maybevalue)
-    if (isDefined(maybeflag)) {
+    if (isdefined(maybeflag)) {
       return [maybeflag, index + 1]
     }
 
@@ -477,7 +482,7 @@ export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
           const [value, iii] = readexpr(read, ii)
           // if we're given array, we pick from it
           if (
-            isArray(value) &&
+            isarray(value) &&
             !ispt(value) &&
             !isstrdir(value) &&
             !isstrcategory(value) &&
@@ -498,7 +503,7 @@ export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
           const [value, iii] = readexpr(read, ii)
           // if we're given array, we pick from it
           if (
-            isArray(value) &&
+            isarray(value) &&
             !ispt(value) &&
             !isstrdir(value) &&
             !isstrcategory(value) &&
@@ -528,7 +533,7 @@ export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
           const [value, iii] = readexpr(read, ii)
           // if we're given array, we pick from it
           if (
-            isArray(value) &&
+            isarray(value) &&
             !ispt(value) &&
             !isstrdir(value) &&
             !isstrcategory(value) &&
@@ -652,10 +657,10 @@ export function readargs<T extends ARG_TYPES>(
       case ARG_TYPE.KIND: {
         const [value, iii] = readexpr(read, ii)
         if (
-          !isArray(value) ||
-          !isString(value[0]) ||
-          !isMaybeString(value[1]) ||
-          !isMaybeString(value[2])
+          !isarray(value) ||
+          !isstring(value[0]) ||
+          !ismaybestring(value[1]) ||
+          !ismaybestring(value[2])
         ) {
           didexpect('kind', value)
         }
@@ -678,7 +683,7 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.NUMBER: {
         const [value, iii] = readexpr(read, ii)
-        if (!isNumber(value)) {
+        if (!isnumber(value)) {
           didexpect('number', value)
         }
         ii = iii
@@ -687,7 +692,7 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.STRING: {
         const value = read.words[i]
-        if (!isString(value)) {
+        if (!isstring(value)) {
           didexpect('string', value)
         }
         ii = i + 1
@@ -728,10 +733,10 @@ export function readargs<T extends ARG_TYPES>(
         const [value, iii] = readexpr(read, ii)
         if (
           value !== undefined &&
-          (!isArray(value) ||
-            !isString(value[0]) ||
-            !isMaybeString(value[1]) ||
-            !isMaybeString(value[2]))
+          (!isarray(value) ||
+            !isstring(value[0]) ||
+            !ismaybestring(value[1]) ||
+            !ismaybestring(value[2]))
         ) {
           didexpect('optional kind', value)
         }
@@ -753,7 +758,7 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.MAYBE_NUMBER: {
         const [value, iii] = readexpr(read, ii)
-        if (value !== undefined && !isNumber(value)) {
+        if (value !== undefined && !isnumber(value)) {
           didexpect('optional number', value)
         }
         ii = iii
@@ -762,7 +767,7 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.MAYBE_STRING: {
         const value = read.words[i]
-        if (value !== undefined && !isString(value)) {
+        if (value !== undefined && !isstring(value)) {
           didexpect('optional string', value)
         }
         ii = i + 1

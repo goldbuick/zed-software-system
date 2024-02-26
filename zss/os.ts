@@ -1,10 +1,9 @@
-import { isDefined } from 'ts-extras'
-
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { loadfirmware } from './firmware/loader'
 import { GeneratorBuild, compile } from './lang/generator'
 import { createguid } from './mapping/guid'
+import { isdefined } from './mapping/types'
 
 export type OS = {
   boot: (id: string | undefined, code: string) => string
@@ -54,7 +53,7 @@ export function createos() {
       return Object.keys(chips)
     },
     has(id) {
-      return isDefined(chips[id])
+      return isdefined(chips[id])
     },
     halt(id) {
       const chip = chips[id]
@@ -69,7 +68,7 @@ export function createos() {
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)
       const targetchip: CHIP | undefined = chips[target]
-      if (isDefined(targetchip)) {
+      if (isdefined(targetchip)) {
         targetchip.message({ ...incoming, target: path })
       }
     },

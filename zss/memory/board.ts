@@ -1,4 +1,3 @@
-import { isDefined } from 'ts-extras'
 import { ref } from 'valtio'
 import { WORD_VALUE } from 'zss/chip'
 import { MAYBE_STRING } from 'zss/device/shared'
@@ -13,6 +12,7 @@ import {
 } from 'zss/firmware/wordtypes'
 import { range, pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
+import { isdefined } from 'zss/mapping/types'
 
 import { namedelements, nearestpt } from './atomics'
 import { BOOK, bookobjectreadkind, bookterrainreadkind } from './book'
@@ -297,14 +297,14 @@ export function boardmoveobject(
 
   // blocked by an object
   const maybeobject = board.lookup[idx]
-  if (isDefined(maybeobject)) {
+  if (isdefined(maybeobject)) {
     // touch & thud
     return false
   }
 
   // blocked by terrain
   const mayberterrain = board.terrain[idx]
-  if (isDefined(mayberterrain)) {
+  if (isdefined(mayberterrain)) {
     const terrainkind = bookterrainreadkind(book, mayberterrain)
     const terraincollision =
       mayberterrain.collision ?? terrainkind?.collision ?? COLLISION.WALK
@@ -331,14 +331,14 @@ export function boardfindplayer(
   board: BOARD,
   target: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
-  if (!isDefined(target)) {
+  if (!isdefined(target)) {
     return undefined
   }
 
   // check aggro
   const aggro = target.stats?.player ?? ''
   const player = board.objects[aggro]
-  if (isDefined(player)) {
+  if (isdefined(player)) {
     return player
   }
 
@@ -359,7 +359,7 @@ function boardsetlookup(book: BOOK, board: BOARD) {
   const objects = Object.values(board.objects)
   for (let i = 0; i < objects.length; ++i) {
     const object = objects[i]
-    if (isDefined(object.x) && isDefined(object.y) && isDefined(object.id)) {
+    if (isdefined(object.x) && isdefined(object.y) && isdefined(object.id)) {
       // cache kind
       const kind = bookobjectreadkind(book, object)
 
@@ -383,7 +383,7 @@ function boardsetlookup(book: BOOK, board: BOARD) {
   let y = 0
   for (let i = 0; i < board.terrain.length; ++i) {
     const terrain = board.terrain[i]
-    if (isDefined(terrain)) {
+    if (isdefined(terrain)) {
       // cache kind
       const kind = bookobjectreadkind(book, terrain)
 
@@ -429,7 +429,7 @@ export function boardtick(
     const target = targets[i]
 
     // check that we have an id
-    if (!isDefined(target.id)) {
+    if (!isdefined(target.id)) {
       return
     }
 

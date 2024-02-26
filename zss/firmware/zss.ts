@@ -1,9 +1,8 @@
-import { isDefined } from 'ts-extras'
 import { createfirmware } from 'zss/firmware'
+import { gadgetcheckset, gadgetpanel } from 'zss/gadget/data/api'
+import { PANEL_TYPE_MAP } from 'zss/gadget/data/types'
+import { isdefined } from 'zss/mapping/types'
 import { memoryreadchip } from 'zss/memory'
-
-import { gadgetcheckset, gadgetpanel } from '../gadget/data/api'
-import { PANEL_TYPE_MAP } from '../gadget/data/types'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -21,7 +20,7 @@ export const ZSS_FIRMWARE = createfirmware(
   .command('bg', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.COLOR])
-    if (isDefined(memory.target)) {
+    if (isdefined(memory.target)) {
       memory.target.bg = value
     }
     return 0
@@ -29,7 +28,7 @@ export const ZSS_FIRMWARE = createfirmware(
   .command('color', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.COLOR])
-    if (isDefined(memory.target)) {
+    if (isdefined(memory.target)) {
       memory.target.color = value
     }
     return 0

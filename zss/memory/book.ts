@@ -1,4 +1,4 @@
-import { isDefined } from 'ts-extras'
+import { isdefined } from 'zss/mapping/types'
 
 import { MAYBE_BOARD_ELEMENT } from './board'
 import {
@@ -35,8 +35,8 @@ export function bookobjectreadkind(
   book: BOOK,
   object: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
-  if (isDefined(object) && isDefined(object.kind)) {
-    if (!isDefined(object.kinddata)) {
+  if (isdefined(object) && isdefined(object.kind)) {
+    if (!isdefined(object.kinddata)) {
       object.kinddata = bookreadaddress(book, CONTENT_TYPE.OBJECT, object.kind)
     }
     return object.kinddata
@@ -48,8 +48,8 @@ export function bookterrainreadkind(
   book: BOOK,
   terrain: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
-  if (isDefined(terrain) && isDefined(terrain.kind)) {
-    if (!isDefined(terrain.kinddata)) {
+  if (isdefined(terrain) && isdefined(terrain.kind)) {
+    if (!isdefined(terrain.kinddata)) {
       terrain.kinddata = bookreadaddress(
         book,
         CONTENT_TYPE.TERRAIN,

@@ -1,4 +1,3 @@
-import { isDefined, isPresent } from 'ts-extras'
 import { WORD_VALUE, maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import { gadgethyperlink, gadgettext } from 'zss/gadget/data/api'
@@ -9,6 +8,7 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
+import { isdefined, isnumber, ispresent } from 'zss/mapping/types'
 import {
   memoryboardmoveobject,
   memoryplayerreadflag,
@@ -16,8 +16,6 @@ import {
   memoryreadchip,
 } from 'zss/memory'
 import { BOARD_ELEMENT, boardfindplayer } from 'zss/memory/board'
-
-import { isNumber } from '../mapping/types'
 
 import {
   categoryconsts,
@@ -55,19 +53,19 @@ const INPUT_STAT_NAMES = new Set([
 
 function maptoconst(value: string) {
   const maybecategory = (categoryconsts as any)[value]
-  if (isDefined(maybecategory)) {
+  if (isdefined(maybecategory)) {
     return maybecategory
   }
   const maybecollision = (collisionconsts as any)[value]
-  if (isDefined(maybecollision)) {
+  if (isdefined(maybecollision)) {
     return maybecollision
   }
   const maybecolor = (colorconsts as any)[value]
-  if (isDefined(maybecolor)) {
+  if (isdefined(maybecolor)) {
     return maybecolor
   }
   const maybedir = (dirconsts as any)[value]
-  if (isDefined(maybedir)) {
+  if (isdefined(maybedir)) {
     return maybedir
   }
   return undefined
@@ -132,7 +130,7 @@ export const ZZT_FIRMWARE = createfirmware(
 
     // check consts first (data normalization)
     const maybeconst = maptoconst(name)
-    if (isDefined(maybeconst)) {
+    if (isdefined(maybeconst)) {
       return [true, maybeconst]
     }
 
@@ -146,7 +144,7 @@ export const ZZT_FIRMWARE = createfirmware(
 
       // read stat
       const value = memory.target.stats?.[name] as WORD_VALUE
-      const defined = isPresent(value)
+      const defined = ispresent(value)
 
       // return result
       if (defined || STAT_NAMES.has(name)) {
@@ -161,14 +159,14 @@ export const ZZT_FIRMWARE = createfirmware(
 
     // then global
     const value = memoryplayerreadflag(player?.id, name)
-    return [isPresent(value), value]
+    return [ispresent(value), value]
   },
   (chip, name, value) => {
     const memory = memoryreadchip(chip.id())
 
     // we have to check the object's stats first
     if (memory.target) {
-      const defined = isPresent(memory.target?.stats?.[name])
+      const defined = ispresent(memory.target?.stats?.[name])
       if (defined || STAT_NAMES.has(name)) {
         // console.info('??set', name, value)
         if (!memory.target.stats) {
@@ -204,7 +202,7 @@ export const ZZT_FIRMWARE = createfirmware(
   .command('char', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.NUMBER])
-    if (isDefined(memory.target)) {
+    if (isdefined(memory.target)) {
       memory.target.char = value
     }
     return 0
@@ -248,7 +246,7 @@ export const ZZT_FIRMWARE = createfirmware(
     let i = 0
     let steps = 1
     const [maybesteps, ii] = readexpr({ ...memory, chip, words }, 0)
-    if (isNumber(maybesteps)) {
+    if (isnumber(maybesteps)) {
       i = ii
       steps = clamp(Math.round(maybesteps), 1, 1024)
     }
