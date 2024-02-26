@@ -1,7 +1,15 @@
-import isEqual from 'fast-deep-equal'
+import { deepClone, compare } from 'fast-json-patch'
 import { isDefined, isPresent } from 'ts-extras'
 
-export { isDefined as isdefined, isPresent as ispresent, isEqual as isequal }
+export { isDefined as isdefined, isPresent as ispresent }
+
+export function isequal(a: any, b: any) {
+  return compare(a, b)
+}
+
+export function deepcopy<T>(word: T): T {
+  return deepClone(word) as T
+}
 
 export function isnumber(word: any): word is number {
   return typeof word === 'number'

@@ -560,6 +560,13 @@ export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
       case 'func': {
         break
       }
+      // edit
+      case 'edit': {
+        // Or should we make data source suffixes ?
+        // #if any red fish on
+        // EDIT <color> <kind>
+        break
+      }
     }
   }
 

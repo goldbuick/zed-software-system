@@ -1,12 +1,11 @@
 import ErrorStackParser from 'error-stack-parser'
-import { klona } from 'klona/json'
 
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
 import { ARG_TYPE, chipreadcontext, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
-import { isequal, isnumber, isstring } from './mapping/types'
+import { deepcopy, isequal, isnumber, isstring } from './mapping/types'
 
 export const HALT_AT_COUNT = 64
 
@@ -103,7 +102,7 @@ export function maptostring(value: any) {
 // lifecycle and control flow api
 export function createchip(id: string, build: GeneratorBuild) {
   // entry point state
-  const labels = klona(build.labels ?? {})
+  const labels = deepcopy(build.labels ?? {})
 
   // ref to generator instance
   // eslint-disable-next-line prefer-const
