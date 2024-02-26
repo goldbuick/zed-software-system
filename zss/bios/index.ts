@@ -1,11 +1,7 @@
 import playercode from 'bundle-text:./player.txt'
-import spincode from 'bundle-text:./spin.txt'
-import testercode from 'bundle-text:./tester.txt'
 import { COLLISION, COLOR } from 'zss/firmware/wordtypes'
-import { pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
-import { randomInteger } from 'zss/mapping/number'
-import { createboard, createboardobject } from 'zss/memory/board'
+import { createboard } from 'zss/memory/board'
 import { BOOK } from 'zss/memory/book'
 import { CONTENT_TYPE } from 'zss/memory/codepage'
 
