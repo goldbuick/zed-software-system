@@ -2,7 +2,7 @@ import { isDefined } from 'ts-extras'
 import { proxy } from 'valtio'
 import { BIOS } from 'zss/bios'
 import { WORD_VALUE } from 'zss/chip'
-import { STR_DIR } from 'zss/firmware/wordtypes'
+import { PT, ispt } from 'zss/firmware/wordtypes'
 import { INPUT } from 'zss/gadget/data/types'
 import { randomInteger } from 'zss/mapping/number'
 import { OS } from 'zss/os'
@@ -29,8 +29,8 @@ import { CONTENT_TYPE } from './codepage'
 type MEMORY_CHIP = {
   board: BOARD | undefined
   target: BOARD_ELEMENT | undefined
-  playerfocus: string
   inputqueue: Set<INPUT>
+  inputmods: Record<INPUT, number>
   activeinput: INPUT | undefined
 }
 
@@ -58,8 +58,17 @@ export function memoryreadchip(id: string) {
     MEMORY.chips[id] = {
       board: undefined,
       target: undefined,
-      playerfocus: MEMORY.defaultplayer,
       inputqueue: new Set(),
+      inputmods: {
+        [INPUT.NONE]: 0,
+        [INPUT.MOVE_UP]: 0,
+        [INPUT.MOVE_DOWN]: 0,
+        [INPUT.MOVE_LEFT]: 0,
+        [INPUT.MOVE_RIGHT]: 0,
+        [INPUT.OK_BUTTON]: 0,
+        [INPUT.CANCEL_BUTTON]: 0,
+        [INPUT.MENU_BUTTON]: 0,
+      },
       activeinput: undefined,
     }
   }
@@ -102,13 +111,17 @@ export function memoryplayerlogout(player: string) {
   }
 }
 
-export function memoryplayerreadflag(player: string, flag: string) {
-  const flags = memoryreadflags(player)
+export function memoryplayerreadflag(player: string | undefined, flag: string) {
+  const flags = memoryreadflags(player ?? MEMORY.defaultplayer)
   return flags[flag]
 }
 
-export function memoryplayersetflag(player: string, flag: string, value: any) {
-  const flags = memoryreadflags(player)
+export function memoryplayersetflag(
+  player: string | undefined,
+  flag: string,
+  value: any,
+) {
+  const flags = memoryreadflags(player ?? MEMORY.defaultplayer)
   flags[flag] = value
 }
 
@@ -146,12 +159,12 @@ export function memoryobjectreadkind(object: MAYBE_BOARD_ELEMENT) {
 export function memoryboardmoveobject(
   board: MAYBE_BOARD,
   target: MAYBE_BOARD_ELEMENT,
-  dir: STR_DIR | undefined,
+  dest: PT | undefined,
 ) {
-  if (!isDefined(board) || !isDefined(dir)) {
+  if (!isDefined(board) || !ispt(dest)) {
     return false
   }
-  return boardmoveobject(MEMORY.book, board, target, dir)
+  return boardmoveobject(MEMORY.book, board, target, dest)
 }
 
 export function memorytick(os: OS) {

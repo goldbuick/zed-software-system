@@ -23,7 +23,9 @@ export type BOARD_ELEMENT_STATS = {
   player?: string
   sender?: string
   inputmove?: string[]
-  inputshoot?: string[]
+  inputalt?: number
+  inputctrl?: number
+  inputshift?: number
   inputok?: number
   inputcancel?: number
   inputmenu?: number
@@ -271,21 +273,24 @@ export function boardmoveobject(
   book: BOOK,
   board: BOARD,
   target: MAYBE_BOARD_ELEMENT,
-  dir: STR_DIR,
+  dest: PT,
 ) {
   const object = boardreadobject(board, target?.id ?? '')
   if (!object || !board.lookup) {
     return false
   }
 
-  const { x: dx, y: dy } = boardevaldir(board, object, dir)
-
   // first pass clipping
-  if (dx < 0 || dx >= board.width || dy < 0 || dy >= board.height) {
+  if (
+    dest.x < 0 ||
+    dest.x >= board.width ||
+    dest.y < 0 ||
+    dest.y >= board.height
+  ) {
     return false
   }
 
-  const idx = dx + dy * board.width
+  const idx = dest.x + dest.y * board.width
   const targetkind = bookobjectreadkind(book, object)
   const targetcollision =
     object.collision ?? targetkind?.collision ?? COLLISION.WALK
@@ -313,8 +318,8 @@ export function boardmoveobject(
   board.lookup[idx] = undefined
 
   // update object location
-  object.x = dx
-  object.y = dy
+  object.x = dest.x
+  object.y = dest.y
 
   // update lookup
   board.lookup[object.x + object.y * board.width] = object.id ?? ''

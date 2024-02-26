@@ -160,7 +160,7 @@ export function createlayercontrol(
     type: LAYER_TYPE.CONTROL,
     focusx: 0,
     focusy: 0,
-    viewscale: 1.5,
+    viewscale: 1,
   }
 }
 
@@ -210,6 +210,15 @@ export const PANEL_TYPE_MAP: Record<string, PANEL_TYPE> = {
   scroll: PANEL_TYPE.SCROLL,
 }
 
+export const PANEL_TYPE_SIZES: Record<PANEL_TYPE, number> = {
+  [PANEL_TYPE.START]: 1,
+  [PANEL_TYPE.LEFT]: 20,
+  [PANEL_TYPE.RIGHT]: 20,
+  [PANEL_TYPE.TOP]: 1,
+  [PANEL_TYPE.BOTTOM]: 1,
+  [PANEL_TYPE.SCROLL]: 40,
+}
+
 export type PANEL_ITEM = WORD_VALUE | WORD_VALUE[]
 
 export type PANEL = {
@@ -230,16 +239,16 @@ export type GADGET_STATE = {
   layoutfocus: string
 }
 
+export const INPUT_ALT = 0x0001
+export const INPUT_CTRL = 0x0010
+export const INPUT_SHIFT = 0x0100
+
 export enum INPUT {
   NONE,
   MOVE_UP,
   MOVE_DOWN,
   MOVE_LEFT,
   MOVE_RIGHT,
-  SHOOT_UP,
-  SHOOT_DOWN,
-  SHOOT_LEFT,
-  SHOOT_RIGHT,
   OK_BUTTON,
   CANCEL_BUTTON,
   MENU_BUTTON,

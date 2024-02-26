@@ -1,17 +1,23 @@
 import { isDefined, isPresent } from 'ts-extras'
 import { WORD_VALUE, maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
+import { gadgethyperlink, gadgettext } from 'zss/gadget/data/api'
+import {
+  INPUT,
+  INPUT_ALT,
+  INPUT_CTRL,
+  INPUT_SHIFT,
+} from 'zss/gadget/data/types'
+import { clamp } from 'zss/mapping/number'
 import {
   memoryboardmoveobject,
   memoryplayerreadflag,
   memoryplayersetflag,
   memoryreadchip,
 } from 'zss/memory'
+import { BOARD_ELEMENT, boardfindplayer } from 'zss/memory/board'
 
-import { BOARD_ELEMENT } from '../board'
-import { gadgethyperlink, gadgettext } from '../gadget/data/api'
-import { INPUT } from '../gadget/data/types'
-import { clamp } from '../mapping/number'
+import { isNumber } from '../mapping/types'
 
 import {
   categoryconsts,
@@ -19,7 +25,6 @@ import {
   colorconsts,
   dirconsts,
   readexpr,
-  readdir,
   readargs,
   ARG_TYPE,
 } from './wordtypes'
@@ -29,7 +34,9 @@ const STAT_NAMES = new Set([
   'player',
   'sender',
   'inputmove',
-  'inputshoot',
+  'inputalt',
+  'inputctrl',
+  'inputshift',
   'inputok',
   'inputcancel',
   'inputmenu',
@@ -38,7 +45,9 @@ const STAT_NAMES = new Set([
 
 const INPUT_STAT_NAMES = new Set([
   'inputmove',
-  'inputshoot',
+  'inputalt',
+  'inputctrl',
+  'inputshift',
   'inputok',
   'inputcancel',
   'inputmenu',
@@ -83,24 +92,21 @@ function readinput(target: BOARD_ELEMENT) {
 
   // clear input stats
   target.stats.inputmove = []
-  target.stats.inputshoot = []
   target.stats.inputok = 0
   target.stats.inputcancel = 0
   target.stats.inputmenu = 0
 
   // set active input stat
+  const mods = memory.inputmods[head]
+  target.stats.inputalt = mods & INPUT_ALT ? 1 : 0
+  target.stats.inputctrl = mods & INPUT_CTRL ? 1 : 0
+  target.stats.inputshift = mods & INPUT_SHIFT ? 1 : 0
   switch (head) {
     case INPUT.MOVE_UP:
     case INPUT.MOVE_DOWN:
     case INPUT.MOVE_LEFT:
     case INPUT.MOVE_RIGHT:
       target.stats.inputmove = [readinputmap[head - INPUT.MOVE_UP]]
-      break
-    case INPUT.SHOOT_UP:
-    case INPUT.SHOOT_DOWN:
-    case INPUT.SHOOT_LEFT:
-    case INPUT.SHOOT_RIGHT:
-      target.stats.inputshoot = [readinputmap[head - INPUT.SHOOT_UP]]
       break
     case INPUT.OK_BUTTON:
       target.stats.inputok = 1
@@ -148,8 +154,13 @@ export const ZZT_FIRMWARE = createfirmware(
       }
     }
 
+    // get player
+    const player = memory.board
+      ? boardfindplayer(memory.board, memory.target)
+      : undefined
+
     // then global
-    const value = memoryplayerreadflag(memory.playerfocus, name)
+    const value = memoryplayerreadflag(player?.id, name)
     return [isPresent(value), value]
   },
   (chip, name, value) => {
@@ -168,8 +179,13 @@ export const ZZT_FIRMWARE = createfirmware(
       }
     }
 
+    // get player
+    const player = memory.board
+      ? boardfindplayer(memory.board, memory.target)
+      : undefined
+
     // then global
-    memoryplayersetflag(memory.playerfocus, name, value)
+    memoryplayersetflag(player?.id, name, value)
     return [true, value]
   },
 )
@@ -187,7 +203,7 @@ export const ZZT_FIRMWARE = createfirmware(
   })
   .command('char', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [value] = readargs(chip, words, 0, [ARG_TYPE.NUMBER])
+    const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.NUMBER])
     if (isDefined(memory.target)) {
       memory.target.char = value
     }
@@ -199,7 +215,10 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('cycle', (chip, words) => {
-    const [cyclevalue] = readargs(chip, words, 0, [ARG_TYPE.NUMBER])
+    const memory = memoryreadchip(chip.id())
+    const [cyclevalue] = readargs({ ...memory, chip, words }, 0, [
+      ARG_TYPE.NUMBER,
+    ])
     chip.cycle(clamp(Math.round(cyclevalue), 1, 255))
     return 0
   })
@@ -222,59 +241,93 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('go', (chip, words) => {
-    const [dir] = readdir(chip, words, 0)
     const memory = memoryreadchip(chip.id())
-    if (memoryboardmoveobject(memory.board, memory.target, dir)) {
-      return 0
+    const tx = memory.target?.x
+    const ty = memory.target?.y
+
+    let i = 0
+    let steps = 1
+    const [maybesteps, ii] = readexpr({ ...memory, chip, words }, 0)
+    if (isNumber(maybesteps)) {
+      i = ii
+      steps = clamp(Math.round(maybesteps), 1, 1024)
     }
+
+    while (steps > 0) {
+      const [dest] = readargs({ ...memory, chip, words }, i, [ARG_TYPE.DIR])
+      if (memoryboardmoveobject(memory.board, memory.target, dest)) {
+        // keep moving
+        --steps
+      } else {
+        // bail
+        break
+      }
+    }
+
     // if blocked, return 1
-    return 1
+    return memory.target?.x === tx && memory.target?.y === ty ? 1 : 0
   })
   .command('idle', (chip) => {
     chip.yield()
     return 0
   })
-  .command('if', (chip, words) => {
-    console.info(words) // stub-only, this is a lang feature
-    return 0
-  })
+  // stub-only, this is a lang feature
+  // .command('if', (chip, words) => {
   .command('lock', (chip) => {
     chip.lock(chip.id())
     return 0
   })
   .command('play', (chip, words) => {
-    console.info(words)
+    console.info(words) // this will pipe into the media player
     return 0
   })
   .command('put', (chip, words) => {
     console.info(words)
     return 0
   })
-  // .command('restart', (chip, words) => {
   // this is handled by a built-in 0 label
+  // .command('restart', (chip, words) => {
   .command('restore', (chip, words) => {
     chip.restore(maptostring(words[0]))
     return 0
   })
   .command('send', (chip, words) => {
-    const [value] = readexpr(chip, words, 1)
-    // console.info('send', words)
-    chip.send(maptostring(words[0]), value)
+    const memory = memoryreadchip(chip.id())
+    const [msg, data] = readargs({ ...memory, chip, words }, 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.ANY,
+    ])
+    // console.info('send', { msg, data })
+    chip.send(msg, data)
     return 0
   })
   .command('set', (chip, words) => {
-    const [value] = readexpr(chip, words, 1)
-    chip.set(maptostring(words[0]), value)
+    const memory = memoryreadchip(chip.id())
+    const [name, value] = readargs({ ...memory, chip, words }, 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.ANY,
+    ])
+    chip.set(name, value)
     return 0
   })
   .command('shoot', (chip, words) => {
-    console.info(words)
+    const memory = memoryreadchip(chip.id())
+    const [dir, maybekind] = readargs({ ...memory, chip, words }, 0, [
+      ARG_TYPE.DIR,
+      ARG_TYPE.MAYBE_KIND,
+    ])
+    console.info({ dir, maybekind }) // todo
     return 0
   })
-  // .command('take', (chip, words) => {
   // stub-only, this is a lang feature
+  // .command('take', (chip, words) => {
   .command('throwstar', (chip, words) => {
-    console.info(words)
+    const memory = memoryreadchip(chip.id())
+    const [dir, maybekind] = readargs({ ...memory, chip, words }, 0, [
+      ARG_TYPE.DIR,
+      ARG_TYPE.MAYBE_KIND,
+    ])
+    console.info({ dir, maybekind }) // todo
     return 0
   })
   .command('try', (chip, words) => {
@@ -289,7 +342,7 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('walk', (chip, words) => {
-    console.info(words)
+    console.info(words) // todo
     return 0
   })
   .command('zap', (chip, words) => {

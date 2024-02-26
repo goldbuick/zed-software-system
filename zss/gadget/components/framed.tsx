@@ -5,6 +5,9 @@ import {
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
   INPUT,
+  INPUT_ALT,
+  INPUT_CTRL,
+  INPUT_SHIFT,
   LAYER,
   LAYER_TYPE,
   layersreadcontrol,
@@ -15,7 +18,7 @@ import Clipping from './clipping'
 import { Dither } from './dither'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
-import { UserFocus, UserInput } from './userinput'
+import { UserFocus, UserInput, UserInputMods } from './userinput'
 
 const palette = loadDefaultPalette()
 const charset = loadDefaultCharset()
@@ -27,8 +30,18 @@ interface FramedProps {
   height: number
 }
 
-function sendinput(player: string, input: INPUT) {
-  hub.emit('vm:input', 'gadget', input, player)
+function sendinput(player: string, input: INPUT, mods: UserInputMods) {
+  let bits = 0
+  if (mods.alt) {
+    bits |= INPUT_ALT
+  }
+  if (mods.ctrl) {
+    bits |= INPUT_CTRL
+  }
+  if (mods.shift) {
+    bits |= INPUT_SHIFT
+  }
+  hub.emit('vm:input', 'gadget', [input, bits], player)
 }
 
 export function Framed({ player, layers, width, height }: FramedProps) {
@@ -61,17 +74,13 @@ export function Framed({ player, layers, width, height }: FramedProps) {
   return (
     <UserFocus>
       <UserInput
-        MOVE_LEFT={() => sendinput(player, INPUT.MOVE_LEFT)}
-        MOVE_RIGHT={() => sendinput(player, INPUT.MOVE_RIGHT)}
-        MOVE_UP={() => sendinput(player, INPUT.MOVE_UP)}
-        MOVE_DOWN={() => sendinput(player, INPUT.MOVE_DOWN)}
-        SHOOT_LEFT={() => sendinput(player, INPUT.SHOOT_LEFT)}
-        SHOOT_RIGHT={() => sendinput(player, INPUT.SHOOT_RIGHT)}
-        SHOOT_UP={() => sendinput(player, INPUT.SHOOT_UP)}
-        SHOOT_DOWN={() => sendinput(player, INPUT.SHOOT_DOWN)}
-        OK_BUTTON={() => sendinput(player, INPUT.OK_BUTTON)}
-        CANCEL_BUTTON={() => sendinput(player, INPUT.CANCEL_BUTTON)}
-        MENU_BUTTON={() => sendinput(player, INPUT.MENU_BUTTON)}
+        MOVE_LEFT={(mods) => sendinput(player, INPUT.MOVE_LEFT, mods)}
+        MOVE_RIGHT={(mods) => sendinput(player, INPUT.MOVE_RIGHT, mods)}
+        MOVE_UP={(mods) => sendinput(player, INPUT.MOVE_UP, mods)}
+        MOVE_DOWN={(mods) => sendinput(player, INPUT.MOVE_DOWN, mods)}
+        OK_BUTTON={(mods) => sendinput(player, INPUT.OK_BUTTON, mods)}
+        CANCEL_BUTTON={(mods) => sendinput(player, INPUT.CANCEL_BUTTON, mods)}
+        MENU_BUTTON={(mods) => sendinput(player, INPUT.MENU_BUTTON, mods)}
       />
       <Clipping width={viewwidth} height={viewheight}>
         {/* eslint-disable-next-line react/no-unknown-property */}

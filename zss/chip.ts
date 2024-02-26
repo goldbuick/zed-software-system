@@ -1,8 +1,9 @@
 import ErrorStackParser from 'error-stack-parser'
 import { klona } from 'klona/json'
+import isEqual from 'lodash/isEqual'
 
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
-import { readexpr } from './firmware/wordtypes'
+import { ARG_TYPE, chipreadcontext, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
@@ -356,39 +357,39 @@ export function createchip(id: string, build: GeneratorBuild) {
       return invokecommand('send', [name, ...args])
     },
     if(...words) {
-      const [value, i] = readexpr(chip, words, 0)
+      const read = chipreadcontext(chip, words)
+      const [value, ii] = readargs(read, 0, [ARG_TYPE.ANY])
       const result = maptoresult(value)
 
-      if (result && i < words.length) {
-        chip.command(...words.slice(i))
+      if (result && ii < words.length) {
+        chip.command(...words.slice(ii))
       }
 
       return result
     },
     take(...words) {
-      const [name, ...values] = words
-
-      // todo throw error
-      if (!isString(name)) {
-        return 0
-      }
+      const read = chipreadcontext(chip, words)
+      const [name, maybevalue, ii] = readargs(read, 0, [
+        ARG_TYPE.STRING,
+        ARG_TYPE.MAYBE_NUMBER,
+      ])
 
       const current = chip.get(name)
-      const [maybevalue, i] = readexpr(chip, values, 0)
+      // default to #TAKE <name> 1
       const value = maybevalue ?? 1
 
       // taking from an unset flag, or non-numerical value
-      if (!isNumber(current) || !isNumber(value)) {
+      if (!isNumber(current)) {
         // todo: raise warning ?
         return 1
       }
 
-      const newvalue = current - maybevalue
+      const newvalue = current - value
 
       // returns true when take fails
       if (newvalue < 0) {
-        if (i < values.length) {
-          chip.command(...values.slice(i))
+        if (ii < words.length) {
+          chip.command(...words.slice(ii))
         }
         return 1
       }
@@ -398,16 +399,14 @@ export function createchip(id: string, build: GeneratorBuild) {
       return 0
     },
     give(...words) {
-      const [name, ...values] = words
-
-      // todo throw error
-      if (!isString(name)) {
-        return 0
-      }
+      const read = chipreadcontext(chip, words)
+      const [name, maybevalue, ii] = readargs(read, 0, [
+        ARG_TYPE.STRING,
+        ARG_TYPE.MAYBE_NUMBER,
+      ])
 
       const maybecurrent = chip.get(name)
       const current = isNumber(maybecurrent) ? maybecurrent : 0
-      const [maybevalue, i] = readexpr(chip, values, 0)
       const value = maybevalue ?? 1
 
       // giving a non-numerical value
@@ -418,8 +417,8 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       // returns true when setting an unset flag
       const result = maybecurrent === undefined ? 1 : 0
-      if (result && i < values.length) {
-        chip.command(...values.slice(i))
+      if (result && ii < words.length) {
+        chip.command(...words.slice(ii))
       }
 
       // update flag
@@ -427,23 +426,23 @@ export function createchip(id: string, build: GeneratorBuild) {
       return result
     },
     try(...words) {
-      const [value, i] = readexpr(chip, words, 0)
-
-      console.info('api try', value, i)
+      const read = chipreadcontext(chip, words)
+      const [value, ii] = readargs(read, 0, [ARG_TYPE.ANY])
 
       // we use go because it tries to move and returns 1 on failure
       const result = invokecommand('go', [value as WORD]) ? 1 : 0
-      if (result && i < words.length) {
-        chip.command(...words.slice(i))
+      if (result && ii < words.length) {
+        chip.command(...words.slice(ii))
       }
 
       return result
     },
     repeatStart(index, ...words) {
-      const [maybevalue, i] = readexpr(chip, words, 0)
+      const read = chipreadcontext(chip, words)
+      const [value, ii] = readargs(read, 0, [ARG_TYPE.NUMBER])
 
-      repeats[index] = isNumber(maybevalue) ? maybevalue : 0
-      repeatscommand[index] = i < words.length ? words.slice(i) : undefined
+      repeats[index] = value
+      repeatscommand[index] = ii < words.length ? words.slice(ii) : undefined
     },
     repeat(index) {
       const count = repeats[index] ?? 0
@@ -510,9 +509,10 @@ export function createchip(id: string, build: GeneratorBuild) {
       return true
     },
     or(...words) {
+      const read = chipreadcontext(chip, words)
       let lastvalue = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readexpr(chip, words, i)
+        const [value, next] = readargs(read, 0, [ARG_TYPE.ANY])
         lastvalue = value
         if (lastvalue) {
           break // or returns the first truthy value
@@ -522,9 +522,10 @@ export function createchip(id: string, build: GeneratorBuild) {
       return lastvalue
     },
     and(...words) {
+      const read = chipreadcontext(chip, words)
       let lastvalue = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readexpr(chip, words, i)
+        const [value, next] = readargs(read, 0, [ARG_TYPE.ANY])
         lastvalue = value
         if (!lastvalue) {
           break // and returns the first falsy value, or the last value
@@ -534,83 +535,87 @@ export function createchip(id: string, build: GeneratorBuild) {
       return lastvalue
     },
     not(...words) {
-      const [value] = readexpr(chip, words, 0)
+      const read = chipreadcontext(chip, words)
+      const [value] = readargs(read, 0, [ARG_TYPE.ANY])
       return value ? 0 : 1
     },
     group(...words) {
-      return words
+      // eval a group of words as an expression
+      const read = chipreadcontext(chip, words)
+      const [value] = readargs(read, 0, [ARG_TYPE.ANY])
+      return value
     },
     isEq(lhs, rhs) {
-      const [left] = readexpr(chip, lhs, 0)
-      const [right] = readexpr(chip, rhs, 0)
-      return left === right ? 1 : 0
+      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.ANY])
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.ANY])
+      return isEqual(left, right) ? 1 : 0
     },
     isNotEq(lhs, rhs) {
-      const [left] = readexpr(chip, lhs, 0)
-      const [right] = readexpr(chip, rhs, 0)
+      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.ANY])
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.ANY])
       return left !== right ? 1 : 0
     },
     isLessThan(lhs, rhs) {
-      const [left] = readexpr(chip, lhs, 0)
-      const [right] = readexpr(chip, rhs, 0)
+      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
       return left < right ? 1 : 0
     },
     isGreaterThan(lhs, rhs) {
-      const [left] = readexpr(chip, lhs, 0)
-      const [right] = readexpr(chip, rhs, 0)
+      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
       return left > right ? 1 : 0
     },
     isLessThanOrEq(lhs, rhs) {
-      const [left] = readexpr(chip, lhs, 0)
-      const [right] = readexpr(chip, rhs, 0)
+      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
       return left <= right ? 1 : 0
     },
     isGreaterThanOrEq(lhs, rhs) {
-      const [left] = readexpr(chip, lhs, 0)
-      const [right] = readexpr(chip, rhs, 0)
+      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
       return left >= right ? 1 : 0
     },
     opPlus(lhs, rhs) {
-      const [left] = readexpr(chip, lhs, 0)
-      const [right] = readexpr(chip, rhs, 0)
+      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.ANY])
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.ANY])
       return left + right
     },
     opMinus(lhs, rhs) {
-      const [left] = readexpr(chip, lhs, 0)
-      const [right] = readexpr(chip, rhs, 0)
+      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.ANY])
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.ANY])
       return left - right
     },
     opPower(lhs, rhs) {
-      const [left] = readexpr(chip, lhs, 0)
-      const [right] = readexpr(chip, rhs, 0)
+      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
       return Math.pow(left, right)
     },
     opMultiply(lhs, rhs) {
-      const [left] = readexpr(chip, lhs, 0)
-      const [right] = readexpr(chip, rhs, 0)
+      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
       return left * right
     },
     opDivide(lhs, rhs) {
-      const [left] = readexpr(chip, lhs, 0)
-      const [right] = readexpr(chip, rhs, 0)
+      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
       return left / right
     },
     opModDivide(lhs, rhs) {
-      const [left] = readexpr(chip, lhs, 0)
-      const [right] = readexpr(chip, rhs, 0)
+      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
       return left % right
     },
     opFloorDivide(lhs, rhs) {
-      const [left] = readexpr(chip, lhs, 0)
-      const [right] = readexpr(chip, rhs, 0)
+      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
       return Math.floor(left / right)
     },
     opUniPlus(rhs) {
-      const [right] = readexpr(chip, rhs, 0)
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
       return +right
     },
     opUniMinus(rhs) {
-      const [right] = readexpr(chip, rhs, 0)
+      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
       return -right
     },
   }

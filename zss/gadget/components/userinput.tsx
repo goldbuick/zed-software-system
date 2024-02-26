@@ -12,7 +12,7 @@ import { INPUT } from '../data/types'
 
 // user input
 
-type UserInputMods = {
+export type UserInputMods = {
   alt: boolean
   ctrl: boolean
   shift: boolean
@@ -45,16 +45,16 @@ document.addEventListener('keydown', (event) => {
 
   switch (key) {
     case 'arrowleft':
-      invoke(event.shiftKey ? INPUT.SHOOT_LEFT : INPUT.MOVE_LEFT, mods)
+      invoke(INPUT.MOVE_LEFT, mods)
       break
     case 'arrowright':
-      invoke(event.shiftKey ? INPUT.SHOOT_RIGHT : INPUT.MOVE_RIGHT, mods)
+      invoke(INPUT.MOVE_RIGHT, mods)
       break
     case 'arrowup':
-      invoke(event.shiftKey ? INPUT.SHOOT_UP : INPUT.MOVE_UP, mods)
+      invoke(INPUT.MOVE_UP, mods)
       break
     case 'arrowdown':
-      invoke(event.shiftKey ? INPUT.SHOOT_DOWN : INPUT.MOVE_DOWN, mods)
+      invoke(INPUT.MOVE_DOWN, mods)
       break
     case 'enter':
       invoke(INPUT.OK_BUTTON, mods)
@@ -76,10 +76,10 @@ document.addEventListener('keydown', (event) => {
 })
 
 // gamepad input
+// yes
 
-// mouse input
-
-// touch input
+// mouse input ??
+// touch input ??
 
 // components
 
@@ -104,10 +104,6 @@ interface UserInputProps {
   MOVE_RIGHT?: UserInputHandler
   MOVE_UP?: UserInputHandler
   MOVE_DOWN?: UserInputHandler
-  SHOOT_LEFT?: UserInputHandler
-  SHOOT_RIGHT?: UserInputHandler
-  SHOOT_UP?: UserInputHandler
-  SHOOT_DOWN?: UserInputHandler
   OK_BUTTON?: UserInputHandler
   CANCEL_BUTTON?: UserInputHandler
   MENU_BUTTON?: UserInputHandler

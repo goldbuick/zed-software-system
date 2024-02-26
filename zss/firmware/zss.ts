@@ -2,11 +2,10 @@ import { isDefined } from 'ts-extras'
 import { createfirmware } from 'zss/firmware'
 import { memoryreadchip } from 'zss/memory'
 
-import { maptostring } from '../chip'
 import { gadgetcheckset, gadgetpanel } from '../gadget/data/api'
-import { PANEL_TYPE, PANEL_TYPE_MAP } from '../gadget/data/types'
+import { PANEL_TYPE_MAP } from '../gadget/data/types'
 
-import { ARG_TYPE, readargs, readnumber } from './wordtypes'
+import { ARG_TYPE, readargs } from './wordtypes'
 
 export const ZSS_FIRMWARE = createfirmware(
   () => {
@@ -21,7 +20,7 @@ export const ZSS_FIRMWARE = createfirmware(
 )
   .command('bg', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [value] = readargs(chip, words, 0, [ARG_TYPE.COLOR])
+    const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.COLOR])
     if (isDefined(memory.target)) {
       memory.target.bg = value
     }
@@ -29,24 +28,23 @@ export const ZSS_FIRMWARE = createfirmware(
   })
   .command('color', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [value] = readargs(chip, words, 0, [ARG_TYPE.COLOR])
+    const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.COLOR])
     if (isDefined(memory.target)) {
       memory.target.color = value
     }
     return 0
   })
   .command('gadget', (chip, words) => {
-    const [edge, arg1, arg2] = readargs(chip, words, 0, [
+    const memory = memoryreadchip(chip.id())
+    const context = { ...memory, chip, words }
+
+    const [edge, maybesize, maybename] = readargs(context, 0, [
       ARG_TYPE.STRING,
-      ARG_TYPE.ANY,
-      ARG_TYPE.ANY,
+      ARG_TYPE.MAYBE_NUMBER,
+      ARG_TYPE.MAYBE_STRING,
     ])
     const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
-    const isScroll = edgeConst === PANEL_TYPE.SCROLL
 
-    const [size] = readnumber(chip, [isScroll ? arg2 : arg1], 0)
-    const name = maptostring(isScroll ? arg1 : arg2)
-
-    gadgetpanel(chip, edge, edgeConst, size, name)
+    gadgetpanel(chip, edge, edgeConst, maybesize, maybename)
     return 0
   })

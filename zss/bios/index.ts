@@ -25,27 +25,6 @@ export const BIOS: BOOK = {
           type: CONTENT_TYPE.BOARD,
           name: 'title',
           value: createboard(BOARD_WIDTH, BOARD_HEIGHT, (board) => {
-            for (let i = 0; i < board.terrain.length; ++i) {
-              board.terrain[i] = {
-                kind: pick(
-                  'app:field',
-                  'app:field',
-                  'app:field',
-                  'app:field',
-                  'app:field',
-                  'app:field',
-                  'app:field',
-                  'app:wall',
-                ),
-              }
-            }
-            for (let i = 0; i < 24; i++) {
-              createboardobject(board, {
-                x: randomInteger(0, board.width - 1),
-                y: randomInteger(0, board.height - 1),
-                kind: pick('app:spin', 'app:tester'),
-              })
-            }
             return board
           }),
         },
@@ -54,35 +33,10 @@ export const BIOS: BOOK = {
           type: CONTENT_TYPE.OBJECT,
           name: 'player',
           value: {
-            name: 'player',
-            char: 2,
-            color: COLOR.PURPLE,
-            bg: COLOR.CLEAR,
+            char: 219,
+            color: COLOR.WHITE,
+            bg: COLOR.SHADOW,
             code: playercode,
-          },
-        },
-        {
-          id: createguid(),
-          type: CONTENT_TYPE.OBJECT,
-          name: 'spin',
-          value: {
-            name: 'spin',
-            char: 15,
-            color: COLOR.RED,
-            bg: COLOR.CLEAR,
-            code: spincode,
-          },
-        },
-        {
-          id: createguid(),
-          type: CONTENT_TYPE.OBJECT,
-          name: 'tester',
-          value: {
-            name: 'tester',
-            char: 21,
-            color: COLOR.BLUE,
-            bg: COLOR.CLEAR,
-            code: testercode,
           },
         },
         {
@@ -90,7 +44,6 @@ export const BIOS: BOOK = {
           type: CONTENT_TYPE.TERRAIN,
           name: 'field',
           value: {
-            name: 'field',
             char: 176,
             color: COLOR.DKGRAY,
             collision: COLLISION.WALK,
@@ -101,7 +54,6 @@ export const BIOS: BOOK = {
           type: CONTENT_TYPE.TERRAIN,
           name: 'wall',
           value: {
-            name: 'wall',
             char: 219,
             color: COLOR.CYAN,
             collision: COLLISION.SOLID,

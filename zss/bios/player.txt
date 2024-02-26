@@ -1,53 +1,31 @@
 ' setup ui
-#gadget start
 #gadget right 20
-
+""
  $white   - - - - -
  $black$ongrey    ZED.CAFE    
  $white    - - - - -
 ""
+
 ' main loop
 #cycle 1
-#set inputrate 0
+#set blinkrate 0
 
 :think
+#give blinkrate
+
+#if blinkrate < 5
+  #char 219
+#else if blinkrate < 10
+  #char 176
+#else
+  #set blinkrate 0
+
 #if inputmove
-  ?inputmove
-#else if inputshoot and inputrate < 1
-  #take ammo
-    #give emptyhint
-      |You don't have any ammo!
+  #if inputalt
+    ?10 inputmove
   #else
-    #give inputrate 3
-    #shoot inputshoot
-  #idle
+    ?inputmove
 #else
   #idle
-#take inputrate
+
 #think
-
-:thud
-#if sender is water 
-  #give waterhint
-    |Your way is blocked by water.
-#idle
-#think
-
-:shot
-"Ouch!"
-#play hit
-#anim shake
-#take health 10 kill
-#if health > 0 think
-
-:kill
-#lock
-#play death
-#clear health
-#anim jwaap
-#idle
-#die
-
-:debug
-#if any red fish
-  |You see some red fish

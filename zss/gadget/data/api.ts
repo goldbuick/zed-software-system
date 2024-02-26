@@ -2,6 +2,7 @@ import Case from 'case'
 import { CHIP, STATE, WORD, WORD_VALUE } from 'zss/chip'
 import {
   MAYBE_NUMBER,
+  MAYBE_STRING,
   MAYBE_TEXT,
   observesharedtype,
   observesharedvalue,
@@ -9,8 +10,15 @@ import {
   updatesharedvalue,
 } from 'zss/device/shared'
 import { createguid } from 'zss/mapping/guid'
+import { isNumber } from 'zss/mapping/types'
 
-import { GADGET_STATE, PANEL, PANEL_SHARED, PANEL_TYPE } from './types'
+import {
+  GADGET_STATE,
+  PANEL,
+  PANEL_SHARED,
+  PANEL_TYPE,
+  PANEL_TYPE_SIZES,
+} from './types'
 
 const panelshared: Record<string, PANEL_SHARED> = {}
 
@@ -117,8 +125,8 @@ export function gadgetpanel(
   chip: CHIP,
   edge: string,
   edgeConst: PANEL_TYPE,
-  size: number,
-  name: string,
+  size: MAYBE_NUMBER,
+  name: MAYBE_STRING,
 ) {
   // get state
   const shared = gadgetstate(chip.id())
@@ -131,6 +139,10 @@ export function gadgetpanel(
     // set focus to panel and mark for reset
     shared.layoutreset = true
     shared.layoutfocus = panelName
+    // you can also resize panels
+    if (isNumber(size)) {
+      panelState.size = size
+    }
   } else {
     switch (edgeConst) {
       case PANEL_TYPE.START:
@@ -145,7 +157,7 @@ export function gadgetpanel(
           id: createguid(),
           name: panelName,
           edge: edgeConst,
-          size,
+          size: size ?? PANEL_TYPE_SIZES[edgeConst],
           text: [],
         }
         shared.layout.push(panel)

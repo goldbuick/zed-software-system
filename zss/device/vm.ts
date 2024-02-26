@@ -10,6 +10,8 @@ import {
 } from 'zss/memory'
 import { createos } from 'zss/os'
 
+import { INPUT } from '../gadget/data/types'
+
 // limited chars so peerjs doesn't get mad
 const justNumberChars = customAlphabet(numbers, 4)
 const mixedChars = customAlphabet(`${numbers}${lowercase}`, 16)
@@ -57,7 +59,9 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
       // player input
       if (message.player) {
         const memory = memoryreadchip(message.player)
-        memory.inputqueue.add(message.data)
+        const [input = INPUT.NONE, mods = 0] = message.data ?? {}
+        memory.inputqueue.add(input)
+        memory.inputmods[input as INPUT] = mods
       }
     default:
       os.message(message)
