@@ -13,9 +13,9 @@
 :think
 #give blinkrate
 
-#if blinkrate < 4
+#if blinkrate < 6
   #char 219
-#else if blinkrate < 5
+#else if blinkrate < 7
   #char 32
 #else
   #set blinkrate 0
