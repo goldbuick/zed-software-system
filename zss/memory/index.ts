@@ -25,6 +25,8 @@ import {
 } from './book'
 import { CONTENT_TYPE } from './codepage'
 
+enum MEMORY_STACK_TYPE {}
+
 // shared chip state
 type MEMORY_CHIP = {
   board: BOARD | undefined
@@ -34,23 +36,20 @@ type MEMORY_CHIP = {
   activeinput: INPUT | undefined
 }
 
-// player state
-type MEMORY_FLAGS = Record<string, WORD_VALUE>
+// we have memory slots
+// a slot is either a runner or editor
 
-// player tracking
-type MEMORY_PLAYER = string
-
-// sim state
 const MEMORY = proxy({
-  book: BIOS, // starting software to run
-  defaultplayer: '', // default player aggro
+  // book: BIOS, // starting software to run
+  // defaultplayer: '', // default player aggro
   chips: {} as Record<string, MEMORY_CHIP>, // execution context for a chip
-  flags: {} as Record<string, MEMORY_FLAGS>, // global flags by player
-  players: {} as Record<string, MEMORY_PLAYER>, // map of player to board
+  // flags: {} as Record<string, MEMORY_FLAGS>, // global flags by player
+  // players: {} as Record<string, MEMORY_PLAYER>, // map of player to board
 })
 
 export function memorysetdefaultplayer(player: string) {
-  MEMORY.defaultplayer = player
+  console.info({ player })
+  // MEMORY.defaultplayer = player
 }
 
 export function memoryreadchip(id: string) {
