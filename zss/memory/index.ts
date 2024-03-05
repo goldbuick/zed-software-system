@@ -25,7 +25,10 @@ import {
 } from './book'
 import { CONTENT_TYPE } from './codepage'
 
-enum MEMORY_STACK_TYPE {}
+/*
+BOOK OF CODEPAGES
+A CODEPAGE is CODE + VALUE
+*/
 
 // shared chip state
 type MEMORY_CHIP = {

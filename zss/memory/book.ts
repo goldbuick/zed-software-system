@@ -2,12 +2,7 @@ import { WORD_VALUE } from 'zss/chip'
 import { isdefined } from 'zss/mapping/types'
 
 import { MAYBE_BOARD_ELEMENT } from './board'
-import {
-  CODE_PAGE,
-  CONTENT_TYPE,
-  CONTENT_TYPE_MAP,
-  readentry,
-} from './codepage'
+import { CODE_PAGE } from './codepage'
 
 // player state
 export type BOOK_FLAGS = Record<string, WORD_VALUE>
@@ -17,7 +12,6 @@ export type BOOK_PLAYER = string
 
 export type BOOK = {
   id: string
-  name: string
   pages: CODE_PAGE[]
   flags: Record<string, BOOK_FLAGS>
   players: Record<string, BOOK_PLAYER>
