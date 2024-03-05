@@ -60,27 +60,39 @@ export type CODE_PAGE_PALETTE = {
   value: BITMAP
 }
 
-export type CODE_PAGE =
-  | CODE_PAGE_ERROR
-  | CODE_PAGE_FUNC
-  | CODE_PAGE_BOARD
-  | CODE_PAGE_OBJECT
-  | CODE_PAGE_TERRAIN
-  | CODE_PAGE_CHARSET
-  | CODE_PAGE_PALETTE
+// export type CODE_PAGE =
+//   | CODE_PAGE_ERROR
+//   | CODE_PAGE_FUNC
+//   | CODE_PAGE_BOARD
+//   | CODE_PAGE_OBJECT
+//   | CODE_PAGE_TERRAIN
+//   | CODE_PAGE_CHARSET
+//   | CODE_PAGE_PALETTE
 
-export type CODE_PAGE_TYPE_MAP = {
-  [PAGE_TYPE.ERROR]: string
-  [PAGE_TYPE.FUNC]: string
-  [PAGE_TYPE.BOARD]: BOARD
-  [PAGE_TYPE.OBJECT]: BOARD_ELEMENT
-  [PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
-  [PAGE_TYPE.CHARSET]: BITMAP
-  [PAGE_TYPE.PALETTE]: BITMAP
-}
+// export type CODE_PAGE_TYPE_MAP = {
+//   [PAGE_TYPE.ERROR]: string
+//   [PAGE_TYPE.FUNC]: string
+//   [PAGE_TYPE.BOARD]: BOARD
+//   [PAGE_TYPE.OBJECT]: BOARD_ELEMENT
+//   [PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
+//   [PAGE_TYPE.CHARSET]: BITMAP
+//   [PAGE_TYPE.PALETTE]: BITMAP
+// }
 
 /*
 
 we need to be able to parse out @attributes and know what the name is
 
 */
+
+export type CODE_PAGE = {
+  name?: string
+
+  ERROR
+  FUNC
+  BOARD
+  OBJECT
+  TERRAIN
+  CHARSET
+  PALETTE
+}
