@@ -1,6 +1,7 @@
 import { customAlphabet } from 'nanoid'
 import { numbers, lowercase } from 'nanoid-dictionary'
 import { createdevice } from 'zss/device'
+import { INPUT } from 'zss/gadget/data/types'
 import {
   memoryplayerlogin,
   memoryplayerlogout,
@@ -9,8 +10,6 @@ import {
   memorytick,
 } from 'zss/memory'
 import { createos } from 'zss/os'
-
-import { INPUT } from '../gadget/data/types'
 
 // limited chars so peerjs doesn't get mad
 const justNumberChars = customAlphabet(numbers, 4)

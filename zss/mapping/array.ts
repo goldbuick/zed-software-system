@@ -1,4 +1,5 @@
 import { randomInteger } from './number'
+import { isdefined } from './types'
 
 export function range(a: number, b?: number, step?: number) {
   if (typeof a !== 'number') {
@@ -98,4 +99,9 @@ export function notEmpty<T>(value: T | null | undefined): value is T {
     return false
   }
   return true
+}
+
+export function unique<T>(values: (T | undefined)[]) {
+  const array = [...new Set(values)]
+  return array.filter(isdefined)
 }

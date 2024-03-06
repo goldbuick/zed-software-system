@@ -1,4 +1,5 @@
 import { WORD_VALUE } from 'zss/chip'
+import { unique } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
 import { MAYBE, isdefined } from 'zss/mapping/types'
 
@@ -150,8 +151,7 @@ export function bookplayersetboard(book: BOOK, player: string, board: string) {
 }
 
 export function bookplayerreadboards(book: BOOK) {
-  const activelist = [...new Set(Object.values(book.players))]
-  return activelist
+  return unique(Object.values(book.players))
     .map((address) => bookreadboard(book, address))
     .filter(isdefined)
 }

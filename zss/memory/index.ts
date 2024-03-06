@@ -1,8 +1,9 @@
 import { proxy } from 'valtio'
 import { PT, ispt } from 'zss/firmware/wordtypes'
 import { INPUT } from 'zss/gadget/data/types'
+import { unique } from 'zss/mapping/array'
 import { randomInteger } from 'zss/mapping/number'
-import { isdefined } from 'zss/mapping/types'
+import { MAYBE_STRING, isdefined } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
@@ -26,7 +27,7 @@ import {
   bookterrainreadkind,
 } from './book'
 import { CODE_PAGE_TYPE } from './codepage'
-import { FRAME_STATE } from './frame'
+import { FRAME_STATE, FRAME_TYPE } from './frame'
 
 type CHIP_MEMORY = {
   board: BOARD | undefined
@@ -49,11 +50,22 @@ export function memorysetdefaultplayer(player: string) {
 
 export function memoryreadbook(address: string): MAYBE_BOOK {
   const laddress = address.toLowerCase()
+  const books = Object.values(MEMORY.books)
   return (
     MEMORY.books.get(address) ||
-    Object.values(MEMORY.books).find(
-      (item) => item.name.toLowerCase() === laddress,
-    )
+    books.find((item) => item.name.toLowerCase() === laddress)
+  )
+}
+
+export function memoryreadbooks(addresses: MAYBE_STRING[]) {
+  return unique(addresses).map(memoryreadbook).filter(isdefined)
+}
+
+export function memoryreadmainframes() {
+  return unique(
+    MEMORY.frames.map((frame) =>
+      frame.type === FRAME_TYPE.MAIN ? frame.book : undefined,
+    ),
   )
 }
 
@@ -90,33 +102,37 @@ export function memoryreadflags(address: string, player: string) {
 const PLAYER_KIND = 'player'
 const PLAYER_START = 'title'
 
-export function memoryplayerlogin(address: string, player: string) {
-  const title = memoryreadboard(address, PLAYER_START)
-  const playerkind = memoryreadobject(address, PLAYER_KIND)
-  if (!title || !playerkind) {
-    return
-  }
+export function memoryplayerlogin(player: string) {
+  memoryreadmainframes().forEach((address) => {
+    const title = memoryreadboard(address, PLAYER_START)
+    const playerkind = memoryreadobject(address, PLAYER_KIND)
+    if (!title || !playerkind) {
+      return
+    }
 
-  const obj = createboardobject(title, {
-    id: player,
-    x: randomInteger(0, title.width - 1),
-    y: randomInteger(0, title.height - 1),
-    kind: PLAYER_KIND,
-    stats: {
-      player,
-    },
+    const obj = createboardobject(title, {
+      id: player,
+      x: randomInteger(0, title.width - 1),
+      y: randomInteger(0, title.height - 1),
+      kind: PLAYER_KIND,
+      stats: {
+        player,
+      },
+    })
+
+    if (obj?.id) {
+      memoryplayersetboard(address, player, PLAYER_START)
+    }
   })
-
-  if (obj?.id) {
-    memoryplayersetboard(address, player, PLAYER_START)
-  }
 }
 
-export function memoryplayerlogout(address: string, player: string) {
-  const board = memoryplayerreadboard(address, player)
-  if (board) {
-    boarddeleteobject(board, player)
-  }
+export function memoryplayerlogout(player: string) {
+  memoryreadmainframes().forEach((address) => {
+    const board = memoryplayerreadboard(address, player)
+    if (board) {
+      boarddeleteobject(board, player)
+    }
+  })
 }
 
 export function memoryplayerreadflag(
@@ -199,7 +215,7 @@ export function memoryboardmoveobject(
   return boardmoveobject(book, board, target, dest)
 }
 
-export function memorytick(os: OS, address: string) {
+export function memorytick(os: OS) {
   // glue code between memory, os, and boardtick
   function oncode(
     board: BOARD,
@@ -216,10 +232,14 @@ export function memorytick(os: OS, address: string) {
     os.tick(id, code)
   }
 
-  const book = memoryreadbook(address)
-  if (book) {
-    bookplayerreadboards(book).forEach((board) =>
-      boardtick(book, board, oncode),
-    )
-  }
+  // read which books need updated
+  memoryreadmainframes().forEach((address) => {
+    const book = memoryreadbook(address)
+    if (book) {
+      // read boards with players as active list
+      const boards = bookplayerreadboards(book)
+      // update boards / build code / run chips
+      boards.forEach((board) => boardtick(book, board, oncode))
+    }
+  })
 }

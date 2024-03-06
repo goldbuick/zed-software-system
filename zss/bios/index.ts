@@ -3,7 +3,6 @@ import { COLLISION, COLOR } from 'zss/firmware/wordtypes'
 import { createguid } from 'zss/mapping/guid'
 import { createboard } from 'zss/memory/board'
 import { BOOK } from 'zss/memory/book'
-import { CONTENT_TYPE } from 'zss/memory/codepage'
 
 const BOARD_WIDTH = 60
 const BOARD_HEIGHT = 25
