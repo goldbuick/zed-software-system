@@ -1,6 +1,5 @@
 import { ref } from 'valtio'
 import { WORD_VALUE } from 'zss/chip'
-import { MAYBE_STRING } from 'zss/device/shared'
 import {
   PT,
   DIR,
@@ -12,7 +11,7 @@ import {
 } from 'zss/firmware/wordtypes'
 import { range, pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
-import { isdefined } from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, isdefined } from 'zss/mapping/types'
 
 import { namedelements, nearestpt } from './atomics'
 import { BOOK, bookobjectreadkind, bookterrainreadkind } from './book'
@@ -62,7 +61,7 @@ export type BOARD_ELEMENT = Partial<{
   removed: number
 }>
 
-export type MAYBE_BOARD_ELEMENT = BOARD_ELEMENT | undefined
+export type MAYBE_BOARD_ELEMENT = MAYBE<BOARD_ELEMENT>
 
 export type BOARD_RECT = {
   x: number
@@ -93,7 +92,7 @@ export type BOARD = {
   named?: Record<string, Set<string | number>>
 }
 
-export type MAYBE_BOARD = BOARD | undefined
+export type MAYBE_BOARD = MAYBE<BOARD>
 
 export function createboard(
   width: number,
@@ -128,7 +127,13 @@ export function createboardobject(
   return object
 }
 
-export function boardreadobject(board: BOARD, id: string): MAYBE_BOARD_ELEMENT {
+export function boardreadobject(
+  board: MAYBE_BOARD,
+  id: string,
+): MAYBE_BOARD_ELEMENT {
+  if (!board) {
+    return undefined
+  }
   return board.objects[id]
 }
 

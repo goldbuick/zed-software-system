@@ -1,10 +1,10 @@
 import * as THREE from 'three'
+import { MAYBE_NUMBER } from 'zss/mapping/types'
 
 import { CHARS_PER_ROW, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 
 import { cloneMaterial, interval, time } from './anim'
 
-type MAYBE_NUMBER = number | undefined
 type TILE_CHARS = MAYBE_NUMBER[]
 type TILE_COLORS = MAYBE_NUMBER[]
 

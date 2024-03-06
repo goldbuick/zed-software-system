@@ -3,6 +3,7 @@ import { SPRITES_SINDEX, SPRITES_TINDEX } from 'zss/gadget/data/types'
 import { range, pick } from 'zss/mapping/array'
 import { clamp, randomInteger } from 'zss/mapping/number'
 import {
+  MAYBE,
   isarray,
   isdefined,
   ismaybestring,
@@ -23,7 +24,7 @@ export interface READ_CONTEXT {
   words: WORD[]
 }
 
-type MAYBE_WORD = WORD | undefined
+type MAYBE_WORD = MAYBE<WORD>
 
 export type PT = { x: number; y: number }
 

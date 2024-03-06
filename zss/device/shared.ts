@@ -3,12 +3,11 @@ import * as encoding from 'lib0/encoding'
 import * as syncprotocol from 'y-protocols/sync'
 import * as Y from 'yjs'
 import { createdevice } from 'zss/device'
+import { MAYBE, MAYBE_NUMBER, MAYBE_STRING } from 'zss/mapping/types'
 
-export type MAYBE_MAP = Y.Map<any> | undefined
-export type MAYBE_TEXT = Y.Text | undefined
-export type MAYBE_ARRAY = Y.Array<any> | undefined
-export type MAYBE_NUMBER = number | undefined
-export type MAYBE_STRING = string | undefined
+export type MAYBE_MAP = MAYBE<Y.Map<any>>
+export type MAYBE_TEXT = MAYBE<Y.Text>
+export type MAYBE_ARRAY = MAYBE<Y.Array<any>>
 export type UNOBSERVE_FUNC = () => void
 
 const docs: Record<string, Y.Doc | undefined> = {}

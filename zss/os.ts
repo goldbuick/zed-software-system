@@ -2,15 +2,13 @@ import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { loadfirmware } from './firmware/loader'
 import { GeneratorBuild, compile } from './lang/generator'
-import { createguid } from './mapping/guid'
 import { isdefined } from './mapping/types'
 
 export type OS = {
-  boot: (id: string | undefined, code: string) => string
   ids: () => string[]
   has: (id: string) => boolean
   halt: (id: string) => boolean
-  tick: (id: string) => boolean
+  tick: (id: string, code: string) => boolean
   message: MESSAGE_FUNC
 }
 
@@ -31,24 +29,6 @@ export function createos() {
   }
 
   const os: OS = {
-    boot(maybeid, code) {
-      const id = maybeid ?? createguid()
-
-      const result = build(code)
-      if (result.errors?.length) {
-        // log it ???
-        console.error(result)
-        return ''
-      }
-
-      // create chip from build
-      const chip = (chips[id] = createchip(id, result))
-
-      // load chip firmware
-      loadfirmware(chip)
-
-      return id
-    },
     ids() {
       return Object.keys(chips)
     },
@@ -62,8 +42,25 @@ export function createos() {
       }
       return !!chip
     },
-    tick(id) {
-      return chips[id]?.tick()
+    tick(id, code) {
+      let chip = chips[id]
+
+      if (!isdefined(chips[id])) {
+        const result = build(code)
+        if (result.errors?.length) {
+          // log it ???
+          console.error(result)
+          return false
+        }
+
+        // create chip from build
+        chip = chips[id] = createchip(id, result)
+
+        // load chip firmware
+        loadfirmware(chip)
+      }
+
+      return chip.tick()
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)

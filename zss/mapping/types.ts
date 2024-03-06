@@ -3,6 +3,10 @@ import { isDefined, isPresent } from 'ts-extras'
 
 export { isDefined as isdefined, isPresent as ispresent }
 
+export type MAYBE<T> = T | undefined
+export type MAYBE_NUMBER = number | undefined
+export type MAYBE_STRING = string | undefined
+
 export function isequal(a: any, b: any) {
   return compare(a, b)
 }
@@ -15,7 +19,7 @@ export function isnumber(word: any): word is number {
   return typeof word === 'number'
 }
 
-export function ismaybenumber(word: any): word is number | undefined {
+export function ismaybenumber(word: any): word is MAYBE<number> {
   return typeof word === 'number' || word === undefined
 }
 
@@ -23,7 +27,7 @@ export function isstring(word: any): word is string {
   return typeof word === 'string'
 }
 
-export function ismaybestring(word: any): word is string {
+export function ismaybestring(word: any): word is MAYBE<string> {
   return typeof word === 'string' || word === undefined
 }
 
@@ -31,6 +35,6 @@ export function isarray(word: any): word is any[] {
   return Array.isArray(word)
 }
 
-export function ismaybearray(word: any): word is any[] | undefined {
+export function ismaybearray(word: any): word is MAYBE<any[]> {
   return Array.isArray(word) || word === undefined
 }
