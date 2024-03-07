@@ -1,11 +1,13 @@
 import { customAlphabet } from 'nanoid'
 import { numbers, lowercase } from 'nanoid-dictionary'
+import { BIOS } from 'zss/bios'
 import { createdevice } from 'zss/device'
 import { INPUT } from 'zss/gadget/data/types'
 import {
   memoryplayerlogin,
   memoryplayerlogout,
   memoryreadchip,
+  memorysetbook,
   memorysetdefaultplayer,
   memorytick,
 } from 'zss/memory'
@@ -69,5 +71,11 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
 })
 
 export function ready() {
-  vm.emit('login', undefined, player)
+  // load bios
+  memorysetbook('main', BIOS)
+
+  // start main frame
+
+  // signal ready state
+  vm.emit('ready', undefined, player)
 }

@@ -7,15 +7,6 @@ import { BOOK } from 'zss/memory/book'
 const BOARD_WIDTH = 60
 const BOARD_HEIGHT = 25
 
-/*
-Let's make a terminal stack
-What is a terminal stack ?
-It is a collection of named book slots
-such that each book is being either run or editied
-the fun part is a book can target another book / sim
-and that is how we get generalized software
-*/
-
 export const BIOS: BOOK = {
   id: createguid(),
   name: 'BIOS',

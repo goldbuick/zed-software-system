@@ -48,6 +48,14 @@ export function memorysetdefaultplayer(player: string) {
   MEMORY.defaultplayer = player
 }
 
+export function memoryreadmainframes() {
+  return unique(
+    MEMORY.frames.map((frame) =>
+      frame.type === FRAME_TYPE.MAIN ? frame.book : undefined,
+    ),
+  )
+}
+
 export function memoryreadbook(address: string): MAYBE_BOOK {
   const laddress = address.toLowerCase()
   const books = Object.values(MEMORY.books)
@@ -61,12 +69,12 @@ export function memoryreadbooks(addresses: MAYBE_STRING[]) {
   return unique(addresses).map(memoryreadbook).filter(isdefined)
 }
 
-export function memoryreadmainframes() {
-  return unique(
-    MEMORY.frames.map((frame) =>
-      frame.type === FRAME_TYPE.MAIN ? frame.book : undefined,
-    ),
-  )
+export function memorysetbook(address: string, book: BOOK) {
+  MEMORY.books.set(address, book)
+}
+
+export function memoryclearbook(address: string) {
+  MEMORY.books.delete(address)
 }
 
 export function memoryreadchip(id: string) {

@@ -21,15 +21,11 @@ const syncstate = proxy<SYNC_STATE>({
 
 const gadgetclientdevice = createdevice(
   'gadgetclient',
-  ['login', 'second'],
+  ['ready', 'second'],
   (message) => {
     switch (message.target) {
-      case 'login':
-        if (
-          message.player &&
-          message.target === 'login' &&
-          syncstate.state.player === ''
-        ) {
+      case 'ready':
+        if (message.player && syncstate.state.player === '') {
           syncstate.state.player = message.player
         }
         break
