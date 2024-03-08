@@ -44,10 +44,14 @@ export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.PALETTE]: BITMAP
 }
 
-export function createcodepage(code: string) {
+export function createcodepage(
+  code: string,
+  content: Partial<Omit<CODE_PAGE, 'id' | 'code'>>,
+) {
   return {
     id: createguid(),
     code,
+    ...content,
   }
 }
 

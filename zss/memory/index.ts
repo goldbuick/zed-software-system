@@ -27,7 +27,13 @@ import {
   bookterrainreadkind,
 } from './book'
 import { CODE_PAGE_TYPE } from './codepage'
-import { FRAME_STATE, FRAME_TYPE } from './frame'
+import {
+  FRAME_STATE,
+  FRAME_TYPE,
+  createeditframe,
+  createmainframe,
+  createviewframe,
+} from './frame'
 
 type CHIP_MEMORY = {
   board: BOARD | undefined
@@ -46,6 +52,22 @@ const MEMORY = proxy({
 
 export function memorysetdefaultplayer(player: string) {
   MEMORY.defaultplayer = player
+}
+
+export function memorycreatemainframe(book: string) {
+  MEMORY.frames.push(createmainframe(book))
+}
+
+export function memorycreateviewframe(
+  book: string,
+  board: string,
+  focus: string,
+) {
+  MEMORY.frames.push(createviewframe(book, board, focus))
+}
+
+export function memorycreateeditframe(book: string, board: string) {
+  MEMORY.frames.push(createeditframe(book, board))
 }
 
 export function memoryreadmainframes() {
@@ -69,12 +91,16 @@ export function memoryreadbooks(addresses: MAYBE_STRING[]) {
   return unique(addresses).map(memoryreadbook).filter(isdefined)
 }
 
-export function memorysetbook(address: string, book: BOOK) {
-  MEMORY.books.set(address, book)
+export function memorysetbook(book: BOOK) {
+  MEMORY.books.set(book.id, book)
+  return book.id
 }
 
 export function memoryclearbook(address: string) {
-  MEMORY.books.delete(address)
+  const book = memoryreadbook(address)
+  if (book) {
+    MEMORY.books.delete(book.id)
+  }
 }
 
 export function memoryreadchip(id: string) {

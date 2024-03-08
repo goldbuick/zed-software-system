@@ -9,7 +9,7 @@ import {
   ispt,
   CATEGORY,
 } from 'zss/firmware/wordtypes'
-import { range, pick } from 'zss/mapping/array'
+import { pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
 import { MAYBE, MAYBE_STRING, isdefined } from 'zss/mapping/types'
 
@@ -94,18 +94,19 @@ export type BOARD = {
 
 export type MAYBE_BOARD = MAYBE<BOARD>
 
-export function createboard(
-  width: number,
-  height: number,
-  fn?: (board: BOARD) => BOARD,
-) {
+const BOARD_WIDTH = 60
+const BOARD_HEIGHT = 25
+const BOARD_TERRAIN: undefined[] = new Array(BOARD_WIDTH * BOARD_HEIGHT)
+// BOARD_TERRAIN.fill(undefined)
+
+export function createboard(fn?: (board: BOARD) => BOARD) {
   const board: BOARD = {
     id: createguid(),
     x: 0,
     y: 0,
-    width,
-    height,
-    terrain: range(width * height - 1).map(() => undefined),
+    width: BOARD_WIDTH,
+    height: BOARD_HEIGHT,
+    terrain: BOARD_TERRAIN.slice(0),
     objects: {},
   }
   return fn ? fn(board) : board
