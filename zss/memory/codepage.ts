@@ -1,7 +1,10 @@
+import { IToken } from 'chevrotain'
 import { WORD_VALUE } from 'zss/chip'
 import { BITMAP } from 'zss/gadget/data/bitmap'
-import { tokenize } from 'zss/lang/lexer'
+import { Newline, Stat, tokenize } from 'zss/lang/lexer'
 import { createguid } from 'zss/mapping/guid'
+
+import { isdefined } from '../mapping/types'
 
 import { BOARD, BOARD_ELEMENT } from './board'
 
@@ -56,7 +59,32 @@ export function createcodepage(
 }
 
 export function codepagereadstats(codepage: CODE_PAGE): CODE_PAGE_STATS {
-  const token = tokenize(codepage.code)
+  if (isdefined(codepage.stats?.type)) {
+    return codepage.stats
+  }
+
+  codepage.stats = {}
+  const parse = tokenize(codepage.code)
+
+  // extract @stat lines
+  let statbegin = -1
+  let statend = -1
+  for (let i = 0; i < parse.tokens.length; ++i) {
+    if (statbegin !== -1 && statend !== -1) {
+      const tokens = parse.tokens.slice(statbegin, statend)
+
+      statbegin = -1
+      statend = -1
+    }
+    const token = parse.tokens[i]
+    if (token.tokenType === Stat) {
+      //
+    }
+    if (token.tokenType === Newline) {
+      //
+    }
+  }
+
   console.info('codepagereadstats', token)
   return {}
 }

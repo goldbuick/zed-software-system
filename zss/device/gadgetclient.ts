@@ -27,6 +27,7 @@ const gadgetclientdevice = createdevice(
       case 'ready':
         if (message.player && syncstate.state.player === '') {
           syncstate.state.player = message.player
+          gadgetclientdevice.emit('vm:login', undefined, syncstate.state.player)
         }
         break
       case 'second':
