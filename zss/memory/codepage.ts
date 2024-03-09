@@ -58,6 +58,61 @@ export function createcodepage(
   }
 }
 
+function tokenstostrings(tokens: IToken[]) {
+  return tokens.map((token) => token.image)
+}
+
+function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
+  const [stat, target, ...args] = tokens
+  if (isdefined(codepage.stats) && isdefined(stat)) {
+    const lstat = stat.image.toLowerCase()
+    switch (lstat) {
+      // code page types
+      default:
+        codepage.stats.name = tokenstostrings(tokens).join(' ')
+        break
+      case 'func':
+        codepage.stats.type = CODE_PAGE_TYPE.FUNC
+        codepage.stats.name = target.image
+        break
+      case 'board':
+        codepage.stats.type = CODE_PAGE_TYPE.BOARD
+        codepage.stats.name = target.image
+        break
+      case 'object':
+        codepage.stats.type = CODE_PAGE_TYPE.OBJECT
+        codepage.stats.name = target.image
+        break
+      case 'terrain':
+        codepage.stats.type = CODE_PAGE_TYPE.TERRAIN
+        codepage.stats.name = target.image
+        break
+      case 'charset':
+        codepage.stats.type = CODE_PAGE_TYPE.CHARSET
+        codepage.stats.name = target.image
+        break
+      case 'palette':
+        codepage.stats.type = CODE_PAGE_TYPE.PALETTE
+        codepage.stats.name = target.image
+        break
+      // user inputs
+      case 'rn':
+      case 'range':
+      case 'sl':
+      case 'select':
+      case 'nm':
+      case 'number':
+      case 'tx':
+      case 'text':
+        if (isdefined(target)) {
+          const ltarget = target.image.toLowerCase()
+          codepage.stats[ltarget] = tokenstostrings(args ?? [])
+        }
+        break
+    }
+  }
+}
+
 export function codepagereadstats(codepage: CODE_PAGE): CODE_PAGE_STATS {
   if (isdefined(codepage.stats?.type)) {
     return codepage.stats
@@ -70,23 +125,26 @@ export function codepagereadstats(codepage: CODE_PAGE): CODE_PAGE_STATS {
   let statbegin = -1
   let statend = -1
   for (let i = 0; i < parse.tokens.length; ++i) {
+    const token = parse.tokens[i]
+    if (token.tokenType === Stat) {
+      statbegin = i + 1
+    }
+    if (token.tokenType === Newline) {
+      statend = i
+    }
     if (statbegin !== -1 && statend !== -1) {
-      const tokens = parse.tokens.slice(statbegin, statend)
-
+      tokenstostats(codepage, parse.tokens.slice(statbegin, statend))
       statbegin = -1
       statend = -1
     }
-    const token = parse.tokens[i]
-    if (token.tokenType === Stat) {
-      //
-    }
-    if (token.tokenType === Newline) {
-      //
-    }
   }
 
-  console.info('codepagereadstats', token)
-  return {}
+  // default to object type
+  if (!isdefined(codepage.stats.type)) {
+    codepage.stats.type = CODE_PAGE_TYPE.OBJECT
+  }
+
+  return codepage.stats
 }
 
 export function codepagereadtype(codepage: CODE_PAGE) {

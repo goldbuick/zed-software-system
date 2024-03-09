@@ -1,3 +1,5 @@
+@player
+
 ' setup ui
 #gadget right 20
 ""
