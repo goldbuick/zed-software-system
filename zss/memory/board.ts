@@ -14,7 +14,12 @@ import { createguid } from 'zss/mapping/guid'
 import { MAYBE, MAYBE_STRING, isdefined } from 'zss/mapping/types'
 
 import { namedelements, nearestpt } from './atomics'
-import { BOOK, bookobjectreadkind, bookterrainreadkind } from './book'
+import {
+  BOOK,
+  MAYBE_BOOK,
+  bookobjectreadkind,
+  bookterrainreadkind,
+} from './book'
 
 // generics
 export type BOARD_ELEMENT_STATS = {
@@ -58,6 +63,7 @@ export type BOARD_ELEMENT = Partial<{
   // runtime
   category: CATEGORY
   kinddata: BOARD_ELEMENT
+  kindcode: string
   removed: number
 }>
 
@@ -97,9 +103,12 @@ export type MAYBE_BOARD = MAYBE<BOARD>
 const BOARD_WIDTH = 60
 const BOARD_HEIGHT = 25
 const BOARD_TERRAIN: undefined[] = new Array(BOARD_WIDTH * BOARD_HEIGHT)
-// BOARD_TERRAIN.fill(undefined)
 
-export function createboard(fn?: (board: BOARD) => BOARD) {
+function boardnoop(board: BOARD) {
+  return board
+}
+
+export function createboard(fn = boardnoop) {
   const board: BOARD = {
     id: createguid(),
     x: 0,
@@ -109,13 +118,17 @@ export function createboard(fn?: (board: BOARD) => BOARD) {
     terrain: BOARD_TERRAIN.slice(0),
     objects: {},
   }
-  return fn ? fn(board) : board
+  return fn(board)
 }
 
 export function createboardobject(
-  board: BOARD,
-  from: BOARD_ELEMENT,
+  board: MAYBE_BOARD,
+  from: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
+  if (!isdefined(board) || !isdefined(from)) {
+    return undefined
+  }
+
   const object = {
     ...from,
     id: from.id ?? createguid(),
@@ -163,7 +176,7 @@ function moveptbydir(
 }
 
 export function boardevaldir(
-  board: BOARD,
+  board: MAYBE_BOARD,
   target: MAYBE_BOARD_ELEMENT,
   dir: STR_DIR,
 ): PT {
@@ -254,8 +267,8 @@ export function boardevaldir(
   return pt
 }
 
-export function boarddeleteobject(board: BOARD, id: string) {
-  if (board.objects[id]) {
+export function boarddeleteobject(board: MAYBE_BOARD, id: string) {
+  if (isdefined(board) && isdefined(board.objects[id])) {
     delete board.objects[id]
     return true
   }
@@ -276,13 +289,18 @@ export function boardcheckcollision(source: COLLISION, dest: COLLISION) {
 }
 
 export function boardmoveobject(
-  book: BOOK,
-  board: BOARD,
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
   target: MAYBE_BOARD_ELEMENT,
   dest: PT,
 ) {
   const object = boardreadobject(board, target?.id ?? '')
-  if (!object || !board.lookup) {
+  if (
+    !isdefined(book) ||
+    !isdefined(board) ||
+    !isdefined(object) ||
+    !isdefined(board.lookup)
+  ) {
     return false
   }
 
@@ -334,10 +352,10 @@ export function boardmoveobject(
 }
 
 export function boardfindplayer(
-  board: BOARD,
+  board: MAYBE_BOARD,
   target: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
-  if (!isdefined(target)) {
+  if (!isdefined(board) || !isdefined(target)) {
     return undefined
   }
 
@@ -420,6 +438,7 @@ export function boardtick(
   book: BOOK,
   board: BOARD,
   oncode: (
+    book: BOOK,
     board: BOARD,
     target: BOARD_ELEMENT,
     id: string,
@@ -455,7 +474,7 @@ export function boardtick(
     }
 
     // signal id & code
-    oncode(board, target, target.id, code)
+    oncode(book, board, target, target.id, code)
   }
 
   // cleanup objects flagged for deletion

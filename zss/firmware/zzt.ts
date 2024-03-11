@@ -15,7 +15,11 @@ import {
   memoryplayersetflag,
   memoryreadchip,
 } from 'zss/memory'
-import { BOARD_ELEMENT, boardfindplayer } from 'zss/memory/board'
+import {
+  BOARD_ELEMENT,
+  boardfindplayer,
+  boardmoveobject,
+} from 'zss/memory/board'
 
 import {
   categoryconsts,
@@ -158,7 +162,7 @@ export const ZZT_FIRMWARE = createfirmware(
       : undefined
 
     // then global
-    const value = memoryplayerreadflag(player?.id, name)
+    const value = memoryplayerreadflag(memory.book, player?.id, name)
     return [ispresent(value), value]
   },
   (chip, name, value) => {
@@ -183,7 +187,7 @@ export const ZZT_FIRMWARE = createfirmware(
       : undefined
 
     // then global
-    memoryplayersetflag(player?.id, name, value)
+    memoryplayersetflag(memory.book, player?.id, name, value)
     return [true, value]
   },
 )
@@ -253,7 +257,11 @@ export const ZZT_FIRMWARE = createfirmware(
 
     while (steps > 0) {
       const [dest] = readargs({ ...memory, chip, words }, i, [ARG_TYPE.DIR])
-      if (memoryboardmoveobject(memory.board, memory.target, dest)) {
+      if (
+        isdefined(memory.book) &&
+        isdefined(memory.board) &&
+        boardmoveobject(memory.book, memory.board, memory.target, dest)
+      ) {
         // keep moving
         --steps
       } else {

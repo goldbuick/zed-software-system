@@ -22,7 +22,6 @@ import {
   memoryterrainreadkind,
 } from 'zss/memory'
 
-import { MAYBE_BOARD_ELEMENT } from '../board'
 import { COLOR } from '../firmware/wordtypes'
 
 // tracking gadget state for individual players
@@ -35,7 +34,9 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
       gadgetplayers().forEach((player) => {
         const shared = gadgetstate(player)
 
+        console.info(shared)
         // write frame layers
+        /*
         const layers: LAYER[] = []
         const board = memoryplayerreadboard(player)
         if (board) {
@@ -93,6 +94,7 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
           syncstate[player] = deepClone(shared)
           gadgetserverdevice.emit('gadgetclient:patch', patch, player)
         }
+      */
       })
       break
     case 'desync':

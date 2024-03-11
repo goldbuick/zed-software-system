@@ -3,8 +3,7 @@ import { WORD_VALUE } from 'zss/chip'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { Newline, Stat, tokenize } from 'zss/lang/lexer'
 import { createguid } from 'zss/mapping/guid'
-
-import { isdefined } from '../mapping/types'
+import { MAYBE, isdefined } from 'zss/mapping/types'
 
 import { BOARD, BOARD_ELEMENT } from './board'
 
@@ -36,6 +35,8 @@ export type CODE_PAGE = {
   charset?: BITMAP
   palette?: BITMAP
 }
+
+export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
 
 export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.ERROR]: string

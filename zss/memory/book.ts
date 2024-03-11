@@ -8,6 +8,7 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
+  MAYBE_CODE_PAGE,
   codepagereadname,
   codepagereadtype,
 } from './codepage'
@@ -38,11 +39,11 @@ export function createbook(name: string, pages: CODE_PAGE[]) {
   }
 }
 
-export function bookreadcodepage<T extends CODE_PAGE_TYPE>(
+export function bookreadcodepage(
   book: MAYBE_BOOK,
-  type: T,
+  type: CODE_PAGE_TYPE,
   address: string,
-): CODE_PAGE_TYPE_MAP[T] | undefined {
+): MAYBE_CODE_PAGE {
   if (!book) {
     return undefined
   }
@@ -53,6 +54,16 @@ export function bookreadcodepage<T extends CODE_PAGE_TYPE>(
       codepagereadtype(item) === type &&
       (item.id === address || laddress === codepagereadname(item)),
   )
+
+  return codepage
+}
+
+export function bookreadcodepagedata<T extends CODE_PAGE_TYPE>(
+  book: MAYBE_BOOK,
+  type: T,
+  address: string,
+): CODE_PAGE_TYPE_MAP[T] | undefined {
+  const codepage = bookreadcodepage(book, type, address)
 
   if (codepage) {
     switch (type) {
@@ -111,7 +122,7 @@ export function bookterrainreadkind(
 }
 
 export function bookreadboard(book: MAYBE_BOOK, board: string) {
-  return bookreadcodepage(book, CODE_PAGE_TYPE.BOARD, board)
+  return bookreadcodepagedata(book, CODE_PAGE_TYPE.BOARD, board)
 }
 
 export function bookreadflags(book: MAYBE_BOOK, player: string) {

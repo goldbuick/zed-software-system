@@ -1,8 +1,6 @@
 import Case from 'case'
 import { CHIP, STATE, WORD, WORD_VALUE } from 'zss/chip'
 import {
-  MAYBE_NUMBER,
-  MAYBE_STRING,
   MAYBE_TEXT,
   observesharedtype,
   observesharedvalue,
@@ -10,7 +8,12 @@ import {
   updatesharedvalue,
 } from 'zss/device/shared'
 import { createguid } from 'zss/mapping/guid'
-import { isnumber } from 'zss/mapping/types'
+import {
+  MAYBE_NUMBER,
+  MAYBE_STRING,
+  isdefined,
+  isnumber,
+} from 'zss/mapping/types'
 
 import {
   GADGET_STATE,
@@ -94,12 +97,9 @@ const HYPERLINK_WITH_SHARED_TEXT = new Set(['tx', 'text'])
 
 export function gadgetstate(player: string) {
   let value: GADGET_STATE = allgadgetstate[player]
-
-  if (value === undefined) {
-    allgadgetstate[player] = value = initstate({}, player)
-  }
-
-  return value
+  return isdefined(value)
+    ? value
+    : (allgadgetstate[player] = value = initstate({}, player))
 }
 
 export function gadgetplayers() {

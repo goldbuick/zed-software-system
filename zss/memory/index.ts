@@ -22,7 +22,7 @@ import {
   MAYBE_BOOK,
   bookobjectreadkind,
   bookplayerreadboards,
-  bookreadcodepage,
+  bookreadcodepagedata,
   bookreadflags,
   bookterrainreadkind,
 } from './book'
@@ -36,8 +36,9 @@ import {
 } from './frame'
 
 type CHIP_MEMORY = {
-  board: BOARD | undefined
-  target: BOARD_ELEMENT | undefined
+  book: MAYBE_BOOK
+  board: MAYBE_BOARD
+  target: MAYBE_BOARD_ELEMENT
   inputqueue: Set<INPUT>
   inputmods: Record<INPUT, number>
   activeinput: INPUT | undefined
@@ -108,6 +109,7 @@ export function memoryreadchip(id: string) {
 
   if (!isdefined(chip)) {
     chip = {
+      book: undefined,
       board: undefined,
       target: undefined,
       inputqueue: new Set(),
@@ -211,7 +213,7 @@ export function memoryplayerreadobject(address: string, player: string) {
 }
 
 export function memoryreadboard(address: string, name: string | undefined) {
-  return bookreadcodepage(
+  return bookreadcodepagedata(
     memoryreadbook(address),
     CODE_PAGE_TYPE.BOARD,
     name ?? '',
@@ -226,7 +228,11 @@ export function memoryterrainreadkind(
 }
 
 export function memoryreadobject(address: string, name: string) {
-  return bookreadcodepage(memoryreadbook(address), CODE_PAGE_TYPE.OBJECT, name)
+  return bookreadcodepagedata(
+    memoryreadbook(address),
+    CODE_PAGE_TYPE.OBJECT,
+    name,
+  )
 }
 
 export function memoryobjectreadkind(
@@ -236,22 +242,10 @@ export function memoryobjectreadkind(
   return bookobjectreadkind(memoryreadbook(address), object)
 }
 
-export function memoryboardmoveobject(
-  address: string,
-  board: MAYBE_BOARD,
-  target: MAYBE_BOARD_ELEMENT,
-  dest: PT | undefined,
-) {
-  const book = memoryreadbook(address)
-  if (!isdefined(book) || !isdefined(board) || !ispt(dest)) {
-    return false
-  }
-  return boardmoveobject(book, board, target, dest)
-}
-
 export function memorytick(os: OS) {
   // glue code between memory, os, and boardtick
   function oncode(
+    book: BOOK,
     board: BOARD,
     target: BOARD_ELEMENT,
     id: string,
@@ -259,9 +253,10 @@ export function memorytick(os: OS) {
   ) {
     // set context
     const context = memoryreadchip(id)
-    context.activeinput = undefined
+    context.book = book
     context.board = board
     context.target = target
+    context.activeinput = undefined
     // run chip code
     os.tick(id, code)
   }
