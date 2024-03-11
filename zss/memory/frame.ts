@@ -1,7 +1,7 @@
-import { createguid } from '../mapping/guid'
+import { createguid } from 'zss/mapping/guid'
 
 export enum FRAME_TYPE {
-  MAIN, // handles ticking the needed boards
+  MAIN, // updates book state
   VIEW, // a view into book state
   EDIT, // shared crdt backed book state + copy buffers
 }
@@ -9,36 +9,26 @@ export enum FRAME_TYPE {
 export type FRAME_STATE = {
   id: string
   type: FRAME_TYPE
-  book: string
-  board?: string
+  board: string
   focus?: string
 }
 
-function createframe(type: FRAME_TYPE, book: string): FRAME_STATE {
+function createframe(type: FRAME_TYPE, board: string): FRAME_STATE {
   return {
     id: createguid(),
     type,
-    book,
+    board,
   }
 }
 
-export function createmainframe(book: string): FRAME_STATE {
-  return createframe(FRAME_TYPE.MAIN, book)
+export function createmainframe(board: string): FRAME_STATE {
+  return createframe(FRAME_TYPE.MAIN, board)
 }
 
-export function createviewframe(
-  book: string,
-  board: string,
-  focus: string,
-): FRAME_STATE {
-  const frame = createframe(FRAME_TYPE.MAIN, book)
-  frame.board = board
-  frame.focus = focus
-  return frame
+export function createviewframe(board: string): FRAME_STATE {
+  return createframe(FRAME_TYPE.VIEW, board)
 }
 
-export function createeditframe(book: string, board: string): FRAME_STATE {
-  const frame = createframe(FRAME_TYPE.MAIN, book)
-  frame.board = board
-  return frame
+export function createeditframe(board: string): FRAME_STATE {
+  return createframe(FRAME_TYPE.EDIT, board)
 }

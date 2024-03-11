@@ -11,7 +11,7 @@ import {
 } from 'zss/firmware/wordtypes'
 import { pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
-import { MAYBE, MAYBE_STRING, isdefined } from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, isdefined, noop } from 'zss/mapping/types'
 
 import { namedelements, nearestpt } from './atomics'
 import {
@@ -104,11 +104,7 @@ const BOARD_WIDTH = 60
 const BOARD_HEIGHT = 25
 const BOARD_TERRAIN: undefined[] = new Array(BOARD_WIDTH * BOARD_HEIGHT)
 
-function boardnoop(board: BOARD) {
-  return board
-}
-
-export function createboard(fn = boardnoop) {
+export function createboard(fn = noop<BOARD>) {
   const board: BOARD = {
     id: createguid(),
     x: 0,

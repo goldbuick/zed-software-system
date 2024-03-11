@@ -114,7 +114,11 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
   }
 }
 
-export function codepagereadstats(codepage: CODE_PAGE): CODE_PAGE_STATS {
+export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
+  if (!isdefined(codepage)) {
+    return {}
+  }
+
   if (isdefined(codepage.stats?.type)) {
     return codepage.stats
   }
@@ -148,17 +152,17 @@ export function codepagereadstats(codepage: CODE_PAGE): CODE_PAGE_STATS {
   return codepage.stats
 }
 
-export function codepagereadtype(codepage: CODE_PAGE) {
+export function codepagereadtype(codepage: MAYBE_CODE_PAGE) {
   const stats = codepagereadstats(codepage)
   return stats.type ?? CODE_PAGE_TYPE.ERROR
 }
 
-export function codepagereadname(codepage: CODE_PAGE) {
+export function codepagereadname(codepage: MAYBE_CODE_PAGE) {
   const stats = codepagereadstats(codepage)
   return (stats.name ?? '').toLowerCase()
 }
 
-export function codepagereadstat(codepage: CODE_PAGE, stat: string) {
+export function codepagereadstat(codepage: MAYBE_CODE_PAGE, stat: string) {
   const stats = codepagereadstats(codepage)
   return stats[stat]
 }

@@ -1,7 +1,7 @@
 import { WORD_VALUE } from 'zss/chip'
 import { unique } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
-import { MAYBE, isdefined } from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, isdefined } from 'zss/mapping/types'
 
 import { MAYBE_BOARD_ELEMENT } from './board'
 import {
@@ -29,7 +29,7 @@ export type BOOK = {
 
 export type MAYBE_BOOK = MAYBE<BOOK>
 
-export function createbook(name: string, pages: CODE_PAGE[]) {
+export function createbook(name: string, pages: CODE_PAGE[]): BOOK {
   return {
     id: createguid(),
     name,
@@ -87,21 +87,31 @@ export function bookreadcodepagedata<T extends CODE_PAGE_TYPE>(
   return undefined
 }
 
+export function bookreadobject(
+  book: MAYBE_BOOK,
+  object: MAYBE_STRING,
+): MAYBE_BOARD_ELEMENT {
+  return bookreadcodepage(book, CODE_PAGE_TYPE.OBJECT, object ?? '')
+}
+
 export function bookobjectreadkind(
   book: MAYBE_BOOK,
   object: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
   if (isdefined(object) && isdefined(object.kind)) {
     if (!isdefined(object.kinddata)) {
-      object.kinddata = bookreadcodepage(
-        book,
-        CODE_PAGE_TYPE.OBJECT,
-        object.kind,
-      )
+      object.kinddata = bookreadobject(book, object.kind)
     }
     return object.kinddata
   }
   return undefined
+}
+
+export function bookreadterrain(
+  book: MAYBE_BOOK,
+  terrain: MAYBE_STRING,
+): MAYBE_BOARD_ELEMENT {
+  return bookreadcodepage(book, CODE_PAGE_TYPE.TERRAIN, terrain ?? '')
 }
 
 export function bookterrainreadkind(
@@ -110,11 +120,7 @@ export function bookterrainreadkind(
 ): MAYBE_BOARD_ELEMENT {
   if (isdefined(terrain) && isdefined(terrain.kind)) {
     if (!isdefined(terrain.kinddata)) {
-      terrain.kinddata = bookreadcodepage(
-        book,
-        CODE_PAGE_TYPE.TERRAIN,
-        terrain.kind,
-      )
+      terrain.kinddata = bookreadterrain(book, terrain.kind)
     }
     return terrain.kinddata
   }
@@ -139,7 +145,7 @@ export function bookreadflag(book: MAYBE_BOOK, player: string, name: string) {
 }
 
 export function booksetflag(
-  book: BOOK,
+  book: MAYBE_BOOK,
   player: string,
   name: string,
   value: WORD_VALUE,
@@ -151,18 +157,22 @@ export function booksetflag(
   return value
 }
 
-export function bookplayerreadboard(book: BOOK, player: string) {
-  return bookreadboard(book, book.players[player] ?? '')
+export function bookplayerreadboard(book: MAYBE_BOOK, player: string) {
+  return bookreadboard(book, book?.players[player] ?? '')
 }
 
-export function bookplayersetboard(book: BOOK, player: string, board: string) {
-  if (isdefined(bookreadboard(book, board))) {
+export function bookplayersetboard(
+  book: MAYBE_BOOK,
+  player: string,
+  board: string,
+) {
+  if (isdefined(book) && isdefined(bookreadboard(book, board))) {
     book.players[player] = board
   }
 }
 
-export function bookplayerreadboards(book: BOOK) {
-  return unique(Object.values(book.players))
+export function bookplayerreadboards(book: MAYBE_BOOK) {
+  return unique(Object.values(book?.players ?? []))
     .map((address) => bookreadboard(book, address))
     .filter(isdefined)
 }

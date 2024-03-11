@@ -5,24 +5,9 @@ import {
   gadgetplayers,
   gadgetstate,
 } from 'zss/gadget/data/api'
-import {
-  GADGET_STATE,
-  LAYER,
-  SPRITES_SINDEX,
-  SPRITES_TINDEX,
-  createdither,
-  createlayercontrol,
-  createsprite,
-  createsprites,
-  createtiles,
-} from 'zss/gadget/data/types'
-import {
-  memoryobjectreadkind,
-  memoryplayerreadboard,
-  memoryterrainreadkind,
-} from 'zss/memory'
+import { GADGET_STATE } from 'zss/gadget/data/types'
 
-import { COLOR } from '../firmware/wordtypes'
+import { memoryreadgadgetlayers } from '../memory'
 
 // tracking gadget state for individual players
 const syncstate: Record<string, GADGET_STATE> = {}
@@ -34,59 +19,8 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
       gadgetplayers().forEach((player) => {
         const shared = gadgetstate(player)
 
-        console.info(shared)
-        // write frame layers
-        /*
-        const layers: LAYER[] = []
-        const board = memoryplayerreadboard(player)
-        if (board) {
-          const tiles = createtiles(player, 0, board.width, board.height)
-          layers.push(tiles)
-          const shadow = createdither(player, 1, board.width, board.height)
-          layers.push(shadow)
-          const objects = createsprites(player, 2)
-          layers.push(objects)
-          const control = createlayercontrol(player, 3)
-          layers.push(control)
-
-          board.terrain.forEach((tile, i) => {
-            if (tile) {
-              const kind = memoryterrainreadkind(tile)
-              tiles.char[i] = tile.char ?? kind?.char ?? 0
-              tiles.color[i] = tile.color ?? kind?.color ?? COLOR.BLACK
-              tiles.bg[i] = tile.bg ?? kind?.bg ?? COLOR.BLACK
-            }
-          })
-
-          Object.values(board.objects).forEach((object) => {
-            // should we have bg transparent or match the bg color of the terrain ?
-            const id = object.id ?? ''
-            const kind = memoryobjectreadkind(object)
-            const sprite = createsprite(player, 2, id)
-            const lx = object.lx ?? object.x ?? 0
-            const ly = object.ly ?? object.y ?? 0
-            sprite.x = object.x ?? 0
-            sprite.y = object.y ?? 0
-            sprite.char = object.char ?? kind?.char ?? 1
-            sprite.color = object.color ?? kind?.color ?? COLOR.WHITE
-            sprite.bg = object.bg ?? kind?.bg ?? COLOR.CLEAR
-            objects.sprites.push(sprite)
-
-            // plot shadow
-            if (sprite.bg === SPRITES_SINDEX) {
-              shadow.alphas[lx + ly * board.width] = 0.5
-            }
-
-            // inform control layer where to focus
-            if (id === player) {
-              control.focusx = sprite.x
-              control.focusy = sprite.y
-            }
-          })
-        }
-
-        // update gadget
-        shared.layers = layers
+        // update gadget layers from frames
+        shared.layers = memoryreadgadgetlayers(player)
 
         // write patch
         const patch = compare(syncstate[player] ?? {}, shared)
@@ -94,7 +28,6 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
           syncstate[player] = deepClone(shared)
           gadgetserverdevice.emit('gadgetclient:patch', patch, player)
         }
-      */
       })
       break
     case 'desync':

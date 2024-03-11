@@ -38,3 +38,7 @@ export function isarray(word: any): word is any[] {
 export function ismaybearray(word: any): word is MAYBE<any[]> {
   return Array.isArray(word) || word === undefined
 }
+
+export function noop<T>(item: T) {
+  return item
+}

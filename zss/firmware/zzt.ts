@@ -9,17 +9,13 @@ import {
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { isdefined, isnumber, ispresent } from 'zss/mapping/types'
-import {
-  memoryboardmoveobject,
-  memoryplayerreadflag,
-  memoryplayersetflag,
-  memoryreadchip,
-} from 'zss/memory'
+import { memoryreadchip } from 'zss/memory'
 import {
   BOARD_ELEMENT,
   boardfindplayer,
   boardmoveobject,
 } from 'zss/memory/board'
+import { bookreadflag, booksetflag } from 'zss/memory/book'
 
 import {
   categoryconsts,
@@ -162,16 +158,15 @@ export const ZZT_FIRMWARE = createfirmware(
       : undefined
 
     // then global
-    const value = memoryplayerreadflag(memory.book, player?.id, name)
+    const value = bookreadflag(memory.book, player?.id ?? '', name)
     return [ispresent(value), value]
   },
   (chip, name, value) => {
     const memory = memoryreadchip(chip.id())
 
     // we have to check the object's stats first
-    if (memory.target) {
-      const defined = ispresent(memory.target?.stats?.[name])
-      if (defined || STAT_NAMES.has(name)) {
+    if (ispresent(memory.target)) {
+      if (ispresent(memory.target?.stats?.[name]) || STAT_NAMES.has(name)) {
         // console.info('??set', name, value)
         if (!memory.target.stats) {
           memory.target.stats = {}
@@ -187,7 +182,7 @@ export const ZZT_FIRMWARE = createfirmware(
       : undefined
 
     // then global
-    memoryplayersetflag(memory.book, player?.id, name, value)
+    booksetflag(memory.book, player?.id ?? '', name, value)
     return [true, value]
   },
 )

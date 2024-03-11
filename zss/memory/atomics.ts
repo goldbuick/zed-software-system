@@ -1,20 +1,24 @@
 import { PT } from 'zss/firmware/wordtypes'
 
-import { BOARD, MAYBE_BOARD_ELEMENT } from './board'
+import { MAYBE_BOARD, MAYBE_BOARD_ELEMENT } from './board'
 
 // what is atomics? a set of spatial and data related queries
 
-export function namedelements(board: BOARD, name: string) {
-  const elements = [...(board.named?.[name]?.values() ?? [])]
+export function namedelements(board: MAYBE_BOARD, name: string) {
+  const elements = [...(board?.named?.[name]?.values() ?? [])]
   return elements.map((idorindex) => {
     if (typeof idorindex === 'string') {
-      return board.objects[idorindex]
+      return board?.objects[idorindex]
     }
-    return board.terrain[idorindex]
+    return board?.terrain[idorindex]
   })
 }
 
-export function nearestpt(board: BOARD, pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
+export function nearestpt(
+  board: MAYBE_BOARD,
+  pt: PT,
+  items: MAYBE_BOARD_ELEMENT[],
+) {
   let ndist = 0
   let nearest: MAYBE_BOARD_ELEMENT
 
@@ -34,7 +38,11 @@ export function nearestpt(board: BOARD, pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
   return nearest
 }
 
-export function farthestpt(board: BOARD, pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
+export function farthestpt(
+  board: MAYBE_BOARD,
+  pt: PT,
+  items: MAYBE_BOARD_ELEMENT[],
+) {
   let ndist = 0
   let nearest: MAYBE_BOARD_ELEMENT
 

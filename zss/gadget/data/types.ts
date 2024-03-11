@@ -83,6 +83,7 @@ export type LAYER_CONTROL = {
   type: LAYER_TYPE.CONTROL
   focusx: number
   focusy: number
+  focusid: string
   viewscale: number
 }
 
@@ -160,6 +161,7 @@ export function createlayercontrol(
     type: LAYER_TYPE.CONTROL,
     focusx: 0,
     focusy: 0,
+    focusid: player,
     viewscale: 1,
   }
 }
