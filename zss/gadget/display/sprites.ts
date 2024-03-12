@@ -10,7 +10,7 @@ import { cloneMaterial, interval, time } from './anim'
 
 const spritesMaterial = new THREE.ShaderMaterial({
   // settings
-  transparent: true,
+  transparent: false,
   uniforms: {
     time,
     interval,

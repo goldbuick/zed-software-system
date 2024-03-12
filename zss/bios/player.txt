@@ -8,6 +8,12 @@
  $white    - - - - -
 ""
 
+' create content
+#book create temp
+
+' load content in editor
+#frame edit temp title
+
 ' main loop
 #cycle 1
 #set blinkrate 0
