@@ -34,12 +34,7 @@ import {
   bookreadobject,
   bookterrainreadkind,
 } from './book'
-import {
-  FRAME_STATE,
-  FRAME_TYPE,
-  createeditframe,
-  createviewframe,
-} from './frame'
+import { FRAME_STATE, createeditframe, createviewframe } from './frame'
 
 type CHIP_MEMORY = {
   book: MAYBE_BOOK
@@ -199,16 +194,19 @@ export function memorytick(os: OS) {
 function memoryconverttogadgetlayers(
   player: string,
   index: number,
-  book: BOOK,
-  board: BOARD,
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
 ): LAYER[] {
   const layers: LAYER[] = []
 
   let i = index
-  const tiles = createtiles(player, i++, board.width, board.height)
+  const boardwidth = board?.width ?? 0
+  const boardheight = board?.height ?? 0
+
+  const tiles = createtiles(player, i++, boardwidth, boardheight)
   layers.push(tiles)
 
-  const shadow = createdither(player, i++, board.width, board.height)
+  const shadow = createdither(player, i++, boardwidth, boardheight)
   layers.push(shadow)
 
   const objectindex = i++
@@ -218,7 +216,7 @@ function memoryconverttogadgetlayers(
   const control = createlayercontrol(player, i++)
   layers.push(control)
 
-  board.terrain.forEach((tile, i) => {
+  board?.terrain.forEach((tile, i) => {
     if (tile) {
       const kind = bookterrainreadkind(book, tile)
       tiles.char[i] = tile.char ?? kind?.char ?? 0
@@ -227,7 +225,8 @@ function memoryconverttogadgetlayers(
     }
   })
 
-  Object.values(board.objects).forEach((object) => {
+  const withobjects = board?.objects ?? {}
+  Object.values(withobjects).forEach((object) => {
     // should we have bg transparent or match the bg color of the terrain ?
     const id = object.id ?? ''
     const kind = bookobjectreadkind(book, object)
@@ -245,7 +244,7 @@ function memoryconverttogadgetlayers(
 
     // plot shadow
     if (sprite.bg === COLOR.SHADOW) {
-      shadow.alphas[lx + ly * board.width] = 0.5
+      shadow.alphas[lx + ly * boardwidth] = 0.5
     }
 
     // inform control layer where to focus
@@ -270,18 +269,9 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
 
   let i = 0
   memoryreadframes(board.id ?? '').forEach((frame) => {
-    let view: LAYER[] = []
-    switch (frame.type) {
-      case FRAME_TYPE.VIEW: {
-        view = memoryconverttogadgetlayers(player, i, book, board)
-        break
-      }
-      case FRAME_TYPE.EDIT:
-        break
-      default:
-        // no-op
-        break
-    }
+    const withbook = memoryreadbook(frame.book ?? '') ?? book
+    const withboard = bookreadboard(withbook, frame.board ?? '') ?? board
+    const view = memoryconverttogadgetlayers(player, i, withbook, withboard)
     i += view.length
     layers.push(...view)
   })
