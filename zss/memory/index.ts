@@ -11,7 +11,7 @@ import {
 } from 'zss/gadget/data/types'
 import { unique } from 'zss/mapping/array'
 import { randomInteger } from 'zss/mapping/number'
-import { MAYBE_STRING, isdefined } from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, isdefined } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
@@ -38,7 +38,6 @@ import {
   FRAME_STATE,
   FRAME_TYPE,
   createeditframe,
-  createmainframe,
   createviewframe,
 } from './frame'
 
@@ -46,9 +45,9 @@ type CHIP_MEMORY = {
   book: MAYBE_BOOK
   board: MAYBE_BOARD
   target: MAYBE_BOARD_ELEMENT
-  inputqueue: Set<INPUT>
   inputmods: Record<INPUT, number>
-  activeinput: INPUT | undefined
+  inputqueue: Set<INPUT>
+  inputcurrent: MAYBE<INPUT>
 }
 
 const MEMORY = proxy({
@@ -62,36 +61,41 @@ export function memorysetdefaultplayer(player: string) {
   MEMORY.defaultplayer = player
 }
 
-export function memorycreatemainframe(book: string) {
-  MEMORY.frames.push(createmainframe(book))
+export function memoryresetframes(board: string): FRAME_STATE[] {
+  const frames: FRAME_STATE[] = [createviewframe()]
+  MEMORY.frames.set(board, frames)
+  return frames
 }
 
 export function memorycreateviewframe(
-  book: string,
   board: string,
-  focus: string,
+  book?: string,
+  view?: string,
 ) {
-  MEMORY.frames.push(createviewframe(book, board, focus))
+  const frames = memoryreadframes(board)
+  if (isdefined(frames)) {
+    frames.push(createviewframe(book, view))
+  }
 }
 
 export function memorycreateeditframe(book: string, board: string) {
-  MEMORY.frames.push(createeditframe(book, board))
+  const frames = memoryreadframes(board)
+  if (isdefined(frames)) {
+    frames.push(createeditframe(book, board))
+  }
 }
 
-export function memoryreadmainframes() {
-  return unique(
-    MEMORY.frames.map((frame) =>
-      frame.type === FRAME_TYPE.MAIN ? frame.book : undefined,
-    ),
-  )
+export function memoryreadframes(board: string) {
+  return MEMORY.frames.get(board) ?? memoryresetframes(board)
 }
 
 export function memoryreadbook(address: string): MAYBE_BOOK {
   const laddress = address.toLowerCase()
-  const books = Object.values(MEMORY.books)
   return (
     MEMORY.books.get(address) ||
-    books.find((item) => item.name.toLowerCase() === laddress)
+    [...MEMORY.books.values()].find(
+      (item) => item.name.toLowerCase() === laddress,
+    )
   )
 }
 
@@ -130,7 +134,7 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
         [INPUT.CANCEL_BUTTON]: 0,
         [INPUT.MENU_BUTTON]: 0,
       },
-      activeinput: undefined,
+      inputcurrent: undefined,
     }
     MEMORY.chips.set(id, chip)
   }
@@ -138,38 +142,34 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
   return chip
 }
 
+const PLAYER_BOOK = 'BIOS'
 const PLAYER_KIND = 'player'
 const PLAYER_START = 'title'
 
 export function memoryplayerlogin(player: string) {
-  memoryreadmainframes().forEach((address) => {
-    const book = memoryreadbook(address)
-    const title = bookreadboard(book, PLAYER_START)
-    const playerkind = bookreadobject(book, PLAYER_KIND)
-    if (!title || !playerkind) {
-      return
-    }
-
-    const obj = createboardobject(title, {
+  const book = memoryreadbook(PLAYER_BOOK)
+  const start = bookreadboard(book, PLAYER_START)
+  const playerkind = bookreadobject(book, PLAYER_KIND)
+  if (isdefined(start) && isdefined(playerkind)) {
+    const obj = createboardobject(start, {
       id: player,
-      x: randomInteger(0, title.width - 1),
-      y: randomInteger(0, title.height - 1),
+      x: randomInteger(0, start.width - 1),
+      y: randomInteger(0, start.height - 1),
       kind: PLAYER_KIND,
       stats: {
         player,
       },
     })
-
-    if (obj?.id) {
+    if (isdefined(obj?.id)) {
       bookplayersetboard(book, player, PLAYER_START)
     }
-  })
+  }
 }
 
 export function memoryplayerlogout(player: string) {
-  MEMORY.books.forEach((book) => {
-    boarddeleteobject(bookplayerreadboard(book, player), player)
-  })
+  MEMORY.books.forEach((book) =>
+    boarddeleteobject(bookplayerreadboard(book, player), player),
+  )
 }
 
 export function memorytick(os: OS) {
@@ -186,80 +186,105 @@ export function memorytick(os: OS) {
     context.book = book
     context.board = board
     context.target = target
-    context.activeinput = undefined
+    context.inputcurrent = undefined
     // run chip code
     os.tick(id, code)
   }
 
-  // read which books need updated
-  memoryreadmainframes().forEach((address) => {
-    const book = memoryreadbook(address)
-    if (book) {
-      // read boards with players as active list
-      const boards = bookplayerreadboards(book)
-      // update boards / build code / run chips
-      boards.forEach((board) => boardtick(book, board, oncode))
+  // update boards / build code / run chips
+  const book = memoryreadbook(PLAYER_BOOK)
+  bookplayerreadboards(book).forEach((board) => boardtick(book, board, oncode))
+}
+
+function memoryconverttogadgetlayers(
+  player: string,
+  index: number,
+  book: BOOK,
+  board: BOARD,
+): LAYER[] {
+  const layers: LAYER[] = []
+
+  let i = index
+  const tiles = createtiles(player, i++, board.width, board.height)
+  layers.push(tiles)
+
+  const shadow = createdither(player, i++, board.width, board.height)
+  layers.push(shadow)
+
+  const objectindex = i++
+  const objects = createsprites(player, objectindex)
+  layers.push(objects)
+
+  const control = createlayercontrol(player, i++)
+  layers.push(control)
+
+  board.terrain.forEach((tile, i) => {
+    if (tile) {
+      const kind = bookterrainreadkind(book, tile)
+      tiles.char[i] = tile.char ?? kind?.char ?? 0
+      tiles.color[i] = tile.color ?? kind?.color ?? COLOR.BLACK
+      tiles.bg[i] = tile.bg ?? kind?.bg ?? COLOR.BLACK
     }
   })
+
+  Object.values(board.objects).forEach((object) => {
+    // should we have bg transparent or match the bg color of the terrain ?
+    const id = object.id ?? ''
+    const kind = bookobjectreadkind(book, object)
+    const sprite = createsprite(player, objectindex, id)
+    const lx = object.lx ?? object.x ?? 0
+    const ly = object.ly ?? object.y ?? 0
+
+    // setup sprite
+    sprite.x = object.x ?? 0
+    sprite.y = object.y ?? 0
+    sprite.char = object.char ?? kind?.char ?? 1
+    sprite.color = object.color ?? kind?.color ?? COLOR.WHITE
+    sprite.bg = object.bg ?? kind?.bg ?? COLOR.CLEAR
+    objects.sprites.push(sprite)
+
+    // plot shadow
+    if (sprite.bg === COLOR.SHADOW) {
+      shadow.alphas[lx + ly * board.width] = 0.5
+    }
+
+    // inform control layer where to focus
+    if (id === player) {
+      control.focusx = sprite.x
+      control.focusy = sprite.y
+      control.focusid = id
+    }
+  })
+
+  return layers
 }
 
 export function memoryreadgadgetlayers(player: string): LAYER[] {
-  let index = 0
-  return MEMORY.frames
-    .map((frame) => {
-      const layers: LAYER[] = []
-      const book = memoryreadbook(frame.book)
-      const board = bookreadboard(book, frame.board ?? '')
-      if (!isdefined(board)) {
-        return layers
+  const book = memoryreadbook(PLAYER_BOOK)
+  const board = bookplayerreadboard(book, player)
+
+  const layers: LAYER[] = []
+  if (!isdefined(book) || !isdefined(board)) {
+    return layers
+  }
+
+  let i = 0
+  memoryreadframes(board.id ?? '').forEach((frame) => {
+    let view: LAYER[] = []
+    switch (frame.type) {
+      case FRAME_TYPE.VIEW: {
+        view = memoryconverttogadgetlayers(player, i, book, board)
+        break
       }
-      debugger
+      case FRAME_TYPE.EDIT:
+        break
+      default:
+        // no-op
+        break
+    }
+    i += view.length
+    layers.push(...view)
+  })
 
-      const tiles = createtiles(player, index++, board.width, board.height)
-      layers.push(tiles)
-      const shadow = createdither(player, index++, board.width, board.height)
-      layers.push(shadow)
-      const objects = createsprites(player, index++)
-      layers.push(objects)
-      const control = createlayercontrol(player, index++)
-      layers.push(control)
-
-      board.terrain.forEach((tile, i) => {
-        if (tile) {
-          const kind = bookterrainreadkind(book, tile)
-          tiles.char[i] = tile.char ?? kind?.char ?? 0
-          tiles.color[i] = tile.color ?? kind?.color ?? COLOR.BLACK
-          tiles.bg[i] = tile.bg ?? kind?.bg ?? COLOR.BLACK
-        }
-      })
-
-      Object.values(board.objects).forEach((object) => {
-        // should we have bg transparent or match the bg color of the terrain ?
-        const id = object.id ?? ''
-        const kind = bookobjectreadkind(book, object)
-        const sprite = createsprite(player, 2, id)
-        const lx = object.lx ?? object.x ?? 0
-        const ly = object.ly ?? object.y ?? 0
-        sprite.x = object.x ?? 0
-        sprite.y = object.y ?? 0
-        sprite.char = object.char ?? kind?.char ?? 1
-        sprite.color = object.color ?? kind?.color ?? COLOR.WHITE
-        sprite.bg = object.bg ?? kind?.bg ?? COLOR.CLEAR
-        objects.sprites.push(sprite)
-
-        // plot shadow
-        if (sprite.bg === COLOR.SHADOW) {
-          shadow.alphas[lx + ly * board.width] = 0.5
-        }
-
-        // inform control layer where to focus
-        if (id === player) {
-          control.focusx = sprite.x
-          control.focusy = sprite.y
-        }
-      })
-
-      return layers
-    })
-    .flat()
+  return layers
 }

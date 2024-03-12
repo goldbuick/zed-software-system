@@ -3,7 +3,7 @@ import { unique } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
 import { MAYBE, MAYBE_STRING, isdefined } from 'zss/mapping/types'
 
-import { MAYBE_BOARD_ELEMENT } from './board'
+import { MAYBE_BOARD, MAYBE_BOARD_ELEMENT } from './board'
 import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
@@ -62,25 +62,25 @@ export function bookreadcodepagedata<T extends CODE_PAGE_TYPE>(
   book: MAYBE_BOOK,
   type: T,
   address: string,
-): CODE_PAGE_TYPE_MAP[T] | undefined {
+): MAYBE<CODE_PAGE_TYPE_MAP[T]> {
   const codepage = bookreadcodepage(book, type, address)
 
   if (codepage) {
     switch (type) {
       case CODE_PAGE_TYPE.ERROR:
-        return codepage.error as CODE_PAGE_TYPE_MAP[T] | undefined
+        return codepage.error as MAYBE<CODE_PAGE_TYPE_MAP[T]>
       case CODE_PAGE_TYPE.FUNC:
-        return codepage.code as CODE_PAGE_TYPE_MAP[T] | undefined
+        return codepage.code as MAYBE<CODE_PAGE_TYPE_MAP[T]>
       case CODE_PAGE_TYPE.BOARD:
-        return codepage.board as CODE_PAGE_TYPE_MAP[T] | undefined
+        return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
       case CODE_PAGE_TYPE.OBJECT:
-        return codepage.object as CODE_PAGE_TYPE_MAP[T] | undefined
+        return codepage.object as MAYBE<CODE_PAGE_TYPE_MAP[T]>
       case CODE_PAGE_TYPE.TERRAIN:
-        return codepage.terrain as CODE_PAGE_TYPE_MAP[T] | undefined
+        return codepage.terrain as MAYBE<CODE_PAGE_TYPE_MAP[T]>
       case CODE_PAGE_TYPE.CHARSET:
-        return codepage.charset as CODE_PAGE_TYPE_MAP[T] | undefined
+        return codepage.charset as MAYBE<CODE_PAGE_TYPE_MAP[T]>
       case CODE_PAGE_TYPE.PALETTE:
-        return codepage.palette as CODE_PAGE_TYPE_MAP[T] | undefined
+        return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
   }
 
@@ -127,7 +127,7 @@ export function bookterrainreadkind(
   return undefined
 }
 
-export function bookreadboard(book: MAYBE_BOOK, board: string) {
+export function bookreadboard(book: MAYBE_BOOK, board: string): MAYBE_BOARD {
   return bookreadcodepagedata(book, CODE_PAGE_TYPE.BOARD, board)
 }
 

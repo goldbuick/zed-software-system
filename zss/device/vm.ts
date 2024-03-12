@@ -4,7 +4,6 @@ import { BIOS } from 'zss/bios'
 import { createdevice } from 'zss/device'
 import { INPUT } from 'zss/gadget/data/types'
 import {
-  memorycreatemainframe,
   memoryplayerlogin,
   memoryplayerlogout,
   memoryreadchip,
@@ -74,10 +73,6 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
 export function ready() {
   // load bios
   memorysetbook(BIOS)
-
-  // start main frame
-  memorycreatemainframe(BIOS.id)
-
   // signal ready state
   vm.emit('ready', undefined, player)
 }

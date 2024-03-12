@@ -431,8 +431,8 @@ function boardsetlookup(book: BOOK, board: BOARD) {
 }
 
 export function boardtick(
-  book: BOOK,
-  board: BOARD,
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
   oncode: (
     book: BOOK,
     board: BOARD,
@@ -441,6 +441,10 @@ export function boardtick(
     code: string,
   ) => void,
 ) {
+  if (!isdefined(book) || !isdefined(board)) {
+    return
+  }
+
   // build object lookup pre-tick
   boardsetlookup(book, board)
 

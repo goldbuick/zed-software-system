@@ -8,7 +8,7 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
-import { isdefined, isnumber, ispresent } from 'zss/mapping/types'
+import { isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadchip } from 'zss/memory'
 import {
   BOARD_ELEMENT,
@@ -53,19 +53,19 @@ const INPUT_STAT_NAMES = new Set([
 
 function maptoconst(value: string) {
   const maybecategory = (categoryconsts as any)[value]
-  if (isdefined(maybecategory)) {
+  if (ispresent(maybecategory)) {
     return maybecategory
   }
   const maybecollision = (collisionconsts as any)[value]
-  if (isdefined(maybecollision)) {
+  if (ispresent(maybecollision)) {
     return maybecollision
   }
   const maybecolor = (colorconsts as any)[value]
-  if (isdefined(maybecolor)) {
+  if (ispresent(maybecolor)) {
     return maybecolor
   }
   const maybedir = (dirconsts as any)[value]
-  if (isdefined(maybedir)) {
+  if (ispresent(maybedir)) {
     return maybedir
   }
   return undefined
@@ -77,7 +77,7 @@ function readinput(target: BOARD_ELEMENT) {
   const memory = memoryreadchip(target.id ?? '')
 
   // already read input this tick
-  if (memory.activeinput !== undefined) {
+  if (memory.inputcurrent !== undefined) {
     return
   }
 
@@ -118,7 +118,7 @@ function readinput(target: BOARD_ELEMENT) {
   }
 
   // active input
-  memory.activeinput = head
+  memory.inputcurrent = head
 
   // clear used input
   memory.inputqueue.delete(head)
@@ -130,7 +130,7 @@ export const ZZT_FIRMWARE = createfirmware(
 
     // check consts first (data normalization)
     const maybeconst = maptoconst(name)
-    if (isdefined(maybeconst)) {
+    if (ispresent(maybeconst)) {
       return [true, maybeconst]
     }
 
@@ -201,7 +201,7 @@ export const ZZT_FIRMWARE = createfirmware(
   .command('char', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.NUMBER])
-    if (isdefined(memory.target)) {
+    if (ispresent(memory.target)) {
       memory.target.char = value
     }
     return 0
@@ -253,8 +253,8 @@ export const ZZT_FIRMWARE = createfirmware(
     while (steps > 0) {
       const [dest] = readargs({ ...memory, chip, words }, i, [ARG_TYPE.DIR])
       if (
-        isdefined(memory.book) &&
-        isdefined(memory.board) &&
+        ispresent(memory.book) &&
+        ispresent(memory.board) &&
         boardmoveobject(memory.book, memory.board, memory.target, dest)
       ) {
         // keep moving
