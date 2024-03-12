@@ -61,37 +61,22 @@ class ScriptParser extends CstParser {
   }
 
   program = this.RULED('program', () => {
-    this.MANY(() => this.SUBRULE(this.basic_line))
+    this.MANY(() => this.SUBRULE(this.line))
   })
 
-  basic_line = this.RULED('basic_line', () => {
-    this.OPTION(() => this.SUBRULE(this.basic_stmt))
+  line = this.RULED('line', () => {
+    this.OPTION(() => this.SUBRULE(this.stmt))
     this.AT_LEAST_ONE(() => this.CONSUME(lexer.Newline))
   })
 
-  basic_stmt = this.RULED('basic_stmt', () => {
+  stmt = this.RULED('stmt', () => {
     this.OR([
       { ALT: () => this.CONSUME(lexer.Command_play) },
-      { ALT: () => this.SUBRULE(this.basic_text) },
+      { ALT: () => this.SUBRULE(this.text) },
       { ALT: () => this.SUBRULE(this.multi_stmt) },
       { ALT: () => this.SUBRULE(this.comment) },
       { ALT: () => this.SUBRULE(this.label) },
       { ALT: () => this.SUBRULE(this.hyperlink) },
-    ])
-  })
-
-  nested_line = this.RULED('nested_line', () => {
-    this.OPTION(() => this.SUBRULE(this.nested_stmt))
-    this.AT_LEAST_ONE(() => this.CONSUME(lexer.Newline))
-  })
-
-  nested_stmt = this.RULED('nested_stmt', () => {
-    this.OR([
-      { ALT: () => this.CONSUME(lexer.Command_play) },
-      { ALT: () => this.SUBRULE(this.nested_text) },
-      { ALT: () => this.SUBRULE(this.multi_stmt) },
-      { ALT: () => this.SUBRULE(this.hyperlink) },
-      { ALT: () => this.SUBRULE(this.comment) },
     ])
   })
 
@@ -121,29 +106,15 @@ class ScriptParser extends CstParser {
         },
       },
       {
-        ALT: () => this.SUBRULE(this.struct_cmd),
-      },
-      {
         ALT: () => {
           this.CONSUME(lexer.Stat)
           this.SUBRULE4(this.words)
         },
       },
+      {
+        ALT: () => this.SUBRULE(this.struct_cmd),
+      },
     ])
-  })
-
-  block_lines_gate = () => {
-    const match =
-      this.LA(1).tokenType === lexer.Indent ||
-      this.LA(2).tokenType === lexer.Indent
-    // this.PEEK('block_lines_gate', match, this.LA(1), this.LA(2), this.LA(3))
-    return match
-  }
-
-  block_lines = this.RULED('block_lines', () => {
-    this.CONSUME(lexer.Indent)
-    this.AT_LEAST_ONE(() => this.SUBRULE(this.nested_line))
-    this.CONSUME(lexer.Outdent)
   })
 
   nested_cmd = this.RULED('nested_cmd', () => {
@@ -181,7 +152,6 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.Command)
     this.OR([
       { ALT: () => this.SUBRULE(this.Command_if) },
-      // { ALT: () => this.SUBRULE(this.Command_api) }, what was this ???
       { ALT: () => this.SUBRULE(this.Command_while) },
       { ALT: () => this.SUBRULE(this.Command_repeat) },
       { ALT: () => this.SUBRULE(this.Command_read) },
@@ -193,6 +163,16 @@ class ScriptParser extends CstParser {
   Command_if = this.RULED('Command_if', () => {
     this.CONSUME(lexer.Command_if)
     this.SUBRULE(this.expr)
+
+    /*
+    #if expr [then] [nested_cmd]
+    [lines]
+    #else if expr [then] [nested_cmd]
+    [lines]
+    #else [then] [nested_cmd]
+    [lines]
+    #endif
+    */
 
     this.OR([
       {
@@ -303,11 +283,6 @@ class ScriptParser extends CstParser {
         },
       },
     ])
-  })
-
-  Command_api = this.RULED('Command_api', () => {
-    this.CONSUME(lexer.Command_api)
-    this.SUBRULE(this.words)
   })
 
   Command_while = this.RULED('Command_while', () => {

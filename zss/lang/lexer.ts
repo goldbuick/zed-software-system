@@ -8,159 +8,9 @@ import {
 import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
 
-// State required for matching the indentations
-let indentStack = [0]
-
-function last<T>(arr: T[] | undefined) {
-  if (Array.isArray(arr)) {
-    return arr.slice(-1)[0]
-  }
-  return undefined
-}
-
-const indentRegExp = / +/y
-
-function measureIndent(
-  text: string,
-  offset: number,
-  matchedTokens: IToken[],
-): [number, RegExpExecArray | null] {
-  // no prior tokens, no match
-  if (matchedTokens.length === 0) {
-    return [-1, null]
-  }
-
-  // only match at beginning of line
-  const lastToken = last(matchedTokens)
-  if (lastToken?.tokenType !== Newline) {
-    return [-1, null]
-  }
-
-  // there should be no gap between lastToken and offset
-  if (lastToken.endOffset === undefined || lastToken.endOffset !== offset - 1) {
-    return [-1, null]
-  }
-
-  // measure indent
-  indentRegExp.lastIndex = offset
-  const match = indentRegExp.exec(text)
-  const indentLevel = match?.[0].length ?? 0
-  const lineStart = text[offset + indentLevel]
-
-  // lines composed of only spaces are ignored
-  if (lineStart === '\n') {
-    return [-1, null]
-  }
-
-  // basic text is always indentLevel 0
-  if (`@#/?':!|`.includes(lineStart) === false) {
-    return [0, null]
-  }
-
-  // return measured indentation
-  return [indentLevel, match]
-}
-
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 
-// indentation & Newline
-export const Indent = createToken({
-  name: 'Indent',
-  line_breaks: false,
-  pattern: function (text: string, offset: number, matchedTokens: IToken[]) {
-    // measure indent
-    const [currIndentLevel] = measureIndent(text, offset, matchedTokens)
-    if (currIndentLevel < 0) {
-      return null
-    }
-
-    // deeper indentation
-    const prevIndentLevel = last(indentStack) ?? 0
-    if (currIndentLevel > prevIndentLevel) {
-      indentStack.push(currIndentLevel)
-      // return indent match
-      return ['>'.repeat(currIndentLevel)] as RegExpExecArray
-    }
-
-    return null
-  },
-  start_chars_hint: all_chars,
-})
-
-export const Outdent = createToken({
-  name: 'Outdent',
-  line_breaks: false,
-  pattern: function (text: string, offset: number, matchedTokens: IToken[]) {
-    // measure indent
-    const [currIndentLevel, match] = measureIndent(text, offset, matchedTokens)
-    if (currIndentLevel < 0) {
-      return null
-    }
-
-    // shallower indentation
-    const prevIndentLevel = last(indentStack) ?? 0
-    if (currIndentLevel < prevIndentLevel) {
-      const lastToken = last(matchedTokens)
-      const matchIndentIndex = indentStack.findLastIndex(
-        (depth) => depth === currIndentLevel,
-      )
-
-      // any outdent must match some previous indentation level.
-      if (matchIndentIndex === -1) {
-        // how do we show an error here ???
-        return null //throw Error(`invalid outdent at offset: ${offset}`)
-      }
-
-      // how many steps down
-      const numberOfDedents = indentStack.length - matchIndentIndex - 1
-
-      // This is a little tricky
-      // 1. If there is no match (0 level indent) than this custom token
-      //    matcher would return "null" and so we need to add all the required outdents ourselves.
-      // 2. If there was match (> 0 level indent) than we need to add minus one number of outdents
-      //    because the lexer would create one due to returning a none null result.
-
-      const startOffset = match !== null ? 1 : 0
-      for (let i = startOffset; i < numberOfDedents; i++) {
-        const depth = indentStack.pop() ?? 0
-        matchedTokens.push(
-          createTokenInstance(
-            Outdent,
-            '<'.repeat(depth),
-            lastToken?.startOffset ?? NaN,
-            lastToken?.endOffset ?? NaN,
-            lastToken?.startLine ?? NaN,
-            lastToken?.endLine ?? NaN,
-            lastToken?.startColumn ?? NaN,
-            lastToken?.endColumn ?? NaN,
-          ),
-          // newline always follows an outdent
-          createTokenInstance(
-            Newline,
-            '\n',
-            lastToken?.startOffset ?? NaN,
-            lastToken?.endOffset ?? NaN,
-            lastToken?.startLine ?? NaN,
-            lastToken?.endLine ?? NaN,
-            lastToken?.startColumn ?? NaN,
-            lastToken?.endColumn ?? NaN,
-          ),
-        )
-      }
-
-      // even though we are adding fewer outdents directly we still need to update the indent stack fully.
-      if (startOffset === 1) {
-        indentStack.pop()
-      }
-
-      // return outdent match
-      return match
-    }
-
-    return null
-  },
-  start_chars_hint: all_chars,
-})
+// Newline & Whitespace
 
 export const Newline = createToken({
   name: 'Newline',
@@ -227,7 +77,7 @@ function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
   }
 
   // detect beginning of text
-  if (`@#/?':!|`.includes(text[cursor])) {
+  if (`@#/?':!`.includes(text[cursor])) {
     return null
   }
 
@@ -242,52 +92,11 @@ function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
   return [match] as RegExpExecArray
 }
 
-function matchNestedText(text: string, startOffset: number, matched: IToken[]) {
-  if (!matchTextEnabled) {
-    return null
-  }
-
-  const [lastMatched] = matched.slice(-1)
-
-  // check for indent, then pipe |
-  if (
-    lastMatched &&
-    lastMatched.tokenType !== Indent &&
-    lastMatched.tokenType !== Newline
-  ) {
-    return null
-  }
-
-  const currentChar = text[startOffset]
-
-  // detect beginning of text
-  if (currentChar !== '|') {
-    return null
-  }
-
-  // scan until EOL
-  let i = startOffset + 1
-  while (i < text.length && text[i] !== '\n') {
-    i++
-  }
-
-  // return match
-  const match = text.substring(startOffset, i)
-  return [match] as RegExpExecArray
-}
-
-export const BasicText = createToken({
-  name: 'BasicText',
+export const Text = createToken({
+  name: 'Text',
   pattern: matchBasicText,
   line_breaks: false,
-  start_chars_hint: all_chars.filter((ch) => `@#/?':!|`.includes(ch) === false),
-})
-
-export const NestedText = createToken({
-  name: 'NestedText',
-  pattern: matchNestedText,
-  line_breaks: false,
-  start_chars_hint: ['|'],
+  start_chars_hint: all_chars.filter((ch) => `@#/?':!`.includes(ch) === false),
 })
 
 export const Comment = createToken({
@@ -422,12 +231,14 @@ export const Command_play = createToken({
 // core / structure commands
 
 export const Command_if = createWordToken('if|try|take|give', 'if')
-// may not need this ?
-export const Command_api = createWordToken('set|clear', 'api')
+export const Command_endif = createWordToken('endif')
 export const Command_else = createWordToken('else')
 export const Command_while = createWordToken('while')
+export const Command_endwhile = createWordToken('endwhile')
 export const Command_repeat = createWordToken('repeat')
+export const Command_endrepeat = createWordToken('endrepeat')
 export const Command_read = createWordToken('read')
+export const Command_endread = createWordToken('endread')
 export const Command_break = createWordToken('break')
 export const Command_continue = createWordToken('continue')
 
@@ -464,12 +275,8 @@ function createTokenSet(primary: TokenType[]) {
 }
 
 export const allTokens = createTokenSet([
-  // block lines
-  Outdent,
-  Indent,
   // text output
-  BasicText,
-  NestedText,
+  Text,
   // commands
   Stat,
   Command_play,
@@ -485,11 +292,14 @@ export const allTokens = createTokenSet([
   Whitespace,
   // core / structure commands
   Command_if,
-  // Command_api,
+  Command_endif,
   Command_else,
   Command_while,
+  Command_endwhile,
   Command_repeat,
+  Command_endrepeat,
   Command_read,
+  Command_endread,
   Command_break,
   Command_continue,
 ])
@@ -510,34 +320,12 @@ const scriptLexer = new Lexer(
 
 export function tokenize(text: string) {
   matchTextEnabled = true
-
-  indentStack = [0]
   const lexResult = scriptLexer.tokenize(text || ' \n')
 
-  let lastToken = last(lexResult.tokens)
-  if (!lastToken) {
-    return lexResult
-  }
-
-  // add remaining Outdents
-  while (indentStack.length > 1) {
-    lexResult.tokens.push(
-      createTokenInstance(
-        Outdent,
-        '<<??',
-        lastToken.startOffset,
-        lastToken.endOffset ?? NaN,
-        lastToken.startLine ?? NaN,
-        lastToken.endLine ?? NaN,
-        lastToken.startColumn ?? NaN,
-        lastToken.endColumn ?? NaN,
-      ),
-    )
-    indentStack.pop()
-  }
-
   // add final new line ?
-  lastToken = last(lexResult.tokens)
+  const [lastToken] = (
+    Array.isArray(lexResult.tokens) ? lexResult.tokens : []
+  ).slice(-1)
   if (lastToken && lastToken.tokenType.name !== 'Newline') {
     lexResult.tokens.push(
       createTokenInstance(
