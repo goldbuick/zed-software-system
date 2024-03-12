@@ -13,6 +13,11 @@
 
 ' load content in editor
 #frame edit temp title
+' if you want multiple views
+' #frame view temp minimap 
+
+' this will reset the frame stack
+' #frame reset
 
 ' main loop
 #cycle 1
@@ -22,18 +27,17 @@
 #give blinkrate
 
 #if blinkrate < 6
-  #char 219
+#char 219
 #else if blinkrate < 7
-  #char 32
+#char 32
 #else
-  #set blinkrate 0
+#set blinkrate 0
+#endif
 
 #if inputmove
-  #if inputalt
-    ?10 inputmove
-  #else
-    ?inputmove
+  #if inputalt ?10 inputmove #else ?inputmove #endif
 #else
   #idle
+#endif
 
 #think
