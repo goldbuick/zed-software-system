@@ -231,6 +231,7 @@ export const Command_play = createToken({
 // core / structure commands
 
 export const Command_if = createWordToken('if|try|take|give', 'if')
+export const Command_then = createWordToken('then')
 export const Command_endif = createWordToken('endif')
 export const Command_else = createWordToken('else')
 export const Command_while = createWordToken('while')
@@ -292,6 +293,7 @@ export const allTokens = createTokenSet([
   Whitespace,
   // core / structure commands
   Command_if,
+  Command_then,
   Command_endif,
   Command_else,
   Command_while,

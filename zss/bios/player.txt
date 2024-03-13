@@ -12,7 +12,7 @@
 #book create temp
 
 ' load content in editor
-#frame edit temp title
+' #frame edit temp title
 ' if you want multiple views
 ' #frame view temp minimap 
 
@@ -35,7 +35,9 @@
 #endif
 
 #if inputmove
-  #if inputalt ?10 inputmove #else ?inputmove #endif
+  #if inputalt ?10 inputmove
+  #else ?inputmove
+  #endif
 #else
   #idle
 #endif
