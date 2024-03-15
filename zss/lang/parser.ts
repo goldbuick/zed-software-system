@@ -157,6 +157,7 @@ class ScriptParser extends CstParser {
     this.OR([
       { ALT: () => this.CONSUME(lexer.Command_play) },
       { ALT: () => this.SUBRULE(this.Command_if_inline) },
+      { ALT: () => this.SUBRULE(this.Command_if_multi) },
       { ALT: () => this.SUBRULE(this.Command_while) },
       { ALT: () => this.SUBRULE(this.Command_repeat) },
       { ALT: () => this.SUBRULE(this.Command_read) },
@@ -200,31 +201,32 @@ class ScriptParser extends CstParser {
   Command_if_multi = this.RULED('Command_if_multi', () => {
     this.CONSUME(lexer.Command_if)
     this.SUBRULE(this.expr)
+
     this.OPTION1(() => this.CONSUME1(lexer.Command_then))
-
-    // multi-line
-    this.MANY3(() => this.SUBRULE3(this.Command_else_if))
-
-    this.CONSUME2(lexer.Command_else)
+    this.MANY(() => this.SUBRULE(this.Command_else_if_multi))
+    this.OPTION2(() => this.SUBRULE(this.Command_else_multi))
 
     this.CONSUME(lexer.Command)
-    this.CONSUME3(lexer.Command_endif)
+    this.CONSUME(lexer.Command_endif)
   })
 
-  Command_else_if = this.RULED('Command_else_if', () => {
-    this.CONSUME(lexer.Command)
+  Command_else_if_multi = this.RULED('Command_else_if_multi', () => {
+    this.OPTION(() => this.CONSUME(lexer.Command))
     this.CONSUME(lexer.Command_else)
     this.CONSUME(lexer.Command_if)
     this.SUBRULE(this.expr)
 
-    //
+    this.OPTION1(() => this.CONSUME(lexer.Command_then))
+    this.MANY(() => this.SUBRULE(this.line))
   })
 
-  Command_else = this.RULED('Command_else', () => {
-    this.CONSUME(lexer.Command)
+  Command_else_multi = this.RULED('Command_else_multi', () => {
+    this.OPTION(() => this.CONSUME(lexer.Command))
     this.CONSUME(lexer.Command_else)
+    this.SUBRULE(this.expr)
 
-    //
+    this.OPTION1(() => this.CONSUME(lexer.Command_then))
+    this.MANY(() => this.SUBRULE(this.line))
   })
 
   Command_while = this.RULED('Command_while', () => {

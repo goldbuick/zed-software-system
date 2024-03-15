@@ -224,8 +224,9 @@ export const RParen = createToken({
 
 export const Command_play = createToken({
   name: 'play',
-  pattern: /play.*/,
+  pattern: /play .*/,
   start_chars_hint: all_chars,
+  longer_alt: StringLiteral,
 })
 
 // core / structure commands
