@@ -50,6 +50,7 @@ export function createos() {
         if (result.errors?.length) {
           // log it ???
           console.error(result)
+          debugger
           return false
         }
 

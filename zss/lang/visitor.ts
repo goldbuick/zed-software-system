@@ -294,14 +294,14 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
-  basic_line(ctx: CstChildrenDictionary) {
-    if (ctx.basic_stmt) {
+  line(ctx: CstChildrenDictionary) {
+    if (ctx.stmt) {
       // @ts-expect-error cst element
-      return this.visit(ctx.basic_stmt)
+      return this.visit(ctx.stmt)
     }
   }
 
-  basic_stmt(ctx: CstChildrenDictionary) {
+  stmt(ctx: CstChildrenDictionary) {
     if (ctx.play) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
@@ -311,9 +311,9 @@ class ScriptVisitor extends CstVisitor {
         ],
       })
     }
-    if (ctx.basic_text) {
+    if (ctx.text) {
       // @ts-expect-error cst element
-      return this.visit(ctx.basic_text)
+      return this.visit(ctx.text)
     }
     if (ctx.multi_stmt) {
       // @ts-expect-error cst element
@@ -530,6 +530,11 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
+  Command_lines(ctx: CstChildrenDictionary) {
+    //
+    console.info('Command_lines', ctx)
+  }
+
   Command_else_if(ctx: CstChildrenDictionary) {
     // bail on empty
     if (!ctx.if) {
@@ -584,14 +589,9 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
-  Command_api(ctx: CstChildrenDictionary) {
-    const method = strImage(ctx.set[0]).toLowerCase()
-    return makeNode(ctx, {
-      type: NODE.API,
-      method,
-      // @ts-expect-error cst element
-      words: asList(this, ctx.words).flat(),
-    })
+  Command_endif(ctx: CstChildrenDictionary) {
+    //
+    console.info('Command_endif', ctx)
   }
 
   Command_while(ctx: CstChildrenDictionary) {
@@ -660,21 +660,11 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
-  basic_text(ctx: CstChildrenDictionary) {
-    if (ctx.BasicText) {
+  text(ctx: CstChildrenDictionary) {
+    if (ctx.Text) {
       return makeNode(ctx, {
         type: NODE.TEXT,
         value: strImage(ctx.BasicText[0]),
-      })
-    }
-  }
-
-  nested_text(ctx: CstChildrenDictionary) {
-    if (ctx.NestedText) {
-      return makeNode(ctx, {
-        type: NODE.TEXT,
-        // chop off pipe |
-        value: strImage(ctx.NestedText[0]).substring(1),
       })
     }
   }

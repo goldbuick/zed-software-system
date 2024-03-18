@@ -1,5 +1,9 @@
 @player
 
+#if blinkrate < 6
+#char 219
+#endif
+
 ' setup ui
 #gadget right 20
 ""
