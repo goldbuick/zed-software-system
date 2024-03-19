@@ -48,7 +48,15 @@ class ScriptParser extends CstParser {
         const strIndent = '  '.repeat(useIndent)
         const style = bold ? 'font-weight: bold;' : ''
         if (enableTracing && !this.RECORDING_PHASE) {
-          console.info(this.LA(0), this.LA(1), this.LA(2), this.LA(3))
+          const next: [string, string][] = [
+            this.LA(0),
+            this.LA(1),
+            this.LA(2),
+          ].map((item) => [
+            item.image.replaceAll('\n', '\\n'),
+            `[${item.tokenType.name}]`,
+          ])
+          console.info(...next[0], ':', ...next.slice(1).flat())
           console.info(`%c${strIndent}> ${name} ${useId}`, style)
         }
         implementation()
@@ -173,21 +181,46 @@ class ScriptParser extends CstParser {
   Command_if = this.RULED('Command_if', () => {
     this.CONSUME(lexer.Command_if)
     this.SUBRULE(this.expr)
-    this.OPTION1(() => this.SUBRULE(this.nested_cmd))
+
+    this.OPTION1(() => {
+      this.SUBRULE2(this.nested_cmd)
+    })
+
     this.OPTION2(() => {
-      this.MANY(() => this.SUBRULE(this.Command_else_if))
-      this.OPTION3(() => this.SUBRULE(this.Command_else))
-      this.SUBRULE(this.Command_endif)
+      this.CONSUME3(lexer.Newline)
+      this.MANY3(() => this.SUBRULE3(this.line))
+
+      this.MANY4(() => this.SUBRULE4(this.Command_else_if))
+
+      this.OPTION5(() => this.SUBRULE5(this.Command_else))
+
+      this.CONSUME6(lexer.Command)
+      this.CONSUME6(lexer.Command_endif)
     })
   })
 
   Command_lines = this.RULED('Command_lines', () => {
-    this.SUBRULE(this.nested_cmd)
-    this.MANY(() => this.SUBRULE(this.line))
+    this.OR([
+      {
+        ALT: () => {
+          this.SUBRULE(this.nested_cmd)
+          this.OPTION(() => {
+            this.CONSUME1(lexer.Newline)
+            this.AT_LEAST_ONE1(() => this.SUBRULE1(this.line))
+          })
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME2(lexer.Newline)
+          this.AT_LEAST_ONE2(() => this.SUBRULE2(this.line))
+        },
+      },
+    ])
   })
 
   Command_else_if = this.RULED('Command_else_if', () => {
-    this.OPTION1(() => this.CONSUME(lexer.Command))
+    this.CONSUME(lexer.Command)
     this.CONSUME(lexer.Command_else)
     this.CONSUME(lexer.Command_if)
     this.SUBRULE(this.expr)
@@ -195,14 +228,23 @@ class ScriptParser extends CstParser {
   })
 
   Command_else = this.RULED('Command_else', () => {
-    this.OPTION1(() => this.CONSUME(lexer.Command))
+    this.CONSUME(lexer.Command)
     this.CONSUME(lexer.Command_else)
     this.OPTION2(() => this.SUBRULE(this.Command_lines))
   })
 
-  Command_endif = this.RULED('Command_endif', () => {
+  Command_else_if_inline = this.RULED('Command_else_if_inline', () => {
     this.OPTION1(() => this.CONSUME(lexer.Command))
-    this.CONSUME(lexer.Command_endif)
+    this.CONSUME(lexer.Command_else)
+    this.CONSUME(lexer.Command_if)
+    this.SUBRULE(this.expr)
+    this.OPTION2(() => this.SUBRULE(this.Command_lines))
+  })
+
+  Command_else_inline = this.RULED('Command_else_inline', () => {
+    this.OPTION1(() => this.CONSUME(lexer.Command))
+    this.CONSUME(lexer.Command_else)
+    this.OPTION2(() => this.SUBRULE(this.Command_lines))
   })
 
   Command_while = this.RULED('Command_while', () => {

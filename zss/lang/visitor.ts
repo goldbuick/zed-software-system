@@ -570,6 +570,11 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
+  Command_else_if_inline(ctx: CstChildrenDictionary) {
+    //
+    console.info('Command_else_if', ctx)
+  }
+
   Command_else(ctx: CstChildrenDictionary) {
     // @ts-expect-error cst element
     const words = asList(this, ctx.words).flat()
@@ -587,6 +592,11 @@ class ScriptVisitor extends CstVisitor {
       words,
       block_lines,
     })
+  }
+
+  Command_else_inline(ctx: CstChildrenDictionary) {
+    //
+    console.info('Command_else_inline', ctx)
   }
 
   Command_endif(ctx: CstChildrenDictionary) {
