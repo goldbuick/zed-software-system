@@ -88,7 +88,6 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.multi_stmt) },
       { ALT: () => this.SUBRULE(this.comment) },
       { ALT: () => this.SUBRULE(this.label) },
-      { ALT: () => this.SUBRULE(this.hyperlink) },
     ])
   })
 
@@ -99,80 +98,64 @@ class ScriptParser extends CstParser {
 
   simple_cmd = this.RULED('simple_cmd', () => {
     this.OR([
-      {
-        ALT: () => {
-          this.CONSUME1(lexer.Go)
-          this.SUBRULE1(this.words)
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME2(lexer.Try)
-          this.SUBRULE2(this.words)
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME3(lexer.Command)
-          this.SUBRULE3(this.words)
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME4(lexer.Stat)
-          this.SUBRULE4(this.words)
-        },
-      },
-      {
-        ALT: () => this.SUBRULE5(this.struct_cmd),
-      },
+      { ALT: () => this.SUBRULE(this.hyperlink) },
+      { ALT: () => this.SUBRULE(this.Command_go) },
+      { ALT: () => this.SUBRULE(this.Command_try) },
+      { ALT: () => this.SUBRULE(this.Command_command) },
+      { ALT: () => this.SUBRULE(this.Command_stat) },
+      { ALT: () => this.SUBRULE(this.struct_cmd) },
     ])
   })
 
   nested_cmd = this.RULED('nested_cmd', () => {
     this.OR([
+      { ALT: () => this.SUBRULE(this.hyperlink) },
+      { ALT: () => this.SUBRULE(this.Command_go) },
+      { ALT: () => this.SUBRULE(this.Command_try) },
       {
         ALT: () => {
-          this.SUBRULE(this.hyperlink)
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.Go)
-          this.SUBRULE(this.words)
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME1(lexer.Try)
-          this.SUBRULE1(this.words)
+          this.OPTION1(() => this.CONSUME1(lexer.Command))
+          this.SUBRULE1(this.Command_play)
         },
       },
       {
         ALT: () => {
           this.OPTION2(() => this.CONSUME2(lexer.Command))
-          this.CONSUME2(lexer.Command_play)
+          this.SUBRULE2(this.Command_if)
         },
       },
       {
         ALT: () => {
           this.OPTION3(() => this.CONSUME3(lexer.Command))
-          this.SUBRULE3(this.Command_if)
-        },
-      },
-      {
-        ALT: () => {
-          this.OPTION4(() => this.CONSUME4(lexer.Command))
-          this.SUBRULE4(this.words)
+          this.SUBRULE3(this.words)
         },
       },
     ])
   })
 
+  Command_go = this.RULED('Command_go', () => {
+    this.CONSUME(lexer.Go)
+    this.SUBRULE(this.words)
+  })
+
+  Command_try = this.RULED('Command_try', () => {
+    this.CONSUME(lexer.Try)
+    this.SUBRULE(this.words)
+  })
+
+  Command_command = this.RULED('Command_command', () => {
+    this.CONSUME(lexer.Command)
+    this.SUBRULE(this.words)
+  })
+
+  Command_stat = this.RULED('Command_stat', () => {
+    this.CONSUME(lexer.Stat)
+    this.SUBRULE(this.words)
+  })
+
   struct_cmd = this.RULED('struct_cmd', () => {
     this.CONSUME(lexer.Command)
     this.OR([
-      { ALT: () => this.CONSUME(lexer.Command_play) },
       { ALT: () => this.SUBRULE(this.Command_if) },
       { ALT: () => this.SUBRULE(this.Command_while) },
       { ALT: () => this.SUBRULE(this.Command_repeat) },
@@ -180,6 +163,10 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.Command_break) },
       { ALT: () => this.SUBRULE(this.Command_continue) },
     ])
+  })
+
+  Command_play = this.RULED('Command_play', () => {
+    this.CONSUME(lexer.Command_play)
   })
 
   Command_if = this.RULED('Command_if', () => {
@@ -423,7 +410,6 @@ class ScriptParser extends CstParser {
   })
 
   power = this.RULED('power', () => {
-    // this.SUBRULE(this.words)
     this.SUBRULE(this.token)
     this.OPTION(() => {
       this.CONSUME(lexer.Power)
@@ -434,7 +420,6 @@ class ScriptParser extends CstParser {
   // core simple words
 
   words = this.RULED('words', () => {
-    // this.AT_LEAST_ONE(() => this.SUBRULE(this.token))
     this.AT_LEAST_ONE(() => this.SUBRULE(this.expr))
   })
 
