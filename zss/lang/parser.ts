@@ -423,7 +423,8 @@ class ScriptParser extends CstParser {
   })
 
   power = this.RULED('power', () => {
-    this.SUBRULE(this.words)
+    // this.SUBRULE(this.words)
+    this.SUBRULE(this.token)
     this.OPTION(() => {
       this.CONSUME(lexer.Power)
       this.SUBRULE(this.factor)
@@ -433,7 +434,8 @@ class ScriptParser extends CstParser {
   // core simple words
 
   words = this.RULED('words', () => {
-    this.AT_LEAST_ONE(() => this.SUBRULE(this.token))
+    // this.AT_LEAST_ONE(() => this.SUBRULE(this.token))
+    this.AT_LEAST_ONE(() => this.SUBRULE(this.expr))
   })
 
   token = this.RULED('token', () => {

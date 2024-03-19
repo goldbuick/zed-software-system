@@ -125,13 +125,19 @@ export const HyperLinkText = createToken({
 
 export const StringLiteral = createToken({
   name: 'StringLiteral',
-  pattern: /[_a-zA-Z"$][^!;@#/?\s]*/,
+  // pattern: /[_a-zA-Z"$][^!;@#/?\s] [^!;@#/?\s]*/,
+  pattern: /[^-0-9"!;@#/?\s]+/,
   start_chars_hint: all_chars,
 })
 
 export const StringLiteralDouble = createToken({
   name: 'StringLiteralDouble',
   pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}))*"/,
+})
+
+export const NumberLiteral = createToken({
+  name: 'NumberLiteral',
+  pattern: /-?(\d*\.)?\d+([eE][+-]?\d+)?[jJ]?[lL]?/,
 })
 
 function createWordToken(word: string) {
@@ -141,11 +147,6 @@ function createWordToken(word: string) {
     longer_alt: StringLiteral,
   })
 }
-
-export const NumberLiteral = createToken({
-  name: 'NumberLiteral',
-  pattern: /-?(\d*\.)?\d+([eE][+-]?\d+)?[jJ]?[lL]?/,
-})
 
 // comparision
 
