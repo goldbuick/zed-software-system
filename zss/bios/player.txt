@@ -24,7 +24,12 @@
 #set blinkrate 0
 
 :think
+' this is valid, but now ambiguous to parse :|
 #give blinkrate
+
+#try n [alt]
+#take doot 1 [alt]
+#give doot 1 [alt]
 
 #if blinkrate < 6
 #char 219

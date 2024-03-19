@@ -134,9 +134,9 @@ export const StringLiteralDouble = createToken({
   pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}))*"/,
 })
 
-function createWordToken(word: string, name = '') {
+function createWordToken(word: string) {
   return createToken({
-    name: name || word,
+    name: word,
     pattern: new RegExp(word.toLowerCase(), 'i'),
     longer_alt: StringLiteral,
   })
@@ -231,9 +231,12 @@ export const Command_play = createToken({
 
 // core / structure commands
 
-export const Command_if = createWordToken('if|try|take|give', 'if')
-export const Command_endif = createWordToken('endif')
+export const Command_try = createWordToken('try')
+export const Command_take = createWordToken('take')
+export const Command_give = createWordToken('give')
+export const Command_if = createWordToken('if')
 export const Command_else = createWordToken('else')
+export const Command_endif = createWordToken('endif')
 export const Command_while = createWordToken('while')
 export const Command_endwhile = createWordToken('endwhile')
 export const Command_repeat = createWordToken('repeat')
@@ -292,9 +295,12 @@ export const allTokens = createTokenSet([
   Newline,
   Whitespace,
   // core / structure commands
+  Command_try,
+  Command_take,
+  Command_give,
   Command_if,
-  Command_endif,
   Command_else,
+  Command_endif,
   Command_while,
   Command_endwhile,
   Command_repeat,

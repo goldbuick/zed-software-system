@@ -45,7 +45,8 @@ class ScriptParser extends CstParser {
       () => {
         const useId = incId++
         const useIndent = incIndent++
-        const strIndent = '  '.repeat(useIndent)
+        const prefix = useIndent.toString().padStart(3)
+        const strIndent = ' '.repeat(useIndent)
         const style = bold ? 'font-weight: bold;' : ''
         if (enableTracing && !this.RECORDING_PHASE) {
           const next: [string, string][] = [
@@ -53,15 +54,18 @@ class ScriptParser extends CstParser {
             this.LA(1),
             this.LA(2),
           ].map((item) => [
-            item.image.replaceAll('\n', '\\n'),
             `[${item.tokenType.name}]`,
+            item.image.replaceAll('\n', '\\n'),
           ])
-          console.info(...next[0], ':', ...next.slice(1).flat())
-          console.info(`%c${strIndent}> ${name} ${useId}`, style)
+          const tokens = next.flat()
+          console.info(
+            `${prefix}%c${strIndent}> ${name} ${useId} ${tokens.join(' ')}`,
+            style,
+          )
         }
         implementation()
         if (enableTracing && !this.RECORDING_PHASE) {
-          console.info(`%c${strIndent}< ${name} ${useId}`, style)
+          console.info(`${prefix}%c${strIndent}< ${name} ${useId}`, style)
         }
         incIndent--
       },
