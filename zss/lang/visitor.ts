@@ -424,10 +424,10 @@ class ScriptVisitor extends CstVisitor {
     }
   }
 
-  block_lines(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
-    return asList(this, ctx.nested_line)
-  }
+  // block_lines(ctx: CstChildrenDictionary) {
+  //   // @ts-expect-error cst element
+  //   return asList(this, ctx.nested_line)
+  // }
 
   nested_cmd(ctx: CstChildrenDictionary) {
     if (ctx.hyperlink) {
@@ -470,6 +470,22 @@ class ScriptVisitor extends CstVisitor {
     return this.Command_if(ctx)
   }
 
+  Command_go(ctx: CstChildrenDictionary) {
+    console.info(ctx)
+  }
+
+  Command_try(ctx: CstChildrenDictionary) {
+    console.info(ctx)
+  }
+
+  Command_command(ctx: CstChildrenDictionary) {
+    console.info(ctx)
+  }
+
+  Command_stat(ctx: CstChildrenDictionary) {
+    console.info(ctx)
+  }
+
   struct_cmd(ctx: CstChildrenDictionary) {
     if (ctx.Command_if) {
       // @ts-expect-error cst element
@@ -499,6 +515,10 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error cst element
       return this.visit(ctx.Command_continue)
     }
+  }
+
+  Command_play(ctx: CstChildrenDictionary) {
+    console.info(ctx)
   }
 
   Command_if(ctx: CstChildrenDictionary) {

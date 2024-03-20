@@ -48,9 +48,9 @@ export function createos() {
       if (!isdefined(chips[id])) {
         const result = build(code)
         if (result.errors?.length) {
-          // log it ???
-          console.error(result)
+          console.error(result.errors)
           debugger
+          console.info(result.tokens)
           return false
         }
 
