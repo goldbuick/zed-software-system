@@ -521,6 +521,10 @@ class ScriptVisitor extends CstVisitor {
     console.info(ctx)
   }
 
+  Command_words(ctx: CstChildrenDictionary) {
+    console.info(ctx)
+  }
+
   Command_if(ctx: CstChildrenDictionary) {
     const method = strImage(ctx.if[0]).toLowerCase()
 

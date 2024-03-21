@@ -178,58 +178,53 @@ class ScriptParser extends CstParser {
   })
 
   Command_if = this.RULED('Command_if', () => {
-    this.CONSUME(lexer.Command_if)
-    this.SUBRULE(this.Command_words)
+    this.CONSUME1(lexer.Command_if)
+    this.SUBRULE1(this.Command_words)
 
-    this.OPTION(() => {
-      this.CONSUME2(lexer.Newline)
-      this.MANY(() => this.SUBRULE2(this.line))
+    this.OPTION1(() => {
+      /*
+      lines are terminated by either
+      #else if
+      #else
+      #endif
+      */
+      this.CONSUME1(lexer.Newline)
+      this.MANY1(() => this.SUBRULE1(this.line))
 
-      this.MANY(() => {
-        this.SUBRULE(this.Command_else_if)
-        this.SUBRULE(this.Command_words)
-      })
+      this.MANY2(() => this.SUBRULE2(this.Command_else_if))
 
-      this.CONSUME6(lexer.Command)
-      this.CONSUME6(lexer.Command_endif)
+      this.OPTION2(() => this.SUBRULE1(this.Command_else))
+
+      this.CONSUME1(lexer.Command)
+      this.CONSUME1(lexer.Command_endif)
     })
-
-    // this.OR([
-    //   {
-    //     ALT: () => {
-    //       this.SUBRULE1(this.nested_cmd)
-    //       this.OPTION(() => {
-    //         this.CONSUME1(lexer.Newline)
-    //         this.AT_LEAST_ONE1(() => this.SUBRULE1(this.line))
-    //       })
-    //     },
-    //   },
-    //   {
-    //     ALT: () => {
-
-    //       this.CONSUME(lexer.Command)
-    //       this.CONSUME(lexer.Command_else)
-    //       this.CONSUME(lexer.Command_if)
-    //       this.SUBRULE(this.words)
-
-    //       this.CONSUME(lexer.Command)
-    //       this.CONSUME(lexer.Command_else)
-    //       this.SUBRULE(this.words)
-
-    //     },
-    //   },
-    // ])
   })
 
   Command_else_if = this.RULED('Command_else_if', () => {
     this.CONSUME(lexer.Command)
     this.CONSUME(lexer.Command_else)
     this.CONSUME(lexer.Command_if)
+
+    this.SUBRULE(this.Command_words)
+
+    this.OPTION(() => {
+      this.CONSUME(lexer.Newline)
+      this.MANY(() => this.SUBRULE(this.line))
+    })
   })
 
   Command_else = this.RULED('Command_else', () => {
     this.CONSUME(lexer.Command)
     this.CONSUME(lexer.Command_else)
+
+    this.OPTION1(() => {
+      this.SUBRULE(this.Command_words)
+    })
+
+    this.OPTION2(() => {
+      this.CONSUME(lexer.Newline)
+      this.MANY(() => this.SUBRULE(this.line))
+    })
   })
 
   Command_while = this.RULED('Command_while', () => {
