@@ -424,11 +424,6 @@ class ScriptVisitor extends CstVisitor {
     }
   }
 
-  // block_lines(ctx: CstChildrenDictionary) {
-  //   // @ts-expect-error cst element
-  //   return asList(this, ctx.nested_line)
-  // }
-
   nested_cmd(ctx: CstChildrenDictionary) {
     if (ctx.hyperlink) {
       // @ts-expect-error cst element
@@ -468,6 +463,10 @@ class ScriptVisitor extends CstVisitor {
     }
 
     return this.Command_if(ctx)
+  }
+
+  nested_if(ctx: CstChildrenDictionary) {
+    console.info(ctx)
   }
 
   Command_go(ctx: CstChildrenDictionary) {
