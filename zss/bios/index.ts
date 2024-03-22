@@ -1,3 +1,4 @@
+import BMSG_OBJ from 'bundle-text:./BMSG.OBJ'
 import playercode from 'bundle-text:./player.txt'
 import { COLLISION, COLOR } from 'zss/firmware/wordtypes'
 import { createboard } from 'zss/memory/board'
@@ -8,7 +9,7 @@ export const BIOS = createbook('BIOS', [
   createcodepage('@board title', {
     board: createboard(),
   }),
-  createcodepage(playercode, {
+  createcodepage(BMSG_OBJ, {
     object: {
       char: 219,
       color: COLOR.WHITE,
