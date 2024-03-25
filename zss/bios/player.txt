@@ -31,7 +31,7 @@
 #take doot 1 [alt]
 #give doot 1 [alt]
 
-#if blinkrate < 6
+#if blinkrate < 6 do
 #char 219
 #else if blinkrate < 7
 #char 32
@@ -39,12 +39,18 @@
 #set blinkrate 0
 #endif
 
-#if inputmove
-  #if inputalt ?10 inputmove
-  #else ?inputmove
-  #endif
+#if inputmove do
+#if inputalt do
+?10 inputmove
 #else
-  #idle
+?inputmove
+#endif
+#else
+#idle
 #endif
 
 #think
+
+' do blocks is the way you turn 
+' certain commands into multi-line blocks
+' 

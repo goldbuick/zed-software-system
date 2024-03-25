@@ -17,10 +17,10 @@ const highlight = ['Command', 'lines']
 class ScriptParser extends CstParser {
   constructor() {
     super(lexer.allTokens, {
-      maxLookahead: 3,
       traceInitPerf: LANG_DEV,
       skipValidations: !LANG_DEV,
-      recoveryEnabled: !LANG_DEV,
+      maxLookahead: 3,
+      recoveryEnabled: true,
       nodeLocationTracking: 'full',
     })
     this.performSelfAnalysis()
@@ -84,54 +84,71 @@ class ScriptParser extends CstParser {
 
   stmt = this.RULED('stmt', () => {
     this.OR([
+      // mainlines
+      { ALT: () => this.SUBRULE(this.stat) },
       { ALT: () => this.SUBRULE(this.text) },
-      { ALT: () => this.SUBRULE(this.multi_stmt) },
-      { ALT: () => this.SUBRULE(this.comment) },
       { ALT: () => this.SUBRULE(this.label) },
+      { ALT: () => this.SUBRULE(this.comment) },
+      { ALT: () => this.SUBRULE(this.commands) },
+      // // structured commands
+      // { ALT: () => this.SUBRULE(this.Command_if) },
+      // { ALT: () => this.SUBRULE(this.Command_read) },
+      // { ALT: () => this.SUBRULE(this.Command_while) },
+      // { ALT: () => this.SUBRULE(this.Command_repeat) },
+      // { ALT: () => this.SUBRULE(this.Command_break) },
+      // { ALT: () => this.SUBRULE(this.Command_continue) },
     ])
   })
 
-  multi_stmt = this.RULED('multi_stmt', () => {
+  stat = this.RULED('stat', () => {
+    // should we make this a full line capture here ?
+    // default stat is just name text
+    // codepages will be scoped :
+    // @terrain : here is the string (input)
+    // @stat : hyper link formatted content here ..
+    this.CONSUME(lexer.Stat)
+    this.SUBRULE(this.words)
+  })
+
+  text = this.RULED('text', () => {
+    this.CONSUME(lexer.Text)
+  })
+
+  label = this.RULED('label', () => {
+    this.CONSUME(lexer.Label)
+  })
+
+  comment = this.RULED('comment', () => {
+    this.CONSUME(lexer.Comment)
+  })
+
+  commands = this.RULED('commands', () => {
+    this.OPTION1(() => this.CONSUME1(lexer.Command))
     this.AT_LEAST_ONE(() => this.SUBRULE(this.simple_cmd))
-    this.MANY(() => this.SUBRULE(this.nested_cmd))
   })
 
   simple_cmd = this.RULED('simple_cmd', () => {
     this.OR([
+      // flat commands
+      { ALT: () => this.SUBRULE(this.words) },
       { ALT: () => this.SUBRULE(this.hyperlink) },
       { ALT: () => this.SUBRULE(this.Command_go) },
       { ALT: () => this.SUBRULE(this.Command_try) },
-      { ALT: () => this.SUBRULE(this.Command_command) },
-      { ALT: () => this.SUBRULE(this.Command_stat) },
-      { ALT: () => this.SUBRULE(this.struct_cmd) },
+      { ALT: () => this.SUBRULE(this.Command_play) },
+      // structured commands
+      { ALT: () => this.SUBRULE(this.Command_if) },
+      { ALT: () => this.SUBRULE(this.Command_read) },
+      { ALT: () => this.SUBRULE(this.Command_while) },
+      { ALT: () => this.SUBRULE(this.Command_repeat) },
+      { ALT: () => this.SUBRULE(this.Command_break) },
+      { ALT: () => this.SUBRULE(this.Command_continue) },
     ])
   })
 
-  nested_cmd = this.RULED('nested_cmd', () => {
-    this.OR([
-      { ALT: () => this.SUBRULE(this.hyperlink) },
-      { ALT: () => this.SUBRULE(this.Command_go) },
-      { ALT: () => this.SUBRULE(this.Command_try) },
-      { ALT: () => this.SUBRULE(this.nested_if) },
-      {
-        ALT: () => {
-          this.OPTION1(() => this.CONSUME1(lexer.Command))
-          this.SUBRULE1(this.Command_play)
-        },
-      },
-      {
-        ALT: () => {
-          this.OPTION2(() => this.CONSUME2(lexer.Command))
-          this.SUBRULE2(this.words)
-        },
-      },
-    ])
-  })
-
-  nested_if = this.RULED('nested_if', () => {
-    this.CONSUME(lexer.Command_if)
-    this.SUBRULE(this.Command_words)
-    this.OPTION1(() => this.SUBRULE(this.nested_cmd))
+  hyperlink = this.RULED('hyperlink', () => {
+    this.CONSUME(lexer.HyperLink)
+    this.SUBRULE(this.words)
+    this.CONSUME(lexer.HyperLinkText)
   })
 
   Command_go = this.RULED('Command_go', () => {
@@ -144,80 +161,62 @@ class ScriptParser extends CstParser {
     this.SUBRULE(this.words)
   })
 
-  Command_command = this.RULED('Command_command', () => {
-    this.CONSUME(lexer.Command)
-    this.SUBRULE(this.words)
-  })
-
-  Command_stat = this.RULED('Command_stat', () => {
-    this.CONSUME(lexer.Stat)
-    this.SUBRULE(this.words)
-  })
-
-  struct_cmd = this.RULED('struct_cmd', () => {
-    this.CONSUME(lexer.Command)
-    this.OR([
-      { ALT: () => this.SUBRULE(this.Command_if) },
-      { ALT: () => this.SUBRULE(this.Command_while) },
-      { ALT: () => this.SUBRULE(this.Command_repeat) },
-      { ALT: () => this.SUBRULE(this.Command_read) },
-      { ALT: () => this.SUBRULE(this.Command_break) },
-      { ALT: () => this.SUBRULE(this.Command_continue) },
-    ])
-  })
-
   Command_play = this.RULED('Command_play', () => {
     this.CONSUME(lexer.Command_play)
   })
 
-  Command_words = this.RULED('Command_words', () => {
-    this.OPTION1(() => this.SUBRULE(this.words))
-    this.OPTION2(() => this.SUBRULE(this.nested_cmd))
-  })
-
-  Command_lines = this.RULED('Command_lines', () => {
-    this.CONSUME(lexer.Newline)
-    this.MANY({
-      GATE: () => {
-        // don't include #else, #endif, #endwhile, #endrepeat, #endread
-        if (
-          this.LA(1).tokenType === lexer.Command &&
-          (this.LA(2).tokenType === lexer.Command_else ||
-            this.LA(2).tokenType === lexer.Command_endif ||
-            this.LA(2).tokenType === lexer.Command_endwhile ||
-            this.LA(2).tokenType === lexer.Command_endrepeat ||
-            this.LA(2).tokenType === lexer.Command_endread)
-        ) {
-          return false
-        }
-        return true
-      },
-      DEF: () => this.SUBRULE(this.line),
-    })
+  do_lines = this.RULED('do_lines', () => {
+    // this.CONSUME(lexer.Newline)
+    // this.MANY({
+    //   GATE: () => {
+    //     // don't include #else, #endif, #endwhile, #endrepeat, #endread
+    //     if (
+    //       this.LA(1).tokenType === lexer.Command &&
+    //       (this.LA(2).tokenType === lexer.Command_else ||
+    //         this.LA(2).tokenType === lexer.Command_endif ||
+    //         this.LA(2).tokenType === lexer.Command_endwhile ||
+    //         this.LA(2).tokenType === lexer.Command_endrepeat ||
+    //         this.LA(2).tokenType === lexer.Command_endread)
+    //     ) {
+    //       return false
+    //     }
+    //     return true
+    //   },
+    //   DEF: () => this.SUBRULE(this.line),
+    // })
   })
 
   Command_if = this.RULED('Command_if', () => {
     this.CONSUME(lexer.Command_if)
-    this.SUBRULE(this.Command_words)
-    this.OPTION1(() => {
-      this.SUBRULE(this.Command_lines)
 
-      // else if's
-      this.MANY1(() => {
-        this.CONSUME1(lexer.Command)
-        this.SUBRULE1(this.Command_else_if)
-      })
+    // this.SUBRULE(this.Command_words)
+    // // we need to figure out here if we have a matching endif
+    // // __then__ do it
+    // this.OPTION({
+    //   GATE: () => {
+    //     //
+    //     return true
+    //   },
+    //   DEF: () => {
+    //     this.SUBRULE(this.Command_lines)
 
-      // else
-      this.OPTION2(() => {
-        this.CONSUME2(lexer.Command)
-        this.SUBRULE2(this.Command_else)
-      })
+    //     // else if's
+    //     this.MANY1(() => {
+    //       this.CONSUME1(lexer.Command)
+    //       this.SUBRULE1(this.Command_else_if)
+    //     })
 
-      // end
-      this.CONSUME(lexer.Command)
-      this.CONSUME(lexer.Command_endif)
-    })
+    //     // else
+    //     this.OPTION2(() => {
+    //       this.CONSUME2(lexer.Command)
+    //       this.SUBRULE2(this.Command_else)
+    //     })
+
+    //     // end
+    //     this.CONSUME(lexer.Command)
+    //     this.CONSUME(lexer.Command_endif)
+    //   },
+    // })
   })
 
   Command_else_if = this.RULED('Command_else_if', () => {
@@ -263,24 +262,6 @@ class ScriptParser extends CstParser {
 
   Command_continue = this.RULED('Command_continue', () => {
     this.CONSUME(lexer.Command_continue)
-  })
-
-  text = this.RULED('text', () => {
-    this.CONSUME(lexer.Text)
-  })
-
-  comment = this.RULED('comment', () => {
-    this.CONSUME(lexer.Comment)
-  })
-
-  label = this.RULED('label', () => {
-    this.CONSUME(lexer.Label)
-  })
-
-  hyperlink = this.RULED('hyperlink', () => {
-    this.CONSUME(lexer.HyperLink)
-    this.SUBRULE(this.words)
-    this.CONSUME(lexer.HyperLinkText)
   })
 
   // expressions
