@@ -34,7 +34,7 @@ export const WhitespaceAndNewline = createToken({
 
 export const Stat = createToken({
   name: 'Stat',
-  pattern: /@/,
+  pattern: /@.*/,
   start_chars_hint: ['@'],
 })
 

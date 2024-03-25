@@ -84,7 +84,6 @@ class ScriptParser extends CstParser {
 
   stmt = this.RULED('stmt', () => {
     this.OR([
-      // mainlines
       { ALT: () => this.SUBRULE(this.stat) },
       { ALT: () => this.SUBRULE(this.text) },
       { ALT: () => this.SUBRULE(this.label) },
@@ -94,13 +93,7 @@ class ScriptParser extends CstParser {
   })
 
   stat = this.RULED('stat', () => {
-    // should we make this a full line capture here ?
-    // default stat is just name text
-    // codepages will be scoped :
-    // @terrain : here is the string (input)
-    // @stat : hyper link formatted content here ..
     this.CONSUME(lexer.Stat)
-    this.SUBRULE(this.words)
   })
 
   text = this.RULED('text', () => {
@@ -172,7 +165,6 @@ class ScriptParser extends CstParser {
   do_lines = this.RULED('do_lines', () => {
     this.CONSUME(lexer.Command_do)
     this.MANY(() => this.SUBRULE(this.do_line))
-    // may still need the gate logic here ....
   })
 
   do_line = this.RULED('do_line', () => {
@@ -182,7 +174,6 @@ class ScriptParser extends CstParser {
 
   do_stmt = this.RULED('do_stmt', () => {
     this.OR([
-      // mainlines
       { ALT: () => this.SUBRULE(this.text) },
       { ALT: () => this.SUBRULE(this.comment) },
       { ALT: () => this.SUBRULE(this.commands) },
@@ -194,7 +185,12 @@ class ScriptParser extends CstParser {
     this.SUBRULE(this.words)
     this.OPTION1(() => {
       this.OR([
-        { ALT: () => this.SUBRULE(this.command) },
+        {
+          ALT: () => {
+            // inline if
+            this.SUBRULE(this.command)
+          },
+        },
         {
           ALT: () => {
             // if block
@@ -239,6 +235,7 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.Command_while)
     this.SUBRULE(this.words)
     this.OR([
+      // inline while
       { ALT: () => this.SUBRULE(this.command) },
       {
         ALT: () => {
@@ -256,10 +253,11 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.Command_repeat)
     this.SUBRULE(this.words)
     this.OR([
+      // inline repeat
       { ALT: () => this.SUBRULE(this.command) },
       {
         ALT: () => {
-          // while block
+          // repeat block
           this.SUBRULE1(this.do_lines)
           this.CONSUME4(lexer.Command)
           this.CONSUME4(lexer.Command_endrepeat)
@@ -273,10 +271,11 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.Command_read)
     this.SUBRULE(this.words)
     this.OR([
+      // inline read
       { ALT: () => this.SUBRULE(this.command) },
       {
         ALT: () => {
-          // while block
+          // read block
           this.SUBRULE1(this.do_lines)
           this.CONSUME4(lexer.Command)
           this.CONSUME4(lexer.Command_endread)
