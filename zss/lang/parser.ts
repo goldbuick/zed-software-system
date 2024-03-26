@@ -131,7 +131,7 @@ class ScriptParser extends CstParser {
     ])
   })
 
-  structured_cmd = this.RULED('struct_cmd', () => {
+  structured_cmd = this.RULED('structured_cmd', () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.Command_if) },
       { ALT: () => this.SUBRULE(this.Command_read) },
