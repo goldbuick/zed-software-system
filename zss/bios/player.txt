@@ -1,4 +1,5 @@
 @player
+@stat 
 
 ' setup ui
 #gadget right 20

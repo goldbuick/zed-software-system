@@ -65,6 +65,7 @@ function tokenstostrings(tokens: IToken[]) {
 
 function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
   const [stat, target, ...args] = tokens
+  console.info({ stat, target, args })
   if (isdefined(codepage.stats) && isdefined(stat)) {
     const lstat = stat.image.toLowerCase()
     switch (lstat) {
@@ -112,6 +113,7 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
         break
     }
   }
+  console.info(codepage.stats)
 }
 
 export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
@@ -127,20 +129,13 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
   const parse = tokenize(codepage.code)
 
   // extract @stat lines
-  let statbegin = -1
-  let statend = -1
   for (let i = 0; i < parse.tokens.length; ++i) {
     const token = parse.tokens[i]
     if (token.tokenType === Stat) {
-      statbegin = i + 1
-    }
-    if (token.tokenType === Newline) {
-      statend = i
-    }
-    if (statbegin !== -1 && statend !== -1) {
-      tokenstostats(codepage, parse.tokens.slice(statbegin, statend))
-      statbegin = -1
-      statend = -1
+      const stat = tokenize(token.image.slice(1))
+      if (stat.tokens) {
+        tokenstostats(codepage, stat.tokens)
+      }
     }
   }
 
