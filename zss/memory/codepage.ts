@@ -67,37 +67,7 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
   const [stat, target, ...args] = tokens
   console.info({ stat, target, args })
   if (isdefined(codepage.stats) && isdefined(stat)) {
-    const lstat = stat.image.toLowerCase()
-    switch (lstat) {
-      // code page types
-      default:
-        codepage.stats.name = tokenstostrings(tokens).join(' ')
-        break
-      case 'func':
-        codepage.stats.type = CODE_PAGE_TYPE.FUNC
-        codepage.stats.name = target.image
-        break
-      case 'board':
-        codepage.stats.type = CODE_PAGE_TYPE.BOARD
-        codepage.stats.name = target.image
-        break
-      case 'object':
-        codepage.stats.type = CODE_PAGE_TYPE.OBJECT
-        codepage.stats.name = target.image
-        break
-      case 'terrain':
-        codepage.stats.type = CODE_PAGE_TYPE.TERRAIN
-        codepage.stats.name = target.image
-        break
-      case 'charset':
-        codepage.stats.type = CODE_PAGE_TYPE.CHARSET
-        codepage.stats.name = target.image
-        break
-      case 'palette':
-        codepage.stats.type = CODE_PAGE_TYPE.PALETTE
-        codepage.stats.name = target.image
-        break
-      // user inputs
+    switch (stat.image.toLowerCase()) {
       case 'rn':
       case 'range':
       case 'sl':
@@ -110,6 +80,9 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
           const ltarget = target.image.toLowerCase()
           codepage.stats[ltarget] = tokenstostrings(args ?? [])
         }
+        break
+      default:
+        // default is range ??
         break
     }
   }
@@ -132,9 +105,46 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
   for (let i = 0; i < parse.tokens.length; ++i) {
     const token = parse.tokens[i]
     if (token.tokenType === Stat) {
-      const stat = tokenize(token.image.slice(1))
-      if (stat.tokens) {
-        tokenstostats(codepage, stat.tokens)
+      const [maybename, ...maybevalues] = token.image.slice(1).split(' ')
+      const content = maybevalues.join(' ')
+      switch (maybename.toLowerCase()) {
+        case 'stat': {
+          // stat content is prefixed with hyperlink !
+          const stat = tokenize(`!${content}`)
+          console.info('ttttt', stat)
+          if (stat.tokens.length) {
+            tokenstostats(codepage, stat.tokens)
+          }
+          break
+        }
+        case 'func':
+          codepage.stats.type = CODE_PAGE_TYPE.FUNC
+          codepage.stats.name = content
+          break
+        case 'board':
+          codepage.stats.type = CODE_PAGE_TYPE.BOARD
+          codepage.stats.name = content
+          break
+        case 'object':
+          codepage.stats.type = CODE_PAGE_TYPE.OBJECT
+          codepage.stats.name = content
+          break
+        case 'terrain':
+          codepage.stats.type = CODE_PAGE_TYPE.TERRAIN
+          codepage.stats.name = content
+          break
+        case 'charset':
+          codepage.stats.type = CODE_PAGE_TYPE.CHARSET
+          codepage.stats.name = content
+          break
+        case 'palette':
+          codepage.stats.type = CODE_PAGE_TYPE.PALETTE
+          codepage.stats.name = content
+          break
+        default:
+          codepage.stats.type = CODE_PAGE_TYPE.OBJECT
+          codepage.stats.name = [maybename, ...maybevalues].join(' ')
+          break
       }
     }
   }
@@ -143,6 +153,8 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
   if (!isdefined(codepage.stats.type)) {
     codepage.stats.type = CODE_PAGE_TYPE.OBJECT
   }
+
+  console.info('xxxxx', codepage)
 
   return codepage.stats
 }

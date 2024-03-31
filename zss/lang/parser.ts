@@ -164,6 +164,7 @@ class ScriptParser extends CstParser {
 
   do_lines = this.RULED('do_lines', () => {
     this.CONSUME(lexer.Command_do)
+    this.AT_LEAST_ONE(() => this.CONSUME(lexer.Newline))
     this.MANY(() => this.SUBRULE(this.do_line))
   })
 

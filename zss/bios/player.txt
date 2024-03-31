@@ -1,5 +1,7 @@
 @player
-@stat 
+@stat select charclass Wizard Fug Stricker;Which character
+@stat angry;How angry
+@stat speed;How fast
 
 ' setup ui
 #gadget right 20
@@ -33,21 +35,21 @@
 #give doot 1 [alt]
 
 #if blinkrate < 6 do
-#char 219
-#else if blinkrate < 7
-#char 32
-#else
-#set blinkrate 0
+  #char 219
+#else if blinkrate < 7 do
+  #char 32
+#else do
+  #set blinkrate 0
 #endif
 
 #if inputmove do
-#if inputalt do
-?10 inputmove
-#else
-?inputmove
-#endif
-#else
-#idle
+  #if inputalt do
+    ?10 inputmove
+  #else do 
+    ?inputmove
+  #endif
+#else do
+  #idle
 #endif
 
 #think

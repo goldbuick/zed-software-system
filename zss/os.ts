@@ -2,7 +2,7 @@ import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { loadfirmware } from './firmware/loader'
 import { GeneratorBuild, compile } from './lang/generator'
-import { isdefined } from './mapping/types'
+import { isdefined, ispresent } from './mapping/types'
 
 export type OS = {
   ids: () => string[]
@@ -14,7 +14,7 @@ export type OS = {
 
 export function createos() {
   const builds: Record<string, GeneratorBuild> = {}
-  const chips: Record<string, CHIP> = {}
+  const chips: Record<string, CHIP | null> = {}
 
   function build(code: string) {
     const cache = builds[code]
@@ -22,7 +22,6 @@ export function createos() {
       return cache
     }
 
-    debugger
     const result = compile(code)
     builds[code] = result
 
@@ -50,8 +49,8 @@ export function createos() {
         const result = build(code)
         if (result.errors?.length) {
           console.error(result.errors)
-          debugger
           console.info(result.tokens)
+          chips[id] = null
           return false
         }
 
@@ -62,12 +61,12 @@ export function createos() {
         loadfirmware(chip)
       }
 
-      return chip.tick()
+      return !!chip?.tick()
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)
-      const targetchip: CHIP | undefined = chips[target]
-      if (isdefined(targetchip)) {
+      const targetchip: CHIP | null | undefined = chips[target]
+      if (ispresent(targetchip)) {
         targetchip.message({ ...incoming, target: path })
       }
     },

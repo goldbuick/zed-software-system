@@ -34,8 +34,6 @@ export function compile(text: string): GeneratorBuild {
     }
   }
 
-  debugger
-
   const transformResult = transformAst(astResult.ast)
   if (transformResult.code) {
     if (SHOW_CODE) {
