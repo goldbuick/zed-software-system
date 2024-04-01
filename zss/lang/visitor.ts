@@ -138,22 +138,22 @@ type CodeNodeData =
       type: NODE.IF
       method: string
       words: CodeNode[]
-      nested_cmd: CodeNode[]
-      block_lines?: CodeNode[]
-      else_if: CodeNode[]
-      else: CodeNode[]
+      do_lines: CodeNode[]
+      else_if?: CodeNode[]
+      else?: CodeNode[]
     }
   | {
       type: NODE.ELSE_IF
       method: string
       words: CodeNode[]
-      nested_cmd: CodeNode[]
-      block_lines?: CodeNode[]
+      do_lines: CodeNode[]
+      else_if?: CodeNode[]
+      else?: CodeNode[]
     }
   | {
       type: NODE.ELSE
       words: CodeNode[]
-      block_lines?: CodeNode[]
+      do_lines: CodeNode[]
     }
   | {
       type: NODE.API
@@ -287,16 +287,14 @@ class ScriptVisitor extends CstVisitor {
   }
 
   program(ctx: CstChildrenDictionary) {
-    console.info(ctx)
     return makeNode(ctx, {
       type: NODE.PROGRAM,
       // @ts-expect-error cst element
-      lines: asList(this, ctx.basic_line),
+      lines: asList(this, ctx.line),
     })
   }
 
   line(ctx: CstChildrenDictionary) {
-    console.info(ctx)
     if (ctx.stmt) {
       // @ts-expect-error cst element
       return this.visit(ctx.stmt)
@@ -304,35 +302,29 @@ class ScriptVisitor extends CstVisitor {
   }
 
   stmt(ctx: CstChildrenDictionary) {
-    console.info(ctx)
-    if (ctx.play) {
-      return makeNode(ctx, {
-        type: NODE.COMMAND,
-        words: [
-          makeString(ctx, 'play'),
-          makeString(ctx, strImage(ctx.play[0]).replace('#play', '').trim()),
-        ],
-      })
+    // if (ctx.hyperlink) {
+    //   // @ts-expect-error cst element
+    //   return this.visit(ctx.hyperlink)
+    // }
+    if (ctx.stat) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.stat)
     }
     if (ctx.text) {
       // @ts-expect-error cst element
       return this.visit(ctx.text)
     }
-    if (ctx.multi_stmt) {
+    if (ctx.label) {
       // @ts-expect-error cst element
-      return this.visit(ctx.multi_stmt)
+      return this.visit(ctx.label)
     }
     if (ctx.comment) {
       // @ts-expect-error cst element
       return this.visit(ctx.comment)
     }
-    if (ctx.label) {
+    if (ctx.commands) {
       // @ts-expect-error cst element
-      return this.visit(ctx.label)
-    }
-    if (ctx.hyperlink) {
-      // @ts-expect-error cst element
-      return this.visit(ctx.hyperlink)
+      return this.visit(ctx.commands)
     }
   }
 
@@ -341,11 +333,10 @@ class ScriptVisitor extends CstVisitor {
   }
 
   text(ctx: CstChildrenDictionary) {
-    console.info(ctx)
     if (ctx.Text) {
       return makeNode(ctx, {
         type: NODE.TEXT,
-        value: strImage(ctx.BasicText[0]),
+        value: strImage(ctx.Text[0]),
       })
     }
   }
@@ -369,19 +360,69 @@ class ScriptVisitor extends CstVisitor {
   }
 
   commands(ctx: CstChildrenDictionary) {
-    console.info(ctx)
+    // @ts-expect-error cst element
+    return this.visit(ctx.command)
   }
 
   command(ctx: CstChildrenDictionary) {
-    console.info(ctx)
+    if (ctx.flat_cmd) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.flat_cmd)
+    }
+    if (ctx.structured_cmd) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.structured_cmd)
+    }
   }
 
   flat_cmd(ctx: CstChildrenDictionary) {
-    console.info(ctx)
+    if (ctx.words) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.words)
+    }
+    if (ctx.hyperlink) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.hyperlink)
+    }
+    if (ctx.Command_go) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.Command_go)
+    }
+    if (ctx.Command_try) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.Command_try)
+    }
+    if (ctx.Command_play) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.Command_play)
+    }
   }
 
   structured_cmd(ctx: CstChildrenDictionary) {
-    console.info(ctx)
+    if (ctx.Command_if) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.Command_if)
+    }
+    if (ctx.Command_read) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.Command_read)
+    }
+    if (ctx.Command_while) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.Command_while)
+    }
+    if (ctx.Command_repeat) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.Command_repeat)
+    }
+    if (ctx.Command_break) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.Command_break)
+    }
+    if (ctx.Command_continue) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.Command_continue)
+    }
   }
 
   hyperlink(ctx: CstChildrenDictionary) {
@@ -394,59 +435,167 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_go(ctx: CstChildrenDictionary) {
-    console.info(ctx)
+    if (ctx.Go) {
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        words: [
+          makeString(ctx, 'go'),
+          // @ts-expect-error cst element
+          ...asList(this, ctx.words).flat(),
+        ],
+      })
+    }
   }
 
   Command_try(ctx: CstChildrenDictionary) {
-    console.info(ctx)
+    if (ctx.Try) {
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        words: [
+          makeString(ctx, 'try'),
+          // @ts-expect-error cst element
+          ...asList(this, ctx.words).flat(),
+        ],
+      })
+    }
   }
 
   Command_play(ctx: CstChildrenDictionary) {
-    console.info(ctx)
-  }
-
-  do_lines(ctx: CstChildrenDictionary) {
-    console.info(ctx)
+    if (ctx.Command_play) {
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        words: [
+          makeString(ctx, 'play'),
+          makeString(
+            ctx,
+            strImage(ctx.Command_play[0]).replace('#play', '').trim(),
+          ),
+        ],
+      })
+    }
   }
 
   do_line(ctx: CstChildrenDictionary) {
-    console.info(ctx)
+    // @ts-expect-error cst element
+    return this.visit(ctx.do_stmt)
   }
 
   do_stmt(ctx: CstChildrenDictionary) {
-    console.info(ctx)
+    if (ctx.text) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.text)
+    }
+    if (ctx.comment) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.comment)
+    }
+    if (ctx.commands) {
+      // @ts-expect-error cst element
+      return this.visit(ctx.commands)
+    }
   }
 
   Command_if(ctx: CstChildrenDictionary) {
-    const method = strImage(ctx.if[0]).toLowerCase()
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words).flat()
 
     // @ts-expect-error cst element
-    const words = asList(this, ctx.expr).flat()
+    const command = this.visit(ctx.command)
 
     // @ts-expect-error cst element
-    const nested_cmd = asList(this, ctx.nested_cmd)
+    const do_line = this.visit(ctx.do_line)
 
     // @ts-expect-error cst element
-    const block_lines = this.visit(ctx.block_lines)
+    const Command_else_if = this.visit(ctx.Command_else_if)
 
     // @ts-expect-error cst element
-    const else_if = asList(this, ctx.Command_else_if)
+    const Command_else = this.visit(ctx.Command_else)
 
     // @ts-expect-error cst element
-    const else_case = asList(this, ctx.Command_else)
+    const Command_endif = this.visit(ctx.Command_endif)
 
-    return makeNode(ctx, {
-      type: NODE.IF,
-      method,
+    console.info('ififififif', {
       words,
-      nested_cmd,
-      block_lines,
-      else_if,
-      else: else_case,
+      command,
+      do_line,
+      Command_else_if,
+      Command_else,
+      Command_endif,
     })
+    /*
+
+this.SUBRULE(this.words)
+    this.OR1([
+      { ALT: () => this.SUBRULE(this.command) },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.Command_do)
+          this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
+          this.OR2([
+            {
+              GATE: this.BACKTRACK(this.Command_else_if),
+              ALT: () => this.SUBRULE(this.Command_else_if),
+            },
+            {
+              GATE: this.BACKTRACK(this.Command_else),
+              ALT: () => this.SUBRULE(this.Command_else),
+            },
+            {
+              GATE: this.BACKTRACK(this.Command_endif),
+    */
+
+    // // @ts-expect-error cst element
+    // const nested_cmd = asList(this, ctx.nested_cmd)
+
+    // // @ts-expect-error cst element
+    // const block_lines = this.visit(ctx.block_lines)
+
+    // // @ts-expect-error cst element
+    // const else_if = asList(this, ctx.Command_else_if)
+
+    // // @ts-expect-error cst element
+    // const else_case = asList(this, ctx.Command_else)
+
+    // return makeNode(ctx, {
+    //   type: NODE.IF,
+    //   method: 'if',
+    //   words,
+    //   nested_cmd,
+    //   block_lines,
+    //   else_if,
+    //   else: else_case,
+    // })
   }
 
   Command_else_if(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words).flat()
+
+    // @ts-expect-error cst element
+    const command = this.visit(ctx.command)
+
+    // @ts-expect-error cst element
+    const do_line = this.visit(ctx.do_line)
+
+    // @ts-expect-error cst element
+    const Command_else_if = this.visit(ctx.Command_else_if)
+
+    // @ts-expect-error cst element
+    const Command_else = this.visit(ctx.Command_else)
+
+    // @ts-expect-error cst element
+    const Command_endif = this.visit(ctx.Command_endif)
+
+    console.info('elseifelseif', {
+      words,
+      command,
+      do_line,
+      Command_else_if,
+      Command_else,
+      Command_endif,
+    })
+
+    return
     // bail on empty
     if (!ctx.if) {
       return
@@ -482,6 +631,8 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_else(ctx: CstChildrenDictionary) {
+    console.info(ctx)
+    return
     // @ts-expect-error cst element
     const words = asList(this, ctx.words).flat()
 
@@ -500,7 +651,15 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  Command_endif(ctx: CstChildrenDictionary) {
+    // no-op
+  }
+
   Command_while(ctx: CstChildrenDictionary) {
+    console.info(ctx)
+    return
+
     // @ts-expect-error cst element
     const expr = asList(this, ctx.expr).flat()
 
@@ -519,6 +678,8 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_repeat(ctx: CstChildrenDictionary) {
+    console.info(ctx)
+    return
     // @ts-expect-error cst element
     const expr = asList(this, ctx.expr).flat()
 
