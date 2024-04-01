@@ -1,7 +1,4 @@
 @player
-@stat select charclass Wizard Fug Stricker;Which character
-@stat angry;How angry
-@stat speed;How fast
 
 ' setup ui
 #gadget right 20

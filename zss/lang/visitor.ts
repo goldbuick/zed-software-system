@@ -7,6 +7,8 @@ import {
 } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 
+import { ispresent } from '../mapping/types'
+
 import { parser } from './parser'
 
 const CstVisitor = parser.getBaseCstVisitorConstructor()
@@ -24,9 +26,7 @@ export enum NODE {
   IF,
   ELSE_IF,
   ELSE,
-  // FOR,
   // FUNC,
-  API,
   WHILE,
   BREAK,
   CONTINUE,
@@ -138,7 +138,7 @@ type CodeNodeData =
       type: NODE.IF
       method: string
       words: CodeNode[]
-      do_lines: CodeNode[]
+      lines: CodeNode[]
       else_if?: CodeNode[]
       else?: CodeNode[]
     }
@@ -146,39 +146,30 @@ type CodeNodeData =
       type: NODE.ELSE_IF
       method: string
       words: CodeNode[]
-      do_lines: CodeNode[]
-      else_if?: CodeNode[]
-      else?: CodeNode[]
+      lines: CodeNode[]
     }
   | {
       type: NODE.ELSE
-      words: CodeNode[]
-      do_lines: CodeNode[]
-    }
-  | {
-      type: NODE.API
       method: string
       words: CodeNode[]
+      lines: CodeNode[]
     }
   | {
       type: NODE.WHILE
       words: CodeNode[]
-      nested_cmd: CodeNode[]
-      block_lines?: CodeNode[]
+      lines: CodeNode[]
     }
   | { type: NODE.BREAK }
   | { type: NODE.CONTINUE }
   | {
       type: NODE.REPEAT
       words: CodeNode[]
-      nested_cmd: CodeNode[]
-      block_lines?: CodeNode[]
+      lines: CodeNode[]
     }
   | {
       type: NODE.READ
       words: CodeNode[]
-      nested_cmd: CodeNode[]
-      block_lines?: CodeNode[]
+      lines: CodeNode[]
     }
   | {
       type: NODE.OR
@@ -497,157 +488,57 @@ class ScriptVisitor extends CstVisitor {
 
   Command_if(ctx: CstChildrenDictionary) {
     // @ts-expect-error cst element
-    const words = asList(this, ctx.words).flat()
-
-    // @ts-expect-error cst element
     const command = this.visit(ctx.command)
 
     // @ts-expect-error cst element
-    const do_line = this.visit(ctx.do_line)
+    const lines = [command, ...asList(this, ctx.do_line)]
+      .flat()
+      .filter(ispresent)
 
     // @ts-expect-error cst element
-    const Command_else_if = this.visit(ctx.Command_else_if)
+    const else_if = asList(this, ctx.Command_else_if).flat()
 
-    // @ts-expect-error cst element
-    const Command_else = this.visit(ctx.Command_else)
-
-    // @ts-expect-error cst element
-    const Command_endif = this.visit(ctx.Command_endif)
-
-    console.info('ififififif', {
-      words,
-      command,
-      do_line,
-      Command_else_if,
-      Command_else,
-      Command_endif,
+    return makeNode(ctx, {
+      type: NODE.IF,
+      method: 'if',
+      // @ts-expect-error cst element
+      words: asList(this, ctx.words).flat(),
+      lines,
+      else_if,
+      // @ts-expect-error cst element
+      else: this.visit(ctx.Command_else),
     })
-    /*
-
-this.SUBRULE(this.words)
-    this.OR1([
-      { ALT: () => this.SUBRULE(this.command) },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.Command_do)
-          this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
-          this.OR2([
-            {
-              GATE: this.BACKTRACK(this.Command_else_if),
-              ALT: () => this.SUBRULE(this.Command_else_if),
-            },
-            {
-              GATE: this.BACKTRACK(this.Command_else),
-              ALT: () => this.SUBRULE(this.Command_else),
-            },
-            {
-              GATE: this.BACKTRACK(this.Command_endif),
-    */
-
-    // // @ts-expect-error cst element
-    // const nested_cmd = asList(this, ctx.nested_cmd)
-
-    // // @ts-expect-error cst element
-    // const block_lines = this.visit(ctx.block_lines)
-
-    // // @ts-expect-error cst element
-    // const else_if = asList(this, ctx.Command_else_if)
-
-    // // @ts-expect-error cst element
-    // const else_case = asList(this, ctx.Command_else)
-
-    // return makeNode(ctx, {
-    //   type: NODE.IF,
-    //   method: 'if',
-    //   words,
-    //   nested_cmd,
-    //   block_lines,
-    //   else_if,
-    //   else: else_case,
-    // })
   }
 
   Command_else_if(ctx: CstChildrenDictionary) {
     // @ts-expect-error cst element
-    const words = asList(this, ctx.words).flat()
-
-    // @ts-expect-error cst element
     const command = this.visit(ctx.command)
 
     // @ts-expect-error cst element
-    const do_line = this.visit(ctx.do_line)
-
-    // @ts-expect-error cst element
-    const Command_else_if = this.visit(ctx.Command_else_if)
-
-    // @ts-expect-error cst element
-    const Command_else = this.visit(ctx.Command_else)
-
-    // @ts-expect-error cst element
-    const Command_endif = this.visit(ctx.Command_endif)
-
-    console.info('elseifelseif', {
-      words,
-      command,
-      do_line,
-      Command_else_if,
-      Command_else,
-      Command_endif,
-    })
-
-    return
-    // bail on empty
-    if (!ctx.if) {
-      return
-    }
-
-    const method = strImage(ctx.if[0]).toLowerCase()
-
-    // @ts-expect-error cst element
-    const words = asList(this, ctx.expr).flat()
-
-    // @ts-expect-error cst element
-    const nested_cmd = asList(this, ctx.nested_cmd)
-
-    // @ts-expect-error cst element
-    const block_lines = this.visit(ctx.block_lines)
-
-    // bail on empty else if
-    if (
-      words.length === 0 &&
-      nested_cmd.length === 0 &&
-      block_lines === undefined
-    ) {
-      return
-    }
+    const lines = asList(this, ctx.do_line).flat()
 
     return makeNode(ctx, {
       type: NODE.ELSE_IF,
-      method,
-      words,
-      nested_cmd,
-      block_lines,
+      method: 'if',
+      // @ts-expect-error cst element
+      words: asList(this, ctx.words).flat(),
+      lines: [command, ...lines].flat().filter(ispresent),
     })
   }
 
   Command_else(ctx: CstChildrenDictionary) {
-    console.info(ctx)
-    return
     // @ts-expect-error cst element
-    const words = asList(this, ctx.words).flat()
+    const command = this.visit(ctx.command)
 
     // @ts-expect-error cst element
-    const block_lines = this.visit(ctx.block_lines)
-
-    // bail on empty else if
-    if (words.length === 0 && block_lines === undefined) {
-      return
-    }
+    const lines = asList(this, ctx.do_line).flat()
 
     return makeNode(ctx, {
       type: NODE.ELSE,
-      words,
-      block_lines,
+      method: 'if',
+      // @ts-expect-error cst element
+      words: asList(this, ctx.words).flat(),
+      lines: [command, ...lines].flat().filter(ispresent),
     })
   }
 
