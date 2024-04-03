@@ -44,18 +44,6 @@ export const Command = createToken({
   start_chars_hint: ['#'],
 })
 
-export const Go = createToken({
-  name: 'Go',
-  pattern: /\//,
-  start_chars_hint: ['/'],
-})
-
-export const Try = createToken({
-  name: 'Try',
-  pattern: /\?/,
-  start_chars_hint: ['?'],
-})
-
 let matchTextEnabled = false
 
 function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
@@ -205,8 +193,10 @@ export const Plus = createToken({ name: 'Plus', pattern: /\+/ })
 export const Minus = createToken({ name: 'Minus', pattern: /-/ })
 export const Power = createToken({ name: 'Power', pattern: /\*\*/ })
 export const Multiply = createToken({ name: 'Multiply', pattern: /\*/ })
+export const Divide = createToken({ name: 'FloorDivide', pattern: /\// })
 export const ModDivide = createToken({ name: 'ModDivide', pattern: /%/ })
 export const FloorDivide = createToken({ name: 'FloorDivide', pattern: /%%/ })
+export const Query = createToken({ name: 'Query', pattern: /\?/ })
 
 // grouping
 
@@ -265,8 +255,10 @@ function createTokenSet(primary: TokenType[]) {
     Minus,
     Power,
     Multiply,
+    Divide,
     FloorDivide,
     ModDivide,
+    Query,
     // grouping
     LParen,
     RParen,
@@ -284,8 +276,6 @@ export const allTokens = createTokenSet([
   Stat,
   Command_play,
   Command,
-  Go,
-  Try,
   // flow
   Comment,
   Label,

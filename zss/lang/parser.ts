@@ -125,8 +125,8 @@ class ScriptParser extends CstParser {
       // flat commands
       { ALT: () => this.SUBRULE(this.words) },
       { ALT: () => this.SUBRULE(this.hyperlink) },
-      { ALT: () => this.SUBRULE(this.Command_go) },
-      { ALT: () => this.SUBRULE(this.Command_try) },
+      { ALT: () => this.SUBRULE(this.Short_go) },
+      { ALT: () => this.SUBRULE(this.Short_try) },
       { ALT: () => this.SUBRULE(this.Command_play) },
     ])
   })
@@ -148,13 +148,13 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.HyperLinkText)
   })
 
-  Command_go = this.RULED('Command_go', () => {
-    this.CONSUME(lexer.Go)
+  Short_go = this.RULED('Short_go', () => {
+    this.CONSUME(lexer.Divide)
     this.SUBRULE(this.words)
   })
 
-  Command_try = this.RULED('Command_try', () => {
-    this.CONSUME(lexer.Try)
+  Short_try = this.RULED('Short_try', () => {
+    this.CONSUME(lexer.Query)
     this.SUBRULE(this.words)
   })
 
@@ -417,7 +417,7 @@ class ScriptParser extends CstParser {
   term_item = this.RULED('term_item', () => {
     this.OR([
       { ALT: () => this.CONSUME(lexer.Multiply) },
-      { ALT: () => this.CONSUME(lexer.Go) },
+      { ALT: () => this.CONSUME(lexer.Divide) },
       { ALT: () => this.CONSUME(lexer.ModDivide) },
       { ALT: () => this.CONSUME(lexer.FloorDivide) },
     ])

@@ -300,7 +300,7 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   // stub-only, this is a lang feature
-  // .command('if', (chip, words) => {
+  // .command('if'
   .command('lock', (chip) => {
     chip.lock(chip.id())
     return 0
@@ -314,7 +314,7 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   // this is handled by a built-in 0 label
-  // .command('restart', (chip, words) => {
+  // .command('restart'
   .command('restore', (chip, words) => {
     chip.restore(maptostring(words[0]))
     return 0
@@ -349,6 +349,37 @@ export const ZZT_FIRMWARE = createfirmware(
   })
   .command('take', (chip, words) => {
     console.info('take....', words)
+
+    //   const read = chipreadcontext(chip, words)
+    //   const [name, maybevalue, ii] = readargs(read, 0, [
+    //     ARG_TYPE.STRING,
+    //     ARG_TYPE.MAYBE_NUMBER,
+    //   ])
+
+    //   const current = chip.get(name)
+    //   // default to #TAKE <name> 1
+    //   const value = maybevalue ?? 1
+
+    //   // taking from an unset flag, or non-numerical value
+    //   if (!isnumber(current)) {
+    //     // todo: raise warning ?
+    //     return 1
+    //   }
+
+    //   const newvalue = current - value
+
+    //   // returns true when take fails
+    //   if (newvalue < 0) {
+    //     if (ii < words.length) {
+    //       chip.command(...words.slice(ii))
+    //     }
+    //     return 1
+    //   }
+
+    //   // update flag
+    //   chip.set(name, newvalue)
+    //   return 0
+
     return 0
   })
   .command('throwstar', (chip, words) => {
@@ -362,6 +393,18 @@ export const ZZT_FIRMWARE = createfirmware(
   })
   .command('try', (chip, words) => {
     console.info('try....', words)
+
+    //   const read = chipreadcontext(chip, words)
+    //   const [value, ii] = readargs(read, 0, [ARG_TYPE.ANY])
+
+    //   // we use go because it tries to move and returns 1 on failure
+    //   const result = invokecommand('go', [value as WORD]) ? 1 : 0
+    //   if (result && ii < words.length) {
+    //     chip.command(...words.slice(ii))
+    //   }
+
+    //   return result
+
     // try and move
     chip.command('go', ...words)
     chip.yield()

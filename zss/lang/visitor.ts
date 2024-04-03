@@ -424,8 +424,8 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
-  Command_go(ctx: CstChildrenDictionary) {
-    if (ctx.Go) {
+  Short_go(ctx: CstChildrenDictionary) {
+    if (ctx.Short_go) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
         words: [
@@ -437,8 +437,8 @@ class ScriptVisitor extends CstVisitor {
     }
   }
 
-  Command_try(ctx: CstChildrenDictionary) {
-    if (ctx.Try) {
+  Short_try(ctx: CstChildrenDictionary) {
+    if (ctx.Short_try) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
         words: [
