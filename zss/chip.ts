@@ -57,9 +57,9 @@ export type CHIP = {
   // logic api
   command: (...words: WORD[]) => WORD_VALUE
   if: (...words: WORD[]) => WORD_VALUE
-  try: (...words: WORD[]) => WORD_VALUE
-  take: (...words: WORD[]) => WORD_VALUE
-  give: (...words: WORD[]) => WORD_VALUE
+  // try: (...words: WORD[]) => WORD_VALUE
+  // take: (...words: WORD[]) => WORD_VALUE
+  // give: (...words: WORD[]) => WORD_VALUE
   repeatStart: (index: number, ...words: WORD[]) => void
   repeat: (index: number) => boolean
   readStart: (index: number, name: WORD) => void
@@ -365,76 +365,76 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       return result
     },
-    take(...words) {
-      const read = chipreadcontext(chip, words)
-      const [name, maybevalue, ii] = readargs(read, 0, [
-        ARG_TYPE.STRING,
-        ARG_TYPE.MAYBE_NUMBER,
-      ])
+    // take(...words) {
+    //   const read = chipreadcontext(chip, words)
+    //   const [name, maybevalue, ii] = readargs(read, 0, [
+    //     ARG_TYPE.STRING,
+    //     ARG_TYPE.MAYBE_NUMBER,
+    //   ])
 
-      const current = chip.get(name)
-      // default to #TAKE <name> 1
-      const value = maybevalue ?? 1
+    //   const current = chip.get(name)
+    //   // default to #TAKE <name> 1
+    //   const value = maybevalue ?? 1
 
-      // taking from an unset flag, or non-numerical value
-      if (!isnumber(current)) {
-        // todo: raise warning ?
-        return 1
-      }
+    //   // taking from an unset flag, or non-numerical value
+    //   if (!isnumber(current)) {
+    //     // todo: raise warning ?
+    //     return 1
+    //   }
 
-      const newvalue = current - value
+    //   const newvalue = current - value
 
-      // returns true when take fails
-      if (newvalue < 0) {
-        if (ii < words.length) {
-          chip.command(...words.slice(ii))
-        }
-        return 1
-      }
+    //   // returns true when take fails
+    //   if (newvalue < 0) {
+    //     if (ii < words.length) {
+    //       chip.command(...words.slice(ii))
+    //     }
+    //     return 1
+    //   }
 
-      // update flag
-      chip.set(name, newvalue)
-      return 0
-    },
-    give(...words) {
-      const read = chipreadcontext(chip, words)
-      const [name, maybevalue, ii] = readargs(read, 0, [
-        ARG_TYPE.STRING,
-        ARG_TYPE.MAYBE_NUMBER,
-      ])
+    //   // update flag
+    //   chip.set(name, newvalue)
+    //   return 0
+    // },
+    // give(...words) {
+    //   const read = chipreadcontext(chip, words)
+    //   const [name, maybevalue, ii] = readargs(read, 0, [
+    //     ARG_TYPE.STRING,
+    //     ARG_TYPE.MAYBE_NUMBER,
+    //   ])
 
-      const maybecurrent = chip.get(name)
-      const current = isnumber(maybecurrent) ? maybecurrent : 0
-      const value = maybevalue ?? 1
+    //   const maybecurrent = chip.get(name)
+    //   const current = isnumber(maybecurrent) ? maybecurrent : 0
+    //   const value = maybevalue ?? 1
 
-      // giving a non-numerical value
-      if (!isnumber(value)) {
-        // todo: raise warning ?
-        return 0
-      }
+    //   // giving a non-numerical value
+    //   if (!isnumber(value)) {
+    //     // todo: raise warning ?
+    //     return 0
+    //   }
 
-      // returns true when setting an unset flag
-      const result = maybecurrent === undefined ? 1 : 0
-      if (result && ii < words.length) {
-        chip.command(...words.slice(ii))
-      }
+    //   // returns true when setting an unset flag
+    //   const result = maybecurrent === undefined ? 1 : 0
+    //   if (result && ii < words.length) {
+    //     chip.command(...words.slice(ii))
+    //   }
 
-      // update flag
-      chip.set(name, current + value)
-      return result
-    },
-    try(...words) {
-      const read = chipreadcontext(chip, words)
-      const [value, ii] = readargs(read, 0, [ARG_TYPE.ANY])
+    //   // update flag
+    //   chip.set(name, current + value)
+    //   return result
+    // },
+    // try(...words) {
+    //   const read = chipreadcontext(chip, words)
+    //   const [value, ii] = readargs(read, 0, [ARG_TYPE.ANY])
 
-      // we use go because it tries to move and returns 1 on failure
-      const result = invokecommand('go', [value as WORD]) ? 1 : 0
-      if (result && ii < words.length) {
-        chip.command(...words.slice(ii))
-      }
+    //   // we use go because it tries to move and returns 1 on failure
+    //   const result = invokecommand('go', [value as WORD]) ? 1 : 0
+    //   if (result && ii < words.length) {
+    //     chip.command(...words.slice(ii))
+    //   }
 
-      return result
-    },
+    //   return result
+    // },
     repeatStart(index, ...words) {
       const read = chipreadcontext(chip, words)
       const [value, ii] = readargs(read, 0, [ARG_TYPE.NUMBER])

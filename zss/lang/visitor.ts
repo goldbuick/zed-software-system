@@ -673,14 +673,15 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error cst element
       return this.visit(ctx.arith_expr)
     }
+
     return makeNode(ctx, {
       type: NODE.COMPARE,
       // @ts-expect-error cst element
-      lhs: this.visit(ctx.arith_expr[0]),
+      lhs: [this.visit(ctx.arith_expr[0])],
       // @ts-expect-error cst element
       compare: this.visit(ctx.comp_op),
       // @ts-expect-error cst element
-      rhs: this.visit(ctx.arith_expr[1]),
+      rhs: [this.visit(ctx.arith_expr[1])],
     })
   }
 

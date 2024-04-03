@@ -26,10 +26,6 @@
 :think
 #give blinkrate
 
-#try n [alt]
-#take doot 1 [alt]
-#give doot 1 [alt]
-
 #if blinkrate < 6 do
   #char 219
 #else if blinkrate < 7 do

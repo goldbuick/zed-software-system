@@ -234,7 +234,34 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('give', (chip, words) => {
-    console.info(words) // stub-only, this is a lang feature
+    console.info('give....', words)
+
+    //   const read = chipreadcontext(chip, words)
+    //   const [name, maybevalue, ii] = readargs(read, 0, [
+    //     ARG_TYPE.STRING,
+    //     ARG_TYPE.MAYBE_NUMBER,
+    //   ])
+
+    //   const maybecurrent = chip.get(name)
+    //   const current = isnumber(maybecurrent) ? maybecurrent : 0
+    //   const value = maybevalue ?? 1
+
+    //   // giving a non-numerical value
+    //   if (!isnumber(value)) {
+    //     // todo: raise warning ?
+    //     return 0
+    //   }
+
+    //   // returns true when setting an unset flag
+    //   const result = maybecurrent === undefined ? 1 : 0
+    //   if (result && ii < words.length) {
+    //     chip.command(...words.slice(ii))
+    //   }
+
+    //   // update flag
+    //   chip.set(name, current + value)
+    //   return result
+
     return 0
   })
   .command('go', (chip, words) => {
@@ -320,8 +347,10 @@ export const ZZT_FIRMWARE = createfirmware(
     console.info({ dir, maybekind }) // todo
     return 0
   })
-  // stub-only, this is a lang feature
-  // .command('take', (chip, words) => {
+  .command('take', (chip, words) => {
+    console.info('take....', words)
+    return 0
+  })
   .command('throwstar', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [dir, maybekind] = readargs({ ...memory, chip, words }, 0, [
@@ -332,6 +361,7 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('try', (chip, words) => {
+    console.info('try....', words)
     // try and move
     chip.command('go', ...words)
     chip.yield()

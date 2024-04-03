@@ -98,6 +98,7 @@ function writeArray(ast: CodeNode, array: Array<string | SourceNode>) {
 
 function transformCompare(ast: CodeNode) {
   if (ast.type === NODE.COMPARE) {
+    console.info('WAT', ast)
     switch (ast.compare) {
       case COMPARE.IS_EQ:
         return writeApi(ast, 'isEq', [
@@ -319,17 +320,11 @@ function transformNode(ast: CodeNode): SourceNode {
         `) {\n${END_OF_LINE_CODE}\n`,
       ])
 
-      // if (ast.nested_cmd) {
-      //   ast.nested_cmd.forEach((item) => {
-      //     source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-      //   })
-      // }
-
-      // if (ast.block_lines) {
-      //   ast.block_lines.forEach((item) => {
-      //     source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-      //   })
-      // }
+      if (ast.lines) {
+        ast.lines.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
 
       source.add('}\n')
 
@@ -351,17 +346,11 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
       context.internal += 1
 
-      // if (ast.nested_cmd) {
-      //   ast.nested_cmd.forEach((item) => {
-      //     source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-      //   })
-      // }
-
-      // if (ast.block_lines) {
-      //   ast.block_lines.forEach((item) => {
-      //     source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-      //   })
-      // }
+      if (ast.lines) {
+        ast.lines.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
 
       source.add('}\n')
 
@@ -385,17 +374,11 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
       context.internal += 1
 
-      // if (ast.nested_cmd) {
-      //   ast.nested_cmd.forEach((item) => {
-      //     source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-      //   })
-      // }
-
-      // if (ast.block_lines) {
-      //   ast.block_lines.forEach((item) => {
-      //     source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-      //   })
-      // }
+      if (ast.lines) {
+        ast.lines.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
 
       source.add('}\n')
 
