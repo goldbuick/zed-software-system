@@ -24,7 +24,6 @@
 #set blinkrate 0
 
 :think
-' this is valid, but now ambiguous to parse :|
 #give blinkrate
 
 #try n [alt]

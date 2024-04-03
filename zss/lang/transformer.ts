@@ -255,56 +255,45 @@ function transformNode(ast: CodeNode): SourceNode {
     // core / structure
     case NODE.IF: {
       console.info('OOOO', ast)
+
       const source = write(ast, [
         `if (`,
         writeApi(ast, `${ast.method}`, transformNodes(ast.words)),
         `) {\n${END_OF_LINE_CODE}\n`,
       ])
 
-      // if (ast.nested_cmd) {
-      //   ast.nested_cmd.forEach((item) => {
-      //     source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-      //   })
-      // }
+      if (ast.lines) {
+        ast.lines.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
 
-      // if (ast.block_lines) {
-      //   ast.block_lines.forEach((item) => {
-      //     source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-      //   })
-      // }
-
-      // if (ast.else_if) {
-      //   ast.else_if.forEach((item) => {
-      //     source.add([transformNode(item), `\n`])
-      //   })
-      // }
-
-      // if (ast.else) {
-      //     source.add([transformNode(ast.else), `\n`])
-      // }
+      if (ast.branches) {
+        ast.branches.forEach((item) => {
+          source.add([transformNode(item), `\n`])
+        })
+      }
 
       source.add('}')
 
       return source
     }
     case NODE.ELSE_IF: {
-      console.info('OOOO', ast)
       const source = write(ast, [
         `} else if (`,
         writeApi(ast, ast.method, transformNodes(ast.words)),
         `) {\n${END_OF_LINE_CODE}\n`,
       ])
 
-      // if (ast.block_lines) {
-      //   ast.block_lines.forEach((item) => {
-      //     source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-      //   })
-      // }
+      if (ast.lines) {
+        ast.lines.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
 
       return source
     }
     case NODE.ELSE: {
-      console.info('OOOO', ast)
       const source = write(ast, `} else {\n`)
 
       if (ast.words.length) {
@@ -315,11 +304,11 @@ function transformNode(ast: CodeNode): SourceNode {
         ])
       }
 
-      // if (ast.block_lines) {
-      //   ast.block_lines.forEach((item) => {
-      //     source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-      //   })
-      // }
+      if (ast.lines) {
+        ast.lines.forEach((item) => {
+          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+        })
+      }
 
       return source
     }

@@ -351,7 +351,7 @@ class ScriptVisitor extends CstVisitor {
   }
 
   command(ctx: CstChildrenDictionary) {
-    console.info('command', ctx)
+    // console.info('command', ctx)
     if (ctx.flat_cmd) {
       // @ts-expect-error cst element
       return this.visit(ctx.flat_cmd)
@@ -364,8 +364,11 @@ class ScriptVisitor extends CstVisitor {
 
   flat_cmd(ctx: CstChildrenDictionary) {
     if (ctx.words) {
-      // @ts-expect-error cst element
-      return this.visit(ctx.words)
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        // @ts-expect-error cst element
+        words: asList(this, ctx.words).flat(),
+      })
     }
     if (ctx.hyperlink) {
       // @ts-expect-error cst element
@@ -468,7 +471,7 @@ class ScriptVisitor extends CstVisitor {
   }
 
   do_stmt(ctx: CstChildrenDictionary) {
-    console.info('do_stmt', ctx)
+    // console.info('do_stmt', ctx)
     if (ctx.text) {
       // @ts-expect-error cst element
       return this.visit(ctx.text)
@@ -484,74 +487,76 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_if(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words).flat()
+
     const lines = [
       // @ts-expect-error cst element
       this.visit(ctx.command),
       // @ts-expect-error cst element
       ...asList(this, ctx.do_line),
-    ]
+    ].flat()
 
     const branches = [
       // @ts-expect-error cst element
       this.visit(ctx.Command_else_if),
       // @ts-expect-error cst element
       this.visit(ctx.Command_else),
-    ]
-
-    console.info('Command_if', ctx, lines, branches)
+    ].flat()
 
     return makeNode(ctx, {
       type: NODE.IF,
       method: 'if',
-      // @ts-expect-error cst element
-      words: asList(this, ctx.words).flat(),
-      lines: lines.flat().filter(ispresent),
-      branches: branches.flat().filter(ispresent),
+      words: words.filter(ispresent),
+      lines: lines.filter(ispresent),
+      branches: branches.filter(ispresent),
     })
   }
 
   Command_else_if(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words).flat()
+
     const lines = [
       // @ts-expect-error cst element
       this.visit(ctx.command),
       // @ts-expect-error cst element
       ...asList(this, ctx.do_line),
-    ]
+    ].flat()
 
-    console.info('Command_else_if', ctx, lines)
+    // @ts-expect-error cst element
+    const branches = asList(this, ctx.Command_else_if).flat()
 
     return [
       makeNode(ctx, {
         type: NODE.ELSE_IF,
         method: 'if',
-        // @ts-expect-error cst element
-        words: asList(this, ctx.words).flat(),
-        lines: lines.flat().filter(ispresent),
+        words: words.filter(ispresent),
+        lines: lines.filter(ispresent),
       }),
       // un-nest else_if & else
-      // @ts-expect-error cst element
-      this.visit(ctx.Command_else_if),
+      ...branches.filter(ispresent),
       // @ts-expect-error cst element
       this.visit(ctx.Command_else),
     ]
   }
 
   Command_else(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words).flat()
+
     const lines = [
       // @ts-expect-error cst element
       this.visit(ctx.command),
       // @ts-expect-error cst element
       ...asList(this, ctx.do_line),
-    ]
-
-    console.info('Command_else', ctx, lines)
+    ].flat()
 
     return makeNode(ctx, {
       type: NODE.ELSE,
       method: 'if',
-      // @ts-expect-error cst element
-      words: asList(this, ctx.words).flat(),
-      lines: lines.flat().filter(ispresent),
+      words: words.filter(ispresent),
+      lines: lines.filter(ispresent),
     })
   }
 
@@ -560,50 +565,56 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_while(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words).flat()
+
     const lines = [
       // @ts-expect-error cst element
       this.visit(ctx.command),
       // @ts-expect-error cst element
       ...asList(this, ctx.do_line),
-    ]
+    ].flat()
 
     return makeNode(ctx, {
       type: NODE.WHILE,
-      // @ts-expect-error cst element
-      words: asList(this, ctx.words).flat(),
-      lines: lines.flat().filter(ispresent),
+      words: words.filter(ispresent),
+      lines: lines.filter(ispresent),
     })
   }
 
   Command_repeat(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words).flat()
+
     const lines = [
       // @ts-expect-error cst element
       this.visit(ctx.command),
       // @ts-expect-error cst element
       ...asList(this, ctx.do_line),
-    ]
+    ].flat()
 
     return makeNode(ctx, {
       type: NODE.REPEAT,
-      // @ts-expect-error cst element
-      words: asList(this, ctx.words).flat(),
-      lines: lines.flat().filter(ispresent),
+      words: words.filter(ispresent),
+      lines: lines.filter(ispresent),
     })
   }
 
   Command_read(ctx: CstChildrenDictionary) {
+    // @ts-expect-error cst element
+    const words = asList(this, ctx.words).flat()
+
     const lines = [
       // @ts-expect-error cst element
       this.visit(ctx.command),
       // @ts-expect-error cst element
       ...asList(this, ctx.do_line),
-    ]
+    ].flat()
 
     return makeNode(ctx, {
       type: NODE.READ,
-      // @ts-expect-error cst element
-      words: asList(this, ctx.words).flat(),
-      lines: lines.flat().filter(ispresent),
+      words: words.filter(ispresent),
+      lines: lines.filter(ispresent),
     })
   }
 
@@ -823,12 +834,12 @@ class ScriptVisitor extends CstVisitor {
 
   power(ctx: CstChildrenDictionary) {
     // @ts-expect-error cst element
-    const words = asList(this, ctx.words)
+    const token = this.visit(ctx.token)
 
     if (ctx.factor) {
       return makeNode(ctx, {
         type: NODE.OPERATOR,
-        lhs: words,
+        lhs: [token],
         words: [
           makeNode(ctx, {
             type: NODE.OPERATOR_ITEM,
@@ -840,12 +851,12 @@ class ScriptVisitor extends CstVisitor {
       })
     }
 
-    return words
+    return token
   }
 
   words(ctx: CstChildrenDictionary) {
     // @ts-expect-error cst element
-    return asList(this, ctx.token)
+    return asList(this, ctx.expr)
   }
 
   token(ctx: CstChildrenDictionary) {

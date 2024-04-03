@@ -154,8 +154,6 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
     codepage.stats.type = CODE_PAGE_TYPE.OBJECT
   }
 
-  console.info('xxxxx', codepage)
-
   return codepage.stats
 }
 
