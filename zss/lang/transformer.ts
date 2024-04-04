@@ -15,10 +15,9 @@ export const context: GenContext = {
   labelIndex: 0,
 }
 
+const STOP_CODE = `if (api.sy()) { yield 1; };`
 const JUMP_CODE = `if (api.hm()) { continue jump; }`
 const WAIT_CODE = `yield 1; ${JUMP_CODE}`
-const SPACER = `                                                `
-const END_OF_LINE_CODE = `${SPACER}if (api.sy()) { yield 1; }; ${JUMP_CODE}`
 
 export const GENERATED_FILENAME = 'zss.js'
 
@@ -201,12 +200,10 @@ function transformNode(ast: CodeNode): SourceNode {
         `switch (api.getcase()) {\n`,
         `default:\n`,
         `case 1: \n`,
-        ...ast.lines
-          .map((item) => [transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-          .flat(),
+        ...ast.lines.map((item) => [transformNode(item), `\n`]).flat(),
         `}\n`,
         `api.endofprogram();\n`, // end of program has been reached
-        `while(true) { yield 1; if (api.hasmessage()) { continue jump; } }\n`,
+        `while(true) { ${WAIT_CODE} }\n`,
         `}\n`,
         `} catch (e) {\n`,
         // `debugger;\n`,
@@ -247,39 +244,35 @@ function transformNode(ast: CodeNode): SourceNode {
         ...transformNodes(ast.words),
       ])
     case NODE.MOVE:
-      console.info('%%%%', ast)
+      // console.info('%%%%', ast)
       return write(ast, [
         `while (`,
         writeApi(ast, `move`, [
           ast.wait ? 'true' : 'false',
           ...transformNodes(ast.words),
         ]),
-        `) { ${WAIT_CODE} };`,
+        `) { ${WAIT_CODE} }; ${STOP_CODE}`,
       ])
     case NODE.COMMAND:
       return write(ast, [
         `while (`,
         writeApi(ast, `command`, transformNodes(ast.words)),
-        `) { ${WAIT_CODE} };`,
+        `) { ${WAIT_CODE} }; ${STOP_CODE}`,
       ])
     // core / structure
     case NODE.IF: {
       const source = write(ast, [
         `if (`,
         writeApi(ast, `${ast.method}`, transformNodes(ast.words)),
-        `) {\n${END_OF_LINE_CODE}\n`,
+        `) {\n`,
       ])
 
       if (ast.lines) {
-        ast.lines.forEach((item) => {
-          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-        })
+        ast.lines.forEach((item) => source.add(transformNode(item)))
       }
 
       if (ast.branches) {
-        ast.branches.forEach((item) => {
-          source.add([transformNode(item), `\n`])
-        })
+        ast.branches.forEach((item) => source.add(transformNode(item)))
       }
 
       source.add('}')
@@ -288,21 +281,19 @@ function transformNode(ast: CodeNode): SourceNode {
     }
     case NODE.ELSE_IF: {
       const source = write(ast, [
-        `} else if (`,
+        `\n} else if (`,
         writeApi(ast, ast.method, transformNodes(ast.words)),
-        `) {\n${END_OF_LINE_CODE}\n`,
+        `) {\n`,
       ])
 
       if (ast.lines) {
-        ast.lines.forEach((item) => {
-          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-        })
+        ast.lines.forEach((item) => source.add(transformNode(item)))
       }
 
       return source
     }
     case NODE.ELSE: {
-      const source = write(ast, `} else {\n`)
+      const source = write(ast, `\n} else {\n`)
 
       if (ast.words.length) {
         source.add([
@@ -313,9 +304,7 @@ function transformNode(ast: CodeNode): SourceNode {
       }
 
       if (ast.lines) {
-        ast.lines.forEach((item) => {
-          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
-        })
+        ast.lines.forEach((item) => source.add(transformNode(item)))
       }
 
       return source
@@ -324,12 +313,12 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, [
         'while (',
         writeApi(ast, 'if', transformNodes(ast.words)),
-        `) {\n${END_OF_LINE_CODE}\n`,
+        `) {\n`,
       ])
 
       if (ast.lines) {
         ast.lines.forEach((item) => {
-          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+          source.add([transformNode(item), `\n`])
         })
       }
 
@@ -349,13 +338,13 @@ function transformNode(ast: CodeNode): SourceNode {
         ]),
         '\nwhile (',
         writeApi(ast, 'repeat', [`${context.internal}`]),
-        `) {\n${END_OF_LINE_CODE}\n`,
+        `) {\n`,
       ])
       context.internal += 1
 
       if (ast.lines) {
         ast.lines.forEach((item) => {
-          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+          source.add([transformNode(item), `\n`])
         })
       }
 
@@ -377,13 +366,13 @@ function transformNode(ast: CodeNode): SourceNode {
           `${context.internal}`,
           ...transformNodes(words),
         ]),
-        `) {\n${END_OF_LINE_CODE}\n`,
+        `) {\n`,
       ])
       context.internal += 1
 
       if (ast.lines) {
         ast.lines.forEach((item) => {
-          source.add([transformNode(item), `\n${END_OF_LINE_CODE}\n`])
+          source.add([transformNode(item), `\n`])
         })
       }
 
