@@ -20,6 +20,7 @@ export enum NODE {
   LABEL,
   HYPERLINK,
   STAT,
+  MOVE,
   COMMAND,
   LITERAL,
   // structure
@@ -128,6 +129,11 @@ type CodeNodeData =
     }
   | {
       type: NODE.STAT
+      words: CodeNode[]
+    }
+  | {
+      type: NODE.MOVE
+      wait: boolean
       words: CodeNode[]
     }
   | {
@@ -363,6 +369,7 @@ class ScriptVisitor extends CstVisitor {
   }
 
   flat_cmd(ctx: CstChildrenDictionary) {
+    // console.info('flat_cmd', ctx)
     if (ctx.words) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
@@ -374,13 +381,13 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error cst element
       return this.visit(ctx.hyperlink)
     }
-    if (ctx.Command_go) {
+    if (ctx.Short_go) {
       // @ts-expect-error cst element
-      return this.visit(ctx.Command_go)
+      return this.visit(ctx.Short_go)
     }
-    if (ctx.Command_try) {
+    if (ctx.Short_try) {
       // @ts-expect-error cst element
-      return this.visit(ctx.Command_try)
+      return this.visit(ctx.Short_try)
     }
     if (ctx.Command_play) {
       // @ts-expect-error cst element
@@ -425,27 +432,25 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Short_go(ctx: CstChildrenDictionary) {
-    if (ctx.Short_go) {
+    console.info('ctx.Short_go', ctx)
+    if (ctx.Divide) {
       return makeNode(ctx, {
-        type: NODE.COMMAND,
-        words: [
-          makeString(ctx, 'go'),
-          // @ts-expect-error cst element
-          ...asList(this, ctx.words).flat(),
-        ],
+        type: NODE.MOVE,
+        wait: true,
+        // @ts-expect-error cst element
+        words: asList(this, ctx.words).flat(),
       })
     }
   }
 
   Short_try(ctx: CstChildrenDictionary) {
-    if (ctx.Short_try) {
+    console.info('ctx.Short_try', ctx)
+    if (ctx.Query) {
       return makeNode(ctx, {
-        type: NODE.COMMAND,
-        words: [
-          makeString(ctx, 'try'),
-          // @ts-expect-error cst element
-          ...asList(this, ctx.words).flat(),
-        ],
+        type: NODE.MOVE,
+        wait: false,
+        // @ts-expect-error cst element
+        words: asList(this, ctx.words).flat(),
       })
     }
   }

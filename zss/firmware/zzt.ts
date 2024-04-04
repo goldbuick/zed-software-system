@@ -234,35 +234,31 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('give', (chip, words) => {
-    console.info('give....', words)
+    const memory = memoryreadchip(chip.id())
+    const [name, maybevalue, ii] = readargs({ ...memory, chip, words }, 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.MAYBE_NUMBER,
+    ])
 
-    //   const read = chipreadcontext(chip, words)
-    //   const [name, maybevalue, ii] = readargs(read, 0, [
-    //     ARG_TYPE.STRING,
-    //     ARG_TYPE.MAYBE_NUMBER,
-    //   ])
+    const maybecurrent = chip.get(name)
+    const current = isnumber(maybecurrent) ? maybecurrent : 0
+    const value = maybevalue ?? 1
 
-    //   const maybecurrent = chip.get(name)
-    //   const current = isnumber(maybecurrent) ? maybecurrent : 0
-    //   const value = maybevalue ?? 1
+    // giving a non-numerical value
+    if (!isnumber(value)) {
+      // todo: raise warning ?
+      return 0
+    }
 
-    //   // giving a non-numerical value
-    //   if (!isnumber(value)) {
-    //     // todo: raise warning ?
-    //     return 0
-    //   }
+    // returns true when setting an unset flag
+    const result = maybecurrent === undefined ? 1 : 0
+    if (result && ii < words.length) {
+      chip.command(...words.slice(ii))
+    }
 
-    //   // returns true when setting an unset flag
-    //   const result = maybecurrent === undefined ? 1 : 0
-    //   if (result && ii < words.length) {
-    //     chip.command(...words.slice(ii))
-    //   }
-
-    //   // update flag
-    //   chip.set(name, current + value)
-    //   return result
-
-    return 0
+    // update flag
+    chip.set(name, current + value)
+    return result
   })
   .command('go', (chip, words) => {
     const memory = memoryreadchip(chip.id())

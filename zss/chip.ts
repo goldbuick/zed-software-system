@@ -36,9 +36,9 @@ export type CHIP = {
   tick: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
-  hasmessage: () => number
+  hm: () => number
   yield: () => void
-  shouldyield: () => boolean
+  sy: () => boolean
   send: (target: string, data?: any) => void
   lock: (allowed: string) => void
   unlock: () => void
@@ -55,6 +55,7 @@ export type CHIP = {
   hyperlink: (...words: WORD[]) => WORD_VALUE
 
   // logic api
+  move: (wait: boolean, ...words: WORD[]) => WORD_VALUE
   command: (...words: WORD[]) => WORD_VALUE
   if: (...words: WORD[]) => WORD_VALUE
   // try: (...words: WORD[]) => WORD_VALUE
@@ -237,19 +238,19 @@ export function createchip(id: string, build: GeneratorBuild) {
       return true
     },
     shouldtick() {
-      return endedstate === false || chip.hasmessage() !== 0
+      return endedstate === false || chip.hm() !== 0
     },
     shouldhalt() {
       return loops++ > HALT_AT_COUNT
     },
-    hasmessage() {
+    hm() {
       const target = message?.target ?? ''
       return labels[target]?.find((item) => item > 0) ?? 0
     },
     yield() {
       yieldstate = true
     },
-    shouldyield() {
+    sy() {
       return yieldstate || chip.shouldhalt()
     },
     send(target, data) {
@@ -289,7 +290,7 @@ export function createchip(id: string, build: GeneratorBuild) {
     },
     getcase() {
       if (message) {
-        const label = chip.hasmessage()
+        const label = chip.hm()
 
         // update chip state based on incoming message
         chip.set('sender', message.sender)
@@ -336,6 +337,15 @@ export function createchip(id: string, build: GeneratorBuild) {
     },
     hyperlink(...words) {
       return invokecommand('hyperlink', words)
+    },
+    move(wait, ...words) {
+      // try and move
+      const result = chip.command('go', ...words)
+      // and yield regardless of the outcome
+      chip.yield()
+      // if blocked and should wait, return 1
+      // otherwise 0
+      return result && wait ? 1 : 0
     },
     command(...words) {
       // 0 - continue

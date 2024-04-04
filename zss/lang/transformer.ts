@@ -15,10 +15,10 @@ export const context: GenContext = {
   labelIndex: 0,
 }
 
-const JUMP_CODE = `if (api.hasmessage()) { continue jump; }`
+const JUMP_CODE = `if (api.hm()) { continue jump; }`
 const WAIT_CODE = `yield 1; ${JUMP_CODE}`
-const SPACER = `      `
-const END_OF_LINE_CODE = `${SPACER}if (api.shouldyield()) { yield 1; }; ${JUMP_CODE}`
+const SPACER = `                                                `
+const END_OF_LINE_CODE = `${SPACER}if (api.sy()) { yield 1; }; ${JUMP_CODE}`
 
 export const GENERATED_FILENAME = 'zss.js'
 
@@ -98,7 +98,6 @@ function writeArray(ast: CodeNode, array: Array<string | SourceNode>) {
 
 function transformCompare(ast: CodeNode) {
   if (ast.type === NODE.COMPARE) {
-    console.info('WAT', ast)
     switch (ast.compare) {
       case COMPARE.IS_EQ:
         return writeApi(ast, 'isEq', [
@@ -247,6 +246,16 @@ function transformNode(ast: CodeNode): SourceNode {
         writeTemplateString(ast.input),
         ...transformNodes(ast.words),
       ])
+    case NODE.MOVE:
+      console.info('%%%%', ast)
+      return write(ast, [
+        `while (`,
+        writeApi(ast, `move`, [
+          ast.wait ? 'true' : 'false',
+          ...transformNodes(ast.words),
+        ]),
+        `) { ${WAIT_CODE} };`,
+      ])
     case NODE.COMMAND:
       return write(ast, [
         `while (`,
@@ -255,8 +264,6 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
     // core / structure
     case NODE.IF: {
-      console.info('OOOO', ast)
-
       const source = write(ast, [
         `if (`,
         writeApi(ast, `${ast.method}`, transformNodes(ast.words)),
