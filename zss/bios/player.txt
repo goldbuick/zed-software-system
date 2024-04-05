@@ -2,11 +2,11 @@
 
 ' setup ui
 #gadget right 20
-""
+ $32
  $white   - - - - -
  $black$ongrey    ZED.CAFE    
  $white    - - - - -
-""
+ $32
 
 ' create content
 ' #book create temp
@@ -29,7 +29,7 @@
 #if blinkrate < 6 do
   #char 219
 #else if blinkrate < 7 do
-  #char 32
+  #char 176
 #else do
   #clear blinkrate
 #endif
