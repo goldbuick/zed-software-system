@@ -353,7 +353,7 @@ class ScriptVisitor extends CstVisitor {
 
   commands(ctx: CstChildrenDictionary) {
     // @ts-expect-error cst element
-    return this.visit(ctx.command)
+    return asList(this, ctx.command)
   }
 
   command(ctx: CstChildrenDictionary) {

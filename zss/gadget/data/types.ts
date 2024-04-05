@@ -162,7 +162,7 @@ export function createlayercontrol(
     focusx: 0,
     focusy: 0,
     focusid: player,
-    viewscale: 1,
+    viewscale: 2,
   }
 }
 
