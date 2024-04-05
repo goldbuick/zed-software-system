@@ -26,13 +26,13 @@
 :think
 #give blinkrate
 
-' #if blinkrate < 6 do
-'   #char 219
-' #else if blinkrate < 7 do
-'   #char 32
-' #else do
-'   #clear blinkrate
-' #endif
+#if blinkrate < 6 do
+  #char 219
+#else if blinkrate < 7 do
+  #char 32
+#else do
+  #clear blinkrate
+#endif
 
 #if inputmove do
   #if inputalt do

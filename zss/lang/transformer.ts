@@ -16,7 +16,7 @@ export const context: GenContext = {
 }
 
 const STOP_CODE = `if (api.sy()) { yield 1; };`
-const JUMP_CODE = `if (api.hm()) { continue j; }`
+const JUMP_CODE = `if (api.hm()) { continue zss; }`
 const WAIT_CODE = `yield 1; ${JUMP_CODE}`
 
 export const GENERATED_FILENAME = 'zss.js'
@@ -196,7 +196,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.PROGRAM:
       return write(ast, [
         `try { // first-line\n`,
-        `j: while (true) {\n`,
+        `zss: while (true) {\n`,
         `switch (api.getcase()) {\n`,
         `default:\n`,
         `case 1: \n`,
@@ -250,13 +250,13 @@ function transformNode(ast: CodeNode): SourceNode {
           ast.wait ? 'true' : 'false',
           ...transformNodes(ast.words),
         ]),
-        `)\n       { ${WAIT_CODE} }; ${STOP_CODE}`,
-      ])
+        `) { yield 1;\n         ${JUMP_CODE} };\n         ${JUMP_CODE} ${STOP_CODE}`,
+      ]) // yield 1;
     case NODE.COMMAND:
       return write(ast, [
         `while (`,
         writeApi(ast, `command`, transformNodes(ast.words)),
-        `)\n       { ${WAIT_CODE} }; ${STOP_CODE}`,
+        `) { yield 1;\n         ${JUMP_CODE} };\n         ${JUMP_CODE} ${STOP_CODE}`,
       ])
     // core / structure
     case NODE.IF: {
@@ -267,31 +267,31 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
 
       if (ast.lines) {
-        ast.lines.forEach((item) => source.add(transformNode(item)))
+        ast.lines.forEach((item) => source.add([transformNode(item), `\n`]))
       }
 
       if (ast.branches) {
         ast.branches.forEach((item) => source.add(transformNode(item)))
       }
 
-      source.add('\n}')
+      source.add('}')
       return source
     }
     case NODE.ELSE_IF: {
       const source = write(ast, [
-        `\n} else if (`,
+        `} else if (`,
         writeApi(ast, ast.method, transformNodes(ast.words)),
         `) {\n`,
       ])
 
       if (ast.lines) {
-        ast.lines.forEach((item) => source.add(transformNode(item)))
+        ast.lines.forEach((item) => source.add([transformNode(item), `\n`]))
       }
 
       return source
     }
     case NODE.ELSE: {
-      const source = write(ast, `\n} else {\n`)
+      const source = write(ast, `} else {\n`)
 
       if (ast.words.length) {
         source.add([
@@ -302,7 +302,7 @@ function transformNode(ast: CodeNode): SourceNode {
       }
 
       if (ast.lines) {
-        ast.lines.forEach((item) => source.add(transformNode(item)))
+        ast.lines.forEach((item) => source.add([transformNode(item), `\n`]))
       }
 
       return source
