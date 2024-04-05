@@ -275,11 +275,7 @@ export const ZZT_FIRMWARE = createfirmware(
 
     while (steps > 0) {
       const [dest] = readargs({ ...memory, chip, words }, i, [ARG_TYPE.DIR])
-      if (
-        ispresent(memory.book) &&
-        ispresent(memory.board) &&
-        boardmoveobject(memory.book, memory.board, memory.target, dest)
-      ) {
+      if (boardmoveobject(memory.book, memory.board, memory.target, dest)) {
         // keep moving
         --steps
       } else {
@@ -292,11 +288,11 @@ export const ZZT_FIRMWARE = createfirmware(
     return memory.target?.x === tx && memory.target?.y === ty ? 1 : 0
   })
   .command('idle', (chip) => {
+    // console.info('idle')
     chip.yield()
     return 0
   })
-  // stub-only, this is a lang feature
-  // .command('if'
+  // .command('if' // stub-only, this is a lang feature
   .command('lock', (chip) => {
     chip.lock(chip.id())
     return 0
@@ -306,11 +302,10 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('put', (chip, words) => {
-    console.info(words)
+    // console.info(words)
     return 0
   })
-  // this is handled by a built-in 0 label
-  // .command('restart'
+  // .command('restart' // this is handled by a built-in 0 label
   .command('restore', (chip, words) => {
     chip.restore(maptostring(words[0]))
     return 0
@@ -340,42 +335,38 @@ export const ZZT_FIRMWARE = createfirmware(
       ARG_TYPE.DIR,
       ARG_TYPE.MAYBE_KIND,
     ])
-    console.info({ dir, maybekind }) // todo
+    // console.info({ dir, maybekind }) // todo
     return 0
   })
   .command('take', (chip, words) => {
-    console.info('take....', words)
+    const memory = memoryreadchip(chip.id())
+    const [name, maybevalue, ii] = readargs({ ...memory, chip, words }, 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.MAYBE_NUMBER,
+    ])
 
-    //   const read = chipreadcontext(chip, words)
-    //   const [name, maybevalue, ii] = readargs(read, 0, [
-    //     ARG_TYPE.STRING,
-    //     ARG_TYPE.MAYBE_NUMBER,
-    //   ])
+    const current = chip.get(name)
+    // default to #TAKE <name> 1
+    const value = maybevalue ?? 1
 
-    //   const current = chip.get(name)
-    //   // default to #TAKE <name> 1
-    //   const value = maybevalue ?? 1
+    // taking from an unset flag, or non-numerical value
+    if (!isnumber(current)) {
+      // todo: raise warning ?
+      return 1
+    }
 
-    //   // taking from an unset flag, or non-numerical value
-    //   if (!isnumber(current)) {
-    //     // todo: raise warning ?
-    //     return 1
-    //   }
+    const newvalue = current - value
 
-    //   const newvalue = current - value
+    // returns true when take fails
+    if (newvalue < 0) {
+      if (ii < words.length) {
+        chip.command(...words.slice(ii))
+      }
+      return 1
+    }
 
-    //   // returns true when take fails
-    //   if (newvalue < 0) {
-    //     if (ii < words.length) {
-    //       chip.command(...words.slice(ii))
-    //     }
-    //     return 1
-    //   }
-
-    //   // update flag
-    //   chip.set(name, newvalue)
-    //   return 0
-
+    // update flag
+    chip.set(name, newvalue)
     return 0
   })
   .command('throwstar', (chip, words) => {
@@ -384,27 +375,21 @@ export const ZZT_FIRMWARE = createfirmware(
       ARG_TYPE.DIR,
       ARG_TYPE.MAYBE_KIND,
     ])
-    console.info({ dir, maybekind }) // todo
+    // console.info({ dir, maybekind }) // todo
     return 0
   })
   .command('try', (chip, words) => {
-    console.info('try....', words)
-
-    //   const read = chipreadcontext(chip, words)
-    //   const [value, ii] = readargs(read, 0, [ARG_TYPE.ANY])
-
-    //   // we use go because it tries to move and returns 1 on failure
-    //   const result = invokecommand('go', [value as WORD]) ? 1 : 0
-    //   if (result && ii < words.length) {
-    //     chip.command(...words.slice(ii))
-    //   }
-
-    //   return result
+    const memory = memoryreadchip(chip.id())
+    const [, ii] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.DIR])
 
     // try and move
-    chip.command('go', ...words)
-    chip.yield()
+    const result = chip.command('go', ...words.slice(0, ii))
+    if (result && ii < words.length) {
+      chip.command(...words.slice(ii))
+    }
+
     // and yield regardless of the outcome
+    chip.yield()
     return 0
   })
   .command('unlock', (chip) => {
@@ -412,7 +397,7 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('walk', (chip, words) => {
-    console.info(words) // todo
+    // console.info(words) // todo
     return 0
   })
   .command('zap', (chip, words) => {

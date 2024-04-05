@@ -9,7 +9,7 @@
 ""
 
 ' create content
-#book create temp
+' #book create temp
 
 ' load content in editor
 ' #frame edit temp title
@@ -20,19 +20,19 @@
 ' #frame reset
 
 ' main loop
-#cycle 1 + 3
-#set blinkrate 0
+#cycle 1
+#set blinkrate
 
 :think
 #give blinkrate
 
-#if blinkrate < 6 do
-  #char 219
-#else if blinkrate < 7 do
-  #char 32
-#else do
-  #set blinkrate 0
-#endif
+' #if blinkrate < 6 do
+'   #char 219
+' #else if blinkrate < 7 do
+'   #char 32
+' #else do
+'   #clear blinkrate
+' #endif
 
 #if inputmove do
   #if inputalt do

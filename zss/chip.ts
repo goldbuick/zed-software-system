@@ -255,8 +255,8 @@ export function createchip(id: string, build: GeneratorBuild) {
     },
     send(target, data) {
       const fulltarget = `vm:${id}:${target}`
-      hub.emit(fulltarget, id, data)
       // console.info('send', fulltarget, id, data)
+      hub.emit(fulltarget, id, data)
     },
     lock(allowed) {
       locked = allowed
@@ -357,6 +357,7 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       const [name, ...args] = words
       const command = getcommand(maptostring(name))
+      // console.info({ name, args, command })
       if (command) {
         return command(chip, args)
       }
@@ -375,15 +376,6 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       return result
     },
-    // take(...words) {
-
-    // },
-    // give(...words) {
-
-    // },
-    // try(...words) {
-
-    // },
     repeatStart(index, ...words) {
       const read = chipreadcontext(chip, words)
       const [value, ii] = readargs(read, 0, [ARG_TYPE.NUMBER])
@@ -432,7 +424,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       // map values from object or map number. string to counter
       const names = words.map(maptostring)
 
-      console.info('reading', index, names, next)
+      // console.info('reading', index, names, next)
 
       switch (typeof next) {
         case 'number':

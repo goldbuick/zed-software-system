@@ -16,7 +16,7 @@ export const context: GenContext = {
 }
 
 const STOP_CODE = `if (api.sy()) { yield 1; };`
-const JUMP_CODE = `if (api.hm()) { continue jump; }`
+const JUMP_CODE = `if (api.hm()) { continue j; }`
 const WAIT_CODE = `yield 1; ${JUMP_CODE}`
 
 export const GENERATED_FILENAME = 'zss.js'
@@ -196,7 +196,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.PROGRAM:
       return write(ast, [
         `try { // first-line\n`,
-        `jump: while (true) {\n`,
+        `j: while (true) {\n`,
         `switch (api.getcase()) {\n`,
         `default:\n`,
         `case 1: \n`,
@@ -244,20 +244,19 @@ function transformNode(ast: CodeNode): SourceNode {
         ...transformNodes(ast.words),
       ])
     case NODE.MOVE:
-      // console.info('%%%%', ast)
       return write(ast, [
         `while (`,
         writeApi(ast, `move`, [
           ast.wait ? 'true' : 'false',
           ...transformNodes(ast.words),
         ]),
-        `) { ${WAIT_CODE} }; ${STOP_CODE}`,
+        `)\n       { ${WAIT_CODE} }; ${STOP_CODE}`,
       ])
     case NODE.COMMAND:
       return write(ast, [
         `while (`,
         writeApi(ast, `command`, transformNodes(ast.words)),
-        `) { ${WAIT_CODE} }; ${STOP_CODE}`,
+        `)\n       { ${WAIT_CODE} }; ${STOP_CODE}`,
       ])
     // core / structure
     case NODE.IF: {
@@ -275,8 +274,7 @@ function transformNode(ast: CodeNode): SourceNode {
         ast.branches.forEach((item) => source.add(transformNode(item)))
       }
 
-      source.add('}')
-
+      source.add('\n}')
       return source
     }
     case NODE.ELSE_IF: {
@@ -317,13 +315,10 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
 
       if (ast.lines) {
-        ast.lines.forEach((item) => {
-          source.add([transformNode(item), `\n`])
-        })
+        ast.lines.forEach((item) => source.add(transformNode(item)))
       }
 
-      source.add('}\n')
-
+      source.add('\n}')
       return source
     }
     case NODE.REPEAT: {
@@ -343,13 +338,10 @@ function transformNode(ast: CodeNode): SourceNode {
       context.internal += 1
 
       if (ast.lines) {
-        ast.lines.forEach((item) => {
-          source.add([transformNode(item), `\n`])
-        })
+        ast.lines.forEach((item) => source.add(transformNode(item)))
       }
 
-      source.add('}\n')
-
+      source.add('\n}')
       return source
     }
     case NODE.READ: {
@@ -371,13 +363,10 @@ function transformNode(ast: CodeNode): SourceNode {
       context.internal += 1
 
       if (ast.lines) {
-        ast.lines.forEach((item) => {
-          source.add([transformNode(item), `\n`])
-        })
+        ast.lines.forEach((item) => source.add(transformNode(item)))
       }
 
-      source.add('}\n')
-
+      source.add('\n}')
       return source
     }
     case NODE.BREAK:

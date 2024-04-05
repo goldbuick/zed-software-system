@@ -432,7 +432,7 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Short_go(ctx: CstChildrenDictionary) {
-    console.info('ctx.Short_go', ctx)
+    // console.info('ctx.Short_go', ctx)
     if (ctx.Divide) {
       return makeNode(ctx, {
         type: NODE.MOVE,
@@ -444,7 +444,7 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Short_try(ctx: CstChildrenDictionary) {
-    console.info('ctx.Short_try', ctx)
+    // console.info('ctx.Short_try', ctx)
     if (ctx.Query) {
       return makeNode(ctx, {
         type: NODE.MOVE,
