@@ -1,8 +1,17 @@
 import { createfirmware } from 'zss/firmware'
 import { gadgetcheckset, gadgetpanel } from 'zss/gadget/data/api'
 import { PANEL_TYPE_MAP } from 'zss/gadget/data/types'
-import { isdefined } from 'zss/mapping/types'
-import { memoryreadchip } from 'zss/memory'
+import { isdefined, ispresent } from 'zss/mapping/types'
+import {
+  memorycreateeditframe,
+  memorycreateviewframe,
+  memoryreadchip,
+  memoryresetframes,
+  memorysetbook,
+} from 'zss/memory'
+import { createboard } from 'zss/memory/board'
+import { createbook } from 'zss/memory/book'
+import { createcodepage } from 'zss/memory/codepage'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -45,5 +54,66 @@ export const ZSS_FIRMWARE = createfirmware(
     const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
 
     gadgetpanel(chip, edge, edgeConst, maybesize, maybename)
+    return 0
+  })
+  .command('book', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
+    const [maybetarget, maybeaction] = readargs({ ...memory, chip, words }, 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.STRING,
+    ])
+
+    const ltarget = maybetarget.toLowerCase()
+    const laction = maybeaction.toLowerCase()
+    switch (laction) {
+      case 'create':
+        memorysetbook(
+          createbook(ltarget, [
+            createcodepage('@board title', {
+              board: createboard((board) => {
+                console.info(board)
+                return board
+              }),
+            }),
+          ]),
+        )
+        break
+      default:
+        // TODO raise error of unknown action
+        console.info('book', { ltarget, laction })
+        break
+    }
+
+    return 0
+  })
+  .command('frame', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
+    const [maybetarget, maybetype, maybeboard] = readargs(
+      { ...memory, chip, words },
+      0,
+      [ARG_TYPE.STRING, ARG_TYPE.MAYBE_STRING, ARG_TYPE.MAYBE_STRING],
+    )
+
+    const board = memory.board?.id ?? ''
+
+    const ltarget = maybetarget.toLowerCase()
+    if (ltarget === 'reset') {
+      memoryresetframes(board)
+    } else if (ispresent(maybetype) && ispresent(maybeboard)) {
+      const ltype = maybetype.toLowerCase()
+      console.info('frame', { board, ltarget, ltype, maybeboard })
+      switch (ltype) {
+        case 'edit':
+          memorycreateeditframe(board, ltarget, maybeboard)
+          break
+        case 'view':
+          memorycreateviewframe(board, ltarget, maybeboard)
+          break
+        default:
+          // TODO raise error of unknown action
+          break
+      }
+    }
+
     return 0
   })

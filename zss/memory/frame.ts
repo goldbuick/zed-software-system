@@ -21,8 +21,8 @@ function createframe(type: FRAME_TYPE): FRAME_STATE {
 }
 
 export function createviewframe(
-  book?: MAYBE_STRING,
-  board?: MAYBE_STRING,
+  book: MAYBE_STRING,
+  board: MAYBE_STRING,
 ): FRAME_STATE {
   const frame = createframe(FRAME_TYPE.VIEW)
   frame.book = book

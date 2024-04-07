@@ -6,8 +6,7 @@ import {
   gadgetstate,
 } from 'zss/gadget/data/api'
 import { GADGET_STATE } from 'zss/gadget/data/types'
-
-import { memoryreadgadgetlayers } from '../memory'
+import { memoryreadgadgetlayers } from 'zss/memory'
 
 // tracking gadget state for individual players
 const syncstate: Record<string, GADGET_STATE> = {}

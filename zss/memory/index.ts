@@ -57,7 +57,7 @@ export function memorysetdefaultplayer(player: string) {
 }
 
 export function memoryresetframes(board: string): FRAME_STATE[] {
-  const frames: FRAME_STATE[] = [createviewframe()]
+  const frames: FRAME_STATE[] = [createviewframe(undefined, undefined)]
   MEMORY.frames.set(board, frames)
   return frames
 }
@@ -73,10 +73,14 @@ export function memorycreateviewframe(
   }
 }
 
-export function memorycreateeditframe(book: string, board: string) {
+export function memorycreateeditframe(
+  board: string,
+  book?: string,
+  edit?: string,
+) {
   const frames = memoryreadframes(board)
   if (isdefined(frames)) {
-    frames.push(createeditframe(book, board))
+    frames.push(createeditframe(book, edit))
   }
 }
 
@@ -146,10 +150,11 @@ export function memoryplayerlogin(player: string) {
   const start = bookreadboard(book, PLAYER_START)
   const playerkind = bookreadobject(book, PLAYER_KIND)
   if (isdefined(start) && isdefined(playerkind)) {
+    // TODO: what is a sensible way to place here ?
     const obj = createboardobject(start, {
       id: player,
-      x: randomInteger(0, start.width - 1),
-      y: randomInteger(0, start.height - 1),
+      x: 0,
+      y: 0,
       kind: PLAYER_KIND,
       stats: {
         player,

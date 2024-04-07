@@ -9,12 +9,13 @@
  $32
 
 ' create content
-' #book create temp
+#book temp create
 
 ' load content in editor
-' #frame edit temp title
-' if you want multiple views
-' #frame view temp minimap 
+#frame temp edit title
+
+' if you want multiple views ??
+' #frame temp view minimap 
 
 ' this will reset the frame stack
 ' #frame reset
