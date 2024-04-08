@@ -1,5 +1,5 @@
 import { CHIP, WORD } from 'zss/chip'
-import { SPRITES_SINDEX, SPRITES_TINDEX } from 'zss/gadget/data/types'
+import { COLOR_SINDEX, COLOR_TINDEX } from 'zss/gadget/data/types'
 import { range, pick } from 'zss/mapping/array'
 import { clamp, randomInteger } from 'zss/mapping/number'
 import {
@@ -45,8 +45,8 @@ export enum COLOR {
   PURPLE,
   YELLOW,
   WHITE,
-  CLEAR = SPRITES_TINDEX,
-  SHADOW = SPRITES_SINDEX,
+  CLEAR = COLOR_TINDEX,
+  SHADOW = COLOR_SINDEX,
 }
 
 export enum DIR {

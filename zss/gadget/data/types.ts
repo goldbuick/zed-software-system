@@ -5,8 +5,8 @@ export const BYTES_PER_COLOR = 3
 
 export const PALETTE_COLOR_RANGE = 63
 
-export const SPRITES_TINDEX = -1
-export const SPRITES_SINDEX = -2
+export const COLOR_TINDEX = 32
+export const COLOR_SINDEX = 33
 
 const CHAR_SCALE = 2
 
@@ -125,7 +125,7 @@ export function createsprite(player: string, index: number, id: string) {
     y: 0,
     char: 1,
     color: 15,
-    bg: SPRITES_TINDEX,
+    bg: COLOR_TINDEX,
   }
 }
 

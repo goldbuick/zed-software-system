@@ -1,10 +1,6 @@
 import * as THREE from 'three'
 
-import {
-  DRAW_CHAR_HEIGHT,
-  DRAW_CHAR_WIDTH,
-  SPRITES_TINDEX,
-} from '../data/types'
+import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, COLOR_TINDEX } from '../data/types'
 
 import { cloneMaterial, interval, time } from './anim'
 
@@ -57,7 +53,7 @@ const spritesMaterial = new THREE.ShaderMaterial({
     vec4 empty;
 
     vec4 bgFromIndex(float index) {
-      if (int(index) <= ${SPRITES_TINDEX}) {
+      if (int(index) <= ${COLOR_TINDEX}) {
         return empty;
       }
       vec4 bg;

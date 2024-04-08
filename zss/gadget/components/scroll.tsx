@@ -14,8 +14,12 @@ import {
   createWriteTextContext,
   tokenizeAndWriteTextFormat,
 } from '../data/textformat'
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from '../data/types'
-import { TILE_TINDEX } from '../display/tiles'
+import {
+  COLOR_TINDEX,
+  DRAW_CHAR_HEIGHT,
+  DRAW_CHAR_WIDTH,
+  PANEL_ITEM,
+} from '../data/types'
 
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'
@@ -220,7 +224,7 @@ export function Scroll({
             height={panelheight}
             margin={0}
             color={color}
-            bg={TILE_TINDEX}
+            bg={COLOR_TINDEX}
             text={visibletext}
             selected={row}
           />

@@ -1,7 +1,12 @@
 import * as THREE from 'three'
 import { MAYBE_NUMBER } from 'zss/mapping/types'
 
-import { CHARS_PER_ROW, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
+import {
+  CHARS_PER_ROW,
+  COLOR_TINDEX,
+  DRAW_CHAR_HEIGHT,
+  DRAW_CHAR_WIDTH,
+} from '../data/types'
 
 import { cloneMaterial, interval, time } from './anim'
 
@@ -31,8 +36,6 @@ const QUAD_UVS = new Float32Array([
   ...TOP_LEFT.slice(0, 2),
   ...TOP_RIGHT.slice(0, 2),
 ])
-
-export const TILE_TINDEX = 16
 
 export function updateTilemapDataTexture(
   texture: THREE.DataTexture,
@@ -151,7 +154,7 @@ const tilemapMaterial = new THREE.ShaderMaterial({
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
-        if (bgi == ${TILE_TINDEX}) {
+        if (bgi == ${COLOR_TINDEX}) {
           discard;
         }
         color = palette[bgi];

@@ -34,7 +34,12 @@ import {
   bookreadobject,
   bookterrainreadkind,
 } from './book'
-import { FRAME_STATE, createeditframe, createviewframe } from './frame'
+import {
+  FRAME_STATE,
+  FRAME_TYPE,
+  createeditframe,
+  createviewframe,
+} from './frame'
 
 type CHIP_MEMORY = {
   book: MAYBE_BOOK
@@ -201,14 +206,14 @@ function memoryconverttogadgetlayers(
   index: number,
   book: MAYBE_BOOK,
   board: MAYBE_BOARD,
-  isbaselayer = true,
+  isprimary: boolean,
 ): LAYER[] {
   const layers: LAYER[] = []
 
   let i = index
   const boardwidth = board?.width ?? 0
   const boardheight = board?.height ?? 0
-  const defaultcolor = isbaselayer ? COLOR.BLACK : COLOR.CLEAR
+  const defaultcolor = isprimary ? COLOR.BLACK : COLOR.CLEAR
 
   const tiles = createtiles(player, i++, boardwidth, boardheight, defaultcolor)
   layers.push(tiles)
@@ -221,7 +226,10 @@ function memoryconverttogadgetlayers(
   layers.push(objects)
 
   const control = createlayercontrol(player, i++)
-  layers.push(control)
+  if (isprimary) {
+    // hack to keep only one control layer
+    layers.push(control)
+  }
 
   board?.terrain.forEach((tile, i) => {
     if (tile) {
@@ -262,8 +270,6 @@ function memoryconverttogadgetlayers(
     }
   })
 
-  console.info({ board })
-
   return layers
 }
 
@@ -286,13 +292,11 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
       i,
       withbook,
       withboard,
-      i === 0,
+      frame.type === FRAME_TYPE.VIEW,
     )
     i += view.length
     layers.push(...view)
   })
-
-  console.info({ player, frames, layers })
 
   return layers
 }
