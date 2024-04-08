@@ -201,14 +201,16 @@ function memoryconverttogadgetlayers(
   index: number,
   book: MAYBE_BOOK,
   board: MAYBE_BOARD,
+  isbaselayer = true,
 ): LAYER[] {
   const layers: LAYER[] = []
 
   let i = index
   const boardwidth = board?.width ?? 0
   const boardheight = board?.height ?? 0
+  const defaultcolor = isbaselayer ? COLOR.BLACK : COLOR.CLEAR
 
-  const tiles = createtiles(player, i++, boardwidth, boardheight)
+  const tiles = createtiles(player, i++, boardwidth, boardheight, defaultcolor)
   layers.push(tiles)
 
   const shadow = createdither(player, i++, boardwidth, boardheight)
@@ -225,8 +227,8 @@ function memoryconverttogadgetlayers(
     if (tile) {
       const kind = bookterrainreadkind(book, tile)
       tiles.char[i] = tile.char ?? kind?.char ?? 0
-      tiles.color[i] = tile.color ?? kind?.color ?? COLOR.BLACK
-      tiles.bg[i] = tile.bg ?? kind?.bg ?? COLOR.BLACK
+      tiles.color[i] = tile.color ?? kind?.color ?? defaultcolor
+      tiles.bg[i] = tile.bg ?? kind?.bg ?? defaultcolor
     }
   })
 
@@ -260,6 +262,8 @@ function memoryconverttogadgetlayers(
     }
   })
 
+  console.info({ board })
+
   return layers
 }
 
@@ -273,13 +277,22 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
   }
 
   let i = 0
-  memoryreadframes(board.id ?? '').forEach((frame) => {
+  const frames = memoryreadframes(board.id ?? '')
+  frames.forEach((frame) => {
     const withbook = memoryreadbook(frame.book ?? '') ?? book
     const withboard = bookreadboard(withbook, frame.board ?? '') ?? board
-    const view = memoryconverttogadgetlayers(player, i, withbook, withboard)
+    const view = memoryconverttogadgetlayers(
+      player,
+      i,
+      withbook,
+      withboard,
+      i === 0,
+    )
     i += view.length
     layers.push(...view)
   })
+
+  console.info({ player, frames, layers })
 
   return layers
 }

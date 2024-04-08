@@ -11,14 +11,8 @@
 ' create content
 #book temp create
 
-' load content in editor
+' load content in edit frame
 #frame temp edit title
-
-' if you want multiple views ??
-' #frame temp view minimap 
-
-' this will reset the frame stack
-' #frame reset
 
 ' main loop
 #cycle 1

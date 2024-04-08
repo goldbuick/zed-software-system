@@ -71,7 +71,8 @@ export const ZSS_FIRMWARE = createfirmware(
           createbook(ltarget, [
             createcodepage('@board title', {
               board: createboard((board) => {
-                console.info(board)
+                // console.info(board)
+                // todo, make it so you can clone an existing book
                 return board
               }),
             }),
@@ -101,7 +102,6 @@ export const ZSS_FIRMWARE = createfirmware(
       memoryresetframes(board)
     } else if (ispresent(maybetype) && ispresent(maybeboard)) {
       const ltype = maybetype.toLowerCase()
-      console.info('frame', { board, ltarget, ltype, maybeboard })
       switch (ltype) {
         case 'edit':
           memorycreateeditframe(board, ltarget, maybeboard)
@@ -111,6 +111,7 @@ export const ZSS_FIRMWARE = createfirmware(
           break
         default:
           // TODO raise error of unknown action
+          console.info('frame', { ltype, ltarget, maybeboard })
           break
       }
     }

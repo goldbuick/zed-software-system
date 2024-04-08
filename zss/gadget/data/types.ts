@@ -95,8 +95,8 @@ export type LAYER =
   | LAYER_MEDIA
   | LAYER_CONTROL
 
-function arrayof(size: number): number[] {
-  return new Array(size).fill(0)
+function arrayof(size: number, fill: number): number[] {
+  return new Array(size).fill(fill)
 }
 
 export function createtiles(
@@ -104,6 +104,7 @@ export function createtiles(
   index: number,
   width: number,
   height: number,
+  fill = 0,
 ): LAYER_TILES {
   const size = width * height
   return {
@@ -111,9 +112,9 @@ export function createtiles(
     type: LAYER_TYPE.TILES,
     width,
     height,
-    char: arrayof(size),
-    color: arrayof(size),
-    bg: arrayof(size),
+    char: arrayof(size, fill),
+    color: arrayof(size, fill),
+    bg: arrayof(size, fill),
   }
 }
 
@@ -141,6 +142,7 @@ export function createdither(
   index: number,
   width: number,
   height: number,
+  fill = 0,
 ): LAYER_DITHER {
   const size = width * height
   return {
@@ -148,7 +150,7 @@ export function createdither(
     type: LAYER_TYPE.DITHER,
     width,
     height,
-    alphas: arrayof(size),
+    alphas: arrayof(size, fill),
   }
 }
 
