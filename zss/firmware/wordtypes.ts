@@ -67,6 +67,8 @@ export enum DIR {
   CCW,
   OPP,
   RNDP,
+  // framing
+  EDIT,
 }
 
 export enum COLLISION {
@@ -311,6 +313,8 @@ export const dirconsts = {
   r: 'EAST',
   east: 'EAST',
   e: 'EAST',
+  // framing
+  edit: 'EDIT',
 } as const
 
 export type STR_DIR = (typeof dirconsts)[keyof typeof dirconsts][]
@@ -327,23 +331,33 @@ export function readdir(
   read: READ_CONTEXT,
   index: number,
 ): [STR_DIR | undefined, number] {
-  const value: MAYBE_WORD = read.words[index]
+  // one to many strings
+  let ii = index
+  while (ii < read.words.length) {
+    const value = read.words[ii] as MAYBE_WORD
+    if (typeof value === 'string') {
+      // read value
+      const maybedir = read.chip.get(value)
 
-  // already mapped
-  if (isstrdir(value)) {
-    return [value, index + 1]
+      // check for already mapped
+      if (isstrdir(maybedir)) {
+        return [maybedir, ii + 1]
+      }
+
+      // check for const value
+      if (isstrdirconst(maybedir)) {
+        ++ii
+        continue
+      }
+    }
+
+    // not a dir const we bail
+    break
   }
 
-  // single string
-  if (typeof value === 'string') {
-    const maybedir = read.chip.get(value)
-    if (isstrdir(maybedir)) {
-      return [maybedir, index + 1]
-    }
-    if (isstrdirconst(maybedir)) {
-      // need to handle special case of by & at
-      return [[maybedir], index + 1]
-    }
+  // found dir
+  if (ii !== index) {
+    return [read.words.slice(index, ii) as STR_DIR, ii]
   }
 
   // fail
@@ -671,6 +685,7 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.DIR: {
         const [dir, iii] = readdir(read, ii)
+        console.info('xxx', { dir, iii, read })
         if (isstrdir(dir)) {
           const value = read.board
             ? boardevaldir(read.board, read.target, dir)

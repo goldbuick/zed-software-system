@@ -19,6 +19,7 @@
 ' main loop
 #cycle 1
 #set blinkrate
+#clear drawing
 
 :main
 #give blinkrate
@@ -44,11 +45,30 @@
 #main
 
 :plot
-#color white
+#put edit idle wall
 #main
 
 :draw
-#color yellow
+#if drawing do
+  #clear drawing
+  #color white
+#else do
+  #set drawing
+  #color yellow
+#endif
 #main
 
 ' #put temp 
+' #copy edit idle paste1
+' #put edit idle paste1
+' how can we show the copy & paste buffers ?
+' and we want copy & paste to be across boards right ?
+' so we can have an edit frame turned on for a board
+' local memory, but also need a shared edit memory across boards
+' we dont have a generic way of referring to types
+' we can just guess honestly ?
+' so do we need to be able to "peek" at something?
+' peek at a buffer or kind, or color
+' we should be able to use buffer contents to do queries against edit
+'
+

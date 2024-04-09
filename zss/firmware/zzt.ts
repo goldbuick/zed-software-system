@@ -302,7 +302,12 @@ export const ZZT_FIRMWARE = createfirmware(
     return 0
   })
   .command('put', (chip, words) => {
-    // console.info(words)
+    const memory = memoryreadchip(chip.id())
+    const [dir, kind] = readargs({ ...memory, chip, words }, 0, [
+      ARG_TYPE.DIR,
+      ARG_TYPE.KIND,
+    ])
+    console.info('put', { dir, kind })
     return 0
   })
   // .command('restart' // this is handled by a built-in 0 label
