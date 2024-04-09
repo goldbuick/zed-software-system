@@ -15,8 +15,8 @@ export const context: GenContext = {
   labelIndex: 0,
 }
 
-const STOP_CODE = `if (api.sy()) { yield 1; };`
 const JUMP_CODE = `if (api.hm()) { continue zss; }`
+const STOP_CODE = `if (api.sy()) { yield 1; ${JUMP_CODE} };`
 const WAIT_CODE = `yield 1; ${JUMP_CODE}`
 
 export const GENERATED_FILENAME = 'zss.js'
@@ -250,13 +250,13 @@ function transformNode(ast: CodeNode): SourceNode {
           ast.wait ? 'true' : 'false',
           ...transformNodes(ast.words),
         ]),
-        `) { yield 1; ${JUMP_CODE} };\n         ${STOP_CODE} ${JUMP_CODE}`,
+        `) { ${WAIT_CODE} };\n         ${STOP_CODE} ${JUMP_CODE}`,
       ]) // yield 1;
     case NODE.COMMAND:
       return write(ast, [
         `while (`,
         writeApi(ast, `command`, transformNodes(ast.words)),
-        `) { yield 1; ${JUMP_CODE} };\n         ${STOP_CODE} ${JUMP_CODE}`,
+        `) { ${WAIT_CODE} };\n         ${STOP_CODE} ${JUMP_CODE}`,
       ])
     // core / structure
     case NODE.IF: {

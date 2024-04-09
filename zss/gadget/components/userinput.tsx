@@ -101,19 +101,11 @@ export function UserHotkey({ hotkey, children }: UserHotkeyProps) {
     const invokecheck = isHotKey(hotkey, { byKey: true })
     function hotkeycheck(event: KeyboardEvent) {
       if (user.ignorehotkeys === false && invokecheck(event)) {
-        console.info(
-          'hotkeycheck',
-          user,
-          event,
-          invokecheck,
-          invokecheck(event),
-        )
         children()
       }
     }
-    document.addEventListener(HOTKEY_EVENT, hotkeycheck, { capture: true })
-    return () =>
-      document.removeEventListener(HOTKEY_EVENT, hotkeycheck, { capture: true })
+    document.addEventListener(HOTKEY_EVENT, hotkeycheck, false)
+    return () => document.removeEventListener(HOTKEY_EVENT, hotkeycheck, false)
   }, [hotkey, children])
 
   return null
