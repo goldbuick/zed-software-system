@@ -390,6 +390,8 @@ export function createchip(id: string, build: GeneratorBuild) {
       const result = count > 0
       const repeatCmd = repeatscommand[index]
 
+      console.info({ result, repeatCmd })
+
       if (result && repeatCmd) {
         chip.command(...repeatCmd)
       }

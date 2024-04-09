@@ -1,24 +1,26 @@
 @player
 
-' setup ui
-#gadget right 20
- $32
- $white   - - - - -
- $black$ongrey    ZED.CAFE    
- $white    - - - - -
- $32
-
 ' create content
 #book temp create
 
 ' load content in edit frame
 #frame temp edit title
 
+' setup ui
+#gadget right 20
+ 
+ $white   - - - - -
+ $black$ongrey    ZED.CAFE    
+ $white    - - - - -
+ 
+!hotkey plot space " Space ";Plot
+!hotkey draw tab "  Tab  ";Draw
+
 ' main loop
 #cycle 1
 #set blinkrate
 
-:think
+:main
 #give blinkrate
 
 #if blinkrate < 6 do
@@ -39,8 +41,14 @@
   #idle
 #endif
 
-#think
+#main
 
-' do blocks is the way you turn 
-' certain commands into multi-line blocks
-' 
+:plot
+#color white
+#main
+
+:draw
+#color yellow
+#main
+
+' #put temp 

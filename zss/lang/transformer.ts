@@ -250,13 +250,13 @@ function transformNode(ast: CodeNode): SourceNode {
           ast.wait ? 'true' : 'false',
           ...transformNodes(ast.words),
         ]),
-        `) { yield 1;\n         ${JUMP_CODE} };\n         ${JUMP_CODE} ${STOP_CODE}`,
+        `) { yield 1; ${JUMP_CODE} };\n         ${STOP_CODE} ${JUMP_CODE}`,
       ]) // yield 1;
     case NODE.COMMAND:
       return write(ast, [
         `while (`,
         writeApi(ast, `command`, transformNodes(ast.words)),
-        `) { yield 1;\n         ${JUMP_CODE} };\n         ${JUMP_CODE} ${STOP_CODE}`,
+        `) { yield 1; ${JUMP_CODE} };\n         ${STOP_CODE} ${JUMP_CODE}`,
       ])
     // core / structure
     case NODE.IF: {
