@@ -8,10 +8,12 @@ import {
   isdefined,
   ismaybestring,
   isnumber,
+  ispresent,
   isstring,
 } from 'zss/mapping/types'
 import { memoryreadchip } from 'zss/memory'
 import {
+  BOARD_DIR,
   MAYBE_BOARD,
   MAYBE_BOARD_ELEMENT,
   boardevaldir,
@@ -260,7 +262,7 @@ export function isstrcolor(value: any): value is STR_COLOR {
 export function readcolor(
   read: READ_CONTEXT,
   index: number,
-): [STR_COLOR | number | undefined, number] {
+): [STR_COLOR | undefined, number] {
   const value: MAYBE_WORD = read.words[index]
 
   // already mapped
@@ -279,6 +281,35 @@ export function readcolor(
     }
   }
 
+  return [undefined, index]
+}
+
+export type STR_KIND = [string, STR_COLOR?]
+
+export function isstrkind(value: any): value is STR_KIND {
+  return isarray(value) && typeof value[0] === 'string'
+}
+
+export function readkind(
+  read: READ_CONTEXT,
+  index: number,
+): [STR_KIND | undefined, number] {
+  const value: MAYBE_WORD = read.words[index]
+
+  // already mapped
+  if (isstrkind(value)) {
+    return [value, index + 1]
+  }
+
+  const [maybecolor, ii] = readcolor(read, index)
+  const [maybename, iii] = readexpr(read, ii)
+
+  // found a string, color is optional
+  if (typeof maybename === 'string') {
+    return [[maybename, maybecolor], iii]
+  }
+
+  // fail
   return [undefined, index]
 }
 
@@ -331,33 +362,45 @@ export function readdir(
   read: READ_CONTEXT,
   index: number,
 ): [STR_DIR | undefined, number] {
+  const dirvalue: STR_DIR = []
+  const maybevalue: MAYBE_WORD = read.words[index]
+
+  // already mapped
+  if (isstrdir(maybevalue)) {
+    return [maybevalue, index + 1]
+  }
+
+  // check for flag / stat value
+  if (typeof maybevalue === 'string') {
+    const maybeflagvalue = read.chip.get(maybevalue)
+    // already mapped
+    if (isstrdir(maybeflagvalue)) {
+      return [maybeflagvalue, index + 1]
+    }
+  }
+
   // one to many strings
-  let ii = index
-  while (ii < read.words.length) {
+  for (let ii = index; ii < read.words.length; ++ii) {
+    // check value
     const value = read.words[ii] as MAYBE_WORD
-    if (typeof value === 'string') {
-      // read value
-      const maybedir = read.chip.get(value)
-
-      // check for already mapped
-      if (isstrdir(maybedir)) {
-        return [maybedir, ii + 1]
-      }
-
-      // check for const value
-      if (isstrdirconst(maybedir)) {
-        ++ii
-        continue
-      }
+    if (typeof value !== 'string') {
+      break
     }
 
-    // not a dir const we bail
-    break
+    // read value
+    const maybedir = read.chip.get(value)
+
+    // check for const value
+    if (isstrdirconst(maybedir)) {
+      dirvalue.push(maybedir)
+    } else {
+      break
+    }
   }
 
   // found dir
-  if (ii !== index) {
-    return [read.words.slice(index, ii) as STR_DIR, ii]
+  if (dirvalue.length) {
+    return [dirvalue, index + dirvalue.length]
   }
 
   // fail
@@ -607,8 +650,8 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.CATEGORY]: CATEGORY
   [ARG_TYPE.COLLISION]: COLLISION
   [ARG_TYPE.COLOR]: COLOR
-  [ARG_TYPE.KIND]: [string, string?, string?]
-  [ARG_TYPE.DIR]: PT
+  [ARG_TYPE.KIND]: [string, COLOR?]
+  [ARG_TYPE.DIR]: BOARD_DIR
   [ARG_TYPE.NUMBER]: number
   [ARG_TYPE.STRING]: string
   [ARG_TYPE.MAYBE_CATEGORY]: CATEGORY | undefined
@@ -670,22 +713,17 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.KIND: {
-        const [value, iii] = readexpr(read, ii)
-        if (
-          !isarray(value) ||
-          !isstring(value[0]) ||
-          !ismaybestring(value[1]) ||
-          !ismaybestring(value[2])
-        ) {
-          didexpect('kind', value)
+        const [kind, iii] = readkind(read, ii)
+        if (isstrkind(kind)) {
+          ii = iii
+          values.push(kind)
+        } else {
+          didexpect('kind', kind)
         }
-        ii = iii
-        values.push(value)
         break
       }
       case ARG_TYPE.DIR: {
         const [dir, iii] = readdir(read, ii)
-        console.info('xxx', { dir, iii, read })
         if (isstrdir(dir)) {
           const value = read.board
             ? boardevaldir(read.board, read.target, dir)

@@ -126,8 +126,6 @@ function readinput(target: BOARD_ELEMENT) {
 
 export const ZZT_FIRMWARE = createfirmware(
   (chip, name) => {
-    // console.info('get', name)
-
     // check consts first (data normalization)
     const maybeconst = maptoconst(name)
     if (ispresent(maybeconst)) {

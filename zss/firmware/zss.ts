@@ -13,7 +13,7 @@ import { createboard } from 'zss/memory/board'
 import { createbook } from 'zss/memory/book'
 import { createcodepage } from 'zss/memory/codepage'
 
-import { ARG_TYPE, readargs } from './wordtypes'
+import { ARG_TYPE, COLLISION, COLOR, readargs } from './wordtypes'
 
 export const ZSS_FIRMWARE = createfirmware(
   () => {
@@ -75,6 +75,13 @@ export const ZSS_FIRMWARE = createfirmware(
                 // todo, make it so you can clone an existing book
                 return board
               }),
+            }),
+            createcodepage('@terrain wall', {
+              terrain: {
+                char: 219,
+                color: COLOR.CYAN,
+                collision: COLLISION.SOLID,
+              },
             }),
           ]),
         )

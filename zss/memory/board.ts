@@ -171,14 +171,20 @@ function moveptbydir(
   return pt
 }
 
+export type BOARD_DIR = {
+  x: number
+  y: number
+  frame?: string
+}
+
 export function boardevaldir(
   board: MAYBE_BOARD,
   target: MAYBE_BOARD_ELEMENT,
   dir: STR_DIR,
-): PT {
+): BOARD_DIR {
   const tx = target?.x ?? 0
   const ty = target?.y ?? 0
-  const pt: PT = { x: tx, y: ty }
+  const pt: BOARD_DIR = { x: tx, y: ty }
   const start: PT = { ...pt }
   const flow = dirfrompts(
     {
@@ -255,6 +261,11 @@ export function boardevaldir(
             pt.y += pick(-1, 1)
             break
         }
+        break
+      }
+      // framing
+      case DIR.EDIT: {
+        pt.frame = 'edit'
         break
       }
     }
