@@ -313,6 +313,10 @@ export const ZZT_FIRMWARE = createfirmware(
         const frame = memoryreadframes(memory.board?.id ?? '').find(
           (item) => item.type === FRAME_TYPE.EDIT,
         )
+        // what is needed here ??
+        // we need to write to synced memory
+        // need a global sync based on book id
+        // for buffers we can copy, cut, paste, match against
         console.info({ frame })
         break
       }

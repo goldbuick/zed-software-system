@@ -5,9 +5,9 @@ import * as Y from 'yjs'
 import { createdevice } from 'zss/device'
 import { MAYBE, MAYBE_NUMBER, MAYBE_STRING } from 'zss/mapping/types'
 
-export type MAYBE_MAP = MAYBE<Y.Map<any>>
-export type MAYBE_TEXT = MAYBE<Y.Text>
-export type MAYBE_ARRAY = MAYBE<Y.Array<any>>
+export type MAYBE_SHARED_MAP = MAYBE<Y.Map<any>>
+export type MAYBE_SHARED_TEXT = MAYBE<Y.Text>
+export type MAYBE_SHARED_ARRAY = MAYBE<Y.Array<any>>
 export type UNOBSERVE_FUNC = () => void
 
 const docs: Record<string, Y.Doc | undefined> = {}
@@ -220,7 +220,7 @@ export function observesharedvalue<T extends MAYBE_NUMBER | MAYBE_STRING>(
 }
 
 export function observesharedtype<
-  T extends MAYBE_MAP | MAYBE_TEXT | MAYBE_ARRAY,
+  T extends MAYBE_SHARED_MAP | MAYBE_SHARED_TEXT | MAYBE_SHARED_ARRAY,
 >(
   guid: string,
   key: string,
@@ -275,7 +275,9 @@ export function joinsharedvalue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   }
 }
 
-export function joinsharedtype<T extends MAYBE_MAP | MAYBE_TEXT | MAYBE_ARRAY>(
+export function joinsharedtype<
+  T extends MAYBE_SHARED_MAP | MAYBE_SHARED_TEXT | MAYBE_SHARED_ARRAY,
+>(
   guid: string,
   key: string,
   handler: (value: T | undefined) => void,

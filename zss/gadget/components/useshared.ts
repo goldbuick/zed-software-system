@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react'
 import {
-  MAYBE_MAP,
-  MAYBE_TEXT,
-  MAYBE_ARRAY,
-  MAYBE_NUMBER,
-  MAYBE_STRING,
+  MAYBE_SHARED_MAP,
+  MAYBE_SHARED_TEXT,
+  MAYBE_SHARED_ARRAY,
   updatesharedvalue,
   joinsharedtype,
   joinsharedvalue,
 } from 'zss/device/shared'
+import { MAYBE_NUMBER, MAYBE_STRING } from 'zss/mapping/types'
 
-export type { MAYBE_MAP, MAYBE_TEXT, MAYBE_ARRAY, MAYBE_NUMBER, MAYBE_STRING }
+export type { MAYBE_SHARED_MAP, MAYBE_SHARED_TEXT, MAYBE_SHARED_ARRAY }
 
 export function useSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   guid: string,
@@ -27,10 +26,9 @@ export function useSharedValue<T extends MAYBE_NUMBER | MAYBE_STRING>(
   return [value, updatevalue]
 }
 
-export function useSharedType<T extends MAYBE_MAP | MAYBE_TEXT | MAYBE_ARRAY>(
-  guid: string,
-  key: string,
-): [T | undefined] {
+export function useSharedType<
+  T extends MAYBE_SHARED_MAP | MAYBE_SHARED_TEXT | MAYBE_SHARED_ARRAY,
+>(guid: string, key: string): [T | undefined] {
   const [value, setvalue] = useState<T | undefined>(undefined)
   const [t, toggle] = useState(0)
 

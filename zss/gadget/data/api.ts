@@ -1,7 +1,7 @@
 import Case from 'case'
 import { CHIP, STATE, WORD, WORD_VALUE } from 'zss/chip'
 import {
-  MAYBE_TEXT,
+  MAYBE_SHARED_TEXT,
   observesharedtype,
   observesharedvalue,
   servesharedvalue,
@@ -236,7 +236,7 @@ export function gadgethyperlink(
       servesharedvalue(chip.id(), name, current)
 
       if (HYPERLINK_WITH_SHARED_TEXT.has(type)) {
-        panelshared[panel.id][name] = observesharedtype<MAYBE_TEXT>(
+        panelshared[panel.id][name] = observesharedtype<MAYBE_SHARED_TEXT>(
           chip.id(),
           name,
           (value) => {
