@@ -69,8 +69,8 @@ export function memoryresetframes(board: string): FRAME_STATE[] {
 
 export function memorycreateviewframe(
   board: string,
-  book?: string,
-  view?: string,
+  book: MAYBE_STRING,
+  view: MAYBE_STRING,
 ) {
   const frames = memoryreadframes(board)
   if (isdefined(frames)) {
@@ -80,8 +80,8 @@ export function memorycreateviewframe(
 
 export function memorycreateeditframe(
   board: string,
-  book?: string,
-  edit?: string,
+  book: MAYBE_STRING,
+  edit: MAYBE_STRING,
 ) {
   const frames = memoryreadframes(board)
   if (isdefined(frames)) {

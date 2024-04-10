@@ -9,14 +9,15 @@ import {
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent } from 'zss/mapping/types'
-import { memoryreadchip, memoryreadframes } from 'zss/memory'
+import { memoryreadbook, memoryreadchip, memoryreadframes } from 'zss/memory'
 import {
   BOARD_ELEMENT,
   boardfindplayer,
   boardmoveobject,
 } from 'zss/memory/board'
-import { bookreadflag, booksetflag } from 'zss/memory/book'
+import { bookreadboard, bookreadflag, booksetflag } from 'zss/memory/book'
 
+import { editboard } from '../memory/edit'
 import { FRAME_TYPE } from '../memory/frame'
 
 import {
@@ -308,24 +309,18 @@ export const ZZT_FIRMWARE = createfirmware(
       ARG_TYPE.KIND,
     ])
 
+    // todo: can we put into view frames ?
     switch (dir.frame) {
       case 'edit': {
         const frame = memoryreadframes(memory.board?.id ?? '').find(
           (item) => item.type === FRAME_TYPE.EDIT,
         )
-        // what is needed here ??
-        // we need to write to synced memory
-        // need a global sync based on book id
-        // for buffers we can copy, cut, paste, match against
-        console.info({ frame })
+        const book = memoryreadbook(frame?.book ?? '') ?? memory.book
+        const board = bookreadboard(book, frame?.board ?? '')
+        editboard(book, board, dir, kind)
         break
       }
-      default:
-        //
-        break
     }
-
-    console.info('put', { dir, kind })
 
     return 0
   })

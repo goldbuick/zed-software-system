@@ -37,35 +37,35 @@ export type BOARD_ELEMENT_STATS = {
   [key: string]: WORD_VALUE
 }
 
-export type BOARD_ELEMENT = Partial<{
+export type BOARD_ELEMENT = {
   // this element is an instance of an element type
-  kind: string
+  kind?: string
   // objects only
-  id: string
-  x: number
-  y: number
-  lx: number
-  ly: number
-  walk: number
-  code: string
+  id?: string
+  x?: number
+  y?: number
+  lx?: number
+  ly?: number
+  walk?: number
+  code?: string
   // this is a unique name for this instance
-  name: string
+  name?: string
   // display
-  char: number
-  color: number
-  bg: number
+  char?: number
+  color?: number
+  bg?: number
   // interaction
-  pushable: number
-  collision: number
-  destructible: number
+  pushable?: number
+  collision?: number
+  destructible?: number
   // custom
-  stats: BOARD_ELEMENT_STATS
+  stats?: BOARD_ELEMENT_STATS
   // runtime
-  category: CATEGORY
-  kinddata: BOARD_ELEMENT
-  kindcode: string
-  removed: number
-}>
+  category?: CATEGORY
+  kinddata?: BOARD_ELEMENT
+  kindcode?: string
+  removed?: number
+}
 
 export type MAYBE_BOARD_ELEMENT = MAYBE<BOARD_ELEMENT>
 
@@ -117,6 +117,24 @@ export function createboard(fn = noop<BOARD>) {
   return fn(board)
 }
 
+export function boardsetterrain(
+  board: MAYBE_BOARD,
+  x: number,
+  y: number,
+  terrain: BOARD_ELEMENT,
+) {
+  //
+}
+
+export function boardsetterrainfromkind(
+  board: MAYBE_BOARD,
+  x: number,
+  y: number,
+  terrain: BOARD_ELEMENT,
+) {
+  console.info({ terrain })
+}
+
 export function createboardobject(
   board: MAYBE_BOARD,
   from: MAYBE_BOARD_ELEMENT,
@@ -135,6 +153,16 @@ export function createboardobject(
 
   // return object
   return object
+}
+
+export function createboardobjectfromkind(
+  board: MAYBE_BOARD,
+  x: number,
+  y: number,
+  kind: MAYBE_BOARD_ELEMENT,
+): MAYBE_BOARD_ELEMENT {
+  //
+  return {}
 }
 
 export function boardreadobject(

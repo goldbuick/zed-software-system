@@ -650,15 +650,15 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.CATEGORY]: CATEGORY
   [ARG_TYPE.COLLISION]: COLLISION
   [ARG_TYPE.COLOR]: COLOR
-  [ARG_TYPE.KIND]: [string, COLOR?]
+  [ARG_TYPE.KIND]: STR_KIND
   [ARG_TYPE.DIR]: BOARD_DIR
   [ARG_TYPE.NUMBER]: number
   [ARG_TYPE.STRING]: string
   [ARG_TYPE.MAYBE_CATEGORY]: CATEGORY | undefined
   [ARG_TYPE.MAYBE_COLLISION]: COLLISION | undefined
   [ARG_TYPE.MAYBE_COLOR]: COLOR | undefined
-  [ARG_TYPE.MAYBE_KIND]: [string, string?, string?] | undefined
-  [ARG_TYPE.MAYBE_DIR]: PT | undefined
+  [ARG_TYPE.MAYBE_KIND]: STR_KIND | undefined
+  [ARG_TYPE.MAYBE_DIR]: BOARD_DIR | undefined
   [ARG_TYPE.MAYBE_NUMBER]: number | undefined
   [ARG_TYPE.MAYBE_STRING]: string | undefined
   [ARG_TYPE.ANY]: any
