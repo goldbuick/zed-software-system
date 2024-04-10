@@ -1,4 +1,5 @@
 import { proxy } from 'valtio'
+import { BIOS } from 'zss/bios'
 import { COLOR } from 'zss/firmware/wordtypes'
 import {
   INPUT,
@@ -10,7 +11,6 @@ import {
   createtiles,
 } from 'zss/gadget/data/types'
 import { unique } from 'zss/mapping/array'
-import { randomInteger } from 'zss/mapping/number'
 import { MAYBE, MAYBE_STRING, isdefined } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
@@ -146,12 +146,11 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
   return chip
 }
 
-const PLAYER_BOOK = 'BIOS'
 const PLAYER_KIND = 'player'
 const PLAYER_START = 'title'
 
 export function memoryplayerlogin(player: string) {
-  const book = memoryreadbook(PLAYER_BOOK)
+  const book = memoryreadbook(BIOS.name)
   const start = bookreadboard(book, PLAYER_START)
   const playerkind = bookreadobject(book, PLAYER_KIND)
   if (isdefined(start) && isdefined(playerkind)) {
@@ -197,7 +196,7 @@ export function memorytick(os: OS) {
   }
 
   // update boards / build code / run chips
-  const book = memoryreadbook(PLAYER_BOOK)
+  const book = memoryreadbook(BIOS.name)
   bookplayerreadboards(book).forEach((board) => boardtick(book, board, oncode))
 }
 
@@ -274,7 +273,7 @@ function memoryconverttogadgetlayers(
 }
 
 export function memoryreadgadgetlayers(player: string): LAYER[] {
-  const book = memoryreadbook(PLAYER_BOOK)
+  const book = memoryreadbook(BIOS.name)
   const board = bookplayerreadboard(book, player)
 
   const layers: LAYER[] = []

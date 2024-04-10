@@ -9,13 +9,15 @@ import {
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent } from 'zss/mapping/types'
-import { memoryreadchip } from 'zss/memory'
+import { memoryreadchip, memoryreadframes } from 'zss/memory'
 import {
   BOARD_ELEMENT,
   boardfindplayer,
   boardmoveobject,
 } from 'zss/memory/board'
 import { bookreadflag, booksetflag } from 'zss/memory/book'
+
+import { FRAME_TYPE } from '../memory/frame'
 
 import {
   categoryconsts,
@@ -305,7 +307,22 @@ export const ZZT_FIRMWARE = createfirmware(
       ARG_TYPE.DIR,
       ARG_TYPE.KIND,
     ])
+
+    switch (dir.frame) {
+      case 'edit': {
+        const frame = memoryreadframes(memory.board?.id ?? '').find(
+          (item) => item.type === FRAME_TYPE.EDIT,
+        )
+        console.info({ frame })
+        break
+      }
+      default:
+        //
+        break
+    }
+
     console.info('put', { dir, kind })
+
     return 0
   })
   // .command('restart' // this is handled by a built-in 0 label
