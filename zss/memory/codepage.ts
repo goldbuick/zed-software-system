@@ -52,11 +52,15 @@ export function createcodepage(
   code: string,
   content: Partial<Omit<CODE_PAGE, 'id' | 'code'>>,
 ) {
-  return {
+  const codepage = {
     id: createguid(),
     code,
     ...content,
   }
+  // read codepage name
+  codepagereadstats(codepage)
+  // return result
+  return codepage
 }
 
 function tokenstostrings(tokens: IToken[]) {

@@ -1,7 +1,7 @@
 import { WORD_VALUE } from 'zss/chip'
 import { unique } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
-import { MAYBE, MAYBE_STRING, isdefined } from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, isdefined, ispresent } from 'zss/mapping/types'
 
 import { MAYBE_BOARD, MAYBE_BOARD_ELEMENT } from './board'
 import {
@@ -44,7 +44,7 @@ export function bookreadcodepage(
   type: CODE_PAGE_TYPE,
   address: string,
 ): MAYBE_CODE_PAGE {
-  if (!book) {
+  if (!ispresent(book)) {
     return undefined
   }
 

@@ -11,7 +11,13 @@ import {
 } from 'zss/firmware/wordtypes'
 import { pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
-import { MAYBE, MAYBE_STRING, isdefined, noop } from 'zss/mapping/types'
+import {
+  MAYBE,
+  MAYBE_STRING,
+  isdefined,
+  ispresent,
+  noop,
+} from 'zss/mapping/types'
 
 import { namedelements, nearestpt } from './atomics'
 import {
@@ -121,18 +127,28 @@ export function boardsetterrain(
   board: MAYBE_BOARD,
   x: number,
   y: number,
-  terrain: BOARD_ELEMENT,
-) {
-  //
+  terrain: MAYBE_BOARD_ELEMENT,
+): MAYBE_BOARD_ELEMENT {
+  if (
+    !ispresent(board) ||
+    x < 0 ||
+    x >= board.width ||
+    y < 0 ||
+    y >= board.height
+  ) {
+    return undefined
+  }
+  board.terrain[x + y * board.width] = terrain
+  return terrain
 }
 
 export function boardsetterrainfromkind(
   board: MAYBE_BOARD,
   x: number,
   y: number,
-  terrain: BOARD_ELEMENT,
+  kind: string,
 ) {
-  console.info({ terrain })
+  boardsetterrain(board, x, y, { kind })
 }
 
 export function createboardobject(
@@ -161,7 +177,7 @@ export function createboardobjectfromkind(
   y: number,
   kind: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
-  //
+  console.info({ kind })
   return {}
 }
 

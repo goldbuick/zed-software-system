@@ -19,13 +19,15 @@ export function editboard(
     return
   }
 
-  const maybeterrain = bookreadterrain(book, kind[0])
+  const [name, maybecolor] = kind
+  const maybeterrain = bookreadterrain(book, name)
   if (ispresent(maybeterrain)) {
-    boardsetterrainfromkind(board, dir.x, dir.y, maybeterrain)
+    boardsetterrainfromkind(board, dir.x, dir.y, name)
+    console.info(board)
   }
 
   const maybeobject = bookreadobject(book, kind[0])
-  if (ispresent(maybeobject)) {
+  if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
     createboardobjectfromkind(board, dir.x, dir.y, maybeobject)
   }
 }
