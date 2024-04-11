@@ -58,7 +58,7 @@ export function createcodepage(
     ...content,
   }
   // read codepage name
-  codepagereadstats(codepage)
+  // codepagereadstats(codepage)
   // return result
   return codepage
 }

@@ -12,7 +12,7 @@ export const BIOS = createbook('BIOS', [
     object: {
       char: 219,
       color: COLOR.WHITE,
-      bg: COLOR.SHADOW,
+      bg: COLOR.CLEAR,
     },
   }),
   createcodepage('@terrain field', {

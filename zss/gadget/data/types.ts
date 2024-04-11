@@ -104,7 +104,7 @@ export function createtiles(
   index: number,
   width: number,
   height: number,
-  fill = 0,
+  bg = 0,
 ): LAYER_TILES {
   const size = width * height
   return {
@@ -112,19 +112,25 @@ export function createtiles(
     type: LAYER_TYPE.TILES,
     width,
     height,
-    char: arrayof(size, fill),
-    color: arrayof(size, fill),
-    bg: arrayof(size, fill),
+    char: arrayof(size, 0),
+    color: arrayof(size, 0),
+    bg: arrayof(size, bg),
   }
 }
 
-export function createsprite(player: string, index: number, id: string) {
+export function createsprite(
+  player: string,
+  index: number,
+  id: string,
+  char = 1,
+  color = 15,
+) {
   return {
     id: `sprites:${player}:${index}:${id}`,
     x: 0,
     y: 0,
-    char: 1,
-    color: 15,
+    char,
+    color,
     bg: COLOR_TINDEX,
   }
 }

@@ -11,7 +11,7 @@ import {
   createtiles,
 } from 'zss/gadget/data/types'
 import { unique } from 'zss/mapping/array'
-import { MAYBE, MAYBE_STRING, isdefined } from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, isdefined, ispresent } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
@@ -203,16 +203,17 @@ export function memorytick(os: OS) {
 function memoryconverttogadgetlayers(
   player: string,
   index: number,
-  book: MAYBE_BOOK,
-  board: MAYBE_BOARD,
+  book: BOOK,
+  board: BOARD,
   isprimary: boolean,
 ): LAYER[] {
   const layers: LAYER[] = []
 
   let i = index
-  const boardwidth = board?.width ?? 0
-  const boardheight = board?.height ?? 0
-  const defaultcolor = isprimary ? COLOR.BLACK : COLOR.CLEAR
+  const isbaseboard = i === 0
+  const boardwidth = board.width ?? 0
+  const boardheight = board.height ?? 0
+  const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.CLEAR
 
   const tiles = createtiles(player, i++, boardwidth, boardheight, defaultcolor)
   layers.push(tiles)
@@ -225,12 +226,12 @@ function memoryconverttogadgetlayers(
   layers.push(objects)
 
   const control = createlayercontrol(player, i++)
+  // hack to keep only one control layer
   if (isprimary) {
-    // hack to keep only one control layer
     layers.push(control)
   }
 
-  board?.terrain.forEach((tile, i) => {
+  board.terrain.forEach((tile, i) => {
     if (tile) {
       const kind = bookterrainreadkind(book, tile)
       tiles.char[i] = tile.char ?? kind?.char ?? 0
@@ -239,7 +240,7 @@ function memoryconverttogadgetlayers(
     }
   })
 
-  const withobjects = board?.objects ?? {}
+  const withobjects = board.objects ?? {}
   Object.values(withobjects).forEach((object) => {
     // should we have bg transparent or match the bg color of the terrain ?
     const id = object.id ?? ''
@@ -272,6 +273,16 @@ function memoryconverttogadgetlayers(
   return layers
 }
 
+function framerank(frame: FRAME_STATE): number {
+  switch (frame.type) {
+    case FRAME_TYPE.EDIT:
+      return 1
+    case FRAME_TYPE.VIEW:
+      return 2
+  }
+  return 0
+}
+
 export function memoryreadgadgetlayers(player: string): LAYER[] {
   const book = memoryreadbook(BIOS.name)
   const board = bookplayerreadboard(book, player)
@@ -283,19 +294,23 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
 
   let i = 0
   const frames = memoryreadframes(board.id ?? '')
-  frames.forEach((frame) => {
-    const withbook = memoryreadbook(frame.book ?? '') ?? book
-    const withboard = bookreadboard(withbook, frame.board ?? '') ?? board
-    const view = memoryconverttogadgetlayers(
-      player,
-      i,
-      withbook,
-      withboard,
-      frame.type === FRAME_TYPE.VIEW,
-    )
-    i += view.length
-    layers.push(...view)
-  })
+  frames
+    .toSorted((a, b) => framerank(a) - framerank(b))
+    .forEach((frame) => {
+      const withbook = memoryreadbook(frame.book ?? '') ?? book
+      const withboard = bookreadboard(withbook, frame.board ?? '') ?? board
+      if (ispresent(withbook) && ispresent(withboard)) {
+        const view = memoryconverttogadgetlayers(
+          player,
+          i,
+          withbook,
+          withboard,
+          frame.type === FRAME_TYPE.VIEW,
+        )
+        i += view.length
+        layers.push(...view)
+      }
+    })
 
   return layers
 }

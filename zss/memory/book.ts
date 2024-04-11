@@ -91,7 +91,16 @@ export function bookreadobject(
   book: MAYBE_BOOK,
   object: MAYBE_STRING,
 ): MAYBE_BOARD_ELEMENT {
-  return bookreadcodepage(book, CODE_PAGE_TYPE.OBJECT, object ?? '')
+  const withobject = object ?? ''
+  const page = bookreadcodepage(book, CODE_PAGE_TYPE.OBJECT, withobject)
+  const data = bookreadcodepagedata(book, CODE_PAGE_TYPE.OBJECT, withobject)
+  return !ispresent(page)
+    ? undefined
+    : {
+        ...data,
+        name: withobject,
+        code: page.code,
+      }
 }
 
 export function bookobjectreadkind(
@@ -111,7 +120,16 @@ export function bookreadterrain(
   book: MAYBE_BOOK,
   terrain: MAYBE_STRING,
 ): MAYBE_BOARD_ELEMENT {
-  return bookreadcodepage(book, CODE_PAGE_TYPE.TERRAIN, terrain ?? '')
+  const withterrain = terrain ?? ''
+  const page = bookreadcodepage(book, CODE_PAGE_TYPE.TERRAIN, withterrain)
+  const data = bookreadcodepagedata(book, CODE_PAGE_TYPE.TERRAIN, withterrain)
+  return !ispresent(page)
+    ? undefined
+    : {
+        ...data,
+        name: withterrain,
+        code: page.code,
+      }
 }
 
 export function bookterrainreadkind(

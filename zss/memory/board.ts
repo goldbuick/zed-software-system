@@ -8,6 +8,7 @@ import {
   COLLISION,
   ispt,
   CATEGORY,
+  STR_COLOR,
 } from 'zss/firmware/wordtypes'
 import { pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
@@ -147,6 +148,7 @@ export function boardsetterrainfromkind(
   x: number,
   y: number,
   kind: string,
+  color?: STR_COLOR,
 ) {
   boardsetterrain(board, x, y, { kind })
 }
