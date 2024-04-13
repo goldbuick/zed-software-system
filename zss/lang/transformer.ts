@@ -91,42 +91,38 @@ function writeApi(
   return write(ast, [`api.${method}(`, ...joinChunks(params, ', '), `)`])
 }
 
-function writeArray(ast: CodeNode, array: Array<string | SourceNode>) {
-  return write(ast, [`[`, ...joinChunks(array, ', '), `]`])
-}
-
 function transformCompare(ast: CodeNode) {
   if (ast.type === NODE.COMPARE) {
     switch (ast.compare) {
       case COMPARE.IS_EQ:
         return writeApi(ast, 'isEq', [
-          writeArray(ast, transformNodes(ast.lhs)),
-          writeArray(ast, transformNodes(ast.rhs)),
+          transformNode(ast.lhs),
+          transformNode(ast.rhs),
         ])
       case COMPARE.IS_NOT_EQ:
         return writeApi(ast, 'isNotEq', [
-          writeArray(ast, transformNodes(ast.lhs)),
-          writeArray(ast, transformNodes(ast.rhs)),
+          transformNode(ast.lhs),
+          transformNode(ast.rhs),
         ])
       case COMPARE.IS_LESS_THAN:
         return writeApi(ast, 'isLessThan', [
-          writeArray(ast, transformNodes(ast.lhs)),
-          writeArray(ast, transformNodes(ast.rhs)),
+          transformNode(ast.lhs),
+          transformNode(ast.rhs),
         ])
       case COMPARE.IS_GREATER_THAN:
         return writeApi(ast, 'isGreaterThan', [
-          writeArray(ast, transformNodes(ast.lhs)),
-          writeArray(ast, transformNodes(ast.rhs)),
+          transformNode(ast.lhs),
+          transformNode(ast.rhs),
         ])
       case COMPARE.IS_LESS_THAN_OR_EQ:
         return writeApi(ast, 'isLessThanOrEq', [
-          writeArray(ast, transformNodes(ast.lhs)),
-          writeArray(ast, transformNodes(ast.rhs)),
+          transformNode(ast.lhs),
+          transformNode(ast.rhs),
         ])
       case COMPARE.IS_GREATER_THAN_OR_EQ:
         return writeApi(ast, 'isGreaterThanOrEq', [
-          writeArray(ast, transformNodes(ast.lhs)),
-          writeArray(ast, transformNodes(ast.rhs)),
+          transformNode(ast.lhs),
+          transformNode(ast.rhs),
         ])
     }
   }
@@ -137,20 +133,20 @@ function prefixApi(
   ast: CodeNode,
   operation: SourceNode,
   method: string,
-  rhs: CodeNode[],
+  rhs: CodeNode,
 ) {
   operation.prepend(`api.${method}(`)
-  return operation.add([', ', writeApi(ast, 'group', transformNodes(rhs)), ')'])
+  return operation.add([', ', transformNode(rhs), ')'])
 }
 
 function prefixUniApi(
   ast: CodeNode,
   operation: SourceNode,
   method: string,
-  rhs: CodeNode[],
+  rhs: CodeNode,
 ) {
   operation.prepend(`api.${method}(`)
-  return operation.add([writeApi(ast, 'group', transformNodes(rhs)), ')'])
+  return operation.add([transformNode(rhs), ')'])
 }
 
 function transformOperatorItem(ast: CodeNode, operation: SourceNode) {
@@ -181,10 +177,8 @@ function transformOperatorItem(ast: CodeNode, operation: SourceNode) {
 
 function transformOperator(ast: CodeNode) {
   if (ast.type === NODE.OPERATOR) {
-    const operation = writeArray(ast, transformNodes(ast.lhs))
-    ast.words.forEach((item) => {
-      transformOperatorItem(item, operation)
-    })
+    const operation = transformNode(ast.lhs)
+    ast.items.forEach((item) => transformOperatorItem(item, operation))
     return operation
   }
   return write(ast, '')

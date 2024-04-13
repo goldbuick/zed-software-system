@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import {
   CstChildrenDictionary,
   CstElement,
@@ -178,31 +179,31 @@ type CodeNodeData =
     }
   | {
       type: NODE.OR
-      words: CodeNode[]
+      items: CodeNode[]
     }
   | {
       type: NODE.AND
-      words: CodeNode[]
+      items: CodeNode[]
     }
   | {
       type: NODE.NOT
-      words: CodeNode[]
+      items: CodeNode[]
     }
   | {
       type: NODE.COMPARE
-      lhs: CodeNode[]
+      lhs: CodeNode
       compare: COMPARE
-      rhs: CodeNode[]
+      rhs: CodeNode
     }
   | {
       type: NODE.OPERATOR
-      lhs: CodeNode[]
-      words: CodeNode[]
+      lhs: CodeNode
+      items: CodeNode[]
     }
   | {
       type: NODE.OPERATOR_ITEM
       operator: OPERATOR
-      rhs: CodeNode[]
+      rhs: CodeNode
     }
   | {
       type: NODE.GROUP
@@ -285,37 +286,37 @@ class ScriptVisitor extends CstVisitor {
   program(ctx: CstChildrenDictionary) {
     return makeNode(ctx, {
       type: NODE.PROGRAM,
-      // @ts-expect-error cst element
+      // @ts-expect-error
       lines: asList(this, ctx.line),
     })
   }
 
   line(ctx: CstChildrenDictionary) {
     if (ctx.stmt) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.stmt)
     }
   }
 
   stmt(ctx: CstChildrenDictionary) {
     if (ctx.stat) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.stat)
     }
     if (ctx.text) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.text)
     }
     if (ctx.label) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.label)
     }
     if (ctx.comment) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.comment)
     }
     if (ctx.commands) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.commands)
     }
   }
@@ -352,18 +353,18 @@ class ScriptVisitor extends CstVisitor {
   }
 
   commands(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
+    // @ts-expect-error
     return asList(this, ctx.command)
   }
 
   command(ctx: CstChildrenDictionary) {
     // console.info('command', ctx)
     if (ctx.flat_cmd) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.flat_cmd)
     }
     if (ctx.structured_cmd) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.structured_cmd)
     }
   }
@@ -373,51 +374,62 @@ class ScriptVisitor extends CstVisitor {
     if (ctx.words) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
-        // @ts-expect-error cst element
+        // @ts-expect-error
+
         words: asList(this, ctx.words).flat(),
       })
     }
     if (ctx.hyperlink) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
+
       return this.visit(ctx.hyperlink)
     }
     if (ctx.Short_go) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
+
       return this.visit(ctx.Short_go)
     }
     if (ctx.Short_try) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
+
       return this.visit(ctx.Short_try)
     }
     if (ctx.Command_play) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
+
       return this.visit(ctx.Command_play)
     }
   }
 
   structured_cmd(ctx: CstChildrenDictionary) {
     if (ctx.Command_if) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
+
       return this.visit(ctx.Command_if)
     }
     if (ctx.Command_read) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
+
       return this.visit(ctx.Command_read)
     }
     if (ctx.Command_while) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
+
       return this.visit(ctx.Command_while)
     }
     if (ctx.Command_repeat) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
+
       return this.visit(ctx.Command_repeat)
     }
     if (ctx.Command_break) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
+
       return this.visit(ctx.Command_break)
     }
     if (ctx.Command_continue) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
+
       return this.visit(ctx.Command_continue)
     }
   }
@@ -426,7 +438,7 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.HYPERLINK,
       input: strImage(ctx.HyperLinkText?.[0] ?? ';').slice(1),
-      // @ts-expect-error cst element
+      // @ts-expect-error
       words: asList(this, ctx.words).flat(),
     })
   }
@@ -437,7 +449,7 @@ class ScriptVisitor extends CstVisitor {
       return makeNode(ctx, {
         type: NODE.MOVE,
         wait: true,
-        // @ts-expect-error cst element
+        // @ts-expect-error
         words: asList(this, ctx.words).flat(),
       })
     }
@@ -449,7 +461,7 @@ class ScriptVisitor extends CstVisitor {
       return makeNode(ctx, {
         type: NODE.MOVE,
         wait: false,
-        // @ts-expect-error cst element
+        // @ts-expect-error
         words: asList(this, ctx.words).flat(),
       })
     }
@@ -471,41 +483,41 @@ class ScriptVisitor extends CstVisitor {
   }
 
   do_line(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
+    // @ts-expect-error
     return this.visit(ctx.do_stmt)
   }
 
   do_stmt(ctx: CstChildrenDictionary) {
     // console.info('do_stmt', ctx)
     if (ctx.text) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.text)
     }
     if (ctx.comment) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.comment)
     }
     if (ctx.commands) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.commands)
     }
   }
 
   Command_if(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
+    // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
     const lines = [
-      // @ts-expect-error cst element
+      // @ts-expect-error
       this.visit(ctx.command),
-      // @ts-expect-error cst element
+      // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
 
     const branches = [
-      // @ts-expect-error cst element
+      // @ts-expect-error
       this.visit(ctx.Command_else_if),
-      // @ts-expect-error cst element
+      // @ts-expect-error
       this.visit(ctx.Command_else),
     ].flat()
 
@@ -519,17 +531,17 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_else_if(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
+    // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
     const lines = [
-      // @ts-expect-error cst element
+      // @ts-expect-error
       this.visit(ctx.command),
-      // @ts-expect-error cst element
+      // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
 
-    // @ts-expect-error cst element
+    // @ts-expect-error
     const branches = asList(this, ctx.Command_else_if).flat()
 
     return [
@@ -541,19 +553,19 @@ class ScriptVisitor extends CstVisitor {
       }),
       // un-nest else_if & else
       ...branches.filter(ispresent),
-      // @ts-expect-error cst element
+      // @ts-expect-error
       this.visit(ctx.Command_else),
     ]
   }
 
   Command_else(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
+    // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
     const lines = [
-      // @ts-expect-error cst element
+      // @ts-expect-error
       this.visit(ctx.command),
-      // @ts-expect-error cst element
+      // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
 
@@ -570,13 +582,13 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_while(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
+    // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
     const lines = [
-      // @ts-expect-error cst element
+      // @ts-expect-error
       this.visit(ctx.command),
-      // @ts-expect-error cst element
+      // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
 
@@ -588,13 +600,13 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_repeat(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
+    // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
     const lines = [
-      // @ts-expect-error cst element
+      // @ts-expect-error
       this.visit(ctx.command),
-      // @ts-expect-error cst element
+      // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
 
@@ -606,13 +618,13 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_read(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
+    // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
     const lines = [
-      // @ts-expect-error cst element
+      // @ts-expect-error
       this.visit(ctx.command),
-      // @ts-expect-error cst element
+      // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
 
@@ -637,56 +649,56 @@ class ScriptVisitor extends CstVisitor {
 
   expr(ctx: CstChildrenDictionary) {
     if (ctx.and_test.length === 1) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.and_test)
     }
     return makeNode(ctx, {
       type: NODE.OR,
-      // @ts-expect-error cst element
-      words: this.visit(ctx.and_test),
+      // @ts-expect-error
+      items: this.visit(ctx.and_test),
     })
   }
 
   and_test(ctx: CstChildrenDictionary) {
     if (ctx.not_test.length === 1) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.not_test)
     }
     return makeNode(ctx, {
       type: NODE.AND,
-      // @ts-expect-error cst element
-      words: this.visit(ctx.not_test),
+      // @ts-expect-error
+      items: this.visit(ctx.not_test),
     })
   }
 
   not_test(ctx: CstChildrenDictionary) {
     if (ctx.comparison) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.comparison)
     }
     if (ctx.not_test) {
       return makeNode(ctx, {
         type: NODE.NOT,
-        // @ts-expect-error cst element
-        words: this.visit(ctx.not_test),
+        // @ts-expect-error
+        items: this.visit(ctx.not_test),
       })
     }
   }
 
   comparison(ctx: CstChildrenDictionary) {
     if (ctx.arith_expr.length === 1) {
-      // @ts-expect-error cst element
+      // @ts-expect-error
       return this.visit(ctx.arith_expr)
     }
 
     return makeNode(ctx, {
       type: NODE.COMPARE,
-      // @ts-expect-error cst element
-      lhs: [this.visit(ctx.arith_expr[0])],
-      // @ts-expect-error cst element
+      // @ts-expect-error
+      lhs: this.visit(ctx.arith_expr[0]),
+      // @ts-expect-error
       compare: this.visit(ctx.comp_op),
-      // @ts-expect-error cst element
-      rhs: [this.visit(ctx.arith_expr[1])],
+      // @ts-expect-error
+      rhs: this.visit(ctx.arith_expr[1]),
     })
   }
 
@@ -713,53 +725,49 @@ class ScriptVisitor extends CstVisitor {
 
   expr_value(ctx: CstChildrenDictionary) {
     if (ctx.and_test_value.length === 1) {
-      // @ts-expect-error cst element
       return this.visit(ctx.and_test_value)
     }
     return makeNode(ctx, {
       type: NODE.OR,
-      // @ts-expect-error cst element
+
       words: this.visit(ctx.and_test_value),
     })
   }
 
   and_test_value(ctx: CstChildrenDictionary) {
     if (ctx.not_test_value.length === 1) {
-      // @ts-expect-error cst element
       return this.visit(ctx.not_test_value)
     }
     return makeNode(ctx, {
       type: NODE.AND,
-      // @ts-expect-error cst element
+
       words: this.visit(ctx.not_test_value),
     })
   }
 
   not_test_value(ctx: CstChildrenDictionary) {
     if (ctx.arith_expr) {
-      // @ts-expect-error cst element
       return this.visit(ctx.arith_expr)
     }
     if (ctx.not_test) {
       return makeNode(ctx, {
         type: NODE.NOT,
-        // @ts-expect-error cst element
+
         words: this.visit(ctx.not_test),
       })
     }
   }
 
   arith_expr(ctx: CstChildrenDictionary) {
+    const term = this.visit(ctx.term)
     if (!ctx.arith_expr_item) {
-      // @ts-expect-error cst element
-      return this.visit(ctx.term)
+      return term
     }
     return makeNode(ctx, {
       type: NODE.OPERATOR,
-      // @ts-expect-error cst element
-      lhs: asList(this, ctx.term),
-      // @ts-expect-error cst element
-      words: asList(this, ctx.arith_expr_item),
+      lhs: term,
+
+      items: asList(this, ctx.arith_expr_item),
     })
   }
 
@@ -767,22 +775,19 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.OPERATOR_ITEM,
       operator: ctx.Plus ? OPERATOR.PLUS : OPERATOR.MINUS,
-      // @ts-expect-error cst element
+
       rhs: asList(this, ctx.term),
     })
   }
 
   term(ctx: CstChildrenDictionary) {
     if (!ctx.term_item) {
-      // @ts-expect-error cst element
       return this.visit(ctx.factor)
     }
     return makeNode(ctx, {
       type: NODE.OPERATOR,
-      // @ts-expect-error cst element
-      lhs: asList(this, ctx.factor),
-      // @ts-expect-error cst element
-      words: asList(this, ctx.term_item),
+      lhs: this.visit(ctx.factor),
+      items: this.visit(ctx.term_item),
     })
   }
 
@@ -805,14 +810,13 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.OPERATOR_ITEM,
       operator,
-      // @ts-expect-error cst element
+
       rhs: asList(this, ctx.factor),
     })
   }
 
   factor(ctx: CstChildrenDictionary) {
     if (ctx.power) {
-      // @ts-expect-error cst element
       return this.visit(ctx.power)
     }
 
@@ -831,7 +835,7 @@ class ScriptVisitor extends CstVisitor {
         makeNode(ctx, {
           type: NODE.OPERATOR_ITEM,
           operator,
-          // @ts-expect-error cst element
+
           rhs: asList(this, ctx.factor),
         }),
       ],
@@ -839,18 +843,17 @@ class ScriptVisitor extends CstVisitor {
   }
 
   power(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
     const token = this.visit(ctx.token)
 
     if (ctx.factor) {
       return makeNode(ctx, {
         type: NODE.OPERATOR,
-        lhs: [token],
+        lhs: token,
         words: [
           makeNode(ctx, {
             type: NODE.OPERATOR_ITEM,
             operator: OPERATOR.POWER,
-            // @ts-expect-error cst element
+
             rhs: asList(this, ctx.factor),
           }),
         ],
@@ -861,7 +864,6 @@ class ScriptVisitor extends CstVisitor {
   }
 
   words(ctx: CstChildrenDictionary) {
-    // @ts-expect-error cst element
     return asList(this, ctx.expr)
   }
 
@@ -894,7 +896,7 @@ class ScriptVisitor extends CstVisitor {
     if (ctx.LParen) {
       return makeNode(ctx, {
         type: NODE.GROUP,
-        // @ts-expect-error cst element
+
         words: asList(this, ctx.expr).flat(),
       })
     }

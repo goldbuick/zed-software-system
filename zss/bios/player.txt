@@ -18,20 +18,20 @@
 
 ' main loop
 #cycle 1
-#set blinkrate
-#clear drawing
+#set blink
+#set drawing white
 
 :main
-#give blinkrate
+#give blink
 
-#if blinkrate < 10 do
+#if blink < 10 do
   #char 219
-  #color white
-#else if blinkrate < 15 do
+  #color drawing
+#else if blink < 15 do
   #char 176
-  #color black
+  #color grey
 #else do
-  #clear blinkrate
+  #clear blink
 #endif
 
 #if inputmove do
@@ -51,9 +51,9 @@
 #main
 
 :draw
-#if drawing do
-  #clear drawing
+#if drawing is white do
+  #set drawing yellow
 #else do
-  #set drawing
+  #set drawing white
 #endif
 #main

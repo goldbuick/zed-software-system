@@ -140,7 +140,7 @@ function createWordToken(word: string) {
 
 export const IsEq = createToken({
   name: 'IsEq',
-  pattern: /=|eq|equal/,
+  pattern: /=|is|eq|equal/,
   longer_alt: StringLiteral,
 })
 export const IsNotEq = createToken({
