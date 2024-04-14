@@ -7,8 +7,7 @@ import {
   IToken,
 } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
-
-import { ispresent } from '../mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { parser } from './parser'
 
@@ -41,7 +40,7 @@ export enum NODE {
   COMPARE,
   OPERATOR,
   OPERATOR_ITEM,
-  GROUP,
+  EXPR,
 }
 
 export enum COMPARE {
@@ -197,7 +196,7 @@ type CodeNodeData =
     }
   | {
       type: NODE.OPERATOR
-      lhs: CodeNode
+      lhs: MAYBE<CodeNode>
       items: CodeNode[]
     }
   | {
@@ -206,7 +205,7 @@ type CodeNodeData =
       rhs: CodeNode
     }
   | {
-      type: NODE.GROUP
+      type: NODE.EXPR
       words: CodeNode[]
     }
 
@@ -725,40 +724,44 @@ class ScriptVisitor extends CstVisitor {
 
   expr_value(ctx: CstChildrenDictionary) {
     if (ctx.and_test_value.length === 1) {
+      // @ts-expect-error
       return this.visit(ctx.and_test_value)
     }
     return makeNode(ctx, {
       type: NODE.OR,
-
-      words: this.visit(ctx.and_test_value),
+      // @ts-expect-error
+      items: this.visit(ctx.and_test_value),
     })
   }
 
   and_test_value(ctx: CstChildrenDictionary) {
     if (ctx.not_test_value.length === 1) {
+      // @ts-expect-error
       return this.visit(ctx.not_test_value)
     }
     return makeNode(ctx, {
       type: NODE.AND,
-
-      words: this.visit(ctx.not_test_value),
+      // @ts-expect-error
+      items: this.visit(ctx.not_test_value),
     })
   }
 
   not_test_value(ctx: CstChildrenDictionary) {
     if (ctx.arith_expr) {
+      // @ts-expect-error
       return this.visit(ctx.arith_expr)
     }
     if (ctx.not_test) {
       return makeNode(ctx, {
         type: NODE.NOT,
-
-        words: this.visit(ctx.not_test),
+        // @ts-expect-error
+        items: this.visit(ctx.not_test),
       })
     }
   }
 
   arith_expr(ctx: CstChildrenDictionary) {
+    // @ts-expect-error
     const term = this.visit(ctx.term)
     if (!ctx.arith_expr_item) {
       return term
@@ -766,8 +769,8 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.OPERATOR,
       lhs: term,
-
-      items: asList(this, ctx.arith_expr_item),
+      // @ts-expect-error
+      items: this.visit(ctx.arith_expr_item),
     })
   }
 
@@ -775,18 +778,21 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.OPERATOR_ITEM,
       operator: ctx.Plus ? OPERATOR.PLUS : OPERATOR.MINUS,
-
-      rhs: asList(this, ctx.term),
+      // @ts-expect-error
+      rhs: this.visit(ctx.term),
     })
   }
 
   term(ctx: CstChildrenDictionary) {
     if (!ctx.term_item) {
+      // @ts-expect-error
       return this.visit(ctx.factor)
     }
     return makeNode(ctx, {
       type: NODE.OPERATOR,
+      // @ts-expect-error
       lhs: this.visit(ctx.factor),
+      // @ts-expect-error
       items: this.visit(ctx.term_item),
     })
   }
@@ -810,13 +816,14 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.OPERATOR_ITEM,
       operator,
-
-      rhs: asList(this, ctx.factor),
+      // @ts-expect-error
+      rhs: this.visit(ctx.factor),
     })
   }
 
   factor(ctx: CstChildrenDictionary) {
     if (ctx.power) {
+      // @ts-expect-error
       return this.visit(ctx.power)
     }
 
@@ -830,31 +837,31 @@ class ScriptVisitor extends CstVisitor {
 
     return makeNode(ctx, {
       type: NODE.OPERATOR,
-      lhs: [],
-      words: [
+      lhs: undefined,
+      items: [
         makeNode(ctx, {
           type: NODE.OPERATOR_ITEM,
           operator,
-
-          rhs: asList(this, ctx.factor),
+          // @ts-expect-error
+          rhs: this.visit(ctx.factor),
         }),
       ],
     })
   }
 
   power(ctx: CstChildrenDictionary) {
+    // @ts-expect-error
     const token = this.visit(ctx.token)
-
     if (ctx.factor) {
       return makeNode(ctx, {
         type: NODE.OPERATOR,
         lhs: token,
-        words: [
+        items: [
           makeNode(ctx, {
             type: NODE.OPERATOR_ITEM,
             operator: OPERATOR.POWER,
-
-            rhs: asList(this, ctx.factor),
+            // @ts-expect-error
+            rhs: this.visit(ctx.factor),
           }),
         ],
       })
@@ -864,6 +871,7 @@ class ScriptVisitor extends CstVisitor {
   }
 
   words(ctx: CstChildrenDictionary) {
+    // @ts-expect-error
     return asList(this, ctx.expr)
   }
 
@@ -895,8 +903,8 @@ class ScriptVisitor extends CstVisitor {
 
     if (ctx.LParen) {
       return makeNode(ctx, {
-        type: NODE.GROUP,
-
+        type: NODE.EXPR,
+        // @ts-expect-error
         words: asList(this, ctx.expr).flat(),
       })
     }

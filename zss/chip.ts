@@ -5,7 +5,7 @@ import { ARG_TYPE, chipreadcontext, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
-import { deepcopy, isequal, isnumber, isstring } from './mapping/types'
+import { deepcopy, isequal, isstring } from './mapping/types'
 
 export const HALT_AT_COUNT = 64
 
@@ -68,22 +68,22 @@ export type CHIP = {
   or: (...words: WORD[]) => WORD_VALUE
   and: (...words: WORD[]) => WORD_VALUE
   not: (...words: WORD[]) => WORD_VALUE
-  group: (...words: WORD[]) => WORD[]
-  isEq: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  isNotEq: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  isLessThan: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  isGreaterThan: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  isLessThanOrEq: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  isGreaterThanOrEq: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  opPlus: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  opMinus: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  opPower: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  opMultiply: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  opDivide: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  opModDivide: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  opFloorDivide: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  opUniPlus: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
-  opUniMinus: (lhs: WORD[], rhs: WORD[]) => WORD_VALUE
+  expr: (...words: WORD[]) => WORD[]
+  isEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  isNotEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  isLessThan: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  isGreaterThan: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  isLessThanOrEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  isGreaterThanOrEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opPlus: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opMinus: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opPower: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opMultiply: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opDivide: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opModDivide: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opFloorDivide: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opUniPlus: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  opUniMinus: (lhs: WORD, rhs: WORD) => WORD_VALUE
 }
 
 export type WORD = string | number
@@ -478,83 +478,124 @@ export function createchip(id: string, build: GeneratorBuild) {
       const [value] = readargs(read, 0, [ARG_TYPE.ANY])
       return value ? 0 : 1
     },
-    group(...words) {
+    expr(...words) {
       // eval a group of words as an expression
       const read = chipreadcontext(chip, words)
       const [value] = readargs(read, 0, [ARG_TYPE.ANY])
       return value
     },
     isEq(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.ANY])
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.ANY])
+      const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [ARG_TYPE.ANY])
+      console.info({ left, right }, '??', isequal(left, right))
       return isequal(left, right) ? 1 : 0
     },
     isNotEq(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.ANY])
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.ANY])
+      const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [ARG_TYPE.ANY])
       return left !== right ? 1 : 0
     },
     isLessThan(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
+      const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
       return left < right ? 1 : 0
     },
     isGreaterThan(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
+      const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
       return left > right ? 1 : 0
     },
     isLessThanOrEq(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
+      const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
       return left <= right ? 1 : 0
     },
     isGreaterThanOrEq(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
+      const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
       return left >= right ? 1 : 0
     },
     opPlus(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.ANY])
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.ANY])
+      const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [ARG_TYPE.ANY])
       return left + right
     },
     opMinus(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.ANY])
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.ANY])
+      const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [ARG_TYPE.ANY])
       return left - right
     },
     opPower(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
+      const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
       return Math.pow(left, right)
     },
     opMultiply(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
+      const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
       return left * right
     },
     opDivide(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
+      const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
       return left / right
     },
     opModDivide(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
+      const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
       return left % right
     },
     opFloorDivide(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip, lhs), 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
+      const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
       return Math.floor(left / right)
     },
     opUniPlus(rhs) {
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
       return +right
     },
     opUniMinus(rhs) {
-      const [right] = readargs(chipreadcontext(chip, rhs), 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [
+        ARG_TYPE.NUMBER,
+      ])
       return -right
     },
   }

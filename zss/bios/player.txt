@@ -20,6 +20,7 @@
 #cycle 1
 #set blink
 #set drawing white
+#set playermove idle
 
 :main
 #give blink
@@ -35,10 +36,19 @@
 #endif
 
 #if inputmove do
+  #set playermove inputmove
   #if inputalt do
-    ?10 inputmove
+    #if drawing is yellow do
+      #repeat 10 do
+        ?playermove
+        #put edit idle wall
+      #endrepeat
+    #else do
+      ?10 playermove
+    #endif
   #else do 
-    ?inputmove
+    ?playermove
+    #if drawing is yellow put edit idle wall
   #endif
 #else do
   #idle
@@ -53,6 +63,7 @@
 :draw
 #if drawing is white do
   #set drawing yellow
+  #put edit idle wall
 #else do
   #set drawing white
 #endif

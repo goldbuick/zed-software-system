@@ -8,7 +8,7 @@ export type MAYBE_NUMBER = number | undefined
 export type MAYBE_STRING = string | undefined
 
 export function isequal(a: any, b: any) {
-  return compare(a, b)
+  return compare(a, b).length === 0
 }
 
 export function deepcopy<T>(word: T): T {
