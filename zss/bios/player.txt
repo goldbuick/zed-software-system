@@ -25,10 +25,10 @@
 :main
 #give blink
 
-#if blink < 10 do
+#if blink < 19 do
   #char 219
   #color drawing
-#else if blink < 15 do
+#else if blink < 30 do
   #char 176
   #color grey
 #else do
