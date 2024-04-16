@@ -1,6 +1,6 @@
-import React from 'react'
-import { hub } from 'zss/hub'
-
+import { useFrame } from '@react-three/fiber'
+import React, { useRef } from 'react'
+import { Group, Vector2 } from 'three'
 import {
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
@@ -11,8 +11,11 @@ import {
   LAYER,
   LAYER_TYPE,
   layersreadcontrol,
-} from '../data/types'
-import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
+} from 'zss/gadget/data/types'
+import { loadDefaultCharset, loadDefaultPalette } from 'zss/gadget/file/bytes'
+import { hub } from 'zss/hub'
+import { clamp } from 'zss/mapping/number'
+import { ispresent } from 'zss/mapping/types'
 
 import Clipping from './clipping'
 import { Dither } from './dither'
@@ -55,21 +58,55 @@ export function Framed({ player, layers, width, height }: FramedProps) {
   const drawheight = control.height * DRAW_CHAR_HEIGHT * control.viewscale
   const marginy = drawheight - viewheight
 
+  const zone = Math.round(Math.min(viewwidth, viewheight) * 0.3333)
+
   const offsetx = -control.focusx * DRAW_CHAR_WIDTH * control.viewscale
   const centerx = viewwidth * 0.5 + offsetx
 
   const offsety = -control.focusy * DRAW_CHAR_HEIGHT * control.viewscale
   const centery = viewheight * 0.5 + offsety
 
-  const left =
-    drawwidth < viewwidth
-      ? (viewwidth - drawwidth) * 0.5
-      : Math.max(-marginx, Math.min(0, centerx))
-
+  const left = drawwidth < viewwidth ? (viewwidth - drawwidth) * 0.5 : centerx
   const top =
-    drawheight < viewheight
-      ? (viewheight - drawheight) * 0.5
-      : Math.max(-marginy, Math.min(0, centery))
+    drawheight < viewheight ? (viewheight - drawheight) * 0.5 : centery
+
+  const ref = useRef<Group>(null)
+
+  useFrame((state, delta) => {
+    const { current } = ref
+    if (!current) {
+      return
+    }
+
+    if (!ispresent(current.userData.focus)) {
+      current.position.x = left
+      current.position.y = top
+      current.userData.focus = new Vector2(left, top)
+    }
+
+    const dx = current.position.x - left
+    if (Math.abs(dx) >= zone) {
+      const step = dx < 0 ? -zone : zone
+      current.userData.focus.x = Math.round(left - step)
+    }
+
+    const dy = current.position.y - top
+    if (Math.abs(dy) >= zone) {
+      const step = dy < 0 ? -zone : zone
+      current.userData.focus.y = Math.round(top - step)
+    }
+
+    const slide = 6
+    current.position.x +=
+      (current.userData.focus.x - current.position.x) * delta * slide
+    current.position.y +=
+      (current.userData.focus.y - current.position.y) * delta * slide
+
+    current.position.x = clamp(current.position.x, -marginx, 0)
+    current.position.y = clamp(current.position.y, -marginy, 0)
+  })
+
+  Math.max(-marginy, Math.min(0, centery))
 
   return (
     <UserFocus>
@@ -84,7 +121,7 @@ export function Framed({ player, layers, width, height }: FramedProps) {
       />
       <Clipping width={viewwidth} height={viewheight}>
         {/* eslint-disable-next-line react/no-unknown-property */}
-        <group scale={control.viewscale} position={[left, top, 0]}>
+        <group ref={ref} scale={control.viewscale}>
           {layers.map((layer, i) => {
             switch (layer.type) {
               default:

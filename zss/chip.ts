@@ -487,7 +487,6 @@ export function createchip(id: string, build: GeneratorBuild) {
     isEq(lhs, rhs) {
       const [left] = readargs(chipreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
       const [right] = readargs(chipreadcontext(chip, [rhs]), 0, [ARG_TYPE.ANY])
-      console.info({ left, right }, '??', isequal(left, right))
       return isequal(left, right) ? 1 : 0
     },
     isNotEq(lhs, rhs) {
