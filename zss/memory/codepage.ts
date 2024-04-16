@@ -52,15 +52,11 @@ export function createcodepage(
   code: string,
   content: Partial<Omit<CODE_PAGE, 'id' | 'code'>>,
 ) {
-  const codepage = {
+  return {
     id: createguid(),
     code,
     ...content,
   }
-  // read codepage name
-  // codepagereadstats(codepage)
-  // return result
-  return codepage
 }
 
 function tokenstostrings(tokens: IToken[]) {
@@ -69,7 +65,7 @@ function tokenstostrings(tokens: IToken[]) {
 
 function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
   const [stat, target, ...args] = tokens
-  console.info({ stat, target, args })
+  // console.info({ stat, target, args })
   if (isdefined(codepage.stats) && isdefined(stat)) {
     switch (stat.image.toLowerCase()) {
       case 'rn':
@@ -80,6 +76,8 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
       case 'number':
       case 'tx':
       case 'text':
+      case 'ln': // link to another board
+      case 'link':
         if (isdefined(target)) {
           const ltarget = target.image.toLowerCase()
           codepage.stats[ltarget] = tokenstostrings(args ?? [])
@@ -90,7 +88,7 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
         break
     }
   }
-  console.info(codepage.stats)
+  // console.info(codepage.stats)
 }
 
 export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
@@ -116,12 +114,16 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
         case 'stat': {
           // stat content is prefixed with hyperlink !
           const stat = tokenize(`!${maybename}`)
-          console.info('ttttt', stat)
+          // console.info('ttttt', stat)
           if (stat.tokens.length) {
             tokenstostats(codepage, stat.tokens)
           }
           break
         }
+        case 'flags':
+          // simple space separated local flag names
+          codepage.stats['flags'] = maybename
+          break
         case 'func':
           codepage.stats.type = CODE_PAGE_TYPE.FUNC
           codepage.stats.name = maybename

@@ -1,5 +1,6 @@
 @spin
-#cycle pick range 1 5
+@flags grak prak
+#cycle pick range 1 1
 #color pick red white blue
 :think
 ?u?r?d?l
