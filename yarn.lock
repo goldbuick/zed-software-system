@@ -1584,10 +1584,10 @@
     uuid "^9.0.1"
     zustand "^3.5.13"
 
-"@react-three/fiber@^8.13.6":
-  version "8.15.11"
-  resolved "https://registry.npmjs.org/@react-three/fiber/-/fiber-8.15.11.tgz#e93bfd761a70099dcc80508d69c2540797a8f74e"
-  integrity sha512-jOJjrjVMBJQwIK6Uirc3bErUCTiclbS2alJG1eU8pV1jIwDZwPwcfHzSi2TautxoA4ddMt5DmlpatK4rIqM4jA==
+"@react-three/fiber@^8.16.2":
+  version "8.16.2"
+  resolved "https://registry.npmjs.org/@react-three/fiber/-/fiber-8.16.2.tgz#0911db572b39d4986b645a709fd5af63eab81482"
+  integrity sha512-3Z5FW8mxzomBbrw2iF0lNOAlNBr2OK6HR0NM416PzcTs0UcSoPj/nD4eqmrV5Kut6kvCc/TJua5LyeoPE7vSmw==
   dependencies:
     "@babel/runtime" "^7.17.8"
     "@types/react-reconciler" "^0.26.7"
@@ -1601,10 +1601,10 @@
     suspend-react "^0.1.3"
     zustand "^3.7.1"
 
-"@react-three/postprocessing@^2.15.0":
-  version "2.15.11"
-  resolved "https://registry.npmjs.org/@react-three/postprocessing/-/postprocessing-2.15.11.tgz#d07069eabe5da67c31f56ca7f4fbef71dcca817b"
-  integrity sha512-XQJxhk/hsbzUCLagd8V4pg28iy+UMkYeFFL7BOdlSM1TgAorNzMim+Wu5zI6fbAaGMpmwk7PCbOZN5YPgD0BRQ==
+"@react-three/postprocessing@^2.16.2":
+  version "2.16.2"
+  resolved "https://registry.npmjs.org/@react-three/postprocessing/-/postprocessing-2.16.2.tgz#a6ed5aa0775d843eba845915c41160ce7fff3e79"
+  integrity sha512-2ya1gXLDpzyfbELobi3rPHNNZZCrCfyq20GMYJD1yD7ZyBFSpRG9YSPMBnOal6A89kXanPBw273h6/Dqev0n7g==
   dependencies:
     buffer "^6.0.3"
     maath "^0.6.0"

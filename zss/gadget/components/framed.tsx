@@ -93,7 +93,7 @@ export function Framed({ player, layers, width, height }: FramedProps) {
     const dy = current.position.y - top
     if (Math.abs(dy) >= zone) {
       const step = dy < 0 ? -zone : zone
-      current.userData.focus.y = Math.round(top - step)
+      current.userData.focus.y = Math.round(top - step * 0.5)
     }
 
     const slide = 6
