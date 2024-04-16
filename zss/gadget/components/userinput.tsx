@@ -38,13 +38,16 @@ const isMac = window.navigator.userAgent.indexOf('Mac') !== -1
 document.addEventListener(
   'keydown',
   (event) => {
-    event.preventDefault()
-
     const key = event.key.toLowerCase()
     const mods: UserInputMods = {
       alt: event.altKey,
       ctrl: isMac ? event.metaKey : event.ctrlKey,
       shift: event.shiftKey,
+    }
+
+    // allow Ctrl + R for now ...
+    if (key !== 'r' || mods.ctrl === false) {
+      event.preventDefault()
     }
 
     switch (key) {
