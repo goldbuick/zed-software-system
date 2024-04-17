@@ -29,7 +29,6 @@ export const CRTShape = wrapEffect(CRTShapeEffect)
 
 const CRTLinesFragmentShader = `
 uniform float count;
-uniform float shifty;
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
   float distortion = -0.014;
@@ -43,10 +42,8 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
 	);
 
 	vec2 bend = (kk * xDistorted).xy * 0.5 + 0.5;
-	float offset = time + bend.y * count;
-  float signal = sin(shifty + offset) + 0.3;
+  float signal = sin(time * 8.0 + bend.y * count) + 0.3;
 
-	// outputColor = vec4(signal, signal, signal, inputColor.a);
 	outputColor = mix(vec4(signal, signal, signal, inputColor.a), inputColor, 0.725);
 }
 `

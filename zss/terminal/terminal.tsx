@@ -1,7 +1,6 @@
 import { OrthographicCamera } from '@react-three/drei'
 import { addEffect, addAfterEffect } from '@react-three/fiber'
 import {
-  Noise,
   ChromaticAberration,
   EffectComposer,
   BrightnessContrast,
@@ -34,8 +33,6 @@ export function Terminal() {
       end()
     }
   }, [])
-
-  // useFrame(() => {})
 
   return (
     <>

@@ -7,6 +7,9 @@ import { makeEven } from 'zss/mapping/number'
 
 import 'zss/platform'
 
+import { BIOS } from '../bios'
+import { valuetourlhash } from '../mapping/urlhash'
+
 import { Terminal } from './terminal'
 
 const target = new THREE.Vector3()
@@ -116,3 +119,13 @@ export function App() {
     </>
   )
 }
+
+async function test() {
+  const urlhash = valuetourlhash(BIOS) ?? 'ERROR'
+  console.info({
+    hashsize: urlhash.length,
+    urlhash,
+  })
+}
+
+test()
