@@ -251,7 +251,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
               // eslint-disable-next-line react/no-unknown-property
               position={[0, 0, 800]}
             >
-              <StaticDither width={width} height={height} alpha={0.5} />
+              <StaticDither width={width} height={height} alpha={0.14} />
             </group>
             <group
               // eslint-disable-next-line react/no-unknown-property
