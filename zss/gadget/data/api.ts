@@ -121,6 +121,14 @@ export function gadgetcheckset(chip: CHIP, name: string, value: WORD) {
   })
 }
 
+export function gadgetcheckscroll(chip: CHIP) {
+  // get state
+  const shared = gadgetstate(chip.id())
+  shared.layout = shared.layout.filter(
+    (item) => item.edge !== PANEL_TYPE.SCROLL || item.text.length > 0,
+  )
+}
+
 export function gadgetpanel(
   chip: CHIP,
   edge: string,

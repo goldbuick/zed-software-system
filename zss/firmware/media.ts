@@ -1,13 +1,19 @@
 import { createfirmware } from 'zss/firmware'
 
-export const MEDIA_FIRMWARE = createfirmware(
-  (chip, name) => {
+export const MEDIA_FIRMWARE = createfirmware({
+  get(chip, name) {
     return [false, undefined]
   },
-  (chip, name, value) => {
+  set(chip, name, value) {
     return [false, undefined]
   },
-).command('play', (chip, words) => {
+  tick(chip) {
+    //
+  },
+  tock(chip) {
+    //
+  },
+}).command('play', (chip, words) => {
   return 0
 })
 

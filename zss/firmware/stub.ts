@@ -1,12 +1,18 @@
 import { createfirmware } from 'zss/firmware'
 
-export const STUB_FIRMWARE = createfirmware(
-  (chip, name) => {
+export const STUB_FIRMWARE = createfirmware({
+  get(chip, name) {
     return [false, undefined]
   },
-  (chip, name, value) => {
+  set(chip, name, value) {
     return [false, undefined]
   },
-).command('stub', (chip, words) => {
+  tick(chip) {
+    //
+  },
+  tock(chip) {
+    //
+  },
+}).command('stub', (chip, words) => {
   return 0
 })

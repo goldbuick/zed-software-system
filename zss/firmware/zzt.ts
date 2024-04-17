@@ -127,8 +127,8 @@ function readinput(target: BOARD_ELEMENT) {
   memory.inputqueue.delete(head)
 }
 
-export const ZZT_FIRMWARE = createfirmware(
-  (chip, name) => {
+export const ZZT_FIRMWARE = createfirmware({
+  get(chip, name) {
     // check consts first (data normalization)
     const maybeconst = maptoconst(name)
     if (ispresent(maybeconst)) {
@@ -162,7 +162,7 @@ export const ZZT_FIRMWARE = createfirmware(
     const value = bookreadflag(memory.book, player?.id ?? '', name)
     return [ispresent(value), value]
   },
-  (chip, name, value) => {
+  set(chip, name, value) {
     const memory = memoryreadchip(chip.id())
 
     // we have to check the object's stats first
@@ -186,7 +186,9 @@ export const ZZT_FIRMWARE = createfirmware(
     booksetflag(memory.book, player?.id ?? '', name, value)
     return [true, value]
   },
-)
+  tick() {},
+  tock() {},
+})
   .command('become', (chip, words) => {
     console.info(words)
     return 0

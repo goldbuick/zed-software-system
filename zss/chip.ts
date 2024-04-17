@@ -223,6 +223,11 @@ export function createchip(id: string, build: GeneratorBuild) {
       loops = 0
       yieldstate = false
 
+      // invoke firmware tick
+      for (let i = 0; i < firmwares.length; ++i) {
+        firmwares[i].tick(chip)
+      }
+
       // invoke generator
       try {
         const result = logic?.next()
@@ -233,6 +238,11 @@ export function createchip(id: string, build: GeneratorBuild) {
       } catch (err: any) {
         console.error('we crashed?', err)
         endedstate = true
+      }
+
+      // invoke firmware tock
+      for (let i = 0; i < firmwares.length; ++i) {
+        firmwares[i].tock(chip)
       }
 
       return true

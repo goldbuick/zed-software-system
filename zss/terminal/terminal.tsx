@@ -1,13 +1,12 @@
 import { OrthographicCamera } from '@react-three/drei'
 import { addEffect, addAfterEffect } from '@react-three/fiber'
 import {
-  Bloom,
   Noise,
-  BrightnessContrast,
+  ChromaticAberration,
   EffectComposer,
-  Vignette,
+  BrightnessContrast,
 } from '@react-three/postprocessing'
-import { BlendFunction, KernelSize } from 'postprocessing'
+import { BlendFunction } from 'postprocessing'
 import React, { useEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { STATS_DEV } from 'zss/config'
@@ -50,15 +49,18 @@ export function Terminal() {
         <Gadget />
       </Framing>
       <EffectComposer>
-        <BrightnessContrast
-          brightness={0.2} // brightness. min: -1, max: 1
-          // contrast={0.1} // contrast: min -1, max: 1
+        <ChromaticAberration
+          radialModulation
+          modulationOffset={0.5}
+          blendFunction={BlendFunction.NORMAL} // blend mode
+          offset={[0.001, 0.0]} // color offset
         />
-        <Noise opacity={0.25} />
+        <Noise opacity={0.231} />
         {/* @ts-expect-error pls stop */}
-        <CRTLines />
+        <CRTLines blendFunction={BlendFunction.OVERLAY} />
         {/* @ts-expect-error pls stop */}
         <CRTShape />
+        <BrightnessContrast brightness={0.05} />
       </EffectComposer>
     </>
   )

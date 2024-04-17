@@ -1,6 +1,10 @@
 import { createfirmware } from 'zss/firmware'
-import { gadgetcheckset, gadgetpanel } from 'zss/gadget/data/api'
-import { PANEL_TYPE_MAP } from 'zss/gadget/data/types'
+import {
+  gadgetcheckscroll,
+  gadgetcheckset,
+  gadgetpanel,
+} from 'zss/gadget/data/api'
+import { PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { isdefined, ispresent } from 'zss/mapping/types'
 import {
   memorycreateeditframe,
@@ -15,17 +19,25 @@ import { createcodepage } from 'zss/memory/codepage'
 
 import { ARG_TYPE, COLLISION, COLOR, readargs } from './wordtypes'
 
-export const ZSS_FIRMWARE = createfirmware(
-  () => {
+export const ZSS_FIRMWARE = createfirmware({
+  get() {
     return [false, undefined]
   },
-  (chip, name, value) => {
+  set(chip, name, value) {
     // we monitor changes on shared values here
     gadgetcheckset(chip, name, value)
     // return has unhandled
     return [false, undefined]
   },
-)
+  tick(chip) {
+    const memory = memoryreadchip(chip.id())
+    const withname = memory.target?.name ?? memory.target?.kind ?? 'Scroll'
+    gadgetpanel(chip, 'scroll', PANEL_TYPE.SCROLL, undefined, withname)
+  },
+  tock(chip) {
+    gadgetcheckscroll(chip)
+  },
+})
   .command('bg', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.COLOR])

@@ -15,6 +15,8 @@
  
 !hotkey plot space " Space ";Plot
 !hotkey draw tab "  Tab  ";Draw
+ 
+!hotkey menu_test m  ;Menu Test
 
 ' main loop
 #cycle 1
@@ -67,4 +69,17 @@
 #else do
   #set drawing white
 #endif
+#main
+
+:menu_test
+#set frank4 blonky
+Open Codepage $blue$3$1
+$3 Here is some test text and yeah! $3
+----------------------------------
+!number          frank1 100         ;Number Value 
+!rn              frank2             ;Slider 
+!select          frank3 A BB CC 333 ;Enum 
+!text            frank4             ;Text Value 
+
+#idle
 #main
