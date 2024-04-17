@@ -10,7 +10,7 @@ import { randomInteger } from '../mapping/number'
 export const BIOS = createbook('BIOS', [
   createcodepage('@board title', {
     board: createboard((board) => {
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 32; i++) {
         createboardobject(board, {
           x: randomInteger(0, board.width - 1),
           y: randomInteger(0, board.height - 1),

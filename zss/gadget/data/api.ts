@@ -107,8 +107,10 @@ export function gadgetplayers() {
 }
 
 export function gadgetclearscroll(player: string) {
-  const state = gadgetstate(player)
-  state.layout = state.layout.filter((item) => item.edge !== PANEL_TYPE.SCROLL)
+  const shared = gadgetstate(player)
+  shared.layout = shared.layout.filter(
+    (item) => item.edge !== PANEL_TYPE.SCROLL,
+  )
 }
 
 export function gadgetcheckset(chip: CHIP, name: string, value: WORD) {

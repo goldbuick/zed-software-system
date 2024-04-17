@@ -52,15 +52,13 @@ export function Terminal() {
         <ChromaticAberration
           radialModulation
           modulationOffset={0.5}
-          blendFunction={BlendFunction.NORMAL} // blend mode
-          offset={[0.001, 0.0]} // color offset
+          offset={[0.0014, 0.0]} // color offset
         />
-        <Noise opacity={0.231} />
         {/* @ts-expect-error pls stop */}
         <CRTLines blendFunction={BlendFunction.OVERLAY} />
         {/* @ts-expect-error pls stop */}
         <CRTShape />
-        <BrightnessContrast brightness={0.05} />
+        <BrightnessContrast brightness={-0.01} />
       </EffectComposer>
     </>
   )

@@ -28,11 +28,10 @@
 #give blink
 
 #if blink < 19 do
-  #char 219
+  #char 22
   #color drawing
-#else if blink < 30 do
-  #char 176
-  #color grey
+#else if blink < 25 do
+  #char 219
 #else do
   #clear blink
 #endif
@@ -40,7 +39,7 @@
 #if inputmove do
   #set playermove inputmove
   #if inputalt do
-    #if drawing is yellow do
+    #if drawing is blue do
       #repeat 10 do
         ?playermove
         #put edit idle wall
@@ -50,7 +49,7 @@
     #endif
   #else do 
     ?playermove
-    #if drawing is yellow put edit idle wall
+    #if drawing is blue put edit idle wall
   #endif
 #else do
   #idle
@@ -64,7 +63,7 @@
 
 :draw
 #if drawing is white do
-  #set drawing yellow
+  #set drawing blue
   #put edit idle wall
 #else do
   #set drawing white
@@ -72,8 +71,6 @@
 #main
 
 :menu_test
-#set frank4 blonky
-Open Codepage $blue$3$1
 $3 Here is some test text and yeah! $3
 ----------------------------------
 !number          frank1 100         ;Number Value 

@@ -177,7 +177,7 @@ function transformOperatorItem(ast: CodeNode, operation: SourceNode) {
 
 function transformOperator(ast: CodeNode) {
   if (ast.type === NODE.OPERATOR) {
-    const operation = transformNode(ast.lhs)
+    const operation = ast.lhs ? transformNode(ast.lhs) : write(ast, '')
     ast.items.forEach((item) => transformOperatorItem(item, operation))
     return operation
   }
@@ -234,8 +234,8 @@ function transformNode(ast: CodeNode): SourceNode {
     }
     case NODE.HYPERLINK:
       return writeApi(ast, `hyperlink`, [
-        writeTemplateString(ast.input),
-        ...transformNodes(ast.words),
+        writeTemplateString(ast.text),
+        ...transformNodes(ast.link),
       ])
     case NODE.MOVE:
       return write(ast, [
@@ -369,11 +369,11 @@ function transformNode(ast: CodeNode): SourceNode {
       return write(ast, `continue;\n`)
     // expressions
     case NODE.OR:
-      return writeApi(ast, 'or', ast.words.map(transformNode))
+      return writeApi(ast, 'or', ast.items.map(transformNode))
     case NODE.AND:
-      return writeApi(ast, 'and', ast.words.map(transformNode))
+      return writeApi(ast, 'and', ast.items.map(transformNode))
     case NODE.NOT:
-      return writeApi(ast, 'not', ast.words.map(transformNode))
+      return writeApi(ast, 'not', ast.items.map(transformNode))
     case NODE.COMPARE:
       return transformCompare(ast)
     case NODE.OPERATOR:

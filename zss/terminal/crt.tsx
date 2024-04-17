@@ -43,21 +43,19 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
 	);
 
 	vec2 bend = (kk * xDistorted).xy * 0.5 + 0.5;
-	float offset = time * 8.0 + bend.y * count;
-  float signal = sin(shifty + offset) + 0.99;
+	float offset = time + bend.y * count;
+  float signal = sin(shifty + offset) + 0.3;
 
-	outputColor = mix(vec4(signal, signal, signal, inputColor.a), inputColor, 0.7);
+	// outputColor = vec4(signal, signal, signal, inputColor.a);
+	outputColor = mix(vec4(signal, signal, signal, inputColor.a), inputColor, 0.725);
 }
 `
 
 class CRTLinesEffect extends Effect {
-  constructor(blendFunction: BlendFunction, shifty: number) {
+  constructor(blendFunction: BlendFunction) {
     super('CRTLinesEffect', CRTLinesFragmentShader, {
       blendFunction,
-      uniforms: new Map([
-        ['count', new Uniform(1)],
-        ['shifty', new Uniform(shifty)],
-      ]),
+      uniforms: new Map([['count', new Uniform(1)]]),
     })
   }
 

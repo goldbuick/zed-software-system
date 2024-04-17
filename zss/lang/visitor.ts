@@ -109,8 +109,8 @@ type CodeNodeData =
     }
   | {
       type: NODE.HYPERLINK
-      input: string
-      words: CodeNode[]
+      link: CodeNode[]
+      text: string
     }
   | {
       type: NODE.LITERAL
@@ -374,28 +374,23 @@ class ScriptVisitor extends CstVisitor {
       return makeNode(ctx, {
         type: NODE.COMMAND,
         // @ts-expect-error
-
         words: asList(this, ctx.words).flat(),
       })
     }
     if (ctx.hyperlink) {
       // @ts-expect-error
-
       return this.visit(ctx.hyperlink)
     }
     if (ctx.Short_go) {
       // @ts-expect-error
-
       return this.visit(ctx.Short_go)
     }
     if (ctx.Short_try) {
       // @ts-expect-error
-
       return this.visit(ctx.Short_try)
     }
     if (ctx.Command_play) {
       // @ts-expect-error
-
       return this.visit(ctx.Command_play)
     }
   }
@@ -403,32 +398,26 @@ class ScriptVisitor extends CstVisitor {
   structured_cmd(ctx: CstChildrenDictionary) {
     if (ctx.Command_if) {
       // @ts-expect-error
-
       return this.visit(ctx.Command_if)
     }
     if (ctx.Command_read) {
       // @ts-expect-error
-
       return this.visit(ctx.Command_read)
     }
     if (ctx.Command_while) {
       // @ts-expect-error
-
       return this.visit(ctx.Command_while)
     }
     if (ctx.Command_repeat) {
       // @ts-expect-error
-
       return this.visit(ctx.Command_repeat)
     }
     if (ctx.Command_break) {
       // @ts-expect-error
-
       return this.visit(ctx.Command_break)
     }
     if (ctx.Command_continue) {
       // @ts-expect-error
-
       return this.visit(ctx.Command_continue)
     }
   }
@@ -436,9 +425,9 @@ class ScriptVisitor extends CstVisitor {
   hyperlink(ctx: CstChildrenDictionary) {
     return makeNode(ctx, {
       type: NODE.HYPERLINK,
-      input: strImage(ctx.HyperLinkText?.[0] ?? ';').slice(1),
       // @ts-expect-error
-      words: asList(this, ctx.words).flat(),
+      link: asList(this, ctx.words).flat(),
+      text: strImage(ctx.HyperLinkText?.[0] ?? ';').slice(1),
     })
   }
 

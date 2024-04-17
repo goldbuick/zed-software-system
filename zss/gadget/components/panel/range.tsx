@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react'
+import { MAYBE_NUMBER } from 'zss/mapping/types'
 
 import {
   cacheWriteTextContext,
@@ -6,7 +7,7 @@ import {
   writeCharToEnd,
 } from '../../data/textformat'
 import { UserInput, UserInputHandler } from '../userinput'
-import { MAYBE_NUMBER, useSharedValue } from '../useshared'
+import { useSharedValue } from '../useshared'
 
 import {
   PanelItemProps,

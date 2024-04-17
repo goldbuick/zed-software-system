@@ -1,6 +1,7 @@
 @spin
 #cycle pick range 1 10
-#color pick red white blue
+#color pick red white blue yellow dkblue dkred dkgreen
 :think
 ?u?r?d?l
+#char pick range 1 22
 #think

@@ -91,7 +91,7 @@ export const ZSS_FIRMWARE = createfirmware({
             createcodepage('@terrain wall', {
               terrain: {
                 char: 219,
-                color: COLOR.CYAN,
+                color: COLOR.DKGREEN,
                 collision: COLLISION.SOLID,
               },
             }),

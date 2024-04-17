@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
-
 import {
   cacheWriteTextContext,
   tokenizeAndWriteTextFormat,
   writeCharToEnd,
-} from '../../data/textformat'
+} from 'zss/gadget/data/textformat'
+
 import { UserFocus, UserInput } from '../userinput'
-import { MAYBE_TEXT, useSharedType } from '../useshared'
+import { MAYBE_SHARED_TEXT, useSharedType } from '../useshared'
 
 import {
   PanelItemProps,
@@ -26,7 +26,7 @@ export function PanelItemText({
   const target = mapTo(args[0], '')
 
   // state
-  const [value] = useSharedType<MAYBE_TEXT>(chip, target)
+  const [value] = useSharedType<MAYBE_SHARED_TEXT>(chip, target)
   const state = value?.toJSON() ?? ''
 
   const blink = useBlink()
