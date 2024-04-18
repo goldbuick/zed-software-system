@@ -5,7 +5,6 @@ import {
   EffectComposer,
   BrightnessContrast,
 } from '@react-three/postprocessing'
-import { BlendFunction } from 'postprocessing'
 import React, { useEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { STATS_DEV } from 'zss/config'
@@ -46,16 +45,14 @@ export function Terminal() {
         <Gadget />
       </Framing>
       <EffectComposer>
+        <CRTShape />
         <ChromaticAberration
           radialModulation
           modulationOffset={0.5}
           offset={[0.0014, 0.0]} // color offset
         />
-        {/* @ts-expect-error pls stop */}
-        <CRTLines blendFunction={BlendFunction.OVERLAY} />
-        {/* @ts-expect-error pls stop */}
-        <CRTShape />
         <BrightnessContrast brightness={-0.01} />
+        <CRTLines />
       </EffectComposer>
     </>
   )

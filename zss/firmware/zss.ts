@@ -88,6 +88,22 @@ export const ZSS_FIRMWARE = createfirmware({
                 return board
               }),
             }),
+            createcodepage('@terrain dirt', {
+              terrain: {
+                char: 176,
+                bg: COLOR.BLACK,
+                color: COLOR.DKYELLOW,
+                collision: COLLISION.WALK,
+              },
+            }),
+            createcodepage('@terrain dirt2', {
+              terrain: {
+                char: 176,
+                bg: COLOR.BLACK,
+                color: COLOR.DKGRAY,
+                collision: COLLISION.WALK,
+              },
+            }),
             createcodepage('@terrain wall', {
               terrain: {
                 char: 177,

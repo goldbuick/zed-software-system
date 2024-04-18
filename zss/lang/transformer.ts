@@ -309,10 +309,10 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
 
       if (ast.lines) {
-        ast.lines.forEach((item) => source.add(transformNode(item)))
+        ast.lines.forEach((item) => source.add([transformNode(item), '\n']))
       }
 
-      source.add('\n}')
+      source.add('}')
       return source
     }
     case NODE.REPEAT: {
@@ -325,17 +325,17 @@ function transformNode(ast: CodeNode): SourceNode {
           `${context.internal}`,
           ...transformNodes(ast.words),
         ]),
-        '\nwhile (',
+        ';\nwhile (',
         writeApi(ast, 'repeat', [`${context.internal}`]),
         `) {\n`,
       ])
       context.internal += 1
 
       if (ast.lines) {
-        ast.lines.forEach((item) => source.add(transformNode(item)))
+        ast.lines.forEach((item) => source.add([transformNode(item), '\n']))
       }
 
-      source.add('\n}')
+      source.add('}')
       return source
     }
     case NODE.READ: {
@@ -347,7 +347,7 @@ function transformNode(ast: CodeNode): SourceNode {
           `${context.internal}`,
           transformNode(arraysource),
         ]),
-        '\nwhile (',
+        ';\nwhile (',
         writeApi(ast, 'read', [
           `${context.internal}`,
           ...transformNodes(words),
@@ -357,10 +357,10 @@ function transformNode(ast: CodeNode): SourceNode {
       context.internal += 1
 
       if (ast.lines) {
-        ast.lines.forEach((item) => source.add(transformNode(item)))
+        ast.lines.forEach((item) => source.add([transformNode(item), '\n']))
       }
 
-      source.add('\n}')
+      source.add('}')
       return source
     }
     case NODE.BREAK:

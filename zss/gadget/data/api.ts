@@ -241,6 +241,7 @@ export function gadgethyperlink(
 
     // setup tracking if needed
     if (panelshared[panel.id][name] === undefined) {
+      console.info('hyperlink !!!!!', hyperlink)
       // this will init the value only if not already setup
       // and mark this guid as origin
       servesharedvalue(chip.id(), name, current)

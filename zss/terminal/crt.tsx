@@ -4,7 +4,7 @@ import { Texture, Uniform, WebGLRenderTarget, WebGLRenderer } from 'three'
 
 const CRTShapeFragmentShader = `
 void mainUv(inout vec2 uv) {
-  float distortion = 0.014;
+  float distortion = 0.019;
 	vec2 xn = 2.0 * (uv.st - 0.5);
 	vec3 xDistorted = vec3((1.0 + vec2(distortion, distortion) * dot(xn, xn)) * xn, 1.0);
 
@@ -31,27 +31,15 @@ const CRTLinesFragmentShader = `
 uniform float count;
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-  float distortion = -0.014;
-	vec2 xn = 2.0 * (uv.st - 0.5);
-	vec3 xDistorted = vec3((1.0 + vec2(distortion, distortion) * dot(xn, xn)) * xn, 1.0);
-
-	mat3 kk = mat3(
-		vec3(1.0, 0.0, 0.0),
-		vec3(0.0, 1.0, 0.0),
-		vec3(0.0, 0.0, 1.0)
-	);
-
-	vec2 bend = (kk * xDistorted).xy * 0.5 + 0.5;
-  float signal = sin(time * 8.0 + bend.y * count) + 0.3;
-
-	outputColor = mix(vec4(signal, signal, signal, inputColor.a), inputColor, 0.725);
+  float signal = sin(time * 12.0 + uv.y * count) + 0.8;
+	outputColor = mix(vec4(signal, signal, signal, inputColor.a), inputColor, 0.9);
 }
 `
 
 class CRTLinesEffect extends Effect {
-  constructor(blendFunction: BlendFunction) {
+  constructor() {
     super('CRTLinesEffect', CRTLinesFragmentShader, {
-      blendFunction,
+      blendFunction: BlendFunction.DARKEN,
       uniforms: new Map([['count', new Uniform(1)]]),
     })
   }
@@ -62,7 +50,7 @@ class CRTLinesEffect extends Effect {
   ): void {
     const count = this.uniforms.get('count')
     if (count) {
-      count.value = inputBuffer.height * (Math.PI * 0.5)
+      count.value = inputBuffer.height //* (Math.PI * 0.5)
     }
   }
 }
