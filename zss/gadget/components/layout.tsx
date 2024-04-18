@@ -99,8 +99,8 @@ export function Layout({ player, layers, layout }: LayoutProps) {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
-  const width = Math.floor((viewWidth - 3) / DRAW_CHAR_WIDTH)
-  const height = Math.floor((viewHeight - 3) / DRAW_CHAR_HEIGHT)
+  const width = Math.floor(viewWidth / DRAW_CHAR_WIDTH)
+  const height = Math.floor(viewHeight / DRAW_CHAR_HEIGHT)
   const marginX = viewWidth - width * DRAW_CHAR_WIDTH
   const marginY = viewHeight - height * DRAW_CHAR_HEIGHT
 

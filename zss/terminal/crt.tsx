@@ -1,26 +1,69 @@
 import { EffectProps, wrapEffect } from '@react-three/postprocessing'
-import { BlendFunction, Effect } from 'postprocessing'
+import { BlendFunction, Effect, EffectAttribute } from 'postprocessing'
 import { Texture, Uniform, WebGLRenderTarget, WebGLRenderer } from 'three'
 
 const CRTShapeFragmentShader = `
-void mainUv(inout vec2 uv) {
-  float distortion = 0.019;
-	vec2 xn = 2.0 * (uv.st - 0.5);
-	vec3 xDistorted = vec3((1.0 + vec2(distortion, distortion) * dot(xn, xn)) * xn, 1.0);
+float rectdistance(vec2 uv) {
+  vec2 tl = vec2(-1.0);
+  vec2 br = vec2(1.0);
+  vec2 d = max(tl - uv, uv - br);
+  return abs(length(max(vec2(0.0), d)) + min(0.0, max(d.x, d.y)));
+}
 
-	mat3 kk = mat3(
-		vec3(1.0, 0.0, 0.0),
-		vec3(0.0, 1.0, 0.0),
-		vec3(0.0, 0.0, 1.0)
-	);
+vec2 bendy(const in vec2 xn) {
+  float distortion = 0.025;
+  vec3 xDistorted = vec3((1.0 + vec2(distortion, distortion) * dot(xn, xn)) * xn, 1.0);
 
-	uv = (kk * xDistorted).xy * 0.5 + 0.5;
+  mat3 kk = mat3(
+    vec3(1.0, 0.0, 0.0),
+    vec3(0.0, 1.0, 0.0),
+    vec3(0.0, 0.0, 1.0)
+  );
+
+  return (kk * xDistorted).xy;
+}
+
+void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
+  vec2 xn = 2.0 * (uv.st - 0.5);
+  vec2 edge = bendy(xn);
+  vec2 bent = edge.xy * 0.5 + 0.5;
+  
+  float dx = rectdistance(xn);
+  float bx = rectdistance(edge);
+
+  // apply shape
+  float doot = max(abs(edge.x), abs(edge.y));
+  if (doot > 1.001) {
+    vec3 matte = vec3(205.0 / 255.0, 205.0 / 255.0, 193.0 / 255.0);
+    float mx = pow(1.0 - bx, 64.0) + 0.1;
+    outputColor = vec4(mix(matte, vec3(0.0), mx), inputColor.a);
+  } else if (doot >= 1.0) {
+    outputColor = vec4(vec3(0.0), inputColor.a);
+  } else {  
+    outputColor = texture2D(inputBuffer, bent);
+
+    // apply inner shade
+    float sh = clamp(0.0, 1.0, 1.0 - bx - 0.5);
+    vec3 shade = mix(outputColor.rgb, vec3(0.0), pow(sh, 3.0));
+    outputColor = vec4(shade, inputColor.a);
+  }
+
+  // apply outer shade
+  if (doot >= 0.98) {
+    float sh = clamp(0.0, 1.0, bx * 24.0);
+    vec3 dkout = mix(vec3(0.0), outputColor.rgb, 0.75);
+    vec3 shade = mix(dkout, outputColor.rgb, sh);
+    outputColor = vec4(shade, inputColor.a);
+  }
 }
 `
-
+// 205	205	193
 class CRTShapeEffect extends Effect {
   constructor() {
-    super('CRTShapeEffect', CRTShapeFragmentShader, {})
+    super('CRTShapeEffect', CRTShapeFragmentShader, {
+      blendFunction: BlendFunction.NORMAL,
+      attributes: EffectAttribute.CONVOLUTION,
+    })
   }
 }
 
@@ -31,15 +74,20 @@ const CRTLinesFragmentShader = `
 uniform float count;
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-  float signal = sin(time * 12.0 + uv.y * count) + 0.8;
-	outputColor = mix(vec4(signal, signal, signal, inputColor.a), inputColor, 0.9);
+  float rate = 0.008;
+  float stab = 1.5;
+  float fuzz = 1.35;
+  float cycle = (uv.y + time * rate) * count * fuzz;
+  float signal = sin(cycle) + stab;
+  float px = smoothstep(0.0, 1.0, signal);
+	outputColor = vec4(mix(vec3(0.25), vec3(1.0), px), inputColor.a);
 }
 `
 
 class CRTLinesEffect extends Effect {
   constructor() {
     super('CRTLinesEffect', CRTLinesFragmentShader, {
-      blendFunction: BlendFunction.DARKEN,
+      blendFunction: BlendFunction.MULTIPLY,
       uniforms: new Map([['count', new Uniform(1)]]),
     })
   }
@@ -50,7 +98,7 @@ class CRTLinesEffect extends Effect {
   ): void {
     const count = this.uniforms.get('count')
     if (count) {
-      count.value = inputBuffer.height //* (Math.PI * 0.5)
+      count.value = inputBuffer.height
     }
   }
 }
