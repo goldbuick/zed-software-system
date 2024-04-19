@@ -63,6 +63,8 @@ const gadgetclientdevice = createdevice(
   },
 )
 
-export function useGadgetState(): GADGET_STATE {
-  return useSnapshot(syncstate.state) as GADGET_STATE
+export function getgadgetstate(): GADGET_STATE {
+  return syncstate.state
 }
+
+export { useSnapshot }

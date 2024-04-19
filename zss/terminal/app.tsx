@@ -119,13 +119,3 @@ export function App() {
     </>
   )
 }
-
-async function test() {
-  const urlhash = valuetourlhash(BIOS) ?? 'ERROR'
-  console.info({
-    hashsize: urlhash.length,
-    urlhash,
-  })
-}
-
-test()

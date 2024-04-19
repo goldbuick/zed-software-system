@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import React, { useRef } from 'react'
 import { Group, Vector2 } from 'three'
+import { useSnapshot } from 'zss/device/gadgetclient'
 import {
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
@@ -48,7 +49,10 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
 }
 
 export function Framed({ player, layers, width, height }: FramedProps) {
-  const control = layersreadcontrol(layers)
+  const layersState = useSnapshot(layers)
+  const control = layersreadcontrol(layersState as LAYER[])
+
+  console.info(layersState)
 
   const viewwidth = width * DRAW_CHAR_WIDTH
   const drawwidth = control.width * DRAW_CHAR_WIDTH * control.viewscale
