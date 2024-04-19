@@ -11,7 +11,7 @@
     "update": "node version",
     "clear": "rimraf dist && rimraf .parcel-cache",
     "start": "yarn && yarn clear && PORT=7777 parcel",
-    "build": "yarn && yarn clear && PORT=7777 parcel build"
+    "build": "yarn && yarn clear && parcel build"
   },
   "private": true,
   "@parcel/resolver-default": {
