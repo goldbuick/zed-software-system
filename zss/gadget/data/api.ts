@@ -135,20 +135,22 @@ export function gadgetpanel(
   chip: CHIP,
   edge: string,
   edgeConst: PANEL_TYPE,
-  size: MAYBE_NUMBER,
-  name: MAYBE_STRING,
+  maybesize: MAYBE_NUMBER,
+  maybename: MAYBE_STRING,
 ) {
   // get state
   const shared = gadgetstate(chip.id())
-  const panelName = name || Case.capital(edge)
+  const size = maybesize
+  const name = maybename || Case.capital(edge)
+
   const panelState: PANEL | undefined = shared.layout.find(
-    (panel: PANEL) => panel.name === panelName,
+    (panel: PANEL) => panel.name === name,
   )
 
   if (panelState) {
     // set focus to panel and mark for reset
     shared.layoutreset = true
-    shared.layoutfocus = panelName
+    shared.layoutfocus = name
     // you can also resize panels
     if (isnumber(size)) {
       panelState.size = size
@@ -165,13 +167,13 @@ export function gadgetpanel(
       case PANEL_TYPE.SCROLL:
         const panel: PANEL = {
           id: createguid(),
-          name: panelName,
+          name: name,
           edge: edgeConst,
           size: size ?? PANEL_TYPE_SIZES[edgeConst],
           text: [],
         }
         shared.layout.push(panel)
-        shared.layoutfocus = panelName
+        shared.layoutfocus = name
         break
       default:
         // todo: raise runtime error

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { TICK_FPS } from 'zss/mapping/tick'
 
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, COLOR_TINDEX } from '../data/types'
 
@@ -10,7 +11,7 @@ const spritesMaterial = new THREE.ShaderMaterial({
   uniforms: {
     time,
     interval,
-    rate: { value: 15.0 },
+    rate: { value: TICK_FPS },
     map: { value: null },
     alt: { value: null },
     palette: { value: null },

@@ -178,7 +178,7 @@ export function Scroll({
         if (!groupref.current) {
           return
         }
-        groupref.current.position.y = snap(target.y, DRAW_CHAR_HEIGHT)
+        groupref.current.position.y = snap(target.y, DRAW_CHAR_HEIGHT * 0.125)
       },
     })
   }, [shouldclose])

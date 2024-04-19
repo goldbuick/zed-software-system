@@ -58,14 +58,24 @@ export const ZSS_FIRMWARE = createfirmware({
     const memory = memoryreadchip(chip.id())
     const context = { ...memory, chip, words }
 
-    const [edge, maybesize, maybename] = readargs(context, 0, [
-      ARG_TYPE.STRING,
-      ARG_TYPE.MAYBE_NUMBER,
-      ARG_TYPE.MAYBE_STRING,
-    ])
+    const [edge] = readargs(context, 0, [ARG_TYPE.STRING])
     const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
+    if (edgeConst === PANEL_TYPE.SCROLL) {
+      const [, name, size] = readargs(context, 0, [
+        ARG_TYPE.STRING,
+        ARG_TYPE.MAYBE_STRING,
+        ARG_TYPE.MAYBE_NUMBER,
+      ])
+      gadgetpanel(chip, edge, edgeConst, size, name)
+    } else {
+      const [, size, name] = readargs(context, 0, [
+        ARG_TYPE.STRING,
+        ARG_TYPE.MAYBE_NUMBER,
+        ARG_TYPE.MAYBE_STRING,
+      ])
+      gadgetpanel(chip, edge, edgeConst, size, name)
+    }
 
-    gadgetpanel(chip, edge, edgeConst, maybesize, maybename)
     return 0
   })
   .command('book', (chip, words) => {

@@ -636,6 +636,7 @@ export enum ARG_TYPE {
   DIR,
   NUMBER,
   STRING,
+  NUMBER_OR_STRING,
   MAYBE_CATEGORY,
   MAYBE_COLLISION,
   MAYBE_COLOR,
@@ -643,6 +644,7 @@ export enum ARG_TYPE {
   MAYBE_DIR,
   MAYBE_NUMBER,
   MAYBE_STRING,
+  MAYBE_NUMBER_OR_STRING,
   ANY,
 }
 
@@ -654,6 +656,7 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.DIR]: BOARD_DIR
   [ARG_TYPE.NUMBER]: number
   [ARG_TYPE.STRING]: string
+  [ARG_TYPE.NUMBER_OR_STRING]: number | string
   [ARG_TYPE.MAYBE_CATEGORY]: CATEGORY | undefined
   [ARG_TYPE.MAYBE_COLLISION]: COLLISION | undefined
   [ARG_TYPE.MAYBE_COLOR]: COLOR | undefined
@@ -661,6 +664,7 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.MAYBE_DIR]: BOARD_DIR | undefined
   [ARG_TYPE.MAYBE_NUMBER]: number | undefined
   [ARG_TYPE.MAYBE_STRING]: string | undefined
+  [ARG_TYPE.MAYBE_NUMBER_OR_STRING]: number | string
   [ARG_TYPE.ANY]: any
 }
 
@@ -753,6 +757,15 @@ export function readargs<T extends ARG_TYPES>(
         values.push(value)
         break
       }
+      case ARG_TYPE.NUMBER_OR_STRING: {
+        const value = read.words[i]
+        if (!isnumber(value) && !isstring(value)) {
+          didexpect('number or string', value)
+        }
+        ii = i + 1
+        values.push(value)
+        break
+      }
       case ARG_TYPE.MAYBE_CATEGORY: {
         const [value, iii] = readcategory(read, ii)
         if (value !== undefined && isstrcategory(value)) {
@@ -823,6 +836,15 @@ export function readargs<T extends ARG_TYPES>(
         const value = read.words[i]
         if (value !== undefined && !isstring(value)) {
           didexpect('optional string', value)
+        }
+        ii = i + 1
+        values.push(value)
+        break
+      }
+      case ARG_TYPE.MAYBE_NUMBER_OR_STRING: {
+        const value = read.words[i]
+        if (value !== undefined && !isnumber(value) && !isstring(value)) {
+          didexpect('optional number or string', value)
         }
         ii = i + 1
         values.push(value)
