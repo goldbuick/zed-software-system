@@ -1,5 +1,6 @@
 import React from 'react'
-import { getgadgetstate, useSnapshot } from 'zss/device/gadgetclient'
+import { useSnapshot } from 'valtio'
+import { getgadgetstate } from 'zss/device/gadgetclient'
 import { Layout } from 'zss/gadget/components/layout'
 import { PANEL } from 'zss/gadget/data/types'
 

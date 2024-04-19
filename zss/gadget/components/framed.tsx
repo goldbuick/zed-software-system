@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import React, { useRef } from 'react'
 import { Group, Vector2 } from 'three'
-import { useSnapshot } from 'zss/device/gadgetclient'
+import { useSnapshot } from 'valtio'
 import {
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
@@ -49,10 +49,8 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
 }
 
 export function Framed({ player, layers, width, height }: FramedProps) {
-  const layersState = useSnapshot(layers)
-  const control = layersreadcontrol(layersState as LAYER[])
-
-  console.info(layersState)
+  const layersdata = useSnapshot(layers) as LAYER[]
+  const control = layersreadcontrol(layersdata)
 
   const viewwidth = width * DRAW_CHAR_WIDTH
   const drawwidth = control.width * DRAW_CHAR_WIDTH * control.viewscale
@@ -126,7 +124,7 @@ export function Framed({ player, layers, width, height }: FramedProps) {
       <Clipping width={viewwidth} height={viewheight}>
         {/* eslint-disable-next-line react/no-unknown-property */}
         <group ref={ref} scale={control.viewscale}>
-          {layers.map((layer, i) => {
+          {layersdata.map((layer, i) => {
             switch (layer.type) {
               default:
               case LAYER_TYPE.BLANK:

@@ -1,5 +1,5 @@
 import { JsonPatchError, applyPatch } from 'fast-json-patch'
-import { proxy, useSnapshot } from 'valtio'
+import { proxy } from 'valtio'
 import { createdevice } from 'zss/device'
 import { GADGET_STATE } from 'zss/gadget/data/types'
 
@@ -43,6 +43,7 @@ const gadgetclientdevice = createdevice(
         break
       case 'patch':
         if (message.player === syncstate.state.player && !desync) {
+          console.info('do patch')
           try {
             applyPatch(syncstate.state, message.data, true)
           } catch (err) {
@@ -66,5 +67,3 @@ const gadgetclientdevice = createdevice(
 export function getgadgetstate(): GADGET_STATE {
   return syncstate.state
 }
-
-export { useSnapshot }
