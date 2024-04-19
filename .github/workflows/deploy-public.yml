@@ -21,7 +21,9 @@ jobs:
           node-version-file: .nvmrc
 
       - name: setup and build
-        run: yarn build
+        run: |
+          yarn build
+          yarn build:copy-cname
     
       - name: Push
         uses: s0/git-publish-subdir-action@develop

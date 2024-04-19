@@ -8,10 +8,10 @@
   "scripts": {
     "sloc": "npx sloc zss",
     "test": "yarn jest",
-    "update": "node version",
     "clear": "rimraf dist && rimraf .parcel-cache",
     "start": "yarn && yarn clear && PORT=7777 parcel",
-    "build": "yarn && yarn clear && parcel build"
+    "build": "yarn && yarn clear && parcel build",
+    "build:copy-cname": "cp .github/CNAME dist"
   },
   "private": true,
   "@parcel/resolver-default": {
