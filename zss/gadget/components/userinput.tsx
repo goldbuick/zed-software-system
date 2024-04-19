@@ -45,16 +45,9 @@ document.addEventListener(
       shift: event.shiftKey,
     }
 
-    // allow Ctrl + R for now ...
-    switch (key) {
-      case 'r':
-        if (!mods.ctrl) {
-          event.preventDefault()
-        }
-        break
-      default:
-        event.preventDefault()
-        break
+    // only allow Ctrl + R
+    if (key !== 'r' || !mods.ctrl) {
+      event.preventDefault()
     }
 
     switch (key) {
