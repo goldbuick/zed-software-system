@@ -95,6 +95,17 @@ const HYPERLINK_WITH_SHARED = new Set([
 
 const HYPERLINK_WITH_SHARED_TEXT = new Set(['tx', 'text'])
 
+const HYPERLINK_WITH_SHARED_DEFAULTS = {
+  rn: 1,
+  range: 1,
+  sl: 0,
+  select: 0,
+  nm: 0,
+  number: 0,
+  tx: '',
+  text: '',
+}
+
 export function gadgetstate(player: string) {
   let value: GADGET_STATE = allgadgetstate[player]
   return isdefined(value)
@@ -243,10 +254,16 @@ export function gadgethyperlink(
 
     // setup tracking if needed
     if (panelshared[panel.id][name] === undefined) {
-      console.info('hyperlink !!!!!', hyperlink)
       // this will init the value only if not already setup
       // and mark this guid as origin
-      servesharedvalue(chip.id(), name, current)
+      servesharedvalue(
+        chip.id(),
+        name,
+        current ??
+          HYPERLINK_WITH_SHARED_DEFAULTS[
+            type as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
+          ],
+      )
 
       if (HYPERLINK_WITH_SHARED_TEXT.has(type)) {
         panelshared[panel.id][name] = observesharedtype<MAYBE_SHARED_TEXT>(

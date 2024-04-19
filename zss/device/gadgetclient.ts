@@ -43,7 +43,6 @@ const gadgetclientdevice = createdevice(
         break
       case 'patch':
         if (message.player === syncstate.state.player && !desync) {
-          console.info('do patch')
           try {
             applyPatch(syncstate.state, message.data, true)
           } catch (err) {
