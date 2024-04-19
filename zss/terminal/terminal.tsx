@@ -1,21 +1,20 @@
-import { OrthographicCamera } from '@react-three/drei'
+import { OrthographicCamera, useTexture } from '@react-three/drei'
 import { addEffect, addAfterEffect } from '@react-three/fiber'
-import {
-  EffectComposer,
-  BrightnessContrast,
-  SMAA,
-  Bloom,
-} from '@react-three/postprocessing'
-import { BlendFunction, KernelSize, Resolution } from 'postprocessing'
+import { EffectComposer, BrightnessContrast } from '@react-three/postprocessing'
+import { BlendFunction } from 'postprocessing'
 import React, { useEffect, useState } from 'react'
 import Stats from 'stats.js'
+import decoimageurl from 'url:./scratches.jpg'
 import { STATS_DEV } from 'zss/config'
 
-import { CRTShape, CRTLines } from './crt'
+import { CRTShape, CRTLines, TextureSplat } from './crt'
 import { Framing } from './framing'
 import { Gadget } from './gadget'
 
+console.info({ decoimageurl })
+
 export function Terminal() {
+  const splat = useTexture(decoimageurl)
   const [stats] = useState(() => new Stats())
 
   useEffect(() => {
@@ -47,10 +46,17 @@ export function Terminal() {
         <Gadget />
       </Framing>
       <EffectComposer multisampling={0}>
-        {/* <BrightnessContrast brightness={0.2} /> */}
         <CRTLines />
         <CRTShape />
+        <TextureSplat
+          opacity={0.35}
+          texture={splat}
+          blendFunction={BlendFunction.OVERLAY}
+        />
+        <BrightnessContrast brightness={0.1} contrast={0.14} />
       </EffectComposer>
     </>
   )
 }
+
+// texture
