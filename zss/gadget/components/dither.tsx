@@ -10,7 +10,7 @@ import { createTilemapBufferGeometry } from '../display/tiles'
 
 import { useClipping } from './clipping'
 
-interface DitherProps {
+type DitherProps = {
   width: number
   height: number
   alphas: number[]
@@ -53,7 +53,7 @@ export function Dither({ width, height, alphas }: DitherProps) {
   return null
 }
 
-interface StaticDitherProps {
+type StaticDitherProps = {
   width: number
   height: number
   alpha: number

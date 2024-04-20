@@ -35,7 +35,7 @@ type RECT = {
   text: PANEL_ITEM[]
 }
 
-interface LayoutRectProps {
+type LayoutRectProps = {
   player: string
   layers: LAYER[]
   rect: RECT
@@ -89,7 +89,7 @@ function LayoutRect({
   return null
 }
 
-interface LayoutProps {
+type LayoutProps = {
   player: string
   layers: LAYER[]
   layout: PANEL[]

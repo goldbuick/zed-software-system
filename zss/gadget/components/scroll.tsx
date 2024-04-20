@@ -32,7 +32,7 @@ import {
 import { UserFocus, UserInput, UserInputHandler } from './userinput'
 import { TileSnapshot, useTiles, writeTile } from './usetiles'
 
-interface ScrollProps {
+type ScrollProps = {
   player: string
   name: string
   width: number

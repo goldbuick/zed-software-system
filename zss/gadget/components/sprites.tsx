@@ -16,7 +16,7 @@ import { useClipping } from './clipping'
 
 type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
-interface SpritesProps {
+type SpritesProps = {
   sprites: SPRITE[]
   charset: BITMAP
   palette: BITMAP

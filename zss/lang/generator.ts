@@ -7,7 +7,6 @@ import { compileAST } from './ast'
 import { transformAst } from './transformer'
 import { CodeNode } from './visitor'
 
-// eslint-disable-next-line func-names, @typescript-eslint/no-empty-function
 const GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor
 
 export type GeneratorBuild = {

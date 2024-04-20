@@ -11,7 +11,7 @@ import { PlayerContext } from './panel/common'
 import { PanelItem } from './panel/panelitem'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
 
-interface PanelProps {
+type PanelProps = {
   margin?: number
   selected?: number
   player: string

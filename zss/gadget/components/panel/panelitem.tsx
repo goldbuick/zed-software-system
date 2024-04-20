@@ -16,7 +16,7 @@ import { PanelItemRange } from './range'
 import { PanelItemSelect } from './select'
 import { PanelItemText } from './text'
 
-interface PanelItemProps {
+type PanelItemProps = {
   item: PANEL_ITEM
   active: boolean
 }

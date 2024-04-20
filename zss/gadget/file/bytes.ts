@@ -1,6 +1,3 @@
-import DEFAULT_CHR from './default.chr?uint8array'
-import DEFAULT_PAL from './default.pal?uint8array'
-
 import { BITMAP, createBitmap } from '../data/bitmap'
 import {
   BYTES_PER_COLOR,
@@ -8,6 +5,9 @@ import {
   CHAR_HEIGHT,
   CHAR_WIDTH,
 } from '../data/types'
+
+import DEFAULT_CHR from './default.chr?uint8array'
+import DEFAULT_PAL from './default.pal?uint8array'
 
 // export function loadCharsetFrom
 function base64ToBytes(base64: string) {

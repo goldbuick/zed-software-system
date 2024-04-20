@@ -19,7 +19,7 @@ import {
   boardevaldir,
 } from 'zss/memory/board'
 
-export interface READ_CONTEXT {
+export type READ_CONTEXT = {
   chip: CHIP
   board: MAYBE_BOARD
   target: MAYBE_BOARD_ELEMENT

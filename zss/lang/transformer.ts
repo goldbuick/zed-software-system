@@ -23,7 +23,7 @@ export const GENERATED_FILENAME = 'zss.js'
 
 export function write(
   ast: CodeNode,
-  chunks: Array<string | SourceNode> | SourceNode | string,
+  chunks: (string | SourceNode)[] | SourceNode | string,
 ) {
   return new SourceNode(
     ast.startLine || 1,
@@ -42,7 +42,7 @@ function writeString(value: string): string {
 }
 
 function writeTemplateString(value: string): string {
-  if (value[0] === '"') {
+  if (value.startsWith('"')) {
     return writeTemplateString(value.substring(1, value.length - 1))
   }
 
@@ -70,8 +70,8 @@ function blank(ast: CodeNode) {
   return write(ast, '')
 }
 
-function joinChunks(chunks: Array<string | SourceNode>, separator: string) {
-  const items: Array<string | SourceNode> = []
+function joinChunks(chunks: (string | SourceNode)[], separator: string) {
+  const items: (string | SourceNode)[] = []
 
   chunks.forEach((item) => {
     items.push(item, separator)
@@ -86,7 +86,7 @@ function joinChunks(chunks: Array<string | SourceNode>, separator: string) {
 function writeApi(
   ast: CodeNode,
   method: string,
-  params: Array<string | SourceNode>,
+  params: (string | SourceNode)[],
 ) {
   return write(ast, [`api.${method}(`, ...joinChunks(params, ', '), `)`])
 }

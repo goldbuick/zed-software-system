@@ -12,7 +12,7 @@ export function useDither(width: number, height: number) {
   return dither
 }
 
-interface DitherSnapshotProps {
+type DitherSnapshotProps = {
   width: number
   height: number
   dither: number[]

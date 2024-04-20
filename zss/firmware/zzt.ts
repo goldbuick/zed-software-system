@@ -16,9 +16,8 @@ import {
   boardmoveobject,
 } from 'zss/memory/board'
 import { bookreadboard, bookreadflag, booksetflag } from 'zss/memory/book'
-
-import { editboard } from '../memory/edit'
-import { FRAME_TYPE } from '../memory/frame'
+import { editboard } from 'zss/memory/edit'
+import { FRAME_TYPE } from 'zss/memory/frame'
 
 import {
   categoryconsts,
@@ -144,7 +143,7 @@ export const ZZT_FIRMWARE = createfirmware({
       }
 
       // read stat
-      const value = memory.target.stats?.[name] as WORD_VALUE
+      const value = memory.target.stats?.[name]
       const defined = ispresent(value)
 
       // return result

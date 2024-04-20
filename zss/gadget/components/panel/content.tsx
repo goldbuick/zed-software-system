@@ -3,7 +3,7 @@ import {
   tokenizeAndWriteTextFormat,
 } from '../../data/textformat'
 
-interface PanelItemContentProps {
+type PanelItemContentProps = {
   item: string
   player: string
   context: WRITE_TEXT_CONTEXT

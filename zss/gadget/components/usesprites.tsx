@@ -18,7 +18,7 @@ export function useSprites(width: number, height: number) {
 const palette = loadDefaultPalette()
 const charset = loadDefaultCharset()
 
-interface SpritesSnapshotProps {
+type SpritesSnapshotProps = {
   sprites: SPRITE[]
 }
 

@@ -122,7 +122,7 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
         }
         case 'flags':
           // simple space separated local flag names
-          codepage.stats['flags'] = maybename
+          codepage.stats.flags = maybename
           break
         case 'func':
           codepage.stats.type = CODE_PAGE_TYPE.FUNC

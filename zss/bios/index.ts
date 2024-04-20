@@ -1,11 +1,12 @@
-import playercode from './player.txt?raw'
-import spincode from './spin.txt?raw'
 import { COLLISION, COLOR } from 'zss/firmware/wordtypes'
 import { createboard, createboardobject } from 'zss/memory/board'
 import { createbook } from 'zss/memory/book'
 import { createcodepage } from 'zss/memory/codepage'
 
 import { randomInteger } from '../mapping/number'
+
+import playercode from './player.txt?raw'
+import spincode from './spin.txt?raw'
 
 export const BIOS = createbook('BIOS', [
   createcodepage('@board title', {

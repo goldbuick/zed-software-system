@@ -4,12 +4,12 @@ import { EffectComposer, BrightnessContrast } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
 import { useEffect, useState } from 'react'
 import Stats from 'stats.js'
-import decoimageurl from './scratches.jpg'
 import { STATS_DEV } from 'zss/config'
 
 import { CRTShape, CRTLines, TextureSplat } from './crt'
 import { Framing } from './framing'
 import { Gadget } from './gadget'
+import decoimageurl from './scratches.jpg'
 
 export function Terminal() {
   const splat = useTexture(decoimageurl)

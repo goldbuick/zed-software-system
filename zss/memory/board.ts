@@ -83,9 +83,7 @@ export type BOARD_RECT = {
   height: number
 }
 
-export type BOARD_STATS = {
-  [key: string]: WORD_VALUE
-}
+export type BOARD_STATS = Record<string, WORD_VALUE>
 
 export type BOARD = {
   // lookup

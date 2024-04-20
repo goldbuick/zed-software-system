@@ -92,7 +92,7 @@ document.addEventListener(
 
 // components
 
-interface UserHotkeyProps {
+type UserHotkeyProps = {
   hotkey: string
   children: () => void
 }
@@ -116,7 +116,7 @@ export function UserHotkey({ hotkey, children }: UserHotkeyProps) {
 
 export type UserInputHandler = (mods: UserInputMods) => void
 
-interface UserInputProps {
+type UserInputProps = {
   MOVE_LEFT?: UserInputHandler
   MOVE_RIGHT?: UserInputHandler
   MOVE_UP?: UserInputHandler
@@ -143,7 +143,7 @@ export function UserInput(events: UserInputProps) {
   return null
 }
 
-interface UserFocusProps {
+type UserFocusProps = {
   blockhotkeys?: boolean
   children?: ReactNode
 }

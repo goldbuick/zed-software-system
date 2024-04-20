@@ -1,5 +1,5 @@
-import ZSSWorker from './instance??worker'
 import { createforward } from './device/forward'
+import ZSSWorker from './instance??worker'
 
 // devices that operate within web main
 import './device/gadgetclient'

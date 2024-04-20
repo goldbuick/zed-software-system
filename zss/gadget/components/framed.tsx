@@ -27,7 +27,7 @@ import { UserFocus, UserInput, UserInputMods } from './userinput'
 const palette = loadDefaultPalette()
 const charset = loadDefaultCharset()
 
-interface FramedProps {
+type FramedProps = {
   player: string
   layers: LAYER[]
   width: number
@@ -122,7 +122,7 @@ export function Framed({ player, layers, width, height }: FramedProps) {
         MENU_BUTTON={(mods) => sendinput(player, INPUT.MENU_BUTTON, mods)}
       />
       <Clipping width={viewwidth} height={viewheight}>
-        {/* eslint-disable-next-line react/no-unknown-property */}
+        {}
         <group ref={ref} scale={control.viewscale}>
           {layersdata.map((layer, i) => {
             switch (layer.type) {

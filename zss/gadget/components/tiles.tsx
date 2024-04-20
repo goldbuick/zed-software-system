@@ -14,7 +14,7 @@ import {
 
 import { useClipping } from './clipping'
 
-interface TilesProps {
+type TilesProps = {
   width: number
   height: number
   char: number[]

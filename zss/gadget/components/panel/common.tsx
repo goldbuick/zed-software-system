@@ -18,7 +18,7 @@ export function useBlink() {
   return !!blink
 }
 
-export interface PanelItemProps {
+export type PanelItemProps = {
   player: string
   chip: string
   active: boolean

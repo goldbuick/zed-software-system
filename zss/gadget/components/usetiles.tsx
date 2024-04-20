@@ -30,7 +30,7 @@ export function useTiles(
 const palette = loadDefaultPalette()
 const charset = loadDefaultCharset()
 
-interface TileSnapshotProps {
+type TileSnapshotProps = {
   width: number
   height: number
   tiles: TILES

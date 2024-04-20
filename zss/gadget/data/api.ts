@@ -39,8 +39,8 @@ function resetpanel(panel: PANEL) {
   panel.text = []
 
   // invoke unobserve(s)
-  Object.values(panelshared[panel.id] ?? {}).forEach(
-    (unobserve) => unobserve?.(),
+  Object.values(panelshared[panel.id] ?? {}).forEach((unobserve) =>
+    unobserve?.(),
   )
   panelshared[panel.id] = {}
 }
