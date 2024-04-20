@@ -74,7 +74,7 @@ export function App() {
       <div
         ref={ref}
         style={{
-          position: 'fixed',
+          position: 'absolute',
           inset: 0,
         }}
         onContextMenuCapture={(event) => {

@@ -10,7 +10,8 @@
     "clear": "rimraf dist && rimraf node_modules/.vite",
     "dev": "yarn && yarn clear && vite --host 0.0.0.0 --port 7777",
     "preview": "yarn && yarn clear && vite preview",
-    "build": "tsc && vite build",
+    "build": "vite build",
+    "build:strict": "tsc && vite build",
     "build:copy-cname": "cp .github/CNAME dist"
   },
   "dependencies": {},
@@ -34,7 +35,7 @@
     "@types/three": "^0.158.3",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
-    "@vitejs/plugin-react": "^4.2.1",
+    "@vitejs/plugin-react-swc": "^3.6.0",
     "alea": "^1.0.1",
     "animejs": "^3.2.1",
     "base65536": "^4.0.3",

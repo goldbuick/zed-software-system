@@ -1,4 +1,8 @@
 html,
 body {
-  /* background-color: black; */
+  background-color: black;
+}
+
+#engine {
+  min-height: 100%;
 }
