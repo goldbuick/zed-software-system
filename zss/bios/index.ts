@@ -1,5 +1,5 @@
-import playercode from 'bundle-text:./player.txt'
-import spincode from 'bundle-text:./spin.txt'
+import playercode from './player.txt?raw'
+import spincode from './spin.txt?raw'
 import { COLLISION, COLOR } from 'zss/firmware/wordtypes'
 import { createboard, createboardobject } from 'zss/memory/board'
 import { createbook } from 'zss/memory/book'

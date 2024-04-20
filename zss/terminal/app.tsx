@@ -1,14 +1,10 @@
 import { Loader } from '@react-three/drei'
 import { Canvas, events } from '@react-three/fiber'
-import React from 'react'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
 import { makeEven } from 'zss/mapping/number'
 
 import 'zss/platform'
-
-import { BIOS } from '../bios'
-import { valuetourlhash } from '../mapping/urlhash'
 
 import { Terminal } from './terminal'
 
@@ -77,14 +73,19 @@ export function App() {
     <>
       <div
         ref={ref}
-        className="fixed inset-0"
+        style={{
+          position: 'fixed',
+          inset: 0,
+        }}
         onContextMenuCapture={(event) => {
           event.preventDefault()
         }}
       >
         <div
-          className="absolute mx-auto"
           style={{
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            margin: 'auto',
             width: boundsWidth,
             height: boundsHeight,
           }}

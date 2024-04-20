@@ -1,5 +1,5 @@
-import DEFAULT_CHR from 'data-url:./default.chr'
-import DEFAULT_PAL from 'data-url:./default.pal'
+import DEFAULT_CHR from './default.chr?uint8array'
+import DEFAULT_PAL from './default.pal?uint8array'
 
 import { BITMAP, createBitmap } from '../data/bitmap'
 import {
@@ -46,7 +46,7 @@ export function loadPaletteFromBytes(bytes: Uint8Array): BITMAP | undefined {
   return bitmap
 }
 
-const defaultpalette = loadPaletteFromBytes(dataUrlToBytes(DEFAULT_PAL))
+const defaultpalette = loadPaletteFromBytes(DEFAULT_PAL)
 export function loadDefaultPalette() {
   return defaultpalette
 }
@@ -54,7 +54,7 @@ export function loadDefaultPalette() {
 const FILE_BYTES_PER_CHAR = 14
 
 function isBitOn(value: number, index: number) {
-  return Boolean(value & (1 << index)) ? 255 : 0
+  return value & (1 << index) ? 255 : 0
 }
 
 export function loadCharsetFromBytes(data: Uint8Array): BITMAP | undefined {
@@ -96,7 +96,7 @@ export function loadCharsetFromBytes(data: Uint8Array): BITMAP | undefined {
   return bitmap
 }
 
-const defaultcharset = loadCharsetFromBytes(dataUrlToBytes(DEFAULT_CHR))
+const defaultcharset = loadCharsetFromBytes(DEFAULT_CHR)
 export function loadDefaultCharset() {
   return defaultcharset
 }

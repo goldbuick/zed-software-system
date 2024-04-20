@@ -64,6 +64,7 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
         memory.inputqueue.add(input)
         memory.inputmods[input as INPUT] = mods
       }
+      break
     default:
       os.message(message)
       break
