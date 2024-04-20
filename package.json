@@ -12,7 +12,7 @@
     "preview": "yarn && yarn clear && vite preview",
     "build": "yarn && yarn clear && vite build",
     "build:strict": "tsc && vite build",
-    "build:copy-cname": "cp .github/CNAME dist"
+    "build:copy-cname": "cp .github/CNAME ./zss/terminal/dist"
   },
   "dependencies": {},
   "devDependencies": {
