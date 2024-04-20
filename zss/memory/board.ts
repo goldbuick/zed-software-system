@@ -28,9 +28,11 @@ import {
   bookterrainreadkind,
 } from './book'
 
-// generics
+// simple built-ins go here
 export type BOARD_ELEMENT_STATS = {
   cycle?: number
+  stepx?: number
+  stepy?: number
   player?: string
   sender?: string
   inputmove?: string[]
@@ -53,7 +55,6 @@ export type BOARD_ELEMENT = {
   y?: number
   lx?: number
   ly?: number
-  walk?: number
   code?: string
   // this is a unique name for this instance
   name?: string

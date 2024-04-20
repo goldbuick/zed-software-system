@@ -7,6 +7,9 @@ export const STUB_FIRMWARE = createfirmware({
   set(chip, name, value) {
     return [false, undefined]
   },
+  shouldtick(chip) {
+    //
+  },
   tick(chip) {
     //
   },

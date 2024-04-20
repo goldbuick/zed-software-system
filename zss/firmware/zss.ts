@@ -29,6 +29,7 @@ export const ZSS_FIRMWARE = createfirmware({
     // return has unhandled
     return [false, undefined]
   },
+  shouldtick() {},
   tick(chip) {
     const memory = memoryreadchip(chip.id())
     const withname = memory.target?.name ?? memory.target?.kind ?? 'Scroll'

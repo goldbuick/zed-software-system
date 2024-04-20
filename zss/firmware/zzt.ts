@@ -1,4 +1,4 @@
-import { WORD_VALUE, maptostring } from 'zss/chip'
+import { maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import { gadgethyperlink, gadgettext } from 'zss/gadget/data/api'
 import {
@@ -184,6 +184,16 @@ export const ZZT_FIRMWARE = createfirmware({
     // then global
     booksetflag(memory.book, player?.id ?? '', name, value)
     return [true, value]
+  },
+  shouldtick(chip) {
+    const memory = memoryreadchip(chip.id())
+    if (memory.target?.stats?.stepx || memory.target?.stats?.stepy) {
+      const dest = {
+        x: (memory.target.x ?? 0) + (memory.target.stats.stepx ?? 0),
+        y: (memory.target.y ?? 0) + (memory.target.stats.stepy ?? 0),
+      }
+      boardmoveobject(memory.book, memory.board, memory.target, dest)
+    }
   },
   tick() {},
   tock() {},
@@ -417,7 +427,13 @@ export const ZZT_FIRMWARE = createfirmware({
     return 0
   })
   .command('walk', (chip, words) => {
-    // console.info(words) // todo
+    const memory = memoryreadchip(chip.id())
+    const [dir] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.DIR])
+    // create delta from dir
+    if (ispresent(memory.target?.stats)) {
+      memory.target.stats.stepx = dir.x - (memory.target.x ?? 0)
+      memory.target.stats.stepy = dir.y - (memory.target.y ?? 0)
+    }
     return 0
   })
   .command('zap', (chip, words) => {

@@ -205,6 +205,11 @@ export function createchip(id: string, build: GeneratorBuild) {
       cycle = incoming
     },
     tick() {
+      // invoke firmware shouldtick
+      for (let i = 0; i < firmwares.length; ++i) {
+        firmwares[i].shouldtick(chip)
+      }
+
       // chip is yield / ended state
       if (!chip.shouldtick()) {
         return false
