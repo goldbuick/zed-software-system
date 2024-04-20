@@ -1,3 +1,17 @@
+const fs = require('fs')
+
+const prefixes = ['zss']
+
+const srcFolders = prefixes
+  .map((folder) =>
+    fs
+      .readdirSync(`./${folder}`, { withFileTypes: true })
+      .filter((dirent) => dirent.isDirectory())
+      .map((dirent) => `/${folder}/${dirent.name}`),
+  )
+  .concat(prefixes.map((folder) => `/${folder}`))
+  .flat()
+
 module.exports = {
   root: true,
   env: { browser: true, es2020: true },
@@ -5,6 +19,9 @@ module.exports = {
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended-type-checked',    
     'plugin:@typescript-eslint/stylistic-type-checked',
+    'plugin:import/errors', // Import ordering
+    'plugin:import/warnings', // Import ordering
+    'plugin:import/typescript', // Import ordering
     'plugin:react/jsx-runtime',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
@@ -17,6 +34,18 @@ module.exports = {
   settings: {
     react: {
       version: 'detect',
+    },
+    'import/parsers': {
+      '@typescript-eslint/parser': ['.ts', '.tsx', '.js', '.jsx', '.json'],
+    },
+    'import/resolver': {
+      alias: {
+        map: [
+          ...prefixes.map((item) => [`/${item}`, `./${item}`]),
+          ['chevrotain', '.'],
+        ],
+        extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+      },
     },
   },
   ignorePatterns: ['dist', '.eslintrc.cjs'],
@@ -52,6 +81,27 @@ module.exports = {
     'react/function-component-definition': [
       2,
       { namedComponents: 'function-declaration' },
+    ],
+    'import/no-unresolved': 'off',
+    'import/order': [
+      'error',
+      {
+        'newlines-between': 'always',
+        alphabetize: { order: 'asc', caseInsensitive: true },
+        groups: [
+          'builtin',
+          'external',
+          'internal',
+          'parent',
+          'sibling',
+          'index',
+        ],
+        pathGroups: srcFolders.map((prefix) => ({
+          group: 'internal',
+          pattern: `${prefix}/**`,
+          position: 'before',
+        })),
+      },
     ],
   },
 }
