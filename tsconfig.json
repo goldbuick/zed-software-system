@@ -2,6 +2,11 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
+    "paths": {
+      "zss/*": [
+        "./zss/*"
+      ],
+    },
     "lib": [
       "ES2020",
       "DOM",

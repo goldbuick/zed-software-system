@@ -79,7 +79,6 @@
     "valtio": "^1.11.2",
     "vite": "^5.2.0",
     "vite-plugin-arraybuffer": "^0.0.6",
-    "vite-tsconfig-paths": "^4.3.2",
     "y-protocols": "^1.0.6",
     "yjs": "^13.6.10"
   }
