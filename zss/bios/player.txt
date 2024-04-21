@@ -17,6 +17,7 @@
 !hotkey draw tab "  Tab  ";Draw
  
 !hotkey menu_test m  ;Menu Test
+!hotkey cmmd_test x  ;Cmmd Test
 
 ' main loop
 #cycle 1
@@ -42,14 +43,14 @@
     #if drawing is blue do
       #repeat 10 do
         ?playermove
-        #put edit idle pick wall wall2
+        #put edit idle wall2
       #endrepeat
     #else do
       ?10 playermove
     #endif
   #else do 
     ?playermove
-    #if drawing is blue put edit idle pick wall wall2
+    #if drawing is blue put edit idle wall2
   #endif
 #else do
   #idle
@@ -58,13 +59,13 @@
 #main
 
 :plot
-#put edit idle pick wall wall2
+#put edit idle wall
 #main
 
 :draw
 #if drawing is white do
   #set drawing blue
-  #put edit idle pick wall wall2
+  #put edit idle wall2
 #else do
   #set drawing white
 #endif
@@ -78,5 +79,10 @@ $3 Here is some test text and yeah! $3
 !select          frank3 A BB CC 333 ;Enum 
 !text            frank4             ;Text Value 
 
+#idle
+#main
+
+:cmmd_test
+#change yellow spin red ondkblue fish
 #idle
 #main

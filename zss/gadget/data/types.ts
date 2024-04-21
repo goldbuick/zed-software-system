@@ -5,8 +5,8 @@ export const BYTES_PER_COLOR = 3
 
 export const PALETTE_COLOR_RANGE = 63
 
-export const COLOR_TINDEX = 32
-export const COLOR_SINDEX = 33
+export const COLOR_TINDEX = 64
+export const COLOR_SINDEX = 65
 
 const CHAR_SCALE = 2
 

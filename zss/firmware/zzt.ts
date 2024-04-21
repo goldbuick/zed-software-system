@@ -207,7 +207,15 @@ export const ZZT_FIRMWARE = createfirmware({
     return 0
   })
   .command('change', (chip, words) => {
-    console.info(words)
+    const memory = memoryreadchip(chip.id())
+    const [target, into] = readargs({ ...memory, chip, words }, 0, [
+      ARG_TYPE.KIND,
+      ARG_TYPE.KIND,
+    ])
+    console.info({ target, into })
+    // if (ispresent(memory.target)) {
+    //   memory.target.char = value
+    // }
     return 0
   })
   .command('char', (chip, words) => {

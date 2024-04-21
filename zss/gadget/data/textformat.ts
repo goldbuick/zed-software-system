@@ -66,6 +66,7 @@ const colors = [
   ['dkwhite|ltgray|ltgrey|gray|grey', 'gray'],
   ['dkgray|dkgrey|ltblack', 'dkgray'],
   ['black'],
+  ['clear'],
 ]
 
 const colorIndex: Record<string, number> = {
@@ -85,7 +86,7 @@ const colorIndex: Record<string, number> = {
   purple: 13,
   yellow: 14,
   white: 15,
-  empty: -1,
+  clear: -1,
 }
 
 const allColors = colors.map(([clr, name]) =>
@@ -95,7 +96,6 @@ const allBgColors = [
   ...colors.map(([clr, name]) =>
     createWordToken(`\\$on(${clr})`, `on${name || clr}`),
   ),
-  createWordToken(`\\$on(empty)`, `onempty`),
 ]
 
 export const allTokens = [
@@ -195,7 +195,7 @@ export function applyWriteTextContext(
   dest.activeBg = source.activeBg
 }
 
-export function cacheWriteTextContext(source: WRITE_TEXT_CONTEXT) {
+export function useCacheWriteTextContext(source: WRITE_TEXT_CONTEXT) {
   const cache = useMemo(() => ({ ...source }), [source])
   applyWriteTextContext(source, cache)
 }

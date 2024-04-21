@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react'
+import { useCallback, useContext } from 'react'
 
 import { tokenizeAndWriteTextFormat } from '../../data/textformat'
 import { UserHotkey, UserInput } from '../userinput'
@@ -30,7 +30,7 @@ export function PanelItemHotkey({
   tokenizeAndWriteTextFormat(
     `${
       context.isEven ? '$black$onltgray' : '$black$ondkcyan'
-    }${text}$${tcolor}$onempty ${label}`,
+    }${text}$${tcolor}$onclear ${label}`,
     context,
   )
 
@@ -38,7 +38,7 @@ export function PanelItemHotkey({
   const invoke = useCallback(() => {
     scroll.sendmessage(chiptarget(chip, target))
     scroll.sendclose()
-  }, [scroll, target])
+  }, [chip, scroll, target])
 
   return (
     <>

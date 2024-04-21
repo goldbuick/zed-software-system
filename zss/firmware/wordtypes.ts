@@ -5,8 +5,6 @@ import { clamp, randomInteger } from 'zss/mapping/number'
 import {
   MAYBE,
   isarray,
-  isdefined,
-  ismaybestring,
   isnumber,
   ispresent,
   isstring,
@@ -47,6 +45,22 @@ export enum COLOR {
   PURPLE,
   YELLOW,
   WHITE,
+  ONBLACK,
+  ONDKBLUE,
+  ONDKGREEN,
+  ONDKCYAN,
+  ONDKRED,
+  ONDKPURPLE,
+  ONDKYELLOW,
+  ONLTGRAY,
+  ONDKGRAY,
+  ONBLUE,
+  ONGREEN,
+  ONCYAN,
+  ONRED,
+  ONPURPLE,
+  ONYELLOW,
+  ONWHITE,
   CLEAR = COLOR_TINDEX,
   SHADOW = COLOR_SINDEX,
 }
@@ -86,7 +100,7 @@ export enum CATEGORY {
 }
 
 export function ispt(value: any): value is PT {
-  return isdefined(value) && isdefined(value.x) && isdefined(value.y)
+  return ispresent(value) && ispresent(value.x) && ispresent(value.y)
 }
 
 export function dirfrompts(last: PT, current: PT) {
@@ -115,7 +129,7 @@ export type STR_CATEGORY =
   (typeof categoryconsts)[keyof typeof categoryconsts][]
 
 function isstrcategoryconst(value: any) {
-  return isdefined(CATEGORY[value]) && isstring(value)
+  return ispresent(CATEGORY[value]) && isstring(value)
 }
 
 export function isstrcategory(value: any): value is STR_CATEGORY {
@@ -162,7 +176,7 @@ export type STR_COLLISION =
   (typeof collisionconsts)[keyof typeof collisionconsts][]
 
 function isstrcollisionconst(value: any) {
-  return isdefined(COLLISION[value]) && isstring(value)
+  return ispresent(COLLISION[value]) && isstring(value)
 }
 
 export function isstrcollision(value: any): value is STR_COLLISION {
@@ -212,6 +226,8 @@ export const colorconsts = {
   purple: 'PURPLE',
   yellow: 'YELLOW',
   white: 'WHITE',
+  clear: 'CLEAR',
+  shadow: 'SHADOW',
   // aliases
   brown: 'DKYELLOW',
   dkwhite: 'LTGRAY',
@@ -221,42 +237,64 @@ export const colorconsts = {
   dkgrey: 'DKGRAY',
   ltblack: 'DKGRAY',
   // bg color
-  onblack: 'BLACK',
-  ondkblue: 'DKBLUE',
-  ondkgreen: 'DKGREEN',
-  ondkcyan: 'DKCYAN',
-  ondkred: 'DKRED',
-  ondkpurple: 'DKPURPLE',
-  ondkyellow: 'DKYELLOW',
-  onltgray: 'LTGRAY',
-  ondkgray: 'DKGRAY',
-  onblue: 'BLUE',
-  ongreen: 'GREEN',
-  oncyan: 'CYAN',
-  onred: 'RED',
-  onpurple: 'PURPLE',
-  onyellow: 'YELLOW',
-  onwhite: 'WHITE',
-  clear: 'CLEAR',
-  shadow: 'SHADOW',
+  onblack: 'ONBLACK',
+  ondkblue: 'ONDKBLUE',
+  ondkgreen: 'ONDKGREEN',
+  ondkcyan: 'ONDKCYAN',
+  ondkred: 'ONDKRED',
+  ondkpurple: 'ONDKPURPLE',
+  ondkyellow: 'ONDKYELLOW',
+  onltgray: 'ONLTGRAY',
+  ondkgray: 'ONDKGRAY',
+  onblue: 'ONBLUE',
+  ongreen: 'ONGREEN',
+  oncyan: 'ONCYAN',
+  onred: 'ONRED',
+  onpurple: 'ONPURPLE',
+  onyellow: 'ONYELLOW',
+  onwhite: 'ONWHITE',
   // aliases
-  onbrown: 'DKYELLOW',
-  ondkwhite: 'LTGRAY',
-  onltgrey: 'LTGRAY',
-  ongray: 'LTGRAY',
-  ongrey: 'LTGRAY',
-  ondkgrey: 'DKGRAY',
-  onltblack: 'DKGRAY',
+  onbrown: 'ONDKYELLOW',
+  ondkwhite: 'ONLTGRAY',
+  onltgrey: 'ONLTGRAY',
+  ongray: 'ONLTGRAY',
+  ongrey: 'ONLTGRAY',
+  ondkgrey: 'ONDKGRAY',
+  onltblack: 'ONDKGRAY',
 } as const
 
 export type STR_COLOR = (typeof colorconsts)[keyof typeof colorconsts][]
 
 function isstrcolorconst(value: any) {
-  return isdefined(COLOR[value]) && isstring(value)
+  return ispresent(COLOR[value]) && isstring(value)
 }
 
 export function isstrcolor(value: any): value is STR_COLOR {
   return isarray(value) && isstrcolorconst(value[0])
+}
+
+export function isbgstrcolor(value: any): value is STR_COLOR {
+  return isstrcolor(value) && value[0].startsWith('ON')
+}
+
+function readcolorconst(
+  read: READ_CONTEXT,
+  index: number,
+): STR_COLOR | undefined {
+  const value: MAYBE_WORD = read.words[index]
+
+  // single string
+  if (typeof value === 'string') {
+    const maybecolor = read.chip.get(value)
+    if (isstrcolor(maybecolor)) {
+      return maybecolor
+    }
+    if (isstrcolorconst(maybecolor)) {
+      return [maybecolor]
+    }
+  }
+
+  return undefined
 }
 
 export function readcolor(
@@ -270,15 +308,22 @@ export function readcolor(
     return [value, index + 1]
   }
 
-  // single string
-  if (typeof value === 'string') {
-    const maybecolor = read.chip.get(value)
-    if (isstrcolor(maybecolor)) {
-      return [maybecolor, index + 1]
+  const strcolor: STR_COLOR = []
+
+  const maybecolor = readcolorconst(read, index)
+  if (isstrcolor(maybecolor)) {
+    strcolor.push(...maybecolor)
+  }
+
+  if (!isbgstrcolor(maybecolor)) {
+    const maybebg = readcolorconst(read, index + 1)
+    if (isstrcolor(maybebg)) {
+      strcolor.push(...maybebg)
     }
-    if (isstrcolorconst(maybecolor)) {
-      return [[maybecolor], index + 1]
-    }
+  }
+
+  if (strcolor.length) {
+    return [strcolor, index + strcolor.length]
   }
 
   return [undefined, index]
@@ -302,11 +347,11 @@ export function readkind(
   }
 
   const [maybecolor, ii] = readcolor(read, index)
-  const [maybename, iii] = readexpr(read, ii)
+  const maybename = read.words[ii]
 
   // found a string, color is optional
   if (typeof maybename === 'string') {
-    return [[maybename, maybecolor], iii]
+    return [[maybename, maybecolor], ii + 1]
   }
 
   // fail
@@ -351,7 +396,7 @@ export const dirconsts = {
 export type STR_DIR = (typeof dirconsts)[keyof typeof dirconsts][]
 
 function isstrdirconst(value: any) {
-  return isdefined(DIR[value]) && isstring(value)
+  return ispresent(DIR[value]) && isstring(value)
 }
 
 export function isstrdir(value: any): value is STR_DIR {
@@ -428,17 +473,17 @@ export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
 
   // check consts
   const [maybecategory, n1] = readcategory(read, index)
-  if (isdefined(maybecategory)) {
+  if (ispresent(maybecategory)) {
     return [maybecategory, n1]
   }
 
   const [maybecollision, n2] = readcollision(read, index)
-  if (isdefined(maybecollision)) {
+  if (ispresent(maybecollision)) {
     return [maybecollision, n2]
   }
 
   const [maybecolor, n3] = readcolor(read, index)
-  if (isdefined(maybecolor)) {
+  if (ispresent(maybecolor)) {
     return [maybecolor, n3]
   }
 
@@ -459,14 +504,14 @@ export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
   }
 
   const [maybedir, n4] = readdir(read, index)
-  if (isdefined(maybedir)) {
+  if (ispresent(maybedir)) {
     return [maybedir, n4]
   }
 
   // check complex values
 
   // empty is invalid
-  if (!isdefined(maybevalue)) {
+  if (!ispresent(maybevalue)) {
     return [undefined, index]
   }
 
@@ -481,7 +526,7 @@ export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
 
     // check for flag
     const maybeflag = read.chip.get(maybevalue)
-    if (isdefined(maybeflag)) {
+    if (ispresent(maybeflag)) {
       return [maybeflag, index + 1]
     }
 
@@ -796,20 +841,16 @@ export function readargs<T extends ARG_TYPES>(
         values.push(value)
         break
       }
-      case ARG_TYPE.MAYBE_KIND:
-        const [value, iii] = readexpr(read, ii)
-        if (
-          value !== undefined &&
-          (!isarray(value) ||
-            !isstring(value[0]) ||
-            !ismaybestring(value[1]) ||
-            !ismaybestring(value[2]))
-        ) {
-          didexpect('optional kind', value)
+      case ARG_TYPE.MAYBE_KIND: {
+        const [kind, iii] = readkind(read, ii)
+        if (isstrkind(kind)) {
+          ii = iii
+          values.push(kind)
+        } else if (kind !== undefined) {
+          didexpect('optional kind', kind)
         }
-        ii = iii
-        values.push(value)
         break
+      }
       case ARG_TYPE.MAYBE_DIR: {
         const [dir, iii] = readdir(read, ii)
         if (isstrdir(dir)) {

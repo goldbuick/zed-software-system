@@ -2,7 +2,7 @@ import React, { useCallback } from 'react'
 import { MAYBE_NUMBER } from 'zss/mapping/types'
 
 import {
-  cacheWriteTextContext,
+  useCacheWriteTextContext,
   tokenizeAndWriteTextFormat,
   writeCharToEnd,
 } from '../../data/textformat'
@@ -34,7 +34,7 @@ export function PanelItemSelect({
   const tcolor = inputcolor(active)
 
   // keep stable re-renders
-  cacheWriteTextContext(context)
+  useCacheWriteTextContext(context)
 
   tokenizeAndWriteTextFormat(` $dkred ? $${tcolor}${tlabel} \\`, context)
 

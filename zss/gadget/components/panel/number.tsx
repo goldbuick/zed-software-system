@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react'
 import { MAYBE_NUMBER } from 'zss/mapping/types'
 
 import {
-  cacheWriteTextContext,
+  useCacheWriteTextContext,
   tokenizeAndWriteTextFormat,
   writeCharToEnd,
 } from '../../data/textformat'
@@ -62,7 +62,7 @@ export function PanelItemNumber({
   const tcolor = inputcolor(active)
 
   // keep stable re-renders
-  cacheWriteTextContext(context)
+  useCacheWriteTextContext(context)
 
   if (focus) {
     tvalue = blink ? strsplice(strvalue, cursor, 1, '$219+') : strvalue

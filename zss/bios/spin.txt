@@ -6,18 +6,18 @@
 
 ?u
 #if rnd ?u
-#put edit idle pick dirt dirt2
+#put edit idle dirt
 
 ?r
 #if rnd ?r
-#put edit idle pick dirt dirt2
+#put edit idle dirt2
 
 ?d
 #if rnd ?d
-#put edit idle pick dirt dirt2
+#put edit idle dirt
 
 ?l
 #if rnd ?l
-#put edit idle pick dirt dirt2
+#put edit idle dirt2
 
 #think

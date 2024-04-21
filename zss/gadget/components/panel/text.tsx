@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import {
-  cacheWriteTextContext,
+  useCacheWriteTextContext,
   tokenizeAndWriteTextFormat,
   writeCharToEnd,
 } from 'zss/gadget/data/textformat'
@@ -38,7 +38,7 @@ export function PanelItemText({
   const tcolor = inputcolor(active)
 
   // keep stable re-renders
-  cacheWriteTextContext(context)
+  useCacheWriteTextContext(context)
 
   if (focus && blink) {
     tvalue = strsplice(tvalue, cursor, 1, '$219+')
