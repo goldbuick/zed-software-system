@@ -1,6 +1,8 @@
 @spin
 #cycle pick range 1 10
-#color pick red white blue yellow dkblue dkred dkgreen
+#set doot pick red white blue yellow dkblue dkred dkgreen
+#color doot
+
 :think
 #char pick range 1 22
 

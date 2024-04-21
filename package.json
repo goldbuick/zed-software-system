@@ -16,6 +16,9 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@elemaudio/core": "^3.2.1",
+    "@elemaudio/offline-renderer": "^3.2.2",
+    "@elemaudio/web-renderer": "^3.2.3",
     "@jest/globals": "^29.7.0",
     "@react-spring/three": "^9.7.3",
     "@react-three/drei": "^9.80.2",
@@ -23,6 +26,8 @@
     "@react-three/postprocessing": "^2.16.2",
     "@rwh/keystrokes": "^1.2.3",
     "@rwh/react-keystrokes": "^1.2.3",
+    "@syncedstore/core": "^0.6.0",
+    "@syncedstore/react": "^0.6.0",
     "@types/animejs": "^3.1.12",
     "@types/is-hotkey": "^0.1.10",
     "@types/jest": "^29.5.5",

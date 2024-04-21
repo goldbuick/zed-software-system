@@ -377,6 +377,30 @@
   resolved "https://registry.npmjs.org/@chevrotain/utils/-/utils-11.0.3.tgz#e39999307b102cff3645ec4f5b3665f5297a2224"
   integrity sha512-YslZMgtJUyuMbZ+aKvfF3x1f5liK4mWNxghFRv7jqRR9C3R3fAOGTTKvxXDa2Y1s9zSbcpuO0cAxDYsc9SrXoQ==
 
+"@elemaudio/core@^3.2.1":
+  version "3.2.1"
+  resolved "https://registry.npmjs.org/@elemaudio/core/-/core-3.2.1.tgz#63ce5479a7f8b778071ccca649a1068941529b18"
+  integrity sha512-Id122jLwlJdc9v30RO/sMIxdhyVLXbav9rP5ReUqgWZtlxHcuzT+8/ZSErBNzIfDtwX9P2vwl4ZKBpGnde4y0w==
+  dependencies:
+    eventemitter3 "^5.0.1"
+    invariant "^2.2.4"
+    shallowequal "^1.1.0"
+
+"@elemaudio/offline-renderer@^3.2.2":
+  version "3.2.2"
+  resolved "https://registry.npmjs.org/@elemaudio/offline-renderer/-/offline-renderer-3.2.2.tgz#198b4ab8eaf35c5b95a11dce819401527931313b"
+  integrity sha512-3f6bYtbN1OaCwagSX/xLoYLMmVD2uwTmZ9Uhzp5TW/Iy4SVTf2x16VvJraYYgoytEJEwzp8yMllgpSy0HewhwA==
+  dependencies:
+    "@elemaudio/core" "^3.2.1"
+    invariant "^2.2.4"
+
+"@elemaudio/web-renderer@^3.2.3":
+  version "3.2.3"
+  resolved "https://registry.npmjs.org/@elemaudio/web-renderer/-/web-renderer-3.2.3.tgz#8a7b305b59e091e0d127ebaca1848a8dad360f84"
+  integrity sha512-ZIOlHCqHq7SWJeuH5ma1bMwAg/6mLdyOVnOsHalDmXDa/CJeksv7qoshHPvjUYyDk1Gi8Ut8NmYBkslUJ0+XFA==
+  dependencies:
+    "@elemaudio/core" "^3.2.1"
+
 "@esbuild/aix-ppc64@0.20.2":
   version "0.20.2"
   resolved "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.20.2.tgz#a70f4ac11c6a1dfc18b8bbb13284155d933b9537"
@@ -1015,6 +1039,18 @@
     postprocessing "^6.32.1"
     three-stdlib "^2.23.4"
 
+"@reactivedata/react@^0.2.1":
+  version "0.2.2"
+  resolved "https://registry.npmjs.org/@reactivedata/react/-/react-0.2.2.tgz#967664b419c6f24b5b292ce50a56c915bac21938"
+  integrity sha512-fJ8qoHRbicQnVcnwfHa9FO73mbHFfl590xpuGM4Mo1P2ClaDATfl9oUrrySE+tbA//M9cn8De8HTwjoNqt91sw==
+  dependencies:
+    "@reactivedata/reactive" "^0.2.2"
+
+"@reactivedata/reactive@^0.2.0", "@reactivedata/reactive@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.npmjs.org/@reactivedata/reactive/-/reactive-0.2.2.tgz#19d953f691015152b92f8e699905519d99e3a1bd"
+  integrity sha512-KnINM/Sng25QAv6sHkJO9q/XyslLegCF5jTsTSVu+AouY3uZDVf4Am99xNCqsfqFZFvnTBBDvCsHNdvTVGvPEA==
+
 "@rollup/rollup-android-arm-eabi@4.14.3":
   version "4.14.3"
   resolved "https://registry.npmjs.org/@rollup/rollup-android-arm-eabi/-/rollup-android-arm-eabi-4.14.3.tgz#bddf05c3387d02fac04b6b86b3a779337edfed75"
@@ -1204,6 +1240,26 @@
   integrity sha512-/JLo/l2JsT/LRd80C3HfbmVpxOAJ11FO2RCEslFrgzLltoP9j8XIbsyDcfCt2WWyX+CM96rBoNM+IToAkFOugg==
   dependencies:
     "@swc/counter" "^0.1.3"
+
+"@syncedstore/core@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.npmjs.org/@syncedstore/core/-/core-0.6.0.tgz#c9df48a88f282e7b7b55dd0ce3d2570a92d666f7"
+  integrity sha512-6TtjEoYJsceYi8u1oRecXwbbLmjHaU0S7HvVfOaEdDfphZLGm/faVuA2fpazqc28F0yIFGvYzvPEBUJn9vqRNw==
+  dependencies:
+    "@reactivedata/reactive" "^0.2.0"
+    "@syncedstore/yjs-reactive-bindings" "^0.6.0"
+
+"@syncedstore/react@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.npmjs.org/@syncedstore/react/-/react-0.6.0.tgz#a59d79db7414d362cc34aee83b0d13c0569f23c8"
+  integrity sha512-pc8ycnBuH2wp7Td5nGzP9Dn2mEW9Yg1qF0yGdjJ5UdgLEwfRkq+8/hdQl+alcoSribv9St/Bi5hJckX8GVsAbQ==
+  dependencies:
+    "@reactivedata/react" "^0.2.1"
+
+"@syncedstore/yjs-reactive-bindings@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.npmjs.org/@syncedstore/yjs-reactive-bindings/-/yjs-reactive-bindings-0.6.0.tgz#9b7800163dcfb02f54bea1a57499a99c30d314f1"
+  integrity sha512-VF78h0J4iOt79YU9d6j5E6bFKu7WXYuiI2ue9ZnA+T4SNVn8viRvg0AHm3NqHzudZZUgYT3dpnbv1/ZmU7yPZQ==
 
 "@tweenjs/tween.js@~23.1.1":
   version "23.1.1"
@@ -2676,6 +2732,11 @@ eventemitter3@^4.0.7:
   resolved "https://registry.npmjs.org/eventemitter3/-/eventemitter3-4.0.7.tgz#2de9b68f6528d5644ef5c59526a1b4a07306169f"
   integrity sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==
 
+eventemitter3@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.npmjs.org/eventemitter3/-/eventemitter3-5.0.1.tgz#53f5ffd0a492ac800721bb42c66b841de96423c4"
+  integrity sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==
+
 execa@^5.0.0:
   version "5.1.1"
   resolved "https://registry.npmjs.org/execa/-/execa-5.1.1.tgz#f80ad9cbf4298f7bd1d4c9555c21e93741c411dd"
@@ -3104,6 +3165,13 @@ internal-slot@^1.0.7:
     es-errors "^1.3.0"
     hasown "^2.0.0"
     side-channel "^1.0.4"
+
+invariant@^2.2.4:
+  version "2.2.4"
+  resolved "https://registry.npmjs.org/invariant/-/invariant-2.2.4.tgz#610f3c92c9359ce1db616e538008d23ff35158e6"
+  integrity sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==
+  dependencies:
+    loose-envify "^1.0.0"
 
 is-array-buffer@^3.0.4:
   version "3.0.4"
@@ -3949,7 +4017,7 @@ lodash.merge@^4.6.2:
   resolved "https://registry.npmjs.org/lodash.merge/-/lodash.merge-4.6.2.tgz#558aa53b43b661e1925a0afdfa36a9a1085fe57a"
   integrity sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==
 
-loose-envify@^1.1.0, loose-envify@^1.4.0:
+loose-envify@^1.0.0, loose-envify@^1.1.0, loose-envify@^1.4.0:
   version "1.4.0"
   resolved "https://registry.npmjs.org/loose-envify/-/loose-envify-1.4.0.tgz#71ee51fa7be4caec1a63839f7e682d8132d30caf"
   integrity sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==
@@ -4834,6 +4902,11 @@ setimmediate@^1.0.5:
   version "1.0.5"
   resolved "https://registry.npmjs.org/setimmediate/-/setimmediate-1.0.5.tgz#290cbb232e306942d7d7ea9b83732ab7856f8285"
   integrity sha512-MATJdZp8sLqDl/68LfQmbP8zKPLQNV6BIZoIgrscFDQ+RsvK/BxeDQOgyxKKoh0y/8h3BqVFnCqQ/gd+reiIXA==
+
+shallowequal@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.npmjs.org/shallowequal/-/shallowequal-1.1.0.tgz#188d521de95b9087404fd4dcb68b13df0ae4e7f8"
+  integrity sha512-y0m1JoUZSlPAjXVtPPW70aZWfIL/dSP7AFkRnniLCrK/8MDKog3TySTBmckD+RObVxH0v4Tox67+F14PdED2oQ==
 
 shebang-command@^2.0.0:
   version "2.0.0"

@@ -630,6 +630,7 @@ export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
         return [clamp(a, min, max), ii]
       }
       case 'pick': {
+        // console.info('pick', [...read.words])
         // PICK <a> [b] [c] [d]
         const values: any[] = []
         for (let ii = index + 1; ii < read.words.length; ) {
@@ -753,12 +754,12 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.COLOR: {
-        const [value, iii] = readexpr(read, ii)
+        const [value, iii] = readcolor(read, ii)
         if (!isstrcolor(value)) {
           didexpect('color', value)
         }
         ii = iii
-        values.push(COLOR[value[0]])
+        values.push(value)
         break
       }
       case ARG_TYPE.KIND: {

@@ -6,7 +6,8 @@ import arraybuffer from 'vite-plugin-arraybuffer'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  root: './zss/terminal/',
+  root: 'zss/terminal/',
+  envPrefix: 'ZSS_',
   plugins: [react(), arraybuffer()],
   resolve: {
     alias: {

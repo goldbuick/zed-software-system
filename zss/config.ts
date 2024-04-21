@@ -1,6 +1,10 @@
 // cli config
-const LANG_DEV = !!(import.meta.env.VITE_LANG_DEV !== undefined)
-const STATS_DEV = !!(import.meta.env.VITE_STATS_DEV !== undefined)
-const SHOW_CODE = !!(import.meta.env.VITE_SHOW_CODE !== undefined)
+const LANG_DEV = !!JSON.parse(import.meta.env.ZSS_LANG_DEV)
+const STATS_DEV = !!JSON.parse(import.meta.env.ZSS_STATS_DEV)
+const SHOW_CODE = !!JSON.parse(import.meta.env.ZSS_SHOW_CODE)
+
+if (import.meta.env.DEV) {
+  console.info(import.meta.env)
+}
 
 export { LANG_DEV, STATS_DEV, SHOW_CODE }

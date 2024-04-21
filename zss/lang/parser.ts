@@ -113,12 +113,12 @@ class ScriptParser extends CstParser {
       {
         ALT: () => {
           this.CONSUME(lexer.Command)
-          this.AT_LEAST_ONE(() => this.SUBRULE(this.command))
+          this.AT_LEAST_ONE1(() => this.SUBRULE1(this.command))
         },
       },
       {
         ALT: () => {
-          this.AT_LEAST_ONE(() => this.SUBRULE(this.command))
+          this.AT_LEAST_ONE2(() => this.SUBRULE2(this.command))
         },
       },
     ])

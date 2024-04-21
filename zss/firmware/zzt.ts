@@ -364,6 +364,7 @@ export const ZZT_FIRMWARE = createfirmware({
       ARG_TYPE.STRING,
       ARG_TYPE.ANY,
     ])
+    console.info('setwith', value)
     chip.set(name, value)
     return 0
   })
