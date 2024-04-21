@@ -303,6 +303,8 @@ export function readcolor(
 ): [STR_COLOR | undefined, number] {
   const value: MAYBE_WORD = read.words[index]
 
+  // console.info('readcolor', read.words.slice(index))
+
   // already mapped
   if (isstrcolor(value)) {
     return [value, index + 1]
@@ -313,12 +315,12 @@ export function readcolor(
   const maybecolor = readcolorconst(read, index)
   if (isstrcolor(maybecolor)) {
     strcolor.push(...maybecolor)
-  }
 
-  if (!isbgstrcolor(maybecolor)) {
-    const maybebg = readcolorconst(read, index + 1)
-    if (isstrcolor(maybebg)) {
-      strcolor.push(...maybebg)
+    if (!isbgstrcolor(maybecolor)) {
+      const maybebg = readcolorconst(read, index + 1)
+      if (isstrcolor(maybebg)) {
+        strcolor.push(...maybebg)
+      }
     }
   }
 
@@ -471,21 +473,34 @@ export function chipreadcontext(chip: CHIP, words: WORD[]) {
 export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
   const maybevalue = read.words[index]
 
+  // const dv = read.words.slice(index)
+  // if (dv[0] === 'pick') {
+  //   console.info('readexpr', dv)
+  // }
+
+  // console.info(1)
+
   // check consts
   const [maybecategory, n1] = readcategory(read, index)
   if (ispresent(maybecategory)) {
     return [maybecategory, n1]
   }
 
+  // console.info(2)
+
   const [maybecollision, n2] = readcollision(read, index)
   if (ispresent(maybecollision)) {
     return [maybecollision, n2]
   }
 
+  // console.info(3)
+
   const [maybecolor, n3] = readcolor(read, index)
   if (ispresent(maybecolor)) {
     return [maybecolor, n3]
   }
+
+  // console.info(4)
 
   // special case rnd
   if (isstring(maybevalue) && maybevalue.toLowerCase() === 'rnd') {
@@ -503,6 +518,8 @@ export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
     return [randomInteger(0, 1), index + 1]
   }
 
+  // console.info(5)
+
   const [maybedir, n4] = readdir(read, index)
   if (ispresent(maybedir)) {
     return [maybedir, n4]
@@ -510,15 +527,21 @@ export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
 
   // check complex values
 
+  // console.info(6)
+
   // empty is invalid
   if (!ispresent(maybevalue)) {
     return [undefined, index]
   }
 
-  // check for number or array
+  // console.info(6)
+
+  // check for pt, number, or array
   if (ispt(maybevalue) || isnumber(maybevalue) || isarray(maybevalue)) {
     return [maybevalue, index + 1]
   }
+
+  // console.info(6)
 
   // check for flags and expressions
   if (isstring(maybevalue)) {
