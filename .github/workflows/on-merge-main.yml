@@ -1,0 +1,41 @@
+name: automated versioning
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  autoversion:
+    name: update version on main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          set-safe-directory: true
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with: 
+          node-version-file: .nvmrc
+
+      - name: log version
+        run: cat ./package.json
+
+      - name: 'Automated Version Bump'
+        id: version-bump
+        uses: 'phips28/gh-action-bump-version@master'
+        with:
+          tag-prefix: 'v'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: log version
+        run: cat ./package.json
+
+      - name: signal result
+        env:
+          NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
+        run: echo "new tag $NEW_TAG"
