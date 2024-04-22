@@ -1,4 +1,4 @@
-name: automated versioning
+name: on merge main
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   autoversion:
-    name: update version on main
+    name: update version on main and deploy to gh pages
     runs-on: ubuntu-latest
 
     steps:
