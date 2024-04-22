@@ -5,7 +5,7 @@ import {
   gadgetpanel,
 } from 'zss/gadget/data/api'
 import { PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
-import { isdefined, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import {
   memorycreateeditframe,
   memorycreateviewframe,
@@ -13,7 +13,7 @@ import {
   memoryresetframes,
   memorysetbook,
 } from 'zss/memory'
-import { createboard } from 'zss/memory/board'
+import { boardelementapplycolor, createboard } from 'zss/memory/board'
 import { createbook } from 'zss/memory/book'
 import { createcodepage } from 'zss/memory/codepage'
 
@@ -39,19 +39,11 @@ export const ZSS_FIRMWARE = createfirmware({
     gadgetcheckscroll(chip)
   },
 })
-  .command('bg', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.COLOR])
-    if (isdefined(memory.target)) {
-      memory.target.bg = value
-    }
-    return 0
-  })
   .command('color', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.COLOR])
-    if (isdefined(memory.target)) {
-      memory.target.color = value
+    if (ispresent(memory.target) && ispresent(value)) {
+      boardelementapplycolor(memory.target, value)
     }
     return 0
   })

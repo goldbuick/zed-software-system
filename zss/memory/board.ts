@@ -9,6 +9,7 @@ import {
   ispt,
   CATEGORY,
   STR_COLOR,
+  COLOR,
 } from 'zss/firmware/wordtypes'
 import { pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
@@ -121,6 +122,25 @@ export function createboard(fn = noop<BOARD>) {
     objects: {},
   }
   return fn(board)
+}
+
+export function boardelementapplycolor(
+  element: MAYBE_BOARD_ELEMENT,
+  color: STR_COLOR | undefined,
+) {
+  if (!ispresent(element) || !ispresent(color)) {
+    return
+  }
+  for (const colorconst of color) {
+    const colornumber = COLOR[colorconst]
+    if (ispresent(colornumber)) {
+      if (colornumber >= COLOR.ONBLACK && colornumber <= COLOR.SHADOW) {
+        element.bg = colornumber - COLOR.ONBLACK
+      } else {
+        element.color = colornumber
+      }
+    }
+  }
 }
 
 export function boardsetterrain(
