@@ -1,4 +1,11 @@
-import { PT } from 'zss/firmware/wordtypes'
+import {
+  PT,
+  STR_KIND,
+  iscolormatch,
+  readkindcolor,
+  readkindname,
+} from 'zss/firmware/wordtypes'
+import { ispresent } from 'zss/mapping/types'
 
 import { MAYBE_BOARD, MAYBE_BOARD_ELEMENT } from './board'
 
@@ -14,11 +21,28 @@ export function namedelements(board: MAYBE_BOARD, name: string) {
   })
 }
 
-export function nearestpt(
-  board: MAYBE_BOARD,
-  pt: PT,
-  items: MAYBE_BOARD_ELEMENT[],
-) {
+export function filterelementsbykind(
+  elements: MAYBE_BOARD_ELEMENT[],
+  kind: STR_KIND,
+): MAYBE_BOARD_ELEMENT[] {
+  const name = readkindname(kind)
+  const color = readkindcolor(kind)
+
+  return elements.filter((element) => {
+    if (ispresent(element)) {
+      if (ispresent(name) && element.kind !== name) {
+        return false
+      }
+      if (ispresent(color) && !iscolormatch(color, element.color, element.bg)) {
+        return false
+      }
+      return true
+    }
+    return false
+  })
+}
+
+export function nearestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
   let ndist = 0
   let nearest: MAYBE_BOARD_ELEMENT
 
@@ -38,11 +62,7 @@ export function nearestpt(
   return nearest
 }
 
-export function farthestpt(
-  board: MAYBE_BOARD,
-  pt: PT,
-  items: MAYBE_BOARD_ELEMENT[],
-) {
+export function farthestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
   let ndist = 0
   let nearest: MAYBE_BOARD_ELEMENT
 

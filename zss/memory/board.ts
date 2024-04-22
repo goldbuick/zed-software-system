@@ -10,6 +10,7 @@ import {
   CATEGORY,
   STR_COLOR,
   COLOR,
+  STR_KIND,
 } from 'zss/firmware/wordtypes'
 import { pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'

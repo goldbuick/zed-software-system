@@ -10,6 +10,7 @@ import {
 import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadbook, memoryreadchip, memoryreadframes } from 'zss/memory'
+import { filterelementsbykind, namedelements } from 'zss/memory/atomics'
 import {
   BOARD_ELEMENT,
   boardfindplayer,
@@ -27,6 +28,7 @@ import {
   readexpr,
   readargs,
   ARG_TYPE,
+  readkindname,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
@@ -212,7 +214,13 @@ export const ZZT_FIRMWARE = createfirmware({
       ARG_TYPE.KIND,
       ARG_TYPE.KIND,
     ])
-    console.info({ target, into })
+
+    const targetelements = filterelementsbykind(
+      namedelements(memory.board, readkindname(target) ?? ''),
+      target,
+    )
+
+    console.info({ target, targetelements, into })
     // if (ispresent(memory.target)) {
     //   memory.target.char = value
     // }

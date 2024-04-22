@@ -396,6 +396,41 @@ export function readcolor(
   return strcolor.length ? [strcolor, next] : [undefined, index]
 }
 
+export function mapstrcolortoattributes(color: STR_COLOR) {
+  const attributes = {} as Partial<{
+    color: COLOR
+    bg: COLOR
+  }>
+
+  color.every((attr) => {
+    const value = COLOR[attr]
+    if (ispresent(value)) {
+      if (value < COLOR.ONBLACK) {
+        attributes.color = value
+      } else {
+        attributes.bg = value
+      }
+    }
+  })
+
+  return attributes
+}
+
+export function iscolormatch(
+  pattern: STR_COLOR,
+  color: MAYBE<COLOR>,
+  bg: MAYBE<COLOR>,
+) {
+  const attr = mapstrcolortoattributes(pattern)
+  if (ispresent(color) && color !== attr.color) {
+    return false
+  }
+  if (ispresent(bg) && bg !== attr.bg) {
+    return false
+  }
+  return true
+}
+
 export type STR_KIND = [string, STR_COLOR?]
 
 export function isstrkind(value: any): value is STR_KIND {
@@ -423,6 +458,22 @@ export function readkind(
 
   // fail
   return [undefined, index]
+}
+
+export function readkindname(kind: MAYBE<STR_KIND>) {
+  if (!isstrkind(kind)) {
+    return undefined
+  }
+  const [maybename] = kind
+  return maybename
+}
+
+export function readkindcolor(kind: MAYBE<STR_KIND>) {
+  if (!isstrkind(kind)) {
+    return undefined
+  }
+  const [, maybecolor] = kind
+  return maybecolor
 }
 
 export const dirconsts = {

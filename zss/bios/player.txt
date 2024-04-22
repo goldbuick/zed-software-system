@@ -83,6 +83,6 @@ $3 Here is some test text and yeah! $3
 #main
 
 :cmmd_test
-#change yellow spin red ondkblue fish
+#change white spin purple spin
 #idle
 #main
