@@ -4,6 +4,8 @@ import { ispresent } from 'zss/mapping/types'
 import {
   BOARD_DIR,
   MAYBE_BOARD,
+  boardelementapplycolor,
+  boardgetterrain,
   boardsetterrainfromkind,
   createboardobjectfromkind,
 } from './board'
@@ -22,11 +24,13 @@ export function editboard(
   const [name, maybecolor] = kind
   const maybeterrain = bookreadterrain(book, name)
   if (ispresent(maybeterrain)) {
-    boardsetterrainfromkind(board, dir.x, dir.y, name, maybecolor)
+    boardsetterrainfromkind(board, dir.x, dir.y, name)
+    boardelementapplycolor(boardgetterrain(board, dir.x, dir.y), maybecolor)
   }
 
   const maybeobject = bookreadobject(book, kind[0])
   if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
     createboardobjectfromkind(board, dir.x, dir.y, maybeobject)
+    boardelementapplycolor(maybeobject, maybecolor)
   }
 }

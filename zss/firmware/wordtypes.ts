@@ -45,8 +45,6 @@ export enum COLOR {
   PURPLE,
   YELLOW,
   WHITE,
-  CLEAR = COLOR_TINDEX,
-  SHADOW = COLOR_SINDEX,
   ONBLACK,
   ONDKBLUE,
   ONDKGREEN,
@@ -63,6 +61,8 @@ export enum COLOR {
   ONPURPLE,
   ONYELLOW,
   ONWHITE,
+  CLEAR = COLOR_TINDEX,
+  SHADOW = COLOR_SINDEX,
 }
 
 export enum DIR {
@@ -263,9 +263,11 @@ export const colorconsts = {
   onltblack: 'ONDKGRAY',
 } as const
 
-export type STR_COLOR = (typeof colorconsts)[keyof typeof colorconsts][]
+export type STR_COLOR_KEYS = keyof typeof colorconsts
+export type STR_COLOR_CONST = (typeof colorconsts)[STR_COLOR_KEYS]
+export type STR_COLOR = STR_COLOR_CONST[]
 
-function isstrcolorconst(value: any) {
+function isstrcolorconst(value: any): value is STR_COLOR_CONST {
   return ispresent(COLOR[value]) && isstring(value)
 }
 
@@ -280,53 +282,50 @@ export function isbgstrcolor(value: any): value is STR_COLOR {
 function readcolorconst(
   read: READ_CONTEXT,
   index: number,
-): STR_COLOR | undefined {
+): [STR_COLOR | undefined, number] {
   const value: MAYBE_WORD = read.words[index]
 
-  // single string
-  if (typeof value === 'string') {
-    const maybecolor = read.chip.get(value)
-    if (isstrcolor(maybecolor)) {
-      return maybecolor
-    }
-    if (isstrcolorconst(maybecolor)) {
-      return [maybecolor]
-    }
+  if (isstrcolor(value)) {
+    return [value, index + 1]
   }
 
-  return undefined
+  if (isstrcolorconst(value)) {
+    return [[value], index + 1]
+  }
+
+  const [maybecolorconst, ii] = readexpr(read, index)
+  if (isstrcolor(maybecolorconst)) {
+    return [maybecolorconst, ii]
+  }
+
+  if (isstrcolorconst(maybecolorconst)) {
+    return [[maybecolorconst], ii]
+  }
+
+  return [undefined, index]
 }
 
 export function readcolor(
   read: READ_CONTEXT,
   index: number,
 ): [STR_COLOR | undefined, number] {
-  const value: MAYBE_WORD = read.words[index]
-
-  // already mapped
-  if (isstrcolor(value)) {
-    return [value, index + 1]
-  }
-
   const strcolor: STR_COLOR = []
 
-  const maybecolor = readcolorconst(read, index)
+  const [maybecolor, ii] = readcolorconst(read, index)
   if (isstrcolor(maybecolor)) {
     strcolor.push(...maybecolor)
+  }
 
-    if (!isbgstrcolor(maybecolor)) {
-      const maybebg = readcolorconst(read, index + 1)
-      if (isbgstrcolor(maybebg)) {
-        strcolor.push(...maybebg)
-      }
+  if (!isbgstrcolor(strcolor)) {
+    const [maybebg] = readcolorconst(read, ii)
+    if (isbgstrcolor(maybebg)) {
+      strcolor.push(...maybebg)
     }
   }
 
-  if (strcolor.length) {
-    return [strcolor, index + strcolor.length]
-  }
-
-  return [undefined, index]
+  return strcolor.length
+    ? [strcolor, index + strcolor.length]
+    : [undefined, index]
 }
 
 export type STR_KIND = [string, STR_COLOR?]
@@ -347,11 +346,11 @@ export function readkind(
   }
 
   const [maybecolor, ii] = readcolor(read, index)
-  const maybename = read.words[ii]
+  const [maybename, iii] = readexpr(read, ii, false)
 
   // found a string, color is optional
-  if (typeof maybename === 'string') {
-    return [[maybename, maybecolor], ii + 1]
+  if (isstring(maybename)) {
+    return [[maybename, maybecolor], iii]
   }
 
   // fail
@@ -468,26 +467,36 @@ export function chipreadcontext(chip: CHIP, words: WORD[]) {
 
 // read a value from words
 // consider splitting out to own file
-export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
+export function readexpr(
+  read: READ_CONTEXT,
+  index: number,
+  stringeval = true,
+): [any, number] {
   const maybevalue = read.words[index]
 
   // check consts
-  const [maybecategory, n1] = readcategory(read, index)
-  if (ispresent(maybecategory)) {
-    return [maybecategory, n1]
+  if (isstrcategory(read.words[index])) {
+    const [maybecategory, n1] = readcategory(read, index)
+    if (ispresent(maybecategory)) {
+      return [maybecategory, n1]
+    }
   }
 
-  const [maybecollision, n2] = readcollision(read, index)
-  if (ispresent(maybecollision)) {
-    return [maybecollision, n2]
+  if (isstrcollision(read.words[index])) {
+    const [maybecollision, n2] = readcollision(read, index)
+    if (ispresent(maybecollision)) {
+      return [maybecollision, n2]
+    }
   }
 
-  const [maybecolor, n3] = readcolor(read, index)
-  if (ispresent(maybecolor)) {
-    return [maybecolor, n3]
+  if (isstrcolor(read.words[index])) {
+    const [maybecolor, n3] = readcolor(read, index)
+    if (ispresent(maybecolor)) {
+      return [maybecolor, n3]
+    }
   }
 
-  // special case rnd
+  // special case rnd expression
   if (isstring(maybevalue) && maybevalue.toLowerCase() === 'rnd') {
     // RND - returns 0 or 1
     // RND <number> - return 0 to number
@@ -525,9 +534,11 @@ export function readexpr(read: READ_CONTEXT, index: number): [any, number] {
     const maybeexpr = maybevalue.toLowerCase()
 
     // check for flag
-    const maybeflag = read.chip.get(maybevalue)
-    if (ispresent(maybeflag)) {
-      return [maybeflag, index + 1]
+    if (stringeval) {
+      const maybeflag = read.chip.get(maybevalue)
+      if (ispresent(maybeflag)) {
+        return [maybeflag, index + 1]
+      }
     }
 
     // check for expressions

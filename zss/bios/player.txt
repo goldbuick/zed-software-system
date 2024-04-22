@@ -43,14 +43,14 @@
     #if drawing is blue do
       #repeat 10 do
         ?playermove
-        #put edit idle wall2
+        #put edit idle brown ondkpurple pick wall wall2
       #endrepeat
     #else do
       ?10 playermove
     #endif
   #else do 
     ?playermove
-    #if drawing is blue put edit idle wall2
+    #if drawing is blue put edit idle brown ondkpurple pick wall wall2
   #endif
 #else do
   #idle
@@ -65,7 +65,7 @@
 :draw
 #if drawing is white do
   #set drawing blue
-  #put edit idle wall2
+  #put edit idle brown ondkpurple pick wall wall2
 #else do
   #set drawing white
 #endif

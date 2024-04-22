@@ -143,6 +143,17 @@ export function boardelementapplycolor(
   }
 }
 
+export function boardgetterrain(
+  board: MAYBE_BOARD,
+  x: number,
+  y: number,
+): MAYBE_BOARD_ELEMENT {
+  return (x >= 0 && x < (board?.width ?? -1)) ??
+    (y >= 0 && y < (board?.height ?? -1))
+    ? board?.terrain[x + y * board.width]
+    : undefined
+}
+
 export function boardsetterrain(
   board: MAYBE_BOARD,
   x: number,
@@ -167,7 +178,6 @@ export function boardsetterrainfromkind(
   x: number,
   y: number,
   kind: string,
-  color?: STR_COLOR,
 ) {
   boardsetterrain(board, x, y, { kind })
 }
