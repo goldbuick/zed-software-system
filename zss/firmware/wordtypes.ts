@@ -125,15 +125,44 @@ export const categoryconsts = {
   object: 'OBJECT',
 } as const
 
-export type STR_CATEGORY =
-  (typeof categoryconsts)[keyof typeof categoryconsts][]
-
-function isstrcategoryconst(value: any) {
-  return ispresent(CATEGORY[value]) && isstring(value)
-}
+export type STR_CATEGORY_TYPE = typeof categoryconsts
+export type STR_CATEGORY_KEYS = keyof STR_CATEGORY_TYPE
+export type STR_CATEGORY_CONST = STR_CATEGORY_TYPE[STR_CATEGORY_KEYS]
+export type STR_CATEGORY = STR_CATEGORY_CONST[]
 
 export function isstrcategory(value: any): value is STR_CATEGORY {
   return isarray(value) && isstrcategoryconst(value[0])
+}
+
+function isstrcategoryconst(value: any): value is STR_CATEGORY_CONST {
+  return ispresent(CATEGORY[value]) && isstring(value)
+}
+
+function mapstrcategory(value: any): MAYBE<STR_CATEGORY_CONST> {
+  if (isstring(value)) {
+    return categoryconsts[value.toLowerCase() as STR_CATEGORY_KEYS]
+  }
+  return undefined
+}
+
+function checkforcategoryconst(value: MAYBE_WORD): MAYBE<STR_CATEGORY> {
+  // already mapped STR_CATEGORY
+  if (isstrcategory(value)) {
+    return value
+  }
+
+  // convert STR_CATEGORY_CONST to STR_CATEGORY
+  if (isstrcategoryconst(value)) {
+    return [value]
+  }
+
+  // convert name to const
+  const maybecategory = mapstrcategory(value)
+  if (ispresent(maybecategory)) {
+    return [maybecategory]
+  }
+
+  return undefined
 }
 
 export function readcategory(
@@ -142,20 +171,19 @@ export function readcategory(
 ): [STR_CATEGORY | undefined, number] {
   const value: MAYBE_WORD = read.words[index]
 
-  // already mapped
-  if (isstrcategory(value)) {
-    return [value, index + 1]
+  // pre-check
+  const maybecategory = checkforcategoryconst(value)
+  if (isstrcategory(maybecategory)) {
+    return [maybecategory, index + 1]
   }
 
-  // single string
-  if (typeof value === 'string') {
-    const maybecategory = read.chip.get(value)
-    if (isstrcategory(maybecategory)) {
-      return [maybecategory, index + 1]
-    }
-    if (isstrcategoryconst(maybecategory)) {
-      return [[maybecategory], index + 1]
-    }
+  // read expression
+  const [exprvalue, iii] = readexpr(read, index)
+
+  // post-check
+  const maybecategory2 = checkforcategoryconst(exprvalue)
+  if (isstrcategory(maybecategory2)) {
+    return [maybecategory2, iii]
   }
 
   // fail
@@ -172,15 +200,24 @@ export const collisionconsts = {
   swimmable: 'SWIM',
 } as const
 
-export type STR_COLLISION =
-  (typeof collisionconsts)[keyof typeof collisionconsts][]
-
-function isstrcollisionconst(value: any) {
-  return ispresent(COLLISION[value]) && isstring(value)
-}
+export type STR_COLLISION_TYPE = typeof collisionconsts
+export type STR_COLLISION_KEYS = keyof STR_COLLISION_TYPE
+export type STR_COLLISION_CONST = STR_COLLISION_TYPE[STR_COLLISION_KEYS]
+export type STR_COLLISION = STR_COLLISION_CONST[]
 
 export function isstrcollision(value: any): value is STR_COLLISION {
   return isarray(value) && isstrcollisionconst(value[0])
+}
+
+function isstrcollisionconst(value: any): value is STR_COLLISION_CONST {
+  return ispresent(COLLISION[value]) && isstring(value)
+}
+
+function mapstrcollision(value: any): MAYBE<STR_COLLISION_CONST> {
+  if (isstring(value)) {
+    return collisionconsts[value.toLowerCase() as STR_COLLISION_KEYS]
+  }
+  return undefined
 }
 
 export function readcollision(
@@ -193,16 +230,18 @@ export function readcollision(
   if (isstrcollision(value)) {
     return [value, index + 1]
   }
+  if (isstrcollisionconst(value)) {
+    return [[value], index + 1]
+  }
 
-  // single string
-  if (typeof value === 'string') {
-    const maybecollision = read.chip.get(value)
-    if (isstrcollision(maybecollision)) {
-      return [maybecollision, index + 1]
-    }
-    if (isstrcollisionconst(maybecollision)) {
-      return [[maybecollision], index + 1]
-    }
+  // attempt to read value
+  const [maybecollision, ii] = readexpr(read, index)
+
+  if (isstrcollision(maybecollision)) {
+    return [maybecollision, ii]
+  }
+  if (isstrcollisionconst(maybecollision)) {
+    return [[maybecollision], ii]
   }
 
   // fail
@@ -263,13 +302,10 @@ export const colorconsts = {
   onltblack: 'ONDKGRAY',
 } as const
 
-export type STR_COLOR_KEYS = keyof typeof colorconsts
-export type STR_COLOR_CONST = (typeof colorconsts)[STR_COLOR_KEYS]
+export type STR_COLOR_TYPE = typeof colorconsts
+export type STR_COLOR_KEYS = keyof STR_COLOR_TYPE
+export type STR_COLOR_CONST = STR_COLOR_TYPE[STR_COLOR_KEYS]
 export type STR_COLOR = STR_COLOR_CONST[]
-
-function isstrcolorconst(value: any): value is STR_COLOR_CONST {
-  return ispresent(COLOR[value]) && isstring(value)
-}
 
 export function isstrcolor(value: any): value is STR_COLOR {
   return isarray(value) && isstrcolorconst(value[0])
@@ -279,29 +315,59 @@ export function isbgstrcolor(value: any): value is STR_COLOR {
   return isstrcolor(value) && value[0].startsWith('ON')
 }
 
+function isstrcolorconst(value: any): value is STR_COLOR_CONST {
+  return ispresent(COLOR[value]) && isstring(value)
+}
+
+function mapstrcolor(value: any): MAYBE<STR_COLOR_CONST> {
+  if (isstring(value)) {
+    return colorconsts[value.toLowerCase() as STR_COLOR_KEYS]
+  }
+  return undefined
+}
+
+function checkforcolorconst(value: MAYBE_WORD): MAYBE<STR_COLOR> {
+  // already mapped STR_COLOR
+  if (isstrcolor(value)) {
+    return value
+  }
+
+  // convert STR_COLOR_CONST to STR_COLOR
+  if (isstrcolorconst(value)) {
+    return [value]
+  }
+
+  // convert name to const
+  const maybecolor = mapstrcolor(value)
+  if (ispresent(maybecolor)) {
+    return [maybecolor]
+  }
+
+  return undefined
+}
+
 function readcolorconst(
   read: READ_CONTEXT,
   index: number,
 ): [STR_COLOR | undefined, number] {
   const value: MAYBE_WORD = read.words[index]
 
-  if (isstrcolor(value)) {
-    return [value, index + 1]
+  // pre-check
+  const maybecolor = checkforcolorconst(value)
+  if (isstrcolor(maybecolor)) {
+    return [maybecolor, index + 1]
   }
 
-  if (isstrcolorconst(value)) {
-    return [[value], index + 1]
+  // read expression
+  const [exprvalue, iii] = readexpr(read, index)
+
+  // post-check
+  const maybecolor2 = checkforcolorconst(exprvalue)
+  if (isstrcolor(maybecolor2)) {
+    return [maybecolor2, iii]
   }
 
-  const [maybecolorconst, ii] = readexpr(read, index)
-  if (isstrcolor(maybecolorconst)) {
-    return [maybecolorconst, ii]
-  }
-
-  if (isstrcolorconst(maybecolorconst)) {
-    return [[maybecolorconst], ii]
-  }
-
+  // fail
   return [undefined, index]
 }
 
@@ -311,21 +377,23 @@ export function readcolor(
 ): [STR_COLOR | undefined, number] {
   const strcolor: STR_COLOR = []
 
+  let next = index
+
   const [maybecolor, ii] = readcolorconst(read, index)
   if (isstrcolor(maybecolor)) {
     strcolor.push(...maybecolor)
+    next = ii
   }
 
-  if (!isbgstrcolor(strcolor)) {
-    const [maybebg] = readcolorconst(read, ii)
+  if (isstrcolor(strcolor) && !isbgstrcolor(strcolor)) {
+    const [maybebg, iii] = readcolorconst(read, ii)
     if (isbgstrcolor(maybebg)) {
       strcolor.push(...maybebg)
+      next = iii
     }
   }
 
-  return strcolor.length
-    ? [strcolor, index + strcolor.length]
-    : [undefined, index]
+  return strcolor.length ? [strcolor, next] : [undefined, index]
 }
 
 export type STR_KIND = [string, STR_COLOR?]
@@ -392,72 +460,87 @@ export const dirconsts = {
   edit: 'EDIT',
 } as const
 
-export type STR_DIR = (typeof dirconsts)[keyof typeof dirconsts][]
-
-function isstrdirconst(value: any) {
-  return ispresent(DIR[value]) && isstring(value)
-}
+export type STR_DIR_TYPE = typeof dirconsts
+export type STR_DIR_KEYS = keyof STR_DIR_TYPE
+export type STR_DIR_CONST = STR_DIR_TYPE[STR_DIR_KEYS]
+export type STR_DIR = STR_DIR_CONST[]
 
 export function isstrdir(value: any): value is STR_DIR {
   return isarray(value) && isstrdirconst(value[0])
 }
 
-export function readdir(
+function isstrdirconst(value: any): value is STR_DIR_CONST {
+  return ispresent(DIR[value]) && isstring(value)
+}
+
+function mapstrdir(value: any): MAYBE<STR_DIR_CONST> {
+  if (isstring(value)) {
+    return dirconsts[value.toLowerCase() as STR_DIR_KEYS]
+  }
+  return undefined
+}
+
+function checkfordirconst(value: MAYBE_WORD): MAYBE<STR_DIR> {
+  // already mapped STR_DIR
+  if (isstrdir(value)) {
+    return value
+  }
+
+  // convert STR_DIR_CONST to STR_DIR
+  if (isstrdirconst(value)) {
+    return [value]
+  }
+
+  // convert name to const
+  const maybedir = mapstrdir(value)
+  if (ispresent(maybedir)) {
+    return [maybedir]
+  }
+
+  return undefined
+}
+
+function readdirconst(
   read: READ_CONTEXT,
   index: number,
 ): [STR_DIR | undefined, number] {
-  const dirvalue: STR_DIR = []
-  const maybevalue: MAYBE_WORD = read.words[index]
+  const value: MAYBE_WORD = read.words[index]
 
-  // already mapped
-  if (isstrdir(maybevalue)) {
-    return [maybevalue, index + 1]
+  // pre-check
+  const maybedir = checkfordirconst(value)
+  if (isstrdir(maybedir)) {
+    return [maybedir, index + 1]
   }
 
-  // check for flag / stat value
-  if (typeof maybevalue === 'string') {
-    const maybeflagvalue = read.chip.get(maybevalue)
-    // already mapped
-    if (isstrdir(maybeflagvalue)) {
-      return [maybeflagvalue, index + 1]
-    }
-  }
+  // read expression
+  const [exprvalue, iii] = readexpr(read, index)
 
-  // one to many strings
-  for (let ii = index; ii < read.words.length; ++ii) {
-    // check value
-    const value = read.words[ii] as MAYBE_WORD
-    if (typeof value !== 'string') {
-      break
-    }
-
-    // read value
-    const maybedir = read.chip.get(value)
-
-    // check for const value
-    if (isstrdirconst(maybedir)) {
-      dirvalue.push(maybedir)
-    } else {
-      break
-    }
-  }
-
-  // found dir
-  if (dirvalue.length) {
-    return [dirvalue, index + dirvalue.length]
+  // post-check
+  const maybedir2 = checkfordirconst(exprvalue)
+  if (isstrdir(maybedir2)) {
+    return [maybedir2, iii]
   }
 
   // fail
   return [undefined, index]
 }
 
-// read a numerical value from words
-export function readnumber(read: READ_CONTEXT, i: number): [number, number] {
-  const value: WORD | undefined = read.words[i]
-  return [
-    (typeof value === 'string' ? read.chip.get(value) : undefined) ?? value,
-    i + 1,
-  ]
+export function readdir(
+  read: READ_CONTEXT,
+  index: number,
+): [STR_DIR | undefined, number] {
+  const strdir: STR_DIR = []
+
+  let [maybedir, ii] = readdirconst(read, index)
+  while (isstrdir(maybedir)) {
+    strdir.push(...maybedir)
+
+    const [maybenextdir, iii] = readdirconst(read, ii)
+    maybedir = maybenextdir
+    ii = iii
+  }
+
+  return strdir.length ? [strdir, index + strdir.length] : [undefined, index]
 }
 
 export function chipreadcontext(chip: CHIP, words: WORD[]) {
@@ -475,21 +558,21 @@ export function readexpr(
   const maybevalue = read.words[index]
 
   // check consts
-  if (isstrcategory(read.words[index])) {
+  if (mapstrcategory(maybevalue)) {
     const [maybecategory, n1] = readcategory(read, index)
     if (ispresent(maybecategory)) {
       return [maybecategory, n1]
     }
   }
 
-  if (isstrcollision(read.words[index])) {
+  if (mapstrcollision(maybevalue)) {
     const [maybecollision, n2] = readcollision(read, index)
     if (ispresent(maybecollision)) {
       return [maybecollision, n2]
     }
   }
 
-  if (isstrcolor(read.words[index])) {
+  if (mapstrcolor(maybevalue)) {
     const [maybecolor, n3] = readcolor(read, index)
     if (ispresent(maybecolor)) {
       return [maybecolor, n3]
@@ -512,9 +595,11 @@ export function readexpr(
     return [randomInteger(0, 1), index + 1]
   }
 
-  const [maybedir, n4] = readdir(read, index)
-  if (ispresent(maybedir)) {
-    return [maybedir, n4]
+  if (mapstrdir(maybevalue)) {
+    const [maybedir, n4] = readdir(read, index)
+    if (ispresent(maybedir)) {
+      return [maybedir, n4]
+    }
   }
 
   // check complex values
@@ -749,21 +834,21 @@ export function readargs<T extends ARG_TYPES>(
   for (let i = 0; i < args.length; ++i) {
     switch (args[i]) {
       case ARG_TYPE.CATEGORY: {
-        const [value, iii] = readexpr(read, ii)
+        const [value, iii] = readcategory(read, ii)
         if (!isstrcategory(value)) {
           didexpect('terrain or object', value)
         }
         ii = iii
-        values.push(CATEGORY[value[0]])
+        values.push(value)
         break
       }
       case ARG_TYPE.COLLISION: {
-        const [value, iii] = readexpr(read, ii)
+        const [value, iii] = readcollision(read, ii)
         if (!isstrcollision(value)) {
           didexpect('solid, walk, swim, bullet, walkable or swimmable', value)
         }
         ii = iii
-        values.push(COLLISION[value[0]])
+        values.push(value)
         break
       }
       case ARG_TYPE.COLOR: {
@@ -808,20 +893,20 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.STRING: {
-        const value = read.words[i]
+        const value = read.words[ii]
         if (!isstring(value)) {
           didexpect('string', value)
         }
-        ii = i + 1
+        ++ii
         values.push(value)
         break
       }
       case ARG_TYPE.NUMBER_OR_STRING: {
-        const value = read.words[i]
+        const [value, iii] = readexpr(read, ii, false)
         if (!isnumber(value) && !isstring(value)) {
           didexpect('number or string', value)
         }
-        ii = i + 1
+        ii = iii
         values.push(value)
         break
       }
@@ -888,20 +973,20 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.MAYBE_STRING: {
-        const value = read.words[i]
+        const value = read.words[ii]
         if (value !== undefined && !isstring(value)) {
           didexpect('optional string', value)
         }
-        ii = i + 1
+        ++ii
         values.push(value)
         break
       }
       case ARG_TYPE.MAYBE_NUMBER_OR_STRING: {
-        const value = read.words[i]
+        const [value, iii] = readexpr(read, ii, false)
         if (value !== undefined && !isnumber(value) && !isstring(value)) {
           didexpect('optional number or string', value)
         }
-        ii = i + 1
+        ii = iii
         values.push(value)
         break
       }
