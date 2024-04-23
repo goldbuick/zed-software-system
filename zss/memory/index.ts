@@ -21,11 +21,11 @@ import {
   BOARD,
   BOARD_ELEMENT,
   MAYBE_BOARD,
-  boardtick,
 } from './board'
 import {
   BOOK,
   MAYBE_BOOK,
+  bookboardtick,
   bookobjectreadkind,
   bookplayerreadboard,
   bookplayerreadboards,
@@ -96,7 +96,7 @@ export function memoryreadframes(board: string) {
 export function memoryreadbook(address: string): MAYBE_BOOK {
   const laddress = address.toLowerCase()
   return (
-    MEMORY.books.get(address) ||
+    MEMORY.books.get(address) ??
     [...MEMORY.books.values()].find(
       (item) => item.name.toLowerCase() === laddress,
     )
@@ -197,7 +197,9 @@ export function memorytick(os: OS) {
 
   // update boards / build code / run chips
   const book = memoryreadbook(BIOS.name)
-  bookplayerreadboards(book).forEach((board) => boardtick(book, board, oncode))
+  bookplayerreadboards(book).forEach((board) =>
+    bookboardtick(book, board, oncode),
+  )
 }
 
 function memoryconverttogadgetlayers(

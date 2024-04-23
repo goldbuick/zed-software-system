@@ -1,11 +1,9 @@
-import { ref } from 'valtio'
 import { WORD_VALUE } from 'zss/chip'
 import {
   PT,
   DIR,
   STR_DIR,
   dirfrompts,
-  COLLISION,
   ispt,
   CATEGORY,
   STR_COLOR,
@@ -25,12 +23,6 @@ import {
 } from 'zss/mapping/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
-import {
-  BOOK,
-  MAYBE_BOOK,
-  bookobjectreadkind,
-  bookterrainreadkind,
-} from './book'
 
 // simple built-ins go here
 export type BOARD_ELEMENT_STATS = {
@@ -370,82 +362,6 @@ export function boarddeleteobject(board: MAYBE_BOARD, id: string) {
   return false
 }
 
-export function boardcheckcollision(source: COLLISION, dest: COLLISION) {
-  switch (source) {
-    case COLLISION.WALK:
-      return dest !== COLLISION.WALK
-    case COLLISION.SWIM:
-      return dest !== COLLISION.SWIM
-    case COLLISION.SOLID:
-      return true // solid runs into everything
-    case COLLISION.BULLET:
-      return dest !== COLLISION.WALK && dest !== COLLISION.SWIM
-  }
-}
-
-export function boardmoveobject(
-  book: MAYBE_BOOK,
-  board: MAYBE_BOARD,
-  target: MAYBE_BOARD_ELEMENT,
-  dest: PT,
-) {
-  const object = boardreadobject(board, target?.id ?? '')
-  if (
-    !isdefined(book) ||
-    !isdefined(board) ||
-    !isdefined(object) ||
-    !isdefined(board.lookup)
-  ) {
-    return false
-  }
-
-  // first pass clipping
-  if (
-    dest.x < 0 ||
-    dest.x >= board.width ||
-    dest.y < 0 ||
-    dest.y >= board.height
-  ) {
-    return false
-  }
-
-  const idx = dest.x + dest.y * board.width
-  const targetkind = bookobjectreadkind(book, object)
-  const targetcollision =
-    object.collision ?? targetkind?.collision ?? COLLISION.WALK
-
-  // blocked by an object
-  const maybeobject = board.lookup[idx]
-  if (isdefined(maybeobject)) {
-    // touch & thud
-    return false
-  }
-
-  // blocked by terrain
-  const mayberterrain = board.terrain[idx]
-  if (isdefined(mayberterrain)) {
-    const terrainkind = bookterrainreadkind(book, mayberterrain)
-    const terraincollision =
-      mayberterrain.collision ?? terrainkind?.collision ?? COLLISION.WALK
-    if (boardcheckcollision(targetcollision, terraincollision)) {
-      // touch & thud
-      return false
-    }
-  }
-
-  // todo - everything else ...
-  board.lookup[idx] = undefined
-
-  // update object location
-  object.x = dest.x
-  object.y = dest.y
-
-  // update lookup
-  board.lookup[object.x + object.y * board.width] = object.id ?? ''
-
-  return true
-}
-
 export function boardfindplayer(
   board: MAYBE_BOARD,
   target: MAYBE_BOARD_ELEMENT,
@@ -468,113 +384,4 @@ export function boardfindplayer(
 
   // nearest player to target
   return picknearestpt(target, listnamedelements(board, 'player'))
-}
-
-function boardsetlookup(book: BOOK, board: BOARD) {
-  const lookup: string[] = new Array(board.width * board.height).fill(undefined)
-  const named: Record<string, Set<string | number>> = {}
-
-  // add objects to lookup & to named
-  const objects = Object.values(board.objects)
-  for (let i = 0; i < objects.length; ++i) {
-    const object = objects[i]
-    if (isdefined(object.x) && isdefined(object.y) && isdefined(object.id)) {
-      // cache kind
-      const kind = bookobjectreadkind(book, object)
-
-      // add category
-      object.category = CATEGORY.OBJECT
-
-      // update lookup
-      lookup[object.x + object.y * board.width] = object.id
-
-      // update named lookup
-      const name = (object.name ?? kind?.name ?? 'object').toLowerCase()
-      if (!named[name]) {
-        named[name] = new Set<string>()
-      }
-      named[name].add(object.id)
-    }
-  }
-
-  // add terrain to named
-  let x = 0
-  let y = 0
-  for (let i = 0; i < board.terrain.length; ++i) {
-    const terrain = board.terrain[i]
-    if (isdefined(terrain)) {
-      // cache kind
-      const kind = bookobjectreadkind(book, terrain)
-
-      // add coords
-      terrain.x = x
-      terrain.y = y
-      terrain.category = CATEGORY.TERRAIN
-
-      // update named lookup
-      const name = (terrain.name ?? kind?.name ?? 'terrain').toLowerCase()
-      if (!named[name]) {
-        named[name] = new Set<string>()
-      }
-      named[name].add(i)
-    }
-    ++x
-    if (x >= board.width) {
-      x = 0
-      ++y
-    }
-  }
-
-  board.lookup = ref(lookup)
-  board.named = ref(named)
-}
-
-export function boardtick(
-  book: MAYBE_BOOK,
-  board: MAYBE_BOARD,
-  oncode: (
-    book: BOOK,
-    board: BOARD,
-    target: BOARD_ELEMENT,
-    id: string,
-    code: string,
-  ) => void,
-) {
-  if (!isdefined(book) || !isdefined(board)) {
-    return
-  }
-
-  // build object lookup pre-tick
-  boardsetlookup(book, board)
-
-  // iterate through objects
-  const targets = Object.values(board.objects)
-  for (let i = 0; i < targets.length; ++i) {
-    const target = targets[i]
-
-    // check that we have an id
-    if (!isdefined(target.id)) {
-      return
-    }
-
-    // track last position
-    target.lx = target.x
-    target.ly = target.y
-
-    // lookup kind
-    const kind = bookobjectreadkind(book, target)
-
-    // object code
-    const code = target.code ?? kind?.code ?? ''
-
-    // check that we have code to execute
-    if (!code) {
-      return
-    }
-
-    // signal id & code
-    oncode(book, board, target, target.id, code)
-  }
-
-  // cleanup objects flagged for deletion
 }

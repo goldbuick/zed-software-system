@@ -11,12 +11,13 @@ import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadbook, memoryreadchip, memoryreadframes } from 'zss/memory'
 import { listelementsbykind, listnamedelements } from 'zss/memory/atomics'
+import { BOARD_ELEMENT, boardfindplayer } from 'zss/memory/board'
 import {
-  BOARD_ELEMENT,
-  boardfindplayer,
-  boardmoveobject,
-} from 'zss/memory/board'
-import { bookreadboard, bookreadflag, booksetflag } from 'zss/memory/book'
+  bookboardmoveobject,
+  bookreadboard,
+  bookreadflag,
+  booksetflag,
+} from 'zss/memory/book'
 import { editboard } from 'zss/memory/edit'
 import { FRAME_TYPE } from 'zss/memory/frame'
 
@@ -194,7 +195,7 @@ export const ZZT_FIRMWARE = createfirmware({
         x: (memory.target.x ?? 0) + (memory.target.stats.stepx ?? 0),
         y: (memory.target.y ?? 0) + (memory.target.stats.stepy ?? 0),
       }
-      boardmoveobject(memory.book, memory.board, memory.target, dest)
+      bookboardmoveobject(memory.book, memory.board, memory.target, dest)
     }
   },
   tick() {},
@@ -299,7 +300,7 @@ export const ZZT_FIRMWARE = createfirmware({
 
     while (steps > 0) {
       const [dest] = readargs({ ...memory, chip, words }, i, [ARG_TYPE.DIR])
-      if (boardmoveobject(memory.book, memory.board, memory.target, dest)) {
+      if (bookboardmoveobject(memory.book, memory.board, memory.target, dest)) {
         // keep moving
         --steps
       } else {

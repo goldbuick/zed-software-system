@@ -1,4 +1,5 @@
 import {
+  COLLISION,
   PT,
   STR_KIND,
   readkindbg,
@@ -17,8 +18,22 @@ import {
 
 // what is atomics? a set of spatial and data related queries
 // naming convention
+// check does one to many comparisons, input can be anything
 // list returns a list, input can be anything
 // pick returns a single item FROM a list
+
+export function checkcollision(source: COLLISION, dest: COLLISION) {
+  switch (source) {
+    case COLLISION.WALK:
+      return dest !== COLLISION.WALK
+    case COLLISION.SWIM:
+      return dest !== COLLISION.SWIM
+    case COLLISION.SOLID:
+      return true // solid runs into everything
+    case COLLISION.BULLET:
+      return dest !== COLLISION.WALK && dest !== COLLISION.SWIM
+  }
+}
 
 export function listnamedelements(board: MAYBE_BOARD, name: string) {
   const elements = [...(board?.named?.[name]?.values() ?? [])]
@@ -39,15 +54,15 @@ export function listelementsbykind(
   const bg = readkindbg(kind)
   return elements.filter((element) => {
     if (ispresent(name) && boardelementname(element) !== name) {
-      console.info('no match on name', name)
+      // console.info('no match on name', name)
       return false
     }
     if (ispresent(color) && boardelementcolor(element) !== color) {
-      console.info('no match on color', color)
+      // console.info('no match on color', color)
       return false
     }
     if (ispresent(bg) && boardelementbg(element) !== bg) {
-      console.info('no match on bg', bg)
+      // console.info('no match on bg', bg)
       return false
     }
     return true
