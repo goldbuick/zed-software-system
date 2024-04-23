@@ -10,7 +10,9 @@ import {
   CATEGORY,
   STR_COLOR,
   COLOR,
-  STR_KIND,
+  isstrcolor,
+  readstrcolor,
+  readstrbg,
 } from 'zss/firmware/wordtypes'
 import { pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
@@ -22,7 +24,7 @@ import {
   noop,
 } from 'zss/mapping/types'
 
-import { namedelements, nearestpt } from './atomics'
+import { listnamedelements, picknearestpt } from './atomics'
 import {
   BOOK,
   MAYBE_BOOK,
@@ -125,22 +127,32 @@ export function createboard(fn = noop<BOARD>) {
   return fn(board)
 }
 
+export function boardelementname(element: MAYBE_BOARD_ELEMENT) {
+  return (element?.name ?? element?.kinddata?.name ?? 'object').toLowerCase()
+}
+
+export function boardelementcolor(element: MAYBE_BOARD_ELEMENT) {
+  return element?.color ?? element?.kinddata?.color ?? COLOR.BLACK
+}
+
+export function boardelementbg(element: MAYBE_BOARD_ELEMENT) {
+  return element?.bg ?? element?.kinddata?.bg ?? COLOR.BLACK
+}
+
 export function boardelementapplycolor(
   element: MAYBE_BOARD_ELEMENT,
-  color: STR_COLOR | undefined,
+  strcolor: STR_COLOR | undefined,
 ) {
-  if (!ispresent(element) || !ispresent(color)) {
+  if (!ispresent(element) || !isstrcolor(strcolor)) {
     return
   }
-  for (const colorconst of color) {
-    const colornumber = COLOR[colorconst]
-    if (ispresent(colornumber)) {
-      if (colornumber >= COLOR.ONBLACK && colornumber <= COLOR.SHADOW) {
-        element.bg = colornumber - COLOR.ONBLACK
-      } else {
-        element.color = colornumber
-      }
-    }
+  const color = readstrcolor(strcolor)
+  if (ispresent(color)) {
+    element.color = color
+  }
+  const bg = readstrbg(strcolor)
+  if (ispresent(bg)) {
+    element.bg = bg
   }
 }
 
@@ -455,7 +467,7 @@ export function boardfindplayer(
   }
 
   // nearest player to target
-  return nearestpt(board, target, namedelements(board, 'player'))
+  return picknearestpt(target, listnamedelements(board, 'player'))
 }
 
 function boardsetlookup(book: BOOK, board: BOARD) {

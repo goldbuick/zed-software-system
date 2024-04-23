@@ -10,7 +10,7 @@ import {
 import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadbook, memoryreadchip, memoryreadframes } from 'zss/memory'
-import { filterelementsbykind, namedelements } from 'zss/memory/atomics'
+import { listelementsbykind, listnamedelements } from 'zss/memory/atomics'
 import {
   BOARD_ELEMENT,
   boardfindplayer,
@@ -215,15 +215,11 @@ export const ZZT_FIRMWARE = createfirmware({
       ARG_TYPE.KIND,
     ])
 
-    const targetelements = filterelementsbykind(
-      namedelements(memory.board, readkindname(target) ?? ''),
-      target,
-    )
+    const targetname = readkindname(target) ?? ''
+    const boardelements = listnamedelements(memory.board, targetname)
+    const targetelements = listelementsbykind(boardelements, target)
 
-    console.info({ target, targetelements, into })
-    // if (ispresent(memory.target)) {
-    //   memory.target.char = value
-    // }
+    console.info({ targetname, boardelements, targetelements, into })
     return 0
   })
   .command('char', (chip, words) => {

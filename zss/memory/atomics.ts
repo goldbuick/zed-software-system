@@ -1,17 +1,26 @@
 import {
   PT,
   STR_KIND,
-  iscolormatch,
+  readkindbg,
   readkindcolor,
   readkindname,
 } from 'zss/firmware/wordtypes'
 import { ispresent } from 'zss/mapping/types'
 
-import { MAYBE_BOARD, MAYBE_BOARD_ELEMENT } from './board'
+import {
+  MAYBE_BOARD,
+  MAYBE_BOARD_ELEMENT,
+  boardelementbg,
+  boardelementcolor,
+  boardelementname,
+} from './board'
 
 // what is atomics? a set of spatial and data related queries
+// naming convention
+// list returns a list, input can be anything
+// pick returns a single item FROM a list
 
-export function namedelements(board: MAYBE_BOARD, name: string) {
+export function listnamedelements(board: MAYBE_BOARD, name: string) {
   const elements = [...(board?.named?.[name]?.values() ?? [])]
   return elements.map((idorindex) => {
     if (typeof idorindex === 'string') {
@@ -21,28 +30,31 @@ export function namedelements(board: MAYBE_BOARD, name: string) {
   })
 }
 
-export function filterelementsbykind(
+export function listelementsbykind(
   elements: MAYBE_BOARD_ELEMENT[],
   kind: STR_KIND,
 ): MAYBE_BOARD_ELEMENT[] {
   const name = readkindname(kind)
   const color = readkindcolor(kind)
-
+  const bg = readkindbg(kind)
   return elements.filter((element) => {
-    if (ispresent(element)) {
-      if (ispresent(name) && element.kind !== name) {
-        return false
-      }
-      if (ispresent(color) && !iscolormatch(color, element.color, element.bg)) {
-        return false
-      }
-      return true
+    if (ispresent(name) && boardelementname(element) !== name) {
+      console.info('no match on name', name)
+      return false
     }
-    return false
+    if (ispresent(color) && boardelementcolor(element) !== color) {
+      console.info('no match on color', color)
+      return false
+    }
+    if (ispresent(bg) && boardelementbg(element) !== bg) {
+      console.info('no match on bg', bg)
+      return false
+    }
+    return true
   })
 }
 
-export function nearestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
+export function picknearestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
   let ndist = 0
   let nearest: MAYBE_BOARD_ELEMENT
 
@@ -62,7 +74,7 @@ export function nearestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
   return nearest
 }
 
-export function farthestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
+export function pickfarthestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
   let ndist = 0
   let nearest: MAYBE_BOARD_ELEMENT
 

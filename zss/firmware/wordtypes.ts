@@ -4,6 +4,7 @@ import { range, pick } from 'zss/mapping/array'
 import { clamp, randomInteger } from 'zss/mapping/number'
 import {
   MAYBE,
+  MAYBE_STRING,
   isarray,
   isnumber,
   ispresent,
@@ -326,6 +327,18 @@ function mapstrcolor(value: any): MAYBE<STR_COLOR_CONST> {
   return undefined
 }
 
+export function readstrcolor(value: STR_COLOR): MAYBE<COLOR> {
+  return value
+    .map((name) => COLOR[name])
+    .find((clr) => ispresent(clr) && clr < COLOR.ONBLACK)
+}
+
+export function readstrbg(value: STR_COLOR): MAYBE<COLOR> {
+  return value
+    .map((name) => COLOR[name])
+    .find((clr) => ispresent(clr) && clr >= COLOR.ONBLACK)
+}
+
 function checkforcolorconst(value: MAYBE_WORD): MAYBE<STR_COLOR> {
   // already mapped STR_COLOR
   if (isstrcolor(value)) {
@@ -460,7 +473,7 @@ export function readkind(
   return [undefined, index]
 }
 
-export function readkindname(kind: MAYBE<STR_KIND>) {
+export function readkindname(kind: MAYBE<STR_KIND>): MAYBE_STRING {
   if (!isstrkind(kind)) {
     return undefined
   }
@@ -468,12 +481,22 @@ export function readkindname(kind: MAYBE<STR_KIND>) {
   return maybename
 }
 
-export function readkindcolor(kind: MAYBE<STR_KIND>) {
+export function readkindcolor(kind: MAYBE<STR_KIND>): MAYBE<COLOR> {
   if (!isstrkind(kind)) {
     return undefined
   }
-  const [, maybecolor] = kind
-  return maybecolor
+  const [, strcolor] = kind
+  const color = ispresent(strcolor) ? readstrcolor(strcolor) : undefined
+  return ispresent(color) ? color : undefined
+}
+
+export function readkindbg(kind: MAYBE<STR_KIND>): MAYBE<COLOR> {
+  if (!isstrkind(kind)) {
+    return undefined
+  }
+  const [, strcolor] = kind
+  const bg = ispresent(strcolor) ? readstrbg(strcolor) : undefined
+  return ispresent(bg) ? bg : undefined
 }
 
 export const dirconsts = {
