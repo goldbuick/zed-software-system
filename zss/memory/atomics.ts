@@ -2,6 +2,7 @@ import {
   COLLISION,
   PT,
   STR_KIND,
+  ispt,
   readkindbg,
   readkindcolor,
   readkindname,
@@ -9,6 +10,7 @@ import {
 import { ispresent } from 'zss/mapping/types'
 
 import {
+  BOARD_ELEMENT,
   MAYBE_BOARD,
   MAYBE_BOARD_ELEMENT,
   boardelementbg,
@@ -35,38 +37,89 @@ export function checkcollision(source: COLLISION, dest: COLLISION) {
   }
 }
 
-export function listnamedelements(board: MAYBE_BOARD, name: string) {
+export function listnamedelements(
+  board: MAYBE_BOARD,
+  name: string,
+): BOARD_ELEMENT[] {
   const elements = [...(board?.named?.[name]?.values() ?? [])]
-  return elements.map((idorindex) => {
-    if (typeof idorindex === 'string') {
-      return board?.objects[idorindex]
-    }
-    return board?.terrain[idorindex]
-  })
+  return elements
+    .map((idorindex) => {
+      if (typeof idorindex === 'string') {
+        return board?.objects[idorindex]
+      }
+      return board?.terrain[idorindex]
+    })
+    .filter(ispresent)
 }
 
 export function listelementsbykind(
   elements: MAYBE_BOARD_ELEMENT[],
   kind: STR_KIND,
-): MAYBE_BOARD_ELEMENT[] {
+): BOARD_ELEMENT[] {
   const name = readkindname(kind)
   const color = readkindcolor(kind)
   const bg = readkindbg(kind)
-  return elements.filter((element) => {
-    if (ispresent(name) && boardelementname(element) !== name) {
-      // console.info('no match on name', name)
-      return false
-    }
-    if (ispresent(color) && boardelementcolor(element) !== color) {
-      // console.info('no match on color', color)
-      return false
-    }
-    if (ispresent(bg) && boardelementbg(element) !== bg) {
-      // console.info('no match on bg', bg)
-      return false
-    }
-    return true
-  })
+  return elements
+    .filter((element) => {
+      if (ispresent(name) && boardelementname(element) !== name) {
+        // console.info('no match on name', name)
+        return false
+      }
+      if (ispresent(color) && boardelementcolor(element) !== color) {
+        // console.info('no match on color', color)
+        return false
+      }
+      if (ispresent(bg) && boardelementbg(element) !== bg) {
+        // console.info('no match on bg', bg)
+        return false
+      }
+      return true
+    })
+    .filter(ispresent)
+}
+
+export function listelementsbyattr(
+  board: MAYBE_BOARD,
+  idnameorpts: any[],
+): BOARD_ELEMENT[] {
+  if (!ispresent(board)) {
+    return []
+  }
+  return idnameorpts
+    .map((idnameorpt) => {
+      if (typeof idnameorpt === 'string') {
+        // check by id
+        const maybebyid = board.objects[idnameorpt]
+        if (ispresent(maybebyid)) {
+          return maybebyid
+        }
+        // check by name
+        const maybebyname = listnamedelements(board, idnameorpt.toLowerCase())
+        if (maybebyname.length) {
+          return maybebyname
+        }
+      } else if (
+        // check by valid pt
+        ispt(idnameorpt) &&
+        idnameorpt.x >= 0 &&
+        idnameorpt.x < board.width &&
+        idnameorpt.y >= 0 &&
+        idnameorpt.y < board.height
+      ) {
+        const idx = idnameorpt.x + idnameorpt.y * board.width
+        const maybeid = board.lookup?.[idx]
+        // check lookup first
+        if (ispresent(maybeid)) {
+          return board.objects[maybeid]
+        }
+        // then terrain
+        return board.terrain[idx]
+      }
+      // no idea what you gave me
+      return undefined
+    })
+    .flat()
+    .filter(ispresent)
 }
 
 export function picknearestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {

@@ -10,7 +10,11 @@ import {
 import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadbook, memoryreadchip, memoryreadframes } from 'zss/memory'
-import { listelementsbykind, listnamedelements } from 'zss/memory/atomics'
+import {
+  listelementsbyattr,
+  listelementsbykind,
+  listnamedelements,
+} from 'zss/memory/atomics'
 import { BOARD_ELEMENT, boardfindplayer } from 'zss/memory/board'
 import {
   bookboardmoveobject,
@@ -30,6 +34,7 @@ import {
   readargs,
   ARG_TYPE,
   readkindname,
+  ispt,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
@@ -195,6 +200,7 @@ export const ZZT_FIRMWARE = createfirmware({
         x: (memory.target.x ?? 0) + (memory.target.stats.stepx ?? 0),
         y: (memory.target.y ?? 0) + (memory.target.stats.stepy ?? 0),
       }
+      // TODO: handle when blocked by something ..
       bookboardmoveobject(memory.book, memory.board, memory.target, dest)
     }
   },
@@ -300,11 +306,18 @@ export const ZZT_FIRMWARE = createfirmware({
 
     while (steps > 0) {
       const [dest] = readargs({ ...memory, chip, words }, i, [ARG_TYPE.DIR])
-      if (bookboardmoveobject(memory.book, memory.board, memory.target, dest)) {
+      const blocked = bookboardmoveobject(
+        memory.book,
+        memory.board,
+        memory.target,
+        dest,
+      )
+      if (!blocked) {
         // keep moving
         --steps
       } else {
         // bail
+        // TODO: handle when blocked by something ..
         break
       }
     }
@@ -313,7 +326,6 @@ export const ZZT_FIRMWARE = createfirmware({
     return memory.target?.x === tx && memory.target?.y === ty ? 1 : 0
   })
   .command('idle', (chip) => {
-    // console.info('idle')
     chip.yield()
     return 0
   })
@@ -323,7 +335,7 @@ export const ZZT_FIRMWARE = createfirmware({
     return 0
   })
   .command('play', (chip, words) => {
-    console.info(words) // this will pipe into the media player
+    console.info({ chip, play: words }) // this will pipe into the media player
     return 0
   })
   .command('put', (chip, words) => {
@@ -359,8 +371,55 @@ export const ZZT_FIRMWARE = createfirmware({
       ARG_TYPE.STRING,
       ARG_TYPE.ANY,
     ])
-    // console.info('send', { msg, data })
-    chip.send(msg, data)
+
+    // determine target of send
+    const [maybetarget, maybelabel] = msg.split(':')
+
+    const target = ispresent(maybelabel) ? maybetarget : 'self'
+    const label = maybelabel ?? maybetarget
+
+    function sendtoelements(elements: BOARD_ELEMENT[]) {
+      elements.forEach((element) => {
+        if (ispresent(element.id)) {
+          chip.send(element.id, label, data)
+        }
+      })
+    }
+
+    // the intent here is to gather a list of target chip ids
+    const ltarget = target.toLowerCase()
+    switch (ltarget) {
+      case 'all':
+        for (const id of Object.keys(memory.board?.objects ?? {})) {
+          chip.send(id, label, data)
+        }
+        break
+      case 'self':
+        chip.send(chip.id(), label, data)
+        break
+      case 'others':
+        for (const id of Object.keys(memory.board?.objects ?? {})) {
+          if (id !== chip.id()) {
+            chip.send(id, label, data)
+          }
+        }
+        break
+      case 'player':
+        break
+      default: {
+        // check named elements first
+        sendtoelements(listelementsbyattr(memory.board, [target]))
+        // check to see if its a flag
+        const maybeattr = chip.get(ltarget)
+        // check to see if array
+        if (Array.isArray(maybeattr)) {
+          sendtoelements(listelementsbyattr(memory.board, maybeattr))
+        } else {
+          sendtoelements(listelementsbyattr(memory.board, [maybeattr]))
+        }
+        break
+      }
+    }
     return 0
   })
   .command('set', (chip, words) => {
@@ -378,7 +437,7 @@ export const ZZT_FIRMWARE = createfirmware({
       ARG_TYPE.DIR,
       ARG_TYPE.MAYBE_KIND,
     ])
-    // console.info({ dir, maybekind }) // todo
+    console.info({ dir, maybekind }) // todo
     return 0
   })
   .command('take', (chip, words) => {
