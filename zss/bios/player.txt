@@ -1,7 +1,5 @@
 @player
 
-#all:doot
-
 ' create content
 #book temp create
 

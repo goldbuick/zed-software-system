@@ -8,7 +8,7 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
-import { isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadbook, memoryreadchip, memoryreadframes } from 'zss/memory'
 import {
   listelementsbyattr,
@@ -23,9 +23,10 @@ import {
   bookreadflag,
   booksetflag,
   bookboardobjectsafedelete,
+  bookboardelementreadname,
 } from 'zss/memory/book'
 import { editboard } from 'zss/memory/edit'
-import { FRAME_TYPE } from 'zss/memory/frame'
+import { FRAME_STATE, FRAME_TYPE } from 'zss/memory/frame'
 
 import {
   categoryconsts,
@@ -35,8 +36,11 @@ import {
   readexpr,
   readargs,
   ARG_TYPE,
-  readkindname,
+  readstrkindname,
   PT,
+  readstrkindcolor,
+  readstrkindbg,
+  ispt,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
@@ -259,11 +263,39 @@ export const ZZT_FIRMWARE = createfirmware({
       ARG_TYPE.KIND,
     ])
 
-    const targetname = readkindname(target) ?? ''
+    const targetname = readstrkindname(target) ?? ''
     const boardelements = listnamedelements(memory.board, targetname)
     const targetelements = listelementsbykind(boardelements, target)
 
-    console.info({ targetname, boardelements, targetelements, into })
+    targetelements.forEach((element) => {
+      const kindname = readstrkindname(into)
+      if (bookboardelementreadname(memory.book, element) === kindname) {
+        const color = readstrkindcolor(into)
+        if (ispresent(color)) {
+          element.color = color
+        }
+        const bg = readstrkindbg(into)
+        if (ispresent(bg)) {
+          element.bg = bg
+        }
+      } else {
+        // delete object
+        if (ispresent(element.id)) {
+          bookboardobjectsafedelete(
+            memory.book,
+            memory.board,
+            element,
+            chip.timestamp(),
+          )
+        }
+        // create new element
+        if (ispt(element)) {
+          editboard(memory.book, memory.board, element, into)
+        }
+      }
+    })
+
+    // console.info({ targetelements, into })
     return 0
   })
   .command('char', (chip, words) => {
@@ -391,19 +423,23 @@ export const ZZT_FIRMWARE = createfirmware({
       ARG_TYPE.KIND,
     ])
 
-    // todo: can we put into view frames ?
+    let maybeframe: MAYBE<FRAME_STATE>
+    const frames = memoryreadframes(memory.board?.id ?? '')
     switch (dir.frame) {
       case 'edit': {
-        const frame = memoryreadframes(memory.board?.id ?? '').find(
-          (item) => item.type === FRAME_TYPE.EDIT,
-        )
-        const book = memoryreadbook(frame?.book ?? '') ?? memory.book
-        const board = bookreadboard(book, frame?.board ?? '')
-        editboard(book, board, dir, kind)
+        maybeframe = frames.find((item) => item.type === FRAME_TYPE.EDIT)
         break
       }
     }
 
+    const maybebook = maybeframe
+      ? memoryreadbook(maybeframe?.book ?? '')
+      : memory.book
+    const maybeboard = maybeframe
+      ? bookreadboard(maybebook, maybeframe?.board ?? '')
+      : memory.board
+
+    editboard(maybebook, maybeboard, dir, kind)
     return 0
   })
   // .command('restart' // this is handled by a built-in 0 label

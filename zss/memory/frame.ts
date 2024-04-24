@@ -3,7 +3,7 @@ import { MAYBE_STRING } from 'zss/mapping/types'
 
 export enum FRAME_TYPE {
   VIEW, // a view into book state
-  EDIT, // shared crdt backed book state + copy buffers
+  EDIT, // shared crdt backed book state + copy buffers ( maybe ?? really just need good undo/redo )
 }
 
 export type FRAME_STATE = {

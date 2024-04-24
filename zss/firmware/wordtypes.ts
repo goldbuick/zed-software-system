@@ -473,7 +473,7 @@ export function readkind(
   return [undefined, index]
 }
 
-export function readkindname(kind: MAYBE<STR_KIND>): MAYBE_STRING {
+export function readstrkindname(kind: MAYBE<STR_KIND>): MAYBE_STRING {
   if (!isstrkind(kind)) {
     return undefined
   }
@@ -481,7 +481,7 @@ export function readkindname(kind: MAYBE<STR_KIND>): MAYBE_STRING {
   return maybename
 }
 
-export function readkindcolor(kind: MAYBE<STR_KIND>): MAYBE<COLOR> {
+export function readstrkindcolor(kind: MAYBE<STR_KIND>): MAYBE<COLOR> {
   if (!isstrkind(kind)) {
     return undefined
   }
@@ -490,7 +490,7 @@ export function readkindcolor(kind: MAYBE<STR_KIND>): MAYBE<COLOR> {
   return ispresent(color) ? color : undefined
 }
 
-export function readkindbg(kind: MAYBE<STR_KIND>): MAYBE<COLOR> {
+export function readstrkindbg(kind: MAYBE<STR_KIND>): MAYBE<COLOR> {
   if (!isstrkind(kind)) {
     return undefined
   }

@@ -21,12 +21,12 @@ defaults to object typedef
 @object name
 @name ' object: scope is optional
 ' rest of object code goes here
-' ie: after typing out @object:ripper
+' ie: after typing out @object ripper
 ' you can now launch an objectedit for ripper
 
 @terrain name
 ' rest of terrain code goes here
-' ie: after typing out @terrain:endlesspit
+' ie: after typing out @terrain endlesspit
 ' you can now launch a terrainedit for endlesspit
 
 @charset name

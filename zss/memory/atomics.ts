@@ -3,9 +3,9 @@ import {
   PT,
   STR_KIND,
   ispt,
-  readkindbg,
-  readkindcolor,
-  readkindname,
+  readstrkindbg,
+  readstrkindcolor,
+  readstrkindname,
 } from 'zss/firmware/wordtypes'
 import { ispresent } from 'zss/mapping/types'
 
@@ -56,9 +56,9 @@ export function listelementsbykind(
   elements: MAYBE_BOARD_ELEMENT[],
   kind: STR_KIND,
 ): BOARD_ELEMENT[] {
-  const name = readkindname(kind)
-  const color = readkindcolor(kind)
-  const bg = readkindbg(kind)
+  const name = readstrkindname(kind)
+  const color = readstrkindcolor(kind)
+  const bg = readstrkindbg(kind)
   return elements
     .filter((element) => {
       if (ispresent(name) && boardelementname(element) !== name) {

@@ -1,8 +1,7 @@
-import { STR_KIND } from 'zss/firmware/wordtypes'
+import { PT, STR_KIND } from 'zss/firmware/wordtypes'
 import { ispresent } from 'zss/mapping/types'
 
 import {
-  BOARD_DIR,
   MAYBE_BOARD,
   boardelementapplycolor,
   boardgetterrain,
@@ -14,7 +13,7 @@ import { MAYBE_BOOK, bookreadobject, bookreadterrain } from './book'
 export function editboard(
   book: MAYBE_BOOK,
   board: MAYBE_BOARD,
-  dir: BOARD_DIR,
+  dest: PT,
   kind: STR_KIND,
 ) {
   if (!book || !board) {
@@ -24,13 +23,13 @@ export function editboard(
   const [name, maybecolor] = kind
   const maybeterrain = bookreadterrain(book, name)
   if (ispresent(maybeterrain)) {
-    boardsetterrainfromkind(board, dir.x, dir.y, name)
-    boardelementapplycolor(boardgetterrain(board, dir.x, dir.y), maybecolor)
+    boardsetterrainfromkind(board, dest.x, dest.y, name)
+    boardelementapplycolor(boardgetterrain(board, dest.x, dest.y), maybecolor)
   }
 
   const maybeobject = bookreadobject(book, kind[0])
   if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
-    createboardobjectfromkind(board, dir.x, dir.y, maybeobject)
+    createboardobjectfromkind(board, dest.x, dest.y, maybeobject)
     boardelementapplycolor(maybeobject, maybecolor)
   }
 }
