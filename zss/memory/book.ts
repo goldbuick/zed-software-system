@@ -279,7 +279,18 @@ export function bookboardelementreadname(
   return (element?.name ?? kind?.name ?? 'terrain').toLowerCase()
 }
 
-function bookboardsetlookup(book: BOOK, board: BOARD) {
+export function bookboardsetlookup(book: MAYBE_BOOK, board: MAYBE_BOARD) {
+  // invalid data
+  if (!ispresent(book) || !ispresent(board)) {
+    return
+  }
+
+  // already cached
+  if (ispresent(board.lookup) && ispresent(board.named)) {
+    return
+  }
+
+  // build initial cache
   const lookup: string[] = new Array(board.width * board.height).fill(undefined)
   const named: Record<string, Set<string | number>> = {}
 
@@ -339,16 +350,17 @@ export function bookboardobjectsafedelete(
   timestamp: number,
 ) {
   const name = bookboardelementreadname(book, object)
-  if (name !== 'player') {
-    bookboardobjectdelete(book, board, object, timestamp)
+  if (name !== 'player' && ispresent(object)) {
+    // mark for cleanup
+    object.removed = timestamp
+    bookboardobjectdeletelookups(book, board, object)
   }
 }
 
-export function bookboardobjectdelete(
+export function bookboardobjectdeletelookups(
   book: MAYBE_BOOK,
   board: MAYBE_BOARD,
   object: MAYBE_BOARD_ELEMENT,
-  timestamp: number,
 ) {
   if (
     ispresent(book) &&
@@ -357,9 +369,6 @@ export function bookboardobjectdelete(
     ispresent(object.x) &&
     ispresent(object.y)
   ) {
-    // mark for cleanup
-    object.removed = timestamp
-
     // remove from lookup
     if (ispresent(board.lookup)) {
       const index = object.x + object.y * board.width
@@ -417,7 +426,8 @@ export function bookboardtick(
     return
   }
 
-  // build object lookup pre-tick
+  // force build object lookup pre-tick
+  board.lookup = undefined
   bookboardsetlookup(book, board)
 
   // iterate through objects

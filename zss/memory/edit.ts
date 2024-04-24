@@ -1,5 +1,5 @@
 import { PT, STR_KIND } from 'zss/firmware/wordtypes'
-import { ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import {
   MAYBE_BOARD,
@@ -10,13 +10,13 @@ import {
 } from './board'
 import { MAYBE_BOOK, bookreadobject, bookreadterrain } from './book'
 
-export function editboard(
+export function editboardwrite(
   book: MAYBE_BOOK,
   board: MAYBE_BOARD,
+  kind: MAYBE<STR_KIND>,
   dest: PT,
-  kind: STR_KIND,
 ) {
-  if (!book || !board) {
+  if (!ispresent(book) || !ispresent(board) || !ispresent(kind)) {
     return
   }
 

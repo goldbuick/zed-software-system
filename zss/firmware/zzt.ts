@@ -1,4 +1,4 @@
-import { CHIP, maptostring } from 'zss/chip'
+import { CHIP, WORD_VALUE, maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import { gadgethyperlink, gadgettext } from 'zss/gadget/data/api'
 import {
@@ -8,14 +8,25 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  MAYBE_STRING,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { memoryreadbook, memoryreadchip, memoryreadframes } from 'zss/memory'
 import {
   listelementsbyattr,
   listelementsbykind,
   listnamedelements,
 } from 'zss/memory/atomics'
-import { BOARD_ELEMENT, MAYBE_BOARD, boardfindplayer } from 'zss/memory/board'
+import {
+  BOARD_ELEMENT,
+  MAYBE_BOARD,
+  boarddeleteobject,
+  boardfindplayer,
+} from 'zss/memory/board'
 import {
   MAYBE_BOOK,
   bookboardmoveobject,
@@ -24,8 +35,10 @@ import {
   booksetflag,
   bookboardobjectsafedelete,
   bookboardelementreadname,
+  bookboardsetlookup,
+  bookboardobjectdeletelookups,
 } from 'zss/memory/book'
-import { editboard } from 'zss/memory/edit'
+import { editboardwrite } from 'zss/memory/edit'
 import { FRAME_STATE, FRAME_TYPE } from 'zss/memory/frame'
 
 import {
@@ -176,6 +189,47 @@ function moveobject(
   return !ispresent(blocked)
 }
 
+function valuepeekframename(
+  value: WORD_VALUE,
+  index: number,
+): [MAYBE_STRING, number] {
+  if (isstring(value)) {
+    const lvalue = value.toLowerCase()
+    switch (lvalue) {
+      case 'edit':
+        return [lvalue, index + 1]
+    }
+  }
+  return [undefined, index]
+}
+
+function bookboardframeread(
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
+  type: MAYBE_STRING,
+) {
+  // find target frame by type
+  let maybeframe: MAYBE<FRAME_STATE>
+  const frames = memoryreadframes(board?.id ?? '')
+  switch (type) {
+    // eventually need multiple frames of the same kinds
+    // name:edit ??
+    // so we'd have [name]:type, and name defaults to the value of
+    // type of [name] is omitted
+    case 'edit': {
+      maybeframe = frames.find((item) => item.type === FRAME_TYPE.EDIT)
+      break
+    }
+  }
+
+  const maybebook = maybeframe ? memoryreadbook(maybeframe?.book ?? '') : book
+  const maybeboard = maybeframe
+    ? bookreadboard(maybebook, maybeframe?.board ?? '')
+    : board
+
+  return { maybebook, maybeboard }
+}
+
 export const ZZT_FIRMWARE = createfirmware({
   get(chip, name) {
     // check consts first (data normalization)
@@ -258,44 +312,79 @@ export const ZZT_FIRMWARE = createfirmware({
   })
   .command('change', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [target, into] = readargs({ ...memory, chip, words }, 0, [
+
+    // optional prefix of frame target
+    const [maybeframe, ii] = valuepeekframename(words[0], 0)
+
+    // read
+    const [target, into] = readargs({ ...memory, chip, words }, ii, [
       ARG_TYPE.KIND,
       ARG_TYPE.KIND,
     ])
+    const { maybebook, maybeboard } = bookboardframeread(
+      memory.book,
+      memory.board,
+      maybeframe,
+    )
 
+    // make sure lookup is created
+    bookboardsetlookup(maybebook, maybeboard)
+
+    // begin filtering
     const targetname = readstrkindname(target) ?? ''
-    const boardelements = listnamedelements(memory.board, targetname)
+    const boardelements = listnamedelements(maybeboard, targetname)
     const targetelements = listelementsbykind(boardelements, target)
 
+    // modify attrs
+    const intoname = readstrkindname(into)
+    const intocolor = readstrkindcolor(into)
+    const intobg = readstrkindbg(into)
+
+    console.info({
+      maybebook,
+      maybeboard,
+      targetname,
+      boardelements,
+      targetelements,
+      intoname,
+      intocolor,
+      intobg,
+    })
+
+    // modify elements
     targetelements.forEach((element) => {
-      const kindname = readstrkindname(into)
-      if (bookboardelementreadname(memory.book, element) === kindname) {
-        const color = readstrkindcolor(into)
-        if (ispresent(color)) {
-          element.color = color
+      if (bookboardelementreadname(maybebook, element) === intoname) {
+        if (ispresent(intocolor)) {
+          element.color = intocolor
         }
-        const bg = readstrkindbg(into)
-        if (ispresent(bg)) {
-          element.bg = bg
+        if (ispresent(intobg)) {
+          element.bg = intobg
         }
       } else {
         // delete object
         if (ispresent(element.id)) {
-          bookboardobjectsafedelete(
-            memory.book,
-            memory.board,
-            element,
-            chip.timestamp(),
-          )
+          switch (maybeframe) {
+            case 'edit':
+              bookboardobjectdeletelookups(maybebook, maybeboard, element)
+              boarddeleteobject(maybeboard, element.id)
+              break
+            default:
+              bookboardobjectsafedelete(
+                maybebook,
+                maybeboard,
+                element,
+                chip.timestamp(),
+              )
+              break
+          }
         }
         // create new element
         if (ispt(element)) {
-          editboard(memory.book, memory.board, element, into)
+          editboardwrite(maybebook, maybeboard, into, element)
         }
       }
     })
 
-    // console.info({ targetelements, into })
     return 0
   })
   .command('char', (chip, words) => {
@@ -418,28 +507,25 @@ export const ZZT_FIRMWARE = createfirmware({
   })
   .command('put', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [dir, kind] = readargs({ ...memory, chip, words }, 0, [
+
+    // optional prefix of frame target
+    const [maybeframe, ii] = valuepeekframename(words[0], 0)
+
+    // read
+    const [dir, kind] = readargs({ ...memory, chip, words }, ii, [
       ARG_TYPE.DIR,
       ARG_TYPE.KIND,
     ])
+    const { maybebook, maybeboard } = bookboardframeread(
+      memory.book,
+      memory.board,
+      maybeframe,
+    )
 
-    let maybeframe: MAYBE<FRAME_STATE>
-    const frames = memoryreadframes(memory.board?.id ?? '')
-    switch (dir.frame) {
-      case 'edit': {
-        maybeframe = frames.find((item) => item.type === FRAME_TYPE.EDIT)
-        break
-      }
-    }
+    // make sure lookup is created
+    bookboardsetlookup(maybebook, maybeboard)
 
-    const maybebook = maybeframe
-      ? memoryreadbook(maybeframe?.book ?? '')
-      : memory.book
-    const maybeboard = maybeframe
-      ? bookreadboard(maybebook, maybeframe?.board ?? '')
-      : memory.board
-
-    editboard(maybebook, maybeboard, dir, kind)
+    editboardwrite(maybebook, maybeboard, kind, dir)
     return 0
   })
   // .command('restart' // this is handled by a built-in 0 label

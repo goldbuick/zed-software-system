@@ -12,7 +12,6 @@ import {
 } from 'zss/mapping/types'
 import { memoryreadchip } from 'zss/memory'
 import {
-  BOARD_DIR,
   MAYBE_BOARD,
   MAYBE_BOARD_ELEMENT,
   boardevaldir,
@@ -84,8 +83,6 @@ export enum DIR {
   CCW,
   OPP,
   RNDP,
-  // framing
-  EDIT,
 }
 
 export enum COLLISION {
@@ -871,7 +868,7 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.COLLISION]: COLLISION
   [ARG_TYPE.COLOR]: STR_COLOR
   [ARG_TYPE.KIND]: STR_KIND
-  [ARG_TYPE.DIR]: BOARD_DIR
+  [ARG_TYPE.DIR]: PT
   [ARG_TYPE.NUMBER]: number
   [ARG_TYPE.STRING]: string
   [ARG_TYPE.NUMBER_OR_STRING]: number | string
@@ -879,7 +876,7 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.MAYBE_COLLISION]: COLLISION | undefined
   [ARG_TYPE.MAYBE_COLOR]: STR_COLOR | undefined
   [ARG_TYPE.MAYBE_KIND]: STR_KIND | undefined
-  [ARG_TYPE.MAYBE_DIR]: BOARD_DIR | undefined
+  [ARG_TYPE.MAYBE_DIR]: PT | undefined
   [ARG_TYPE.MAYBE_NUMBER]: number | undefined
   [ARG_TYPE.MAYBE_STRING]: string | undefined
   [ARG_TYPE.MAYBE_NUMBER_OR_STRING]: number | string

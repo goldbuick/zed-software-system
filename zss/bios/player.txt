@@ -83,6 +83,6 @@ $3 Here is some test text and yeah! $3
 #main
 
 :cmmd_test
-#change white spin purple spin
+#change edit wall blue wall
 #idle
 #main
