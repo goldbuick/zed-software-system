@@ -1,4 +1,3 @@
-import { proxy } from 'valtio'
 import { BIOS } from 'zss/bios'
 import { COLOR } from 'zss/firmware/wordtypes'
 import {
@@ -50,12 +49,12 @@ type CHIP_MEMORY = {
   inputcurrent: MAYBE<INPUT>
 }
 
-const MEMORY = proxy({
+const MEMORY = {
   defaultplayer: '',
   books: new Map<string, BOOK>(),
   chips: new Map<string, CHIP_MEMORY>(),
   frames: new Map<string, FRAME_STATE[]>(),
-})
+}
 
 export function memorysetdefaultplayer(player: string) {
   MEMORY.defaultplayer = player

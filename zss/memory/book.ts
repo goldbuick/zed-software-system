@@ -1,4 +1,3 @@
-import { ref } from 'valtio'
 import { WORD_VALUE } from 'zss/chip'
 import { PT, COLLISION, CATEGORY } from 'zss/firmware/wordtypes'
 import { unique } from 'zss/mapping/array'
@@ -235,7 +234,7 @@ export function bookboardmoveobject(
   const maybeobject = boardreadobject(board, board.lookup[idx] ?? '')
   if (isdefined(maybeobject)) {
     // for sending interaction messages
-    return maybeobject
+    return { ...maybeobject }
   }
 
   // blocked by terrain
@@ -246,11 +245,13 @@ export function bookboardmoveobject(
       mayberterrain.collision ?? terrainkind?.collision ?? COLLISION.WALK
     if (checkcollision(targetcollision, terraincollision)) {
       // for sending interaction messages
-      return mayberterrain
+      // does this break out from proxy object land ?
+      return { ...(mayberterrain as BOARD_ELEMENT), ...dest }
     }
   }
 
   // todo - everything else ...
+  // now I don't know what everything else was ...
   board.lookup[idx] = undefined
 
   // update object location
@@ -319,8 +320,8 @@ function boardsetlookup(book: BOOK, board: BOARD) {
     }
   }
 
-  board.lookup = ref(lookup)
-  board.named = ref(named)
+  board.lookup = lookup
+  board.named = named
 }
 
 export function bookboardtick(

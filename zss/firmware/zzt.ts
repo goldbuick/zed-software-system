@@ -1,4 +1,4 @@
-import { maptostring } from 'zss/chip'
+import { CHIP, maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import { gadgethyperlink, gadgettext } from 'zss/gadget/data/api'
 import {
@@ -8,7 +8,7 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
-import { isnumber, ispresent } from 'zss/mapping/types'
+import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadbook, memoryreadchip, memoryreadframes } from 'zss/memory'
 import {
   listelementsbyattr,
@@ -34,7 +34,6 @@ import {
   readargs,
   ARG_TYPE,
   readkindname,
-  ispt,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
@@ -134,6 +133,20 @@ function readinput(target: BOARD_ELEMENT) {
   memory.inputqueue.delete(head)
 }
 
+function sendinteraction(
+  chip: CHIP,
+  from: BOARD_ELEMENT | string,
+  to: BOARD_ELEMENT | string,
+  message: string,
+) {
+  const fromid = isstring(from) ? from : from.id
+  const toid = isstring(to) ? to : to.id
+  // object elements will have ids
+  if (ispresent(fromid) && ispresent(toid)) {
+    chip.send(toid, message, fromid)
+  }
+}
+
 export const ZZT_FIRMWARE = createfirmware({
   get(chip, name) {
     // check consts first (data normalization)
@@ -201,7 +214,22 @@ export const ZZT_FIRMWARE = createfirmware({
         y: (memory.target.y ?? 0) + (memory.target.stats.stepy ?? 0),
       }
       // TODO: handle when blocked by something ..
-      bookboardmoveobject(memory.book, memory.board, memory.target, dest)
+      const blocked = bookboardmoveobject(
+        memory.book,
+        memory.board,
+        memory.target,
+        dest,
+      )
+      if (ispresent(blocked)) {
+        // are we a player ?
+        if (memory.target.kind === 'player') {
+          sendinteraction(chip, blocked, chip.id(), 'thud')
+          sendinteraction(chip, chip.id(), blocked, 'touch')
+        } else {
+          sendinteraction(chip, blocked, chip.id(), 'thud')
+          sendinteraction(chip, chip.id(), blocked, 'bump')
+        }
+      }
     }
   },
   tick() {},
