@@ -1,7 +1,7 @@
 import { deepClone, compare } from 'fast-json-patch'
-import { isDefined, isPresent } from 'ts-extras'
+import { isPresent } from 'ts-extras'
 
-export { isDefined as isdefined, isPresent as ispresent }
+export { isPresent as ispresent }
 
 export type MAYBE<T> = T | undefined
 export type NUMBER_OR_STRING = number | string

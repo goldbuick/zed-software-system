@@ -15,18 +15,14 @@ import {
   listelementsbykind,
   listnamedelements,
 } from 'zss/memory/atomics'
-import {
-  BOARD_ELEMENT,
-  MAYBE_BOARD,
-  MAYBE_BOARD_ELEMENT,
-  boardfindplayer,
-} from 'zss/memory/board'
+import { BOARD_ELEMENT, MAYBE_BOARD, boardfindplayer } from 'zss/memory/board'
 import {
   MAYBE_BOOK,
   bookboardmoveobject,
   bookreadboard,
   bookreadflag,
   booksetflag,
+  bookboardobjectsafedelete,
 } from 'zss/memory/book'
 import { editboard } from 'zss/memory/edit'
 import { FRAME_TYPE } from 'zss/memory/frame'
@@ -293,6 +289,14 @@ export const ZZT_FIRMWARE = createfirmware({
   })
   .command('die', (chip) => {
     // mark target for deletion
+    const memory = memoryreadchip(chip.id())
+    bookboardobjectsafedelete(
+      memory.book,
+      memory.board,
+      memory.target,
+      chip.timestamp(),
+    )
+    // halt execution
     chip.endofprogram()
     return 0
   })

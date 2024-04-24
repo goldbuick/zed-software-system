@@ -11,7 +11,7 @@ import { createguid } from 'zss/mapping/guid'
 import {
   MAYBE_NUMBER,
   MAYBE_STRING,
-  isdefined,
+  ispresent,
   isnumber,
 } from 'zss/mapping/types'
 
@@ -108,7 +108,7 @@ const HYPERLINK_WITH_SHARED_DEFAULTS = {
 
 export function gadgetstate(player: string) {
   let value: GADGET_STATE = allgadgetstate[player]
-  return isdefined(value)
+  return ispresent(value)
     ? value
     : (allgadgetstate[player] = value = initstate({}, player))
 }

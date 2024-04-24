@@ -9,14 +9,17 @@ const clockdevice = createdevice('clock', [], () => {
 let acc = 0
 let previous = performance.now()
 
+// tracking
 let clock = 0
+let timestamp = 0
 function tick() {
-  clockdevice.emit('tick')
-  clockdevice.emit('tock')
+  clockdevice.emit('tick', timestamp)
+  clockdevice.emit('tock', timestamp)
   ++clock
+  ++timestamp
   if (clock >= TICK_FPS) {
     clock %= TICK_FPS
-    clockdevice.emit('second')
+    clockdevice.emit('second', timestamp)
   }
 }
 

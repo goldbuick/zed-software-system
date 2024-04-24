@@ -10,7 +10,7 @@ import {
   createtiles,
 } from 'zss/gadget/data/types'
 import { unique } from 'zss/mapping/array'
-import { MAYBE, MAYBE_STRING, isdefined, ispresent } from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
@@ -72,7 +72,7 @@ export function memorycreateviewframe(
   view: MAYBE_STRING,
 ) {
   const frames = memoryreadframes(board)
-  if (isdefined(frames)) {
+  if (ispresent(frames)) {
     frames.push(createviewframe(book, view))
   }
 }
@@ -83,7 +83,7 @@ export function memorycreateeditframe(
   edit: MAYBE_STRING,
 ) {
   const frames = memoryreadframes(board)
-  if (isdefined(frames)) {
+  if (ispresent(frames)) {
     frames.push(createeditframe(book, edit))
   }
 }
@@ -103,7 +103,7 @@ export function memoryreadbook(address: string): MAYBE_BOOK {
 }
 
 export function memoryreadbooks(addresses: MAYBE_STRING[]) {
-  return unique(addresses).map(memoryreadbook).filter(isdefined)
+  return unique(addresses).map(memoryreadbook).filter(ispresent)
 }
 
 export function memorysetbook(book: BOOK) {
@@ -121,7 +121,7 @@ export function memoryclearbook(address: string) {
 export function memoryreadchip(id: string): CHIP_MEMORY {
   let chip = MEMORY.chips.get(id)
 
-  if (!isdefined(chip)) {
+  if (!ispresent(chip)) {
     chip = {
       book: undefined,
       board: undefined,
@@ -152,7 +152,7 @@ export function memoryplayerlogin(player: string) {
   const book = memoryreadbook(BIOS.name)
   const start = bookreadboard(book, PLAYER_START)
   const playerkind = bookreadobject(book, PLAYER_KIND)
-  if (isdefined(start) && isdefined(playerkind)) {
+  if (ispresent(start) && ispresent(playerkind)) {
     // TODO: what is a sensible way to place here ?
     const obj = createboardobject(start, {
       id: player,
@@ -163,7 +163,7 @@ export function memoryplayerlogin(player: string) {
         player,
       },
     })
-    if (isdefined(obj?.id)) {
+    if (ispresent(obj?.id)) {
       bookplayersetboard(book, player, PLAYER_START)
     }
   }
@@ -175,7 +175,7 @@ export function memoryplayerlogout(player: string) {
   )
 }
 
-export function memorytick(os: OS) {
+export function memorytick(os: OS, timestamp: number) {
   // glue code between memory, os, and boardtick
   function oncode(
     book: BOOK,
@@ -197,7 +197,7 @@ export function memorytick(os: OS) {
   // update boards / build code / run chips
   const book = memoryreadbook(BIOS.name)
   bookplayerreadboards(book).forEach((board) =>
-    bookboardtick(book, board, oncode),
+    bookboardtick(book, board, timestamp, oncode),
   )
 }
 
@@ -243,6 +243,11 @@ function memoryconverttogadgetlayers(
 
   const withobjects = board.objects ?? {}
   Object.values(withobjects).forEach((object) => {
+    // skip if marked for removal
+    if (ispresent(object.removed)) {
+      return
+    }
+
     // should we have bg transparent or match the bg color of the terrain ?
     const id = object.id ?? ''
     const kind = bookobjectreadkind(book, object)
@@ -289,7 +294,7 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
   const board = bookplayerreadboard(book, player)
 
   const layers: LAYER[] = []
-  if (!isdefined(book) || !isdefined(board)) {
+  if (!ispresent(book) || !ispresent(board)) {
     return layers
   }
 

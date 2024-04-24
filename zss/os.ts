@@ -2,7 +2,7 @@ import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { loadfirmware } from './firmware/loader'
 import { GeneratorBuild, compile } from './lang/generator'
-import { isdefined, ispresent } from './mapping/types'
+import { ispresent } from './mapping/types'
 
 export type OS = {
   ids: () => string[]
@@ -33,7 +33,7 @@ export function createos() {
       return Object.keys(chips)
     },
     has(id) {
-      return isdefined(chips[id])
+      return ispresent(chips[id])
     },
     halt(id) {
       const chip = chips[id]
@@ -45,7 +45,7 @@ export function createos() {
     tick(id, code) {
       let chip = chips[id]
 
-      if (!isdefined(chips[id])) {
+      if (!ispresent(chips[id])) {
         const result = build(code)
         if (result.errors?.length) {
           console.error(result.errors)

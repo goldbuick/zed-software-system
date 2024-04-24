@@ -14,13 +14,7 @@ import {
 } from 'zss/firmware/wordtypes'
 import { pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
-import {
-  MAYBE,
-  MAYBE_STRING,
-  isdefined,
-  ispresent,
-  noop,
-} from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, ispresent, noop } from 'zss/mapping/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
 
@@ -191,7 +185,7 @@ export function createboardobject(
   board: MAYBE_BOARD,
   from: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
-  if (!isdefined(board) || !isdefined(from)) {
+  if (!ispresent(board) || !ispresent(from)) {
     return undefined
   }
 
@@ -355,7 +349,7 @@ export function boardevaldir(
 }
 
 export function boarddeleteobject(board: MAYBE_BOARD, id: string) {
-  if (isdefined(board) && isdefined(board.objects[id])) {
+  if (ispresent(board) && ispresent(board.objects[id])) {
     delete board.objects[id]
     return true
   }
@@ -366,14 +360,14 @@ export function boardfindplayer(
   board: MAYBE_BOARD,
   target: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
-  if (!isdefined(board) || !isdefined(target)) {
+  if (!ispresent(board) || !ispresent(target)) {
     return undefined
   }
 
   // check aggro
   const aggro = target.stats?.player ?? ''
   const player = board.objects[aggro]
-  if (isdefined(player)) {
+  if (ispresent(player)) {
     return player
   }
 

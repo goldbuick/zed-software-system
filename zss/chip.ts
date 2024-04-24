@@ -33,7 +33,8 @@ export type CHIP = {
 
   // lifecycle api
   cycle: (incoming: number) => void
-  tick: () => boolean
+  timestamp: () => number
+  tick: (incoming: number) => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
   hm: () => number
@@ -129,6 +130,8 @@ export function createchip(id: string, build: GeneratorBuild) {
   // execution frequency
   let cycle = 3
   let pulse = 0
+  // execution timestamp
+  let timestamp = 0
 
   // chip is in ended state awaiting any messages
   let endedstate = false
@@ -204,7 +207,13 @@ export function createchip(id: string, build: GeneratorBuild) {
     cycle(incoming) {
       cycle = incoming
     },
-    tick() {
+    timestamp() {
+      return timestamp
+    },
+    tick(incoming) {
+      // update timestamp
+      timestamp = incoming
+
       // invoke firmware shouldtick
       for (let i = 0; i < firmwares.length; ++i) {
         firmwares[i].shouldtick(chip)

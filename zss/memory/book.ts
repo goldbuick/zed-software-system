@@ -2,7 +2,8 @@ import { WORD_VALUE } from 'zss/chip'
 import { PT, COLLISION, CATEGORY } from 'zss/firmware/wordtypes'
 import { unique } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
-import { MAYBE, MAYBE_STRING, isdefined, ispresent } from 'zss/mapping/types'
+import { TICK_FPS } from 'zss/mapping/tick'
+import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
 
 import { checkcollision } from './atomics'
 import {
@@ -10,6 +11,7 @@ import {
   BOARD_ELEMENT,
   MAYBE_BOARD,
   MAYBE_BOARD_ELEMENT,
+  boarddeleteobject,
   boardreadobject,
 } from './board'
 import {
@@ -115,8 +117,8 @@ export function bookobjectreadkind(
   book: MAYBE_BOOK,
   object: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
-  if (isdefined(object) && isdefined(object.kind)) {
-    if (!isdefined(object.kinddata)) {
+  if (ispresent(object) && ispresent(object.kind)) {
+    if (!ispresent(object.kinddata)) {
       object.kinddata = bookreadobject(book, object.kind)
     }
     return object.kinddata
@@ -144,8 +146,8 @@ export function bookterrainreadkind(
   book: MAYBE_BOOK,
   terrain: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
-  if (isdefined(terrain) && isdefined(terrain.kind)) {
-    if (!isdefined(terrain.kinddata)) {
+  if (ispresent(terrain) && ispresent(terrain.kind)) {
+    if (!ispresent(terrain.kinddata)) {
       terrain.kinddata = bookreadterrain(book, terrain.kind)
     }
     return terrain.kinddata
@@ -192,7 +194,7 @@ export function bookplayersetboard(
   player: string,
   board: string,
 ) {
-  if (isdefined(book) && isdefined(bookreadboard(book, board))) {
+  if (ispresent(book) && ispresent(bookreadboard(book, board))) {
     book.players[player] = board
   }
 }
@@ -200,7 +202,7 @@ export function bookplayersetboard(
 export function bookplayerreadboards(book: MAYBE_BOOK) {
   return unique(Object.values(book?.players ?? []))
     .map((address) => bookreadboard(book, address))
-    .filter(isdefined)
+    .filter(ispresent)
 }
 
 export function bookboardmoveobject(
@@ -212,10 +214,10 @@ export function bookboardmoveobject(
   const object = boardreadobject(board, target?.id ?? '')
   // first pass clipping
   if (
-    !isdefined(book) ||
-    !isdefined(board) ||
-    !isdefined(object) ||
-    !isdefined(board.lookup) ||
+    !ispresent(book) ||
+    !ispresent(board) ||
+    !ispresent(object) ||
+    !ispresent(board.lookup) ||
     dest.x < 0 ||
     dest.x >= board.width ||
     dest.y < 0 ||
@@ -232,14 +234,14 @@ export function bookboardmoveobject(
 
   // blocked by an object
   const maybeobject = boardreadobject(board, board.lookup[idx] ?? '')
-  if (isdefined(maybeobject)) {
+  if (ispresent(maybeobject)) {
     // for sending interaction messages
     return { ...maybeobject }
   }
 
   // blocked by terrain
   const mayberterrain = board.terrain[idx]
-  if (isdefined(mayberterrain)) {
+  if (ispresent(mayberterrain)) {
     const terrainkind = bookterrainreadkind(book, mayberterrain)
     const terraincollision =
       mayberterrain.collision ?? terrainkind?.collision ?? COLLISION.WALK
@@ -265,7 +267,19 @@ export function bookboardmoveobject(
   return undefined
 }
 
-function boardsetlookup(book: BOOK, board: BOARD) {
+export function bookboardelementreadname(
+  book: MAYBE_BOOK,
+  element: MAYBE_BOARD_ELEMENT,
+) {
+  if (ispresent(element?.x) && ispresent(element.y) && ispresent(element.id)) {
+    const kind = bookobjectreadkind(book, element)
+    return (element.name ?? kind?.name ?? 'object').toLowerCase()
+  }
+  const kind = bookterrainreadkind(book, element)
+  return (element?.name ?? kind?.name ?? 'terrain').toLowerCase()
+}
+
+function bookboardsetlookup(book: BOOK, board: BOARD) {
   const lookup: string[] = new Array(board.width * board.height).fill(undefined)
   const named: Record<string, Set<string | number>> = {}
 
@@ -273,10 +287,7 @@ function boardsetlookup(book: BOOK, board: BOARD) {
   const objects = Object.values(board.objects)
   for (let i = 0; i < objects.length; ++i) {
     const object = objects[i]
-    if (isdefined(object.x) && isdefined(object.y) && isdefined(object.id)) {
-      // cache kind
-      const kind = bookobjectreadkind(book, object)
-
+    if (ispresent(object.x) && ispresent(object.y) && ispresent(object.id)) {
       // add category
       object.category = CATEGORY.OBJECT
 
@@ -284,7 +295,7 @@ function boardsetlookup(book: BOOK, board: BOARD) {
       lookup[object.x + object.y * board.width] = object.id
 
       // update named lookup
-      const name = (object.name ?? kind?.name ?? 'object').toLowerCase()
+      const name = bookboardelementreadname(book, object)
       if (!named[name]) {
         named[name] = new Set<string>()
       }
@@ -297,17 +308,14 @@ function boardsetlookup(book: BOOK, board: BOARD) {
   let y = 0
   for (let i = 0; i < board.terrain.length; ++i) {
     const terrain = board.terrain[i]
-    if (isdefined(terrain)) {
-      // cache kind
-      const kind = bookobjectreadkind(book, terrain)
-
+    if (ispresent(terrain)) {
       // add coords
       terrain.x = x
       terrain.y = y
       terrain.category = CATEGORY.TERRAIN
 
       // update named lookup
-      const name = (terrain.name ?? kind?.name ?? 'terrain').toLowerCase()
+      const name = bookboardelementreadname(book, terrain)
       if (!named[name]) {
         named[name] = new Set<string>()
       }
@@ -324,9 +332,79 @@ function boardsetlookup(book: BOOK, board: BOARD) {
   board.named = named
 }
 
+export function bookboardobjectsafedelete(
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
+  object: MAYBE_BOARD_ELEMENT,
+  timestamp: number,
+) {
+  const name = bookboardelementreadname(book, object)
+  if (name !== 'player') {
+    bookboardobjectdelete(book, board, object, timestamp)
+  }
+}
+
+export function bookboardobjectdelete(
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
+  object: MAYBE_BOARD_ELEMENT,
+  timestamp: number,
+) {
+  if (
+    ispresent(book) &&
+    ispresent(board) &&
+    ispresent(object?.id) &&
+    ispresent(object.x) &&
+    ispresent(object.y)
+  ) {
+    // mark for cleanup
+    object.removed = timestamp
+
+    // remove from lookup
+    if (ispresent(board.lookup)) {
+      const index = object.x + object.y * board.width
+      if (board.lookup?.[index] === object.id) {
+        delete board.lookup[index]
+      }
+    }
+
+    // remove from named
+    const name = bookboardelementreadname(book, object)
+    if (ispresent(board.named?.[name])) {
+      board.named[name].delete(object.id)
+    }
+  }
+}
+
+function bookboardcleanup(
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
+  timestamp: number,
+) {
+  if (!ispresent(book) || !ispresent(board)) {
+    return
+  }
+  // iterate through objects
+  const targets = Object.values(board.objects)
+  for (let i = 0; i < targets.length; ++i) {
+    const target = targets[i]
+    // check that we have an id and are marked for removal
+    // 5 seconds after marked for removal
+    if (
+      ispresent(target.id) &&
+      ispresent(target.removed) &&
+      timestamp - target.removed > TICK_FPS * 5
+    ) {
+      // drop from board
+      boarddeleteobject(board, target.id)
+    }
+  }
+}
+
 export function bookboardtick(
   book: MAYBE_BOOK,
   board: MAYBE_BOARD,
+  timestamp: number,
   oncode: (
     book: BOOK,
     board: BOARD,
@@ -335,12 +413,12 @@ export function bookboardtick(
     code: string,
   ) => void,
 ) {
-  if (!isdefined(book) || !isdefined(board)) {
+  if (!ispresent(book) || !ispresent(board)) {
     return
   }
 
   // build object lookup pre-tick
-  boardsetlookup(book, board)
+  bookboardsetlookup(book, board)
 
   // iterate through objects
   const targets = Object.values(board.objects)
@@ -348,8 +426,8 @@ export function bookboardtick(
     const target = targets[i]
 
     // check that we have an id
-    if (!isdefined(target.id)) {
-      return
+    if (!ispresent(target.id)) {
+      continue
     }
 
     // track last position
@@ -364,7 +442,7 @@ export function bookboardtick(
 
     // check that we have code to execute
     if (!code) {
-      return
+      continue
     }
 
     // signal id & code
@@ -372,4 +450,5 @@ export function bookboardtick(
   }
 
   // cleanup objects flagged for deletion
+  bookboardcleanup(book, board, timestamp)
 }

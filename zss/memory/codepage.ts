@@ -3,7 +3,7 @@ import { WORD_VALUE } from 'zss/chip'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { Newline, Stat, tokenize } from 'zss/lang/lexer'
 import { createguid } from 'zss/mapping/guid'
-import { MAYBE, isdefined } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { BOARD, BOARD_ELEMENT } from './board'
 
@@ -66,7 +66,7 @@ function tokenstostrings(tokens: IToken[]) {
 function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
   const [stat, target, ...args] = tokens
   // console.info({ stat, target, args })
-  if (isdefined(codepage.stats) && isdefined(stat)) {
+  if (ispresent(codepage.stats) && ispresent(stat)) {
     switch (stat.image.toLowerCase()) {
       case 'rn':
       case 'range':
@@ -78,7 +78,7 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
       case 'text':
       case 'ln': // link to another board
       case 'link':
-        if (isdefined(target)) {
+        if (ispresent(target)) {
           const ltarget = target.image.toLowerCase()
           codepage.stats[ltarget] = tokenstostrings(args ?? [])
         }
@@ -92,11 +92,11 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
 }
 
 export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
-  if (!isdefined(codepage)) {
+  if (!ispresent(codepage)) {
     return {}
   }
 
-  if (isdefined(codepage.stats?.type)) {
+  if (ispresent(codepage.stats?.type)) {
     return codepage.stats
   }
 
@@ -157,7 +157,7 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
   }
 
   // default to object type
-  if (!isdefined(codepage.stats.type)) {
+  if (!ispresent(codepage.stats.type)) {
     codepage.stats.type = CODE_PAGE_TYPE.OBJECT
   }
 

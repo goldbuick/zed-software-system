@@ -37,7 +37,7 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
       }
       break
     case 'tick':
-      memorytick(os)
+      memorytick(os, message.data)
       break
     case 'tock':
       // iterate over logged in players
