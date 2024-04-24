@@ -15,8 +15,14 @@ import {
   listelementsbykind,
   listnamedelements,
 } from 'zss/memory/atomics'
-import { BOARD_ELEMENT, boardfindplayer } from 'zss/memory/board'
 import {
+  BOARD_ELEMENT,
+  MAYBE_BOARD,
+  MAYBE_BOARD_ELEMENT,
+  boardfindplayer,
+} from 'zss/memory/board'
+import {
+  MAYBE_BOOK,
   bookboardmoveobject,
   bookreadboard,
   bookreadflag,
@@ -34,6 +40,7 @@ import {
   readargs,
   ARG_TYPE,
   readkindname,
+  PT,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
@@ -147,6 +154,28 @@ function sendinteraction(
   }
 }
 
+function moveobject(
+  chip: CHIP,
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
+  target: BOARD_ELEMENT,
+  dest: PT,
+) {
+  const blocked = bookboardmoveobject(book, board, target, dest)
+  if (ispresent(blocked)) {
+    // are we a player ?
+    if (target.kind === 'player') {
+      // TODO: handle case where player touches board edge
+      sendinteraction(chip, blocked, chip.id(), 'thud')
+      sendinteraction(chip, chip.id(), blocked, 'touch')
+    } else {
+      sendinteraction(chip, blocked, chip.id(), 'thud')
+      sendinteraction(chip, chip.id(), blocked, 'bump')
+    }
+  }
+  return !ispresent(blocked)
+}
+
 export const ZZT_FIRMWARE = createfirmware({
   get(chip, name) {
     // check consts first (data normalization)
@@ -213,23 +242,7 @@ export const ZZT_FIRMWARE = createfirmware({
         x: (memory.target.x ?? 0) + (memory.target.stats.stepx ?? 0),
         y: (memory.target.y ?? 0) + (memory.target.stats.stepy ?? 0),
       }
-      // TODO: handle when blocked by something ..
-      const blocked = bookboardmoveobject(
-        memory.book,
-        memory.board,
-        memory.target,
-        dest,
-      )
-      if (ispresent(blocked)) {
-        // are we a player ?
-        if (memory.target.kind === 'player') {
-          sendinteraction(chip, blocked, chip.id(), 'thud')
-          sendinteraction(chip, chip.id(), blocked, 'touch')
-        } else {
-          sendinteraction(chip, blocked, chip.id(), 'thud')
-          sendinteraction(chip, chip.id(), blocked, 'bump')
-        }
-      }
+      moveobject(chip, memory.book, memory.board, memory.target, dest)
     }
   },
   tick() {},
@@ -320,38 +333,39 @@ export const ZZT_FIRMWARE = createfirmware({
     return result
   })
   .command('go', (chip, words) => {
+    // bail if no target
     const memory = memoryreadchip(chip.id())
-    const tx = memory.target?.x
-    const ty = memory.target?.y
+    if (!ispresent(memory.target)) {
+      return 0
+    }
 
+    // tracking
     let i = 0
     let steps = 1
+
+    // attempt to read number of times to repeat direction
     const [maybesteps, ii] = readexpr({ ...memory, chip, words }, 0)
     if (isnumber(maybesteps)) {
       i = ii
       steps = clamp(Math.round(maybesteps), 1, 1024)
     }
 
+    // attempt to step given number of times
     while (steps > 0) {
       const [dest] = readargs({ ...memory, chip, words }, i, [ARG_TYPE.DIR])
-      const blocked = bookboardmoveobject(
-        memory.book,
-        memory.board,
-        memory.target,
-        dest,
-      )
-      if (!blocked) {
+      if (moveobject(chip, memory.book, memory.board, memory.target, dest)) {
         // keep moving
         --steps
       } else {
         // bail
-        // TODO: handle when blocked by something ..
-        break
+        steps = -1
       }
     }
 
     // if blocked, return 1
-    return memory.target?.x === tx && memory.target?.y === ty ? 1 : 0
+    const tx = memory.target.x
+    const ty = memory.target.y
+    return memory.target.x === tx && memory.target.y === ty ? 1 : 0
   })
   .command('idle', (chip) => {
     chip.yield()
