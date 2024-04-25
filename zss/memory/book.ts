@@ -213,7 +213,7 @@ export function bookboardmoveobject(
     dest.y >= board.height
   ) {
     // for sending interaction messages
-    return { kind: 'edge', ...dest }
+    return { kind: 'edge', collision: COLLISION.SOLID, x: dest.x, y: dest.y }
   }
 
   const idx = dest.x + dest.y * board.width
@@ -331,7 +331,12 @@ export function bookboardsetlookup(book: MAYBE_BOOK, board: MAYBE_BOARD) {
   const objects = Object.values(board.objects)
   for (let i = 0; i < objects.length; ++i) {
     const object = objects[i]
-    if (ispresent(object.x) && ispresent(object.y) && ispresent(object.id)) {
+    if (
+      ispresent(object.x) &&
+      ispresent(object.y) &&
+      ispresent(object.id) &&
+      !ispresent(object.removed)
+    ) {
       // add category
       object.category = CATEGORY.OBJECT
 

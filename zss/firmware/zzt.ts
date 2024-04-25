@@ -59,6 +59,7 @@ import {
   ispt,
   dirfrompts,
   ptapplydir,
+  COLLISION,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
@@ -160,15 +161,21 @@ function readinput(target: BOARD_ELEMENT) {
 
 function sendinteraction(
   chip: CHIP,
-  from: BOARD_ELEMENT | string,
-  to: BOARD_ELEMENT | string,
+  maybefrom: BOARD_ELEMENT | string,
+  maybeto: BOARD_ELEMENT | string,
   message: string,
 ) {
-  const fromid = isstring(from) ? from : from.id
-  const toid = isstring(to) ? to : to.id
+  const fromid = isstring(maybefrom) ? maybefrom : maybefrom.id
+  const frompt: PT | undefined = isstring(maybefrom)
+    ? undefined
+    : { x: maybefrom.x ?? 0, y: maybefrom.y ?? 0 }
+  const toid = isstring(maybeto) ? maybeto : maybeto.id
+
   // object elements will have ids
-  if (ispresent(fromid) && ispresent(toid)) {
-    chip.send(toid, message, fromid)
+  const from = fromid ?? frompt
+  console.info({ toid, from, message })
+  if (ispresent(toid) && ispresent(from)) {
+    chip.send(toid, message, from)
   }
 }
 
@@ -181,14 +188,17 @@ function moveobject(
 ) {
   const blocked = bookboardmoveobject(book, board, target, dest)
   if (ispresent(blocked)) {
-    // are we a player ?
-    if (target.kind === 'player') {
-      // TODO: handle case where player touches board edge
-      sendinteraction(chip, blocked, chip.id(), 'thud')
-      sendinteraction(chip, chip.id(), blocked, 'touch')
-    } else {
-      sendinteraction(chip, blocked, chip.id(), 'thud')
-      sendinteraction(chip, chip.id(), blocked, 'bump')
+    sendinteraction(chip, blocked, chip.id(), 'thud')
+    switch (target.kind) {
+      case 'player':
+        sendinteraction(chip, chip.id(), blocked, 'touch')
+        break
+      case 'bullet':
+        sendinteraction(chip, chip.id(), blocked, 'shot')
+        break
+      default:
+        sendinteraction(chip, chip.id(), blocked, 'bump')
+        break
     }
   }
   return !ispresent(blocked)
@@ -296,12 +306,24 @@ export const ZZT_FIRMWARE = createfirmware({
   },
   shouldtick(chip) {
     const memory = memoryreadchip(chip.id())
-    if (memory.target?.stats?.stepx || memory.target?.stats?.stepy) {
-      const dest = {
-        x: (memory.target.x ?? 0) + (memory.target.stats.stepx ?? 0),
-        y: (memory.target.y ?? 0) + (memory.target.stats.stepy ?? 0),
-      }
-      moveobject(chip, memory.book, memory.board, memory.target, dest)
+    if (
+      !ispresent(memory.target?.x) ||
+      !ispresent(memory.target?.y) ||
+      !ispresent(memory.target?.stats?.stepx) ||
+      !ispresent(memory.target?.stats?.stepy)
+    ) {
+      return
+    }
+    if (
+      !moveobject(chip, memory.book, memory.board, memory.target, {
+        x: memory.target.x + memory.target.stats.stepx,
+        y: memory.target.y + memory.target.stats.stepy,
+      })
+    ) {
+      editelementstatsafewrite(memory.target, {
+        stepx: 0,
+        stepy: 0,
+      })
     }
   },
   tick() {},
@@ -425,8 +447,10 @@ export const ZZT_FIRMWARE = createfirmware({
     return 0
   })
   .command('die', (chip) => {
-    // mark target for deletion
     const memory = memoryreadchip(chip.id())
+    // drop from lookups
+    bookboardobjectnamedlookupdelete(memory.book, memory.board, memory.target)
+    // mark target for deletion
     bookboardobjectsafedelete(memory.book, memory.target, chip.timestamp())
     // halt execution
     chip.endofprogram()
@@ -669,10 +693,13 @@ export const ZZT_FIRMWARE = createfirmware({
       )
 
       // success ! get it moving
-      editelementstatsafewrite(bullet, {
-        stepx: step.x,
-        stepy: step.y,
-      })
+      if (ispresent(bullet)) {
+        bullet.collision = COLLISION.BULLET
+        editelementstatsafewrite(bullet, {
+          stepx: step.x,
+          stepy: step.y,
+        })
+      }
     }
 
     // and yield regardless of the outcome
@@ -739,12 +766,19 @@ export const ZZT_FIRMWARE = createfirmware({
   })
   .command('walk', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [dir] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.DIR])
-    // create delta from dir
-    if (ispresent(memory.target?.stats)) {
-      memory.target.stats.stepx = dir.x - (memory.target.x ?? 0)
-      memory.target.stats.stepy = dir.y - (memory.target.y ?? 0)
+    // invalid data
+    if (!ispt(memory.target)) {
+      return 0
     }
+    // read walk direction
+    const [maybedir] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.DIR])
+    const dir = dirfrompts(memory.target, maybedir)
+    const step = ptapplydir({ x: 0, y: 0 }, dir)
+    // create delta from dir
+    editelementstatsafewrite(memory.target, {
+      stepx: step.x,
+      stepy: step.y,
+    })
     return 0
   })
   .command('zap', (chip, words) => {
