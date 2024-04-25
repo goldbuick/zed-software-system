@@ -14,7 +14,7 @@ import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
-  createboardobject,
+  boardcreateobject,
   boarddeleteobject,
   MAYBE_BOARD_ELEMENT,
   BOARD,
@@ -154,7 +154,7 @@ export function memoryplayerlogin(player: string) {
   const playerkind = bookreadobject(book, PLAYER_KIND)
   if (ispresent(start) && ispresent(playerkind)) {
     // TODO: what is a sensible way to place here ?
-    const obj = createboardobject(start, {
+    const obj = boardcreateobject(start, {
       id: player,
       x: 0,
       y: 0,

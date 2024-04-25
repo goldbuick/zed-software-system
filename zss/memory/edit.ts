@@ -4,11 +4,16 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   MAYBE_BOARD,
   boardelementapplycolor,
-  boardgetterrain,
-  boardsetterrainfromkind,
-  createboardobjectfromkind,
+  boardterrainsetfromkind,
+  boardobjectcreatefromkind,
 } from './board'
-import { MAYBE_BOOK, bookreadobject, bookreadterrain } from './book'
+import {
+  MAYBE_BOOK,
+  bookboardlookupwrite,
+  bookboardnamedwrite,
+  bookreadobject,
+  bookreadterrain,
+} from './book'
 
 export function editboardwrite(
   book: MAYBE_BOOK,
@@ -23,13 +28,23 @@ export function editboardwrite(
   const [name, maybecolor] = kind
   const maybeterrain = bookreadterrain(book, name)
   if (ispresent(maybeterrain)) {
-    boardsetterrainfromkind(board, dest.x, dest.y, name)
-    boardelementapplycolor(boardgetterrain(board, dest.x, dest.y), maybecolor)
+    // create new terrain element
+    const terrain = boardterrainsetfromkind(board, dest.x, dest.y, name)
+    // update color
+    boardelementapplycolor(terrain, maybecolor)
+    // update lookup and named
+    bookboardlookupwrite(book, board, terrain)
+    bookboardnamedwrite(book, board, terrain, dest.x + dest.y * board.width)
   }
 
-  const maybeobject = bookreadobject(book, kind[0])
+  const maybeobject = bookreadobject(book, name)
   if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
-    createboardobjectfromkind(board, dest.x, dest.y, maybeobject)
-    boardelementapplycolor(maybeobject, maybecolor)
+    // create new object element
+    const object = boardobjectcreatefromkind(board, dest.x, dest.y, name)
+    // update color
+    boardelementapplycolor(object, maybecolor)
+    // update lookup and named
+    bookboardlookupwrite(book, board, object)
+    bookboardnamedwrite(book, board, object)
   }
 }

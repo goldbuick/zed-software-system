@@ -1,5 +1,5 @@
 import { COLLISION, COLOR } from 'zss/firmware/wordtypes'
-import { createboard, createboardobject } from 'zss/memory/board'
+import { createboard, boardcreateobject } from 'zss/memory/board'
 import { createbook } from 'zss/memory/book'
 import { createcodepage } from 'zss/memory/codepage'
 
@@ -12,7 +12,7 @@ export const BIOS = createbook('BIOS', [
   createcodepage('@board title', {
     board: createboard((board) => {
       for (let i = 0; i < 32; i++) {
-        createboardobject(board, {
+        boardcreateobject(board, {
           x: randomInteger(0, board.width - 1),
           y: randomInteger(0, board.height - 1),
           kind: 'spin',

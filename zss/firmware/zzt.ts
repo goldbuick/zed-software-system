@@ -340,17 +340,6 @@ export const ZZT_FIRMWARE = createfirmware({
     const intocolor = readstrkindcolor(into)
     const intobg = readstrkindbg(into)
 
-    console.info({
-      maybebook,
-      maybeboard,
-      targetname,
-      boardelements,
-      targetelements,
-      intoname,
-      intocolor,
-      intobg,
-    })
-
     // modify elements
     targetelements.forEach((element) => {
       if (bookboardelementreadname(maybebook, element) === intoname) {

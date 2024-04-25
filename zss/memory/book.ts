@@ -279,6 +279,50 @@ export function bookboardelementreadname(
   return (element?.name ?? kind?.name ?? 'terrain').toLowerCase()
 }
 
+export function bookboardnamedwrite(
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
+  element: MAYBE_BOARD_ELEMENT,
+  index?: number,
+) {
+  // invalid data
+  if (
+    !ispresent(book) ||
+    !ispresent(board) ||
+    !ispresent(board.named) ||
+    !ispresent(element)
+  ) {
+    return
+  }
+  // update named
+  const name = bookboardelementreadname(book, element)
+  if (!board.named[name]) {
+    board.named[name] = new Set<string>()
+  }
+  // object.id or terrain index
+  board.named[name].add(element?.id ?? index ?? '')
+}
+
+export function bookboardlookupwrite(
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
+  element: MAYBE_BOARD_ELEMENT,
+) {
+  // invalid data
+  if (
+    !ispresent(book) ||
+    !ispresent(board) ||
+    !ispresent(board.lookup) ||
+    !ispresent(element?.id)
+  ) {
+    return
+  }
+  // update object lookup
+  const x = element.x ?? 0
+  const y = element.y ?? 0
+  board.lookup[x + y * board.width] = element.id
+}
+
 export function bookboardsetlookup(book: MAYBE_BOOK, board: MAYBE_BOARD) {
   // invalid data
   if (!ispresent(book) || !ispresent(board)) {
@@ -341,6 +385,10 @@ export function bookboardsetlookup(book: MAYBE_BOOK, board: MAYBE_BOARD) {
 
   board.lookup = lookup
   board.named = named
+
+  if (book.name === 'temp') {
+    console.info(board)
+  }
 }
 
 export function bookboardobjectsafedelete(

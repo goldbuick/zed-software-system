@@ -155,33 +155,25 @@ export function boardgetterrain(
 
 export function boardsetterrain(
   board: MAYBE_BOARD,
-  x: number,
-  y: number,
-  terrain: MAYBE_BOARD_ELEMENT,
+  from: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
   if (
     !ispresent(board) ||
-    x < 0 ||
-    x >= board.width ||
-    y < 0 ||
-    y >= board.height
+    !ispresent(from) ||
+    !ispresent(from.x) ||
+    !ispresent(from.y) ||
+    from.x < 0 ||
+    from.x >= board.width ||
+    from.y < 0 ||
+    from.y >= board.height
   ) {
     return undefined
   }
-  board.terrain[x + y * board.width] = terrain
-  return terrain
+  board.terrain[from.x + from.y * board.width] = from
+  return from
 }
 
-export function boardsetterrainfromkind(
-  board: MAYBE_BOARD,
-  x: number,
-  y: number,
-  kind: string,
-) {
-  boardsetterrain(board, x, y, { kind })
-}
-
-export function createboardobject(
+export function boardcreateobject(
   board: MAYBE_BOARD,
   from: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
@@ -201,14 +193,22 @@ export function createboardobject(
   return object
 }
 
-export function createboardobjectfromkind(
+export function boardterrainsetfromkind(
   board: MAYBE_BOARD,
   x: number,
   y: number,
-  kind: MAYBE_BOARD_ELEMENT,
+  kind: string,
 ): MAYBE_BOARD_ELEMENT {
-  console.info({ kind })
-  return {}
+  return boardsetterrain(board, { x, y, kind })
+}
+
+export function boardobjectcreatefromkind(
+  board: MAYBE_BOARD,
+  x: number,
+  y: number,
+  kind: string,
+): MAYBE_BOARD_ELEMENT {
+  return boardcreateobject(board, { x, y, kind })
 }
 
 export function boardreadobject(
