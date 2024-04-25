@@ -11,6 +11,8 @@ import {
   isstrcolor,
   readstrcolor,
   readstrbg,
+  ptapplydir,
+  COLLISION,
 } from 'zss/firmware/wordtypes'
 import { pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
@@ -54,7 +56,7 @@ export type BOARD_ELEMENT = {
   bg?: number
   // interaction
   pushable?: number
-  collision?: number
+  collision?: COLLISION
   destructible?: number
   // custom
   stats?: BOARD_ELEMENT_STATS
@@ -100,7 +102,7 @@ const BOARD_WIDTH = 60
 const BOARD_HEIGHT = 25
 const BOARD_TERRAIN: undefined[] = new Array(BOARD_WIDTH * BOARD_HEIGHT)
 
-export function createboard(fn = noop<BOARD>) {
+export function boardcreate(fn = noop<BOARD>) {
   const board: BOARD = {
     id: createguid(),
     x: 0,
@@ -111,6 +113,39 @@ export function createboard(fn = noop<BOARD>) {
     objects: {},
   }
   return fn(board)
+}
+
+export function boardelementindex(board: MAYBE_BOARD, pt: PT): number {
+  if (
+    !ispresent(board) ||
+    pt.x < 0 ||
+    pt.x >= board.width ||
+    pt.y < 0 ||
+    pt.y >= board.height
+  ) {
+    return -1
+  }
+  return pt.x + pt.y * board.width
+}
+
+export function boardelementread(
+  board: MAYBE_BOARD,
+  pt: PT,
+): MAYBE_BOARD_ELEMENT {
+  // clipping
+  const index = boardelementindex(board, pt)
+  if (index < 0 || !ispresent(board?.lookup)) {
+    return undefined
+  }
+
+  // check lookup
+  const object = boardobjectread(board, board.lookup[index] ?? '')
+  if (ispresent(object)) {
+    return object
+  }
+
+  // return terrain
+  return board.terrain[index]
 }
 
 export function boardelementname(element: MAYBE_BOARD_ELEMENT) {
@@ -173,7 +208,7 @@ export function boardsetterrain(
   return from
 }
 
-export function boardcreateobject(
+export function boardobjectcreate(
   board: MAYBE_BOARD,
   from: MAYBE_BOARD_ELEMENT,
 ): MAYBE_BOARD_ELEMENT {
@@ -208,10 +243,10 @@ export function boardobjectcreatefromkind(
   y: number,
   kind: string,
 ): MAYBE_BOARD_ELEMENT {
-  return boardcreateobject(board, { x, y, kind })
+  return boardobjectcreate(board, { x, y, kind })
 }
 
-export function boardreadobject(
+export function boardobjectread(
   board: MAYBE_BOARD,
   id: string,
 ): MAYBE_BOARD_ELEMENT {
@@ -219,30 +254,6 @@ export function boardreadobject(
     return undefined
   }
   return board.objects[id]
-}
-
-function moveptbydir(
-  pt: PT,
-  dir: DIR.NORTH | DIR.SOUTH | DIR.WEST | DIR.EAST | undefined,
-): PT {
-  switch (dir) {
-    case DIR.NORTH:
-      --pt.y
-      break
-    case DIR.SOUTH:
-      ++pt.y
-      break
-    case DIR.WEST:
-      --pt.x
-      break
-    case DIR.EAST:
-      ++pt.x
-      break
-    default:
-      // no-op
-      break
-  }
-  return pt
 }
 
 export function boardevaldir(
@@ -274,7 +285,7 @@ export function boardevaldir(
       case DIR.SOUTH:
       case DIR.WEST:
       case DIR.EAST:
-        moveptbydir(pt, dirconst)
+        ptapplydir(pt, dirconst)
         break
       case DIR.BY:
         // BY <x> <y>
@@ -283,38 +294,38 @@ export function boardevaldir(
         // AT <x> <y>
         break
       case DIR.FLOW:
-        moveptbydir(pt, flow)
+        ptapplydir(pt, flow)
         break
       case DIR.SEEK: {
         const player = boardfindplayer(board, target)
         if (ispt(player)) {
-          moveptbydir(pt, dirfrompts(start, player))
+          ptapplydir(pt, dirfrompts(start, player))
         }
         break
       }
       case DIR.RNDNS:
-        moveptbydir(pt, pick(DIR.NORTH, DIR.SOUTH))
+        ptapplydir(pt, pick(DIR.NORTH, DIR.SOUTH))
         break
       case DIR.RNDNE:
-        moveptbydir(pt, pick(DIR.NORTH, DIR.EAST))
+        ptapplydir(pt, pick(DIR.NORTH, DIR.EAST))
         break
       case DIR.RND:
-        moveptbydir(pt, pick(DIR.NORTH, DIR.SOUTH, DIR.WEST, DIR.EAST))
+        ptapplydir(pt, pick(DIR.NORTH, DIR.SOUTH, DIR.WEST, DIR.EAST))
         break
       // modifiers
       case DIR.CW: {
         const modpt = boardevaldir(board, target, dir.slice(i + 1))
-        moveptbydir(pt, dirfrompts(start, modpt))
+        ptapplydir(pt, dirfrompts(start, modpt))
         break
       }
       case DIR.CCW: {
         const modpt = boardevaldir(board, target, dir.slice(i + 1))
-        moveptbydir(pt, dirfrompts(start, modpt))
+        ptapplydir(pt, dirfrompts(start, modpt))
         break
       }
       case DIR.OPP: {
         const modpt = boardevaldir(board, target, dir.slice(i + 1))
-        moveptbydir(pt, dirfrompts(start, modpt))
+        ptapplydir(pt, dirfrompts(start, modpt))
         break
       }
       case DIR.RNDP: {

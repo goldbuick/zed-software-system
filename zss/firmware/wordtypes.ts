@@ -101,6 +101,30 @@ export function ispt(value: any): value is PT {
   return ispresent(value) && ispresent(value.x) && ispresent(value.y)
 }
 
+export function ptapplydir(
+  pt: PT,
+  dir: DIR.NORTH | DIR.SOUTH | DIR.WEST | DIR.EAST | undefined,
+): PT {
+  switch (dir) {
+    case DIR.NORTH:
+      --pt.y
+      break
+    case DIR.SOUTH:
+      ++pt.y
+      break
+    case DIR.WEST:
+      --pt.x
+      break
+    case DIR.EAST:
+      ++pt.x
+      break
+    default:
+      // no-op
+      break
+  }
+  return pt
+}
+
 export function dirfrompts(last: PT, current: PT) {
   const dx = current.x - last.x
   const dy = current.y - last.y

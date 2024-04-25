@@ -37,24 +37,24 @@
   #clear blink
 #endif
 
-' #if inputshoot do
-'   #shoot inputshoot
-' #endif
-
 #if inputmove do
   #set playermove inputmove
-  #if inputalt do
-    #if drawing is blue do
-      #repeat 10 do
-        ?playermove
-        #put edit idle brown ondkpurple pick wall wall2
-      #endrepeat
-    #else do
-      ?10 playermove
+  #if inputshift do
+    #shoot playermove
+  #else do
+    #if inputalt do
+      #if drawing is blue do
+        #repeat 10 do
+          ?playermove
+          #put edit idle brown ondkpurple pick wall wall2
+        #endrepeat
+      #else do
+        ?10 playermove
+      #endif
+    #else do 
+      ?playermove
+      #if drawing is blue put edit idle brown ondkpurple pick wall wall2
     #endif
-  #else do 
-    ?playermove
-    #if drawing is blue put edit idle brown ondkpurple pick wall wall2
   #endif
 #else do
   #idle

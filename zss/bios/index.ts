@@ -1,19 +1,20 @@
 import { COLLISION, COLOR } from 'zss/firmware/wordtypes'
-import { createboard, boardcreateobject } from 'zss/memory/board'
+import { boardcreate, boardobjectcreate } from 'zss/memory/board'
 import { createbook } from 'zss/memory/book'
 import { createcodepage } from 'zss/memory/codepage'
 
 import { randomInteger } from '../mapping/number'
 
 import blonkcode from './blonk.txt?raw'
+import bulletcode from './bullet.txt?raw'
 import playercode from './player.txt?raw'
 import spincode from './spin.txt?raw'
 
 export const BIOS = createbook('BIOS', [
   createcodepage('@board title', {
-    board: createboard((board) => {
+    board: boardcreate((board) => {
       for (let i = 0; i < 32; i++) {
-        boardcreateobject(board, {
+        boardobjectcreate(board, {
           x: randomInteger(0, board.width - 1),
           y: randomInteger(0, board.height - 1),
           kind: 'spin',
@@ -27,6 +28,13 @@ export const BIOS = createbook('BIOS', [
       char: 15,
       color: COLOR.WHITE,
       bg: COLOR.BLACK,
+    },
+  }),
+  createcodepage(bulletcode, {
+    object: {
+      char: 15,
+      color: COLOR.WHITE,
+      bg: COLOR.SHADOW,
     },
   }),
   createcodepage(playercode, {

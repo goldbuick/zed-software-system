@@ -1,0 +1,5 @@
+@bullet
+#end
+
+:thud
+#die

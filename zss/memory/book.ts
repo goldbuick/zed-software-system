@@ -12,7 +12,7 @@ import {
   MAYBE_BOARD,
   MAYBE_BOARD_ELEMENT,
   boarddeleteobject,
-  boardreadobject,
+  boardobjectread,
 } from './board'
 import {
   CODE_PAGE,
@@ -97,6 +97,21 @@ export function bookreadcodepagedata<T extends CODE_PAGE_TYPE>(
   return undefined
 }
 
+export function bookelementkindread(
+  book: MAYBE_BOOK,
+  element: MAYBE_BOARD_ELEMENT,
+) {
+  if (ispresent(element) && ispresent(element.kind)) {
+    if (!ispresent(element.kinddata)) {
+      element.kinddata = ispresent(element.id)
+        ? bookreadobject(book, element.kind)
+        : bookreadterrain(book, element.kind)
+    }
+    return element.kinddata
+  }
+  return undefined
+}
+
 export function bookreadobject(
   book: MAYBE_BOOK,
   object: MAYBE_STRING,
@@ -113,19 +128,6 @@ export function bookreadobject(
       }
 }
 
-export function bookobjectreadkind(
-  book: MAYBE_BOOK,
-  object: MAYBE_BOARD_ELEMENT,
-): MAYBE_BOARD_ELEMENT {
-  if (ispresent(object) && ispresent(object.kind)) {
-    if (!ispresent(object.kinddata)) {
-      object.kinddata = bookreadobject(book, object.kind)
-    }
-    return object.kinddata
-  }
-  return undefined
-}
-
 export function bookreadterrain(
   book: MAYBE_BOOK,
   terrain: MAYBE_STRING,
@@ -140,19 +142,6 @@ export function bookreadterrain(
         name: withterrain,
         code: page.code,
       }
-}
-
-export function bookterrainreadkind(
-  book: MAYBE_BOOK,
-  terrain: MAYBE_BOARD_ELEMENT,
-): MAYBE_BOARD_ELEMENT {
-  if (ispresent(terrain) && ispresent(terrain.kind)) {
-    if (!ispresent(terrain.kinddata)) {
-      terrain.kinddata = bookreadterrain(book, terrain.kind)
-    }
-    return terrain.kinddata
-  }
-  return undefined
 }
 
 export function bookreadboard(book: MAYBE_BOOK, board: string): MAYBE_BOARD {
@@ -211,7 +200,7 @@ export function bookboardmoveobject(
   target: MAYBE_BOARD_ELEMENT,
   dest: PT,
 ): MAYBE_BOARD_ELEMENT {
-  const object = boardreadobject(board, target?.id ?? '')
+  const object = boardobjectread(board, target?.id ?? '')
   // first pass clipping
   if (
     !ispresent(book) ||
@@ -228,12 +217,12 @@ export function bookboardmoveobject(
   }
 
   const idx = dest.x + dest.y * board.width
-  const targetkind = bookobjectreadkind(book, object)
+  const targetkind = bookelementkindread(book, object)
   const targetcollision =
     object.collision ?? targetkind?.collision ?? COLLISION.WALK
 
   // blocked by an object
-  const maybeobject = boardreadobject(board, board.lookup[idx] ?? '')
+  const maybeobject = boardobjectread(board, board.lookup[idx] ?? '')
   if (ispresent(maybeobject)) {
     // for sending interaction messages
     return { ...maybeobject }
@@ -242,7 +231,7 @@ export function bookboardmoveobject(
   // blocked by terrain
   const mayberterrain = board.terrain[idx]
   if (ispresent(mayberterrain)) {
-    const terrainkind = bookterrainreadkind(book, mayberterrain)
+    const terrainkind = bookelementkindread(book, mayberterrain)
     const terraincollision =
       mayberterrain.collision ?? terrainkind?.collision ?? COLLISION.WALK
     if (checkcollision(targetcollision, terraincollision)) {
@@ -272,10 +261,10 @@ export function bookboardelementreadname(
   element: MAYBE_BOARD_ELEMENT,
 ) {
   if (ispresent(element?.x) && ispresent(element.y) && ispresent(element.id)) {
-    const kind = bookobjectreadkind(book, element)
+    const kind = bookelementkindread(book, element)
     return (element.name ?? kind?.name ?? 'object').toLowerCase()
   }
-  const kind = bookterrainreadkind(book, element)
+  const kind = bookelementkindread(book, element)
   return (element?.name ?? kind?.name ?? 'terrain').toLowerCase()
 }
 
@@ -483,7 +472,7 @@ export function bookboardtick(
     target.ly = target.y
 
     // lookup kind
-    const kind = bookobjectreadkind(book, target)
+    const kind = bookelementkindread(book, target)
 
     // object code
     const code = target.code ?? kind?.code ?? ''

@@ -7,7 +7,7 @@ import {
   readstrkindcolor,
   readstrkindname,
 } from 'zss/firmware/wordtypes'
-import { ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import {
   BOARD_ELEMENT,
@@ -24,7 +24,12 @@ import {
 // list returns a list, input can be anything
 // pick returns a single item FROM a list
 
-export function checkcollision(source: COLLISION, dest: COLLISION) {
+export function checkcollision(
+  maybesource: MAYBE<COLLISION>,
+  maybedest: MAYBE<COLLISION>,
+) {
+  const source = maybesource ?? COLLISION.WALK
+  const dest = maybedest ?? COLLISION.WALK
   switch (source) {
     case COLLISION.WALK:
       return dest !== COLLISION.WALK

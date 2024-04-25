@@ -13,7 +13,7 @@ import {
   memoryresetframes,
   memorysetbook,
 } from 'zss/memory'
-import { boardelementapplycolor, createboard } from 'zss/memory/board'
+import { boardelementapplycolor, boardcreate } from 'zss/memory/board'
 import { createbook } from 'zss/memory/book'
 import { createcodepage } from 'zss/memory/codepage'
 
@@ -85,7 +85,7 @@ export const ZSS_FIRMWARE = createfirmware({
         memorysetbook(
           createbook(ltarget, [
             createcodepage('@board title', {
-              board: createboard((board) => {
+              board: boardcreate((board) => {
                 // console.info(board)
                 // todo, make it so you can clone an existing book
                 return board

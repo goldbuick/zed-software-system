@@ -14,7 +14,7 @@ import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
-  boardcreateobject,
+  boardobjectcreate,
   boarddeleteobject,
   MAYBE_BOARD_ELEMENT,
   BOARD,
@@ -25,13 +25,12 @@ import {
   BOOK,
   MAYBE_BOOK,
   bookboardtick,
-  bookobjectreadkind,
+  bookelementkindread,
   bookplayerreadboard,
   bookplayerreadboards,
   bookplayersetboard,
   bookreadboard,
   bookreadobject,
-  bookterrainreadkind,
 } from './book'
 import {
   FRAME_STATE,
@@ -154,7 +153,7 @@ export function memoryplayerlogin(player: string) {
   const playerkind = bookreadobject(book, PLAYER_KIND)
   if (ispresent(start) && ispresent(playerkind)) {
     // TODO: what is a sensible way to place here ?
-    const obj = boardcreateobject(start, {
+    const obj = boardobjectcreate(start, {
       id: player,
       x: 0,
       y: 0,
@@ -234,7 +233,7 @@ function memoryconverttogadgetlayers(
 
   board.terrain.forEach((tile, i) => {
     if (tile) {
-      const kind = bookterrainreadkind(book, tile)
+      const kind = bookelementkindread(book, tile)
       tiles.char[i] = tile.char ?? kind?.char ?? 0
       tiles.color[i] = tile.color ?? kind?.color ?? defaultcolor
       tiles.bg[i] = tile.bg ?? kind?.bg ?? defaultcolor
@@ -250,7 +249,7 @@ function memoryconverttogadgetlayers(
 
     // should we have bg transparent or match the bg color of the terrain ?
     const id = object.id ?? ''
-    const kind = bookobjectreadkind(book, object)
+    const kind = bookelementkindread(book, object)
     const sprite = createsprite(player, objectindex, id)
     const lx = object.lx ?? object.x ?? 0
     const ly = object.ly ?? object.y ?? 0

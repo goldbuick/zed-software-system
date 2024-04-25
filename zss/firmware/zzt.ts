@@ -11,12 +11,14 @@ import { clamp } from 'zss/mapping/number'
 import {
   MAYBE,
   MAYBE_STRING,
+  deepcopy,
   isnumber,
   ispresent,
   isstring,
 } from 'zss/mapping/types'
 import { memoryreadbook, memoryreadchip, memoryreadframes } from 'zss/memory'
 import {
+  checkcollision,
   listelementsbyattr,
   listelementsbykind,
   listnamedelements,
@@ -25,6 +27,7 @@ import {
   BOARD_ELEMENT,
   MAYBE_BOARD,
   boarddeleteobject,
+  boardelementread,
   boardfindplayer,
 } from 'zss/memory/board'
 import {
@@ -37,6 +40,7 @@ import {
   bookboardelementreadname,
   bookboardsetlookup,
   bookboardobjectnamedlookupdelete,
+  bookelementkindread,
 } from 'zss/memory/book'
 import { editboardwrite } from 'zss/memory/edit'
 import { FRAME_STATE, FRAME_TYPE } from 'zss/memory/frame'
@@ -54,6 +58,9 @@ import {
   readstrkindcolor,
   readstrkindbg,
   ispt,
+  dirfrompts,
+  ptapplydir,
+  COLLISION,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
@@ -304,18 +311,14 @@ export const ZZT_FIRMWARE = createfirmware({
 })
   .command('become', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-
     // track dest
     const dest: PT = { x: memory.target?.x ?? 0, y: memory.target?.y ?? 0 }
-
     // read
     const [kind] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.KIND])
-
     // make sure lookup is created
     bookboardsetlookup(memory.book, memory.board)
     // make invisible
     bookboardobjectnamedlookupdelete(memory.book, memory.board, memory.target)
-
     // nuke self
     if (
       bookboardobjectsafedelete(memory.book, memory.target, chip.timestamp())
@@ -323,7 +326,6 @@ export const ZZT_FIRMWARE = createfirmware({
       // write new element
       editboardwrite(memory.book, memory.board, kind, dest)
     }
-
     // halt execution
     chip.endofprogram()
     return 0
@@ -535,6 +537,7 @@ export const ZZT_FIRMWARE = createfirmware({
 
     // make sure lookup is created
     bookboardsetlookup(maybebook, maybeboard)
+
     // write new element
     editboardwrite(maybebook, maybeboard, kind, dir)
     return 0
@@ -613,18 +616,70 @@ export const ZZT_FIRMWARE = createfirmware({
   .command('shoot', (chip, words) => {
     const memory = memoryreadchip(chip.id())
 
-    // peek at optional frame type
-    const maybeframe = isstring(words[0]) ? words[0] : undefined
+    // optional prefix of frame target
+    const [maybeframe, ii] = valuepeekframename(words[0], 0)
 
     // read direction + what to shoot
-    const ii = ispresent(maybeframe) ? 1 : 0
-    const [dir, maybekind] = readargs({ ...memory, chip, words }, ii, [
+    const [maybedir, maybekind] = readargs({ ...memory, chip, words }, ii, [
       ARG_TYPE.DIR,
       ARG_TYPE.MAYBE_KIND,
     ])
 
-    console.info({ maybeframe, dir, maybekind }) // todo
+    if (ispt(memory.target)) {
+      // this feels a little silly
+      const dir = dirfrompts(memory.target, maybedir)
+      const step = ptapplydir({ x: 0, y: 0 }, dir)
+      const start = ptapplydir({ x: memory.target.x, y: memory.target.y }, dir)
 
+      // check starting point
+      let blocked = boardelementread(memory.board, start)
+
+      // check for terrain that doesn't block bullets
+      if (ispresent(blocked) && !ispresent(blocked.id)) {
+        const selfkind = bookelementkindread(memory.book, memory.target)
+        const blockedkind = bookelementkindread(memory.book, blocked)
+        // found terrain
+        if (
+          !checkcollision(
+            blocked.collision ?? selfkind?.collision,
+            blocked.collision ?? blockedkind?.collision,
+          )
+        ) {
+          blocked = undefined
+        }
+      }
+
+      if (ispresent(blocked)) {
+        // blocked by object, send message
+        // and start bullet in hidden-removed mode
+        console.info(blocked)
+      } else {
+        // good to go! create bullet, and setup with walk
+
+        // make sure lookup is created
+        bookboardsetlookup(memory.book, memory.board)
+
+        // write new element
+        const bullet = editboardwrite(
+          memory.book,
+          memory.board,
+          maybekind ?? ['bullet'],
+          start,
+        )
+
+        // success ! get it moving
+        if (ispresent(bullet)) {
+          bullet.stats = {
+            ...bullet.stats,
+            stepx: step.x,
+            stepy: step.y,
+          }
+        }
+      }
+    }
+
+    // and yield regardless of the outcome
+    chip.yield()
     return 0
   })
   .command('take', (chip, words) => {

@@ -192,6 +192,9 @@ export function createchip(id: string, build: GeneratorBuild) {
       for (let i = 0; i < firmwares.length; ++i) {
         const [result, value] = firmwares[i].get(chip, lname)
         if (result) {
+          if (lname.startsWith('input')) {
+            // console.info('get', lname, value)
+          }
           return value
         }
       }
@@ -391,6 +394,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       const [value, ii] = readargs(read, 0, [ARG_TYPE.ANY])
       const result = maptoresult(value)
 
+      // console.info('if', value, { ii, length: words.length }, result)
       if (result && ii < words.length) {
         chip.command(...words.slice(ii))
       }

@@ -129,7 +129,6 @@ type UserInputProps = {
 
 export function UserInput(events: UserInputProps) {
   const context = useContext(UserInputContext)
-  const deps = [...Object.keys(events), ...Object.values(events)]
 
   useEffect(() => {
     const list = Object.entries(events)
@@ -138,7 +137,7 @@ export function UserInput(events: UserInputProps) {
     return () => {
       list.forEach(([key, value]) => context.off(key, value))
     }
-  }, deps)
+  }, [context, events])
 
   return null
 }
