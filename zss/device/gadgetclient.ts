@@ -1,4 +1,7 @@
-import { JsonPatchError, applyPatch } from 'fast-json-patch'
+import {
+  JsonPatchError as jsonpatcherror,
+  applyPatch as applypatch,
+} from 'fast-json-patch'
 import { proxy } from 'valtio'
 import { createdevice } from 'zss/device'
 import { GADGET_STATE } from 'zss/gadget/data/types'
@@ -44,9 +47,9 @@ const gadgetclientdevice = createdevice(
       case 'patch':
         if (message.player === syncstate.state.player && !desync) {
           try {
-            applyPatch(syncstate.state, message.data, true)
+            applypatch(syncstate.state, message.data, true)
           } catch (err) {
-            if (err instanceof JsonPatchError) {
+            if (err instanceof jsonpatcherror) {
               // we are out of sync and need to request a refresh
               desync = true
               gadgetclientdevice.reply(

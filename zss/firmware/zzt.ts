@@ -11,7 +11,6 @@ import { clamp } from 'zss/mapping/number'
 import {
   MAYBE,
   MAYBE_STRING,
-  deepcopy,
   isnumber,
   ispresent,
   isstring,
@@ -42,7 +41,7 @@ import {
   bookboardobjectnamedlookupdelete,
   bookelementkindread,
 } from 'zss/memory/book'
-import { editboardwrite } from 'zss/memory/edit'
+import { editboardwrite, editelementstatsafewrite } from 'zss/memory/edit'
 import { FRAME_STATE, FRAME_TYPE } from 'zss/memory/frame'
 
 import {
@@ -60,7 +59,6 @@ import {
   ispt,
   dirfrompts,
   ptapplydir,
-  COLLISION,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
@@ -616,66 +614,65 @@ export const ZZT_FIRMWARE = createfirmware({
   .command('shoot', (chip, words) => {
     const memory = memoryreadchip(chip.id())
 
+    // invalid data
+    if (!ispt(memory.target)) {
+      return 0
+    }
+
     // optional prefix of frame target
     const [maybeframe, ii] = valuepeekframename(words[0], 0)
-
     // read direction + what to shoot
     const [maybedir, maybekind] = readargs({ ...memory, chip, words }, ii, [
       ARG_TYPE.DIR,
       ARG_TYPE.MAYBE_KIND,
     ])
 
-    if (ispt(memory.target)) {
-      // this feels a little silly
-      const dir = dirfrompts(memory.target, maybedir)
-      const step = ptapplydir({ x: 0, y: 0 }, dir)
-      const start = ptapplydir({ x: memory.target.x, y: memory.target.y }, dir)
+    // this feels a little silly
+    const dir = dirfrompts(memory.target, maybedir)
+    const step = ptapplydir({ x: 0, y: 0 }, dir)
+    const start = ptapplydir({ x: memory.target.x, y: memory.target.y }, dir)
 
-      // check starting point
-      let blocked = boardelementread(memory.board, start)
+    // check starting point
+    let blocked = boardelementread(memory.board, start)
 
-      // check for terrain that doesn't block bullets
-      if (ispresent(blocked) && !ispresent(blocked.id)) {
-        const selfkind = bookelementkindread(memory.book, memory.target)
-        const blockedkind = bookelementkindread(memory.book, blocked)
-        // found terrain
-        if (
-          !checkcollision(
-            blocked.collision ?? selfkind?.collision,
-            blocked.collision ?? blockedkind?.collision,
-          )
-        ) {
-          blocked = undefined
-        }
-      }
-
-      if (ispresent(blocked)) {
-        // blocked by object, send message
-        // and start bullet in hidden-removed mode
-        console.info(blocked)
-      } else {
-        // good to go! create bullet, and setup with walk
-
-        // make sure lookup is created
-        bookboardsetlookup(memory.book, memory.board)
-
-        // write new element
-        const bullet = editboardwrite(
-          memory.book,
-          memory.board,
-          maybekind ?? ['bullet'],
-          start,
+    // check for terrain that doesn't block bullets
+    if (ispresent(blocked) && !ispresent(blocked.id)) {
+      const selfkind = bookelementkindread(memory.book, memory.target)
+      const blockedkind = bookelementkindread(memory.book, blocked)
+      // found terrain
+      if (
+        !checkcollision(
+          blocked.collision ?? selfkind?.collision,
+          blocked.collision ?? blockedkind?.collision,
         )
-
-        // success ! get it moving
-        if (ispresent(bullet)) {
-          bullet.stats = {
-            ...bullet.stats,
-            stepx: step.x,
-            stepy: step.y,
-          }
-        }
+      ) {
+        blocked = undefined
       }
+    }
+
+    if (ispresent(blocked)) {
+      // blocked by object, send message
+      // and start bullet in hidden-removed mode
+      console.info(blocked)
+    } else {
+      // good to go! create bullet, and setup with walk
+
+      // make sure lookup is created
+      bookboardsetlookup(memory.book, memory.board)
+
+      // write new element
+      const bullet = editboardwrite(
+        memory.book,
+        memory.board,
+        maybekind ?? ['bullet'],
+        start,
+      )
+
+      // success ! get it moving
+      editelementstatsafewrite(bullet, {
+        stepx: step.x,
+        stepy: step.y,
+      })
     }
 
     // and yield regardless of the outcome

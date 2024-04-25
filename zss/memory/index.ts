@@ -264,6 +264,7 @@ function memoryconverttogadgetlayers(
 
     // plot shadow
     if (sprite.bg === COLOR.SHADOW) {
+      sprite.bg = COLOR.CLEAR
       shadow.alphas[lx + ly * boardwidth] = 0.5
     }
 

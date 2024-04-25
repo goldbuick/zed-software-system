@@ -3,3 +3,4 @@
 // const TICK_RATE = 33.333
 export const TICK_RATE = 40
 export const TICK_FPS = Math.round(1000 / TICK_RATE)
+export const CYCLE_DEFAULT = 3

@@ -7,6 +7,7 @@ import {
   boardterrainsetfromkind,
   boardobjectcreatefromkind,
   MAYBE_BOARD_ELEMENT,
+  BOARD_ELEMENT_STATS,
 } from './board'
 import {
   MAYBE_BOOK,
@@ -15,6 +16,25 @@ import {
   bookreadobject,
   bookreadterrain,
 } from './book'
+
+export function editelementstatsafewrite(
+  element: MAYBE_BOARD_ELEMENT,
+  stats: BOARD_ELEMENT_STATS,
+) {
+  // invalid data
+  if (!ispresent(element) || !ispresent(stats)) {
+    return
+  }
+  // init stats if needed
+  if (!ispresent(element.stats)) {
+    element.stats = {}
+  }
+  // write stats
+  for (const [name, value] of Object.entries(stats)) {
+    const lname = name.toLowerCase()
+    element.stats[lname] = value
+  }
+}
 
 export function editboardwrite(
   book: MAYBE_BOOK,

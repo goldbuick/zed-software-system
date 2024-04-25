@@ -1,4 +1,5 @@
 @bullet
+#cycle 1
 #end
 
 :thud

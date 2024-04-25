@@ -635,7 +635,7 @@ export function readdir(
     ii = iii
   }
 
-  return strdir.length ? [strdir, index + strdir.length] : [undefined, index]
+  return strdir.length ? [strdir, ii] : [undefined, index]
 }
 
 export function chipreadcontext(chip: CHIP, words: WORD[]) {
@@ -1007,7 +1007,7 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.MAYBE_CATEGORY: {
         const [value, iii] = readcategory(read, ii)
-        if (value !== undefined && isstrcategory(value)) {
+        if (value !== undefined && !isstrcategory(value)) {
           didexpect('optional terrain or object', value)
         }
         ii = iii
@@ -1016,7 +1016,7 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.MAYBE_COLLISION: {
         const [value, iii] = readcategory(read, ii)
-        if (value !== undefined && isstrcollision(value)) {
+        if (value !== undefined && !isstrcollision(value)) {
           didexpect(
             'optional solid, walk, swim, bullet, walkable or swimmable',
             value,
@@ -1037,12 +1037,11 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.MAYBE_KIND: {
         const [kind, iii] = readkind(read, ii)
-        if (isstrkind(kind)) {
-          ii = iii
-          values.push(kind)
-        } else if (kind !== undefined) {
+        if (kind !== undefined && !isstrkind(kind)) {
           didexpect('optional kind', kind)
         }
+        ii = iii
+        values.push(kind)
         break
       }
       case ARG_TYPE.MAYBE_DIR: {
@@ -1053,7 +1052,10 @@ export function readargs<T extends ARG_TYPES>(
             : { x: 0, y: 0 }
           ii = iii
           values.push(value)
-        } else if (dir !== undefined) {
+        } else if (dir === undefined) {
+          ii = iii
+          values.push(undefined)
+        } else {
           didexpect('optional direction', dir)
         }
         break

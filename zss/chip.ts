@@ -5,6 +5,7 @@ import { ARG_TYPE, chipreadcontext, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
+import { CYCLE_DEFAULT } from './mapping/tick'
 import { deepcopy, isequal, isstring } from './mapping/types'
 
 export const HALT_AT_COUNT = 64
@@ -125,7 +126,7 @@ export function createchip(id: string, build: GeneratorBuild) {
   let yieldstate = false
 
   // execution frequency
-  let cycle = 3
+  let cycle = CYCLE_DEFAULT
   let pulse = 0
   // execution timestamp
   let timestamp = 0
