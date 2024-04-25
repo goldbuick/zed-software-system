@@ -1,5 +1,5 @@
 import { randomInteger } from './number'
-import { ispresent } from './types'
+import { MAYBE_NUMBER, ispresent } from './types'
 
 export function range(a: number, b?: number, step?: number) {
   if (typeof a !== 'number') {
@@ -104,4 +104,9 @@ export function notEmpty<T>(value: T | null | undefined): value is T {
 export function unique<T>(values: (T | undefined)[]) {
   const array = [...new Set(values)]
   return array.filter(ispresent)
+}
+
+export function average(...maybevalues: (MAYBE_NUMBER | MAYBE_NUMBER[])[]) {
+  const values = maybevalues.flat().filter(ispresent)
+  return values.reduce((acc, value) => acc + value, 0) / values.length
 }

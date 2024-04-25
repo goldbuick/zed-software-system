@@ -32,7 +32,7 @@ export const BIOS = createbook('BIOS', [
   }),
   createcodepage(bulletcode, {
     object: {
-      char: 15,
+      char: 248,
       color: COLOR.WHITE,
       bg: COLOR.SHADOW,
     },

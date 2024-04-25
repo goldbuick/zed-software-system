@@ -11,7 +11,7 @@ import {
 } from './board'
 import {
   MAYBE_BOOK,
-  bookboardlookupwrite,
+  bookboardobjectlookupwrite,
   bookboardnamedwrite,
   bookreadobject,
   bookreadterrain,
@@ -50,8 +50,7 @@ export function editboardwrite(
       const terrain = boardterrainsetfromkind(board, dest.x, dest.y, name)
       // update color
       boardelementapplycolor(terrain, maybecolor)
-      // update lookup and named
-      bookboardlookupwrite(book, board, terrain)
+      // update named (terrain & objects)
       bookboardnamedwrite(book, board, terrain, dest.x + dest.y * board.width)
       // return result
       return terrain
@@ -63,8 +62,9 @@ export function editboardwrite(
       const object = boardobjectcreatefromkind(board, dest.x, dest.y, name)
       // update color
       boardelementapplycolor(object, maybecolor)
-      // update lookup and named
-      bookboardlookupwrite(book, board, object)
+      // update lookup (only objects)
+      bookboardobjectlookupwrite(book, board, object)
+      // update named (terrain & objects)
       bookboardnamedwrite(book, board, object)
       // return result
       return object

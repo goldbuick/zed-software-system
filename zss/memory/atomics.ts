@@ -113,12 +113,8 @@ export function listelementsbyattr(
       ) {
         const idx = idnameorpt.x + idnameorpt.y * board.width
         const maybeid = board.lookup?.[idx]
-        // check lookup first
-        if (ispresent(maybeid)) {
-          return board.objects[maybeid]
-        }
-        // then terrain
-        return board.terrain[idx]
+        // check lookup first, then fallback to terrain
+        return ispresent(maybeid) ? board.objects[maybeid] : board.terrain[idx]
       }
       // no idea what you gave me
       return undefined

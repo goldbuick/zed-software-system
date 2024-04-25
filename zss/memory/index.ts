@@ -9,7 +9,7 @@ import {
   createsprites,
   createtiles,
 } from 'zss/gadget/data/types'
-import { unique } from 'zss/mapping/array'
+import { average, unique } from 'zss/mapping/array'
 import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
@@ -265,7 +265,7 @@ function memoryconverttogadgetlayers(
     // plot shadow
     if (sprite.bg === COLOR.SHADOW) {
       sprite.bg = COLOR.CLEAR
-      shadow.alphas[lx + ly * boardwidth] = 0.5
+      shadow.alphas[lx + ly * boardwidth] = 1.0
     }
 
     // inform control layer where to focus
@@ -275,6 +275,53 @@ function memoryconverttogadgetlayers(
       control.focusid = id
     }
   })
+
+  // smooth shadows
+  function aa(x: number, y: number) {
+    if (x < 0 || x >= board.width || y < 0 || y >= board.height) {
+      return undefined
+    }
+    return shadow.alphas[x + y * board.width]
+  }
+
+  const alphas = new Array<number>(shadow.alphas.length)
+  for (let i = 0; i < shadow.alphas.length; ++i) {
+    const ix = i % board.width
+    const iy = Math.floor(i / board.width)
+
+    if (aa(ix, iy) ?? 0 > 0.99) {
+      alphas[i] = 0.5
+      continue
+    }
+
+    // core
+    const coreshadow = average(
+      [aa(ix, iy - 1)],
+      [aa(ix - 1, iy), aa(ix, iy), aa(ix + 1, iy)],
+      [aa(ix, iy + 1)],
+    )
+
+    // fade
+    const fadeshadow = average(
+      [aa(ix, iy - 2)],
+      [aa(ix - 1, iy - 1), aa(ix, iy - 1), aa(ix + 1, iy - 1)],
+      [
+        aa(ix - 2, iy),
+        aa(ix - 1, iy),
+        aa(ix, iy),
+        aa(ix + 1, iy),
+        aa(ix + 2, iy),
+      ],
+      [aa(ix - 1, iy + 1), aa(ix, iy + 1), aa(ix + 1, iy + 1)],
+      [aa(ix, iy + 2)],
+    )
+
+    // blended
+    alphas[i] = average(coreshadow, coreshadow, fadeshadow)
+  }
+
+  // update shadows
+  shadow.alphas = alphas
 
   return layers
 }
@@ -299,24 +346,23 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
   }
 
   let i = 0
-  const frames = memoryreadframes(board.id ?? '')
-  frames
-    .toSorted((a, b) => framerank(a) - framerank(b))
-    .forEach((frame) => {
-      const withbook = memoryreadbook(frame.book ?? '') ?? book
-      const withboard = bookreadboard(withbook, frame.board ?? '') ?? board
-      if (ispresent(withbook) && ispresent(withboard)) {
-        const view = memoryconverttogadgetlayers(
-          player,
-          i,
-          withbook,
-          withboard,
-          frame.type === FRAME_TYPE.VIEW,
-        )
-        i += view.length
-        layers.push(...view)
-      }
-    })
+  const frames = [...memoryreadframes(board.id ?? '')]
+  frames.sort((a, b) => framerank(a) - framerank(b))
+  frames.forEach((frame) => {
+    const withbook = memoryreadbook(frame.book ?? '') ?? book
+    const withboard = bookreadboard(withbook, frame.board ?? '') ?? board
+    if (ispresent(withbook) && ispresent(withboard)) {
+      const view = memoryconverttogadgetlayers(
+        player,
+        i,
+        withbook,
+        withboard,
+        frame.type === FRAME_TYPE.VIEW,
+      )
+      i += view.length
+      layers.push(...view)
+    }
+  })
 
   return layers
 }

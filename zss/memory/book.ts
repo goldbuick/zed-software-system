@@ -201,11 +201,14 @@ export function bookboardmoveobject(
   dest: PT,
 ): MAYBE_BOARD_ELEMENT {
   const object = boardobjectread(board, target?.id ?? '')
+
   // first pass clipping
   if (
     !ispresent(book) ||
     !ispresent(board) ||
     !ispresent(object) ||
+    !ispresent(object.x) ||
+    !ispresent(object.y) ||
     !ispresent(board.lookup) ||
     dest.x < 0 ||
     dest.x >= board.width ||
@@ -216,10 +219,16 @@ export function bookboardmoveobject(
     return { kind: 'edge', collision: COLLISION.SOLID, x: dest.x, y: dest.y }
   }
 
+  // second pass, are we actually trying to move ?
+  if (object.x - dest.x === 0 && object.y - dest.y === 0) {
+    // no interaction due to no movement
+    return undefined
+  }
+
+  // gather meta for move
   const idx = dest.x + dest.y * board.width
   const targetkind = bookelementkindread(book, object)
-  const targetcollision =
-    object.collision ?? targetkind?.collision ?? COLLISION.WALK
+  const targetcollision = object.collision ?? targetkind?.collision
 
   // blocked by an object
   const maybeobject = boardobjectread(board, board.lookup[idx] ?? '')
@@ -232,25 +241,25 @@ export function bookboardmoveobject(
   const mayberterrain = board.terrain[idx]
   if (ispresent(mayberterrain)) {
     const terrainkind = bookelementkindread(book, mayberterrain)
-    const terraincollision =
-      mayberterrain.collision ?? terrainkind?.collision ?? COLLISION.WALK
+    const terraincollision = mayberterrain.collision ?? terrainkind?.collision
     if (checkcollision(targetcollision, terraincollision)) {
       // for sending interaction messages
-      // does this break out from proxy object land ?
-      return { ...(mayberterrain as BOARD_ELEMENT), ...dest }
+      return { ...mayberterrain, x: dest.x, y: dest.y }
     }
   }
-
-  // todo - everything else ...
-  // now I don't know what everything else was ...
-  board.lookup[idx] = undefined
 
   // update object location
   object.x = dest.x
   object.y = dest.y
 
-  // update lookup
-  board.lookup[object.x + object.y * board.width] = object.id ?? ''
+  // if not removed, update lookup
+  if (!ispresent(object.removed)) {
+    // blank lookup
+    board.lookup[idx] = undefined
+
+    // update lookup
+    board.lookup[object.x + object.y * board.width] = object.id ?? ''
+  }
 
   // no interaction
   return undefined
@@ -292,24 +301,26 @@ export function bookboardnamedwrite(
   board.named[name].add(element?.id ?? index ?? '')
 }
 
-export function bookboardlookupwrite(
+export function bookboardobjectlookupwrite(
   book: MAYBE_BOOK,
   board: MAYBE_BOARD,
-  element: MAYBE_BOARD_ELEMENT,
+  object: MAYBE_BOARD_ELEMENT,
 ) {
   // invalid data
   if (
     !ispresent(book) ||
     !ispresent(board) ||
     !ispresent(board.lookup) ||
-    !ispresent(element?.id)
+    !ispresent(object?.id)
   ) {
     return
   }
   // update object lookup
-  const x = element.x ?? 0
-  const y = element.y ?? 0
-  board.lookup[x + y * board.width] = element.id
+  if (!ispresent(object.removed)) {
+    const x = object.x ?? 0
+    const y = object.y ?? 0
+    board.lookup[x + y * board.width] = object.id
+  }
 }
 
 export function bookboardsetlookup(book: MAYBE_BOOK, board: MAYBE_BOARD) {
