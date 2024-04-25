@@ -8,7 +8,7 @@ export type OS = {
   ids: () => string[]
   has: (id: string) => boolean
   halt: (id: string) => boolean
-  tick: (id: string, code: string) => boolean
+  tick: (id: string, timestamp: number, code: string) => boolean
   message: MESSAGE_FUNC
 }
 
@@ -42,7 +42,7 @@ export function createos() {
       }
       return !!chip
     },
-    tick(id, code) {
+    tick(id, timestamp, code) {
       let chip = chips[id]
 
       if (!ispresent(chips[id])) {
@@ -61,7 +61,7 @@ export function createos() {
         loadfirmware(chip)
       }
 
-      return !!chip?.tick()
+      return !!chip?.tick(timestamp)
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)

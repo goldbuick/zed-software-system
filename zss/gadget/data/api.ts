@@ -39,8 +39,8 @@ function resetpanel(panel: PANEL) {
   panel.text = []
 
   // invoke unobserve(s)
-  Object.values(panelshared[panel.id] ?? {}).forEach((unobserve) =>
-    unobserve?.(),
+  Object.values(panelshared[panel.id] ?? {}).forEach(
+    (unobserve) => unobserve?.(),
   )
   panelshared[panel.id] = {}
 }
@@ -175,7 +175,7 @@ export function gadgetpanel(
       case PANEL_TYPE.RIGHT:
       case PANEL_TYPE.TOP:
       case PANEL_TYPE.BOTTOM:
-      case PANEL_TYPE.SCROLL:
+      case PANEL_TYPE.SCROLL: {
         const panel: PANEL = {
           id: createguid(),
           name: name,
@@ -186,6 +186,7 @@ export function gadgetpanel(
         shared.layout.push(panel)
         shared.layoutfocus = name
         break
+      }
       default:
         // todo: raise runtime error
         // probably make a chip api to do it

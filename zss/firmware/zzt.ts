@@ -36,7 +36,7 @@ import {
   bookboardobjectsafedelete,
   bookboardelementreadname,
   bookboardsetlookup,
-  bookboardobjectdeletelookups,
+  bookboardobjectnamedlookupdelete,
 } from 'zss/memory/book'
 import { editboardwrite } from 'zss/memory/edit'
 import { FRAME_STATE, FRAME_TYPE } from 'zss/memory/frame'
@@ -303,7 +303,29 @@ export const ZZT_FIRMWARE = createfirmware({
   tock() {},
 })
   .command('become', (chip, words) => {
-    console.info(words)
+    const memory = memoryreadchip(chip.id())
+
+    // track dest
+    const dest: PT = { x: memory.target?.x ?? 0, y: memory.target?.y ?? 0 }
+
+    // read
+    const [kind] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.KIND])
+
+    // make sure lookup is created
+    bookboardsetlookup(memory.book, memory.board)
+    // make invisible
+    bookboardobjectnamedlookupdelete(memory.book, memory.board, memory.target)
+
+    // nuke self
+    if (
+      bookboardobjectsafedelete(memory.book, memory.target, chip.timestamp())
+    ) {
+      // write new element
+      editboardwrite(memory.book, memory.board, kind, dest)
+    }
+
+    // halt execution
+    chip.endofprogram()
     return 0
   })
   .command('bind', (chip, words) => {
@@ -352,18 +374,23 @@ export const ZZT_FIRMWARE = createfirmware({
       } else {
         // delete object
         if (ispresent(element.id)) {
+          // make invisible
+          bookboardobjectnamedlookupdelete(maybebook, maybeboard, element)
+          // hit with delete
           switch (maybeframe) {
             case 'edit':
-              bookboardobjectdeletelookups(maybebook, maybeboard, element)
-              boarddeleteobject(maybeboard, element.id)
+              if (!boarddeleteobject(maybeboard, element.id)) {
+                // bail
+                return
+              }
               break
             default:
-              bookboardobjectsafedelete(
-                maybebook,
-                maybeboard,
-                element,
-                chip.timestamp(),
-              )
+              if (
+                !bookboardobjectsafedelete(maybebook, element, chip.timestamp())
+              ) {
+                // bail
+                return
+              }
               break
           }
         }
@@ -400,12 +427,7 @@ export const ZZT_FIRMWARE = createfirmware({
   .command('die', (chip) => {
     // mark target for deletion
     const memory = memoryreadchip(chip.id())
-    bookboardobjectsafedelete(
-      memory.book,
-      memory.board,
-      memory.target,
-      chip.timestamp(),
-    )
+    bookboardobjectsafedelete(memory.book, memory.target, chip.timestamp())
     // halt execution
     chip.endofprogram()
     return 0
@@ -513,7 +535,7 @@ export const ZZT_FIRMWARE = createfirmware({
 
     // make sure lookup is created
     bookboardsetlookup(maybebook, maybeboard)
-
+    // write new element
     editboardwrite(maybebook, maybeboard, kind, dir)
     return 0
   })

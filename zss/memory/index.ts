@@ -191,7 +191,7 @@ export function memorytick(os: OS, timestamp: number) {
     context.target = target
     context.inputcurrent = undefined
     // run chip code
-    os.tick(id, code)
+    os.tick(id, timestamp, code)
   }
 
   // update boards / build code / run chips

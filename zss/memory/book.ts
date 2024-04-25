@@ -385,15 +385,10 @@ export function bookboardsetlookup(book: MAYBE_BOOK, board: MAYBE_BOARD) {
 
   board.lookup = lookup
   board.named = named
-
-  if (book.name === 'temp') {
-    console.info(board)
-  }
 }
 
 export function bookboardobjectsafedelete(
   book: MAYBE_BOOK,
-  board: MAYBE_BOARD,
   object: MAYBE_BOARD_ELEMENT,
   timestamp: number,
 ) {
@@ -401,33 +396,28 @@ export function bookboardobjectsafedelete(
   if (name !== 'player' && ispresent(object)) {
     // mark for cleanup
     object.removed = timestamp
-    bookboardobjectdeletelookups(book, board, object)
+    return true
   }
+  return false
 }
 
-export function bookboardobjectdeletelookups(
+export function bookboardobjectnamedlookupdelete(
   book: MAYBE_BOOK,
   board: MAYBE_BOARD,
   object: MAYBE_BOARD_ELEMENT,
 ) {
-  if (
-    ispresent(book) &&
-    ispresent(board) &&
-    ispresent(object?.id) &&
-    ispresent(object.x) &&
-    ispresent(object.y)
-  ) {
+  if (ispresent(book) && ispresent(board) && ispresent(object?.id)) {
     // remove from lookup
-    if (ispresent(board.lookup)) {
+    if (ispresent(board.lookup) && ispresent(object.x) && ispresent(object.y)) {
       const index = object.x + object.y * board.width
-      if (board.lookup?.[index] === object.id) {
+      if (board.lookup[index] === object.id) {
         delete board.lookup[index]
       }
     }
 
     // remove from named
     const name = bookboardelementreadname(book, object)
-    if (ispresent(board.named?.[name])) {
+    if (ispresent(board.named?.[name]) && ispresent(object.id)) {
       board.named[name].delete(object.id)
     }
   }

@@ -59,12 +59,9 @@ export type CHIP = {
   move: (wait: boolean, ...words: WORD[]) => WORD_VALUE
   command: (...words: WORD[]) => WORD_VALUE
   if: (...words: WORD[]) => WORD_VALUE
-  // try: (...words: WORD[]) => WORD_VALUE
-  // take: (...words: WORD[]) => WORD_VALUE
-  // give: (...words: WORD[]) => WORD_VALUE
-  repeatStart: (index: number, ...words: WORD[]) => void
+  repeatstart: (index: number, ...words: WORD[]) => void
   repeat: (index: number) => boolean
-  readStart: (index: number, name: WORD) => void
+  readstart: (index: number, name: WORD) => void
   read: (index: number, ...words: WORD[]) => boolean
   or: (...words: WORD[]) => WORD_VALUE
   and: (...words: WORD[]) => WORD_VALUE
@@ -400,7 +397,7 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       return result
     },
-    repeatStart(index, ...words) {
+    repeatstart(index, ...words) {
       const read = chipreadcontext(chip, words)
       const [value, ii] = readargs(read, 0, [ARG_TYPE.NUMBER])
 
@@ -412,15 +409,15 @@ export function createchip(id: string, build: GeneratorBuild) {
       repeats[index] = count - 1
 
       const result = count > 0
-      const repeatCmd = repeatscommand[index]
+      const repeatcmd = repeatscommand[index]
 
-      if (result && repeatCmd) {
-        chip.command(...repeatCmd)
+      if (result && repeatcmd) {
+        chip.command(...repeatcmd)
       }
 
       return result
     },
-    readStart(index, name) {
+    readstart(index, name) {
       if (!isstring(name)) {
         // todo throw error
         return

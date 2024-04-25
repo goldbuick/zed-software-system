@@ -319,15 +319,15 @@ function transformNode(ast: CodeNode): SourceNode {
       // note this is a repeat counter
       // id: number => number of iterations left
       // and if zero, re-eval the given words to calc number of repeats
-      // repeatStart should naturally reset the repeat counter before looping
+      // repeatstart should naturally reset the repeat counter before looping
       const source = write(ast, [
-        writeApi(ast, 'repeatStart', [
+        writeApi(ast, 'repeatstart', [
           `${context.internal}`,
           ...transformNodes(ast.words),
         ]),
         ';\nwhile (',
         writeApi(ast, 'repeat', [`${context.internal}`]),
-        `) {\n`,
+        `) {\n         ${STOP_CODE} ${JUMP_CODE}\n`,
       ])
       context.internal += 1
 

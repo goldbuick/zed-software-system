@@ -5,6 +5,7 @@ import { createcodepage } from 'zss/memory/codepage'
 
 import { randomInteger } from '../mapping/number'
 
+import blonkcode from './blonk.txt?raw'
 import playercode from './player.txt?raw'
 import spincode from './spin.txt?raw'
 
@@ -20,6 +21,13 @@ export const BIOS = createbook('BIOS', [
       }
       return board
     }),
+  }),
+  createcodepage(blonkcode, {
+    object: {
+      char: 15,
+      color: COLOR.WHITE,
+      bg: COLOR.BLACK,
+    },
   }),
   createcodepage(playercode, {
     object: {
