@@ -612,11 +612,19 @@ export const ZZT_FIRMWARE = createfirmware({
   })
   .command('shoot', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [dir, maybekind] = readargs({ ...memory, chip, words }, 0, [
+
+    // peek at optional frame type
+    const maybeframe = isstring(words[0]) ? words[0] : undefined
+
+    // read direction + what to shoot
+    const ii = ispresent(maybeframe) ? 1 : 0
+    const [dir, maybekind] = readargs({ ...memory, chip, words }, ii, [
       ARG_TYPE.DIR,
       ARG_TYPE.MAYBE_KIND,
     ])
-    console.info({ dir, maybekind }) // todo
+
+    console.info({ maybeframe, dir, maybekind }) // todo
+
     return 0
   })
   .command('take', (chip, words) => {

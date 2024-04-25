@@ -37,6 +37,10 @@
   #clear blink
 #endif
 
+' #if inputshoot do
+'   #shoot inputshoot
+' #endif
+
 #if inputmove do
   #set playermove inputmove
   #if inputalt do
