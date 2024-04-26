@@ -43,14 +43,12 @@
     #shoot playermove
   #else do
     #if inputalt do
-      #if drawing is blue do
-        #repeat 10 do
-          ?playermove
+      #repeat 10 do
+        ?playermove
+        #if drawing is blue do
           #put edit idle brown ondkpurple pick wall wall2
-        #endrepeat
-      #else do
-        ?10 playermove
-      #endif
+        #endif
+      #endrepeat
     #else do 
       ?playermove
       #if drawing is blue put edit idle brown ondkpurple pick wall wall2

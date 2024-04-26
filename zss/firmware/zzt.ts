@@ -492,39 +492,18 @@ export const ZZT_FIRMWARE = createfirmware({
     return result
   })
   .command('go', (chip, words) => {
-    // bail if no target
     const memory = memoryreadchip(chip.id())
     if (!ispresent(memory.target)) {
-      return 0
+      // if blocked, return 1
+      return 1
     }
 
-    // tracking
-    let i = 0
-    let steps = 1
-
-    // attempt to read number of times to repeat direction
-    const [maybesteps, ii] = readexpr({ ...memory, chip, words }, 0)
-    if (isnumber(maybesteps)) {
-      i = ii
-      steps = clamp(Math.round(maybesteps), 1, 1024)
-    }
-
-    // attempt to step given number of times
-    while (steps > 0) {
-      const [dest] = readargs({ ...memory, chip, words }, i, [ARG_TYPE.DIR])
-      if (moveobject(chip, memory.book, memory.board, memory.target, dest)) {
-        // keep moving
-        --steps
-      } else {
-        // bail
-        steps = -1
-      }
-    }
+    // attempt to move
+    const [dest] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.DIR])
+    moveobject(chip, memory.book, memory.board, memory.target, dest)
 
     // if blocked, return 1
-    const tx = memory.target.x
-    const ty = memory.target.y
-    return memory.target.x === tx && memory.target.y === ty ? 1 : 0
+    return memory.target.x !== dest.x && memory.target.y !== dest.y ? 1 : 0
   })
   .command('idle', (chip) => {
     chip.yield()
@@ -742,7 +721,7 @@ export const ZZT_FIRMWARE = createfirmware({
       ARG_TYPE.DIR,
       ARG_TYPE.MAYBE_KIND,
     ])
-    // console.info({ dir, maybekind }) // todo
+    console.info({ dir, maybekind }) // todo
     return 0
   })
   .command('try', (chip, words) => {
@@ -750,7 +729,7 @@ export const ZZT_FIRMWARE = createfirmware({
     const [, ii] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.DIR])
 
     // try and move
-    const result = chip.command('go', ...words.slice(0, ii))
+    const result = chip.command('go', ...words)
     if (result && ii < words.length) {
       chip.command(...words.slice(ii))
     }
