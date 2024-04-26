@@ -716,13 +716,7 @@ export const ZZT_FIRMWARE = createfirmware({
     return 0
   })
   .command('throwstar', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [dir, maybekind] = readargs({ ...memory, chip, words }, 0, [
-      ARG_TYPE.DIR,
-      ARG_TYPE.MAYBE_KIND,
-    ])
-    console.info({ dir, maybekind }) // todo
-    return 0
+    return chip.command('shoot', ...words, 'star') ? 1 : 0
   })
   .command('try', (chip, words) => {
     const memory = memoryreadchip(chip.id())

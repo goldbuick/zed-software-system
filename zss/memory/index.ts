@@ -10,6 +10,7 @@ import {
   createtiles,
 } from 'zss/gadget/data/types'
 import { average, unique } from 'zss/mapping/array'
+import { clamp } from 'zss/mapping/number'
 import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
@@ -265,7 +266,7 @@ function memoryconverttogadgetlayers(
     // plot shadow
     if (sprite.bg === COLOR.SHADOW) {
       sprite.bg = COLOR.CLEAR
-      shadow.alphas[lx + ly * boardwidth] = 1.0
+      shadow.alphas[lx + ly * boardwidth] = 0.5
     }
 
     // inform control layer where to focus
@@ -284,45 +285,69 @@ function memoryconverttogadgetlayers(
     return shadow.alphas[x + y * board.width]
   }
 
+  const weights = [
+    [1, 1, 1, 1, 1],
+    [1, 3, 3, 3, 1],
+    [1, 3, 13, 3, 1],
+    [1, 3, 3, 3, 1],
+    [1, 1, 1, 1, 1],
+  ].flat()
+
   const alphas = new Array<number>(shadow.alphas.length)
   for (let i = 0; i < shadow.alphas.length; ++i) {
-    const ix = i % board.width
-    const iy = Math.floor(i / board.width)
+    // coords
+    const cx = i % board.width
+    const cy = Math.floor(i / board.width)
 
-    if (aa(ix, iy) ?? 0 > 0.99) {
-      alphas[i] = 0.5
-      continue
-    }
-
-    // core
-    const coreshadow = average(
-      [aa(ix, iy - 1)],
-      [aa(ix - 1, iy), aa(ix, iy), aa(ix + 1, iy)],
-      [aa(ix, iy + 1)],
-    )
-
-    // fade
-    const fadeshadow = average(
-      [aa(ix, iy - 2)],
-      [aa(ix - 1, iy - 1), aa(ix, iy - 1), aa(ix + 1, iy - 1)],
+    // weighted average
+    const values = [
       [
-        aa(ix - 2, iy),
-        aa(ix - 1, iy),
-        aa(ix, iy),
-        aa(ix + 1, iy),
-        aa(ix + 2, iy),
+        aa(cx - 2, cy - 2),
+        aa(cx - 1, cy - 2),
+        aa(cx, cy - 2),
+        aa(cx + 1, cy - 2),
+        aa(cx + 2, cy - 2),
       ],
-      [aa(ix - 1, iy + 1), aa(ix, iy + 1), aa(ix + 1, iy + 1)],
-      [aa(ix, iy + 2)],
-    )
-
-    // blended
-    alphas[i] = average(coreshadow, coreshadow, fadeshadow)
+      [
+        aa(cx - 2, cy - 1),
+        aa(cx - 1, cy - 1),
+        aa(cx, cy - 1),
+        aa(cx + 1, cy - 1),
+        aa(cx + 2, cy - 1),
+      ],
+      [
+        aa(cx - 2, cy),
+        aa(cx - 1, cy),
+        aa(cx, cy),
+        aa(cx + 1, cy),
+        aa(cx + 2, cy),
+      ],
+      [
+        aa(cx - 2, cy + 1),
+        aa(cx - 1, cy + 1),
+        aa(cx, cy + 1),
+        aa(cx + 1, cy + 1),
+        aa(cx + 2, cy + 1),
+      ],
+      [
+        aa(cx - 2, cy + 2),
+        aa(cx - 1, cy + 2),
+        aa(cx, cy + 2),
+        aa(cx + 1, cy + 2),
+        aa(cx + 2, cy + 2),
+      ],
+    ]
+      .flat()
+      .map((value, i) => (ispresent(value) ? value * weights[i] : undefined))
+      .filter(ispresent)
+    // final shade
+    alphas[i] = clamp(average(values), 0, 1)
   }
 
   // update shadows
   shadow.alphas = alphas
 
+  // return result
   return layers
 }
 
