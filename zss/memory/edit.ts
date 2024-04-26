@@ -36,6 +36,29 @@ export function editelementstatsafewrite(
   }
 }
 
+export function editboardwriteheadlessobject(
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
+  kind: MAYBE<STR_KIND>,
+  dest: PT,
+) {
+  if (ispresent(book) && ispresent(board) && ispresent(kind)) {
+    const [name, maybecolor] = kind
+    const maybeobject = bookreadobject(book, name)
+    if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
+      // create new object element
+      const object = boardobjectcreatefromkind(board, dest, name)
+      // update color
+      boardelementapplycolor(object, maybecolor)
+      // update named (terrain & objects)
+      bookboardnamedwrite(book, board, object)
+      // return result
+      return object
+    }
+  }
+  return undefined
+}
+
 export function editboardwrite(
   book: MAYBE_BOOK,
   board: MAYBE_BOARD,
@@ -44,10 +67,11 @@ export function editboardwrite(
 ): MAYBE_BOARD_ELEMENT {
   if (ispresent(book) && ispresent(board) && ispresent(kind)) {
     const [name, maybecolor] = kind
+
     const maybeterrain = bookreadterrain(book, name)
     if (ispresent(maybeterrain)) {
       // create new terrain element
-      const terrain = boardterrainsetfromkind(board, dest.x, dest.y, name)
+      const terrain = boardterrainsetfromkind(board, dest, name)
       // update color
       boardelementapplycolor(terrain, maybecolor)
       // update named (terrain & objects)
@@ -59,7 +83,7 @@ export function editboardwrite(
     const maybeobject = bookreadobject(book, name)
     if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
       // create new object element
-      const object = boardobjectcreatefromkind(board, dest.x, dest.y, name)
+      const object = boardobjectcreatefromkind(board, dest, name)
       // update color
       boardelementapplycolor(object, maybecolor)
       // update lookup (only objects)

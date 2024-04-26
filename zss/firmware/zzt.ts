@@ -28,6 +28,7 @@ import {
   boarddeleteobject,
   boardelementread,
   boardfindplayer,
+  boardterrainsetfromkind,
 } from 'zss/memory/board'
 import {
   MAYBE_BOOK,
@@ -41,7 +42,11 @@ import {
   bookboardobjectnamedlookupdelete,
   bookelementkindread,
 } from 'zss/memory/book'
-import { editboardwrite, editelementstatsafewrite } from 'zss/memory/edit'
+import {
+  editboardwrite,
+  editboardwriteheadlessobject,
+  editelementstatsafewrite,
+} from 'zss/memory/edit'
 import { FRAME_STATE, FRAME_TYPE } from 'zss/memory/frame'
 
 import {
@@ -188,16 +193,12 @@ function moveobject(
   const blocked = bookboardmoveobject(book, board, target, dest)
   if (ispresent(blocked)) {
     sendinteraction(chip, blocked, chip.id(), 'thud')
-    switch (target.kind) {
-      case 'player':
-        sendinteraction(chip, chip.id(), blocked, 'touch')
-        break
-      case 'bullet':
-        sendinteraction(chip, chip.id(), blocked, 'shot')
-        break
-      default:
-        sendinteraction(chip, chip.id(), blocked, 'bump')
-        break
+    if (target.kind === 'player') {
+      sendinteraction(chip, chip.id(), blocked, 'touch')
+    } else if (target.collision === COLLISION.BULLET) {
+      sendinteraction(chip, chip.id(), blocked, 'shot')
+    } else {
+      sendinteraction(chip, chip.id(), blocked, 'bump')
     }
   }
   return !ispresent(blocked)
@@ -623,24 +624,35 @@ export const ZZT_FIRMWARE = createfirmware({
 
     // optional prefix of frame target
     const [maybeframe, ii] = valuepeekframename(words[0], 0)
+
     // read direction + what to shoot
     const [maybedir, maybekind] = readargs({ ...memory, chip, words }, ii, [
       ARG_TYPE.DIR,
       ARG_TYPE.MAYBE_KIND,
     ])
 
+    // __where__ are we shooting
+    const { maybebook, maybeboard } = bookboardframeread(
+      memory.book,
+      memory.board,
+      maybeframe,
+    )
+
     // this feels a little silly
     const dir = dirfrompts(memory.target, maybedir)
     const step = ptapplydir({ x: 0, y: 0 }, dir)
     const start = ptapplydir({ x: memory.target.x, y: memory.target.y }, dir)
 
+    // make sure lookup is created
+    bookboardsetlookup(maybebook, maybeboard)
+
     // check starting point
-    let blocked = boardelementread(memory.board, start)
+    let blocked = boardelementread(maybeboard, start)
 
     // check for terrain that doesn't block bullets
     if (ispresent(blocked) && !ispresent(blocked.id)) {
-      const selfkind = bookelementkindread(memory.book, memory.target)
-      const blockedkind = bookelementkindread(memory.book, blocked)
+      const selfkind = bookelementkindread(maybebook, memory.target)
+      const blockedkind = bookelementkindread(maybebook, blocked)
       // found terrain
       if (
         !checkcollision(
@@ -654,18 +666,31 @@ export const ZZT_FIRMWARE = createfirmware({
 
     if (ispresent(blocked)) {
       // blocked by object, send message
-      // and start bullet in hidden-removed mode
-      console.info(blocked)
+      if (ispresent(blocked.id)) {
+        sendinteraction(chip, chip.id(), blocked, 'shot')
+      } else if (blocked.destructible) {
+        // delete terrain
+        boardterrainsetfromkind(maybeboard, start, 'empty')
+      }
+
+      // and start bullet in headless mode
+      const bullet = editboardwriteheadlessobject(
+        maybebook,
+        maybeboard,
+        maybekind ?? ['bullet'],
+        start,
+      )
+
+      // success ! start with thud message
+      if (ispresent(bullet)) {
+        bullet.collision = COLLISION.BULLET
+        sendinteraction(chip, blocked, chip.id(), 'thud')
+      }
     } else {
-      // good to go! create bullet, and setup with walk
-
-      // make sure lookup is created
-      bookboardsetlookup(memory.book, memory.board)
-
       // write new element
       const bullet = editboardwrite(
-        memory.book,
-        memory.board,
+        maybebook,
+        maybeboard,
         maybekind ?? ['bullet'],
         start,
       )

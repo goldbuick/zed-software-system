@@ -104,17 +104,19 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
   const parse = tokenize(codepage.code)
 
   // extract @stat lines
+  let first = true
   for (let i = 0; i < parse.tokens.length; ++i) {
     const token = parse.tokens[i]
     if (token.tokenType === Stat) {
       const [maybetype, ...maybevalues] = token.image.slice(1).split(' ')
+      const lmaybetype = maybetype.toLowerCase()
       const maybename = maybevalues.join(' ')
+      const lmaybename = maybename.toLowerCase()
 
-      switch (maybetype.toLowerCase()) {
+      switch (lmaybetype) {
         case 'stat': {
           // stat content is prefixed with hyperlink !
           const stat = tokenize(`!${maybename}`)
-          // console.info('ttttt', stat)
           if (stat.tokens.length) {
             tokenstostats(codepage, stat.tokens)
           }
@@ -122,35 +124,42 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
         }
         case 'flags':
           // simple space separated local flag names
-          codepage.stats.flags = maybename
+          codepage.stats.flags = lmaybename
           break
         case 'func':
           codepage.stats.type = CODE_PAGE_TYPE.FUNC
-          codepage.stats.name = maybename
+          codepage.stats.name = lmaybename
           break
         case 'board':
           codepage.stats.type = CODE_PAGE_TYPE.BOARD
-          codepage.stats.name = maybename
+          codepage.stats.name = lmaybename
           break
         case 'object':
           codepage.stats.type = CODE_PAGE_TYPE.OBJECT
-          codepage.stats.name = maybename
+          codepage.stats.name = lmaybename
           break
         case 'terrain':
           codepage.stats.type = CODE_PAGE_TYPE.TERRAIN
-          codepage.stats.name = maybename
+          codepage.stats.name = lmaybename
           break
         case 'charset':
           codepage.stats.type = CODE_PAGE_TYPE.CHARSET
-          codepage.stats.name = maybename
+          codepage.stats.name = lmaybename
           break
         case 'palette':
           codepage.stats.type = CODE_PAGE_TYPE.PALETTE
-          codepage.stats.name = maybename
+          codepage.stats.name = lmaybename
           break
         default:
-          codepage.stats.type = CODE_PAGE_TYPE.OBJECT
-          codepage.stats.name = [maybetype, ...maybevalues].join(' ')
+          if (first) {
+            // first default is object
+            first = false
+            codepage.stats.type = CODE_PAGE_TYPE.OBJECT
+            codepage.stats.name = [lmaybetype, ...maybevalues].join(' ')
+          } else {
+            // second default is boolean stats
+            codepage.stats[lmaybetype] = 1
+          }
           break
       }
     }

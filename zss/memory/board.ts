@@ -64,6 +64,7 @@ export type BOARD_ELEMENT = {
   category?: CATEGORY
   kinddata?: BOARD_ELEMENT
   kindcode?: string
+  headless?: boolean
   removed?: number
 }
 
@@ -230,20 +231,18 @@ export function boardobjectcreate(
 
 export function boardterrainsetfromkind(
   board: MAYBE_BOARD,
-  x: number,
-  y: number,
+  pt: PT,
   kind: string,
 ): MAYBE_BOARD_ELEMENT {
-  return boardsetterrain(board, { x, y, kind })
+  return boardsetterrain(board, { ...pt, kind })
 }
 
 export function boardobjectcreatefromkind(
   board: MAYBE_BOARD,
-  x: number,
-  y: number,
+  pt: PT,
   kind: string,
 ): MAYBE_BOARD_ELEMENT {
-  return boardobjectcreate(board, { x, y, kind })
+  return boardobjectcreate(board, { ...pt, kind })
 }
 
 export function boardobjectread(

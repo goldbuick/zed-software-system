@@ -51,6 +51,13 @@ export const BIOS = createbook('BIOS', [
       bg: COLOR.CLEAR,
     },
   }),
+  createcodepage('@terrain bimp\n@destructible', {
+    terrain: {
+      char: 236,
+      color: COLOR.WHITE,
+      bg: COLOR.DKGREEN,
+    },
+  }),
   createcodepage('@terrain field', {
     terrain: {
       char: 176,
