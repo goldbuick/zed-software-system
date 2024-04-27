@@ -25,6 +25,7 @@ import {
 import {
   BOARD_ELEMENT,
   MAYBE_BOARD,
+  MAYBE_BOARD_ELEMENT,
   boarddeleteobject,
   boardelementread,
   boardfindplayer,
@@ -183,6 +184,22 @@ function sendinteraction(
   }
 }
 
+function bonkelement(
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
+  blocked: MAYBE_BOARD_ELEMENT,
+  dest: PT,
+) {
+  if (ispresent(blocked?.id)) {
+    // mark headless
+    blocked.headless = true
+    // drop from luts
+    bookboardobjectnamedlookupdelete(book, board, blocked)
+  } else {
+    boardterrainsetfromkind(board, dest, 'empty')
+  }
+}
+
 function moveobject(
   chip: CHIP,
   book: MAYBE_BOOK,
@@ -203,14 +220,7 @@ function moveobject(
     // delete destructible elements
     const blockedkind = bookelementkindread(book, blocked)
     if (blocked.destructible ?? blockedkind?.destructible) {
-      if (ispresent(blocked.id)) {
-        // mark headless
-        blocked.headless = true
-        // drop from luts
-        bookboardobjectnamedlookupdelete(book, board, blocked)
-      } else {
-        boardterrainsetfromkind(board, dest, 'empty')
-      }
+      bonkelement(book, board, blocked, dest)
     }
 
     return false
@@ -690,9 +700,12 @@ export const ZZT_FIRMWARE = createfirmware({
       // blocked by object, send message
       if (ispresent(blocked.id)) {
         sendinteraction(chip, chip.id(), blocked, 'shot')
-      } else if (blocked.destructible) {
-        // delete terrain
-        boardterrainsetfromkind(maybeboard, start, 'empty')
+      }
+
+      // delete destructible elements
+      const blockedkind = bookelementkindread(maybebook, blocked)
+      if (blocked.destructible ?? blockedkind?.destructible) {
+        bonkelement(maybebook, maybeboard, blocked, start)
       }
 
       // and start bullet in headless mode
