@@ -205,7 +205,11 @@ export function boardsetterrain(
   ) {
     return undefined
   }
-  board.terrain[from.x + from.y * board.width] = from
+
+  const terrain = { ...from }
+  const index = from.x + from.y * board.width
+  board.terrain[index] = terrain
+
   return from
 }
 

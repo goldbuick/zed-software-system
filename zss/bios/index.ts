@@ -1,5 +1,10 @@
 import { COLLISION, COLOR } from 'zss/firmware/wordtypes'
-import { boardcreate, boardobjectcreate } from 'zss/memory/board'
+import { pick } from 'zss/mapping/array'
+import {
+  boardcreate,
+  boardobjectcreatefromkind,
+  boardterrainsetfromkind,
+} from 'zss/memory/board'
 import { createbook } from 'zss/memory/book'
 import { createcodepage } from 'zss/memory/codepage'
 
@@ -14,11 +19,20 @@ export const BIOS = createbook('BIOS', [
   createcodepage('@board title', {
     board: boardcreate((board) => {
       for (let i = 0; i < 32; i++) {
-        boardobjectcreate(board, {
+        const dest = {
           x: randomInteger(0, board.width - 1),
           y: randomInteger(0, board.height - 1),
-          kind: 'spin',
-        })
+        }
+        boardobjectcreatefromkind(board, dest, 'spin')
+      }
+      for (let i = 0; i < board.width; ++i) {
+        for (let ii = 0; ii < 5; ++ii) {
+          boardterrainsetfromkind(
+            board,
+            { x: i, y: 3 + ii },
+            pick('bimp', 'bimp', 'bimp', 'bomp'),
+          )
+        }
       }
       return board
     }),
@@ -56,6 +70,15 @@ export const BIOS = createbook('BIOS', [
       char: 236,
       color: COLOR.WHITE,
       bg: COLOR.DKGREEN,
+      collision: COLLISION.SOLID,
+    },
+  }),
+  createcodepage('@terrain bomp', {
+    terrain: {
+      char: 236,
+      color: COLOR.YELLOW,
+      bg: COLOR.DKGREEN,
+      collision: COLLISION.SOLID,
     },
   }),
   createcodepage('@terrain field', {

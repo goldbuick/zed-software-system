@@ -241,10 +241,10 @@ function memoryconverttogadgetlayers(
     }
   })
 
-  const withobjects = board.objects ?? {}
-  Object.values(withobjects).forEach((object) => {
-    // skip if marked for removal
-    if (ispresent(object.removed)) {
+  const boardobjects = board.objects ?? {}
+  Object.values(boardobjects).forEach((object) => {
+    // skip if marked for removal or headless
+    if (ispresent(object.removed) || ispresent(object.headless)) {
       return
     }
 
@@ -287,9 +287,9 @@ function memoryconverttogadgetlayers(
 
   const weights = [
     [1, 1, 1, 1, 1],
-    [1, 3, 3, 3, 1],
-    [1, 3, 13, 3, 1],
-    [1, 3, 3, 3, 1],
+    [1, 3, 5, 3, 1],
+    [1, 5, 12, 5, 1],
+    [1, 3, 5, 3, 1],
     [1, 1, 1, 1, 1],
   ].flat()
 

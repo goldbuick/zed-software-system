@@ -48,10 +48,14 @@ export function editboardwriteheadlessobject(
     if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
       // create new object element
       const object = boardobjectcreatefromkind(board, dest, name)
-      // update color
-      boardelementapplycolor(object, maybecolor)
-      // update named (terrain & objects)
-      bookboardnamedwrite(book, board, object)
+      if (ispresent(object)) {
+        // mark as headless
+        object.headless = true
+        // update color
+        boardelementapplycolor(object, maybecolor)
+        // update named (terrain & objects)
+        bookboardnamedwrite(book, board, object)
+      }
       // return result
       return object
     }
@@ -75,7 +79,8 @@ export function editboardwrite(
       // update color
       boardelementapplycolor(terrain, maybecolor)
       // update named (terrain & objects)
-      bookboardnamedwrite(book, board, terrain, dest.x + dest.y * board.width)
+      const index = dest.x + dest.y * board.width
+      bookboardnamedwrite(book, board, terrain, index)
       // return result
       return terrain
     }

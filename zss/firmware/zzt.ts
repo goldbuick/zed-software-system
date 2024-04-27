@@ -200,8 +200,22 @@ function moveobject(
     } else {
       sendinteraction(chip, chip.id(), blocked, 'bump')
     }
+    // delete destructible elements
+    const blockedkind = bookelementkindread(book, blocked)
+    if (blocked.destructible ?? blockedkind?.destructible) {
+      if (ispresent(blocked.id)) {
+        // mark headless
+        blocked.headless = true
+        // drop from luts
+        bookboardobjectnamedlookupdelete(book, board, blocked)
+      } else {
+        boardterrainsetfromkind(board, dest, 'empty')
+      }
+    }
+
+    return false
   }
-  return !ispresent(blocked)
+  return true
 }
 
 function valuepeekframename(
@@ -327,7 +341,13 @@ export const ZZT_FIRMWARE = createfirmware({
     }
   },
   tick() {},
-  tock() {},
+  tock(chip) {
+    const memory = memoryreadchip(chip.id())
+    // headless only gets a single tick to do its magic
+    if (memory.target?.headless) {
+      chip.command('die')
+    }
+  },
 })
   .command('become', (chip, words) => {
     const memory = memoryreadchip(chip.id())
@@ -448,8 +468,10 @@ export const ZZT_FIRMWARE = createfirmware({
   })
   .command('die', (chip) => {
     const memory = memoryreadchip(chip.id())
-    // drop from lookups
-    bookboardobjectnamedlookupdelete(memory.book, memory.board, memory.target)
+    // drop from lookups if not headless
+    if (memory.target?.headless) {
+      bookboardobjectnamedlookupdelete(memory.book, memory.board, memory.target)
+    }
     // mark target for deletion
     bookboardobjectsafedelete(memory.book, memory.target, chip.timestamp())
     // halt execution

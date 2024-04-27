@@ -1,7 +1,7 @@
 import { IToken } from 'chevrotain'
 import { WORD_VALUE } from 'zss/chip'
 import { BITMAP } from 'zss/gadget/data/bitmap'
-import { Newline, Stat, tokenize } from 'zss/lang/lexer'
+import { Stat, tokenize } from 'zss/lang/lexer'
 import { createguid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
@@ -91,11 +91,32 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
   // console.info(codepage.stats)
 }
 
+export function codepagereadstatdefaults(
+  codepage: MAYBE_CODE_PAGE,
+): CODE_PAGE_STATS {
+  const stats = { ...codepagereadstats(codepage) }
+
+  // extract defaults
+  Object.keys(stats).forEach((key) => {
+    switch (key) {
+      case 'type':
+      case 'name':
+        // trim
+        delete stats[key]
+        break
+    }
+  })
+
+  // send it
+  return stats
+}
+
 export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
   if (!ispresent(codepage)) {
     return {}
   }
 
+  // cached results !
   if (ispresent(codepage.stats?.type)) {
     return codepage.stats
   }
@@ -152,9 +173,7 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
           break
         default:
           if (first) {
-            // first default is object
-            first = false
-            codepage.stats.type = CODE_PAGE_TYPE.OBJECT
+            // first default is name
             codepage.stats.name = [lmaybetype, ...maybevalues].join(' ')
           } else {
             // second default is boolean stats
@@ -162,6 +181,8 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
           }
           break
       }
+
+      first = false
     }
   }
 
@@ -170,6 +191,7 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
     codepage.stats.type = CODE_PAGE_TYPE.OBJECT
   }
 
+  // results !
   return codepage.stats
 }
 

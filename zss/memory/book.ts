@@ -20,6 +20,7 @@ import {
   CODE_PAGE_TYPE_MAP,
   MAYBE_CODE_PAGE,
   codepagereadname,
+  codepagereadstatdefaults,
   codepagereadtype,
 } from './codepage'
 
@@ -114,34 +115,42 @@ export function bookelementkindread(
 
 export function bookreadobject(
   book: MAYBE_BOOK,
-  object: MAYBE_STRING,
+  maybeobject: MAYBE_STRING,
 ): MAYBE_BOARD_ELEMENT {
-  const withobject = object ?? ''
-  const page = bookreadcodepage(book, CODE_PAGE_TYPE.OBJECT, withobject)
-  const data = bookreadcodepagedata(book, CODE_PAGE_TYPE.OBJECT, withobject)
-  return !ispresent(page)
-    ? undefined
-    : {
-        ...data,
-        name: withobject,
-        code: page.code,
-      }
+  const object = maybeobject ?? ''
+  const page = bookreadcodepage(book, CODE_PAGE_TYPE.OBJECT, object)
+  const data = bookreadcodepagedata(book, CODE_PAGE_TYPE.OBJECT, object)
+  if (ispresent(page)) {
+    const stats = codepagereadstatdefaults(page)
+    return {
+      ...data,
+      ...stats,
+      name: object,
+      code: page.code,
+    }
+  } else {
+    return undefined
+  }
 }
 
 export function bookreadterrain(
   book: MAYBE_BOOK,
-  terrain: MAYBE_STRING,
+  maybeterrain: MAYBE_STRING,
 ): MAYBE_BOARD_ELEMENT {
-  const withterrain = terrain ?? ''
-  const page = bookreadcodepage(book, CODE_PAGE_TYPE.TERRAIN, withterrain)
-  const data = bookreadcodepagedata(book, CODE_PAGE_TYPE.TERRAIN, withterrain)
-  return !ispresent(page)
-    ? undefined
-    : {
-        ...data,
-        name: withterrain,
-        code: page.code,
-      }
+  const terrain = maybeterrain ?? ''
+  const page = bookreadcodepage(book, CODE_PAGE_TYPE.TERRAIN, terrain)
+  const data = bookreadcodepagedata(book, CODE_PAGE_TYPE.TERRAIN, terrain)
+  if (ispresent(page)) {
+    const stats = codepagereadstatdefaults(page)
+    return {
+      ...data,
+      ...stats,
+      name: terrain,
+      code: page.code,
+    }
+  } else {
+    return undefined
+  }
 }
 
 export function bookreadboard(book: MAYBE_BOOK, board: string): MAYBE_BOARD {
@@ -254,7 +263,7 @@ export function bookboardmoveobject(
 
   // if not removed, update lookup
   if (!ispresent(object.removed)) {
-    // blank lookup
+    // blank current lookup
     board.lookup[idx] = undefined
 
     // update lookup
@@ -269,11 +278,10 @@ export function bookboardelementreadname(
   book: MAYBE_BOOK,
   element: MAYBE_BOARD_ELEMENT,
 ) {
-  if (ispresent(element?.x) && ispresent(element.y) && ispresent(element.id)) {
-    const kind = bookelementkindread(book, element)
+  const kind = bookelementkindread(book, element)
+  if (ispresent(element?.id) && ispresent(element.x) && ispresent(element.y)) {
     return (element.name ?? kind?.name ?? 'object').toLowerCase()
   }
-  const kind = bookelementkindread(book, element)
   return (element?.name ?? kind?.name ?? 'terrain').toLowerCase()
 }
 
@@ -419,7 +427,6 @@ export function bookboardobjectnamedlookupdelete(
         delete board.lookup[index]
       }
     }
-
     // remove from named
     const name = bookboardelementreadname(book, object)
     if (ispresent(board.named?.[name]) && ispresent(object.id)) {
