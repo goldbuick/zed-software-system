@@ -55,7 +55,6 @@ import {
   collisionconsts,
   colorconsts,
   dirconsts,
-  readexpr,
   readargs,
   ARG_TYPE,
   readstrkindname,

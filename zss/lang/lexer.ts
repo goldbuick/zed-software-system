@@ -238,6 +238,7 @@ function createTokenSet(primary: TokenType[]) {
   return [
     // primary tokens
     ...primary,
+    NumberLiteral,
     // expressions
     IsEq,
     IsNotEq,
@@ -264,7 +265,6 @@ function createTokenSet(primary: TokenType[]) {
     // content
     StringLiteralDouble,
     StringLiteral,
-    NumberLiteral,
   ]
 }
 

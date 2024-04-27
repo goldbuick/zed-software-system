@@ -25,12 +25,12 @@ export const BIOS = createbook('BIOS', [
         }
         boardobjectcreatefromkind(board, dest, 'spin')
       }
-      for (let i = 0; i < board.width; ++i) {
-        for (let ii = 0; ii < 5; ++ii) {
+      for (let ix = 0; ix < board.width; ++ix) {
+        for (let iy = 5; iy < 15; ++iy) {
           boardterrainsetfromkind(
             board,
-            { x: i, y: 3 + ii },
-            pick('bimp', 'bimp', 'bimp', 'bomp'),
+            { x: ix, y: iy },
+            pick('bimp', 'bimp', 'bimp', 'bimp', 'bimp', 'bomp'),
           )
         }
       }

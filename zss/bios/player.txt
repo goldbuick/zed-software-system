@@ -40,15 +40,20 @@
 #if inputmove do
   #set playermove inputmove
   #if inputshift do
-    #shoot playermove
+    ?at 5 5
   #else do
     #if inputalt do
-      #repeat 10 do
-        ?playermove
-        #if drawing is blue do
+      #if drawing is blue do
+        #repeat 10 do
+          ?playermove
           #put edit idle brown ondkpurple pick wall wall2
-        #endif
-      #endrepeat
+        #endrepeat
+      #else do
+        #if playermove is n ?by 0 -10
+        #if playermove is e ?by 10 0
+        #if playermove is w ?by -10 0
+        #if playermove is s ?by 0 10
+      #endif
     #else do 
       ?playermove
       #if drawing is blue put edit idle brown ondkpurple pick wall wall2

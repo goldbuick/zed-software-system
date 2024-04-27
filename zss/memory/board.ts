@@ -13,10 +13,18 @@ import {
   readstrbg,
   ptapplydir,
   COLLISION,
+  mapstrdirtoconst,
 } from 'zss/firmware/wordtypes'
 import { pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
-import { MAYBE, MAYBE_STRING, ispresent, noop } from 'zss/mapping/types'
+import { clamp } from 'zss/mapping/number'
+import {
+  MAYBE,
+  MAYBE_STRING,
+  isnumber,
+  ispresent,
+  noop,
+} from 'zss/mapping/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
 
@@ -267,6 +275,11 @@ export function boardevaldir(
   const tx = target?.x ?? 0
   const ty = target?.y ?? 0
   const pt: PT = { x: tx, y: ty }
+  if (!ispresent(board)) {
+    return pt
+  }
+
+  // we need to know current flow etc..
   const start: PT = { ...pt }
   const flow = dirfrompts(
     {
@@ -275,11 +288,10 @@ export function boardevaldir(
     },
     pt,
   )
-
-  // we need to know current flow etc..
-
+  const xmax = board?.width ?? 1 - 1
+  const ymax = board?.height ?? 1 - 1
   for (let i = 0; i < dir.length && pt.x === tx && pt.y === ty; ++i) {
-    const dirconst = DIR[dir[i]]
+    const dirconst = mapstrdirtoconst(dir[i])
     switch (dirconst) {
       case DIR.IDLE:
         // no-op
@@ -290,12 +302,28 @@ export function boardevaldir(
       case DIR.EAST:
         ptapplydir(pt, dirconst)
         break
-      case DIR.BY:
+      case DIR.BY: {
         // BY <x> <y>
+        const [x, y] = dir.slice(i + 1)
+        if (isnumber(x) && isnumber(y)) {
+          pt.x = clamp(pt.x + x, 0, xmax)
+          pt.y = clamp(pt.y + y, 0, ymax)
+        }
+        // need to skip x & y
+        i += 2
         break
-      case DIR.AT:
-        // AT <x> <y>
+      }
+      case DIR.AT: {
+        // BY <x> <y>
+        const [x, y] = dir.slice(i + 1)
+        if (isnumber(x) && isnumber(y)) {
+          pt.x = clamp(x, 0, xmax)
+          pt.y = clamp(y, 0, ymax)
+        }
+        // need to skip x & y
+        i += 2
         break
+      }
       case DIR.FLOW:
         ptapplydir(pt, flow)
         break

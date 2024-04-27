@@ -558,7 +558,7 @@ export const dirconsts = {
 export type STR_DIR_TYPE = typeof dirconsts
 export type STR_DIR_KEYS = keyof STR_DIR_TYPE
 export type STR_DIR_CONST = STR_DIR_TYPE[STR_DIR_KEYS]
-export type STR_DIR = STR_DIR_CONST[]
+export type STR_DIR = (STR_DIR_CONST | number)[]
 
 export function isstrdir(value: any): value is STR_DIR {
   return isarray(value) && isstrdirconst(value[0])
@@ -566,6 +566,15 @@ export function isstrdir(value: any): value is STR_DIR {
 
 function isstrdirconst(value: any): value is STR_DIR_CONST {
   return ispresent(DIR[value]) && isstring(value)
+}
+
+export function mapstrdirtoconst(value: any): DIR {
+  const maybedir = DIR[value]
+  if (ispresent(maybedir)) {
+    // @ts-expect-error yay enum junk
+    return maybedir
+  }
+  return DIR.IDLE
 }
 
 function mapstrdir(value: any): MAYBE<STR_DIR_CONST> {
@@ -628,8 +637,21 @@ export function readdir(
 
   let [maybedir, ii] = readdirconst(read, index)
   while (isstrdir(maybedir)) {
+    // make a list !
     strdir.push(...maybedir)
 
+    // read coords for at & by
+    if (maybedir[0] === 'AT' || maybedir[0] === 'BY') {
+      // read
+      const [xvalue, yvalue, iii] = readargs(read, ii, [
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.NUMBER,
+      ])
+      strdir.push(xvalue, yvalue)
+      ii = iii
+    }
+
+    // get next item in list
     const [maybenextdir, iii] = readdirconst(read, ii)
     maybedir = maybenextdir
     ii = iii

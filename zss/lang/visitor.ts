@@ -759,7 +759,7 @@ class ScriptVisitor extends CstVisitor {
       type: NODE.OPERATOR,
       lhs: term,
       // @ts-expect-error
-      items: this.visit(ctx.arith_expr_item),
+      items: asList(this, ctx.arith_expr_item),
     })
   }
 
@@ -782,7 +782,7 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error
       lhs: this.visit(ctx.factor),
       // @ts-expect-error
-      items: this.visit(ctx.term_item),
+      items: asList(this, ctx.term_item),
     })
   }
 
