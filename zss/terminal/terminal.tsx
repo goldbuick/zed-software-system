@@ -1,8 +1,13 @@
 import { OrthographicCamera, useTexture } from '@react-three/drei'
 import { addEffect, addAfterEffect } from '@react-three/fiber'
-import { EffectComposer, BrightnessContrast } from '@react-three/postprocessing'
+import {
+  EffectComposer,
+  BrightnessContrast,
+  SMAA,
+  ChromaticAberration,
+} from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { STATS_DEV } from 'zss/config'
 
@@ -10,6 +15,8 @@ import { CRTShape, CRTLines, TextureSplat } from './crt'
 import { Framing } from './framing'
 import { Gadget } from './gadget'
 import decoimageurl from './scratches.jpg'
+
+const TUG = 0.0006
 
 export function Terminal() {
   const splat = useTexture(decoimageurl)
@@ -43,16 +50,23 @@ export function Terminal() {
       <Framing>
         <Gadget />
       </Framing>
-      <EffectComposer multisampling={0}>
-        <CRTLines />
-        <CRTShape />
-        <TextureSplat
-          opacity={0.35}
-          texture={splat}
-          blendFunction={BlendFunction.OVERLAY}
-        />
-        <BrightnessContrast brightness={0.1} contrast={0.14} />
-      </EffectComposer>
+      <Suspense fallback={null}>
+        <EffectComposer multisampling={0}>
+          <CRTLines />
+          <ChromaticAberration
+            blendFunction={BlendFunction.NORMAL}
+            offset={[TUG, -TUG]}
+          />
+          <CRTShape />
+          <TextureSplat
+            opacity={0.35}
+            texture={splat}
+            blendFunction={BlendFunction.OVERLAY}
+          />
+          <BrightnessContrast brightness={0.1} contrast={0.14} />
+          <SMAA />
+        </EffectComposer>
+      </Suspense>
     </>
   )
 }

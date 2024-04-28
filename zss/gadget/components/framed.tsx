@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import React, { useRef } from 'react'
+import { useRef } from 'react'
 import { Group, Vector2 } from 'three'
 import { useSnapshot } from 'valtio'
 import {
@@ -68,47 +68,55 @@ export function Framed({ player, layers, width, height }: FramedProps) {
   const offsety = -control.focusy * DRAW_CHAR_HEIGHT * control.viewscale
   const centery = viewheight * 0.5 + offsety
 
-  const left = drawwidth < viewwidth ? (viewwidth - drawwidth) * 0.5 : centerx
-  const top =
-    drawheight < viewheight ? (viewheight - drawheight) * 0.5 : centery
+  const left = drawwidth < viewwidth ? marginx * -0.5 : centerx
+  const top = drawheight < viewheight ? marginy * -0.5 : centery
 
   const ref = useRef<Group>(null)
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     const { current } = ref
     if (!current) {
       return
     }
-
+    // setup
     if (!ispresent(current.userData.focus)) {
       current.position.x = left
       current.position.y = top
       current.userData.focus = new Vector2(left, top)
     }
-
-    const dx = current.position.x - left
-    if (Math.abs(dx) >= zone) {
-      const step = dx < 0 ? -zone : zone
-      current.userData.focus.x = Math.round(left - step)
+    // focus
+    if (marginx < 0) {
+      current.userData.focus.x = left
+    } else {
+      const dx = current.position.x - left
+      if (Math.abs(dx) >= zone) {
+        const step = dx < 0 ? -zone : zone
+        current.userData.focus.x = Math.round(left - step)
+      }
     }
-
-    const dy = current.position.y - top
-    if (Math.abs(dy) >= zone) {
-      const step = dy < 0 ? -zone : zone
-      current.userData.focus.y = Math.round(top - step * 0.5)
+    if (marginy < 0) {
+      current.userData.focus.y = top
+    } else {
+      const dy = current.position.y - top
+      if (Math.abs(dy) >= zone) {
+        const step = dy < 0 ? -zone : zone
+        current.userData.focus.y = Math.round(top - step * 0.5)
+      }
     }
-
+    // smoooothed
     const slide = 6
     current.position.x +=
       (current.userData.focus.x - current.position.x) * delta * slide
     current.position.y +=
       (current.userData.focus.y - current.position.y) * delta * slide
-
-    current.position.x = clamp(current.position.x, -marginx, 0)
-    current.position.y = clamp(current.position.y, -marginy, 0)
+    // clamp to edges
+    if (marginx >= 0) {
+      current.position.x = clamp(current.position.x, -marginx, 0)
+    }
+    if (marginy >= 0) {
+      current.position.y = clamp(current.position.y, -marginy, 0)
+    }
   })
-
-  Math.max(-marginy, Math.min(0, centery))
 
   return (
     <UserFocus>
