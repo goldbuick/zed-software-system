@@ -64,7 +64,6 @@ export function Terminal() {
             blendFunction={BlendFunction.OVERLAY}
           />
           <BrightnessContrast brightness={0.1} contrast={0.14} />
-          <SMAA />
         </EffectComposer>
       </Suspense>
     </>
