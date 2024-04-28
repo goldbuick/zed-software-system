@@ -3,7 +3,6 @@ import { addEffect, addAfterEffect } from '@react-three/fiber'
 import {
   EffectComposer,
   BrightnessContrast,
-  SMAA,
   ChromaticAberration,
 } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'

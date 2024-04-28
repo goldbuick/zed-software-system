@@ -16,8 +16,8 @@
 !hotkey plot space " Space ";Plot
 !hotkey draw tab "  Tab  ";Draw
  
-!hotkey menu_test m  ;Menu Test
-!hotkey cmmd_test x  ;Cmmd Test
+!hotkey menu_test m;Menu Test
+!hotkey zoop_test z;Zoop!
 
 ' main loop
 #cycle 1
@@ -40,7 +40,7 @@
 #if inputmove do
   #set playermove inputmove
   #if inputshift do
-    ?at 5 5
+    #shoot playermove
   #else do
     #if inputalt do
       #if drawing is blue do
@@ -89,8 +89,6 @@ $3 Here is some test text and yeah! $3
 #idle
 #main
 
-:cmmd_test
-' #change edit wall blue wall
-#change white spin blue blonk
-#idle
+:zoop_test
+?at 5 5 
 #main
