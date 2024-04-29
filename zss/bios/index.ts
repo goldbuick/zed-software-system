@@ -41,28 +41,24 @@ export const BIOS = createbook('BIOS', [
     object: {
       char: 15,
       color: COLOR.WHITE,
-      bg: COLOR.BORROW,
     },
   }),
   createcodepage(bulletcode, {
     object: {
       char: 248,
       color: COLOR.WHITE,
-      bg: COLOR.SHADOW,
     },
   }),
   createcodepage(playercode, {
     object: {
       char: 219,
       color: COLOR.WHITE,
-      bg: COLOR.BORROW,
     },
   }),
   createcodepage(spincode, {
     object: {
       char: 1,
       color: COLOR.WHITE,
-      bg: COLOR.BORROW,
     },
   }),
   createcodepage('@terrain bimp\n@destructible', {

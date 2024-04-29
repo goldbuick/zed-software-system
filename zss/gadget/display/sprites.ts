@@ -131,7 +131,7 @@ const spritesMaterial = new THREE.ShaderMaterial({
       float xscale = pointSize.y / pointSize.x;
       float px = gl_PointCoord.x * xscale;
       
-      if (px > 1.0) {
+      if (px >= 1.0) {
         discard;
       }
 

@@ -266,7 +266,7 @@ function memoryconverttogadgetlayers(
     sprite.y = object.y ?? 0
     sprite.char = object.char ?? kind?.char ?? 1
     sprite.color = object.color ?? kind?.color ?? COLOR.WHITE
-    sprite.bg = object.bg ?? kind?.bg ?? COLOR.CLEAR
+    sprite.bg = object.bg ?? kind?.bg ?? COLOR.BORROW
     objects.sprites.push(sprite)
 
     // plot shadow
