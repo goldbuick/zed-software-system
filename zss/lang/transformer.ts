@@ -178,7 +178,6 @@ function transformOperatorItem(ast: CodeNode, operation: SourceNode) {
 function transformOperator(ast: CodeNode) {
   if (ast.type === NODE.OPERATOR) {
     const operation = ast.lhs ? transformNode(ast.lhs) : write(ast, '')
-    console.info(ast)
     ast.items.forEach((item) => transformOperatorItem(item, operation))
     return operation
   }

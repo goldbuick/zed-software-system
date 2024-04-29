@@ -144,7 +144,6 @@ export function Scroll({
   const viewport = useThree((state) => state.viewport)
   const { height: viewheight } = viewport.getCurrentViewport()
 
-  console.info('shouldclose', shouldclose)
 
   const didclose = useCallback(() => {
     if (shouldclose) {

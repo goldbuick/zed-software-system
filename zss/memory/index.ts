@@ -240,7 +240,9 @@ function memoryconverttogadgetlayers(
       tiles.color[i] = tile.color ?? kind?.color ?? defaultcolor
       tiles.bg[i] = tile.bg ?? kind?.bg ?? defaultcolor
       // write to borrow buffer
-      borrowbuffer[i] = tiles.color[i]
+      if (tiles.color[i] !== (COLOR.CLEAR as number)) {
+        borrowbuffer[i] = tiles.color[i]
+      }
     }
   })
 
@@ -279,7 +281,9 @@ function memoryconverttogadgetlayers(
     }
 
     // write to borrow buffer
-    borrowbuffer[li] = sprite.color
+    if (sprite.color !== (COLOR.CLEAR as number)) {
+      borrowbuffer[li] = sprite.color
+    }
 
     // inform control layer where to focus
     if (id === player) {
