@@ -61,8 +61,10 @@ export enum COLOR {
   ONPURPLE,
   ONYELLOW,
   ONWHITE,
+  // special bg colors
   CLEAR = COLOR_TINDEX,
   SHADOW = COLOR_SINDEX,
+  BORROW = COLOR_SINDEX + 1,
 }
 
 export enum DIR {
@@ -289,6 +291,7 @@ export const colorconsts = {
   white: 'WHITE',
   clear: 'CLEAR',
   shadow: 'SHADOW',
+  borrow: 'BORROW',
   // aliases
   brown: 'DKYELLOW',
   dkwhite: 'LTGRAY',

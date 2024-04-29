@@ -191,7 +191,7 @@ export function memorytick(os: OS, timestamp: number) {
     context.target = target
     context.inputcurrent = undefined
     // run chip code
-    os.tick(id, timestamp, code)
+    os.tick(id, timestamp, code, ['zss', 'zzt'])
   }
 
   // update boards / build code / run chips
@@ -207,6 +207,7 @@ function memoryconverttogadgetlayers(
   book: BOOK,
   board: BOARD,
   isprimary: boolean,
+  borrowbuffer: number[],
 ): LAYER[] {
   const layers: LAYER[] = []
 
@@ -238,6 +239,8 @@ function memoryconverttogadgetlayers(
       tiles.char[i] = tile.char ?? kind?.char ?? 0
       tiles.color[i] = tile.color ?? kind?.color ?? defaultcolor
       tiles.bg[i] = tile.bg ?? kind?.bg ?? defaultcolor
+      // write to borrow buffer
+      borrowbuffer[i] = tiles.color[i]
     }
   })
 
@@ -254,6 +257,7 @@ function memoryconverttogadgetlayers(
     const sprite = createsprite(player, objectindex, id)
     const lx = object.lx ?? object.x ?? 0
     const ly = object.ly ?? object.y ?? 0
+    const li = lx + ly * board.width
 
     // setup sprite
     sprite.x = object.x ?? 0
@@ -264,10 +268,18 @@ function memoryconverttogadgetlayers(
     objects.sprites.push(sprite)
 
     // plot shadow
-    if (sprite.bg === COLOR.SHADOW) {
+    if (sprite.bg === (COLOR.SHADOW as number)) {
       sprite.bg = COLOR.CLEAR
       shadow.alphas[lx + ly * boardwidth] = 0.5
     }
+
+    // borrow color
+    if (sprite.bg === (COLOR.BORROW as number)) {
+      sprite.bg = borrowbuffer[li] ?? COLOR.BLACK
+    }
+
+    // write to borrow buffer
+    borrowbuffer[li] = sprite.color
 
     // inform control layer where to focus
     if (id === player) {
@@ -372,6 +384,8 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
 
   let i = 0
   const frames = [...memoryreadframes(board.id ?? '')]
+  const borrowbuffer: number[] = new Array(board.width * board.height).fill(0)
+
   frames.sort((a, b) => framerank(a) - framerank(b))
   frames.forEach((frame) => {
     const withbook = memoryreadbook(frame.book ?? '') ?? book
@@ -383,6 +397,7 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
         withbook,
         withboard,
         frame.type === FRAME_TYPE.VIEW,
+        borrowbuffer,
       )
       i += view.length
       layers.push(...view)

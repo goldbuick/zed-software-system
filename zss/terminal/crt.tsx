@@ -48,8 +48,8 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   } else {  
     outputColor = texture2D(inputBuffer, bent);
     // apply inner shade
-    float sh = clamp(0.0, 1.0, 1.0 - bx - 0.5);
-    vec3 shade = mix(outputColor.rgb, vec3(0.0), pow(sh, 3.0));
+    float sh = clamp(0.0, 1.0, 1.0 - bx - 0.7);
+    vec3 shade = mix(outputColor.rgb, vec3(0.0), pow(sh, 4.0));
     outputColor = vec4(shade, inputColor.a);
   }
 

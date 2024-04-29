@@ -9,9 +9,8 @@ const firmwares: Record<string, FIRMWARE> = {
   zss: ZSS_FIRMWARE,
 }
 
-export function loadfirmware(chip: CHIP) {
-  // todo, add target codepage type here ...
-  Object.values(firmwares).forEach((firmware) => {
-    chip.install(firmware)
-  })
+export type FIRMWARE_NAME = keyof typeof firmwares
+
+export function loadfirmware(chip: CHIP, items: FIRMWARE_NAME[]) {
+  items.forEach((name) => chip.install(firmwares[name]))
 }

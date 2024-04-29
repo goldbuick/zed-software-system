@@ -54,7 +54,7 @@ const spritesMaterial = new THREE.ShaderMaterial({
     vec4 empty;
 
     vec4 bgFromIndex(float index) {
-      if (int(index) <= ${COLOR_TINDEX}) {
+      if (int(index) >= ${COLOR_TINDEX}) {
         return empty;
       }
       vec4 bg;

@@ -6,7 +6,7 @@ import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
 import { CYCLE_DEFAULT } from './mapping/tick'
-import { deepcopy, isequal, isstring } from './mapping/types'
+import { MAYBE, deepcopy, isequal, ispresent, isstring } from './mapping/types'
 
 export const HALT_AT_COUNT = 64
 
@@ -26,7 +26,7 @@ export type CHIP = {
   id: () => string
 
   // set firmware on chip
-  install: (firmware: FIRMWARE) => void
+  install: (firmware: MAYBE<FIRMWARE>) => void
 
   // state api
   set: (name: string, value: any) => any
@@ -167,6 +167,9 @@ export function createchip(id: string, build: GeneratorBuild) {
 
     // invokes api
     install(firmware) {
+      if (!ispresent(firmware)) {
+        return
+      }
       // clear invoke cache
       invokes = {}
       // add firmware
