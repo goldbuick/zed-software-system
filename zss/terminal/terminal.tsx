@@ -62,7 +62,7 @@ export function Terminal() {
             texture={splat}
             blendFunction={BlendFunction.OVERLAY}
           />
-          <BrightnessContrast brightness={0.1} contrast={0.14} />
+          <BrightnessContrast brightness={0.02} contrast={0.1} />
         </EffectComposer>
       </Suspense>
     </>

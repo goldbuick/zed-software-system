@@ -79,13 +79,24 @@ const CRTLinesFragmentShader = `
 uniform float count;
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-  float rate = 0.002;
-  float stab = 1.5;
-  float fuzz = 1.35;
-  float cycle = (uv.y + time * rate) * count * fuzz;
-  float signal = sin(cycle) + stab;
-  float px = smoothstep(0.0, 1.0, signal);
-	outputColor = vec4(mix(vec3(0.0), vec3(1.0), px), inputColor.a);
+  float rate1 = 0.002;
+  float stab1 = 1.5;
+  float fuzz1 = 1.35;
+  float cycle1 = (uv.y + time * rate1) * count * fuzz1;
+  float signal1 = sin(cycle1) + stab1;
+
+  float rate2 = 0.2;
+  float scale2 = 0.01;
+  float stab2 = 1.99;
+  float cycle2 = (uv.y * count * scale2) - time * rate2;
+  float signal2 = sin(cycle2) + stab2;
+
+  float shade = smoothstep(0.0, 1.0, signal1);
+  float light = 1.0 - (smoothstep(0.0, 1.0, pow(signal2, 128.0)));
+
+  vec3 c = mix(vec3(0.0), vec3(1.0), smoothstep(0.0, 1.0, shade + light * 0.25));
+  
+	outputColor = vec4(c, inputColor.a);
 }
 `
 

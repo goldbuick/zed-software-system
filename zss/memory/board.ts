@@ -272,25 +272,25 @@ export function boardevaldir(
   target: MAYBE_BOARD_ELEMENT,
   dir: STR_DIR,
 ): PT {
-  const tx = target?.x ?? 0
-  const ty = target?.y ?? 0
-  const pt: PT = { x: tx, y: ty }
-  if (!ispresent(board)) {
-    return pt
+  if (!ispresent(board) || !ispresent(target)) {
+    return { x: 0, y: 0 }
+  }
+
+  const pt: PT = {
+    x: target.x ?? 0,
+    y: target.y ?? 0,
+  }
+  const lpt: PT = {
+    x: target.lx ?? pt.x,
+    y: target.ly ?? pt.y,
   }
 
   // we need to know current flow etc..
   const start: PT = { ...pt }
-  const flow = dirfrompts(
-    {
-      x: target?.lx ?? pt.x,
-      y: target?.ly ?? pt.y,
-    },
-    pt,
-  )
-  const xmax = board?.width ?? 1 - 1
-  const ymax = board?.height ?? 1 - 1
-  for (let i = 0; i < dir.length && pt.x === tx && pt.y === ty; ++i) {
+  const flow = dirfrompts(lpt, pt)
+  const xmax = board.width - 1
+  const ymax = board.height - 1
+  for (let i = 0; i < dir.length; ++i) {
     const dirconst = mapstrdirtoconst(dir[i])
     switch (dirconst) {
       case DIR.IDLE:
