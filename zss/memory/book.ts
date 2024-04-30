@@ -470,6 +470,7 @@ export function bookboardtick(
     target: BOARD_ELEMENT,
     id: string,
     code: string,
+    type: CODE_PAGE_TYPE,
   ) => void,
 ) {
   if (!ispresent(book) || !ispresent(board)) {
@@ -506,7 +507,7 @@ export function bookboardtick(
     }
 
     // signal id & code
-    oncode(book, board, target, target.id, code)
+    oncode(book, board, target, target.id, code, CODE_PAGE_TYPE.OBJECT)
   }
 
   // cleanup objects flagged for deletion

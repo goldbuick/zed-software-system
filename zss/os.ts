@@ -1,8 +1,9 @@
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
-import { FIRMWARE_NAME, loadfirmware } from './firmware/loader'
+import { loadfirmware } from './firmware/loader'
 import { GeneratorBuild, compile } from './lang/generator'
 import { ispresent } from './mapping/types'
+import { CODE_PAGE_TYPE } from './memory/codepage'
 
 export type OS = {
   ids: () => string[]
@@ -12,7 +13,7 @@ export type OS = {
     id: string,
     timestamp: number,
     code: string,
-    firmwares: FIRMWARE_NAME[],
+    type: CODE_PAGE_TYPE,
   ) => boolean
   message: MESSAGE_FUNC
 }
@@ -47,7 +48,7 @@ export function createos() {
       }
       return !!chip
     },
-    tick(id, timestamp, code, firmwares) {
+    tick(id, timestamp, code, type) {
       let chip = chips[id]
 
       if (!ispresent(chips[id])) {
@@ -63,7 +64,7 @@ export function createos() {
         chip = chips[id] = createchip(id, result)
 
         // load chip firmware
-        loadfirmware(chip, firmwares)
+        loadfirmware(chip, type)
       }
 
       return !!chip?.tick(timestamp)

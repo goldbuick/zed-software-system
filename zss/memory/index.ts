@@ -33,6 +33,7 @@ import {
   bookreadboard,
   bookreadobject,
 } from './book'
+import { CODE_PAGE_TYPE } from './codepage'
 import {
   FRAME_STATE,
   FRAME_TYPE,
@@ -183,6 +184,7 @@ export function memorytick(os: OS, timestamp: number) {
     target: BOARD_ELEMENT,
     id: string,
     code: string,
+    type: CODE_PAGE_TYPE,
   ) {
     // set context
     const context = memoryreadchip(id)
@@ -191,7 +193,8 @@ export function memorytick(os: OS, timestamp: number) {
     context.target = target
     context.inputcurrent = undefined
     // run chip code
-    os.tick(id, timestamp, code, ['zss', 'zzt'])
+    //
+    os.tick(id, timestamp, code, type)
   }
 
   // update boards / build code / run chips
