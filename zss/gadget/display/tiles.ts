@@ -154,7 +154,7 @@ const tilemapMaterial = new THREE.ShaderMaterial({
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
-        if (bgi == ${COLOR_TINDEX}) {
+        if (bgi >= ${COLOR_TINDEX}) {
           discard;
         }
         color = palette[bgi];
