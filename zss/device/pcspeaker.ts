@@ -1,7 +1,6 @@
 import { createdevice } from 'zss/device'
 import { playchipfreq } from 'zss/gadget/audio/blaster'
 import { randomInteger } from 'zss/mapping/number'
-import { TICK_RATE } from 'zss/mapping/tick'
 import { isarray, isnumber, isstring } from 'zss/mapping/types'
 
 const pcspeaker = {
@@ -35,7 +34,6 @@ for (let octave = 0; octave <= 15; ++octave) {
     notebase *= notestep
   }
 }
-console.info(soundfreqtable)
 
 // drums
 const sounddrumtable: number[][] = []
@@ -100,7 +98,6 @@ function soundupdate(delta: number) {
   if (tone === 0) {
     pcspeaker.off()
   } else if (tone < 240) {
-    // play given freq
     pcspeaker.on(soundfreqtable[tone])
   } else {
     // play given drum
@@ -110,11 +107,9 @@ function soundupdate(delta: number) {
 
   const duration = pcspeaker.buffer[pcspeaker.bufferpos++]
   pcspeaker.durationcounter = duration
-  console.info(pcspeaker.durationcounter)
 }
 
 function soundparse(input: string) {
-  console.info(input)
   let notetone = 0
   let noteoctave = 3
   let noteduration = 1
@@ -236,16 +231,14 @@ export function soundplay(priority: number, maybepattern: string) {
 export function soundstop() {
   pcspeaker.buffer = []
   pcspeaker.isplaying = false
-  // stop sounds
+  pcspeaker.off()
 }
 
 const TIME_STEP = 10
 setInterval(() => soundupdate(TIME_STEP / 1000), TIME_STEP)
 
-createdevice('pcspeaker', ['tock'], (message) => {
+createdevice('pcspeaker', [], (message) => {
   switch (message.target) {
-    case 'tock':
-      break
     case 'play':
       if (isarray(message.data)) {
         const [priority, buffer] = message.data
