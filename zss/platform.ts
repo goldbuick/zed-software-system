@@ -3,12 +3,16 @@ import ZSSWorker from './instance??worker'
 
 // devices that operate within web main
 import './device/gadgetclient'
+import './device/pcspeaker'
 import './device/shared'
 
-const instance = new ZSSWorker()
+export function createplatform() {
+  const instance = new ZSSWorker()
 
-const forward = createforward((message) => instance.postMessage(message))
+  const forward = createforward((message) => instance.postMessage(message))
 
-instance.addEventListener('message', (event) => {
-  forward(event.data)
-})
+  instance.addEventListener('message', (event) => {
+    // console.info(event.data)
+    forward(event.data)
+  })
+}

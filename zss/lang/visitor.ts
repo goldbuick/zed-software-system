@@ -456,15 +456,12 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Command_play(ctx: CstChildrenDictionary) {
-    if (ctx.Command_play) {
+    if (ctx.play) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
         words: [
           makeString(ctx, 'play'),
-          makeString(
-            ctx,
-            strImage(ctx.Command_play[0]).replace('#play', '').trim(),
-          ),
+          makeString(ctx, strImage(ctx.play[0]).replace('play', '').trim()),
         ],
       })
     }

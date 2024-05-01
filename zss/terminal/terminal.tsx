@@ -9,17 +9,20 @@ import { BlendFunction } from 'postprocessing'
 import { Suspense, useEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { STATS_DEV } from 'zss/config'
+import { createplatform } from 'zss/platform'
 
 import { CRTShape, CRTLines, TextureSplat } from './crt'
 import { Framing } from './framing'
 import { Gadget } from './gadget'
 import decoimageurl from './scratches.jpg'
+import { Splash } from './splash'
 
 const TUG = 0.0006
 
 export function Terminal() {
   const splat = useTexture(decoimageurl)
   const [stats] = useState(() => new Stats())
+  const [active, setActive] = useState(false)
 
   useEffect(() => {
     if (!STATS_DEV) {
@@ -47,7 +50,16 @@ export function Terminal() {
         position={[0, 0, 1000]}
       />
       <Framing>
-        <Gadget />
+        {active ? (
+          <Gadget />
+        ) : (
+          <Splash
+            onBoot={() => {
+              createplatform()
+              setActive(true)
+            }}
+          />
+        )}
       </Framing>
       <Suspense fallback={null}>
         <EffectComposer multisampling={0}>

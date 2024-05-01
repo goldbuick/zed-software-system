@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { objectKeys } from 'ts-extras'
 import { proxy, useSnapshot } from 'valtio'
+import { ispresent } from 'zss/mapping/types'
 
 import { TILES } from '../data/types'
 import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
@@ -99,7 +100,7 @@ export function writeTile(
   const index = x + y * width
   objectKeys(value).forEach((key) => {
     const v = value[key]
-    if (v !== undefined) {
+    if (ispresent(v)) {
       tiles[key][index] = v
     }
   })

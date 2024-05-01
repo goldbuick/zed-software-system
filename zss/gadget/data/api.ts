@@ -39,8 +39,8 @@ function resetpanel(panel: PANEL) {
   panel.text = []
 
   // invoke unobserve(s)
-  Object.values(panelshared[panel.id] ?? {}).forEach(
-    (unobserve) => unobserve?.(),
+  Object.values(panelshared[panel.id] ?? {}).forEach((unobserve) =>
+    unobserve?.(),
   )
   panelshared[panel.id] = {}
 }
@@ -152,7 +152,7 @@ export function gadgetpanel(
   // get state
   const shared = gadgetstate(chip.id())
   const size = maybesize
-  const name = maybename || Case.capital(edge)
+  const name = maybename ?? Case.capital(edge)
 
   const panelState: PANEL | undefined = shared.layout.find(
     (panel: PANEL) => panel.name === name,
@@ -245,6 +245,7 @@ export function gadgethyperlink(
   // do we care?
   if (HYPERLINK_WITH_SHARED.has(type)) {
     // track changes to flag
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     const name = `${hyperlink[3] ?? ''}`
 
     // value tracking grouped by panel id

@@ -6,6 +6,7 @@ import {
   INPUT_CTRL,
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
+import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadbook, memoryreadchip, memoryreadframes } from 'zss/memory'
@@ -494,7 +495,9 @@ export const ZZT_FIRMWARE = createfirmware({
     return memory.target.x !== dest.x && memory.target.y !== dest.y ? 1 : 0
   })
   .command('play', (chip, words) => {
-    console.info({ chip, play: words }) // this will pipe into the media player
+    const memory = memoryreadchip(chip.id())
+    const [buffer] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.STRING])
+    chip.emit('pcspeaker:play', [-1, buffer])
     return 0
   })
   .command('put', (chip, words) => {

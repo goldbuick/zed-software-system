@@ -41,6 +41,7 @@ export type CHIP = {
   hm: () => number
   yield: () => void
   sy: () => boolean
+  emit: (target: string, data?: any) => void
   send: (chipid: string, message: string, data?: any) => void
   lock: (allowed: string) => void
   unlock: () => void
@@ -281,10 +282,12 @@ export function createchip(id: string, build: GeneratorBuild) {
     sy() {
       return yieldstate || chip.shouldhalt()
     },
+    emit(target, data) {
+      console.info({ target, id, data })
+      hub.emit(target, id, data)
+    },
     send(chipid, message, data) {
-      const fulltarget = `vm:${chipid}:${message}`
-      // console.info('send', fulltarget, id, data)
-      hub.emit(fulltarget, id, data)
+      hub.emit(`vm:${chipid}:${message}`, id, data)
     },
     lock(allowed) {
       locked = allowed

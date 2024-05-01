@@ -1,5 +1,3 @@
-import React from 'react'
-
 import {
   WRITE_TEXT_CONTEXT,
   WriteTextContext,
