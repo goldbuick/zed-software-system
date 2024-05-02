@@ -170,6 +170,7 @@ Make sure that all grammar rule definitions are done before 'performSelfAnalysis
 #if inputmove do
   #set playermove inputmove
   #if inputshift do
+    #play tc-f#
     #shoot playermove
   #else do
     #if inputalt do
