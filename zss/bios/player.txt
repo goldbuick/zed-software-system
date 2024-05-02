@@ -16,8 +16,7 @@
 !hotkey plot space " Space ";Plot
 !hotkey draw tab "  Tab  ";Draw
  
-!hotkey menu_test m;Menu Test
-!hotkey zoop_test z;Zoop!
+!hotkey menu_test p;#PlayTest
 
 ' main loop
 #cycle 1

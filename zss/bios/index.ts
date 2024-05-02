@@ -18,22 +18,22 @@ import spincode from './spin.txt?raw'
 export const BIOS = createbook('BIOS', [
   createcodepage('@board title', {
     board: boardcreate((board) => {
-      for (let i = 0; i < 32; i++) {
-        const dest = {
-          x: randomInteger(0, board.width - 1),
-          y: randomInteger(0, board.height - 1),
-        }
-        boardobjectcreatefromkind(board, dest, 'spin')
-      }
-      for (let ix = 0; ix < board.width; ++ix) {
-        for (let iy = 5; iy < 15; ++iy) {
-          boardterrainsetfromkind(
-            board,
-            { x: ix, y: iy },
-            pick('bimp', 'bimp', 'bimp', 'bimp', 'bimp', 'bomp'),
-          )
-        }
-      }
+      // for (let i = 0; i < 32; i++) {
+      //   const dest = {
+      //     x: randomInteger(0, board.width - 1),
+      //     y: randomInteger(0, board.height - 1),
+      //   }
+      //   boardobjectcreatefromkind(board, dest, 'spin')
+      // }
+      // for (let ix = 0; ix < board.width; ++ix) {
+      //   for (let iy = 5; iy < 15; ++iy) {
+      //     boardterrainsetfromkind(
+      //       board,
+      //       { x: ix, y: iy },
+      //       pick('bimp', 'bimp', 'bimp', 'bimp', 'bimp', 'bomp'),
+      //     )
+      //   }
+      // }
       return board
     }),
   }),

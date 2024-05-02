@@ -4077,6 +4077,11 @@ jszip@^3.10.1:
     readable-stream "~2.3.6"
     setimmediate "^1.0.5"
 
+kademlia-table@^1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/kademlia-table/-/kademlia-table-1.0.7.tgz#954daa688a8227e98bba2d8f559d65929fd9109d"
+  integrity sha512-G/4G6IrOSjGoRz/lZMTPd+s+T5UyMvmjihGG7AhycCSRrDq+A4j2jFLjogqfE3NJ64TYQkJKUSjkJhWvrzjlBQ==
+
 keyv@^4.5.3:
   version "4.5.4"
   resolved "https://registry.npmjs.org/keyv/-/keyv-4.5.4.tgz#a879a99e29452f942439f2a405e3af8b31d4de93"
