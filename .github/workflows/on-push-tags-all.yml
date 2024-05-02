@@ -1,4 +1,4 @@
-name: create-gh-release
+name: create github release page
 
 on:
   push:

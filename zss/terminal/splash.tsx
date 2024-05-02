@@ -9,8 +9,8 @@ import {
 } from 'zss/gadget/components/usetiles'
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 
-const TINFO = `${import.meta.env.ZSS_BRANCH_NAME} - ${import.meta.env.ZSS_BRANCH_VERSION}`
-const TSPACE = `                  `
+const TINFO = `${import.meta.env.ZSS_BRANCH_NAME} - ${import.meta.env.ZSS_BRANCH_VERSION} - ${import.meta.env.ZSS_COMMIT_MESSAGE}`
+const TSPACE = `        `
 const TICKER = `${TSPACE}< Click To Boot >${TSPACE}${TINFO}`
 
 export type SplashProps = {
