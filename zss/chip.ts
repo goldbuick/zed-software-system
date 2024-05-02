@@ -283,7 +283,6 @@ export function createchip(id: string, build: GeneratorBuild) {
       return yieldstate || chip.shouldhalt()
     },
     emit(target, data) {
-      console.info({ target, id, data })
       hub.emit(target, id, data)
     },
     send(chipid, message, data) {

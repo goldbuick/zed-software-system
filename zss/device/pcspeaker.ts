@@ -1,7 +1,7 @@
 import { createdevice } from 'zss/device'
 import { playchipfreq } from 'zss/gadget/audio/blaster'
 import { randomInteger } from 'zss/mapping/number'
-import { isarray, isnumber, isstring } from 'zss/mapping/types'
+import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 const pcspeaker = {
   time: 0,
@@ -24,15 +24,26 @@ const pcspeaker = {
 // setup tables
 
 // notes
-const soundfreqtable: number[] = []
+const soundfreqtable = new Array(256).fill(0)
 const freqc1 = 32.0
 const notestep = Math.exp(Math.LN2 / 12.0)
-for (let octave = 0; octave <= 15; ++octave) {
+for (let octave = 1; octave <= 15; ++octave) {
   let notebase = Math.exp((octave + 1) * Math.LN2) * freqc1
   for (let note = 0; note <= 11; ++note) {
     soundfreqtable[octave * 16 + note] = Math.floor(notebase)
     notebase *= notestep
   }
+}
+console.info(soundfreqtable)
+
+const soundparsenotetable = {
+  c: 0,
+  d: 2,
+  e: 4,
+  f: 5,
+  g: 7,
+  a: 9,
+  b: 11,
 }
 
 // drums
@@ -60,14 +71,17 @@ sounddrumtable.push(new Array(14).map(() => randomInteger(0, 440) + 220))
 
 // runner
 // testing 100 bpm
-const RATE = ((60 / 150) * 64) / 1000
+// middle number is BPM
+const RATE = 60 / 150 / 8
 function soundupdate(delta: number) {
+  // 32nd note duration
   pcspeaker.time += delta
   if (pcspeaker.time < RATE) {
     return
   }
   pcspeaker.time %= RATE
 
+  // sound is off
   if (!pcspeaker.enabled) {
     // not enabled
     pcspeaker.isplaying = false
@@ -75,11 +89,13 @@ function soundupdate(delta: number) {
     return
   }
 
+  // sound is playing
   if (!pcspeaker.isplaying) {
     // not playing
     return
   }
 
+  // sound is X number of updates
   --pcspeaker.durationcounter
   if (pcspeaker.durationcounter > 0) {
     // still playing
@@ -88,25 +104,24 @@ function soundupdate(delta: number) {
 
   if (pcspeaker.bufferpos >= pcspeaker.buffer.length) {
     // buffer complete
-    pcspeaker.isplaying = false
     pcspeaker.off()
+    pcspeaker.isplaying = false
     return
   }
 
   // read next tone
   const tone = pcspeaker.buffer[pcspeaker.bufferpos++]
   if (tone === 0) {
+    // rest
     pcspeaker.off()
   } else if (tone < 240) {
-    pcspeaker.on(soundfreqtable[tone])
+    // doot
+    pcspeaker.on(soundfreqtable[tone - 240])
   } else {
-    // play given drum
-    // play given set of freq ...
-    // sounddrumtable[tone - 240]
+    // drum
   }
 
-  const duration = pcspeaker.buffer[pcspeaker.bufferpos++]
-  pcspeaker.durationcounter = duration
+  pcspeaker.durationcounter = pcspeaker.buffer[pcspeaker.bufferpos++]
 }
 
 function soundparse(input: string) {
@@ -152,45 +167,32 @@ function soundparse(input: string) {
         output.push(0, noteduration)
         break
       case '0':
-        output.push(240 + parseFloat(li), noteduration)
+      case '1':
+      case '2':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+        output.push(parseFloat(li) + 240, noteduration)
         break
       default: {
-        switch (li) {
-          case 'c':
-          default:
-            notetone = 0
-            break
-          case 'd':
-            notetone = 2
-            break
-          case 'e':
-            notetone = 4
-            break
-          case 'f':
-            notetone = 5
-            break
-          case 'g':
-            notetone = 7
-            break
-          case 'a':
-            notetone = 9
-            break
-          case 'b':
-            notetone = 11
-            break
+        const tt = li as keyof typeof soundparsenotetable
+        const maybenotetone = soundparsenotetable[tt]
+        if (ispresent(maybenotetone)) {
+          notetone = maybenotetone
+          const peek = input[++i] ?? ''
+          switch (peek) {
+            case '!':
+              --notetone
+              break
+            case '#':
+              ++notetone
+              break
+          }
+          output.push(noteoctave * 10 + notetone, noteduration)
         }
-        const peek = input[i + 1] ?? ''
-        switch (peek.toLowerCase()) {
-          case '!':
-            ++i
-            --notetone
-            break
-          case '#':
-            ++i
-            ++notetone
-            break
-        }
-        output.push(noteoctave * 10 + notetone, noteduration)
         break
       }
     }
@@ -200,11 +202,17 @@ function soundparse(input: string) {
 }
 
 export function soundplay(priority: number, maybepattern: string) {
-  const pattern = soundparse(maybepattern)
+  // skip empty strings
+  if (!maybepattern) {
+    return
+  }
+
+  // skip when sounds are blocked
   if (pcspeaker.blockqueueing) {
     return
   }
 
+  // filter based on priority
   if (
     pcspeaker.isplaying &&
     priority !== -1 &&
@@ -213,18 +221,22 @@ export function soundplay(priority: number, maybepattern: string) {
     return
   }
 
+  // parse and queue up data
+  const pattern = soundparse(maybepattern)
   if (priority >= 0 || !pcspeaker.isplaying) {
+    // start new sound
     pcspeaker.currentpriority = priority
     pcspeaker.buffer = pattern
     pcspeaker.bufferpos = 0
     pcspeaker.durationcounter = 1
   } else {
-    pcspeaker.buffer = [...pcspeaker.buffer.slice(pcspeaker.bufferpos)]
+    // queue pattern
+    pcspeaker.buffer = pcspeaker.buffer.slice(pcspeaker.bufferpos)
     pcspeaker.bufferpos = 0
-    if (pcspeaker.buffer.length + pattern.length < 255) {
-      pcspeaker.buffer.push(...pattern)
-    }
+    pcspeaker.buffer.push(...pattern)
   }
+
+  // we blastin
   pcspeaker.isplaying = true
 }
 
@@ -234,8 +246,13 @@ export function soundstop() {
   pcspeaker.off()
 }
 
-const TIME_STEP = 10
-setInterval(() => soundupdate(TIME_STEP / 1000), TIME_STEP)
+let tm = performance.now()
+setInterval(() => {
+  const nxt = performance.now()
+  const delta = (nxt - tm) / 1000
+  tm = nxt
+  soundupdate(delta)
+}, 10)
 
 createdevice('pcspeaker', [], (message) => {
   switch (message.target) {
