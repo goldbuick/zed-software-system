@@ -3,19 +3,16 @@ import {
   useCacheWriteTextContext,
   tokenizeAndWriteTextFormat,
   writeCharToEnd,
+  applycolortoindexes,
+  applystrtoindex,
 } from 'zss/gadget/data/textformat'
+import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
 import { UserFocus, UserInput, UserInputMods, isMac } from '../userinput'
 import { MAYBE_SHARED_TEXT, useSharedType } from '../useshared'
 
-import {
-  PanelItemProps,
-  inputcolor,
-  mapTo,
-  strsplice,
-  useBlink,
-} from './common'
+import { PanelItemProps, inputcolor, mapTo, useBlink } from './common'
 
 export function PanelItemText({
   chip,
@@ -35,20 +32,48 @@ export function PanelItemText({
   const [focus, setFocus] = useState(false)
   const [selection, setSelection] = useState<number | undefined>(undefined)
 
-  let tvalue = `${state} `
+  const tvalue = `${state} `
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
   // keep stable re-renders
   useCacheWriteTextContext(context)
 
-  if (focus && blink) {
-    tvalue = strsplice(tvalue, cursor, 1, '$219+')
-  }
-  tokenizeAndWriteTextFormat(`$green  $20 $${tcolor}${tlabel}$green\\`, context)
-  const visiblerange = context.width - context.x - 2
+  // prefix
+  tokenizeAndWriteTextFormat(
+    `$green  $20 $${tcolor}${tlabel}$green \\`,
+    context,
+  )
+  const tx = context.x
+  const ty = context.y
+  const tyw = ty * context.width
+
+  // content
   tokenizeAndWriteTextFormat(`${tvalue}\\`, context)
   writeCharToEnd(' ', context)
+
+  // input state
+  const hasselection = ispresent(selection)
+  const visiblerange = context.width - tx - 2
+  const left = hasselection ? Math.min(selection, cursor) : cursor
+  let right = hasselection ? Math.max(selection, cursor) : cursor
+  if (hasselection) {
+    if (right !== left && right === cursor) {
+      --right
+    }
+    applycolortoindexes(tx + left + tyw, tx + right + tyw, 15, 8, context)
+  }
+  if (focus && blink) {
+    applystrtoindex(tx + cursor + tyw, String.fromCharCode(219), context)
+  }
+
+  function deleteselection() {
+    if (ispresent(value)) {
+      setCursor(left)
+      setSelection(undefined)
+      value.delete(left, right - left + 1)
+    }
+  }
 
   return (
     <>
@@ -67,18 +92,30 @@ export function PanelItemText({
         <UserFocus blockhotkeys>
           <UserInput
             MOVE_LEFT={(mods) => {
-              if (mods.shift && !selection) {
-                setSelection(cursor)
+              if (mods.shift) {
+                if (!ispresent(selection)) {
+                  setSelection(clamp(cursor - 1, 0, state.length))
+                }
+              } else {
+                setSelection(undefined)
               }
-              setCursor((c) => Math.max(0, c - 1))
+              setCursor((c) => clamp(c - 1, 0, state.length))
             }}
             MOVE_RIGHT={(mods) => {
-              if (mods.shift && !selection) {
-                setSelection(cursor)
+              if (mods.shift) {
+                if (!ispresent(selection)) {
+                  setSelection(cursor)
+                }
+              } else {
+                setSelection(undefined)
               }
-              setCursor((c) => Math.min(state.length, c + 1))
+              setCursor((c) => clamp(c + 1, 0, state.length))
             }}
-            CANCEL_BUTTON={() => setFocus(false)}
+            CANCEL_BUTTON={() => {
+              setFocus(false)
+              setCursor(state.length)
+              setSelection(undefined)
+            }}
             OK_BUTTON={() => setFocus(false)}
             keydown={(event) => {
               if (!value) {
@@ -96,12 +133,16 @@ export function PanelItemText({
 
               switch (lkey) {
                 case 'delete':
-                  if (state.length > 0) {
+                  if (hasselection) {
+                    deleteselection()
+                  } else if (state.length > 0) {
                     value.delete(cursor, 1)
                   }
                   break
                 case 'backspace':
-                  if (cursor > 0) {
+                  if (hasselection) {
+                    deleteselection()
+                  } else if (cursor > 0) {
                     value.delete(cursor - 1, 1)
                     setCursor((state) => Math.max(0, state - 1))
                   }
@@ -109,6 +150,10 @@ export function PanelItemText({
                 default:
                   if (mods.ctrl) {
                     switch (lkey) {
+                      case 'a':
+                        setSelection(0)
+                        setCursor(state.length)
+                        break
                       case 'c':
                         if (ispresent(navigator.clipboard)) {
                           navigator.clipboard
@@ -121,7 +166,11 @@ export function PanelItemText({
                           navigator.clipboard
                             .readText()
                             .then((text) => {
+                              if (hasselection) {
+                                deleteselection()
+                              }
                               value.insert(cursor, text)
+                              setCursor(cursor + text.length)
                             })
                             .catch((err) => console.error(err))
                         }
@@ -130,15 +179,13 @@ export function PanelItemText({
                         if (ispresent(navigator.clipboard)) {
                           navigator.clipboard
                             .writeText(value.toJSON())
-                            .then(() => {
-                              value.delete(0, value.length)
-                            })
+                            .then(() => deleteselection())
                             .catch((err) => console.error(err))
                         }
                         break
                     }
                   } else if (mods.alt) {
-                    // no-op ??
+                    // no-op ?? - could this shove text around ??
                   } else if (key.length === 1 && state.length < visiblerange) {
                     value.insert(cursor, key)
                     setCursor((state) => state + 1)

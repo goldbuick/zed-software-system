@@ -364,3 +364,30 @@ export function writeCharToEnd(char: string, context: WRITE_TEXT_CONTEXT) {
   }
   tokenizeAndWriteTextFormat(char.repeat(delta), context)
 }
+
+export function applystrtoindex(
+  p1: number,
+  str: string,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  let t = 0
+  const p2 = p1 + str.length
+  for (let i = p1; i < p2; ++i) {
+    context.char[i] = str.charCodeAt(t++)
+  }
+}
+
+export function applycolortoindexes(
+  p1: number,
+  p2: number,
+  color: number,
+  bg: number,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  const left = Math.min(p1, p2)
+  const right = Math.max(p1, p2)
+  for (let i = left; i <= right; ++i) {
+    context.color[i] = color
+    context.bg[i] = bg
+  }
+}

@@ -887,6 +887,14 @@ class ScriptVisitor extends CstVisitor {
       })
     }
 
+    if (ctx.read) {
+      return makeNode(ctx, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: strImage(ctx.read[0]),
+      })
+    }
+
     if (ctx.LParen) {
       return makeNode(ctx, {
         type: NODE.EXPR,

@@ -1,4 +1,5 @@
 @player
+#urlstate read usersong 
 
 ' create content
 #book temp create
@@ -80,14 +81,16 @@
 #main
 
 :playtest
-#gadget scroll welcome 70
+#gadget scroll welcome 1000
 !text usersong;#PLAY
 ----------------------------------
 !hotkey playinput p;Play It !
+The Doot! hotkey will now play your input
 #idle
 #main
 
 :playinput
 #play usersong
+#urlstate write usersong
 #main
 

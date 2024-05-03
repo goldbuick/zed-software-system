@@ -1,6 +1,7 @@
 import { createdevice } from 'zss/device'
-import { playchipfreq } from 'zss/gadget/audio/blaster'
+import { playchipdrum, playchipfreq } from 'zss/gadget/audio/blaster'
 import { bpmtoseconds } from 'zss/gadget/audio/logic'
+import { range } from 'zss/mapping/array'
 import { randomInteger } from 'zss/mapping/number'
 import { isarray, isnumber, isstring } from 'zss/mapping/types'
 
@@ -43,25 +44,25 @@ const soundparsenotetable = {
 // drums
 const sounddrumtable: number[][] = []
 sounddrumtable.push([3200])
-sounddrumtable.push(new Array(14).map((_, i) => i * 100 + 1000))
+sounddrumtable.push(range(1, 14).map((i) => i * 100 + 1000))
 sounddrumtable.push(
-  new Array(16).map((_, i) => (i % 2) * 1600 + 1600 + (i % 4) * 1600),
+  range(1, 16).map((i) => (i % 2) * 1600 + 1600 + (i % 4) * 1600),
 )
-sounddrumtable.push(new Array(14).map(() => randomInteger(0, 5000) + 500))
-const doot = new Array(14).fill(0)
-for (let i = 0; i < 7; ++i) {
+sounddrumtable.push(range(1, 14).map(() => randomInteger(0, 5000) + 500))
+const doot = range(0, 16).fill(0)
+range(1, 8).forEach((i) => {
   doot[i * 2 - 1] = 1600
   doot[i * 2] = randomInteger(0, 1600) + 800
-}
+})
 sounddrumtable.push(doot)
 sounddrumtable.push(
-  new Array(14).map((_, i) => (i % 2) * 880 + 880 + (i % 3) * 440),
+  range(1, 14).map((i) => (i % 2) * 880 + 880 + (i % 3) * 440),
 )
-sounddrumtable.push(new Array(14).map((_, i) => 700 - i * 12))
+sounddrumtable.push(range(1, 14).map((i) => 700 - i * 12))
 sounddrumtable.push(
-  new Array(14).map((_, i) => i * 20 + 1200 - randomInteger(0, i * 40)),
+  range(1, 14).map((i) => i * 20 + 1200 - randomInteger(0, i * 40)),
 )
-sounddrumtable.push(new Array(14).map(() => randomInteger(0, 440) + 220))
+sounddrumtable.push(range(1, 14).map(() => randomInteger(0, 440) + 220))
 
 // runner
 // testing 150 bpm (#play feels better at 300bpm ??)
@@ -112,9 +113,12 @@ function soundupdate(delta: number) {
     playchipfreq(soundfreqtable[tone])
   } else {
     // drum
-    // tone - 240
+    const drumtype = tone - 240
+    const drum = sounddrumtable[drumtype] ?? []
+    playchipdrum(drum)
   }
 
+  // how many ticks before change ?
   pcspeaker.durationcounter = pcspeaker.buffer[pcspeaker.bufferpos++]
 }
 
@@ -190,7 +194,6 @@ function soundparse(input: string) {
     }
   }
 
-  console.info('song!!!', output)
   return output
 }
 

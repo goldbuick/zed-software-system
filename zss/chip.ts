@@ -283,7 +283,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       return yieldstate || chip.shouldhalt()
     },
     emit(target, data) {
-      hub.emit(target, id, data)
+      hub.emit(target, `vm:${id}`, data)
     },
     send(chipid, message, data) {
       hub.emit(`vm:${chipid}:${message}`, id, data)
@@ -295,11 +295,21 @@ export function createchip(id: string, build: GeneratorBuild) {
       locked = ''
     },
     message(incoming) {
-      // internal messages while locked are allowed
-      if (locked && incoming.sender !== locked) {
-        return
+      // system messages
+      switch (incoming.target) {
+        case 'urlstate': {
+          const [name, value] = incoming.data
+          chip.set(name, value)
+          break
+        }
+        default:
+          // internal messages while locked are allowed
+          if (locked && incoming.sender !== locked) {
+            return
+          }
+          message = incoming
+          break
       }
-      message = incoming
     },
     zap(label) {
       const labelset = labels[label]

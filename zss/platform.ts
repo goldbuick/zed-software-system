@@ -5,6 +5,7 @@ import ZSSWorker from './instance??worker'
 import './device/gadgetclient'
 import './device/pcspeaker'
 import './device/shared'
+import './device/urlstate'
 
 export function createplatform() {
   const instance = new ZSSWorker()

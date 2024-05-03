@@ -39,6 +39,22 @@ export const ZSS_FIRMWARE = createfirmware({
     gadgetcheckscroll(chip)
   },
 })
+  .command('urlstate', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
+    const [action, name] = readargs({ ...memory, chip, words }, 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.STRING,
+    ])
+    switch (action.toLowerCase()) {
+      case 'read':
+        chip.emit('urlstate:read', name)
+        break
+      case 'write':
+        chip.emit('urlstate:write', [name, chip.get(name)])
+        break
+    }
+    return 0
+  })
   .command('color', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.COLOR])

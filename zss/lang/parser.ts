@@ -481,6 +481,7 @@ class ScriptParser extends CstParser {
       { ALT: () => this.CONSUME(lexer.StringLiteralDouble) },
       { ALT: () => this.CONSUME(lexer.StringLiteral) },
       { ALT: () => this.CONSUME(lexer.NumberLiteral) },
+      { ALT: () => this.CONSUME(lexer.Command_read) },
       {
         ALT: () => {
           this.CONSUME(lexer.LParen)
