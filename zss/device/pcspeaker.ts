@@ -1,5 +1,10 @@
 import { createdevice } from 'zss/device'
-import { playchipdrum, playchipfreq } from 'zss/gadget/audio/blaster'
+import {
+  loadchipdrum,
+  onblasterready,
+  playchipdrum,
+  playchipfreq,
+} from 'zss/gadget/audio/blaster'
 import { bpmtoseconds } from 'zss/gadget/audio/logic'
 import { range } from 'zss/mapping/array'
 import { randomInteger } from 'zss/mapping/number'
@@ -42,27 +47,45 @@ const soundparsenotetable = {
 }
 
 // drums
-const sounddrumtable: number[][] = []
-sounddrumtable.push([3200])
-sounddrumtable.push(range(1, 14).map((i) => i * 100 + 1000))
-sounddrumtable.push(
-  range(1, 16).map((i) => (i % 2) * 1600 + 1600 + (i % 4) * 1600),
-)
-sounddrumtable.push(range(1, 14).map(() => randomInteger(0, 5000) + 500))
-const doot = range(0, 16).fill(0)
-range(1, 8).forEach((i) => {
-  doot[i * 2 - 1] = 1600
-  doot[i * 2] = randomInteger(0, 1600) + 800
+onblasterready(() => {
+  let drumindex = 0
+  loadchipdrum(drumindex++, [3200])
+  loadchipdrum(
+    drumindex++,
+    range(1, 14).map((i) => i * 100 + 1000),
+  )
+  loadchipdrum(
+    drumindex++,
+    range(1, 16).map((i) => (i % 2) * 1600 + 1600 + (i % 4) * 1600),
+  )
+  loadchipdrum(
+    drumindex++,
+    range(1, 14).map(() => randomInteger(0, 5000) + 500),
+  )
+  const doot = range(0, 16).fill(0)
+  range(1, 8).forEach((i) => {
+    doot[i * 2 - 1] = 1600
+    doot[i * 2] = randomInteger(0, 1600) + 800
+  })
+  loadchipdrum(drumindex++, doot)
+  loadchipdrum(
+    drumindex++,
+    range(1, 14).map((i) => (i % 2) * 880 + 880 + (i % 3) * 440),
+  )
+  loadchipdrum(
+    drumindex++,
+    range(1, 14).map((i) => 700 - i * 12),
+  )
+  loadchipdrum(
+    drumindex++,
+    range(1, 14).map((i) => i * 20 + 1200 - randomInteger(0, i * 40)),
+  )
+  loadchipdrum(
+    drumindex++,
+    range(1, 14).map(() => randomInteger(0, 440) + 220),
+  )
+  console.info('loaded', drumindex, 'drums')
 })
-sounddrumtable.push(doot)
-sounddrumtable.push(
-  range(1, 14).map((i) => (i % 2) * 880 + 880 + (i % 3) * 440),
-)
-sounddrumtable.push(range(1, 14).map((i) => 700 - i * 12))
-sounddrumtable.push(
-  range(1, 14).map((i) => i * 20 + 1200 - randomInteger(0, i * 40)),
-)
-sounddrumtable.push(range(1, 14).map(() => randomInteger(0, 440) + 220))
 
 // runner
 // testing 150 bpm (#play feels better at 300bpm ??)
@@ -113,9 +136,7 @@ function soundupdate(delta: number) {
     playchipfreq(soundfreqtable[tone])
   } else {
     // drum
-    const drumtype = tone - 240
-    const drum = sounddrumtable[drumtype] ?? []
-    playchipdrum(drum)
+    playchipdrum(tone - 240)
   }
 
   // how many ticks before change ?
