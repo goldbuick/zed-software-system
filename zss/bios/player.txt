@@ -17,6 +17,7 @@
 !hotkey draw tab "  Tab  ";Draw
  
 !hotkey playtest p;#PlayTest
+!hotkey playinput d;Doot!
 
 ' main loop
 #cycle 1
@@ -79,6 +80,7 @@
 #main
 
 :playtest
+#gadget scroll welcome 70
 !text usersong;#PLAY
 ----------------------------------
 !hotkey playinput p;Play It !

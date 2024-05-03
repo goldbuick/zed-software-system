@@ -174,11 +174,13 @@ function soundparse(input: string) {
       default: {
         notetone =
           soundparsenotetable[li as keyof typeof soundparsenotetable] ?? 0
-        switch ((input[++i] ?? '').toLowerCase()) {
+        switch ((input[i + 1] ?? '').toLowerCase()) {
           case '!':
+            ++i
             --notetone
             break
           case '#':
+            ++i
             ++notetone
             break
         }
@@ -188,6 +190,7 @@ function soundparse(input: string) {
     }
   }
 
+  console.info('song!!!', output)
   return output
 }
 

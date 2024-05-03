@@ -1,6 +1,6 @@
 import isHotKey from 'is-hotkey'
 import mitt from 'mitt'
-import React, {
+import {
   ReactNode,
   createContext,
   useContext,
@@ -33,7 +33,7 @@ function invoke(input: INPUT, mods: UserInputMods) {
 // keyboard input
 export type KeyboardInputHandler = (event: KeyboardEvent) => void
 
-const isMac = window.navigator.userAgent.indexOf('Mac') !== -1
+export const isMac = window.navigator.userAgent.indexOf('Mac') !== -1
 
 document.addEventListener(
   'keydown',
