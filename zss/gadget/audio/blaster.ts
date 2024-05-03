@@ -18,16 +18,8 @@ function nm(key: string, alt: string): { key: string } {
   return { key: `${key}:${alt}` }
 }
 
-function cl(key: string, input: any) {
-  return el.max(nm(key, 'max'), 0, el.min(nm(key, 'min'), 1, input))
-}
-
-function rendersq(key: string, freq: any) {
-  // round & mul for the nice classic sound
-  const sq = el.square(nm(key, 'sq'), freq)
-  const ssq = el.mul(nm(key, 'sqm'), sq, 32)
-  const cssq = cl(nm(key, 'cl').key, ssq)
-  return cssq
+function rendervoice(key: string, freq: any) {
+  return el.blepsaw(nm(key, 'voice'), freq)
 }
 
 function drumname(i: number) {
@@ -45,7 +37,7 @@ function renderblaster() {
     el.mul(
       nm(doot, 'mul'),
       el.ge(chipblaster.freq, 0),
-      rendersq(nm(doot, 'voice').key, chipblaster.freq),
+      rendervoice(nm(doot, 'voice').key, chipblaster.freq),
     ),
   )
 
@@ -57,7 +49,7 @@ function renderblaster() {
       return el.mul(
         nm(name, 'mul'),
         el.const({ ...nm(name, 'gate'), value: active }),
-        rendersq(
+        rendervoice(
           nm(name, 'voice').key,
           el.seq2(
             {
