@@ -17,3 +17,8 @@ https://github.com/phips28/gh-action-bump-version/tree/master?tab=readme-ov-file
   * All other changes will increment the patch version.
 * Push the bumped npm version in package.json back into the repo.
 * Push a tag for the new version back into the repo.
+
+## notes for later
+
+for when I want to go crazy for speed
+https://romgrk.com/posts/optimizing-javascript
