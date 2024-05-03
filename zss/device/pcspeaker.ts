@@ -58,6 +58,8 @@ onblasterready(() => {
     drumindex++,
     range(1, 16).map((i) => (i % 2) * 1600 + 1600 + (i % 4) * 1600),
   )
+  // empty 'cause 3 is taken
+  loadchipdrum(drumindex++, [])
   loadchipdrum(
     drumindex++,
     range(1, 14).map(() => randomInteger(0, 5000) + 500),
@@ -128,9 +130,10 @@ function soundupdate(delta: number) {
 
   // read next tone
   const tone = pcspeaker.buffer[pcspeaker.bufferpos++]
+  // reset
+  playchipfreq(0)
   if (tone === 0) {
     // rest
-    playchipfreq(0)
   } else if (tone < 240) {
     // doot
     playchipfreq(soundfreqtable[tone])

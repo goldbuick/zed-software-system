@@ -14,13 +14,24 @@ const chipblaster = {
   drum: '',
 }
 
+function nm(key: string, alt: string): { key: string } {
+  return { key: `${key}:${alt}` }
+}
+
+function cl(key: string, input: any) {
+  return el.max(nm(key, 'max'), 0, el.min(nm(key, 'min'), 1, input))
+}
+
 function rendersq(key: string, freq: any) {
   // round & mul for the nice classic sound
-  return el.mul(el.square(freq), 0.1)
+  const sq = el.square(nm(key, 'sq'), freq)
+  const ssq = el.mul(nm(key, 'sqm'), sq, 32)
+  const cssq = cl(nm(key, 'cl').key, ssq)
+  return cssq
 }
 
 function drumname(i: number) {
-  return `drum${i}`
+  return nm('drum', `${i}`).key
 }
 
 const drumvalues: Record<string, number[]> = {}
@@ -29,23 +40,33 @@ function renderblaster() {
   const voices: any[] = []
 
   // add doot
+  const doot = 'doot'
   voices.push(
-    el.mul(el.ge(chipblaster.freq, 0), rendersq('doot', chipblaster.freq)),
+    el.mul(
+      nm(doot, 'mul'),
+      el.ge(chipblaster.freq, 0),
+      rendersq(nm(doot, 'voice').key, chipblaster.freq),
+    ),
   )
 
   // add drums
   const drums = Object.keys(drumvalues)
   voices.push(
     ...drums.map((name) => {
-      const active = name === chipblaster.drum
+      const active = name === chipblaster.drum ? 1 : 0
       return el.mul(
-        1, // active ? 1 : 0,
+        nm(name, 'mul'),
+        el.const({ ...nm(name, 'gate'), value: active }),
         rendersq(
-          name,
+          nm(name, 'voice').key,
           el.seq2(
-            { seq: drumvalues[name], offset: 0 },
-            el.train(500),
-            active ? 1 : 0,
+            {
+              ...nm(name, 'seq'),
+              loop: false,
+              seq: drumvalues[name],
+            },
+            el.train(1000),
+            el.const({ ...nm(name, 'reset'), value: active }),
           ),
         ),
       )
@@ -53,7 +74,11 @@ function renderblaster() {
   )
 
   // render output
-  const out = el.add(...voices)
+  const out = el.mul(
+    nm('mixer', 'gate'),
+    0.5,
+    el.add(nm('mixer', 'add'), ...voices),
+  )
   core.render(out, out).catch((e) => console.error(e))
 }
 
