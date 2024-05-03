@@ -59,6 +59,7 @@ import {
   dirfrompts,
   ptapplydir,
   COLLISION,
+  readexpr,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
@@ -497,7 +498,15 @@ export const ZZT_FIRMWARE = createfirmware({
   .command('play', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [buffer] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.STRING])
-    chip.emit('pcspeaker:play', [-1, buffer])
+
+    // see if we've been given a flag
+    const maybebuffer = chip.get(buffer)
+    if (isstring(maybebuffer)) {
+      chip.emit('pcspeaker:play', [-1, maybebuffer])
+    } else {
+      chip.emit('pcspeaker:play', [-1, buffer])
+    }
+
     return 0
   })
   .command('put', (chip, words) => {

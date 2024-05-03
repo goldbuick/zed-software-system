@@ -16,7 +16,7 @@
 !hotkey plot space " Space ";Plot
 !hotkey draw tab "  Tab  ";Draw
  
-!hotkey menu_test p;#PlayTest
+!hotkey playtest p;#PlayTest
 
 ' main loop
 #cycle 1
@@ -78,19 +78,14 @@
 #endif
 #main
 
-:menu_test
-$3 Here is some test text and yeah! $3
+:playtest
+!text usersong;#PLAY
 ----------------------------------
-!number          frank1 100         ;Number Value 
-!rn              frank2             ;Slider 
-!select          frank3 A BB CC 333 ;Enum 
-!text            frank4             ;Text Value 
-
+!hotkey playinput p;Play It !
 #idle
 #main
 
-:zoop_test
-?at 5 4 
-#play tcegc#fg#df#ad#ga#eg#+c
+:playinput
+#play usersong
 #main
 

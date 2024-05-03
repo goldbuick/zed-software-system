@@ -7,7 +7,7 @@ const audiocontext = new AudioContext()
 export function playchipfreq(freq: number) {
   if (freq) {
     // round & mul for the nice classic sound
-    const sq = el.round(el.mul(el.square(freq), 32))
+    const sq = el.round(el.mul(el.square(freq), 16))
     core.render(sq, sq).catch((e) => console.error(e))
   } else {
     core.render().catch((e) => console.error(e))

@@ -1,5 +1,6 @@
 import { createdevice } from 'zss/device'
 import { playchipfreq } from 'zss/gadget/audio/blaster'
+import { bpmtoseconds } from 'zss/gadget/audio/logic'
 import { randomInteger } from 'zss/mapping/number'
 import { isarray, isnumber, isstring } from 'zss/mapping/types'
 
@@ -63,9 +64,8 @@ sounddrumtable.push(
 sounddrumtable.push(new Array(14).map(() => randomInteger(0, 440) + 220))
 
 // runner
-// testing 100 bpm
-// middle number is BPM
-const RATE = 60 / 150 / 8
+// testing 150 bpm (#play feels better at 300bpm ??)
+const RATE = bpmtoseconds(150 * 2)
 function soundupdate(delta: number) {
   // 32nd note duration
   pcspeaker.time += delta
