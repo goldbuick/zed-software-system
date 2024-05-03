@@ -38,8 +38,10 @@ export function Splash({ onBoot }: SplashProps) {
       void boot()
     }
 
+    document.addEventListener('keydown', invoke)
     document.addEventListener('pointerdown', invoke)
     return () => {
+      document.removeEventListener('keydown', invoke)
       document.removeEventListener('pointerdown', invoke)
     }
   }, [onBoot])

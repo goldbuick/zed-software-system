@@ -32,7 +32,7 @@ export const ZSS_FIRMWARE = createfirmware({
   shouldtick() {},
   tick(chip) {
     const memory = memoryreadchip(chip.id())
-    const withname = memory.target?.name ?? memory.target?.kind ?? 'Scroll'
+    const withname = memory.object?.name ?? memory.object?.kind ?? 'Scroll'
     gadgetpanel(chip, 'scroll', PANEL_TYPE.SCROLL, undefined, withname)
   },
   tock(chip) {
@@ -42,8 +42,8 @@ export const ZSS_FIRMWARE = createfirmware({
   .command('color', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.COLOR])
-    if (ispresent(memory.target) && ispresent(value)) {
-      boardelementapplycolor(memory.target, value)
+    if (ispresent(memory.object) && ispresent(value)) {
+      boardelementapplycolor(memory.object, value)
     }
     return 0
   })

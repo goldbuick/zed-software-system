@@ -1,4 +1,5 @@
 import { CHIP, WORD } from 'zss/chip'
+import { BITMAP } from 'zss/gadget/data/bitmap'
 import { COLOR_SINDEX, COLOR_TINDEX } from 'zss/gadget/data/types'
 import { range, pick } from 'zss/mapping/array'
 import { clamp, randomInteger } from 'zss/mapping/number'
@@ -16,11 +17,18 @@ import {
   MAYBE_BOARD_ELEMENT,
   boardevaldir,
 } from 'zss/memory/board'
+import { MAYBE_BOOK } from 'zss/memory/book'
 
 export type READ_CONTEXT = {
-  chip: CHIP
+  // targets
+  book: MAYBE_BOOK
   board: MAYBE_BOARD
-  target: MAYBE_BOARD_ELEMENT
+  object: MAYBE_BOARD_ELEMENT
+  terrain: MAYBE_BOARD_ELEMENT
+  charset: MAYBE<BITMAP>
+  palette: MAYBE<BITMAP>
+  // context
+  chip: CHIP
   words: WORD[]
 }
 
@@ -994,7 +1002,7 @@ export function readargs<T extends ARG_TYPES>(
         const [dir, iii] = readdir(read, ii)
         if (isstrdir(dir)) {
           const value = read.board
-            ? boardevaldir(read.board, read.target, dir)
+            ? boardevaldir(read.board, read.object, dir)
             : { x: 0, y: 0 }
           ii = iii
           values.push(value)
@@ -1073,7 +1081,7 @@ export function readargs<T extends ARG_TYPES>(
         const [dir, iii] = readdir(read, ii)
         if (isstrdir(dir)) {
           const value = read.board
-            ? boardevaldir(read.board, read.target, dir)
+            ? boardevaldir(read.board, read.object, dir)
             : { x: 0, y: 0 }
           ii = iii
           values.push(value)

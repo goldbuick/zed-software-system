@@ -272,14 +272,14 @@ export const ZZT_FIRMWARE = createfirmware({
 
     // we have to check the object's stats next
     const memory = memoryreadchip(chip.id())
-    if (memory.target) {
+    if (memory.object) {
       // if we are reading from input, pull the next input
       if (INPUT_STAT_NAMES.has(name)) {
-        readinput(memory.target)
+        readinput(memory.object)
       }
 
       // read stat
-      const value = memory.target.stats?.[name]
+      const value = memory.object.stats?.[name]
       const defined = ispresent(value)
 
       // return result
@@ -290,7 +290,7 @@ export const ZZT_FIRMWARE = createfirmware({
 
     // get player
     const player = memory.board
-      ? boardfindplayer(memory.board, memory.target)
+      ? boardfindplayer(memory.board, memory.object)
       : undefined
 
     // then global
@@ -301,20 +301,20 @@ export const ZZT_FIRMWARE = createfirmware({
     const memory = memoryreadchip(chip.id())
 
     // we have to check the object's stats first
-    if (ispresent(memory.target)) {
-      if (ispresent(memory.target?.stats?.[name]) || STAT_NAMES.has(name)) {
+    if (ispresent(memory.object)) {
+      if (ispresent(memory.object?.stats?.[name]) || STAT_NAMES.has(name)) {
         // console.info('??set', name, value)
-        if (!memory.target.stats) {
-          memory.target.stats = {}
+        if (!memory.object.stats) {
+          memory.object.stats = {}
         }
-        memory.target.stats[name] = value
+        memory.object.stats[name] = value
         return [true, value]
       }
     }
 
     // get player
     const player = memory.board
-      ? boardfindplayer(memory.board, memory.target)
+      ? boardfindplayer(memory.board, memory.object)
       : undefined
 
     // then global
@@ -324,20 +324,20 @@ export const ZZT_FIRMWARE = createfirmware({
   shouldtick(chip) {
     const memory = memoryreadchip(chip.id())
     if (
-      !ispresent(memory.target?.x) ||
-      !ispresent(memory.target?.y) ||
-      !ispresent(memory.target?.stats?.stepx) ||
-      !ispresent(memory.target?.stats?.stepy)
+      !ispresent(memory.object?.x) ||
+      !ispresent(memory.object?.y) ||
+      !ispresent(memory.object?.stats?.stepx) ||
+      !ispresent(memory.object?.stats?.stepy)
     ) {
       return
     }
     if (
-      !moveobject(chip, memory.book, memory.board, memory.target, {
-        x: memory.target.x + memory.target.stats.stepx,
-        y: memory.target.y + memory.target.stats.stepy,
+      !moveobject(chip, memory.book, memory.board, memory.object, {
+        x: memory.object.x + memory.object.stats.stepx,
+        y: memory.object.y + memory.object.stats.stepy,
       })
     ) {
-      editelementstatsafewrite(memory.target, {
+      editelementstatsafewrite(memory.object, {
         stepx: 0,
         stepy: 0,
       })
@@ -347,7 +347,7 @@ export const ZZT_FIRMWARE = createfirmware({
   tock(chip) {
     const memory = memoryreadchip(chip.id())
     // headless only gets a single tick to do its magic
-    if (memory.target?.headless) {
+    if (memory.object?.headless) {
       chip.command('die')
     }
   },
@@ -355,16 +355,16 @@ export const ZZT_FIRMWARE = createfirmware({
   .command('become', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     // track dest
-    const dest: PT = { x: memory.target?.x ?? 0, y: memory.target?.y ?? 0 }
+    const dest: PT = { x: memory.object?.x ?? 0, y: memory.object?.y ?? 0 }
     // read
     const [kind] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.KIND])
     // make sure lookup is created
     bookboardsetlookup(memory.book, memory.board)
     // make invisible
-    bookboardobjectnamedlookupdelete(memory.book, memory.board, memory.target)
+    bookboardobjectnamedlookupdelete(memory.book, memory.board, memory.object)
     // nuke self
     if (
-      bookboardobjectsafedelete(memory.book, memory.target, chip.timestamp())
+      bookboardobjectsafedelete(memory.book, memory.object, chip.timestamp())
     ) {
       // write new element
       editboardwrite(memory.book, memory.board, kind, dest)
@@ -451,8 +451,8 @@ export const ZZT_FIRMWARE = createfirmware({
   .command('char', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.NUMBER])
-    if (ispresent(memory.target)) {
-      memory.target.char = value
+    if (ispresent(memory.object)) {
+      memory.object.char = value
     }
     return 0
   })
@@ -467,11 +467,11 @@ export const ZZT_FIRMWARE = createfirmware({
   .command('die', (chip) => {
     const memory = memoryreadchip(chip.id())
     // drop from lookups if not headless
-    if (memory.target?.headless) {
-      bookboardobjectnamedlookupdelete(memory.book, memory.board, memory.target)
+    if (memory.object?.headless) {
+      bookboardobjectnamedlookupdelete(memory.book, memory.board, memory.object)
     }
     // mark target for deletion
-    bookboardobjectsafedelete(memory.book, memory.target, chip.timestamp())
+    bookboardobjectsafedelete(memory.book, memory.object, chip.timestamp())
     // halt execution
     chip.endofprogram()
     return 0
@@ -482,17 +482,17 @@ export const ZZT_FIRMWARE = createfirmware({
   })
   .command('go', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    if (!ispresent(memory.target)) {
+    if (!ispresent(memory.object)) {
       // if blocked, return 1
       return 1
     }
 
     // attempt to move
     const [dest] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.DIR])
-    moveobject(chip, memory.book, memory.board, memory.target, dest)
+    moveobject(chip, memory.book, memory.board, memory.object, dest)
 
     // if blocked, return 1
-    return memory.target.x !== dest.x && memory.target.y !== dest.y ? 1 : 0
+    return memory.object.x !== dest.x && memory.object.y !== dest.y ? 1 : 0
   })
   .command('play', (chip, words) => {
     const memory = memoryreadchip(chip.id())
@@ -585,7 +585,7 @@ export const ZZT_FIRMWARE = createfirmware({
     const memory = memoryreadchip(chip.id())
 
     // invalid data
-    if (!ispt(memory.target)) {
+    if (!ispt(memory.object)) {
       return 0
     }
 
@@ -606,9 +606,9 @@ export const ZZT_FIRMWARE = createfirmware({
     )
 
     // this feels a little silly
-    const dir = dirfrompts(memory.target, maybedir)
+    const dir = dirfrompts(memory.object, maybedir)
     const step = ptapplydir({ x: 0, y: 0 }, dir)
-    const start = ptapplydir({ x: memory.target.x, y: memory.target.y }, dir)
+    const start = ptapplydir({ x: memory.object.x, y: memory.object.y }, dir)
 
     // make sure lookup is created
     bookboardsetlookup(maybebook, maybeboard)
@@ -618,7 +618,7 @@ export const ZZT_FIRMWARE = createfirmware({
 
     // check for terrain that doesn't block bullets
     if (ispresent(blocked) && !ispresent(blocked.id)) {
-      const selfkind = bookelementkindread(maybebook, memory.target)
+      const selfkind = bookelementkindread(maybebook, memory.object)
       const blockedkind = bookelementkindread(maybebook, blocked)
       // found terrain
       if (
@@ -699,15 +699,15 @@ export const ZZT_FIRMWARE = createfirmware({
   .command('walk', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     // invalid data
-    if (!ispt(memory.target)) {
+    if (!ispt(memory.object)) {
       return 0
     }
     // read walk direction
     const [maybedir] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.DIR])
-    const dir = dirfrompts(memory.target, maybedir)
+    const dir = dirfrompts(memory.object, maybedir)
     const step = ptapplydir({ x: 0, y: 0 }, dir)
     // create delta from dir
-    editelementstatsafewrite(memory.target, {
+    editelementstatsafewrite(memory.object, {
       stepx: step.x,
       stepy: step.y,
     })
@@ -717,8 +717,8 @@ export const ZZT_FIRMWARE = createfirmware({
   .command('stat', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     // all this command does for now is update name
-    if (memory.target) {
-      memory.target.name = words.map(maptostring).join(' ')
+    if (memory.object) {
+      memory.object.name = words.map(maptostring).join(' ')
     }
     return 0
   })

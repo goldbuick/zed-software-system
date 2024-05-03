@@ -1,5 +1,6 @@
 import { BIOS } from 'zss/bios'
 import { COLOR } from 'zss/firmware/wordtypes'
+import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
   INPUT,
   LAYER,
@@ -42,9 +43,14 @@ import {
 } from './frame'
 
 type CHIP_MEMORY = {
+  // targets
   book: MAYBE_BOOK
   board: MAYBE_BOARD
-  target: MAYBE_BOARD_ELEMENT
+  object: MAYBE_BOARD_ELEMENT
+  terrain: MAYBE_BOARD_ELEMENT
+  charset: MAYBE<BITMAP>
+  palette: MAYBE<BITMAP>
+  // user input
   inputmods: Record<INPUT, number>
   inputqueue: Set<INPUT>
   inputcurrent: MAYBE<INPUT>
@@ -126,7 +132,7 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
     chip = {
       book: undefined,
       board: undefined,
-      target: undefined,
+      object: undefined,
       inputqueue: new Set(),
       inputmods: {
         [INPUT.NONE]: 0,
@@ -190,7 +196,7 @@ export function memorytick(os: OS, timestamp: number) {
     const context = memoryreadchip(id)
     context.book = book
     context.board = board
-    context.target = target
+    context.object = target
     context.inputcurrent = undefined
     // run chip code
     //
