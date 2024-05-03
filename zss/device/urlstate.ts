@@ -23,13 +23,16 @@ function writestate(state: any) {
 const urlstate = createdevice('urlstate', [], (message) => {
   switch (message.target) {
     case 'read': {
-      const name = message.data ?? ''
+      const [name] = message.data
       const current = readstate()
       if (ispresent(current)) {
         const value = current[name]
-        urlstate.reply(message, 'urlstate', [name, value ?? 0])
-      } else {
-        console.info(name, 'is empty')
+        if (ispresent(current)) {
+          urlstate.reply(message, 'urlstate', [name, value])
+          console.info('read', value, 'for', name)
+        } else {
+          console.info(name, 'is empty')
+        }
       }
       break
     }

@@ -47,7 +47,7 @@ export const ZSS_FIRMWARE = createfirmware({
     ])
     switch (action.toLowerCase()) {
       case 'read':
-        chip.emit('urlstate:read', name)
+        chip.emit('urlstate:read', [name])
         break
       case 'write':
         chip.emit('urlstate:write', [name, chip.get(name)])
