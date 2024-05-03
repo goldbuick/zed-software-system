@@ -214,7 +214,7 @@ Make sure that all grammar rule definitions are done before 'performSelfAnalysis
 #gadget scroll welcome 1000
 !text usersong;#PLAY
 ----------------------------------
-!hotkey playinput p;Play It !
+!hotkey playinput d;Doot!
 The Doot! hotkey will now play your input
 #idle
 #main
