@@ -72,6 +72,7 @@ const STAT_NAMES = new Set([
   'inputok',
   'inputcancel',
   'inputmenu',
+  'inputdebug',
   'data',
 ])
 
@@ -83,6 +84,7 @@ const INPUT_STAT_NAMES = new Set([
   'inputok',
   'inputcancel',
   'inputmenu',
+  'inputdebug',
 ])
 
 function maptoconst(value: string) {
@@ -127,12 +129,14 @@ function readinput(target: BOARD_ELEMENT) {
   target.stats.inputok = 0
   target.stats.inputcancel = 0
   target.stats.inputmenu = 0
+  target.stats.inputdebug = 0
 
   // set active input stat
   const mods = memory.inputmods[head]
   target.stats.inputalt = mods & INPUT_ALT ? 1 : 0
   target.stats.inputctrl = mods & INPUT_CTRL ? 1 : 0
   target.stats.inputshift = mods & INPUT_SHIFT ? 1 : 0
+
   switch (head) {
     case INPUT.MOVE_UP:
     case INPUT.MOVE_DOWN:
@@ -148,6 +152,9 @@ function readinput(target: BOARD_ELEMENT) {
       break
     case INPUT.MENU_BUTTON:
       target.stats.inputmenu = 1
+      break
+    case INPUT.DEBUG_BUTTON:
+      target.stats.inputdebug = 1
       break
   }
 

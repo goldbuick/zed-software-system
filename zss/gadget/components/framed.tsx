@@ -128,6 +128,7 @@ export function Framed({ player, layers, width, height }: FramedProps) {
         OK_BUTTON={(mods) => sendinput(player, INPUT.OK_BUTTON, mods)}
         CANCEL_BUTTON={(mods) => sendinput(player, INPUT.CANCEL_BUTTON, mods)}
         MENU_BUTTON={(mods) => sendinput(player, INPUT.MENU_BUTTON, mods)}
+        DEBUG_BUTTON={(mods) => sendinput(player, INPUT.DEBUG_BUTTON, mods)}
       />
       <Clipping width={viewwidth} height={viewheight}>
         {}
