@@ -104,7 +104,7 @@ function soundupdate(delta: number) {
   if (!pcspeaker.enabled) {
     // not enabled
     pcspeaker.isplaying = false
-    playchipfreq(0)
+    playchipfreq(0, 0)
     return
   }
 
@@ -123,23 +123,26 @@ function soundupdate(delta: number) {
 
   if (pcspeaker.bufferpos >= pcspeaker.buffer.length) {
     // buffer complete
-    playchipfreq(0)
+    playchipfreq(0, 0)
     pcspeaker.isplaying = false
     return
   }
 
   // read next tone
   const tone = pcspeaker.buffer[pcspeaker.bufferpos++]
+  // read next type
+  const type = pcspeaker.buffer[pcspeaker.bufferpos++]
   // reset
-  playchipfreq(0)
+  playchipfreq(type, 0)
+
   if (tone === 0) {
     // rest
   } else if (tone < 240) {
     // doot
-    playchipfreq(soundfreqtable[tone])
+    playchipfreq(type, soundfreqtable[tone])
   } else {
     // drum
-    playchipdrum(tone - 240)
+    playchipdrum(type, tone - 240)
   }
 
   // how many ticks before change ?
@@ -148,8 +151,11 @@ function soundupdate(delta: number) {
 
 function soundparse(input: string) {
   let notetone = 0
+  let notetype = 0
   let noteoctave = 3
   let noteduration = 1
+
+  console.info('soundparse', input)
 
   const output: number[] = []
   for (let i = 0; i < input.length; ++i) {
@@ -188,6 +194,25 @@ function soundparse(input: string) {
       case 'x':
         output.push(0, noteduration)
         break
+      case 'z': {
+        console.info('****', input)
+        const lii = (input[i + 1] ?? '').toLowerCase()
+        switch (lii) {
+          case '0':
+          case '1':
+          case '2':
+          case '4':
+          case '5':
+          case '6':
+          case '7':
+          case '8':
+          case '9':
+            ++i
+            notetype = parseFloat(lii)
+            break
+        }
+        break
+      }
       case '0':
       case '1':
       case '2':
@@ -197,7 +222,7 @@ function soundparse(input: string) {
       case '7':
       case '8':
       case '9':
-        output.push(parseFloat(li) + 240, noteduration)
+        output.push(parseFloat(li) + 240, notetype, noteduration)
         break
       default: {
         notetone =
@@ -212,7 +237,7 @@ function soundparse(input: string) {
             ++notetone
             break
         }
-        output.push(noteoctave * 16 + notetone, noteduration)
+        output.push(noteoctave * 16 + notetone, notetype, noteduration)
         break
       }
     }

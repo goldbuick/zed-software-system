@@ -1,5 +1,6 @@
-import { el } from '@elemaudio/core'
+import { ElemNode, el } from '@elemaudio/core'
 import WebRenderer from '@elemaudio/web-renderer'
+import { MAYBE } from 'zss/mapping/types'
 
 let coreisready = false
 const core = new WebRenderer()
@@ -11,6 +12,7 @@ const audiocontext = new AudioContext()
 
 const chipblaster = {
   freq: 0,
+  type: 0,
   drum: '',
 }
 
@@ -18,8 +20,22 @@ function nm(key: string, alt: string): { key: string } {
   return { key: `${key}:${alt}` }
 }
 
-function rendervoice(key: string, freq: any) {
-  return el.blepsaw(nm(key, 'voice'), freq)
+function rendervoice(key: string, type: number, freq: ElemNode): ElemNode {
+  let node: MAYBE<ElemNode> = undefined
+
+  switch (type % 3) {
+    default:
+      node = el.square(nm(key, 'voice'), freq)
+      break
+    case 1:
+      node = el.saw(nm(key, 'voice'), freq)
+      break
+    case 2:
+      node = el.triangle(nm(key, 'voice'), freq)
+      break
+  }
+
+  return node
 }
 
 function drumname(i: number) {
@@ -37,7 +53,7 @@ function renderblaster() {
     el.mul(
       nm(doot, 'mul'),
       el.ge(chipblaster.freq, 0),
-      rendervoice(nm(doot, 'voice').key, chipblaster.freq),
+      rendervoice(nm(doot, 'voice').key, chipblaster.type, chipblaster.freq),
     ),
   )
 
@@ -51,6 +67,7 @@ function renderblaster() {
         el.const({ ...nm(name, 'gate'), value: active }),
         rendervoice(
           nm(name, 'voice').key,
+          chipblaster.type,
           el.seq2(
             {
               ...nm(name, 'seq'),
@@ -66,12 +83,10 @@ function renderblaster() {
   )
 
   // render output
-  const out = el.mul(
-    nm('mixer', 'gate'),
-    0.5,
-    el.add(nm('mixer', 'add'), ...voices),
-  )
-  core.render(out, out).catch((e) => console.error(e))
+  const out = el.add(nm('mixer', 'add'), ...voices)
+  const dcblockout = el.dcblock(out)
+  const gainout = el.mul(dcblockout, 2)
+  core.render(gainout, gainout).catch((e) => console.error(e))
 }
 
 export function onblasterready(fn: () => void) {
@@ -82,7 +97,8 @@ export function onblasterready(fn: () => void) {
   }
 }
 
-export function playchipfreq(freq: number) {
+export function playchipfreq(type: number, freq: number) {
+  chipblaster.type = type
   chipblaster.freq = freq
   chipblaster.drum = ''
   renderblaster()
@@ -92,7 +108,8 @@ export function loadchipdrum(i: number, drum: number[]) {
   drumvalues[drumname(i)] = [...drum, 0]
 }
 
-export function playchipdrum(drum: number) {
+export function playchipdrum(type: number, drum: number) {
+  chipblaster.type = type
   chipblaster.freq = 0
   chipblaster.drum = drumname(drum)
   renderblaster()
@@ -109,5 +126,5 @@ export async function initaudio() {
   })
   node.connect(audiocontext.destination)
 
-  core.on('load', () => playchipfreq(0))
+  core.on('load', () => playchipfreq(0, 0))
 }

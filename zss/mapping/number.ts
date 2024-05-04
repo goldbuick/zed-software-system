@@ -2,7 +2,7 @@ import Alea from 'alea'
 
 const prng = Alea('089fad0j9awfem09wavefc09uwaef')
 
-export function clamp(value: number, min: number, max: number) {
+export function clamp(value: number, min = 0, max = 1) {
   return Math.max(min, Math.min(max, value))
 }
 
