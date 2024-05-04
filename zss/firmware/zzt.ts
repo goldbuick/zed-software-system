@@ -59,7 +59,6 @@ import {
   dirfrompts,
   ptapplydir,
   COLLISION,
-  readexpr,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([

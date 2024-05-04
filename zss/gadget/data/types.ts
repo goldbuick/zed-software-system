@@ -262,4 +262,5 @@ export enum INPUT {
   OK_BUTTON,
   CANCEL_BUTTON,
   MENU_BUTTON,
+  DEBUG_BUTTON,
 }
