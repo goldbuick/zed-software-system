@@ -4,12 +4,27 @@ import {
   onblasterready,
   playchipdrum,
   playchipfreq,
+  playchiproom,
   playchipstop,
+  playchiptype,
 } from 'zss/gadget/audio/blaster'
 import { bpmtoseconds } from 'zss/gadget/audio/logic'
 import { range } from 'zss/mapping/array'
 import { randomInteger } from 'zss/mapping/number'
-import { isarray, isnumber, isstring } from 'zss/mapping/types'
+import {
+  MAYBE_NUMBER,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
+
+type PCNOTE = {
+  type: number
+  freq: number
+  room: number
+  duration: number
+}
 
 const pcspeaker = {
   time: 0,
@@ -18,7 +33,7 @@ const pcspeaker = {
   blockqueueing: false,
   currentpriority: 0,
   durationcounter: 0,
-  buffer: [] as number[],
+  buffer: [] as PCNOTE[],
   bufferpos: 0,
   isplaying: false,
 }
@@ -35,16 +50,6 @@ for (let octave = 1; octave <= 15; ++octave) {
     soundfreqtable[octave * 16 + note] = Math.floor(notebase)
     notebase *= notestep
   }
-}
-
-const soundparsenotetable = {
-  c: 0,
-  d: 2,
-  e: 4,
-  f: 5,
-  g: 7,
-  a: 9,
-  b: 11,
 }
 
 // drums
@@ -90,22 +95,24 @@ onblasterready(() => {
   console.info('loaded', drumindex, 'drums')
 })
 
-// runner
 // testing 150 bpm (#play feels better at 300bpm ??)
-const RATE = bpmtoseconds(150 * 2)
+export const PCSPEAKER_BPM = bpmtoseconds(150)
+
+// runner
 function soundupdate(delta: number) {
   // 32nd note duration
+  const rate = PCSPEAKER_BPM * 0.5
   pcspeaker.time += delta
-  if (pcspeaker.time < RATE) {
+  if (pcspeaker.time < rate) {
     return
   }
-  pcspeaker.time %= RATE
+  pcspeaker.time %= rate
 
   // sound is off
   if (!pcspeaker.enabled) {
     // not enabled
     pcspeaker.isplaying = false
-    playchipfreq(0, 0)
+    playchipstop()
     return
   }
 
@@ -124,67 +131,84 @@ function soundupdate(delta: number) {
 
   if (pcspeaker.bufferpos >= pcspeaker.buffer.length) {
     // buffer complete
-    playchipfreq(0, 0)
+    playchipstop()
     pcspeaker.isplaying = false
     return
   }
 
-  // read next tone
-  const tone = pcspeaker.buffer[pcspeaker.bufferpos++]
-  // read next type
-  const type = pcspeaker.buffer[pcspeaker.bufferpos++]
+  // read next action
+  const action = pcspeaker.buffer[pcspeaker.bufferpos++]
+
+  // setup
+  playchiptype(action.type)
+  playchiproom(action.room)
 
   // trigger
   playchipstop()
-  if (tone === 0) {
+  if (action.freq === 0) {
     // rest
-  } else if (tone < 240) {
+  } else if (action.freq < 240) {
     // doot
-    playchipfreq(type, soundfreqtable[tone])
+    playchipfreq(soundfreqtable[action.freq])
   } else {
     // drum
-    playchipdrum(type, tone - 240)
+    playchipdrum(action.freq - 240)
   }
 
   // how many ticks before change ?
-  pcspeaker.durationcounter = pcspeaker.buffer[pcspeaker.bufferpos++]
+  pcspeaker.durationcounter = action.duration
+}
+
+const soundparsenotetable = {
+  c: 0,
+  d: 2,
+  e: 4,
+  f: 5,
+  g: 7,
+  a: 9,
+  b: 11,
+}
+
+function soundparsenumeric(input: string): MAYBE_NUMBER {
+  const value = parseFloat(input)
+  return !Number.isNaN(value) ? value : undefined
 }
 
 function soundparse(input: string) {
+  let type = 0
+  let room = 0
+  let duration = 1
   let notetone = 0
-  let notetype = 0
   let noteoctave = 3
-  let noteduration = 1
 
-  console.info('soundparse', input)
-
-  const output: number[] = []
+  const output: PCNOTE[] = []
   for (let i = 0; i < input.length; ++i) {
     const li = input[i].toLowerCase()
+    const lii = (input[i + 1] ?? '').toLowerCase()
     switch (li) {
       case 't':
-        noteduration = 1
+        duration = 1
         break
       case 's':
-        noteduration = 2
+        duration = 2
         break
       case 'i':
-        noteduration = 4
+        duration = 4
         break
       case 'q':
-        noteduration = 8
+        duration = 8
         break
       case 'h':
-        noteduration = 16
+        duration = 16
         break
       case 'w':
-        noteduration = 32
+        duration = 32
         break
       case '.':
-        noteduration = (noteduration * 3) / 2
+        duration = (duration * 3) / 2
         break
       case '3':
-        noteduration /= 3
+        duration /= 3
         break
       case '+':
         noteoctave = Math.min(noteoctave + 1, 6)
@@ -193,24 +217,26 @@ function soundparse(input: string) {
         noteoctave = Math.max(noteoctave - 1, 1)
         break
       case 'x':
-        output.push(0, notetype, noteduration)
+        output.push({
+          type,
+          room,
+          duration,
+          freq: 0,
+        })
         break
       case 'z': {
-        console.info('****', input)
-        const lii = (input[i + 1] ?? '').toLowerCase()
-        switch (lii) {
-          case '0':
-          case '1':
-          case '2':
-          case '4':
-          case '5':
-          case '6':
-          case '7':
-          case '8':
-          case '9':
-            ++i
-            notetype = parseFloat(lii)
-            break
+        const value = soundparsenumeric(lii)
+        if (ispresent(value)) {
+          ++i
+          type = value
+        }
+        break
+      }
+      case 'r': {
+        const value = soundparsenumeric(lii)
+        if (ispresent(value)) {
+          ++i
+          room = value
         }
         break
       }
@@ -223,22 +249,36 @@ function soundparse(input: string) {
       case '7':
       case '8':
       case '9':
-        output.push(parseFloat(li) + 240, notetype, noteduration)
         break
       default: {
-        notetone =
-          soundparsenotetable[li as keyof typeof soundparsenotetable] ?? 0
-        switch ((input[i + 1] ?? '').toLowerCase()) {
-          case '!':
-            ++i
-            --notetone
-            break
-          case '#':
-            ++i
-            ++notetone
-            break
+        const value = soundparsenumeric(li)
+        if (ispresent(value)) {
+          output.push({
+            type,
+            room,
+            duration,
+            freq: value + 240,
+          })
+        } else {
+          notetone =
+            soundparsenotetable[li as keyof typeof soundparsenotetable] ?? 0
+          switch (lii) {
+            case '!':
+              ++i
+              --notetone
+              break
+            case '#':
+              ++i
+              ++notetone
+              break
+          }
+          output.push({
+            type,
+            room,
+            duration,
+            freq: noteoctave * 16 + notetone,
+          })
         }
-        output.push(noteoctave * 16 + notetone, notetype, noteduration)
         break
       }
     }
@@ -284,12 +324,6 @@ export function soundplay(priority: number, maybepattern: string) {
 
   // we blastin
   pcspeaker.isplaying = true
-}
-
-export function soundstop() {
-  pcspeaker.buffer = []
-  pcspeaker.isplaying = false
-  playchipfreq(0)
 }
 
 let tm = performance.now()

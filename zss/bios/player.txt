@@ -85,7 +85,7 @@
 !text usersong;#PLAY
 ----------------------------------
 !hotkey playinput d;Doot!
-The Doot! hotkey will now play your input
+Hotkey will now play your input
 #idle
 #main
 
