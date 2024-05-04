@@ -49,7 +49,7 @@ function rendervoice(name: string, type: number, freq: ElemNode): ElemNode {
       break
   }
 
-  return el.mul(nm(name, 'mul'), 0.125, node)
+  return el.mul(nm(name, 'mul'), 0.85, node)
 }
 
 function drumname(i: number) {
