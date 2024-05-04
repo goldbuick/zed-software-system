@@ -2,6 +2,8 @@ import { ElemNode, el } from '@elemaudio/core'
 import WebRenderer from '@elemaudio/web-renderer'
 import { MAYBE } from 'zss/mapping/types'
 
+import { nm } from './logic'
+
 let coreisready = false
 const core = new WebRenderer()
 core.on('load', () => {
@@ -14,10 +16,6 @@ const chipblaster = {
   freq: 0,
   type: 0,
   drum: '',
-}
-
-function nm(key: string, alt: string): { key: string } {
-  return { key: `${key}:${alt}` }
 }
 
 function rendervoice(key: string, type: number, freq: ElemNode): ElemNode {
@@ -83,7 +81,7 @@ function renderblaster() {
   )
 
   // render output
-  const out = el.add(nm('mixer', 'add'), ...voices)
+  const out = el.add(...voices)
   const dcblockout = el.dcblock(out)
   const gainout = el.mul(dcblockout, 2)
   core.render(gainout, gainout).catch((e) => console.error(e))
@@ -113,6 +111,11 @@ export function playchipdrum(type: number, drum: number) {
   chipblaster.freq = 0
   chipblaster.drum = drumname(drum)
   renderblaster()
+}
+
+export function playchipstop() {
+  chipblaster.freq = 0
+  chipblaster.drum = ''
 }
 
 export async function initaudio() {

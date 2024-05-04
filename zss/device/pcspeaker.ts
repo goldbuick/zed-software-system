@@ -4,6 +4,7 @@ import {
   onblasterready,
   playchipdrum,
   playchipfreq,
+  playchipstop,
 } from 'zss/gadget/audio/blaster'
 import { bpmtoseconds } from 'zss/gadget/audio/logic'
 import { range } from 'zss/mapping/array'
@@ -132,9 +133,9 @@ function soundupdate(delta: number) {
   const tone = pcspeaker.buffer[pcspeaker.bufferpos++]
   // read next type
   const type = pcspeaker.buffer[pcspeaker.bufferpos++]
-  // reset
-  playchipfreq(type, 0)
 
+  // trigger
+  playchipstop()
   if (tone === 0) {
     // rest
   } else if (tone < 240) {
@@ -192,7 +193,7 @@ function soundparse(input: string) {
         noteoctave = Math.max(noteoctave - 1, 1)
         break
       case 'x':
-        output.push(0, noteduration)
+        output.push(0, notetype, noteduration)
         break
       case 'z': {
         console.info('****', input)
