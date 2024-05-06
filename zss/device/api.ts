@@ -38,6 +38,10 @@ export function gadgetserver_clearscroll(sender: string, player: string) {
   hub.emit('gadgetserver:clearscroll', sender, undefined, player)
 }
 
+export function pcspeaker_play(sender: string, priority: number, buffer: string) {
+  hub.emit('pcspeaker:play', sender, [priority, buffer])
+}
+
 export function register_read(sender: string, name: string, player: string) {
   hub.emit('register:read', sender, [name], player)
 }
