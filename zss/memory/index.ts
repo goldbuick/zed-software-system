@@ -1,4 +1,4 @@
-import { BIOS } from 'zss/bios'
+import { tape_error } from 'zss/device/api'
 import { COLOR } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
@@ -12,7 +12,7 @@ import {
 } from 'zss/gadget/data/types'
 import { average, unique } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
@@ -113,6 +113,12 @@ export function memoryreadbooks(addresses: MAYBE_STRING[]) {
   return unique(addresses).map(memoryreadbook).filter(ispresent)
 }
 
+export function memoryresetbooks(book: BOOK) {
+  MEMORY.books.clear()
+  MEMORY.books.set(book.id, book)
+  return book.id
+}
+
 export function memorysetbook(book: BOOK) {
   MEMORY.books.set(book.id, book)
   return book.id
@@ -130,9 +136,14 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
 
   if (!ispresent(chip)) {
     chip = {
+      // targets
       book: undefined,
       board: undefined,
       object: undefined,
+      terrain: undefined,
+      charset: undefined,
+      palette: undefined,
+      // user input
       inputqueue: new Set(),
       inputmods: {
         [INPUT.NONE]: 0,
@@ -143,6 +154,7 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
         [INPUT.OK_BUTTON]: 0,
         [INPUT.CANCEL_BUTTON]: 0,
         [INPUT.MENU_BUTTON]: 0,
+        [INPUT.DEBUG_BUTTON]: 0,
       },
       inputcurrent: undefined,
     }
@@ -152,28 +164,52 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
   return chip
 }
 
+const PLAYER_BOOK = 'main'
 const PLAYER_KIND = 'player'
 const PLAYER_START = 'title'
 
-export function memoryplayerlogin(player: string) {
-  const book = memoryreadbook(BIOS.name)
-  const start = bookreadboard(book, PLAYER_START)
-  const playerkind = bookreadobject(book, PLAYER_KIND)
-  if (ispresent(start) && ispresent(playerkind)) {
-    // TODO: what is a sensible way to place here ?
-    const obj = boardobjectcreate(start, {
-      id: player,
-      x: 0,
-      y: 0,
-      kind: PLAYER_KIND,
-      stats: {
-        player,
-      },
-    })
-    if (ispresent(obj?.id)) {
-      bookplayersetboard(book, player, PLAYER_START)
-    }
+export function memoryplayerlogin(player: string): boolean {
+  if (!isstring(player) || !player) {
+    return tape_error('memory', `login failed for playerid ==>${player}<==`)
   }
+
+  const book = memoryreadbook(PLAYER_BOOK)
+  if (!ispresent(book)) {
+    return tape_error('memory', `login failed to find book ${PLAYER_BOOK}`)
+  }
+
+  const start = bookreadboard(book, PLAYER_START)
+  if (!ispresent(start)) {
+    return tape_error('memory', `login failed to find board ${PLAYER_START}`)
+  }
+
+  const playerkind = bookreadobject(book, PLAYER_KIND)
+  if (!ispresent(playerkind)) {
+    return tape_error(
+      'memory',
+      'login',
+      `login failed to find object type ${PLAYER_KIND}`,
+    )
+  }
+
+  // TODO: what is a sensible way to place here ?
+  // via player token I think ..
+
+  const obj = boardobjectcreate(start, {
+    id: player,
+    x: 0,
+    y: 0,
+    kind: PLAYER_KIND,
+    stats: {
+      player,
+    },
+  })
+
+  if (ispresent(obj?.id)) {
+    bookplayersetboard(book, player, PLAYER_START)
+  }
+
+  return true
 }
 
 export function memoryplayerlogout(player: string) {
@@ -204,7 +240,7 @@ export function memorytick(os: OS, timestamp: number) {
   }
 
   // update boards / build code / run chips
-  const book = memoryreadbook(BIOS.name)
+  const book = memoryreadbook(PLAYER_BOOK)
   bookplayerreadboards(book).forEach((board) =>
     bookboardtick(book, board, timestamp, oncode),
   )
@@ -387,7 +423,7 @@ function framerank(frame: FRAME_STATE): number {
 }
 
 export function memoryreadgadgetlayers(player: string): LAYER[] {
-  const book = memoryreadbook(BIOS.name)
+  const book = memoryreadbook(PLAYER_BOOK)
   const board = bookplayerreadboard(book, player)
 
   const layers: LAYER[] = []

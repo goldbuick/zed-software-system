@@ -1,3 +1,0 @@
-@blonk
-#repeat 60 idle
-#become spin

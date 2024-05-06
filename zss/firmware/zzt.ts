@@ -6,7 +6,6 @@ import {
   INPUT_CTRL,
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
-import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadbook, memoryreadchip, memoryreadframes } from 'zss/memory'

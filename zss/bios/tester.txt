@@ -1,7 +1,0 @@
-@tester
-#cycle pick range 3 12
-:think
-#color pick dkgreen brown dkpurple
-#repeat 5
-  ?seek
-#think

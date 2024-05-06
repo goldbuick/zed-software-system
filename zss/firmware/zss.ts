@@ -1,3 +1,4 @@
+import { register_read, register_write } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import {
   gadgetcheckscroll,
@@ -39,7 +40,7 @@ export const ZSS_FIRMWARE = createfirmware({
     gadgetcheckscroll(chip)
   },
 })
-  .command('urlstate', (chip, words) => {
+  .command('register', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [action, name] = readargs({ ...memory, chip, words }, 0, [
       ARG_TYPE.STRING,
@@ -47,10 +48,10 @@ export const ZSS_FIRMWARE = createfirmware({
     ])
     switch (action.toLowerCase()) {
       case 'read':
-        chip.emit('urlstate:read', [name])
+        register_read(chip.senderid(), name)
         break
       case 'write':
-        chip.emit('urlstate:write', [name, chip.get(name)])
+        register_write(chip.senderid(), name, chip.get(name))
         break
     }
     return 0

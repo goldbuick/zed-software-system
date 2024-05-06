@@ -24,6 +24,7 @@ export type STATE = Record<string, any>
 export type CHIP = {
   // id
   id: () => string
+  senderid: (maybeid?: string) => string
 
   // set firmware on chip
   install: (firmware: MAYBE<FIRMWARE>) => void
@@ -165,6 +166,9 @@ export function createchip(id: string, build: GeneratorBuild) {
     id() {
       return id
     },
+    senderid(maybeid = chip.id()) {
+      return `vm${maybeid ?? chip.id()}`
+    },
 
     // invokes api
     install(firmware) {
@@ -283,10 +287,10 @@ export function createchip(id: string, build: GeneratorBuild) {
       return yieldstate || chip.shouldhalt()
     },
     emit(target, data) {
-      hub.emit(target, `vm:${id}`, data)
+      hub.emit(target, chip.senderid(), data)
     },
     send(chipid, message, data) {
-      hub.emit(`vm:${chipid}:${message}`, id, data)
+      hub.emit(`${chip.senderid(chipid)}:${message}`, id, data)
     },
     lock(allowed) {
       locked = allowed

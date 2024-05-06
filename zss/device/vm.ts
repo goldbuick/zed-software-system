@@ -1,17 +1,18 @@
 import { customAlphabet } from 'nanoid'
 import { numbers, lowercase } from 'nanoid-dictionary'
-import { BIOS } from 'zss/bios'
 import { createdevice } from 'zss/device'
 import { INPUT } from 'zss/gadget/data/types'
 import {
   memoryplayerlogin,
   memoryplayerlogout,
   memoryreadchip,
-  memorysetbook,
+  memoryresetbooks,
   memorysetdefaultplayer,
   memorytick,
 } from 'zss/memory'
 import { createos } from 'zss/os'
+
+import { tape_error, tape_log } from './api'
 
 // limited chars so peerjs doesn't get mad
 const justNumberChars = customAlphabet(numbers, 4)
@@ -30,10 +31,21 @@ const tracking: Record<string, number> = {}
 
 const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
   switch (message.target) {
+    case 'mem':
+      if (message.player === player) {
+        memoryresetbooks(message.data)
+        tape_log(vm.id(), 'memset')
+        vm.emit('memset', undefined, message.player)
+      }
+      break
     case 'login':
       if (message.player) {
-        tracking[message.player] = 0
-        memoryplayerlogin(message.player)
+        if (memoryplayerlogin(message.player)) {
+          tracking[message.player] = 0
+        } else {
+          tape_error(vm.id(), 'with login')
+          vm.emit('error', 'with login', message.player)
+        }
       }
       break
     case 'tick':
@@ -47,6 +59,8 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
           // drop inactive players (logout)
           delete tracking[player]
           memoryplayerlogout(player)
+          tape_log(vm.id(), 'logout', player)
+          vm.emit('player', 'did logout', player)
         }
       })
       break
@@ -54,6 +68,7 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
       // player keepalive
       if (message.player) {
         tracking[message.player] = 0
+        tape_log(vm.id(), '.', message.player)
       }
       break
     case 'input':
@@ -72,8 +87,7 @@ const vm = createdevice('vm', ['login', 'tick', 'tock'], (message) => {
 })
 
 export function ready() {
-  // load bios
-  memorysetbook(BIOS)
+  // TODO: load default software ...
   // signal ready state
   vm.emit('ready', undefined, player)
 }

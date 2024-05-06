@@ -1,7 +1,0 @@
-@bullet
-#cycle 1
-:razzle
-#color pick red white blue yellow
-#razzle
-:thud
-#die
