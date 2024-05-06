@@ -9,9 +9,6 @@ const bip = createdevice(
   'bip',
   ['second', 'ready', 'error', 'memset'],
   (message) => {
-    // ??
-    console.info(message)
-
     switch (message.target) {
       case 'second': {
         const player = gadgetstategetplayer()

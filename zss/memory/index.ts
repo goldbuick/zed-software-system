@@ -1,4 +1,3 @@
-import { tape_error } from 'zss/device/api'
 import { COLOR } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
@@ -41,6 +40,7 @@ import {
   createeditframe,
   createviewframe,
 } from './frame'
+import { api_error } from 'zss/device/api'
 
 type CHIP_MEMORY = {
   // targets
@@ -170,22 +170,22 @@ const PLAYER_START = 'title'
 
 export function memoryplayerlogin(player: string): boolean {
   if (!isstring(player) || !player) {
-    return tape_error('memory', `login failed for playerid ==>${player}<==`)
+    return api_error('memory', `login failed for playerid ==>${player}<==`, player)
   }
 
   const book = memoryreadbook(PLAYER_BOOK)
   if (!ispresent(book)) {
-    return tape_error('memory', `login failed to find book ${PLAYER_BOOK}`)
+    return api_error('memory', `login failed to find book ${PLAYER_BOOK}`, player)
   }
 
   const start = bookreadboard(book, PLAYER_START)
   if (!ispresent(start)) {
-    return tape_error('memory', `login failed to find board ${PLAYER_START}`)
+    return api_error('memory', `login failed to find board ${PLAYER_START}`, player)
   }
 
   const playerkind = bookreadobject(book, PLAYER_KIND)
   if (!ispresent(playerkind)) {
-    return tape_error(
+    return api_error(
       'memory',
       'login',
       `login failed to find object type ${PLAYER_KIND}`,
