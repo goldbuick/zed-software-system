@@ -8,6 +8,8 @@ import {
 import { GADGET_STATE } from 'zss/gadget/data/types'
 import { memoryreadgadgetlayers } from 'zss/memory'
 
+import { gadgetclient_patch, gadgetclient_reset } from './api'
+
 // tracking gadget state for individual players
 const syncstate: Record<string, GADGET_STATE> = {}
 
@@ -25,14 +27,14 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
         const patch = compare(syncstate[player] ?? {}, shared)
         if (patch.length) {
           syncstate[player] = deepClone(shared)
-          gadgetserverdevice.emit('gadgetclient:patch', patch, player)
+          gadgetclient_patch(gadgetserverdevice.name(), patch, player)
         }
       })
       break
     case 'desync':
       if (message.player) {
         const state = gadgetstate(message.player)
-        gadgetserverdevice.emit('gadgetclient:reset', state, message.player)
+        gadgetclient_reset(gadgetserverdevice.name(), state, message.player)
       }
       break
     case 'clearscroll':

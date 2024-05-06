@@ -45,7 +45,7 @@ const gadgetclientdevice = createdevice(
                 message,
                 'desync',
                 undefined,
-                syncstate.state.player,
+                message.player,
               )
             }
           }
