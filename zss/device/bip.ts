@@ -36,9 +36,9 @@ const bip = createdevice(
           }
         }
         break
-      case 'memset':
+      case 'ackmem':
         if (message.player) {
-          //
+          vm_login(bip.name(), message.player)
         }
     }
   },

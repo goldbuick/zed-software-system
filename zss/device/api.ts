@@ -25,12 +25,21 @@ function tape_error(sender: string, ...message: any[]) {
   return false
 }
 
-export function register_read(sender: string, name: string) {
-  hub.emit('register:read', sender, [name])
+export function register_reboot(sender: string, player: string) {
+  hub.emit('register:reboot', sender, undefined, player)
 }
 
-export function register_write(sender: string, name: string, value: any) {
-  hub.emit('register:write', sender, [name, value])
+export function register_read(sender: string, name: string, player: string) {
+  hub.emit('register:read', sender, [name], player)
+}
+
+export function register_write(
+  sender: string,
+  name: string,
+  value: any,
+  player: string,
+) {
+  hub.emit('register:write', sender, [name, value], player)
 }
 
 export function vm_mem(sender: string, book: BOOK, player: string) {
