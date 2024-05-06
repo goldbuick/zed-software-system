@@ -27,17 +27,6 @@ const gadgetclientdevice = createdevice(
   ['ready', 'second'],
   (message) => {
     switch (message.target) {
-      case 'ready':
-        if (message.player && syncstate.state.player === '') {
-          syncstate.state.player = message.player
-          gadgetclientdevice.emit('vm:login', undefined, syncstate.state.player)
-        }
-        break
-      case 'second':
-        if (syncstate.state.player) {
-          gadgetclientdevice.emit('vm:doot', undefined, syncstate.state.player)
-        }
-        break
       case 'reset':
         if (message.player === syncstate.state.player) {
           desync = false
@@ -68,4 +57,16 @@ const gadgetclientdevice = createdevice(
 
 export function getgadgetstate(): GADGET_STATE {
   return syncstate.state
+}
+
+export function gadgetstatesetplayer(player: string) {
+  if (player && syncstate.state.player === '') {
+    syncstate.state.player = player
+    return true
+  }
+  return false
+}
+
+export function gadgetstategetplayer() {
+  return syncstate.state.player
 }

@@ -2,7 +2,7 @@ import { createdevice } from 'zss/device'
 import { encodeduritovalue, valuetoencodeduri } from 'zss/mapping/buffer'
 import { ispresent } from 'zss/mapping/types'
 
-import { vm_mem } from './api'
+import { api_error, tape_log, vm_mem } from './api'
 
 function readstate(): [any, any] {
   try {
@@ -25,13 +25,16 @@ function writestate(state: any) {
 const register = createdevice('register', [], (message) => {
   switch (message.target) {
     // memory
-    case 'reboot': {
-      const [mem] = readstate()
-      if (ispresent(mem)) {
-        vm_mem(register.id(), mem)
+    case 'reboot':
+      if (message.player) {
+        const [mem] = readstate()
+        if (ispresent(mem)) {
+          vm_mem(register.name(), mem, message.player)
+        } else {
+          api_error(register.name(), 'reboot failed', message.player)
+        }
       }
       break
-    }
     case 'flush': {
       const [, flags] = readstate()
       if (ispresent(message.data)) {
@@ -47,9 +50,9 @@ const register = createdevice('register', [], (message) => {
         const value = flags[name]
         if (ispresent(flags)) {
           register.reply(message, 'register', [name, value])
-          console.info('read', value, 'for', name)
+          tape_log(register.name(), 'read', value, 'for', name)
         } else {
-          console.info(name, 'is empty')
+          tape_log(register.name(), 'read', name, 'is empty')
         }
       }
       break
@@ -60,7 +63,7 @@ const register = createdevice('register', [], (message) => {
       if (ispresent(flags)) {
         flags[name] = value
         writestate([mem, flags])
-        console.info('wrote', value, 'to', name)
+        tape_log(register.name(), 'wrote', value, 'to', name)
       }
       break
     }
