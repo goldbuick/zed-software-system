@@ -3,7 +3,7 @@ import { PT, COLLISION, CATEGORY } from 'zss/firmware/wordtypes'
 import { unique } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
 
 import { checkcollision } from './atomics'
 import {
@@ -48,6 +48,18 @@ export function createbook(name: string, pages: CODE_PAGE[]): BOOK {
     flags: {},
     players: {},
   }
+}
+
+export function isbook(value: any): value is BOOK {
+  return (
+    ispresent(value) &&
+    typeof value === 'object' &&
+    isstring(value.id) &&
+    isstring(value.name) &&
+    Array.isArray(value.pages) &&
+    typeof value.pages === 'object' &&
+    typeof value.player === 'object'
+  )
 }
 
 export function bookreadcodepage(

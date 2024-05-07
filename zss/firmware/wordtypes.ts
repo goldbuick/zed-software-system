@@ -17,7 +17,9 @@ import {
 } from 'zss/memory/board'
 import { MAYBE_BOOK } from 'zss/memory/book'
 
-export type READ_CONTEXT = {
+type READ_CONTEXT_GET = (name: string) => any
+
+type READ_CONTEXT = {
   // targets
   book: MAYBE_BOOK
   board: MAYBE_BOARD
@@ -26,8 +28,28 @@ export type READ_CONTEXT = {
   charset: MAYBE<BITMAP>
   palette: MAYBE<BITMAP>
   // context
-  get: (name: string) => any
   words: WORD[]
+  get: READ_CONTEXT_GET
+}
+
+export function createreadcontext(
+  read: Omit<READ_CONTEXT, 'words' | 'get'>,
+  // context
+  words: WORD[],
+  get: READ_CONTEXT_GET,
+): READ_CONTEXT {
+  return {
+    // targets
+    book: read.book,
+    board: read.board,
+    object: read.object,
+    terrain: read.terrain,
+    charset: read.charset,
+    palette: read.palette,
+    // context
+    words,
+    get,
+  }
 }
 
 export type WORD = string | number
@@ -433,7 +455,7 @@ export function readcolor(
   if (isstrcolor(strcolor) && !isbgstrcolor(strcolor)) {
     const [maybebg, iii] = readcolorconst(read, ii)
     if (isbgstrcolor(maybebg)) {
-      strcolor.push(...maybebg)
+      // strcolor.push(...maybebg)
       next = iii
     }
   }

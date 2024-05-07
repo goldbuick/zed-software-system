@@ -17,8 +17,10 @@ export function TapeConsole() {
   const fg = 10
   const bg = 2
 
+  const tape = useTape()
+
   const width = Math.floor(viewWidth / DRAW_CHAR_WIDTH)
-  const height = Math.floor(viewHeight / DRAW_CHAR_HEIGHT)
+  const height = Math.floor((viewHeight / DRAW_CHAR_HEIGHT) * tape.open)
   const marginX = viewWidth - width * DRAW_CHAR_WIDTH
   const marginY = viewHeight - height * DRAW_CHAR_HEIGHT
 
@@ -46,8 +48,6 @@ export function TapeConsole() {
     leftEdge: 0,
     rightEdge: width,
   }
-
-  const tape = useTape()
 
   // bail on odd states
   if (width < 1 || height < 1) {

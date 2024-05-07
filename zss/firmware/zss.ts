@@ -1,4 +1,4 @@
-import { register_read, register_write } from 'zss/device/api'
+import { api_error, register_read, register_write } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import {
   gadgetcheckscroll,
@@ -11,6 +11,7 @@ import {
   memorycreateeditframe,
   memorycreateviewframe,
   memoryreadchip,
+  memoryreadcontext,
   memoryresetframes,
   memorysetbook,
 } from 'zss/memory'
@@ -42,31 +43,40 @@ export const ZSS_FIRMWARE = createfirmware({
 })
   .command('register', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [action, name] = readargs({ ...memory, chip, words }, 0, [
+    const maybeplayer = memory.object?.stats?.player ?? ''
+    const [action, name] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.STRING,
     ])
     switch (action.toLowerCase()) {
       case 'read':
-        register_read(chip.senderid(), name)
+        register_read(chip.senderid(), name, maybeplayer)
         break
       case 'write':
-        register_write(chip.senderid(), name, chip.get(name))
+        register_write(chip.senderid(), name, chip.get(name), maybeplayer)
+        break
+      default:
+        api_error(
+          chip.senderid(),
+          `unknown #regsiter [action] ${action}`,
+          maybeplayer,
+        )
         break
     }
     return 0
   })
   .command('color', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [value] = readargs({ ...memory, chip, words }, 0, [ARG_TYPE.COLOR])
+    const [value] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.COLOR,
+    ])
     if (ispresent(memory.object) && ispresent(value)) {
       boardelementapplycolor(memory.object, value)
     }
     return 0
   })
   .command('gadget', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const context = { ...memory, chip, words }
+    const context = memoryreadcontext(chip, words)
 
     const [edge] = readargs(context, 0, [ARG_TYPE.STRING])
     const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
@@ -89,11 +99,11 @@ export const ZSS_FIRMWARE = createfirmware({
     return 0
   })
   .command('book', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [maybetarget, maybeaction] = readargs({ ...memory, chip, words }, 0, [
-      ARG_TYPE.STRING,
-      ARG_TYPE.STRING,
-    ])
+    const [maybetarget, maybeaction] = readargs(
+      memoryreadcontext(chip, words),
+      0,
+      [ARG_TYPE.STRING, ARG_TYPE.STRING],
+    )
 
     const ltarget = maybetarget.toLowerCase()
     const laction = maybeaction.toLowerCase()
@@ -154,7 +164,7 @@ export const ZSS_FIRMWARE = createfirmware({
   .command('frame', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const [maybetarget, maybetype, maybeboard] = readargs(
-      { ...memory, chip, words },
+      memoryreadcontext(chip, words),
       0,
       [ARG_TYPE.STRING, ARG_TYPE.MAYBE_STRING, ARG_TYPE.MAYBE_STRING],
     )

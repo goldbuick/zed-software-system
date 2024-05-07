@@ -2,7 +2,7 @@ import { maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import { gadgethyperlink, gadgettext } from 'zss/gadget/data/api'
 import { isnumber } from 'zss/mapping/types'
-import { memoryreadchip } from 'zss/memory'
+import { memoryreadcontext } from 'zss/memory'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -34,8 +34,7 @@ export const ALL_FIRMWARE = createfirmware({
     return 0
   })
   .command('give', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name, maybevalue, ii] = readargs({ ...chip, ...memory, words }, 0, [
+    const [name, maybevalue, ii] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.MAYBE_NUMBER,
     ])
@@ -75,8 +74,7 @@ export const ALL_FIRMWARE = createfirmware({
     return 0
   })
   .command('set', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name, value] = readargs({ ...chip, ...memory, words }, 0, [
+    const [name, value] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.ANY,
     ])
@@ -84,8 +82,7 @@ export const ALL_FIRMWARE = createfirmware({
     return 0
   })
   .command('take', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name, maybevalue, ii] = readargs({ ...chip, ...memory, words }, 0, [
+    const [name, maybevalue, ii] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.MAYBE_NUMBER,
     ])

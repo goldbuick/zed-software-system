@@ -1,16 +1,17 @@
 import { proxy, useSnapshot } from 'valtio'
 import { createdevice } from 'zss/device'
 import { createguid } from 'zss/mapping/guid'
+import { isnumber } from 'zss/mapping/types'
 
 // system wide message logger
 
 type TAPE_ROW = [string, string, string, ...any[]]
 const tape = proxy({
-  open: false,
+  open: 0,
   logs: [] as TAPE_ROW[],
 })
 
-export function tapesetopen(open: boolean) {
+export function tapesetopen(open: number) {
   tape.open = open
 }
 
@@ -30,5 +31,10 @@ createdevice('tape', [], (message) => {
       ])
       break
     }
+    case 'open':
+      if (isnumber(message.data)) {
+        tapesetopen(message.data)
+      }
+      break
   }
 })

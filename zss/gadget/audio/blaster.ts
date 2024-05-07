@@ -32,6 +32,7 @@ const chipblaster = {
   freq: 0,
   room: 0,
   drum: '',
+  loop: false,
 }
 
 function rendervoice(name: string, type: number, freq: ElemNode): ElemNode {
@@ -90,7 +91,7 @@ function renderblaster() {
           el.seq2(
             {
               ...nm(name, 'seq'),
-              loop: false,
+              loop: chipblaster.loop,
               seq: drumvalues[name],
             },
             el.train(1000),
@@ -195,6 +196,10 @@ export function playchiptype(type: number) {
 
 export function playchiproom(room: number) {
   chipblaster.room = room
+}
+
+export function playchiploop(loop: boolean) {
+  chipblaster.loop = loop
 }
 
 export function playchipstop() {

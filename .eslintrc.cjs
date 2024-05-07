@@ -25,7 +25,7 @@ module.exports = {
     'plugin:react/jsx-runtime',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
-    'plugin:@react-three/recommended',
+    // 'plugin:@react-three/recommended',
     'plugin:prettier/recommended', 
     // Enables eslint-plugin-prettier and eslint-config-prettier. 
     // This will display prettier errors as ESLint errors.

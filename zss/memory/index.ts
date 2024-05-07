@@ -1,6 +1,6 @@
 import { CHIP } from 'zss/chip'
 import { api_error } from 'zss/device/api'
-import { COLOR, WORD } from 'zss/firmware/wordtypes'
+import { COLOR, WORD, createreadcontext } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
   INPUT,
@@ -166,7 +166,7 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
 
 export function memoryreadcontext(chip: CHIP, words: WORD[]) {
   const memory = memoryreadchip(chip.id())
-  return { ...chip, ...memory, words }
+  return createreadcontext(memory, words, chip.get)
 }
 
 const PLAYER_BOOK = 'main'

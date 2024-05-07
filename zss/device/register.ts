@@ -1,6 +1,7 @@
 import { createdevice } from 'zss/device'
 import { encodeduritovalue, valuetoencodeduri } from 'zss/mapping/buffer'
 import { ispresent } from 'zss/mapping/types'
+import { isbook } from 'zss/memory/book'
 
 import { api_error, tape_log, vm_mem } from './api'
 
@@ -28,12 +29,11 @@ const register = createdevice('register', [], (message) => {
     case 'reboot':
       if (message.player) {
         const [mem] = readstate()
-        console.info('????mem', mem)
-        // if (ispresent(mem)) {
-        //   vm_mem(register.name(), mem, message.player)
-        // } else {
-        //   api_error(register.name(), 'reboot failed', message.player)
-        // }
+        if (isbook(mem)) {
+          vm_mem(register.name(), mem, message.player)
+        } else {
+          api_error(register.name(), 'reboot failed', message.player)
+        }
       }
       break
     case 'flush': {

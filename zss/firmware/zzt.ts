@@ -8,7 +8,12 @@ import {
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadbook, memoryreadchip, memoryreadframes } from 'zss/memory'
+import {
+  memoryreadbook,
+  memoryreadchip,
+  memoryreadcontext,
+  memoryreadframes,
+} from 'zss/memory'
 import {
   checkcollision,
   listelementsbyattr,
@@ -357,7 +362,7 @@ export const ZZT_FIRMWARE = createfirmware({
     // track dest
     const dest: PT = { x: memory.object?.x ?? 0, y: memory.object?.y ?? 0 }
     // read
-    const [kind] = readargs({ ...chip, ...memory, words }, 0, [ARG_TYPE.KIND])
+    const [kind] = readargs(memoryreadcontext(chip, words), 0, [ARG_TYPE.KIND])
     // make sure lookup is created
     bookboardsetlookup(memory.book, memory.board)
     // make invisible
@@ -384,7 +389,7 @@ export const ZZT_FIRMWARE = createfirmware({
     const [maybeframe, ii] = valuepeekframename(words[0], 0)
 
     // read
-    const [target, into] = readargs({ ...chip, ...memory, words }, ii, [
+    const [target, into] = readargs(memoryreadcontext(chip, words), ii, [
       ARG_TYPE.KIND,
       ARG_TYPE.KIND,
     ])
@@ -450,7 +455,7 @@ export const ZZT_FIRMWARE = createfirmware({
   })
   .command('char', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [value] = readargs({ ...chip, ...memory, words }, 0, [
+    const [value] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.NUMBER,
     ])
     if (ispresent(memory.object)) {
@@ -459,8 +464,7 @@ export const ZZT_FIRMWARE = createfirmware({
     return 0
   })
   .command('cycle', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [cyclevalue] = readargs({ ...chip, ...memory, words }, 0, [
+    const [cyclevalue] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.NUMBER,
     ])
     chip.cycle(clamp(Math.round(cyclevalue), 1, 255))
@@ -490,15 +494,14 @@ export const ZZT_FIRMWARE = createfirmware({
     }
 
     // attempt to move
-    const [dest] = readargs({ ...chip, ...memory, words }, 0, [ARG_TYPE.DIR])
+    const [dest] = readargs(memoryreadcontext(chip, words), 0, [ARG_TYPE.DIR])
     moveobject(chip, memory.book, memory.board, memory.object, dest)
 
     // if blocked, return 1
     return memory.object.x !== dest.x && memory.object.y !== dest.y ? 1 : 0
   })
   .command('play', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [buffer] = readargs({ ...chip, ...memory, words }, 0, [
+    const [buffer] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
     ])
 
@@ -519,7 +522,7 @@ export const ZZT_FIRMWARE = createfirmware({
     const [maybeframe, ii] = valuepeekframename(words[0], 0)
 
     // read
-    const [dir, kind] = readargs({ ...chip, ...memory, words }, ii, [
+    const [dir, kind] = readargs(memoryreadcontext(chip, words), ii, [
       ARG_TYPE.DIR,
       ARG_TYPE.KIND,
     ])
@@ -538,7 +541,7 @@ export const ZZT_FIRMWARE = createfirmware({
   })
   .command('send', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [msg, data] = readargs({ ...chip, ...memory, words }, 0, [
+    const [msg, data] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.ANY,
     ])
@@ -605,7 +608,7 @@ export const ZZT_FIRMWARE = createfirmware({
     const [maybeframe, ii] = valuepeekframename(words[0], 0)
 
     // read direction + what to shoot
-    const [maybedir, maybekind] = readargs({ ...chip, ...memory, words }, ii, [
+    const [maybedir, maybekind] = readargs(memoryreadcontext(chip, words), ii, [
       ARG_TYPE.DIR,
       ARG_TYPE.MAYBE_KIND,
     ])
@@ -695,8 +698,7 @@ export const ZZT_FIRMWARE = createfirmware({
     return chip.command('shoot', ...words, 'star') ? 1 : 0
   })
   .command('try', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [, ii] = readargs({ ...chip, ...memory, words }, 0, [ARG_TYPE.DIR])
+    const [, ii] = readargs(memoryreadcontext(chip, words), 0, [ARG_TYPE.DIR])
 
     // try and move
     const result = chip.command('go', ...words)
@@ -715,7 +717,7 @@ export const ZZT_FIRMWARE = createfirmware({
       return 0
     }
     // read walk direction
-    const [maybedir] = readargs({ ...chip, ...memory, words }, 0, [
+    const [maybedir] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.DIR,
     ])
     const dir = dirfrompts(memory.object, maybedir)

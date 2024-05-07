@@ -68,6 +68,10 @@ function tape_error(sender: string, ...message: any[]) {
   return false
 }
 
+export function tape_open(sender: string, amount: number) {
+  hub.emit('tape:open', sender, amount)
+}
+
 export function vm_mem(sender: string, book: BOOK, player: string) {
   hub.emit('vm:mem', sender, book, player)
 }

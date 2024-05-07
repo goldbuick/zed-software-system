@@ -4,6 +4,7 @@ import {
   onblasterready,
   playchipdrum,
   playchipfreq,
+  playchiploop,
   playchiproom,
   playchipstop,
   playchiptype,
@@ -23,6 +24,7 @@ type PCNOTE = {
   type: number
   freq: number
   room: number
+  loop: boolean
   duration: number
 }
 
@@ -142,6 +144,7 @@ function soundupdate(delta: number) {
   // setup
   playchiptype(action.type)
   playchiproom(action.room)
+  playchiploop(action.loop)
 
   // trigger
   playchipstop()
@@ -175,9 +178,13 @@ function soundparsenumeric(input: string): MAYBE_NUMBER {
 }
 
 function soundparse(input: string) {
-  let type = 0
-  let room = 0
-  let duration = 1
+  const note: PCNOTE = {
+    type: 0,
+    freq: 0,
+    room: 0,
+    loop: false,
+    duration: 1,
+  }
   let notetone = 0
   let noteoctave = 3
 
@@ -187,28 +194,28 @@ function soundparse(input: string) {
     const lii = (input[i + 1] ?? '').toLowerCase()
     switch (li) {
       case 't':
-        duration = 1
+        note.duration = 1
         break
       case 's':
-        duration = 2
+        note.duration = 2
         break
       case 'i':
-        duration = 4
+        note.duration = 4
         break
       case 'q':
-        duration = 8
+        note.duration = 8
         break
       case 'h':
-        duration = 16
+        note.duration = 16
         break
       case 'w':
-        duration = 32
+        note.duration = 32
         break
       case '.':
-        duration = (duration * 3) / 2
+        note.duration = (note.duration * 3) / 2
         break
       case '3':
-        duration /= 3
+        note.duration /= 3
         break
       case '+':
         noteoctave = Math.min(noteoctave + 1, 6)
@@ -217,18 +224,16 @@ function soundparse(input: string) {
         noteoctave = Math.max(noteoctave - 1, 1)
         break
       case 'x':
-        output.push({
-          type,
-          room,
-          duration,
-          freq: 0,
-        })
+        output.push({ ...note, freq: 0 })
+        break
+      case 'l':
+        note.loop = true
         break
       case 'z': {
         const value = soundparsenumeric(lii)
         if (ispresent(value)) {
           ++i
-          type = value
+          note.type = value
         }
         break
       }
@@ -236,19 +241,14 @@ function soundparse(input: string) {
         const value = soundparsenumeric(lii)
         if (ispresent(value)) {
           ++i
-          room = value
+          note.room = value
         }
         break
       }
       default: {
         const value = soundparsenumeric(li)
         if (ispresent(value)) {
-          output.push({
-            type,
-            room,
-            duration,
-            freq: value + 240,
-          })
+          output.push({ ...note, freq: value + 240 })
         } else {
           notetone =
             soundparsenotetable[li as keyof typeof soundparsenotetable] ?? 0
@@ -262,12 +262,7 @@ function soundparse(input: string) {
               ++notetone
               break
           }
-          output.push({
-            type,
-            room,
-            duration,
-            freq: noteoctave * 16 + notetone,
-          })
+          output.push({ ...note, freq: noteoctave * 16 + notetone })
         }
         break
       }

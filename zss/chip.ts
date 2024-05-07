@@ -1,12 +1,13 @@
 import ErrorStackParser from 'error-stack-parser'
 
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
-import { ARG_TYPE, chipreadcontext, readargs } from './firmware/wordtypes'
+import { ARG_TYPE, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
 import { CYCLE_DEFAULT } from './mapping/tick'
 import { MAYBE, deepcopy, isequal, ispresent, isstring } from './mapping/types'
+import { memoryreadcontext } from './memory'
 
 export const HALT_AT_COUNT = 64
 
@@ -410,8 +411,9 @@ export function createchip(id: string, build: GeneratorBuild) {
       return invokecommand('send', [name, ...args])
     },
     if(...words) {
-      const read = chipreadcontext(chip.id(), words)
-      const [value, ii] = readargs(read, 0, [ARG_TYPE.ANY])
+      const [value, ii] = readargs(memoryreadcontext(chip, words), 0, [
+        ARG_TYPE.ANY,
+      ])
       const result = maptoresult(value)
 
       // console.info('if', value, { ii, length: words.length }, result)
@@ -422,8 +424,9 @@ export function createchip(id: string, build: GeneratorBuild) {
       return result
     },
     repeatstart(index, ...words) {
-      const read = chipreadcontext(chip.id(), words)
-      const [value, ii] = readargs(read, 0, [ARG_TYPE.NUMBER])
+      const [value, ii] = readargs(memoryreadcontext(chip, words), 0, [
+        ARG_TYPE.NUMBER,
+      ])
 
       repeats[index] = value
       repeatscommand[index] = ii < words.length ? words.slice(ii) : undefined
@@ -493,10 +496,11 @@ export function createchip(id: string, build: GeneratorBuild) {
       return true
     },
     or(...words) {
-      const read = chipreadcontext(chip.id(), words)
       let lastvalue = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readargs(read, 0, [ARG_TYPE.ANY])
+        const [value, next] = readargs(memoryreadcontext(chip, words), 0, [
+          ARG_TYPE.ANY,
+        ])
         lastvalue = value
         if (lastvalue) {
           break // or returns the first truthy value
@@ -506,10 +510,11 @@ export function createchip(id: string, build: GeneratorBuild) {
       return lastvalue
     },
     and(...words) {
-      const read = chipreadcontext(chip.id(), words)
       let lastvalue = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readargs(read, 0, [ARG_TYPE.ANY])
+        const [value, next] = readargs(memoryreadcontext(chip, words), 0, [
+          ARG_TYPE.ANY,
+        ])
         lastvalue = value
         if (!lastvalue) {
           break // and returns the first falsy value, or the last value
@@ -519,141 +524,135 @@ export function createchip(id: string, build: GeneratorBuild) {
       return lastvalue
     },
     not(...words) {
-      const read = chipreadcontext(chip.id(), words)
-      const [value] = readargs(read, 0, [ARG_TYPE.ANY])
+      const [value] = readargs(memoryreadcontext(chip, words), 0, [
+        ARG_TYPE.ANY,
+      ])
       return value ? 0 : 1
     },
     expr(...words) {
       // eval a group of words as an expression
-      const read = chipreadcontext(chip.id(), words)
-      const [value] = readargs(read, 0, [ARG_TYPE.ANY])
+      const [value] = readargs(memoryreadcontext(chip, words), 0, [
+        ARG_TYPE.ANY,
+      ])
       return value
     },
     isEq(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip.id(), [lhs]), 0, [
-        ARG_TYPE.ANY,
-      ])
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.ANY,
       ])
       return isequal(left, right) ? 1 : 0
     },
     isNotEq(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip.id(), [lhs]), 0, [
-        ARG_TYPE.ANY,
-      ])
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.ANY,
       ])
       return left !== right ? 1 : 0
     },
     isLessThan(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip.id(), [lhs]), 0, [
+      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
       return left < right ? 1 : 0
     },
     isGreaterThan(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip.id(), [lhs]), 0, [
+      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
       return left > right ? 1 : 0
     },
     isLessThanOrEq(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip.id(), [lhs]), 0, [
+      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
       return left <= right ? 1 : 0
     },
     isGreaterThanOrEq(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip.id(), [lhs]), 0, [
+      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
       return left >= right ? 1 : 0
     },
     opPlus(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip.id(), [lhs]), 0, [
-        ARG_TYPE.ANY,
-      ])
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.ANY,
       ])
       return left + right
     },
     opMinus(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip.id(), [lhs]), 0, [
-        ARG_TYPE.ANY,
-      ])
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.ANY,
       ])
       return left - right
     },
     opPower(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip.id(), [lhs]), 0, [
+      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
       return Math.pow(left, right)
     },
     opMultiply(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip.id(), [lhs]), 0, [
+      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
       return left * right
     },
     opDivide(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip.id(), [lhs]), 0, [
+      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
       return left / right
     },
     opModDivide(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip.id(), [lhs]), 0, [
+      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
       return left % right
     },
     opFloorDivide(lhs, rhs) {
-      const [left] = readargs(chipreadcontext(chip.id(), [lhs]), 0, [
+      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
       return Math.floor(left / right)
     },
     opUniPlus(rhs) {
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
       return +right
     },
     opUniMinus(rhs) {
-      const [right] = readargs(chipreadcontext(chip.id(), [rhs]), 0, [
+      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.NUMBER,
       ])
       return -right
