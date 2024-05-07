@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { TICK_FPS } from 'zss/mapping/tick'
 
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, COLOR_TINDEX } from '../data/types'
+import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 
 import { cloneMaterial, interval, time } from './anim'
 
@@ -56,7 +56,7 @@ const spritesMaterial = new THREE.ShaderMaterial({
     vec4 empty;
 
     vec4 bgFromIndex(float index) {
-      if (int(index) >= ${COLOR_TINDEX}) {
+      if (int(index) >= ${COLOR.CLEAR}) {
         return empty;
       }
       vec4 bg;

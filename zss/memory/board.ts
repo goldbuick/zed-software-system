@@ -7,7 +7,6 @@ import {
   ispt,
   CATEGORY,
   STR_COLOR,
-  COLOR,
   isstrcolor,
   readstrcolor,
   readstrbg,
@@ -15,6 +14,7 @@ import {
   COLLISION,
   mapstrdirtoconst,
 } from 'zss/firmware/wordtypes'
+import { COLOR } from 'zss/gadget/data/types'
 import { pick } from 'zss/mapping/array'
 import { createguid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'

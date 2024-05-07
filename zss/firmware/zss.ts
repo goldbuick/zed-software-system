@@ -5,7 +5,7 @@ import {
   gadgetcheckset,
   gadgetpanel,
 } from 'zss/gadget/data/api'
-import { PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
+import { COLOR, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
 import {
   memorycreateeditframe,
@@ -19,7 +19,7 @@ import { boardelementapplycolor, boardcreate } from 'zss/memory/board'
 import { createbook } from 'zss/memory/book'
 import { createcodepage } from 'zss/memory/codepage'
 
-import { ARG_TYPE, COLLISION, COLOR, readargs } from './wordtypes'
+import { ARG_TYPE, COLLISION, readargs } from './wordtypes'
 
 export const ZSS_FIRMWARE = createfirmware({
   get() {

@@ -3,7 +3,7 @@ import { MAYBE_NUMBER } from 'zss/mapping/types'
 
 import {
   CHARS_PER_ROW,
-  COLOR_TINDEX,
+  COLOR,
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
 } from '../data/types'
@@ -154,7 +154,7 @@ const tilemapMaterial = new THREE.ShaderMaterial({
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
-        if (bgi >= ${COLOR_TINDEX}) {
+        if (bgi >= ${COLOR.CLEAR}) {
           discard;
         }
         color = palette[bgi];

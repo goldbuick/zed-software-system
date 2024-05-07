@@ -2,10 +2,12 @@ import { useThree } from '@react-three/fiber'
 import { tapesetopen, useTape } from 'zss/device/tape'
 import {
   WRITE_TEXT_CONTEXT,
-  createWriteTextContext,
+  createwritetextcontext,
   tokenizeAndWriteTextFormat,
+  tokenizeandmeasuretextformat,
 } from 'zss/gadget/data/textformat'
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
+import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
+import { clamp } from 'zss/mapping/number'
 
 import { UserHotkey } from './userinput'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
@@ -14,34 +16,25 @@ export function TapeConsole() {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
-  const fg = 10
-  const bg = 2
+  const scale = 1
+  const fg = COLOR.PURPLE
+  const bg = COLOR.DKPURPLE
+  const tw = DRAW_CHAR_WIDTH * scale
+  const th = DRAW_CHAR_HEIGHT * scale
 
   const tape = useTape()
 
-  const width = Math.floor(viewWidth / DRAW_CHAR_WIDTH)
-  const height = Math.floor((viewHeight / DRAW_CHAR_HEIGHT) * tape.open)
-  const marginX = viewWidth - width * DRAW_CHAR_WIDTH
-  const marginY = viewHeight - height * DRAW_CHAR_HEIGHT
+  const width = Math.floor(viewWidth / tw)
+  const fullheight = Math.floor(viewHeight / th)
+  const height = clamp(Math.round(fullheight * tape.open), 1, fullheight)
+  const marginX = viewWidth - width * tw
+  const marginY = viewHeight - height * th
 
-  const tiles = useTiles(width, height, 0, 0, 0)
-  resetTiles(tiles, 178, 0, bg)
+  const tiles = useTiles(width, height, 0, fg, bg)
 
-  const junk = useTiles(width, height, 0, 0, 0)
-  function measurerow(text: string) {
-    const junkcontext: WRITE_TEXT_CONTEXT = {
-      ...createWriteTextContext(width, height, fg, bg),
-      ...junk,
-      x: 0,
-      leftEdge: 0,
-      rightEdge: width,
-    }
-    tokenizeAndWriteTextFormat(text, junkcontext)
-    return junkcontext.y
-  }
-
+  resetTiles(tiles, 250, fg, bg)
   const context: WRITE_TEXT_CONTEXT = {
-    ...createWriteTextContext(width, height, fg, bg),
+    ...createwritetextcontext(width, height, fg, bg),
     ...tiles,
     x: 0,
     y: height - 1,
@@ -58,29 +51,26 @@ export function TapeConsole() {
     const [id, level, source, ...message] = tape.logs[i]
     const messagetext = message.map((v) => JSON.stringify(v)).join(' ')
     const rowtext = `${id.slice(id.length - 3)}>${source}>${level}: ${messagetext}`
-    context.y -= measurerow(rowtext) + 1
+    const measure = tokenizeandmeasuretextformat(rowtext, width, height)
+    context.y -= (measure?.y ?? 1) + 1
     if (context.y >= 0) {
       tokenizeAndWriteTextFormat(rowtext, context)
     }
   }
 
   return (
-    <group position={[marginX * 0.5, marginY * 0.5, 0]}>
+    <group position={[marginX * 0.5, marginY, 0]} scale={[scale, scale, 1.0]}>
       <UserHotkey hotkey="Escape">
         {() => {
-          if (tape.open) {
-            tapesetopen(false)
-          }
+          tapesetopen(0)
         }}
       </UserHotkey>
       <UserHotkey hotkey="Shift+?">
         {() => {
-          if (!tape.open) {
-            tapesetopen(true)
-          }
+          tapesetopen(tape.open > 0 ? 0 : 0.5)
         }}
       </UserHotkey>
-      {tape.open && (
+      {tape.open !== 0 && (
         <TileSnapshot width={width} height={height} tiles={tiles} />
       )}
     </group>

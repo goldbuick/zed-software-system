@@ -5,8 +5,44 @@ export const BYTES_PER_COLOR = 3
 
 export const PALETTE_COLOR_RANGE = 63
 
-export const COLOR_TINDEX = 32
-export const COLOR_SINDEX = 33
+export enum COLOR {
+  BLACK,
+  DKBLUE,
+  DKGREEN,
+  DKCYAN,
+  DKRED,
+  DKPURPLE,
+  DKYELLOW,
+  LTGRAY,
+  DKGRAY,
+  BLUE,
+  GREEN,
+  CYAN,
+  RED,
+  PURPLE,
+  YELLOW,
+  WHITE,
+  ONBLACK,
+  ONDKBLUE,
+  ONDKGREEN,
+  ONDKCYAN,
+  ONDKRED,
+  ONDKPURPLE,
+  ONDKYELLOW,
+  ONLTGRAY,
+  ONDKGRAY,
+  ONBLUE,
+  ONGREEN,
+  ONCYAN,
+  ONRED,
+  ONPURPLE,
+  ONYELLOW,
+  ONWHITE,
+  // special bg colors
+  CLEAR = 32,
+  SHADOW,
+  BORROW,
+}
 
 const CHAR_SCALE = 2
 
@@ -131,7 +167,7 @@ export function createsprite(
     y: 0,
     char,
     color,
-    bg: COLOR_TINDEX,
+    bg: COLOR.CLEAR,
   }
 }
 

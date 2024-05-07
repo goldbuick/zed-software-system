@@ -1,7 +1,7 @@
 import {
   WRITE_TEXT_CONTEXT,
   WriteTextContext,
-  createWriteTextContext,
+  createwritetextcontext,
 } from '../data/textformat'
 import { PANEL_ITEM } from '../data/types'
 
@@ -35,7 +35,7 @@ export function Panel({
   resetTiles(tiles, 0, color, bg)
 
   const context: WRITE_TEXT_CONTEXT = {
-    ...createWriteTextContext(width, height, color, bg),
+    ...createwritetextcontext(width, height, color, bg),
     ...tiles,
   }
   context.x = margin

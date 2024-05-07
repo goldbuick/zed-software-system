@@ -1,21 +1,15 @@
 import { useThree } from '@react-three/fiber'
 import anime from 'animejs'
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Group } from 'three'
 import { snap } from 'zss/mapping/number'
 
 import {
-  createWriteTextContext,
+  createwritetextcontext,
   tokenizeAndWriteTextFormat,
 } from '../data/textformat'
 import {
-  COLOR_TINDEX,
+  COLOR,
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
   PANEL_ITEM,
@@ -97,14 +91,14 @@ export function Scroll({
 
   // measure title
   const title = ` ${name} `
-  let context = createWriteTextContext(width - 6, 1, color, bg)
+  let context = createwritetextcontext(width - 6, 1, color, bg)
   context.measureOnly = true
   tokenizeAndWriteTextFormat(title, context)
 
   // center title
   const titleWidth = context.x
   context = {
-    ...createWriteTextContext(width, height, color, bg),
+    ...createwritetextcontext(width, height, color, bg),
     ...tiles,
     activeColor: 14,
     x: Math.round(width * 0.5) - Math.round(titleWidth * 0.5),
@@ -143,7 +137,6 @@ export function Scroll({
   const groupref = useRef<Group>(null)
   const viewport = useThree((state) => state.viewport)
   const { height: viewheight } = viewport.getCurrentViewport()
-
 
   const didclose = useCallback(() => {
     if (shouldclose) {
@@ -223,7 +216,7 @@ export function Scroll({
             height={panelheight}
             margin={0}
             color={color}
-            bg={COLOR_TINDEX}
+            bg={COLOR.CLEAR}
             text={visibletext}
             selected={row}
           />

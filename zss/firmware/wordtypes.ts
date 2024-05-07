@@ -1,5 +1,5 @@
 import { BITMAP } from 'zss/gadget/data/bitmap'
-import { COLOR_SINDEX, COLOR_TINDEX } from 'zss/gadget/data/types'
+import { COLOR } from 'zss/gadget/data/types'
 import { range, pick } from 'zss/mapping/array'
 import { clamp, randomInteger } from 'zss/mapping/number'
 import {
@@ -57,45 +57,6 @@ export type WORD_VALUE = WORD | WORD[] | undefined
 export type MAYBE_WORD = MAYBE<WORD>
 
 export type PT = { x: number; y: number }
-
-export enum COLOR {
-  BLACK,
-  DKBLUE,
-  DKGREEN,
-  DKCYAN,
-  DKRED,
-  DKPURPLE,
-  DKYELLOW,
-  LTGRAY,
-  DKGRAY,
-  BLUE,
-  GREEN,
-  CYAN,
-  RED,
-  PURPLE,
-  YELLOW,
-  WHITE,
-  ONBLACK,
-  ONDKBLUE,
-  ONDKGREEN,
-  ONDKCYAN,
-  ONDKRED,
-  ONDKPURPLE,
-  ONDKYELLOW,
-  ONLTGRAY,
-  ONDKGRAY,
-  ONBLUE,
-  ONGREEN,
-  ONCYAN,
-  ONRED,
-  ONPURPLE,
-  ONYELLOW,
-  ONWHITE,
-  // special bg colors
-  CLEAR = COLOR_TINDEX,
-  SHADOW = COLOR_SINDEX,
-  BORROW = COLOR_SINDEX + 1,
-}
 
 export enum DIR {
   IDLE,

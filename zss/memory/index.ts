@@ -1,8 +1,9 @@
 import { CHIP } from 'zss/chip'
 import { api_error } from 'zss/device/api'
-import { COLOR, WORD, createreadcontext } from 'zss/firmware/wordtypes'
+import { WORD, createreadcontext } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
+  COLOR,
   INPUT,
   LAYER,
   createdither,
@@ -332,13 +333,13 @@ function memoryconverttogadgetlayers(
     objects.sprites.push(sprite)
 
     // plot shadow
-    if (sprite.bg === (COLOR.SHADOW as number)) {
+    if (sprite.bg === COLOR.SHADOW) {
       sprite.bg = COLOR.CLEAR
       shadow.alphas[lx + ly * boardwidth] = 0.5
     }
 
     // borrow color
-    if (sprite.bg === (COLOR.BORROW as number)) {
+    if (sprite.bg === COLOR.BORROW) {
       sprite.bg = borrowbuffer[li] ?? COLOR.BLACK
     }
 

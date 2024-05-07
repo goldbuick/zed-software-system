@@ -2,6 +2,9 @@ import { createToken, IToken, Lexer } from 'chevrotain'
 import { createContext, useMemo } from 'react'
 import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
+import { MAYBE } from 'zss/mapping/types'
+
+import { COLOR } from './types'
 
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 
@@ -158,7 +161,7 @@ export type WRITE_TEXT_CONTEXT = {
   bg: number[]
 }
 
-export function createWriteTextContext(
+export function createwritetextcontext(
   width: number,
   height: number,
   color: number,
@@ -201,7 +204,7 @@ export function useCacheWriteTextContext(source: WRITE_TEXT_CONTEXT) {
 }
 
 export const WriteTextContext = createContext(
-  createWriteTextContext(1, 1, 15, 1),
+  createwritetextcontext(1, 1, 15, 1),
 )
 
 export function writeTextColorReset(context: WRITE_TEXT_CONTEXT) {
@@ -330,11 +333,9 @@ export function writeTextFormat(
   }
 
   // move to next line if needed
-  if (context.measureOnly !== true) {
-    if (context.x !== 0 || context.y === starty) {
-      context.x = context.leftEdge ?? 0
-      ++context.y
-    }
+  if (context.x !== 0 || context.y === starty) {
+    context.x = context.leftEdge ?? 0
+    ++context.y
   }
 
   return true
@@ -355,6 +356,28 @@ export function tokenizeAndWriteTextFormat(
   }
 
   return shouldreset
+}
+
+export function tokenizeandmeasuretextformat(
+  text: string,
+  width: number,
+  height: number,
+): MAYBE<WRITE_TEXT_CONTEXT> {
+  const result = tokenize(text)
+  if (!result.tokens) {
+    return undefined
+  }
+
+  const context = createwritetextcontext(
+    width,
+    height,
+    COLOR.WHITE,
+    COLOR.BLACK,
+  )
+  context.measureOnly = true
+
+  writeTextFormat(result.tokens, context)
+  return context
 }
 
 export function writechartoend(char: string, context: WRITE_TEXT_CONTEXT) {
