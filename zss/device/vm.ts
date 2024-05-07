@@ -26,10 +26,10 @@ memorysetdefaultplayer(playerid)
 const os = createos()
 
 // tracking active player ids
-const LOOP_TIMEOUT = 32 * 15
+const SECOND_TIMEOUT = 32
 const tracking: Record<string, number> = {}
 
-const vm = createdevice('vm', ['tick', 'tock'], (message) => {
+const vm = createdevice('vm', ['tick', 'second'], (message) => {
   switch (message.target) {
     case 'mem':
       if (message.player === playerid) {
@@ -53,7 +53,7 @@ const vm = createdevice('vm', ['tick', 'tock'], (message) => {
       // player keepalive
       if (message.player) {
         tracking[message.player] = 0
-        tape_log(vm.name(), '.', message.player)
+        tape_log(vm.name(), message.player, 'active')
         vm.emit('doot', undefined, message.player)
       }
       break
@@ -70,11 +70,11 @@ const vm = createdevice('vm', ['tick', 'tock'], (message) => {
     case 'tick':
       memorytick(os, message.data)
       break
-    case 'tock':
+    case 'second':
       // iterate over logged in players
       Object.keys(tracking).forEach((player) => {
         ++tracking[player]
-        if (tracking[player] > LOOP_TIMEOUT) {
+        if (tracking[player] >= SECOND_TIMEOUT) {
           // drop inactive players (logout)
           delete tracking[player]
           memoryplayerlogout(player)

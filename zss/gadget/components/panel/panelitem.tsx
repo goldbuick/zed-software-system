@@ -1,11 +1,10 @@
-import React, { useContext } from 'react'
-
+import { useContext } from 'react'
 import {
   WriteTextContext,
   tokenizeAndWriteTextFormat,
   writeTextColorReset,
-} from '../../data/textformat'
-import { PANEL_ITEM } from '../../data/types'
+} from 'zss/gadget/data/textformat'
+import { PANEL_ITEM } from 'zss/gadget/data/types'
 
 import { PlayerContext } from './common'
 import { PanelItemContent } from './content'

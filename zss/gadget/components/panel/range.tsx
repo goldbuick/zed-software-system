@@ -4,7 +4,7 @@ import { MAYBE_NUMBER } from 'zss/mapping/types'
 import {
   useCacheWriteTextContext,
   tokenizeAndWriteTextFormat,
-  writeCharToEnd,
+  writechartoend,
 } from '../../data/textformat'
 import { UserInput, UserInputHandler } from '../userinput'
 import { useSharedValue } from '../useshared'
@@ -68,7 +68,7 @@ export function PanelItemRange({
     `$${tcolor}${labelmin}${bar}${labelmax} $green${state + 1} \\`,
     context,
   )
-  writeCharToEnd(' ', context)
+  writechartoend(' ', context)
 
   const up = useCallback<UserInputHandler>(
     (mods) => {

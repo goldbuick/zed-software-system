@@ -73,11 +73,6 @@ document.addEventListener(
       case 'tab':
         invoke(INPUT.MENU_BUTTON, mods)
         break
-      case '?':
-        if (mods.shift) {
-          invoke(INPUT.DEBUG_BUTTON, mods)
-        }
-        break
       default:
         // we should have gamepad input that moves between hotkey inputs,
         // which then can be activated with the ok button
@@ -129,7 +124,6 @@ type UserInputProps = {
   OK_BUTTON?: UserInputHandler
   CANCEL_BUTTON?: UserInputHandler
   MENU_BUTTON?: UserInputHandler
-  DEBUG_BUTTON?: UserInputHandler
   keydown?: KeyboardInputHandler
 }
 
@@ -139,8 +133,10 @@ export function UserInput(events: UserInputProps) {
   useEffect(() => {
     const list = Object.entries(events)
 
+    // @ts-expect-error ugh
     list.forEach(([key, value]) => context.on(key, value))
     return () => {
+      // @ts-expect-error ugh
       list.forEach(([key, value]) => context.off(key, value))
     }
   }, [context, events])

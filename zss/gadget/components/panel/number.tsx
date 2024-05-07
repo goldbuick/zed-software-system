@@ -4,7 +4,7 @@ import { MAYBE_NUMBER } from 'zss/mapping/types'
 import {
   useCacheWriteTextContext,
   tokenizeAndWriteTextFormat,
-  writeCharToEnd,
+  writechartoend,
 } from '../../data/textformat'
 import {
   UserFocus,
@@ -72,7 +72,7 @@ export function PanelItemNumber({
     `  # $${tcolor}${tlabel} $green${tvalue} \\`,
     context,
   )
-  writeCharToEnd(' ', context)
+  writechartoend(' ', context)
 
   const up = useCallback<UserInputHandler>(
     (mods) => {

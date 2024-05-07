@@ -1,8 +1,6 @@
 /*
-
 what is api? a set of common helper functions to send messages to devices
 without having to include device code
-
 */
 
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
@@ -11,7 +9,7 @@ import { BOOK } from 'zss/memory/book'
 
 export function api_error(sender: string, message: string, player: string) {
   hub.emit('error', sender, message, player)
-  return tape_error(sender, [message, player])
+  return tape_error(sender, message, player)
 }
 
 export function register_reboot(sender: string, player: string) {
@@ -38,7 +36,11 @@ export function gadgetserver_clearscroll(sender: string, player: string) {
   hub.emit('gadgetserver:clearscroll', sender, undefined, player)
 }
 
-export function pcspeaker_play(sender: string, priority: number, buffer: string) {
+export function pcspeaker_play(
+  sender: string,
+  priority: number,
+  buffer: string,
+) {
   hub.emit('pcspeaker:play', sender, [priority, buffer])
 }
 

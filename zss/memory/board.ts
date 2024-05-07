@@ -42,7 +42,6 @@ export type BOARD_ELEMENT_STATS = {
   inputok?: number
   inputcancel?: number
   inputmenu?: number
-  inputdebug?: number
   data?: any
   [key: string]: WORD_VALUE
 }

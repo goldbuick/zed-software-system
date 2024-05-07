@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   useCacheWriteTextContext,
   tokenizeAndWriteTextFormat,
-  writeCharToEnd,
+  writechartoend,
   applycolortoindexes,
   applystrtoindex,
 } from 'zss/gadget/data/textformat'
@@ -50,7 +50,7 @@ export function PanelItemText({
 
   // content
   tokenizeAndWriteTextFormat(`${tvalue}\\`, context)
-  writeCharToEnd(' ', context)
+  writechartoend(' ', context)
 
   // input state
   const hasselection = ispresent(selection)

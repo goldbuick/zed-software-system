@@ -1,3 +1,4 @@
+import { api_error } from 'zss/device/api'
 import { COLOR } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
@@ -40,7 +41,6 @@ import {
   createeditframe,
   createviewframe,
 } from './frame'
-import { api_error } from 'zss/device/api'
 
 type CHIP_MEMORY = {
   // targets
@@ -154,7 +154,6 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
         [INPUT.OK_BUTTON]: 0,
         [INPUT.CANCEL_BUTTON]: 0,
         [INPUT.MENU_BUTTON]: 0,
-        [INPUT.DEBUG_BUTTON]: 0,
       },
       inputcurrent: undefined,
     }
@@ -170,17 +169,29 @@ const PLAYER_START = 'title'
 
 export function memoryplayerlogin(player: string): boolean {
   if (!isstring(player) || !player) {
-    return api_error('memory', `login failed for playerid ==>${player}<==`, player)
+    return api_error(
+      'memory',
+      `login failed for playerid ==>${player}<==`,
+      player,
+    )
   }
 
   const book = memoryreadbook(PLAYER_BOOK)
   if (!ispresent(book)) {
-    return api_error('memory', `login failed to find book ${PLAYER_BOOK}`, player)
+    return api_error(
+      'memory',
+      `login failed to find book ${PLAYER_BOOK}`,
+      player,
+    )
   }
 
   const start = bookreadboard(book, PLAYER_START)
   if (!ispresent(start)) {
-    return api_error('memory', `login failed to find board ${PLAYER_START}`, player)
+    return api_error(
+      'memory',
+      `login failed to find board ${PLAYER_START}`,
+      player,
+    )
   }
 
   const playerkind = bookreadobject(book, PLAYER_KIND)

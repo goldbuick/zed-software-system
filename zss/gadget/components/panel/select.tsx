@@ -4,7 +4,7 @@ import { MAYBE_NUMBER } from 'zss/mapping/types'
 import {
   useCacheWriteTextContext,
   tokenizeAndWriteTextFormat,
-  writeCharToEnd,
+  writechartoend,
 } from '../../data/textformat'
 import { UserInput, UserInputHandler } from '../userinput'
 import { useSharedValue } from '../useshared'
@@ -48,7 +48,7 @@ export function PanelItemSelect({
   // write value
   tokenizeAndWriteTextFormat(`$green${tvalue} \\`, context)
 
-  writeCharToEnd(' ', context)
+  writechartoend(' ', context)
 
   const up = useCallback<UserInputHandler>(
     (mods) => {
