@@ -1,6 +1,6 @@
 import { createdevice } from 'zss/device'
 
-import { vm_doot, vm_login } from './api'
+import { register_reboot, vm_doot, vm_login } from './api'
 import { gadgetstategetplayer, gadgetstatesetplayer } from './gadgetclient'
 
 // simple bootstrap manager
@@ -36,6 +36,7 @@ const bip = createdevice(
           switch (message.data) {
             case 'with login':
               // issue reboot
+              register_reboot(bip.name(), message.player)
               break
           }
         }

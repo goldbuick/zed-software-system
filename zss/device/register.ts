@@ -28,11 +28,12 @@ const register = createdevice('register', [], (message) => {
     case 'reboot':
       if (message.player) {
         const [mem] = readstate()
-        if (ispresent(mem)) {
-          vm_mem(register.name(), mem, message.player)
-        } else {
-          api_error(register.name(), 'reboot failed', message.player)
-        }
+        console.info('????mem', mem)
+        // if (ispresent(mem)) {
+        //   vm_mem(register.name(), mem, message.player)
+        // } else {
+        //   api_error(register.name(), 'reboot failed', message.player)
+        // }
       }
       break
     case 'flush': {

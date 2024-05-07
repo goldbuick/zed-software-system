@@ -1,4 +1,3 @@
-import { CHIP, WORD } from 'zss/chip'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { COLOR_SINDEX, COLOR_TINDEX } from 'zss/gadget/data/types'
 import { range, pick } from 'zss/mapping/array'
@@ -11,7 +10,6 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { memoryreadchip } from 'zss/memory'
 import {
   MAYBE_BOARD,
   MAYBE_BOARD_ELEMENT,
@@ -28,11 +26,13 @@ export type READ_CONTEXT = {
   charset: MAYBE<BITMAP>
   palette: MAYBE<BITMAP>
   // context
-  chip: CHIP
+  get: (name: string) => any
   words: WORD[]
 }
 
-type MAYBE_WORD = MAYBE<WORD>
+export type WORD = string | number
+export type WORD_VALUE = WORD | WORD[] | undefined
+export type MAYBE_WORD = MAYBE<WORD>
 
 export type PT = { x: number; y: number }
 
@@ -671,11 +671,6 @@ export function readdir(
   return strdir.length ? [strdir, ii] : [undefined, index]
 }
 
-export function chipreadcontext(chip: CHIP, words: WORD[]) {
-  const memory = memoryreadchip(chip.id())
-  return { ...memory, chip, words }
-}
-
 // read a value from words
 // consider splitting out to own file
 export function readexpr(
@@ -748,7 +743,7 @@ export function readexpr(
 
     // check for flag
     if (stringeval) {
-      const maybeflag = read.chip.get(maybevalue)
+      const maybeflag = read.get(maybevalue)
       if (ispresent(maybeflag)) {
         return [maybeflag, index + 1]
       }

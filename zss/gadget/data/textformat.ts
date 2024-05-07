@@ -150,7 +150,6 @@ export type WRITE_TEXT_CONTEXT = {
   activeBg: number | undefined
   width: number
   height: number
-  rowdir: number
   leftEdge: number | undefined
   rightEdge: number | undefined
   bottomEdge: number | undefined
@@ -177,7 +176,6 @@ export function createWriteTextContext(
     activeBg: bg,
     width,
     height,
-    rowdir: 1,
     leftEdge: undefined,
     rightEdge: undefined,
     bottomEdge: undefined,
@@ -221,7 +219,7 @@ export function writeTextFormat(
     ++context.x
     if (context.x >= (context.rightEdge ?? context.width)) {
       context.x = context.leftEdge ?? 0
-      context.y += context.rowdir
+      ++context.y
     }
   }
 
@@ -335,7 +333,7 @@ export function writeTextFormat(
   if (context.measureOnly !== true) {
     if (context.x !== 0 || context.y === starty) {
       context.x = context.leftEdge ?? 0
-      context.y += context.rowdir
+      ++context.y
     }
   }
 

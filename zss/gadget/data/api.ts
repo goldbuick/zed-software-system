@@ -1,5 +1,5 @@
 import Case from 'case'
-import { CHIP, STATE, WORD, WORD_VALUE } from 'zss/chip'
+import { CHIP, STATE } from 'zss/chip'
 import {
   MAYBE_SHARED_TEXT,
   observesharedtype,
@@ -7,6 +7,7 @@ import {
   servesharedvalue,
   updatesharedvalue,
 } from 'zss/device/shared'
+import { WORD, WORD_VALUE } from 'zss/firmware/wordtypes'
 import { createguid } from 'zss/mapping/guid'
 import {
   MAYBE_NUMBER,

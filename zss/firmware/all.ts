@@ -35,7 +35,7 @@ export const ALL_FIRMWARE = createfirmware({
   })
   .command('give', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [name, maybevalue, ii] = readargs({ ...memory, chip, words }, 0, [
+    const [name, maybevalue, ii] = readargs({ ...chip, ...memory, words }, 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.MAYBE_NUMBER,
     ])
@@ -76,7 +76,7 @@ export const ALL_FIRMWARE = createfirmware({
   })
   .command('set', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [name, value] = readargs({ ...memory, chip, words }, 0, [
+    const [name, value] = readargs({ ...chip, ...memory, words }, 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.ANY,
     ])
@@ -85,7 +85,7 @@ export const ALL_FIRMWARE = createfirmware({
   })
   .command('take', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [name, maybevalue, ii] = readargs({ ...memory, chip, words }, 0, [
+    const [name, maybevalue, ii] = readargs({ ...chip, ...memory, words }, 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.MAYBE_NUMBER,
     ])
