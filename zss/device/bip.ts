@@ -34,7 +34,6 @@ const bip = createdevice(
         break
       case 'error:login':
         if (message.player) {
-          // issue reboot
           register_reboot(bip.name(), message.player)
         }
         break
