@@ -357,7 +357,6 @@ class ScriptVisitor extends CstVisitor {
   }
 
   command(ctx: CstChildrenDictionary) {
-    // console.info('command', ctx)
     if (ctx.flat_cmd) {
       // @ts-expect-error
       return this.visit(ctx.flat_cmd)
@@ -369,7 +368,6 @@ class ScriptVisitor extends CstVisitor {
   }
 
   flat_cmd(ctx: CstChildrenDictionary) {
-    // console.info('flat_cmd', ctx)
     if (ctx.words) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
@@ -432,7 +430,6 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Short_go(ctx: CstChildrenDictionary) {
-    // console.info('ctx.Short_go', ctx)
     if (ctx.Divide) {
       return makeNode(ctx, {
         type: NODE.MOVE,
@@ -444,7 +441,6 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Short_try(ctx: CstChildrenDictionary) {
-    // console.info('ctx.Short_try', ctx)
     if (ctx.Query) {
       return makeNode(ctx, {
         type: NODE.MOVE,
@@ -473,7 +469,6 @@ class ScriptVisitor extends CstVisitor {
   }
 
   do_stmt(ctx: CstChildrenDictionary) {
-    // console.info('do_stmt', ctx)
     if (ctx.text) {
       // @ts-expect-error
       return this.visit(ctx.text)

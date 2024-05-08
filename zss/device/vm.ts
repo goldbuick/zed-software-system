@@ -44,8 +44,6 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           tracking[message.player] = 0
           tape_log(vm.name(), 'acklogin', message.player)
           vm.emit('acklogin', undefined, message.player)
-        } else {
-          api_error(vm.name(), 'with login', message.player)
         }
       }
       break

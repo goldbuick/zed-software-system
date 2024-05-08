@@ -1,5 +1,6 @@
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
+import { api_error } from './device/api'
 import { loadfirmware } from './firmware/loader'
 import { GeneratorBuild, compile } from './lang/generator'
 import { ispresent } from './mapping/types'
@@ -54,8 +55,8 @@ export function createos() {
       if (!ispresent(chips[id])) {
         const result = build(code)
         if (result.errors?.length) {
-          console.error(result.errors)
-          console.info(result.tokens)
+          // todo, need an error message
+          api_error('os', 'build', JSON.stringify(result.errors), '')
           chips[id] = null
           return false
         }

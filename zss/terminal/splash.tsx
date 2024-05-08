@@ -1,17 +1,23 @@
 import { useThree } from '@react-three/fiber'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { initaudio } from 'zss/gadget/audio/blaster'
 import {
   TileSnapshot,
   resetTiles,
   useTiles,
-  writeTile,
 } from 'zss/gadget/components/usetiles'
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
+import {
+  createwritetextcontext,
+  tokenizeAndWriteTextFormat,
+} from 'zss/gadget/data/textformat'
+import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 
-const TINFO = `${import.meta.env.ZSS_BRANCH_NAME} - ${import.meta.env.ZSS_BRANCH_VERSION} - ${import.meta.env.ZSS_COMMIT_MESSAGE}`
-const TSPACE = `        `
-const TICKER = `${TSPACE}< Press Any Key >${TSPACE}${TINFO}`
+const RELEASE = `${import.meta.env.ZSS_BRANCH_NAME} - ${import.meta.env.ZSS_BRANCH_VERSION} - ${import.meta.env.ZSS_COMMIT_MESSAGE}`
+const TICKER: string[] = [
+  `${import.meta.env.ZSS_BRANCH_NAME} - ${import.meta.env.ZSS_BRANCH_VERSION} - ${import.meta.env.ZSS_COMMIT_MESSAGE}`,
+  '-'.repeat(RELEASE.length),
+  `PRESS ANY KEY`,
+]
 
 export type SplashProps = {
   onBoot: () => void
@@ -27,7 +33,6 @@ export function Splash({ onBoot }: SplashProps) {
   const marginY = viewHeight - height * DRAW_CHAR_HEIGHT
 
   const tiles = useTiles(width, height, 0, 0, 0)
-  const [offset, setOffset] = useState(0)
 
   useEffect(() => {
     async function boot() {
@@ -47,32 +52,13 @@ export function Splash({ onBoot }: SplashProps) {
   }, [onBoot])
 
   useEffect(() => {
-    const timer = setInterval(
-      () => setOffset((state) => state + TICKER.length - 1),
-      250,
-    )
-    return () => {
-      clearInterval(timer)
+    resetTiles(tiles, 0, COLOR.WHITE, COLOR.DKGRAY)
+    const context = {
+      ...createwritetextcontext(width, height, COLOR.WHITE, COLOR.DKGRAY),
+      ...tiles,
     }
-  }, [setOffset])
-
-  useEffect(() => {
-    resetTiles(tiles, 0, 0, 0)
-
-    for (let iy = 0; iy < height; ++iy) {
-      for (let ix = 0; ix < width; ++ix) {
-        writeTile(tiles, width, height, ix, iy, {
-          char:
-            iy % 2 === 1
-              ? 0
-              : TICKER.charCodeAt((ix + iy + offset) % TICKER.length),
-          color: 15,
-        })
-      }
-    }
-
-    //
-  }, [width, height, tiles, offset])
+    TICKER.forEach((item) => tokenizeAndWriteTextFormat(item, context))
+  }, [width, height, tiles])
 
   return (
     <group position={[marginX * 0.5, marginY * 0.5, 0]}>

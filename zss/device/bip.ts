@@ -13,6 +13,7 @@ const bip = createdevice(
   'bip',
   ['second', 'ready', 'error', 'memset'],
   (message) => {
+    console.info(message)
     switch (message.target) {
       case 'second':
         ++keepalive
@@ -31,17 +32,15 @@ const bip = createdevice(
           }
         }
         break
-      case 'error':
+      case 'error:login':
         if (message.player) {
-          switch (message.data) {
-            case 'with login':
-              // issue reboot
-              register_reboot(bip.name(), message.player)
-              break
-            case 'reboot failed':
-              tape_open(bip.name(), 1)
-              break
-          }
+          // issue reboot
+          register_reboot(bip.name(), message.player)
+        }
+        break
+      case 'error:reboot':
+        if (message.player) {
+          tape_open(bip.name(), 1)
         }
         break
       case 'ackmem':

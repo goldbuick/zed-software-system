@@ -7,8 +7,14 @@ import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
 import { BOOK } from 'zss/memory/book'
 
-export function api_error(sender: string, message: string, player: string) {
-  hub.emit('error', sender, message, player)
+export function api_error(
+  sender: string,
+  kind: string,
+  message: string,
+  maybeplayer?: string,
+) {
+  const player = maybeplayer ?? 'anon'
+  hub.emit(`error:${kind}`, sender, message, player)
   return tape_error(sender, message, player)
 }
 

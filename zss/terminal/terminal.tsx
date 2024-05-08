@@ -4,8 +4,9 @@ import {
   EffectComposer,
   BrightnessContrast,
   ChromaticAberration,
+  Bloom,
 } from '@react-three/postprocessing'
-import { BlendFunction } from 'postprocessing'
+import { BlendFunction, KernelSize, Resolution } from 'postprocessing'
 import { Suspense, useEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { STATS_DEV } from 'zss/config'

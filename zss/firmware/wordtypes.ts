@@ -832,12 +832,10 @@ export function readexpr(
         return [clamp(a, min, max), ii]
       }
       case 'pick': {
-        // console.info('pick', read.words.slice(index + 1))
         // PICK <a> [b] [c] [d]
         const values: any[] = []
         for (let ii = index + 1; ii < read.words.length; ) {
           const [value, iii] = readexpr(read, ii)
-          // console.info({ value, iii })
           // if we're given array, we pick from it
           if (
             isarray(value) &&
@@ -852,7 +850,6 @@ export function readexpr(
           ii = iii
           values.push(value)
         }
-        // console.info({ from: values })
         return [pick(values), read.words.length]
       }
       case 'range': {

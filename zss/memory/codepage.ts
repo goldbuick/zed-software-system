@@ -65,7 +65,6 @@ function tokenstostrings(tokens: IToken[]) {
 
 function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
   const [stat, target, ...args] = tokens
-  // console.info({ stat, target, args })
   if (ispresent(codepage.stats) && ispresent(stat)) {
     switch (stat.image.toLowerCase()) {
       case 'rn':
@@ -88,7 +87,6 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
         break
     }
   }
-  // console.info(codepage.stats)
 }
 
 export function codepagereadstatdefaults(

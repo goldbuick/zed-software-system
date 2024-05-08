@@ -15,7 +15,6 @@ export function createplatform() {
   const forward = createforward((message) => instance.postMessage(message))
 
   instance.addEventListener('message', (event) => {
-    // console.info(event.data)
     forward(event.data)
   })
 }

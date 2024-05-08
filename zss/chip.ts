@@ -202,9 +202,6 @@ export function createchip(id: string, build: GeneratorBuild) {
       for (let i = 0; i < firmwares.length; ++i) {
         const [result, value] = firmwares[i].get(chip, lname)
         if (result) {
-          if (lname.startsWith('input')) {
-            // console.info('get', lname, value)
-          }
           return value
         }
       }
@@ -402,7 +399,6 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       const [name, ...args] = words
       const command = getcommand(maptostring(name))
-      // console.info({ name, args, command })
       if (command) {
         return command(chip, args)
       }
@@ -416,7 +412,6 @@ export function createchip(id: string, build: GeneratorBuild) {
       ])
       const result = maptoresult(value)
 
-      // console.info('if', value, { ii, length: words.length }, result)
       if (result && ii < words.length) {
         chip.command(...words.slice(ii))
       }
@@ -471,8 +466,6 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       // map values from object or map number. string to counter
       const names = words.map(maptostring)
-
-      // console.info('reading', index, names, next)
 
       switch (typeof next) {
         case 'number':

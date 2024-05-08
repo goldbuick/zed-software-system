@@ -308,7 +308,6 @@ export const ZZT_FIRMWARE = createfirmware({
     // we have to check the object's stats first
     if (ispresent(memory.object)) {
       if (ispresent(memory.object?.stats?.[name]) || STAT_NAMES.has(name)) {
-        // console.info('??set', name, value)
         if (!memory.object.stats) {
           memory.object.stats = {}
         }
@@ -378,8 +377,7 @@ export const ZZT_FIRMWARE = createfirmware({
     chip.endofprogram()
     return 0
   })
-  .command('bind', (_chip, words) => {
-    console.info(words)
+  .command('bind', (chip, words) => {
     return 0
   })
   .command('change', (chip, words) => {

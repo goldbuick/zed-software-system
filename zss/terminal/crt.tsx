@@ -56,7 +56,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   // apply outer shade
   if (doot >= 0.97) {
     float sh = clamp(0.0, 1.0, bx * 24.0);
-    vec3 dkout = mix(vec3(0.0), outputColor.rgb, 0.75);
+    vec3 dkout = mix(vec3(0.0), outputColor.rgb, 0.81);
     vec3 shade = mix(dkout, outputColor.rgb, sh);
     outputColor = vec4(shade, inputColor.a);
   }

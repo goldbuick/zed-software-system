@@ -9,32 +9,31 @@ import {
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 
-import { UserHotkey } from './userinput'
+import { UserFocus, UserHotkey, UserInput } from './userinput'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
+
+const SCALE = 1
+const FG = COLOR.BLUE
+const BG = COLOR.DKBLUE
+const TW = DRAW_CHAR_WIDTH * SCALE
+const TH = DRAW_CHAR_HEIGHT * SCALE
 
 export function TapeConsole() {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
-  const scale = 1
-  const fg = COLOR.PURPLE
-  const bg = COLOR.DKPURPLE
-  const tw = DRAW_CHAR_WIDTH * scale
-  const th = DRAW_CHAR_HEIGHT * scale
-
   const tape = useTape()
-
-  const width = Math.floor(viewWidth / tw)
-  const fullheight = Math.floor(viewHeight / th)
+  const width = Math.floor(viewWidth / TW)
+  const fullheight = Math.floor(viewHeight / TH)
   const height = clamp(Math.round(fullheight * tape.open), 1, fullheight)
-  const marginX = viewWidth - width * tw
-  const marginY = viewHeight - height * th
+  const marginX = viewWidth - width * TW
+  const marginY = viewHeight - height * TH
 
-  const tiles = useTiles(width, height, 0, fg, bg)
+  const tiles = useTiles(width, height, 0, FG, BG)
 
-  resetTiles(tiles, 250, fg, bg)
+  resetTiles(tiles, 250, FG, BG)
   const context: WRITE_TEXT_CONTEXT = {
-    ...createwritetextcontext(width, height, fg, bg),
+    ...createwritetextcontext(width, height, FG, BG),
     ...tiles,
     x: 0,
     y: height - 1,
@@ -59,7 +58,7 @@ export function TapeConsole() {
   }
 
   return (
-    <group position={[marginX * 0.5, marginY, 0]} scale={[scale, scale, 1.0]}>
+    <group position={[marginX * 0.5, marginY, 0]} scale={[SCALE, SCALE, 1.0]}>
       <UserHotkey hotkey="Escape">
         {() => {
           tapesetopen(0)
@@ -71,7 +70,14 @@ export function TapeConsole() {
         }}
       </UserHotkey>
       {tape.open !== 0 && (
-        <TileSnapshot width={width} height={height} tiles={tiles} />
+        <UserFocus>
+          <TileSnapshot width={width} height={height} tiles={tiles} />
+          <UserInput
+            keydown={(event) => {
+              //
+            }}
+          />
+        </UserFocus>
       )}
     </group>
   )

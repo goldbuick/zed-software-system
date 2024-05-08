@@ -173,7 +173,6 @@ function leaveShared(guid: string) {
 // object change handlers
 
 export function servesharedvalue<T>(guid: string, key: string, value: T) {
-  console.info({ guid, key, value })
   // mark this guid as origin
   origin[guid] = true
   // determine if we need to init value

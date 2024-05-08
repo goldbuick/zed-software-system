@@ -17,7 +17,6 @@ const devices = new Set<DEVICE>()
 
 export const hub: HUB = {
   emit(target, sender, data, player) {
-    // console.info(target, sender, data, player)
     hub.invoke(createmessage(target, sender, data, player))
   },
   invoke(message) {
