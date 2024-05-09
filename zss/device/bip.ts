@@ -2,6 +2,7 @@ import { createdevice } from 'zss/device'
 
 import { register_reboot, tape_open, vm_doot, vm_login } from './api'
 import { gadgetstategetplayer, gadgetstatesetplayer } from './gadgetclient'
+import { TAPE_DISPLAY } from './tape'
 
 // simple bootstrap manager
 let keepalive = 0
@@ -13,7 +14,6 @@ const bip = createdevice(
   'bip',
   ['second', 'ready', 'error', 'memset'],
   (message) => {
-    console.info(message)
     switch (message.target) {
       case 'second':
         ++keepalive
@@ -39,7 +39,7 @@ const bip = createdevice(
         break
       case 'error:reboot':
         if (message.player) {
-          tape_open(bip.name(), 1)
+          tape_open(bip.name(), TAPE_DISPLAY.FULL)
         }
         break
       case 'ackmem':

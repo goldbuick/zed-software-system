@@ -5,14 +5,40 @@ import { isnumber } from 'zss/mapping/types'
 
 // system wide message logger
 
+export enum TAPE_DISPLAY {
+  BOTTOM,
+  RIGHT,
+  TOP,
+  LEFT,
+  FULL,
+  MAX,
+}
+
 type TAPE_ROW = [string, string, string, ...any[]]
-const tape = proxy({
-  open: 0,
-  logs: [] as TAPE_ROW[],
+type TAPE_STATE = {
+  open: boolean
+  mode: TAPE_DISPLAY
+  logs: TAPE_ROW[]
+}
+
+const tape = proxy<TAPE_STATE>({
+  open: false,
+  mode: TAPE_DISPLAY.BOTTOM,
+  logs: [],
 })
 
-export function tapesetopen(open: number) {
+export function tapesetopen(open: boolean) {
   tape.open = open
+}
+
+export function tapesetmode(inc: number) {
+  tape.mode = ((tape.mode as number) + inc) as TAPE_DISPLAY
+  if ((tape.mode as number) < 0) {
+    tape.mode += TAPE_DISPLAY.MAX
+  }
+  if ((tape.mode as number) >= (TAPE_DISPLAY.MAX as number)) {
+    tape.mode -= TAPE_DISPLAY.MAX
+  }
 }
 
 export function useTape() {
@@ -33,7 +59,8 @@ createdevice('tape', [], (message) => {
     }
     case 'open':
       if (isnumber(message.data)) {
-        tapesetopen(message.data)
+        tapesetopen(true)
+        tapesetmode(message.data)
       }
       break
   }

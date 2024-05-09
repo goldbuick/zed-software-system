@@ -1,13 +1,17 @@
 import { useThree } from '@react-three/fiber'
-import { tapesetopen, useTape } from 'zss/device/tape'
+import {
+  TAPE_DISPLAY,
+  tapesetmode,
+  tapesetopen,
+  useTape,
+} from 'zss/device/tape'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
-  tokenizeAndWriteTextFormat,
+  tokenizeAndWriteTextFormat as tokenizeandwritetextformat,
   tokenizeandmeasuretextformat,
 } from 'zss/gadget/data/textformat'
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
-import { clamp } from 'zss/mapping/number'
 
 import { UserFocus, UserHotkey, UserInput } from './userinput'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
@@ -15,19 +19,46 @@ import { TileSnapshot, resetTiles, useTiles } from './usetiles'
 const SCALE = 1
 const FG = COLOR.BLUE
 const BG = COLOR.DKBLUE
-const TW = DRAW_CHAR_WIDTH * SCALE
-const TH = DRAW_CHAR_HEIGHT * SCALE
+const CHAR_WIDTH = DRAW_CHAR_WIDTH * SCALE
+const CHAR_HEIGHT = DRAW_CHAR_HEIGHT * SCALE
 
 export function TapeConsole() {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
   const tape = useTape()
-  const width = Math.floor(viewWidth / TW)
-  const fullheight = Math.floor(viewHeight / TH)
-  const height = clamp(Math.round(fullheight * tape.open), 1, fullheight)
-  const marginX = viewWidth - width * TW
-  const marginY = viewHeight - height * TH
+
+  const cols = Math.floor(viewWidth / CHAR_WIDTH)
+  const rows = Math.floor(viewHeight / CHAR_HEIGHT)
+  const marginX = viewWidth - cols * CHAR_WIDTH
+  const marginY = viewHeight - rows * CHAR_HEIGHT
+
+  let top = 0
+  let left = 0
+  let width = cols
+  let height = rows
+
+  console.info(tape)
+  switch (tape.mode) {
+    case TAPE_DISPLAY.TOP:
+      height = Math.round(rows * 0.5)
+      break
+    case TAPE_DISPLAY.RIGHT:
+      width = Math.round(cols * 0.5)
+      left = (cols - width) * CHAR_WIDTH
+      break
+    case TAPE_DISPLAY.BOTTOM:
+      height = Math.round(rows * 0.5)
+      top = (rows - height) * CHAR_HEIGHT
+      break
+    case TAPE_DISPLAY.LEFT:
+      width = Math.round(cols * 0.5)
+      break
+    default:
+    case TAPE_DISPLAY.FULL:
+      // no-op
+      break
+  }
 
   const tiles = useTiles(width, height, 0, FG, BG)
 
@@ -36,7 +67,7 @@ export function TapeConsole() {
     ...createwritetextcontext(width, height, FG, BG),
     ...tiles,
     x: 0,
-    y: height - 1,
+    y: height - 2,
     leftEdge: 0,
     rightEdge: width,
   }
@@ -46,33 +77,39 @@ export function TapeConsole() {
     return null
   }
 
-  for (let i = 0; i < tape.logs.length; ++i) {
+  for (let i = 0; i < tape.logs.length && context.y >= 0; ++i) {
     const [id, level, source, ...message] = tape.logs[i]
     const messagetext = message.map((v) => JSON.stringify(v)).join(' ')
     const rowtext = `${id.slice(id.length - 3)}>${source}>${level}: ${messagetext}`
     const measure = tokenizeandmeasuretextformat(rowtext, width, height)
-    context.y -= (measure?.y ?? 1) + 1
-    if (context.y >= 0) {
-      tokenizeAndWriteTextFormat(rowtext, context)
-    }
+    context.y -= measure?.y ?? 1
+    const reset = context.y
+    tokenizeandwritetextformat(rowtext, context)
+    context.y = reset
   }
 
   return (
-    <group position={[marginX * 0.5, marginY, 0]} scale={[SCALE, SCALE, 1.0]}>
+    <group
+      position={[marginX * 0.5 + left, marginY + top, 0]}
+      scale={[SCALE, SCALE, 1.0]}
+    >
       <UserHotkey hotkey="Escape">
         {() => {
-          tapesetopen(0)
+          tapesetopen(false)
         }}
       </UserHotkey>
       <UserHotkey hotkey="Shift+?">
         {() => {
-          tapesetopen(tape.open > 0 ? 0 : 0.5)
+          tapesetopen(!tape.open)
         }}
       </UserHotkey>
-      {tape.open !== 0 && (
+      {tape.open && (
         <UserFocus>
           <TileSnapshot width={width} height={height} tiles={tiles} />
           <UserInput
+            MENU_BUTTON={(mods) => {
+              tapesetmode(mods.shift ? -1 : 1)
+            }}
             keydown={(event) => {
               //
             }}

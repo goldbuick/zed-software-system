@@ -142,7 +142,7 @@ export function tokenize(text: string, noWhitespace = false) {
 }
 
 export type WRITE_TEXT_CONTEXT = {
-  measureOnly: boolean
+  measureonly: boolean
   resetCheck: boolean
   x: number
   y: number
@@ -168,7 +168,7 @@ export function createwritetextcontext(
   bg: number,
 ): WRITE_TEXT_CONTEXT {
   return {
-    measureOnly: false,
+    measureonly: false,
     resetCheck: true,
     x: 0,
     y: 0,
@@ -212,7 +212,7 @@ export function writeTextColorReset(context: WRITE_TEXT_CONTEXT) {
   context.activeBg = context.resetBg
 }
 
-export function writeTextFormat(
+export function writetextformat(
   tokens: IToken[],
   context: WRITE_TEXT_CONTEXT,
 ): boolean {
@@ -240,7 +240,7 @@ export function writeTextFormat(
 
   function writeStr(str: string) {
     for (let t = 0; t < str.length; ++t) {
-      if (context.measureOnly !== true && isVisible()) {
+      if (context.measureonly !== true && isVisible()) {
         const i = context.x + context.y * context.width
         context.char[i] = str.charCodeAt(t)
         if (context.activeColor !== undefined) {
@@ -301,7 +301,7 @@ export function writeTextFormat(
         context.activeBg = context.resetBg
         break
       case NumberLiteral:
-        if (context.measureOnly !== true && isVisible()) {
+        if (context.measureonly !== true && isVisible()) {
           const i = context.x + context.y * context.width
           context.char[i] = parseFloat(token.image.replace('$', ''))
           if (context.activeColor !== undefined) {
@@ -350,7 +350,7 @@ export function tokenizeAndWriteTextFormat(
     return true
   }
 
-  const shouldreset = writeTextFormat(result.tokens, context)
+  const shouldreset = writetextformat(result.tokens, context)
   if (context.resetCheck && shouldreset) {
     writeTextColorReset(context)
   }
@@ -374,9 +374,9 @@ export function tokenizeandmeasuretextformat(
     COLOR.WHITE,
     COLOR.BLACK,
   )
-  context.measureOnly = true
+  context.measureonly = true
 
-  writeTextFormat(result.tokens, context)
+  writetextformat(result.tokens, context)
   return context
 }
 

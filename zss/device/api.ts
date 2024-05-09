@@ -7,6 +7,8 @@ import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
 import { BOOK } from 'zss/memory/book'
 
+import { TAPE_DISPLAY } from './tape'
+
 export function api_error(
   sender: string,
   kind: string,
@@ -74,8 +76,8 @@ function tape_error(sender: string, ...message: any[]) {
   return false
 }
 
-export function tape_open(sender: string, amount: number) {
-  hub.emit('tape:open', sender, amount)
+export function tape_open(sender: string, mode: TAPE_DISPLAY) {
+  hub.emit('tape:open', sender, mode)
 }
 
 export function vm_mem(sender: string, book: BOOK, player: string) {

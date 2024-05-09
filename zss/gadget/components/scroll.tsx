@@ -92,7 +92,7 @@ export function Scroll({
   // measure title
   const title = ` ${name} `
   let context = createwritetextcontext(width - 6, 1, color, bg)
-  context.measureOnly = true
+  context.measureonly = true
   tokenizeAndWriteTextFormat(title, context)
 
   // center title
