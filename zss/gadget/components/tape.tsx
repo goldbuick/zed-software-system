@@ -116,7 +116,7 @@ export function TapeConsole() {
   const iic = ii2 - ii1
 
   const inputstateselected = hasselection
-    ? stringsplice(inputstate, ii1, iic)
+    ? inputstate.substring(ii1, ii2 + 1)
     : inputstate
 
   // draw input line

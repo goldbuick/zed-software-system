@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          set-safe-directory: true
+          # set-safe-directory: true
 
       - name: setup node
         uses: actions/setup-node@v4
