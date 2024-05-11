@@ -86,7 +86,8 @@ export function TapeConsole() {
 
   const blink = useBlink()
   const [cursor, setcursor] = useState(0)
-  const [inputstate, setinputstate] = useState('')
+  const [inputbufferindex, setinputbufferindex] = useState(0)
+  const [inputbuffer, setinputbuffer] = useState<string[]>([''])
   const [selection, setselection] = useState<number | undefined>(undefined)
 
   // bail on odd states
@@ -115,6 +116,7 @@ export function TapeConsole() {
   const ii2 = hasselection ? Math.max(selection, cursor) : cursor
   const iic = ii2 - ii1
 
+  const inputstate = inputbuffer[inputbufferindex]
   const inputstateselected = hasselection
     ? inputstate.substring(ii1, ii2 + 1)
     : inputstate
@@ -133,13 +135,18 @@ export function TapeConsole() {
 
   // update state
   function inputstatesetsplice(index: number, count: number, insert?: string) {
-    setinputstate(stringsplice(inputstate, index, count, insert))
+    inputbuffer[inputbufferindex] = stringsplice(
+      inputstate,
+      index,
+      count,
+      insert,
+    )
   }
 
-  function trackselection(shift: boolean) {
-    if (shift) {
+  function trackselection(index: number | undefined) {
+    if (ispresent(index)) {
       if (!ispresent(selection)) {
-        setselection(clamp(cursor - 1, 0, inputstate.length))
+        setselection(clamp(index, 0, inputstate.length - 1))
       }
     } else {
       setselection(undefined)
@@ -165,20 +172,31 @@ export function TapeConsole() {
             MENU_BUTTON={(mods) => {
               tapesetmode(mods.shift ? -1 : 1)
             }}
+            MOVE_UP={() => {
+              setinputbufferindex(
+                clamp(inputbufferindex + 1, 0, inputbuffer.length - 1),
+              )
+            }}
+            MOVE_DOWN={() => {
+              setinputbufferindex(
+                clamp(inputbufferindex - 1, 0, inputbuffer.length - 1),
+              )
+            }}
             MOVE_LEFT={(mods) => {
-              trackselection(mods.shift)
+              trackselection(mods.shift ? cursor : undefined)
               setcursor(clamp(cursor - 1, 0, inputstate.length))
             }}
             MOVE_RIGHT={(mods) => {
-              trackselection(mods.shift)
+              trackselection(mods.shift ? cursor : undefined)
               setcursor(clamp(cursor + 1, 0, inputstate.length))
             }}
             OK_BUTTON={() => {
-              // invoke command
-              console.info('invoke', { inputstate, inputstateselected })
+              const invoke = hasselection ? inputstateselected : inputstate
+              setinputbuffer([invoke, ...inputbuffer])
+              setinputbufferindex(0)
               setcursor(0)
               setselection(undefined)
-              setinputstate('')
+              setinputbuffer(['', ...inputbuffer])
             }}
             keydown={(event) => {
               const { key } = event
@@ -189,7 +207,6 @@ export function TapeConsole() {
                 shift: event.shiftKey,
               }
 
-              console.info('keydown', lkey)
               switch (lkey) {
                 case 'delete':
                   if (hasselection) {

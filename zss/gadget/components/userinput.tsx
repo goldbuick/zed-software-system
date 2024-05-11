@@ -45,12 +45,10 @@ document.addEventListener(
       shift: event.shiftKey,
     }
 
-    // allow shortcuts
+    // allowed shortcuts, all others we attempt to block
     // refresh page : Ctrl + R / Cmd + R
     // open / close devtools : Ctrl + Shift + I / Cmd + Alt + I
     // open / close js console : Ctrl + Shift + J / Cmd + Alt + J
-
-    console.info(key, mods)
     switch (key) {
       case 'r':
         if (!mods.ctrl) {
