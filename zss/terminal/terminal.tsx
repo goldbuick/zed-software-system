@@ -4,11 +4,11 @@ import {
   EffectComposer,
   BrightnessContrast,
   ChromaticAberration,
-  Bloom,
 } from '@react-three/postprocessing'
-import { BlendFunction, KernelSize, Resolution } from 'postprocessing'
+import { BlendFunction } from 'postprocessing'
 import { Suspense, useEffect, useState } from 'react'
 import Stats from 'stats.js'
+import { NearestFilter } from 'three'
 import { STATS_DEV } from 'zss/config'
 import { createplatform } from 'zss/platform'
 
@@ -22,6 +22,9 @@ const TUG = 0.0006
 
 export function Terminal() {
   const splat = useTexture(decoimageurl)
+  splat.minFilter = NearestFilter
+  splat.magFilter = NearestFilter
+
   const [stats] = useState(() => new Stats())
   const [active, setActive] = useState(false)
 
@@ -75,7 +78,7 @@ export function Terminal() {
             texture={splat}
             blendFunction={BlendFunction.OVERLAY}
           />
-          <BrightnessContrast brightness={0.02} contrast={0.1} />
+          <BrightnessContrast brightness={0.04} contrast={0.1} />
         </EffectComposer>
       </Suspense>
     </>

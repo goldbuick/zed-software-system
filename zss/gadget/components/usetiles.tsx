@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { objectKeys } from 'ts-extras'
 import { proxy, useSnapshot } from 'valtio'
 import { ispresent } from 'zss/mapping/types'
@@ -23,7 +23,7 @@ export function useTiles(
       color: new Array(size).fill(color),
       bg: new Array(size).fill(bg),
     })
-  }, [width, height])
+  }, [size, char, color, bg])
 
   return tiles
 }
