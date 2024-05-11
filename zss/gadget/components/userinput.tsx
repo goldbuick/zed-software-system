@@ -45,9 +45,27 @@ document.addEventListener(
       shift: event.shiftKey,
     }
 
-    // only allow Ctrl + R
-    if (key !== 'r' || !mods.ctrl) {
-      event.preventDefault()
+    // allow shortcuts
+    // refresh page : Ctrl + R / Cmd + R
+    // open / close devtools : Ctrl + Shift + I / Cmd + Alt + I
+    // open / close js console : Ctrl + Shift + J / Cmd + Alt + J
+
+    console.info(key, mods)
+    switch (key) {
+      case 'r':
+        if (!mods.ctrl) {
+          event.preventDefault()
+        }
+        break
+      case 'alt':
+      case 'meta':
+      case 'shift':
+      case 'dead':
+        // no-op
+        break
+      default:
+        event.preventDefault()
+        break
     }
 
     switch (key) {
