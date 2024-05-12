@@ -169,9 +169,7 @@ export function TapeConsole() {
           <UserHotkey hotkey="Escape">{() => tapesetopen(false)}</UserHotkey>
           <TileSnapshot width={width} height={height} tiles={tiles} />
           <UserInput
-            MENU_BUTTON={(mods) => {
-              tapesetmode(mods.shift ? -1 : 1)
-            }}
+            MENU_BUTTON={(mods) => tapesetmode(mods.shift ? -1 : 1)}
             MOVE_UP={() => {
               setinputbufferindex(
                 clamp(inputbufferindex + 1, 0, inputbuffer.length - 1),

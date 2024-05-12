@@ -12,28 +12,23 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # set-safe-directory: true
 
       - name: setup node
         uses: actions/setup-node@v4
         with: 
           node-version-file: .nvmrc
 
-      - name: log version
+      - name: log package before
         run: cat ./package.json
 
-      - name: 'Automated Version Bump'
-        id: version-bump
-        uses: 'phips28/gh-action-bump-version@master'
+      - name: scan commits for versioning
+        id: version
+        uses: paulhatch/semantic-version@latest
         with:
-          tag-prefix: 'v'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          bump_each_commit: true
+          minor_pattern: "feat: "
+          major_pattern: "release: "
+          bump_each_commit_patch_pattern: "(fix|add): "
 
-      - name: log version
+      - name: log package after
         run: cat ./package.json
-
-      - name: signal result
-        env:
-          NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
-        run: echo "new tag $NEW_TAG"
