@@ -13,21 +13,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: setup node
-        uses: actions/setup-node@v4
-        with: 
-          node-version-file: .nvmrc
-
       - name: log package before
         run: cat ./package.json
 
       - name: scan commits for versioning
         id: version
-        uses: paulhatch/semantic-version@latest
+        uses: paulhatch/semantic-version@5.4.0
         with:
-          bump_each_commit: true
           minor_pattern: "feat: "
           major_pattern: "release: "
+          bump_each_commit: true
           bump_each_commit_patch_pattern: "(fix|add): "
 
       - name: log package after
