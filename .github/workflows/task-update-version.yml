@@ -18,12 +18,12 @@ jobs:
 
       - name: scan commits for versioning
         id: version
-        uses: paulhatch/semantic-version@v5.3.0
+        uses: paulhatch/semantic-version@v5.4.0
         with:
           minor_pattern: "feat: "
           major_pattern: "release: "
-          bump_each_commit: true
           bump_each_commit_patch_pattern: "(fix|add): "
+          bump_each_commit: true
 
       - name: log package after
         run: cat ./package.json
