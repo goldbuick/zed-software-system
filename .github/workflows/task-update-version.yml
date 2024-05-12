@@ -18,7 +18,7 @@ jobs:
 
       - name: scan commits for versioning
         id: version
-        uses: paulhatch/semantic-version@5.4.0
+        uses: paulhatch/semantic-version@v5.3.0
         with:
           minor_pattern: "feat: "
           major_pattern: "release: "
