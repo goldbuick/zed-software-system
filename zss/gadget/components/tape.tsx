@@ -1,5 +1,7 @@
 import { useThree } from '@react-three/fiber'
 import { useState } from 'react'
+import { vm_cli } from 'zss/device/api'
+import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import {
   TAPE_DISPLAY,
   tapesetmode,
@@ -97,9 +99,10 @@ export function TapeConsole() {
 
   // logs
   for (let i = 0; i < tape.logs.length && context.y >= 0; ++i) {
-    const [id, level, source, ...message] = tape.logs[i]
+    const [id, maybelevel, source, ...message] = tape.logs[i]
+    const level = maybelevel === 'log' ? '' : `${maybelevel}:`
     const messagetext = message.map((v) => JSON.stringify(v)).join(' ')
-    const rowtext = `${id.slice(id.length - 3)}>${source}>${level}: ${messagetext}`
+    const rowtext = `${id.slice(id.length - 3)}>${source}>${level} ${messagetext}`
     const measure = tokenizeandmeasuretextformat(rowtext, width, height)
     //
     context.y -= measure?.y ?? 1
@@ -124,10 +127,12 @@ export function TapeConsole() {
   // draw input line
   const inputline = inputstate.padEnd(width, '_')
   applystrtoindex(inputindex, inputline, context)
+
   // draw selection
   if (hasselection) {
     applycolortoindexes(inputindex + ii1, inputindex + ii2, 15, 8, context)
   }
+
   // draw cursor
   if (blink) {
     applystrtoindex(inputindex + cursor, String.fromCharCode(221), context)
@@ -195,6 +200,7 @@ export function TapeConsole() {
               setcursor(0)
               setselection(undefined)
               setinputbuffer(['', ...inputbuffer])
+              vm_cli('tape', invoke, gadgetstategetplayer())
             }}
             keydown={(event) => {
               const { key } = event
@@ -270,6 +276,7 @@ export function TapeConsole() {
                   ) {
                     if (hasselection) {
                       setcursor(ii2)
+                      setselection(undefined)
                       inputstatesetsplice(ii1, ii2, key)
                     } else {
                       setcursor(cursor + 1)

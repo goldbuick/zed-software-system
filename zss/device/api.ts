@@ -65,8 +65,13 @@ export function register_write(
   hub.emit('register:write', sender, [name, value], player)
 }
 
-export function tape_log(sender: string, ...message: any[]) {
-  hub.emit('tape:log', sender, message)
+export function tape_info(sender: string, ...message: any[]) {
+  hub.emit('tape:info', sender, message)
+  return true
+}
+
+export function tape_debug(sender: string, ...message: any[]) {
+  hub.emit('tape:debug', sender, message)
   return true
 }
 
@@ -99,4 +104,8 @@ export function vm_input(
   player: string,
 ) {
   hub.emit('vm:input', sender, [input, mods], player)
+}
+
+export function vm_cli(sender: string, input: string, player: string) {
+  hub.emit('vm:cli', sender, input, player)
 }

@@ -12,7 +12,7 @@ import {
 } from 'zss/memory'
 import { createos } from 'zss/os'
 
-import { api_error, tape_log } from './api'
+import { api_error, tape_debug, tape_info } from './api'
 
 // limited chars so peerjs doesn't get mad
 const justNumberChars = customAlphabet(numbers, 4)
@@ -34,7 +34,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
     case 'mem':
       if (message.player === playerid) {
         memoryresetbooks(message.data)
-        tape_log(vm.name(), 'ackmem', message.player)
+        tape_info(vm.name(), 'ackmem', message.player)
         vm.emit('ackmem', undefined, message.player)
       }
       break
@@ -42,7 +42,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       if (message.player) {
         if (memoryplayerlogin(message.player)) {
           tracking[message.player] = 0
-          tape_log(vm.name(), 'acklogin', message.player)
+          tape_info(vm.name(), 'acklogin', message.player)
           vm.emit('acklogin', undefined, message.player)
         }
       }
@@ -51,7 +51,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       // player keepalive
       if (message.player) {
         tracking[message.player] = 0
-        tape_log(vm.name(), message.player, 'active')
+        tape_debug(vm.name(), message.player, 'active')
         vm.emit('doot', undefined, message.player)
       }
       break
@@ -76,11 +76,16 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           // drop inactive players (logout)
           delete tracking[player]
           memoryplayerlogout(player)
-          tape_log(vm.name(), 'logout', player)
+          tape_info(vm.name(), 'logout', player)
           vm.emit('logout', undefined, player)
         }
       })
       break
+    // user input
+    case 'cli':
+      tape_debug(vm.name(), message.data)
+      break
+    // running software messages
     default:
       os.message(message)
       break

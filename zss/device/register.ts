@@ -3,7 +3,7 @@ import { encodeduritovalue, valuetoencodeduri } from 'zss/mapping/buffer'
 import { ispresent } from 'zss/mapping/types'
 import { isbook } from 'zss/memory/book'
 
-import { api_error, tape_log, vm_mem } from './api'
+import { api_error, tape_info, vm_mem } from './api'
 
 function readstate(): [any, any] {
   try {
@@ -56,9 +56,9 @@ const register = createdevice('register', [], (message) => {
         const value = flags[name]
         if (ispresent(flags)) {
           register.reply(message, 'register', [name, value])
-          tape_log(register.name(), 'read', value, 'for', name)
+          tape_info(register.name(), 'read', value, 'for', name)
         } else {
-          tape_log(register.name(), 'read', name, 'is empty')
+          tape_info(register.name(), 'read', name, 'is empty')
         }
       }
       break
@@ -69,7 +69,7 @@ const register = createdevice('register', [], (message) => {
       if (ispresent(flags)) {
         flags[name] = value
         writestate([mem, flags])
-        tape_log(register.name(), 'wrote', value, 'to', name)
+        tape_info(register.name(), 'wrote', value, 'to', name)
       }
       break
     }

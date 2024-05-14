@@ -20,7 +20,7 @@ import {
   isstring,
 } from 'zss/mapping/types'
 
-import { tape_log } from './api'
+import { tape_info } from './api'
 
 type PCNOTE = {
   type: number
@@ -96,7 +96,6 @@ onblasterready(() => {
     drumindex++,
     range(1, 14).map(() => randomInteger(0, 440) + 220),
   )
-  tape_log('pcspeaker', 'loaded', drumindex, 'drums')
 })
 
 // testing 150 bpm (#play feels better at 300bpm ??)

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { MAYBE_NUMBER } from 'zss/mapping/types'
 
 import {
@@ -53,9 +53,9 @@ export function PanelItemNumber({
   const state = value ?? 0
 
   const blink = useBlink()
-  const [strvalue, setStrValue] = useState('')
-  const [cursor, setCursor] = useState(0)
-  const [focus, setFocus] = useState(false)
+  const [strvalue, setstrValue] = useState('')
+  const [cursor, setcursor] = useState(0)
+  const [focus, setfocus] = useState(false)
 
   let tvalue = `${value ?? 0}`
   const tlabel = label.trim()
@@ -79,7 +79,7 @@ export function PanelItemNumber({
       const step = mods.alt ? 10 : 1
       setvalue(Math.min(max, state + step))
     },
-    [max, value],
+    [max, setvalue, state],
   )
 
   const down = useCallback<UserInputHandler>(
@@ -87,16 +87,16 @@ export function PanelItemNumber({
       const step = mods.alt ? 10 : 1
       setvalue(Math.max(min, state - step))
     },
-    [min, value],
+    [min, setvalue, state],
   )
 
   const ok = useCallback(() => {
-    setFocus((state) => {
+    setfocus((state) => {
       const next = !state
       if (next) {
         const str = `${value}`
-        setStrValue(str)
-        setCursor(str.length)
+        setstrValue(str)
+        setcursor(str.length)
       } else {
         const num = parseFloat(strvalue)
         const newvalue = isNaN(num) ? 0 : num
@@ -104,7 +104,7 @@ export function PanelItemNumber({
       }
       return next
     })
-  }, [setFocus, setStrValue, min, max, value, strvalue])
+  }, [setfocus, setstrValue, min, max, value, setvalue, strvalue])
 
   return (
     value !== undefined && (
@@ -131,10 +131,10 @@ export function PanelItemNumber({
             </UserHotkey>
             <UserInput
               MOVE_LEFT={() => {
-                setCursor((state) => Math.max(0, state - 1))
+                setcursor((state) => Math.max(0, state - 1))
               }}
               MOVE_RIGHT={() => {
-                setCursor((state) => Math.min(strvalue.length, state + 1))
+                setcursor((state) => Math.min(strvalue.length, state + 1))
               }}
               CANCEL_BUTTON={ok}
               OK_BUTTON={ok}
@@ -142,13 +142,13 @@ export function PanelItemNumber({
                 switch (event.key.toLowerCase()) {
                   case 'delete':
                     if (strvalue.length > 0) {
-                      setStrValue((state) => strsplice(state, cursor, 1))
+                      setstrValue((state) => strsplice(state, cursor, 1))
                     }
                     break
                   case 'backspace':
                     if (cursor > 0) {
-                      setStrValue((state) => strsplice(state, cursor - 1, 1))
-                      setCursor((state) => Math.max(0, state - 1))
+                      setstrValue((state) => strsplice(state, cursor - 1, 1))
+                      setcursor((state) => Math.max(0, state - 1))
                     }
                     break
                 }
@@ -157,8 +157,8 @@ export function PanelItemNumber({
                   event.key.length === 1 &&
                   strvalue.length < context.width * 0.5
                 ) {
-                  setStrValue((state) => strsplice(state, cursor, 0, event.key))
-                  setCursor((state) => state + 1)
+                  setstrValue((state) => strsplice(state, cursor, 0, event.key))
+                  setcursor((state) => state + 1)
                 }
               }}
             />
