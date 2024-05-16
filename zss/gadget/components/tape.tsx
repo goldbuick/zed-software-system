@@ -112,8 +112,8 @@ export function TapeConsole() {
   }
 
   // input & selection
-  const visiblerange = width - 2
-  const inputindex = (height - 1) * width
+  const visiblerange = width - 3
+  const inputindex = (height - 1) * width + 1
   const hasselection = ispresent(selection)
   const ii1 = hasselection ? Math.min(selection, cursor) : cursor
   const ii2 = hasselection ? Math.max(selection, cursor) : cursor
@@ -125,7 +125,7 @@ export function TapeConsole() {
     : inputstate
 
   // draw input line
-  const inputline = inputstate.padEnd(width, '_')
+  const inputline = inputstate.padEnd(width - 2, '_')
   applystrtoindex(inputindex, inputline, context)
 
   // draw selection

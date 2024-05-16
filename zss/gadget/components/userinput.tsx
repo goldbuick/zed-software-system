@@ -51,14 +51,30 @@ document.addEventListener(
     // open / close js console : Ctrl + Shift + J / Cmd + Alt + J
     switch (key) {
       case 'r':
-        if (!mods.ctrl) {
+        if (mods.ctrl) {
+          // no-op
+        } else {
+          event.preventDefault()
+        }
+        break
+      case 'i':
+        if (!isMac && mods.shift && mods.ctrl) {
+          // no-op
+        } else {
+          event.preventDefault()
+        }
+        break
+      case 'dead':
+        if (isMac && mods.alt && mods.ctrl) {
+          // no-op
+        } else {
           event.preventDefault()
         }
         break
       case 'alt':
       case 'meta':
       case 'shift':
-      case 'dead':
+      case 'control':
         // no-op
         break
       default:
