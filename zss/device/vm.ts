@@ -12,7 +12,7 @@ import {
 } from 'zss/memory'
 import { createos } from 'zss/os'
 
-import { api_error, tape_debug, tape_info } from './api'
+import { tape_debug, tape_info } from './api'
 
 // limited chars so peerjs doesn't get mad
 const justNumberChars = customAlphabet(numbers, 4)
@@ -81,9 +81,9 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         }
       })
       break
-    // user input
+    // user input from built-in console
     case 'cli':
-      tape_debug(vm.name(), message.data)
+      os.cli(message)
       break
     // running software messages
     default:

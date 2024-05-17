@@ -16,6 +16,7 @@ export type OS = {
     code: string,
     type: CODE_PAGE_TYPE,
   ) => boolean
+  cli: MESSAGE_FUNC
   message: MESSAGE_FUNC
 }
 
@@ -69,6 +70,10 @@ export function createos() {
       }
 
       return !!chip?.tick(timestamp)
+    },
+    cli(incoming) {
+      console.info(incoming)
+      // todo, make this rad !!
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)
