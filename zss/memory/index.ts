@@ -1,4 +1,4 @@
-import { CHIP } from 'zss/chip'
+import { CHIP, MESSAGE } from 'zss/chip'
 import { api_error } from 'zss/device/api'
 import { WORD, createreadcontext } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
@@ -44,19 +44,22 @@ import {
   createviewframe,
 } from './frame'
 
-type CHIP_MEMORY = {
-  // targets
+type CHIP_TARGETS = {
   book: MAYBE_BOOK
   board: MAYBE_BOARD
   object: MAYBE_BOARD_ELEMENT
   terrain: MAYBE_BOARD_ELEMENT
   charset: MAYBE<BITMAP>
   palette: MAYBE<BITMAP>
-  // user input
+}
+
+type CHIP_USER_INPUT = {
   inputmods: Record<INPUT, number>
   inputqueue: Set<INPUT>
   inputcurrent: MAYBE<INPUT>
 }
+
+type CHIP_MEMORY = CHIP_TARGETS & CHIP_USER_INPUT
 
 const MEMORY = {
   defaultplayer: '',
@@ -241,31 +244,31 @@ export function memoryplayerlogout(player: string) {
 }
 
 export function memorytick(os: OS, timestamp: number) {
-  // glue code between memory, os, and boardtick
-  function oncode(
-    book: BOOK,
-    board: BOARD,
-    target: BOARD_ELEMENT,
-    id: string,
-    code: string,
-    type: CODE_PAGE_TYPE,
-  ) {
-    // set context
-    const context = memoryreadchip(id)
-    context.book = book
-    context.board = board
-    context.object = target
-    context.inputcurrent = undefined
-    // run chip code
-    //
-    os.tick(id, timestamp, code, type)
-  }
-
   // update boards / build code / run chips
   const book = memoryreadbook(PLAYER_BOOK)
-  bookplayerreadboards(book).forEach((board) =>
-    bookboardtick(book, board, timestamp, oncode),
-  )
+  bookplayerreadboards(book).forEach((board) => {
+    const run = bookboardtick(book, board, timestamp)
+
+    // iterate code needed to update given board
+    for (let i = 0; i < run.length; ++i) {
+      const item = run[i]
+
+      // create / update context
+      const context = memoryreadchip(item.id)
+      context.book = book
+      context.board = board
+      context.object = item.object
+      context.inputcurrent = undefined
+
+      // run chip code
+      os.tick(item.id, timestamp, item.code, item.type)
+    }
+  })
+}
+
+export function memorycli(os: OS, message: MESSAGE) {
+  //
+  console.info('invoke =>', message)
 }
 
 function memoryconverttogadgetlayers(

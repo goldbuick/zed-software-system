@@ -472,21 +472,28 @@ function bookboardcleanup(
   }
 }
 
+type BOOK_RUN_CODE_TARGETS = {
+  object: MAYBE_BOARD_ELEMENT
+  terrain: MAYBE_BOARD_ELEMENT
+}
+
+type BOOK_RUN_CODE = {
+  id: string
+  code: string
+  type: CODE_PAGE_TYPE
+}
+
+export type BOOK_RUN_ARGS = BOOK_RUN_CODE_TARGETS & BOOK_RUN_CODE
+
 export function bookboardtick(
   book: MAYBE_BOOK,
   board: MAYBE_BOARD,
   timestamp: number,
-  oncode: (
-    book: BOOK,
-    board: BOARD,
-    target: BOARD_ELEMENT,
-    id: string,
-    code: string,
-    type: CODE_PAGE_TYPE,
-  ) => void,
 ) {
+  const args: BOOK_RUN_ARGS[] = []
+
   if (!ispresent(book) || !ispresent(board)) {
-    return
+    return args
   }
 
   // force build object lookup pre-tick
@@ -494,24 +501,24 @@ export function bookboardtick(
   bookboardsetlookup(book, board)
 
   // iterate through objects
-  const targets = Object.values(board.objects)
-  for (let i = 0; i < targets.length; ++i) {
-    const target = targets[i]
+  const objects = Object.values(board.objects)
+  for (let i = 0; i < objects.length; ++i) {
+    const object = objects[i]
 
     // check that we have an id
-    if (!ispresent(target.id)) {
+    if (!ispresent(object.id)) {
       continue
     }
 
     // track last position
-    target.lx = target.x
-    target.ly = target.y
+    object.lx = object.x
+    object.ly = object.y
 
     // lookup kind
-    const kind = bookelementkindread(book, target)
+    const kind = bookelementkindread(book, object)
 
     // object code
-    const code = target.code ?? kind?.code ?? ''
+    const code = object.code ?? kind?.code ?? ''
 
     // check that we have code to execute
     if (!code) {
@@ -519,9 +526,18 @@ export function bookboardtick(
     }
 
     // signal id & code
-    oncode(book, board, target, target.id, code, CODE_PAGE_TYPE.OBJECT)
+    args.push({
+      id: object.id,
+      type: CODE_PAGE_TYPE.OBJECT,
+      code,
+      object,
+      terrain: undefined,
+    })
   }
 
   // cleanup objects flagged for deletion
   bookboardcleanup(book, board, timestamp)
+
+  // return code that needs to be run
+  return args
 }

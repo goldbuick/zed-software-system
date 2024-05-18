@@ -3,6 +3,7 @@ import { numbers, lowercase } from 'nanoid-dictionary'
 import { createdevice } from 'zss/device'
 import { INPUT } from 'zss/gadget/data/types'
 import {
+  memorycli,
   memoryplayerlogin,
   memoryplayerlogout,
   memoryreadchip,
@@ -68,8 +69,8 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
     case 'tick':
       memorytick(os, message.data)
       break
+    // iterate over logged in players to check activity
     case 'second':
-      // iterate over logged in players
       Object.keys(tracking).forEach((player) => {
         ++tracking[player]
         if (tracking[player] >= SECOND_TIMEOUT) {
@@ -83,7 +84,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     // user input from built-in console
     case 'cli':
-      os.cli(message)
+      memorycli(os, message)
       break
     // running software messages
     default:
