@@ -27,5 +27,8 @@ jobs:
         with:
           version: ${{ steps.version.outputs.version }}
 
-      - name: log package after
-        run: cat ./package.json
+      - name: commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: updated zss version
+
