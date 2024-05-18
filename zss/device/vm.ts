@@ -26,6 +26,9 @@ memorysetdefaultplayer(playerid)
 // manages chips
 const os = createos()
 
+// remember last tick for cli invokes
+let lasttick = 0
+
 // tracking active player ids
 const SECOND_TIMEOUT = 32
 const tracking: Record<string, number> = {}
@@ -67,7 +70,8 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     // from clock
     case 'tick':
-      memorytick(os, message.data)
+      lasttick = message.data ?? 0
+      memorytick(os, lasttick)
       break
     // iterate over logged in players to check activity
     case 'second':
@@ -84,7 +88,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     // user input from built-in console
     case 'cli':
-      memorycli(os, message)
+      memorycli(os, lasttick, message.player ?? '', message.data ?? '')
       break
     // running software messages
     default:

@@ -13,6 +13,7 @@ import {
   createtiles,
 } from 'zss/gadget/data/types'
 import { average, unique } from 'zss/mapping/array'
+import { createguid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
@@ -261,14 +262,33 @@ export function memorytick(os: OS, timestamp: number) {
       context.inputcurrent = undefined
 
       // run chip code
-      os.tick(item.id, timestamp, item.code, item.type)
+      os.tick(item.id, item.type, timestamp, item.code)
     }
   })
 }
 
-export function memorycli(os: OS, message: MESSAGE) {
-  //
-  console.info('invoke =>', message)
+export function memorycli(
+  os: OS,
+  timestamp: number,
+  player: string,
+  cli: string,
+) {
+  // player id + unique id fo run
+  const id = `${player}_func`
+
+  // create / update context
+  const context = memoryreadchip(id)
+  context.book = undefined
+  context.board = undefined
+  context.inputcurrent = undefined
+
+  console.info('running', timestamp, id, cli)
+
+  // run chip code
+  os.tick(id, CODE_PAGE_TYPE.FUNC, timestamp, cli)
+
+  // halt code
+  os.halt(id)
 }
 
 function memoryconverttogadgetlayers(

@@ -12,11 +12,10 @@ export type OS = {
   halt: (id: string) => boolean
   tick: (
     id: string,
+    type: CODE_PAGE_TYPE,
     timestamp: number,
     code: string,
-    type: CODE_PAGE_TYPE,
   ) => boolean
-  cli: MESSAGE_FUNC
   message: MESSAGE_FUNC
 }
 
@@ -50,15 +49,16 @@ export function createos() {
       }
       return !!chip
     },
-    tick(id, timestamp, code, type) {
+    tick(id, type, timestamp, code) {
       let chip = chips[id]
 
       if (!ispresent(chips[id])) {
         const result = build(code)
+
+        // bail on errors
         if (result.errors?.length) {
-          // todo, need an error message
+          // todo, need an error message that makes sense
           api_error('os', 'build', JSON.stringify(result.errors), '')
-          chips[id] = null
           return false
         }
 
@@ -70,10 +70,6 @@ export function createos() {
       }
 
       return !!chip?.tick(timestamp)
-    },
-    cli(incoming) {
-      console.info(incoming)
-      // todo, make this rad !!
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)
