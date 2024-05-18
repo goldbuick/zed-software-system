@@ -13,9 +13,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: log package before
-        run: cat ./package.json
-
       - name: scan commits for versioning
         id: version
         uses: paulhatch/semantic-version@v5.4.0
@@ -24,6 +21,15 @@ jobs:
           major_pattern: "release: "
           bump_each_commit_patch_pattern: "(fix|add): "
           bump_each_commit: true
+
+      - name: update zss version
+        run: |
+          echo "test ${{ steps.version.outputs }}"
+      
+      # - name: update zss version
+      #   uses: reedyuk/npm-version@1.1.1
+      #   with:
+      #     version: ${{ steps.version.outputs. }}
 
       - name: log package after
         run: cat ./package.json
