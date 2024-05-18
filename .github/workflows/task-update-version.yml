@@ -24,7 +24,7 @@ jobs:
 
       - name: update zss version
         run: |
-          echo "test ${{ steps.version.outputs }}"
+          echo "test ${{ steps.version.outputs.version }}"
       
       # - name: update zss version
       #   uses: reedyuk/npm-version@1.1.1
