@@ -12,7 +12,7 @@ import { NearestFilter } from 'three'
 import { STATS_DEV } from 'zss/config'
 import { createplatform } from 'zss/platform'
 
-import { CRTShape, CRTLines, TextureSplat } from './crt'
+import { CRTShape, CRTLines } from './crt'
 import { Framing } from './framing'
 import { Gadget } from './gadget'
 import decoimageurl from './scratches.jpg'
@@ -67,18 +67,13 @@ export function Terminal() {
       </Framing>
       <Suspense fallback={null}>
         <EffectComposer multisampling={0}>
-          <CRTLines />
+          <BrightnessContrast brightness={0.04} contrast={0.1} />
           <ChromaticAberration
             blendFunction={BlendFunction.NORMAL}
             offset={[TUG, -TUG]}
           />
-          <CRTShape />
-          <TextureSplat
-            opacity={0.35}
-            texture={splat}
-            blendFunction={BlendFunction.OVERLAY}
-          />
-          <BrightnessContrast brightness={0.04} contrast={0.1} />
+          <CRTLines />
+          <CRTShape texture={splat} />
         </EffectComposer>
       </Suspense>
     </>
