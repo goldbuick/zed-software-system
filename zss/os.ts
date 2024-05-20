@@ -6,16 +6,19 @@ import { GeneratorBuild, compile } from './lang/generator'
 import { ispresent } from './mapping/types'
 import { CODE_PAGE_TYPE } from './memory/codepage'
 
+export type OS_INVOKE = (
+  id: string,
+  type: CODE_PAGE_TYPE,
+  timestamp: number,
+  code: string,
+) => boolean
+
 export type OS = {
   ids: () => string[]
   has: (id: string) => boolean
   halt: (id: string) => boolean
-  tick: (
-    id: string,
-    type: CODE_PAGE_TYPE,
-    timestamp: number,
-    code: string,
-  ) => boolean
+  tick: OS_INVOKE
+  once: OS_INVOKE
   message: MESSAGE_FUNC
 }
 
@@ -70,6 +73,10 @@ export function createos() {
       }
 
       return !!chip?.tick(timestamp)
+    },
+    once(id, type, timestamp, code) {
+      const result = os.tick(id, type, timestamp, code)
+      return result && os.halt(id)
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)

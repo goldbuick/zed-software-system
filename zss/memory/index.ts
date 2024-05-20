@@ -1,5 +1,5 @@
 import { CHIP, MESSAGE } from 'zss/chip'
-import { api_error } from 'zss/device/api'
+import { api_error, tape_debug } from 'zss/device/api'
 import { WORD, createreadcontext } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
@@ -13,7 +13,6 @@ import {
   createtiles,
 } from 'zss/gadget/data/types'
 import { average, unique } from 'zss/mapping/array'
-import { createguid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
@@ -23,7 +22,6 @@ import {
   boarddeleteobject,
   MAYBE_BOARD_ELEMENT,
   BOARD,
-  BOARD_ELEMENT,
   MAYBE_BOARD,
 } from './board'
 import {
@@ -282,13 +280,10 @@ export function memorycli(
   context.board = undefined
   context.inputcurrent = undefined
 
-  console.info('running', timestamp, id, cli)
+  tape_debug('memory', 'running', timestamp, id, cli)
 
   // run chip code
-  os.tick(id, CODE_PAGE_TYPE.FUNC, timestamp, cli)
-
-  // halt code
-  os.halt(id)
+  os.once(id, CODE_PAGE_TYPE.CLI, timestamp, cli)
 }
 
 function memoryconverttogadgetlayers(

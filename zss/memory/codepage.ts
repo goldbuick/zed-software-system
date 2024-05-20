@@ -9,7 +9,8 @@ import { BOARD, BOARD_ELEMENT } from './board'
 
 export enum CODE_PAGE_TYPE {
   ERROR,
-  FUNC,
+  CLI,
+  // all of these types support os.once() invoke as well
   BOARD,
   OBJECT,
   TERRAIN,
@@ -40,7 +41,7 @@ export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
 
 export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.ERROR]: string
-  [CODE_PAGE_TYPE.FUNC]: string
+  [CODE_PAGE_TYPE.CLI]: string
   [CODE_PAGE_TYPE.BOARD]: BOARD
   [CODE_PAGE_TYPE.OBJECT]: BOARD_ELEMENT
   [CODE_PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
@@ -144,6 +145,10 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
         case 'flags':
           // simple space separated local flag names
           codepage.stats.flags = lmaybename
+          break
+        case 'cli':
+          codepage.stats.type = CODE_PAGE_TYPE.CLI
+          codepage.stats.name = lmaybename
           break
         case 'func':
           codepage.stats.type = CODE_PAGE_TYPE.FUNC

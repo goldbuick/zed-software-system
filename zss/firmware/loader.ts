@@ -3,17 +3,20 @@ import { FIRMWARE } from 'zss/firmware'
 import { CODE_PAGE_TYPE } from 'zss/memory/codepage'
 
 import { ALL_FIRMWARE } from './all'
+import { CLI_FIRMWARE } from './cli'
 import { ZSS_FIRMWARE } from './zss'
 import { ZZT_FIRMWARE } from './zzt'
 
 const firmwares: Record<string, FIRMWARE> = {
   all: ALL_FIRMWARE,
+  cli: CLI_FIRMWARE,
   zzt: ZZT_FIRMWARE,
   zss: ZSS_FIRMWARE,
 }
 
 export const CODE_PAGE_FIRMWARE = {
   [CODE_PAGE_TYPE.ERROR]: [],
+  [CODE_PAGE_TYPE.CLI]: ['all', 'cli'],
   [CODE_PAGE_TYPE.FUNC]: ['all'],
   [CODE_PAGE_TYPE.BOARD]: ['all'],
   [CODE_PAGE_TYPE.OBJECT]: ['all', 'zss', 'zzt'],

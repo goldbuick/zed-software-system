@@ -25,6 +25,7 @@ import {
   MAYBE_BOARD,
   MAYBE_BOARD_ELEMENT,
   boarddeleteobject,
+  boardelementapplycolor,
   boardelementread,
   boardfindplayer,
   boardterrainsetfromkind,
@@ -267,7 +268,7 @@ function bookboardframeread(
   return { maybebook, maybeboard }
 }
 
-export const ZZT_FIRMWARE = createfirmware({
+export const OBJECT_FIRMWARE = createfirmware({
   get(chip, name) {
     // check consts first (data normalization)
     const maybeconst = maptoconst(name)
@@ -377,7 +378,8 @@ export const ZZT_FIRMWARE = createfirmware({
     chip.endofprogram()
     return 0
   })
-  .command('bind', (chip, words) => {
+  .command('bind', () => {
+    //
     return 0
   })
   .command('change', (chip, words) => {
@@ -458,6 +460,16 @@ export const ZZT_FIRMWARE = createfirmware({
     ])
     if (ispresent(memory.object)) {
       memory.object.char = value
+    }
+    return 0
+  })
+  .command('color', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
+    const [value] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.COLOR,
+    ])
+    if (ispresent(memory.object) && ispresent(value)) {
+      boardelementapplycolor(memory.object, value)
     }
     return 0
   })
