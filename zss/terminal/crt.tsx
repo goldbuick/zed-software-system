@@ -14,10 +14,6 @@ import {
 } from 'three'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-type CRTEffectOpts = {
-  texture?: Texture
-}
-
 const CRTShapeVertShader = `
 #ifdef ASPECT_CORRECTION
 	uniform float scale;
@@ -88,6 +84,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     outputColor = mix(displaycolor, fuxtcolor, 0.04);
   } else if (doot > 1.004) {
     // display shell
+    // rbgb 205 205 193
     vec3 matte = vec3(205.0 / 255.0, 205.0 / 255.0, 193.0 / 255.0);
     vec3 dkmatte = mix(matte, vec3(0.0), 0.25);
     float mx = pow(1.0 - bx, 16.0) + 0.2;
@@ -113,9 +110,13 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   }
 }
 `
-// 205	205	193
+
+type CRTShapeOpts = {
+  texture?: Texture
+}
+
 class CRTShapeEffect extends Effect {
-  constructor({ texture }: CRTEffectOpts = {}) {
+  constructor({ texture }: CRTShapeOpts = {}) {
     super('CRTShapeEffect', CRTShapeFragShader, {
       blendFunction: BlendFunction.NORMAL,
       attributes: EffectAttribute.CONVOLUTION,
@@ -230,19 +231,19 @@ export type CRTShapeProps = EffectProps<typeof CRTShapeEffect>
 export const CRTShape = wrapEffect(CRTShapeEffect)
 
 const CRTLinesFragShader = `
-uniform float count;
+uniform float viewheight;
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
   float rate1 = 0.002;
   float stab1 = 1.5;
   float fuzz1 = 1.35;
-  float cycle1 = (uv.y + time * rate1) * count * fuzz1;
+  float cycle1 = (uv.y + time * rate1) * viewheight * fuzz1;
   float signal1 = sin(cycle1) + stab1;
 
   float rate2 = 0.2;
   float scale2 = 0.01;
   float stab2 = 1.99;
-  float cycle2 = (uv.y * count * scale2) - time * rate2;
+  float cycle2 = (uv.y * viewheight * scale2) - time * rate2;
   float signal2 = sin(cycle2) + stab2;
 
   float shade = smoothstep(0.0, 1.0, signal1);
@@ -254,24 +255,30 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
 }
 `
 
+type CRTLinesOpts = {
+  viewheight?: number
+}
+
 class CRTLinesEffect extends Effect {
   // eslint-disable-next-line no-empty-pattern
-  constructor({}: any = {}) {
+  constructor({ viewheight }: CRTLinesOpts = {}) {
     super('CRTLinesEffect', CRTLinesFragShader, {
       blendFunction: BlendFunction.MULTIPLY,
-      uniforms: new Map<string, Uniform>([['count', new Uniform(1)]]),
+      uniforms: new Map<string, Uniform>([
+        ['viewheight', new Uniform(viewheight ?? 128)],
+      ]),
     })
   }
 
-  update(
-    _renderer: WebGLRenderer,
-    inputBuffer: WebGLRenderTarget<Texture>,
-  ): void {
-    const count = this.uniforms.get('count')
-    if (count) {
-      count.value = inputBuffer.height
-    }
-  }
+  // update(
+  //   _renderer: WebGLRenderer,
+  //   inputBuffer: WebGLRenderTarget<Texture>,
+  // ): void {
+  //   const viewheight = this.uniforms.get('viewheight')
+  //   if (viewheight) {
+  //     viewheight.value = inputBuffer.height
+  //   }
+  // }
 }
 
 export type CRTLinesProps = EffectProps<typeof CRTLinesEffect>

@@ -1,5 +1,5 @@
 import { OrthographicCamera, useTexture } from '@react-three/drei'
-import { addEffect, addAfterEffect } from '@react-three/fiber'
+import { addEffect, addAfterEffect, useThree } from '@react-three/fiber'
 import {
   EffectComposer,
   BrightnessContrast,
@@ -8,7 +8,7 @@ import {
 import { BlendFunction } from 'postprocessing'
 import { Suspense, useEffect, useState } from 'react'
 import Stats from 'stats.js'
-import { NearestFilter } from 'three'
+import { NearestFilter, Vector2 } from 'three'
 import { STATS_DEV } from 'zss/config'
 import { createplatform } from 'zss/platform'
 
@@ -19,8 +19,12 @@ import decoimageurl from './scratches.jpg'
 import { Splash } from './splash'
 
 const TUG = 0.0006
+const TUG_VEC = new Vector2(TUG, TUG * -0.5)
 
 export function Terminal() {
+  const viewport = useThree((state) => state.viewport)
+  const { height: viewheight } = viewport.getCurrentViewport()
+
   const splat = useTexture(decoimageurl)
   splat.minFilter = NearestFilter
   splat.magFilter = NearestFilter
@@ -70,9 +74,11 @@ export function Terminal() {
           <BrightnessContrast brightness={0.04} contrast={0.1} />
           <ChromaticAberration
             blendFunction={BlendFunction.NORMAL}
-            offset={[TUG, -TUG]}
+            offset={TUG_VEC}
+            radialModulation
+            modulationOffset={0.5}
           />
-          <CRTLines />
+          <CRTLines viewheight={viewheight} />
           <CRTShape texture={splat} />
         </EffectComposer>
       </Suspense>

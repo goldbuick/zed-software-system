@@ -18,7 +18,7 @@ export const ALL_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  // memory / app state
+  // memory state
   .command('book', (chip, words) => {
     const [maybetarget, maybeaction] = readargs(
       memoryreadcontext(chip, words),
@@ -39,6 +39,7 @@ export const ALL_FIRMWARE = createfirmware({
 
     return 0
   })
+  // app state (in-url)
   .command('register', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const maybeplayer = memory.object?.stats?.player ?? ''
