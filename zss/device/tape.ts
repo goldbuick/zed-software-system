@@ -33,7 +33,7 @@ const tape: TAPE_STATE = proxy({
   open: false,
   mode: TAPE_DISPLAY.BOTTOM,
   logs: [],
-  loglevel: TAPE_LOG_LEVEL.DEBUG,
+  loglevel: TAPE_LOG_LEVEL.INFO,
 })
 
 export function tapesetopen(open: boolean) {
