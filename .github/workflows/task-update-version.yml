@@ -21,14 +21,18 @@ jobs:
           major_pattern: "release: "
           bump_each_commit_patch_pattern: "(fix|add): "
           bump_each_commit: true
-      
-      - name: update zss version
-        uses: reedyuk/npm-version@1.1.1
-        with:
-          version: ${{ steps.version.outputs.version }}
 
-      - name: commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: updated zss version
+      - name: log result
+        run: |
+          echo "version: ${{ steps.version.outputs.version }}"
+      
+      # - name: update zss version
+      #   uses: reedyuk/npm-version@1.1.1
+      #   with:
+      #     version: ${{ steps.version.outputs.version }}
+
+      # - name: commit changes
+      #   uses: stefanzweifel/git-auto-commit-action@v5
+      #   with:
+      #     commit_message: updated zss version
 
