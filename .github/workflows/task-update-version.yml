@@ -21,4 +21,4 @@ jobs:
           major_pattern: "release:"
           minor_pattern: "/(feat|feature):/"
           bump_each_commit: true
-          bump_each_commit_patch_pattern: "/(fix:add):/"
+          bump_each_commit_patch_pattern: "/(fix|add):/"
