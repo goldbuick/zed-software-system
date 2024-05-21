@@ -17,9 +17,10 @@ jobs:
         id: version
         uses: paulhatch/semantic-version@v5.4.0
         with:
-          minor_pattern: "feat: "
-          major_pattern: "release: "
-          bump_each_commit_patch_pattern: "(fix|add): "
+          minor_pattern: "feat:"
+          minor_regexp_flags: ""
+          major_pattern: "release:"
+          major_regexp_flags: ""
           bump_each_commit: true
 
       - name: log result
