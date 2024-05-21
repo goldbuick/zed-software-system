@@ -510,21 +510,6 @@ export const OBJECT_FIRMWARE = createfirmware({
     // if blocked, return 1
     return memory.object.x !== dest.x && memory.object.y !== dest.y ? 1 : 0
   })
-  .command('play', (chip, words) => {
-    const [buffer] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
-
-    // see if we've been given a flag
-    const maybebuffer = chip.get(buffer)
-    if (isstring(maybebuffer)) {
-      chip.emit('pcspeaker:play', [-1, maybebuffer])
-    } else {
-      chip.emit('pcspeaker:play', [-1, buffer])
-    }
-
-    return 0
-  })
   .command('put', (chip, words) => {
     const memory = memoryreadchip(chip.id())
 

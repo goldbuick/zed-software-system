@@ -272,10 +272,11 @@ export function memorycli(
   cli: string,
 ) {
   // player id + unique id fo run
-  const id = `${player}_func`
+  const id = `${player}_cli`
 
   // create / update context
   const context = memoryreadchip(id)
+
   context.book = undefined
   context.board = undefined
   context.inputcurrent = undefined
