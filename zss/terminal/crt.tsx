@@ -5,13 +5,7 @@ import {
   EffectAttribute,
   ColorChannel,
 } from 'postprocessing'
-import {
-  Texture,
-  Uniform,
-  UnsignedByteType,
-  WebGLRenderTarget,
-  WebGLRenderer,
-} from 'three'
+import { Texture, Uniform, UnsignedByteType } from 'three'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 const CRTShapeVertShader = `
@@ -33,12 +27,7 @@ void mainSupport(const in vec2 uv) {
 `
 
 const CRTShapeFragShader = `
-// #ifdef TEXTURE_PRECISION_HIGH
-// 	uniform highp sampler2D splat;
-// #else
-// 	uniform mediump sampler2D splat;
-// #endif
-
+uniform float viewheight;
 uniform sampler2D splat;
 
 float rectdistance(vec2 uv) {
@@ -94,7 +83,20 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     outputColor = vec4(mix(vec3(0.0), outputColor.rgb, 0.5), inputColor.a);
   }
 
-  // apply inner shade
+  // apply scanlines
+  if (doot < 1.0) {
+    float row = round(uv.y * viewheight * 0.5);
+    float alt = mod(row, 2.0);
+    float phase = time;
+    float slowband = abs(cos(uv.x + phase) * sin(uv.y + phase)) / 2.0;
+    float fastband = (cos(uv.y * 3.0 + time * 1.24) + 1.0) / 2.0;
+    float blankdmix = 0.2 - pow(slowband, viewheight * 0.125) ;//- pow(fastband, viewheight) * 0.1;
+    vec3 blankd = mix(outputColor.rgb, vec3(0.0), blankdmix);
+    vec3 scanline = mix(outputColor.rgb, blankd, alt);
+    outputColor = vec4(scanline, inputColor.a);
+  }
+
+  // apply inner shade && scanlines
   if (doot >= 0.5 && doot < 1.0) {
     float sh = clamp(0.0, 1.0, 1.0 - bx - 0.7);
     vec3 shade = mix(outputColor.rgb, vec3(0.0), pow(sh, 4.0));
@@ -112,11 +114,12 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
 `
 
 type CRTShapeOpts = {
-  texture?: Texture
+  splat?: Texture
+  viewheight?: number
 }
 
 class CRTShapeEffect extends Effect {
-  constructor({ texture }: CRTShapeOpts = {}) {
+  constructor({ splat, viewheight }: CRTShapeOpts = {}) {
     super('CRTShapeEffect', CRTShapeFragShader, {
       blendFunction: BlendFunction.NORMAL,
       attributes: EffectAttribute.CONVOLUTION,
@@ -124,16 +127,19 @@ class CRTShapeEffect extends Effect {
         ['TEXEL', 'texel'],
         ['TEXTURE_PRECISION_HIGH', '1'],
       ]),
-      uniforms: new Map<string, Uniform>([['splat', new Uniform(texture)]]),
+      uniforms: new Map<string, Uniform>([
+        ['splat', new Uniform(splat)],
+        ['viewheight', new Uniform(viewheight ?? 128)],
+      ]),
     })
   }
 
-  get texture(): MAYBE<Texture> {
+  get splat(): MAYBE<Texture> {
     return this.uniforms.get('splat')?.value
   }
 
-  set texture(value: Texture) {
-    const { texture: prevTexture, uniforms, defines } = this
+  set splat(value: Texture) {
+    const { splat: prevTexture, uniforms, defines } = this
     const uniformmap = uniforms.get('splat')
     const uniformuvTransform = uniforms.get('uvTransform')
 
@@ -167,11 +173,11 @@ class CRTShapeEffect extends Effect {
   }
 
   getTexture() {
-    return this.texture
+    return this.splat
   }
 
   setTexture(value: Texture) {
-    this.texture = value
+    this.splat = value
   }
 
   get aspectCorrection() {
@@ -191,15 +197,15 @@ class CRTShapeEffect extends Effect {
   }
 
   get uvTransform() {
-    const texture = this.texture
-    return !!texture?.matrixAutoUpdate
+    const splat = this.splat
+    return !!splat?.matrixAutoUpdate
   }
 
   set uvTransform(value: boolean) {
-    const texture = this.texture
+    const splat = this.splat
 
-    if (ispresent(texture)) {
-      texture.matrixAutoUpdate = value
+    if (ispresent(splat)) {
+      splat.matrixAutoUpdate = value
     }
   }
 
@@ -221,8 +227,8 @@ class CRTShapeEffect extends Effect {
   }
 
   update(): void {
-    if (this.texture?.matrixAutoUpdate) {
-      this.texture.updateMatrix()
+    if (this.splat?.matrixAutoUpdate) {
+      this.splat.updateMatrix()
     }
   }
 }
@@ -230,56 +236,31 @@ class CRTShapeEffect extends Effect {
 export type CRTShapeProps = EffectProps<typeof CRTShapeEffect>
 export const CRTShape = wrapEffect(CRTShapeEffect)
 
-const CRTLinesFragShader = `
-uniform float viewheight;
+// const CRTLinesFragShader = `
+// uniform float viewheight;
 
-void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-  float rate1 = 0.002;
-  float stab1 = 1.5;
-  float fuzz1 = 1.35;
-  float cycle1 = (uv.y + time * rate1) * viewheight * fuzz1;
-  float signal1 = sin(cycle1) + stab1;
+// void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
+//   float row = round(uv.y * viewheight);
+//   float alt = mod(row, 2.0);
+//   outputColor = vec4(vec3(alt), inputColor.a);
 
-  float rate2 = 0.2;
-  float scale2 = 0.01;
-  float stab2 = 1.99;
-  float cycle2 = (uv.y * viewheight * scale2) - time * rate2;
-  float signal2 = sin(cycle2) + stab2;
+//   // float rate1 = 0.002;
+//   // float stab1 = 1.5;
+//   // float fuzz1 = 1.35;
+//   // float cycle1 = (uv.y + time * rate1) * viewheight * fuzz1;
+//   // float signal1 = sin(cycle1) + stab1;
 
-  float shade = smoothstep(0.0, 1.0, signal1);
-  float light = 1.0 - (smoothstep(0.0, 1.0, pow(signal2, 128.0)));
+//   // float rate2 = 0.2;
+//   // float scale2 = 0.01;
+//   // float stab2 = 1.99;
+//   // float cycle2 = (uv.y * viewheight * scale2) - time * rate2;
+//   // float signal2 = sin(cycle2) + stab2;
 
-  vec3 c = mix(vec3(0.0), vec3(1.0), smoothstep(0.0, 1.0, shade + light * 0.25));
-  
-	outputColor = vec4(c, inputColor.a);
-}
-`
+//   // float shade = smoothstep(0.0, 1.0, signal1);
+//   // float light = 1.0 - (smoothstep(0.0, 1.0, pow(signal2, 128.0)));
 
-type CRTLinesOpts = {
-  viewheight?: number
-}
+//   // vec3 c = mix(vec3(0.0), vec3(1.0), smoothstep(0.0, 1.0, shade + light * 0.25));
 
-class CRTLinesEffect extends Effect {
-  // eslint-disable-next-line no-empty-pattern
-  constructor({ viewheight }: CRTLinesOpts = {}) {
-    super('CRTLinesEffect', CRTLinesFragShader, {
-      blendFunction: BlendFunction.MULTIPLY,
-      uniforms: new Map<string, Uniform>([
-        ['viewheight', new Uniform(viewheight ?? 128)],
-      ]),
-    })
-  }
-
-  // update(
-  //   _renderer: WebGLRenderer,
-  //   inputBuffer: WebGLRenderTarget<Texture>,
-  // ): void {
-  //   const viewheight = this.uniforms.get('viewheight')
-  //   if (viewheight) {
-  //     viewheight.value = inputBuffer.height
-  //   }
-  // }
-}
-
-export type CRTLinesProps = EffectProps<typeof CRTLinesEffect>
-export const CRTLines = wrapEffect(CRTLinesEffect)
+// 	// outputColor = vec4(c, inputColor.a);
+// }
+// `

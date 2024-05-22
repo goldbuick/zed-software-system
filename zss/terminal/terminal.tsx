@@ -12,7 +12,7 @@ import { NearestFilter, Vector2 } from 'three'
 import { STATS_DEV } from 'zss/config'
 import { createplatform } from 'zss/platform'
 
-import { CRTShape, CRTLines } from './crt'
+import { CRTShape } from './crt'
 import { Framing } from './framing'
 import { Gadget } from './gadget'
 import decoimageurl from './scratches.jpg'
@@ -78,8 +78,7 @@ export function Terminal() {
             radialModulation
             modulationOffset={0.5}
           />
-          <CRTLines viewheight={viewheight} />
-          <CRTShape texture={splat} />
+          <CRTShape splat={splat} viewheight={viewheight} />
         </EffectComposer>
       </Suspense>
     </>
