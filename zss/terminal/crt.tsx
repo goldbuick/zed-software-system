@@ -87,10 +87,13 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   if (doot < 1.0) {
     float row = round(uv.y * viewheight * 0.5);
     float alt = mod(row, 2.0);
-    float phase = time;
-    float slowband = abs(cos(uv.x + phase) * sin(uv.y + phase)) / 2.0;
-    float fastband = (cos(uv.y * 3.0 + time * 1.24) + 1.0) / 2.0;
-    float blankdmix = 0.2 - pow(slowband, viewheight * 0.125) ;//- pow(fastband, viewheight) * 0.1;
+    float phase = time + cos(uv.x + uv.y);
+    float slowband = (cos(uv.x + uv.y - phase) + 1.0) / 2.0;
+    float fastband = (cos(uv.y + time * 0.37) + 1.0) / 2.0;
+    float blankdmix = 0.5 - 
+      pow(slowband, viewheight * 0.01) * 0.05 - 
+      pow(fastband, viewheight * 64.0) * 0.2 - 
+      pow(fastband, viewheight * 128.0) * 0.1;
     vec3 blankd = mix(outputColor.rgb, vec3(0.0), blankdmix);
     vec3 scanline = mix(outputColor.rgb, blankd, alt);
     outputColor = vec4(scanline, inputColor.a);
