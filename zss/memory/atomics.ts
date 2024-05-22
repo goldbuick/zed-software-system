@@ -70,10 +70,12 @@ export function listelementsbykind(
         // console.info('no match on name', name)
         return false
       }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
       if (ispresent(color) && boardelementcolor(element) !== color) {
         // console.info('no match on color', color)
         return false
       }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
       if (ispresent(bg) && boardelementbg(element) !== bg) {
         // console.info('no match on bg', bg)
         return false

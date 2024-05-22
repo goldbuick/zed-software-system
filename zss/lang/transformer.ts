@@ -26,8 +26,8 @@ export function write(
   chunks: (string | SourceNode)[] | SourceNode | string,
 ) {
   return new SourceNode(
-    ast.startLine || 1,
-    ast.startColumn || 1,
+    ast.startLine ?? 1,
+    ast.startColumn ?? 1,
     GENERATED_FILENAME,
     chunks,
   )

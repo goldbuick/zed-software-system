@@ -15,7 +15,7 @@ function addRange(node: CodeNode | undefined): OffsetRange | undefined {
   }
 
   const offsets: (OffsetRange | undefined)[] = [
-    { start: node.startOffset, end: node.endOffset || 0 },
+    { start: node.startOffset, end: node.endOffset ?? 0 },
   ]
 
   Object.keys(node).forEach((name) => {
@@ -33,10 +33,10 @@ function addRange(node: CodeNode | undefined): OffsetRange | undefined {
 
   node.range = {
     start: Math.min(
-      ...offsets.filter((item) => item).map((item) => item?.start || 0),
+      ...offsets.filter((item) => item).map((item) => item?.start ?? 0),
     ),
     end: Math.max(
-      ...offsets.filter((item) => item).map((item) => item?.end || 0),
+      ...offsets.filter((item) => item).map((item) => item?.end ?? 0),
     ),
   }
 

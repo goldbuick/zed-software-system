@@ -90,7 +90,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     float phase = time + cos(uv.x + uv.y);
     float slowband = (cos(uv.x + uv.y - phase) + 1.0) / 2.0;
     float fastband = (cos(uv.y + time * 0.37) + 1.0) / 2.0;
-    float blankdmix = 0.5 - 
+    float blankdmix = 0.3 - 
       pow(slowband, viewheight * 0.01) * 0.05 - 
       pow(fastband, viewheight * 64.0) * 0.2 - 
       pow(fastband, viewheight * 128.0) * 0.1;

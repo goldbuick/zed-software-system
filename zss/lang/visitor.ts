@@ -77,7 +77,7 @@ function asIToken(thing: CstNode | CstElement): IToken {
 
 function asList(thing: ScriptVisitor, node: CstNode[] | undefined): CodeNode[] {
   return (
-    node?.map((item) => thing.visit(item)).filter((item) => item) || []
+    node?.map((item) => thing.visit(item)).filter((item) => item) ?? []
   ).flat()
 }
 
@@ -257,12 +257,12 @@ function getLocation(obj: CstChildrenDictionary): CstNodeLocation {
     })
 
   return {
-    startLine: Math.min(...locations.map((item) => item.startLine || 1)),
-    startColumn: Math.min(...locations.map((item) => item.startColumn || 1)),
-    startOffset: Math.min(...locations.map((item) => item.startOffset || 1)),
-    endLine: Math.max(...locations.map((item) => item.endLine || 1)),
-    endColumn: Math.max(...locations.map((item) => item.endColumn || 1)),
-    endOffset: Math.max(...locations.map((item) => item.endOffset || 1)),
+    startLine: Math.min(...locations.map((item) => item.startLine ?? 1)),
+    startColumn: Math.min(...locations.map((item) => item.startColumn ?? 1)),
+    startOffset: Math.min(...locations.map((item) => item.startOffset ?? 1)),
+    endLine: Math.max(...locations.map((item) => item.endLine ?? 1)),
+    endColumn: Math.max(...locations.map((item) => item.endColumn ?? 1)),
+    endOffset: Math.max(...locations.map((item) => item.endOffset ?? 1)),
   }
 }
 

@@ -114,14 +114,23 @@ export function TapeConsole() {
   // input & selection
   const visiblerange = width - 3
   const inputindex = (height - 1) * width + 1
-  const hasselection = ispresent(selection)
-  const ii1 = hasselection ? Math.min(selection, cursor) : cursor
-  const ii2 = hasselection ? Math.max(selection, cursor) : cursor
-  const iic = ii2 - ii1
-
   const inputstate = inputbuffer[inputbufferindex]
+
+  let ii1 = cursor
+  let ii2 = cursor
+  let hasselection = false
+  if (ispresent(selection)) {
+    ii1 = Math.min(cursor, selection)
+    ii2 = Math.max(cursor, selection)
+    if (cursor !== selection) {
+      --ii2
+      hasselection = true
+    }
+  }
+
+  const iic = ii2 - ii1 + 1
   const inputstateselected = hasselection
-    ? inputstate.substring(ii1, ii2 + 1)
+    ? inputstate.substring(ii1, ii2)
     : inputstate
 
   // draw input line
@@ -130,7 +139,9 @@ export function TapeConsole() {
 
   // draw selection
   if (hasselection) {
-    applycolortoindexes(inputindex + ii1, inputindex + ii2, 15, 8, context)
+    const p1 = inputindex + ii1
+    const p2 = inputindex + ii2
+    applycolortoindexes(p1, p2, 15, 8, context)
   }
 
   // draw cursor
@@ -146,6 +157,7 @@ export function TapeConsole() {
       count,
       insert,
     )
+    return inputbuffer[inputbufferindex]
   }
 
   function trackselection(index: number | undefined) {
@@ -161,7 +173,7 @@ export function TapeConsole() {
   function deleteselection() {
     setcursor(ii1)
     setselection(undefined)
-    inputstatesetsplice(ii1, iic)
+    return inputstatesetsplice(ii1, iic)
   }
 
   return (
@@ -176,14 +188,21 @@ export function TapeConsole() {
           <UserInput
             MENU_BUTTON={(mods) => tapesetmode(mods.shift ? -1 : 1)}
             MOVE_UP={() => {
-              setinputbufferindex(
-                clamp(inputbufferindex + 1, 0, inputbuffer.length - 1),
-              )
+              const ir = inputbuffer.length - 1
+              const index = clamp(inputbufferindex + 1, 0, ir)
+              setselection(undefined)
+              setinputbufferindex(index)
+              setcursor((inputbuffer[index] ?? '').length)
             }}
             MOVE_DOWN={() => {
-              setinputbufferindex(
-                clamp(inputbufferindex - 1, 0, inputbuffer.length - 1),
-              )
+              // TODO: we should actually be copying history items into an active buffer on edit ?
+              // so instead of overwriting the historyical entry
+              // we copy to our mutable entry before continuting
+              const ir = inputbuffer.length - 1
+              const index = clamp(inputbufferindex - 1, 0, ir)
+              setselection(undefined)
+              setinputbufferindex(index)
+              setcursor((inputbuffer[index] ?? '').length)
             }}
             MOVE_LEFT={(mods) => {
               trackselection(mods.shift ? cursor : undefined)
@@ -195,12 +214,17 @@ export function TapeConsole() {
             }}
             OK_BUTTON={() => {
               const invoke = hasselection ? inputstateselected : inputstate
-              setinputbuffer([invoke, ...inputbuffer])
-              setinputbufferindex(0)
-              setcursor(0)
-              setselection(undefined)
-              setinputbuffer(['', ...inputbuffer])
-              vm_cli('tape', invoke, gadgetstategetplayer())
+              if (invoke.length) {
+                setinputbuffer([
+                  '',
+                  invoke,
+                  ...inputbuffer.slice(1).filter((item) => item !== invoke),
+                ])
+                setinputbufferindex(0)
+                setcursor(0)
+                setselection(undefined)
+                vm_cli('tape', invoke, gadgetstategetplayer())
+              }
             }}
             keydown={(event) => {
               const { key } = event
@@ -249,7 +273,7 @@ export function TapeConsole() {
                               if (hasselection) {
                                 inputstatesetsplice(ii1, iic, text)
                                 setselection(undefined)
-                                setcursor(ii2)
+                                setcursor(ii1 + text.length)
                               } else {
                                 inputstatesetsplice(cursor, 0, text)
                                 setcursor(cursor + text.length)
@@ -269,18 +293,18 @@ export function TapeConsole() {
                     }
                   } else if (mods.alt) {
                     // no-op ?? - could this shove text around when you have selection ??
-                    // or jump by 10 ?
+                    // or jump by 10 or by word ??
                   } else if (
                     key.length === 1 &&
                     inputstate.length < visiblerange
                   ) {
                     if (hasselection) {
-                      setcursor(ii2)
+                      inputstatesetsplice(ii1, iic, key)
                       setselection(undefined)
-                      inputstatesetsplice(ii1, ii2, key)
+                      setcursor(ii1 + 1)
                     } else {
+                      inputstatesetsplice(cursor, 0, key)
                       setcursor(cursor + 1)
-                      inputstatesetsplice(cursor, cursor, key)
                     }
                   }
                   break
