@@ -36,3 +36,6 @@ export const CLI_FIRMWARE = createfirmware({
     console.info('hyperlink', label, input, words)
     return 0
   })
+  .command('help', (chip, args) => {
+    return 0
+  })

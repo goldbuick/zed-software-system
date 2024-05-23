@@ -19,7 +19,7 @@ import {
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
-import { MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
+import { MAYBE_NUMBER, ispresent, isstring } from 'zss/mapping/types'
 
 import { useBlink } from './panel/common'
 import {
@@ -105,7 +105,9 @@ export function TapeConsole() {
   for (let i = 0; i < tape.logs.length && context.y >= 0; ++i) {
     const [id, maybelevel, source, ...message] = tape.logs[i]
     const level = maybelevel === 'log' ? '' : `${maybelevel}:`
-    const messagetext = message.map((v) => JSON.stringify(v)).join(' ')
+    const messagetext = message
+      .map((v) => (isstring(v) ? v : JSON.stringify(v).replaceAll('"', '')))
+      .join(' ')
     const rowtext = `${id.slice(id.length - 3)}>${source}>${level} ${messagetext}`
     const measure = tokenizeandmeasuretextformat(rowtext, width, height)
     //
