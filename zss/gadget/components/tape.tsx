@@ -1,5 +1,5 @@
 import { useThree } from '@react-three/fiber'
-import { useState } from 'react'
+import { proxy, useSnapshot } from 'valtio'
 import { vm_cli } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import {
@@ -19,7 +19,7 @@ import {
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
-import { ispresent } from 'zss/mapping/types'
+import { MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
 
 import { useBlink } from './panel/common'
 import {
@@ -37,11 +37,19 @@ const BG = COLOR.DKBLUE
 const CHAR_WIDTH = DRAW_CHAR_WIDTH * SCALE
 const CHAR_HEIGHT = DRAW_CHAR_HEIGHT * SCALE
 
+const tapeinputstate = proxy({
+  cursor: 0,
+  bufferindex: 0,
+  buffer: [''],
+  selection: undefined as MAYBE_NUMBER,
+})
+
 export function TapeConsole() {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
   const tape = useTape()
+  const tapeinput = useSnapshot(tapeinputstate)
 
   const cols = Math.floor(viewWidth / CHAR_WIDTH)
   const rows = Math.floor(viewHeight / CHAR_HEIGHT)
@@ -87,10 +95,6 @@ export function TapeConsole() {
   }
 
   const blink = useBlink()
-  const [cursor, setcursor] = useState(0)
-  const [inputbufferindex, setinputbufferindex] = useState(0)
-  const [inputbuffer, setinputbuffer] = useState<string[]>([''])
-  const [selection, setselection] = useState<number | undefined>(undefined)
 
   // bail on odd states
   if (width < 1 || height < 1) {
@@ -114,15 +118,15 @@ export function TapeConsole() {
   // input & selection
   const visiblerange = width - 3
   const inputindex = (height - 1) * width + 1
-  const inputstate = inputbuffer[inputbufferindex]
+  const inputstate = tapeinput.buffer[tapeinput.bufferindex]
 
-  let ii1 = cursor
-  let ii2 = cursor
+  let ii1 = tapeinput.cursor
+  let ii2 = tapeinput.cursor
   let hasselection = false
-  if (ispresent(selection)) {
-    ii1 = Math.min(cursor, selection)
-    ii2 = Math.max(cursor, selection)
-    if (cursor !== selection) {
+  if (ispresent(tapeinput.selection)) {
+    ii1 = Math.min(tapeinput.cursor, tapeinput.selection)
+    ii2 = Math.max(tapeinput.cursor, tapeinput.selection)
+    if (tapeinput.cursor !== tapeinput.selection) {
       --ii2
       hasselection = true
     }
@@ -146,34 +150,40 @@ export function TapeConsole() {
 
   // draw cursor
   if (blink) {
-    applystrtoindex(inputindex + cursor, String.fromCharCode(221), context)
+    applystrtoindex(
+      inputindex + tapeinput.cursor,
+      String.fromCharCode(221),
+      context,
+    )
   }
 
   // update state
   function inputstatesetsplice(index: number, count: number, insert?: string) {
-    inputbuffer[inputbufferindex] = stringsplice(
-      inputstate,
-      index,
-      count,
-      insert,
-    )
-    return inputbuffer[inputbufferindex]
+    // we are trying to modify historical entries
+    if (tapeinput.bufferindex > 0) {
+      // blank inputslot and snap index to 0
+      tapeinputstate.bufferindex = 0
+    }
+    // write state
+    tapeinputstate.buffer[0] = stringsplice(inputstate, index, count, insert)
+    // clear selection
+    tapeinputstate.selection = undefined
+    tapeinputstate.cursor = index + (insert ?? '').length
   }
 
   function trackselection(index: number | undefined) {
     if (ispresent(index)) {
-      if (!ispresent(selection)) {
-        setselection(clamp(index, 0, inputstate.length - 1))
+      if (!ispresent(tapeinput.selection)) {
+        tapeinputstate.selection = clamp(index, 0, inputstate.length - 1)
       }
     } else {
-      setselection(undefined)
+      tapeinputstate.selection = undefined
     }
   }
 
   function deleteselection() {
-    setcursor(ii1)
-    setselection(undefined)
-    return inputstatesetsplice(ii1, iic)
+    tapeinputstate.cursor = ii1
+    tapeinputstate.selection = undefined
   }
 
   return (
@@ -188,41 +198,48 @@ export function TapeConsole() {
           <UserInput
             MENU_BUTTON={(mods) => tapesetmode(mods.shift ? -1 : 1)}
             MOVE_UP={() => {
-              const ir = inputbuffer.length - 1
-              const index = clamp(inputbufferindex + 1, 0, ir)
-              setselection(undefined)
-              setinputbufferindex(index)
-              setcursor((inputbuffer[index] ?? '').length)
+              const ir = tapeinput.buffer.length - 1
+              const index = clamp(tapeinput.bufferindex + 1, 0, ir)
+              tapeinputstate.selection = undefined
+              tapeinputstate.bufferindex = index
+              tapeinputstate.cursor = inputstate.length
             }}
             MOVE_DOWN={() => {
-              // TODO: we should actually be copying history items into an active buffer on edit ?
-              // so instead of overwriting the historyical entry
-              // we copy to our mutable entry before continuting
-              const ir = inputbuffer.length - 1
-              const index = clamp(inputbufferindex - 1, 0, ir)
-              setselection(undefined)
-              setinputbufferindex(index)
-              setcursor((inputbuffer[index] ?? '').length)
+              const ir = tapeinput.buffer.length - 1
+              const index = clamp(tapeinput.bufferindex - 1, 0, ir)
+              tapeinputstate.selection = undefined
+              tapeinputstate.bufferindex = index
+              tapeinputstate.cursor = inputstate.length
             }}
             MOVE_LEFT={(mods) => {
-              trackselection(mods.shift ? cursor : undefined)
-              setcursor(clamp(cursor - 1, 0, inputstate.length))
+              trackselection(mods.shift ? tapeinput.cursor : undefined)
+              tapeinputstate.cursor = clamp(
+                tapeinput.cursor - 1,
+                0,
+                inputstate.length,
+              )
             }}
             MOVE_RIGHT={(mods) => {
-              trackselection(mods.shift ? cursor : undefined)
-              setcursor(clamp(cursor + 1, 0, inputstate.length))
+              trackselection(mods.shift ? tapeinput.cursor : undefined)
+              tapeinputstate.cursor = clamp(
+                tapeinput.cursor + 1,
+                0,
+                inputstate.length,
+              )
             }}
             OK_BUTTON={() => {
               const invoke = hasselection ? inputstateselected : inputstate
               if (invoke.length) {
-                setinputbuffer([
+                tapeinputstate.cursor = 0
+                tapeinputstate.bufferindex = 0
+                tapeinputstate.selection = undefined
+                tapeinputstate.buffer = [
                   '',
                   invoke,
-                  ...inputbuffer.slice(1).filter((item) => item !== invoke),
-                ])
-                setinputbufferindex(0)
-                setcursor(0)
-                setselection(undefined)
+                  ...tapeinput.buffer
+                    .slice(1)
+                    .filter((item) => item !== invoke),
+                ]
                 vm_cli('tape', invoke, gadgetstategetplayer())
               }
             }}
@@ -240,23 +257,23 @@ export function TapeConsole() {
                   if (hasselection) {
                     deleteselection()
                   } else if (inputstate.length > 0) {
-                    inputstatesetsplice(cursor, 1)
+                    inputstatesetsplice(tapeinput.cursor, 1)
                   }
                   break
                 case 'backspace':
                   if (hasselection) {
                     deleteselection()
-                  } else if (cursor > 0) {
-                    inputstatesetsplice(cursor - 1, 1)
-                    setcursor(cursor - 1)
+                  } else if (tapeinput.cursor > 0) {
+                    inputstatesetsplice(tapeinput.cursor - 1, 1)
+                    tapeinputstate.cursor = tapeinput.cursor - 1
                   }
                   break
                 default:
                   if (mods.ctrl) {
                     switch (lkey) {
                       case 'a':
-                        setselection(0)
-                        setcursor(inputstate.length)
+                        tapeinputstate.selection = 0
+                        tapeinputstate.cursor = inputstate.length
                         break
                       case 'c':
                         if (ispresent(navigator.clipboard)) {
@@ -272,11 +289,8 @@ export function TapeConsole() {
                             .then((text) => {
                               if (hasselection) {
                                 inputstatesetsplice(ii1, iic, text)
-                                setselection(undefined)
-                                setcursor(ii1 + text.length)
                               } else {
-                                inputstatesetsplice(cursor, 0, text)
-                                setcursor(cursor + text.length)
+                                inputstatesetsplice(tapeinput.cursor, 0, text)
                               }
                             })
                             .catch((err) => console.error(err))
@@ -300,11 +314,11 @@ export function TapeConsole() {
                   ) {
                     if (hasselection) {
                       inputstatesetsplice(ii1, iic, key)
-                      setselection(undefined)
-                      setcursor(ii1 + 1)
+                      tapeinputstate.selection = undefined
+                      tapeinputstate.cursor = ii1 + 1
                     } else {
-                      inputstatesetsplice(cursor, 0, key)
-                      setcursor(cursor + 1)
+                      inputstatesetsplice(tapeinput.cursor, 0, key)
+                      tapeinputstate.cursor = tapeinput.cursor + 1
                     }
                   }
                   break
