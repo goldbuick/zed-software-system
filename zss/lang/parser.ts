@@ -189,6 +189,7 @@ class ScriptParser extends CstParser {
   Command_if = this.RULED('Command_if', () => {
     this.CONSUME(lexer.Command_if)
     this.SUBRULE(this.words)
+    this.OPTION(() => this.CONSUME(lexer.Command_then))
     this.OPTION(() => {
       this.OR([
         { ALT: () => this.SUBRULE(this.command) },
@@ -221,6 +222,7 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.Command_else)
     this.CONSUME(lexer.Command_if)
     this.SUBRULE(this.words)
+    this.OPTION(() => this.CONSUME(lexer.Command_then))
     this.OPTION(() => {
       this.OR([
         { ALT: () => this.SUBRULE(this.command) },
@@ -251,6 +253,7 @@ class ScriptParser extends CstParser {
   Command_else = this.RULED('Command_else', () => {
     this.CONSUME(lexer.Command)
     this.CONSUME(lexer.Command_else)
+    this.OPTION(() => this.CONSUME(lexer.Command_then))
     this.OPTION(() => {
       this.OR([
         { ALT: () => this.SUBRULE(this.command) },
@@ -274,6 +277,7 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.Command)
     this.CONSUME(lexer.Command_while)
     this.SUBRULE(this.words)
+    this.OPTION(() => this.CONSUME(lexer.Command_then))
     this.OPTION(() => {
       this.OR([
         // inline while
@@ -295,6 +299,7 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.Command)
     this.CONSUME(lexer.Command_repeat)
     this.SUBRULE(this.words)
+    this.OPTION(() => this.CONSUME(lexer.Command_then))
     this.OPTION(() => {
       this.OR([
         // inline repeat
@@ -312,14 +317,23 @@ class ScriptParser extends CstParser {
     })
   })
 
+  Command_read_flags = this.RULED('Command_read_flags', () => {
+    this.AT_LEAST_ONE(() => this.CONSUME(lexer.StringLiteral))
+  })
+
   Command_read = this.RULED('Command_read', () => {
     this.CONSUME(lexer.Command)
     this.CONSUME(lexer.Command_read)
     this.SUBRULE(this.words)
+    this.CONSUME(lexer.Command_into)
+    this.SUBRULE(this.Command_read_flags)
+    this.OPTION(() => this.CONSUME(lexer.Command_then))
     this.OPTION(() => {
       this.OR([
         // inline read
-        { ALT: () => this.SUBRULE(this.command) },
+        {
+          ALT: () => this.SUBRULE(this.command),
+        },
         {
           ALT: () => {
             // read block

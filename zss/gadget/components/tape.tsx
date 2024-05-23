@@ -134,7 +134,7 @@ export function TapeConsole() {
 
   const iic = ii2 - ii1 + 1
   const inputstateselected = hasselection
-    ? inputstate.substring(ii1, ii2)
+    ? inputstate.substring(ii1, ii2 + 1)
     : inputstate
 
   // draw input line
@@ -171,6 +171,14 @@ export function TapeConsole() {
     tapeinputstate.cursor = index + (insert ?? '').length
   }
 
+  function inputstateswitch(switchto: number) {
+    const ir = tapeinput.buffer.length - 1
+    const index = clamp(switchto, 0, ir)
+    tapeinputstate.selection = undefined
+    tapeinputstate.bufferindex = index
+    tapeinputstate.cursor = tapeinputstate.buffer[index].length
+  }
+
   function trackselection(index: number | undefined) {
     if (ispresent(index)) {
       if (!ispresent(tapeinput.selection)) {
@@ -184,10 +192,12 @@ export function TapeConsole() {
   function deleteselection() {
     tapeinputstate.cursor = ii1
     tapeinputstate.selection = undefined
+    inputstatesetsplice(ii1, iic)
   }
 
   return (
     <group
+      // eslint-disable-next-line react/no-unknown-property
       position={[marginX * 0.5 + left, marginY + top, 0]}
       scale={[SCALE, SCALE, 1.0]}
     >
@@ -197,20 +207,8 @@ export function TapeConsole() {
           <TileSnapshot width={width} height={height} tiles={tiles} />
           <UserInput
             MENU_BUTTON={(mods) => tapesetmode(mods.shift ? -1 : 1)}
-            MOVE_UP={() => {
-              const ir = tapeinput.buffer.length - 1
-              const index = clamp(tapeinput.bufferindex + 1, 0, ir)
-              tapeinputstate.selection = undefined
-              tapeinputstate.bufferindex = index
-              tapeinputstate.cursor = inputstate.length
-            }}
-            MOVE_DOWN={() => {
-              const ir = tapeinput.buffer.length - 1
-              const index = clamp(tapeinput.bufferindex - 1, 0, ir)
-              tapeinputstate.selection = undefined
-              tapeinputstate.bufferindex = index
-              tapeinputstate.cursor = inputstate.length
-            }}
+            MOVE_UP={() => inputstateswitch(tapeinput.bufferindex + 1)}
+            MOVE_DOWN={() => inputstateswitch(tapeinput.bufferindex - 1)}
             MOVE_LEFT={(mods) => {
               trackselection(mods.shift ? tapeinput.cursor : undefined)
               tapeinputstate.cursor = clamp(

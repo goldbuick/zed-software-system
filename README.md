@@ -24,3 +24,5 @@ for when I want to go crazy for speed
 https://romgrk.com/posts/optimizing-javascript
 
   #play r4i3-a0+e0b0a5exaxgxexax+cx-bxgxaxex+cxz4-gx-dxax+dxexgxf#xdxaxgxexdxf#xdxcxexf
+
+  #play r6cxxaxxfxx+fxx6xx6xx

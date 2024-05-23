@@ -223,6 +223,7 @@ export const Command_play = createToken({
 
 export const Command_if = createWordToken('if')
 export const Command_do = createWordToken('do')
+export const Command_then = createWordToken('then')
 export const Command_else = createWordToken('else')
 export const Command_endif = createWordToken('endif')
 export const Command_while = createWordToken('while')
@@ -230,6 +231,7 @@ export const Command_endwhile = createWordToken('endwhile')
 export const Command_repeat = createWordToken('repeat')
 export const Command_endrepeat = createWordToken('endrepeat')
 export const Command_read = createWordToken('read')
+export const Command_into = createWordToken('into')
 export const Command_endread = createWordToken('endread')
 export const Command_break = createWordToken('break')
 export const Command_continue = createWordToken('continue')
@@ -285,6 +287,7 @@ export const allTokens = createTokenSet([
   // core / structure commands
   Command_if,
   Command_do,
+  Command_then,
   Command_else,
   Command_endif,
   Command_while,
@@ -292,6 +295,7 @@ export const allTokens = createTokenSet([
   Command_repeat,
   Command_endrepeat,
   Command_read,
+  Command_into,
   Command_endread,
   Command_break,
   Command_continue,
