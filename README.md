@@ -23,6 +23,8 @@ https://github.com/phips28/gh-action-bump-version/tree/master?tab=readme-ov-file
 for when I want to go crazy for speed
 https://romgrk.com/posts/optimizing-javascript
 
-  #play r4i3-a0+e0b0a5exaxgxexax+cx-bxgxaxex+cxz4-gx-dxax+dxexgxf#xdxaxgxexdxf#xdxcxexf
+  #play r4i3-a0+e0b0a5exaxgxexax+cx-bxgxaxex+cxz4-gx-dxax+dxexgxf#xdxaxgxexdxf#xd0dac
 
   #play r6cxxaxxfxx+fxx6xx6xx
+
+  #play r4i3-a7+e4bxa7e4axg7e4ax+c7-b4gxa7e4+cxz4-g7-d4ax+d7e4gxf#7d4axg7e4dxf#7d4dac
