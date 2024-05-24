@@ -11,7 +11,7 @@ import {
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
-  tokenizeAndWriteTextFormat as tokenizeandwritetextformat,
+  tokenizeandwritetextformat,
   tokenizeandmeasuretextformat,
   applystrtoindex,
   applycolortoindexes,
@@ -113,9 +113,15 @@ export function TapeConsole() {
     //
     context.y -= measure?.y ?? 1
     const reset = context.y
-    tokenizeandwritetextformat(rowtext, context)
+    tokenizeandwritetextformat(rowtext, context, true)
     context.y = reset
   }
+
+  // write hint
+  const hint = 'if lost try #help'
+  context.x = width - hint.length - 1
+  context.y = height - 2
+  tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
 
   // input & selection
   const visiblerange = width - 3
@@ -184,7 +190,7 @@ export function TapeConsole() {
   function trackselection(index: number | undefined) {
     if (ispresent(index)) {
       if (!ispresent(tapeinput.selection)) {
-        tapeinputstate.selection = clamp(index, 0, inputstate.length - 1)
+        tapeinputstate.selection = clamp(index, 0, inputstate.length)
       }
     } else {
       tapeinputstate.selection = undefined

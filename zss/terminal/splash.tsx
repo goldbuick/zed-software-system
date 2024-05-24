@@ -8,7 +8,7 @@ import {
 } from 'zss/gadget/components/usetiles'
 import {
   createwritetextcontext,
-  tokenizeAndWriteTextFormat,
+  tokenizeandwritetextformat,
 } from 'zss/gadget/data/textformat'
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 
@@ -57,7 +57,7 @@ export function Splash({ onBoot }: SplashProps) {
       ...createwritetextcontext(width, height, COLOR.WHITE, COLOR.DKGRAY),
       ...tiles,
     }
-    TICKER.forEach((item) => tokenizeAndWriteTextFormat(item, context))
+    TICKER.forEach((item) => tokenizeandwritetextformat(item, context, true))
   }, [width, height, tiles])
 
   return (

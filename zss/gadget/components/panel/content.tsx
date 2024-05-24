@@ -1,6 +1,6 @@
 import {
   WRITE_TEXT_CONTEXT,
-  tokenizeAndWriteTextFormat,
+  tokenizeandwritetextformat,
 } from '../../data/textformat'
 
 type PanelItemContentProps = {
@@ -10,6 +10,6 @@ type PanelItemContentProps = {
 }
 
 export function PanelItemContent({ item, context }: PanelItemContentProps) {
-  tokenizeAndWriteTextFormat(item, context)
+  tokenizeandwritetextformat(item, context, true)
   return null
 }

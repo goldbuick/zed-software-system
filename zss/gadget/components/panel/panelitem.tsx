@@ -1,8 +1,8 @@
 import { useContext } from 'react'
 import {
   WriteTextContext,
-  tokenizeAndWriteTextFormat,
-  writeTextColorReset,
+  tokenizeandwritetextformat,
+  writetextcolorreset,
 } from 'zss/gadget/data/textformat'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 
@@ -68,11 +68,15 @@ export function PanelItem({ item, active }: PanelItemProps) {
         return <PanelItemText {...props} />
       default:
         // throw an unknown input type error ?
-        tokenizeAndWriteTextFormat(`$red unknown input type ${input}`, context)
+        tokenizeandwritetextformat(
+          `$red unknown input type ${input}`,
+          context,
+          true,
+        )
         break
     }
 
-    writeTextColorReset(context)
+    writetextcolorreset(context)
   }
   return null
 }

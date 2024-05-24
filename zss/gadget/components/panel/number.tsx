@@ -3,7 +3,7 @@ import { MAYBE_NUMBER } from 'zss/mapping/types'
 
 import {
   useCacheWriteTextContext,
-  tokenizeAndWriteTextFormat,
+  tokenizeandwritetextformat,
   writechartoend,
 } from '../../data/textformat'
 import {
@@ -68,9 +68,10 @@ export function PanelItemNumber({
     tvalue = blink ? strsplice(strvalue, cursor, 1, '$219+') : strvalue
   }
 
-  tokenizeAndWriteTextFormat(
-    `  # $${tcolor}${tlabel} $green${tvalue} \\`,
+  tokenizeandwritetextformat(
+    `  # $${tcolor}${tlabel} $green${tvalue}`,
     context,
+    false,
   )
   writechartoend(' ', context)
 

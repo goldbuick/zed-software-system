@@ -1,6 +1,6 @@
 import { useCallback, useContext } from 'react'
 
-import { tokenizeAndWriteTextFormat } from '../../data/textformat'
+import { tokenizeandwritetextformat } from '../../data/textformat'
 import { UserHotkey, UserInput } from '../userinput'
 
 import {
@@ -27,11 +27,12 @@ export function PanelItemHotkey({
   const text = maybetext || ` ${shortcut.toUpperCase()} `
   const tcolor = inputcolor(active)
 
-  tokenizeAndWriteTextFormat(
+  tokenizeandwritetextformat(
     `${
       context.isEven ? '$black$onltgray' : '$black$ondkcyan'
     }${text}$${tcolor}$onclear ${label}`,
     context,
+    true,
   )
 
   const scroll = useContext(ScrollContext)

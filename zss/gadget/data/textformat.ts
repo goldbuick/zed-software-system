@@ -40,11 +40,6 @@ export const NumberLiteral = createToken({
   pattern: /\$-?(\d*\.)?\d+([eE][+-]?\d+)?[jJ]?[lL]?\+?/,
 })
 
-export const ContinueLine = createToken({
-  name: 'ContinueLine',
-  pattern: /\\/,
-})
-
 function createWordToken(word: string, name = '') {
   return createToken({
     name: name || word,
@@ -52,46 +47,7 @@ function createWordToken(word: string, name = '') {
   })
 }
 
-const colors = [
-  ['blue'],
-  ['green'],
-  ['cyan'],
-  ['red'],
-  ['purple'],
-  ['yellow'],
-  ['white'],
-  ['dkblue'],
-  ['dkgreen'],
-  ['dkcyan'],
-  ['dkred'],
-  ['dkpurple'],
-  ['dkyellow|brown', 'brown'],
-  ['dkwhite|ltgray|ltgrey|gray|grey', 'gray'],
-  ['dkgray|dkgrey|ltblack', 'dkgray'],
-  ['black'],
-  ['clear'],
-]
-
-const colorIndex: Record<string, number> = {
-  black: 0,
-  dkblue: 1,
-  dkgreen: 2,
-  dkcyan: 3,
-  dkred: 4,
-  dkpurple: 5,
-  brown: 6,
-  gray: 7,
-  dkgray: 8,
-  blue: 9,
-  green: 10,
-  cyan: 11,
-  red: 12,
-  purple: 13,
-  yellow: 14,
-  white: 15,
-  clear: -1,
-}
-
+todo bring in the string color consts from wordtypes
 const allColors = colors.map(([clr, name]) =>
   createWordToken(`\\$(${clr})`, name || clr),
 )
@@ -103,7 +59,6 @@ const allBgColors = [
 
 export const allTokens = [
   Whitespace,
-  ContinueLine,
   ...allColors,
   ...allBgColors,
   StringLiteralDouble,
@@ -120,7 +75,6 @@ const scriptLexer = new Lexer(allTokens, {
 const scriptLexerNoWhitespace = new Lexer(
   [
     WhitespaceSkipped,
-    ContinueLine,
     ...allColors,
     ...allBgColors,
     StringLiteralDouble,
@@ -207,15 +161,12 @@ export const WriteTextContext = createContext(
   createwritetextcontext(1, 1, 15, 1),
 )
 
-export function writeTextColorReset(context: WRITE_TEXT_CONTEXT) {
+export function writetextcolorreset(context: WRITE_TEXT_CONTEXT) {
   context.activeColor = context.resetColor
   context.activeBg = context.resetBg
 }
 
-export function writetextformat(
-  tokens: IToken[],
-  context: WRITE_TEXT_CONTEXT,
-): boolean {
+function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   const starty = context.y
 
   function incCursor() {
@@ -318,9 +269,6 @@ export function writetextformat(
         writeStr(token.image.substring(1, token.image.length - 1))
         break
 
-      case ContinueLine:
-        return false
-
       default:
         writeStr(token.image)
         break
@@ -328,7 +276,7 @@ export function writetextformat(
 
     // basic boundry check
     if (context.y >= context.height) {
-      return true
+      return
     }
   }
 
@@ -337,22 +285,21 @@ export function writetextformat(
     context.x = context.leftEdge ?? 0
     ++context.y
   }
-
-  return true
 }
 
-export function tokenizeAndWriteTextFormat(
+export function tokenizeandwritetextformat(
   text: string,
   context: WRITE_TEXT_CONTEXT,
+  shouldreset: boolean,
 ) {
   const result = tokenize(text)
   if (!result.tokens) {
     return true
   }
 
-  const shouldreset = writetextformat(result.tokens, context)
+  writetextformat(result.tokens, context)
   if (context.resetCheck && shouldreset) {
-    writeTextColorReset(context)
+    writetextcolorreset(context)
   }
 
   return shouldreset
@@ -385,7 +332,7 @@ export function writechartoend(char: string, context: WRITE_TEXT_CONTEXT) {
   if (delta < 1) {
     return
   }
-  tokenizeAndWriteTextFormat(char.repeat(delta), context)
+  tokenizeandwritetextformat(char.repeat(delta), context, true)
 }
 
 export function applystrtoindex(

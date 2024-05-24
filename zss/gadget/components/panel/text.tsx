@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   useCacheWriteTextContext,
-  tokenizeAndWriteTextFormat,
+  tokenizeandwritetextformat,
   writechartoend,
   applycolortoindexes,
   applystrtoindex,
@@ -40,16 +40,17 @@ export function PanelItemText({
   useCacheWriteTextContext(context)
 
   // prefix
-  tokenizeAndWriteTextFormat(
-    `$green  $20 $${tcolor}${tlabel}$green \\`,
+  tokenizeandwritetextformat(
+    `$green  $20 $${tcolor}${tlabel}$green`,
     context,
+    false,
   )
   const tx = context.x
   const ty = context.y
   const tyw = ty * context.width
 
   // content
-  tokenizeAndWriteTextFormat(`${tvalue}\\`, context)
+  tokenizeandwritetextformat(`${tvalue}`, context, false)
   writechartoend(' ', context)
 
   // input state
