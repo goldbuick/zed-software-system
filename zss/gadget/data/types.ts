@@ -1,5 +1,6 @@
 import { WORD_VALUE } from 'zss/chip'
 import { UNOBSERVE_FUNC } from 'zss/device/shared'
+import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
 
 export const BYTES_PER_COLOR = 3
 
@@ -22,6 +23,7 @@ export enum COLOR {
   PURPLE,
   YELLOW,
   WHITE,
+  BG,
   ONBLACK,
   ONDKBLUE,
   ONDKGREEN,
@@ -39,9 +41,17 @@ export enum COLOR {
   ONYELLOW,
   ONWHITE,
   // special bg colors
-  CLEAR = 32,
+  CLEAR,
   SHADOW,
   BORROW,
+}
+
+export function colortofg(color: MAYBE<COLOR>): MAYBE_NUMBER {
+  return ispresent(color) && color < COLOR.BG ? color : undefined
+}
+
+export function colortobg(color: MAYBE<COLOR>): MAYBE_NUMBER {
+  return ispresent(color) && color > COLOR.BG ? color : undefined
 }
 
 const CHAR_SCALE = 2

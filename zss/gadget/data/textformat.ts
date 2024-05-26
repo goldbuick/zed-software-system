@@ -1,10 +1,11 @@
 import { createToken, IToken, Lexer } from 'chevrotain'
 import { createContext, useMemo } from 'react'
 import { LANG_DEV } from 'zss/config'
+import { colorconsts } from 'zss/firmware/wordtypes'
 import { range } from 'zss/mapping/array'
-import { MAYBE } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 
-import { COLOR } from './types'
+import { COLOR, colortobg, colortofg } from './types'
 
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 
@@ -47,20 +48,12 @@ function createWordToken(word: string, name = '') {
   })
 }
 
-todo bring in the string color consts from wordtypes
-const allColors = colors.map(([clr, name]) =>
-  createWordToken(`\\$(${clr})`, name || clr),
-)
-const allBgColors = [
-  ...colors.map(([clr, name]) =>
-    createWordToken(`\\$on(${clr})`, `on${name || clr}`),
-  ),
-]
+const colors = Object.keys(colorconsts)
+const allcolors = colors.map((name) => createWordToken(`\\$(${name})`, name))
 
 export const allTokens = [
   Whitespace,
-  ...allColors,
-  ...allBgColors,
+  ...allcolors,
   StringLiteralDouble,
   StringLiteral,
   NumberLiteral,
@@ -75,8 +68,7 @@ const scriptLexer = new Lexer(allTokens, {
 const scriptLexerNoWhitespace = new Lexer(
   [
     WhitespaceSkipped,
-    ...allColors,
-    ...allBgColors,
+    ...allcolors,
     StringLiteralDouble,
     StringLiteral,
     NumberLiteral,
@@ -208,49 +200,6 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   for (let i = 0; i < tokens.length; ++i) {
     const token = tokens[i]
     switch (token.tokenType) {
-      case allColors[0]:
-      case allColors[1]:
-      case allColors[2]:
-      case allColors[3]:
-      case allColors[4]:
-      case allColors[5]:
-      case allColors[6]:
-      case allColors[7]:
-      case allColors[8]:
-      case allColors[9]:
-      case allColors[10]:
-      case allColors[11]:
-      case allColors[12]:
-      case allColors[13]:
-      case allColors[14]:
-      case allColors[15]: {
-        const colorName = token.tokenType.name
-        context.activeColor = colorIndex[colorName] ?? 0
-        break
-      }
-      case allBgColors[0]:
-      case allBgColors[1]:
-      case allBgColors[2]:
-      case allBgColors[3]:
-      case allBgColors[4]:
-      case allBgColors[5]:
-      case allBgColors[6]:
-      case allBgColors[7]:
-      case allBgColors[8]:
-      case allBgColors[9]:
-      case allBgColors[10]:
-      case allBgColors[11]:
-      case allBgColors[12]:
-      case allBgColors[13]:
-      case allBgColors[14]:
-      case allBgColors[15]: {
-        const colorName = token.tokenType.name.replace('on', '')
-        context.activeBg = colorIndex[colorName] ?? 0
-        break
-      }
-      case allBgColors[16]:
-        context.activeBg = context.resetBg
-        break
       case NumberLiteral:
         if (context.measureonly !== true && isVisible()) {
           const i = context.x + context.y * context.width
@@ -269,9 +218,25 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         writeStr(token.image.substring(1, token.image.length - 1))
         break
 
-      default:
-        writeStr(token.image)
+      default: {
+        const tokenname = token.tokenType.name as keyof typeof colorconsts
+        const maybename = colorconsts[tokenname]
+        const maybecolor = colortofg(COLOR[maybename])
+        const maybebg = colortobg(COLOR[maybename])
+        if (maybecolor === COLOR.CLEAR) {
+          // reset bg color
+          context.activeBg = context.resetBg
+        } else if (ispresent(maybecolor)) {
+          // update fg color
+          context.activeColor = maybecolor
+        } else if (ispresent(maybebg)) {
+          // update bg color
+          context.activeBg = maybebg
+        } else {
+          writeStr(token.image)
+        }
         break
+      }
     }
 
     // basic boundry check
