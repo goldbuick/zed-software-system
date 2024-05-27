@@ -88,9 +88,9 @@ export function TapeConsole() {
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, FG, BG),
     ...tiles,
-    x: 1,
+    x: 0,
     y: height - 2,
-    leftEdge: 1,
+    leftEdge: 0,
     rightEdge: width - 1,
   }
 
@@ -103,12 +103,12 @@ export function TapeConsole() {
 
   // logs
   for (let i = 0; i < tape.logs.length && context.y >= 0; ++i) {
-    const [id, maybelevel, source, ...message] = tape.logs[i]
-    const level = maybelevel === 'log' ? '' : `${maybelevel}:`
+    const [, maybelevel, source, ...message] = tape.logs[i]
+    const level = maybelevel === 'log' ? '' : `${maybelevel[0]}:`
     const messagetext = message
       .map((v) => (isstring(v) ? v : JSON.stringify(v).replaceAll('"', '')))
       .join(' ')
-    const rowtext = `${id.slice(id.length - 3)}>${source}>${level} ${messagetext}`
+    const rowtext = `${source}>${level} ${messagetext}`
     const measure = tokenizeandmeasuretextformat(rowtext, width, height)
     //
     context.y -= measure?.y ?? 1

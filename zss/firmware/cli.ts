@@ -3,24 +3,22 @@ import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 
 const COLOR_EDGE = '$dkpurple'
-// const CHR_TL = '$201'
-const CHR_TR = '$187'
-const CHR_TM = '$205'
+
+const CHR_TM = '$196'
+
 const CHR_LM = '$204'
+const CHR_LA = '$199'
+
 const CHR_SD = '$186'
-const CHR_BR = '$188'
 const CHR_BM = '$205'
 
 function writeheader(header: string) {
   const CHR_TBAR = CHR_TM.repeat(header.length + 2)
-  const CHR_BBAR = CHR_BM.repeat(header.length + 2)
+  const CHR_BBAR = CHR_BM.repeat(header.length + 3)
   tape_info('cli', `${COLOR_EDGE}${CHR_SD} `)
-  tape_info('cli', `${COLOR_EDGE}${CHR_LM}${CHR_TBAR}${CHR_TR}`)
-  tape_info(
-    'cli',
-    `${COLOR_EDGE}${CHR_SD}$white ${header} ${COLOR_EDGE}${CHR_SD}`,
-  )
-  tape_info('cli', `${COLOR_EDGE}${CHR_LM}${CHR_BBAR}${CHR_BR}`)
+  tape_info('cli', `${COLOR_EDGE}${CHR_LA}${CHR_TBAR}`)
+  tape_info('cli', `${COLOR_EDGE}${CHR_SD}$white ${header}`)
+  tape_info('cli', `${COLOR_EDGE}${CHR_LM}${CHR_BBAR}`)
 }
 
 function writesection(section: string) {
@@ -72,6 +70,12 @@ export const CLI_FIRMWARE = createfirmware({
     writeoption('2', 'text formatting')
     writeoption('3', 'edit commands')
     writeoption('4', 'player settings')
+    writesection('keyboard input')
+    writetext('?: open console')
+    writetext('esc: close console')
+    writetext('tab: move console')
+    writetext('up / down arrow keys: input history')
+    writetext('alt + up / down arrow keys: scroll console')
     return 0
   })
   .command('1', () => {
@@ -82,9 +86,8 @@ export const CLI_FIRMWARE = createfirmware({
     writetext('enter: ok / accept')
     writetext('escape: cancel / close')
     writetext('tab: menu / action')
-    writetext('?: open console')
     writesection('mouse input')
-    writetext('todo')
+    writetext('todo ???')
     writesection('controller input')
     writetext('left stick: move')
     writetext('right stick: aim')
@@ -97,6 +100,10 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('2', () => {
     writeheader('text formatting')
+    writesection('typography')
+    writetext('---')
+    writesection('ascii')
+    writetext('---')
     return 0
   })
   .command('3', () => {
