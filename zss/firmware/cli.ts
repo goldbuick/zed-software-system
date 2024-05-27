@@ -2,15 +2,40 @@ import { maptostring } from 'zss/chip'
 import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 
+const COLOR_EDGE = '$dkpurple'
+// const CHR_TL = '$201'
+const CHR_TR = '$187'
+const CHR_TM = '$205'
+const CHR_LM = '$204'
+const CHR_SD = '$186'
+const CHR_BR = '$188'
+const CHR_BM = '$205'
+
 function writeheader(header: string) {
-  const bar = '-'.repeat(header.length + 4)
-  tape_info('cli', `$green=${bar}=`)
-  tape_info('cli', `$green $4$white ${header} $green$4 `)
-  tape_info('cli', `$green=${bar}=`)
+  const CHR_TBAR = CHR_TM.repeat(header.length + 2)
+  const CHR_BBAR = CHR_BM.repeat(header.length + 2)
+  tape_info('cli', `${COLOR_EDGE}${CHR_SD} `)
+  tape_info('cli', `${COLOR_EDGE}${CHR_LM}${CHR_TBAR}${CHR_TR}`)
+  tape_info(
+    'cli',
+    `${COLOR_EDGE}${CHR_SD}$white ${header} ${COLOR_EDGE}${CHR_SD}`,
+  )
+  tape_info('cli', `${COLOR_EDGE}${CHR_LM}${CHR_BBAR}${CHR_BR}`)
+}
+
+function writesection(section: string) {
+  const CHR_BBAR = CHR_BM.repeat(section.length + 2)
+  tape_info('cli', `${COLOR_EDGE}${CHR_SD} `)
+  tape_info('cli', `${COLOR_EDGE}${CHR_SD} $gray${section}`)
+  tape_info('cli', `${COLOR_EDGE}${CHR_LM}${CHR_BBAR}`)
 }
 
 function writeoption(option: string, label: string) {
-  tape_info('cli', `$white#${option} $blue$26 ${label}`)
+  tape_info('cli', `${COLOR_EDGE}${CHR_SD} $gray#${option} $blue${label}`)
+}
+
+function writetext(text: string) {
+  tape_info('cli', `${COLOR_EDGE}${CHR_SD} $blue${text}`)
 }
 
 export const CLI_FIRMWARE = createfirmware({
@@ -22,23 +47,17 @@ export const CLI_FIRMWARE = createfirmware({
     // player chip ?
     return [false, undefined]
   },
-  shouldtick() {
-    //
-  },
-  tick(chip) {
-    //
-  },
-  tock(chip) {
-    //
-  },
+  shouldtick() {},
+  tick() {},
+  tock() {},
 })
-  .command('text', (chip, words) => {
+  .command('text', (_chip, words) => {
     // const memory = memoryreadchip(chip.id())
     const text = words.map(maptostring).join('')
     tape_info('cli', 'player>', text)
     return 0
   })
-  .command('hyperlink', (chip, args) => {
+  .command('hyperlink', (_chip, args) => {
     // package into a panel item
     const [labelword, inputword, ...words] = args
     const label = maptostring(labelword)
@@ -57,6 +76,23 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('1', () => {
     writeheader('zss controls and inputs')
+    writesection('keyboard input')
+    writetext('arrow keys: move')
+    writetext('shift + arrow keys: shoot')
+    writetext('enter: ok / accept')
+    writetext('escape: cancel / close')
+    writetext('tab: menu / action')
+    writetext('?: open console')
+    writesection('mouse input')
+    writetext('todo')
+    writesection('controller input')
+    writetext('left stick: move')
+    writetext('right stick: aim')
+    writetext('a: ok / accept')
+    writetext('b: cancel / close')
+    writetext('y: menu / action')
+    writetext('x: shoot')
+    writetext('triggers: shoot')
     return 0
   })
   .command('2', () => {

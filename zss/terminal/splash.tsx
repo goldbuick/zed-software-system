@@ -7,6 +7,7 @@ import {
   useTiles,
 } from 'zss/gadget/components/usetiles'
 import {
+  WRITE_TEXT_CONTEXT,
   createwritetextcontext,
   tokenizeandwritetextformat,
 } from 'zss/gadget/data/textformat'
@@ -53,9 +54,12 @@ export function Splash({ onBoot }: SplashProps) {
 
   useEffect(() => {
     resetTiles(tiles, 0, COLOR.WHITE, COLOR.DKGRAY)
-    const context = {
+    const context: WRITE_TEXT_CONTEXT = {
       ...createwritetextcontext(width, height, COLOR.WHITE, COLOR.DKGRAY),
       ...tiles,
+      x: 1,
+      leftEdge: 1,
+      rightEdge: width - 2,
     }
     TICKER.forEach((item) => tokenizeandwritetextformat(item, context, true))
   }, [width, height, tiles])

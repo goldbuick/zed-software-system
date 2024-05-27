@@ -88,10 +88,10 @@ export function TapeConsole() {
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, FG, BG),
     ...tiles,
-    x: 0,
+    x: 1,
     y: height - 2,
-    leftEdge: 0,
-    rightEdge: width,
+    leftEdge: 1,
+    rightEdge: width - 1,
   }
 
   const blink = useBlink()
@@ -120,7 +120,7 @@ export function TapeConsole() {
   // write hint
   const hint = 'if lost try #help'
   context.x = width - hint.length - 1
-  context.y = height - 2
+  context.y = 0
   tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
 
   // input & selection
