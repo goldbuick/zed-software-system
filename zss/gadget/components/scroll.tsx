@@ -188,7 +188,7 @@ export function Scroll({
       const step = mods.alt ? 10 : 1
       setCursor((state) => Math.min(text.length, state + step))
     },
-    [setCursor],
+    [setCursor, text.length],
   )
 
   return (

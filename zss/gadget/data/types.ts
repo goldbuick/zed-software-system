@@ -23,7 +23,6 @@ export enum COLOR {
   PURPLE,
   YELLOW,
   WHITE,
-  BG,
   ONBLACK,
   ONDKBLUE,
   ONDKGREEN,
@@ -47,11 +46,13 @@ export enum COLOR {
 }
 
 export function colortofg(color: MAYBE<COLOR>): MAYBE_NUMBER {
-  return ispresent(color) && color < COLOR.BG ? color : undefined
+  return ispresent(color) && color < COLOR.ONBLACK ? color : undefined
 }
 
 export function colortobg(color: MAYBE<COLOR>): MAYBE_NUMBER {
-  return ispresent(color) && color > COLOR.BG ? color : undefined
+  return ispresent(color) && color > COLOR.WHITE
+    ? color - COLOR.ONBLACK
+    : undefined
 }
 
 const CHAR_SCALE = 2

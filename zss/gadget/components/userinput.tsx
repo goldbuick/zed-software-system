@@ -33,7 +33,8 @@ function invoke(input: INPUT, mods: UserInputMods) {
 // keyboard input
 export type KeyboardInputHandler = (event: KeyboardEvent) => void
 
-export const isMac = window.navigator.userAgent.indexOf('Mac') !== -1
+const ismac = navigator.userAgent.indexOf('Mac') !== -1
+export const metakey = ismac ? 'cmd' : 'ctrl'
 
 document.addEventListener(
   'keydown',
@@ -41,7 +42,7 @@ document.addEventListener(
     const key = event.key.toLowerCase()
     const mods: UserInputMods = {
       alt: event.altKey,
-      ctrl: isMac ? event.metaKey : event.ctrlKey,
+      ctrl: ismac ? event.metaKey : event.ctrlKey,
       shift: event.shiftKey,
     }
 
@@ -58,14 +59,14 @@ document.addEventListener(
         }
         break
       case 'i':
-        if (!isMac && mods.shift && mods.ctrl) {
+        if (!ismac && mods.shift && mods.ctrl) {
           // no-op
         } else {
           event.preventDefault()
         }
         break
       case 'dead':
-        if (isMac && mods.alt && mods.ctrl) {
+        if (ismac && mods.alt && mods.ctrl) {
           // no-op
         } else {
           event.preventDefault()

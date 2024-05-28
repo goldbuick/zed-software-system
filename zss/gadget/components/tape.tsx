@@ -215,23 +215,55 @@ export function TapeConsole() {
           <TileSnapshot width={width} height={height} tiles={tiles} />
           <UserInput
             MENU_BUTTON={(mods) => tapesetmode(mods.shift ? -1 : 1)}
-            MOVE_UP={() => inputstateswitch(tapeinput.bufferindex + 1)}
-            MOVE_DOWN={() => inputstateswitch(tapeinput.bufferindex - 1)}
+            MOVE_UP={(mods) => {
+              if (mods.alt) {
+                //
+              } else if (mods.ctrl) {
+                inputstateswitch(tapeinput.bufferindex + 1)
+              } else if (mods.shift) {
+                //
+              } else {
+                //
+              }
+            }}
+            MOVE_DOWN={(mods) => {
+              if (mods.alt) {
+                //
+              } else if (mods.ctrl) {
+                inputstateswitch(tapeinput.bufferindex - 1)
+              } else if (mods.shift) {
+                //
+              } else {
+                //
+              }
+            }}
             MOVE_LEFT={(mods) => {
-              trackselection(mods.shift ? tapeinput.cursor : undefined)
-              tapeinputstate.cursor = clamp(
-                tapeinput.cursor - 1,
-                0,
-                inputstate.length,
-              )
+              if (mods.alt) {
+                //
+              } else if (mods.ctrl) {
+                //
+              } else {
+                trackselection(mods.shift ? tapeinput.cursor : undefined)
+                tapeinputstate.cursor = clamp(
+                  tapeinput.cursor - 1,
+                  0,
+                  inputstate.length,
+                )
+              }
             }}
             MOVE_RIGHT={(mods) => {
-              trackselection(mods.shift ? tapeinput.cursor : undefined)
-              tapeinputstate.cursor = clamp(
-                tapeinput.cursor + 1,
-                0,
-                inputstate.length,
-              )
+              if (mods.alt) {
+                //
+              } else if (mods.ctrl) {
+                //
+              } else {
+                trackselection(mods.shift ? tapeinput.cursor : undefined)
+                tapeinputstate.cursor = clamp(
+                  tapeinput.cursor + 1,
+                  0,
+                  inputstate.length,
+                )
+              }
             }}
             OK_BUTTON={() => {
               const invoke = hasselection ? inputstateselected : inputstate

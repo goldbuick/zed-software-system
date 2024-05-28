@@ -31,6 +31,11 @@ export const StringLiteralDouble = createToken({
   pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}))*"/,
 })
 
+export const EscapedDollar = createToken({
+  name: 'EscapedDollar',
+  pattern: '$$',
+})
+
 export const MaybeFlag = createToken({
   name: 'MaybeFlag',
   pattern: /\$[^ $]+/,
@@ -57,6 +62,7 @@ export const allTokens = [
   StringLiteralDouble,
   StringLiteral,
   NumberLiteral,
+  EscapedDollar,
   MaybeFlag,
 ]
 
@@ -72,6 +78,7 @@ const scriptLexerNoWhitespace = new Lexer(
     StringLiteralDouble,
     StringLiteral,
     NumberLiteral,
+    EscapedDollar,
     MaybeFlag,
   ],
   {
@@ -89,7 +96,6 @@ export function tokenize(text: string, noWhitespace = false) {
 
 export type WRITE_TEXT_CONTEXT = {
   measureonly: boolean
-  resetCheck: boolean
   x: number
   y: number
   isEven: boolean
@@ -115,7 +121,6 @@ export function createwritetextcontext(
 ): WRITE_TEXT_CONTEXT {
   return {
     measureonly: false,
-    resetCheck: true,
     x: 0,
     y: 0,
     isEven: true,
@@ -200,6 +205,10 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   for (let i = 0; i < tokens.length; ++i) {
     const token = tokens[i]
     switch (token.tokenType) {
+      case EscapedDollar:
+        writeStr('$')
+        break
+
       case NumberLiteral:
         if (context.measureonly !== true && isVisible()) {
           const i = context.x + context.y * context.width
@@ -215,7 +224,11 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         break
 
       case StringLiteralDouble:
-        writeStr(token.image.substring(1, token.image.length - 1))
+        writeStr(
+          token.image
+            .substring(1, token.image.length - 1)
+            .replaceAll('\\"', '"'),
+        )
         break
 
       default: {
@@ -263,7 +276,7 @@ export function tokenizeandwritetextformat(
   }
 
   writetextformat(result.tokens, context)
-  if (context.resetCheck && shouldreset) {
+  if (shouldreset) {
     writetextcolorreset(context)
   }
 

@@ -103,6 +103,10 @@ export function memoryreadframes(board: string) {
   return MEMORY.frames.get(board) ?? memoryresetframes(board)
 }
 
+export function memoryreadbooklist(): BOOK[] {
+  return [...MEMORY.books.values()]
+}
+
 export function memoryreadbook(address: string): MAYBE_BOOK {
   const laddress = address.toLowerCase()
   return (
