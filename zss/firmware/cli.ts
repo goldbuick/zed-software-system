@@ -3,6 +3,9 @@ import { tape_debug, tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { memoryreadbooklist } from 'zss/memory'
 
+const ismac = navigator.userAgent.indexOf('Mac') !== -1
+const metakey = ismac ? 'cmd' : 'ctrl'
+
 const COLOR_EDGE = '$dkpurple'
 
 const CHR_TM = '$196'
