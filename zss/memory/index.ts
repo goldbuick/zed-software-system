@@ -52,13 +52,14 @@ type CHIP_TARGETS = {
   palette: MAYBE<BITMAP>
 }
 
-type CHIP_USER_INPUT = {
+type CHIP_PLAYER_INPUT = {
+  player: string
   inputmods: Record<INPUT, number>
   inputqueue: Set<INPUT>
   inputcurrent: MAYBE<INPUT>
 }
 
-type CHIP_MEMORY = CHIP_TARGETS & CHIP_USER_INPUT
+type CHIP_MEMORY = CHIP_TARGETS & CHIP_PLAYER_INPUT
 
 const MEMORY = {
   defaultplayer: '',
@@ -151,7 +152,8 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
       terrain: undefined,
       charset: undefined,
       palette: undefined,
-      // user input
+      // player input
+      player: MEMORY.defaultplayer,
       inputqueue: new Set(),
       inputmods: {
         [INPUT.NONE]: 0,

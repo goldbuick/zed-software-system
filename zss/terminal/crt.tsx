@@ -70,7 +70,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     // display
     vec4 displaycolor = texture2D(inputBuffer, bent);
     vec4 fuxtcolor = texel;
-    outputColor = mix(displaycolor, fuxtcolor, 0.04);
+    outputColor = mix(displaycolor, fuxtcolor, 0.1);
   } else if (doot > 1.004) {
     // display shell
     // rbgb 205 205 193
@@ -166,8 +166,7 @@ class CRTShapeEffect extends Effect {
 
         if (
           prevTexture === null ||
-          prevTexture?.type !== value.type ||
-          prevTexture?.encoding !== value.encoding
+          prevTexture?.type !== value.type 
         ) {
           this.setChanged()
         }
