@@ -9,7 +9,7 @@ import {
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
-import { UserFocus, UserInput, UserInputMods, isMac } from '../userinput'
+import { UserFocus, UserInput, UserInputMods, ismac } from '../userinput'
 import { MAYBE_SHARED_TEXT, useSharedType } from '../useshared'
 
 import { PanelItemProps, inputcolor, mapTo, useBlink } from './common'
@@ -127,7 +127,7 @@ export function PanelItemText({
               const lkey = key.toLowerCase()
               const mods: UserInputMods = {
                 alt: event.altKey,
-                ctrl: isMac ? event.metaKey : event.ctrlKey,
+                ctrl: ismac ? event.metaKey : event.ctrlKey,
                 shift: event.shiftKey,
               }
               const state = value.toJSON()

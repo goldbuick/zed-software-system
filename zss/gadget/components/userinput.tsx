@@ -33,7 +33,7 @@ function invoke(input: INPUT, mods: UserInputMods) {
 // keyboard input
 export type KeyboardInputHandler = (event: KeyboardEvent) => void
 
-const ismac = navigator.userAgent.indexOf('Mac') !== -1
+export const ismac = navigator.userAgent.indexOf('Mac') !== -1
 export const metakey = ismac ? 'cmd' : 'ctrl'
 
 document.addEventListener(

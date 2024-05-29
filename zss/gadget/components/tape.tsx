@@ -27,7 +27,7 @@ import {
   UserHotkey,
   UserInput,
   UserInputMods,
-  isMac,
+  ismac,
 } from './userinput'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
 
@@ -286,7 +286,7 @@ export function TapeConsole() {
               const lkey = key.toLowerCase()
               const mods: UserInputMods = {
                 alt: event.altKey,
-                ctrl: isMac ? event.metaKey : event.ctrlKey,
+                ctrl: ismac ? event.metaKey : event.ctrlKey,
                 shift: event.shiftKey,
               }
 

@@ -13,9 +13,6 @@ const CHR_LA = '$199'
 const CHR_SD = '$186'
 const CHR_BM = '$205'
 
-const isMac = navigator.userAgent.indexOf('Mac') !== -1
-const metakey = isMac ? 'cmd' : 'ctrl'
-
 function fg(color: string, text: string) {
   return `$${color}${text}$blue`
 }
