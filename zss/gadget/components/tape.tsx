@@ -39,7 +39,7 @@ const CHAR_HEIGHT = DRAW_CHAR_HEIGHT * SCALE
 
 const tapeinputstate = proxy({
   // cursor position & selection
-  xcursor: 0,
+  xcursor: 1,
   ycursor: 0,
   xselect: undefined as MAYBE_NUMBER,
   yselect: undefined as MAYBE_NUMBER,
@@ -127,18 +127,30 @@ export function TapeConsole() {
   context.y = 0
   tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
 
+  // cursor indexes
+  const cursorindex =
+    tapeinput.xcursor + (height - tapeinput.ycursor - 1) * width
+  const selectindex =
+    ispresent(tapeinput.xselect) && ispresent(tapeinput.yselect)
+      ? tapeinput.xselect + tapeinput.yselect * width
+      : undefined
+
   // input & selection
-  const visiblerange = width - 3
-  const inputindex = (height - 1) * width + 1
+  const visiblerange = width - 2
+  const inputindex = 1 + (height - 1) * width
   const inputstate = tapeinput.buffer[tapeinput.bufferindex]
 
-  let ii1 = tapeinput.xcursor
-  let ii2 = tapeinput.xcursor
+  // local x input
+  const xcursor = cursorindex - inputindex
+  const xselect = ispresent(selectindex) ? selectindex - inputindex : undefined
+
+  let ii1 = xcursor
+  let ii2 = xcursor
   let hasselection = false
-  if (ispresent(tapeinput.xselect)) {
-    ii1 = Math.min(tapeinput.xcursor, tapeinput.xselect)
-    ii2 = Math.max(tapeinput.xcursor, tapeinput.xselect)
-    if (tapeinput.xcursor !== tapeinput.xselect) {
+  if (ispresent(xselect)) {
+    ii1 = Math.min(xcursor, xselect)
+    ii2 = Math.max(xcursor, xselect)
+    if (xcursor !== xselect) {
       --ii2
       hasselection = true
     }
@@ -162,11 +174,7 @@ export function TapeConsole() {
 
   // draw cursor
   if (blink) {
-    applystrtoindex(
-      inputindex + tapeinput.xcursor,
-      String.fromCharCode(221),
-      context,
-    )
+    applystrtoindex(cursorindex, String.fromCharCode(221), context)
   }
 
   // update state
@@ -225,7 +233,11 @@ export function TapeConsole() {
               } else if (mods.shift) {
                 //
               } else {
-                tapeinputstate.ycursor = clamp(tapeinput.ycursor + mods.alt ? 10 : 1, 0, tape.logs.length)
+                tapeinputstate.ycursor = clamp(
+                  tapeinput.ycursor + (mods.alt ? 10 : 1),
+                  0,
+                  tape.logs.length,
+                )
               }
             }}
             MOVE_DOWN={(mods) => {
