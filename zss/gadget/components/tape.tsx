@@ -106,11 +106,8 @@ export function TapeConsole() {
   }
 
   // offset into logs
-  const startrow = clamp(
-    Math.round(tapeinput.ycursor - height * 0.5),
-    0,
-    tape.logs.length - (height - 2),
-  )
+  const centerrow = Math.round(tapeinput.ycursor - height * 0.5)
+  const startrow = clamp(centerrow, 0, tape.logs.length - (height - 2))
 
   // render logs
   context.y = height - 2
@@ -151,11 +148,10 @@ export function TapeConsole() {
   const inputindex = bottomedge * width
 
   // draw divider
-  applystrtoindex(
-    inputindex - width,
-    String.fromCharCode(205).repeat(width),
-    context,
-  )
+  const de = String.fromCharCode(196)
+  const dc = String.fromCharCode(205)
+  const dm = dc.repeat(width - 6)
+  applystrtoindex(inputindex - width, `  ${de}${dm}${de}  `, context)
 
   // draw input line
   const inputline = inputstate.padEnd(width, ' ')
