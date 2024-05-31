@@ -9,11 +9,6 @@ const metakey = ismac ? 'cmd' : 'ctrl'
 const COLOR_EDGE = '$dkpurple'
 
 const CHR_TM = '$196'
-
-const CHR_LM = '$204'
-const CHR_LA = '$199'
-
-const CHR_SD = '$186'
 const CHR_BM = '$205'
 
 function fg(color: string, text: string) {
@@ -24,28 +19,32 @@ function bg(color: string, text: string) {
   return `$${color}${text}$ondkblue`
 }
 
+function write(text: string) {
+  tape_info('cli', text)
+}
+
 function writeheader(header: string) {
   const CHR_TBAR = CHR_TM.repeat(header.length + 2)
   const CHR_BBAR = CHR_BM.repeat(header.length + 3)
-  tape_info('cli', `${COLOR_EDGE}${CHR_SD} `)
-  tape_info('cli', `${COLOR_EDGE}${CHR_LA}${CHR_TBAR}`)
-  tape_info('cli', `${COLOR_EDGE}${CHR_SD} $white${header}`)
-  tape_info('cli', `${COLOR_EDGE}${CHR_LM}${CHR_BBAR}`)
+  write(`${COLOR_EDGE} ${' '.repeat(header.length)}`)
+  write(`${COLOR_EDGE}${CHR_TBAR}`)
+  write(`${COLOR_EDGE} $white${header}`)
+  write(`${COLOR_EDGE}${CHR_BBAR}`)
 }
 
 function writesection(section: string) {
   const CHR_BBAR = CHR_BM.repeat(section.length + 2)
-  tape_info('cli', `${COLOR_EDGE}${CHR_SD} `)
-  tape_info('cli', `${COLOR_EDGE}${CHR_SD} $gray${section}`)
-  tape_info('cli', `${COLOR_EDGE}${CHR_LM}${CHR_BBAR}`)
+  write(`${COLOR_EDGE} ${' '.repeat(section.length)}`)
+  write(`${COLOR_EDGE} $gray${section}`)
+  write(`${COLOR_EDGE}${CHR_BBAR}`)
 }
 
 function writeoption(option: string, label: string) {
-  tape_info('cli', `${COLOR_EDGE}${CHR_SD} $white${option} $blue${label}`)
+  write(`${COLOR_EDGE} $white${option} $blue${label}`)
 }
 
 function writetext(text: string) {
-  tape_info('cli', `${COLOR_EDGE}${CHR_SD} $blue${text}`)
+  write(`${COLOR_EDGE} $blue${text}`)
 }
 
 export const CLI_FIRMWARE = createfirmware({
@@ -149,16 +148,16 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('books', () => {
-    writeheader(`books`)
+    writesection(`books`)
     const list = memoryreadbooklist()
     if (list.length) {
       list.forEach((book) => {
-        writetext(`!bookopen ${book.id};${book.name}`)
+        write(`!bookopen ${book.id};${book.name}`)
       })
     } else {
       writetext(`no books found`)
     }
-    writetext(`!bookcreate;create a new book`)
+    write(`!bookcreate;create a new book`)
     return 0
   })
   .command('4', () => {
