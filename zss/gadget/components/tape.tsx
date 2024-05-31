@@ -147,15 +147,18 @@ export function TapeConsole() {
   let ii2 = tapeinput.xcursor
   let hasselection = false
 
-  const iic = ii2 - ii1 + 1
-  const inputstateactive = tapeinput.ycursor === 0
-  const inputstateselected = hasselection
-    ? inputstate.substring(ii1, ii2 + 1)
-    : inputstate
+  // calc input ui offset
+  const inputindex = bottomedge * width
+
+  // draw divider
+  applystrtoindex(
+    inputindex - width,
+    String.fromCharCode(205).repeat(width),
+    context,
+  )
 
   // draw input line
-  const inputindex = bottomedge * width
-  const inputline = inputstate.padEnd(width, '_')
+  const inputline = inputstate.padEnd(width, ' ')
   applystrtoindex(inputindex, inputline, context)
 
   // draw selection
@@ -180,6 +183,12 @@ export function TapeConsole() {
       }
     }
   }
+
+  const iic = ii2 - ii1 + 1
+  const inputstateactive = tapeinput.ycursor === 0
+  const inputstateselected = hasselection
+    ? inputstate.substring(ii1, ii2 + 1)
+    : inputstate
 
   // draw cursor
   if (blink) {
@@ -209,9 +218,11 @@ export function TapeConsole() {
   function inputstateswitch(switchto: number) {
     const ir = tapeinput.buffer.length - 1
     const index = clamp(switchto, 0, ir)
-    tapeinputstate.xselect = undefined
     tapeinputstate.bufferindex = index
     tapeinputstate.xcursor = tapeinputstate.buffer[index].length
+    tapeinputstate.ycursor = 0
+    tapeinputstate.xselect = undefined
+    tapeinputstate.yselect = undefined
   }
 
   // track selection
@@ -228,10 +239,12 @@ export function TapeConsole() {
   }
 
   function deleteselection() {
-    tapeinputstate.xcursor = ii1
-    tapeinputstate.xselect = undefined
-    tapeinputstate.yselect = undefined
-    inputstatesetsplice(ii1, iic)
+    if (ispresent(tapeinputstate.xselect)) {
+      tapeinputstate.xcursor = ii1
+      tapeinputstate.xselect = undefined
+      tapeinputstate.yselect = undefined
+      inputstatesetsplice(ii1, iic)
+    }
   }
 
   function resettoend() {
@@ -362,11 +375,12 @@ export function TapeConsole() {
                   if (mods.ctrl) {
                     switch (lkey) {
                       case 'a':
-                        // single line only
-                        tapeinputstate.xcursor = inputstate.length
-                        tapeinputstate.ycursor = 0
+                        // start
                         tapeinputstate.xselect = 0
                         tapeinputstate.yselect = 0
+                        // end
+                        tapeinputstate.xcursor = inputstate.length
+                        tapeinputstate.ycursor = 0
                         break
                       case 'c':
                         // can support multiline ?
