@@ -38,12 +38,12 @@ export function PanelItemSelect({
   // keep stable re-renders
   useCacheWriteTextContext(context)
 
-  tokenizeandwritetextformat(` $dkred ? $${tcolor}${tlabel}`, context, false)
+  tokenizeandwritetextformat(` $dkred ? ${tcolor}${tlabel}`, context, false)
 
   // write range viewer
   const knob = active ? (blink ? '$26' : '$27') : '/'
   tokenizeandwritetextformat(
-    `${state + 1}$green${knob}$${tcolor}${max + 1}`,
+    `${state + 1}$green${knob}${tcolor}${max + 1}`,
     context,
     false,
   )

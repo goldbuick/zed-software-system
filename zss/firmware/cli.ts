@@ -25,17 +25,17 @@ function write(text: string) {
 
 function writeheader(header: string) {
   const CHR_TBAR = CHR_TM.repeat(header.length + 2)
-  const CHR_BBAR = CHR_BM.repeat(header.length + 3)
-  write(`${COLOR_EDGE} ${' '.repeat(header.length)}`)
+  const CHR_BBAR = CHR_BM.repeat(header.length + 2)
+  write(`${COLOR_EDGE} ${' '.repeat(header.length)} `)
   write(`${COLOR_EDGE}${CHR_TBAR}`)
-  write(`${COLOR_EDGE} $white${header}`)
+  write(`${COLOR_EDGE} $white${header} `)
   write(`${COLOR_EDGE}${CHR_BBAR}`)
 }
 
 function writesection(section: string) {
   const CHR_BBAR = CHR_BM.repeat(section.length + 2)
-  write(`${COLOR_EDGE} ${' '.repeat(section.length)}`)
-  write(`${COLOR_EDGE} $gray${section}`)
+  write(`${COLOR_EDGE} ${' '.repeat(section.length)} `)
+  write(`${COLOR_EDGE} $gray${section} `)
   write(`${COLOR_EDGE}${CHR_BBAR}`)
 }
 
@@ -61,18 +61,16 @@ export const CLI_FIRMWARE = createfirmware({
   tock() {},
 })
   .command('text', (_chip, words) => {
-    // const memory = memoryreadchip(chip.id())
-    const text = words.map(maptostring).join('')
-    tape_info('cli', 'player>', text)
+    const text = words.map(maptostring).join(' ')
+    tape_info('cli', '$2:', text)
     return 0
   })
   .command('hyperlink', (_chip, args) => {
     // package into a panel item
-    const [labelword, inputword, ...words] = args
+    const [labelword, ...words] = args
     const label = maptostring(labelword)
-    const input = maptostring(inputword)
-    const text = words.map(maptostring).join('')
-    tape_info('cli', 'player>', label, input, text)
+    const hyperlink = words.map(maptostring).join(' ')
+    tape_info('$2', `!${hyperlink};${label}`)
     return 0
   })
   .command('help', () => {

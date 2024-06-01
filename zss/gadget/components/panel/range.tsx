@@ -52,15 +52,15 @@ export function PanelItemRange({
   // keep stable re-renders
   useCacheWriteTextContext(context)
 
-  tokenizeandwritetextformat(` $red $29 $${tcolor}${tlabel}`, context, false)
+  tokenizeandwritetextformat(` $red $29 ${tcolor}${tlabel}`, context, false)
 
   // write range viewer
   const knob = active ? (blink ? '$26' : '$27') : '$4'
-  const bar = strsplice('----:----', state, 1, `$green${knob}$${tcolor}`)
+  const bar = strsplice('----:----', state, 1, `$green${knob}${tcolor}`)
     .replaceAll('-', '$7')
     .replaceAll(':', '$9')
   tokenizeandwritetextformat(
-    `$${tcolor}${labelmin}${bar}${labelmax} $green${state + 1}`,
+    `${tcolor}${labelmin}${bar}${labelmax} $green${state + 1}`,
     context,
     false,
   )

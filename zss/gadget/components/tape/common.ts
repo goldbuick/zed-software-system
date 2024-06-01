@@ -30,14 +30,31 @@ export type ConsoleItemProps = {
   context: WRITE_TEXT_CONTEXT
 }
 
+export type ConsoleItemInputProps = {
+  blink?: boolean
+  active?: boolean
+  prefix: string
+  label: string
+  words: string[]
+  offset: number
+  context: WRITE_TEXT_CONTEXT
+}
+
 type ConsoleContextState = {
   sendmessage: (target: string, data?: any) => void
-  sendclose: () => void
-  didclose: () => void
 }
 
 export const ConsoleContext = createContext<ConsoleContextState>({
   sendmessage() {},
-  sendclose() {},
-  didclose() {},
 })
+
+export function setupitemcontext(
+  blink: boolean,
+  active: boolean,
+  offset: number,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  context.y = context.height - 3 + offset
+  context.isEven = context.y % 2 === 0
+  context.activeBg = active && !blink ? BG_ACTIVE : BG
+}

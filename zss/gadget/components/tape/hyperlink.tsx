@@ -1,26 +1,39 @@
 import { useCallback, useContext } from 'react'
+import { tokenizeandwritetextformat } from 'zss/gadget/data/textformat'
 
-import { tokenizeandwritetextformat } from '../../data/textformat'
+import { inputcolor } from '../panel/common'
 import { UserInput } from '../userinput'
 
-import { ConsoleItemProps } from './common'
+import {
+  ConsoleContext,
+  ConsoleItemInputProps,
+  setupitemcontext,
+} from './common'
 
-export function ConsoleItemHyperlink({
+export function TapeConsoleHyperlink({
   blink,
   active,
-  text,
+  prefix,
+  label,
+  words,
   offset,
-}: ConsoleItemProps) {
-  // const [target, data] = [mapTo(args[0], ''), args[1]]
+  context,
+}: ConsoleItemInputProps) {
+  const cc = useContext(ConsoleContext)
+  const invoke = useCallback(() => {
+    const [target, data] = words
+    cc.sendmessage(target, data)
+  }, [words, cc])
 
-  // const tcolor = inputcolor(active)
-  // tokenizeandwritetextformat(`  $purple$16 $${tcolor}${label}`, context, true)
+  const tcolor = inputcolor(!!active)
 
-  // const scroll = useContext(ScrollContext)
-  // const invoke = useCallback(() => {
-  //   scroll.sendmessage(chiptarget(chip, target), data)
-  //   scroll.sendclose()
-  // }, [scroll, chip, target, data])
+  // render output
+  setupitemcontext(!!blink, !!active, offset, context)
+  tokenizeandwritetextformat(
+    `${prefix} $purple$16 ${tcolor}${label}`,
+    context,
+    true,
+  )
 
   return active && <UserInput OK_BUTTON={invoke} />
 }

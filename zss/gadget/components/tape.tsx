@@ -104,13 +104,23 @@ export function TapeConsole() {
   // render to strings
   const logrows: string[] = logput.map((item) => {
     const [, maybelevel, source, ...message] = item
-    const level = maybelevel === 'log' ? '' : `${maybelevel[0]}`
-    const messagetext = message.map((v) => `${v}`).join(' ')
-    const prefix = `[${source}:${level}]`
-    if (messagetext.startsWith('!')) {
-      return `${messagetext} ${prefix}`
+    let level = '$white'
+    switch (maybelevel) {
+      case 'debug':
+        level = '$yellow'
+        break
+      case 'error':
+        level = '$red'
+        break
     }
-    return `${prefix} ${messagetext}`
+
+    const messagetext = message.join(' ')
+
+    console.info(message)
+
+    const ishyperlink = messagetext.startsWith('!')
+    const prefix = `$blue[${level}${source}$blue]`
+    return `${ishyperlink ? '!' : ''}${prefix} ${messagetext}`
   })
 
   // measure rows

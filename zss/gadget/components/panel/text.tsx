@@ -42,7 +42,7 @@ export function PanelItemText({
 
   // prefix
   tokenizeandwritetextformat(
-    `$green  $20 $${tcolor}${tlabel}$green`,
+    `$green  $20 ${tcolor}${tlabel}$green`,
     context,
     false,
   )

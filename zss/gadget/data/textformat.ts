@@ -22,7 +22,7 @@ export const WhitespaceSkipped = createToken({
 
 export const StringLiteral = createToken({
   name: 'StringLiteral',
-  pattern: /[^ $]+/,
+  pattern: /[^ $;]+/,
   start_chars_hint: all_chars,
 })
 
@@ -46,6 +46,12 @@ export const NumberLiteral = createToken({
   pattern: /\$-?(\d*\.)?\d+([eE][+-]?\d+)?[jJ]?[lL]?\+?/,
 })
 
+export const HyperLinkText = createToken({
+  name: 'HyperLinkText',
+  pattern: /;[^;\n]*/,
+  start_chars_hint: [';'],
+})
+
 function createWordToken(word: string, name = '') {
   return createToken({
     name: name || word,
@@ -63,6 +69,7 @@ export const allTokens = [
   StringLiteral,
   NumberLiteral,
   EscapedDollar,
+  HyperLinkText,
   MaybeFlag,
 ]
 

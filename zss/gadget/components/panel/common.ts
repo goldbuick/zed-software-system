@@ -25,8 +25,8 @@ export const ScrollContext = createContext<ScrollContextState>({
 
 export const theme = {
   input: {
-    color: 'white',
-    active: 'yellow',
+    color: '$white',
+    active: '$yellow',
   },
 }
 

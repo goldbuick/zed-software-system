@@ -18,10 +18,11 @@ export function PanelItemHyperlink({
   args,
   context,
 }: PanelItemProps) {
+  console.info(label, args)
   const [target, data] = [mapTo(args[0], ''), args[1]]
 
   const tcolor = inputcolor(active)
-  tokenizeandwritetextformat(`  $purple$16 $${tcolor}${label}`, context, true)
+  tokenizeandwritetextformat(`  $purple$16 ${tcolor}${label}`, context, true)
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {

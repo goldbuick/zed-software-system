@@ -64,7 +64,7 @@ export function PanelItemNumber({
   }
 
   tokenizeandwritetextformat(
-    `  # $${tcolor}${tlabel} $green${tvalue}`,
+    `  # ${tcolor}${tlabel} $green${tvalue}`,
     context,
     false,
   )
