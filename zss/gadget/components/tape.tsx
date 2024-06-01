@@ -11,7 +11,6 @@ import {
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
-  applystrtoindex,
   tokenizeandmeasuretextformat,
 } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
@@ -115,15 +114,16 @@ export function TapeConsole() {
   })
 
   // measure rows
-  context.y = maxrowheight
+  context.y = 0
   const logoffsets: number[] = logrows.map((item) => {
+    const y = -context.y
     if (item.startsWith('!')) {
-      --context.y
+      context.y += 1
     } else {
       const measure = tokenizeandmeasuretextformat(item, width, height)
-      context.y -= measure?.y ?? 1
+      context.y += measure?.y ?? 1
     }
-    return context.y
+    return y
   })
 
   // input & selection
@@ -219,7 +219,6 @@ export function TapeConsole() {
           <UserHotkey hotkey="Escape">{() => tapesetopen(false)}</UserHotkey>
           <Logput
             player={gadgetstategetplayer()}
-            selected={tapeinput.ycursor - 2}
             rows={logrows}
             offsets={logoffsets}
             startrow={startrow}

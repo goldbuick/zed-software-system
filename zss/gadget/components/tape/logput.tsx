@@ -14,7 +14,6 @@ import { ConsoleItem } from './consoleitem'
 
 type LogputProps = {
   player: string
-  selected: number
   rows: string[]
   offsets: number[]
   startrow: number
@@ -30,7 +29,7 @@ export function Logput({
 }: LogputProps) {
   // track active row
   const tapeinput = useSnapshot(tapeinputstate)
-  const activerow = tapeinput.ycursor - 2
+  const yscrolled = tapeinput.ycursor - startrow - 2
 
   // write hint
   const hint = 'if lost try #help'
@@ -42,7 +41,7 @@ export function Logput({
     <PlayerContext.Provider value={player}>
       <WriteTextContext.Provider value={context}>
         {rows.map((text, index) =>
-          index === activerow ? (
+          index === yscrolled ? (
             <ActiveItem
               key={index}
               text={text}

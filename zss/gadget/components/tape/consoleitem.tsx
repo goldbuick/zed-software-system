@@ -26,7 +26,7 @@ export function ConsoleItem({
   }
 
   // render output
-  context.y = offset
+  context.y = context.height - 3 + offset
   context.isEven = context.y % 2 === 0
   context.activeBg = active && !blink ? BG_ACTIVE : BG
   tokenizeandwritetextformat(text, context, true)

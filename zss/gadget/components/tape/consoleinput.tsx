@@ -1,18 +1,31 @@
 import { useContext } from 'react'
 import { useSnapshot } from 'valtio'
 import {
+  WRITE_TEXT_CONTEXT,
   WriteTextContext,
   applycolortoindexes,
   applystrtoindex,
+  tokenizeandwritetextformat,
 } from 'zss/gadget/data/textformat'
 import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../useblink'
 
-import { tapeinputstate } from './common'
+import { BG, BG_ACTIVE, tapeinputstate } from './common'
 
 type ConsoleInputProps = {
   startrow: number
+}
+
+function writeline(
+  blink: boolean,
+  active: boolean,
+  text: string,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  context.isEven = context.y % 2 === 0
+  context.activeBg = active && !blink ? BG_ACTIVE : BG
+  tokenizeandwritetextformat(text, context, true)
 }
 
 export function ConsoleInput({ startrow }: ConsoleInputProps) {
@@ -25,17 +38,18 @@ export function ConsoleInput({ startrow }: ConsoleInputProps) {
 
   // calc input ui offset
   const bottomedge = context.height - 1
-  const inputindex = bottomedge * context.width
 
   // draw divider
-  const de = String.fromCharCode(196)
-  const dc = String.fromCharCode(205)
+  const de = '$196'
+  const dc = '$205'
   const dm = dc.repeat(context.width - 6)
-  applystrtoindex(inputindex - context.width, `  ${de}${dm}${de}  `, context)
+  context.y = bottomedge - 1
+  writeline(blink, false, `  ${de}${dm}${de}  `, context)
 
   // draw input line
   const inputline = inputstate.padEnd(context.width, ' ')
-  applystrtoindex(inputindex, inputline, context)
+  context.y = bottomedge
+  writeline(blink, false, inputline, context)
 
   // draw selection
   if (
@@ -56,6 +70,8 @@ export function ConsoleInput({ startrow }: ConsoleInputProps) {
       applycolortoindexes(p1, p2, 15, 8, context)
     }
   }
+
+  // apply bg blink
 
   // draw cursor
   if (blink) {
