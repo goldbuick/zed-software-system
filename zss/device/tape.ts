@@ -1,4 +1,5 @@
 import { proxy, useSnapshot } from 'valtio'
+import { LOG_DEBUG } from 'zss/config'
 import { createdevice } from 'zss/device'
 import { createguid } from 'zss/mapping/guid'
 import { isnumber } from 'zss/mapping/types'
@@ -33,7 +34,7 @@ const tape: TAPE_STATE = proxy({
   open: false,
   mode: TAPE_DISPLAY.BOTTOM,
   logs: [],
-  loglevel: TAPE_LOG_LEVEL.DEBUG,
+  loglevel: LOG_DEBUG ? TAPE_LOG_LEVEL.DEBUG : TAPE_LOG_LEVEL.INFO,
 })
 
 export function tapesetopen(open: boolean) {

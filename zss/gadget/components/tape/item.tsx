@@ -53,20 +53,20 @@ export function TapeConsoleItem({
     switch (input.toLowerCase()) {
       case 'hk':
       case 'hotkey':
-        return <TapeConsoleHyperlink {...props} />
+        return null
       case 'hyperlink':
       case 'rn':
       case 'range':
-        return <TapeConsoleHyperlink {...props} />
+        return null
       case 'sl':
       case 'select':
-        return <TapeConsoleHyperlink {...props} />
+        return null
       case 'nm':
       case 'number':
-        return <TapeConsoleHyperlink {...props} />
+        return null
       case 'tx':
       case 'text':
-        return <TapeConsoleHyperlink {...props} />
+        return null
       default:
         return <TapeConsoleHyperlink {...props} words={words} />
     }
