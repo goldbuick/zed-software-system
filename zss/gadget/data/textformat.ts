@@ -86,6 +86,7 @@ const scriptLexerNoWhitespace = new Lexer(
     StringLiteral,
     NumberLiteral,
     EscapedDollar,
+    HyperLinkText,
     MaybeFlag,
   ],
   {

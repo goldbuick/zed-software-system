@@ -114,10 +114,7 @@ export function TapeConsole() {
         break
     }
 
-    const messagetext = message.join(' ')
-
-    console.info(message)
-
+    const messagetext = message.map((v) => `${v}`).join(' ')
     const ishyperlink = messagetext.startsWith('!')
     const prefix = `$blue[${level}${source}$blue]`
     return `${ishyperlink ? '!' : ''}${prefix} ${messagetext}`

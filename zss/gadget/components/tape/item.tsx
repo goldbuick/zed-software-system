@@ -26,7 +26,7 @@ export function TapeConsoleItem({
     let label = 'PRESS ME'
     const words: string[] = []
 
-    const result = tokenize(hyperlink)
+    const result = tokenize(hyperlink, true)
     result.tokens.forEach((token) => {
       switch (token.tokenType) {
         case HyperLinkText:
