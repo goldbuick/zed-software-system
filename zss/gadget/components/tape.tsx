@@ -1,5 +1,5 @@
 import { useThree } from '@react-three/fiber'
-import { proxy, useSnapshot } from 'valtio'
+import { useSnapshot } from 'valtio'
 import { vm_cli } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import {
@@ -11,16 +11,21 @@ import {
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
-  tokenizeandwritetextformat,
   applystrtoindex,
-  applycolortoindexes,
+  tokenizeandmeasuretextformat,
 } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
-import { MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 
-import { BG, CHAR_HEIGHT, CHAR_WIDTH, FG, SCALE } from './tape/common'
-import { CONSOLE_ROW } from './tape/consoleitem'
+import {
+  BG,
+  CHAR_HEIGHT,
+  CHAR_WIDTH,
+  FG,
+  SCALE,
+  tapeinputstate,
+} from './tape/common'
 import { Logput } from './tape/logput'
 import {
   UserFocus,
@@ -30,17 +35,6 @@ import {
   ismac,
 } from './userinput'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
-
-const tapeinputstate = proxy({
-  // cursor position & selection
-  xcursor: 0,
-  ycursor: 0,
-  xselect: undefined as MAYBE_NUMBER,
-  yselect: undefined as MAYBE_NUMBER,
-  // input history
-  bufferindex: 0,
-  buffer: [''],
-})
 
 export function TapeConsole() {
   const viewport = useThree((state) => state.viewport)
@@ -92,8 +86,6 @@ export function TapeConsole() {
     rightEdge: width,
   }
 
-  // const blink = useBlink()
-
   // bail on odd states
   if (width < 1 || height < 1) {
     return null
@@ -104,30 +96,42 @@ export function TapeConsole() {
   const maxrowheight = height - 2
   const startrow = clamp(centerrow, 0, tape.logs.length - maxrowheight)
 
-  // render logs
-  // context.y = maxrowheight
+  // starting render row
   const logput = tape.logs.slice(startrow, startrow + maxrowheight)
-  // .map((row, index) => (
-  //   <ConsoleItem
-  //     key={row[0]}
-  //     active={index - 2 === tapeinput.ycursor}
-  //     row={row as CONSOLE_ROW}
-  //     width={width}
-  //     height={height}
-  //   />
-  // ))
 
-  // write hint
-  // const hint = 'if lost try #help'
-  // context.x = width - hint.length
-  // context.y = 0
-  // tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
+  // build id list
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const logids: string[] = logput.map((item) => item[0])
+
+  // render to strings
+  const logrows: string[] = logput.map((item) => {
+    const [, maybelevel, source, ...message] = item
+    const level = maybelevel === 'log' ? '' : `${maybelevel[0]}`
+    const messagetext = message.map((v) => `${v}`).join(' ')
+    const prefix = `[${source}:${level}]`
+    if (messagetext.startsWith('!')) {
+      return `${messagetext} ${prefix}`
+    }
+    return `${prefix} ${messagetext}`
+  })
+
+  // measure rows
+  context.y = maxrowheight
+  const logoffsets: number[] = logrows.map((item) => {
+    if (item.startsWith('!')) {
+      --context.y
+    } else {
+      const measure = tokenizeandmeasuretextformat(item, width, height)
+      context.y -= measure?.y ?? 1
+    }
+    return context.y
+  })
 
   // input & selection
   const inputstate = tapeinput.buffer[tapeinput.bufferindex]
 
   // local x input
-  // const bottomedge = height - 1
+  const bottomedge = height - 1
   const rightedge = width - 1
   const lastrow = tape.logs.length + 1
 
@@ -136,19 +140,13 @@ export function TapeConsole() {
   let hasselection = false
 
   // calc input ui offset
-  // const inputindex = bottomedge * width
-
-  // draw divider
-  // const de = String.fromCharCode(196)
-  // const dc = String.fromCharCode(205)
-  // const dm = dc.repeat(width - 6)
-  // applystrtoindex(inputindex - width, `  ${de}${dm}${de}  `, context)
+  const inputindex = bottomedge * width
 
   // draw input line
-  // const inputline = inputstate.padEnd(width, ' ')
-  // applystrtoindex(inputindex, inputline, context)
+  const inputline = inputstate.padEnd(width, ' ')
+  applystrtoindex(inputindex, inputline, context)
 
-  // draw selection
+  // adjust input edges selection
   if (ispresent(tapeinput.xselect) && ispresent(tapeinput.yselect)) {
     hasselection = true
     ii1 = Math.min(tapeinput.xcursor, tapeinput.xselect)
@@ -156,18 +154,6 @@ export function TapeConsole() {
     if (tapeinput.xcursor !== tapeinput.xselect) {
       // tuck in right side
       --ii2
-      // // top - left
-      // const x1 = Math.min(tapeinput.xcursor, tapeinput.xselect)
-      // const y1 = Math.min(tapeinput.ycursor, tapeinput.yselect)
-      // // bottom - right
-      // const x2 = Math.max(tapeinput.xcursor, tapeinput.xselect) - 1
-      // const y2 = Math.max(tapeinput.ycursor, tapeinput.yselect)
-      // write colors
-      // for (let iy = y1; iy <= y2; ++iy) {
-      //   const p1 = x1 + (bottomedge - iy) * width
-      //   const p2 = x2 + (bottomedge - iy) * width
-      //   applycolortoindexes(p1, p2, 15, 8, context)
-      // }
     }
   }
 
@@ -176,16 +162,6 @@ export function TapeConsole() {
   const inputstateselected = hasselection
     ? inputstate.substring(ii1, ii2 + 1)
     : inputstate
-
-  // draw cursor
-  // if (blink) {
-  //   const ycursor = bottomedge - (tapeinput.ycursor - startrow)
-  //   applystrtoindex(
-  //     tapeinput.xcursor + ycursor * width,
-  //     String.fromCharCode(221),
-  //     context,
-  //   )
-  // }
 
   // update state
   function inputstatesetsplice(index: number, count: number, insert?: string) {
@@ -249,6 +225,16 @@ export function TapeConsole() {
     >
       {tape.open ? (
         <UserFocus>
+          <UserHotkey hotkey="Escape">{() => tapesetopen(false)}</UserHotkey>
+          <Logput
+            player={gadgetstategetplayer()}
+            selected={tapeinput.ycursor - 2}
+            rows={logrows}
+            offsets={logoffsets}
+            startrow={startrow}
+            context={context}
+          />
+          <TileSnapshot width={width} height={height} tiles={tiles} />
           <UserInput
             MENU_BUTTON={(mods) => tapesetmode(mods.shift ? -1 : 1)}
             MOVE_UP={(mods) => {
@@ -435,13 +421,6 @@ export function TapeConsole() {
               }
             }}
           />
-          <UserHotkey hotkey="Escape">{() => tapesetopen(false)}</UserHotkey>
-          <Logput
-            player={gadgetstategetplayer()}
-            context={context}
-            rows={logput as CONSOLE_ROW[]}
-          />
-          <TileSnapshot width={width} height={height} tiles={tiles} />
         </UserFocus>
       ) : (
         <UserHotkey hotkey="Shift+?">
