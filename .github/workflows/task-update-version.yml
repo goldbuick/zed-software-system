@@ -14,11 +14,12 @@ jobs:
           fetch-depth: 0
       
       - name: update zss version
-        uses: paulhatch/semantic-version@v5.3.0
+        uses: phips28/gh-action-bump-version@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # The prefix to use to identify tags
-          tag_prefix: "v"
-          major_pattern: "release:"
-          minor_pattern: "/(feat|feature):/"
-          bump_each_commit: true
-          bump_each_commit_patch_pattern: "/(fix|add):/"
+          tag_prefix: 'v'
+          major-wording: 'release:'
+          minor-wording: 'feat:,feature:'
+          patch-wording: 'fix:,add:' 
+
