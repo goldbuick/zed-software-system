@@ -43,9 +43,19 @@ export function Logput({
       <WriteTextContext.Provider value={context}>
         {rows.map((text, index) =>
           index === activerow ? (
-            <ActiveItem key={index} text={text} offset={offsets[index]} />
+            <ActiveItem
+              key={index}
+              text={text}
+              offset={offsets[index]}
+              context={context}
+            />
           ) : (
-            <ConsoleItem key={index} text={text} offset={offsets[index]} />
+            <ConsoleItem
+              key={index}
+              text={text}
+              offset={offsets[index]}
+              context={context}
+            />
           ),
         )}
         <ConsoleInput startrow={startrow} />

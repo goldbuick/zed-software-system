@@ -126,7 +126,7 @@ export const CLI_FIRMWARE = createfirmware({
       `use color names like ${bg('ongreen', '$$ongreen')} to change background color`,
     )
     writetext(`use clear ${bg('clear', 'to change background to')} transparent`)
-    writesection(`hypertext`)
+    writesection(`hyperlinks`)
     writetext(
       `${fg('white', '"!hotkey"')} message shortcut;${fg('gray', 'Label')}`,
     )

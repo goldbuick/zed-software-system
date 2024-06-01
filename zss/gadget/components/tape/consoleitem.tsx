@@ -1,23 +1,34 @@
-import { useContext } from 'react'
 import {
-  WriteTextContext,
   tokenizeandwritetextformat,
   writetextcolorreset,
 } from 'zss/gadget/data/textformat'
 
-type ConsoleItemProps = {
-  text: string
-  blink?: boolean
-  active?: boolean
-  offset: number
-}
+import { BG, BG_ACTIVE, ConsoleItemProps } from './common'
+import { ConsoleItemHyperlink } from './hyperlink'
 
-export function ConsoleItem({ text, blink, active, offset }: ConsoleItemProps) {
-  const context = useContext(WriteTextContext)
+export function ConsoleItem({
+  blink,
+  active,
+  text,
+  offset,
+  context,
+}: ConsoleItemProps) {
+  if (text.startsWith('!')) {
+    return (
+      <ConsoleItemHyperlink
+        blink={blink}
+        active={active}
+        text={text}
+        offset={offset}
+        context={context}
+      />
+    )
+  }
 
   // render output
   context.y = offset
   context.isEven = context.y % 2 === 0
+  context.activeBg = active && !blink ? BG_ACTIVE : BG
   tokenizeandwritetextformat(text, context, true)
   writetextcolorreset(context)
 

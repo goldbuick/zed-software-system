@@ -100,8 +100,7 @@ export function TapeConsole() {
   const logput = tape.logs.slice(startrow, startrow + maxrowheight)
 
   // build id list
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const logids: string[] = logput.map((item) => item[0])
+  // const logids: string[] = logput.map((item) => item[0])
 
   // render to strings
   const logrows: string[] = logput.map((item) => {
@@ -131,20 +130,12 @@ export function TapeConsole() {
   const inputstate = tapeinput.buffer[tapeinput.bufferindex]
 
   // local x input
-  const bottomedge = height - 1
   const rightedge = width - 1
   const lastrow = tape.logs.length + 1
 
   let ii1 = tapeinput.xcursor
   let ii2 = tapeinput.xcursor
   let hasselection = false
-
-  // calc input ui offset
-  const inputindex = bottomedge * width
-
-  // draw input line
-  const inputline = inputstate.padEnd(width, ' ')
-  applystrtoindex(inputindex, inputline, context)
 
   // adjust input edges selection
   if (ispresent(tapeinput.xselect) && ispresent(tapeinput.yselect)) {

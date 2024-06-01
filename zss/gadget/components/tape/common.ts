@@ -7,6 +7,7 @@ import { MAYBE_NUMBER } from 'zss/mapping/types'
 export const SCALE = 1
 export const FG = COLOR.BLUE
 export const BG = COLOR.DKBLUE
+export const BG_ACTIVE = COLOR.BLACK
 export const CHAR_WIDTH = DRAW_CHAR_WIDTH * SCALE
 export const CHAR_HEIGHT = DRAW_CHAR_HEIGHT * SCALE
 
@@ -22,12 +23,10 @@ export const tapeinputstate = proxy({
 })
 
 export type ConsoleItemProps = {
-  player: string
-  chip: string
-  active: boolean
-  // ?? just text ??
-  // label: string
-  // args: WORD_VALUE[]
+  blink?: boolean
+  active?: boolean
+  text: string
+  offset: number
   context: WRITE_TEXT_CONTEXT
 }
 

@@ -1,0 +1,26 @@
+import { useCallback, useContext } from 'react'
+
+import { tokenizeandwritetextformat } from '../../data/textformat'
+import { UserInput } from '../userinput'
+
+import { ConsoleItemProps } from './common'
+
+export function ConsoleItemHyperlink({
+  blink,
+  active,
+  text,
+  offset,
+}: ConsoleItemProps) {
+  // const [target, data] = [mapTo(args[0], ''), args[1]]
+
+  // const tcolor = inputcolor(active)
+  // tokenizeandwritetextformat(`  $purple$16 $${tcolor}${label}`, context, true)
+
+  // const scroll = useContext(ScrollContext)
+  // const invoke = useCallback(() => {
+  //   scroll.sendmessage(chiptarget(chip, target), data)
+  //   scroll.sendclose()
+  // }, [scroll, chip, target, data])
+
+  return active && <UserInput OK_BUTTON={invoke} />
+}

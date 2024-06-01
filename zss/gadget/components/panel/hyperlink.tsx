@@ -11,7 +11,7 @@ import {
   inputcolor,
 } from './common'
 
-export function PanelItemHyperText({
+export function PanelItemHyperlink({
   chip,
   active,
   label,

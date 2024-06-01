@@ -224,7 +224,7 @@ export function gadgethyperlink(
   // find slot
   const panel = findpanel(shared)
 
-  // add hypertext
+  // add hyperlink
   if (shared.layoutreset) {
     shared.layoutreset = false
     resetpanel(panel)
@@ -236,7 +236,7 @@ export function gadgethyperlink(
   const hyperlink: WORD_VALUE[] = [
     chip.id(),
     label,
-    ...(HYPERLINK_TYPES.has(linput) ? [linput] : ['hypertext', input]),
+    ...(HYPERLINK_TYPES.has(linput) ? [linput] : ['hyperlink', input]),
     ...words,
   ]
 

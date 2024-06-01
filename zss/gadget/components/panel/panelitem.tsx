@@ -10,7 +10,7 @@ import { usePlayer } from '../useplayer'
 
 import { PanelItemContent } from './content'
 import { PanelItemHotkey } from './hotkey'
-import { PanelItemHyperText } from './hypertext'
+import { PanelItemHyperlink } from './hyperlink'
 import { PanelItemNumber } from './number'
 import { PanelItemRange } from './range'
 import { PanelItemSelect } from './select'
@@ -53,8 +53,8 @@ export function PanelItem({ item, active }: PanelItemProps) {
       case 'hk':
       case 'hotkey':
         return <PanelItemHotkey {...props} />
-      case 'hypertext':
-        return <PanelItemHyperText {...props} />
+      case 'hyperlink':
+        return <PanelItemHyperlink {...props} />
       case 'rn':
       case 'range':
         return <PanelItemRange {...props} />
