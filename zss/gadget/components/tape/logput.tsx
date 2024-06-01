@@ -1,3 +1,4 @@
+import { useSnapshot } from 'valtio'
 import {
   WRITE_TEXT_CONTEXT,
   WriteTextContext,
@@ -6,6 +7,8 @@ import {
 
 import { PlayerContext } from '../useplayer'
 
+import { ActiveItem } from './activeitem'
+import { tapeinputstate } from './common'
 import { ConsoleInput } from './consoleinput'
 import { ConsoleItem } from './consoleitem'
 
@@ -25,6 +28,10 @@ export function Logput({
   startrow,
   context,
 }: LogputProps) {
+  // track active row
+  const tapeinput = useSnapshot(tapeinputstate)
+  const activerow = tapeinput.ycursor - 2
+
   // write hint
   const hint = 'if lost try #help'
   context.x = context.width - hint.length
@@ -34,9 +41,13 @@ export function Logput({
   return (
     <PlayerContext.Provider value={player}>
       <WriteTextContext.Provider value={context}>
-        {rows.map((text, index) => (
-          <ConsoleItem key={index} text={text} offset={offsets[index]} />
-        ))}
+        {rows.map((text, index) =>
+          index === activerow ? (
+            <ActiveItem key={index} text={text} offset={offsets[index]} />
+          ) : (
+            <ConsoleItem key={index} text={text} offset={offsets[index]} />
+          ),
+        )}
         <ConsoleInput startrow={startrow} />
       </WriteTextContext.Provider>
     </PlayerContext.Provider>

@@ -1,13 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
+import { proxy, useSnapshot } from 'valtio'
+
+const toggle = proxy({ blink: false })
+
+setInterval(() => {
+  toggle.blink = !toggle.blink
+}, 333)
 
 export function useBlink() {
-  const [blink, setBlink] = useState(0)
-  const callback = useCallback(() => setBlink((state) => 1 - state), [setBlink])
-
-  useEffect(() => {
-    const id = setInterval(callback, 300)
-    return () => clearInterval(id)
-  }, [callback])
-
-  return !!blink
+  const state = useSnapshot(toggle)
+  return state.blink
 }
