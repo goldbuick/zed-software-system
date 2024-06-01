@@ -19,7 +19,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_prefix: 'v'
-          major-wording: 'release:'
-          minor-wording: 'feat:,feature:'
-          patch-wording: 'fix:,add:' 
+          major-wording: 'release'
+          minor-wording: 'feat,feature'
+          patch-wording: 'fix,add' 
 
