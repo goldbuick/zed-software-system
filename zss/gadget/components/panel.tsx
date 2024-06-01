@@ -5,8 +5,8 @@ import {
 } from '../data/textformat'
 import { PANEL_ITEM } from '../data/types'
 
-import { PlayerContext } from './panel/common'
 import { PanelItem } from './panel/panelitem'
+import { PlayerContext } from './useplayer'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
 
 type PanelProps = {

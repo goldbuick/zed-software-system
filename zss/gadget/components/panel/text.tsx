@@ -9,10 +9,11 @@ import {
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
+import { useBlink } from '../useblink'
 import { UserFocus, UserInput, UserInputMods, ismac } from '../userinput'
 import { MAYBE_SHARED_TEXT, useSharedType } from '../useshared'
 
-import { PanelItemProps, inputcolor, mapTo, useBlink } from './common'
+import { PanelItemProps, inputcolor, mapTo } from './common'
 
 export function PanelItemText({
   chip,

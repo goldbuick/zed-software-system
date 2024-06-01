@@ -6,16 +6,11 @@ import {
   tokenizeandwritetextformat,
   writechartoend,
 } from '../../data/textformat'
+import { useBlink } from '../useblink'
 import { UserInput, UserInputHandler } from '../userinput'
 import { useSharedValue } from '../useshared'
 
-import {
-  PanelItemProps,
-  inputcolor,
-  mapTo,
-  strsplice,
-  useBlink,
-} from './common'
+import { PanelItemProps, inputcolor, mapTo, strsplice } from './common'
 
 export function PanelItemRange({
   chip,

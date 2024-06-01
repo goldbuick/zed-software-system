@@ -6,10 +6,11 @@ import {
   tokenizeandwritetextformat,
   writechartoend,
 } from '../../data/textformat'
+import { useBlink } from '../useblink'
 import { UserInput, UserInputHandler } from '../userinput'
 import { useSharedValue } from '../useshared'
 
-import { PanelItemProps, inputcolor, mapTo, useBlink } from './common'
+import { PanelItemProps, inputcolor, mapTo } from './common'
 
 export function PanelItemSelect({
   chip,

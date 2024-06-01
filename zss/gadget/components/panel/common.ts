@@ -1,22 +1,6 @@
-import { createContext, useCallback, useEffect, useState } from 'react'
+import { createContext } from 'react'
 import { WORD_VALUE } from 'zss/chip'
-
-import { WRITE_TEXT_CONTEXT } from '../../data/textformat'
-
-export function useBlink() {
-  const [blink, setBlink] = useState(0)
-
-  const callback = useCallback(() => setBlink((state) => 1 - state), [setBlink])
-
-  useEffect(() => {
-    const id = setInterval(callback, 300)
-    return () => {
-      clearInterval(id)
-    }
-  }, [])
-
-  return !!blink
-}
+import { WRITE_TEXT_CONTEXT } from 'zss/gadget/data/textformat'
 
 export type PanelItemProps = {
   player: string
@@ -38,8 +22,6 @@ export const ScrollContext = createContext<ScrollContextState>({
   sendclose() {},
   didclose() {},
 })
-
-export const PlayerContext = createContext('')
 
 export const theme = {
   input: {

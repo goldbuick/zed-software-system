@@ -6,7 +6,8 @@ import {
 } from 'zss/gadget/data/textformat'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 
-import { PlayerContext } from './common'
+import { usePlayer } from '../useplayer'
+
 import { PanelItemContent } from './content'
 import { PanelItemHotkey } from './hotkey'
 import { PanelItemHyperText } from './hypertext'
@@ -21,7 +22,7 @@ type PanelItemProps = {
 }
 
 export function PanelItem({ item, active }: PanelItemProps) {
-  const player = useContext(PlayerContext)
+  const player = usePlayer()
   const context = useContext(WriteTextContext)
 
   context.isEven = context.y % 2 === 0
