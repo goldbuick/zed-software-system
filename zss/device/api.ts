@@ -85,6 +85,10 @@ export function tape_open(sender: string, mode: TAPE_DISPLAY) {
   hub.emit('tape:open', sender, mode)
 }
 
+export function tape_close(sender: string) {
+  hub.emit('tape:close', sender)
+}
+
 export function vm_mem(sender: string, book: BOOK, player: string) {
   hub.emit('vm:mem', sender, book, player)
 }

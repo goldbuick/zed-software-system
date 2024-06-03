@@ -1,13 +1,16 @@
+import { proxy } from 'valtio'
 import { maptostring } from 'zss/chip'
 import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { createname } from 'zss/mapping/guid'
+import { ispresent } from 'zss/mapping/types'
 import {
   memoryreadbooklist,
+  memoryreadchip,
   memoryreadcontext,
   memorysetbook,
 } from 'zss/memory'
-import { createbook } from 'zss/memory/book'
+import { BOOK_FLAGS, createbook } from 'zss/memory/book'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -55,14 +58,39 @@ function writetext(text: string) {
   write(`${COLOR_EDGE} $blue${text}`)
 }
 
+// player cli state here ...
+type CLI_MEMORY_FLAGS = Record<string, Record<string, any>>
+
+const CLI_MEMORY = proxy({
+  flags: {} as CLI_MEMORY_FLAGS,
+})
+
+function readflags(player: string) {
+  CLI_MEMORY.flags[player] = CLI_MEMORY.flags[player] ?? {}
+  return CLI_MEMORY.flags[player]
+}
+
+function readflag(player: string, name: string) {
+  const flags = readflags(player)
+  return flags?.[name]
+}
+
+function setflag(player: string, name: string, value: any) {
+  const flags = readflags(player)
+  flags[name] = value
+  return value
+}
+
 export const CLI_FIRMWARE = createfirmware({
   get(chip, name) {
-    // player chip ?
-    return [false, undefined]
+    const memory = memoryreadchip(chip.id())
+    const flag = readflag(memory.player, name)
+    return [ispresent(flag), flag]
   },
   set(chip, name, value) {
-    // player chip ?
-    return [false, undefined]
+    const memory = memoryreadchip(chip.id())
+    const flag = setflag(memory.player, name, value)
+    return [ispresent(flag), flag]
   },
   shouldtick() {},
   tick() {},
