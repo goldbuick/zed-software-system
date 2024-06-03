@@ -37,15 +37,15 @@ const tape: TAPE_STATE = proxy({
   loglevel: LOG_DEBUG ? TAPE_LOG_LEVEL.DEBUG : TAPE_LOG_LEVEL.INFO,
 })
 
-export function tapesetopen(open: boolean) {
+function tapesetopen(open: boolean) {
   tape.open = open
 }
 
-export function tapesetmode(mode: TAPE_DISPLAY) {
+function tapesetmode(mode: TAPE_DISPLAY) {
   tape.mode = mode
 }
 
-export function tapeincmode(inc: number) {
+function tapeincmode(inc: number) {
   tape.mode = ((tape.mode as number) + inc) as TAPE_DISPLAY
   if ((tape.mode as number) < 0) {
     tape.mode += TAPE_DISPLAY.MAX

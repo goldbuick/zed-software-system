@@ -54,7 +54,6 @@ export function TapeConsoleItem({
       case 'hk':
       case 'hotkey':
         return null
-      case 'hyperlink':
       case 'rn':
       case 'range':
         return null
@@ -68,6 +67,7 @@ export function TapeConsoleItem({
       case 'text':
         return null
       default:
+      case 'hyperlink':
         return <TapeConsoleHyperlink {...props} words={words} />
     }
   }

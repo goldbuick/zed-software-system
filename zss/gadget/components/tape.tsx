@@ -1,13 +1,8 @@
 import { useThree } from '@react-three/fiber'
 import { useSnapshot } from 'valtio'
-import { vm_cli } from 'zss/device/api'
+import { tape_close, vm_cli } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
-import {
-  TAPE_DISPLAY,
-  tapeincmode,
-  tapesetopen,
-  useTape,
-} from 'zss/device/tape'
+import { TAPE_DISPLAY, useTape } from 'zss/device/tape'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
@@ -223,7 +218,7 @@ export function TapeConsole() {
     >
       {tape.open ? (
         <UserFocus>
-          <UserHotkey hotkey="Escape">{() => tapesetopen(false)}</UserHotkey>
+          <UserHotkey hotkey="Escape">{() => tape_close('tape')}</UserHotkey>
           <Logput
             player={gadgetstategetplayer()}
             rows={logrows}
