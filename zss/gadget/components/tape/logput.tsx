@@ -1,10 +1,12 @@
 import { useSnapshot } from 'valtio'
-import { tape_debug } from 'zss/device/api'
+import { tape_debug, vm_cli } from 'zss/device/api'
 import {
   WRITE_TEXT_CONTEXT,
   WriteTextContext,
   tokenizeandwritetextformat,
 } from 'zss/gadget/data/textformat'
+import { hub } from 'zss/hub'
+import { totarget } from 'zss/mapping/string'
 
 import { PlayerContext } from '../useplayer'
 
@@ -43,11 +45,13 @@ export function Logput({
       <WriteTextContext.Provider value={context}>
         <ConsoleContext.Provider
           value={{
-            sendmessage(target, data) {
-              console.info(target, data)
-              // send a hyperlink message
-              // hub.emit(target, 'gadget', data, player)
-              tape_debug('tape', target, data)
+            sendmessage(maybetarget, data) {
+              const [target, message] = totarget(maybetarget)
+              if (target === 'self') {
+                vm_cli('tape', `#${message}`, player)
+              } else {
+                hub.emit(`${target}:${message}`, 'gadget', data, player)
+              }
             },
           }}
         >

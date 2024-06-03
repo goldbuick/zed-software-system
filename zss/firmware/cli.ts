@@ -1,7 +1,15 @@
 import { maptostring } from 'zss/chip'
-import { tape_debug, tape_info } from 'zss/device/api'
+import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
-import { memoryreadbooklist } from 'zss/memory'
+import { createname } from 'zss/mapping/guid'
+import {
+  memoryreadbooklist,
+  memoryreadcontext,
+  memorysetbook,
+} from 'zss/memory'
+import { createbook } from 'zss/memory/book'
+
+import { ARG_TYPE, readargs } from './wordtypes'
 
 const ismac = navigator.userAgent.indexOf('Mac') !== -1
 const metakey = ismac ? 'cmd' : 'ctrl'
@@ -163,7 +171,29 @@ export const CLI_FIRMWARE = createfirmware({
     writetext(`todo`)
     return 0
   })
-  .command('send', (chip, args) => {
-    tape_debug('cli', JSON.stringify(args))
+  .command('send', (chip, words) => {
+    // const memory = memoryreadchip(chip.id())
+    const [msg, data] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.ANY,
+    ])
+
+    switch (msg) {
+      case 'bookcreate': {
+        const book = createbook(createname(), [])
+        memorysetbook(book)
+        writetext(`created ${book.name}`)
+        write(`!bookopen ${book.id};open ${book.name}`)
+        break
+      }
+      case 'bookopen':
+        break
+      case 'bookclose':
+        break
+      default:
+        tape_info('cli', msg, data)
+        break
+    }
+
     return 0
   })

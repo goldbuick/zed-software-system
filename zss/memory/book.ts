@@ -7,8 +7,6 @@ import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
 
 import { checkcollision } from './atomics'
 import {
-  BOARD,
-  BOARD_ELEMENT,
   MAYBE_BOARD,
   MAYBE_BOARD_ELEMENT,
   boarddeleteobject,
@@ -92,8 +90,6 @@ export function bookreadcodepagedata<T extends CODE_PAGE_TYPE>(
     switch (type) {
       case CODE_PAGE_TYPE.ERROR:
         return codepage.error as MAYBE<CODE_PAGE_TYPE_MAP[T]>
-      case CODE_PAGE_TYPE.FUNC:
-        return codepage.code as MAYBE<CODE_PAGE_TYPE_MAP[T]>
       case CODE_PAGE_TYPE.BOARD:
         return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
       case CODE_PAGE_TYPE.OBJECT:
