@@ -86,14 +86,10 @@ createdevice('tape', [], (message) => {
       }
       break
     case 'open':
-      if (isnumber(message.data)) {
-        tapesetopen(true)
-      }
+      tapesetopen(true)
       break
     case 'close':
-      if (isnumber(message.data)) {
-        tapesetopen(false)
-      }
+      tapesetopen(false)
       break
     case 'mode':
       if (isnumber(message.data)) {
