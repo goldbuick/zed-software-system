@@ -49,7 +49,7 @@ export function ConsoleInput({ startrow }: ConsoleInputProps) {
   // draw input line
   const inputline = inputstate.padEnd(context.width, ' ')
   context.y = bottomedge
-  writeline(blink, false, inputline, context)
+  applystrtoindex(bottomedge * context.width, inputline, context)
 
   // draw selection
   if (

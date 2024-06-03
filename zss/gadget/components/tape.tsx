@@ -4,7 +4,7 @@ import { vm_cli } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import {
   TAPE_DISPLAY,
-  tapesetmode,
+  tapeincmode,
   tapesetopen,
   useTape,
 } from 'zss/device/tape'
@@ -233,7 +233,7 @@ export function TapeConsole() {
           />
           <TileSnapshot width={width} height={height} tiles={tiles} />
           <UserInput
-            MENU_BUTTON={(mods) => tapesetmode(mods.shift ? -1 : 1)}
+            MENU_BUTTON={(mods) => tapeincmode(mods.shift ? -1 : 1)}
             MOVE_UP={(mods) => {
               if (mods.ctrl) {
                 inputstateswitch(tapeinput.bufferindex + 1)

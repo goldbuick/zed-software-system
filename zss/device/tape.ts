@@ -41,7 +41,11 @@ export function tapesetopen(open: boolean) {
   tape.open = open
 }
 
-export function tapesetmode(inc: number) {
+export function tapesetmode(mode: TAPE_DISPLAY) {
+  tape.mode = mode
+}
+
+export function tapeincmode(inc: number) {
   tape.mode = ((tape.mode as number) + inc) as TAPE_DISPLAY
   if ((tape.mode as number) < 0) {
     tape.mode += TAPE_DISPLAY.MAX
@@ -93,8 +97,12 @@ createdevice('tape', [], (message) => {
       break
     case 'mode':
       if (isnumber(message.data)) {
-        tapesetmode(message.data)
+        tapeincmode(message.data)
       }
+      break
+    case 'crash':
+      tapesetopen(true)
+      tapesetmode(TAPE_DISPLAY.FULL)
       break
   }
 })
