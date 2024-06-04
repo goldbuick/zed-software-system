@@ -402,6 +402,8 @@ export function transformAst(ast: CodeNode): GenContextAndCode {
   // translate into js
   const source = transformNode(ast)
 
+  console.info(ast)
+
   // get source js and source map
   const output = source.toStringWithSourceMap({
     file: `${GENERATED_FILENAME}.map`,

@@ -1,16 +1,17 @@
 import { proxy } from 'valtio'
 import { maptostring } from 'zss/chip'
-import { tape_info } from 'zss/device/api'
+import { api_error, tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { createname } from 'zss/mapping/guid'
-import { ispresent } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import {
+  memoryreadbook,
   memoryreadbooklist,
   memoryreadchip,
   memoryreadcontext,
   memorysetbook,
 } from 'zss/memory'
-import { BOOK_FLAGS, createbook } from 'zss/memory/book'
+import { createbook } from 'zss/memory/book'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -62,6 +63,7 @@ function writetext(text: string) {
 type CLI_MEMORY_FLAGS = Record<string, Record<string, any>>
 
 const CLI_MEMORY = proxy({
+  openbook: '',
   flags: {} as CLI_MEMORY_FLAGS,
 })
 
@@ -179,6 +181,16 @@ export const CLI_FIRMWARE = createfirmware({
   .command('3', () => {
     writeheader(`edit commands`)
     writeoption(`#books`, `list books in memory`)
+    writeoption(`#pages`, `list pages in opened book`)
+    writeoption(
+      `@[pagetype:]page name`,
+      `create & edit a new codepage in the currently opened book`,
+    )
+    return 0
+  })
+  .command('4', () => {
+    writeheader(`player settings`)
+    writetext(`todo`)
     return 0
   })
   .command('books', () => {
@@ -194,17 +206,21 @@ export const CLI_FIRMWARE = createfirmware({
     write(`!bookcreate;create a new book`)
     return 0
   })
-  .command('4', () => {
-    writeheader(`player settings`)
-    writetext(`todo`)
+  .command('stat', (chip, words) => {
+    // const memory = memoryreadchip(chip.id())
+    // all this command does for now is update name
+    // if (memory.object) {
+    //   memory.object.name = words.map(maptostring).join(' ')
+    // }
+    // tape_info('cli', 'STAT INVOKE', ...words)
+    console.info('????', words)
     return 0
   })
   .command('send', (chip, words) => {
-    // const memory = memoryreadchip(chip.id())
-    const [msg, data] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-      ARG_TYPE.ANY,
-    ])
+    const memory = memoryreadchip(chip.id())
+    const read = memoryreadcontext(chip, words)
+    const [msg, data] = readargs(read, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+    console.info(msg, data, words)
 
     switch (msg) {
       case 'bookcreate': {
@@ -215,7 +231,28 @@ export const CLI_FIRMWARE = createfirmware({
         break
       }
       case 'bookopen':
-        write(`open book ${data}`)
+        if (isstring(data)) {
+          const book = memoryreadbook(data)
+          if (ispresent(book)) {
+            CLI_MEMORY.openbook = data
+            writetext(`opened book ${book.name}`)
+          } else {
+            api_error(
+              'cli',
+              'bookopen',
+              `book with id ${data} not found`,
+              memory.player,
+            )
+          }
+        } else {
+          api_error(
+            'cli',
+            'bookopen',
+            `expected book id, got: ${data} instead`,
+            memory.player,
+          )
+        }
+        // write(`open book ${data}`)
         break
       case 'bookclose':
         break
