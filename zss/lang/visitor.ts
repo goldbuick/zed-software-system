@@ -129,7 +129,7 @@ type CodeNodeData =
     }
   | {
       type: NODE.STAT
-      words: CodeNode[]
+      value: string
     }
   | {
       type: NODE.MOVE
@@ -320,8 +320,12 @@ class ScriptVisitor extends CstVisitor {
     }
   }
 
-  stat() {
-    // no-op
+  stat(ctx: CstChildrenDictionary) {
+    return makeNode(ctx, {
+      type: NODE.STAT,
+      // @ts-expect-error
+      value: ctx.Stat?.[0].image.slice(1),
+    })
   }
 
   text(ctx: CstChildrenDictionary) {
