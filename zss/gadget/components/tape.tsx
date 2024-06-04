@@ -1,6 +1,6 @@
 import { useThree } from '@react-three/fiber'
 import { useSnapshot } from 'valtio'
-import { tape_close, vm_cli } from 'zss/device/api'
+import { tape_close, tape_incmode, tape_open, vm_cli } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import { TAPE_DISPLAY, useTape } from 'zss/device/tape'
 import {
@@ -228,7 +228,7 @@ export function TapeConsole() {
           />
           <TileSnapshot width={width} height={height} tiles={tiles} />
           <UserInput
-            MENU_BUTTON={(mods) => tapeincmode(mods.shift ? -1 : 1)}
+            MENU_BUTTON={(mods) => tape_incmode('tape', mods.shift ? -1 : 1)}
             MOVE_UP={(mods) => {
               if (mods.ctrl) {
                 inputstateswitch(tapeinput.bufferindex + 1)
@@ -415,9 +415,7 @@ export function TapeConsole() {
           />
         </UserFocus>
       ) : (
-        <UserHotkey hotkey="Shift+?">
-          {() => tapesetopen(!tape.open)}
-        </UserHotkey>
+        <UserHotkey hotkey="Shift+?">{() => tape_open('tape')}</UserHotkey>
       )}
     </group>
   )

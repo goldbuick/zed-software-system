@@ -215,6 +215,7 @@ export const CLI_FIRMWARE = createfirmware({
         break
       }
       case 'bookopen':
+        write(`open book ${data}`)
         break
       case 'bookclose':
         break

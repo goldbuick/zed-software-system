@@ -83,6 +83,10 @@ export function tape_open(sender: string) {
   hub.emit('tape:open', sender)
 }
 
+export function tape_incmode(sender: string, inc: number) {
+  hub.emit('tape:incmode', sender, inc)
+}
+
 export function tape_close(sender: string) {
   hub.emit('tape:close', sender)
 }

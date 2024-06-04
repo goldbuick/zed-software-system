@@ -48,7 +48,7 @@ export function Logput({
             sendmessage(maybetarget, data) {
               const [target, message] = totarget(maybetarget)
               if (target === 'self') {
-                vm_cli('tape', `#${message}`, player)
+                vm_cli('tape', `#${message} ${data ?? ''}`, player)
               } else {
                 hub.emit(`${target}:${message}`, 'gadget', data, player)
               }
