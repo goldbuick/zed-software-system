@@ -11,7 +11,7 @@ import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../useblink'
 
-import { BG, BG_ACTIVE, tapeinputstate } from './common'
+import { BG, BG_ACTIVE, FG, tapeinputstate } from './common'
 
 type ConsoleInputProps = {
   startrow: number
@@ -48,8 +48,11 @@ export function ConsoleInput({ startrow }: ConsoleInputProps) {
 
   // draw input line
   const inputline = inputstate.padEnd(context.width, ' ')
+  const in1 = bottomedge * context.width
+  const in2 = in1 + context.width
   context.y = bottomedge
-  applystrtoindex(bottomedge * context.width, inputline, context)
+  applystrtoindex(in1, inputline, context)
+  applycolortoindexes(in1, in2, FG, BG, context)
 
   // draw selection
   if (
