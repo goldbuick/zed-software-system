@@ -22,6 +22,15 @@ export const tapeinputstate = proxy({
   buffer: [''],
 })
 
+export const tapeeditorstate = proxy({
+  // cursor position & selection (cols & rows)
+  xcursor: 0,
+  ycursor: 0,
+  xselect: undefined as MAYBE_NUMBER,
+  yselect: undefined as MAYBE_NUMBER,
+  // need an id for synced store
+})
+
 export type ConsoleItemProps = {
   blink?: boolean
   active?: boolean

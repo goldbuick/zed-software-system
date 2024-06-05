@@ -25,16 +25,18 @@ type TAPE_ROW = [string, string, string, ...any[]]
 
 type TAPE_STATE = {
   open: boolean
-  mode: TAPE_DISPLAY
+  display: TAPE_DISPLAY
   logs: TAPE_ROW[]
   loglevel: TAPE_LOG_LEVEL
 }
 
-const tape: TAPE_STATE = proxy({
+const tape = proxy<TAPE_STATE>({
+  // terminal state
   open: false,
-  mode: TAPE_DISPLAY.BOTTOM,
+  display: TAPE_DISPLAY.BOTTOM,
   logs: [],
   loglevel: LOG_DEBUG ? TAPE_LOG_LEVEL.DEBUG : TAPE_LOG_LEVEL.INFO,
+  // editor state
 })
 
 function tapesetopen(open: boolean) {
@@ -42,16 +44,16 @@ function tapesetopen(open: boolean) {
 }
 
 function tapesetmode(mode: TAPE_DISPLAY) {
-  tape.mode = mode
+  tape.display = mode
 }
 
-function tapeincmode(inc: number) {
-  tape.mode = ((tape.mode as number) + inc) as TAPE_DISPLAY
-  if ((tape.mode as number) < 0) {
-    tape.mode += TAPE_DISPLAY.MAX
+function tapeincdisplay(inc: number) {
+  tape.display = ((tape.display as number) + inc) as TAPE_DISPLAY
+  if ((tape.display as number) < 0) {
+    tape.display += TAPE_DISPLAY.MAX
   }
-  if ((tape.mode as number) >= (TAPE_DISPLAY.MAX as number)) {
-    tape.mode -= TAPE_DISPLAY.MAX
+  if ((tape.display as number) >= (TAPE_DISPLAY.MAX as number)) {
+    tape.display -= TAPE_DISPLAY.MAX
   }
 }
 
@@ -91,9 +93,9 @@ createdevice('tape', [], (message) => {
     case 'close':
       tapesetopen(false)
       break
-    case 'incmode':
+    case 'incdisplay':
       if (isnumber(message.data)) {
-        tapeincmode(message.data)
+        tapeincdisplay(message.data)
       }
       break
     case 'crash':
