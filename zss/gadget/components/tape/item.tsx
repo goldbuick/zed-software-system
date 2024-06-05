@@ -1,5 +1,6 @@
 import {
   HyperLinkText,
+  applystrtoindex,
   tokenize,
   tokenizeandwritetextformat,
 } from 'zss/gadget/data/textformat'
@@ -18,6 +19,10 @@ export function TapeConsoleItem({
   offset,
   context,
 }: ConsoleItemProps) {
+  // setup context for item
+  setupitemcontext(!!blink, !!active, offset, context)
+
+  // write ui
   if (text.startsWith('!')) {
     // parse hyperlink
     const [prefix, ...content] = text.slice(1).split('!')
@@ -72,9 +77,7 @@ export function TapeConsoleItem({
     }
   }
 
-  // render output
-  setupitemcontext(!!blink, !!active, offset, context)
+  // render text output
   tokenizeandwritetextformat(text, context, true)
-
   return null
 }

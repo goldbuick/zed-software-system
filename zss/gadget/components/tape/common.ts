@@ -1,10 +1,15 @@
 import { createContext } from 'react'
 import { proxy } from 'valtio'
-import { WRITE_TEXT_CONTEXT } from 'zss/gadget/data/textformat'
+import {
+  WRITE_TEXT_CONTEXT,
+  applycolortoindexes,
+  applystrtoindex,
+} from 'zss/gadget/data/textformat'
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { MAYBE_NUMBER } from 'zss/mapping/types'
 
 export const SCALE = 1
+export const DOT = 250
 export const FG = COLOR.BLUE
 export const BG = COLOR.DKBLUE
 export const BG_ACTIVE = COLOR.BLACK
@@ -66,4 +71,15 @@ export function setupitemcontext(
   context.y = context.height - 3 + offset
   context.isEven = context.y % 2 === 0
   context.activeBg = active && !blink ? BG_ACTIVE : BG
+
+  // write bkg dots
+  const p1 = context.y * context.width
+  const p2 = p1 + context.width - 1
+  applystrtoindex(
+    context.y * context.width,
+    String.fromCharCode(DOT).repeat(context.width),
+    context,
+  )
+  // write default colors
+  applycolortoindexes(p1, p2, FG, BG, context)
 }

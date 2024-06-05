@@ -6,7 +6,7 @@ import {
   createwritetextcontext,
 } from 'zss/gadget/data/textformat'
 
-import { BG, CHAR_HEIGHT, CHAR_WIDTH, FG, SCALE } from './tape/common'
+import { BG, CHAR_HEIGHT, CHAR_WIDTH, DOT, FG, SCALE } from './tape/common'
 import { TapeConsoleTerminal } from './tape/terminal'
 import { UserFocus, UserHotkey } from './userinput'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
@@ -50,7 +50,7 @@ export function TapeConsole() {
 
   const tiles = useTiles(width, height, 0, FG, BG)
 
-  resetTiles(tiles, 250, FG, BG)
+  resetTiles(tiles, DOT, FG, BG)
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, FG, BG),
     ...tiles,
