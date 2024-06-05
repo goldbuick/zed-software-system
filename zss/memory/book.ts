@@ -1,7 +1,7 @@
 import { WORD_VALUE } from 'zss/chip'
 import { PT, COLLISION, CATEGORY } from 'zss/firmware/wordtypes'
 import { unique } from 'zss/mapping/array'
-import { createguid } from 'zss/mapping/guid'
+import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
 
@@ -38,10 +38,10 @@ export type BOOK = {
 
 export type MAYBE_BOOK = MAYBE<BOOK>
 
-export function createbook(name: string, pages: CODE_PAGE[]): BOOK {
+export function createbook(pages: CODE_PAGE[]): BOOK {
   return {
-    id: createguid(),
-    name,
+    id: createsid(),
+    name: createnameid(),
     pages,
     flags: {},
     players: {},

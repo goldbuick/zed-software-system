@@ -95,6 +95,15 @@ export function tape_crash(sender: string) {
   hub.emit('tape:crash', sender)
 }
 
+export function tape_edit(
+  sender: string,
+  book: string,
+  page: string,
+  player: string,
+) {
+  hub.emit('tape:edit', sender, [book, page], player)
+}
+
 export function vm_mem(sender: string, book: BOOK, player: string) {
   hub.emit('vm:mem', sender, book, player)
 }

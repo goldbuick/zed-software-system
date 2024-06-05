@@ -16,7 +16,7 @@ import {
 } from 'zss/firmware/wordtypes'
 import { COLOR } from 'zss/gadget/data/types'
 import { pick } from 'zss/mapping/array'
-import { createguid } from 'zss/mapping/guid'
+import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import {
   MAYBE,
@@ -113,7 +113,7 @@ const BOARD_TERRAIN: undefined[] = new Array(BOARD_WIDTH * BOARD_HEIGHT)
 
 export function boardcreate(fn = noop<BOARD>) {
   const board: BOARD = {
-    id: createguid(),
+    id: createsid(),
     x: 0,
     y: 0,
     width: BOARD_WIDTH,
@@ -231,7 +231,7 @@ export function boardobjectcreate(
 
   const object = {
     ...from,
-    id: from.id ?? createguid(),
+    id: from.id ?? createsid(),
   }
 
   // add to board

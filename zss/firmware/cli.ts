@@ -1,8 +1,7 @@
 import { proxy } from 'valtio'
 import { maptostring } from 'zss/chip'
-import { api_error, tape_info } from 'zss/device/api'
+import { api_error, tape_edit, tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
-import { createname } from 'zss/mapping/guid'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryreadbook,
@@ -12,6 +11,11 @@ import {
   memorysetbook,
 } from 'zss/memory'
 import { createbook } from 'zss/memory/book'
+import {
+  codepagereadname,
+  codepagereadtypetostring,
+  createcodepage,
+} from 'zss/memory/codepage'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -206,25 +210,57 @@ export const CLI_FIRMWARE = createfirmware({
     write(`!bookcreate;create a new book`)
     return 0
   })
+  .command('pages', (chip) => {
+    writesection(`pages`)
+    const book = memoryreadbook(CLI_MEMORY.openbook)
+    if (ispresent(book)) {
+      if (book.pages.length) {
+        book.pages.forEach((page) => {
+          const name = codepagereadname(page)
+          write(`!pageopen ${page.id};${name}`)
+        })
+      } else {
+        writetext(`no pages found`)
+        writetext(`use @ to create a page`)
+        writetext(`@board Name of board`)
+        writetext(`@terrain Name of terrain`)
+        writetext(`@charset Name of charset`)
+        writetext(`@palette Name of palette`)
+        writetext(`You can omit the type and it will default to object`)
+        writetext(`@object Name of object`)
+        writetext(`@Name of object`)
+      }
+    } else {
+      writetext(`no book currently open`)
+      chip.command('books')
+    }
+    return 0
+  })
   .command('stat', (chip, words) => {
-    // const memory = memoryreadchip(chip.id())
-    // all this command does for now is update name
-    // if (memory.object) {
-    //   memory.object.name = words.map(maptostring).join(' ')
-    // }
-    // tape_info('cli', 'STAT INVOKE', ...words)
-    console.info('????', words)
+    const memory = memoryreadchip(chip.id())
+    const [codepage] = words
+    const book = memoryreadbook(CLI_MEMORY.openbook)
+    if (ispresent(book)) {
+      const page = createcodepage(`@${codepage}`, {})
+      const name = codepagereadname(page)
+      const type = codepagereadtypetostring(page)
+      writetext(`created ${name} of type ${type}`)
+      // tell tape to open a codeeditor for given page
+      tape_edit('cli', CLI_MEMORY.openbook, page.id, memory.player)
+    } else {
+      writetext(`no book currently open`)
+      chip.command('books')
+    }
     return 0
   })
   .command('send', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const read = memoryreadcontext(chip, words)
     const [msg, data] = readargs(read, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
-    console.info(msg, data, words)
 
     switch (msg) {
       case 'bookcreate': {
-        const book = createbook(createname(), [])
+        const book = createbook([])
         memorysetbook(book)
         writetext(`created ${book.name}`)
         write(`!bookopen ${book.id};open ${book.name}`)
@@ -252,9 +288,9 @@ export const CLI_FIRMWARE = createfirmware({
             memory.player,
           )
         }
-        // write(`open book ${data}`)
         break
       case 'bookclose':
+        // do we need this ?
         break
       default:
         tape_info('cli', msg, data)

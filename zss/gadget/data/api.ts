@@ -8,7 +8,7 @@ import {
   updatesharedvalue,
 } from 'zss/device/shared'
 import { WORD, WORD_VALUE } from 'zss/firmware/wordtypes'
-import { createguid } from 'zss/mapping/guid'
+import { createsid } from 'zss/mapping/guid'
 import {
   MAYBE_NUMBER,
   MAYBE_STRING,
@@ -54,7 +54,7 @@ function findpanel(state: STATE): PANEL {
 
   if (!panel) {
     const newPanel: PANEL = {
-      id: createguid(),
+      id: createsid(),
       name: state.layoutfocus,
       edge: PANEL_TYPE.RIGHT,
       size: 20,
@@ -178,7 +178,7 @@ export function gadgetpanel(
       case PANEL_TYPE.BOTTOM:
       case PANEL_TYPE.SCROLL: {
         const panel: PANEL = {
-          id: createguid(),
+          id: createsid(),
           name: name,
           edge: edgeConst,
           size: size ?? PANEL_TYPE_SIZES[edgeConst],
