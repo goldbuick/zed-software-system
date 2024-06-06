@@ -28,12 +28,13 @@ export const tapeinputstate = proxy({
 })
 
 export const tapeeditorstate = proxy({
+  // need an id for synced store
+  id: '',
   // cursor position & selection (cols & rows)
   xcursor: 0,
   ycursor: 0,
   xselect: undefined as MAYBE_NUMBER,
   yselect: undefined as MAYBE_NUMBER,
-  // need an id for synced store
 })
 
 export type ConsoleItemProps = {

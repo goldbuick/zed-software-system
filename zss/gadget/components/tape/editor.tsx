@@ -1,7 +1,7 @@
 import { WRITE_TEXT_CONTEXT } from 'zss/gadget/data/textformat'
 import { TILES } from 'zss/gadget/data/types'
 
-import { UserInput } from '../userinput'
+import { UserInput, modsfromevent } from '../userinput'
 
 type TapeConsoleEditorProps = {
   tiles: TILES
@@ -21,8 +21,9 @@ export function TapeConsoleEditor({
   return (
     <>
       <UserInput
-        MENU_BUTTON={(mods) => {
-          console.info(mods, tiles, width, height, context)
+        keydown={(event) => {
+          const mods = modsfromevent(event)
+          console.info(mods, event.key)
         }}
       />
     </>

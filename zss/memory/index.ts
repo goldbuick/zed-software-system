@@ -62,6 +62,7 @@ type CHIP_PLAYER_INPUT = {
 type CHIP_MEMORY = CHIP_TARGETS & CHIP_PLAYER_INPUT
 
 const MEMORY = {
+  // running software
   defaultplayer: '',
   books: new Map<string, BOOK>(),
   chips: new Map<string, CHIP_MEMORY>(),

@@ -1,4 +1,3 @@
-import { proxy } from 'valtio'
 import { maptostring } from 'zss/chip'
 import { api_error, tape_edit, tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
@@ -10,7 +9,7 @@ import {
   memoryreadcontext,
   memorysetbook,
 } from 'zss/memory'
-import { createbook } from 'zss/memory/book'
+import { bookreadflag, booksetflag, createbook } from 'zss/memory/book'
 import {
   codepagereadname,
   codepagereadtypetostring,
@@ -63,40 +62,21 @@ function writetext(text: string) {
   write(`${COLOR_EDGE} $blue${text}`)
 }
 
-// player cli state here ...
-type CLI_MEMORY_FLAGS = Record<string, Record<string, any>>
-
-const CLI_MEMORY = proxy({
-  openbook: '',
-  flags: {} as CLI_MEMORY_FLAGS,
-})
-
-function readflags(player: string) {
-  CLI_MEMORY.flags[player] = CLI_MEMORY.flags[player] ?? {}
-  return CLI_MEMORY.flags[player]
-}
-
-function readflag(player: string, name: string) {
-  const flags = readflags(player)
-  return flags?.[name]
-}
-
-function setflag(player: string, name: string, value: any) {
-  const flags = readflags(player)
-  flags[name] = value
-  return value
-}
+let openbook = ''
 
 export const CLI_FIRMWARE = createfirmware({
   get(chip, name) {
+    // check player's flags
     const memory = memoryreadchip(chip.id())
-    const flag = readflag(memory.player, name)
-    return [ispresent(flag), flag]
+    // then global
+    const value = bookreadflag(memory.book, memory.player, name)
+    return [ispresent(value), value]
   },
   set(chip, name, value) {
     const memory = memoryreadchip(chip.id())
-    const flag = setflag(memory.player, name, value)
-    return [ispresent(flag), flag]
+    // set player's flags
+    booksetflag(memory.book, memory.player, name, value)
+    return [true, value]
   },
   shouldtick() {},
   tick() {},
@@ -104,7 +84,7 @@ export const CLI_FIRMWARE = createfirmware({
 })
   .command('text', (_chip, words) => {
     const text = words.map(maptostring).join(' ')
-    tape_info('cli', '$2:', text)
+    tape_info('$2:', text)
     return 0
   })
   .command('hyperlink', (_chip, args) => {
@@ -212,7 +192,7 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('pages', (chip) => {
     writesection(`pages`)
-    const book = memoryreadbook(CLI_MEMORY.openbook)
+    const book = memoryreadbook(openbook)
     if (ispresent(book)) {
       if (book.pages.length) {
         book.pages.forEach((page) => {
@@ -237,20 +217,22 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('stat', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [codepage] = words
-    const book = memoryreadbook(CLI_MEMORY.openbook)
-    if (ispresent(book)) {
-      const page = createcodepage(`@${codepage}`, {})
-      const name = codepagereadname(page)
-      const type = codepagereadtypetostring(page)
-      writetext(`created ${name} of type ${type}`)
-      // tell tape to open a codeeditor for given page
-      tape_edit('cli', CLI_MEMORY.openbook, page.id, memory.player)
-    } else {
+    const book = memoryreadbook(openbook)
+    if (!ispresent(book)) {
       writetext(`no book currently open`)
       chip.command('books')
+      return 0
     }
+
+    const [codepage] = words
+    const memory = memoryreadchip(chip.id())
+    const page = createcodepage(`@${codepage}`, {})
+    const name = codepagereadname(page)
+    const type = codepagereadtypetostring(page)
+    writetext(`created ${name} of type ${type}`)
+
+    // tell tape to open a codeeditor for given page
+    tape_edit('cli', openbook, page.id, memory.player)
     return 0
   })
   .command('send', (chip, words) => {
@@ -270,7 +252,7 @@ export const CLI_FIRMWARE = createfirmware({
         if (isstring(data)) {
           const book = memoryreadbook(data)
           if (ispresent(book)) {
-            CLI_MEMORY.openbook = data
+            openbook = data
             writetext(`opened book ${book.name}`)
           } else {
             api_error(
@@ -289,11 +271,11 @@ export const CLI_FIRMWARE = createfirmware({
           )
         }
         break
+      // do we need this ?
       case 'bookclose':
-        // do we need this ?
         break
       default:
-        tape_info('cli', msg, data)
+        tape_info('$2:', `${msg}${ispresent(data) ? `[${data}]` : ''}`)
         break
     }
 

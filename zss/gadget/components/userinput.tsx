@@ -36,15 +36,19 @@ export type KeyboardInputHandler = (event: KeyboardEvent) => void
 export const ismac = navigator.userAgent.indexOf('Mac') !== -1
 export const metakey = ismac ? 'cmd' : 'ctrl'
 
+export function modsfromevent(event: KeyboardEvent): UserInputMods {
+  return {
+    alt: event.altKey,
+    ctrl: ismac ? event.metaKey : event.ctrlKey,
+    shift: event.shiftKey,
+  }
+}
+
 document.addEventListener(
   'keydown',
   (event) => {
     const key = event.key.toLowerCase()
-    const mods: UserInputMods = {
-      alt: event.altKey,
-      ctrl: ismac ? event.metaKey : event.ctrlKey,
-      shift: event.shiftKey,
-    }
+    const mods = modsfromevent(event)
 
     // allowed shortcuts, all others we attempt to block
     // refresh page : Ctrl + R / Cmd + R
@@ -83,6 +87,7 @@ document.addEventListener(
         break
     }
 
+    // keyboard built-in player inputs
     switch (key) {
       case 'arrowleft':
         invoke(INPUT.MOVE_LEFT, mods)
@@ -106,13 +111,13 @@ document.addEventListener(
       case 'tab':
         invoke(INPUT.MENU_BUTTON, mods)
         break
-      default:
-        // we should have gamepad input that moves between hotkey inputs,
-        // which then can be activated with the ok button
-        // maybe d-pad ?
-        user.root.emit('keydown', event)
-        break
     }
+
+    // always invoke keydown
+    // we should have gamepad input that moves between hotkey inputs,
+    // which then can be activated with the ok button
+    // maybe d-pad ?
+    user.root.emit('keydown', event)
   },
   { capture: true },
 )

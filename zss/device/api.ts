@@ -95,13 +95,17 @@ export function tape_crash(sender: string) {
   hub.emit('tape:crash', sender)
 }
 
-export function tape_edit(
+export function tape_editopen(
   sender: string,
   book: string,
   page: string,
   player: string,
 ) {
-  hub.emit('tape:edit', sender, [book, page], player)
+  hub.emit('tape:editopen', sender, [book, page], player)
+}
+
+export function tape_editclose(sender: string) {
+  hub.emit('tape:editclose', sender)
 }
 
 export function vm_mem(sender: string, book: BOOK, player: string) {

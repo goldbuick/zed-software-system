@@ -7,6 +7,7 @@ import {
 } from 'zss/gadget/data/textformat'
 
 import { BG, CHAR_HEIGHT, CHAR_WIDTH, DOT, FG, SCALE } from './tape/common'
+import { TapeConsoleEditor } from './tape/editor'
 import { TapeConsoleTerminal } from './tape/terminal'
 import { UserFocus, UserHotkey } from './userinput'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
@@ -74,11 +75,20 @@ export function TapeConsole() {
       {tape.open ? (
         <UserFocus>
           <TileSnapshot width={width} height={height} tiles={tiles} />
-          <TapeConsoleTerminal
-            width={width}
-            height={height}
-            context={context}
-          />
+          {tape.editopen ? (
+            <TapeConsoleEditor
+              tiles={tiles}
+              width={width}
+              height={height}
+              context={context}
+            />
+          ) : (
+            <TapeConsoleTerminal
+              width={width}
+              height={height}
+              context={context}
+            />
+          )}
         </UserFocus>
       ) : (
         <UserHotkey hotkey="Shift+?">{() => tape_open('tape')}</UserHotkey>
