@@ -1,5 +1,9 @@
 import { useSnapshot } from 'valtio'
-import { tape_close, tape_incdisplay, vm_cli } from 'zss/device/api'
+import {
+  tape_terminal_close,
+  tape_terminal_inclayout,
+  vm_cli,
+} from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import { useTape } from 'zss/device/tape'
 import {
@@ -32,10 +36,10 @@ export function TapeConsoleTerminal({
   // offset into logs
   const centerrow = Math.round(tapeinput.ycursor - height * 0.5)
   const maxrowheight = height - 2
-  const startrow = clamp(centerrow, 0, tape.logs.length - maxrowheight)
+  const startrow = clamp(centerrow, 0, tape.terminal.logs.length - maxrowheight)
 
   // starting render row
-  const logput = tape.logs.slice(startrow, startrow + maxrowheight)
+  const logput = tape.terminal.logs.slice(startrow, startrow + maxrowheight)
 
   // build id list
   // const logids: string[] = logput.map((item) => item[0])
@@ -79,7 +83,7 @@ export function TapeConsoleTerminal({
 
   // local x input
   const rightedge = width - 1
-  const lastrow = tape.logs.length + 1
+  const lastrow = tape.terminal.logs.length + 1
 
   let ii1 = tapeinput.xcursor
   let ii2 = tapeinput.xcursor
@@ -158,7 +162,9 @@ export function TapeConsoleTerminal({
 
   return (
     <>
-      <UserHotkey hotkey="Escape">{() => tape_close('tape')}</UserHotkey>
+      <UserHotkey hotkey="Escape">
+        {() => tape_terminal_close('tape')}
+      </UserHotkey>
       <Logput
         player={gadgetstategetplayer()}
         rows={logrows}
@@ -167,7 +173,9 @@ export function TapeConsoleTerminal({
         context={context}
       />
       <UserInput
-        MENU_BUTTON={(mods) => tape_incdisplay('tape', mods.shift ? -1 : 1)}
+        MENU_BUTTON={(mods) =>
+          tape_terminal_inclayout('tape', mods.shift ? -1 : 1)
+        }
         MOVE_UP={(mods) => {
           if (mods.ctrl) {
             inputstateswitch(tapeinput.bufferindex + 1)

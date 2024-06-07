@@ -1,5 +1,4 @@
 import { useCallback, useContext } from 'react'
-import { tape_info } from 'zss/device/api'
 import { tokenizeandwritetextformat } from 'zss/gadget/data/textformat'
 
 import { inputcolor } from '../panel/common'

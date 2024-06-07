@@ -20,8 +20,6 @@ import {
   isstring,
 } from 'zss/mapping/types'
 
-import { tape_info } from './api'
-
 type PCNOTE = {
   type: number
   freq: number

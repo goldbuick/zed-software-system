@@ -79,33 +79,33 @@ function tape_error(sender: string, ...message: any[]) {
   return false
 }
 
-export function tape_open(sender: string) {
-  hub.emit('tape:open', sender)
+export function tape_terminal_open(sender: string) {
+  hub.emit('tape:terminal:open', sender)
 }
 
-export function tape_incdisplay(sender: string, inc: number) {
-  hub.emit('tape:incdisplay', sender, inc)
+export function tape_terminal_close(sender: string) {
+  hub.emit('tape:terminal:close', sender)
 }
 
-export function tape_close(sender: string) {
-  hub.emit('tape:close', sender)
+export function tape_terminal_inclayout(sender: string, inc: number) {
+  hub.emit('tape:terminal:inclayout', sender, inc)
 }
 
 export function tape_crash(sender: string) {
   hub.emit('tape:crash', sender)
 }
 
-export function tape_editopen(
+export function tape_editor_open(
   sender: string,
   book: string,
   page: string,
   player: string,
 ) {
-  hub.emit('tape:editopen', sender, [book, page], player)
+  hub.emit('tape:editor:open', sender, [book, page], player)
 }
 
-export function tape_editclose(sender: string) {
-  hub.emit('tape:editclose', sender)
+export function tape_editor_close(sender: string) {
+  hub.emit('tape:editor:close', sender)
 }
 
 export function vm_mem(sender: string, book: BOOK, player: string) {

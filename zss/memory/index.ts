@@ -1,4 +1,4 @@
-import { CHIP, MESSAGE } from 'zss/chip'
+import { CHIP } from 'zss/chip'
 import { api_error, tape_debug } from 'zss/device/api'
 import { WORD, createreadcontext } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
@@ -265,6 +265,9 @@ export function memorytick(os: OS, timestamp: number) {
       context.board = board
       context.object = item.object
       context.inputcurrent = undefined
+      // figure out a good way to set this ..
+      // because in this way, state will get out of sync
+      context.player = item.object?.stats?.player ?? ''
 
       // run chip code
       os.tick(item.id, item.type, timestamp, item.code)
@@ -284,6 +287,7 @@ export function memorycli(
   // create / update context
   const context = memoryreadchip(id)
 
+  context.player = player
   context.book = undefined
   context.board = undefined
   context.inputcurrent = undefined

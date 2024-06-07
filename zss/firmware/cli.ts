@@ -1,5 +1,5 @@
 import { maptostring } from 'zss/chip'
-import { api_error, tape_edit, tape_info } from 'zss/device/api'
+import { api_error, tape_editor_open, tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
@@ -62,6 +62,7 @@ function writetext(text: string) {
   write(`${COLOR_EDGE} $blue${text}`)
 }
 
+// cli's only state ?
 let openbook = ''
 
 export const CLI_FIRMWARE = createfirmware({
@@ -84,7 +85,7 @@ export const CLI_FIRMWARE = createfirmware({
 })
   .command('text', (_chip, words) => {
     const text = words.map(maptostring).join(' ')
-    tape_info('$2:', text)
+    tape_info('$2', text)
     return 0
   })
   .command('hyperlink', (_chip, args) => {
@@ -232,7 +233,7 @@ export const CLI_FIRMWARE = createfirmware({
     writetext(`created ${name} of type ${type}`)
 
     // tell tape to open a codeeditor for given page
-    tape_edit('cli', openbook, page.id, memory.player)
+    tape_editor_open('cli', openbook, page.id, memory.player)
     return 0
   })
   .command('send', (chip, words) => {

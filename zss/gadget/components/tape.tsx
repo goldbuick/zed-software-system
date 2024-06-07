@@ -1,5 +1,5 @@
 import { useThree } from '@react-three/fiber'
-import { tape_open } from 'zss/device/api'
+import { tape_terminal_open } from 'zss/device/api'
 import { TAPE_DISPLAY, useTape } from 'zss/device/tape'
 import {
   WRITE_TEXT_CONTEXT,
@@ -28,7 +28,7 @@ export function TapeConsole() {
   let width = cols
   let height = rows
 
-  switch (tape.display) {
+  switch (tape.terminal.layout) {
     case TAPE_DISPLAY.TOP:
       height = Math.round(rows * 0.5)
       break
@@ -72,10 +72,10 @@ export function TapeConsole() {
       position={[marginx * 0.5 + left, marginy + top, 0]}
       scale={[SCALE, SCALE, 1.0]}
     >
-      {tape.open ? (
+      {tape.terminal.open ? (
         <UserFocus>
           <TileSnapshot width={width} height={height} tiles={tiles} />
-          {tape.editopen ? (
+          {tape.editor.open ? (
             <TapeConsoleEditor
               tiles={tiles}
               width={width}
@@ -91,7 +91,9 @@ export function TapeConsole() {
           )}
         </UserFocus>
       ) : (
-        <UserHotkey hotkey="Shift+?">{() => tape_open('tape')}</UserHotkey>
+        <UserHotkey hotkey="Shift+?">
+          {() => tape_terminal_open('tape')}
+        </UserHotkey>
       )}
     </group>
   )
