@@ -224,11 +224,18 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('stat', (chip, words) => {
-    const book = memoryreadbook(openbook)
+    let book = memoryreadbook(openbook)
+
+    // create book if needed
     if (!ispresent(book)) {
-      writetext(`no book currently open`)
-      chip.command('books')
-      return 0
+      book = createbook([])
+      openbook = book.id
+      memorysetbook(book)
+      writetext(`created and opened ${book.name}`)
+      if (!ispresent(book)) {
+        // bail ??
+        return 0
+      }
     }
 
     // create page
@@ -261,9 +268,9 @@ export const CLI_FIRMWARE = createfirmware({
     switch (msg) {
       case 'bookcreate': {
         const book = createbook([])
+        openbook = book.id
         memorysetbook(book)
-        writetext(`created ${book.name}`)
-        write(`!bookopen ${book.id};open ${book.name}`)
+        writetext(`created and opened ${book.name}`)
         break
       }
       case 'bookopen':
