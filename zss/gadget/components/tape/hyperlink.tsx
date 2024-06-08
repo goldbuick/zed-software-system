@@ -1,5 +1,8 @@
 import { useCallback, useContext } from 'react'
-import { tokenizeandwritetextformat } from 'zss/gadget/data/textformat'
+import {
+  WriteTextContext,
+  tokenizeandwritetextformat,
+} from 'zss/gadget/data/textformat'
 
 import { inputcolor } from '../panel/common'
 import { UserInput } from '../userinput'
@@ -7,7 +10,7 @@ import { UserInput } from '../userinput'
 import {
   ConsoleContext,
   ConsoleItemInputProps,
-  setupitemcontext,
+  setuplogitem,
 } from './common'
 
 export function TapeConsoleHyperlink({
@@ -17,8 +20,9 @@ export function TapeConsoleHyperlink({
   label,
   words,
   offset,
-  context,
 }: ConsoleItemInputProps) {
+  const context = useContext(WriteTextContext)
+
   const cc = useContext(ConsoleContext)
   const invoke = useCallback(() => {
     const [target, data] = words
@@ -28,7 +32,7 @@ export function TapeConsoleHyperlink({
   const tcolor = inputcolor(!!active)
 
   // render output
-  setupitemcontext(!!blink, !!active, offset, context)
+  setuplogitem(!!blink, !!active, offset, context)
   tokenizeandwritetextformat(
     `${prefix} $purple$16 ${tcolor}${label}`,
     context,

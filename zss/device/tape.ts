@@ -34,9 +34,12 @@ type TAPE_STATE = {
     open: boolean
     book: string
     page: string
+    type: string
+    title: string
   }
 }
 
+// message controlled state
 const tape = proxy<TAPE_STATE>({
   terminal: {
     open: false,
@@ -48,6 +51,8 @@ const tape = proxy<TAPE_STATE>({
     open: false,
     book: '',
     page: '',
+    type: '',
+    title: '',
   },
 })
 
@@ -107,15 +112,18 @@ createdevice('tape', [], (message) => {
         terminalinclayout(message.data)
       }
       break
-    case 'editor:open': {
-      const [editorbook, editorpage] = message.data ?? ['', '']
-      tape.terminal.open = true
-      tape.editor.open = true
-      tape.editor.book = editorbook
-      tape.editor.page = editorpage
+    case 'editor:open':
+      if (Array.isArray(message.data)) {
+        const [book, page, type, title] = message.data ?? ['', '', '']
+        tape.terminal.open = true
+        tape.editor.open = true
+        tape.editor.book = book
+        tape.editor.page = page
+        tape.editor.type = type
+        tape.editor.title = title
+      }
       break
-    }
-    case 'editpr:close':
+    case 'editor:close':
       tape.editor.open = false
       break
   }

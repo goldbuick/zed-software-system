@@ -60,6 +60,22 @@ export function isbook(value: any): value is BOOK {
   )
 }
 
+export function bookfindcodepage(
+  book: MAYBE_BOOK,
+  address: string,
+): MAYBE_CODE_PAGE {
+  if (!ispresent(book)) {
+    return undefined
+  }
+
+  const laddress = address.toLowerCase()
+  const codepage = book.pages.find(
+    (item) => item.id === address || laddress === codepagereadname(item),
+  )
+
+  return codepage
+}
+
 export function bookreadcodepage(
   book: MAYBE_BOOK,
   type: CODE_PAGE_TYPE,
@@ -77,6 +93,24 @@ export function bookreadcodepage(
   )
 
   return codepage
+}
+
+export function bookwritecodepage(
+  book: MAYBE_BOOK,
+  codepage: MAYBE_CODE_PAGE,
+): boolean {
+  if (!ispresent(book) || !ispresent(codepage)) {
+    return false
+  }
+
+  const existing = bookfindcodepage(book, codepage.id)
+  if (ispresent(existing)) {
+    return false
+  }
+
+  book.pages.push(codepage)
+
+  return true
 }
 
 export function bookreadcodepagedata<T extends CODE_PAGE_TYPE>(

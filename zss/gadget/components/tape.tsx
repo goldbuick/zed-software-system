@@ -1,14 +1,17 @@
 import { useThree } from '@react-three/fiber'
 import { tape_terminal_open } from 'zss/device/api'
+import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import { TAPE_DISPLAY, useTape } from 'zss/device/tape'
 import {
   WRITE_TEXT_CONTEXT,
+  WriteTextContext,
   createwritetextcontext,
 } from 'zss/gadget/data/textformat'
 
 import { BG, CHAR_HEIGHT, CHAR_WIDTH, DOT, FG, SCALE } from './tape/common'
 import { TapeConsoleEditor } from './tape/editor'
 import { TapeConsoleTerminal } from './tape/terminal'
+import { PlayerContext } from './useplayer'
 import { UserFocus, UserHotkey } from './userinput'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
 
@@ -66,6 +69,9 @@ export function TapeConsole() {
     return null
   }
 
+  // user id
+  const player = gadgetstategetplayer()
+
   return (
     <group
       // eslint-disable-next-line react/no-unknown-property
@@ -75,20 +81,15 @@ export function TapeConsole() {
       {tape.terminal.open ? (
         <UserFocus>
           <TileSnapshot width={width} height={height} tiles={tiles} />
-          {tape.editor.open ? (
-            <TapeConsoleEditor
-              tiles={tiles}
-              width={width}
-              height={height}
-              context={context}
-            />
-          ) : (
-            <TapeConsoleTerminal
-              width={width}
-              height={height}
-              context={context}
-            />
-          )}
+          <PlayerContext.Provider value={player}>
+            <WriteTextContext.Provider value={context}>
+              {tape.editor.open ? (
+                <TapeConsoleEditor />
+              ) : (
+                <TapeConsoleTerminal />
+              )}
+            </WriteTextContext.Provider>
+          </PlayerContext.Provider>
         </UserFocus>
       ) : (
         <UserHotkey hotkey="Shift+?">

@@ -1,3 +1,4 @@
+import { useContext } from 'react'
 import { useSnapshot } from 'valtio'
 import {
   tape_terminal_close,
@@ -7,42 +8,39 @@ import {
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import { useTape } from 'zss/device/tape'
 import {
-  WRITE_TEXT_CONTEXT,
+  WriteTextContext,
   tokenizeandmeasuretextformat,
+  tokenizeandwritetextformat,
 } from 'zss/gadget/data/textformat'
+import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
-import { stringsplice } from 'zss/mapping/string'
+import { stringsplice, totarget } from 'zss/mapping/string'
 import { ispresent } from 'zss/mapping/types'
 
 import { UserHotkey, UserInput, UserInputMods, ismac } from '../userinput'
 
-import { tapeinputstate } from './common'
-import { Logput } from './logput'
+import { ActiveItem } from './activeitem'
+import { ConsoleContext, tapeinputstate } from './common'
+import { ConsoleInput } from './input'
+import { TapeConsoleItem } from './item'
 
-type TapeConsoleTerminalProps = {
-  width: number
-  height: number
-  context: WRITE_TEXT_CONTEXT
-}
+export function TapeConsoleTerminal() {
+  const context = useContext(WriteTextContext)
 
-export function TapeConsoleTerminal({
-  width,
-  height,
-  context,
-}: TapeConsoleTerminalProps) {
   const tape = useTape()
   const tapeinput = useSnapshot(tapeinputstate)
 
   // offset into logs
-  const centerrow = Math.round(tapeinput.ycursor - height * 0.5)
-  const maxrowheight = height - 2
+  const centerrow = Math.round(tapeinput.ycursor - context.height * 0.5)
+  const maxrowheight = context.height - 2
   const startrow = clamp(centerrow, 0, tape.terminal.logs.length - maxrowheight)
 
   // starting render row
   const logput = tape.terminal.logs.slice(startrow, startrow + maxrowheight)
 
   // build id list
-  // const logids: string[] = logput.map((item) => item[0])
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const logids: string[] = logput.map((item) => item[0])
 
   // render to strings
   const logrows: string[] = logput.map((item) => {
@@ -70,7 +68,11 @@ export function TapeConsoleTerminal({
     if (item.startsWith('!')) {
       context.y += 1
     } else {
-      const measure = tokenizeandmeasuretextformat(item, width, height)
+      const measure = tokenizeandmeasuretextformat(
+        item,
+        context.width,
+        context.height,
+      )
       const step = measure?.y ?? 1
       context.y += step
       y -= step - 1
@@ -82,7 +84,7 @@ export function TapeConsoleTerminal({
   const inputstate = tapeinput.buffer[tapeinput.bufferindex]
 
   // local x input
-  const rightedge = width - 1
+  const rightedge = context.width - 1
   const lastrow = tape.terminal.logs.length + 1
 
   let ii1 = tapeinput.xcursor
@@ -160,18 +162,49 @@ export function TapeConsoleTerminal({
     tapeinputstate.yselect = undefined
   }
 
+  // track scrolling
+  const yscrolled = tapeinput.ycursor - startrow - 2
+
+  // write hint
+  const hint = 'if lost try #help'
+  context.x = context.width - hint.length
+  context.y = 0
+  tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
+
+  // user id
+  const player = gadgetstategetplayer()
+
   return (
     <>
       <UserHotkey hotkey="Escape">
         {() => tape_terminal_close('tape')}
       </UserHotkey>
-      <Logput
-        player={gadgetstategetplayer()}
-        rows={logrows}
-        offsets={logoffsets}
-        startrow={startrow}
-        context={context}
-      />
+      <ConsoleContext.Provider
+        value={{
+          sendmessage(maybetarget, data) {
+            const [target, message] = totarget(maybetarget)
+            if (target === 'self') {
+              const input = `#${message} ${data ?? ''}`
+              vm_cli('tape', input, player)
+            } else {
+              hub.emit(`${target}:${message}`, 'gadget', data, player)
+            }
+          },
+        }}
+      >
+        {logrows.map((text, index) =>
+          index === yscrolled ? (
+            <ActiveItem key={index} text={text} offset={logoffsets[index]} />
+          ) : (
+            <TapeConsoleItem
+              key={index}
+              text={text}
+              offset={logoffsets[index]}
+            />
+          ),
+        )}
+        <ConsoleInput startrow={startrow} />
+      </ConsoleContext.Provider>
       <UserInput
         MENU_BUTTON={(mods) =>
           tape_terminal_inclayout('tape', mods.shift ? -1 : 1)

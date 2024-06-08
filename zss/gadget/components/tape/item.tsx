@@ -1,6 +1,7 @@
+import { useContext } from 'react'
 import {
   HyperLinkText,
-  applystrtoindex,
+  WriteTextContext,
   tokenize,
   tokenizeandwritetextformat,
 } from 'zss/gadget/data/textformat'
@@ -8,7 +9,7 @@ import {
 import {
   ConsoleItemInputProps,
   ConsoleItemProps,
-  setupitemcontext,
+  setuplogitem,
 } from './common'
 import { TapeConsoleHyperlink } from './hyperlink'
 
@@ -17,10 +18,11 @@ export function TapeConsoleItem({
   active,
   text,
   offset,
-  context,
 }: ConsoleItemProps) {
+  const context = useContext(WriteTextContext)
+
   // setup context for item
-  setupitemcontext(!!blink, !!active, offset, context)
+  setuplogitem(!!blink, !!active, offset, context)
 
   // write ui
   if (text.startsWith('!')) {
@@ -52,7 +54,6 @@ export function TapeConsoleItem({
       label,
       words: args,
       offset,
-      context,
     }
 
     switch (input.toLowerCase()) {

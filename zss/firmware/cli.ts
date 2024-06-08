@@ -9,7 +9,12 @@ import {
   memoryreadcontext,
   memorysetbook,
 } from 'zss/memory'
-import { bookreadflag, booksetflag, createbook } from 'zss/memory/book'
+import {
+  bookreadflag,
+  booksetflag,
+  bookwritecodepage,
+  createbook,
+} from 'zss/memory/book'
 import {
   codepagereadname,
   codepagereadtypetostring,
@@ -83,19 +88,6 @@ export const CLI_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  .command('text', (_chip, words) => {
-    const text = words.map(maptostring).join(' ')
-    tape_info('$2', text)
-    return 0
-  })
-  .command('hyperlink', (_chip, args) => {
-    // package into a panel item
-    const [labelword, ...words] = args
-    const label = maptostring(labelword)
-    const hyperlink = words.map(maptostring).join(' ')
-    tape_info('$2', `!${hyperlink};${label}`)
-    return 0
-  })
   .command('help', () => {
     writeheader(`H E L P`)
     writeoption(`#1`, `zss controls and inputs`)
@@ -178,6 +170,20 @@ export const CLI_FIRMWARE = createfirmware({
     writetext(`todo`)
     return 0
   })
+  .command('text', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
+    const text = words.map(maptostring).join(' ')
+    tape_info('$2', `${memory.player}: ${text}`)
+    return 0
+  })
+  .command('hyperlink', (chip, args) => {
+    const memory = memoryreadchip(chip.id())
+    const [labelword, ...words] = args
+    const label = maptostring(labelword)
+    const hyperlink = words.map(maptostring).join(' ')
+    tape_info('$2', `!${hyperlink};${memory.player}: ${label}`)
+    return 0
+  })
   .command('books', () => {
     writesection(`books`)
     const list = memoryreadbooklist()
@@ -225,15 +231,26 @@ export const CLI_FIRMWARE = createfirmware({
       return 0
     }
 
+    // create page
     const [codepage] = words
     const memory = memoryreadchip(chip.id())
     const page = createcodepage(`@${codepage}`, {})
     const name = codepagereadname(page)
     const type = codepagereadtypetostring(page)
-    writetext(`created ${name} of type ${type}`)
 
-    // tell tape to open a codeeditor for given page
-    tape_editor_open('cli', openbook, page.id, memory.player)
+    // msg and add
+    writetext(`created ${name} of type ${type}`)
+    bookwritecodepage(book, page)
+
+    // tell tape to open a code editor for given page
+    tape_editor_open(
+      'cli',
+      openbook,
+      page.id,
+      codepagereadtypetostring(page),
+      codepagereadname(page),
+      memory.player,
+    )
     return 0
   })
   .command('send', (chip, words) => {
@@ -272,11 +289,8 @@ export const CLI_FIRMWARE = createfirmware({
           )
         }
         break
-      // do we need this ?
-      case 'bookclose':
-        break
       default:
-        tape_info('$2:', `${msg}${ispresent(data) ? `[${data}]` : ''}`)
+        tape_info('$2', `${msg} ${data ?? ''}`)
         break
     }
 

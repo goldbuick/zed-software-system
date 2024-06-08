@@ -1,31 +1,42 @@
-import { WRITE_TEXT_CONTEXT } from 'zss/gadget/data/textformat'
-import { TILES } from 'zss/gadget/data/types'
+import { useContext } from 'react'
+import {
+  WriteTextContext,
+  tokenizeandwritetextformat,
+} from 'zss/gadget/data/textformat'
 
-import { UserInput, modsfromevent } from '../userinput'
+import { writeTile } from '../usetiles'
 
-type TapeConsoleEditorProps = {
-  tiles: TILES
-  width: number
-  height: number
-  context: WRITE_TEXT_CONTEXT
-}
+import { BG, FG, setupeditoritem } from './common'
+import { Menubar } from './menubar'
+import { Textinput } from './textinput'
+import { Textrows } from './textrows'
 
-export function TapeConsoleEditor({
-  tiles,
-  width,
-  height,
-  context,
-}: TapeConsoleEditorProps) {
-  //
+export function TapeConsoleEditor() {
+  const context = useContext(WriteTextContext)
+
+  // left - right - bottom of frame
+  for (let y = 1; y < context.height - 1; ++y) {
+    writeTile(context, context.width, context.height, 0, y, {
+      char: 179,
+      color: FG,
+      bg: BG,
+    })
+    writeTile(context, context.width, context.height, context.width - 1, y, {
+      char: 179,
+      color: FG,
+      bg: BG,
+    })
+  }
+
+  const bottomedge = `$205`.repeat(context.width - 2)
+  setupeditoritem(false, false, 0, context.height - 1, context)
+  tokenizeandwritetextformat(`$212${bottomedge}$190`, context, true)
 
   return (
     <>
-      <UserInput
-        keydown={(event) => {
-          const mods = modsfromevent(event)
-          console.info(mods, event.key)
-        }}
-      />
+      <Menubar />
+      <Textrows />
+      <Textinput />
     </>
   )
 }

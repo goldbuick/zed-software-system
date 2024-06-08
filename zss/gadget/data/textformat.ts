@@ -104,6 +104,7 @@ export function tokenize(text: string, noWhitespace = false) {
 
 export type WRITE_TEXT_CONTEXT = {
   measureonly: boolean
+  measuredwidth: number
   x: number
   y: number
   isEven: boolean
@@ -129,6 +130,7 @@ export function createwritetextcontext(
 ): WRITE_TEXT_CONTEXT {
   return {
     measureonly: false,
+    measuredwidth: 0,
     x: 0,
     y: 0,
     isEven: true,
@@ -179,6 +181,9 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
     if (context.x >= (context.rightEdge ?? context.width)) {
       context.x = context.leftEdge ?? 0
       ++context.y
+    }
+    if (context.x > context.measuredwidth) {
+      context.measuredwidth = context.x + 1
     }
   }
 
@@ -264,6 +269,11 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
     if (context.y >= context.height) {
       return
     }
+  }
+
+  // track overall width
+  if (context.x > context.measuredwidth) {
+    context.measuredwidth = context.x + 1
   }
 
   // move to next line if needed

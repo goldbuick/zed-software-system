@@ -99,9 +99,11 @@ export function tape_editor_open(
   sender: string,
   book: string,
   page: string,
+  type: string,
+  title: string,
   player: string,
 ) {
-  hub.emit('tape:editor:open', sender, [book, page], player)
+  hub.emit('tape:editor:open', sender, [book, page, type, title], player)
 }
 
 export function tape_editor_close(sender: string) {

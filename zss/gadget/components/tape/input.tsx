@@ -13,10 +13,6 @@ import { useBlink } from '../useblink'
 
 import { BG, BG_ACTIVE, FG, tapeinputstate } from './common'
 
-type ConsoleInputProps = {
-  startrow: number
-}
-
 function writeline(
   blink: boolean,
   active: boolean,
@@ -26,6 +22,10 @@ function writeline(
   context.isEven = context.y % 2 === 0
   context.activeBg = active && !blink ? BG_ACTIVE : BG
   tokenizeandwritetextformat(text, context, true)
+}
+
+type ConsoleInputProps = {
+  startrow: number
 }
 
 export function ConsoleInput({ startrow }: ConsoleInputProps) {
