@@ -1,7 +1,6 @@
-import { useContext } from 'react'
 import { useSnapshot } from 'valtio'
 import { tape_terminal_inclayout } from 'zss/device/api'
-import { WriteTextContext, applystrtoindex } from 'zss/gadget/data/textformat'
+import { applystrtoindex, useWriteText } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
 
 import { useBlink } from '../useblink'
@@ -11,7 +10,7 @@ import { tapeeditorstate } from './common'
 
 export function Textinput() {
   const blink = useBlink()
-  const context = useContext(WriteTextContext)
+  const context = useWriteText()
   const tapeeditor = useSnapshot(tapeeditorstate)
 
   // draw cursor

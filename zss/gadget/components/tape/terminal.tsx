@@ -1,4 +1,3 @@
-import { useContext } from 'react'
 import { useSnapshot } from 'valtio'
 import {
   tape_terminal_close,
@@ -8,9 +7,9 @@ import {
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import { useTape } from 'zss/device/tape'
 import {
-  WriteTextContext,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
+  useWriteText,
 } from 'zss/gadget/data/textformat'
 import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
@@ -25,7 +24,7 @@ import { ConsoleInput } from './input'
 import { TapeConsoleItem } from './item'
 
 export function TapeConsoleTerminal() {
-  const context = useContext(WriteTextContext)
+  const context = useWriteText()
 
   const tape = useTape()
   const tapeinput = useSnapshot(tapeinputstate)

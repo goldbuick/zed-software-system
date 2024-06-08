@@ -1,16 +1,11 @@
-import { useContext } from 'react'
 import {
   HyperLinkText,
-  WriteTextContext,
   tokenize,
   tokenizeandwritetextformat,
+  useWriteText,
 } from 'zss/gadget/data/textformat'
 
-import {
-  ConsoleItemInputProps,
-  ConsoleItemProps,
-  setuplogitem,
-} from './common'
+import { ConsoleItemInputProps, ConsoleItemProps, setuplogitem } from './common'
 import { TapeConsoleHyperlink } from './hyperlink'
 
 export function TapeConsoleItem({
@@ -19,7 +14,7 @@ export function TapeConsoleItem({
   text,
   offset,
 }: ConsoleItemProps) {
-  const context = useContext(WriteTextContext)
+  const context = useWriteText()
 
   // setup context for item
   setuplogitem(!!blink, !!active, offset, context)

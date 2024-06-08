@@ -1,7 +1,6 @@
-import { useContext } from 'react'
 import {
-  WriteTextContext,
   tokenizeandwritetextformat,
+  useWriteText,
   writetextcolorreset,
 } from 'zss/gadget/data/textformat'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
@@ -23,7 +22,7 @@ type PanelItemProps = {
 
 export function PanelItem({ item, active }: PanelItemProps) {
   const player = usePlayer()
-  const context = useContext(WriteTextContext)
+  const context = useWriteText()
 
   context.isEven = context.y % 2 === 0
 

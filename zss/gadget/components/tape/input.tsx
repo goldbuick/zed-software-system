@@ -1,11 +1,10 @@
-import { useContext } from 'react'
 import { useSnapshot } from 'valtio'
 import {
   WRITE_TEXT_CONTEXT,
-  WriteTextContext,
   applycolortoindexes,
   applystrtoindex,
   tokenizeandwritetextformat,
+  useWriteText,
 } from 'zss/gadget/data/textformat'
 import { ispresent } from 'zss/mapping/types'
 
@@ -30,7 +29,7 @@ type ConsoleInputProps = {
 
 export function ConsoleInput({ startrow }: ConsoleInputProps) {
   const blink = useBlink()
-  const context = useContext(WriteTextContext)
+  const context = useWriteText()
   const tapeinput = useSnapshot(tapeinputstate)
 
   // input & selection

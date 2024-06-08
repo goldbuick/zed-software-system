@@ -1,7 +1,6 @@
-import { useContext } from 'react'
 import {
-  WriteTextContext,
   tokenizeandwritetextformat,
+  useWriteText,
 } from 'zss/gadget/data/textformat'
 
 import { writeTile } from '../usetiles'
@@ -12,7 +11,7 @@ import { Textinput } from './textinput'
 import { Textrows } from './textrows'
 
 export function TapeConsoleEditor() {
-  const context = useContext(WriteTextContext)
+  const context = useWriteText()
 
   // left - right - bottom of frame
   for (let y = 1; y < context.height - 1; ++y) {

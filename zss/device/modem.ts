@@ -2,7 +2,6 @@ import { syncedStore, getYjsDoc, SyncedText } from '@syncedstore/core'
 import { useSyncedStore } from '@syncedstore/react'
 import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'
-import { useEffect } from 'react'
 import * as syncprotocol from 'y-protocols/sync'
 import { createdevice } from 'zss/device'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -14,10 +13,12 @@ export enum MODEM_SHARED_TYPE {
 
 type MODEM_SHARED_VALUE =
   | {
+      key: string
       type: MODEM_SHARED_TYPE.NUMBER
       value: number
     }
   | {
+      key: string
       type: MODEM_SHARED_TYPE.STRING
       value: SyncedText
     }
@@ -27,48 +28,68 @@ type SHARED_TYPE_MAP = {
   [MODEM_SHARED_TYPE.STRING]: SyncedText
 }
 
-type SHARED_VALUES = Record<string, MODEM_SHARED_VALUE>
+const store = syncedStore({ shared: [] } as { shared: MODEM_SHARED_VALUE[] })
 
-const store = syncedStore({ shared: {} } as { shared: SHARED_VALUES })
+function findvalue(
+  values: MODEM_SHARED_VALUE[],
+  key: string,
+  type: MODEM_SHARED_TYPE,
+): MAYBE<MODEM_SHARED_VALUE> {
+  return values.find((item) => item.key === key && item.type === type)
+}
 
 export function useModem() {
-  return useSyncedStore(store)
+  const modem = useSyncedStore(store)
+  return modem
 }
 
 // react ui code uses this to wait for shared value to
 // populate before continuing
-export function useWaitFor(callback: () => MAYBE<() => void>, key: string) {
+function useWaitFor(
+  key: string,
+  type: MODEM_SHARED_TYPE,
+): MODEM_SHARED_VALUE | undefined {
   const modem = useModem()
-  const maybevalue = modem.shared[key]
-  useEffect(() => {
-    const value = modem.shared[key]
-    if (ispresent(value)) {
-      return callback()
-    }
-    // skip
-    return undefined
-  }, [callback, key, modem, maybevalue])
+  const maybevalue = findvalue(modem.shared, key, type)
+  return ispresent(maybevalue) ? maybevalue : undefined
+}
+
+export function useWaitForNumber(key: string) {
+  const result = useWaitFor(key, MODEM_SHARED_TYPE.NUMBER)
+  return result
+}
+
+export function useWaitForString(key: string) {
+  const result = useWaitFor(key, MODEM_SHARED_TYPE.STRING)
+  return result
 }
 
 // non react code uses this to setup values
-export function modemwriteinit<T extends MODEM_SHARED_TYPE>(
+function modemwriteinit<T extends MODEM_SHARED_TYPE>(
   key: string,
   type: T,
   value: SHARED_TYPE_MAP[T],
 ) {
-  const maybevalue = store.shared[key]
-  if (!ispresent(maybevalue)) {
-    // @ts-expect-error ugh
-    store.shared[key] = {
-      type,
-      value,
-    }
+  const maybevalue = findvalue(store.shared, key, type)
+  if (ispresent(maybevalue)) {
+    return
   }
+
+  // @ts-expect-error ugh
+  store.shared.push({ key, type, value })
+}
+
+export function modemwritenumber(key: string, value: number) {
+  modemwriteinit(key, MODEM_SHARED_TYPE.NUMBER, value)
+}
+
+export function modemwritestring(key: string, value: string) {
+  const strvalue = new SyncedText(value)
+  modemwriteinit(key, MODEM_SHARED_TYPE.STRING, strvalue)
 }
 
 function modemmessage(encoder: encoding.Encoder) {
-  const message = encoding.toUint8Array(encoder)
-  return [message]
+  return encoding.toUint8Array(encoder)
 }
 
 let joined = false
@@ -77,8 +98,8 @@ const doc = getYjsDoc(store)
 const modem = createdevice('modem', ['second'], (message) => {
   switch (message.target) {
     case 'second':
-      if (!joined) {
-        // send join message
+      // send join message
+      if (!joined && message.data % 2 === 0) {
         modem.emit('modem:join')
       }
       break
@@ -102,9 +123,8 @@ const modem = createdevice('modem', ['second'], (message) => {
       joined = true
       break
     case 'sync': {
-      const [content] = message.data
-      if (message.sender !== modem.id()) {
-        const decoder = decoding.createDecoder(content)
+      if (ispresent(message.data) && message.sender !== modem.id()) {
+        const decoder = decoding.createDecoder(message.data)
         const syncEncoder = encoding.createEncoder()
         const syncMessageType = syncprotocol.readSyncMessage(
           decoder,

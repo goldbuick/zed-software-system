@@ -1,17 +1,13 @@
 import { useCallback, useContext } from 'react'
 import {
-  WriteTextContext,
   tokenizeandwritetextformat,
+  useWriteText,
 } from 'zss/gadget/data/textformat'
 
 import { inputcolor } from '../panel/common'
 import { UserInput } from '../userinput'
 
-import {
-  ConsoleContext,
-  ConsoleItemInputProps,
-  setuplogitem,
-} from './common'
+import { ConsoleContext, ConsoleItemInputProps, setuplogitem } from './common'
 
 export function TapeConsoleHyperlink({
   blink,
@@ -21,7 +17,7 @@ export function TapeConsoleHyperlink({
   words,
   offset,
 }: ConsoleItemInputProps) {
-  const context = useContext(WriteTextContext)
+  const context = useWriteText()
 
   const cc = useContext(ConsoleContext)
   const invoke = useCallback(() => {

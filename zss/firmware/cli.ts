@@ -1,5 +1,6 @@
 import { maptostring } from 'zss/chip'
 import { api_error, tape_editor_open, tape_info } from 'zss/device/api'
+import { modemwritestring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
@@ -241,13 +242,17 @@ export const CLI_FIRMWARE = createfirmware({
     // create page
     const [codepage] = words
     const memory = memoryreadchip(chip.id())
-    const page = createcodepage(`@${codepage}`, {})
+    const content = `@${codepage}`
+    const page = createcodepage(content, {})
     const name = codepagereadname(page)
     const type = codepagereadtypetostring(page)
 
     // msg and add
     writetext(`created ${name} of type ${type}`)
     bookwritecodepage(book, page)
+
+    // write to modem so ui can pick it up
+    modemwritestring(page.id, content)
 
     // tell tape to open a code editor for given page
     tape_editor_open(

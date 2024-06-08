@@ -1,9 +1,8 @@
-import { useContext } from 'react'
 import { useTape } from 'zss/device/tape'
 import {
-  WriteTextContext,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
+  useWriteText,
 } from 'zss/gadget/data/textformat'
 
 import { useBlink } from '../useblink'
@@ -13,7 +12,7 @@ import { EG_BOTTOM, EG_TOP, setupeditoritem } from './common'
 export function Menubar() {
   const tape = useTape()
   const blink = useBlink()
-  const context = useContext(WriteTextContext)
+  const context = useWriteText()
 
   setupeditoritem(false, false, 0, 0, context)
   const egtop = `${EG_TOP}`.repeat(context.width - 4)
