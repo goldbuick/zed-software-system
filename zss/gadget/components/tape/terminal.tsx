@@ -1,4 +1,3 @@
-import { useSnapshot } from 'valtio'
 import {
   tape_terminal_close,
   tape_terminal_inclayout,
@@ -19,7 +18,7 @@ import { ispresent } from 'zss/mapping/types'
 import { UserHotkey, UserInput, UserInputMods, ismac } from '../userinput'
 
 import { ActiveItem } from './activeitem'
-import { ConsoleContext, tapeinputstate } from './common'
+import { ConsoleContext, tapeinputstate, useTapeInput } from './common'
 import { ConsoleInput } from './input'
 import { TapeConsoleItem } from './item'
 
@@ -27,7 +26,7 @@ export function TapeConsoleTerminal() {
   const context = useWriteText()
 
   const tape = useTape()
-  const tapeinput = useSnapshot(tapeinputstate)
+  const tapeinput = useTapeInput()
 
   // offset into logs
   const centerrow = Math.round(tapeinput.ycursor - context.height * 0.5)

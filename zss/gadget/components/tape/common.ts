@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import { proxy } from 'valtio'
+import { proxy, useSnapshot } from 'valtio'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
@@ -25,28 +25,6 @@ export const SCALE = 1
 export const CHAR_WIDTH = DRAW_CHAR_WIDTH * SCALE
 export const CHAR_HEIGHT = DRAW_CHAR_HEIGHT * SCALE
 
-// scroll ui edges & deco
-
-// edges
-// top
-// 0, 0 196
-// 0, 1 205
-//
-// bottom
-// -1, 205
-
-// deco
-// 1, 0 - 205 187
-// 1, 1 - 232 200
-
-// corners
-// top left-right
-// 213 191
-// 181 <- extra
-//
-// bottom left-right
-// 212 190
-
 export const tapeinputstate = proxy({
   // cursor position & selection
   xcursor: 0,
@@ -57,16 +35,20 @@ export const tapeinputstate = proxy({
   bufferindex: 0,
   buffer: [''],
 })
+export function useTapeInput() {
+  return useSnapshot(tapeinputstate)
+}
 
 export const tapeeditorstate = proxy({
   // need an id for synced store
   id: '',
-  // cursor position & selection (cols & rows)
-  xcursor: 0,
-  ycursor: 0,
-  xselect: undefined as MAYBE_NUMBER,
-  yselect: undefined as MAYBE_NUMBER,
+  // cursor position & selection (text index)
+  cursor: 0,
+  select: undefined as MAYBE_NUMBER,
 })
+export function useTapeEditor() {
+  return useSnapshot(tapeeditorstate)
+}
 
 export type ConsoleItemProps = {
   blink?: boolean

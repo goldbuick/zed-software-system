@@ -1,4 +1,3 @@
-import { useSnapshot } from 'valtio'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
@@ -10,7 +9,7 @@ import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../useblink'
 
-import { BG, BG_ACTIVE, FG, tapeinputstate } from './common'
+import { BG, BG_ACTIVE, FG, useTapeInput } from './common'
 
 function writeline(
   blink: boolean,
@@ -30,7 +29,7 @@ type ConsoleInputProps = {
 export function ConsoleInput({ startrow }: ConsoleInputProps) {
   const blink = useBlink()
   const context = useWriteText()
-  const tapeinput = useSnapshot(tapeinputstate)
+  const tapeinput = useTapeInput()
 
   // input & selection
   const inputstate = tapeinput.buffer[tapeinput.bufferindex]

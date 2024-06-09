@@ -242,8 +242,8 @@ export const CLI_FIRMWARE = createfirmware({
     // create page
     const [codepage] = words
     const memory = memoryreadchip(chip.id())
-    const content = `@${codepage}`
-    const page = createcodepage(content, {})
+    const code = `@${codepage}\n`
+    const page = createcodepage(code, {})
     const name = codepagereadname(page)
     const type = codepagereadtypetostring(page)
 
@@ -252,7 +252,7 @@ export const CLI_FIRMWARE = createfirmware({
     bookwritecodepage(book, page)
 
     // write to modem so ui can pick it up
-    modemwritestring(page.id, content)
+    modemwritestring(page.id, code)
 
     // tell tape to open a code editor for given page
     tape_editor_open(

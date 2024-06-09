@@ -103,6 +103,7 @@ export function tokenize(text: string, noWhitespace = false) {
 }
 
 export type WRITE_TEXT_CONTEXT = {
+  disablewrap: boolean
   measureonly: boolean
   measuredwidth: number
   x: number
@@ -129,6 +130,7 @@ export function createwritetextcontext(
   bg: number,
 ): WRITE_TEXT_CONTEXT {
   return {
+    disablewrap: false,
     measureonly: false,
     measuredwidth: 0,
     x: 0,
@@ -182,7 +184,10 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
 
   function incCursor() {
     ++context.x
-    if (context.x >= (context.rightEdge ?? context.width)) {
+    if (
+      !context.disablewrap &&
+      context.x >= (context.rightEdge ?? context.width)
+    ) {
       context.x = context.leftEdge ?? 0
       ++context.y
     }

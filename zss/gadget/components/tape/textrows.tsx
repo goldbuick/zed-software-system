@@ -1,4 +1,4 @@
-import { useSnapshot } from 'valtio'
+import { SyncedText } from '@syncedstore/core'
 import { useWaitForString } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
 import {
@@ -9,13 +9,12 @@ import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../useblink'
 
-import { setupeditoritem, tapeeditorstate } from './common'
+import { setupeditoritem } from './common'
 
 export function Textrows() {
   const tape = useTape()
   const blink = useBlink()
   const context = useWriteText()
-  const tapeeditor = useSnapshot(tapeeditorstate)
   const codepage = useWaitForString(tape.editor.page)
 
   setupeditoritem(false, false, 1, 2, context)
@@ -24,9 +23,16 @@ export function Textrows() {
     return null
   }
 
-  // split by newlines ...
-  // we need the shared string
-  tokenizeandwritetextformat(`!!!!!!!!!!!!!!!`, context, true)
+  // split by line
+  const code = (codepage.value as SyncedText).toJSON()
+  const rows = code.split(/\r?\n/)
+
+  const height = context.height - 3
+  for (let i = 0; i < rows.length && i < height; ++i) {
+    const row = rows[i]
+    setupeditoritem(false, false, 1, 2 + i, context)
+    tokenizeandwritetextformat(row, context, true)
+  }
 
   return null
 }
