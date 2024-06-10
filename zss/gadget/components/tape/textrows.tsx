@@ -9,12 +9,13 @@ import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../useblink'
 
-import { setupeditoritem } from './common'
+import { setupeditoritem, useTapeEditor } from './common'
 
 export function Textrows() {
   const tape = useTape()
   const blink = useBlink()
   const context = useWriteText()
+  const tapeeditor = useTapeEditor()
   const codepage = useWaitForString(tape.editor.page)
 
   setupeditoritem(false, false, 1, 2, context)
@@ -31,7 +32,7 @@ export function Textrows() {
   for (let i = 0; i < rows.length && i < height; ++i) {
     const row = rows[i]
     setupeditoritem(false, false, 1, 2 + i, context)
-    tokenizeandwritetextformat(row, context, true)
+    tokenizeandwritetextformat(`${row} `, context, true)
   }
 
   return null

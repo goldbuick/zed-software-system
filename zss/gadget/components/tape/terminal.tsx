@@ -15,7 +15,13 @@ import { clamp } from 'zss/mapping/number'
 import { stringsplice, totarget } from 'zss/mapping/string'
 import { ispresent } from 'zss/mapping/types'
 
-import { UserHotkey, UserInput, UserInputMods, ismac } from '../userinput'
+import {
+  UserHotkey,
+  UserInput,
+  UserInputMods,
+  ismac,
+  modsfromevent,
+} from '../userinput'
 
 import { ActiveItem } from './activeitem'
 import { ConsoleContext, tapeinputstate, useTapeInput } from './common'
@@ -174,9 +180,6 @@ export function TapeConsoleTerminal() {
 
   return (
     <>
-      <UserHotkey hotkey="Escape">
-        {() => tape_terminal_close('tape')}
-      </UserHotkey>
       <ConsoleContext.Provider
         value={{
           sendmessage(maybetarget, data) {
@@ -276,14 +279,13 @@ export function TapeConsoleTerminal() {
             }
           }
         }}
+        CANCEL_BUTTON={() => {
+          tape_terminal_close('tape')
+        }}
         keydown={(event) => {
           const { key } = event
           const lkey = key.toLowerCase()
-          const mods: UserInputMods = {
-            alt: event.altKey,
-            ctrl: ismac ? event.metaKey : event.ctrlKey,
-            shift: event.shiftKey,
-          }
+          const mods = modsfromevent(event)
 
           switch (lkey) {
             case 'delete':

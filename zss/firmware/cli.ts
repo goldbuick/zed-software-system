@@ -11,6 +11,7 @@ import {
   memorysetbook,
 } from 'zss/memory'
 import {
+  bookreadcodepage,
   bookreadflag,
   booksetflag,
   bookwritecodepage,
@@ -18,6 +19,7 @@ import {
 } from 'zss/memory/book'
 import {
   codepagereadname,
+  codepagereadtype,
   codepagereadtypetostring,
   createcodepage,
 } from 'zss/memory/codepage'
@@ -243,13 +245,20 @@ export const CLI_FIRMWARE = createfirmware({
     const [codepage] = words
     const memory = memoryreadchip(chip.id())
     const code = `@${codepage}\n`
-    const page = createcodepage(code, {})
+
+    // add to book if needed, use page from book if name matches
+    let page = createcodepage(code, {})
     const name = codepagereadname(page)
     const type = codepagereadtypetostring(page)
+    const maybepage = bookreadcodepage(book, codepagereadtype(page), name)
 
-    // msg and add
-    writetext(`created ${name} of type ${type}`)
-    bookwritecodepage(book, page)
+    if (ispresent(maybepage)) {
+      page = maybepage
+      writetext(`opened ${name} of type ${type}`)
+    } else {
+      bookwritecodepage(book, page)
+      writetext(`created ${name} of type ${type}`)
+    }
 
     // write to modem so ui can pick it up
     modemwritestring(page.id, code)
@@ -260,7 +269,7 @@ export const CLI_FIRMWARE = createfirmware({
       openbook,
       page.id,
       codepagereadtypetostring(page),
-      codepagereadname(page),
+      `${book.name}:${name}`,
       memory.player,
     )
     return 0

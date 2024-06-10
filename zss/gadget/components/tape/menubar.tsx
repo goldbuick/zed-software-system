@@ -25,10 +25,10 @@ export function Menubar() {
   )
 
   // make label
-  const label = tape.editor.type === 'object' ? '' : `[${tape.editor.type}]`
+  const label = tape.editor.type === 'object' ? '' : `[${tape.editor.type}] `
 
   // write name
-  const title = ` ${tape.editor.title}${label} `
+  const title = ` ${label}${tape.editor.title} `
   const result = tokenizeandmeasuretextformat(
     title,
     context.width,
