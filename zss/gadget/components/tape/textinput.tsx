@@ -10,6 +10,7 @@ import { useTape } from 'zss/device/tape'
 import { PT } from 'zss/firmware/wordtypes'
 import { applystrtoindex, useWriteText } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
+import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../useblink'
 import { UserInput, modsfromevent } from '../userinput'
@@ -27,10 +28,11 @@ function splitcoderows(code: string): CODE_ROW[] {
   const rows = code.split(/\r?\n/)
   return rows.map((code) => {
     const start = cursor
-    cursor += code.length
+    const fullcode = `${code}\n`
+    cursor += fullcode.length
     return {
       start,
-      code,
+      code: fullcode,
       end: start + code.length,
     }
   })
@@ -62,6 +64,8 @@ export function Textinput() {
   // translate index to x, y
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
   const xcursor = tapeeditor.cursor - rows[ycursor].start
+
+  console.info(tapeeditor.cursor, xcursor, ycursor, rows)
 
   // draw cursor
   const xblink = xcursor + 1
@@ -141,7 +145,11 @@ export function Textinput() {
         }
       }}
       OK_BUTTON={() => {
-        // insert newline !
+        if (ispresent(value)) {
+          // insert newline !
+          value.insert(tapeeditor.cursor, `\n`)
+          tapeeditorstate.cursor += 1
+        }
       }}
       CANCEL_BUTTON={() => {
         tape_editor_close('editor')
@@ -150,14 +158,20 @@ export function Textinput() {
         tape_terminal_inclayout('tape', mods.shift ? -1 : 1)
       }}
       keydown={(event) => {
+        if (!ispresent(value)) {
+          return
+        }
+
         const { key } = event
         const lkey = key.toLowerCase()
         const mods = modsfromevent(event)
 
         switch (lkey) {
           case 'delete':
+            value.delete(tapeeditor.cursor, 1)
             break
           case 'backspace':
+            value.delete(tapeeditor.cursor - 1, 1)
             break
           default:
             if (mods.ctrl) {
@@ -175,7 +189,8 @@ export function Textinput() {
               // no-op ?? - could this shove text around when you have selection ??
               // or jump by 10 or by word ??
             } else if (key.length === 1) {
-              //
+              value.insert(tapeeditor.cursor, key)
+              tapeeditorstate.cursor += key.length
             }
             break
         }
