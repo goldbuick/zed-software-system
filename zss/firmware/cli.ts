@@ -1,7 +1,30 @@
 import { maptostring } from 'zss/chip'
-import { tape_debug, tape_info } from 'zss/device/api'
+import { api_error, tape_editor_open, tape_info } from 'zss/device/api'
+import { modemwritestring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
-import { memoryreadbooklist } from 'zss/memory'
+import { ispresent, isstring } from 'zss/mapping/types'
+import {
+  memoryreadbook,
+  memoryreadbooklist,
+  memoryreadchip,
+  memoryreadcontext,
+  memorysetbook,
+} from 'zss/memory'
+import {
+  bookreadcodepage,
+  bookreadflag,
+  booksetflag,
+  bookwritecodepage,
+  createbook,
+} from 'zss/memory/book'
+import {
+  codepagereadname,
+  codepagereadtype,
+  codepagereadtypetostring,
+  createcodepage,
+} from 'zss/memory/codepage'
+
+import { ARG_TYPE, readargs } from './wordtypes'
 
 const ismac = navigator.userAgent.indexOf('Mac') !== -1
 const metakey = ismac ? 'cmd' : 'ctrl'
@@ -47,32 +70,27 @@ function writetext(text: string) {
   write(`${COLOR_EDGE} $blue${text}`)
 }
 
+// cli's only state ?
+let openbook = ''
+
 export const CLI_FIRMWARE = createfirmware({
   get(chip, name) {
-    // player chip ?
-    return [false, undefined]
+    // check player's flags
+    const memory = memoryreadchip(chip.id())
+    // then global
+    const value = bookreadflag(memory.book, memory.player, name)
+    return [ispresent(value), value]
   },
   set(chip, name, value) {
-    // player chip ?
-    return [false, undefined]
+    const memory = memoryreadchip(chip.id())
+    // set player's flags
+    booksetflag(memory.book, memory.player, name, value)
+    return [true, value]
   },
   shouldtick() {},
   tick() {},
   tock() {},
 })
-  .command('text', (_chip, words) => {
-    const text = words.map(maptostring).join(' ')
-    tape_info('cli', '$2:', text)
-    return 0
-  })
-  .command('hyperlink', (_chip, args) => {
-    // package into a panel item
-    const [labelword, ...words] = args
-    const label = maptostring(labelword)
-    const hyperlink = words.map(maptostring).join(' ')
-    tape_info('$2', `!${hyperlink};${label}`)
-    return 0
-  })
   .command('help', () => {
     writeheader(`H E L P`)
     writeoption(`#1`, `zss controls and inputs`)
@@ -143,6 +161,30 @@ export const CLI_FIRMWARE = createfirmware({
   .command('3', () => {
     writeheader(`edit commands`)
     writeoption(`#books`, `list books in memory`)
+    writeoption(`#pages`, `list pages in opened book`)
+    writeoption(
+      `@[pagetype:]page name`,
+      `create & edit a new codepage in the currently opened book`,
+    )
+    return 0
+  })
+  .command('4', () => {
+    writeheader(`player settings`)
+    writetext(`todo`)
+    return 0
+  })
+  .command('text', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
+    const text = words.map(maptostring).join(' ')
+    tape_info('$2', `${memory.player}: ${text}`)
+    return 0
+  })
+  .command('hyperlink', (chip, args) => {
+    const memory = memoryreadchip(chip.id())
+    const [labelword, ...words] = args
+    const label = maptostring(labelword)
+    const hyperlink = words.map(maptostring).join(' ')
+    tape_info('$2', `!${hyperlink};${memory.player}: ${label}`)
     return 0
   })
   .command('books', () => {
@@ -158,12 +200,141 @@ export const CLI_FIRMWARE = createfirmware({
     write(`!bookcreate;create a new book`)
     return 0
   })
-  .command('4', () => {
-    writeheader(`player settings`)
-    writetext(`todo`)
+  .command('pages', (chip) => {
+    writesection(`pages`)
+    const book = memoryreadbook(openbook)
+    if (ispresent(book)) {
+      if (book.pages.length) {
+        book.pages.forEach((page) => {
+          const name = codepagereadname(page)
+          write(`!pageopen ${page.id};${name}`)
+        })
+      } else {
+        writetext(`no pages found`)
+        writetext(`use @ to create a page`)
+        writetext(`@board Name of board`)
+        writetext(`@terrain Name of terrain`)
+        writetext(`@charset Name of charset`)
+        writetext(`@palette Name of palette`)
+        writetext(`You can omit the type and it will default to object`)
+        writetext(`@object Name of object`)
+        writetext(`@Name of object`)
+      }
+    } else {
+      writetext(`no book currently open`)
+      chip.command('books')
+    }
     return 0
   })
-  .command('send', (chip, args) => {
-    tape_debug('cli', JSON.stringify(args))
+  .command('stat', (chip, words) => {
+    let book = memoryreadbook(openbook)
+
+    // create page
+    const [maybecodepage] = words
+    const codepage = maptostring(maybecodepage)
+
+    // check for special @book [name] case
+    if (/^book /gi.test(codepage)) {
+      const name = codepage.substring(5)
+      book = memoryreadbook(name)
+      // create book if needed
+      if (!ispresent(book)) {
+        book = createbook([])
+        book.name = name
+        openbook = book.id
+        memorysetbook(book)
+        writetext(`created and opened ${book.name}`)
+        if (!ispresent(book)) {
+          // bail ??
+          return 0
+        }
+      }
+    } else {
+      // create book if needed
+      if (!ispresent(book)) {
+        book = createbook([])
+        openbook = book.id
+        memorysetbook(book)
+        writetext(`created and opened ${book.name}`)
+        if (!ispresent(book)) {
+          // bail ??
+          return 0
+        }
+      }
+
+      const memory = memoryreadchip(chip.id())
+      const code = `@${codepage}\n`
+
+      // add to book if needed, use page from book if name matches
+      let page = createcodepage(code, {})
+      const name = codepagereadname(page)
+      const type = codepagereadtypetostring(page)
+      const maybepage = bookreadcodepage(book, codepagereadtype(page), name)
+
+      if (ispresent(maybepage)) {
+        page = maybepage
+        writetext(`opened ${name} of type ${type}`)
+      } else {
+        bookwritecodepage(book, page)
+        writetext(`created ${name} of type ${type}`)
+      }
+
+      // write to modem so ui can pick it up
+      modemwritestring(page.id, code)
+
+      // tell tape to open a code editor for given page
+      tape_editor_open(
+        'cli',
+        openbook,
+        page.id,
+        codepagereadtypetostring(page),
+        `@book ${book.name}:${name}`,
+        memory.player,
+      )
+    }
+
+    return 0
+  })
+  .command('send', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
+    const read = memoryreadcontext(chip, words)
+    const [msg, data] = readargs(read, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+
+    switch (msg) {
+      case 'bookcreate': {
+        const book = createbook([])
+        openbook = book.id
+        memorysetbook(book)
+        writetext(`created and opened ${book.name}`)
+        break
+      }
+      case 'bookopen':
+        if (isstring(data)) {
+          const book = memoryreadbook(data)
+          if (ispresent(book)) {
+            openbook = data
+            writetext(`opened book ${book.name}`)
+          } else {
+            api_error(
+              'cli',
+              'bookopen',
+              `book with id ${data} not found`,
+              memory.player,
+            )
+          }
+        } else {
+          api_error(
+            'cli',
+            'bookopen',
+            `expected book id, got: ${data} instead`,
+            memory.player,
+          )
+        }
+        break
+      default:
+        tape_info('$2', `${msg} ${data ?? ''}`)
+        break
+    }
+
     return 0
   })

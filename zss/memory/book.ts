@@ -1,14 +1,12 @@
 import { WORD_VALUE } from 'zss/chip'
 import { PT, COLLISION, CATEGORY } from 'zss/firmware/wordtypes'
 import { unique } from 'zss/mapping/array'
-import { createguid } from 'zss/mapping/guid'
+import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
 
 import { checkcollision } from './atomics'
 import {
-  BOARD,
-  BOARD_ELEMENT,
   MAYBE_BOARD,
   MAYBE_BOARD_ELEMENT,
   boarddeleteobject,
@@ -40,10 +38,10 @@ export type BOOK = {
 
 export type MAYBE_BOOK = MAYBE<BOOK>
 
-export function createbook(name: string, pages: CODE_PAGE[]): BOOK {
+export function createbook(pages: CODE_PAGE[]): BOOK {
   return {
-    id: createguid(),
-    name,
+    id: createsid(),
+    name: createnameid(),
     pages,
     flags: {},
     players: {},
@@ -60,6 +58,22 @@ export function isbook(value: any): value is BOOK {
     typeof value.pages === 'object' &&
     typeof value.player === 'object'
   )
+}
+
+export function bookfindcodepage(
+  book: MAYBE_BOOK,
+  address: string,
+): MAYBE_CODE_PAGE {
+  if (!ispresent(book)) {
+    return undefined
+  }
+
+  const laddress = address.toLowerCase()
+  const codepage = book.pages.find(
+    (item) => item.id === address || laddress === codepagereadname(item),
+  )
+
+  return codepage
 }
 
 export function bookreadcodepage(
@@ -81,6 +95,24 @@ export function bookreadcodepage(
   return codepage
 }
 
+export function bookwritecodepage(
+  book: MAYBE_BOOK,
+  codepage: MAYBE_CODE_PAGE,
+): boolean {
+  if (!ispresent(book) || !ispresent(codepage)) {
+    return false
+  }
+
+  const existing = bookfindcodepage(book, codepage.id)
+  if (ispresent(existing)) {
+    return false
+  }
+
+  book.pages.push(codepage)
+
+  return true
+}
+
 export function bookreadcodepagedata<T extends CODE_PAGE_TYPE>(
   book: MAYBE_BOOK,
   type: T,
@@ -92,8 +124,6 @@ export function bookreadcodepagedata<T extends CODE_PAGE_TYPE>(
     switch (type) {
       case CODE_PAGE_TYPE.ERROR:
         return codepage.error as MAYBE<CODE_PAGE_TYPE_MAP[T]>
-      case CODE_PAGE_TYPE.FUNC:
-        return codepage.code as MAYBE<CODE_PAGE_TYPE_MAP[T]>
       case CODE_PAGE_TYPE.BOARD:
         return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
       case CODE_PAGE_TYPE.OBJECT:

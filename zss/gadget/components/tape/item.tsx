@@ -2,13 +2,10 @@ import {
   HyperLinkText,
   tokenize,
   tokenizeandwritetextformat,
+  useWriteText,
 } from 'zss/gadget/data/textformat'
 
-import {
-  ConsoleItemInputProps,
-  ConsoleItemProps,
-  setupitemcontext,
-} from './common'
+import { ConsoleItemInputProps, ConsoleItemProps, setuplogitem } from './common'
 import { TapeConsoleHyperlink } from './hyperlink'
 
 export function TapeConsoleItem({
@@ -16,8 +13,13 @@ export function TapeConsoleItem({
   active,
   text,
   offset,
-  context,
 }: ConsoleItemProps) {
+  const context = useWriteText()
+
+  // setup context for item
+  setuplogitem(!!blink, !!active, offset, context)
+
+  // write ui
   if (text.startsWith('!')) {
     // parse hyperlink
     const [prefix, ...content] = text.slice(1).split('!')
@@ -47,14 +49,12 @@ export function TapeConsoleItem({
       label,
       words: args,
       offset,
-      context,
     }
 
     switch (input.toLowerCase()) {
       case 'hk':
       case 'hotkey':
         return null
-      case 'hyperlink':
       case 'rn':
       case 'range':
         return null
@@ -68,13 +68,12 @@ export function TapeConsoleItem({
       case 'text':
         return null
       default:
+      case 'hyperlink':
         return <TapeConsoleHyperlink {...props} words={words} />
     }
   }
 
-  // render output
-  setupitemcontext(!!blink, !!active, offset, context)
+  // render text output
   tokenizeandwritetextformat(text, context, true)
-
   return null
 }

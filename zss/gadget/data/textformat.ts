@@ -1,5 +1,5 @@
-import { createToken, IToken, Lexer } from 'chevrotain'
-import { createContext, useMemo } from 'react'
+import { createToken, createTokenInstance, IToken, Lexer } from 'chevrotain'
+import { createContext as createcontext, useContext, useMemo } from 'react'
 import { LANG_DEV } from 'zss/config'
 import { colorconsts } from 'zss/firmware/wordtypes'
 import { range } from 'zss/mapping/array'
@@ -103,7 +103,9 @@ export function tokenize(text: string, noWhitespace = false) {
 }
 
 export type WRITE_TEXT_CONTEXT = {
+  disablewrap: boolean
   measureonly: boolean
+  measuredwidth: number
   x: number
   y: number
   isEven: boolean
@@ -128,7 +130,9 @@ export function createwritetextcontext(
   bg: number,
 ): WRITE_TEXT_CONTEXT {
   return {
+    disablewrap: false,
     measureonly: false,
+    measuredwidth: 0,
     x: 0,
     y: 0,
     isEven: true,
@@ -147,7 +151,7 @@ export function createwritetextcontext(
   }
 }
 
-export function applyWriteTextContext(
+export function applywritetextcontext(
   dest: WRITE_TEXT_CONTEXT,
   source: WRITE_TEXT_CONTEXT,
 ) {
@@ -159,12 +163,16 @@ export function applyWriteTextContext(
 
 export function useCacheWriteTextContext(source: WRITE_TEXT_CONTEXT) {
   const cache = useMemo(() => ({ ...source }), [source])
-  applyWriteTextContext(source, cache)
+  applywritetextcontext(source, cache)
 }
 
-export const WriteTextContext = createContext(
+export const WriteTextContext = createcontext(
   createwritetextcontext(1, 1, 15, 1),
 )
+
+export function useWriteText() {
+  return useContext(WriteTextContext)
+}
 
 export function writetextcolorreset(context: WRITE_TEXT_CONTEXT) {
   context.activeColor = context.resetColor
@@ -176,9 +184,15 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
 
   function incCursor() {
     ++context.x
-    if (context.x >= (context.rightEdge ?? context.width)) {
+    if (
+      !context.disablewrap &&
+      context.x >= (context.rightEdge ?? context.width)
+    ) {
       context.x = context.leftEdge ?? 0
       ++context.y
+    }
+    if (context.x > context.measuredwidth) {
+      context.measuredwidth = context.x + 1
     }
   }
 
@@ -266,8 +280,13 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
     }
   }
 
+  // track overall width
+  if (context.x > context.measuredwidth) {
+    context.measuredwidth = context.x + 1
+  }
+
   // move to next line if needed
-  if (context.x !== 0 || context.y === starty) {
+  if (context.y === starty) {
     context.x = context.leftEdge ?? 0
     ++context.y
   }
@@ -280,15 +299,13 @@ export function tokenizeandwritetextformat(
 ) {
   const result = tokenize(text)
   if (!result.tokens) {
-    return true
+    return
   }
 
   writetextformat(result.tokens, context)
   if (shouldreset) {
     writetextcolorreset(context)
   }
-
-  return shouldreset
 }
 
 export function tokenizeandmeasuretextformat(
@@ -345,5 +362,19 @@ export function applycolortoindexes(
   for (let i = left; i <= right; ++i) {
     context.color[i] = color
     context.bg[i] = bg
+  }
+}
+
+export function writeplaintext(
+  text: string,
+  context: WRITE_TEXT_CONTEXT,
+  shouldreset: boolean,
+) {
+  // create plaintext token
+  const plaintext = createTokenInstance(StringLiteral, text, 0, 0, 0, 0, 0, 0)
+  // render it
+  writetextformat([plaintext], context)
+  if (shouldreset) {
+    writetextcolorreset(context)
   }
 }

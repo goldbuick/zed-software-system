@@ -1,6 +1,6 @@
 import { MESSAGE } from './chip'
 import { hub } from './hub'
-import { createguid } from './mapping/guid'
+import { createsid } from './mapping/guid'
 
 export function createmessage(
   target: string,
@@ -8,7 +8,7 @@ export function createmessage(
   data?: any,
   player?: string,
 ): MESSAGE {
-  return { id: createguid(), target, sender, data, player }
+  return { id: createsid(), target, sender, data, player }
 }
 
 export type MESSAGE_FUNC = (message: MESSAGE) => void
@@ -32,7 +32,7 @@ export function createdevice(
   tags: string[],
   onMessage: MESSAGE_FUNC,
 ) {
-  const id = createguid()
+  const id = createsid()
   const iname = name.toLowerCase()
   const itags = tags.map((tag) => tag.toLowerCase())
 

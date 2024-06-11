@@ -223,7 +223,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.TEXT:
       return writeApi(ast, 'text', [writeTemplateString(ast.value)])
     case NODE.STAT:
-      return writeApi(ast, `stat`, transformNodes(ast.words))
+      return writeApi(ast, `stat`, [writeString(ast.value)])
     case NODE.LABEL: {
       const index = context.labelIndex++
       if (!context.labels[ast.name]) {

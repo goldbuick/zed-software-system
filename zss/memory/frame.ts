@@ -1,4 +1,4 @@
-import { createguid } from 'zss/mapping/guid'
+import { createsid } from 'zss/mapping/guid'
 import { MAYBE_STRING } from 'zss/mapping/types'
 
 export enum FRAME_TYPE {
@@ -15,7 +15,7 @@ export type FRAME_STATE = {
 
 function createframe(type: FRAME_TYPE): FRAME_STATE {
   return {
-    id: createguid(),
+    id: createsid(),
     type,
   }
 }

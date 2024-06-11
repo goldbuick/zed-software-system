@@ -2,8 +2,7 @@ import { maptostring } from 'zss/chip'
 import { api_error, register_read, register_write } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { isnumber } from 'zss/mapping/types'
-import { memoryreadchip, memoryreadcontext, memorysetbook } from 'zss/memory'
-import { createbook } from 'zss/memory/book'
+import { memoryreadchip, memoryreadcontext } from 'zss/memory'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -18,27 +17,6 @@ export const ALL_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  // memory state
-  .command('book', (chip, words) => {
-    const [maybetarget, maybeaction] = readargs(
-      memoryreadcontext(chip, words),
-      0,
-      [ARG_TYPE.STRING, ARG_TYPE.STRING],
-    )
-
-    const ltarget = maybetarget.toLowerCase()
-    const laction = maybeaction.toLowerCase()
-    switch (laction) {
-      case 'create':
-        memorysetbook(createbook(ltarget, []))
-        break
-      default:
-        // TODO raise error of unknown action
-        break
-    }
-
-    return 0
-  })
   // app state (in-url)
   .command('register', (chip, words) => {
     const memory = memoryreadchip(chip.id())

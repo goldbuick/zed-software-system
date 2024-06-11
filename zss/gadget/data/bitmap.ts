@@ -1,4 +1,4 @@
-import { createguid } from 'zss/mapping/guid'
+import { createsid } from 'zss/mapping/guid'
 
 export type BITMAP = {
   id: string
@@ -134,7 +134,7 @@ export function copyBitmap(
 
 export function createBitmap(width: number, height: number): BITMAP {
   return {
-    id: createguid(),
+    id: createsid(),
     width,
     height,
     size: width * height,

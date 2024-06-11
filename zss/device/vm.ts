@@ -1,7 +1,6 @@
-import { customAlphabet } from 'nanoid'
-import { numbers, lowercase } from 'nanoid-dictionary'
 import { createdevice } from 'zss/device'
 import { INPUT } from 'zss/gadget/data/types'
+import { createpid } from 'zss/mapping/guid'
 import {
   memorycli,
   memoryplayerlogin,
@@ -15,12 +14,8 @@ import { createos } from 'zss/os'
 
 import { tape_debug, tape_info } from './api'
 
-// limited chars so peerjs doesn't get mad
-const justNumberChars = customAlphabet(numbers, 4)
-const mixedChars = customAlphabet(`${numbers}${lowercase}`, 16)
-
 // this should be unique every time the worker is created
-const playerid = `pid_${justNumberChars()}_${mixedChars()}`
+const playerid = createpid()
 memorysetdefaultplayer(playerid)
 
 // manages chips

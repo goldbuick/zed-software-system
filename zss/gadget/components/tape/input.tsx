@@ -1,21 +1,15 @@
-import { useContext } from 'react'
-import { useSnapshot } from 'valtio'
 import {
   WRITE_TEXT_CONTEXT,
-  WriteTextContext,
   applycolortoindexes,
   applystrtoindex,
   tokenizeandwritetextformat,
+  useWriteText,
 } from 'zss/gadget/data/textformat'
 import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../useblink'
 
-import { BG, BG_ACTIVE, tapeinputstate } from './common'
-
-type ConsoleInputProps = {
-  startrow: number
-}
+import { BG, BG_ACTIVE, FG, useTapeInput } from './common'
 
 function writeline(
   blink: boolean,
@@ -28,10 +22,14 @@ function writeline(
   tokenizeandwritetextformat(text, context, true)
 }
 
+type ConsoleInputProps = {
+  startrow: number
+}
+
 export function ConsoleInput({ startrow }: ConsoleInputProps) {
   const blink = useBlink()
-  const context = useContext(WriteTextContext)
-  const tapeinput = useSnapshot(tapeinputstate)
+  const context = useWriteText()
+  const tapeinput = useTapeInput()
 
   // input & selection
   const inputstate = tapeinput.buffer[tapeinput.bufferindex]
@@ -48,8 +46,11 @@ export function ConsoleInput({ startrow }: ConsoleInputProps) {
 
   // draw input line
   const inputline = inputstate.padEnd(context.width, ' ')
+  const in1 = bottomedge * context.width
+  const in2 = in1 + context.width
   context.y = bottomedge
-  writeline(blink, false, inputline, context)
+  applystrtoindex(in1, inputline, context)
+  applycolortoindexes(in1, in2, FG, BG, context)
 
   // draw selection
   if (

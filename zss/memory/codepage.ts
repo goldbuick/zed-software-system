@@ -2,7 +2,7 @@ import { IToken } from 'chevrotain'
 import { WORD_VALUE } from 'zss/chip'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { Stat, tokenize } from 'zss/lang/lexer'
-import { createguid } from 'zss/mapping/guid'
+import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { BOARD, BOARD_ELEMENT } from './board'
@@ -54,7 +54,7 @@ export function createcodepage(
   content: Partial<Omit<CODE_PAGE, 'id' | 'code'>>,
 ) {
   return {
-    id: createguid(),
+    id: createsid(),
     code,
     ...content,
   }
@@ -150,10 +150,6 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
           codepage.stats.type = CODE_PAGE_TYPE.CLI
           codepage.stats.name = lmaybename
           break
-        case 'func':
-          codepage.stats.type = CODE_PAGE_TYPE.FUNC
-          codepage.stats.name = lmaybename
-          break
         case 'board':
           codepage.stats.type = CODE_PAGE_TYPE.BOARD
           codepage.stats.name = lmaybename
@@ -201,6 +197,26 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
 export function codepagereadtype(codepage: MAYBE_CODE_PAGE) {
   const stats = codepagereadstats(codepage)
   return stats.type ?? CODE_PAGE_TYPE.ERROR
+}
+
+export function codepagereadtypetostring(codepage: MAYBE_CODE_PAGE) {
+  switch (codepagereadtype(codepage)) {
+    default:
+    case CODE_PAGE_TYPE.ERROR:
+      return 'error'
+    case CODE_PAGE_TYPE.CLI:
+      return 'cli'
+    case CODE_PAGE_TYPE.BOARD:
+      return 'board'
+    case CODE_PAGE_TYPE.OBJECT:
+      return 'object'
+    case CODE_PAGE_TYPE.TERRAIN:
+      return 'terrain'
+    case CODE_PAGE_TYPE.CHARSET:
+      return 'charset'
+    case CODE_PAGE_TYPE.PALETTE:
+      return 'palette'
+  }
 }
 
 export function codepagereadname(codepage: MAYBE_CODE_PAGE) {
