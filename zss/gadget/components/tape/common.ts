@@ -19,7 +19,9 @@ export const EG_BOTTOM = `$205`
 
 // colors
 export const FG = COLOR.BLUE
+export const FG_SELECTED = COLOR.WHITE
 export const BG = COLOR.DKBLUE
+export const BG_SELECTED = COLOR.DKGRAY
 export const BG_ACTIVE = COLOR.BLACK
 
 // sizing

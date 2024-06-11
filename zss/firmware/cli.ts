@@ -269,7 +269,7 @@ export const CLI_FIRMWARE = createfirmware({
       openbook,
       page.id,
       codepagereadtypetostring(page),
-      `${book.name}:${name}`,
+      `@book ${book.name}:${name}`,
       memory.player,
     )
     return 0

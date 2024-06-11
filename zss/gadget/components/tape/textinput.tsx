@@ -1,5 +1,9 @@
 import { useRef } from 'react'
-import { tape_editor_close, tape_terminal_inclayout } from 'zss/device/api'
+import {
+  api_error,
+  tape_editor_close,
+  tape_terminal_inclayout,
+} from 'zss/device/api'
 import { useWaitForString } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
 import { PT } from 'zss/firmware/wordtypes'
@@ -28,7 +32,8 @@ export function Textinput() {
 
   // split by line
   const value = sharedtosynced(codepage)
-  const rows = splitcoderows(ispresent(value) ? value.toJSON() : '')
+  const strvalue = ispresent(value) ? value.toJSON() : ''
+  const rows = splitcoderows(strvalue)
   const rowsend = rows.length - 1
 
   // translate index to x, y
@@ -53,36 +58,83 @@ export function Textinput() {
 
   // ranges
   const codeend = rows[rowsend].end
-  // const coderow = rows[ycursor]?.code ?? ''
-  // const coderowend = coderow.length - 1
+  const coderow = rows[ycursor]
+
+  let ii1 = tapeeditor.cursor
+  let ii2 = tapeeditor.cursor
+  let hasselection = false
+
+  // adjust input edges selection
+  if (ispresent(tapeeditor.select)) {
+    hasselection = true
+    ii1 = Math.min(tapeeditor.cursor, tapeeditor.select)
+    ii2 = Math.max(tapeeditor.cursor, tapeeditor.select)
+    if (tapeeditor.cursor !== tapeeditor.select) {
+      // tuck in right side
+      --ii2
+    }
+  }
+
+  const iic = ii2 - ii1 + 1
+  const strvalueselected = hasselection
+    ? strvalue.substring(ii1, ii2 + 1)
+    : strvalue
+
+  function trackselection(active: boolean) {
+    if (active) {
+      if (!ispresent(tapeeditor.select)) {
+        tapeeditorstate.select = tapeeditor.cursor
+      }
+    } else {
+      tapeeditorstate.select = undefined
+    }
+  }
+
+  function strvaluesplice(index: number, count: number, insert?: string) {
+    if (count > 0) {
+      value?.delete(index, count)
+    }
+    if (ispresent(insert)) {
+      value?.insert(index, insert)
+    }
+    tapeeditorstate.cursor = index + (insert ?? '').length
+    tapeeditorstate.select = undefined
+  }
+
+  function deleteselection() {
+    if (ispresent(tapeeditor.select)) {
+      tapeeditorstate.cursor = ii1
+      strvaluesplice(ii1, iic)
+    }
+  }
+
+  function resettoend() {
+    tapeeditorstate.cursor = codeend
+    tapeeditorstate.select = undefined
+  }
 
   return (
     <UserInput
       MOVE_LEFT={(mods) => {
+        trackselection(mods.shift)
         if (mods.ctrl) {
-          const yoffset = findcursorinrows(ycursor, rows)
-          tapeeditorstate.cursor = rows[yoffset].start
+          tapeeditorstate.cursor = coderow.start
         } else {
-          tapeeditorstate.cursor = clamp(
-            tapeeditorstate.cursor - (mods.alt ? 10 : 1),
-            0,
-            codeend,
-          )
+          const cursor = tapeeditorstate.cursor - (mods.alt ? 10 : 1)
+          tapeeditorstate.cursor = clamp(cursor, 0, codeend)
         }
       }}
       MOVE_RIGHT={(mods) => {
+        trackselection(mods.shift)
         if (mods.ctrl) {
-          const yoffset = findcursorinrows(ycursor, rows)
-          tapeeditorstate.cursor = rows[yoffset].end
+          tapeeditorstate.cursor = coderow.end
         } else {
-          tapeeditorstate.cursor = clamp(
-            tapeeditorstate.cursor + (mods.alt ? 10 : 1),
-            0,
-            codeend,
-          )
+          const cursor = tapeeditorstate.cursor + (mods.alt ? 10 : 1)
+          tapeeditorstate.cursor = clamp(cursor, 0, codeend)
         }
       }}
       MOVE_UP={(mods) => {
+        trackselection(mods.shift)
         if (mods.ctrl) {
           tapeeditorstate.cursor = 0
         } else {
@@ -93,23 +145,25 @@ export function Textinput() {
             tapeeditorstate.cursor = codeend
           } else {
             const row = rows[ycheck]
-            tapeeditorstate.cursor = row.start + clamp(xcursor, 0, row.end)
+            tapeeditorstate.cursor =
+              row.start + Math.min(xcursor, row.code.length - 1)
           }
         }
       }}
       MOVE_DOWN={(mods) => {
+        trackselection(mods.shift)
         if (mods.ctrl) {
           tapeeditorstate.cursor = codeend
         } else {
           const ycheck = ycursor + (mods.alt ? 10 : 1)
-          console.info({ xcursor, ycursor, ycheck, rowsend })
           if (ycheck < 0) {
             tapeeditorstate.cursor = 0
           } else if (ycheck > rowsend) {
             tapeeditorstate.cursor = codeend
           } else {
             const row = rows[ycheck]
-            tapeeditorstate.cursor = row.start + clamp(xcursor, 0, row.end)
+            tapeeditorstate.cursor =
+              row.start + Math.min(xcursor, row.code.length - 1)
           }
         }
       }}
@@ -124,7 +178,7 @@ export function Textinput() {
         tape_editor_close('editor')
       }}
       MENU_BUTTON={(mods) => {
-        tape_terminal_inclayout('tape', mods.shift ? -1 : 1)
+        tape_terminal_inclayout('editor', mods.shift ? -1 : 1)
       }}
       keydown={(event) => {
         if (!ispresent(value)) {
@@ -137,21 +191,61 @@ export function Textinput() {
 
         switch (lkey) {
           case 'delete':
-            value.delete(tapeeditor.cursor, 1)
+            if (hasselection) {
+              deleteselection()
+            } else {
+              value.delete(tapeeditor.cursor, 1)
+            }
             break
           case 'backspace':
-            value.delete(tapeeditor.cursor - 1, 1)
+            if (hasselection) {
+              deleteselection()
+            } else {
+              tapeeditorstate.cursor = Math.max(0, tapeeditorstate.cursor - 1)
+              value.delete(tapeeditorstate.cursor, 1)
+            }
             break
           default:
             if (mods.ctrl) {
               switch (lkey) {
                 case 'a':
+                  tapeeditorstate.select = 0
+                  tapeeditorstate.cursor = codeend
                   break
                 case 'c':
+                  if (ispresent(navigator.clipboard)) {
+                    navigator.clipboard
+                      .writeText(strvalueselected)
+                      .catch((err) => api_error('tape', 'clipboard', err))
+                  } else {
+                    resettoend()
+                  }
                   break
                 case 'v':
+                  if (ispresent(navigator.clipboard)) {
+                    navigator.clipboard
+                      .readText()
+                      .then((text) => {
+                        if (hasselection) {
+                          strvaluesplice(ii1, iic, text)
+                        } else {
+                          strvaluesplice(tapeeditor.cursor, 0, text)
+                        }
+                      })
+                      .catch((err) => api_error('tape', 'clipboard', err))
+                  } else {
+                    resettoend()
+                  }
                   break
                 case 'x':
+                  if (ispresent(navigator.clipboard)) {
+                    navigator.clipboard
+                      .writeText(strvalueselected)
+                      .then(() => deleteselection())
+                      .catch((err) => api_error('tape', 'clipboard', err))
+                  } else {
+                    resettoend()
+                  }
                   break
               }
             } else if (mods.alt) {
