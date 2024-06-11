@@ -229,49 +229,70 @@ export const CLI_FIRMWARE = createfirmware({
   .command('stat', (chip, words) => {
     let book = memoryreadbook(openbook)
 
-    // create book if needed
-    if (!ispresent(book)) {
-      book = createbook([])
-      openbook = book.id
-      memorysetbook(book)
-      writetext(`created and opened ${book.name}`)
-      if (!ispresent(book)) {
-        // bail ??
-        return 0
-      }
-    }
-
     // create page
-    const [codepage] = words
-    const memory = memoryreadchip(chip.id())
-    const code = `@${codepage}\n`
+    const [maybecodepage] = words
+    const codepage = maptostring(maybecodepage)
 
-    // add to book if needed, use page from book if name matches
-    let page = createcodepage(code, {})
-    const name = codepagereadname(page)
-    const type = codepagereadtypetostring(page)
-    const maybepage = bookreadcodepage(book, codepagereadtype(page), name)
-
-    if (ispresent(maybepage)) {
-      page = maybepage
-      writetext(`opened ${name} of type ${type}`)
+    // check for special @book [name] case
+    if (/^book /gi.test(codepage)) {
+      const name = codepage.substring(5)
+      book = memoryreadbook(name)
+      // create book if needed
+      if (!ispresent(book)) {
+        book = createbook([])
+        book.name = name
+        openbook = book.id
+        memorysetbook(book)
+        writetext(`created and opened ${book.name}`)
+        if (!ispresent(book)) {
+          // bail ??
+          return 0
+        }
+      }
     } else {
-      bookwritecodepage(book, page)
-      writetext(`created ${name} of type ${type}`)
+      // create book if needed
+      if (!ispresent(book)) {
+        book = createbook([])
+        openbook = book.id
+        memorysetbook(book)
+        writetext(`created and opened ${book.name}`)
+        if (!ispresent(book)) {
+          // bail ??
+          return 0
+        }
+      }
+
+      const memory = memoryreadchip(chip.id())
+      const code = `@${codepage}\n`
+
+      // add to book if needed, use page from book if name matches
+      let page = createcodepage(code, {})
+      const name = codepagereadname(page)
+      const type = codepagereadtypetostring(page)
+      const maybepage = bookreadcodepage(book, codepagereadtype(page), name)
+
+      if (ispresent(maybepage)) {
+        page = maybepage
+        writetext(`opened ${name} of type ${type}`)
+      } else {
+        bookwritecodepage(book, page)
+        writetext(`created ${name} of type ${type}`)
+      }
+
+      // write to modem so ui can pick it up
+      modemwritestring(page.id, code)
+
+      // tell tape to open a code editor for given page
+      tape_editor_open(
+        'cli',
+        openbook,
+        page.id,
+        codepagereadtypetostring(page),
+        `@book ${book.name}:${name}`,
+        memory.player,
+      )
     }
 
-    // write to modem so ui can pick it up
-    modemwritestring(page.id, code)
-
-    // tell tape to open a code editor for given page
-    tape_editor_open(
-      'cli',
-      openbook,
-      page.id,
-      codepagereadtypetostring(page),
-      `@book ${book.name}:${name}`,
-      memory.player,
-    )
     return 0
   })
   .command('send', (chip, words) => {
