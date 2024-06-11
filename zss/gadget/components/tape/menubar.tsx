@@ -7,7 +7,7 @@ import {
 
 import { useBlink } from '../useblink'
 
-import { EG_BOTTOM, EG_TOP, setupeditoritem } from './common'
+import { setupeditoritem } from './common'
 
 export function Menubar() {
   const tape = useTape()
@@ -15,8 +15,8 @@ export function Menubar() {
   const context = useWriteText()
 
   setupeditoritem(false, false, 0, 0, 0, context)
-  const egtop = `${EG_TOP}`.repeat(context.width - 4)
-  const egbottom = `${EG_BOTTOM}`.repeat(context.width - 4)
+  const egtop = `$196`.repeat(context.width - 4)
+  const egbottom = `$205`.repeat(context.width - 4)
   tokenizeandwritetextformat(`$213$205$187${egtop}$191`, context, true)
   tokenizeandwritetextformat(
     `$179$${blink ? '7' : '232'}$200${egbottom}$181`,
