@@ -14,7 +14,7 @@ export function Menubar() {
   const blink = useBlink()
   const context = useWriteText()
 
-  setupeditoritem(false, false, 0, 0, context)
+  setupeditoritem(false, false, 0, 0, 0, context)
   const egtop = `${EG_TOP}`.repeat(context.width - 4)
   const egbottom = `${EG_BOTTOM}`.repeat(context.width - 4)
   tokenizeandwritetextformat(`$213$205$187${egtop}$191`, context, true)
@@ -36,7 +36,7 @@ export function Menubar() {
   )
   const titlewidth = result?.measuredwidth ?? 1
   const titlex = Math.round(context.width * 0.5) - Math.round(titlewidth * 0.5)
-  setupeditoritem(false, false, titlex, 0, context)
+  setupeditoritem(false, false, titlex, 0, 0, context)
   tokenizeandwritetextformat(title, context, true)
 
   return null

@@ -28,7 +28,7 @@ export function TapeConsoleEditor() {
   }
 
   const bottomedge = `$205`.repeat(context.width - 2)
-  setupeditoritem(false, false, 0, context.height - 1, context)
+  setupeditoritem(false, false, 0, context.height - 1, 0, context)
   tokenizeandwritetextformat(`$212${bottomedge}$190`, context, true)
 
   return (

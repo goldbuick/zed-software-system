@@ -286,7 +286,7 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   }
 
   // move to next line if needed
-  if (context.x !== 0 || context.y === starty) {
+  if (context.y === starty) {
     context.x = context.leftEdge ?? 0
     ++context.y
   }

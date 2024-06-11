@@ -40,7 +40,7 @@ function splitcoderows(code: string): CODE_ROW[] {
 
 function findcursorinrows(cursor: number, rows: CODE_ROW[]) {
   for (let i = 0; i < rows.length; ++i) {
-    if (cursor < rows[i].end) {
+    if (cursor <= rows[i].end) {
       return i
     }
   }

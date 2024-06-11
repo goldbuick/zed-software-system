@@ -18,7 +18,7 @@ export function Textrows() {
   const tapeeditor = useTapeEditor()
   const codepage = useWaitForString(tape.editor.page)
 
-  setupeditoritem(false, false, 1, 2, context)
+  setupeditoritem(false, false, 1, 2, 1, context)
   if (!ispresent(codepage)) {
     tokenizeandwritetextformat(` LOADING ${blink ? '|' : '-'}`, context, true)
     return null
@@ -29,9 +29,9 @@ export function Textrows() {
   const rows = code.split(/\r?\n/)
 
   const height = context.height - 3
+  setupeditoritem(false, false, 1, 2, 1, context)
   for (let i = 0; i < rows.length && i < height; ++i) {
     const row = rows[i]
-    setupeditoritem(false, false, 1, 2 + i, context)
     tokenizeandwritetextformat(`${row} `, context, true)
   }
 

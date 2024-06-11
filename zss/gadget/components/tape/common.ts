@@ -102,11 +102,13 @@ export function setupeditoritem(
   active: boolean,
   x: number,
   y: number,
+  inset: number,
   context: WRITE_TEXT_CONTEXT,
 ) {
   // reset context
   context.x = x
   context.y = y
+  context.leftEdge = inset
   context.isEven = context.y % 2 === 0
   context.activeBg = active && !blink ? BG_ACTIVE : BG
 }
