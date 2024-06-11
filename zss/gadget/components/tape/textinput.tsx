@@ -1,10 +1,5 @@
-import { SyncedText } from '@syncedstore/core'
 import { useRef } from 'react'
-import {
-  tape_editor_close,
-  tape_info,
-  tape_terminal_inclayout,
-} from 'zss/device/api'
+import { tape_editor_close, tape_terminal_inclayout } from 'zss/device/api'
 import { useWaitForString } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
 import { PT } from 'zss/firmware/wordtypes'
@@ -15,37 +10,13 @@ import { ispresent } from 'zss/mapping/types'
 import { useBlink } from '../useblink'
 import { UserInput, modsfromevent } from '../userinput'
 
-import { tapeeditorstate, useTapeEditor } from './common'
-
-type CODE_ROW = {
-  start: number
-  code: string
-  end: number
-}
-
-function splitcoderows(code: string): CODE_ROW[] {
-  let cursor = 0
-  const rows = code.split(/\r?\n/)
-  return rows.map((code) => {
-    const start = cursor
-    const fullcode = `${code}\n`
-    cursor += fullcode.length
-    return {
-      start,
-      code: fullcode,
-      end: start + code.length,
-    }
-  })
-}
-
-function findcursorinrows(cursor: number, rows: CODE_ROW[]) {
-  for (let i = 0; i < rows.length; ++i) {
-    if (cursor <= rows[i].end) {
-      return i
-    }
-  }
-  return 0
-}
+import {
+  findcursorinrows,
+  sharedtosynced,
+  splitcoderows,
+  tapeeditorstate,
+  useTapeEditor,
+} from './common'
 
 export function Textinput() {
   const tape = useTape()
@@ -56,16 +27,13 @@ export function Textinput() {
   const codepage = useWaitForString(tape.editor.page)
 
   // split by line
-  const value = codepage ? (codepage.value as SyncedText) : undefined
-  const code = value ? value.toJSON() : ''
-  const rows = splitcoderows(code)
+  const value = sharedtosynced(codepage)
+  const rows = splitcoderows(ispresent(value) ? value.toJSON() : '')
   const rowsend = rows.length - 1
 
   // translate index to x, y
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
   const xcursor = tapeeditor.cursor - rows[ycursor].start
-
-  console.info(tapeeditor.cursor, xcursor, ycursor, rows)
 
   // draw cursor
   const xblink = xcursor + 1
@@ -84,7 +52,7 @@ export function Textinput() {
   }
 
   // ranges
-  const codeend = code.length - 1
+  const codeend = rows[rowsend].end
   // const coderow = rows[ycursor]?.code ?? ''
   // const coderowend = coderow.length - 1
 
@@ -124,8 +92,8 @@ export function Textinput() {
           } else if (ycheck > rowsend) {
             tapeeditorstate.cursor = codeend
           } else {
-            const yoffset = findcursorinrows(ycheck, rows)
-            tapeeditorstate.cursor = rows[yoffset].start + xcursor
+            const row = rows[ycheck]
+            tapeeditorstate.cursor = row.start + clamp(xcursor, 0, row.end)
           }
         }
       }}
@@ -134,13 +102,14 @@ export function Textinput() {
           tapeeditorstate.cursor = codeend
         } else {
           const ycheck = ycursor + (mods.alt ? 10 : 1)
+          console.info({ xcursor, ycursor, ycheck, rowsend })
           if (ycheck < 0) {
             tapeeditorstate.cursor = 0
           } else if (ycheck > rowsend) {
             tapeeditorstate.cursor = codeend
           } else {
-            const yoffset = findcursorinrows(ycheck, rows)
-            tapeeditorstate.cursor = rows[yoffset].start + xcursor
+            const row = rows[ycheck]
+            tapeeditorstate.cursor = row.start + clamp(xcursor, 0, row.end)
           }
         }
       }}

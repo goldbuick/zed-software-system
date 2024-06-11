@@ -11,7 +11,7 @@ export enum MODEM_SHARED_TYPE {
   STRING,
 }
 
-type MODEM_SHARED_VALUE =
+export type MODEM_SHARED_VALUE =
   | {
       key: string
       type: MODEM_SHARED_TYPE.NUMBER

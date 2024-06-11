@@ -1,12 +1,14 @@
+import { SyncedText } from '@syncedstore/core'
 import { createContext } from 'react'
 import { proxy, useSnapshot } from 'valtio'
+import { MODEM_SHARED_VALUE } from 'zss/device/modem'
 import {
   WRITE_TEXT_CONTEXT,
   applycolortoindexes,
   applystrtoindex,
 } from 'zss/gadget/data/textformat'
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
-import { MAYBE_NUMBER } from 'zss/mapping/types'
+import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
 
 // deco
 export const DOT = 250
@@ -111,4 +113,45 @@ export function setupeditoritem(
   context.leftEdge = inset
   context.isEven = context.y % 2 === 0
   context.activeBg = active && !blink ? BG_ACTIVE : BG
+}
+
+export type EDITOR_CODE_ROW = {
+  start: number
+  code: string
+  end: number
+}
+
+export function splitcoderows(code: string): EDITOR_CODE_ROW[] {
+  let cursor = 0
+  const rows = code.split(/\r?\n/)
+  return rows.map((code) => {
+    const start = cursor
+    const fullcode = `${code}\n`
+    cursor += fullcode.length
+    return {
+      start,
+      code: fullcode,
+      end: start + code.length,
+    }
+  })
+}
+
+export function findcursorinrows(cursor: number, rows: EDITOR_CODE_ROW[]) {
+  for (let i = 0; i < rows.length; ++i) {
+    if (cursor <= rows[i].end) {
+      return i
+    }
+  }
+  return 0
+}
+
+export function sharedtosynced(
+  shared: MAYBE<MODEM_SHARED_VALUE>,
+): MAYBE<SyncedText> {
+  return ispresent(shared) ? (shared.value as SyncedText) : undefined
+}
+
+export function sharedtorows(shared: MAYBE<MODEM_SHARED_VALUE>) {
+  const value = sharedtosynced(shared)
+  return splitcoderows(ispresent(value) ? value.toJSON() : '')
 }

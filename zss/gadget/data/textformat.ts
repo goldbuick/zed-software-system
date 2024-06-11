@@ -1,5 +1,5 @@
-import { createToken, IToken, Lexer } from 'chevrotain'
-import { createContext, useContext, useMemo } from 'react'
+import { createToken, createTokenInstance, IToken, Lexer } from 'chevrotain'
+import { createContext as createcontext, useContext, useMemo } from 'react'
 import { LANG_DEV } from 'zss/config'
 import { colorconsts } from 'zss/firmware/wordtypes'
 import { range } from 'zss/mapping/array'
@@ -151,7 +151,7 @@ export function createwritetextcontext(
   }
 }
 
-export function applyWriteTextContext(
+export function applywritetextcontext(
   dest: WRITE_TEXT_CONTEXT,
   source: WRITE_TEXT_CONTEXT,
 ) {
@@ -163,10 +163,10 @@ export function applyWriteTextContext(
 
 export function useCacheWriteTextContext(source: WRITE_TEXT_CONTEXT) {
   const cache = useMemo(() => ({ ...source }), [source])
-  applyWriteTextContext(source, cache)
+  applywritetextcontext(source, cache)
 }
 
-export const WriteTextContext = createContext(
+export const WriteTextContext = createcontext(
   createwritetextcontext(1, 1, 15, 1),
 )
 
@@ -299,15 +299,13 @@ export function tokenizeandwritetextformat(
 ) {
   const result = tokenize(text)
   if (!result.tokens) {
-    return true
+    return
   }
 
   writetextformat(result.tokens, context)
   if (shouldreset) {
     writetextcolorreset(context)
   }
-
-  return shouldreset
 }
 
 export function tokenizeandmeasuretextformat(
@@ -364,5 +362,19 @@ export function applycolortoindexes(
   for (let i = left; i <= right; ++i) {
     context.color[i] = color
     context.bg[i] = bg
+  }
+}
+
+export function writeplaintext(
+  text: string,
+  context: WRITE_TEXT_CONTEXT,
+  shouldreset: boolean,
+) {
+  // create plaintext token
+  const plaintext = createTokenInstance(StringLiteral, text, 0, 0, 0, 0, 0, 0)
+  // render it
+  writetextformat([plaintext], context)
+  if (shouldreset) {
+    writetextcolorreset(context)
   }
 }
