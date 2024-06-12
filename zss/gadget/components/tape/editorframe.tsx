@@ -6,13 +6,33 @@ import {
 } from 'zss/gadget/data/textformat'
 
 import { useBlink } from '../useblink'
+import { writeTile } from '../usetiles'
 
-import { setupeditoritem } from './common'
+import { BG, FG, setupeditoritem } from './common'
 
-export function Menubar() {
+export function EditorFrame() {
+  const context = useWriteText()
+
+  // left - right - bottom of frame
+  for (let y = 1; y < context.height - 1; ++y) {
+    writeTile(context, context.width, context.height, 0, y, {
+      char: 179,
+      color: FG,
+      bg: BG,
+    })
+    writeTile(context, context.width, context.height, context.width - 1, y, {
+      char: 179,
+      color: FG,
+      bg: BG,
+    })
+  }
+
+  const bottomedge = `$205`.repeat(context.width - 2)
+  setupeditoritem(false, false, 0, context.height - 1, 0, context)
+  tokenizeandwritetextformat(`$212${bottomedge}$190`, context, true)
+
   const tape = useTape()
   const blink = useBlink()
-  const context = useWriteText()
 
   setupeditoritem(false, false, 0, 0, 0, context)
   const egtop = `$196`.repeat(context.width - 4)
