@@ -5,7 +5,7 @@ without having to include device code
 
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
-import { BOOK } from 'zss/memory/book'
+import { BOOK, MAYBE_BOOK } from 'zss/memory/book'
 
 export function api_error(
   sender: string,
@@ -48,6 +48,10 @@ export function pcspeaker_play(
   buffer: string,
 ) {
   hub.emit('pcspeaker:play', sender, [priority, buffer])
+}
+
+export function register_flush(sender: string, book: MAYBE_BOOK) {
+  hub.emit('register:flush', sender, book)
 }
 
 export function register_read(sender: string, name: string, player: string) {

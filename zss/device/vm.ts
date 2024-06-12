@@ -5,6 +5,7 @@ import {
   memorycli,
   memoryplayerlogin,
   memoryplayerlogout,
+  memoryreadbook,
   memoryreadchip,
   memoryresetbooks,
   memorysetdefaultplayer,
@@ -12,7 +13,7 @@ import {
 } from 'zss/memory'
 import { createos } from 'zss/os'
 
-import { tape_debug, tape_info } from './api'
+import { register_flush, tape_debug, tape_info } from './api'
 
 // this should be unique every time the worker is created
 const playerid = createpid()
@@ -27,6 +28,10 @@ let lasttick = 0
 // tracking active player ids
 const SECOND_TIMEOUT = 32
 const tracking: Record<string, number> = {}
+
+// control how fast we persist to the register
+const FLUSH_RATE = 1
+let flushtick = 0
 
 const vm = createdevice('vm', ['tick', 'second'], (message) => {
   switch (message.target) {
@@ -80,6 +85,12 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           vm.emit('logout', undefined, player)
         }
       })
+      if (flushtick >= FLUSH_RATE) {
+        flushtick = 0
+        const book = memoryreadbook('main')
+        register_flush(vm.name(), book)
+      }
+      ++flushtick
       break
     // user input from built-in console
     case 'cli':
