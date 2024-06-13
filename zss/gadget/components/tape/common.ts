@@ -13,10 +13,6 @@ import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
 // deco
 export const DOT = 250
 
-// edges
-export const EG_TOP = `$196`
-export const EG_BOTTOM = `$205`
-
 // colors
 export const FG = COLOR.BLUE
 export const FG_SELECTED = COLOR.WHITE

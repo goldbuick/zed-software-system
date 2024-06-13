@@ -5,7 +5,7 @@ without having to include device code
 
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
-import { BOOK } from 'zss/memory/book'
+import { BOOK, MAYBE_BOOK } from 'zss/memory/book'
 
 export function api_error(
   sender: string,
@@ -16,6 +16,18 @@ export function api_error(
   const player = maybeplayer ?? 'anon'
   hub.emit(`error:${kind}`, sender, message, player)
   return tape_error(sender, message, player)
+}
+
+export function bip_retry(sender: string, player: string) {
+  hub.emit('bip:retry', sender, undefined, player)
+}
+
+export function bip_loginfailed(sender: string, player: string) {
+  hub.emit('bip:loginfailed', sender, undefined, player)
+}
+
+export function bip_rebootfailed(sender: string, player: string) {
+  hub.emit('bip:rebootfailed', sender, undefined, player)
 }
 
 export function register_reboot(sender: string, player: string) {
@@ -48,6 +60,10 @@ export function pcspeaker_play(
   buffer: string,
 ) {
   hub.emit('pcspeaker:play', sender, [priority, buffer])
+}
+
+export function register_flush(sender: string, book: MAYBE_BOOK) {
+  hub.emit('register:flush', sender, book)
 }
 
 export function register_read(sender: string, name: string, player: string) {
@@ -129,6 +145,24 @@ export function vm_input(
   player: string,
 ) {
   hub.emit('vm:input', sender, [input, mods], player)
+}
+
+export function vm_pagewatch(
+  sender: string,
+  book: string,
+  page: string,
+  player: string,
+) {
+  hub.emit('vm:pagewatch', sender, [book, page], player)
+}
+
+export function vm_pagerelease(
+  sender: string,
+  book: string,
+  page: string,
+  player: string,
+) {
+  hub.emit('vm:pagerelease', sender, [book, page], player)
 }
 
 export function vm_cli(sender: string, input: string, player: string) {

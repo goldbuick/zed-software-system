@@ -179,7 +179,7 @@ export function memoryreadcontext(chip: CHIP, words: WORD[]) {
   return createreadcontext(memory, words, chip.get)
 }
 
-const PLAYER_BOOK = 'main'
+export const PLAYER_BOOK = 'main'
 const PLAYER_KIND = 'player'
 const PLAYER_START = 'title'
 

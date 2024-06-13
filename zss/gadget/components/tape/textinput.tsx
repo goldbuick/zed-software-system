@@ -28,7 +28,11 @@ export function Textinput() {
   const context = useWriteText()
   const blinkdelta = useRef<PT>()
   const tapeeditor = useTapeEditor()
-  const codepage = useWaitForString(tape.editor.page)
+  const codepage = useWaitForString(
+    tape.editor.book,
+    tape.editor.page,
+    tape.editor.player,
+  )
 
   // split by line
   const value = sharedtosynced(codepage)
@@ -44,9 +48,10 @@ export function Textinput() {
   const xblink = xcursor + 1
   const yblink = ycursor + 2
   if (
-    blink ||
-    blinkdelta.current?.x !== xblink ||
-    blinkdelta.current?.y !== yblink
+    ispresent(codepage) &&
+    (blink ||
+      blinkdelta.current?.x !== xblink ||
+      blinkdelta.current?.y !== yblink)
   ) {
     blinkdelta.current = { x: xblink, y: yblink }
     applystrtoindex(

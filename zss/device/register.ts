@@ -3,7 +3,7 @@ import { encodeduritovalue, valuetoencodeduri } from 'zss/mapping/buffer'
 import { ispresent } from 'zss/mapping/types'
 import { isbook } from 'zss/memory/book'
 
-import { api_error, tape_info, vm_mem } from './api'
+import { api_error, bip_rebootfailed, tape_info, vm_mem } from './api'
 
 function readstate(): [any, any] {
   try {
@@ -28,21 +28,27 @@ const register = createdevice('register', [], (message) => {
     // memory
     case 'reboot':
       if (message.player) {
-        const [mem] = readstate()
-        if (isbook(mem)) {
-          vm_mem(register.name(), mem, message.player)
+        const [, main] = readstate()
+        if (isbook(main)) {
+          tape_info(
+            register.name(),
+            'loaded main from registry',
+            message.player,
+          )
+          vm_mem(register.name(), main, message.player)
         } else {
           api_error(
             register.name(),
             'reboot',
-            'no book found in memory',
+            'no book found in registry',
             message.player,
           )
+          bip_rebootfailed(register.name(), message.player)
         }
       }
       break
     case 'flush': {
-      const [, flags] = readstate()
+      const [flags] = readstate()
       if (ispresent(message.data)) {
         writestate([message.data, flags])
       }
@@ -51,7 +57,7 @@ const register = createdevice('register', [], (message) => {
     // flags
     case 'read': {
       const [name] = message.data
-      const [, flags] = readstate()
+      const [flags] = readstate()
       if (ispresent(flags)) {
         const value = flags[name]
         if (ispresent(flags)) {
@@ -65,10 +71,10 @@ const register = createdevice('register', [], (message) => {
     }
     case 'write': {
       const [name, value] = message.data
-      const [mem, flags] = readstate()
+      const [flags, main] = readstate()
       if (ispresent(flags)) {
         flags[name] = value
-        writestate([mem, flags])
+        writestate([flags, main])
         tape_info(register.name(), 'wrote', value, 'to', name)
       }
       break
