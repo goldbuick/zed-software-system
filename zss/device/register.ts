@@ -1,11 +1,14 @@
 import { createdevice } from 'zss/device'
 import { encodeduritovalue, valuetoencodeduri } from 'zss/mapping/buffer'
-import { ispresent } from 'zss/mapping/types'
+import { isarray, ispresent } from 'zss/mapping/types'
 import { isbook } from 'zss/memory/book'
 
 import { api_error, bip_rebootfailed, tape_info, vm_mem } from './api'
 
-function readstate(): [any, any] {
+type STATE_FLAGS = Record<string, any>
+type STATE_BOOKS = any[]
+
+function readstate(): [STATE_FLAGS, ...STATE_BOOKS] {
   try {
     const hash = window.location.hash.slice(1)
     if (hash.length) {
@@ -18,8 +21,8 @@ function readstate(): [any, any] {
   return [{}, {}] as any
 }
 
-function writestate(state: any) {
-  const out = `#${valuetoencodeduri(state)}`
+function writestate(flags: STATE_FLAGS, books: STATE_BOOKS) {
+  const out = `#${valuetoencodeduri([flags, ...books])}`
   window.location.hash = out
 }
 
@@ -49,8 +52,8 @@ const register = createdevice('register', [], (message) => {
       break
     case 'flush': {
       const [flags] = readstate()
-      if (ispresent(message.data)) {
-        writestate([message.data, flags])
+      if (isarray(message.data)) {
+        writestate(flags, message.data)
       }
       break
     }
@@ -71,10 +74,10 @@ const register = createdevice('register', [], (message) => {
     }
     case 'write': {
       const [name, value] = message.data
-      const [flags, main] = readstate()
+      const [flags, ...books] = readstate()
       if (ispresent(flags)) {
         flags[name] = value
-        writestate([flags, main])
+        writestate(flags, books)
         tape_info(register.name(), 'wrote', value, 'to', name)
       }
       break

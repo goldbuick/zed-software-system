@@ -3,7 +3,13 @@ import { PT, COLLISION, CATEGORY } from 'zss/firmware/wordtypes'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  MAYBE_STRING,
+  isarray,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 
 import { checkcollision } from './atomics'
 import {
@@ -55,7 +61,7 @@ export function isbook(value: any): value is BOOK {
     isstring(value.name) === true &&
     typeof value.flags === 'object' &&
     typeof value.players === 'object' &&
-    Array.isArray(value.pages) === true
+    isarray(value.pages) === true
   )
 }
 

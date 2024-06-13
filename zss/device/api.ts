@@ -30,10 +30,6 @@ export function bip_rebootfailed(sender: string, player: string) {
   hub.emit('bip:rebootfailed', sender, undefined, player)
 }
 
-export function register_reboot(sender: string, player: string) {
-  hub.emit('register:reboot', sender, undefined, player)
-}
-
 export function gadgetclient_reset(
   sender: string,
   gadgetstate: GADGET_STATE,
@@ -62,8 +58,12 @@ export function pcspeaker_play(
   hub.emit('pcspeaker:play', sender, [priority, buffer])
 }
 
-export function register_flush(sender: string, book: MAYBE_BOOK) {
-  hub.emit('register:flush', sender, book)
+export function register_reboot(sender: string, player: string) {
+  hub.emit('register:reboot', sender, undefined, player)
+}
+
+export function register_flush(sender: string, books: BOOK[]) {
+  hub.emit('register:flush', sender, books)
 }
 
 export function register_read(sender: string, name: string, player: string) {

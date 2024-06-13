@@ -7,7 +7,13 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  MAYBE_STRING,
+  isarray,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import {
   memoryreadbook,
   memoryreadchip,
@@ -581,7 +587,7 @@ export const OBJECT_FIRMWARE = createfirmware({
         // check to see if its a flag
         const maybeattr = chip.get(ltarget)
         // check to see if array
-        if (Array.isArray(maybeattr)) {
+        if (isarray(maybeattr)) {
           sendtoelements(listelementsbyattr(memory.board, maybeattr))
         } else {
           sendtoelements(listelementsbyattr(memory.board, [maybeattr]))

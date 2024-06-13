@@ -1,13 +1,14 @@
 import { createdevice } from 'zss/device'
 import { INPUT } from 'zss/gadget/data/types'
 import { createpid } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 import {
   PLAYER_BOOK,
   memorycli,
   memoryplayerlogin,
   memoryplayerlogout,
   memoryreadbook,
+  memoryreadbooklist,
   memoryreadchip,
   memoryresetbooks,
   memorysetdefaultplayer,
@@ -90,7 +91,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       }
       break
     case 'pagewatch':
-      if (message.player && Array.isArray(message.data)) {
+      if (message.player && isarray(message.data)) {
         const [book, page] = message.data
         // start watching
         if (!ispresent(observers[page])) {
@@ -114,7 +115,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       }
       break
     case 'pagerelease':
-      if (message.player && Array.isArray(message.data)) {
+      if (message.player && isarray(message.data)) {
         const [book, page] = message.data
         if (ispresent(watching[book])) {
           if (ispresent(watching[book][page])) {
@@ -148,8 +149,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       })
       if (flushtick >= FLUSH_RATE) {
         flushtick = 0
-        const book = memoryreadbook(PLAYER_BOOK)
-        register_flush(vm.name(), book)
+        register_flush(vm.name(), memoryreadbooklist())
       }
       ++flushtick
       break

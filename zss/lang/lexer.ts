@@ -7,6 +7,7 @@ import {
 } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
+import { isarray } from 'zss/mapping/types'
 
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 
@@ -320,9 +321,9 @@ export function tokenize(text: string) {
   const lexResult = scriptLexer.tokenize(text || ' \n')
 
   // add final new line ?
-  const [lastToken] = (
-    Array.isArray(lexResult.tokens) ? lexResult.tokens : []
-  ).slice(-1)
+  const [lastToken] = (isarray(lexResult.tokens) ? lexResult.tokens : []).slice(
+    -1,
+  )
   if (lastToken && lastToken.tokenType.name !== 'Newline') {
     lexResult.tokens.push(
       createTokenInstance(
