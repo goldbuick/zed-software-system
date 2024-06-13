@@ -12,6 +12,7 @@ import {
   memorysetbook,
 } from 'zss/memory'
 import {
+  bookfindcodepage,
   bookreadcodepage,
   bookreadflag,
   booksetflag,
@@ -74,16 +75,16 @@ function writetext(text: string) {
 // cli's only state ?
 let openbook = ''
 
-function createopenbook() {
+function createnewbook(maybename?: any) {
   const book = createbook([])
 
-  // auto-fill @book main
-  if (!ispresent(memoryreadbook(PLAYER_BOOK))) {
+  if (isstring(maybename)) {
+    book.name = maybename
+  } else if (!ispresent(memoryreadbook(PLAYER_BOOK))) {
+    // auto-fill @book main
     book.name = PLAYER_BOOK
   }
 
-  // track open book
-  openbook = book.id
   memorysetbook(book)
 
   // message
@@ -103,13 +104,12 @@ function ensureopenbook() {
   book = memoryreadbook(PLAYER_BOOK)
   if (ispresent(book)) {
     openbook = book.id
+    writetext(`opened book ${book.name}`)
     return book
   }
 
   // create book
-  book = createopenbook()
-  writetext(`opened ${book.name}`)
-  return book
+  return createnewbook()
 }
 
 export const CLI_FIRMWARE = createfirmware({
@@ -278,15 +278,7 @@ export const CLI_FIRMWARE = createfirmware({
       book = memoryreadbook(name)
       // create book if needed
       if (!ispresent(book)) {
-        book = createbook([])
-        book.name = name
-        openbook = book.id
-        memorysetbook(book)
-        writetext(`created and opened ${book.name}`)
-        if (!ispresent(book)) {
-          // bail ??
-          return 0
-        }
+        chip.command('bookcreate', name)
       }
     } else {
       // create book if needed
@@ -295,36 +287,19 @@ export const CLI_FIRMWARE = createfirmware({
         return 0
       }
 
-      const memory = memoryreadchip(chip.id())
-      const code = `@${codepage}\n`
-
       // add to book if needed, use page from book if name matches
-      let page = createcodepage(code, {})
+      const code = `@${codepage}\n`
+      const page = createcodepage(code, {})
       const name = codepagereadname(page)
       const maybepage = bookreadcodepage(book, codepagereadtype(page), name)
 
-      const pagetype = codepagereadtypetostring(page)
-      if (ispresent(maybepage)) {
-        page = maybepage
-        writetext(`opened ${name} of type ${pagetype}`)
-      } else {
+      if (!ispresent(maybepage)) {
         bookwritecodepage(book, page)
+        const pagetype = codepagereadtypetostring(page)
         writetext(`created ${name} of type ${pagetype}`)
       }
 
-      // write to modem
-      modemwritestring(page.id, page.code)
-
-      // tell tape to open a code editor for given page
-      const type = codepagereadtypetostring(page)
-      tape_editor_open(
-        'cli',
-        openbook,
-        page.id,
-        type,
-        `@book ${book.name}:${name}`,
-        memory.player,
-      )
+      chip.command('pageopen', maybepage?.id ?? page.id)
     }
 
     return 0
@@ -335,15 +310,18 @@ export const CLI_FIRMWARE = createfirmware({
     const [msg, data] = readargs(read, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
 
     switch (msg) {
-      case 'bookcreate':
-        createopenbook()
+      case 'bookcreate': {
+        const book = createnewbook(data)
+        chip.command('bookopen', book.id)
         break
+      }
       case 'bookopen':
         if (isstring(data)) {
           const book = memoryreadbook(data)
           if (ispresent(book)) {
             openbook = data
             writetext(`opened book ${book.name}`)
+            chip.command('pages')
           } else {
             api_error(
               'cli',
@@ -361,6 +339,43 @@ export const CLI_FIRMWARE = createfirmware({
           )
         }
         break
+      case 'pageopen':
+        if (isstring(data)) {
+          const book = memoryreadbook(openbook)
+          if (ispresent(book)) {
+            const page = bookfindcodepage(book, data)
+            if (ispresent(page)) {
+              const name = codepagereadname(page)
+              const pagetype = codepagereadtypetostring(page)
+              writetext(`opened ${name} of type ${pagetype}`)
+
+              // write to modem
+              modemwritestring(page.id, page.code)
+
+              // tell tape to open a code editor for given page
+              const type = codepagereadtypetostring(page)
+              tape_editor_open(
+                'cli',
+                openbook,
+                page.id,
+                type,
+                `@book ${book.name}:${name}`,
+                memory.player,
+              )
+            } else {
+              api_error('cli', msg, `page ${data} not found`, memory.player)
+            }
+          } else {
+            api_error(
+              'cli',
+              msg,
+              `need to open a book before opening a page`,
+              memory.player,
+            )
+          }
+        }
+        break
+
       default:
         tape_info('$2', `${msg} ${data ?? ''}`)
         break
