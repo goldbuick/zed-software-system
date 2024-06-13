@@ -5,7 +5,8 @@ without having to include device code
 
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
-import { BOOK, MAYBE_BOOK } from 'zss/memory/book'
+
+// be careful to keep imports here minimal
 
 export function api_error(
   sender: string,
@@ -64,6 +65,14 @@ export function register_reboot(sender: string, player: string) {
 
 export function register_flush(sender: string, books: BOOK[]) {
   hub.emit('register:flush', sender, books)
+}
+
+export function register_biosflash(sender: string) {
+  hub.emit('register:biosflash', sender)
+}
+
+export function register_bioserase(sender: string) {
+  hub.emit('register:bioserase', sender)
 }
 
 export function register_read(sender: string, name: string, player: string) {
@@ -126,8 +135,8 @@ export function tape_editor_close(sender: string) {
   hub.emit('tape:editor:close', sender)
 }
 
-export function vm_mem(sender: string, book: BOOK, player: string) {
-  hub.emit('vm:mem', sender, book, player)
+export function vm_books(sender: string, books: BOOK[], player: string) {
+  hub.emit('vm:books', sender, books, player)
 }
 
 export function vm_login(sender: string, player: string) {
@@ -167,4 +176,8 @@ export function vm_pagerelease(
 
 export function vm_cli(sender: string, input: string, player: string) {
   hub.emit('vm:cli', sender, input, player)
+}
+
+export function vm_flush(sender: string) {
+  hub.emit('vm:flush', sender)
 }

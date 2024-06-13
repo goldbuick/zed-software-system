@@ -44,3 +44,14 @@ export function ismaybearray(word: any): word is MAYBE<any[]> {
 export function noop<T>(item: T) {
   return item
 }
+
+export function isbook(value: any) {
+  return (
+    typeof value === 'object' &&
+    isstring(value.id) === true &&
+    isstring(value.name) === true &&
+    typeof value.flags === 'object' &&
+    typeof value.players === 'object' &&
+    isarray(value.pages) === true
+  )
+}

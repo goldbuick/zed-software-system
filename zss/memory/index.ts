@@ -123,10 +123,11 @@ export function memoryreadbooks(addresses: MAYBE_STRING[]) {
   return unique(addresses).map(memoryreadbook).filter(ispresent)
 }
 
-export function memoryresetbooks(book: BOOK) {
+export function memoryresetbooks(books: BOOK[]) {
   MEMORY.books.clear()
-  MEMORY.books.set(book.id, book)
-  return book.id
+  books.forEach((book) => {
+    MEMORY.books.set(book.id, book)
+  })
 }
 
 export function memorysetbook(book: BOOK) {

@@ -23,6 +23,7 @@ import {
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
   MAYBE_CODE_PAGE,
+  codepagereaddata,
   codepagereadname,
   codepagereadstatdefaults,
   codepagereadtype,
@@ -52,17 +53,6 @@ export function createbook(pages: CODE_PAGE[]): BOOK {
     flags: {},
     players: {},
   }
-}
-
-export function isbook(value: any): value is BOOK {
-  return (
-    typeof value === 'object' &&
-    isstring(value.id) === true &&
-    isstring(value.name) === true &&
-    typeof value.flags === 'object' &&
-    typeof value.players === 'object' &&
-    isarray(value.pages) === true
-  )
 }
 
 export function bookfindcodepage(
@@ -124,25 +114,7 @@ export function bookreadcodepagedata<T extends CODE_PAGE_TYPE>(
   address: string,
 ): MAYBE<CODE_PAGE_TYPE_MAP[T]> {
   const codepage = bookreadcodepage(book, type, address)
-
-  if (codepage) {
-    switch (type) {
-      case CODE_PAGE_TYPE.ERROR:
-        return codepage.error as MAYBE<CODE_PAGE_TYPE_MAP[T]>
-      case CODE_PAGE_TYPE.BOARD:
-        return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
-      case CODE_PAGE_TYPE.OBJECT:
-        return codepage.object as MAYBE<CODE_PAGE_TYPE_MAP[T]>
-      case CODE_PAGE_TYPE.TERRAIN:
-        return codepage.terrain as MAYBE<CODE_PAGE_TYPE_MAP[T]>
-      case CODE_PAGE_TYPE.CHARSET:
-        return codepage.charset as MAYBE<CODE_PAGE_TYPE_MAP[T]>
-      case CODE_PAGE_TYPE.PALETTE:
-        return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
-    }
-  }
-
-  return undefined
+  return codepagereaddata(codepage)
 }
 
 export function bookelementkindread(
