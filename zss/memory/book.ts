@@ -50,13 +50,12 @@ export function createbook(pages: CODE_PAGE[]): BOOK {
 
 export function isbook(value: any): value is BOOK {
   return (
-    ispresent(value) &&
     typeof value === 'object' &&
-    isstring(value.id) &&
-    isstring(value.name) &&
-    Array.isArray(value.pages) &&
-    typeof value.pages === 'object' &&
-    typeof value.player === 'object'
+    isstring(value.id) === true &&
+    isstring(value.name) === true &&
+    typeof value.flags === 'object' &&
+    typeof value.players === 'object' &&
+    Array.isArray(value.pages) === true
   )
 }
 

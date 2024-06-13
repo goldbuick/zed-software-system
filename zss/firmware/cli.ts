@@ -67,11 +67,49 @@ function writeoption(option: string, label: string) {
 }
 
 function writetext(text: string) {
-  write(`${COLOR_EDGE} $blue${text}`)
+  write(`${COLOR_EDGE}$blue${text}`)
 }
 
 // cli's only state ?
 let openbook = ''
+
+function createopenbook() {
+  const book = createbook([])
+
+  // auto-fill @book main
+  if (!ispresent(memoryreadbook('main'))) {
+    book.name = 'main'
+  }
+
+  // track open book
+  openbook = book.id
+  memorysetbook(book)
+
+  // message
+  writetext(`created and opened ${book.name}`)
+  return book
+}
+
+function ensureopenbook() {
+  let book = memoryreadbook(openbook)
+
+  // book already open
+  if (ispresent(book)) {
+    return book
+  }
+
+  // attempt to open main
+  book = memoryreadbook('main')
+  if (ispresent(book)) {
+    openbook = book.id
+    return book
+  }
+
+  // create book
+  book = createopenbook()
+  writetext(`opened ${book.name}`)
+  return book
+}
 
 export const CLI_FIRMWARE = createfirmware({
   get(chip, name) {
@@ -251,15 +289,9 @@ export const CLI_FIRMWARE = createfirmware({
       }
     } else {
       // create book if needed
+      const book = ensureopenbook()
       if (!ispresent(book)) {
-        book = createbook([])
-        openbook = book.id
-        memorysetbook(book)
-        writetext(`created and opened ${book.name}`)
-        if (!ispresent(book)) {
-          // bail ??
-          return 0
-        }
+        return 0
       }
 
       const memory = memoryreadchip(chip.id())
@@ -301,13 +333,9 @@ export const CLI_FIRMWARE = createfirmware({
     const [msg, data] = readargs(read, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
 
     switch (msg) {
-      case 'bookcreate': {
-        const book = createbook([])
-        openbook = book.id
-        memorysetbook(book)
-        writetext(`created and opened ${book.name}`)
+      case 'bookcreate':
+        createopenbook()
         break
-      }
       case 'bookopen':
         if (isstring(data)) {
           const book = memoryreadbook(data)
@@ -318,7 +346,7 @@ export const CLI_FIRMWARE = createfirmware({
             api_error(
               'cli',
               'bookopen',
-              `book with id ${data} not found`,
+              `book ${data} not found`,
               memory.player,
             )
           }
@@ -326,7 +354,7 @@ export const CLI_FIRMWARE = createfirmware({
           api_error(
             'cli',
             'bookopen',
-            `expected book id, got: ${data} instead`,
+            `expected book id or name, got: ${data} instead`,
             memory.player,
           )
         }

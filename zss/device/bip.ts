@@ -33,7 +33,8 @@ const bip = createdevice(
         break
       case 'error:login':
         if (message.player) {
-          register_reboot(bip.name(), message.player)
+          const { player } = message
+          queueMicrotask(() => register_reboot(bip.name(), player))
         }
         break
       case 'error:reboot':

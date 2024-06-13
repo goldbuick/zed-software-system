@@ -11,6 +11,7 @@ import {
   memorysetdefaultplayer,
   memorytick,
 } from 'zss/memory'
+import { BOOK, isbook } from 'zss/memory/book'
 import { createos } from 'zss/os'
 
 import { register_flush, tape_debug, tape_info } from './api'
@@ -36,9 +37,10 @@ let flushtick = 0
 const vm = createdevice('vm', ['tick', 'second'], (message) => {
   switch (message.target) {
     case 'mem':
-      if (message.player === playerid) {
-        memoryresetbooks(message.data)
-        tape_info(vm.name(), 'ackmem', message.player)
+      if (message.player === playerid && isbook(message.data)) {
+        const book: BOOK = message.data
+        memoryresetbooks(book)
+        tape_info(vm.name(), 'vm reset with', book.name, message.player)
         vm.emit('ackmem', undefined, message.player)
       }
       break
@@ -55,7 +57,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       // player keepalive
       if (message.player) {
         tracking[message.player] = 0
-        tape_debug(vm.name(), message.player, 'active')
+        tape_debug(vm.name(), 'active', message.player)
         vm.emit('doot', undefined, message.player)
       }
       break
