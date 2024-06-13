@@ -1,7 +1,9 @@
 import { createdevice } from 'zss/device'
 import { INPUT } from 'zss/gadget/data/types'
 import { createpid } from 'zss/mapping/guid'
+import { ispresent } from 'zss/mapping/types'
 import {
+  PLAYER_BOOK,
   memorycli,
   memoryplayerlogin,
   memoryplayerlogout,
@@ -14,7 +16,14 @@ import {
 import { BOOK, isbook } from 'zss/memory/book'
 import { createos } from 'zss/os'
 
-import { register_flush, tape_debug, tape_info } from './api'
+import {
+  bip_loginfailed,
+  bip_retry,
+  register_flush,
+  tape_crash,
+  tape_debug,
+  tape_info,
+} from './api'
 
 // this should be unique every time the worker is created
 const playerid = createpid()
@@ -40,66 +49,74 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       if (message.player === playerid && isbook(message.data)) {
         const book: BOOK = message.data
         memoryresetbooks(book)
+        // message
         tape_info(vm.name(), 'vm reset with', book.name, message.player)
-        vm.emit('ackmem', undefined, message.player)
+        bip_retry(vm.name(), message.player)
+        console.info(book)
       }
       break
     case 'login':
       if (message.player) {
         if (memoryplayerlogin(message.player)) {
           tracking[message.player] = 0
-          tape_info(vm.name(), 'acklogin', message.player)
-          vm.emit('acklogin', undefined, message.player)
+          tape_info(vm.name(), 'player login', message.player)
+        } else {
+          if (ispresent(memoryreadbook(PLAYER_BOOK))) {
+            tape_crash(vm.name())
+          } else {
+            bip_loginfailed(vm.name(), message.player)
+          }
         }
       }
       break
     case 'doot':
-      // player keepalive
       if (message.player) {
+        // player keepalive
         tracking[message.player] = 0
         tape_debug(vm.name(), 'active', message.player)
-        vm.emit('doot', undefined, message.player)
       }
       break
     case 'input':
-      // player input
       if (message.player) {
+        // player input
         const memory = memoryreadchip(message.player)
         const [input = INPUT.NONE, mods = 0] = message.data ?? {}
         memory.inputqueue.add(input)
         memory.inputmods[input as INPUT] = mods
       }
       break
-    // from clock
     case 'tick':
+      // from clock
       lasttick = message.data ?? 0
       memorytick(os, lasttick)
       break
-    // iterate over logged in players to check activity
     case 'second':
+      // from clock & iterate over logged in players to check activity
       Object.keys(tracking).forEach((player) => {
         ++tracking[player]
         if (tracking[player] >= SECOND_TIMEOUT) {
           // drop inactive players (logout)
           delete tracking[player]
           memoryplayerlogout(player)
-          tape_info(vm.name(), 'logout', player)
+          // message
+          tape_info(vm.name(), 'player logout', player)
           vm.emit('logout', undefined, player)
         }
       })
       if (flushtick >= FLUSH_RATE) {
         flushtick = 0
-        const book = memoryreadbook('main')
+        const book = memoryreadbook(PLAYER_BOOK)
         register_flush(vm.name(), book)
+        console.info(book)
       }
       ++flushtick
       break
-    // user input from built-in console
     case 'cli':
+      // user input from built-in console
       memorycli(os, lasttick, message.player ?? '', message.data ?? '')
       break
-    // running software messages
     default:
+      // running software messages
       os.message(message)
       break
   }

@@ -4,6 +4,7 @@ import { modemwritestring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
+  PLAYER_BOOK,
   memoryreadbook,
   memoryreadbooklist,
   memoryreadchip,
@@ -77,8 +78,8 @@ function createopenbook() {
   const book = createbook([])
 
   // auto-fill @book main
-  if (!ispresent(memoryreadbook('main'))) {
-    book.name = 'main'
+  if (!ispresent(memoryreadbook(PLAYER_BOOK))) {
+    book.name = PLAYER_BOOK
   }
 
   // track open book
@@ -99,7 +100,7 @@ function ensureopenbook() {
   }
 
   // attempt to open main
-  book = memoryreadbook('main')
+  book = memoryreadbook(PLAYER_BOOK)
   if (ispresent(book)) {
     openbook = book.id
     return book

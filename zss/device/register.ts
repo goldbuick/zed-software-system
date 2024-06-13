@@ -3,7 +3,7 @@ import { encodeduritovalue, valuetoencodeduri } from 'zss/mapping/buffer'
 import { ispresent } from 'zss/mapping/types'
 import { isbook } from 'zss/memory/book'
 
-import { api_error, tape_info, vm_mem } from './api'
+import { api_error, bip_rebootfailed, tape_info, vm_mem } from './api'
 
 function readstate(): [any, any] {
   try {
@@ -30,13 +30,12 @@ const register = createdevice('register', [], (message) => {
       if (message.player) {
         const [, main] = readstate()
         if (isbook(main)) {
-          vm_mem(register.name(), main, message.player)
-          api_error(
+          tape_info(
             register.name(),
-            'reboot',
             'loaded main from registry',
             message.player,
           )
+          vm_mem(register.name(), main, message.player)
         } else {
           api_error(
             register.name(),
@@ -44,6 +43,7 @@ const register = createdevice('register', [], (message) => {
             'no book found in registry',
             message.player,
           )
+          bip_rebootfailed(register.name(), message.player)
         }
       }
       break

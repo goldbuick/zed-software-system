@@ -18,6 +18,18 @@ export function api_error(
   return tape_error(sender, message, player)
 }
 
+export function bip_retry(sender: string, player: string) {
+  hub.emit('bip:retry', sender, undefined, player)
+}
+
+export function bip_loginfailed(sender: string, player: string) {
+  hub.emit('bip:loginfailed', sender, undefined, player)
+}
+
+export function bip_rebootfailed(sender: string, player: string) {
+  hub.emit('bip:rebootfailed', sender, undefined, player)
+}
+
 export function register_reboot(sender: string, player: string) {
   hub.emit('register:reboot', sender, undefined, player)
 }

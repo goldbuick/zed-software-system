@@ -1,4 +1,9 @@
-import { syncedStore, getYjsDoc, SyncedText } from '@syncedstore/core'
+import {
+  syncedStore,
+  getYjsDoc,
+  SyncedText,
+  observeDeep,
+} from '@syncedstore/core'
 import { useSyncedStore } from '@syncedstore/react'
 import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'
@@ -51,6 +56,9 @@ function useWaitFor(
 ): MODEM_SHARED_VALUE | undefined {
   const modem = useModem()
   const maybevalue = findvalue(modem.shared, key, type)
+
+  // this should also handle messaging the vm to observe modem values to copy into memory
+
   return ispresent(maybevalue) ? maybevalue : undefined
 }
 
@@ -87,6 +95,48 @@ export function modemwritestring(key: string, value: string) {
   const strvalue = new SyncedText(value)
   modemwriteinit(key, MODEM_SHARED_TYPE.STRING, strvalue)
 }
+
+export type UNOBSERVE_FUNC = () => void
+
+function modemobservevalue(
+  key: string,
+  type: MODEM_SHARED_TYPE,
+  callback: (value: any) => void,
+): UNOBSERVE_FUNC {
+  let observedone: MAYBE<UNOBSERVE_FUNC>
+
+  function checkvalue() {
+    const maybevalue = findvalue(store.shared, key, type)
+    if (ispresent(maybevalue)) {
+      checkdone()
+      observedone = observeDeep(maybevalue, () => callback(maybevalue.value))
+    }
+  }
+
+  const checkdone = observeDeep(store.shared, checkvalue)
+  checkvalue()
+
+  return () => observedone?.()
+}
+
+export function modemobservevaluenumber(
+  key: string,
+  callback: (value: number) => void,
+) {
+  return modemobservevalue(key, MODEM_SHARED_TYPE.NUMBER, callback)
+}
+
+export function modemobservevaluestring(
+  key: string,
+  callback: (value: string) => void,
+) {
+  return modemobservevalue(key, MODEM_SHARED_TYPE.NUMBER, (value) =>
+    callback(value.toJSON()),
+  )
+}
+
+// non react code uses this to listen to value changes
+// getYjsValue
 
 function modemmessage(encoder: encoding.Encoder) {
   return encoding.toUint8Array(encoder)
