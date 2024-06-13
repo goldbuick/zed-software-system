@@ -32,6 +32,7 @@ type TAPE_STATE = {
   }
   editor: {
     open: boolean
+    player: string
     book: string
     page: string
     type: string
@@ -49,6 +50,7 @@ const tape = proxy<TAPE_STATE>({
   },
   editor: {
     open: false,
+    player: '',
     book: '',
     page: '',
     type: '',
@@ -117,6 +119,7 @@ createdevice('tape', [], (message) => {
         const [book, page, type, title] = message.data ?? ['', '', '']
         tape.terminal.open = true
         tape.editor.open = true
+        tape.editor.player = message.player ?? ''
         tape.editor.book = book
         tape.editor.page = page
         tape.editor.type = type

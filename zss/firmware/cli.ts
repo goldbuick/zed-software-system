@@ -87,7 +87,7 @@ function createopenbook() {
   memorysetbook(book)
 
   // message
-  writetext(`created and opened ${book.name}`)
+  writetext(`created ${book.name}`)
   return book
 }
 
@@ -301,26 +301,27 @@ export const CLI_FIRMWARE = createfirmware({
       // add to book if needed, use page from book if name matches
       let page = createcodepage(code, {})
       const name = codepagereadname(page)
-      const type = codepagereadtypetostring(page)
       const maybepage = bookreadcodepage(book, codepagereadtype(page), name)
 
+      const pagetype = codepagereadtypetostring(page)
       if (ispresent(maybepage)) {
         page = maybepage
-        writetext(`opened ${name} of type ${type}`)
+        writetext(`opened ${name} of type ${pagetype}`)
       } else {
         bookwritecodepage(book, page)
-        writetext(`created ${name} of type ${type}`)
+        writetext(`created ${name} of type ${pagetype}`)
       }
 
-      // write to modem so ui can pick it up
-      modemwritestring(page.id, code)
+      // write to modem
+      modemwritestring(page.id, page.code)
 
       // tell tape to open a code editor for given page
+      const type = codepagereadtypetostring(page)
       tape_editor_open(
         'cli',
         openbook,
         page.id,
-        codepagereadtypetostring(page),
+        type,
         `@book ${book.name}:${name}`,
         memory.player,
       )

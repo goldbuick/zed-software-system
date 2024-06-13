@@ -1,4 +1,3 @@
-import { SyncedText } from '@syncedstore/core'
 import { useWaitForString } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
 import {
@@ -27,11 +26,16 @@ export function Textrows() {
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
-  const codepage = useWaitForString(tape.editor.page)
+  const codepage = useWaitForString(
+    tape.editor.book,
+    tape.editor.page,
+    tape.editor.player,
+  )
 
   setupeditoritem(false, false, 1, 2, 1, context)
   if (!ispresent(codepage)) {
-    tokenizeandwritetextformat(` LOADING ${blink ? '|' : '-'}`, context, true)
+    const fibble = (blink ? '|' : '-').repeat(3)
+    tokenizeandwritetextformat(` ${fibble} LOADING ${fibble}`, context, true)
     return null
   }
 

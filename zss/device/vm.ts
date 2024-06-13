@@ -1,7 +1,7 @@
 import { createdevice } from 'zss/device'
 import { INPUT } from 'zss/gadget/data/types'
 import { createpid } from 'zss/mapping/guid'
-import { ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   PLAYER_BOOK,
   memorycli,
@@ -13,7 +13,7 @@ import {
   memorysetdefaultplayer,
   memorytick,
 } from 'zss/memory'
-import { BOOK, isbook } from 'zss/memory/book'
+import { BOOK, bookfindcodepage, isbook } from 'zss/memory/book'
 import { createos } from 'zss/os'
 
 import {
@@ -24,6 +24,7 @@ import {
   tape_debug,
   tape_info,
 } from './api'
+import { UNOBSERVE_FUNC, modemobservevaluestring } from './modem'
 
 // this should be unique every time the worker is created
 const playerid = createpid()
@@ -40,8 +41,12 @@ const SECOND_TIMEOUT = 32
 const tracking: Record<string, number> = {}
 
 // control how fast we persist to the register
-const FLUSH_RATE = 1
+const FLUSH_RATE = 4
 let flushtick = 0
+
+// track watched codepage memory
+const watching: Record<string, Record<string, Set<string>>> = {}
+const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
 const vm = createdevice('vm', ['tick', 'second'], (message) => {
   switch (message.target) {
@@ -52,7 +57,6 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         // message
         tape_info(vm.name(), 'vm reset with', book.name, message.player)
         bip_retry(vm.name(), message.player)
-        console.info(book)
       }
       break
     case 'login':
@@ -85,6 +89,45 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         memory.inputmods[input as INPUT] = mods
       }
       break
+    case 'pagewatch':
+      if (message.player && Array.isArray(message.data)) {
+        const [book, page] = message.data
+        // start watching
+        if (!ispresent(observers[page])) {
+          observers[page] = modemobservevaluestring(page, (value) => {
+            // write to code
+            const codepage = bookfindcodepage(memoryreadbook(book), page)
+            if (ispresent(codepage)) {
+              // TODO: should only update code through helper func
+              // the idea is that if you change the codepage type
+              // your data needs to be set to a working default value
+              codepage.code = value
+            }
+          })
+        }
+        // track use
+        if (!ispresent(watching[book]?.[page])) {
+          watching[book] = watching[book] ?? {}
+          watching[book][page] = new Set()
+        }
+        watching[book][page].add(message.player)
+      }
+      break
+    case 'pagerelease':
+      if (message.player && Array.isArray(message.data)) {
+        const [book, page] = message.data
+        if (ispresent(watching[book])) {
+          if (ispresent(watching[book][page])) {
+            watching[book][page].delete(message.player)
+            // stop watching
+            if (watching[book][page].size === 0) {
+              observers[page]?.()
+              observers[page] = undefined
+            }
+          }
+        }
+      }
+      break
     case 'tick':
       // from clock
       lasttick = message.data ?? 0
@@ -107,7 +150,6 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         flushtick = 0
         const book = memoryreadbook(PLAYER_BOOK)
         register_flush(vm.name(), book)
-        console.info(book)
       }
       ++flushtick
       break

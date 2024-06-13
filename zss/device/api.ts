@@ -147,6 +147,24 @@ export function vm_input(
   hub.emit('vm:input', sender, [input, mods], player)
 }
 
+export function vm_pagewatch(
+  sender: string,
+  book: string,
+  page: string,
+  player: string,
+) {
+  hub.emit('vm:pagewatch', sender, [book, page], player)
+}
+
+export function vm_pagerelease(
+  sender: string,
+  book: string,
+  page: string,
+  player: string,
+) {
+  hub.emit('vm:pagerelease', sender, [book, page], player)
+}
+
 export function vm_cli(sender: string, input: string, player: string) {
   hub.emit('vm:cli', sender, input, player)
 }

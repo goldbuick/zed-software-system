@@ -7,9 +7,12 @@ import {
 import { useSyncedStore } from '@syncedstore/react'
 import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'
+import { useEffect } from 'react'
 import * as syncprotocol from 'y-protocols/sync'
 import { createdevice } from 'zss/device'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+
+import { vm_pagerelease, vm_pagewatch } from './api'
 
 export enum MODEM_SHARED_TYPE {
   NUMBER,
@@ -51,25 +54,30 @@ export function useModem() {
 // react ui code uses this to wait for shared value to
 // populate before continuing
 function useWaitFor(
+  book: string,
   key: string,
   type: MODEM_SHARED_TYPE,
+  player: string,
 ): MODEM_SHARED_VALUE | undefined {
   const modem = useModem()
   const maybevalue = findvalue(modem.shared, key, type)
 
-  // this should also handle messaging the vm to observe modem values to copy into memory
+  useEffect(() => {
+    vm_pagewatch('modem', book, key, player)
+    return () => {
+      vm_pagerelease('modem', book, key, player)
+    }
+  }, [book, key, player])
 
   return ispresent(maybevalue) ? maybevalue : undefined
 }
 
-export function useWaitForNumber(key: string) {
-  const result = useWaitFor(key, MODEM_SHARED_TYPE.NUMBER)
-  return result
+export function useWaitForNumber(book: string, key: string, player: string) {
+  return useWaitFor(book, key, MODEM_SHARED_TYPE.NUMBER, player)
 }
 
-export function useWaitForString(key: string) {
-  const result = useWaitFor(key, MODEM_SHARED_TYPE.STRING)
-  return result
+export function useWaitForString(book: string, key: string, player: string) {
+  return useWaitFor(book, key, MODEM_SHARED_TYPE.STRING, player)
 }
 
 // non react code uses this to setup values
@@ -122,15 +130,15 @@ function modemobservevalue(
 export function modemobservevaluenumber(
   key: string,
   callback: (value: number) => void,
-) {
+): UNOBSERVE_FUNC {
   return modemobservevalue(key, MODEM_SHARED_TYPE.NUMBER, callback)
 }
 
 export function modemobservevaluestring(
   key: string,
   callback: (value: string) => void,
-) {
-  return modemobservevalue(key, MODEM_SHARED_TYPE.NUMBER, (value) =>
+): UNOBSERVE_FUNC {
+  return modemobservevalue(key, MODEM_SHARED_TYPE.STRING, (value: SyncedText) =>
     callback(value.toJSON()),
   )
 }
