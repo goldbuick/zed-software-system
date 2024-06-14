@@ -1,6 +1,8 @@
 import { maptostring } from 'zss/chip'
 import {
   api_error,
+  register_bioserase,
+  register_biosflash,
   tape_editor_open,
   tape_info,
   vm_flush,
@@ -335,6 +337,17 @@ export const CLI_FIRMWARE = createfirmware({
     }
     return 0
   })
+  .command('update', () => {
+    const booknames = memoryreadbooklist()
+      .map((item) => item.name)
+      .join(' ')
+    write(`!biosflash;$GREENWrite ${booknames} to bios`)
+    return 0
+  })
+  .command('factoryreset', () => {
+    write(`!bioserase;$REDReset bios`)
+    return 0
+  })
   .command('send', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const read = memoryreadcontext(chip, words)
@@ -428,7 +441,14 @@ export const CLI_FIRMWARE = createfirmware({
           }
         }
         break
-
+      case 'biosflash':
+        register_biosflash('cli')
+        writetext(`bios flashed`)
+        break
+      case 'bioserase':
+        register_bioserase('cli')
+        writetext(`bios erased, refreshing page recommended`)
+        break
       default:
         tape_info('$2', `${msg} ${data ?? ''}`)
         break
