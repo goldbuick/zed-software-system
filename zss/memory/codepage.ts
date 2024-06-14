@@ -5,7 +5,7 @@ import { Stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import { BOARD, BOARD_ELEMENT } from './board'
+import { BOARD, BOARD_ELEMENT, boardcreate } from './board'
 
 export enum CODE_PAGE_TYPE {
   ERROR,
@@ -249,10 +249,16 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
     }
     case CODE_PAGE_TYPE.BOARD: {
       // validate and shape board into usable state
+      if (!ispresent(codepage.board)) {
+        codepage.board = boardcreate()
+      }
       return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {
       // validate and shape object into usable state
+      if (!ispresent(codepage.object)) {
+        // codepage.object =
+      }
       return codepage.object as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.TERRAIN: {
