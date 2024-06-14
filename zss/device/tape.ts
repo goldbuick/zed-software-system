@@ -2,7 +2,7 @@ import { proxy, useSnapshot } from 'valtio'
 import { LOG_DEBUG } from 'zss/config'
 import { createdevice } from 'zss/device'
 import { createsid } from 'zss/mapping/guid'
-import { isnumber } from 'zss/mapping/types'
+import { isarray, isnumber } from 'zss/mapping/types'
 
 // system wide message logger
 
@@ -115,7 +115,7 @@ createdevice('tape', [], (message) => {
       }
       break
     case 'editor:open':
-      if (Array.isArray(message.data)) {
+      if (isarray(message.data)) {
         const [book, page, type, title] = message.data ?? ['', '', '']
         tape.terminal.open = true
         tape.editor.open = true

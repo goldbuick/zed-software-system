@@ -5,7 +5,7 @@ import { Stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import { BOARD, BOARD_ELEMENT } from './board'
+import { BOARD, BOARD_ELEMENT, boardcreate } from './board'
 
 export enum CODE_PAGE_TYPE {
   ERROR,
@@ -108,6 +108,14 @@ export function codepagereadstatdefaults(
 
   // send it
   return stats
+}
+
+export function codepageresetstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
+  if (!ispresent(codepage)) {
+    return {}
+  }
+  codepage.stats = undefined
+  return codepagereadstats(codepage)
 }
 
 export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
@@ -227,4 +235,43 @@ export function codepagereadname(codepage: MAYBE_CODE_PAGE) {
 export function codepagereadstat(codepage: MAYBE_CODE_PAGE, stat: string) {
   const stats = codepagereadstats(codepage)
   return stats[stat]
+}
+
+export function codepagereaddata<T extends CODE_PAGE_TYPE>(
+  codepage: MAYBE_CODE_PAGE,
+): MAYBE<CODE_PAGE_TYPE_MAP[T]> {
+  if (!ispresent(codepage?.stats?.type)) {
+    return undefined
+  }
+  switch (codepage.stats.type) {
+    case CODE_PAGE_TYPE.ERROR: {
+      return codepage.error as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+    }
+    case CODE_PAGE_TYPE.BOARD: {
+      // validate and shape board into usable state
+      if (!ispresent(codepage.board)) {
+        codepage.board = boardcreate()
+      }
+      return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+    }
+    case CODE_PAGE_TYPE.OBJECT: {
+      // validate and shape object into usable state
+      if (!ispresent(codepage.object)) {
+        // codepage.object =
+      }
+      return codepage.object as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+    }
+    case CODE_PAGE_TYPE.TERRAIN: {
+      // validate and shape terrain into usable state
+      return codepage.terrain as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+    }
+    case CODE_PAGE_TYPE.CHARSET: {
+      // validate and shape charset into usable state
+      return codepage.charset as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+    }
+    case CODE_PAGE_TYPE.PALETTE: {
+      // validate and shape palette into usable state
+      return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+    }
+  }
 }

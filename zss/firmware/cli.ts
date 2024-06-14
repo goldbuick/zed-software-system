@@ -1,10 +1,18 @@
 import { maptostring } from 'zss/chip'
-import { api_error, tape_editor_open, tape_info } from 'zss/device/api'
+import {
+  api_error,
+  register_bioserase,
+  register_biosflash,
+  tape_editor_open,
+  tape_info,
+  vm_flush,
+} from 'zss/device/api'
 import { modemwritestring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   PLAYER_BOOK,
+  memoryclearbook,
   memoryreadbook,
   memoryreadbooklist,
   memoryreadchip,
@@ -12,6 +20,8 @@ import {
   memorysetbook,
 } from 'zss/memory'
 import {
+  bookclearcodepage,
+  bookfindcodepage,
   bookreadcodepage,
   bookreadflag,
   booksetflag,
@@ -74,20 +84,22 @@ function writetext(text: string) {
 // cli's only state ?
 let openbook = ''
 
-function createopenbook() {
+function createnewbook(maybename?: any) {
   const book = createbook([])
 
-  // auto-fill @book main
-  if (!ispresent(memoryreadbook(PLAYER_BOOK))) {
+  if (isstring(maybename)) {
+    book.name = maybename
+  } else if (!ispresent(memoryreadbook(PLAYER_BOOK))) {
+    // auto-fill @book main
     book.name = PLAYER_BOOK
   }
 
-  // track open book
-  openbook = book.id
   memorysetbook(book)
 
   // message
   writetext(`created ${book.name}`)
+  cli_flush() // tell register to save changes
+
   return book
 }
 
@@ -103,13 +115,16 @@ function ensureopenbook() {
   book = memoryreadbook(PLAYER_BOOK)
   if (ispresent(book)) {
     openbook = book.id
+    writetext(`opened [book] ${book.name}`)
     return book
   }
 
   // create book
-  book = createopenbook()
-  writetext(`opened ${book.name}`)
-  return book
+  return createnewbook()
+}
+
+function cli_flush() {
+  vm_flush('cli')
 }
 
 export const CLI_FIRMWARE = createfirmware({
@@ -260,8 +275,7 @@ export const CLI_FIRMWARE = createfirmware({
         writetext(`@Name of object`)
       }
     } else {
-      writetext(`no book currently open`)
-      chip.command('books')
+      chip.command('bookopen', 'main')
     }
     return 0
   })
@@ -278,15 +292,7 @@ export const CLI_FIRMWARE = createfirmware({
       book = memoryreadbook(name)
       // create book if needed
       if (!ispresent(book)) {
-        book = createbook([])
-        book.name = name
-        openbook = book.id
-        memorysetbook(book)
-        writetext(`created and opened ${book.name}`)
-        if (!ispresent(book)) {
-          // bail ??
-          return 0
-        }
+        chip.command('bookcreate', name)
       }
     } else {
       // create book if needed
@@ -295,38 +301,51 @@ export const CLI_FIRMWARE = createfirmware({
         return 0
       }
 
-      const memory = memoryreadchip(chip.id())
-      const code = `@${codepage}\n`
-
       // add to book if needed, use page from book if name matches
-      let page = createcodepage(code, {})
+      const code = `@${codepage}\n`
+      const page = createcodepage(code, {})
       const name = codepagereadname(page)
       const maybepage = bookreadcodepage(book, codepagereadtype(page), name)
 
-      const pagetype = codepagereadtypetostring(page)
-      if (ispresent(maybepage)) {
-        page = maybepage
-        writetext(`opened ${name} of type ${pagetype}`)
-      } else {
+      if (!ispresent(maybepage)) {
         bookwritecodepage(book, page)
+        const pagetype = codepagereadtypetostring(page)
         writetext(`created ${name} of type ${pagetype}`)
+        cli_flush() // tell register to save changes
       }
 
-      // write to modem
-      modemwritestring(page.id, page.code)
-
-      // tell tape to open a code editor for given page
-      const type = codepagereadtypetostring(page)
-      tape_editor_open(
-        'cli',
-        openbook,
-        page.id,
-        type,
-        `@book ${book.name}:${name}`,
-        memory.player,
-      )
+      chip.command('pageopen', maybepage?.id ?? page.id)
     }
 
+    return 0
+  })
+  .command('trash', () => {
+    writesection(`books`)
+    const list = memoryreadbooklist()
+    if (list.length) {
+      list.forEach((book) => {
+        write(`!booktrash ${book.id};$REDTRASH ${book.name}`)
+      })
+    }
+    const book = memoryreadbook(openbook)
+    if (ispresent(book)) {
+      writesection(`book ${book.name}`)
+      book.pages.forEach((page) => {
+        const name = codepagereadname(page)
+        write(`!pagetrash ${page.id};$REDTRASH ${name}`)
+      })
+    }
+    return 0
+  })
+  .command('update', () => {
+    const booknames = memoryreadbooklist()
+      .map((item) => item.name)
+      .join(' ')
+    write(`!biosflash;$GREENWrite ${booknames} to bios`)
+    return 0
+  })
+  .command('factoryreset', () => {
+    write(`!bioserase;$REDReset bios`)
     return 0
   })
   .command('send', (chip, words) => {
@@ -335,15 +354,34 @@ export const CLI_FIRMWARE = createfirmware({
     const [msg, data] = readargs(read, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
 
     switch (msg) {
-      case 'bookcreate':
-        createopenbook()
+      case 'bookcreate': {
+        const book = createnewbook(data)
+        chip.command('bookopen', book.id)
+        break
+      }
+      case 'booktrash':
+        if (isstring(data)) {
+          const opened = memoryreadbook(openbook)
+          const book = memoryreadbook(data)
+          if (ispresent(book)) {
+            // clear opened
+            if (opened === book) {
+              openbook = ''
+            }
+            // clear book
+            memoryclearbook(data)
+            writetext(`trashed [book] ${book.name}`)
+            cli_flush() // tell register to save changes
+          }
+        }
         break
       case 'bookopen':
         if (isstring(data)) {
           const book = memoryreadbook(data)
           if (ispresent(book)) {
             openbook = data
-            writetext(`opened book ${book.name}`)
+            writetext(`opened [book] ${book.name}`)
+            chip.command('pages')
           } else {
             api_error(
               'cli',
@@ -360,6 +398,56 @@ export const CLI_FIRMWARE = createfirmware({
             memory.player,
           )
         }
+        break
+      case 'pagetrash':
+        if (isstring(data)) {
+          const book = ensureopenbook()
+          const page = bookclearcodepage(book, data)
+          if (ispresent(page)) {
+            const name = codepagereadname(page)
+            const pagetype = codepagereadtypetostring(page)
+            writetext(`trashed [${pagetype}] ${name}`)
+            cli_flush() // tell register to save changes
+          }
+        }
+        break
+      case 'pageopen':
+        if (isstring(data)) {
+          const book = ensureopenbook()
+
+          // store success !
+          openbook = book.id
+          const page = bookfindcodepage(book, data)
+          if (ispresent(page)) {
+            const name = codepagereadname(page)
+            const pagetype = codepagereadtypetostring(page)
+            writetext(`opened [${pagetype}] ${name}`)
+
+            // write to modem
+            modemwritestring(page.id, page.code)
+
+            // tell tape to open a code editor for given page
+            const type = codepagereadtypetostring(page)
+            tape_editor_open(
+              'cli',
+              openbook,
+              page.id,
+              type,
+              `@book ${book.name}:${name}`,
+              memory.player,
+            )
+          } else {
+            api_error('cli', msg, `page ${data} not found`, memory.player)
+          }
+        }
+        break
+      case 'biosflash':
+        register_biosflash('cli')
+        writetext(`bios flashed`)
+        break
+      case 'bioserase':
+        register_bioserase('cli')
+        writetext(`bios erased, refreshing page recommended`)
         break
       default:
         tape_info('$2', `${msg} ${data ?? ''}`)

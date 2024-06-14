@@ -6,7 +6,14 @@ import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
 import { CYCLE_DEFAULT } from './mapping/tick'
-import { MAYBE, deepcopy, isequal, ispresent, isstring } from './mapping/types'
+import {
+  MAYBE,
+  deepcopy,
+  isarray,
+  isequal,
+  ispresent,
+  isstring,
+} from './mapping/types'
 import { memoryreadcontext } from './memory'
 
 export const HALT_AT_COUNT = 64
@@ -92,7 +99,7 @@ export type WORD = string | number
 export type WORD_VALUE = WORD | WORD[] | undefined
 
 function maptoresult(value: WORD_VALUE): WORD {
-  if (Array.isArray(value)) {
+  if (isarray(value)) {
     return value.length > 0 ? 1 : 0
   }
   return value ?? 0
@@ -448,13 +455,13 @@ export function createchip(id: string, build: GeneratorBuild) {
       // expects name to be a string
       const arraysource: any[] = chip.get(name) ?? []
       // and chip.get(name) to return an object or an array
-      reads[index] = Array.isArray(arraysource) ? arraysource : [arraysource]
+      reads[index] = isarray(arraysource) ? arraysource : [arraysource]
     },
     read(index, ...words) {
       const arraysource = reads[index]
 
       // todo raise error
-      if (Array.isArray(arraysource) === false) {
+      if (isarray(arraysource) === false) {
         return false
       }
 

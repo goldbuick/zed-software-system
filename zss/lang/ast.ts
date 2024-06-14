@@ -1,4 +1,5 @@
 import { CstNode, IToken } from 'chevrotain'
+import { isarray } from 'zss/mapping/types'
 
 import { tokenize } from './lexer'
 import { parser } from './parser'
@@ -21,7 +22,7 @@ function addRange(node: CodeNode | undefined): OffsetRange | undefined {
   Object.keys(node).forEach((name) => {
     if (name !== 'parent') {
       const next = (node as Record<string, any>)[name]
-      if (Array.isArray(next)) {
+      if (isarray(next)) {
         next.forEach((item) => {
           offsets.push(addRange(item))
         })

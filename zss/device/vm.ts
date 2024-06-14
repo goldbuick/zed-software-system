@@ -1,19 +1,21 @@
 import { createdevice } from 'zss/device'
 import { INPUT } from 'zss/gadget/data/types'
 import { createpid } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, isarray, isbook, ispresent } from 'zss/mapping/types'
 import {
   PLAYER_BOOK,
   memorycli,
   memoryplayerlogin,
   memoryplayerlogout,
   memoryreadbook,
+  memoryreadbooklist,
   memoryreadchip,
   memoryresetbooks,
   memorysetdefaultplayer,
   memorytick,
 } from 'zss/memory'
-import { BOOK, bookfindcodepage, isbook } from 'zss/memory/book'
+import { BOOK, bookfindcodepage } from 'zss/memory/book'
+import { codepageresetstats } from 'zss/memory/codepage'
 import { createos } from 'zss/os'
 
 import {
@@ -23,6 +25,7 @@ import {
   tape_crash,
   tape_debug,
   tape_info,
+  vm_flush,
 } from './api'
 import { UNOBSERVE_FUNC, modemobservevaluestring } from './modem'
 
@@ -41,7 +44,7 @@ const SECOND_TIMEOUT = 32
 const tracking: Record<string, number> = {}
 
 // control how fast we persist to the register
-const FLUSH_RATE = 4
+const FLUSH_RATE = 64
 let flushtick = 0
 
 // track watched codepage memory
@@ -50,12 +53,25 @@ const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
 const vm = createdevice('vm', ['tick', 'second'], (message) => {
   switch (message.target) {
-    case 'mem':
-      if (message.player === playerid && isbook(message.data)) {
-        const book: BOOK = message.data
-        memoryresetbooks(book)
+    case 'books':
+      if (
+        message.data.every(isbook) &&
+        message.player === playerid &&
+        isarray(message.data) === true
+      ) {
+        // unpack books
+        const books: BOOK[] = message.data
+        const booknames = books.map((item) => item.name)
+        memoryresetbooks(books)
         // message
-        tape_info(vm.name(), 'vm reset with', book.name, message.player)
+        tape_info(
+          vm.name(),
+          'reset by',
+          message.sender,
+          'with',
+          ...booknames,
+          message.player,
+        )
         bip_retry(vm.name(), message.player)
       }
       break
@@ -90,7 +106,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       }
       break
     case 'pagewatch':
-      if (message.player && Array.isArray(message.data)) {
+      if (message.player && isarray(message.data)) {
         const [book, page] = message.data
         // start watching
         if (!ispresent(observers[page])) {
@@ -98,10 +114,9 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
             // write to code
             const codepage = bookfindcodepage(memoryreadbook(book), page)
             if (ispresent(codepage)) {
-              // TODO: should only update code through helper func
-              // the idea is that if you change the codepage type
-              // your data needs to be set to a working default value
               codepage.code = value
+              // re-parse code for @ attrs and expected data type
+              codepageresetstats(codepage)
             }
           })
         }
@@ -114,7 +129,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       }
       break
     case 'pagerelease':
-      if (message.player && Array.isArray(message.data)) {
+      if (message.player && isarray(message.data)) {
         const [book, page] = message.data
         if (ispresent(watching[book])) {
           if (ispresent(watching[book][page])) {
@@ -146,12 +161,14 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           vm.emit('logout', undefined, player)
         }
       })
-      if (flushtick >= FLUSH_RATE) {
-        flushtick = 0
-        const book = memoryreadbook(PLAYER_BOOK)
-        register_flush(vm.name(), book)
+      // autosave to url
+      if (++flushtick >= FLUSH_RATE) {
+        vm_flush(vm.name())
       }
-      ++flushtick
+      break
+    case 'flush':
+      flushtick = 0
+      register_flush(vm.name(), memoryreadbooklist())
       break
     case 'cli':
       // user input from built-in console

@@ -4,6 +4,7 @@ import {
   writetextcolorreset,
 } from 'zss/gadget/data/textformat'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
+import { isarray } from 'zss/mapping/types'
 
 import { usePlayer } from '../useplayer'
 
@@ -28,7 +29,7 @@ export function PanelItem({ item, active }: PanelItemProps) {
 
   if (typeof item === 'string') {
     return <PanelItemContent player={player} item={item} context={context} />
-  } else if (Array.isArray(item)) {
+  } else if (isarray(item)) {
     const [chip, label, input, ...args] = item
 
     if (
