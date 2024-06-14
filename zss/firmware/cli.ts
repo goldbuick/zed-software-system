@@ -280,8 +280,6 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('stat', (chip, words) => {
-    let book = memoryreadbook(openbook)
-
     // create page
     const [maybecodepage] = words
     const codepage = maptostring(maybecodepage)
@@ -289,32 +287,9 @@ export const CLI_FIRMWARE = createfirmware({
     // check for special @book [name] case
     if (/^book /gi.test(codepage)) {
       const name = codepage.substring(5)
-      book = memoryreadbook(name)
-      // create book if needed
-      if (!ispresent(book)) {
-        chip.command('bookcreate', name)
-      }
+      chip.command('bookopenorcreate', name)
     } else {
-      // create book if needed
-      const book = ensureopenbook()
-      if (!ispresent(book)) {
-        return 0
-      }
-
-      // add to book if needed, use page from book if name matches
-      const code = `@${codepage}\n`
-      const page = createcodepage(code, {})
-      const name = codepagereadname(page)
-      const maybepage = bookreadcodepage(book, codepagereadtype(page), name)
-
-      if (!ispresent(maybepage)) {
-        bookwritecodepage(book, page)
-        const pagetype = codepagereadtypetostring(page)
-        writetext(`created ${name} of type ${pagetype}`)
-        cli_flush() // tell register to save changes
-      }
-
-      chip.command('pageopen', maybepage?.id ?? page.id)
+      chip.command('pageopenorcreate', codepage)
     }
 
     return 0
@@ -359,22 +334,6 @@ export const CLI_FIRMWARE = createfirmware({
         chip.command('bookopen', book.id)
         break
       }
-      case 'booktrash':
-        if (isstring(data)) {
-          const opened = memoryreadbook(openbook)
-          const book = memoryreadbook(data)
-          if (ispresent(book)) {
-            // clear opened
-            if (opened === book) {
-              openbook = ''
-            }
-            // clear book
-            memoryclearbook(data)
-            writetext(`trashed [book] ${book.name}`)
-            cli_flush() // tell register to save changes
-          }
-        }
-        break
       case 'bookopen':
         if (isstring(data)) {
           const book = memoryreadbook(data)
@@ -399,21 +358,63 @@ export const CLI_FIRMWARE = createfirmware({
           )
         }
         break
-      case 'pagetrash':
+      case 'bookopenorcreate': {
+        const book = memoryreadbook(data)
+        if (ispresent(book)) {
+          chip.command('bookopen', data)
+        } else {
+          chip.command('bookcreate', data)
+        }
+        break
+      }
+      case 'booktrash':
         if (isstring(data)) {
-          const book = ensureopenbook()
-          const page = bookclearcodepage(book, data)
-          if (ispresent(page)) {
-            const name = codepagereadname(page)
-            const pagetype = codepagereadtypetostring(page)
-            writetext(`trashed [${pagetype}] ${name}`)
+          const opened = memoryreadbook(openbook)
+          const book = memoryreadbook(data)
+          if (ispresent(book)) {
+            // clear opened
+            if (opened === book) {
+              openbook = ''
+            }
+            // clear book
+            memoryclearbook(data)
+            writetext(`trashed [book] ${book.name}`)
             cli_flush() // tell register to save changes
+            chip.command('pages')
+          }
+        }
+        break
+      case 'pagecreate':
+        if (isstring(data)) {
+          // create book if needed
+          const book = ensureopenbook()
+          if (!ispresent(book)) {
+            return 0
+          }
+
+          // add to book if needed, use page from book if name matches
+          const code = `@${data}\n`
+          const page = createcodepage(code, {})
+          const name = codepagereadname(page)
+
+          // only create if target doesn't already exist
+          const maybepage = bookreadcodepage(book, codepagereadtype(page), name)
+          if (!ispresent(maybepage)) {
+            bookwritecodepage(book, page)
+            const pagetype = codepagereadtypetostring(page)
+            writetext(`created ${name} of type ${pagetype}`)
+            cli_flush() // tell register to save changes
+            chip.command('pageopen', page.id) // open created content
           }
         }
         break
       case 'pageopen':
         if (isstring(data)) {
+          // create book if needed
           const book = ensureopenbook()
+          if (!ispresent(book)) {
+            return 0
+          }
 
           // store success !
           openbook = book.id
@@ -438,6 +439,19 @@ export const CLI_FIRMWARE = createfirmware({
             )
           } else {
             api_error('cli', msg, `page ${data} not found`, memory.player)
+          }
+        }
+        break
+      case 'pagetrash':
+        if (isstring(data)) {
+          const book = ensureopenbook()
+          const page = bookclearcodepage(book, data)
+          if (ispresent(page)) {
+            const name = codepagereadname(page)
+            const pagetype = codepagereadtypetostring(page)
+            writetext(`trashed [${pagetype}] ${name}`)
+            cli_flush() // tell register to save changes
+            chip.command('pages')
           }
         }
         break
