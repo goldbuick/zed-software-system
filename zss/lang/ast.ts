@@ -1,4 +1,4 @@
-import { CstNode, IToken } from 'chevrotain'
+import { CstNode, ILexingError, IToken } from 'chevrotain'
 import { isarray } from 'zss/mapping/types'
 
 import { tokenize } from './lexer'
@@ -45,7 +45,7 @@ function addRange(node: CodeNode | undefined): OffsetRange | undefined {
 }
 
 export function compileAST(text: string): {
-  errors?: any[]
+  errors?: string[]
   tokens?: IToken[]
   cst?: CstNode
   ast?: CodeNode
@@ -53,7 +53,7 @@ export function compileAST(text: string): {
   const tokens = tokenize(`${text}\n`)
   if (tokens.errors.length > 0) {
     return {
-      errors: tokens.errors,
+      errors: tokens.errors.map((error) => error.message),
       tokens: [],
     }
   }
@@ -63,7 +63,7 @@ export function compileAST(text: string): {
   if (parser.errors.length > 0) {
     return {
       tokens: tokens.tokens,
-      errors: parser.errors,
+      errors: parser.errors.map((error) => error.message),
     }
   }
 

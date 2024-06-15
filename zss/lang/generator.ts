@@ -10,7 +10,7 @@ import { CodeNode } from './visitor'
 const GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor
 
 export type GeneratorBuild = {
-  errors?: any[]
+  errors?: string[]
   tokens?: IToken[]
   cst?: CstNode
   ast?: CodeNode
@@ -47,12 +47,7 @@ export function compile(text: string): GeneratorBuild {
       }
     } catch (error) {
       return {
-        errors: [
-          {
-            // @ts-expect-error cst element
-            message: error.message,
-          },
-        ],
+        errors: [(error as Error).message],
         source: 'there was an error',
         code: new GeneratorFunction('api', ' '),
       }

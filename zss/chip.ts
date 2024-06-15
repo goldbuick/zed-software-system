@@ -142,7 +142,7 @@ export function createchip(id: string, build: GeneratorBuild) {
   let timestamp = 0
 
   // chip is in ended state awaiting any messages
-  let endedstate = false
+  let endedstate = ispresent(build.errors)
 
   // chip invokes
   const firmwares: FIRMWARE[] = []

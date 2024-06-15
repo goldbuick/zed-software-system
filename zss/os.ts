@@ -58,15 +58,17 @@ export function createos() {
       if (!ispresent(chips[id])) {
         const result = build(code)
 
-        // bail on errors
-        if (result.errors?.length) {
-          // todo, need an error message that makes sense
-          api_error('os', 'build', JSON.stringify(result.errors), '')
-          return false
-        }
-
         // create chip from build
         chip = chips[id] = createchip(id, result)
+
+        // bail on errors
+        if (result.errors?.length) {
+          const [errorlines] = result.errors
+          errorlines.split('\n').forEach((message) => {
+            api_error('os', 'build', message, '')
+          })
+          return false
+        }
 
         // load chip firmware
         loadfirmware(chip, type)
