@@ -74,6 +74,10 @@ export const ConsoleContext = createContext<ConsoleContextState>({
   sendmessage() {},
 })
 
+export function logitemy(offset: number, context: WRITE_TEXT_CONTEXT) {
+  return context.height - 3 + offset
+}
+
 export function setuplogitem(
   blink: boolean,
   active: boolean,
@@ -81,7 +85,8 @@ export function setuplogitem(
   context: WRITE_TEXT_CONTEXT,
 ) {
   // reset context
-  context.y = context.height - 3 + offset
+  context.x = context.leftEdge ?? 0
+  context.y = logitemy(offset, context)
   context.isEven = context.y % 2 === 0
   context.activeBg = active && !blink ? BG_ACTIVE : BG
 

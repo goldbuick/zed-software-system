@@ -145,20 +145,9 @@ export const CLI_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  .command('1', (chip) => {
-    chip.command('helpcontrols')
-    return 0
-  })
-  .command('2', (chip) => {
-    chip.command('helptext')
-    return 0
-  })
-  .command('3', (chip) => {
-    chip.command('helpdeveloper')
-    return 0
-  })
-  .command('4', (chip) => {
-    chip.command('helpplayer')
+  .command('help', (chip, words) => {
+    const text = words.map(maptostring).join(' ') || 'menu'
+    chip.command(`help${text}`)
     return 0
   })
   .command('text', (chip, words) => {
@@ -268,12 +257,20 @@ export const CLI_FIRMWARE = createfirmware({
 
     switch (msg) {
       // help messages
-      case 'help':
+      case 'helpmenu':
         writeheader(`H E L P`)
-        writeoption(`#1`, `zss controls and inputs`)
-        writeoption(`#2`, `text formatting`)
-        writeoption(`#3`, `developer commands`)
-        writeoption(`#4`, `player settings`)
+        writeoption(`#help controls`, `zss controls and inputs`)
+        write(`!helpcontrols;read help controls`)
+        write(``)
+        writeoption(`#help text`, `text formatting`)
+        write(`!helptext;read help text`)
+        write(``)
+        writeoption(`#help developer`, `developer commands`)
+        write(`!helpdeveloper;read help developer`)
+        write(``)
+        writeoption(`#help player`, `player settings`)
+        write(`!helpplayer;read help player`)
+        write(``)
         writesection(`keyboard input`)
         writeoption(`?`, `open console`)
         writeoption(`esc`, `close console`)

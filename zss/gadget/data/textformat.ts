@@ -180,8 +180,6 @@ export function writetextcolorreset(context: WRITE_TEXT_CONTEXT) {
 }
 
 function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
-  const starty = context.y
-
   function incCursor() {
     ++context.x
     if (
@@ -285,11 +283,9 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
     context.measuredwidth = context.x + 1
   }
 
-  // move to next line if needed
-  if (context.y === starty) {
-    context.x = context.leftEdge ?? 0
-    ++context.y
-  }
+  // move to next line
+  context.x = context.leftEdge ?? 0
+  ++context.y
 }
 
 export function tokenizeandwritetextformat(
