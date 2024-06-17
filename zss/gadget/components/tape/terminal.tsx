@@ -73,6 +73,7 @@ export function TapeConsoleTerminal() {
     logrowtotalheight += rowheight
     return -y // flipped y render
   })
+  ++logrowtotalheight
 
   // offset into logs
   const centerrow = Math.round(tapeinput.ycursor - context.height * 0.5)
@@ -199,7 +200,8 @@ export function TapeConsoleTerminal() {
         {visiblelogrows.map((text, index) => {
           const offset = logrowoffsets[index]
           const yrow = logitemy(offset, context)
-          return yrow === tapeycursor ? (
+          const yheight = logrowheights[index] - 1
+          return tapeycursor >= yrow && tapeycursor <= yrow + yheight ? (
             <ActiveItem key={index} text={text} offset={offset} />
           ) : (
             <TapeConsoleItem key={index} text={text} offset={offset} />
