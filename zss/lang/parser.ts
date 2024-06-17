@@ -194,7 +194,6 @@ class ScriptParser extends CstParser {
         {
           ALT: () => {
             // inline if
-            this.OPTION(() => this.CONSUME(lexer.Command_then))
             this.SUBRULE(this.command)
           },
         },
@@ -233,7 +232,6 @@ class ScriptParser extends CstParser {
         {
           ALT: () => {
             // inline else if
-            this.OPTION(() => this.CONSUME(lexer.Command_then))
             this.SUBRULE(this.command)
           },
         },
@@ -270,7 +268,6 @@ class ScriptParser extends CstParser {
         {
           ALT: () => {
             // inline else
-            this.OPTION(() => this.CONSUME(lexer.Command_then))
             this.SUBRULE(this.command)
           },
         },
@@ -300,7 +297,6 @@ class ScriptParser extends CstParser {
         {
           ALT: () => {
             // inline while
-            this.OPTION(() => this.CONSUME(lexer.Command_then))
             this.SUBRULE(this.command)
           },
         },
@@ -326,7 +322,6 @@ class ScriptParser extends CstParser {
         {
           ALT: () => {
             // inline repeat
-            this.OPTION(() => this.CONSUME(lexer.Command_then))
             this.SUBRULE(this.command)
           },
         },
@@ -358,7 +353,6 @@ class ScriptParser extends CstParser {
         {
           ALT: () => {
             // inline read
-            this.OPTION(() => this.CONSUME(lexer.Command_then))
             this.SUBRULE(this.command)
           },
         },
