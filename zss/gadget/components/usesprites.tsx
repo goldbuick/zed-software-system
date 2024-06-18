@@ -27,7 +27,8 @@ export function SpritesSnapshot({ sprites }: SpritesSnapshotProps) {
 
   return (
     palette &&
-    charset && (
+    charset &&
+    snapshot.length > 0 && (
       <Sprites palette={palette} charset={charset} sprites={snapshot} />
     )
   )

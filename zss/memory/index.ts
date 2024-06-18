@@ -128,6 +128,7 @@ export function memoryresetbooks(books: BOOK[]) {
   books.forEach((book) => {
     MEMORY.books.set(book.id, book)
   })
+  console.info(MEMORY.books)
 }
 
 export function memorysetbook(book: BOOK) {
