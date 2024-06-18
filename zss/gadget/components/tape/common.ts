@@ -11,7 +11,7 @@ import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
 
 // deco
-export const DOT = 250
+export const BKG_PTRN = 250
 
 // colors
 export const FG = COLOR.BLUE
@@ -95,7 +95,7 @@ export function setuplogitem(
   const p2 = p1 + context.width - 1
   applystrtoindex(
     context.y * context.width,
-    String.fromCharCode(DOT).repeat(context.width),
+    String.fromCharCode(BKG_PTRN).repeat(context.width),
     context,
   )
   // write default colors

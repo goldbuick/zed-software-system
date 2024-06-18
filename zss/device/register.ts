@@ -23,6 +23,7 @@ function readstate(): [STATE_FLAGS, ...STATE_BOOKS] {
 function writestate(flags: STATE_FLAGS, books: STATE_BOOKS) {
   const out = `#${valuetoencodeduri([flags, ...books])}`
   window.location.hash = out
+  tape_info(register.name(), `wrote [...${out.slice(-16)}]`)
 }
 
 const BIOS_BOOKS = 'bios-books'

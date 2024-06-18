@@ -238,6 +238,10 @@ export const CLI_FIRMWARE = createfirmware({
     }
     return 0
   })
+  .command('save', () => {
+    vm_flush('cli')
+    return 0
+  })
   .command('update', () => {
     const booknames = memoryreadbooklist()
       .map((item) => item.name)
@@ -343,6 +347,9 @@ export const CLI_FIRMWARE = createfirmware({
           `#trash`,
           `list books and pages from open book you can delete`,
         )
+        writeoption(`#save`, `flush state to register`)
+        writeoption(`#update`, `write current books to bios`)
+        writeoption(`#factoryreset`, `erase books stored in bios`)
         break
       case 'helpplayer':
         writeheader(`player settings`)

@@ -418,6 +418,7 @@ export function createchip(id: string, build: GeneratorBuild) {
         ARG_TYPE.ANY,
       ])
       const result = maptoresult(value)
+      console.info('if', words, result)
 
       if (result && ii < words.length) {
         chip.command(...words.slice(ii))
