@@ -1,15 +1,17 @@
+import { trimUndefinedRecursively } from 'compress-json'
 import { WORD_VALUE } from 'zss/chip'
 import { PT, COLLISION, CATEGORY } from 'zss/firmware/wordtypes'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, deepcopy, ispresent } from 'zss/mapping/types'
 
 import { checkcollision } from './atomics'
 import {
   MAYBE_BOARD,
   MAYBE_BOARD_ELEMENT,
   boarddeleteobject,
+  boardexport,
   boardobjectread,
 } from './board'
 import {
@@ -552,4 +554,22 @@ export function bookboardtick(
 
   // return code that needs to be run
   return args
+}
+
+export function bookexport(book: MAYBE_BOOK) {
+  if (!ispresent(book)) {
+    return undefined
+  }
+
+  const bookexport = deepcopy(book)
+  bookexport.pages = bookexport.pages.map((page) => {
+    return {
+      ...page,
+      board: ispresent(page.board) ? boardexport(page.board) : undefined,
+    }
+  })
+
+  // bad undefined !
+  trimUndefinedRecursively(bookexport)
+  return bookexport
 }
