@@ -410,3 +410,46 @@ export function boardfindplayer(
   // nearest player to target
   return picknearestpt(target, listnamedelements(board, 'player'))
 }
+
+function boardelementexport(element: MAYBE_BOARD_ELEMENT): MAYBE_BOARD_ELEMENT {
+  if (!ispresent(element)) {
+    return undefined
+  }
+
+  const elementexport: BOARD_ELEMENT = {
+    ...element,
+  }
+
+  // cut runtime data
+  delete elementexport.category
+  delete elementexport.kinddata
+  delete elementexport.kindcode
+  delete elementexport.headless
+  delete elementexport.removed
+
+  return elementexport
+}
+
+export function boardexport(board: MAYBE_BOARD): MAYBE_BOARD {
+  if (!ispresent(board)) {
+    return undefined
+  }
+
+  // trim terrain
+  const terrain = board.terrain.map(boardelementexport)
+
+  // trim objects, and remove any players
+  const objects: Record<string, BOARD_ELEMENT> = {}
+  Object.keys(board.objects).forEach((id) => {
+    const object = boardelementexport(board.objects[id])
+    if (ispresent(object) && object.kind !== 'player') {
+      objects[id] = object
+    }
+  })
+
+  return {
+    ...board,
+    terrain,
+    objects,
+  }
+}
