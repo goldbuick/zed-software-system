@@ -12,7 +12,7 @@ import { BG, CHAR_HEIGHT, CHAR_WIDTH, BKG_PTRN, FG, SCALE } from './tape/common'
 import { TapeConsoleEditor } from './tape/editor'
 import { TapeConsoleTerminal } from './tape/terminal'
 import { PlayerContext } from './useplayer'
-import { UserFocus, UserHotkey } from './userinput'
+import { UserHotkey } from './userinput'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
 
 export function TapeConsole() {
@@ -79,7 +79,7 @@ export function TapeConsole() {
       scale={[SCALE, SCALE, 1.0]}
     >
       {tape.terminal.open ? (
-        <UserFocus>
+        <>
           <TileSnapshot width={width} height={height} tiles={tiles} />
           <PlayerContext.Provider value={player}>
             <WriteTextContext.Provider value={context}>
@@ -90,7 +90,7 @@ export function TapeConsole() {
               )}
             </WriteTextContext.Provider>
           </PlayerContext.Provider>
-        </UserFocus>
+        </>
       ) : (
         <UserHotkey hotkey="Shift+?">
           {() => tape_terminal_open('tape')}

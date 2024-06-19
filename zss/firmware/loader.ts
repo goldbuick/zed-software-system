@@ -21,7 +21,7 @@ export const CODE_PAGE_FIRMWARE = {
   [CODE_PAGE_TYPE.CLI]: ['all', 'audio', 'cli'],
   [CODE_PAGE_TYPE.BOARD]: ['all', 'audio', 'gadget'],
   [CODE_PAGE_TYPE.OBJECT]: ['all', 'audio', 'object', 'gadget'],
-  [CODE_PAGE_TYPE.TERRAIN]: ['all'],
+  [CODE_PAGE_TYPE.TERRAIN]: ['all', 'audio'],
   [CODE_PAGE_TYPE.CHARSET]: ['all'],
   [CODE_PAGE_TYPE.PALETTE]: ['all'],
 }

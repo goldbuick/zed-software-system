@@ -22,7 +22,7 @@ import Clipping from './clipping'
 import { Dither } from './dither'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
-import { UserFocus, UserInput, UserInputMods } from './userinput'
+import { UserInput, UserInputMods } from './userinput'
 
 const palette = loadDefaultPalette()
 const charset = loadDefaultCharset()
@@ -119,7 +119,7 @@ export function Framed({ player, layers, width, height }: FramedProps) {
   })
 
   return (
-    <UserFocus>
+    <>
       <UserInput
         MOVE_LEFT={(mods) => sendinput(player, INPUT.MOVE_LEFT, mods)}
         MOVE_RIGHT={(mods) => sendinput(player, INPUT.MOVE_RIGHT, mods)}
@@ -173,6 +173,6 @@ export function Framed({ player, layers, width, height }: FramedProps) {
           })}
         </group>
       </Clipping>
-    </UserFocus>
+    </>
   )
 }

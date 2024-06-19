@@ -6,6 +6,7 @@ import {
   INPUT_CTRL,
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
+import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import {
   MAYBE,
@@ -570,7 +571,12 @@ export const OBJECT_FIRMWARE = createfirmware({
         }
         break
       case 'self':
-        chip.send(chip.id(), label, data)
+        chip.message({
+          id: createsid(),
+          sender: chip.id(),
+          target: label,
+          data,
+        })
         break
       case 'others':
         for (const id of Object.keys(memory.board?.objects ?? {})) {

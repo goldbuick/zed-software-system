@@ -142,7 +142,7 @@ export function createchip(id: string, build: GeneratorBuild) {
   let timestamp = 0
 
   // chip is in ended state awaiting any messages
-  let endedstate = ispresent(build.errors)
+  let endedstate = (build.errors?.length ?? 0) !== 0
 
   // chip invokes
   const firmwares: FIRMWARE[] = []
@@ -418,7 +418,6 @@ export function createchip(id: string, build: GeneratorBuild) {
         ARG_TYPE.ANY,
       ])
       const result = maptoresult(value)
-      console.info('if', words, result)
 
       if (result && ii < words.length) {
         chip.command(...words.slice(ii))

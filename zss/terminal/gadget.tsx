@@ -7,16 +7,16 @@ import { PANEL } from 'zss/gadget/data/types'
 
 export function Gadget() {
   const state = getgadgetstate()
-  const { player, layout } = useSnapshot(state)
+  const { player, layout, layers } = useSnapshot(state)
   return (
     <UserFocus>
-      <TapeConsole key="console" />
       <Layout
-        key="display"
+        key={`layout-${layers.length}`}
         player={player}
         layout={layout as PANEL[]}
         layers={state.layers}
       />
+      <TapeConsole key="console" />
     </UserFocus>
   )
 }
