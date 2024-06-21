@@ -97,7 +97,6 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       }
       break
     case 'input':
-      console.info(message)
       if (message.player) {
         // player input
         const memory = memoryreadchip(message.player)
