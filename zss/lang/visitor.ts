@@ -639,7 +639,7 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.OR,
       // @ts-expect-error
-      items: this.visit(ctx.and_test),
+      items: asList(this, ctx.and_test),
     })
   }
 
@@ -651,7 +651,7 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.AND,
       // @ts-expect-error
-      items: this.visit(ctx.not_test),
+      items: asList(this, ctx.not_test),
     })
   }
 
@@ -664,7 +664,7 @@ class ScriptVisitor extends CstVisitor {
       return makeNode(ctx, {
         type: NODE.NOT,
         // @ts-expect-error
-        items: this.visit(ctx.not_test),
+        items: asList(this, ctx.not_test),
       })
     }
   }

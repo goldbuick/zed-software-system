@@ -230,7 +230,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
       }}
     >
       {/* eslint-disable-next-line react/no-unknown-property */}
-      <group position={[marginX * 0.5, marginY * 0.5, 0]}>
+      <group position={[marginX * 0.5, marginY * 0.5, -512]}>
         {rects.map((rect, i) => {
           return (
             <group

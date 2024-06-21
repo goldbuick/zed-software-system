@@ -11,7 +11,7 @@ import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
 
 // deco
-export const DOT = 250
+export const BKG_PTRN = 250
 
 // colors
 export const FG = COLOR.BLUE
@@ -74,6 +74,10 @@ export const ConsoleContext = createContext<ConsoleContextState>({
   sendmessage() {},
 })
 
+export function logitemy(offset: number, context: WRITE_TEXT_CONTEXT) {
+  return context.height - 3 + offset
+}
+
 export function setuplogitem(
   blink: boolean,
   active: boolean,
@@ -81,7 +85,8 @@ export function setuplogitem(
   context: WRITE_TEXT_CONTEXT,
 ) {
   // reset context
-  context.y = context.height - 3 + offset
+  context.x = context.leftEdge ?? 0
+  context.y = logitemy(offset, context)
   context.isEven = context.y % 2 === 0
   context.activeBg = active && !blink ? BG_ACTIVE : BG
 
@@ -90,7 +95,7 @@ export function setuplogitem(
   const p2 = p1 + context.width - 1
   applystrtoindex(
     context.y * context.width,
-    String.fromCharCode(DOT).repeat(context.width),
+    String.fromCharCode(BKG_PTRN).repeat(context.width),
     context,
   )
   // write default colors

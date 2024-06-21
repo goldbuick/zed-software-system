@@ -128,11 +128,12 @@ export const NumberLiteral = createToken({
   pattern: /-?(\d*\.)?\d+([eE][+-]?\d+)?[jJ]?[lL]?/,
 })
 
-function createWordToken(word: string) {
+function createWordToken(word: string, skipped = false) {
   return createToken({
     name: word,
     pattern: new RegExp(word.toLowerCase(), 'i'),
     longer_alt: StringLiteral,
+    group: skipped ? Lexer.SKIPPED : undefined,
   })
 }
 
@@ -224,7 +225,7 @@ export const Command_play = createToken({
 
 export const Command_if = createWordToken('if')
 export const Command_do = createWordToken('do')
-export const Command_then = createWordToken('then')
+export const Command_then = createWordToken('then', true)
 export const Command_else = createWordToken('else')
 export const Command_endif = createWordToken('endif')
 export const Command_while = createWordToken('while')
@@ -236,6 +237,15 @@ export const Command_into = createWordToken('into')
 export const Command_endread = createWordToken('endread')
 export const Command_break = createWordToken('break')
 export const Command_continue = createWordToken('continue')
+
+// common error marking
+export type LANG_ERROR = {
+  offset: number
+  line: number | undefined
+  column: number | undefined
+  length: number
+  message: string
+}
 
 function createTokenSet(primary: TokenType[]) {
   return [

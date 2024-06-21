@@ -42,7 +42,9 @@ export function TileSnapshot({ width, height, tiles }: TileSnapshotProps) {
 
   return (
     palette &&
-    charset && (
+    charset &&
+    width > 0 &&
+    height > 0 && (
       <Tiles
         {...snapshot}
         width={width}

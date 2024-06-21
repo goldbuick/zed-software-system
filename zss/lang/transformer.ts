@@ -16,7 +16,7 @@ export const context: GenContext = {
 }
 
 const JUMP_CODE = `if (api.hm()) { continue zss; }`
-const STOP_CODE = `if (api.sy()) { yield 1; ${JUMP_CODE} };`
+const STOP_CODE = `if (api.sy()) { yield 1; };`
 const WAIT_CODE = `yield 1; ${JUMP_CODE}`
 
 export const GENERATED_FILENAME = 'zss.js'

@@ -4,13 +4,14 @@ import { CHIP } from 'zss/chip'
 import { SHOW_CODE } from 'zss/config'
 
 import { compileAST } from './ast'
+import { LANG_ERROR } from './lexer'
 import { transformAst } from './transformer'
 import { CodeNode } from './visitor'
 
 const GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor
 
 export type GeneratorBuild = {
-  errors?: any[]
+  errors?: LANG_ERROR[]
   tokens?: IToken[]
   cst?: CstNode
   ast?: CodeNode
@@ -29,7 +30,9 @@ export function compile(text: string): GeneratorBuild {
   if (!astResult.ast) {
     return {
       ...astResult,
-      errors: ['no ast output'],
+      errors: [
+        { message: 'no ast output', offset: 0, line: 0, column: 0, length: 0 },
+      ],
     }
   }
 
@@ -49,11 +52,14 @@ export function compile(text: string): GeneratorBuild {
       return {
         errors: [
           {
-            // @ts-expect-error cst element
-            message: error.message,
+            message: `unexpected error ${(error as Error).message}`,
+            offset: 0,
+            line: 0,
+            column: 0,
+            length: 0,
           },
         ],
-        source: 'there was an error',
+        source: '',
         code: new GeneratorFunction('api', ' '),
       }
     }
@@ -62,7 +68,7 @@ export function compile(text: string): GeneratorBuild {
   return {
     ...astResult,
     ...transformResult,
-    source: 'there was an error',
+    source: '',
     code: new GeneratorFunction('api', ' '),
   }
 }

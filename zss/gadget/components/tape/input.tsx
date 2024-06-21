@@ -23,10 +23,10 @@ function writeline(
 }
 
 type ConsoleInputProps = {
-  startrow: number
+  tapeycursor: number
 }
 
-export function ConsoleInput({ startrow }: ConsoleInputProps) {
+export function ConsoleInput({ tapeycursor }: ConsoleInputProps) {
   const blink = useBlink()
   const context = useWriteText()
   const tapeinput = useTapeInput()
@@ -76,10 +76,8 @@ export function ConsoleInput({ startrow }: ConsoleInputProps) {
 
   // draw cursor
   if (blink) {
-    const yscrolled = tapeinput.ycursor - startrow
-    const flipy = (bottomedge - yscrolled) * context.width
     applystrtoindex(
-      tapeinput.xcursor + flipy,
+      tapeinput.xcursor + tapeycursor * context.width,
       String.fromCharCode(221),
       context,
     )

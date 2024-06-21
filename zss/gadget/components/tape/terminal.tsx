@@ -15,16 +15,15 @@ import { clamp } from 'zss/mapping/number'
 import { stringsplice, totarget } from 'zss/mapping/string'
 import { ispresent } from 'zss/mapping/types'
 
-import {
-  UserHotkey,
-  UserInput,
-  UserInputMods,
-  ismac,
-  modsfromevent,
-} from '../userinput'
+import { UserInput, modsfromevent } from '../userinput'
 
 import { ActiveItem } from './activeitem'
-import { ConsoleContext, tapeinputstate, useTapeInput } from './common'
+import {
+  ConsoleContext,
+  logitemy,
+  tapeinputstate,
+  useTapeInput,
+} from './common'
 import { ConsoleInput } from './input'
 import { TapeConsoleItem } from './item'
 
@@ -34,20 +33,8 @@ export function TapeConsoleTerminal() {
   const tape = useTape()
   const tapeinput = useTapeInput()
 
-  // offset into logs
-  const centerrow = Math.round(tapeinput.ycursor - context.height * 0.5)
-  const maxrowheight = context.height - 2
-  const startrow = clamp(centerrow, 0, tape.terminal.logs.length - maxrowheight)
-
-  // starting render row
-  const logput = tape.terminal.logs.slice(startrow, startrow + maxrowheight)
-
-  // build id list
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const logids: string[] = logput.map((item) => item[0])
-
   // render to strings
-  const logrows: string[] = logput.map((item) => {
+  const logrows: string[] = tape.terminal.logs.map((item) => {
     const [, maybelevel, source, ...message] = item
     let level = '$white'
     switch (maybelevel) {
@@ -66,30 +53,50 @@ export function TapeConsoleTerminal() {
   })
 
   // measure rows
-  context.y = 0
-  const logoffsets: number[] = logrows.map((item) => {
-    let y = -context.y
+  const logrowheights: number[] = logrows.map((item) => {
     if (item.startsWith('!')) {
-      context.y += 1
-    } else {
-      const measure = tokenizeandmeasuretextformat(
-        item,
-        context.width,
-        context.height,
-      )
-      const step = measure?.y ?? 1
-      context.y += step
-      y -= step - 1
+      return 1
     }
-    return y
+    const measure = tokenizeandmeasuretextformat(
+      item,
+      context.width,
+      context.height,
+    )
+    return measure?.y ?? 1
   })
+
+  // upper bound on ycursor
+  let logrowtotalheight = 0
+  // ycoords for rows
+  const logrowoffsets: number[] = logrowheights.map((rowheight) => {
+    const y = logrowtotalheight + rowheight - 1
+    logrowtotalheight += rowheight
+    return -y // flipped y render
+  })
+  ++logrowtotalheight
+
+  // offset into logs
+  const centerrow = Math.round(tapeinput.ycursor - context.height * 0.5)
+  const maxvisiblerows = context.height - 2
+  const startrow = clamp(
+    centerrow,
+    0,
+    tape.terminal.logs.length - maxvisiblerows,
+  )
+
+  // starting render row
+  const visiblelogrows = logrows.slice(startrow, startrow + maxvisiblerows)
+
+  // calculate ycoord to render cursor
+  const bottomedge = context.height - 1
+  const yscrolled = tapeinput.ycursor - startrow
+  const tapeycursor = bottomedge - yscrolled
 
   // input & selection
   const inputstate = tapeinput.buffer[tapeinput.bufferindex]
 
   // local x input
   const rightedge = context.width - 1
-  const lastrow = tape.terminal.logs.length + 1
 
   let ii1 = tapeinput.xcursor
   let ii2 = tapeinput.xcursor
@@ -166,9 +173,6 @@ export function TapeConsoleTerminal() {
     tapeinputstate.yselect = undefined
   }
 
-  // track scrolling
-  const yscrolled = tapeinput.ycursor - startrow - 2
-
   // write hint
   const hint = 'if lost try #help'
   context.x = context.width - hint.length
@@ -193,18 +197,17 @@ export function TapeConsoleTerminal() {
           },
         }}
       >
-        {logrows.map((text, index) =>
-          index === yscrolled ? (
-            <ActiveItem key={index} text={text} offset={logoffsets[index]} />
+        {visiblelogrows.map((text, index) => {
+          const offset = logrowoffsets[index]
+          const yrow = logitemy(offset, context)
+          const yheight = logrowheights[index] - 1
+          return tapeycursor >= yrow && tapeycursor <= yrow + yheight ? (
+            <ActiveItem key={index} text={text} offset={offset} />
           ) : (
-            <TapeConsoleItem
-              key={index}
-              text={text}
-              offset={logoffsets[index]}
-            />
-          ),
-        )}
-        <ConsoleInput startrow={startrow} />
+            <TapeConsoleItem key={index} text={text} offset={offset} />
+          )
+        })}
+        <ConsoleInput tapeycursor={tapeycursor} />
       </ConsoleContext.Provider>
       <UserInput
         MENU_BUTTON={(mods) =>
@@ -218,7 +221,7 @@ export function TapeConsoleTerminal() {
             tapeinputstate.ycursor = clamp(
               tapeinput.ycursor + (mods.alt ? 10 : 1),
               0,
-              lastrow,
+              logrowtotalheight,
             )
           }
         }}
@@ -230,7 +233,7 @@ export function TapeConsoleTerminal() {
             tapeinputstate.ycursor = clamp(
               tapeinput.ycursor - (mods.alt ? 10 : 1),
               0,
-              lastrow,
+              logrowtotalheight,
             )
           }
         }}

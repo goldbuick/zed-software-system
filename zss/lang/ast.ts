@@ -1,7 +1,7 @@
 import { CstNode, IToken } from 'chevrotain'
 import { isarray } from 'zss/mapping/types'
 
-import { tokenize } from './lexer'
+import { LANG_ERROR, tokenize } from './lexer'
 import { parser } from './parser'
 import { CodeNode, visitor } from './visitor'
 
@@ -45,17 +45,14 @@ function addRange(node: CodeNode | undefined): OffsetRange | undefined {
 }
 
 export function compileAST(text: string): {
-  errors?: any[]
+  errors?: LANG_ERROR[]
   tokens?: IToken[]
   cst?: CstNode
   ast?: CodeNode
 } {
   const tokens = tokenize(`${text}\n`)
   if (tokens.errors.length > 0) {
-    return {
-      errors: tokens.errors,
-      tokens: [],
-    }
+    return tokens
   }
 
   parser.input = tokens.tokens
@@ -63,7 +60,13 @@ export function compileAST(text: string): {
   if (parser.errors.length > 0) {
     return {
       tokens: tokens.tokens,
-      errors: parser.errors,
+      errors: parser.errors.map((error) => ({
+        offset: error.token.startOffset,
+        line: error.token.startLine,
+        column: error.token.startColumn,
+        length: error.token.image.length,
+        message: error.message,
+      })),
     }
   }
 
@@ -72,7 +75,9 @@ export function compileAST(text: string): {
     return {
       tokens: tokens.tokens,
       cst,
-      errors: ['no ast output'],
+      errors: [
+        { message: 'no ast output', offset: 0, line: 0, column: 0, length: 0 },
+      ],
     }
   }
 

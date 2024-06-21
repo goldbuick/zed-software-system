@@ -1,6 +1,7 @@
 import { createdevice } from 'zss/device'
 import { encodeduritovalue, valuetoencodeduri } from 'zss/mapping/buffer'
 import { isarray, isbook, ispresent } from 'zss/mapping/types'
+import { bookexport } from 'zss/memory/book'
 
 import { api_error, bip_rebootfailed, tape_info, vm_books } from './api'
 
@@ -21,8 +22,9 @@ function readstate(): [STATE_FLAGS, ...STATE_BOOKS] {
 }
 
 function writestate(flags: STATE_FLAGS, books: STATE_BOOKS) {
-  const out = `#${valuetoencodeduri([flags, ...books])}`
+  const out = `#${valuetoencodeduri([flags, ...books.map(bookexport)])}`
   window.location.hash = out
+  tape_info(register.name(), `wrote [...${out.slice(-16)}]`)
 }
 
 const BIOS_BOOKS = 'bios-books'

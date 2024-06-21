@@ -58,15 +58,31 @@ export function createos() {
       if (!ispresent(chips[id])) {
         const result = build(code)
 
-        // bail on errors
-        if (result.errors?.length) {
-          // todo, need an error message that makes sense
-          api_error('os', 'build', JSON.stringify(result.errors), '')
-          return false
-        }
-
         // create chip from build
         chip = chips[id] = createchip(id, result)
+
+        // bail on errors
+        if (result.errors?.length) {
+          const [primary] = result.errors
+          const errorline = (primary?.line ?? 2) - 1
+          const codelines = code.replaceAll('\r\n', '').split('\n')
+          primary.message.split('\n').forEach((message) => {
+            api_error('os', 'build', message, '')
+          })
+          codelines.forEach((message, index) => {
+            if (index === errorline) {
+              const start = (primary.column ?? 1) - 1
+              const end = start + primary.length ?? 0
+              const a = message.substring(0, start)
+              const b = message.substring(start, end)
+              const c = message.substring(end)
+              api_error('os', 'build', `$grey${a}$red${b}$grey${c}`, '')
+            } else {
+              api_error('os', 'build', `$grey${message}`, '')
+            }
+          })
+          return false
+        }
 
         // load chip firmware
         loadfirmware(chip, type)

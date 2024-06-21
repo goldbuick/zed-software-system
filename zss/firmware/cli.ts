@@ -145,86 +145,9 @@ export const CLI_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  .command('help', () => {
-    writeheader(`H E L P`)
-    writeoption(`#1`, `zss controls and inputs`)
-    writeoption(`#2`, `text formatting`)
-    writeoption(`#3`, `edit commands`)
-    writeoption(`#4`, `player settings`)
-    writesection(`keyboard input`)
-    writeoption(`?`, `open console`)
-    writeoption(`esc`, `close console`)
-    writeoption(`tab`, `move console`)
-    writeoption(`up / down arrow keys`, `navigate console items`)
-    writeoption(`left / right arrow keys`, `change console items`)
-    writeoption(`enter`, `interact with console items`)
-    writeoption(`alt + arrow keys`, `skip words and console lines`)
-    writeoption(`${metakey} + up / down arrow keys`, `input history`)
-    return 0
-  })
-  .command('1', () => {
-    writeheader(`zss controls and inputs`)
-    writesection(`keyboard input`)
-    writeoption(`arrow keys`, `move`)
-    writeoption(`shift + arrow keys`, `shoot`)
-    writeoption(`enter`, `ok / accept`)
-    writeoption(`escape`, `cancel / close`)
-    writeoption(`tab`, `menu / action`)
-    writesection(`mouse input`)
-    writetext(`todo ???`)
-    writesection(`controller input`)
-    writeoption(`left stick`, `move`)
-    writeoption(`right stick`, `aim`)
-    writeoption(`a`, `ok / accept`)
-    writeoption(`b`, `cancel / close`)
-    writeoption(`y`, `menu / action`)
-    writeoption(`x`, `shoot`)
-    writeoption(`triggers`, `shoot`)
-    return 0
-  })
-  .command('2', () => {
-    writeheader(`text formatting`)
-    writesection(`typography`)
-    writetext(`plain text`)
-    writetext(`$centering text`)
-    writetext(`"\\"@quoted strings for special chars\\""`)
-    writetext(`$$0-255 for ascii chars $159$176$240`)
-    writetext(
-      `use color names like ${fg('red', '$$red')} to change foreground color`,
-    )
-    writetext(
-      `use color names like ${bg('ongreen', '$$ongreen')} to change background color`,
-    )
-    writetext(`use clear ${bg('clear', 'to change background to')} transparent`)
-    writesection(`hyperlinks`)
-    writetext(
-      `${fg('white', '"!hotkey"')} message shortcut;${fg('gray', 'Label')}`,
-    )
-    writetext(
-      `${fg('white', '"!range"')} flag [labelmin] [labelmax];${fg('gray', 'Input Label')}`,
-    )
-    writetext(
-      `${fg('white', '"!select"')} flag ...list of values;${fg('gray', 'Input Label')}`,
-    )
-    writetext(
-      `${fg('white', '"!number"')} flag [minvalue] [maxvalue];${fg('gray', 'Input Label')}`,
-    )
-    writetext(`${fg('white', '"!text"')} flag;${fg('gray', 'Input Label')}`)
-    return 0
-  })
-  .command('3', () => {
-    writeheader(`edit commands`)
-    writeoption(`#books`, `list books in memory`)
-    writeoption(`#pages`, `list pages in opened book`)
-    writeoption(
-      `@[pagetype:]page name`,
-      `create & edit a new codepage in the currently opened book`,
-    )
-    return 0
-  })
-  .command('4', () => {
-    writeheader(`player settings`)
-    writetext(`todo`)
+  .command('help', (chip, words) => {
+    const text = words.map(maptostring).join(' ') || 'menu'
+    chip.command(`help${text}`)
     return 0
   })
   .command('text', (chip, words) => {
@@ -280,8 +203,6 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('stat', (chip, words) => {
-    let book = memoryreadbook(openbook)
-
     // create page
     const [maybecodepage] = words
     const codepage = maptostring(maybecodepage)
@@ -289,52 +210,36 @@ export const CLI_FIRMWARE = createfirmware({
     // check for special @book [name] case
     if (/^book /gi.test(codepage)) {
       const name = codepage.substring(5)
-      book = memoryreadbook(name)
-      // create book if needed
-      if (!ispresent(book)) {
-        chip.command('bookcreate', name)
-      }
+      chip.command('bookopenorcreate', name)
     } else {
-      // create book if needed
-      const book = ensureopenbook()
-      if (!ispresent(book)) {
-        return 0
-      }
-
-      // add to book if needed, use page from book if name matches
-      const code = `@${codepage}\n`
-      const page = createcodepage(code, {})
-      const name = codepagereadname(page)
-      const maybepage = bookreadcodepage(book, codepagereadtype(page), name)
-
-      if (!ispresent(maybepage)) {
-        bookwritecodepage(book, page)
-        const pagetype = codepagereadtypetostring(page)
-        writetext(`created ${name} of type ${pagetype}`)
-        cli_flush() // tell register to save changes
-      }
-
-      chip.command('pageopen', maybepage?.id ?? page.id)
+      chip.command('pageopenorcreate', codepage)
     }
 
     return 0
   })
   .command('trash', () => {
-    writesection(`books`)
+    writesection(`$REDTRASH`)
+    writetext(`books`)
     const list = memoryreadbooklist()
     if (list.length) {
       list.forEach((book) => {
         write(`!booktrash ${book.id};$REDTRASH ${book.name}`)
       })
+      write('')
     }
     const book = memoryreadbook(openbook)
     if (ispresent(book)) {
-      writesection(`book ${book.name}`)
+      writetext(`pages in open ${book.name} book`)
       book.pages.forEach((page) => {
         const name = codepagereadname(page)
         write(`!pagetrash ${page.id};$REDTRASH ${name}`)
       })
+      write('')
     }
+    return 0
+  })
+  .command('save', () => {
+    vm_flush('cli')
     return 0
   })
   .command('update', () => {
@@ -345,6 +250,7 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('factoryreset', () => {
+    // todo, list book names in bios
     write(`!bioserase;$REDReset bios`)
     return 0
   })
@@ -354,27 +260,107 @@ export const CLI_FIRMWARE = createfirmware({
     const [msg, data] = readargs(read, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
 
     switch (msg) {
+      // help messages
+      case 'helpmenu':
+        writeheader(`H E L P`)
+        writeoption(`#help controls`, `zss controls and inputs`)
+        write(`!helpcontrols;read help controls`)
+        write(``)
+        writeoption(`#help text`, `text formatting`)
+        write(`!helptext;read help text`)
+        write(``)
+        writeoption(`#help developer`, `developer commands`)
+        write(`!helpdeveloper;read help developer`)
+        write(``)
+        writeoption(`#help player`, `player settings`)
+        write(`!helpplayer;read help player`)
+        write(``)
+        writesection(`keyboard input`)
+        writeoption(`?`, `open console`)
+        writeoption(`esc`, `close console`)
+        writeoption(`tab`, `move console`)
+        writeoption(`up / down arrow keys`, `navigate console items`)
+        writeoption(`left / right arrow keys`, `change console items`)
+        writeoption(`enter`, `interact with console items`)
+        writeoption(`alt + arrow keys`, `skip words and console lines`)
+        writeoption(`${metakey} + up / down arrow keys`, `input history`)
+        break
+      case 'helpcontrols':
+        writeheader(`zss controls and inputs`)
+        writesection(`keyboard input`)
+        writeoption(`arrow keys`, `move`)
+        writeoption(`shift + arrow keys`, `shoot`)
+        writeoption(`enter`, `ok / accept`)
+        writeoption(`escape`, `cancel / close`)
+        writeoption(`tab`, `menu / action`)
+        writesection(`mouse input`)
+        writetext(`todo ???`)
+        writesection(`controller input`)
+        writeoption(`left stick`, `move`)
+        writeoption(`right stick`, `aim`)
+        writeoption(`a`, `ok / accept`)
+        writeoption(`b`, `cancel / close`)
+        writeoption(`y`, `menu / action`)
+        writeoption(`x`, `shoot`)
+        writeoption(`triggers`, `shoot`)
+        break
+      case 'helptext':
+        writeheader(`text formatting`)
+        writesection(`typography`)
+        writetext(`plain text`)
+        writetext(`$centering text`)
+        writetext(`"\\"@quoted strings for special chars\\""`)
+        writetext(`$$0-255 for ascii chars $159$176$240`)
+        writetext(
+          `use color names like ${fg('red', '$$red')} to change foreground color`,
+        )
+        writetext(
+          `use color names like ${bg('ongreen', '$$ongreen')} to change background color`,
+        )
+        writetext(
+          `use clear ${bg('clear', 'to change background to')} transparent`,
+        )
+        writesection(`hyperlinks`)
+        writetext(
+          `${fg('white', '"!hotkey"')} message shortcut;${fg('gray', 'Label')}`,
+        )
+        writetext(
+          `${fg('white', '"!range"')} flag [labelmin] [labelmax];${fg('gray', 'Input Label')}`,
+        )
+        writetext(
+          `${fg('white', '"!select"')} flag ...list of values;${fg('gray', 'Input Label')}`,
+        )
+        writetext(
+          `${fg('white', '"!number"')} flag [minvalue] [maxvalue];${fg('gray', 'Input Label')}`,
+        )
+        writetext(`${fg('white', '"!text"')} flag;${fg('gray', 'Input Label')}`)
+        break
+      case 'helpdeveloper':
+        writeheader(`developer commands`)
+        writeoption(`#books`, `list books in memory`)
+        writeoption(`#pages`, `list pages in opened book`)
+        writeoption(
+          `@[pagetype:]page name`,
+          `create & edit a new codepage in the currently opened book`,
+        )
+        writeoption(
+          `#trash`,
+          `list books and pages from open book you can delete`,
+        )
+        writeoption(`#save`, `flush state to register`)
+        writeoption(`#update`, `write current books to bios`)
+        writeoption(`#factoryreset`, `erase books stored in bios`)
+        break
+      case 'helpplayer':
+        writeheader(`player settings`)
+        writetext(`todo`)
+        break
+      // developer edits
       case 'bookcreate': {
         const book = createnewbook(data)
         chip.command('bookopen', book.id)
         break
       }
-      case 'booktrash':
-        if (isstring(data)) {
-          const opened = memoryreadbook(openbook)
-          const book = memoryreadbook(data)
-          if (ispresent(book)) {
-            // clear opened
-            if (opened === book) {
-              openbook = ''
-            }
-            // clear book
-            memoryclearbook(data)
-            writetext(`trashed [book] ${book.name}`)
-            cli_flush() // tell register to save changes
-          }
-        }
-        break
       case 'bookopen':
         if (isstring(data)) {
           const book = memoryreadbook(data)
@@ -399,21 +385,63 @@ export const CLI_FIRMWARE = createfirmware({
           )
         }
         break
-      case 'pagetrash':
+      case 'bookopenorcreate': {
+        const book = memoryreadbook(data)
+        if (ispresent(book)) {
+          chip.command('bookopen', data)
+        } else {
+          chip.command('bookcreate', data)
+        }
+        break
+      }
+      case 'booktrash':
         if (isstring(data)) {
-          const book = ensureopenbook()
-          const page = bookclearcodepage(book, data)
-          if (ispresent(page)) {
-            const name = codepagereadname(page)
-            const pagetype = codepagereadtypetostring(page)
-            writetext(`trashed [${pagetype}] ${name}`)
+          const opened = memoryreadbook(openbook)
+          const book = memoryreadbook(data)
+          if (ispresent(book)) {
+            // clear opened
+            if (opened === book) {
+              openbook = ''
+            }
+            // clear book
+            memoryclearbook(data)
+            writetext(`trashed [book] ${book.name}`)
             cli_flush() // tell register to save changes
+            chip.command('pages')
+          }
+        }
+        break
+      case 'pagecreate':
+        if (isstring(data)) {
+          // create book if needed
+          const book = ensureopenbook()
+          if (!ispresent(book)) {
+            return 0
+          }
+
+          // add to book if needed, use page from book if name matches
+          const code = `@${data}\n`
+          const page = createcodepage(code, {})
+          const name = codepagereadname(page)
+
+          // only create if target doesn't already exist
+          const maybepage = bookreadcodepage(book, codepagereadtype(page), name)
+          if (!ispresent(maybepage)) {
+            bookwritecodepage(book, page)
+            const pagetype = codepagereadtypetostring(page)
+            writetext(`create [${pagetype}] ${name}`)
+            cli_flush() // tell register to save changes
+            chip.command('pageopen', page.id) // open created content
           }
         }
         break
       case 'pageopen':
         if (isstring(data)) {
+          // create book if needed
           const book = ensureopenbook()
+          if (!ispresent(book)) {
+            return 0
+          }
 
           // store success !
           openbook = book.id
@@ -438,6 +466,35 @@ export const CLI_FIRMWARE = createfirmware({
             )
           } else {
             api_error('cli', msg, `page ${data} not found`, memory.player)
+          }
+        }
+        break
+      case 'pageopenorcreate':
+        if (isstring(data)) {
+          // create book if needed
+          const book = ensureopenbook()
+          if (!ispresent(book)) {
+            return 0
+          }
+          // find page, and create if not found
+          const page = bookfindcodepage(book, data)
+          if (ispresent(page)) {
+            chip.command('pageopen', data)
+          } else {
+            chip.command('pagecreate', data)
+          }
+        }
+        break
+      case 'pagetrash':
+        if (isstring(data)) {
+          const book = ensureopenbook()
+          const page = bookclearcodepage(book, data)
+          if (ispresent(page)) {
+            const name = codepagereadname(page)
+            const pagetype = codepagereadtypetostring(page)
+            writetext(`trashed [${pagetype}] ${name}`)
+            cli_flush() // tell register to save changes
+            chip.command('pages')
           }
         }
         break

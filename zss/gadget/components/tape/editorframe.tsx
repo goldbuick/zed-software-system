@@ -8,10 +8,21 @@ import {
 import { useBlink } from '../useblink'
 import { writeTile } from '../usetiles'
 
-import { BG, FG, setupeditoritem } from './common'
+import { BG, BKG_PTRN, FG, setupeditoritem } from './common'
 
 export function EditorFrame() {
   const context = useWriteText()
+
+  // fill
+  for (let y = 2; y < context.height - 1; ++y) {
+    for (let x = 1; x < context.width - 1; ++x) {
+      writeTile(context, context.width, context.height, x, y, {
+        char: BKG_PTRN,
+        color: FG,
+        bg: BG,
+      })
+    }
+  }
 
   // left - right - bottom of frame
   for (let y = 1; y < context.height - 1; ++y) {
@@ -34,10 +45,12 @@ export function EditorFrame() {
   const tape = useTape()
   const blink = useBlink()
 
-  setupeditoritem(false, false, 0, 0, 0, context)
   const egtop = `$196`.repeat(context.width - 4)
-  const egbottom = `$205`.repeat(context.width - 4)
+  setupeditoritem(false, false, 0, 0, 0, context)
   tokenizeandwritetextformat(`$213$205$187${egtop}$191`, context, true)
+
+  const egbottom = `$205`.repeat(context.width - 4)
+  setupeditoritem(false, false, 0, 1, 0, context)
   tokenizeandwritetextformat(
     `$179$${blink ? '7' : '232'}$200${egbottom}$181`,
     context,
