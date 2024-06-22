@@ -58,8 +58,8 @@ export function Splash({ onBoot }: SplashProps) {
       ...createwritetextcontext(width, height, COLOR.WHITE, COLOR.DKGRAY),
       ...tiles,
       x: 1,
-      leftEdge: 1,
-      rightEdge: width - 2,
+      leftedge: 1,
+      rightedge: width - 2,
     }
     TICKER.forEach((item) => tokenizeandwritetextformat(item, context, true))
   }, [width, height, tiles])

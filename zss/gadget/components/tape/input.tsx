@@ -17,8 +17,8 @@ function writeline(
   text: string,
   context: WRITE_TEXT_CONTEXT,
 ) {
-  context.isEven = context.y % 2 === 0
-  context.activeBg = active && !blink ? BG_ACTIVE : BG
+  context.iseven = context.y % 2 === 0
+  context.activebg = active && !blink ? BG_ACTIVE : BG
   tokenizeandwritetextformat(text, context, true)
 }
 

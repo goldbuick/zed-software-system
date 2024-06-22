@@ -100,11 +100,11 @@ export function Scroll({
   context = {
     ...createwritetextcontext(width, height, color, bg),
     ...tiles,
-    activeColor: 14,
+    activecolor: 14,
     x: Math.round(width * 0.5) - Math.round(titleWidth * 0.5),
-    leftEdge: 2,
-    rightEdge: width - 2,
-    bottomEdge: 1,
+    leftedge: 2,
+    rightedge: width - 2,
+    bottomedge: 1,
   }
   tokenizeandwritetextformat(title, context, true)
 

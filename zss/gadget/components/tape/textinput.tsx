@@ -15,6 +15,7 @@ import { useBlink } from '../useblink'
 import { UserInput, modsfromevent } from '../userinput'
 
 import {
+  EDITOR_CODE_ROW,
   findcursorinrows,
   sharedtosynced,
   splitcoderows,
@@ -22,7 +23,22 @@ import {
   useTapeEditor,
 } from './common'
 
-export function Textinput() {
+type TextinputProps = {
+  ycursor: number
+  leftedge: number
+  rightedge: number
+  topedge: number
+  bottomedge: number
+  rows: EDITOR_CODE_ROW[]
+}
+
+export function Textinput({
+  // leftedge,
+  // rightedge,
+  // topedge,
+  // bottomedge,
+  rows,
+}: TextinputProps) {
   const tape = useTape()
   const blink = useBlink()
   const context = useWriteText()
@@ -37,7 +53,6 @@ export function Textinput() {
   // split by line
   const value = sharedtosynced(codepage)
   const strvalue = ispresent(value) ? value.toJSON() : ''
-  const rows = splitcoderows(strvalue)
   const rowsend = rows.length - 1
 
   // translate index to x, y

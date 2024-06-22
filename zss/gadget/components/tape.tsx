@@ -60,8 +60,8 @@ export function TapeConsole() {
     ...tiles,
     x: 0,
     y: 0,
-    leftEdge: 0,
-    rightEdge: width,
+    leftedge: 0,
+    rightedge: width,
   }
 
   // bail on odd states

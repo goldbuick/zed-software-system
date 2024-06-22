@@ -25,7 +25,7 @@ export function PanelItem({ item, active }: PanelItemProps) {
   const player = usePlayer()
   const context = useWriteText()
 
-  context.isEven = context.y % 2 === 0
+  context.iseven = context.y % 2 === 0
 
   if (typeof item === 'string') {
     return <PanelItemContent player={player} item={item} context={context} />

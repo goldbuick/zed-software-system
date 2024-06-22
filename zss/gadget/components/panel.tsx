@@ -39,8 +39,8 @@ export function Panel({
     ...tiles,
   }
   context.x = margin
-  context.leftEdge = margin
-  context.rightEdge = context.width - margin
+  context.leftedge = margin
+  context.rightedge = context.width - margin
 
   return (
     <PlayerContext.Provider value={player}>
