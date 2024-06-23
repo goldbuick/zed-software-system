@@ -23,10 +23,12 @@ import {
 } from './common'
 
 type TextinputProps = {
+  ycursor: number
+  yoffset: number
   rows: EDITOR_CODE_ROW[]
 }
 
-export function Textinput({ rows }: TextinputProps) {
+export function Textinput({ ycursor, yoffset, rows }: TextinputProps) {
   const tape = useTape()
   const blink = useBlink()
   const context = useWriteText()
@@ -44,25 +46,23 @@ export function Textinput({ rows }: TextinputProps) {
   const rowsend = rows.length - 1
 
   // translate index to x, y
-  const ycursor = findcursorinrows(tapeeditor.cursor, rows)
   const xcursor = tapeeditor.cursor - rows[ycursor].start
 
   // draw cursor
   const xblink = xcursor + 1
-  const yblink = ycursor + 2
-  if (
-    ispresent(codepage) &&
-    (blink ||
-      blinkdelta.current?.x !== xblink ||
-      blinkdelta.current?.y !== yblink)
-  ) {
-    blinkdelta.current = { x: xblink, y: yblink }
-    applystrtoindex(
-      xblink + yblink * context.width,
-      String.fromCharCode(221),
-      context,
-    )
+  const yblink = ycursor + 2 - yoffset
+  if (ispresent(codepage)) {
+    const moving =
+      blinkdelta.current?.x !== xblink || blinkdelta.current?.y !== yblink
+    if (blink || moving) {
+      applystrtoindex(
+        xblink + yblink * context.width,
+        String.fromCharCode(221),
+        context,
+      )
+    }
   }
+  blinkdelta.current = { x: xblink, y: yblink }
 
   // ranges
   const codeend = rows[rowsend].end

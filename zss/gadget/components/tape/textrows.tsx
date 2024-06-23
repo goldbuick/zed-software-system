@@ -7,7 +7,6 @@ import {
   useWriteText,
   writeplaintext,
 } from 'zss/gadget/data/textformat'
-import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../useblink'
@@ -24,10 +23,11 @@ import {
 
 type TextrowsProps = {
   ycursor: number
+  yoffset: number
   rows: EDITOR_CODE_ROW[]
 }
 
-export function Textrows({ ycursor, rows }: TextrowsProps) {
+export function Textrows({ ycursor, yoffset, rows }: TextrowsProps) {
   const tape = useTape()
   const blink = useBlink()
   const context = useWriteText()
@@ -65,13 +65,7 @@ export function Textrows({ ycursor, rows }: TextrowsProps) {
     }
   }
 
-  // ---
-  const halfviewheight = Math.round((context.height - 3) * 0.5)
-  const yoffset = clamp(
-    ycursor - halfviewheight,
-    0,
-    rows.length - halfviewheight,
-  )
+  // render lines
   setupeditoritem(false, false, leftedge, topedge - yoffset, 1, context)
   for (let i = 0; i < rows.length && context.y <= bottomedge; ++i) {
     // setup
