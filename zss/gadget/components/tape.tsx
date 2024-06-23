@@ -58,10 +58,6 @@ export function TapeConsole() {
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, FG, BG),
     ...tiles,
-    x: 0,
-    y: 0,
-    leftedge: 0,
-    rightedge: width,
   }
 
   // bail on odd states

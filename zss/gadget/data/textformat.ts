@@ -102,6 +102,15 @@ export function tokenize(text: string, noWhitespace = false) {
   return scriptLexer.tokenize(text)
 }
 
+export type WRITE_PEN_CONTEXT = {
+  color: number
+  bg: number
+  topedge: number | undefined
+  leftedge: number | undefined
+  rightedge: number | undefined
+  bottomedge: number | undefined
+}
+
 export type WRITE_TEXT_CONTEXT = {
   // control
   disablewrap: boolean
@@ -111,19 +120,13 @@ export type WRITE_TEXT_CONTEXT = {
   x: number
   y: number
   iseven: boolean
-  // attr
-  resetcolor: number
-  resetbg: number
-  activecolor: number | undefined
-  activebg: number | undefined
   // region
   width: number
   height: number
-  // boundry
-  topedge: number | undefined
-  leftedge: number | undefined
-  rightedge: number | undefined
-  bottomedge: number | undefined
+  // attr
+  active: WRITE_PEN_CONTEXT
+  // resets
+  reset: WRITE_PEN_CONTEXT
   // output
   char: number[]
   color: number[]
@@ -135,6 +138,10 @@ export function createwritetextcontext(
   height: number,
   color: number,
   bg: number,
+  topedge?: number | undefined,
+  leftedge?: number | undefined,
+  rightedge?: number | undefined,
+  bottomedge?: number | undefined,
 ): WRITE_TEXT_CONTEXT {
   return {
     disablewrap: false,
@@ -143,16 +150,24 @@ export function createwritetextcontext(
     x: 0,
     y: 0,
     iseven: true,
-    resetcolor: color,
-    resetbg: bg,
-    activecolor: color,
-    activebg: bg,
+    active: {
+      color: color,
+      bg: bg,
+      topedge,
+      leftedge,
+      rightedge,
+      bottomedge,
+    },
+    reset: {
+      color: color,
+      bg: bg,
+      topedge,
+      leftedge,
+      rightedge,
+      bottomedge,
+    },
     width,
     height,
-    topedge: undefined,
-    leftedge: undefined,
-    rightedge: undefined,
-    bottomedge: undefined,
     char: [],
     color: [],
     bg: [],
@@ -165,8 +180,8 @@ export function applywritetextcontext(
 ) {
   dest.x = source.x
   dest.y = source.y
-  dest.activecolor = source.activecolor
-  dest.activebg = source.activebg
+  dest.active.color = source.active.color
+  dest.active.bg = source.active.bg
 }
 
 export function useCacheWriteTextContext(source: WRITE_TEXT_CONTEXT) {
@@ -182,9 +197,8 @@ export function useWriteText() {
   return useContext(WriteTextContext)
 }
 
-export function writetextcolorreset(context: WRITE_TEXT_CONTEXT) {
-  context.activecolor = context.resetcolor
-  context.activebg = context.resetbg
+export function writetextreset(context: WRITE_TEXT_CONTEXT) {
+  context.active = { ...context.reset }
 }
 
 function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
@@ -192,9 +206,9 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
     ++context.x
     if (
       !context.disablewrap &&
-      context.x >= (context.rightedge ?? context.width)
+      context.x >= (context.active.rightedge ?? context.width)
     ) {
-      context.x = context.leftedge ?? 0
+      context.x = context.active.leftedge ?? 0
       ++context.y
     }
     if (context.x > context.measuredwidth) {
@@ -204,10 +218,10 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
 
   function isVisible() {
     if (
-      context.x < (context.leftedge ?? 0) ||
-      context.x >= (context.rightedge ?? context.width) ||
-      context.y < 0 ||
-      context.y >= (context.bottomedge ?? context.height)
+      context.x < (context.active.leftedge ?? 0) ||
+      context.x >= (context.active.rightedge ?? context.width) ||
+      context.y < (context.active.topedge ?? 0) ||
+      context.y >= (context.active.bottomedge ?? context.height)
     ) {
       return false
     }
@@ -219,11 +233,11 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
       if (context.measureonly !== true && isVisible()) {
         const i = context.x + context.y * context.width
         context.char[i] = str.charCodeAt(t)
-        if (context.activecolor !== undefined) {
-          context.color[i] = context.activecolor
+        if (context.active.color !== undefined) {
+          context.color[i] = context.active.color
         }
-        if (context.activebg !== undefined) {
-          context.bg[i] = context.activebg
+        if (context.active.bg !== undefined) {
+          context.bg[i] = context.active.bg
         }
       }
       incCursor()
@@ -241,11 +255,11 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         if (context.measureonly !== true && isVisible()) {
           const i = context.x + context.y * context.width
           context.char[i] = parseFloat(token.image.replace('$', ''))
-          if (context.activecolor !== undefined) {
-            context.color[i] = context.activecolor
+          if (context.active.color !== undefined) {
+            context.color[i] = context.active.color
           }
-          if (context.activebg !== undefined) {
-            context.bg[i] = context.activebg
+          if (context.active.bg !== undefined) {
+            context.bg[i] = context.active.bg
           }
         }
         incCursor()
@@ -266,13 +280,13 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         const maybebg = colortobg(COLOR[maybename])
         if (maybecolor === COLOR.CLEAR) {
           // reset bg color
-          context.activebg = context.resetbg
+          context.active.bg = context.reset.bg
         } else if (ispresent(maybecolor)) {
           // update fg color
-          context.activecolor = maybecolor
+          context.active.color = maybecolor
         } else if (ispresent(maybebg)) {
           // update bg color
-          context.activebg = maybebg
+          context.active.bg = maybebg
         } else {
           writeStr(token.image)
         }
@@ -292,7 +306,7 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   }
 
   // move to next line
-  context.x = context.leftedge ?? 0
+  context.x = context.active.leftedge ?? 0
   ++context.y
 }
 
@@ -308,7 +322,7 @@ export function tokenizeandwritetextformat(
 
   writetextformat(result.tokens, context)
   if (shouldreset) {
-    writetextcolorreset(context)
+    writetextreset(context)
   }
 }
 
@@ -379,6 +393,19 @@ export function writeplaintext(
   // render it
   writetextformat([plaintext], context)
   if (shouldreset) {
-    writetextcolorreset(context)
+    writetextreset(context)
   }
+}
+
+export function textformatedges(
+  topedge: number,
+  leftedge: number,
+  rightedge: number,
+  bottomedge: number,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  context.active.topedge = topedge
+  context.active.leftedge = leftedge
+  context.active.rightedge = rightedge
+  context.active.bottomedge = bottomedge
 }

@@ -2,6 +2,7 @@ import { useWaitForString } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
 import {
   applycolortoindexes,
+  textformatedges,
   tokenizeandwritetextformat,
   useWriteText,
   writeplaintext,
@@ -23,21 +24,10 @@ import {
 
 type TextrowsProps = {
   ycursor: number
-  leftedge: number
-  rightedge: number
-  topedge: number
-  bottomedge: number
   rows: EDITOR_CODE_ROW[]
 }
 
-export function Textrows({
-  ycursor,
-  leftedge,
-  rightedge,
-  topedge,
-  bottomedge,
-  rows,
-}: TextrowsProps) {
+export function Textrows({ ycursor, rows }: TextrowsProps) {
   const tape = useTape()
   const blink = useBlink()
   const context = useWriteText()
@@ -48,9 +38,14 @@ export function Textrows({
     tape.editor.player,
   )
 
-  setupeditoritem(false, false, 1, 2, 1, context)
+  const topedge = 2
+  const leftedge = 1
+  const rightedge = context.width - 2
+  const bottomedge = context.height - 2
+
   if (!ispresent(codepage)) {
     const fibble = (blink ? '|' : '-').repeat(3)
+    setupeditoritem(false, false, leftedge, topedge, 1, context)
     tokenizeandwritetextformat(` ${fibble} LOADING ${fibble}`, context, true)
     return null
   }
@@ -83,16 +78,17 @@ export function Textrows({
     const row = rows[i]
     const active = i === ycursor
     const text = row.code.replaceAll('\n', '')
+    textformatedges(topedge, leftedge, rightedge, bottomedge, context)
 
     // render
     context.iseven = context.y % 2 === 0
-    context.activebg = active ? BG_ACTIVE : BG
+    context.active.bg = active ? BG_ACTIVE : BG
     const ycontext = context.y
     writeplaintext(`${text}`, context, true)
 
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
-      const index = (context.leftedge ?? 0) + ycontext * context.width
+      const index = (context.active.leftedge ?? 0) + ycontext * context.width
       const start = Math.max(row.start, ii1) - row.start
       const end = Math.min(row.end, ii2) - row.start
       applycolortoindexes(

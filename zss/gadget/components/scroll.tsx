@@ -6,6 +6,7 @@ import { snap } from 'zss/mapping/number'
 
 import {
   createwritetextcontext,
+  tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from '../data/textformat'
 import {
@@ -91,21 +92,16 @@ export function Scroll({
 
   // measure title
   const title = ` ${name} `
-  let context = createwritetextcontext(width - 6, 1, color, bg)
-  context.measureonly = true
-  tokenizeandwritetextformat(title, context, true)
+  const measure = tokenizeandmeasuretextformat(title, width, height)
 
   // center title
-  const titleWidth = context.x
-  context = {
-    ...createwritetextcontext(width, height, color, bg),
+  const titleWidth = measure?.x ?? title.length
+  const context = {
+    ...createwritetextcontext(width, height, color, bg, 0, 0, width, height),
     ...tiles,
-    activecolor: 14,
     x: Math.round(width * 0.5) - Math.round(titleWidth * 0.5),
-    leftedge: 2,
-    rightedge: width - 2,
-    bottomedge: 1,
   }
+
   tokenizeandwritetextformat(title, context, true)
 
   // input cursor

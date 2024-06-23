@@ -8,24 +8,15 @@ import {
 import { useBlink } from '../useblink'
 import { writeTile } from '../usetiles'
 
-import { BG, BKG_PTRN, EDITOR_CODE_ROW, FG, setupeditoritem } from './common'
+import { BG, BKG_PTRN, FG, setupeditoritem } from './common'
 
-type EditorFrameProps = {
-  ycursor: number
-  leftedge: number
-  rightedge: number
-  topedge: number
-  bottomedge: number
-  rows: EDITOR_CODE_ROW[]
-}
-
-export function EditorFrame({
-  leftedge,
-  rightedge,
-  topedge,
-  bottomedge,
-}: EditorFrameProps) {
+export function EditorFrame() {
   const context = useWriteText()
+
+  const topedge = 2
+  const leftedge = 1
+  const rightedge = context.width - 2
+  const bottomedge = context.height - 2
 
   // fill
   for (let y = 0; y < context.height; ++y) {

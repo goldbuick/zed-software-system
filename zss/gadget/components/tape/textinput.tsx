@@ -18,27 +18,15 @@ import {
   EDITOR_CODE_ROW,
   findcursorinrows,
   sharedtosynced,
-  splitcoderows,
   tapeeditorstate,
   useTapeEditor,
 } from './common'
 
 type TextinputProps = {
-  ycursor: number
-  leftedge: number
-  rightedge: number
-  topedge: number
-  bottomedge: number
   rows: EDITOR_CODE_ROW[]
 }
 
-export function Textinput({
-  // leftedge,
-  // rightedge,
-  // topedge,
-  // bottomedge,
-  rows,
-}: TextinputProps) {
+export function Textinput({ rows }: TextinputProps) {
   const tape = useTape()
   const blink = useBlink()
   const context = useWriteText()

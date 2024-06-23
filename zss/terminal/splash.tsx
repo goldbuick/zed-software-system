@@ -55,11 +55,19 @@ export function Splash({ onBoot }: SplashProps) {
   useEffect(() => {
     resetTiles(tiles, 0, COLOR.WHITE, COLOR.DKGRAY)
     const context: WRITE_TEXT_CONTEXT = {
-      ...createwritetextcontext(width, height, COLOR.WHITE, COLOR.DKGRAY),
+      ...createwritetextcontext(
+        width,
+        height,
+        COLOR.WHITE,
+        COLOR.DKGRAY,
+        1,
+        1,
+        width - 2,
+        height - 1,
+      ),
       ...tiles,
       x: 1,
-      leftedge: 1,
-      rightedge: width - 2,
+      y: 1,
     }
     TICKER.forEach((item) => tokenizeandwritetextformat(item, context, true))
   }, [width, height, tiles])

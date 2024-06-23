@@ -85,10 +85,10 @@ export function setuplogitem(
   context: WRITE_TEXT_CONTEXT,
 ) {
   // reset context
-  context.x = context.leftedge ?? 0
+  context.x = context.active.leftedge ?? 0
   context.y = logitemy(offset, context)
   context.iseven = context.y % 2 === 0
-  context.activebg = active && !blink ? BG_ACTIVE : BG
+  context.active.bg = active && !blink ? BG_ACTIVE : BG
 
   // write bkg dots
   const p1 = context.y * context.width
@@ -113,9 +113,12 @@ export function setupeditoritem(
   // reset context
   context.x = x
   context.y = y
-  context.leftedge = inset
   context.iseven = context.y % 2 === 0
-  context.activebg = active && !blink ? BG_ACTIVE : BG
+  context.active.bg = active && !blink ? BG_ACTIVE : BG
+  context.active.leftedge = inset
+  context.active.rightedge = context.width - 1 - inset
+  context.active.topedge = inset
+  context.active.bottomedge = context.height - 1 - inset
 }
 
 export type EDITOR_CODE_ROW = {

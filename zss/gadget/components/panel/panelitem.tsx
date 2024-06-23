@@ -1,7 +1,7 @@
 import {
   tokenizeandwritetextformat,
   useWriteText,
-  writetextcolorreset,
+  writetextreset,
 } from 'zss/gadget/data/textformat'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { isarray } from 'zss/mapping/types'
@@ -77,7 +77,7 @@ export function PanelItem({ item, active }: PanelItemProps) {
         break
     }
 
-    writetextcolorreset(context)
+    writetextreset(context)
   }
   return null
 }

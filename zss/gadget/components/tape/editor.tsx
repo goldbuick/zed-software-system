@@ -15,7 +15,6 @@ import { Textrows } from './textrows'
 
 export function TapeConsoleEditor() {
   const tape = useTape()
-  const context = useWriteText()
   const tapeeditor = useTapeEditor()
   const codepage = useWaitForString(
     tape.editor.book,
@@ -32,16 +31,12 @@ export function TapeConsoleEditor() {
   // measure edges once
   const measure = {
     ycursor,
-    leftedge: 1,
-    rightedge: context.width - 2,
-    topedge: 2,
-    bottomedge: context.height - 2,
     rows,
   }
 
   return (
     <>
-      <EditorFrame {...measure} />
+      <EditorFrame />
       <Textrows {...measure} />
       <Textinput {...measure} />
     </>
