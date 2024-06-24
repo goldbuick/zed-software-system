@@ -50,14 +50,14 @@ export function useTapeEditor() {
   return useSnapshot(tapeeditorstate)
 }
 
-export type ConsoleItemProps = {
+export type TerminalItemProps = {
   blink?: boolean
   active?: boolean
   text: string
   offset: number
 }
 
-export type ConsoleItemInputProps = {
+export type TerminalItemInputProps = {
   blink?: boolean
   active?: boolean
   prefix: string

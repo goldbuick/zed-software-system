@@ -204,10 +204,8 @@ export function writetextreset(context: WRITE_TEXT_CONTEXT) {
 function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   function incCursor() {
     ++context.x
-    if (
-      !context.disablewrap &&
-      context.x >= (context.active.rightedge ?? context.width)
-    ) {
+    const rightedge = context.active.rightedge ?? context.width - 1
+    if (!context.disablewrap && context.x > rightedge) {
       context.x = context.active.leftedge ?? 0
       ++context.y
     }

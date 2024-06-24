@@ -6,17 +6,16 @@ import {
 
 import { inputcolor } from '../../panel/common'
 import { UserInput } from '../../userinput'
+import { ConsoleContext, TerminalItemInputProps, setuplogitem } from '../common'
 
-import { ConsoleContext, ConsoleItemInputProps, setuplogitem } from './common'
-
-export function TapeConsoleHyperlink({
+export function TerminalHyperlink({
   blink,
   active,
   prefix,
   label,
   words,
   offset,
-}: ConsoleItemInputProps) {
+}: TerminalItemInputProps) {
   const context = useWriteText()
 
   const cc = useContext(ConsoleContext)

@@ -1,13 +1,9 @@
 import { useBlink } from '../../useblink'
+import { TerminalItemProps } from '../common'
 
-import { TapeConsoleItem } from './terminalitem'
+import { TerminalItem } from './terminalitem'
 
-type ActiveItemProps = {
-  text: string
-  offset: number
-}
-
-export function ActiveItem({ text, offset }: ActiveItemProps) {
+export function TerminalItemActive(props: TerminalItemProps) {
   const blink = useBlink()
-  return <TapeConsoleItem active blink={blink} text={text} offset={offset} />
+  return <TerminalItem active blink={blink} {...props} />
 }

@@ -1,5 +1,6 @@
 import { useTape } from 'zss/device/tape'
 import {
+  textformatedges,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
   useWriteText,
@@ -7,8 +8,7 @@ import {
 
 import { useBlink } from '../../useblink'
 import { writeTile } from '../../usetiles'
-
-import { BG, BKG_PTRN, FG, setupeditoritem } from './common'
+import { BG, BKG_PTRN, FG, setupeditoritem } from '../common'
 
 export function EditorFrame() {
   const context = useWriteText()
@@ -43,16 +43,16 @@ export function EditorFrame() {
     })
   }
 
+  const egtop = `$196`.repeat(context.width - 4)
+  setupeditoritem(false, false, 0, 0, 0, context)
+  tokenizeandwritetextformat(`$213$205$187${egtop}$191`, context, true)
+
   const bottomchrs = `$205`.repeat(context.width - 2)
   setupeditoritem(false, false, 0, context.height - 1, 0, context)
   tokenizeandwritetextformat(`$212${bottomchrs}$190`, context, true)
 
   const tape = useTape()
   const blink = useBlink()
-
-  const egtop = `$196`.repeat(context.width - 4)
-  setupeditoritem(false, false, 0, 0, 0, context)
-  tokenizeandwritetextformat(`$213$205$187${egtop}$191`, context, true)
 
   const egbottom = `$205`.repeat(context.width - 4)
   setupeditoritem(false, false, 0, 1, 0, context)

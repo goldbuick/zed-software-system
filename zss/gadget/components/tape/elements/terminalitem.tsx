@@ -5,15 +5,20 @@ import {
   useWriteText,
 } from 'zss/gadget/data/textformat'
 
-import { ConsoleItemInputProps, ConsoleItemProps, setuplogitem } from './common'
-import { TapeConsoleHyperlink } from './terminalhyperlink'
+import {
+  TerminalItemInputProps,
+  TerminalItemProps,
+  setuplogitem,
+} from '../common'
 
-export function TapeConsoleItem({
+import { TerminalHyperlink } from './terminalhyperlink'
+
+export function TerminalItem({
   blink,
   active,
   text,
   offset,
-}: ConsoleItemProps) {
+}: TerminalItemProps) {
   const context = useWriteText()
 
   // setup context for item
@@ -42,7 +47,7 @@ export function TapeConsoleItem({
 
     // setup input props
     const [input, ...args] = words
-    const props: ConsoleItemInputProps = {
+    const props: TerminalItemInputProps = {
       blink,
       active,
       prefix,
@@ -69,7 +74,7 @@ export function TapeConsoleItem({
         return null
       default:
       case 'hyperlink':
-        return <TapeConsoleHyperlink {...props} words={words} />
+        return <TerminalHyperlink {...props} words={words} />
     }
   }
 

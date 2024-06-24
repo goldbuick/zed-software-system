@@ -22,12 +22,12 @@ import {
   logitemy,
   tapeinputstate,
   useTapeInput,
-} from './elements/common'
-import { ConsoleInput } from './elements/terminalinput'
-import { TapeConsoleItem } from './elements/terminalitem'
-import { ActiveItem } from './elements/terminalitemactive'
+} from './common'
+import { TerminalInput } from './elements/terminalinput'
+import { TerminalItem } from './elements/terminalitem'
+import { TerminalItemActive } from './elements/terminalitemactive'
 
-export function TapeConsoleTerminal() {
+export function TapeTerminal() {
   const context = useWriteText()
 
   const tape = useTape()
@@ -202,12 +202,12 @@ export function TapeConsoleTerminal() {
           const yrow = logitemy(offset, context)
           const yheight = logrowheights[index] - 1
           return tapeycursor >= yrow && tapeycursor <= yrow + yheight ? (
-            <ActiveItem key={index} text={text} offset={offset} />
+            <TerminalItemActive key={index} text={text} offset={offset} />
           ) : (
-            <TapeConsoleItem key={index} text={text} offset={offset} />
+            <TerminalItem key={index} text={text} offset={offset} />
           )
         })}
-        <ConsoleInput tapeycursor={tapeycursor} />
+        <TerminalInput tapeycursor={tapeycursor} />
       </ConsoleContext.Provider>
       <UserInput
         MENU_BUTTON={(mods) =>

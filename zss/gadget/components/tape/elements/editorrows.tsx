@@ -10,7 +10,6 @@ import {
 import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../../useblink'
-
 import {
   BG,
   BG_ACTIVE,
@@ -19,7 +18,7 @@ import {
   FG_SELECTED,
   setupeditoritem,
   useTapeEditor,
-} from './common'
+} from '../common'
 
 type TextrowsProps = {
   ycursor: number
@@ -27,7 +26,7 @@ type TextrowsProps = {
   rows: EDITOR_CODE_ROW[]
 }
 
-export function Textrows({ ycursor, yoffset, rows }: TextrowsProps) {
+export function EditorRows({ ycursor, yoffset, rows }: TextrowsProps) {
   const tape = useTape()
   const blink = useBlink()
   const context = useWriteText()

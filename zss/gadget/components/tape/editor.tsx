@@ -9,12 +9,12 @@ import {
   sharedtosynced,
   splitcoderows,
   useTapeEditor,
-} from './elements/common'
+} from './common'
 import { EditorFrame } from './elements/editorframe'
-import { Textinput } from './elements/editorinput'
-import { Textrows } from './elements/editorrows'
+import { EditorInput } from './elements/editorinput'
+import { EditorRows } from './elements/editorrows'
 
-export function TapeConsoleEditor() {
+export function TapeEditor() {
   const tape = useTape()
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
@@ -46,8 +46,8 @@ export function TapeConsoleEditor() {
   return (
     <>
       <EditorFrame />
-      <Textrows {...measure} />
-      <Textinput {...measure} />
+      <EditorRows {...measure} />
+      <EditorInput {...measure} />
     </>
   )
 }

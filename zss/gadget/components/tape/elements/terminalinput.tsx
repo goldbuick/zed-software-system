@@ -8,8 +8,7 @@ import {
 import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../../useblink'
-
-import { BG, BG_ACTIVE, FG, useTapeInput } from './common'
+import { BG, BG_ACTIVE, FG, useTapeInput } from '../common'
 
 function writeline(
   blink: boolean,
@@ -26,7 +25,7 @@ type ConsoleInputProps = {
   tapeycursor: number
 }
 
-export function ConsoleInput({ tapeycursor }: ConsoleInputProps) {
+export function TerminalInput({ tapeycursor }: ConsoleInputProps) {
   const blink = useBlink()
   const context = useWriteText()
   const tapeinput = useTapeInput()

@@ -13,13 +13,12 @@ import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../../useblink'
 import { UserInput, modsfromevent } from '../../userinput'
-
 import {
   EDITOR_CODE_ROW,
   sharedtosynced,
   tapeeditorstate,
   useTapeEditor,
-} from './common'
+} from '../common'
 
 type TextinputProps = {
   ycursor: number
@@ -27,7 +26,7 @@ type TextinputProps = {
   rows: EDITOR_CODE_ROW[]
 }
 
-export function Textinput({ ycursor, yoffset, rows }: TextinputProps) {
+export function EditorInput({ ycursor, yoffset, rows }: TextinputProps) {
   const tape = useTape()
   const blink = useBlink()
   const context = useWriteText()

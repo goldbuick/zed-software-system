@@ -8,9 +8,9 @@ import {
   createwritetextcontext,
 } from 'zss/gadget/data/textformat'
 
-import { BG, CHAR_HEIGHT, CHAR_WIDTH, BKG_PTRN, FG, SCALE } from './tape/elements/common'
-import { TapeConsoleEditor } from './tape/editor'
-import { TapeConsoleTerminal } from './tape/terminal'
+import { BG, CHAR_HEIGHT, CHAR_WIDTH, BKG_PTRN, FG, SCALE } from './tape/common'
+import { TapeEditor } from './tape/editor'
+import { TapeTerminal } from './tape/terminal'
 import { PlayerContext } from './useplayer'
 import { UserFocus, UserHotkey } from './userinput'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
@@ -79,11 +79,7 @@ export function TapeConsole() {
           <TileSnapshot width={width} height={height} tiles={tiles} />
           <PlayerContext.Provider value={player}>
             <WriteTextContext.Provider value={context}>
-              {tape.editor.open ? (
-                <TapeConsoleEditor />
-              ) : (
-                <TapeConsoleTerminal />
-              )}
+              {tape.editor.open ? <TapeEditor /> : <TapeTerminal />}
             </WriteTextContext.Provider>
           </PlayerContext.Provider>
         </UserFocus>
