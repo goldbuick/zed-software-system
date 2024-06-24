@@ -20,7 +20,7 @@ import {
   sharedtosynced,
   tapeeditorstate,
   useTapeEditor,
-} from './common'
+} from './elements/common'
 
 type TextinputProps = {
   ycursor: number

@@ -8,7 +8,7 @@ import {
   createwritetextcontext,
 } from 'zss/gadget/data/textformat'
 
-import { BG, CHAR_HEIGHT, CHAR_WIDTH, BKG_PTRN, FG, SCALE } from './tape/common'
+import { BG, CHAR_HEIGHT, CHAR_WIDTH, BKG_PTRN, FG, SCALE } from './tape/elements/common'
 import { TapeConsoleEditor } from './tape/editor'
 import { TapeConsoleTerminal } from './tape/terminal'
 import { PlayerContext } from './useplayer'

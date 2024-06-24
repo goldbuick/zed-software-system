@@ -23,9 +23,9 @@ import {
   logitemy,
   tapeinputstate,
   useTapeInput,
-} from './common'
+} from './elements/common'
 import { ConsoleInput } from './input'
-import { TapeConsoleItem } from './item'
+import { TapeConsoleItem } from './elements/item'
 
 export function TapeConsoleTerminal() {
   const context = useWriteText()

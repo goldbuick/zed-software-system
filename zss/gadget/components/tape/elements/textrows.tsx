@@ -9,7 +9,7 @@ import {
 } from 'zss/gadget/data/textformat'
 import { ispresent } from 'zss/mapping/types'
 
-import { useBlink } from '../useblink'
+import { useBlink } from '../../useblink'
 
 import {
   BG,

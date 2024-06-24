@@ -9,7 +9,7 @@ import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../useblink'
 
-import { BG, BG_ACTIVE, FG, useTapeInput } from './common'
+import { BG, BG_ACTIVE, FG, useTapeInput } from './elements/common'
 
 function writeline(
   blink: boolean,

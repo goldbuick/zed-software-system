@@ -217,15 +217,12 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   }
 
   function isVisible() {
-    if (
-      context.x < (context.active.leftedge ?? 0) ||
-      context.x >= (context.active.rightedge ?? context.width) ||
-      context.y < (context.active.topedge ?? 0) ||
-      context.y >= (context.active.bottomedge ?? context.height)
-    ) {
-      return false
-    }
-    return true
+    return (
+      context.x >= (context.active.leftedge ?? 0) &&
+      context.x <= (context.active.rightedge ?? context.width - 1) &&
+      context.y >= (context.active.topedge ?? 0) &&
+      context.y <= (context.active.bottomedge ?? context.height - 1)
+    )
   }
 
   function writeStr(str: string) {

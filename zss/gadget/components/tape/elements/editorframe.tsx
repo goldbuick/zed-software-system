@@ -8,7 +8,7 @@ import {
 import { useBlink } from '../useblink'
 import { writeTile } from '../usetiles'
 
-import { BG, BKG_PTRN, FG, setupeditoritem } from './common'
+import { BG, BKG_PTRN, FG, setupeditoritem } from './elements/common'
 
 export function EditorFrame() {
   const context = useWriteText()

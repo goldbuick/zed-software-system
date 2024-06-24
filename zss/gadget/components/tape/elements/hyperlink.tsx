@@ -7,7 +7,7 @@ import {
 import { inputcolor } from '../panel/common'
 import { UserInput } from '../userinput'
 
-import { ConsoleContext, ConsoleItemInputProps, setuplogitem } from './common'
+import { ConsoleContext, ConsoleItemInputProps, setuplogitem } from './elements/common'
 
 export function TapeConsoleHyperlink({
   blink,
