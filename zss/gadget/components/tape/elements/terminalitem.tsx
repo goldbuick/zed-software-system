@@ -6,7 +6,7 @@ import {
 } from 'zss/gadget/data/textformat'
 
 import { ConsoleItemInputProps, ConsoleItemProps, setuplogitem } from './common'
-import { TapeConsoleHyperlink } from './hyperlink'
+import { TapeConsoleHyperlink } from './terminalhyperlink'
 
 export function TapeConsoleItem({
   blink,

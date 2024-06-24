@@ -11,16 +11,15 @@ import { applystrtoindex, useWriteText } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
-import { useBlink } from '../useblink'
-import { UserInput, modsfromevent } from '../userinput'
+import { useBlink } from '../../useblink'
+import { UserInput, modsfromevent } from '../../userinput'
 
 import {
   EDITOR_CODE_ROW,
-  findcursorinrows,
   sharedtosynced,
   tapeeditorstate,
   useTapeEditor,
-} from './elements/common'
+} from './common'
 
 type TextinputProps = {
   ycursor: number

@@ -4,15 +4,15 @@ import { useWriteText } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
-import { EditorFrame } from './editorframe'
 import {
   findcursorinrows,
   sharedtosynced,
   splitcoderows,
   useTapeEditor,
 } from './elements/common'
-import { Textinput } from './textinput'
-import { Textrows } from './elements/textrows'
+import { EditorFrame } from './elements/editorframe'
+import { Textinput } from './elements/editorinput'
+import { Textrows } from './elements/editorrows'
 
 export function TapeConsoleEditor() {
   const tape = useTape()

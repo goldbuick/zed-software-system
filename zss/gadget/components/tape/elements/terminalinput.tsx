@@ -7,9 +7,9 @@ import {
 } from 'zss/gadget/data/textformat'
 import { ispresent } from 'zss/mapping/types'
 
-import { useBlink } from '../useblink'
+import { useBlink } from '../../useblink'
 
-import { BG, BG_ACTIVE, FG, useTapeInput } from './elements/common'
+import { BG, BG_ACTIVE, FG, useTapeInput } from './common'
 
 function writeline(
   blink: boolean,
@@ -18,7 +18,7 @@ function writeline(
   context: WRITE_TEXT_CONTEXT,
 ) {
   context.iseven = context.y % 2 === 0
-  context.activebg = active && !blink ? BG_ACTIVE : BG
+  context.active.bg = active && !blink ? BG_ACTIVE : BG
   tokenizeandwritetextformat(text, context, true)
 }
 

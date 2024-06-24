@@ -17,15 +17,15 @@ import { ispresent } from 'zss/mapping/types'
 
 import { UserInput, modsfromevent } from '../userinput'
 
-import { ActiveItem } from './activeitem'
 import {
   ConsoleContext,
   logitemy,
   tapeinputstate,
   useTapeInput,
 } from './elements/common'
-import { ConsoleInput } from './input'
-import { TapeConsoleItem } from './elements/item'
+import { ConsoleInput } from './elements/terminalinput'
+import { TapeConsoleItem } from './elements/terminalitem'
+import { ActiveItem } from './elements/terminalitemactive'
 
 export function TapeConsoleTerminal() {
   const context = useWriteText()

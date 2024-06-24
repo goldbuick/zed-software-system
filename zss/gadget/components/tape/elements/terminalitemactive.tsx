@@ -1,6 +1,6 @@
-import { useBlink } from '../useblink'
+import { useBlink } from '../../useblink'
 
-import { TapeConsoleItem } from './item'
+import { TapeConsoleItem } from './terminalitem'
 
 type ActiveItemProps = {
   text: string

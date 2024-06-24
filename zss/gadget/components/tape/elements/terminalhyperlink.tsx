@@ -4,10 +4,10 @@ import {
   useWriteText,
 } from 'zss/gadget/data/textformat'
 
-import { inputcolor } from '../panel/common'
-import { UserInput } from '../userinput'
+import { inputcolor } from '../../panel/common'
+import { UserInput } from '../../userinput'
 
-import { ConsoleContext, ConsoleItemInputProps, setuplogitem } from './elements/common'
+import { ConsoleContext, ConsoleItemInputProps, setuplogitem } from './common'
 
 export function TapeConsoleHyperlink({
   blink,

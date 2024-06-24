@@ -5,10 +5,10 @@ import {
   useWriteText,
 } from 'zss/gadget/data/textformat'
 
-import { useBlink } from '../useblink'
-import { writeTile } from '../usetiles'
+import { useBlink } from '../../useblink'
+import { writeTile } from '../../usetiles'
 
-import { BG, BKG_PTRN, FG, setupeditoritem } from './elements/common'
+import { BG, BKG_PTRN, FG, setupeditoritem } from './common'
 
 export function EditorFrame() {
   const context = useWriteText()
