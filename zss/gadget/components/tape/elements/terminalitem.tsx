@@ -6,6 +6,7 @@ import {
 } from 'zss/gadget/data/textformat'
 
 import {
+  BKG_PTRN,
   TerminalItemInputProps,
   TerminalItemProps,
   setuplogitem,
@@ -20,12 +21,17 @@ export function TerminalItem({
   offset,
 }: TerminalItemProps) {
   const context = useWriteText()
+  const ishyperlink = text.startsWith('!')
 
-  // setup context for item
+  // render text output
+  context.writefullwidth = BKG_PTRN
+
+  // write text or clear line for ui
   setuplogitem(!!blink, !!active, offset, context)
+  tokenizeandwritetextformat(ishyperlink ? '' : text, context, true)
 
-  // write ui
-  if (text.startsWith('!')) {
+  // hyperlinks
+  if (ishyperlink) {
     // parse hyperlink
     const [prefix, ...content] = text.slice(1).split('!')
     const hyperlink = `${content.join('!')}`
@@ -56,6 +62,9 @@ export function TerminalItem({
       offset,
     }
 
+    // reset context for rendering ui
+    setuplogitem(!!blink, !!active, offset, context)
+
     switch (input.toLowerCase()) {
       case 'hk':
       case 'hotkey':
@@ -78,7 +87,7 @@ export function TerminalItem({
     }
   }
 
-  // render text output
-  tokenizeandwritetextformat(text, context, true)
+  // reset
+  context.writefullwidth = undefined
   return null
 }

@@ -3,7 +3,7 @@ import { createContext as createcontext, useContext, useMemo } from 'react'
 import { LANG_DEV } from 'zss/config'
 import { colorconsts } from 'zss/firmware/wordtypes'
 import { range } from 'zss/mapping/array'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { ispresent, MAYBE, MAYBE_NUMBER } from 'zss/mapping/types'
 
 import { COLOR, colortobg, colortofg } from './types'
 
@@ -116,6 +116,7 @@ export type WRITE_TEXT_CONTEXT = {
   disablewrap: boolean
   measureonly: boolean
   measuredwidth: number
+  writefullwidth: MAYBE_NUMBER
   // cursor
   x: number
   y: number
@@ -147,6 +148,7 @@ export function createwritetextcontext(
     disablewrap: false,
     measureonly: false,
     measuredwidth: 0,
+    writefullwidth: undefined,
     x: 0,
     y: 0,
     iseven: true,
@@ -298,6 +300,17 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   // track overall width
   if (context.x > context.measuredwidth) {
     context.measuredwidth = context.x + 1
+  }
+
+  // fill line
+  if (ispresent(context.writefullwidth)) {
+    const rightedge = context.active.rightedge ?? context.width - 1
+    const fill = rightedge - context.x + 1
+    if (fill > 0) {
+      context.active.color = context.reset.color
+      context.active.bg = context.reset.bg
+      writeStr(String.fromCharCode(context.writefullwidth).repeat(fill))
+    }
   }
 
   // move to next line

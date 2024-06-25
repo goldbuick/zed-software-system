@@ -91,15 +91,15 @@ export function setuplogitem(
   context.active.bg = active && !blink ? BG_ACTIVE : BG
 
   // write bkg dots
-  const p1 = context.y * context.width
-  const p2 = p1 + context.width - 1
-  applystrtoindex(
-    context.y * context.width,
-    String.fromCharCode(BKG_PTRN).repeat(context.width),
-    context,
-  )
-  // write default colors
-  applycolortoindexes(p1, p2, FG, BG, context)
+  // const p1 = context.y * context.width
+  // const p2 = p1 + context.width - 1
+  // applystrtoindex(
+  //   context.y * context.width,
+  //   String.fromCharCode(BKG_PTRN).repeat(context.width),
+  //   context,
+  // )
+  // // write default colors
+  // applycolortoindexes(p1, p2, FG, BG, context)
 }
 
 export function setupeditoritem(

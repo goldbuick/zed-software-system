@@ -1,6 +1,5 @@
 import { useTape } from 'zss/device/tape'
 import {
-  textformatedges,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
   useWriteText,
