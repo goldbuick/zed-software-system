@@ -54,7 +54,7 @@ export type TerminalItemProps = {
   blink?: boolean
   active?: boolean
   text: string
-  offset: number
+  y: number
 }
 
 export type TerminalItemInputProps = {
@@ -63,7 +63,7 @@ export type TerminalItemInputProps = {
   prefix: string
   label: string
   words: string[]
-  offset: number
+  y: number
 }
 
 type ConsoleContextState = {
@@ -81,25 +81,14 @@ export function logitemy(offset: number, context: WRITE_TEXT_CONTEXT) {
 export function setuplogitem(
   blink: boolean,
   active: boolean,
-  offset: number,
+  y: number,
   context: WRITE_TEXT_CONTEXT,
 ) {
   // reset context
   context.x = context.active.leftedge ?? 0
-  context.y = logitemy(offset, context)
+  context.y = y
   context.iseven = context.y % 2 === 0
   context.active.bg = active && !blink ? BG_ACTIVE : BG
-
-  // write bkg dots
-  // const p1 = context.y * context.width
-  // const p2 = p1 + context.width - 1
-  // applystrtoindex(
-  //   context.y * context.width,
-  //   String.fromCharCode(BKG_PTRN).repeat(context.width),
-  //   context,
-  // )
-  // // write default colors
-  // applycolortoindexes(p1, p2, FG, BG, context)
 }
 
 export function setupeditoritem(

@@ -10,7 +10,7 @@ import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
 
-import { ConsoleContext, logitemy, useTapeInput } from './common'
+import { ConsoleContext, useTapeInput } from './common'
 import { TerminalInput } from './elements/terminalinput'
 import { TerminalItem } from './elements/terminalitem'
 import { TerminalItemActive } from './elements/terminalitemactive'
@@ -54,31 +54,27 @@ export function TapeTerminal() {
   })
 
   // upper bound on ycursor
+  const bottomedge = context.height - 3
   let logrowtotalheight = 0
+  let logrowycoord = bottomedge + 1
   // ycoords for rows
-  const logrowoffsets: number[] = logrowheights.map((rowheight) => {
-    const y = logrowtotalheight + rowheight - 1
+  const logrowycoords: number[] = logrowheights.map((rowheight) => {
+    logrowycoord -= rowheight
     logrowtotalheight += rowheight
-    return -y // flipped y render
+    return logrowycoord
   })
   ++logrowtotalheight
 
   // offset into logs
-  const centerrow = Math.round(tapeinput.ycursor - context.height * 0.5)
+  const ycursor = Math.round(tapeinput.ycursor - context.height * 0.5)
   const maxvisiblerows = context.height - 2
-  const startrow = clamp(
-    centerrow,
-    0,
-    tape.terminal.logs.length - maxvisiblerows,
-  )
+  const yoffset = clamp(ycursor, 0, logrowtotalheight - maxvisiblerows)
 
   // starting render row
-  const visiblelogrows = logrows.slice(startrow, startrow + maxvisiblerows)
+  const visiblelogrows = logrows.slice(yoffset, yoffset + maxvisiblerows)
 
   // calculate ycoord to render cursor
-  const bottomedge = context.height - 1
-  const yscrolled = tapeinput.ycursor - startrow
-  const tapeycursor = bottomedge - yscrolled
+  const tapeycursor = context.height - tapeinput.ycursor - yoffset - 1
 
   // write hint
   const hint = 'if lost try #help'
@@ -105,13 +101,15 @@ export function TapeTerminal() {
         }}
       >
         {visiblelogrows.map((text, index) => {
-          const offset = logrowoffsets[index]
-          const yrow = logitemy(offset, context)
-          const yheight = logrowheights[index] - 1
-          return tapeycursor >= yrow && tapeycursor <= yrow + yheight ? (
-            <TerminalItemActive key={index} text={text} offset={offset} />
+          const y = logrowycoords[index] - yoffset
+          if (y < 0 || y > context.height - 3) {
+            return null
+          }
+          const yheight = logrowheights[index]
+          return tapeycursor >= y && tapeycursor < y + yheight ? (
+            <TerminalItemActive key={index} text={text} y={y} />
           ) : (
-            <TerminalItem key={index} text={text} offset={offset} />
+            <TerminalItem key={index} text={text} y={y} />
           )
         })}
         <TerminalInput

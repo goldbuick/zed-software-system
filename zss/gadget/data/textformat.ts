@@ -20,9 +20,16 @@ export const WhitespaceSkipped = createToken({
   group: Lexer.SKIPPED,
 })
 
+export const Newline = createToken({
+  name: 'Newline',
+  line_breaks: true,
+  start_chars_hint: ['\n', '\r'],
+  pattern: /\n|\r\n?/,
+})
+
 export const StringLiteral = createToken({
   name: 'StringLiteral',
-  pattern: /[^ $;]+/,
+  pattern: /[^ $;\r\n]+/,
   start_chars_hint: all_chars,
 })
 
@@ -38,7 +45,7 @@ export const EscapedDollar = createToken({
 
 export const MaybeFlag = createToken({
   name: 'MaybeFlag',
-  pattern: /\$[^ $]+/,
+  pattern: /\$[^ $\r\n]+/,
 })
 
 export const NumberLiteral = createToken({
@@ -48,7 +55,7 @@ export const NumberLiteral = createToken({
 
 export const HyperLinkText = createToken({
   name: 'HyperLinkText',
-  pattern: /;[^;\n]*/,
+  pattern: /;[^;\r\n]*/,
   start_chars_hint: [';'],
 })
 
@@ -64,6 +71,7 @@ const allcolors = colors.map((name) => createWordToken(`\\$(${name})`, name))
 
 export const allTokens = [
   Whitespace,
+  Newline,
   ...allcolors,
   StringLiteralDouble,
   StringLiteral,
@@ -81,6 +89,7 @@ const scriptLexer = new Lexer(allTokens, {
 const scriptLexerNoWhitespace = new Lexer(
   [
     WhitespaceSkipped,
+    Newline,
     ...allcolors,
     StringLiteralDouble,
     StringLiteral,
@@ -270,6 +279,12 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         )
         break
 
+      case Newline: {
+        context.x = context.active.leftedge ?? 0
+        ++context.y
+        break
+      }
+
       default: {
         const tokenname = token.tokenType.name as keyof typeof colorconsts
         const maybename = colorconsts[tokenname]
@@ -303,19 +318,15 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   }
 
   // fill line
-  if (ispresent(context.writefullwidth)) {
-    const rightedge = context.active.rightedge ?? context.width - 1
-    const fill = rightedge - context.x + 1
-    if (fill > 0) {
-      context.active.color = context.reset.color
-      context.active.bg = context.reset.bg
-      writeStr(String.fromCharCode(context.writefullwidth).repeat(fill))
-    }
-  }
-
-  // move to next line
-  context.x = context.active.leftedge ?? 0
-  ++context.y
+  // if (ispresent(context.writefullwidth)) {
+  //   const rightedge = context.active.rightedge ?? context.width - 1
+  //   const fill = rightedge - context.x + 1
+  //   if (fill > 0) {
+  //     writetextreset(context)
+  //     writeStr(String.fromCharCode(context.writefullwidth).repeat(fill))
+  //     // return
+  //   }
+  // }
 }
 
 export function tokenizeandwritetextformat(
@@ -353,6 +364,11 @@ export function tokenizeandmeasuretextformat(
   context.measureonly = true
 
   writetextformat(result.tokens, context)
+  // min height is 1
+  if (context.x > 0) {
+    ++context.y
+  }
+
   return context
 }
 
