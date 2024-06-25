@@ -10,7 +10,7 @@ import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
 
-import { ConsoleContext, useTapeInput } from './common'
+import { BKG_PTRN, ConsoleContext, setuplogitem, useTapeInput } from './common'
 import { TerminalInput } from './elements/terminalinput'
 import { TerminalItem } from './elements/terminalitem'
 import { TerminalItemActive } from './elements/terminalitemactive'
@@ -66,20 +66,26 @@ export function TapeTerminal() {
   ++logrowtotalheight
 
   // offset into logs
-  const ycursor = Math.round(tapeinput.ycursor - context.height * 0.5)
-  const maxvisiblerows = context.height - 2
-  const yoffset = clamp(ycursor, 0, logrowtotalheight - maxvisiblerows)
-
-  // starting render row
-  const visiblelogrows = logrows.slice(yoffset, yoffset + maxvisiblerows)
+  const ycursorbottom = context.height - 1
+  const halfvisiblerows = Math.round(context.height * 0.5)
+  const ycursor = tapeinput.ycursor - halfvisiblerows
+  const yoffset = clamp(ycursor, 0, logrowtotalheight - halfvisiblerows)
 
   // calculate ycoord to render cursor
-  const tapeycursor = context.height - tapeinput.ycursor - yoffset - 1
+  const tapeycursor = ycursorbottom - tapeinput.ycursor + yoffset
 
-  // write hint
+  // write blanks & hint
+  const padding = -(logrowtotalheight - yoffset - ycursorbottom)
+  for (let i = 0; i < padding; ++i) {
+    setuplogitem(false, false, i, context)
+    context.writefullwidth = BKG_PTRN
+    tokenizeandwritetextformat('', context, true)
+    context.writefullwidth = undefined
+  }
+
+  setuplogitem(false, false, 0, context)
   const hint = 'if lost try #help'
   context.x = context.width - hint.length
-  context.y = 0
   tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
 
   // user id
@@ -100,13 +106,14 @@ export function TapeTerminal() {
           },
         }}
       >
-        {visiblelogrows.map((text, index) => {
-          const y = logrowycoords[index] - yoffset
-          if (y < 0 || y > context.height - 3) {
+        {logrows.map((text, index) => {
+          const y = logrowycoords[index] + yoffset
+          const yheight = logrowheights[index]
+          const ybottom = y + yheight
+          if (ybottom < 0 || y > bottomedge) {
             return null
           }
-          const yheight = logrowheights[index]
-          return tapeycursor >= y && tapeycursor < y + yheight ? (
+          return tapeycursor >= y && tapeycursor < ybottom ? (
             <TerminalItemActive key={index} text={text} y={y} />
           ) : (
             <TerminalItem key={index} text={text} y={y} />

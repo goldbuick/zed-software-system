@@ -17,18 +17,14 @@ import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../../useblink'
 import { UserInput, modsfromevent } from '../../userinput'
-import { BG, BG_ACTIVE, FG, tapeinputstate, useTapeInput } from '../common'
-
-function writeline(
-  blink: boolean,
-  active: boolean,
-  text: string,
-  context: WRITE_TEXT_CONTEXT,
-) {
-  context.iseven = context.y % 2 === 0
-  context.active.bg = active && !blink ? BG_ACTIVE : BG
-  tokenizeandwritetextformat(text, context, true)
-}
+import {
+  BG,
+  BG_ACTIVE,
+  FG,
+  setuplogitem,
+  tapeinputstate,
+  useTapeInput,
+} from '../common'
 
 type ConsoleInputProps = {
   tapeycursor: number
@@ -131,8 +127,8 @@ export function TerminalInput({
   const de = '$196'
   const dc = '$205'
   const dm = dc.repeat(context.width - 6)
-  context.y = bottomedge - 1
-  writeline(blink, false, `  ${de}${dm}${de}  `, context)
+  setuplogitem(false, false, bottomedge - 1, context)
+  tokenizeandwritetextformat(`  ${de}${dm}${de}  `, context, true)
 
   // draw input line
   const inputline = inputstate.padEnd(context.width, ' ')

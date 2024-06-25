@@ -18,71 +18,67 @@ export function TerminalItem({ blink, active, text, y }: TerminalItemProps) {
   const context = useWriteText()
   const ishyperlink = text.startsWith('!')
 
-  // render text output
-  context.writefullwidth = BKG_PTRN
-
   // write text or clear line for ui
   setuplogitem(!!blink, !!active, y, context)
+  context.writefullwidth = BKG_PTRN
+  context.active.bottomedge = context.height - 3
   tokenizeandwritetextformat(ishyperlink ? '' : text, context, true)
+  context.writefullwidth = undefined
 
   // hyperlinks
-  // if (ishyperlink) {
-  //   // parse hyperlink
-  //   const [prefix, ...content] = text.slice(1).split('!')
-  //   const hyperlink = `${content.join('!')}`
+  if (ishyperlink) {
+    // parse hyperlink
+    const [prefix, ...content] = text.slice(1).split('!')
+    const hyperlink = `${content.join('!')}`
 
-  //   let label = 'PRESS ME'
-  //   const words: string[] = []
+    let label = 'PRESS ME'
+    const words: string[] = []
 
-  //   const result = tokenize(hyperlink, true)
-  //   result.tokens.forEach((token) => {
-  //     switch (token.tokenType) {
-  //       case HyperLinkText:
-  //         label = token.image.slice(1)
-  //         break
-  //       default:
-  //         words.push(token.image)
-  //         break
-  //     }
-  //   })
+    const result = tokenize(hyperlink, true)
+    result.tokens.forEach((token) => {
+      switch (token.tokenType) {
+        case HyperLinkText:
+          label = token.image.slice(1)
+          break
+        default:
+          words.push(token.image)
+          break
+      }
+    })
 
-  //   // setup input props
-  //   const [input, ...args] = words
-  //   const props: TerminalItemInputProps = {
-  //     blink,
-  //     active,
-  //     prefix,
-  //     label,
-  //     words: args,
-  //     offset,
-  //   }
+    // setup input props
+    const [input, ...args] = words
+    const props: TerminalItemInputProps = {
+      blink,
+      active,
+      prefix,
+      label,
+      words: args,
+      y,
+    }
 
-  //   // reset context for rendering ui
-  //   setuplogitem(!!blink, !!active, offset, context)
+    // render hyperlink
+    switch (input.toLowerCase()) {
+      case 'hk':
+      case 'hotkey':
+        return null
+      case 'rn':
+      case 'range':
+        return null
+      case 'sl':
+      case 'select':
+        return null
+      case 'nm':
+      case 'number':
+        return null
+      case 'tx':
+      case 'text':
+        return null
+      default:
+      case 'hyperlink':
+        return <TerminalHyperlink {...props} words={words} />
+    }
+  }
 
-  //   switch (input.toLowerCase()) {
-  //     case 'hk':
-  //     case 'hotkey':
-  //       return null
-  //     case 'rn':
-  //     case 'range':
-  //       return null
-  //     case 'sl':
-  //     case 'select':
-  //       return null
-  //     case 'nm':
-  //     case 'number':
-  //       return null
-  //     case 'tx':
-  //     case 'text':
-  //       return null
-  //     default:
-  //     case 'hyperlink':
-  //       return <TerminalHyperlink {...props} words={words} />
-  //   }
-  // }
-
-  // reset
-  context.writefullwidth = undefined
   return null
 }

@@ -305,11 +305,6 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         break
       }
     }
-
-    // basic boundry check
-    if (context.y >= context.height) {
-      return
-    }
   }
 
   // track overall width
@@ -318,15 +313,23 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   }
 
   // fill line
-  // if (ispresent(context.writefullwidth)) {
-  //   const rightedge = context.active.rightedge ?? context.width - 1
-  //   const fill = rightedge - context.x + 1
-  //   if (fill > 0) {
-  //     writetextreset(context)
-  //     writeStr(String.fromCharCode(context.writefullwidth).repeat(fill))
-  //     // return
-  //   }
-  // }
+  if (ispresent(context.writefullwidth)) {
+    const rightedge = context.active.rightedge ?? context.width - 1
+    const fill = rightedge - context.x + 1
+    if (fill > 0) {
+      writetextreset(context)
+      const pttrn = String.fromCharCode(context.writefullwidth).repeat(fill)
+      const i = context.x + context.y * context.width
+      applycolortoindexes(
+        i,
+        i + pttrn.length,
+        context.active.color,
+        context.active.bg,
+        context,
+      )
+      applystrtoindex(i, pttrn, context)
+    }
+  }
 }
 
 export function tokenizeandwritetextformat(

@@ -14,7 +14,7 @@ export function TerminalHyperlink({
   prefix,
   label,
   words,
-  offset,
+  y,
 }: TerminalItemInputProps) {
   const context = useWriteText()
 
@@ -27,7 +27,7 @@ export function TerminalHyperlink({
   const tcolor = inputcolor(!!active)
 
   // render output
-  setuplogitem(!!blink, !!active, offset, context)
+  setuplogitem(!!blink, !!active, y, context)
   tokenizeandwritetextformat(
     `${prefix} $purple$16 ${tcolor}${label}`,
     context,
