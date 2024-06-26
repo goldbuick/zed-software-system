@@ -1,9 +1,41 @@
 @player
+#char 2
+#bg blue
 #cycle 1
+' create ui
+#gadget right
+""
+- - - quick - - -
+ - - - demos - - -
+""
+
+!hotkey dialog o;Open Dialog
+
+:head
+#idle
 :main
+
 #if inputshift and inputmove do
-#shoot inputmove
+?opp inputmove
 #else if inputmove do
 ?inputmove
 #else idle
+
 #main
+
+:dialog
+Welcome to razzle dazzle!
+
+!wiggle;Wiggle It
+!range wangle AA BB;Wangle
+!select dangle apple pear orange;Fruit
+!number arch 26;Arch max level
+!text myname;Player Name
+
+#head
+
+:wiggle
+#repeat 32 ?rnd
+#main
+
+
