@@ -237,10 +237,11 @@ export function EditorInput({ ycursor, yoffset, rows }: TextinputProps) {
                     navigator.clipboard
                       .readText()
                       .then((text) => {
+                        const cleantext = text.replaceAll('\r', '')
                         if (hasselection) {
-                          strvaluesplice(ii1, iic, text)
+                          strvaluesplice(ii1, iic, cleantext)
                         } else {
-                          strvaluesplice(tapeeditor.cursor, 0, text)
+                          strvaluesplice(tapeeditor.cursor, 0, cleantext)
                         }
                       })
                       .catch((err) => api_error('tape', 'clipboard', err))
