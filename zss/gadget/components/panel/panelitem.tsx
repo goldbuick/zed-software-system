@@ -70,7 +70,7 @@ export function PanelItem({ item, active }: PanelItemProps) {
       default:
         // throw an unknown input type error ?
         tokenizeandwritetextformat(
-          `$red unknown input type ${input}`,
+          `$red unknown input type ${input}\n`,
           context,
           true,
         )

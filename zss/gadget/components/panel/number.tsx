@@ -64,11 +64,11 @@ export function PanelItemNumber({
   }
 
   tokenizeandwritetextformat(
-    `  # ${tcolor}${tlabel} $green${tvalue}`,
+    `  # ${tcolor}${tlabel} $green${tvalue}\n`,
     context,
     false,
   )
-  writechartoend(' ', context)
+  // writechartoend(' ', context)
 
   const up = useCallback<UserInputHandler>(
     (mods) => {

@@ -60,7 +60,7 @@ export function PanelItemRange({
     .replaceAll('-', '$7')
     .replaceAll(':', '$9')
   tokenizeandwritetextformat(
-    `${tcolor}${labelmin}${bar}${labelmax} $green${state + 1}`,
+    `${tcolor}${labelmin}${bar}${labelmax} $green${state + 1}\n`,
     context,
     false,
   )

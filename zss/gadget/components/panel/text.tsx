@@ -51,8 +51,8 @@ export function PanelItemText({
   const tyw = ty * context.width
 
   // content
-  tokenizeandwritetextformat(`${tvalue}`, context, false)
-  writechartoend(' ', context)
+  tokenizeandwritetextformat(`${tvalue}\n`, context, false)
+  // writechartoend(' ', context)
 
   // input state
   const hasselection = ispresent(selection)

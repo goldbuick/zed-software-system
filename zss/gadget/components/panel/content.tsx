@@ -10,6 +10,6 @@ type PanelItemContentProps = {
 }
 
 export function PanelItemContent({ item, context }: PanelItemContentProps) {
-  tokenizeandwritetextformat(item, context, true)
+  tokenizeandwritetextformat(`${item}\n`, context, true)
   return null
 }

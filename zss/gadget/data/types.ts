@@ -50,7 +50,7 @@ export function colortofg(color: MAYBE<COLOR>): MAYBE_NUMBER {
 }
 
 export function colortobg(color: MAYBE<COLOR>): MAYBE_NUMBER {
-  return ispresent(color) && color > COLOR.WHITE
+  return ispresent(color) && color > COLOR.WHITE && color < COLOR.CLEAR
     ? color - COLOR.ONBLACK
     : undefined
 }

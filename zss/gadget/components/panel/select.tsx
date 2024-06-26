@@ -49,9 +49,9 @@ export function PanelItemSelect({
   )
 
   // write value
-  tokenizeandwritetextformat(`$green${tvalue}`, context, false)
+  tokenizeandwritetextformat(`$green${tvalue}\n`, context, false)
 
-  writechartoend(' ', context)
+  // writechartoend(' ', context)
 
   const up = useCallback<UserInputHandler>(
     (mods) => {
