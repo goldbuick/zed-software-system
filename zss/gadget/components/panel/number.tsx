@@ -4,7 +4,6 @@ import { MAYBE_NUMBER } from 'zss/mapping/types'
 import {
   useCacheWriteTextContext,
   tokenizeandwritetextformat,
-  writechartoend,
 } from '../../data/textformat'
 import { useBlink } from '../useblink'
 import {
@@ -68,7 +67,6 @@ export function PanelItemNumber({
     context,
     false,
   )
-  // writechartoend(' ', context)
 
   const up = useCallback<UserInputHandler>(
     (mods) => {

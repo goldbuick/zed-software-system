@@ -42,7 +42,7 @@ export function PanelItemText({
 
   // prefix
   tokenizeandwritetextformat(
-    `$green  $20 ${tcolor}${tlabel}$green`,
+    `$green  $20 ${tcolor}${tlabel} $green`,
     context,
     false,
   )
@@ -52,7 +52,6 @@ export function PanelItemText({
 
   // content
   tokenizeandwritetextformat(`${tvalue}\n`, context, false)
-  // writechartoend(' ', context)
 
   // input state
   const hasselection = ispresent(selection)

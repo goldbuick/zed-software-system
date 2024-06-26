@@ -28,14 +28,14 @@ export function PanelItemRange({
   let labelmin: string
   let labelmax: string
   if (maybelabelmin === '') {
-    labelmin = 'L'
-    labelmax = 'H'
+    labelmin = 'L '
+    labelmax = ' H'
   } else if (maybelabelmax === '') {
-    labelmin = 'L'
-    labelmax = maybelabelmin
+    labelmin = 'L '
+    labelmax = ` ${maybelabelmin}`
   } else {
-    labelmin = maybelabelmin
-    labelmax = maybelabelmax
+    labelmin = `${maybelabelmin} `
+    labelmax = ` ${maybelabelmax}`
   }
 
   const min = 0
@@ -52,7 +52,7 @@ export function PanelItemRange({
   // keep stable re-renders
   useCacheWriteTextContext(context)
 
-  tokenizeandwritetextformat(` $red $29 ${tcolor}${tlabel}\n`, context, false)
+  tokenizeandwritetextformat(` $red $29 ${tcolor}${tlabel} `, context, false)
 
   // write range viewer
   const knob = active ? (blink ? '$26' : '$27') : '$4'
