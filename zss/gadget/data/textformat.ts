@@ -213,6 +213,8 @@ export function writetextreset(context: WRITE_TEXT_CONTEXT) {
 }
 
 function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
+  const starty = context.y
+
   function incCursor() {
     ++context.x
     const rightedge = context.active.rightedge ?? context.width - 1
@@ -313,7 +315,11 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   }
 
   // fill line
-  if (ispresent(context.writefullwidth)) {
+  const leftedge = context.active.leftedge ?? 0
+  if (
+    ispresent(context.writefullwidth) &&
+    (context.x > leftedge || context.y === starty)
+  ) {
     const rightedge = context.active.rightedge ?? context.width - 1
     const fill = rightedge - context.x + 1
     if (fill > 0) {
