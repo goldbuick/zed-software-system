@@ -1,7 +1,7 @@
 import {
   tokenizeandwritetextformat,
   useWriteText,
-  writetextcolorreset,
+  writetextreset,
 } from 'zss/gadget/data/textformat'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { isarray } from 'zss/mapping/types'
@@ -25,7 +25,7 @@ export function PanelItem({ item, active }: PanelItemProps) {
   const player = usePlayer()
   const context = useWriteText()
 
-  context.isEven = context.y % 2 === 0
+  context.iseven = context.y % 2 === 0
 
   if (typeof item === 'string') {
     return <PanelItemContent player={player} item={item} context={context} />
@@ -77,7 +77,7 @@ export function PanelItem({ item, active }: PanelItemProps) {
         break
     }
 
-    writetextcolorreset(context)
+    writetextreset(context)
   }
   return null
 }

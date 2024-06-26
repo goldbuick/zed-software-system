@@ -5,22 +5,28 @@ import {
   useWriteText,
 } from 'zss/gadget/data/textformat'
 
-import { ConsoleItemInputProps, ConsoleItemProps, setuplogitem } from './common'
-import { TapeConsoleHyperlink } from './hyperlink'
+import {
+  BKG_PTRN,
+  TerminalItemInputProps,
+  TerminalItemProps,
+  setuplogitem,
+} from '../common'
 
-export function TapeConsoleItem({
-  blink,
-  active,
-  text,
-  offset,
-}: ConsoleItemProps) {
+import { TerminalHyperlink } from './terminalhyperlink'
+
+export function TerminalItem({ blink, active, text, y }: TerminalItemProps) {
   const context = useWriteText()
+  const ishyperlink = text.startsWith('!')
 
-  // setup context for item
-  setuplogitem(!!blink, !!active, offset, context)
+  // write text or clear line for ui
+  setuplogitem(!!blink, !!active, y, context)
+  context.writefullwidth = BKG_PTRN
+  context.active.bottomedge = context.height - 3
+  tokenizeandwritetextformat(ishyperlink ? '' : text, context, true)
+  context.writefullwidth = undefined
 
-  // write ui
-  if (text.startsWith('!')) {
+  // hyperlinks
+  if (ishyperlink) {
     // parse hyperlink
     const [prefix, ...content] = text.slice(1).split('!')
     const hyperlink = `${content.join('!')}`
@@ -42,15 +48,16 @@ export function TapeConsoleItem({
 
     // setup input props
     const [input, ...args] = words
-    const props: ConsoleItemInputProps = {
+    const props: TerminalItemInputProps = {
       blink,
       active,
       prefix,
       label,
       words: args,
-      offset,
+      y,
     }
 
+    // render hyperlink
     switch (input.toLowerCase()) {
       case 'hk':
       case 'hotkey':
@@ -69,11 +76,9 @@ export function TapeConsoleItem({
         return null
       default:
       case 'hyperlink':
-        return <TapeConsoleHyperlink {...props} words={words} />
+        return <TerminalHyperlink {...props} words={words} />
     }
   }
 
-  // render text output
-  tokenizeandwritetextformat(text, context, true)
   return null
 }

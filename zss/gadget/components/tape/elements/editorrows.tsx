@@ -2,26 +2,31 @@ import { useWaitForString } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
 import {
   applycolortoindexes,
+  textformatedges,
   tokenizeandwritetextformat,
   useWriteText,
   writeplaintext,
 } from 'zss/gadget/data/textformat'
 import { ispresent } from 'zss/mapping/types'
 
-import { useBlink } from '../useblink'
-
+import { useBlink } from '../../useblink'
 import {
   BG,
   BG_ACTIVE,
   BG_SELECTED,
+  EDITOR_CODE_ROW,
   FG_SELECTED,
-  findcursorinrows,
   setupeditoritem,
-  sharedtorows,
   useTapeEditor,
-} from './common'
+} from '../common'
 
-export function Textrows() {
+type TextrowsProps = {
+  ycursor: number
+  yoffset: number
+  rows: EDITOR_CODE_ROW[]
+}
+
+export function EditorRows({ ycursor, yoffset, rows }: TextrowsProps) {
   const tape = useTape()
   const blink = useBlink()
   const context = useWriteText()
@@ -32,18 +37,17 @@ export function Textrows() {
     tape.editor.player,
   )
 
-  setupeditoritem(false, false, 1, 2, 1, context)
+  const topedge = 2
+  const leftedge = 1
+  const rightedge = context.width - 2
+  const bottomedge = context.height - 2
+
   if (!ispresent(codepage)) {
     const fibble = (blink ? '|' : '-').repeat(3)
+    setupeditoritem(false, false, leftedge, topedge, 1, context)
     tokenizeandwritetextformat(` ${fibble} LOADING ${fibble}`, context, true)
     return null
   }
-
-  // split by line
-  const rows = sharedtorows(codepage)
-  const ycursor = findcursorinrows(tapeeditor.cursor, rows)
-  const fillwidth = context.width - 2
-  const bottomedge = context.height - 3
 
   let ii1 = tapeeditor.cursor
   let ii2 = tapeeditor.cursor
@@ -60,24 +64,24 @@ export function Textrows() {
     }
   }
 
-  // ---
-  setupeditoritem(false, false, 1, 2, 1, context)
+  // render lines
+  setupeditoritem(false, false, leftedge, topedge - yoffset, 1, context)
   for (let i = 0; i < rows.length && context.y <= bottomedge; ++i) {
     // setup
     const row = rows[i]
     const active = i === ycursor
     const text = row.code.replaceAll('\n', '')
-    const fill = ' '.repeat(fillwidth)
+    textformatedges(topedge, leftedge, rightedge, bottomedge, context)
 
     // render
-    context.isEven = context.y % 2 === 0
-    context.activeBg = active ? BG_ACTIVE : BG
+    context.iseven = context.y % 2 === 0
+    context.active.bg = active ? BG_ACTIVE : BG
     const ycontext = context.y
-    writeplaintext(`${text}${fill}`.substring(0, fillwidth), context, true)
+    writeplaintext(`${text}`, context, true)
 
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
-      const index = (context.leftEdge ?? 0) + ycontext * context.width
+      const index = (context.active.leftedge ?? 0) + ycontext * context.width
       const start = Math.max(row.start, ii1) - row.start
       const end = Math.min(row.end, ii2) - row.start
       applycolortoindexes(

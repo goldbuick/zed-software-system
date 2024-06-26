@@ -11,18 +11,22 @@ import { applystrtoindex, useWriteText } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
-import { useBlink } from '../useblink'
-import { UserInput, modsfromevent } from '../userinput'
-
+import { useBlink } from '../../useblink'
+import { UserInput, modsfromevent } from '../../userinput'
 import {
-  findcursorinrows,
+  EDITOR_CODE_ROW,
   sharedtosynced,
-  splitcoderows,
   tapeeditorstate,
   useTapeEditor,
-} from './common'
+} from '../common'
 
-export function Textinput() {
+type TextinputProps = {
+  ycursor: number
+  yoffset: number
+  rows: EDITOR_CODE_ROW[]
+}
+
+export function EditorInput({ ycursor, yoffset, rows }: TextinputProps) {
   const tape = useTape()
   const blink = useBlink()
   const context = useWriteText()
@@ -37,29 +41,26 @@ export function Textinput() {
   // split by line
   const value = sharedtosynced(codepage)
   const strvalue = ispresent(value) ? value.toJSON() : ''
-  const rows = splitcoderows(strvalue)
   const rowsend = rows.length - 1
 
   // translate index to x, y
-  const ycursor = findcursorinrows(tapeeditor.cursor, rows)
   const xcursor = tapeeditor.cursor - rows[ycursor].start
 
   // draw cursor
   const xblink = xcursor + 1
-  const yblink = ycursor + 2
-  if (
-    ispresent(codepage) &&
-    (blink ||
-      blinkdelta.current?.x !== xblink ||
-      blinkdelta.current?.y !== yblink)
-  ) {
-    blinkdelta.current = { x: xblink, y: yblink }
-    applystrtoindex(
-      xblink + yblink * context.width,
-      String.fromCharCode(221),
-      context,
-    )
+  const yblink = ycursor + 2 - yoffset
+  if (ispresent(codepage)) {
+    const moving =
+      blinkdelta.current?.x !== xblink || blinkdelta.current?.y !== yblink
+    if (blink || moving) {
+      applystrtoindex(
+        xblink + yblink * context.width,
+        String.fromCharCode(221),
+        context,
+      )
+    }
   }
+  blinkdelta.current = { x: xblink, y: yblink }
 
   // ranges
   const codeend = rows[rowsend].end

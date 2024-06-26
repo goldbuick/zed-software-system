@@ -259,6 +259,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       // invoke generator
       try {
         const result = logic?.next()
+
         if (result?.done) {
           console.error('we crashed?', build.source)
           endedstate = true
@@ -498,7 +499,7 @@ export function createchip(id: string, build: GeneratorBuild) {
     or(...words) {
       let lastvalue = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readargs(memoryreadcontext(chip, words), 0, [
+        const [value, next] = readargs(memoryreadcontext(chip, words), i, [
           ARG_TYPE.ANY,
         ])
         lastvalue = value
@@ -512,7 +513,7 @@ export function createchip(id: string, build: GeneratorBuild) {
     and(...words) {
       let lastvalue = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readargs(memoryreadcontext(chip, words), 0, [
+        const [value, next] = readargs(memoryreadcontext(chip, words), i, [
           ARG_TYPE.ANY,
         ])
         lastvalue = value

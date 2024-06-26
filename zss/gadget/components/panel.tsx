@@ -35,12 +35,19 @@ export function Panel({
   resetTiles(tiles, 0, color, bg)
 
   const context: WRITE_TEXT_CONTEXT = {
-    ...createwritetextcontext(width, height, color, bg),
+    ...createwritetextcontext(
+      width,
+      height,
+      color,
+      bg,
+      0,
+      margin,
+      width - margin,
+      height,
+    ),
     ...tiles,
+    x: margin,
   }
-  context.x = margin
-  context.leftEdge = margin
-  context.rightEdge = context.width - margin
 
   return (
     <PlayerContext.Provider value={player}>

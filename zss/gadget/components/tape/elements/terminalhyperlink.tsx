@@ -4,19 +4,18 @@ import {
   useWriteText,
 } from 'zss/gadget/data/textformat'
 
-import { inputcolor } from '../panel/common'
-import { UserInput } from '../userinput'
+import { inputcolor } from '../../panel/common'
+import { UserInput } from '../../userinput'
+import { ConsoleContext, TerminalItemInputProps, setuplogitem } from '../common'
 
-import { ConsoleContext, ConsoleItemInputProps, setuplogitem } from './common'
-
-export function TapeConsoleHyperlink({
+export function TerminalHyperlink({
   blink,
   active,
   prefix,
   label,
   words,
-  offset,
-}: ConsoleItemInputProps) {
+  y,
+}: TerminalItemInputProps) {
   const context = useWriteText()
 
   const cc = useContext(ConsoleContext)
@@ -28,7 +27,7 @@ export function TapeConsoleHyperlink({
   const tcolor = inputcolor(!!active)
 
   // render output
-  setuplogitem(!!blink, !!active, offset, context)
+  setuplogitem(!!blink, !!active, y, context)
   tokenizeandwritetextformat(
     `${prefix} $purple$16 ${tcolor}${label}`,
     context,

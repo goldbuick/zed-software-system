@@ -3,7 +3,7 @@ import { createContext as createcontext, useContext, useMemo } from 'react'
 import { LANG_DEV } from 'zss/config'
 import { colorconsts } from 'zss/firmware/wordtypes'
 import { range } from 'zss/mapping/array'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { ispresent, MAYBE, MAYBE_NUMBER } from 'zss/mapping/types'
 
 import { COLOR, colortobg, colortofg } from './types'
 
@@ -20,9 +20,16 @@ export const WhitespaceSkipped = createToken({
   group: Lexer.SKIPPED,
 })
 
+export const Newline = createToken({
+  name: 'Newline',
+  line_breaks: true,
+  start_chars_hint: ['\n', '\r'],
+  pattern: /\n|\r\n?/,
+})
+
 export const StringLiteral = createToken({
   name: 'StringLiteral',
-  pattern: /[^ $;]+/,
+  pattern: /[^ $;\r\n]+/,
   start_chars_hint: all_chars,
 })
 
@@ -38,7 +45,7 @@ export const EscapedDollar = createToken({
 
 export const MaybeFlag = createToken({
   name: 'MaybeFlag',
-  pattern: /\$[^ $]+/,
+  pattern: /\$[^ $\r\n]+/,
 })
 
 export const NumberLiteral = createToken({
@@ -48,7 +55,7 @@ export const NumberLiteral = createToken({
 
 export const HyperLinkText = createToken({
   name: 'HyperLinkText',
-  pattern: /;[^;\n]*/,
+  pattern: /;[^;\r\n]*/,
   start_chars_hint: [';'],
 })
 
@@ -64,6 +71,7 @@ const allcolors = colors.map((name) => createWordToken(`\\$(${name})`, name))
 
 export const allTokens = [
   Whitespace,
+  Newline,
   ...allcolors,
   StringLiteralDouble,
   StringLiteral,
@@ -81,6 +89,7 @@ const scriptLexer = new Lexer(allTokens, {
 const scriptLexerNoWhitespace = new Lexer(
   [
     WhitespaceSkipped,
+    Newline,
     ...allcolors,
     StringLiteralDouble,
     StringLiteral,
@@ -102,22 +111,33 @@ export function tokenize(text: string, noWhitespace = false) {
   return scriptLexer.tokenize(text)
 }
 
+export type WRITE_PEN_CONTEXT = {
+  color: number
+  bg: number
+  topedge: number | undefined
+  leftedge: number | undefined
+  rightedge: number | undefined
+  bottomedge: number | undefined
+}
+
 export type WRITE_TEXT_CONTEXT = {
+  // control
   disablewrap: boolean
   measureonly: boolean
   measuredwidth: number
+  writefullwidth: MAYBE_NUMBER
+  // cursor
   x: number
   y: number
-  isEven: boolean
-  resetColor: number
-  resetBg: number
-  activeColor: number | undefined
-  activeBg: number | undefined
+  iseven: boolean
+  // region
   width: number
   height: number
-  leftEdge: number | undefined
-  rightEdge: number | undefined
-  bottomEdge: number | undefined
+  // attr
+  active: WRITE_PEN_CONTEXT
+  // resets
+  reset: WRITE_PEN_CONTEXT
+  // output
   char: number[]
   color: number[]
   bg: number[]
@@ -128,23 +148,37 @@ export function createwritetextcontext(
   height: number,
   color: number,
   bg: number,
+  topedge?: number | undefined,
+  leftedge?: number | undefined,
+  rightedge?: number | undefined,
+  bottomedge?: number | undefined,
 ): WRITE_TEXT_CONTEXT {
   return {
     disablewrap: false,
     measureonly: false,
     measuredwidth: 0,
+    writefullwidth: undefined,
     x: 0,
     y: 0,
-    isEven: true,
-    resetColor: color,
-    resetBg: bg,
-    activeColor: color,
-    activeBg: bg,
+    iseven: true,
+    active: {
+      color: color,
+      bg: bg,
+      topedge,
+      leftedge,
+      rightedge,
+      bottomedge,
+    },
+    reset: {
+      color: color,
+      bg: bg,
+      topedge,
+      leftedge,
+      rightedge,
+      bottomedge,
+    },
     width,
     height,
-    leftEdge: undefined,
-    rightEdge: undefined,
-    bottomEdge: undefined,
     char: [],
     color: [],
     bg: [],
@@ -157,8 +191,8 @@ export function applywritetextcontext(
 ) {
   dest.x = source.x
   dest.y = source.y
-  dest.activeColor = source.activeColor
-  dest.activeBg = source.activeBg
+  dest.active.color = source.active.color
+  dest.active.bg = source.active.bg
 }
 
 export function useCacheWriteTextContext(source: WRITE_TEXT_CONTEXT) {
@@ -174,19 +208,18 @@ export function useWriteText() {
   return useContext(WriteTextContext)
 }
 
-export function writetextcolorreset(context: WRITE_TEXT_CONTEXT) {
-  context.activeColor = context.resetColor
-  context.activeBg = context.resetBg
+export function writetextreset(context: WRITE_TEXT_CONTEXT) {
+  context.active = { ...context.reset }
 }
 
 function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
+  const starty = context.y
+
   function incCursor() {
     ++context.x
-    if (
-      !context.disablewrap &&
-      context.x >= (context.rightEdge ?? context.width)
-    ) {
-      context.x = context.leftEdge ?? 0
+    const rightedge = context.active.rightedge ?? context.width - 1
+    if (!context.disablewrap && context.x > rightedge) {
+      context.x = context.active.leftedge ?? 0
       ++context.y
     }
     if (context.x > context.measuredwidth) {
@@ -195,15 +228,12 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
   }
 
   function isVisible() {
-    if (
-      context.x < (context.leftEdge ?? 0) ||
-      context.x >= (context.rightEdge ?? context.width) ||
-      context.y < 0 ||
-      context.y >= (context.bottomEdge ?? context.height)
-    ) {
-      return false
-    }
-    return true
+    return (
+      context.x >= (context.active.leftedge ?? 0) &&
+      context.x <= (context.active.rightedge ?? context.width - 1) &&
+      context.y >= (context.active.topedge ?? 0) &&
+      context.y <= (context.active.bottomedge ?? context.height - 1)
+    )
   }
 
   function writeStr(str: string) {
@@ -211,11 +241,11 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
       if (context.measureonly !== true && isVisible()) {
         const i = context.x + context.y * context.width
         context.char[i] = str.charCodeAt(t)
-        if (context.activeColor !== undefined) {
-          context.color[i] = context.activeColor
+        if (context.active.color !== undefined) {
+          context.color[i] = context.active.color
         }
-        if (context.activeBg !== undefined) {
-          context.bg[i] = context.activeBg
+        if (context.active.bg !== undefined) {
+          context.bg[i] = context.active.bg
         }
       }
       incCursor()
@@ -233,11 +263,11 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         if (context.measureonly !== true && isVisible()) {
           const i = context.x + context.y * context.width
           context.char[i] = parseFloat(token.image.replace('$', ''))
-          if (context.activeColor !== undefined) {
-            context.color[i] = context.activeColor
+          if (context.active.color !== undefined) {
+            context.color[i] = context.active.color
           }
-          if (context.activeBg !== undefined) {
-            context.bg[i] = context.activeBg
+          if (context.active.bg !== undefined) {
+            context.bg[i] = context.active.bg
           }
         }
         incCursor()
@@ -251,6 +281,12 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         )
         break
 
+      case Newline: {
+        context.x = context.active.leftedge ?? 0
+        ++context.y
+        break
+      }
+
       default: {
         const tokenname = token.tokenType.name as keyof typeof colorconsts
         const maybename = colorconsts[tokenname]
@@ -258,23 +294,18 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         const maybebg = colortobg(COLOR[maybename])
         if (maybecolor === COLOR.CLEAR) {
           // reset bg color
-          context.activeBg = context.resetBg
+          context.active.bg = context.reset.bg
         } else if (ispresent(maybecolor)) {
           // update fg color
-          context.activeColor = maybecolor
+          context.active.color = maybecolor
         } else if (ispresent(maybebg)) {
           // update bg color
-          context.activeBg = maybebg
+          context.active.bg = maybebg
         } else {
           writeStr(token.image)
         }
         break
       }
-    }
-
-    // basic boundry check
-    if (context.y >= context.height) {
-      return
     }
   }
 
@@ -283,9 +314,28 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
     context.measuredwidth = context.x + 1
   }
 
-  // move to next line
-  context.x = context.leftEdge ?? 0
-  ++context.y
+  // fill line
+  const leftedge = context.active.leftedge ?? 0
+  if (
+    ispresent(context.writefullwidth) &&
+    (context.x > leftedge || context.y === starty)
+  ) {
+    const rightedge = context.active.rightedge ?? context.width - 1
+    const fill = rightedge - context.x + 1
+    if (fill > 0) {
+      writetextreset(context)
+      const pttrn = String.fromCharCode(context.writefullwidth).repeat(fill)
+      const i = context.x + context.y * context.width
+      applycolortoindexes(
+        i,
+        i + pttrn.length,
+        context.active.color,
+        context.active.bg,
+        context,
+      )
+      applystrtoindex(i, pttrn, context)
+    }
+  }
 }
 
 export function tokenizeandwritetextformat(
@@ -300,7 +350,7 @@ export function tokenizeandwritetextformat(
 
   writetextformat(result.tokens, context)
   if (shouldreset) {
-    writetextcolorreset(context)
+    writetextreset(context)
   }
 }
 
@@ -323,6 +373,11 @@ export function tokenizeandmeasuretextformat(
   context.measureonly = true
 
   writetextformat(result.tokens, context)
+  // min height is 1
+  if (context.x > 0) {
+    ++context.y
+  }
+
   return context
 }
 
@@ -371,6 +426,19 @@ export function writeplaintext(
   // render it
   writetextformat([plaintext], context)
   if (shouldreset) {
-    writetextcolorreset(context)
+    writetextreset(context)
   }
+}
+
+export function textformatedges(
+  topedge: number,
+  leftedge: number,
+  rightedge: number,
+  bottomedge: number,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  context.active.topedge = topedge
+  context.active.leftedge = leftedge
+  context.active.rightedge = rightedge
+  context.active.bottomedge = bottomedge
 }

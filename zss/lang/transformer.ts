@@ -1,4 +1,5 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
+import { SHOW_CODE } from 'zss/config'
 import { tokenize, MaybeFlag } from 'zss/gadget/data/textformat'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
@@ -16,8 +17,26 @@ export const context: GenContext = {
 }
 
 const JUMP_CODE = `if (api.hm()) { continue zss; }`
-const STOP_CODE = `if (api.sy()) { yield 1; };`
+const STOP_CODE = `if (api.sy()) { yield 1; }`
 const WAIT_CODE = `yield 1; ${JUMP_CODE}`
+
+const trace: Record<string, number> = {}
+function TRACE(tag: string) {
+  if (!SHOW_CODE) {
+    return ''
+  }
+  trace[tag] = trace[tag] ?? 0
+  const count = trace[tag]++
+  return `console.info('${tag}-${count}')`
+}
+
+function WAIT() {
+  return `${WAIT_CODE}; ${TRACE('wait')};`
+}
+
+function EOL() {
+  return `${STOP_CODE}; ${JUMP_CODE}; ${TRACE('eol')};`
+}
 
 export const GENERATED_FILENAME = 'zss.js'
 
@@ -197,7 +216,7 @@ function transformNode(ast: CodeNode): SourceNode {
         ...ast.lines.map((item) => [transformNode(item), `\n`]).flat(),
         `}\n`,
         `api.endofprogram();\n`, // end of program has been reached
-        `while(true) { ${WAIT_CODE} }\n`,
+        `while(true) { ${WAIT()} }\n`,
         `}\n`,
         `} catch (e) {\n`,
         // `debugger;\n`,
@@ -244,20 +263,20 @@ function transformNode(ast: CodeNode): SourceNode {
           ast.wait ? 'true' : 'false',
           ...transformNodes(ast.words),
         ]),
-        `) { ${WAIT_CODE} };\n         ${STOP_CODE} ${JUMP_CODE}`,
+        `) { ${WAIT()} };\n         ${EOL()}`,
       ]) // yield 1;
     case NODE.COMMAND:
       return write(ast, [
         `while (`,
         writeApi(ast, `command`, transformNodes(ast.words)),
-        `) { ${WAIT_CODE} };\n         ${STOP_CODE} ${JUMP_CODE}`,
+        `) { ${WAIT()} };\n         ${EOL()}`,
       ])
     // core / structure
     case NODE.IF: {
       const source = write(ast, [
         `if (`,
         writeApi(ast, `${ast.method}`, transformNodes(ast.words)),
-        `) {\n`,
+        `) { ${TRACE('if')} \n`,
       ])
 
       if (ast.lines) {
@@ -291,7 +310,7 @@ function transformNode(ast: CodeNode): SourceNode {
         source.add([
           `while (`,
           writeApi(ast, `command`, transformNodes(ast.words)),
-          `) { ${WAIT_CODE} };`,
+          `) { ${WAIT()} };`,
         ])
       }
 
@@ -327,7 +346,7 @@ function transformNode(ast: CodeNode): SourceNode {
         ]),
         ';\nwhile (',
         writeApi(ast, 'repeat', [`${context.internal}`]),
-        `) {\n         ${STOP_CODE} ${JUMP_CODE}\n`,
+        `) {\n         ${EOL()}\n`,
       ])
       context.internal += 1
 

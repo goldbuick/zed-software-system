@@ -15,8 +15,8 @@ import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 
 const RELEASE = `${import.meta.env.ZSS_BRANCH_NAME} - ${import.meta.env.ZSS_BRANCH_VERSION} - ${import.meta.env.ZSS_COMMIT_MESSAGE}`
 const TICKER: string[] = [
-  `${import.meta.env.ZSS_BRANCH_NAME} - ${import.meta.env.ZSS_BRANCH_VERSION} - ${import.meta.env.ZSS_COMMIT_MESSAGE}`,
-  '-'.repeat(RELEASE.length),
+  `${import.meta.env.ZSS_BRANCH_NAME} - ${import.meta.env.ZSS_BRANCH_VERSION} - ${import.meta.env.ZSS_COMMIT_MESSAGE}\n`,
+  `${'-'.repeat(RELEASE.length)}\n`,
   `PRESS ANY KEY`,
 ]
 
@@ -55,11 +55,19 @@ export function Splash({ onBoot }: SplashProps) {
   useEffect(() => {
     resetTiles(tiles, 0, COLOR.WHITE, COLOR.DKGRAY)
     const context: WRITE_TEXT_CONTEXT = {
-      ...createwritetextcontext(width, height, COLOR.WHITE, COLOR.DKGRAY),
+      ...createwritetextcontext(
+        width,
+        height,
+        COLOR.WHITE,
+        COLOR.DKGRAY,
+        1,
+        1,
+        width - 2,
+        height - 1,
+      ),
       ...tiles,
       x: 1,
-      leftEdge: 1,
-      rightEdge: width - 2,
+      y: 1,
     }
     TICKER.forEach((item) => tokenizeandwritetextformat(item, context, true))
   }, [width, height, tiles])
