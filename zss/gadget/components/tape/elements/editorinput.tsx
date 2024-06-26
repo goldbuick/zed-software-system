@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import {
   api_error,
   tape_editor_close,
+  tape_terminal_close,
   tape_terminal_inclayout,
 } from 'zss/device/api'
 import { useWaitForString } from 'zss/device/modem'
@@ -180,8 +181,12 @@ export function EditorInput({ ycursor, yoffset, rows }: TextinputProps) {
           tapeeditorstate.cursor += 1
         }
       }}
-      CANCEL_BUTTON={() => {
-        tape_editor_close('editor')
+      CANCEL_BUTTON={(mods) => {
+        if (mods.shift || mods.alt || mods.ctrl) {
+          tape_terminal_close('tape')
+        } else {
+          tape_editor_close('editor')
+        }
       }}
       MENU_BUTTON={(mods) => {
         tape_terminal_inclayout('editor', mods.shift ? -1 : 1)

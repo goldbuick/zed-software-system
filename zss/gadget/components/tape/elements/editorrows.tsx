@@ -6,6 +6,7 @@ import {
   tokenizeandwritetextformat,
   useWriteText,
   writeplaintext,
+  writetextreset,
 } from 'zss/gadget/data/textformat'
 import { ispresent } from 'zss/mapping/types'
 
@@ -74,10 +75,12 @@ export function EditorRows({ ycursor, yoffset, rows }: TextrowsProps) {
     textformatedges(topedge, leftedge, rightedge, bottomedge, context)
 
     // render
+    const ycontext = context.y
     context.iseven = context.y % 2 === 0
     context.active.bg = active ? BG_ACTIVE : BG
-    const ycontext = context.y
     writeplaintext(`${text}`, context, true)
+    context.x = leftedge
+    ++context.y
 
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
