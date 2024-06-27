@@ -105,40 +105,40 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         memory.inputmods[input as INPUT] = mods
       }
       break
-    case 'flagwatch':
+    case 'valuewatch':
       if (message.player && isarray(message.data)) {
+        const [object, value] = message.data
         //
       }
       break
-    case 'flagrelease':
+    case 'valuerelease':
       if (message.player && isarray(message.data)) {
+        const [object, value] = message.data
         //
       }
       break
-    case 'pagewatch':
+    case 'codewatch':
       if (message.player && isarray(message.data)) {
-        const [book, page] = message.data
+        const [book, codepage] = message.data
         // start watching
-        if (!ispresent(observers[page])) {
-          observers[page] = modemobservevaluestring(page, (value) => {
+        if (!ispresent(observers[codepage])) {
+          observers[codepage] = modemobservevaluestring(codepage, (value) => {
             // write to code
-            const codepage = bookfindcodepage(memoryreadbook(book), page)
-            if (ispresent(codepage)) {
-              codepage.code = value
+            const content = bookfindcodepage(memoryreadbook(book), codepage)
+            if (ispresent(content)) {
+              content.code = value
               // re-parse code for @ attrs and expected data type
-              codepageresetstats(codepage)
+              codepageresetstats(content)
             }
           })
         }
         // track use
-        if (!ispresent(watching[book]?.[page])) {
-          watching[book] = watching[book] ?? {}
-          watching[book][page] = new Set()
-        }
-        watching[book][page].add(message.player)
+        watching[book] = watching[book] ?? {}
+        watching[book][codepage] = watching[book][codepage] ?? new Set()
+        watching[book][codepage].add(message.player)
       }
       break
-    case 'pagerelease':
+    case 'coderelease':
       if (message.player && isarray(message.data)) {
         const [book, page] = message.data
         if (ispresent(watching[book])) {

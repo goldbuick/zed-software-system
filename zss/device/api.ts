@@ -63,7 +63,7 @@ export function register_reboot(sender: string, player: string) {
   hub.emit('register:reboot', sender, undefined, player)
 }
 
-export function register_flush(sender: string, books: BOOK[]) {
+export function register_flush(sender: string, books: any[]) {
   hub.emit('register:flush', sender, books)
 }
 
@@ -135,7 +135,7 @@ export function tape_editor_close(sender: string) {
   hub.emit('tape:editor:close', sender)
 }
 
-export function vm_books(sender: string, books: BOOK[], player: string) {
+export function vm_books(sender: string, books: any[], player: string) {
   hub.emit('vm:books', sender, books, player)
 }
 
@@ -156,40 +156,40 @@ export function vm_input(
   hub.emit('vm:input', sender, [input, mods], player)
 }
 
-export function vm_flagwatch(
+export function vm_valuewatch(
   sender: string,
   object: string,
-  flag: string,
+  value: string,
   player: string,
 ) {
-  hub.emit('vm:flagwatch', sender, [object, flag], player)
+  hub.emit('vm:valuewatch', sender, [object, value], player)
 }
 
-export function vm_flagrelease(
+export function vm_valuerelease(
   sender: string,
   object: string,
-  flag: string,
+  value: string,
   player: string,
 ) {
-  hub.emit('vm:flagrelease', sender, [object, flag], player)
+  hub.emit('vm:valuerelease', sender, [object, value], player)
 }
 
-export function vm_pagewatch(
+export function vm_codewatch(
   sender: string,
   book: string,
-  page: string,
+  codepage: string,
   player: string,
 ) {
-  hub.emit('vm:pagewatch', sender, [book, page], player)
+  hub.emit('vm:codewatch', sender, [book, codepage], player)
 }
 
-export function vm_pagerelease(
+export function vm_coderelease(
   sender: string,
   book: string,
-  page: string,
+  codepage: string,
   player: string,
 ) {
-  hub.emit('vm:pagerelease', sender, [book, page], player)
+  hub.emit('vm:coderelease', sender, [book, codepage], player)
 }
 
 export function vm_cli(sender: string, input: string, player: string) {

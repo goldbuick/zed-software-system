@@ -12,7 +12,7 @@ import * as syncprotocol from 'y-protocols/sync'
 import { createdevice } from 'zss/device'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import { vm_pagerelease, vm_pagewatch } from './api'
+import { vm_coderelease, vm_codewatch } from './api'
 
 export enum MODEM_SHARED_TYPE {
   NUMBER,
@@ -63,9 +63,9 @@ function useWaitFor(
   const maybevalue = findvalue(modem.shared, key, type)
 
   useEffect(() => {
-    vm_pagewatch('modem', book, key, player)
+    vm_codewatch('modem', book, key, player)
     return () => {
-      vm_pagerelease('modem', book, key, player)
+      vm_coderelease('modem', book, key, player)
     }
   }, [book, key, player])
 
