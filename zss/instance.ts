@@ -5,7 +5,6 @@ import { ready } from './device/vm'
 import './device/clock'
 import './device/gadgetserver'
 import './device/modem'
-import './device/shared'
 
 const forward = createforward((message) => postMessage(message))
 

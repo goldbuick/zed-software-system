@@ -2,7 +2,6 @@ import { useState } from 'react'
 import {
   useCacheWriteTextContext,
   tokenizeandwritetextformat,
-  writechartoend,
   applycolortoindexes,
   applystrtoindex,
 } from 'zss/gadget/data/textformat'
@@ -11,7 +10,7 @@ import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../useblink'
 import { UserFocus, UserInput, UserInputMods, ismac } from '../userinput'
-import { MAYBE_SHARED_TEXT, useSharedType } from '../useshared'
+// import { MAYBE_SHARED_TEXT, useSharedType } from '../useshared'
 
 import { PanelItemProps, inputcolor, mapTo } from './common'
 

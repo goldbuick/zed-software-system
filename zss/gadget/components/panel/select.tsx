@@ -4,11 +4,9 @@ import { MAYBE_NUMBER } from 'zss/mapping/types'
 import {
   useCacheWriteTextContext,
   tokenizeandwritetextformat,
-  writechartoend,
 } from '../../data/textformat'
 import { useBlink } from '../useblink'
 import { UserInput, UserInputHandler } from '../userinput'
-import { useSharedValue } from '../useshared'
 
 import { PanelItemProps, inputcolor, mapTo } from './common'
 

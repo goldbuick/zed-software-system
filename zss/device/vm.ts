@@ -47,7 +47,7 @@ const tracking: Record<string, number> = {}
 const FLUSH_RATE = 64
 let flushtick = 0
 
-// track watched codepage memory
+// track watched memory
 const watching: Record<string, Record<string, Set<string>>> = {}
 const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
@@ -103,6 +103,16 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         const [input = INPUT.NONE, mods = 0] = message.data ?? {}
         memory.inputqueue.add(input)
         memory.inputmods[input as INPUT] = mods
+      }
+      break
+    case 'flagwatch':
+      if (message.player && isarray(message.data)) {
+        //
+      }
+      break
+    case 'flagrelease':
+      if (message.player && isarray(message.data)) {
+        //
       }
       break
     case 'pagewatch':

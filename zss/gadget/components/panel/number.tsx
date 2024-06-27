@@ -12,7 +12,6 @@ import {
   UserInput,
   UserInputHandler,
 } from '../userinput'
-import { useSharedValue } from '../useshared'
 
 import { PanelItemProps, inputcolor, mapTo, strsplice } from './common'
 

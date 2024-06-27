@@ -1,12 +1,12 @@
 import Case from 'case'
 import { CHIP, STATE } from 'zss/chip'
-import {
-  MAYBE_SHARED_TEXT,
-  observesharedtype,
-  observesharedvalue,
-  servesharedvalue,
-  updatesharedvalue,
-} from 'zss/device/shared'
+// import {
+//   MAYBE_SHARED_TEXT,
+//   observesharedtype,
+//   observesharedvalue,
+//   servesharedvalue,
+//   updatesharedvalue,
+// } from 'zss/device/shared'
 import { WORD, WORD_VALUE } from 'zss/firmware/wordtypes'
 import { createsid } from 'zss/mapping/guid'
 import {

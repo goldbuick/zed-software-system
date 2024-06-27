@@ -1,5 +1,5 @@
 import { WORD_VALUE } from 'zss/chip'
-import { UNOBSERVE_FUNC } from 'zss/device/shared'
+// import { UNOBSERVE_FUNC } from 'zss/device/shared'
 import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
 
 export const BYTES_PER_COLOR = 3

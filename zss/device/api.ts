@@ -156,6 +156,24 @@ export function vm_input(
   hub.emit('vm:input', sender, [input, mods], player)
 }
 
+export function vm_flagwatch(
+  sender: string,
+  object: string,
+  flag: string,
+  player: string,
+) {
+  hub.emit('vm:flagwatch', sender, [object, flag], player)
+}
+
+export function vm_flagrelease(
+  sender: string,
+  object: string,
+  flag: string,
+  player: string,
+) {
+  hub.emit('vm:flagrelease', sender, [object, flag], player)
+}
+
 export function vm_pagewatch(
   sender: string,
   book: string,

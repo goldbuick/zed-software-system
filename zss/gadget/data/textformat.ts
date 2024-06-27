@@ -382,14 +382,6 @@ export function tokenizeandmeasuretextformat(
   return context
 }
 
-export function writechartoend(char: string, context: WRITE_TEXT_CONTEXT) {
-  const delta = context.width - context.x
-  if (delta < 1) {
-    return
-  }
-  tokenizeandwritetextformat(char.repeat(delta), context, true)
-}
-
 export function applystrtoindex(
   p1: number,
   str: string,
