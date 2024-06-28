@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { MAYBE_NUMBER } from 'zss/mapping/types'
+import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 
 import {
   useCacheWriteTextContext,
@@ -40,8 +40,8 @@ export function PanelItemRange({
   const max = 8
 
   // state
-  const [value, setvalue] = useSharedValue<MAYBE_NUMBER>(chip, target)
-  const state = value ?? 0
+  const modem = useWaitForValueNumber(chip, target)
+  const state = modem?.value ?? 0
 
   const blink = useBlink()
   const tlabel = label.trim()
@@ -63,22 +63,21 @@ export function PanelItemRange({
     context,
     false,
   )
-  // writechartoend(' ', context)
 
   const up = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      setvalue(Math.min(max, state + step))
+      modemwritevaluenumber(chip, target, Math.min(max, state + step))
     },
-    [max, state, setvalue],
+    [max, state, chip, target],
   )
 
   const down = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      setvalue(Math.max(min, state - step))
+      modemwritevaluenumber(chip, target, Math.max(min, state - step))
     },
-    [min, state, setvalue],
+    [min, state, chip, target],
   )
 
   return <>{active && <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} />}</>

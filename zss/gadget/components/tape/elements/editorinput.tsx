@@ -5,7 +5,7 @@ import {
   tape_terminal_close,
   tape_terminal_inclayout,
 } from 'zss/device/api'
-import { useWaitForString } from 'zss/device/modem'
+import { useWaitForCode } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
 import { PT } from 'zss/firmware/wordtypes'
 import { applystrtoindex, useWriteText } from 'zss/gadget/data/textformat'
@@ -33,7 +33,7 @@ export function EditorInput({ ycursor, yoffset, rows }: TextinputProps) {
   const context = useWriteText()
   const blinkdelta = useRef<PT>()
   const tapeeditor = useTapeEditor()
-  const codepage = useWaitForString(
+  const codepage = useWaitForCode(
     tape.editor.book,
     tape.editor.page,
     tape.editor.player,

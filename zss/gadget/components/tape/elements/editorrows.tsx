@@ -1,4 +1,4 @@
-import { useWaitForString } from 'zss/device/modem'
+import { useWaitForCode } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
 import {
   applycolortoindexes,
@@ -6,7 +6,6 @@ import {
   tokenizeandwritetextformat,
   useWriteText,
   writeplaintext,
-  writetextreset,
 } from 'zss/gadget/data/textformat'
 import { ispresent } from 'zss/mapping/types'
 
@@ -32,7 +31,7 @@ export function EditorRows({ ycursor, yoffset, rows }: TextrowsProps) {
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
-  const codepage = useWaitForString(
+  const codepage = useWaitForCode(
     tape.editor.book,
     tape.editor.page,
     tape.editor.player,

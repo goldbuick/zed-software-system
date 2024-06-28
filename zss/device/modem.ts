@@ -19,17 +19,24 @@ export enum MODEM_SHARED_TYPE {
   STRING,
 }
 
-export type MODEM_SHARED_VALUE =
-  | {
-      key: string
-      type: MODEM_SHARED_TYPE.NUMBER
-      value: number
-    }
-  | {
-      key: string
-      type: MODEM_SHARED_TYPE.STRING
-      value: SyncedText
-    }
+export type MODEM_SHARED_NUMBER = {
+  key: string
+  type: MODEM_SHARED_TYPE.NUMBER
+  value: number
+}
+
+export type MODEM_SHARED_STRING = {
+  key: string
+  type: MODEM_SHARED_TYPE.STRING
+  value: SyncedText
+}
+
+export type MODEM_SHARED_VALUE = MODEM_SHARED_NUMBER | MODEM_SHARED_STRING
+
+type MODEM_TYPE_MAP = {
+  [MODEM_SHARED_TYPE.NUMBER]: MODEM_SHARED_NUMBER
+  [MODEM_SHARED_TYPE.STRING]: MODEM_SHARED_STRING
+}
 
 type SHARED_TYPE_MAP = {
   [MODEM_SHARED_TYPE.NUMBER]: number
@@ -51,16 +58,15 @@ export function useModem() {
   return modem
 }
 
-// react ui code uses this to wait for shared value to
-// populate before continuing
-function useWaitFor(
+// tape editor uses this to wait for shared value to populate
+
+export function useWaitForCode(
   book: string,
   key: string,
-  type: MODEM_SHARED_TYPE,
   player: string,
-): MODEM_SHARED_VALUE | undefined {
+): MAYBE<MODEM_SHARED_NUMBER> {
   const modem = useModem()
-  const maybevalue = findvalue(modem.shared, key, type)
+  const maybevalue = findvalue(modem.shared, key, MODEM_SHARED_TYPE.STRING)
 
   useEffect(() => {
     vm_codewatch('modem', book, key, player)
@@ -69,15 +75,28 @@ function useWaitFor(
     }
   }, [book, key, player])
 
-  return ispresent(maybevalue) ? maybevalue : undefined
+  return ispresent(maybevalue) ? (maybevalue as MODEM_SHARED_NUMBER) : undefined
 }
 
-export function useWaitForNumber(book: string, key: string, player: string) {
-  return useWaitFor(book, key, MODEM_SHARED_TYPE.NUMBER, player)
+// scroll hyperlinks use this to wait for shared value to populate
+function useWaitForValue<T extends MODEM_SHARED_TYPE>(
+  chip: string,
+  key: string,
+  type: T,
+): MAYBE<MODEM_TYPE_MAP[T]> {
+  const modem = useModem()
+  const maybevalue = findvalue(modem.shared, `${chip}:${key}`, type)
+  return ispresent(maybevalue)
+    ? (maybevalue as MAYBE<MODEM_TYPE_MAP[T]>)
+    : undefined
 }
 
-export function useWaitForString(book: string, key: string, player: string) {
-  return useWaitFor(book, key, MODEM_SHARED_TYPE.STRING, player)
+export function useWaitForValueNumber(chip: string, key: string) {
+  return useWaitForValue(chip, key, MODEM_SHARED_TYPE.NUMBER)
+}
+
+export function useWaitForValueString(chip: string, key: string) {
+  return useWaitForValue(chip, key, MODEM_SHARED_TYPE.STRING)
 }
 
 // non react code uses this to setup values
@@ -102,6 +121,15 @@ export function modemwritenumber(key: string, value: number) {
 export function modemwritestring(key: string, value: string) {
   const strvalue = new SyncedText(value)
   modemwriteinit(key, MODEM_SHARED_TYPE.STRING, strvalue)
+}
+
+// for scrolls
+export function modemwritevaluenumber(
+  chip: string,
+  key: string,
+  value: number,
+) {
+  return modemwritenumber(`${chip}:${key}`, value)
 }
 
 export type UNOBSERVE_FUNC = () => void

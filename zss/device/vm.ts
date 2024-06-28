@@ -105,18 +105,6 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         memory.inputmods[input as INPUT] = mods
       }
       break
-    case 'valuewatch':
-      if (message.player && isarray(message.data)) {
-        const [object, value] = message.data
-        //
-      }
-      break
-    case 'valuerelease':
-      if (message.player && isarray(message.data)) {
-        const [object, value] = message.data
-        //
-      }
-      break
     case 'codewatch':
       if (message.player && isarray(message.data)) {
         const [book, codepage] = message.data

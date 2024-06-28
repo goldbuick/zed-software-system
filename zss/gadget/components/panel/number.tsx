@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { MAYBE_NUMBER } from 'zss/mapping/types'
+import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 
 import {
   useCacheWriteTextContext,
@@ -42,7 +42,8 @@ export function PanelItemNumber({
   }
 
   // state
-  const [value, setvalue] = useSharedValue<MAYBE_NUMBER>(chip, target)
+  const modem = useWaitForValueNumber(chip, target)
+  const value = modem?.value
   const state = value ?? 0
 
   const blink = useBlink()
@@ -50,7 +51,7 @@ export function PanelItemNumber({
   const [cursor, setcursor] = useState(0)
   const [focus, setfocus] = useState(false)
 
-  let tvalue = `${value ?? 0}`
+  let tvalue = `${state}`
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
@@ -70,17 +71,17 @@ export function PanelItemNumber({
   const up = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      setvalue(Math.min(max, state + step))
+      modemwritevaluenumber(chip, target, Math.min(max, state + step))
     },
-    [max, setvalue, state],
+    [max, state, chip, target],
   )
 
   const down = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      setvalue(Math.max(min, state - step))
+      modemwritevaluenumber(chip, target, Math.max(min, state - step))
     },
-    [min, setvalue, state],
+    [min, state, chip, target],
   )
 
   const ok = useCallback(() => {
@@ -93,11 +94,15 @@ export function PanelItemNumber({
       } else {
         const num = parseFloat(strvalue)
         const newvalue = isNaN(num) ? 0 : num
-        setvalue(Math.min(max, Math.max(min, newvalue)))
+        modemwritevaluenumber(
+          chip,
+          target,
+          Math.min(max, Math.max(min, newvalue)),
+        )
       }
       return next
     })
-  }, [setfocus, setstrValue, min, max, value, setvalue, strvalue])
+  }, [chip, max, min, strvalue, target, value])
 
   return (
     value !== undefined && (

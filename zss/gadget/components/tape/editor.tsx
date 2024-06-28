@@ -1,4 +1,4 @@
-import { useWaitForString } from 'zss/device/modem'
+import { useWaitForCode } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
 import { useWriteText } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
@@ -18,7 +18,7 @@ export function TapeEditor() {
   const tape = useTape()
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
-  const codepage = useWaitForString(
+  const codepage = useWaitForCode(
     tape.editor.book,
     tape.editor.page,
     tape.editor.player,

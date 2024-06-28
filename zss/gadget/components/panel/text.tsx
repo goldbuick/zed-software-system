@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useWaitForValueString } from 'zss/device/modem'
 import {
   useCacheWriteTextContext,
   tokenizeandwritetextformat,
@@ -10,7 +11,6 @@ import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../useblink'
 import { UserFocus, UserInput, UserInputMods, ismac } from '../userinput'
-// import { MAYBE_SHARED_TEXT, useSharedType } from '../useshared'
 
 import { PanelItemProps, inputcolor, mapTo } from './common'
 
@@ -24,7 +24,8 @@ export function PanelItemText({
   const target = mapTo(args[0], '')
 
   // state
-  const [value] = useSharedType<MAYBE_SHARED_TEXT>(chip, target)
+  const modem = useWaitForValueString(chip, target)
+  const value = modem?.value
   const state = value?.toJSON() ?? ''
 
   const blink = useBlink()

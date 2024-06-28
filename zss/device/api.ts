@@ -156,24 +156,6 @@ export function vm_input(
   hub.emit('vm:input', sender, [input, mods], player)
 }
 
-export function vm_valuewatch(
-  sender: string,
-  object: string,
-  value: string,
-  player: string,
-) {
-  hub.emit('vm:valuewatch', sender, [object, value], player)
-}
-
-export function vm_valuerelease(
-  sender: string,
-  object: string,
-  value: string,
-  player: string,
-) {
-  hub.emit('vm:valuerelease', sender, [object, value], player)
-}
-
 export function vm_codewatch(
   sender: string,
   book: string,
