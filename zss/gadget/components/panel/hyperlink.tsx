@@ -18,7 +18,6 @@ export function PanelItemHyperlink({
   args,
   context,
 }: PanelItemProps) {
-  console.info(label, args)
   const [target, data] = [mapTo(args[0], ''), args[1]]
 
   const tcolor = inputcolor(active)

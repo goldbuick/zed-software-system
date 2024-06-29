@@ -1,7 +1,7 @@
 import ErrorStackParser from 'error-stack-parser'
 
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
-import { ARG_TYPE, readargs } from './firmware/wordtypes'
+import { ARG_TYPE, WORD, WORD_VALUE, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
@@ -94,9 +94,6 @@ export type CHIP = {
   opUniPlus: (lhs: WORD, rhs: WORD) => WORD_VALUE
   opUniMinus: (lhs: WORD, rhs: WORD) => WORD_VALUE
 }
-
-export type WORD = string | number
-export type WORD_VALUE = WORD | WORD[] | undefined
 
 function maptoresult(value: WORD_VALUE): WORD {
   if (isarray(value)) {

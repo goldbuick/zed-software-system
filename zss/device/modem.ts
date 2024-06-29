@@ -9,6 +9,7 @@ import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'
 import * as syncprotocol from 'y-protocols/sync'
 import { createdevice } from 'zss/device'
+import { UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 export enum MODEM_SHARED_TYPE {
@@ -119,8 +120,6 @@ export function modemwritevaluestring(key: string, value: string) {
   }
   store.shared.push({ key, type: MODEM_SHARED_TYPE.STRING, value: strvalue })
 }
-
-export type UNOBSERVE_FUNC = () => void
 
 function modemobservevalue(
   key: string,

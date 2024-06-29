@@ -1,5 +1,5 @@
 import { createdevice } from 'zss/device'
-import { INPUT } from 'zss/gadget/data/types'
+import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { createpid } from 'zss/mapping/guid'
 import { MAYBE, isarray, isbook, ispresent } from 'zss/mapping/types'
 import {
@@ -28,7 +28,7 @@ import {
   vm_codeaddress,
   vm_flush,
 } from './api'
-import { UNOBSERVE_FUNC, modemobservevaluestring } from './modem'
+import { modemobservevaluestring } from './modem'
 
 // this should be unique every time the worker is created
 const playerid = createpid()
@@ -183,7 +183,6 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
 })
 
 export function ready() {
-  // TODO: load default software ...
   // signal ready state
   vm.emit('ready', undefined, playerid)
 }
