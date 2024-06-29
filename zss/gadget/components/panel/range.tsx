@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
+import { paneladdress } from 'zss/gadget/data/types'
 
 import {
   useCacheWriteTextContext,
@@ -40,7 +41,8 @@ export function PanelItemRange({
   const max = 8
 
   // state
-  const modem = useWaitForValueNumber(chip, target)
+  const address = paneladdress(chip, target)
+  const modem = useWaitForValueNumber(address)
   const state = modem?.value ?? 0
 
   const blink = useBlink()

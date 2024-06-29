@@ -1,4 +1,6 @@
-import { useWaitForCode } from 'zss/device/modem'
+import { useEffect } from 'react'
+import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
+import { useWaitForValueString } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
 import { useWriteText } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
@@ -18,11 +20,26 @@ export function TapeEditor() {
   const tape = useTape()
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
-  const codepage = useWaitForCode(
-    tape.editor.book,
-    tape.editor.page,
-    tape.editor.player,
+  const codepage = useWaitForValueString(
+    vm_codeaddress(tape.editor.book, tape.editor.page),
   )
+
+  useEffect(() => {
+    vm_codewatch(
+      'editor',
+      tape.editor.book,
+      tape.editor.page,
+      tape.editor.player,
+    )
+    return () => {
+      vm_coderelease(
+        'editor',
+        tape.editor.book,
+        tape.editor.page,
+        tape.editor.player,
+      )
+    }
+  }, [codepage, tape.editor.book, tape.editor.page, tape.editor.player])
 
   // split by line
   const value = sharedtosynced(codepage)
@@ -37,7 +54,8 @@ export function TapeEditor() {
   )
 
   // measure edges once
-  const measure = {
+  const props = {
+    codepage,
     ycursor,
     yoffset,
     rows,
@@ -46,8 +64,8 @@ export function TapeEditor() {
   return (
     <>
       <EditorFrame />
-      <EditorRows {...measure} />
-      <EditorInput {...measure} />
+      <EditorRows {...props} />
+      <EditorInput {...props} />
     </>
   )
 }

@@ -1,4 +1,5 @@
 import { WORD_VALUE } from 'zss/chip'
+import { UNOBSERVE_FUNC } from 'zss/device/modem'
 // import { UNOBSERVE_FUNC } from 'zss/device/shared'
 import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
 
@@ -287,6 +288,10 @@ export type PANEL = {
 }
 
 export type PANEL_SHARED = Record<string, UNOBSERVE_FUNC>
+
+export function paneladdress(chip: string, target: string) {
+  return `${chip}:${target}`
+}
 
 export type GADGET_STATE = {
   player: string

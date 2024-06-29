@@ -5,12 +5,11 @@ import {
   tape_terminal_close,
   tape_terminal_inclayout,
 } from 'zss/device/api'
-import { useWaitForCode } from 'zss/device/modem'
-import { useTape } from 'zss/device/tape'
+import { MODEM_SHARED_STRING } from 'zss/device/modem'
 import { PT } from 'zss/firmware/wordtypes'
 import { applystrtoindex, useWriteText } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
-import { ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../../useblink'
 import { UserInput, modsfromevent } from '../../userinput'
@@ -25,19 +24,19 @@ type TextinputProps = {
   ycursor: number
   yoffset: number
   rows: EDITOR_CODE_ROW[]
+  codepage: MAYBE<MODEM_SHARED_STRING>
 }
 
-export function EditorInput({ ycursor, yoffset, rows }: TextinputProps) {
-  const tape = useTape()
+export function EditorInput({
+  ycursor,
+  yoffset,
+  rows,
+  codepage,
+}: TextinputProps) {
   const blink = useBlink()
   const context = useWriteText()
   const blinkdelta = useRef<PT>()
   const tapeeditor = useTapeEditor()
-  const codepage = useWaitForCode(
-    tape.editor.book,
-    tape.editor.page,
-    tape.editor.player,
-  )
 
   // split by line
   const value = sharedtosynced(codepage)

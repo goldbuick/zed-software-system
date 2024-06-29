@@ -7,12 +7,9 @@ import {
 import { useSyncedStore } from '@syncedstore/react'
 import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'
-import { useEffect } from 'react'
 import * as syncprotocol from 'y-protocols/sync'
 import { createdevice } from 'zss/device'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-
-import { vm_coderelease, vm_codewatch } from './api'
 
 export enum MODEM_SHARED_TYPE {
   NUMBER,
@@ -59,44 +56,25 @@ export function useModem() {
 }
 
 // tape editor uses this to wait for shared value to populate
-
-export function useWaitForCode(
-  book: string,
-  key: string,
-  player: string,
-): MAYBE<MODEM_SHARED_NUMBER> {
-  const modem = useModem()
-  const maybevalue = findvalue(modem.shared, key, MODEM_SHARED_TYPE.STRING)
-
-  useEffect(() => {
-    vm_codewatch('modem', book, key, player)
-    return () => {
-      vm_coderelease('modem', book, key, player)
-    }
-  }, [book, key, player])
-
-  return ispresent(maybevalue) ? (maybevalue as MODEM_SHARED_NUMBER) : undefined
-}
-
 // scroll hyperlinks use this to wait for shared value to populate
+
 function useWaitForValue<T extends MODEM_SHARED_TYPE>(
-  chip: string,
   key: string,
   type: T,
 ): MAYBE<MODEM_TYPE_MAP[T]> {
   const modem = useModem()
-  const maybevalue = findvalue(modem.shared, `${chip}:${key}`, type)
+  const maybevalue = findvalue(modem.shared, key, type)
   return ispresent(maybevalue)
     ? (maybevalue as MAYBE<MODEM_TYPE_MAP[T]>)
     : undefined
 }
 
-export function useWaitForValueNumber(chip: string, key: string) {
-  return useWaitForValue(chip, key, MODEM_SHARED_TYPE.NUMBER)
+export function useWaitForValueNumber(key: string) {
+  return useWaitForValue(key, MODEM_SHARED_TYPE.NUMBER)
 }
 
-export function useWaitForValueString(chip: string, key: string) {
-  return useWaitForValue(chip, key, MODEM_SHARED_TYPE.STRING)
+export function useWaitForValueString(key: string) {
+  return useWaitForValue(key, MODEM_SHARED_TYPE.STRING)
 }
 
 // non react code uses this to setup values
@@ -109,27 +87,37 @@ function modemwriteinit<T extends MODEM_SHARED_TYPE>(
   if (ispresent(maybevalue)) {
     return
   }
-
   // @ts-expect-error ugh
   store.shared.push({ key, type, value })
 }
 
-export function modemwritenumber(key: string, value: number) {
+export function modemwriteinitnumber(key: string, value: number) {
   modemwriteinit(key, MODEM_SHARED_TYPE.NUMBER, value)
 }
 
-export function modemwritestring(key: string, value: string) {
+export function modemwriteinitstring(key: string, value: string) {
   const strvalue = new SyncedText(value)
   modemwriteinit(key, MODEM_SHARED_TYPE.STRING, strvalue)
 }
 
 // for scrolls
-export function modemwritevaluenumber(
-  chip: string,
-  key: string,
-  value: number,
-) {
-  return modemwritenumber(`${chip}:${key}`, value)
+export function modemwritevaluenumber(key: string, value: number) {
+  const maybevalue = findvalue(store.shared, key, MODEM_SHARED_TYPE.NUMBER)
+  if (ispresent(maybevalue)) {
+    maybevalue.value = value
+    return
+  }
+  store.shared.push({ key, type: MODEM_SHARED_TYPE.NUMBER, value })
+}
+
+export function modemwritevaluestring(key: string, value: string) {
+  const strvalue = new SyncedText(value)
+  const maybevalue = findvalue(store.shared, key, MODEM_SHARED_TYPE.STRING)
+  if (ispresent(maybevalue)) {
+    maybevalue.value = strvalue
+    return
+  }
+  store.shared.push({ key, type: MODEM_SHARED_TYPE.STRING, value: strvalue })
 }
 
 export type UNOBSERVE_FUNC = () => void

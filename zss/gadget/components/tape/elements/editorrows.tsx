@@ -1,5 +1,4 @@
-import { useWaitForCode } from 'zss/device/modem'
-import { useTape } from 'zss/device/tape'
+import { MODEM_SHARED_STRING } from 'zss/device/modem'
 import {
   applycolortoindexes,
   textformatedges,
@@ -7,7 +6,7 @@ import {
   useWriteText,
   writeplaintext,
 } from 'zss/gadget/data/textformat'
-import { ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../../useblink'
 import {
@@ -24,18 +23,18 @@ type TextrowsProps = {
   ycursor: number
   yoffset: number
   rows: EDITOR_CODE_ROW[]
+  codepage: MAYBE<MODEM_SHARED_STRING>
 }
 
-export function EditorRows({ ycursor, yoffset, rows }: TextrowsProps) {
-  const tape = useTape()
+export function EditorRows({
+  ycursor,
+  yoffset,
+  rows,
+  codepage,
+}: TextrowsProps) {
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
-  const codepage = useWaitForCode(
-    tape.editor.book,
-    tape.editor.page,
-    tape.editor.player,
-  )
 
   const topedge = 2
   const leftedge = 1

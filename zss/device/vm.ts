@@ -25,6 +25,7 @@ import {
   tape_crash,
   tape_debug,
   tape_info,
+  vm_codeaddress,
   vm_flush,
 } from './api'
 import { UNOBSERVE_FUNC, modemobservevaluestring } from './modem'
@@ -52,6 +53,7 @@ const watching: Record<string, Record<string, Set<string>>> = {}
 const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
 const vm = createdevice('vm', ['tick', 'second'], (message) => {
+  // console.info(message)
   switch (message.target) {
     case 'books':
       if (
@@ -110,7 +112,8 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         const [book, codepage] = message.data
         // start watching
         if (!ispresent(observers[codepage])) {
-          observers[codepage] = modemobservevaluestring(codepage, (value) => {
+          const address = vm_codeaddress(book, codepage)
+          observers[codepage] = modemobservevaluestring(address, (value) => {
             // write to code
             const content = bookfindcodepage(memoryreadbook(book), codepage)
             if (ispresent(content)) {

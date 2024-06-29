@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
+import { paneladdress } from 'zss/gadget/data/types'
 
 import {
   useCacheWriteTextContext,
@@ -42,7 +43,8 @@ export function PanelItemNumber({
   }
 
   // state
-  const modem = useWaitForValueNumber(chip, target)
+  const address = paneladdress(chip, target)
+  const modem = useWaitForValueNumber(address)
   const value = modem?.value
   const state = value ?? 0
 

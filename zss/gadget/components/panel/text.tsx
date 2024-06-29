@@ -6,6 +6,7 @@ import {
   applycolortoindexes,
   applystrtoindex,
 } from 'zss/gadget/data/textformat'
+import { paneladdress } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
@@ -24,7 +25,8 @@ export function PanelItemText({
   const target = mapTo(args[0], '')
 
   // state
-  const modem = useWaitForValueString(chip, target)
+  const address = paneladdress(chip, target)
+  const modem = useWaitForValueString(address)
   const value = modem?.value
   const state = value?.toJSON() ?? ''
 

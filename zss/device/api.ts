@@ -156,6 +156,10 @@ export function vm_input(
   hub.emit('vm:input', sender, [input, mods], player)
 }
 
+export function vm_codeaddress(book: string, codepage: string) {
+  return `${book}${codepage}`
+}
+
 export function vm_codewatch(
   sender: string,
   book: string,
