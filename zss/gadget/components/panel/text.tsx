@@ -1,17 +1,17 @@
 import { useState } from 'react'
+import { useWaitForValueString } from 'zss/device/modem'
 import {
   useCacheWriteTextContext,
   tokenizeandwritetextformat,
-  writechartoend,
   applycolortoindexes,
   applystrtoindex,
 } from 'zss/gadget/data/textformat'
+import { paneladdress } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../useblink'
 import { UserFocus, UserInput, UserInputMods, ismac } from '../userinput'
-import { MAYBE_SHARED_TEXT, useSharedType } from '../useshared'
 
 import { PanelItemProps, inputcolor, mapTo } from './common'
 
@@ -25,7 +25,9 @@ export function PanelItemText({
   const target = mapTo(args[0], '')
 
   // state
-  const [value] = useSharedType<MAYBE_SHARED_TEXT>(chip, target)
+  const address = paneladdress(chip, target)
+  const modem = useWaitForValueString(address)
+  const value = modem?.value
   const state = value?.toJSON() ?? ''
 
   const blink = useBlink()
@@ -42,7 +44,7 @@ export function PanelItemText({
 
   // prefix
   tokenizeandwritetextformat(
-    `$green  $20 ${tcolor}${tlabel}$green`,
+    `$green  $20 ${tcolor}${tlabel} $green`,
     context,
     false,
   )
@@ -51,8 +53,7 @@ export function PanelItemText({
   const tyw = ty * context.width
 
   // content
-  tokenizeandwritetextformat(`${tvalue}`, context, false)
-  writechartoend(' ', context)
+  tokenizeandwritetextformat(`${tvalue}\n`, context, false)
 
   // input state
   const hasselection = ispresent(selection)

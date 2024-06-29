@@ -1,14 +1,13 @@
 import { useCallback } from 'react'
-import { MAYBE_NUMBER } from 'zss/mapping/types'
+import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
+import { paneladdress } from 'zss/gadget/data/types'
 
 import {
   useCacheWriteTextContext,
   tokenizeandwritetextformat,
-  writechartoend,
 } from '../../data/textformat'
 import { useBlink } from '../useblink'
 import { UserInput, UserInputHandler } from '../userinput'
-import { useSharedValue } from '../useshared'
 
 import { PanelItemProps, inputcolor, mapTo } from './common'
 
@@ -25,8 +24,9 @@ export function PanelItemSelect({
   const max = values.length - 1
 
   // state
-  const [value, setvalue] = useSharedValue<MAYBE_NUMBER>(chip, target)
-  const state = value ?? 0
+  const address = paneladdress(chip, target)
+  const modem = useWaitForValueNumber(address)
+  const state = modem?.value ?? 0
 
   const blink = useBlink()
 
@@ -38,7 +38,7 @@ export function PanelItemSelect({
   // keep stable re-renders
   useCacheWriteTextContext(context)
 
-  tokenizeandwritetextformat(` $dkred ? ${tcolor}${tlabel}`, context, false)
+  tokenizeandwritetextformat(` $dkred ? ${tcolor}${tlabel} `, context, false)
 
   // write range viewer
   const knob = active ? (blink ? '$26' : '$27') : '/'
@@ -49,24 +49,22 @@ export function PanelItemSelect({
   )
 
   // write value
-  tokenizeandwritetextformat(`$green${tvalue}`, context, false)
-
-  writechartoend(' ', context)
+  tokenizeandwritetextformat(` $green${tvalue}\n`, context, false)
 
   const up = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      setvalue(Math.min(max, state + step))
+      modemwritevaluenumber(address, Math.min(max, state + step))
     },
-    [max, state, setvalue],
+    [max, state, address],
   )
 
   const down = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      setvalue(Math.max(min, state - step))
+      modemwritevaluenumber(address, Math.max(min, state - step))
     },
-    [min, state, setvalue],
+    [min, state, address],
   )
 
   return <>{active && <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} />}</>

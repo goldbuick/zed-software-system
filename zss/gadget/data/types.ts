@@ -1,5 +1,3 @@
-import { WORD_VALUE } from 'zss/chip'
-import { UNOBSERVE_FUNC } from 'zss/device/shared'
 import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
 
 export const BYTES_PER_COLOR = 3
@@ -50,7 +48,7 @@ export function colortofg(color: MAYBE<COLOR>): MAYBE_NUMBER {
 }
 
 export function colortobg(color: MAYBE<COLOR>): MAYBE_NUMBER {
-  return ispresent(color) && color > COLOR.WHITE
+  return ispresent(color) && color > COLOR.WHITE && color < COLOR.CLEAR
     ? color - COLOR.ONBLACK
     : undefined
 }
@@ -276,6 +274,8 @@ export const PANEL_TYPE_SIZES: Record<PANEL_TYPE, number> = {
   [PANEL_TYPE.SCROLL]: 40,
 }
 
+type WORD = string | number
+type WORD_VALUE = WORD | WORD[] | undefined
 export type PANEL_ITEM = WORD_VALUE | WORD_VALUE[]
 
 export type PANEL = {
@@ -286,7 +286,12 @@ export type PANEL = {
   text: PANEL_ITEM[]
 }
 
+export type UNOBSERVE_FUNC = () => void
 export type PANEL_SHARED = Record<string, UNOBSERVE_FUNC>
+
+export function paneladdress(chip: string, target: string) {
+  return `${chip}:${target}`
+}
 
 export type GADGET_STATE = {
   player: string

@@ -1,12 +1,13 @@
 import Case from 'case'
 import { CHIP, STATE } from 'zss/chip'
 import {
-  MAYBE_SHARED_TEXT,
-  observesharedtype,
-  observesharedvalue,
-  servesharedvalue,
-  updatesharedvalue,
-} from 'zss/device/shared'
+  modemobservevaluenumber,
+  modemobservevaluestring,
+  modemwriteinitnumber,
+  modemwriteinitstring,
+  modemwritevaluenumber,
+  modemwritevaluestring,
+} from 'zss/device/modem'
 import { WORD, WORD_VALUE } from 'zss/firmware/wordtypes'
 import { createsid } from 'zss/mapping/guid'
 import {
@@ -14,6 +15,7 @@ import {
   MAYBE_STRING,
   ispresent,
   isnumber,
+  isstring,
 } from 'zss/mapping/types'
 
 import {
@@ -22,6 +24,7 @@ import {
   PANEL_SHARED,
   PANEL_TYPE,
   PANEL_TYPE_SIZES,
+  paneladdress,
 } from './types'
 
 const panelshared: Record<string, PANEL_SHARED> = {}
@@ -130,7 +133,13 @@ export function gadgetcheckset(chip: CHIP, name: string, value: WORD) {
   Object.values(panelshared).forEach((state) => {
     // we care about this value
     if (state[name] !== undefined) {
-      updatesharedvalue(chip.id(), name, value)
+      const address = paneladdress(chip.id(), name)
+      if (isnumber(value)) {
+        modemwritevaluenumber(address, value)
+      }
+      if (isstring(value)) {
+        modemwritevaluestring(address, value)
+      }
     }
   })
 }
@@ -253,40 +262,37 @@ export function gadgethyperlink(
     panelshared[panel.id] = panelshared[panel.id] ?? {}
 
     // get current flag value
-    const current = chip.get(name)
+    const current =
+      chip.get(name) ??
+      HYPERLINK_WITH_SHARED_DEFAULTS[
+        type as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
+      ]
 
     // setup tracking if needed
     if (panelshared[panel.id][name] === undefined) {
+      const address = paneladdress(chip.id(), name)
       // this will init the value only if not already setup
-      // and mark this guid as origin
-      servesharedvalue(
-        chip.id(),
-        name,
-        current ??
-          HYPERLINK_WITH_SHARED_DEFAULTS[
-            type as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
-          ],
-      )
-
+      if (isnumber(current)) {
+        modemwriteinitnumber(address, current)
+      }
+      if (isstring(current)) {
+        modemwriteinitstring(address, current)
+      }
+      // observe by hyperlink type
       if (HYPERLINK_WITH_SHARED_TEXT.has(type)) {
-        panelshared[panel.id][name] = observesharedtype<MAYBE_SHARED_TEXT>(
-          chip.id(),
-          name,
+        panelshared[panel.id][name] = modemobservevaluestring(
+          address,
           (value) => {
-            if (value !== undefined) {
-              const str = value.toJSON()
-              if (str !== chip.get(name)) {
-                chip.set(name, str)
-              }
+            if (ispresent(value) && value !== chip.get(name)) {
+              chip.set(name, value)
             }
           },
         )
       } else {
-        panelshared[panel.id][name] = observesharedvalue<MAYBE_NUMBER>(
-          chip.id(),
-          name,
+        panelshared[panel.id][name] = modemobservevaluenumber(
+          address,
           (value) => {
-            if (value !== undefined && value !== chip.get(name)) {
+            if (ispresent(value) && value !== chip.get(name)) {
               chip.set(name, value)
             }
           },

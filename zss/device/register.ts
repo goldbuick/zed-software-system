@@ -1,14 +1,13 @@
 import { createdevice } from 'zss/device'
 import { encodeduritovalue, valuetoencodeduri } from 'zss/mapping/buffer'
-import { isarray, isbook, ispresent } from 'zss/mapping/types'
+import { isarray, isbook } from 'zss/mapping/types'
 import { bookexport } from 'zss/memory/book'
 
 import { api_error, bip_rebootfailed, tape_info, vm_books } from './api'
 
-type STATE_FLAGS = Record<string, any>
 type STATE_BOOKS = any[]
 
-function readstate(): [STATE_FLAGS, ...STATE_BOOKS] {
+function readstate(): STATE_BOOKS {
   try {
     const hash = window.location.hash.slice(1)
     if (hash.length) {
@@ -17,12 +16,12 @@ function readstate(): [STATE_FLAGS, ...STATE_BOOKS] {
   } catch (err) {
     //
   }
-  // state is [memory, flags]
-  return [{}, {}] as any
+  return [] as any[]
 }
 
-function writestate(flags: STATE_FLAGS, books: STATE_BOOKS) {
-  const out = `#${valuetoencodeduri([flags, ...books.map(bookexport)])}`
+function writestate(books: STATE_BOOKS) {
+  const cleanbooks = [...books.map(bookexport)]
+  const out = `#${valuetoencodeduri(cleanbooks)}`
   window.location.hash = out
   tape_info(register.name(), `wrote [...${out.slice(-16)}]`)
 }
@@ -51,7 +50,7 @@ const register = createdevice('register', [], (message) => {
     case 'reboot':
       if (message.player) {
         // check url first
-        const [, ...books] = readstate()
+        const books = readstate()
         if (isbook(books[0])) {
           vm_books(register.name(), books, message.player)
         } else {
@@ -72,45 +71,18 @@ const register = createdevice('register', [], (message) => {
       }
       break
     case 'flush': {
-      const [flags] = readstate()
       if (isarray(message.data)) {
-        writestate(flags, message.data)
+        writestate(message.data)
       }
       break
     }
     case 'biosflash': {
-      const [, ...books] = readstate()
+      const books = readstate()
       writebiosbooks(books)
       break
     }
     case 'bioserase': {
       erasebiosbooks()
-      break
-    }
-
-    // flags
-    case 'read': {
-      const [name] = message.data
-      const [flags] = readstate()
-      if (ispresent(flags)) {
-        const value = flags[name]
-        if (ispresent(flags)) {
-          register.reply(message, 'register', [name, value])
-          tape_info(register.name(), 'read', value, 'for', name)
-        } else {
-          tape_info(register.name(), 'read', name, 'is empty')
-        }
-      }
-      break
-    }
-    case 'write': {
-      const [name, value] = message.data
-      const [flags, ...books] = readstate()
-      if (ispresent(flags)) {
-        flags[name] = value
-        writestate(flags, books)
-        tape_info(register.name(), 'wrote', value, 'to', name)
-      }
       break
     }
   }

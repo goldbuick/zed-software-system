@@ -14,7 +14,6 @@ import { StaticDither } from './dither'
 import { BG, CHAR_HEIGHT, CHAR_WIDTH, BKG_PTRN, FG, SCALE } from './tape/common'
 import { TapeEditor } from './tape/editor'
 import { TapeTerminal } from './tape/terminal'
-import { DitherSnapshot, useDither } from './usedither'
 import { PlayerContext } from './useplayer'
 import { UserFocus, UserHotkey } from './userinput'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
@@ -78,10 +77,8 @@ export function TapeConsole() {
   return (
     <>
       {tape.terminal.open && (
-        <group
-          // eslint-disable-next-line react/no-unknown-property
-          position={[0, 0, 0]}
-        >
+        // eslint-disable-next-line react/no-unknown-property
+        <group position={[0, 0, 0]}>
           <StaticDither width={ditherwidth} height={ditherheight} alpha={0.2} />
         </group>
       )}
@@ -91,7 +88,7 @@ export function TapeConsole() {
         scale={[SCALE, SCALE, 1.0]}
       >
         {tape.terminal.open ? (
-          <UserFocus>
+          <UserFocus blockhotkeys>
             <TileSnapshot width={width} height={height} tiles={tiles} />
             <PlayerContext.Provider value={player}>
               <WriteTextContext.Provider value={context}>

@@ -1,5 +1,5 @@
 import { createdevice } from 'zss/device'
-import { INPUT } from 'zss/gadget/data/types'
+import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { createpid } from 'zss/mapping/guid'
 import { MAYBE, isarray, isbook, ispresent } from 'zss/mapping/types'
 import {
@@ -25,9 +25,10 @@ import {
   tape_crash,
   tape_debug,
   tape_info,
+  vm_codeaddress,
   vm_flush,
 } from './api'
-import { UNOBSERVE_FUNC, modemobservevaluestring } from './modem'
+import { modemobservevaluestring } from './modem'
 
 // this should be unique every time the worker is created
 const playerid = createpid()
@@ -47,11 +48,12 @@ const tracking: Record<string, number> = {}
 const FLUSH_RATE = 64
 let flushtick = 0
 
-// track watched codepage memory
+// track watched memory
 const watching: Record<string, Record<string, Set<string>>> = {}
 const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
 const vm = createdevice('vm', ['tick', 'second'], (message) => {
+  // console.info(message)
   switch (message.target) {
     case 'books':
       if (
@@ -105,30 +107,29 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         memory.inputmods[input as INPUT] = mods
       }
       break
-    case 'pagewatch':
+    case 'codewatch':
       if (message.player && isarray(message.data)) {
-        const [book, page] = message.data
+        const [book, codepage] = message.data
         // start watching
-        if (!ispresent(observers[page])) {
-          observers[page] = modemobservevaluestring(page, (value) => {
+        if (!ispresent(observers[codepage])) {
+          const address = vm_codeaddress(book, codepage)
+          observers[codepage] = modemobservevaluestring(address, (value) => {
             // write to code
-            const codepage = bookfindcodepage(memoryreadbook(book), page)
-            if (ispresent(codepage)) {
-              codepage.code = value
+            const content = bookfindcodepage(memoryreadbook(book), codepage)
+            if (ispresent(content)) {
+              content.code = value
               // re-parse code for @ attrs and expected data type
-              codepageresetstats(codepage)
+              codepageresetstats(content)
             }
           })
         }
         // track use
-        if (!ispresent(watching[book]?.[page])) {
-          watching[book] = watching[book] ?? {}
-          watching[book][page] = new Set()
-        }
-        watching[book][page].add(message.player)
+        watching[book] = watching[book] ?? {}
+        watching[book][codepage] = watching[book][codepage] ?? new Set()
+        watching[book][codepage].add(message.player)
       }
       break
-    case 'pagerelease':
+    case 'coderelease':
       if (message.player && isarray(message.data)) {
         const [book, page] = message.data
         if (ispresent(watching[book])) {
@@ -182,7 +183,6 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
 })
 
 export function ready() {
-  // TODO: load default software ...
   // signal ready state
   vm.emit('ready', undefined, playerid)
 }

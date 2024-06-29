@@ -7,7 +7,6 @@ import './device/gadgetclient'
 import './device/pcspeaker'
 import './device/modem'
 import './device/register'
-import './device/shared'
 import './device/tape'
 
 export function createplatform() {

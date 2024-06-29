@@ -303,10 +303,11 @@ export function TerminalInput({
                       navigator.clipboard
                         .readText()
                         .then((text) => {
+                          const cleantext = text.replaceAll('\r', '')
                           if (hasselection) {
-                            inputstatesetsplice(ii1, iic, text)
+                            inputstatesetsplice(ii1, iic, cleantext)
                           } else {
-                            inputstatesetsplice(tapeinput.xcursor, 0, text)
+                            inputstatesetsplice(tapeinput.xcursor, 0, cleantext)
                           }
                         })
                         .catch((err) => console.error(err))

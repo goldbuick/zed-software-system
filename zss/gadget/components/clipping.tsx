@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import React, { createContext, useContext, useRef, useState } from 'react'
+import { createContext, useContext, useRef, useState } from 'react'
 import * as THREE from 'three'
 
 type ClippingSet = THREE.Plane[]

@@ -7,29 +7,34 @@ import {
 import { useSyncedStore } from '@syncedstore/react'
 import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'
-import { useEffect } from 'react'
 import * as syncprotocol from 'y-protocols/sync'
 import { createdevice } from 'zss/device'
+import { UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-
-import { vm_pagerelease, vm_pagewatch } from './api'
 
 export enum MODEM_SHARED_TYPE {
   NUMBER,
   STRING,
 }
 
-export type MODEM_SHARED_VALUE =
-  | {
-      key: string
-      type: MODEM_SHARED_TYPE.NUMBER
-      value: number
-    }
-  | {
-      key: string
-      type: MODEM_SHARED_TYPE.STRING
-      value: SyncedText
-    }
+export type MODEM_SHARED_NUMBER = {
+  key: string
+  type: MODEM_SHARED_TYPE.NUMBER
+  value: number
+}
+
+export type MODEM_SHARED_STRING = {
+  key: string
+  type: MODEM_SHARED_TYPE.STRING
+  value: SyncedText
+}
+
+export type MODEM_SHARED_VALUE = MODEM_SHARED_NUMBER | MODEM_SHARED_STRING
+
+type MODEM_TYPE_MAP = {
+  [MODEM_SHARED_TYPE.NUMBER]: MODEM_SHARED_NUMBER
+  [MODEM_SHARED_TYPE.STRING]: MODEM_SHARED_STRING
+}
 
 type SHARED_TYPE_MAP = {
   [MODEM_SHARED_TYPE.NUMBER]: number
@@ -51,33 +56,26 @@ export function useModem() {
   return modem
 }
 
-// react ui code uses this to wait for shared value to
-// populate before continuing
-function useWaitFor(
-  book: string,
+// tape editor uses this to wait for shared value to populate
+// scroll hyperlinks use this to wait for shared value to populate
+
+function useWaitForValue<T extends MODEM_SHARED_TYPE>(
   key: string,
-  type: MODEM_SHARED_TYPE,
-  player: string,
-): MODEM_SHARED_VALUE | undefined {
+  type: T,
+): MAYBE<MODEM_TYPE_MAP[T]> {
   const modem = useModem()
   const maybevalue = findvalue(modem.shared, key, type)
-
-  useEffect(() => {
-    vm_pagewatch('modem', book, key, player)
-    return () => {
-      vm_pagerelease('modem', book, key, player)
-    }
-  }, [book, key, player])
-
-  return ispresent(maybevalue) ? maybevalue : undefined
+  return ispresent(maybevalue)
+    ? (maybevalue as MAYBE<MODEM_TYPE_MAP[T]>)
+    : undefined
 }
 
-export function useWaitForNumber(book: string, key: string, player: string) {
-  return useWaitFor(book, key, MODEM_SHARED_TYPE.NUMBER, player)
+export function useWaitForValueNumber(key: string) {
+  return useWaitForValue(key, MODEM_SHARED_TYPE.NUMBER)
 }
 
-export function useWaitForString(book: string, key: string, player: string) {
-  return useWaitFor(book, key, MODEM_SHARED_TYPE.STRING, player)
+export function useWaitForValueString(key: string) {
+  return useWaitForValue(key, MODEM_SHARED_TYPE.STRING)
 }
 
 // non react code uses this to setup values
@@ -90,21 +88,38 @@ function modemwriteinit<T extends MODEM_SHARED_TYPE>(
   if (ispresent(maybevalue)) {
     return
   }
-
   // @ts-expect-error ugh
   store.shared.push({ key, type, value })
 }
 
-export function modemwritenumber(key: string, value: number) {
+export function modemwriteinitnumber(key: string, value: number) {
   modemwriteinit(key, MODEM_SHARED_TYPE.NUMBER, value)
 }
 
-export function modemwritestring(key: string, value: string) {
+export function modemwriteinitstring(key: string, value: string) {
   const strvalue = new SyncedText(value)
   modemwriteinit(key, MODEM_SHARED_TYPE.STRING, strvalue)
 }
 
-export type UNOBSERVE_FUNC = () => void
+// for scrolls
+export function modemwritevaluenumber(key: string, value: number) {
+  const maybevalue = findvalue(store.shared, key, MODEM_SHARED_TYPE.NUMBER)
+  if (ispresent(maybevalue)) {
+    maybevalue.value = value
+    return
+  }
+  store.shared.push({ key, type: MODEM_SHARED_TYPE.NUMBER, value })
+}
+
+export function modemwritevaluestring(key: string, value: string) {
+  const strvalue = new SyncedText(value)
+  const maybevalue = findvalue(store.shared, key, MODEM_SHARED_TYPE.STRING)
+  if (ispresent(maybevalue)) {
+    maybevalue.value = strvalue
+    return
+  }
+  store.shared.push({ key, type: MODEM_SHARED_TYPE.STRING, value: strvalue })
+}
 
 function modemobservevalue(
   key: string,

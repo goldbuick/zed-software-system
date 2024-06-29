@@ -5,9 +5,10 @@ import {
   register_biosflash,
   tape_editor_open,
   tape_info,
+  vm_codeaddress,
   vm_flush,
 } from 'zss/device/api'
-import { modemwritestring } from 'zss/device/modem'
+import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
@@ -452,7 +453,7 @@ export const CLI_FIRMWARE = createfirmware({
             writetext(`opened [${pagetype}] ${name}`)
 
             // write to modem
-            modemwritestring(page.id, page.code)
+            modemwriteinitstring(vm_codeaddress(book.id, page.id), page.code)
 
             // tell tape to open a code editor for given page
             const type = codepagereadtypetostring(page)

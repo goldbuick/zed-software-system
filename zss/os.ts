@@ -25,19 +25,15 @@ export type OS = {
 export function createos() {
   const builds: Record<string, GeneratorBuild> = {}
   const chips: Record<string, CHIP | null> = {}
-
   function build(code: string) {
     const cache = builds[code]
     if (cache) {
       return cache
     }
-
     const result = compile(code)
     builds[code] = result
-
     return result
   }
-
   const os: OS = {
     ids() {
       return Object.keys(chips)
@@ -54,13 +50,10 @@ export function createos() {
     },
     tick(id, type, timestamp, code) {
       let chip = chips[id]
-
       if (!ispresent(chips[id])) {
         const result = build(code)
-
         // create chip from build
         chip = chips[id] = createchip(id, result)
-
         // bail on errors
         if (result.errors?.length) {
           const [primary] = result.errors
@@ -83,11 +76,9 @@ export function createos() {
           })
           return false
         }
-
         // load chip firmware
         loadfirmware(chip, type)
       }
-
       return !!chip?.tick(timestamp)
     },
     once(id, type, timestamp, code) {
@@ -102,6 +93,5 @@ export function createos() {
       }
     },
   }
-
   return os
 }
