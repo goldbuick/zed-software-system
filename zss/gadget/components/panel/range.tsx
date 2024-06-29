@@ -69,17 +69,17 @@ export function PanelItemRange({
   const up = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      modemwritevaluenumber(chip, target, Math.min(max, state + step))
+      modemwritevaluenumber(address, Math.min(max, state + step))
     },
-    [max, state, chip, target],
+    [max, state, address],
   )
 
   const down = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      modemwritevaluenumber(chip, target, Math.max(min, state - step))
+      modemwritevaluenumber(address, Math.max(min, state - step))
     },
-    [min, state, chip, target],
+    [min, state, address],
   )
 
   return <>{active && <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} />}</>

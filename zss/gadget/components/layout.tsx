@@ -196,7 +196,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
           height: clamp(18, 8, frame.height - 8),
           text: panel.text,
         }
-        rect.x = frame.x + Math.round((frame.width - rect.width) * 0.5)
+        rect.x = frame.x + Math.floor((frame.width - rect.width) * 0.5)
         rect.y = frame.y + Math.floor((frame.height - rect.height) * 0.5)
         // cache scroll
         // don't add to render list
