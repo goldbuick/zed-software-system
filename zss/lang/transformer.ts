@@ -1,5 +1,5 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
-import { SHOW_CODE } from 'zss/config'
+import { TRACE_CODE } from 'zss/config'
 import { tokenize, MaybeFlag } from 'zss/gadget/data/textformat'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
@@ -16,18 +16,20 @@ export const context: GenContext = {
   labelIndex: 0,
 }
 
+const BUMP_CODE = `\n         `
 const JUMP_CODE = `if (api.hm()) { continue zss; }`
 const STOP_CODE = `if (api.sy()) { yield 1; }`
 const WAIT_CODE = `yield 1; ${JUMP_CODE}`
 
+let tracing = false
 const trace: Record<string, number> = {}
 function TRACE(tag: string) {
-  if (!SHOW_CODE) {
+  if (!tracing) {
     return ''
   }
   trace[tag] = trace[tag] ?? 0
   const count = trace[tag]++
-  return `console.info('${tag}-${count}')`
+  return `${BUMP_CODE}console.info('${tag}-${count}')`
 }
 
 function WAIT() {
@@ -36,6 +38,10 @@ function WAIT() {
 
 function EOL() {
   return `${STOP_CODE}; ${JUMP_CODE}; ${TRACE('eol')};`
+}
+
+export function enabletracing(name: string) {
+  tracing = name === TRACE_CODE
 }
 
 export const GENERATED_FILENAME = 'zss.js'
@@ -263,13 +269,13 @@ function transformNode(ast: CodeNode): SourceNode {
           ast.wait ? 'true' : 'false',
           ...transformNodes(ast.words),
         ]),
-        `) { ${WAIT()} };\n         ${EOL()}`,
+        `) { ${WAIT()} };${BUMP_CODE}${EOL()}`,
       ]) // yield 1;
     case NODE.COMMAND:
       return write(ast, [
         `while (`,
         writeApi(ast, `command`, transformNodes(ast.words)),
-        `) { ${WAIT()} };\n         ${EOL()}`,
+        `) { ${WAIT()} };${BUMP_CODE}${EOL()}`,
       ])
     // core / structure
     case NODE.IF: {
@@ -346,7 +352,7 @@ function transformNode(ast: CodeNode): SourceNode {
         ]),
         ';\nwhile (',
         writeApi(ast, 'repeat', [`${context.internal}`]),
-        `) {\n         ${EOL()}\n`,
+        `) {${BUMP_CODE}${EOL()}\n`,
       ])
       context.internal += 1
 

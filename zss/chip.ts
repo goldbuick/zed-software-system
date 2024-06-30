@@ -340,10 +340,6 @@ export function createchip(id: string, build: GeneratorBuild) {
           chip.set('player', message.player)
         }
 
-        if (message.target !== 'main') {
-          console.info('>>>', label, deepcopy(message))
-        }
-
         // clear message
         message = undefined
 
