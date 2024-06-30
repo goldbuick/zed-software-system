@@ -10,6 +10,7 @@ export type OS_INVOKE = (
   id: string,
   type: CODE_PAGE_TYPE,
   timestamp: number,
+  name: string,
   code: string,
 ) => boolean
 
@@ -25,12 +26,12 @@ export type OS = {
 export function createos() {
   const builds: Record<string, GeneratorBuild> = {}
   const chips: Record<string, CHIP | null> = {}
-  function build(code: string) {
+  function build(name: string, code: string) {
     const cache = builds[code]
     if (cache) {
       return cache
     }
-    const result = compile(code)
+    const result = compile(name, code)
     builds[code] = result
     return result
   }
@@ -48,10 +49,10 @@ export function createos() {
       }
       return !!chip
     },
-    tick(id, type, timestamp, code) {
+    tick(id, type, timestamp, name, code) {
       let chip = chips[id]
       if (!ispresent(chips[id])) {
-        const result = build(code)
+        const result = build(name, code)
         // create chip from build
         chip = chips[id] = createchip(id, result)
         // bail on errors
@@ -81,15 +82,16 @@ export function createos() {
       }
       return !!chip?.tick(timestamp)
     },
-    once(id, type, timestamp, code) {
-      const result = os.tick(id, type, timestamp, code)
+    once(id, type, timestamp, name, code) {
+      const result = os.tick(id, type, timestamp, name, code)
       return result && os.halt(id)
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)
       const targetchip: CHIP | null | undefined = chips[target]
       if (ispresent(targetchip)) {
-        targetchip.message({ ...incoming, target: path })
+        const message = { ...incoming, target: path }
+        targetchip.message(message)
       }
     },
   }

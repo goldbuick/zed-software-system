@@ -79,15 +79,15 @@ export enum DIR {
 }
 
 export enum COLLISION {
-  SOLID,
-  WALK,
-  SWIM,
-  BULLET,
+  ISSOLID,
+  ISWALK,
+  ISSWIM,
+  ISBULLET,
 }
 
 export enum CATEGORY {
-  TERRAIN,
-  OBJECT,
+  ISTERRAIN,
+  ISOBJECT,
 }
 
 export function ispt(value: any): value is PT {
@@ -136,8 +136,8 @@ export function dirfrompts(last: PT, current: PT) {
 }
 
 export const categoryconsts = {
-  terrain: 'TERRAIN',
-  object: 'OBJECT',
+  isterrain: 'ISTERRAIN',
+  isobject: 'ISOBJECT',
 } as const
 
 export type STR_CATEGORY_TYPE = typeof categoryconsts
@@ -206,13 +206,13 @@ export function readcategory(
 }
 
 export const collisionconsts = {
-  solid: 'SOLID',
-  walk: 'WALK',
-  swim: 'SWIM',
-  bullet: 'BULLET',
+  issolid: 'ISSOLID',
+  iswalk: 'ISWALK',
+  isswim: 'ISSWIM',
+  isbullet: 'ISBULLET',
   // aliases
-  walkable: 'WALK',
-  swimmable: 'SWIM',
+  iswalkable: 'ISWALKABLE',
+  isswimmable: 'ISSWIMABLE',
 } as const
 
 export type STR_COLLISION_TYPE = typeof collisionconsts

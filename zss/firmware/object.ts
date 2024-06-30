@@ -218,7 +218,7 @@ function moveobject(
     sendinteraction(chip, blocked, chip.id(), 'thud')
     if (target.kind === 'player') {
       sendinteraction(chip, chip.id(), blocked, 'touch')
-    } else if (target.collision === COLLISION.BULLET) {
+    } else if (target.collision === COLLISION.ISBULLET) {
       sendinteraction(chip, chip.id(), blocked, 'shot')
     } else {
       sendinteraction(chip, chip.id(), blocked, 'bump')
@@ -488,6 +488,7 @@ export const OBJECT_FIRMWARE = createfirmware({
     return 0
   })
   .command('die', (chip) => {
+    console.info('die')
     const memory = memoryreadchip(chip.id())
     // drop from lookups if not headless
     if (memory.object?.headless) {
@@ -675,7 +676,7 @@ export const OBJECT_FIRMWARE = createfirmware({
 
       // success ! start with thud message
       if (ispresent(bullet)) {
-        bullet.collision = COLLISION.BULLET
+        bullet.collision = COLLISION.ISBULLET
         sendinteraction(chip, blocked, chip.id(), 'thud')
       }
     } else {
@@ -689,7 +690,7 @@ export const OBJECT_FIRMWARE = createfirmware({
 
       // success ! get it moving
       if (ispresent(bullet)) {
-        bullet.collision = COLLISION.BULLET
+        bullet.collision = COLLISION.ISBULLET
         editelementstatsafewrite(bullet, {
           stepx: step.x,
           stepy: step.y,

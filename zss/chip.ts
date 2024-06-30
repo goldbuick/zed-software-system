@@ -50,8 +50,8 @@ export type CHIP = {
   hm: () => number
   yield: () => void
   sy: () => boolean
-  emit: (target: string, data?: any) => void
-  send: (chipid: string, message: string, data?: any) => void
+  emit: (target: string, data?: any, player?: string) => void
+  send: (chipid: string, message: string, data?: any, player?: string) => void
   lock: (allowed: string) => void
   unlock: () => void
   message: (incoming: MESSAGE) => void
@@ -172,7 +172,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       return id
     },
     senderid(maybeid = chip.id()) {
-      return `vm${maybeid ?? chip.id()}`
+      return `vm:${maybeid ?? chip.id()}`
     },
 
     // invokes api
@@ -281,7 +281,10 @@ export function createchip(id: string, build: GeneratorBuild) {
     },
     hm() {
       const target = message?.target ?? ''
-      return labels[target]?.find((item) => item > 0) ?? 0
+      if (ispresent(message?.target)) {
+        return labels[target]?.find((item) => item > 0) ?? 0
+      }
+      return 0
     },
     yield() {
       yieldstate = true
@@ -289,11 +292,11 @@ export function createchip(id: string, build: GeneratorBuild) {
     sy() {
       return yieldstate || chip.shouldhalt()
     },
-    emit(target, data) {
-      hub.emit(target, chip.senderid(), data)
+    emit(target, data, player) {
+      hub.emit(target, chip.senderid(), data, player)
     },
-    send(chipid, message, data) {
-      hub.emit(`${chip.senderid(chipid)}:${message}`, id, data)
+    send(chipid, message, data, player) {
+      hub.emit(`${chip.senderid(chipid)}:${message}`, id, data, player)
     },
     lock(allowed) {
       locked = allowed
@@ -302,21 +305,11 @@ export function createchip(id: string, build: GeneratorBuild) {
       locked = ''
     },
     message(incoming) {
-      // system messages
-      switch (incoming.target) {
-        case 'urlstate': {
-          const [name, value] = incoming.data
-          chip.set(name, value)
-          break
-        }
-        default:
-          // internal messages while locked are allowed
-          if (locked && incoming.sender !== locked) {
-            return
-          }
-          message = incoming
-          break
+      // internal messages while locked are allowed
+      if (locked && incoming.sender !== locked) {
+        return
       }
+      message = incoming
     },
     zap(label) {
       const labelset = labels[label]
@@ -336,9 +329,8 @@ export function createchip(id: string, build: GeneratorBuild) {
       }
     },
     getcase() {
-      if (message) {
-        const label = chip.hm()
-
+      const label = chip.hm()
+      if (label && ispresent(message)) {
         // update chip state based on incoming message
         chip.set('sender', message.sender)
         chip.set('data', message.data)
@@ -354,11 +346,10 @@ export function createchip(id: string, build: GeneratorBuild) {
         // reset ended state
         yieldstate = false
         endedstate = false
-
-        // return entry point
-        return label
       }
-      return 0
+
+      // return entry point
+      return label
     },
     endofprogram() {
       chip.yield()

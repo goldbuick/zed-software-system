@@ -5,7 +5,7 @@ import { SHOW_CODE } from 'zss/config'
 
 import { compileAST } from './ast'
 import { LANG_ERROR } from './lexer'
-import { transformAst } from './transformer'
+import { enabletracing, transformAst } from './transformer'
 import { CodeNode } from './visitor'
 
 const GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor
@@ -21,7 +21,8 @@ export type GeneratorBuild = {
   source?: string
 }
 
-export function compile(text: string): GeneratorBuild {
+export function compile(name: string, text: string): GeneratorBuild {
+  enabletracing(name)
   const astResult = compileAST(text)
   if (astResult.errors && astResult.errors.length > 0) {
     return astResult

@@ -14,11 +14,6 @@ import {
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 
 const RELEASE = `${import.meta.env.ZSS_BRANCH_NAME} - ${import.meta.env.ZSS_BRANCH_VERSION} - ${import.meta.env.ZSS_COMMIT_MESSAGE}`
-const TICKER: string[] = [
-  `${import.meta.env.ZSS_BRANCH_NAME} - ${import.meta.env.ZSS_BRANCH_VERSION} - ${import.meta.env.ZSS_COMMIT_MESSAGE}\n`,
-  `${'-'.repeat(RELEASE.length)}\n`,
-  `PRESS ANY KEY`,
-]
 
 export type SplashProps = {
   onBoot: () => void
@@ -34,6 +29,13 @@ export function Splash({ onBoot }: SplashProps) {
   const marginY = viewHeight - height * DRAW_CHAR_HEIGHT
 
   const tiles = useTiles(width, height, 0, 0, 0)
+
+  const gerber = Math.max(1, Math.min(width - 2, RELEASE.length))
+  const TICKER: string[] = [
+    `${import.meta.env.ZSS_BRANCH_NAME} - ${import.meta.env.ZSS_BRANCH_VERSION} - ${import.meta.env.ZSS_COMMIT_MESSAGE}\n`,
+    `${'-'.repeat(gerber)}\n`,
+    `PRESS ANY KEY`,
+  ]
 
   useEffect(() => {
     async function boot() {

@@ -284,6 +284,12 @@ export function gadgethyperlink(
           address,
           (value) => {
             if (ispresent(value) && value !== chip.get(name)) {
+              console.info(
+                'modemobservevaluestring??',
+                name,
+                value,
+                chip.get(name),
+              )
               chip.set(name, value)
             }
           },
@@ -293,6 +299,12 @@ export function gadgethyperlink(
           address,
           (value) => {
             if (ispresent(value) && value !== chip.get(name)) {
+              console.info(
+                'modemobservevaluenumber??',
+                name,
+                value,
+                chip.get(name),
+              )
               chip.set(name, value)
             }
           },

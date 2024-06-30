@@ -64,11 +64,14 @@ export function PanelItemNumber({
     tvalue = blink ? strsplice(strvalue, cursor, 1, '$219+') : strvalue
   }
 
+  context.writefullwidth = 32
   tokenizeandwritetextformat(
-    `  # ${tcolor}${tlabel} $green${tvalue}\n`,
+    `  # ${tcolor}${tlabel} $green${tvalue}`,
     context,
     false,
   )
+  context.writefullwidth = undefined
+  tokenizeandwritetextformat(`\n`, context, false)
 
   const up = useCallback<UserInputHandler>(
     (mods) => {

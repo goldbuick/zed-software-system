@@ -1,8 +1,7 @@
 import { maptostring } from 'zss/chip'
-import { api_error, register_read, register_write } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { isnumber } from 'zss/mapping/types'
-import { memoryreadchip, memoryreadcontext } from 'zss/memory'
+import { memoryreadcontext } from 'zss/memory'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -17,32 +16,6 @@ export const ALL_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  // app state (in-url)
-  .command('register', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const maybeplayer = memory.object?.stats?.player ?? ''
-    const [action, name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-      ARG_TYPE.STRING,
-    ])
-    switch (action.toLowerCase()) {
-      case 'read':
-        register_read(chip.senderid(), name, maybeplayer)
-        break
-      case 'write':
-        register_write(chip.senderid(), name, chip.get(name), maybeplayer)
-        break
-      default:
-        api_error(
-          chip.senderid(),
-          'register',
-          `unknown #regsiter [action] ${action}`,
-          maybeplayer,
-        )
-        break
-    }
-    return 0
-  })
   // flags
   .command('clear', (chip, words) => {
     const name = maptostring(words[0])

@@ -49,7 +49,10 @@ export function PanelItemSelect({
   )
 
   // write value
-  tokenizeandwritetextformat(` $green${tvalue}\n`, context, false)
+  context.writefullwidth = 32
+  tokenizeandwritetextformat(` $green${tvalue}`, context, false)
+  context.writefullwidth = undefined
+  tokenizeandwritetextformat(`\n`, context, false)
 
   const up = useCallback<UserInputHandler>(
     (mods) => {

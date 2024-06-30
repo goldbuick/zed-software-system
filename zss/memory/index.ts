@@ -23,6 +23,7 @@ import {
   MAYBE_BOARD_ELEMENT,
   BOARD,
   MAYBE_BOARD,
+  boardelementname,
 } from './board'
 import {
   BOOK,
@@ -271,7 +272,8 @@ export function memorytick(os: OS, timestamp: number) {
       context.player = item.object?.stats?.player ?? ''
 
       // run chip code
-      os.tick(item.id, item.type, timestamp, item.code)
+      const itemname = boardelementname(item.object)
+      os.tick(item.id, item.type, timestamp, itemname, item.code)
     }
   })
 }
@@ -296,7 +298,7 @@ export function memorycli(
   tape_debug('memory', 'running', timestamp, id, cli)
 
   // run chip code
-  os.once(id, CODE_PAGE_TYPE.CLI, timestamp, cli)
+  os.once(id, CODE_PAGE_TYPE.CLI, timestamp, 'cli', cli)
 }
 
 function memoryconverttogadgetlayers(
