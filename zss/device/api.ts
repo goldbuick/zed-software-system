@@ -75,19 +75,6 @@ export function register_bioserase(sender: string) {
   hub.emit('register:bioserase', sender)
 }
 
-export function register_read(sender: string, name: string, player: string) {
-  hub.emit('register:read', sender, [name], player)
-}
-
-export function register_write(
-  sender: string,
-  name: string,
-  value: any,
-  player: string,
-) {
-  hub.emit('register:write', sender, [name, value], player)
-}
-
 export function tape_info(sender: string, ...message: any[]) {
   hub.emit('tape:info', sender, message)
   return true

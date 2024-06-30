@@ -28,17 +28,17 @@ export function checkcollision(
   maybesource: MAYBE<COLLISION>,
   maybedest: MAYBE<COLLISION>,
 ) {
-  const source = maybesource ?? COLLISION.WALK
-  const dest = maybedest ?? COLLISION.WALK
+  const source = maybesource ?? COLLISION.ISWALK
+  const dest = maybedest ?? COLLISION.ISWALK
   switch (source) {
-    case COLLISION.WALK:
-      return dest !== COLLISION.WALK
-    case COLLISION.SWIM:
-      return dest !== COLLISION.SWIM
-    case COLLISION.SOLID:
+    case COLLISION.ISWALK:
+      return dest !== COLLISION.ISWALK
+    case COLLISION.ISSWIM:
+      return dest !== COLLISION.ISSWIM
+    case COLLISION.ISSOLID:
       return true // solid runs into everything
-    case COLLISION.BULLET:
-      return dest !== COLLISION.WALK && dest !== COLLISION.SWIM
+    case COLLISION.ISBULLET:
+      return dest !== COLLISION.ISWALK && dest !== COLLISION.ISSWIM
   }
 }
 

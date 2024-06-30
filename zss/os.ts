@@ -89,7 +89,8 @@ export function createos() {
       const { target, path } = parsetarget(incoming.target)
       const targetchip: CHIP | null | undefined = chips[target]
       if (ispresent(targetchip)) {
-        targetchip.message({ ...incoming, target: path })
+        const message = { ...incoming, target: path }
+        targetchip.message(message)
       }
     },
   }

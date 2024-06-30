@@ -251,7 +251,7 @@ export function bookboardmoveobject(
     dest.y >= board.height
   ) {
     // for sending interaction messages
-    return { kind: 'edge', collision: COLLISION.SOLID, x: dest.x, y: dest.y }
+    return { kind: 'edge', collision: COLLISION.ISSOLID, x: dest.x, y: dest.y }
   }
 
   // second pass, are we actually trying to move ?
@@ -383,7 +383,7 @@ export function bookboardsetlookup(book: MAYBE_BOOK, board: MAYBE_BOARD) {
       !ispresent(object.removed)
     ) {
       // add category
-      object.category = CATEGORY.OBJECT
+      object.category = CATEGORY.ISOBJECT
 
       // update lookup
       lookup[object.x + object.y * board.width] = object.id
@@ -406,7 +406,7 @@ export function bookboardsetlookup(book: MAYBE_BOOK, board: MAYBE_BOARD) {
       // add coords
       terrain.x = x
       terrain.y = y
-      terrain.category = CATEGORY.TERRAIN
+      terrain.category = CATEGORY.ISTERRAIN
 
       // update named lookup
       const name = bookboardelementreadname(book, terrain)

@@ -24,6 +24,17 @@ export type DEVICE = {
 
 export function parsetarget(targetString: string) {
   const [target, ...path] = targetString.split(':')
+  // switch (target) {
+  //   case 'tick':
+  //   case 'tock':
+  //   case 'modem':
+  //   case 'second':
+  //   case 'gadgetclient':
+  //     break
+  //   default:
+  //     console.info('eee', target, path.join(':'))
+  //     break
+  // }
   return { target, path: path.join(':') }
 }
 
@@ -55,6 +66,18 @@ export function createdevice(
     handle(message) {
       const { target, path } = parsetarget(message.target)
       const itarget = target.toLowerCase()
+
+      // switch (itarget) {
+      //   case 'tick':
+      //   case 'tock':
+      //   case 'modem':
+      //   case 'second':
+      //   case 'gadgetclient':
+      //     break
+      //   default:
+      //     console.info('XXXX', { target, path, itarget, iname })
+      //     break
+      // }
 
       // we match by tags
       if (itags.findIndex((tag) => tag === 'all' || tag === itarget) !== -1) {
