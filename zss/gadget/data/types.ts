@@ -275,8 +275,8 @@ export const PANEL_TYPE_SIZES: Record<PANEL_TYPE, number> = {
 }
 
 type WORD = string | number
-type WORD_VALUE = WORD | WORD[] | undefined
-export type PANEL_ITEM = WORD_VALUE | WORD_VALUE[]
+type WORD = WORD | WORD[] | undefined
+export type PANEL_ITEM = WORD | WORD[]
 
 export type PANEL = {
   id: string

@@ -8,7 +8,7 @@ import {
   modemwritevaluenumber,
   modemwritevaluestring,
 } from 'zss/device/modem'
-import { WORD, WORD_VALUE } from 'zss/firmware/wordtypes'
+import { WORD } from 'zss/firmware/wordtypes'
 import { createsid } from 'zss/mapping/guid'
 import {
   MAYBE_NUMBER,
@@ -242,7 +242,7 @@ export function gadgethyperlink(
   // package into a panel item
   const linput = input.toLowerCase()
 
-  const hyperlink: WORD_VALUE[] = [
+  const hyperlink: WORD[] = [
     chip.id(),
     label,
     ...(HYPERLINK_TYPES.has(linput) ? [linput] : ['hyperlink', input]),

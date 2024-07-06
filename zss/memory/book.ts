@@ -1,6 +1,5 @@
 import { trimUndefinedRecursively } from 'compress-json'
-import { WORD_VALUE } from 'zss/chip'
-import { PT, COLLISION, CATEGORY } from 'zss/firmware/wordtypes'
+import { PT, COLLISION, CATEGORY, WORD } from 'zss/firmware/wordtypes'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
@@ -26,7 +25,7 @@ import {
 } from './codepage'
 
 // player state
-export type BOOK_FLAGS = Record<string, WORD_VALUE>
+export type BOOK_FLAGS = Record<string, WORD>
 
 // player location tracking
 export type BOOK_PLAYER = string
@@ -200,7 +199,7 @@ export function booksetflag(
   book: MAYBE_BOOK,
   player: string,
   name: string,
-  value: WORD_VALUE,
+  value: WORD,
 ) {
   const flags = bookreadflags(book, player)
   if (flags) {
