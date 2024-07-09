@@ -81,8 +81,8 @@ export function EditorRows({
     ++context.y
 
     // render selection
-    if (hasselection && row.start <= ii2 && row.end >= ii1) {
-      const index = (context.active.leftedge ?? 0) + ycontext * context.width
+    if (hasselection && row.start <= ii2 && row.end >= ii1 && ycontext > 1) {
+      const index = leftedge + ycontext * context.width
       const start = Math.max(row.start, ii1) - row.start
       const end = Math.min(row.end, ii2) - row.start
       applycolortoindexes(
