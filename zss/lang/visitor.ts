@@ -520,7 +520,7 @@ class ScriptVisitor extends CstVisitor {
 
     const lines = [
       // @ts-expect-error
-      this.visit(ctx.command),
+      this.visit(ctx.flat_cmd),
       // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
@@ -547,7 +547,7 @@ class ScriptVisitor extends CstVisitor {
 
     const lines = [
       // @ts-expect-error
-      this.visit(ctx.command),
+      this.visit(ctx.flat_cmd),
       // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
@@ -575,7 +575,7 @@ class ScriptVisitor extends CstVisitor {
 
     const lines = [
       // @ts-expect-error
-      this.visit(ctx.command),
+      this.visit(ctx.flat_cmd),
       // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
@@ -598,7 +598,7 @@ class ScriptVisitor extends CstVisitor {
 
     const lines = [
       // @ts-expect-error
-      this.visit(ctx.command),
+      this.visit(ctx.flat_cmd),
       // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
@@ -616,7 +616,7 @@ class ScriptVisitor extends CstVisitor {
 
     const lines = [
       // @ts-expect-error
-      this.visit(ctx.command),
+      this.visit(ctx.flat_cmd),
       // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
@@ -642,7 +642,7 @@ class ScriptVisitor extends CstVisitor {
 
     const lines = [
       // @ts-expect-error
-      this.visit(ctx.command),
+      this.visit(ctx.flat_cmd),
       // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
