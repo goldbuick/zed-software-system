@@ -129,11 +129,18 @@ export const NumberLiteral = createToken({
 })
 
 function createWordToken(word: string, skipped = false) {
+  if (skipped) {
+    return createToken({
+      name: word,
+      pattern: new RegExp(word.toLowerCase(), 'i'),
+      longer_alt: StringLiteral,
+      group: Lexer.SKIPPED,
+    })
+  }
   return createToken({
     name: word,
     pattern: new RegExp(word.toLowerCase(), 'i'),
     longer_alt: StringLiteral,
-    group: skipped ? Lexer.SKIPPED : undefined,
   })
 }
 

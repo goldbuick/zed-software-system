@@ -33,11 +33,11 @@ function TRACE(tag: string) {
 }
 
 function WAIT() {
-  return `${WAIT_CODE}; ${TRACE('wait')};`
+  return `${WAIT_CODE};${TRACE('wait')}`
 }
 
 function EOL() {
-  return `${STOP_CODE}; ${JUMP_CODE}; ${TRACE('eol')};`
+  return `${STOP_CODE};${JUMP_CODE}${TRACE('eol')};`
 }
 
 export function enabletracing(name: string) {
@@ -210,6 +210,7 @@ function transformOperator(ast: CodeNode) {
 }
 
 function transformNode(ast: CodeNode): SourceNode {
+  console.info('#####', ast)
   switch (ast.type) {
     // categories
     case NODE.PROGRAM:
