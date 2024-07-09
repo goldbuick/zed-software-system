@@ -52,9 +52,9 @@ export function createreadcontext(
   }
 }
 
-export type WORD = string | number
-export type WORD_VALUE = WORD | WORD[] | undefined
+export type WORD = string | number | undefined | WORD[]
 export type MAYBE_WORD = MAYBE<WORD>
+export type WORD_RESULT = 0 | 1
 
 export type PT = { x: number; y: number }
 

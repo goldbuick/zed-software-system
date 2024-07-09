@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import { WORD_VALUE } from 'zss/chip'
+import { WORD } from 'zss/chip'
 import { WRITE_TEXT_CONTEXT } from 'zss/gadget/data/textformat'
 
 export type PanelItemProps = {
@@ -7,7 +7,7 @@ export type PanelItemProps = {
   chip: string
   active: boolean
   label: string
-  args: WORD_VALUE[]
+  args: WORD[]
   context: WRITE_TEXT_CONTEXT
 }
 

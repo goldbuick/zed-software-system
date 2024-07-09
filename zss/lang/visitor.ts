@@ -174,6 +174,7 @@ type CodeNodeData =
   | {
       type: NODE.READ
       words: CodeNode[]
+      flags: CodeNode[]
       lines: CodeNode[]
     }
   | {
@@ -298,6 +299,10 @@ class ScriptVisitor extends CstVisitor {
   }
 
   stmt(ctx: CstChildrenDictionary) {
+    if (ctx.label) {
+      // @ts-expect-error
+      return this.visit(ctx.label)
+    }
     if (ctx.stat) {
       // @ts-expect-error
       return this.visit(ctx.stat)
@@ -306,18 +311,67 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error
       return this.visit(ctx.text)
     }
-    if (ctx.label) {
+    if (ctx.comment) {
       // @ts-expect-error
-      return this.visit(ctx.label)
+      return this.visit(ctx.comment)
+    }
+    if (ctx.command) {
+      // @ts-expect-error
+      return this.visit(ctx.command)
+    }
+    if (ctx.hyperlink) {
+      // @ts-expect-error
+      return this.visit(ctx.hyperlink)
+    }
+    if (ctx.Short_go) {
+      // @ts-expect-error
+      return this.visit(ctx.Short_go)
+    }
+    if (ctx.Short_try) {
+      // @ts-expect-error
+      return this.visit(ctx.Short_try)
+    }
+  }
+
+  do_stmt(ctx: CstChildrenDictionary) {
+    if (ctx.stat) {
+      // @ts-expect-error
+      return this.visit(ctx.stat)
+    }
+    if (ctx.text) {
+      // @ts-expect-error
+      return this.visit(ctx.text)
     }
     if (ctx.comment) {
       // @ts-expect-error
       return this.visit(ctx.comment)
     }
-    if (ctx.commands) {
+    if (ctx.command) {
       // @ts-expect-error
-      return this.visit(ctx.commands)
+      return this.visit(ctx.command)
     }
+    if (ctx.hyperlink) {
+      // @ts-expect-error
+      return this.visit(ctx.hyperlink)
+    }
+    if (ctx.Short_go) {
+      // @ts-expect-error
+      return this.visit(ctx.Short_go)
+    }
+    if (ctx.Short_try) {
+      // @ts-expect-error
+      return this.visit(ctx.Short_try)
+    }
+  }
+
+  label(ctx: CstChildrenDictionary) {
+    return makeNode(ctx, {
+      type: NODE.LABEL,
+      active: true,
+      name: strImage(ctx.Label?.[0] ?? ':')
+        .slice(1)
+        .trim(),
+    })
   }
 
   stat(ctx: CstChildrenDictionary) {
@@ -337,16 +391,6 @@ class ScriptVisitor extends CstVisitor {
     }
   }
 
-  label(ctx: CstChildrenDictionary) {
-    return makeNode(ctx, {
-      type: NODE.LABEL,
-      active: true,
-      name: strImage(ctx.Label?.[0] ?? ':')
-        .slice(1)
-        .trim(),
-    })
-  }
-
   comment(ctx: CstChildrenDictionary) {
     return makeNode(ctx, {
       type: NODE.LABEL,
@@ -355,15 +399,26 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
-  commands(ctx: CstChildrenDictionary) {
-    // @ts-expect-error
-    return asList(this, ctx.command)
+  hyperlink(ctx: CstChildrenDictionary) {
+    return makeNode(ctx, {
+      type: NODE.HYPERLINK,
+      // @ts-expect-error
+      link: asList(this, ctx.words).flat(),
+      text: strImage(ctx.HyperLinkText?.[0] ?? ';').slice(1),
+    })
   }
 
   command(ctx: CstChildrenDictionary) {
-    if (ctx.flat_cmd) {
+    if (ctx.words) {
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        // @ts-expect-error
+        words: asList(this, ctx.words).flat(),
+      })
+    }
+    if (ctx.Command_play) {
       // @ts-expect-error
-      return this.visit(ctx.flat_cmd)
+      return this.visit(ctx.Command_play)
     }
     if (ctx.structured_cmd) {
       // @ts-expect-error
@@ -379,9 +434,9 @@ class ScriptVisitor extends CstVisitor {
         words: asList(this, ctx.words).flat(),
       })
     }
-    if (ctx.hyperlink) {
+    if (ctx.Command_play) {
       // @ts-expect-error
-      return this.visit(ctx.hyperlink)
+      return this.visit(ctx.Command_play)
     }
     if (ctx.Short_go) {
       // @ts-expect-error
@@ -390,10 +445,6 @@ class ScriptVisitor extends CstVisitor {
     if (ctx.Short_try) {
       // @ts-expect-error
       return this.visit(ctx.Short_try)
-    }
-    if (ctx.Command_play) {
-      // @ts-expect-error
-      return this.visit(ctx.Command_play)
     }
   }
 
@@ -422,15 +473,6 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error
       return this.visit(ctx.Command_continue)
     }
-  }
-
-  hyperlink(ctx: CstChildrenDictionary) {
-    return makeNode(ctx, {
-      type: NODE.HYPERLINK,
-      // @ts-expect-error
-      link: asList(this, ctx.words).flat(),
-      text: strImage(ctx.HyperLinkText?.[0] ?? ';').slice(1),
-    })
   }
 
   Short_go(ctx: CstChildrenDictionary) {
@@ -472,28 +514,13 @@ class ScriptVisitor extends CstVisitor {
     return this.visit(ctx.do_stmt)
   }
 
-  do_stmt(ctx: CstChildrenDictionary) {
-    if (ctx.text) {
-      // @ts-expect-error
-      return this.visit(ctx.text)
-    }
-    if (ctx.comment) {
-      // @ts-expect-error
-      return this.visit(ctx.comment)
-    }
-    if (ctx.commands) {
-      // @ts-expect-error
-      return this.visit(ctx.commands)
-    }
-  }
-
   Command_if(ctx: CstChildrenDictionary) {
     // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
     const lines = [
       // @ts-expect-error
-      this.visit(ctx.command),
+      this.visit(ctx.flat_cmd),
       // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
@@ -520,7 +547,7 @@ class ScriptVisitor extends CstVisitor {
 
     const lines = [
       // @ts-expect-error
-      this.visit(ctx.command),
+      this.visit(ctx.flat_cmd),
       // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
@@ -548,7 +575,7 @@ class ScriptVisitor extends CstVisitor {
 
     const lines = [
       // @ts-expect-error
-      this.visit(ctx.command),
+      this.visit(ctx.flat_cmd),
       // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
@@ -571,7 +598,7 @@ class ScriptVisitor extends CstVisitor {
 
     const lines = [
       // @ts-expect-error
-      this.visit(ctx.command),
+      this.visit(ctx.flat_cmd),
       // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
@@ -589,7 +616,7 @@ class ScriptVisitor extends CstVisitor {
 
     const lines = [
       // @ts-expect-error
-      this.visit(ctx.command),
+      this.visit(ctx.flat_cmd),
       // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
@@ -601,13 +628,21 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
+  Command_read_flags(ctx: CstChildrenDictionary) {
+    // @ts-expect-error
+    return asList(this, ctx.StringLiteral).flat()
+  }
+
   Command_read(ctx: CstChildrenDictionary) {
     // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
+    // @ts-expect-error
+    const flags = this.visit(ctx.Command_read_flags).flat()
+
     const lines = [
       // @ts-expect-error
-      this.visit(ctx.command),
+      this.visit(ctx.flat_cmd),
       // @ts-expect-error
       ...asList(this, ctx.do_line),
     ].flat()
@@ -615,6 +650,7 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.READ,
       words: words.filter(ispresent),
+      flags: flags.filter(ispresent),
       lines: lines.filter(ispresent),
     })
   }

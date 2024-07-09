@@ -1,0 +1,14 @@
+@bullet
+@char 72
+#cycle 1
+:yeep
+?rnd
+#char 77
+#color pick green blue
+#yeep
+:thud
+#die
+:bump
+:touch
+#die item
+

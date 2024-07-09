@@ -1,4 +1,3 @@
-import { WORD_VALUE } from 'zss/chip'
 import {
   PT,
   DIR,
@@ -13,6 +12,7 @@ import {
   ptapplydir,
   COLLISION,
   mapstrdirtoconst,
+  WORD,
 } from 'zss/firmware/wordtypes'
 import { COLOR } from 'zss/gadget/data/types'
 import { pick } from 'zss/mapping/array'
@@ -43,7 +43,7 @@ export type BOARD_ELEMENT_STATS = {
   inputcancel?: number
   inputmenu?: number
   data?: any
-  [key: string]: WORD_VALUE
+  [key: string]: WORD
 }
 
 export type BOARD_ELEMENT = {
@@ -85,7 +85,7 @@ export type BOARD_RECT = {
   height: number
 }
 
-export type BOARD_STATS = Record<string, WORD_VALUE>
+export type BOARD_STATS = Record<string, WORD>
 
 export type BOARD = {
   // lookup

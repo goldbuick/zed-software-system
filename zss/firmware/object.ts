@@ -1,4 +1,4 @@
-import { CHIP, WORD_VALUE, maptostring } from 'zss/chip'
+import { CHIP, maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import {
   INPUT,
@@ -71,6 +71,7 @@ import {
   dirfrompts,
   ptapplydir,
   COLLISION,
+  WORD,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
@@ -235,7 +236,7 @@ function moveobject(
 }
 
 function valuepeekframename(
-  value: WORD_VALUE,
+  value: WORD,
   index: number,
 ): [MAYBE_STRING, number] {
   if (isstring(value)) {

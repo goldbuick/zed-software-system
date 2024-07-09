@@ -1,4 +1,5 @@
-import { CHIP, WORD } from './chip'
+import { CHIP } from './chip'
+import { WORD } from './firmware/wordtypes'
 
 type FIRMWARE_GET = (chip: CHIP, name: string) => [boolean, any]
 type FIRMWARE_SET = (chip: CHIP, name: string, value: any) => [boolean, any]

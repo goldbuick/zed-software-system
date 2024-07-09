@@ -1,7 +1,7 @@
 import ErrorStackParser from 'error-stack-parser'
 
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
-import { ARG_TYPE, WORD, WORD_VALUE, readargs } from './firmware/wordtypes'
+import { ARG_TYPE, WORD, WORD_RESULT, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
@@ -62,40 +62,40 @@ export type CHIP = {
   stacktrace: (error: Error) => void
 
   // output / config
-  text: (...words: WORD[]) => WORD_VALUE
-  stat: (...words: WORD[]) => WORD_VALUE
-  hyperlink: (...words: WORD[]) => WORD_VALUE
+  text: (...words: WORD[]) => void
+  stat: (...words: WORD[]) => void
+  hyperlink: (...words: WORD[]) => void
 
   // logic api
-  move: (wait: boolean, ...words: WORD[]) => WORD_VALUE
-  command: (...words: WORD[]) => WORD_VALUE
-  if: (...words: WORD[]) => WORD_VALUE
+  move: (wait: WORD_RESULT, ...words: WORD[]) => WORD_RESULT
+  command: (...words: WORD[]) => WORD_RESULT
+  if: (...words: WORD[]) => WORD_RESULT
   repeatstart: (index: number, ...words: WORD[]) => void
-  repeat: (index: number) => boolean
+  repeat: (index: number) => WORD_RESULT
   readstart: (index: number, name: WORD) => void
-  read: (index: number, ...words: WORD[]) => boolean
-  or: (...words: WORD[]) => WORD_VALUE
-  and: (...words: WORD[]) => WORD_VALUE
-  not: (...words: WORD[]) => WORD_VALUE
+  read: (index: number, ...words: WORD[]) => WORD_RESULT
+  or: (...words: WORD[]) => WORD
+  and: (...words: WORD[]) => WORD
+  not: (...words: WORD[]) => WORD
   expr: (...words: WORD[]) => WORD[]
-  isEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  isNotEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  isLessThan: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  isGreaterThan: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  isLessThanOrEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  isGreaterThanOrEq: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opPlus: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opMinus: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opPower: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opMultiply: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opDivide: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opModDivide: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opFloorDivide: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opUniPlus: (lhs: WORD, rhs: WORD) => WORD_VALUE
-  opUniMinus: (lhs: WORD, rhs: WORD) => WORD_VALUE
+  isEq: (lhs: WORD, rhs: WORD) => WORD
+  isNotEq: (lhs: WORD, rhs: WORD) => WORD
+  isLessThan: (lhs: WORD, rhs: WORD) => WORD
+  isGreaterThan: (lhs: WORD, rhs: WORD) => WORD
+  isLessThanOrEq: (lhs: WORD, rhs: WORD) => WORD
+  isGreaterThanOrEq: (lhs: WORD, rhs: WORD) => WORD
+  opPlus: (lhs: WORD, rhs: WORD) => WORD
+  opMinus: (lhs: WORD, rhs: WORD) => WORD
+  opPower: (lhs: WORD, rhs: WORD) => WORD
+  opMultiply: (lhs: WORD, rhs: WORD) => WORD
+  opDivide: (lhs: WORD, rhs: WORD) => WORD
+  opModDivide: (lhs: WORD, rhs: WORD) => WORD
+  opFloorDivide: (lhs: WORD, rhs: WORD) => WORD
+  opUniPlus: (lhs: WORD, rhs: WORD) => WORD
+  opUniMinus: (lhs: WORD, rhs: WORD) => WORD
 }
 
-function maptoresult(value: WORD_VALUE): WORD {
+function maptoresult(value: WORD): WORD {
   if (isarray(value)) {
     return value.length > 0 ? 1 : 0
   }
@@ -127,7 +127,7 @@ export function createchip(id: string, build: GeneratorBuild) {
   const repeatscommand: Record<number, undefined | WORD[]> = {}
 
   // tracking for reads
-  const reads: Record<number, WORD_VALUE> = {}
+  const reads: Record<number, WORD[]> = {}
 
   // pause until next tick
   let yieldstate = false
@@ -158,12 +158,12 @@ export function createchip(id: string, build: GeneratorBuild) {
     return invokes[name]
   }
 
-  function invokecommand(name: string, words: WORD[]): 0 | 1 {
+  function invokecommand(name: string, words: WORD[]) {
     const command = getcommand(name)
     if (!command) {
       throw new Error(`unknown firmware command ${name}`)
     }
-    return command(chip, words)
+    command(chip, words)
   }
 
   const chip: CHIP = {
@@ -378,12 +378,12 @@ export function createchip(id: string, build: GeneratorBuild) {
     },
     move(wait, ...words) {
       // try and move
-      const result = chip.command('go', ...words)
+      const result = chip.command('go', ...words) && wait
       // and yield regardless of the outcome
       chip.yield()
       // if blocked and should wait, return 1
       // otherwise 0
-      return result && wait ? 1 : 0
+      return result ? 1 : 0
     },
     command(...words) {
       // 0 - continue
@@ -395,12 +395,15 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       const [name, ...args] = words
       const command = getcommand(maptostring(name))
-      if (command) {
+
+      // found command, invoke
+      if (ispresent(command)) {
         return command(chip, args)
       }
 
-      // unknown command defaults to send
-      return invokecommand('send', [name, ...args])
+      // unknown command,  defaults to send
+      invokecommand('send', [name, ...args])
+      return 0
     },
     if(...words) {
       const [value, ii] = readargs(memoryreadcontext(chip, words), 0, [
@@ -412,7 +415,7 @@ export function createchip(id: string, build: GeneratorBuild) {
         chip.command(...words.slice(ii))
       }
 
-      return result
+      return result ? 1 : 0
     },
     repeatstart(index, ...words) {
       const [value, ii] = readargs(memoryreadcontext(chip, words), 0, [
@@ -433,7 +436,7 @@ export function createchip(id: string, build: GeneratorBuild) {
         chip.command(...repeatcmd)
       }
 
-      return result
+      return result ? 1 : 0
     },
     readstart(index, name) {
       if (!isstring(name)) {
@@ -443,6 +446,7 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       // expects name to be a string
       const arraysource: any[] = chip.get(name) ?? []
+
       // and chip.get(name) to return an object or an array
       reads[index] = isarray(arraysource) ? arraysource : [arraysource]
     },
@@ -451,13 +455,13 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       // todo raise error
       if (isarray(arraysource) === false) {
-        return false
+        return 0
       }
 
       // read next value
       const next = arraysource.shift()
       if (next === undefined) {
-        return false
+        return 0
       }
 
       // map values from object or map number. string to counter
@@ -471,18 +475,22 @@ export function createchip(id: string, build: GeneratorBuild) {
           })
           break
         case 'object':
-          names.forEach((key) => {
-            const value = next[key]
-            // todo validate type on value
-            chip.set(key, value)
-          })
+          if (Array.isArray(next)) {
+            //
+          } else {
+            names.forEach((key) => {
+              const value = next[key]
+              // todo validate type on value
+              chip.set(key, value)
+            })
+          }
           break
         default:
           // todo raise about not being able to read value
           break
       }
 
-      return true
+      return 1
     },
     or(...words) {
       let lastvalue = 0

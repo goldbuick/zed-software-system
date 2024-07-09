@@ -1,5 +1,5 @@
 import { IToken } from 'chevrotain'
-import { WORD_VALUE } from 'zss/chip'
+import { WORD } from 'zss/chip'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { Stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
@@ -21,7 +21,7 @@ export enum CODE_PAGE_TYPE {
 export type CODE_PAGE_STATS = {
   type?: CODE_PAGE_TYPE
   name?: string
-  [key: string]: WORD_VALUE
+  [key: string]: WORD
 }
 
 export type CODE_PAGE = {
