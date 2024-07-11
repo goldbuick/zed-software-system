@@ -13,7 +13,9 @@ async function readstate(): Promise<STATE_BOOKS> {
     const hash = window.location.hash.slice(1)
     if (hash.length) {
       const result = (await decompressfromurlhash(hash)) ?? []
-      return result.map(shapebook)
+      const statebooks = result.map(shapebook)
+      console.info('readstate', statebooks)
+      return statebooks
     }
   } catch (err) {
     //
@@ -24,6 +26,7 @@ async function readstate(): Promise<STATE_BOOKS> {
 async function writestate(books: STATE_BOOKS) {
   const cleanbooks = [...books.map(bookexport)].filter(ispresent)
   const hash = (await compresstourlhash(cleanbooks)) ?? ''
+  console.info('writestate', hash)
   const out = `#${hash}`
   window.location.hash = out
   tape_info(

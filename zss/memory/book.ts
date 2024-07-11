@@ -60,6 +60,7 @@ export function shapebook(book: MAYBE_BOOK) {
       book.tags = new Set(book.tags)
     }
   }
+  console.info('shapebook', book)
   return book
 }
 

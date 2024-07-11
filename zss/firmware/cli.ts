@@ -180,7 +180,7 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('pages', (chip) => {
     writesection(`pages`)
-    const book = memoryreadbookbyaddress(openbook)
+    const book = ensureopenbook()
     if (ispresent(book)) {
       if (book.pages.length) {
         book.pages.forEach((page) => {

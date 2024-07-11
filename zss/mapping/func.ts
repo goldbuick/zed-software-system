@@ -1,8 +1,6 @@
-import { noop } from './types'
-
 export function doasync(
   asyncfunc: () => Promise<void>,
-  errorfunc: (error: Error) => void = noop,
+  errorfunc: (error: Error) => void = console.error,
 ) {
   asyncfunc().catch(errorfunc)
 }

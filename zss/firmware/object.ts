@@ -16,7 +16,7 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import {
-  memoryreadbookbyaddress,
+  memoryreadbooksbytags,
   memoryreadchip,
   memoryreadcontext,
   memoryreadframes,
@@ -40,7 +40,6 @@ import {
 import {
   MAYBE_BOOK,
   bookboardmoveobject,
-  bookreadboard,
   bookreadflag,
   booksetflag,
   bookboardobjectsafedelete,
@@ -48,6 +47,7 @@ import {
   bookboardsetlookup,
   bookboardobjectnamedlookupdelete,
   bookelementkindread,
+  bookreadboardsbytags,
 } from 'zss/memory/book'
 import {
   editboardwrite,
@@ -268,10 +268,12 @@ function bookboardframeread(
     }
   }
 
-  const maybebook = maybeframe ? memoryreadbookbyaddress(maybeframe?.book ?? '') : book
-  const maybeboard = maybeframe
-    ? bookreadboard(maybebook, maybeframe?.board ?? '')
-    : board
+  const [maybebook] = maybeframe
+    ? memoryreadbooksbytags(maybeframe?.book ?? [])
+    : [book]
+  const [maybeboard] = maybeframe
+    ? bookreadboardsbytags(maybebook, maybeframe?.board ?? [])
+    : [board]
 
   return { maybebook, maybeboard }
 }

@@ -84,7 +84,8 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           tracking[message.player] = 0
           tape_info(vm.name(), 'player login', message.player)
         } else {
-          const [mainbook] = memoryreadbooksbytags(memoryreadmaintags())
+          const maintags = memoryreadmaintags()
+          const [mainbook] = memoryreadbooksbytags(maintags)
           if (ispresent(mainbook)) {
             tape_crash(vm.name())
           } else {
