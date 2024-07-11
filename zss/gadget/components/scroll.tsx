@@ -156,8 +156,8 @@ export function Scroll({
         if (!ispresent(groupref.current)) {
           return
         }
-        const force = 9.78
-        const damp = 17.325
+        const force = 9.58
+        const damp = 39.325
         const target = shouldclose ? height * 2 * -DRAW_CHAR_HEIGHT : 0
         const step = target - groupref.current.userData.y
 
@@ -165,7 +165,7 @@ export function Scroll({
         groupref.current.userData.y += groupref.current.userData.vy
         groupref.current.position.y = snap(
           groupref.current.userData.y,
-          DRAW_CHAR_HEIGHT,
+          DRAW_CHAR_HEIGHT * 0.5,
         )
         groupref.current.userData.vy +=
           groupref.current.userData.vy * delta * -damp
@@ -197,7 +197,7 @@ export function Scroll({
   )
 
   return (
-    <group ref={groupref}>
+    <group ref={groupref} position-y={1000000}>
       <UserFocus>
         <UserInput
           MOVE_UP={up}
