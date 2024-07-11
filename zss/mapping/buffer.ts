@@ -1,6 +1,5 @@
 import { encode as msgencode, decode as msgdecode } from '@msgpack/msgpack'
 import { toBase64, fromBase64 } from '@smithy/util-base64'
-import { compress as compact, decompress as decompact } from 'compress-json'
 import {
   makeCompressionStream,
   makeDecompressionStream,
@@ -11,94 +10,87 @@ import { ispresent } from './types'
 const CompressionStream = makeCompressionStream(TransformStream)
 const DecompressionStream = makeDecompressionStream(TransformStream)
 
-async function zipbuffer(buffer: Uint8Array): Promise<Uint8Array | undefined> {
-  //create the stream
-  const cs = new CompressionStream('gzip')
-  //create the writer
-  const writer = cs.writable.getWriter()
-  //write the buffer to the writer
-  writer.write(buffer)
-  writer.close()
-  //create the output
-  const output: Uint8Array[] = []
-  const reader = cs.readable.getReader()
-  let totalSize = 0
-  //go through each chunk and add it to the output
-  while (true) {
-    const { value, done } = await reader.read()
-    if (done) break
-    output.push(value)
-    totalSize += value.byteLength
-  }
-  const concatenated = new Uint8Array(totalSize)
-  let offset = 0
-  //finally build the compressed array and return it
-  for (const array of output) {
-    concatenated.set(array, offset)
-    offset += array.byteLength
-  }
-  return concatenated
-}
-
-async function unzipbuffer(
-  buffer: Uint8Array,
-): Promise<Uint8Array | undefined> {
+async function zipstream<
+  T extends typeof CompressionStream | typeof DecompressionStream,
+>(Stream: T, buffer: Uint8Array) {
   try {
-    //create the stream
-    const cs = new CompressionStream('gzip')
-    //create the writer
-    const writer = cs.writable.getWriter()
+    // create the stream
+    const bufferstream = new Stream('gzip')
+    // create the writer
+    const writer = bufferstream.writable.getWriter()
+
     //write the buffer to the writer
-    writer.write(buffer)
-    writer.close()
+    await writer.write(buffer)
+    await writer.close()
+
+    return bufferstream
   } catch (err) {
     //
   }
 }
 
-export async function compresstourlstring(
-  value: JSON,
+async function zipreader(reader: ReadableStreamDefaultReader<Uint8Array>) {
+  try {
+    let result
+    let compressedData = new Uint8Array()
+    while ((result = await reader.read())) {
+      if (result.done) {
+        return compressedData
+      } else {
+        compressedData = new Uint8Array([...compressedData, ...result.value])
+      }
+    }
+    return compressedData
+  } catch (err) {
+    //
+  }
+}
+
+async function zipbuffer(buffer: Uint8Array): Promise<Uint8Array | undefined> {
+  const bs = await zipstream(CompressionStream, buffer)
+  if (!ispresent(bs)) {
+    return
+  }
+
+  return await zipreader(bs.readable.getReader())
+}
+
+async function unzipbuffer(
+  buffer: Uint8Array,
+): Promise<Uint8Array | undefined> {
+  const bs = await zipstream(DecompressionStream, buffer)
+  if (!ispresent(bs)) {
+    return
+  }
+
+  return await zipreader(bs.readable.getReader())
+}
+
+export async function compresstourlhash(
+  value: any,
 ): Promise<string | undefined> {
   try {
-    const compactjson = compact(value)
-    const buffer = msgencode(compactjson)
+    const buffer = msgencode(value)
     const zipped = await zipbuffer(buffer)
     if (ispresent(zipped)) {
-      const urlstring = toBase64(zipped)
-      return urlstring
+      const urlhash = toBase64(zipped)
+      return urlhash
     }
   } catch (err) {
     //
   }
 }
 
-/**
- * trimming process:
- *
- * 1. compress-json
- * 2. msg-pack into binary
- * 3. compress binary
- * 4. pack into url-safe-chars
- */
-
-// const compressArrayBuffer = async (input: ArrayBuffer) => {
-//   //create the output
-//   const output: Uint8Array[] = [];
-//   const reader = cs.readable.getReader();
-//   let totalSize = 0;
-//   //go through each chunk and add it to the output
-//   while (true) {
-//     const { value, done } = await reader.read();
-//     if (done) break;
-//     output.push(value);
-//     totalSize += value.byteLength;
-//   }
-//   const concatenated = new Uint8Array(totalSize);
-//   let offset = 0;
-//   //finally build the compressed array and return it
-//   for (const array of output) {
-//     concatenated.set(array, offset);
-//     offset += array.byteLength;
-//   }
-//   return concatenated;
-// };
+export async function decompressfromurlhash(
+  value: string,
+): Promise<any | undefined> {
+  try {
+    const zipped = fromBase64(value)
+    const buffer = await unzipbuffer(zipped)
+    if (ispresent(buffer)) {
+      return msgdecode(buffer)
+    }
+  } catch (err) {
+    //
+  }
+}

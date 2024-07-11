@@ -1673,11 +1673,6 @@ alea@^1.0.1:
   resolved "https://registry.npmjs.org/alea/-/alea-1.0.1.tgz#957f60741c5ad11b13f72aa02a6b89fe96a26dc4"
   integrity sha512-QU+wv+ziDXaMxRdsQg/aH7sVfWdhKps5YP97IIwFkHCsbDZA3k87JXoZ5/iuemf4ntytzIWeScrRpae8+lDrXA==
 
-animejs@^3.2.1:
-  version "3.2.2"
-  resolved "https://registry.npmjs.org/animejs/-/animejs-3.2.2.tgz#59be98c58834339d5847f4a70ddba74ac75b6afc"
-  integrity sha512-Ao95qWLpDPXXM+WrmwcKbl6uNlC5tjnowlaRYtuVDHHoygjtIPfDUoK9NthrlZsQSKjZXlmji2TrBUAVbiH0LQ==
-
 ansi-escapes@^4.2.1:
   version "4.3.2"
   resolved "https://registry.npmjs.org/ansi-escapes/-/ansi-escapes-4.3.2.tgz#6b2291d1db7d98b6521d5f1efa42d0f3a9feb65e"
@@ -2202,10 +2197,10 @@ commander@^4.0.0:
   resolved "https://registry.npmjs.org/commander/-/commander-4.1.1.tgz#9fd602bd936294e9e9ef46a3f4d6964044b18068"
   integrity sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==
 
-compress-json@^3.0.5:
-  version "3.0.5"
-  resolved "https://registry.npmjs.org/compress-json/-/compress-json-3.0.5.tgz#2bb7c3961c69482f1857ebbad9de83d0dd699b90"
-  integrity sha512-HYiJvE0cTIygI9zXqY5fkRr7H3NV3UAME0enzwN5M0JkzMOtUcjSyaH7HxVRzXsn7IIXD0STA9M5jyWkxERSLg==
+compress-json@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.npmjs.org/compress-json/-/compress-json-3.1.0.tgz#337e0a5b28b180fb849bcb6913bf361a5b3c0d57"
+  integrity sha512-Zcq4jRC5ZpfaOY3mbBWOANtGuMHJ/hsTENcwN1/lEkrogcoAF7HBma1RLe/CICZO6IquK1U0EaPzmnlDIFRNjA==
 
 compression-streams-polyfill@^0.1.7:
   version "0.1.7"

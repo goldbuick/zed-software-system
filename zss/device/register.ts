@@ -1,17 +1,19 @@
 import { createdevice } from 'zss/device'
-import { encodeduritovalue, valuetoencodeduri } from 'zss/mapping/buffer'
-import { isarray, isbook } from 'zss/mapping/types'
+import { decompressfromurlhash, compresstourlhash } from 'zss/mapping/buffer'
+import { doasync } from 'zss/mapping/func'
+import { isarray, isbook, ispresent } from 'zss/mapping/types'
 import { bookexport } from 'zss/memory/book'
 
 import { api_error, bip_rebootfailed, tape_info, vm_books } from './api'
 
 type STATE_BOOKS = any[]
 
-function readstate(): STATE_BOOKS {
+async function readstate(): Promise<STATE_BOOKS> {
   try {
     const hash = window.location.hash.slice(1)
     if (hash.length) {
-      return encodeduritovalue(hash)
+      const result = await decompressfromurlhash(hash)
+      return (result ?? []) as any[]
     }
   } catch (err) {
     //
@@ -19,11 +21,15 @@ function readstate(): STATE_BOOKS {
   return [] as any[]
 }
 
-function writestate(books: STATE_BOOKS) {
-  const cleanbooks = [...books.map(bookexport)]
-  const out = `#${valuetoencodeduri(cleanbooks)}`
+async function writestate(books: STATE_BOOKS) {
+  const cleanbooks = [...books.map(bookexport)].filter(ispresent)
+  const hash = (await compresstourlhash(cleanbooks)) ?? ''
+  const out = `#${hash}`
   window.location.hash = out
-  tape_info(register.name(), `wrote [...${out.slice(-16)}]`)
+  tape_info(
+    register.name(),
+    `wrote ${hash?.length ?? 0} chars [${hash.slice(0, 8)}...${hash.slice(-8)}]`,
+  )
 }
 
 const BIOS_BOOKS = 'bios-books'
@@ -44,46 +50,54 @@ function erasebiosbooks() {
   localStorage.removeItem(BIOS_BOOKS)
 }
 
-const register = createdevice('register', [], (message) => {
+const register = createdevice('register', [], function (message) {
   switch (message.target) {
     // memory
     case 'reboot':
-      if (message.player) {
+      doasync(async function () {
+        if (!ispresent(message.player)) {
+          return
+        }
+
         // check url first
-        const books = readstate()
+        const books = await readstate()
         if (isbook(books[0])) {
           vm_books(register.name(), books, message.player)
-        } else {
-          // check local storage second
-          const biosbooks = readbiosbooks()
-          if (biosbooks.length > 0 && biosbooks.every(isbook)) {
-            vm_books(register.name(), biosbooks, message.player)
-          } else {
-            api_error(
-              register.name(),
-              message.target,
-              'no main book found in registry',
-              message.player,
-            )
-            bip_rebootfailed(register.name(), message.player)
-          }
+          return
         }
-      }
+
+        // check local storage second
+        const biosbooks = readbiosbooks()
+        if (biosbooks.length > 0 && biosbooks.every(isbook)) {
+          vm_books(register.name(), biosbooks, message.player)
+          return
+        }
+
+        // signal error
+        api_error(
+          register.name(),
+          message.target,
+          'no main book found in registry',
+          message.player,
+        )
+        bip_rebootfailed(register.name(), message.player)
+      })
       break
-    case 'flush': {
-      if (isarray(message.data)) {
-        writestate(message.data)
-      }
+    case 'flush':
+      doasync(async function () {
+        if (isarray(message.data)) {
+          await writestate(message.data)
+        }
+      })
       break
-    }
-    case 'biosflash': {
-      const books = readstate()
-      writebiosbooks(books)
+    case 'biosflash':
+      doasync(async function () {
+        const books = await readstate()
+        writebiosbooks(books)
+      })
       break
-    }
-    case 'bioserase': {
+    case 'bioserase':
       erasebiosbooks()
       break
-    }
   }
 })
