@@ -1,8 +1,8 @@
-import { useThree } from '@react-three/fiber'
-import anime from 'animejs'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Group } from 'three'
 import { snap } from 'zss/mapping/number'
+import { ispresent } from 'zss/mapping/types'
 
 import {
   createwritetextcontext,
@@ -49,6 +49,7 @@ export function Scroll({
   text,
   shouldclose,
 }: ScrollProps) {
+  const { viewport } = useThree()
   const panelwidth = width - 3
   const panelheight = height - 3
   const tiles = useTiles(width, height, 0, color, bg)
@@ -131,45 +132,53 @@ export function Scroll({
   }
 
   const groupref = useRef<Group>(null)
-  const viewport = useThree((state) => state.viewport)
-  const { height: viewheight } = viewport.getCurrentViewport()
 
-  const didclose = useCallback(() => {
+  const didstop = useCallback(() => {
     if (shouldclose) {
       scroll.didclose()
     }
   }, [shouldclose, scroll])
 
+  // start position
   useEffect(() => {
-    if (!groupref.current) {
-      return
+    if (groupref.current && !shouldclose) {
+      const start = viewport.height
+      groupref.current.position.y = start
+      groupref.current.userData.y = start
+      groupref.current.userData.vy = 0
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldclose])
 
-    // tracking
-    const start = !shouldclose ? viewheight : 0
-    const end = !shouldclose ? 0 : height * -DRAW_CHAR_HEIGHT
-    const easing = !shouldclose ? 'easeOutBack' : 'easeInBack'
-
-    // start position
-    const target = { y: start }
-    groupref.current.position.y = start
-
-    // run anim
-    anime({
-      // end position
-      y: end,
-      duration: 300,
-      easing,
-      targets: target,
-      complete: didclose,
-      update() {
-        if (!groupref.current) {
+  useFrame(
+    useCallback(
+      (_, delta) => {
+        if (!ispresent(groupref.current)) {
           return
         }
-        groupref.current.position.y = snap(target.y, DRAW_CHAR_HEIGHT * 0.125)
+        const force = 9.58
+        const damp = 39.325
+        const target = shouldclose ? height * 2 * -DRAW_CHAR_HEIGHT : 0
+        const step = target - groupref.current.userData.y
+
+        groupref.current.userData.vy += step * delta * force
+        groupref.current.userData.y += groupref.current.userData.vy
+        groupref.current.position.y = snap(
+          groupref.current.userData.y,
+          DRAW_CHAR_HEIGHT * 0.5,
+        )
+        groupref.current.userData.vy +=
+          groupref.current.userData.vy * delta * -damp
+
+        const near = shouldclose ? 8 : 0.1
+        if (Math.abs(step) < near) {
+          didstop()
+        }
       },
-    })
-  }, [shouldclose])
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [shouldclose],
+    ),
+  )
 
   const up = useCallback<UserInputHandler>(
     (mods) => {
@@ -188,7 +197,7 @@ export function Scroll({
   )
 
   return (
-    <group ref={groupref}>
+    <group ref={groupref} position-y={1000000}>
       <UserFocus>
         <UserInput
           MOVE_UP={up}

@@ -1,31 +1,96 @@
-import { compress, decompress } from 'compress-json'
+import { encode as msgencode, decode as msgdecode } from '@msgpack/msgpack'
+import { toBase64, fromBase64 } from '@smithy/util-base64'
 import {
-  compressToEncodedURIComponent,
-  compressToUint8Array,
-  decompressFromEncodedURIComponent,
-  decompressFromUint8Array,
-} from 'lz-string'
+  makeCompressionStream,
+  makeDecompressionStream,
+} from 'compression-streams-polyfill/ponyfill'
 
-export function valuetostring(value: any) {
-  return JSON.stringify(compress(value))
+import { ispresent } from './types'
+
+const CompressionStream = makeCompressionStream(TransformStream)
+const DecompressionStream = makeDecompressionStream(TransformStream)
+
+async function zipstream<
+  T extends typeof CompressionStream | typeof DecompressionStream,
+>(Stream: T, buffer: Uint8Array) {
+  try {
+    // create the stream
+    const bufferstream = new Stream('gzip')
+    // create the writer
+    const writer = bufferstream.writable.getWriter()
+
+    //write the buffer to the writer
+    await writer.write(buffer)
+    await writer.close()
+
+    return bufferstream
+  } catch (err) {
+    //
+  }
 }
 
-export function stringtovalue<T>(value: string) {
-  return decompress(JSON.parse(value)) as T
+async function zipreader(reader: ReadableStreamDefaultReader<Uint8Array>) {
+  try {
+    let result
+    let compressedData = new Uint8Array()
+    while ((result = await reader.read())) {
+      if (result.done) {
+        return compressedData
+      } else {
+        compressedData = new Uint8Array([...compressedData, ...result.value])
+      }
+    }
+    return compressedData
+  } catch (err) {
+    //
+  }
 }
 
-export function valuetobuffer(value: any) {
-  return compressToUint8Array(valuetostring(value))
+async function zipbuffer(buffer: Uint8Array): Promise<Uint8Array | undefined> {
+  const bs = await zipstream(CompressionStream, buffer)
+  if (!ispresent(bs)) {
+    return
+  }
+
+  return await zipreader(bs.readable.getReader())
 }
 
-export function buffertovalue<T>(buffer: Uint8Array) {
-  return stringtovalue<T>(decompressFromUint8Array(buffer))
+async function unzipbuffer(
+  buffer: Uint8Array,
+): Promise<Uint8Array | undefined> {
+  const bs = await zipstream(DecompressionStream, buffer)
+  if (!ispresent(bs)) {
+    return
+  }
+
+  return await zipreader(bs.readable.getReader())
 }
 
-export function valuetoencodeduri(value: any) {
-  return compressToEncodedURIComponent(valuetostring(value))
+export async function compresstourlhash(
+  value: any,
+): Promise<string | undefined> {
+  try {
+    const buffer = msgencode(value)
+    const zipped = await zipbuffer(buffer)
+    if (ispresent(zipped)) {
+      const urlhash = toBase64(zipped)
+      return urlhash
+    }
+  } catch (err) {
+    //
+  }
 }
 
-export function encodeduritovalue<T>(encodeduri: string) {
-  return stringtovalue<T>(decompressFromEncodedURIComponent(encodeduri))
+export async function decompressfromurlhash(
+  value: string,
+): Promise<any | undefined> {
+  try {
+    const zipped = fromBase64(value)
+    const buffer = await unzipbuffer(zipped)
+    if (ispresent(buffer)) {
+      return msgdecode(buffer)
+    }
+  } catch (err) {
+    //
+  }
 }
