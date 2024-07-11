@@ -156,20 +156,26 @@ export function Scroll({
         if (!ispresent(groupref.current)) {
           return
         }
-        const force = 9.58
-        const damp = 39.325
         const target = shouldclose ? height * 2 * -DRAW_CHAR_HEIGHT : 0
-        const step = target - groupref.current.userData.y
 
+        const damp = 39.325
+        const drag = groupref.current.userData.vy
+        groupref.current.userData.vy -= drag * delta * damp
+
+        const force = 9.58
+        const step = target - groupref.current.userData.y
         groupref.current.userData.vy += step * delta * force
+
+        // track scroll position
         groupref.current.userData.y += groupref.current.userData.vy
+
+        // chunky movement
         groupref.current.position.y = snap(
           groupref.current.userData.y,
           DRAW_CHAR_HEIGHT * 0.5,
         )
-        groupref.current.userData.vy +=
-          groupref.current.userData.vy * delta * -damp
 
+        // signal completion
         const near = shouldclose ? 8 : 0.1
         if (Math.abs(step) < near) {
           didstop()
