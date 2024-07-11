@@ -12,9 +12,9 @@ import {
   createsprites,
   createtiles,
 } from 'zss/gadget/data/types'
-import { average, unique } from 'zss/mapping/array'
+import { average } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
@@ -30,11 +30,12 @@ import {
   MAYBE_BOOK,
   bookboardtick,
   bookelementkindread,
+  bookhasmatch,
   bookplayerreadboard,
   bookplayerreadboards,
   bookplayersetboard,
-  bookreadboard,
-  bookreadobject,
+  bookreadboardsbytags,
+  bookreadobjectsbytags,
 } from './book'
 import { CODE_PAGE_TYPE } from './codepage'
 import {
@@ -68,6 +69,55 @@ const MEMORY = {
   books: new Map<string, BOOK>(),
   chips: new Map<string, CHIP_MEMORY>(),
   frames: new Map<string, FRAME_STATE[]>(),
+  // tag configs
+  tags: {
+    main: new Set(['main']),
+    title: new Set(['title']),
+    player: new Set(['player']),
+  },
+}
+
+export enum MEMORY_LABEL {
+  MAIN = 'main',
+  TITLE = 'title',
+  PLAYER = 'player',
+}
+
+export function memoryreadtags(label: string) {
+  const index = label.toLowerCase() as keyof typeof MEMORY.tags
+  return [...(MEMORY.tags[index] ?? [])]
+}
+
+export function memoryaddtags(label: string, tags: string[]) {
+  const index = label.toLowerCase() as keyof typeof MEMORY.tags
+  if (!ispresent(MEMORY.tags[index])) {
+    MEMORY.tags[index] = new Set(tags)
+  } else {
+    const list = MEMORY.tags[index]
+    tags.forEach((item) => list.add(item))
+  }
+}
+
+export function memoryremovetags(label: string, tags: string[]) {
+  const index = label.toLowerCase() as keyof typeof MEMORY.tags
+  if (!ispresent(MEMORY.tags[index])) {
+    // noop
+  } else {
+    const list = MEMORY.tags[index]
+    tags.forEach((item) => list.delete(item))
+  }
+}
+
+export function memoryreadmaintags() {
+  return memoryreadtags(MEMORY_LABEL.MAIN)
+}
+
+export function memoryreadtitletags() {
+  return memoryreadtags(MEMORY_LABEL.TITLE)
+}
+
+export function memoryreadplayertags() {
+  return memoryreadtags(MEMORY_LABEL.PLAYER)
 }
 
 export function memorysetdefaultplayer(player: string) {
@@ -75,15 +125,15 @@ export function memorysetdefaultplayer(player: string) {
 }
 
 export function memoryresetframes(board: string): FRAME_STATE[] {
-  const frames: FRAME_STATE[] = [createviewframe(undefined, undefined)]
+  const frames: FRAME_STATE[] = [createviewframe([], [])]
   MEMORY.frames.set(board, frames)
   return frames
 }
 
 export function memorycreateviewframe(
   board: string,
-  book: MAYBE_STRING,
-  view: MAYBE_STRING,
+  book: string[],
+  view: string[],
 ) {
   const frames = memoryreadframes(board)
   if (ispresent(frames)) {
@@ -93,8 +143,8 @@ export function memorycreateviewframe(
 
 export function memorycreateeditframe(
   board: string,
-  book: MAYBE_STRING,
-  edit: MAYBE_STRING,
+  book: string[],
+  edit: string[],
 ) {
   const frames = memoryreadframes(board)
   if (ispresent(frames)) {
@@ -110,18 +160,16 @@ export function memoryreadbooklist(): BOOK[] {
   return [...MEMORY.books.values()]
 }
 
-export function memoryreadbook(address: string): MAYBE_BOOK {
+export function memoryreadbookbyaddress(address: string): MAYBE_BOOK {
   const laddress = address.toLowerCase()
   return (
     MEMORY.books.get(address) ??
-    [...MEMORY.books.values()].find(
-      (item) => item.name.toLowerCase() === laddress,
-    )
+    memoryreadbooklist().find((item) => item.name.toLowerCase() === laddress)
   )
 }
 
-export function memoryreadbooks(addresses: MAYBE_STRING[]) {
-  return unique(addresses).map(memoryreadbook).filter(ispresent)
+export function memoryreadbooksbytags(tags: string[]) {
+  return memoryreadbooklist().filter((book) => bookhasmatch(book, tags))
 }
 
 export function memoryresetbooks(books: BOOK[]) {
@@ -137,7 +185,7 @@ export function memorysetbook(book: BOOK) {
 }
 
 export function memoryclearbook(address: string) {
-  const book = memoryreadbook(address)
+  const book = memoryreadbookbyaddress(address)
   if (book) {
     MEMORY.books.delete(book.id)
   }
@@ -181,10 +229,6 @@ export function memoryreadcontext(chip: CHIP, words: WORD[]) {
   return createreadcontext(memory, words, chip.get)
 }
 
-export const PLAYER_BOOK = 'main'
-const PLAYER_KIND = 'player'
-const PLAYER_START = 'title'
-
 export function memoryplayerlogin(player: string): boolean {
   if (!isstring(player) || !player) {
     return api_error(
@@ -195,32 +239,35 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
-  const book = memoryreadbook(PLAYER_BOOK)
-  if (!ispresent(book)) {
+  const maintags = memoryreadmaintags()
+  const [mainbook] = memoryreadbooksbytags(maintags)
+  if (!ispresent(mainbook)) {
     return api_error(
       'memory',
       'login',
-      `login failed to find book ${PLAYER_BOOK}`,
+      `login failed to find book ${maintags.join('. ')}`,
       player,
     )
   }
 
-  const start = bookreadboard(book, PLAYER_START)
-  if (!ispresent(start)) {
+  const titletags = memoryreadtitletags()
+  const [titleboard] = bookreadboardsbytags(mainbook, titletags)
+  if (!ispresent(titleboard)) {
     return api_error(
       'memory',
       'login',
-      `login failed to find board ${PLAYER_START}`,
+      `login failed to find board ${titletags.join(', ')}`,
       player,
     )
   }
 
-  const playerkind = bookreadobject(book, PLAYER_KIND)
+  const playertags = memoryreadplayertags()
+  const [playerkind] = bookreadobjectsbytags(mainbook, playertags)
   if (!ispresent(playerkind)) {
     return api_error(
       'memory',
       'login',
-      `login failed to find object type ${PLAYER_KIND}`,
+      `login failed to find object type ${playertags.join(', ')}`,
       player,
     )
   }
@@ -228,18 +275,18 @@ export function memoryplayerlogin(player: string): boolean {
   // TODO: what is a sensible way to place here ?
   // via player token I think ..
 
-  const obj = boardobjectcreate(start, {
+  const obj = boardobjectcreate(titleboard, {
     id: player,
     x: 0,
     y: 0,
-    kind: PLAYER_KIND,
+    kind: playerkind.name,
     stats: {
       player,
     },
   })
 
-  if (ispresent(obj?.id)) {
-    bookplayersetboard(book, player, PLAYER_START)
+  if (ispresent(obj?.id) && ispresent(titleboard.id)) {
+    bookplayersetboard(mainbook, player, titleboard.id)
   }
 
   return true
@@ -252,8 +299,10 @@ export function memoryplayerlogout(player: string) {
 }
 
 export function memorytick(os: OS, timestamp: number) {
+  const maintags = memoryreadmaintags()
+  const [book] = memoryreadbooksbytags(maintags)
+
   // update boards / build code / run chips
-  const book = memoryreadbook(PLAYER_BOOK)
   bookplayerreadboards(book).forEach((board) => {
     const run = bookboardtick(book, board, timestamp)
 
@@ -478,11 +527,11 @@ function framerank(frame: FRAME_STATE): number {
 }
 
 export function memoryreadgadgetlayers(player: string): LAYER[] {
-  const book = memoryreadbook(PLAYER_BOOK)
-  const board = bookplayerreadboard(book, player)
+  const [mainbook] = memoryreadbooksbytags(memoryreadmaintags())
+  const board = bookplayerreadboard(mainbook, player)
 
   const layers: LAYER[] = []
-  if (!ispresent(book) || !ispresent(board)) {
+  if (!ispresent(mainbook) || !ispresent(board)) {
     return layers
   }
 
@@ -492,20 +541,27 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
 
   frames.sort((a, b) => framerank(a) - framerank(b))
   frames.forEach((frame) => {
-    const withbook = memoryreadbook(frame.book ?? '') ?? book
-    const withboard = bookreadboard(withbook, frame.board ?? '') ?? board
-    if (ispresent(withbook) && ispresent(withboard)) {
-      const view = memoryconverttogadgetlayers(
-        player,
-        i,
-        withbook,
-        withboard,
-        frame.type === FRAME_TYPE.VIEW,
-        borrowbuffer,
-      )
-      i += view.length
-      layers.push(...view)
+    const [withbook] = memoryreadbooksbytags(frame.book ?? memoryreadmaintags())
+    if (!ispresent(withbook)) {
+      return
     }
+    const [withboard] = bookreadboardsbytags(
+      withbook,
+      frame.board ?? memoryreadtitletags(),
+    )
+    if (!ispresent(withboard)) {
+      return
+    }
+    const view = memoryconverttogadgetlayers(
+      player,
+      i,
+      withbook,
+      withboard,
+      frame.type === FRAME_TYPE.VIEW,
+      borrowbuffer,
+    )
+    i += view.length
+    layers.push(...view)
   })
 
   return layers

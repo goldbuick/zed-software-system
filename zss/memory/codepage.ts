@@ -1,5 +1,5 @@
 import { IToken } from 'chevrotain'
-import { WORD } from 'zss/chip'
+import { WORD } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { Stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
@@ -25,9 +25,11 @@ export type CODE_PAGE_STATS = {
 }
 
 export type CODE_PAGE = {
+  // all pages have id & code
   id: string
   code: string
-  stats?: CODE_PAGE_STATS
+  tags: Set<string>
+  // non-code data
   error?: string
   func?: string
   board?: BOARD
@@ -35,6 +37,8 @@ export type CODE_PAGE = {
   terrain?: BOARD_ELEMENT
   charset?: BITMAP
   palette?: BITMAP
+  // common parsed values
+  stats?: CODE_PAGE_STATS
 }
 
 export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
@@ -51,10 +55,11 @@ export type CODE_PAGE_TYPE_MAP = {
 
 export function createcodepage(
   code: string,
-  content: Partial<Omit<CODE_PAGE, 'id' | 'code'>>,
+  content: Partial<Omit<CODE_PAGE, 'id' | 'code' | 'tags'>>,
 ) {
   return {
     id: createsid(),
+    tags: new Set<string>(),
     code,
     ...content,
   }
@@ -235,6 +240,25 @@ export function codepagereadname(codepage: MAYBE_CODE_PAGE) {
 export function codepagereadstat(codepage: MAYBE_CODE_PAGE, stat: string) {
   const stats = codepagereadstats(codepage)
   return stats[stat]
+}
+
+export function codepagehastags(
+  codepage: MAYBE_CODE_PAGE,
+  tags: string[],
+): boolean {
+  return tags.every((tag) => codepage?.tags.has(tag))
+}
+
+export function codepagehasmatch(
+  codepage: MAYBE_CODE_PAGE,
+  type: CODE_PAGE_TYPE,
+  tags: string[],
+): boolean {
+  return (
+    codepagereadtype(codepage) === type &&
+    (codepagehastags(codepage, tags) ||
+      tags.some((tag) => codepage?.id === tag))
+  )
 }
 
 export function codepagereaddata<T extends CODE_PAGE_TYPE>(

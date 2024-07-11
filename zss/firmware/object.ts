@@ -16,7 +16,7 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import {
-  memoryreadbook,
+  memoryreadbookbyaddress,
   memoryreadchip,
   memoryreadcontext,
   memoryreadframes,
@@ -268,7 +268,7 @@ function bookboardframeread(
     }
   }
 
-  const maybebook = maybeframe ? memoryreadbook(maybeframe?.book ?? '') : book
+  const maybebook = maybeframe ? memoryreadbookbyaddress(maybeframe?.book ?? '') : book
   const maybeboard = maybeframe
     ? bookreadboard(maybebook, maybeframe?.board ?? '')
     : board

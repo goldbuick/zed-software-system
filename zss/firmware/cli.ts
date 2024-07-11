@@ -12,9 +12,8 @@ import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
-  PLAYER_BOOK,
   memoryclearbook,
-  memoryreadbook,
+  memoryreadbookbyaddress,
   memoryreadbooklist,
   memoryreadchip,
   memoryreadcontext,
@@ -22,7 +21,7 @@ import {
 } from 'zss/memory'
 import {
   bookclearcodepage,
-  bookfindcodepage,
+  bookreadcodepagebyaddress,
   bookreadcodepage,
   bookreadflag,
   booksetflag,
@@ -84,15 +83,16 @@ function writetext(text: string) {
 
 // cli's only state ?
 let openbook = ''
+const DEFAULT_BOOK = 'main'
 
 function createnewbook(maybename?: any) {
-  const book = createbook([])
+  const book = createbook([], [])
 
   if (isstring(maybename)) {
     book.name = maybename
-  } else if (!ispresent(memoryreadbook(PLAYER_BOOK))) {
+  } else if (!ispresent(memoryreadbookbyaddress(DEFAULT_BOOK))) {
     // auto-fill @book main
-    book.name = PLAYER_BOOK
+    book.name = DEFAULT_BOOK
   }
 
   memorysetbook(book)
@@ -105,7 +105,7 @@ function createnewbook(maybename?: any) {
 }
 
 function ensureopenbook() {
-  let book = memoryreadbook(openbook)
+  let book = memoryreadbookbyaddress(openbook)
 
   // book already open
   if (ispresent(book)) {
@@ -113,7 +113,7 @@ function ensureopenbook() {
   }
 
   // attempt to open main
-  book = memoryreadbook(PLAYER_BOOK)
+  book = memoryreadbookbyaddress(DEFAULT_BOOK)
   if (ispresent(book)) {
     openbook = book.id
     writetext(`opened [book] ${book.name}`)
@@ -180,7 +180,7 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('pages', (chip) => {
     writesection(`pages`)
-    const book = memoryreadbook(openbook)
+    const book = memoryreadbookbyaddress(openbook)
     if (ispresent(book)) {
       if (book.pages.length) {
         book.pages.forEach((page) => {
@@ -228,7 +228,7 @@ export const CLI_FIRMWARE = createfirmware({
       })
       write('')
     }
-    const book = memoryreadbook(openbook)
+    const book = memoryreadbookbyaddress(openbook)
     if (ispresent(book)) {
       writetext(`pages in open ${book.name} book`)
       book.pages.forEach((page) => {
@@ -364,7 +364,7 @@ export const CLI_FIRMWARE = createfirmware({
       }
       case 'bookopen':
         if (isstring(data)) {
-          const book = memoryreadbook(data)
+          const book = memoryreadbookbyaddress(data)
           if (ispresent(book)) {
             openbook = data
             writetext(`opened [book] ${book.name}`)
@@ -387,7 +387,7 @@ export const CLI_FIRMWARE = createfirmware({
         }
         break
       case 'bookopenorcreate': {
-        const book = memoryreadbook(data)
+        const book = memoryreadbookbyaddress(data)
         if (ispresent(book)) {
           chip.command('bookopen', data)
         } else {
@@ -397,8 +397,8 @@ export const CLI_FIRMWARE = createfirmware({
       }
       case 'booktrash':
         if (isstring(data)) {
-          const opened = memoryreadbook(openbook)
-          const book = memoryreadbook(data)
+          const opened = memoryreadbookbyaddress(openbook)
+          const book = memoryreadbookbyaddress(data)
           if (ispresent(book)) {
             // clear opened
             if (opened === book) {
@@ -446,7 +446,7 @@ export const CLI_FIRMWARE = createfirmware({
 
           // store success !
           openbook = book.id
-          const page = bookfindcodepage(book, data)
+          const page = bookreadcodepagebyaddress(book, data)
           if (ispresent(page)) {
             const name = codepagereadname(page)
             const pagetype = codepagereadtypetostring(page)
@@ -478,7 +478,7 @@ export const CLI_FIRMWARE = createfirmware({
             return 0
           }
           // find page, and create if not found
-          const page = bookfindcodepage(book, data)
+          const page = bookreadcodepagebyaddress(book, data)
           if (ispresent(page)) {
             chip.command('pageopen', data)
           } else {

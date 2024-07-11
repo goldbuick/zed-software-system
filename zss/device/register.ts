@@ -2,7 +2,7 @@ import { createdevice } from 'zss/device'
 import { decompressfromurlhash, compresstourlhash } from 'zss/mapping/buffer'
 import { doasync } from 'zss/mapping/func'
 import { isarray, isbook, ispresent } from 'zss/mapping/types'
-import { bookexport } from 'zss/memory/book'
+import { bookexport, shapebook } from 'zss/memory/book'
 
 import { api_error, bip_rebootfailed, tape_info, vm_books } from './api'
 
@@ -12,8 +12,8 @@ async function readstate(): Promise<STATE_BOOKS> {
   try {
     const hash = window.location.hash.slice(1)
     if (hash.length) {
-      const result = await decompressfromurlhash(hash)
-      return (result ?? []) as any[]
+      const result = (await decompressfromurlhash(hash)) ?? []
+      return result.map(shapebook)
     }
   } catch (err) {
     //

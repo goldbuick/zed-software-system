@@ -3,18 +3,19 @@ import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { createpid } from 'zss/mapping/guid'
 import { MAYBE, isarray, isbook, ispresent } from 'zss/mapping/types'
 import {
-  PLAYER_BOOK,
   memorycli,
   memoryplayerlogin,
   memoryplayerlogout,
-  memoryreadbook,
+  memoryreadbookbyaddress,
+  memoryreadbooksbytags,
   memoryreadbooklist,
   memoryreadchip,
+  memoryreadmaintags,
   memoryresetbooks,
   memorysetdefaultplayer,
   memorytick,
 } from 'zss/memory'
-import { BOOK, bookfindcodepage } from 'zss/memory/book'
+import { BOOK, bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { createos } from 'zss/os'
 
@@ -83,7 +84,8 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           tracking[message.player] = 0
           tape_info(vm.name(), 'player login', message.player)
         } else {
-          if (ispresent(memoryreadbook(PLAYER_BOOK))) {
+          const [mainbook] = memoryreadbooksbytags(memoryreadmaintags())
+          if (ispresent(mainbook)) {
             tape_crash(vm.name())
           } else {
             bip_loginfailed(vm.name(), message.player)
@@ -115,7 +117,10 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           const address = vm_codeaddress(book, codepage)
           observers[codepage] = modemobservevaluestring(address, (value) => {
             // write to code
-            const content = bookfindcodepage(memoryreadbook(book), codepage)
+            const content = bookreadcodepagebyaddress(
+              memoryreadbookbyaddress(book),
+              codepage,
+            )
             if (ispresent(content)) {
               content.code = value
               // re-parse code for @ attrs and expected data type

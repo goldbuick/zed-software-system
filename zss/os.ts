@@ -66,7 +66,7 @@ export function createos() {
           codelines.forEach((message, index) => {
             if (index === errorline) {
               const start = (primary.column ?? 1) - 1
-              const end = start + primary.length ?? 0
+              const end = start + primary.length
               const a = message.substring(0, start)
               const b = message.substring(start, end)
               const c = message.substring(end)
