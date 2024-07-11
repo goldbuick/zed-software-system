@@ -54,15 +54,31 @@ export function createbook(pages: CODE_PAGE[], tags: string[]): BOOK {
   }
 }
 
-export function shapebook(book: MAYBE_BOOK) {
-  if (ispresent(book)) {
-    if (typeof book.tags.has === 'undefined') {
-      book.tags = new Set(book.tags)
-    }
+// safe to serialize copy of book
+export function exportbook(book: MAYBE_BOOK) {
+  return {
+    ...book,
+    tags: [], // all tags are temp
   }
-  console.info('shapebook', book)
-  return book
 }
+
+// import json into book
+export function importbook(book: MAYBE_BOOK) {
+  return {
+    ...book,
+    tags: [], // all tags are temp
+  }
+}
+
+// export function shapebook(book: MAYBE_BOOK) {
+//   if (ispresent(book)) {
+//     if (typeof book.tags.has === 'undefined') {
+//       book.tags = new Set(book.tags)
+//     }
+//   }
+//   console.info('shapebook', book)
+//   return book
+// }
 
 export function bookreadtags(book: MAYBE_BOOK) {
   return [...(book?.tags ?? [])]

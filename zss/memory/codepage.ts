@@ -65,6 +65,22 @@ export function createcodepage(
   }
 }
 
+// safe to serialize copy of codepage
+export function exportcodepage(codepage: CODE_PAGE) {
+  return {
+    ...codepage,
+    tags: [], // all tags are temp
+  }
+}
+
+// safe to serialize copy of codepage
+export function importcodepage(codepage: CODE_PAGE) {
+  return {
+    ...codepage,
+    tags: [], // all tags are temp
+  }
+}
+
 function tokenstostrings(tokens: IToken[]) {
   return tokens.map((token) => token.image)
 }
