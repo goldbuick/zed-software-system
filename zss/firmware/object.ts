@@ -28,15 +28,14 @@ import {
   listnamedelements,
 } from 'zss/memory/atomics'
 import {
-  BOARD_ELEMENT,
   MAYBE_BOARD,
-  MAYBE_BOARD_ELEMENT,
   boarddeleteobject,
   boardelementapplycolor,
   boardelementread,
   boardfindplayer,
   boardterrainsetfromkind,
 } from 'zss/memory/board'
+import { BOARD_ELEMENT, MAYBE_BOARD_ELEMENT } from 'zss/memory/boardelement'
 import {
   MAYBE_BOOK,
   bookboardmoveobject,
