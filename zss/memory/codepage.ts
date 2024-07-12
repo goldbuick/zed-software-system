@@ -5,7 +5,12 @@ import { Stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import { BOARD, BOARD_ELEMENT, boardcreate } from './board'
+import { BOARD, boardcreate, exportboard, importboard } from './board'
+import {
+  BOARD_ELEMENT,
+  exportboardelement,
+  importboardelement,
+} from './boardelement'
 
 export enum CODE_PAGE_TYPE {
   ERROR,
@@ -66,18 +71,40 @@ export function createcodepage(
 }
 
 // safe to serialize copy of codepage
-export function exportcodepage(codepage: CODE_PAGE) {
+export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
+  if (!ispresent(codepage)) {
+    return
+  }
   return {
-    ...codepage,
-    tags: [], // all tags are temp
+    id: codepage.id,
+    code: codepage.code,
+    tags: new Set<string>(), // all tags are temp
+    // non-code data
+    func: codepage.func,
+    board: exportboard(codepage.board),
+    object: exportboardelement(codepage.object),
+    terrain: exportboardelement(codepage.terrain),
+    // charset: codepage.charset,
+    // palette: codepage.palette, TODO: scrub these values too
   }
 }
 
 // safe to serialize copy of codepage
-export function importcodepage(codepage: CODE_PAGE) {
+export function importcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
+  if (!ispresent(codepage)) {
+    return
+  }
   return {
-    ...codepage,
-    tags: [], // all tags are temp
+    id: codepage.id,
+    code: codepage.code,
+    tags: new Set<string>(), // all tags are temp
+    // non-code data
+    func: codepage.func,
+    board: importboard(codepage.board),
+    object: importboardelement(codepage.object),
+    terrain: importboardelement(codepage.terrain),
+    // charset: codepage.charset,
+    // palette: codepage.palette, TODO: scrub these values too
   }
 }
 

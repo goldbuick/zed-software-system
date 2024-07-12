@@ -1,8 +1,9 @@
+import { trimUndefinedRecursively } from 'compress-json'
 import { createdevice } from 'zss/device'
 import { decompressfromurlhash, compresstourlhash } from 'zss/mapping/buffer'
 import { doasync } from 'zss/mapping/func'
 import { isarray, isbook, ispresent } from 'zss/mapping/types'
-import { bookexport, shapebook } from 'zss/memory/book'
+import { exportbook, importbook } from 'zss/memory/book'
 
 import { api_error, bip_rebootfailed, tape_info, vm_books } from './api'
 
@@ -13,8 +14,7 @@ async function readstate(): Promise<STATE_BOOKS> {
     const hash = window.location.hash.slice(1)
     if (hash.length) {
       const result = (await decompressfromurlhash(hash)) ?? []
-      const statebooks = result.map(shapebook)
-      console.info('readstate', statebooks)
+      const statebooks = result.map(importbook)
       return statebooks
     }
   } catch (err) {
@@ -24,9 +24,8 @@ async function readstate(): Promise<STATE_BOOKS> {
 }
 
 async function writestate(books: STATE_BOOKS) {
-  const cleanbooks = [...books.map(bookexport)].filter(ispresent)
+  const cleanbooks = trimUndefinedRecursively(books.map(exportbook))
   const hash = (await compresstourlhash(cleanbooks)) ?? ''
-  console.info('writestate', hash)
   const out = `#${hash}`
   window.location.hash = out
   tape_info(

@@ -4,13 +4,11 @@ import {
   STR_DIR,
   dirfrompts,
   ispt,
-  CATEGORY,
   STR_COLOR,
   isstrcolor,
   readstrcolor,
   readstrbg,
   ptapplydir,
-  COLLISION,
   mapstrdirtoconst,
   WORD,
 } from 'zss/firmware/wordtypes'
@@ -27,56 +25,12 @@ import {
 } from 'zss/mapping/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
-
-// simple built-ins go here
-export type BOARD_ELEMENT_STATS = {
-  cycle?: number
-  stepx?: number
-  stepy?: number
-  player?: string
-  sender?: string
-  inputmove?: string[]
-  inputalt?: number
-  inputctrl?: number
-  inputshift?: number
-  inputok?: number
-  inputcancel?: number
-  inputmenu?: number
-  data?: any
-  [key: string]: WORD
-}
-
-export type BOARD_ELEMENT = {
-  // this element is an instance of an element type
-  kind?: string
-  // objects only
-  id?: string
-  x?: number
-  y?: number
-  lx?: number
-  ly?: number
-  code?: string
-  // this is a unique name for this instance
-  name?: string
-  // display
-  char?: number
-  color?: number
-  bg?: number
-  // interaction
-  pushable?: number
-  collision?: COLLISION
-  destructible?: number
-  // custom
-  stats?: BOARD_ELEMENT_STATS
-  // runtime
-  category?: CATEGORY
-  kinddata?: BOARD_ELEMENT
-  kindcode?: string
-  headless?: boolean
-  removed?: number
-}
-
-export type MAYBE_BOARD_ELEMENT = MAYBE<BOARD_ELEMENT>
+import {
+  BOARD_ELEMENT,
+  MAYBE_BOARD_ELEMENT,
+  exportboardelement,
+  importboardelement,
+} from './boardelement'
 
 export type BOARD_RECT = {
   x: number
@@ -122,6 +76,40 @@ export function boardcreate(fn = noop<BOARD>) {
     objects: {},
   }
   return fn(board)
+}
+
+// safe to serialize copy of board
+export function exportboard(board: MAYBE_BOARD): MAYBE_BOARD {
+  if (!ispresent(board)) {
+    return
+  }
+  return {
+    ...board,
+    terrain: board.terrain.map(exportboardelement),
+    objects: Object.fromEntries<BOARD_ELEMENT>(
+      Object.entries(board.objects).map(([id, object]) => [
+        id,
+        exportboardelement(object),
+      ]) as any,
+    ),
+  }
+}
+
+// import json into board
+export function importboard(board: MAYBE_BOARD): MAYBE_BOARD {
+  if (!ispresent(board)) {
+    return
+  }
+  return {
+    ...board,
+    terrain: board.terrain.map(importboardelement),
+    objects: Object.fromEntries<BOARD_ELEMENT>(
+      Object.entries(board.objects).map(([id, object]) => [
+        id,
+        importboardelement(object),
+      ]) as any,
+    ),
+  }
 }
 
 export function boardelementindex(board: MAYBE_BOARD, pt: PT): number {

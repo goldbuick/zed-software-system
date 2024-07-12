@@ -17,6 +17,8 @@ import {
   bookreadterrain,
 } from './book'
 
+// what do I do with this ????
+
 export function editelementstatsafewrite(
   element: MAYBE_BOARD_ELEMENT,
   stats: BOARD_ELEMENT_STATS,

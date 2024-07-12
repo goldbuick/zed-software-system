@@ -1,20 +1,12 @@
-import { trimUndefinedRecursively } from 'compress-json'
 import { PT, COLLISION, CATEGORY, WORD } from 'zss/firmware/wordtypes'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, MAYBE_STRING, deepcopy, ispresent } from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
 
 import { checkcollision } from './atomics'
-import {
-  BOARD,
-  BOARD_ELEMENT,
-  MAYBE_BOARD,
-  MAYBE_BOARD_ELEMENT,
-  boarddeleteobject,
-  boardexport,
-  boardobjectread,
-} from './board'
+import { BOARD, MAYBE_BOARD, boarddeleteobject, boardobjectread } from './board'
+import { BOARD_ELEMENT, MAYBE_BOARD_ELEMENT } from './boardelement'
 import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
@@ -24,6 +16,8 @@ import {
   codepagereadname,
   codepagereadstatdefaults,
   codepagereadtype,
+  exportcodepage,
+  importcodepage,
 } from './codepage'
 
 // player state
@@ -55,30 +49,34 @@ export function createbook(pages: CODE_PAGE[], tags: string[]): BOOK {
 }
 
 // safe to serialize copy of book
-export function exportbook(book: MAYBE_BOOK) {
+export function exportbook(book: MAYBE_BOOK): MAYBE_BOOK {
+  if (!ispresent(book)) {
+    return
+  }
   return {
-    ...book,
-    tags: [], // all tags are temp
+    id: book.id,
+    name: book.name,
+    tags: new Set<string>(), // all tags are temp
+    pages: book.pages.map(exportcodepage).filter(ispresent),
+    flags: {},
+    players: {},
   }
 }
 
 // import json into book
-export function importbook(book: MAYBE_BOOK) {
+export function importbook(book: MAYBE_BOOK): MAYBE_BOOK {
+  if (!ispresent(book)) {
+    return
+  }
   return {
-    ...book,
-    tags: [], // all tags are temp
+    id: book.id,
+    name: book.name,
+    tags: new Set<string>(), // all tags are temp
+    pages: book.pages.map(importcodepage).filter(ispresent),
+    flags: {},
+    players: {},
   }
 }
-
-// export function shapebook(book: MAYBE_BOOK) {
-//   if (ispresent(book)) {
-//     if (typeof book.tags.has === 'undefined') {
-//       book.tags = new Set(book.tags)
-//     }
-//   }
-//   console.info('shapebook', book)
-//   return book
-// }
 
 export function bookreadtags(book: MAYBE_BOOK) {
   return [...(book?.tags ?? [])]
@@ -249,7 +247,7 @@ export function bookreadterrainbytags(
 ): BOARD_ELEMENT[] {
   return (book?.pages ?? [])
     .filter((page) => codepagehasmatch(page, CODE_PAGE_TYPE.TERRAIN, tags))
-    .map((page) => codepagereaddata<CODE_PAGE_TYPE.OBJECT>(page))
+    .map((page) => codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(page))
     .filter(ispresent)
 }
 
@@ -640,22 +638,4 @@ export function bookboardtick(
 
   // return code that needs to be run
   return args
-}
-
-export function bookexport(book: MAYBE_BOOK) {
-  if (!ispresent(book)) {
-    return undefined
-  }
-
-  const bookexport = deepcopy(book)
-  bookexport.pages = bookexport.pages.map((page) => {
-    return {
-      ...page,
-      board: ispresent(page.board) ? boardexport(page.board) : undefined,
-    }
-  })
-
-  // bad undefined !
-  trimUndefinedRecursively(bookexport)
-  return bookexport
 }
