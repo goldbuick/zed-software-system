@@ -18,11 +18,11 @@ import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
-  boardobjectcreate,
   boarddeleteobject,
   BOARD,
   MAYBE_BOARD,
   boardelementname,
+  boardobjectcreatefromkind,
 } from './board'
 import { MAYBE_BOARD_ELEMENT } from './boardelement'
 import {
@@ -273,19 +273,12 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
+  const pt = { x: 0, y: 0 }
+  const kindname = playerkind.name ?? 'player'
   // TODO: what is a sensible way to place here ?
   // via player token I think ..
 
-  const obj = boardobjectcreate(titleboard, {
-    id: player,
-    x: 0,
-    y: 0,
-    kind: playerkind.name,
-    stats: {
-      player,
-    },
-  })
-
+  const obj = boardobjectcreatefromkind(titleboard, pt, kindname, player)
   if (ispresent(obj?.id) && ispresent(titleboard.id)) {
     bookplayersetboard(mainbook, player, titleboard.id)
   }
@@ -301,9 +294,10 @@ export function memoryplayerlogout(player: string) {
 
 export function memorytick(os: OS, timestamp: number) {
   const [book] = memoryreadbooksbytags(memoryreadmaintags())
+  const boards = bookplayerreadboards(book)
 
   // update boards / build code / run chips
-  bookplayerreadboards(book).forEach((board) => {
+  boards.forEach((board) => {
     const run = bookboardtick(book, board, timestamp)
 
     // iterate code needed to update given board

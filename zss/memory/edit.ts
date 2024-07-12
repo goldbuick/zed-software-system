@@ -6,9 +6,8 @@ import {
   boardelementapplycolor,
   boardterrainsetfromkind,
   boardobjectcreatefromkind,
-  MAYBE_BOARD_ELEMENT,
-  BOARD_ELEMENT_STATS,
 } from './board'
+import { BOARD_ELEMENT_STATS, MAYBE_BOARD_ELEMENT } from './boardelement'
 import {
   MAYBE_BOOK,
   bookboardobjectlookupwrite,

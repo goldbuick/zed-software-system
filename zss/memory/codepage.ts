@@ -359,6 +359,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       if (!ispresent(codepage.object)) {
         codepage.object = createboardelement()
       }
+      codepage.object.name = codepagereadname(codepage)
       return codepage.object as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.TERRAIN: {
@@ -366,6 +367,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       if (!ispresent(codepage.terrain)) {
         codepage.terrain = createboardelement()
       }
+      codepage.terrain.name = codepagereadname(codepage)
       return codepage.terrain as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.CHARSET: {

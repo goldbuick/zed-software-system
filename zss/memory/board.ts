@@ -84,6 +84,7 @@ export function exportboard(board: MAYBE_BOARD): MAYBE_BOARD {
   if (!ispresent(board)) {
     return
   }
+
   return {
     id: board.id,
     // dimensions
@@ -94,10 +95,9 @@ export function exportboard(board: MAYBE_BOARD): MAYBE_BOARD {
     // specifics
     terrain: board.terrain.map(exportboardelement),
     objects: Object.fromEntries<BOARD_ELEMENT>(
-      Object.entries(board.objects).map(([id, object]) => [
-        id,
-        exportboardelement(object),
-      ]) as any,
+      Object.entries(board.objects) // trim objects, and remove any players
+        .filter(([, object]) => object.kind !== 'player')
+        .map(([id, object]) => [id, exportboardelement(object)]) as any,
     ),
     // custom
     stats: board.stats,
@@ -258,8 +258,9 @@ export function boardobjectcreatefromkind(
   board: MAYBE_BOARD,
   pt: PT,
   kind: string,
+  id?: string,
 ): MAYBE_BOARD_ELEMENT {
-  return boardobjectcreate(board, { ...pt, kind })
+  return boardobjectcreate(board, { ...pt, id: id ?? undefined, kind })
 }
 
 export function boardobjectread(
@@ -416,45 +417,21 @@ export function boardfindplayer(
   return picknearestpt(target, listnamedelements(board, 'player'))
 }
 
-function boardelementexport(element: MAYBE_BOARD_ELEMENT): MAYBE_BOARD_ELEMENT {
-  if (!ispresent(element)) {
-    return undefined
-  }
+// function boardelementexport(element: MAYBE_BOARD_ELEMENT): MAYBE_BOARD_ELEMENT {
+//   if (!ispresent(element)) {
+//     return undefined
+//   }
 
-  const elementexport: BOARD_ELEMENT = {
-    ...element,
-  }
+//   const elementexport: BOARD_ELEMENT = {
+//     ...element,
+//   }
 
-  // cut runtime data
-  delete elementexport.category
-  delete elementexport.kinddata
-  delete elementexport.kindcode
-  delete elementexport.headless
-  delete elementexport.removed
+//   // cut runtime data
+//   delete elementexport.category
+//   delete elementexport.kinddata
+//   delete elementexport.kindcode
+//   delete elementexport.headless
+//   delete elementexport.removed
 
-  return elementexport
-}
-
-export function boardexport(board: MAYBE_BOARD): MAYBE_BOARD {
-  if (!ispresent(board)) {
-    return undefined
-  }
-
-  // trim terrain
-  const terrain = board.terrain.map(boardelementexport)
-
-  // trim objects, and remove any players
-  const objects: Record<string, BOARD_ELEMENT> = {}
-  Object.keys(board.objects).forEach((id) => {
-    const object = boardelementexport(board.objects[id])
-    if (ispresent(object) && object.kind !== 'player') {
-      objects[id] = object
-    }
-  })
-
-  return {
-    ...board,
-    terrain,
-    objects,
-  }
-}
+//   return elementexport
+// }
