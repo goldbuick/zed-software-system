@@ -97,7 +97,10 @@ export function bookremovetags(book: MAYBE_BOOK, tags: string[]) {
 }
 
 export function bookhastags(book: MAYBE_BOOK, tags: string[]): boolean {
-  return tags.every((tag) => book?.tags.has(tag))
+  if (!ispresent(book)) {
+    return false
+  }
+  return tags.every((tag) => book.tags.has(tag))
 }
 
 export function bookhasmatch(
@@ -134,7 +137,7 @@ export function bookreadcodepagebyaddress(
   return codepage
 }
 
-export function bookreadcodepage(
+export function bookreadcodepagewithtype(
   book: MAYBE_BOOK,
   type: CODE_PAGE_TYPE,
   address: string,
@@ -202,7 +205,7 @@ export function bookreadobject(
   maybeobject: MAYBE_STRING,
 ): MAYBE_BOARD_ELEMENT {
   const object = maybeobject ?? ''
-  const page = bookreadcodepage(book, CODE_PAGE_TYPE.OBJECT, object)
+  const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.OBJECT, object)
   if (ispresent(page)) {
     const stats = codepagereadstatdefaults(page)
     const data = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(page)
@@ -235,7 +238,7 @@ export function bookreadterrain(
   maybeterrain: MAYBE_STRING,
 ): MAYBE_BOARD_ELEMENT {
   const terrain = maybeterrain ?? ''
-  const page = bookreadcodepage(book, CODE_PAGE_TYPE.TERRAIN, terrain)
+  const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.TERRAIN, terrain)
   if (ispresent(page)) {
     const stats = codepagereadstatdefaults(page)
     const data = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(page)

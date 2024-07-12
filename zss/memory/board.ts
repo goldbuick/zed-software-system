@@ -42,7 +42,6 @@ export type BOARD_RECT = {
 export type BOARD_STATS = Record<string, WORD>
 
 export type BOARD = {
-  // lookup
   id?: string
   // dimensions
   x: number
@@ -68,10 +67,12 @@ const BOARD_TERRAIN: undefined[] = new Array(BOARD_WIDTH * BOARD_HEIGHT)
 export function createboard(fn = noop<BOARD>) {
   const board: BOARD = {
     id: createsid(),
+    // dimensions
     x: 0,
     y: 0,
     width: BOARD_WIDTH,
     height: BOARD_HEIGHT,
+    // specifics
     terrain: BOARD_TERRAIN.slice(0),
     objects: {},
   }
@@ -84,7 +85,13 @@ export function exportboard(board: MAYBE_BOARD): MAYBE_BOARD {
     return
   }
   return {
-    ...board,
+    id: board.id,
+    // dimensions
+    x: board.x,
+    y: board.y,
+    width: board.width,
+    height: board.height,
+    // specifics
     terrain: board.terrain.map(exportboardelement),
     objects: Object.fromEntries<BOARD_ELEMENT>(
       Object.entries(board.objects).map(([id, object]) => [
@@ -92,6 +99,8 @@ export function exportboard(board: MAYBE_BOARD): MAYBE_BOARD {
         exportboardelement(object),
       ]) as any,
     ),
+    // custom
+    stats: board.stats,
   }
 }
 
@@ -101,7 +110,13 @@ export function importboard(board: MAYBE_BOARD): MAYBE_BOARD {
     return
   }
   return {
-    ...board,
+    id: board.id,
+    // dimensions
+    x: board.x,
+    y: board.y,
+    width: board.width,
+    height: board.height,
+    // specifics
     terrain: board.terrain.map(importboardelement),
     objects: Object.fromEntries<BOARD_ELEMENT>(
       Object.entries(board.objects).map(([id, object]) => [
@@ -109,6 +124,8 @@ export function importboard(board: MAYBE_BOARD): MAYBE_BOARD {
         importboardelement(object),
       ]) as any,
     ),
+    // custom
+    stats: board.stats,
   }
 }
 

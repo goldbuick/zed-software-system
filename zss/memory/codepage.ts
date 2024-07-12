@@ -89,8 +89,8 @@ export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
     board: exportboard(codepage.board),
     object: exportboardelement(codepage.object),
     terrain: exportboardelement(codepage.terrain),
-    // charset: codepage.charset,
-    // palette: codepage.palette, TODO: scrub these values too
+    // charset: exportcharsetelement(codepage.charset),
+    // palette: exportpaletteelement(codepage.palette), TODO: scrub these values too
   }
 }
 
@@ -135,7 +135,10 @@ export function codepagehastags(
   codepage: MAYBE_CODE_PAGE,
   tags: string[],
 ): boolean {
-  return tags.every((tag) => codepage?.tags.has(tag))
+  if (!ispresent(codepage)) {
+    return false
+  }
+  return tags.every((tag) => codepage.tags.has(tag))
 }
 
 export function codepagehasmatch(
@@ -337,7 +340,10 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
   codepage: MAYBE_CODE_PAGE,
 ): MAYBE<CODE_PAGE_TYPE_MAP[T]> {
   switch (codepage?.stats?.type) {
-    default:
+    default: {
+      // empty / invalid
+      return undefined
+    }
     case CODE_PAGE_TYPE.ERROR: {
       return (codepage?.error ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }

@@ -61,7 +61,7 @@ export function createos() {
           const errorline = (primary?.line ?? 2) - 1
           const codelines = code.replaceAll('\r\n', '').split('\n')
           primary.message.split('\n').forEach((message) => {
-            api_error('os', 'build', message, '')
+            api_error('os', 'build', message)
           })
           codelines.forEach((message, index) => {
             if (index === errorline) {
@@ -70,9 +70,9 @@ export function createos() {
               const a = message.substring(0, start)
               const b = message.substring(start, end)
               const c = message.substring(end)
-              api_error('os', 'build', `$grey${a}$red${b}$grey${c}`, '')
+              api_error('os', 'build', `$grey${a}$red${b}$grey${c}`)
             } else {
-              api_error('os', 'build', `$grey${message}`, '')
+              api_error('os', 'build', `$grey${message}`)
             }
           })
           return false

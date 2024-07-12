@@ -22,7 +22,7 @@ import {
 import {
   bookclearcodepage,
   bookreadcodepagebyaddress,
-  bookreadcodepage,
+  bookreadcodepagewithtype,
   bookreadflag,
   booksetflag,
   bookwritecodepage,
@@ -221,7 +221,7 @@ export const CLI_FIRMWARE = createfirmware({
     const name = codepagereadname(codepage)
 
     // only create if target doesn't already exist
-    const maybepage = bookreadcodepage(book, codepagereadtype(codepage), name)
+    const maybepage = bookreadcodepagewithtype(book, codepagereadtype(codepage), name)
     if (!ispresent(maybepage)) {
       bookwritecodepage(book, codepage)
       const pagetype = codepagereadtypetostring(codepage)
