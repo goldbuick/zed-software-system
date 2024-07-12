@@ -4,6 +4,7 @@ import {
   makeCompressionStream,
   makeDecompressionStream,
 } from 'compression-streams-polyfill/ponyfill'
+import { api_error } from 'zss/device/api'
 
 import { ispresent } from './types'
 
@@ -76,8 +77,8 @@ export async function compresstourlhash(
       const urlhash = toBase64(zipped)
       return urlhash
     }
-  } catch (err) {
-    //
+  } catch (err: any) {
+    api_error('buffer', 'crash', err.message)
   }
 }
 
@@ -90,7 +91,7 @@ export async function decompressfromurlhash(
     if (ispresent(buffer)) {
       return msgdecode(buffer)
     }
-  } catch (err) {
-    //
+  } catch (err: any) {
+    api_error('buffer', 'crash', err.message)
   }
 }

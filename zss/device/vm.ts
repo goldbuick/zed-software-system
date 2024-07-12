@@ -1,3 +1,4 @@
+import { trimUndefinedRecursively } from 'compress-json'
 import { createdevice } from 'zss/device'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { createpid } from 'zss/mapping/guid'
@@ -15,7 +16,7 @@ import {
   memorysetdefaultplayer,
   memorytick,
 } from 'zss/memory'
-import { BOOK, bookreadcodepagebyaddress } from 'zss/memory/book'
+import { BOOK, bookreadcodepagebyaddress, exportbook } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { createos } from 'zss/os'
 
@@ -84,8 +85,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           tracking[message.player] = 0
           tape_info(vm.name(), 'player login', message.player)
         } else {
-          const maintags = memoryreadmaintags()
-          const [mainbook] = memoryreadbooksbytags(maintags)
+          const [mainbook] = memoryreadbooksbytags(memoryreadmaintags())
           if (ispresent(mainbook)) {
             tape_crash(vm.name())
           } else {
@@ -173,10 +173,13 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         vm_flush(vm.name())
       }
       break
-    case 'flush':
+    case 'flush': {
       flushtick = 0
-      register_flush(vm.name(), memoryreadbooklist())
+      const flushdata = memoryreadbooklist().map(exportbook)
+      trimUndefinedRecursively(flushdata)
+      register_flush(vm.name(), flushdata)
       break
+    }
     case 'cli':
       // user input from built-in console
       memorycli(os, lasttick, message.player ?? '', message.data ?? '')

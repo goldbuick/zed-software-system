@@ -56,7 +56,7 @@ export function exportbook(book: MAYBE_BOOK): MAYBE_BOOK {
   return {
     id: book.id,
     name: book.name,
-    tags: new Set<string>(), // all tags are temp
+    tags: [...book.tags] as any,
     pages: book.pages.map(exportcodepage).filter(ispresent),
     flags: {},
     players: {},
@@ -71,7 +71,7 @@ export function importbook(book: MAYBE_BOOK): MAYBE_BOOK {
   return {
     id: book.id,
     name: book.name,
-    tags: new Set<string>(), // all tags are temp
+    tags: new Set([...book.tags]),
     pages: book.pages.map(importcodepage).filter(ispresent),
     flags: {},
     players: {},
@@ -86,30 +86,36 @@ export function bookaddtags(book: MAYBE_BOOK, tags: string[]) {
   if (!ispresent(book)) {
     return
   }
-  if (!ispresent(book.tags)) {
-    book.tags = new Set(tags)
-  } else {
-    tags.forEach((item) => book.tags.add(item))
-  }
+  tags.forEach((item) => book.tags.add(item))
 }
 
 export function bookremovetags(book: MAYBE_BOOK, tags: string[]) {
   if (!ispresent(book)) {
     return
   }
-  if (!ispresent(book.tags)) {
-    // noop
-  } else {
-    tags.forEach((item) => book.tags.delete(item))
-  }
+  tags.forEach((item) => book.tags.delete(item))
 }
 
 export function bookhastags(book: MAYBE_BOOK, tags: string[]): boolean {
   return tags.every((tag) => book?.tags.has(tag))
 }
 
-export function bookhasmatch(book: MAYBE_BOOK, tags: string[]): boolean {
-  return bookhastags(book, tags) || tags.some((tag) => book?.id === tag)
+export function bookhasmatch(
+  book: MAYBE_BOOK,
+  ids: string[],
+  tags: string[],
+): boolean {
+  if (!ispresent(book)) {
+    return false
+  }
+  if (ids.some((id) => id === book.id)) {
+    return true
+  }
+  const lname = book.name.toLowerCase()
+  if (tags.includes(lname)) {
+    return true
+  }
+  return bookhastags(book, tags)
 }
 
 export function bookreadcodepagebyaddress(
@@ -215,8 +221,11 @@ export function bookreadobjectsbytags(
   book: MAYBE_BOOK,
   tags: string[],
 ): BOARD_ELEMENT[] {
+  const ltags = tags.map((tag) => tag.toLowerCase())
   return (book?.pages ?? [])
-    .filter((page) => codepagehasmatch(page, CODE_PAGE_TYPE.OBJECT, tags))
+    .filter((page) =>
+      codepagehasmatch(page, CODE_PAGE_TYPE.OBJECT, tags, ltags),
+    )
     .map((page) => codepagereaddata<CODE_PAGE_TYPE.OBJECT>(page))
     .filter(ispresent)
 }
@@ -245,8 +254,11 @@ export function bookreadterrainbytags(
   book: MAYBE_BOOK,
   tags: string[],
 ): BOARD_ELEMENT[] {
+  const ltags = tags.map((tag) => tag.toLowerCase())
   return (book?.pages ?? [])
-    .filter((page) => codepagehasmatch(page, CODE_PAGE_TYPE.TERRAIN, tags))
+    .filter((page) =>
+      codepagehasmatch(page, CODE_PAGE_TYPE.TERRAIN, tags, ltags),
+    )
     .map((page) => codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(page))
     .filter(ispresent)
 }
@@ -261,8 +273,9 @@ export function bookreadboardsbytags(
   book: MAYBE_BOOK,
   tags: string[],
 ): BOARD[] {
+  const ltags = tags.map((tag) => tag.toLowerCase())
   return (book?.pages ?? [])
-    .filter((page) => codepagehasmatch(page, CODE_PAGE_TYPE.BOARD, tags))
+    .filter((page) => codepagehasmatch(page, CODE_PAGE_TYPE.BOARD, tags, ltags))
     .map((page) => codepagereaddata<CODE_PAGE_TYPE.BOARD>(page))
     .filter(ispresent)
 }

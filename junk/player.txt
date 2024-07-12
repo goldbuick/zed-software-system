@@ -16,7 +16,7 @@
 :main
 
 #if inputshift and inputmove do
-?opp inputmove
+#shoot inputmove
 #else if inputmove do
 ?inputmove
 #else idle

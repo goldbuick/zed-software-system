@@ -20,11 +20,11 @@ import { OS } from 'zss/os'
 import {
   boardobjectcreate,
   boarddeleteobject,
-  MAYBE_BOARD_ELEMENT,
   BOARD,
   MAYBE_BOARD,
   boardelementname,
 } from './board'
+import { MAYBE_BOARD_ELEMENT } from './boardelement'
 import {
   BOOK,
   MAYBE_BOOK,
@@ -169,7 +169,8 @@ export function memoryreadbookbyaddress(address: string): MAYBE_BOOK {
 }
 
 export function memoryreadbooksbytags(tags: string[]) {
-  return memoryreadbooklist().filter((book) => bookhasmatch(book, tags))
+  const ltags = tags.map((tag) => tag.toLowerCase())
+  return memoryreadbooklist().filter((book) => bookhasmatch(book, tags, ltags))
 }
 
 export function memoryresetbooks(books: BOOK[]) {
@@ -299,8 +300,7 @@ export function memoryplayerlogout(player: string) {
 }
 
 export function memorytick(os: OS, timestamp: number) {
-  const maintags = memoryreadmaintags()
-  const [book] = memoryreadbooksbytags(maintags)
+  const [book] = memoryreadbooksbytags(memoryreadmaintags())
 
   // update boards / build code / run chips
   bookplayerreadboards(book).forEach((board) => {

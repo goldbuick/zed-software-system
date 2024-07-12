@@ -65,7 +65,7 @@ const BOARD_WIDTH = 60
 const BOARD_HEIGHT = 25
 const BOARD_TERRAIN: undefined[] = new Array(BOARD_WIDTH * BOARD_HEIGHT)
 
-export function boardcreate(fn = noop<BOARD>) {
+export function createboard(fn = noop<BOARD>) {
   const board: BOARD = {
     id: createsid(),
     x: 0,

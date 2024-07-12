@@ -1,4 +1,5 @@
 import { CATEGORY, COLLISION, WORD } from 'zss/firmware/wordtypes'
+import { createsid } from 'zss/mapping/guid'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 
 // simple built-ins go here
@@ -20,6 +21,10 @@ export type BOARD_ELEMENT_STATS = {
 }
 
 export type MAYBE_BOARD_ELEMENT_STATS = MAYBE<BOARD_ELEMENT_STATS>
+
+export function createboardelementstats() {
+  return {}
+}
 
 // safe to serialize copy of board
 export function exportboardelementstats(
@@ -72,6 +77,13 @@ export type BOARD_ELEMENT = {
 }
 
 export type MAYBE_BOARD_ELEMENT = MAYBE<BOARD_ELEMENT>
+
+export function createboardelement() {
+  const boardelement: BOARD_ELEMENT = {
+    id: createsid(),
+  }
+  return boardelement
+}
 
 // safe to serialize copy of boardelement
 export function exportboardelement(
