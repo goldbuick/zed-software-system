@@ -72,8 +72,9 @@ export async function compresstobuffer(
 ): Promise<Uint8Array | undefined> {
   try {
     const buffer = msgencode(value)
-    const zipped = await zipbuffer(buffer)
-    return zipped
+    if (ispresent(buffer)) {
+      return await zipbuffer(buffer)
+    }
   } catch (err: any) {
     api_error('buffer', 'crash', err.message)
   }
@@ -85,37 +86,17 @@ export async function decompressfrombuffer(
   try {
     const msg = await unzipbuffer(zipped)
     if (ispresent(msg)) {
-      const buffer = msgdecode(msg)
-      return buffer
+      return msgdecode(msg)
     }
   } catch (err: any) {
     api_error('buffer', 'crash', err.message)
   }
 }
 
-export async function compresstourlhash(
-  value: any,
-): Promise<string | undefined> {
-  try {
-    const buffer = await compresstobuffer(value)
-    if (ispresent(buffer)) {
-      return toBase64(buffer)
-    }
-  } catch (err: any) {
-    api_error('buffer', 'crash', err.message)
-  }
+export async function compresstourlhash(value: any) {
+  return toBase64((await compresstobuffer(value)) ?? '')
 }
 
-export async function decompressfromurlhash(
-  value: string,
-): Promise<any | undefined> {
-  try {
-    const zipped = fromBase64(value)
-    const buffer = await decompressfrombuffer(zipped)
-    if (ispresent(buffer)) {
-      return msgdecode(buffer)
-    }
-  } catch (err: any) {
-    api_error('buffer', 'crash', err.message)
-  }
+export async function decompressfromurlhash(value: string) {
+  return await decompressfrombuffer(fromBase64(value))
 }
