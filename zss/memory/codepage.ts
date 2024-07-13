@@ -238,7 +238,7 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
       const [maybetype, ...maybevalues] = token.image.slice(1).split(' ')
       const lmaybetype = maybetype.toLowerCase()
       const maybename = maybevalues.join(' ')
-      const lmaybename = maybename.toLowerCase()
+      const lmaybename = maybename.toLowerCase().trim()
 
       switch (lmaybetype) {
         case 'stat': {
@@ -280,7 +280,7 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
         default:
           if (first) {
             // first default is name
-            codepage.stats.name = [lmaybetype, ...maybevalues].join(' ')
+            codepage.stats.name = [lmaybetype, ...maybevalues].join(' ').trim()
           } else {
             // second default is boolean stats
             codepage.stats[lmaybetype] = 1
@@ -352,6 +352,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       if (!ispresent(codepage.board)) {
         codepage.board = createboard()
       }
+      codepage.board.id = codepage.id
       return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {

@@ -324,9 +324,8 @@ export function bookplayersetboard(
 }
 
 export function bookplayerreadboards(book: MAYBE_BOOK) {
-  return unique(Object.values(book?.players ?? []))
-    .map((address) => bookreadboard(book, address))
-    .filter(ispresent)
+  const ids = unique(Object.values(book?.players ?? {}))
+  return ids.map((address) => bookreadboard(book, address)).filter(ispresent)
 }
 
 export function bookboardmoveobject(

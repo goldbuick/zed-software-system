@@ -63,6 +63,12 @@ type CHIP_PLAYER_INPUT = {
 
 type CHIP_MEMORY = CHIP_TARGETS & CHIP_PLAYER_INPUT
 
+export enum MEMORY_LABEL {
+  MAIN = 'main',
+  TITLE = 'title',
+  PLAYER = 'player',
+}
+
 const MEMORY = {
   // running software
   defaultplayer: '',
@@ -71,16 +77,10 @@ const MEMORY = {
   frames: new Map<string, FRAME_STATE[]>(),
   // tag configs
   tags: {
-    main: new Set(['main']),
-    title: new Set(['title']),
-    player: new Set(['player']),
+    main: new Set([MEMORY_LABEL.MAIN as string]),
+    title: new Set([MEMORY_LABEL.TITLE as string]),
+    player: new Set([MEMORY_LABEL.PLAYER as string]),
   },
-}
-
-export enum MEMORY_LABEL {
-  MAIN = 'main',
-  TITLE = 'title',
-  PLAYER = 'player',
 }
 
 export function memoryreadtags(label: string) {
@@ -273,17 +273,18 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
-  const pt = { x: 0, y: 0 }
-  const kindname = playerkind.name ?? 'player'
   // TODO: what is a sensible way to place here ?
   // via player token I think ..
 
+  const pt = { x: 0, y: 0 }
+  const kindname = playerkind.name ?? MEMORY_LABEL.PLAYER
   const obj = boardobjectcreatefromkind(titleboard, pt, kindname, player)
   if (ispresent(obj?.id) && ispresent(titleboard.id)) {
     bookplayersetboard(mainbook, player, titleboard.id)
+    return true
   }
 
-  return true
+  return false
 }
 
 export function memoryplayerlogout(player: string) {
@@ -293,7 +294,8 @@ export function memoryplayerlogout(player: string) {
 }
 
 export function memorytick(os: OS, timestamp: number) {
-  const [book] = memoryreadbooksbytags(memoryreadmaintags())
+  const maintags = memoryreadmaintags()
+  const [book] = memoryreadbooksbytags(maintags)
   const boards = bookplayerreadboards(book)
 
   // update boards / build code / run chips

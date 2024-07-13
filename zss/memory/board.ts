@@ -416,22 +416,3 @@ export function boardfindplayer(
   // nearest player to target
   return picknearestpt(target, listnamedelements(board, 'player'))
 }
-
-// function boardelementexport(element: MAYBE_BOARD_ELEMENT): MAYBE_BOARD_ELEMENT {
-//   if (!ispresent(element)) {
-//     return undefined
-//   }
-
-//   const elementexport: BOARD_ELEMENT = {
-//     ...element,
-//   }
-
-//   // cut runtime data
-//   delete elementexport.category
-//   delete elementexport.kinddata
-//   delete elementexport.kindcode
-//   delete elementexport.headless
-//   delete elementexport.removed
-
-//   return elementexport
-// }
