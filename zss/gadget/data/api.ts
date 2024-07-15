@@ -21,6 +21,7 @@ import {
 import {
   GADGET_STATE,
   PANEL,
+  PANEL_ITEM,
   PANEL_SHARED,
   PANEL_TYPE,
   PANEL_TYPE_SIZES,
@@ -314,5 +315,5 @@ export function gadgethyperlink(
   }
 
   // add content
-  panel.text.push(hyperlink)
+  panel.text.push(hyperlink as PANEL_ITEM)
 }

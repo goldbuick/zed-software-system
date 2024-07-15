@@ -1,4 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber'
+import { damp } from 'maath/easing'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Group } from 'three'
 import { snap } from 'zss/mapping/number'
@@ -156,18 +157,9 @@ export function Scroll({
         if (!ispresent(groupref.current)) {
           return
         }
+        // slick move
         const target = shouldclose ? height * 2 * -DRAW_CHAR_HEIGHT : 0
-
-        const damp = 39.325
-        const drag = groupref.current.userData.vy
-        groupref.current.userData.vy -= drag * delta * damp
-
-        const force = 9.58
-        const step = target - groupref.current.userData.y
-        groupref.current.userData.vy += step * delta * force
-
-        // track scroll position
-        groupref.current.userData.y += groupref.current.userData.vy
+        damp(groupref.current.userData, 'y', target, 0.0613, delta)
 
         // chunky movement
         groupref.current.position.y = snap(
@@ -177,6 +169,7 @@ export function Scroll({
 
         // signal completion
         const near = shouldclose ? 8 : 0.1
+        const step = target - groupref.current.userData.y
         if (Math.abs(step) < near) {
           didstop()
         }
