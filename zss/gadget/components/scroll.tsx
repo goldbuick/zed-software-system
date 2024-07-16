@@ -159,12 +159,12 @@ export function Scroll({
         }
         // slick move
         const target = shouldclose ? height * 2 * -DRAW_CHAR_HEIGHT : 0
-        damp(groupref.current.userData, 'y', target, 0.0613, delta)
+        damp(groupref.current.userData, 'y', target, 0.0573, delta)
 
         // chunky movement
         groupref.current.position.y = snap(
           groupref.current.userData.y,
-          DRAW_CHAR_HEIGHT * 0.5,
+          DRAW_CHAR_HEIGHT,
         )
 
         // signal completion
