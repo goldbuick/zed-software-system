@@ -6,9 +6,12 @@ import {
   memoryreadcontext,
   memoryreadmaintags,
 } from 'zss/memory'
-import { MAYBE_BOARD_ELEMENT } from 'zss/memory/boardelement'
 import { bookreadcodepagebyaddress, MAYBE_BOOK } from 'zss/memory/book'
-import { CODE_PAGE_TYPE, codepagereaddata } from 'zss/memory/codepage'
+import {
+  CODE_PAGE_TYPE,
+  codepagereaddata,
+  codepagereadtype,
+} from 'zss/memory/codepage'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -55,79 +58,65 @@ function modbook(): MAYBE_BOOK {
   return undefined
 }
 
-function modobject(): MAYBE_BOARD_ELEMENT {
-  const codepage = bookreadcodepagebyaddress(modbook(), MODS.object)
-  if (ispresent(codepage)) {
-    return codepagereaddata<CODE_PAGE_TYPE.OBJECT>(codepage)
-  }
-}
-
-function modterrain(): MAYBE_BOARD_ELEMENT {
-  const codepage = bookreadcodepagebyaddress(modbook(), MODS.terrain)
-  if (ispresent(codepage)) {
-    return codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(codepage)
-  }
-}
-
 function modsoftware(name: MODS_KEY, key: string, value: any) {
-  if (name === 'book') {
-    const target = modbook()
-    if (ispresent(target)) {
-      //
-    }
-
+  const book = modbook()
+  if (!ispresent(book)) {
     return
   }
 
-  let target: any = undefined
-  let valid: string[] = []
-
-  switch (name) {
-    case 'book':
-      target = modbook()
-      valid = ['name']
-      break
-    case 'board':
-      valid = ['name']
-
-      break
-    case 'object':
-      target = modobject()
-      valid = ['name']
-      valid = ['char']
-      valid = ['color']
-      valid = ['bg']
-      break
-    case 'terrain':
-      target = modterrain()
-      valid = ['name']
-      valid = ['char']
-      valid = ['color']
-      valid = ['bg']
-      break
-    case 'charset':
-      valid = ['name']
-      break
-    case 'palette':
-      valid = ['name']
-      break
+  if (name === 'book') {
+    switch (key) {
+      case 'name':
+        if (isstring(value)) {
+          book.name = value
+        }
+        break
+    }
+    return
   }
 
-  // update target
-  if (ispresent(target) && valid.includes(key)) {
-    target[key] = value
+  const codepage = bookreadcodepagebyaddress(book, MODS[name])
+  // const stats = codepagereadstats(codepage)
+
+  switch (codepagereadtype(codepage)) {
+    case CODE_PAGE_TYPE.OBJECT: {
+      const object = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(codepage)
+      if (ispresent(object)) {
+        switch (key) {
+          case 'char':
+          case 'color':
+          case 'bg':
+            object[key] = value
+            break
+        }
+      }
+      break
+    }
+    case CODE_PAGE_TYPE.TERRAIN: {
+      const terrain = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(codepage)
+      if (ispresent(terrain)) {
+        switch (key) {
+          case 'char':
+          case 'color':
+          case 'bg':
+            terrain[key] = value
+            break
+        }
+      }
+      break
+    }
   }
 }
 
 export const MODS_FIRMWARE = createfirmware({
-  get(chip, name) {
+  get(_, name) {
     const mod = strmodname(name)
     if (ispresent(mod)) {
       return [true, MODS[mod]]
     }
     return [false, undefined]
   },
-  set(chip, name, value) {
+  set(_, name, value) {
     const mod = strmodname(name)
     if (ispresent(mod)) {
       MODS[mod] = value
@@ -135,15 +124,9 @@ export const MODS_FIRMWARE = createfirmware({
     }
     return [false, undefined]
   },
-  shouldtick(chip) {
-    //
-  },
-  tick(chip) {
-    //
-  },
-  tock(chip) {
-    //
-  },
+  shouldtick() {},
+  tick() {},
+  tock() {},
 }).command('mod', (chip, words) => {
   // mod thing key value
   const [name, maybekey, maybevalue] = readargs(

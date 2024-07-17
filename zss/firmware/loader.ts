@@ -27,11 +27,11 @@ const firmwares: Record<string, FIRMWARE> = {
 export const CODE_PAGE_FIRMWARE = {
   [CODE_PAGE_TYPE.ERROR]: [],
   [CODE_PAGE_TYPE.CLI]: ['all', 'audio', 'cli'],
-  [CODE_PAGE_TYPE.BOARD]: ['all', 'audio', 'gadget', 'mods'],
-  [CODE_PAGE_TYPE.OBJECT]: ['all', 'audio', 'object', 'gadget', 'mods'],
-  [CODE_PAGE_TYPE.TERRAIN]: ['all', 'audio', 'terrain', 'gadget', 'mods'],
-  [CODE_PAGE_TYPE.CHARSET]: ['all', 'audio', 'charset', 'gadget', 'mods'],
-  [CODE_PAGE_TYPE.PALETTE]: ['all', 'audio', 'palette', 'gadget', 'mods'],
+  [CODE_PAGE_TYPE.BOARD]: ['all', 'audio', 'gadget', 'mods', 'board'],
+  [CODE_PAGE_TYPE.OBJECT]: ['all', 'audio', 'gadget', 'mods', 'object'],
+  [CODE_PAGE_TYPE.TERRAIN]: ['all', 'audio', 'gadget', 'mods', 'terrain'],
+  [CODE_PAGE_TYPE.CHARSET]: ['all', 'audio', 'gadget', 'mods', 'charset'],
+  [CODE_PAGE_TYPE.PALETTE]: ['all', 'audio', 'gadget', 'mods', 'palette'],
 }
 
 export type FIRMWARE_NAME = keyof typeof CODE_PAGE_FIRMWARE
