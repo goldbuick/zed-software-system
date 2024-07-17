@@ -90,6 +90,7 @@
     "valtio": "^1.11.2",
     "vite": "^5.2.0",
     "vite-plugin-arraybuffer": "^0.0.7",
+    "vite-plugin-full-reload": "^1.2.0",
     "vite-plugin-mkcert": "^1.17.5",
     "y-protocols": "^1.0.6",
     "yjs": "^13.6.15"

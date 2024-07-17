@@ -23,7 +23,6 @@ async function readstate(): Promise<STATE_BOOKS> {
 }
 
 async function writestate(exportedbooks: STATE_BOOKS) {
-  console.info('exportedbooks', exportedbooks)
   const hash = (await compresstourlhash(exportedbooks)) ?? ''
   const out = `#${hash}`
   window.location.hash = out

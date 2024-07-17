@@ -5581,6 +5581,14 @@ vite-plugin-arraybuffer@^0.0.7:
   resolved "https://registry.npmjs.org/vite-plugin-arraybuffer/-/vite-plugin-arraybuffer-0.0.7.tgz#240f35c86464ef0e9898b38c1b9dc20d2f51f0cf"
   integrity sha512-c4Egxj7NUGco2Ggw9KUBToOxuc7Ws7mWm0hz/QnaT5Ph8ycC7ypMBOD31NuhPSx+wdUvgIbS1XpMvJLSdHakPA==
 
+vite-plugin-full-reload@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/vite-plugin-full-reload/-/vite-plugin-full-reload-1.2.0.tgz#bc4bfdc842abb4d24309ca802be8b955fce1c0c6"
+  integrity sha512-kz18NW79x0IHbxRSHm0jttP4zoO9P9gXh+n6UTwlNKnviTTEpOlum6oS9SmecrTtSr+muHEn5TUuC75UovQzcA==
+  dependencies:
+    picocolors "^1.0.0"
+    picomatch "^2.3.1"
+
 vite-plugin-mkcert@^1.17.5:
   version "1.17.5"
   resolved "https://registry.npmjs.org/vite-plugin-mkcert/-/vite-plugin-mkcert-1.17.5.tgz#175f1a2a99c110fa87b2f2e6390b22656674a67b"

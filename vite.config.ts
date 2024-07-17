@@ -4,6 +4,7 @@ import path from 'path'
 import react from '@vitejs/plugin-react-swc'
 import { defineConfig, loadEnv } from 'vite'
 import arraybuffer from 'vite-plugin-arraybuffer'
+import fullreload from 'vite-plugin-full-reload'
 import mkcert from 'vite-plugin-mkcert'
 
 import pkg from './package.json'
@@ -27,11 +28,14 @@ export default defineConfig(({ mode }) => {
   return {
     root: 'zss/terminal/',
     envPrefix: 'ZSS_',
-    plugins: [react(), arraybuffer(), mkcert()],
+    plugins: [react(), arraybuffer(), mkcert(), fullreload('zss/**/*')],
     resolve: {
       alias: {
         zss: path.resolve(__dirname, './zss'),
       },
+    },
+    server: {
+      hmr: false,
     },
   }
 })
