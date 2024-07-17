@@ -16,6 +16,9 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import {
+  memoryboardwrite,
+  memoryboardwriteheadlessobject,
+  memoryelementstatsafewrite,
   memoryreadbooksbytags,
   memoryreadchip,
   memoryreadcontext,
@@ -317,10 +320,10 @@ export const OBJECT_FIRMWARE = createfirmware({
         y: memory.object.y + memory.object.stats.stepy,
       })
     ) {
-      // editelementstatsafewrite(memory.object, {
-      //   stepx: 0,
-      //   stepy: 0,
-      // })
+      memoryelementstatsafewrite(memory.object, {
+        stepx: 0,
+        stepy: 0,
+      })
     }
   },
   tick() {},
@@ -347,7 +350,7 @@ export const OBJECT_FIRMWARE = createfirmware({
       bookboardobjectsafedelete(memory.book, memory.object, chip.timestamp())
     ) {
       // write new element
-      // editboardwrite(memory.book, memory.board, kind, dest)
+      memoryboardwrite(memory.book, memory.board, kind, dest)
     }
     // halt execution
     chip.endofprogram()
@@ -421,7 +424,7 @@ export const OBJECT_FIRMWARE = createfirmware({
         }
         // create new element
         if (ispt(element)) {
-          // editboardwrite(maybebook, maybeboard, into, element)
+          memoryboardwrite(maybebook, maybeboard, into, element)
         }
       }
     })
@@ -507,7 +510,7 @@ export const OBJECT_FIRMWARE = createfirmware({
     bookboardsetlookup(maybebook, maybeboard)
 
     // write new element
-    // editboardwrite(maybebook, maybeboard, kind, dir)
+    memoryboardwrite(maybebook, maybeboard, kind, dir)
     return 0
   })
   .command('send', (chip, words) => {
@@ -635,34 +638,34 @@ export const OBJECT_FIRMWARE = createfirmware({
       }
 
       // and start bullet in headless mode
-      // const bullet = editboardwriteheadlessobject(
-      //   maybebook,
-      //   maybeboard,
-      //   maybekind ?? ['bullet'],
-      //   start,
-      // )
+      const bullet = memoryboardwriteheadlessobject(
+        maybebook,
+        maybeboard,
+        maybekind ?? ['bullet'],
+        start,
+      )
 
       // success ! start with thud message
-      // if (ispresent(bullet)) {
-      //   bullet.collision = COLLISION.ISBULLET
-      //   sendinteraction(chip, blocked, chip.id(), 'thud')
-      // }
+      if (ispresent(bullet)) {
+        bullet.collision = COLLISION.ISBULLET
+        sendinteraction(chip, blocked, chip.id(), 'thud')
+      }
     } else {
       // write new element
-      // const bullet = editboardwrite(
-      //   maybebook,
-      //   maybeboard,
-      //   maybekind ?? ['bullet'],
-      //   start,
-      // )
+      const bullet = memoryboardwrite(
+        maybebook,
+        maybeboard,
+        maybekind ?? ['bullet'],
+        start,
+      )
       // success ! get it moving
-      // if (ispresent(bullet)) {
-      //   bullet.collision = COLLISION.ISBULLET
-      //   editelementstatsafewrite(bullet, {
-      //     stepx: step.x,
-      //     stepy: step.y,
-      //   })
-      // }
+      if (ispresent(bullet)) {
+        bullet.collision = COLLISION.ISBULLET
+        memoryelementstatsafewrite(bullet, {
+          stepx: step.x,
+          stepy: step.y,
+        })
+      }
     }
 
     // and yield regardless of the outcome
@@ -692,16 +695,16 @@ export const OBJECT_FIRMWARE = createfirmware({
       return 0
     }
     // read walk direction
-    // const [maybedir] = readargs(memoryreadcontext(chip, words), 0, [
-    //   ARG_TYPE.DIR,
-    // ])
-    // const dir = dirfrompts(memory.object, maybedir)
-    // const step = ptapplydir({ x: 0, y: 0 }, dir)
+    const [maybedir] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.DIR,
+    ])
+    const dir = dirfrompts(memory.object, maybedir)
+    const step = ptapplydir({ x: 0, y: 0 }, dir)
     // create delta from dir
-    // editelementstatsafewrite(memory.object, {
-    //   stepx: step.x,
-    //   stepy: step.y,
-    // })
+    memoryelementstatsafewrite(memory.object, {
+      stepx: step.x,
+      stepy: step.y,
+    })
     return 0
   })
   // zzt @

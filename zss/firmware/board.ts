@@ -16,6 +16,6 @@ export const BOARD_FIRMWARE = createfirmware({
   tock(chip) {
     //
   },
-}).command('stub', (chip, words) => {
+}).command('board_stub', (chip, words) => {
   return 0
 })

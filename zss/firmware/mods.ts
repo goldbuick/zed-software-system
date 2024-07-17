@@ -1,7 +1,7 @@
+import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
-  memoryreadbookbyaddress,
   memoryreadbooksbytags,
   memoryreadcontext,
   memoryreadmaintags,
@@ -11,6 +11,7 @@ import {
   CODE_PAGE_TYPE,
   codepagereaddata,
   codepagereadtype,
+  codepagereadtypetostring,
 } from 'zss/memory/codepage'
 
 import { ARG_TYPE, readargs } from './wordtypes'
@@ -47,14 +48,19 @@ function strmodname(name: string): MODS_KEY | undefined {
 }
 
 function modbook(): MAYBE_BOOK {
-  const book = memoryreadbookbyaddress(MODS.book)
+  // modbook
+  const [book] = memoryreadbooksbytags([MODS.book])
   if (ispresent(book)) {
     return book
   }
+
+  // main
   const [maybebook] = memoryreadbooksbytags(memoryreadmaintags())
   if (ispresent(maybebook)) {
     return maybebook
   }
+
+  // oops
   return undefined
 }
 
@@ -71,12 +77,16 @@ function modsoftware(name: MODS_KEY, key: string, value: any) {
           book.name = value
         }
         break
+      default:
+        return false
     }
-    return
+
+    return tape_info('mods', `wrote ${value} to ${key} on book ${book.id}`)
   }
 
   const codepage = bookreadcodepagebyaddress(book, MODS[name])
-  // const stats = codepagereadstats(codepage)
+  const type = codepagereadtypetostring(codepage)
+  const id = codepage?.id ?? ''
 
   switch (codepagereadtype(codepage)) {
     case CODE_PAGE_TYPE.OBJECT: {
@@ -88,6 +98,8 @@ function modsoftware(name: MODS_KEY, key: string, value: any) {
           case 'bg':
             object[key] = value
             break
+          default:
+            return false
         }
       }
       break
@@ -101,11 +113,17 @@ function modsoftware(name: MODS_KEY, key: string, value: any) {
           case 'bg':
             terrain[key] = value
             break
+          default:
+            return false
         }
       }
       break
     }
+    default:
+      return false
   }
+
+  return tape_info('mods', `wrote ${value} to ${key} on ${type} ${id}`)
 }
 
 export const MODS_FIRMWARE = createfirmware({
@@ -120,7 +138,7 @@ export const MODS_FIRMWARE = createfirmware({
     const mod = strmodname(name)
     if (ispresent(mod)) {
       MODS[mod] = value
-      return [true, MODS[mod]]
+      return [tape_info('mods', `wrote ${value} to ${name}`), MODS[mod]]
     }
     return [false, undefined]
   },
@@ -179,6 +197,13 @@ export const MODS_FIRMWARE = createfirmware({
       usekey = name
       usevalue = maybekey
       break
+  }
+
+  if (MODS.cursor) {
+    tape_info(
+      'mods',
+      `selected ${MODS.cursor} - ${usekey ?? ''} ${usevalue ?? ''}`,
+    )
   }
 
   // read cursor and write value

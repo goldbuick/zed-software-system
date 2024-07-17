@@ -16,6 +16,6 @@ export const CHARSET_FIRMWARE = createfirmware({
   tock(chip) {
     //
   },
-}).command('stub', (chip, words) => {
+}).command('charset_stub', (chip, words) => {
   return 0
 })
