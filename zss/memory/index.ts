@@ -1,6 +1,6 @@
 import { CHIP } from 'zss/chip'
 import { api_error, tape_debug } from 'zss/device/api'
-import { PT, STR_KIND, WORD, createreadcontext } from 'zss/firmware/wordtypes'
+import { WORD, createreadcontext } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
   COLOR,
@@ -23,15 +23,11 @@ import {
   MAYBE_BOARD,
   boardelementname,
   boardobjectcreatefromkind,
-  boardterrainsetfromkind,
-  boardelementapplycolor,
 } from './board'
-import { BOARD_ELEMENT_STATS, MAYBE_BOARD_ELEMENT } from './boardelement'
+import { MAYBE_BOARD_ELEMENT } from './boardelement'
 import {
   BOOK,
   MAYBE_BOOK,
-  bookboardnamedwrite,
-  bookboardobjectlookupwrite,
   bookboardtick,
   bookelementkindread,
   bookhasmatch,
@@ -39,9 +35,7 @@ import {
   bookplayerreadboards,
   bookplayersetboard,
   bookreadboardsbytags,
-  bookreadobject,
   bookreadobjectsbytags,
-  bookreadterrain,
 } from './book'
 import { CODE_PAGE_TYPE } from './codepage'
 import {
@@ -313,14 +307,16 @@ export function memorytick(os: OS, timestamp: number) {
       const item = run[i]
 
       // create / update context
+      const chip = os.chip(item.id)
       const context = memoryreadchip(item.id)
       context.book = book
       context.board = board
       context.object = item.object
       context.inputcurrent = undefined
-      // figure out a good way to set this ..
-      // because in this way, state will get out of sync
+
+      // map stats
       context.player = item.object?.stats?.player ?? ''
+      chip?.cycle(item.object?.stats?.cycle ?? 3)
 
       // run chip code
       const itemname = boardelementname(item.object)
@@ -567,89 +563,4 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
   })
 
   return layers
-}
-
-export function memoryboardwrite(
-  book: MAYBE_BOOK,
-  board: MAYBE_BOARD,
-  kind: MAYBE<STR_KIND>,
-  dest: PT,
-): MAYBE_BOARD_ELEMENT {
-  if (ispresent(book) && ispresent(board) && ispresent(kind)) {
-    const [name, maybecolor] = kind
-
-    const maybeterrain = bookreadterrain(book, name)
-    if (ispresent(maybeterrain)) {
-      // create new terrain element
-      const terrain = boardterrainsetfromkind(board, dest, name)
-      // update color
-      boardelementapplycolor(terrain, maybecolor)
-      // update named (terrain & objects)
-      const index = dest.x + dest.y * board.width
-      bookboardnamedwrite(book, board, terrain, index)
-      // return result
-      return terrain
-    }
-
-    const maybeobject = bookreadobject(book, name)
-    if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
-      // create new object element
-      const object = boardobjectcreatefromkind(board, dest, name)
-      // update color
-      boardelementapplycolor(object, maybecolor)
-      // update lookup (only objects)
-      bookboardobjectlookupwrite(book, board, object)
-      // update named (terrain & objects)
-      bookboardnamedwrite(book, board, object)
-      // return result
-      return object
-    }
-  }
-  return undefined
-}
-
-export function memoryelementstatsafewrite(
-  element: MAYBE_BOARD_ELEMENT,
-  stats: BOARD_ELEMENT_STATS,
-) {
-  // invalid data
-  if (!ispresent(element) || !ispresent(stats)) {
-    return
-  }
-  // init stats if needed
-  if (!ispresent(element.stats)) {
-    element.stats = {}
-  }
-  // write stats
-  for (const [name, value] of Object.entries(stats)) {
-    const lname = name.toLowerCase()
-    element.stats[lname] = value
-  }
-}
-
-export function memoryboardwriteheadlessobject(
-  book: MAYBE_BOOK,
-  board: MAYBE_BOARD,
-  kind: MAYBE<STR_KIND>,
-  dest: PT,
-) {
-  if (ispresent(book) && ispresent(board) && ispresent(kind)) {
-    const [name, maybecolor] = kind
-    const maybeobject = bookreadobject(book, name)
-    if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
-      // create new object element
-      const object = boardobjectcreatefromkind(board, dest, name)
-      if (ispresent(object)) {
-        // mark as headless
-        object.headless = true
-        // update color
-        boardelementapplycolor(object, maybecolor)
-        // update named (terrain & objects)
-        bookboardnamedwrite(book, board, object)
-      }
-      // return result
-      return object
-    }
-  }
-  return undefined
 }

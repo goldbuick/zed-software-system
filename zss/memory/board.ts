@@ -129,6 +129,14 @@ export function importboard(board: MAYBE_BOARD): MAYBE_BOARD {
   }
 }
 
+export function boardwritestat(board: MAYBE_BOARD, key: string, value: WORD) {
+  if (!ispresent(board)) {
+    return
+  }
+  board.stats = board.stats ?? {}
+  board.stats[key] = value
+}
+
 export function boardelementindex(board: MAYBE_BOARD, pt: PT): number {
   if (
     !ispresent(board) ||

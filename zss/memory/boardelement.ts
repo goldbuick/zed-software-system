@@ -148,3 +148,24 @@ export function importboardelement(
     stats: importboardelementstats(boardelement.stats),
   }
 }
+
+export function boardelementwritestat(
+  boardelement: MAYBE_BOARD_ELEMENT,
+  key: string,
+  value: WORD,
+) {
+  if (!ispresent(boardelement)) {
+    return
+  }
+  boardelement.stats = boardelement.stats ?? createboardelementstats()
+  boardelement.stats[key] = value
+}
+
+export function boardelementwritestats(
+  boardelement: MAYBE_BOARD_ELEMENT,
+  stats: Record<string, WORD>,
+) {
+  Object.entries(stats).forEach(([key, value]) =>
+    boardelementwritestat(boardelement, key, value),
+  )
+}

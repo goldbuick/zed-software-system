@@ -16,9 +16,6 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import {
-  memoryboardwrite,
-  memoryboardwriteheadlessobject,
-  memoryelementstatsafewrite,
   memoryreadbooksbytags,
   memoryreadchip,
   memoryreadcontext,
@@ -38,8 +35,15 @@ import {
   boardfindplayer,
   boardterrainsetfromkind,
 } from 'zss/memory/board'
-import { BOARD_ELEMENT, MAYBE_BOARD_ELEMENT } from 'zss/memory/boardelement'
 import {
+  BOARD_ELEMENT,
+  MAYBE_BOARD_ELEMENT,
+  boardelementwritestat,
+  boardelementwritestats,
+} from 'zss/memory/boardelement'
+import {
+  bookboardwrite,
+  bookboardwriteheadlessobject,
   MAYBE_BOOK,
   bookboardmoveobject,
   bookreadflag,
@@ -320,7 +324,7 @@ export const OBJECT_FIRMWARE = createfirmware({
         y: memory.object.y + memory.object.stats.stepy,
       })
     ) {
-      memoryelementstatsafewrite(memory.object, {
+      boardelementwritestats(memory.object, {
         stepx: 0,
         stepy: 0,
       })
@@ -350,7 +354,7 @@ export const OBJECT_FIRMWARE = createfirmware({
       bookboardobjectsafedelete(memory.book, memory.object, chip.timestamp())
     ) {
       // write new element
-      memoryboardwrite(memory.book, memory.board, kind, dest)
+      bookboardwrite(memory.book, memory.board, kind, dest)
     }
     // halt execution
     chip.endofprogram()
@@ -424,7 +428,7 @@ export const OBJECT_FIRMWARE = createfirmware({
         }
         // create new element
         if (ispt(element)) {
-          memoryboardwrite(maybebook, maybeboard, into, element)
+          bookboardwrite(maybebook, maybeboard, into, element)
         }
       }
     })
@@ -452,14 +456,21 @@ export const OBJECT_FIRMWARE = createfirmware({
     return 0
   })
   .command('cycle', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
+    if (ispresent(memory.object)) {
+      return 0
+    }
+    // read cycle
     const [cyclevalue] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.NUMBER,
     ])
-    chip.cycle(clamp(Math.round(cyclevalue), 1, 255))
+    const cycle = clamp(Math.round(cyclevalue), 1, 255)
+    // set stat & chip cycle
+    chip.cycle(cycle)
+    boardelementwritestat(memory.object, 'cycle', cycle)
     return 0
   })
   .command('die', (chip) => {
-    console.info('die')
     const memory = memoryreadchip(chip.id())
     // drop from lookups if not headless
     if (memory.object?.headless) {
@@ -510,7 +521,7 @@ export const OBJECT_FIRMWARE = createfirmware({
     bookboardsetlookup(maybebook, maybeboard)
 
     // write new element
-    memoryboardwrite(maybebook, maybeboard, kind, dir)
+    bookboardwrite(maybebook, maybeboard, kind, dir)
     return 0
   })
   .command('send', (chip, words) => {
@@ -638,7 +649,7 @@ export const OBJECT_FIRMWARE = createfirmware({
       }
 
       // and start bullet in headless mode
-      const bullet = memoryboardwriteheadlessobject(
+      const bullet = bookboardwriteheadlessobject(
         maybebook,
         maybeboard,
         maybekind ?? ['bullet'],
@@ -652,7 +663,7 @@ export const OBJECT_FIRMWARE = createfirmware({
       }
     } else {
       // write new element
-      const bullet = memoryboardwrite(
+      const bullet = bookboardwrite(
         maybebook,
         maybeboard,
         maybekind ?? ['bullet'],
@@ -661,7 +672,7 @@ export const OBJECT_FIRMWARE = createfirmware({
       // success ! get it moving
       if (ispresent(bullet)) {
         bullet.collision = COLLISION.ISBULLET
-        memoryelementstatsafewrite(bullet, {
+        boardelementwritestats(bullet, {
           stepx: step.x,
           stepy: step.y,
         })
@@ -701,7 +712,7 @@ export const OBJECT_FIRMWARE = createfirmware({
     const dir = dirfrompts(memory.object, maybedir)
     const step = ptapplydir({ x: 0, y: 0 }, dir)
     // create delta from dir
-    memoryelementstatsafewrite(memory.object, {
+    boardelementwritestats(memory.object, {
       stepx: step.x,
       stepy: step.y,
     })

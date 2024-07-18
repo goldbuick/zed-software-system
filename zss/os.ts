@@ -3,7 +3,7 @@ import { MESSAGE_FUNC, parsetarget } from './device'
 import { api_error } from './device/api'
 import { loadfirmware } from './firmware/loader'
 import { GeneratorBuild, compile } from './lang/generator'
-import { ispresent } from './mapping/types'
+import { MAYBE, ispresent } from './mapping/types'
 import { CODE_PAGE_TYPE } from './memory/codepage'
 
 export type OS_INVOKE = (
@@ -18,6 +18,7 @@ export type OS = {
   ids: () => string[]
   has: (id: string) => boolean
   halt: (id: string) => boolean
+  chip: (id: string) => MAYBE<CHIP>
   tick: OS_INVOKE
   once: OS_INVOKE
   message: MESSAGE_FUNC
@@ -25,7 +26,7 @@ export type OS = {
 
 export function createos() {
   const builds: Record<string, GeneratorBuild> = {}
-  const chips: Record<string, CHIP | null> = {}
+  const chips: Record<string, CHIP | undefined> = {}
   function build(name: string, code: string) {
     const cache = builds[code]
     if (cache) {
@@ -48,6 +49,9 @@ export function createos() {
         delete chips[id]
       }
       return !!chip
+    },
+    chip(id) {
+      return chips[id]
     },
     tick(id, type, timestamp, name, code) {
       let chip = chips[id]

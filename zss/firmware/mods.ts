@@ -6,6 +6,8 @@ import {
   memoryreadcontext,
   memoryreadmaintags,
 } from 'zss/memory'
+import { boardwritestat } from 'zss/memory/board'
+import { boardelementwritestat } from 'zss/memory/boardelement'
 import { bookreadcodepagebyaddress, MAYBE_BOOK } from 'zss/memory/book'
 import {
   CODE_PAGE_TYPE,
@@ -70,6 +72,7 @@ function modsoftware(name: MODS_KEY, key: string, value: any) {
     return
   }
 
+  // book mods
   if (name === 'book') {
     switch (key) {
       case 'name':
@@ -88,7 +91,15 @@ function modsoftware(name: MODS_KEY, key: string, value: any) {
   const type = codepagereadtypetostring(codepage)
   const id = codepage?.id ?? ''
 
+  // codepage mods
   switch (codepagereadtype(codepage)) {
+    case CODE_PAGE_TYPE.BOARD: {
+      const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+      if (ispresent(board)) {
+        boardwritestat(board, key, value)
+      }
+      break
+    }
     case CODE_PAGE_TYPE.OBJECT: {
       const object = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(codepage)
       if (ispresent(object)) {
@@ -99,9 +110,7 @@ function modsoftware(name: MODS_KEY, key: string, value: any) {
             object[key] = value
             break
           case 'cycle':
-          case 'stepx':
-          case 'stepy':
-            //
+            boardelementwritestat(object, 'cycle', value)
             break
           default:
             return false
@@ -124,10 +133,23 @@ function modsoftware(name: MODS_KEY, key: string, value: any) {
       }
       break
     }
+    case CODE_PAGE_TYPE.CHARSET: {
+      const charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(codepage)
+      if (ispresent(charset)) {
+        //
+      }
+      break
+    }
+    case CODE_PAGE_TYPE.PALETTE: {
+      const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
+      if (ispresent(palette)) {
+        //
+      }
+      break
+    }
     default:
       return false
   }
-
   return tape_info('mods', `wrote ${value} to ${key} on ${type} ${id}`)
 }
 
