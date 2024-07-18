@@ -98,6 +98,11 @@ function modsoftware(name: MODS_KEY, key: string, value: any) {
           case 'bg':
             object[key] = value
             break
+          case 'cycle':
+          case 'stepx':
+          case 'stepy':
+            //
+            break
           default:
             return false
         }
