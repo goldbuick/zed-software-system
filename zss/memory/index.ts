@@ -14,6 +14,7 @@ import {
 } from 'zss/gadget/data/types'
 import { average } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
+import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
@@ -307,7 +308,6 @@ export function memorytick(os: OS, timestamp: number) {
       const item = run[i]
 
       // create / update context
-      const chip = os.chip(item.id)
       const context = memoryreadchip(item.id)
       context.book = book
       context.board = board
@@ -315,12 +315,12 @@ export function memorytick(os: OS, timestamp: number) {
       context.inputcurrent = undefined
 
       // map stats
+      const cycle = item.object?.stats?.cycle ?? CYCLE_DEFAULT
       context.player = item.object?.stats?.player ?? ''
-      chip?.cycle(item.object?.stats?.cycle ?? 3)
 
       // run chip code
       const itemname = boardelementname(item.object)
-      os.tick(item.id, item.type, timestamp, itemname, item.code)
+      os.tick(item.id, item.type, cycle, timestamp, itemname, item.code)
     }
   })
 }

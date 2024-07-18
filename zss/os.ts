@@ -3,7 +3,7 @@ import { MESSAGE_FUNC, parsetarget } from './device'
 import { api_error } from './device/api'
 import { loadfirmware } from './firmware/loader'
 import { GeneratorBuild, compile } from './lang/generator'
-import { MAYBE, ispresent } from './mapping/types'
+import { ispresent } from './mapping/types'
 import { CODE_PAGE_TYPE } from './memory/codepage'
 
 export type OS_INVOKE = (
@@ -18,8 +18,14 @@ export type OS = {
   ids: () => string[]
   has: (id: string) => boolean
   halt: (id: string) => boolean
-  chip: (id: string) => MAYBE<CHIP>
-  tick: OS_INVOKE
+  tick: (
+    id: string,
+    type: CODE_PAGE_TYPE,
+    cycle: number,
+    timestamp: number,
+    name: string,
+    code: string,
+  ) => boolean
   once: OS_INVOKE
   message: MESSAGE_FUNC
 }
@@ -50,10 +56,7 @@ export function createos() {
       }
       return !!chip
     },
-    chip(id) {
-      return chips[id]
-    },
-    tick(id, type, timestamp, name, code) {
+    tick(id, type, cycle, timestamp, name, code) {
       let chip = chips[id]
       if (!ispresent(chips[id])) {
         const result = build(name, code)
@@ -84,10 +87,10 @@ export function createos() {
         // load chip firmware
         loadfirmware(chip, type)
       }
-      return !!chip?.tick(timestamp)
+      return !!chip?.tick(cycle, timestamp)
     },
     once(id, type, timestamp, name, code) {
-      const result = os.tick(id, type, timestamp, name, code)
+      const result = os.tick(id, type, 1, timestamp, name, code)
       return result && os.halt(id)
     },
     message(incoming) {

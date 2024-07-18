@@ -5,7 +5,6 @@ import { ARG_TYPE, WORD, WORD_RESULT, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
-import { CYCLE_DEFAULT } from './mapping/tick'
 import {
   MAYBE,
   deepcopy,
@@ -42,9 +41,9 @@ export type CHIP = {
   get: (name: string) => any
 
   // lifecycle api
-  cycle: (incoming: number) => void
+  // cycle: (incoming: number) => void
   timestamp: () => number
-  tick: (incoming: number) => boolean
+  tick: (cycle: number, incoming: number) => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
   hm: () => number
@@ -133,7 +132,7 @@ export function createchip(id: string, build: GeneratorBuild) {
   let yieldstate = false
 
   // execution frequency
-  let cycle = CYCLE_DEFAULT
+  // let cycle = CYCLE_DEFAULT
   let pulse = 0
   // execution timestamp
   let timestamp = 0
@@ -215,13 +214,10 @@ export function createchip(id: string, build: GeneratorBuild) {
     },
 
     // lifecycle api
-    cycle(incoming) {
-      cycle = incoming
-    },
     timestamp() {
       return timestamp
     },
-    tick(incoming) {
+    tick(cycle, incoming) {
       // update timestamp
       timestamp = incoming
 

@@ -464,9 +464,8 @@ export const OBJECT_FIRMWARE = createfirmware({
     const [cyclevalue] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.NUMBER,
     ])
+    // write cycle
     const cycle = clamp(Math.round(cyclevalue), 1, 255)
-    // set stat & chip cycle
-    chip.cycle(cycle)
     boardelementwritestat(memory.object, 'cycle', cycle)
     return 0
   })
