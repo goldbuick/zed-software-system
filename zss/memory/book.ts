@@ -1,27 +1,32 @@
-import { trimUndefinedRecursively } from 'compress-json'
-import { PT, COLLISION, CATEGORY, WORD } from 'zss/firmware/wordtypes'
+import { PT, COLLISION, CATEGORY, WORD, STR_KIND } from 'zss/firmware/wordtypes'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, MAYBE_STRING, deepcopy, ispresent } from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
 
 import { checkcollision } from './atomics'
 import {
+  BOARD,
   MAYBE_BOARD,
-  MAYBE_BOARD_ELEMENT,
   boarddeleteobject,
-  boardexport,
+  boardelementapplycolor,
+  boardobjectcreatefromkind,
   boardobjectread,
+  boardterrainsetfromkind,
 } from './board'
+import { BOARD_ELEMENT, MAYBE_BOARD_ELEMENT } from './boardelement'
+import { MAYBE_BOOK } from './book'
 import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
-  CODE_PAGE_TYPE_MAP,
   MAYBE_CODE_PAGE,
+  codepagehasmatch,
   codepagereaddata,
   codepagereadname,
   codepagereadstatdefaults,
   codepagereadtype,
+  exportcodepage,
+  importcodepage,
 } from './codepage'
 
 // player state
@@ -33,6 +38,7 @@ export type BOOK_PLAYER = string
 export type BOOK = {
   id: string
   name: string
+  tags: Set<string>
   pages: CODE_PAGE[]
   flags: Record<string, BOOK_FLAGS>
   players: Record<string, BOOK_PLAYER>
@@ -40,17 +46,91 @@ export type BOOK = {
 
 export type MAYBE_BOOK = MAYBE<BOOK>
 
-export function createbook(pages: CODE_PAGE[]): BOOK {
+export function createbook(pages: CODE_PAGE[], tags: string[]): BOOK {
   return {
     id: createsid(),
     name: createnameid(),
+    tags: new Set(tags),
     pages,
     flags: {},
     players: {},
   }
 }
 
-export function bookfindcodepage(
+// safe to serialize copy of book
+export function exportbook(book: MAYBE_BOOK): MAYBE_BOOK {
+  if (!ispresent(book)) {
+    return
+  }
+  return {
+    id: book.id,
+    name: book.name,
+    tags: [...book.tags] as any,
+    pages: book.pages.map(exportcodepage).filter(ispresent),
+    flags: {},
+    players: {},
+  }
+}
+
+// import json into book
+export function importbook(book: MAYBE_BOOK): MAYBE_BOOK {
+  if (!ispresent(book)) {
+    return
+  }
+  return {
+    id: book.id,
+    name: book.name,
+    tags: new Set([...book.tags]),
+    pages: book.pages.map(importcodepage).filter(ispresent),
+    flags: {},
+    players: {},
+  }
+}
+
+export function bookreadtags(book: MAYBE_BOOK) {
+  return [...(book?.tags ?? [])]
+}
+
+export function bookaddtags(book: MAYBE_BOOK, tags: string[]) {
+  if (!ispresent(book)) {
+    return
+  }
+  tags.forEach((item) => book.tags.add(item))
+}
+
+export function bookremovetags(book: MAYBE_BOOK, tags: string[]) {
+  if (!ispresent(book)) {
+    return
+  }
+  tags.forEach((item) => book.tags.delete(item))
+}
+
+export function bookhastags(book: MAYBE_BOOK, tags: string[]): boolean {
+  if (!ispresent(book)) {
+    return false
+  }
+  return tags.every((tag) => book.tags.has(tag))
+}
+
+export function bookhasmatch(
+  book: MAYBE_BOOK,
+  ids: string[],
+  tags: string[],
+): boolean {
+  if (!ispresent(book)) {
+    return false
+  }
+  if (ids.some((id) => id === book.id)) {
+    return true
+  }
+  const lname = book.name.toLowerCase()
+  if (tags.includes(lname)) {
+    return true
+  }
+  return bookhastags(book, tags)
+}
+
+export function bookreadcodepagebyaddress(
   book: MAYBE_BOOK,
   address: string,
 ): MAYBE_CODE_PAGE {
@@ -66,7 +146,7 @@ export function bookfindcodepage(
   return codepage
 }
 
-export function bookreadcodepage(
+export function bookreadcodepagewithtype(
   book: MAYBE_BOOK,
   type: CODE_PAGE_TYPE,
   address: string,
@@ -93,7 +173,7 @@ export function bookwritecodepage(
     return false
   }
 
-  const existing = bookfindcodepage(book, codepage.id)
+  const existing = bookreadcodepagebyaddress(book, codepage.id)
   if (ispresent(existing)) {
     return false
   }
@@ -104,7 +184,7 @@ export function bookwritecodepage(
 }
 
 export function bookclearcodepage(book: MAYBE_BOOK, address: string) {
-  const codepage = bookfindcodepage(book, address)
+  const codepage = bookreadcodepagebyaddress(book, address)
   if (ispresent(book) && ispresent(codepage)) {
     const laddress = address.toLowerCase()
     book.pages = book.pages.filter(
@@ -112,15 +192,6 @@ export function bookclearcodepage(book: MAYBE_BOOK, address: string) {
     )
     return codepage
   }
-}
-
-export function bookreadcodepagedata<T extends CODE_PAGE_TYPE>(
-  book: MAYBE_BOOK,
-  type: T,
-  address: string,
-): MAYBE<CODE_PAGE_TYPE_MAP[T]> {
-  const codepage = bookreadcodepage(book, type, address)
-  return codepagereaddata(codepage)
 }
 
 export function bookelementkindread(
@@ -143,10 +214,10 @@ export function bookreadobject(
   maybeobject: MAYBE_STRING,
 ): MAYBE_BOARD_ELEMENT {
   const object = maybeobject ?? ''
-  const page = bookreadcodepage(book, CODE_PAGE_TYPE.OBJECT, object)
-  const data = bookreadcodepagedata(book, CODE_PAGE_TYPE.OBJECT, object)
+  const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.OBJECT, object)
   if (ispresent(page)) {
     const stats = codepagereadstatdefaults(page)
+    const data = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(page)
     return {
       ...data,
       ...stats,
@@ -158,15 +229,28 @@ export function bookreadobject(
   }
 }
 
+export function bookreadobjectsbytags(
+  book: MAYBE_BOOK,
+  tags: string[],
+): BOARD_ELEMENT[] {
+  const ltags = tags.map((tag) => tag.toLowerCase())
+  return (book?.pages ?? [])
+    .filter((page) =>
+      codepagehasmatch(page, CODE_PAGE_TYPE.OBJECT, tags, ltags),
+    )
+    .map((page) => codepagereaddata<CODE_PAGE_TYPE.OBJECT>(page))
+    .filter(ispresent)
+}
+
 export function bookreadterrain(
   book: MAYBE_BOOK,
   maybeterrain: MAYBE_STRING,
 ): MAYBE_BOARD_ELEMENT {
   const terrain = maybeterrain ?? ''
-  const page = bookreadcodepage(book, CODE_PAGE_TYPE.TERRAIN, terrain)
-  const data = bookreadcodepagedata(book, CODE_PAGE_TYPE.TERRAIN, terrain)
+  const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.TERRAIN, terrain)
   if (ispresent(page)) {
     const stats = codepagereadstatdefaults(page)
+    const data = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(page)
     return {
       ...data,
       ...stats,
@@ -178,8 +262,34 @@ export function bookreadterrain(
   }
 }
 
+export function bookreadterrainbytags(
+  book: MAYBE_BOOK,
+  tags: string[],
+): BOARD_ELEMENT[] {
+  const ltags = tags.map((tag) => tag.toLowerCase())
+  return (book?.pages ?? [])
+    .filter((page) =>
+      codepagehasmatch(page, CODE_PAGE_TYPE.TERRAIN, tags, ltags),
+    )
+    .map((page) => codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(page))
+    .filter(ispresent)
+}
+
 export function bookreadboard(book: MAYBE_BOOK, board: string): MAYBE_BOARD {
-  return bookreadcodepagedata(book, CODE_PAGE_TYPE.BOARD, board)
+  return codepagereaddata<CODE_PAGE_TYPE.BOARD>(
+    bookreadcodepagebyaddress(book, board),
+  )
+}
+
+export function bookreadboardsbytags(
+  book: MAYBE_BOOK,
+  tags: string[],
+): BOARD[] {
+  const ltags = tags.map((tag) => tag.toLowerCase())
+  return (book?.pages ?? [])
+    .filter((page) => codepagehasmatch(page, CODE_PAGE_TYPE.BOARD, tags, ltags))
+    .map((page) => codepagereaddata<CODE_PAGE_TYPE.BOARD>(page))
+    .filter(ispresent)
 }
 
 export function bookreadflags(book: MAYBE_BOOK, player: string) {
@@ -223,9 +333,8 @@ export function bookplayersetboard(
 }
 
 export function bookplayerreadboards(book: MAYBE_BOOK) {
-  return unique(Object.values(book?.players ?? []))
-    .map((address) => bookreadboard(book, address))
-    .filter(ispresent)
+  const ids = unique(Object.values(book?.players ?? {}))
+  return ids.map((address) => bookreadboard(book, address)).filter(ispresent)
 }
 
 export function bookboardmoveobject(
@@ -555,20 +664,68 @@ export function bookboardtick(
   return args
 }
 
-export function bookexport(book: MAYBE_BOOK) {
-  if (!ispresent(book)) {
-    return undefined
-  }
-
-  const bookexport = deepcopy(book)
-  bookexport.pages = bookexport.pages.map((page) => {
-    return {
-      ...page,
-      board: ispresent(page.board) ? boardexport(page.board) : undefined,
+export function bookboardwriteheadlessobject(
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
+  kind: MAYBE<STR_KIND>,
+  dest: PT,
+) {
+  if (ispresent(book) && ispresent(board) && ispresent(kind)) {
+    const [name, maybecolor] = kind
+    const maybeobject = bookreadobject(book, name)
+    if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
+      // create new object element
+      const object = boardobjectcreatefromkind(board, dest, name)
+      if (ispresent(object)) {
+        // mark as headless
+        object.headless = true
+        // update color
+        boardelementapplycolor(object, maybecolor)
+        // update named (terrain & objects)
+        bookboardnamedwrite(book, board, object)
+      }
+      // return result
+      return object
     }
-  })
+  }
+  return undefined
+}
 
-  // bad undefined !
-  trimUndefinedRecursively(bookexport)
-  return bookexport
+export function bookboardwrite(
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
+  kind: MAYBE<STR_KIND>,
+  dest: PT,
+): MAYBE_BOARD_ELEMENT {
+  if (ispresent(book) && ispresent(board) && ispresent(kind)) {
+    const [name, maybecolor] = kind
+
+    const maybeterrain = bookreadterrain(book, name)
+    if (ispresent(maybeterrain)) {
+      // create new terrain element
+      const terrain = boardterrainsetfromkind(board, dest, name)
+      // update color
+      boardelementapplycolor(terrain, maybecolor)
+      // update named (terrain & objects)
+      const index = dest.x + dest.y * board.width
+      bookboardnamedwrite(book, board, terrain, index)
+      // return result
+      return terrain
+    }
+
+    const maybeobject = bookreadobject(book, name)
+    if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
+      // create new object element
+      const object = boardobjectcreatefromkind(board, dest, name)
+      // update color
+      boardelementapplycolor(object, maybecolor)
+      // update lookup (only objects)
+      bookboardobjectlookupwrite(book, board, object)
+      // update named (terrain & objects)
+      bookboardnamedwrite(book, board, object)
+      // return result
+      return object
+    }
+  }
+  return undefined
 }

@@ -86,10 +86,10 @@ export const GADGET_FIRMWARE = createfirmware({
       const ltype = maybetype.toLowerCase()
       switch (ltype) {
         case 'edit':
-          memorycreateeditframe(board, ltarget, maybeboard)
+          memorycreateeditframe(board, [ltarget], [maybeboard])
           break
         case 'view':
-          memorycreateviewframe(board, ltarget, maybeboard)
+          memorycreateviewframe(board, [ltarget], [maybeboard])
           break
         default:
           // TODO raise error of unknown action

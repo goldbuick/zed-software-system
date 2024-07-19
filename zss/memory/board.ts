@@ -4,13 +4,11 @@ import {
   STR_DIR,
   dirfrompts,
   ispt,
-  CATEGORY,
   STR_COLOR,
   isstrcolor,
   readstrcolor,
   readstrbg,
   ptapplydir,
-  COLLISION,
   mapstrdirtoconst,
   WORD,
 } from 'zss/firmware/wordtypes'
@@ -27,56 +25,12 @@ import {
 } from 'zss/mapping/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
-
-// simple built-ins go here
-export type BOARD_ELEMENT_STATS = {
-  cycle?: number
-  stepx?: number
-  stepy?: number
-  player?: string
-  sender?: string
-  inputmove?: string[]
-  inputalt?: number
-  inputctrl?: number
-  inputshift?: number
-  inputok?: number
-  inputcancel?: number
-  inputmenu?: number
-  data?: any
-  [key: string]: WORD
-}
-
-export type BOARD_ELEMENT = {
-  // this element is an instance of an element type
-  kind?: string
-  // objects only
-  id?: string
-  x?: number
-  y?: number
-  lx?: number
-  ly?: number
-  code?: string
-  // this is a unique name for this instance
-  name?: string
-  // display
-  char?: number
-  color?: number
-  bg?: number
-  // interaction
-  pushable?: number
-  collision?: COLLISION
-  destructible?: number
-  // custom
-  stats?: BOARD_ELEMENT_STATS
-  // runtime
-  category?: CATEGORY
-  kinddata?: BOARD_ELEMENT
-  kindcode?: string
-  headless?: boolean
-  removed?: number
-}
-
-export type MAYBE_BOARD_ELEMENT = MAYBE<BOARD_ELEMENT>
+import {
+  BOARD_ELEMENT,
+  MAYBE_BOARD_ELEMENT,
+  exportboardelement,
+  importboardelement,
+} from './boardelement'
 
 export type BOARD_RECT = {
   x: number
@@ -88,7 +42,6 @@ export type BOARD_RECT = {
 export type BOARD_STATS = Record<string, WORD>
 
 export type BOARD = {
-  // lookup
   id?: string
   // dimensions
   x: number
@@ -111,17 +64,77 @@ const BOARD_WIDTH = 60
 const BOARD_HEIGHT = 25
 const BOARD_TERRAIN: undefined[] = new Array(BOARD_WIDTH * BOARD_HEIGHT)
 
-export function boardcreate(fn = noop<BOARD>) {
+export function createboard(fn = noop<BOARD>) {
   const board: BOARD = {
     id: createsid(),
+    // dimensions
     x: 0,
     y: 0,
     width: BOARD_WIDTH,
     height: BOARD_HEIGHT,
+    // specifics
     terrain: BOARD_TERRAIN.slice(0),
     objects: {},
   }
   return fn(board)
+}
+
+// safe to serialize copy of board
+export function exportboard(board: MAYBE_BOARD): MAYBE_BOARD {
+  if (!ispresent(board)) {
+    return
+  }
+
+  return {
+    id: board.id,
+    // dimensions
+    x: board.x,
+    y: board.y,
+    width: board.width,
+    height: board.height,
+    // specifics
+    terrain: board.terrain.map(exportboardelement),
+    objects: Object.fromEntries<BOARD_ELEMENT>(
+      Object.entries(board.objects) // trim objects, and remove any players
+        .filter(([, object]) => object.kind !== 'player')
+        .map(([id, object]) => [id, exportboardelement(object)]) as any,
+    ),
+    // custom
+    stats: board.stats,
+  }
+}
+
+// import json into board
+export function importboard(board: MAYBE_BOARD): MAYBE_BOARD {
+  if (!ispresent(board)) {
+    return
+  }
+  return {
+    id: board.id,
+    // dimensions
+    x: board.x,
+    y: board.y,
+    width: board.width,
+    height: board.height,
+    // specifics
+    terrain: board.terrain.map(importboardelement),
+    objects: Object.fromEntries<BOARD_ELEMENT>(
+      Object.entries(board.objects).map(([id, object]) => [
+        id,
+        importboardelement(object),
+      ]) as any,
+    ),
+    // custom
+    stats: board.stats,
+  }
+}
+
+export function boardwritestat(board: MAYBE_BOARD, key: string, value: WORD) {
+  if (!ispresent(board)) {
+    return
+  }
+  board.stats = board.stats ?? {}
+  board.stats[key] = value
 }
 
 export function boardelementindex(board: MAYBE_BOARD, pt: PT): number {
@@ -253,8 +266,9 @@ export function boardobjectcreatefromkind(
   board: MAYBE_BOARD,
   pt: PT,
   kind: string,
+  id?: string,
 ): MAYBE_BOARD_ELEMENT {
-  return boardobjectcreate(board, { ...pt, kind })
+  return boardobjectcreate(board, { ...pt, id: id ?? undefined, kind })
 }
 
 export function boardobjectread(
@@ -409,47 +423,4 @@ export function boardfindplayer(
 
   // nearest player to target
   return picknearestpt(target, listnamedelements(board, 'player'))
-}
-
-function boardelementexport(element: MAYBE_BOARD_ELEMENT): MAYBE_BOARD_ELEMENT {
-  if (!ispresent(element)) {
-    return undefined
-  }
-
-  const elementexport: BOARD_ELEMENT = {
-    ...element,
-  }
-
-  // cut runtime data
-  delete elementexport.category
-  delete elementexport.kinddata
-  delete elementexport.kindcode
-  delete elementexport.headless
-  delete elementexport.removed
-
-  return elementexport
-}
-
-export function boardexport(board: MAYBE_BOARD): MAYBE_BOARD {
-  if (!ispresent(board)) {
-    return undefined
-  }
-
-  // trim terrain
-  const terrain = board.terrain.map(boardelementexport)
-
-  // trim objects, and remove any players
-  const objects: Record<string, BOARD_ELEMENT> = {}
-  Object.keys(board.objects).forEach((id) => {
-    const object = boardelementexport(board.objects[id])
-    if (ispresent(object) && object.kind !== 'player') {
-      objects[id] = object
-    }
-  })
-
-  return {
-    ...board,
-    terrain,
-    objects,
-  }
 }

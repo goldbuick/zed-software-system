@@ -2,7 +2,7 @@ import { createdevice } from 'zss/device'
 import { decompressfromurlhash, compresstourlhash } from 'zss/mapping/buffer'
 import { doasync } from 'zss/mapping/func'
 import { isarray, isbook, ispresent } from 'zss/mapping/types'
-import { bookexport } from 'zss/memory/book'
+import { importbook } from 'zss/memory/book'
 
 import { api_error, bip_rebootfailed, tape_info, vm_books } from './api'
 
@@ -12,18 +12,18 @@ async function readstate(): Promise<STATE_BOOKS> {
   try {
     const hash = window.location.hash.slice(1)
     if (hash.length) {
-      const result = await decompressfromurlhash(hash)
-      return (result ?? []) as any[]
+      const result = (await decompressfromurlhash(hash)) ?? []
+      const importedbooks = result.map(importbook)
+      return importedbooks
     }
-  } catch (err) {
-    //
+  } catch (err: any) {
+    api_error('register', 'crash', err.message)
   }
   return [] as any[]
 }
 
-async function writestate(books: STATE_BOOKS) {
-  const cleanbooks = [...books.map(bookexport)].filter(ispresent)
-  const hash = (await compresstourlhash(cleanbooks)) ?? ''
+async function writestate(exportedbooks: STATE_BOOKS) {
+  const hash = (await compresstourlhash(exportedbooks)) ?? ''
   const out = `#${hash}`
   window.location.hash = out
   tape_info(
@@ -58,21 +58,18 @@ const register = createdevice('register', [], function (message) {
         if (!ispresent(message.player)) {
           return
         }
-
         // check url first
         const books = await readstate()
         if (isbook(books[0])) {
           vm_books(register.name(), books, message.player)
           return
         }
-
         // check local storage second
         const biosbooks = readbiosbooks()
         if (biosbooks.length > 0 && biosbooks.every(isbook)) {
           vm_books(register.name(), biosbooks, message.player)
           return
         }
-
         // signal error
         api_error(
           register.name(),

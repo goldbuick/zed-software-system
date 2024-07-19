@@ -4,6 +4,7 @@ import {
   makeCompressionStream,
   makeDecompressionStream,
 } from 'compression-streams-polyfill/ponyfill'
+import { api_error } from 'zss/device/api'
 
 import { ispresent } from './types'
 
@@ -66,31 +67,36 @@ async function unzipbuffer(
   return await zipreader(bs.readable.getReader())
 }
 
-export async function compresstourlhash(
+export async function compresstobuffer(
   value: any,
-): Promise<string | undefined> {
+): Promise<Uint8Array | undefined> {
   try {
     const buffer = msgencode(value)
-    const zipped = await zipbuffer(buffer)
-    if (ispresent(zipped)) {
-      const urlhash = toBase64(zipped)
-      return urlhash
+    if (ispresent(buffer)) {
+      return await zipbuffer(buffer)
     }
-  } catch (err) {
-    //
+  } catch (err: any) {
+    api_error('buffer', 'crash', err.message)
   }
 }
 
-export async function decompressfromurlhash(
-  value: string,
+export async function decompressfrombuffer(
+  zipped: Uint8Array,
 ): Promise<any | undefined> {
   try {
-    const zipped = fromBase64(value)
-    const buffer = await unzipbuffer(zipped)
-    if (ispresent(buffer)) {
-      return msgdecode(buffer)
+    const msg = await unzipbuffer(zipped)
+    if (ispresent(msg)) {
+      return msgdecode(msg)
     }
-  } catch (err) {
-    //
+  } catch (err: any) {
+    api_error('buffer', 'crash', err.message)
   }
+}
+
+export async function compresstourlhash(value: any) {
+  return toBase64((await compresstobuffer(value)) ?? '')
+}
+
+export async function decompressfromurlhash(value: string) {
+  return await decompressfrombuffer(fromBase64(value))
 }

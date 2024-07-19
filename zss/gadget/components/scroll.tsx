@@ -1,6 +1,8 @@
 import { useFrame, useThree } from '@react-three/fiber'
+import { damp, expo, exp, rsqw } from 'maath/easing'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Group } from 'three'
+import { animpositiontotarget } from 'zss/mapping/anim'
 import { snap } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
@@ -150,33 +152,19 @@ export function Scroll({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldclose])
 
+  // slick move
   useFrame(
     useCallback(
       (_, delta) => {
-        if (!ispresent(groupref.current)) {
-          return
-        }
-        const force = 9.58
-        const damp = 39.325
-        const target = shouldclose ? height * 2 * -DRAW_CHAR_HEIGHT : 0
-        const step = target - groupref.current.userData.y
-
-        groupref.current.userData.vy += step * delta * force
-        groupref.current.userData.y += groupref.current.userData.vy
-        groupref.current.position.y = snap(
-          groupref.current.userData.y,
-          DRAW_CHAR_HEIGHT * 0.5,
-        )
-        groupref.current.userData.vy +=
-          groupref.current.userData.vy * delta * -damp
-
-        const near = shouldclose ? 8 : 0.1
-        if (Math.abs(step) < near) {
-          didstop()
+        if (ispresent(groupref.current)) {
+          const target = shouldclose ? height * 2 * -DRAW_CHAR_HEIGHT : 0
+          if (animpositiontotarget(groupref.current, 'y', target, delta)) {
+            // signal completion
+            didstop()
+          }
         }
       },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [shouldclose],
+      [shouldclose, didstop, height],
     ),
   )
 

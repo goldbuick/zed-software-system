@@ -1,0 +1,9 @@
+@test
+@stat anger range;Anger
+#cycle pick 1 3 7 15
+:main
+?rnd
+#main
+:touch
+My anger is at level $anger !!
+#main

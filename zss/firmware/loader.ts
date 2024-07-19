@@ -4,26 +4,36 @@ import { CODE_PAGE_TYPE } from 'zss/memory/codepage'
 
 import { ALL_FIRMWARE } from './all'
 import { AUDIO_FIRMWARE } from './audio'
+import { BOARD_FIRMWARE } from './board'
+import { CHARSET_FIRMWARE } from './charset'
 import { CLI_FIRMWARE } from './cli'
 import { GADGET_FIRMWARE } from './gadget'
+import { MODS_FIRMWARE } from './mods'
 import { OBJECT_FIRMWARE } from './object'
+import { PALETTE_FIRMWARE } from './palette'
+import { TERRAIN_FIRMWARE } from './terrain'
 
 const firmwares: Record<string, FIRMWARE> = {
   all: ALL_FIRMWARE,
-  cli: CLI_FIRMWARE,
   audio: AUDIO_FIRMWARE,
+  board: BOARD_FIRMWARE,
+  charset: CHARSET_FIRMWARE,
+  cli: CLI_FIRMWARE,
   gadget: GADGET_FIRMWARE,
+  mods: MODS_FIRMWARE,
   object: OBJECT_FIRMWARE,
+  palette: PALETTE_FIRMWARE,
+  terrain: TERRAIN_FIRMWARE,
 }
 
 export const CODE_PAGE_FIRMWARE = {
   [CODE_PAGE_TYPE.ERROR]: [],
-  [CODE_PAGE_TYPE.CLI]: ['all', 'audio', 'cli'],
-  [CODE_PAGE_TYPE.BOARD]: ['all', 'audio', 'gadget'],
-  [CODE_PAGE_TYPE.OBJECT]: ['all', 'audio', 'object', 'gadget'],
-  [CODE_PAGE_TYPE.TERRAIN]: ['all', 'audio'],
-  [CODE_PAGE_TYPE.CHARSET]: ['all'],
-  [CODE_PAGE_TYPE.PALETTE]: ['all'],
+  [CODE_PAGE_TYPE.CLI]: ['all', 'audio', 'mods', 'cli'],
+  [CODE_PAGE_TYPE.BOARD]: ['all', 'audio', 'gadget', 'mods', 'board'],
+  [CODE_PAGE_TYPE.OBJECT]: ['all', 'audio', 'gadget', 'mods', 'object'],
+  [CODE_PAGE_TYPE.TERRAIN]: ['all', 'audio', 'gadget', 'mods', 'terrain'],
+  [CODE_PAGE_TYPE.CHARSET]: ['all', 'audio', 'gadget', 'mods', 'charset'],
+  [CODE_PAGE_TYPE.PALETTE]: ['all', 'audio', 'gadget', 'mods', 'palette'],
 }
 
 export type FIRMWARE_NAME = keyof typeof CODE_PAGE_FIRMWARE

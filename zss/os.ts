@@ -18,14 +18,21 @@ export type OS = {
   ids: () => string[]
   has: (id: string) => boolean
   halt: (id: string) => boolean
-  tick: OS_INVOKE
+  tick: (
+    id: string,
+    type: CODE_PAGE_TYPE,
+    cycle: number,
+    timestamp: number,
+    name: string,
+    code: string,
+  ) => boolean
   once: OS_INVOKE
   message: MESSAGE_FUNC
 }
 
 export function createos() {
   const builds: Record<string, GeneratorBuild> = {}
-  const chips: Record<string, CHIP | null> = {}
+  const chips: Record<string, CHIP | undefined> = {}
   function build(name: string, code: string) {
     const cache = builds[code]
     if (cache) {
@@ -49,7 +56,7 @@ export function createos() {
       }
       return !!chip
     },
-    tick(id, type, timestamp, name, code) {
+    tick(id, type, cycle, timestamp, name, code) {
       let chip = chips[id]
       if (!ispresent(chips[id])) {
         const result = build(name, code)
@@ -61,18 +68,18 @@ export function createos() {
           const errorline = (primary?.line ?? 2) - 1
           const codelines = code.replaceAll('\r\n', '').split('\n')
           primary.message.split('\n').forEach((message) => {
-            api_error('os', 'build', message, '')
+            api_error('os', 'build', message)
           })
           codelines.forEach((message, index) => {
             if (index === errorline) {
               const start = (primary.column ?? 1) - 1
-              const end = start + primary.length ?? 0
+              const end = start + primary.length
               const a = message.substring(0, start)
               const b = message.substring(start, end)
               const c = message.substring(end)
-              api_error('os', 'build', `$grey${a}$red${b}$grey${c}`, '')
+              api_error('os', 'build', `$grey${a}$red${b}$grey${c}`)
             } else {
-              api_error('os', 'build', `$grey${message}`, '')
+              api_error('os', 'build', `$grey${message}`)
             }
           })
           return false
@@ -80,10 +87,11 @@ export function createos() {
         // load chip firmware
         loadfirmware(chip, type)
       }
-      return !!chip?.tick(timestamp)
+      // run it
+      return !!chip?.tick(cycle, timestamp)
     },
     once(id, type, timestamp, name, code) {
-      const result = os.tick(id, type, timestamp, name, code)
+      const result = os.tick(id, type, 1, timestamp, name, code)
       return result && os.halt(id)
     },
     message(incoming) {

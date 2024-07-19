@@ -1,11 +1,17 @@
 import { IToken } from 'chevrotain'
-import { WORD } from 'zss/chip'
+import { WORD } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { Stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import { BOARD, BOARD_ELEMENT, boardcreate } from './board'
+import { BOARD, createboard, exportboard, importboard } from './board'
+import {
+  BOARD_ELEMENT,
+  createboardelement,
+  exportboardelement,
+  importboardelement,
+} from './boardelement'
 
 export enum CODE_PAGE_TYPE {
   ERROR,
@@ -25,9 +31,11 @@ export type CODE_PAGE_STATS = {
 }
 
 export type CODE_PAGE = {
+  // all pages have id & code
   id: string
   code: string
-  stats?: CODE_PAGE_STATS
+  tags: Set<string>
+  // non-code data
   error?: string
   func?: string
   board?: BOARD
@@ -35,6 +43,8 @@ export type CODE_PAGE = {
   terrain?: BOARD_ELEMENT
   charset?: BITMAP
   palette?: BITMAP
+  // common parsed values
+  stats?: CODE_PAGE_STATS
 }
 
 export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
@@ -42,22 +52,111 @@ export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
 export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.ERROR]: string
   [CODE_PAGE_TYPE.CLI]: string
+  // core content types
   [CODE_PAGE_TYPE.BOARD]: BOARD
   [CODE_PAGE_TYPE.OBJECT]: BOARD_ELEMENT
   [CODE_PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
   [CODE_PAGE_TYPE.CHARSET]: BITMAP
   [CODE_PAGE_TYPE.PALETTE]: BITMAP
+  // future types
+  // SONG
+  // SFX
 }
 
 export function createcodepage(
   code: string,
-  content: Partial<Omit<CODE_PAGE, 'id' | 'code'>>,
+  content: Partial<Omit<CODE_PAGE, 'id' | 'code' | 'tags'>>,
 ) {
   return {
     id: createsid(),
+    tags: new Set<string>(),
     code,
     ...content,
   }
+}
+
+// safe to serialize copy of codepage
+export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
+  if (!ispresent(codepage)) {
+    return
+  }
+  return {
+    id: codepage.id,
+    code: codepage.code,
+    tags: [...codepage.tags] as any,
+    // non-code data
+    func: codepage.func,
+    board: exportboard(codepage.board),
+    object: exportboardelement(codepage.object),
+    terrain: exportboardelement(codepage.terrain),
+    // charset: exportcharsetelement(codepage.charset),
+    // palette: exportpaletteelement(codepage.palette), TODO: scrub these values too
+  }
+}
+
+// safe to serialize copy of codepage
+export function importcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
+  if (!ispresent(codepage)) {
+    return
+  }
+  return {
+    id: codepage.id,
+    code: codepage.code,
+    tags: new Set([...codepage.tags]),
+    // non-code data
+    func: codepage.func,
+    board: importboard(codepage.board),
+    object: importboardelement(codepage.object),
+    terrain: importboardelement(codepage.terrain),
+    // charset: codepage.charset,
+    // palette: codepage.palette, TODO: scrub these values too
+  }
+}
+
+export function codepagereadtags(codepage: MAYBE_CODE_PAGE) {
+  return [...(codepage?.tags ?? [])]
+}
+
+export function codepageaddtags(codepage: MAYBE_CODE_PAGE, tags: string[]) {
+  if (!ispresent(codepage)) {
+    return
+  }
+  tags.forEach((item) => codepage.tags.add(item))
+}
+
+export function codepageremovetags(codepage: MAYBE_CODE_PAGE, tags: string[]) {
+  if (!ispresent(codepage)) {
+    return
+  }
+  tags.forEach((item) => codepage.tags.delete(item))
+}
+
+export function codepagehastags(
+  codepage: MAYBE_CODE_PAGE,
+  tags: string[],
+): boolean {
+  if (!ispresent(codepage)) {
+    return false
+  }
+  return tags.every((tag) => codepage.tags.has(tag))
+}
+
+export function codepagehasmatch(
+  codepage: MAYBE_CODE_PAGE,
+  type: CODE_PAGE_TYPE,
+  ids: string[],
+  tags: string[],
+): boolean {
+  if (!ispresent(codepage) || codepagereadtype(codepage) !== type) {
+    return false
+  }
+  if (ids.some((id) => id === codepage.id)) {
+    return true
+  }
+  if (tags.includes(codepagereadname(codepage))) {
+    return true
+  }
+  return codepagehastags(codepage, tags)
 }
 
 function tokenstostrings(tokens: IToken[]) {
@@ -139,7 +238,7 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
       const [maybetype, ...maybevalues] = token.image.slice(1).split(' ')
       const lmaybetype = maybetype.toLowerCase()
       const maybename = maybevalues.join(' ')
-      const lmaybename = maybename.toLowerCase()
+      const lmaybename = maybename.toLowerCase().trim()
 
       switch (lmaybetype) {
         case 'stat': {
@@ -181,7 +280,7 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
         default:
           if (first) {
             // first default is name
-            codepage.stats.name = [lmaybetype, ...maybevalues].join(' ')
+            codepage.stats.name = [lmaybetype, ...maybevalues].join(' ').trim()
           } else {
             // second default is boolean stats
             codepage.stats[lmaybetype] = 1
@@ -240,37 +339,50 @@ export function codepagereadstat(codepage: MAYBE_CODE_PAGE, stat: string) {
 export function codepagereaddata<T extends CODE_PAGE_TYPE>(
   codepage: MAYBE_CODE_PAGE,
 ): MAYBE<CODE_PAGE_TYPE_MAP[T]> {
-  if (!ispresent(codepage?.stats?.type)) {
-    return undefined
-  }
-  switch (codepage.stats.type) {
+  switch (codepage?.stats?.type) {
+    default: {
+      // empty / invalid
+      return undefined
+    }
     case CODE_PAGE_TYPE.ERROR: {
-      return codepage.error as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return (codepage?.error ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.BOARD: {
       // validate and shape board into usable state
       if (!ispresent(codepage.board)) {
-        codepage.board = boardcreate()
+        codepage.board = createboard()
       }
+      codepage.board.id = codepage.id
       return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {
       // validate and shape object into usable state
       if (!ispresent(codepage.object)) {
-        // codepage.object =
+        codepage.object = createboardelement()
       }
+      codepage.object.name = codepagereadname(codepage)
       return codepage.object as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.TERRAIN: {
       // validate and shape terrain into usable state
+      if (!ispresent(codepage.terrain)) {
+        codepage.terrain = createboardelement()
+      }
+      codepage.terrain.name = codepagereadname(codepage)
       return codepage.terrain as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.CHARSET: {
       // validate and shape charset into usable state
+      if (!ispresent(codepage.charset)) {
+        // codepage.charset = {}
+      }
       return codepage.charset as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.PALETTE: {
       // validate and shape palette into usable state
+      if (!ispresent(codepage.palette)) {
+        // codepage.palette = {}
+      }
       return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
   }

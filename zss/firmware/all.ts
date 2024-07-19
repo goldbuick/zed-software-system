@@ -1,12 +1,45 @@
 import { maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
-import { isnumber } from 'zss/mapping/types'
+import { isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadcontext } from 'zss/memory'
 
-import { ARG_TYPE, readargs } from './wordtypes'
+import {
+  ARG_TYPE,
+  categoryconsts,
+  collisionconsts,
+  colorconsts,
+  dirconsts,
+  readargs,
+} from './wordtypes'
+
+function maptoconst(value: string) {
+  const maybecategory = (categoryconsts as any)[value]
+  if (ispresent(maybecategory)) {
+    return maybecategory
+  }
+  const maybecollision = (collisionconsts as any)[value]
+  if (ispresent(maybecollision)) {
+    return maybecollision
+  }
+  const maybecolor = (colorconsts as any)[value]
+  if (ispresent(maybecolor)) {
+    return maybecolor
+  }
+  const maybedir = (dirconsts as any)[value]
+  if (ispresent(maybedir)) {
+    return maybedir
+  }
+  return undefined
+}
 
 export const ALL_FIRMWARE = createfirmware({
-  get() {
+  get(_, name) {
+    // check consts first (data normalization)
+    const maybeconst = maptoconst(name)
+    if (ispresent(maybeconst)) {
+      return [true, maybeconst]
+    }
+
     return [false, undefined]
   },
   set() {
