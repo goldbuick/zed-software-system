@@ -5,8 +5,9 @@
 ?rnd?i
 #cycle 2
 ?rnd?i
+?rnd?i
 #char 77
-#cycle 6
+#cycle 3
 :yeep
 ?rnd
 #color pick green blue
