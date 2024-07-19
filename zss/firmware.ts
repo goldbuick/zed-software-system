@@ -4,13 +4,14 @@ import { WORD } from './firmware/wordtypes'
 type FIRMWARE_GET = (chip: CHIP, name: string) => [boolean, any]
 type FIRMWARE_SET = (chip: CHIP, name: string, value: any) => [boolean, any]
 type FIRMWARE_CYCLE = (chip: CHIP) => void
+type FIRMWARE_SHOULD_TICK = (chip: CHIP, activecycle: boolean) => void
 
 export type FIRMWARE_COMMAND = (chip: CHIP, words: WORD[]) => 0 | 1
 
 export type FIRMWARE_EVENTS = {
   get: FIRMWARE_GET
   set: FIRMWARE_SET
-  shouldtick: FIRMWARE_CYCLE
+  shouldtick: FIRMWARE_SHOULD_TICK
   tick: FIRMWARE_CYCLE
   tock: FIRMWARE_CYCLE
 }
@@ -18,7 +19,7 @@ export type FIRMWARE_EVENTS = {
 export type FIRMWARE = {
   get: FIRMWARE_GET
   set: FIRMWARE_SET
-  shouldtick: FIRMWARE_CYCLE
+  shouldtick: FIRMWARE_SHOULD_TICK
   tick: FIRMWARE_CYCLE
   tock: FIRMWARE_CYCLE
   getcommand: (name: string) => FIRMWARE_COMMAND | undefined

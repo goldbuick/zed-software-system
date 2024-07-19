@@ -87,6 +87,7 @@ export function createos() {
         // load chip firmware
         loadfirmware(chip, type)
       }
+      // run it
       return !!chip?.tick(cycle, timestamp)
     },
     once(id, type, timestamp, name, code) {

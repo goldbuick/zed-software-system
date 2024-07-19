@@ -7,7 +7,7 @@ export const TERRAIN_FIRMWARE = createfirmware({
   set(chip, name, value) {
     return [false, undefined]
   },
-  shouldtick(chip) {
+  shouldtick(chip, activecycle) {
     //
   },
   tick(chip) {

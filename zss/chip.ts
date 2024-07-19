@@ -132,7 +132,6 @@ export function createchip(id: string, build: GeneratorBuild) {
   let yieldstate = false
 
   // execution frequency
-  // let cycle = CYCLE_DEFAULT
   let pulse = 0
   // execution timestamp
   let timestamp = 0
@@ -221,9 +220,12 @@ export function createchip(id: string, build: GeneratorBuild) {
       // update timestamp
       timestamp = incoming
 
+      // we active ?
+      const activecycle = pulse % cycle === 0
+
       // invoke firmware shouldtick
       for (let i = 0; i < firmwares.length; ++i) {
-        firmwares[i].shouldtick(chip)
+        firmwares[i].shouldtick(chip, activecycle)
       }
 
       // chip is yield / ended state
@@ -231,8 +233,7 @@ export function createchip(id: string, build: GeneratorBuild) {
         return false
       }
 
-      // inc pulse after checking cycle
-      const activecycle = pulse % cycle === 0
+      // inc pulse after checking should tick
       ++pulse
 
       // execution frequency

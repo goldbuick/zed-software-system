@@ -15,7 +15,7 @@ import {
 import { average } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
-import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
@@ -25,7 +25,7 @@ import {
   boardelementname,
   boardobjectcreatefromkind,
 } from './board'
-import { MAYBE_BOARD_ELEMENT } from './boardelement'
+import { MAYBE_BOARD_ELEMENT, boardelementreadstat } from './boardelement'
 import {
   BOOK,
   MAYBE_BOOK,
@@ -315,8 +315,21 @@ export function memorytick(os: OS, timestamp: number) {
       context.inputcurrent = undefined
 
       // map stats
-      const cycle = item.object?.stats?.cycle ?? CYCLE_DEFAULT
-      context.player = item.object?.stats?.player ?? ''
+      const maybeplayer = boardelementreadstat(item.object, 'player', '')
+      const maybekind = bookelementkindread(book, item.object)
+      const maybekindcycle = boardelementreadstat(
+        maybekind,
+        'cycle',
+        CYCLE_DEFAULT,
+      )
+      const maybecycle = boardelementreadstat(
+        item.object,
+        'cycle',
+        maybekindcycle,
+      )
+
+      const cycle = isnumber(maybecycle) ? maybecycle : CYCLE_DEFAULT
+      context.player = isstring(maybeplayer) ? maybeplayer : ''
 
       // run chip code
       const itemname = boardelementname(item.object)

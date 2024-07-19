@@ -149,6 +149,19 @@ export function importboardelement(
   }
 }
 
+export function boardelementreadstat(
+  boardelement: MAYBE_BOARD_ELEMENT,
+  key: string,
+  defaultvalue: WORD,
+): WORD {
+  if (!ispresent(boardelement)) {
+    return
+  }
+  boardelement.stats = boardelement.stats ?? createboardelementstats()
+  const value = boardelement.stats[key]
+  return value ?? defaultvalue
+}
+
 export function boardelementwritestat(
   boardelement: MAYBE_BOARD_ELEMENT,
   key: string,

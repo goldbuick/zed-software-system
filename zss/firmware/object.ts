@@ -308,9 +308,10 @@ export const OBJECT_FIRMWARE = createfirmware({
     booksetflag(memory.book, player?.id ?? '', name, value)
     return [true, value]
   },
-  shouldtick(chip) {
+  shouldtick(chip, activecycle) {
     const memory = memoryreadchip(chip.id())
     if (
+      !activecycle ||
       !ispresent(memory.object?.x) ||
       !ispresent(memory.object?.y) ||
       !ispresent(memory.object?.stats?.stepx) ||
@@ -458,15 +459,14 @@ export const OBJECT_FIRMWARE = createfirmware({
   .command('cycle', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     if (ispresent(memory.object)) {
-      return 0
+      // read cycle
+      const [cyclevalue] = readargs(memoryreadcontext(chip, words), 0, [
+        ARG_TYPE.NUMBER,
+      ])
+      // write cycle
+      const cycle = clamp(Math.round(cyclevalue), 1, 255)
+      boardelementwritestat(memory.object, 'cycle', cycle)
     }
-    // read cycle
-    const [cyclevalue] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.NUMBER,
-    ])
-    // write cycle
-    const cycle = clamp(Math.round(cyclevalue), 1, 255)
-    boardelementwritestat(memory.object, 'cycle', cycle)
     return 0
   })
   .command('die', (chip) => {
