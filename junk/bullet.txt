@@ -1,9 +1,14 @@
 @bullet
-@char 72
-#cycle 1
+?rnd?i
+?rnd?i
+?rnd?i
+?rnd?i
+#cycle 2
+?rnd?i
+#char 77
+#cycle 6
 :yeep
 ?rnd
-#char 77
 #color pick green blue
 #yeep
 :thud

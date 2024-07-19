@@ -1,4 +1,4 @@
-import { OrthographicCamera, useTexture } from '@react-three/drei'
+import { OrthographicCamera, useDetectGPU, useTexture } from '@react-three/drei'
 import { addEffect, addAfterEffect, useThree } from '@react-three/fiber'
 import {
   EffectComposer,
@@ -49,6 +49,8 @@ export function Terminal() {
     }
   }, [stats])
 
+  const gputier = useDetectGPU()
+
   return (
     <>
       <OrthographicCamera
@@ -69,18 +71,20 @@ export function Terminal() {
           />
         )}
       </Framing>
-      <Suspense fallback={null}>
-        <EffectComposer multisampling={0}>
-          <BrightnessContrast brightness={0.04} contrast={0.1} />
-          <ChromaticAberration
-            blendFunction={BlendFunction.NORMAL}
-            offset={TUG_VEC}
-            radialModulation
-            modulationOffset={0.5}
-          />
-          <CRTShape splat={splat} viewheight={viewheight} />
-        </EffectComposer>
-      </Suspense>
+      {gputier.tier > 2 && !gputier.isMobile && (
+        <Suspense fallback={null}>
+          <EffectComposer multisampling={0}>
+            <BrightnessContrast brightness={0.04} contrast={0.1} />
+            <ChromaticAberration
+              blendFunction={BlendFunction.NORMAL}
+              offset={TUG_VEC}
+              radialModulation
+              modulationOffset={0.5}
+            />
+            <CRTShape splat={splat} viewheight={viewheight} />
+          </EffectComposer>
+        </Suspense>
+      )}
     </>
   )
 }
