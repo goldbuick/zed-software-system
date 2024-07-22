@@ -476,17 +476,24 @@ class ScriptVisitor extends CstVisitor {
   }
 
   Short_go(ctx: CstChildrenDictionary) {
+    console.info('Short_go', ctx)
     if (ctx.Divide) {
-      return makeNode(ctx, {
+      const shortgo = makeNode(ctx, {
         type: NODE.MOVE,
         wait: true,
         // @ts-expect-error
         words: asList(this, ctx.words).flat(),
       })
+      if (ctx.do_stmt) {
+        // @ts-expect-error
+        return [shortgo, this.visit(ctx.do_stmt)]
+      }
+      return [shortgo]
     }
   }
 
   Short_try(ctx: CstChildrenDictionary) {
+    console.info('Short_try', ctx)
     if (ctx.Query) {
       return makeNode(ctx, {
         type: NODE.MOVE,

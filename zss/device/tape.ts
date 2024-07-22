@@ -9,9 +9,9 @@ import { isarray, isnumber } from 'zss/mapping/types'
 export enum TAPE_DISPLAY {
   TOP,
   BOTTOM,
+  FULL,
   RIGHT,
   LEFT,
-  FULL,
   MAX,
 }
 

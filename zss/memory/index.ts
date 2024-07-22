@@ -15,7 +15,13 @@ import {
 import { average } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  MAYBE_STRING,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
@@ -576,4 +582,33 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
   })
 
   return layers
+}
+
+export function memoryboardframeread(
+  book: MAYBE_BOOK,
+  board: MAYBE_BOARD,
+  type: MAYBE_STRING,
+) {
+  // find target frame by type
+  let maybeframe: MAYBE<FRAME_STATE>
+  const frames = memoryreadframes(board?.id ?? '')
+  switch (type) {
+    // eventually need multiple frames of the same kinds
+    // name:edit ??
+    // so we'd have [name]:type, and name defaults to the value of
+    // type of [name] is omitted
+    case 'edit': {
+      maybeframe = frames.find((item) => item.type === FRAME_TYPE.EDIT)
+      break
+    }
+  }
+
+  const [maybebook] = maybeframe
+    ? memoryreadbooksbytags(maybeframe?.book ?? [])
+    : [book]
+  const [maybeboard] = maybeframe
+    ? bookreadboardsbytags(maybebook, maybeframe?.board ?? [])
+    : [board]
+
+  return { maybebook, maybeboard }
 }

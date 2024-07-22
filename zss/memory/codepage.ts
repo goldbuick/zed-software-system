@@ -22,6 +22,8 @@ export enum CODE_PAGE_TYPE {
   TERRAIN,
   CHARSET,
   PALETTE,
+  // SONG
+  // SFX ?
 }
 
 export type CODE_PAGE_STATS = {

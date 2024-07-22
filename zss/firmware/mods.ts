@@ -2,13 +2,18 @@ import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
+  memoryreadbooklist,
   memoryreadbooksbytags,
   memoryreadcontext,
   memoryreadmaintags,
 } from 'zss/memory'
 import { boardwritestat } from 'zss/memory/board'
 import { boardelementwritestat } from 'zss/memory/boardelement'
-import { bookreadcodepagebyaddress, MAYBE_BOOK } from 'zss/memory/book'
+import {
+  bookreadcodepagebyaddress,
+  bookreadcodepagedatabytype,
+  MAYBE_BOOK,
+} from 'zss/memory/book'
 import {
   CODE_PAGE_TYPE,
   codepagereaddata,
@@ -96,7 +101,11 @@ function modsoftware(name: MODS_KEY, key: string, value: any) {
     case CODE_PAGE_TYPE.BOARD: {
       const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
       if (ispresent(board)) {
-        boardwritestat(board, key, value)
+        switch (key) {
+          default:
+            boardwritestat(board, key, value)
+            break
+        }
       }
       break
     }
@@ -159,6 +168,25 @@ export const MODS_FIRMWARE = createfirmware({
     if (ispresent(mod)) {
       return [true, MODS[mod]]
     }
+
+    // list of items
+    const book = modbook()
+    switch (name) {
+      case 'books':
+        return [true, memoryreadbooklist()]
+      case 'boards':
+        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.BOARD)]
+      case 'objects':
+        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.OBJECT)]
+      case 'terrains':
+        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.TERRAIN)]
+      case 'charsets':
+        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.CHARSET)]
+      case 'palettes':
+        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.PALETTE)]
+        break
+    }
+
     return [false, undefined]
   },
   set(_, name, value) {
