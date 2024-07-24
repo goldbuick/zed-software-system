@@ -71,6 +71,14 @@ class ScriptParser extends CstParser {
     this.AT_LEAST_ONE(() => this.CONSUME(lexer.Newline))
   })
 
+  inlineops = this.RULED('inlineops', () => {
+    this.OR([
+      { ALT: () => this.SUBRULE(this.command) },
+      { ALT: () => this.SUBRULE(this.Short_go) },
+      { ALT: () => this.SUBRULE(this.Short_try) },
+    ])
+  })
+
   stmt = this.RULED('stmt', () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.label) },
