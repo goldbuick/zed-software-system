@@ -33,6 +33,8 @@ const MODS = {
   // display
   charset: '',
   palette: '',
+  // audio
+  soundblaster: '',
   // general cursor
   cursor: '',
 }
@@ -152,6 +154,14 @@ function modsoftware(name: MODS_KEY, key: string, value: any) {
     case CODE_PAGE_TYPE.PALETTE: {
       const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
       if (ispresent(palette)) {
+        //
+      }
+      break
+    }
+    case CODE_PAGE_TYPE.SOUNDBLASTER: {
+      const soundblaster =
+        codepagereaddata<CODE_PAGE_TYPE.SOUNDBLASTER>(codepage)
+      if (ispresent(soundblaster)) {
         //
       }
       break
