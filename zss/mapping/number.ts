@@ -1,10 +1,9 @@
 import Alea from 'alea'
+import { clamp } from 'maath/misc'
 
 const prng = Alea('089fad0j9awfem09wavefc09uwaef')
 
-export function clamp(value: number, min = 0, max = 1) {
-  return Math.max(min, Math.min(max, value))
-}
+export { clamp }
 
 export function makeEven(value: number) {
   return 2 * Math.floor(value / 2)
