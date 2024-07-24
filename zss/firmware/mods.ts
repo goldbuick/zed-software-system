@@ -49,9 +49,13 @@ function strmodname(name: string): MODS_KEY | undefined {
     case 'modobject':
     case 'modterrain':
     case 'modcharset':
-    case 'modpalette': {
+    case 'modpalette':
+    case 'modsoundblaster': {
       return lname.replace('mod', '') as MODS_KEY
     }
+    // aliases
+    case 'modsb':
+      return 'soundblaster'
   }
   return undefined
 }
@@ -182,19 +186,24 @@ export const MODS_FIRMWARE = createfirmware({
     // list of items
     const book = modbook()
     switch (name) {
-      case 'books':
+      case 'booklist':
         return [true, memoryreadbooklist()]
-      case 'boards':
+      case 'boardlist':
         return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.BOARD)]
-      case 'objects':
+      case 'objectlist':
         return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.OBJECT)]
-      case 'terrains':
+      case 'terrainlist':
         return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.TERRAIN)]
-      case 'charsets':
+      case 'charsetlist':
         return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.CHARSET)]
-      case 'palettes':
+      case 'palettelist':
         return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.PALETTE)]
-        break
+      case 'sblist':
+      case 'soundblasterlist':
+        return [
+          true,
+          bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.SOUNDBLASTER),
+        ]
     }
 
     return [false, undefined]
@@ -254,6 +263,11 @@ export const MODS_FIRMWARE = createfirmware({
       break
     case 'palette':
       MODS.cursor = 'palette'
+      usekey = maybekey
+      usevalue = maybevalue
+      break
+    case 'soundblaster':
+      MODS.cursor = 'soundblaster'
       usekey = maybekey
       usevalue = maybevalue
       break
