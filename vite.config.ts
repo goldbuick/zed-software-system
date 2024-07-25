@@ -28,14 +28,16 @@ export default defineConfig(({ mode }) => {
   return {
     root: 'zss/terminal/',
     envPrefix: 'ZSS_',
-    plugins: [react(), arraybuffer(), mkcert(), fullreload('zss/**/*')],
+    plugins: [
+      react(),
+      arraybuffer(),
+      mkcert(),
+      fullreload(['**/*.ts', '**/*.tsx']),
+    ],
     resolve: {
       alias: {
         zss: path.resolve(__dirname, './zss'),
       },
-    },
-    server: {
-      hmr: false,
     },
   }
 })
