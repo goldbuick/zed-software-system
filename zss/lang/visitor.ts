@@ -456,25 +456,19 @@ class ScriptVisitor extends CstVisitor {
   }
 
   flat_cmd(ctx: CstChildrenDictionary) {
-    if (ctx.words) {
-      return makeNode(ctx, {
-        type: NODE.COMMAND,
-        // @ts-expect-error
-        words: asList(this, ctx.words).flat(),
-      })
-    }
-    if (ctx.Command_play) {
+    return [
+      ctx.words
+        ? makeNode(ctx, {
+            type: NODE.COMMAND,
+            // @ts-expect-error
+            words: asList(this, ctx.words).flat(),
+          })
+        : [],
       // @ts-expect-error
-      return this.visit(ctx.Command_play)
-    }
-    if (ctx.Short_go) {
+      ctx.Command_play ? this.visit(ctx.Command_play) : [],
       // @ts-expect-error
-      return this.visit(ctx.Short_go)
-    }
-    if (ctx.Short_try) {
-      // @ts-expect-error
-      return this.visit(ctx.Short_try)
-    }
+      ctx.short_ops ? asList(this, ctx.short_ops) : [],
+    ].flat()
   }
 
   structured_cmd(ctx: CstChildrenDictionary) {

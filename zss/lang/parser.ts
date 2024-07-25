@@ -156,12 +156,13 @@ class ScriptParser extends CstParser {
   })
 
   flat_cmd = this.RULED('flat_cmd', () => {
-    this.OR([
-      { ALT: () => this.SUBRULE(this.words) },
-      { ALT: () => this.SUBRULE(this.Command_play) },
-      { ALT: () => this.SUBRULE(this.Short_go) },
-      { ALT: () => this.SUBRULE(this.Short_try) },
-    ])
+    this.OPTION(() => {
+      this.OR([
+        { ALT: () => this.SUBRULE(this.words) },
+        { ALT: () => this.SUBRULE(this.Command_play) },
+      ])
+    })
+    this.MANY(() => this.SUBRULE(this.short_ops))
   })
 
   structured_cmd = this.RULED('structured_cmd', () => {
