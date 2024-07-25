@@ -67,13 +67,14 @@ class ScriptParser extends CstParser {
   })
 
   line = this.RULED('line', () => {
+    this.MANY(() => this.SUBRULE(this.short_ops))
     this.OPTION(() => this.SUBRULE(this.stmt))
     this.AT_LEAST_ONE(() => this.CONSUME(lexer.Newline))
   })
 
-  inlineops = this.RULED('inlineops', () => {
+  short_ops = this.RULED('short_ops', () => {
     this.OR([
-      { ALT: () => this.SUBRULE(this.command) },
+      { ALT: () => this.SUBRULE(this.short_cmd) },
       { ALT: () => this.SUBRULE(this.Short_go) },
       { ALT: () => this.SUBRULE(this.Short_try) },
     ])
@@ -85,25 +86,33 @@ class ScriptParser extends CstParser {
       // ---
       { ALT: () => this.SUBRULE(this.stat) },
       { ALT: () => this.SUBRULE(this.text) },
-      { ALT: () => this.SUBRULE(this.comment) },
       { ALT: () => this.SUBRULE(this.command) },
+      { ALT: () => this.SUBRULE(this.comment) },
       { ALT: () => this.SUBRULE(this.hyperlink) },
-      { ALT: () => this.SUBRULE(this.Short_go) },
-      { ALT: () => this.SUBRULE(this.Short_try) },
     ])
+  })
+
+  do_block = this.RULED('do_block', () => {
+    this.CONSUME(lexer.Command_do)
+    this.AT_LEAST_ONE({
+      GATE: this.BACKTRACK(this.do_line),
+      DEF: () => this.SUBRULE(this.do_line),
+    })
+  })
+
+  do_line = this.RULED('do_line', () => {
+    this.MANY(() => this.SUBRULE(this.short_ops))
+    this.OPTION(() => this.SUBRULE(this.do_stmt))
+    this.AT_LEAST_ONE(() => this.CONSUME2(lexer.Newline))
   })
 
   do_stmt = this.RULED('do_stmt', () => {
     this.OR([
-      // we use a switch statement
-      // ---
       { ALT: () => this.SUBRULE(this.stat) },
       { ALT: () => this.SUBRULE(this.text) },
-      { ALT: () => this.SUBRULE(this.comment) },
       { ALT: () => this.SUBRULE(this.command) },
+      { ALT: () => this.SUBRULE(this.comment) },
       { ALT: () => this.SUBRULE(this.hyperlink) },
-      { ALT: () => this.SUBRULE(this.Short_go) },
-      { ALT: () => this.SUBRULE(this.Short_try) },
     ])
   })
 
@@ -138,6 +147,14 @@ class ScriptParser extends CstParser {
     ])
   })
 
+  short_cmd = this.RULED('short_cmd', () => {
+    this.CONSUME(lexer.Command)
+    this.OR([
+      { ALT: () => this.SUBRULE(this.words) },
+      { ALT: () => this.SUBRULE(this.Command_play) },
+    ])
+  })
+
   flat_cmd = this.RULED('flat_cmd', () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.words) },
@@ -161,24 +178,15 @@ class ScriptParser extends CstParser {
   Short_go = this.RULED('Short_go', () => {
     this.CONSUME(lexer.Divide)
     this.SUBRULE(this.words)
-    this.OPTION(() => this.SUBRULE(this.do_stmt))
   })
 
   Short_try = this.RULED('Short_try', () => {
     this.CONSUME(lexer.Query)
     this.SUBRULE(this.words)
-    this.OPTION(() => this.SUBRULE(this.do_stmt))
   })
 
   Command_play = this.RULED('Command_play', () => {
     this.CONSUME(lexer.Command_play)
-  })
-
-  do_line = this.RULED('do_line', () => {
-    this.CONSUME(lexer.Command_do)
-    this.OPTION1(() => this.CONSUME1(lexer.Newline))
-    this.OPTION2(() => this.SUBRULE(this.do_stmt))
-    this.AT_LEAST_ONE(() => this.CONSUME2(lexer.Newline))
   })
 
   Command_if = this.RULED('Command_if', () => {
@@ -195,7 +203,7 @@ class ScriptParser extends CstParser {
         {
           ALT: () => {
             // block if
-            this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
+            this.SUBRULE(this.do_block)
             this.OR2([
               {
                 GATE: this.BACKTRACK(this.Command_else_if),
@@ -232,7 +240,7 @@ class ScriptParser extends CstParser {
         {
           ALT: () => {
             // block else if
-            this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
+            this.SUBRULE(this.do_block)
             this.OR2([
               {
                 GATE: this.BACKTRACK(this.Command_else_if),
@@ -267,7 +275,7 @@ class ScriptParser extends CstParser {
         {
           ALT: () => {
             // block else
-            this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
+            this.SUBRULE(this.do_block)
             this.SUBRULE(this.Command_endif)
           },
         },
@@ -294,7 +302,7 @@ class ScriptParser extends CstParser {
         {
           ALT: () => {
             // while block
-            this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
+            this.SUBRULE(this.do_block)
             this.CONSUME4(lexer.Command)
             this.CONSUME4(lexer.Command_endwhile)
           },
@@ -317,7 +325,7 @@ class ScriptParser extends CstParser {
         {
           ALT: () => {
             // repeat block
-            this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
+            this.SUBRULE(this.do_block)
             this.CONSUME4(lexer.Command)
             this.CONSUME4(lexer.Command_endrepeat)
           },
@@ -348,7 +356,7 @@ class ScriptParser extends CstParser {
         {
           ALT: () => {
             // read block
-            this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
+            this.SUBRULE(this.do_block)
             this.CONSUME4(lexer.Command)
             this.CONSUME4(lexer.Command_endread)
           },

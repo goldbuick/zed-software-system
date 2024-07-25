@@ -287,15 +287,32 @@ class ScriptVisitor extends CstVisitor {
     return makeNode(ctx, {
       type: NODE.PROGRAM,
       // @ts-expect-error
-      lines: asList(this, ctx.line),
+      lines: asList(this, ctx.line).flat(),
     })
   }
 
-  line(ctx: CstChildrenDictionary) {
-    if (ctx.stmt) {
+  short_ops(ctx: CstChildrenDictionary) {
+    if (ctx.short_cmd) {
       // @ts-expect-error
-      return this.visit(ctx.stmt)
+      return this.visit(ctx.short_cmd)
     }
+    if (ctx.Short_go) {
+      // @ts-expect-error
+      return this.visit(ctx.Short_go)
+    }
+    if (ctx.Short_try) {
+      // @ts-expect-error
+      return this.visit(ctx.Short_try)
+    }
+  }
+
+  line(ctx: CstChildrenDictionary) {
+    return [
+      // @ts-expect-error
+      ctx.short_ops ? asList(this, ctx.short_ops) : [],
+      // @ts-expect-error
+      ctx.stmt ? this.visit(ctx.stmt) : [],
+    ].flat()
   }
 
   stmt(ctx: CstChildrenDictionary) {
@@ -323,14 +340,20 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error
       return this.visit(ctx.hyperlink)
     }
-    if (ctx.Short_go) {
+  }
+
+  do_block(ctx: CstChildrenDictionary) {
+    // @ts-expect-error
+    return asList(this, ctx.do_line).flat()
+  }
+
+  do_line(ctx: CstChildrenDictionary) {
+    return [
       // @ts-expect-error
-      return this.visit(ctx.Short_go)
-    }
-    if (ctx.Short_try) {
+      ctx.short_ops ? asList(this, ctx.short_ops) : [],
       // @ts-expect-error
-      return this.visit(ctx.Short_try)
-    }
+      ctx.do_stmt ? this.visit(ctx.do_stmt) : [],
+    ].flat()
   }
 
   do_stmt(ctx: CstChildrenDictionary) {
@@ -353,14 +376,6 @@ class ScriptVisitor extends CstVisitor {
     if (ctx.hyperlink) {
       // @ts-expect-error
       return this.visit(ctx.hyperlink)
-    }
-    if (ctx.Short_go) {
-      // @ts-expect-error
-      return this.visit(ctx.Short_go)
-    }
-    if (ctx.Short_try) {
-      // @ts-expect-error
-      return this.visit(ctx.Short_try)
     }
   }
 
@@ -423,6 +438,20 @@ class ScriptVisitor extends CstVisitor {
     if (ctx.structured_cmd) {
       // @ts-expect-error
       return this.visit(ctx.structured_cmd)
+    }
+  }
+
+  short_cmd(ctx: CstChildrenDictionary) {
+    if (ctx.words) {
+      return makeNode(ctx, {
+        type: NODE.COMMAND,
+        // @ts-expect-error
+        words: asList(this, ctx.words).flat(),
+      })
+    }
+    if (ctx.Command_play) {
+      // @ts-expect-error
+      return this.visit(ctx.Command_play)
     }
   }
 
@@ -521,11 +550,6 @@ class ScriptVisitor extends CstVisitor {
     }
   }
 
-  do_line(ctx: CstChildrenDictionary) {
-    // @ts-expect-error
-    return this.visit(ctx.do_stmt)
-  }
-
   Command_if(ctx: CstChildrenDictionary) {
     // @ts-expect-error
     const words = asList(this, ctx.words).flat()
@@ -534,7 +558,7 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error
       this.visit(ctx.flat_cmd),
       // @ts-expect-error
-      ...asList(this, ctx.do_line),
+      this.visit(ctx.do_block),
     ].flat()
 
     const branches = [
@@ -561,7 +585,7 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error
       this.visit(ctx.flat_cmd),
       // @ts-expect-error
-      ...asList(this, ctx.do_line),
+      this.visit(ctx.do_block),
     ].flat()
 
     // @ts-expect-error
@@ -589,7 +613,7 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error
       this.visit(ctx.flat_cmd),
       // @ts-expect-error
-      ...asList(this, ctx.do_line),
+      this.visit(ctx.do_block),
     ].flat()
 
     return makeNode(ctx, {
@@ -612,7 +636,7 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error
       this.visit(ctx.flat_cmd),
       // @ts-expect-error
-      ...asList(this, ctx.do_line),
+      this.visit(ctx.do_block),
     ].flat()
 
     return makeNode(ctx, {
@@ -630,7 +654,7 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error
       this.visit(ctx.flat_cmd),
       // @ts-expect-error
-      ...asList(this, ctx.do_line),
+      this.visit(ctx.do_block),
     ].flat()
 
     return makeNode(ctx, {
@@ -656,7 +680,7 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error
       this.visit(ctx.flat_cmd),
       // @ts-expect-error
-      ...asList(this, ctx.do_line),
+      this.visit(ctx.do_block),
     ].flat()
 
     return makeNode(ctx, {
