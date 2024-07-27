@@ -4,6 +4,7 @@ import {
   Lexer,
   IToken,
   TokenType,
+  ITokenConfig,
 } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
@@ -11,36 +12,59 @@ import { isarray } from 'zss/mapping/types'
 
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 
+function createSimpleToken(config: ITokenConfig) {
+  return createToken({
+    ...config,
+    name: `token_${config.name}`,
+  })
+}
+
+function createWordToken(word: string, skipped = false) {
+  if (skipped) {
+    return createSimpleToken({
+      name: word,
+      pattern: new RegExp(word.toLowerCase(), 'i'),
+      longer_alt: stringliteral,
+      group: Lexer.SKIPPED,
+    })
+  }
+  return createSimpleToken({
+    name: word,
+    pattern: new RegExp(word.toLowerCase(), 'i'),
+    longer_alt: stringliteral,
+  })
+}
+
 // Newline & Whitespace
 
-export const Newline = createToken({
-  name: 'Newline',
+export const newline = createSimpleToken({
+  name: 'newline',
   line_breaks: true,
   start_chars_hint: ['\n', '\r'],
   pattern: /\n|\r\n?/,
 })
 
-export const Whitespace = createToken({
-  name: 'Whitespace',
+export const whitespace = createSimpleToken({
+  name: 'whitespace',
   pattern: / +/,
   group: Lexer.SKIPPED,
 })
 
-export const WhitespaceAndNewline = createToken({
-  name: 'Whitespace',
+export const whitespaceandnewline = createSimpleToken({
+  name: 'whitespace',
   pattern: /\s+/,
   line_breaks: true,
   group: Lexer.SKIPPED,
 })
 
-export const Stat = createToken({
-  name: 'Stat',
+export const stat = createSimpleToken({
+  name: 'stat',
   pattern: /@.*/,
   start_chars_hint: ['@'],
 })
 
-export const Command = createToken({
-  name: 'Command',
+export const command = createSimpleToken({
+  name: 'command',
   pattern: /#/,
   start_chars_hint: ['#'],
 })
@@ -55,7 +79,7 @@ function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
   const [lastMatched] = matched.slice(-1)
 
   // check for newline
-  if (lastMatched && lastMatched.tokenType !== Newline) {
+  if (lastMatched && lastMatched.tokenType !== newline) {
     return null
   }
 
@@ -81,169 +105,156 @@ function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
   return [match] as RegExpExecArray
 }
 
-export const Text = createToken({
-  name: 'Text',
+export const text = createSimpleToken({
+  name: 'text',
   pattern: matchBasicText,
   line_breaks: false,
   start_chars_hint: all_chars.filter((ch) => `@#/?':!`.includes(ch) === false),
 })
 
-export const Comment = createToken({
-  name: 'Comment',
+export const comment = createSimpleToken({
+  name: 'comment',
   pattern: /'.*/,
   start_chars_hint: [`'`],
 })
 
-export const Label = createToken({
-  name: 'Label',
+export const label = createSimpleToken({
+  name: 'label',
   pattern: /:[^;:\n]*/,
   start_chars_hint: [':'],
 })
 
-export const HyperLink = createToken({
-  name: 'HyperLink',
+export const hyperlink = createSimpleToken({
+  name: 'hyperlink',
   pattern: /!/,
   start_chars_hint: ['!'],
 })
 
-export const HyperLinkText = createToken({
-  name: 'HyperLinkText',
+export const hyperlinktext = createSimpleToken({
+  name: 'hyperlinktext',
   pattern: /;[^;\n]*/,
   start_chars_hint: [';'],
 })
 
-export const StringLiteral = createToken({
-  name: 'StringLiteral',
+export const stringliteral = createSimpleToken({
+  name: 'stringliteral',
   pattern: /[^-0-9"!;@#/?\s]+[^-"!;@#/?\s]*/,
   start_chars_hint: all_chars,
 })
 
-export const StringLiteralDouble = createToken({
-  name: 'StringLiteralDouble',
+export const stringliteraldouble = createSimpleToken({
+  name: 'stringliteraldouble',
   pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}))*"/,
 })
 
-export const NumberLiteral = createToken({
-  name: 'NumberLiteral',
+export const numberliteral = createSimpleToken({
+  name: 'numberliteral',
   pattern: /-?(\d*\.)?\d+([eE][+-]?\d+)?[jJ]?[lL]?/,
 })
 
-function createWordToken(word: string, skipped = false) {
-  if (skipped) {
-    return createToken({
-      name: word,
-      pattern: new RegExp(word.toLowerCase(), 'i'),
-      longer_alt: StringLiteral,
-      group: Lexer.SKIPPED,
-    })
-  }
-  return createToken({
-    name: word,
-    pattern: new RegExp(word.toLowerCase(), 'i'),
-    longer_alt: StringLiteral,
-  })
-}
-
 // comparision
 
-export const IsEq = createToken({
-  name: 'IsEq',
+export const iseq = createSimpleToken({
+  name: 'iseq',
   pattern: /=|is|eq|equal/,
-  longer_alt: StringLiteral,
+  longer_alt: stringliteral,
 })
-export const IsNotEq = createToken({
-  name: 'IsNotEq',
+export const isnoteq = createSimpleToken({
+  name: 'isnoteq',
   pattern: /!=|not ?eq|not ?equal/,
-  longer_alt: StringLiteral,
+  longer_alt: stringliteral,
 })
-export const IsLessThan = createToken({
-  name: 'IsLessThan',
+export const islessthan = createSimpleToken({
+  name: 'islessthan',
   pattern: /<|below/,
-  longer_alt: StringLiteral,
+  longer_alt: stringliteral,
 })
-export const IsGreaterThan = createToken({
-  name: 'IsGreaterThan',
+export const isgreaterthan = createSimpleToken({
+  name: 'isgreaterthan',
   pattern: />|above/,
-  longer_alt: StringLiteral,
+  longer_alt: stringliteral,
 })
-export const IsLessThanOrEqual = createToken({
-  name: 'IsLessThanOrEqual',
+export const islessthanorequal = createSimpleToken({
+  name: 'islessthanorequal',
   pattern: /<=|below ?or ?eq|below ?or ?equal/,
-  longer_alt: StringLiteral,
+  longer_alt: stringliteral,
 })
-export const IsGreaterThanOrEqual = createToken({
-  name: 'IsGreaterThanOrEqual',
+export const isgreaterthanorequal = createSimpleToken({
+  name: 'isgreaterthanorequal',
   pattern: />=|above ?or ?eq|above ?or ?equal/,
-  longer_alt: StringLiteral,
+  longer_alt: stringliteral,
 })
 
 // logical
 
-export const Or = createToken({
-  name: 'Or',
+export const or = createSimpleToken({
+  name: 'or',
   pattern: /or/i,
-  longer_alt: StringLiteral,
+  longer_alt: stringliteral,
 })
-export const Not = createToken({
-  name: 'Not',
+export const not = createSimpleToken({
+  name: 'not',
   pattern: /not/i,
-  longer_alt: StringLiteral,
+  longer_alt: stringliteral,
 })
-export const And = createToken({
-  name: 'And',
+export const and = createSimpleToken({
+  name: 'and',
   pattern: /and/i,
-  longer_alt: StringLiteral,
+  longer_alt: stringliteral,
 })
 
 // math ops
 
-export const Plus = createToken({ name: 'Plus', pattern: /\+/ })
-export const Minus = createToken({ name: 'Minus', pattern: /-/ })
-export const Power = createToken({ name: 'Power', pattern: /\*\*/ })
-export const Multiply = createToken({ name: 'Multiply', pattern: /\*/ })
-export const Divide = createToken({ name: 'Divide', pattern: /\// })
-export const ModDivide = createToken({ name: 'ModDivide', pattern: /%/ })
-export const FloorDivide = createToken({ name: 'FloorDivide', pattern: /%%/ })
-export const Query = createToken({ name: 'Query', pattern: /\?/ })
+export const plus = createSimpleToken({ name: 'plus', pattern: /\+/ })
+export const minus = createSimpleToken({ name: 'minus', pattern: /-/ })
+export const power = createSimpleToken({ name: 'power', pattern: /\*\*/ })
+export const multiply = createSimpleToken({ name: 'multiply', pattern: /\*/ })
+export const divide = createSimpleToken({ name: 'divide', pattern: /\// })
+export const moddivide = createSimpleToken({ name: 'moddivide', pattern: /%/ })
+export const floordivide = createSimpleToken({
+  name: 'floordivide',
+  pattern: /%%/,
+})
+export const query = createSimpleToken({ name: 'query', pattern: /\?/ })
 
 // grouping
 
-export const LParen = createToken({
-  name: 'LParen',
+export const lparen = createSimpleToken({
+  name: 'lparen',
   pattern: /\(/,
   push_mode: 'ignore_newlines',
 })
-export const RParen = createToken({
-  name: 'RParen',
+export const rparen = createSimpleToken({
+  name: 'rparen',
   pattern: /\)/,
   pop_mode: true,
 })
 
 // media command
 
-export const Command_play = createToken({
-  name: 'play',
+export const command_play = createSimpleToken({
+  name: 'command_play',
   pattern: /play .*/,
   start_chars_hint: all_chars,
-  longer_alt: StringLiteral,
+  longer_alt: stringliteral,
 })
 
 // core / structure commands
 
-export const Command_if = createWordToken('if')
-export const Command_do = createWordToken('do')
-export const Command_then = createWordToken('then', true)
-export const Command_else = createWordToken('else')
-export const Command_endif = createWordToken('endif')
-export const Command_while = createWordToken('while')
-export const Command_endwhile = createWordToken('endwhile')
-export const Command_repeat = createWordToken('repeat')
-export const Command_endrepeat = createWordToken('endrepeat')
-export const Command_read = createWordToken('read')
-export const Command_into = createWordToken('into')
-export const Command_endread = createWordToken('endread')
-export const Command_break = createWordToken('break')
-export const Command_continue = createWordToken('continue')
+export const command_if = createWordToken('if')
+export const command_do = createWordToken('do')
+export const command_then = createWordToken('then', true)
+export const command_else = createWordToken('else')
+export const command_endif = createWordToken('endif')
+export const command_while = createWordToken('while')
+export const command_endwhile = createWordToken('endwhile')
+export const command_repeat = createWordToken('repeat')
+export const command_endrepeat = createWordToken('endrepeat')
+export const command_read = createWordToken('read')
+export const command_into = createWordToken('into')
+export const command_endread = createWordToken('endread')
+export const command_break = createWordToken('break')
+export const command_continue = createWordToken('continue')
 
 // common error marking
 export type LANG_ERROR = {
@@ -258,65 +269,65 @@ function createTokenSet(primary: TokenType[]) {
   return [
     // primary tokens
     ...primary,
-    NumberLiteral,
+    numberliteral,
     // expressions
-    IsEq,
-    IsNotEq,
-    IsLessThanOrEqual,
-    IsLessThan,
-    IsGreaterThanOrEqual,
-    IsGreaterThan,
+    iseq,
+    isnoteq,
+    islessthanorequal,
+    islessthan,
+    isgreaterthanorequal,
+    isgreaterthan,
     // logical
-    Or,
-    Not,
-    And,
+    or,
+    not,
+    and,
     // math ops
-    Plus,
-    Minus,
-    Power,
-    Multiply,
-    Divide,
-    FloorDivide,
-    ModDivide,
-    Query,
+    plus,
+    minus,
+    power,
+    multiply,
+    divide,
+    floordivide,
+    moddivide,
+    query,
     // grouping
-    LParen,
-    RParen,
+    lparen,
+    rparen,
     // content
-    StringLiteralDouble,
-    StringLiteral,
+    stringliteraldouble,
+    stringliteral,
   ]
 }
 
 export const allTokens = createTokenSet([
   // text output
-  Text,
+  text,
   // commands
-  Stat,
-  Command_play,
-  Command,
+  stat,
+  command_play,
+  command,
   // flow
-  Comment,
-  Label,
-  HyperLink,
-  HyperLinkText,
-  Newline,
-  Whitespace,
+  comment,
+  label,
+  hyperlink,
+  hyperlinktext,
+  newline,
+  whitespace,
   // core / structure commands
-  Command_if,
-  Command_do,
-  Command_then,
-  Command_else,
-  Command_endif,
-  Command_while,
-  Command_endwhile,
-  Command_repeat,
-  Command_endrepeat,
-  Command_read,
-  Command_into,
-  Command_endread,
-  Command_break,
-  Command_continue,
+  command_if,
+  command_do,
+  command_then,
+  command_else,
+  command_endif,
+  command_while,
+  command_endwhile,
+  command_repeat,
+  command_endrepeat,
+  command_read,
+  command_into,
+  command_endread,
+  command_break,
+  command_continue,
 ])
 
 const scriptLexer = new Lexer(
@@ -324,7 +335,7 @@ const scriptLexer = new Lexer(
     defaultMode: 'use_newlines',
     modes: {
       use_newlines: allTokens,
-      ignore_newlines: createTokenSet([WhitespaceAndNewline]),
+      ignore_newlines: createTokenSet([whitespaceandnewline]),
     },
   },
   {
@@ -344,7 +355,7 @@ export function tokenize(text: string) {
   if (lastToken && lastToken.tokenType.name !== 'Newline') {
     lexResult.tokens.push(
       createTokenInstance(
-        Newline,
+        newline,
         '\n',
         lastToken.startOffset,
         lastToken.endOffset ?? NaN,

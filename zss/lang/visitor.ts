@@ -296,13 +296,13 @@ class ScriptVisitor extends CstVisitor {
       // @ts-expect-error
       return this.visit(ctx.short_cmd)
     }
-    if (ctx.Short_go) {
+    if (ctx.short_go) {
       // @ts-expect-error
-      return this.visit(ctx.Short_go)
+      return this.visit(ctx.short_go)
     }
-    if (ctx.Short_try) {
+    if (ctx.short_try) {
       // @ts-expect-error
-      return this.visit(ctx.Short_try)
+      return this.visit(ctx.short_try)
     }
   }
 
@@ -431,9 +431,9 @@ class ScriptVisitor extends CstVisitor {
         words: asList(this, ctx.words).flat(),
       })
     }
-    if (ctx.Command_play) {
+    if (ctx.command_play) {
       // @ts-expect-error
-      return this.visit(ctx.Command_play)
+      return this.visit(ctx.command_play)
     }
     if (ctx.structured_cmd) {
       // @ts-expect-error
@@ -449,9 +449,9 @@ class ScriptVisitor extends CstVisitor {
         words: asList(this, ctx.words).flat(),
       })
     }
-    if (ctx.Command_play) {
+    if (ctx.command_play) {
       // @ts-expect-error
-      return this.visit(ctx.Command_play)
+      return this.visit(ctx.command_play)
     }
   }
 
@@ -465,41 +465,41 @@ class ScriptVisitor extends CstVisitor {
           })
         : [],
       // @ts-expect-error
-      ctx.Command_play ? this.visit(ctx.Command_play) : [],
+      ctx.command_play ? this.visit(ctx.command_play) : [],
       // @ts-expect-error
       ctx.short_ops ? asList(this, ctx.short_ops) : [],
     ].flat()
   }
 
   structured_cmd(ctx: CstChildrenDictionary) {
-    if (ctx.Command_if) {
+    if (ctx.command_if) {
       // @ts-expect-error
-      return this.visit(ctx.Command_if)
+      return this.visit(ctx.command_if)
     }
-    if (ctx.Command_read) {
+    if (ctx.command_read) {
       // @ts-expect-error
-      return this.visit(ctx.Command_read)
+      return this.visit(ctx.command_read)
     }
-    if (ctx.Command_while) {
+    if (ctx.command_while) {
       // @ts-expect-error
-      return this.visit(ctx.Command_while)
+      return this.visit(ctx.command_while)
     }
-    if (ctx.Command_repeat) {
+    if (ctx.command_repeat) {
       // @ts-expect-error
-      return this.visit(ctx.Command_repeat)
+      return this.visit(ctx.command_repeat)
     }
-    if (ctx.Command_break) {
+    if (ctx.command_break) {
       // @ts-expect-error
-      return this.visit(ctx.Command_break)
+      return this.visit(ctx.command_break)
     }
-    if (ctx.Command_continue) {
+    if (ctx.command_continue) {
       // @ts-expect-error
-      return this.visit(ctx.Command_continue)
+      return this.visit(ctx.command_continue)
     }
   }
 
-  Short_go(ctx: CstChildrenDictionary) {
-    console.info('Short_go', ctx)
+  short_go(ctx: CstChildrenDictionary) {
+    console.info('short_go', ctx)
     if (ctx.Divide) {
       const shortgo = makeNode(ctx, {
         type: NODE.MOVE,
@@ -515,8 +515,8 @@ class ScriptVisitor extends CstVisitor {
     }
   }
 
-  Short_try(ctx: CstChildrenDictionary) {
-    console.info('Short_try', ctx)
+  short_try(ctx: CstChildrenDictionary) {
+    console.info('short_try', ctx)
     if (ctx.Query) {
       const shortgo = makeNode(ctx, {
         type: NODE.MOVE,
@@ -532,7 +532,7 @@ class ScriptVisitor extends CstVisitor {
     }
   }
 
-  Command_play(ctx: CstChildrenDictionary) {
+  command_play(ctx: CstChildrenDictionary) {
     if (ctx.play) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
@@ -544,7 +544,7 @@ class ScriptVisitor extends CstVisitor {
     }
   }
 
-  Command_if(ctx: CstChildrenDictionary) {
+  command_if(ctx: CstChildrenDictionary) {
     // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
@@ -557,9 +557,9 @@ class ScriptVisitor extends CstVisitor {
 
     const branches = [
       // @ts-expect-error
-      this.visit(ctx.Command_else_if),
+      this.visit(ctx.command_else_if),
       // @ts-expect-error
-      this.visit(ctx.Command_else),
+      this.visit(ctx.command_else),
     ].flat()
 
     return makeNode(ctx, {
@@ -571,7 +571,7 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
-  Command_else_if(ctx: CstChildrenDictionary) {
+  command_else_if(ctx: CstChildrenDictionary) {
     // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
@@ -583,7 +583,7 @@ class ScriptVisitor extends CstVisitor {
     ].flat()
 
     // @ts-expect-error
-    const branches = asList(this, ctx.Command_else_if).flat()
+    const branches = asList(this, ctx.command_else_if).flat()
 
     return [
       makeNode(ctx, {
@@ -595,11 +595,11 @@ class ScriptVisitor extends CstVisitor {
       // un-nest else_if & else
       ...branches.filter(ispresent),
       // @ts-expect-error
-      this.visit(ctx.Command_else),
+      this.visit(ctx.command_else),
     ]
   }
 
-  Command_else(ctx: CstChildrenDictionary) {
+  command_else(ctx: CstChildrenDictionary) {
     // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
@@ -618,11 +618,11 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
-  Command_endif() {
+  command_endif() {
     // no-op
   }
 
-  Command_while(ctx: CstChildrenDictionary) {
+  command_while(ctx: CstChildrenDictionary) {
     // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
@@ -640,7 +640,7 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
-  Command_repeat(ctx: CstChildrenDictionary) {
+  command_repeat(ctx: CstChildrenDictionary) {
     // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
@@ -658,17 +658,17 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
-  Command_read_flags(ctx: CstChildrenDictionary) {
+  command_read_flags(ctx: CstChildrenDictionary) {
     // @ts-expect-error
     return asList(this, ctx.StringLiteral).flat()
   }
 
-  Command_read(ctx: CstChildrenDictionary) {
+  command_read(ctx: CstChildrenDictionary) {
     // @ts-expect-error
     const words = asList(this, ctx.words).flat()
 
     // @ts-expect-error
-    const flags = this.visit(ctx.Command_read_flags).flat()
+    const flags = this.visit(ctx.command_read_flags).flat()
 
     const lines = [
       // @ts-expect-error
@@ -685,13 +685,13 @@ class ScriptVisitor extends CstVisitor {
     })
   }
 
-  Command_break(ctx: CstChildrenDictionary) {
+  command_break(ctx: CstChildrenDictionary) {
     return makeNode(ctx, {
       type: NODE.BREAK,
     })
   }
 
-  Command_continue(ctx: CstChildrenDictionary) {
+  command_continue(ctx: CstChildrenDictionary) {
     return makeNode(ctx, {
       type: NODE.CONTINUE,
     })

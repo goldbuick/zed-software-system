@@ -1,7 +1,7 @@
 import { IToken } from 'chevrotain'
 import { WORD } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
-import { Stat, tokenize } from 'zss/lang/lexer'
+import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
@@ -236,7 +236,7 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
   let first = true
   for (let i = 0; i < parse.tokens.length; ++i) {
     const token = parse.tokens[i]
-    if (token.tokenType === Stat) {
+    if (token.tokenType === stat) {
       const [maybetype, ...maybevalues] = token.image.slice(1).split(' ')
       const lmaybetype = maybetype.toLowerCase()
       const maybename = maybevalues.join(' ')
