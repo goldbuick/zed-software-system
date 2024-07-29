@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "include": [
     "zss",
+    "zss/lang/visitor.d.ts",
     "vite.config.ts"
   ]
 }

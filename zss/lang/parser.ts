@@ -1,11 +1,13 @@
 import {
   CstNode,
   CstParser,
+  generateCstDts,
   IRuleConfig,
   IToken,
   ParserMethod,
+  Rule,
 } from 'chevrotain'
-import { LANG_DEV } from 'zss/config'
+import { LANG_DEV, LANG_TYPES } from 'zss/config'
 
 import * as lexer from './lexer'
 
@@ -86,10 +88,7 @@ class ScriptParser extends CstParser {
 
   do_block = this.RULED('do_block', () => {
     this.CONSUME(lexer.command_do)
-    this.AT_LEAST_ONE({
-      GATE: this.BACKTRACK(this.do_line),
-      DEF: () => this.SUBRULE(this.do_line),
-    })
+    this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
   })
 
   do_line = this.RULED('do_line', () => {
@@ -523,3 +522,9 @@ class ScriptParser extends CstParser {
 }
 
 export const parser = new ScriptParser()
+
+if (LANG_TYPES) {
+  const productions: Record<string, Rule> = parser.getGAstProductions()
+  const dtsstring = generateCstDts(productions)
+  console.info(dtsstring)
+}
