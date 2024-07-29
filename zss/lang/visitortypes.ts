@@ -1,4 +1,4 @@
-import type { CstNode, ICstVisitor, IToken } from 'chevrotain'
+import type { CstNode, IToken } from 'chevrotain'
 
 export type ProgramCstNode = {
   name: 'program'

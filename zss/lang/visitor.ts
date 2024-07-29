@@ -86,20 +86,6 @@ export enum LITERAL {
   TEMPLATE,
 }
 
-function asIToken(thing: CstNode | CstElement): IToken {
-  return thing as unknown as IToken
-}
-
-function asList(thing: ScriptVisitor, node: CstNode[] | undefined): CodeNode[] {
-  return (
-    node?.map((item) => thing.visit(item)).filter((item) => item) ?? []
-  ).flat()
-}
-
-function strImage(thing: CstNode | CstElement): string {
-  return asIToken(thing).image
-}
-
 function makeString(ctx: CstChildrenDictionary, value: string) {
   return makeNode(ctx, {
     type: NODE.LITERAL,
@@ -292,7 +278,7 @@ function makeNode(ctx: CstChildrenDictionary, node: CodeNodeData): CodeNode {
 
 class ScriptVisitor
   extends CstVisitor
-  implements ICstNodeVisitor<any, CodeNode>
+  implements ICstNodeVisitor<any, CodeNode[]>
 {
   constructor() {
     super()
@@ -302,10 +288,12 @@ class ScriptVisitor
   }
 
   program(ctx: ProgramCstChildren) {
-    return makeNode(ctx, {
-      type: NODE.PROGRAM,
-      lines: asList(this, ctx.line).flat(),
-    })
+    return [
+      makeNode(ctx, {
+        type: NODE.PROGRAM,
+        lines: ctx.line ? this.visit(ctx.line).flat() : [],
+      }),
+    ]
   }
 
   line(ctx: LineCstChildren) {
