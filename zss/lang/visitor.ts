@@ -10,12 +10,35 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { parser } from './parser'
 import {
+  And_test_valueCstChildren,
+  And_testCstChildren,
+  Arith_expr_itemCstChildren,
+  Arith_exprCstChildren,
+  Command_breakCstChildren,
+  Command_continueCstChildren,
+  Command_else_ifCstChildren,
+  Command_elseCstChildren,
+  Command_ifCstChildren,
+  Command_read_flagsCstChildren,
+  Command_readCstChildren,
+  Command_repeatCstChildren,
+  Command_whileCstChildren,
+  Comp_opCstChildren,
+  ComparisonCstChildren,
   Do_blockCstChildren,
   Do_lineCstChildren,
   Do_stmtCstChildren,
+  Expr_valueCstChildren,
+  ExprCstChildren,
+  FactorCstChildren,
+  Flat_cmdCstChildren,
   ICstNodeVisitor,
   LineCstChildren,
+  Not_test_valueCstChildren,
+  Not_testCstChildren,
+  PowerCstChildren,
   ProgramCstChildren,
+  Short_cmdCstChildren,
   Short_opsCstChildren,
   Stmt_commandCstChildren,
   Stmt_commentCstChildren,
@@ -24,6 +47,11 @@ import {
   Stmt_statCstChildren,
   Stmt_textCstChildren,
   StmtCstChildren,
+  Structured_cmdCstChildren,
+  Term_itemCstChildren,
+  TermCstChildren,
+  TokenCstChildren,
+  WordsCstChildren,
 } from './visitortypes'
 
 const CstVisitor = parser.getBaseCstVisitorConstructor()
@@ -287,20 +315,21 @@ class ScriptVisitor
     }
   }
 
+  go(node: any): CodeNode[] {
+    return node ? this.visit(node) : []
+  }
+
   program(ctx: ProgramCstChildren) {
     return [
       makeNode(ctx, {
         type: NODE.PROGRAM,
-        lines: ctx.line ? this.visit(ctx.line).flat() : [],
+        lines: this.go(ctx.line).flat(),
       }),
     ]
   }
 
   line(ctx: LineCstChildren) {
-    return [
-      ctx.short_ops ? asList(this, ctx.short_ops) : [],
-      ctx.stmt ? this.visit(ctx.stmt) : [],
-    ].flat()
+    return [this.go(ctx.short_ops), this.go(ctx.stmt)].flat()
   }
 
   stmt(ctx: StmtCstChildren) {
@@ -423,7 +452,7 @@ class ScriptVisitor
     }
   }
 
-  short_cmd(ctx) {
+  short_cmd(ctx: Short_cmdCstChildren) {
     if (ctx.words) {
       return makeNode(ctx, {
         type: NODE.COMMAND,
@@ -436,7 +465,7 @@ class ScriptVisitor
     }
   }
 
-  flat_cmd(ctx, param) {
+  flat_cmd(ctx: Flat_cmdCstChildren) {
     return [
       ctx.words
         ? makeNode(ctx, {
@@ -449,7 +478,7 @@ class ScriptVisitor
     ].flat()
   }
 
-  structured_cmd(ctx, param) {
+  structured_cmd(ctx: Structured_cmdCstChildren) {
     if (ctx.command_if) {
       return this.visit(ctx.command_if)
     }
@@ -470,7 +499,7 @@ class ScriptVisitor
     }
   }
 
-  short_go(ctx, param) {
+  short_go(ctx: Short_cmdCstChildren) {
     console.info('short_go', ctx)
     if (ctx.Divide) {
       const shortgo = makeNode(ctx, {
@@ -486,7 +515,7 @@ class ScriptVisitor
     }
   }
 
-  short_try(ctx, param) {
+  short_try(ctx: Short_cmdCstChildren) {
     console.info('short_try', ctx)
     if (ctx.Query) {
       const shortgo = makeNode(ctx, {
@@ -502,19 +531,15 @@ class ScriptVisitor
     }
   }
 
-  command_play(ctx, param) {
-    if (ctx.play) {
-      return makeNode(ctx, {
-        type: NODE.COMMAND,
-        words: [
-          makeString(ctx, 'play'),
-          makeString(ctx, strImage(ctx.play[0]).replace('play', '').trim()),
-        ],
-      })
-    }
-  }
+  // return makeNode(ctx, {
+  //   type: NODE.COMMAND,
+  //   words: [
+  //     makeString(ctx, 'play'),
+  //     makeString(ctx, strImage(ctx.play[0]).replace('play', '').trim()),
+  //   ],
+  // })
 
-  command_if(ctx, param) {
+  command_if(ctx: Command_ifCstChildren) {
     const words = asList(this, ctx.words).flat()
 
     const lines = [this.visit(ctx.flat_cmd), this.visit(ctx.do_block)].flat()
@@ -533,7 +558,7 @@ class ScriptVisitor
     })
   }
 
-  command_else_if(ctx, param) {
+  command_else_if(ctx: Command_else_ifCstChildren) {
     const words = asList(this, ctx.words).flat()
 
     const lines = [this.visit(ctx.flat_cmd), this.visit(ctx.do_block)].flat()
@@ -552,7 +577,7 @@ class ScriptVisitor
     ]
   }
 
-  command_else(ctx, param) {
+  command_else(ctx: Command_elseCstChildren) {
     const words = asList(this, ctx.words).flat()
 
     const lines = [this.visit(ctx.flat_cmd), this.visit(ctx.do_block)].flat()
@@ -567,9 +592,10 @@ class ScriptVisitor
 
   command_endif() {
     // no-op
+    return []
   }
 
-  command_while(ctx, param) {
+  command_while(ctx: Command_whileCstChildren) {
     const words = asList(this, ctx.words).flat()
 
     const lines = [this.visit(ctx.flat_cmd), this.visit(ctx.do_block)].flat()
@@ -581,7 +607,7 @@ class ScriptVisitor
     })
   }
 
-  command_repeat(ctx, param) {
+  command_repeat(ctx: Command_repeatCstChildren) {
     const words = asList(this, ctx.words).flat()
 
     const lines = [this.visit(ctx.flat_cmd), this.visit(ctx.do_block)].flat()
@@ -593,11 +619,11 @@ class ScriptVisitor
     })
   }
 
-  command_read_flags(ctx, param) {
+  command_read_flags(ctx: Command_read_flagsCstChildren) {
     return asList(this, ctx.StringLiteral).flat()
   }
 
-  command_read(ctx, param) {
+  command_read(ctx: Command_readCstChildren) {
     const words = asList(this, ctx.words).flat()
     const flags = this.visit(ctx.command_read_flags).flat()
 
@@ -611,19 +637,23 @@ class ScriptVisitor
     })
   }
 
-  command_break(ctx, param) {
-    return makeNode(ctx, {
-      type: NODE.BREAK,
-    })
+  command_break(ctx: Command_breakCstChildren) {
+    return [
+      makeNode(ctx, {
+        type: NODE.BREAK,
+      }),
+    ]
   }
 
-  command_continue(ctx, param) {
-    return makeNode(ctx, {
-      type: NODE.CONTINUE,
-    })
+  command_continue(ctx: Command_continueCstChildren) {
+    return [
+      makeNode(ctx, {
+        type: NODE.CONTINUE,
+      }),
+    ]
   }
 
-  expr(ctx, param) {
+  expr(ctx: ExprCstChildren) {
     if (ctx.and_test.length === 1) {
       return this.visit(ctx.and_test)
     }
@@ -633,7 +663,7 @@ class ScriptVisitor
     })
   }
 
-  and_test(ctx, param) {
+  and_test(ctx: And_testCstChildren) {
     if (ctx.not_test.length === 1) {
       return this.visit(ctx.not_test)
     }
@@ -643,7 +673,7 @@ class ScriptVisitor
     })
   }
 
-  not_test(ctx, param) {
+  not_test(ctx: Not_testCstChildren) {
     if (ctx.comparison) {
       return this.visit(ctx.comparison)
     }
@@ -656,7 +686,7 @@ class ScriptVisitor
     }
   }
 
-  comparison(ctx, param) {
+  comparison(ctx: ComparisonCstChildren) {
     if (ctx.arith_expr.length === 1) {
       return this.visit(ctx.arith_expr)
     }
@@ -669,7 +699,7 @@ class ScriptVisitor
     })
   }
 
-  comp_op(ctx, param) {
+  comp_op(ctx: Comp_opCstChildren) {
     if (ctx.is || ctx.IsEq) {
       return COMPARE.IS_EQ
     }
@@ -690,7 +720,7 @@ class ScriptVisitor
     }
   }
 
-  expr_value(ctx, param) {
+  expr_value(ctx: Expr_valueCstChildren) {
     if (ctx.and_test_value.length === 1) {
       return this.visit(ctx.and_test_value)
     }
@@ -700,7 +730,7 @@ class ScriptVisitor
     })
   }
 
-  and_test_value(ctx, param) {
+  and_test_value(ctx: And_test_valueCstChildren) {
     if (ctx.not_test_value.length === 1) {
       return this.visit(ctx.not_test_value)
     }
@@ -710,7 +740,7 @@ class ScriptVisitor
     })
   }
 
-  not_test_value(ctx, param) {
+  not_test_value(ctx: Not_test_valueCstChildren) {
     if (ctx.arith_expr) {
       return this.visit(ctx.arith_expr)
     }
@@ -723,7 +753,7 @@ class ScriptVisitor
     }
   }
 
-  arith_expr(ctx, param) {
+  arith_expr(ctx: Arith_exprCstChildren) {
     const term = this.visit(ctx.term)
     if (!ctx.arith_expr_item) {
       return term
@@ -735,7 +765,7 @@ class ScriptVisitor
     })
   }
 
-  arith_expr_item(ctx, param) {
+  arith_expr_item(ctx: Arith_expr_itemCstChildren) {
     return makeNode(ctx, {
       type: NODE.OPERATOR_ITEM,
       operator: ctx.Plus ? OPERATOR.PLUS : OPERATOR.MINUS,
@@ -743,7 +773,7 @@ class ScriptVisitor
     })
   }
 
-  term(ctx, param) {
+  term(ctx: TermCstChildren) {
     if (!ctx.term_item) {
       return this.visit(ctx.factor)
     }
@@ -754,7 +784,7 @@ class ScriptVisitor
     })
   }
 
-  term_item(ctx, param) {
+  term_item(ctx: Term_itemCstChildren) {
     let operator = OPERATOR.EMPTY
 
     if (ctx.Multiply) {
@@ -777,7 +807,7 @@ class ScriptVisitor
     })
   }
 
-  factor(ctx, param) {
+  factor(ctx: FactorCstChildren) {
     if (ctx.power) {
       return this.visit(ctx.power)
     }
@@ -804,7 +834,7 @@ class ScriptVisitor
     })
   }
 
-  power(ctx, param) {
+  power(ctx: PowerCstChildren) {
     const token = this.visit(ctx.token)
     if (ctx.factor) {
       return makeNode(ctx, {
@@ -823,11 +853,11 @@ class ScriptVisitor
     return token
   }
 
-  words(ctx, param) {
-    return asList(this, ctx.expr)
+  words(ctx: WordsCstChildren) {
+    return this.go(ctx.expr)
   }
 
-  token(ctx, param) {
+  token(ctx: TokenCstChildren) {
     if (ctx.StringLiteralDouble) {
       const str = strImage(ctx.StringLiteralDouble[0])
       return makeNode(ctx, {
