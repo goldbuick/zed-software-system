@@ -141,7 +141,7 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.command)
     this.OR([
       { ALT: () => this.SUBRULE(this.words) },
-      { ALT: () => this.CONSUME(lexer.command_play) },
+      { ALT: () => this.SUBRULE(this.command_play) },
       { ALT: () => this.SUBRULE(this.structured_cmd) },
     ])
   })
@@ -150,7 +150,7 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.command)
     this.OR([
       { ALT: () => this.SUBRULE(this.words) },
-      { ALT: () => this.CONSUME(lexer.command_play) },
+      { ALT: () => this.SUBRULE(this.command_play) },
     ])
   })
 
@@ -158,7 +158,7 @@ class ScriptParser extends CstParser {
     this.OPTION(() => {
       this.OR([
         { ALT: () => this.SUBRULE(this.words) },
-        { ALT: () => this.CONSUME(lexer.command_play) },
+        { ALT: () => this.SUBRULE(this.command_play) },
       ])
     })
     this.MANY(() => this.SUBRULE(this.short_ops))
@@ -330,16 +330,12 @@ class ScriptParser extends CstParser {
     })
   })
 
-  command_read_flags = this.RULED('command_read_flags', () => {
-    this.AT_LEAST_ONE(() => this.CONSUME(lexer.stringliteral))
-  })
-
   command_read = this.RULED('command_read', () => {
     this.CONSUME(lexer.command_read)
     this.SUBRULE(this.words)
 
     this.CONSUME(lexer.command_into)
-    this.SUBRULE(this.command_read_flags)
+    this.AT_LEAST_ONE(() => this.CONSUME(lexer.stringliteral))
 
     this.OPTION(() => {
       this.OR([
@@ -367,6 +363,10 @@ class ScriptParser extends CstParser {
 
   command_continue = this.RULED('command_continue', () => {
     this.CONSUME(lexer.command_continue)
+  })
+
+  command_play = this.RULED('command_play', () => {
+    this.CONSUME(lexer.command_play)
   })
 
   // expressions

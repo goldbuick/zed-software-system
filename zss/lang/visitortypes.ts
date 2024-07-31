@@ -1,4 +1,4 @@
-import type { CstNode, IToken } from 'chevrotain'
+import type { CstNode, ICstVisitor, IToken } from 'chevrotain'
 
 export type ProgramCstNode = {
   name: 'program'
@@ -134,7 +134,7 @@ export type Stmt_commandCstNode = {
 export type Stmt_commandCstChildren = {
   token_command: IToken[]
   words?: WordsCstNode[]
-  token_command_play?: IToken[]
+  command_play?: Command_playCstNode[]
   structured_cmd?: Structured_cmdCstNode[]
 }
 
@@ -146,7 +146,7 @@ export type Short_cmdCstNode = {
 export type Short_cmdCstChildren = {
   token_command: IToken[]
   words?: WordsCstNode[]
-  token_command_play?: IToken[]
+  command_play?: Command_playCstNode[]
 }
 
 export type Flat_cmdCstNode = {
@@ -156,7 +156,7 @@ export type Flat_cmdCstNode = {
 
 export type Flat_cmdCstChildren = {
   words?: WordsCstNode[]
-  token_command_play?: IToken[]
+  command_play?: Command_playCstNode[]
   short_ops?: Short_opsCstNode[]
 }
 
@@ -277,15 +277,6 @@ export type Command_repeatCstChildren = {
   token_endrepeat?: IToken[]
 }
 
-export type Command_read_flagsCstNode = {
-  name: 'command_read_flags'
-  children: Command_read_flagsCstChildren
-} & CstNode
-
-export type Command_read_flagsCstChildren = {
-  token_stringliteral: IToken[]
-}
-
 export type Command_readCstNode = {
   name: 'command_read'
   children: Command_readCstChildren
@@ -295,7 +286,7 @@ export type Command_readCstChildren = {
   token_read: IToken[]
   words: WordsCstNode[]
   token_into: IToken[]
-  command_read_flags: Command_read_flagsCstNode[]
+  token_stringliteral: IToken[]
   flat_cmd?: Flat_cmdCstNode[]
   do_block?: Do_blockCstNode[]
   token_command?: IToken[]
@@ -318,6 +309,15 @@ export type Command_continueCstNode = {
 
 export type Command_continueCstChildren = {
   token_continue: IToken[]
+}
+
+export type Command_playCstNode = {
+  name: 'command_play'
+  children: Command_playCstChildren
+} & CstNode
+
+export type Command_playCstChildren = {
+  token_command_play: IToken[]
 }
 
 export type ExprCstNode = {
@@ -496,8 +496,7 @@ export type TokenCstChildren = {
   token_rparen?: IToken[]
 }
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export interface ICstNodeVisitor<IN, OUT> {
+export type ICstNodeVisitor<IN, OUT> = {
   program(children: ProgramCstChildren, param?: IN): OUT
   line(children: LineCstChildren, param?: IN): OUT
   stmt(children: StmtCstChildren, param?: IN): OUT
@@ -522,10 +521,10 @@ export interface ICstNodeVisitor<IN, OUT> {
   command_endif(children: Command_endifCstChildren, param?: IN): OUT
   command_while(children: Command_whileCstChildren, param?: IN): OUT
   command_repeat(children: Command_repeatCstChildren, param?: IN): OUT
-  command_read_flags(children: Command_read_flagsCstChildren, param?: IN): OUT
   command_read(children: Command_readCstChildren, param?: IN): OUT
   command_break(children: Command_breakCstChildren, param?: IN): OUT
   command_continue(children: Command_continueCstChildren, param?: IN): OUT
+  command_play(children: Command_playCstChildren, param?: IN): OUT
   expr(children: ExprCstChildren, param?: IN): OUT
   and_test(children: And_testCstChildren, param?: IN): OUT
   not_test(children: Not_testCstChildren, param?: IN): OUT
@@ -542,4 +541,4 @@ export interface ICstNodeVisitor<IN, OUT> {
   power(children: PowerCstChildren, param?: IN): OUT
   words(children: WordsCstChildren, param?: IN): OUT
   token(children: TokenCstChildren, param?: IN): OUT
-}
+} & ICstVisitor<IN, OUT>
