@@ -749,16 +749,16 @@ class ScriptVisitor
     }
     return createcodenode(ctx, {
       type: NODE.OPERATOR,
-      lhs: term,
-      items: asList(this, ctx.arith_expr_item),
+      lhs: term[0],
+      items: this.go(ctx.arith_expr_item),
     })
   }
 
   arith_expr_item(ctx: Arith_expr_itemCstChildren) {
     return createcodenode(ctx, {
       type: NODE.OPERATOR_ITEM,
-      operator: ctx.Plus ? OPERATOR.PLUS : OPERATOR.MINUS,
-      rhs: this.go(ctx.term),
+      operator: ctx.token_plus ? OPERATOR.PLUS : OPERATOR.MINUS,
+      rhs: this.go(ctx.term)[0],
     })
   }
 
@@ -768,31 +768,31 @@ class ScriptVisitor
     }
     return createcodenode(ctx, {
       type: NODE.OPERATOR,
-      lhs: this.go(ctx.factor),
-      items: asList(this, ctx.term_item),
+      lhs: this.go(ctx.factor)[0],
+      items: this.go(ctx.term_item),
     })
   }
 
   term_item(ctx: Term_itemCstChildren) {
     let operator = OPERATOR.EMPTY
 
-    if (ctx.Multiply) {
+    if (ctx.token_multiply) {
       operator = OPERATOR.MULTIPLY
     }
-    if (ctx.Divide) {
+    if (ctx.token_divide) {
       operator = OPERATOR.DIVIDE
     }
-    if (ctx.ModDivide) {
+    if (ctx.token_moddivide) {
       operator = OPERATOR.MOD_DIVIDE
     }
-    if (ctx.FloorDivide) {
+    if (ctx.token_floordivide) {
       operator = OPERATOR.FLOOR_DIVIDE
     }
 
     return createcodenode(ctx, {
       type: NODE.OPERATOR_ITEM,
       operator,
-      rhs: this.go(ctx.factor),
+      rhs: this.go(ctx.factor)[0],
     })
   }
 
@@ -802,40 +802,36 @@ class ScriptVisitor
     }
 
     let operator = OPERATOR.EMPTY
-    if (ctx.Plus) {
+    if (ctx.token_plus) {
       operator = OPERATOR.UNI_PLUS
     }
-    if (ctx.Minus) {
+    if (ctx.token_minus) {
       operator = OPERATOR.UNI_MINUS
     }
 
     return createcodenode(ctx, {
       type: NODE.OPERATOR,
       lhs: undefined,
-      items: [
-        createcodenode(ctx, {
-          type: NODE.OPERATOR_ITEM,
-          operator,
-
-          rhs: this.go(ctx.factor),
-        }),
-      ],
+      items: createcodenode(ctx, {
+        type: NODE.OPERATOR_ITEM,
+        operator,
+        rhs: this.go(ctx.factor)[0],
+      }),
     })
   }
 
   power(ctx: PowerCstChildren) {
     const token = this.go(ctx.token)
+
     if (ctx.factor) {
       return createcodenode(ctx, {
         type: NODE.OPERATOR,
-        lhs: token,
-        items: [
-          createcodenode(ctx, {
-            type: NODE.OPERATOR_ITEM,
-            operator: OPERATOR.POWER,
-            rhs: this.go(ctx.factor),
-          }),
-        ],
+        lhs: token[0],
+        items: createcodenode(ctx, {
+          type: NODE.OPERATOR_ITEM,
+          operator: OPERATOR.POWER,
+          rhs: this.go(ctx.factor)[0],
+        }),
       })
     }
 
@@ -847,8 +843,8 @@ class ScriptVisitor
   }
 
   token(ctx: TokenCstChildren) {
-    if (ctx.StringLiteralDouble) {
-      const str = strImage(ctx.StringLiteralDouble[0])
+    if (ctx.token_stringliteraldouble) {
+      const str = tokenstring(ctx.token_stringliteraldouble, '""')
       return createcodenode(ctx, {
         type: NODE.LITERAL,
         literal: LITERAL.TEMPLATE,
@@ -856,34 +852,26 @@ class ScriptVisitor
       })
     }
 
-    if (ctx.StringLiteral) {
+    if (ctx.token_stringliteral) {
       return createcodenode(ctx, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value: strImage(ctx.StringLiteral[0]),
+        value: tokenstring(ctx.token_stringliteral, ''),
       })
     }
 
-    if (ctx.NumberLiteral) {
+    if (ctx.token_numberliteral) {
       return createcodenode(ctx, {
         type: NODE.LITERAL,
         literal: LITERAL.NUMBER,
-        value: parseFloat(strImage(ctx.NumberLiteral[0])),
+        value: parseFloat(tokenstring(ctx.token_numberliteral, '0')),
       })
     }
 
-    if (ctx.read) {
-      return createcodenode(ctx, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value: strImage(ctx.read[0]),
-      })
-    }
-
-    if (ctx.LParen) {
+    if (ctx.token_lparen) {
       return createcodenode(ctx, {
         type: NODE.EXPR,
-        words: asList(this, ctx.expr).flat(),
+        words: this.go(ctx.expr),
       })
     }
     return []
