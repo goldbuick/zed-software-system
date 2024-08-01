@@ -123,6 +123,20 @@ class ScriptParser extends CstParser {
     ])
   })
 
+  do_inline = this.RULED('do_inline', () => {
+    this.OR([
+      { ALT: () => this.SUBRULE(this.stmt_stat) },
+      { ALT: () => this.SUBRULE(this.stmt_text) },
+      { ALT: () => this.SUBRULE(this.stmt_comment) },
+      { ALT: () => this.SUBRULE(this.stmt_hyperlink) },
+      { ALT: () => this.SUBRULE(this.stmt_command) },
+      {
+        GATE: this.BACKTRACK(this.commands),
+        ALT: () => this.MANY(() => this.SUBRULE(this.commands)),
+      },
+    ])
+  })
+
   stmt_label = this.RULED('stmt_label', () => {
     this.CONSUME(lexer.label)
   })
@@ -195,20 +209,24 @@ class ScriptParser extends CstParser {
       this.OR([
         {
           // inline if
-          ALT: () => this.SUBRULE(this.do_stmt),
+          GATE: this.BACKTRACK(this.do_inline),
+          ALT: () => this.SUBRULE(this.do_inline),
         },
         {
           // block if
           ALT: () => {
             this.SUBRULE(this.do_block)
+
             this.MANY({
               GATE: this.BACKTRACK(this.command_else_if),
               DEF: () => this.SUBRULE(this.command_else_if),
             })
+
             this.OPTION2({
               GATE: this.BACKTRACK(this.command_else),
               DEF: () => this.SUBRULE(this.command_else),
             })
+
             this.MANY2(() => this.CONSUME(lexer.newline))
             this.CONSUME(lexer.command)
             this.CONSUME(lexer.command_endif)
@@ -227,7 +245,8 @@ class ScriptParser extends CstParser {
       this.OR([
         {
           // inline else if
-          ALT: () => this.SUBRULE(this.do_stmt),
+          GATE: this.BACKTRACK(this.do_inline),
+          ALT: () => this.SUBRULE(this.do_inline),
         },
         {
           // block else if
@@ -244,7 +263,8 @@ class ScriptParser extends CstParser {
       this.OR([
         {
           // inline else
-          ALT: () => this.SUBRULE(this.do_stmt),
+          GATE: this.BACKTRACK(this.do_inline),
+          ALT: () => this.SUBRULE(this.do_inline),
         },
         {
           // block else
@@ -261,7 +281,8 @@ class ScriptParser extends CstParser {
       this.OR([
         {
           // inline while
-          ALT: () => this.SUBRULE(this.do_stmt),
+          GATE: this.BACKTRACK(this.do_inline),
+          ALT: () => this.SUBRULE(this.do_inline),
         },
         {
           // while block
@@ -282,7 +303,8 @@ class ScriptParser extends CstParser {
       this.OR([
         {
           // inline repeat
-          ALT: () => this.SUBRULE(this.do_stmt),
+          GATE: this.BACKTRACK(this.do_inline),
+          ALT: () => this.SUBRULE(this.do_inline),
         },
         {
           // repeat block
@@ -305,7 +327,8 @@ class ScriptParser extends CstParser {
       this.OR([
         {
           // inline read
-          ALT: () => this.SUBRULE(this.do_stmt),
+          GATE: this.BACKTRACK(this.do_inline),
+          ALT: () => this.SUBRULE(this.do_inline),
         },
         {
           // read block

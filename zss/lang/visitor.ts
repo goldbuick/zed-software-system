@@ -371,6 +371,9 @@ class ScriptVisitor
     if (ctx.stmt_hyperlink) {
       return this.go(ctx.stmt_hyperlink)
     }
+    if (ctx.short_commands) {
+      return [this.go(ctx.short_commands), this.go(ctx.commands)].flat()
+    }
     return []
   }
 
@@ -397,6 +400,9 @@ class ScriptVisitor
     }
     if (ctx.stmt_hyperlink) {
       return this.go(ctx.stmt_hyperlink)
+    }
+    if (ctx.short_commands) {
+      return [this.go(ctx.short_commands), this.go(ctx.commands)].flat()
     }
     return []
   }
@@ -457,7 +463,7 @@ class ScriptVisitor
     return createcodenode(ctx, {
       type: NODE.HYPERLINK,
       link: this.go(ctx.words),
-      text: tokenstring(ctx.token_hyperlinktext, ';'),
+      text: tokenstring(ctx.token_hyperlinktext, ';').slice(1),
     })
   }
 
@@ -558,17 +564,12 @@ class ScriptVisitor
   }
 
   command_else_if(ctx: Command_else_ifCstChildren) {
-    return [
-      createcodenode(ctx, {
-        type: NODE.ELSE_IF,
-        method: 'if',
-        words: this.go(ctx.words),
-        lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
-      }),
-      // un-nest else_if & else
-      this.go(ctx.command_else_if),
-      this.go(ctx.command_else),
-    ].flat()
+    return createcodenode(ctx, {
+      type: NODE.ELSE_IF,
+      method: 'if',
+      words: this.go(ctx.words),
+      lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
+    })
   }
 
   command_else(ctx: Command_elseCstChildren) {
@@ -577,11 +578,6 @@ class ScriptVisitor
       method: 'if',
       lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
     })
-  }
-
-  command_endif() {
-    // no-op
-    return []
   }
 
   command_while(ctx: Command_whileCstChildren) {
