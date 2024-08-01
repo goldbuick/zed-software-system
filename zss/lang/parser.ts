@@ -1,11 +1,13 @@
 import {
   CstNode,
   CstParser,
+  generateCstDts,
   IRuleConfig,
   IToken,
   ParserMethod,
+  Rule,
 } from 'chevrotain'
-import { LANG_DEV } from 'zss/config'
+import { LANG_DEV, LANG_TYPES } from 'zss/config'
 
 import * as lexer from './lexer'
 
@@ -67,294 +69,251 @@ class ScriptParser extends CstParser {
   })
 
   line = this.RULED('line', () => {
-    this.OPTION(() => this.SUBRULE(this.stmt))
-    this.AT_LEAST_ONE(() => this.CONSUME(lexer.Newline))
+    this.OR([
+      { ALT: () => this.SUBRULE(this.stmt) },
+      { ALT: () => this.CONSUME(lexer.newline) },
+    ])
   })
 
   stmt = this.RULED('stmt', () => {
     this.OR([
-      { ALT: () => this.SUBRULE(this.label) },
+      { ALT: () => this.SUBRULE(this.stmt_label) },
       // ---
-      { ALT: () => this.SUBRULE(this.stat) },
-      { ALT: () => this.SUBRULE(this.text) },
-      { ALT: () => this.SUBRULE(this.comment) },
-      { ALT: () => this.SUBRULE(this.command) },
-      { ALT: () => this.SUBRULE(this.hyperlink) },
-      { ALT: () => this.SUBRULE(this.Short_go) },
-      { ALT: () => this.SUBRULE(this.Short_try) },
+      { ALT: () => this.SUBRULE(this.stmt_stat) },
+      { ALT: () => this.SUBRULE(this.stmt_text) },
+      { ALT: () => this.SUBRULE(this.stmt_comment) },
+      { ALT: () => this.SUBRULE(this.stmt_hyperlink) },
+      { ALT: () => this.SUBRULE(this.stmt_command) },
+      {
+        ALT: () => {
+          this.AT_LEAST_ONE(() => this.SUBRULE(this.short_commands))
+          this.MANY(() => this.SUBRULE(this.commands))
+        },
+      },
     ])
+  })
+
+  do_block = this.RULED('do_block', () => {
+    this.CONSUME(lexer.command_do)
+    this.MANY(() => this.CONSUME(lexer.newline))
+    this.AT_LEAST_ONE({
+      GATE: this.BACKTRACK(this.do_line),
+      DEF: () => this.SUBRULE(this.do_line),
+    })
+  })
+
+  do_line = this.RULED('do_line', () => {
+    this.SUBRULE(this.do_stmt)
+    this.AT_LEAST_ONE(() => this.CONSUME(lexer.newline))
   })
 
   do_stmt = this.RULED('do_stmt', () => {
     this.OR([
-      // we use a switch statement
-      // ---
-      { ALT: () => this.SUBRULE(this.stat) },
-      { ALT: () => this.SUBRULE(this.text) },
-      { ALT: () => this.SUBRULE(this.comment) },
-      { ALT: () => this.SUBRULE(this.command) },
-      { ALT: () => this.SUBRULE(this.hyperlink) },
-      { ALT: () => this.SUBRULE(this.Short_go) },
-      { ALT: () => this.SUBRULE(this.Short_try) },
+      { ALT: () => this.SUBRULE(this.stmt_stat) },
+      { ALT: () => this.SUBRULE(this.stmt_text) },
+      { ALT: () => this.SUBRULE(this.stmt_comment) },
+      { ALT: () => this.SUBRULE(this.stmt_hyperlink) },
+      { ALT: () => this.SUBRULE(this.stmt_command) },
+      {
+        ALT: () => {
+          this.AT_LEAST_ONE(() => this.SUBRULE(this.short_commands))
+          this.MANY(() => this.SUBRULE(this.commands))
+        },
+      },
     ])
   })
 
-  label = this.RULED('label', () => {
-    this.CONSUME(lexer.Label)
+  do_inline = this.RULED('do_inline', () => {
+    this.OR([
+      { ALT: () => this.SUBRULE(this.stmt_stat) },
+      { ALT: () => this.SUBRULE(this.stmt_text) },
+      { ALT: () => this.SUBRULE(this.stmt_comment) },
+      { ALT: () => this.SUBRULE(this.stmt_hyperlink) },
+      { ALT: () => this.SUBRULE(this.stmt_command) },
+      {
+        GATE: this.BACKTRACK(this.commands),
+        ALT: () => this.MANY(() => this.SUBRULE(this.commands)),
+      },
+    ])
   })
 
-  stat = this.RULED('stat', () => {
-    this.CONSUME(lexer.Stat)
+  stmt_label = this.RULED('stmt_label', () => {
+    this.CONSUME(lexer.label)
   })
 
-  text = this.RULED('text', () => {
-    this.CONSUME(lexer.Text)
+  stmt_stat = this.RULED('stmt_stat', () => {
+    this.CONSUME(lexer.stat)
   })
 
-  comment = this.RULED('comment', () => {
-    this.CONSUME(lexer.Comment)
+  stmt_text = this.RULED('stmt_text', () => {
+    this.CONSUME(lexer.text)
   })
 
-  hyperlink = this.RULED('hyperlink', () => {
-    this.CONSUME(lexer.HyperLink)
+  stmt_comment = this.RULED('stmt_comment', () => {
+    this.CONSUME(lexer.comment)
+  })
+
+  stmt_hyperlink = this.RULED('stmt_hyperlink', () => {
+    this.CONSUME(lexer.hyperlink)
     this.SUBRULE(this.words)
-    this.CONSUME(lexer.HyperLinkText)
+    this.CONSUME(lexer.hyperlinktext)
   })
 
-  command = this.RULED('command', () => {
-    this.CONSUME(lexer.Command)
+  stmt_command = this.RULED('stmt_command', () => {
+    this.CONSUME(lexer.command)
+    this.AT_LEAST_ONE(() => this.SUBRULE(this.commands))
+  })
+
+  short_commands = this.RULED('short_commands', () => {
     this.OR([
-      { ALT: () => this.SUBRULE(this.words) },
-      { ALT: () => this.SUBRULE(this.Command_play) },
-      { ALT: () => this.SUBRULE(this.structured_cmd) },
+      { ALT: () => this.SUBRULE(this.short_go) },
+      { ALT: () => this.SUBRULE(this.short_try) },
     ])
   })
 
-  flat_cmd = this.RULED('flat_cmd', () => {
+  commands = this.RULED('commands', () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.words) },
-      { ALT: () => this.SUBRULE(this.Command_play) },
-      { ALT: () => this.SUBRULE(this.Short_go) },
-      { ALT: () => this.SUBRULE(this.Short_try) },
+      { ALT: () => this.SUBRULE(this.short_go) },
+      { ALT: () => this.SUBRULE(this.short_try) },
+      { ALT: () => this.SUBRULE(this.command_play) },
+      { ALT: () => this.SUBRULE(this.structured_cmd) },
     ])
   })
 
   structured_cmd = this.RULED('structured_cmd', () => {
     this.OR([
-      { ALT: () => this.SUBRULE(this.Command_if) },
-      { ALT: () => this.SUBRULE(this.Command_read) },
-      { ALT: () => this.SUBRULE(this.Command_while) },
-      { ALT: () => this.SUBRULE(this.Command_repeat) },
-      { ALT: () => this.SUBRULE(this.Command_break) },
-      { ALT: () => this.SUBRULE(this.Command_continue) },
+      { ALT: () => this.SUBRULE(this.command_if) },
+      { ALT: () => this.SUBRULE(this.command_read) },
+      { ALT: () => this.SUBRULE(this.command_while) },
+      { ALT: () => this.SUBRULE(this.command_repeat) },
+      { ALT: () => this.SUBRULE(this.command_break) },
+      { ALT: () => this.SUBRULE(this.command_continue) },
     ])
   })
 
-  Short_go = this.RULED('Short_go', () => {
-    this.CONSUME(lexer.Divide)
+  short_go = this.RULED('short_go', () => {
+    this.CONSUME(lexer.divide)
     this.SUBRULE(this.words)
-    this.OPTION(() => this.SUBRULE(this.do_stmt))
   })
 
-  Short_try = this.RULED('Short_try', () => {
-    this.CONSUME(lexer.Query)
+  short_try = this.RULED('short_try', () => {
+    this.CONSUME(lexer.query)
     this.SUBRULE(this.words)
-    this.OPTION(() => this.SUBRULE(this.do_stmt))
   })
 
-  Command_play = this.RULED('Command_play', () => {
-    this.CONSUME(lexer.Command_play)
-  })
-
-  do_line = this.RULED('do_line', () => {
-    this.CONSUME(lexer.Command_do)
-    this.OPTION1(() => this.CONSUME1(lexer.Newline))
-    this.OPTION2(() => this.SUBRULE(this.do_stmt))
-    this.AT_LEAST_ONE(() => this.CONSUME2(lexer.Newline))
-  })
-
-  Command_if = this.RULED('Command_if', () => {
-    this.CONSUME(lexer.Command_if)
+  command_if = this.RULED('command_if', () => {
+    this.CONSUME(lexer.command_if)
     this.SUBRULE(this.words)
-    this.OPTION(() => {
-      this.OR([
-        {
-          ALT: () => {
-            // inline if
-            this.SUBRULE(this.flat_cmd)
-          },
-        },
-        {
-          ALT: () => {
-            // block if
-            this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
-            this.OR2([
-              {
-                GATE: this.BACKTRACK(this.Command_else_if),
-                ALT: () => this.SUBRULE(this.Command_else_if),
-              },
-              {
-                GATE: this.BACKTRACK(this.Command_else),
-                ALT: () => this.SUBRULE(this.Command_else),
-              },
-              {
-                GATE: this.BACKTRACK(this.Command_endif),
-                ALT: () => this.SUBRULE(this.Command_endif),
-              },
-            ])
-          },
-        },
-      ])
+    this.OPTION({
+      GATE: this.BACKTRACK(this.command_if_block),
+      DEF: () => this.SUBRULE(this.command_if_block),
     })
   })
 
-  Command_else_if = this.RULED('Command_else_if', () => {
-    this.CONSUME(lexer.Command)
-    this.CONSUME(lexer.Command_else)
-    this.CONSUME(lexer.Command_if)
+  command_if_block = this.RULED('command_if_block', () => {
+    this.OR([
+      {
+        // inline if
+        GATE: this.BACKTRACK(this.do_inline),
+        ALT: () => this.SUBRULE(this.do_inline),
+      },
+      {
+        // block if
+        ALT: () => {
+          this.SUBRULE(this.do_block)
+
+          this.MANY({
+            GATE: this.BACKTRACK(this.command_else_if),
+            DEF: () => this.SUBRULE(this.command_else_if),
+          })
+
+          this.OPTION2({
+            GATE: this.BACKTRACK(this.command_else),
+            DEF: () => this.SUBRULE(this.command_else),
+          })
+
+          this.MANY2(() => this.CONSUME(lexer.newline))
+          this.CONSUME(lexer.command)
+          this.CONSUME(lexer.command_endif)
+        },
+      },
+    ])
+  })
+
+  command_block = this.RULED('command_block', () => {
+    this.OR([
+      {
+        // inline else if
+        GATE: this.BACKTRACK(this.do_inline),
+        ALT: () => this.SUBRULE(this.do_inline),
+      },
+      {
+        // block else if
+        ALT: () => this.SUBRULE(this.do_block),
+      },
+    ])
+  })
+
+  command_else_if = this.RULED('command_else_if', () => {
+    this.CONSUME(lexer.command)
+    this.CONSUME(lexer.command_else)
+    this.CONSUME(lexer.command_if)
     this.SUBRULE(this.words)
-    this.OPTION(() => {
-      this.OR([
-        {
-          ALT: () => {
-            // inline else if
-            this.SUBRULE(this.flat_cmd)
-          },
-        },
-        {
-          ALT: () => {
-            // block else if
-            this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
-            this.OR2([
-              {
-                GATE: this.BACKTRACK(this.Command_else_if),
-                ALT: () => this.SUBRULE(this.Command_else_if),
-              },
-              {
-                GATE: this.BACKTRACK(this.Command_else),
-                ALT: () => this.SUBRULE(this.Command_else),
-              },
-              {
-                GATE: this.BACKTRACK(this.Command_endif),
-                ALT: () => this.SUBRULE(this.Command_endif),
-              },
-            ])
-          },
-        },
-      ])
+    this.OPTION({
+      GATE: this.BACKTRACK(this.command_block),
+      DEF: () => this.SUBRULE(this.command_block),
     })
   })
 
-  Command_else = this.RULED('Command_else', () => {
-    this.CONSUME(lexer.Command)
-    this.CONSUME(lexer.Command_else)
-    this.OPTION(() => {
-      this.OR([
-        {
-          ALT: () => {
-            // inline else
-            this.SUBRULE(this.flat_cmd)
-          },
-        },
-        {
-          ALT: () => {
-            // block else
-            this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
-            this.SUBRULE(this.Command_endif)
-          },
-        },
-      ])
+  command_else = this.RULED('command_else', () => {
+    this.CONSUME(lexer.command)
+    this.CONSUME(lexer.command_else)
+    this.OPTION({
+      GATE: this.BACKTRACK(this.command_block),
+      DEF: () => this.SUBRULE(this.command_block),
     })
   })
 
-  Command_endif = this.RULED('Command_endif', () => {
-    this.CONSUME(lexer.Command)
-    this.CONSUME(lexer.Command_endif)
-  })
-
-  Command_while = this.RULED('Command_while', () => {
-    this.CONSUME(lexer.Command_while)
+  command_while = this.RULED('command_while', () => {
+    this.CONSUME(lexer.command_while)
     this.SUBRULE(this.words)
-    this.OPTION(() => {
-      this.OR([
-        {
-          ALT: () => {
-            // inline while
-            this.SUBRULE(this.flat_cmd)
-          },
-        },
-        {
-          ALT: () => {
-            // while block
-            this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
-            this.CONSUME4(lexer.Command)
-            this.CONSUME4(lexer.Command_endwhile)
-          },
-        },
-      ])
+    this.OPTION({
+      GATE: this.BACKTRACK(this.command_block),
+      DEF: () => this.SUBRULE(this.command_block),
     })
   })
 
-  Command_repeat = this.RULED('Command_repeat', () => {
-    this.CONSUME(lexer.Command_repeat)
+  command_repeat = this.RULED('command_repeat', () => {
+    this.CONSUME(lexer.command_repeat)
     this.SUBRULE(this.words)
-    this.OPTION(() => {
-      this.OR([
-        {
-          ALT: () => {
-            // inline repeat
-            this.SUBRULE(this.flat_cmd)
-          },
-        },
-        {
-          ALT: () => {
-            // repeat block
-            this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
-            this.CONSUME4(lexer.Command)
-            this.CONSUME4(lexer.Command_endrepeat)
-          },
-        },
-      ])
+    this.OPTION({
+      GATE: this.BACKTRACK(this.command_block),
+      DEF: () => this.SUBRULE(this.command_block),
     })
   })
 
-  Command_read_flags = this.RULED('Command_read_flags', () => {
-    this.AT_LEAST_ONE(() => this.CONSUME(lexer.StringLiteral))
-  })
-
-  Command_read = this.RULED('Command_read', () => {
-    this.CONSUME(lexer.Command_read)
+  command_read = this.RULED('command_read', () => {
+    this.CONSUME(lexer.command_read)
     this.SUBRULE(this.words)
-
-    this.CONSUME(lexer.Command_into)
-    this.SUBRULE(this.Command_read_flags)
-
-    this.OPTION(() => {
-      this.OR([
-        {
-          ALT: () => {
-            // inline read
-            this.SUBRULE(this.flat_cmd)
-          },
-        },
-        {
-          ALT: () => {
-            // read block
-            this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
-            this.CONSUME4(lexer.Command)
-            this.CONSUME4(lexer.Command_endread)
-          },
-        },
-      ])
+    this.CONSUME(lexer.command_into)
+    this.AT_LEAST_ONE(() => this.CONSUME(lexer.stringliteral))
+    this.OPTION({
+      GATE: this.BACKTRACK(this.command_block),
+      DEF: () => this.SUBRULE(this.command_block),
     })
   })
 
-  Command_break = this.RULED('Command_break', () => {
-    this.CONSUME(lexer.Command_break)
+  command_break = this.RULED('command_break', () => {
+    this.CONSUME(lexer.command_break)
   })
 
-  Command_continue = this.RULED('Command_continue', () => {
-    this.CONSUME(lexer.Command_continue)
+  command_continue = this.RULED('command_continue', () => {
+    this.CONSUME(lexer.command_continue)
+  })
+
+  command_play = this.RULED('command_play', () => {
+    this.CONSUME(lexer.command_play)
   })
 
   // expressions
@@ -363,7 +322,7 @@ class ScriptParser extends CstParser {
   expr = this.RULED('expr', () => {
     this.SUBRULE1(this.and_test)
     this.MANY(() => {
-      this.CONSUME(lexer.Or)
+      this.CONSUME(lexer.or)
       this.SUBRULE2(this.and_test)
     })
   })
@@ -371,7 +330,7 @@ class ScriptParser extends CstParser {
   and_test = this.RULED('and_test', () => {
     this.SUBRULE1(this.not_test)
     this.MANY(() => {
-      this.CONSUME(lexer.And)
+      this.CONSUME(lexer.and)
       this.SUBRULE2(this.not_test)
     })
   })
@@ -380,7 +339,7 @@ class ScriptParser extends CstParser {
     this.OR([
       {
         ALT: () => {
-          this.CONSUME(lexer.Not)
+          this.CONSUME(lexer.not)
           this.SUBRULE1(this.not_test)
         },
       },
@@ -398,19 +357,19 @@ class ScriptParser extends CstParser {
 
   comp_op = this.RULED('comp_op', () => {
     this.OR([
-      { ALT: () => this.CONSUME(lexer.IsEq) },
-      { ALT: () => this.CONSUME(lexer.IsNotEq) },
-      { ALT: () => this.CONSUME(lexer.IsLessThan) },
-      { ALT: () => this.CONSUME(lexer.IsGreaterThan) },
-      { ALT: () => this.CONSUME(lexer.IsLessThanOrEqual) },
-      { ALT: () => this.CONSUME(lexer.IsGreaterThanOrEqual) },
+      { ALT: () => this.CONSUME(lexer.iseq) },
+      { ALT: () => this.CONSUME(lexer.isnoteq) },
+      { ALT: () => this.CONSUME(lexer.islessthan) },
+      { ALT: () => this.CONSUME(lexer.isgreaterthan) },
+      { ALT: () => this.CONSUME(lexer.islessthanorequal) },
+      { ALT: () => this.CONSUME(lexer.isgreaterthanorequal) },
     ])
   })
 
   expr_value = this.RULED('expr_value', () => {
     this.SUBRULE1(this.and_test_value)
     this.MANY(() => {
-      this.CONSUME(lexer.Or)
+      this.CONSUME(lexer.or)
       this.SUBRULE2(this.and_test_value)
     })
   })
@@ -418,7 +377,7 @@ class ScriptParser extends CstParser {
   and_test_value = this.RULED('and_test_value', () => {
     this.SUBRULE1(this.not_test_value)
     this.MANY(() => {
-      this.CONSUME(lexer.And)
+      this.CONSUME(lexer.and)
       this.SUBRULE2(this.not_test_value)
     })
   })
@@ -427,7 +386,7 @@ class ScriptParser extends CstParser {
     this.OR([
       {
         ALT: () => {
-          this.CONSUME(lexer.Not)
+          this.CONSUME(lexer.not)
           this.SUBRULE1(this.not_test_value)
         },
       },
@@ -442,8 +401,8 @@ class ScriptParser extends CstParser {
 
   arith_expr_item = this.RULED('arith_expr_item', () => {
     this.OR([
-      { ALT: () => this.CONSUME(lexer.Plus) },
-      { ALT: () => this.CONSUME(lexer.Minus) },
+      { ALT: () => this.CONSUME(lexer.plus) },
+      { ALT: () => this.CONSUME(lexer.minus) },
     ])
     this.SUBRULE(this.term)
   })
@@ -455,10 +414,10 @@ class ScriptParser extends CstParser {
 
   term_item = this.RULED('term_item', () => {
     this.OR([
-      { ALT: () => this.CONSUME(lexer.Multiply) },
-      { ALT: () => this.CONSUME(lexer.Divide) },
-      { ALT: () => this.CONSUME(lexer.ModDivide) },
-      { ALT: () => this.CONSUME(lexer.FloorDivide) },
+      { ALT: () => this.CONSUME(lexer.multiply) },
+      { ALT: () => this.CONSUME(lexer.divide) },
+      { ALT: () => this.CONSUME(lexer.moddivide) },
+      { ALT: () => this.CONSUME(lexer.floordivide) },
     ])
     this.SUBRULE(this.factor)
   })
@@ -468,8 +427,8 @@ class ScriptParser extends CstParser {
       {
         ALT: () => {
           this.OR2([
-            { ALT: () => this.CONSUME(lexer.Plus) },
-            { ALT: () => this.CONSUME(lexer.Minus) },
+            { ALT: () => this.CONSUME(lexer.plus) },
+            { ALT: () => this.CONSUME(lexer.minus) },
           ])
           this.SUBRULE(this.factor)
         },
@@ -481,7 +440,7 @@ class ScriptParser extends CstParser {
   power = this.RULED('power', () => {
     this.SUBRULE(this.token)
     this.OPTION(() => {
-      this.CONSUME(lexer.Power)
+      this.CONSUME(lexer.power)
       this.SUBRULE(this.factor)
     })
   })
@@ -494,15 +453,15 @@ class ScriptParser extends CstParser {
 
   token = this.RULED('token', () => {
     this.OR([
-      { ALT: () => this.CONSUME(lexer.StringLiteralDouble) },
-      { ALT: () => this.CONSUME(lexer.StringLiteral) },
-      { ALT: () => this.CONSUME(lexer.NumberLiteral) },
+      { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
+      { ALT: () => this.CONSUME(lexer.stringliteral) },
+      { ALT: () => this.CONSUME(lexer.numberliteral) },
       // { ALT: () => this.CONSUME(lexer.Command_read) },
       {
         ALT: () => {
-          this.CONSUME(lexer.LParen)
+          this.CONSUME(lexer.lparen)
           this.SUBRULE(this.expr)
-          this.CONSUME(lexer.RParen)
+          this.CONSUME(lexer.rparen)
         },
       },
     ])
@@ -510,3 +469,9 @@ class ScriptParser extends CstParser {
 }
 
 export const parser = new ScriptParser()
+
+if (LANG_TYPES) {
+  const productions: Record<string, Rule> = parser.getGAstProductions()
+  const dtsstring = generateCstDts(productions)
+  console.info(dtsstring)
+}

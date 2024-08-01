@@ -117,8 +117,8 @@ function writeApi(
 }
 
 function transformCompare(ast: CodeNode) {
-  if (ast.type === NODE.COMPARE) {
-    switch (ast.compare) {
+  if (ast.type === NODE.COMPARE && ast.compare.type === NODE.COMPARE_ITEM) {
+    switch (ast.compare.method) {
       case COMPARE.IS_EQ:
         return writeApi(ast, 'isEq', [
           transformNode(ast.lhs),
@@ -289,10 +289,6 @@ function transformNode(ast: CodeNode): SourceNode {
         ast.lines.forEach((item) => source.add([transformNode(item), `\n`]))
       }
 
-      if (ast.branches) {
-        ast.branches.forEach((item) => source.add(transformNode(item)))
-      }
-
       source.add('}')
       return source
     }
@@ -311,14 +307,6 @@ function transformNode(ast: CodeNode): SourceNode {
     }
     case NODE.ELSE: {
       const source = write(ast, `} else {\n`)
-
-      if (ast.words.length) {
-        source.add([
-          `while (`,
-          writeApi(ast, `command`, transformNodes(ast.words)),
-          `) { ${WAIT()} };`,
-        ])
-      }
 
       if (ast.lines) {
         ast.lines.forEach((item) => source.add([transformNode(item), `\n`]))
@@ -406,7 +394,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.EXPR:
       return writeApi(ast, 'expr', ast.words.map(transformNode))
     default:
-      console.error(`<unsupported node>`, ast)
+      console.error(`<unsupported node>`, ast.type, ast)
       return blank(ast)
   }
 }

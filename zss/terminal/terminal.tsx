@@ -9,7 +9,7 @@ import { BlendFunction } from 'postprocessing'
 import { Suspense, useEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { NearestFilter, Vector2 } from 'three'
-import { STATS_DEV } from 'zss/config'
+import { FORCE_CRT_OFF, STATS_DEV } from 'zss/config'
 import { createplatform } from 'zss/platform'
 
 import { CRTShape } from './crt'
@@ -50,6 +50,7 @@ export function Terminal() {
   }, [stats])
 
   const gputier = useDetectGPU()
+  const shouldcrt = !FORCE_CRT_OFF && gputier.tier > 2 && !gputier.isMobile
 
   return (
     <>
@@ -71,7 +72,7 @@ export function Terminal() {
           />
         )}
       </Framing>
-      {gputier.tier > 2 && !gputier.isMobile && (
+      {shouldcrt && (
         <Suspense fallback={null}>
           <EffectComposer multisampling={0}>
             <BrightnessContrast brightness={0.04} contrast={0.1} />

@@ -66,22 +66,32 @@ export function createos() {
         if (result.errors?.length) {
           const [primary] = result.errors
           const errorline = (primary?.line ?? 2) - 1
-          const codelines = code.replaceAll('\r\n', '').split('\n')
+          const codelines: [string, number][] = code
+            .replaceAll('\r\n', '')
+            .split('\n')
+            .map((line, index) => [line, index])
+
+          codelines.slice(errorline - 5, errorline).forEach(([line, index]) => {
+            api_error('os', 'build', `$grey${index + 1} $grey${line}`)
+          })
+
+          const [hline, hindex] = codelines[errorline]
+          const start = (primary.column ?? 1) - 1
+          const end = start + primary.length
+          const hlinepadded = start < hline.length ? hline : `${hline}*`
+          const a = hlinepadded.substring(0, start)
+          const b = hlinepadded.substring(start, end)
+          const c = hlinepadded.substring(end)
+          api_error(
+            'os',
+            'build',
+            `$red${hindex + 1} $grey${a}$red${b}$grey${c}`,
+          )
+
           primary.message.split('\n').forEach((message) => {
             api_error('os', 'build', message)
           })
-          codelines.forEach((message, index) => {
-            if (index === errorline) {
-              const start = (primary.column ?? 1) - 1
-              const end = start + primary.length
-              const a = message.substring(0, start)
-              const b = message.substring(start, end)
-              const c = message.substring(end)
-              api_error('os', 'build', `$grey${a}$red${b}$grey${c}`)
-            } else {
-              api_error('os', 'build', `$grey${message}`)
-            }
-          })
+
           return false
         }
         // load chip firmware

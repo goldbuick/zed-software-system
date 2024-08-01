@@ -8,18 +8,11 @@ import {
 } from 'zss/gadget/data/types'
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
+import { MAYBE_STRING, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
-  MAYBE,
-  MAYBE_STRING,
-  isarray,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
-import {
-  memoryreadbooksbytags,
+  memoryboardframeread,
   memoryreadchip,
   memoryreadcontext,
-  memoryreadframes,
 } from 'zss/memory'
 import {
   checkcollision,
@@ -53,9 +46,7 @@ import {
   bookboardsetlookup,
   bookboardobjectnamedlookupdelete,
   bookelementkindread,
-  bookreadboardsbytags,
 } from 'zss/memory/book'
-import { FRAME_STATE, FRAME_TYPE } from 'zss/memory/frame'
 
 import {
   readargs,
@@ -226,35 +217,6 @@ function valuepeekframename(
   return [undefined, index]
 }
 
-function bookboardframeread(
-  book: MAYBE_BOOK,
-  board: MAYBE_BOARD,
-  type: MAYBE_STRING,
-) {
-  // find target frame by type
-  let maybeframe: MAYBE<FRAME_STATE>
-  const frames = memoryreadframes(board?.id ?? '')
-  switch (type) {
-    // eventually need multiple frames of the same kinds
-    // name:edit ??
-    // so we'd have [name]:type, and name defaults to the value of
-    // type of [name] is omitted
-    case 'edit': {
-      maybeframe = frames.find((item) => item.type === FRAME_TYPE.EDIT)
-      break
-    }
-  }
-
-  const [maybebook] = maybeframe
-    ? memoryreadbooksbytags(maybeframe?.book ?? [])
-    : [book]
-  const [maybeboard] = maybeframe
-    ? bookreadboardsbytags(maybebook, maybeframe?.board ?? [])
-    : [board]
-
-  return { maybebook, maybeboard }
-}
-
 export const OBJECT_FIRMWARE = createfirmware({
   get(chip, name) {
     const memory = memoryreadchip(chip.id())
@@ -376,7 +338,7 @@ export const OBJECT_FIRMWARE = createfirmware({
       ARG_TYPE.KIND,
       ARG_TYPE.KIND,
     ])
-    const { maybebook, maybeboard } = bookboardframeread(
+    const { maybebook, maybeboard } = memoryboardframeread(
       memory.book,
       memory.board,
       maybeframe,
@@ -510,7 +472,7 @@ export const OBJECT_FIRMWARE = createfirmware({
       ARG_TYPE.DIR,
       ARG_TYPE.KIND,
     ])
-    const { maybebook, maybeboard } = bookboardframeread(
+    const { maybebook, maybeboard } = memoryboardframeread(
       memory.book,
       memory.board,
       maybeframe,
@@ -603,7 +565,7 @@ export const OBJECT_FIRMWARE = createfirmware({
     ])
 
     // __where__ are we shooting
-    const { maybebook, maybeboard } = bookboardframeread(
+    const { maybebook, maybeboard } = memoryboardframeread(
       memory.book,
       memory.board,
       maybeframe,

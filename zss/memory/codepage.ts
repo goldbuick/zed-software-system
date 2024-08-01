@@ -1,7 +1,7 @@
 import { IToken } from 'chevrotain'
 import { WORD } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
-import { Stat, tokenize } from 'zss/lang/lexer'
+import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
@@ -22,6 +22,7 @@ export enum CODE_PAGE_TYPE {
   TERRAIN,
   CHARSET,
   PALETTE,
+  SOUNDBLASTER,
 }
 
 export type CODE_PAGE_STATS = {
@@ -43,6 +44,7 @@ export type CODE_PAGE = {
   terrain?: BOARD_ELEMENT
   charset?: BITMAP
   palette?: BITMAP
+  soundblaster?: any
   // common parsed values
   stats?: CODE_PAGE_STATS
 }
@@ -58,9 +60,7 @@ export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
   [CODE_PAGE_TYPE.CHARSET]: BITMAP
   [CODE_PAGE_TYPE.PALETTE]: BITMAP
-  // future types
-  // SONG
-  // SFX
+  [CODE_PAGE_TYPE.SOUNDBLASTER]: any
 }
 
 export function createcodepage(
@@ -91,6 +91,7 @@ export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
     terrain: exportboardelement(codepage.terrain),
     // charset: exportcharsetelement(codepage.charset),
     // palette: exportpaletteelement(codepage.palette), TODO: scrub these values too
+    // soundblaster: ....
   }
 }
 
@@ -110,6 +111,7 @@ export function importcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
     terrain: importboardelement(codepage.terrain),
     // charset: codepage.charset,
     // palette: codepage.palette, TODO: scrub these values too
+    // soundblaster: ....
   }
 }
 
@@ -234,7 +236,7 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
   let first = true
   for (let i = 0; i < parse.tokens.length; ++i) {
     const token = parse.tokens[i]
-    if (token.tokenType === Stat) {
+    if (token.tokenType === stat) {
       const [maybetype, ...maybevalues] = token.image.slice(1).split(' ')
       const lmaybetype = maybetype.toLowerCase()
       const maybename = maybevalues.join(' ')
@@ -275,6 +277,11 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
           break
         case 'palette':
           codepage.stats.type = CODE_PAGE_TYPE.PALETTE
+          codepage.stats.name = lmaybename
+          break
+        case 'sb':
+        case 'soundblaster':
+          codepage.stats.type = CODE_PAGE_TYPE.SOUNDBLASTER
           codepage.stats.name = lmaybename
           break
         default:
@@ -323,6 +330,8 @@ export function codepagereadtypetostring(codepage: MAYBE_CODE_PAGE) {
       return 'charset'
     case CODE_PAGE_TYPE.PALETTE:
       return 'palette'
+    case CODE_PAGE_TYPE.SOUNDBLASTER:
+      return 'soundblaster'
   }
 }
 
@@ -384,6 +393,13 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         // codepage.palette = {}
       }
       return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+    }
+    case CODE_PAGE_TYPE.SOUNDBLASTER: {
+      // validate and shape soundblaster into usable state
+      if (!ispresent(codepage.soundblaster)) {
+        // codepage.soundblaster = {}
+      }
+      return codepage.soundblaster as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
   }
 }

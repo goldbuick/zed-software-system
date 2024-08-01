@@ -2,13 +2,18 @@ import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
+  memoryreadbooklist,
   memoryreadbooksbytags,
   memoryreadcontext,
   memoryreadmaintags,
 } from 'zss/memory'
 import { boardwritestat } from 'zss/memory/board'
 import { boardelementwritestat } from 'zss/memory/boardelement'
-import { bookreadcodepagebyaddress, MAYBE_BOOK } from 'zss/memory/book'
+import {
+  bookreadcodepagebyaddress,
+  bookreadcodepagedatabytype,
+  MAYBE_BOOK,
+} from 'zss/memory/book'
 import {
   CODE_PAGE_TYPE,
   codepagereaddata,
@@ -28,6 +33,8 @@ const MODS = {
   // display
   charset: '',
   palette: '',
+  // audio
+  soundblaster: '',
   // general cursor
   cursor: '',
 }
@@ -42,9 +49,13 @@ function strmodname(name: string): MODS_KEY | undefined {
     case 'modobject':
     case 'modterrain':
     case 'modcharset':
-    case 'modpalette': {
+    case 'modpalette':
+    case 'modsoundblaster': {
       return lname.replace('mod', '') as MODS_KEY
     }
+    // aliases
+    case 'modsb':
+      return 'soundblaster'
   }
   return undefined
 }
@@ -96,7 +107,11 @@ function modsoftware(name: MODS_KEY, key: string, value: any) {
     case CODE_PAGE_TYPE.BOARD: {
       const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
       if (ispresent(board)) {
-        boardwritestat(board, key, value)
+        switch (key) {
+          default:
+            boardwritestat(board, key, value)
+            break
+        }
       }
       break
     }
@@ -147,6 +162,14 @@ function modsoftware(name: MODS_KEY, key: string, value: any) {
       }
       break
     }
+    case CODE_PAGE_TYPE.SOUNDBLASTER: {
+      const soundblaster =
+        codepagereaddata<CODE_PAGE_TYPE.SOUNDBLASTER>(codepage)
+      if (ispresent(soundblaster)) {
+        //
+      }
+      break
+    }
     default:
       return false
   }
@@ -159,6 +182,30 @@ export const MODS_FIRMWARE = createfirmware({
     if (ispresent(mod)) {
       return [true, MODS[mod]]
     }
+
+    // list of items
+    const book = modbook()
+    switch (name) {
+      case 'booklist':
+        return [true, memoryreadbooklist()]
+      case 'boardlist':
+        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.BOARD)]
+      case 'objectlist':
+        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.OBJECT)]
+      case 'terrainlist':
+        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.TERRAIN)]
+      case 'charsetlist':
+        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.CHARSET)]
+      case 'palettelist':
+        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.PALETTE)]
+      case 'sblist':
+      case 'soundblasterlist':
+        return [
+          true,
+          bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.SOUNDBLASTER),
+        ]
+    }
+
     return [false, undefined]
   },
   set(_, name, value) {
@@ -216,6 +263,11 @@ export const MODS_FIRMWARE = createfirmware({
       break
     case 'palette':
       MODS.cursor = 'palette'
+      usekey = maybekey
+      usevalue = maybevalue
+      break
+    case 'soundblaster':
+      MODS.cursor = 'soundblaster'
       usekey = maybekey
       usevalue = maybevalue
       break

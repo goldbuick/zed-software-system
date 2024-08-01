@@ -1,15 +1,61 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import {
   CstChildrenDictionary,
-  CstElement,
   CstNode,
   CstNodeLocation,
   IToken,
 } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { parser } from './parser'
+import {
+  And_test_valueCstChildren,
+  And_testCstChildren,
+  Arith_expr_itemCstChildren,
+  Arith_exprCstChildren,
+  Command_block_ifCstChildren,
+  Command_blockCstChildren,
+  Command_breakCstChildren,
+  Command_continueCstChildren,
+  Command_else_ifCstChildren,
+  Command_elseCstChildren,
+  Command_ifCstChildren,
+  Command_playCstChildren,
+  Command_readCstChildren,
+  Command_repeatCstChildren,
+  Command_whileCstChildren,
+  CommandsCstChildren,
+  Comp_opCstChildren,
+  ComparisonCstChildren,
+  Do_blockCstChildren,
+  Do_inlineCstChildren,
+  Do_lineCstChildren,
+  Do_stmtCstChildren,
+  Expr_valueCstChildren,
+  ExprCstChildren,
+  FactorCstChildren,
+  ICstNodeVisitor,
+  LineCstChildren,
+  Not_test_valueCstChildren,
+  Not_testCstChildren,
+  PowerCstChildren,
+  ProgramCstChildren,
+  Short_commandsCstChildren,
+  Short_goCstChildren,
+  Short_tryCstChildren,
+  Stmt_commandCstChildren,
+  Stmt_commentCstChildren,
+  Stmt_hyperlinkCstChildren,
+  Stmt_labelCstChildren,
+  Stmt_statCstChildren,
+  Stmt_textCstChildren,
+  StmtCstChildren,
+  Structured_cmdCstChildren,
+  Term_itemCstChildren,
+  TermCstChildren,
+  TokenCstChildren,
+  WordsCstChildren,
+} from './visitortypes'
 
 const CstVisitor = parser.getBaseCstVisitorConstructor()
 
@@ -38,6 +84,7 @@ export enum NODE {
   AND,
   NOT,
   COMPARE,
+  COMPARE_ITEM,
   OPERATOR,
   OPERATOR_ITEM,
   EXPR,
@@ -69,28 +116,6 @@ export enum LITERAL {
   NUMBER,
   STRING,
   TEMPLATE,
-}
-
-function asIToken(thing: CstNode | CstElement): IToken {
-  return thing as unknown as IToken
-}
-
-function asList(thing: ScriptVisitor, node: CstNode[] | undefined): CodeNode[] {
-  return (
-    node?.map((item) => thing.visit(item)).filter((item) => item) ?? []
-  ).flat()
-}
-
-function strImage(thing: CstNode | CstElement): string {
-  return asIToken(thing).image
-}
-
-function makeString(ctx: CstChildrenDictionary, value: string) {
-  return makeNode(ctx, {
-    type: NODE.LITERAL,
-    literal: LITERAL.STRING,
-    value,
-  })
 }
 
 type CodeNodeData =
@@ -145,7 +170,6 @@ type CodeNodeData =
       method: string
       words: CodeNode[]
       lines: CodeNode[]
-      branches: CodeNode[]
     }
   | {
       type: NODE.ELSE_IF
@@ -156,11 +180,11 @@ type CodeNodeData =
   | {
       type: NODE.ELSE
       method: string
-      words: CodeNode[]
       lines: CodeNode[]
     }
   | {
       type: NODE.WHILE
+      method: string
       words: CodeNode[]
       lines: CodeNode[]
     }
@@ -174,7 +198,7 @@ type CodeNodeData =
   | {
       type: NODE.READ
       words: CodeNode[]
-      flags: CodeNode[]
+      flags: string[]
       lines: CodeNode[]
     }
   | {
@@ -192,8 +216,12 @@ type CodeNodeData =
   | {
       type: NODE.COMPARE
       lhs: CodeNode
-      compare: COMPARE
       rhs: CodeNode
+      compare: CodeNode
+    }
+  | {
+      type: NODE.COMPARE_ITEM
+      method: COMPARE
     }
   | {
       type: NODE.OPERATOR
@@ -202,8 +230,8 @@ type CodeNodeData =
     }
   | {
       type: NODE.OPERATOR_ITEM
-      operator: OPERATOR
       rhs: CodeNode
+      operator: OPERATOR
     }
   | {
       type: NODE.EXPR
@@ -223,7 +251,20 @@ function isToken(obj: CstNode | IToken): obj is IToken {
   return (obj as IToken)?.tokenType ? true : false
 }
 
-function getLocation(obj: CstChildrenDictionary): CstNodeLocation {
+function tokenstring(token: IToken[] | undefined, defaultstr: string) {
+  const [first] = token ?? []
+  return first?.image ?? defaultstr
+}
+
+function createstringnode(ctx: CstChildrenDictionary, value: string) {
+  return createcodenode(ctx, {
+    type: NODE.LITERAL,
+    literal: LITERAL.STRING,
+    value,
+  })
+}
+
+function getnodelocation(obj: CstChildrenDictionary): CstNodeLocation {
   const locations = Object.values(obj)
     .flat()
     .filter((item) => !!item)
@@ -267,15 +308,23 @@ function getLocation(obj: CstChildrenDictionary): CstNodeLocation {
   }
 }
 
-function makeNode(ctx: CstChildrenDictionary, node: CodeNodeData): CodeNode {
-  return {
-    // parent: undefined,
-    ...node,
-    ...getLocation(ctx),
-  }
+function createcodenode(
+  ctx: CstChildrenDictionary,
+  node: CodeNodeData,
+): CodeNode[] {
+  return [
+    {
+      // parent: undefined,
+      ...node,
+      ...getnodelocation(ctx),
+    },
+  ]
 }
 
-class ScriptVisitor extends CstVisitor {
+class ScriptVisitor
+  extends CstVisitor
+  implements ICstNodeVisitor<any, CodeNode[]>
+{
   constructor() {
     super()
     if (LANG_DEV) {
@@ -283,660 +332,568 @@ class ScriptVisitor extends CstVisitor {
     }
   }
 
-  program(ctx: CstChildrenDictionary) {
-    return makeNode(ctx, {
+  go(node: any): CodeNode[] {
+    if (Array.isArray(node)) {
+      return node.map((item) => this.visit(item)).flat()
+    }
+    if (ispresent(node)) {
+      return [this.visit(node)].flat()
+    }
+    return []
+  }
+
+  program(ctx: ProgramCstChildren) {
+    return createcodenode(ctx, {
       type: NODE.PROGRAM,
-      // @ts-expect-error
-      lines: asList(this, ctx.line),
+      lines: this.go(ctx.line),
     })
   }
 
-  line(ctx: CstChildrenDictionary) {
-    if (ctx.stmt) {
-      // @ts-expect-error
-      return this.visit(ctx.stmt)
-    }
+  line(ctx: LineCstChildren) {
+    return this.go(ctx.stmt)
   }
 
-  stmt(ctx: CstChildrenDictionary) {
-    if (ctx.label) {
-      // @ts-expect-error
-      return this.visit(ctx.label)
+  stmt(ctx: StmtCstChildren) {
+    if (ctx.stmt_label) {
+      return this.go(ctx.stmt_label)
     }
-    if (ctx.stat) {
-      // @ts-expect-error
-      return this.visit(ctx.stat)
+    if (ctx.stmt_stat) {
+      return this.go(ctx.stmt_stat)
     }
-    if (ctx.text) {
-      // @ts-expect-error
-      return this.visit(ctx.text)
+    if (ctx.stmt_text) {
+      return this.go(ctx.stmt_text)
     }
-    if (ctx.comment) {
-      // @ts-expect-error
-      return this.visit(ctx.comment)
+    if (ctx.stmt_comment) {
+      return this.go(ctx.stmt_comment)
     }
-    if (ctx.command) {
-      // @ts-expect-error
-      return this.visit(ctx.command)
+    if (ctx.stmt_command) {
+      return this.go(ctx.stmt_command)
     }
-    if (ctx.hyperlink) {
-      // @ts-expect-error
-      return this.visit(ctx.hyperlink)
+    if (ctx.stmt_hyperlink) {
+      return this.go(ctx.stmt_hyperlink)
     }
-    if (ctx.Short_go) {
-      // @ts-expect-error
-      return this.visit(ctx.Short_go)
+    if (ctx.short_commands) {
+      return [this.go(ctx.short_commands), this.go(ctx.commands)].flat()
     }
-    if (ctx.Short_try) {
-      // @ts-expect-error
-      return this.visit(ctx.Short_try)
-    }
+    return []
   }
 
-  do_stmt(ctx: CstChildrenDictionary) {
-    if (ctx.stat) {
-      // @ts-expect-error
-      return this.visit(ctx.stat)
-    }
-    if (ctx.text) {
-      // @ts-expect-error
-      return this.visit(ctx.text)
-    }
-    if (ctx.comment) {
-      // @ts-expect-error
-      return this.visit(ctx.comment)
-    }
-    if (ctx.command) {
-      // @ts-expect-error
-      return this.visit(ctx.command)
-    }
-    if (ctx.hyperlink) {
-      // @ts-expect-error
-      return this.visit(ctx.hyperlink)
-    }
-    if (ctx.Short_go) {
-      // @ts-expect-error
-      return this.visit(ctx.Short_go)
-    }
-    if (ctx.Short_try) {
-      // @ts-expect-error
-      return this.visit(ctx.Short_try)
-    }
+  do_block(ctx: Do_blockCstChildren) {
+    return this.go(ctx.do_line)
   }
 
-  label(ctx: CstChildrenDictionary) {
-    return makeNode(ctx, {
+  do_line(ctx: Do_lineCstChildren) {
+    return this.go(ctx.do_stmt)
+  }
+
+  do_stmt(ctx: Do_stmtCstChildren) {
+    if (ctx.stmt_stat) {
+      return this.go(ctx.stmt_stat)
+    }
+    if (ctx.stmt_text) {
+      return this.go(ctx.stmt_text)
+    }
+    if (ctx.stmt_comment) {
+      return this.go(ctx.stmt_comment)
+    }
+    if (ctx.stmt_command) {
+      return this.go(ctx.stmt_command)
+    }
+    if (ctx.stmt_hyperlink) {
+      return this.go(ctx.stmt_hyperlink)
+    }
+    if (ctx.short_commands) {
+      return [this.go(ctx.short_commands), this.go(ctx.commands)].flat()
+    }
+    return []
+  }
+
+  do_inline(ctx: Do_inlineCstChildren) {
+    if (ctx.stmt_stat) {
+      return this.go(ctx.stmt_stat)
+    }
+    if (ctx.stmt_text) {
+      return this.go(ctx.stmt_text)
+    }
+    if (ctx.stmt_comment) {
+      return this.go(ctx.stmt_comment)
+    }
+    if (ctx.stmt_command) {
+      return this.go(ctx.stmt_command)
+    }
+    if (ctx.stmt_hyperlink) {
+      return this.go(ctx.stmt_hyperlink)
+    }
+    if (ctx.commands) {
+      return this.go(ctx.commands)
+    }
+    return []
+  }
+
+  stmt_label(ctx: Stmt_labelCstChildren) {
+    return createcodenode(ctx, {
       type: NODE.LABEL,
       active: true,
-      name: strImage(ctx.Label?.[0] ?? ':')
-        .slice(1)
-        .trim(),
+      name: tokenstring(ctx.token_label, ':').slice(1).trim(),
     })
   }
 
-  stat(ctx: CstChildrenDictionary) {
-    return makeNode(ctx, {
+  stmt_stat(ctx: Stmt_statCstChildren) {
+    return createcodenode(ctx, {
       type: NODE.STAT,
-      // @ts-expect-error
-      value: ctx.Stat?.[0].image.slice(1),
+      value: tokenstring(ctx.token_stat, '@').slice(1),
     })
   }
 
-  text(ctx: CstChildrenDictionary) {
-    if (ctx.Text) {
-      return makeNode(ctx, {
-        type: NODE.TEXT,
-        value: strImage(ctx.Text[0]),
-      })
-    }
+  stmt_text(ctx: Stmt_textCstChildren) {
+    return createcodenode(ctx, {
+      type: NODE.TEXT,
+      value: tokenstring(ctx.token_text, ''),
+    })
   }
 
-  comment(ctx: CstChildrenDictionary) {
-    return makeNode(ctx, {
+  stmt_comment(ctx: Stmt_commentCstChildren) {
+    return createcodenode(ctx, {
       type: NODE.LABEL,
       active: false,
-      name: strImage(ctx.Comment[0]).slice(1).trim(),
+      name: tokenstring(ctx.token_comment, `'`).slice(1).trim(),
     })
   }
 
-  hyperlink(ctx: CstChildrenDictionary) {
-    return makeNode(ctx, {
+  stmt_hyperlink(ctx: Stmt_hyperlinkCstChildren) {
+    return createcodenode(ctx, {
       type: NODE.HYPERLINK,
-      // @ts-expect-error
-      link: asList(this, ctx.words).flat(),
-      text: strImage(ctx.HyperLinkText?.[0] ?? ';').slice(1),
+      link: this.go(ctx.words),
+      text: tokenstring(ctx.token_hyperlinktext, ';').slice(1),
     })
   }
 
-  command(ctx: CstChildrenDictionary) {
+  stmt_command(ctx: Stmt_commandCstChildren) {
+    if (ctx.commands) {
+      return this.go(ctx.commands)
+    }
+    return []
+  }
+
+  short_commands(ctx: Short_commandsCstChildren) {
+    if (ctx.short_go) {
+      return this.go(ctx.short_go)
+    }
+    if (ctx.short_try) {
+      return this.go(ctx.short_try)
+    }
+    return []
+  }
+
+  commands(ctx: CommandsCstChildren) {
     if (ctx.words) {
-      return makeNode(ctx, {
+      return createcodenode(ctx, {
         type: NODE.COMMAND,
-        // @ts-expect-error
-        words: asList(this, ctx.words).flat(),
+        words: this.go(ctx.words),
       })
     }
-    if (ctx.Command_play) {
-      // @ts-expect-error
-      return this.visit(ctx.Command_play)
+    if (ctx.short_go) {
+      return this.go(ctx.short_go)
+    }
+    if (ctx.short_try) {
+      return this.go(ctx.short_try)
+    }
+    if (ctx.command_play) {
+      return this.go(ctx.command_play)
     }
     if (ctx.structured_cmd) {
-      // @ts-expect-error
-      return this.visit(ctx.structured_cmd)
+      return this.go(ctx.structured_cmd)
     }
+    return []
   }
 
-  flat_cmd(ctx: CstChildrenDictionary) {
-    if (ctx.words) {
-      return makeNode(ctx, {
-        type: NODE.COMMAND,
-        // @ts-expect-error
-        words: asList(this, ctx.words).flat(),
-      })
+  structured_cmd(ctx: Structured_cmdCstChildren) {
+    if (ctx.command_if) {
+      return this.go(ctx.command_if)
     }
-    if (ctx.Command_play) {
-      // @ts-expect-error
-      return this.visit(ctx.Command_play)
+    if (ctx.command_read) {
+      return this.go(ctx.command_read)
     }
-    if (ctx.Short_go) {
-      // @ts-expect-error
-      return this.visit(ctx.Short_go)
+    if (ctx.command_while) {
+      return this.go(ctx.command_while)
     }
-    if (ctx.Short_try) {
-      // @ts-expect-error
-      return this.visit(ctx.Short_try)
+    if (ctx.command_repeat) {
+      return this.go(ctx.command_repeat)
     }
+    if (ctx.command_break) {
+      return this.go(ctx.command_break)
+    }
+    if (ctx.command_continue) {
+      return this.go(ctx.command_continue)
+    }
+    return []
   }
 
-  structured_cmd(ctx: CstChildrenDictionary) {
-    if (ctx.Command_if) {
-      // @ts-expect-error
-      return this.visit(ctx.Command_if)
-    }
-    if (ctx.Command_read) {
-      // @ts-expect-error
-      return this.visit(ctx.Command_read)
-    }
-    if (ctx.Command_while) {
-      // @ts-expect-error
-      return this.visit(ctx.Command_while)
-    }
-    if (ctx.Command_repeat) {
-      // @ts-expect-error
-      return this.visit(ctx.Command_repeat)
-    }
-    if (ctx.Command_break) {
-      // @ts-expect-error
-      return this.visit(ctx.Command_break)
-    }
-    if (ctx.Command_continue) {
-      // @ts-expect-error
-      return this.visit(ctx.Command_continue)
-    }
-  }
-
-  Short_go(ctx: CstChildrenDictionary) {
-    if (ctx.Divide) {
-      return makeNode(ctx, {
+  short_go(ctx: Short_goCstChildren) {
+    if (ctx.token_divide) {
+      return createcodenode(ctx, {
         type: NODE.MOVE,
         wait: true,
-        // @ts-expect-error
-        words: asList(this, ctx.words).flat(),
+        words: this.go(ctx.words),
       })
     }
+    return []
   }
 
-  Short_try(ctx: CstChildrenDictionary) {
-    if (ctx.Query) {
-      return makeNode(ctx, {
+  short_try(ctx: Short_tryCstChildren) {
+    if (ctx.token_query) {
+      return createcodenode(ctx, {
         type: NODE.MOVE,
         wait: false,
-        // @ts-expect-error
-        words: asList(this, ctx.words).flat(),
+        words: this.go(ctx.words),
       })
     }
+    return []
   }
 
-  Command_play(ctx: CstChildrenDictionary) {
-    if (ctx.play) {
-      return makeNode(ctx, {
-        type: NODE.COMMAND,
-        words: [
-          makeString(ctx, 'play'),
-          makeString(ctx, strImage(ctx.play[0]).replace('play', '').trim()),
-        ],
-      })
-    }
-  }
-
-  do_line(ctx: CstChildrenDictionary) {
-    // @ts-expect-error
-    return this.visit(ctx.do_stmt)
-  }
-
-  Command_if(ctx: CstChildrenDictionary) {
-    // @ts-expect-error
-    const words = asList(this, ctx.words).flat()
-
-    const lines = [
-      // @ts-expect-error
-      this.visit(ctx.flat_cmd),
-      // @ts-expect-error
-      ...asList(this, ctx.do_line),
-    ].flat()
-
-    const branches = [
-      // @ts-expect-error
-      this.visit(ctx.Command_else_if),
-      // @ts-expect-error
-      this.visit(ctx.Command_else),
-    ].flat()
-
-    return makeNode(ctx, {
+  command_if(ctx: Command_ifCstChildren) {
+    return createcodenode(ctx, {
       type: NODE.IF,
       method: 'if',
-      words: words.filter(ispresent),
-      lines: lines.filter(ispresent),
-      branches: branches.filter(ispresent),
+      words: this.go(ctx.words),
+      lines: this.go(ctx.command_if_block),
     })
   }
 
-  Command_else_if(ctx: CstChildrenDictionary) {
-    // @ts-expect-error
-    const words = asList(this, ctx.words).flat()
-
-    const lines = [
-      // @ts-expect-error
-      this.visit(ctx.flat_cmd),
-      // @ts-expect-error
-      ...asList(this, ctx.do_line),
-    ].flat()
-
-    // @ts-expect-error
-    const branches = asList(this, ctx.Command_else_if).flat()
-
+  command_if_block(ctx: Command_block_ifCstChildren) {
     return [
-      makeNode(ctx, {
-        type: NODE.ELSE_IF,
-        method: 'if',
-        words: words.filter(ispresent),
-        lines: lines.filter(ispresent),
-      }),
-      // un-nest else_if & else
-      ...branches.filter(ispresent),
-      // @ts-expect-error
-      this.visit(ctx.Command_else),
-    ]
+      this.go(ctx.do_inline),
+      this.go(ctx.do_block),
+      this.go(ctx.command_else_if),
+      this.go(ctx.command_else),
+    ].flat()
   }
 
-  Command_else(ctx: CstChildrenDictionary) {
-    // @ts-expect-error
-    const words = asList(this, ctx.words).flat()
+  command_block(ctx: Command_blockCstChildren) {
+    return [this.go(ctx.do_inline), this.go(ctx.do_block)].flat()
+  }
 
-    const lines = [
-      // @ts-expect-error
-      this.visit(ctx.flat_cmd),
-      // @ts-expect-error
-      ...asList(this, ctx.do_line),
-    ].flat()
+  command_else_if(ctx: Command_else_ifCstChildren) {
+    return createcodenode(ctx, {
+      type: NODE.ELSE_IF,
+      method: 'if',
+      words: this.go(ctx.words),
+      lines: this.go(ctx.command_block),
+    })
+  }
 
-    return makeNode(ctx, {
+  command_else(ctx: Command_elseCstChildren) {
+    return createcodenode(ctx, {
       type: NODE.ELSE,
       method: 'if',
-      words: words.filter(ispresent),
-      lines: lines.filter(ispresent),
+      lines: this.go(ctx.command_block),
     })
   }
 
-  Command_endif() {
-    // no-op
-  }
-
-  Command_while(ctx: CstChildrenDictionary) {
-    // @ts-expect-error
-    const words = asList(this, ctx.words).flat()
-
-    const lines = [
-      // @ts-expect-error
-      this.visit(ctx.flat_cmd),
-      // @ts-expect-error
-      ...asList(this, ctx.do_line),
-    ].flat()
-
-    return makeNode(ctx, {
+  command_while(ctx: Command_whileCstChildren) {
+    return createcodenode(ctx, {
       type: NODE.WHILE,
-      words: words.filter(ispresent),
-      lines: lines.filter(ispresent),
+      method: 'while', // future variants of while ( move, take ? )
+      words: this.go(ctx.words),
+      lines: this.go(ctx.command_block),
     })
   }
 
-  Command_repeat(ctx: CstChildrenDictionary) {
-    // @ts-expect-error
-    const words = asList(this, ctx.words).flat()
-
-    const lines = [
-      // @ts-expect-error
-      this.visit(ctx.flat_cmd),
-      // @ts-expect-error
-      ...asList(this, ctx.do_line),
-    ].flat()
-
-    return makeNode(ctx, {
+  command_repeat(ctx: Command_repeatCstChildren) {
+    return createcodenode(ctx, {
       type: NODE.REPEAT,
-      words: words.filter(ispresent),
-      lines: lines.filter(ispresent),
+      words: this.go(ctx.words),
+      lines: this.go(ctx.command_block),
     })
   }
 
-  Command_read_flags(ctx: CstChildrenDictionary) {
-    // @ts-expect-error
-    return asList(this, ctx.StringLiteral).flat()
-  }
-
-  Command_read(ctx: CstChildrenDictionary) {
-    // @ts-expect-error
-    const words = asList(this, ctx.words).flat()
-
-    // @ts-expect-error
-    const flags = this.visit(ctx.Command_read_flags).flat()
-
-    const lines = [
-      // @ts-expect-error
-      this.visit(ctx.flat_cmd),
-      // @ts-expect-error
-      ...asList(this, ctx.do_line),
-    ].flat()
-
-    return makeNode(ctx, {
+  command_read(ctx: Command_readCstChildren) {
+    return createcodenode(ctx, {
       type: NODE.READ,
-      words: words.filter(ispresent),
-      flags: flags.filter(ispresent),
-      lines: lines.filter(ispresent),
+      flags: ctx.token_stringliteral.map((token) => tokenstring([token], '')),
+      words: this.go(ctx.words),
+      lines: this.go(ctx.command_block),
     })
   }
 
-  Command_break(ctx: CstChildrenDictionary) {
-    return makeNode(ctx, {
+  command_break(ctx: Command_breakCstChildren) {
+    return createcodenode(ctx, {
       type: NODE.BREAK,
     })
   }
 
-  Command_continue(ctx: CstChildrenDictionary) {
-    return makeNode(ctx, {
+  command_continue(ctx: Command_continueCstChildren) {
+    return createcodenode(ctx, {
       type: NODE.CONTINUE,
     })
   }
 
-  expr(ctx: CstChildrenDictionary) {
+  command_play(ctx: Command_playCstChildren) {
+    const playstr = tokenstring(ctx.token_command_play, '')
+      .replace('play', '')
+      .trim()
+    return createcodenode(ctx, {
+      type: NODE.COMMAND,
+      words: [
+        createstringnode(ctx, 'play'),
+        createstringnode(ctx, playstr),
+      ].flat(),
+    })
+  }
+
+  expr(ctx: ExprCstChildren) {
     if (ctx.and_test.length === 1) {
-      // @ts-expect-error
-      return this.visit(ctx.and_test)
+      return this.go(ctx.and_test)
     }
-    return makeNode(ctx, {
+    return createcodenode(ctx, {
       type: NODE.OR,
-      // @ts-expect-error
-      items: asList(this, ctx.and_test),
+      items: this.go(ctx.and_test),
     })
   }
 
-  and_test(ctx: CstChildrenDictionary) {
+  and_test(ctx: And_testCstChildren) {
     if (ctx.not_test.length === 1) {
-      // @ts-expect-error
-      return this.visit(ctx.not_test)
+      return this.go(ctx.not_test)
     }
-    return makeNode(ctx, {
+    return createcodenode(ctx, {
       type: NODE.AND,
-      // @ts-expect-error
-      items: asList(this, ctx.not_test),
+      items: this.go(ctx.not_test),
     })
   }
 
-  not_test(ctx: CstChildrenDictionary) {
+  not_test(ctx: Not_testCstChildren) {
     if (ctx.comparison) {
-      // @ts-expect-error
-      return this.visit(ctx.comparison)
+      return this.go(ctx.comparison)
     }
     if (ctx.not_test) {
-      return makeNode(ctx, {
+      return createcodenode(ctx, {
         type: NODE.NOT,
-        // @ts-expect-error
-        items: asList(this, ctx.not_test),
+        items: this.go(ctx.not_test),
       })
     }
+    return []
   }
 
-  comparison(ctx: CstChildrenDictionary) {
+  comparison(ctx: ComparisonCstChildren) {
     if (ctx.arith_expr.length === 1) {
-      // @ts-expect-error
-      return this.visit(ctx.arith_expr)
+      return this.go(ctx.arith_expr)
     }
-
-    return makeNode(ctx, {
+    const [lhs, rhs] = this.go(ctx.arith_expr)
+    const [compare] = this.go(ctx.comp_op)
+    return createcodenode(ctx, {
       type: NODE.COMPARE,
-      // @ts-expect-error
-      lhs: this.visit(ctx.arith_expr[0]),
-      // @ts-expect-error
-      compare: this.visit(ctx.comp_op),
-      // @ts-expect-error
-      rhs: this.visit(ctx.arith_expr[1]),
+      lhs,
+      compare,
+      rhs,
     })
   }
 
-  comp_op(ctx: CstChildrenDictionary) {
-    if (ctx.is || ctx.IsEq) {
-      return COMPARE.IS_EQ
-    }
-    if (ctx.IsNotEq) {
-      return COMPARE.IS_NOT_EQ
-    }
-    if (ctx.IsLessThan) {
-      return COMPARE.IS_LESS_THAN
-    }
-    if (ctx.IsGreaterThan) {
-      return COMPARE.IS_GREATER_THAN
-    }
-    if (ctx.IsLessThanOrEqual) {
-      return COMPARE.IS_LESS_THAN_OR_EQ
-    }
-    if (ctx.IsGreaterThanOrEqual) {
-      return COMPARE.IS_GREATER_THAN_OR_EQ
-    }
-  }
-
-  expr_value(ctx: CstChildrenDictionary) {
-    if (ctx.and_test_value.length === 1) {
-      // @ts-expect-error
-      return this.visit(ctx.and_test_value)
-    }
-    return makeNode(ctx, {
-      type: NODE.OR,
-      // @ts-expect-error
-      items: this.visit(ctx.and_test_value),
-    })
-  }
-
-  and_test_value(ctx: CstChildrenDictionary) {
-    if (ctx.not_test_value.length === 1) {
-      // @ts-expect-error
-      return this.visit(ctx.not_test_value)
-    }
-    return makeNode(ctx, {
-      type: NODE.AND,
-      // @ts-expect-error
-      items: this.visit(ctx.not_test_value),
-    })
-  }
-
-  not_test_value(ctx: CstChildrenDictionary) {
-    if (ctx.arith_expr) {
-      // @ts-expect-error
-      return this.visit(ctx.arith_expr)
-    }
-    if (ctx.not_test) {
-      return makeNode(ctx, {
-        type: NODE.NOT,
-        // @ts-expect-error
-        items: this.visit(ctx.not_test),
+  comp_op(ctx: Comp_opCstChildren) {
+    if (ctx.token_iseq) {
+      return createcodenode(ctx, {
+        type: NODE.COMPARE_ITEM,
+        method: COMPARE.IS_EQ,
       })
     }
+    if (ctx.token_isnoteq) {
+      return createcodenode(ctx, {
+        type: NODE.COMPARE_ITEM,
+        method: COMPARE.IS_NOT_EQ,
+      })
+    }
+    if (ctx.token_islessthan) {
+      return createcodenode(ctx, {
+        type: NODE.COMPARE_ITEM,
+        method: COMPARE.IS_LESS_THAN,
+      })
+    }
+    if (ctx.token_isgreaterthan) {
+      return createcodenode(ctx, {
+        type: NODE.COMPARE_ITEM,
+        method: COMPARE.IS_GREATER_THAN,
+      })
+    }
+    if (ctx.token_isgreaterthanorequal) {
+      return createcodenode(ctx, {
+        type: NODE.COMPARE_ITEM,
+        method: COMPARE.IS_LESS_THAN_OR_EQ,
+      })
+    }
+    if (ctx.token_isgreaterthanorequal) {
+      return createcodenode(ctx, {
+        type: NODE.COMPARE_ITEM,
+        method: COMPARE.IS_GREATER_THAN_OR_EQ,
+      })
+    }
+    return []
   }
 
-  arith_expr(ctx: CstChildrenDictionary) {
-    // @ts-expect-error
-    const term = this.visit(ctx.term)
+  expr_value(ctx: Expr_valueCstChildren) {
+    if (ctx.and_test_value.length === 1) {
+      return this.go(ctx.and_test_value)
+    }
+    return createcodenode(ctx, {
+      type: NODE.OR,
+      items: this.go(ctx.and_test_value),
+    })
+  }
+
+  and_test_value(ctx: And_test_valueCstChildren) {
+    if (ctx.not_test_value.length === 1) {
+      return this.go(ctx.not_test_value)
+    }
+    return createcodenode(ctx, {
+      type: NODE.AND,
+      items: this.go(ctx.not_test_value),
+    })
+  }
+
+  not_test_value(ctx: Not_test_valueCstChildren) {
+    if (ctx.arith_expr) {
+      return this.go(ctx.arith_expr)
+    }
+    if (ctx.not_test_value) {
+      return createcodenode(ctx, {
+        type: NODE.NOT,
+        items: this.go(ctx.not_test_value),
+      })
+    }
+    return []
+  }
+
+  arith_expr(ctx: Arith_exprCstChildren) {
+    const term = this.go(ctx.term)
     if (!ctx.arith_expr_item) {
       return term
     }
-    return makeNode(ctx, {
+    return createcodenode(ctx, {
       type: NODE.OPERATOR,
-      lhs: term,
-      // @ts-expect-error
-      items: asList(this, ctx.arith_expr_item),
+      lhs: term[0],
+      items: this.go(ctx.arith_expr_item),
     })
   }
 
-  arith_expr_item(ctx: CstChildrenDictionary) {
-    return makeNode(ctx, {
+  arith_expr_item(ctx: Arith_expr_itemCstChildren) {
+    return createcodenode(ctx, {
       type: NODE.OPERATOR_ITEM,
-      operator: ctx.Plus ? OPERATOR.PLUS : OPERATOR.MINUS,
-      // @ts-expect-error
-      rhs: this.visit(ctx.term),
+      operator: ctx.token_plus ? OPERATOR.PLUS : OPERATOR.MINUS,
+      rhs: this.go(ctx.term)[0],
     })
   }
 
-  term(ctx: CstChildrenDictionary) {
+  term(ctx: TermCstChildren) {
     if (!ctx.term_item) {
-      // @ts-expect-error
-      return this.visit(ctx.factor)
+      return this.go(ctx.factor)
     }
-    return makeNode(ctx, {
+    return createcodenode(ctx, {
       type: NODE.OPERATOR,
-      // @ts-expect-error
-      lhs: this.visit(ctx.factor),
-      // @ts-expect-error
-      items: asList(this, ctx.term_item),
+      lhs: this.go(ctx.factor)[0],
+      items: this.go(ctx.term_item),
     })
   }
 
-  term_item(ctx: CstChildrenDictionary) {
+  term_item(ctx: Term_itemCstChildren) {
     let operator = OPERATOR.EMPTY
 
-    if (ctx.Multiply) {
+    if (ctx.token_multiply) {
       operator = OPERATOR.MULTIPLY
     }
-    if (ctx.Divide) {
+    if (ctx.token_divide) {
       operator = OPERATOR.DIVIDE
     }
-    if (ctx.ModDivide) {
+    if (ctx.token_moddivide) {
       operator = OPERATOR.MOD_DIVIDE
     }
-    if (ctx.FloorDivide) {
+    if (ctx.token_floordivide) {
       operator = OPERATOR.FLOOR_DIVIDE
     }
 
-    return makeNode(ctx, {
+    return createcodenode(ctx, {
       type: NODE.OPERATOR_ITEM,
       operator,
-      // @ts-expect-error
-      rhs: this.visit(ctx.factor),
+      rhs: this.go(ctx.factor)[0],
     })
   }
 
-  factor(ctx: CstChildrenDictionary) {
+  factor(ctx: FactorCstChildren) {
     if (ctx.power) {
-      // @ts-expect-error
-      return this.visit(ctx.power)
+      return this.go(ctx.power)
     }
 
     let operator = OPERATOR.EMPTY
-    if (ctx.Plus) {
+    if (ctx.token_plus) {
       operator = OPERATOR.UNI_PLUS
     }
-    if (ctx.Minus) {
+    if (ctx.token_minus) {
       operator = OPERATOR.UNI_MINUS
     }
 
-    return makeNode(ctx, {
+    return createcodenode(ctx, {
       type: NODE.OPERATOR,
       lhs: undefined,
-      items: [
-        makeNode(ctx, {
-          type: NODE.OPERATOR_ITEM,
-          operator,
-          // @ts-expect-error
-          rhs: this.visit(ctx.factor),
-        }),
-      ],
+      items: createcodenode(ctx, {
+        type: NODE.OPERATOR_ITEM,
+        operator,
+        rhs: this.go(ctx.factor)[0],
+      }),
     })
   }
 
-  power(ctx: CstChildrenDictionary) {
-    // @ts-expect-error
-    const token = this.visit(ctx.token)
+  power(ctx: PowerCstChildren) {
+    const token = this.go(ctx.token)
+
     if (ctx.factor) {
-      return makeNode(ctx, {
+      return createcodenode(ctx, {
         type: NODE.OPERATOR,
-        lhs: token,
-        items: [
-          makeNode(ctx, {
-            type: NODE.OPERATOR_ITEM,
-            operator: OPERATOR.POWER,
-            // @ts-expect-error
-            rhs: this.visit(ctx.factor),
-          }),
-        ],
+        lhs: token[0],
+        items: createcodenode(ctx, {
+          type: NODE.OPERATOR_ITEM,
+          operator: OPERATOR.POWER,
+          rhs: this.go(ctx.factor)[0],
+        }),
       })
     }
 
     return token
   }
 
-  words(ctx: CstChildrenDictionary) {
-    // @ts-expect-error
-    return asList(this, ctx.expr)
+  words(ctx: WordsCstChildren) {
+    return this.go(ctx.expr)
   }
 
-  token(ctx: CstChildrenDictionary) {
-    if (ctx.StringLiteralDouble) {
-      const str = strImage(ctx.StringLiteralDouble[0])
-      return makeNode(ctx, {
+  token(ctx: TokenCstChildren) {
+    if (ctx.token_stringliteraldouble) {
+      const str = tokenstring(ctx.token_stringliteraldouble, '""')
+      return createcodenode(ctx, {
         type: NODE.LITERAL,
         literal: LITERAL.TEMPLATE,
         value: str.substring(1, str.length - 1),
       })
     }
 
-    if (ctx.StringLiteral) {
-      return makeNode(ctx, {
+    if (ctx.token_stringliteral) {
+      return createcodenode(ctx, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value: strImage(ctx.StringLiteral[0]),
+        value: tokenstring(ctx.token_stringliteral, ''),
       })
     }
 
-    if (ctx.NumberLiteral) {
-      return makeNode(ctx, {
+    if (ctx.token_numberliteral) {
+      return createcodenode(ctx, {
         type: NODE.LITERAL,
         literal: LITERAL.NUMBER,
-        value: parseFloat(strImage(ctx.NumberLiteral[0])),
+        value: parseFloat(tokenstring(ctx.token_numberliteral, '0')),
       })
     }
 
-    if (ctx.read) {
-      return makeNode(ctx, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value: strImage(ctx.read[0]),
-      })
-    }
-
-    if (ctx.LParen) {
-      return makeNode(ctx, {
+    if (ctx.token_lparen) {
+      return createcodenode(ctx, {
         type: NODE.EXPR,
-        // @ts-expect-error
-        words: asList(this, ctx.expr).flat(),
+        words: this.go(ctx.expr),
       })
     }
+    return []
   }
 }
 

@@ -10,11 +10,8 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import {
-  MAYBE_BOARD,
-  MAYBE_BOARD_ELEMENT,
-  boardevaldir,
-} from 'zss/memory/board'
+import { MAYBE_BOARD, boardevaldir } from 'zss/memory/board'
+import { MAYBE_BOARD_ELEMENT } from 'zss/memory/boardelement'
 import { MAYBE_BOOK } from 'zss/memory/book'
 
 type READ_CONTEXT_GET = (name: string) => any
@@ -533,6 +530,7 @@ export const dirconsts = {
   opp: 'OPP',
   rndp: 'RNDP',
   // aliases
+  i: 'IDLE',
   u: 'NORTH',
   north: 'NORTH',
   n: 'NORTH',

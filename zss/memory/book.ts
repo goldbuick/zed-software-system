@@ -15,7 +15,6 @@ import {
   boardterrainsetfromkind,
 } from './board'
 import { BOARD_ELEMENT, MAYBE_BOARD_ELEMENT } from './boardelement'
-import { MAYBE_BOOK } from './book'
 import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
@@ -163,6 +162,29 @@ export function bookreadcodepagewithtype(
   )
 
   return codepage
+}
+
+export function bookreadcodepagesbytype(
+  book: MAYBE_BOOK,
+  type: CODE_PAGE_TYPE,
+): CODE_PAGE[] {
+  if (!ispresent(book)) {
+    return []
+  }
+  return book.pages.filter((item) => codepagereadtype(item) === type)
+}
+
+export function bookreadcodepagedatabytype(
+  book: MAYBE_BOOK,
+  type: CODE_PAGE_TYPE,
+) {
+  if (!ispresent(book)) {
+    return []
+  }
+  return book.pages
+    .filter((item) => codepagereadtype(item) === type)
+    .map((page) => codepagereaddata(page))
+    .filter(ispresent)
 }
 
 export function bookwritecodepage(
