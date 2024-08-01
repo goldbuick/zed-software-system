@@ -14,7 +14,7 @@ export function api_error(
   message: string,
   maybeplayer?: string,
 ) {
-  const player = maybeplayer ?? 'anon'
+  const player = maybeplayer ?? ''
   hub.emit(`error:${kind}`, sender, message, player)
   return tape_error(sender, message, player)
 }

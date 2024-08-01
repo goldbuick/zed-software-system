@@ -70,7 +70,7 @@ export function compileAST(text: string): {
     }
   }
 
-  const ast = visitor.visit(cst) as CodeNode
+  const [ast] = visitor.go(cst)
   if (!ast) {
     return {
       tokens: tokens.tokens,

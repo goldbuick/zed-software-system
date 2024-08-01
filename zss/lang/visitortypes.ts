@@ -6,6 +6,7 @@ export type ProgramCstNode = {
 } & CstNode
 
 export type ProgramCstChildren = {
+  token_newline?: IToken[]
   line?: LineCstNode[]
 }
 
@@ -15,8 +16,7 @@ export type LineCstNode = {
 } & CstNode
 
 export type LineCstChildren = {
-  short_ops?: Short_opsCstNode[]
-  stmt?: StmtCstNode[]
+  stmt: StmtCstNode[]
   token_newline: IToken[]
 }
 
@@ -29,9 +29,9 @@ export type StmtCstChildren = {
   stmt_label?: Stmt_labelCstNode[]
   stmt_stat?: Stmt_statCstNode[]
   stmt_text?: Stmt_textCstNode[]
-  stmt_command?: Stmt_commandCstNode[]
   stmt_comment?: Stmt_commentCstNode[]
   stmt_hyperlink?: Stmt_hyperlinkCstNode[]
+  stmt_command?: Stmt_commandCstNode[]
 }
 
 export type Do_blockCstNode = {
@@ -50,8 +50,7 @@ export type Do_lineCstNode = {
 } & CstNode
 
 export type Do_lineCstChildren = {
-  short_ops?: Short_opsCstNode[]
-  do_stmt?: Do_stmtCstNode[]
+  do_stmt: Do_stmtCstNode[]
   token_newline: IToken[]
 }
 
@@ -63,20 +62,23 @@ export type Do_stmtCstNode = {
 export type Do_stmtCstChildren = {
   stmt_stat?: Stmt_statCstNode[]
   stmt_text?: Stmt_textCstNode[]
-  stmt_command?: Stmt_commandCstNode[]
   stmt_comment?: Stmt_commentCstNode[]
   stmt_hyperlink?: Stmt_hyperlinkCstNode[]
+  stmt_command?: Stmt_commandCstNode[]
 }
 
-export type Short_opsCstNode = {
-  name: 'short_ops'
-  children: Short_opsCstChildren
+export type Do_inlineCstNode = {
+  name: 'do_inline'
+  children: Do_inlineCstChildren
 } & CstNode
 
-export type Short_opsCstChildren = {
-  short_cmd?: Short_cmdCstNode[]
-  short_go?: Short_goCstNode[]
-  short_try?: Short_tryCstNode[]
+export type Do_inlineCstChildren = {
+  stmt_stat?: Stmt_statCstNode[]
+  stmt_text?: Stmt_textCstNode[]
+  stmt_comment?: Stmt_commentCstNode[]
+  stmt_hyperlink?: Stmt_hyperlinkCstNode[]
+  stmt_command?: Stmt_commandCstNode[]
+  commands?: CommandsCstNode[]
 }
 
 export type Stmt_labelCstNode = {
@@ -133,31 +135,20 @@ export type Stmt_commandCstNode = {
 
 export type Stmt_commandCstChildren = {
   token_command: IToken[]
+  commands: CommandsCstNode[]
+}
+
+export type CommandsCstNode = {
+  name: 'commands'
+  children: CommandsCstChildren
+} & CstNode
+
+export type CommandsCstChildren = {
   words?: WordsCstNode[]
+  short_go?: Short_goCstNode[]
+  short_try?: Short_tryCstNode[]
   command_play?: Command_playCstNode[]
   structured_cmd?: Structured_cmdCstNode[]
-}
-
-export type Short_cmdCstNode = {
-  name: 'short_cmd'
-  children: Short_cmdCstChildren
-} & CstNode
-
-export type Short_cmdCstChildren = {
-  token_command: IToken[]
-  words?: WordsCstNode[]
-  command_play?: Command_playCstNode[]
-}
-
-export type Flat_cmdCstNode = {
-  name: 'flat_cmd'
-  children: Flat_cmdCstChildren
-} & CstNode
-
-export type Flat_cmdCstChildren = {
-  words?: WordsCstNode[]
-  command_play?: Command_playCstNode[]
-  short_ops?: Short_opsCstNode[]
 }
 
 export type Structured_cmdCstNode = {
@@ -202,7 +193,7 @@ export type Command_ifCstNode = {
 export type Command_ifCstChildren = {
   token_if: IToken[]
   words: WordsCstNode[]
-  flat_cmd?: Flat_cmdCstNode[]
+  do_inline?: Do_inlineCstNode[]
   do_block?: Do_blockCstNode[]
   command_else_if?: Command_else_ifCstNode[]
   command_else?: Command_elseCstNode[]
@@ -219,7 +210,7 @@ export type Command_else_ifCstChildren = {
   token_else: IToken[]
   token_if: IToken[]
   words: WordsCstNode[]
-  flat_cmd?: Flat_cmdCstNode[]
+  do_inline?: Do_inlineCstNode[]
   do_block?: Do_blockCstNode[]
   command_else_if?: Command_else_ifCstNode[]
   command_else?: Command_elseCstNode[]
@@ -234,7 +225,7 @@ export type Command_elseCstNode = {
 export type Command_elseCstChildren = {
   token_command: IToken[]
   token_else: IToken[]
-  flat_cmd?: Flat_cmdCstNode[]
+  do_inline?: Do_inlineCstNode[]
   do_block?: Do_blockCstNode[]
   command_endif?: Command_endifCstNode[]
 }
@@ -257,7 +248,7 @@ export type Command_whileCstNode = {
 export type Command_whileCstChildren = {
   token_while: IToken[]
   words: WordsCstNode[]
-  flat_cmd?: Flat_cmdCstNode[]
+  do_inline?: Do_inlineCstNode[]
   do_block?: Do_blockCstNode[]
   token_command?: IToken[]
   token_endwhile?: IToken[]
@@ -271,7 +262,7 @@ export type Command_repeatCstNode = {
 export type Command_repeatCstChildren = {
   token_repeat: IToken[]
   words: WordsCstNode[]
-  flat_cmd?: Flat_cmdCstNode[]
+  do_inline?: Do_inlineCstNode[]
   do_block?: Do_blockCstNode[]
   token_command?: IToken[]
   token_endrepeat?: IToken[]
@@ -287,7 +278,7 @@ export type Command_readCstChildren = {
   words: WordsCstNode[]
   token_into: IToken[]
   token_stringliteral: IToken[]
-  flat_cmd?: Flat_cmdCstNode[]
+  do_inline?: Do_inlineCstNode[]
   do_block?: Do_blockCstNode[]
   token_command?: IToken[]
   token_endread?: IToken[]
@@ -503,15 +494,14 @@ export type ICstNodeVisitor<IN, OUT> = {
   do_block(children: Do_blockCstChildren, param?: IN): OUT
   do_line(children: Do_lineCstChildren, param?: IN): OUT
   do_stmt(children: Do_stmtCstChildren, param?: IN): OUT
-  short_ops(children: Short_opsCstChildren, param?: IN): OUT
+  do_inline(children: Do_inlineCstChildren, param?: IN): OUT
   stmt_label(children: Stmt_labelCstChildren, param?: IN): OUT
   stmt_stat(children: Stmt_statCstChildren, param?: IN): OUT
   stmt_text(children: Stmt_textCstChildren, param?: IN): OUT
   stmt_comment(children: Stmt_commentCstChildren, param?: IN): OUT
   stmt_hyperlink(children: Stmt_hyperlinkCstChildren, param?: IN): OUT
   stmt_command(children: Stmt_commandCstChildren, param?: IN): OUT
-  short_cmd(children: Short_cmdCstChildren, param?: IN): OUT
-  flat_cmd(children: Flat_cmdCstChildren, param?: IN): OUT
+  commands(children: CommandsCstChildren, param?: IN): OUT
   structured_cmd(children: Structured_cmdCstChildren, param?: IN): OUT
   short_go(children: Short_goCstChildren, param?: IN): OUT
   short_try(children: Short_tryCstChildren, param?: IN): OUT

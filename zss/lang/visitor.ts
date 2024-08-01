@@ -5,7 +5,7 @@ import {
   IToken,
 } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { parser } from './parser'
 import {
@@ -19,28 +19,26 @@ import {
   Command_elseCstChildren,
   Command_ifCstChildren,
   Command_playCstChildren,
-  Command_read_flagsCstChildren,
   Command_readCstChildren,
   Command_repeatCstChildren,
   Command_whileCstChildren,
+  CommandsCstChildren,
   Comp_opCstChildren,
   ComparisonCstChildren,
   Do_blockCstChildren,
+  Do_inlineCstChildren,
   Do_lineCstChildren,
   Do_stmtCstChildren,
   Expr_valueCstChildren,
   ExprCstChildren,
   FactorCstChildren,
-  Flat_cmdCstChildren,
   ICstNodeVisitor,
   LineCstChildren,
   Not_test_valueCstChildren,
   Not_testCstChildren,
   PowerCstChildren,
   ProgramCstChildren,
-  Short_cmdCstChildren,
   Short_goCstChildren,
-  Short_opsCstChildren,
   Short_tryCstChildren,
   Stmt_commandCstChildren,
   Stmt_commentCstChildren,
@@ -184,6 +182,7 @@ type CodeNodeData =
     }
   | {
       type: NODE.WHILE
+      method: string
       words: CodeNode[]
       lines: CodeNode[]
     }
@@ -215,12 +214,12 @@ type CodeNodeData =
   | {
       type: NODE.COMPARE
       lhs: CodeNode
-      compare: CodeNode
       rhs: CodeNode
+      compare: CodeNode
     }
   | {
       type: NODE.COMPARE_ITEM
-      compare: COMPARE
+      method: COMPARE
     }
   | {
       type: NODE.OPERATOR
@@ -229,8 +228,8 @@ type CodeNodeData =
     }
   | {
       type: NODE.OPERATOR_ITEM
-      operator: OPERATOR
       rhs: CodeNode
+      operator: OPERATOR
     }
   | {
       type: NODE.EXPR
@@ -332,18 +331,24 @@ class ScriptVisitor
   }
 
   go(node: any): CodeNode[] {
-    return node ? this.go(node) : []
+    if (Array.isArray(node)) {
+      return node.map((item) => this.visit(item)).flat()
+    }
+    if (ispresent(node)) {
+      return [this.visit(node)].flat()
+    }
+    return []
   }
 
   program(ctx: ProgramCstChildren) {
     return createcodenode(ctx, {
       type: NODE.PROGRAM,
-      lines: this.go(ctx.line).flat(),
+      lines: this.go(ctx.line),
     })
   }
 
   line(ctx: LineCstChildren) {
-    return [this.go(ctx.short_ops), this.go(ctx.stmt)].flat()
+    return this.go(ctx.stmt)
   }
 
   stmt(ctx: StmtCstChildren) {
@@ -373,7 +378,7 @@ class ScriptVisitor
   }
 
   do_line(ctx: Do_lineCstChildren) {
-    return [this.go(ctx.short_ops), this.go(ctx.do_stmt)].flat()
+    return this.go(ctx.do_stmt)
   }
 
   do_stmt(ctx: Do_stmtCstChildren) {
@@ -395,15 +400,24 @@ class ScriptVisitor
     return []
   }
 
-  short_ops(ctx: Short_opsCstChildren) {
-    if (ctx.short_cmd) {
-      return this.go(ctx.short_cmd)
+  do_inline(ctx: Do_inlineCstChildren) {
+    if (ctx.stmt_stat) {
+      return this.go(ctx.stmt_stat)
     }
-    if (ctx.short_go) {
-      return this.go(ctx.short_go)
+    if (ctx.stmt_text) {
+      return this.go(ctx.stmt_text)
     }
-    if (ctx.short_try) {
-      return this.go(ctx.short_try)
+    if (ctx.stmt_comment) {
+      return this.go(ctx.stmt_comment)
+    }
+    if (ctx.stmt_command) {
+      return this.go(ctx.stmt_command)
+    }
+    if (ctx.stmt_hyperlink) {
+      return this.go(ctx.stmt_hyperlink)
+    }
+    if (ctx.commands) {
+      return this.go(ctx.commands)
     }
     return []
   }
@@ -441,17 +455,30 @@ class ScriptVisitor
   stmt_hyperlink(ctx: Stmt_hyperlinkCstChildren) {
     return createcodenode(ctx, {
       type: NODE.HYPERLINK,
-      link: this.go(ctx.words).flat(),
+      link: this.go(ctx.words),
       text: tokenstring(ctx.token_hyperlinktext, ';'),
     })
   }
 
   stmt_command(ctx: Stmt_commandCstChildren) {
+    if (ctx.commands) {
+      return this.go(ctx.commands)
+    }
+    return []
+  }
+
+  commands(ctx: CommandsCstChildren) {
     if (ctx.words) {
       return createcodenode(ctx, {
         type: NODE.COMMAND,
-        words: this.go(ctx.words).flat(),
+        words: this.go(ctx.words),
       })
+    }
+    if (ctx.short_go) {
+      return this.go(ctx.short_go)
+    }
+    if (ctx.short_try) {
+      return this.go(ctx.short_try)
     }
     if (ctx.command_play) {
       return this.go(ctx.command_play)
@@ -460,32 +487,6 @@ class ScriptVisitor
       return this.go(ctx.structured_cmd)
     }
     return []
-  }
-
-  short_cmd(ctx: Short_cmdCstChildren) {
-    if (ctx.words) {
-      return createcodenode(ctx, {
-        type: NODE.COMMAND,
-        words: this.go(ctx.words).flat(),
-      })
-    }
-    if (ctx.command_play) {
-      return this.go(ctx.command_play)
-    }
-    return []
-  }
-
-  flat_cmd(ctx: Flat_cmdCstChildren) {
-    return [
-      ctx.words
-        ? createcodenode(ctx, {
-            type: NODE.COMMAND,
-            words: this.go(ctx.words).flat(),
-          })
-        : [],
-      this.go(ctx.command_play),
-      this.go(ctx.short_ops),
-    ].flat()
   }
 
   structured_cmd(ctx: Structured_cmdCstChildren) {
@@ -514,8 +515,8 @@ class ScriptVisitor
     if (ctx.token_divide) {
       return createcodenode(ctx, {
         type: NODE.MOVE,
-        wait: false,
-        words: this.go(ctx.words).flat(),
+        wait: true,
+        words: this.go(ctx.words),
       })
     }
     return []
@@ -525,8 +526,8 @@ class ScriptVisitor
     if (ctx.token_query) {
       return createcodenode(ctx, {
         type: NODE.MOVE,
-        wait: true,
-        words: this.go(ctx.words).flat(),
+        wait: false,
+        words: this.go(ctx.words),
       })
     }
     return []
@@ -536,8 +537,8 @@ class ScriptVisitor
     return createcodenode(ctx, {
       type: NODE.IF,
       method: 'if',
-      words: this.go(ctx.words).flat(),
-      lines: [this.go(ctx.flat_cmd), this.go(ctx.do_block)].flat(),
+      words: this.go(ctx.words),
+      lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
       branches: [
         this.go(ctx.command_else_if),
         this.go(ctx.command_else),
@@ -550,8 +551,8 @@ class ScriptVisitor
       createcodenode(ctx, {
         type: NODE.ELSE_IF,
         method: 'if',
-        words: this.go(ctx.words).flat(),
-        lines: [this.go(ctx.flat_cmd), this.go(ctx.do_block)].flat(),
+        words: this.go(ctx.words),
+        lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
       }),
       // un-nest else_if & else
       this.go(ctx.command_else_if),
@@ -563,7 +564,7 @@ class ScriptVisitor
     return createcodenode(ctx, {
       type: NODE.ELSE,
       method: 'if',
-      lines: [this.go(ctx.flat_cmd), this.go(ctx.do_block)].flat(),
+      lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
     })
   }
 
@@ -575,16 +576,17 @@ class ScriptVisitor
   command_while(ctx: Command_whileCstChildren) {
     return createcodenode(ctx, {
       type: NODE.WHILE,
-      words: this.go(ctx.words).flat(),
-      lines: [this.go(ctx.flat_cmd), this.go(ctx.do_block)].flat(),
+      method: 'while', // future variants of while ( move, take ? )
+      words: this.go(ctx.words),
+      lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
     })
   }
 
   command_repeat(ctx: Command_repeatCstChildren) {
     return createcodenode(ctx, {
       type: NODE.REPEAT,
-      words: this.go(ctx.words).flat(),
-      lines: [this.go(ctx.flat_cmd), this.go(ctx.do_block)].flat(),
+      words: this.go(ctx.words),
+      lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
     })
   }
 
@@ -592,8 +594,8 @@ class ScriptVisitor
     return createcodenode(ctx, {
       type: NODE.READ,
       flags: ctx.token_stringliteral.map((token) => tokenstring([token], '')),
-      words: this.go(ctx.words).flat(),
-      lines: [this.go(ctx.flat_cmd), this.go(ctx.do_block)].flat(),
+      words: this.go(ctx.words),
+      lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
     })
   }
 
@@ -609,15 +611,15 @@ class ScriptVisitor
     })
   }
 
-  commmand_play(ctx: Command_playCstChildren) {
+  command_play(ctx: Command_playCstChildren) {
+    const playstr = tokenstring(ctx.token_command_play, '')
+      .replace('play', '')
+      .trim()
     return createcodenode(ctx, {
       type: NODE.COMMAND,
       words: [
         createstringnode(ctx, 'play'),
-        createstringnode(
-          ctx,
-          tokenstring(ctx.token_command_play, '').replace('play', '').trim(),
-        ),
+        createstringnode(ctx, playstr),
       ].flat(),
     })
   }
@@ -673,37 +675,37 @@ class ScriptVisitor
     if (ctx.token_iseq) {
       return createcodenode(ctx, {
         type: NODE.COMPARE_ITEM,
-        compare: COMPARE.IS_EQ,
+        method: COMPARE.IS_EQ,
       })
     }
     if (ctx.token_isnoteq) {
       return createcodenode(ctx, {
         type: NODE.COMPARE_ITEM,
-        compare: COMPARE.IS_NOT_EQ,
+        method: COMPARE.IS_NOT_EQ,
       })
     }
     if (ctx.token_islessthan) {
       return createcodenode(ctx, {
         type: NODE.COMPARE_ITEM,
-        compare: COMPARE.IS_LESS_THAN,
+        method: COMPARE.IS_LESS_THAN,
       })
     }
     if (ctx.token_isgreaterthan) {
       return createcodenode(ctx, {
         type: NODE.COMPARE_ITEM,
-        compare: COMPARE.IS_GREATER_THAN,
+        method: COMPARE.IS_GREATER_THAN,
       })
     }
     if (ctx.token_isgreaterthanorequal) {
       return createcodenode(ctx, {
         type: NODE.COMPARE_ITEM,
-        compare: COMPARE.IS_LESS_THAN_OR_EQ,
+        method: COMPARE.IS_LESS_THAN_OR_EQ,
       })
     }
     if (ctx.token_isgreaterthanorequal) {
       return createcodenode(ctx, {
         type: NODE.COMPARE_ITEM,
-        compare: COMPARE.IS_GREATER_THAN_OR_EQ,
+        method: COMPARE.IS_GREATER_THAN_OR_EQ,
       })
     }
     return []

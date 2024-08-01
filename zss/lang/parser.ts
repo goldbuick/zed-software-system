@@ -69,9 +69,10 @@ class ScriptParser extends CstParser {
   })
 
   line = this.RULED('line', () => {
-    this.MANY(() => this.SUBRULE(this.short_ops))
-    this.OPTION(() => this.SUBRULE(this.stmt))
-    this.AT_LEAST_ONE(() => this.CONSUME(lexer.newline))
+    this.OR([
+      { ALT: () => this.SUBRULE(this.stmt) },
+      { ALT: () => this.CONSUME(lexer.newline) },
+    ])
   })
 
   stmt = this.RULED('stmt', () => {
@@ -80,9 +81,9 @@ class ScriptParser extends CstParser {
       // ---
       { ALT: () => this.SUBRULE(this.stmt_stat) },
       { ALT: () => this.SUBRULE(this.stmt_text) },
-      { ALT: () => this.SUBRULE(this.stmt_command) },
       { ALT: () => this.SUBRULE(this.stmt_comment) },
       { ALT: () => this.SUBRULE(this.stmt_hyperlink) },
+      { ALT: () => this.SUBRULE(this.stmt_command) },
     ])
   })
 
@@ -92,26 +93,29 @@ class ScriptParser extends CstParser {
   })
 
   do_line = this.RULED('do_line', () => {
-    this.MANY(() => this.SUBRULE(this.short_ops))
-    this.OPTION(() => this.SUBRULE(this.do_stmt))
-    this.AT_LEAST_ONE(() => this.CONSUME2(lexer.newline))
+    this.SUBRULE(this.do_stmt)
+    this.AT_LEAST_ONE(() => this.CONSUME(lexer.newline))
   })
 
   do_stmt = this.RULED('do_stmt', () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.stmt_stat) },
       { ALT: () => this.SUBRULE(this.stmt_text) },
-      { ALT: () => this.SUBRULE(this.stmt_command) },
       { ALT: () => this.SUBRULE(this.stmt_comment) },
       { ALT: () => this.SUBRULE(this.stmt_hyperlink) },
+      { ALT: () => this.SUBRULE(this.stmt_command) },
     ])
   })
 
-  short_ops = this.RULED('short_ops', () => {
+  do_inline = this.RULED('do_inline', () => {
     this.OR([
-      { ALT: () => this.SUBRULE(this.short_cmd) },
-      { ALT: () => this.SUBRULE(this.short_go) },
-      { ALT: () => this.SUBRULE(this.short_try) },
+      { ALT: () => this.SUBRULE(this.stmt_stat) },
+      { ALT: () => this.SUBRULE(this.stmt_text) },
+      { ALT: () => this.SUBRULE(this.stmt_comment) },
+      { ALT: () => this.SUBRULE(this.stmt_hyperlink) },
+      { ALT: () => this.SUBRULE(this.stmt_command) },
+      // special case for inline
+      { ALT: () => this.AT_LEAST_ONE(() => this.SUBRULE(this.commands)) },
     ])
   })
 
@@ -139,29 +143,17 @@ class ScriptParser extends CstParser {
 
   stmt_command = this.RULED('stmt_command', () => {
     this.CONSUME(lexer.command)
+    this.AT_LEAST_ONE(() => this.SUBRULE(this.commands))
+  })
+
+  commands = this.RULED('commands', () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.words) },
+      { ALT: () => this.SUBRULE(this.short_go) },
+      { ALT: () => this.SUBRULE(this.short_try) },
       { ALT: () => this.SUBRULE(this.command_play) },
       { ALT: () => this.SUBRULE(this.structured_cmd) },
     ])
-  })
-
-  short_cmd = this.RULED('short_cmd', () => {
-    this.CONSUME(lexer.command)
-    this.OR([
-      { ALT: () => this.SUBRULE(this.words) },
-      { ALT: () => this.SUBRULE(this.command_play) },
-    ])
-  })
-
-  flat_cmd = this.RULED('flat_cmd', () => {
-    this.OPTION(() => {
-      this.OR([
-        { ALT: () => this.SUBRULE(this.words) },
-        { ALT: () => this.SUBRULE(this.command_play) },
-      ])
-    })
-    this.MANY(() => this.SUBRULE(this.short_ops))
   })
 
   structured_cmd = this.RULED('structured_cmd', () => {
@@ -191,14 +183,12 @@ class ScriptParser extends CstParser {
     this.OPTION(() => {
       this.OR([
         {
-          ALT: () => {
-            // inline if
-            this.SUBRULE(this.flat_cmd)
-          },
+          // inline if
+          ALT: () => this.SUBRULE(this.do_inline),
         },
         {
+          // block if
           ALT: () => {
-            // block if
             this.SUBRULE(this.do_block)
             this.OR2([
               {
@@ -228,14 +218,12 @@ class ScriptParser extends CstParser {
     this.OPTION(() => {
       this.OR([
         {
-          ALT: () => {
-            // inline else if
-            this.SUBRULE(this.flat_cmd)
-          },
+          // inline else if
+          ALT: () => this.SUBRULE(this.do_inline),
         },
         {
+          // block else if
           ALT: () => {
-            // block else if
             this.SUBRULE(this.do_block)
             this.OR2([
               {
@@ -263,14 +251,12 @@ class ScriptParser extends CstParser {
     this.OPTION(() => {
       this.OR([
         {
-          ALT: () => {
-            // inline else
-            this.SUBRULE(this.flat_cmd)
-          },
+          // inline else
+          ALT: () => this.SUBRULE(this.do_inline),
         },
         {
+          // block else
           ALT: () => {
-            // block else
             this.SUBRULE(this.do_block)
             this.SUBRULE(this.command_endif)
           },
@@ -290,17 +276,15 @@ class ScriptParser extends CstParser {
     this.OPTION(() => {
       this.OR([
         {
-          ALT: () => {
-            // inline while
-            this.SUBRULE(this.flat_cmd)
-          },
+          // inline while
+          ALT: () => this.SUBRULE(this.do_inline),
         },
         {
+          // while block
           ALT: () => {
-            // while block
             this.SUBRULE(this.do_block)
-            this.CONSUME4(lexer.command)
-            this.CONSUME4(lexer.command_endwhile)
+            this.CONSUME(lexer.command)
+            this.CONSUME(lexer.command_endwhile)
           },
         },
       ])
@@ -313,17 +297,15 @@ class ScriptParser extends CstParser {
     this.OPTION(() => {
       this.OR([
         {
-          ALT: () => {
-            // inline repeat
-            this.SUBRULE(this.flat_cmd)
-          },
+          // inline repeat
+          ALT: () => this.SUBRULE(this.do_inline),
         },
         {
+          // repeat block
           ALT: () => {
-            // repeat block
             this.SUBRULE(this.do_block)
-            this.CONSUME4(lexer.command)
-            this.CONSUME4(lexer.command_endrepeat)
+            this.CONSUME(lexer.command)
+            this.CONSUME(lexer.command_endrepeat)
           },
         },
       ])
@@ -333,24 +315,20 @@ class ScriptParser extends CstParser {
   command_read = this.RULED('command_read', () => {
     this.CONSUME(lexer.command_read)
     this.SUBRULE(this.words)
-
     this.CONSUME(lexer.command_into)
     this.AT_LEAST_ONE(() => this.CONSUME(lexer.stringliteral))
-
     this.OPTION(() => {
       this.OR([
         {
-          ALT: () => {
-            // inline read
-            this.SUBRULE(this.flat_cmd)
-          },
+          // inline read
+          ALT: () => this.SUBRULE(this.do_inline),
         },
         {
+          // read block
           ALT: () => {
-            // read block
             this.SUBRULE(this.do_block)
-            this.CONSUME4(lexer.command)
-            this.CONSUME4(lexer.command_endread)
+            this.CONSUME(lexer.command)
+            this.CONSUME(lexer.command_endread)
           },
         },
       ])
