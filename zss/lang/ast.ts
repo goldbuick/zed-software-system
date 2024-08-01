@@ -58,6 +58,13 @@ export function compileAST(text: string): {
   parser.input = tokens.tokens
   const cst = parser.program()
   if (parser.errors.length > 0) {
+    const [primary] = parser.errors
+    console.info(
+      'errrrr',
+      primary.context.ruleStack,
+      primary.token,
+      primary.message,
+    )
     return {
       tokens: tokens.tokens,
       errors: parser.errors.map((error) => ({
