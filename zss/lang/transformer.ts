@@ -289,10 +289,6 @@ function transformNode(ast: CodeNode): SourceNode {
         ast.lines.forEach((item) => source.add([transformNode(item), `\n`]))
       }
 
-      if (ast.branches) {
-        ast.branches.forEach((item) => source.add(transformNode(item)))
-      }
-
       source.add('}')
       return source
     }

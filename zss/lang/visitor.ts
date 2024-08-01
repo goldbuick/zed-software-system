@@ -13,6 +13,8 @@ import {
   And_testCstChildren,
   Arith_expr_itemCstChildren,
   Arith_exprCstChildren,
+  Command_block_ifCstChildren,
+  Command_blockCstChildren,
   Command_breakCstChildren,
   Command_continueCstChildren,
   Command_else_ifCstChildren,
@@ -168,7 +170,6 @@ type CodeNodeData =
       method: string
       words: CodeNode[]
       lines: CodeNode[]
-      branches: CodeNode[]
     }
   | {
       type: NODE.ELSE_IF
@@ -555,12 +556,21 @@ class ScriptVisitor
       type: NODE.IF,
       method: 'if',
       words: this.go(ctx.words),
-      lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
-      branches: [
-        this.go(ctx.command_else_if),
-        this.go(ctx.command_else),
-      ].flat(),
+      lines: this.go(ctx.command_if_block),
     })
+  }
+
+  command_if_block(ctx: Command_block_ifCstChildren) {
+    return [
+      this.go(ctx.do_inline),
+      this.go(ctx.do_block),
+      this.go(ctx.command_else_if),
+      this.go(ctx.command_else),
+    ].flat()
+  }
+
+  command_block(ctx: Command_blockCstChildren) {
+    return [this.go(ctx.do_inline), this.go(ctx.do_block)].flat()
   }
 
   command_else_if(ctx: Command_else_ifCstChildren) {
@@ -568,7 +578,7 @@ class ScriptVisitor
       type: NODE.ELSE_IF,
       method: 'if',
       words: this.go(ctx.words),
-      lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
+      lines: this.go(ctx.command_block),
     })
   }
 
@@ -576,7 +586,7 @@ class ScriptVisitor
     return createcodenode(ctx, {
       type: NODE.ELSE,
       method: 'if',
-      lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
+      lines: this.go(ctx.command_block),
     })
   }
 
@@ -585,7 +595,7 @@ class ScriptVisitor
       type: NODE.WHILE,
       method: 'while', // future variants of while ( move, take ? )
       words: this.go(ctx.words),
-      lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
+      lines: this.go(ctx.command_block),
     })
   }
 
@@ -593,7 +603,7 @@ class ScriptVisitor
     return createcodenode(ctx, {
       type: NODE.REPEAT,
       words: this.go(ctx.words),
-      lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
+      lines: this.go(ctx.command_block),
     })
   }
 
@@ -602,7 +612,7 @@ class ScriptVisitor
       type: NODE.READ,
       flags: ctx.token_stringliteral.map((token) => tokenstring([token], '')),
       words: this.go(ctx.words),
-      lines: [this.go(ctx.do_inline), this.go(ctx.do_block)].flat(),
+      lines: this.go(ctx.command_block),
     })
   }
 
