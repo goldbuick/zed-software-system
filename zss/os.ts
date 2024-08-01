@@ -76,9 +76,9 @@ export function createos() {
           })
 
           const [hline, hindex] = codelines[errorline]
-          const hlinepadded = `${hline}*`
           const start = (primary.column ?? 1) - 1
           const end = start + primary.length
+          const hlinepadded = start < hline.length ? hline : `${hline}*`
           const a = hlinepadded.substring(0, start)
           const b = hlinepadded.substring(start, end)
           const c = hlinepadded.substring(end)

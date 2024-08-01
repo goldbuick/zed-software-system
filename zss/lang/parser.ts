@@ -89,8 +89,11 @@ class ScriptParser extends CstParser {
 
   do_block = this.RULED('do_block', () => {
     this.CONSUME(lexer.command_do)
-    this.AT_LEAST_ONE(() => this.CONSUME(lexer.newline))
-    this.AT_LEAST_ONE(() => this.SUBRULE(this.do_line))
+    this.MANY(() => this.CONSUME(lexer.newline))
+    this.AT_LEAST_ONE({
+      GATE: this.BACKTRACK(this.do_line),
+      DEF: () => this.SUBRULE(this.do_line),
+    })
   })
 
   do_line = this.RULED('do_line', () => {
@@ -105,6 +108,12 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.stmt_comment) },
       { ALT: () => this.SUBRULE(this.stmt_hyperlink) },
       { ALT: () => this.SUBRULE(this.stmt_command) },
+      {
+        ALT: () => {
+          this.AT_LEAST_ONE(() => this.SUBRULE(this.short_commands))
+          this.MANY(() => this.SUBRULE(this.commands))
+        },
+      },
     ])
   })
 
@@ -115,7 +124,6 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.stmt_comment) },
       { ALT: () => this.SUBRULE(this.stmt_hyperlink) },
       { ALT: () => this.SUBRULE(this.stmt_command) },
-      // special case for inline
       { ALT: () => this.AT_LEAST_ONE(() => this.SUBRULE(this.commands)) },
     ])
   })
@@ -145,6 +153,13 @@ class ScriptParser extends CstParser {
   stmt_command = this.RULED('stmt_command', () => {
     this.CONSUME(lexer.command)
     this.AT_LEAST_ONE(() => this.SUBRULE(this.commands))
+  })
+
+  short_commands = this.RULED('short_commands', () => {
+    this.OR([
+      { ALT: () => this.SUBRULE(this.short_go) },
+      { ALT: () => this.SUBRULE(this.short_try) },
+    ])
   })
 
   commands = this.RULED('commands', () => {
@@ -191,20 +206,17 @@ class ScriptParser extends CstParser {
           // block if
           ALT: () => {
             this.SUBRULE(this.do_block)
-            this.OR2([
-              {
-                GATE: this.BACKTRACK(this.command_else_if),
-                ALT: () => this.SUBRULE(this.command_else_if),
-              },
-              {
-                GATE: this.BACKTRACK(this.command_else),
-                ALT: () => this.SUBRULE(this.command_else),
-              },
-              {
-                GATE: this.BACKTRACK(this.command_endif),
-                ALT: () => this.SUBRULE(this.command_endif),
-              },
-            ])
+            this.MANY({
+              GATE: this.BACKTRACK(this.command_else_if),
+              DEF: () => this.SUBRULE(this.command_else_if),
+            })
+            this.OPTION2({
+              GATE: this.BACKTRACK(this.command_else),
+              DEF: () => this.SUBRULE(this.command_else),
+            })
+            this.MANY2(() => this.CONSUME(lexer.newline))
+            this.CONSUME(lexer.command)
+            this.CONSUME(lexer.command_endif)
           },
         },
       ])
@@ -224,23 +236,7 @@ class ScriptParser extends CstParser {
         },
         {
           // block else if
-          ALT: () => {
-            this.SUBRULE(this.do_block)
-            this.OR2([
-              {
-                GATE: this.BACKTRACK(this.command_else_if),
-                ALT: () => this.SUBRULE(this.command_else_if),
-              },
-              {
-                GATE: this.BACKTRACK(this.command_else),
-                ALT: () => this.SUBRULE(this.command_else),
-              },
-              {
-                GATE: this.BACKTRACK(this.command_endif),
-                ALT: () => this.SUBRULE(this.command_endif),
-              },
-            ])
-          },
+          ALT: () => this.SUBRULE(this.do_block),
         },
       ])
     })
@@ -257,18 +253,10 @@ class ScriptParser extends CstParser {
         },
         {
           // block else
-          ALT: () => {
-            this.SUBRULE(this.do_block)
-            this.SUBRULE(this.command_endif)
-          },
+          ALT: () => this.SUBRULE(this.do_block),
         },
       ])
     })
-  })
-
-  command_endif = this.RULED('command_endif', () => {
-    this.CONSUME(lexer.command)
-    this.CONSUME(lexer.command_endif)
   })
 
   command_while = this.RULED('command_while', () => {

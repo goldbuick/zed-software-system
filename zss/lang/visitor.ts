@@ -38,6 +38,7 @@ import {
   Not_testCstChildren,
   PowerCstChildren,
   ProgramCstChildren,
+  Short_commandsCstChildren,
   Short_goCstChildren,
   Short_tryCstChildren,
   Stmt_commandCstChildren,
@@ -463,6 +464,16 @@ class ScriptVisitor
   stmt_command(ctx: Stmt_commandCstChildren) {
     if (ctx.commands) {
       return this.go(ctx.commands)
+    }
+    return []
+  }
+
+  short_commands(ctx: Short_commandsCstChildren) {
+    if (ctx.short_go) {
+      return this.go(ctx.short_go)
+    }
+    if (ctx.short_try) {
+      return this.go(ctx.short_try)
     }
     return []
   }
