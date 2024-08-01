@@ -64,12 +64,10 @@ export function createos() {
         chip = chips[id] = createchip(id, result)
         // bail on errors
         if (result.errors?.length) {
+          console.info(result.errors)
           const [primary] = result.errors
           const errorline = (primary?.line ?? 2) - 1
           const codelines = code.replaceAll('\r\n', '').split('\n')
-          primary.message.split('\n').forEach((message) => {
-            api_error('os', 'build', message)
-          })
           codelines.forEach((message, index) => {
             if (index === errorline) {
               const start = (primary.column ?? 1) - 1
@@ -77,9 +75,16 @@ export function createos() {
               const a = message.substring(0, start)
               const b = message.substring(start, end)
               const c = message.substring(end)
-              api_error('os', 'build', `$grey${a}$red${b}$grey${c}`)
+              api_error(
+                'os',
+                'build',
+                `$red${index + 1} $grey${a}$red${b}$grey${c}`,
+              )
+              primary.message.split('\n').forEach((message) => {
+                api_error('os', 'build', message)
+              })
             } else {
-              api_error('os', 'build', `$grey${message}`)
+              api_error('os', 'build', `$grey${index + 1} $grey${message}`)
             }
           })
           return false
