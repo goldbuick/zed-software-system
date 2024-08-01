@@ -84,6 +84,12 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.stmt_comment) },
       { ALT: () => this.SUBRULE(this.stmt_hyperlink) },
       { ALT: () => this.SUBRULE(this.stmt_command) },
+      {
+        ALT: () => {
+          this.AT_LEAST_ONE(() => this.SUBRULE(this.short_commands))
+          this.MANY(() => this.SUBRULE(this.commands))
+        },
+      },
     ])
   })
 
@@ -114,17 +120,6 @@ class ScriptParser extends CstParser {
           this.MANY(() => this.SUBRULE(this.commands))
         },
       },
-    ])
-  })
-
-  do_inline = this.RULED('do_inline', () => {
-    this.OR([
-      { ALT: () => this.SUBRULE(this.stmt_stat) },
-      { ALT: () => this.SUBRULE(this.stmt_text) },
-      { ALT: () => this.SUBRULE(this.stmt_comment) },
-      { ALT: () => this.SUBRULE(this.stmt_hyperlink) },
-      { ALT: () => this.SUBRULE(this.stmt_command) },
-      { ALT: () => this.AT_LEAST_ONE(() => this.SUBRULE(this.commands)) },
     ])
   })
 
@@ -200,7 +195,7 @@ class ScriptParser extends CstParser {
       this.OR([
         {
           // inline if
-          ALT: () => this.SUBRULE(this.do_inline),
+          ALT: () => this.SUBRULE(this.do_stmt),
         },
         {
           // block if
@@ -232,7 +227,7 @@ class ScriptParser extends CstParser {
       this.OR([
         {
           // inline else if
-          ALT: () => this.SUBRULE(this.do_inline),
+          ALT: () => this.SUBRULE(this.do_stmt),
         },
         {
           // block else if
@@ -249,7 +244,7 @@ class ScriptParser extends CstParser {
       this.OR([
         {
           // inline else
-          ALT: () => this.SUBRULE(this.do_inline),
+          ALT: () => this.SUBRULE(this.do_stmt),
         },
         {
           // block else
@@ -266,7 +261,7 @@ class ScriptParser extends CstParser {
       this.OR([
         {
           // inline while
-          ALT: () => this.SUBRULE(this.do_inline),
+          ALT: () => this.SUBRULE(this.do_stmt),
         },
         {
           // while block
@@ -287,7 +282,7 @@ class ScriptParser extends CstParser {
       this.OR([
         {
           // inline repeat
-          ALT: () => this.SUBRULE(this.do_inline),
+          ALT: () => this.SUBRULE(this.do_stmt),
         },
         {
           // repeat block
@@ -310,7 +305,7 @@ class ScriptParser extends CstParser {
       this.OR([
         {
           // inline read
-          ALT: () => this.SUBRULE(this.do_inline),
+          ALT: () => this.SUBRULE(this.do_stmt),
         },
         {
           // read block
