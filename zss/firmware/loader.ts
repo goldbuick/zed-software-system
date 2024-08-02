@@ -34,6 +34,7 @@ export const CODE_PAGE_FIRMWARE = {
   [CODE_PAGE_TYPE.TERRAIN]: ['all', 'audio', 'gadget', 'mods', 'terrain'],
   [CODE_PAGE_TYPE.CHARSET]: ['all', 'audio', 'gadget', 'mods', 'charset'],
   [CODE_PAGE_TYPE.PALETTE]: ['all', 'audio', 'gadget', 'mods', 'palette'],
+  [CODE_PAGE_TYPE.SOUNDBLASTER]: ['all', 'audio', 'gadget', 'mods'],
 }
 
 export type FIRMWARE_NAME = keyof typeof CODE_PAGE_FIRMWARE

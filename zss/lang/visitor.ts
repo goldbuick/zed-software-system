@@ -863,7 +863,10 @@ class ScriptVisitor
 
   token(ctx: TokenCstChildren) {
     if (ctx.token_stringliteraldouble) {
-      const str = tokenstring(ctx.token_stringliteraldouble, '""')
+      const str = tokenstring(ctx.token_stringliteraldouble, '""').replace(
+        /(^"|"$)/g,
+        '',
+      )
       return createcodenode(ctx, {
         type: NODE.LITERAL,
         literal: LITERAL.TEMPLATE,

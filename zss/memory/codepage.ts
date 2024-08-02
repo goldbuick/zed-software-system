@@ -16,6 +16,7 @@ import {
 export enum CODE_PAGE_TYPE {
   ERROR,
   CLI,
+  LOADER,
   // all of these types support os.once() invoke as well
   BOARD,
   OBJECT,
@@ -45,6 +46,7 @@ export type CODE_PAGE = {
   charset?: BITMAP
   palette?: BITMAP
   soundblaster?: any
+  loader?: any
   // common parsed values
   stats?: CODE_PAGE_STATS
 }
@@ -61,6 +63,7 @@ export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.CHARSET]: BITMAP
   [CODE_PAGE_TYPE.PALETTE]: BITMAP
   [CODE_PAGE_TYPE.SOUNDBLASTER]: any
+  [CODE_PAGE_TYPE.LOADER]: any
 }
 
 export function createcodepage(
@@ -92,6 +95,7 @@ export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
     // charset: exportcharsetelement(codepage.charset),
     // palette: exportpaletteelement(codepage.palette), TODO: scrub these values too
     // soundblaster: ....
+    // loader: ...
   }
 }
 
@@ -112,6 +116,7 @@ export function importcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
     // charset: codepage.charset,
     // palette: codepage.palette, TODO: scrub these values too
     // soundblaster: ....
+    // loader: ...
   }
 }
 
@@ -284,6 +289,10 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
           codepage.stats.type = CODE_PAGE_TYPE.SOUNDBLASTER
           codepage.stats.name = lmaybename
           break
+        case 'loader':
+          codepage.stats.type = CODE_PAGE_TYPE.LOADER
+          codepage.stats.name = lmaybename
+          break
         default:
           if (first) {
             // first default is name
@@ -400,6 +409,13 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         // codepage.soundblaster = {}
       }
       return codepage.soundblaster as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+    }
+    case CODE_PAGE_TYPE.LOADER: {
+      // validate and shape loader into usable state
+      if (!ispresent(codepage.loader)) {
+        // codepage.loader = {}
+      }
+      return codepage.loader as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
   }
 }
