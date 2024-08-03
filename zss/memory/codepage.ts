@@ -24,7 +24,7 @@ export enum CODE_PAGE_TYPE {
   TERRAIN,
   CHARSET,
   PALETTE,
-  EIGHT_TRACK_TAPE,
+  EIGHT_TRACK,
 }
 
 export type CODE_PAGE_STATS = {
@@ -63,7 +63,7 @@ export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
   [CODE_PAGE_TYPE.CHARSET]: BITMAP
   [CODE_PAGE_TYPE.PALETTE]: BITMAP
-  [CODE_PAGE_TYPE.EIGHT_TRACK_TAPE]: EIGHT_TRACK_TAPE
+  [CODE_PAGE_TYPE.EIGHT_TRACK]: EIGHT_TRACK_TAPE
 }
 
 export function createcodepage(
@@ -283,7 +283,7 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
           codepage.stats.name = lmaybename
           break
         case '8track':
-          codepage.stats.type = CODE_PAGE_TYPE.EIGHT_TRACK_TAPE
+          codepage.stats.type = CODE_PAGE_TYPE.EIGHT_TRACK
           codepage.stats.name = lmaybename
           break
         case 'loader':
@@ -336,7 +336,7 @@ export function codepagereadtypetostring(codepage: MAYBE_CODE_PAGE) {
       return 'charset'
     case CODE_PAGE_TYPE.PALETTE:
       return 'palette'
-    case CODE_PAGE_TYPE.EIGHT_TRACK_TAPE:
+    case CODE_PAGE_TYPE.EIGHT_TRACK:
       return '8track'
   }
 }
@@ -400,7 +400,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       }
       return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
-    case CODE_PAGE_TYPE.EIGHT_TRACK_TAPE: {
+    case CODE_PAGE_TYPE.EIGHT_TRACK: {
       // validate and shape eighttracktape into usable state
       if (!ispresent(codepage.eighttracktape)) {
         // codepage.eighttracktape = {}

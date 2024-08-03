@@ -1,7 +1,7 @@
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { api_error } from './device/api'
-import { loadfirmware } from './firmware/loader'
+import { loadfirmware } from './firmware/boot'
 import { GeneratorBuild, compile } from './lang/generator'
 import { ispresent } from './mapping/types'
 import { CODE_PAGE_TYPE } from './memory/codepage'
