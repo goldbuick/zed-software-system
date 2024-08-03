@@ -429,8 +429,12 @@ export function memoryloadfile(
           .async('uint8array')
           .then((bytes) => {
             const mimetype = mimetypeofbytesread(filepath, bytes)
-            const zipfile = new File([bytes], fileitem.name, { type: mimetype })
-            memoryloadfile(os, timestamp, player, zipfile)
+            if (mimetype !== false) {
+              const zipfile = new File([bytes], fileitem.name, {
+                type: mimetype,
+              })
+              memoryloadfile(os, timestamp, player, zipfile)
+            }
           })
           .catch((err) => {
             api_error('memory', 'crash', err.message)

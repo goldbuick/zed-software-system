@@ -46,7 +46,7 @@ export type CODE_PAGE = {
   terrain?: BOARD_ELEMENT
   charset?: BITMAP
   palette?: BITMAP
-  eighttracktape?: EIGHT_TRACK
+  eighttrack?: EIGHT_TRACK
   // common parsed values
   stats?: CODE_PAGE_STATS
 }
@@ -94,7 +94,7 @@ export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
     terrain: exportboardelement(codepage.terrain),
     // charset: exportcharset(codepage.charset),
     // palette: exportpalette(codepage.palette), TODO: scrub these values too
-    // eighttracktape: exporteighttracktape(codepage.eighttracktape), TODO: scrub these values too
+    // eighttrack: exporteighttrack(codepage.eighttrack), TODO: scrub these values too
   }
 }
 
@@ -114,7 +114,7 @@ export function importcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
     terrain: importboardelement(codepage.terrain),
     // charset: importcharset(codepage.charset),
     // palette: importpalette(codepage.palette),
-    // eighttracktape: importeighttracktape(codepage.eighttracktape),
+    // eighttrack: importeighttrack(codepage.eighttrack),
   }
 }
 
@@ -401,11 +401,11 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.EIGHT_TRACK: {
-      // validate and shape eighttracktape into usable state
-      if (!ispresent(codepage.eighttracktape)) {
-        // codepage.eighttracktape = {}
+      // validate and shape eighttrack into usable state
+      if (!ispresent(codepage.eighttrack)) {
+        // codepage.eighttrack = {}
       }
-      return codepage.eighttracktape as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return codepage.eighttrack as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.LOADER: {
       // validate and shape loader into usable state

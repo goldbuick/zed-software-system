@@ -20,7 +20,7 @@ function createpatterns(): EIGHT_TRACK_PATTERNS {
   }
 }
 
-export function createeighttracktape(): EIGHT_TRACK {
+export function createeighttrack(): EIGHT_TRACK {
   return {
     id: createsid(),
     tracks: [
@@ -36,14 +36,14 @@ export function createeighttracktape(): EIGHT_TRACK {
   }
 }
 
-export function exporteighttracktape(
-  eighttracktape: MAYBE_EIGHT_TRACK,
+export function exporteighttrack(
+  eighttrack: MAYBE_EIGHT_TRACK,
 ): MAYBE_EIGHT_TRACK {
-  return eighttracktape
+  return eighttrack
 }
 
-export function importeighttracktape(
-  eighttracktape: MAYBE_EIGHT_TRACK,
+export function importeighttrack(
+  eighttrack: MAYBE_EIGHT_TRACK,
 ): MAYBE_EIGHT_TRACK {
-  return eighttracktape
+  return eighttrack
 }
