@@ -12,6 +12,7 @@ import {
   exportboardelement,
   importboardelement,
 } from './boardelement'
+import { EIGHT_TRACK_TAPE } from './eighttrack'
 
 export enum CODE_PAGE_TYPE {
   ERROR,
@@ -23,7 +24,7 @@ export enum CODE_PAGE_TYPE {
   TERRAIN,
   CHARSET,
   PALETTE,
-  SOUNDBLASTER,
+  EIGHT_TRACK_TAPE,
 }
 
 export type CODE_PAGE_STATS = {
@@ -45,8 +46,7 @@ export type CODE_PAGE = {
   terrain?: BOARD_ELEMENT
   charset?: BITMAP
   palette?: BITMAP
-  soundblaster?: any
-  loader?: any
+  eighttracktape?: EIGHT_TRACK_TAPE
   // common parsed values
   stats?: CODE_PAGE_STATS
 }
@@ -56,14 +56,14 @@ export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
 export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.ERROR]: string
   [CODE_PAGE_TYPE.CLI]: string
+  [CODE_PAGE_TYPE.LOADER]: string
   // core content types
   [CODE_PAGE_TYPE.BOARD]: BOARD
   [CODE_PAGE_TYPE.OBJECT]: BOARD_ELEMENT
   [CODE_PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
   [CODE_PAGE_TYPE.CHARSET]: BITMAP
   [CODE_PAGE_TYPE.PALETTE]: BITMAP
-  [CODE_PAGE_TYPE.SOUNDBLASTER]: any
-  [CODE_PAGE_TYPE.LOADER]: any
+  [CODE_PAGE_TYPE.EIGHT_TRACK_TAPE]: EIGHT_TRACK_TAPE
 }
 
 export function createcodepage(
@@ -92,10 +92,9 @@ export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
     board: exportboard(codepage.board),
     object: exportboardelement(codepage.object),
     terrain: exportboardelement(codepage.terrain),
-    // charset: exportcharsetelement(codepage.charset),
-    // palette: exportpaletteelement(codepage.palette), TODO: scrub these values too
-    // soundblaster: ....
-    // loader: ...
+    // charset: exportcharset(codepage.charset),
+    // palette: exportpalette(codepage.palette), TODO: scrub these values too
+    // eighttracktape: exporteighttracktape(codepage.eighttracktape), TODO: scrub these values too
   }
 }
 
@@ -113,10 +112,9 @@ export function importcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
     board: importboard(codepage.board),
     object: importboardelement(codepage.object),
     terrain: importboardelement(codepage.terrain),
-    // charset: codepage.charset,
-    // palette: codepage.palette, TODO: scrub these values too
-    // soundblaster: ....
-    // loader: ...
+    // charset: importcharset(codepage.charset),
+    // palette: importpalette(codepage.palette),
+    // eighttracktape: importeighttracktape(codepage.eighttracktape),
   }
 }
 
@@ -284,9 +282,8 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
           codepage.stats.type = CODE_PAGE_TYPE.PALETTE
           codepage.stats.name = lmaybename
           break
-        case 'sb':
-        case 'soundblaster':
-          codepage.stats.type = CODE_PAGE_TYPE.SOUNDBLASTER
+        case '8track':
+          codepage.stats.type = CODE_PAGE_TYPE.EIGHT_TRACK_TAPE
           codepage.stats.name = lmaybename
           break
         case 'loader':
@@ -339,8 +336,8 @@ export function codepagereadtypetostring(codepage: MAYBE_CODE_PAGE) {
       return 'charset'
     case CODE_PAGE_TYPE.PALETTE:
       return 'palette'
-    case CODE_PAGE_TYPE.SOUNDBLASTER:
-      return 'soundblaster'
+    case CODE_PAGE_TYPE.EIGHT_TRACK_TAPE:
+      return '8track'
   }
 }
 
@@ -403,19 +400,19 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       }
       return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
-    case CODE_PAGE_TYPE.SOUNDBLASTER: {
-      // validate and shape soundblaster into usable state
-      if (!ispresent(codepage.soundblaster)) {
-        // codepage.soundblaster = {}
+    case CODE_PAGE_TYPE.EIGHT_TRACK_TAPE: {
+      // validate and shape eighttracktape into usable state
+      if (!ispresent(codepage.eighttracktape)) {
+        // codepage.eighttracktape = {}
       }
-      return codepage.soundblaster as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return codepage.eighttracktape as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.LOADER: {
       // validate and shape loader into usable state
-      if (!ispresent(codepage.loader)) {
-        // codepage.loader = {}
+      if (!ispresent(codepage.func)) {
+        codepage.func = ''
       }
-      return codepage.loader as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return codepage.func as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
   }
 }
