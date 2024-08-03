@@ -104,7 +104,7 @@ function createnewbook(maybename?: any) {
   return book
 }
 
-function ensureopenbook() {
+export function ensureopenbook() {
   let book = memoryreadbookbyaddress(openbook)
 
   // book already open

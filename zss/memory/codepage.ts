@@ -12,7 +12,7 @@ import {
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import { EIGHT_TRACK_TAPE } from './eighttrack'
+import { EIGHT_TRACK } from './eighttrack'
 
 export enum CODE_PAGE_TYPE {
   ERROR,
@@ -46,7 +46,7 @@ export type CODE_PAGE = {
   terrain?: BOARD_ELEMENT
   charset?: BITMAP
   palette?: BITMAP
-  eighttracktape?: EIGHT_TRACK_TAPE
+  eighttracktape?: EIGHT_TRACK
   // common parsed values
   stats?: CODE_PAGE_STATS
 }
@@ -63,7 +63,7 @@ export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
   [CODE_PAGE_TYPE.CHARSET]: BITMAP
   [CODE_PAGE_TYPE.PALETTE]: BITMAP
-  [CODE_PAGE_TYPE.EIGHT_TRACK]: EIGHT_TRACK_TAPE
+  [CODE_PAGE_TYPE.EIGHT_TRACK]: EIGHT_TRACK
 }
 
 export function createcodepage(
