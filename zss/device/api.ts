@@ -172,3 +172,7 @@ export function vm_cli(sender: string, input: string, player: string) {
 export function vm_flush(sender: string) {
   hub.emit('vm:flush', sender)
 }
+
+export function vm_loadfile(sender: string, file: File, player: string) {
+  hub.emit('vm:loadfile', sender, file, player)
+}

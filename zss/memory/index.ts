@@ -367,6 +367,16 @@ export function memorycli(
   os.once(id, CODE_PAGE_TYPE.CLI, timestamp, 'cli', cli)
 }
 
+export function memoryloadfile(
+  os: OS,
+  timestamp: number,
+  player: string,
+  file: File,
+) {
+  //
+  console.info('yo load this file!!!', file)
+}
+
 function memoryconverttogadgetlayers(
   player: string,
   index: number,

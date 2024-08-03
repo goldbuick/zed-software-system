@@ -4,10 +4,10 @@
 #cycle 1
 ' create ui
 #gadget right
-""
-- - - quick - - -
- - - - demos - - -
-""
+"
+"- - - quick - - -
+" - - - demos - - -
+"
 
 !hotkey dialog o;Open Dialog
 
@@ -16,10 +16,11 @@
 :main
 
 #if inputshift and inputmove do
-#shoot inputmove
+ #shoot inputmove
 #else if inputmove do
-?inputmove
+ ?inputmove
 #else idle
+#endif
 
 #main
 

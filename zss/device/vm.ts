@@ -15,6 +15,7 @@ import {
   memoryresetbooks,
   memorysetdefaultplayer,
   memorytick,
+  memoryloadfile,
 } from 'zss/memory'
 import { BOOK, bookreadcodepagebyaddress, exportbook } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -183,6 +184,10 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
     case 'cli':
       // user input from built-in console
       memorycli(os, lasttick, message.player ?? '', message.data ?? '')
+      break
+    case 'loadfile':
+      // user input from built-in console
+      memoryloadfile(os, lasttick, message.player ?? '', message.data)
       break
     default:
       // running software messages
