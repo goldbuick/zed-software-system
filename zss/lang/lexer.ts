@@ -144,7 +144,7 @@ export const stringliteral = createSimpleToken({
 
 export const stringliteraldouble = createSimpleToken({
   name: 'stringliteraldouble',
-  pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}))*"/,
+  pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}))*"?/,
 })
 
 export const numberliteral = createSimpleToken({

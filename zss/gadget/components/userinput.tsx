@@ -51,10 +51,12 @@ document.addEventListener(
     const mods = modsfromevent(event)
 
     // allowed shortcuts, all others we attempt to block
+    // paste ; Ctrl + V / Cmd + V
     // refresh page : Ctrl + R / Cmd + R
     // open / close devtools : Ctrl + Shift + I / Cmd + Alt + I
     // open / close js console : Ctrl + Shift + J / Cmd + Alt + J
     switch (key) {
+      case 'v':
       case 'r':
         if (mods.ctrl) {
           // no-op

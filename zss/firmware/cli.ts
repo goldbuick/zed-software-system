@@ -104,7 +104,7 @@ function createnewbook(maybename?: any) {
   return book
 }
 
-function ensureopenbook() {
+export function ensureopenbook() {
   let book = memoryreadbookbyaddress(openbook)
 
   // book already open
@@ -363,13 +363,12 @@ export const CLI_FIRMWARE = createfirmware({
       } else {
         writetext(`no pages found`)
         writetext(`use @ to create a page`)
-        writetext(`@board Name of board`)
-        writetext(`@terrain Name of terrain`)
-        writetext(`@charset Name of charset`)
-        writetext(`@palette Name of palette`)
+        writetext(`@board name of board`)
+        writetext(`@object name of object`)
+        writetext(`@terrain name of terrain`)
         writetext(`You can omit the type and it will default to object`)
-        writetext(`@object Name of object`)
-        writetext(`@Name of object`)
+        writetext(`@object name of object`)
+        writetext(`@name of object`)
       }
     } else {
       chip.command('bookopen', 'main')

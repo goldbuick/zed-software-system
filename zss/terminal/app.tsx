@@ -1,10 +1,15 @@
 import { Loader } from '@react-three/drei'
 import { Canvas, events } from '@react-three/fiber'
+import { useEffect } from 'react'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
+import { vm_loadfile } from 'zss/device/api'
+import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import { makeEven } from 'zss/mapping/number'
 
 import 'zss/platform'
+
+import { ispresent } from 'zss/mapping/types'
 
 import { Terminal } from './terminal'
 
@@ -69,6 +74,28 @@ export function App() {
   const boundsWidth = makeEven(bounds.width)
   const boundsHeight = makeEven(bounds.height)
 
+  useEffect(() => {
+    function handlepaste(event: ClipboardEvent) {
+      if (!event.clipboardData?.files.length) {
+        return
+      }
+
+      // Prevent the default behavior, so you can code your own logic.
+      event.preventDefault()
+
+      // read files from clipboardData
+      const files = [...event.clipboardData.files]
+      files.forEach((file) =>
+        vm_loadfile('loadfile', file, gadgetstategetplayer()),
+      )
+    }
+
+    document.addEventListener('paste', handlepaste, true)
+    return () => {
+      document.removeEventListener('paste', handlepaste, true)
+    }
+  }, [])
+
   return (
     <>
       <div
@@ -78,6 +105,31 @@ export function App() {
           inset: 0,
         }}
         onContextMenuCapture={(event) => {
+          event.preventDefault()
+        }}
+        onDrop={(event) => {
+          event.preventDefault()
+          if (event.dataTransfer.items) {
+            const items = [...event.dataTransfer.items]
+            // Use DataTransferItemList interface to access the file(s)
+            items.forEach((item) => {
+              // If dropped items aren't files, reject them
+              if (item.kind === 'file') {
+                const file = item.getAsFile()
+                if (ispresent(file)) {
+                  vm_loadfile('loadfile', file, gadgetstategetplayer())
+                }
+              }
+            })
+          } else {
+            const files = [...event.dataTransfer.files]
+            // Use DataTransfer interface to access the file(s)
+            files.forEach((file) =>
+              vm_loadfile('loadfile', file, gadgetstategetplayer()),
+            )
+          }
+        }}
+        onDragOver={(event) => {
           event.preventDefault()
         }}
       >

@@ -34,7 +34,7 @@ const MODS = {
   charset: '',
   palette: '',
   // audio
-  soundblaster: '',
+  eighttrack: '',
   // general cursor
   cursor: '',
 }
@@ -50,12 +50,9 @@ function strmodname(name: string): MODS_KEY | undefined {
     case 'modterrain':
     case 'modcharset':
     case 'modpalette':
-    case 'modsoundblaster': {
+    case 'modeighttrack': {
       return lname.replace('mod', '') as MODS_KEY
     }
-    // aliases
-    case 'modsb':
-      return 'soundblaster'
   }
   return undefined
 }
@@ -162,10 +159,9 @@ function modsoftware(name: MODS_KEY, key: string, value: any) {
       }
       break
     }
-    case CODE_PAGE_TYPE.SOUNDBLASTER: {
-      const soundblaster =
-        codepagereaddata<CODE_PAGE_TYPE.SOUNDBLASTER>(codepage)
-      if (ispresent(soundblaster)) {
+    case CODE_PAGE_TYPE.EIGHT_TRACK: {
+      const eighttrack = codepagereaddata<CODE_PAGE_TYPE.EIGHT_TRACK>(codepage)
+      if (ispresent(eighttrack)) {
         //
       }
       break

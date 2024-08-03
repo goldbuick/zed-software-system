@@ -1,0 +1,25 @@
+{
+  "location": "Paradigm Moon",
+  "enemies": [
+    {
+      "name": "Starky",
+      "avatar_alive": "/enemies/starky-alive.png",
+      "avatar_dead": "/enemies/starky-dead.png",
+      "battle_messages": [
+        {
+          "message": "Starky attacks you from behind like a walrus!"
+        },
+        {
+          "message": "Starky eats a lemon in your face!"
+        }
+      ],
+      "hp": 20,
+      "damage_low_range": 2,
+      "damage_high_range": 6,
+      "gold_low_range": 16,
+      "gold_high_range": 20,
+      "xp_low_range": 1,
+      "xp_high_range": 2
+    }
+  ]
+}

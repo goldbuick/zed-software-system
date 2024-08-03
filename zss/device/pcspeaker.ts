@@ -192,6 +192,9 @@ function soundparse(input: string) {
     const li = input[i].toLowerCase()
     const lii = (input[i + 1] ?? '').toLowerCase()
     switch (li) {
+      // case 'y':
+      //   note.duration = 0.5 ??
+      //   break
       case 't':
         note.duration = 1
         break
