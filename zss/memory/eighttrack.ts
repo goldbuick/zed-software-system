@@ -3,7 +3,7 @@ import { MAYBE } from 'zss/mapping/types'
 
 export type EIGHT_TRACK = {
   id?: string
-  sequence: string[]
+  patterns: string[]
 }
 
 export type EIGHT_TRACK_TAPE = {
@@ -13,10 +13,26 @@ export type EIGHT_TRACK_TAPE = {
 
 export type MAYBE_EIGHT_TRACK_TAPE = MAYBE<EIGHT_TRACK_TAPE>
 
-export function createeighttracktape() {
+function createcreateeighttracktapetrack(): EIGHT_TRACK {
   return {
     id: createsid(),
-    tracks: [],
+    patterns: ['', '', '', '', '', '', '', ''],
+  }
+}
+
+export function createeighttracktape(): EIGHT_TRACK_TAPE {
+  return {
+    id: createsid(),
+    tracks: [
+      createcreateeighttracktapetrack(),
+      createcreateeighttracktapetrack(),
+      createcreateeighttracktapetrack(),
+      createcreateeighttracktapetrack(),
+      createcreateeighttracktapetrack(),
+      createcreateeighttracktapetrack(),
+      createcreateeighttracktapetrack(),
+      createcreateeighttracktapetrack(),
+    ],
   }
 }
 
