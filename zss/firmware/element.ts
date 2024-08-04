@@ -217,7 +217,7 @@ function valuepeekframename(
   return [undefined, index]
 }
 
-export const OBJECT_FIRMWARE = createfirmware({
+export const ELEMENT_FIRMWARE = createfirmware({
   get(chip, name) {
     const memory = memoryreadchip(chip.id())
 

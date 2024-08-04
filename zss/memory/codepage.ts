@@ -16,9 +16,6 @@ import { EIGHT_TRACK } from './eighttrack'
 
 export enum CODE_PAGE_TYPE {
   ERROR,
-  CLI,
-  LOADER,
-  // all of these types support os.once() invoke as well
   BOARD,
   OBJECT,
   TERRAIN,
@@ -55,9 +52,6 @@ export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
 
 export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.ERROR]: string
-  [CODE_PAGE_TYPE.CLI]: string
-  [CODE_PAGE_TYPE.LOADER]: string
-  // core content types
   [CODE_PAGE_TYPE.BOARD]: BOARD
   [CODE_PAGE_TYPE.OBJECT]: BOARD_ELEMENT
   [CODE_PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
