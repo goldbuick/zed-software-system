@@ -1,7 +1,5 @@
-import JSZip from 'jszip'
 import { CHIP } from 'zss/chip'
-import { api_error, tape_debug, tape_info } from 'zss/device/api'
-import { ensureopenbook } from 'zss/firmware/cli'
+import { api_error, tape_debug } from 'zss/device/api'
 import { WORD, createreadcontext } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
@@ -15,7 +13,6 @@ import {
   createtiles,
 } from 'zss/gadget/data/types'
 import { average } from 'zss/mapping/array'
-import { mimetypeofbytesread } from 'zss/mapping/buffer'
 import { clamp } from 'zss/mapping/number'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import {
@@ -45,23 +42,21 @@ import {
   bookplayerreadboards,
   bookplayersetboard,
   bookreadboardsbytags,
-  bookreadcodepagewithtype,
   bookreadobjectsbytags,
-  bookwritecodepage,
 } from './book'
-import {
-  CODE_PAGE_TYPE,
-  codepagereadname,
-  codepagereadtype,
-  codepagereadtypetostring,
-  createcodepage,
-} from './codepage'
+import { CODE_PAGE_TYPE } from './codepage'
 import {
   FRAME_STATE,
   FRAME_TYPE,
   createeditframe,
   createviewframe,
 } from './frame'
+import {
+  mimetypeofbytesread,
+  parsebinaryfile,
+  parsetextfile,
+  parsezipfile,
+} from './parsefile'
 
 type CHIP_TARGETS = {
   book: MAYBE_BOOK
@@ -384,86 +379,49 @@ export function memoryloadfile(
   player: string,
   file: File | undefined,
 ) {
-  if (!ispresent(file)) {
-    return
-  }
-
-  // create codepage from source text
-  function createcodepagefromtext(text: string) {
-    const codepage = createcodepage(text, {})
-    const pagename = codepagereadname(codepage)
-    const pagetype = codepagereadtypetostring(codepage)
-
-    // only create if target doesn't already exist
-    const book = ensureopenbook()
-    const maybepage = bookreadcodepagewithtype(
-      book,
-      codepagereadtype(codepage),
-      pagename,
-    )
-
-    if (ispresent(maybepage)) {
-      tape_info(
-        'memory',
-        `${book.name} already has a [${pagetype}] named ${pagename}`,
-      )
-    } else {
-      bookwritecodepage(book, codepage)
-      tape_info('memory', `created [${pagetype}] ${pagename} in ${book.name}`)
+  function handlefiletype(type: string) {
+    if (!ispresent(file)) {
+      return
     }
-  }
-
-  // various handlers
-  async function loadtextfile(file: File) {
-    const text = await file.text()
-    createcodepagefromtext(text)
-  }
-
-  async function loadzipfile(file: File) {
-    try {
-      const buffer = await file.arrayBuffer()
-      const ziplib = new JSZip()
-      const zip = await ziplib.loadAsync(buffer)
-      zip.forEach((filepath, fileitem) => {
-        fileitem
-          .async('uint8array')
-          .then((bytes) => {
-            const mimetype = mimetypeofbytesread(filepath, bytes)
-            if (mimetype !== false) {
-              const zipfile = new File([bytes], fileitem.name, {
-                type: mimetype,
-              })
-              memoryloadfile(os, timestamp, player, zipfile)
+    switch (type) {
+      case 'text/plain':
+        parsetextfile(file).catch((err) =>
+          api_error('memory', 'crash', err.message),
+        )
+        break
+      case 'application/zip':
+        parsezipfile(os, timestamp, player, file).catch((err) =>
+          api_error('memory', 'crash', err.message),
+        )
+        break
+      case 'application/octet-stream':
+        parsebinaryfile(os, timestamp, player, file).catch((err) =>
+          api_error('memory', 'crash', err.message),
+        )
+        break
+      default:
+        file
+          .arrayBuffer()
+          .then((arraybuffer) => {
+            const type = mimetypeofbytesread(
+              file.name,
+              new Uint8Array(arraybuffer),
+            )
+            if (type) {
+              handlefiletype(type)
+            } else {
+              return api_error(
+                'memory',
+                'loadfile',
+                `unsupported file ${file.name}`,
+              )
             }
           })
-          .catch((err) => {
-            api_error('memory', 'crash', err.message)
-          })
-      })
-    } catch (err: any) {
-      api_error('memory', 'crash', err.message)
+          .catch((err) => api_error('memory', 'crash', err.message))
+        return
     }
   }
-
-  // which file types do we support loading
-  switch (file.type) {
-    case 'text/plain':
-      loadtextfile(file).catch((err) =>
-        api_error('memory', 'crash', err.message),
-      )
-      break
-    case 'application/zip':
-      loadzipfile(file).catch((err) =>
-        api_error('memory', 'crash', err.message),
-      )
-      break
-    default:
-      return api_error(
-        'memory',
-        'loadfile',
-        `${file.name} unsupported type ${file.type}`,
-      )
-  }
+  handlefiletype(file?.type ?? '')
 }
 
 function memoryconverttogadgetlayers(

@@ -14,6 +14,11 @@ import { OBJECT_FIRMWARE } from './object'
 import { PALETTE_FIRMWARE } from './palette'
 import { TERRAIN_FIRMWARE } from './terrain'
 
+// we need firmware set flavors independent of codepages
+// codepage type is a firmware type
+// but we have additional firmware types that are not codepages
+// for example cli
+
 const firmwares: Record<string, FIRMWARE> = {
   all: ALL_FIRMWARE,
   audio: AUDIO_FIRMWARE,

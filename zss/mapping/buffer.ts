@@ -4,7 +4,6 @@ import {
   makeCompressionStream,
   makeDecompressionStream,
 } from 'compression-streams-polyfill/ponyfill'
-import mime from 'mime-types'
 import { api_error } from 'zss/device/api'
 
 import { ispresent } from './types'
@@ -100,27 +99,4 @@ export async function compresstourlhash(value: any) {
 
 export async function decompressfromurlhash(value: string) {
   return await decompressfrombuffer(fromBase64(value))
-}
-
-export function mimetypeofbytesread(filepath: string, filebytes: Uint8Array) {
-  const bytes = [...filebytes.slice(0, 4)]
-  const signature = bytes
-    .map((item) => item.toString(16))
-    .join('')
-    .toUpperCase()
-  switch (signature) {
-    case '89504E47':
-      return 'image/png'
-    case '47494638':
-      return 'image/gif'
-    case '25504446':
-      return 'application/pdf'
-    case 'FFD8FFDB':
-    case 'FFD8FFE0':
-    case 'FFD8FFE1':
-      return 'image/jpeg'
-    case '504B0304':
-      return 'application/zip'
-  }
-  return mime.lookup(filepath)
 }
