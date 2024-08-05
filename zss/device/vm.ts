@@ -187,7 +187,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     case 'loadfile':
       // user input from built-in console
-      memoryloadfile(os, lasttick, message.player ?? '', message.data)
+      memoryloadfile(lasttick, message.player ?? '', message.data)
       break
     default:
       // running software messages

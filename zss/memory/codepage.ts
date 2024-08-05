@@ -12,10 +12,11 @@ import {
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import { EIGHT_TRACK } from './eighttrack'
+import { EIGHT_TRACK, exporteighttrack, importeighttrack } from './eighttrack'
 
 export enum CODE_PAGE_TYPE {
   ERROR,
+  LOADER,
   BOARD,
   OBJECT,
   TERRAIN,
@@ -35,9 +36,7 @@ export type CODE_PAGE = {
   id: string
   code: string
   tags: Set<string>
-  // non-code data
-  error?: string
-  func?: string
+  // content data
   board?: BOARD
   object?: BOARD_ELEMENT
   terrain?: BOARD_ELEMENT
@@ -52,6 +51,7 @@ export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
 
 export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.ERROR]: string
+  [CODE_PAGE_TYPE.LOADER]: string
   [CODE_PAGE_TYPE.BOARD]: BOARD
   [CODE_PAGE_TYPE.OBJECT]: BOARD_ELEMENT
   [CODE_PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
@@ -81,14 +81,13 @@ export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
     id: codepage.id,
     code: codepage.code,
     tags: [...codepage.tags] as any,
-    // non-code data
-    func: codepage.func,
+    // content data
     board: exportboard(codepage.board),
     object: exportboardelement(codepage.object),
     terrain: exportboardelement(codepage.terrain),
     // charset: exportcharset(codepage.charset),
     // palette: exportpalette(codepage.palette), TODO: scrub these values too
-    // eighttrack: exporteighttrack(codepage.eighttrack), TODO: scrub these values too
+    eighttrack: exporteighttrack(codepage.eighttrack),
   }
 }
 
@@ -101,14 +100,13 @@ export function importcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
     id: codepage.id,
     code: codepage.code,
     tags: new Set([...codepage.tags]),
-    // non-code data
-    func: codepage.func,
+    // content data
     board: importboard(codepage.board),
     object: importboardelement(codepage.object),
     terrain: importboardelement(codepage.terrain),
     // charset: importcharset(codepage.charset),
     // palette: importpalette(codepage.palette),
-    // eighttrack: importeighttrack(codepage.eighttrack),
+    eighttrack: importeighttrack(codepage.eighttrack),
   }
 }
 
@@ -166,13 +164,13 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
   const [stat, target, ...args] = tokens
   if (ispresent(codepage.stats) && ispresent(stat)) {
     switch (stat.image.toLowerCase()) {
-      case 'rn':
+      case 'rn': // 1 - 9 with optional min / max labels
       case 'range':
-      case 'sl':
+      case 'sl': // select from a list of values
       case 'select':
-      case 'nm':
+      case 'nm': // number input with optional min / max
       case 'number':
-      case 'tx':
+      case 'tx': // text input
       case 'text':
       case 'ln': // link to another board
       case 'link':
@@ -181,9 +179,14 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
           codepage.stats[ltarget] = tokenstostrings(args ?? [])
         }
         break
-      default:
-        // default is range ??
+      default: {
+        // default is list of stat names
+        const names = tokens.slice(1).map((token) => token.image)
+        for (let i = 0; i < names.length; ++i) {
+          codepage.stats[names[i]] = ''
+        }
         break
+      }
     }
   }
 }
@@ -248,14 +251,6 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
           }
           break
         }
-        case 'flags':
-          // simple space separated local flag names
-          codepage.stats.flags = lmaybename
-          break
-        case 'cli':
-          codepage.stats.type = CODE_PAGE_TYPE.CLI
-          codepage.stats.name = lmaybename
-          break
         case 'board':
           codepage.stats.type = CODE_PAGE_TYPE.BOARD
           codepage.stats.name = lmaybename
@@ -318,8 +313,8 @@ export function codepagereadtypetostring(codepage: MAYBE_CODE_PAGE) {
     default:
     case CODE_PAGE_TYPE.ERROR:
       return 'error'
-    case CODE_PAGE_TYPE.CLI:
-      return 'cli'
+    case CODE_PAGE_TYPE.LOADER:
+      return 'loader'
     case CODE_PAGE_TYPE.BOARD:
       return 'board'
     case CODE_PAGE_TYPE.OBJECT:
@@ -354,7 +349,10 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       return undefined
     }
     case CODE_PAGE_TYPE.ERROR: {
-      return (codepage?.error ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return (codepage?.code ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+    }
+    case CODE_PAGE_TYPE.LOADER: {
+      return (codepage?.code ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.BOARD: {
       // validate and shape board into usable state
@@ -400,13 +398,6 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         // codepage.eighttrack = {}
       }
       return codepage.eighttrack as MAYBE<CODE_PAGE_TYPE_MAP[T]>
-    }
-    case CODE_PAGE_TYPE.LOADER: {
-      // validate and shape loader into usable state
-      if (!ispresent(codepage.func)) {
-        codepage.func = ''
-      }
-      return codepage.func as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
   }
 }

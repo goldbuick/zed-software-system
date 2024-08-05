@@ -1,5 +1,6 @@
 import ErrorStackParser from 'error-stack-parser'
 
+import { api_error } from './device/api'
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
 import { ARG_TYPE, WORD, WORD_RESULT, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
@@ -44,6 +45,7 @@ export type CHIP = {
   // cycle: (incoming: number) => void
   timestamp: () => number
   tick: (cycle: number, incoming: number) => boolean
+  isended: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
   hm: () => number
@@ -255,11 +257,11 @@ export function createchip(id: string, build: GeneratorBuild) {
         const result = logic?.next()
 
         if (result?.done) {
-          console.error('we crashed?', build.source)
+          api_error('chip', 'crash', 'generator logic unexpectedly exited')
           endedstate = true
         }
       } catch (err: any) {
-        console.error('we crashed?', err)
+        api_error('chip', 'crash', err.message)
         endedstate = true
       }
 
@@ -269,6 +271,9 @@ export function createchip(id: string, build: GeneratorBuild) {
       }
 
       return true
+    },
+    isended() {
+      return endedstate === true
     },
     shouldtick() {
       return endedstate === false || chip.hm() !== 0

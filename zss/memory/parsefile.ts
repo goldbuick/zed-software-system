@@ -3,8 +3,6 @@ import mime from 'mime/lite'
 import { api_error, tape_info } from 'zss/device/api'
 import { ensureopenbook } from 'zss/firmware/cli'
 import { ispresent } from 'zss/mapping/types'
-import { memoryloadfile } from 'zss/memory'
-import { OS } from 'zss/os'
 
 import { bookreadcodepagewithtype, bookwritecodepage } from './book'
 import {
@@ -69,10 +67,8 @@ export async function parsetextfile(file: File) {
 }
 
 export async function parsezipfile(
-  os: OS,
-  timestamp: number,
-  player: string,
   file: File,
+  onreadfile: (zipfile: File) => void,
 ) {
   try {
     tape_info('parsezipfile', file.name)
@@ -87,7 +83,7 @@ export async function parsezipfile(
           const zipfile = new File([bytes], fileitem.name, {
             type: mimetype,
           })
-          memoryloadfile(os, timestamp, player, zipfile)
+          onreadfile(zipfile)
         })
         .catch((err) => {
           api_error('memory', 'crash', err.message)
@@ -99,15 +95,14 @@ export async function parsezipfile(
 }
 
 export async function parsebinaryfile(
-  os: OS,
-  timestamp: number,
-  player: string,
   file: File,
+  onbuffer: (fileext: string, buffer: Uint8Array) => void,
 ) {
   try {
     tape_info('parsebinaryfile', file.name)
     const arraybuffer = await file.arrayBuffer()
-    // TDOD
+    const ext = file.name.split('.').slice(-1)[0]
+    onbuffer((ext ?? '').toLowerCase(), new Uint8Array(arraybuffer))
   } catch (err: any) {
     api_error('memory', 'crash', err.message)
   }

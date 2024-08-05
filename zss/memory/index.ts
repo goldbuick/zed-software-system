@@ -1,5 +1,6 @@
 import { CHIP } from 'zss/chip'
-import { api_error, tape_debug } from 'zss/device/api'
+import { api_error, tape_debug, tape_info } from 'zss/device/api'
+import { DRIVER_TYPE } from 'zss/firmware/boot'
 import { WORD, createreadcontext } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
@@ -42,9 +43,11 @@ import {
   bookplayerreadboards,
   bookplayersetboard,
   bookreadboardsbytags,
+  bookreadcodepagesbytype,
   bookreadobjectsbytags,
 } from './book'
-import { CODE_PAGE_TYPE } from './codepage'
+import { CODE_PAGE_TYPE, codepagereadstats } from './codepage'
+import { EIGHT_TRACK } from './eighttrack'
 import {
   FRAME_STATE,
   FRAME_TYPE,
@@ -59,12 +62,17 @@ import {
 } from './parsefile'
 
 type CHIP_TARGETS = {
+  // memory
   book: MAYBE_BOOK
+  // codepages
   board: MAYBE_BOARD
   object: MAYBE_BOARD_ELEMENT
   terrain: MAYBE_BOARD_ELEMENT
   charset: MAYBE<BITMAP>
   palette: MAYBE<BITMAP>
+  eighttrack: MAYBE<EIGHT_TRACK>
+  // loaders
+  binaryfile: MAYBE<Uint8Array>
 }
 
 type CHIP_PLAYER_INPUT = {
@@ -87,6 +95,11 @@ const MEMORY = {
   defaultplayer: '',
   books: new Map<string, BOOK>(),
   chips: new Map<string, CHIP_MEMORY>(),
+  // active loaders
+  loaders: new Map<string, string>(),
+  // may re-work how this works
+  // may be simpler to just to be able to have a board
+  // show another board, and mods api etc..
   frames: new Map<string, FRAME_STATE[]>(),
   // tag configs
   tags: {
@@ -217,6 +230,9 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
       terrain: undefined,
       charset: undefined,
       palette: undefined,
+      eighttrack: undefined,
+      // loaders
+      binaryfile: undefined,
       // player input
       player: MEMORY.defaultplayer,
       inputqueue: new Set(),
@@ -307,6 +323,16 @@ export function memoryplayerlogout(player: string) {
 }
 
 export function memorytick(os: OS, timestamp: number) {
+  // update loaders
+  MEMORY.loaders.forEach((code, id) => {
+    os.tick(id, DRIVER_TYPE.LOADER, 1, timestamp, 'loader', code)
+    // teardown
+    if (os.isended(id)) {
+      os.halt(id)
+      MEMORY.loaders.delete(id)
+    }
+  })
+
   const maintags = memoryreadmaintags()
   const [book] = memoryreadbooksbytags(maintags)
   const boards = bookplayerreadboards(book)
@@ -345,7 +371,14 @@ export function memorytick(os: OS, timestamp: number) {
 
       // run chip code
       const itemname = boardelementname(item.object)
-      os.tick(item.id, item.type, cycle, timestamp, itemname, item.code)
+      os.tick(
+        item.id,
+        DRIVER_TYPE.OBJECT,
+        cycle,
+        timestamp,
+        itemname,
+        item.code,
+      )
     }
   })
 }
@@ -370,11 +403,60 @@ export function memorycli(
   tape_debug('memory', 'running', timestamp, id, cli)
 
   // run chip code
-  os.once(id, CODE_PAGE_TYPE.CLI, timestamp, 'cli', cli)
+  os.once(id, DRIVER_TYPE.CLI, timestamp, 'cli', cli)
+}
+
+function memoryloader(
+  timestamp: number,
+  player: string,
+  fileext: string,
+  binaryfile: Uint8Array,
+) {
+  // we scan main book for loaders
+  const [mainbook] = memoryreadbooksbytags(memoryreadmaintags())
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  const shouldmatch = ['binaryfile', fileext]
+  tape_info('memory', 'looking for stats', ...shouldmatch)
+
+  const loaders = bookreadcodepagesbytype(
+    mainbook,
+    CODE_PAGE_TYPE.LOADER,
+  ).filter((codepage) => {
+    // all blank stats must match
+    const stats = codepagereadstats(codepage)
+    const names = Object.keys(stats)
+    const matched = names.filter(
+      (name) => stats[name] === '' && shouldmatch.includes(name.toLowerCase()),
+    )
+    return matched.length === shouldmatch.length
+  })
+
+  for (let i = 0; i < loaders.length; ++i) {
+    const loader = loaders[i]
+
+    // player id + unique id fo run
+    const id = `${player}_load_${loader.id}`
+
+    // create / update context
+    const context = memoryreadchip(id)
+
+    context.player = player
+    context.book = undefined
+    context.board = undefined
+    context.binaryfile = binaryfile
+    context.inputcurrent = undefined
+
+    tape_info('memory', 'starting loader', timestamp, id)
+
+    // add code to active loaders
+    MEMORY.loaders.set(id, loader.code)
+  }
 }
 
 export function memoryloadfile(
-  os: OS,
   timestamp: number,
   player: string,
   file: File | undefined,
@@ -390,14 +472,14 @@ export function memoryloadfile(
         )
         break
       case 'application/zip':
-        parsezipfile(os, timestamp, player, file).catch((err) =>
-          api_error('memory', 'crash', err.message),
-        )
+        parsezipfile(file, (zipfile) =>
+          memoryloadfile(timestamp, player, zipfile),
+        ).catch((err) => api_error('memory', 'crash', err.message))
         break
       case 'application/octet-stream':
-        parsebinaryfile(os, timestamp, player, file).catch((err) =>
-          api_error('memory', 'crash', err.message),
-        )
+        parsebinaryfile(file, (fileext, binaryfile) => {
+          memoryloader(timestamp, player, fileext, binaryfile)
+        }).catch((err) => api_error('memory', 'crash', err.message))
         break
       default:
         file
