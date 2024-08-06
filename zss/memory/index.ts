@@ -61,6 +61,11 @@ import {
   parsezipfile,
 } from './parsefile'
 
+type BINARY_READER = {
+  offset: number
+  dataview: DataView
+}
+
 type CHIP_TARGETS = {
   // memory
   book: MAYBE_BOOK
@@ -72,7 +77,7 @@ type CHIP_TARGETS = {
   palette: MAYBE<BITMAP>
   eighttrack: MAYBE<EIGHT_TRACK>
   // loaders
-  binaryfile: MAYBE<Uint8Array>
+  binaryfile: MAYBE<BINARY_READER>
 }
 
 type CHIP_PLAYER_INPUT = {
@@ -446,7 +451,10 @@ function memoryloader(
     context.player = player
     context.book = undefined
     context.board = undefined
-    context.binaryfile = binaryfile
+    context.binaryfile = {
+      offset: 0,
+      dataview: new DataView(binaryfile.buffer),
+    }
     context.inputcurrent = undefined
 
     tape_info('memory', 'starting loader', timestamp, id)

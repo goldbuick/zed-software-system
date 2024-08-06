@@ -420,15 +420,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command('cycle', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    if (ispresent(memory.object)) {
-      // read cycle
-      const [cyclevalue] = readargs(memoryreadcontext(chip, words), 0, [
-        ARG_TYPE.NUMBER,
-      ])
-      // write cycle
-      const cycle = clamp(Math.round(cyclevalue), 1, 255)
-      boardelementwritestat(memory.object, 'cycle', cycle)
-    }
+    // read cycle
+    const [cyclevalue] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.NUMBER,
+    ])
+    // write cycle
+    const cycle = clamp(Math.round(cyclevalue), 1, 255)
+    boardelementwritestat(memory.object, 'cycle', cycle)
     return 0
   })
   .command('die', (chip) => {

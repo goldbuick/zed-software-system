@@ -146,6 +146,35 @@ export const CLI_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
+  .command('stat', (chip, words) => {
+    // create page
+    const [maybecodepage] = words
+    const codepage = maptostring(maybecodepage)
+
+    // check for special @book [name] case
+    if (/^book /gi.test(codepage)) {
+      const name = codepage.substring(5)
+      chip.command('bookopenorcreate', name)
+    } else {
+      chip.command('pageopenorcreate', codepage)
+    }
+
+    return 0
+  })
+  .command('text', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
+    const text = words.map(maptostring).join(' ')
+    tape_info('$2', `${memory.player}: ${text}`)
+    return 0
+  })
+  .command('hyperlink', (chip, args) => {
+    const memory = memoryreadchip(chip.id())
+    const [labelword, ...words] = args
+    const label = maptostring(labelword)
+    const hyperlink = words.map(maptostring).join(' ')
+    tape_info('$2', `!${hyperlink};${memory.player}: ${label}`)
+    return 0
+  })
   .command('bookcreate', (chip, words) => {
     const [name] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
@@ -324,20 +353,6 @@ export const CLI_FIRMWARE = createfirmware({
     chip.command(`help${text}`)
     return 0
   })
-  .command('text', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const text = words.map(maptostring).join(' ')
-    tape_info('$2', `${memory.player}: ${text}`)
-    return 0
-  })
-  .command('hyperlink', (chip, args) => {
-    const memory = memoryreadchip(chip.id())
-    const [labelword, ...words] = args
-    const label = maptostring(labelword)
-    const hyperlink = words.map(maptostring).join(' ')
-    tape_info('$2', `!${hyperlink};${memory.player}: ${label}`)
-    return 0
-  })
   .command('books', () => {
     writesection(`books`)
     const list = memoryreadbooklist()
@@ -373,21 +388,6 @@ export const CLI_FIRMWARE = createfirmware({
     } else {
       chip.command('bookopen', 'main')
     }
-    return 0
-  })
-  .command('stat', (chip, words) => {
-    // create page
-    const [maybecodepage] = words
-    const codepage = maptostring(maybecodepage)
-
-    // check for special @book [name] case
-    if (/^book /gi.test(codepage)) {
-      const name = codepage.substring(5)
-      chip.command('bookopenorcreate', name)
-    } else {
-      chip.command('pageopenorcreate', codepage)
-    }
-
     return 0
   })
   .command('trash', () => {
