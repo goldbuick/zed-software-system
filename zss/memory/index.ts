@@ -394,6 +394,10 @@ export function memorycli(
   player: string,
   cli: string,
 ) {
+  // we try and execute cli invokes in main
+  // its okay if we do not find main
+  const [mainbook] = memoryreadbooksbytags(memoryreadmaintags())
+
   // player id + unique id fo run
   const id = `${player}_cli`
 
@@ -401,7 +405,7 @@ export function memorycli(
   const context = memoryreadchip(id)
 
   context.player = player
-  context.book = undefined
+  context.book = mainbook
   context.board = undefined
   context.inputcurrent = undefined
 

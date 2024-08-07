@@ -34,6 +34,10 @@ export const LOADER_FIRMWARE = createfirmware({
     //
   },
 })
+  .command('stat', () => {
+    // no-op
+    return 0
+  })
   .command('text', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     const text = words.map(maptostring).join(' ')
@@ -48,129 +52,94 @@ export const LOADER_FIRMWARE = createfirmware({
     tape_info('$2', `!${hyperlink};${memory.player}: ${label}`)
     return 0
   })
-  .command('binary:float32', (chip, words) => {
+  .command('binary', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
+    const [kind, name] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.STRING,
       ARG_TYPE.STRING,
     ])
     const lname = name.toLowerCase()
-    chip.set(
-      lname,
-      memory.binaryfile?.dataview.getFloat32((memory.binaryfile.offset += 4)),
-    )
+    switch (kind.toLowerCase()) {
+      case 'float32':
+        chip.set(
+          lname,
+          memory.binaryfile?.dataview.getFloat32(
+            (memory.binaryfile.offset += 4),
+          ),
+        )
+        break
+      case 'float64':
+        chip.set(
+          lname,
+          memory.binaryfile?.dataview.getFloat64(
+            (memory.binaryfile.offset += 8),
+          ),
+        )
+        break
+      case 'int8':
+        chip.set(
+          lname,
+          memory.binaryfile?.dataview.getInt8((memory.binaryfile.offset += 1)),
+        )
+        break
+      case 'int16':
+        chip.set(
+          lname,
+          memory.binaryfile?.dataview.getInt16((memory.binaryfile.offset += 2)),
+        )
+        break
+      case 'int32':
+        chip.set(
+          lname,
+          memory.binaryfile?.dataview.getInt32((memory.binaryfile.offset += 4)),
+        )
+        break
+      case 'int63':
+        chip.set(
+          lname,
+          memory.binaryfile?.dataview.getBigInt64(
+            (memory.binaryfile.offset += 8),
+          ),
+        )
+        break
+      case 'uint8':
+        chip.set(
+          lname,
+          memory.binaryfile?.dataview.getUint8((memory.binaryfile.offset += 1)),
+        )
+        break
+      case 'uint16':
+        chip.set(
+          lname,
+          memory.binaryfile?.dataview.getUint16(
+            (memory.binaryfile.offset += 2),
+          ),
+        )
+        break
+      case 'uint32':
+        chip.set(
+          lname,
+          memory.binaryfile?.dataview.getUint32(
+            (memory.binaryfile.offset += 4),
+          ),
+        )
+        break
+      case 'uint63':
+        chip.set(
+          lname,
+          memory.binaryfile?.dataview.getBigUint64(
+            (memory.binaryfile.offset += 8),
+          ),
+        )
+        break
+    }
     return 0
   })
-  .command('binary:float64', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
+  .command('send', (chip, words) => {
+    const [msg, data] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
+      ARG_TYPE.ANY,
     ])
-    const lname = name.toLowerCase()
-    chip.set(
-      lname,
-      memory.binaryfile?.dataview.getFloat64((memory.binaryfile.offset += 8)),
-    )
-    return 0
-  })
-  .command('binary:int8', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
-    const lname = name.toLowerCase()
-    chip.set(
-      lname,
-      memory.binaryfile?.dataview.getInt8(memory.binaryfile.offset++),
-    )
-    return 0
-  })
-  .command('binary:int16', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
-    const lname = name.toLowerCase()
-    chip.set(
-      lname,
-      memory.binaryfile?.dataview.getInt8(memory.binaryfile.offset++),
-    )
-    return 0
-  })
-  .command('binary:int32', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
-    const lname = name.toLowerCase()
-    chip.set(
-      lname,
-      memory.binaryfile?.dataview.getInt8(memory.binaryfile.offset++),
-    )
-
-    return 0
-  })
-  .command('binary:int64', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
-    const lname = name.toLowerCase()
-    chip.set(
-      lname,
-      memory.binaryfile?.dataview.getInt8(memory.binaryfile.offset++),
-    )
-
-    return 0
-  })
-  .command('binary:uint8', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
-    const lname = name.toLowerCase()
-    chip.set(
-      lname,
-      memory.binaryfile?.dataview.getInt8(memory.binaryfile.offset++),
-    )
-
-    return 0
-  })
-  .command('binary:uint16', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
-    const lname = name.toLowerCase()
-    chip.set(
-      lname,
-      memory.binaryfile?.dataview.getInt8(memory.binaryfile.offset++),
-    )
-
-    return 0
-  })
-  .command('binary:uint32', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
-    const lname = name.toLowerCase()
-    chip.set(
-      lname,
-      memory.binaryfile?.dataview.getInt8(memory.binaryfile.offset++),
-    )
-
-    return 0
-  })
-  .command('binary:uint64', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
-    const lname = name.toLowerCase()
-    chip.set(
-      lname,
-      memory.binaryfile?.dataview.getInt8(memory.binaryfile.offset++),
-    )
-
+    tape_info('$2', `${msg} ${data ?? ''}`)
     return 0
   })
