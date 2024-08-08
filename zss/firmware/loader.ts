@@ -1,14 +1,14 @@
 import { maptostring } from 'zss/chip'
 import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
-import { ispresent } from 'zss/mapping/types'
+import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadchip, memoryreadcontext } from 'zss/memory'
+import { bookreadflag, booksetflag } from 'zss/memory/book'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
-    // read loader state
     const memory = memoryreadchip(chip.id())
     if (!ispresent(memory)) {
       return [false, undefined]
@@ -16,23 +16,28 @@ export const LOADER_FIRMWARE = createfirmware({
 
     switch (name.toLowerCase()) {
       case 'filename':
-        break
+        return [true, memory.binaryfile?.filename ?? '']
     }
 
-    return [false, undefined]
+    // get player's flags
+    const value = bookreadflag(memory.book, memory.player, name)
+    // console.info('get', name, value)
+    return [ispresent(value), value]
   },
   set(chip, name, value) {
-    return [false, undefined]
+    const memory = memoryreadchip(chip.id())
+    if (!ispresent(memory)) {
+      return [false, undefined]
+    }
+
+    // set player's flags
+    booksetflag(memory.book, memory.player, name, value)
+    // console.info('set', name, value)
+    return [true, value]
   },
-  shouldtick(chip, activecycle) {
-    //
-  },
-  tick(chip) {
-    //
-  },
-  tock(chip) {
-    //
-  },
+  shouldtick() {},
+  tick() {},
+  tock() {},
 })
   .command('stat', () => {
     // no-op
@@ -54,84 +59,154 @@ export const LOADER_FIRMWARE = createfirmware({
   })
   .command('binary', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [kind, name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
+    if (!ispresent(memory.binaryfile)) {
+      return 0
+    }
+    const [kind] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
     ])
-    const lname = name.toLowerCase()
-    switch (kind.toLowerCase()) {
+
+    const lkind = kind.toLowerCase()
+
+    let name = ''
+    switch (lkind) {
+      // skip odd balls
+      case 'seek':
+      case 'text':
+        break
+      // standard format + name
+      default: {
+        const [, target] = readargs(memoryreadcontext(chip, words), 0, [
+          ARG_TYPE.STRING,
+          ARG_TYPE.STRING,
+        ])
+        name = target
+        break
+      }
+    }
+
+    const le = lkind.endsWith('le')
+    switch (lkind) {
+      case 'seek': {
+        const [, offset] = readargs(memoryreadcontext(chip, words), 0, [
+          ARG_TYPE.STRING,
+          ARG_TYPE.NUMBER,
+        ])
+        memory.binaryfile.offset = offset
+        break
+      }
       case 'float32':
+      case 'float32le': {
         chip.set(
-          lname,
-          memory.binaryfile?.dataview.getFloat32(
-            (memory.binaryfile.offset += 4),
-          ),
+          name,
+          memory.binaryfile.dataview.getFloat32(memory.binaryfile.offset, le),
         )
+        memory.binaryfile.offset += 4
         break
+      }
       case 'float64':
+      case 'float64le': {
         chip.set(
-          lname,
-          memory.binaryfile?.dataview.getFloat64(
-            (memory.binaryfile.offset += 8),
-          ),
+          name,
+          memory.binaryfile.dataview.getFloat64(memory.binaryfile.offset, le),
         )
+        memory.binaryfile.offset += 8
         break
+      }
       case 'int8':
+      case 'int8le': {
         chip.set(
-          lname,
-          memory.binaryfile?.dataview.getInt8((memory.binaryfile.offset += 1)),
+          name,
+          memory.binaryfile.dataview.getInt8(memory.binaryfile.offset),
         )
+        memory.binaryfile.offset += 1
         break
+      }
       case 'int16':
-        chip.set(
-          lname,
-          memory.binaryfile?.dataview.getInt16((memory.binaryfile.offset += 2)),
+      case 'int16le': {
+        const value = memory.binaryfile.dataview.getInt16(
+          memory.binaryfile.offset,
+          le,
         )
+        chip.set(name, value)
+        memory.binaryfile.offset += 2
         break
+      }
       case 'int32':
+      case 'int32le': {
         chip.set(
-          lname,
-          memory.binaryfile?.dataview.getInt32((memory.binaryfile.offset += 4)),
+          name,
+          memory.binaryfile.dataview.getInt32(memory.binaryfile.offset, le),
         )
+        memory.binaryfile.offset += 4
         break
-      case 'int63':
+      }
+      case 'int64':
+      case 'int64le': {
         chip.set(
-          lname,
-          memory.binaryfile?.dataview.getBigInt64(
-            (memory.binaryfile.offset += 8),
-          ),
+          name,
+          memory.binaryfile.dataview.getBigInt64(memory.binaryfile.offset, le),
         )
+        memory.binaryfile.offset += 8
         break
+      }
       case 'uint8':
+      case 'uint8le': {
         chip.set(
-          lname,
-          memory.binaryfile?.dataview.getUint8((memory.binaryfile.offset += 1)),
+          name,
+          memory.binaryfile.dataview.getUint8(memory.binaryfile.offset),
         )
+        memory.binaryfile.offset += 1
         break
+      }
       case 'uint16':
+      case 'uint16le': {
         chip.set(
-          lname,
-          memory.binaryfile?.dataview.getUint16(
-            (memory.binaryfile.offset += 2),
-          ),
+          name,
+          memory.binaryfile.dataview.getUint16(memory.binaryfile.offset, le),
         )
+        memory.binaryfile.offset += 2
         break
+      }
       case 'uint32':
+      case 'uint32le': {
         chip.set(
-          lname,
-          memory.binaryfile?.dataview.getUint32(
-            (memory.binaryfile.offset += 4),
-          ),
+          name,
+          memory.binaryfile.dataview.getUint32(memory.binaryfile.offset, le),
         )
+        memory.binaryfile.offset += 4
         break
-      case 'uint63':
+      }
+      case 'uint64':
+      case 'uint64le': {
         chip.set(
-          lname,
-          memory.binaryfile?.dataview.getBigUint64(
-            (memory.binaryfile.offset += 8),
-          ),
+          name,
+          memory.binaryfile.dataview.getBigUint64(memory.binaryfile.offset, le),
         )
+        memory.binaryfile.offset += 8
         break
+      }
+      case 'text': {
+        const [, length, target] = readargs(memoryreadcontext(chip, words), 0, [
+          ARG_TYPE.STRING,
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.STRING,
+        ])
+        if (isnumber(length) && isstring(target)) {
+          const bytes = new Uint8Array(
+            memory.binaryfile.bytes.buffer,
+            memory.binaryfile.offset,
+            length,
+          )
+          // Using decode method to get string output
+          const decoder = new TextDecoder('utf-8')
+          const value = decoder.decode(bytes)
+          chip.set(target, value)
+          memory.binaryfile.offset += length
+          console.info('text', length, target, value)
+        }
+        break
+      }
     }
     return 0
   })

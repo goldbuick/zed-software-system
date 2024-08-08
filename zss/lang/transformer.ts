@@ -79,12 +79,12 @@ function writeTemplateString(value: string): string {
   const template = result.tokens.map((token) => {
     if (token.tokenType === MaybeFlag) {
       const name = escapeString(token.image.substring(1))
-      return `', api.group('${name}'), '`
+      return `', api.get('${name}'), '`
     }
     return escapeString(token.image)
   })
 
-  return `'${template.join('')}'`
+  return `['${template.join('')}'].join('')`
 }
 
 function transformNodes(nodes: CodeNode[]) {

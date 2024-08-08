@@ -109,7 +109,8 @@ export type Stmt_textCstNode = {
 } & CstNode
 
 export type Stmt_textCstChildren = {
-  token_text: IToken[]
+  token_stringliteraldouble?: IToken[]
+  token_text?: IToken[]
 }
 
 export type Stmt_commentCstNode = {
@@ -259,6 +260,18 @@ export type Command_elseCstChildren = {
   command_block?: Command_blockCstNode[]
 }
 
+export type Command_loopCstNode = {
+  name: 'command_loop'
+  children: Command_loopCstChildren
+} & CstNode
+
+export type Command_loopCstChildren = {
+  do_inline?: Do_inlineCstNode[]
+  do_block?: Do_blockCstNode[]
+  token_command?: IToken[]
+  token_done?: IToken[]
+}
+
 export type Command_whileCstNode = {
   name: 'command_while'
   children: Command_whileCstChildren
@@ -267,7 +280,7 @@ export type Command_whileCstNode = {
 export type Command_whileCstChildren = {
   token_while: IToken[]
   words: WordsCstNode[]
-  command_block?: Command_blockCstNode[]
+  command_loop?: Command_loopCstNode[]
 }
 
 export type Command_repeatCstNode = {
@@ -278,7 +291,7 @@ export type Command_repeatCstNode = {
 export type Command_repeatCstChildren = {
   token_repeat: IToken[]
   words: WordsCstNode[]
-  command_block?: Command_blockCstNode[]
+  command_loop?: Command_loopCstNode[]
 }
 
 export type Command_readCstNode = {
@@ -291,7 +304,7 @@ export type Command_readCstChildren = {
   words: WordsCstNode[]
   token_into: IToken[]
   token_stringliteral: IToken[]
-  command_block?: Command_blockCstNode[]
+  command_loop?: Command_loopCstNode[]
 }
 
 export type Command_breakCstNode = {
@@ -521,6 +534,7 @@ export type ICstNodeVisitor<IN, OUT> = {
   command_block(children: Command_blockCstChildren, param?: IN): OUT
   command_else_if(children: Command_else_ifCstChildren, param?: IN): OUT
   command_else(children: Command_elseCstChildren, param?: IN): OUT
+  command_loop(children: Command_loopCstChildren, param?: IN): OUT
   command_while(children: Command_whileCstChildren, param?: IN): OUT
   command_repeat(children: Command_repeatCstChildren, param?: IN): OUT
   command_read(children: Command_readCstChildren, param?: IN): OUT

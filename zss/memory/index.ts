@@ -62,7 +62,9 @@ import {
 } from './parsefile'
 
 type BINARY_READER = {
+  filename: string
   offset: number
+  bytes: Uint8Array
   dataview: DataView
 }
 
@@ -418,6 +420,7 @@ export function memorycli(
 function memoryloader(
   timestamp: number,
   player: string,
+  file: File,
   fileext: string,
   binaryfile: Uint8Array,
 ) {
@@ -453,10 +456,12 @@ function memoryloader(
     const context = memoryreadchip(id)
 
     context.player = player
-    context.book = undefined
+    context.book = mainbook
     context.board = undefined
     context.binaryfile = {
+      filename: file.name,
       offset: 0,
+      bytes: binaryfile,
       dataview: new DataView(binaryfile.buffer),
     }
     context.inputcurrent = undefined
@@ -490,7 +495,7 @@ export function memoryloadfile(
         break
       case 'application/octet-stream':
         parsebinaryfile(file, (fileext, binaryfile) => {
-          memoryloader(timestamp, player, fileext, binaryfile)
+          memoryloader(timestamp, player, file, fileext, binaryfile)
         }).catch((err) => api_error('memory', 'crash', err.message))
         break
       default:

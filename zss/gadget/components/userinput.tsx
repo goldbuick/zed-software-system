@@ -7,6 +7,8 @@ import {
   useEffect,
   useState,
 } from 'react'
+import { vm_cli } from 'zss/device/api'
+import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 
 import { INPUT } from '../data/types'
 
@@ -55,7 +57,14 @@ document.addEventListener(
     // refresh page : Ctrl + R / Cmd + R
     // open / close devtools : Ctrl + Shift + I / Cmd + Alt + I
     // open / close js console : Ctrl + Shift + J / Cmd + Alt + J
+    // save ; Ctrl + S
     switch (key) {
+      case 's':
+        if (mods.ctrl) {
+          vm_cli('tape', '#save', gadgetstategetplayer())
+        }
+        event.preventDefault()
+        break
       case 'v':
       case 'r':
         if (mods.ctrl) {
