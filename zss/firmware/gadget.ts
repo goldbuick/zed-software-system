@@ -9,13 +9,7 @@ import {
 } from 'zss/gadget/data/api'
 import { PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
-import {
-  memorycreateeditframe,
-  memorycreateviewframe,
-  memoryreadchip,
-  memoryreadcontext,
-  memoryresetframes,
-} from 'zss/memory'
+import { memoryreadchip, memoryreadcontext } from 'zss/memory'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -69,36 +63,7 @@ export const GADGET_FIRMWARE = createfirmware({
 
     return 0
   })
-  .command('frame', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [maybetarget, maybetype, maybeboard] = readargs(
-      memoryreadcontext(chip, words),
-      0,
-      [ARG_TYPE.STRING, ARG_TYPE.MAYBE_STRING, ARG_TYPE.MAYBE_STRING],
-    )
 
-    const board = memory.board?.id ?? ''
-
-    const ltarget = maybetarget.toLowerCase()
-    if (ltarget === 'reset') {
-      memoryresetframes(board)
-    } else if (ispresent(maybetype) && ispresent(maybeboard)) {
-      const ltype = maybetype.toLowerCase()
-      switch (ltype) {
-        case 'edit':
-          memorycreateeditframe(board, [ltarget], [maybeboard])
-          break
-        case 'view':
-          memorycreateviewframe(board, [ltarget], [maybeboard])
-          break
-        default:
-          // TODO raise error of unknown action
-          break
-      }
-    }
-
-    return 0
-  })
   .command('text', (chip, words) => {
     const text = words.map(maptostring).join('')
     gadgettext(chip, text)
