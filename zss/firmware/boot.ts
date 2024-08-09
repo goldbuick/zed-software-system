@@ -3,6 +3,7 @@ import { FIRMWARE } from 'zss/firmware'
 
 import { ALL_FIRMWARE } from './all'
 import { AUDIO_FIRMWARE } from './audio'
+import { BOARD_FIRMWARE } from './board'
 import { CLI_FIRMWARE } from './cli'
 import { ELEMENT_FIRMWARE } from './element'
 import { GADGET_FIRMWARE } from './gadget'
@@ -20,12 +21,12 @@ export enum DRIVER_TYPE {
   TERRAIN,
   CHARSET,
   PALETTE,
-  EIGHT_TRACK,
 }
 
 const firmwares: Record<string, FIRMWARE> = {
   all: ALL_FIRMWARE,
   audio: AUDIO_FIRMWARE,
+  board: BOARD_FIRMWARE,
   cli: CLI_FIRMWARE,
   element: ELEMENT_FIRMWARE,
   gadget: GADGET_FIRMWARE,
@@ -39,12 +40,11 @@ const DRIVER_FIRMWARE = {
   [DRIVER_TYPE.CLI]: ['all', 'audio', 'mods', 'cli'],
   [DRIVER_TYPE.LOADER]: ['all', 'audio', 'mods', 'loader'],
   // codepages
-  [DRIVER_TYPE.BOARD]: ['all', 'audio', 'mods'],
-  [DRIVER_TYPE.OBJECT]: ['all', 'audio', 'gadget', 'mods', 'element'],
-  [DRIVER_TYPE.TERRAIN]: ['all', 'audio', 'gadget', 'mods', 'element'],
-  [DRIVER_TYPE.CHARSET]: ['all', 'mods'],
-  [DRIVER_TYPE.PALETTE]: ['all', 'mods'],
-  [DRIVER_TYPE.EIGHT_TRACK]: ['all', 'audio', 'mods'],
+  [DRIVER_TYPE.BOARD]: ['all', 'audio', 'mods', 'gadget', 'board'],
+  [DRIVER_TYPE.OBJECT]: ['all', 'audio', 'mods', 'gadget', 'element'],
+  [DRIVER_TYPE.TERRAIN]: ['all', 'audio', 'mods', 'gadget', 'element'],
+  [DRIVER_TYPE.CHARSET]: ['all'],
+  [DRIVER_TYPE.PALETTE]: ['all'],
 }
 
 export type DRIVE_NAME = keyof typeof DRIVER_FIRMWARE
