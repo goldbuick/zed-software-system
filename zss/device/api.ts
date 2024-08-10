@@ -99,7 +99,7 @@ export function tape_terminal_close(sender: string) {
   hub.emit('tape:terminal:close', sender)
 }
 
-export function tape_terminal_inclayout(sender: string, inc: number) {
+export function tape_terminal_inclayout(sender: string, inc: boolean) {
   hub.emit('tape:terminal:inclayout', sender, inc)
 }
 

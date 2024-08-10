@@ -188,7 +188,7 @@ export function EditorInput({
         }
       }}
       MENU_BUTTON={(mods) => {
-        tape_terminal_inclayout('editor', mods.shift ? -1 : 1)
+        tape_terminal_inclayout('editor', !mods.shift)
       }}
       keydown={(event) => {
         if (!ispresent(value)) {

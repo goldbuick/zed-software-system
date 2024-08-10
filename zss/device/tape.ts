@@ -2,6 +2,7 @@ import { proxy, useSnapshot } from 'valtio'
 import { LOG_DEBUG } from 'zss/config'
 import { createdevice } from 'zss/device'
 import { createsid } from 'zss/mapping/guid'
+import { clamp } from 'zss/mapping/number'
 import { isarray, isnumber } from 'zss/mapping/types'
 
 // system wide message logger
@@ -10,6 +11,8 @@ export enum TAPE_DISPLAY {
   TOP,
   BOTTOM,
   FULL,
+  SPLIT_X,
+  SPLIT_Y,
   RIGHT,
   LEFT,
   MAX,
@@ -58,14 +61,22 @@ const tape = proxy<TAPE_STATE>({
   },
 })
 
-function terminalinclayout(inc: number) {
+function terminalinclayout(inc: boolean) {
+  const step = inc ? 1 : -1
   tape.terminal.layout = ((tape.terminal.layout as number) +
-    inc) as TAPE_DISPLAY
+    step) as TAPE_DISPLAY
   if ((tape.terminal.layout as number) < 0) {
     tape.terminal.layout += TAPE_DISPLAY.MAX
   }
   if ((tape.terminal.layout as number) >= (TAPE_DISPLAY.MAX as number)) {
     tape.terminal.layout -= TAPE_DISPLAY.MAX
+  }
+  if (
+    !tape.terminal.open &&
+    (tape.terminal.layout === TAPE_DISPLAY.SPLIT_X ||
+      tape.terminal.layout === TAPE_DISPLAY.SPLIT_Y)
+  ) {
+    terminalinclayout(inc)
   }
 }
 

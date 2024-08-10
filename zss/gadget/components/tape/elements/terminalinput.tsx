@@ -172,9 +172,7 @@ export function TerminalInput({
   return (
     <>
       <UserInput
-        MENU_BUTTON={(mods) =>
-          tape_terminal_inclayout('tape', mods.shift ? -1 : 1)
-        }
+        MENU_BUTTON={(mods) => tape_terminal_inclayout('tape', !mods.shift)}
         MOVE_UP={(mods) => {
           if (mods.ctrl) {
             inputstateswitch(tapeinput.bufferindex + 1)
