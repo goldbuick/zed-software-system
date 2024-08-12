@@ -2,8 +2,7 @@ import { proxy, useSnapshot } from 'valtio'
 import { LOG_DEBUG } from 'zss/config'
 import { createdevice } from 'zss/device'
 import { createsid } from 'zss/mapping/guid'
-import { clamp } from 'zss/mapping/number'
-import { isarray, isnumber } from 'zss/mapping/types'
+import { isarray, isboolean } from 'zss/mapping/types'
 
 // system wide message logger
 
@@ -72,7 +71,7 @@ function terminalinclayout(inc: boolean) {
     tape.terminal.layout -= TAPE_DISPLAY.MAX
   }
   if (
-    !tape.terminal.open &&
+    !tape.editor.open &&
     (tape.terminal.layout === TAPE_DISPLAY.SPLIT_X ||
       tape.terminal.layout === TAPE_DISPLAY.SPLIT_Y)
   ) {
@@ -121,7 +120,7 @@ createdevice('tape', [], (message) => {
       tape.terminal.open = false
       break
     case 'terminal:inclayout':
-      if (isnumber(message.data)) {
+      if (isboolean(message.data)) {
         terminalinclayout(message.data)
       }
       break
