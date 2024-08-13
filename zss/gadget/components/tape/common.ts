@@ -11,6 +11,7 @@ import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
 
 // deco
 export const BKG_PTRN = 250
+export const BKG_PTRN_ALT = 249
 
 // colors
 export const FG = COLOR.BLUE
@@ -96,19 +97,21 @@ export function setupeditoritem(
   active: boolean,
   x: number,
   y: number,
-  inset: number,
   context: WRITE_TEXT_CONTEXT,
+  xmargin: number,
+  topmargin: number,
+  bottommargin: number,
 ) {
   const edge = textformatreadedges(context)
   // reset context
-  context.x = edge.left + x
-  context.y = edge.top + y
   context.iseven = context.y % 2 === 0
   context.active.bg = active && !blink ? BG_ACTIVE : BG
-  context.active.leftedge = edge.left + inset
-  context.active.rightedge = edge.right - 1 - inset
-  context.active.topedge = edge.top + inset
-  context.active.bottomedge = edge.bottom - 1 - inset
+  context.active.leftedge = edge.left + xmargin
+  context.active.rightedge = edge.right - 1 - xmargin
+  context.active.topedge = edge.top + topmargin
+  context.active.bottomedge = edge.bottom - 1 - bottommargin
+  context.x = context.active.leftedge + x
+  context.y = context.active.topedge + y
 }
 
 export type EDITOR_CODE_ROW = {

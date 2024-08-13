@@ -29,6 +29,8 @@ export default defineConfig(({ mode }) => {
     ...loadEnv(mode, apppath, envprefix),
   }
 
+  console.info('ZSS_HMR_ONLY', process.env.ZSS_HMR_ONLY)
+
   return {
     root,
     envPrefix: envprefix,

@@ -20,7 +20,10 @@ export function TapeConsole() {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
-  const tape = useTape()
+  const {
+    layout,
+    terminal: { open },
+  } = useTape()
 
   const ditherwidth = Math.floor(viewWidth / DRAW_CHAR_WIDTH)
   const ditherheight = Math.floor(viewHeight / DRAW_CHAR_HEIGHT)
@@ -35,7 +38,7 @@ export function TapeConsole() {
   let width = cols
   let height = rows
 
-  switch (tape.layout) {
+  switch (layout) {
     case TAPE_DISPLAY.TOP:
       height = Math.round(rows * 0.5)
       break
@@ -58,7 +61,7 @@ export function TapeConsole() {
 
   const tiles = useTiles(width, height, 0, FG, BG)
 
-  resetTiles(tiles, BKG_PTRN, FG, BG)
+  resetTiles(tiles, 0, FG, BG)
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, FG, BG),
     ...tiles,
@@ -74,7 +77,7 @@ export function TapeConsole() {
 
   return (
     <>
-      {tape.terminal.open && (
+      {open && (
         // eslint-disable-next-line react/no-unknown-property
         <group position={[0, 0, 0]}>
           <StaticDither width={ditherwidth} height={ditherheight} alpha={0.2} />
@@ -85,7 +88,7 @@ export function TapeConsole() {
         position={[marginx * 0.5 + left, marginy + top, 1]}
         scale={[SCALE, SCALE, 1.0]}
       >
-        {tape.terminal.open ? (
+        {open ? (
           <UserFocus blockhotkeys>
             <TileSnapshot width={width} height={height} tiles={tiles} />
             <PlayerContext.Provider value={player}>

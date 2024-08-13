@@ -27,12 +27,12 @@ export function TapeLayout({ context }: TapeLayoutProps) {
       reset: {
         ...context.reset,
         leftedge: 0,
-        rightedge: xstep,
+        rightedge: xstep - 1,
       },
       active: {
         ...context.reset,
         leftedge: 0,
-        rightedge: xstep,
+        rightedge: xstep - 1,
       },
     }),
     [context, xstep],
@@ -44,12 +44,12 @@ export function TapeLayout({ context }: TapeLayoutProps) {
       y: 0,
       reset: {
         ...context.reset,
-        leftedge: xstep + 1,
+        leftedge: xstep,
         rightedge: context.width,
       },
       active: {
         ...context.reset,
-        leftedge: xstep + 1,
+        leftedge: xstep,
         rightedge: context.width,
       },
     }),

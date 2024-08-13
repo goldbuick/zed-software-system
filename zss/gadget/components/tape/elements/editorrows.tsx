@@ -40,7 +40,7 @@ export function EditorRows({
 
   if (!ispresent(codepage)) {
     const fibble = (blink ? '|' : '-').repeat(3)
-    setupeditoritem(false, false, 0, 0, 1, context)
+    setupeditoritem(false, false, 0, 0, context, 1, 2, 1)
     tokenizeandwritetextformat(` ${fibble} LOADING ${fibble}`, context, true)
     return null
   }
@@ -61,8 +61,8 @@ export function EditorRows({
   }
 
   // render lines
-  setupeditoritem(false, false, 1, 2 - yoffset, 1, context)
-  for (let i = 0; i < rows.length && context.y < edge.bottom; ++i) {
+  setupeditoritem(false, false, 0, -yoffset, context, 1, 2, 1)
+  for (let i = 0; i < rows.length && context.y < edge.bottom - 1; ++i) {
     textformatedges(edge.top, edge.left, edge.right, edge.bottom, context)
 
     // setup
