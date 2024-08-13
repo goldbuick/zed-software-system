@@ -7,7 +7,11 @@ import {
 } from 'zss/device/api'
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
 import { PT } from 'zss/firmware/wordtypes'
-import { applystrtoindex, useWriteText } from 'zss/gadget/data/textformat'
+import {
+  applystrtoindex,
+  textformatreadedges,
+  useWriteText,
+} from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
@@ -37,6 +41,7 @@ export function EditorInput({
   const context = useWriteText()
   const blinkdelta = useRef<PT>()
   const tapeeditor = useTapeEditor()
+  const edge = textformatreadedges(context)
 
   // split by line
   const value = sharedtosynced(codepage)
@@ -53,11 +58,9 @@ export function EditorInput({
     const moving =
       blinkdelta.current?.x !== xblink || blinkdelta.current?.y !== yblink
     if (blink || moving) {
-      applystrtoindex(
-        xblink + yblink * context.width,
-        String.fromCharCode(221),
-        context,
-      )
+      const x = edge.left + xblink
+      const y = edge.top + yblink
+      applystrtoindex(x + y * context.width, String.fromCharCode(221), context)
     }
   }
   blinkdelta.current = { x: xblink, y: yblink }

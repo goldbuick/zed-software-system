@@ -1,5 +1,6 @@
 import {
   HyperLinkText,
+  textformatreadedges,
   tokenize,
   tokenizeandwritetextformat,
   useWriteText,
@@ -16,12 +17,13 @@ import { TerminalHyperlink } from './terminalhyperlink'
 
 export function TerminalItem({ blink, active, text, y }: TerminalItemProps) {
   const context = useWriteText()
+  const edge = textformatreadedges(context)
   const ishyperlink = text.startsWith('!')
 
   // write text or clear line for ui
   setuplogitem(!!blink, !!active, y, context)
   context.writefullwidth = BKG_PTRN
-  context.active.bottomedge = context.height - 3
+  context.active.bottomedge = edge.bottom - 3
   tokenizeandwritetextformat(ishyperlink ? '' : text, context, true)
   context.writefullwidth = undefined
 

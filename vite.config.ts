@@ -11,6 +11,10 @@ import pkg from './package.json'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
+  const envprefix = 'ZSS_'
+  const root = path.join('zss', 'terminal')
+  const apppath = path.join(process.cwd(), root)
+
   // Load app-level env vars to node-level env vars.
   process.env = {
     ...process.env,
@@ -22,17 +26,19 @@ export default defineConfig(({ mode }) => {
     ZSS_COMMIT_MESSAGE: execSync('git show -s --format=%s')
       .toString()
       .trimEnd(),
-    ...loadEnv(mode, process.cwd()),
+    ...loadEnv(mode, apppath, envprefix),
   }
 
   return {
-    root: 'zss/terminal/',
-    envPrefix: 'ZSS_',
+    root,
+    envPrefix: envprefix,
     plugins: [
       react(),
       arraybuffer(),
       mkcert(),
-      fullreload(['**/*.ts', '**/*.tsx']),
+      ...(process.env.ZSS_HMR_ONLY
+        ? []
+        : [fullreload(['**/*.ts', '**/*.tsx'])]),
     ],
     resolve: {
       alias: {

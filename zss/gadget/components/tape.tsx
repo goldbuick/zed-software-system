@@ -4,7 +4,6 @@ import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import { TAPE_DISPLAY, useTape } from 'zss/device/tape'
 import {
   WRITE_TEXT_CONTEXT,
-  WriteTextContext,
   createwritetextcontext,
 } from 'zss/gadget/data/textformat'
 
@@ -12,8 +11,7 @@ import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 
 import { StaticDither } from './dither'
 import { BG, CHAR_HEIGHT, CHAR_WIDTH, BKG_PTRN, FG, SCALE } from './tape/common'
-import { TapeEditor } from './tape/editor'
-import { TapeTerminal } from './tape/terminal'
+import { TapeLayout } from './tape/layout'
 import { PlayerContext } from './useplayer'
 import { UserFocus, UserHotkey } from './userinput'
 import { TileSnapshot, resetTiles, useTiles } from './usetiles'
@@ -37,7 +35,7 @@ export function TapeConsole() {
   let width = cols
   let height = rows
 
-  switch (tape.terminal.layout) {
+  switch (tape.layout) {
     case TAPE_DISPLAY.TOP:
       height = Math.round(rows * 0.5)
       break
@@ -91,9 +89,7 @@ export function TapeConsole() {
           <UserFocus blockhotkeys>
             <TileSnapshot width={width} height={height} tiles={tiles} />
             <PlayerContext.Provider value={player}>
-              <WriteTextContext.Provider value={context}>
-                {tape.editor.open ? <TapeEditor /> : <TapeTerminal />}
-              </WriteTextContext.Provider>
+              <TapeLayout context={context} />
             </PlayerContext.Provider>
           </UserFocus>
         ) : (

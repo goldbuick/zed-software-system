@@ -435,3 +435,13 @@ export function textformatedges(
   context.active.rightedge = rightedge
   context.active.bottomedge = bottomedge
 }
+
+export function textformatreadedges(context: WRITE_TEXT_CONTEXT) {
+  const left = context.reset.leftedge ?? 0
+  const right = context.reset.rightedge ?? context.width
+  const top = context.reset.topedge ?? 0
+  const bottom = context.reset.bottomedge ?? context.height
+  const width = right - left
+  const height = bottom - top
+  return { left, right, top, bottom, width, height }
+}

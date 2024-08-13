@@ -2,6 +2,7 @@ import { MODEM_SHARED_STRING } from 'zss/device/modem'
 import {
   applycolortoindexes,
   textformatedges,
+  textformatreadedges,
   tokenizeandwritetextformat,
   useWriteText,
   writeplaintext,
@@ -35,15 +36,11 @@ export function EditorRows({
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
-
-  const topedge = 2
-  const leftedge = 1
-  const rightedge = context.width - 2
-  const bottomedge = context.height - 2
+  const edge = textformatreadedges(context)
 
   if (!ispresent(codepage)) {
     const fibble = (blink ? '|' : '-').repeat(3)
-    setupeditoritem(false, false, leftedge, topedge, 1, context)
+    setupeditoritem(false, false, 0, 0, 1, context)
     tokenizeandwritetextformat(` ${fibble} LOADING ${fibble}`, context, true)
     return null
   }
@@ -64,25 +61,30 @@ export function EditorRows({
   }
 
   // render lines
-  setupeditoritem(false, false, leftedge, topedge - yoffset, 1, context)
-  for (let i = 0; i < rows.length && context.y <= bottomedge; ++i) {
+  setupeditoritem(false, false, 1, 2 - yoffset, 1, context)
+  for (let i = 0; i < rows.length && context.y < edge.bottom; ++i) {
+    textformatedges(edge.top, edge.left, edge.right, edge.bottom, context)
+
     // setup
     const row = rows[i]
+
+    // const yrow = i + 2
     const active = i === ycursor
     const text = row.code.replaceAll('\n', '')
-    textformatedges(topedge, leftedge, rightedge, bottomedge, context)
 
     // render
-    const ycontext = context.y
     context.iseven = context.y % 2 === 0
     context.active.bg = active ? BG_ACTIVE : BG
+
     writeplaintext(`${text}`, context, true)
-    context.x = leftedge
+    context.x = edge.left + 1
     ++context.y
 
     // render selection
-    if (hasselection && row.start <= ii2 && row.end >= ii1 && ycontext > 1) {
-      const index = leftedge + ycontext * context.width
+    if (hasselection && row.start <= ii2 && row.end >= ii1) {
+      const sx = edge.left
+      const sy = edge.top
+      const index = sx + sy * context.width
       const start = Math.max(row.start, ii1) - row.start
       const end = Math.min(row.end, ii2) - row.start
       applycolortoindexes(

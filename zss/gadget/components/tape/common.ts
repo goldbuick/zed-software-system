@@ -4,8 +4,7 @@ import { proxy, useSnapshot } from 'valtio'
 import { MODEM_SHARED_VALUE } from 'zss/device/modem'
 import {
   WRITE_TEXT_CONTEXT,
-  applycolortoindexes,
-  applystrtoindex,
+  textformatreadedges,
 } from 'zss/gadget/data/textformat'
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
@@ -84,9 +83,10 @@ export function setuplogitem(
   y: number,
   context: WRITE_TEXT_CONTEXT,
 ) {
+  const edge = textformatreadedges(context)
   // reset context
-  context.x = context.active.leftedge ?? 0
-  context.y = y
+  context.x = edge.left
+  context.y = edge.top + y
   context.iseven = context.y % 2 === 0
   context.active.bg = active && !blink ? BG_ACTIVE : BG
 }
@@ -99,15 +99,16 @@ export function setupeditoritem(
   inset: number,
   context: WRITE_TEXT_CONTEXT,
 ) {
+  const edge = textformatreadedges(context)
   // reset context
-  context.x = x
-  context.y = y
+  context.x = edge.left + x
+  context.y = edge.top + y
   context.iseven = context.y % 2 === 0
   context.active.bg = active && !blink ? BG_ACTIVE : BG
-  context.active.leftedge = inset
-  context.active.rightedge = context.width - 1 - inset
-  context.active.topedge = inset
-  context.active.bottomedge = context.height - 1 - inset
+  context.active.leftedge = edge.left + inset
+  context.active.rightedge = edge.right - 1 - inset
+  context.active.topedge = edge.top + inset
+  context.active.bottomedge = edge.bottom - 1 - inset
 }
 
 export type EDITOR_CODE_ROW = {

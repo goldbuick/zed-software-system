@@ -26,9 +26,9 @@ export enum TAPE_LOG_LEVEL {
 type TAPE_ROW = [string, string, string, ...any[]]
 
 type TAPE_STATE = {
+  layout: TAPE_DISPLAY
   terminal: {
     open: boolean
-    layout: TAPE_DISPLAY
     level: TAPE_LOG_LEVEL
     logs: TAPE_ROW[]
   }
@@ -44,9 +44,9 @@ type TAPE_STATE = {
 
 // message controlled state
 const tape = proxy<TAPE_STATE>({
+  layout: TAPE_DISPLAY.BOTTOM,
   terminal: {
     open: false,
-    layout: TAPE_DISPLAY.BOTTOM,
     level: LOG_DEBUG ? TAPE_LOG_LEVEL.DEBUG : TAPE_LOG_LEVEL.INFO,
     logs: [],
   },
@@ -62,18 +62,17 @@ const tape = proxy<TAPE_STATE>({
 
 function terminalinclayout(inc: boolean) {
   const step = inc ? 1 : -1
-  tape.terminal.layout = ((tape.terminal.layout as number) +
-    step) as TAPE_DISPLAY
-  if ((tape.terminal.layout as number) < 0) {
-    tape.terminal.layout += TAPE_DISPLAY.MAX
+  tape.layout = ((tape.layout as number) + step) as TAPE_DISPLAY
+  if ((tape.layout as number) < 0) {
+    tape.layout += TAPE_DISPLAY.MAX
   }
-  if ((tape.terminal.layout as number) >= (TAPE_DISPLAY.MAX as number)) {
-    tape.terminal.layout -= TAPE_DISPLAY.MAX
+  if ((tape.layout as number) >= (TAPE_DISPLAY.MAX as number)) {
+    tape.layout -= TAPE_DISPLAY.MAX
   }
   if (
     !tape.editor.open &&
-    (tape.terminal.layout === TAPE_DISPLAY.SPLIT_X ||
-      tape.terminal.layout === TAPE_DISPLAY.SPLIT_Y)
+    (tape.layout === TAPE_DISPLAY.SPLIT_X ||
+      tape.layout === TAPE_DISPLAY.SPLIT_Y)
   ) {
     terminalinclayout(inc)
   }
@@ -111,7 +110,7 @@ createdevice('tape', [], (message) => {
       break
     case 'crash':
       tape.terminal.open = true
-      tape.terminal.layout = TAPE_DISPLAY.FULL
+      tape.layout = TAPE_DISPLAY.FULL
       break
     case 'terminal:open':
       tape.terminal.open = true

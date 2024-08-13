@@ -5,9 +5,9 @@ import {
 } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import {
-  WRITE_TEXT_CONTEXT,
   applycolortoindexes,
   applystrtoindex,
+  textformatreadedges,
   tokenizeandwritetextformat,
   useWriteText,
 } from 'zss/gadget/data/textformat'
@@ -17,14 +17,7 @@ import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../../useblink'
 import { UserInput, modsfromevent } from '../../userinput'
-import {
-  BG,
-  BG_ACTIVE,
-  FG,
-  setuplogitem,
-  tapeinputstate,
-  useTapeInput,
-} from '../common'
+import { BG, FG, setuplogitem, tapeinputstate, useTapeInput } from '../common'
 
 type ConsoleInputProps = {
   tapeycursor: number
@@ -38,12 +31,13 @@ export function TerminalInput({
   const blink = useBlink()
   const context = useWriteText()
   const tapeinput = useTapeInput()
+  const edge = textformatreadedges(context)
 
   // input & selection
   const inputstate = tapeinput.buffer[tapeinput.bufferindex]
 
   // local x input
-  const rightedge = context.width - 1
+  const rightedge = edge.right - 1
 
   let ii1 = tapeinput.xcursor
   let ii2 = tapeinput.xcursor
@@ -120,21 +114,18 @@ export function TerminalInput({
     tapeinputstate.yselect = undefined
   }
 
-  // calc input ui offset
-  const bottomedge = context.height - 1
-
   // draw divider
   const de = '$196'
   const dc = '$205'
-  const dm = dc.repeat(context.width - 6)
-  setuplogitem(false, false, bottomedge - 1, context)
+  const dm = dc.repeat(edge.width - 6)
+  setuplogitem(false, false, edge.bottom - 2, context)
   tokenizeandwritetextformat(`  ${de}${dm}${de}  `, context, true)
 
   // draw input line
-  const inputline = inputstate.padEnd(context.width, ' ')
-  const in1 = bottomedge * context.width
-  const in2 = in1 + context.width
-  context.y = bottomedge
+  const inputline = inputstate.padEnd(edge.width, ' ')
+  const in1 = (edge.bottom - 1) * edge.width
+  const in2 = in1 + edge.width
+  context.y = edge.bottom
   applystrtoindex(in1, inputline, context)
   applycolortoindexes(in1, in2, FG, BG, context)
 
@@ -152,8 +143,8 @@ export function TerminalInput({
     const y2 = Math.max(tapeinput.ycursor, tapeinput.yselect)
     // write colors
     for (let iy = y1; iy <= y2; ++iy) {
-      const p1 = x1 + (bottomedge - iy) * context.width
-      const p2 = x2 + (bottomedge - iy) * context.width
+      const p1 = x1 + (edge.bottom - iy) * edge.width
+      const p2 = x2 + (edge.bottom - iy) * edge.width
       applycolortoindexes(p1, p2, 15, 8, context)
     }
   }
@@ -163,7 +154,7 @@ export function TerminalInput({
   // draw cursor
   if (blink) {
     applystrtoindex(
-      tapeinput.xcursor + tapeycursor * context.width,
+      tapeinput.xcursor + tapeycursor * edge.width,
       String.fromCharCode(221),
       context,
     )

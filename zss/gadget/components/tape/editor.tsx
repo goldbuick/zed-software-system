@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
-import { useWriteText } from 'zss/gadget/data/textformat'
+import { textformatreadedges, useWriteText } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
@@ -23,6 +23,7 @@ export function TapeEditor() {
   const codepage = useWaitForValueString(
     vm_codeaddress(tape.editor.book, tape.editor.page),
   )
+  const edge = textformatreadedges(context)
 
   useEffect(() => {
     vm_codewatch(
@@ -46,7 +47,7 @@ export function TapeEditor() {
   const strvalue = ispresent(value) ? value.toJSON() : ''
   const rows = splitcoderows(strvalue)
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
-  const halfviewheight = Math.round((context.height - 3) * 0.5)
+  const halfviewheight = Math.round((edge.height - 3) * 0.5)
   const yoffset = clamp(
     ycursor - halfviewheight,
     0,
