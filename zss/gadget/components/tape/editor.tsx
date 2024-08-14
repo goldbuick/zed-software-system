@@ -12,6 +12,7 @@ import {
   splitcoderows,
   useTapeEditor,
 } from './common'
+import { BackPlate } from './elements/backplate'
 import { EditorFrame } from './elements/editorframe'
 import { EditorInput } from './elements/editorinput'
 import { EditorRows } from './elements/editorrows'
@@ -64,10 +65,10 @@ export function TapeEditor() {
 
   return (
     <>
-      <EditorFrame>
-        <EditorRows {...props} />
-        <EditorInput {...props} />
-      </EditorFrame>
+      <BackPlate {...edge} />
+      <EditorFrame />
+      <EditorRows {...props} />
+      <EditorInput {...props} />
     </>
   )
 }

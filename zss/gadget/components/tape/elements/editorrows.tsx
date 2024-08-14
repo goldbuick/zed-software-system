@@ -62,8 +62,7 @@ export function EditorRows({
 
   // render lines
   setupeditoritem(false, false, 0, -yoffset, context, 1, 2, 1)
-  textformatedges(edge.top, edge.left, edge.right, edge.bottom, context)
-  for (let i = 0; i < rows.length && context.y < edge.bottom - 1; ++i) {
+  for (let i = 0; i < rows.length; ++i) {
     // setup
     const row = rows[i]
 
@@ -75,15 +74,28 @@ export function EditorRows({
     context.iseven = context.y % 2 === 0
     context.active.bg = active ? BG_ACTIVE : BG
 
-    writeplaintext(`${text}`, context, true)
+    const cx = context.x
+    const cy = context.y
+
+    context.disablewrap = true
+    textformatedges(
+      edge.top + 2,
+      edge.left + 1,
+      edge.right - 2,
+      edge.bottom - 1,
+      context,
+    )
+    writeplaintext(`${text}`, context, false)
     context.x = edge.left + 1
     ++context.y
 
+    if (context.y >= edge.bottom) {
+      break
+    }
+
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
-      const sx = edge.left
-      const sy = edge.top
-      const index = sx + sy * context.width
+      const index = cx + cy * context.width
       const start = Math.max(row.start, ii1) - row.start
       const end = Math.min(row.end, ii2) - row.start
       applycolortoindexes(
@@ -95,6 +107,7 @@ export function EditorRows({
       )
     }
   }
+  context.disablewrap = false
 
   return null
 }

@@ -1,4 +1,3 @@
-import { PropsWithChildren } from 'react'
 import { useTape } from 'zss/device/tape'
 import {
   textformatreadedges,
@@ -10,8 +9,6 @@ import {
 import { useBlink } from '../../useblink'
 import { writeTile } from '../../usetiles'
 import { BG, FG, setupeditoritem } from '../common'
-
-import { BackPlate } from './backplate'
 
 export function EditorFrame() {
   const context = useWriteText()
@@ -31,7 +28,7 @@ export function EditorFrame() {
     })
   }
 
-  const egtop = `$196`.repeat(edge.width - 4)
+  const egtop = `$196`.repeat(edge.width - 5)
   setupeditoritem(false, false, 0, 0, context, 0, 0, 0)
   tokenizeandwritetextformat(`$213$205$187${egtop}$191`, context, true)
 
@@ -42,7 +39,7 @@ export function EditorFrame() {
   const tape = useTape()
   const blink = useBlink()
 
-  const egbottom = `$205`.repeat(edge.width - 4)
+  const egbottom = `$205`.repeat(edge.width - 5)
   setupeditoritem(false, false, 0, 1, context, 0, 0, 0)
   tokenizeandwritetextformat(
     `$179$${blink ? '7' : '232'}$200${egbottom}$181`,
@@ -61,5 +58,5 @@ export function EditorFrame() {
   setupeditoritem(false, false, titlex, 0, context, 0, 0, 0)
   tokenizeandwritetextformat(title, context, true)
 
-  return <BackPlate {...edge} />
+  return null
 }
