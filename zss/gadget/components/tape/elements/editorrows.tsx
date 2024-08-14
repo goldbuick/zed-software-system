@@ -62,9 +62,8 @@ export function EditorRows({
 
   // render lines
   setupeditoritem(false, false, 0, -yoffset, context, 1, 2, 1)
+  textformatedges(edge.top, edge.left, edge.right, edge.bottom, context)
   for (let i = 0; i < rows.length && context.y < edge.bottom - 1; ++i) {
-    textformatedges(edge.top, edge.left, edge.right, edge.bottom, context)
-
     // setup
     const row = rows[i]
 

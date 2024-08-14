@@ -16,8 +16,8 @@ type TapeLayoutProps = {
 export function TapeLayout({ context }: TapeLayoutProps) {
   const tape = useTape()
   const edge = textformatreadedges(context)
-  const xstep = Math.floor((edge.right - edge.left) * 0.5)
-  const ystep = Math.floor((edge.bottom - edge.top) * 0.5)
+  const xstep = Math.floor(edge.width * 0.5)
+  const ystep = Math.floor(edge.height * 0.5)
 
   const xleft = useMemo(
     () => ({

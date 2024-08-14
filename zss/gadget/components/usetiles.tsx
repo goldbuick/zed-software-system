@@ -38,15 +38,16 @@ type TileSnapshotProps = {
 }
 
 export function TileSnapshot({ width, height, tiles }: TileSnapshotProps) {
-  const snapshot = useSnapshot(tiles) as TILES
-
+  const { char, color, bg } = useSnapshot(tiles) as TILES
   return (
     palette &&
     charset &&
     width > 0 &&
     height > 0 && (
       <Tiles
-        {...snapshot}
+        char={char}
+        color={color}
+        bg={bg}
         width={width}
         height={height}
         palette={palette}

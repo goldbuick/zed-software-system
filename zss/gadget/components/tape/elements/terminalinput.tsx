@@ -17,7 +17,7 @@ import { ispresent } from 'zss/mapping/types'
 
 import { useBlink } from '../../useblink'
 import { UserInput, modsfromevent } from '../../userinput'
-import { BG, FG, setuplogitem, tapeinputstate, useTapeInput } from '../common'
+import { setuplogitem, tapeinputstate, useTapeInput } from '../common'
 
 type ConsoleInputProps = {
   tapeycursor: number
@@ -37,8 +37,6 @@ export function TerminalInput({
   const inputstate = tapeinput.buffer[tapeinput.bufferindex]
 
   // local x input
-  const rightedge = edge.right - 1
-
   let ii1 = tapeinput.xcursor
   let ii2 = tapeinput.xcursor
   let hasselection = false
@@ -114,20 +112,23 @@ export function TerminalInput({
     tapeinputstate.yselect = undefined
   }
 
+  // write hint
+  setuplogitem(false, false, 0, 0, context)
+  const hint = 'if lost try #help'
+  context.x = edge.right - hint.length
+  tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
+
   // draw divider
   const de = '$196'
   const dc = '$205'
   const dm = dc.repeat(edge.width - 6)
-  setuplogitem(false, false, edge.bottom - 2, context)
-  tokenizeandwritetextformat(`  ${de}${dm}${de}  `, context, true)
+  setuplogitem(false, false, 3, edge.height - 2, context)
+  tokenizeandwritetextformat(`${de}${dm}${de}`, context, true)
 
   // draw input line
   const inputline = inputstate.padEnd(edge.width, ' ')
-  const in1 = (edge.bottom - 1) * edge.width
-  const in2 = in1 + edge.width
-  context.y = edge.bottom
-  applystrtoindex(in1, inputline, context)
-  applycolortoindexes(in1, in2, FG, BG, context)
+  setuplogitem(false, false, 0, edge.height - 1, context)
+  tokenizeandwritetextformat(inputline, context, true)
 
   // draw selection
   if (
@@ -149,15 +150,11 @@ export function TerminalInput({
     }
   }
 
-  // apply bg blink
-
   // draw cursor
   if (blink) {
-    applystrtoindex(
-      tapeinput.xcursor + tapeycursor * edge.width,
-      String.fromCharCode(221),
-      context,
-    )
+    const x = edge.left + tapeinput.xcursor
+    const y = edge.top + tapeycursor
+    applystrtoindex(x + y * context.width, String.fromCharCode(221), context)
   }
 
   return (
@@ -196,7 +193,7 @@ export function TerminalInput({
             tapeinputstate.xcursor = clamp(
               tapeinput.xcursor - (mods.alt ? 10 : 1),
               0,
-              rightedge,
+              edge.right,
             )
           }
         }}
@@ -205,12 +202,12 @@ export function TerminalInput({
           if (mods.ctrl) {
             tapeinputstate.xcursor = inputstateactive
               ? inputstate.length
-              : rightedge
+              : edge.right
           } else {
             tapeinputstate.xcursor = clamp(
               tapeinput.xcursor + (mods.alt ? 10 : 1),
               0,
-              rightedge,
+              edge.right,
             )
           }
         }}

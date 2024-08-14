@@ -43,7 +43,7 @@ export function Tiles({
   // create data texture
   useEffect(() => {
     material.uniforms.data.value = createTilemapDataTexture(width, height)
-  }, [width, height])
+  }, [material.uniforms.data, width, height])
 
   // set data texture
   useEffect(() => {
@@ -55,18 +55,15 @@ export function Tiles({
       color,
       bg,
     )
-  }, [width, height, char, color, bg])
+  }, [material.uniforms.data.value, width, height, char, color, bg])
 
   // create / config material
   useEffect(() => {
     if (!charsetTexture || !bgRef.current) {
       return
     }
-
     createTilemapBufferGeometry(bgRef.current, width, height)
-
     const paletteColors = convertPaletteToColors(palette)
-
     material.uniforms.map.value = charsetTexture
     material.uniforms.alt.value = charsetTexture
     material.uniforms.palette.value = paletteColors
@@ -78,6 +75,7 @@ export function Tiles({
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
   }, [
+    palette,
     charsetTexture,
     material,
     width,

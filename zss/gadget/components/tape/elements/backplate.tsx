@@ -13,9 +13,8 @@ type BackPlateProps = {
 export function BackPlate({ top, left, right, bottom }: BackPlateProps) {
   const context = useWriteText()
 
-  // fill
-  for (let y = top + 1; y < bottom - 1; ++y) {
-    for (let x = left + 1; x < right - 1; ++x) {
+  for (let y = top; y <= bottom; ++y) {
+    for (let x = left; x <= right; ++x) {
       let char = 0
       if ((x + y) % 2 === 0) {
         char = Math.abs(Math.round(Math.cos(x * y * 0.01)))

@@ -81,15 +81,20 @@ export function logitemy(offset: number, context: WRITE_TEXT_CONTEXT) {
 export function setuplogitem(
   blink: boolean,
   active: boolean,
+  x: number,
   y: number,
   context: WRITE_TEXT_CONTEXT,
 ) {
   const edge = textformatreadedges(context)
   // reset context
-  context.x = edge.left
-  context.y = edge.top + y
   context.iseven = context.y % 2 === 0
   context.active.bg = active && !blink ? BG_ACTIVE : BG
+  context.active.leftedge = edge.left
+  context.active.rightedge = edge.right
+  context.active.topedge = edge.top
+  context.active.bottomedge = edge.bottom
+  context.x = context.active.leftedge + x
+  context.y = context.active.topedge + y
 }
 
 export function setupeditoritem(
@@ -107,9 +112,9 @@ export function setupeditoritem(
   context.iseven = context.y % 2 === 0
   context.active.bg = active && !blink ? BG_ACTIVE : BG
   context.active.leftedge = edge.left + xmargin
-  context.active.rightedge = edge.right - 1 - xmargin
+  context.active.rightedge = edge.right - xmargin
   context.active.topedge = edge.top + topmargin
-  context.active.bottomedge = edge.bottom - 1 - bottommargin
+  context.active.bottomedge = edge.bottom - bottommargin
   context.x = context.active.leftedge + x
   context.y = context.active.topedge + y
 }

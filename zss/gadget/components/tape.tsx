@@ -10,11 +10,11 @@ import {
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 
 import { StaticDither } from './dither'
-import { BG, CHAR_HEIGHT, CHAR_WIDTH, BKG_PTRN, FG, SCALE } from './tape/common'
+import { BG, CHAR_HEIGHT, CHAR_WIDTH, FG, SCALE } from './tape/common'
 import { TapeLayout } from './tape/layout'
 import { PlayerContext } from './useplayer'
 import { UserFocus, UserHotkey } from './userinput'
-import { TileSnapshot, resetTiles, useTiles } from './usetiles'
+import { TileSnapshot, useTiles } from './usetiles'
 
 export function TapeConsole() {
   const viewport = useThree((state) => state.viewport)
@@ -60,11 +60,11 @@ export function TapeConsole() {
   }
 
   const tiles = useTiles(width, height, 0, FG, BG)
-
-  resetTiles(tiles, 0, FG, BG)
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, FG, BG),
-    ...tiles,
+    char: tiles.char,
+    color: tiles.color,
+    bg: tiles.bg,
   }
 
   // bail on odd states
@@ -90,10 +90,10 @@ export function TapeConsole() {
       >
         {open ? (
           <UserFocus blockhotkeys>
-            <TileSnapshot width={width} height={height} tiles={tiles} />
             <PlayerContext.Provider value={player}>
               <TapeLayout context={context} />
             </PlayerContext.Provider>
+            <TileSnapshot width={width} height={height} tiles={tiles} />
           </UserFocus>
         ) : (
           <UserHotkey hotkey="Shift+?">

@@ -1,3 +1,4 @@
+import { PropsWithChildren } from 'react'
 import { useTape } from 'zss/device/tape'
 import {
   textformatreadedges,
@@ -8,38 +9,16 @@ import {
 
 import { useBlink } from '../../useblink'
 import { writeTile } from '../../usetiles'
-import { BG, BKG_PTRN, BKG_PTRN_ALT, FG, setupeditoritem } from '../common'
+import { BG, FG, setupeditoritem } from '../common'
+
+import { BackPlate } from './backplate'
 
 export function EditorFrame() {
   const context = useWriteText()
   const edge = textformatreadedges(context)
 
-  // fill
-  for (let y = edge.top + 1; y < edge.bottom - 1; ++y) {
-    for (let x = edge.left + 1; x < edge.right - 1; ++x) {
-      let char = 0
-      if ((x + y) % 2 === 0) {
-        char = Math.abs(Math.round(Math.cos(x * y * 0.01)))
-          ? BKG_PTRN
-          : BKG_PTRN_ALT
-      }
-      writeTile(
-        context,
-        context.width,
-        context.height,
-        edge.left + x,
-        edge.top + y,
-        {
-          char,
-          color: FG,
-          bg: BG,
-        },
-      )
-    }
-  }
-
   // left - right - bottom of frame
-  for (let y = edge.top; y <= edge.bottom - 1; ++y) {
+  for (let y = edge.top; y < edge.bottom; ++y) {
     writeTile(context, context.width, context.height, edge.left, y, {
       char: 179,
       color: FG,
@@ -82,5 +61,5 @@ export function EditorFrame() {
   setupeditoritem(false, false, titlex, 0, context, 0, 0, 0)
   tokenizeandwritetextformat(title, context, true)
 
-  return null
+  return <BackPlate {...edge} />
 }

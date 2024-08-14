@@ -4,14 +4,14 @@ import { useTape } from 'zss/device/tape'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
-  tokenizeandwritetextformat,
   useWriteText,
 } from 'zss/gadget/data/textformat'
 import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
 
-import { BKG_PTRN, ConsoleContext, setuplogitem, useTapeInput } from './common'
+import { ConsoleContext, useTapeInput } from './common'
+import { BackPlate } from './elements/backplate'
 import { TerminalInput } from './elements/terminalinput'
 import { TerminalItem } from './elements/terminalitem'
 import { TerminalItemActive } from './elements/terminalitemactive'
@@ -52,7 +52,7 @@ export function TapeTerminal() {
 
   // upper bound on ycursor
   let logrowtotalheight = 0
-  let logrowycoord = edge.bottom - 2
+  let logrowycoord = edge.bottom - 1
 
   // ycoords for rows
   const logrowycoords: number[] = logrowheights.map((rowheight) => {
@@ -63,27 +63,13 @@ export function TapeTerminal() {
   ++logrowtotalheight
 
   // offset into logs
-  const ycursorbottom = edge.bottom - 1
+  const ycursorbottom = edge.bottom
   const halfvisiblerows = Math.round(edge.height * 0.5)
   const ycursor = tapeinput.ycursor - halfvisiblerows
   const yoffset = clamp(ycursor, 0, logrowtotalheight - halfvisiblerows)
 
   // calculate ycoord to render cursor
   const tapeycursor = ycursorbottom - tapeinput.ycursor + yoffset
-
-  // write blanks & hint
-  const padding = -(logrowtotalheight - yoffset - ycursorbottom)
-  for (let i = 0; i < padding; ++i) {
-    setuplogitem(false, false, i, context)
-    context.writefullwidth = BKG_PTRN
-    tokenizeandwritetextformat('', context, true)
-    context.writefullwidth = undefined
-  }
-
-  setuplogitem(false, false, 0, context)
-  const hint = 'if lost try #help'
-  context.x = edge.right - hint.length
-  tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
 
   // user id
   const player = gadgetstategetplayer()
@@ -103,6 +89,12 @@ export function TapeTerminal() {
           },
         }}
       >
+        <BackPlate
+          left={edge.left}
+          top={edge.top}
+          right={edge.right}
+          bottom={edge.bottom}
+        />
         {logrows.map((text, index) => {
           const y = logrowycoords[index] + yoffset
           const yheight = logrowheights[index]

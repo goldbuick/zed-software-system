@@ -64,9 +64,10 @@ export function TapeEditor() {
 
   return (
     <>
-      <EditorFrame />
-      <EditorRows {...props} />
-      <EditorInput {...props} />
+      <EditorFrame>
+        <EditorRows {...props} />
+        <EditorInput {...props} />
+      </EditorFrame>
     </>
   )
 }

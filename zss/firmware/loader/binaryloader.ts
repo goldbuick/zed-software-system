@@ -147,7 +147,6 @@ export const binaryloader: FIRMWARE_COMMAND = (chip, words) => {
         const value = decoder.decode(bytes)
         chip.set(target, value)
         memory.binaryfile.offset += length
-        console.info('text', length, target, value)
       }
       break
     }
