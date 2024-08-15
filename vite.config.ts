@@ -29,7 +29,8 @@ export default defineConfig(({ mode }) => {
     ...loadEnv(mode, apppath, envprefix),
   }
 
-  console.info('ZSS_HMR_ONLY', process.env.ZSS_HMR_ONLY)
+  const hmronly = !!JSON.parse(process.env.ZSS_HMR_ONLY ?? '')
+  console.info({ hmronly })
 
   return {
     root,
@@ -38,9 +39,7 @@ export default defineConfig(({ mode }) => {
       react(),
       arraybuffer(),
       mkcert(),
-      ...(process.env.ZSS_HMR_ONLY
-        ? []
-        : [fullreload(['**/*.ts', '**/*.tsx'])]),
+      ...(hmronly ? [] : [fullreload(['**/*.ts', '**/*.tsx'])]),
     ],
     resolve: {
       alias: {

@@ -1,20 +1,20 @@
-import { useWriteText } from 'zss/gadget/data/textformat'
+import {
+  textformatreadedges,
+  WRITE_TEXT_CONTEXT,
+} from 'zss/gadget/data/textformat'
 
 import { writeTile } from '../../usetiles'
 import { BG, BKG_PTRN, BKG_PTRN_ALT, FG } from '../common'
 
 type BackPlateProps = {
-  top: number
-  left: number
-  right: number
-  bottom: number
+  context: WRITE_TEXT_CONTEXT
 }
 
-export function BackPlate({ top, left, right, bottom }: BackPlateProps) {
-  const context = useWriteText()
+export function BackPlate({ context }: BackPlateProps) {
+  const edge = textformatreadedges(context)
 
-  for (let y = top; y <= bottom; ++y) {
-    for (let x = left; x <= right; ++x) {
+  for (let y = edge.top; y <= edge.bottom; ++y) {
+    for (let x = edge.left; x <= edge.right; ++x) {
       let char = 0
       if ((x + y) % 2 === 0) {
         char = Math.abs(Math.round(Math.cos(x * y * 0.01)))

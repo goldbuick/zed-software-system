@@ -11,7 +11,9 @@ export enum TAPE_DISPLAY {
   BOTTOM,
   FULL,
   SPLIT_X,
+  SPLIT_X_ALT,
   SPLIT_Y,
+  SPLIT_Y_ALT,
   RIGHT,
   LEFT,
   MAX,
@@ -69,12 +71,15 @@ function terminalinclayout(inc: boolean) {
   if ((tape.layout as number) >= (TAPE_DISPLAY.MAX as number)) {
     tape.layout -= TAPE_DISPLAY.MAX
   }
-  if (
-    !tape.editor.open &&
-    (tape.layout === TAPE_DISPLAY.SPLIT_X ||
-      tape.layout === TAPE_DISPLAY.SPLIT_Y)
-  ) {
-    terminalinclayout(inc)
+  if (!tape.editor.open) {
+    switch (tape.layout) {
+      case TAPE_DISPLAY.SPLIT_X:
+      case TAPE_DISPLAY.SPLIT_Y:
+      case TAPE_DISPLAY.SPLIT_X_ALT:
+      case TAPE_DISPLAY.SPLIT_Y_ALT:
+        terminalinclayout(inc)
+        break
+    }
   }
 }
 

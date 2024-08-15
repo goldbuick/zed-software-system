@@ -11,7 +11,6 @@ import { clamp } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
 
 import { ConsoleContext, useTapeInput } from './common'
-import { BackPlate } from './elements/backplate'
 import { TerminalInput } from './elements/terminalinput'
 import { TerminalItem } from './elements/terminalitem'
 import { TerminalItemActive } from './elements/terminalitemactive'
@@ -89,12 +88,6 @@ export function TapeTerminal() {
           },
         }}
       >
-        <BackPlate
-          left={edge.left}
-          top={edge.top}
-          right={edge.right}
-          bottom={edge.bottom}
-        />
         {logrows.map((text, index) => {
           const y = logrowycoords[index] + yoffset
           const yheight = logrowheights[index]

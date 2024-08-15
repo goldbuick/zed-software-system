@@ -11,6 +11,7 @@ import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 
 import { StaticDither } from './dither'
 import { BG, CHAR_HEIGHT, CHAR_WIDTH, FG, SCALE } from './tape/common'
+import { BackPlate } from './tape/elements/backplate'
 import { TapeLayout } from './tape/layout'
 import { PlayerContext } from './useplayer'
 import { UserFocus, UserHotkey } from './userinput'
@@ -60,6 +61,7 @@ export function TapeConsole() {
   }
 
   const tiles = useTiles(width, height, 0, FG, BG)
+
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, FG, BG),
     char: tiles.char,

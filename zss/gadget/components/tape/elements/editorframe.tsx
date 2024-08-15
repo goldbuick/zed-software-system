@@ -21,14 +21,14 @@ export function EditorFrame() {
       color: FG,
       bg: BG,
     })
-    writeTile(context, context.width, context.height, edge.right - 1, y, {
+    writeTile(context, context.width, context.height, edge.right, y, {
       char: 179,
       color: FG,
       bg: BG,
     })
   }
 
-  const egtop = `$196`.repeat(edge.width - 5)
+  const egtop = `$196`.repeat(edge.width - 4)
   setupeditoritem(false, false, 0, 0, context, 0, 0, 0)
   tokenizeandwritetextformat(`$213$205$187${egtop}$191`, context, true)
 
@@ -39,7 +39,7 @@ export function EditorFrame() {
   const tape = useTape()
   const blink = useBlink()
 
-  const egbottom = `$205`.repeat(edge.width - 5)
+  const egbottom = `$205`.repeat(edge.width - 4)
   setupeditoritem(false, false, 0, 1, context, 0, 0, 0)
   tokenizeandwritetextformat(
     `$179$${blink ? '7' : '232'}$200${egbottom}$181`,
