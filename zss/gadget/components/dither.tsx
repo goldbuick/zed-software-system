@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useRef } from 'react'
-import { BufferGeometry } from 'three'
+import { useEffect, useMemo, useRef } from 'react'
+import { Box2, BufferGeometry, Vector2 } from 'three'
+import { clamp } from 'zss/mapping/number'
 
 import {
   createDitherDataTexture,
@@ -24,12 +25,12 @@ export function Dither({ width, height, alphas }: DitherProps) {
   // create data texture
   useEffect(() => {
     material.uniforms.data.value = createDitherDataTexture(width, height)
-  }, [width, height])
+  }, [material.uniforms.data, width, height])
 
   // set data texture
   useEffect(() => {
     updateDitherDataTexture(material.uniforms.data.value, width, height, alphas)
-  }, [width, height, alphas])
+  }, [material.uniforms.data.value, width, height, alphas])
 
   // create / config material
   useEffect(() => {
@@ -42,7 +43,7 @@ export function Dither({ width, height, alphas }: DitherProps) {
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
-  }, [material, clippingPlanes])
+  }, [material, clippingPlanes, width, height])
 
   return (
     <mesh material={material}>
@@ -64,5 +65,51 @@ export function StaticDither({ width, height, alpha }: StaticDitherProps) {
     () => new Array(width * height).fill(alpha),
     [width, height, alpha],
   )
+  return <Dither width={width} height={height} alphas={alphas} />
+}
+
+type ShadeBoxDitherProps = {
+  width: number
+  height: number
+  top: number
+  left: number
+  right: number
+  bottom: number
+  scale?: number
+  alpha?: number
+}
+
+const box = new Box2()
+const point = new Vector2()
+
+export function ShadeBoxDither({
+  width,
+  height,
+  top,
+  left,
+  right,
+  bottom,
+  scale = 0.04,
+  alpha = 0.25,
+}: ShadeBoxDitherProps) {
+  const alphas = useMemo(() => {
+    const values = new Array(width * height)
+    box.min.x = left
+    box.min.y = top
+    box.max.x = right
+    box.max.y = bottom
+    point.x = 0
+    point.y = 0
+    for (let i = 0; i < values.length; ++i) {
+      values[i] = clamp(alpha - box.distanceToPoint(point) * scale, 0, 1)
+      ++point.x
+      if (point.x >= width) {
+        point.x = 0
+        ++point.y
+      }
+    }
+    console.info(values, top, left, right, bottom)
+    return values
+  }, [width, height, top, left, right, bottom, scale, alpha])
   return <Dither width={width} height={height} alphas={alphas} />
 }

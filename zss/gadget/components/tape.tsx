@@ -9,7 +9,7 @@ import {
 
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 
-import { StaticDither } from './dither'
+import { ShadeBoxDither, StaticDither } from './dither'
 import { BG, CHAR_HEIGHT, CHAR_WIDTH, FG, SCALE } from './tape/common'
 import { BackPlate } from './tape/elements/backplate'
 import { TapeLayout } from './tape/layout'
@@ -45,11 +45,11 @@ export function TapeConsole() {
       break
     case TAPE_DISPLAY.RIGHT:
       width = Math.round(cols * 0.5)
-      left = (cols - width) * CHAR_WIDTH
+      left = cols - width
       break
     case TAPE_DISPLAY.BOTTOM:
       height = Math.round(rows * 0.5)
-      top = (rows - height) * CHAR_HEIGHT
+      top = rows - height
       break
     case TAPE_DISPLAY.LEFT:
       width = Math.round(cols * 0.5)
@@ -82,12 +82,23 @@ export function TapeConsole() {
       {open && (
         // eslint-disable-next-line react/no-unknown-property
         <group position={[0, 0, 0]}>
-          <StaticDither width={ditherwidth} height={ditherheight} alpha={0.2} />
+          <ShadeBoxDither
+            width={ditherwidth}
+            height={ditherheight}
+            top={top}
+            left={left}
+            right={left + width - 1}
+            bottom={top + height - 1}
+          />
         </group>
       )}
       <group
         // eslint-disable-next-line react/no-unknown-property
-        position={[marginx * 0.5 + left, marginy + top, 1]}
+        position={[
+          marginx * 0.5 + left * CHAR_WIDTH,
+          marginy + top * CHAR_HEIGHT,
+          1,
+        ]}
         scale={[SCALE, SCALE, 1.0]}
       >
         {open ? (

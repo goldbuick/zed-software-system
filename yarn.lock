@@ -3976,6 +3976,11 @@ kleur@^3.0.3:
   resolved "https://registry.npmjs.org/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
+lethargy-ts@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.npmjs.org/lethargy-ts/-/lethargy-ts-0.1.0.tgz#70c40c2e26ab0899e049eee8dd31b5fd07ff6640"
+  integrity sha512-ZNwMby5hVdtKsLCmQAw6ZwZV/YMnZglu6f7tCuoFq1nEGkBAqdzoGdtaObNa/tDQaA8yuyMNNfLpRaeIo8jXeA==
+
 leven@^3.1.0:
   version "3.1.0"
   resolved "https://registry.npmjs.org/leven/-/leven-3.1.0.tgz#77891de834064cccba82ae7842bb6b14a13ed7f2"

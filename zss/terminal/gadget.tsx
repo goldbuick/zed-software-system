@@ -10,13 +10,13 @@ export function Gadget() {
   const { player, layout, layers } = useSnapshot(state)
   return (
     <UserFocus>
-      <TapeConsole key="console" />
       <Layout
         key={`layout-${layers.length}`}
         player={player}
         layout={layout as PANEL[]}
         layers={state.layers}
       />
+      <TapeConsole key="console" />
     </UserFocus>
   )
 }

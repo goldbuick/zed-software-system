@@ -51,19 +51,19 @@ export function TapeLayout({ context }: TapeLayoutProps) {
   const ystep = Math.floor(edge.height * 0.5)
 
   const xleft = useMemo(
-    () => forkonedge(0, 0, xstep, bottom, context),
+    () => forkonedge(0, 0, xstep - 1, bottom, context),
     [xstep, bottom, context],
   )
   const xright = useMemo(
-    () => forkonedge(xstep + 1, 0, right, bottom, context),
+    () => forkonedge(xstep, 0, right, bottom, context),
     [xstep, right, bottom, context],
   )
   const ytop = useMemo(
-    () => forkonedge(0, 0, right, ystep, context),
+    () => forkonedge(0, 0, right, ystep - 1, context),
     [ystep, right, context],
   )
   const ybottom = useMemo(
-    () => forkonedge(0, ystep + 1, right, bottom, context),
+    () => forkonedge(0, ystep, right, bottom, context),
     [ystep, right, bottom, context],
   )
 

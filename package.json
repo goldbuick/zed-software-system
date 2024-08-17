@@ -14,7 +14,9 @@
     "build:strict": "tsc && vite build",
     "build:copy-cname": "cp .github/CNAME ./zss/terminal/dist"
   },
-  "dependencies": {},
+  "dependencies": {
+    "lethargy-ts": "^0.1.0"
+  },
   "devDependencies": {
     "@elemaudio/core": "^3.2.1",
     "@elemaudio/offline-renderer": "^3.2.2",
