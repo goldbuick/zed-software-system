@@ -92,6 +92,7 @@ export function TapeConsole() {
       >
         {open ? (
           <UserFocus blockhotkeys>
+            <BackPlate context={context} />
             <PlayerContext.Provider value={player}>
               <TapeLayout context={context} />
             </PlayerContext.Provider>

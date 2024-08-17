@@ -11,6 +11,7 @@ import { clamp } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
 
 import { ConsoleContext, useTapeInput } from './common'
+import { BackPlate } from './elements/backplate'
 import { TerminalInput } from './elements/terminalinput'
 import { TerminalItem } from './elements/terminalitem'
 import { TerminalItemActive } from './elements/terminalitemactive'
@@ -75,6 +76,7 @@ export function TapeTerminal() {
 
   return (
     <>
+      <BackPlate context={context} />
       <ConsoleContext.Provider
         value={{
           sendmessage(maybetarget, data) {

@@ -122,8 +122,8 @@ export function TerminalInput({
   const de = '$196'
   const dc = '$205'
   const dm = dc.repeat(edge.width - 6)
-  setuplogitem(false, false, 3, edge.height - 2, context)
-  tokenizeandwritetextformat(`${de}${dm}${de}`, context, true)
+  setuplogitem(false, false, 0, edge.height - 2, context)
+  tokenizeandwritetextformat(`  ${de}${dm}${de}  `, context, true)
 
   // draw input line
   const inputline = inputstate.padEnd(edge.width, ' ')
