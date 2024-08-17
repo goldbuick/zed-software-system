@@ -63,6 +63,10 @@ export function TapeEditor() {
     rows,
   }
 
+  // Need to have yoffset independent of ycursor
+  // so we can have mouse wheel & touch scrolling
+  // the cursor only snaps the view when being moved via arrow keys or controller
+
   return (
     <>
       <BackPlate context={context} />

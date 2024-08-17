@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { Box2, BufferGeometry, Vector2 } from 'three'
-import { clamp } from 'zss/mapping/number'
+import { Box2, BufferGeometry, MathUtils, Vector2 } from 'three'
 
 import {
   createDitherDataTexture,
@@ -89,7 +88,7 @@ export function ShadeBoxDither({
   left,
   right,
   bottom,
-  scale = 0.04,
+  scale = 0.125,
   alpha = 0.25,
 }: ShadeBoxDitherProps) {
   const alphas = useMemo(() => {
@@ -101,14 +100,15 @@ export function ShadeBoxDither({
     point.x = 0
     point.y = 0
     for (let i = 0; i < values.length; ++i) {
-      values[i] = clamp(alpha - box.distanceToPoint(point) * scale, 0, 1)
+      values[i] =
+        MathUtils.smootherstep(1 - box.distanceToPoint(point) * scale, 0, 1) *
+        alpha
       ++point.x
       if (point.x >= width) {
         point.x = 0
         ++point.y
       }
     }
-    console.info(values, top, left, right, bottom)
     return values
   }, [width, height, top, left, right, bottom, scale, alpha])
   return <Dither width={width} height={height} alphas={alphas} />

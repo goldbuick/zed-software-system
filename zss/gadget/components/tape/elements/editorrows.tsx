@@ -9,6 +9,7 @@ import {
 } from 'zss/gadget/data/textformat'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
+import { Scrollable } from '../../scrollable'
 import { useBlink } from '../../useblink'
 import {
   BG,
@@ -109,5 +110,16 @@ export function EditorRows({
   }
   context.disablewrap = false
 
-  return null
+  return (
+    <Scrollable
+      blocking
+      x={edge.left}
+      y={edge.top}
+      width={edge.width}
+      height={edge.height}
+      onScroll={(deltay) => {
+        console.info(deltay)
+      }}
+    />
+  )
 }

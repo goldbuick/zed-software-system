@@ -112,6 +112,10 @@ const HYPERLINK_WITH_SHARED_DEFAULTS = {
 }
 
 export function gadgetstate(player: string) {
+  console.info('gadgetstate', player)
+  if (player.startsWith('s')) {
+    console.trace('???')
+  }
   let value: GADGET_STATE = allgadgetstate[player]
   return ispresent(value)
     ? value

@@ -1,6 +1,5 @@
 import { Loader } from '@react-three/drei'
 import { Canvas, events } from '@react-three/fiber'
-import { Lethargy } from 'lethargy-ts'
 import { useEffect } from 'react'
 import useMeasure from 'react-use-measure'
 import * as THREE from 'three'
@@ -12,7 +11,6 @@ import 'zss/platform'
 
 import { Terminal } from './terminal'
 
-const lethargy = new Lethargy()
 const target = new THREE.Vector3()
 const facing = new THREE.Vector3()
 
@@ -90,18 +88,9 @@ export function App() {
       )
     }
 
-    function handlemousewheel(event: WheelEvent) {
-      if (!lethargy.check(event)) {
-        return
-      }
-      console.info(event.deltaY)
-    }
-
-    document.addEventListener('paste', handlepaste, true)
-    document.addEventListener('wheel', handlemousewheel, true)
+    document.addEventListener('paste', handlepaste)
     return () => {
-      document.removeEventListener('paste', handlepaste, true)
-      document.removeEventListener('wheel', handlemousewheel, true)
+      document.removeEventListener('paste', handlepaste)
     }
   }, [])
 

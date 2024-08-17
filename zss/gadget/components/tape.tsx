@@ -9,7 +9,7 @@ import {
 
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 
-import { ShadeBoxDither, StaticDither } from './dither'
+import { ShadeBoxDither } from './dither'
 import { BG, CHAR_HEIGHT, CHAR_WIDTH, FG, SCALE } from './tape/common'
 import { BackPlate } from './tape/elements/backplate'
 import { TapeLayout } from './tape/layout'

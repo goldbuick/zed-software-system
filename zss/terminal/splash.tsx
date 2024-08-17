@@ -72,7 +72,7 @@ export function Splash({ onBoot }: SplashProps) {
       y: 1,
     }
     TICKER.forEach((item) => tokenizeandwritetextformat(item, context, true))
-  }, [width, height, tiles])
+  }, [width, height, tiles, TICKER])
 
   return (
     <group position={[marginX * 0.5, marginY * 0.5, 0]}>

@@ -18,6 +18,7 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
     case 'tock':
       // we need to sync gadget here
       gadgetplayers().forEach((player) => {
+        console.info('player??', player)
         const shared = gadgetstate(player)
 
         // update gadget layers from frames

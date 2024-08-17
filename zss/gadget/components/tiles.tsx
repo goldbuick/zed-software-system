@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { BufferGeometry } from 'three'
 
 import { BITMAP } from '../data/bitmap'
