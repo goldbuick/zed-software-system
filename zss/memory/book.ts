@@ -342,7 +342,6 @@ export function booksetflag(
 
 export function bookplayerreadboard(book: MAYBE_BOOK, player: string) {
   const boardid = book?.players[player] ?? ''
-  console.info({ player, book, boardid, doot: book?.players })
   return bookreadboard(book, boardid)
 }
 

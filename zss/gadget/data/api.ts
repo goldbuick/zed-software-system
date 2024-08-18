@@ -112,10 +112,6 @@ const HYPERLINK_WITH_SHARED_DEFAULTS = {
 }
 
 export function gadgetstate(player: string) {
-  console.info('gadgetstate', player)
-  if (player.startsWith('s')) {
-    console.trace('???')
-  }
   let value: GADGET_STATE = allgadgetstate[player]
   return ispresent(value)
     ? value
@@ -158,14 +154,14 @@ export function gadgetcheckscroll(chip: CHIP) {
 }
 
 export function gadgetpanel(
-  chip: CHIP,
+  player: string,
   edge: string,
   edgeConst: PANEL_TYPE,
   maybesize: MAYBE_NUMBER,
   maybename: MAYBE_STRING,
 ) {
   // get state
-  const shared = gadgetstate(chip.id())
+  const shared = gadgetstate(player)
   const size = maybesize
   const name = maybename ?? Case.capital(edge)
 
@@ -184,7 +180,7 @@ export function gadgetpanel(
   } else {
     switch (edgeConst) {
       case PANEL_TYPE.START:
-        initstate(shared, chip.id())
+        initstate(shared, player)
         break
       case PANEL_TYPE.LEFT:
       case PANEL_TYPE.RIGHT:
@@ -210,9 +206,9 @@ export function gadgetpanel(
   }
 }
 
-export function gadgettext(chip: CHIP, text: string) {
+export function gadgettext(player: string, text: string) {
   // get state
-  const shared = gadgetstate(chip.id())
+  const shared = gadgetstate(player)
 
   // find slot
   const panel = findpanel(shared)
@@ -227,13 +223,14 @@ export function gadgettext(chip: CHIP, text: string) {
 }
 
 export function gadgethyperlink(
+  player: string,
   chip: CHIP,
   label: string,
   input: string,
   words: WORD[],
 ) {
   // get state
-  const shared = gadgetstate(chip.id())
+  const shared = gadgetstate(player)
 
   // find slot
   const panel = findpanel(shared)
