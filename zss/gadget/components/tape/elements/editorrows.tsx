@@ -1,4 +1,5 @@
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
+import { useBlink } from 'zss/gadget/components/useblink'
 import {
   applycolortoindexes,
   textformatedges,
@@ -9,8 +10,6 @@ import {
 } from 'zss/gadget/data/textformat'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import { Scrollable } from '../../scrollable'
-import { useBlink } from '../../useblink'
 import {
   BG,
   BG_ACTIVE,
@@ -110,16 +109,5 @@ export function EditorRows({
   }
   context.disablewrap = false
 
-  return (
-    <Scrollable
-      blocking
-      x={edge.left}
-      y={edge.top}
-      width={edge.width}
-      height={edge.height}
-      onScroll={(deltay) => {
-        console.info(deltay)
-      }}
-    />
-  )
+  return null
 }

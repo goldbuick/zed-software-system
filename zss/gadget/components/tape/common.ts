@@ -25,7 +25,9 @@ export const SCALE = 1
 export const CHAR_WIDTH = DRAW_CHAR_WIDTH * SCALE
 export const CHAR_HEIGHT = DRAW_CHAR_HEIGHT * SCALE
 
-export const tapeinputstate = proxy({
+export const tapeterminalstate = proxy({
+  // scrolling offset
+  scroll: 0,
   // cursor position & selection
   xcursor: 0,
   ycursor: 0,
@@ -35,17 +37,21 @@ export const tapeinputstate = proxy({
   bufferindex: 0,
   buffer: [''],
 })
-export function useTapeInput() {
-  return useSnapshot(tapeinputstate)
+
+export function useTapeTerminal() {
+  return useSnapshot(tapeterminalstate)
 }
 
 export const tapeeditorstate = proxy({
   // need an id for synced store
   id: '',
+  // scrolling offset
+  scroll: 0,
   // cursor position & selection (text index)
   cursor: 0,
   select: undefined as MAYBE_NUMBER,
 })
+
 export function useTapeEditor() {
   return useSnapshot(tapeeditorstate)
 }

@@ -15,8 +15,9 @@ import {
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
+import { Scrollable } from '../../scrollable'
 import { useBlink } from '../../useblink'
-import { UserInput, modsfromevent } from '../../userinput'
+import { UserInput, UserInputMods, modsfromevent } from '../../userinput'
 import {
   EDITOR_CODE_ROW,
   sharedtosynced,
@@ -122,156 +123,163 @@ export function EditorInput({
     tapeeditorstate.select = undefined
   }
 
+  function movecursor(inc: number) {
+    const ycheck = ycursor - inc
+    if (ycheck < 0) {
+      tapeeditorstate.cursor = 0
+    } else if (ycheck > rowsend) {
+      tapeeditorstate.cursor = codeend
+    } else {
+      const row = rows[ycheck]
+      tapeeditorstate.cursor =
+        row.start + Math.min(xcursor, row.code.length - 1)
+    }
+  }
+
   return (
-    <UserInput
-      MOVE_LEFT={(mods) => {
-        trackselection(mods.shift)
-        if (mods.ctrl) {
-          tapeeditorstate.cursor = coderow.start
-        } else {
-          const cursor = tapeeditorstate.cursor - (mods.alt ? 10 : 1)
-          tapeeditorstate.cursor = clamp(cursor, 0, codeend)
-        }
-      }}
-      MOVE_RIGHT={(mods) => {
-        trackselection(mods.shift)
-        if (mods.ctrl) {
-          tapeeditorstate.cursor = coderow.end
-        } else {
-          const cursor = tapeeditorstate.cursor + (mods.alt ? 10 : 1)
-          tapeeditorstate.cursor = clamp(cursor, 0, codeend)
-        }
-      }}
-      MOVE_UP={(mods) => {
-        trackselection(mods.shift)
-        if (mods.ctrl) {
-          tapeeditorstate.cursor = 0
-        } else {
-          const ycheck = ycursor - (mods.alt ? 10 : 1)
-          if (ycheck < 0) {
+    <>
+      <Scrollable
+        blocking
+        x={edge.left}
+        y={edge.top}
+        width={edge.width}
+        height={edge.height}
+        onScroll={(deltay) => {
+          movecursor(-deltay)
+        }}
+      />
+      <UserInput
+        MOVE_LEFT={(mods) => {
+          trackselection(mods.shift)
+          if (mods.ctrl) {
+            tapeeditorstate.cursor = coderow.start
+          } else {
+            const cursor = tapeeditorstate.cursor - (mods.alt ? 10 : 1)
+            tapeeditorstate.cursor = clamp(cursor, 0, codeend)
+          }
+        }}
+        MOVE_RIGHT={(mods) => {
+          trackselection(mods.shift)
+          if (mods.ctrl) {
+            tapeeditorstate.cursor = coderow.end
+          } else {
+            const cursor = tapeeditorstate.cursor + (mods.alt ? 10 : 1)
+            tapeeditorstate.cursor = clamp(cursor, 0, codeend)
+          }
+        }}
+        MOVE_UP={(mods) => {
+          trackselection(mods.shift)
+          if (mods.ctrl) {
             tapeeditorstate.cursor = 0
-          } else if (ycheck > rowsend) {
+          } else {
+            movecursor(mods.alt ? 10 : 1)
+          }
+        }}
+        MOVE_DOWN={(mods) => {
+          trackselection(mods.shift)
+          if (mods.ctrl) {
             tapeeditorstate.cursor = codeend
           } else {
-            const row = rows[ycheck]
-            tapeeditorstate.cursor =
-              row.start + Math.min(xcursor, row.code.length - 1)
+            movecursor(mods.alt ? 10 : 1)
           }
-        }
-      }}
-      MOVE_DOWN={(mods) => {
-        trackselection(mods.shift)
-        if (mods.ctrl) {
-          tapeeditorstate.cursor = codeend
-        } else {
-          const ycheck = ycursor + (mods.alt ? 10 : 1)
-          if (ycheck < 0) {
-            tapeeditorstate.cursor = 0
-          } else if (ycheck > rowsend) {
-            tapeeditorstate.cursor = codeend
+        }}
+        OK_BUTTON={() => {
+          if (ispresent(value)) {
+            // insert newline !
+            value.insert(tapeeditor.cursor, `\n`)
+            tapeeditorstate.cursor += 1
+          }
+        }}
+        CANCEL_BUTTON={(mods) => {
+          if (mods.shift || mods.alt || mods.ctrl) {
+            tape_terminal_close('tape')
           } else {
-            const row = rows[ycheck]
-            tapeeditorstate.cursor =
-              row.start + Math.min(xcursor, row.code.length - 1)
+            tape_editor_close('editor')
           }
-        }
-      }}
-      OK_BUTTON={() => {
-        if (ispresent(value)) {
-          // insert newline !
-          value.insert(tapeeditor.cursor, `\n`)
-          tapeeditorstate.cursor += 1
-        }
-      }}
-      CANCEL_BUTTON={(mods) => {
-        if (mods.shift || mods.alt || mods.ctrl) {
-          tape_terminal_close('tape')
-        } else {
-          tape_editor_close('editor')
-        }
-      }}
-      MENU_BUTTON={(mods) => {
-        tape_terminal_inclayout('editor', !mods.shift)
-      }}
-      keydown={(event) => {
-        if (!ispresent(value)) {
-          return
-        }
+        }}
+        MENU_BUTTON={(mods) => {
+          tape_terminal_inclayout('editor', !mods.shift)
+        }}
+        keydown={(event) => {
+          if (!ispresent(value)) {
+            return
+          }
 
-        const { key } = event
-        const lkey = key.toLowerCase()
-        const mods = modsfromevent(event)
+          const { key } = event
+          const lkey = key.toLowerCase()
+          const mods = modsfromevent(event)
 
-        switch (lkey) {
-          case 'delete':
-            if (hasselection) {
-              deleteselection()
-            } else {
-              value.delete(tapeeditor.cursor, 1)
-            }
-            break
-          case 'backspace':
-            if (hasselection) {
-              deleteselection()
-            } else {
-              tapeeditorstate.cursor = Math.max(0, tapeeditorstate.cursor - 1)
-              value.delete(tapeeditorstate.cursor, 1)
-            }
-            break
-          default:
-            if (mods.ctrl) {
-              switch (lkey) {
-                case 'a':
-                  tapeeditorstate.select = 0
-                  tapeeditorstate.cursor = codeend
-                  break
-                case 'c':
-                  if (ispresent(navigator.clipboard)) {
-                    navigator.clipboard
-                      .writeText(strvalueselected)
-                      .catch((err) => api_error('tape', 'clipboard', err))
-                  } else {
-                    resettoend()
-                  }
-                  break
-                case 'v':
-                  if (ispresent(navigator.clipboard)) {
-                    navigator.clipboard
-                      .readText()
-                      .then((text) => {
-                        const cleantext = text.replaceAll('\r', '')
-                        if (hasselection) {
-                          strvaluesplice(ii1, iic, cleantext)
-                        } else {
-                          strvaluesplice(tapeeditor.cursor, 0, cleantext)
-                        }
-                      })
-                      .catch((err) => api_error('tape', 'clipboard', err))
-                  } else {
-                    resettoend()
-                  }
-                  break
-                case 'x':
-                  if (ispresent(navigator.clipboard)) {
-                    navigator.clipboard
-                      .writeText(strvalueselected)
-                      .then(() => deleteselection())
-                      .catch((err) => api_error('tape', 'clipboard', err))
-                  } else {
-                    resettoend()
-                  }
-                  break
+          switch (lkey) {
+            case 'delete':
+              if (hasselection) {
+                deleteselection()
+              } else {
+                value.delete(tapeeditor.cursor, 1)
               }
-            } else if (mods.alt) {
-              // no-op ?? - could this shove text around when you have selection ??
-              // or jump by 10 or by word ??
-            } else if (key.length === 1) {
-              value.insert(tapeeditor.cursor, key)
-              tapeeditorstate.cursor += key.length
-            }
-            break
-        }
-      }}
-    />
+              break
+            case 'backspace':
+              if (hasselection) {
+                deleteselection()
+              } else {
+                tapeeditorstate.cursor = Math.max(0, tapeeditorstate.cursor - 1)
+                value.delete(tapeeditorstate.cursor, 1)
+              }
+              break
+            default:
+              if (mods.ctrl) {
+                switch (lkey) {
+                  case 'a':
+                    tapeeditorstate.select = 0
+                    tapeeditorstate.cursor = codeend
+                    break
+                  case 'c':
+                    if (ispresent(navigator.clipboard)) {
+                      navigator.clipboard
+                        .writeText(strvalueselected)
+                        .catch((err) => api_error('tape', 'clipboard', err))
+                    } else {
+                      resettoend()
+                    }
+                    break
+                  case 'v':
+                    if (ispresent(navigator.clipboard)) {
+                      navigator.clipboard
+                        .readText()
+                        .then((text) => {
+                          const cleantext = text.replaceAll('\r', '')
+                          if (hasselection) {
+                            strvaluesplice(ii1, iic, cleantext)
+                          } else {
+                            strvaluesplice(tapeeditor.cursor, 0, cleantext)
+                          }
+                        })
+                        .catch((err) => api_error('tape', 'clipboard', err))
+                    } else {
+                      resettoend()
+                    }
+                    break
+                  case 'x':
+                    if (ispresent(navigator.clipboard)) {
+                      navigator.clipboard
+                        .writeText(strvalueselected)
+                        .then(() => deleteselection())
+                        .catch((err) => api_error('tape', 'clipboard', err))
+                    } else {
+                      resettoend()
+                    }
+                    break
+                }
+              } else if (mods.alt) {
+                // no-op ?? - could this shove text around when you have selection ??
+                // or jump by 10 or by word ??
+              } else if (key.length === 1) {
+                value.insert(tapeeditor.cursor, key)
+                tapeeditorstate.cursor += key.length
+              }
+              break
+          }
+        }}
+      />
+    </>
   )
 }

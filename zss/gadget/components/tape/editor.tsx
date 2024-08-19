@@ -48,18 +48,18 @@ export function TapeEditor() {
   const strvalue = ispresent(value) ? value.toJSON() : ''
   const rows = splitcoderows(strvalue)
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
-  const halfviewheight = Math.round((edge.height - 3) * 0.5)
-  const yoffset = clamp(
-    ycursor - halfviewheight,
-    0,
-    rows.length - halfviewheight,
-  )
+  // const halfviewheight = Math.round((edge.height - 3) * 0.5)
+  // const yoffset = clamp(
+  //   ycursor - halfviewheight,
+  //   0,
+  //   rows.length - halfviewheight,
+  // )
 
   // measure edges once
   const props = {
+    yoffset: tapeeditor.scroll,
     codepage,
     ycursor,
-    yoffset,
     rows,
   }
 

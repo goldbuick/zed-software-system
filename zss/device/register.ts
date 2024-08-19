@@ -25,11 +25,13 @@ async function readstate(): Promise<STATE_BOOKS> {
 async function writestate(exportedbooks: STATE_BOOKS) {
   const hash = (await compresstourlhash(exportedbooks)) ?? ''
   const out = `#${hash}`
-  window.location.hash = out
-  tape_info(
-    register.name(),
-    `wrote ${hash?.length ?? 0} chars [${hash.slice(0, 8)}...${hash.slice(-8)}]`,
-  )
+  if (window.location.hash !== out) {
+    window.location.hash = out
+    tape_info(
+      register.name(),
+      `wrote ${hash?.length ?? 0} chars [${hash.slice(0, 8)}...${hash.slice(-8)}]`,
+    )
+  }
 }
 
 const BIOS_BOOKS = 'bios-books'

@@ -7,10 +7,9 @@ import {
   useWriteText,
 } from 'zss/gadget/data/textformat'
 import { hub } from 'zss/hub'
-import { clamp } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
 
-import { ConsoleContext, useTapeInput } from './common'
+import { ConsoleContext, useTapeTerminal } from './common'
 import { BackPlate } from './elements/backplate'
 import { TerminalInput } from './elements/terminalinput'
 import { TerminalItem } from './elements/terminalitem'
@@ -19,7 +18,7 @@ import { TerminalItemActive } from './elements/terminalitemactive'
 export function TapeTerminal() {
   const tape = useTape()
   const context = useWriteText()
-  const tapeinput = useTapeInput()
+  const tapeinput = useTapeTerminal()
   const edge = textformatreadedges(context)
 
   // render to strings
@@ -62,14 +61,8 @@ export function TapeTerminal() {
   })
   ++logrowtotalheight
 
-  // offset into logs
-  const ycursorbottom = edge.bottom
-  const halfvisiblerows = Math.round(edge.height * 0.5)
-  const ycursor = tapeinput.ycursor - halfvisiblerows
-  const yoffset = clamp(ycursor, 0, logrowtotalheight - halfvisiblerows)
-
   // calculate ycoord to render cursor
-  const tapeycursor = ycursorbottom - tapeinput.ycursor + yoffset
+  const tapeycursor = edge.bottom - tapeinput.ycursor + tapeinput.scroll
 
   // user id
   const player = gadgetstategetplayer()
@@ -91,7 +84,7 @@ export function TapeTerminal() {
         }}
       >
         {logrows.map((text, index) => {
-          const y = logrowycoords[index] + yoffset
+          const y = logrowycoords[index] + tapeinput.scroll
           const yheight = logrowheights[index]
           const ybottom = y + yheight
           if (ybottom < 0 || y > edge.bottom - 1) {
