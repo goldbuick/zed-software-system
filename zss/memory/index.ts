@@ -14,6 +14,7 @@ import {
   createtiles,
 } from 'zss/gadget/data/types'
 import { average } from 'zss/mapping/array'
+import { createpid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import {
@@ -99,7 +100,7 @@ export enum MEMORY_LABEL {
 
 const MEMORY = {
   // running software
-  defaultplayer: '',
+  defaultplayer: createpid(),
   books: new Map<string, BOOK>(),
   chips: new Map<string, CHIP_MEMORY>(),
   // active loaders
@@ -153,8 +154,8 @@ export function memoryreadplayertags() {
   return memoryreadtags(MEMORY_LABEL.PLAYER)
 }
 
-export function memorysetdefaultplayer(player: string) {
-  MEMORY.defaultplayer = player
+export function memorygetdefaultplayer() {
+  return MEMORY.defaultplayer
 }
 
 export function memoryresetframes(board: string): FRAME_STATE[] {
@@ -360,28 +361,24 @@ export function memorytick(os: OS, timestamp: number) {
       context.inputcurrent = undefined
 
       // map stats
-      const maybeplayer = boardelementreadstat(item.object, 'player', '')
       const maybekind = bookelementkindread(book, item.object)
-      const maybekindcycle = boardelementreadstat(
-        maybekind,
-        'cycle',
-        CYCLE_DEFAULT,
-      )
+      const maybekindcycle = boardelementreadstat(maybekind, 'cycle', undefined)
+      const maybeplayer = boardelementreadstat(item.object, 'player', undefined)
       const maybecycle = boardelementreadstat(
         item.object,
         'cycle',
         maybekindcycle,
       )
 
-      const cycle = isnumber(maybecycle) ? maybecycle : CYCLE_DEFAULT
-      context.player = isstring(maybeplayer) ? maybeplayer : ''
+      // update player from board element
+      context.player = isstring(maybeplayer) ? maybeplayer : context.player
 
       // run chip code
       const itemname = boardelementname(item.object)
       os.tick(
         item.id,
         DRIVER_TYPE.OBJECT,
-        cycle,
+        isnumber(maybecycle) ? maybecycle : CYCLE_DEFAULT,
         timestamp,
         itemname,
         item.code,

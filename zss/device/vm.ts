@@ -1,7 +1,6 @@
 import { trimUndefinedRecursively } from 'compress-json'
 import { createdevice } from 'zss/device'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
-import { createpid } from 'zss/mapping/guid'
 import { MAYBE, isarray, isbook, ispresent } from 'zss/mapping/types'
 import {
   memorycli,
@@ -13,9 +12,9 @@ import {
   memoryreadchip,
   memoryreadmaintags,
   memoryresetbooks,
-  memorysetdefaultplayer,
   memorytick,
   memoryloadfile,
+  memorygetdefaultplayer,
 } from 'zss/memory'
 import { BOOK, bookreadcodepagebyaddress, exportbook } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -32,10 +31,6 @@ import {
   vm_flush,
 } from './api'
 import { modemobservevaluestring } from './modem'
-
-// this should be unique every time the worker is created
-const playerid = createpid()
-memorysetdefaultplayer(playerid)
 
 // manages chips
 const os = createos()
@@ -61,7 +56,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
     case 'books':
       if (
         message.data.every(isbook) &&
-        message.player === playerid &&
+        message.player === memorygetdefaultplayer() &&
         isarray(message.data) === true
       ) {
         // unpack books
@@ -183,11 +178,15 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
     }
     case 'cli':
       // user input from built-in console
-      memorycli(os, lasttick, message.player ?? '', message.data ?? '')
+      if (ispresent(message.player)) {
+        memorycli(os, lasttick, message.player, message.data ?? '')
+      }
       break
     case 'loadfile':
       // user input from built-in console
-      memoryloadfile(lasttick, message.player ?? '', message.data)
+      if (ispresent(message.player)) {
+        memoryloadfile(lasttick, message.player, message.data)
+      }
       break
     default:
       // running software messages
@@ -198,5 +197,5 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
 
 export function ready() {
   // signal ready state
-  vm.emit('ready', undefined, playerid)
+  vm.emit('ready', undefined, memorygetdefaultplayer())
 }
