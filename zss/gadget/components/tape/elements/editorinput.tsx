@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import {
   api_error,
   tape_editor_close,
@@ -17,7 +17,7 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { Scrollable } from '../../scrollable'
 import { useBlink } from '../../useblink'
-import { UserInput, UserInputMods, modsfromevent } from '../../userinput'
+import { UserInput, modsfromevent } from '../../userinput'
 import {
   EDITOR_CODE_ROW,
   sharedtosynced,
@@ -123,18 +123,37 @@ export function EditorInput({
     tapeeditorstate.select = undefined
   }
 
-  function movecursor(inc: number) {
-    const ycheck = ycursor - inc
-    if (ycheck < 0) {
-      tapeeditorstate.cursor = 0
-    } else if (ycheck > rowsend) {
-      tapeeditorstate.cursor = codeend
-    } else {
-      const row = rows[ycheck]
-      tapeeditorstate.cursor =
-        row.start + Math.min(xcursor, row.code.length - 1)
+  const movecursor = useCallback(
+    function movecursor(inc: number) {
+      const ycheck = Math.round(ycursor + inc)
+      if (ycheck < 0) {
+        tapeeditorstate.cursor = 0
+      } else if (ycheck > rowsend) {
+        tapeeditorstate.cursor = codeend
+      } else {
+        const row = rows[ycheck]
+        tapeeditorstate.cursor =
+          row.start + Math.min(xcursor, row.code.length - 1)
+      }
+    },
+    [codeend, rows, rowsend, xcursor, ycursor],
+  )
+
+  const rowheight = edge.bottom - 4
+  useEffect(() => {
+    const scrollsteps = rowheight * 0.8
+    // check if we need to update offsets
+    if (ycursor < yoffset) {
+      tapeeditorstate.scroll = ycursor - scrollsteps
+    } else if (ycursor > yoffset + rowheight) {
+      tapeeditorstate.scroll = ycursor - rowheight + scrollsteps
     }
-  }
+    const maxscroll = rows.length - 4
+    tapeeditorstate.scroll = Math.round(
+      clamp(tapeeditorstate.scroll, 0, maxscroll),
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ycursor])
 
   return (
     <>
@@ -144,9 +163,7 @@ export function EditorInput({
         y={edge.top}
         width={edge.width}
         height={edge.height}
-        onScroll={(deltay) => {
-          movecursor(-deltay)
-        }}
+        onScroll={(ydelta) => movecursor(ydelta * 0.75)}
       />
       <UserInput
         MOVE_LEFT={(mods) => {
@@ -172,7 +189,7 @@ export function EditorInput({
           if (mods.ctrl) {
             tapeeditorstate.cursor = 0
           } else {
-            movecursor(mods.alt ? 10 : 1)
+            movecursor(mods.alt ? -10 : -1)
           }
         }}
         MOVE_DOWN={(mods) => {

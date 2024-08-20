@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import {
   tape_terminal_close,
   tape_terminal_inclayout,
@@ -31,30 +32,30 @@ export function TerminalInput({
 }: ConsoleInputProps) {
   const blink = useBlink()
   const context = useWriteText()
-  const tapeinput = useTapeTerminal()
+  const tapeterminal = useTapeTerminal()
   const edge = textformatreadedges(context)
 
   // input & selection
-  const inputstate = tapeinput.buffer[tapeinput.bufferindex]
+  const inputstate = tapeterminal.buffer[tapeterminal.bufferindex]
 
   // local x input
-  let ii1 = tapeinput.xcursor
-  let ii2 = tapeinput.xcursor
+  let ii1 = tapeterminal.xcursor
+  let ii2 = tapeterminal.xcursor
   let hasselection = false
 
   // adjust input edges selection
-  if (ispresent(tapeinput.xselect) && ispresent(tapeinput.yselect)) {
+  if (ispresent(tapeterminal.xselect) && ispresent(tapeterminal.yselect)) {
     hasselection = true
-    ii1 = Math.min(tapeinput.xcursor, tapeinput.xselect)
-    ii2 = Math.max(tapeinput.xcursor, tapeinput.xselect)
-    if (tapeinput.xcursor !== tapeinput.xselect) {
+    ii1 = Math.min(tapeterminal.xcursor, tapeterminal.xselect)
+    ii2 = Math.max(tapeterminal.xcursor, tapeterminal.xselect)
+    if (tapeterminal.xcursor !== tapeterminal.xselect) {
       // tuck in right side
       --ii2
     }
   }
 
   const iic = ii2 - ii1 + 1
-  const inputstateactive = tapeinput.ycursor === 0
+  const inputstateactive = tapeterminal.ycursor === 0
   const inputstateselected = hasselection
     ? inputstate.substring(ii1, ii2 + 1)
     : inputstate
@@ -62,7 +63,7 @@ export function TerminalInput({
   // update state
   function inputstatesetsplice(index: number, count: number, insert?: string) {
     // we are trying to modify historical entries
-    if (tapeinput.bufferindex > 0) {
+    if (tapeterminal.bufferindex > 0) {
       // blank inputslot and snap index to 0
       tapeterminalstate.bufferindex = 0
     }
@@ -75,7 +76,7 @@ export function TerminalInput({
 
   // navigate input history
   function inputstateswitch(switchto: number) {
-    const ir = tapeinput.buffer.length - 1
+    const ir = tapeterminal.buffer.length - 1
     const index = clamp(switchto, 0, ir)
     tapeterminalstate.bufferindex = index
     tapeterminalstate.xcursor = tapeterminalstate.buffer[index].length
@@ -87,9 +88,9 @@ export function TerminalInput({
   // track selection
   function trackselection(active: boolean) {
     if (active) {
-      if (!ispresent(tapeinput.xselect)) {
-        tapeterminalstate.xselect = tapeinput.xcursor
-        tapeterminalstate.yselect = tapeinput.ycursor
+      if (!ispresent(tapeterminal.xselect)) {
+        tapeterminalstate.xselect = tapeterminal.xcursor
+        tapeterminalstate.yselect = tapeterminal.ycursor
       }
     } else {
       tapeterminalstate.xselect = undefined
@@ -133,16 +134,16 @@ export function TerminalInput({
 
   // draw selection
   if (
-    ispresent(tapeinput.xselect) &&
-    ispresent(tapeinput.yselect) &&
-    tapeinput.xcursor !== tapeinput.xselect
+    ispresent(tapeterminal.xselect) &&
+    ispresent(tapeterminal.yselect) &&
+    tapeterminal.xcursor !== tapeterminal.xselect
   ) {
     // top - left
-    const x1 = Math.min(tapeinput.xcursor, tapeinput.xselect)
-    const y1 = Math.min(tapeinput.ycursor, tapeinput.yselect)
+    const x1 = Math.min(tapeterminal.xcursor, tapeterminal.xselect)
+    const y1 = Math.min(tapeterminal.ycursor, tapeterminal.yselect)
     // bottom - right
-    const x2 = Math.max(tapeinput.xcursor, tapeinput.xselect) - 1
-    const y2 = Math.max(tapeinput.ycursor, tapeinput.yselect)
+    const x2 = Math.max(tapeterminal.xcursor, tapeterminal.xselect) - 1
+    const y2 = Math.max(tapeterminal.ycursor, tapeterminal.yselect)
     // write colors
     for (let iy = y1; iy <= y2; ++iy) {
       const p1 = x1 + (edge.bottom - iy) * edge.width
@@ -153,10 +154,27 @@ export function TerminalInput({
 
   // draw cursor
   if (blink) {
-    const x = edge.left + tapeinput.xcursor
+    const x = edge.left + tapeterminal.xcursor
     const y = edge.top + tapeycursor
     applystrtoindex(x + y * context.width, String.fromCharCode(221), context)
   }
+
+  const rowheight = edge.bottom - 4
+  useEffect(() => {
+    console.info({ rowheight, tapeycursor, scroll: tapeterminal.scroll })
+    // const scrollsteps = rowheight * 0.8
+    // // check if we need to update offsets
+    // if (tapeycursor < tapeterminal.scroll) {
+    //   tapeterminalstate.scroll = tapeycursor - scrollsteps
+    // } else if (tapeycursor > tapeterminal.scroll + rowheight) {
+    //   tapeterminalstate.scroll = tapeycursor - rowheight + scrollsteps
+    // }
+    // const maxscroll = logrowtotalheight
+    // tapeterminalstate.scroll = Math.round(
+    //   clamp(tapeterminalstate.scroll, 0, maxscroll),
+    // )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tapeycursor])
 
   return (
     <>
@@ -169,7 +187,7 @@ export function TerminalInput({
         onScroll={(deltay) => {
           trackselection(false)
           tapeterminalstate.ycursor = clamp(
-            Math.round(tapeinput.ycursor - deltay),
+            Math.round(tapeterminal.ycursor - deltay),
             0,
             logrowtotalheight,
           )
@@ -179,11 +197,11 @@ export function TerminalInput({
         MENU_BUTTON={(mods) => tape_terminal_inclayout('tape', !mods.shift)}
         MOVE_UP={(mods) => {
           if (mods.ctrl) {
-            inputstateswitch(tapeinput.bufferindex + 1)
+            inputstateswitch(tapeterminal.bufferindex + 1)
           } else {
             trackselection(mods.shift)
             tapeterminalstate.ycursor = clamp(
-              tapeinput.ycursor + (mods.alt ? 10 : 1),
+              tapeterminal.ycursor + (mods.alt ? 10 : 1),
               0,
               logrowtotalheight,
             )
@@ -191,11 +209,11 @@ export function TerminalInput({
         }}
         MOVE_DOWN={(mods) => {
           if (mods.ctrl) {
-            inputstateswitch(tapeinput.bufferindex - 1)
+            inputstateswitch(tapeterminal.bufferindex - 1)
           } else {
             trackselection(mods.shift)
             tapeterminalstate.ycursor = clamp(
-              tapeinput.ycursor - (mods.alt ? 10 : 1),
+              tapeterminal.ycursor - (mods.alt ? 10 : 1),
               0,
               logrowtotalheight,
             )
@@ -207,7 +225,7 @@ export function TerminalInput({
             tapeterminalstate.xcursor = 0
           } else {
             tapeterminalstate.xcursor = clamp(
-              tapeinput.xcursor - (mods.alt ? 10 : 1),
+              tapeterminal.xcursor - (mods.alt ? 10 : 1),
               0,
               edge.right,
             )
@@ -221,7 +239,7 @@ export function TerminalInput({
               : edge.right
           } else {
             tapeterminalstate.xcursor = clamp(
-              tapeinput.xcursor + (mods.alt ? 10 : 1),
+              tapeterminal.xcursor + (mods.alt ? 10 : 1),
               0,
               edge.right,
             )
@@ -238,7 +256,9 @@ export function TerminalInput({
               tapeterminalstate.buffer = [
                 '',
                 invoke,
-                ...tapeinput.buffer.slice(1).filter((item) => item !== invoke),
+                ...tapeterminal.buffer
+                  .slice(1)
+                  .filter((item) => item !== invoke),
               ]
               vm_cli('tape', invoke, gadgetstategetplayer())
             } else {
@@ -261,7 +281,7 @@ export function TerminalInput({
                 if (hasselection) {
                   deleteselection()
                 } else if (inputstate.length > 0) {
-                  inputstatesetsplice(tapeinput.xcursor, 1)
+                  inputstatesetsplice(tapeterminal.xcursor, 1)
                 }
               } else {
                 resettoend()
@@ -272,8 +292,8 @@ export function TerminalInput({
               if (inputstateactive) {
                 if (hasselection) {
                   deleteselection()
-                } else if (tapeinput.xcursor > 0) {
-                  inputstatesetsplice(tapeinput.xcursor - 1, 1)
+                } else if (tapeterminal.xcursor > 0) {
+                  inputstatesetsplice(tapeterminal.xcursor - 1, 1)
                 }
               } else {
                 resettoend()
@@ -309,7 +329,11 @@ export function TerminalInput({
                           if (hasselection) {
                             inputstatesetsplice(ii1, iic, cleantext)
                           } else {
-                            inputstatesetsplice(tapeinput.xcursor, 0, cleantext)
+                            inputstatesetsplice(
+                              tapeterminal.xcursor,
+                              0,
+                              cleantext,
+                            )
                           }
                         })
                         .catch((err) => console.error(err))
@@ -334,13 +358,13 @@ export function TerminalInput({
               } else if (key.length === 1) {
                 if (
                   inputstateactive &&
-                  tapeinput.xcursor <= inputstate.length
+                  tapeterminal.xcursor <= inputstate.length
                 ) {
                   if (hasselection) {
                     inputstatesetsplice(ii1, iic, key)
                     tapeterminalstate.xselect = undefined
                   } else {
-                    inputstatesetsplice(tapeinput.xcursor, 0, key)
+                    inputstatesetsplice(tapeterminal.xcursor, 0, key)
                   }
                 } else {
                   resettoend()
