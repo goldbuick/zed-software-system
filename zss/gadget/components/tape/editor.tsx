@@ -2,8 +2,7 @@ import { useEffect } from 'react'
 import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
-import { textformatreadedges, useWriteText } from 'zss/gadget/data/textformat'
-import { clamp } from 'zss/mapping/number'
+import { useWriteText } from 'zss/gadget/data/textformat'
 import { ispresent } from 'zss/mapping/types'
 
 import {

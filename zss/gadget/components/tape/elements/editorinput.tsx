@@ -139,21 +139,19 @@ export function EditorInput({
     [codeend, rows, rowsend, xcursor, ycursor],
   )
 
-  const rowheight = edge.bottom - 4
+  const maxscroll = rows.length - 4
   useEffect(() => {
-    const scrollsteps = rowheight * 0.8
-    // check if we need to update offsets
-    if (ycursor < yoffset) {
-      tapeeditorstate.scroll = ycursor - scrollsteps
-    } else if (ycursor > yoffset + rowheight) {
-      tapeeditorstate.scroll = ycursor - rowheight + scrollsteps
+    const delta = ycursor - tapeeditor.scroll
+    if (delta > edge.height - 8) {
+      tapeeditorstate.scroll++
     }
-    const maxscroll = rows.length - 4
+    if (delta < 4) {
+      tapeeditorstate.scroll--
+    }
     tapeeditorstate.scroll = Math.round(
       clamp(tapeeditorstate.scroll, 0, maxscroll),
     )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ycursor])
+  }, [ycursor, tapeeditor.scroll, maxscroll, edge.height])
 
   return (
     <>

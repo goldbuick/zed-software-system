@@ -159,22 +159,17 @@ export function TerminalInput({
     applystrtoindex(x + y * context.width, String.fromCharCode(221), context)
   }
 
-  const rowheight = edge.bottom - 4
   useEffect(() => {
-    console.info({ rowheight, tapeycursor, scroll: tapeterminal.scroll })
-    // const scrollsteps = rowheight * 0.8
-    // // check if we need to update offsets
-    // if (tapeycursor < tapeterminal.scroll) {
-    //   tapeterminalstate.scroll = tapeycursor - scrollsteps
-    // } else if (tapeycursor > tapeterminal.scroll + rowheight) {
-    //   tapeterminalstate.scroll = tapeycursor - rowheight + scrollsteps
-    // }
-    // const maxscroll = logrowtotalheight
-    // tapeterminalstate.scroll = Math.round(
-    //   clamp(tapeterminalstate.scroll, 0, maxscroll),
-    // )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tapeycursor])
+    if (tapeycursor < 4) {
+      tapeterminalstate.scroll++
+    }
+    if (tapeycursor > edge.bottom - 4) {
+      tapeterminalstate.scroll--
+    }
+    tapeterminalstate.scroll = Math.round(
+      clamp(tapeterminalstate.scroll, 0, logrowtotalheight),
+    )
+  }, [tapeycursor, logrowtotalheight, edge.bottom])
 
   return (
     <>
