@@ -1,0 +1,38 @@
+@loader zztview
+@stat binaryfile zzt
+
+' the idea here is that we 
+' have stats binary & zzt now
+' and when a binary file with a zzt extension 
+' gets dropped on zed.cafe this code will be run
+
+#bin seek 2
+#bin int16le boardcount
+"$filename has $boardcount board(s)"
+
+#bin seek 29
+#bin uint8 len
+#bin text len worldname
+"$filename has a world named $worldname"
+
+Reading all the boards
+#play t+++c-c-c-c-c-c
+
+#set index 1
+#set offset 512
+#repeat boardcount do
+
+#bin seek offset
+#bin int16le boardsize
+"boardsize: $boardsize"
+
+#bin uint8 len
+#bin text len boardname
+"BOARD $index - $boardname"
+
+#give index
+#give offset boardsize + 2
+
+#done
+
+

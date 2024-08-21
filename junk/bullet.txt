@@ -1,13 +1,9 @@
 @bullet
-?rnd?i
-?rnd?i
-?rnd?i
-?rnd?i
+#repeat 4 ?rnd?i
 #cycle 2
-?rnd?i
-?rnd?i
-#char 77
+#repeat 2 ?rnd?i
 #cycle 3
+#char 77
 :yeep
 ?rnd
 #color pick green blue

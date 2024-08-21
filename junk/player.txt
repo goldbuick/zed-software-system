@@ -4,15 +4,15 @@
 #cycle 1
 ' create ui
 #gadget right
-"
-"- - - quick - - -
-" - - - demos - - -
-"
-
-!hotkey dialog o;Open Dialog
+"                "
+- - - proto - - -
+ - - - editr - - -
+"                "
+!hotkey pe_selectbook b;Select Book
 
 :head
 #idle
+
 :main
 
 #if inputshift and inputmove do
@@ -20,20 +20,13 @@
 #else if inputmove do
  ?inputmove
 #else idle
-#endif
+#done
 
 #main
 
-:dialog
-Welcome to razzle dazzle!
-
-!wiggle;Wiggle It
-!range wangle AA BB;Wangle
-!select dangle apple pear orange;Fruit
-!number arch 26;Arch max level
-!text myname;Player Name
-
-#head
+:pe_selectbook
+' list books to open
+?i#head
 
 :wiggle
 #repeat 32 ?rnd
