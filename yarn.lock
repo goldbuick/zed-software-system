@@ -5460,6 +5460,11 @@ typed-array-length@^1.0.6:
     is-typed-array "^1.1.13"
     possible-typed-array-names "^1.0.0"
 
+typed-binary@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.npmjs.org/typed-binary/-/typed-binary-4.0.1.tgz#aa847e419644e7cc228bdd1b0885f28c7cadbdd2"
+  integrity sha512-nne2iMvXX8Qi3KI7do55udYsPNIUr7zFhPJNdWpujkWUzr6sJK6gQjCUcZGMM6+lws75oiFtGk8if6S2KgWppg==
+
 typescript@^5.2.2:
   version "5.4.5"
   resolved "https://registry.npmjs.org/typescript/-/typescript-5.4.5.tgz#42ccef2c571fdbd0f6718b1d1f5e6e5ef006f611"
