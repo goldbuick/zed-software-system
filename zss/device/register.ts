@@ -1,51 +1,39 @@
 import { createdevice } from 'zss/device'
-import { decompressfromurlhash, compresstourlhash } from 'zss/mapping/buffer'
-import { doasync } from 'zss/mapping/func'
-import { isarray, isbook, ispresent } from 'zss/mapping/types'
-import { importbook } from 'zss/memory/book'
+import { ispresent, isstring } from 'zss/mapping/types'
 
 import { api_error, bip_rebootfailed, tape_info, vm_books } from './api'
 
-type STATE_BOOKS = any[]
-
-async function readstate(): Promise<STATE_BOOKS> {
+function readstate(): string {
   try {
     const hash = window.location.hash.slice(1)
     if (hash.length) {
-      const result = (await decompressfromurlhash(hash)) ?? []
-      const importedbooks = result.map(importbook)
-      return importedbooks
+      return hash
     }
   } catch (err: any) {
     api_error('register', 'crash', err.message)
   }
-  return [] as any[]
+  return ''
 }
 
-async function writestate(exportedbooks: STATE_BOOKS) {
-  const hash = (await compresstourlhash(exportedbooks)) ?? ''
-  const out = `#${hash}`
+function writestate(exportedbooks: string) {
+  const out = `#${exportedbooks}`
   if (window.location.hash !== out) {
     window.location.hash = out
     tape_info(
       register.name(),
-      `wrote ${hash?.length ?? 0} chars [${hash.slice(0, 8)}...${hash.slice(-8)}]`,
+      `wrote ${exportedbooks?.length ?? 0} chars [${exportedbooks.slice(0, 8)}...${exportedbooks.slice(-8)}]`,
     )
   }
 }
 
 const BIOS_BOOKS = 'bios-books'
 
-function readbiosbooks(): STATE_BOOKS {
-  const json = localStorage.getItem(BIOS_BOOKS)
-  if (json === null) {
-    return []
-  }
-  return JSON.parse(json) as STATE_BOOKS
+function readbiosbooks(): string {
+  return localStorage.getItem(BIOS_BOOKS) ?? ''
 }
 
-function writebiosbooks(books: any) {
-  localStorage.setItem(BIOS_BOOKS, JSON.stringify(books))
+function writebiosbooks(books: string) {
+  localStorage.setItem(BIOS_BOOKS, books)
 }
 
 function erasebiosbooks() {
@@ -55,45 +43,39 @@ function erasebiosbooks() {
 const register = createdevice('register', [], function (message) {
   switch (message.target) {
     // memory
-    case 'reboot':
-      doasync(async function () {
-        if (!ispresent(message.player)) {
-          return
-        }
-        // check url first
-        const books = await readstate()
-        if (isbook(books[0])) {
-          vm_books(register.name(), books, message.player)
-          return
-        }
-        // check local storage second
-        const biosbooks = readbiosbooks()
-        if (biosbooks.length > 0 && biosbooks.every(isbook)) {
-          vm_books(register.name(), biosbooks, message.player)
-          return
-        }
-        // signal error
-        api_error(
-          register.name(),
-          message.target,
-          'no main book found in registry',
-          message.player,
-        )
-        bip_rebootfailed(register.name(), message.player)
-      })
+    case 'reboot': {
+      if (!ispresent(message.player)) {
+        return
+      }
+      // check url first
+      const books = readstate()
+      if (books.length) {
+        vm_books(register.name(), books, message.player)
+        return
+      }
+      // check local storage second
+      const biosbooks = readbiosbooks()
+      if (biosbooks.length) {
+        vm_books(register.name(), biosbooks, message.player)
+        return
+      }
+      // signal error
+      api_error(
+        register.name(),
+        message.target,
+        'no main book found in registry',
+        message.player,
+      )
+      bip_rebootfailed(register.name(), message.player)
       break
+    }
     case 'flush':
-      doasync(async function () {
-        if (isarray(message.data)) {
-          await writestate(message.data)
-        }
-      })
+      if (isstring(message.data)) {
+        writestate(message.data)
+      }
       break
     case 'biosflash':
-      doasync(async function () {
-        const books = await readstate()
-        writebiosbooks(books)
-      })
+      writebiosbooks(readstate())
       break
     case 'bioserase':
       erasebiosbooks()

@@ -1163,7 +1163,7 @@
 
 "@smithy/util-base64@^3.0.0":
   version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@smithy/util-base64/-/util-base64-3.0.0.tgz#f7a9a82adf34e27a72d0719395713edf0e493017"
+  resolved "https://registry.npmjs.org/@smithy/util-base64/-/util-base64-3.0.0.tgz#f7a9a82adf34e27a72d0719395713edf0e493017"
   integrity sha512-Kxvoh5Qtt0CDsfajiZOCpJxgtPHXOKwmM+Zy4waD43UoEMA+qPxxa98aE/7ZhdnBFZFXMOiBR5xbcaMhLtznQQ==
   dependencies:
     "@smithy/util-buffer-from" "^3.0.0"
@@ -2137,18 +2137,6 @@ commander@^4.0.0:
   version "4.1.1"
   resolved "https://registry.npmjs.org/commander/-/commander-4.1.1.tgz#9fd602bd936294e9e9ef46a3f4d6964044b18068"
   integrity sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==
-
-compress-json@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.npmjs.org/compress-json/-/compress-json-3.1.0.tgz#337e0a5b28b180fb849bcb6913bf361a5b3c0d57"
-  integrity sha512-Zcq4jRC5ZpfaOY3mbBWOANtGuMHJ/hsTENcwN1/lEkrogcoAF7HBma1RLe/CICZO6IquK1U0EaPzmnlDIFRNjA==
-
-compression-streams-polyfill@^0.1.7:
-  version "0.1.7"
-  resolved "https://registry.yarnpkg.com/compression-streams-polyfill/-/compression-streams-polyfill-0.1.7.tgz#3fdfdf1536960e96fb2256de50fa4065742de7de"
-  integrity sha512-Y6VkJzi9JkvmcgDuJ2jJZ5DGljNhUrFBGxx5+gQ2RNg+uPesuRDDL5zN1NTk5NTuynyVkQ4MNip5z37MmtbdpQ==
-  dependencies:
-    fflate "^0.8.2"
 
 concat-map@0.0.1:
   version "0.0.1"

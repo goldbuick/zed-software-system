@@ -63,7 +63,7 @@ export function register_reboot(sender: string, player: string) {
   hub.emit('register:reboot', sender, undefined, player)
 }
 
-export function register_flush(sender: string, books: any[]) {
+export function register_flush(sender: string, books: string) {
   hub.emit('register:flush', sender, books)
 }
 
@@ -122,7 +122,7 @@ export function tape_editor_close(sender: string) {
   hub.emit('tape:editor:close', sender)
 }
 
-export function vm_books(sender: string, books: any[], player: string) {
+export function vm_books(sender: string, books: string, player: string) {
   hub.emit('vm:books', sender, books, player)
 }
 

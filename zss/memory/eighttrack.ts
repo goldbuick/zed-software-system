@@ -1,38 +1,46 @@
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE } from 'zss/mapping/types'
 
-export type EIGHT_TRACK_PATTERNS = {
-  id?: string
-  patterns: string[]
+export type EIGHT_TRACK_PATTERN = {
+  // 8 tracks per pattern
+  tracks: string[]
+}
+
+export type EIGHT_TRACK_SEQUENCE = {
+  // 4 patterns per sequence
+  patterns: EIGHT_TRACK_PATTERN[]
 }
 
 export type EIGHT_TRACK = {
-  id?: string
-  tracks: EIGHT_TRACK_PATTERNS[]
+  id: string
+  sequences: EIGHT_TRACK_SEQUENCE[]
 }
 
 export type MAYBE_EIGHT_TRACK = MAYBE<EIGHT_TRACK>
 
-function createpatterns(): EIGHT_TRACK_PATTERNS {
+function createeighttrackpattern(): EIGHT_TRACK_PATTERN {
   return {
-    id: createsid(),
-    patterns: ['', '', '', '', '', '', '', ''],
+    // 8 tracks per pattern
+    tracks: ['', '', '', '', '', '', '', ''],
+  }
+}
+
+export function createeighttracksequence(): EIGHT_TRACK_SEQUENCE {
+  return {
+    // 4 patterns per sequence
+    patterns: [
+      createeighttrackpattern(),
+      createeighttrackpattern(),
+      createeighttrackpattern(),
+      createeighttrackpattern(),
+    ],
   }
 }
 
 export function createeighttrack(): EIGHT_TRACK {
   return {
     id: createsid(),
-    tracks: [
-      createpatterns(),
-      createpatterns(),
-      createpatterns(),
-      createpatterns(),
-      createpatterns(),
-      createpatterns(),
-      createpatterns(),
-      createpatterns(),
-    ],
+    sequences: [],
   }
 }
 

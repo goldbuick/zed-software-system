@@ -4,6 +4,9 @@ import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 
 // simple built-ins go here
 export type BOARD_ELEMENT_STATS = {
+  p1?: string
+  p2?: string
+  p3?: string
   cycle?: number
   stepx?: number
   stepy?: number

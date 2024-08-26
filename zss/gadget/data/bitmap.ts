@@ -6,7 +6,6 @@ export type BITMAP = {
   height: number
   size: number
   bits: Uint8Array
-  color?: number
 }
 
 export function bitmapToCanvas(bitmap: BITMAP) {
