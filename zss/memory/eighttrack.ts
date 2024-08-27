@@ -1,5 +1,6 @@
+import * as bin from 'typed-binary'
 import { createsid } from 'zss/mapping/guid'
-import { MAYBE } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 
 export type EIGHT_TRACK_PATTERN = {
   // 8 tracks per pattern
@@ -25,6 +26,19 @@ function createeighttrackpattern(): EIGHT_TRACK_PATTERN {
   }
 }
 
+export const BIN_EIGHT_TRACK = bin.object({
+  id: bin.string,
+  sequences: bin.dynamicArrayOf(
+    bin.object({
+      patterns: bin.dynamicArrayOf(
+        bin.object({
+          tracks: bin.dynamicArrayOf(bin.string),
+        }),
+      ),
+    }),
+  ),
+})
+
 export function createeighttracksequence(): EIGHT_TRACK_SEQUENCE {
   return {
     // 4 patterns per sequence
@@ -44,14 +58,23 @@ export function createeighttrack(): EIGHT_TRACK {
   }
 }
 
+type BIN_EIGHT_TRACK = bin.Parsed<typeof BIN_EIGHT_TRACK>
+
 export function exporteighttrack(
   eighttrack: MAYBE_EIGHT_TRACK,
-): MAYBE_EIGHT_TRACK {
+): MAYBE<BIN_EIGHT_TRACK> {
+  if (!ispresent(eighttrack)) {
+    return
+  }
+
   return eighttrack
 }
 
 export function importeighttrack(
-  eighttrack: MAYBE_EIGHT_TRACK,
+  eighttrack: MAYBE<BIN_EIGHT_TRACK>,
 ): MAYBE_EIGHT_TRACK {
+  if (!ispresent(eighttrack)) {
+    return
+  }
   return eighttrack
 }

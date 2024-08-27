@@ -1,4 +1,13 @@
-import { PT, COLLISION, CATEGORY, WORD, STR_KIND } from 'zss/firmware/wordtypes'
+import * as bin from 'typed-binary'
+import {
+  PT,
+  COLLISION,
+  CATEGORY,
+  WORD,
+  STR_KIND,
+  BIN_WORD_ENTRY,
+  exportwordentry,
+} from 'zss/firmware/wordtypes'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
@@ -16,6 +25,7 @@ import {
 } from './board'
 import { BOARD_ELEMENT, MAYBE_BOARD_ELEMENT } from './boardelement'
 import {
+  BIN_CODEPAGE,
   CODE_PAGE,
   CODE_PAGE_TYPE,
   MAYBE_CODE_PAGE,
@@ -56,23 +66,60 @@ export function createbook(pages: CODE_PAGE[], tags: string[]): BOOK {
   }
 }
 
+export const BIN_BOOK = bin.object({
+  id: bin.string,
+  name: bin.string,
+  tags: bin.dynamicArrayOf(bin.string),
+  flags: bin.dynamicArrayOf(
+    bin.object({
+      player: bin.string,
+      values: bin.dynamicArrayOf(BIN_WORD_ENTRY),
+    }),
+  ),
+  players: bin.dynamicArrayOf(
+    bin.object({
+      player: bin.string,
+      board: bin.string,
+    }),
+  ),
+  pages: bin.dynamicArrayOf(BIN_CODEPAGE),
+})
+type BIN_BOOK = bin.Parsed<typeof BIN_BOOK>
+
 // safe to serialize copy of book
-export function exportbook(book: MAYBE_BOOK): MAYBE_BOOK {
+export function exportbook(book: MAYBE_BOOK): MAYBE<Uint8Array> {
   if (!ispresent(book)) {
     return
   }
-  return {
+  const data: BIN_BOOK = {
     id: book.id,
     name: book.name,
-    tags: [...book.tags] as any,
+    tags: [...book.tags],
     pages: book.pages.map(exportcodepage).filter(ispresent),
-    flags: {},
-    players: {},
+    flags: Object.keys(book.flags).map((player) => {
+      return {
+        player,
+        // exportwordentry
+        values: Object.keys(book.flags[player]).map((name) => {
+          return exportwordentry(name, book.flags[player][name])
+        }),
+      }
+    }),
+    players: Object.keys(book.players)
+      .map((name) => {
+        return undefined
+      })
+      .filter(ispresent),
   }
+  const buffer = new ArrayBuffer(BIN_BOOK.measure(data).size)
+  const writer = new bin.BufferWriter(buffer)
+  BIN_BOOK.write(writer, data)
+
+  return new Uint8Array(buffer)
 }
 
 // import json into book
-export function importbook(book: MAYBE_BOOK): MAYBE_BOOK {
+export function importbook(book: MAYBE<Uint8Array>): MAYBE_BOOK {
   if (!ispresent(book)) {
     return
   }

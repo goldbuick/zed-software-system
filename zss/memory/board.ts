@@ -1,3 +1,4 @@
+import * as bin from 'typed-binary'
 import {
   PT,
   DIR,
@@ -11,6 +12,7 @@ import {
   ptapplydir,
   mapstrdirtoconst,
   WORD,
+  BIN_WORD_ENTRY,
 } from 'zss/firmware/wordtypes'
 import { COLOR } from 'zss/gadget/data/types'
 import { pick } from 'zss/mapping/array'
@@ -26,6 +28,7 @@ import {
 
 import { listnamedelements, picknearestpt } from './atomics'
 import {
+  BIN_BOARD_ELEMENT,
   BOARD_ELEMENT,
   MAYBE_BOARD_ELEMENT,
   exportboardelement,
@@ -79,26 +82,39 @@ export function createboard(fn = noop<BOARD>) {
   return fn(board)
 }
 
+export const BIN_BOARD = bin.object({
+  id: bin.string,
+  // dimensions
+  x: bin.optional(bin.byte),
+  y: bin.optional(bin.byte),
+  width: bin.optional(bin.byte),
+  height: bin.optional(bin.byte),
+  // specifics
+  terrain: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
+  objects: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
+  // custom
+  stats: bin.optional(bin.dynamicArrayOf(BIN_WORD_ENTRY)),
+})
+type BIN_BOARD = bin.Parsed<typeof BIN_BOARD>
+
 // safe to serialize copy of board
-export function exportboard(board: MAYBE_BOARD): MAYBE_BOARD {
+export function exportboard(board: MAYBE_BOARD): MAYBE<BIN_BOARD> {
   if (!ispresent(board)) {
     return
   }
 
   return {
-    id: board.id,
+    id: board.id ?? '',
     // dimensions
     x: board.x,
     y: board.y,
     width: board.width,
     height: board.height,
     // specifics
-    terrain: board.terrain.map(exportboardelement),
-    objects: Object.fromEntries<BOARD_ELEMENT>(
-      Object.entries(board.objects) // trim objects, and remove any players
-        .filter(([, object]) => object.kind !== 'player')
-        .map(([id, object]) => [id, exportboardelement(object)]) as any,
-    ),
+    terrain: board.terrain.map(exportboardelement).filter(ispresent),
+    objects: Object.keys(board.objects)
+      .map((name) => exportboardelement(board.objects[name]))
+      .filter(ispresent),
     // custom
     stats: board.stats,
   }

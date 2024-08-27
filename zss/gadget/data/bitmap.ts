@@ -1,4 +1,6 @@
+import * as bin from 'typed-binary'
 import { createsid } from 'zss/mapping/guid'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 
 export type BITMAP = {
   id: string
@@ -138,6 +140,35 @@ export function createBitmap(width: number, height: number): BITMAP {
     height,
     size: width * height,
     bits: new Uint8Array(width * height).fill(0),
+  }
+}
+
+export const BIN_BITMAP = bin.object({
+  id: bin.string,
+  width: bin.u32,
+  height: bin.u32,
+  size: bin.u32,
+  bits: bin.dynamicArrayOf(bin.byte),
+})
+export type BIN_BITMAP = bin.Parsed<typeof BIN_BITMAP>
+
+export function exportbitmap(bitmap: MAYBE<BITMAP>): MAYBE<BIN_BITMAP> {
+  if (!ispresent(bitmap)) {
+    return
+  }
+  return {
+    ...bitmap,
+    bits: Array.from(bitmap?.bits ?? []),
+  }
+}
+
+export function importbitmap(bitmap: MAYBE<BIN_BITMAP>): MAYBE<BITMAP> {
+  if (!ispresent(bitmap)) {
+    return
+  }
+  return {
+    ...bitmap,
+    bits: Uint8Array.from(bitmap.bits),
   }
 }
 

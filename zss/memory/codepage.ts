@@ -1,12 +1,25 @@
 import { IToken } from 'chevrotain'
-import { WORD } from 'zss/firmware/wordtypes'
-import { BITMAP } from 'zss/gadget/data/bitmap'
+import * as bin from 'typed-binary'
+import { BIN_WORD_ENTRY, WORD } from 'zss/firmware/wordtypes'
+import {
+  BIN_BITMAP,
+  BITMAP,
+  exportbitmap,
+  importbitmap,
+} from 'zss/gadget/data/bitmap'
 import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import { BOARD, createboard, exportboard, importboard } from './board'
 import {
+  BIN_BOARD,
+  BOARD,
+  createboard,
+  exportboard,
+  importboard,
+} from './board'
+import {
+  BIN_BOARD_ELEMENT,
   BOARD_ELEMENT,
   createboardelement,
   exportboardelement,
@@ -72,8 +85,45 @@ export function createcodepage(
   }
 }
 
+export const BIN_CODEPAGE = bin.object({
+  // all pages have id, code, and tags
+  id: bin.string,
+  code: bin.string,
+  tags: bin.dynamicArrayOf(bin.string),
+  // content data
+  board: bin.optional(BIN_BOARD),
+  object: bin.optional(BIN_BOARD_ELEMENT),
+  terrain: bin.optional(BIN_BOARD_ELEMENT),
+  charset: bin.optional(BIN_BITMAP),
+  palette: bin.optional(BIN_BITMAP),
+  eighttrack: bin.optional(
+    bin.object({
+      id: bin.string,
+      sequences: bin.dynamicArrayOf(
+        bin.object({
+          patterns: bin.dynamicArrayOf(
+            bin.object({
+              tracks: bin.dynamicArrayOf(bin.string),
+            }),
+          ),
+        }),
+      ),
+    }),
+  ),
+  // common parsed values
+  stats: bin.optional(
+    bin.object({
+      type: bin.optional(bin.byte),
+      name: bin.optional(bin.string),
+      // custom
+      custom: bin.optional(bin.dynamicArrayOf(BIN_WORD_ENTRY)),
+    }),
+  ),
+})
+type BIN_CODEPAGE = bin.Parsed<typeof BIN_CODEPAGE>
+
 // safe to serialize copy of codepage
-export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
+export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE<BIN_CODEPAGE> {
   if (!ispresent(codepage)) {
     return
   }
@@ -85,17 +135,21 @@ export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
     board: exportboard(codepage.board),
     object: exportboardelement(codepage.object),
     terrain: exportboardelement(codepage.terrain),
-    // charset: exportcharset(codepage.charset),
-    // palette: exportpalette(codepage.palette), TODO: scrub these values too
+    charset: exportbitmap(codepage.charset),
+    palette: exportbitmap(codepage.palette),
     eighttrack: exporteighttrack(codepage.eighttrack),
+    stats: exportcodepagestats(codepage.stats),
   }
 }
 
 // safe to serialize copy of codepage
-export function importcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
-  if (!ispresent(codepage)) {
+export function importcodepage(
+  codepagebytes: MAYBE<BIN_CODEPAGE>,
+): MAYBE_CODE_PAGE {
+  if (!ispresent(codepagebytes)) {
     return
   }
+
   return {
     id: codepage.id,
     code: codepage.code,
@@ -104,8 +158,8 @@ export function importcodepage(codepage: MAYBE_CODE_PAGE): MAYBE_CODE_PAGE {
     board: importboard(codepage.board),
     object: importboardelement(codepage.object),
     terrain: importboardelement(codepage.terrain),
-    // charset: importcharset(codepage.charset),
-    // palette: importpalette(codepage.palette),
+    charset: importbitmap(codepage.charset),
+    palette: importbitmap(codepage.palette),
     eighttrack: importeighttrack(codepage.eighttrack),
   }
 }
