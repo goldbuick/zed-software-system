@@ -1,13 +1,5 @@
 import * as bin from 'typed-binary'
-import {
-  PT,
-  COLLISION,
-  CATEGORY,
-  WORD,
-  STR_KIND,
-  BIN_WORD_ENTRY,
-  exportwordentry,
-} from 'zss/firmware/wordtypes'
+import { PT, STR_KIND } from 'zss/firmware/wordtypes'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
@@ -16,6 +8,8 @@ import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
 import { checkcollision } from './atomics'
 import {
   BOARD,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
   MAYBE_BOARD,
   boarddeleteobject,
   boardelementapplycolor,
@@ -23,7 +17,12 @@ import {
   boardobjectread,
   boardterrainsetfromkind,
 } from './board'
-import { BOARD_ELEMENT, MAYBE_BOARD_ELEMENT } from './boardelement'
+import {
+  BOARD_ELEMENT,
+  CATEGORY,
+  COLLISION,
+  MAYBE_BOARD_ELEMENT,
+} from './boardelement'
 import {
   BIN_CODEPAGE,
   CODE_PAGE,
@@ -37,6 +36,7 @@ import {
   exportcodepage,
   importcodepage,
 } from './codepage'
+import { BIN_WORD_ENTRY, exportwordentry, WORD } from './word'
 
 // player state
 export type BOOK_FLAGS = Record<string, WORD>
@@ -87,39 +87,46 @@ export const BIN_BOOK = bin.object({
 type BIN_BOOK = bin.Parsed<typeof BIN_BOOK>
 
 // safe to serialize copy of book
-export function exportbook(book: MAYBE_BOOK): MAYBE<Uint8Array> {
+export function exportbook(book: MAYBE_BOOK): MAYBE<BIN_BOOK> {
   if (!ispresent(book)) {
     return
   }
+
+  const flags = Object.keys(book.flags).map((player) => {
+    const values = book.flags[player]
+    return {
+      player,
+      values: Object.keys(values)
+        .map((name) => exportwordentry(name, values[name]))
+        .filter(ispresent),
+    }
+  })
+
+  const players = Object.keys(book.players).map((player) => {
+    const board = book.players[player]
+    return {
+      player,
+      board,
+    }
+  })
+
   const data: BIN_BOOK = {
     id: book.id,
     name: book.name,
     tags: [...book.tags],
     pages: book.pages.map(exportcodepage).filter(ispresent),
-    flags: Object.keys(book.flags).map((player) => {
-      return {
-        player,
-        // exportwordentry
-        values: Object.keys(book.flags[player]).map((name) => {
-          return exportwordentry(name, book.flags[player][name])
-        }),
-      }
-    }),
-    players: Object.keys(book.players)
-      .map((name) => {
-        return undefined
-      })
-      .filter(ispresent),
+    flags,
+    players,
   }
   const buffer = new ArrayBuffer(BIN_BOOK.measure(data).size)
   const writer = new bin.BufferWriter(buffer)
   BIN_BOOK.write(writer, data)
 
-  return new Uint8Array(buffer)
+  return
 }
 
 // import json into book
-export function importbook(book: MAYBE<Uint8Array>): MAYBE_BOOK {
+export function importbook(book: MAYBE<BIN_BOOK>): MAYBE_BOOK {
   if (!ispresent(book)) {
     return
   }
@@ -424,9 +431,9 @@ export function bookboardmoveobject(
     !ispresent(object.y) ||
     !ispresent(board.lookup) ||
     dest.x < 0 ||
-    dest.x >= board.width ||
+    dest.x >= BOARD_WIDTH ||
     dest.y < 0 ||
-    dest.y >= board.height
+    dest.y >= BOARD_HEIGHT
   ) {
     // for sending interaction messages
     return { kind: 'edge', collision: COLLISION.ISSOLID, x: dest.x, y: dest.y }
@@ -439,7 +446,7 @@ export function bookboardmoveobject(
   }
 
   // gather meta for move
-  const idx = dest.x + dest.y * board.width
+  const idx = dest.x + dest.y * BOARD_WIDTH
   const targetkind = bookelementkindread(book, object)
   const targetcollision = object.collision ?? targetkind?.collision
 
@@ -471,7 +478,7 @@ export function bookboardmoveobject(
     board.lookup[idx] = undefined
 
     // update lookup
-    board.lookup[object.x + object.y * board.width] = object.id ?? ''
+    board.lookup[object.x + object.y * BOARD_WIDTH] = object.id ?? ''
   }
 
   // no interaction
@@ -531,7 +538,7 @@ export function bookboardobjectlookupwrite(
   if (!ispresent(object.removed)) {
     const x = object.x ?? 0
     const y = object.y ?? 0
-    board.lookup[x + y * board.width] = object.id
+    board.lookup[x + y * BOARD_WIDTH] = object.id
   }
 }
 
@@ -547,7 +554,7 @@ export function bookboardsetlookup(book: MAYBE_BOOK, board: MAYBE_BOARD) {
   }
 
   // build initial cache
-  const lookup: string[] = new Array(board.width * board.height).fill(undefined)
+  const lookup: string[] = new Array(BOARD_WIDTH * BOARD_HEIGHT).fill(undefined)
   const named: Record<string, Set<string | number>> = {}
 
   // add objects to lookup & to named
@@ -564,7 +571,7 @@ export function bookboardsetlookup(book: MAYBE_BOOK, board: MAYBE_BOARD) {
       object.category = CATEGORY.ISOBJECT
 
       // update lookup
-      lookup[object.x + object.y * board.width] = object.id
+      lookup[object.x + object.y * BOARD_WIDTH] = object.id
 
       // update named lookup
       const name = bookboardelementreadname(book, object)
@@ -594,7 +601,7 @@ export function bookboardsetlookup(book: MAYBE_BOOK, board: MAYBE_BOARD) {
       named[name].add(i)
     }
     ++x
-    if (x >= board.width) {
+    if (x >= BOARD_WIDTH) {
       x = 0
       ++y
     }
@@ -626,7 +633,7 @@ export function bookboardobjectnamedlookupdelete(
   if (ispresent(book) && ispresent(board) && ispresent(object?.id)) {
     // remove from lookup
     if (ispresent(board.lookup) && ispresent(object.x) && ispresent(object.y)) {
-      const index = object.x + object.y * board.width
+      const index = object.x + object.y * BOARD_WIDTH
       if (board.lookup[index] === object.id) {
         delete board.lookup[index]
       }
@@ -777,7 +784,7 @@ export function bookboardwrite(
       // update color
       boardelementapplycolor(terrain, maybecolor)
       // update named (terrain & objects)
-      const index = dest.x + dest.y * board.width
+      const index = dest.x + dest.y * BOARD_WIDTH
       bookboardnamedwrite(book, board, terrain, index)
       // return result
       return terrain

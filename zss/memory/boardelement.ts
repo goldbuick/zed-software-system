@@ -1,15 +1,20 @@
 import * as bin from 'typed-binary'
-import {
-  BIN_WORD,
-  BIN_WORD_ENTRY,
-  CATEGORY,
-  COLLISION,
-  exportword,
-  importword,
-  WORD,
-} from 'zss/firmware/wordtypes'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+
+import { BIN_WORD, BIN_WORD_ENTRY, WORD, exportword, importword } from './word'
+
+export enum COLLISION {
+  ISSOLID,
+  ISWALK,
+  ISSWIM,
+  ISBULLET,
+}
+
+export enum CATEGORY {
+  ISTERRAIN,
+  ISOBJECT,
+}
 
 // simple built-ins go here
 export type BOARD_ELEMENT_STATS = {

@@ -1,8 +1,6 @@
-import { trimUndefinedRecursively } from 'compress-json'
 import { createdevice } from 'zss/device'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
-import { doasync } from 'zss/mapping/func'
-import { MAYBE, isarray, isbook, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memorycli,
   memoryplayerlogin,
@@ -17,9 +15,9 @@ import {
   memoryloadfile,
   memorygetdefaultplayer,
 } from 'zss/memory'
-import { BOOK, bookreadcodepagebyaddress, exportbook } from 'zss/memory/book'
+import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
-import { compressbooks } from 'zss/memory/compress'
+import { compressbooks, decompressbooks } from 'zss/memory/compress'
 import { createos } from 'zss/os'
 
 import {
@@ -57,20 +55,20 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
   switch (message.target) {
     case 'books':
       if (isstring(message.data)) {
-        // // unpack books
-        // const books: BOOK[] = message.data
-        // const booknames = books.map((item) => item.name)
-        // memoryresetbooks(books)
-        // // message
-        // tape_info(
-        //   vm.name(),
-        //   'reset by',
-        //   message.sender,
-        //   'with',
-        //   ...booknames,
-        //   message.player,
-        // )
-        // bip_retry(vm.name(), message.player)
+        // unpack books
+        const books = decompressbooks(message.data)
+        const booknames = books.map((item) => item.name)
+        memoryresetbooks(books)
+        // message
+        tape_info(
+          vm.name(),
+          'reset by',
+          message.sender,
+          'with',
+          ...booknames,
+          message.player,
+        )
+        bip_retry(vm.name(), message.player ?? '')
       }
       break
     case 'login':
@@ -167,17 +165,11 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         vm_flush(vm.name())
       }
       break
-    case 'flush':
-      doasync(async function () {
-        flushtick = 0
-        const flushdata = memoryreadbooklist().map(exportbook)
-        trimUndefinedRecursively(flushdata)
-        register_flush(
-          vm.name(),
-          (await compressbooks(flushdata.filter(ispresent))) ?? '',
-        )
-      })
+    case 'flush': {
+      flushtick = 0
+      register_flush(vm.name(), compressbooks(memoryreadbooklist()))
       break
+    }
     case 'cli':
       // user input from built-in console
       if (ispresent(message.player)) {

@@ -1,5 +1,4 @@
 import {
-  COLLISION,
   PT,
   STR_KIND,
   ispt,
@@ -10,13 +9,14 @@ import {
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import {
-  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
   MAYBE_BOARD,
-  MAYBE_BOARD_ELEMENT,
   boardelementbg,
   boardelementcolor,
   boardelementname,
 } from './board'
+import { BOARD_ELEMENT, COLLISION, MAYBE_BOARD_ELEMENT } from './boardelement'
 
 // what is atomics? a set of spatial and data related queries
 // naming convention
@@ -109,11 +109,11 @@ export function listelementsbyattr(
         // check by valid pt
         ispt(idnameorpt) &&
         idnameorpt.x >= 0 &&
-        idnameorpt.x < board.width &&
+        idnameorpt.x < BOARD_WIDTH &&
         idnameorpt.y >= 0 &&
-        idnameorpt.y < board.height
+        idnameorpt.y < BOARD_HEIGHT
       ) {
-        const idx = idnameorpt.x + idnameorpt.y * board.width
+        const idx = idnameorpt.x + idnameorpt.y * BOARD_WIDTH
         const maybeid = board.lookup?.[idx]
         // check lookup first, then fallback to terrain
         return ispresent(maybeid) ? board.objects[maybeid] : board.terrain[idx]

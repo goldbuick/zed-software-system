@@ -1,6 +1,5 @@
 import { IToken } from 'chevrotain'
 import * as bin from 'typed-binary'
-import { BIN_WORD_ENTRY, WORD } from 'zss/firmware/wordtypes'
 import {
   BIN_BITMAP,
   BITMAP,
@@ -25,7 +24,13 @@ import {
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import { EIGHT_TRACK, exporteighttrack, importeighttrack } from './eighttrack'
+import {
+  BIN_EIGHT_TRACK,
+  EIGHT_TRACK,
+  exporteighttrack,
+  importeighttrack,
+} from './eighttrack'
+import { BIN_WORD_ENTRY, WORD } from './word'
 
 export enum CODE_PAGE_TYPE {
   ERROR,
@@ -96,29 +101,7 @@ export const BIN_CODEPAGE = bin.object({
   terrain: bin.optional(BIN_BOARD_ELEMENT),
   charset: bin.optional(BIN_BITMAP),
   palette: bin.optional(BIN_BITMAP),
-  eighttrack: bin.optional(
-    bin.object({
-      id: bin.string,
-      sequences: bin.dynamicArrayOf(
-        bin.object({
-          patterns: bin.dynamicArrayOf(
-            bin.object({
-              tracks: bin.dynamicArrayOf(bin.string),
-            }),
-          ),
-        }),
-      ),
-    }),
-  ),
-  // common parsed values
-  stats: bin.optional(
-    bin.object({
-      type: bin.optional(bin.byte),
-      name: bin.optional(bin.string),
-      // custom
-      custom: bin.optional(bin.dynamicArrayOf(BIN_WORD_ENTRY)),
-    }),
-  ),
+  eighttrack: bin.optional(BIN_EIGHT_TRACK),
 })
 type BIN_CODEPAGE = bin.Parsed<typeof BIN_CODEPAGE>
 
@@ -138,15 +121,12 @@ export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE<BIN_CODEPAGE> {
     charset: exportbitmap(codepage.charset),
     palette: exportbitmap(codepage.palette),
     eighttrack: exporteighttrack(codepage.eighttrack),
-    stats: exportcodepagestats(codepage.stats),
   }
 }
 
 // safe to serialize copy of codepage
-export function importcodepage(
-  codepagebytes: MAYBE<BIN_CODEPAGE>,
-): MAYBE_CODE_PAGE {
-  if (!ispresent(codepagebytes)) {
+export function importcodepage(codepage: MAYBE<BIN_CODEPAGE>): MAYBE_CODE_PAGE {
+  if (!ispresent(codepage)) {
     return
   }
 

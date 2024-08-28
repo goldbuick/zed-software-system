@@ -30,6 +30,7 @@ import {
 } from 'zss/memory/board'
 import {
   BOARD_ELEMENT,
+  COLLISION,
   MAYBE_BOARD_ELEMENT,
   boardelementwritestat,
   boardelementwritestats,
@@ -47,6 +48,7 @@ import {
   bookboardobjectnamedlookupdelete,
   bookelementkindread,
 } from 'zss/memory/book'
+import { WORD } from 'zss/memory/word'
 
 import {
   readargs,
@@ -58,8 +60,6 @@ import {
   ispt,
   dirfrompts,
   ptapplydir,
-  COLLISION,
-  WORD,
 } from './wordtypes'
 
 const STAT_NAMES = new Set([

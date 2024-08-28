@@ -12,12 +12,12 @@ export type BIN_BOOKS = bin.Parsed<typeof BIN_BOOKS>
 
 export function compressbooks(books: BOOK[]): string {
   try {
-    const mappedbooks = books.map(exportbook)
-    const buffer = new ArrayBuffer(BIN_BOOKS.measure(mappedbooks).size)
-    const writer = new bin.BufferWriter(buffer)
-    BIN_BOOKS.write(writer, mappedbooks)
-    const bytes = gunzipSync(new Uint8Array(buffer))
-    return toBase64(bytes)
+    const exportedbooks = books.map(exportbook).filter(ispresent)
+    const binbooks = new ArrayBuffer(BIN_BOOKS.measure(exportedbooks).size)
+    const writer = new bin.BufferWriter(binbooks)
+    BIN_BOOKS.write(writer, exportedbooks)
+    const asciibytes = gzipSync(new Uint8Array(binbooks))
+    return toBase64(asciibytes)
   } catch (err) {
     console.error(err)
     return ''
@@ -27,10 +27,10 @@ export function compressbooks(books: BOOK[]): string {
 // import json into book
 export function decompressbooks(base64bytes: string): BOOK[] {
   try {
-    const bytes = fromBase64(base64bytes)
-    const reader = new bin.BufferReader(bytes.buffer)
-    const mappedbooks = BIN_BOOKS.read(reader)
-    return mappedbooks.map(importbook).filter(ispresent)
+    const asciibytes = fromBase64(base64bytes)
+    const binbooks = gunzipSync(asciibytes)
+    const reader = new bin.BufferReader(binbooks.buffer)
+    return BIN_BOOKS.read(reader).map(importbook).filter(ispresent)
   } catch (err) {
     console.error(err)
     return []

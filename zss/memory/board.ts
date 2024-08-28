@@ -11,10 +11,6 @@ import {
   readstrbg,
   ptapplydir,
   mapstrdirtoconst,
-  WORD,
-  BIN_WORD_ENTRY,
-  exportwordentry,
-  importwordentry,
 } from 'zss/firmware/wordtypes'
 import { COLOR } from 'zss/gadget/data/types'
 import { pick } from 'zss/mapping/array'
@@ -36,6 +32,7 @@ import {
   exportboardelement,
   importboardelement,
 } from './boardelement'
+import { BIN_WORD_ENTRY, exportwordentry, importwordentry, WORD } from './word'
 
 export type BOARD_RECT = {
   x: number
@@ -60,8 +57,8 @@ export type BOARD = {
 
 export type MAYBE_BOARD = MAYBE<BOARD>
 
-const BOARD_WIDTH = 60
-const BOARD_HEIGHT = 25
+export const BOARD_WIDTH = 60
+export const BOARD_HEIGHT = 25
 const BOARD_TERRAIN: undefined[] = new Array(BOARD_WIDTH * BOARD_HEIGHT)
 
 export function createboard(fn = noop<BOARD>) {
@@ -91,6 +88,10 @@ export function exportboard(board: MAYBE_BOARD): MAYBE<BIN_BOARD> {
   }
 
   const stats = board.stats ?? {}
+  const wordentries = Object.keys(stats)
+    .map((name) => exportwordentry(name, stats[name]))
+    .filter(ispresent)
+
   return {
     id: board.id ?? '',
     // specifics
@@ -99,7 +100,7 @@ export function exportboard(board: MAYBE_BOARD): MAYBE<BIN_BOARD> {
       .map((name) => exportboardelement(board.objects[name]))
       .filter(ispresent),
     // custom
-    stats: Object.keys(stats).map((name) => exportwordentry(name, stats[name])),
+    stats: wordentries,
   }
 }
 
