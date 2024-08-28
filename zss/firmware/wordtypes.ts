@@ -77,10 +77,10 @@ export function exportword(word: MAYBE_WORD): MAYBE<BIN_WORD> {
   if (!ispresent(word)) {
     return
   }
-  if (isarray(word)) {
+  if (isnumber(word)) {
     return {
-      type: 'wordarray',
-      value: word.map(exportword).filter(ispresent),
+      type: 'wordnumber',
+      value: word,
     }
   }
   if (isstring(word)) {
@@ -89,10 +89,10 @@ export function exportword(word: MAYBE_WORD): MAYBE<BIN_WORD> {
       value: word,
     }
   }
-  if (isnumber(word)) {
+  if (isarray(word)) {
     return {
-      type: 'wordnumber',
-      value: word,
+      type: 'wordarray',
+      value: word.map(exportword).filter(ispresent),
     }
   }
 }
@@ -111,23 +111,21 @@ export function importword(word: MAYBE<BIN_WORD>): MAYBE_WORD {
   }
 }
 
-export const BIN_WORD_ENTRY = bin.keyed('bin-word-entry', (binwordentry) =>
-  bin.generic(
-    {
-      name: bin.string,
-    },
-    {
-      wordnumber: bin.object({
-        value: bin.i32,
-      }),
-      wordstring: bin.object({
-        value: bin.string,
-      }),
-      wordarray: bin.object({
-        value: bin.dynamicArrayOf(binwordentry),
-      }),
-    },
-  ),
+export const BIN_WORD_ENTRY = bin.generic(
+  {
+    name: bin.string,
+  },
+  {
+    wordnumber: bin.object({
+      value: bin.i32,
+    }),
+    wordstring: bin.object({
+      value: bin.string,
+    }),
+    wordarray: bin.object({
+      value: bin.dynamicArrayOf(BIN_WORD),
+    }),
+  },
 )
 export type BIN_WORD_ENTRY = bin.Parsed<typeof BIN_WORD_ENTRY>
 
@@ -135,7 +133,7 @@ export type BIN_WORD_ENTRY = bin.Parsed<typeof BIN_WORD_ENTRY>
 export function exportwordentry(
   name: string,
   word: MAYBE_WORD,
-): BIN_WORD_ENTRY {
+): MAYBE<BIN_WORD_ENTRY> {
   if (!ispresent(word)) {
     return
   }

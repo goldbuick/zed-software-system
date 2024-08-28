@@ -13,6 +13,8 @@ import {
   mapstrdirtoconst,
   WORD,
   BIN_WORD_ENTRY,
+  exportwordentry,
+  importwordentry,
 } from 'zss/firmware/wordtypes'
 import { COLOR } from 'zss/gadget/data/types'
 import { pick } from 'zss/mapping/array'
@@ -46,11 +48,6 @@ export type BOARD_STATS = Record<string, WORD>
 
 export type BOARD = {
   id?: string
-  // dimensions
-  x: number
-  y: number
-  width: number
-  height: number
   // specifics
   terrain: MAYBE_BOARD_ELEMENT[]
   objects: Record<string, BOARD_ELEMENT>
@@ -70,11 +67,6 @@ const BOARD_TERRAIN: undefined[] = new Array(BOARD_WIDTH * BOARD_HEIGHT)
 export function createboard(fn = noop<BOARD>) {
   const board: BOARD = {
     id: createsid(),
-    // dimensions
-    x: 0,
-    y: 0,
-    width: BOARD_WIDTH,
-    height: BOARD_HEIGHT,
     // specifics
     terrain: BOARD_TERRAIN.slice(0),
     objects: {},
@@ -84,11 +76,6 @@ export function createboard(fn = noop<BOARD>) {
 
 export const BIN_BOARD = bin.object({
   id: bin.string,
-  // dimensions
-  x: bin.optional(bin.byte),
-  y: bin.optional(bin.byte),
-  width: bin.optional(bin.byte),
-  height: bin.optional(bin.byte),
   // specifics
   terrain: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
   objects: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
@@ -103,37 +90,38 @@ export function exportboard(board: MAYBE_BOARD): MAYBE<BIN_BOARD> {
     return
   }
 
+  const stats = board.stats ?? {}
   return {
     id: board.id ?? '',
-    // dimensions
-    x: board.x,
-    y: board.y,
-    width: board.width,
-    height: board.height,
     // specifics
     terrain: board.terrain.map(exportboardelement).filter(ispresent),
     objects: Object.keys(board.objects)
       .map((name) => exportboardelement(board.objects[name]))
       .filter(ispresent),
     // custom
-    stats: board.stats,
+    stats: Object.keys(stats).map((name) => exportwordentry(name, stats[name])),
   }
 }
 
 // import json into board
-export function importboard(board: MAYBE_BOARD): MAYBE_BOARD {
+export function importboard(board: MAYBE<BIN_BOARD>): MAYBE_BOARD {
   if (!ispresent(board)) {
     return
   }
+  let stats: MAYBE<BOARD_STATS>
+  if (board.stats) {
+    stats = {}
+    for (let i = 0; i < board.stats.length; ++i) {
+      const [name, word] = importwordentry(board.stats[i]) ?? []
+      if (ispresent(name)) {
+        stats[name] = word
+      }
+    }
+  }
   return {
     id: board.id,
-    // dimensions
-    x: board.x,
-    y: board.y,
-    width: board.width,
-    height: board.height,
     // specifics
-    terrain: board.terrain.map(importboardelement),
+    terrain: board.terrain.map(importboardelement).filter(ispresent),
     objects: Object.fromEntries<BOARD_ELEMENT>(
       Object.entries(board.objects).map(([id, object]) => [
         id,
@@ -141,7 +129,7 @@ export function importboard(board: MAYBE_BOARD): MAYBE_BOARD {
       ]) as any,
     ),
     // custom
-    stats: board.stats,
+    stats,
   }
 }
 
@@ -157,13 +145,13 @@ export function boardelementindex(board: MAYBE_BOARD, pt: PT): number {
   if (
     !ispresent(board) ||
     pt.x < 0 ||
-    pt.x >= board.width ||
+    pt.x >= BOARD_WIDTH ||
     pt.y < 0 ||
-    pt.y >= board.height
+    pt.y >= BOARD_HEIGHT
   ) {
     return -1
   }
-  return pt.x + pt.y * board.width
+  return pt.x + pt.y * BOARD_WIDTH
 }
 
 export function boardelementread(
@@ -220,9 +208,8 @@ export function boardgetterrain(
   x: number,
   y: number,
 ): MAYBE_BOARD_ELEMENT {
-  return (x >= 0 && x < (board?.width ?? -1)) ??
-    (y >= 0 && y < (board?.height ?? -1))
-    ? board?.terrain[x + y * board.width]
+  return (x >= 0 && x < BOARD_WIDTH) ?? (y >= 0 && y < BOARD_HEIGHT)
+    ? board?.terrain[x + y * BOARD_WIDTH]
     : undefined
 }
 
@@ -236,15 +223,15 @@ export function boardsetterrain(
     !ispresent(from.x) ||
     !ispresent(from.y) ||
     from.x < 0 ||
-    from.x >= board.width ||
+    from.x >= BOARD_WIDTH ||
     from.y < 0 ||
-    from.y >= board.height
+    from.y >= BOARD_HEIGHT
   ) {
     return undefined
   }
 
   const terrain = { ...from }
-  const index = from.x + from.y * board.width
+  const index = from.x + from.y * BOARD_WIDTH
   board.terrain[index] = terrain
 
   return from
@@ -318,8 +305,8 @@ export function boardevaldir(
   // we need to know current flow etc..
   const start: PT = { ...pt }
   const flow = dirfrompts(lpt, pt)
-  const xmax = board.width - 1
-  const ymax = board.height - 1
+  const xmax = BOARD_WIDTH - 1
+  const ymax = BOARD_HEIGHT - 1
   for (let i = 0; i < dir.length; ++i) {
     const dirconst = mapstrdirtoconst(dir[i])
     switch (dirconst) {

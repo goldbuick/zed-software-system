@@ -139,6 +139,7 @@ export function importboardelementstats(
     data: importword(boardelementstats.data) as any,
   }
   boardelementstats.custom?.forEach((entry) => {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     stats[entry.name] = entry.value as any
   })
   return stats
