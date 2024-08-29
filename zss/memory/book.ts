@@ -110,7 +110,7 @@ export function exportbook(book: MAYBE_BOOK): MAYBE<BIN_BOOK> {
     }
   })
 
-  const data: BIN_BOOK = {
+  return {
     id: book.id,
     name: book.name,
     tags: [...book.tags],
@@ -118,11 +118,6 @@ export function exportbook(book: MAYBE_BOOK): MAYBE<BIN_BOOK> {
     flags,
     players,
   }
-  const buffer = new ArrayBuffer(BIN_BOOK.measure(data).size)
-  const writer = new bin.BufferWriter(buffer)
-  BIN_BOOK.write(writer, data)
-
-  return
 }
 
 // import json into book

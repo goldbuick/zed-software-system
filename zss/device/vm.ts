@@ -1,5 +1,6 @@
 import { createdevice } from 'zss/device'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
+import { doasync } from 'zss/mapping/func'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memorycli,
@@ -54,22 +55,28 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
   // console.info(message)
   switch (message.target) {
     case 'books':
-      if (isstring(message.data)) {
-        // unpack books
-        const books = decompressbooks(message.data)
-        const booknames = books.map((item) => item.name)
-        memoryresetbooks(books)
-        // message
-        tape_info(
-          vm.name(),
-          'reset by',
-          message.sender,
-          'with',
-          ...booknames,
-          message.player,
-        )
-        bip_retry(vm.name(), message.player ?? '')
-      }
+      doasync(async () => {
+        if (isstring(message.data)) {
+          // unpack books
+          const books = await decompressbooks(message.data)
+          const booknames = books.map((item) => item.name)
+          memoryresetbooks(books)
+          // message
+          tape_info(
+            vm.name(),
+            'reset by',
+            message.sender,
+            'with',
+            ...booknames,
+            message.player,
+          )
+          // guard against infinite reset
+          const [mainbook] = memoryreadbooksbytags(memoryreadmaintags())
+          if (ispresent(mainbook)) {
+            bip_retry(vm.name(), message.player ?? '')
+          }
+        }
+      })
       break
     case 'login':
       if (message.player) {
@@ -165,11 +172,15 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         vm_flush(vm.name())
       }
       break
-    case 'flush': {
-      flushtick = 0
-      register_flush(vm.name(), compressbooks(memoryreadbooklist()))
+    case 'flush':
+      doasync(async () => {
+        flushtick = 0
+        const books = memoryreadbooklist()
+        if (books.length) {
+          register_flush(vm.name(), await compressbooks(books))
+        }
+      })
       break
-    }
     case 'cli':
       // user input from built-in console
       if (ispresent(message.player)) {

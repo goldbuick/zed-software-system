@@ -32,6 +32,8 @@ import {
   MAYBE_BOARD,
   boardelementname,
   boardobjectcreatefromkind,
+  BOARD_WIDTH,
+  BOARD_HEIGHT,
 } from './board'
 import { MAYBE_BOARD_ELEMENT, boardelementreadstat } from './boardelement'
 import {
@@ -532,8 +534,8 @@ function memoryconverttogadgetlayers(
 
   let i = index
   const isbaseboard = i === 0
-  const boardwidth = board.width ?? 0
-  const boardheight = board.height ?? 0
+  const boardwidth = BOARD_WIDTH
+  const boardheight = BOARD_HEIGHT
   const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.CLEAR
 
   const tiles = createtiles(player, i++, boardwidth, boardheight, defaultcolor)
@@ -578,7 +580,7 @@ function memoryconverttogadgetlayers(
     const sprite = createsprite(player, objectindex, id)
     const lx = object.lx ?? object.x ?? 0
     const ly = object.ly ?? object.y ?? 0
-    const li = lx + ly * board.width
+    const li = lx + ly * BOARD_WIDTH
 
     // setup sprite
     sprite.x = object.x ?? 0
@@ -614,10 +616,10 @@ function memoryconverttogadgetlayers(
 
   // smooth shadows
   function aa(x: number, y: number) {
-    if (x < 0 || x >= board.width || y < 0 || y >= board.height) {
+    if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT) {
       return undefined
     }
-    return shadow.alphas[x + y * board.width]
+    return shadow.alphas[x + y * BOARD_WIDTH]
   }
 
   const weights = [
@@ -631,8 +633,8 @@ function memoryconverttogadgetlayers(
   const alphas = new Array<number>(shadow.alphas.length)
   for (let i = 0; i < shadow.alphas.length; ++i) {
     // coords
-    const cx = i % board.width
-    const cy = Math.floor(i / board.width)
+    const cx = i % BOARD_WIDTH
+    const cy = Math.floor(i / BOARD_WIDTH)
 
     // weighted average
     const values = [
@@ -707,7 +709,7 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
 
   let i = 0
   const frames = [...memoryreadframes(board.id ?? '')]
-  const borrowbuffer: number[] = new Array(board.width * board.height).fill(0)
+  const borrowbuffer: number[] = new Array(BOARD_WIDTH * BOARD_HEIGHT).fill(0)
 
   frames.sort((a, b) => framerank(a) - framerank(b))
   frames.forEach((frame) => {
