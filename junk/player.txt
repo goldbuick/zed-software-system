@@ -2,6 +2,7 @@
 #char 2
 #bg blue
 #cycle 1
+
 ' create ui
 #gadget right
 "                "
