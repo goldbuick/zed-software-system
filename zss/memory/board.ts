@@ -124,8 +124,8 @@ export function importboard(board: MAYBE<BIN_BOARD>): MAYBE_BOARD {
     // specifics
     terrain: board.terrain.map(importboardelement).filter(ispresent),
     objects: Object.fromEntries<BOARD_ELEMENT>(
-      Object.entries(board.objects).map(([id, object]) => [
-        id,
+      board.objects.map((object) => [
+        object.id,
         importboardelement(object),
       ]) as any,
     ),
@@ -398,6 +398,7 @@ export function boardevaldir(
 }
 
 export function boarddeleteobject(board: MAYBE_BOARD, id: string) {
+  console.info('boarddeleteobject', board, id)
   if (ispresent(board?.objects[id])) {
     delete board.objects[id]
     return true

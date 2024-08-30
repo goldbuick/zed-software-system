@@ -30,7 +30,7 @@ import {
   exporteighttrack,
   importeighttrack,
 } from './eighttrack'
-import { BIN_WORD_ENTRY, WORD } from './word'
+import { WORD } from './word'
 
 export enum CODE_PAGE_TYPE {
   ERROR,

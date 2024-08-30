@@ -7,7 +7,7 @@ import { gadgetstategetplayer, gadgetstatesetplayer } from './gadgetclient'
 let keepalive = 0
 
 // send keepalive message every 24 seconds
-const signalrate = 24
+const signalrate = 1
 
 const bip = createdevice('bip', ['second', 'ready'], (message) => {
   switch (message.target) {

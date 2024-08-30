@@ -5,7 +5,6 @@ import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memorycli,
   memoryplayerlogin,
-  memoryplayerlogout,
   memoryreadbookbyaddress,
   memoryreadbooksbytags,
   memoryreadbooklist,
@@ -15,6 +14,8 @@ import {
   memorytick,
   memoryloadfile,
   memorygetdefaultplayer,
+  memoryplayerscan,
+  memoryplayerlogout,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -40,7 +41,7 @@ const os = createos()
 let lasttick = 0
 
 // tracking active player ids
-const SECOND_TIMEOUT = 32
+const SECOND_TIMEOUT = 16
 const tracking: Record<string, number> = {}
 
 // control how fast we persist to the register
@@ -154,27 +155,41 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       lasttick = message.data ?? 0
       memorytick(os, lasttick)
       break
-    case 'second':
-      // from clock & iterate over logged in players to check activity
-      Object.keys(tracking).forEach((player) => {
-        ++tracking[player]
+    case 'second': {
+      // ensure player ids are added to tracking
+      // this manages restoring from saved or transfered state
+      memoryplayerscan(tracking)
+
+      // list of player ids
+      const players = Object.keys(tracking)
+
+      // update tracking counts
+      for (let i = 0; i < players.length; ++i) {
+        ++tracking[players[i]]
+      }
+
+      // drop lagged players from tracking
+      for (let i = 0; i < players.length; ++i) {
+        const player = players[i]
         if (tracking[player] >= SECOND_TIMEOUT) {
           // drop inactive players (logout)
           delete tracking[player]
           memoryplayerlogout(player)
-          // message
+          // message outcome
           tape_info(vm.name(), 'player logout', player)
           vm.emit('logout', undefined, player)
         }
-      })
+      }
+
       // autosave to url
       if (++flushtick >= FLUSH_RATE) {
+        flushtick = 0
         vm_flush(vm.name())
       }
       break
+    }
     case 'flush':
       doasync(async () => {
-        flushtick = 0
         const books = memoryreadbooklist()
         if (books.length) {
           register_flush(vm.name(), await compressbooks(books))

@@ -1,5 +1,6 @@
 import { CHIP } from 'zss/chip'
 import { FIRMWARE } from 'zss/firmware'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { ALL_FIRMWARE } from './all'
 import { AUDIO_FIRMWARE } from './audio'
@@ -21,6 +22,7 @@ export enum DRIVER_TYPE {
   TERRAIN,
   CHARSET,
   PALETTE,
+  EIGHT_TRACK,
 }
 
 const firmwares: Record<string, FIRMWARE> = {
@@ -45,11 +47,40 @@ const DRIVER_FIRMWARE = {
   [DRIVER_TYPE.TERRAIN]: ['all', 'audio', 'mods', 'gadget', 'element'],
   [DRIVER_TYPE.CHARSET]: ['all'],
   [DRIVER_TYPE.PALETTE]: ['all'],
+  [DRIVER_TYPE.EIGHT_TRACK]: ['all', 'audio', 'mods', 'gadget', 'element'],
 }
 
-export type DRIVE_NAME = keyof typeof DRIVER_FIRMWARE
+const DRIVER_EIGHT_TRACK_FIRMWARE = {
+  // no-ops
+  [DRIVER_TYPE.ERROR]: [],
+  [DRIVER_TYPE.CLI]: [],
+  [DRIVER_TYPE.LOADER]: [],
+  // codepages
+  [DRIVER_TYPE.BOARD]: ['all', 'audio', 'mods', 'gadget', 'board'],
+  [DRIVER_TYPE.OBJECT]: ['all', 'audio', 'mods', 'gadget', 'element'],
+  [DRIVER_TYPE.TERRAIN]: ['all', 'audio', 'mods', 'gadget', 'element'],
+  [DRIVER_TYPE.CHARSET]: ['all'],
+  [DRIVER_TYPE.PALETTE]: ['all'],
+  [DRIVER_TYPE.EIGHT_TRACK]: ['all', 'audio', 'mods'],
+}
 
-export function loadfirmware(chip: CHIP, driver: DRIVER_TYPE) {
-  const items = DRIVER_FIRMWARE[driver] ?? []
-  items.forEach((name) => chip.install(firmwares[name]))
+export function loadfirmware(
+  chip: CHIP,
+  driver: DRIVER_TYPE,
+  variantdriver = DRIVER_TYPE.ERROR,
+) {
+  let install: string[] = []
+
+  switch (driver) {
+    case DRIVER_TYPE.EIGHT_TRACK:
+      if (ispresent(variantdriver)) {
+        install = DRIVER_EIGHT_TRACK_FIRMWARE[variantdriver] ?? []
+      }
+      break
+
+    default:
+      install = DRIVER_FIRMWARE[driver] ?? []
+      break
+  }
+  install.forEach((name) => chip.install(firmwares[name]))
 }

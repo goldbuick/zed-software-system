@@ -3,11 +3,12 @@ import { MESSAGE_FUNC, parsetarget } from './device'
 import { api_error } from './device/api'
 import { DRIVER_TYPE, loadfirmware } from './firmware/boot'
 import { GeneratorBuild, compile } from './lang/generator'
-import { ispresent } from './mapping/types'
+import { ispresent, MAYBE } from './mapping/types'
 
 export type OS_INVOKE = (
   id: string,
   driver: DRIVER_TYPE,
+  variantdriver: MAYBE<DRIVER_TYPE>,
   timestamp: number,
   name: string,
   code: string,
@@ -21,6 +22,7 @@ export type OS = {
   tick: (
     id: string,
     driver: DRIVER_TYPE,
+    variantdriver: MAYBE<DRIVER_TYPE>,
     cycle: number,
     timestamp: number,
     name: string,
@@ -63,7 +65,7 @@ export function createos() {
       }
       return !!chip
     },
-    tick(id, driver, cycle, timestamp, name, code) {
+    tick(id, driver, variantdriver, cycle, timestamp, name, code) {
       let chip = chips[id]
 
       // attempt to create chip
@@ -106,14 +108,22 @@ export function createos() {
         }
 
         // load chip firmware
-        loadfirmware(chip, driver)
+        loadfirmware(chip, driver, variantdriver)
       }
 
       // run it
       return !!chip?.tick(cycle, timestamp)
     },
-    once(id, driver, timestamp, name, code) {
-      const result = os.tick(id, driver, 1, timestamp, name, code)
+    once(id, driver, variantdriver, timestamp, name, code) {
+      const result = os.tick(
+        id,
+        driver,
+        variantdriver,
+        1,
+        timestamp,
+        name,
+        code,
+      )
       return result && os.halt(id)
     },
     message(incoming) {

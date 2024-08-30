@@ -1,7 +1,7 @@
 import { CHIP } from 'zss/chip'
 import { api_error, tape_debug, tape_info } from 'zss/device/api'
 import { DRIVER_TYPE } from 'zss/firmware/boot'
-import { WORD, createreadcontext } from 'zss/firmware/wordtypes'
+import { createreadcontext } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
   COLOR,
@@ -14,7 +14,7 @@ import {
   createtiles,
 } from 'zss/gadget/data/types'
 import { average } from 'zss/mapping/array'
-import { createpid } from 'zss/mapping/guid'
+import { createpid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import {
@@ -327,15 +327,43 @@ export function memoryplayerlogin(player: string): boolean {
 }
 
 export function memoryplayerlogout(player: string) {
-  MEMORY.books.forEach((book) =>
-    boarddeleteobject(bookplayerreadboard(book, player), player),
-  )
+  MEMORY.books.forEach((book) => {
+    const board = bookplayerreadboard(book, player)
+    boarddeleteobject(board, player)
+  })
+}
+
+export function memoryplayerscan(players: Record<string, number>) {
+  const maintags = memoryreadmaintags()
+  const [book] = memoryreadbooksbytags(maintags)
+  const boards = bookplayerreadboards(book)
+  for (let i = 0; i < boards.length; ++i) {
+    const board = boards[i]
+    const boardid = board.id ?? ''
+    const objects = Object.keys(board.objects)
+    for (let o = 0; o < objects.length; ++o) {
+      const object = board.objects[objects[o]]
+      const objectid = object.id
+      if (ispid(objectid) && ispresent(players[objectid]) === false) {
+        players[objectid] = 0
+        bookplayersetboard(book, objectid, boardid)
+      }
+    }
+  }
 }
 
 export function memorytick(os: OS, timestamp: number) {
   // update loaders
   MEMORY.loaders.forEach((code, id) => {
-    os.tick(id, DRIVER_TYPE.LOADER, 1, timestamp, 'loader', code)
+    os.tick(
+      id,
+      DRIVER_TYPE.LOADER,
+      DRIVER_TYPE.ERROR,
+      1,
+      timestamp,
+      'loader',
+      code,
+    )
     // teardown
     if (os.isended(id)) {
       os.halt(id)
@@ -380,6 +408,7 @@ export function memorytick(os: OS, timestamp: number) {
       os.tick(
         item.id,
         DRIVER_TYPE.OBJECT,
+        DRIVER_TYPE.ERROR,
         isnumber(maybecycle) ? maybecycle : CYCLE_DEFAULT,
         timestamp,
         itemname,
@@ -413,7 +442,7 @@ export function memorycli(
   tape_debug('memory', 'running', timestamp, id, cli)
 
   // run chip code
-  os.once(id, DRIVER_TYPE.CLI, timestamp, 'cli', cli)
+  os.once(id, DRIVER_TYPE.CLI, DRIVER_TYPE.ERROR, timestamp, 'cli', cli)
 }
 
 function memoryloader(
