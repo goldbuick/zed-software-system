@@ -1,6 +1,6 @@
 import { createdevice } from 'zss/device'
 
-import { register_reboot, tape_crash, vm_doot, vm_login } from './api'
+import { register_reboot, tape_crash, vm_doot, vm_init, vm_login } from './api'
 import { gadgetstategetplayer, gadgetstatesetplayer } from './gadgetclient'
 
 // simple bootstrap manager
@@ -23,8 +23,11 @@ const bip = createdevice('bip', ['second', 'ready'], (message) => {
       break
     case 'ready':
       if (message.player) {
-        if (gadgetstatesetplayer(message.player)) {
-          vm_login(bip.name(), message.player)
+        const player = localStorage.getItem('node') ?? message.player
+        if (gadgetstatesetplayer(player)) {
+          vm_init(bip.name(), player)
+          vm_login(bip.name(), player)
+          localStorage.setItem('node', player)
         }
       }
       break
@@ -42,6 +45,11 @@ const bip = createdevice('bip', ['second', 'ready'], (message) => {
     case 'rebootfailed':
       if (message.player) {
         tape_crash(bip.name())
+      }
+      break
+    case 'nodetrash':
+      if (message.player) {
+        localStorage.removeItem('node')
       }
       break
   }

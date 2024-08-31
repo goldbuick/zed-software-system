@@ -156,6 +156,10 @@ export function memoryreadplayertags() {
   return memoryreadtags(MEMORY_LABEL.PLAYER)
 }
 
+export function memorysetdefaultplayer(player: string) {
+  MEMORY.defaultplayer = player
+}
+
 export function memorygetdefaultplayer() {
   return MEMORY.defaultplayer
 }

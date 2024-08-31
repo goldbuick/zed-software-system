@@ -1,12 +1,13 @@
 import { maptostring } from 'zss/chip'
 import {
   api_error,
-  register_bioserase,
+  register_biostrash,
   register_biosflash,
   tape_editor_open,
   tape_info,
   vm_codeaddress,
   vm_flush,
+  bip_nodetrash,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
@@ -343,9 +344,14 @@ export const CLI_FIRMWARE = createfirmware({
     writetext(`bios flashed`)
     return 0
   })
-  .command('bioserase', () => {
-    register_bioserase('cli')
+  .command('biostrash', () => {
+    register_biostrash('cli')
     writetext(`bios erased, refreshing page recommended`)
+    return 0
+  })
+  .command('nodetrash', () => {
+    bip_nodetrash('cli')
+    writetext(`node id changed, refreshing page recommended`)
     return 0
   })
   .command('help', (chip, words) => {

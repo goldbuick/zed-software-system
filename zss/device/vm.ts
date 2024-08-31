@@ -13,9 +13,10 @@ import {
   memoryresetbooks,
   memorytick,
   memoryloadfile,
-  memorygetdefaultplayer,
+  memorysetdefaultplayer,
   memoryplayerscan,
   memoryplayerlogout,
+  memorygetdefaultplayer,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -55,6 +56,11 @@ const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 const vm = createdevice('vm', ['tick', 'second'], (message) => {
   // console.info(message)
   switch (message.target) {
+    case 'init':
+      if (ispresent(message.player)) {
+        memorysetdefaultplayer(message.player)
+      }
+      break
     case 'books':
       doasync(async () => {
         if (isstring(message.data)) {

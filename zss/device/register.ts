@@ -40,7 +40,7 @@ function erasebiosbooks() {
   localStorage.removeItem(BIOS_BOOKS)
 }
 
-const register = createdevice('register', [], function (message) {
+const register = createdevice('register', ['ready'], function (message) {
   switch (message.target) {
     // memory
     case 'reboot': {
