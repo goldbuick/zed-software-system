@@ -32,16 +32,34 @@ import {
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import { BIN_WORD_ENTRY, exportwordentry, importwordentry, WORD } from './word'
+import {
+  BIN_WORD,
+  BIN_WORD_ENTRY,
+  exportword,
+  exportwordentry,
+  importword,
+  importwordentry,
+  WORD,
+} from './word'
 
-export type BOARD_RECT = {
-  x: number
-  y: number
-  width: number
-  height: number
+// simple built-ins go here
+export type BOARD_STATS = {
+  isdark?: number
+  // board displayed over this one
+  above?: string
+  // only view mode supported for above boards
+  // board displayed under this one
+  below?: string
+  // common stats
+  exitnorth?: string
+  exitsouth?: string
+  exitwest?: string
+  exiteast?: string
+  timelimit?: number
+  maxplayershots?: number
+  // generic stats
+  [key: string]: WORD
 }
-
-export type BOARD_STATS = Record<string, WORD>
 
 export type BOARD = {
   id?: string
@@ -61,6 +79,26 @@ export const BOARD_WIDTH = 60
 export const BOARD_HEIGHT = 25
 const BOARD_TERRAIN: undefined[] = new Array(BOARD_WIDTH * BOARD_HEIGHT)
 
+export type MAYBE_BOARD_STATS = MAYBE<BOARD_STATS>
+
+export function createboardstats() {
+  return {}
+}
+
+const BIN_BOARD_STATS = bin.object({
+  isdark: bin.optional(BIN_WORD),
+  above: bin.optional(BIN_WORD),
+  below: bin.optional(BIN_WORD),
+  exitnorth: bin.optional(BIN_WORD),
+  exitsouth: bin.optional(BIN_WORD),
+  exitwest: bin.optional(BIN_WORD),
+  exiteast: bin.optional(BIN_WORD),
+  timelimit: bin.optional(BIN_WORD),
+  maxplayershots: bin.optional(BIN_WORD),
+  custom: bin.optional(bin.dynamicArrayOf(BIN_WORD_ENTRY)),
+})
+type BIN_BOARD_STATS = bin.Parsed<typeof BIN_BOARD_STATS>
+
 export function createboard(fn = noop<BOARD>) {
   const board: BOARD = {
     id: createsid(),
@@ -77,21 +115,80 @@ export const BIN_BOARD = bin.object({
   terrain: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
   objects: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
   // custom
-  stats: bin.optional(bin.dynamicArrayOf(BIN_WORD_ENTRY)),
+  stats: bin.optional(BIN_BOARD_STATS),
 })
 type BIN_BOARD = bin.Parsed<typeof BIN_BOARD>
+
+// safe to serialize copy of board
+export function exportboardstats(
+  boardstats: MAYBE_BOARD_STATS,
+): MAYBE<BIN_BOARD_STATS> {
+  if (!ispresent(boardstats)) {
+    return
+  }
+  const skip = [
+    'isdark',
+    'above',
+    'below',
+    'exitnorth',
+    'exitsouth',
+    'exitwest',
+    'exiteast',
+    'timelimit',
+    'maxplayershots',
+  ]
+  const custom = Object.keys(boardstats).filter(
+    (key) => skip.includes(key) === false,
+  )
+  const bincustom = custom.map((name) => ({
+    name,
+    ...exportword(boardstats[name]),
+  })) as BIN_WORD_ENTRY[]
+
+  return {
+    isdark: exportword(boardstats.isdark),
+    above: exportword(boardstats.above),
+    below: exportword(boardstats.below),
+    exitnorth: exportword(boardstats.exitnorth),
+    exitsouth: exportword(boardstats.exitsouth),
+    exitwest: exportword(boardstats.exitwest),
+    exiteast: exportword(boardstats.exiteast),
+    timelimit: exportword(boardstats.timelimit),
+    maxplayershots: exportword(boardstats.maxplayershots),
+    custom: bincustom,
+  }
+}
+
+// import json into board
+export function importboardstats(
+  boardstats: MAYBE<BIN_BOARD_STATS>,
+): MAYBE_BOARD_STATS {
+  if (!ispresent(boardstats)) {
+    return
+  }
+  const stats: BOARD_STATS = {
+    isdark: importword(boardstats.isdark) as any,
+    above: importword(boardstats.above) as any,
+    below: importword(boardstats.below) as any,
+    exitnorth: importword(boardstats.exitnorth) as any,
+    exitsouth: importword(boardstats.exitsouth) as any,
+    exitwest: importword(boardstats.exitwest) as any,
+    exiteast: importword(boardstats.exiteast) as any,
+    timelimit: importword(boardstats.timelimit) as any,
+    maxplayershots: importword(boardstats.maxplayershots) as any,
+  }
+  boardstats.custom?.forEach((entry) => {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    stats[entry.name] = entry.value as any
+  })
+  return stats
+}
 
 // safe to serialize copy of board
 export function exportboard(board: MAYBE_BOARD): MAYBE<BIN_BOARD> {
   if (!ispresent(board)) {
     return
   }
-
-  const stats = board.stats ?? {}
-  const wordentries = Object.keys(stats)
-    .map((name) => exportwordentry(name, stats[name]))
-    .filter(ispresent)
-
   return {
     id: board.id ?? '',
     // specifics
@@ -100,7 +197,7 @@ export function exportboard(board: MAYBE_BOARD): MAYBE<BIN_BOARD> {
       .map((name) => exportboardelement(board.objects[name]))
       .filter(ispresent),
     // custom
-    stats: wordentries,
+    stats: exportboardstats(board.stats),
   }
 }
 
@@ -108,16 +205,6 @@ export function exportboard(board: MAYBE_BOARD): MAYBE<BIN_BOARD> {
 export function importboard(board: MAYBE<BIN_BOARD>): MAYBE_BOARD {
   if (!ispresent(board)) {
     return
-  }
-  let stats: MAYBE<BOARD_STATS>
-  if (board.stats) {
-    stats = {}
-    for (let i = 0; i < board.stats.length; ++i) {
-      const [name, word] = importwordentry(board.stats[i]) ?? []
-      if (ispresent(name)) {
-        stats[name] = word
-      }
-    }
   }
   return {
     id: board.id,
@@ -130,7 +217,7 @@ export function importboard(board: MAYBE<BIN_BOARD>): MAYBE_BOARD {
       ]) as any,
     ),
     // custom
-    stats,
+    stats: importboardstats(board.stats),
   }
 }
 
