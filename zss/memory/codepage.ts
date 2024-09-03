@@ -43,6 +43,15 @@ export enum CODE_PAGE_TYPE {
   EIGHT_TRACK,
 }
 
+export enum CODE_PAGE_LABEL {
+  BOARD = 'board',
+  OBJECT = 'object',
+  TERRAIN = 'terrain',
+  CHARSET = 'charset',
+  PALETTE = 'palette',
+  EIGHT_TRACK = '8track',
+}
+
 export type CODE_PAGE_STATS = {
   type?: CODE_PAGE_TYPE
   name?: string
@@ -285,27 +294,27 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
           }
           break
         }
-        case 'board':
+        case CODE_PAGE_LABEL.BOARD as string:
           codepage.stats.type = CODE_PAGE_TYPE.BOARD
           codepage.stats.name = lmaybename
           break
-        case 'object':
+        case CODE_PAGE_LABEL.OBJECT as string:
           codepage.stats.type = CODE_PAGE_TYPE.OBJECT
           codepage.stats.name = lmaybename
           break
-        case 'terrain':
+        case CODE_PAGE_LABEL.TERRAIN as string:
           codepage.stats.type = CODE_PAGE_TYPE.TERRAIN
           codepage.stats.name = lmaybename
           break
-        case 'charset':
+        case CODE_PAGE_LABEL.CHARSET as string:
           codepage.stats.type = CODE_PAGE_TYPE.CHARSET
           codepage.stats.name = lmaybename
           break
-        case 'palette':
+        case CODE_PAGE_LABEL.PALETTE as string:
           codepage.stats.type = CODE_PAGE_TYPE.PALETTE
           codepage.stats.name = lmaybename
           break
-        case '8track':
+        case CODE_PAGE_LABEL.EIGHT_TRACK as string:
           codepage.stats.type = CODE_PAGE_TYPE.EIGHT_TRACK
           codepage.stats.name = lmaybename
           break

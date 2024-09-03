@@ -1,289 +1,148 @@
-import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import {
-  memoryreadbooklist,
   memoryreadbooksbytags,
+  memoryreadchip,
   memoryreadcontext,
-  memoryreadmaintags,
 } from 'zss/memory'
-import { boardwritestat } from 'zss/memory/board'
-import { boardelementwritestat } from 'zss/memory/boardelement'
+import { bookreadcodepagewithtype } from 'zss/memory/book'
 import {
-  bookreadcodepagebyaddress,
-  bookreadcodepagedatabytype,
-  MAYBE_BOOK,
-} from 'zss/memory/book'
-import {
+  CODE_PAGE_LABEL,
   CODE_PAGE_TYPE,
   codepagereaddata,
-  codepagereadtype,
-  codepagereadtypetostring,
 } from 'zss/memory/codepage'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
-const MODS = {
-  // current target for mods
-  book: '',
-  board: '',
-  // elements
-  object: '',
-  terrain: '',
-  // display
-  charset: '',
-  palette: '',
-  // audio
-  eighttrack: '',
-  // general cursor
-  cursor: '',
-}
-
-type MODS_KEY = keyof typeof MODS
-
-function strmodname(name: string): MODS_KEY | undefined {
-  const lname = name.toLowerCase()
-  switch (lname) {
-    case 'modbook':
-    case 'modboard':
-    case 'modobject':
-    case 'modterrain':
-    case 'modcharset':
-    case 'modpalette':
-    case 'modeighttrack': {
-      return lname.replace('mod', '') as MODS_KEY
-    }
-  }
-  return undefined
-}
-
-function modbook(): MAYBE_BOOK {
-  // modbook
-  const [book] = memoryreadbooksbytags([MODS.book])
-  if (ispresent(book)) {
-    return book
-  }
-
-  // main
-  const [maybebook] = memoryreadbooksbytags(memoryreadmaintags())
-  if (ispresent(maybebook)) {
-    return maybebook
-  }
-
-  // oops
-  return undefined
-}
-
-function modsoftware(name: MODS_KEY, key: string, value: any) {
-  const book = modbook()
-  if (!ispresent(book)) {
-    return
-  }
-
-  // book mods
-  if (name === 'book') {
-    switch (key) {
-      case 'name':
-        if (isstring(value)) {
-          book.name = value
-        }
-        break
-      default:
-        return false
-    }
-
-    return tape_info('mods', `wrote ${value} to ${key} on book ${book.id}`)
-  }
-
-  const codepage = bookreadcodepagebyaddress(book, MODS[name])
-  const type = codepagereadtypetostring(codepage)
-  const id = codepage?.id ?? ''
-
-  // codepage mods
-  switch (codepagereadtype(codepage)) {
-    case CODE_PAGE_TYPE.BOARD: {
-      const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
-      if (ispresent(board)) {
-        switch (key) {
-          default:
-            boardwritestat(board, key, value)
-            break
-        }
-      }
-      break
-    }
-    case CODE_PAGE_TYPE.OBJECT: {
-      const object = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(codepage)
-      if (ispresent(object)) {
-        switch (key) {
-          case 'char':
-          case 'color':
-          case 'bg':
-            object[key] = value
-            break
-          case 'cycle':
-            boardelementwritestat(object, 'cycle', value)
-            break
-          default:
-            return false
-        }
-      }
-      break
-    }
-    case CODE_PAGE_TYPE.TERRAIN: {
-      const terrain = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(codepage)
-      if (ispresent(terrain)) {
-        switch (key) {
-          case 'char':
-          case 'color':
-          case 'bg':
-            terrain[key] = value
-            break
-          default:
-            return false
-        }
-      }
-      break
-    }
-    case CODE_PAGE_TYPE.CHARSET: {
-      const charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(codepage)
-      if (ispresent(charset)) {
-        //
-      }
-      break
-    }
-    case CODE_PAGE_TYPE.PALETTE: {
-      const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
-      if (ispresent(palette)) {
-        //
-      }
-      break
-    }
-    case CODE_PAGE_TYPE.EIGHT_TRACK: {
-      const eighttrack = codepagereaddata<CODE_PAGE_TYPE.EIGHT_TRACK>(codepage)
-      if (ispresent(eighttrack)) {
-        //
-      }
-      break
-    }
-    default:
-      return false
-  }
-  return tape_info('mods', `wrote ${value} to ${key} on ${type} ${id}`)
-}
-
 export const MODS_FIRMWARE = createfirmware({
-  get(_, name) {
-    const mod = strmodname(name)
-    if (ispresent(mod)) {
-      return [true, MODS[mod]]
-    }
-
-    // list of items
-    const book = modbook()
-    switch (name) {
-      case 'booklist':
-        return [true, memoryreadbooklist()]
-      case 'boardlist':
-        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.BOARD)]
-      case 'objectlist':
-        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.OBJECT)]
-      case 'terrainlist':
-        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.TERRAIN)]
-      case 'charsetlist':
-        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.CHARSET)]
-      case 'palettelist':
-        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.PALETTE)]
-      case 'sblist':
-      case 'soundblasterlist':
-        return [
-          true,
-          bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.SOUNDBLASTER),
-        ]
-    }
-
+  get(chip, name) {
     return [false, undefined]
   },
-  set(_, name, value) {
-    const mod = strmodname(name)
-    if (ispresent(mod)) {
-      MODS[mod] = value
-      return [tape_info('mods', `wrote ${value} to ${name}`), MODS[mod]]
-    }
+  set(chip, name, value) {
     return [false, undefined]
   },
-  shouldtick() {},
-  tick() {},
-  tock() {},
+  shouldtick(chip, activecycle) {
+    //
+  },
+  tick(chip) {
+    //
+  },
+  tock(chip) {
+    //
+  },
 }).command('mod', (chip, words) => {
-  // mod thing key value
-  const [name, maybekey, maybevalue] = readargs(
-    memoryreadcontext(chip, words),
-    0,
-    [
-      ARG_TYPE.STRING,
-      ARG_TYPE.MAYBE_NUMBER_OR_STRING,
-      ARG_TYPE.MAYBE_NUMBER_OR_STRING,
-    ],
-  )
+  // book
+  const backup = memoryreadchip(`${chip.id()}.backup`)
+  const memory = memoryreadchip(chip.id())
 
-  // change cursor
-  let usekey: any = ''
-  let usevalue: any = undefined
-  const lname = name.toLowerCase()
-  switch (lname) {
-    case 'book':
-      MODS.cursor = 'book'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    case 'board':
-      MODS.cursor = 'board'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    case 'object':
-      MODS.cursor = 'object'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    case 'terrain':
-      MODS.cursor = 'terrain'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    case 'charset':
-      MODS.cursor = 'charset'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    case 'palette':
-      MODS.cursor = 'palette'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    case 'soundblaster':
-      MODS.cursor = 'soundblaster'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    default:
-      // use current value of MODS.cursor
-      usekey = name
-      usevalue = maybekey
-      break
+  if (!ispresent(backup.book) && ispresent(memory.book)) {
+    // backup context
+    // this revert data is used when #mod self, or after #end of exec
+    backup.book = memory.book
+    backup.board = memory.board
+    backup.object = memory.object
   }
 
-  if (MODS.cursor) {
-    tape_info(
-      'mods',
-      `selected ${MODS.cursor} - ${usekey ?? ''} ${usevalue ?? ''}`,
-    )
-  }
+  const [maybetype, maybename] = readargs(memoryreadcontext(chip, words), 0, [
+    ARG_TYPE.STRING,
+    ARG_TYPE.MAYBE_STRING,
+  ])
 
-  // read cursor and write value
-  if (MODS.cursor && isstring(usekey) && ispresent(usevalue)) {
-    modsoftware(MODS.cursor as MODS_KEY, usekey, usevalue)
+  const hastype = ispresent(maybename)
+  const type = hastype ? maybetype : 'object'
+  const name = hastype ? maybename : maybetype
+
+  switch (type as CODE_PAGE_LABEL) {
+    case 'self' as CODE_PAGE_LABEL:
+      memory.book = backup.book
+      memory.board = backup.board
+      memory.object = backup.object
+      break
+    case 'book' as CODE_PAGE_LABEL: {
+      const [maybebook] = memoryreadbooksbytags([name])
+      if (ispresent(maybebook)) {
+        memory.book = maybebook
+      }
+      break
+    }
+    case CODE_PAGE_LABEL.BOARD:
+      if (ispresent(memory.book)) {
+        const maybecodepage = bookreadcodepagewithtype(
+          memory.book,
+          CODE_PAGE_TYPE.BOARD,
+          name,
+        )
+        const data = codepagereaddata<CODE_PAGE_TYPE.BOARD>(maybecodepage)
+        if (ispresent(data)) {
+          memory.board = data
+        }
+      }
+      break
+    case CODE_PAGE_LABEL.OBJECT:
+      if (ispresent(memory.book)) {
+        const maybecodepage = bookreadcodepagewithtype(
+          memory.book,
+          CODE_PAGE_TYPE.OBJECT,
+          name,
+        )
+        const data = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(maybecodepage)
+        if (ispresent(data)) {
+          memory.object = data
+        }
+      }
+      break
+    case CODE_PAGE_LABEL.TERRAIN:
+      if (ispresent(memory.book)) {
+        const maybecodepage = bookreadcodepagewithtype(
+          memory.book,
+          CODE_PAGE_TYPE.TERRAIN,
+          name,
+        )
+        const data = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(maybecodepage)
+        if (ispresent(data)) {
+          memory.terrain = data
+        }
+      }
+      break
+    case CODE_PAGE_LABEL.CHARSET:
+      if (ispresent(memory.book)) {
+        const maybecodepage = bookreadcodepagewithtype(
+          memory.book,
+          CODE_PAGE_TYPE.CHARSET,
+          name,
+        )
+        const data = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(maybecodepage)
+        if (ispresent(data)) {
+          memory.charset = data
+        }
+      }
+      break
+    case CODE_PAGE_LABEL.PALETTE:
+      if (ispresent(memory.book)) {
+        const maybecodepage = bookreadcodepagewithtype(
+          memory.book,
+          CODE_PAGE_TYPE.PALETTE,
+          name,
+        )
+        const data = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(maybecodepage)
+        if (ispresent(data)) {
+          memory.palette = data
+        }
+      }
+      break
+    case CODE_PAGE_LABEL.EIGHT_TRACK:
+      if (ispresent(memory.book)) {
+        const maybecodepage = bookreadcodepagewithtype(
+          memory.book,
+          CODE_PAGE_TYPE.EIGHT_TRACK,
+          name,
+        )
+        const data = codepagereaddata<CODE_PAGE_TYPE.EIGHT_TRACK>(maybecodepage)
+        if (ispresent(data)) {
+          memory.eighttrack = data
+        }
+      }
+      break
   }
 
   return 0

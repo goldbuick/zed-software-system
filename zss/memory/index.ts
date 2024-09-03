@@ -63,6 +63,7 @@ import {
   parsetextfile,
   parsezipfile,
 } from './parsefile'
+import { WORD } from './word'
 
 type BINARY_READER = {
   filename: string
