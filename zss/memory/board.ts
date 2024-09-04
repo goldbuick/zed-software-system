@@ -32,15 +32,7 @@ import {
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import {
-  BIN_WORD,
-  BIN_WORD_ENTRY,
-  exportword,
-  exportwordentry,
-  importword,
-  importwordentry,
-  WORD,
-} from './word'
+import { BIN_WORD, BIN_WORD_ENTRY, exportword, importword, WORD } from './word'
 
 // simple built-ins go here
 export type BOARD_STATS = {

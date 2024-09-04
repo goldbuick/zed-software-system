@@ -1,7 +1,7 @@
 import { createfirmware } from 'zss/firmware'
 import { ispresent } from 'zss/mapping/types'
 import {
-  memoryreadbooksbytags,
+  memoryreadbookbyaddress,
   memoryreadchip,
   memoryreadcontext,
 } from 'zss/memory'
@@ -55,7 +55,7 @@ export const MODS_FIRMWARE = createfirmware({
       memory.object = backup.object
       break
     case 'book' as CODE_PAGE_LABEL: {
-      const [maybebook] = memoryreadbooksbytags([name])
+      const maybebook = memoryreadbookbyaddress(name)
       if (ispresent(maybebook)) {
         memory.book = maybebook
       }

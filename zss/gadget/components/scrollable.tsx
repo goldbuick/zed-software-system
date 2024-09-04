@@ -2,7 +2,7 @@ import { Lethargy } from 'lethargy-ts'
 import { ReactNode } from 'react'
 import { clamp } from 'zss/mapping/number'
 
-import { Rect } from './Rect'
+import { Rect } from './rect'
 
 const lethargy = new Lethargy()
 

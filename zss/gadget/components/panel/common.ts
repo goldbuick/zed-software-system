@@ -1,6 +1,6 @@
 import { createContext } from 'react'
-import { WORD } from 'zss/chip'
 import { WRITE_TEXT_CONTEXT } from 'zss/gadget/data/textformat'
+import { WORD } from 'zss/memory/word'
 
 export type PanelItemProps = {
   player: string

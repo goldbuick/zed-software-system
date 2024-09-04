@@ -62,7 +62,6 @@ export type CODE_PAGE = {
   // all pages have id & code
   id: string
   code: string
-  tags: Set<string>
   // content data
   board?: BOARD
   object?: BOARD_ELEMENT
@@ -89,21 +88,19 @@ export type CODE_PAGE_TYPE_MAP = {
 
 export function createcodepage(
   code: string,
-  content: Partial<Omit<CODE_PAGE, 'id' | 'code' | 'tags'>>,
+  content: Partial<Omit<CODE_PAGE, 'id' | 'code'>>,
 ) {
   return {
     id: createsid(),
-    tags: new Set<string>(),
     code,
     ...content,
   }
 }
 
 export const BIN_CODEPAGE = bin.object({
-  // all pages have id, code, and tags
+  // all pages have id, and code
   id: bin.string,
   code: bin.string,
-  tags: bin.dynamicArrayOf(bin.string),
   // content data
   board: bin.optional(BIN_BOARD),
   object: bin.optional(BIN_BOARD_ELEMENT),
@@ -122,7 +119,6 @@ export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE<BIN_CODEPAGE> {
   return {
     id: codepage.id,
     code: codepage.code,
-    tags: [...codepage.tags] as any,
     // content data
     board: exportboard(codepage.board),
     object: exportboardelement(codepage.object),
@@ -142,7 +138,6 @@ export function importcodepage(codepage: MAYBE<BIN_CODEPAGE>): MAYBE_CODE_PAGE {
   return {
     id: codepage.id,
     code: codepage.code,
-    tags: new Set([...codepage.tags]),
     // content data
     board: importboard(codepage.board),
     object: importboardelement(codepage.object),
@@ -153,39 +148,10 @@ export function importcodepage(codepage: MAYBE<BIN_CODEPAGE>): MAYBE_CODE_PAGE {
   }
 }
 
-export function codepagereadtags(codepage: MAYBE_CODE_PAGE) {
-  return [...(codepage?.tags ?? [])]
-}
-
-export function codepageaddtags(codepage: MAYBE_CODE_PAGE, tags: string[]) {
-  if (!ispresent(codepage)) {
-    return
-  }
-  tags.forEach((item) => codepage.tags.add(item))
-}
-
-export function codepageremovetags(codepage: MAYBE_CODE_PAGE, tags: string[]) {
-  if (!ispresent(codepage)) {
-    return
-  }
-  tags.forEach((item) => codepage.tags.delete(item))
-}
-
-export function codepagehastags(
-  codepage: MAYBE_CODE_PAGE,
-  tags: string[],
-): boolean {
-  if (!ispresent(codepage)) {
-    return false
-  }
-  return tags.every((tag) => codepage.tags.has(tag))
-}
-
 export function codepagehasmatch(
   codepage: MAYBE_CODE_PAGE,
   type: CODE_PAGE_TYPE,
   ids: string[],
-  tags: string[],
 ): boolean {
   if (!ispresent(codepage) || codepagereadtype(codepage) !== type) {
     return false
@@ -193,10 +159,7 @@ export function codepagehasmatch(
   if (ids.some((id) => id === codepage.id)) {
     return true
   }
-  if (tags.includes(codepagereadname(codepage))) {
-    return true
-  }
-  return codepagehastags(codepage, tags)
+  return false
 }
 
 function tokenstostrings(tokens: IToken[]) {

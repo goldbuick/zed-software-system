@@ -1,4 +1,5 @@
 import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
+import { WORD } from 'zss/memory/word'
 
 export const BYTES_PER_COLOR = 3
 
@@ -274,8 +275,8 @@ export const PANEL_TYPE_SIZES: Record<PANEL_TYPE, number> = {
   [PANEL_TYPE.SCROLL]: 40,
 }
 
-type WORD = string | number
-type WORD = WORD | WORD[] | undefined
+// type WORD = string | number
+// type WORD = WORD | WORD[] | undefined
 export type PANEL_ITEM = WORD | WORD[]
 
 export type PANEL = {

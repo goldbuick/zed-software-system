@@ -8,7 +8,6 @@ import {
   modemwritevaluenumber,
   modemwritevaluestring,
 } from 'zss/device/modem'
-import { WORD } from 'zss/firmware/wordtypes'
 import { createsid } from 'zss/mapping/guid'
 import {
   MAYBE_NUMBER,
@@ -17,6 +16,7 @@ import {
   isnumber,
   isstring,
 } from 'zss/mapping/types'
+import { WORD } from 'zss/memory/word'
 
 import {
   GADGET_STATE,

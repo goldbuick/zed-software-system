@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 
-import { Rect } from './Rect'
+import { Rect } from './rect'
 
 type Props = {
   debug?: boolean

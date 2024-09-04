@@ -2,7 +2,7 @@ import ErrorStackParser from 'error-stack-parser'
 
 import { api_error } from './device/api'
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
-import { ARG_TYPE, WORD, WORD_RESULT, readargs } from './firmware/wordtypes'
+import { ARG_TYPE, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
@@ -15,6 +15,7 @@ import {
   isstring,
 } from './mapping/types'
 import { memoryreadcontext } from './memory'
+import { WORD, WORD_RESULT } from './memory/word'
 
 export const HALT_AT_COUNT = 64
 

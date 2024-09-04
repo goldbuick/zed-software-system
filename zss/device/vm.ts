@@ -6,10 +6,8 @@ import {
   memorycli,
   memoryplayerlogin,
   memoryreadbookbyaddress,
-  memoryreadbooksbytags,
   memoryreadbooklist,
   memoryreadchip,
-  memoryreadmaintags,
   memoryresetbooks,
   memorytick,
   memoryloadfile,
@@ -78,7 +76,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
             message.player,
           )
           // guard against infinite reset
-          const [mainbook] = memoryreadbooksbytags(memoryreadmaintags())
+          const mainbook = memoryreadbookbyaddress('main')
           if (ispresent(mainbook)) {
             bip_retry(vm.name(), message.player ?? '')
           }
@@ -91,7 +89,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           tracking[message.player] = 0
           tape_info(vm.name(), 'player login', message.player)
         } else {
-          const [mainbook] = memoryreadbooksbytags(memoryreadmaintags())
+          const mainbook = memoryreadbookbyaddress('main')
           if (ispresent(mainbook)) {
             tape_crash(vm.name())
           } else {

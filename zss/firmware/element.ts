@@ -8,23 +8,12 @@ import {
 } from 'zss/gadget/data/types'
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE_STRING, isarray, ispresent, isstring } from 'zss/mapping/types'
-import {
-  memoryboardframeread,
-  memoryreadchip,
-  memoryreadcontext,
-} from 'zss/memory'
-import {
-  checkcollision,
-  listelementsbyattr,
-  listelementsbykind,
-  listnamedelements,
-} from 'zss/memory/atomics'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { memoryreadchip, memoryreadcontext } from 'zss/memory'
+import { listelementsbyattr } from 'zss/memory/atomics'
 import {
   MAYBE_BOARD,
-  boarddeleteobject,
   boardelementapplycolor,
-  boardelementread,
   boardfindplayer,
   boardterrainsetfromkind,
 } from 'zss/memory/board'
@@ -37,26 +26,20 @@ import {
 } from 'zss/memory/boardelement'
 import {
   bookboardwrite,
-  bookboardwriteheadlessobject,
   MAYBE_BOOK,
   bookboardmoveobject,
   bookreadflag,
   booksetflag,
   bookboardobjectsafedelete,
-  bookboardelementreadname,
   bookboardsetlookup,
   bookboardobjectnamedlookupdelete,
   bookelementkindread,
 } from 'zss/memory/book'
-import { WORD } from 'zss/memory/word'
 
 import {
   readargs,
   ARG_TYPE,
-  readstrkindname,
   PT,
-  readstrkindcolor,
-  readstrkindbg,
   ispt,
   dirfrompts,
   ptapplydir,
@@ -203,19 +186,19 @@ function moveobject(
   return true
 }
 
-function valuepeekframename(
-  value: WORD,
-  index: number,
-): [MAYBE_STRING, number] {
-  if (isstring(value)) {
-    const lvalue = value.toLowerCase()
-    switch (lvalue) {
-      case 'edit':
-        return [lvalue, index + 1]
-    }
-  }
-  return [undefined, index]
-}
+// function valuepeekframename(
+//   value: WORD,
+//   index: number,
+// ): [MAYBE_STRING, number] {
+//   if (isstring(value)) {
+//     const lvalue = value.toLowerCase()
+//     switch (lvalue) {
+//       case 'edit':
+//         return [lvalue, index + 1]
+//     }
+//   }
+//   return [undefined, index]
+// }
 
 export const ELEMENT_FIRMWARE = createfirmware({
   get(chip, name) {
@@ -328,73 +311,73 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('change', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
+    // const memory = memoryreadchip(chip.id())
 
-    // optional prefix of frame target
-    const [maybeframe, ii] = valuepeekframename(words[0], 0)
+    // // optional prefix of frame target
+    // const [maybeframe, ii] = valuepeekframename(words[0], 0)
 
-    // read
-    const [target, into] = readargs(memoryreadcontext(chip, words), ii, [
-      ARG_TYPE.KIND,
-      ARG_TYPE.KIND,
-    ])
-    const { maybebook, maybeboard } = memoryboardframeread(
-      memory.book,
-      memory.board,
-      maybeframe,
-    )
+    // // read
+    // const [target, into] = readargs(memoryreadcontext(chip, words), ii, [
+    //   ARG_TYPE.KIND,
+    //   ARG_TYPE.KIND,
+    // ])
+    // // const { maybebook, maybeboard } = memoryboardframeread(
+    // //   memory.book,
+    // //   memory.board,
+    // //   maybeframe,
+    // // )
 
-    // make sure lookup is created
-    bookboardsetlookup(maybebook, maybeboard)
+    // // make sure lookup is created
+    // bookboardsetlookup(maybebook, maybeboard)
 
-    // begin filtering
-    const targetname = readstrkindname(target) ?? ''
-    const boardelements = listnamedelements(maybeboard, targetname)
-    const targetelements = listelementsbykind(boardelements, target)
+    // // begin filtering
+    // const targetname = readstrkindname(target) ?? ''
+    // const boardelements = listnamedelements(maybeboard, targetname)
+    // const targetelements = listelementsbykind(boardelements, target)
 
-    // modify attrs
-    const intoname = readstrkindname(into)
-    const intocolor = readstrkindcolor(into)
-    const intobg = readstrkindbg(into)
+    // // modify attrs
+    // const intoname = readstrkindname(into)
+    // const intocolor = readstrkindcolor(into)
+    // const intobg = readstrkindbg(into)
 
-    // modify elements
-    targetelements.forEach((element) => {
-      if (bookboardelementreadname(maybebook, element) === intoname) {
-        if (ispresent(intocolor)) {
-          element.color = intocolor
-        }
-        if (ispresent(intobg)) {
-          element.bg = intobg
-        }
-      } else {
-        // delete object
-        if (ispresent(element.id)) {
-          // make invisible
-          bookboardobjectnamedlookupdelete(maybebook, maybeboard, element)
-          // hit with delete
-          switch (maybeframe) {
-            case 'edit':
-              if (!boarddeleteobject(maybeboard, element.id)) {
-                // bail
-                return
-              }
-              break
-            default:
-              if (
-                !bookboardobjectsafedelete(maybebook, element, chip.timestamp())
-              ) {
-                // bail
-                return
-              }
-              break
-          }
-        }
-        // create new element
-        if (ispt(element)) {
-          bookboardwrite(maybebook, maybeboard, into, element)
-        }
-      }
-    })
+    // // modify elements
+    // targetelements.forEach((element) => {
+    //   if (bookboardelementreadname(maybebook, element) === intoname) {
+    //     if (ispresent(intocolor)) {
+    //       element.color = intocolor
+    //     }
+    //     if (ispresent(intobg)) {
+    //       element.bg = intobg
+    //     }
+    //   } else {
+    //     // delete object
+    //     if (ispresent(element.id)) {
+    //       // make invisible
+    //       bookboardobjectnamedlookupdelete(maybebook, maybeboard, element)
+    //       // hit with delete
+    //       switch (maybeframe) {
+    //         case 'edit':
+    //           if (!boarddeleteobject(maybeboard, element.id)) {
+    //             // bail
+    //             return
+    //           }
+    //           break
+    //         default:
+    //           if (
+    //             !bookboardobjectsafedelete(maybebook, element, chip.timestamp())
+    //           ) {
+    //             // bail
+    //             return
+    //           }
+    //           break
+    //       }
+    //     }
+    //     // create new element
+    //     if (ispt(element)) {
+    //       bookboardwrite(maybebook, maybeboard, into, element)
+    //     }
+    //   }
+    // })
 
     return 0
   })
@@ -460,27 +443,27 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return memory.object.x !== dest.x && memory.object.y !== dest.y ? 1 : 0
   })
   .command('put', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
+    // const memory = memoryreadchip(chip.id())
 
-    // optional prefix of frame target
-    const [maybeframe, ii] = valuepeekframename(words[0], 0)
+    // // optional prefix of frame target
+    // const [maybeframe, ii] = valuepeekframename(words[0], 0)
 
-    // read
-    const [dir, kind] = readargs(memoryreadcontext(chip, words), ii, [
-      ARG_TYPE.DIR,
-      ARG_TYPE.KIND,
-    ])
-    const { maybebook, maybeboard } = memoryboardframeread(
-      memory.book,
-      memory.board,
-      maybeframe,
-    )
+    // // read
+    // const [dir, kind] = readargs(memoryreadcontext(chip, words), ii, [
+    //   ARG_TYPE.DIR,
+    //   ARG_TYPE.KIND,
+    // ])
+    // const { maybebook, maybeboard } = memoryboardframeread(
+    //   memory.book,
+    //   memory.board,
+    //   maybeframe,
+    // )
 
-    // make sure lookup is created
-    bookboardsetlookup(maybebook, maybeboard)
+    // // make sure lookup is created
+    // bookboardsetlookup(maybebook, maybeboard)
 
-    // write new element
-    bookboardwrite(maybebook, maybeboard, kind, dir)
+    // // write new element
+    // bookboardwrite(maybebook, maybeboard, kind, dir)
     return 0
   })
   .command('send', (chip, words) => {
@@ -546,97 +529,97 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('shoot', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
+    // const memory = memoryreadchip(chip.id())
 
-    // invalid data
-    if (!ispt(memory.object)) {
-      return 0
-    }
+    // // invalid data
+    // if (!ispt(memory.object)) {
+    //   return 0
+    // }
 
-    // optional prefix of frame target
-    const [maybeframe, ii] = valuepeekframename(words[0], 0)
+    // // optional prefix of frame target
+    // const [maybeframe, ii] = valuepeekframename(words[0], 0)
 
-    // read direction + what to shoot
-    const [maybedir, maybekind] = readargs(memoryreadcontext(chip, words), ii, [
-      ARG_TYPE.DIR,
-      ARG_TYPE.MAYBE_KIND,
-    ])
+    // // read direction + what to shoot
+    // const [maybedir, maybekind] = readargs(memoryreadcontext(chip, words), ii, [
+    //   ARG_TYPE.DIR,
+    //   ARG_TYPE.MAYBE_KIND,
+    // ])
 
-    // __where__ are we shooting
-    const { maybebook, maybeboard } = memoryboardframeread(
-      memory.book,
-      memory.board,
-      maybeframe,
-    )
+    // // __where__ are we shooting
+    // const { maybebook, maybeboard } = memoryboardframeread(
+    //   memory.book,
+    //   memory.board,
+    //   maybeframe,
+    // )
 
-    // this feels a little silly
-    const dir = dirfrompts(memory.object, maybedir)
-    const step = ptapplydir({ x: 0, y: 0 }, dir)
-    const start = ptapplydir({ x: memory.object.x, y: memory.object.y }, dir)
+    // // this feels a little silly
+    // const dir = dirfrompts(memory.object, maybedir)
+    // const step = ptapplydir({ x: 0, y: 0 }, dir)
+    // const start = ptapplydir({ x: memory.object.x, y: memory.object.y }, dir)
 
-    // make sure lookup is created
-    bookboardsetlookup(maybebook, maybeboard)
+    // // make sure lookup is created
+    // bookboardsetlookup(maybebook, maybeboard)
 
-    // check starting point
-    let blocked = boardelementread(maybeboard, start)
+    // // check starting point
+    // let blocked = boardelementread(maybeboard, start)
 
-    // check for terrain that doesn't block bullets
-    if (ispresent(blocked) && !ispresent(blocked.id)) {
-      const selfkind = bookelementkindread(maybebook, memory.object)
-      const blockedkind = bookelementkindread(maybebook, blocked)
-      // found terrain
-      if (
-        !checkcollision(
-          blocked.collision ?? selfkind?.collision,
-          blocked.collision ?? blockedkind?.collision,
-        )
-      ) {
-        blocked = undefined
-      }
-    }
+    // // check for terrain that doesn't block bullets
+    // if (ispresent(blocked) && !ispresent(blocked.id)) {
+    //   const selfkind = bookelementkindread(maybebook, memory.object)
+    //   const blockedkind = bookelementkindread(maybebook, blocked)
+    //   // found terrain
+    //   if (
+    //     !checkcollision(
+    //       blocked.collision ?? selfkind?.collision,
+    //       blocked.collision ?? blockedkind?.collision,
+    //     )
+    //   ) {
+    //     blocked = undefined
+    //   }
+    // }
 
-    if (ispresent(blocked)) {
-      // blocked by object, send message
-      if (ispresent(blocked.id)) {
-        sendinteraction(chip, chip.id(), blocked, 'shot')
-      }
+    // if (ispresent(blocked)) {
+    //   // blocked by object, send message
+    //   if (ispresent(blocked.id)) {
+    //     sendinteraction(chip, chip.id(), blocked, 'shot')
+    //   }
 
-      // delete destructible elements
-      const blockedkind = bookelementkindread(maybebook, blocked)
-      if (blocked.destructible ?? blockedkind?.destructible) {
-        bonkelement(maybebook, maybeboard, blocked, start)
-      }
+    //   // delete destructible elements
+    //   const blockedkind = bookelementkindread(maybebook, blocked)
+    //   if (blocked.destructible ?? blockedkind?.destructible) {
+    //     bonkelement(maybebook, maybeboard, blocked, start)
+    //   }
 
-      // and start bullet in headless mode
-      const bullet = bookboardwriteheadlessobject(
-        maybebook,
-        maybeboard,
-        maybekind ?? ['bullet'],
-        start,
-      )
+    //   // and start bullet in headless mode
+    //   const bullet = bookboardwriteheadlessobject(
+    //     maybebook,
+    //     maybeboard,
+    //     maybekind ?? ['bullet'],
+    //     start,
+    //   )
 
-      // success ! start with thud message
-      if (ispresent(bullet)) {
-        bullet.collision = COLLISION.ISBULLET
-        sendinteraction(chip, blocked, chip.id(), 'thud')
-      }
-    } else {
-      // write new element
-      const bullet = bookboardwrite(
-        maybebook,
-        maybeboard,
-        maybekind ?? ['bullet'],
-        start,
-      )
-      // success ! get it moving
-      if (ispresent(bullet)) {
-        bullet.collision = COLLISION.ISBULLET
-        boardelementwritestats(bullet, {
-          stepx: step.x,
-          stepy: step.y,
-        })
-      }
-    }
+    //   // success ! start with thud message
+    //   if (ispresent(bullet)) {
+    //     bullet.collision = COLLISION.ISBULLET
+    //     sendinteraction(chip, blocked, chip.id(), 'thud')
+    //   }
+    // } else {
+    //   // write new element
+    //   const bullet = bookboardwrite(
+    //     maybebook,
+    //     maybeboard,
+    //     maybekind ?? ['bullet'],
+    //     start,
+    //   )
+    //   // success ! get it moving
+    //   if (ispresent(bullet)) {
+    //     bullet.collision = COLLISION.ISBULLET
+    //     boardelementwritestats(bullet, {
+    //       stepx: step.x,
+    //       stepy: step.y,
+    //     })
+    //   }
+    // }
 
     // and yield regardless of the outcome
     chip.yield()

@@ -87,7 +87,7 @@ let openbook = ''
 const DEFAULT_BOOK = 'main'
 
 function createnewbook(maybename?: any) {
-  const book = createbook([], [])
+  const book = createbook([])
 
   if (isstring(maybename)) {
     book.name = maybename
