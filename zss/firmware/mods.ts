@@ -15,21 +15,15 @@ import {
 import { ARG_TYPE, readargs } from './wordtypes'
 
 export const MODS_FIRMWARE = createfirmware({
-  get(chip, name) {
+  get() {
     return [false, undefined]
   },
-  set(chip, name, value) {
+  set() {
     return [false, undefined]
   },
-  shouldtick(chip, activecycle) {
-    //
-  },
-  tick(chip) {
-    //
-  },
-  tock(chip) {
-    //
-  },
+  shouldtick() {},
+  tick() {},
+  tock() {},
 }).command('mod', (chip, words) => {
   // book
   const backup = memoryreadchip(`${chip.id()}.backup`)
@@ -51,6 +45,8 @@ export const MODS_FIRMWARE = createfirmware({
   const hastype = ispresent(maybename)
   const type = hastype ? maybetype : 'object'
   const name = hastype ? maybename : maybetype
+
+  // can this also work for #modifying over / under boards ?
 
   switch (type as CODE_PAGE_LABEL) {
     case 'self' as CODE_PAGE_LABEL:

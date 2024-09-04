@@ -360,15 +360,7 @@ export function memoryplayerscan(players: Record<string, number>) {
 export function memorytick(os: OS, timestamp: number) {
   // update loaders
   MEMORY.loaders.forEach((code, id) => {
-    os.tick(
-      id,
-      DRIVER_TYPE.LOADER,
-      DRIVER_TYPE.ERROR,
-      1,
-      timestamp,
-      'loader',
-      code,
-    )
+    os.tick(id, DRIVER_TYPE.LOADER, 1, timestamp, 'loader', code)
     // teardown
     if (os.isended(id)) {
       os.halt(id)
@@ -412,8 +404,7 @@ export function memorytick(os: OS, timestamp: number) {
       const itemname = boardelementname(item.object)
       os.tick(
         item.id,
-        DRIVER_TYPE.OBJECT,
-        DRIVER_TYPE.ERROR,
+        DRIVER_TYPE.CODE_PAGE,
         isnumber(maybecycle) ? maybecycle : CYCLE_DEFAULT,
         timestamp,
         itemname,
@@ -447,7 +438,7 @@ export function memorycli(
   tape_debug('memory', 'running', timestamp, id, cli)
 
   // run chip code
-  os.once(id, DRIVER_TYPE.CLI, DRIVER_TYPE.ERROR, timestamp, 'cli', cli)
+  os.once(id, DRIVER_TYPE.CLI, timestamp, 'cli', cli)
 }
 
 function memoryloader(
