@@ -1,6 +1,5 @@
 import { createforward } from './device/forward'
 import ZSSWorker from './instance??worker'
-import './device/bip'
 import './device/gadgetclient'
 import './device/pcspeaker'
 import './device/modem'

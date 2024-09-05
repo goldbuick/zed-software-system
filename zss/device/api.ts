@@ -19,22 +19,6 @@ export function api_error(
   return tape_error(sender, message, player)
 }
 
-export function bip_retry(sender: string, player: string) {
-  hub.emit('bip:retry', sender, undefined, player)
-}
-
-export function bip_loginfailed(sender: string, player: string) {
-  hub.emit('bip:loginfailed', sender, undefined, player)
-}
-
-export function bip_rebootfailed(sender: string, player: string) {
-  hub.emit('bip:rebootfailed', sender, undefined, player)
-}
-
-export function bip_nodetrash(sender: string) {
-  hub.emit('bip:nodetrash', sender)
-}
-
 export function gadgetclient_reset(
   sender: string,
   gadgetstate: GADGET_STATE,
@@ -63,12 +47,12 @@ export function pcspeaker_play(
   hub.emit('pcspeaker:play', sender, [priority, buffer])
 }
 
-export function register_reboot(sender: string, player: string) {
-  hub.emit('register:reboot', sender, undefined, player)
-}
-
 export function register_flush(sender: string, books: string) {
   hub.emit('register:flush', sender, books)
+}
+
+export function register_nodetrash(sender: string) {
+  hub.emit('register:nodetrash', sender)
 }
 
 export function register_biosflash(sender: string) {

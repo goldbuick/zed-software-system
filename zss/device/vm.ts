@@ -22,14 +22,12 @@ import { compressbooks, decompressbooks } from 'zss/memory/compress'
 import { createos } from 'zss/os'
 
 import {
-  bip_loginfailed,
-  bip_retry,
   register_flush,
-  tape_crash,
   tape_debug,
   tape_info,
   vm_codeaddress,
   vm_flush,
+  vm_login,
 } from './api'
 import { modemobservevaluestring } from './modem'
 
@@ -78,7 +76,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           // guard against infinite reset
           const mainbook = memoryreadbookbyaddress('main')
           if (ispresent(mainbook)) {
-            bip_retry(vm.name(), message.player ?? '')
+            vm_login(vm.name(), message.player ?? '')
           }
         }
       })
@@ -88,13 +86,6 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         if (memoryplayerlogin(message.player)) {
           tracking[message.player] = 0
           tape_info(vm.name(), 'player login', message.player)
-        } else {
-          const mainbook = memoryreadbookbyaddress('main')
-          if (ispresent(mainbook)) {
-            tape_crash(vm.name())
-          } else {
-            bip_loginfailed(vm.name(), message.player)
-          }
         }
       }
       break

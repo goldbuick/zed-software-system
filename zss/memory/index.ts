@@ -177,7 +177,7 @@ export function memoryplayerlogin(player: string): boolean {
   if (!ispresent(mainbook)) {
     return api_error(
       'memory',
-      'login',
+      'login:main',
       `login failed to find book 'main'`,
       player,
     )
@@ -187,7 +187,7 @@ export function memoryplayerlogin(player: string): boolean {
   if (!ispresent(titleboard)) {
     return api_error(
       'memory',
-      'login',
+      'login:title',
       `login failed to find board 'title'`,
       player,
     )
@@ -197,7 +197,7 @@ export function memoryplayerlogin(player: string): boolean {
   if (!ispresent(playerkind)) {
     return api_error(
       'memory',
-      'login',
+      'login:player',
       `login failed to find object type 'player'`,
       player,
     )

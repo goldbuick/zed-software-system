@@ -7,7 +7,7 @@ import {
   tape_info,
   vm_codeaddress,
   vm_flush,
-  bip_nodetrash,
+  register_nodetrash,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
@@ -339,6 +339,11 @@ export const CLI_FIRMWARE = createfirmware({
 
     return 0
   })
+  .command('nodetrash', () => {
+    register_nodetrash('cli')
+    writetext(`node id changed, refreshing page recommended`)
+    return 0
+  })
   .command('biosflash', () => {
     register_biosflash('cli')
     writetext(`bios flashed`)
@@ -347,11 +352,6 @@ export const CLI_FIRMWARE = createfirmware({
   .command('biostrash', () => {
     register_biostrash('cli')
     writetext(`bios erased, refreshing page recommended`)
-    return 0
-  })
-  .command('nodetrash', () => {
-    bip_nodetrash('cli')
-    writetext(`node id changed, refreshing page recommended`)
     return 0
   })
   .command('help', (chip, words) => {
