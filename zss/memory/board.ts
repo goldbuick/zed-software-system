@@ -32,7 +32,14 @@ import {
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import { BIN_WORD, BIN_WORD_ENTRY, exportword, importword, WORD } from './word'
+import {
+  BIN_WORD,
+  BIN_WORD_ENTRY,
+  exportword,
+  importword,
+  MAYBE_WORD,
+  WORD,
+} from './word'
 
 // simple built-ins go here
 export type BOARD_STATS = {
@@ -224,12 +231,24 @@ export function importboard(board: MAYBE<BIN_BOARD>): MAYBE_BOARD {
   }
 }
 
-export function boardwritestat(board: MAYBE_BOARD, key: string, value: WORD) {
+export function boardreadstat(board: MAYBE_BOARD, key: string): MAYBE_WORD {
+  if (!ispresent(board)) {
+    return
+  }
+  return board.stats?.[key]
+}
+
+export function boardwritestat(
+  board: MAYBE_BOARD,
+  key: string,
+  value: WORD,
+): WORD {
   if (!ispresent(board)) {
     return
   }
   board.stats = board.stats ?? {}
   board.stats[key] = value
+  return value
 }
 
 export function boardelementindex(board: MAYBE_BOARD, pt: PT): number {

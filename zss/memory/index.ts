@@ -28,6 +28,7 @@ import {
   BOARD_WIDTH,
   BOARD_HEIGHT,
   BOARD,
+  boardreadstat,
 } from './board'
 import { MAYBE_BOARD_ELEMENT, boardelementreadstat } from './boardelement'
 import {
@@ -620,20 +621,39 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
     return layers
   }
 
-  // todo: fix this with over / under boards
   const borrowbuffer: number[] = new Array(BOARD_WIDTH * BOARD_HEIGHT).fill(0)
 
+  // TODO: add support for book address prefixes
+  //   ie: #set under grunkle:title  <-  this will display the title board from the grunkle book
+  //                                     the thought here is this gives the mods api a new target to use
+  //                                     #mod under, #mod over, note that #mod self resets all changes #mod
+  //                                     has done to the chip memory context
+
+  // read over board
+  const overid = boardreadstat(playerboard, 'over')
+  const over = bookreadboard(mainbook, isstring(overid) ? overid : '')
+
+  // read under board
+  const underid = boardreadstat(playerboard, 'under')
+  const under = bookreadboard(mainbook, isstring(underid) ? underid : '')
+
+  // compose layers
+  const boards = [over, playerboard, under].filter(ispresent)
+
   let i = 0
-  const view = memoryconverttogadgetlayers(
-    player,
-    i,
-    mainbook,
-    playerboard,
-    true,
-    borrowbuffer,
-  )
-  i += view.length
-  layers.push(...view)
+  for (let b = 0; b < boards.length; ++b) {
+    const board = boards[b]
+    const view = memoryconverttogadgetlayers(
+      player,
+      i,
+      mainbook,
+      board,
+      board === playerboard,
+      borrowbuffer,
+    )
+    i += view.length
+    layers.push(...view)
+  }
 
   return layers
 }
