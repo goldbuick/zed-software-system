@@ -20,7 +20,7 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
       gadgetplayers().forEach((player) => {
         const shared = gadgetstate(player)
 
-        // update gadget layers from frames
+        // update gadget layers from player's current board
         shared.layers = memoryreadgadgetlayers(player)
 
         // write patch

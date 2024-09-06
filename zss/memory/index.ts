@@ -3,8 +3,19 @@ import { api_error, tape_debug, tape_info } from 'zss/device/api'
 import { DRIVER_TYPE } from 'zss/firmware/boot'
 import { createreadcontext } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
-import { INPUT, LAYER } from 'zss/gadget/data/types'
+import {
+  COLOR,
+  createdither,
+  createlayercontrol,
+  createsprite,
+  createsprites,
+  createtiles,
+  INPUT,
+  LAYER,
+} from 'zss/gadget/data/types'
+import { average } from 'zss/mapping/array'
 import { createpid, ispid } from 'zss/mapping/guid'
+import { clamp } from 'zss/mapping/number'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
@@ -14,6 +25,9 @@ import {
   MAYBE_BOARD,
   boardelementname,
   boardobjectcreatefromkind,
+  BOARD_WIDTH,
+  BOARD_HEIGHT,
+  BOARD,
 } from './board'
 import { MAYBE_BOARD_ELEMENT, boardelementreadstat } from './boardelement'
 import {
@@ -431,250 +445,195 @@ export function memoryloadfile(
   handlefiletype(file?.type ?? '')
 }
 
-// function memoryconverttogadgetlayers(
-//   player: string,
-//   index: number,
-//   book: BOOK,
-//   board: BOARD,
-//   isprimary: boolean,
-//   borrowbuffer: number[],
-// ): LAYER[] {
-//   const layers: LAYER[] = []
+function memoryconverttogadgetlayers(
+  player: string,
+  index: number,
+  book: BOOK,
+  board: BOARD,
+  isprimary: boolean,
+  borrowbuffer: number[],
+): LAYER[] {
+  const layers: LAYER[] = []
 
-//   let i = index
-//   const isbaseboard = i === 0
-//   const boardwidth = BOARD_WIDTH
-//   const boardheight = BOARD_HEIGHT
-//   const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.CLEAR
+  let i = index
+  const isbaseboard = i === 0
+  const boardwidth = BOARD_WIDTH
+  const boardheight = BOARD_HEIGHT
+  const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.CLEAR
 
-//   const tiles = createtiles(player, i++, boardwidth, boardheight, defaultcolor)
-//   layers.push(tiles)
+  const tiles = createtiles(player, i++, boardwidth, boardheight, defaultcolor)
+  layers.push(tiles)
 
-//   const shadow = createdither(player, i++, boardwidth, boardheight)
-//   layers.push(shadow)
+  const shadow = createdither(player, i++, boardwidth, boardheight)
+  layers.push(shadow)
 
-//   const objectindex = i++
-//   const objects = createsprites(player, objectindex)
-//   layers.push(objects)
+  const objectindex = i++
+  const objects = createsprites(player, objectindex)
+  layers.push(objects)
 
-//   const control = createlayercontrol(player, i++)
-//   // hack to keep only one control layer
-//   if (isprimary) {
-//     layers.push(control)
-//   }
+  const control = createlayercontrol(player, i++)
+  // hack to keep only one control layer
+  if (isprimary) {
+    layers.push(control)
+  }
 
-//   board.terrain.forEach((tile, i) => {
-//     if (tile) {
-//       const kind = bookelementkindread(book, tile)
-//       tiles.char[i] = tile.char ?? kind?.char ?? 0
-//       tiles.color[i] = tile.color ?? kind?.color ?? defaultcolor
-//       tiles.bg[i] = tile.bg ?? kind?.bg ?? defaultcolor
-//       // write to borrow buffer
-//       if (tiles.color[i] !== (COLOR.CLEAR as number)) {
-//         borrowbuffer[i] = tiles.color[i]
-//       }
-//     }
-//   })
+  board.terrain.forEach((tile, i) => {
+    if (tile) {
+      const kind = bookelementkindread(book, tile)
+      tiles.char[i] = tile.char ?? kind?.char ?? 0
+      tiles.color[i] = tile.color ?? kind?.color ?? defaultcolor
+      tiles.bg[i] = tile.bg ?? kind?.bg ?? defaultcolor
+      // write to borrow buffer
+      if (tiles.color[i] !== (COLOR.CLEAR as number)) {
+        borrowbuffer[i] = tiles.color[i]
+      }
+    }
+  })
 
-//   const boardobjects = board.objects ?? {}
-//   Object.values(boardobjects).forEach((object) => {
-//     // skip if marked for removal or headless
-//     if (ispresent(object.removed) || ispresent(object.headless)) {
-//       return
-//     }
+  const boardobjects = board.objects ?? {}
+  Object.values(boardobjects).forEach((object) => {
+    // skip if marked for removal or headless
+    if (ispresent(object.removed) || ispresent(object.headless)) {
+      return
+    }
 
-//     // should we have bg transparent or match the bg color of the terrain ?
-//     const id = object.id ?? ''
-//     const kind = bookelementkindread(book, object)
-//     const sprite = createsprite(player, objectindex, id)
-//     const lx = object.lx ?? object.x ?? 0
-//     const ly = object.ly ?? object.y ?? 0
-//     const li = lx + ly * BOARD_WIDTH
+    // should we have bg transparent or match the bg color of the terrain ?
+    const id = object.id ?? ''
+    const kind = bookelementkindread(book, object)
+    const sprite = createsprite(player, objectindex, id)
+    const lx = object.lx ?? object.x ?? 0
+    const ly = object.ly ?? object.y ?? 0
+    const li = lx + ly * BOARD_WIDTH
 
-//     // setup sprite
-//     sprite.x = object.x ?? 0
-//     sprite.y = object.y ?? 0
-//     sprite.char = object.char ?? kind?.char ?? 1
-//     sprite.color = object.color ?? kind?.color ?? COLOR.WHITE
-//     sprite.bg = object.bg ?? kind?.bg ?? COLOR.BORROW
-//     objects.sprites.push(sprite)
+    // setup sprite
+    sprite.x = object.x ?? 0
+    sprite.y = object.y ?? 0
+    sprite.char = object.char ?? kind?.char ?? 1
+    sprite.color = object.color ?? kind?.color ?? COLOR.WHITE
+    sprite.bg = object.bg ?? kind?.bg ?? COLOR.BORROW
+    objects.sprites.push(sprite)
 
-//     // plot shadow
-//     if (sprite.bg === COLOR.SHADOW) {
-//       sprite.bg = COLOR.CLEAR
-//       shadow.alphas[lx + ly * boardwidth] = 0.5
-//     }
+    // plot shadow
+    if (sprite.bg === COLOR.SHADOW) {
+      sprite.bg = COLOR.CLEAR
+      shadow.alphas[lx + ly * boardwidth] = 0.5
+    }
 
-//     // borrow color
-//     if (sprite.bg === COLOR.BORROW) {
-//       sprite.bg = borrowbuffer[li] ?? COLOR.BLACK
-//     }
+    // borrow color
+    if (sprite.bg === COLOR.BORROW) {
+      sprite.bg = borrowbuffer[li] ?? COLOR.BLACK
+    }
 
-//     // write to borrow buffer
-//     if (sprite.color !== (COLOR.CLEAR as number)) {
-//       borrowbuffer[li] = sprite.color
-//     }
+    // write to borrow buffer
+    if (sprite.color !== (COLOR.CLEAR as number)) {
+      borrowbuffer[li] = sprite.color
+    }
 
-//     // inform control layer where to focus
-//     if (id === player) {
-//       control.focusx = sprite.x
-//       control.focusy = sprite.y
-//       control.focusid = id
-//     }
-//   })
+    // inform control layer where to focus
+    if (id === player) {
+      control.focusx = sprite.x
+      control.focusy = sprite.y
+      control.focusid = id
+    }
+  })
 
-//   // smooth shadows
-//   function aa(x: number, y: number) {
-//     if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT) {
-//       return undefined
-//     }
-//     return shadow.alphas[x + y * BOARD_WIDTH]
-//   }
+  // smooth shadows
+  function aa(x: number, y: number) {
+    if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT) {
+      return undefined
+    }
+    return shadow.alphas[x + y * BOARD_WIDTH]
+  }
 
-//   const weights = [
-//     [1, 1, 1, 1, 1],
-//     [1, 3, 5, 3, 1],
-//     [1, 5, 12, 5, 1],
-//     [1, 3, 5, 3, 1],
-//     [1, 1, 1, 1, 1],
-//   ].flat()
+  const weights = [
+    [1, 1, 1, 1, 1],
+    [1, 3, 5, 3, 1],
+    [1, 5, 12, 5, 1],
+    [1, 3, 5, 3, 1],
+    [1, 1, 1, 1, 1],
+  ].flat()
 
-//   const alphas = new Array<number>(shadow.alphas.length)
-//   for (let i = 0; i < shadow.alphas.length; ++i) {
-//     // coords
-//     const cx = i % BOARD_WIDTH
-//     const cy = Math.floor(i / BOARD_WIDTH)
+  const alphas = new Array<number>(shadow.alphas.length)
+  for (let i = 0; i < shadow.alphas.length; ++i) {
+    // coords
+    const cx = i % BOARD_WIDTH
+    const cy = Math.floor(i / BOARD_WIDTH)
 
-//     // weighted average
-//     const values = [
-//       [
-//         aa(cx - 2, cy - 2),
-//         aa(cx - 1, cy - 2),
-//         aa(cx, cy - 2),
-//         aa(cx + 1, cy - 2),
-//         aa(cx + 2, cy - 2),
-//       ],
-//       [
-//         aa(cx - 2, cy - 1),
-//         aa(cx - 1, cy - 1),
-//         aa(cx, cy - 1),
-//         aa(cx + 1, cy - 1),
-//         aa(cx + 2, cy - 1),
-//       ],
-//       [
-//         aa(cx - 2, cy),
-//         aa(cx - 1, cy),
-//         aa(cx, cy),
-//         aa(cx + 1, cy),
-//         aa(cx + 2, cy),
-//       ],
-//       [
-//         aa(cx - 2, cy + 1),
-//         aa(cx - 1, cy + 1),
-//         aa(cx, cy + 1),
-//         aa(cx + 1, cy + 1),
-//         aa(cx + 2, cy + 1),
-//       ],
-//       [
-//         aa(cx - 2, cy + 2),
-//         aa(cx - 1, cy + 2),
-//         aa(cx, cy + 2),
-//         aa(cx + 1, cy + 2),
-//         aa(cx + 2, cy + 2),
-//       ],
-//     ]
-//       .flat()
-//       .map((value, i) => (ispresent(value) ? value * weights[i] : undefined))
-//       .filter(ispresent)
-//     // final shade
-//     alphas[i] = clamp(average(values), 0, 1)
-//   }
+    // weighted average
+    const values = [
+      [
+        aa(cx - 2, cy - 2),
+        aa(cx - 1, cy - 2),
+        aa(cx, cy - 2),
+        aa(cx + 1, cy - 2),
+        aa(cx + 2, cy - 2),
+      ],
+      [
+        aa(cx - 2, cy - 1),
+        aa(cx - 1, cy - 1),
+        aa(cx, cy - 1),
+        aa(cx + 1, cy - 1),
+        aa(cx + 2, cy - 1),
+      ],
+      [
+        aa(cx - 2, cy),
+        aa(cx - 1, cy),
+        aa(cx, cy),
+        aa(cx + 1, cy),
+        aa(cx + 2, cy),
+      ],
+      [
+        aa(cx - 2, cy + 1),
+        aa(cx - 1, cy + 1),
+        aa(cx, cy + 1),
+        aa(cx + 1, cy + 1),
+        aa(cx + 2, cy + 1),
+      ],
+      [
+        aa(cx - 2, cy + 2),
+        aa(cx - 1, cy + 2),
+        aa(cx, cy + 2),
+        aa(cx + 1, cy + 2),
+        aa(cx + 2, cy + 2),
+      ],
+    ]
+      .flat()
+      .map((value, i) => (ispresent(value) ? value * weights[i] : undefined))
+      .filter(ispresent)
+    // final shade
+    alphas[i] = clamp(average(values), 0, 1)
+  }
 
-//   // update shadows
-//   shadow.alphas = alphas
+  // update shadows
+  shadow.alphas = alphas
 
-//   // return result
-//   return layers
-// }
-
-// function framerank(frame: FRAME_STATE): number {
-//   switch (frame.type) {
-//     case FRAME_TYPE.EDIT:
-//       return 1
-//     case FRAME_TYPE.VIEW:
-//       return 2
-//   }
-//   return 0
-// }
+  // return result
+  return layers
+}
 
 export function memoryreadgadgetlayers(player: string): LAYER[] {
   const mainbook = memoryreadbookbyaddress('main')
-  const board = bookplayerreadboard(mainbook, player)
+  const playerboard = bookplayerreadboard(mainbook, player)
 
   const layers: LAYER[] = []
-  if (!ispresent(mainbook) || !ispresent(board)) {
+  if (!ispresent(mainbook) || !ispresent(playerboard)) {
     return layers
   }
 
   // todo: fix this with over / under boards
-  //
-  // let i = 0
-  // const frames = [...memoryreadframes(board.id ?? '')]
-  // const borrowbuffer: number[] = new Array(BOARD_WIDTH * BOARD_HEIGHT).fill(0)
+  const borrowbuffer: number[] = new Array(BOARD_WIDTH * BOARD_HEIGHT).fill(0)
 
-  // frames.sort((a, b) => framerank(a) - framerank(b))
-  // frames.forEach((frame) => {
-  //   const [withbook] = memoryreadbooksbytags(frame.book ?? memoryreadmaintags())
-  //   if (!ispresent(withbook)) {
-  //     return
-  //   }
-  //   const [withboard] = bookreadboardsbytags(
-  //     withbook,
-  //     frame.board ?? memoryreadtitletags(),
-  //   )
-  //   if (!ispresent(withboard)) {
-  //     return
-  //   }
-  //   const view = memoryconverttogadgetlayers(
-  //     player,
-  //     i,
-  //     withbook,
-  //     withboard,
-  //     frame.type === FRAME_TYPE.VIEW,
-  //     borrowbuffer,
-  //   )
-  //   i += view.length
-  //   layers.push(...view)
-  // })
+  let i = 0
+  const view = memoryconverttogadgetlayers(
+    player,
+    i,
+    mainbook,
+    playerboard,
+    true,
+    borrowbuffer,
+  )
+  i += view.length
+  layers.push(...view)
 
   return layers
 }
-
-// export function memoryboardframeread(
-//   book: MAYBE_BOOK,
-//   board: MAYBE_BOARD,
-//   type: MAYBE_STRING,
-// ) {
-//   // find target frame by type
-//   let maybeframe: MAYBE<FRAME_STATE>
-//   const frames = memoryreadframes(board?.id ?? '')
-//   switch (type) {
-//     // eventually need multiple frames of the same kinds
-//     // name:edit ??
-//     // so we'd have [name]:type, and name defaults to the value of
-//     // type of [name] is omitted
-//     case 'edit': {
-//       maybeframe = frames.find((item) => item.type === FRAME_TYPE.EDIT)
-//       break
-//     }
-//   }
-
-//   const [maybebook] = maybeframe
-//     ? memoryreadbooksbytags(maybeframe?.book ?? [])
-//     : [book]
-//   const [maybeboard] = maybeframe
-//     ? bookreadboardsbytags(maybebook, maybeframe?.board ?? [])
-//     : [board]
-
-//   return { maybebook, maybeboard }
-// }

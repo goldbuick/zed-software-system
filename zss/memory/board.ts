@@ -37,6 +37,17 @@ import { BIN_WORD, BIN_WORD_ENTRY, exportword, importword, WORD } from './word'
 // simple built-ins go here
 export type BOARD_STATS = {
   isdark?: number
+  // concept, you can add scope here to address other books
+  // and that represents being able to switch out different boards for your engine to edit
+  // examples:
+  //   main:seeker (book main, board seeker)
+  //   main:sid_sdfefef (book main, board sid_sdfefef)
+  //
+  // would love to have a built in way to select a resource
+  //   have some simple contexts to work in:
+  //     like select a book (or create a new one)
+  //     like select a type of codepage in a book (or create a new one)
+  //
   // board displayed over this one
   above?: string
   // only view mode supported for above boards
