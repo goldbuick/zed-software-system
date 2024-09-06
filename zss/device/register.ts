@@ -98,7 +98,7 @@ const signalrate = 1
 
 const register = createdevice(
   'register',
-  ['ready', 'error'],
+  ['second', 'ready', 'error'],
   function (message) {
     switch (message.target) {
       case 'error:login:main':
