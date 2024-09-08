@@ -308,9 +308,7 @@ export function booksetflag(
 }
 
 export function bookplayerreadboard(book: MAYBE_BOOK, player: string) {
-  const boardid = book?.players[player] ?? ''
-  console.info('??? boardid', boardid, player)
-  return bookreadboard(book, boardid)
+  return bookreadboard(book, book?.players[player] ?? '')
 }
 
 export function bookplayersetboard(

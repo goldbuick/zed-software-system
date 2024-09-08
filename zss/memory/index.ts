@@ -1,4 +1,4 @@
-import { CHIP } from 'zss/chip'
+import { CHIP, CONFIG, DEFAULT_HALT_AT_COUNT } from 'zss/chip'
 import { api_error, tape_debug, tape_info } from 'zss/device/api'
 import { DRIVER_TYPE } from 'zss/firmware/boot'
 import { createreadcontext } from 'zss/firmware/wordtypes'
@@ -55,7 +55,7 @@ import { WORD } from './word'
 
 type BINARY_READER = {
   filename: string
-  offset: number
+  cursor: number
   bytes: Uint8Array
   dataview: DataView
 }
@@ -259,6 +259,8 @@ export function memoryplayerscan(players: Record<string, number>) {
 
 export function memorytick(os: OS, timestamp: number) {
   // update loaders
+  const resethalt = CONFIG.HALT_AT_COUNT
+  CONFIG.HALT_AT_COUNT = resethalt * 32
   MEMORY.loaders.forEach((code, id) => {
     os.tick(id, DRIVER_TYPE.LOADER, 1, timestamp, 'loader', code)
     // teardown
@@ -267,6 +269,7 @@ export function memorytick(os: OS, timestamp: number) {
       MEMORY.loaders.delete(id)
     }
   })
+  CONFIG.HALT_AT_COUNT = resethalt
 
   const mainbook = memoryreadbookbyaddress('main')
   const boards = bookplayerreadboards(mainbook)
@@ -383,7 +386,7 @@ function memoryloader(
     context.board = undefined
     context.binaryfile = {
       filename: file.name,
-      offset: 0,
+      cursor: 0,
       bytes: binaryfile,
       dataview: new DataView(binaryfile.buffer),
     }

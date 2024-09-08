@@ -507,7 +507,6 @@ export function boardevaldir(
 }
 
 export function boarddeleteobject(board: MAYBE_BOARD, id: string) {
-  console.info('boarddeleteobject', board, id)
   if (ispresent(board?.objects[id])) {
     delete board.objects[id]
     return true

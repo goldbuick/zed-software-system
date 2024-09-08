@@ -17,7 +17,7 @@ import {
 import { memoryreadcontext } from './memory'
 import { WORD, WORD_RESULT } from './memory/word'
 
-export const HALT_AT_COUNT = 64
+export const CONFIG = { HALT_AT_COUNT: 64 }
 
 export type MESSAGE = {
   id: string
@@ -280,7 +280,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       return endedstate === false || chip.hm() !== 0
     },
     shouldhalt() {
-      return loops++ > HALT_AT_COUNT
+      return loops++ > CONFIG.HALT_AT_COUNT
     },
     hm() {
       const target = message?.target ?? ''

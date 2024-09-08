@@ -1,5 +1,5 @@
 import { useThree } from '@react-three/fiber'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { initaudio } from 'zss/gadget/audio/blaster'
 import {
   TileSnapshot,
@@ -31,16 +31,26 @@ export function Splash({ onBoot }: SplashProps) {
   const tiles = useTiles(width, height, 0, 0, 0)
 
   const gerber = Math.max(1, Math.min(width - 2, RELEASE.length))
-  const TICKER: string[] = [
-    `${import.meta.env.ZSS_BRANCH_NAME} - ${import.meta.env.ZSS_BRANCH_VERSION} - ${import.meta.env.ZSS_COMMIT_MESSAGE}\n`,
-    `${'-'.repeat(gerber)}\n`,
-    `PRESS ANY KEY`,
-  ]
+  const TICKER: string[] = useMemo(
+    () => [
+      `${import.meta.env.ZSS_BRANCH_NAME} - ${import.meta.env.ZSS_BRANCH_VERSION} - ${import.meta.env.ZSS_COMMIT_MESSAGE}\n`,
+      `${'-'.repeat(gerber)}\n`,
+      `PRESS ANY KEY`,
+    ],
+    [gerber],
+  )
 
   useEffect(() => {
     async function boot() {
-      await initaudio()
-      onBoot()
+      try {
+        // if (screenfull.isEnabled) {
+        //   await screenfull.request(undefined, { navigationUI: 'hide' })
+        // }
+        await initaudio()
+        onBoot()
+      } catch (err: any) {
+        // no-op
+      }
     }
     function invoke() {
       void boot()

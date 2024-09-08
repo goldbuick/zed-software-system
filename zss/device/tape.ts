@@ -6,6 +6,8 @@ import { isarray, isboolean } from 'zss/mapping/types'
 
 // system wide message logger
 
+export const TAPE_MAX_LINES = 128
+
 export enum TAPE_DISPLAY {
   TOP,
   BOTTOM,
@@ -95,6 +97,9 @@ createdevice('tape', [], (message) => {
       message.sender,
       ...message.data,
     ])
+    if (tape.terminal.logs.length > TAPE_MAX_LINES) {
+      tape.terminal.logs = tape.terminal.logs.slice(0, TAPE_MAX_LINES)
+    }
   }
 
   switch (message.target) {
