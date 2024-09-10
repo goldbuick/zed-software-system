@@ -37,109 +37,117 @@ export const MODS_FIRMWARE = createfirmware({
     backup.object = memory.object
   }
 
-  const [maybetype, maybename] = readargs(memoryreadcontext(chip, words), 0, [
+  const [address] = readargs(memoryreadcontext(chip, words), 0, [
     ARG_TYPE.STRING,
-    ARG_TYPE.MAYBE_STRING,
   ])
 
-  const hastype = ispresent(maybename)
-  const type = hastype ? maybetype : 'object'
-  const name = hastype ? maybename : maybetype
+  // TODO: have a generic zrn parser
+  // so would it be type:location ??
+  // and the implied type is book ??
+  // or would the requesting side specify type?
+  // I need a book at game1 address <= this feels right
+  // book:game1:title   <= super easy to parse
+  // book:game1:title:[object id or tile index]
+  // book:game1:title:349
 
-  // can this also work for #modifying over / under boards ?
+  // const hastype = ispresent(maybename)
+  // const type = hastype ? maybetype : 'object'
+  // const name = hastype ? maybename : maybetype
 
-  switch (type as CODE_PAGE_LABEL) {
-    case 'self' as CODE_PAGE_LABEL:
-      memory.book = backup.book
-      memory.board = backup.board
-      memory.object = backup.object
-      break
-    case 'book' as CODE_PAGE_LABEL: {
-      const maybebook = memoryreadbookbyaddress(name)
-      if (ispresent(maybebook)) {
-        memory.book = maybebook
-      }
-      break
-    }
-    case CODE_PAGE_LABEL.BOARD:
-      if (ispresent(memory.book)) {
-        const maybecodepage = bookreadcodepagewithtype(
-          memory.book,
-          CODE_PAGE_TYPE.BOARD,
-          name,
-        )
-        const data = codepagereaddata<CODE_PAGE_TYPE.BOARD>(maybecodepage)
-        if (ispresent(data)) {
-          memory.board = data
-        }
-      }
-      break
-    case CODE_PAGE_LABEL.OBJECT:
-      if (ispresent(memory.book)) {
-        const maybecodepage = bookreadcodepagewithtype(
-          memory.book,
-          CODE_PAGE_TYPE.OBJECT,
-          name,
-        )
-        const data = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(maybecodepage)
-        if (ispresent(data)) {
-          memory.object = data
-        }
-      }
-      break
-    case CODE_PAGE_LABEL.TERRAIN:
-      if (ispresent(memory.book)) {
-        const maybecodepage = bookreadcodepagewithtype(
-          memory.book,
-          CODE_PAGE_TYPE.TERRAIN,
-          name,
-        )
-        const data = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(maybecodepage)
-        if (ispresent(data)) {
-          memory.terrain = data
-        }
-      }
-      break
-    case CODE_PAGE_LABEL.CHARSET:
-      if (ispresent(memory.book)) {
-        const maybecodepage = bookreadcodepagewithtype(
-          memory.book,
-          CODE_PAGE_TYPE.CHARSET,
-          name,
-        )
-        const data = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(maybecodepage)
-        if (ispresent(data)) {
-          memory.charset = data
-        }
-      }
-      break
-    case CODE_PAGE_LABEL.PALETTE:
-      if (ispresent(memory.book)) {
-        const maybecodepage = bookreadcodepagewithtype(
-          memory.book,
-          CODE_PAGE_TYPE.PALETTE,
-          name,
-        )
-        const data = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(maybecodepage)
-        if (ispresent(data)) {
-          memory.palette = data
-        }
-      }
-      break
-    case CODE_PAGE_LABEL.EIGHT_TRACK:
-      if (ispresent(memory.book)) {
-        const maybecodepage = bookreadcodepagewithtype(
-          memory.book,
-          CODE_PAGE_TYPE.EIGHT_TRACK,
-          name,
-        )
-        const data = codepagereaddata<CODE_PAGE_TYPE.EIGHT_TRACK>(maybecodepage)
-        if (ispresent(data)) {
-          memory.eighttrack = data
-        }
-      }
-      break
-  }
+  // // can this also work for #modifying over / under boards ?
+
+  // switch (type as CODE_PAGE_LABEL) {
+  //   case 'self' as CODE_PAGE_LABEL:
+  //     memory.book = backup.book
+  //     memory.board = backup.board
+  //     memory.object = backup.object
+  //     break
+  //   case 'book' as CODE_PAGE_LABEL: {
+  //     const maybebook = memoryreadbookbyaddress(name)
+  //     if (ispresent(maybebook)) {
+  //       memory.book = maybebook
+  //     }
+  //     break
+  //   }
+  //   case CODE_PAGE_LABEL.BOARD:
+  //     if (ispresent(memory.book)) {
+  //       const maybecodepage = bookreadcodepagewithtype(
+  //         memory.book,
+  //         CODE_PAGE_TYPE.BOARD,
+  //         name,
+  //       )
+  //       const data = codepagereaddata<CODE_PAGE_TYPE.BOARD>(maybecodepage)
+  //       if (ispresent(data)) {
+  //         memory.board = data
+  //       }
+  //     }
+  //     break
+  //   case CODE_PAGE_LABEL.OBJECT:
+  //     if (ispresent(memory.book)) {
+  //       const maybecodepage = bookreadcodepagewithtype(
+  //         memory.book,
+  //         CODE_PAGE_TYPE.OBJECT,
+  //         name,
+  //       )
+  //       const data = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(maybecodepage)
+  //       if (ispresent(data)) {
+  //         memory.object = data
+  //       }
+  //     }
+  //     break
+  //   case CODE_PAGE_LABEL.TERRAIN:
+  //     if (ispresent(memory.book)) {
+  //       const maybecodepage = bookreadcodepagewithtype(
+  //         memory.book,
+  //         CODE_PAGE_TYPE.TERRAIN,
+  //         name,
+  //       )
+  //       const data = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(maybecodepage)
+  //       if (ispresent(data)) {
+  //         memory.terrain = data
+  //       }
+  //     }
+  //     break
+  //   case CODE_PAGE_LABEL.CHARSET:
+  //     if (ispresent(memory.book)) {
+  //       const maybecodepage = bookreadcodepagewithtype(
+  //         memory.book,
+  //         CODE_PAGE_TYPE.CHARSET,
+  //         name,
+  //       )
+  //       const data = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(maybecodepage)
+  //       if (ispresent(data)) {
+  //         memory.charset = data
+  //       }
+  //     }
+  //     break
+  //   case CODE_PAGE_LABEL.PALETTE:
+  //     if (ispresent(memory.book)) {
+  //       const maybecodepage = bookreadcodepagewithtype(
+  //         memory.book,
+  //         CODE_PAGE_TYPE.PALETTE,
+  //         name,
+  //       )
+  //       const data = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(maybecodepage)
+  //       if (ispresent(data)) {
+  //         memory.palette = data
+  //       }
+  //     }
+  //     break
+  //   case CODE_PAGE_LABEL.EIGHT_TRACK:
+  //     if (ispresent(memory.book)) {
+  //       const maybecodepage = bookreadcodepagewithtype(
+  //         memory.book,
+  //         CODE_PAGE_TYPE.EIGHT_TRACK,
+  //         name,
+  //       )
+  //       const data = codepagereaddata<CODE_PAGE_TYPE.EIGHT_TRACK>(maybecodepage)
+  //       if (ispresent(data)) {
+  //         memory.eighttrack = data
+  //       }
+  //     }
+  //     break
+  // }
 
   return 0
 })
