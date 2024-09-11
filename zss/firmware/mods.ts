@@ -1,18 +1,37 @@
+import { tape_info, vm_flush } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
+import { createshortnameid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 import {
   memoryreadbookbyaddress,
   memoryreadchip,
   memoryreadcontext,
+  memorysetbook,
 } from 'zss/memory'
-import { bookreadcodepagewithtype } from 'zss/memory/book'
+import {
+  bookreadcodepagewithtype,
+  bookwritecodepage,
+  createbook,
+} from 'zss/memory/book'
 import {
   CODE_PAGE_LABEL,
   CODE_PAGE_TYPE,
   codepagereaddata,
+  codepagereadtypetostring,
+  createcodepage,
 } from 'zss/memory/codepage'
 
 import { ARG_TYPE, readargs } from './wordtypes'
+
+const COLOR_EDGE = '$dkpurple'
+
+function writetext(text: string) {
+  tape_info('mods', `${COLOR_EDGE}$blue${text}`)
+}
+
+function flush() {
+  vm_flush('mods')
+}
 
 export const MODS_FIRMWARE = createfirmware({
   get() {
@@ -37,117 +56,165 @@ export const MODS_FIRMWARE = createfirmware({
     backup.object = memory.object
   }
 
-  const [address] = readargs(memoryreadcontext(chip, words), 0, [
+  const [type, maybename] = readargs(memoryreadcontext(chip, words), 0, [
     ARG_TYPE.STRING,
+    ARG_TYPE.MAYBE_STRING,
   ])
 
-  // TODO: have a generic zrn parser
-  // so would it be type:location ??
-  // and the implied type is book ??
-  // or would the requesting side specify type?
-  // I need a book at game1 address <= this feels right
-  // book:game1:title   <= super easy to parse
-  // book:game1:title:[object id or tile index]
-  // book:game1:title:349
+  function ensureopenbook() {
+    memory.book = memory.book ?? createbook([])
+  }
 
-  // const hastype = ispresent(maybename)
-  // const type = hastype ? maybetype : 'object'
-  // const name = hastype ? maybename : maybetype
+  switch (type) {
+    case 'self':
+      memory.book = backup.book
+      memory.board = backup.board
+      memory.object = backup.object
+      break
+    case 'book':
+      // lookup by address
+      memory.book = memoryreadbookbyaddress(maybename ?? '')
 
-  // // can this also work for #modifying over / under boards ?
-
-  // switch (type as CODE_PAGE_LABEL) {
-  //   case 'self' as CODE_PAGE_LABEL:
-  //     memory.book = backup.book
-  //     memory.board = backup.board
-  //     memory.object = backup.object
-  //     break
-  //   case 'book' as CODE_PAGE_LABEL: {
-  //     const maybebook = memoryreadbookbyaddress(name)
-  //     if (ispresent(maybebook)) {
-  //       memory.book = maybebook
-  //     }
-  //     break
-  //   }
-  //   case CODE_PAGE_LABEL.BOARD:
-  //     if (ispresent(memory.book)) {
-  //       const maybecodepage = bookreadcodepagewithtype(
-  //         memory.book,
-  //         CODE_PAGE_TYPE.BOARD,
-  //         name,
-  //       )
-  //       const data = codepagereaddata<CODE_PAGE_TYPE.BOARD>(maybecodepage)
-  //       if (ispresent(data)) {
-  //         memory.board = data
-  //       }
-  //     }
-  //     break
-  //   case CODE_PAGE_LABEL.OBJECT:
-  //     if (ispresent(memory.book)) {
-  //       const maybecodepage = bookreadcodepagewithtype(
-  //         memory.book,
-  //         CODE_PAGE_TYPE.OBJECT,
-  //         name,
-  //       )
-  //       const data = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(maybecodepage)
-  //       if (ispresent(data)) {
-  //         memory.object = data
-  //       }
-  //     }
-  //     break
-  //   case CODE_PAGE_LABEL.TERRAIN:
-  //     if (ispresent(memory.book)) {
-  //       const maybecodepage = bookreadcodepagewithtype(
-  //         memory.book,
-  //         CODE_PAGE_TYPE.TERRAIN,
-  //         name,
-  //       )
-  //       const data = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(maybecodepage)
-  //       if (ispresent(data)) {
-  //         memory.terrain = data
-  //       }
-  //     }
-  //     break
-  //   case CODE_PAGE_LABEL.CHARSET:
-  //     if (ispresent(memory.book)) {
-  //       const maybecodepage = bookreadcodepagewithtype(
-  //         memory.book,
-  //         CODE_PAGE_TYPE.CHARSET,
-  //         name,
-  //       )
-  //       const data = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(maybecodepage)
-  //       if (ispresent(data)) {
-  //         memory.charset = data
-  //       }
-  //     }
-  //     break
-  //   case CODE_PAGE_LABEL.PALETTE:
-  //     if (ispresent(memory.book)) {
-  //       const maybecodepage = bookreadcodepagewithtype(
-  //         memory.book,
-  //         CODE_PAGE_TYPE.PALETTE,
-  //         name,
-  //       )
-  //       const data = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(maybecodepage)
-  //       if (ispresent(data)) {
-  //         memory.palette = data
-  //       }
-  //     }
-  //     break
-  //   case CODE_PAGE_LABEL.EIGHT_TRACK:
-  //     if (ispresent(memory.book)) {
-  //       const maybecodepage = bookreadcodepagewithtype(
-  //         memory.book,
-  //         CODE_PAGE_TYPE.EIGHT_TRACK,
-  //         name,
-  //       )
-  //       const data = codepagereaddata<CODE_PAGE_TYPE.EIGHT_TRACK>(maybecodepage)
-  //       if (ispresent(data)) {
-  //         memory.eighttrack = data
-  //       }
-  //     }
-  //     break
-  // }
+      // create new book
+      if (!ispresent(memory.book)) {
+        memory.book = createbook([])
+        memorysetbook(memory.book)
+        // message
+        writetext(`created ${memory.book.name}`)
+        flush() // tell register to save changes
+      }
+      break
+    case CODE_PAGE_LABEL.BOARD as string:
+      ensureopenbook()
+      if (ispresent(memory.book)) {
+        const address = maybename ?? createshortnameid()
+        // lookup by address
+        memory.board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(
+          bookreadcodepagewithtype(memory.book, CODE_PAGE_TYPE.BOARD, address),
+        )
+        // create new board
+        if (!ispresent(memory.board)) {
+          const codepage = createcodepage(`@board ${address}\n`, {})
+          bookwritecodepage(memory.book, codepage)
+          // message
+          const pagetype = codepagereadtypetostring(codepage)
+          writetext(`create [${pagetype}] ${address}`)
+          flush() // tell register to save changes
+        }
+      }
+      break
+    case CODE_PAGE_LABEL.OBJECT as string:
+      ensureopenbook()
+      if (ispresent(memory.book)) {
+        const address = maybename ?? createshortnameid()
+        // lookup by address
+        memory.object = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(
+          bookreadcodepagewithtype(memory.book, CODE_PAGE_TYPE.OBJECT, address),
+        )
+        // create new object
+        if (!ispresent(memory.object)) {
+          const codepage = createcodepage(`@${address}\n`, {})
+          bookwritecodepage(memory.book, codepage)
+          // message
+          const pagetype = codepagereadtypetostring(codepage)
+          writetext(`create [${pagetype}] ${address}`)
+          flush() // tell register to save changes
+        }
+      }
+      break
+    case CODE_PAGE_LABEL.TERRAIN as string:
+      ensureopenbook()
+      if (ispresent(memory.book)) {
+        const address = maybename ?? createshortnameid()
+        // lookup by address
+        memory.terrain = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(
+          bookreadcodepagewithtype(
+            memory.book,
+            CODE_PAGE_TYPE.TERRAIN,
+            address,
+          ),
+        )
+        // create new terrain
+        if (!ispresent(memory.terrain)) {
+          const codepage = createcodepage(`@terrain ${address}\n`, {})
+          bookwritecodepage(memory.book, codepage)
+          // message
+          const pagetype = codepagereadtypetostring(codepage)
+          writetext(`create [${pagetype}] ${address}`)
+          flush() // tell register to save changes
+        }
+      }
+      break
+    case CODE_PAGE_LABEL.CHARSET as string:
+      ensureopenbook()
+      if (ispresent(memory.book)) {
+        const address = maybename ?? createshortnameid()
+        // lookup by address
+        memory.charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(
+          bookreadcodepagewithtype(
+            memory.book,
+            CODE_PAGE_TYPE.CHARSET,
+            address,
+          ),
+        )
+        // create new charset
+        if (!ispresent(memory.charset)) {
+          const codepage = createcodepage(`@charset ${address}\n`, {})
+          bookwritecodepage(memory.book, codepage)
+          // message
+          const pagetype = codepagereadtypetostring(codepage)
+          writetext(`create [${pagetype}] ${address}`)
+          flush() // tell register to save changes
+        }
+      }
+      break
+    case CODE_PAGE_LABEL.PALETTE as string:
+      ensureopenbook()
+      if (ispresent(memory.book)) {
+        const address = maybename ?? createshortnameid()
+        // lookup by address
+        memory.palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(
+          bookreadcodepagewithtype(
+            memory.book,
+            CODE_PAGE_TYPE.PALETTE,
+            address,
+          ),
+        )
+        // create new palette
+        if (!ispresent(memory.palette)) {
+          const codepage = createcodepage(`@palette ${address}\n`, {})
+          bookwritecodepage(memory.book, codepage)
+          // message
+          const pagetype = codepagereadtypetostring(codepage)
+          writetext(`create [${pagetype}] ${address}`)
+          flush() // tell register to save changes
+        }
+      }
+      break
+    case CODE_PAGE_LABEL.EIGHT_TRACK as string:
+      ensureopenbook()
+      if (ispresent(memory.book)) {
+        const address = maybename ?? createshortnameid()
+        // lookup by address
+        memory.eighttrack = codepagereaddata<CODE_PAGE_TYPE.EIGHT_TRACK>(
+          bookreadcodepagewithtype(
+            memory.book,
+            CODE_PAGE_TYPE.EIGHT_TRACK,
+            address,
+          ),
+        )
+        // create new eighttrack
+        if (!ispresent(memory.eighttrack)) {
+          const codepage = createcodepage(`@8track ${address}\n`, {})
+          bookwritecodepage(memory.book, codepage)
+          // message
+          const pagetype = codepagereadtypetostring(codepage)
+          writetext(`create [${pagetype}] ${address}`)
+          flush() // tell register to save changes
+        }
+      }
+      break
+  }
 
   return 0
 })

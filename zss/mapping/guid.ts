@@ -29,3 +29,11 @@ export function createnameid() {
     adjectiveCount: 1,
   })
 }
+
+export function createshortnameid() {
+  return humanid({
+    addAdverb: false,
+    capitalize: false,
+    adjectiveCount: 0,
+  })
+}

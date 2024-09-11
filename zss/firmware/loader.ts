@@ -50,12 +50,12 @@ export const LOADER_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  .command('stat', () => {
-    // no-op
+  .command('stat', (_, words) => {
+    const text = words.map(maptostring).join(' ')
+    tape_info(`$2 ${text}`)
     return 0
   })
-  .command('text', (chip, words) => {
-    // const memory = memoryreadchip(chip.id())
+  .command('text', (_, words) => {
     const text = words.map(maptostring).join(' ')
     tape_info('$2', text)
     return 0

@@ -23,18 +23,11 @@ import {
 import {
   bookclearcodepage,
   bookreadcodepagebyaddress,
-  bookreadcodepagewithtype,
   bookreadflag,
   booksetflag,
-  bookwritecodepage,
   createbook,
 } from 'zss/memory/book'
-import {
-  codepagereadname,
-  codepagereadtype,
-  codepagereadtypetostring,
-  createcodepage,
-} from 'zss/memory/codepage'
+import { codepagereadname, codepagereadtypetostring } from 'zss/memory/codepage'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -147,28 +140,17 @@ export const CLI_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  .command('stat', (chip, words) => {
-    // create page
-    const [maybecodepage] = words
-    const codepage = maptostring(maybecodepage)
-
-    // check for special @book [name] case
-    if (/^book /gi.test(codepage)) {
-      const name = codepage.substring(5)
-      chip.command('bookopenorcreate', name)
-    } else {
-      chip.command('pageopenorcreate', codepage)
-    }
-
+  .command('stat', (_, words) => {
+    const text = words.map(maptostring).join(' ')
+    tape_info(`$2 ${text}`)
     return 0
   })
-  .command('text', (chip, words) => {
-    // const memory = memoryreadchip(chip.id())
+  .command('text', (_, words) => {
     const text = words.map(maptostring).join(' ')
     tape_info('$2', text)
     return 0
   })
-  .command('hyperlink', (chip, args) => {
+  .command('hyperlink', (_, args) => {
     // const memory = memoryreadchip(chip.id())
     const [labelword, ...words] = args
     const label = maptostring(labelword)
@@ -201,19 +183,6 @@ export const CLI_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('bookopenorcreate', (chip, words) => {
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
-
-    const book = memoryreadbookbyaddress(name)
-    if (ispresent(book)) {
-      chip.command('bookopen', name)
-    } else {
-      chip.command('bookcreate', name)
-    }
-    return 0
-  })
   .command('booktrash', (chip, words) => {
     const [name] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
@@ -231,37 +200,6 @@ export const CLI_FIRMWARE = createfirmware({
       writetext(`trashed [book] ${book.name}`)
       cli_flush() // tell register to save changes
       chip.command('pages')
-    }
-    return 0
-  })
-  .command('pagecreate', (chip, words) => {
-    const [page] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
-
-    // create book if needed
-    const book = ensureopenbook()
-    if (!ispresent(book)) {
-      return 0
-    }
-
-    // add to book if needed, use page from book if name matches
-    const code = `@${page}\n`
-    const codepage = createcodepage(code, {})
-    const name = codepagereadname(codepage)
-
-    // only create if target doesn't already exist
-    const maybepage = bookreadcodepagewithtype(
-      book,
-      codepagereadtype(codepage),
-      name,
-    )
-    if (!ispresent(maybepage)) {
-      bookwritecodepage(book, codepage)
-      const pagetype = codepagereadtypetostring(codepage)
-      writetext(`create [${pagetype}] ${name}`)
-      cli_flush() // tell register to save changes
-      chip.command('pageopen', codepage.id) // open created content
     }
     return 0
   })
@@ -300,25 +238,6 @@ export const CLI_FIRMWARE = createfirmware({
       )
     } else {
       api_error('cli', 'pageopen', `page ${page} not found`, memory.player)
-    }
-    return 0
-  })
-  .command('pageopenorcreate', (chip, words) => {
-    const [page] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
-
-    // create book if needed
-    const book = ensureopenbook()
-    if (!ispresent(book)) {
-      return 0
-    }
-    // find page, and create if not found
-    const codepage = bookreadcodepagebyaddress(book, page)
-    if (ispresent(codepage)) {
-      chip.command('pageopen', page)
-    } else {
-      chip.command('pagecreate', page)
     }
     return 0
   })
