@@ -18,6 +18,7 @@ import {
   CODE_PAGE_TYPE,
   codepagereaddata,
   codepagereadtypetostring,
+  codepagetypetostring,
   createcodepage,
 } from 'zss/memory/codepage'
 
@@ -25,7 +26,7 @@ import { ARG_TYPE, readargs } from './wordtypes'
 
 const COLOR_EDGE = '$dkpurple'
 
-function writetext(text: string) {
+function write(text: string) {
   tape_info('mods', `${COLOR_EDGE}$blue${text}`)
 }
 
@@ -65,6 +66,24 @@ export const MODS_FIRMWARE = createfirmware({
     memory.book = memory.book ?? createbook([])
   }
 
+  function ensurecodepage<T extends CODE_PAGE_TYPE>(type: T, address: string) {
+    // lookup by address
+    let codepage = bookreadcodepagewithtype(memory.book, type, address)
+    if (!ispresent(codepage)) {
+      // create new codepage
+      const typestr = codepagetypetostring(type)
+      codepage = createcodepage(`@${typestr} ${address}\n`, {})
+      if (ispresent(codepage)) {
+        bookwritecodepage(memory.book, codepage)
+        // message
+        const pagetype = codepagereadtypetostring(codepage)
+        write(`create [${pagetype}] ${address}`)
+        flush() // tell register to save changes
+      }
+    }
+    return codepage
+  }
+
   switch (type) {
     case 'self':
       memory.book = backup.book
@@ -80,7 +99,7 @@ export const MODS_FIRMWARE = createfirmware({
         memory.book = createbook([])
         memorysetbook(memory.book)
         // message
-        writetext(`created ${memory.book.name}`)
+        write(`created ${memory.book.name}`)
         flush() // tell register to save changes
       }
       break
@@ -88,38 +107,16 @@ export const MODS_FIRMWARE = createfirmware({
       ensureopenbook()
       if (ispresent(memory.book)) {
         const address = maybename ?? createshortnameid()
-        // lookup by address
-        memory.board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(
-          bookreadcodepagewithtype(memory.book, CODE_PAGE_TYPE.BOARD, address),
-        )
-        // create new board
-        if (!ispresent(memory.board)) {
-          const codepage = createcodepage(`@board ${address}\n`, {})
-          bookwritecodepage(memory.book, codepage)
-          // message
-          const pagetype = codepagereadtypetostring(codepage)
-          writetext(`create [${pagetype}] ${address}`)
-          flush() // tell register to save changes
-        }
+        const codepage = ensurecodepage(CODE_PAGE_TYPE.BOARD, address)
+        memory.board = codepage.board
       }
       break
     case CODE_PAGE_LABEL.OBJECT as string:
       ensureopenbook()
       if (ispresent(memory.book)) {
         const address = maybename ?? createshortnameid()
-        // lookup by address
-        memory.object = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(
-          bookreadcodepagewithtype(memory.book, CODE_PAGE_TYPE.OBJECT, address),
-        )
-        // create new object
-        if (!ispresent(memory.object)) {
-          const codepage = createcodepage(`@${address}\n`, {})
-          bookwritecodepage(memory.book, codepage)
-          // message
-          const pagetype = codepagereadtypetostring(codepage)
-          writetext(`create [${pagetype}] ${address}`)
-          flush() // tell register to save changes
-        }
+        const codepage = ensurecodepage(CODE_PAGE_TYPE.OBJECT, address)
+        memory.object = codepage.object
       }
       break
     case CODE_PAGE_LABEL.TERRAIN as string:
@@ -140,7 +137,7 @@ export const MODS_FIRMWARE = createfirmware({
           bookwritecodepage(memory.book, codepage)
           // message
           const pagetype = codepagereadtypetostring(codepage)
-          writetext(`create [${pagetype}] ${address}`)
+          write(`create [${pagetype}] ${address}`)
           flush() // tell register to save changes
         }
       }
@@ -163,7 +160,7 @@ export const MODS_FIRMWARE = createfirmware({
           bookwritecodepage(memory.book, codepage)
           // message
           const pagetype = codepagereadtypetostring(codepage)
-          writetext(`create [${pagetype}] ${address}`)
+          write(`create [${pagetype}] ${address}`)
           flush() // tell register to save changes
         }
       }
@@ -186,7 +183,7 @@ export const MODS_FIRMWARE = createfirmware({
           bookwritecodepage(memory.book, codepage)
           // message
           const pagetype = codepagereadtypetostring(codepage)
-          writetext(`create [${pagetype}] ${address}`)
+          write(`create [${pagetype}] ${address}`)
           flush() // tell register to save changes
         }
       }
@@ -209,7 +206,7 @@ export const MODS_FIRMWARE = createfirmware({
           bookwritecodepage(memory.book, codepage)
           // message
           const pagetype = codepagereadtypetostring(codepage)
-          writetext(`create [${pagetype}] ${address}`)
+          write(`create [${pagetype}] ${address}`)
           flush() // tell register to save changes
         }
       }

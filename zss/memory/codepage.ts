@@ -309,31 +309,35 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
   return codepage.stats
 }
 
+export function codepagetypetostring(type: MAYBE<CODE_PAGE_TYPE>): string {
+  switch (type) {
+    default:
+    case CODE_PAGE_TYPE.ERROR:
+      return 'error'
+    case CODE_PAGE_TYPE.LOADER:
+      return 'error'
+    case CODE_PAGE_TYPE.BOARD:
+      return CODE_PAGE_LABEL.BOARD
+    case CODE_PAGE_TYPE.OBJECT:
+      return CODE_PAGE_LABEL.OBJECT
+    case CODE_PAGE_TYPE.TERRAIN:
+      return CODE_PAGE_LABEL.TERRAIN
+    case CODE_PAGE_TYPE.CHARSET:
+      return CODE_PAGE_LABEL.CHARSET
+    case CODE_PAGE_TYPE.PALETTE:
+      return CODE_PAGE_LABEL.PALETTE
+    case CODE_PAGE_TYPE.EIGHT_TRACK:
+      return CODE_PAGE_LABEL.EIGHT_TRACK
+  }
+}
+
 export function codepagereadtype(codepage: MAYBE_CODE_PAGE) {
   const stats = codepagereadstats(codepage)
   return stats.type ?? CODE_PAGE_TYPE.ERROR
 }
 
 export function codepagereadtypetostring(codepage: MAYBE_CODE_PAGE) {
-  switch (codepagereadtype(codepage)) {
-    default:
-    case CODE_PAGE_TYPE.ERROR:
-      return 'error'
-    case CODE_PAGE_TYPE.LOADER:
-      return 'loader'
-    case CODE_PAGE_TYPE.BOARD:
-      return 'board'
-    case CODE_PAGE_TYPE.OBJECT:
-      return 'object'
-    case CODE_PAGE_TYPE.TERRAIN:
-      return 'terrain'
-    case CODE_PAGE_TYPE.CHARSET:
-      return 'charset'
-    case CODE_PAGE_TYPE.PALETTE:
-      return 'palette'
-    case CODE_PAGE_TYPE.EIGHT_TRACK:
-      return '8track'
-  }
+  return codepagetypetostring(codepagereadtype(codepage))
 }
 
 export function codepagereadname(codepage: MAYBE_CODE_PAGE) {
