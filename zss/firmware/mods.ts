@@ -16,7 +16,6 @@ import {
 import {
   CODE_PAGE_LABEL,
   CODE_PAGE_TYPE,
-  codepagereaddata,
   codepagereadtypetostring,
   codepagetypetostring,
   createcodepage,
@@ -69,7 +68,11 @@ export const MODS_FIRMWARE = createfirmware({
   function ensurecodepage<T extends CODE_PAGE_TYPE>(type: T, address: string) {
     // lookup by address
     let codepage = bookreadcodepagewithtype(memory.book, type, address)
-    if (!ispresent(codepage)) {
+    if (ispresent(codepage)) {
+      // message
+      const pagetype = codepagereadtypetostring(codepage)
+      write(`modifying [${pagetype}] ${address}`)
+    } else {
       // create new codepage
       const typestr = codepagetypetostring(type)
       codepage = createcodepage(`@${typestr} ${address}\n`, {})
@@ -77,7 +80,7 @@ export const MODS_FIRMWARE = createfirmware({
         bookwritecodepage(memory.book, codepage)
         // message
         const pagetype = codepagereadtypetostring(codepage)
-        write(`create [${pagetype}] ${address}`)
+        write(`created [${pagetype}] ${address}`)
         flush() // tell register to save changes
       }
     }
@@ -93,13 +96,15 @@ export const MODS_FIRMWARE = createfirmware({
     case 'book':
       // lookup by address
       memory.book = memoryreadbookbyaddress(maybename ?? '')
-
-      // create new book
-      if (!ispresent(memory.book)) {
+      if (ispresent(memory.book)) {
+        // message
+        write(`modifying [book] ${memory.book.name}`)
+      } else {
+        // create new book
         memory.book = createbook([])
         memorysetbook(memory.book)
         // message
-        write(`created ${memory.book.name}`)
+        write(`created [book] ${memory.book.name}`)
         flush() // tell register to save changes
       }
       break
@@ -123,92 +128,32 @@ export const MODS_FIRMWARE = createfirmware({
       ensureopenbook()
       if (ispresent(memory.book)) {
         const address = maybename ?? createshortnameid()
-        // lookup by address
-        memory.terrain = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(
-          bookreadcodepagewithtype(
-            memory.book,
-            CODE_PAGE_TYPE.TERRAIN,
-            address,
-          ),
-        )
-        // create new terrain
-        if (!ispresent(memory.terrain)) {
-          const codepage = createcodepage(`@terrain ${address}\n`, {})
-          bookwritecodepage(memory.book, codepage)
-          // message
-          const pagetype = codepagereadtypetostring(codepage)
-          write(`create [${pagetype}] ${address}`)
-          flush() // tell register to save changes
-        }
+        const codepage = ensurecodepage(CODE_PAGE_TYPE.TERRAIN, address)
+        memory.terrain = codepage.terrain
       }
       break
     case CODE_PAGE_LABEL.CHARSET as string:
       ensureopenbook()
       if (ispresent(memory.book)) {
         const address = maybename ?? createshortnameid()
-        // lookup by address
-        memory.charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(
-          bookreadcodepagewithtype(
-            memory.book,
-            CODE_PAGE_TYPE.CHARSET,
-            address,
-          ),
-        )
-        // create new charset
-        if (!ispresent(memory.charset)) {
-          const codepage = createcodepage(`@charset ${address}\n`, {})
-          bookwritecodepage(memory.book, codepage)
-          // message
-          const pagetype = codepagereadtypetostring(codepage)
-          write(`create [${pagetype}] ${address}`)
-          flush() // tell register to save changes
-        }
+        const codepage = ensurecodepage(CODE_PAGE_TYPE.CHARSET, address)
+        memory.charset = codepage.charset
       }
       break
     case CODE_PAGE_LABEL.PALETTE as string:
       ensureopenbook()
       if (ispresent(memory.book)) {
         const address = maybename ?? createshortnameid()
-        // lookup by address
-        memory.palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(
-          bookreadcodepagewithtype(
-            memory.book,
-            CODE_PAGE_TYPE.PALETTE,
-            address,
-          ),
-        )
-        // create new palette
-        if (!ispresent(memory.palette)) {
-          const codepage = createcodepage(`@palette ${address}\n`, {})
-          bookwritecodepage(memory.book, codepage)
-          // message
-          const pagetype = codepagereadtypetostring(codepage)
-          write(`create [${pagetype}] ${address}`)
-          flush() // tell register to save changes
-        }
+        const codepage = ensurecodepage(CODE_PAGE_TYPE.PALETTE, address)
+        memory.palette = codepage.palette
       }
       break
     case CODE_PAGE_LABEL.EIGHT_TRACK as string:
       ensureopenbook()
       if (ispresent(memory.book)) {
         const address = maybename ?? createshortnameid()
-        // lookup by address
-        memory.eighttrack = codepagereaddata<CODE_PAGE_TYPE.EIGHT_TRACK>(
-          bookreadcodepagewithtype(
-            memory.book,
-            CODE_PAGE_TYPE.EIGHT_TRACK,
-            address,
-          ),
-        )
-        // create new eighttrack
-        if (!ispresent(memory.eighttrack)) {
-          const codepage = createcodepage(`@8track ${address}\n`, {})
-          bookwritecodepage(memory.book, codepage)
-          // message
-          const pagetype = codepagereadtypetostring(codepage)
-          write(`create [${pagetype}] ${address}`)
-          flush() // tell register to save changes
-        }
+        const codepage = ensurecodepage(CODE_PAGE_TYPE.EIGHT_TRACK, address)
+        memory.eighttrack = codepage.eighttrack
       }
       break
   }
