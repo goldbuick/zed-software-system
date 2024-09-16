@@ -152,8 +152,9 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
       eighttrack: undefined,
       // loaders
       binaryfile: undefined,
-      // player input
+      // player aggro
       player: MEMORY.defaultplayer,
+      // user input
       inputqueue: new Set(),
       inputmods: {
         [INPUT.NONE]: 0,

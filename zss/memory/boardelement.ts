@@ -24,15 +24,7 @@ export type BOARD_ELEMENT_STATS = {
   cycle?: number
   stepx?: number
   stepy?: number
-  player?: string
   sender?: string
-  inputmove?: string[]
-  inputalt?: number
-  inputctrl?: number
-  inputshift?: number
-  inputok?: number
-  inputcancel?: number
-  inputmenu?: number
   data?: any
   [key: string]: WORD
 }
@@ -52,13 +44,6 @@ const BIN_BOARD_ELEMENT_STATS = bin.object({
   stepy: bin.optional(BIN_WORD),
   player: bin.optional(BIN_WORD),
   sender: bin.optional(BIN_WORD),
-  inputmove: bin.optional(BIN_WORD),
-  inputalt: bin.optional(BIN_WORD),
-  inputctrl: bin.optional(BIN_WORD),
-  inputshift: bin.optional(BIN_WORD),
-  inputok: bin.optional(BIN_WORD),
-  inputcancel: bin.optional(BIN_WORD),
-  inputmenu: bin.optional(BIN_WORD),
   data: bin.optional(BIN_WORD),
   custom: bin.optional(bin.dynamicArrayOf(BIN_WORD_ENTRY)),
 })
@@ -80,13 +65,6 @@ export function exportboardelementstats(
     'stepy',
     'player',
     'sender',
-    'inputmove',
-    'inputalt',
-    'inputctrl',
-    'inputshift',
-    'inputok',
-    'inputcancel',
-    'inputmenu',
     'data',
   ]
   const custom = Object.keys(boardelementstats).filter(
@@ -106,13 +84,6 @@ export function exportboardelementstats(
     stepy: exportword(boardelementstats.stepy),
     player: exportword(boardelementstats.player),
     sender: exportword(boardelementstats.sender),
-    inputmove: exportword(boardelementstats.inputmove),
-    inputalt: exportword(boardelementstats.inputalt),
-    inputctrl: exportword(boardelementstats.inputctrl),
-    inputshift: exportword(boardelementstats.inputshift),
-    inputok: exportword(boardelementstats.inputok),
-    inputcancel: exportword(boardelementstats.inputcancel),
-    inputmenu: exportword(boardelementstats.inputmenu),
     data: exportword(boardelementstats.data),
     custom: bincustom,
   }
@@ -134,13 +105,6 @@ export function importboardelementstats(
     stepy: importword(boardelementstats.stepy) as any,
     player: importword(boardelementstats.player) as any,
     sender: importword(boardelementstats.sender) as any,
-    inputmove: importword(boardelementstats.inputmove) as any,
-    inputalt: importword(boardelementstats.inputalt) as any,
-    inputctrl: importword(boardelementstats.inputctrl) as any,
-    inputshift: importword(boardelementstats.inputshift) as any,
-    inputok: importword(boardelementstats.inputok) as any,
-    inputcancel: importword(boardelementstats.inputcancel) as any,
-    inputmenu: importword(boardelementstats.inputmenu) as any,
     data: importword(boardelementstats.data) as any,
   }
   boardelementstats.custom?.forEach((entry) => {

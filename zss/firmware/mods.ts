@@ -112,48 +112,45 @@ export const MODS_FIRMWARE = createfirmware({
       ensureopenbook()
       if (ispresent(memory.book)) {
         const address = maybename ?? createshortnameid()
-        const codepage = ensurecodepage(CODE_PAGE_TYPE.BOARD, address)
-        memory.board = codepage.board
+        memory.board = ensurecodepage(CODE_PAGE_TYPE.BOARD, address).board
       }
       break
     case CODE_PAGE_LABEL.OBJECT as string:
       ensureopenbook()
       if (ispresent(memory.book)) {
         const address = maybename ?? createshortnameid()
-        const codepage = ensurecodepage(CODE_PAGE_TYPE.OBJECT, address)
-        memory.object = codepage.object
+        memory.object = ensurecodepage(CODE_PAGE_TYPE.OBJECT, address).object
       }
       break
     case CODE_PAGE_LABEL.TERRAIN as string:
       ensureopenbook()
       if (ispresent(memory.book)) {
         const address = maybename ?? createshortnameid()
-        const codepage = ensurecodepage(CODE_PAGE_TYPE.TERRAIN, address)
-        memory.terrain = codepage.terrain
+        memory.terrain = ensurecodepage(CODE_PAGE_TYPE.TERRAIN, address).terrain
       }
       break
     case CODE_PAGE_LABEL.CHARSET as string:
       ensureopenbook()
       if (ispresent(memory.book)) {
         const address = maybename ?? createshortnameid()
-        const codepage = ensurecodepage(CODE_PAGE_TYPE.CHARSET, address)
-        memory.charset = codepage.charset
+        memory.charset = ensurecodepage(CODE_PAGE_TYPE.CHARSET, address).charset
       }
       break
     case CODE_PAGE_LABEL.PALETTE as string:
       ensureopenbook()
       if (ispresent(memory.book)) {
         const address = maybename ?? createshortnameid()
-        const codepage = ensurecodepage(CODE_PAGE_TYPE.PALETTE, address)
-        memory.palette = codepage.palette
+        memory.palette = ensurecodepage(CODE_PAGE_TYPE.PALETTE, address).palette
       }
       break
     case CODE_PAGE_LABEL.EIGHT_TRACK as string:
       ensureopenbook()
       if (ispresent(memory.book)) {
         const address = maybename ?? createshortnameid()
-        const codepage = ensurecodepage(CODE_PAGE_TYPE.EIGHT_TRACK, address)
-        memory.eighttrack = codepage.eighttrack
+        memory.eighttrack = ensurecodepage(
+          CODE_PAGE_TYPE.EIGHT_TRACK,
+          address,
+        ).eighttrack
       }
       break
   }

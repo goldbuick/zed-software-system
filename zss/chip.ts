@@ -38,6 +38,11 @@ export type CHIP = {
   // set firmware on chip
   install: (firmware: MAYBE<FIRMWARE>) => void
 
+  // export chip run state
+  // import chip run state
+  // should the global tick increment be actual part of the individual book ??
+  // the answer is yes!
+
   // state api
   set: (name: string, value: any) => any
   get: (name: string) => any

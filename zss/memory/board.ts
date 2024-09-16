@@ -56,10 +56,10 @@ export type BOARD_STATS = {
   //     like select a type of codepage in a book (or create a new one)
   //
   // board displayed over this one
-  above?: string
+  over?: string
   // only view mode supported for above boards
   // board displayed under this one
-  below?: string
+  under?: string
   // common stats
   exitnorth?: string
   exitsouth?: string
@@ -97,8 +97,8 @@ export function createboardstats() {
 
 const BIN_BOARD_STATS = bin.object({
   isdark: bin.optional(BIN_WORD),
-  above: bin.optional(BIN_WORD),
-  below: bin.optional(BIN_WORD),
+  over: bin.optional(BIN_WORD),
+  under: bin.optional(BIN_WORD),
   exitnorth: bin.optional(BIN_WORD),
   exitsouth: bin.optional(BIN_WORD),
   exitwest: bin.optional(BIN_WORD),
@@ -138,8 +138,8 @@ export function exportboardstats(
   }
   const skip = [
     'isdark',
-    'above',
-    'below',
+    'over',
+    'under',
     'exitnorth',
     'exitsouth',
     'exitwest',
@@ -157,8 +157,8 @@ export function exportboardstats(
 
   return {
     isdark: exportword(boardstats.isdark),
-    above: exportword(boardstats.above),
-    below: exportword(boardstats.below),
+    over: exportword(boardstats.over),
+    under: exportword(boardstats.under),
     exitnorth: exportword(boardstats.exitnorth),
     exitsouth: exportword(boardstats.exitsouth),
     exitwest: exportword(boardstats.exitwest),
@@ -178,8 +178,8 @@ export function importboardstats(
   }
   const stats: BOARD_STATS = {
     isdark: importword(boardstats.isdark) as any,
-    above: importword(boardstats.above) as any,
-    below: importword(boardstats.below) as any,
+    over: importword(boardstats.over) as any,
+    under: importword(boardstats.under) as any,
     exitnorth: importword(boardstats.exitnorth) as any,
     exitsouth: importword(boardstats.exitsouth) as any,
     exitwest: importword(boardstats.exitwest) as any,
