@@ -137,19 +137,20 @@ const tilemapMaterial = new THREE.ShaderMaterial({
     void main() {
       #include <clipping_planes_fragment>
 
-      uvec4 lookup = texture2D(data, vUv);
-      int ci = int(lookup.z);
-      int bgi = int(lookup.w);
+      uvec4 tiledata = texture(data, vUv);
+      int colori = int(tiledata.z);
+      int bgi = int(tiledata.w);
 
       vec2 charPosition = mod(vUv, size) / size;
       vec2 uv = vec2(charPosition.x * step.x, charPosition.y * step.y);
-      vec3 color = palette[ci];
+      vec3 color = palette[colori];
 
-      uv += step * float(lookup.xy);
+      uv.x += step.x * float(tiledata.x);
+      uv.y += step.y * float(tiledata.y);
       uv.y = 1.0 - uv.y;
 
       bool useAlt = mod(time, interval * 2.0) > interval;
-      vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
+      vec3 blip = useAlt ? texture(alt, uv).rgb : texture(map, uv).rgb;
 
       if (blip.r == 0.0) {
         if (bgi >= ${COLOR.CLEAR}) {
