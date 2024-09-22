@@ -50,9 +50,8 @@ export const LOADER_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  .command('stat', (_, words) => {
-    const text = words.map(maptostring).join(' ')
-    tape_info(`$2 ${text}`)
+  .command('stat', () => {
+    // no-op
     return 0
   })
   .command('text', (_, words) => {
@@ -60,7 +59,7 @@ export const LOADER_FIRMWARE = createfirmware({
     tape_info('$2', text)
     return 0
   })
-  .command('hyperlink', (chip, args) => {
+  .command('hyperlink', (_, args) => {
     // const memory = memoryreadchip(chip.id())
     const [labelword, ...words] = args
     const label = maptostring(labelword)
