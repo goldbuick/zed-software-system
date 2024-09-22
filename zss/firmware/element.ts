@@ -57,16 +57,13 @@ import {
 } from './wordtypes'
 
 const STAT_NAMES = new Set([
+  'p1',
+  'p2',
+  'p3',
   'cycle',
-  'player',
+  'stepx',
+  'stepy',
   'sender',
-  'inputmove',
-  'inputalt',
-  'inputctrl',
-  'inputshift',
-  'inputok',
-  'inputcancel',
-  'inputmenu',
   'data',
 ])
 

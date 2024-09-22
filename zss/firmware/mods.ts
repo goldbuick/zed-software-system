@@ -1,3 +1,4 @@
+import { parsetarget } from 'zss/device'
 import { tape_info, vm_flush } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { createshortnameid } from 'zss/mapping/guid'
@@ -21,6 +22,7 @@ import {
   createcodepage,
 } from 'zss/memory/codepage'
 
+import { ensureopenbook } from './cli'
 import { ARG_TYPE, readargs } from './wordtypes'
 
 const COLOR_EDGE = '$dkpurple'
@@ -34,7 +36,32 @@ function flush() {
 }
 
 export const MODS_FIRMWARE = createfirmware({
-  get() {
+  get(chip, name) {
+    const backup = memoryreadchip(`${chip.id()}.backup`)
+    const memory = memoryreadchip(chip.id())
+
+    if (name.startsWith('mod')) {
+      const { path } = parsetarget(name)
+      switch (path) {
+        case 'self':
+          return [true, backup.object?.id ?? '']
+        case 'book':
+          return [true, memory.book?.id ?? '']
+        case CODE_PAGE_LABEL.BOARD as string:
+          return [true, memory.board?.id ?? '']
+        case CODE_PAGE_LABEL.OBJECT as string:
+          return [true, memory.object?.id ?? '']
+        case CODE_PAGE_LABEL.TERRAIN as string:
+          return [true, memory.terrain?.id ?? '']
+        case CODE_PAGE_LABEL.CHARSET as string:
+          return [true, memory.charset?.id ?? '']
+        case CODE_PAGE_LABEL.PALETTE as string:
+          return [true, memory.palette?.id ?? '']
+        case CODE_PAGE_LABEL.EIGHT_TRACK as string:
+          return [true, memory.board?.id ?? '']
+      }
+    }
+
     return [false, undefined]
   },
   set() {
@@ -44,11 +71,17 @@ export const MODS_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 }).command('mod', (chip, words) => {
-  // book
   const backup = memoryreadchip(`${chip.id()}.backup`)
   const memory = memoryreadchip(chip.id())
 
-  if (!ispresent(backup.book) && ispresent(memory.book)) {
+  // ensure open book
+  memory.book = memory.book ?? ensureopenbook()
+
+  if (!ispresent(memory.book)) {
+    return 0
+  }
+
+  if (!ispresent(backup.book)) {
     // backup context
     // this revert data is used when #mod self, or after #end of exec
     backup.book = memory.book
@@ -61,10 +94,6 @@ export const MODS_FIRMWARE = createfirmware({
     ARG_TYPE.MAYBE_STRING,
   ])
 
-  function ensureopenbook() {
-    memory.book = memory.book ?? createbook([])
-  }
-
   function ensurecodepage<T extends CODE_PAGE_TYPE>(type: T, address: string) {
     // lookup by address
     let codepage = bookreadcodepagewithtype(memory.book, type, address)
@@ -75,7 +104,10 @@ export const MODS_FIRMWARE = createfirmware({
     } else {
       // create new codepage
       const typestr = codepagetypetostring(type)
-      codepage = createcodepage(`@${typestr} ${address}\n`, {})
+      codepage = createcodepage(
+        typestr === 'object' ? `@${address}\n` : `@${typestr} ${address}\n`,
+        {},
+      )
       if (ispresent(codepage)) {
         bookwritecodepage(memory.book, codepage)
         // message
@@ -87,11 +119,16 @@ export const MODS_FIRMWARE = createfirmware({
     return codepage
   }
 
-  switch (type) {
+  switch (type.toLowerCase()) {
     case 'self':
       memory.book = backup.book
       memory.board = backup.board
       memory.object = backup.object
+      break
+    default:
+      if (ispresent(memory.book)) {
+        memory.object = ensurecodepage(CODE_PAGE_TYPE.OBJECT, type).object
+      }
       break
     case 'book':
       // lookup by address

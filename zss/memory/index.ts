@@ -290,18 +290,19 @@ export function memorytick(os: OS, timestamp: number) {
       context.object = item.object
       context.inputcurrent = undefined
 
-      // map stats
-      const maybekind = bookelementkindread(mainbook, item.object)
-      const maybekindcycle = boardelementreadstat(maybekind, 'cycle', undefined)
-      const maybeplayer = boardelementreadstat(item.object, 'player', undefined)
+      // read cycle from element kind
+      const maybekindcycle = boardelementreadstat(
+        bookelementkindread(mainbook, item.object),
+        'cycle',
+        undefined,
+      )
+
+      // read cycle from element
       const maybecycle = boardelementreadstat(
         item.object,
         'cycle',
         maybekindcycle,
       )
-
-      // update player from board element
-      context.player = isstring(maybeplayer) ? maybeplayer : context.player
 
       // run chip code
       const itemname = boardelementname(item.object)

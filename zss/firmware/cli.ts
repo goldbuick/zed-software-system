@@ -140,9 +140,19 @@ export const CLI_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  .command('stat', (_, words) => {
-    const text = words.map(maptostring).join(' ')
-    tape_info(`$2 ${text}`)
+  .command('stat', (chip, words) => {
+    const [maybeargs] = words
+    if (!isstring(maybeargs)) {
+      return 0
+    }
+    const [maybetype, maybename] = maybeargs.split(' ')
+    const type = ispresent(maybename) ? maptostring(maybetype) : 'object'
+    const name = ispresent(maybename)
+      ? maptostring(maybename)
+      : maptostring(maybetype)
+    // create
+    chip.command('mod', type, name)
+    chip.command('pageopen', name)
     return 0
   })
   .command('text', (_, words) => {

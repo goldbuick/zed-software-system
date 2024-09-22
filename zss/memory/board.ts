@@ -11,6 +11,7 @@ import {
   readstrbg,
   ptapplydir,
   mapstrdirtoconst,
+  mapstrcolortoattributes,
 } from 'zss/firmware/wordtypes'
 import { COLOR } from 'zss/gadget/data/types'
 import { pick } from 'zss/mapping/array'
@@ -303,11 +304,10 @@ export function boardelementapplycolor(
   if (!ispresent(element) || !isstrcolor(strcolor)) {
     return
   }
-  const color = readstrcolor(strcolor)
+  const { color, bg } = mapstrcolortoattributes(strcolor)
   if (ispresent(color)) {
     element.color = color
   }
-  const bg = readstrbg(strcolor)
   if (ispresent(bg)) {
     element.bg = bg
   }

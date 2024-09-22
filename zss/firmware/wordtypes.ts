@@ -412,7 +412,7 @@ export function mapstrcolortoattributes(color: STR_COLOR) {
       if (value < COLOR.ONBLACK) {
         attributes.color = value
       } else {
-        attributes.bg = value
+        attributes.bg = value - COLOR.ONBLACK
       }
     }
   })
