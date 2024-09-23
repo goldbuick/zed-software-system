@@ -35,33 +35,26 @@ function flush() {
   vm_flush('mods')
 }
 
+// track origin address for chip memory context
+const MOD_ADDRESS = {
+  ['self']: '',
+  ['book']: '',
+  [CODE_PAGE_LABEL.LOADER]: '',
+  [CODE_PAGE_LABEL.BOARD]: '',
+  [CODE_PAGE_LABEL.OBJECT]: '',
+  [CODE_PAGE_LABEL.TERRAIN]: '',
+  [CODE_PAGE_LABEL.CHARSET]: '',
+  [CODE_PAGE_LABEL.PALETTE]: '',
+  [CODE_PAGE_LABEL.EIGHT_TRACK]: '',
+}
+
 export const MODS_FIRMWARE = createfirmware({
-  get(chip, name) {
-    const backup = memoryreadchip(`${chip.id()}.backup`)
-    const memory = memoryreadchip(chip.id())
-
-    if (name.startsWith('mod')) {
+  get(_, name) {
+    if (name.startsWith('mod:')) {
       const { path } = parsetarget(name)
-      switch (path) {
-        case 'self':
-          return [true, backup.object?.id ?? '']
-        case 'book':
-          return [true, memory.book?.id ?? '']
-        case CODE_PAGE_LABEL.BOARD as string:
-          return [true, memory.board?.id ?? '']
-        case CODE_PAGE_LABEL.OBJECT as string:
-          return [true, memory.object?.id ?? '']
-        case CODE_PAGE_LABEL.TERRAIN as string:
-          return [true, memory.terrain?.id ?? '']
-        case CODE_PAGE_LABEL.CHARSET as string:
-          return [true, memory.charset?.id ?? '']
-        case CODE_PAGE_LABEL.PALETTE as string:
-          return [true, memory.palette?.id ?? '']
-        case CODE_PAGE_LABEL.EIGHT_TRACK as string:
-          return [true, memory.board?.id ?? '']
-      }
+      const value = MOD_ADDRESS[path as keyof typeof MOD_ADDRESS]
+      return [true, value ?? '']
     }
-
     return [false, undefined]
   },
   set() {
@@ -87,6 +80,9 @@ export const MODS_FIRMWARE = createfirmware({
     backup.book = memory.book
     backup.board = memory.board
     backup.object = memory.object
+    MOD_ADDRESS.book = ''
+    MOD_ADDRESS.board = ''
+    MOD_ADDRESS.object = 'self'
   }
 
   const [type, maybename] = readargs(memoryreadcontext(chip, words), 0, [
@@ -119,23 +115,30 @@ export const MODS_FIRMWARE = createfirmware({
     return codepage
   }
 
+  const maybeaddress = maybename ?? ''
   switch (type.toLowerCase()) {
     case 'self':
       memory.book = backup.book
       memory.board = backup.board
       memory.object = backup.object
+      MOD_ADDRESS.book = ''
+      MOD_ADDRESS.board = ''
+      MOD_ADDRESS.object = 'self'
       break
     default:
       if (ispresent(memory.book)) {
-        memory.object = ensurecodepage(CODE_PAGE_TYPE.OBJECT, type).object
+        const codepage = ensurecodepage(CODE_PAGE_TYPE.OBJECT, type)
+        memory.object = codepage.object
+        MOD_ADDRESS.object = codepage.id
       }
       break
     case 'book':
       // lookup by address
-      memory.book = memoryreadbookbyaddress(maybename ?? '')
+      memory.book = memoryreadbookbyaddress(maybeaddress)
       if (ispresent(memory.book)) {
         // message
         write(`modifying [book] ${memory.book.name}`)
+        MOD_ADDRESS.book = maybeaddress
       } else {
         // create new book
         memory.book = createbook([])
@@ -143,6 +146,7 @@ export const MODS_FIRMWARE = createfirmware({
         // message
         write(`created [book] ${memory.book.name}`)
         flush() // tell register to save changes
+        MOD_ADDRESS.book = memory.book.id
       }
       break
     case CODE_PAGE_LABEL.BOARD as string:
