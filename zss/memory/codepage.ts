@@ -44,6 +44,7 @@ export enum CODE_PAGE_TYPE {
 }
 
 export enum CODE_PAGE_LABEL {
+  LOADER = 'loader',
   BOARD = 'board',
   OBJECT = 'object',
   TERRAIN = 'terrain',
@@ -281,7 +282,7 @@ export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
           codepage.stats.type = CODE_PAGE_TYPE.EIGHT_TRACK
           codepage.stats.name = lmaybename
           break
-        case 'loader':
+        case CODE_PAGE_LABEL.LOADER as string:
           codepage.stats.type = CODE_PAGE_TYPE.LOADER
           codepage.stats.name = lmaybename
           break
@@ -315,7 +316,7 @@ export function codepagetypetostring(type: MAYBE<CODE_PAGE_TYPE>): string {
     case CODE_PAGE_TYPE.ERROR:
       return 'error'
     case CODE_PAGE_TYPE.LOADER:
-      return 'error'
+      return CODE_PAGE_LABEL.LOADER
     case CODE_PAGE_TYPE.BOARD:
       return CODE_PAGE_LABEL.BOARD
     case CODE_PAGE_TYPE.OBJECT:

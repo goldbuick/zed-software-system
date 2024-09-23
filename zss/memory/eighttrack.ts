@@ -52,6 +52,12 @@ export function createeighttracksequence(): EIGHT_TRACK_SEQUENCE {
 }
 
 export function createeighttrack(): EIGHT_TRACK {
+  // sequencing is separate from patterns
+  // 0001001001
+  // patterns have the actual #code to run
+  // #play +cxcxc
+  // honestly the simplest approach here is being able to sequence lines of code
+  // remix it into 8 tracks
   return {
     id: createsid(),
     sequences: [],
