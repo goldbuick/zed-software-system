@@ -39,7 +39,6 @@ function flush() {
 const MOD_ADDRESS = {
   ['self']: '',
   ['book']: '',
-  [CODE_PAGE_LABEL.LOADER]: '',
   [CODE_PAGE_LABEL.BOARD]: '',
   [CODE_PAGE_LABEL.OBJECT]: '',
   [CODE_PAGE_LABEL.TERRAIN]: '',
@@ -69,13 +68,12 @@ export const MODS_FIRMWARE = createfirmware({
 
   // ensure open book
   memory.book = memory.book ?? ensureopenbook()
-
   if (!ispresent(memory.book)) {
     return 0
   }
 
+  // backup context
   if (!ispresent(backup.book)) {
-    // backup context
     // this revert data is used when #mod self, or after #end of exec
     backup.book = memory.book
     backup.board = memory.board
@@ -97,26 +95,51 @@ export const MODS_FIRMWARE = createfirmware({
       // message
       const pagetype = codepagereadtypetostring(codepage)
       write(`modifying [${pagetype}] ${address}`)
-    } else {
-      // create new codepage
-      const typestr = codepagetypetostring(type)
-      codepage = createcodepage(
-        typestr === 'object' ? `@${address}\n` : `@${typestr} ${address}\n`,
-        {},
-      )
-      if (ispresent(codepage)) {
-        bookwritecodepage(memory.book, codepage)
-        // message
-        const pagetype = codepagereadtypetostring(codepage)
-        write(`created [${pagetype}] ${address}`)
-        flush() // tell register to save changes
-      }
+      return codepage
     }
+
+    // create new codepage
+    const typestr = codepagetypetostring(type)
+    codepage = createcodepage(
+      typestr === 'object' ? `@${address}\n` : `@${typestr} ${address}\n`,
+      {},
+    )
+    if (ispresent(codepage)) {
+      bookwritecodepage(memory.book, codepage)
+      // message
+      const pagetype = codepagereadtypetostring(codepage)
+      write(`created [${pagetype}] ${address}`)
+      flush() // tell register to save changes
+    }
+
     return codepage
   }
 
   const maybeaddress = maybename ?? ''
-  switch (type.toLowerCase()) {
+  const maybetype = type.toLowerCase()
+
+  // book is a special case
+  if (maybetype === 'book') {
+    // lookup by address
+    memory.book = memoryreadbookbyaddress(maybeaddress)
+    if (ispresent(memory.book)) {
+      // message
+      write(`modifying [book] ${memory.book.name}`)
+      MOD_ADDRESS.book = maybeaddress
+    } else {
+      // create new book
+      memory.book = createbook([])
+      memorysetbook(memory.book)
+      // message
+      write(`created [book] ${memory.book.name}`)
+      flush() // tell register to save changes
+      MOD_ADDRESS.book = memory.book.id
+    }
+    return 0
+  }
+
+  const withaddress = maybename ?? createshortnameid()
+  switch (maybetype) {
     case 'self':
       memory.book = backup.book
       memory.board = backup.board
@@ -125,75 +148,60 @@ export const MODS_FIRMWARE = createfirmware({
       MOD_ADDRESS.board = ''
       MOD_ADDRESS.object = 'self'
       break
-    default:
-      if (ispresent(memory.book)) {
-        const codepage = ensurecodepage(CODE_PAGE_TYPE.OBJECT, type)
-        memory.object = codepage.object
-        MOD_ADDRESS.object = codepage.id
-      }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+    case CODE_PAGE_LABEL.LOADER: {
+      ensurecodepage(CODE_PAGE_TYPE.LOADER, withaddress)
       break
-    case 'book':
-      // lookup by address
-      memory.book = memoryreadbookbyaddress(maybeaddress)
-      if (ispresent(memory.book)) {
-        // message
-        write(`modifying [book] ${memory.book.name}`)
-        MOD_ADDRESS.book = maybeaddress
-      } else {
-        // create new book
-        memory.book = createbook([])
-        memorysetbook(memory.book)
-        // message
-        write(`created [book] ${memory.book.name}`)
-        flush() // tell register to save changes
-        MOD_ADDRESS.book = memory.book.id
-      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+    case CODE_PAGE_LABEL.BOARD: {
+      const codepage = ensurecodepage(CODE_PAGE_TYPE.BOARD, withaddress)
+      memory.board = codepage.board
+      MOD_ADDRESS.board = codepage.id
       break
-    case CODE_PAGE_LABEL.BOARD as string:
-      ensureopenbook()
-      if (ispresent(memory.book)) {
-        const address = maybename ?? createshortnameid()
-        memory.board = ensurecodepage(CODE_PAGE_TYPE.BOARD, address).board
-      }
+    }
+    default: {
+      const shortcut = type || createshortnameid()
+      const codepage = ensurecodepage(CODE_PAGE_TYPE.OBJECT, shortcut)
+      memory.object = codepage.object
+      MOD_ADDRESS.object = codepage.id
       break
-    case CODE_PAGE_LABEL.OBJECT as string:
-      ensureopenbook()
-      if (ispresent(memory.book)) {
-        const address = maybename ?? createshortnameid()
-        memory.object = ensurecodepage(CODE_PAGE_TYPE.OBJECT, address).object
-      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+    case CODE_PAGE_LABEL.OBJECT: {
+      const codepage = ensurecodepage(CODE_PAGE_TYPE.OBJECT, withaddress)
+      memory.object = codepage.object
+      MOD_ADDRESS.object = codepage.id
       break
-    case CODE_PAGE_LABEL.TERRAIN as string:
-      ensureopenbook()
-      if (ispresent(memory.book)) {
-        const address = maybename ?? createshortnameid()
-        memory.terrain = ensurecodepage(CODE_PAGE_TYPE.TERRAIN, address).terrain
-      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+    case CODE_PAGE_LABEL.TERRAIN: {
+      const codepage = ensurecodepage(CODE_PAGE_TYPE.TERRAIN, withaddress)
+      memory.terrain = codepage.terrain
+      MOD_ADDRESS.terrain = codepage.id
       break
-    case CODE_PAGE_LABEL.CHARSET as string:
-      ensureopenbook()
-      if (ispresent(memory.book)) {
-        const address = maybename ?? createshortnameid()
-        memory.charset = ensurecodepage(CODE_PAGE_TYPE.CHARSET, address).charset
-      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+    case CODE_PAGE_LABEL.CHARSET: {
+      const codepage = ensurecodepage(CODE_PAGE_TYPE.CHARSET, withaddress)
+      memory.charset = codepage.charset
+      MOD_ADDRESS.charset = codepage.id
       break
-    case CODE_PAGE_LABEL.PALETTE as string:
-      ensureopenbook()
-      if (ispresent(memory.book)) {
-        const address = maybename ?? createshortnameid()
-        memory.palette = ensurecodepage(CODE_PAGE_TYPE.PALETTE, address).palette
-      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+    case CODE_PAGE_LABEL.PALETTE: {
+      const codepage = ensurecodepage(CODE_PAGE_TYPE.PALETTE, withaddress)
+      memory.palette = codepage.palette
+      MOD_ADDRESS.palette = codepage.id
       break
-    case CODE_PAGE_LABEL.EIGHT_TRACK as string:
-      ensureopenbook()
-      if (ispresent(memory.book)) {
-        const address = maybename ?? createshortnameid()
-        memory.eighttrack = ensurecodepage(
-          CODE_PAGE_TYPE.EIGHT_TRACK,
-          address,
-        ).eighttrack
-      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+    case CODE_PAGE_LABEL.EIGHT_TRACK as string: {
+      const codepage = ensurecodepage(CODE_PAGE_TYPE.EIGHT_TRACK, withaddress)
+      memory.eighttrack = codepage.eighttrack
+      MOD_ADDRESS.eighttrack = codepage.id
       break
+    }
   }
 
   return 0

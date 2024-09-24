@@ -50,7 +50,7 @@ export enum CODE_PAGE_LABEL {
   TERRAIN = 'terrain',
   CHARSET = 'charset',
   PALETTE = 'palette',
-  EIGHT_TRACK = '8track',
+  EIGHT_TRACK = 'eighttrack',
 }
 
 export type CODE_PAGE_STATS = {
