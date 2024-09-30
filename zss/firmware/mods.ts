@@ -1,28 +1,35 @@
-import { parsetarget } from 'zss/device'
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import { tape_info, vm_flush } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
+import { BITMAP } from 'zss/gadget/data/bitmap'
 import { createshortnameid } from 'zss/mapping/guid'
-import { ispresent } from 'zss/mapping/types'
 import {
-  memoryreadbookbyaddress,
-  memoryreadchip,
-  memoryreadcontext,
-  memorysetbook,
-} from 'zss/memory'
+  isarray,
+  isboolean,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
+import { CHIP_MEMORY, memoryreadchip, memoryreadcontext } from 'zss/memory'
+import { BOARD } from 'zss/memory/board'
+import { BOARD_ELEMENT } from 'zss/memory/boardelement'
 import {
+  bookreadcodepagebyaddress,
   bookreadcodepagewithtype,
   bookwritecodepage,
-  createbook,
 } from 'zss/memory/book'
 import {
+  CODE_PAGE,
   CODE_PAGE_LABEL,
   CODE_PAGE_TYPE,
+  codepagereadtype,
   codepagereadtypetostring,
   codepagetypetostring,
   createcodepage,
 } from 'zss/memory/codepage'
+import { EIGHT_TRACK } from 'zss/memory/eighttrack'
 
-import { ensureopenbook } from './cli'
+import { ensureopenbook, ensureopenbookbyname } from './cli'
 import { ARG_TYPE, readargs } from './wordtypes'
 
 const COLOR_EDGE = '$dkpurple'
@@ -35,25 +42,126 @@ function flush() {
   vm_flush('mods')
 }
 
-// track origin address for chip memory context
-const MOD_ADDRESS = {
-  ['self']: '',
-  ['book']: '',
-  [CODE_PAGE_LABEL.BOARD]: '',
-  [CODE_PAGE_LABEL.OBJECT]: '',
-  [CODE_PAGE_LABEL.TERRAIN]: '',
-  [CODE_PAGE_LABEL.CHARSET]: '',
-  [CODE_PAGE_LABEL.PALETTE]: '',
-  [CODE_PAGE_LABEL.EIGHT_TRACK]: '',
+type MOD_STATE = {
+  target: string
+} & (
+  | {
+      type: CODE_PAGE_TYPE.ERROR
+      value: undefined
+    }
+  | {
+      type: CODE_PAGE_TYPE.BOARD
+      value: BOARD
+    }
+  | {
+      type: CODE_PAGE_TYPE.OBJECT
+      value: BOARD_ELEMENT
+    }
+  | {
+      type: CODE_PAGE_TYPE.TERRAIN
+      value: BOARD_ELEMENT
+    }
+  | {
+      type: CODE_PAGE_TYPE.CHARSET
+      value: BITMAP
+    }
+  | {
+      type: CODE_PAGE_TYPE.PALETTE
+      value: BITMAP
+    }
+  | {
+      type: CODE_PAGE_TYPE.EIGHT_TRACK
+      value: EIGHT_TRACK
+    }
+)
+
+const mods = new Map<string, MOD_STATE>()
+
+function readmodstate(id: string): MOD_STATE {
+  let mod = mods.get(id)
+  if (ispresent(mod)) {
+    return mod
+  }
+  mod = {
+    type: CODE_PAGE_TYPE.ERROR,
+    target: '',
+    value: undefined,
+  }
+  mods.set(id, mod)
+  return mod
+}
+
+function applymod(modstate: MOD_STATE, codepage: CODE_PAGE, address: string) {
+  switch (codepagereadtype(codepage)) {
+    case CODE_PAGE_TYPE.ERROR:
+    case CODE_PAGE_TYPE.LOADER:
+      // no-ops
+      break
+    case CODE_PAGE_TYPE.BOARD:
+      modstate.type = CODE_PAGE_TYPE.ERROR
+      modstate.target = codepage.id
+      modstate.value = codepage.board
+      break
+    case CODE_PAGE_TYPE.OBJECT:
+      modstate.type = CODE_PAGE_TYPE.OBJECT
+      modstate.target = codepage.id
+      modstate.value = codepage.object
+      break
+    case CODE_PAGE_TYPE.TERRAIN:
+      modstate.type = CODE_PAGE_TYPE.TERRAIN
+      modstate.target = codepage.id
+      modstate.value = codepage.terrain
+      break
+    case CODE_PAGE_TYPE.CHARSET:
+      modstate.type = CODE_PAGE_TYPE.CHARSET
+      modstate.target = codepage.id
+      modstate.value = codepage.charset
+      break
+    case CODE_PAGE_TYPE.PALETTE:
+      modstate.type = CODE_PAGE_TYPE.PALETTE
+      modstate.target = codepage.id
+      modstate.value = codepage.palette
+      break
+    case CODE_PAGE_TYPE.EIGHT_TRACK:
+      modstate.type = CODE_PAGE_TYPE.EIGHT_TRACK
+      modstate.target = codepage.id
+      modstate.value = codepage.eighttrack
+      break
+  }
+  // message
+  const pagetype = codepagereadtypetostring(codepage)
+  write(`modifying [${pagetype}] ${address}`)
+}
+
+function ensurecodepage<T extends CODE_PAGE_TYPE>(
+  modstate: MOD_STATE,
+  memory: CHIP_MEMORY,
+  type: T,
+  address: string,
+) {
+  // lookup by address
+  let codepage = bookreadcodepagewithtype(memory.book, type, address)
+  if (ispresent(codepage)) {
+    return codepage
+  }
+
+  // create new codepage
+  const typestr = codepagetypetostring(type)
+  codepage = createcodepage(
+    typestr === 'object' ? `@${address}\n` : `@${typestr} ${address}\n`,
+    {},
+  )
+  if (ispresent(codepage)) {
+    bookwritecodepage(memory.book, codepage)
+    applymod(modstate, codepage, address)
+    flush() // tell register to save changes
+  }
+
+  return codepage
 }
 
 export const MODS_FIRMWARE = createfirmware({
-  get(_, name) {
-    if (name.startsWith('mod:')) {
-      const { path } = parsetarget(name)
-      const value = MOD_ADDRESS[path as keyof typeof MOD_ADDRESS]
-      return [true, value ?? '']
-    }
+  get() {
     return [false, undefined]
   },
   set() {
@@ -62,147 +170,142 @@ export const MODS_FIRMWARE = createfirmware({
   shouldtick() {},
   tick() {},
   tock() {},
-}).command('mod', (chip, words) => {
-  const backup = memoryreadchip(`${chip.id()}.backup`)
-  const memory = memoryreadchip(chip.id())
-
-  // ensure open book
-  memory.book = memory.book ?? ensureopenbook()
-  if (!ispresent(memory.book)) {
-    return 0
-  }
-
-  // backup context
-  if (!ispresent(backup.book)) {
-    // this revert data is used when #mod self, or after #end of exec
-    backup.book = memory.book
-    backup.board = memory.board
-    backup.object = memory.object
-    MOD_ADDRESS.book = ''
-    MOD_ADDRESS.board = ''
-    MOD_ADDRESS.object = 'self'
-  }
-
-  const [type, maybename] = readargs(memoryreadcontext(chip, words), 0, [
-    ARG_TYPE.STRING,
-    ARG_TYPE.MAYBE_STRING,
-  ])
-
-  function ensurecodepage<T extends CODE_PAGE_TYPE>(type: T, address: string) {
-    // lookup by address
-    let codepage = bookreadcodepagewithtype(memory.book, type, address)
-    if (ispresent(codepage)) {
-      // message
-      const pagetype = codepagereadtypetostring(codepage)
-      write(`modifying [${pagetype}] ${address}`)
-      return codepage
-    }
-
-    // create new codepage
-    const typestr = codepagetypetostring(type)
-    codepage = createcodepage(
-      typestr === 'object' ? `@${address}\n` : `@${typestr} ${address}\n`,
-      {},
-    )
-    if (ispresent(codepage)) {
-      bookwritecodepage(memory.book, codepage)
-      // message
-      const pagetype = codepagereadtypetostring(codepage)
-      write(`created [${pagetype}] ${address}`)
-      flush() // tell register to save changes
-    }
-
-    return codepage
-  }
-
-  const maybeaddress = maybename ?? ''
-  const maybetype = type.toLowerCase()
-
-  // book is a special case
-  if (maybetype === 'book') {
-    // lookup by address
-    memory.book = memoryreadbookbyaddress(maybeaddress)
-    if (ispresent(memory.book)) {
-      // message
-      write(`modifying [book] ${memory.book.name}`)
-      MOD_ADDRESS.book = maybeaddress
-    } else {
-      // create new book
-      memory.book = createbook([])
-      memorysetbook(memory.book)
-      // message
-      write(`created [book] ${memory.book.name}`)
-      flush() // tell register to save changes
-      MOD_ADDRESS.book = memory.book.id
-    }
-    return 0
-  }
-
-  const withaddress = maybename ?? createshortnameid()
-  switch (maybetype) {
-    case 'self':
-      memory.book = backup.book
-      memory.board = backup.board
-      memory.object = backup.object
-      MOD_ADDRESS.book = ''
-      MOD_ADDRESS.board = ''
-      MOD_ADDRESS.object = 'self'
-      break
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-    case CODE_PAGE_LABEL.LOADER: {
-      ensurecodepage(CODE_PAGE_TYPE.LOADER, withaddress)
-      break
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-    case CODE_PAGE_LABEL.BOARD: {
-      const codepage = ensurecodepage(CODE_PAGE_TYPE.BOARD, withaddress)
-      memory.board = codepage.board
-      MOD_ADDRESS.board = codepage.id
-      break
-    }
-    default: {
-      const shortcut = type || createshortnameid()
-      const codepage = ensurecodepage(CODE_PAGE_TYPE.OBJECT, shortcut)
-      memory.object = codepage.object
-      MOD_ADDRESS.object = codepage.id
-      break
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-    case CODE_PAGE_LABEL.OBJECT: {
-      const codepage = ensurecodepage(CODE_PAGE_TYPE.OBJECT, withaddress)
-      memory.object = codepage.object
-      MOD_ADDRESS.object = codepage.id
-      break
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-    case CODE_PAGE_LABEL.TERRAIN: {
-      const codepage = ensurecodepage(CODE_PAGE_TYPE.TERRAIN, withaddress)
-      memory.terrain = codepage.terrain
-      MOD_ADDRESS.terrain = codepage.id
-      break
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-    case CODE_PAGE_LABEL.CHARSET: {
-      const codepage = ensurecodepage(CODE_PAGE_TYPE.CHARSET, withaddress)
-      memory.charset = codepage.charset
-      MOD_ADDRESS.charset = codepage.id
-      break
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-    case CODE_PAGE_LABEL.PALETTE: {
-      const codepage = ensurecodepage(CODE_PAGE_TYPE.PALETTE, withaddress)
-      memory.palette = codepage.palette
-      MOD_ADDRESS.palette = codepage.id
-      break
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-    case CODE_PAGE_LABEL.EIGHT_TRACK as string: {
-      const codepage = ensurecodepage(CODE_PAGE_TYPE.EIGHT_TRACK, withaddress)
-      memory.eighttrack = codepage.eighttrack
-      MOD_ADDRESS.eighttrack = codepage.id
-      break
-    }
-  }
-
-  return 0
 })
+  .command('mod', (chip, words) => {
+    ensureopenbook()
+    const memory = memoryreadchip(chip.id())
+    const modstate = readmodstate(chip.id())
+
+    const [type, maybename] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.MAYBE_STRING,
+    ])
+
+    const maybeaddress = maybename ?? ''
+    const maybetype = type.toLowerCase()
+
+    // book is a special case
+    if (maybetype === 'book') {
+      if (maybeaddress && isstring(maybeaddress)) {
+        ensureopenbookbyname(maybeaddress)
+      } else {
+        // create new book
+        ensureopenbookbyname()
+      }
+      // reset mod state
+      modstate.type = CODE_PAGE_TYPE.ERROR
+      modstate.target = ''
+      modstate.value = undefined
+      return 0
+    }
+
+    const withaddress = maybename ?? createshortnameid()
+    switch (maybetype) {
+      default: {
+        // we check for name first, in current book
+        const codepage = bookreadcodepagebyaddress(memory.book, type)
+        if (ispresent(codepage)) {
+          applymod(modstate, codepage, type)
+        } else {
+          const named = type || createshortnameid()
+          ensurecodepage(modstate, memory, CODE_PAGE_TYPE.OBJECT, named)
+        }
+        break
+      }
+      case CODE_PAGE_LABEL.LOADER:
+        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.LOADER, withaddress)
+        break
+      case CODE_PAGE_LABEL.BOARD:
+        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.BOARD, withaddress)
+        break
+      case CODE_PAGE_LABEL.OBJECT:
+        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.OBJECT, withaddress)
+        break
+      case CODE_PAGE_LABEL.TERRAIN:
+        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.TERRAIN, withaddress)
+        break
+      case CODE_PAGE_LABEL.CHARSET:
+        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.CHARSET, withaddress)
+        break
+      case CODE_PAGE_LABEL.PALETTE:
+        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.PALETTE, withaddress)
+        break
+      case CODE_PAGE_LABEL.EIGHT_TRACK:
+        ensurecodepage(
+          modstate,
+          memory,
+          CODE_PAGE_TYPE.EIGHT_TRACK,
+          withaddress,
+        )
+        break
+    }
+
+    return 0
+  })
+  .command('read', (chip, words) => {
+    ensureopenbook()
+    const modstate = readmodstate(chip.id())
+    if (!ispresent(modstate.value)) {
+      write(`use #mod before #read`)
+      return 0
+    }
+
+    // write the value in given address into the given flag or print value to terminal
+    // if we omit a stat name we print out a list of possible stats
+    const [maybestat, maybeflag] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.MAYBE_STRING,
+      ARG_TYPE.MAYBE_STRING,
+    ])
+
+    if (!ispresent(maybestat)) {
+      // print all stat names
+      const names = Object.keys(modstate.value ?? {}).filter((item) => {
+        switch (item) {
+          case 'code':
+            return false
+        }
+        return true
+      })
+      write(`available stats [${names.join(', ')}]`)
+      return 0
+    }
+
+    if (!ispresent(maybeflag)) {
+      // print stat
+      const stat = maybestat.toLowerCase()
+      // @ts-expect-error being generic
+      const value: any = modstate.value[stat]
+      if (isstring(value) || isnumber(value) || isboolean(value)) {
+        write(`stat ${stat} is ${value}`)
+      }
+      if (isarray(value)) {
+        write(`stat ${stat} is an array`)
+      }
+      if (value === undefined) {
+        write(`stat ${stat} is not set`)
+      }
+      return 0
+    }
+
+    // #mod shade1
+    // #read
+    return 0
+  })
+  .command('write', (chip, words) => {
+    ensureopenbook()
+    const modstate = readmodstate(chip.id())
+    if (!ispresent(modstate.value)) {
+      write(`use #mod before #write`)
+      return 0
+    }
+
+    // write given value to given address
+    const [address, value] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.ANY,
+    ])
+
+    // we need to define a schema ..
+
+    return 0
+  })

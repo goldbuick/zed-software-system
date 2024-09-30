@@ -187,7 +187,7 @@ class ScriptParser extends CstParser {
   structured_cmd = this.RULED('structured_cmd', () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.command_if) },
-      { ALT: () => this.SUBRULE(this.command_read) },
+      // { ALT: () => this.SUBRULE(this.command_read) },
       { ALT: () => this.SUBRULE(this.command_while) },
       { ALT: () => this.SUBRULE(this.command_repeat) },
       { ALT: () => this.SUBRULE(this.command_break) },
@@ -316,16 +316,16 @@ class ScriptParser extends CstParser {
     })
   })
 
-  command_read = this.RULED('command_read', () => {
-    this.CONSUME(lexer.command_read)
-    this.SUBRULE(this.words)
-    this.CONSUME(lexer.command_into)
-    this.AT_LEAST_ONE(() => this.CONSUME(lexer.stringliteral))
-    this.OPTION({
-      GATE: this.BACKTRACK(this.command_loop),
-      DEF: () => this.SUBRULE(this.command_loop),
-    })
-  })
+  // command_read = this.RULED('command_read', () => {
+  //   this.CONSUME(lexer.command_read)
+  //   this.SUBRULE(this.words)
+  //   this.CONSUME(lexer.command_into)
+  //   this.AT_LEAST_ONE(() => this.CONSUME(lexer.stringliteral))
+  //   this.OPTION({
+  //     GATE: this.BACKTRACK(this.command_loop),
+  //     DEF: () => this.SUBRULE(this.command_loop),
+  //   })
+  // })
 
   command_break = this.RULED('command_break', () => {
     this.CONSUME(lexer.command_break)

@@ -7,8 +7,6 @@ import {
   ispt,
   STR_COLOR,
   isstrcolor,
-  readstrcolor,
-  readstrbg,
   ptapplydir,
   mapstrdirtoconst,
   mapstrcolortoattributes,
@@ -73,7 +71,6 @@ export type BOARD_STATS = {
 }
 
 export type BOARD = {
-  id?: string
   // specifics
   terrain: MAYBE_BOARD_ELEMENT[]
   objects: Record<string, BOARD_ELEMENT>
@@ -112,7 +109,6 @@ type BIN_BOARD_STATS = bin.Parsed<typeof BIN_BOARD_STATS>
 
 export function createboard(fn = noop<BOARD>) {
   const board: BOARD = {
-    id: createsid(),
     // specifics
     terrain: BOARD_TERRAIN.slice(0),
     objects: {},
@@ -121,7 +117,6 @@ export function createboard(fn = noop<BOARD>) {
 }
 
 export const BIN_BOARD = bin.object({
-  id: bin.string,
   // specifics
   terrain: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
   objects: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
@@ -201,7 +196,6 @@ export function exportboard(board: MAYBE_BOARD): MAYBE<BIN_BOARD> {
     return
   }
   return {
-    id: board.id ?? '',
     // specifics
     terrain: board.terrain.map(exportboardelement).filter(ispresent),
     objects: Object.keys(board.objects)
@@ -218,7 +212,6 @@ export function importboard(board: MAYBE<BIN_BOARD>): MAYBE_BOARD {
     return
   }
   return {
-    id: board.id,
     // specifics
     terrain: board.terrain.map(importboardelement).filter(ispresent),
     objects: Object.fromEntries<BOARD_ELEMENT>(

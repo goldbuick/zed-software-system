@@ -351,31 +351,31 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add('}')
       return source
     }
-    case NODE.READ: {
-      // note this is a read counter
-      // we do read loops over arrays of complex data
-      const [arraysource, ...words] = ast.words
-      const source = write(ast, [
-        writeApi(ast, 'readStart', [
-          `${context.internal}`,
-          transformNode(arraysource),
-        ]),
-        ';\nwhile (',
-        writeApi(ast, 'read', [
-          `${context.internal}`,
-          ...transformNodes(words),
-        ]),
-        `) {\n`,
-      ])
-      context.internal += 1
+    // case NODE.READ: {
+    //   // note this is a read counter
+    //   // we do read loops over arrays of complex data
+    //   const [arraysource, ...words] = ast.words
+    //   const source = write(ast, [
+    //     writeApi(ast, 'readStart', [
+    //       `${context.internal}`,
+    //       transformNode(arraysource),
+    //     ]),
+    //     ';\nwhile (',
+    //     writeApi(ast, 'read', [
+    //       `${context.internal}`,
+    //       ...transformNodes(words),
+    //     ]),
+    //     `) {\n`,
+    //   ])
+    //   context.internal += 1
 
-      if (ast.lines) {
-        ast.lines.forEach((item) => source.add([transformNode(item), '\n']))
-      }
+    //   if (ast.lines) {
+    //     ast.lines.forEach((item) => source.add([transformNode(item), '\n']))
+    //   }
 
-      source.add('}')
-      return source
-    }
+    //   source.add('}')
+    //   return source
+    // }
     case NODE.BREAK:
       return write(ast, `break;\n`)
     case NODE.CONTINUE:

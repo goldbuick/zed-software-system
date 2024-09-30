@@ -513,9 +513,9 @@ class ScriptVisitor
     if (ctx.command_if) {
       return this.go(ctx.command_if)
     }
-    if (ctx.command_read) {
-      return this.go(ctx.command_read)
-    }
+    // if (ctx.command_read) {
+    //   return this.go(ctx.command_read)
+    // }
     if (ctx.command_while) {
       return this.go(ctx.command_while)
     }
@@ -613,14 +613,14 @@ class ScriptVisitor
     })
   }
 
-  command_read(ctx: Command_readCstChildren) {
-    return createcodenode(ctx, {
-      type: NODE.READ,
-      flags: ctx.token_stringliteral.map((token) => tokenstring([token], '')),
-      words: this.go(ctx.words),
-      lines: this.go(ctx.command_loop),
-    })
-  }
+  // command_read(ctx: Command_readCstChildren) {
+  //   return createcodenode(ctx, {
+  //     type: NODE.READ,
+  //     flags: ctx.token_stringliteral.map((token) => tokenstring([token], '')),
+  //     words: this.go(ctx.words),
+  //     lines: this.go(ctx.command_loop),
+  //   })
+  // }
 
   command_break(ctx: Command_breakCstChildren) {
     return createcodenode(ctx, {

@@ -11,7 +11,7 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { ispresent, isstring, MAYBE_STRING } from 'zss/mapping/types'
 import {
   memoryclearbook,
   memoryreadbookbyaddress,
@@ -116,6 +116,21 @@ export function ensureopenbook() {
 
   // create book
   return createnewbook()
+}
+
+export function ensureopenbookbyname(name?: string) {
+  if (!isstring(name)) {
+    // create book
+    return createnewbook()
+  }
+
+  // attempt to open book
+  const book = memoryreadbookbyaddress(name)
+  if (ispresent(book)) {
+    openbook = book.id
+    writetext(`opened [book] ${book.name}`)
+    return book
+  }
 }
 
 function cli_flush() {

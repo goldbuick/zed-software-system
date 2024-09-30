@@ -248,7 +248,7 @@ export const command_then = createWordToken('then', true)
 export const command_else = createWordToken('else')
 export const command_while = createWordToken('while')
 export const command_repeat = createWordToken('repeat')
-export const command_read = createWordToken('read')
+// export const command_read = createWordToken('read')
 export const command_into = createWordToken('into')
 export const command_break = createWordToken('break')
 export const command_continue = createWordToken('continue')
@@ -318,7 +318,7 @@ export const allTokens = createTokenSet([
   command_else,
   command_while,
   command_repeat,
-  command_read,
+  // command_read,
   command_into,
   command_break,
   command_continue,

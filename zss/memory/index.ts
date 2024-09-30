@@ -81,7 +81,7 @@ type CHIP_PLAYER_INPUT = {
   inputcurrent: MAYBE<INPUT>
 }
 
-type CHIP_MEMORY = CHIP_TARGETS & CHIP_PLAYER_INPUT
+export type CHIP_MEMORY = CHIP_TARGETS & CHIP_PLAYER_INPUT
 
 export enum MEMORY_LABEL {
   MAIN = 'main',

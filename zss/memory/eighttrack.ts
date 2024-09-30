@@ -1,73 +1,42 @@
 import * as bin from 'typed-binary'
-import { createsid } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
-export type EIGHT_TRACK_PATTERN = {
-  // 8 tracks per pattern
-  tracks: string[]
-}
-
-export type EIGHT_TRACK_SEQUENCE = {
-  // 4 patterns per sequence
-  patterns: EIGHT_TRACK_PATTERN[]
-}
+export type EIGHT_MEASURE = [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+]
 
 export type EIGHT_TRACK = {
-  id: string
-  sequences: EIGHT_TRACK_SEQUENCE[]
+  tempo: number
+  measures: EIGHT_MEASURE[]
 }
 
-export type MAYBE_EIGHT_TRACK = MAYBE<EIGHT_TRACK>
-
-function createeighttrackpattern(): EIGHT_TRACK_PATTERN {
-  return {
-    // 8 tracks per pattern
-    tracks: ['', '', '', '', '', '', '', ''],
-  }
+export function createeighttrackmeasure(): EIGHT_MEASURE {
+  return [-1, -1, -1, -1, -1, -1, -1, -1]
 }
 
 export const BIN_EIGHT_TRACK = bin.object({
-  id: bin.string,
-  sequences: bin.dynamicArrayOf(
-    bin.object({
-      patterns: bin.dynamicArrayOf(
-        bin.object({
-          tracks: bin.dynamicArrayOf(bin.string),
-        }),
-      ),
-    }),
-  ),
+  tempo: bin.i32,
+  measures: bin.dynamicArrayOf(bin.arrayOf(bin.i32, 8)),
 })
 
-export function createeighttracksequence(): EIGHT_TRACK_SEQUENCE {
-  return {
-    // 4 patterns per sequence
-    patterns: [
-      createeighttrackpattern(),
-      createeighttrackpattern(),
-      createeighttrackpattern(),
-      createeighttrackpattern(),
-    ],
-  }
-}
-
 export function createeighttrack(): EIGHT_TRACK {
-  // sequencing is separate from patterns
-  // 0001001001
-  // patterns have the actual #code to run
-  // #play +cxcxc
-  // honestly the simplest approach here is being able to sequence lines of code
-  // remix it into 8 tracks
   return {
-    id: createsid(),
-    sequences: [],
+    tempo: 150,
+    measures: [],
   }
 }
 
 type BIN_EIGHT_TRACK = bin.Parsed<typeof BIN_EIGHT_TRACK>
 
 export function exporteighttrack(
-  eighttrack: MAYBE_EIGHT_TRACK,
+  eighttrack: MAYBE<EIGHT_TRACK>,
 ): MAYBE<BIN_EIGHT_TRACK> {
   if (!ispresent(eighttrack)) {
     return
@@ -78,9 +47,35 @@ export function exporteighttrack(
 
 export function importeighttrack(
   eighttrack: MAYBE<BIN_EIGHT_TRACK>,
-): MAYBE_EIGHT_TRACK {
+): MAYBE<EIGHT_TRACK> {
   if (!ispresent(eighttrack)) {
     return
   }
-  return eighttrack
+  return eighttrack as EIGHT_TRACK
 }
+
+/*
+
+I think the trick will be handling the ambiguity of inserting new lines ??
+  will need to do a re-map operation.
+
+also boards will need to track active eight track state ..
+
+so the idea is we have 8 tracks, to play lines of code on
+
+the granularity is a single measure
+
+so we need line numbers for each measure
+[0, 1, -1, -1, -1, -1, -1, -1]
+[0, 1, -1, -1, -1, -1, -1, -1]
+[0, 1, -1, -1, -1, -1, -1, -1]
+[0, 1, -1, -1, -1, -1, -1, -1]
+
+and the tempo of the eight track
+
+#play [name of eight track], will play the given 8track on the current board
+
+Essentially we get 8 note polyphony
+8 different chances to #play
+
+*/
