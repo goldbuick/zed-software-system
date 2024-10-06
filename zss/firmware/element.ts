@@ -89,38 +89,33 @@ function readinput(target: BOARD_ELEMENT) {
 
   const [head = INPUT.NONE] = memory.inputqueue
 
-  // ensure we have stats
-  if (target.stats === undefined) {
-    target.stats = {}
-  }
-
   // clear input stats
-  target.stats.inputmove = []
-  target.stats.inputok = 0
-  target.stats.inputcancel = 0
-  target.stats.inputmenu = 0
+  target.inputmove = []
+  target.inputok = 0
+  target.inputcancel = 0
+  target.inputmenu = 0
 
   // set active input stat
   const mods = memory.inputmods[head]
-  target.stats.inputalt = mods & INPUT_ALT ? 1 : 0
-  target.stats.inputctrl = mods & INPUT_CTRL ? 1 : 0
-  target.stats.inputshift = mods & INPUT_SHIFT ? 1 : 0
+  target.inputalt = mods & INPUT_ALT ? 1 : 0
+  target.inputctrl = mods & INPUT_CTRL ? 1 : 0
+  target.inputshift = mods & INPUT_SHIFT ? 1 : 0
 
   switch (head) {
     case INPUT.MOVE_UP:
     case INPUT.MOVE_DOWN:
     case INPUT.MOVE_LEFT:
     case INPUT.MOVE_RIGHT:
-      target.stats.inputmove = [readinputmap[head - INPUT.MOVE_UP]]
+      target.inputmove = [readinputmap[head - INPUT.MOVE_UP]]
       break
     case INPUT.OK_BUTTON:
-      target.stats.inputok = 1
+      target.inputok = 1
       break
     case INPUT.CANCEL_BUTTON:
-      target.stats.inputcancel = 1
+      target.inputcancel = 1
       break
     case INPUT.MENU_BUTTON:
-      target.stats.inputmenu = 1
+      target.inputmenu = 1
       break
   }
 
@@ -206,7 +201,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       }
 
       // read stat
-      const value = memory.object.stats?.[name]
+      const value = memory.object[name]
       const defined = ispresent(value)
 
       // return result
@@ -229,11 +224,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // we have to check the object's stats first
     if (ispresent(memory.object)) {
-      if (ispresent(memory.object?.stats?.[name]) || STAT_NAMES.has(name)) {
-        if (!memory.object.stats) {
-          memory.object.stats = {}
-        }
-        memory.object.stats[name] = value
+      if (ispresent(memory.object[name]) || STAT_NAMES.has(name)) {
+        memory.object[name] = value
         return [true, value]
       }
     }
@@ -253,15 +245,15 @@ export const ELEMENT_FIRMWARE = createfirmware({
       !activecycle ||
       !ispresent(memory.object?.x) ||
       !ispresent(memory.object?.y) ||
-      !ispresent(memory.object?.stats?.stepx) ||
-      !ispresent(memory.object?.stats?.stepy)
+      !ispresent(memory.object?.stepx) ||
+      !ispresent(memory.object?.stepy)
     ) {
       return
     }
     if (
       !moveobject(chip, memory.book, memory.board, memory.object, {
-        x: memory.object.x + memory.object.stats.stepx,
-        y: memory.object.y + memory.object.stats.stepy,
+        x: memory.object.x + memory.object.stepx,
+        y: memory.object.y + memory.object.stepy,
       })
     ) {
       boardelementwritestats(memory.object, {

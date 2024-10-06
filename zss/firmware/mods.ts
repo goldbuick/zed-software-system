@@ -28,6 +28,13 @@ import {
   createcodepage,
 } from 'zss/memory/codepage'
 import { EIGHT_TRACK } from 'zss/memory/eighttrack'
+import {
+  SCHEMA_TYPE,
+  BITMAP_SCHEMA,
+  BOARD_ELEMENT_SCHEMA,
+  BOARD_SCHEMA,
+  EIGHT_TRACK_SCHEMA,
+} from 'zss/memory/schema'
 
 import { ensureopenbook, ensureopenbookbyname } from './cli'
 import { ARG_TYPE, readargs } from './wordtypes'
@@ -48,30 +55,37 @@ type MOD_STATE = {
   | {
       type: CODE_PAGE_TYPE.ERROR
       value: undefined
+      schema: undefined
     }
   | {
       type: CODE_PAGE_TYPE.BOARD
       value: BOARD
+      schema: typeof BOARD_SCHEMA
     }
   | {
       type: CODE_PAGE_TYPE.OBJECT
       value: BOARD_ELEMENT
+      schema: typeof BOARD_ELEMENT_SCHEMA
     }
   | {
       type: CODE_PAGE_TYPE.TERRAIN
       value: BOARD_ELEMENT
+      schema: typeof BOARD_ELEMENT_SCHEMA
     }
   | {
       type: CODE_PAGE_TYPE.CHARSET
       value: BITMAP
+      schema: typeof BITMAP_SCHEMA
     }
   | {
       type: CODE_PAGE_TYPE.PALETTE
       value: BITMAP
+      schema: typeof BITMAP_SCHEMA
     }
   | {
       type: CODE_PAGE_TYPE.EIGHT_TRACK
       value: EIGHT_TRACK
+      schema: typeof EIGHT_TRACK_SCHEMA
     }
 )
 
@@ -86,46 +100,48 @@ function readmodstate(id: string): MOD_STATE {
     type: CODE_PAGE_TYPE.ERROR,
     target: '',
     value: undefined,
+    schema: undefined,
   }
   mods.set(id, mod)
   return mod
 }
 
 function applymod(modstate: MOD_STATE, codepage: CODE_PAGE, address: string) {
+  modstate.target = codepage.id
   switch (codepagereadtype(codepage)) {
     case CODE_PAGE_TYPE.ERROR:
     case CODE_PAGE_TYPE.LOADER:
       // no-ops
       break
     case CODE_PAGE_TYPE.BOARD:
-      modstate.type = CODE_PAGE_TYPE.ERROR
-      modstate.target = codepage.id
+      modstate.type = CODE_PAGE_TYPE.BOARD
       modstate.value = codepage.board
+      modstate.schema = BOARD_SCHEMA
       break
     case CODE_PAGE_TYPE.OBJECT:
       modstate.type = CODE_PAGE_TYPE.OBJECT
-      modstate.target = codepage.id
       modstate.value = codepage.object
+      modstate.schema = BOARD_ELEMENT_SCHEMA
       break
     case CODE_PAGE_TYPE.TERRAIN:
       modstate.type = CODE_PAGE_TYPE.TERRAIN
-      modstate.target = codepage.id
       modstate.value = codepage.terrain
+      modstate.schema = BOARD_ELEMENT_SCHEMA
       break
     case CODE_PAGE_TYPE.CHARSET:
       modstate.type = CODE_PAGE_TYPE.CHARSET
-      modstate.target = codepage.id
       modstate.value = codepage.charset
+      modstate.schema = BITMAP_SCHEMA
       break
     case CODE_PAGE_TYPE.PALETTE:
       modstate.type = CODE_PAGE_TYPE.PALETTE
-      modstate.target = codepage.id
       modstate.value = codepage.palette
+      modstate.schema = BITMAP_SCHEMA
       break
     case CODE_PAGE_TYPE.EIGHT_TRACK:
       modstate.type = CODE_PAGE_TYPE.EIGHT_TRACK
-      modstate.target = codepage.id
       modstate.value = codepage.eighttrack
+      modstate.schema = EIGHT_TRACK_SCHEMA
       break
   }
   // message
@@ -259,30 +275,31 @@ export const MODS_FIRMWARE = createfirmware({
 
     if (!ispresent(maybestat)) {
       // print all stat names
-      const names = Object.keys(modstate.value ?? {}).filter((item) => {
-        switch (item) {
-          case 'code':
-            return false
-        }
-        return true
-      })
-      write(`available stats [${names.join(', ')}]`)
+      if (modstate.schema?.type === SCHEMA_TYPE.OBJECT) {
+        const names = Object.keys(modstate.schema?.props ?? {})
+        write(`available stats [${names.join(', ')}]`)
+      }
       return 0
     }
 
     if (!ispresent(maybeflag)) {
-      // print stat
-      const stat = maybestat.toLowerCase()
-      // @ts-expect-error being generic
-      const value: any = modstate.value[stat]
-      if (isstring(value) || isnumber(value) || isboolean(value)) {
-        write(`stat ${stat} is ${value}`)
-      }
-      if (isarray(value)) {
-        write(`stat ${stat} is an array`)
-      }
-      if (value === undefined) {
-        write(`stat ${stat} is not set`)
+      if (modstate.schema?.type === SCHEMA_TYPE.OBJECT) {
+        const names = Object.keys(modstate.schema?.props ?? {})
+        const stat = maybestat.toLowerCase()
+        if (names.includes(stat)) {
+          // print stat
+          // @ts-expect-error being generic
+          const value: any = modstate.value[stat]
+          if (isstring(value) || isnumber(value) || isboolean(value)) {
+            write(`stat ${stat} is ${value}`)
+          }
+          if (isarray(value)) {
+            write(`stat ${stat} is an array`)
+          }
+          if (value === undefined) {
+            write(`stat ${stat} is not set`)
+          }
+        }
       }
       return 0
     }

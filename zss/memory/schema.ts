@@ -1,10 +1,11 @@
-enum SCHEMA_TYPE {
+export enum SCHEMA_TYPE {
   ANY,
   SKIP,
   STRING,
   NUMBER,
   ARRAY,
   OBJECT,
+  READ_ONLY,
 }
 
 type SCHEMA_ITEM =
@@ -29,18 +30,22 @@ type SCHEMA_ITEM =
       element?: SCHEMA_ITEM
       props?: Record<string, SCHEMA_ITEM>
     }
+  | {
+      type: SCHEMA_TYPE.READ_ONLY
+    }
 
 const ANY_SCHEMA: SCHEMA_ITEM = { type: SCHEMA_TYPE.ANY }
 const SKIP_SCHEMA: SCHEMA_ITEM = { type: SCHEMA_TYPE.SKIP }
 const STRING_SCHEMA: SCHEMA_ITEM = { type: SCHEMA_TYPE.STRING }
 const NUMBER_SCHEMA: SCHEMA_ITEM = { type: SCHEMA_TYPE.NUMBER }
+const READ_ONLY_SCHEMA: SCHEMA_ITEM = { type: SCHEMA_TYPE.READ_ONLY }
 
 export const BOARD_ELEMENT_SCHEMA: SCHEMA_ITEM = {
   type: SCHEMA_TYPE.OBJECT,
   element: ANY_SCHEMA,
   props: {
-    kind: SKIP_SCHEMA,
-    name: SKIP_SCHEMA,
+    kind: READ_ONLY_SCHEMA,
+    name: READ_ONLY_SCHEMA,
     code: SKIP_SCHEMA,
     sender: SKIP_SCHEMA,
     data: SKIP_SCHEMA,
@@ -68,7 +73,7 @@ export const BOARD_ELEMENT_SCHEMA: SCHEMA_ITEM = {
 export const BOARD_SCHEMA: SCHEMA_ITEM = {
   type: SCHEMA_TYPE.OBJECT,
   props: {
-    id: STRING_SCHEMA,
+    id: SKIP_SCHEMA,
     terrain: {
       type: SCHEMA_TYPE.ARRAY,
       element: BOARD_ELEMENT_SCHEMA,
@@ -98,14 +103,19 @@ export const BOARD_SCHEMA: SCHEMA_ITEM = {
 export const BITMAP_SCHEMA: SCHEMA_ITEM = {
   type: SCHEMA_TYPE.OBJECT,
   props: {
-    width: SKIP_SCHEMA,
-    height: SKIP_SCHEMA,
+    width: READ_ONLY_SCHEMA,
+    height: READ_ONLY_SCHEMA,
     size: SKIP_SCHEMA,
     //
-    id: STRING_SCHEMA,
+    id: SKIP_SCHEMA,
     bits: {
       type: SCHEMA_TYPE.ARRAY,
       element: NUMBER_SCHEMA,
     },
   },
+}
+
+export const EIGHT_TRACK_SCHEMA: SCHEMA_ITEM = {
+  type: SCHEMA_TYPE.OBJECT,
+  props: {},
 }

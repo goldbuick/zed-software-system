@@ -16,7 +16,7 @@ import {
   boardobjectread,
   boardterrainsetfromkind,
 } from './board'
-import { CATEGORY, COLLISION, MAYBE_BOARD_ELEMENT } from './boardelement'
+import { BOARD_ELEMENT, CATEGORY, COLLISION, MAYBE_BOARD_ELEMENT } from './boardelement'
 import {
   BIN_CODEPAGE,
   CODE_PAGE,
@@ -244,12 +244,13 @@ export function bookreadobject(
   if (ispresent(page)) {
     const stats = codepagereadstatdefaults(page)
     const data = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(page)
-    return {
+    const element = {
       ...data,
       ...stats,
       name: object,
       code: page.code,
     }
+    return element as BOARD_ELEMENT
   } else {
     return undefined
   }
@@ -269,7 +270,7 @@ export function bookreadterrain(
       ...stats,
       name: terrain,
       code: page.code,
-    }
+    } as BOARD_ELEMENT
   } else {
     return undefined
   }
@@ -376,7 +377,7 @@ export function bookboardmoveobject(
     const terraincollision = mayberterrain.collision ?? terrainkind?.collision
     if (checkcollision(targetcollision, terraincollision)) {
       // for sending interaction messages
-      return { ...mayberterrain, x: dest.x, y: dest.y }
+      return { ...mayberterrain, x: dest.x, y: dest.y } as BOARD_ELEMENT
     }
   }
 

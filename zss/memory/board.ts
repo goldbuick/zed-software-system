@@ -39,6 +39,7 @@ import {
   MAYBE_WORD,
   WORD,
 } from './word'
+import { memoryreadchip } from '.'
 
 // simple built-ins go here
 export type BOARD_STATS = {
@@ -354,10 +355,10 @@ export function boardobjectcreate(
   }
 
   // add to board
-  board.objects[object.id] = object
+  board.objects[object.id] = object as BOARD_ELEMENT
 
   // return object
-  return object
+  return object as BOARD_ELEMENT
 }
 
 export function boardterrainsetfromkind(
@@ -516,8 +517,9 @@ export function boardfindplayer(
   }
 
   // check aggro
-  const aggro = target.stats?.player ?? ''
-  const player = board.objects[aggro]
+  const memory = memoryreadchip(target.id ?? '')
+  const pid = memory.player ?? ''
+  const player = board.objects[pid]
   if (ispresent(player)) {
     return player
   }
