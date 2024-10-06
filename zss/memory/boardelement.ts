@@ -1,8 +1,8 @@
-import * as bin from 'typed-binary'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import { BIN_WORD, BIN_WORD_ENTRY, WORD, exportword, importword } from './word'
+import { BIN_BOARD_ELEMENT, BIN_WORD_ENTRY } from './binary'
+import { WORD, exportword, importword } from './word'
 
 export enum COLLISION {
   ISSOLID,

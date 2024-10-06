@@ -1,4 +1,4 @@
-import { CHIP, CONFIG, DEFAULT_HALT_AT_COUNT } from 'zss/chip'
+import { CHIP, CONFIG } from 'zss/chip'
 import { api_error, tape_debug, tape_info } from 'zss/device/api'
 import { DRIVER_TYPE } from 'zss/firmware/boot'
 import { createreadcontext } from 'zss/firmware/wordtypes'
@@ -225,8 +225,8 @@ export function memoryplayerlogin(player: string): boolean {
   const pt = { x: 0, y: 0 }
   const kindname = playerkind.name ?? MEMORY_LABEL.PLAYER
   const obj = boardobjectcreatefromkind(titleboard, pt, kindname, player)
-  if (ispresent(obj?.id) && ispresent(titleboard.id)) {
-    bookplayersetboard(mainbook, player, titleboard.id)
+  if (ispresent(obj?.id)) {
+    bookplayersetboard(mainbook, player, titleboard.codepage)
     return true
   }
 
@@ -245,14 +245,13 @@ export function memoryplayerscan(players: Record<string, number>) {
   const boards = bookplayerreadboards(mainbook)
   for (let i = 0; i < boards.length; ++i) {
     const board = boards[i]
-    const boardid = board.id ?? ''
     const objects = Object.keys(board.objects)
     for (let o = 0; o < objects.length; ++o) {
       const object = board.objects[objects[o]]
       const objectid = object.id
       if (ispid(objectid) && ispresent(players[objectid]) === false) {
         players[objectid] = 0
-        bookplayersetboard(mainbook, objectid, boardid)
+        bookplayersetboard(mainbook, objectid, board.codepage)
       }
     }
   }

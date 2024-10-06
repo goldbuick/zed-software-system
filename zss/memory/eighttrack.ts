@@ -1,5 +1,6 @@
-import * as bin from 'typed-binary'
 import { ispresent, MAYBE } from 'zss/mapping/types'
+
+import { BIN_EIGHT_TRACK } from './binary'
 
 export type EIGHT_MEASURE = [
   number,

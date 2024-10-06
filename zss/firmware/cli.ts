@@ -11,7 +11,7 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
-import { ispresent, isstring, MAYBE_STRING } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryclearbook,
   memoryreadbookbyaddress,

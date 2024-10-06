@@ -1,4 +1,3 @@
-import * as bin from 'typed-binary'
 import { PT, STR_KIND } from 'zss/firmware/wordtypes'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
@@ -6,6 +5,7 @@ import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
 
 import { checkcollision } from './atomics'
+import { BIN_BOOK } from './binary'
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,

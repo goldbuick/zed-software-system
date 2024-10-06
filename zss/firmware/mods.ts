@@ -278,7 +278,7 @@ export const MODS_FIRMWARE = createfirmware({
       if (modstate.schema?.type === SCHEMA_TYPE.OBJECT) {
         // const names = Object.keys(modstate.schema?.props ?? {})
         // const writestats = modstate.schema.props
-        const names = []
+        const names: string[] = []
         write(`write stats [${names.join(', ')}]`)
         write(`read only stats [${names.join(', ')}]`)
       }

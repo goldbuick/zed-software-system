@@ -27,6 +27,7 @@ import { BIN_BOARD, BIN_BOARD_STATS, BIN_WORD_ENTRY } from './binary'
 import {
   BOARD_ELEMENT,
   MAYBE_BOARD_ELEMENT,
+  createboardelement,
   exportboardelement,
   importboardelement,
 } from './boardelement'
@@ -71,6 +72,7 @@ export type BOARD = {
   // custom
   stats?: BOARD_STATS
   // runtime only
+  codepage: string
   lookup?: MAYBE_STRING[]
   named?: Record<string, Set<string | number>>
 }
@@ -79,7 +81,9 @@ export type MAYBE_BOARD = MAYBE<BOARD>
 
 export const BOARD_WIDTH = 60
 export const BOARD_HEIGHT = 25
-const BOARD_TERRAIN: undefined[] = new Array(BOARD_WIDTH * BOARD_HEIGHT)
+const BOARD_TERRAIN: BOARD_ELEMENT[] = new Array(
+  BOARD_WIDTH * BOARD_HEIGHT,
+).map(() => createboardelement())
 
 export type MAYBE_BOARD_STATS = MAYBE<BOARD_STATS>
 
@@ -92,6 +96,7 @@ export function createboard(fn = noop<BOARD>) {
     // specifics
     terrain: BOARD_TERRAIN.slice(0),
     objects: {},
+    codepage: '',
   }
   return fn(board)
 }
@@ -155,7 +160,6 @@ export function importboardstats(
     maxplayershots: importword(boardstats.maxplayershots) as any,
   }
   boardstats.custom?.forEach((entry) => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     stats[entry.name] = entry.value as any
   })
   return stats
@@ -186,10 +190,15 @@ export function importboard(board: MAYBE<BIN_BOARD>): MAYBE_BOARD {
     // specifics
     terrain: board.terrain.map(importboardelement).filter(ispresent),
     objects: Object.fromEntries<BOARD_ELEMENT>(
-      board.objects.map((object) => [object.id, importboardelement(object)]),
+      board.objects
+        .map(importboardelement)
+        .filter((object) => ispresent(object))
+        .map((value) => [value.id ?? '', value]),
     ),
     // custom
     stats: importboardstats(board.stats),
+    // runtime
+    codepage: '',
   }
 }
 

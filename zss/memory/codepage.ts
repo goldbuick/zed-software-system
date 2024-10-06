@@ -339,6 +339,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       if (!ispresent(codepage.board)) {
         codepage.board = createboard()
       }
+      codepage.board.codepage = codepage.id
       return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {
