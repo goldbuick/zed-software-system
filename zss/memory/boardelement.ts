@@ -66,40 +66,6 @@ export function createboardelement() {
   return boardelement
 }
 
-export const BIN_BOARD_ELEMENT = bin.object({
-  // this element is an instance of an element type
-  kind: bin.optional(bin.string),
-  // objects only
-  id: bin.optional(bin.string),
-  x: bin.optional(bin.byte),
-  y: bin.optional(bin.byte),
-  lx: bin.optional(bin.byte),
-  ly: bin.optional(bin.byte),
-  code: bin.optional(bin.string),
-  // this is a unique name for this instance
-  name: bin.optional(bin.string),
-  // display
-  char: bin.optional(bin.byte),
-  color: bin.optional(bin.byte),
-  bg: bin.optional(bin.byte),
-  // interaction
-  pushable: bin.optional(bin.bool),
-  collision: bin.optional(bin.byte),
-  destructible: bin.optional(bin.bool),
-  // common
-  p1: bin.optional(BIN_WORD),
-  p2: bin.optional(BIN_WORD),
-  p3: bin.optional(BIN_WORD),
-  cycle: bin.optional(BIN_WORD),
-  stepx: bin.optional(BIN_WORD),
-  stepy: bin.optional(BIN_WORD),
-  player: bin.optional(BIN_WORD),
-  sender: bin.optional(BIN_WORD),
-  data: bin.optional(BIN_WORD),
-  custom: bin.optional(bin.dynamicArrayOf(BIN_WORD_ENTRY)),
-})
-type BIN_BOARD_ELEMENT = bin.Parsed<typeof BIN_BOARD_ELEMENT>
-
 // safe to serialize copy of boardelement
 export function exportboardelement(
   boardelement: MAYBE_BOARD_ELEMENT,

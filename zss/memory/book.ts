@@ -16,9 +16,13 @@ import {
   boardobjectread,
   boardterrainsetfromkind,
 } from './board'
-import { BOARD_ELEMENT, CATEGORY, COLLISION, MAYBE_BOARD_ELEMENT } from './boardelement'
 import {
-  BIN_CODEPAGE,
+  BOARD_ELEMENT,
+  CATEGORY,
+  COLLISION,
+  MAYBE_BOARD_ELEMENT,
+} from './boardelement'
+import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
   MAYBE_CODE_PAGE,
@@ -29,7 +33,7 @@ import {
   exportcodepage,
   importcodepage,
 } from './codepage'
-import { BIN_WORD_ENTRY, exportwordentry, WORD } from './word'
+import { exportwordentry, WORD } from './word'
 
 // player state
 export type BOOK_FLAGS = Record<string, WORD>
@@ -56,25 +60,6 @@ export function createbook(pages: CODE_PAGE[]): BOOK {
     players: {},
   }
 }
-
-export const BIN_BOOK = bin.object({
-  id: bin.string,
-  name: bin.string,
-  flags: bin.dynamicArrayOf(
-    bin.object({
-      player: bin.string,
-      values: bin.dynamicArrayOf(BIN_WORD_ENTRY),
-    }),
-  ),
-  players: bin.dynamicArrayOf(
-    bin.object({
-      player: bin.string,
-      board: bin.string,
-    }),
-  ),
-  pages: bin.dynamicArrayOf(BIN_CODEPAGE),
-})
-type BIN_BOOK = bin.Parsed<typeof BIN_BOOK>
 
 // safe to serialize copy of book
 export function exportbook(book: MAYBE_BOOK): MAYBE<BIN_BOOK> {

@@ -1,35 +1,18 @@
 import { IToken } from 'chevrotain'
-import * as bin from 'typed-binary'
-import {
-  BIN_BITMAP,
-  BITMAP,
-  exportbitmap,
-  importbitmap,
-} from 'zss/gadget/data/bitmap'
+import { BITMAP } from 'zss/gadget/data/bitmap'
 import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
+import { BIN_CODEPAGE, exportbitmap, importbitmap } from './binary'
+import { BOARD, createboard, exportboard, importboard } from './board'
 import {
-  BIN_BOARD,
-  BOARD,
-  createboard,
-  exportboard,
-  importboard,
-} from './board'
-import {
-  BIN_BOARD_ELEMENT,
   BOARD_ELEMENT,
   createboardelement,
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import {
-  BIN_EIGHT_TRACK,
-  EIGHT_TRACK,
-  exporteighttrack,
-  importeighttrack,
-} from './eighttrack'
+import { EIGHT_TRACK, exporteighttrack, importeighttrack } from './eighttrack'
 import { WORD } from './word'
 
 export enum CODE_PAGE_TYPE {
@@ -97,20 +80,6 @@ export function createcodepage(
     ...content,
   }
 }
-
-export const BIN_CODEPAGE = bin.object({
-  // all pages have id, and code
-  id: bin.string,
-  code: bin.string,
-  // content data
-  board: bin.optional(BIN_BOARD),
-  object: bin.optional(BIN_BOARD_ELEMENT),
-  terrain: bin.optional(BIN_BOARD_ELEMENT),
-  charset: bin.optional(BIN_BITMAP),
-  palette: bin.optional(BIN_BITMAP),
-  eighttrack: bin.optional(BIN_EIGHT_TRACK),
-})
-type BIN_CODEPAGE = bin.Parsed<typeof BIN_CODEPAGE>
 
 // safe to serialize copy of codepage
 export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE<BIN_CODEPAGE> {
@@ -370,7 +339,6 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       if (!ispresent(codepage.board)) {
         codepage.board = createboard()
       }
-      codepage.board.id = codepage.id
       return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {

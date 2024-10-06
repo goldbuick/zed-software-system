@@ -1,4 +1,3 @@
-import * as bin from 'typed-binary'
 import {
   MAYBE,
   isarray,
@@ -7,27 +6,11 @@ import {
   isstring,
 } from 'zss/mapping/types'
 
+import { BIN_WORD, BIN_WORD_ENTRY } from './binary'
+
 export type WORD = string | number | undefined | WORD[]
 export type MAYBE_WORD = MAYBE<WORD>
 export type WORD_RESULT = 0 | 1
-
-export const BIN_WORD = bin.keyed('bin-word', (binword) =>
-  bin.generic(
-    {},
-    {
-      wordnumber: bin.object({
-        value: bin.i32,
-      }),
-      wordstring: bin.object({
-        value: bin.string,
-      }),
-      wordarray: bin.object({
-        value: bin.dynamicArrayOf(binword),
-      }),
-    },
-  ),
-)
-type BIN_WORD = bin.Parsed<typeof BIN_WORD>
 
 // safe to serialize copy of boardelement
 export function exportword(word: MAYBE_WORD): MAYBE<BIN_WORD> {
@@ -67,24 +50,6 @@ export function importword(word: MAYBE<BIN_WORD>): MAYBE_WORD {
       return word.value.map(importword).filter(ispresent)
   }
 }
-
-export const BIN_WORD_ENTRY = bin.generic(
-  {
-    name: bin.string,
-  },
-  {
-    wordnumber: bin.object({
-      value: bin.i32,
-    }),
-    wordstring: bin.object({
-      value: bin.string,
-    }),
-    wordarray: bin.object({
-      value: bin.dynamicArrayOf(BIN_WORD),
-    }),
-  },
-)
-export type BIN_WORD_ENTRY = bin.Parsed<typeof BIN_WORD_ENTRY>
 
 // safe to serialize copy of boardelement
 export function exportwordentry(

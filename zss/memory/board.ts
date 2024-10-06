@@ -1,4 +1,3 @@
-import * as bin from 'typed-binary'
 import {
   PT,
   DIR,
@@ -24,21 +23,15 @@ import {
 } from 'zss/mapping/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
+import { BIN_BOARD, BIN_BOARD_STATS, BIN_WORD_ENTRY } from './binary'
 import {
-  BIN_BOARD_ELEMENT,
   BOARD_ELEMENT,
   MAYBE_BOARD_ELEMENT,
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import {
-  BIN_WORD,
-  BIN_WORD_ENTRY,
-  exportword,
-  importword,
-  MAYBE_WORD,
-  WORD,
-} from './word'
+import { exportword, importword, MAYBE_WORD, WORD } from './word'
+
 import { memoryreadchip } from '.'
 
 // simple built-ins go here
@@ -94,20 +87,6 @@ export function createboardstats() {
   return {}
 }
 
-const BIN_BOARD_STATS = bin.object({
-  isdark: bin.optional(BIN_WORD),
-  over: bin.optional(BIN_WORD),
-  under: bin.optional(BIN_WORD),
-  exitnorth: bin.optional(BIN_WORD),
-  exitsouth: bin.optional(BIN_WORD),
-  exitwest: bin.optional(BIN_WORD),
-  exiteast: bin.optional(BIN_WORD),
-  timelimit: bin.optional(BIN_WORD),
-  maxplayershots: bin.optional(BIN_WORD),
-  custom: bin.optional(bin.dynamicArrayOf(BIN_WORD_ENTRY)),
-})
-type BIN_BOARD_STATS = bin.Parsed<typeof BIN_BOARD_STATS>
-
 export function createboard(fn = noop<BOARD>) {
   const board: BOARD = {
     // specifics
@@ -116,15 +95,6 @@ export function createboard(fn = noop<BOARD>) {
   }
   return fn(board)
 }
-
-export const BIN_BOARD = bin.object({
-  // specifics
-  terrain: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
-  objects: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
-  // custom
-  stats: bin.optional(BIN_BOARD_STATS),
-})
-type BIN_BOARD = bin.Parsed<typeof BIN_BOARD>
 
 // safe to serialize copy of board
 export function exportboardstats(
@@ -216,10 +186,7 @@ export function importboard(board: MAYBE<BIN_BOARD>): MAYBE_BOARD {
     // specifics
     terrain: board.terrain.map(importboardelement).filter(ispresent),
     objects: Object.fromEntries<BOARD_ELEMENT>(
-      board.objects.map((object) => [
-        object.id,
-        importboardelement(object),
-      ]) as any,
+      board.objects.map((object) => [object.id, importboardelement(object)]),
     ),
     // custom
     stats: importboardstats(board.stats),

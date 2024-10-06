@@ -276,8 +276,11 @@ export const MODS_FIRMWARE = createfirmware({
     if (!ispresent(maybestat)) {
       // print all stat names
       if (modstate.schema?.type === SCHEMA_TYPE.OBJECT) {
-        const names = Object.keys(modstate.schema?.props ?? {})
-        write(`available stats [${names.join(', ')}]`)
+        // const names = Object.keys(modstate.schema?.props ?? {})
+        // const writestats = modstate.schema.props
+        const names = []
+        write(`write stats [${names.join(', ')}]`)
+        write(`read only stats [${names.join(', ')}]`)
       }
       return 0
     }

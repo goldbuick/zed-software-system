@@ -21,19 +21,12 @@ export function createeighttrackmeasure(): EIGHT_MEASURE {
   return [-1, -1, -1, -1, -1, -1, -1, -1]
 }
 
-export const BIN_EIGHT_TRACK = bin.object({
-  tempo: bin.i32,
-  measures: bin.dynamicArrayOf(bin.arrayOf(bin.i32, 8)),
-})
-
 export function createeighttrack(): EIGHT_TRACK {
   return {
     tempo: 150,
     measures: [],
   }
 }
-
-type BIN_EIGHT_TRACK = bin.Parsed<typeof BIN_EIGHT_TRACK>
 
 export function exporteighttrack(
   eighttrack: MAYBE<EIGHT_TRACK>,
