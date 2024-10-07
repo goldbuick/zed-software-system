@@ -3,7 +3,8 @@ import { gzip, gunzip } from 'fflate'
 import * as bin from 'typed-binary'
 import { ispresent } from 'zss/mapping/types'
 
-import { BIN_BOOK, BOOK, exportbook, importbook } from './book'
+import { BIN_BOOK } from './binary'
+import { BOOK, exportbook, importbook } from './book'
 
 // data encoding for urls
 function base64urltobase64(base64UrlString: string) {

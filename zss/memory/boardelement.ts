@@ -1,5 +1,5 @@
 import { createsid } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { BIN_BOARD_ELEMENT, BIN_WORD_ENTRY } from './binary'
 import { WORD, exportword, importword } from './word'
@@ -57,8 +57,6 @@ export type BOARD_ELEMENT = {
   removed?: number
 }
 
-export type MAYBE_BOARD_ELEMENT = MAYBE<BOARD_ELEMENT>
-
 export function createboardelement() {
   const boardelement: BOARD_ELEMENT = {
     id: createsid(),
@@ -68,7 +66,7 @@ export function createboardelement() {
 
 // safe to serialize copy of boardelement
 export function exportboardelement(
-  boardelement: MAYBE_BOARD_ELEMENT,
+  boardelement: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<BIN_BOARD_ELEMENT> {
   if (!ispresent(boardelement)) {
     return
@@ -148,7 +146,7 @@ export function exportboardelement(
 // import json into boardelement
 export function importboardelement(
   boardelement: MAYBE<BIN_BOARD_ELEMENT>,
-): MAYBE_BOARD_ELEMENT {
+): MAYBE<BOARD_ELEMENT> {
   if (!ispresent(boardelement)) {
     return
   }
@@ -193,7 +191,7 @@ export function importboardelement(
 }
 
 export function boardelementreadstat(
-  boardelement: MAYBE_BOARD_ELEMENT,
+  boardelement: MAYBE<BOARD_ELEMENT>,
   key: string,
   defaultvalue: WORD,
 ): WORD {
@@ -205,7 +203,7 @@ export function boardelementreadstat(
 }
 
 export function boardelementwritestat(
-  boardelement: MAYBE_BOARD_ELEMENT,
+  boardelement: MAYBE<BOARD_ELEMENT>,
   key: string,
   value: WORD,
 ) {
@@ -216,7 +214,7 @@ export function boardelementwritestat(
 }
 
 export function boardelementwritestats(
-  boardelement: MAYBE_BOARD_ELEMENT,
+  boardelement: MAYBE<BOARD_ELEMENT>,
   stats: Record<string, WORD>,
 ) {
   Object.entries(stats).forEach(([key, value]) =>

@@ -173,7 +173,6 @@ export type Structured_cmdCstNode = {
 
 export type Structured_cmdCstChildren = {
   command_if?: Command_ifCstNode[]
-  command_read?: Command_readCstNode[]
   command_while?: Command_whileCstNode[]
   command_repeat?: Command_repeatCstNode[]
   command_break?: Command_breakCstNode[]
@@ -291,19 +290,6 @@ export type Command_repeatCstNode = {
 export type Command_repeatCstChildren = {
   token_repeat: IToken[]
   words: WordsCstNode[]
-  command_loop?: Command_loopCstNode[]
-}
-
-export type Command_readCstNode = {
-  name: 'command_read'
-  children: Command_readCstChildren
-} & CstNode
-
-export type Command_readCstChildren = {
-  token_read: IToken[]
-  words: WordsCstNode[]
-  token_into: IToken[]
-  token_stringliteral: IToken[]
   command_loop?: Command_loopCstNode[]
 }
 
@@ -537,7 +523,6 @@ export type ICstNodeVisitor<IN, OUT> = {
   command_loop(children: Command_loopCstChildren, param?: IN): OUT
   command_while(children: Command_whileCstChildren, param?: IN): OUT
   command_repeat(children: Command_repeatCstChildren, param?: IN): OUT
-  command_read(children: Command_readCstChildren, param?: IN): OUT
   command_break(children: Command_breakCstChildren, param?: IN): OUT
   command_continue(children: Command_continueCstChildren, param?: IN): OUT
   command_play(children: Command_playCstChildren, param?: IN): OUT

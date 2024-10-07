@@ -8,7 +8,7 @@ import {
 } from 'zss/gadget/data/types'
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { memoryreadchip, memoryreadcontext } from 'zss/memory'
 import {
   checkcollision,
@@ -26,13 +26,11 @@ import {
 import {
   BOARD_ELEMENT,
   COLLISION,
-  MAYBE_BOARD_ELEMENT,
   boardelementwritestat,
   boardelementwritestats,
 } from 'zss/memory/boardelement'
 import {
   bookboardwrite,
-  MAYBE_BOOK,
   bookboardmoveobject,
   bookreadflag,
   booksetflag,
@@ -42,6 +40,7 @@ import {
   bookelementkindread,
   bookboardelementreadname,
   bookboardwriteheadlessobject,
+  BOOK,
 } from 'zss/memory/book'
 
 import {
@@ -146,9 +145,9 @@ function sendinteraction(
 }
 
 function bonkelement(
-  book: MAYBE_BOOK,
+  book: MAYBE<BOOK>,
   board: MAYBE_BOARD,
-  blocked: MAYBE_BOARD_ELEMENT,
+  blocked: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ) {
   if (ispresent(blocked?.id)) {
@@ -163,7 +162,7 @@ function bonkelement(
 
 function moveobject(
   chip: CHIP,
-  book: MAYBE_BOOK,
+  book: MAYBE<BOOK>,
   board: MAYBE_BOARD,
   target: BOARD_ELEMENT,
   dest: PT,

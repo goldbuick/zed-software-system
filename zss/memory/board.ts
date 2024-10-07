@@ -26,7 +26,6 @@ import { listnamedelements, picknearestpt } from './atomics'
 import { BIN_BOARD, BIN_BOARD_STATS, BIN_WORD_ENTRY } from './binary'
 import {
   BOARD_ELEMENT,
-  MAYBE_BOARD_ELEMENT,
   createboardelement,
   exportboardelement,
   importboardelement,
@@ -67,7 +66,7 @@ export type BOARD_STATS = {
 
 export type BOARD = {
   // specifics
-  terrain: MAYBE_BOARD_ELEMENT[]
+  terrain: MAYBE<BOARD_ELEMENT>[]
   objects: Record<string, BOARD_ELEMENT>
   // custom
   stats?: BOARD_STATS
@@ -193,7 +192,7 @@ export function importboard(board: MAYBE<BIN_BOARD>): MAYBE_BOARD {
       board.objects
         .map(importboardelement)
         .filter((object) => ispresent(object))
-        .map((value) => [value.id ?? '', value]),
+        .map((value) => [value?.id ?? '', value]),
     ),
     // custom
     stats: importboardstats(board.stats),
@@ -238,7 +237,7 @@ export function boardelementindex(board: MAYBE_BOARD, pt: PT): number {
 export function boardelementread(
   board: MAYBE_BOARD,
   pt: PT,
-): MAYBE_BOARD_ELEMENT {
+): MAYBE<BOARD_ELEMENT> {
   // clipping
   const index = boardelementindex(board, pt)
   if (index < 0 || !ispresent(board?.lookup)) {
@@ -255,20 +254,20 @@ export function boardelementread(
   return board.terrain[index]
 }
 
-export function boardelementname(element: MAYBE_BOARD_ELEMENT) {
+export function boardelementname(element: MAYBE<BOARD_ELEMENT>) {
   return (element?.name ?? element?.kinddata?.name ?? 'object').toLowerCase()
 }
 
-export function boardelementcolor(element: MAYBE_BOARD_ELEMENT) {
+export function boardelementcolor(element: MAYBE<BOARD_ELEMENT>) {
   return element?.color ?? element?.kinddata?.color ?? COLOR.BLACK
 }
 
-export function boardelementbg(element: MAYBE_BOARD_ELEMENT) {
+export function boardelementbg(element: MAYBE<BOARD_ELEMENT>) {
   return element?.bg ?? element?.kinddata?.bg ?? COLOR.BLACK
 }
 
 export function boardelementapplycolor(
-  element: MAYBE_BOARD_ELEMENT,
+  element: MAYBE<BOARD_ELEMENT>,
   strcolor: STR_COLOR | undefined,
 ) {
   if (!ispresent(element) || !isstrcolor(strcolor)) {
@@ -287,7 +286,7 @@ export function boardgetterrain(
   board: MAYBE_BOARD,
   x: number,
   y: number,
-): MAYBE_BOARD_ELEMENT {
+): MAYBE<BOARD_ELEMENT> {
   return (x >= 0 && x < BOARD_WIDTH) ?? (y >= 0 && y < BOARD_HEIGHT)
     ? board?.terrain[x + y * BOARD_WIDTH]
     : undefined
@@ -295,8 +294,8 @@ export function boardgetterrain(
 
 export function boardsetterrain(
   board: MAYBE_BOARD,
-  from: MAYBE_BOARD_ELEMENT,
-): MAYBE_BOARD_ELEMENT {
+  from: MAYBE<BOARD_ELEMENT>,
+): MAYBE<BOARD_ELEMENT> {
   if (
     !ispresent(board) ||
     !ispresent(from) ||
@@ -319,8 +318,8 @@ export function boardsetterrain(
 
 export function boardobjectcreate(
   board: MAYBE_BOARD,
-  from: MAYBE_BOARD_ELEMENT,
-): MAYBE_BOARD_ELEMENT {
+  from: MAYBE<BOARD_ELEMENT>,
+): MAYBE<BOARD_ELEMENT> {
   if (!ispresent(board) || !ispresent(from)) {
     return undefined
   }
@@ -341,7 +340,7 @@ export function boardterrainsetfromkind(
   board: MAYBE_BOARD,
   pt: PT,
   kind: string,
-): MAYBE_BOARD_ELEMENT {
+): MAYBE<BOARD_ELEMENT> {
   return boardsetterrain(board, { ...pt, kind })
 }
 
@@ -350,14 +349,14 @@ export function boardobjectcreatefromkind(
   pt: PT,
   kind: string,
   id?: string,
-): MAYBE_BOARD_ELEMENT {
+): MAYBE<BOARD_ELEMENT> {
   return boardobjectcreate(board, { ...pt, id: id ?? undefined, kind })
 }
 
 export function boardobjectread(
   board: MAYBE_BOARD,
   id: string,
-): MAYBE_BOARD_ELEMENT {
+): MAYBE<BOARD_ELEMENT> {
   if (!board) {
     return undefined
   }
@@ -366,7 +365,7 @@ export function boardobjectread(
 
 export function boardevaldir(
   board: MAYBE_BOARD,
-  target: MAYBE_BOARD_ELEMENT,
+  target: MAYBE<BOARD_ELEMENT>,
   dir: STR_DIR,
 ): PT {
   if (!ispresent(board) || !ispresent(target)) {
@@ -486,8 +485,8 @@ export function boarddeleteobject(board: MAYBE_BOARD, id: string) {
 
 export function boardfindplayer(
   board: MAYBE_BOARD,
-  target: MAYBE_BOARD_ELEMENT,
-): MAYBE_BOARD_ELEMENT {
+  target: MAYBE<BOARD_ELEMENT>,
+): MAYBE<BOARD_ELEMENT> {
   if (!ispresent(board) || !ispresent(target)) {
     return undefined
   }

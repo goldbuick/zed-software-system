@@ -16,7 +16,7 @@ import {
   boardelementcolor,
   boardelementname,
 } from './board'
-import { BOARD_ELEMENT, COLLISION, MAYBE_BOARD_ELEMENT } from './boardelement'
+import { BOARD_ELEMENT, COLLISION } from './boardelement'
 
 // what is atomics? a set of spatial and data related queries
 // naming convention
@@ -58,7 +58,7 @@ export function listnamedelements(
 }
 
 export function listelementsbykind(
-  elements: MAYBE_BOARD_ELEMENT[],
+  elements: MAYBE<BOARD_ELEMENT>[],
   kind: STR_KIND,
 ): BOARD_ELEMENT[] {
   const name = readstrkindname(kind)
@@ -125,9 +125,9 @@ export function listelementsbyattr(
     .filter(ispresent)
 }
 
-export function picknearestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
+export function picknearestpt(pt: PT, items: MAYBE<BOARD_ELEMENT>[]) {
   let ndist = 0
-  let nearest: MAYBE_BOARD_ELEMENT
+  let nearest: MAYBE<BOARD_ELEMENT>
 
   for (let i = 0; i < items.length; ++i) {
     const item = items[i]
@@ -145,9 +145,9 @@ export function picknearestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
   return nearest
 }
 
-export function pickfarthestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
+export function pickfarthestpt(pt: PT, items: MAYBE<BOARD_ELEMENT>[]) {
   let ndist = 0
-  let nearest: MAYBE_BOARD_ELEMENT
+  let nearest: MAYBE<BOARD_ELEMENT>
 
   for (let i = 0; i < items.length; ++i) {
     const item = items[i]

@@ -10,11 +10,7 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { MAYBE_BOARD, boardevaldir } from 'zss/memory/board'
-import {
-  CATEGORY,
-  COLLISION,
-  MAYBE_BOARD_ELEMENT,
-} from 'zss/memory/boardelement'
+import { BOARD_ELEMENT, CATEGORY, COLLISION } from 'zss/memory/boardelement'
 import { MAYBE_WORD, WORD } from 'zss/memory/word'
 
 type READ_CONTEXT_GET = (name: string) => any
@@ -22,7 +18,7 @@ type READ_CONTEXT_GET = (name: string) => any
 type READ_CONTEXT = {
   // targets
   board: MAYBE_BOARD
-  object: MAYBE_BOARD_ELEMENT
+  object: MAYBE<BOARD_ELEMENT>
   // context
   words: WORD[]
   get: READ_CONTEXT_GET

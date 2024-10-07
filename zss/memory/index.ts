@@ -30,10 +30,9 @@ import {
   BOARD,
   boardreadstat,
 } from './board'
-import { MAYBE_BOARD_ELEMENT, boardelementreadstat } from './boardelement'
+import { BOARD_ELEMENT, boardelementreadstat } from './boardelement'
 import {
   BOOK,
-  MAYBE_BOOK,
   bookboardtick,
   bookelementkindread,
   bookplayerreadboard,
@@ -62,11 +61,11 @@ type BINARY_READER = {
 
 type CHIP_TARGETS = {
   // memory
-  book: MAYBE_BOOK
+  book: MAYBE<BOOK>
   // codepages
   board: MAYBE_BOARD
-  object: MAYBE_BOARD_ELEMENT
-  terrain: MAYBE_BOARD_ELEMENT
+  object: MAYBE<BOARD_ELEMENT>
+  terrain: MAYBE<BOARD_ELEMENT>
   charset: MAYBE<BITMAP>
   palette: MAYBE<BITMAP>
   eighttrack: MAYBE<EIGHT_TRACK>
@@ -110,7 +109,7 @@ export function memoryreadbooklist(): BOOK[] {
   return [...MEMORY.books.values()]
 }
 
-export function memoryreadbookbyaddress(address: string): MAYBE_BOOK {
+export function memoryreadbookbyaddress(address: string): MAYBE<BOOK> {
   const laddress = address.toLowerCase()
   return (
     MEMORY.books.get(address) ??
