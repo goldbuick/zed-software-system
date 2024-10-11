@@ -4,59 +4,6 @@ import { ispresent, MAYBE } from 'zss/mapping/types'
 import { BIN_BOARD_ELEMENT, BIN_WORD_ENTRY } from './binary'
 import { WORD, exportword, importword } from './word'
 
-export enum COLLISION {
-  ISSOLID,
-  ISWALK,
-  ISSWIM,
-  ISBULLET,
-}
-
-export enum CATEGORY {
-  ISTERRAIN,
-  ISOBJECT,
-}
-
-export type BOARD_ELEMENT = {
-  // this element is an instance of an element type
-  kind?: string
-  // objects only
-  id?: string
-  x?: number
-  y?: number
-  lx?: number
-  ly?: number
-  code?: string
-  // this is a unique name for this instance
-  name?: string
-  // display
-  char?: number
-  color?: number
-  bg?: number
-  // interaction
-  pushable?: number
-  collision?: COLLISION
-  destructible?: number
-  // common
-  p1?: string
-  p2?: string
-  p3?: string
-  cycle?: number
-  stepx?: number
-  stepy?: number
-  sender?: string
-  data?: any
-  // custom
-  [key: string]: WORD
-  // runtime
-  category?: CATEGORY
-  // @ts-expect-error special data
-  kinddata?: BOARD_ELEMENT
-  kindcode?: string
-  // @ts-expect-error special data
-  headless?: boolean
-  removed?: number
-}
-
 export function createboardelement() {
   const boardelement: BOARD_ELEMENT = {
     id: createsid(),

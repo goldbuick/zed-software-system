@@ -31,18 +31,6 @@ import {
 import { exportwordentry, WORD } from './word'
 
 // player state
-export type BOOK_FLAGS = Record<string, WORD>
-
-// player location tracking
-export type BOOK_PLAYER = string
-
-export type BOOK = {
-  id: string
-  name: string
-  pages: CODE_PAGE[]
-  flags: Record<string, BOOK_FLAGS>
-  players: Record<string, BOOK_PLAYER>
-}
 
 export function createbook(pages: CODE_PAGE[]): BOOK {
   return {

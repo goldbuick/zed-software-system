@@ -34,58 +34,6 @@ import { exportword, importword, MAYBE_WORD, WORD } from './word'
 
 import { memoryreadchip } from '.'
 
-// simple built-ins go here
-export type BOARD_STATS = {
-  isdark?: number
-  // concept, you can add scope here to address other books
-  // and that represents being able to switch out different boards for your engine to edit
-  // examples:
-  //   main:seeker (book main, board seeker)
-  //   main:sid_sdfefef (book main, board sid_sdfefef)
-  //
-  // would love to have a built in way to select a resource
-  //   have some simple contexts to work in:
-  //     like select a book (or create a new one)
-  //     like select a type of codepage in a book (or create a new one)
-  //
-  // board displayed over this one
-  over?: string
-  // only view mode supported for above boards
-  // board displayed under this one
-  under?: string
-  // common stats
-  exitnorth?: string
-  exitsouth?: string
-  exitwest?: string
-  exiteast?: string
-  timelimit?: number
-  maxplayershots?: number
-  // generic stats
-  [key: string]: WORD
-}
-
-export type BOARD = {
-  // specifics
-  terrain: MAYBE<BOARD_ELEMENT>[]
-  objects: Record<string, BOARD_ELEMENT>
-  // custom
-  stats?: BOARD_STATS
-  // runtime only
-  codepage: string
-  lookup?: MAYBE_STRING[]
-  named?: Record<string, Set<string | number>>
-}
-
-export type MAYBE_BOARD = MAYBE<BOARD>
-
-export const BOARD_WIDTH = 60
-export const BOARD_HEIGHT = 25
-const BOARD_TERRAIN: BOARD_ELEMENT[] = new Array(
-  BOARD_WIDTH * BOARD_HEIGHT,
-).map(() => createboardelement())
-
-export type MAYBE_BOARD_STATS = MAYBE<BOARD_STATS>
-
 export function createboardstats() {
   return {}
 }
