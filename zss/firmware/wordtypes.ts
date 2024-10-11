@@ -9,15 +9,20 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { MAYBE_BOARD, boardevaldir } from 'zss/memory/board'
-import { BOARD_ELEMENT, CATEGORY, COLLISION } from 'zss/memory/boardelement'
-import { MAYBE_WORD, WORD } from 'zss/memory/word'
+import { boardevaldir } from 'zss/memory/board'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  CATEGORY,
+  COLLISION,
+  WORD,
+} from 'zss/memory/types'
 
 type READ_CONTEXT_GET = (name: string) => any
 
 type READ_CONTEXT = {
   // targets
-  board: MAYBE_BOARD
+  board: MAYBE<BOARD>
   object: MAYBE<BOARD_ELEMENT>
   // context
   words: WORD[]
@@ -132,7 +137,7 @@ function mapstrcategory(value: any): MAYBE<STR_CATEGORY_CONST> {
   return undefined
 }
 
-function checkforcategoryconst(value: MAYBE_WORD): MAYBE<STR_CATEGORY> {
+function checkforcategoryconst(value: MAYBE<WORD>): MAYBE<STR_CATEGORY> {
   // already mapped STR_CATEGORY
   if (isstrcategory(value)) {
     return value
@@ -156,7 +161,7 @@ export function readcategory(
   read: READ_CONTEXT,
   index: number,
 ): [STR_CATEGORY | undefined, number] {
-  const value: MAYBE_WORD = read.words[index]
+  const value: MAYBE<WORD> = read.words[index]
 
   // pre-check
   const maybecategory = checkforcategoryconst(value)
@@ -211,7 +216,7 @@ export function readcollision(
   read: READ_CONTEXT,
   index: number,
 ): [STR_COLLISION | undefined, number] {
-  const value: MAYBE_WORD = read.words[index]
+  const value: MAYBE<WORD> = read.words[index]
 
   // already mapped
   if (isstrcollision(value)) {
@@ -326,7 +331,7 @@ export function readstrbg(value: STR_COLOR): MAYBE<COLOR> {
     .find((clr) => ispresent(clr) && clr >= COLOR.ONBLACK)
 }
 
-function checkforcolorconst(value: MAYBE_WORD): MAYBE<STR_COLOR> {
+function checkforcolorconst(value: MAYBE<WORD>): MAYBE<STR_COLOR> {
   // already mapped STR_COLOR
   if (isstrcolor(value)) {
     return value
@@ -350,7 +355,7 @@ function readcolorconst(
   read: READ_CONTEXT,
   index: number,
 ): [STR_COLOR | undefined, number] {
-  const value: MAYBE_WORD = read.words[index]
+  const value: MAYBE<WORD> = read.words[index]
 
   // pre-check
   const maybecolor = checkforcolorconst(value)
@@ -441,7 +446,7 @@ export function readkind(
   read: READ_CONTEXT,
   index: number,
 ): [STR_KIND | undefined, number] {
-  const value: MAYBE_WORD = read.words[index]
+  const value: MAYBE<WORD> = read.words[index]
 
   // already mapped
   if (isstrkind(value)) {
@@ -551,7 +556,7 @@ function mapstrdir(value: any): MAYBE<STR_DIR_CONST> {
   return undefined
 }
 
-function checkfordirconst(value: MAYBE_WORD): MAYBE<STR_DIR> {
+function checkfordirconst(value: MAYBE<WORD>): MAYBE<STR_DIR> {
   // already mapped STR_DIR
   if (isstrdir(value)) {
     return value
@@ -575,7 +580,7 @@ function readdirconst(
   read: READ_CONTEXT,
   index: number,
 ): [STR_DIR | undefined, number] {
-  const value: MAYBE_WORD = read.words[index]
+  const value: MAYBE<WORD> = read.words[index]
 
   // pre-check
   const maybedir = checkfordirconst(value)

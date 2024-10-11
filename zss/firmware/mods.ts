@@ -11,23 +11,17 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { CHIP_MEMORY, memoryreadchip, memoryreadcontext } from 'zss/memory'
-import { BOARD } from 'zss/memory/board'
-import { BOARD_ELEMENT } from 'zss/memory/boardelement'
 import {
   bookreadcodepagebyaddress,
   bookreadcodepagewithtype,
   bookwritecodepage,
 } from 'zss/memory/book'
 import {
-  CODE_PAGE,
-  CODE_PAGE_LABEL,
-  CODE_PAGE_TYPE,
   codepagereadtype,
   codepagereadtypetostring,
   codepagetypetostring,
   createcodepage,
 } from 'zss/memory/codepage'
-import { EIGHT_TRACK } from 'zss/memory/eighttrack'
 import {
   SCHEMA_TYPE,
   BITMAP_SCHEMA,
@@ -35,6 +29,14 @@ import {
   BOARD_SCHEMA,
   EIGHT_TRACK_SCHEMA,
 } from 'zss/memory/schema'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  CODE_PAGE,
+  CODE_PAGE_LABEL,
+  CODE_PAGE_TYPE,
+  EIGHT_TRACK,
+} from 'zss/memory/types'
 
 import { ensureopenbook, ensureopenbookbyname } from './cli'
 import { ARG_TYPE, readargs } from './wordtypes'

@@ -17,15 +17,12 @@ import {
   listnamedelements,
 } from 'zss/memory/atomics'
 import {
-  MAYBE_BOARD,
   boardelementapplycolor,
   boardelementread,
   boardfindplayer,
   boardterrainsetfromkind,
 } from 'zss/memory/board'
 import {
-  BOARD_ELEMENT,
-  COLLISION,
   boardelementwritestat,
   boardelementwritestats,
 } from 'zss/memory/boardelement'
@@ -40,8 +37,8 @@ import {
   bookelementkindread,
   bookboardelementreadname,
   bookboardwriteheadlessobject,
-  BOOK,
 } from 'zss/memory/book'
+import { BOARD, BOARD_ELEMENT, BOOK, COLLISION } from 'zss/memory/types'
 
 import {
   readargs,
@@ -146,7 +143,7 @@ function sendinteraction(
 
 function bonkelement(
   book: MAYBE<BOOK>,
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   blocked: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ) {
@@ -163,7 +160,7 @@ function bonkelement(
 function moveobject(
   chip: CHIP,
   book: MAYBE<BOOK>,
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   target: BOARD_ELEMENT,
   dest: PT,
 ) {
