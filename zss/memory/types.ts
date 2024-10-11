@@ -1,3 +1,14 @@
+import { BITMAP } from 'zss/gadget/data/bitmap'
+import { MAYBE, MAYBE_STRING } from 'zss/mapping/types'
+
+// words
+
+export type WORD = string | number | undefined | WORD[]
+export type MAYBE_WORD = MAYBE<WORD>
+export type WORD_RESULT = 0 | 1
+
+// board elements
+
 export enum COLLISION {
   ISSOLID,
   ISWALK,
@@ -43,11 +54,15 @@ export type BOARD_ELEMENT = {
   [key: string]: WORD
   // runtime
   category?: CATEGORY
+  // @ts-expect-error rude type
   kinddata?: BOARD_ELEMENT
   kindcode?: string
+  // @ts-expect-error rude type
   headless?: boolean
   removed?: number
 }
+
+// boards
 
 // simple built-ins go here
 export type BOARD_STATS = {
@@ -95,11 +110,86 @@ export type MAYBE_BOARD = MAYBE<BOARD>
 
 export const BOARD_WIDTH = 60
 export const BOARD_HEIGHT = 25
-const BOARD_TERRAIN: BOARD_ELEMENT[] = new Array(
-  BOARD_WIDTH * BOARD_HEIGHT,
-).map(() => createboardelement())
 
 export type MAYBE_BOARD_STATS = MAYBE<BOARD_STATS>
+
+// 8tracks
+
+export type EIGHT_MEASURE = [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+]
+
+export type EIGHT_TRACK = {
+  tempo: number
+  measures: EIGHT_MEASURE[]
+}
+
+// codepages
+
+export enum CODE_PAGE_TYPE {
+  ERROR,
+  LOADER,
+  BOARD,
+  OBJECT,
+  TERRAIN,
+  CHARSET,
+  PALETTE,
+  EIGHT_TRACK,
+}
+
+export enum CODE_PAGE_LABEL {
+  LOADER = 'loader',
+  BOARD = 'board',
+  OBJECT = 'object',
+  TERRAIN = 'terrain',
+  CHARSET = 'charset',
+  PALETTE = 'palette',
+  EIGHT_TRACK = '8track',
+}
+
+export type CODE_PAGE_STATS = {
+  type?: CODE_PAGE_TYPE
+  name?: string
+  [key: string]: WORD
+}
+
+export type CODE_PAGE = {
+  // all pages have id & code
+  id: string
+  code: string
+  // content data
+  board?: BOARD
+  object?: BOARD_ELEMENT
+  terrain?: BOARD_ELEMENT
+  charset?: BITMAP
+  palette?: BITMAP
+  eighttrack?: EIGHT_TRACK
+  // common parsed values
+  stats?: CODE_PAGE_STATS
+}
+
+export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
+
+export type CODE_PAGE_TYPE_MAP = {
+  [CODE_PAGE_TYPE.ERROR]: string
+  [CODE_PAGE_TYPE.LOADER]: string
+  [CODE_PAGE_TYPE.BOARD]: BOARD
+  [CODE_PAGE_TYPE.OBJECT]: BOARD_ELEMENT
+  [CODE_PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
+  [CODE_PAGE_TYPE.CHARSET]: BITMAP
+  [CODE_PAGE_TYPE.PALETTE]: BITMAP
+  [CODE_PAGE_TYPE.EIGHT_TRACK]: EIGHT_TRACK
+}
+
+// book
+
 export type BOOK_FLAGS = Record<string, WORD>
 
 // player location tracking

@@ -2,7 +2,8 @@ import { createsid } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { BIN_BOARD_ELEMENT, BIN_WORD_ENTRY } from './binary'
-import { WORD, exportword, importword } from './word'
+import { BOARD_ELEMENT, WORD } from './types'
+import { exportword, importword } from './word'
 
 export function createboardelement() {
   const boardelement: BOARD_ELEMENT = {

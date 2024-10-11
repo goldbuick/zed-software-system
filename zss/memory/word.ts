@@ -7,13 +7,10 @@ import {
 } from 'zss/mapping/types'
 
 import { BIN_WORD, BIN_WORD_ENTRY } from './binary'
-
-export type WORD = string | number | undefined | WORD[]
-export type MAYBE_WORD = MAYBE<WORD>
-export type WORD_RESULT = 0 | 1
+import { WORD } from './types'
 
 // safe to serialize copy of boardelement
-export function exportword(word: MAYBE_WORD): MAYBE<BIN_WORD> {
+export function exportword(word: MAYBE<WORD>): MAYBE<BIN_WORD> {
   if (!ispresent(word)) {
     return
   }
@@ -38,7 +35,7 @@ export function exportword(word: MAYBE_WORD): MAYBE<BIN_WORD> {
 }
 
 // import json into word
-export function importword(word: MAYBE<BIN_WORD>): MAYBE_WORD {
+export function importword(word: MAYBE<BIN_WORD>): MAYBE<WORD> {
   if (!ispresent(word)) {
     return
   }
@@ -54,7 +51,7 @@ export function importword(word: MAYBE<BIN_WORD>): MAYBE_WORD {
 // safe to serialize copy of boardelement
 export function exportwordentry(
   name: string,
-  word: MAYBE_WORD,
+  word: MAYBE<WORD>,
 ): MAYBE<BIN_WORD_ENTRY> {
   if (!ispresent(word)) {
     return

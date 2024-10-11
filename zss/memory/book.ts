@@ -7,20 +7,13 @@ import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
 import { checkcollision } from './atomics'
 import { BIN_BOOK } from './binary'
 import {
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  MAYBE_BOARD,
   boarddeleteobject,
   boardelementapplycolor,
   boardobjectcreatefromkind,
   boardobjectread,
   boardterrainsetfromkind,
 } from './board'
-import { BOARD_ELEMENT, CATEGORY, COLLISION } from './boardelement'
 import {
-  CODE_PAGE,
-  CODE_PAGE_TYPE,
-  MAYBE_CODE_PAGE,
   codepagereaddata,
   codepagereadname,
   codepagereadstatdefaults,
@@ -28,7 +21,19 @@ import {
   exportcodepage,
   importcodepage,
 } from './codepage'
-import { exportwordentry, WORD } from './word'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  BOOK,
+  CATEGORY,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+  COLLISION,
+  WORD,
+} from './types'
+import { exportwordentry } from './word'
 
 // player state
 
@@ -102,7 +107,7 @@ export function bookhasmatch(book: MAYBE<BOOK>, ids: string[]): boolean {
 export function bookreadcodepagebyaddress(
   book: MAYBE<BOOK>,
   address: string,
-): MAYBE_CODE_PAGE {
+): MAYBE<CODE_PAGE> {
   if (!ispresent(book)) {
     return undefined
   }
@@ -119,7 +124,7 @@ export function bookreadcodepagewithtype(
   book: MAYBE<BOOK>,
   type: CODE_PAGE_TYPE,
   address: string,
-): MAYBE_CODE_PAGE {
+): MAYBE<CODE_PAGE> {
   if (!ispresent(book)) {
     return undefined
   }
@@ -159,7 +164,7 @@ export function bookreadcodepagedatabytype(
 
 export function bookwritecodepage(
   book: MAYBE<BOOK>,
-  codepage: MAYBE_CODE_PAGE,
+  codepage: MAYBE<CODE_PAGE>,
 ): boolean {
   if (!ispresent(book) || !ispresent(codepage)) {
     return false
@@ -242,7 +247,10 @@ export function bookreadterrain(
   }
 }
 
-export function bookreadboard(book: MAYBE<BOOK>, address: string): MAYBE_BOARD {
+export function bookreadboard(
+  book: MAYBE<BOOK>,
+  address: string,
+): MAYBE<BOARD> {
   return codepagereaddata<CODE_PAGE_TYPE.BOARD>(
     bookreadcodepagebyaddress(book, address),
   )
@@ -295,7 +303,7 @@ export function bookplayerreadboards(book: MAYBE<BOOK>) {
 
 export function bookboardmoveobject(
   book: MAYBE<BOOK>,
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   target: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ): MAYBE<BOARD_ELEMENT> {
@@ -377,7 +385,7 @@ export function bookboardelementreadname(
 
 export function bookboardnamedwrite(
   book: MAYBE<BOOK>,
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   element: MAYBE<BOARD_ELEMENT>,
   index?: number,
 ) {
@@ -401,7 +409,7 @@ export function bookboardnamedwrite(
 
 export function bookboardobjectlookupwrite(
   book: MAYBE<BOOK>,
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   object: MAYBE<BOARD_ELEMENT>,
 ) {
   // invalid data
@@ -421,7 +429,7 @@ export function bookboardobjectlookupwrite(
   }
 }
 
-export function bookboardsetlookup(book: MAYBE<BOOK>, board: MAYBE_BOARD) {
+export function bookboardsetlookup(book: MAYBE<BOOK>, board: MAYBE<BOARD>) {
   // invalid data
   if (!ispresent(book) || !ispresent(board)) {
     return
@@ -506,7 +514,7 @@ export function bookboardobjectsafedelete(
 
 export function bookboardobjectnamedlookupdelete(
   book: MAYBE<BOOK>,
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   object: MAYBE<BOARD_ELEMENT>,
 ) {
   if (ispresent(book) && ispresent(board) && ispresent(object?.id)) {
@@ -527,7 +535,7 @@ export function bookboardobjectnamedlookupdelete(
 
 function bookboardcleanup(
   book: MAYBE<BOOK>,
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   timestamp: number,
 ) {
   if (!ispresent(book) || !ispresent(board)) {
@@ -565,7 +573,7 @@ export type BOOK_RUN_ARGS = BOOK_RUN_CODE_TARGETS & BOOK_RUN_CODE
 
 export function bookboardtick(
   book: MAYBE<BOOK>,
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   timestamp: number,
 ) {
   const args: BOOK_RUN_ARGS[] = []
@@ -622,7 +630,7 @@ export function bookboardtick(
 
 export function bookboardwriteheadlessobject(
   book: MAYBE<BOOK>,
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   kind: MAYBE<STR_KIND>,
   dest: PT,
 ) {
@@ -649,7 +657,7 @@ export function bookboardwriteheadlessobject(
 
 export function bookboardwrite(
   book: MAYBE<BOOK>,
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   kind: MAYBE<STR_KIND>,
   dest: PT,
 ): MAYBE<BOARD_ELEMENT> {

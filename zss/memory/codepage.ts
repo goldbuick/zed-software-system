@@ -1,74 +1,23 @@
 import { IToken } from 'chevrotain'
-import { BITMAP } from 'zss/gadget/data/bitmap'
 import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { BIN_CODEPAGE, exportbitmap, importbitmap } from './binary'
-import { BOARD, createboard, exportboard, importboard } from './board'
+import { createboard, exportboard, importboard } from './board'
 import {
-  BOARD_ELEMENT,
   createboardelement,
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import { EIGHT_TRACK, exporteighttrack, importeighttrack } from './eighttrack'
-import { WORD } from './word'
-
-export enum CODE_PAGE_TYPE {
-  ERROR,
-  LOADER,
-  BOARD,
-  OBJECT,
-  TERRAIN,
-  CHARSET,
-  PALETTE,
-  EIGHT_TRACK,
-}
-
-export enum CODE_PAGE_LABEL {
-  LOADER = 'loader',
-  BOARD = 'board',
-  OBJECT = 'object',
-  TERRAIN = 'terrain',
-  CHARSET = 'charset',
-  PALETTE = 'palette',
-  EIGHT_TRACK = '8track',
-}
-
-export type CODE_PAGE_STATS = {
-  type?: CODE_PAGE_TYPE
-  name?: string
-  [key: string]: WORD
-}
-
-export type CODE_PAGE = {
-  // all pages have id & code
-  id: string
-  code: string
-  // content data
-  board?: BOARD
-  object?: BOARD_ELEMENT
-  terrain?: BOARD_ELEMENT
-  charset?: BITMAP
-  palette?: BITMAP
-  eighttrack?: EIGHT_TRACK
-  // common parsed values
-  stats?: CODE_PAGE_STATS
-}
-
-export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
-
-export type CODE_PAGE_TYPE_MAP = {
-  [CODE_PAGE_TYPE.ERROR]: string
-  [CODE_PAGE_TYPE.LOADER]: string
-  [CODE_PAGE_TYPE.BOARD]: BOARD
-  [CODE_PAGE_TYPE.OBJECT]: BOARD_ELEMENT
-  [CODE_PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
-  [CODE_PAGE_TYPE.CHARSET]: BITMAP
-  [CODE_PAGE_TYPE.PALETTE]: BITMAP
-  [CODE_PAGE_TYPE.EIGHT_TRACK]: EIGHT_TRACK
-}
+import { exporteighttrack, importeighttrack } from './eighttrack'
+import {
+  CODE_PAGE,
+  CODE_PAGE_LABEL,
+  CODE_PAGE_STATS,
+  CODE_PAGE_TYPE,
+  CODE_PAGE_TYPE_MAP,
+} from './types'
 
 export function createcodepage(
   code: string,
@@ -82,7 +31,9 @@ export function createcodepage(
 }
 
 // safe to serialize copy of codepage
-export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE<BIN_CODEPAGE> {
+export function exportcodepage(
+  codepage: MAYBE<CODE_PAGE>,
+): MAYBE<BIN_CODEPAGE> {
   if (!ispresent(codepage)) {
     return
   }
@@ -100,7 +51,9 @@ export function exportcodepage(codepage: MAYBE_CODE_PAGE): MAYBE<BIN_CODEPAGE> {
 }
 
 // safe to serialize copy of codepage
-export function importcodepage(codepage: MAYBE<BIN_CODEPAGE>): MAYBE_CODE_PAGE {
+export function importcodepage(
+  codepage: MAYBE<BIN_CODEPAGE>,
+): MAYBE<CODE_PAGE> {
   if (!ispresent(codepage)) {
     return
   }
@@ -119,7 +72,7 @@ export function importcodepage(codepage: MAYBE<BIN_CODEPAGE>): MAYBE_CODE_PAGE {
 }
 
 export function codepagehasmatch(
-  codepage: MAYBE_CODE_PAGE,
+  codepage: MAYBE<CODE_PAGE>,
   type: CODE_PAGE_TYPE,
   ids: string[],
 ): boolean {
@@ -168,7 +121,7 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
 }
 
 export function codepagereadstatdefaults(
-  codepage: MAYBE_CODE_PAGE,
+  codepage: MAYBE<CODE_PAGE>,
 ): CODE_PAGE_STATS {
   const stats = { ...codepagereadstats(codepage) }
 
@@ -187,7 +140,9 @@ export function codepagereadstatdefaults(
   return stats
 }
 
-export function codepageresetstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
+export function codepageresetstats(
+  codepage: MAYBE<CODE_PAGE>,
+): CODE_PAGE_STATS {
   if (!ispresent(codepage)) {
     return {}
   }
@@ -195,7 +150,7 @@ export function codepageresetstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
   return codepagereadstats(codepage)
 }
 
-export function codepagereadstats(codepage: MAYBE_CODE_PAGE): CODE_PAGE_STATS {
+export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
   if (!ispresent(codepage)) {
     return {}
   }
@@ -301,27 +256,27 @@ export function codepagetypetostring(type: MAYBE<CODE_PAGE_TYPE>): string {
   }
 }
 
-export function codepagereadtype(codepage: MAYBE_CODE_PAGE) {
+export function codepagereadtype(codepage: MAYBE<CODE_PAGE>) {
   const stats = codepagereadstats(codepage)
   return stats.type ?? CODE_PAGE_TYPE.ERROR
 }
 
-export function codepagereadtypetostring(codepage: MAYBE_CODE_PAGE) {
+export function codepagereadtypetostring(codepage: MAYBE<CODE_PAGE>) {
   return codepagetypetostring(codepagereadtype(codepage))
 }
 
-export function codepagereadname(codepage: MAYBE_CODE_PAGE) {
+export function codepagereadname(codepage: MAYBE<CODE_PAGE>) {
   const stats = codepagereadstats(codepage)
   return (stats.name ?? '').toLowerCase()
 }
 
-export function codepagereadstat(codepage: MAYBE_CODE_PAGE, stat: string) {
+export function codepagereadstat(codepage: MAYBE<CODE_PAGE>, stat: string) {
   const stats = codepagereadstats(codepage)
   return stats[stat]
 }
 
 export function codepagereaddata<T extends CODE_PAGE_TYPE>(
-  codepage: MAYBE_CODE_PAGE,
+  codepage: MAYBE<CODE_PAGE>,
 ): MAYBE<CODE_PAGE_TYPE_MAP[T]> {
   switch (codepage?.stats?.type) {
     default: {

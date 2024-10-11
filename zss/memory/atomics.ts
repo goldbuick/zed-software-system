@@ -8,15 +8,14 @@ import {
 } from 'zss/firmware/wordtypes'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
+import { boardelementbg, boardelementcolor, boardelementname } from './board'
 import {
+  BOARD,
+  BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
-  MAYBE_BOARD,
-  boardelementbg,
-  boardelementcolor,
-  boardelementname,
-} from './board'
-import { BOARD_ELEMENT, COLLISION } from './boardelement'
+  COLLISION,
+} from './types'
 
 // what is atomics? a set of spatial and data related queries
 // naming convention
@@ -43,7 +42,7 @@ export function checkcollision(
 }
 
 export function listnamedelements(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   name: string,
 ): BOARD_ELEMENT[] {
   const elements = [...(board?.named?.[name]?.values() ?? [])]
@@ -86,7 +85,7 @@ export function listelementsbykind(
 }
 
 export function listelementsbyattr(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   idnameorpts: any[],
 ): BOARD_ELEMENT[] {
   if (!ispresent(board)) {

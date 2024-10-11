@@ -14,25 +14,30 @@ import { COLOR } from 'zss/gadget/data/types'
 import { pick } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import {
-  MAYBE,
-  MAYBE_STRING,
-  isnumber,
-  ispresent,
-  noop,
-} from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, noop } from 'zss/mapping/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
 import { BIN_BOARD, BIN_BOARD_STATS, BIN_WORD_ENTRY } from './binary'
 import {
-  BOARD_ELEMENT,
   createboardelement,
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import { exportword, importword, MAYBE_WORD, WORD } from './word'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_STATS,
+  BOARD_WIDTH,
+  WORD,
+} from './types'
+import { exportword, importword } from './word'
 
 import { memoryreadchip } from '.'
+
+const BOARD_TERRAIN: BOARD_ELEMENT[] = new Array(
+  BOARD_WIDTH * BOARD_HEIGHT,
+).map(() => createboardelement())
 
 export function createboardstats() {
   return {}
@@ -50,7 +55,7 @@ export function createboard(fn = noop<BOARD>) {
 
 // safe to serialize copy of board
 export function exportboardstats(
-  boardstats: MAYBE_BOARD_STATS,
+  boardstats: MAYBE<BOARD_STATS>,
 ): MAYBE<BIN_BOARD_STATS> {
   if (!ispresent(boardstats)) {
     return
@@ -91,7 +96,7 @@ export function exportboardstats(
 // import json into board
 export function importboardstats(
   boardstats: MAYBE<BIN_BOARD_STATS>,
-): MAYBE_BOARD_STATS {
+): MAYBE<BOARD_STATS> {
   if (!ispresent(boardstats)) {
     return
   }
@@ -113,7 +118,7 @@ export function importboardstats(
 }
 
 // safe to serialize copy of board
-export function exportboard(board: MAYBE_BOARD): MAYBE<BIN_BOARD> {
+export function exportboard(board: MAYBE<BOARD>): MAYBE<BIN_BOARD> {
   if (!ispresent(board)) {
     return
   }
@@ -129,7 +134,7 @@ export function exportboard(board: MAYBE_BOARD): MAYBE<BIN_BOARD> {
 }
 
 // import json into board
-export function importboard(board: MAYBE<BIN_BOARD>): MAYBE_BOARD {
+export function importboard(board: MAYBE<BIN_BOARD>): MAYBE<BOARD> {
   if (!ispresent(board)) {
     return
   }
@@ -149,7 +154,7 @@ export function importboard(board: MAYBE<BIN_BOARD>): MAYBE_BOARD {
   }
 }
 
-export function boardreadstat(board: MAYBE_BOARD, key: string): MAYBE_WORD {
+export function boardreadstat(board: MAYBE<BOARD>, key: string): MAYBE<WORD> {
   if (!ispresent(board)) {
     return
   }
@@ -157,7 +162,7 @@ export function boardreadstat(board: MAYBE_BOARD, key: string): MAYBE_WORD {
 }
 
 export function boardwritestat(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   key: string,
   value: WORD,
 ): WORD {
@@ -169,7 +174,7 @@ export function boardwritestat(
   return value
 }
 
-export function boardelementindex(board: MAYBE_BOARD, pt: PT): number {
+export function boardelementindex(board: MAYBE<BOARD>, pt: PT): number {
   if (
     !ispresent(board) ||
     pt.x < 0 ||
@@ -183,7 +188,7 @@ export function boardelementindex(board: MAYBE_BOARD, pt: PT): number {
 }
 
 export function boardelementread(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   pt: PT,
 ): MAYBE<BOARD_ELEMENT> {
   // clipping
@@ -231,7 +236,7 @@ export function boardelementapplycolor(
 }
 
 export function boardgetterrain(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   x: number,
   y: number,
 ): MAYBE<BOARD_ELEMENT> {
@@ -241,7 +246,7 @@ export function boardgetterrain(
 }
 
 export function boardsetterrain(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   from: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<BOARD_ELEMENT> {
   if (
@@ -265,7 +270,7 @@ export function boardsetterrain(
 }
 
 export function boardobjectcreate(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   from: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<BOARD_ELEMENT> {
   if (!ispresent(board) || !ispresent(from)) {
@@ -285,7 +290,7 @@ export function boardobjectcreate(
 }
 
 export function boardterrainsetfromkind(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   pt: PT,
   kind: string,
 ): MAYBE<BOARD_ELEMENT> {
@@ -293,7 +298,7 @@ export function boardterrainsetfromkind(
 }
 
 export function boardobjectcreatefromkind(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   pt: PT,
   kind: string,
   id?: string,
@@ -302,7 +307,7 @@ export function boardobjectcreatefromkind(
 }
 
 export function boardobjectread(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   id: string,
 ): MAYBE<BOARD_ELEMENT> {
   if (!board) {
@@ -312,7 +317,7 @@ export function boardobjectread(
 }
 
 export function boardevaldir(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   target: MAYBE<BOARD_ELEMENT>,
   dir: STR_DIR,
 ): PT {
@@ -423,7 +428,7 @@ export function boardevaldir(
   return pt
 }
 
-export function boarddeleteobject(board: MAYBE_BOARD, id: string) {
+export function boarddeleteobject(board: MAYBE<BOARD>, id: string) {
   if (ispresent(board?.objects[id])) {
     delete board.objects[id]
     return true
@@ -432,7 +437,7 @@ export function boarddeleteobject(board: MAYBE_BOARD, id: string) {
 }
 
 export function boardfindplayer(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   target: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<BOARD_ELEMENT> {
   if (!ispresent(board) || !ispresent(target)) {

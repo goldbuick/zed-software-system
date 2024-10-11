@@ -1,22 +1,7 @@
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { BIN_EIGHT_TRACK } from './binary'
-
-export type EIGHT_MEASURE = [
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-]
-
-export type EIGHT_TRACK = {
-  tempo: number
-  measures: EIGHT_MEASURE[]
-}
+import { EIGHT_MEASURE, EIGHT_TRACK } from './types'
 
 export function createeighttrackmeasure(): EIGHT_MEASURE {
   return [-1, -1, -1, -1, -1, -1, -1, -1]

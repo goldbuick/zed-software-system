@@ -22,17 +22,12 @@ import { OS } from 'zss/os'
 
 import {
   boarddeleteobject,
-  MAYBE_BOARD,
   boardelementname,
   boardobjectcreatefromkind,
-  BOARD_WIDTH,
-  BOARD_HEIGHT,
-  BOARD,
   boardreadstat,
 } from './board'
-import { BOARD_ELEMENT, boardelementreadstat } from './boardelement'
+import { boardelementreadstat } from './boardelement'
 import {
-  BOOK,
   bookboardtick,
   bookelementkindread,
   bookplayerreadboard,
@@ -42,15 +37,23 @@ import {
   bookreadcodepagesbytype,
   bookreadobject,
 } from './book'
-import { CODE_PAGE_TYPE, codepagereadstats } from './codepage'
-import { EIGHT_TRACK } from './eighttrack'
+import { codepagereadstats } from './codepage'
 import {
   mimetypeofbytesread,
   parsebinaryfile,
   parsetextfile,
   parsezipfile,
 } from './parsefile'
-import { WORD } from './word'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  BOOK,
+  CODE_PAGE_TYPE,
+  EIGHT_TRACK,
+  WORD,
+} from './types'
 
 type BINARY_READER = {
   filename: string
@@ -63,7 +66,7 @@ type CHIP_TARGETS = {
   // memory
   book: MAYBE<BOOK>
   // codepages
-  board: MAYBE_BOARD
+  board: MAYBE<BOARD>
   object: MAYBE<BOARD_ELEMENT>
   terrain: MAYBE<BOARD_ELEMENT>
   charset: MAYBE<BITMAP>
