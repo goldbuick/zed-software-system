@@ -113,12 +113,24 @@ export function memoryreadbooklist(): BOOK[] {
   return [...MEMORY.books.values()]
 }
 
+export function memoryreadfirstbook(): MAYBE<BOOK> {
+  const [first] = MEMORY.books.values()
+  return first
+}
+
 export function memoryreadbookbyaddress(address: string): MAYBE<BOOK> {
   const laddress = address.toLowerCase()
   return (
     MEMORY.books.get(address) ??
     memoryreadbooklist().find((item) => item.name.toLowerCase() === laddress)
   )
+}
+
+export function memorysetsoftwarebook(
+  slot: keyof typeof MEMORY.software,
+  book: string,
+) {
+  MEMORY.software[slot] = book
 }
 
 export function memoryreadbookbysoftware(

@@ -15,9 +15,11 @@ import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryclearbook,
   memoryreadbookbyaddress,
+  memoryreadbookbysoftware,
   memoryreadbooklist,
   memoryreadchip,
   memoryreadcontext,
+  memoryreadfirstbook,
   memorysetbook,
 } from 'zss/memory'
 import {
@@ -77,16 +79,12 @@ function writetext(text: string) {
 
 // cli's only state ?
 let openbook = ''
-const DEFAULT_BOOK = 'main'
 
 function createnewbook(maybename?: any) {
   const book = createbook([])
 
   if (isstring(maybename)) {
     book.name = maybename
-  } else if (!ispresent(memoryreadbookbyaddress(DEFAULT_BOOK))) {
-    // auto-fill @book main
-    book.name = DEFAULT_BOOK
   }
 
   memorysetbook(book)
@@ -107,7 +105,14 @@ export function ensureopenbook() {
   }
 
   // attempt to open main
-  book = memoryreadbookbyaddress(DEFAULT_BOOK)
+  book = memoryreadbookbysoftware('main')
+
+  // try first book
+  if (!ispresent(book)) {
+    book = memoryreadfirstbook()
+  }
+
+  // success
   if (ispresent(book)) {
     openbook = book.id
     writetext(`opened [book] ${book.name}`)
