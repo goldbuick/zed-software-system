@@ -10,6 +10,7 @@ export function createeighttrackmeasure(): EIGHT_MEASURE {
 export function createeighttrack(): EIGHT_TRACK {
   return {
     tempo: 150,
+    synths: [],
     measures: [],
   }
 }

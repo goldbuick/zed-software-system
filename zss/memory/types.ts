@@ -126,8 +126,37 @@ export type EIGHT_MEASURE = [
   number,
 ]
 
+export enum EIGHT_FX {
+  SQUARE,
+}
+
+export type EIGHT_FX_CONFIG = {
+  fx: EIGHT_FX
+  settings: Record<number, WORD>
+}
+
+export enum EIGHT_SYNTH {
+  SQUARE,
+}
+
+export type EIGHT_SYNTH_CONFIG = {
+  synth: EIGHT_SYNTH
+  effects: EIGHT_FX_CONFIG[]
+  settings: Record<number, WORD>
+}
+
 export type EIGHT_TRACK = {
   tempo: number
+  synths: [
+    EIGHT_SYNTH_CONFIG,
+    EIGHT_SYNTH_CONFIG,
+    EIGHT_SYNTH_CONFIG,
+    EIGHT_SYNTH_CONFIG,
+    EIGHT_SYNTH_CONFIG,
+    EIGHT_SYNTH_CONFIG,
+    EIGHT_SYNTH_CONFIG,
+    EIGHT_SYNTH_CONFIG,
+  ]
   measures: EIGHT_MEASURE[]
 }
 
