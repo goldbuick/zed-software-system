@@ -16,7 +16,6 @@ import { CRTShape } from './crt'
 import { Framing } from './framing'
 import { Gadget } from './gadget'
 import decoimageurl from './scratches.jpg'
-import { Splash } from './splash'
 
 const TUG = 0.0006
 const TUG_VEC = new Vector2(TUG, TUG * -0.5)
@@ -30,7 +29,8 @@ export function Terminal() {
   splat.magFilter = NearestFilter
 
   const [stats] = useState(() => new Stats())
-  const [active, setActive] = useState(false)
+
+  useEffect(createplatform, [])
 
   useEffect(() => {
     if (!STATS_DEV) {
@@ -61,16 +61,7 @@ export function Terminal() {
         position={[0, 0, 1000]}
       />
       <Framing>
-        {active ? (
-          <Gadget />
-        ) : (
-          <Splash
-            onBoot={() => {
-              createplatform()
-              setActive(true)
-            }}
-          />
-        )}
+        <Gadget />
       </Framing>
       {shouldcrt && (
         <Suspense fallback={null}>

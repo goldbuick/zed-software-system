@@ -15,6 +15,7 @@ import {
   memoryplayerscan,
   memoryplayerlogout,
   memorygetdefaultplayer,
+  memoryreadbookbysoftware,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -74,7 +75,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
             message.player,
           )
           // guard against infinite reset
-          const mainbook = memoryreadbookbyaddress('main')
+          const mainbook = memoryreadbookbysoftware('main')
           if (ispresent(mainbook)) {
             vm_login(vm.name(), message.player ?? '')
           }
@@ -113,10 +114,8 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           const address = vm_codeaddress(book, codepage)
           observers[codepage] = modemobservevaluestring(address, (value) => {
             // write to code
-            const content = bookreadcodepagebyaddress(
-              memoryreadbookbyaddress(book),
-              codepage,
-            )
+            const contentbook = memoryreadbookbyaddress(book)
+            const content = bookreadcodepagebyaddress(contentbook, codepage)
             if (ispresent(content)) {
               content.code = value
               // re-parse code for @ attrs and expected data type

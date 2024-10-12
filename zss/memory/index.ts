@@ -86,17 +86,18 @@ type CHIP_PLAYER_INPUT = {
 export type CHIP_MEMORY = CHIP_TARGETS & CHIP_PLAYER_INPUT
 
 export enum MEMORY_LABEL {
-  MAIN = 'main',
   TITLE = 'title',
   PLAYER = 'player',
 }
 
 const MEMORY = {
-  // running software
   defaultplayer: createpid(),
+  software: {
+    main: '',
+    content: '',
+  },
   books: new Map<string, BOOK>(),
   chips: new Map<string, CHIP_MEMORY>(),
-  // active loaders
   loaders: new Map<string, string>(),
 }
 
@@ -118,6 +119,12 @@ export function memoryreadbookbyaddress(address: string): MAYBE<BOOK> {
     MEMORY.books.get(address) ??
     memoryreadbooklist().find((item) => item.name.toLowerCase() === laddress)
   )
+}
+
+export function memoryreadbookbysoftware(
+  slot: keyof typeof MEMORY.software,
+): MAYBE<BOOK> {
+  return memoryreadbookbyaddress(MEMORY.software[slot])
 }
 
 export function memoryresetbooks(books: BOOK[]) {
@@ -191,7 +198,7 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
-  const mainbook = memoryreadbookbyaddress('main')
+  const mainbook = memoryreadbookbysoftware('main')
   if (!ispresent(mainbook)) {
     return api_error(
       'memory',
@@ -243,7 +250,7 @@ export function memoryplayerlogout(player: string) {
 }
 
 export function memoryplayerscan(players: Record<string, number>) {
-  const mainbook = memoryreadbookbyaddress('main')
+  const mainbook = memoryreadbookbysoftware('main')
   const boards = bookplayerreadboards(mainbook)
   for (let i = 0; i < boards.length; ++i) {
     const board = boards[i]
@@ -273,7 +280,7 @@ export function memorytick(os: OS, timestamp: number) {
   })
   CONFIG.HALT_AT_COUNT = resethalt
 
-  const mainbook = memoryreadbookbyaddress('main')
+  const mainbook = memoryreadbookbysoftware('main')
   const boards = bookplayerreadboards(mainbook)
 
   // update boards / build code / run chips
@@ -327,7 +334,7 @@ export function memorycli(
 ) {
   // we try and execute cli invokes in main
   // its okay if we do not find main
-  const mainbook = memoryreadbookbyaddress('main')
+  const mainbook = memoryreadbookbysoftware('main')
 
   // player id + unique id fo run
   const id = `${player}_cli`
@@ -354,7 +361,7 @@ function memoryloader(
   binaryfile: Uint8Array,
 ) {
   // we scan main book for loaders
-  const mainbook = memoryreadbookbyaddress('main')
+  const mainbook = memoryreadbookbysoftware('main')
   if (!ispresent(mainbook)) {
     return
   }
@@ -619,7 +626,7 @@ function memoryconverttogadgetlayers(
 }
 
 export function memoryreadgadgetlayers(player: string): LAYER[] {
-  const mainbook = memoryreadbookbyaddress('main')
+  const mainbook = memoryreadbookbysoftware('main')
   const playerboard = bookplayerreadboard(mainbook, player)
 
   const layers: LAYER[] = []

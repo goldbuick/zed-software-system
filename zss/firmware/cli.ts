@@ -398,7 +398,6 @@ export const CLI_FIRMWARE = createfirmware({
         write(``)
         writeoption(`#help player`, `player settings`)
         write(`!helpplayer;read help player`)
-        write(``)
         writesection(`keyboard input`)
         writeoption(`?`, `open console`)
         writeoption(`esc`, `close console`)
@@ -472,8 +471,8 @@ export const CLI_FIRMWARE = createfirmware({
           `list books and pages from open book you can delete`,
         )
         writeoption(`#save`, `flush state to register`)
-        writeoption(`#update`, `write current books to bios`)
-        writeoption(`#factoryreset`, `erase books stored in bios`)
+        // writeoption(`#update`, `write current books to bios`)
+        // writeoption(`#factoryreset`, `erase books stored in bios`)
         break
       case 'helpplayer':
         writeheader(`player settings`)
