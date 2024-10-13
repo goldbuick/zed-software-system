@@ -17,20 +17,13 @@ import { clamp } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, noop } from 'zss/mapping/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
-import { BIN_BOARD, BIN_BOARD_STATS, BIN_WORD_ENTRY } from './binary'
+import { BIN_BOARD } from './binary'
 import {
   createboardelement,
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import {
-  BOARD,
-  BOARD_ELEMENT,
-  BOARD_HEIGHT,
-  BOARD_STATS,
-  BOARD_WIDTH,
-  WORD,
-} from './types'
+import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 import { exportword, importword } from './word'
 
 import { memoryreadchip } from '.'
@@ -45,76 +38,12 @@ export function createboardstats() {
 
 export function createboard(fn = noop<BOARD>) {
   const board: BOARD = {
-    // specifics
     terrain: BOARD_TERRAIN.slice(0),
     objects: {},
+    // runtime
     codepage: '',
   }
   return fn(board)
-}
-
-// safe to serialize copy of board
-export function exportboardstats(
-  boardstats: MAYBE<BOARD_STATS>,
-): MAYBE<BIN_BOARD_STATS> {
-  if (!ispresent(boardstats)) {
-    return
-  }
-  const skip = [
-    'isdark',
-    'over',
-    'under',
-    'exitnorth',
-    'exitsouth',
-    'exitwest',
-    'exiteast',
-    'timelimit',
-    'maxplayershots',
-  ]
-  const custom = Object.keys(boardstats).filter(
-    (key) => skip.includes(key) === false,
-  )
-  const bincustom = custom.map((name) => ({
-    name,
-    ...exportword(boardstats[name]),
-  })) as BIN_WORD_ENTRY[]
-
-  return {
-    isdark: exportword(boardstats.isdark),
-    over: exportword(boardstats.over),
-    under: exportword(boardstats.under),
-    exitnorth: exportword(boardstats.exitnorth),
-    exitsouth: exportword(boardstats.exitsouth),
-    exitwest: exportword(boardstats.exitwest),
-    exiteast: exportword(boardstats.exiteast),
-    timelimit: exportword(boardstats.timelimit),
-    maxplayershots: exportword(boardstats.maxplayershots),
-    custom: bincustom,
-  }
-}
-
-// import json into board
-export function importboardstats(
-  boardstats: MAYBE<BIN_BOARD_STATS>,
-): MAYBE<BOARD_STATS> {
-  if (!ispresent(boardstats)) {
-    return
-  }
-  const stats: BOARD_STATS = {
-    isdark: importword(boardstats.isdark) as any,
-    over: importword(boardstats.over) as any,
-    under: importword(boardstats.under) as any,
-    exitnorth: importword(boardstats.exitnorth) as any,
-    exitsouth: importword(boardstats.exitsouth) as any,
-    exitwest: importword(boardstats.exitwest) as any,
-    exiteast: importword(boardstats.exiteast) as any,
-    timelimit: importword(boardstats.timelimit) as any,
-    maxplayershots: importword(boardstats.maxplayershots) as any,
-  }
-  boardstats.custom?.forEach((entry) => {
-    stats[entry.name] = entry.value as any
-  })
-  return stats
 }
 
 // safe to serialize copy of board
@@ -123,13 +52,21 @@ export function exportboard(board: MAYBE<BOARD>): MAYBE<BIN_BOARD> {
     return
   }
   return {
-    // specifics
     terrain: board.terrain.map(exportboardelement).filter(ispresent),
     objects: Object.keys(board.objects)
       .map((name) => exportboardelement(board.objects[name]))
       .filter(ispresent),
-    // custom
-    stats: exportboardstats(board.stats),
+    // stats
+    isdark: exportword(board.isdark),
+    over: exportword(board.over),
+    under: exportword(board.under),
+    exitnorth: exportword(board.exitnorth),
+    exitsouth: exportword(board.exitsouth),
+    exitwest: exportword(board.exitwest),
+    exiteast: exportword(board.exiteast),
+    timelimit: exportword(board.timelimit),
+    restartonzap: exportword(board.restartonzap),
+    maxplayershots: exportword(board.maxplayershots),
   }
 }
 
@@ -139,7 +76,6 @@ export function importboard(board: MAYBE<BIN_BOARD>): MAYBE<BOARD> {
     return
   }
   return {
-    // specifics
     terrain: board.terrain.map(importboardelement).filter(ispresent),
     objects: Object.fromEntries<BOARD_ELEMENT>(
       board.objects
@@ -147,31 +83,20 @@ export function importboard(board: MAYBE<BIN_BOARD>): MAYBE<BOARD> {
         .filter((object) => ispresent(object))
         .map((value) => [value?.id ?? '', value]),
     ),
-    // custom
-    stats: importboardstats(board.stats),
+    // stats
+    isdark: importword(board.isdark) as any,
+    over: importword(board.over) as any,
+    under: importword(board.under) as any,
+    exitnorth: importword(board.exitnorth) as any,
+    exitsouth: importword(board.exitsouth) as any,
+    exitwest: importword(board.exitwest) as any,
+    exiteast: importword(board.exiteast) as any,
+    timelimit: importword(board.timelimit) as any,
+    restartonzap: importword(board.restartonzap) as any,
+    maxplayershots: importword(board.maxplayershots) as any,
     // runtime
     codepage: '',
   }
-}
-
-export function boardreadstat(board: MAYBE<BOARD>, key: string): MAYBE<WORD> {
-  if (!ispresent(board)) {
-    return
-  }
-  return board.stats?.[key]
-}
-
-export function boardwritestat(
-  board: MAYBE<BOARD>,
-  key: string,
-  value: WORD,
-): WORD {
-  if (!ispresent(board)) {
-    return
-  }
-  board.stats = board.stats ?? {}
-  board.stats[key] = value
-  return value
 }
 
 export function boardelementindex(board: MAYBE<BOARD>, pt: PT): number {

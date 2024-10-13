@@ -1,7 +1,29 @@
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { BIN_EIGHT_TRACK } from './binary'
-import { EIGHT_MEASURE, EIGHT_TRACK } from './types'
+import {
+  EIGHT_FX,
+  EIGHT_FX_CONFIG,
+  EIGHT_MEASURE,
+  EIGHT_SYNTH,
+  EIGHT_SYNTH_CONFIG,
+  EIGHT_TRACK,
+} from './types'
+
+export function createeighttrackfxconfig(): EIGHT_FX_CONFIG {
+  return {
+    fx: EIGHT_FX.ECHO,
+    settings: {},
+  }
+}
+
+export function createeighttracksynthconfig(): EIGHT_SYNTH_CONFIG {
+  return {
+    synth: EIGHT_SYNTH.SQUARE,
+    effects: [],
+    settings: {},
+  }
+}
 
 export function createeighttrackmeasure(): EIGHT_MEASURE {
   return [-1, -1, -1, -1, -1, -1, -1, -1]
@@ -10,7 +32,16 @@ export function createeighttrackmeasure(): EIGHT_MEASURE {
 export function createeighttrack(): EIGHT_TRACK {
   return {
     tempo: 150,
-    synths: [],
+    synths: [
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
+    ],
     measures: [],
   }
 }
@@ -33,29 +64,3 @@ export function importeighttrack(
   }
   return eighttrack as EIGHT_TRACK
 }
-
-/*
-
-I think the trick will be handling the ambiguity of inserting new lines ??
-  will need to do a re-map operation.
-
-also boards will need to track active eight track state ..
-
-so the idea is we have 8 tracks, to play lines of code on
-
-the granularity is a single measure
-
-so we need line numbers for each measure
-[0, 1, -1, -1, -1, -1, -1, -1]
-[0, 1, -1, -1, -1, -1, -1, -1]
-[0, 1, -1, -1, -1, -1, -1, -1]
-[0, 1, -1, -1, -1, -1, -1, -1]
-
-and the tempo of the eight track
-
-#play [name of eight track], will play the given 8track on the current board
-
-Essentially we get 8 note polyphony
-8 different chances to #play
-
-*/

@@ -2,6 +2,8 @@ import * as bin from 'typed-binary'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
+import { BOARD_SIZE } from './types'
+
 export const BIN_WORD = bin.keyed('bin-word', (binword) =>
   bin.generic(
     {},
@@ -58,21 +60,23 @@ export const BIN_BOARD_ELEMENT = bin.object({
   pushable: bin.optional(bin.bool),
   collision: bin.optional(bin.byte),
   destructible: bin.optional(bin.bool),
-  // common
+  // config
   p1: bin.optional(BIN_WORD),
   p2: bin.optional(BIN_WORD),
   p3: bin.optional(BIN_WORD),
   cycle: bin.optional(BIN_WORD),
   stepx: bin.optional(BIN_WORD),
   stepy: bin.optional(BIN_WORD),
-  player: bin.optional(BIN_WORD),
   sender: bin.optional(BIN_WORD),
   data: bin.optional(BIN_WORD),
-  custom: bin.optional(bin.dynamicArrayOf(BIN_WORD_ENTRY)),
 })
 export type BIN_BOARD_ELEMENT = bin.Parsed<typeof BIN_BOARD_ELEMENT>
 
-export const BIN_BOARD_STATS = bin.object({
+export const BIN_BOARD = bin.object({
+  // specifics
+  terrain: bin.arrayOf(BIN_BOARD_ELEMENT, BOARD_SIZE),
+  objects: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
+  // stats
   isdark: bin.optional(BIN_WORD),
   over: bin.optional(BIN_WORD),
   under: bin.optional(BIN_WORD),
@@ -81,22 +85,12 @@ export const BIN_BOARD_STATS = bin.object({
   exitwest: bin.optional(BIN_WORD),
   exiteast: bin.optional(BIN_WORD),
   timelimit: bin.optional(BIN_WORD),
+  restartonzap: bin.optional(BIN_WORD),
   maxplayershots: bin.optional(BIN_WORD),
-  custom: bin.optional(bin.dynamicArrayOf(BIN_WORD_ENTRY)),
-})
-export type BIN_BOARD_STATS = bin.Parsed<typeof BIN_BOARD_STATS>
-
-export const BIN_BOARD = bin.object({
-  // specifics
-  terrain: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
-  objects: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
-  // custom
-  stats: bin.optional(BIN_BOARD_STATS),
 })
 export type BIN_BOARD = bin.Parsed<typeof BIN_BOARD>
 
 export const BIN_BITMAP = bin.object({
-  id: bin.string,
   width: bin.u32,
   height: bin.u32,
   size: bin.u32,

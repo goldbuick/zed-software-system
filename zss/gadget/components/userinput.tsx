@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import isHotKey from 'is-hotkey'
 import mitt from 'mitt'
 import {

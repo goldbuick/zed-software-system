@@ -30,7 +30,6 @@ import {
   boarddeleteobject,
   boardelementname,
   boardobjectcreatefromkind,
-  boardreadstat,
 } from './board'
 import { boardelementreadstat } from './boardelement'
 import {
@@ -101,54 +100,6 @@ const MEMORY = {
   chips: new Map<string, CHIP_MEMORY>(),
   loaders: new Map<string, string>(),
 }
-
-// // cli's only state ?
-// let openbook = ''
-
-// function createnewbook(maybename?: any) {
-//   const book = createbook([])
-
-//   if (isstring(maybename)) {
-//     book.name = maybename
-//   }
-
-//   memorysetbook(book)
-
-//   // message
-//   writetext(`created ${book.name}`)
-//   cli_flush() // tell register to save changes
-
-//   return book
-// }
-
-// export function ensureopenbookinmain() {
-//   let book = memoryreadbookbyaddress(openbook)
-
-//   // book already open
-//   if (ispresent(book)) {
-//     return book
-//   }
-
-//   // attempt to open main
-//   book = memoryreadbookbysoftware('main')
-
-//   return book
-// }
-
-// export function ensureopenbookbyname(name?: string) {
-//   if (!isstring(name)) {
-//     // create book
-//     return createnewbook()
-//   }
-
-//   // attempt to open book
-//   const book = memoryreadbookbyaddress(name)
-//   if (ispresent(book)) {
-//     openbook = book.id
-//     writetext(`opened [book] ${book.name}`)
-//     return book
-//   }
-// }
 
 export function memorysetdefaultplayer(player: string) {
   MEMORY.defaultplayer = player
@@ -739,12 +690,10 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
   //                                     has done to the chip memory context
 
   // read over board
-  const overid = boardreadstat(playerboard, 'over')
-  const over = bookreadboard(mainbook, isstring(overid) ? overid : '')
+  const over = bookreadboard(mainbook, playerboard.over ?? '')
 
   // read under board
-  const underid = boardreadstat(playerboard, 'under')
-  const under = bookreadboard(mainbook, isstring(underid) ? underid : '')
+  const under = bookreadboard(mainbook, playerboard.under ?? '')
 
   // compose layers
   const boards = [over, playerboard, under].filter(ispresent)

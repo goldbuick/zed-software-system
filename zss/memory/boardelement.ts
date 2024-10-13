@@ -1,8 +1,9 @@
+import { objectKeys } from 'ts-extras'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
-import { BIN_BOARD_ELEMENT, BIN_WORD_ENTRY } from './binary'
-import { BOARD_ELEMENT, WORD } from './types'
+import { BIN_BOARD_ELEMENT } from './binary'
+import { BOARD_ELEMENT, BOARD_ELEMENT_STAT, WORD } from './types'
 import { exportword, importword } from './word'
 
 export function createboardelement() {
@@ -19,43 +20,6 @@ export function exportboardelement(
   if (!ispresent(boardelement)) {
     return
   }
-  const skip = [
-    'kind',
-    // objects only
-    'id',
-    'x',
-    'y',
-    'lx',
-    'ly',
-    'code',
-    // this is a unique name for this instance
-    'name',
-    // display
-    'char',
-    'color',
-    'bg',
-    // interaction
-    'pushable',
-    'collision',
-    'destructible',
-    // common
-    'p1',
-    'p2',
-    'p3',
-    'cycle',
-    'stepx',
-    'stepy',
-    'player',
-    'sender',
-    'data',
-  ]
-  const custom = Object.keys(boardelement).filter(
-    (key) => skip.includes(key) === false,
-  )
-  const bincustom = custom.map((name) => ({
-    name,
-    ...exportword(boardelement[name]),
-  })) as BIN_WORD_ENTRY[]
   return {
     // this element is an instance of an element type
     kind: boardelement.kind,
@@ -83,11 +47,8 @@ export function exportboardelement(
     cycle: exportword(boardelement.cycle),
     stepx: exportword(boardelement.stepx),
     stepy: exportword(boardelement.stepy),
-    player: exportword(boardelement.player),
     sender: exportword(boardelement.sender),
     data: exportword(boardelement.data),
-    // custom
-    custom: bincustom,
   }
 }
 
@@ -98,7 +59,7 @@ export function importboardelement(
   if (!ispresent(boardelement)) {
     return
   }
-  const element = {
+  return {
     // this element is an instance of an element type
     kind: boardelement.kind,
     // objects only
@@ -118,29 +79,21 @@ export function importboardelement(
     pushable: boardelement.pushable ? 1 : undefined,
     collision: boardelement.collision,
     destructible: boardelement.destructible ? 1 : undefined,
-    // common
+    // config
     p1: importword(boardelement.p1) as any,
     p2: importword(boardelement.p2) as any,
     p3: importword(boardelement.p3) as any,
     cycle: importword(boardelement.cycle) as any,
     stepx: importword(boardelement.stepx) as any,
     stepy: importword(boardelement.stepy) as any,
-    player: importword(boardelement.player) as any,
     sender: importword(boardelement.sender) as any,
     data: importword(boardelement.data) as any,
   }
-
-  boardelement.custom?.forEach((entry) => {
-    // @ts-expect-error ahhhhh
-    element[entry.name] = entry.value as WORD
-  })
-
-  return element
 }
 
 export function boardelementreadstat(
   boardelement: MAYBE<BOARD_ELEMENT>,
-  key: string,
+  key: BOARD_ELEMENT_STAT,
   defaultvalue: WORD,
 ): WORD {
   if (!ispresent(boardelement)) {
@@ -152,7 +105,7 @@ export function boardelementreadstat(
 
 export function boardelementwritestat(
   boardelement: MAYBE<BOARD_ELEMENT>,
-  key: string,
+  key: BOARD_ELEMENT_STAT,
   value: WORD,
 ) {
   if (!ispresent(boardelement)) {
@@ -163,9 +116,9 @@ export function boardelementwritestat(
 
 export function boardelementwritestats(
   boardelement: MAYBE<BOARD_ELEMENT>,
-  stats: Record<string, WORD>,
+  stats: Record<BOARD_ELEMENT_STAT, WORD>,
 ) {
-  Object.entries(stats).forEach(([key, value]) =>
-    boardelementwritestat(boardelement, key, value),
+  objectKeys(stats).forEach((key) =>
+    boardelementwritestat(boardelement, key, stats[key]),
   )
 }

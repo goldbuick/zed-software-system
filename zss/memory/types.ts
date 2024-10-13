@@ -41,7 +41,7 @@ export type BOARD_ELEMENT = {
   pushable?: number
   collision?: COLLISION
   destructible?: number
-  // common
+  // config
   p1?: string
   p2?: string
   p3?: string
@@ -57,6 +57,8 @@ export type BOARD_ELEMENT = {
   headless?: boolean
   removed?: number
 }
+
+export type BOARD_ELEMENT_STAT = keyof BOARD_ELEMENT
 
 // boards
 
@@ -86,19 +88,9 @@ export type BOARD = {
 
 export const BOARD_WIDTH = 60
 export const BOARD_HEIGHT = 25
+export const BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT
 
 // 8tracks
-
-export type EIGHT_MEASURE = [
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-]
 
 export enum EIGHT_FX {
   ECHO,
@@ -121,6 +113,17 @@ export type EIGHT_SYNTH_CONFIG = {
   effects: EIGHT_FX_CONFIG[]
   settings: Record<number, WORD>
 }
+
+export type EIGHT_MEASURE = [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+]
 
 export type EIGHT_TRACK = {
   tempo: number

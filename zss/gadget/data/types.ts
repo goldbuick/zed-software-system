@@ -1,5 +1,5 @@
 import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
-import { WORD } from 'zss/memory/word'
+import { WORD } from 'zss/memory/types'
 
 export const BYTES_PER_COLOR = 3
 
