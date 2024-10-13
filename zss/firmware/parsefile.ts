@@ -1,16 +1,15 @@
 import JSZip from 'jszip'
 import mime from 'mime/lite'
 import { api_error, tape_info } from 'zss/device/api'
-import { ensureopenbook } from 'zss/firmware/cli'
 import { ispresent } from 'zss/mapping/types'
-
-import { bookreadcodepagewithtype, bookwritecodepage } from './book'
+import { memoryensuresoftwarebook } from 'zss/memory'
+import { bookreadcodepagewithtype, bookwritecodepage } from 'zss/memory/book'
 import {
   codepagereadname,
   codepagereadtype,
   codepagereadtypetostring,
   createcodepage,
-} from './codepage'
+} from 'zss/memory/codepage'
 
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
   const bytes = [...filebytes.slice(0, 4)]
@@ -41,8 +40,12 @@ function createcodepagefromtext(text: string) {
   const pagename = codepagereadname(codepage)
   const pagetype = codepagereadtypetostring(codepage)
 
+  const book = memoryensuresoftwarebook('main')
+  if (!ispresent(book)) {
+    return
+  }
+
   // only create if target doesn't already exist
-  const book = ensureopenbook()
   const maybepage = bookreadcodepagewithtype(
     book,
     codepagereadtype(codepage),

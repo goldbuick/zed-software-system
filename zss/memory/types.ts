@@ -50,38 +50,25 @@ export type BOARD_ELEMENT = {
   stepy?: number
   sender?: string
   data?: any
-  // custom
-  [key: string]: WORD
   // runtime
   category?: CATEGORY
-  // @ts-expect-error rude type
   kinddata?: BOARD_ELEMENT
   kindcode?: string
-  // @ts-expect-error rude type
   headless?: boolean
   removed?: number
 }
 
 // boards
 
-// simple built-ins go here
-export type BOARD_STATS = {
+export type BOARD = {
+  // specifics
+  terrain: MAYBE<BOARD_ELEMENT>[]
+  objects: Record<string, BOARD_ELEMENT>
+  // stats
   isdark?: number
-  // concept, you can add scope here to address other books
-  // and that represents being able to switch out different boards for your engine to edit
-  // examples:
-  //   main:seeker (book main, board seeker)
-  //   main:sid_sdfefef (book main, board sid_sdfefef)
-  //
-  // would love to have a built in way to select a resource
-  //   have some simple contexts to work in:
-  //     like select a book (or create a new one)
-  //     like select a type of codepage in a book (or create a new one)
-  //
-  // board displayed over this one
+  // board displayed over/under this one
+  // uses content slot book
   over?: string
-  // only view mode supported for above boards
-  // board displayed under this one
   under?: string
   // common stats
   exitnorth?: string
@@ -89,29 +76,16 @@ export type BOARD_STATS = {
   exitwest?: string
   exiteast?: string
   timelimit?: number
+  restartonzap?: number
   maxplayershots?: number
-  // generic stats
-  [key: string]: WORD
-}
-
-export type BOARD = {
-  // specifics
-  terrain: MAYBE<BOARD_ELEMENT>[]
-  objects: Record<string, BOARD_ELEMENT>
-  // custom
-  stats?: BOARD_STATS
   // runtime only
   codepage: string
   lookup?: MAYBE_STRING[]
   named?: Record<string, Set<string | number>>
 }
 
-export type MAYBE_BOARD = MAYBE<BOARD>
-
 export const BOARD_WIDTH = 60
 export const BOARD_HEIGHT = 25
-
-export type MAYBE_BOARD_STATS = MAYBE<BOARD_STATS>
 
 // 8tracks
 
@@ -127,7 +101,9 @@ export type EIGHT_MEASURE = [
 ]
 
 export enum EIGHT_FX {
-  SQUARE,
+  ECHO,
+  REVERB,
+  DISTORTION,
 }
 
 export type EIGHT_FX_CONFIG = {
@@ -137,6 +113,7 @@ export type EIGHT_FX_CONFIG = {
 
 export enum EIGHT_SYNTH {
   SQUARE,
+  TRIANGLE,
 }
 
 export type EIGHT_SYNTH_CONFIG = {

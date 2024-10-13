@@ -87,7 +87,6 @@ export async function decompressbooks(base64bytes: string) {
       if (binbooks) {
         const reader = new bin.BufferReader(binbooks.buffer)
         const books = BIN_BOOKS.read(reader).map(importbook).filter(ispresent)
-        console.info('imported', books)
         resolve(books)
       }
     })

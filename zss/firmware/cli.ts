@@ -14,20 +14,19 @@ import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryclearbook,
+  memoryensuresoftwarebook,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
   memoryreadchip,
   memoryreadcontext,
-  memoryreadfirstbook,
-  memorysetbook,
+  memorysetsoftwarebook,
 } from 'zss/memory'
 import {
   bookclearcodepage,
   bookreadcodepagebyaddress,
   bookreadflag,
   booksetflag,
-  createbook,
 } from 'zss/memory/book'
 import { codepagereadname, codepagereadtypetostring } from 'zss/memory/codepage'
 
@@ -77,69 +76,8 @@ function writetext(text: string) {
   write(`${COLOR_EDGE}$blue${text}`)
 }
 
-// cli's only state ?
-let openbook = ''
-
-function createnewbook(maybename?: any) {
-  const book = createbook([])
-
-  if (isstring(maybename)) {
-    book.name = maybename
-  }
-
-  memorysetbook(book)
-
-  // message
-  writetext(`created ${book.name}`)
-  cli_flush() // tell register to save changes
-
-  return book
-}
-
-export function ensureopenbook() {
-  let book = memoryreadbookbyaddress(openbook)
-
-  // book already open
-  if (ispresent(book)) {
-    return book
-  }
-
-  // attempt to open main
-  book = memoryreadbookbysoftware('main')
-
-  // try first book
-  if (!ispresent(book)) {
-    book = memoryreadfirstbook()
-  }
-
-  // success
-  if (ispresent(book)) {
-    openbook = book.id
-    writetext(`opened [book] ${book.name}`)
-    return book
-  }
-
-  // create book
-  return createnewbook()
-}
-
-export function ensureopenbookbyname(name?: string) {
-  if (!isstring(name)) {
-    // create book
-    return createnewbook()
-  }
-
-  // attempt to open book
-  const book = memoryreadbookbyaddress(name)
-  if (ispresent(book)) {
-    openbook = book.id
-    writetext(`opened [book] ${book.name}`)
-    return book
-  }
-}
-
-function cli_flush() {
-  vm_flush('cli')
+function ensureopenbookinmain() {
+  return memoryensuresoftwarebook('main')
 }
 
 export const CLI_FIRMWARE = createfirmware({
@@ -193,8 +131,10 @@ export const CLI_FIRMWARE = createfirmware({
       ARG_TYPE.STRING,
     ])
 
-    const book = createnewbook(name)
-    chip.command('bookopen', book.id)
+    const book = memoryensuresoftwarebook('main', name)
+    if (ispresent(book)) {
+      chip.command('bookopen', book.id)
+    }
     return 0
   })
   .command('bookopen', (chip, words) => {
@@ -205,8 +145,8 @@ export const CLI_FIRMWARE = createfirmware({
 
     const book = memoryreadbookbyaddress(name)
     if (ispresent(book)) {
-      openbook = name
       writetext(`opened [book] ${book.name}`)
+      memorysetsoftwarebook('main', book.id)
       chip.command('pages')
     } else {
       api_error('cli', 'bookopen', `book ${name} not found`, memory.player)
@@ -214,21 +154,22 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('booktrash', (chip, words) => {
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
+    const [address] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
     ])
 
-    const opened = memoryreadbookbyaddress(openbook)
-    const book = memoryreadbookbyaddress(name)
+    const opened = memoryreadbookbysoftware('main')
+    const book = memoryreadbookbyaddress(address)
     if (ispresent(book)) {
       // clear opened
       if (opened === book) {
-        openbook = ''
+        memorysetsoftwarebook('main', '')
       }
       // clear book
-      memoryclearbook(name)
+      memoryclearbook(address)
       writetext(`trashed [book] ${book.name}`)
-      cli_flush() // tell register to save changes
+      vm_flush('cli')
+      // reset to good state
       chip.command('pages')
     }
     return 0
@@ -240,13 +181,11 @@ export const CLI_FIRMWARE = createfirmware({
     ])
 
     // create book if needed
-    const book = ensureopenbook()
+    const book = ensureopenbookinmain()
     if (!ispresent(book)) {
       return 0
     }
 
-    // store success !
-    openbook = book.id
     const codepage = bookreadcodepagebyaddress(book, page)
     if (ispresent(codepage)) {
       const name = codepagereadname(codepage)
@@ -260,7 +199,7 @@ export const CLI_FIRMWARE = createfirmware({
       const type = codepagereadtypetostring(codepage)
       tape_editor_open(
         'cli',
-        openbook,
+        book.id,
         codepage.id,
         type,
         `@book ${book.name}:${name}`,
@@ -276,13 +215,13 @@ export const CLI_FIRMWARE = createfirmware({
       ARG_TYPE.STRING,
     ])
 
-    const book = ensureopenbook()
+    const book = ensureopenbookinmain()
     const codepage = bookclearcodepage(book, page)
     if (ispresent(page)) {
       const name = codepagereadname(codepage)
       const pagetype = codepagereadtypetostring(codepage)
       writetext(`trashed [${pagetype}] ${name}`)
-      cli_flush() // tell register to save changes
+      vm_flush('cli')
       chip.command('pages')
     }
 
@@ -323,7 +262,7 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('pages', (chip) => {
     writesection(`pages`)
-    const book = ensureopenbook()
+    const book = ensureopenbookinmain()
     if (ispresent(book)) {
       if (book.pages.length) {
         book.pages.forEach((page) => {
@@ -355,7 +294,7 @@ export const CLI_FIRMWARE = createfirmware({
       })
       write('')
     }
-    const book = memoryreadbookbyaddress(openbook)
+    const book = memoryreadbookbysoftware('main')
     if (ispresent(book)) {
       writetext(`pages in open ${book.name} book`)
       book.pages.forEach((page) => {

@@ -10,7 +10,12 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { CHIP_MEMORY, memoryreadchip, memoryreadcontext } from 'zss/memory'
+import {
+  CHIP_MEMORY,
+  memoryensuresoftwarebook,
+  memoryreadchip,
+  memoryreadcontext,
+} from 'zss/memory'
 import {
   bookreadcodepagebyaddress,
   bookreadcodepagewithtype,
@@ -38,17 +43,12 @@ import {
   EIGHT_TRACK,
 } from 'zss/memory/types'
 
-import { ensureopenbook, ensureopenbookbyname } from './cli'
 import { ARG_TYPE, readargs } from './wordtypes'
 
 const COLOR_EDGE = '$dkpurple'
 
 function write(text: string) {
   tape_info('mods', `${COLOR_EDGE}$blue${text}`)
-}
-
-function flush() {
-  vm_flush('mods')
 }
 
 type MOD_STATE = {
@@ -172,7 +172,7 @@ function ensurecodepage<T extends CODE_PAGE_TYPE>(
   if (ispresent(codepage)) {
     bookwritecodepage(memory.book, codepage)
     applymod(modstate, codepage, address)
-    flush() // tell register to save changes
+    vm_flush('mods') // tell register to save changes
   }
 
   return codepage
@@ -190,7 +190,6 @@ export const MODS_FIRMWARE = createfirmware({
   tock() {},
 })
   .command('mod', (chip, words) => {
-    ensureopenbook()
     const memory = memoryreadchip(chip.id())
     const modstate = readmodstate(chip.id())
 
@@ -204,12 +203,8 @@ export const MODS_FIRMWARE = createfirmware({
 
     // book is a special case
     if (maybetype === 'book') {
-      if (maybeaddress && isstring(maybeaddress)) {
-        ensureopenbookbyname(maybeaddress)
-      } else {
-        // create new book
-        ensureopenbookbyname()
-      }
+      // create new book
+      memoryensuresoftwarebook('main', maybeaddress)
       // reset mod state
       modstate.type = CODE_PAGE_TYPE.ERROR
       modstate.target = ''
@@ -261,7 +256,6 @@ export const MODS_FIRMWARE = createfirmware({
     return 0
   })
   .command('read', (chip, words) => {
-    ensureopenbook()
     const modstate = readmodstate(chip.id())
     if (!ispresent(modstate.value)) {
       write(`use #mod before #read`)
@@ -314,7 +308,6 @@ export const MODS_FIRMWARE = createfirmware({
     return 0
   })
   .command('write', (chip, words) => {
-    ensureopenbook()
     const modstate = readmodstate(chip.id())
     if (!ispresent(modstate.value)) {
       write(`use #mod before #write`)

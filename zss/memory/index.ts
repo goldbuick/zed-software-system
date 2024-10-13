@@ -1,6 +1,12 @@
 import { CHIP, CONFIG } from 'zss/chip'
 import { api_error, tape_debug, tape_info } from 'zss/device/api'
 import { DRIVER_TYPE } from 'zss/firmware/boot'
+import {
+  mimetypeofbytesread,
+  parsebinaryfile,
+  parsetextfile,
+  parsezipfile,
+} from 'zss/firmware/parsefile'
 import { createreadcontext } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
@@ -36,14 +42,9 @@ import {
   bookreadboard,
   bookreadcodepagesbytype,
   bookreadobject,
+  createbook,
 } from './book'
 import { codepagereadstats } from './codepage'
-import {
-  mimetypeofbytesread,
-  parsebinaryfile,
-  parsetextfile,
-  parsezipfile,
-} from './parsefile'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -101,6 +102,54 @@ const MEMORY = {
   loaders: new Map<string, string>(),
 }
 
+// // cli's only state ?
+// let openbook = ''
+
+// function createnewbook(maybename?: any) {
+//   const book = createbook([])
+
+//   if (isstring(maybename)) {
+//     book.name = maybename
+//   }
+
+//   memorysetbook(book)
+
+//   // message
+//   writetext(`created ${book.name}`)
+//   cli_flush() // tell register to save changes
+
+//   return book
+// }
+
+// export function ensureopenbookinmain() {
+//   let book = memoryreadbookbyaddress(openbook)
+
+//   // book already open
+//   if (ispresent(book)) {
+//     return book
+//   }
+
+//   // attempt to open main
+//   book = memoryreadbookbysoftware('main')
+
+//   return book
+// }
+
+// export function ensureopenbookbyname(name?: string) {
+//   if (!isstring(name)) {
+//     // create book
+//     return createnewbook()
+//   }
+
+//   // attempt to open book
+//   const book = memoryreadbookbyaddress(name)
+//   if (ispresent(book)) {
+//     openbook = book.id
+//     writetext(`opened [book] ${book.name}`)
+//     return book
+//   }
+// }
+
 export function memorysetdefaultplayer(player: string) {
   MEMORY.defaultplayer = player
 }
@@ -137,6 +186,39 @@ export function memoryreadbookbysoftware(
   slot: keyof typeof MEMORY.software,
 ): MAYBE<BOOK> {
   return memoryreadbookbyaddress(MEMORY.software[slot])
+}
+
+export function memoryensuresoftwarebook(
+  slot: keyof typeof MEMORY.software,
+  maybename?: string,
+) {
+  let book = memoryreadbookbysoftware(slot)
+
+  // slot is set
+  if (ispresent(book)) {
+    return book
+  }
+
+  // try first book
+  if (!ispresent(book)) {
+    book = memoryreadfirstbook()
+  }
+
+  // create book
+  if (!ispresent(book)) {
+    book = createbook([])
+    if (isstring(maybename)) {
+      book.name = maybename
+    }
+    memorysetbook(book)
+    tape_info('memory', `created [book] ${book.name}`)
+  }
+
+  // success
+  if (ispresent(book)) {
+    memorysetsoftwarebook('main', book.id)
+    tape_info('memory', `opened [book] ${book.name}`)
+  }
 }
 
 export function memoryresetbooks(books: BOOK[]) {
@@ -344,6 +426,8 @@ export function memorycli(
   player: string,
   cli: string,
 ) {
+  memoryensuresoftwarebook('main')
+
   // we try and execute cli invokes in main
   // its okay if we do not find main
   const mainbook = memoryreadbookbysoftware('main')
