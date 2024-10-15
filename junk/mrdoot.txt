@@ -11,3 +11,9 @@
 #loop
 
 
+#play +cxcxc ; cxxxc ; -cxcxxc
+#play ++cxcxc ; cxxxc ; -cxcxxc
+
+#play 0xx1xx2xxPxx4xx5xx6xx7xx8xx9
+
+#play +++ffff;9999
