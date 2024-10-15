@@ -39,14 +39,6 @@ export function gadgetserver_clearscroll(sender: string, player: string) {
   hub.emit('gadgetserver:clearscroll', sender, undefined, player)
 }
 
-export function pcspeaker_play(
-  sender: string,
-  priority: number,
-  buffer: string,
-) {
-  hub.emit('pcspeaker:play', sender, [priority, buffer])
-}
-
 export function register_flush(sender: string, books: string) {
   hub.emit('register:flush', sender, books)
 }
@@ -61,6 +53,10 @@ export function register_biosflash(sender: string) {
 
 export function register_biostrash(sender: string) {
   hub.emit('register:biostrash', sender)
+}
+
+export function synth_play(sender: string, priority: number, buffer: string) {
+  hub.emit('synth:play', sender, [priority, buffer])
 }
 
 export function tape_info(sender: string, ...message: any[]) {
