@@ -47,6 +47,25 @@ drumtick.set({
   },
 })
 
+const drumcowbellfilter = new Tone.Filter(350, 'bandpass').toDestination()
+
+const drumcowbellgain = new Tone.Gain().connect(drumcowbellfilter)
+drumcowbellgain.gain.value = 0
+
+const drumcowbell = new Tone.PolySynth().connect(drumcowbellgain)
+drumcowbell.maxPolyphony = 8
+drumcowbell.set({
+  envelope: {
+    attack: 0.001,
+    decay: 0.01,
+    release: 0.1,
+    sustain: 0.1,
+  },
+  oscillator: {
+    type: 'square',
+  },
+})
+
 const drumbass = new Tone.MembraneSynth().toDestination()
 
 let enabled = false
@@ -74,17 +93,20 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
     SYNTH[synth].triggerAttackRelease(note, duration, time)
   }
   if (isnumber(note)) {
-    // const timeseconds = Tone.Time(time).toSeconds()
     switch (note) {
-      case 0: {
-        // DRUM_TICK
+      case 0: // DRUM_TICK
         drumtick.triggerAttackRelease('C6', '1i', time)
         break
-      }
       case 1: // DRUM_TWEET
         break
-      case 2: // DRUM_COWBELL
+      case 2: {
+        // DRUM_COWBELL
+        const ramp = Tone.Time(duration).toSeconds()
+        drumcowbellgain.gain.setValueAtTime(0.5, time)
+        drumcowbellgain.gain.exponentialRampToValueAtTime(0.01, ramp + time)
+        drumcowbell.triggerAttackRelease([800, 540], duration, time)
         break
+      }
       case 3: // DRUM_CLAP
         break
       case 4: // DRUM_HI_SNARE
