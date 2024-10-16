@@ -31,37 +31,23 @@ const SYNTH = [
   createsynth(),
 ]
 
-const DRUMS = {
-  // DRUM_TICK
-  [0]: new Tone.Oscillator().toDestination(),
-  // DRUM_TWEET
-  [1]: 0,
-  // DRUM_COWBELL
-  [2]: 0,
-  // DRUM_CLAP
-  [3]: 0,
-  // DRUM_HI_SNARE
-  [4]: 0,
-  // DRUM_HI_WOODBLOCK
-  [5]: 0,
-  // DRUM_LOW_TOM
-  [6]: 0,
-  // DRUM_LOW_SNARE
-  [7]: 0,
-  // DRUM_LOW_WOODBLOCK
-  [8]: 0,
-  // DRUM_BASS
-  [9]: new Tone.MembraneSynth().toDestination(),
-}
-
 // config drums
-const HHF = 40
-const HHF_PARTIALS = [2, 3, 4.16, 5.43, 6.79, 8.21]
 
-DRUMS[0].set({
-  type: 'square',
-  partials: HHF_PARTIALS.map((item) => item * HHF),
+const drumtick = new Tone.PolySynth().toDestination()
+drumtick.maxPolyphony = 8
+drumtick.set({
+  envelope: {
+    attack: 0.001,
+    decay: 0.001,
+    release: 0.001,
+    sustain: 0.001,
+  },
+  oscillator: {
+    type: 'square',
+  },
 })
+
+const drumbass = new Tone.MembraneSynth().toDestination()
 
 let enabled = false
 export async function enableaudio() {
@@ -87,12 +73,14 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
   if (isstring(note) && ispresent(SYNTH[synth])) {
     SYNTH[synth].triggerAttackRelease(note, duration, time)
   }
-  if (isnumber(note) && DRUMS[note as keyof typeof DRUMS]) {
+  if (isnumber(note)) {
+    // const timeseconds = Tone.Time(time).toSeconds()
     switch (note) {
-      case 0: // DRUM_TICK
-        DRUMS[0].start(time)
-        DRUMS[0].stop('+256n')
+      case 0: {
+        // DRUM_TICK
+        drumtick.triggerAttackRelease('C6', '1i', time)
         break
+      }
       case 1: // DRUM_TWEET
         break
       case 2: // DRUM_COWBELL
@@ -110,7 +98,7 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
       case 8: // DRUM_LOW_WOODBLOCK
         break
       case 9: // DRUM_BASS
-        DRUMS[9].triggerAttackRelease('C2', '8n', time)
+        drumbass.triggerAttackRelease('C2', '8n', time)
         break
     }
   }
