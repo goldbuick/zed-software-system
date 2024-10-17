@@ -126,65 +126,213 @@ function drumclaptrigger(duration: string, time: number) {
 
 // drumhisnare
 
-function drumhisnaretrigger(duration: string, time: number) {
-  //
-}
+const drumhisnaredistortion = new Tone.Distortion().toDestination()
+drumhisnaredistortion.set({
+  distortion: 0.666,
+})
 
-// drumhiwoodblock
-
-function drumhiwoodblocktrigger(duration: string, time: number) {
-  //
-}
-
-// drumlowsnare
-
-function drumlowsnaretrigger(duration: string, time: number) {
-  //
-}
-
-// drumlowtom
-
-// const drumlowtomeq = new Tone.EQ3(-3, 10, -3).toDestination()
-
-const drumlowtomoscgain = new Tone.Gain().toDestination()
-
-const drumlowtomosc = new Tone.PolySynth()
-drumlowtomosc.maxPolyphony = 8
-drumlowtomosc.set({
+const drumhisnareosc = new Tone.Synth()
+drumhisnareosc.set({
   envelope: {
-    attack: 0.001,
-    decay: 1,
-    sustain: 0.01,
-    release: 0.01,
+    attack: 0,
+    decay: 0.1,
+    sustain: 0,
+    release: 1,
   },
   oscillator: {
     type: 'triangle',
   },
 })
-drumlowtomosc.connect(drumlowtomoscgain)
+drumhisnareosc.connect(drumhisnaredistortion)
 
-const drumlowtomnoisefiltergain = new Tone.Gain().toDestination()
+const drumhisnarefilter = new Tone.Filter()
+drumhisnarefilter.set({
+  type: 'highpass',
+  frequency: 10000,
+})
+drumhisnarefilter.connect(drumhisnaredistortion)
 
-const drumlowtomnoisefilter = new Tone.Filter(1000, 'highpass')
-drumlowtomnoisefilter.connect(drumlowtomnoisefiltergain)
+const drumhisnarenoise = new Tone.NoiseSynth()
+drumhisnarenoise.set({
+  envelope: {
+    attack: 0.01,
+    decay: 0.1,
+    sustain: 0.001,
+    release: 0.1,
+  },
+})
+drumhisnarenoise.connect(drumhisnarefilter)
 
-const drumlowtomnoise = new Tone.NoiseSynth()
-drumlowtomnoise.connect(drumlowtomnoisefilter)
+function drumhisnaretrigger(duration: string, time: number) {
+  const ramp = Tone.Time('512n').toSeconds()
+  const ramp2 = Tone.Time('32n').toSeconds()
+
+  drumhisnareosc.triggerAttackRelease(10000, duration, time, 1)
+  drumhisnareosc.frequency.exponentialRampToValueAtTime(300, time + ramp)
+  drumhisnareosc.frequency.exponentialRampToValueAtTime(100, time + ramp2)
+
+  drumhisnarenoise.triggerAttackRelease('8n', time, 0.333)
+  drumhisnarenoise.volume.setValueAtTime(1, time)
+  drumhisnarenoise.volume.exponentialRampToValueAtTime(
+    0,
+    time + Tone.Time('32n').toSeconds(),
+  )
+}
+
+// drumhiwoodblock
+
+const drumhiwoodblockfilter = new Tone.Filter().toDestination()
+drumhiwoodblockfilter.set({
+  type: 'bandpass',
+  frequency: 256,
+})
+
+const drumhiwoodblock = new Tone.FMSynth()
+drumhiwoodblock.set({
+  harmonicity: 8,
+  modulationIndex: 2,
+  oscillator: {
+    type: 'sine',
+  },
+  envelope: {
+    attack: 0.001,
+    decay: 2,
+    sustain: 0.1,
+    release: 2,
+  },
+  modulation: {
+    type: 'square',
+  },
+  modulationEnvelope: {
+    attack: 0.002,
+    decay: 0.2,
+    sustain: 0,
+    release: 0.2,
+  },
+})
+drumhiwoodblock.connect(drumhiwoodblockfilter)
+
+const drumhiwoodblocknoise = new Tone.MetalSynth()
+drumhiwoodblocknoise.connect(drumhiwoodblockfilter)
+
+function drumhiwoodblocktrigger(duration: string, time: number) {
+  drumhiwoodblock.triggerAttackRelease('C4', '8n', time)
+  drumhiwoodblocknoise.triggerAttackRelease('C6', '8n', time)
+}
+
+// drumlowsnare
+
+const drumlowsnaredistortion = new Tone.Distortion().toDestination()
+drumlowsnaredistortion.set({
+  distortion: 0.876,
+})
+
+const drumlowsnareosc = new Tone.Synth()
+drumlowsnareosc.set({
+  envelope: {
+    attack: 0,
+    decay: 0.1,
+    sustain: 0,
+    release: 1,
+  },
+  oscillator: {
+    type: 'triangle',
+  },
+})
+drumlowsnareosc.connect(drumlowsnaredistortion)
+
+const drumlowsnarefilter = new Tone.Filter()
+drumlowsnarefilter.set({
+  type: 'highpass',
+  frequency: 10000,
+})
+drumlowsnarefilter.connect(drumlowsnaredistortion)
+
+const drumlowsnarenoise = new Tone.NoiseSynth()
+drumlowsnarenoise.set({
+  envelope: {
+    attack: 0.01,
+    decay: 0.1,
+    sustain: 0.001,
+    release: 0.1,
+  },
+})
+drumlowsnarenoise.connect(drumlowsnarefilter)
+
+function drumlowsnaretrigger(duration: string, time: number) {
+  const ramp = Tone.Time('512n').toSeconds()
+  const ramp2 = Tone.Time('32n').toSeconds()
+
+  drumlowsnareosc.triggerAttackRelease(10000, duration, time, 1)
+  drumlowsnareosc.frequency.exponentialRampToValueAtTime(150, time + ramp)
+  drumlowsnareosc.frequency.exponentialRampToValueAtTime(100, time + ramp2)
+
+  drumlowsnarenoise.triggerAttackRelease('8n', time, 0.25)
+  drumlowsnarenoise.volume.setValueAtTime(1, time)
+  drumlowsnarenoise.volume.exponentialRampToValueAtTime(
+    0,
+    time + Tone.Time('32n').toSeconds(),
+  )
+}
+
+// drumlowtom
+
+const drumlowtomosc = new Tone.Synth().toDestination()
+drumlowtomosc.set({
+  envelope: {
+    attack: 0.01,
+    decay: 0.5,
+    sustain: 0.001,
+    release: 0.1,
+  },
+  oscillator: {
+    type: 'sawtooth',
+  },
+})
+
+const drumlowtomosc2 = new Tone.Synth().toDestination()
+drumlowtomosc.set({
+  envelope: {
+    attack: 0.01,
+    decay: 0.5,
+    sustain: 0.001,
+    release: 0.1,
+  },
+  oscillator: {
+    type: 'triangle',
+  },
+})
+
+const drumlowtomnoise = new Tone.NoiseSynth().toDestination()
+drumlowtomnoise.set({
+  envelope: {
+    attack: 0.01,
+    decay: 0.1,
+    sustain: 0.001,
+    release: 0.1,
+  },
+})
 
 function drumlowtomtrigger(time: number) {
-  drumlowtomnoise.triggerAttack(time)
+  const duration = '8n'
+  const ramp = Tone.Time('8n').toSeconds()
 
-  // const duration = Tone.Time('8n').toSeconds()
-  // drumlowtomnoisefilter.frequency.setValueAtTime(10000, time)
-  // drumlowtomnoisefilter.frequency.exponentialRampToValueAtTime(
-  //   10000,
-  //   time + duration,
-  // )
-  // drumlowtomnoisefiltergain.gain.setValueAtTime(1, time)
-  // drumlowtomnoisefiltergain.gain.exponentialRampToValueAtTime(
-  //   0.1,
-  //   time + duration,
-  // )
+  drumlowtomosc.triggerAttackRelease('C4', duration, time, 1)
+  drumlowtomosc.frequency.exponentialRampToValueAtTime(
+    Tone.Frequency('C0').toFrequency(),
+    time + ramp,
+  )
+
+  drumlowtomosc2.triggerAttackRelease('C5', duration, time, 0.5)
+  drumlowtomosc2.frequency.exponentialRampToValueAtTime(
+    Tone.Frequency('C0').toFrequency(),
+    time + ramp,
+  )
+
+  const ramp2 = Tone.Time('4n').toSeconds()
+  drumlowtomnoise.triggerAttackRelease('8n', time)
+  drumlowtomnoise.volume.setValueAtTime(1, time)
+  drumlowtomnoise.volume.exponentialRampToValueAtTime(0, time + ramp2)
 }
 
 // drumlowwoodblock
