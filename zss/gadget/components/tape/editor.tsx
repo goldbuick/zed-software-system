@@ -3,7 +3,6 @@ import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
 import { useWriteText } from 'zss/gadget/data/textformat'
-import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
 import {
@@ -12,6 +11,7 @@ import {
   splitcoderows,
   useTapeEditor,
 } from './common'
+import { BackPlate } from './elements/backplate'
 import { EditorFrame } from './elements/editorframe'
 import { EditorInput } from './elements/editorinput'
 import { EditorRows } from './elements/editorrows'
@@ -46,23 +46,18 @@ export function TapeEditor() {
   const strvalue = ispresent(value) ? value.toJSON() : ''
   const rows = splitcoderows(strvalue)
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
-  const halfviewheight = Math.round((context.height - 3) * 0.5)
-  const yoffset = clamp(
-    ycursor - halfviewheight,
-    0,
-    rows.length - halfviewheight,
-  )
 
   // measure edges once
   const props = {
+    yoffset: tapeeditor.scroll,
     codepage,
     ycursor,
-    yoffset,
     rows,
   }
 
   return (
     <>
+      <BackPlate context={context} />
       <EditorFrame />
       <EditorRows {...props} />
       <EditorInput {...props} />

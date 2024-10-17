@@ -13,15 +13,14 @@ import {
   And_testCstChildren,
   Arith_expr_itemCstChildren,
   Arith_exprCstChildren,
-  Command_block_ifCstChildren,
   Command_blockCstChildren,
   Command_breakCstChildren,
   Command_continueCstChildren,
   Command_else_ifCstChildren,
   Command_elseCstChildren,
+  Command_if_blockCstChildren,
   Command_ifCstChildren,
   Command_playCstChildren,
-  Command_readCstChildren,
   Command_repeatCstChildren,
   Command_whileCstChildren,
   CommandsCstChildren,
@@ -448,7 +447,9 @@ class ScriptVisitor
   stmt_text(ctx: Stmt_textCstChildren) {
     return createcodenode(ctx, {
       type: NODE.TEXT,
-      value: tokenstring(ctx.token_text, ''),
+      value:
+        tokenstring(ctx.token_stringliteraldouble, '') ||
+        tokenstring(ctx.token_text, ''),
     })
   }
 
@@ -511,9 +512,9 @@ class ScriptVisitor
     if (ctx.command_if) {
       return this.go(ctx.command_if)
     }
-    if (ctx.command_read) {
-      return this.go(ctx.command_read)
-    }
+    // if (ctx.command_read) {
+    //   return this.go(ctx.command_read)
+    // }
     if (ctx.command_while) {
       return this.go(ctx.command_while)
     }
@@ -560,7 +561,7 @@ class ScriptVisitor
     })
   }
 
-  command_if_block(ctx: Command_block_ifCstChildren) {
+  command_if_block(ctx: Command_if_blockCstChildren) {
     return [
       this.go(ctx.do_inline),
       this.go(ctx.do_block),
@@ -590,12 +591,16 @@ class ScriptVisitor
     })
   }
 
+  command_loop(ctx: Command_blockCstChildren) {
+    return [this.go(ctx.do_inline), this.go(ctx.do_block)].flat()
+  }
+
   command_while(ctx: Command_whileCstChildren) {
     return createcodenode(ctx, {
       type: NODE.WHILE,
       method: 'while', // future variants of while ( move, take ? )
       words: this.go(ctx.words),
-      lines: this.go(ctx.command_block),
+      lines: this.go(ctx.command_loop),
     })
   }
 
@@ -603,18 +608,18 @@ class ScriptVisitor
     return createcodenode(ctx, {
       type: NODE.REPEAT,
       words: this.go(ctx.words),
-      lines: this.go(ctx.command_block),
+      lines: this.go(ctx.command_loop),
     })
   }
 
-  command_read(ctx: Command_readCstChildren) {
-    return createcodenode(ctx, {
-      type: NODE.READ,
-      flags: ctx.token_stringliteral.map((token) => tokenstring([token], '')),
-      words: this.go(ctx.words),
-      lines: this.go(ctx.command_block),
-    })
-  }
+  // command_read(ctx: Command_readCstChildren) {
+  //   return createcodenode(ctx, {
+  //     type: NODE.READ,
+  //     flags: ctx.token_stringliteral.map((token) => tokenstring([token], '')),
+  //     words: this.go(ctx.words),
+  //     lines: this.go(ctx.command_loop),
+  //   })
+  // }
 
   command_break(ctx: Command_breakCstChildren) {
     return createcodenode(ctx, {

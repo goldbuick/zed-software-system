@@ -90,7 +90,7 @@ function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
   }
 
   // detect beginning of text
-  if (`@#/?':!`.includes(text[cursor])) {
+  if (`@#/?':!"`.includes(text[cursor])) {
     return null
   }
 
@@ -144,7 +144,7 @@ export const stringliteral = createSimpleToken({
 
 export const stringliteraldouble = createSimpleToken({
   name: 'stringliteraldouble',
-  pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}))*"?/,
+  pattern: /"(?:[^\\"]|\\(?:[^\n\r]|u[0-9a-fA-F]{4}))*"/,
 })
 
 export const numberliteral = createSimpleToken({
@@ -243,16 +243,13 @@ export const command_play = createSimpleToken({
 
 export const command_if = createWordToken('if')
 export const command_do = createWordToken('do')
+export const command_done = createWordToken('done')
 export const command_then = createWordToken('then', true)
 export const command_else = createWordToken('else')
-export const command_endif = createWordToken('endif')
 export const command_while = createWordToken('while')
-export const command_endwhile = createWordToken('endwhile')
 export const command_repeat = createWordToken('repeat')
-export const command_endrepeat = createWordToken('endrepeat')
-export const command_read = createWordToken('read')
+// export const command_read = createWordToken('read')
 export const command_into = createWordToken('into')
-export const command_endread = createWordToken('endread')
 export const command_break = createWordToken('break')
 export const command_continue = createWordToken('continue')
 
@@ -315,17 +312,14 @@ export const allTokens = createTokenSet([
   whitespace,
   // core / structure commands
   command_if,
+  command_done,
   command_do,
   command_then,
   command_else,
-  command_endif,
   command_while,
-  command_endwhile,
   command_repeat,
-  command_endrepeat,
-  command_read,
+  // command_read,
   command_into,
-  command_endread,
   command_break,
   command_continue,
 ])

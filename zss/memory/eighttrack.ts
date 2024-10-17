@@ -1,49 +1,66 @@
-import { createsid } from 'zss/mapping/guid'
-import { MAYBE } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 
-export type EIGHT_TRACK_PATTERNS = {
-  id?: string
-  patterns: string[]
-}
+import { BIN_EIGHT_TRACK } from './binary'
+import {
+  EIGHT_FX,
+  EIGHT_FX_CONFIG,
+  EIGHT_MEASURE,
+  EIGHT_SYNTH,
+  EIGHT_SYNTH_CONFIG,
+  EIGHT_TRACK,
+} from './types'
 
-export type EIGHT_TRACK = {
-  id?: string
-  tracks: EIGHT_TRACK_PATTERNS[]
-}
-
-export type MAYBE_EIGHT_TRACK = MAYBE<EIGHT_TRACK>
-
-function createpatterns(): EIGHT_TRACK_PATTERNS {
+export function createeighttrackfxconfig(): EIGHT_FX_CONFIG {
   return {
-    id: createsid(),
-    patterns: ['', '', '', '', '', '', '', ''],
+    fx: EIGHT_FX.ECHO,
+    settings: {},
   }
+}
+
+export function createeighttracksynthconfig(): EIGHT_SYNTH_CONFIG {
+  return {
+    synth: EIGHT_SYNTH.SQUARE,
+    effects: [],
+    settings: {},
+  }
+}
+
+export function createeighttrackmeasure(): EIGHT_MEASURE {
+  return [-1, -1, -1, -1, -1, -1, -1, -1]
 }
 
 export function createeighttrack(): EIGHT_TRACK {
   return {
-    id: createsid(),
-    tracks: [
-      createpatterns(),
-      createpatterns(),
-      createpatterns(),
-      createpatterns(),
-      createpatterns(),
-      createpatterns(),
-      createpatterns(),
-      createpatterns(),
+    tempo: 150,
+    synths: [
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
+      createeighttracksynthconfig(),
     ],
+    measures: [],
   }
 }
 
 export function exporteighttrack(
-  eighttrack: MAYBE_EIGHT_TRACK,
-): MAYBE_EIGHT_TRACK {
+  eighttrack: MAYBE<EIGHT_TRACK>,
+): MAYBE<BIN_EIGHT_TRACK> {
+  if (!ispresent(eighttrack)) {
+    return
+  }
+
   return eighttrack
 }
 
 export function importeighttrack(
-  eighttrack: MAYBE_EIGHT_TRACK,
-): MAYBE_EIGHT_TRACK {
-  return eighttrack
+  eighttrack: MAYBE<BIN_EIGHT_TRACK>,
+): MAYBE<EIGHT_TRACK> {
+  if (!ispresent(eighttrack)) {
+    return
+  }
+  return eighttrack as EIGHT_TRACK
 }

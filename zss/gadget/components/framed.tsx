@@ -27,6 +27,8 @@ import { UserInput, UserInputMods } from './userinput'
 const palette = loadDefaultPalette()
 const charset = loadDefaultCharset()
 
+const focus = new Vector2(0, 0)
+
 type FramedProps = {
   player: string
   layers: LAYER[]
@@ -82,7 +84,9 @@ export function Framed({ player, layers, width, height }: FramedProps) {
     if (!ispresent(current.userData.focus)) {
       current.position.x = left
       current.position.y = top
-      current.userData.focus = new Vector2(left, top)
+      current.userData.focus = focus
+      current.userData.focus.x = left
+      current.userData.focus.y = top
     }
     // focus
     if (marginx < 0) {

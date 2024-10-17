@@ -17,6 +17,10 @@ export function deepcopy<T>(word: T): T {
   return deepClone(word) as T
 }
 
+export function isboolean(word: any): word is boolean {
+  return typeof word === 'boolean'
+}
+
 export function isnumber(word: any): word is number {
   return typeof word === 'number'
 }

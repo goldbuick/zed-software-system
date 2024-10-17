@@ -60,7 +60,15 @@ export function updateTilemapDataTexture(
 
 export function createTilemapDataTexture(width: number, height: number) {
   const data = new Uint8Array(4 * width * height)
-  return new THREE.DataTexture(data, width, height)
+  const texture = new THREE.DataTexture(
+    data,
+    width,
+    height,
+    THREE.RGBAIntegerFormat,
+    THREE.UnsignedByteType,
+  )
+  texture.internalFormat = 'RGBA8UI'
+  return texture
 }
 
 export function createTilemapBufferGeometry(
@@ -104,15 +112,11 @@ const tilemapMaterial = new THREE.ShaderMaterial({
   // vertex shader
   vertexShader: `
     #include <clipping_planes_pars_vertex>
-
     varying vec2 vUv;
-  
     void main() {
       vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
       gl_Position = projectionMatrix * mvPosition;
-      
       vUv = uv;
-      
       #include <clipping_planes_vertex>
     }
   `,
@@ -124,34 +128,29 @@ const tilemapMaterial = new THREE.ShaderMaterial({
     uniform float interval;
     uniform sampler2D map;
     uniform sampler2D alt;
-    uniform sampler2D data;
+    uniform usampler2D data;
     uniform vec3 palette[16];
-
     uniform vec2 size;
     uniform vec2 step;
-
     varying vec2 vUv;
 
     void main() {
       #include <clipping_planes_fragment>
 
-      vec4 lookupRange = texture2D(data, vUv);
-      
-      vec2 lookup;
-      lookup.x = floor(lookupRange.x * 255.0);
-      lookup.y = floor(lookupRange.y * 255.0);
-      int ci = int(floor(lookupRange.z * 255.0));
-      int bgi = int(floor(lookupRange.w * 255.0));
+      uvec4 tiledata = texture(data, vUv);
+      int colori = int(tiledata.z);
+      int bgi = int(tiledata.w);
 
       vec2 charPosition = mod(vUv, size) / size;
       vec2 uv = vec2(charPosition.x * step.x, charPosition.y * step.y);
-      vec3 color = palette[ci];
+      vec3 color = palette[colori];
 
-      uv += step * lookup;
+      uv.x += step.x * float(tiledata.x);
+      uv.y += step.y * float(tiledata.y);
       uv.y = 1.0 - uv.y;
 
       bool useAlt = mod(time, interval * 2.0) > interval;
-      vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
+      vec3 blip = useAlt ? texture(alt, uv).rgb : texture(map, uv).rgb;
 
       if (blip.r == 0.0) {
         if (bgi >= ${COLOR.CLEAR}) {

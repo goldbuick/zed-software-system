@@ -164,10 +164,7 @@ class CRTShapeEffect extends Effect {
           defines.set('TEXTURE_PRECISION_HIGH', '1')
         }
 
-        if (
-          prevTexture === null ||
-          prevTexture?.type !== value.type 
-        ) {
+        if (prevTexture === null || prevTexture?.type !== value.type) {
           this.setChanged()
         }
       }

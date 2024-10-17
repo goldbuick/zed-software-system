@@ -1,82 +1,10 @@
-import { CATEGORY, COLLISION, WORD } from 'zss/firmware/wordtypes'
+import { objectKeys } from 'ts-extras'
 import { createsid } from 'zss/mapping/guid'
-import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 
-// simple built-ins go here
-export type BOARD_ELEMENT_STATS = {
-  cycle?: number
-  stepx?: number
-  stepy?: number
-  player?: string
-  sender?: string
-  inputmove?: string[]
-  inputalt?: number
-  inputctrl?: number
-  inputshift?: number
-  inputok?: number
-  inputcancel?: number
-  inputmenu?: number
-  data?: any
-  [key: string]: WORD
-}
-
-export type MAYBE_BOARD_ELEMENT_STATS = MAYBE<BOARD_ELEMENT_STATS>
-
-export function createboardelementstats() {
-  return {}
-}
-
-// safe to serialize copy of board
-export function exportboardelementstats(
-  boardelementstats: MAYBE_BOARD_ELEMENT_STATS,
-): MAYBE_BOARD_ELEMENT_STATS {
-  if (!ispresent(boardelementstats)) {
-    return
-  }
-  return deepcopy(boardelementstats)
-}
-
-// import json into board
-export function importboardelementstats(
-  boardelementstats: MAYBE_BOARD_ELEMENT_STATS,
-): MAYBE_BOARD_ELEMENT_STATS {
-  if (!ispresent(boardelementstats)) {
-    return
-  }
-  return deepcopy(boardelementstats)
-}
-
-export type BOARD_ELEMENT = {
-  // this element is an instance of an element type
-  kind?: string
-  // objects only
-  id?: string
-  x?: number
-  y?: number
-  lx?: number
-  ly?: number
-  code?: string
-  // this is a unique name for this instance
-  name?: string
-  // display
-  char?: number
-  color?: number
-  bg?: number
-  // interaction
-  pushable?: number
-  collision?: COLLISION
-  destructible?: number
-  // custom
-  stats?: BOARD_ELEMENT_STATS
-  // runtime
-  category?: CATEGORY
-  kinddata?: BOARD_ELEMENT
-  kindcode?: string
-  headless?: boolean
-  removed?: number
-}
-
-export type MAYBE_BOARD_ELEMENT = MAYBE<BOARD_ELEMENT>
+import { BIN_BOARD_ELEMENT } from './binary'
+import { BOARD_ELEMENT, BOARD_ELEMENT_STAT, WORD } from './types'
+import { exportword, importword } from './word'
 
 export function createboardelement() {
   const boardelement: BOARD_ELEMENT = {
@@ -87,8 +15,8 @@ export function createboardelement() {
 
 // safe to serialize copy of boardelement
 export function exportboardelement(
-  boardelement: MAYBE_BOARD_ELEMENT,
-): MAYBE_BOARD_ELEMENT {
+  boardelement: MAYBE<BOARD_ELEMENT>,
+): MAYBE<BIN_BOARD_ELEMENT> {
   if (!ispresent(boardelement)) {
     return
   }
@@ -109,18 +37,25 @@ export function exportboardelement(
     color: boardelement.color,
     bg: boardelement.bg,
     // interaction
-    pushable: boardelement.pushable,
+    pushable: !!boardelement.pushable,
     collision: boardelement.collision,
-    destructible: boardelement.destructible,
-    // custom
-    stats: exportboardelementstats(boardelement.stats),
+    destructible: !!boardelement.destructible,
+    // common
+    p1: exportword(boardelement.p1),
+    p2: exportword(boardelement.p2),
+    p3: exportword(boardelement.p3),
+    cycle: exportword(boardelement.cycle),
+    stepx: exportword(boardelement.stepx),
+    stepy: exportword(boardelement.stepy),
+    sender: exportword(boardelement.sender),
+    data: exportword(boardelement.data),
   }
 }
 
 // import json into boardelement
 export function importboardelement(
-  boardelement: MAYBE_BOARD_ELEMENT,
-): MAYBE_BOARD_ELEMENT {
+  boardelement: MAYBE<BIN_BOARD_ELEMENT>,
+): MAYBE<BOARD_ELEMENT> {
   if (!ispresent(boardelement)) {
     return
   }
@@ -141,44 +76,49 @@ export function importboardelement(
     color: boardelement.color,
     bg: boardelement.bg,
     // interaction
-    pushable: boardelement.pushable,
+    pushable: boardelement.pushable ? 1 : undefined,
     collision: boardelement.collision,
-    destructible: boardelement.destructible,
-    // custom
-    stats: importboardelementstats(boardelement.stats),
+    destructible: boardelement.destructible ? 1 : undefined,
+    // config
+    p1: importword(boardelement.p1) as any,
+    p2: importword(boardelement.p2) as any,
+    p3: importword(boardelement.p3) as any,
+    cycle: importword(boardelement.cycle) as any,
+    stepx: importword(boardelement.stepx) as any,
+    stepy: importword(boardelement.stepy) as any,
+    sender: importword(boardelement.sender) as any,
+    data: importword(boardelement.data) as any,
   }
 }
 
 export function boardelementreadstat(
-  boardelement: MAYBE_BOARD_ELEMENT,
-  key: string,
+  boardelement: MAYBE<BOARD_ELEMENT>,
+  key: BOARD_ELEMENT_STAT,
   defaultvalue: WORD,
 ): WORD {
   if (!ispresent(boardelement)) {
     return
   }
-  boardelement.stats = boardelement.stats ?? createboardelementstats()
-  const value = boardelement.stats[key]
+  const value = boardelement[key]
   return value ?? defaultvalue
 }
 
 export function boardelementwritestat(
-  boardelement: MAYBE_BOARD_ELEMENT,
-  key: string,
+  boardelement: MAYBE<BOARD_ELEMENT>,
+  key: BOARD_ELEMENT_STAT,
   value: WORD,
 ) {
   if (!ispresent(boardelement)) {
     return
   }
-  boardelement.stats = boardelement.stats ?? createboardelementstats()
-  boardelement.stats[key] = value
+  boardelement[key] = value
 }
 
 export function boardelementwritestats(
-  boardelement: MAYBE_BOARD_ELEMENT,
-  stats: Record<string, WORD>,
+  boardelement: MAYBE<BOARD_ELEMENT>,
+  stats: Record<BOARD_ELEMENT_STAT, WORD>,
 ) {
-  Object.entries(stats).forEach(([key, value]) =>
-    boardelementwritestat(boardelement, key, value),
+  objectKeys(stats).forEach((key) =>
+    boardelementwritestat(boardelement, key, stats[key]),
   )
 }

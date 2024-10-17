@@ -16,7 +16,7 @@ export type MESSAGE_FUNC = (message: MESSAGE) => void
 export type DEVICE = {
   id: () => string
   name: () => string
-  tags: () => string[]
+  topics: () => string[]
   emit: (target: string, data?: any, player?: string) => void
   reply: (to: MESSAGE, target: string, data?: any, player?: string) => void
   handle: MESSAGE_FUNC
@@ -24,28 +24,17 @@ export type DEVICE = {
 
 export function parsetarget(targetString: string) {
   const [target, ...path] = targetString.split(':')
-  // switch (target) {
-  //   case 'tick':
-  //   case 'tock':
-  //   case 'modem':
-  //   case 'second':
-  //   case 'gadgetclient':
-  //     break
-  //   default:
-  //     console.info('eee', target, path.join(':'))
-  //     break
-  // }
   return { target, path: path.join(':') }
 }
 
 export function createdevice(
   name: string,
-  tags: string[],
+  topics: string[],
   onMessage: MESSAGE_FUNC,
 ) {
   const id = createsid()
   const iname = name.toLowerCase()
-  const itags = tags.map((tag) => tag.toLowerCase())
+  const itopics = topics.map((tag) => tag.toLowerCase())
 
   const device: DEVICE = {
     id() {
@@ -54,8 +43,8 @@ export function createdevice(
     name() {
       return name
     },
-    tags() {
-      return tags
+    topics() {
+      return topics
     },
     emit(target, data, player) {
       hub.emit(target, id, data, player)
@@ -67,20 +56,8 @@ export function createdevice(
       const { target, path } = parsetarget(message.target)
       const itarget = target.toLowerCase()
 
-      // switch (itarget) {
-      //   case 'tick':
-      //   case 'tock':
-      //   case 'modem':
-      //   case 'second':
-      //   case 'gadgetclient':
-      //     break
-      //   default:
-      //     console.info('XXXX', { target, path, itarget, iname })
-      //     break
-      // }
-
-      // we match by tags
-      if (itags.findIndex((tag) => tag === 'all' || tag === itarget) !== -1) {
+      // we match by topics
+      if (itopics.findIndex((tag) => tag === 'all' || tag === itarget) !== -1) {
         onMessage(message)
       }
 

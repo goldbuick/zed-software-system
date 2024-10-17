@@ -19,18 +19,6 @@ export function api_error(
   return tape_error(sender, message, player)
 }
 
-export function bip_retry(sender: string, player: string) {
-  hub.emit('bip:retry', sender, undefined, player)
-}
-
-export function bip_loginfailed(sender: string, player: string) {
-  hub.emit('bip:loginfailed', sender, undefined, player)
-}
-
-export function bip_rebootfailed(sender: string, player: string) {
-  hub.emit('bip:rebootfailed', sender, undefined, player)
-}
-
 export function gadgetclient_reset(
   sender: string,
   gadgetstate: GADGET_STATE,
@@ -51,28 +39,24 @@ export function gadgetserver_clearscroll(sender: string, player: string) {
   hub.emit('gadgetserver:clearscroll', sender, undefined, player)
 }
 
-export function pcspeaker_play(
-  sender: string,
-  priority: number,
-  buffer: string,
-) {
-  hub.emit('pcspeaker:play', sender, [priority, buffer])
-}
-
-export function register_reboot(sender: string, player: string) {
-  hub.emit('register:reboot', sender, undefined, player)
-}
-
-export function register_flush(sender: string, books: any[]) {
+export function register_flush(sender: string, books: string) {
   hub.emit('register:flush', sender, books)
+}
+
+export function register_nodetrash(sender: string) {
+  hub.emit('register:nodetrash', sender)
 }
 
 export function register_biosflash(sender: string) {
   hub.emit('register:biosflash', sender)
 }
 
-export function register_bioserase(sender: string) {
-  hub.emit('register:bioserase', sender)
+export function register_biostrash(sender: string) {
+  hub.emit('register:biostrash', sender)
+}
+
+export function synth_play(sender: string, priority: number, buffer: string) {
+  hub.emit('synth:play', sender, [priority, buffer])
 }
 
 export function tape_info(sender: string, ...message: any[]) {
@@ -99,7 +83,7 @@ export function tape_terminal_close(sender: string) {
   hub.emit('tape:terminal:close', sender)
 }
 
-export function tape_terminal_inclayout(sender: string, inc: number) {
+export function tape_terminal_inclayout(sender: string, inc: boolean) {
   hub.emit('tape:terminal:inclayout', sender, inc)
 }
 
@@ -122,7 +106,11 @@ export function tape_editor_close(sender: string) {
   hub.emit('tape:editor:close', sender)
 }
 
-export function vm_books(sender: string, books: any[], player: string) {
+export function vm_init(sender: string, player: string) {
+  hub.emit('vm:init', sender, undefined, player)
+}
+
+export function vm_books(sender: string, books: string, player: string) {
   hub.emit('vm:books', sender, books, player)
 }
 
