@@ -10,8 +10,8 @@ function createsynth() {
     envelope: {
       attack: 0.01,
       decay: 0.1,
-      release: 0.1,
       sustain: 0.1,
+      release: 0.1,
     },
     oscillator: {
       type: 'square',
@@ -33,19 +33,38 @@ const SYNTH = [
 
 // config drums
 
+// drumtick
+
 const drumtick = new Tone.PolySynth().toDestination()
 drumtick.maxPolyphony = 8
 drumtick.set({
   envelope: {
     attack: 0.001,
     decay: 0.001,
-    release: 0.001,
     sustain: 0.001,
+    release: 0.1,
   },
   oscillator: {
     type: 'square',
   },
 })
+
+// drumtweet
+
+const drumtweet = new Tone.Synth().toDestination()
+drumtick.set({
+  envelope: {
+    attack: 0.001,
+    decay: 0.001,
+    sustain: 0.001,
+    release: 0.1,
+  },
+  oscillator: {
+    type: 'square',
+  },
+})
+
+// drumcowbell
 
 const drumcowbellfilter = new Tone.Filter(350, 'bandpass').toDestination()
 
@@ -58,13 +77,52 @@ drumcowbell.set({
   envelope: {
     attack: 0.001,
     decay: 0.01,
-    release: 0.1,
     sustain: 0.1,
+    release: 0.1,
   },
   oscillator: {
     type: 'square',
   },
 })
+
+// drumclap
+
+const drumclapeq = new Tone.EQ3(-10, 10, -1).toDestination()
+
+const drumclapfilter = new Tone.Filter(800, 'highpass', -12)
+drumclapfilter.connect(drumclapeq)
+
+const drumclap = new Tone.NoiseSynth()
+drumclap.set({
+  envelope: {
+    attack: 0.01,
+    decay: 0.1,
+    sustain: 0.1,
+    release: 0.1,
+  },
+})
+drumclap.connect(drumclapfilter)
+
+// drumlowtom
+
+// const drumlowtomeq = new Tone.EQ3(-3, 10, -3).toDestination()
+
+const drumlowtomoscgain = new Tone.Gain().toDestination()
+
+const drumlowtomosc = new Tone.Synth({
+  oscillator: { type: 'triangle' },
+})
+drumlowtomosc.connect(drumlowtomoscgain)
+
+const drumlowtomnoisefiltergain = new Tone.Gain().toDestination()
+
+const drumlowtomnoisefilter = new Tone.Filter(0, 'highpass')
+drumlowtomnoisefilter.connect(drumlowtomnoisefiltergain)
+
+const drumlowtomnoise = new Tone.NoiseSynth()
+drumlowtomnoise.connect(drumlowtomnoisefilter)
+
+// drumbass
 
 const drumbass = new Tone.MembraneSynth().toDestination()
 
@@ -97,26 +155,38 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
       case 0: // DRUM_TICK
         drumtick.triggerAttackRelease('C6', '1i', time)
         break
-      case 1: // DRUM_TWEET
+      case 1: {
+        // DRUM_TWEET
+        const ramp = Tone.Time('64n').toSeconds()
+        drumtweet.triggerAttackRelease('C6', '8n', time)
+        drumtweet.frequency.exponentialRampToValueAtTime('C11', ramp + time)
         break
+      }
       case 2: {
         // DRUM_COWBELL
-        const ramp = Tone.Time(duration).toSeconds()
+        const ramp =
+          Tone.Time('64n').toSeconds() + Tone.Time(duration).toSeconds()
         drumcowbellgain.gain.setValueAtTime(0.5, time)
         drumcowbellgain.gain.exponentialRampToValueAtTime(0.01, ramp + time)
         drumcowbell.triggerAttackRelease([800, 540], duration, time)
         break
       }
       case 3: // DRUM_CLAP
+        drumclap.triggerAttackRelease(duration, time)
         break
       case 4: // DRUM_HI_SNARE
         break
       case 5: // DRUM_HI_WOODBLOCK
         break
-      case 6: // DRUM_LOW_TOM
+      case 6: // DRUM_LOW_SNARE
         break
-      case 7: // DRUM_LOW_SNARE
+      case 7: {
+        // DRUM_LOW_TOM
+        drumlowtomnoisefiltergain.gain.setValueAtTime(0, time)
+        drumlowtomnoisefiltergain.gain.setValueAtTime(0, time)
+        drumlowtomosc.triggerAttackRelease(800, '8n', time)
         break
+      }
       case 8: // DRUM_LOW_WOODBLOCK
         break
       case 9: // DRUM_BASS

@@ -198,10 +198,10 @@ export function invokeplay(synth: number, play: SYNTH_OP[]) {
       case SYNTH_OP.DRUM_HI_WOODBLOCK:
         note = 5
         break
-      case SYNTH_OP.DRUM_LOW_TOM:
+      case SYNTH_OP.DRUM_LOW_SNARE:
         note = 6
         break
-      case SYNTH_OP.DRUM_LOW_SNARE:
+      case SYNTH_OP.DRUM_LOW_TOM:
         note = 7
         break
       case SYNTH_OP.DRUM_LOW_WOODBLOCK:
