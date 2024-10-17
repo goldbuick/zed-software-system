@@ -49,6 +49,10 @@ drumtick.set({
   },
 })
 
+function drumticktrigger(time: number) {
+  drumtick.triggerAttackRelease('C6', '1i', time)
+}
+
 // drumtweet
 
 const drumtweet = new Tone.Synth().toDestination()
@@ -63,6 +67,12 @@ drumtick.set({
     type: 'square',
   },
 })
+
+function drumtweettrigger(time: number) {
+  const ramp = Tone.Time('64n').toSeconds()
+  drumtweet.triggerAttackRelease('C6', '8n', time)
+  drumtweet.frequency.exponentialRampToValueAtTime('C11', ramp + time)
+}
 
 // drumcowbell
 
@@ -85,6 +95,13 @@ drumcowbell.set({
   },
 })
 
+function drumcowbelltrigger(duration: string, time: number) {
+  const ramp = Tone.Time('64n').toSeconds() + Tone.Time(duration).toSeconds()
+  drumcowbellgain.gain.setValueAtTime(0.5, time)
+  drumcowbellgain.gain.exponentialRampToValueAtTime(0.01, ramp + time)
+  drumcowbell.triggerAttackRelease([800, 540], duration, time)
+}
+
 // drumclap
 
 const drumclapeq = new Tone.EQ3(-10, 10, -1).toDestination()
@@ -103,28 +120,90 @@ drumclap.set({
 })
 drumclap.connect(drumclapfilter)
 
+function drumclaptrigger(duration: string, time: number) {
+  drumclap.triggerAttackRelease(duration, time)
+}
+
+// drumhisnare
+
+function drumhisnaretrigger(duration: string, time: number) {
+  //
+}
+
+// drumhiwoodblock
+
+function drumhiwoodblocktrigger(duration: string, time: number) {
+  //
+}
+
+// drumlowsnare
+
+function drumlowsnaretrigger(duration: string, time: number) {
+  //
+}
+
 // drumlowtom
 
 // const drumlowtomeq = new Tone.EQ3(-3, 10, -3).toDestination()
 
 const drumlowtomoscgain = new Tone.Gain().toDestination()
 
-const drumlowtomosc = new Tone.Synth({
-  oscillator: { type: 'triangle' },
+const drumlowtomosc = new Tone.PolySynth()
+drumlowtomosc.maxPolyphony = 8
+drumlowtomosc.set({
+  envelope: {
+    attack: 0.001,
+    decay: 1,
+    sustain: 0.01,
+    release: 0.01,
+  },
+  oscillator: {
+    type: 'triangle',
+  },
 })
 drumlowtomosc.connect(drumlowtomoscgain)
 
 const drumlowtomnoisefiltergain = new Tone.Gain().toDestination()
 
-const drumlowtomnoisefilter = new Tone.Filter(0, 'highpass')
+const drumlowtomnoisefilter = new Tone.Filter(1000, 'highpass')
 drumlowtomnoisefilter.connect(drumlowtomnoisefiltergain)
 
 const drumlowtomnoise = new Tone.NoiseSynth()
 drumlowtomnoise.connect(drumlowtomnoisefilter)
 
+function drumlowtomtrigger(time: number) {
+  drumlowtomnoise.triggerAttack(time)
+
+  // const duration = Tone.Time('8n').toSeconds()
+  // drumlowtomnoisefilter.frequency.setValueAtTime(10000, time)
+  // drumlowtomnoisefilter.frequency.exponentialRampToValueAtTime(
+  //   10000,
+  //   time + duration,
+  // )
+  // drumlowtomnoisefiltergain.gain.setValueAtTime(1, time)
+  // drumlowtomnoisefiltergain.gain.exponentialRampToValueAtTime(
+  //   0.1,
+  //   time + duration,
+  // )
+}
+
+// drumlowwoodblock
+
+function drumlowwoodblocktrigger(duration: string, time: number) {
+  //
+}
+
 // drumbass
 
 const drumbass = new Tone.MembraneSynth().toDestination()
+
+function drumbasstrigger(time: number) {
+  drumbass.triggerAttackRelease('C2', '8n', time)
+}
+
+// synth setup
+
+// function drumbasstrigger(time: number, value: SYNTH_NOTE_ON) {
 
 let enabled = false
 export async function enableaudio() {
@@ -153,44 +232,34 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
   if (isnumber(note)) {
     switch (note) {
       case 0: // DRUM_TICK
-        drumtick.triggerAttackRelease('C6', '1i', time)
+        drumticktrigger(time)
         break
-      case 1: {
-        // DRUM_TWEET
-        const ramp = Tone.Time('64n').toSeconds()
-        drumtweet.triggerAttackRelease('C6', '8n', time)
-        drumtweet.frequency.exponentialRampToValueAtTime('C11', ramp + time)
+      case 1: // DRUM_TWEET
+        drumtweettrigger(time)
         break
-      }
-      case 2: {
-        // DRUM_COWBELL
-        const ramp =
-          Tone.Time('64n').toSeconds() + Tone.Time(duration).toSeconds()
-        drumcowbellgain.gain.setValueAtTime(0.5, time)
-        drumcowbellgain.gain.exponentialRampToValueAtTime(0.01, ramp + time)
-        drumcowbell.triggerAttackRelease([800, 540], duration, time)
+      case 2: // DRUM_COWBELL
+        drumcowbelltrigger(duration, time)
         break
-      }
       case 3: // DRUM_CLAP
-        drumclap.triggerAttackRelease(duration, time)
+        drumclaptrigger(duration, time)
         break
       case 4: // DRUM_HI_SNARE
+        drumhisnaretrigger(duration, time)
         break
       case 5: // DRUM_HI_WOODBLOCK
+        drumhiwoodblocktrigger(duration, time)
         break
       case 6: // DRUM_LOW_SNARE
+        drumlowsnaretrigger(duration, time)
         break
-      case 7: {
-        // DRUM_LOW_TOM
-        drumlowtomnoisefiltergain.gain.setValueAtTime(0, time)
-        drumlowtomnoisefiltergain.gain.setValueAtTime(0, time)
-        drumlowtomosc.triggerAttackRelease(800, '8n', time)
+      case 7: // DRUM_LOW_TOM
+        drumlowtomtrigger(time)
         break
-      }
       case 8: // DRUM_LOW_WOODBLOCK
+        drumlowwoodblocktrigger(duration, time)
         break
       case 9: // DRUM_BASS
-        drumbass.triggerAttackRelease('C2', '8n', time)
+        drumbasstrigger(time)
         break
     }
   }
