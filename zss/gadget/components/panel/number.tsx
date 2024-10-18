@@ -99,15 +99,11 @@ export function PanelItemNumber({
       } else {
         const num = parseFloat(strvalue)
         const newvalue = isNaN(num) ? 0 : num
-        modemwritevaluenumber(
-          chip,
-          target,
-          Math.min(max, Math.max(min, newvalue)),
-        )
+        modemwritevaluenumber(target, Math.min(max, Math.max(min, newvalue)))
       }
       return next
     })
-  }, [chip, max, min, strvalue, target, value])
+  }, [max, min, strvalue, target, value])
 
   return (
     value !== undefined && (

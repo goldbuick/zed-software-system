@@ -19,6 +19,6 @@ export default function useBitmapTexture(bitmap: BITMAP | undefined) {
       bitmap
         ? updateTexture(new THREE.CanvasTexture(bitmapToCanvas(bitmap)))
         : undefined,
-    [bitmap?.id],
+    [bitmap],
   )
 }

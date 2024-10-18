@@ -4,14 +4,14 @@ import { proxy, useSnapshot } from 'valtio'
 import { MODEM_SHARED_VALUE } from 'zss/device/modem'
 import {
   WRITE_TEXT_CONTEXT,
-  applycolortoindexes,
-  applystrtoindex,
+  textformatreadedges,
 } from 'zss/gadget/data/textformat'
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
 
 // deco
 export const BKG_PTRN = 250
+export const BKG_PTRN_ALT = 249
 
 // colors
 export const FG = COLOR.BLUE
@@ -25,7 +25,9 @@ export const SCALE = 1
 export const CHAR_WIDTH = DRAW_CHAR_WIDTH * SCALE
 export const CHAR_HEIGHT = DRAW_CHAR_HEIGHT * SCALE
 
-export const tapeinputstate = proxy({
+export const tapeterminalstate = proxy({
+  // scrolling offset
+  scroll: 0,
   // cursor position & selection
   xcursor: 0,
   ycursor: 0,
@@ -35,17 +37,21 @@ export const tapeinputstate = proxy({
   bufferindex: 0,
   buffer: [''],
 })
-export function useTapeInput() {
-  return useSnapshot(tapeinputstate)
+
+export function useTapeTerminal() {
+  return useSnapshot(tapeterminalstate)
 }
 
 export const tapeeditorstate = proxy({
   // need an id for synced store
   id: '',
+  // scrolling offset
+  scroll: 0,
   // cursor position & selection (text index)
   cursor: 0,
   select: undefined as MAYBE_NUMBER,
 })
+
 export function useTapeEditor() {
   return useSnapshot(tapeeditorstate)
 }
@@ -81,14 +87,20 @@ export function logitemy(offset: number, context: WRITE_TEXT_CONTEXT) {
 export function setuplogitem(
   blink: boolean,
   active: boolean,
+  x: number,
   y: number,
   context: WRITE_TEXT_CONTEXT,
 ) {
+  const edge = textformatreadedges(context)
   // reset context
-  context.x = context.active.leftedge ?? 0
-  context.y = y
   context.iseven = context.y % 2 === 0
   context.active.bg = active && !blink ? BG_ACTIVE : BG
+  context.active.leftedge = edge.left
+  context.active.rightedge = edge.right
+  context.active.topedge = edge.top
+  context.active.bottomedge = edge.bottom
+  context.x = context.active.leftedge + x
+  context.y = context.active.topedge + y
 }
 
 export function setupeditoritem(
@@ -96,18 +108,21 @@ export function setupeditoritem(
   active: boolean,
   x: number,
   y: number,
-  inset: number,
   context: WRITE_TEXT_CONTEXT,
+  xmargin: number,
+  topmargin: number,
+  bottommargin: number,
 ) {
+  const edge = textformatreadedges(context)
   // reset context
-  context.x = x
-  context.y = y
   context.iseven = context.y % 2 === 0
   context.active.bg = active && !blink ? BG_ACTIVE : BG
-  context.active.leftedge = inset
-  context.active.rightedge = context.width - 1 - inset
-  context.active.topedge = inset
-  context.active.bottomedge = context.height - 1 - inset
+  context.active.leftedge = edge.left + xmargin
+  context.active.rightedge = edge.right - xmargin
+  context.active.topedge = edge.top + topmargin
+  context.active.bottomedge = edge.bottom - bottommargin
+  context.x = context.active.leftedge + x
+  context.y = context.active.topedge + y
 }
 
 export type EDITOR_CODE_ROW = {
