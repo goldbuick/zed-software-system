@@ -175,7 +175,7 @@ export function invokeplay(synth: number, play: SYNTH_OP[]) {
         duration = '1n'
         break
       case SYNTH_OP.TIME_TRIPLET:
-        duration += 't'
+        duration = duration.replace('n', 't')
         break
       case SYNTH_OP.TIME_AND_A_HALF:
         duration += '.'
