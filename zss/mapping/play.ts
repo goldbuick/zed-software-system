@@ -2,7 +2,7 @@ import * as Tone from 'tone'
 
 import { isnumber, ispresent } from './types'
 
-enum SYNTH_OP {
+export enum SYNTH_OP {
   OFF,
   NOTE_A,
   NOTE_B,
@@ -213,13 +213,20 @@ export function invokeplay(synth: number, play: SYNTH_OP[]) {
     }
   }
 
+  // write final note
   writenote()
+
+  // write end of pattern
+  time -= Tone.Time(duration).toTicks()
+  pattern.push([`+${time}i`, [synth, duration, -1]])
 
   return pattern
 }
 
-export function parseplay(play: string): SYNTH_OP[][] {
-  const playops: SYNTH_OP[][] = []
+export type SYNTH_INVOKES = SYNTH_OP[][]
+
+export function parseplay(play: string): SYNTH_INVOKES {
+  const playops: SYNTH_INVOKES = []
   const invokes = play.split(';')
 
   for (let p = 0; p < invokes.length; ++p) {
