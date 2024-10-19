@@ -21,6 +21,9 @@ function createsynth() {
 }
 
 const SYNTH = [
+  // for play
+  createsynth(),
+  // + 8track synths
   createsynth(),
   createsynth(),
   createsynth(),
@@ -28,6 +31,7 @@ const SYNTH = [
   createsynth(),
   createsynth(),
   createsynth(),
+  // for sfx
   createsynth(),
 ]
 
@@ -466,17 +470,29 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
   }
 }
 
-function synthplay(priority: number, buffer: string) {
-  // TODO: manage which synth gets notes
-  // make interrupting #bgplay work
-  // make empty play stop sounds
+let synthsfxpriority = -1
 
+function synthplaystart(buffer: string) {
   const invokes = parseplay(buffer)
   for (let i = 0; i < invokes.length; ++i) {
     const pattern = invokeplay(i, invokes[i])
     if (pattern.length > 0) {
       new Tone.Part(synthtick, pattern).start('0')
     }
+  }
+}
+
+function synthplay(priority: number, buffer: string) {
+  if (priority < 0) {
+    // music queue
+    return
+  }
+
+  // sfx /w priority
+  if (synthsfxpriority === -1 || priority >= synthsfxpriority) {
+    // invoke
+    synthsfxpriority = priority
+    synthplaystart(buffer)
   }
 }
 
