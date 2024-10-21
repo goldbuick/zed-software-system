@@ -30,6 +30,7 @@ type SCHEMA_ITEM =
     }
   | {
       type: SCHEMA_TYPE.OBJECT
+      numkey?: boolean
       element?: SCHEMA_ITEM
       props?: Record<string, SCHEMA_ITEM>
     }
@@ -118,7 +119,8 @@ export const EIGHT_FX_CONFIG_SCHEMA: SCHEMA_ITEM = {
     fx: NUMBER_SCHEMA,
     settings: {
       type: SCHEMA_TYPE.OBJECT,
-      element: ANY_SCHEMA,
+      numkey: true,
+      element: STRING_SCHEMA,
     },
   },
 }
@@ -133,7 +135,8 @@ export const EIGHT_SYNTH_CONFIG_SCHEMA: SCHEMA_ITEM = {
     },
     settings: {
       type: SCHEMA_TYPE.OBJECT,
-      element: ANY_SCHEMA,
+      numkey: true,
+      element: STRING_SCHEMA,
     },
   },
 }
