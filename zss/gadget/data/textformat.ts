@@ -322,7 +322,7 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
     (context.x > leftedge || context.y === starty)
   ) {
     const rightedge = context.active.rightedge ?? context.width - 1
-    const fill = rightedge - context.x + 1
+    const fill = rightedge - context.x
     if (fill > 0) {
       writetextreset(context)
       const pttrn = String.fromCharCode(context.writefullwidth).repeat(fill)
@@ -434,4 +434,14 @@ export function textformatedges(
   context.active.leftedge = leftedge
   context.active.rightedge = rightedge
   context.active.bottomedge = bottomedge
+}
+
+export function textformatreadedges(context: WRITE_TEXT_CONTEXT) {
+  const left = context.reset.leftedge ?? 0
+  const right = context.reset.rightedge ?? context.width - 1
+  const top = context.reset.topedge ?? 0
+  const bottom = context.reset.bottomedge ?? context.height - 1
+  const width = right - left + 1
+  const height = bottom - top + 1
+  return { left, right, top, bottom, width, height }
 }

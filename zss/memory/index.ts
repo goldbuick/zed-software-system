@@ -1,75 +1,79 @@
-import JSZip from 'jszip'
-import { CHIP } from 'zss/chip'
+import { CHIP, CONFIG } from 'zss/chip'
 import { api_error, tape_debug, tape_info } from 'zss/device/api'
-import { ensureopenbook } from 'zss/firmware/cli'
-import { WORD, createreadcontext } from 'zss/firmware/wordtypes'
+import { DRIVER_TYPE } from 'zss/firmware/boot'
+import {
+  mimetypeofbytesread,
+  parsebinaryfile,
+  parsetextfile,
+  parsezipfile,
+} from 'zss/firmware/parsefile'
+import { createreadcontext } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
   COLOR,
-  INPUT,
-  LAYER,
   createdither,
   createlayercontrol,
   createsprite,
   createsprites,
   createtiles,
+  INPUT,
+  LAYER,
 } from 'zss/gadget/data/types'
 import { average } from 'zss/mapping/array'
-import { mimetypeofbytesread } from 'zss/mapping/buffer'
+import { createpid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
-import {
-  MAYBE,
-  MAYBE_STRING,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
   boarddeleteobject,
-  BOARD,
-  MAYBE_BOARD,
   boardelementname,
   boardobjectcreatefromkind,
 } from './board'
-import { MAYBE_BOARD_ELEMENT, boardelementreadstat } from './boardelement'
+import { boardelementreadstat } from './boardelement'
 import {
-  BOOK,
-  MAYBE_BOOK,
   bookboardtick,
   bookelementkindread,
-  bookhasmatch,
   bookplayerreadboard,
   bookplayerreadboards,
   bookplayersetboard,
-  bookreadboardsbytags,
-  bookreadcodepagewithtype,
-  bookreadobjectsbytags,
-  bookwritecodepage,
+  bookreadboard,
+  bookreadcodepagesbytype,
+  bookreadobject,
+  createbook,
 } from './book'
+import { codepagereadstats } from './codepage'
 import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  BOOK,
   CODE_PAGE_TYPE,
-  codepagereadname,
-  codepagereadtype,
-  codepagereadtypetostring,
-  createcodepage,
-} from './codepage'
-import {
-  FRAME_STATE,
-  FRAME_TYPE,
-  createeditframe,
-  createviewframe,
-} from './frame'
+  EIGHT_TRACK,
+  WORD,
+} from './types'
+
+type BINARY_READER = {
+  filename: string
+  cursor: number
+  bytes: Uint8Array
+  dataview: DataView
+}
 
 type CHIP_TARGETS = {
-  book: MAYBE_BOOK
-  board: MAYBE_BOARD
-  object: MAYBE_BOARD_ELEMENT
-  terrain: MAYBE_BOARD_ELEMENT
+  // memory
+  book: MAYBE<BOOK>
+  // codepages
+  board: MAYBE<BOARD>
+  object: MAYBE<BOARD_ELEMENT>
+  terrain: MAYBE<BOARD_ELEMENT>
   charset: MAYBE<BITMAP>
   palette: MAYBE<BITMAP>
+  eighttrack: MAYBE<EIGHT_TRACK>
+  // loaders
+  binaryfile: MAYBE<BINARY_READER>
 }
 
 type CHIP_PLAYER_INPUT = {
@@ -79,106 +83,42 @@ type CHIP_PLAYER_INPUT = {
   inputcurrent: MAYBE<INPUT>
 }
 
-type CHIP_MEMORY = CHIP_TARGETS & CHIP_PLAYER_INPUT
+export type CHIP_MEMORY = CHIP_TARGETS & CHIP_PLAYER_INPUT
 
 export enum MEMORY_LABEL {
-  MAIN = 'main',
   TITLE = 'title',
   PLAYER = 'player',
 }
 
 const MEMORY = {
-  // running software
-  defaultplayer: '',
+  defaultplayer: createpid(),
+  software: {
+    main: '',
+    content: '',
+  },
   books: new Map<string, BOOK>(),
   chips: new Map<string, CHIP_MEMORY>(),
-  frames: new Map<string, FRAME_STATE[]>(),
-  // tag configs
-  tags: {
-    main: new Set([MEMORY_LABEL.MAIN as string]),
-    title: new Set([MEMORY_LABEL.TITLE as string]),
-    player: new Set([MEMORY_LABEL.PLAYER as string]),
-  },
-}
-
-export function memoryreadtags(label: string) {
-  const index = label.toLowerCase() as keyof typeof MEMORY.tags
-  return [...(MEMORY.tags[index] ?? [])]
-}
-
-export function memoryaddtags(label: string, tags: string[]) {
-  const index = label.toLowerCase() as keyof typeof MEMORY.tags
-  if (!ispresent(MEMORY.tags[index])) {
-    MEMORY.tags[index] = new Set(tags)
-  } else {
-    const list = MEMORY.tags[index]
-    tags.forEach((item) => list.add(item))
-  }
-}
-
-export function memoryremovetags(label: string, tags: string[]) {
-  const index = label.toLowerCase() as keyof typeof MEMORY.tags
-  if (!ispresent(MEMORY.tags[index])) {
-    // noop
-  } else {
-    const list = MEMORY.tags[index]
-    tags.forEach((item) => list.delete(item))
-  }
-}
-
-export function memoryreadmaintags() {
-  return memoryreadtags(MEMORY_LABEL.MAIN)
-}
-
-export function memoryreadtitletags() {
-  return memoryreadtags(MEMORY_LABEL.TITLE)
-}
-
-export function memoryreadplayertags() {
-  return memoryreadtags(MEMORY_LABEL.PLAYER)
+  loaders: new Map<string, string>(),
 }
 
 export function memorysetdefaultplayer(player: string) {
   MEMORY.defaultplayer = player
 }
 
-export function memoryresetframes(board: string): FRAME_STATE[] {
-  const frames: FRAME_STATE[] = [createviewframe([], [])]
-  MEMORY.frames.set(board, frames)
-  return frames
-}
-
-export function memorycreateviewframe(
-  board: string,
-  book: string[],
-  view: string[],
-) {
-  const frames = memoryreadframes(board)
-  if (ispresent(frames)) {
-    frames.push(createviewframe(book, view))
-  }
-}
-
-export function memorycreateeditframe(
-  board: string,
-  book: string[],
-  edit: string[],
-) {
-  const frames = memoryreadframes(board)
-  if (ispresent(frames)) {
-    frames.push(createeditframe(book, edit))
-  }
-}
-
-export function memoryreadframes(board: string) {
-  return MEMORY.frames.get(board) ?? memoryresetframes(board)
+export function memorygetdefaultplayer() {
+  return MEMORY.defaultplayer
 }
 
 export function memoryreadbooklist(): BOOK[] {
   return [...MEMORY.books.values()]
 }
 
-export function memoryreadbookbyaddress(address: string): MAYBE_BOOK {
+export function memoryreadfirstbook(): MAYBE<BOOK> {
+  const [first] = MEMORY.books.values()
+  return first
+}
+
+export function memoryreadbookbyaddress(address: string): MAYBE<BOOK> {
   const laddress = address.toLowerCase()
   return (
     MEMORY.books.get(address) ??
@@ -186,16 +126,68 @@ export function memoryreadbookbyaddress(address: string): MAYBE_BOOK {
   )
 }
 
-export function memoryreadbooksbytags(tags: string[]) {
-  const ltags = tags.map((tag) => tag.toLowerCase())
-  return memoryreadbooklist().filter((book) => bookhasmatch(book, tags, ltags))
+export function memorysetsoftwarebook(
+  slot: keyof typeof MEMORY.software,
+  book: string,
+) {
+  MEMORY.software[slot] = book
+}
+
+export function memoryreadbookbysoftware(
+  slot: keyof typeof MEMORY.software,
+): MAYBE<BOOK> {
+  return memoryreadbookbyaddress(MEMORY.software[slot])
+}
+
+export function memoryensuresoftwarebook(
+  slot: keyof typeof MEMORY.software,
+  maybename?: string,
+) {
+  let book = memoryreadbookbysoftware(slot)
+
+  // slot is set
+  if (ispresent(book)) {
+    return book
+  }
+
+  // try first book
+  if (!ispresent(book)) {
+    book = memoryreadfirstbook()
+  }
+
+  // create book
+  if (!ispresent(book)) {
+    book = createbook([])
+    if (isstring(maybename)) {
+      book.name = maybename
+    }
+    memorysetbook(book)
+    tape_info('memory', `created [book] ${book.name}`)
+  }
+
+  // success
+  if (ispresent(book)) {
+    memorysetsoftwarebook('main', book.id)
+    tape_info('memory', `opened [book] ${book.name}`)
+  }
 }
 
 export function memoryresetbooks(books: BOOK[]) {
+  // clear all books
   MEMORY.books.clear()
   books.forEach((book) => {
     MEMORY.books.set(book.id, book)
+    // attempt default for main
+    if (book.name.toLowerCase() === 'main') {
+      MEMORY.software.main = book.id
+    }
   })
+  if (!MEMORY.software.main) {
+    const first = MEMORY.books.values().next()
+    if (first.value) {
+      MEMORY.software.main = first.value.id
+    }
+  }
 }
 
 export function memorysetbook(book: BOOK) {
@@ -222,8 +214,12 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
       terrain: undefined,
       charset: undefined,
       palette: undefined,
-      // player input
+      eighttrack: undefined,
+      // loaders
+      binaryfile: undefined,
+      // player aggro
       player: MEMORY.defaultplayer,
+      // user input
       inputqueue: new Set(),
       inputmods: {
         [INPUT.NONE]: 0,
@@ -258,35 +254,32 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
-  const maintags = memoryreadmaintags()
-  const [mainbook] = memoryreadbooksbytags(maintags)
+  const mainbook = memoryreadbookbysoftware('main')
   if (!ispresent(mainbook)) {
     return api_error(
       'memory',
-      'login',
-      `login failed to find book ${maintags.join('. ')}`,
+      'login:main',
+      `login failed to find book 'main'`,
       player,
     )
   }
 
-  const titletags = memoryreadtitletags()
-  const [titleboard] = bookreadboardsbytags(mainbook, titletags)
+  const titleboard = bookreadboard(mainbook, 'title')
   if (!ispresent(titleboard)) {
     return api_error(
       'memory',
-      'login',
-      `login failed to find board ${titletags.join(', ')}`,
+      'login:title',
+      `login failed to find board 'title'`,
       player,
     )
   }
 
-  const playertags = memoryreadplayertags()
-  const [playerkind] = bookreadobjectsbytags(mainbook, playertags)
+  const playerkind = bookreadobject(mainbook, 'player')
   if (!ispresent(playerkind)) {
     return api_error(
       'memory',
-      'login',
-      `login failed to find object type ${playertags.join(', ')}`,
+      'login:player',
+      `login failed to find object type 'player'`,
       player,
     )
   }
@@ -297,8 +290,8 @@ export function memoryplayerlogin(player: string): boolean {
   const pt = { x: 0, y: 0 }
   const kindname = playerkind.name ?? MEMORY_LABEL.PLAYER
   const obj = boardobjectcreatefromkind(titleboard, pt, kindname, player)
-  if (ispresent(obj?.id) && ispresent(titleboard.id)) {
-    bookplayersetboard(mainbook, player, titleboard.id)
+  if (ispresent(obj?.id)) {
+    bookplayersetboard(mainbook, player, titleboard.codepage)
     return true
   }
 
@@ -306,19 +299,49 @@ export function memoryplayerlogin(player: string): boolean {
 }
 
 export function memoryplayerlogout(player: string) {
-  MEMORY.books.forEach((book) =>
-    boarddeleteobject(bookplayerreadboard(book, player), player),
-  )
+  MEMORY.books.forEach((book) => {
+    const board = bookplayerreadboard(book, player)
+    boarddeleteobject(board, player)
+  })
+}
+
+export function memoryplayerscan(players: Record<string, number>) {
+  const mainbook = memoryreadbookbysoftware('main')
+  const boards = bookplayerreadboards(mainbook)
+  for (let i = 0; i < boards.length; ++i) {
+    const board = boards[i]
+    const objects = Object.keys(board.objects)
+    for (let o = 0; o < objects.length; ++o) {
+      const object = board.objects[objects[o]]
+      const objectid = object.id
+      if (ispid(objectid) && ispresent(players[objectid]) === false) {
+        players[objectid] = 0
+        bookplayersetboard(mainbook, objectid, board.codepage)
+      }
+    }
+  }
 }
 
 export function memorytick(os: OS, timestamp: number) {
-  const maintags = memoryreadmaintags()
-  const [book] = memoryreadbooksbytags(maintags)
-  const boards = bookplayerreadboards(book)
+  // update loaders
+  const resethalt = CONFIG.HALT_AT_COUNT
+  CONFIG.HALT_AT_COUNT = resethalt * 32
+  MEMORY.loaders.forEach((code, id) => {
+    os.tick(id, DRIVER_TYPE.LOADER, 1, timestamp, 'loader', code)
+    // teardown
+    if (os.isended(id)) {
+      os.halt(id)
+      MEMORY.loaders.delete(id)
+    }
+  })
+  CONFIG.HALT_AT_COUNT = resethalt
+
+  const mainbook = memoryreadbookbysoftware('main')
+  const boards = bookplayerreadboards(mainbook)
 
   // update boards / build code / run chips
   boards.forEach((board) => {
-    const run = bookboardtick(book, board, timestamp)
+    const run = bookboardtick(mainbook, board, timestamp)
 
     // iterate code needed to update given board
     for (let i = 0; i < run.length; ++i) {
@@ -326,31 +349,35 @@ export function memorytick(os: OS, timestamp: number) {
 
       // create / update context
       const context = memoryreadchip(item.id)
-      context.book = book
+      context.book = mainbook
       context.board = board
       context.object = item.object
       context.inputcurrent = undefined
 
-      // map stats
-      const maybeplayer = boardelementreadstat(item.object, 'player', '')
-      const maybekind = bookelementkindread(book, item.object)
+      // read cycle from element kind
       const maybekindcycle = boardelementreadstat(
-        maybekind,
+        bookelementkindread(mainbook, item.object),
         'cycle',
-        CYCLE_DEFAULT,
+        undefined,
       )
+
+      // read cycle from element
       const maybecycle = boardelementreadstat(
         item.object,
         'cycle',
         maybekindcycle,
       )
 
-      const cycle = isnumber(maybecycle) ? maybecycle : CYCLE_DEFAULT
-      context.player = isstring(maybeplayer) ? maybeplayer : ''
-
       // run chip code
       const itemname = boardelementname(item.object)
-      os.tick(item.id, item.type, cycle, timestamp, itemname, item.code)
+      os.tick(
+        item.id,
+        DRIVER_TYPE.CODE_PAGE,
+        isnumber(maybecycle) ? maybecycle : CYCLE_DEFAULT,
+        timestamp,
+        itemname,
+        item.code,
+      )
     }
   })
 }
@@ -361,6 +388,12 @@ export function memorycli(
   player: string,
   cli: string,
 ) {
+  memoryensuresoftwarebook('main')
+
+  // we try and execute cli invokes in main
+  // its okay if we do not find main
+  const mainbook = memoryreadbookbysoftware('main')
+
   // player id + unique id fo run
   const id = `${player}_cli`
 
@@ -368,102 +401,120 @@ export function memorycli(
   const context = memoryreadchip(id)
 
   context.player = player
-  context.book = undefined
+  context.book = mainbook
   context.board = undefined
   context.inputcurrent = undefined
 
   tape_debug('memory', 'running', timestamp, id, cli)
 
   // run chip code
-  os.once(id, CODE_PAGE_TYPE.CLI, timestamp, 'cli', cli)
+  os.once(id, DRIVER_TYPE.CLI, timestamp, 'cli', cli)
+}
+
+function memoryloader(
+  timestamp: number,
+  player: string,
+  file: File,
+  fileext: string,
+  binaryfile: Uint8Array,
+) {
+  // we scan main book for loaders
+  const mainbook = memoryreadbookbysoftware('main')
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  const shouldmatch = ['binaryfile', fileext]
+  tape_info('memory', 'looking for stats', ...shouldmatch)
+
+  const loaders = bookreadcodepagesbytype(
+    mainbook,
+    CODE_PAGE_TYPE.LOADER,
+  ).filter((codepage) => {
+    // all blank stats must match
+    const stats = codepagereadstats(codepage)
+    const names = Object.keys(stats)
+    const matched = names.filter(
+      (name) => stats[name] === '' && shouldmatch.includes(name.toLowerCase()),
+    )
+    return matched.length === shouldmatch.length
+  })
+
+  for (let i = 0; i < loaders.length; ++i) {
+    const loader = loaders[i]
+
+    // player id + unique id fo run
+    const id = `${player}_load_${loader.id}`
+
+    // create / update context
+    const context = memoryreadchip(id)
+
+    context.player = player
+    context.book = mainbook
+    context.board = undefined
+    context.binaryfile = {
+      filename: file.name,
+      cursor: 0,
+      bytes: binaryfile,
+      dataview: new DataView(binaryfile.buffer),
+    }
+    context.inputcurrent = undefined
+
+    tape_info('memory', 'starting loader', timestamp, id)
+
+    // add code to active loaders
+    MEMORY.loaders.set(id, loader.code)
+  }
 }
 
 export function memoryloadfile(
-  os: OS,
   timestamp: number,
   player: string,
   file: File | undefined,
 ) {
-  if (!ispresent(file)) {
-    return
-  }
-
-  // create codepage from source text
-  function createcodepagefromtext(text: string) {
-    const codepage = createcodepage(text, {})
-    const pagename = codepagereadname(codepage)
-    const pagetype = codepagereadtypetostring(codepage)
-
-    // only create if target doesn't already exist
-    const book = ensureopenbook()
-    const maybepage = bookreadcodepagewithtype(
-      book,
-      codepagereadtype(codepage),
-      pagename,
-    )
-
-    if (ispresent(maybepage)) {
-      tape_info(
-        'memory',
-        `${book.name} already has a [${pagetype}] named ${pagename}`,
-      )
-    } else {
-      bookwritecodepage(book, codepage)
-      tape_info('memory', `created [${pagetype}] ${pagename} in ${book.name}`)
+  function handlefiletype(type: string) {
+    if (!ispresent(file)) {
+      return
     }
-  }
-
-  // various handlers
-  async function loadtextfile(file: File) {
-    const text = await file.text()
-    createcodepagefromtext(text)
-  }
-
-  async function loadzipfile(file: File) {
-    try {
-      const buffer = await file.arrayBuffer()
-      const ziplib = new JSZip()
-      const zip = await ziplib.loadAsync(buffer)
-      zip.forEach((filepath, fileitem) => {
-        fileitem
-          .async('uint8array')
-          .then((bytes) => {
-            const mimetype = mimetypeofbytesread(filepath, bytes)
-            if (mimetype !== false) {
-              const zipfile = new File([bytes], fileitem.name, {
-                type: mimetype,
-              })
-              memoryloadfile(os, timestamp, player, zipfile)
+    switch (type) {
+      case 'text/plain':
+        parsetextfile(file).catch((err) =>
+          api_error('memory', 'crash', err.message),
+        )
+        break
+      case 'application/zip':
+        parsezipfile(file, (zipfile) =>
+          memoryloadfile(timestamp, player, zipfile),
+        ).catch((err) => api_error('memory', 'crash', err.message))
+        break
+      case 'application/octet-stream':
+        parsebinaryfile(file, (fileext, binaryfile) => {
+          memoryloader(timestamp, player, file, fileext, binaryfile)
+        }).catch((err) => api_error('memory', 'crash', err.message))
+        break
+      default:
+        file
+          .arrayBuffer()
+          .then((arraybuffer) => {
+            const type = mimetypeofbytesread(
+              file.name,
+              new Uint8Array(arraybuffer),
+            )
+            if (type) {
+              handlefiletype(type)
+            } else {
+              return api_error(
+                'memory',
+                'loadfile',
+                `unsupported file ${file.name}`,
+              )
             }
           })
-          .catch((err) => {
-            api_error('memory', 'crash', err.message)
-          })
-      })
-    } catch (err: any) {
-      api_error('memory', 'crash', err.message)
+          .catch((err) => api_error('memory', 'crash', err.message))
+        return
     }
   }
-
-  // which file types do we support loading
-  switch (file.type) {
-    case 'text/plain':
-      loadtextfile(file).catch((err) =>
-        api_error('memory', 'crash', err.message),
-      )
-      break
-    case 'application/zip':
-      loadzipfile(file).catch((err) =>
-        api_error('memory', 'crash', err.message),
-      )
-      break
-    default:
-      return api_error(
-        'memory',
-        'loadfile',
-        `${file.name} unsupported type ${file.type}`,
-      )
-  }
+  handlefiletype(file?.type ?? '')
 }
 
 function memoryconverttogadgetlayers(
@@ -478,8 +529,8 @@ function memoryconverttogadgetlayers(
 
   let i = index
   const isbaseboard = i === 0
-  const boardwidth = board.width ?? 0
-  const boardheight = board.height ?? 0
+  const boardwidth = BOARD_WIDTH
+  const boardheight = BOARD_HEIGHT
   const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.CLEAR
 
   const tiles = createtiles(player, i++, boardwidth, boardheight, defaultcolor)
@@ -524,7 +575,7 @@ function memoryconverttogadgetlayers(
     const sprite = createsprite(player, objectindex, id)
     const lx = object.lx ?? object.x ?? 0
     const ly = object.ly ?? object.y ?? 0
-    const li = lx + ly * board.width
+    const li = lx + ly * BOARD_WIDTH
 
     // setup sprite
     sprite.x = object.x ?? 0
@@ -560,10 +611,10 @@ function memoryconverttogadgetlayers(
 
   // smooth shadows
   function aa(x: number, y: number) {
-    if (x < 0 || x >= board.width || y < 0 || y >= board.height) {
+    if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT) {
       return undefined
     }
-    return shadow.alphas[x + y * board.width]
+    return shadow.alphas[x + y * BOARD_WIDTH]
   }
 
   const weights = [
@@ -577,8 +628,8 @@ function memoryconverttogadgetlayers(
   const alphas = new Array<number>(shadow.alphas.length)
   for (let i = 0; i < shadow.alphas.length; ++i) {
     // coords
-    const cx = i % board.width
-    const cy = Math.floor(i / board.width)
+    const cx = i % BOARD_WIDTH
+    const cy = Math.floor(i / BOARD_WIDTH)
 
     // weighted average
     const values = [
@@ -632,82 +683,46 @@ function memoryconverttogadgetlayers(
   return layers
 }
 
-function framerank(frame: FRAME_STATE): number {
-  switch (frame.type) {
-    case FRAME_TYPE.EDIT:
-      return 1
-    case FRAME_TYPE.VIEW:
-      return 2
-  }
-  return 0
-}
-
 export function memoryreadgadgetlayers(player: string): LAYER[] {
-  const [mainbook] = memoryreadbooksbytags(memoryreadmaintags())
-  const board = bookplayerreadboard(mainbook, player)
+  const mainbook = memoryreadbookbysoftware('main')
+  const playerboard = bookplayerreadboard(mainbook, player)
 
   const layers: LAYER[] = []
-  if (!ispresent(mainbook) || !ispresent(board)) {
+  if (!ispresent(mainbook) || !ispresent(playerboard)) {
     return layers
   }
 
-  let i = 0
-  const frames = [...memoryreadframes(board.id ?? '')]
-  const borrowbuffer: number[] = new Array(board.width * board.height).fill(0)
+  const borrowbuffer: number[] = new Array(BOARD_WIDTH * BOARD_HEIGHT).fill(0)
 
-  frames.sort((a, b) => framerank(a) - framerank(b))
-  frames.forEach((frame) => {
-    const [withbook] = memoryreadbooksbytags(frame.book ?? memoryreadmaintags())
-    if (!ispresent(withbook)) {
-      return
-    }
-    const [withboard] = bookreadboardsbytags(
-      withbook,
-      frame.board ?? memoryreadtitletags(),
-    )
-    if (!ispresent(withboard)) {
-      return
-    }
+  // TODO: add support for book address prefixes
+  //   ie: #set under grunkle:title  <-  this will display the title board from the grunkle book
+  //                                     the thought here is this gives the mods api a new target to use
+  //                                     #mod under, #mod over, note that #mod self resets all changes #mod
+  //                                     has done to the chip memory context
+
+  // read over board
+  const over = bookreadboard(mainbook, playerboard.over ?? '')
+
+  // read under board
+  const under = bookreadboard(mainbook, playerboard.under ?? '')
+
+  // compose layers
+  const boards = [over, playerboard, under].filter(ispresent)
+
+  let i = 0
+  for (let b = 0; b < boards.length; ++b) {
+    const board = boards[b]
     const view = memoryconverttogadgetlayers(
       player,
       i,
-      withbook,
-      withboard,
-      frame.type === FRAME_TYPE.VIEW,
+      mainbook,
+      board,
+      board === playerboard,
       borrowbuffer,
     )
     i += view.length
     layers.push(...view)
-  })
-
-  return layers
-}
-
-export function memoryboardframeread(
-  book: MAYBE_BOOK,
-  board: MAYBE_BOARD,
-  type: MAYBE_STRING,
-) {
-  // find target frame by type
-  let maybeframe: MAYBE<FRAME_STATE>
-  const frames = memoryreadframes(board?.id ?? '')
-  switch (type) {
-    // eventually need multiple frames of the same kinds
-    // name:edit ??
-    // so we'd have [name]:type, and name defaults to the value of
-    // type of [name] is omitted
-    case 'edit': {
-      maybeframe = frames.find((item) => item.type === FRAME_TYPE.EDIT)
-      break
-    }
   }
 
-  const [maybebook] = maybeframe
-    ? memoryreadbooksbytags(maybeframe?.book ?? [])
-    : [book]
-  const [maybeboard] = maybeframe
-    ? bookreadboardsbytags(maybebook, maybeframe?.board ?? [])
-    : [board]
-
-  return { maybebook, maybeboard }
+  return layers
 }

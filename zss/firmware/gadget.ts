@@ -9,13 +9,7 @@ import {
 } from 'zss/gadget/data/api'
 import { PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
-import {
-  memorycreateeditframe,
-  memorycreateviewframe,
-  memoryreadchip,
-  memoryreadcontext,
-  memoryresetframes,
-} from 'zss/memory'
+import { memoryreadchip, memoryreadcontext } from 'zss/memory'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -39,14 +33,16 @@ export const GADGET_FIRMWARE = createfirmware({
       withname = memory.object.name
     }
 
-    gadgetpanel(chip, 'scroll', PANEL_TYPE.SCROLL, undefined, withname)
+    gadgetpanel(memory.player, 'scroll', PANEL_TYPE.SCROLL, undefined, withname)
   },
   tock(chip) {
-    gadgetcheckscroll(chip)
+    const memory = memoryreadchip(chip.id())
+    gadgetcheckscroll(memory.player)
   },
 })
   // gadget output & ui
   .command('gadget', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
     const context = memoryreadcontext(chip, words)
 
     const [edge] = readargs(context, 0, [ARG_TYPE.STRING])
@@ -57,58 +53,30 @@ export const GADGET_FIRMWARE = createfirmware({
         ARG_TYPE.MAYBE_STRING,
         ARG_TYPE.MAYBE_NUMBER,
       ])
-      gadgetpanel(chip, edge, edgeConst, size, name)
+      gadgetpanel(memory.player, edge, edgeConst, size, name)
     } else {
       const [, size, name] = readargs(context, 0, [
         ARG_TYPE.STRING,
         ARG_TYPE.MAYBE_NUMBER,
         ARG_TYPE.MAYBE_STRING,
       ])
-      gadgetpanel(chip, edge, edgeConst, size, name)
-    }
-
-    return 0
-  })
-  .command('frame', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [maybetarget, maybetype, maybeboard] = readargs(
-      memoryreadcontext(chip, words),
-      0,
-      [ARG_TYPE.STRING, ARG_TYPE.MAYBE_STRING, ARG_TYPE.MAYBE_STRING],
-    )
-
-    const board = memory.board?.id ?? ''
-
-    const ltarget = maybetarget.toLowerCase()
-    if (ltarget === 'reset') {
-      memoryresetframes(board)
-    } else if (ispresent(maybetype) && ispresent(maybeboard)) {
-      const ltype = maybetype.toLowerCase()
-      switch (ltype) {
-        case 'edit':
-          memorycreateeditframe(board, [ltarget], [maybeboard])
-          break
-        case 'view':
-          memorycreateviewframe(board, [ltarget], [maybeboard])
-          break
-        default:
-          // TODO raise error of unknown action
-          break
-      }
+      gadgetpanel(memory.player, edge, edgeConst, size, name)
     }
 
     return 0
   })
   .command('text', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
     const text = words.map(maptostring).join('')
-    gadgettext(chip, text)
+    gadgettext(memory.player, text)
     return 0
   })
   .command('hyperlink', (chip, args) => {
+    const memory = memoryreadchip(chip.id())
     // package into a panel item
     const [labelword, inputword, ...words] = args
     const label = maptostring(labelword)
     const input = maptostring(inputword)
-    gadgethyperlink(chip, label, input, words)
+    gadgethyperlink(memory.player, chip, label, input, words)
     return 0
   })

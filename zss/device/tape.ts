@@ -2,14 +2,20 @@ import { proxy, useSnapshot } from 'valtio'
 import { LOG_DEBUG } from 'zss/config'
 import { createdevice } from 'zss/device'
 import { createsid } from 'zss/mapping/guid'
-import { isarray, isnumber } from 'zss/mapping/types'
+import { isarray, isboolean } from 'zss/mapping/types'
 
 // system wide message logger
+
+export const TAPE_MAX_LINES = 128
 
 export enum TAPE_DISPLAY {
   TOP,
   BOTTOM,
   FULL,
+  SPLIT_X,
+  SPLIT_X_ALT,
+  SPLIT_Y,
+  SPLIT_Y_ALT,
   RIGHT,
   LEFT,
   MAX,
@@ -24,9 +30,9 @@ export enum TAPE_LOG_LEVEL {
 type TAPE_ROW = [string, string, string, ...any[]]
 
 type TAPE_STATE = {
+  layout: TAPE_DISPLAY
   terminal: {
     open: boolean
-    layout: TAPE_DISPLAY
     level: TAPE_LOG_LEVEL
     logs: TAPE_ROW[]
   }
@@ -42,9 +48,9 @@ type TAPE_STATE = {
 
 // message controlled state
 const tape = proxy<TAPE_STATE>({
+  layout: TAPE_DISPLAY.BOTTOM,
   terminal: {
-    open: false,
-    layout: TAPE_DISPLAY.BOTTOM,
+    open: true,
     level: LOG_DEBUG ? TAPE_LOG_LEVEL.DEBUG : TAPE_LOG_LEVEL.INFO,
     logs: [],
   },
@@ -58,14 +64,24 @@ const tape = proxy<TAPE_STATE>({
   },
 })
 
-function terminalinclayout(inc: number) {
-  tape.terminal.layout = ((tape.terminal.layout as number) +
-    inc) as TAPE_DISPLAY
-  if ((tape.terminal.layout as number) < 0) {
-    tape.terminal.layout += TAPE_DISPLAY.MAX
+function terminalinclayout(inc: boolean) {
+  const step = inc ? 1 : -1
+  tape.layout = ((tape.layout as number) + step) as TAPE_DISPLAY
+  if ((tape.layout as number) < 0) {
+    tape.layout += TAPE_DISPLAY.MAX
   }
-  if ((tape.terminal.layout as number) >= (TAPE_DISPLAY.MAX as number)) {
-    tape.terminal.layout -= TAPE_DISPLAY.MAX
+  if ((tape.layout as number) >= (TAPE_DISPLAY.MAX as number)) {
+    tape.layout -= TAPE_DISPLAY.MAX
+  }
+  if (!tape.editor.open) {
+    switch (tape.layout) {
+      case TAPE_DISPLAY.SPLIT_X:
+      case TAPE_DISPLAY.SPLIT_Y:
+      case TAPE_DISPLAY.SPLIT_X_ALT:
+      case TAPE_DISPLAY.SPLIT_Y_ALT:
+        terminalinclayout(inc)
+        break
+    }
   }
 }
 
@@ -81,6 +97,9 @@ createdevice('tape', [], (message) => {
       message.sender,
       ...message.data,
     ])
+    if (tape.terminal.logs.length > TAPE_MAX_LINES) {
+      tape.terminal.logs = tape.terminal.logs.slice(0, TAPE_MAX_LINES)
+    }
   }
 
   switch (message.target) {
@@ -101,7 +120,7 @@ createdevice('tape', [], (message) => {
       break
     case 'crash':
       tape.terminal.open = true
-      tape.terminal.layout = TAPE_DISPLAY.FULL
+      tape.layout = TAPE_DISPLAY.FULL
       break
     case 'terminal:open':
       tape.terminal.open = true
@@ -110,7 +129,7 @@ createdevice('tape', [], (message) => {
       tape.terminal.open = false
       break
     case 'terminal:inclayout':
-      if (isnumber(message.data)) {
+      if (isboolean(message.data)) {
         terminalinclayout(message.data)
       }
       break

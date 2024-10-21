@@ -1,8 +1,4 @@
-import {
-  tokenizeandwritetextformat,
-  useWriteText,
-  writetextreset,
-} from 'zss/gadget/data/textformat'
+import { useWriteText, writetextreset } from 'zss/gadget/data/textformat'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { isarray } from 'zss/mapping/types'
 
@@ -67,14 +63,6 @@ export function PanelItem({ item, active }: PanelItemProps) {
       case 'tx':
       case 'text':
         return <PanelItemText {...props} />
-      default:
-        // throw an unknown input type error ?
-        tokenizeandwritetextformat(
-          `$red unknown input type ${input}\n`,
-          context,
-          true,
-        )
-        break
     }
 
     writetextreset(context)

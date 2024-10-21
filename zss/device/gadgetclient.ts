@@ -22,38 +22,34 @@ const syncstate = proxy<SYNC_STATE>({
   },
 })
 
-const gadgetclientdevice = createdevice(
-  'gadgetclient',
-  ['ready', 'second'],
-  (message) => {
-    switch (message.target) {
-      case 'reset':
-        if (message.player === syncstate.state.player) {
-          desync = false
-          syncstate.state = message.data
-        }
-        break
-      case 'patch':
-        if (message.player === syncstate.state.player && !desync) {
-          try {
-            applypatch(syncstate.state, message.data, true)
-          } catch (err) {
-            if (err instanceof jsonpatcherror) {
-              // we are out of sync and need to request a refresh
-              desync = true
-              gadgetclientdevice.reply(
-                message,
-                'desync',
-                undefined,
-                message.player,
-              )
-            }
+const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
+  switch (message.target) {
+    case 'reset':
+      if (message.player === syncstate.state.player) {
+        desync = false
+        syncstate.state = message.data
+      }
+      break
+    case 'patch':
+      if (message.player === syncstate.state.player && !desync) {
+        try {
+          applypatch(syncstate.state, message.data, true)
+        } catch (err) {
+          if (err instanceof jsonpatcherror) {
+            // we are out of sync and need to request a refresh
+            desync = true
+            gadgetclientdevice.reply(
+              message,
+              'desync',
+              undefined,
+              message.player,
+            )
           }
         }
-        break
-    }
-  },
-)
+      }
+      break
+  }
+})
 
 export function getgadgetstate(): GADGET_STATE {
   return syncstate.state

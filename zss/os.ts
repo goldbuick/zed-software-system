@@ -1,14 +1,13 @@
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { api_error } from './device/api'
-import { loadfirmware } from './firmware/boot'
+import { DRIVER_TYPE, loadfirmware } from './firmware/boot'
 import { GeneratorBuild, compile } from './lang/generator'
 import { ispresent } from './mapping/types'
-import { CODE_PAGE_TYPE } from './memory/codepage'
 
 export type OS_INVOKE = (
   id: string,
-  type: CODE_PAGE_TYPE,
+  driver: DRIVER_TYPE,
   timestamp: number,
   name: string,
   code: string,
@@ -17,10 +16,11 @@ export type OS_INVOKE = (
 export type OS = {
   ids: () => string[]
   has: (id: string) => boolean
+  isended: (id: string) => boolean
   halt: (id: string) => boolean
   tick: (
     id: string,
-    type: CODE_PAGE_TYPE,
+    driver: DRIVER_TYPE,
     cycle: number,
     timestamp: number,
     name: string,
@@ -49,19 +49,29 @@ export function createos() {
     has(id) {
       return ispresent(chips[id])
     },
+    isended(id) {
+      const chip = chips[id]
+      if (ispresent(chip)) {
+        return chip.isended()
+      }
+      return true
+    },
     halt(id) {
       const chip = chips[id]
-      if (chip) {
+      if (ispresent(chip)) {
         delete chips[id]
       }
       return !!chip
     },
-    tick(id, type, cycle, timestamp, name, code) {
+    tick(id, driver, cycle, timestamp, name, code) {
       let chip = chips[id]
+
+      // attempt to create chip
       if (!ispresent(chips[id])) {
         const result = build(name, code)
         // create chip from build
         chip = chips[id] = createchip(id, result)
+
         // bail on errors
         if (result.errors?.length) {
           const [primary] = result.errors
@@ -94,14 +104,16 @@ export function createos() {
 
           return false
         }
+
         // load chip firmware
-        loadfirmware(chip, type)
+        loadfirmware(chip, driver)
       }
+
       // run it
       return !!chip?.tick(cycle, timestamp)
     },
-    once(id, type, timestamp, name, code) {
-      const result = os.tick(id, type, 1, timestamp, name, code)
+    once(id, driver, timestamp, name, code) {
+      const result = os.tick(id, driver, 1, timestamp, name, code)
       return result && os.halt(id)
     },
     message(incoming) {

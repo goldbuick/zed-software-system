@@ -1,5 +1,4 @@
 import {
-  COLLISION,
   PT,
   STR_KIND,
   ispt,
@@ -9,14 +8,14 @@ import {
 } from 'zss/firmware/wordtypes'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
+import { boardelementbg, boardelementcolor, boardelementname } from './board'
 import {
+  BOARD,
   BOARD_ELEMENT,
-  MAYBE_BOARD,
-  MAYBE_BOARD_ELEMENT,
-  boardelementbg,
-  boardelementcolor,
-  boardelementname,
-} from './board'
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  COLLISION,
+} from './types'
 
 // what is atomics? a set of spatial and data related queries
 // naming convention
@@ -43,7 +42,7 @@ export function checkcollision(
 }
 
 export function listnamedelements(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   name: string,
 ): BOARD_ELEMENT[] {
   const elements = [...(board?.named?.[name]?.values() ?? [])]
@@ -58,7 +57,7 @@ export function listnamedelements(
 }
 
 export function listelementsbykind(
-  elements: MAYBE_BOARD_ELEMENT[],
+  elements: MAYBE<BOARD_ELEMENT>[],
   kind: STR_KIND,
 ): BOARD_ELEMENT[] {
   const name = readstrkindname(kind)
@@ -86,7 +85,7 @@ export function listelementsbykind(
 }
 
 export function listelementsbyattr(
-  board: MAYBE_BOARD,
+  board: MAYBE<BOARD>,
   idnameorpts: any[],
 ): BOARD_ELEMENT[] {
   if (!ispresent(board)) {
@@ -109,11 +108,11 @@ export function listelementsbyattr(
         // check by valid pt
         ispt(idnameorpt) &&
         idnameorpt.x >= 0 &&
-        idnameorpt.x < board.width &&
+        idnameorpt.x < BOARD_WIDTH &&
         idnameorpt.y >= 0 &&
-        idnameorpt.y < board.height
+        idnameorpt.y < BOARD_HEIGHT
       ) {
-        const idx = idnameorpt.x + idnameorpt.y * board.width
+        const idx = idnameorpt.x + idnameorpt.y * BOARD_WIDTH
         const maybeid = board.lookup?.[idx]
         // check lookup first, then fallback to terrain
         return ispresent(maybeid) ? board.objects[maybeid] : board.terrain[idx]
@@ -125,9 +124,9 @@ export function listelementsbyattr(
     .filter(ispresent)
 }
 
-export function picknearestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
+export function picknearestpt(pt: PT, items: MAYBE<BOARD_ELEMENT>[]) {
   let ndist = 0
-  let nearest: MAYBE_BOARD_ELEMENT
+  let nearest: MAYBE<BOARD_ELEMENT>
 
   for (let i = 0; i < items.length; ++i) {
     const item = items[i]
@@ -145,9 +144,9 @@ export function picknearestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
   return nearest
 }
 
-export function pickfarthestpt(pt: PT, items: MAYBE_BOARD_ELEMENT[]) {
+export function pickfarthestpt(pt: PT, items: MAYBE<BOARD_ELEMENT>[]) {
   let ndist = 0
-  let nearest: MAYBE_BOARD_ELEMENT
+  let nearest: MAYBE<BOARD_ELEMENT>
 
   for (let i = 0; i < items.length; ++i) {
     const item = items[i]
