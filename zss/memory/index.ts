@@ -173,10 +173,21 @@ export function memoryensuresoftwarebook(
 }
 
 export function memoryresetbooks(books: BOOK[]) {
+  // clear all books
   MEMORY.books.clear()
   books.forEach((book) => {
     MEMORY.books.set(book.id, book)
+    // attempt default for main
+    if (book.name.toLowerCase() === 'main') {
+      MEMORY.software.main = book.id
+    }
   })
+  if (!MEMORY.software.main) {
+    const first = MEMORY.books.values().next()
+    if (first.value) {
+      MEMORY.software.main = first.value.id
+    }
+  }
 }
 
 export function memorysetbook(book: BOOK) {

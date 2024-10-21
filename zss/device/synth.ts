@@ -416,10 +416,12 @@ function drumbasstrigger(time: number) {
 // synth setup
 
 let enabled = false
+let enableaudiochecking = false
 export async function enableaudio() {
-  if (enabled) {
+  if (enabled || enableaudiochecking) {
     return
   }
+  enableaudiochecking = true
   try {
     await Tone.start()
     const transport = Tone.getTransport()
@@ -429,6 +431,7 @@ export async function enableaudio() {
   } catch (err) {
     //
   }
+  enableaudiochecking = false
 }
 
 function synthtick(time: number, value: SYNTH_NOTE_ON | null) {

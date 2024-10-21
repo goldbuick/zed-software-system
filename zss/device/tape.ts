@@ -50,7 +50,7 @@ type TAPE_STATE = {
 const tape = proxy<TAPE_STATE>({
   layout: TAPE_DISPLAY.BOTTOM,
   terminal: {
-    open: false,
+    open: true,
     level: LOG_DEBUG ? TAPE_LOG_LEVEL.DEBUG : TAPE_LOG_LEVEL.INFO,
     logs: [],
   },

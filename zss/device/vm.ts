@@ -15,7 +15,6 @@ import {
   memoryplayerscan,
   memoryplayerlogout,
   memorygetdefaultplayer,
-  memoryreadbookbysoftware,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -28,7 +27,6 @@ import {
   tape_info,
   vm_codeaddress,
   vm_flush,
-  vm_login,
 } from './api'
 import { modemobservevaluestring } from './modem'
 
@@ -56,6 +54,8 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
     case 'init':
       if (ispresent(message.player)) {
         memorysetdefaultplayer(message.player)
+        // ack
+        vm.reply(message, 'ackinit', true, message.player)
       }
       break
     case 'books':
@@ -74,11 +74,8 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
             ...booknames,
             message.player,
           )
-          // guard against infinite reset
-          const mainbook = memoryreadbookbysoftware('main')
-          if (ispresent(mainbook)) {
-            vm_login(vm.name(), message.player ?? '')
-          }
+          // ack
+          vm.reply(message, 'ackbooks', true, message.player)
         }
       })
       break
@@ -87,6 +84,8 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         if (memoryplayerlogin(message.player)) {
           tracking[message.player] = 0
           tape_info(vm.name(), 'player login', message.player)
+          // ack
+          vm.reply(message, 'acklogin', true, message.player)
         }
       }
       break

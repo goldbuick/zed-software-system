@@ -10,6 +10,7 @@ import {
   vm_books,
   vm_doot,
   vm_init,
+  vm_login,
 } from './api'
 import { gadgetstategetplayer, gadgetstatesetplayer } from './gadgetclient'
 
@@ -115,18 +116,34 @@ const register = createdevice(
           if (!ispresent(player)) {
             return
           }
+          // init vm with player id
+          if (gadgetstatesetplayer(player)) {
+            vm_init(register.name(), player)
+          }
+        })
+        break
+      case 'ackinit':
+        doasync(async () => {
+          if (!ispresent(message.player)) {
+            return
+          }
           const books = readstate() ?? (await readbiosbooks())
           if (books.length === 0) {
             api_error(register.name(), 'content', 'no content found')
             tape_crash(register.name())
             return
           }
-          // init player id & vm with content
-          if (gadgetstatesetplayer(player)) {
-            vm_init(register.name(), player)
-            vm_books(register.name(), books, player)
-          }
+          // init vm with content
+          vm_books(register.name(), books, message.player)
         })
+        break
+      case 'ackbooks':
+        if (ispresent(message.player)) {
+          vm_login(register.name(), message.player)
+        }
+        break
+      case 'acklogin':
+        // hide terminal on boot
         break
       case 'flush':
         if (isstring(message.data)) {
