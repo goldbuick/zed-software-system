@@ -52,20 +52,33 @@ function write(text: string) {
   tape_info('cli', text)
 }
 
-function writeheader(header: string) {
-  const CHR_TBAR = CHR_TM.repeat(header.length + 2)
-  const CHR_BBAR = CHR_BM.repeat(header.length + 2)
-  write(`${COLOR_EDGE} ${' '.repeat(header.length)} `)
+function writetbar(width: number) {
+  const CHR_TBAR = CHR_TM.repeat(width)
   write(`${COLOR_EDGE}${CHR_TBAR}`)
-  write(`${COLOR_EDGE} $white${header} `)
+}
+
+function writebbar(width: number) {
+  const CHR_BBAR = CHR_BM.repeat(width)
   write(`${COLOR_EDGE}${CHR_BBAR}`)
 }
 
+function writeheader(header: string) {
+  // const CHR_TBAR = CHR_TM.repeat(header.length + 2)
+  // const CHR_BBAR = CHR_BM.repeat(header.length + 2)
+  write(`${COLOR_EDGE} ${' '.repeat(header.length)} `)
+  writetbar(header.length + 2)
+  // write(`${COLOR_EDGE}${CHR_TBAR}`)
+  write(`${COLOR_EDGE} $white${header} `)
+  writebbar(header.length + 2)
+  // write(`${COLOR_EDGE}${CHR_BBAR}`)
+}
+
 function writesection(section: string) {
-  const CHR_BBAR = CHR_BM.repeat(section.length + 2)
+  // const CHR_BBAR = CHR_BM.repeat(section.length + 2)
   write(`${COLOR_EDGE} ${' '.repeat(section.length)} `)
   write(`${COLOR_EDGE} $gray${section} `)
-  write(`${COLOR_EDGE}${CHR_BBAR}`)
+  writebbar(section.length + 2)
+  // write(`${COLOR_EDGE}${CHR_BBAR}`)
 }
 
 function writeoption(option: string, label: string) {
@@ -249,6 +262,11 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('books', () => {
     writesection(`books`)
+    const main = memoryreadbookbysoftware('main')
+    writeoption('main', `${main?.name ?? 'empty'} $GREEN${main?.id ?? ''}`)
+    const content = memoryreadbookbysoftware('content')
+    writeoption('content', `${content?.name ?? 'empty'} ${content?.id ?? ''}`)
+    writebbar(7)
     const list = memoryreadbooklist()
     if (list.length) {
       list.forEach((book) => {
@@ -264,12 +282,14 @@ export const CLI_FIRMWARE = createfirmware({
     writesection(`pages`)
     const book = ensureopenbookinmain()
     if (ispresent(book)) {
+      writeoption('main', `${book.name} $GREEN${book.id}`)
       if (book.pages.length) {
         book.pages.forEach((page) => {
           const name = codepagereadname(page)
           write(`!pageopen ${page.id};${name}`)
         })
       } else {
+        write(``)
         writetext(`no pages found`)
         writetext(`use @ to create a page`)
         writetext(`@board name of board`)

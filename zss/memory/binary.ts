@@ -40,6 +40,24 @@ export const BIN_WORD_ENTRY = bin.generic(
 )
 export type BIN_WORD_ENTRY = bin.Parsed<typeof BIN_WORD_ENTRY>
 
+export const BIN_NUM_WORD_ENTRY = bin.generic(
+  {
+    key: bin.i32,
+  },
+  {
+    wordnumber: bin.object({
+      value: bin.i32,
+    }),
+    wordstring: bin.object({
+      value: bin.string,
+    }),
+    wordarray: bin.object({
+      value: bin.dynamicArrayOf(BIN_WORD),
+    }),
+  },
+)
+export type BIN_NUM_WORD_ENTRY = bin.Parsed<typeof BIN_NUM_WORD_ENTRY>
+
 export const BIN_BOARD_ELEMENT = bin.object({
   // this element is an instance of an element type
   kind: bin.optional(bin.string),
@@ -67,6 +85,7 @@ export const BIN_BOARD_ELEMENT = bin.object({
   cycle: bin.optional(BIN_WORD),
   stepx: bin.optional(BIN_WORD),
   stepy: bin.optional(BIN_WORD),
+  // messages
   sender: bin.optional(BIN_WORD),
   data: bin.optional(BIN_WORD),
 })
@@ -74,7 +93,7 @@ export type BIN_BOARD_ELEMENT = bin.Parsed<typeof BIN_BOARD_ELEMENT>
 
 export const BIN_BOARD = bin.object({
   // specifics
-  terrain: bin.arrayOf(BIN_BOARD_ELEMENT, BOARD_SIZE),
+  terrain: bin.arrayOf(bin.optional(BIN_BOARD_ELEMENT), BOARD_SIZE),
   objects: bin.dynamicArrayOf(BIN_BOARD_ELEMENT),
   // stats
   isdark: bin.optional(BIN_WORD),
@@ -98,8 +117,22 @@ export const BIN_BITMAP = bin.object({
 })
 export type BIN_BITMAP = bin.Parsed<typeof BIN_BITMAP>
 
+export const BIN_EIGHT_FX_CONFIG = bin.object({
+  fx: bin.i32,
+  settings: bin.dynamicArrayOf(BIN_NUM_WORD_ENTRY),
+})
+export type BIN_EIGHT_FX_CONFIG = bin.Parsed<typeof BIN_EIGHT_FX_CONFIG>
+
+export const BIN_EIGHT_SYNTH_CONFIG = bin.object({
+  synth: bin.i32,
+  effects: bin.dynamicArrayOf(BIN_EIGHT_FX_CONFIG),
+  settings: bin.dynamicArrayOf(BIN_NUM_WORD_ENTRY),
+})
+export type BIN_EIGHT_SYNTH_CONFIG = bin.Parsed<typeof BIN_EIGHT_SYNTH_CONFIG>
+
 export const BIN_EIGHT_TRACK = bin.object({
   tempo: bin.i32,
+  synths: bin.dynamicArrayOf(BIN_EIGHT_SYNTH_CONFIG),
   measures: bin.dynamicArrayOf(bin.arrayOf(bin.i32, 8)),
 })
 export type BIN_EIGHT_TRACK = bin.Parsed<typeof BIN_EIGHT_TRACK>

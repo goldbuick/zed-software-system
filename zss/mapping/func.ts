@@ -1,12 +1,9 @@
 import { api_error } from 'zss/device/api'
 
-function logerror(error: Error) {
-  api_error('async', 'crash', error.message)
-}
-
-export function doasync(
-  asyncfunc: () => Promise<void>,
-  errorfunc: (error: Error) => void = logerror,
-) {
-  asyncfunc().catch(errorfunc)
+export function doasync(label: string, asyncfunc: () => Promise<void>) {
+  function logerror(error: Error) {
+    console.error(error)
+    api_error(label, 'crash', error.message)
+  }
+  asyncfunc().catch(logerror)
 }

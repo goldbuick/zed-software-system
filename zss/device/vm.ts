@@ -59,7 +59,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       }
       break
     case 'books':
-      doasync(async () => {
+      doasync('vm:books', async () => {
         if (isstring(message.data)) {
           // unpack books
           const books = await decompressbooks(message.data)
@@ -182,7 +182,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     }
     case 'flush':
-      doasync(async () => {
+      doasync('vm:flush', async () => {
         const books = memoryreadbooklist()
         if (books.length) {
           register_flush(vm.name(), await compressbooks(books))

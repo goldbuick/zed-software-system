@@ -108,7 +108,7 @@ const register = createdevice(
         tape_crash(register.name())
         break
       case 'ready':
-        doasync(async () => {
+        doasync('register:ready', async () => {
           if (!ispresent(message.player)) {
             return
           }
@@ -123,7 +123,7 @@ const register = createdevice(
         })
         break
       case 'ackinit':
-        doasync(async () => {
+        doasync('register:ackinit', async () => {
           if (!ispresent(message.player)) {
             return
           }
@@ -151,13 +151,13 @@ const register = createdevice(
         }
         break
       case 'nodetrash':
-        doasync(async () => await erasebiosnode())
+        doasync('register:nodetrash', async () => await erasebiosnode())
         break
       case 'biosflash':
-        doasync(async () => await writebiosbooks())
+        doasync('register:biosflash', async () => await writebiosbooks())
         break
       case 'biostrash':
-        doasync(async () => await erasebiosbooks())
+        doasync('register:biostrash', async () => await erasebiosbooks())
         break
       case 'second':
         ++keepalive

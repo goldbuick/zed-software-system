@@ -18,27 +18,19 @@ import { MAYBE, isnumber, ispresent, noop } from 'zss/mapping/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
 import { BIN_BOARD } from './binary'
-import {
-  createboardelement,
-  exportboardelement,
-  importboardelement,
-} from './boardelement'
+import { exportboardelement, importboardelement } from './boardelement'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 import { exportword, importword } from './word'
 
 import { memoryreadchip } from '.'
 
-const BOARD_TERRAIN: BOARD_ELEMENT[] = new Array(
-  BOARD_WIDTH * BOARD_HEIGHT,
-).map(() => createboardelement())
-
-export function createboardstats() {
-  return {}
+function createempty() {
+  return new Array(BOARD_WIDTH * BOARD_HEIGHT).map(() => undefined)
 }
 
 export function createboard(fn = noop<BOARD>) {
   const board: BOARD = {
-    terrain: BOARD_TERRAIN.slice(0),
+    terrain: createempty(),
     objects: {},
     // runtime
     codepage: '',
@@ -52,7 +44,7 @@ export function exportboard(board: MAYBE<BOARD>): MAYBE<BIN_BOARD> {
     return
   }
   return {
-    terrain: board.terrain.map(exportboardelement).filter(ispresent),
+    terrain: board.terrain.map(exportboardelement),
     objects: Object.keys(board.objects)
       .map((name) => exportboardelement(board.objects[name]))
       .filter(ispresent),
