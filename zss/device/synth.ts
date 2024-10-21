@@ -9,6 +9,14 @@ import {
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 function createsynth() {
+  const feedbackdelay = new Tone.FeedbackDelay('16n', 0.125).toDestination()
+
+  // const chorus = new Tone.Chorus(4, 2.5, 0.5).start()
+  // chorus.connect(feedbackdelay)
+
+  // const fx = new Tone.Reverb(0.5)
+  // fx.connect(chorus)
+
   const synth = new Tone.PolySynth().toDestination()
   synth.maxPolyphony = 8
   synth.set({
@@ -22,6 +30,8 @@ function createsynth() {
       type: 'square',
     },
   })
+  synth.connect(feedbackdelay)
+
   return synth
 }
 
@@ -559,7 +569,7 @@ const synth = createdevice('synth', ['second'], (message) => {
           synthplaystart(
             invokes,
             // shaving ?
-            Tone.Time(message.data).toSeconds() - 0.03,
+            Tone.Time(message.data).toSeconds() - 0.025,
             true,
           )
         }

@@ -7,6 +7,7 @@ import {
   api_error,
   tape_crash,
   tape_info,
+  tape_terminal_close,
   vm_books,
   vm_doot,
   vm_init,
@@ -143,7 +144,7 @@ const register = createdevice(
         }
         break
       case 'acklogin':
-        // hide terminal on boot
+        tape_terminal_close(register.name())
         break
       case 'flush':
         if (isstring(message.data)) {

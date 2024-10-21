@@ -149,6 +149,7 @@ function applymod(modstate: MOD_STATE, codepage: CODE_PAGE, address: string) {
   // message
   const pagetype = codepagereadtypetostring(codepage)
   write(`modifying [${pagetype}] ${address}`)
+  console.info(mods)
 }
 
 function ensurecodepage<T extends CODE_PAGE_TYPE>(
@@ -271,12 +272,28 @@ export const MODS_FIRMWARE = createfirmware({
 
     if (!ispresent(maybestat)) {
       // print all stat names
-      if (modstate.schema?.type === SCHEMA_TYPE.OBJECT) {
-        // const names = Object.keys(modstate.schema?.props ?? {})
-        // const writestats = modstate.schema.props
-        const names: string[] = []
-        write(`write stats [${names.join(', ')}]`)
-        write(`read only stats [${names.join(', ')}]`)
+      if (
+        modstate.schema?.type === SCHEMA_TYPE.OBJECT &&
+        ispresent(modstate.schema.props)
+      ) {
+        const writenames: string[] = []
+        const readonlynames: string[] = []
+        const propnames = Object.keys(modstate.schema.props)
+        for (let i = 0; i < propnames.length; ++i) {
+          const name = propnames[i]
+          switch (modstate.schema.props?.[name].type) {
+            case SCHEMA_TYPE.SKIP:
+              break
+            case SCHEMA_TYPE.READ_ONLY:
+              readonlynames.push(name)
+              break
+            default:
+              writenames.push(name)
+              break
+          }
+        }
+        write(`write stats [${writenames.join(', ')}]`)
+        write(`read only stats [${readonlynames.join(', ')}]`)
       }
       return 0
     }
@@ -321,6 +338,5 @@ export const MODS_FIRMWARE = createfirmware({
     ])
 
     // we need to define a schema ..
-
     return 0
   })
