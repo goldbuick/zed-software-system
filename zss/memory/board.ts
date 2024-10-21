@@ -68,7 +68,7 @@ export function importboard(board: MAYBE<BIN_BOARD>): MAYBE<BOARD> {
     return
   }
   return {
-    terrain: board.terrain.map(importboardelement).filter(ispresent),
+    terrain: board.terrain.map(importboardelement),
     objects: Object.fromEntries<BOARD_ELEMENT>(
       board.objects
         .map(importboardelement)
