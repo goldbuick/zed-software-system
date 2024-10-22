@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import {
   api_error,
   tape_editor_close,
@@ -38,6 +38,7 @@ export function EditorInput({
   rows,
   codepage,
 }: TextinputProps) {
+  // const tape = useTape()
   const blink = useBlink()
   const context = useWriteText()
   const blinkdelta = useRef<PT>()
@@ -138,20 +139,6 @@ export function EditorInput({
     },
     [codeend, rows, rowsend, xcursor, ycursor],
   )
-
-  const maxscroll = rows.length - 4
-  useEffect(() => {
-    const delta = ycursor - tapeeditor.scroll
-    if (delta > edge.height - 8) {
-      tapeeditorstate.scroll++
-    }
-    if (delta < 4) {
-      tapeeditorstate.scroll--
-    }
-    tapeeditorstate.scroll = Math.round(
-      clamp(tapeeditorstate.scroll, 0, maxscroll),
-    )
-  }, [ycursor, tapeeditor.scroll, maxscroll, edge.height])
 
   return (
     <>

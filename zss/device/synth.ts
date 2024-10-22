@@ -9,7 +9,7 @@ import {
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 function createsynth() {
-  const feedbackdelay = new Tone.FeedbackDelay('16n', 0.125).toDestination()
+  const feedbackdelay = new Tone.FeedbackDelay('8n', 0.3333).toDestination()
 
   // const chorus = new Tone.Chorus(4, 2.5, 0.5).start()
   // chorus.connect(feedbackdelay)
@@ -27,7 +27,10 @@ function createsynth() {
       release: 0.1,
     },
     oscillator: {
-      type: 'square',
+      type: 'fmsquare4',
+      harmonicity: 8,
+      // @ts-expect-error yay
+      partials: [0.999, 0.33, 0.8, 1],
     },
   })
   synth.connect(feedbackdelay)
