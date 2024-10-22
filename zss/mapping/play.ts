@@ -73,15 +73,16 @@ const CHAR_OP_MAP = {
 
 export type SYNTH_NOTE = null | string | number
 export type SYNTH_NOTE_ON = [number, string, SYNTH_NOTE]
+export type SYNTH_NOTE_ENTRY = [number, SYNTH_NOTE_ON]
 
-export function invokeplay(synth: number, play: SYNTH_OP[]) {
+export function invokeplay(synth: number, starttime: number, play: SYNTH_OP[]) {
   // translate ops into time, note pairs
-  let time = 0
+  let time = starttime
   let octave = 3
   let duration = '32n'
   let accidental = ''
   let note: SYNTH_NOTE = ''
-  const pattern: [string, SYNTH_NOTE_ON][] = []
+  const pattern: SYNTH_NOTE_ENTRY[] = []
 
   function resetnote() {
     note = ''
@@ -90,15 +91,14 @@ export function invokeplay(synth: number, play: SYNTH_OP[]) {
   }
 
   function writenote() {
-    const ticks = `+${time}i`
     if (note === null) {
-      pattern.push([ticks, [synth, duration, note]])
+      pattern.push([time, [synth, duration, note]])
       resetnote()
     } else if (isnumber(note)) {
-      pattern.push([ticks, [synth, duration, note]])
+      pattern.push([time, [synth, duration, note]])
       resetnote()
     } else if (note !== '') {
-      pattern.push([ticks, [synth, duration, `${note}${accidental}${octave}`]])
+      pattern.push([time, [synth, duration, `${note}${accidental}${octave}`]])
       resetnote()
     }
   }
@@ -217,8 +217,7 @@ export function invokeplay(synth: number, play: SYNTH_OP[]) {
   writenote()
 
   // write end of pattern
-  time -= Tone.Time(duration).toTicks()
-  pattern.push([`+${time}i`, [synth, duration, -1]])
+  pattern.push([time, [synth, duration, -1]])
 
   return pattern
 }

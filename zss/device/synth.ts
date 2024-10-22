@@ -8,20 +8,43 @@ import {
 } from 'zss/mapping/play'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
+const reverb = new Tone.Reverb().toDestination()
+reverb.set({
+  wet: 0.87,
+  decay: 1.5,
+  preDelay: 0.01,
+})
+
+const echo = new Tone.FeedbackDelay()
+echo.set({
+  wet: 0.87,
+  feedback: 0.5,
+  maxDelay: '1n',
+  delayTime: '4n.',
+})
+echo.connect(reverb)
+
+const phaser = new Tone.Phaser()
+phaser.connect(echo)
+
+const output = new Tone.Gain()
+output.connect(phaser)
+
 function createsynth() {
   const synth = new Tone.PolySynth().toDestination()
   synth.maxPolyphony = 8
   synth.set({
     envelope: {
       attack: 0.01,
-      decay: 0.1,
+      decay: 0.5,
       sustain: 0.1,
-      release: 0.1,
+      release: 0.2,
     },
     oscillator: {
-      type: 'square',
+      type: 'fmsquare7',
     },
   })
+  synth.connect(output)
 
   return synth
 }
@@ -409,9 +432,12 @@ function drumlowwoodblocktrigger(duration: string, time: number) {
 // drumbass
 
 const drumbass = new Tone.MembraneSynth().toDestination()
+drumbass.set({
+  octaves: 8,
+})
 
 function drumbasstrigger(time: number) {
-  drumbass.triggerAttackRelease('C2', '8n', time)
+  drumbass.triggerAttackRelease('C1', '8n', time)
 }
 
 // synth setup
@@ -440,6 +466,7 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
     return
   }
   const [chan, duration, note] = value
+  console.info({ chan, duration, note })
   if (isstring(note) && ispresent(SYNTH[chan])) {
     SYNTH[chan].triggerAttackRelease(note, duration, time)
   }
@@ -476,24 +503,26 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
         drumbasstrigger(time)
         break
       case -1: // END OF PATTERN
-        synth.emit('synth:endofpattern', duration)
+        synth.emit('synth:endofpattern', time)
         break
     }
   }
 }
 
-function synthplaystart(
-  invokes: SYNTH_INVOKES,
-  time: number | string,
-  markendofpattern = false,
-) {
+let pacertime = 0
+let pacerstart = 0
+// @ts-expect-error dont care enough right now
+const pacer = new Tone.Part(synthtick)
+
+function synthplaystart(invokes: SYNTH_INVOKES, markendofpattern = false) {
   // scan for longest invoke
   let longest = 0
   let longestindex = 0
   if (markendofpattern) {
     for (let i = 0; i < invokes.length; ++i) {
-      const count = invokes[i].length
-      if (invokes[i].length > longest) {
+      const invoke = invokes[i]
+      const count = invoke.length
+      if (invoke.length > longest) {
         longest = count
         longestindex = i
       }
@@ -501,34 +530,40 @@ function synthplaystart(
   }
   // invoke synth ops
   for (let i = 0; i < invokes.length; ++i) {
-    const pattern = invokeplay(0, invokes[i])
+    const pattern = invokeplay(0, pacertime, invokes[i])
     if (i !== longestindex || !markendofpattern) {
       // only longest pattern keeps end of pattern entry
       pattern.pop()
     }
-    if (pattern.length > 0) {
-      new Tone.Part(synthtick, pattern).start(time)
+    // track next note time
+    if (i === longestindex && pattern.length) {
+      const last = pattern[pattern.length - 1]
+      pacertime = Math.max(pacertime, last[0])
+    }
+    // write pattern to pacer
+    for (let p = 0; p < pattern.length; ++p) {
+      const [time, value] = pattern[p]
+      pacer.add(`+${time}i`, value)
     }
   }
 }
 
-let synthsmusicplaying = false
-const synthsmusicqueue: SYNTH_INVOKES[] = []
 let synthsfxpriority = -1
-
-function synthplay(priority: number, buffer: string, time: number | string) {
+function synthplay(priority: number, buffer: string) {
   const invokes = parseplay(buffer)
+
+  // start pacer if needed
+  console.info('pacer!!', pacer.state)
+  if (pacer.state === 'stopped') {
+    pacer.clear()
+    pacer.start(0)
+    pacertime = 0
+    pacerstart = Tone.getTransport().now()
+  }
 
   // music queue
   if (priority < 0) {
-    if (synthsmusicplaying || synthsmusicqueue.length) {
-      // add to music queue
-      synthsmusicqueue.push(invokes)
-    } else {
-      // start music
-      synthsmusicplaying = true
-      synthplaystart(invokes, time, true)
-    }
+    synthplaystart(invokes, true)
     return
   }
 
@@ -536,7 +571,7 @@ function synthplay(priority: number, buffer: string, time: number | string) {
   if (synthsfxpriority === -1 || priority >= synthsfxpriority) {
     // invoke
     synthsfxpriority = priority
-    synthplaystart(invokes, time)
+    synthplaystart(invokes)
   }
 }
 
@@ -545,24 +580,17 @@ const synth = createdevice('synth', ['second'], (message) => {
     case 'play':
       if (isarray(message.data)) {
         const [priority, buffer] = message.data as [number, string]
-        synthplay(priority, buffer, 0)
+        synthplay(priority, buffer)
       }
       break
     case 'endofpattern':
       // mark as done
-      synthsmusicplaying = false
-      // check music queue
-      if (isstring(message.data) && synthsmusicqueue.length) {
-        const invokes = synthsmusicqueue.shift()
-        if (ispresent(invokes)) {
-          // continue music
-          synthsmusicplaying = true
-          synthplaystart(
-            invokes,
-            // shaving ?
-            Tone.Time(message.data).toSeconds() - 0.025,
-            true,
-          )
+      if (isnumber(message.data)) {
+        const maxtime = message.data - pacerstart
+        const pacerend = Tone.Time(`${pacertime}i`).toSeconds()
+        if (maxtime >= pacerend) {
+          console.info('??', maxtime, pacerend)
+          pacer.stop(0)
         }
       }
       break
