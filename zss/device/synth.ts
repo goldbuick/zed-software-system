@@ -9,14 +9,6 @@ import {
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 function createsynth() {
-  const feedbackdelay = new Tone.FeedbackDelay('8n', 0.3333).toDestination()
-
-  // const chorus = new Tone.Chorus(4, 2.5, 0.5).start()
-  // chorus.connect(feedbackdelay)
-
-  // const fx = new Tone.Reverb(0.5)
-  // fx.connect(chorus)
-
   const synth = new Tone.PolySynth().toDestination()
   synth.maxPolyphony = 8
   synth.set({
@@ -27,19 +19,17 @@ function createsynth() {
       release: 0.1,
     },
     oscillator: {
-      type: 'fmsquare4',
-      harmonicity: 8,
-      // @ts-expect-error yay
-      partials: [0.999, 0.33, 0.8, 1],
+      type: 'square',
     },
   })
-  synth.connect(feedbackdelay)
 
   return synth
 }
 
 const SYNTH = [
   // for play
+  createsynth(),
+  // for sfx
   createsynth(),
   // + 8track synths
   createsynth(),
@@ -48,8 +38,6 @@ const SYNTH = [
   createsynth(),
   createsynth(),
   createsynth(),
-  createsynth(),
-  // for sfx
   createsynth(),
 ]
 
@@ -513,7 +501,7 @@ function synthplaystart(
   }
   // invoke synth ops
   for (let i = 0; i < invokes.length; ++i) {
-    const pattern = invokeplay(i, invokes[i])
+    const pattern = invokeplay(0, invokes[i])
     if (i !== longestindex || !markendofpattern) {
       // only longest pattern keeps end of pattern entry
       pattern.pop()
