@@ -8,43 +8,36 @@ import {
 } from 'zss/mapping/play'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
-const reverb = new Tone.Reverb().toDestination()
+const reverb = new Tone.Reverb()
 reverb.set({
-  wet: 0.87,
-  decay: 1.5,
-  preDelay: 0.01,
+  wet: 0.25,
 })
+reverb.toDestination()
 
 const echo = new Tone.FeedbackDelay()
 echo.set({
-  wet: 0.87,
-  feedback: 0.5,
-  maxDelay: '1n',
-  delayTime: '4n.',
+  wet: 0.5,
+  delayTime: '8n',
+  maxDelay: 1,
 })
 echo.connect(reverb)
 
-const phaser = new Tone.Phaser()
-phaser.connect(echo)
-
-const output = new Tone.Gain()
-output.connect(phaser)
-
 function createsynth() {
-  const synth = new Tone.PolySynth().toDestination()
+  const synth = new Tone.PolySynth()
   synth.maxPolyphony = 8
   synth.set({
     envelope: {
       attack: 0.01,
-      decay: 0.5,
-      sustain: 0.1,
-      release: 0.2,
+      decay: 0.01,
+      sustain: 0.5,
+      release: 0.01,
     },
     oscillator: {
-      type: 'fmsquare7',
+      type: 'square',
     },
   })
-  synth.connect(output)
+  synth.toDestination()
+  synth.connect(echo)
 
   return synth
 }
@@ -190,7 +183,7 @@ drumhisnarenoise.set({
   envelope: {
     attack: 0.01,
     decay: 0.1,
-    sustain: 0.001,
+    sustain: 0,
     release: 0.1,
   },
 })
@@ -452,7 +445,7 @@ export async function enableaudio() {
   try {
     await Tone.start()
     const transport = Tone.getTransport()
-    transport.bpm.value = 69
+    transport.bpm.value = 107
     transport.start()
     enabled = true
   } catch (err) {
@@ -553,11 +546,10 @@ function synthplay(priority: number, buffer: string) {
   const invokes = parseplay(buffer)
 
   // start pacer if needed
-  console.info('pacer!!', pacer.state)
   if (pacer.state === 'stopped') {
-    pacer.clear()
-    pacer.start(0)
     pacertime = 0
+    pacer.clear()
+    pacer.start(pacertime)
     pacerstart = Tone.getTransport().now()
   }
 
@@ -589,7 +581,6 @@ const synth = createdevice('synth', ['second'], (message) => {
         const maxtime = message.data - pacerstart
         const pacerend = Tone.Time(`${pacertime}i`).toSeconds()
         if (maxtime >= pacerend) {
-          console.info('??', maxtime, pacerend)
           pacer.stop(0)
         }
       }

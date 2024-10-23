@@ -116,7 +116,7 @@ export function TerminalInput({
 
   // write hint
   setuplogitem(false, false, 0, 0, context)
-  const hint = 'if lost try #help'
+  const hint = `${import.meta.env.ZSS_BRANCH_NAME}:${import.meta.env.ZSS_BRANCH_VERSION} - if lost try #help`
   context.x = edge.right - hint.length
   tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
 

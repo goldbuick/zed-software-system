@@ -86,6 +86,7 @@
     "typescript": "^5.2.2",
     "valtio": "^1.11.2",
     "vite": "^5.2.0",
+    "vite-bundle-analyzer": "^0.12.1",
     "vite-plugin-arraybuffer": "^0.0.7",
     "vite-plugin-full-reload": "^1.2.0",
     "vite-plugin-mkcert": "^1.17.5",

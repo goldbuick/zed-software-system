@@ -5804,6 +5804,11 @@ valtio@^1.11.2:
     proxy-compare "2.6.0"
     use-sync-external-store "1.2.0"
 
+vite-bundle-analyzer@^0.12.1:
+  version "0.12.1"
+  resolved "https://registry.npmjs.org/vite-bundle-analyzer/-/vite-bundle-analyzer-0.12.1.tgz#0a429384ab327ad6ab08e3f0aa29e4cf0693969f"
+  integrity sha512-mIYwsDvTYCqXAUtOZIL3f7NdwWUeL/MlNFhOJzlTdcZE4pye6h06IEnOvWhnc/e+HM4oVVNxuRHZt0Rz6VO7EA==
+
 vite-plugin-arraybuffer@^0.0.7:
   version "0.0.7"
   resolved "https://registry.npmjs.org/vite-plugin-arraybuffer/-/vite-plugin-arraybuffer-0.0.7.tgz#240f35c86464ef0e9898b38c1b9dc20d2f51f0cf"
