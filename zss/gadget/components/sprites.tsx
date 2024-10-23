@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import {
   BufferAttribute,
   BufferGeometry,
@@ -169,7 +169,14 @@ export function Sprites({ sprites, charset, palette }: SpritesProps) {
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
-  }, [charsetTexture, material, imageWidth, imageHeight, clippingPlanes])
+  }, [
+    charsetTexture,
+    palette,
+    material,
+    imageWidth,
+    imageHeight,
+    clippingPlanes,
+  ])
 
   return (
     <points frustumCulled={false} material={material}>

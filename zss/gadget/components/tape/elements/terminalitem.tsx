@@ -1,12 +1,12 @@
 import {
   HyperLinkText,
+  textformatreadedges,
   tokenize,
   tokenizeandwritetextformat,
   useWriteText,
 } from 'zss/gadget/data/textformat'
 
 import {
-  BKG_PTRN,
   TerminalItemInputProps,
   TerminalItemProps,
   setuplogitem,
@@ -16,14 +16,13 @@ import { TerminalHyperlink } from './terminalhyperlink'
 
 export function TerminalItem({ blink, active, text, y }: TerminalItemProps) {
   const context = useWriteText()
+  const edge = textformatreadedges(context)
   const ishyperlink = text.startsWith('!')
 
   // write text or clear line for ui
-  setuplogitem(!!blink, !!active, y, context)
-  context.writefullwidth = BKG_PTRN
-  context.active.bottomedge = context.height - 3
+  setuplogitem(!!blink, !!active, 0, y, context)
+  context.active.bottomedge = edge.bottom
   tokenizeandwritetextformat(ishyperlink ? '' : text, context, true)
-  context.writefullwidth = undefined
 
   // hyperlinks
   if (ishyperlink) {

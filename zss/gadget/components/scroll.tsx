@@ -1,9 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import { damp, expo, exp, rsqw } from 'maath/easing'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Group } from 'three'
 import { animpositiontotarget } from 'zss/mapping/anim'
-import { snap } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
 import {

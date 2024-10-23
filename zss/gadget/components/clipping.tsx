@@ -4,6 +4,7 @@ import * as THREE from 'three'
 
 type ClippingSet = THREE.Plane[]
 
+const subVectors = new THREE.Vector3()
 const ClippingContext = createContext<ClippingSet>([])
 
 export function useClipping() {
@@ -62,7 +63,7 @@ export default function Clipping({
       }
       for (let i = 0; i < clippingPlanes.length; i += 1) {
         clippingPlanes[i].setFromNormalAndCoplanarPoint(
-          new THREE.Vector3().subVectors(center, sides[i]).normalize(),
+          subVectors.subVectors(center, sides[i]).normalize(),
           sides[i],
         )
       }

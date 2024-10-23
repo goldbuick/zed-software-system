@@ -1,8 +1,8 @@
 import { createforward } from './device/forward'
 import { ready } from './device/vm'
 
+// these are all back-end devices
 // devices that operate within the web worker
-import './device/clock'
 import './device/gadgetserver'
 import './device/modem'
 

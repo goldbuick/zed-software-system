@@ -1,12 +1,10 @@
 import { createsid } from 'zss/mapping/guid'
 
 export type BITMAP = {
-  id: string
   width: number
   height: number
   size: number
   bits: Uint8Array
-  color?: number
 }
 
 export function bitmapToCanvas(bitmap: BITMAP) {
@@ -134,7 +132,6 @@ export function copyBitmap(
 
 export function createBitmap(width: number, height: number): BITMAP {
   return {
-    id: createsid(),
     width,
     height,
     size: width * height,

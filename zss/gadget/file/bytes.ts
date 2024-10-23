@@ -9,26 +9,6 @@ import {
 import DEFAULT_CHR from './default.chr?uint8array'
 import DEFAULT_PAL from './default.pal?uint8array'
 
-// export function loadCharsetFrom
-// function base64ToBytes(base64: string) {
-//   try {
-//     const binString = atob(base64)
-//     // @ts-expect-error don't care
-//     return Uint8Array.from(binString, (m) => m.codePointAt(0))
-//   } catch (err) {
-//     console.error(err)
-//   }
-//   return new Uint8Array([])
-// }
-
-// function dataUrlToBytes(dataUrl: string) {
-//   const [, base64] = dataUrl.split(',')
-//   if (!base64) {
-//     return new Uint8Array([])
-//   }
-//   return base64ToBytes(decodeURIComponent(base64))
-// }
-
 export function loadPaletteFromBytes(bytes: Uint8Array): BITMAP | undefined {
   const count = Math.floor(bytes.length / BYTES_PER_COLOR)
 

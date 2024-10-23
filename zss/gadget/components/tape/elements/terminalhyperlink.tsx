@@ -27,7 +27,7 @@ export function TerminalHyperlink({
   const tcolor = inputcolor(!!active)
 
   // render output
-  setuplogitem(!!blink, !!active, y, context)
+  setuplogitem(!!blink, !!active, 0, y, context)
   tokenizeandwritetextformat(
     `${prefix} $purple$16 ${tcolor}${label}`,
     context,

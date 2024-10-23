@@ -21,6 +21,8 @@ const spritesMaterial = new THREE.ShaderMaterial({
     },
     rows: { value: 1 },
     step: { value: new THREE.Vector2() },
+    // todo, rework to MAX_SPRITES logic
+    // where we can have a max of 2048 sprites to render
   },
   // vertex shader
   vertexShader: `

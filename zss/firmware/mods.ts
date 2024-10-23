@@ -1,290 +1,342 @@
-import { tape_info } from 'zss/device/api'
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
+import { tape_info, vm_flush } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { BITMAP } from 'zss/gadget/data/bitmap'
+import { createshortnameid } from 'zss/mapping/guid'
 import {
-  memoryreadbooklist,
-  memoryreadbooksbytags,
+  isarray,
+  isboolean,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
+import {
+  CHIP_MEMORY,
+  memoryensuresoftwarebook,
+  memoryreadchip,
   memoryreadcontext,
-  memoryreadmaintags,
 } from 'zss/memory'
-import { boardwritestat } from 'zss/memory/board'
-import { boardelementwritestat } from 'zss/memory/boardelement'
 import {
   bookreadcodepagebyaddress,
-  bookreadcodepagedatabytype,
-  MAYBE_BOOK,
+  bookreadcodepagewithtype,
+  bookwritecodepage,
 } from 'zss/memory/book'
 import {
-  CODE_PAGE_TYPE,
-  codepagereaddata,
   codepagereadtype,
   codepagereadtypetostring,
+  codepagetypetostring,
+  createcodepage,
 } from 'zss/memory/codepage'
+import {
+  SCHEMA_TYPE,
+  BITMAP_SCHEMA,
+  BOARD_ELEMENT_SCHEMA,
+  BOARD_SCHEMA,
+  EIGHT_TRACK_SCHEMA,
+} from 'zss/memory/schema'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  CODE_PAGE,
+  CODE_PAGE_LABEL,
+  CODE_PAGE_TYPE,
+  EIGHT_TRACK,
+} from 'zss/memory/types'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
-const MODS = {
-  // current target for mods
-  book: '',
-  board: '',
-  // elements
-  object: '',
-  terrain: '',
-  // display
-  charset: '',
-  palette: '',
-  // audio
-  eighttrack: '',
-  // general cursor
-  cursor: '',
+const COLOR_EDGE = '$dkpurple'
+
+function write(text: string) {
+  tape_info('mods', `${COLOR_EDGE}$blue${text}`)
 }
 
-type MODS_KEY = keyof typeof MODS
-
-function strmodname(name: string): MODS_KEY | undefined {
-  const lname = name.toLowerCase()
-  switch (lname) {
-    case 'modbook':
-    case 'modboard':
-    case 'modobject':
-    case 'modterrain':
-    case 'modcharset':
-    case 'modpalette':
-    case 'modeighttrack': {
-      return lname.replace('mod', '') as MODS_KEY
+type MOD_STATE = {
+  target: string
+} & (
+  | {
+      type: CODE_PAGE_TYPE.ERROR
+      value: undefined
+      schema: undefined
     }
-  }
-  return undefined
-}
-
-function modbook(): MAYBE_BOOK {
-  // modbook
-  const [book] = memoryreadbooksbytags([MODS.book])
-  if (ispresent(book)) {
-    return book
-  }
-
-  // main
-  const [maybebook] = memoryreadbooksbytags(memoryreadmaintags())
-  if (ispresent(maybebook)) {
-    return maybebook
-  }
-
-  // oops
-  return undefined
-}
-
-function modsoftware(name: MODS_KEY, key: string, value: any) {
-  const book = modbook()
-  if (!ispresent(book)) {
-    return
-  }
-
-  // book mods
-  if (name === 'book') {
-    switch (key) {
-      case 'name':
-        if (isstring(value)) {
-          book.name = value
-        }
-        break
-      default:
-        return false
+  | {
+      type: CODE_PAGE_TYPE.BOARD
+      value: BOARD
+      schema: typeof BOARD_SCHEMA
     }
+  | {
+      type: CODE_PAGE_TYPE.OBJECT
+      value: BOARD_ELEMENT
+      schema: typeof BOARD_ELEMENT_SCHEMA
+    }
+  | {
+      type: CODE_PAGE_TYPE.TERRAIN
+      value: BOARD_ELEMENT
+      schema: typeof BOARD_ELEMENT_SCHEMA
+    }
+  | {
+      type: CODE_PAGE_TYPE.CHARSET
+      value: BITMAP
+      schema: typeof BITMAP_SCHEMA
+    }
+  | {
+      type: CODE_PAGE_TYPE.PALETTE
+      value: BITMAP
+      schema: typeof BITMAP_SCHEMA
+    }
+  | {
+      type: CODE_PAGE_TYPE.EIGHT_TRACK
+      value: EIGHT_TRACK
+      schema: typeof EIGHT_TRACK_SCHEMA
+    }
+)
 
-    return tape_info('mods', `wrote ${value} to ${key} on book ${book.id}`)
+const mods = new Map<string, MOD_STATE>()
+
+function readmodstate(id: string): MOD_STATE {
+  let mod = mods.get(id)
+  if (ispresent(mod)) {
+    return mod
   }
+  mod = {
+    type: CODE_PAGE_TYPE.ERROR,
+    target: '',
+    value: undefined,
+    schema: undefined,
+  }
+  mods.set(id, mod)
+  return mod
+}
 
-  const codepage = bookreadcodepagebyaddress(book, MODS[name])
-  const type = codepagereadtypetostring(codepage)
-  const id = codepage?.id ?? ''
-
-  // codepage mods
+function applymod(modstate: MOD_STATE, codepage: CODE_PAGE, address: string) {
+  modstate.target = codepage.id
   switch (codepagereadtype(codepage)) {
-    case CODE_PAGE_TYPE.BOARD: {
-      const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
-      if (ispresent(board)) {
-        switch (key) {
-          default:
-            boardwritestat(board, key, value)
-            break
-        }
-      }
+    case CODE_PAGE_TYPE.ERROR:
+    case CODE_PAGE_TYPE.LOADER:
+      // no-ops
       break
-    }
-    case CODE_PAGE_TYPE.OBJECT: {
-      const object = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(codepage)
-      if (ispresent(object)) {
-        switch (key) {
-          case 'char':
-          case 'color':
-          case 'bg':
-            object[key] = value
-            break
-          case 'cycle':
-            boardelementwritestat(object, 'cycle', value)
-            break
-          default:
-            return false
-        }
-      }
+    case CODE_PAGE_TYPE.BOARD:
+      modstate.type = CODE_PAGE_TYPE.BOARD
+      modstate.value = codepage.board
+      modstate.schema = BOARD_SCHEMA
       break
-    }
-    case CODE_PAGE_TYPE.TERRAIN: {
-      const terrain = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(codepage)
-      if (ispresent(terrain)) {
-        switch (key) {
-          case 'char':
-          case 'color':
-          case 'bg':
-            terrain[key] = value
-            break
-          default:
-            return false
-        }
-      }
+    case CODE_PAGE_TYPE.OBJECT:
+      modstate.type = CODE_PAGE_TYPE.OBJECT
+      modstate.value = codepage.object
+      modstate.schema = BOARD_ELEMENT_SCHEMA
       break
-    }
-    case CODE_PAGE_TYPE.CHARSET: {
-      const charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(codepage)
-      if (ispresent(charset)) {
-        //
-      }
+    case CODE_PAGE_TYPE.TERRAIN:
+      modstate.type = CODE_PAGE_TYPE.TERRAIN
+      modstate.value = codepage.terrain
+      modstate.schema = BOARD_ELEMENT_SCHEMA
       break
-    }
-    case CODE_PAGE_TYPE.PALETTE: {
-      const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
-      if (ispresent(palette)) {
-        //
-      }
+    case CODE_PAGE_TYPE.CHARSET:
+      modstate.type = CODE_PAGE_TYPE.CHARSET
+      modstate.value = codepage.charset
+      modstate.schema = BITMAP_SCHEMA
       break
-    }
-    case CODE_PAGE_TYPE.EIGHT_TRACK: {
-      const eighttrack = codepagereaddata<CODE_PAGE_TYPE.EIGHT_TRACK>(codepage)
-      if (ispresent(eighttrack)) {
-        //
-      }
+    case CODE_PAGE_TYPE.PALETTE:
+      modstate.type = CODE_PAGE_TYPE.PALETTE
+      modstate.value = codepage.palette
+      modstate.schema = BITMAP_SCHEMA
       break
-    }
-    default:
-      return false
+    case CODE_PAGE_TYPE.EIGHT_TRACK:
+      modstate.type = CODE_PAGE_TYPE.EIGHT_TRACK
+      modstate.value = codepage.eighttrack
+      modstate.schema = EIGHT_TRACK_SCHEMA
+      break
   }
-  return tape_info('mods', `wrote ${value} to ${key} on ${type} ${id}`)
+  // message
+  const pagetype = codepagereadtypetostring(codepage)
+  write(`modifying [${pagetype}] ${address}`)
+  console.info(mods)
+}
+
+function ensurecodepage<T extends CODE_PAGE_TYPE>(
+  modstate: MOD_STATE,
+  memory: CHIP_MEMORY,
+  type: T,
+  address: string,
+) {
+  // lookup by address
+  let codepage = bookreadcodepagewithtype(memory.book, type, address)
+  if (ispresent(codepage)) {
+    return codepage
+  }
+
+  // create new codepage
+  const typestr = codepagetypetostring(type)
+  codepage = createcodepage(
+    typestr === 'object' ? `@${address}\n` : `@${typestr} ${address}\n`,
+    {},
+  )
+  if (ispresent(codepage)) {
+    bookwritecodepage(memory.book, codepage)
+    applymod(modstate, codepage, address)
+    vm_flush('mods') // tell register to save changes
+  }
+
+  return codepage
 }
 
 export const MODS_FIRMWARE = createfirmware({
-  get(_, name) {
-    const mod = strmodname(name)
-    if (ispresent(mod)) {
-      return [true, MODS[mod]]
-    }
-
-    // list of items
-    const book = modbook()
-    switch (name) {
-      case 'booklist':
-        return [true, memoryreadbooklist()]
-      case 'boardlist':
-        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.BOARD)]
-      case 'objectlist':
-        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.OBJECT)]
-      case 'terrainlist':
-        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.TERRAIN)]
-      case 'charsetlist':
-        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.CHARSET)]
-      case 'palettelist':
-        return [true, bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.PALETTE)]
-      case 'sblist':
-      case 'soundblasterlist':
-        return [
-          true,
-          bookreadcodepagedatabytype(book, CODE_PAGE_TYPE.SOUNDBLASTER),
-        ]
-    }
-
+  get() {
     return [false, undefined]
   },
-  set(_, name, value) {
-    const mod = strmodname(name)
-    if (ispresent(mod)) {
-      MODS[mod] = value
-      return [tape_info('mods', `wrote ${value} to ${name}`), MODS[mod]]
-    }
+  set() {
     return [false, undefined]
   },
   shouldtick() {},
   tick() {},
   tock() {},
-}).command('mod', (chip, words) => {
-  // mod thing key value
-  const [name, maybekey, maybevalue] = readargs(
-    memoryreadcontext(chip, words),
-    0,
-    [
-      ARG_TYPE.STRING,
-      ARG_TYPE.MAYBE_NUMBER_OR_STRING,
-      ARG_TYPE.MAYBE_NUMBER_OR_STRING,
-    ],
-  )
-
-  // change cursor
-  let usekey: any = ''
-  let usevalue: any = undefined
-  const lname = name.toLowerCase()
-  switch (lname) {
-    case 'book':
-      MODS.cursor = 'book'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    case 'board':
-      MODS.cursor = 'board'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    case 'object':
-      MODS.cursor = 'object'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    case 'terrain':
-      MODS.cursor = 'terrain'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    case 'charset':
-      MODS.cursor = 'charset'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    case 'palette':
-      MODS.cursor = 'palette'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    case 'soundblaster':
-      MODS.cursor = 'soundblaster'
-      usekey = maybekey
-      usevalue = maybevalue
-      break
-    default:
-      // use current value of MODS.cursor
-      usekey = name
-      usevalue = maybekey
-      break
-  }
-
-  if (MODS.cursor) {
-    tape_info(
-      'mods',
-      `selected ${MODS.cursor} - ${usekey ?? ''} ${usevalue ?? ''}`,
-    )
-  }
-
-  // read cursor and write value
-  if (MODS.cursor && isstring(usekey) && ispresent(usevalue)) {
-    modsoftware(MODS.cursor as MODS_KEY, usekey, usevalue)
-  }
-
-  return 0
 })
+  .command('mod', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
+    const modstate = readmodstate(chip.id())
+
+    const [type, maybename] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.MAYBE_STRING,
+    ])
+
+    const maybeaddress = maybename ?? ''
+    const maybetype = type.toLowerCase()
+
+    // book is a special case
+    if (maybetype === 'book') {
+      // create new book
+      memoryensuresoftwarebook('main', maybeaddress)
+      // reset mod state
+      modstate.type = CODE_PAGE_TYPE.ERROR
+      modstate.target = ''
+      modstate.value = undefined
+      return 0
+    }
+
+    const withaddress = maybename ?? createshortnameid()
+    switch (maybetype) {
+      default: {
+        // we check for name first, in current book
+        const codepage = bookreadcodepagebyaddress(memory.book, type)
+        if (ispresent(codepage)) {
+          applymod(modstate, codepage, type)
+        } else {
+          const named = type || createshortnameid()
+          ensurecodepage(modstate, memory, CODE_PAGE_TYPE.OBJECT, named)
+        }
+        break
+      }
+      case CODE_PAGE_LABEL.LOADER:
+        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.LOADER, withaddress)
+        break
+      case CODE_PAGE_LABEL.BOARD:
+        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.BOARD, withaddress)
+        break
+      case CODE_PAGE_LABEL.OBJECT:
+        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.OBJECT, withaddress)
+        break
+      case CODE_PAGE_LABEL.TERRAIN:
+        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.TERRAIN, withaddress)
+        break
+      case CODE_PAGE_LABEL.CHARSET:
+        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.CHARSET, withaddress)
+        break
+      case CODE_PAGE_LABEL.PALETTE:
+        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.PALETTE, withaddress)
+        break
+      case CODE_PAGE_LABEL.EIGHT_TRACK:
+        ensurecodepage(
+          modstate,
+          memory,
+          CODE_PAGE_TYPE.EIGHT_TRACK,
+          withaddress,
+        )
+        break
+    }
+
+    return 0
+  })
+  .command('read', (chip, words) => {
+    const modstate = readmodstate(chip.id())
+    if (!ispresent(modstate.value)) {
+      write(`use #mod before #read`)
+      return 0
+    }
+
+    // write the value in given address into the given flag or print value to terminal
+    // if we omit a stat name we print out a list of possible stats
+    const [maybestat, maybeflag] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.MAYBE_STRING,
+      ARG_TYPE.MAYBE_STRING,
+    ])
+
+    if (!ispresent(maybestat)) {
+      // print all stat names
+      if (
+        modstate.schema?.type === SCHEMA_TYPE.OBJECT &&
+        ispresent(modstate.schema.props)
+      ) {
+        const writenames: string[] = []
+        const readonlynames: string[] = []
+        const propnames = Object.keys(modstate.schema.props)
+        for (let i = 0; i < propnames.length; ++i) {
+          const name = propnames[i]
+          switch (modstate.schema.props?.[name].type) {
+            case SCHEMA_TYPE.SKIP:
+              break
+            case SCHEMA_TYPE.READ_ONLY:
+              readonlynames.push(name)
+              break
+            default:
+              writenames.push(name)
+              break
+          }
+        }
+        write(`write stats [${writenames.join(', ')}]`)
+        write(`read only stats [${readonlynames.join(', ')}]`)
+      }
+      return 0
+    }
+
+    if (!ispresent(maybeflag)) {
+      if (modstate.schema?.type === SCHEMA_TYPE.OBJECT) {
+        const names = Object.keys(modstate.schema?.props ?? {})
+        const stat = maybestat.toLowerCase()
+        if (names.includes(stat)) {
+          // print stat
+          // @ts-expect-error being generic
+          const value: any = modstate.value[stat]
+          if (isstring(value) || isnumber(value) || isboolean(value)) {
+            write(`stat ${stat} is ${value}`)
+          }
+          if (isarray(value)) {
+            write(`stat ${stat} is an array`)
+          }
+          if (value === undefined) {
+            write(`stat ${stat} is not set`)
+          }
+        }
+      }
+      return 0
+    }
+
+    // #mod shade1
+    // #read
+    return 0
+  })
+  .command('write', (chip, words) => {
+    const modstate = readmodstate(chip.id())
+    if (!ispresent(modstate.value)) {
+      write(`use #mod before #write`)
+      return 0
+    }
+
+    // write given value to given address
+    const [address, value] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.ANY,
+    ])
+
+    // we need to define a schema ..
+    return 0
+  })

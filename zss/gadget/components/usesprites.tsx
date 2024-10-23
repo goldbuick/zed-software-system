@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react'
+/* eslint-disable react-refresh/only-export-components */
+import { useMemo } from 'react'
 import { proxy, useSnapshot } from 'valtio'
 
 import { SPRITE } from '../data/types'

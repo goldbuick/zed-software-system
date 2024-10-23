@@ -6,10 +6,8 @@ import * as THREE from 'three'
 import { vm_loadfile } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import { makeEven } from 'zss/mapping/number'
-
-import 'zss/platform'
-
 import { ispresent } from 'zss/mapping/types'
+import 'zss/platform'
 
 import { Terminal } from './terminal'
 
@@ -90,9 +88,9 @@ export function App() {
       )
     }
 
-    document.addEventListener('paste', handlepaste, true)
+    document.addEventListener('paste', handlepaste)
     return () => {
-      document.removeEventListener('paste', handlepaste, true)
+      document.removeEventListener('paste', handlepaste)
     }
   }, [])
 

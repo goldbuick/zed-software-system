@@ -3,6 +3,7 @@ import path from 'path'
 
 import react from '@vitejs/plugin-react-swc'
 import { defineConfig, loadEnv } from 'vite'
+import { analyzer } from 'vite-bundle-analyzer'
 import arraybuffer from 'vite-plugin-arraybuffer'
 import fullreload from 'vite-plugin-full-reload'
 import mkcert from 'vite-plugin-mkcert'
@@ -11,6 +12,10 @@ import pkg from './package.json'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
+  const envprefix = 'ZSS_'
+  const root = path.join('zss', 'terminal')
+  const apppath = path.join(process.cwd(), root)
+
   // Load app-level env vars to node-level env vars.
   process.env = {
     ...process.env,
@@ -22,17 +27,21 @@ export default defineConfig(({ mode }) => {
     ZSS_COMMIT_MESSAGE: execSync('git show -s --format=%s')
       .toString()
       .trimEnd(),
-    ...loadEnv(mode, process.cwd()),
+    ...loadEnv(mode, apppath, envprefix),
   }
 
+  const hmronly = !!JSON.parse(process.env.ZSS_HMR_ONLY ?? '')
+  console.info({ hmronly })
+
   return {
-    root: 'zss/terminal/',
-    envPrefix: 'ZSS_',
+    root,
+    envPrefix: envprefix,
     plugins: [
       react(),
       arraybuffer(),
       mkcert(),
-      fullreload(['**/*.ts', '**/*.tsx']),
+      ...(hmronly ? [] : [fullreload(['**/*.ts', '**/*.tsx'])]),
+      // analyzer(),
     ],
     resolve: {
       alias: {

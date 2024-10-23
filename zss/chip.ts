@@ -1,7 +1,8 @@
 import ErrorStackParser from 'error-stack-parser'
 
+import { api_error } from './device/api'
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
-import { ARG_TYPE, WORD, WORD_RESULT, readargs } from './firmware/wordtypes'
+import { ARG_TYPE, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
@@ -14,8 +15,9 @@ import {
   isstring,
 } from './mapping/types'
 import { memoryreadcontext } from './memory'
+import { WORD, WORD_RESULT } from './memory/word'
 
-export const HALT_AT_COUNT = 64
+export const CONFIG = { HALT_AT_COUNT: 64 }
 
 export type MESSAGE = {
   id: string
@@ -36,6 +38,11 @@ export type CHIP = {
   // set firmware on chip
   install: (firmware: MAYBE<FIRMWARE>) => void
 
+  // export chip run state
+  // import chip run state
+  // should the global tick increment be actual part of the individual book ??
+  // the answer is yes!
+
   // state api
   set: (name: string, value: any) => any
   get: (name: string) => any
@@ -44,6 +51,7 @@ export type CHIP = {
   // cycle: (incoming: number) => void
   timestamp: () => number
   tick: (cycle: number, incoming: number) => boolean
+  isended: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
   hm: () => number
@@ -255,11 +263,11 @@ export function createchip(id: string, build: GeneratorBuild) {
         const result = logic?.next()
 
         if (result?.done) {
-          console.error('we crashed?', build.source)
+          api_error('chip', 'crash', 'generator logic unexpectedly exited')
           endedstate = true
         }
       } catch (err: any) {
-        console.error('we crashed?', err)
+        api_error('chip', 'crash', err.message)
         endedstate = true
       }
 
@@ -270,11 +278,14 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       return true
     },
+    isended() {
+      return endedstate === true
+    },
     shouldtick() {
       return endedstate === false || chip.hm() !== 0
     },
     shouldhalt() {
-      return loops++ > HALT_AT_COUNT
+      return loops++ > CONFIG.HALT_AT_COUNT
     },
     hm() {
       const target = message?.target ?? ''

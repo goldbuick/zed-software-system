@@ -1,3 +1,4 @@
+import { ShaderMaterial } from 'three'
 const epoch = Date.now()
 
 export const time = {
@@ -23,7 +24,7 @@ export const interval = {
   },
 }
 
-export function cloneMaterial(material: THREE.ShaderMaterial) {
+export function cloneMaterial(material: ShaderMaterial) {
   const clone = material.clone()
   clone.uniforms.time = time
   clone.uniforms.interval = interval
