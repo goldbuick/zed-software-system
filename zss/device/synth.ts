@@ -8,19 +8,26 @@ import {
 } from 'zss/mapping/play'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
-const reverb = new Tone.Reverb()
-reverb.set({
-  wet: 0.25,
-})
-reverb.toDestination()
+// const reverb = new Tone.Reverb()
+// reverb.set({
+//   wet: 0,
+// })
+// reverb.toDestination()
 
-const echo = new Tone.FeedbackDelay()
-echo.set({
-  wet: 0.5,
-  delayTime: '8n',
-  maxDelay: 1,
-})
-echo.connect(reverb)
+// const echo = new Tone.FeedbackDelay()
+// echo.set({
+//   wet: 0,
+//   delayTime: '4n.',
+//   maxDelay: '1n',
+//   feedback: 0.371,
+// })
+// echo.connect(reverb)
+
+const maingain = new Tone.Gain()
+maingain.toDestination()
+
+const drumgain = new Tone.Gain()
+drumgain.toDestination()
 
 function createsynth() {
   const synth = new Tone.PolySynth()
@@ -36,8 +43,7 @@ function createsynth() {
       type: 'square',
     },
   })
-  synth.toDestination()
-  synth.connect(echo)
+  synth.connect(maingain)
 
   return synth
 }
@@ -61,7 +67,7 @@ const SYNTH = [
 
 // drumtick
 
-const drumtick = new Tone.PolySynth().toDestination()
+const drumtick = new Tone.PolySynth().connect(drumgain)
 drumtick.maxPolyphony = 8
 drumtick.set({
   envelope: {
@@ -81,7 +87,7 @@ function drumticktrigger(time: number) {
 
 // drumtweet
 
-const drumtweet = new Tone.Synth().toDestination()
+const drumtweet = new Tone.Synth().connect(drumgain)
 drumtick.set({
   envelope: {
     attack: 0.001,
@@ -102,7 +108,7 @@ function drumtweettrigger(time: number) {
 
 // drumcowbell
 
-const drumcowbellfilter = new Tone.Filter(350, 'bandpass').toDestination()
+const drumcowbellfilter = new Tone.Filter(350, 'bandpass').connect(drumgain)
 
 const drumcowbellgain = new Tone.Gain().connect(drumcowbellfilter)
 drumcowbellgain.gain.value = 0
@@ -130,7 +136,7 @@ function drumcowbelltrigger(duration: string, time: number) {
 
 // drumclap
 
-const drumclapeq = new Tone.EQ3(-10, 10, -1).toDestination()
+const drumclapeq = new Tone.EQ3(-10, 10, -1).connect(drumgain)
 
 const drumclapfilter = new Tone.Filter(800, 'highpass', -12)
 drumclapfilter.connect(drumclapeq)
@@ -152,7 +158,7 @@ function drumclaptrigger(duration: string, time: number) {
 
 // drumhisnare
 
-const drumhisnaredistortion = new Tone.Distortion().toDestination()
+const drumhisnaredistortion = new Tone.Distortion().connect(drumgain)
 drumhisnaredistortion.set({
   distortion: 0.666,
 })
@@ -213,7 +219,7 @@ drumhiwoodblockfilter.set({
   frequency: 256,
   Q: 0.17,
 })
-drumhiwoodblockfilter.toDestination()
+drumhiwoodblockfilter.connect(drumgain)
 
 const drumhiwoodblockclack = new Tone.Synth()
 drumhiwoodblockclack.set({
@@ -258,7 +264,7 @@ function drumhiwoodblocktrigger(duration: string, time: number) {
 
 // drumlowsnare
 
-const drumlowsnaredistortion = new Tone.Distortion().toDestination()
+const drumlowsnaredistortion = new Tone.Distortion().connect(drumgain)
 drumlowsnaredistortion.set({
   distortion: 0.876,
 })
@@ -313,7 +319,7 @@ function drumlowsnaretrigger(duration: string, time: number) {
 
 // drumlowtom
 
-const drumlowtomosc = new Tone.Synth().toDestination()
+const drumlowtomosc = new Tone.Synth().connect(drumgain)
 drumlowtomosc.set({
   envelope: {
     attack: 0.01,
@@ -326,7 +332,7 @@ drumlowtomosc.set({
   },
 })
 
-const drumlowtomosc2 = new Tone.Synth().toDestination()
+const drumlowtomosc2 = new Tone.Synth().connect(drumgain)
 drumlowtomosc.set({
   envelope: {
     attack: 0.01,
@@ -339,7 +345,7 @@ drumlowtomosc.set({
   },
 })
 
-const drumlowtomnoise = new Tone.NoiseSynth().toDestination()
+const drumlowtomnoise = new Tone.NoiseSynth().connect(drumgain)
 drumlowtomnoise.set({
   envelope: {
     attack: 0.01,
@@ -379,7 +385,7 @@ drumlowwoodblockfilter.set({
   frequency: 256,
   Q: 0.17,
 })
-drumlowwoodblockfilter.toDestination()
+drumlowwoodblockfilter.connect(drumgain)
 
 const drumlowwoodblockclack = new Tone.Synth()
 drumlowwoodblockclack.set({
@@ -424,7 +430,7 @@ function drumlowwoodblocktrigger(duration: string, time: number) {
 
 // drumbass
 
-const drumbass = new Tone.MembraneSynth().toDestination()
+const drumbass = new Tone.MembraneSynth().connect(drumgain)
 drumbass.set({
   octaves: 8,
 })
@@ -522,16 +528,17 @@ function synthplaystart(invokes: SYNTH_INVOKES, markendofpattern = false) {
     }
   }
   // invoke synth ops
+  const starttime = pacertime
   for (let i = 0; i < invokes.length; ++i) {
-    const pattern = invokeplay(0, pacertime, invokes[i])
-    if (i !== longestindex || !markendofpattern) {
-      // only longest pattern keeps end of pattern entry
-      pattern.pop()
-    }
+    const pattern = invokeplay(0, starttime, invokes[i])
     // track next note time
-    if (i === longestindex && pattern.length) {
-      const last = pattern[pattern.length - 1]
+    const last = pattern[pattern.length - 1]
+    if (ispresent(last)) {
       pacertime = Math.max(pacertime, last[0])
+    }
+    // only longest pattern keeps end of pattern entry
+    if (i !== longestindex || !markendofpattern) {
+      pattern.pop()
     }
     // write pattern to pacer
     for (let p = 0; p < pattern.length; ++p) {
@@ -581,7 +588,9 @@ const synth = createdevice('synth', ['second'], (message) => {
         const maxtime = message.data - pacerstart
         const pacerend = Tone.Time(`${pacertime}i`).toSeconds()
         if (maxtime >= pacerend) {
+          pacer.clear()
           pacer.stop(0)
+          pacertime = 0
         }
       }
       break

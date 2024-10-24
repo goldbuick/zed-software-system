@@ -22,6 +22,7 @@ import {
   bookwritecodepage,
 } from 'zss/memory/book'
 import {
+  codepagereadname,
   codepagereadtype,
   codepagereadtypetostring,
   codepagetypetostring,
@@ -108,7 +109,7 @@ function readmodstate(id: string): MOD_STATE {
   return mod
 }
 
-function applymod(modstate: MOD_STATE, codepage: CODE_PAGE, address: string) {
+function applymod(modstate: MOD_STATE, codepage: CODE_PAGE) {
   modstate.target = codepage.id
   switch (codepagereadtype(codepage)) {
     case CODE_PAGE_TYPE.ERROR:
@@ -148,8 +149,9 @@ function applymod(modstate: MOD_STATE, codepage: CODE_PAGE, address: string) {
   }
   // message
   const pagetype = codepagereadtypetostring(codepage)
-  write(`modifying [${pagetype}] ${address}`)
-  console.info(mods)
+  write(
+    `modifying [${pagetype}] ${codepagereadname(codepage)} ${modstate.target}`,
+  )
 }
 
 function ensurecodepage<T extends CODE_PAGE_TYPE>(
@@ -172,7 +174,7 @@ function ensurecodepage<T extends CODE_PAGE_TYPE>(
   )
   if (ispresent(codepage)) {
     bookwritecodepage(memory.book, codepage)
-    applymod(modstate, codepage, address)
+    applymod(modstate, codepage)
     vm_flush('mods') // tell register to save changes
   }
 
@@ -195,9 +197,23 @@ export const MODS_FIRMWARE = createfirmware({
     const modstate = readmodstate(chip.id())
 
     const [type, maybename] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
+      ARG_TYPE.MAYBE_STRING,
       ARG_TYPE.MAYBE_STRING,
     ])
+
+    if (!ispresent(type)) {
+      if (modstate.target === '') {
+        write(`not currently modifying anything`)
+      } else {
+        const codepage = bookreadcodepagebyaddress(memory.book, modstate.target)
+        const pagetype = codepagereadtypetostring(codepage)
+        write(
+          `modifying [${pagetype}] ${codepagereadname(codepage)} ${modstate.target}`,
+        )
+      }
+
+      return 0
+    }
 
     const maybeaddress = maybename ?? ''
     const maybetype = type.toLowerCase()
@@ -219,7 +235,7 @@ export const MODS_FIRMWARE = createfirmware({
         // we check for name first, in current book
         const codepage = bookreadcodepagebyaddress(memory.book, type)
         if (ispresent(codepage)) {
-          applymod(modstate, codepage, type)
+          applymod(modstate, codepage)
         } else {
           const named = type || createshortnameid()
           ensurecodepage(modstate, memory, CODE_PAGE_TYPE.OBJECT, named)
@@ -332,10 +348,26 @@ export const MODS_FIRMWARE = createfirmware({
     }
 
     // write given value to given address
-    const [address, value] = readargs(memoryreadcontext(chip, words), 0, [
+    const [name, value] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.ANY,
     ])
+
+    if (modstate.schema?.type === SCHEMA_TYPE.OBJECT) {
+      const prop = modstate.schema.props?.[name]
+      if (ispresent(prop)) {
+        switch (prop.type) {
+          case SCHEMA_TYPE.NUMBER:
+            modstate.value[name] = parseFloat(value)
+            break
+          case SCHEMA_TYPE.STRING:
+            modstate.value[name] = `${value}`
+            break
+        }
+      } else {
+        // log error
+      }
+    }
 
     // we need to define a schema ..
     return 0
