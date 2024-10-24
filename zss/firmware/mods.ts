@@ -348,10 +348,26 @@ export const MODS_FIRMWARE = createfirmware({
     }
 
     // write given value to given address
-    const [address, value] = readargs(memoryreadcontext(chip, words), 0, [
+    const [name, value] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.ANY,
     ])
+
+    if (modstate.schema?.type === SCHEMA_TYPE.OBJECT) {
+      const prop = modstate.schema.props?.[name]
+      if (ispresent(prop)) {
+        switch (prop.type) {
+          case SCHEMA_TYPE.NUMBER:
+            modstate.value[name] = parseFloat(value)
+            break
+          case SCHEMA_TYPE.STRING:
+            modstate.value[name] = `${value}`
+            break
+        }
+      } else {
+        // log error
+      }
+    }
 
     // we need to define a schema ..
     return 0
