@@ -28,7 +28,7 @@ jobs:
         with:
           tag-prefix: 'v'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ZSS_AUTO_BUMP }}
 
       - name: 'package.json after'
         run: cat ./package.json
@@ -46,4 +46,3 @@ jobs:
           FOLDER: ./zss/terminal/dist # The directory where your assets are generated
           MESSAGE: "Build: ({sha}) {msg}" # The commit message
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub will automatically add this - you don't need to bother getting a token
-          
