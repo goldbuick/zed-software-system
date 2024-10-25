@@ -8,26 +8,68 @@ import {
 } from 'zss/mapping/play'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
+const maincompressor = new Tone.Compressor({
+  threshold: -20,
+  ratio: 12,
+  attack: 0,
+  release: 0.3,
+})
+maincompressor.toDestination()
+
 // const reverb = new Tone.Reverb()
 // reverb.set({
-//   wet: 0,
+//   wet: 0.125,
 // })
-// reverb.toDestination()
+// reverb.connect(maincompressor)
 
 // const echo = new Tone.FeedbackDelay()
 // echo.set({
-//   wet: 0,
+//   wet: 0.125,
 //   delayTime: '4n.',
 //   maxDelay: '1n',
 //   feedback: 0.371,
 // })
 // echo.connect(reverb)
 
+// const chorus = new Tone.Chorus()
+// chorus.set({
+//   wet: 0.125 * 0,
+//   depth: 0.999,
+//   frequency: 7,
+//   feedback: 0.666,
+// })
+// chorus.connect(echo)
+
+// const phaser = new Tone.Phaser()
+// phaser.set({
+//   wet: 0.125 * 0,
+//   frequency: 7,
+//   octaves: 3,
+//   stages: 10,
+//   Q: 10,
+//   baseFrequency: 350,
+// })
+// phaser.connect(chorus)
+
+// const distortion = new Tone.Distortion()
+// distortion.set({
+//   wet: 0.25 * 0.25,
+//   distortion: 0.9,
+// })
+// distortion.connect(phaser)
+
+// const vibrato = new Tone.Vibrato()
+// vibrato.set({
+//   wet: 0.5 * 0,
+//   depth: 0.2,
+// })
+// vibrato.connect(distortion)
+
 const maingain = new Tone.Gain()
-maingain.toDestination()
+maingain.connect(maincompressor)
 
 const drumgain = new Tone.Gain()
-drumgain.toDestination()
+drumgain.connect(maincompressor)
 
 function createsynth() {
   const synth = new Tone.PolySynth()
@@ -40,11 +82,41 @@ function createsynth() {
       release: 0.01,
     },
     oscillator: {
+      // type: 'sine',
       type: 'square',
+      // type: 'triangle',
+      // type: 'sawtooth',
+      // type: 'fmsine',
+      // type: 'fmsquare',
+      // type: 'fmtriangle',
+      // type: 'fmsawtooth',
+      // type: 'amsine',
+      // type: 'amsquare',
+      // type: 'amtriangle',
+      // type: 'amsawtooth',
+      // type: 'fatsquare',
+      // type: 'fattriangle',
+      // type: 'fatsawtooth',
+      // type: 'sine14',
+      // type: 'square14',
+      // type: 'triangle14',
+      // type: 'sawtooth14',
+      // type: 'fmsine14',
+      // type: 'fmsquare14',
+      // type: 'fmtriangle14',
+      // type: 'fmsawtooth14',
+      // type: 'amsine14',
+      // type: 'amsquare14',
+      // type: 'amtriangle14',
+      // type: 'amsawtooth14',
+      // type: 'custom',
+      // partials: [0.75, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15],
     },
   })
   synth.connect(maingain)
-
+  // #play cxcxcxcxcxcxcxcxcxcxcxcxcxcxcx;--pxcxpxcxpxcxpxcxpxcxpxcxpxcx;q9999;i10011001100199
+  // #play cxcxcxcxcxcxcx+cxcxcxcxcxcxcxcx;--pxcxpxcxpxcxppcxpxcxpxcxpxcx;q9999;i14011401140199
+  // #play cecxcxcxcxcxcx+cecxcecxcecxcxcxf+c+c;--pxcxpxcxpxcxppcxpxcxpxcxpxcx;q9999;i14011401100199
   return synth
 }
 
@@ -453,6 +525,7 @@ export async function enableaudio() {
     const transport = Tone.getTransport()
     transport.bpm.value = 107
     transport.start()
+    pacer.start()
     enabled = true
   } catch (err) {
     //
@@ -465,7 +538,6 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
     return
   }
   const [chan, duration, note] = value
-  console.info({ chan, duration, note })
   if (isstring(note) && ispresent(SYNTH[chan])) {
     SYNTH[chan].triggerAttackRelease(note, duration, time)
   }
@@ -502,14 +574,16 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
         drumbasstrigger(time)
         break
       case -1: // END OF PATTERN
-        synth.emit('synth:endofpattern', time)
+        if (Tone.getTransport().seconds >= pacertime) {
+          pacertime = -1
+        }
         break
     }
   }
 }
 
-let pacertime = 0
-let pacerstart = 0
+let pacertime = -1
+
 // @ts-expect-error dont care enough right now
 const pacer = new Tone.Part(synthtick)
 
@@ -527,6 +601,7 @@ function synthplaystart(invokes: SYNTH_INVOKES, markendofpattern = false) {
       }
     }
   }
+
   // invoke synth ops
   const starttime = pacertime
   for (let i = 0; i < invokes.length; ++i) {
@@ -543,21 +618,21 @@ function synthplaystart(invokes: SYNTH_INVOKES, markendofpattern = false) {
     // write pattern to pacer
     for (let p = 0; p < pattern.length; ++p) {
       const [time, value] = pattern[p]
-      pacer.add(`+${time}i`, value)
+      pacer.add(time, value)
     }
   }
 }
 
 let synthsfxpriority = -1
 function synthplay(priority: number, buffer: string) {
+  // parse ops
   const invokes = parseplay(buffer)
 
-  // start pacer if needed
-  if (pacer.state === 'stopped') {
-    pacertime = 0
-    pacer.clear()
-    pacer.start(pacertime)
-    pacerstart = Tone.getTransport().now()
+  // reset note offset
+  if (pacertime === -1) {
+    pacertime = Tone.getTransport().seconds
+    // pacerstart = pacertime
+    // console.info('starting at', pacertime)
   }
 
   // music queue
@@ -568,13 +643,13 @@ function synthplay(priority: number, buffer: string) {
 
   // sfx /w priority
   if (synthsfxpriority === -1 || priority >= synthsfxpriority) {
-    // invoke
     synthsfxpriority = priority
     synthplaystart(invokes)
   }
 }
 
-const synth = createdevice('synth', ['second'], (message) => {
+createdevice('synth', ['second'], (message) => {
+  // TODO: add messages for synth & fx config
   switch (message.target) {
     case 'play':
       if (isarray(message.data)) {
@@ -582,18 +657,5 @@ const synth = createdevice('synth', ['second'], (message) => {
         synthplay(priority, buffer)
       }
       break
-    case 'endofpattern':
-      // mark as done
-      if (isnumber(message.data)) {
-        const maxtime = message.data - pacerstart
-        const pacerend = Tone.Time(`${pacertime}i`).toSeconds()
-        if (maxtime >= pacerend) {
-          pacer.clear()
-          pacer.stop(0)
-          pacertime = 0
-        }
-      }
-      break
-    // add messages for synth & fx config
   }
 })
