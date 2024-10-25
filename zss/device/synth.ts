@@ -574,13 +574,16 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
         drumbasstrigger(time)
         break
       case -1: // END OF PATTERN
-        synth.emit('synth:endofpattern', time)
+        if (Tone.getTransport().seconds >= pacertime) {
+          pacertime = -1
+        }
         break
     }
   }
 }
 
-let pacertime = 0
+let pacertime = -1
+
 // @ts-expect-error dont care enough right now
 const pacer = new Tone.Part(synthtick)
 
@@ -598,6 +601,7 @@ function synthplaystart(invokes: SYNTH_INVOKES, markendofpattern = false) {
       }
     }
   }
+
   // invoke synth ops
   const starttime = pacertime
   for (let i = 0; i < invokes.length; ++i) {
@@ -621,11 +625,14 @@ function synthplaystart(invokes: SYNTH_INVOKES, markendofpattern = false) {
 
 let synthsfxpriority = -1
 function synthplay(priority: number, buffer: string) {
+  // parse ops
   const invokes = parseplay(buffer)
 
-  // init when pacer is empty
-  if (pacer.length === 0) {
-    pacertime = pacer.now()
+  // reset note offset
+  if (pacertime === -1) {
+    pacertime = Tone.getTransport().seconds
+    // pacerstart = pacertime
+    // console.info('starting at', pacertime)
   }
 
   // music queue
@@ -636,27 +643,18 @@ function synthplay(priority: number, buffer: string) {
 
   // sfx /w priority
   if (synthsfxpriority === -1 || priority >= synthsfxpriority) {
-    // invoke
     synthsfxpriority = priority
     synthplaystart(invokes)
   }
 }
 
-const synth = createdevice('synth', ['second'], (message) => {
+createdevice('synth', ['second'], (message) => {
   // TODO: add messages for synth & fx config
   switch (message.target) {
     case 'play':
       if (isarray(message.data)) {
         const [priority, buffer] = message.data as [number, string]
         synthplay(priority, buffer)
-      }
-      break
-    case 'endofpattern':
-      console.info('message.data > pacertime', message.data, pacertime)
-      // mark as done and clear pacer
-      if (isnumber(message.data) && message.data > pacertime) {
-        console.info('pacer.clear()')
-        pacer.clear()
       }
       break
   }
