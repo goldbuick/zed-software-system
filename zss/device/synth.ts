@@ -8,26 +8,68 @@ import {
 } from 'zss/mapping/play'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
-// const reverb = new Tone.Reverb()
-// reverb.set({
-//   wet: 0,
-// })
-// reverb.toDestination()
+const maincompressor = new Tone.Compressor({
+  threshold: -20,
+  ratio: 12,
+  attack: 0,
+  release: 0.3,
+})
+maincompressor.toDestination()
 
-// const echo = new Tone.FeedbackDelay()
-// echo.set({
-//   wet: 0,
-//   delayTime: '4n.',
-//   maxDelay: '1n',
-//   feedback: 0.371,
-// })
-// echo.connect(reverb)
+const reverb = new Tone.Reverb()
+reverb.set({
+  wet: 0, //0.125,
+})
+reverb.connect(maincompressor)
+
+const echo = new Tone.FeedbackDelay()
+echo.set({
+  wet: 0, //0.125,
+  delayTime: '4n.',
+  maxDelay: '1n',
+  feedback: 0.371,
+})
+echo.connect(reverb)
+
+const chorus = new Tone.Chorus()
+chorus.set({
+  wet: 0, //0.125,
+  depth: 0.999,
+  frequency: 7,
+  feedback: 0.666,
+})
+chorus.connect(echo)
+
+const phaser = new Tone.Phaser()
+phaser.set({
+  wet: 0, //0.125,
+  frequency: 7,
+  octaves: 3,
+  stages: 10,
+  Q: 10,
+  baseFrequency: 350,
+})
+phaser.connect(chorus)
+
+const distortion = new Tone.Distortion()
+distortion.set({
+  wet: 0, //0.25,
+  distortion: 0.9,
+})
+distortion.connect(phaser)
+
+const vibrato = new Tone.Vibrato()
+vibrato.set({
+  wet: 0, //0.5,
+  depth: 0.2,
+})
+vibrato.connect(distortion)
 
 const maingain = new Tone.Gain()
-maingain.toDestination()
+maingain.connect(vibrato)
 
 const drumgain = new Tone.Gain()
-drumgain.toDestination()
+drumgain.connect(maincompressor)
 
 function createsynth() {
   const synth = new Tone.PolySynth()
@@ -40,11 +82,28 @@ function createsynth() {
       release: 0.01,
     },
     oscillator: {
-      type: 'square',
+      // type: 'fmsine',
+      // type: 'fmsquare',
+      // type: 'fmtriangle',
+      // type: 'fmsawtooth',
+      // type: 'amsine',
+      // type: 'amsquare',
+      // type: 'amtriangle',
+      // type: 'amsawtooth',
+      // type: 'fmsine14',
+      // type: 'fmsquare14',
+      // type: 'fmtriangle14',
+      // type: 'fmsawtooth14',
+      // type: 'amsine14',
+      // type: 'amsquare14',
+      // type: 'amtriangle14',
+      // type: 'amsawtooth14',
+      type: 'amsquare32',
     },
   })
   synth.connect(maingain)
-
+  // #play cxcxcxcxcxcxcxcxcxcxcxcxcxcxcx;--pxcxpxcxpxcxpxcxpxcxpxcxpxcx;q9999;i10011001100199
+  // #play cxcxcxcxcxcxcx+cxcxcxcxcxcxcxcx;--pxcxpxcxpxcxppcxpxcxpxcxpxcx;q9999;i14011401140199
   return synth
 }
 
@@ -453,6 +512,7 @@ export async function enableaudio() {
     const transport = Tone.getTransport()
     transport.bpm.value = 107
     transport.start()
+    pacer.start()
     enabled = true
   } catch (err) {
     //
@@ -465,7 +525,6 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
     return
   }
   const [chan, duration, note] = value
-  console.info({ chan, duration, note })
   if (isstring(note) && ispresent(SYNTH[chan])) {
     SYNTH[chan].triggerAttackRelease(note, duration, time)
   }
@@ -552,12 +611,10 @@ let synthsfxpriority = -1
 function synthplay(priority: number, buffer: string) {
   const invokes = parseplay(buffer)
 
-  // start pacer if needed
-  if (pacer.state === 'stopped') {
+  // init when pacer is empty
+  if (pacer.length === 0) {
     pacertime = 0
-    pacer.clear()
-    pacer.start(pacertime)
-    pacerstart = Tone.getTransport().now()
+    pacerstart = pacer.immediate()
   }
 
   // music queue
@@ -575,6 +632,7 @@ function synthplay(priority: number, buffer: string) {
 }
 
 const synth = createdevice('synth', ['second'], (message) => {
+  // TODO: add messages for synth & fx config
   switch (message.target) {
     case 'play':
       if (isarray(message.data)) {
@@ -583,17 +641,10 @@ const synth = createdevice('synth', ['second'], (message) => {
       }
       break
     case 'endofpattern':
-      // mark as done
-      if (isnumber(message.data)) {
-        const maxtime = message.data - pacerstart
-        const pacerend = Tone.Time(`${pacertime}i`).toSeconds()
-        if (maxtime >= pacerend) {
-          pacer.clear()
-          pacer.stop(0)
-          pacertime = 0
-        }
+      // mark as done and clear pacer
+      if (isnumber(message.data) && message.data > pacertime + pacerstart) {
+        pacer.clear()
       }
       break
-    // add messages for synth & fx config
   }
 })

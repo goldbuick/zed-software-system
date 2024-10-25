@@ -87,7 +87,7 @@ export function invokeplay(synth: number, starttime: number, play: SYNTH_OP[]) {
   function resetnote() {
     note = ''
     accidental = ''
-    time += Tone.Time(duration).toTicks()
+    time += Tone.Time(duration).toSeconds()
   }
 
   function writenote() {
@@ -217,7 +217,7 @@ export function invokeplay(synth: number, starttime: number, play: SYNTH_OP[]) {
   writenote()
 
   // write end of pattern
-  pattern.push([time, [synth, duration, -1]])
+  pattern.push([time, [synth, '16n', -1]])
 
   return pattern
 }
