@@ -16,57 +16,57 @@ const maincompressor = new Tone.Compressor({
 })
 maincompressor.toDestination()
 
-const reverb = new Tone.Reverb()
-reverb.set({
-  wet: 0, //0.125,
-})
-reverb.connect(maincompressor)
+// const reverb = new Tone.Reverb()
+// reverb.set({
+//   wet: 0.125,
+// })
+// reverb.connect(maincompressor)
 
-const echo = new Tone.FeedbackDelay()
-echo.set({
-  wet: 0, //0.125,
-  delayTime: '4n.',
-  maxDelay: '1n',
-  feedback: 0.371,
-})
-echo.connect(reverb)
+// const echo = new Tone.FeedbackDelay()
+// echo.set({
+//   wet: 0.125,
+//   delayTime: '4n.',
+//   maxDelay: '1n',
+//   feedback: 0.371,
+// })
+// echo.connect(reverb)
 
-const chorus = new Tone.Chorus()
-chorus.set({
-  wet: 0, //0.125,
-  depth: 0.999,
-  frequency: 7,
-  feedback: 0.666,
-})
-chorus.connect(echo)
+// const chorus = new Tone.Chorus()
+// chorus.set({
+//   wet: 0.125 * 0,
+//   depth: 0.999,
+//   frequency: 7,
+//   feedback: 0.666,
+// })
+// chorus.connect(echo)
 
-const phaser = new Tone.Phaser()
-phaser.set({
-  wet: 0, //0.125,
-  frequency: 7,
-  octaves: 3,
-  stages: 10,
-  Q: 10,
-  baseFrequency: 350,
-})
-phaser.connect(chorus)
+// const phaser = new Tone.Phaser()
+// phaser.set({
+//   wet: 0.125 * 0,
+//   frequency: 7,
+//   octaves: 3,
+//   stages: 10,
+//   Q: 10,
+//   baseFrequency: 350,
+// })
+// phaser.connect(chorus)
 
-const distortion = new Tone.Distortion()
-distortion.set({
-  wet: 0, //0.25,
-  distortion: 0.9,
-})
-distortion.connect(phaser)
+// const distortion = new Tone.Distortion()
+// distortion.set({
+//   wet: 0.25 * 0.25,
+//   distortion: 0.9,
+// })
+// distortion.connect(phaser)
 
-const vibrato = new Tone.Vibrato()
-vibrato.set({
-  wet: 0, //0.5,
-  depth: 0.2,
-})
-vibrato.connect(distortion)
+// const vibrato = new Tone.Vibrato()
+// vibrato.set({
+//   wet: 0.5 * 0,
+//   depth: 0.2,
+// })
+// vibrato.connect(distortion)
 
 const maingain = new Tone.Gain()
-maingain.connect(vibrato)
+maingain.connect(maincompressor)
 
 const drumgain = new Tone.Gain()
 drumgain.connect(maincompressor)
@@ -82,6 +82,10 @@ function createsynth() {
       release: 0.01,
     },
     oscillator: {
+      // type: 'sine',
+      type: 'square',
+      // type: 'triangle',
+      // type: 'sawtooth',
       // type: 'fmsine',
       // type: 'fmsquare',
       // type: 'fmtriangle',
@@ -90,6 +94,13 @@ function createsynth() {
       // type: 'amsquare',
       // type: 'amtriangle',
       // type: 'amsawtooth',
+      // type: 'fatsquare',
+      // type: 'fattriangle',
+      // type: 'fatsawtooth',
+      // type: 'sine14',
+      // type: 'square14',
+      // type: 'triangle14',
+      // type: 'sawtooth14',
       // type: 'fmsine14',
       // type: 'fmsquare14',
       // type: 'fmtriangle14',
@@ -98,12 +109,14 @@ function createsynth() {
       // type: 'amsquare14',
       // type: 'amtriangle14',
       // type: 'amsawtooth14',
-      type: 'amsquare32',
+      // type: 'custom',
+      // partials: [0.75, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15],
     },
   })
   synth.connect(maingain)
   // #play cxcxcxcxcxcxcxcxcxcxcxcxcxcxcx;--pxcxpxcxpxcxpxcxpxcxpxcxpxcx;q9999;i10011001100199
   // #play cxcxcxcxcxcxcx+cxcxcxcxcxcxcxcx;--pxcxpxcxpxcxppcxpxcxpxcxpxcx;q9999;i14011401140199
+  // #play cecxcxcxcxcxcx+cecxcecxcecxcxcxf+c+c;--pxcxpxcxpxcxppcxpxcxpxcxpxcx;q9999;i14011401100199
   return synth
 }
 
@@ -568,7 +581,6 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
 }
 
 let pacertime = 0
-let pacerstart = 0
 // @ts-expect-error dont care enough right now
 const pacer = new Tone.Part(synthtick)
 
@@ -602,7 +614,7 @@ function synthplaystart(invokes: SYNTH_INVOKES, markendofpattern = false) {
     // write pattern to pacer
     for (let p = 0; p < pattern.length; ++p) {
       const [time, value] = pattern[p]
-      pacer.add(`+${time}i`, value)
+      pacer.add(time, value)
     }
   }
 }
@@ -613,8 +625,7 @@ function synthplay(priority: number, buffer: string) {
 
   // init when pacer is empty
   if (pacer.length === 0) {
-    pacertime = 0
-    pacerstart = pacer.immediate()
+    pacertime = pacer.now()
   }
 
   // music queue
@@ -641,8 +652,10 @@ const synth = createdevice('synth', ['second'], (message) => {
       }
       break
     case 'endofpattern':
+      console.info('message.data > pacertime', message.data, pacertime)
       // mark as done and clear pacer
-      if (isnumber(message.data) && message.data > pacertime + pacerstart) {
+      if (isnumber(message.data) && message.data > pacertime) {
+        console.info('pacer.clear()')
         pacer.clear()
       }
       break
