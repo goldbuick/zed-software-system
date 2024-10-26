@@ -68,8 +68,9 @@ export const LOADER_FIRMWARE = createfirmware({
     return 0
   })
   .command('bin', binaryloader)
-  /*
+  /**
    * TODO loaders, textloader, jsonloader, imageloader, xmlloader
+   * common text parsing ??
    */
   .command('send', (chip, words) => {
     const [msg, data] = readargs(memoryreadcontext(chip, words), 0, [

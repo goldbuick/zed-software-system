@@ -348,21 +348,30 @@ export const MODS_FIRMWARE = createfirmware({
     }
 
     // write given value to given address
-    const [name, value] = readargs(memoryreadcontext(chip, words), 0, [
+    const [name] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
-      ARG_TYPE.ANY,
     ])
 
     if (modstate.schema?.type === SCHEMA_TYPE.OBJECT) {
       const prop = modstate.schema.props?.[name]
       if (ispresent(prop)) {
         switch (prop.type) {
-          case SCHEMA_TYPE.NUMBER:
-            modstate.value[name] = parseFloat(value)
+          case SCHEMA_TYPE.NUMBER: {
+            const [value] = readargs(memoryreadcontext(chip, words), 1, [
+              ARG_TYPE.NUMBER,
+            ])
+            // @ts-expect-error yes
+            modstate.value[name] = value
             break
-          case SCHEMA_TYPE.STRING:
-            modstate.value[name] = `${value}`
+          }
+          case SCHEMA_TYPE.STRING: {
+            const [value] = readargs(memoryreadcontext(chip, words), 1, [
+              ARG_TYPE.STRING,
+            ])
+            // @ts-expect-error yes
+            modstate.value[name] = value
             break
+          }
         }
       } else {
         // log error
