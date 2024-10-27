@@ -76,6 +76,8 @@ export type SYNTH_NOTE = null | string | number
 export type SYNTH_NOTE_ON = [number, string, SYNTH_NOTE]
 export type SYNTH_NOTE_ENTRY = [number, SYNTH_NOTE_ON]
 
+let endofplaymarker = 0
+
 export function invokeplay(synth: number, starttime: number, play: SYNTH_OP[]) {
   // translate ops into time, note pairs
   let time = starttime
@@ -218,7 +220,7 @@ export function invokeplay(synth: number, starttime: number, play: SYNTH_OP[]) {
   writenote()
 
   // write end of pattern
-  pattern.push([time, [pick(range(1000000, 9000000)), '8n', -1]])
+  pattern.push([time, [--endofplaymarker, '8n', -1]])
 
   return pattern
 }
