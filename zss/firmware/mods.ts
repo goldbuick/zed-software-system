@@ -10,12 +10,7 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import {
-  CHIP_MEMORY,
-  memoryensuresoftwarebook,
-  memoryreadchip,
-  memoryreadcontext,
-} from 'zss/memory'
+import { CHIP_MEMORY, memoryreadchip, memoryreadcontext } from 'zss/memory'
 import {
   bookreadcodepagebyaddress,
   bookreadcodepagewithtype,
@@ -215,19 +210,7 @@ export const MODS_FIRMWARE = createfirmware({
       return 0
     }
 
-    const maybeaddress = maybename ?? ''
     const maybetype = type.toLowerCase()
-
-    // book is a special case
-    if (maybetype === 'book') {
-      // create new book
-      memoryensuresoftwarebook('main', maybeaddress)
-      // reset mod state
-      modstate.type = CODE_PAGE_TYPE.ERROR
-      modstate.target = ''
-      modstate.value = undefined
-      return 0
-    }
 
     const withaddress = maybename ?? createshortnameid()
     switch (maybetype) {
@@ -341,6 +324,7 @@ export const MODS_FIRMWARE = createfirmware({
     return 0
   })
   .command('write', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
     const modstate = readmodstate(chip.id())
     if (!ispresent(modstate.value)) {
       write(`use #mod before #write`)
@@ -356,20 +340,28 @@ export const MODS_FIRMWARE = createfirmware({
       const prop = modstate.schema.props?.[name]
       if (ispresent(prop)) {
         switch (prop.type) {
-          case SCHEMA_TYPE.NUMBER: {
+          case SCHEMA_TYPE.WORD_TYPE: {
+            const WORD_TYPE_MAP = {
+              string: ARG_TYPE.STRING,
+              number: ARG_TYPE.NUMBER,
+              collision: ARG_TYPE.COLLISION,
+              color: ARG_TYPE.COLOR,
+            }
+
             const [value] = readargs(memoryreadcontext(chip, words), 1, [
-              ARG_TYPE.NUMBER,
+              WORD_TYPE_MAP[prop.kind],
             ])
             // @ts-expect-error yes
             modstate.value[name] = value
-            break
-          }
-          case SCHEMA_TYPE.STRING: {
-            const [value] = readargs(memoryreadcontext(chip, words), 1, [
-              ARG_TYPE.STRING,
-            ])
-            // @ts-expect-error yes
-            modstate.value[name] = value
+            const strvalue = `${value}`
+            const codepage = bookreadcodepagebyaddress(
+              memory.book,
+              modstate.target,
+            )
+            const pagetype = codepagereadtypetostring(codepage)
+            write(
+              `wrote [${pagetype}] ${codepagereadname(codepage)} ${strvalue} to ${name}`,
+            )
             break
           }
         }

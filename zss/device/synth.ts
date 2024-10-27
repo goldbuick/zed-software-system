@@ -574,7 +574,7 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
         drumbasstrigger(time)
         break
       case -1: // END OF PATTERN
-        if (Tone.getTransport().seconds >= pacertime) {
+        if (chan === pacerend) {
           pacertime = -1
         }
         break
@@ -583,6 +583,7 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
 }
 
 let pacertime = -1
+let pacerend = -1
 
 // @ts-expect-error dont care enough right now
 const pacer = new Tone.Part(synthtick)
@@ -609,7 +610,10 @@ function synthplaystart(invokes: SYNTH_INVOKES, markendofpattern = false) {
     // track next note time
     const last = pattern[pattern.length - 1]
     if (ispresent(last)) {
+      // trigger time
       pacertime = Math.max(pacertime, last[0])
+      // synth #
+      pacerend = last[1][0]
     }
     // only longest pattern keeps end of pattern entry
     if (i !== longestindex || !markendofpattern) {

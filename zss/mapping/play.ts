@@ -1,5 +1,6 @@
 import * as Tone from 'tone'
 
+import { pick, range } from './array'
 import { isnumber, ispresent } from './types'
 
 export enum SYNTH_OP {
@@ -217,7 +218,7 @@ export function invokeplay(synth: number, starttime: number, play: SYNTH_OP[]) {
   writenote()
 
   // write end of pattern
-  pattern.push([time, [synth, '8n', -1]])
+  pattern.push([time, [pick(range(1000000, 9000000)), '8n', -1]])
 
   return pattern
 }
