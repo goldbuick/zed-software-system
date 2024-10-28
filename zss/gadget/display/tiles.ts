@@ -1,4 +1,12 @@
-import * as THREE from 'three'
+import {
+  BufferAttribute,
+  BufferGeometry,
+  DataTexture,
+  RGBAIntegerFormat,
+  ShaderMaterial,
+  UnsignedByteType,
+  Vector2,
+} from 'three'
 import { MAYBE_NUMBER } from 'zss/mapping/types'
 
 import {
@@ -38,7 +46,7 @@ const QUAD_UVS = new Float32Array([
 ])
 
 export function updateTilemapDataTexture(
-  texture: THREE.DataTexture,
+  texture: DataTexture,
   width: number,
   height: number,
   tchar: TILE_CHARS,
@@ -60,19 +68,19 @@ export function updateTilemapDataTexture(
 
 export function createTilemapDataTexture(width: number, height: number) {
   const data = new Uint8Array(4 * width * height)
-  const texture = new THREE.DataTexture(
+  const texture = new DataTexture(
     data,
     width,
     height,
-    THREE.RGBAIntegerFormat,
-    THREE.UnsignedByteType,
+    RGBAIntegerFormat,
+    UnsignedByteType,
   )
   texture.internalFormat = 'RGBA8UI'
   return texture
 }
 
 export function createTilemapBufferGeometry(
-  bg: THREE.BufferGeometry,
+  bg: BufferGeometry,
   width: number,
   height: number,
 ) {
@@ -89,14 +97,14 @@ export function createTilemapBufferGeometry(
     }
   })
 
-  bg.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-  bg.setAttribute('uv', new THREE.BufferAttribute(QUAD_UVS, 2))
+  bg.setAttribute('position', new BufferAttribute(positions, 3))
+  bg.setAttribute('uv', new BufferAttribute(QUAD_UVS, 2))
 
   bg.computeBoundingBox()
   bg.computeBoundingSphere()
 }
 
-const tilemapMaterial = new THREE.ShaderMaterial({
+const tilemapMaterial = new ShaderMaterial({
   // settings
   transparent: false,
   uniforms: {
@@ -106,8 +114,8 @@ const tilemapMaterial = new THREE.ShaderMaterial({
     alt: { value: null },
     data: { value: null },
     palette: { value: null },
-    size: { value: new THREE.Vector2() },
-    step: { value: new THREE.Vector2() },
+    size: { value: new Vector2() },
+    step: { value: new Vector2() },
   },
   // vertex shader
   vertexShader: `

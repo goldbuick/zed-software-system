@@ -1,4 +1,3 @@
-import localforage from 'localforage'
 import { createdevice } from 'zss/device'
 import { doasync } from 'zss/mapping/func'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -40,56 +39,21 @@ function writestate(exportedbooks: string) {
 
 const BIOS_NODE = 'bios-node'
 
-async function readbiosnode(defaultnode: string) {
+function readbiosnode(defaultnode: string) {
   try {
-    const node = await localforage.getItem<string>(BIOS_NODE)
+    const node = localStorage.getItem(BIOS_NODE)
     if (ispresent(node)) {
       return node
     }
-    return await localforage.setItem(BIOS_NODE, defaultnode)
+    localStorage.setItem(BIOS_NODE, defaultnode)
+    return defaultnode
   } catch (err: any) {
     api_error(register.name(), BIOS_NODE, err.message)
   }
 }
 
-async function erasebiosnode() {
-  try {
-    await localforage.removeItem(BIOS_NODE)
-  } catch (err: any) {
-    api_error(register.name(), BIOS_NODE, err.message)
-  }
-}
-
-const BIOS_BOOKS = 'bios-books'
-
-async function readbiosbooks() {
-  try {
-    const books = await localforage.getItem<string>(BIOS_BOOKS)
-    if (ispresent(books)) {
-      return books
-    }
-  } catch (err: any) {
-    api_error(register.name(), BIOS_BOOKS, err.message)
-  }
-}
-
-async function writebiosbooks() {
-  try {
-    const source = readstate()
-    if (source.length) {
-      await localforage.setItem<string>(BIOS_BOOKS, source)
-    }
-  } catch (err: any) {
-    api_error(register.name(), BIOS_BOOKS, err.message)
-  }
-}
-
-async function erasebiosbooks() {
-  try {
-    await localforage.removeItem(BIOS_BOOKS)
-  } catch (err: any) {
-    api_error(register.name(), BIOS_BOOKS, err.message)
-  }
+function erasebiosnode() {
+  localStorage.removeItem(BIOS_NODE)
 }
 
 // simple bootstrap manager
@@ -109,35 +73,32 @@ const register = createdevice(
         tape_crash(register.name())
         break
       case 'ready':
-        doasync('register:ready', async () => {
-          if (!ispresent(message.player)) {
-            return
-          }
-          const player = await readbiosnode(message.player)
-          if (!ispresent(player)) {
-            return
-          }
-          // init vm with player id
-          if (gadgetstatesetplayer(player)) {
-            vm_init(register.name(), player)
-          }
-        })
+        if (!ispresent(message.player)) {
+          return
+        }
+        const player = readbiosnode(message.player)
+        if (!ispresent(player)) {
+          return
+        }
+        // init vm with player id
+        if (gadgetstatesetplayer(player)) {
+          vm_init(register.name(), player)
+        }
         break
-      case 'ackinit':
-        doasync('register:ackinit', async () => {
-          if (!ispresent(message.player)) {
-            return
-          }
-          const books = readstate() ?? (await readbiosbooks())
-          if (books.length === 0) {
-            api_error(register.name(), 'content', 'no content found')
-            tape_crash(register.name())
-            return
-          }
-          // init vm with content
-          vm_books(register.name(), books, message.player)
-        })
+      case 'ackinit': {
+        if (!ispresent(message.player)) {
+          return
+        }
+        const books = readstate()
+        if (books.length === 0) {
+          api_error(register.name(), 'content', 'no content found')
+          tape_crash(register.name())
+          return
+        }
+        // init vm with content
+        vm_books(register.name(), books, message.player)
         break
+      }
       case 'ackbooks':
         if (ispresent(message.player)) {
           vm_login(register.name(), message.player)

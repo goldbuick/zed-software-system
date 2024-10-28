@@ -1,11 +1,5 @@
 import { OrthographicCamera, useDetectGPU, useTexture } from '@react-three/drei'
 import { addEffect, addAfterEffect, useThree } from '@react-three/fiber'
-import {
-  EffectComposer,
-  BrightnessContrast,
-  ChromaticAberration,
-} from '@react-three/postprocessing'
-import { BlendFunction } from 'postprocessing'
 import { Suspense, useEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { NearestFilter, Vector2 } from 'three'
@@ -63,7 +57,7 @@ export function Terminal() {
       <Framing>
         <Gadget />
       </Framing>
-      {shouldcrt && (
+      {/* {shouldcrt && (
         <Suspense fallback={null}>
           <EffectComposer multisampling={0}>
             <BrightnessContrast brightness={0.04} contrast={0.1} />
@@ -76,7 +70,7 @@ export function Terminal() {
             <CRTShape splat={splat} viewheight={viewheight} />
           </EffectComposer>
         </Suspense>
-      )}
+      )} */}
     </>
   )
 }

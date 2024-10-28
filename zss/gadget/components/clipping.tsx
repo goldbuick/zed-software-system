@@ -1,10 +1,10 @@
 import { useFrame } from '@react-three/fiber'
 import { createContext, useContext, useRef, useState } from 'react'
-import * as THREE from 'three'
+import { Group, Plane, Vector3 } from 'three'
 
-type ClippingSet = THREE.Plane[]
+type ClippingSet = Plane[]
 
-const subVectors = new THREE.Vector3()
+const subVectors = new Vector3()
 const ClippingContext = createContext<ClippingSet>([])
 
 export function useClipping() {
@@ -22,25 +22,25 @@ export default function Clipping({
   children,
   ...props
 }: Props) {
-  const ref = useRef<THREE.Group>(null)
+  const ref = useRef<Group>(null)
 
   const [clippingPlanes] = useState<ClippingSet>(() => {
     const planes: ClippingSet = []
     if (width) {
-      planes.push(new THREE.Plane(), new THREE.Plane())
+      planes.push(new Plane(), new Plane())
     }
     if (height) {
-      planes.push(new THREE.Plane(), new THREE.Plane())
+      planes.push(new Plane(), new Plane())
     }
     return planes
   })
 
-  const [vecs] = useState<THREE.Vector3[]>(() => [
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
+  const [vecs] = useState<Vector3[]>(() => [
+    new Vector3(0, 0, 0),
+    new Vector3(0, 0, 0),
+    new Vector3(0, 0, 0),
+    new Vector3(0, 0, 0),
+    new Vector3(0, 0, 0),
   ])
 
   useFrame(() => {

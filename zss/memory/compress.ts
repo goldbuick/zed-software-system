@@ -1,5 +1,4 @@
-import { decode, encode } from 'base64-arraybuffer'
-import { gzip, gunzip } from 'fflate'
+import JSZip from 'jszip'
 import * as bin from 'typed-binary'
 import { ispresent } from 'zss/mapping/types'
 
@@ -23,8 +22,17 @@ function base64tobase64url(base64String: string) {
   return base64String.replace(/\+/g, '-').replace(/\//g, '_')
 }
 
+function decode(data: string): ArrayBuffer {}
+
 function base64decode(data: string): Uint8Array {
   return new Uint8Array(decode(atob(data)))
+}
+
+async function encode(data: Uint8Array): string {
+  const zip = new JSZip()
+  zip.file('bin', data, {
+    binary: true,
+  })
 }
 
 function base64encode(data: Uint8Array): string {
@@ -39,56 +47,57 @@ function base64urltouint8array(base64String: string) {
   return base64decode(base64)
 }
 
-function uint8arraytobase64url(bytes: Uint8Array) {
-  const base64 = base64encode(bytes)
-
-  // base64 sanitizing
-  return base64tobase64url(base64)
-}
-
-const BIN_BOOKS = bin.dynamicArrayOf(BIN_BOOK)
-
-// Type alias for ease-of-use
-export type BIN_BOOKS = bin.Parsed<typeof BIN_BOOKS>
+const FIXED_DATE = new Date('1980/09/02')
 
 export async function compressbooks(books: BOOK[]) {
   return new Promise<string>((resolve, reject) => {
-    const exportedbooks = books.map(exportbook).filter(ispresent)
-    const binbooks = new ArrayBuffer(BIN_BOOKS.measure(exportedbooks).size)
-    const writer = new bin.BufferWriter(binbooks)
-    BIN_BOOKS.write(writer, exportedbooks)
-    gzip(
-      new Uint8Array(binbooks),
-      {
-        mtime: 0,
-        level: 9,
-        filename: '',
-      },
-      (err, asciibytes) => {
-        if (err) {
-          reject(err)
-        }
-        if (asciibytes) {
-          resolve(uint8arraytobase64url(asciibytes))
-        }
-      },
-    )
+    const zip = new JSZip()
+    for (let i = 0; i < books.length; ++i) {
+      const book = books[i]
+      const exportedbook = exportbook(book)
+      if (exportedbook) {
+        const binbook = new ArrayBuffer(BIN_BOOK.measure(exportedbook).size)
+        const writer = new bin.BufferWriter(binbook)
+        BIN_BOOK.write(writer, exportedbook)
+        zip.file(book.id, binbook, { date: FIXED_DATE })
+      }
+    }
+    zip
+      .generateAsync({ type: 'base64' })
+      .then((content) => {
+        resolve(base64tobase64url(content))
+      })
+      .catch(reject)
   })
 }
 
 // import json into book
 export async function decompressbooks(base64bytes: string) {
   return new Promise<BOOK[]>((resolve, reject) => {
-    const asciibytes = base64urltouint8array(base64bytes)
-    gunzip(asciibytes, {}, (err, binbooks) => {
-      if (err) {
-        reject(err)
-      }
-      if (binbooks) {
-        const reader = new bin.BufferReader(binbooks.buffer)
-        const books = BIN_BOOKS.read(reader).map(importbook).filter(ispresent)
-        resolve(books)
-      }
-    })
+    const zip = new JSZip()
+    zip
+      .loadAsync(base64urltobase64(base64bytes), { base64: true })
+      .then(() => {
+        const books: BOOK[] = []
+        zip.forEach((path, file) => {
+          file.async('arraybuffer')
+          //
+        })
+        // for (let i = 0; i < zip.files.length; ++i) {
+        //   //
+        // }
+        // const reader = new bin.BufferReader(binbooks.buffer)
+        // const books = BIN_BOOKS.read(reader).map(importbook).filter(ispresent)
+      })
+      .catch(reject)
+    // const asciibytes = base64urltouint8array(base64bytes)
+    // gunzip(asciibytes, {}, (err, binbooks) => {
+    //   if (err) {
+    //     reject(err)
+    //   }
+    //   if (binbooks) {
+    //     resolve(books)
+    //   }
+    // })
   })
 }

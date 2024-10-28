@@ -2,7 +2,6 @@ import { Loader } from '@react-three/drei'
 import { Canvas, events } from '@react-three/fiber'
 import { useEffect } from 'react'
 import useMeasure from 'react-use-measure'
-import * as THREE from 'three'
 import { vm_loadfile } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import { makeEven } from 'zss/mapping/number'
@@ -10,9 +9,10 @@ import { ispresent } from 'zss/mapping/types'
 import 'zss/platform'
 
 import { Terminal } from './terminal'
+import { Intersection, Plane, Vector3 } from 'three'
 
-const target = new THREE.Vector3()
-const facing = new THREE.Vector3()
+const target = new Vector3()
+const facing = new Vector3()
 
 const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   state,
@@ -21,13 +21,13 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   ...events(state),
 
   // The filter can re-order or re-structure the intersections
-  filter: (items: THREE.Intersection[]) => {
+  filter: (items: Intersection[]) => {
     const list = items.filter((item) => {
       if (!item.object.visible) {
         return false
       }
 
-      const clippingPlanes: THREE.Plane[] =
+      const clippingPlanes: Plane[] =
         item.object.userData.clippingPlanes ?? []
       if (
         clippingPlanes.some((plane) => {

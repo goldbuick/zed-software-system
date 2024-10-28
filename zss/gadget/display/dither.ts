@@ -1,9 +1,9 @@
-import * as THREE from 'three'
+import { Color, DataTexture, ShaderMaterial } from 'three'
 
 import { cloneMaterial } from './anim'
 
 export function updateDitherDataTexture(
-  texture: THREE.DataTexture,
+  texture: DataTexture,
   width: number,
   height: number,
   alpha: number[],
@@ -20,15 +20,15 @@ export function updateDitherDataTexture(
 
 export function createDitherDataTexture(width: number, height: number) {
   const data = new Uint8Array(4 * width * height)
-  return new THREE.DataTexture(data, width, height)
+  return new DataTexture(data, width, height)
 }
 
-const ditherMaterial = new THREE.ShaderMaterial({
+const ditherMaterial = new ShaderMaterial({
   // settings
   transparent: false,
   uniforms: {
     palette: { value: null },
-    color: { value: new THREE.Color(0, 0, 0) },
+    color: { value: new Color(0, 0, 0) },
     data: { value: null },
   },
   // vertex shader

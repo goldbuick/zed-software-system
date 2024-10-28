@@ -26,13 +26,14 @@ Reading all the boards
 #bin int16le boardsize
 "boardsize: $boardsize"
 
-#bin uint8 len
-#bin text len boardname
+#bin text uint8 boardname
 "BOARD $index - $boardname"
 
+#break
+
+'next
 #give index
 #give offset boardsize + 2
-
 #done
 
 
