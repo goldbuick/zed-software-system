@@ -41,7 +41,9 @@ import {
 
 import {
   ARG_TYPE,
+  isstrcollision,
   isstrcolor,
+  mapstrcollisiontoenum,
   mapstrcolortoattributes,
   readargs,
 } from './wordtypes'
@@ -360,6 +362,10 @@ export const MODS_FIRMWARE = createfirmware({
             if (prop.kind === 'color' && isstrcolor(maybevalue)) {
               const { color, bg } = mapstrcolortoattributes(maybevalue)
               maybevalue = color ?? bg ?? 0
+            }
+
+            if (prop.kind === 'collision' && isstrcollision(maybevalue)) {
+              maybevalue = mapstrcollisiontoenum(maybevalue)
             }
 
             // @ts-expect-error yes
