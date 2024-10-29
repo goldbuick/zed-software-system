@@ -1,7 +1,7 @@
-import { Loader } from '@react-three/drei'
 import { Canvas, events } from '@react-three/fiber'
 import { useEffect } from 'react'
 import useMeasure from 'react-use-measure'
+import { Intersection, Plane, Vector3 } from 'three'
 import { vm_loadfile } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import { makeEven } from 'zss/mapping/number'
@@ -9,7 +9,6 @@ import { ispresent } from 'zss/mapping/types'
 import 'zss/platform'
 
 import { Terminal } from './terminal'
-import { Intersection, Plane, Vector3 } from 'three'
 
 const target = new Vector3()
 const facing = new Vector3()
@@ -27,8 +26,7 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
         return false
       }
 
-      const clippingPlanes: Plane[] =
-        item.object.userData.clippingPlanes ?? []
+      const clippingPlanes: Plane[] = item.object.userData.clippingPlanes ?? []
       if (
         clippingPlanes.some((plane) => {
           plane.projectPoint(item.point, target)
@@ -95,78 +93,75 @@ export function App() {
   }, [])
 
   return (
-    <>
-      <div
-        ref={ref}
-        style={{
-          position: 'absolute',
-          inset: 0,
-        }}
-        onContextMenuCapture={(event) => {
-          event.preventDefault()
-        }}
-        onDrop={(event) => {
-          event.preventDefault()
-          if (event.dataTransfer.items) {
-            const items = [...event.dataTransfer.items]
-            // Use DataTransferItemList interface to access the file(s)
-            items.forEach((item) => {
-              // If dropped items aren't files, reject them
-              if (item.kind === 'file') {
-                const file = item.getAsFile()
-                if (ispresent(file)) {
-                  vm_loadfile('loadfile', file, gadgetstategetplayer())
-                }
+    <div
+      ref={ref}
+      style={{
+        position: 'absolute',
+        inset: 0,
+      }}
+      onContextMenuCapture={(event) => {
+        event.preventDefault()
+      }}
+      onDrop={(event) => {
+        event.preventDefault()
+        if (event.dataTransfer.items) {
+          const items = [...event.dataTransfer.items]
+          // Use DataTransferItemList interface to access the file(s)
+          items.forEach((item) => {
+            // If dropped items aren't files, reject them
+            if (item.kind === 'file') {
+              const file = item.getAsFile()
+              if (ispresent(file)) {
+                vm_loadfile('loadfile', file, gadgetstategetplayer())
               }
-            })
-          } else {
-            const files = [...event.dataTransfer.files]
-            // Use DataTransfer interface to access the file(s)
-            files.forEach((file) =>
-              vm_loadfile('loadfile', file, gadgetstategetplayer()),
-            )
-          }
-        }}
-        onDragOver={(event) => {
-          event.preventDefault()
+            }
+          })
+        } else {
+          const files = [...event.dataTransfer.files]
+          // Use DataTransfer interface to access the file(s)
+          files.forEach((file) =>
+            vm_loadfile('loadfile', file, gadgetstategetplayer()),
+          )
+        }
+      }}
+      onDragOver={(event) => {
+        event.preventDefault()
+      }}
+    >
+      <div
+        style={{
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          margin: 'auto',
+          width: boundsWidth,
+          height: boundsHeight,
         }}
       >
-        <div
+        <Canvas
+          flat
+          linear
+          dpr={1}
+          shadows={false}
+          touch-action="none"
+          gl={{
+            alpha: false,
+            stencil: false,
+            antialias: false,
+            precision: 'highp',
+            preserveDrawingBuffer: true,
+            powerPreference: 'high-performance',
+          }}
           style={{
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            margin: 'auto',
-            width: boundsWidth,
-            height: boundsHeight,
+            imageRendering: 'pixelated',
+          }}
+          events={eventManagerFactory}
+          onCreated={({ gl }) => {
+            gl.localClippingEnabled = true
           }}
         >
-          <Canvas
-            flat
-            linear
-            dpr={1}
-            shadows={false}
-            touch-action="none"
-            gl={{
-              alpha: false,
-              stencil: false,
-              antialias: false,
-              precision: 'highp',
-              preserveDrawingBuffer: true,
-              powerPreference: 'high-performance',
-            }}
-            style={{
-              imageRendering: 'pixelated',
-            }}
-            events={eventManagerFactory}
-            onCreated={({ gl }) => {
-              gl.localClippingEnabled = true
-            }}
-          >
-            <Terminal />
-          </Canvas>
-        </div>
+          <Terminal />
+        </Canvas>
       </div>
-      <Loader />
-    </>
+    </div>
   )
 }

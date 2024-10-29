@@ -1,10 +1,10 @@
-// import { EffectProps, wrapEffect } from '@react-three/postprocessing'
-// import {
-//   BlendFunction,
-//   Effect,
-//   EffectAttribute,
-//   ColorChannel,
-// } from 'postprocessing'
+import { EffectProps, wrapEffect } from '@react-three/postprocessing'
+import {
+  BlendFunction,
+  Effect,
+  EffectAttribute,
+  ColorChannel,
+} from 'postprocessing'
 import { Texture, Uniform, UnsignedByteType } from 'three'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 

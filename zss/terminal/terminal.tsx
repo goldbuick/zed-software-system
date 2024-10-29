@@ -1,9 +1,20 @@
-import { OrthographicCamera, useDetectGPU, useTexture } from '@react-three/drei'
 import { addEffect, addAfterEffect, useThree } from '@react-three/fiber'
-import { Suspense, useEffect, useState } from 'react'
+import {
+  BrightnessContrast,
+  ChromaticAberration,
+  EffectComposer,
+} from '@react-three/postprocessing'
+import { getGPUTier, GetGPUTier } from 'detect-gpu'
+import { useEffect, useLayoutEffect, useRef, useState, Suspense } from 'react'
 import Stats from 'stats.js'
-import { NearestFilter, Vector2 } from 'three'
+import { suspend } from 'suspend-react'
+import {
+  OrthographicCamera as OrthographicCameraImpl,
+  NearestFilter,
+  Vector2,
+} from 'three'
 import { FORCE_CRT_OFF, STATS_DEV } from 'zss/config'
+import { useTexture } from 'zss/gadget/components/usetexture'
 import { createplatform } from 'zss/platform'
 
 import { CRTShape } from './crt'
@@ -14,8 +25,12 @@ import decoimageurl from './scratches.jpg'
 const TUG = 0.0006
 const TUG_VEC = new Vector2(TUG, TUG * -0.5)
 
+const useDetectGPU = (props?: GetGPUTier) =>
+  suspend(() => getGPUTier(props), ['useDetectGPU'])
+
 export function Terminal() {
   const viewport = useThree((state) => state.viewport)
+  const cameraRef = useRef<OrthographicCameraImpl>(null)
   const { height: viewheight } = viewport.getCurrentViewport()
 
   const splat = useTexture(decoimageurl)
@@ -46,10 +61,28 @@ export function Terminal() {
   const gputier = useDetectGPU()
   const shouldcrt = !FORCE_CRT_OFF && gputier.tier > 2 && !gputier.isMobile
 
+  const set = useThree(({ set }) => set)
+  const size = useThree(({ size }) => size)
+  const camera = useThree(({ camera }) => camera)
+
+  useLayoutEffect(() => {
+    cameraRef.current?.updateProjectionMatrix()
+  })
+
+  useLayoutEffect(() => {
+    const oldCam = camera
+    set(() => ({ camera: cameraRef.current! }))
+    return () => set(() => ({ camera: oldCam }))
+  }, [set, camera, cameraRef])
+
   return (
     <>
-      <OrthographicCamera
-        makeDefault
+      <orthographicCamera
+        ref={cameraRef}
+        left={size.width / -2}
+        right={size.width / 2}
+        top={size.height / 2}
+        bottom={size.height / -2}
         near={1}
         far={2000}
         position={[0, 0, 1000]}
@@ -57,12 +90,12 @@ export function Terminal() {
       <Framing>
         <Gadget />
       </Framing>
-      {/* {shouldcrt && (
+      {shouldcrt && (
         <Suspense fallback={null}>
           <EffectComposer multisampling={0}>
             <BrightnessContrast brightness={0.04} contrast={0.1} />
             <ChromaticAberration
-              blendFunction={BlendFunction.NORMAL}
+              // blendFunction={BlendFunction.NORMAL}
               offset={TUG_VEC}
               radialModulation
               modulationOffset={0.5}
@@ -70,7 +103,7 @@ export function Terminal() {
             <CRTShape splat={splat} viewheight={viewheight} />
           </EffectComposer>
         </Suspense>
-      )} */}
+      )}
     </>
   )
 }

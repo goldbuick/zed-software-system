@@ -35,14 +35,15 @@ export async function compressbooks(books: BOOK[]) {
         const writer = new bin.BufferWriter(binbook)
         BIN_BOOK.write(writer, exportedbook)
         // compress book
-        zip.file(book.id, binbook, {
-          date: FIXED_DATE,
-          compressionOptions: { level: 9 },
-        })
+        zip.file(book.id, binbook, { date: FIXED_DATE })
       }
     }
     zip
-      .generateAsync({ type: 'base64' })
+      .generateAsync({
+        type: 'base64',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 9 },
+      })
       .then((content) => {
         resolve(base64tobase64url(content))
       })

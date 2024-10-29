@@ -39,7 +39,12 @@ import {
   EIGHT_TRACK,
 } from 'zss/memory/types'
 
-import { ARG_TYPE, readargs } from './wordtypes'
+import {
+  ARG_TYPE,
+  isstrcolor,
+  mapstrcolortoattributes,
+  readargs,
+} from './wordtypes'
 
 const COLOR_EDGE = '$dkpurple'
 
@@ -348,19 +353,27 @@ export const MODS_FIRMWARE = createfirmware({
               color: ARG_TYPE.COLOR,
             }
 
-            const [value] = readargs(memoryreadcontext(chip, words), 1, [
+            let [maybevalue] = readargs(memoryreadcontext(chip, words), 1, [
               WORD_TYPE_MAP[prop.kind],
             ])
+
+            if (prop.kind === 'color' && isstrcolor(maybevalue)) {
+              const { color, bg } = mapstrcolortoattributes(maybevalue)
+              maybevalue = color ?? bg ?? 0
+            }
+
             // @ts-expect-error yes
-            modstate.value[name] = value
-            const strvalue = `${value}`
+            modstate.value[name] = maybevalue
+
+            const strvalue = `${maybevalue}`
             const codepage = bookreadcodepagebyaddress(
               memory.book,
               modstate.target,
             )
+
             const pagetype = codepagereadtypetostring(codepage)
             write(
-              `wrote [${pagetype}] ${codepagereadname(codepage)} ${strvalue} to ${name}`,
+              `wrote [${pagetype}] ${codepagereadname(codepage)} ${name} = ${strvalue}`,
             )
             break
           }
