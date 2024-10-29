@@ -28,6 +28,8 @@ const TUG_VEC = new Vector2(TUG, TUG * -0.5)
 const useDetectGPU = (props?: GetGPUTier) =>
   suspend(() => getGPUTier(props), ['useDetectGPU'])
 
+createplatform()
+
 export function Terminal() {
   const viewport = useThree((state) => state.viewport)
   const cameraRef = useRef<OrthographicCameraImpl>(null)
@@ -38,8 +40,6 @@ export function Terminal() {
   splat.magFilter = NearestFilter
 
   const [stats] = useState(() => new Stats())
-
-  useEffect(createplatform, [])
 
   useEffect(() => {
     if (!STATS_DEV) {

@@ -154,22 +154,12 @@ function transformCompare(ast: CodeNode) {
   return write(ast, '')
 }
 
-function prefixApi(
-  ast: CodeNode,
-  operation: SourceNode,
-  method: string,
-  rhs: CodeNode,
-) {
+function prefixApi(operation: SourceNode, method: string, rhs: CodeNode) {
   operation.prepend(`api.${method}(`)
   return operation.add([', ', transformNode(rhs), ')'])
 }
 
-function prefixUniApi(
-  ast: CodeNode,
-  operation: SourceNode,
-  method: string,
-  rhs: CodeNode,
-) {
+function prefixUniApi(operation: SourceNode, method: string, rhs: CodeNode) {
   operation.prepend(`api.${method}(`)
   return operation.add([transformNode(rhs), ')'])
 }
@@ -178,23 +168,23 @@ function transformOperatorItem(ast: CodeNode, operation: SourceNode) {
   if (ast.type === NODE.OPERATOR_ITEM) {
     switch (ast.operator) {
       case OPERATOR.PLUS:
-        return prefixApi(ast, operation, 'opPlus', ast.rhs)
+        return prefixApi(operation, 'opPlus', ast.rhs)
       case OPERATOR.MINUS:
-        return prefixApi(ast, operation, 'opMinus', ast.rhs)
+        return prefixApi(operation, 'opMinus', ast.rhs)
       case OPERATOR.POWER:
-        return prefixApi(ast, operation, 'opPower', ast.rhs)
+        return prefixApi(operation, 'opPower', ast.rhs)
       case OPERATOR.MULTIPLY:
-        return prefixApi(ast, operation, 'opMultiply', ast.rhs)
+        return prefixApi(operation, 'opMultiply', ast.rhs)
       case OPERATOR.DIVIDE:
-        return prefixApi(ast, operation, 'opDivide', ast.rhs)
+        return prefixApi(operation, 'opDivide', ast.rhs)
       case OPERATOR.MOD_DIVIDE:
-        return prefixApi(ast, operation, 'opModDivide', ast.rhs)
+        return prefixApi(operation, 'opModDivide', ast.rhs)
       case OPERATOR.FLOOR_DIVIDE:
-        return prefixApi(ast, operation, 'opFloorDivide', ast.rhs)
+        return prefixApi(operation, 'opFloorDivide', ast.rhs)
       case OPERATOR.UNI_PLUS:
-        return prefixUniApi(ast, operation, 'opUniPlus', ast.rhs)
+        return prefixUniApi(operation, 'opUniPlus', ast.rhs)
       case OPERATOR.UNI_MINUS:
-        return prefixUniApi(ast, operation, 'opUniMinus', ast.rhs)
+        return prefixUniApi(operation, 'opUniMinus', ast.rhs)
     }
   }
   return write(ast, '')
@@ -207,6 +197,20 @@ function transformOperator(ast: CodeNode) {
     return operation
   }
   return write(ast, '')
+}
+
+function addlabel(label: string, active = true): number {
+  const llabel = label.toLowerCase()
+  const index = context.labelIndex++
+  if (!context.labels[llabel]) {
+    context.labels[llabel] = []
+  }
+  context.labels[llabel].push(active ? index : -index)
+  return index
+}
+
+function writelabel(ast: CodeNode, label: string, index: number): SourceNode {
+  return write(ast, `case ${index}: // ${label}`)
 }
 
 function transformNode(ast: CodeNode): SourceNode {
@@ -250,12 +254,8 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.STAT:
       return writeApi(ast, `stat`, [writeString(ast.value)])
     case NODE.LABEL: {
-      const index = context.labelIndex++
-      if (!context.labels[ast.name]) {
-        context.labels[ast.name] = []
-      }
-      context.labels[ast.name].push(ast.active ? index : -index)
-      return write(ast, `case ${index}: // ${ast.name}`)
+      const index = addlabel(ast.name, ast.active)
+      return writelabel(ast, ast.name, index)
     }
     case NODE.HYPERLINK:
       return writeApi(ast, `hyperlink`, [
@@ -279,6 +279,11 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
     // core / structure
     case NODE.IF: {
+      /*
+      #if (thing) _skip_label_
+      ... else if code here ...
+      :_skip_label_
+      */
       const source = write(ast, [
         `if (`,
         writeApi(ast, `${ast.method}`, transformNodes(ast.words)),
@@ -293,6 +298,11 @@ function transformNode(ast: CodeNode): SourceNode {
       return source
     }
     case NODE.ELSE_IF: {
+      /*
+      #if (thing) _skip_label_
+      ... else if code here ...
+      :_skip_label_
+      */
       const source = write(ast, [
         `} else if (`,
         writeApi(ast, ast.method, transformNodes(ast.words)),
@@ -306,6 +316,11 @@ function transformNode(ast: CodeNode): SourceNode {
       return source
     }
     case NODE.ELSE: {
+      /*
+      #_else_label_
+      ... else code here ...
+      :_else_label_
+      */
       const source = write(ast, `} else {\n`)
 
       if (ast.lines) {
@@ -315,20 +330,49 @@ function transformNode(ast: CodeNode): SourceNode {
       return source
     }
     case NODE.WHILE: {
+      /*
+      :_while_label_
+      #if (thing) _generated_done_
+      ... loop code here ...
+      #_while_label_
+      :_generated_done_
+      */
+      const whileloop = `__whileloop${context.internal++}`
+      const whileloopindex = addlabel(whileloop)
+      const whiledone = `__whiledone${context.internal++}`
+      const whiledoneindex = addlabel(whiledone)
+
       const source = write(ast, [
-        'while (',
+        writelabel(ast, whileloop, whileloopindex),
+        '\n',
+        'if (!',
         writeApi(ast, 'if', transformNodes(ast.words)),
         `) {\n`,
+        writeApi(ast, `command`, [whiledone]),
+        `}`,
       ])
 
       if (ast.lines) {
         ast.lines.forEach((item) => source.add([transformNode(item), '\n']))
       }
 
-      source.add('}')
+      source.add([
+        writeApi(ast, `command`, [whileloop]),
+        '\n',
+        writelabel(ast, whiledone, whiledoneindex),
+        '\n',
+      ])
+
       return source
     }
     case NODE.REPEAT: {
+      /*
+      :_repeat_label_
+      #if (thing) _generated_done_
+      ... loop code here ...
+      #_repeat_label_
+      :_generated_done_
+      */
       // note this is a repeat counter
       // id: number => number of iterations left
       // and if zero, re-eval the given words to calc number of repeats
@@ -351,34 +395,11 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add('}')
       return source
     }
-    // case NODE.READ: {
-    //   // note this is a read counter
-    //   // we do read loops over arrays of complex data
-    //   const [arraysource, ...words] = ast.words
-    //   const source = write(ast, [
-    //     writeApi(ast, 'readStart', [
-    //       `${context.internal}`,
-    //       transformNode(arraysource),
-    //     ]),
-    //     ';\nwhile (',
-    //     writeApi(ast, 'read', [
-    //       `${context.internal}`,
-    //       ...transformNodes(words),
-    //     ]),
-    //     `) {\n`,
-    //   ])
-    //   context.internal += 1
-
-    //   if (ast.lines) {
-    //     ast.lines.forEach((item) => source.add([transformNode(item), '\n']))
-    //   }
-
-    //   source.add('}')
-    //   return source
-    // }
     case NODE.BREAK:
+      // escape while / repeat loop
       return write(ast, `break;\n`)
     case NODE.CONTINUE:
+      // skip to next while / repeat iteration
       return write(ast, `continue;\n`)
     // expressions
     case NODE.OR:

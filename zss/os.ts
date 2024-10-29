@@ -3,7 +3,7 @@ import { MESSAGE_FUNC, parsetarget } from './device'
 import { api_error } from './device/api'
 import { DRIVER_TYPE, loadfirmware } from './firmware/boot'
 import { GeneratorBuild, compile } from './lang/generator'
-import { ispresent } from './mapping/types'
+import { ispresent, isstring } from './mapping/types'
 
 export type OS_INVOKE = (
   id: string,
@@ -85,18 +85,20 @@ export function createos() {
             api_error('os', 'build', `$grey${index + 1} $grey${line}`)
           })
 
-          const [hline, hindex] = codelines[errorline]
-          const start = (primary.column ?? 1) - 1
-          const end = start + primary.length
-          const hlinepadded = start < hline.length ? hline : `${hline}*`
-          const a = hlinepadded.substring(0, start)
-          const b = hlinepadded.substring(start, end)
-          const c = hlinepadded.substring(end)
-          api_error(
-            'os',
-            'build',
-            `$red${hindex + 1} $grey${a}$red${b}$grey${c}`,
-          )
+          const [hline, hindex] = codelines[errorline] ?? []
+          if (isstring(hline) && ispresent(hindex)) {
+            const start = (primary.column ?? 1) - 1
+            const end = start + primary.length
+            const hlinepadded = start < hline.length ? hline : `${hline}*`
+            const a = hlinepadded.substring(0, start)
+            const b = hlinepadded.substring(start, end)
+            const c = hlinepadded.substring(end)
+            api_error(
+              'os',
+              'build',
+              `$red${hindex + 1} $grey${a}$red${b}$grey${c}`,
+            )
+          }
 
           primary.message.split('\n').forEach((message) => {
             api_error('os', 'build', message)
