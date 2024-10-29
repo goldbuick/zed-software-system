@@ -139,6 +139,16 @@ export function memoryreadbookbysoftware(
   return memoryreadbookbyaddress(MEMORY.software[slot])
 }
 
+export function memorycreatesoftwarebook(maybename?: string) {
+  const book = createbook([])
+  if (isstring(maybename)) {
+    book.name = maybename
+  }
+  memorysetbook(book)
+  tape_info('memory', `created [book] ${book.name}`)
+  return book
+}
+
 export function memoryensuresoftwarebook(
   slot: keyof typeof MEMORY.software,
   maybename?: string,
@@ -157,12 +167,7 @@ export function memoryensuresoftwarebook(
 
   // create book
   if (!ispresent(book)) {
-    book = createbook([])
-    if (isstring(maybename)) {
-      book.name = maybename
-    }
-    memorysetbook(book)
-    tape_info('memory', `created [book] ${book.name}`)
+    book = memorycreatesoftwarebook(maybename)
   }
 
   // success

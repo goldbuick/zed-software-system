@@ -12,12 +12,14 @@ import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryclearbook,
+  memorycreatesoftwarebook,
   memoryensuresoftwarebook,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
   memoryreadchip,
   memoryreadcontext,
+  memorysetbook,
   memorysetsoftwarebook,
 } from 'zss/memory'
 import {
@@ -25,6 +27,7 @@ import {
   bookreadcodepagebyaddress,
   bookreadflag,
   booksetflag,
+  createbook,
 } from 'zss/memory/book'
 import { codepagereadname, codepagereadtypetostring } from 'zss/memory/codepage'
 
@@ -138,11 +141,11 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('bookcreate', (chip, words) => {
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
+    const [maybename] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.MAYBE_STRING,
     ])
 
-    const book = memoryensuresoftwarebook('main', name)
+    const book = memorycreatesoftwarebook(maybename)
     if (ispresent(book)) {
       chip.command('bookopen', book.id)
     }

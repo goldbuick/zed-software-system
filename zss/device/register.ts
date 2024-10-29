@@ -1,5 +1,4 @@
 import { createdevice } from 'zss/device'
-import { doasync } from 'zss/mapping/func'
 import { ispresent, isstring } from 'zss/mapping/types'
 
 import {
@@ -72,7 +71,7 @@ const register = createdevice(
       case 'error:login:player':
         tape_crash(register.name())
         break
-      case 'ready':
+      case 'ready': {
         if (!ispresent(message.player)) {
           return
         }
@@ -85,6 +84,7 @@ const register = createdevice(
           vm_init(register.name(), player)
         }
         break
+      }
       case 'ackinit': {
         if (!ispresent(message.player)) {
           return
@@ -113,13 +113,7 @@ const register = createdevice(
         }
         break
       case 'nodetrash':
-        doasync('register:nodetrash', async () => await erasebiosnode())
-        break
-      case 'biosflash':
-        doasync('register:biosflash', async () => await writebiosbooks())
-        break
-      case 'biostrash':
-        doasync('register:biostrash', async () => await erasebiosbooks())
+        erasebiosnode()
         break
       case 'second':
         ++keepalive
