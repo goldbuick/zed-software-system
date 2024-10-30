@@ -15,7 +15,7 @@ import {
   isstring,
 } from './mapping/types'
 import { memoryreadcontext } from './memory'
-import { WORD, WORD_RESULT } from './memory/word'
+import { WORD, WORD_RESULT } from './memory/types'
 
 export const CONFIG = { HALT_AT_COUNT: 64 }
 
@@ -54,6 +54,7 @@ export type CHIP = {
   isended: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
+  goto: (label: string) => void
   hm: () => number
   yield: () => void
   sy: () => boolean
@@ -286,6 +287,9 @@ export function createchip(id: string, build: GeneratorBuild) {
     },
     shouldhalt() {
       return loops++ > CONFIG.HALT_AT_COUNT
+    },
+    goto(label) {
+      invokecommand('send', [label])
     },
     hm() {
       const target = message?.target ?? ''

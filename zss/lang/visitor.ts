@@ -70,6 +70,7 @@ export enum NODE {
   LITERAL,
   // structure
   IF,
+  IF_BLOCK,
   ELSE_IF,
   ELSE,
   // FUNC,
@@ -77,7 +78,6 @@ export enum NODE {
   BREAK,
   CONTINUE,
   REPEAT,
-  READ,
   // expressions
   OR,
   AND,
@@ -168,11 +168,17 @@ type CodeNodeData =
       type: NODE.IF
       method: string
       words: CodeNode[]
+      blocks: CodeNode[]
+    }
+  | {
+      type: NODE.IF_BLOCK
       lines: CodeNode[]
+      altlines: CodeNode[]
     }
   | {
       type: NODE.ELSE_IF
       method: string
+      skipto: string
       words: CodeNode[]
       lines: CodeNode[]
     }
@@ -187,17 +193,17 @@ type CodeNodeData =
       words: CodeNode[]
       lines: CodeNode[]
     }
-  | { type: NODE.BREAK }
-  | { type: NODE.CONTINUE }
+  | {
+      type: NODE.BREAK
+      skipto: string
+    }
+  | {
+      type: NODE.CONTINUE
+      skipto: string
+    }
   | {
       type: NODE.REPEAT
       words: CodeNode[]
-      lines: CodeNode[]
-    }
-  | {
-      type: NODE.READ
-      words: CodeNode[]
-      flags: string[]
       lines: CodeNode[]
     }
   | {
@@ -512,9 +518,6 @@ class ScriptVisitor
     if (ctx.command_if) {
       return this.go(ctx.command_if)
     }
-    // if (ctx.command_read) {
-    //   return this.go(ctx.command_read)
-    // }
     if (ctx.command_while) {
       return this.go(ctx.command_while)
     }
@@ -557,17 +560,24 @@ class ScriptVisitor
       type: NODE.IF,
       method: 'if',
       words: this.go(ctx.words),
-      lines: this.go(ctx.command_if_block),
+      blocks: this.go(ctx.command_if_block),
     })
   }
 
   command_if_block(ctx: Command_if_blockCstChildren) {
-    return [
-      this.go(ctx.do_inline),
-      this.go(ctx.do_block),
-      this.go(ctx.command_else_if),
-      this.go(ctx.command_else),
-    ].flat()
+    return createcodenode(ctx, {
+      type: NODE.IF_BLOCK,
+      lines: [
+        // if stmt logic
+        this.go(ctx.do_inline),
+        this.go(ctx.do_block),
+      ].flat(),
+      altlines: [
+        // other lines of logic
+        this.go(ctx.command_else_if),
+        this.go(ctx.command_else),
+      ].flat(),
+    })
   }
 
   command_block(ctx: Command_blockCstChildren) {
@@ -578,6 +588,7 @@ class ScriptVisitor
     return createcodenode(ctx, {
       type: NODE.ELSE_IF,
       method: 'if',
+      skipto: '',
       words: this.go(ctx.words),
       lines: this.go(ctx.command_block),
     })
@@ -612,24 +623,17 @@ class ScriptVisitor
     })
   }
 
-  // command_read(ctx: Command_readCstChildren) {
-  //   return createcodenode(ctx, {
-  //     type: NODE.READ,
-  //     flags: ctx.token_stringliteral.map((token) => tokenstring([token], '')),
-  //     words: this.go(ctx.words),
-  //     lines: this.go(ctx.command_loop),
-  //   })
-  // }
-
   command_break(ctx: Command_breakCstChildren) {
     return createcodenode(ctx, {
       type: NODE.BREAK,
+      skipto: '',
     })
   }
 
   command_continue(ctx: Command_continueCstChildren) {
     return createcodenode(ctx, {
       type: NODE.CONTINUE,
+      skipto: '',
     })
   }
 
