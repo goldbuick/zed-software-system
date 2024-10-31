@@ -2,9 +2,6 @@ import { useThree } from '@react-three/fiber'
 import { deepClone, _areEquals } from 'fast-json-patch'
 import React, { useState } from 'react'
 import { gadgetserver_clearscroll } from 'zss/device/api'
-import { hub } from 'zss/hub'
-import { clamp } from 'zss/mapping/number'
-
 import {
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
@@ -12,7 +9,9 @@ import {
   PANEL_TYPE,
   PANEL_ITEM,
   LAYER,
-} from '../data/types'
+} from 'zss/gadget/data/types'
+import { hub } from 'zss/hub'
+import { clamp } from 'zss/mapping/number'
 
 import { StaticDither } from './dither'
 import { Framed } from './framed'

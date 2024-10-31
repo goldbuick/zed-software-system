@@ -28,7 +28,8 @@
 :wiggle
 
 #foreach eek 1 to 10 do
- "eek $eek" ?i
+eek: $eek
+#repeat 32 ?i
 #done
 
 #waitfor inputmenu

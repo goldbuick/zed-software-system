@@ -37,7 +37,12 @@ export const GADGET_FIRMWARE = createfirmware({
   },
   tock(chip) {
     const memory = memoryreadchip(chip.id())
-    gadgetcheckscroll(memory.player)
+    const ticker = gadgetcheckscroll(memory.player)
+    if (ticker && ispresent(memory.object)) {
+      const timestamp = chip.timestamp()
+      memory.object.tickertext = ticker
+      memory.object.tickertime = timestamp
+    }
   },
 })
   // gadget output & ui

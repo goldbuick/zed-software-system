@@ -147,10 +147,22 @@ export function gadgetcheckset(chip: CHIP, name: string, value: WORD) {
 
 export function gadgetcheckscroll(player: string) {
   // get state
+  let ticker = ''
   const shared = gadgetstate(player)
-  shared.layout = shared.layout.filter(
-    (item) => item.edge !== PANEL_TYPE.SCROLL || item.text.length > 0,
-  )
+
+  shared.layout = shared.layout.filter((item) => {
+    if (item.edge === PANEL_TYPE.SCROLL) {
+      const [line] = item.text
+      // catch single lines of text and turn into ticker messages
+      if (isstring(line) && item.text.length === 1) {
+        ticker = line
+      }
+      return item.text.length > 1
+    }
+    return true
+  })
+
+  return ticker
 }
 
 export function gadgetpanel(
