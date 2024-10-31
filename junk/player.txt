@@ -1,7 +1,4 @@
 @player
-#char 2
-#bg blue
-#cycle 1
 
 ' create ui
 #gadget right
@@ -9,7 +6,10 @@
 - - - proto - - -
  - - - editr - - -
 "                "
-!hotkey pe_selectbook b;Select Book
+
+!hotkey playdoot d;play Doot
+!hotkey playbook p;Play book
+!hotkey wiggle w;Wiggle
 
 :head
 #idle
@@ -25,12 +25,23 @@
 
 #main
 
-:pe_selectbook
-' list books to open
-?i#head
-
 :wiggle
-#repeat 32 ?rnd
+
+#foreach eek 1 to 10 do
+ "eek $eek" ?i
+#done
+
+#waitfor inputmenu
+
 #main
 
+:playdoot
+#play 0xx1xx2xxPxx4xx5xx6xx7xx8xx9
+#main
 
+:playbook
+!song1; Play Song1
+!song2; Play Song2
+!song3; Play Song3
+!song4; Play Song4
+#idle#main
