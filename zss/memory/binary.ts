@@ -78,6 +78,8 @@ export const BIN_BOARD_ELEMENT = bin.object({
   pushable: bin.optional(bin.bool),
   collision: bin.optional(bin.byte),
   destructible: bin.optional(bin.bool),
+  tickertext: bin.optional(bin.string),
+  tickertime: bin.optional(bin.i32),
   // config
   p1: bin.optional(BIN_WORD),
   p2: bin.optional(BIN_WORD),

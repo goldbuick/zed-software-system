@@ -415,13 +415,12 @@ function transformNode(ast: CodeNode): SourceNode {
         ';\n',
       ])
       source.add([writelabel(ast, repeatloop, repeatloopindex), `\n`])
-      source.add([
-        'if (!',
-        writeApi(ast, 'repeat', [`${context.internal}`]),
-        `)${BUMP_CODE}{ `,
-        writegoto(ast, repeatdone),
-        ` }\n`,
-      ])
+      source.add(
+        [
+          ['if (!', writeApi(ast, 'repeat', [`${context.internal}`]), `)`],
+          [`${BUMP_CODE}{ `, writegoto(ast, repeatdone), ` }\n`],
+        ].flat(),
+      )
       context.internal += 1
 
       // repeat true logic

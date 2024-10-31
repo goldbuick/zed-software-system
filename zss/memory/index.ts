@@ -7,8 +7,13 @@ import {
   parsetextfile,
   parsezipfile,
 } from 'zss/firmware/parsefile'
-import { createreadcontext } from 'zss/firmware/wordtypes'
+import { createreadcontext, PT } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
+import {
+  createwritetextcontext,
+  tokenizeandmeasuretextformat,
+  tokenizeandwritetextformat,
+} from 'zss/gadget/data/textformat'
 import {
   COLOR,
   createdither,
@@ -22,7 +27,7 @@ import {
 import { average } from 'zss/mapping/array'
 import { createpid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import { CYCLE_DEFAULT } from 'zss/mapping/tick'
+import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
@@ -359,6 +364,15 @@ export function memorytick(os: OS, timestamp: number) {
       context.object = item.object
       context.inputcurrent = undefined
 
+      // clear ticker text after X number of ticks
+      if (isnumber(context.object?.tickertime)) {
+        const delta = timestamp - context.object?.tickertime
+        if (delta > TICK_FPS * 5) {
+          context.object.tickertext = undefined
+          context.object.tickertime = undefined
+        }
+      }
+
       // read cycle from element kind
       const maybekindcycle = boardelementreadstat(
         bookelementkindread(mainbook, item.object),
@@ -522,6 +536,27 @@ export function memoryloadfile(
   handlefiletype(file?.type ?? '')
 }
 
+let decoticker = 0
+function readdecotickercolor(): COLOR {
+  switch (decoticker++) {
+    case 0:
+      return COLOR.BLUE
+    case 1:
+      return COLOR.GREEN
+    case 2:
+      return COLOR.CYAN
+    case 3:
+      return COLOR.RED
+    case 4:
+      return COLOR.PURPLE
+    case 5:
+      return COLOR.YELLOW
+    default:
+      decoticker = 0
+      return COLOR.WHITE
+  }
+}
+
 function memoryconverttogadgetlayers(
   player: string,
   index: number,
@@ -547,6 +582,19 @@ function memoryconverttogadgetlayers(
   const objectindex = i++
   const objects = createsprites(player, objectindex)
   layers.push(objects)
+
+  const tickers = createtiles(player, i++, boardwidth, boardheight, COLOR.CLEAR)
+  layers.push(tickers)
+
+  const tickercontext = {
+    ...createwritetextcontext(
+      BOARD_WIDTH,
+      BOARD_HEIGHT,
+      readdecotickercolor(),
+      COLOR.CLEAR,
+    ),
+    ...tickers,
+  }
 
   const control = createlayercontrol(player, i++)
   // hack to keep only one control layer
@@ -604,6 +652,36 @@ function memoryconverttogadgetlayers(
     // write to borrow buffer
     if (sprite.color !== (COLOR.CLEAR as number)) {
       borrowbuffer[li] = sprite.color
+    }
+
+    // write ticker messages
+    if (
+      isstring(object.tickertext) &&
+      isnumber(object.tickertime) &&
+      object.tickertext.length
+    ) {
+      // calc placement
+      const TICKER_WIDTH = 15
+      const measure = tokenizeandmeasuretextformat(
+        object.tickertext,
+        TICKER_WIDTH,
+        BOARD_HEIGHT,
+      )
+      const width = (measure?.x ?? 2) - 1
+      const x = object.x ?? 0
+      const y = object.y ?? 0
+      const upper = y < BOARD_HEIGHT * 0.5
+      tickercontext.x = Math.round(x - width * 0.5)
+      tickercontext.y = y + (upper ? 1 : -1)
+      // clip placement
+      if (tickercontext.x + width >= BOARD_WIDTH) {
+        tickercontext.x = BOARD_WIDTH - width - 1
+      }
+      if (tickercontext.x < 0) {
+        tickercontext.x = 0
+      }
+      // render text
+      tokenizeandwritetextformat(object.tickertext, tickercontext, true)
     }
 
     // inform control layer where to focus

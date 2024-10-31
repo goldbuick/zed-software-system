@@ -9,7 +9,7 @@
 - - - proto - - -
  - - - editr - - -
 "                "
-!hotkey pe_selectbook b;Select Book
+!hotkey wiggle b;Wiggle
 
 :head
 #idle
@@ -25,12 +25,11 @@
 
 #main
 
-:pe_selectbook
-' list books to open
-?i#head
-
 :wiggle
-#repeat 32 ?rnd
+#foreach eek 1 to 10 do
+eek: $eek
+#repeat 32 ?i
+#done
 #main
 
 

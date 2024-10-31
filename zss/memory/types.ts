@@ -41,6 +41,8 @@ export type BOARD_ELEMENT = {
   pushable?: number
   collision?: COLLISION
   destructible?: number
+  tickertext?: string
+  tickertime?: number
   // config
   p1?: string
   p2?: string

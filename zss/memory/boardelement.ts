@@ -40,6 +40,8 @@ export function exportboardelement(
     pushable: !!boardelement.pushable,
     collision: boardelement.collision,
     destructible: !!boardelement.destructible,
+    tickertext: boardelement.tickertext,
+    tickertime: boardelement.tickertime,
     // common
     p1: exportword(boardelement.p1),
     p2: exportword(boardelement.p2),
@@ -79,6 +81,8 @@ export function importboardelement(
     pushable: boardelement.pushable ? 1 : undefined,
     collision: boardelement.collision,
     destructible: boardelement.destructible ? 1 : undefined,
+    tickertext: boardelement.tickertext,
+    tickertime: boardelement.tickertime,
     // config
     p1: importword(boardelement.p1) as any,
     p2: importword(boardelement.p2) as any,
