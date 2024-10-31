@@ -11,8 +11,8 @@ import {
   deepcopy,
   isarray,
   isequal,
+  isnumber,
   ispresent,
-  isstring,
 } from './mapping/types'
 import { memoryreadcontext } from './memory'
 import { WORD, WORD_RESULT } from './memory/types'
@@ -80,8 +80,8 @@ export type CHIP = {
   if: (...words: WORD[]) => WORD_RESULT
   repeatstart: (index: number, ...words: WORD[]) => void
   repeat: (index: number) => WORD_RESULT
-  readstart: (index: number, name: WORD) => void
-  read: (index: number, ...words: WORD[]) => WORD_RESULT
+  foreachstart: (...words: WORD[]) => WORD_RESULT
+  foreach: (...words: WORD[]) => WORD_RESULT
   or: (...words: WORD[]) => WORD
   and: (...words: WORD[]) => WORD
   not: (...words: WORD[]) => WORD
@@ -133,9 +133,6 @@ export function createchip(id: string, build: GeneratorBuild) {
   // tracking for repeats
   const repeats: Record<number, number> = {}
   const repeatscommand: Record<number, undefined | WORD[]> = {}
-
-  // tracking for reads
-  const reads: Record<number, WORD[]> = {}
 
   // pause until next tick
   let yieldstate = false
@@ -450,59 +447,76 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       return result ? 1 : 0
     },
-    readstart(index, name) {
-      if (!isstring(name)) {
-        // todo throw error
-        return
+    foreachstart(...words) {
+      const [name, maybemin, maybemax, maybestep] = readargs(
+        memoryreadcontext(chip, words),
+        0,
+        [
+          ARG_TYPE.STRING,
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.MAYBE_NUMBER,
+        ],
+      )
+
+      let min = Math.min(maybemin, maybemax)
+      let max = Math.max(maybemin, maybemax)
+
+      // step 0 is invalid, force to 1
+      const step = (maybestep ?? 0) || 1
+      if (step < 0) {
+        const t = min
+        min = max
+        max = t
       }
 
-      // expects name to be a string
-      const arraysource: any[] = chip.get(name) ?? []
+      // set init state
+      chip.set(name, min - step)
 
-      // and chip.get(name) to return an object or an array
-      reads[index] = isarray(arraysource) ? arraysource : [arraysource]
+      return 0
     },
-    read(index, ...words) {
-      const arraysource = reads[index]
+    foreach(...words) {
+      const [name, maybemin, maybemax, maybestep, ii] = readargs(
+        memoryreadcontext(chip, words),
+        0,
+        [
+          ARG_TYPE.STRING,
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.MAYBE_NUMBER,
+        ],
+      )
 
-      // todo raise error
-      if (isarray(arraysource) === false) {
-        return 0
+      let min = Math.min(maybemin, maybemax)
+      let max = Math.max(maybemin, maybemax)
+
+      // step 0 is invalid, force to 1
+      const step = (maybestep ?? 0) || 1
+      if (step < 0) {
+        const t = min
+        min = max
+        max = t
       }
 
-      // read next value
-      const next = arraysource.shift()
-      if (next === undefined) {
-        return 0
+      // get current value and get an init state
+      let value = chip.get(name)
+      if (!isnumber(value) || value < min || value > max) {
+        // reset on nan or invalid range
+        value = min
+      } else {
+        value += step
       }
 
-      // map values from object or map number. string to counter
-      const names = words.map(maptostring)
-
-      switch (typeof next) {
-        case 'number':
-        case 'string':
-          names.forEach((key) => {
-            chip.set(key, next)
-          })
-          break
-        case 'object':
-          if (Array.isArray(next)) {
-            //
-          } else {
-            names.forEach((key) => {
-              const value = next[key]
-              // todo validate type on value
-              chip.set(key, value)
-            })
-          }
-          break
-        default:
-          // todo raise about not being able to read value
-          break
+      const result = value <= max ? 1 : 0
+      if (result) {
+        // only set when within the value range A to B
+        chip.set(name, value)
+        if (ii < words.length) {
+          chip.command(...words.slice(ii))
+        }
       }
 
-      return 1
+      return result
     },
     or(...words) {
       let lastvalue = 0

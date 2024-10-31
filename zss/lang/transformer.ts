@@ -298,7 +298,7 @@ function transformNode(ast: CodeNode): SourceNode {
 
       // check if conditional
       const source = write(ast, [
-        '\nif (!',
+        'if (!',
         writeApi(ast, ast.method, transformNodes(ast.words)),
         `)${BUMP_CODE}{ `,
         writegoto(ast, skipif),
@@ -314,7 +314,7 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add([writegoto(ast, skipto), `\n`])
 
       // if false (alt) logic
-      source.add(writelabel(ast, skipif, skipifindex))
+      source.add([writelabel(ast, skipif, skipifindex), `\n`])
       ast.blocks.forEach((block) => {
         if (block.type === NODE.IF_BLOCK) {
           block.altlines.forEach((item) => {
@@ -327,7 +327,7 @@ function transformNode(ast: CodeNode): SourceNode {
       })
 
       // all done
-      source.add(writelabel(ast, skipto, skiptoindex))
+      source.add([writelabel(ast, skipto, skiptoindex), `\n`])
 
       return source
     }
@@ -337,7 +337,7 @@ function transformNode(ast: CodeNode): SourceNode {
 
       // check if conditional
       const source = write(ast, [
-        '\nif (!',
+        'if (!',
         writeApi(ast, ast.method, transformNodes(ast.words)),
         `)${BUMP_CODE}{ `,
         writegoto(ast, skipelseif),
@@ -349,7 +349,7 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add([writegoto(ast, ast.skipto), `\n`])
 
       // if false logic
-      source.add(writelabel(ast, skipelseif, skipelseifindex))
+      source.add([writelabel(ast, skipelseif, skipelseifindex), `\n`])
 
       return source
     }
@@ -367,7 +367,11 @@ function transformNode(ast: CodeNode): SourceNode {
 
       const source = write(ast, [
         writelabel(ast, whileloop, whileloopindex),
-        '\nif (!',
+        `\n`,
+      ])
+
+      source.add([
+        'if (!',
         writeApi(ast, 'if', transformNodes(ast.words)),
         `)${BUMP_CODE}{ `,
         writegoto(ast, whiledone),
@@ -389,7 +393,7 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add([writegoto(ast, whileloop), `\n`])
 
       // while false logic
-      source.add(writelabel(ast, whiledone, whiledoneindex))
+      source.add([writelabel(ast, whiledone, whiledoneindex), `\n`])
 
       return source
     }
@@ -435,7 +439,75 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add([writegoto(ast, repeatloop), `\n`])
 
       // repeat false logic
-      source.add(writelabel(ast, repeatdone, repeatdoneindex))
+      source.add([writelabel(ast, repeatdone, repeatdoneindex), `\n`])
+
+      return source
+    }
+    case NODE.WAITFOR: {
+      const waitforloop = genlabel()
+      const waitforloopindex = addlabel(waitforloop)
+      const waitfordone = genlabel()
+      const waitfordoneindex = addlabel(waitfordone)
+
+      // waitfor build
+      const source = write(ast, [
+        writelabel(ast, waitforloop, waitforloopindex),
+        '\n',
+      ])
+
+      source.add([
+        'if (',
+        writeApi(ast, 'if', transformNodes(ast.words)),
+        `)${BUMP_CODE}{ `,
+        writegoto(ast, waitfordone),
+        ` }\n`,
+      ])
+
+      // waitfor false logic
+      source.add(WAIT())
+      source.add([writegoto(ast, waitforloop), `\n`])
+
+      // waitfor true logic
+      source.add([writelabel(ast, waitfordone, waitfordoneindex), `\n`])
+
+      return source
+    }
+    case NODE.FOREACH: {
+      const foreachloop = genlabel()
+      const foreachloopindex = addlabel(foreachloop)
+      const foreachdone = genlabel()
+      const foreachdoneindex = addlabel(foreachdone)
+
+      // foreach build
+      const source = write(ast, [
+        writeApi(ast, 'foreachstart', transformNodes(ast.words)),
+        ';\n',
+      ])
+      source.add([writelabel(ast, foreachloop, foreachloopindex), '\n'])
+      source.add([
+        'if (!',
+        writeApi(ast, 'foreach', transformNodes(ast.words)),
+        `)${BUMP_CODE}{ `,
+        writegoto(ast, foreachdone),
+        ` }\n`,
+      ])
+
+      // foreach true logic
+      ast.lines.forEach((item) => {
+        switch (item.type) {
+          case NODE.BREAK:
+            item.skipto = foreachdone
+            break
+          case NODE.CONTINUE:
+            item.skipto = foreachloop
+            break
+        }
+        source.add([transformNode(item), '\n'])
+      })
+      source.add([writegoto(ast, foreachloop), `\n`])
+
+      // foreach false logic
+      source.add([writelabel(ast, foreachdone, foreachdoneindex), `\n`])
 
       return source
     }

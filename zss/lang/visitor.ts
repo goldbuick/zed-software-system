@@ -18,18 +18,18 @@ import {
   Command_continueCstChildren,
   Command_else_ifCstChildren,
   Command_elseCstChildren,
+  Command_foreachCstChildren,
   Command_if_blockCstChildren,
   Command_ifCstChildren,
   Command_playCstChildren,
   Command_repeatCstChildren,
+  Command_waitforCstChildren,
   Command_whileCstChildren,
   CommandsCstChildren,
   Comp_opCstChildren,
   ComparisonCstChildren,
   Do_blockCstChildren,
   Do_inlineCstChildren,
-  Do_lineCstChildren,
-  Do_stmtCstChildren,
   Expr_valueCstChildren,
   ExprCstChildren,
   FactorCstChildren,
@@ -78,6 +78,8 @@ export enum NODE {
   BREAK,
   CONTINUE,
   REPEAT,
+  WAITFOR,
+  FOREACH,
   // expressions
   OR,
   AND,
@@ -203,6 +205,15 @@ type CodeNodeData =
     }
   | {
       type: NODE.REPEAT
+      words: CodeNode[]
+      lines: CodeNode[]
+    }
+  | {
+      type: NODE.WAITFOR
+      words: CodeNode[]
+    }
+  | {
+      type: NODE.FOREACH
       words: CodeNode[]
       lines: CodeNode[]
     }
@@ -384,33 +395,7 @@ class ScriptVisitor
   }
 
   do_block(ctx: Do_blockCstChildren) {
-    return this.go(ctx.do_line)
-  }
-
-  do_line(ctx: Do_lineCstChildren) {
-    return this.go(ctx.do_stmt)
-  }
-
-  do_stmt(ctx: Do_stmtCstChildren) {
-    if (ctx.stmt_stat) {
-      return this.go(ctx.stmt_stat)
-    }
-    if (ctx.stmt_text) {
-      return this.go(ctx.stmt_text)
-    }
-    if (ctx.stmt_comment) {
-      return this.go(ctx.stmt_comment)
-    }
-    if (ctx.stmt_command) {
-      return this.go(ctx.stmt_command)
-    }
-    if (ctx.stmt_hyperlink) {
-      return this.go(ctx.stmt_hyperlink)
-    }
-    if (ctx.short_commands) {
-      return [this.go(ctx.short_commands), this.go(ctx.commands)].flat()
-    }
-    return []
+    return this.go(ctx.line)
   }
 
   do_inline(ctx: Do_inlineCstChildren) {
@@ -524,6 +509,12 @@ class ScriptVisitor
     if (ctx.command_repeat) {
       return this.go(ctx.command_repeat)
     }
+    if (ctx.command_waitfor) {
+      return this.go(ctx.command_waitfor)
+    }
+    if (ctx.command_foreach) {
+      return this.go(ctx.command_foreach)
+    }
     if (ctx.command_break) {
       return this.go(ctx.command_break)
     }
@@ -618,6 +609,21 @@ class ScriptVisitor
   command_repeat(ctx: Command_repeatCstChildren) {
     return createcodenode(ctx, {
       type: NODE.REPEAT,
+      words: this.go(ctx.words),
+      lines: this.go(ctx.command_loop),
+    })
+  }
+
+  command_waitfor(ctx: Command_waitforCstChildren) {
+    return createcodenode(ctx, {
+      type: NODE.WAITFOR,
+      words: this.go(ctx.words),
+    })
+  }
+
+  command_foreach(ctx: Command_foreachCstChildren) {
+    return createcodenode(ctx, {
+      type: NODE.FOREACH,
       words: this.go(ctx.words),
       lines: this.go(ctx.command_loop),
     })
