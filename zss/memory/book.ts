@@ -1,4 +1,5 @@
 import { PT, STR_KIND } from 'zss/firmware/wordtypes'
+import { COLOR } from 'zss/gadget/data/types'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
@@ -204,6 +205,18 @@ export function bookelementkindread(
     return element.kinddata
   }
   return undefined
+}
+
+export function bookelementdisplayread(
+  book: MAYBE<BOOK>,
+  element: MAYBE<BOARD_ELEMENT>,
+) {
+  const kind = bookelementkindread(book, element)
+  return {
+    char: element?.char ?? kind?.char ?? 1,
+    color: element?.color ?? kind?.color ?? COLOR.WHITE,
+    bg: element?.bg ?? kind?.bg ?? COLOR.BORROW,
+  }
 }
 
 export function bookreadobject(

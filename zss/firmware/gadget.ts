@@ -1,4 +1,5 @@
 import { maptostring } from 'zss/chip'
+import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import {
   gadgetcheckscroll,
@@ -7,9 +8,10 @@ import {
   gadgetpanel,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
+import { COLOR, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadchip, memoryreadcontext } from 'zss/memory'
+import { bookelementdisplayread } from 'zss/memory/book'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -42,6 +44,9 @@ export const GADGET_FIRMWARE = createfirmware({
       const timestamp = chip.timestamp()
       memory.object.tickertext = ticker
       memory.object.tickertime = timestamp
+      // send message
+      const display = bookelementdisplayread(memory.book, memory.object)
+      tape_info(`$${COLOR[display.color]}$${display.char}`, ticker)
     }
   },
 })

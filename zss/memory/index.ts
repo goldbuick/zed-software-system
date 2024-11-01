@@ -39,6 +39,7 @@ import {
 import { boardelementreadstat } from './boardelement'
 import {
   bookboardtick,
+  bookelementdisplayread,
   bookelementkindread,
   bookplayerreadboard,
   bookplayerreadboards,
@@ -624,7 +625,7 @@ function memoryconverttogadgetlayers(
 
     // should we have bg transparent or match the bg color of the terrain ?
     const id = object.id ?? ''
-    const kind = bookelementkindread(book, object)
+    const display = bookelementdisplayread(book, object)
     const sprite = createsprite(player, objectindex, id)
     const lx = object.lx ?? object.x ?? 0
     const ly = object.ly ?? object.y ?? 0
@@ -633,9 +634,9 @@ function memoryconverttogadgetlayers(
     // setup sprite
     sprite.x = object.x ?? 0
     sprite.y = object.y ?? 0
-    sprite.char = object.char ?? kind?.char ?? 1
-    sprite.color = object.color ?? kind?.color ?? COLOR.WHITE
-    sprite.bg = object.bg ?? kind?.bg ?? COLOR.BORROW
+    sprite.char = object.char ?? display?.char ?? 1
+    sprite.color = object.color ?? display?.color ?? COLOR.WHITE
+    sprite.bg = object.bg ?? display?.bg ?? COLOR.BORROW
     objects.sprites.push(sprite)
 
     // plot shadow

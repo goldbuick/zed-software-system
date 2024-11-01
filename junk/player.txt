@@ -6,9 +6,7 @@
 - - - proto - - -
  - - - editr - - -
 "                "
-
-!hotkey playdoot d;play Doot
-!hotkey playbook p;Play book
+!hotkey bongle b;Bongle
 !hotkey wiggle w;Wiggle
 
 :head
@@ -25,24 +23,15 @@
 
 #main
 
-:wiggle
+:bongle
+"$red$3$yellow$3$3$grey$3$3"
+#main
 
+:wiggle
 #foreach eek 1 to 10 do
 eek: $eek
 #repeat 32 ?i
 #done
-
-#waitfor inputmenu
-
 #main
 
-:playdoot
-#play 0xx1xx2xxPxx4xx5xx6xx7xx8xx9
-#main
 
-:playbook
-!song1; Play Song1
-!song2; Play Song2
-!song3; Play Song3
-!song4; Play Song4
-#idle#main
