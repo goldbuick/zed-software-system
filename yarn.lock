@@ -827,11 +827,6 @@
   resolved "https://registry.yarnpkg.com/@msgpack/msgpack/-/msgpack-2.8.0.tgz#4210deb771ee3912964f14a15ddfb5ff877e70b9"
   integrity sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==
 
-"@msgpack/msgpack@^3.0.0-beta2":
-  version "3.0.0-beta2"
-  resolved "https://registry.yarnpkg.com/@msgpack/msgpack/-/msgpack-3.0.0-beta2.tgz#5bccee30f84df220b33905e3d8249ba96deca0b7"
-  integrity sha512-y+l1PNV0XDyY8sM3YtuMLK5vE3/hkfId+Do8pLo/OPxfxuFAUwcGz3oiiUuV46/aBpwTzZ+mRWVMtlSKbradhw==
-
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -5442,10 +5437,10 @@ typed-array-length@^1.0.6:
     is-typed-array "^1.1.13"
     possible-typed-array-names "^1.0.0"
 
-typed-binary@^4.0.1:
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/typed-binary/-/typed-binary-4.1.1.tgz#5e57a111cb78b0331f7482ff786784316aa27989"
-  integrity sha512-u1eE2LCTv8oOZk5NatIG8vQTMh4r54wXbY5rAvauUNhVQF0wYPeRtTREKi0HBFGKpS/q/G6G7picEyaQ3rf+RA==
+typed-binary@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.npmjs.org/typed-binary/-/typed-binary-4.2.0.tgz#89bb6d7cac33cbd309192a4c12fe97b0fa798ad0"
+  integrity sha512-K8lXyQUAk095YkIkFqV929+epoQqxB0lsx9TBd1mb79565eVWXIRa7emCArRajH+g5nYa3t/ZoaSQIl0RDQMsQ==
 
 typescript@^5.2.2:
   version "5.6.3"

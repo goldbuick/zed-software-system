@@ -23,6 +23,15 @@ import {
   importcodepage,
 } from './codepage'
 import {
+  FORMAT_ENTRY,
+  formatentrylist,
+  formatentrystring,
+  formatlist,
+  formatuserlist,
+  formatuserstring,
+  unpackformatlist,
+} from './format'
+import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
@@ -48,51 +57,50 @@ export function createbook(pages: CODE_PAGE[]): BOOK {
   }
 }
 
+enum BOOK_KEYS {
+  id,
+  name,
+  pages,
+  flags,
+  players,
+}
+
 // safe to serialize copy of book
-export function exportbook(book: MAYBE<BOOK>): MAYBE<BIN_BOOK> {
+export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_ENTRY> {
   if (!ispresent(book)) {
     return
   }
 
   const flags = Object.keys(book.flags).map((player) => {
     const values = book.flags[player]
-    return {
+    const names = Object.keys(values)
+    return formatuserlist(
       player,
-      values: Object.keys(values)
-        .map((name) => exportwordentry(name, values[name]))
-        .filter(ispresent),
-    }
+      names.map((name) => exportwordentry(name, values[name])),
+    )
   })
 
   const players = Object.keys(book.players).map((player) => {
-    const board = book.players[player]
-    return {
-      player,
-      board,
-    }
+    return formatuserstring(player, book.players[player])
   })
 
-  return {
-    id: book.id,
-    name: book.name,
-    pages: book.pages.map(exportcodepage).filter(ispresent),
-    flags,
-    players,
-  }
+  return formatlist([
+    formatentrystring(BOOK_KEYS.id, book.id),
+    formatentrystring(BOOK_KEYS.name, book.name),
+    formatentrylist(BOOK_KEYS.pages, book.pages.map(exportcodepage)),
+    formatentrylist(BOOK_KEYS.flags, flags),
+    formatentrylist(BOOK_KEYS.players, players),
+  ])
 }
 
 // import json into book
-export function importbook(book: MAYBE<BIN_BOOK>): MAYBE<BOOK> {
-  if (!ispresent(book)) {
+export function importbook(bookentry: MAYBE<FORMAT_ENTRY>): MAYBE<BOOK> {
+  if (!ispresent(bookentry)) {
     return
   }
-  return {
-    id: book.id,
-    name: book.name,
-    pages: book.pages.map(importcodepage).filter(ispresent),
-    flags: {},
-    players: {},
-  }
+  const book = unpackformatlist<BOOK>(bookentry, BOOK_KEYS)
+
+  return book
 }
 
 export function bookhasmatch(book: MAYBE<BOOK>, ids: string[]): boolean {
