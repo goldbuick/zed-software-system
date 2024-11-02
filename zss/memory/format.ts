@@ -355,10 +355,9 @@ export function formatuserlist(
 
 export function packbinary(entry: FORMAT_ENTRY): MAYBE<ArrayBuffer> {
   try {
-    // @ts-expect-error not sure why?
-    const binaryentry = new ArrayBuffer(FORMAT_ENTRY.measure(entry).size)
+    const binaryentry = new ArrayBuffer(FORMAT_ENTRY.maxSize)
     const writer = new bin.BufferWriter(binaryentry)
-    // @ts-expect-error not sure why?
+    // @ts-expect-error too wild
     FORMAT_ENTRY.write(writer, entry)
     return binaryentry
   } catch (err: any) {
@@ -375,10 +374,19 @@ export function unpackbinary(binary: ArrayBuffer): MAYBE<FORMAT_ENTRY> {
   }
 }
 
+export function unpackentry(entry: MAYBE<FORMAT_ENTRY>): MAYBE<FORMAT_ENTRY> {
+  if (ispresent(entry)) {
+    // @ts-expect-error eat it
+    entry.type = parseInt(entry.type, 10)
+  }
+  return entry
+}
+
 export function unpackformatlist<T>(
   entry: MAYBE<FORMAT_ENTRY>,
   keymap: Record<number, string>,
 ): MAYBE<T> {
+  unpackentry(entry)
   if (entry?.type !== FORMAT_TYPE.LIST) {
     return
   }
@@ -386,6 +394,7 @@ export function unpackformatlist<T>(
   const obj: Record<string, any> = {}
   for (let i = 0; i < entry.value.length; ++i) {
     const value = entry.value[i]
+    unpackentry(value)
     switch (value.type) {
       case FORMAT_TYPE.BYTELIST:
       case FORMAT_TYPE.INTLIST:

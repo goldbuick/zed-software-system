@@ -60,6 +60,7 @@
     "maath": "^0.10.8",
     "mime": "^4.0.4",
     "mitt": "^3.0.1",
+    "msgpackr": "^1.11.2",
     "nanoid": "^5.0.3",
     "nanoid-dictionary": "^4.3.0",
     "path-browserify": "^1.0.0",

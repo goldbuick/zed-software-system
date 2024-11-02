@@ -6,7 +6,6 @@ import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
 
 import { checkcollision } from './atomics'
-import { BIN_BOOK } from './binary'
 import {
   boarddeleteobject,
   boardelementapplycolor,
@@ -95,11 +94,8 @@ export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_ENTRY> {
 
 // import json into book
 export function importbook(bookentry: MAYBE<FORMAT_ENTRY>): MAYBE<BOOK> {
-  if (!ispresent(bookentry)) {
-    return
-  }
   const book = unpackformatlist<BOOK>(bookentry, BOOK_KEYS)
-
+  debugger
   return book
 }
 
