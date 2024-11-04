@@ -64,7 +64,7 @@ export async function decompressbooks(base64bytes: string) {
         for (let i = 0; i < files.length; ++i) {
           const file = files[i]
           // uncompress book
-          const bin = await file.async('arraybuffer')
+          const bin = await file.async('uint8array')
           // convert back to json
           const book = importbook(unpackbinary(bin))
           if (ispresent(book)) {

@@ -2,7 +2,7 @@
   "short_name": "zed.cafe",
   "name": "zed.cafe fullscreen",
   "description": "used to pinned to home",
-  "scope": "/zed.cafe/",
+  "scope": "/",
   "background_color": "#5A0FC8",
   "theme_color": "#3c0a86",
   "start_url": "/",

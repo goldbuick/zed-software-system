@@ -4,14 +4,14 @@ import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import {
   FORMAT_ENTRY,
-  formatentrystring,
+  FORMAT_KEY,
   formatlist,
-  formatentrybyte,
-  formatentryint,
+  formatnumber,
+  formatstring,
   unpackformatlist,
 } from './format'
 import { BOARD_ELEMENT, BOARD_ELEMENT_STAT, WORD } from './types'
-import { exportwordcustom, exportwordentry } from './word'
+import { exportword, exportwordcustom, importwordcustom } from './word'
 
 export function createboardelement() {
   const boardelement: BOARD_ELEMENT = {
@@ -50,37 +50,41 @@ enum BOARD_ELEMENT_KEYS {
 // safe to serialize copy of boardelement
 export function exportboardelement(
   boardelement: MAYBE<BOARD_ELEMENT>,
+  key?: FORMAT_KEY,
 ): MAYBE<FORMAT_ENTRY> {
   if (!ispresent(boardelement)) {
     return
   }
-  return formatlist([
-    formatentrystring(BOARD_ELEMENT_KEYS.kind, boardelement.kind),
-    formatentrystring(BOARD_ELEMENT_KEYS.id, boardelement.id),
-    formatentrybyte(BOARD_ELEMENT_KEYS.x, boardelement.x),
-    formatentrybyte(BOARD_ELEMENT_KEYS.y, boardelement.y),
-    formatentrybyte(BOARD_ELEMENT_KEYS.lx, boardelement.lx),
-    formatentrybyte(BOARD_ELEMENT_KEYS.ly, boardelement.ly),
-    formatentrystring(BOARD_ELEMENT_KEYS.code, boardelement.code),
-    formatentrystring(BOARD_ELEMENT_KEYS.name, boardelement.name),
-    formatentrybyte(BOARD_ELEMENT_KEYS.char, boardelement.char),
-    formatentrybyte(BOARD_ELEMENT_KEYS.color, boardelement.color),
-    formatentrybyte(BOARD_ELEMENT_KEYS.bg, boardelement.bg),
-    formatentrybyte(BOARD_ELEMENT_KEYS.pushable, boardelement.pushable),
-    formatentrybyte(BOARD_ELEMENT_KEYS.collision, boardelement.collision),
-    formatentrybyte(BOARD_ELEMENT_KEYS.destructible, boardelement.destructible),
-    formatentrystring(BOARD_ELEMENT_KEYS.tickertext, boardelement.tickertext),
-    formatentryint(BOARD_ELEMENT_KEYS.tickertime, boardelement.tickertime),
-    exportwordentry(BOARD_ELEMENT_KEYS.p1, boardelement.p1),
-    exportwordentry(BOARD_ELEMENT_KEYS.p2, boardelement.p2),
-    exportwordentry(BOARD_ELEMENT_KEYS.p3, boardelement.p3),
-    formatentrybyte(BOARD_ELEMENT_KEYS.cycle, boardelement.cycle),
-    formatentrybyte(BOARD_ELEMENT_KEYS.stepx, boardelement.stepx),
-    formatentrybyte(BOARD_ELEMENT_KEYS.stepy, boardelement.stepy),
-    formatentrystring(BOARD_ELEMENT_KEYS.sender, boardelement.sender),
-    exportwordentry(BOARD_ELEMENT_KEYS.data, boardelement.data),
-    ...exportwordcustom(BOARD_ELEMENT_KEYS, boardelement),
-  ])
+  return formatlist(
+    [
+      formatstring(boardelement.kind, BOARD_ELEMENT_KEYS.kind),
+      formatstring(boardelement.id, BOARD_ELEMENT_KEYS.id),
+      formatnumber(boardelement.x, BOARD_ELEMENT_KEYS.x),
+      formatnumber(boardelement.y, BOARD_ELEMENT_KEYS.y),
+      formatnumber(boardelement.lx, BOARD_ELEMENT_KEYS.lx),
+      formatnumber(boardelement.ly, BOARD_ELEMENT_KEYS.ly),
+      formatstring(boardelement.code, BOARD_ELEMENT_KEYS.code),
+      formatstring(boardelement.name, BOARD_ELEMENT_KEYS.name),
+      formatnumber(boardelement.char, BOARD_ELEMENT_KEYS.char),
+      formatnumber(boardelement.color, BOARD_ELEMENT_KEYS.color),
+      formatnumber(boardelement.bg, BOARD_ELEMENT_KEYS.bg),
+      formatnumber(boardelement.pushable, BOARD_ELEMENT_KEYS.pushable),
+      formatnumber(boardelement.collision, BOARD_ELEMENT_KEYS.collision),
+      formatnumber(boardelement.destructible, BOARD_ELEMENT_KEYS.destructible),
+      formatstring(boardelement.tickertext, BOARD_ELEMENT_KEYS.tickertext),
+      formatnumber(boardelement.tickertime, BOARD_ELEMENT_KEYS.tickertime),
+      exportword(boardelement.p1, BOARD_ELEMENT_KEYS.p1),
+      exportword(boardelement.p2, BOARD_ELEMENT_KEYS.p2),
+      exportword(boardelement.p3, BOARD_ELEMENT_KEYS.p3),
+      formatnumber(boardelement.cycle, BOARD_ELEMENT_KEYS.cycle),
+      formatnumber(boardelement.stepx, BOARD_ELEMENT_KEYS.stepx),
+      formatnumber(boardelement.stepy, BOARD_ELEMENT_KEYS.stepy),
+      formatstring(boardelement.sender, BOARD_ELEMENT_KEYS.sender),
+      exportword(boardelement.data, BOARD_ELEMENT_KEYS.data),
+      ...exportwordcustom(boardelement, BOARD_ELEMENT_KEYS),
+    ],
+    key,
+  )
 }
 
 // import json into boardelement
@@ -91,6 +95,7 @@ export function importboardelement(
     boardelemententry,
     BOARD_ELEMENT_KEYS,
   )
+  importwordcustom(boardelement, BOARD_ELEMENT_KEYS)
   return boardelement
 }
 

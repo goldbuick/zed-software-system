@@ -20,15 +20,14 @@ import { listnamedelements, picknearestpt } from './atomics'
 import { exportboardelement } from './boardelement'
 import {
   FORMAT_ENTRY,
-  formatentrybucket,
-  formatentrybyte,
-  formatentrylist,
-  formatentrystring,
+  FORMAT_KEY,
   formatlist,
+  formatnumber,
+  formatstring,
   unpackformatlist,
 } from './format'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
-import { exportwordcustom } from './word'
+import { exportwordcustom, importwordcustom } from './word'
 
 import { memoryreadchip } from '.'
 
@@ -62,40 +61,40 @@ enum BOARD_KEYS {
 }
 
 // safe to serialize copy of board
-export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_ENTRY> {
+export function exportboard(
+  board: MAYBE<BOARD>,
+  key?: FORMAT_KEY,
+): MAYBE<FORMAT_ENTRY> {
   if (!ispresent(board)) {
     return
   }
-  return formatentrylist(0, [
-    formatentrybucket(
-      BOARD_KEYS.terrain,
-      board.terrain.map(exportboardelement),
-    ),
-    formatentrylist(
-      BOARD_KEYS.objects,
-      Object.values(board.objects).map(exportboardelement),
-    ),
-    formatentrybyte(BOARD_KEYS.isdark, board.isdark),
-    formatentrystring(BOARD_KEYS.over, board.over),
-    formatentrystring(BOARD_KEYS.under, board.under),
-    formatentrystring(BOARD_KEYS.exitnorth, board.exitnorth),
-    formatentrystring(BOARD_KEYS.exitsouth, board.exitsouth),
-    formatentrystring(BOARD_KEYS.exitwest, board.exitwest),
-    formatentrystring(BOARD_KEYS.exiteast, board.exiteast),
-    formatentrybyte(BOARD_KEYS.timelimit, board.timelimit),
-    formatentrybyte(BOARD_KEYS.restartonzap, board.restartonzap),
-    formatentrybyte(BOARD_KEYS.maxplayershots, board.maxplayershots),
-    ...exportwordcustom(BOARD_KEYS, board),
-  ])
+  return formatlist(
+    [
+      formatlist(board.terrain.map(exportboardelement), BOARD_KEYS.terrain),
+      formatlist(
+        Object.values(board.objects).map(exportboardelement),
+        BOARD_KEYS.objects,
+      ),
+      formatnumber(board.isdark, BOARD_KEYS.isdark),
+      formatstring(board.over, BOARD_KEYS.over),
+      formatstring(board.under, BOARD_KEYS.under),
+      formatstring(board.exitnorth, BOARD_KEYS.exitnorth),
+      formatstring(board.exitsouth, BOARD_KEYS.exitsouth),
+      formatstring(board.exitwest, BOARD_KEYS.exitwest),
+      formatstring(board.exiteast, BOARD_KEYS.exiteast),
+      formatnumber(board.timelimit, BOARD_KEYS.timelimit),
+      formatnumber(board.restartonzap, BOARD_KEYS.restartonzap),
+      formatnumber(board.maxplayershots, BOARD_KEYS.maxplayershots),
+      ...exportwordcustom(board, BOARD_KEYS),
+    ],
+    key,
+  )
 }
 
 // import json into board
 export function importboard(boardentry: MAYBE<FORMAT_ENTRY>): MAYBE<BOARD> {
-  if (!ispresent(boardentry)) {
-    return
-  }
-
   const board = unpackformatlist<BOARD>(boardentry, BOARD_KEYS)
+  importwordcustom(board, BOARD_KEYS)
   return board
 }
 

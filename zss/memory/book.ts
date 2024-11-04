@@ -23,11 +23,8 @@ import {
 } from './codepage'
 import {
   FORMAT_ENTRY,
-  formatentrylist,
-  formatentrystring,
   formatlist,
-  formatuserlist,
-  formatuserstring,
+  formatstring,
   unpackformatlist,
 } from './format'
 import {
@@ -36,13 +33,14 @@ import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
+  BOOK_FLAGS,
   CATEGORY,
   CODE_PAGE,
   CODE_PAGE_TYPE,
   COLLISION,
   WORD,
 } from './types'
-import { exportwordentry } from './word'
+import { exportword } from './word'
 
 // player state
 
@@ -73,29 +71,45 @@ export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_ENTRY> {
   const flags = Object.keys(book.flags).map((player) => {
     const values = book.flags[player]
     const names = Object.keys(values)
-    return formatuserlist(
+    return formatlist(
+      names.map((name) => exportword(values[name], name)),
       player,
-      names.map((name) => exportwordentry(name, values[name])),
     )
   })
 
   const players = Object.keys(book.players).map((player) => {
-    return formatuserstring(player, book.players[player])
+    return formatstring(book.players[player], player)
   })
 
   return formatlist([
-    formatentrystring(BOOK_KEYS.id, book.id),
-    formatentrystring(BOOK_KEYS.name, book.name),
-    formatentrylist(BOOK_KEYS.pages, book.pages.map(exportcodepage)),
-    formatentrylist(BOOK_KEYS.flags, flags),
-    formatentrylist(BOOK_KEYS.players, players),
+    formatstring(book.id, BOOK_KEYS.id),
+    formatstring(book.name, BOOK_KEYS.name),
+    formatlist(book.pages.map(exportcodepage), BOOK_KEYS.pages),
+    formatlist(flags, BOOK_KEYS.flags),
+    formatlist(players, BOOK_KEYS.players),
   ])
 }
 
 // import json into book
 export function importbook(bookentry: MAYBE<FORMAT_ENTRY>): MAYBE<BOOK> {
-  const book = unpackformatlist<BOOK>(bookentry, BOOK_KEYS)
   debugger
+  const book = unpackformatlist<BOOK | any>(bookentry, BOOK_KEYS)
+  if (ispresent(book)) {
+    // import pages
+    book.pages = unpackformatlist<CODE_PAGE[]>(book.flags, {})
+    book.pages = book.pages.map(importcodepage)
+    // import flags
+    book.flags = unpackformatlist<BOOK_FLAGS | any>(book.flags, {})
+    // import players
+    book.players = unpackformatlist<any>(book.players, {})
+    // Object.keys(book.players).forEach((player) => {
+    //   const values = book.flags[player]
+    //   const names = Object.keys(values)
+    //   names.forEach((name) => {
+    //     book.flags[player][name] = importword(book.flags[player][name])
+    //   })
+    // })
+  }
   return book
 }
 

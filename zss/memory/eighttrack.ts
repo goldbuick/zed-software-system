@@ -2,11 +2,11 @@ import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import {
   FORMAT_ENTRY,
+  FORMAT_KEY,
   FORMAT_TYPE,
   formatbytelist,
-  formatentryint,
-  formatentrylist,
   formatlist,
+  formatnumber,
   unpackformatlist,
 } from './format'
 import {
@@ -75,7 +75,7 @@ export function exporteighttrackmeasure(
   if (!ispresent(measure)) {
     return
   }
-  return formatbytelist(0, measure)
+  return formatbytelist(Uint8Array.from(measure))
 }
 
 export function importeighttrackmeasure(
@@ -111,34 +111,37 @@ enum EIGHT_TRACK_KEYS {
 
 export function exporteighttrack(
   eighttrack: MAYBE<EIGHT_TRACK>,
+  key?: FORMAT_KEY,
 ): MAYBE<FORMAT_ENTRY> {
   if (!ispresent(eighttrack)) {
     return
   }
-  return formatlist([
-    formatentryint(EIGHT_TRACK_KEYS.tempo, eighttrack.tempo),
-    formatentrylist(
-      EIGHT_TRACK_KEYS.synths,
-      eighttrack.synths.map(exporteighttracksynthconfig),
-    ),
-    formatentrylist(
-      EIGHT_TRACK_KEYS.measures,
-      eighttrack.measures.map(exporteighttrackmeasure),
-    ),
-  ])
+  return formatlist(
+    [
+      formatnumber(eighttrack.tempo, EIGHT_TRACK_KEYS.tempo),
+      formatlist(
+        eighttrack.synths.map(exporteighttracksynthconfig),
+        EIGHT_TRACK_KEYS.synths,
+      ),
+      formatlist(
+        eighttrack.measures.map(exporteighttrackmeasure),
+        EIGHT_TRACK_KEYS.measures,
+      ),
+    ],
+    key,
+  )
 }
 
 export function importeighttrack(
   eighttrackentry: MAYBE<FORMAT_ENTRY>,
 ): MAYBE<EIGHT_TRACK> {
-  if (eighttrackentry?.type !== FORMAT_TYPE.LIST) {
-    return
-  }
-
-  const eighttrack = unpackformatlist<EIGHT_TRACK>(
+  const eighttrack = unpackformatlist<EIGHT_TRACK | any>(
     eighttrackentry,
     EIGHT_TRACK_KEYS,
   )
-
+  if (ispresent(eighttrack)) {
+    eighttrack.synths = eighttrack.synths.map(importeighttracksynthconfig)
+    eighttrack.measures = eighttrack.measures.map(importeighttrackmeasure)
+  }
   return eighttrack
 }

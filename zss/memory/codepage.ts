@@ -9,11 +9,11 @@ import { createboardelement, exportboardelement } from './boardelement'
 import { exporteighttrack } from './eighttrack'
 import {
   FORMAT_ENTRY,
-  makeentrylist,
+  FORMAT_KEY,
   formatbytelist,
-  formatentryint,
-  formatentrystring,
   formatlist,
+  formatnumber,
+  formatstring,
   unpackformatlist,
 } from './format'
 import {
@@ -30,15 +30,21 @@ enum BITMAP_KEYS {
   bits,
 }
 
-export function exportbitmap(bitmap: MAYBE<BITMAP>): MAYBE<FORMAT_ENTRY> {
+export function exportbitmap(
+  bitmap: MAYBE<BITMAP>,
+  key?: FORMAT_KEY,
+): MAYBE<FORMAT_ENTRY> {
   if (!ispresent(bitmap)) {
     return
   }
-  return formatlist([
-    formatentryint(BITMAP_KEYS.width, bitmap.width),
-    formatentryint(BITMAP_KEYS.height, bitmap.height),
-    formatbytelist(BITMAP_KEYS.bits, Array.from(bitmap.bits)),
-  ])
+  return formatlist(
+    [
+      formatnumber(bitmap.width, BITMAP_KEYS.width),
+      formatnumber(bitmap.height, BITMAP_KEYS.height),
+      formatbytelist(bitmap.bits, BITMAP_KEYS.bits),
+    ],
+    key,
+  )
 }
 
 export function importbitmap(bitmapentry: MAYBE<FORMAT_ENTRY>): MAYBE<BITMAP> {
@@ -76,17 +82,14 @@ export function exportcodepage(
     return
   }
   return formatlist([
-    formatentrystring(CODE_PAGE_KEYS.id, codepage.id),
-    formatentrystring(CODE_PAGE_KEYS.id, codepage.code),
-    makeentrylist(CODE_PAGE_KEYS.board, exportboard(codepage.board)),
-    makeentrylist(CODE_PAGE_KEYS.object, exportboardelement(codepage.object)),
-    makeentrylist(CODE_PAGE_KEYS.terrain, exportboardelement(codepage.terrain)),
-    makeentrylist(CODE_PAGE_KEYS.charset, exportbitmap(codepage.charset)),
-    makeentrylist(CODE_PAGE_KEYS.palette, exportbitmap(codepage.palette)),
-    makeentrylist(
-      CODE_PAGE_KEYS.eighttrack,
-      exporteighttrack(codepage.eighttrack),
-    ),
+    formatstring(codepage.id, CODE_PAGE_KEYS.id),
+    formatstring(codepage.code, CODE_PAGE_KEYS.code),
+    exportboard(codepage.board, CODE_PAGE_KEYS.board),
+    exportboardelement(codepage.object, CODE_PAGE_KEYS.object),
+    exportboardelement(codepage.terrain, CODE_PAGE_KEYS.terrain),
+    exportbitmap(codepage.charset, CODE_PAGE_KEYS.charset),
+    exportbitmap(codepage.palette, CODE_PAGE_KEYS.palette),
+    exporteighttrack(codepage.eighttrack, CODE_PAGE_KEYS.eighttrack),
   ])
 }
 
