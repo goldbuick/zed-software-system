@@ -2,10 +2,16 @@ import { unpack, pack } from 'msgpackr'
 import { api_error } from 'zss/device/api'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
-export function formatobject(obj: any, keymap: any): any[] {
-  const keys = Object.keys(obj)
-  const formatted: any[] = []
+export type FORMAT_OBJECT = [string?, any?, ...FORMAT_OBJECT[]]
 
+export function formatobject(obj: any, keymap: any): MAYBE<FORMAT_OBJECT> {
+  if (!ispresent(obj)) {
+    return
+  }
+
+  const formatted: FORMAT_OBJECT = []
+
+  const keys = Object.keys(obj)
   for (let i = 0; i < keys.length; ++i) {
     const key = keys[i]
     const mkey = keymap[key]
@@ -19,25 +25,37 @@ export function formatobject(obj: any, keymap: any): any[] {
   return formatted
 }
 
-export function unformatobject(formatted: any[], keymap: any) {
-  const obj: Record<string, any> = {}
-  for (let i = 0; i < formatted.length; i += 2) {
-    const key = formatted[i]
-    const value = formatted[i + 1]
-    const mkey = keymap[key]
-    if (ispresent(mkey)) {
-      obj[mkey] = value
-    } else {
-      obj[key] = value
-    }
+export function unformatobject<T>(
+  formatted: MAYBE<FORMAT_OBJECT>,
+  keymap: any,
+): MAYBE<T> {
+  if (!ispresent(formatted)) {
+    return
   }
 
-  return obj
+  try {
+    const obj: Record<string, any> = {}
+
+    for (let i = 0; i < formatted.length; i += 2) {
+      const key = formatted[i]
+      const value = formatted[i + 1]
+      const mkey = keymap[key]
+      if (ispresent(mkey)) {
+        obj[mkey] = value
+      } else {
+        obj[key] = value
+      }
+    }
+
+    return obj as T
+  } catch (err) {
+    //
+  }
 }
 
 // read / write helpers
 
-export function packbinary(entry: any[]): MAYBE<Uint8Array> {
+export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
   try {
     return pack(entry)
   } catch (err: any) {
@@ -45,7 +63,7 @@ export function packbinary(entry: any[]): MAYBE<Uint8Array> {
   }
 }
 
-export function unpackbinary(binary: Uint8Array): MAYBE<any[]> {
+export function unpackbinary(binary: Uint8Array): MAYBE<FORMAT_OBJECT> {
   try {
     return unpack(binary)
   } catch (err: any) {
