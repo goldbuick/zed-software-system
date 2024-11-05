@@ -17,8 +17,13 @@ import { clamp } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, noop } from 'zss/mapping/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
-import { exportboardelement } from './boardelement'
-import { FORMAT_OBJECT, formatobject, unformatobject } from './format'
+import { exportboardelement, importboardelement } from './boardelement'
+import {
+  FORMAT_OBJECT,
+  FORMAT_SKIP,
+  formatobject,
+  unformatobject,
+} from './format'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 import { memoryreadchip } from '.'
@@ -53,15 +58,30 @@ enum BOARD_KEYS {
 }
 
 export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
-  if (!ispresent(board)) {
-    return
-  }
-  // would also need to format the board elements here too ?????
-  return formatobject(board, BOARD_KEYS)
+  return formatobject(board, BOARD_KEYS, {
+    terrain: exportboardelement,
+    objects: (objects) =>
+      Object.values<BOARD_ELEMENT>(objects).map(exportboardelement),
+    codepage: FORMAT_SKIP,
+    lookup: FORMAT_SKIP,
+    named: FORMAT_SKIP,
+  })
 }
 
 export function importboard(boardentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOARD> {
-  return unformatobject(boardentry, BOARD_KEYS)
+  return unformatobject(boardentry, BOARD_KEYS, {
+    terrain: (terrain) => terrain.map(importboardelement),
+    objects: (elements) => {
+      const objects: Record<string, BOARD_ELEMENT> = {}
+      for (let i = 0; i < elements.length; ++i) {
+        const obj = importboardelement(elements[i])
+        if (ispresent(obj?.id)) {
+          objects[obj.id] = obj
+        }
+      }
+      return objects
+    },
+  })
 }
 
 export function boardelementindex(board: MAYBE<BOARD>, pt: PT): number {
@@ -130,7 +150,7 @@ export function boardgetterrain(
   x: number,
   y: number,
 ): MAYBE<BOARD_ELEMENT> {
-  return ((x >= 0 && x < BOARD_WIDTH) ?? (y >= 0 && y < BOARD_HEIGHT))
+  return (x >= 0 && x < BOARD_WIDTH) ?? (y >= 0 && y < BOARD_HEIGHT)
     ? board?.terrain[x + y * BOARD_WIDTH]
     : undefined
 }

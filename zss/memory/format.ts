@@ -4,7 +4,17 @@ import { ispresent, MAYBE } from 'zss/mapping/types'
 
 export type FORMAT_OBJECT = [string?, any?, ...FORMAT_OBJECT[]]
 
-export function formatobject(obj: any, keymap: any): MAYBE<FORMAT_OBJECT> {
+export type FORMAT_METHOD = (value: any) => any
+
+export function FORMAT_SKIP() {
+  return null
+}
+
+export function formatobject(
+  obj: any,
+  keymap: any,
+  formatmap: Record<string, FORMAT_METHOD> = {},
+): MAYBE<FORMAT_OBJECT> {
   if (!ispresent(obj)) {
     return
   }
@@ -13,12 +23,21 @@ export function formatobject(obj: any, keymap: any): MAYBE<FORMAT_OBJECT> {
 
   const keys = Object.keys(obj)
   for (let i = 0; i < keys.length; ++i) {
-    const key = keys[i]
+    let key = keys[i]
+    let value = obj[key]
+
     const mkey = keymap[key]
     if (ispresent(mkey)) {
-      formatted.push(mkey, obj[key])
-    } else {
-      formatted.push(key, obj[key])
+      key = mkey
+    }
+
+    const formatter = formatmap[key]
+    if (ispresent(formatter)) {
+      value = formatter(value)
+    }
+
+    if (value !== null) {
+      formatted.push(mkey, value)
     }
   }
 
@@ -28,6 +47,7 @@ export function formatobject(obj: any, keymap: any): MAYBE<FORMAT_OBJECT> {
 export function unformatobject<T>(
   formatted: MAYBE<FORMAT_OBJECT>,
   keymap: any,
+  formatmap: Record<string, FORMAT_METHOD> = {},
 ): MAYBE<T> {
   if (!ispresent(formatted)) {
     return
@@ -37,14 +57,20 @@ export function unformatobject<T>(
     const obj: Record<string, any> = {}
 
     for (let i = 0; i < formatted.length; i += 2) {
-      const key = formatted[i]
-      const value = formatted[i + 1]
+      let key = formatted[i]
+      let value = formatted[i + 1]
+
       const mkey = keymap[key]
       if (ispresent(mkey)) {
-        obj[mkey] = value
-      } else {
-        obj[key] = value
+        key = mkey
       }
+
+      const formatter = formatmap[key]
+      if (ispresent(formatter)) {
+        value = formatter(value)
+      }
+
+      obj[key] = value
     }
 
     return obj as T

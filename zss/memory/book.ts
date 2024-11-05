@@ -21,12 +21,7 @@ import {
   exportcodepage,
   importcodepage,
 } from './codepage'
-import {
-  FORMAT_ENTRY,
-  formatlist,
-  formatstring,
-  unpackformatlist,
-} from './format'
+import { FORMAT_OBJECT, formatobject, unformatobject } from './format'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -40,7 +35,6 @@ import {
   COLLISION,
   WORD,
 } from './types'
-import { exportword } from './word'
 
 // player state
 
@@ -62,55 +56,12 @@ enum BOOK_KEYS {
   players,
 }
 
-// safe to serialize copy of book
-export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_ENTRY> {
-  if (!ispresent(book)) {
-    return
-  }
-
-  const flags = Object.keys(book.flags).map((player) => {
-    const values = book.flags[player]
-    const names = Object.keys(values)
-    return formatlist(
-      names.map((name) => exportword(values[name], name)),
-      player,
-    )
-  })
-
-  const players = Object.keys(book.players).map((player) => {
-    return formatstring(book.players[player], player)
-  })
-
-  return formatlist([
-    formatstring(book.id, BOOK_KEYS.id),
-    formatstring(book.name, BOOK_KEYS.name),
-    formatlist(book.pages.map(exportcodepage), BOOK_KEYS.pages),
-    formatlist(flags, BOOK_KEYS.flags),
-    formatlist(players, BOOK_KEYS.players),
-  ])
+export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
+  return formatobject(book, BOOK_KEYS)
 }
 
-// import json into book
-export function importbook(bookentry: MAYBE<FORMAT_ENTRY>): MAYBE<BOOK> {
-  debugger
-  const book = unpackformatlist<BOOK | any>(bookentry, BOOK_KEYS)
-  if (ispresent(book)) {
-    // import pages
-    book.pages = unpackformatlist<CODE_PAGE[]>(book.flags, {})
-    book.pages = book.pages.map(importcodepage)
-    // import flags
-    book.flags = unpackformatlist<BOOK_FLAGS | any>(book.flags, {})
-    // import players
-    book.players = unpackformatlist<any>(book.players, {})
-    // Object.keys(book.players).forEach((player) => {
-    //   const values = book.flags[player]
-    //   const names = Object.keys(values)
-    //   names.forEach((name) => {
-    //     book.flags[player][name] = importword(book.flags[player][name])
-    //   })
-    // })
-  }
-  return book
+export function importbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
+  return unformatobject(bookentry, BOOK_KEYS)
 }
 
 export function bookhasmatch(book: MAYBE<BOOK>, ids: string[]): boolean {

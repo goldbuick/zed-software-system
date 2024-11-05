@@ -4,7 +4,6 @@ import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { FORMAT_OBJECT, formatobject, unformatobject } from './format'
 import { BOARD_ELEMENT, BOARD_ELEMENT_STAT, WORD } from './types'
-import { exportword, exportwordcustom, importwordcustom } from './word'
 
 export function createboardelement() {
   const boardelement: BOARD_ELEMENT = {
@@ -44,9 +43,6 @@ enum BOARD_ELEMENT_KEYS {
 export function exportboardelement(
   boardelement: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<FORMAT_OBJECT> {
-  if (!ispresent(boardelement)) {
-    return
-  }
   return formatobject(boardelement, BOARD_ELEMENT_KEYS)
 }
 
