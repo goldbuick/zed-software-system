@@ -58,9 +58,15 @@ export type BOARD_ELEMENT = {
   kindcode?: string
   headless?: boolean
   removed?: number
+  // player only
+  inputmove?: string[]
+  inputok?: number
+  inputcancel?: number
+  inputmenu?: number
+  inputalt?: number
+  inputctrl?: number
+  inputshift?: number
 }
-
-export type BOARD_ELEMENT_STAT = keyof BOARD_ELEMENT
 
 // boards
 

@@ -2,8 +2,13 @@ import { objectKeys } from 'ts-extras'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
-import { FORMAT_OBJECT, formatobject, unformatobject } from './format'
-import { BOARD_ELEMENT, BOARD_ELEMENT_STAT, WORD } from './types'
+import {
+  FORMAT_OBJECT,
+  FORMAT_SKIP,
+  formatobject,
+  unformatobject,
+} from './format'
+import { BOARD_ELEMENT, WORD } from './types'
 
 export function createboardelement() {
   const boardelement: BOARD_ELEMENT = {
@@ -43,7 +48,20 @@ enum BOARD_ELEMENT_KEYS {
 export function exportboardelement(
   boardelement: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<FORMAT_OBJECT> {
-  return formatobject(boardelement, BOARD_ELEMENT_KEYS)
+  return formatobject(boardelement, BOARD_ELEMENT_KEYS, {
+    category: FORMAT_SKIP,
+    kinddata: FORMAT_SKIP,
+    kindcode: FORMAT_SKIP,
+    headless: FORMAT_SKIP,
+    removed: FORMAT_SKIP,
+    inputmove: FORMAT_SKIP,
+    inputok: FORMAT_SKIP,
+    inputcancel: FORMAT_SKIP,
+    inputmenu: FORMAT_SKIP,
+    inputalt: FORMAT_SKIP,
+    inputctrl: FORMAT_SKIP,
+    inputshift: FORMAT_SKIP,
+  })
 }
 
 // import json into boardelement
@@ -55,7 +73,7 @@ export function importboardelement(
 
 export function boardelementreadstat(
   boardelement: MAYBE<BOARD_ELEMENT>,
-  key: BOARD_ELEMENT_STAT,
+  key: keyof BOARD_ELEMENT,
   defaultvalue: WORD,
 ): WORD {
   if (!ispresent(boardelement)) {
@@ -67,7 +85,7 @@ export function boardelementreadstat(
 
 export function boardelementwritestat(
   boardelement: MAYBE<BOARD_ELEMENT>,
-  key: BOARD_ELEMENT_STAT,
+  key: keyof BOARD_ELEMENT,
   value: WORD,
 ) {
   if (!ispresent(boardelement)) {
@@ -78,7 +96,7 @@ export function boardelementwritestat(
 
 export function boardelementwritestats(
   boardelement: MAYBE<BOARD_ELEMENT>,
-  stats: Record<BOARD_ELEMENT_STAT, WORD>,
+  stats: BOARD_ELEMENT,
 ) {
   objectKeys(stats).forEach((key) =>
     boardelementwritestat(boardelement, key, stats[key]),

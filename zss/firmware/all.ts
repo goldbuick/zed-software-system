@@ -52,7 +52,7 @@ export const ALL_FIRMWARE = createfirmware({
   // flags
   .command('clear', (chip, words) => {
     const name = maptostring(words[0])
-    chip.set(name, undefined)
+    chip.set(name, 0)
     return 0
   })
   .command('set', (chip, words) => {
