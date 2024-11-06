@@ -1,0 +1,11 @@
+{
+  "short_name": "zed.cafe",
+  "name": "zed.cafe fullscreen",
+  "description": "used to pinned to home",
+  "scope": "/",
+  "background_color": "#000",
+  "theme_color": "#00A",
+  "start_url": "/",
+  "display": "standalone",
+  "icons": []
+}
