@@ -80,6 +80,9 @@ if (ispresent(engine)) {
       antialias: false,
       preserveDrawingBuffer: true,
     },
+    onCreated({ gl }) {
+      gl.localClippingEnabled = true
+    },
   })
 
   const handleresize = debounce((width: number, height: number) => {
@@ -88,11 +91,8 @@ if (ispresent(engine)) {
     })
   }, 256)
 
-  // createRoot by design is not responsive, you have to take care of resize yourself
   window.addEventListener('resize', () => {
-    setTimeout(() => {
-      handleresize(makeEven(window.innerWidth), makeEven(window.innerHeight))
-    }, 100)
+    handleresize(makeEven(window.innerWidth), makeEven(window.innerHeight))
   })
 
   // Render entry point
