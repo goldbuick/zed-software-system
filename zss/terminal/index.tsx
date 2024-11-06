@@ -71,6 +71,7 @@ if (ispresent(engine)) {
   // Configure the root, inject events optionally, set camera, etc
   root.configure({
     events: eventManagerFactory,
+    dpr: 1,
     flat: true,
     linear: true,
     shadows: false,
