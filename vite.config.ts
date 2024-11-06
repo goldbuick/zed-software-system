@@ -31,7 +31,8 @@ export default defineConfig(({ mode }) => {
   }
 
   const hmronly = !!JSON.parse(process.env.ZSS_HMR_ONLY ?? '')
-  console.info({ hmronly })
+  const useanalyzer = !!JSON.parse(process.env.ZSS_ANALYZER ?? '')
+  console.info({ hmronly, analyzer })
 
   return {
     root,
@@ -41,7 +42,8 @@ export default defineConfig(({ mode }) => {
       arraybuffer(),
       mkcert(),
       ...(hmronly ? [] : [fullreload(['**/*.ts', '**/*.tsx'])]),
-      // analyzer(),
+      ...(useanalyzer ? [analyzer()] : []),
+      // ,
     ],
     resolve: {
       alias: {

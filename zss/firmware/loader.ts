@@ -1,6 +1,7 @@
 import { maptostring } from 'zss/chip'
 import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
+import { createsid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadchip, memoryreadcontext } from 'zss/memory'
 import { bookreadflag, booksetflag } from 'zss/memory/book'
@@ -68,14 +69,20 @@ export const LOADER_FIRMWARE = createfirmware({
     return 0
   })
   .command('bin', binaryloader)
-  /*
+  /**
    * TODO loaders, textloader, jsonloader, imageloader, xmlloader
+   * common text parsing ??
    */
   .command('send', (chip, words) => {
-    const [msg, data] = readargs(memoryreadcontext(chip, words), 0, [
+    const [target, data] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.ANY,
     ])
-    tape_info('$2', `${msg} ${data ?? ''}`)
+    chip.message({
+      id: createsid(),
+      sender: chip.id(),
+      target,
+      data,
+    })
     return 0
   })

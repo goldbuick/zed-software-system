@@ -17,10 +17,14 @@ import { clamp } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, noop } from 'zss/mapping/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
-import { BIN_BOARD } from './binary'
 import { exportboardelement, importboardelement } from './boardelement'
+import {
+  FORMAT_OBJECT,
+  FORMAT_SKIP,
+  formatobject,
+  unformatobject,
+} from './format'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
-import { exportword, importword } from './word'
 
 import { memoryreadchip } from '.'
 
@@ -38,57 +42,46 @@ export function createboard(fn = noop<BOARD>) {
   return fn(board)
 }
 
-// safe to serialize copy of board
-export function exportboard(board: MAYBE<BOARD>): MAYBE<BIN_BOARD> {
-  if (!ispresent(board)) {
-    return
-  }
-  return {
-    terrain: board.terrain.map(exportboardelement),
-    objects: Object.keys(board.objects)
-      .map((name) => exportboardelement(board.objects[name]))
-      .filter(ispresent),
-    // stats
-    isdark: exportword(board.isdark),
-    over: exportword(board.over),
-    under: exportword(board.under),
-    exitnorth: exportword(board.exitnorth),
-    exitsouth: exportword(board.exitsouth),
-    exitwest: exportword(board.exitwest),
-    exiteast: exportword(board.exiteast),
-    timelimit: exportword(board.timelimit),
-    restartonzap: exportword(board.restartonzap),
-    maxplayershots: exportword(board.maxplayershots),
-  }
+enum BOARD_KEYS {
+  terrain,
+  objects,
+  isdark,
+  over,
+  under,
+  exitnorth,
+  exitsouth,
+  exitwest,
+  exiteast,
+  timelimit,
+  restartonzap,
+  maxplayershots,
 }
 
-// import json into board
-export function importboard(board: MAYBE<BIN_BOARD>): MAYBE<BOARD> {
-  if (!ispresent(board)) {
-    return
-  }
-  return {
-    terrain: board.terrain.map(importboardelement),
-    objects: Object.fromEntries<BOARD_ELEMENT>(
-      board.objects
-        .map(importboardelement)
-        .filter((object) => ispresent(object))
-        .map((value) => [value?.id ?? '', value]),
-    ),
-    // stats
-    isdark: importword(board.isdark) as any,
-    over: importword(board.over) as any,
-    under: importword(board.under) as any,
-    exitnorth: importword(board.exitnorth) as any,
-    exitsouth: importword(board.exitsouth) as any,
-    exitwest: importword(board.exitwest) as any,
-    exiteast: importword(board.exiteast) as any,
-    timelimit: importword(board.timelimit) as any,
-    restartonzap: importword(board.restartonzap) as any,
-    maxplayershots: importword(board.maxplayershots) as any,
-    // runtime
-    codepage: '',
-  }
+export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
+  return formatobject(board, BOARD_KEYS, {
+    terrain: exportboardelement,
+    objects: (objects) =>
+      Object.values<BOARD_ELEMENT>(objects).map(exportboardelement),
+    codepage: FORMAT_SKIP,
+    lookup: FORMAT_SKIP,
+    named: FORMAT_SKIP,
+  })
+}
+
+export function importboard(boardentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOARD> {
+  return unformatobject(boardentry, BOARD_KEYS, {
+    terrain: (terrain) => terrain.map(importboardelement),
+    objects: (elements) => {
+      const objects: Record<string, BOARD_ELEMENT> = {}
+      for (let i = 0; i < elements.length; ++i) {
+        const obj = importboardelement(elements[i])
+        if (ispresent(obj?.id)) {
+          objects[obj.id] = obj
+        }
+      }
+      return objects
+    },
+  })
 }
 
 export function boardelementindex(board: MAYBE<BOARD>, pt: PT): number {

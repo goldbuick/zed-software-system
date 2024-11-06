@@ -1,5 +1,6 @@
 import * as Tone from 'tone'
 
+import { pick, range } from './array'
 import { isnumber, ispresent } from './types'
 
 export enum SYNTH_OP {
@@ -74,6 +75,8 @@ const CHAR_OP_MAP = {
 export type SYNTH_NOTE = null | string | number
 export type SYNTH_NOTE_ON = [number, string, SYNTH_NOTE]
 export type SYNTH_NOTE_ENTRY = [number, SYNTH_NOTE_ON]
+
+let endofplaymarker = 0
 
 export function invokeplay(synth: number, starttime: number, play: SYNTH_OP[]) {
   // translate ops into time, note pairs
@@ -217,7 +220,7 @@ export function invokeplay(synth: number, starttime: number, play: SYNTH_OP[]) {
   writenote()
 
   // write end of pattern
-  pattern.push([time, [synth, '8n', -1]])
+  pattern.push([time, [--endofplaymarker, '8n', -1]])
 
   return pattern
 }

@@ -47,14 +47,6 @@ export function register_nodetrash(sender: string) {
   hub.emit('register:nodetrash', sender)
 }
 
-export function register_biosflash(sender: string) {
-  hub.emit('register:biosflash', sender)
-}
-
-export function register_biostrash(sender: string) {
-  hub.emit('register:biostrash', sender)
-}
-
 export function synth_play(sender: string, priority: number, buffer: string) {
   hub.emit('synth:play', sender, [priority, buffer])
 }

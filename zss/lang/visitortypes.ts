@@ -43,32 +43,7 @@ export type Do_blockCstNode = {
 export type Do_blockCstChildren = {
   token_do: IToken[]
   token_newline?: IToken[]
-  do_line: Do_lineCstNode[]
-}
-
-export type Do_lineCstNode = {
-  name: 'do_line'
-  children: Do_lineCstChildren
-} & CstNode
-
-export type Do_lineCstChildren = {
-  do_stmt: Do_stmtCstNode[]
-  token_newline: IToken[]
-}
-
-export type Do_stmtCstNode = {
-  name: 'do_stmt'
-  children: Do_stmtCstChildren
-} & CstNode
-
-export type Do_stmtCstChildren = {
-  stmt_stat?: Stmt_statCstNode[]
-  stmt_text?: Stmt_textCstNode[]
-  stmt_comment?: Stmt_commentCstNode[]
-  stmt_hyperlink?: Stmt_hyperlinkCstNode[]
-  stmt_command?: Stmt_commandCstNode[]
-  short_commands?: Short_commandsCstNode[]
-  commands?: CommandsCstNode[]
+  line: LineCstNode[]
 }
 
 export type Do_inlineCstNode = {
@@ -77,6 +52,7 @@ export type Do_inlineCstNode = {
 } & CstNode
 
 export type Do_inlineCstChildren = {
+  stmt_label?: Stmt_labelCstNode[]
   stmt_stat?: Stmt_statCstNode[]
   stmt_text?: Stmt_textCstNode[]
   stmt_comment?: Stmt_commentCstNode[]
@@ -175,6 +151,8 @@ export type Structured_cmdCstChildren = {
   command_if?: Command_ifCstNode[]
   command_while?: Command_whileCstNode[]
   command_repeat?: Command_repeatCstNode[]
+  command_waitfor?: Command_waitforCstNode[]
+  command_foreach?: Command_foreachCstNode[]
   command_break?: Command_breakCstNode[]
   command_continue?: Command_continueCstNode[]
 }
@@ -222,7 +200,7 @@ export type Command_if_blockCstChildren = {
   command_else?: Command_elseCstNode[]
   token_newline?: IToken[]
   token_command?: IToken[]
-  token_endif?: IToken[]
+  token_done?: IToken[]
 }
 
 export type Command_blockCstNode = {
@@ -290,6 +268,28 @@ export type Command_repeatCstNode = {
 export type Command_repeatCstChildren = {
   token_repeat: IToken[]
   words: WordsCstNode[]
+  command_loop?: Command_loopCstNode[]
+}
+
+export type Command_waitforCstNode = {
+  name: 'command_waitfor'
+  children: Command_waitforCstChildren
+} & CstNode
+
+export type Command_waitforCstChildren = {
+  token_waitfor: IToken[]
+  words: WordsCstNode[]
+}
+
+export type Command_foreachCstNode = {
+  name: 'command_foreach'
+  children: Command_foreachCstChildren
+} & CstNode
+
+export type Command_foreachCstChildren = {
+  token_foreach: IToken[]
+  words: WordsCstNode[]
+  token_to?: IToken[]
   command_loop?: Command_loopCstNode[]
 }
 
@@ -501,8 +501,6 @@ export type ICstNodeVisitor<IN, OUT> = {
   line(children: LineCstChildren, param?: IN): OUT
   stmt(children: StmtCstChildren, param?: IN): OUT
   do_block(children: Do_blockCstChildren, param?: IN): OUT
-  do_line(children: Do_lineCstChildren, param?: IN): OUT
-  do_stmt(children: Do_stmtCstChildren, param?: IN): OUT
   do_inline(children: Do_inlineCstChildren, param?: IN): OUT
   stmt_label(children: Stmt_labelCstChildren, param?: IN): OUT
   stmt_stat(children: Stmt_statCstChildren, param?: IN): OUT
@@ -523,6 +521,8 @@ export type ICstNodeVisitor<IN, OUT> = {
   command_loop(children: Command_loopCstChildren, param?: IN): OUT
   command_while(children: Command_whileCstChildren, param?: IN): OUT
   command_repeat(children: Command_repeatCstChildren, param?: IN): OUT
+  command_waitfor(children: Command_waitforCstChildren, param?: IN): OUT
+  command_foreach(children: Command_foreachCstChildren, param?: IN): OUT
   command_break(children: Command_breakCstChildren, param?: IN): OUT
   command_continue(children: Command_continueCstChildren, param?: IN): OUT
   command_play(children: Command_playCstChildren, param?: IN): OUT

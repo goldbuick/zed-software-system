@@ -3,8 +3,7 @@ import { BOARD_SIZE } from './types'
 export enum SCHEMA_TYPE {
   ANY,
   SKIP,
-  STRING,
-  NUMBER,
+  WORD_TYPE,
   ARRAY,
   OBJECT,
   READ_ONLY,
@@ -18,10 +17,8 @@ type SCHEMA_ITEM =
       type: SCHEMA_TYPE.SKIP
     }
   | {
-      type: SCHEMA_TYPE.STRING
-    }
-  | {
-      type: SCHEMA_TYPE.NUMBER
+      type: SCHEMA_TYPE.WORD_TYPE
+      kind: 'string' | 'number' | 'collision' | 'color'
     }
   | {
       type: SCHEMA_TYPE.ARRAY
@@ -40,8 +37,23 @@ type SCHEMA_ITEM =
 
 const ANY_SCHEMA: SCHEMA_ITEM = { type: SCHEMA_TYPE.ANY }
 const SKIP_SCHEMA: SCHEMA_ITEM = { type: SCHEMA_TYPE.SKIP }
-const STRING_SCHEMA: SCHEMA_ITEM = { type: SCHEMA_TYPE.STRING }
-const NUMBER_SCHEMA: SCHEMA_ITEM = { type: SCHEMA_TYPE.NUMBER }
+const STRING_SCHEMA: SCHEMA_ITEM = {
+  type: SCHEMA_TYPE.WORD_TYPE,
+  kind: 'string',
+}
+const NUMBER_SCHEMA: SCHEMA_ITEM = {
+  type: SCHEMA_TYPE.WORD_TYPE,
+  kind: 'number',
+}
+const COLLISION_SCHEMA: SCHEMA_ITEM = {
+  type: SCHEMA_TYPE.WORD_TYPE,
+  kind: 'collision',
+}
+const COLOR_SCHEMA: SCHEMA_ITEM = {
+  type: SCHEMA_TYPE.WORD_TYPE,
+  kind: 'color',
+}
+
 const READ_ONLY_SCHEMA: SCHEMA_ITEM = { type: SCHEMA_TYPE.READ_ONLY }
 
 export const BOARD_ELEMENT_SCHEMA: SCHEMA_ITEM = {
@@ -60,10 +72,10 @@ export const BOARD_ELEMENT_SCHEMA: SCHEMA_ITEM = {
     lx: NUMBER_SCHEMA,
     ly: NUMBER_SCHEMA,
     char: NUMBER_SCHEMA,
-    color: NUMBER_SCHEMA,
-    bg: NUMBER_SCHEMA,
+    color: COLOR_SCHEMA,
+    bg: COLOR_SCHEMA,
     pushable: NUMBER_SCHEMA,
-    collision: NUMBER_SCHEMA,
+    collision: COLLISION_SCHEMA,
     destructible: NUMBER_SCHEMA,
     p1: ANY_SCHEMA,
     p2: ANY_SCHEMA,

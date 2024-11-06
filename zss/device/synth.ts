@@ -574,7 +574,8 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
         drumbasstrigger(time)
         break
       case -1: // END OF PATTERN
-        if (Tone.getTransport().seconds >= pacertime) {
+        --pacercount
+        if (pacercount === 0) {
           pacertime = -1
         }
         break
@@ -583,38 +584,27 @@ function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
 }
 
 let pacertime = -1
+let pacercount = 0
 
 // @ts-expect-error dont care enough right now
 const pacer = new Tone.Part(synthtick)
 
-function synthplaystart(invokes: SYNTH_INVOKES, markendofpattern = false) {
-  // scan for longest invoke
-  let longest = 0
-  let longestindex = 0
-  if (markendofpattern) {
-    for (let i = 0; i < invokes.length; ++i) {
-      const invoke = invokes[i]
-      const count = invoke.length
-      if (invoke.length > longest) {
-        longest = count
-        longestindex = i
-      }
-    }
-  }
-
+function synthplaystart(invokes: SYNTH_INVOKES) {
   // invoke synth ops
   const starttime = pacertime
   for (let i = 0; i < invokes.length; ++i) {
+    // inc invoke tracker
+    ++pacercount
+
+    // build tone.js pattern
     const pattern = invokeplay(0, starttime, invokes[i])
-    // track next note time
+
+    // track current max pacertime
     const last = pattern[pattern.length - 1]
     if (ispresent(last)) {
       pacertime = Math.max(pacertime, last[0])
     }
-    // only longest pattern keeps end of pattern entry
-    if (i !== longestindex || !markendofpattern) {
-      pattern.pop()
-    }
+
     // write pattern to pacer
     for (let p = 0; p < pattern.length; ++p) {
       const [time, value] = pattern[p]
@@ -631,13 +621,11 @@ function synthplay(priority: number, buffer: string) {
   // reset note offset
   if (pacertime === -1) {
     pacertime = Tone.getTransport().seconds
-    // pacerstart = pacertime
-    // console.info('starting at', pacertime)
   }
 
   // music queue
   if (priority < 0) {
-    synthplaystart(invokes, true)
+    synthplaystart(invokes)
     return
   }
 

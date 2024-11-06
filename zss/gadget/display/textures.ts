@@ -1,14 +1,12 @@
 import { useMemo } from 'react'
-import * as THREE from 'three'
+import { CanvasTexture, NearestFilter, Texture } from 'three'
 
 import { BITMAP, bitmapToCanvas } from '../data/bitmap'
 
-export function updateTexture<T extends THREE.Texture | THREE.CanvasTexture>(
-  texture: T,
-) {
+export function updateTexture<T extends Texture | CanvasTexture>(texture: T) {
   texture.generateMipmaps = false
-  texture.minFilter = THREE.NearestFilter
-  texture.magFilter = THREE.NearestFilter
+  texture.minFilter = NearestFilter
+  texture.magFilter = NearestFilter
   texture.needsUpdate = true
   return texture
 }
@@ -17,7 +15,7 @@ export default function useBitmapTexture(bitmap: BITMAP | undefined) {
   return useMemo(
     () =>
       bitmap
-        ? updateTexture(new THREE.CanvasTexture(bitmapToCanvas(bitmap)))
+        ? updateTexture(new CanvasTexture(bitmapToCanvas(bitmap)))
         : undefined,
     [bitmap],
   )

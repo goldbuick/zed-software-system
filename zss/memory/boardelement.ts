@@ -2,9 +2,13 @@ import { objectKeys } from 'ts-extras'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
-import { BIN_BOARD_ELEMENT } from './binary'
-import { BOARD_ELEMENT, BOARD_ELEMENT_STAT, WORD } from './types'
-import { exportword, importword } from './word'
+import {
+  FORMAT_OBJECT,
+  FORMAT_SKIP,
+  formatobject,
+  unformatobject,
+} from './format'
+import { BOARD_ELEMENT, WORD } from './types'
 
 export function createboardelement() {
   const boardelement: BOARD_ELEMENT = {
@@ -13,87 +17,63 @@ export function createboardelement() {
   return boardelement
 }
 
+enum BOARD_ELEMENT_KEYS {
+  kind,
+  id,
+  x,
+  y,
+  lx,
+  ly,
+  code,
+  name,
+  char,
+  color,
+  bg,
+  pushable,
+  collision,
+  destructible,
+  tickertext,
+  tickertime,
+  p1,
+  p2,
+  p3,
+  cycle,
+  stepx,
+  stepy,
+  sender,
+  data,
+}
+
 // safe to serialize copy of boardelement
 export function exportboardelement(
   boardelement: MAYBE<BOARD_ELEMENT>,
-): MAYBE<BIN_BOARD_ELEMENT> {
-  if (!ispresent(boardelement)) {
-    return
-  }
-  return {
-    // this element is an instance of an element type
-    kind: boardelement.kind,
-    // objects only
-    id: boardelement.id,
-    x: boardelement.x,
-    y: boardelement.y,
-    lx: boardelement.lx,
-    ly: boardelement.ly,
-    code: boardelement.code,
-    // this is a unique name for this instance
-    name: boardelement.name,
-    // display
-    char: boardelement.char,
-    color: boardelement.color,
-    bg: boardelement.bg,
-    // interaction
-    pushable: !!boardelement.pushable,
-    collision: boardelement.collision,
-    destructible: !!boardelement.destructible,
-    // common
-    p1: exportword(boardelement.p1),
-    p2: exportword(boardelement.p2),
-    p3: exportword(boardelement.p3),
-    cycle: exportword(boardelement.cycle),
-    stepx: exportword(boardelement.stepx),
-    stepy: exportword(boardelement.stepy),
-    sender: exportword(boardelement.sender),
-    data: exportword(boardelement.data),
-  }
+): MAYBE<FORMAT_OBJECT> {
+  return formatobject(boardelement, BOARD_ELEMENT_KEYS, {
+    category: FORMAT_SKIP,
+    kinddata: FORMAT_SKIP,
+    kindcode: FORMAT_SKIP,
+    headless: FORMAT_SKIP,
+    removed: FORMAT_SKIP,
+    inputmove: FORMAT_SKIP,
+    inputok: FORMAT_SKIP,
+    inputcancel: FORMAT_SKIP,
+    inputmenu: FORMAT_SKIP,
+    inputalt: FORMAT_SKIP,
+    inputctrl: FORMAT_SKIP,
+    inputshift: FORMAT_SKIP,
+  })
 }
 
 // import json into boardelement
 export function importboardelement(
-  boardelement: MAYBE<BIN_BOARD_ELEMENT>,
+  boardelemententry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<BOARD_ELEMENT> {
-  if (!ispresent(boardelement)) {
-    return
-  }
-  return {
-    // this element is an instance of an element type
-    kind: boardelement.kind,
-    // objects only
-    id: boardelement.id,
-    x: boardelement.x,
-    y: boardelement.y,
-    lx: boardelement.lx,
-    ly: boardelement.ly,
-    code: boardelement.code,
-    // this is a unique name for this instance
-    name: boardelement.name,
-    // display
-    char: boardelement.char,
-    color: boardelement.color,
-    bg: boardelement.bg,
-    // interaction
-    pushable: boardelement.pushable ? 1 : undefined,
-    collision: boardelement.collision,
-    destructible: boardelement.destructible ? 1 : undefined,
-    // config
-    p1: importword(boardelement.p1) as any,
-    p2: importword(boardelement.p2) as any,
-    p3: importword(boardelement.p3) as any,
-    cycle: importword(boardelement.cycle) as any,
-    stepx: importword(boardelement.stepx) as any,
-    stepy: importword(boardelement.stepy) as any,
-    sender: importword(boardelement.sender) as any,
-    data: importword(boardelement.data) as any,
-  }
+  return unformatobject(boardelemententry, BOARD_ELEMENT_KEYS)
 }
 
 export function boardelementreadstat(
   boardelement: MAYBE<BOARD_ELEMENT>,
-  key: BOARD_ELEMENT_STAT,
+  key: keyof BOARD_ELEMENT,
   defaultvalue: WORD,
 ): WORD {
   if (!ispresent(boardelement)) {
@@ -105,7 +85,7 @@ export function boardelementreadstat(
 
 export function boardelementwritestat(
   boardelement: MAYBE<BOARD_ELEMENT>,
-  key: BOARD_ELEMENT_STAT,
+  key: keyof BOARD_ELEMENT,
   value: WORD,
 ) {
   if (!ispresent(boardelement)) {
@@ -116,7 +96,7 @@ export function boardelementwritestat(
 
 export function boardelementwritestats(
   boardelement: MAYBE<BOARD_ELEMENT>,
-  stats: Record<BOARD_ELEMENT_STAT, WORD>,
+  stats: BOARD_ELEMENT,
 ) {
   objectKeys(stats).forEach((key) =>
     boardelementwritestat(boardelement, key, stats[key]),

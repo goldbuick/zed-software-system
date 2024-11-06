@@ -188,22 +188,22 @@ function moveobject(
 export const ELEMENT_FIRMWARE = createfirmware({
   get(chip, name) {
     const memory = memoryreadchip(chip.id())
+    if (!ispresent(memory.object)) {
+      return [false, undefined]
+    }
 
-    // we have to check the object's stats next
-    if (memory.object) {
-      // if we are reading from input, pull the next input
-      if (INPUT_STAT_NAMES.has(name)) {
-        readinput(memory.object)
-      }
+    // if we are reading from input, pull the next input
+    if (INPUT_STAT_NAMES.has(name)) {
+      readinput(memory.object)
+    }
 
-      // read stat
-      const value = memory.object[name]
-      const defined = ispresent(value)
+    // read stat
+    const maybevalue = memory.object[name as keyof BOARD_ELEMENT]
+    const defined = ispresent(maybevalue)
 
-      // return result
-      if (defined || STAT_NAMES.has(name)) {
-        return [true, value]
-      }
+    // return result
+    if (defined || STAT_NAMES.has(name)) {
+      return [true, maybevalue]
     }
 
     // get player
@@ -217,13 +217,17 @@ export const ELEMENT_FIRMWARE = createfirmware({
   },
   set(chip, name, value) {
     const memory = memoryreadchip(chip.id())
+    if (!ispresent(memory.object)) {
+      return [false, undefined]
+    }
 
     // we have to check the object's stats first
-    if (ispresent(memory.object)) {
-      if (ispresent(memory.object[name]) || STAT_NAMES.has(name)) {
-        memory.object[name] = value
-        return [true, value]
-      }
+    if (
+      ispresent(memory.object[name as keyof BOARD_ELEMENT]) ||
+      STAT_NAMES.has(name)
+    ) {
+      memory.object[name as keyof BOARD_ELEMENT] = value
+      return [true, value]
     }
 
     // get player

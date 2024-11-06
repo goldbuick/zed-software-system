@@ -1,11 +1,11 @@
-import * as THREE from 'three'
+import { ShaderMaterial, Vector2 } from 'three'
 import { TICK_FPS } from 'zss/mapping/tick'
 
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 
 import { cloneMaterial, interval, time } from './anim'
 
-const spritesMaterial = new THREE.ShaderMaterial({
+const spritesMaterial = new ShaderMaterial({
   // settings
   transparent: false,
   uniforms: {
@@ -17,10 +17,10 @@ const spritesMaterial = new THREE.ShaderMaterial({
     alt: { value: null },
     palette: { value: null },
     pointSize: {
-      value: new THREE.Vector2(DRAW_CHAR_WIDTH, DRAW_CHAR_HEIGHT),
+      value: new Vector2(DRAW_CHAR_WIDTH, DRAW_CHAR_HEIGHT),
     },
     rows: { value: 1 },
-    step: { value: new THREE.Vector2() },
+    step: { value: new Vector2() },
     // todo, rework to MAX_SPRITES logic
     // where we can have a max of 2048 sprites to render
   },

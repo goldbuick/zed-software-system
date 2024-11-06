@@ -7,8 +7,13 @@ import {
   parsetextfile,
   parsezipfile,
 } from 'zss/firmware/parsefile'
-import { createreadcontext } from 'zss/firmware/wordtypes'
+import { createreadcontext, PT } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
+import {
+  createwritetextcontext,
+  tokenizeandmeasuretextformat,
+  tokenizeandwritetextformat,
+} from 'zss/gadget/data/textformat'
 import {
   COLOR,
   createdither,
@@ -22,7 +27,7 @@ import {
 import { average } from 'zss/mapping/array'
 import { createpid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import { CYCLE_DEFAULT } from 'zss/mapping/tick'
+import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
@@ -34,6 +39,7 @@ import {
 import { boardelementreadstat } from './boardelement'
 import {
   bookboardtick,
+  bookelementdisplayread,
   bookelementkindread,
   bookplayerreadboard,
   bookplayerreadboards,
@@ -139,6 +145,16 @@ export function memoryreadbookbysoftware(
   return memoryreadbookbyaddress(MEMORY.software[slot])
 }
 
+export function memorycreatesoftwarebook(maybename?: string) {
+  const book = createbook([])
+  if (isstring(maybename)) {
+    book.name = maybename
+  }
+  memorysetbook(book)
+  tape_info('memory', `created [book] ${book.name}`)
+  return book
+}
+
 export function memoryensuresoftwarebook(
   slot: keyof typeof MEMORY.software,
   maybename?: string,
@@ -157,12 +173,7 @@ export function memoryensuresoftwarebook(
 
   // create book
   if (!ispresent(book)) {
-    book = createbook([])
-    if (isstring(maybename)) {
-      book.name = maybename
-    }
-    memorysetbook(book)
-    tape_info('memory', `created [book] ${book.name}`)
+    book = memorycreatesoftwarebook(maybename)
   }
 
   // success
@@ -354,6 +365,15 @@ export function memorytick(os: OS, timestamp: number) {
       context.object = item.object
       context.inputcurrent = undefined
 
+      // clear ticker text after X number of ticks
+      if (isnumber(context.object?.tickertime)) {
+        const delta = timestamp - context.object?.tickertime
+        if (delta > TICK_FPS * 5) {
+          context.object.tickertext = undefined
+          context.object.tickertime = undefined
+        }
+      }
+
       // read cycle from element kind
       const maybekindcycle = boardelementreadstat(
         bookelementkindread(mainbook, item.object),
@@ -517,6 +537,27 @@ export function memoryloadfile(
   handlefiletype(file?.type ?? '')
 }
 
+let decoticker = 0
+function readdecotickercolor(): COLOR {
+  switch (decoticker++) {
+    case 0:
+      return COLOR.BLUE
+    case 1:
+      return COLOR.GREEN
+    case 2:
+      return COLOR.CYAN
+    case 3:
+      return COLOR.RED
+    case 4:
+      return COLOR.PURPLE
+    case 5:
+      return COLOR.YELLOW
+    default:
+      decoticker = 0
+      return COLOR.WHITE
+  }
+}
+
 function memoryconverttogadgetlayers(
   player: string,
   index: number,
@@ -542,6 +583,19 @@ function memoryconverttogadgetlayers(
   const objectindex = i++
   const objects = createsprites(player, objectindex)
   layers.push(objects)
+
+  const tickers = createtiles(player, i++, boardwidth, boardheight, COLOR.CLEAR)
+  layers.push(tickers)
+
+  const tickercontext = {
+    ...createwritetextcontext(
+      BOARD_WIDTH,
+      BOARD_HEIGHT,
+      readdecotickercolor(),
+      COLOR.CLEAR,
+    ),
+    ...tickers,
+  }
 
   const control = createlayercontrol(player, i++)
   // hack to keep only one control layer
@@ -571,7 +625,7 @@ function memoryconverttogadgetlayers(
 
     // should we have bg transparent or match the bg color of the terrain ?
     const id = object.id ?? ''
-    const kind = bookelementkindread(book, object)
+    const display = bookelementdisplayread(book, object)
     const sprite = createsprite(player, objectindex, id)
     const lx = object.lx ?? object.x ?? 0
     const ly = object.ly ?? object.y ?? 0
@@ -580,9 +634,9 @@ function memoryconverttogadgetlayers(
     // setup sprite
     sprite.x = object.x ?? 0
     sprite.y = object.y ?? 0
-    sprite.char = object.char ?? kind?.char ?? 1
-    sprite.color = object.color ?? kind?.color ?? COLOR.WHITE
-    sprite.bg = object.bg ?? kind?.bg ?? COLOR.BORROW
+    sprite.char = object.char ?? display?.char ?? 1
+    sprite.color = object.color ?? display?.color ?? COLOR.WHITE
+    sprite.bg = object.bg ?? display?.bg ?? COLOR.BORROW
     objects.sprites.push(sprite)
 
     // plot shadow
@@ -599,6 +653,36 @@ function memoryconverttogadgetlayers(
     // write to borrow buffer
     if (sprite.color !== (COLOR.CLEAR as number)) {
       borrowbuffer[li] = sprite.color
+    }
+
+    // write ticker messages
+    if (
+      isstring(object.tickertext) &&
+      isnumber(object.tickertime) &&
+      object.tickertext.length
+    ) {
+      // calc placement
+      const TICKER_WIDTH = BOARD_WIDTH
+      const measure = tokenizeandmeasuretextformat(
+        object.tickertext,
+        TICKER_WIDTH,
+        BOARD_HEIGHT,
+      )
+      const width = (measure?.measuredwidth ?? 1) - 1
+      const x = object.x ?? 0
+      const y = object.y ?? 0
+      const upper = y < BOARD_HEIGHT * 0.5
+      tickercontext.x = x - Math.floor(width * 0.5)
+      tickercontext.y = y + (upper ? 1 : -1)
+      // clip placement
+      if (tickercontext.x + width > BOARD_WIDTH) {
+        tickercontext.x = BOARD_WIDTH - width
+      }
+      if (tickercontext.x < 0) {
+        tickercontext.x = 0
+      }
+      // render text
+      tokenizeandwritetextformat(object.tickertext, tickercontext, true)
     }
 
     // inform control layer where to focus

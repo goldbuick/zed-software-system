@@ -10,12 +10,7 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import {
-  CHIP_MEMORY,
-  memoryensuresoftwarebook,
-  memoryreadchip,
-  memoryreadcontext,
-} from 'zss/memory'
+import { CHIP_MEMORY, memoryreadchip, memoryreadcontext } from 'zss/memory'
 import {
   bookreadcodepagebyaddress,
   bookreadcodepagewithtype,
@@ -44,7 +39,14 @@ import {
   EIGHT_TRACK,
 } from 'zss/memory/types'
 
-import { ARG_TYPE, readargs } from './wordtypes'
+import {
+  ARG_TYPE,
+  isstrcollision,
+  isstrcolor,
+  mapstrcollisiontoenum,
+  mapstrcolortoattributes,
+  readargs,
+} from './wordtypes'
 
 const COLOR_EDGE = '$dkpurple'
 
@@ -215,19 +217,7 @@ export const MODS_FIRMWARE = createfirmware({
       return 0
     }
 
-    const maybeaddress = maybename ?? ''
     const maybetype = type.toLowerCase()
-
-    // book is a special case
-    if (maybetype === 'book') {
-      // create new book
-      memoryensuresoftwarebook('main', maybeaddress)
-      // reset mod state
-      modstate.type = CODE_PAGE_TYPE.ERROR
-      modstate.target = ''
-      modstate.value = undefined
-      return 0
-    }
 
     const withaddress = maybename ?? createshortnameid()
     switch (maybetype) {
@@ -341,6 +331,7 @@ export const MODS_FIRMWARE = createfirmware({
     return 0
   })
   .command('write', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
     const modstate = readmodstate(chip.id())
     if (!ispresent(modstate.value)) {
       write(`use #mod before #write`)
@@ -348,21 +339,50 @@ export const MODS_FIRMWARE = createfirmware({
     }
 
     // write given value to given address
-    const [name, value] = readargs(memoryreadcontext(chip, words), 0, [
+    const [name] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.STRING,
-      ARG_TYPE.ANY,
     ])
 
     if (modstate.schema?.type === SCHEMA_TYPE.OBJECT) {
       const prop = modstate.schema.props?.[name]
       if (ispresent(prop)) {
         switch (prop.type) {
-          case SCHEMA_TYPE.NUMBER:
-            modstate.value[name] = parseFloat(value)
+          case SCHEMA_TYPE.WORD_TYPE: {
+            const WORD_TYPE_MAP = {
+              string: ARG_TYPE.STRING,
+              number: ARG_TYPE.NUMBER,
+              collision: ARG_TYPE.COLLISION,
+              color: ARG_TYPE.COLOR,
+            }
+
+            let [maybevalue] = readargs(memoryreadcontext(chip, words), 1, [
+              WORD_TYPE_MAP[prop.kind],
+            ])
+
+            if (prop.kind === 'color' && isstrcolor(maybevalue)) {
+              const { color, bg } = mapstrcolortoattributes(maybevalue)
+              maybevalue = color ?? bg ?? 0
+            }
+
+            if (prop.kind === 'collision' && isstrcollision(maybevalue)) {
+              maybevalue = mapstrcollisiontoenum(maybevalue)
+            }
+
+            // @ts-expect-error yes
+            modstate.value[name] = maybevalue
+
+            const strvalue = `${maybevalue}`
+            const codepage = bookreadcodepagebyaddress(
+              memory.book,
+              modstate.target,
+            )
+
+            const pagetype = codepagereadtypetostring(codepage)
+            write(
+              `wrote [${pagetype}] ${codepagereadname(codepage)} ${name} = ${strvalue}`,
+            )
             break
-          case SCHEMA_TYPE.STRING:
-            modstate.value[name] = `${value}`
-            break
+          }
         }
       } else {
         // log error

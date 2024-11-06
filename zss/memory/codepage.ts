@@ -1,9 +1,9 @@
 import { IToken } from 'chevrotain'
+import { BITMAP } from 'zss/gadget/data/bitmap'
 import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import { BIN_CODEPAGE, exportbitmap, importbitmap } from './binary'
 import { createboard, exportboard, importboard } from './board'
 import {
   createboardelement,
@@ -12,12 +12,32 @@ import {
 } from './boardelement'
 import { exporteighttrack, importeighttrack } from './eighttrack'
 import {
+  FORMAT_OBJECT,
+  FORMAT_SKIP,
+  formatobject,
+  unformatobject,
+} from './format'
+import {
   CODE_PAGE,
   CODE_PAGE_LABEL,
   CODE_PAGE_STATS,
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
 } from './types'
+
+enum BITMAP_KEYS {
+  width,
+  height,
+  bits,
+}
+
+export function exportbitmap(bitmap: MAYBE<BITMAP>): MAYBE<FORMAT_OBJECT> {
+  return formatobject(bitmap, BITMAP_KEYS)
+}
+
+export function importbitmap(bitmapentry: MAYBE<FORMAT_OBJECT>): MAYBE<BITMAP> {
+  return unformatobject(bitmapentry, BITMAP_KEYS)
+}
 
 export function createcodepage(
   code: string,
@@ -30,45 +50,44 @@ export function createcodepage(
   }
 }
 
+enum CODE_PAGE_KEYS {
+  id,
+  code,
+  board,
+  object,
+  terrain,
+  charset,
+  palette,
+  eighttrack,
+}
+
 // safe to serialize copy of codepage
 export function exportcodepage(
   codepage: MAYBE<CODE_PAGE>,
-): MAYBE<BIN_CODEPAGE> {
-  if (!ispresent(codepage)) {
-    return
-  }
-  return {
-    id: codepage.id,
-    code: codepage.code,
-    // content data
-    board: exportboard(codepage.board),
-    object: exportboardelement(codepage.object),
-    terrain: exportboardelement(codepage.terrain),
-    charset: exportbitmap(codepage.charset),
-    palette: exportbitmap(codepage.palette),
-    eighttrack: exporteighttrack(codepage.eighttrack),
-  }
+): MAYBE<FORMAT_OBJECT> {
+  return formatobject(codepage, CODE_PAGE_KEYS, {
+    board: exportboard,
+    object: exportboardelement,
+    terrain: exportboardelement,
+    charset: exportbitmap,
+    palette: exportbitmap,
+    eighttrack: exporteighttrack,
+    stats: FORMAT_SKIP,
+  })
 }
 
 // safe to serialize copy of codepage
 export function importcodepage(
-  codepage: MAYBE<BIN_CODEPAGE>,
+  codepageentry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<CODE_PAGE> {
-  if (!ispresent(codepage)) {
-    return
-  }
-
-  return {
-    id: codepage.id,
-    code: codepage.code,
-    // content data
-    board: importboard(codepage.board),
-    object: importboardelement(codepage.object),
-    terrain: importboardelement(codepage.terrain),
-    charset: importbitmap(codepage.charset),
-    palette: importbitmap(codepage.palette),
-    eighttrack: importeighttrack(codepage.eighttrack),
-  }
+  return unformatobject<CODE_PAGE>(codepageentry, CODE_PAGE_KEYS, {
+    board: importboard,
+    object: importboardelement,
+    terrain: importboardelement,
+    charset: importbitmap,
+    palette: importbitmap,
+    eighttrack: importeighttrack,
+  })
 }
 
 export function codepagehasmatch(

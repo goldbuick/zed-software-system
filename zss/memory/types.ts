@@ -41,6 +41,8 @@ export type BOARD_ELEMENT = {
   pushable?: number
   collision?: COLLISION
   destructible?: number
+  tickertext?: string
+  tickertime?: number
   // config
   p1?: string
   p2?: string
@@ -56,9 +58,15 @@ export type BOARD_ELEMENT = {
   kindcode?: string
   headless?: boolean
   removed?: number
+  // player only
+  inputmove?: string[]
+  inputok?: number
+  inputcancel?: number
+  inputmenu?: number
+  inputalt?: number
+  inputctrl?: number
+  inputshift?: number
 }
-
-export type BOARD_ELEMENT_STAT = keyof BOARD_ELEMENT
 
 // boards
 

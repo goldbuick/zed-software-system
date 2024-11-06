@@ -192,6 +192,16 @@ export const collisionconsts = {
   isswimmable: 'ISSWIMABLE',
 } as const
 
+export const collisionenums = {
+  issolid: COLLISION.ISSOLID,
+  iswalk: COLLISION.ISWALK,
+  isswim: COLLISION.ISSWIM,
+  isbullet: COLLISION.ISBULLET,
+  // aliases
+  iswalkable: COLLISION.ISWALK,
+  isswimmable: COLLISION.ISSWIM,
+} as const
+
 export type STR_COLLISION_TYPE = typeof collisionconsts
 export type STR_COLLISION_KEYS = keyof STR_COLLISION_TYPE
 export type STR_COLLISION_CONST = STR_COLLISION_TYPE[STR_COLLISION_KEYS]
@@ -199,6 +209,10 @@ export type STR_COLLISION = STR_COLLISION_CONST[]
 
 export function isstrcollision(value: any): value is STR_COLLISION {
   return isarray(value) && isstrcollisionconst(value[0])
+}
+
+export function mapstrcollisiontoenum(value: STR_COLLISION): COLLISION {
+  return collisionenums[value[0].toLowerCase() as keyof typeof collisionenums]
 }
 
 function isstrcollisionconst(value: any): value is STR_COLLISION_CONST {

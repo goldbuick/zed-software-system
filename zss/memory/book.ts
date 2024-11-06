@@ -1,11 +1,11 @@
 import { PT, STR_KIND } from 'zss/firmware/wordtypes'
+import { COLOR } from 'zss/gadget/data/types'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
 
 import { checkcollision } from './atomics'
-import { BIN_BOOK } from './binary'
 import {
   boarddeleteobject,
   boardelementapplycolor,
@@ -21,19 +21,20 @@ import {
   exportcodepage,
   importcodepage,
 } from './codepage'
+import { FORMAT_OBJECT, formatobject, unformatobject } from './format'
 import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
+  BOOK_FLAGS,
   CATEGORY,
   CODE_PAGE,
   CODE_PAGE_TYPE,
   COLLISION,
   WORD,
 } from './types'
-import { exportwordentry } from './word'
 
 // player state
 
@@ -47,51 +48,20 @@ export function createbook(pages: CODE_PAGE[]): BOOK {
   }
 }
 
-// safe to serialize copy of book
-export function exportbook(book: MAYBE<BOOK>): MAYBE<BIN_BOOK> {
-  if (!ispresent(book)) {
-    return
-  }
-
-  const flags = Object.keys(book.flags).map((player) => {
-    const values = book.flags[player]
-    return {
-      player,
-      values: Object.keys(values)
-        .map((name) => exportwordentry(name, values[name]))
-        .filter(ispresent),
-    }
-  })
-
-  const players = Object.keys(book.players).map((player) => {
-    const board = book.players[player]
-    return {
-      player,
-      board,
-    }
-  })
-
-  return {
-    id: book.id,
-    name: book.name,
-    pages: book.pages.map(exportcodepage).filter(ispresent),
-    flags,
-    players,
-  }
+enum BOOK_KEYS {
+  id,
+  name,
+  pages,
+  flags,
+  players,
 }
 
-// import json into book
-export function importbook(book: MAYBE<BIN_BOOK>): MAYBE<BOOK> {
-  if (!ispresent(book)) {
-    return
-  }
-  return {
-    id: book.id,
-    name: book.name,
-    pages: book.pages.map(importcodepage).filter(ispresent),
-    flags: {},
-    players: {},
-  }
+export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
+  return formatobject(book, BOOK_KEYS)
+}
+
+export function importbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
+  return unformatobject(bookentry, BOOK_KEYS)
 }
 
 export function bookhasmatch(book: MAYBE<BOOK>, ids: string[]): boolean {
@@ -204,6 +174,18 @@ export function bookelementkindread(
     return element.kinddata
   }
   return undefined
+}
+
+export function bookelementdisplayread(
+  book: MAYBE<BOOK>,
+  element: MAYBE<BOARD_ELEMENT>,
+) {
+  const kind = bookelementkindread(book, element)
+  return {
+    char: element?.char ?? kind?.char ?? 1,
+    color: element?.color ?? kind?.color ?? COLOR.WHITE,
+    bg: element?.bg ?? kind?.bg ?? COLOR.BORROW,
+  }
 }
 
 export function bookreadobject(

@@ -1,6 +1,6 @@
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE } from 'zss/mapping/types'
 
-import { BIN_EIGHT_TRACK } from './binary'
+import { FORMAT_OBJECT, formatobject, unformatobject } from './format'
 import {
   EIGHT_FX,
   EIGHT_FX_CONFIG,
@@ -17,6 +17,18 @@ export function createeighttrackfxconfig(): EIGHT_FX_CONFIG {
   }
 }
 
+export function exporteighttrackfxconfig(
+  fxconfig: MAYBE<EIGHT_FX_CONFIG>,
+): MAYBE<FORMAT_OBJECT> {
+  return formatobject(fxconfig, {})
+}
+
+export function importeighttrackfxconfig(
+  fxconfigentry: MAYBE<FORMAT_OBJECT>,
+): MAYBE<EIGHT_FX_CONFIG> {
+  return unformatobject(fxconfigentry, {})
+}
+
 export function createeighttracksynthconfig(): EIGHT_SYNTH_CONFIG {
   return {
     synth: EIGHT_SYNTH.SQUARE,
@@ -25,8 +37,32 @@ export function createeighttracksynthconfig(): EIGHT_SYNTH_CONFIG {
   }
 }
 
+export function exporteighttracksynthconfig(
+  synthconfig: MAYBE<EIGHT_SYNTH_CONFIG>,
+): MAYBE<FORMAT_OBJECT> {
+  return formatobject(synthconfig, {})
+}
+
+export function importeighttracksynthconfig(
+  synthconfigentry: MAYBE<FORMAT_OBJECT>,
+): MAYBE<EIGHT_SYNTH_CONFIG> {
+  return unformatobject(synthconfigentry, {})
+}
+
 export function createeighttrackmeasure(): EIGHT_MEASURE {
   return [-1, -1, -1, -1, -1, -1, -1, -1]
+}
+
+export function exporteighttrackmeasure(
+  measure: MAYBE<EIGHT_MEASURE>,
+): MAYBE<FORMAT_OBJECT> {
+  return formatobject(measure, {})
+}
+
+export function importeighttrackmeasure(
+  measureentry: MAYBE<FORMAT_OBJECT>,
+): MAYBE<EIGHT_MEASURE> {
+  return unformatobject(measureentry, {})
 }
 
 export function createeighttrack(): EIGHT_TRACK {
@@ -46,21 +82,23 @@ export function createeighttrack(): EIGHT_TRACK {
   }
 }
 
+enum EIGHT_TRACK_KEYS {
+  tempo,
+  synths,
+  measures,
+}
+
 export function exporteighttrack(
   eighttrack: MAYBE<EIGHT_TRACK>,
-): MAYBE<BIN_EIGHT_TRACK> {
-  if (!ispresent(eighttrack)) {
-    return
-  }
-
-  return eighttrack
+): MAYBE<FORMAT_OBJECT> {
+  return formatobject(eighttrack, EIGHT_TRACK_KEYS, {
+    synths: exporteighttracksynthconfig,
+    measures: exporteighttrackmeasure,
+  })
 }
 
 export function importeighttrack(
-  eighttrack: MAYBE<BIN_EIGHT_TRACK>,
+  eighttrackentry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<EIGHT_TRACK> {
-  if (!ispresent(eighttrack)) {
-    return
-  }
-  return eighttrack as EIGHT_TRACK
+  return unformatobject(eighttrackentry, EIGHT_TRACK_KEYS)
 }

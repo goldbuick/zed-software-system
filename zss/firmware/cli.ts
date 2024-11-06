@@ -1,8 +1,6 @@
 import { maptostring } from 'zss/chip'
 import {
   api_error,
-  register_biostrash,
-  register_biosflash,
   tape_editor_open,
   tape_info,
   vm_codeaddress,
@@ -14,12 +12,14 @@ import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryclearbook,
+  memorycreatesoftwarebook,
   memoryensuresoftwarebook,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
   memoryreadchip,
   memoryreadcontext,
+  memorysetbook,
   memorysetsoftwarebook,
 } from 'zss/memory'
 import {
@@ -27,6 +27,7 @@ import {
   bookreadcodepagebyaddress,
   bookreadflag,
   booksetflag,
+  createbook,
 } from 'zss/memory/book'
 import { codepagereadname, codepagereadtypetostring } from 'zss/memory/codepage'
 
@@ -140,11 +141,11 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('bookcreate', (chip, words) => {
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
+    const [maybename] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.MAYBE_STRING,
     ])
 
-    const book = memoryensuresoftwarebook('main', name)
+    const book = memorycreatesoftwarebook(maybename)
     if (ispresent(book)) {
       chip.command('bookopen', book.id)
     }
@@ -245,16 +246,6 @@ export const CLI_FIRMWARE = createfirmware({
     writetext(`node id changed, refreshing page recommended`)
     return 0
   })
-  .command('biosflash', () => {
-    register_biosflash('cli')
-    writetext(`bios flashed`)
-    return 0
-  })
-  .command('biostrash', () => {
-    register_biostrash('cli')
-    writetext(`bios erased, refreshing page recommended`)
-    return 0
-  })
   .command('help', (chip, words) => {
     const text = words.map(maptostring).join(' ') || 'menu'
     chip.command(`help${text}`)
@@ -327,18 +318,6 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('save', () => {
     vm_flush('cli')
-    return 0
-  })
-  .command('update', () => {
-    const booknames = memoryreadbooklist()
-      .map((item) => item.name)
-      .join(' ')
-    write(`!biosflash;$GREENWrite ${booknames} to bios`)
-    return 0
-  })
-  .command('factoryreset', () => {
-    // todo, list book names in bios
-    write(`!bioserase;$REDReset bios`)
     return 0
   })
   .command('send', (chip, words) => {
@@ -435,8 +414,6 @@ export const CLI_FIRMWARE = createfirmware({
           `list books and pages from open book you can delete`,
         )
         writeoption(`#save`, `flush state to register`)
-        // writeoption(`#update`, `write current books to bios`)
-        // writeoption(`#factoryreset`, `erase books stored in bios`)
         break
       case 'helpplayer':
         writeheader(`player settings`)

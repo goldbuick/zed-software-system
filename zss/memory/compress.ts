@@ -1,20 +1,17 @@
-import { decode, encode } from 'base64-arraybuffer'
-import { gzip, gunzip } from 'fflate'
-import * as bin from 'typed-binary'
+import JSZip, { JSZipObject } from 'jszip'
 import { ispresent } from 'zss/mapping/types'
 
-import { BIN_BOOK } from './binary'
 import { exportbook, importbook } from './book'
+import { packbinary, unpackbinary } from './format'
 import { BOOK } from './types'
 
 // data encoding for urls
 function base64urltobase64(base64UrlString: string) {
   // Replace non-url compatible chars with base64 standard chars
   const base64 = base64UrlString.replace(/-/g, '+').replace(/_/g, '/')
-
   // Pad out with standard base64 required padding characters if missing
   const missingPadding = '='.repeat((4 - (base64.length % 4)) % 4)
-
+  // return full str
   return base64 + missingPadding
 }
 
@@ -23,72 +20,60 @@ function base64tobase64url(base64String: string) {
   return base64String.replace(/\+/g, '-').replace(/\//g, '_')
 }
 
-function base64decode(data: string): Uint8Array {
-  return new Uint8Array(decode(atob(data)))
-}
-
-function base64encode(data: Uint8Array): string {
-  return btoa(encode(data))
-}
-
-function base64urltouint8array(base64String: string) {
-  // base64 de-sanitizing
-  const base64 = base64urltobase64(base64String)
-
-  // base64 decoding
-  return base64decode(base64)
-}
-
-function uint8arraytobase64url(bytes: Uint8Array) {
-  const base64 = base64encode(bytes)
-
-  // base64 sanitizing
-  return base64tobase64url(base64)
-}
-
-const BIN_BOOKS = bin.dynamicArrayOf(BIN_BOOK)
-
-// Type alias for ease-of-use
-export type BIN_BOOKS = bin.Parsed<typeof BIN_BOOKS>
+const FIXED_DATE = new Date('1980/09/02')
 
 export async function compressbooks(books: BOOK[]) {
   return new Promise<string>((resolve, reject) => {
-    const exportedbooks = books.map(exportbook).filter(ispresent)
-    const binbooks = new ArrayBuffer(BIN_BOOKS.measure(exportedbooks).size)
-    const writer = new bin.BufferWriter(binbooks)
-    BIN_BOOKS.write(writer, exportedbooks)
-    gzip(
-      new Uint8Array(binbooks),
-      {
-        mtime: 0,
-        level: 9,
-        filename: '',
-      },
-      (err, asciibytes) => {
-        if (err) {
-          reject(err)
+    const zip = new JSZip()
+    for (let i = 0; i < books.length; ++i) {
+      const book = books[i]
+      const exportedbook = exportbook(book)
+      if (exportedbook) {
+        // convert to binary & compress book
+        const bin = packbinary(exportedbook)
+        if (ispresent(bin)) {
+          zip.file(book.id, bin, { date: FIXED_DATE })
         }
-        if (asciibytes) {
-          resolve(uint8arraytobase64url(asciibytes))
-        }
-      },
-    )
+      }
+    }
+    zip
+      .generateAsync({
+        type: 'base64',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 9 },
+      })
+      .then((content) => {
+        resolve(base64tobase64url(content))
+      })
+      .catch(reject)
   })
 }
 
 // import json into book
 export async function decompressbooks(base64bytes: string) {
   return new Promise<BOOK[]>((resolve, reject) => {
-    const asciibytes = base64urltouint8array(base64bytes)
-    gunzip(asciibytes, {}, (err, binbooks) => {
-      if (err) {
-        reject(err)
-      }
-      if (binbooks) {
-        const reader = new bin.BufferReader(binbooks.buffer)
-        const books = BIN_BOOKS.read(reader).map(importbook).filter(ispresent)
+    const zip = new JSZip()
+    zip
+      .loadAsync(base64urltobase64(base64bytes), { base64: true })
+      .then(async () => {
+        const books: BOOK[] = []
+        // extract a normal list
+        const files: JSZipObject[] = []
+        zip.forEach((_path, file) => files.push(file))
+        // unpack books
+        for (let i = 0; i < files.length; ++i) {
+          const file = files[i]
+          // uncompress book
+          const bin = await file.async('uint8array')
+          // convert back to json
+          const book = importbook(unpackbinary(bin))
+          if (ispresent(book)) {
+            books.push(book)
+          }
+        }
+        // return result
         resolve(books)
-      }
-    })
+      })
+      .catch(reject)
   })
 }
