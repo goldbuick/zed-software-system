@@ -21,28 +21,98 @@ Reading all the boards
 #set offset 512
 #repeat boardcount do
 
-#bin seek offset
-#bin int16le boardsize
-"boardsize: $boardsize"
+ #bin seek offset
+ #bin int16le boardsize
+ "boardsize: $boardsize"
 
-#bin text uint8 boardname
-"BOARD $index - $boardname"
+ #bin text uint8 boardname
+ "BOARD $index - $boardname"
 
-#bin seek offset + 53
-#clear tiles
+ #bin seek offset + 53
 
-#while tiles < 1500 do
-#bin uint8 tilecount
-#bin uint8 tileelement
-#bin uint8 tilecolor
-"ELEMENT $tileelement"
-#done
+ 'create/modify board by given name
 
-#break
+ #clear tiles
+ #clear blocks
+ #while tiles < 1500 do
+  #bin uint8 tilecount
+  #bin uint8 tileelement
+  #bin uint8 tilecolor
+  'plot element
+  #for i 1 to tilecount do
+   #give blocks
+   #if tileelement is 0 put at x y empty
+   #if tileelement is 1 put at x y empty
+   #if tileelement is 2 put at x y empty
+   #if tileelement is 3 put at x y empty
+   #if tileelement is 4 put at x y empty
+   #if tileelement is 5 put at x y empty
+   #if tileelement is 6 put at x y empty
+   #if tileelement is 7 put at x y empty
+   #if tileelement is 8 put at x y empty
+   #if tileelement is 9 put at x y empty
+   #if tileelement is 10 put at x y empty
+   #if tileelement is 11 put at x y empty
+   #if tileelement is 12 put at x y empty
+   #if tileelement is 13 put at x y empty
+   #if tileelement is 14 put at x y empty
+   #if tileelement is 15 put at x y empty
+   #if tileelement is 16 put at x y empty
+   #if tileelement is 17 put at x y empty
+   #if tileelement is 18 put at x y empty
+   #if tileelement is 19 put at x y empty
+   #if tileelement is 20 put at x y empty
+   #if tileelement is 21 put at x y empty
+   #if tileelement is 22 put at x y empty
+   #if tileelement is 23 put at x y empty
+   #if tileelement is 24 put at x y empty
+   #if tileelement is 25 put at x y empty
+   #if tileelement is 26 put at x y empty
+   #if tileelement is 27 put at x y empty
+   #if tileelement is 28 put at x y empty
+   #if tileelement is 29 put at x y empty
+   #if tileelement is 30 put at x y empty
+   #if tileelement is 31 put at x y empty
+   #if tileelement is 32 put at x y empty
+   #if tileelement is 33 put at x y empty
+   #if tileelement is 34 put at x y empty
+   #if tileelement is 35 put at x y empty
+   #if tileelement is 36 put at x y empty
+   #if tileelement is 37 put at x y empty
+   #if tileelement is 38 put at x y empty
+   #if tileelement is 39 put at x y empty
+   #if tileelement is 40 put at x y empty
+   #if tileelement is 41 put at x y empty
+   #if tileelement is 42 put at x y empty
+   #if tileelement is 43 put at x y empty
+   #if tileelement is 44 put at x y empty
+   #if tileelement is 45 put at x y empty
+   #if tileelement is 46 put at x y empty
+   #if tileelement is 47 put at x y empty
+   #if tileelement is 48 put at x y empty
+   #if tileelement is 49 put at x y empty
+   #if tileelement is 50 put at x y empty
+   #if tileelement is 51 put at x y empty
+   #if tileelement is 52 put at x y empty
+   #if tileelement is 53 put at x y empty
+   #give x
+   #if x is 60 do
+    #clear x
+    #give y
+   #done
+  #done
+ 
+  #give tiles tilecount
+ #done
 
-'next
-#give index
-#give offset boardsize + 2
+ "decoded $blocks RLE blocks"
+
+ 'skip the rest for now
+ #break
+
+ 'next
+ #give index
+ #give offset boardsize + 2
 #done
 
 
