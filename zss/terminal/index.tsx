@@ -1,15 +1,13 @@
-import { extend, createRoot, events, Canvas } from '@react-three/fiber'
+import { createRoot, events, Canvas } from '@react-three/fiber'
 import debounce from 'debounce'
-import * as THREE from 'three'
+import { Intersection, Plane, Vector3 } from 'three'
 import { makeEven } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
 import { App } from './app'
 
-extend(THREE)
-
-const target = new THREE.Vector3()
-const facing = new THREE.Vector3()
+const target = new Vector3()
+const facing = new Vector3()
 
 const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   state,
@@ -18,14 +16,13 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   ...events(state),
 
   // The filter can re-order or re-structure the intersections
-  filter: (items: THREE.Intersection[]) => {
+  filter: (items: Intersection[]) => {
     const list = items.filter((item) => {
       if (!item.object.visible) {
         return false
       }
 
-      const clippingPlanes: THREE.Plane[] =
-        item.object.userData.clippingPlanes ?? []
+      const clippingPlanes: Plane[] = item.object.userData.clippingPlanes ?? []
       if (
         clippingPlanes.some((plane) => {
           plane.projectPoint(item.point, target)

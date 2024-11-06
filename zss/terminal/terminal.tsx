@@ -1,4 +1,4 @@
-import { addEffect, addAfterEffect, useThree } from '@react-three/fiber'
+import { addEffect, addAfterEffect, useThree, extend } from '@react-three/fiber'
 import {
   BrightnessContrast,
   ChromaticAberration,
@@ -8,11 +8,7 @@ import { getGPUTier, GetGPUTier } from 'detect-gpu'
 import { useEffect, useLayoutEffect, useRef, useState, Suspense } from 'react'
 import Stats from 'stats.js'
 import { suspend } from 'suspend-react'
-import {
-  OrthographicCamera as OrthographicCameraImpl,
-  NearestFilter,
-  Vector2,
-} from 'three'
+import { NearestFilter, Vector2, OrthographicCamera } from 'three'
 import { FORCE_CRT_OFF, STATS_DEV } from 'zss/config'
 import { useTexture } from 'zss/gadget/components/usetexture'
 import { createplatform } from 'zss/platform'
@@ -21,6 +17,8 @@ import { CRTShape } from './crt'
 import { Framing } from './framing'
 import { Gadget } from './gadget'
 import decoimageurl from './scratches.jpg'
+
+extend({ OrthographicCamera })
 
 const TUG = 0.0006
 const TUG_VEC = new Vector2(TUG, TUG * -0.5)
@@ -32,7 +30,7 @@ createplatform()
 
 export function Terminal() {
   const viewport = useThree((state) => state.viewport)
-  const cameraRef = useRef<OrthographicCameraImpl>(null)
+  const cameraRef = useRef<OrthographicCamera>(null)
   const { height: viewheight } = viewport.getCurrentViewport()
 
   const splat = useTexture(decoimageurl)

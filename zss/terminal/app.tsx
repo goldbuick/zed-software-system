@@ -1,10 +1,30 @@
+import { extend } from '@react-three/fiber'
+import {
+  BufferGeometry,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  OrthographicCamera,
+  PlaneGeometry,
+  Points,
+} from 'three'
 import { vm_loadfile } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import { ispresent } from 'zss/mapping/types'
 
+import { Terminal } from './terminal'
+
 import 'zss/platform'
 
-import { Terminal } from './terminal'
+extend({
+  BufferGeometry,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  OrthographicCamera,
+  PlaneGeometry,
+  Points,
+})
 
 window.addEventListener('dragover', (event) => {
   event.preventDefault()

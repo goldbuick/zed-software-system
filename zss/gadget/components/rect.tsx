@@ -1,6 +1,4 @@
-// import { Plane } from '@react-three/drei'
 import React from 'react'
-import { Mesh, Plane } from 'three'
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 
 import { useClipping } from './clipping'
