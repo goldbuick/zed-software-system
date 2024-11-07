@@ -1,6 +1,5 @@
-// import { Plane } from '@react-three/drei'
 import React from 'react'
-import { Mesh, Plane } from 'three'
+import { Mesh } from 'three'
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 
 import { useClipping } from './clipping'
@@ -15,7 +14,7 @@ type ShapeProps<T> = Omit<JSX.IntrinsicElements['mesh'], 'args'> & {
 }
 
 const PlaneComponent = React.forwardRef(function Plane(
-  { args, children, ...props }: ShapeProps<Plane>,
+  { args, children, ...props }: ShapeProps<typeof Plane>,
   fref: React.ForwardedRef<Mesh>,
 ) {
   const ref = React.useRef<Mesh>(null!)
