@@ -400,10 +400,6 @@ class ScriptVisitor
     return []
   }
 
-  do_block(ctx: Do_blockCstChildren) {
-    return this.go(ctx.line)
-  }
-
   do_inline(ctx: Do_inlineCstChildren) {
     if (ctx.stmt_stat) {
       return this.go(ctx.stmt_stat)
@@ -444,9 +440,7 @@ class ScriptVisitor
   stmt_text(ctx: Stmt_textCstChildren) {
     return createcodenode(ctx, {
       type: NODE.TEXT,
-      value:
-        tokenstring(ctx.token_stringliteraldouble, '') ||
-        tokenstring(ctx.token_text, ''),
+      value: tokenstring(ctx.token_text, ''),
     })
   }
 
@@ -583,7 +577,7 @@ class ScriptVisitor
   }
 
   command_block(ctx: Command_blockCstChildren) {
-    return [this.go(ctx.do_inline), this.go(ctx.do_block)].flat()
+    return [this.go(ctx.do_inline), this.go(ctx.line)].flat()
   }
 
   command_else_if(ctx: Command_else_ifCstChildren) {

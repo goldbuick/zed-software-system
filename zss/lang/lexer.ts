@@ -90,7 +90,7 @@ function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
   }
 
   // detect beginning of text
-  if (`@#/?':!"`.includes(text[cursor])) {
+  if (`@#/?':!`.includes(text[cursor])) {
     return null
   }
 
