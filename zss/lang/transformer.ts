@@ -529,6 +529,8 @@ function transformNode(ast: CodeNode): SourceNode {
       return transformOperator(ast)
     case NODE.EXPR:
       return writeApi(ast, 'expr', ast.words.map(transformNode))
+    case NODE.DEBUGGER:
+      return writeApi(ast, 'debugger', [])
     default:
       console.error(`<unsupported node>`, ast.type, ast)
       return blank(ast)

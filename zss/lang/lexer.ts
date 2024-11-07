@@ -241,6 +241,7 @@ export const command_play = createSimpleToken({
 
 // core / structure commands
 
+export const command_debugger = createWordToken('debugger')
 export const command_if = createWordToken('if')
 export const command_do = createWordToken('do')
 export const command_to = createWordToken('to', true)
@@ -316,6 +317,7 @@ export const allTokens = createTokenSet([
   newline,
   whitespace,
   // core / structure commands
+  command_debugger,
   command_if,
   command_done,
   command_do,

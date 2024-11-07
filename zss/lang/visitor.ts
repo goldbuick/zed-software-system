@@ -16,6 +16,7 @@ import {
   Command_blockCstChildren,
   Command_breakCstChildren,
   Command_continueCstChildren,
+  Command_debuggerCstChildren,
   Command_else_ifCstChildren,
   Command_elseCstChildren,
   Command_foreachCstChildren,
@@ -89,6 +90,8 @@ export enum NODE {
   OPERATOR,
   OPERATOR_ITEM,
   EXPR,
+  // utils
+  DEBUGGER,
 }
 
 export enum COMPARE {
@@ -252,6 +255,9 @@ type CodeNodeData =
   | {
       type: NODE.EXPR
       words: CodeNode[]
+    }
+  | {
+      type: NODE.DEBUGGER
     }
 
 export type CodeNode = CodeNodeData &
@@ -500,6 +506,9 @@ class ScriptVisitor
   }
 
   structured_cmd(ctx: Structured_cmdCstChildren) {
+    if (ctx.command_debugger) {
+      return this.go(ctx.command_debugger)
+    }
     if (ctx.command_if) {
       return this.go(ctx.command_if)
     }
@@ -544,6 +553,12 @@ class ScriptVisitor
       })
     }
     return []
+  }
+
+  command_debugger(ctx: Command_debuggerCstChildren) {
+    return createcodenode(ctx, {
+      type: NODE.DEBUGGER,
+    })
   }
 
   command_if(ctx: Command_ifCstChildren) {

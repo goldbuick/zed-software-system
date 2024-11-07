@@ -101,6 +101,9 @@ export type CHIP = {
   opFloorDivide: (lhs: WORD, rhs: WORD) => WORD
   opUniPlus: (lhs: WORD, rhs: WORD) => WORD
   opUniMinus: (lhs: WORD, rhs: WORD) => WORD
+
+  // util api
+  debugger: () => WORD
 }
 
 function maptoresult(value: WORD): WORD {
@@ -564,14 +567,13 @@ export function createchip(id: string, build: GeneratorBuild) {
       const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
         ARG_TYPE.ANY,
       ])
-      return isequal(left, right) ? 1 : 0
+      if (typeof left === 'object' || typeof right === 'object') {
+        return isequal(left, right) ? 1 : 0
+      }
+      return left === right ? 1 : 0
     },
     isNotEq(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.ANY,
-      ])
-      return left !== right ? 1 : 0
+      return this.isEq(lhs, rhs) ? 0 : 1
     },
     isLessThan(lhs, rhs) {
       const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
@@ -679,6 +681,10 @@ export function createchip(id: string, build: GeneratorBuild) {
         ARG_TYPE.NUMBER,
       ])
       return -right
+    },
+    debugger() {
+      debugger
+      return 0
     },
   }
 
