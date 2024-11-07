@@ -558,11 +558,7 @@ class ScriptVisitor
   command_if_block(ctx: Command_if_blockCstChildren) {
     return createcodenode(ctx, {
       type: NODE.IF_BLOCK,
-      lines: [
-        // if stmt logic
-        this.go(ctx.do_inline),
-        this.go(ctx.do_block),
-      ].flat(),
+      lines: [this.go(ctx.do_inline), this.go(ctx.line)].flat(),
       altlines: [
         // other lines of logic
         this.go(ctx.command_else_if),
@@ -593,16 +589,12 @@ class ScriptVisitor
     })
   }
 
-  command_loop(ctx: Command_blockCstChildren) {
-    return [this.go(ctx.do_inline), this.go(ctx.do_block)].flat()
-  }
-
   command_while(ctx: Command_whileCstChildren) {
     return createcodenode(ctx, {
       type: NODE.WHILE,
       method: 'while', // future variants of while ( move, take ? )
       words: this.go(ctx.words),
-      lines: this.go(ctx.command_loop),
+      lines: this.go(ctx.command_block),
     })
   }
 
@@ -610,7 +602,7 @@ class ScriptVisitor
     return createcodenode(ctx, {
       type: NODE.REPEAT,
       words: this.go(ctx.words),
-      lines: this.go(ctx.command_loop),
+      lines: this.go(ctx.command_block),
     })
   }
 
@@ -625,7 +617,7 @@ class ScriptVisitor
     return createcodenode(ctx, {
       type: NODE.FOREACH,
       words: this.go(ctx.words),
-      lines: this.go(ctx.command_loop),
+      lines: this.go(ctx.command_block),
     })
   }
 

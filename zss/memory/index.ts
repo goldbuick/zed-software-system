@@ -7,7 +7,7 @@ import {
   parsetextfile,
   parsezipfile,
 } from 'zss/firmware/parsefile'
-import { createreadcontext, PT } from 'zss/firmware/wordtypes'
+import { createreadcontext } from 'zss/firmware/wordtypes'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
   createwritetextcontext,

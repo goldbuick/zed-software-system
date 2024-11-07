@@ -19,7 +19,6 @@ import {
   memoryreadbooklist,
   memoryreadchip,
   memoryreadcontext,
-  memorysetbook,
   memorysetsoftwarebook,
 } from 'zss/memory'
 import {
@@ -27,7 +26,6 @@ import {
   bookreadcodepagebyaddress,
   bookreadflag,
   booksetflag,
-  createbook,
 } from 'zss/memory/book'
 import { codepagereadname, codepagereadtypetostring } from 'zss/memory/codepage'
 

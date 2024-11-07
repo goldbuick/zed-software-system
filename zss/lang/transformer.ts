@@ -368,6 +368,8 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, [
         writelabel(ast, whileloop, whileloopindex),
         `\n`,
+        EOL(),
+        `\n`,
       ])
 
       source.add([
@@ -415,6 +417,7 @@ function transformNode(ast: CodeNode): SourceNode {
         ';\n',
       ])
       source.add([writelabel(ast, repeatloop, repeatloopindex), `\n`])
+      source.add([EOL(), `\n`])
       source.add(
         [
           ['if (!', writeApi(ast, 'repeat', [`${context.internal}`]), `)`],

@@ -94,11 +94,9 @@ class ScriptParser extends CstParser {
 
   do_block = this.RULED('do_block', () => {
     this.CONSUME(lexer.command_do)
-    this.MANY(() => this.CONSUME(lexer.newline))
-    this.AT_LEAST_ONE({
-      GATE: this.BACKTRACK(this.line),
-      DEF: () => this.SUBRULE(this.line),
-    })
+    this.MANY(() => this.SUBRULE(this.line))
+    this.CONSUME(lexer.command)
+    this.CONSUME(lexer.command_done)
   })
 
   do_inline = this.RULED('do_inline', () => {
@@ -204,21 +202,22 @@ class ScriptParser extends CstParser {
       {
         // block if
         ALT: () => {
-          this.SUBRULE(this.do_block)
-
+          this.CONSUME(lexer.command_do)
           this.MANY({
+            GATE: this.BACKTRACK(this.line),
+            DEF: () => this.SUBRULE(this.line),
+          })
+          this.MANY2({
             GATE: this.BACKTRACK(this.command_else_if),
             DEF: () => this.SUBRULE(this.command_else_if),
           })
-
-          this.OPTION2({
+          this.OPTION({
             GATE: this.BACKTRACK(this.command_else),
             DEF: () => this.SUBRULE(this.command_else),
           })
-
-          this.MANY2(() => this.CONSUME(lexer.newline))
-          this.CONSUME(lexer.command)
-          this.CONSUME(lexer.command_done)
+          this.MANY3(() => this.CONSUME3(lexer.newline))
+          this.CONSUME3(lexer.command)
+          this.CONSUME3(lexer.command_done)
         },
       },
     ])
@@ -259,31 +258,12 @@ class ScriptParser extends CstParser {
     })
   })
 
-  command_loop = this.RULED('command_loop', () => {
-    this.OR([
-      {
-        // inline block
-        GATE: this.BACKTRACK(this.do_inline),
-        ALT: () => this.SUBRULE(this.do_inline),
-      },
-      {
-        // multi-line block
-        GATE: this.BACKTRACK(this.do_block),
-        ALT: () => {
-          this.SUBRULE(this.do_block)
-          this.CONSUME(lexer.command)
-          this.CONSUME(lexer.command_done)
-        },
-      },
-    ])
-  })
-
   command_while = this.RULED('command_while', () => {
     this.CONSUME(lexer.command_while)
     this.SUBRULE(this.words)
     this.OPTION({
-      GATE: this.BACKTRACK(this.command_loop),
-      DEF: () => this.SUBRULE(this.command_loop),
+      GATE: this.BACKTRACK(this.command_block),
+      DEF: () => this.SUBRULE(this.command_block),
     })
   })
 
@@ -291,8 +271,8 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.command_repeat)
     this.SUBRULE(this.words)
     this.OPTION({
-      GATE: this.BACKTRACK(this.command_loop),
-      DEF: () => this.SUBRULE(this.command_loop),
+      GATE: this.BACKTRACK(this.command_block),
+      DEF: () => this.SUBRULE(this.command_block),
     })
   })
 
@@ -305,8 +285,8 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.command_foreach)
     this.SUBRULE(this.words)
     this.OPTION({
-      GATE: this.BACKTRACK(this.command_loop),
-      DEF: () => this.SUBRULE(this.command_loop),
+      GATE: this.BACKTRACK(this.command_block),
+      DEF: () => this.SUBRULE(this.command_block),
     })
   })
 

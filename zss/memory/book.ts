@@ -18,8 +18,6 @@ import {
   codepagereadname,
   codepagereadstatdefaults,
   codepagereadtype,
-  exportcodepage,
-  importcodepage,
 } from './codepage'
 import { FORMAT_OBJECT, formatobject, unformatobject } from './format'
 import {
@@ -28,7 +26,6 @@ import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
-  BOOK_FLAGS,
   CATEGORY,
   CODE_PAGE,
   CODE_PAGE_TYPE,
