@@ -250,7 +250,11 @@ export const command_else = createWordToken('else')
 export const command_while = createWordToken('while')
 export const command_repeat = createWordToken('repeat')
 export const command_waitfor = createWordToken('waitfor')
-export const command_foreach = createWordToken('foreach')
+export const command_foreach = createSimpleToken({
+  name: 'foreach',
+  pattern: /for|foreach/,
+  longer_alt: stringliteral,
+})
 export const command_break = createWordToken('break')
 export const command_continue = createWordToken('continue')
 

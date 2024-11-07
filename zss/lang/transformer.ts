@@ -328,7 +328,6 @@ function transformNode(ast: CodeNode): SourceNode {
 
       // all done
       source.add([writelabel(ast, skipto, skiptoindex), `\n`])
-
       return source
     }
     case NODE.ELSE_IF: {
@@ -350,7 +349,6 @@ function transformNode(ast: CodeNode): SourceNode {
 
       // if false logic
       source.add([writelabel(ast, skipelseif, skipelseifindex), `\n`])
-
       return source
     }
     case NODE.ELSE: {
@@ -368,9 +366,8 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, [
         writelabel(ast, whileloop, whileloopindex),
         `\n`,
-        EOL(),
-        `\n`,
       ])
+      source.add([EOL(), `\n`])
 
       source.add([
         'if (!',
@@ -396,7 +393,6 @@ function transformNode(ast: CodeNode): SourceNode {
 
       // while false logic
       source.add([writelabel(ast, whiledone, whiledoneindex), `\n`])
-
       return source
     }
     case NODE.REPEAT: {
@@ -418,6 +414,7 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
       source.add([writelabel(ast, repeatloop, repeatloopindex), `\n`])
       source.add([EOL(), `\n`])
+
       source.add(
         [
           ['if (!', writeApi(ast, 'repeat', [`${context.internal}`]), `)`],
@@ -442,7 +439,6 @@ function transformNode(ast: CodeNode): SourceNode {
 
       // repeat false logic
       source.add([writelabel(ast, repeatdone, repeatdoneindex), `\n`])
-
       return source
     }
     case NODE.WAITFOR: {
@@ -456,6 +452,7 @@ function transformNode(ast: CodeNode): SourceNode {
         writelabel(ast, waitforloop, waitforloopindex),
         '\n',
       ])
+      source.add([EOL(), `\n`])
 
       source.add([
         'if (',
@@ -471,7 +468,6 @@ function transformNode(ast: CodeNode): SourceNode {
 
       // waitfor true logic
       source.add([writelabel(ast, waitfordone, waitfordoneindex), `\n`])
-
       return source
     }
     case NODE.FOREACH: {
@@ -486,6 +482,8 @@ function transformNode(ast: CodeNode): SourceNode {
         ';\n',
       ])
       source.add([writelabel(ast, foreachloop, foreachloopindex), '\n'])
+      source.add([EOL(), `\n`])
+
       source.add([
         'if (!',
         writeApi(ast, 'foreach', transformNodes(ast.words)),
@@ -510,7 +508,6 @@ function transformNode(ast: CodeNode): SourceNode {
 
       // foreach false logic
       source.add([writelabel(ast, foreachdone, foreachdoneindex), `\n`])
-
       return source
     }
     case NODE.BREAK:
