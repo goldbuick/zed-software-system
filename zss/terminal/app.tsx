@@ -10,6 +10,7 @@ import {
 } from 'three'
 import { vm_loadfile } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
+import { enableaudio } from 'zss/device/synth'
 import { ispresent } from 'zss/mapping/types'
 
 import { Terminal } from './terminal'
@@ -26,11 +27,24 @@ extend({
   Points,
 })
 
+document.addEventListener('keydown', () => {
+  enableaudio()
+})
+
+window.addEventListener('touchstart', () => {
+  enableaudio()
+})
+
+window.addEventListener('click', () => {
+  enableaudio()
+})
+
 window.addEventListener('dragover', (event) => {
   event.preventDefault()
 })
 
 window.addEventListener('contextmenu', (event) => {
+  enableaudio()
   event.preventDefault()
 })
 
@@ -40,6 +54,7 @@ window.addEventListener('paste', (event) => {
   }
 
   // Prevent the default behavior, so you can code your own logic.
+  enableaudio()
   event.preventDefault()
 
   // read files from clipboardData
@@ -48,7 +63,9 @@ window.addEventListener('paste', (event) => {
 })
 
 window.addEventListener('drop', (event) => {
+  enableaudio()
   event.preventDefault()
+
   if (event.dataTransfer?.items) {
     const items = [...event.dataTransfer.items]
     // Use DataTransferItemList interface to access the file(s)

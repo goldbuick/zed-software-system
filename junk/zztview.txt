@@ -8,11 +8,11 @@
 
 #bin seek 2
 #bin int16le boardcount
-"$filename has $boardcount board(s)"
+"$filename has $boardcount board(s)
 
 #bin seek 29
 #bin text uint8 worldname
-"$filename has a world named $worldname"
+"$filename has a world named $worldname
 
 Reading all the boards
 #play t+++c-c-c-c-c-c
@@ -23,10 +23,10 @@ Reading all the boards
 
  #bin seek offset
  #bin int16le boardsize
- "boardsize: $boardsize"
+ "boardsize: $boardsize
 
  #bin text uint8 boardname
- "BOARD $index - $boardname"
+ "BOARD $index - $boardname
 
  #bin seek offset + 53
 
@@ -101,11 +101,10 @@ Reading all the boards
     #give y
    #done
   #done
- 
   #give tiles tilecount
  #done
 
- "decoded $blocks RLE blocks"
+ "decoded $blocks RLE blocks
 
  'skip the rest for now
  #break
@@ -115,4 +114,4 @@ Reading all the boards
  #give offset boardsize + 2
 #done
 
-
+Exited !!!!

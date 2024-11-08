@@ -29,7 +29,6 @@ import {
   CommandsCstChildren,
   Comp_opCstChildren,
   ComparisonCstChildren,
-  Do_blockCstChildren,
   Do_inlineCstChildren,
   Expr_valueCstChildren,
   ExprCstChildren,
@@ -275,7 +274,8 @@ function isToken(obj: CstNode | IToken): obj is IToken {
 
 function tokenstring(token: IToken[] | undefined, defaultstr: string) {
   const [first] = token ?? []
-  return first?.image ?? defaultstr
+  const tokenstr = (first?.image ?? defaultstr).trimStart()
+  return tokenstr.replaceAll(/^"|"$/g, '')
 }
 
 function createstringnode(ctx: CstChildrenDictionary, value: string) {
@@ -879,7 +879,7 @@ class ScriptVisitor
 
   token(ctx: TokenCstChildren) {
     if (ctx.token_stringliteraldouble) {
-      const str = tokenstring(ctx.token_stringliteraldouble, '""').replace(
+      const str = tokenstring(ctx.token_stringliteraldouble, '').replaceAll(
         /(^"|"$)/g,
         '',
       )

@@ -84,9 +84,7 @@ if (ispresent(engine)) {
   })
 
   const handleresize = debounce((width: number, height: number) => {
-    root.configure({
-      size: { width, height, top: 0, left: 0 },
-    })
+    root.configure({ size: { width, height, top: 0, left: 0 } })
   }, 256)
 
   window.addEventListener('resize', () => {

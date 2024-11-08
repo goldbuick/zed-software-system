@@ -10,7 +10,6 @@ import {
 } from 'react'
 import { vm_cli } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
-import { enableaudio } from 'zss/device/synth'
 
 import { INPUT } from '../data/types'
 
@@ -51,7 +50,6 @@ export function modsfromevent(event: KeyboardEvent): UserInputMods {
 document.addEventListener(
   'keydown',
   (event) => {
-    enableaudio().catch((err) => err)
     const key = event.key.toLowerCase()
     const mods = modsfromevent(event)
 
