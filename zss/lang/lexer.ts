@@ -102,6 +102,12 @@ function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
 
   // return match
   const match = text.substring(startOffset, i)
+
+  // do not match empty strings
+  if (match.trim().length === 0) {
+    return null
+  }
+
   return [match] as RegExpExecArray
 }
 
