@@ -56,23 +56,23 @@ function createsynthplay() {
 
   // const chorus = new Tone.Chorus()
   // chorus.set({
-  //   wet: 0.125 * 0,
+  //   wet: 0.5,
   //   depth: 0.999,
   //   frequency: 7,
   //   feedback: 0.666,
   // })
-  // chorus.connect(echo)
+  // chorus.connect(maincompressor)
 
   // const phaser = new Tone.Phaser()
   // phaser.set({
-  //   wet: 0.125 * 0,
-  //   frequency: 7,
-  //   octaves: 3,
-  //   stages: 10,
+  //   wet: 0.5,
+  //   // frequency: 7,
+  //   // octaves: 3,
+  //   // stages: 10,
   //   Q: 10,
-  //   baseFrequency: 350,
+  //   // baseFrequency: 250,
   // })
-  // phaser.connect(chorus)
+  // phaser.connect(maincompressor)
 
   // const distortion = new Tone.Distortion()
   // distortion.set({
@@ -106,7 +106,7 @@ function createsynthplay() {
       },
       oscillator: {
         // type: 'sine',
-        // type: 'square',
+        type: 'square',
         // type: 'triangle',
         // type: 'sawtooth',
         // type: 'fmsine',
@@ -132,14 +132,19 @@ function createsynthplay() {
         // type: 'amsquare14',
         // type: 'amtriangle14',
         // type: 'amsawtooth14',
-        type: 'custom',
-        partials: [0.75, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15],
+        // type: 'custom',
+        // partials: [0.75, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15],
+        // partials: [
+        //   0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15,
+        //   0.15, 0.15, 0.15, 0.15, 0.15,
+        // ],
       },
     })
     synth.connect(maingain)
     // #play cxcxcxcxcxcxcxcxcxcxcxcxcxcxcx;--pxcxpxcxpxcxpxcxpxcxpxcxpxcx;q9999;i10011001100199
     // #play cxcxcxcxcxcxcx+cxcxcxcxcxcxcxcx;--pxcxpxcxpxcxppcxpxcxpxcxpxcx;q9999;i14011401140199
     // #play cecxcxcxcxcxcx+cecxcecxcecxcxcxf+c+c;--pxcxpxcxpxcxppcxpxcxpxcxpxcx;q9999;i14011401100199
+    // #play pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx;q949494949
     return synth
   }
 

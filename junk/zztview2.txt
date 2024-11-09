@@ -19,7 +19,7 @@ Reading all the boards
 #set index 1
 #set offset 512
 #repeat boardcount do
- #play 2
+ #play p
 
  #bin seek offset
  #bin int16le boardsize
@@ -32,14 +32,20 @@ Reading all the boards
 
  'create/modify board by given name
 
- #clear tx ty tiles
+ #clear tx ty tiles tkind
  #while tiles < 1500 do
   #bin uint8 tilecount
   #bin uint8 tileelement
   #bin uint8 tilecolor
   'plot elements
   #for tc 1 to tilecount do
-   'should invoke put here ??
+   'setup kind by element number
+   #set tkind empty
+   
+   
+   
+   #put at tx ty tkind
+   'move cursor
    #give tx
    #give tiles
    'wrap cursor
