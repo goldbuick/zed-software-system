@@ -155,16 +155,24 @@ export function memorycreatesoftwarebook(maybename?: string) {
   return book
 }
 
+export function memoryensurebookbyname(name: string) {
+  let book = memoryreadbookbyaddress(name)
+  if (!ispresent(book)) {
+    book = createbook([])
+    book.name = name
+  }
+  memorysetbook(book)
+  tape_info('memory', `created [book] ${book.name}`)
+  return book
+}
+
 export function memoryensuresoftwarebook(
   slot: keyof typeof MEMORY.software,
   maybename?: string,
 ) {
-  let book = memoryreadbookbysoftware(slot)
-
-  // slot is set
-  if (ispresent(book)) {
-    return book
-  }
+  let book = ispresent(maybename)
+    ? memoryensurebookbyname(maybename)
+    : memoryreadbookbysoftware(slot)
 
   // try first book
   if (!ispresent(book)) {
