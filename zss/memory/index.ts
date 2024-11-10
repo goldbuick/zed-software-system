@@ -174,6 +174,10 @@ export function memoryensuresoftwarebook(
     ? memoryensurebookbyname(maybename)
     : memoryreadbookbysoftware(slot)
 
+  if (ispresent(book)) {
+    return book
+  }
+
   // try first book
   if (!ispresent(book)) {
     book = memoryreadfirstbook()
@@ -189,6 +193,8 @@ export function memoryensuresoftwarebook(
     memorysetsoftwarebook('main', book.id)
     tape_info('memory', `opened [book] ${book.name}`)
   }
+
+  return book
 }
 
 export function memoryresetbooks(books: BOOK[]) {

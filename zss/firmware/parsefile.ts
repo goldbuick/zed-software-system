@@ -46,11 +46,8 @@ function createcodepagefromtext(text: string) {
   }
 
   // only create if target doesn't already exist
-  const maybepage = bookreadcodepagewithtype(
-    book,
-    codepagereadtype(codepage),
-    pagename,
-  )
+  const codepagetype = codepagereadtype(codepage)
+  const maybepage = bookreadcodepagewithtype(book, codepagetype, pagename)
 
   if (ispresent(maybepage)) {
     tape_info(

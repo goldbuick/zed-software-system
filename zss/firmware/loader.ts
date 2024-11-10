@@ -73,10 +73,13 @@ export const LOADER_FIRMWARE = createfirmware({
     return 0
   })
   .command('load', (chip, words) => {
-    const [target] = readargs(memoryreadcontext(chip, words), 0, [
+    const memory = memoryreadchip(chip.id())
+    const [maybename] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.MAYBE_STRING,
     ])
-    memoryensuresoftwarebook('content', target)
+    // set running loader's book via #load
+    const name = maybename ?? ''
+    memory.book = memoryensuresoftwarebook('content', chip.get(name) ?? name)
     return 0
   })
   .command('bin', binaryloader)
