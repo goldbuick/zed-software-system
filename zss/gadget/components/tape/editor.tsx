@@ -3,6 +3,7 @@ import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
 import { useTape } from 'zss/device/tape'
 import { textformatreadedges, useWriteText } from 'zss/gadget/data/textformat'
+import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
 import {
@@ -16,7 +17,6 @@ import { BackPlate } from './elements/backplate'
 import { EditorFrame } from './elements/editorframe'
 import { EditorInput } from './elements/editorinput'
 import { EditorRows } from './elements/editorrows'
-import { clamp } from 'zss/mapping/number'
 
 export function TapeEditor() {
   const tape = useTape()

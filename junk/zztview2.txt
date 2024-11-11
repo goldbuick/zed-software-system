@@ -1,6 +1,6 @@
 @loader zztview
 @stat binaryfile zzt
-
+ 
 'the idea here is that we 
 'have stats binary & zzt now
 'and when a binary file with a zzt extension 
@@ -34,20 +34,73 @@ Reading all the boards
  #bin seek offset + 53
 
  'create/modify board by given name
- #mod board "$index.$boardname"
+ #mod board "$index $boardname"
 
  #clear tx ty tiles tkind
  #while tiles < 1500 do
-  #bin uint8 tilecount
-  #bin uint8 tileelement
-  #bin uint8 tilecolor
+  #bin uint8 tcount
+  #bin uint8 telem
+  #bin uint8 tcolor
 
   'plot elements
-  #for tc 1 to tilecount do
-   'setup kind by element number
-   '#set tkind empty
-   '#put at tx ty tkind
-
+  #for tc 1 to tcount do
+   #set pt at tx ty
+   'plot by element number
+   #if telem is 0 put pt empty
+   #if telem is 1 put pt empty
+   #if telem is 2 put pt empty
+   #if telem is 3 put pt empty
+   #if telem is 4 put pt empty
+   #if telem is 5 put pt empty
+   #if telem is 6 put pt empty
+   #if telem is 7 put pt empty
+   #if telem is 8 put pt empty
+   #if telem is 9 put pt empty
+   #if telem is 10 put pt empty
+   #if telem is 11 put pt empty
+   #if telem is 12 put pt empty
+   #if telem is 13 put pt empty
+   #if telem is 14 put pt empty
+   #if telem is 15 put pt empty
+   #if telem is 16 put pt empty
+   #if telem is 17 put pt empty
+   #if telem is 18 put pt empty
+   #if telem is 19 put pt empty
+   #if telem is 20 put pt empty
+   #if telem is 21 put pt empty
+   #if telem is 22 put pt empty
+   #if telem is 23 put pt empty
+   #if telem is 24 put pt empty
+   #if telem is 25 put pt empty
+   #if telem is 26 put pt empty
+   #if telem is 27 put pt empty
+   #if telem is 28 put pt empty
+   #if telem is 29 put pt empty
+   #if telem is 30 put pt empty
+   #if telem is 31 put pt empty
+   #if telem is 32 put pt empty
+   #if telem is 33 put pt empty
+   #if telem is 34 put pt empty
+   #if telem is 35 put pt empty
+   #if telem is 36 put pt empty
+   #if telem is 37 put pt empty
+   #if telem is 38 put pt empty
+   #if telem is 39 put pt empty
+   #if telem is 40 put pt empty
+   #if telem is 41 put pt empty
+   #if telem is 42 put pt empty
+   #if telem is 43 put pt empty
+   #if telem is 44 put pt empty
+   #if telem is 45 put pt empty
+   #if telem is 46 put pt empty
+   #if telem is 47 put pt empty
+   #if telem is 48 put pt empty
+   #if telem is 49 put pt empty
+   #if telem is 50 put pt empty
+   #if telem is 51 put pt empty
+   #if telem is 52 put pt empty
+   #if telem is 53 put pt empty
+   
    'move cursor
    #give tx
    #give tiles
@@ -61,6 +114,8 @@ Reading all the boards
   #done
  #done
 
+ #break
+ 
  'next
  #give index
  #give offset boardsize + 2

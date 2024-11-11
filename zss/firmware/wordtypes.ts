@@ -627,8 +627,8 @@ export function readdir(
     strdir.push(...maybedir)
 
     // read coords for at & by
-    if (maybedir[0] === 'AT' || maybedir[0] === 'BY') {
-      // read
+    if ((maybedir[0] === 'AT' || maybedir[0] === 'BY') && maybedir.length < 2) {
+      // read args
       const [xvalue, yvalue, iii] = readargs(read, ii, [
         ARG_TYPE.NUMBER,
         ARG_TYPE.NUMBER,

@@ -69,8 +69,6 @@ type BINARY_READER = {
 }
 
 type CHIP_TARGETS = {
-  // memory
-  book: MAYBE<BOOK>
   // codepages
   board: MAYBE<BOARD>
   object: MAYBE<BOARD_ELEMENT>
@@ -234,7 +232,6 @@ export function memoryreadchip(id: string): CHIP_MEMORY {
   if (!ispresent(chip)) {
     chip = {
       // targets
-      book: undefined,
       board: undefined,
       object: undefined,
       terrain: undefined,
@@ -375,7 +372,6 @@ export function memorytick(os: OS, timestamp: number) {
 
       // create / update context
       const context = memoryreadchip(item.id)
-      context.book = mainbook
       context.board = board
       context.object = item.object
       context.inputcurrent = undefined
@@ -425,10 +421,6 @@ export function memorycli(
 ) {
   memoryensuresoftwarebook('main')
 
-  // we try and execute cli invokes in main
-  // its okay if we do not find main
-  const mainbook = memoryreadbookbysoftware('main')
-
   // player id + unique id fo run
   const id = `${player}_cli`
 
@@ -436,7 +428,6 @@ export function memorycli(
   const context = memoryreadchip(id)
 
   context.player = player
-  context.book = mainbook
   context.board = undefined
   context.inputcurrent = undefined
 
@@ -485,7 +476,6 @@ function memoryloader(
     const context = memoryreadchip(id)
 
     context.player = player
-    context.book = mainbook
     context.board = undefined
     context.binaryfile = {
       filename: file.name,

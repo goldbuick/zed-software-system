@@ -10,13 +10,18 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { memoryensuresoftwarebook, memoryreadcontext } from 'zss/memory'
+import {
+  memoryensuresoftwarebook,
+  memoryreadchip,
+  memoryreadcontext,
+} from 'zss/memory'
 import {
   bookreadcodepagebyaddress,
   bookreadcodepagewithtype,
   bookwritecodepage,
 } from 'zss/memory/book'
 import {
+  codepagereaddata,
   codepagereadname,
   codepagereadtype,
   codepagereadtypetostring,
@@ -214,6 +219,7 @@ export const MODS_FIRMWARE = createfirmware({
     return 0
   })
   .command('mod', (chip, words) => {
+    const memory = memoryreadchip(chip.id())
     const modstate = readmodstate(chip.id())
     const content = memoryensuresoftwarebook('content')
 
@@ -237,11 +243,9 @@ export const MODS_FIRMWARE = createfirmware({
     }
 
     const maybetype = type.toLowerCase()
-
     const withaddress = maybename ?? createshortnameid()
     switch (maybetype) {
       default: {
-        // we check for name first, in current book
         const codepage = bookreadcodepagebyaddress(content, type)
         if (ispresent(codepage)) {
           applymod(modstate, codepage)
@@ -255,7 +259,18 @@ export const MODS_FIRMWARE = createfirmware({
         ensurecodepage(modstate, content, CODE_PAGE_TYPE.LOADER, withaddress)
         break
       case CODE_PAGE_LABEL.BOARD:
-        ensurecodepage(modstate, content, CODE_PAGE_TYPE.BOARD, withaddress)
+        {
+          const codepage = ensurecodepage(
+            modstate,
+            content,
+            CODE_PAGE_TYPE.BOARD,
+            withaddress,
+          )
+          const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+          if (ispresent(board)) {
+            memory.board = board
+          }
+        }
         break
       case CODE_PAGE_LABEL.OBJECT:
         ensurecodepage(modstate, content, CODE_PAGE_TYPE.OBJECT, withaddress)
