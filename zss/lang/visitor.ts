@@ -879,30 +879,35 @@ class ScriptVisitor
 
   token(ctx: TokenCstChildren) {
     if (ctx.token_stringliteraldouble) {
-      const str = tokenstring(ctx.token_stringliteraldouble, '').replaceAll(
+      const value = tokenstring(ctx.token_stringliteraldouble, '').replaceAll(
         /(^"|"$)/g,
         '',
       )
       return createcodenode(ctx, {
         type: NODE.LITERAL,
         literal: LITERAL.TEMPLATE,
-        value: str.substring(1, str.length - 1),
+        value,
       })
     }
 
     if (ctx.token_stringliteral) {
+      const value = tokenstring(ctx.token_stringliteral, '').replaceAll(
+        /(^"|"$)/g,
+        '',
+      )
       return createcodenode(ctx, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value: tokenstring(ctx.token_stringliteral, ''),
+        value,
       })
     }
 
     if (ctx.token_numberliteral) {
+      const value = parseFloat(tokenstring(ctx.token_numberliteral, '0'))
       return createcodenode(ctx, {
         type: NODE.LITERAL,
         literal: LITERAL.NUMBER,
-        value: parseFloat(tokenstring(ctx.token_numberliteral, '0')),
+        value,
       })
     }
 

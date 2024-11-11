@@ -45,7 +45,8 @@ export const EscapedDollar = createToken({
 
 export const MaybeFlag = createToken({
   name: 'MaybeFlag',
-  pattern: /\$[^ $\r\n]+/,
+  pattern: /\$[^-0-9"!;@#/?\s]+[^-"!;@#/?\s]*/,
+  // pattern: /\$[^ $\r\n]+/,
 })
 
 export const NumberLiteral = createToken({

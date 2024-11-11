@@ -10,7 +10,7 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { CHIP_MEMORY, memoryreadchip, memoryreadcontext } from 'zss/memory'
+import { memoryensuresoftwarebook, memoryreadcontext } from 'zss/memory'
 import {
   bookreadcodepagebyaddress,
   bookreadcodepagewithtype,
@@ -33,6 +33,7 @@ import {
 import {
   BOARD,
   BOARD_ELEMENT,
+  BOOK,
   CODE_PAGE,
   CODE_PAGE_LABEL,
   CODE_PAGE_TYPE,
@@ -158,12 +159,12 @@ function applymod(modstate: MOD_STATE, codepage: CODE_PAGE) {
 
 function ensurecodepage<T extends CODE_PAGE_TYPE>(
   modstate: MOD_STATE,
-  memory: CHIP_MEMORY,
+  content: BOOK,
   type: T,
   address: string,
 ) {
   // lookup by address
-  let codepage = bookreadcodepagewithtype(memory.book, type, address)
+  let codepage = bookreadcodepagewithtype(content, type, address)
   if (ispresent(codepage)) {
     return codepage
   }
@@ -175,7 +176,7 @@ function ensurecodepage<T extends CODE_PAGE_TYPE>(
     {},
   )
   if (ispresent(codepage)) {
-    bookwritecodepage(memory.book, codepage)
+    bookwritecodepage(content, codepage)
     applymod(modstate, codepage)
     vm_flush('mods') // tell register to save changes
   }
@@ -194,9 +195,27 @@ export const MODS_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
+  .command('load', (chip, words) => {
+    const [maybename] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.MAYBE_STRING,
+    ])
+    const name = maybename ?? ''
+    memoryensuresoftwarebook('content', chip.get(name) ?? name)
+    return 0
+  })
+  .command('reload', (chip, words) => {
+    const [maybename] = readargs(memoryreadcontext(chip, words), 0, [
+      ARG_TYPE.MAYBE_STRING,
+    ])
+    const name = maybename ?? ''
+    const book = memoryensuresoftwarebook('content', chip.get(name) ?? name)
+    // delete all codepages
+    book.pages = []
+    return 0
+  })
   .command('mod', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
     const modstate = readmodstate(chip.id())
+    const content = memoryensuresoftwarebook('content')
 
     const [type, maybename] = readargs(memoryreadcontext(chip, words), 0, [
       ARG_TYPE.MAYBE_STRING,
@@ -207,7 +226,7 @@ export const MODS_FIRMWARE = createfirmware({
       if (modstate.target === '') {
         write(`not currently modifying anything`)
       } else {
-        const codepage = bookreadcodepagebyaddress(memory.book, modstate.target)
+        const codepage = bookreadcodepagebyaddress(content, modstate.target)
         const pagetype = codepagereadtypetostring(codepage)
         write(
           `modifying [${pagetype}] ${codepagereadname(codepage)} ${modstate.target}`,
@@ -223,37 +242,37 @@ export const MODS_FIRMWARE = createfirmware({
     switch (maybetype) {
       default: {
         // we check for name first, in current book
-        const codepage = bookreadcodepagebyaddress(memory.book, type)
+        const codepage = bookreadcodepagebyaddress(content, type)
         if (ispresent(codepage)) {
           applymod(modstate, codepage)
         } else {
           const named = type || createshortnameid()
-          ensurecodepage(modstate, memory, CODE_PAGE_TYPE.OBJECT, named)
+          ensurecodepage(modstate, content, CODE_PAGE_TYPE.OBJECT, named)
         }
         break
       }
       case CODE_PAGE_LABEL.LOADER:
-        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.LOADER, withaddress)
+        ensurecodepage(modstate, content, CODE_PAGE_TYPE.LOADER, withaddress)
         break
       case CODE_PAGE_LABEL.BOARD:
-        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.BOARD, withaddress)
+        ensurecodepage(modstate, content, CODE_PAGE_TYPE.BOARD, withaddress)
         break
       case CODE_PAGE_LABEL.OBJECT:
-        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.OBJECT, withaddress)
+        ensurecodepage(modstate, content, CODE_PAGE_TYPE.OBJECT, withaddress)
         break
       case CODE_PAGE_LABEL.TERRAIN:
-        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.TERRAIN, withaddress)
+        ensurecodepage(modstate, content, CODE_PAGE_TYPE.TERRAIN, withaddress)
         break
       case CODE_PAGE_LABEL.CHARSET:
-        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.CHARSET, withaddress)
+        ensurecodepage(modstate, content, CODE_PAGE_TYPE.CHARSET, withaddress)
         break
       case CODE_PAGE_LABEL.PALETTE:
-        ensurecodepage(modstate, memory, CODE_PAGE_TYPE.PALETTE, withaddress)
+        ensurecodepage(modstate, content, CODE_PAGE_TYPE.PALETTE, withaddress)
         break
       case CODE_PAGE_LABEL.EIGHT_TRACK:
         ensurecodepage(
           modstate,
-          memory,
+          content,
           CODE_PAGE_TYPE.EIGHT_TRACK,
           withaddress,
         )
@@ -264,6 +283,7 @@ export const MODS_FIRMWARE = createfirmware({
   })
   .command('read', (chip, words) => {
     const modstate = readmodstate(chip.id())
+
     if (!ispresent(modstate.value)) {
       write(`use #mod before #read`)
       return 0
@@ -331,8 +351,9 @@ export const MODS_FIRMWARE = createfirmware({
     return 0
   })
   .command('write', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
     const modstate = readmodstate(chip.id())
+    const content = memoryensuresoftwarebook('content')
+
     if (!ispresent(modstate.value)) {
       write(`use #mod before #write`)
       return 0
@@ -354,29 +375,20 @@ export const MODS_FIRMWARE = createfirmware({
               collision: ARG_TYPE.COLLISION,
               color: ARG_TYPE.COLOR,
             }
-
             let [maybevalue] = readargs(memoryreadcontext(chip, words), 1, [
               WORD_TYPE_MAP[prop.kind],
             ])
-
             if (prop.kind === 'color' && isstrcolor(maybevalue)) {
               const { color, bg } = mapstrcolortoattributes(maybevalue)
               maybevalue = color ?? bg ?? 0
             }
-
             if (prop.kind === 'collision' && isstrcollision(maybevalue)) {
               maybevalue = mapstrcollisiontoenum(maybevalue)
             }
-
             // @ts-expect-error yes
             modstate.value[name] = maybevalue
-
             const strvalue = `${maybevalue}`
-            const codepage = bookreadcodepagebyaddress(
-              memory.book,
-              modstate.target,
-            )
-
+            const codepage = bookreadcodepagebyaddress(content, modstate.target)
             const pagetype = codepagereadtypetostring(codepage)
             write(
               `wrote [${pagetype}] ${codepagereadname(codepage)} ${name} = ${strvalue}`,

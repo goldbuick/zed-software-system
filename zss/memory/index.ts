@@ -174,26 +174,27 @@ export function memoryensuresoftwarebook(
     ? memoryensurebookbyname(maybename)
     : memoryreadbookbysoftware(slot)
 
-  if (ispresent(book)) {
-    return book
-  }
-
-  // try first book
+  // book not found
   if (!ispresent(book)) {
-    book = memoryreadfirstbook()
+    // try first book
+    if (!ispresent(book)) {
+      book = memoryreadfirstbook()
+    }
+
+    // create book
+    if (!ispresent(book)) {
+      book = memorycreatesoftwarebook(maybename)
+    }
+
+    // success
+    if (ispresent(book)) {
+      memorysetsoftwarebook('main', book.id)
+      tape_info('memory', `opened [book] ${book.name}`)
+    }
   }
 
-  // create book
-  if (!ispresent(book)) {
-    book = memorycreatesoftwarebook(maybename)
-  }
-
-  // success
-  if (ispresent(book)) {
-    memorysetsoftwarebook('main', book.id)
-    tape_info('memory', `opened [book] ${book.name}`)
-  }
-
+  // make sure slot is set
+  memorysetsoftwarebook(slot, book.id)
   return book
 }
 

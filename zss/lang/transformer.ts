@@ -69,7 +69,7 @@ function writeString(value: string): string {
 
 function writeTemplateString(value: string): string {
   if (value.startsWith('"')) {
-    return writeTemplateString(value.substring(1, value.length - 1))
+    return writeTemplateString(value.replaceAll(/(^"|"$)/g, ''))
   }
 
   const result = tokenize(value)
