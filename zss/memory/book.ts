@@ -242,7 +242,7 @@ export function bookreadflags(book: MAYBE<BOOK>, id: string) {
     return {}
   }
   book.flags[id] = book.flags[id] ?? {}
-  return book.flags[id] ?? {}
+  return book.flags[id]
 }
 
 export function bookreadflag(book: MAYBE<BOOK>, id: string, name: string) {
@@ -264,18 +264,6 @@ export function bookwriteflag(
   return value
 }
 
-export function bookwriteflags(
-  book: MAYBE<BOOK>,
-  id: string,
-  flags: Record<string, WORD>,
-) {
-  const keys = Object.keys(flags)
-  for (let i = 0; i < keys.length; ++i) {
-    const key = keys[i]
-    bookwriteflag(book, id, key, flags[key])
-  }
-}
-
 export function bookplayerreadboard(book: MAYBE<BOOK>, player: string) {
   const value = bookreadflag(book, player, 'board')
   return bookreadboard(book, isstring(value) ? value : '')
@@ -287,7 +275,7 @@ export function bookplayersetboard(
   board: string,
 ) {
   if (ispresent(bookreadboard(book, board))) {
-    bookwriteflags(book, player, { board })
+    bookwriteflag(book, player, 'board', board)
   }
 }
 

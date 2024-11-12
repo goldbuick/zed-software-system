@@ -45,7 +45,6 @@ import {
   bookreadcodepagesbytype,
   bookreadflags,
   bookreadobject,
-  bookwriteflags,
   createbook,
 } from './book'
 import { codepagereadstats } from './codepage'
@@ -327,7 +326,7 @@ export function memorytick(os: OS, timestamp: number) {
     for (let i = 0; i < run.length; ++i) {
       const item = run[i]
 
-      // create / update context
+      // write context
       if (ispresent(item.object)) {
         const flags = bookreadflags(mainbook, item.object.id ?? '')
 
@@ -378,10 +377,10 @@ export function memorycli(os: OS, player: string, cli = '') {
   // player id + unique id fo run
   const id = `${player}_cli`
 
-  // write player tracking
-  bookwriteflags(mainbook, id, { player })
-  // board: board.codepage,
-  // inputcurrent: 0,
+  // write context
+  const flags = bookreadflags(mainbook, id)
+  flags.player = player
+  flags.inputcurrent = 0
 
   // invoke once
   tape_debug('memory', 'running', mainbook.timestamp, id, cli)

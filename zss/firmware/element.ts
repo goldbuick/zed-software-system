@@ -9,12 +9,7 @@ import {
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
-import {
-  memoryreadbookbycodepage,
-  memoryreadbookbysoftware,
-  memoryreadchip,
-  memoryreadcontext,
-} from 'zss/memory'
+import { memoryreadbookbycodepage, memoryreadbookbysoftware } from 'zss/memory'
 import {
   checkcollision,
   listelementsbyattr,
@@ -43,6 +38,7 @@ import {
   bookboardelementreadname,
   bookboardwriteheadlessobject,
   bookreadflags,
+  bookreadboard,
 } from 'zss/memory/book'
 import { BOARD, BOARD_ELEMENT, BOOK, COLLISION } from 'zss/memory/types'
 
@@ -195,56 +191,66 @@ export const ELEMENT_FIRMWARE = createfirmware({
   get(chip, name) {
     const mainbook = memoryreadbookbysoftware('main')
     const flags = bookreadflags(mainbook, chip.id())
-    if (!ispresent(flags?.board)) {
+    if (!isstring(flags.board)) {
       return [false, undefined]
     }
+
+    // get element's board
+    const board = bookreadboard(mainbook, flags.board)
+    // get element
+    const element = board?.objects[chip.id()]
 
     // if we are reading from input, pull the next input
     if (INPUT_STAT_NAMES.has(name)) {
       // readinput(memory.object)
     }
 
-    // // read stat
-    // const maybevalue = memory.object[name as keyof BOARD_ELEMENT]
-    // const defined = ispresent(maybevalue)
+    // read stat
+    const maybevalue = element?.[name as keyof BOARD_ELEMENT]
+    const defined = ispresent(maybevalue)
 
-    // // return result
-    // if (defined || STAT_NAMES.has(name)) {
-    //   return [true, maybevalue]
-    // }
+    // return result
+    if (defined || STAT_NAMES.has(name)) {
+      return [true, maybevalue]
+    }
 
-    // // get player
-    // const player = memory.board
-    //   ? boardfindplayer(memory.board, memory.object)
-    //   : undefined
+    // get player
+    const playerobject = isstring(flags.player)
+      ? boardfindplayer(board, element, flags.player)
+      : undefined
 
     // then global
-    const value = bookreadflag(mainbook, player?.id ?? '', name)
+    const value = bookreadflag(mainbook, playerobject?.id ?? '', name)
     return [ispresent(value), value]
   },
   set(chip, name, value) {
-    const memory = memoryreadchip(chip.id())
-    if (!ispresent(memory.object)) {
+    const mainbook = memoryreadbookbysoftware('main')
+    const flags = bookreadflags(mainbook, chip.id())
+    if (!isstring(flags.board)) {
       return [false, undefined]
     }
 
+    // get element's board
+    const board = bookreadboard(mainbook, flags.board)
+    // get element
+    const element = board?.objects[chip.id()]
+
     // we have to check the object's stats first
     if (
-      ispresent(memory.object[name as keyof BOARD_ELEMENT]) ||
-      STAT_NAMES.has(name)
+      ispresent(element) &&
+      (ispresent(element[name as keyof BOARD_ELEMENT]) || STAT_NAMES.has(name))
     ) {
-      memory.object[name as keyof BOARD_ELEMENT] = value
+      element[name as keyof BOARD_ELEMENT] = value
       return [true, value]
     }
 
     // get player
-    const player = memory.board
-      ? boardfindplayer(memory.board, memory.object)
+    const player = isstring(flags.player)
+      ? boardfindplayer(board, element, flags.player)
       : undefined
 
     // then global
-    const book = memoryreadbookbycodepage(memory.board?.codepage)
-    bookwriteflag(book, player?.id ?? '', name, value)
+    bookwriteflag(mainbook, player?.id ?? '', name, value)
     return [true, value]
   },
   shouldtick(chip, activecycle) {
