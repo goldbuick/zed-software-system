@@ -15,17 +15,16 @@ import {
   memorycreatesoftwarebook,
   memoryensuresoftwarebook,
   memoryreadbookbyaddress,
+  memoryreadbookbycodepage,
   memoryreadbookbysoftware,
   memoryreadbooklist,
-  memoryreadchip,
-  memoryreadcontext,
   memorysetsoftwarebook,
 } from 'zss/memory'
 import {
   bookclearcodepage,
   bookreadcodepagebyaddress,
   bookreadflag,
-  booksetflag,
+  bookwriteflag,
 } from 'zss/memory/book'
 import { codepagereadname, codepagereadtypetostring } from 'zss/memory/codepage'
 
@@ -96,14 +95,16 @@ export const CLI_FIRMWARE = createfirmware({
   get(chip, name) {
     // check player's flags
     const memory = memoryreadchip(chip.id())
+    const book = memoryreadbookbycodepage(memory.board?.codepage)
     // then global
-    const value = bookreadflag(memory.book, memory.player, name)
+    const value = bookreadflag(book, memory.player, name)
     return [ispresent(value), value]
   },
   set(chip, name, value) {
     const memory = memoryreadchip(chip.id())
+    const book = memoryreadbookbycodepage(memory.board?.codepage)
     // set player's flags
-    booksetflag(memory.book, memory.player, name, value)
+    bookwriteflag(book, memory.player, name, value)
     return [true, value]
   },
   shouldtick() {},

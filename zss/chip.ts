@@ -120,37 +120,37 @@ export function maptostring(value: any) {
 // lifecycle and control flow api
 export function createchip(id: string, build: GeneratorBuild) {
   // entry point state
-  const labels = deepcopy(build.labels ?? {})
+  // const labels = deepcopy(build.labels ?? {})
 
   // ref to generator instance
   // eslint-disable-next-line prefer-const
   let logic: Generator<number> | undefined
 
-  // incoming message state
-  let locked = ''
-  let message: MESSAGE | undefined = undefined
+  // // incoming message state
+  // let locked = ''
+  // let message: MESSAGE | undefined = undefined
 
-  // prevent infinite loop lockup
-  let loops = 0
+  // // prevent infinite loop lockup
+  // let loops = 0
 
-  // tracking for repeats
-  const repeats: Record<number, number> = {}
-  const repeatscommand: Record<number, undefined | WORD[]> = {}
+  // // tracking for repeats
+  // const repeats: Record<number, number> = {}
+  // const repeatscommand: Record<number, undefined | WORD[]> = {}
 
-  // pause until next tick
-  let yieldstate = false
+  // // pause until next tick
+  // let yieldstate = false
 
-  // execution frequency
-  let pulse = 0
-  // execution timestamp
-  let timestamp = 0
+  // // execution frequency
+  // let pulse = 0
+  // // execution timestamp
+  // let timestamp = 0
 
-  // chip is in ended state awaiting any messages
-  let endedstate = (build.errors?.length ?? 0) !== 0
+  // // chip is in ended state awaiting any messages
+  // let endedstate = (build.errors?.length ?? 0) !== 0
 
-  // chip invokes
-  const firmwares: FIRMWARE[] = []
-  let invokes: Record<string, FIRMWARE_COMMAND> = {}
+  // // chip invokes
+  // const firmwares: FIRMWARE[] = []
+  // let invokes: Record<string, FIRMWARE_COMMAND> = {}
 
   function getcommand(name: string) {
     if (invokes[name] === undefined) {

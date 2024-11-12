@@ -26,8 +26,6 @@ import {
 } from './format'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
-import { memoryreadchip } from '.'
-
 function createempty() {
   return new Array(BOARD_WIDTH * BOARD_HEIGHT).map(() => undefined)
 }
@@ -150,7 +148,7 @@ export function boardgetterrain(
   x: number,
   y: number,
 ): MAYBE<BOARD_ELEMENT> {
-  return (x >= 0 && x < BOARD_WIDTH) ?? (y >= 0 && y < BOARD_HEIGHT)
+  return ((x >= 0 && x < BOARD_WIDTH) ?? (y >= 0 && y < BOARD_HEIGHT))
     ? board?.terrain[x + y * BOARD_WIDTH]
     : undefined
 }
@@ -230,6 +228,7 @@ export function boardevaldir(
   board: MAYBE<BOARD>,
   target: MAYBE<BOARD_ELEMENT>,
   dir: STR_DIR,
+  player: string,
 ): PT {
   if (!ispresent(board) || !ispresent(target)) {
     return { x: 0, y: 0 }
@@ -287,9 +286,9 @@ export function boardevaldir(
         ptapplydir(pt, flow)
         break
       case DIR.SEEK: {
-        const player = boardfindplayer(board, target)
-        if (ispt(player)) {
-          ptapplydir(pt, dirfrompts(start, player))
+        const playerobject = boardfindplayer(board, target, player)
+        if (ispt(playerobject)) {
+          ptapplydir(pt, dirfrompts(start, playerobject))
         }
         break
       }
@@ -304,22 +303,22 @@ export function boardevaldir(
         break
       // modifiers
       case DIR.CW: {
-        const modpt = boardevaldir(board, target, dir.slice(i + 1))
+        const modpt = boardevaldir(board, target, dir.slice(i + 1), player)
         ptapplydir(pt, dirfrompts(start, modpt))
         break
       }
       case DIR.CCW: {
-        const modpt = boardevaldir(board, target, dir.slice(i + 1))
+        const modpt = boardevaldir(board, target, dir.slice(i + 1), player)
         ptapplydir(pt, dirfrompts(start, modpt))
         break
       }
       case DIR.OPP: {
-        const modpt = boardevaldir(board, target, dir.slice(i + 1))
+        const modpt = boardevaldir(board, target, dir.slice(i + 1), player)
         ptapplydir(pt, dirfrompts(start, modpt))
         break
       }
       case DIR.RNDP: {
-        const modpt = boardevaldir(board, target, dir.slice(i + 1))
+        const modpt = boardevaldir(board, target, dir.slice(i + 1), player)
         switch (dirfrompts(start, modpt)) {
           case DIR.NORTH:
           case DIR.SOUTH:
@@ -349,17 +348,16 @@ export function boarddeleteobject(board: MAYBE<BOARD>, id: string) {
 export function boardfindplayer(
   board: MAYBE<BOARD>,
   target: MAYBE<BOARD_ELEMENT>,
+  player: string,
 ): MAYBE<BOARD_ELEMENT> {
   if (!ispresent(board) || !ispresent(target)) {
     return undefined
   }
 
   // check aggro
-  const memory = memoryreadchip(target.id ?? '')
-  const pid = memory.player ?? ''
-  const player = board.objects[pid]
-  if (ispresent(player)) {
-    return player
+  const playerobject = board.objects[player]
+  if (ispresent(playerobject)) {
+    return playerobject
   }
 
   // check pt

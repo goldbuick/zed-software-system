@@ -10,11 +10,7 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import {
-  memoryensuresoftwarebook,
-  memoryreadchip,
-  memoryreadcontext,
-} from 'zss/memory'
+import { memoryensuresoftwarebook, memorysetcodepageindex } from 'zss/memory'
 import {
   bookreadcodepagebyaddress,
   bookreadcodepagewithtype,
@@ -182,6 +178,7 @@ function ensurecodepage<T extends CODE_PAGE_TYPE>(
   )
   if (ispresent(codepage)) {
     bookwritecodepage(content, codepage)
+    memorysetcodepageindex(codepage.id, content.id)
     applymod(modstate, codepage)
     vm_flush('mods') // tell register to save changes
   }

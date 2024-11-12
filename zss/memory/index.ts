@@ -1,4 +1,4 @@
-import { CHIP, CONFIG } from 'zss/chip'
+import { CONFIG } from 'zss/chip'
 import { api_error, tape_debug, tape_info } from 'zss/device/api'
 import { DRIVER_TYPE } from 'zss/firmware/boot'
 import {
@@ -7,8 +7,6 @@ import {
   parsetextfile,
   parsezipfile,
 } from 'zss/firmware/parsefile'
-import { createreadcontext } from 'zss/firmware/wordtypes'
-import { BITMAP } from 'zss/gadget/data/bitmap'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
@@ -21,7 +19,6 @@ import {
   createsprite,
   createsprites,
   createtiles,
-  INPUT,
   LAYER,
 } from 'zss/gadget/data/types'
 import { average } from 'zss/mapping/array'
@@ -46,20 +43,13 @@ import {
   bookplayersetboard,
   bookreadboard,
   bookreadcodepagesbytype,
+  bookreadflags,
   bookreadobject,
+  bookwriteflags,
   createbook,
 } from './book'
 import { codepagereadstats } from './codepage'
-import {
-  BOARD,
-  BOARD_ELEMENT,
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  BOOK,
-  CODE_PAGE_TYPE,
-  EIGHT_TRACK,
-  WORD,
-} from './types'
+import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK, CODE_PAGE_TYPE } from './types'
 
 type BINARY_READER = {
   filename: string
@@ -68,41 +58,28 @@ type BINARY_READER = {
   dataview: DataView
 }
 
-type CHIP_TARGETS = {
-  // codepages
-  board: MAYBE<BOARD>
-  object: MAYBE<BOARD_ELEMENT>
-  terrain: MAYBE<BOARD_ELEMENT>
-  charset: MAYBE<BITMAP>
-  palette: MAYBE<BITMAP>
-  eighttrack: MAYBE<EIGHT_TRACK>
-  // loaders
-  binaryfile: MAYBE<BINARY_READER>
-}
-
-type CHIP_PLAYER_INPUT = {
-  player: string
-  inputmods: Record<INPUT, number>
-  inputqueue: Set<INPUT>
-  inputcurrent: MAYBE<INPUT>
-}
-
-export type CHIP_MEMORY = CHIP_TARGETS & CHIP_PLAYER_INPUT
-
 export enum MEMORY_LABEL {
   TITLE = 'title',
   PLAYER = 'player',
 }
 
 const MEMORY = {
+  // default player for aggro
   defaultplayer: createpid(),
+  // active software
   software: {
     main: '',
     content: '',
   },
   books: new Map<string, BOOK>(),
-  chips: new Map<string, CHIP_MEMORY>(),
+  // running code
+  chips: new Map<string, string>(),
   loaders: new Map<string, string>(),
+  // book indexes for running code
+  chipindex: new Map<string, string>(),
+  codepageindex: new Map<string, string>(),
+  // external content loaders
+  binaryfiles: new Map<string, BINARY_READER>(),
 }
 
 export function memorysetdefaultplayer(player: string) {
@@ -226,45 +203,20 @@ export function memoryclearbook(address: string) {
   }
 }
 
-export function memoryreadchip(id: string): CHIP_MEMORY {
-  let chip = MEMORY.chips.get(id)
-
-  if (!ispresent(chip)) {
-    chip = {
-      // targets
-      board: undefined,
-      object: undefined,
-      terrain: undefined,
-      charset: undefined,
-      palette: undefined,
-      eighttrack: undefined,
-      // loaders
-      binaryfile: undefined,
-      // player aggro
-      player: MEMORY.defaultplayer,
-      // user input
-      inputqueue: new Set(),
-      inputmods: {
-        [INPUT.NONE]: 0,
-        [INPUT.MOVE_UP]: 0,
-        [INPUT.MOVE_DOWN]: 0,
-        [INPUT.MOVE_LEFT]: 0,
-        [INPUT.MOVE_RIGHT]: 0,
-        [INPUT.OK_BUTTON]: 0,
-        [INPUT.CANCEL_BUTTON]: 0,
-        [INPUT.MENU_BUTTON]: 0,
-      },
-      inputcurrent: undefined,
-    }
-    MEMORY.chips.set(id, chip)
-  }
-
-  return chip
+export function memorysetcodepageindex(codepage: string, book: string) {
+  MEMORY.codepageindex.set(codepage, book)
 }
 
-export function memoryreadcontext(chip: CHIP, words: WORD[]) {
-  const memory = memoryreadchip(chip.id())
-  return createreadcontext(memory, words, chip.get)
+export function memoryreadbookbycodepage(codepage: MAYBE<string>): MAYBE<BOOK> {
+  return memoryreadbookbyaddress(MEMORY.codepageindex.get(codepage ?? '') ?? '')
+}
+
+export function memorysetchipindex(chip: string, book: string) {
+  MEMORY.chipindex.set(chip, book)
+}
+
+export function memoryreadbookbychip(chip: MAYBE<string>): MAYBE<BOOK> {
+  return memoryreadbookbyaddress(MEMORY.chipindex.get(chip ?? '') ?? '')
 }
 
 export function memoryplayerlogin(player: string): boolean {
@@ -359,10 +311,15 @@ export function memorytick(os: OS, timestamp: number) {
   })
   CONFIG.HALT_AT_COUNT = resethalt
 
+  // read main book
   const mainbook = memoryreadbookbysoftware('main')
   const boards = bookplayerreadboards(mainbook)
+  if (!ispresent(mainbook)) {
+    return
+  }
 
   // update boards / build code / run chips
+  mainbook.timestamp = timestamp
   boards.forEach((board) => {
     const run = bookboardtick(mainbook, board, timestamp)
 
@@ -371,32 +328,31 @@ export function memorytick(os: OS, timestamp: number) {
       const item = run[i]
 
       // create / update context
-      const context = memoryreadchip(item.id)
-      context.board = board
-      context.object = item.object
-      context.inputcurrent = undefined
+      if (ispresent(item.object)) {
+        const flags = bookreadflags(mainbook, item.object.id ?? '')
 
-      // clear ticker text after X number of ticks
-      if (isnumber(context.object?.tickertime)) {
-        const delta = timestamp - context.object?.tickertime
-        if (delta > TICK_FPS * 5) {
-          context.object.tickertext = undefined
-          context.object.tickertime = undefined
+        // clear ticker text after X number of ticks
+        if (isnumber(flags.tickertime)) {
+          if (timestamp - flags.tickertime > TICK_FPS * 5) {
+            flags.tickertime = 0
+            flags.tickertext = ''
+          }
         }
+
+        // update state
+        flags.board = board.codepage
+        flags.inputcurrent = 0
       }
 
-      // read cycle from element kind
-      const maybekindcycle = boardelementreadstat(
-        bookelementkindread(mainbook, item.object),
-        'cycle',
-        undefined,
-      )
-
-      // read cycle from element
-      const maybecycle = boardelementreadstat(
+      // read cycle
+      const cycle = boardelementreadstat(
         item.object,
         'cycle',
-        maybekindcycle,
+        boardelementreadstat(
+          bookelementkindread(mainbook, item.object),
+          'cycle',
+          CYCLE_DEFAULT,
+        ),
       )
 
       // run chip code
@@ -404,7 +360,7 @@ export function memorytick(os: OS, timestamp: number) {
       os.tick(
         item.id,
         DRIVER_TYPE.CODE_PAGE,
-        isnumber(maybecycle) ? maybecycle : CYCLE_DEFAULT,
+        isnumber(cycle) ? cycle : CYCLE_DEFAULT,
         timestamp,
         itemname,
         item.code,
@@ -413,32 +369,26 @@ export function memorytick(os: OS, timestamp: number) {
   })
 }
 
-export function memorycli(
-  os: OS,
-  timestamp: number,
-  player: string,
-  cli: string,
-) {
-  memoryensuresoftwarebook('main')
+export function memorycli(os: OS, player: string, cli = '') {
+  const mainbook = memoryensuresoftwarebook('main')
+  if (!ispresent(mainbook)) {
+    return
+  }
 
   // player id + unique id fo run
   const id = `${player}_cli`
 
-  // create / update context
-  const context = memoryreadchip(id)
+  // write player tracking
+  bookwriteflags(mainbook, id, { player })
+  // board: board.codepage,
+  // inputcurrent: 0,
 
-  context.player = player
-  context.board = undefined
-  context.inputcurrent = undefined
-
-  tape_debug('memory', 'running', timestamp, id, cli)
-
-  // run chip code
-  os.once(id, DRIVER_TYPE.CLI, timestamp, 'cli', cli)
+  // invoke once
+  tape_debug('memory', 'running', mainbook.timestamp, id, cli)
+  os.once(id, DRIVER_TYPE.CLI, mainbook.timestamp, 'cli', cli)
 }
 
 function memoryloader(
-  timestamp: number,
   player: string,
   file: File,
   fileext: string,
@@ -472,31 +422,21 @@ function memoryloader(
     // player id + unique id fo run
     const id = `${player}_load_${loader.id}`
 
-    // create / update context
-    const context = memoryreadchip(id)
-
-    context.player = player
-    context.board = undefined
-    context.binaryfile = {
+    // create binary file loader
+    MEMORY.binaryfiles.set(id, {
       filename: file.name,
       cursor: 0,
       bytes: binaryfile,
       dataview: new DataView(binaryfile.buffer),
-    }
-    context.inputcurrent = undefined
-
-    tape_info('memory', 'starting loader', timestamp, id)
+    })
 
     // add code to active loaders
+    tape_info('memory', 'starting loader', mainbook.timestamp, id)
     MEMORY.loaders.set(id, loader.code)
   }
 }
 
-export function memoryloadfile(
-  timestamp: number,
-  player: string,
-  file: File | undefined,
-) {
+export function memoryloadfile(player: string, file: File | undefined) {
   function handlefiletype(type: string) {
     if (!ispresent(file)) {
       return
@@ -508,13 +448,13 @@ export function memoryloadfile(
         )
         break
       case 'application/zip':
-        parsezipfile(file, (zipfile) =>
-          memoryloadfile(timestamp, player, zipfile),
-        ).catch((err) => api_error('memory', 'crash', err.message))
+        parsezipfile(file, (zipfile) => memoryloadfile(player, zipfile)).catch(
+          (err) => api_error('memory', 'crash', err.message),
+        )
         break
       case 'application/octet-stream':
         parsebinaryfile(file, (fileext, binaryfile) => {
-          memoryloader(timestamp, player, file, fileext, binaryfile)
+          memoryloader(player, file, fileext, binaryfile)
         }).catch((err) => api_error('memory', 'crash', err.message))
         break
       default:
@@ -782,12 +722,6 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
   }
 
   const borrowbuffer: number[] = new Array(BOARD_WIDTH * BOARD_HEIGHT).fill(0)
-
-  // TODO: add support for book address prefixes
-  //   ie: #set under grunkle:title  <-  this will display the title board from the grunkle book
-  //                                     the thought here is this gives the mods api a new target to use
-  //                                     #mod under, #mod over, note that #mod self resets all changes #mod
-  //                                     has done to the chip memory context
 
   // read over board
   const over = bookreadboard(mainbook, playerboard.over ?? '')

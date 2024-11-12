@@ -42,59 +42,59 @@ Reading all the boards
   #for i 1 to tilecount do
    #give blocks
    #if tileelement is 0 put at x y empty
-   #if tileelement is 1 put at x y empty
+   #if tileelement is 1 put at x y edge
    #if tileelement is 2 put at x y empty
    #if tileelement is 3 put at x y empty
    #if tileelement is 4 put at x y empty
-   #if tileelement is 5 put at x y empty
-   #if tileelement is 6 put at x y empty
-   #if tileelement is 7 put at x y empty
-   #if tileelement is 8 put at x y empty
-   #if tileelement is 9 put at x y empty
-   #if tileelement is 10 put at x y empty
-   #if tileelement is 11 put at x y empty
-   #if tileelement is 12 put at x y empty
-   #if tileelement is 13 put at x y empty
-   #if tileelement is 14 put at x y empty
-   #if tileelement is 15 put at x y empty
-   #if tileelement is 16 put at x y empty
-   #if tileelement is 17 put at x y empty
-   #if tileelement is 18 put at x y empty
-   #if tileelement is 19 put at x y empty
-   #if tileelement is 20 put at x y empty
-   #if tileelement is 21 put at x y empty
-   #if tileelement is 22 put at x y empty
-   #if tileelement is 23 put at x y empty
-   #if tileelement is 24 put at x y empty
-   #if tileelement is 25 put at x y empty
-   #if tileelement is 26 put at x y empty
-   #if tileelement is 27 put at x y empty
-   #if tileelement is 28 put at x y empty
-   #if tileelement is 29 put at x y empty
-   #if tileelement is 30 put at x y empty
-   #if tileelement is 31 put at x y empty
-   #if tileelement is 32 put at x y empty
-   #if tileelement is 33 put at x y empty
-   #if tileelement is 34 put at x y empty
-   #if tileelement is 35 put at x y empty
-   #if tileelement is 36 put at x y empty
-   #if tileelement is 37 put at x y empty
-   #if tileelement is 38 put at x y empty
-   #if tileelement is 39 put at x y empty
-   #if tileelement is 40 put at x y empty
-   #if tileelement is 41 put at x y empty
-   #if tileelement is 42 put at x y empty
-   #if tileelement is 43 put at x y empty
-   #if tileelement is 44 put at x y empty
-   #if tileelement is 45 put at x y empty
+   #if tileelement is 5 put at x y ammo
+   #if tileelement is 6 put at x y torch
+   #if tileelement is 7 put at x y gem
+   #if tileelement is 8 put at x y key
+   #if tileelement is 9 put at x y door
+   #if tileelement is 10 put at x y scroll
+   #if tileelement is 11 put at x y passage
+   #if tileelement is 12 put at x y duplicator
+   #if tileelement is 13 put at x y bomb
+   #if tileelement is 14 put at x y enegizer
+   #if tileelement is 15 put at x y star
+   #if tileelement is 16 put at x y clockwise
+   #if tileelement is 17 put at x y counter
+   #if tileelement is 18 put at x y bullet
+   #if tileelement is 19 put at x y water
+   #if tileelement is 20 put at x y forest
+   #if tileelement is 21 put at x y solid
+   #if tileelement is 22 put at x y normal
+   #if tileelement is 23 put at x y breakable
+   #if tileelement is 24 put at x y boulder
+   #if tileelement is 25 put at x y sliderns
+   #if tileelement is 26 put at x y sliderew
+   #if tileelement is 27 put at x y fake
+   #if tileelement is 28 put at x y invisible
+   #if tileelement is 29 put at x y blinkwall
+   #if tileelement is 30 put at x y transporter
+   #if tileelement is 31 put at x y line
+   #if tileelement is 32 put at x y ricochet
+   #if tileelement is 33 put at x y blinkrayhorz
+   #if tileelement is 34 put at x y bear
+   #if tileelement is 35 put at x y ruffian
+   #if tileelement is 36 put at x y object
+   #if tileelement is 37 put at x y slime
+   #if tileelement is 38 put at x y shark
+   #if tileelement is 39 put at x y spinninggun
+   #if tileelement is 40 put at x y pusher
+   #if tileelement is 41 put at x y lion
+   #if tileelement is 42 put at x y tiger
+   #if tileelement is 43 put at x y blinkrayvert
+   #if tileelement is 44 put at x y head
+   #if tileelement is 45 put at x y segment
    #if tileelement is 46 put at x y empty
-   #if tileelement is 47 put at x y empty
-   #if tileelement is 48 put at x y empty
-   #if tileelement is 49 put at x y empty
-   #if tileelement is 50 put at x y empty
-   #if tileelement is 51 put at x y empty
-   #if tileelement is 52 put at x y empty
-   #if tileelement is 53 put at x y empty
+   #if tileelement is 47 put at x y text
+   #if tileelement is 48 put at x y text
+   #if tileelement is 49 put at x y text
+   #if tileelement is 50 put at x y text
+   #if tileelement is 51 put at x y text
+   #if tileelement is 52 put at x y text
+   #if tileelement is 53 put at x y text
    #give x
    #if x is 60 do
     #clear x

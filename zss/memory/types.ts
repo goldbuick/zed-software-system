@@ -209,13 +209,13 @@ export type CODE_PAGE_TYPE_MAP = {
 
 export type BOOK_FLAGS = Record<string, WORD>
 
-// player location tracking
-export type BOOK_PLAYER = string
-
 export type BOOK = {
   id: string
   name: string
+  timestamp: number
+  activelist: string[]
+  // content list
   pages: CODE_PAGE[]
+  // global flags by id
   flags: Record<string, BOOK_FLAGS>
-  players: Record<string, BOOK_PLAYER>
 }

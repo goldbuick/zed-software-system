@@ -45,61 +45,62 @@ Reading all the boards
   'plot elements
   #for tc 1 to tcount do
    #set pt at tx ty
+   
    'plot by element number
-   #if telem is 0 put pt empty
-   #if telem is 1 put pt empty
-   #if telem is 2 put pt empty
-   #if telem is 3 put pt empty
-   #if telem is 4 put pt empty
-   #if telem is 5 put pt empty
-   #if telem is 6 put pt empty
-   #if telem is 7 put pt empty
-   #if telem is 8 put pt empty
-   #if telem is 9 put pt empty
-   #if telem is 10 put pt empty
-   #if telem is 11 put pt empty
-   #if telem is 12 put pt empty
-   #if telem is 13 put pt empty
-   #if telem is 14 put pt empty
-   #if telem is 15 put pt empty
-   #if telem is 16 put pt empty
-   #if telem is 17 put pt empty
-   #if telem is 18 put pt empty
-   #if telem is 19 put pt empty
-   #if telem is 20 put pt empty
-   #if telem is 21 put pt empty
-   #if telem is 22 put pt empty
-   #if telem is 23 put pt empty
-   #if telem is 24 put pt empty
-   #if telem is 25 put pt empty
-   #if telem is 26 put pt empty
-   #if telem is 27 put pt empty
-   #if telem is 28 put pt empty
-   #if telem is 29 put pt empty
-   #if telem is 30 put pt empty
-   #if telem is 31 put pt empty
-   #if telem is 32 put pt empty
-   #if telem is 33 put pt empty
-   #if telem is 34 put pt empty
-   #if telem is 35 put pt empty
-   #if telem is 36 put pt empty
-   #if telem is 37 put pt empty
-   #if telem is 38 put pt empty
-   #if telem is 39 put pt empty
-   #if telem is 40 put pt empty
-   #if telem is 41 put pt empty
-   #if telem is 42 put pt empty
-   #if telem is 43 put pt empty
-   #if telem is 44 put pt empty
-   #if telem is 45 put pt empty
+   #if telem is 0 put aptempty
+   #if telem is 1 put aptedge
+   #if telem is 2 put aptempty
+   #if telem is 3 put aptempty
+   #if telem is 4 put aptempty
+   #if telem is 5 put aptammo
+   #if telem is 6 put apttorch
+   #if telem is 7 put aptgem
+   #if telem is 8 put aptkey
+   #if telem is 9 put aptdoor
+   #if telem is 10 put pt scroll
+   #if telem is 11 put pt passage
+   #if telem is 12 put pt duplicator
+   #if telem is 13 put pt bomb
+   #if telem is 14 put pt enegizer
+   #if telem is 15 put pt star
+   #if telem is 16 put pt clockwise
+   #if telem is 17 put pt counter
+   #if telem is 18 put pt bullet
+   #if telem is 19 put pt water
+   #if telem is 20 put pt forest
+   #if telem is 21 put pt solid
+   #if telem is 22 put pt normal
+   #if telem is 23 put pt breakable
+   #if telem is 24 put pt boulder
+   #if telem is 25 put pt sliderns
+   #if telem is 26 put pt sliderew
+   #if telem is 27 put pt fake
+   #if telem is 28 put pt invisible
+   #if telem is 29 put pt blinkwall
+   #if telem is 30 put pt transporter
+   #if telem is 31 put pt line
+   #if telem is 32 put pt ricochet
+   #if telem is 33 put pt blinkrayhorz
+   #if telem is 34 put pt bear
+   #if telem is 35 put pt ruffian
+   #if telem is 36 put pt object
+   #if telem is 37 put pt slime
+   #if telem is 38 put pt shark
+   #if telem is 39 put pt spinninggun
+   #if telem is 40 put pt pusher
+   #if telem is 41 put pt lion
+   #if telem is 42 put pt tiger
+   #if telem is 43 put pt blinkrayvert
+   #if telem is 44 put pt head
+   #if telem is 45 put pt segment
    #if telem is 46 put pt empty
-   #if telem is 47 put pt empty
-   #if telem is 48 put pt empty
-   #if telem is 49 put pt empty
-   #if telem is 50 put pt empty
-   #if telem is 51 put pt empty
-   #if telem is 52 put pt empty
-   #if telem is 53 put pt empty
+   #if telem is 47 put pt text
+   #if telem is 48 put pt text
+   #if telem is 49 put pt text
+   #if telem is 50 put pt text
+   #if telem is 51 put pt text
+   #if telem is 52 put pt text
+   #if telem is 53 put pt text
    
    'move cursor
    #give tx

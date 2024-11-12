@@ -9,7 +9,12 @@ import {
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
-import { memoryreadchip, memoryreadcontext } from 'zss/memory'
+import {
+  memoryreadbookbycodepage,
+  memoryreadbookbysoftware,
+  memoryreadchip,
+  memoryreadcontext,
+} from 'zss/memory'
 import {
   checkcollision,
   listelementsbyattr,
@@ -30,13 +35,14 @@ import {
   bookboardwrite,
   bookboardmoveobject,
   bookreadflag,
-  booksetflag,
+  bookwriteflag,
   bookboardobjectsafedelete,
   bookboardsetlookup,
   bookboardobjectnamedlookupdelete,
   bookelementkindread,
   bookboardelementreadname,
   bookboardwriteheadlessobject,
+  bookreadflags,
 } from 'zss/memory/book'
 import { BOARD, BOARD_ELEMENT, BOOK, COLLISION } from 'zss/memory/types'
 
@@ -187,32 +193,33 @@ function moveobject(
 
 export const ELEMENT_FIRMWARE = createfirmware({
   get(chip, name) {
-    const memory = memoryreadchip(chip.id())
-    if (!ispresent(memory.object)) {
+    const mainbook = memoryreadbookbysoftware('main')
+    const flags = bookreadflags(mainbook, chip.id())
+    if (!ispresent(flags?.board)) {
       return [false, undefined]
     }
 
     // if we are reading from input, pull the next input
     if (INPUT_STAT_NAMES.has(name)) {
-      readinput(memory.object)
+      // readinput(memory.object)
     }
 
-    // read stat
-    const maybevalue = memory.object[name as keyof BOARD_ELEMENT]
-    const defined = ispresent(maybevalue)
+    // // read stat
+    // const maybevalue = memory.object[name as keyof BOARD_ELEMENT]
+    // const defined = ispresent(maybevalue)
 
-    // return result
-    if (defined || STAT_NAMES.has(name)) {
-      return [true, maybevalue]
-    }
+    // // return result
+    // if (defined || STAT_NAMES.has(name)) {
+    //   return [true, maybevalue]
+    // }
 
-    // get player
-    const player = memory.board
-      ? boardfindplayer(memory.board, memory.object)
-      : undefined
+    // // get player
+    // const player = memory.board
+    //   ? boardfindplayer(memory.board, memory.object)
+    //   : undefined
 
     // then global
-    const value = bookreadflag(memory.book, player?.id ?? '', name)
+    const value = bookreadflag(mainbook, player?.id ?? '', name)
     return [ispresent(value), value]
   },
   set(chip, name, value) {
@@ -236,7 +243,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
       : undefined
 
     // then global
-    booksetflag(memory.book, player?.id ?? '', name, value)
+    const book = memoryreadbookbycodepage(memory.board?.codepage)
+    bookwriteflag(book, player?.id ?? '', name, value)
     return [true, value]
   },
   shouldtick(chip, activecycle) {
@@ -250,8 +258,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
     ) {
       return
     }
+    const book = memoryreadbookbycodepage(memory.board?.codepage)
     if (
-      !moveobject(chip, memory.book, memory.board, memory.object, {
+      !moveobject(chip, book, memory.board, memory.object, {
         x: memory.object.x + memory.object.stepx,
         y: memory.object.y + memory.object.stepy,
       })
@@ -273,20 +282,19 @@ export const ELEMENT_FIRMWARE = createfirmware({
 })
   .command('become', (chip, words) => {
     const memory = memoryreadchip(chip.id())
+    const book = memoryreadbookbycodepage(memory.board?.codepage)
     // track dest
     const dest: PT = { x: memory.object?.x ?? 0, y: memory.object?.y ?? 0 }
     // read
     const [kind] = readargs(memoryreadcontext(chip, words), 0, [ARG_TYPE.KIND])
     // make sure lookup is created
-    bookboardsetlookup(memory.book, memory.board)
+    bookboardsetlookup(book, memory.board)
     // make invisible
-    bookboardobjectnamedlookupdelete(memory.book, memory.board, memory.object)
+    bookboardobjectnamedlookupdelete(book, memory.board, memory.object)
     // nuke self
-    if (
-      bookboardobjectsafedelete(memory.book, memory.object, chip.timestamp())
-    ) {
+    if (bookboardobjectsafedelete(book, memory.object, chip.timestamp())) {
       // write new element
-      bookboardwrite(memory.book, memory.board, kind, dest)
+      bookboardwrite(book, memory.board, kind, dest)
     }
     // halt execution
     chip.endofprogram()
@@ -298,7 +306,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command('change', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    if (!ispresent(memory.book) || !ispresent(memory.board)) {
+    const book = memoryreadbookbycodepage(memory.board?.codepage)
+    if (!ispresent(book) || !ispresent(memory.board)) {
       return 0
     }
 
@@ -309,7 +318,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     ])
 
     // make sure lookup is created
-    bookboardsetlookup(memory.book, memory.board)
+    bookboardsetlookup(book, memory.board)
 
     // begin filtering
     const targetname = readstrkindname(target) ?? ''
@@ -323,7 +332,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // modify elements
     targetelements.forEach((element) => {
-      if (bookboardelementreadname(memory.book, element) === intoname) {
+      if (bookboardelementreadname(book, element) === intoname) {
         if (ispresent(intocolor)) {
           element.color = intocolor
         }
@@ -334,18 +343,16 @@ export const ELEMENT_FIRMWARE = createfirmware({
         // delete object
         if (ispresent(element.id)) {
           // make invisible
-          bookboardobjectnamedlookupdelete(memory.book, memory.board, element)
+          bookboardobjectnamedlookupdelete(book, memory.board, element)
           // hit with delete
-          if (
-            !bookboardobjectsafedelete(memory.book, element, chip.timestamp())
-          ) {
+          if (!bookboardobjectsafedelete(book, element, chip.timestamp())) {
             // bail
             return
           }
         }
         // create new element
         if (ispt(element)) {
-          bookboardwrite(memory.book, memory.board, into, element)
+          bookboardwrite(book, memory.board, into, element)
         }
       }
     })
@@ -387,10 +394,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const memory = memoryreadchip(chip.id())
     // drop from lookups if not headless
     if (memory.object?.headless) {
-      bookboardobjectnamedlookupdelete(memory.book, memory.board, memory.object)
+      bookboardobjectnamedlookupdelete(book, memory.board, memory.object)
     }
     // mark target for deletion
-    bookboardobjectsafedelete(memory.book, memory.object, chip.timestamp())
+    bookboardobjectsafedelete(book, memory.object, chip.timestamp())
     // halt execution
     chip.endofprogram()
     return 0
@@ -408,14 +415,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // attempt to move
     const [dest] = readargs(memoryreadcontext(chip, words), 0, [ARG_TYPE.DIR])
-    moveobject(chip, memory.book, memory.board, memory.object, dest)
+    moveobject(chip, book, memory.board, memory.object, dest)
 
     // if blocked, return 1
     return memory.object.x !== dest.x && memory.object.y !== dest.y ? 1 : 0
   })
   .command('put', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    if (!ispresent(memory.book) || !ispresent(memory.board)) {
+    if (!ispresent(book) || !ispresent(memory.board)) {
       return 0
     }
 
@@ -426,10 +433,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
     ])
 
     // make sure lookup is created
-    bookboardsetlookup(memory.book, memory.board)
+    bookboardsetlookup(book, memory.board)
 
     // write new element
-    bookboardwrite(memory.book, memory.board, kind, dir)
+    bookboardwrite(book, memory.board, kind, dir)
     return 0
   })
   .command('send', (chip, words) => {
@@ -496,7 +503,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command('shoot', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    if (!ispresent(memory.book) || !ispresent(memory.board)) {
+    if (!ispresent(book) || !ispresent(memory.board)) {
       return 0
     }
 
@@ -517,15 +524,15 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const start = ptapplydir({ x: memory.object.x, y: memory.object.y }, dir)
 
     // make sure lookup is created
-    bookboardsetlookup(memory.book, memory.board)
+    bookboardsetlookup(book, memory.board)
 
     // check starting point
     let blocked = boardelementread(memory.board, start)
 
     // check for terrain that doesn't block bullets
     if (ispresent(blocked) && !ispresent(blocked.id)) {
-      const selfkind = bookelementkindread(memory.book, memory.object)
-      const blockedkind = bookelementkindread(memory.book, blocked)
+      const selfkind = bookelementkindread(book, memory.object)
+      const blockedkind = bookelementkindread(book, blocked)
       // found terrain
       if (
         !checkcollision(
@@ -544,14 +551,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
       }
 
       // delete destructible elements
-      const blockedkind = bookelementkindread(memory.book, blocked)
+      const blockedkind = bookelementkindread(book, blocked)
       if (blocked.destructible ?? blockedkind?.destructible) {
-        bonkelement(memory.book, memory.board, blocked, start)
+        bonkelement(book, memory.board, blocked, start)
       }
 
       // and start bullet in headless mode
       const bullet = bookboardwriteheadlessobject(
-        memory.book,
+        book,
         memory.board,
         maybekind ?? ['bullet'],
         start,
@@ -565,7 +572,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     } else {
       // write new element
       const bullet = bookboardwrite(
-        memory.book,
+        book,
         memory.board,
         maybekind ?? ['bullet'],
         start,

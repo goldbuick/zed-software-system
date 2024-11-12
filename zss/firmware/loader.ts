@@ -3,8 +3,8 @@ import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
-import { memoryreadchip, memoryreadcontext } from 'zss/memory'
-import { bookreadflag, booksetflag } from 'zss/memory/book'
+import { memoryreadbookbycodepage } from 'zss/memory'
+import { bookreadflag, bookwriteflag } from 'zss/memory/book'
 
 import { binaryloader } from './loader/binaryloader'
 import { ARG_TYPE, readargs } from './wordtypes'
@@ -32,7 +32,8 @@ export const LOADER_FIRMWARE = createfirmware({
     }
 
     // get player's flags
-    const value = bookreadflag(memory.book, memory.player, name)
+    const book = memoryreadbookbycodepage(memory.board?.codepage)
+    const value = bookreadflag(book, memory.player, name)
     // console.info('get', name, value)
     return [ispresent(value), value]
   },
@@ -43,7 +44,8 @@ export const LOADER_FIRMWARE = createfirmware({
     }
 
     // set player's flags
-    booksetflag(memory.book, memory.player, name, value)
+    const book = memoryreadbookbycodepage(memory.board?.codepage)
+    bookwriteflag(book, memory.player, name, value)
     // console.info('set', name, value)
     return [true, value]
   },

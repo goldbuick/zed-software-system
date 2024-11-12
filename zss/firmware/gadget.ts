@@ -10,7 +10,7 @@ import {
 } from 'zss/gadget/data/api'
 import { COLOR, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
-import { memoryreadchip, memoryreadcontext } from 'zss/memory'
+import { memoryreadbookbycodepage } from 'zss/memory'
 import { bookelementdisplayread } from 'zss/memory/book'
 
 import { ARG_TYPE, readargs } from './wordtypes'
@@ -39,13 +39,14 @@ export const GADGET_FIRMWARE = createfirmware({
   },
   tock(chip) {
     const memory = memoryreadchip(chip.id())
+    const book = memoryreadbookbycodepage(memory.board?.codepage)
     const ticker = gadgetcheckscroll(memory.player)
     if (ticker && ispresent(memory.object)) {
       const timestamp = chip.timestamp()
       memory.object.tickertext = ticker
       memory.object.tickertime = timestamp
       // send message
-      const display = bookelementdisplayread(memory.book, memory.object)
+      const display = bookelementdisplayread(book, memory.object)
       tape_info(`$${COLOR[display.color]}$${display.char}`, ticker)
     }
   },

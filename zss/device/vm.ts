@@ -7,7 +7,6 @@ import {
   memoryplayerlogin,
   memoryreadbookbyaddress,
   memoryreadbooklist,
-  memoryreadchip,
   memoryresetbooks,
   memorytick,
   memoryloadfile,
@@ -15,8 +14,9 @@ import {
   memoryplayerscan,
   memoryplayerlogout,
   memorygetdefaultplayer,
+  memoryreadbookbychip,
 } from 'zss/memory'
-import { bookreadcodepagebyaddress } from 'zss/memory/book'
+import { bookreadcodepagebyaddress, bookwriteflag } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
 import { createos } from 'zss/os'
@@ -32,9 +32,6 @@ import { modemobservevaluestring } from './modem'
 
 // manages chips
 const os = createos()
-
-// remember last tick for cli invokes
-let lasttick = 0
 
 // tracking active player ids
 const SECOND_TIMEOUT = 16
@@ -99,10 +96,17 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
     case 'input':
       if (message.player) {
         // player input
-        const memory = memoryreadchip(message.player)
-        const [input = INPUT.NONE, mods = 0] = message.data ?? {}
-        memory.inputqueue.add(input)
-        memory.inputmods[input as INPUT] = mods
+        const id = message.player
+        const book = memoryreadbookbychip(id)
+        const [input = INPUT.NONE, mods = {}] = message.data ?? {}
+        if (ispresent(book)) {
+          const inputstr = INPUT[input].toLowerCase()
+          const inputmodsstr = Object.keys(mods).map(
+            (value) => INPUT[parseFloat(value)],
+          )
+          bookwriteflag(book, id, `input${inputstr}`, 1)
+          bookwriteflag(book, id, `inputmods`, inputmodsstr)
+        }
       }
       break
     case 'codewatch':
@@ -145,8 +149,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     case 'tick':
       // from clock
-      lasttick = message.data ?? 0
-      memorytick(os, lasttick)
+      memorytick(os, message.data ?? 0)
       break
     case 'second': {
       // ensure player ids are added to tracking
@@ -192,13 +195,13 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
     case 'cli':
       // user input from built-in console
       if (ispresent(message.player)) {
-        memorycli(os, lasttick, message.player, message.data ?? '')
+        memorycli(os, message.player, message.data)
       }
       break
     case 'loadfile':
       // user input from built-in console
       if (ispresent(message.player)) {
-        memoryloadfile(lasttick, message.player, message.data)
+        memoryloadfile(message.player, message.data)
       }
       break
     default:

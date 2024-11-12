@@ -3,7 +3,7 @@ import { COLOR } from 'zss/gadget/data/types'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
+import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
 
 import { checkcollision } from './atomics'
 import {
@@ -39,18 +39,20 @@ export function createbook(pages: CODE_PAGE[]): BOOK {
   return {
     id: createsid(),
     name: createnameid(),
+    timestamp: 0,
+    activelist: [],
     pages,
     flags: {},
-    players: {},
   }
 }
 
 enum BOOK_KEYS {
   id,
   name,
+  timestamp,
+  activelist,
   pages,
   flags,
-  players,
 }
 
 export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
@@ -235,34 +237,48 @@ export function bookreadboard(
   )
 }
 
-export function bookreadflags(book: MAYBE<BOOK>, player: string) {
+export function bookreadflags(book: MAYBE<BOOK>, id: string) {
   if (!book) {
-    return undefined
+    return {}
   }
-  book.flags[player] = book.flags[player] ?? {}
-  return book.flags[player]
+  book.flags[id] = book.flags[id] ?? {}
+  return book.flags[id] ?? {}
 }
 
-export function bookreadflag(book: MAYBE<BOOK>, player: string, name: string) {
-  const flags = bookreadflags(book, player)
+export function bookreadflag(book: MAYBE<BOOK>, id: string, name: string) {
+  const flags = bookreadflags(book, id)
   return flags?.[name]
 }
 
-export function booksetflag(
+export function bookwriteflag(
   book: MAYBE<BOOK>,
-  player: string,
+  id: string,
   name: string,
   value: WORD,
 ) {
-  const flags = bookreadflags(book, player)
+  const flags = bookreadflags(book, id)
   if (flags) {
     flags[name] = value
+    console.info('>>>', name, value)
   }
   return value
 }
 
+export function bookwriteflags(
+  book: MAYBE<BOOK>,
+  id: string,
+  flags: Record<string, WORD>,
+) {
+  const keys = Object.keys(flags)
+  for (let i = 0; i < keys.length; ++i) {
+    const key = keys[i]
+    bookwriteflag(book, id, key, flags[key])
+  }
+}
+
 export function bookplayerreadboard(book: MAYBE<BOOK>, player: string) {
-  return bookreadboard(book, book?.players[player] ?? '')
+  const value = bookreadflag(book, player, 'board')
+  return bookreadboard(book, isstring(value) ? value : '')
 }
 
 export function bookplayersetboard(
@@ -270,13 +286,22 @@ export function bookplayersetboard(
   player: string,
   board: string,
 ) {
-  if (ispresent(book) && ispresent(bookreadboard(book, board))) {
-    book.players[player] = board
+  if (ispresent(bookreadboard(book, board))) {
+    bookwriteflags(book, player, { board })
   }
 }
 
+function bookplayerreadboardids(book: MAYBE<BOOK>) {
+  const ids =
+    book?.activelist.map((player) => {
+      const value = bookreadflag(book, player, 'board')
+      return isstring(value) ? value : ''
+    }) ?? []
+  return unique(ids)
+}
+
 export function bookplayerreadboards(book: MAYBE<BOOK>) {
-  const ids = unique(Object.values(book?.players ?? {}))
+  const ids = bookplayerreadboardids(book)
   return ids.map((address) => bookreadboard(book, address)).filter(ispresent)
 }
 
