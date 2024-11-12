@@ -18,31 +18,15 @@ import {
   WORD,
 } from 'zss/memory/types'
 
-type READ_CONTEXT_GET = (name: string) => any
-
-type READ_CONTEXT = {
+export const READ_CONTEXT = {
   // targets
-  board: MAYBE<BOARD>
-  object: MAYBE<BOARD_ELEMENT>
-  // context
-  words: WORD[]
-  get: READ_CONTEXT_GET
-}
-
-export function createreadcontext(
-  read: Omit<READ_CONTEXT, 'words' | 'get'>,
-  // context
-  words: WORD[],
-  get: READ_CONTEXT_GET,
-): READ_CONTEXT {
-  return {
-    // targets
-    board: read.board,
-    object: read.object,
-    // context
-    words,
-    get,
-  }
+  board: undefined as MAYBE<BOARD>,
+  object: undefined as MAYBE<BOARD_ELEMENT>,
+  player: '',
+  // input
+  words: [] as WORD[],
+  // access
+  get: undefined as MAYBE<(name: string) => any>,
 }
 
 export type PT = { x: number; y: number }
@@ -158,10 +142,9 @@ function checkforcategoryconst(value: MAYBE<WORD>): MAYBE<STR_CATEGORY> {
 }
 
 export function readcategory(
-  read: READ_CONTEXT,
   index: number,
 ): [STR_CATEGORY | undefined, number] {
-  const value: MAYBE<WORD> = read.words[index]
+  const value: MAYBE<WORD> = READ_CONTEXT.words[index]
 
   // pre-check
   const maybecategory = checkforcategoryconst(value)
@@ -170,7 +153,7 @@ export function readcategory(
   }
 
   // read expression
-  const [exprvalue, iii] = readexpr(read, index)
+  const [exprvalue, iii] = readexpr(index)
 
   // post-check
   const maybecategory2 = checkforcategoryconst(exprvalue)
@@ -227,10 +210,9 @@ function mapstrcollision(value: any): MAYBE<STR_COLLISION_CONST> {
 }
 
 export function readcollision(
-  read: READ_CONTEXT,
   index: number,
 ): [STR_COLLISION | undefined, number] {
-  const value: MAYBE<WORD> = read.words[index]
+  const value: MAYBE<WORD> = READ_CONTEXT.words[index]
 
   // already mapped
   if (isstrcollision(value)) {
@@ -241,7 +223,7 @@ export function readcollision(
   }
 
   // attempt to read value
-  const [maybecollision, ii] = readexpr(read, index)
+  const [maybecollision, ii] = readexpr(index)
 
   if (isstrcollision(maybecollision)) {
     return [maybecollision, ii]
@@ -365,11 +347,8 @@ function checkforcolorconst(value: MAYBE<WORD>): MAYBE<STR_COLOR> {
   return undefined
 }
 
-function readcolorconst(
-  read: READ_CONTEXT,
-  index: number,
-): [STR_COLOR | undefined, number] {
-  const value: MAYBE<WORD> = read.words[index]
+function readcolorconst(index: number): [STR_COLOR | undefined, number] {
+  const value: MAYBE<WORD> = READ_CONTEXT.words[index]
 
   // pre-check
   const maybecolor = checkforcolorconst(value)
@@ -378,7 +357,7 @@ function readcolorconst(
   }
 
   // read expression
-  const [exprvalue, iii] = readexpr(read, index)
+  const [exprvalue, iii] = readexpr(index)
 
   // post-check
   const maybecolor2 = checkforcolorconst(exprvalue)
@@ -390,22 +369,19 @@ function readcolorconst(
   return [undefined, index]
 }
 
-export function readcolor(
-  read: READ_CONTEXT,
-  index: number,
-): [STR_COLOR | undefined, number] {
+export function readcolor(index: number): [STR_COLOR | undefined, number] {
   const strcolor: STR_COLOR = []
 
   let next = index
 
-  const [maybecolor, ii] = readcolorconst(read, index)
+  const [maybecolor, ii] = readcolorconst(index)
   if (isstrcolor(maybecolor)) {
     strcolor.push(...maybecolor)
     next = ii
   }
 
   if (isstrcolor(strcolor) && !isbgstrcolor(strcolor)) {
-    const [maybebg, iii] = readcolorconst(read, ii)
+    const [maybebg, iii] = readcolorconst(ii)
     if (isbgstrcolor(maybebg)) {
       // strcolor.push(...maybebg)
       next = iii
@@ -456,19 +432,16 @@ export function isstrkind(value: any): value is STR_KIND {
   return isarray(value) && typeof value[0] === 'string'
 }
 
-export function readkind(
-  read: READ_CONTEXT,
-  index: number,
-): [STR_KIND | undefined, number] {
-  const value: MAYBE<WORD> = read.words[index]
+export function readkind(index: number): [STR_KIND | undefined, number] {
+  const value: MAYBE<WORD> = READ_CONTEXT.words[index]
 
   // already mapped
   if (isstrkind(value)) {
     return [value, index + 1]
   }
 
-  const [maybecolor, ii] = readcolor(read, index)
-  const [maybename, iii] = readexpr(read, ii, false)
+  const [maybecolor, ii] = readcolor(index)
+  const [maybename, iii] = readexpr(ii, false)
 
   // found a string, color is optional
   if (isstring(maybename)) {
@@ -590,11 +563,8 @@ function checkfordirconst(value: MAYBE<WORD>): MAYBE<STR_DIR> {
   return undefined
 }
 
-function readdirconst(
-  read: READ_CONTEXT,
-  index: number,
-): [STR_DIR | undefined, number] {
-  const value: MAYBE<WORD> = read.words[index]
+function readdirconst(index: number): [STR_DIR | undefined, number] {
+  const value: MAYBE<WORD> = READ_CONTEXT.words[index]
 
   // pre-check
   const maybedir = checkfordirconst(value)
@@ -603,7 +573,7 @@ function readdirconst(
   }
 
   // read expression
-  const [exprvalue, iii] = readexpr(read, index)
+  const [exprvalue, iii] = readexpr(index)
 
   // post-check
   const maybedir2 = checkfordirconst(exprvalue)
@@ -615,13 +585,10 @@ function readdirconst(
   return [undefined, index]
 }
 
-export function readdir(
-  read: READ_CONTEXT,
-  index: number,
-): [STR_DIR | undefined, number] {
+export function readdir(index: number): [STR_DIR | undefined, number] {
   const strdir: STR_DIR = []
 
-  let [maybedir, ii] = readdirconst(read, index)
+  let [maybedir, ii] = readdirconst(index)
   while (isstrdir(maybedir)) {
     // make a list !
     strdir.push(...maybedir)
@@ -629,7 +596,7 @@ export function readdir(
     // read coords for at & by
     if ((maybedir[0] === 'AT' || maybedir[0] === 'BY') && maybedir.length < 2) {
       // read args
-      const [xvalue, yvalue, iii] = readargs(read, ii, [
+      const [xvalue, yvalue, iii] = readargs(ii, [
         ARG_TYPE.NUMBER,
         ARG_TYPE.NUMBER,
       ])
@@ -638,7 +605,7 @@ export function readdir(
     }
 
     // get next item in list
-    const [maybenextdir, iii] = readdirconst(read, ii)
+    const [maybenextdir, iii] = readdirconst(ii)
     maybedir = maybenextdir
     ii = iii
   }
@@ -648,30 +615,26 @@ export function readdir(
 
 // read a value from words
 // consider splitting out to own file
-export function readexpr(
-  read: READ_CONTEXT,
-  index: number,
-  stringeval = true,
-): [any, number] {
-  const maybevalue = read.words[index]
+export function readexpr(index: number, stringeval = true): [any, number] {
+  const maybevalue = READ_CONTEXT.words[index]
 
   // check consts
   if (mapstrcategory(maybevalue)) {
-    const [maybecategory, n1] = readcategory(read, index)
+    const [maybecategory, n1] = readcategory(index)
     if (ispresent(maybecategory)) {
       return [maybecategory, n1]
     }
   }
 
   if (mapstrcollision(maybevalue)) {
-    const [maybecollision, n2] = readcollision(read, index)
+    const [maybecollision, n2] = readcollision(index)
     if (ispresent(maybecollision)) {
       return [maybecollision, n2]
     }
   }
 
   if (mapstrcolor(maybevalue)) {
-    const [maybecolor, n3] = readcolor(read, index)
+    const [maybecolor, n3] = readcolor(index)
     if (ispresent(maybecolor)) {
       return [maybecolor, n3]
     }
@@ -682,8 +645,8 @@ export function readexpr(
     // RND - returns 0 or 1
     // RND <number> - return 0 to number
     // RND <number> <number> - return number to number
-    const [min, ii] = readexpr(read, index + 1)
-    const [max, iii] = readexpr(read, ii)
+    const [min, ii] = readexpr(index + 1)
+    const [max, iii] = readexpr(ii)
     if (isnumber(min) && isnumber(max)) {
       return [randomInteger(min, max), iii]
     }
@@ -694,7 +657,7 @@ export function readexpr(
   }
 
   if (mapstrdir(maybevalue)) {
-    const [maybedir, n4] = readdir(read, index)
+    const [maybedir, n4] = readdir(index)
     if (ispresent(maybedir)) {
       return [maybedir, n4]
     }
@@ -718,7 +681,7 @@ export function readexpr(
 
     // check for flag
     if (stringeval) {
-      const maybeflag = read.get(maybevalue)
+      const maybeflag = READ_CONTEXT.get?.(maybevalue)
       if (ispresent(maybeflag)) {
         return [maybeflag, index + 1]
       }
@@ -753,30 +716,30 @@ export function readexpr(
       // numbers
       case 'abs': {
         // ABS <a>
-        const [a, ii] = readargs(read, index + 1, [ARG_TYPE.NUMBER])
+        const [a, ii] = readargs(index + 1, [ARG_TYPE.NUMBER])
         return [Math.abs(a), ii]
       }
       case 'ceil': {
         // CEIL <a>
-        const [a, ii] = readargs(read, index + 1, [ARG_TYPE.NUMBER])
+        const [a, ii] = readargs(index + 1, [ARG_TYPE.NUMBER])
         return [Math.ceil(a), ii]
       }
       case 'floor': {
         // FLOOR <a>
-        const [a, ii] = readargs(read, index + 1, [ARG_TYPE.NUMBER])
+        const [a, ii] = readargs(index + 1, [ARG_TYPE.NUMBER])
         return [Math.floor(a), ii]
       }
       case 'round': {
         // ROUND <a>
-        const [a, ii] = readargs(read, index + 1, [ARG_TYPE.NUMBER])
+        const [a, ii] = readargs(index + 1, [ARG_TYPE.NUMBER])
         return [Math.round(a), ii]
       }
       // array
       case 'min': {
         // MIN <a> [b] [c] [d]
         const values: any[] = []
-        for (let ii = index + 1; ii < read.words.length; ) {
-          const [value, iii] = readexpr(read, ii)
+        for (let ii = index + 1; ii < READ_CONTEXT.words.length; ) {
+          const [value, iii] = readexpr(ii)
           // if we're given array, we pick from it
           if (
             isarray(value) &&
@@ -791,13 +754,13 @@ export function readexpr(
           ii = iii
           values.push(value)
         }
-        return [Math.min(...values), read.words.length]
+        return [Math.min(...values), READ_CONTEXT.words.length]
       }
       case 'max': {
         // MAX <a> [b] [c] [d]
         const values: any[] = []
-        for (let ii = index + 1; ii < read.words.length; ) {
-          const [value, iii] = readexpr(read, ii)
+        for (let ii = index + 1; ii < READ_CONTEXT.words.length; ) {
+          const [value, iii] = readexpr(ii)
           // if we're given array, we pick from it
           if (
             isarray(value) &&
@@ -812,11 +775,11 @@ export function readexpr(
           ii = iii
           values.push(value)
         }
-        return [Math.max(...values), read.words.length]
+        return [Math.max(...values), READ_CONTEXT.words.length]
       }
       case 'clamp': {
         // CLAMP <a> <min> <max>
-        const [a, min, max, ii] = readargs(read, index + 1, [
+        const [a, min, max, ii] = readargs(index + 1, [
           ARG_TYPE.NUMBER,
           ARG_TYPE.NUMBER,
           ARG_TYPE.NUMBER,
@@ -826,8 +789,8 @@ export function readexpr(
       case 'pick': {
         // PICK <a> [b] [c] [d]
         const values: any[] = []
-        for (let ii = index + 1; ii < read.words.length; ) {
-          const [value, iii] = readexpr(read, ii)
+        for (let ii = index + 1; ii < READ_CONTEXT.words.length; ) {
+          const [value, iii] = readexpr(ii)
           // if we're given array, we pick from it
           if (
             isarray(value) &&
@@ -842,11 +805,11 @@ export function readexpr(
           ii = iii
           values.push(value)
         }
-        return [pick(values), read.words.length]
+        return [pick(values), READ_CONTEXT.words.length]
       }
       case 'range': {
         // RANGE <a> [b] [step]
-        const [a, b, step, ii] = readargs(read, index + 1, [
+        const [a, b, step, ii] = readargs(index + 1, [
           ARG_TYPE.NUMBER,
           ARG_TYPE.MAYBE_NUMBER,
           ARG_TYPE.MAYBE_NUMBER,
@@ -919,7 +882,6 @@ function didexpect(msg: string, value: any) {
 }
 
 export function readargs<T extends ARG_TYPES>(
-  read: READ_CONTEXT,
   index: number,
   args: T,
 ): [...ARG_TYPE_VALUES<T>, number] {
@@ -929,7 +891,7 @@ export function readargs<T extends ARG_TYPES>(
   for (let i = 0; i < args.length; ++i) {
     switch (args[i]) {
       case ARG_TYPE.CATEGORY: {
-        const [value, iii] = readcategory(read, ii)
+        const [value, iii] = readcategory(ii)
         if (!isstrcategory(value)) {
           didexpect('terrain or object', value)
         }
@@ -938,7 +900,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.COLLISION: {
-        const [value, iii] = readcollision(read, ii)
+        const [value, iii] = readcollision(ii)
         if (!isstrcollision(value)) {
           didexpect('solid, walk, swim, bullet, walkable or swimmable', value)
         }
@@ -947,7 +909,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.COLOR: {
-        const [value, iii] = readcolor(read, ii)
+        const [value, iii] = readcolor(ii)
         if (!isstrcolor(value)) {
           didexpect('color', value)
         }
@@ -956,7 +918,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.KIND: {
-        const [kind, iii] = readkind(read, ii)
+        const [kind, iii] = readkind(ii)
         if (isstrkind(kind)) {
           ii = iii
           values.push(kind)
@@ -966,10 +928,15 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.DIR: {
-        const [dir, iii] = readdir(read, ii)
+        const [dir, iii] = readdir(ii)
         if (isstrdir(dir)) {
-          const value = read.board
-            ? boardevaldir(read.board, read.object, dir)
+          const value = READ_CONTEXT.board
+            ? boardevaldir(
+                READ_CONTEXT.board,
+                READ_CONTEXT.object,
+                dir,
+                READ_CONTEXT.player,
+              )
             : { x: 0, y: 0 }
           ii = iii
           values.push(value)
@@ -979,7 +946,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.NUMBER: {
-        const [value, iii] = readexpr(read, ii)
+        const [value, iii] = readexpr(ii)
         if (!isnumber(value)) {
           didexpect('number', value)
         }
@@ -988,7 +955,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.STRING: {
-        const value = read.words[ii]
+        const value = READ_CONTEXT.words[ii]
         if (!isstring(value)) {
           didexpect('string', value)
         }
@@ -997,7 +964,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.NUMBER_OR_STRING: {
-        const [value, iii] = readexpr(read, ii, false)
+        const [value, iii] = readexpr(ii, false)
         if (!isnumber(value) && !isstring(value)) {
           didexpect('number or string', value)
         }
@@ -1006,7 +973,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.MAYBE_CATEGORY: {
-        const [value, iii] = readcategory(read, ii)
+        const [value, iii] = readcategory(ii)
         if (value !== undefined && !isstrcategory(value)) {
           didexpect('optional terrain or object', value)
         }
@@ -1015,7 +982,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.MAYBE_COLLISION: {
-        const [value, iii] = readcategory(read, ii)
+        const [value, iii] = readcategory(ii)
         if (value !== undefined && !isstrcollision(value)) {
           didexpect(
             'optional solid, walk, swim, bullet, walkable or swimmable',
@@ -1027,7 +994,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.MAYBE_COLOR: {
-        const [value, iii] = readcolor(read, ii)
+        const [value, iii] = readcolor(ii)
         if (value !== undefined && !isstrcolor(value)) {
           didexpect('optional color', value)
         }
@@ -1036,7 +1003,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.MAYBE_KIND: {
-        const [kind, iii] = readkind(read, ii)
+        const [kind, iii] = readkind(ii)
         if (kind !== undefined && !isstrkind(kind)) {
           didexpect('optional kind', kind)
         }
@@ -1045,10 +1012,15 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.MAYBE_DIR: {
-        const [dir, iii] = readdir(read, ii)
+        const [dir, iii] = readdir(ii)
         if (isstrdir(dir)) {
-          const value = read.board
-            ? boardevaldir(read.board, read.object, dir)
+          const value = READ_CONTEXT.board
+            ? boardevaldir(
+                READ_CONTEXT.board,
+                READ_CONTEXT.object,
+                dir,
+                READ_CONTEXT.player,
+              )
             : { x: 0, y: 0 }
           ii = iii
           values.push(value)
@@ -1061,7 +1033,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.MAYBE_NUMBER: {
-        const [value, iii] = readexpr(read, ii)
+        const [value, iii] = readexpr(ii)
         if (value !== undefined && !isnumber(value)) {
           didexpect('optional number', value)
         }
@@ -1070,7 +1042,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.MAYBE_STRING: {
-        const value = read.words[ii]
+        const value = READ_CONTEXT.words[ii]
         if (value !== undefined && !isstring(value)) {
           didexpect('optional string', value)
         }
@@ -1079,7 +1051,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.MAYBE_NUMBER_OR_STRING: {
-        const [value, iii] = readexpr(read, ii, false)
+        const [value, iii] = readexpr(ii, false)
         if (value !== undefined && !isnumber(value) && !isstring(value)) {
           didexpect('optional number or string', value)
         }
@@ -1088,7 +1060,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.ANY: {
-        const [value, iii] = readexpr(read, ii)
+        const [value, iii] = readexpr(ii)
         ii = iii
         values.push(value)
         break

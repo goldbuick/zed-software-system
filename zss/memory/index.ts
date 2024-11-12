@@ -7,6 +7,7 @@ import {
   parsetextfile,
   parsezipfile,
 } from 'zss/firmware/parsefile'
+import { READ_CONTEXT } from 'zss/firmware/wordtypes'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
@@ -32,6 +33,7 @@ import {
   boarddeleteobject,
   boardelementname,
   boardobjectcreatefromkind,
+  boardobjectread,
 } from './board'
 import { boardelementreadstat } from './boardelement'
 import {
@@ -48,18 +50,21 @@ import {
   createbook,
 } from './book'
 import { codepagereadstats } from './codepage'
-import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK, CODE_PAGE_TYPE } from './types'
-
-type BINARY_READER = {
-  filename: string
-  cursor: number
-  bytes: Uint8Array
-  dataview: DataView
-}
+import {
+  BINARY_READER,
+  BOARD,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  BOOK,
+  CODE_PAGE_TYPE,
+  WORD,
+} from './types'
 
 export enum MEMORY_LABEL {
+  MAIN = 'main',
   TITLE = 'title',
   PLAYER = 'player',
+  CONTENT = 'content',
 }
 
 const MEMORY = {
@@ -172,6 +177,14 @@ export function memoryensuresoftwarebook(
   return book
 }
 
+export function memoryreadsoftwareflags(
+  slot: keyof typeof MEMORY.software,
+  id: string,
+) {
+  const book = memoryensuresoftwarebook(slot)
+  return bookreadflags(book, id)
+}
+
 export function memoryresetbooks(books: BOOK[]) {
   // clear all books
   MEMORY.books.clear()
@@ -260,7 +273,6 @@ export function memoryplayerlogin(player: string): boolean {
 
   // TODO: what is a sensible way to place here ?
   // via player token I think ..
-
   const pt = { x: 0, y: 0 }
   const kindname = playerkind.name ?? MEMORY_LABEL.PLAYER
   const obj = boardobjectcreatefromkind(titleboard, pt, kindname, player)
@@ -273,9 +285,11 @@ export function memoryplayerlogin(player: string): boolean {
 }
 
 export function memoryplayerlogout(player: string) {
+  const mainbook = memoryreadbookbysoftware('main')
   MEMORY.books.forEach((book) => {
     const board = bookplayerreadboard(book, player)
     boarddeleteobject(board, player)
+    bookplayersetboard(mainbook, player, '')
   })
 }
 
@@ -294,6 +308,24 @@ export function memoryplayerscan(players: Record<string, number>) {
       }
     }
   }
+}
+
+export function memoryreadcontext(id: string, words: WORD[]) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const flags = bookreadflags(mainbook, id)
+
+  if (isstring(flags.board)) {
+    READ_CONTEXT.board = bookreadboard(mainbook, flags.board)
+  }
+  if (ispresent(READ_CONTEXT.board)) {
+    READ_CONTEXT.object = boardobjectread(READ_CONTEXT.board, id)
+  }
+  if (isstring(flags.player)) {
+    READ_CONTEXT.player = flags.player
+  }
+  READ_CONTEXT.words = words
+
+  return READ_CONTEXT
 }
 
 export function memorytick(os: OS, timestamp: number) {
@@ -433,6 +465,10 @@ function memoryloader(
     tape_info('memory', 'starting loader', mainbook.timestamp, id)
     MEMORY.loaders.set(id, loader.code)
   }
+}
+
+export function memoryreadbinaryfile(id: string) {
+  return MEMORY.binaryfiles.get(id)
 }
 
 export function memoryloadfile(player: string, file: File | undefined) {

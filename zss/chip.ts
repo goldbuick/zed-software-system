@@ -2,6 +2,13 @@ import ErrorStackParser from 'error-stack-parser'
 
 import { api_error } from './device/api'
 import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
+import {
+  DRIVER_TYPE,
+  firmwareget,
+  firmwaregetcommand,
+  firmwareset,
+  firmwareshouldtick,
+} from './firmware/boot'
 import { ARG_TYPE, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
@@ -14,7 +21,11 @@ import {
   isnumber,
   ispresent,
 } from './mapping/types'
-import { memoryreadcontext } from './memory'
+import {
+  MEMORY_LABEL,
+  memoryreadcontext,
+  memoryreadsoftwareflags,
+} from './memory'
 import { WORD, WORD_RESULT } from './memory/types'
 
 export const CONFIG = { HALT_AT_COUNT: 64 }
@@ -35,21 +46,11 @@ export type CHIP = {
   id: () => string
   senderid: (maybeid?: string) => string
 
-  // set firmware on chip
-  install: (firmware: MAYBE<FIRMWARE>) => void
-
-  // export chip run state
-  // import chip run state
-  // should the global tick increment be actual part of the individual book ??
-  // the answer is yes!
-
   // state api
   set: (name: string, value: any) => any
   get: (name: string) => any
 
   // lifecycle api
-  // cycle: (incoming: number) => void
-  timestamp: () => number
   tick: (cycle: number, incoming: number) => boolean
   isended: () => boolean
   shouldtick: () => boolean
@@ -118,9 +119,18 @@ export function maptostring(value: any) {
 }
 
 // lifecycle and control flow api
-export function createchip(id: string, build: GeneratorBuild) {
+export function createchip(
+  id: string,
+  driver: DRIVER_TYPE,
+  build: GeneratorBuild,
+) {
+  const labels = memoryreadsoftwareflags(MEMORY_LABEL.MAIN, `${id}_L`)
+
   // entry point state
-  // const labels = deepcopy(build.labels ?? {})
+  const buildlabels = build.labels ?? {}
+  Object.keys(buildlabels).forEach((name) => {
+    labels[name] = deepcopy(buildlabels[name] ?? [])
+  })
 
   // ref to generator instance
   // eslint-disable-next-line prefer-const
@@ -148,25 +158,8 @@ export function createchip(id: string, build: GeneratorBuild) {
   // // chip is in ended state awaiting any messages
   // let endedstate = (build.errors?.length ?? 0) !== 0
 
-  // // chip invokes
-  // const firmwares: FIRMWARE[] = []
-  // let invokes: Record<string, FIRMWARE_COMMAND> = {}
-
-  function getcommand(name: string) {
-    if (invokes[name] === undefined) {
-      for (let i = 0; i < firmwares.length; ++i) {
-        const command = firmwares[i].getcommand(name)
-        if (command) {
-          invokes[name] = command
-        }
-      }
-    }
-
-    return invokes[name]
-  }
-
   function invokecommand(name: string, words: WORD[]) {
-    const command = getcommand(name)
+    const command = firmwaregetcommand(driver, name)
     if (!command) {
       throw new Error(`unknown firmware command ${name}`)
     }
@@ -182,49 +175,25 @@ export function createchip(id: string, build: GeneratorBuild) {
       return `vm:${maybeid ?? chip.id()}`
     },
 
-    // invokes api
-    install(firmware) {
-      if (!ispresent(firmware)) {
-        return
-      }
-      // clear invoke cache
-      invokes = {}
-      // add firmware
-      firmwares.push(firmware)
-    },
-
     // internal state api
     set(name, value) {
-      const lname = name.toLowerCase()
-
-      for (let i = 0; i < firmwares.length; ++i) {
-        const [result] = firmwares[i].set(chip, lname, value)
-        if (result) {
-          return value
-        }
+      const [result, resultvalue] = firmwareset(driver, chip, name, value)
+      if (result) {
+        return resultvalue
       }
-
-      // raise an error ??
-      return value
+      // no result, return undefined
+      return undefined
     },
     get(name) {
-      const lname = name.toLowerCase()
-
-      for (let i = 0; i < firmwares.length; ++i) {
-        const [result, value] = firmwares[i].get(chip, lname)
-        if (result) {
-          return value
-        }
+      const [result, value] = firmwareget(driver, chip, name)
+      if (result) {
+        return value
       }
-
       // no result, return undefined
       return undefined
     },
 
     // lifecycle api
-    timestamp() {
-      return timestamp
-    },
     tick(cycle, incoming) {
       // update timestamp
       timestamp = incoming
@@ -233,9 +202,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       const activecycle = pulse % cycle === 0
 
       // invoke firmware shouldtick
-      for (let i = 0; i < firmwares.length; ++i) {
-        firmwares[i].shouldtick(chip, activecycle)
-      }
+      firmwareshouldtick(driver, chip, activecycle)
 
       // chip is yield / ended state
       if (!chip.shouldtick()) {
@@ -406,7 +373,10 @@ export function createchip(id: string, build: GeneratorBuild) {
       }
 
       const [name, ...args] = words
-      const command = getcommand(maptostring(name))
+      const command = firmwaregetcommand(driver, maptostring(name))
+
+      // used in firmware
+      memoryreadcontext(id, args)
 
       // found command, invoke
       if (ispresent(command)) {
@@ -418,9 +388,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       return 0
     },
     if(...words) {
-      const [value, ii] = readargs(memoryreadcontext(chip, words), 0, [
-        ARG_TYPE.ANY,
-      ])
+      const [value, ii] = readargs(0, [ARG_TYPE.ANY])
       const result = maptoresult(value)
 
       if (result && ii < words.length) {
@@ -430,9 +398,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       return result ? 1 : 0
     },
     repeatstart(index, ...words) {
-      const [value, ii] = readargs(memoryreadcontext(chip, words), 0, [
-        ARG_TYPE.NUMBER,
-      ])
+      const [value, ii] = readargs(0, [ARG_TYPE.NUMBER])
 
       repeats[index] = value
       repeatscommand[index] = ii < words.length ? words.slice(ii) : undefined
@@ -524,9 +490,7 @@ export function createchip(id: string, build: GeneratorBuild) {
     or(...words) {
       let lastvalue = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readargs(memoryreadcontext(chip, words), i, [
-          ARG_TYPE.ANY,
-        ])
+        const [value, next] = readargs(i, [ARG_TYPE.ANY])
         lastvalue = value
         if (lastvalue) {
           break // or returns the first truthy value
@@ -538,9 +502,7 @@ export function createchip(id: string, build: GeneratorBuild) {
     and(...words) {
       let lastvalue = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readargs(memoryreadcontext(chip, words), i, [
-          ARG_TYPE.ANY,
-        ])
+        const [value, next] = readargs(i, [ARG_TYPE.ANY])
         lastvalue = value
         if (!lastvalue) {
           break // and returns the first falsy value, or the last value
@@ -550,16 +512,12 @@ export function createchip(id: string, build: GeneratorBuild) {
       return lastvalue
     },
     not(...words) {
-      const [value] = readargs(memoryreadcontext(chip, words), 0, [
-        ARG_TYPE.ANY,
-      ])
+      const [value] = readargs(0, [ARG_TYPE.ANY])
       return value ? 0 : 1
     },
     expr(...words) {
       // eval a group of words as an expression
-      const [value] = readargs(memoryreadcontext(chip, words), 0, [
-        ARG_TYPE.ANY,
-      ])
+      const [value] = readargs(0, [ARG_TYPE.ANY])
       return value
     },
     isEq(lhs, rhs) {

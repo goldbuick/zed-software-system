@@ -140,7 +140,7 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('bookcreate', (chip, words) => {
-    const [maybename] = readargs(memoryreadcontext(chip, words), 0, [
+    const [maybename] = readargs(0, [
       ARG_TYPE.MAYBE_STRING,
     ])
 
@@ -152,7 +152,7 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('bookopen', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
+    const [name] = readargs(0, [
       ARG_TYPE.STRING,
     ])
 
@@ -167,7 +167,7 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('booktrash', (chip, words) => {
-    const [address] = readargs(memoryreadcontext(chip, words), 0, [
+    const [address] = readargs(0, [
       ARG_TYPE.STRING,
     ])
 
@@ -189,7 +189,7 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('pageopen', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [page] = readargs(memoryreadcontext(chip, words), 0, [
+    const [page] = readargs(0, [
       ARG_TYPE.STRING,
     ])
 
@@ -224,7 +224,7 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('pagetrash', (chip, words) => {
-    const [page] = readargs(memoryreadcontext(chip, words), 0, [
+    const [page] = readargs(0, [
       ARG_TYPE.STRING,
     ])
 
@@ -320,7 +320,7 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('send', (chip, words) => {
-    const [msg, data] = readargs(memoryreadcontext(chip, words), 0, [
+    const [msg, data] = readargs(0, [
       ARG_TYPE.STRING,
       ARG_TYPE.ANY,
     ])

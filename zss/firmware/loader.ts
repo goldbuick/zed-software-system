@@ -76,7 +76,7 @@ export const LOADER_FIRMWARE = createfirmware({
    * common text parsing ??
    */
   .command('send', (chip, words) => {
-    const [target, data] = readargs(memoryreadcontext(chip, words), 0, [
+    const [target, data] = readargs(0, [
       ARG_TYPE.STRING,
       ARG_TYPE.ANY,
     ])

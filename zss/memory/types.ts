@@ -213,9 +213,18 @@ export type BOOK = {
   id: string
   name: string
   timestamp: number
-  activelist: string[]
+  activelist: Set<string>
   // content list
   pages: CODE_PAGE[]
   // global flags by id
   flags: Record<string, BOOK_FLAGS>
+}
+
+// readers
+
+export type BINARY_READER = {
+  filename: string
+  cursor: number
+  bytes: Uint8Array
+  dataview: DataView
 }

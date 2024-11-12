@@ -1,7 +1,6 @@
 import { synth_play } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { isstring } from 'zss/mapping/types'
-import { memoryreadcontext } from 'zss/memory'
 
 import { ARG_TYPE, readargs } from './wordtypes'
 
@@ -16,18 +15,16 @@ export const AUDIO_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  .command('play', (chip, words) => {
-    const memory = memoryreadcontext(chip, words)
-    const [maybebuffer] = readargs(memory, 0, [ARG_TYPE.MAYBE_STRING])
+  .command('play', (chip) => {
+    const [maybebuffer] = readargs(0, [ARG_TYPE.MAYBE_STRING])
     const buffer = maybebuffer ?? ''
     // see if we've been given a flag
     const bufferfromflag = chip.get(buffer)
     synth_play('audio', -1, isstring(bufferfromflag) ? bufferfromflag : buffer)
     return 0
   })
-  .command('bgplay', (chip, words) => {
-    const memory = memoryreadcontext(chip, words)
-    const [maybebuffer] = readargs(memory, 0, [ARG_TYPE.MAYBE_STRING])
+  .command('bgplay', (chip) => {
+    const [maybebuffer] = readargs(0, [ARG_TYPE.MAYBE_STRING])
     const buffer = maybebuffer ?? ''
     // see if we've been given a flag
     const bufferfromflag = chip.get(buffer)

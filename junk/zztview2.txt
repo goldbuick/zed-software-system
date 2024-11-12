@@ -47,16 +47,16 @@ Reading all the boards
    #set pt at tx ty
    
    'plot by element number
-   #if telem is 0 put aptempty
-   #if telem is 1 put aptedge
-   #if telem is 2 put aptempty
-   #if telem is 3 put aptempty
-   #if telem is 4 put aptempty
-   #if telem is 5 put aptammo
-   #if telem is 6 put apttorch
-   #if telem is 7 put aptgem
-   #if telem is 8 put aptkey
-   #if telem is 9 put aptdoor
+   #if telem is 0 put pt empty
+   #if telem is 1 put pt edge
+   #if telem is 2 put pt empty
+   #if telem is 3 put pt empty
+   #if telem is 4 put pt empty
+   #if telem is 5 put pt ammo
+   #if telem is 6 put pt torch
+   #if telem is 7 put pt gem
+   #if telem is 8 put pt key
+   #if telem is 9 put pt door
    #if telem is 10 put pt scroll
    #if telem is 11 put pt passage
    #if telem is 12 put pt duplicator

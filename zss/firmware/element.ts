@@ -292,7 +292,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // track dest
     const dest: PT = { x: memory.object?.x ?? 0, y: memory.object?.y ?? 0 }
     // read
-    const [kind] = readargs(memoryreadcontext(chip, words), 0, [ARG_TYPE.KIND])
+    const [kind] = readargs(0, [ARG_TYPE.KIND])
     // make sure lookup is created
     bookboardsetlookup(book, memory.board)
     // make invisible
@@ -318,7 +318,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
 
     // read
-    const [target, into] = readargs(memoryreadcontext(chip, words), 0, [
+    const [target, into] = readargs(0, [
       ARG_TYPE.KIND,
       ARG_TYPE.KIND,
     ])
@@ -367,7 +367,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command('char', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [value] = readargs(memoryreadcontext(chip, words), 0, [
+    const [value] = readargs(0, [
       ARG_TYPE.NUMBER,
     ])
     if (ispresent(memory.object)) {
@@ -377,7 +377,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command('color', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [value] = readargs(memoryreadcontext(chip, words), 0, [
+    const [value] = readargs(0, [
       ARG_TYPE.COLOR,
     ])
     if (ispresent(memory.object) && ispresent(value)) {
@@ -388,7 +388,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   .command('cycle', (chip, words) => {
     const memory = memoryreadchip(chip.id())
     // read cycle
-    const [cyclevalue] = readargs(memoryreadcontext(chip, words), 0, [
+    const [cyclevalue] = readargs(0, [
       ARG_TYPE.NUMBER,
     ])
     // write cycle
@@ -420,7 +420,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
 
     // attempt to move
-    const [dest] = readargs(memoryreadcontext(chip, words), 0, [ARG_TYPE.DIR])
+    const [dest] = readargs(0, [ARG_TYPE.DIR])
     moveobject(chip, book, memory.board, memory.object, dest)
 
     // if blocked, return 1
@@ -433,7 +433,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
 
     // read
-    const [dir, kind] = readargs(memoryreadcontext(chip, words), 0, [
+    const [dir, kind] = readargs(0, [
       ARG_TYPE.DIR,
       ARG_TYPE.KIND,
     ])
@@ -447,7 +447,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command('send', (chip, words) => {
     const memory = memoryreadchip(chip.id())
-    const [msg, data] = readargs(memoryreadcontext(chip, words), 0, [
+    const [msg, data] = readargs(0, [
       ARG_TYPE.STRING,
       ARG_TYPE.ANY,
     ])
@@ -519,7 +519,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
 
     // read direction + what to shoot
-    const [maybedir, maybekind] = readargs(memoryreadcontext(chip, words), 0, [
+    const [maybedir, maybekind] = readargs(0, [
       ARG_TYPE.DIR,
       ARG_TYPE.MAYBE_KIND,
     ])
@@ -601,7 +601,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return chip.command('shoot', ...words, 'star') ? 1 : 0
   })
   .command('try', (chip, words) => {
-    const [, ii] = readargs(memoryreadcontext(chip, words), 0, [ARG_TYPE.DIR])
+    const [, ii] = readargs(0, [ARG_TYPE.DIR])
 
     // try and move
     const result = chip.command('go', ...words)
@@ -620,7 +620,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       return 0
     }
     // read walk direction
-    const [maybedir] = readargs(memoryreadcontext(chip, words), 0, [
+    const [maybedir] = readargs(0, [
       ARG_TYPE.DIR,
     ])
     const dir = dirfrompts(memory.object, maybedir)

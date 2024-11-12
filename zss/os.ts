@@ -1,7 +1,7 @@
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { api_error } from './device/api'
-import { DRIVER_TYPE, loadfirmware } from './firmware/boot'
+import { DRIVER_TYPE } from './firmware/boot'
 import { GeneratorBuild, compile } from './lang/generator'
 import { ispresent, isstring } from './mapping/types'
 
@@ -70,7 +70,7 @@ export function createos() {
       if (!ispresent(chips[id])) {
         const result = build(name, code)
         // create chip from build
-        chip = chips[id] = createchip(id, result)
+        chip = chips[id] = createchip(id, driver, result)
 
         // bail on errors
         if (result.errors?.length) {
@@ -106,9 +106,6 @@ export function createos() {
 
           return false
         }
-
-        // load chip firmware
-        loadfirmware(chip, driver)
       }
 
       // run it

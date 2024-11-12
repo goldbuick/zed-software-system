@@ -1,5 +1,6 @@
 import { CHIP } from 'zss/chip'
-import { FIRMWARE } from 'zss/firmware'
+import { FIRMWARE, FIRMWARE_COMMAND } from 'zss/firmware'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { ALL_FIRMWARE } from './all'
 import { AUDIO_FIRMWARE } from './audio'
@@ -37,7 +38,79 @@ const DRIVER_FIRMWARE = {
   [DRIVER_TYPE.CODE_PAGE]: ['all', 'audio', 'mods', 'element', 'gadget'],
 }
 
-export function loadfirmware(chip: CHIP, driver: DRIVER_TYPE) {
-  const install: string[] = DRIVER_FIRMWARE[driver] ?? []
-  install.forEach((name) => chip.install(firmwares[name]))
+const DRIVER_COMMANDS = {
+  [DRIVER_TYPE.ERROR]: new Map<string, FIRMWARE_COMMAND>(),
+  // user input
+  [DRIVER_TYPE.CLI]: new Map<string, FIRMWARE_COMMAND>(),
+  [DRIVER_TYPE.LOADER]: new Map<string, FIRMWARE_COMMAND>(),
+  // codepages
+  [DRIVER_TYPE.CODE_PAGE]: new Map<string, FIRMWARE_COMMAND>(),
 }
+
+export function firmwaregetcommand(
+  driver: DRIVER_TYPE,
+  method: string,
+): MAYBE<FIRMWARE_COMMAND> {
+  const commands = DRIVER_COMMANDS[driver]
+
+  // lookup from firmware
+  if (!commands.has(method)) {
+    const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
+    for (let i = 0; i < lookup.length; ++i) {
+      const firmware = firmwares[lookup[i]]
+      if (ispresent(firmware)) {
+        const command = firmware.getcommand(method)
+        if (ispresent(command)) {
+          commands.set(method, command)
+        }
+      }
+    }
+  }
+
+  return commands.get(method)
+}
+
+export function firmwareget(
+  driver: DRIVER_TYPE,
+  chip: CHIP,
+  name: string,
+): [boolean, any] {
+  //
+}
+
+export function firmwareset(
+  driver: DRIVER_TYPE,
+  chip: CHIP,
+  name: string,
+  value: any,
+): [boolean, any] {
+  //
+}
+
+export function firmwareshouldtick(
+  driver: DRIVER_TYPE,
+  chip: CHIP,
+  activecycle: boolean,
+) {
+  //
+}
+
+export function firmwaretick(driver: DRIVER_TYPE, chip: CHIP) {
+  //
+}
+
+export function firmwaretock(driver: DRIVER_TYPE, chip: CHIP) {
+  //
+}
+
+// type FIRMWARE_GET = (chip: CHIP, name: string) => [boolean, any]
+// type FIRMWARE_SET = (chip: CHIP, name: string, value: any) => [boolean, any]
+// type FIRMWARE_CYCLE = (chip: CHIP) => void
+// type FIRMWARE_SHOULD_TICK = (chip: CHIP, activecycle: boolean) => void
+
+// export type FIRMWARE_COMMAND = (chip: CHIP, words: WORD[]) => 0 | 1
+// get: FIRMWARE_GET
+// set: FIRMWARE_SET
+// shouldtick: FIRMWARE_SHOULD_TICK
+// tick: FIRMWARE_CYCLE
+// tock: FIRMWARE_CYCLE

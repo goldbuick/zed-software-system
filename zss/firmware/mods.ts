@@ -47,6 +47,7 @@ import {
   isstrcolor,
   mapstrcollisiontoenum,
   mapstrcolortoattributes,
+  READ_CONTEXT,
   readargs,
 } from './wordtypes'
 
@@ -197,30 +198,25 @@ export const MODS_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  .command('load', (chip, words) => {
-    const [maybename] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.MAYBE_STRING,
-    ])
+  .command('load', (chip) => {
+    const [maybename] = readargs(0, [ARG_TYPE.MAYBE_STRING])
     const name = maybename ?? ''
     memoryensuresoftwarebook('content', chip.get(name) ?? name)
     return 0
   })
-  .command('reload', (chip, words) => {
-    const [maybename] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.MAYBE_STRING,
-    ])
+  .command('reload', (chip) => {
+    const [maybename] = readargs(0, [ARG_TYPE.MAYBE_STRING])
     const name = maybename ?? ''
     const book = memoryensuresoftwarebook('content', chip.get(name) ?? name)
     // delete all codepages
     book.pages = []
     return 0
   })
-  .command('mod', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
+  .command('mod', (chip) => {
     const modstate = readmodstate(chip.id())
     const content = memoryensuresoftwarebook('content')
 
-    const [type, maybename] = readargs(memoryreadcontext(chip, words), 0, [
+    const [type, maybename] = readargs(0, [
       ARG_TYPE.MAYBE_STRING,
       ARG_TYPE.MAYBE_STRING,
     ])
@@ -265,7 +261,7 @@ export const MODS_FIRMWARE = createfirmware({
           )
           const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
           if (ispresent(board)) {
-            memory.board = board
+            READ_CONTEXT.board = board
           }
         }
         break
@@ -303,7 +299,7 @@ export const MODS_FIRMWARE = createfirmware({
 
     // write the value in given address into the given flag or print value to terminal
     // if we omit a stat name we print out a list of possible stats
-    const [maybestat, maybeflag] = readargs(memoryreadcontext(chip, words), 0, [
+    const [maybestat, maybeflag] = readargs(0, [
       ARG_TYPE.MAYBE_STRING,
       ARG_TYPE.MAYBE_STRING,
     ])
@@ -372,9 +368,7 @@ export const MODS_FIRMWARE = createfirmware({
     }
 
     // write given value to given address
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
+    const [name] = readargs(0, [ARG_TYPE.STRING])
 
     if (modstate.schema?.type === SCHEMA_TYPE.OBJECT) {
       const prop = modstate.schema.props?.[name]
@@ -387,9 +381,7 @@ export const MODS_FIRMWARE = createfirmware({
               collision: ARG_TYPE.COLLISION,
               color: ARG_TYPE.COLOR,
             }
-            let [maybevalue] = readargs(memoryreadcontext(chip, words), 1, [
-              WORD_TYPE_MAP[prop.kind],
-            ])
+            let [maybevalue] = readargs(1, [WORD_TYPE_MAP[prop.kind]])
             if (prop.kind === 'color' && isstrcolor(maybevalue)) {
               const { color, bg } = mapstrcolortoattributes(maybevalue)
               maybevalue = color ?? bg ?? 0

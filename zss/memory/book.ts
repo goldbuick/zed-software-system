@@ -40,7 +40,7 @@ export function createbook(pages: CODE_PAGE[]): BOOK {
     id: createsid(),
     name: createnameid(),
     timestamp: 0,
-    activelist: [],
+    activelist: new Set(),
     pages,
     flags: {},
   }
@@ -275,16 +275,21 @@ export function bookplayersetboard(
   board: string,
 ) {
   if (ispresent(bookreadboard(book, board))) {
+    if (board === '') {
+      book?.activelist.delete(player)
+    } else {
+      book?.activelist.add(player)
+    }
     bookwriteflag(book, player, 'board', board)
   }
 }
 
 function bookplayerreadboardids(book: MAYBE<BOOK>) {
-  const ids =
-    book?.activelist.map((player) => {
-      const value = bookreadflag(book, player, 'board')
-      return isstring(value) ? value : ''
-    }) ?? []
+  const players = [...(book?.activelist.values() ?? [])]
+  const ids = players.map((player) => {
+    const value = bookreadflag(book, player, 'board')
+    return isstring(value) ? value : ''
+  })
   return unique(ids)
 }
 
