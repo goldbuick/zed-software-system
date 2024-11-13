@@ -21,7 +21,7 @@ import {
   isnumber,
   ispresent,
 } from './mapping/types'
-import { memoryreadcontext, memoryreadflags } from './memory'
+import { MEMORY_LABEL, memoryreadflags } from './memory'
 import { WORD, WORD_RESULT } from './memory/types'
 
 export const CONFIG = { HALT_AT_COUNT: 64 }
@@ -121,7 +121,7 @@ export function createchip(
   build: GeneratorBuild,
 ) {
   // chip memory
-  const flags = memoryreadflags(`chip_${id}`)
+  const flags = memoryreadflags(`${id}_chip`)
 
   // ref to generator instance
   // eslint-disable-next-line prefer-const
@@ -335,7 +335,7 @@ export function createchip(
 
         // this sets player focus
         if (player) {
-          chip.set('player', player)
+          chip.set(MEMORY_LABEL.PLAYER, player)
         }
 
         // clear message
@@ -395,7 +395,8 @@ export function createchip(
       const command = firmwaregetcommand(driver, maptostring(name))
 
       // used in firmware
-      memoryreadcontext(id, args)
+      READ_CONTEXT.words = args
+      // memoryreadcontext(id, args)
 
       // found command, invoke
       if (ispresent(command)) {

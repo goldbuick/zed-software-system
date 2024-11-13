@@ -167,7 +167,7 @@ export function memoryensuresoftwarebook(
 
     // success
     if (ispresent(book)) {
-      memorysetsoftwarebook('main', book.id)
+      memorysetsoftwarebook(MEMORY_LABEL.MAIN, book.id)
       tape_info('memory', `opened [book] ${book.name}`)
     }
   }
@@ -238,7 +238,7 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
-  const mainbook = memoryreadbookbysoftware('main')
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return api_error(
       'memory',
@@ -248,22 +248,22 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
-  const titleboard = bookreadboard(mainbook, 'title')
+  const titleboard = bookreadboard(mainbook, MEMORY_LABEL.TITLE)
   if (!ispresent(titleboard)) {
     return api_error(
       'memory',
       'login:title',
-      `login failed to find board 'title'`,
+      `login failed to find board '${MEMORY_LABEL.TITLE}'`,
       player,
     )
   }
 
-  const playerkind = bookreadobject(mainbook, 'player')
+  const playerkind = bookreadobject(mainbook, MEMORY_LABEL.PLAYER)
   if (!ispresent(playerkind)) {
     return api_error(
       'memory',
       'login:player',
-      `login failed to find object type 'player'`,
+      `login failed to find object type '${MEMORY_LABEL.PLAYER}'`,
       player,
     )
   }
@@ -282,7 +282,7 @@ export function memoryplayerlogin(player: string): boolean {
 }
 
 export function memoryplayerlogout(player: string) {
-  const mainbook = memoryreadbookbysoftware('main')
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   MEMORY.books.forEach((book) => {
     const board = bookplayerreadboard(book, player)
     boarddeleteobject(board, player)
@@ -291,7 +291,7 @@ export function memoryplayerlogout(player: string) {
 }
 
 export function memoryplayerscan(players: Record<string, number>) {
-  const mainbook = memoryreadbookbysoftware('main')
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const boards = bookplayerreadboards(mainbook)
   for (let i = 0; i < boards.length; ++i) {
     const board = boards[i]
@@ -307,28 +307,11 @@ export function memoryplayerscan(players: Record<string, number>) {
   }
 }
 
-export function memoryreadcontext(id: string, words: WORD[]) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const flags = bookreadflags(mainbook, id)
-
-  if (isstring(flags.board)) {
-    READ_CONTEXT.board = bookreadboard(mainbook, flags.board)
-  }
-  if (ispresent(READ_CONTEXT.board)) {
-    READ_CONTEXT.object = boardobjectread(READ_CONTEXT.board, id)
-  }
-  if (isstring(flags.player)) {
-    READ_CONTEXT.player = flags.player
-  }
-  READ_CONTEXT.words = words
-
-  return READ_CONTEXT
-}
-
 export function memorytick(os: OS, timestamp: number) {
-  // update loaders
+  // loaders get more processing time
   const resethalt = CONFIG.HALT_AT_COUNT
   CONFIG.HALT_AT_COUNT = resethalt * 32
+  // update loaders
   MEMORY.loaders.forEach((code, id) => {
     os.tick(id, DRIVER_TYPE.LOADER, 1, timestamp, 'loader', code)
     // teardown
@@ -337,27 +320,37 @@ export function memorytick(os: OS, timestamp: number) {
       MEMORY.loaders.delete(id)
     }
   })
+  // reset
   CONFIG.HALT_AT_COUNT = resethalt
 
   // read main book
-  const mainbook = memoryreadbookbysoftware('main')
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const boards = bookplayerreadboards(mainbook)
   if (!ispresent(mainbook)) {
     return
   }
 
-  // update boards / build code / run chips
+  // track tick
   mainbook.timestamp = timestamp
+  READ_CONTEXT.timestamp = timestamp
+
+  // update boards / build code / run chips
   boards.forEach((board) => {
     const run = bookboardtick(mainbook, board, timestamp)
 
     // iterate code needed to update given board
     for (let i = 0; i < run.length; ++i) {
-      const item = run[i]
+      const { id, code, object } = run[i]
 
       // write context
-      if (ispresent(item.object)) {
-        const flags = bookreadflags(mainbook, item.object.id ?? '')
+      if (ispresent(object)) {
+        const flags = bookreadflags(mainbook, object.id ?? '')
+        READ_CONTEXT.book = mainbook
+        READ_CONTEXT.board = board
+        READ_CONTEXT.element = object
+        READ_CONTEXT.player = isstring(flags.player)
+          ? flags.player
+          : MEMORY.defaultplayer
 
         // clear ticker text after X number of ticks
         if (isnumber(flags.tickertime)) {
@@ -368,37 +361,36 @@ export function memorytick(os: OS, timestamp: number) {
         }
 
         // update state
-        flags.board = board.codepage
         flags.inputcurrent = 0
       }
 
       // read cycle
       const cycle = boardelementreadstat(
-        item.object,
+        object,
         'cycle',
         boardelementreadstat(
-          bookelementkindread(mainbook, item.object),
+          bookelementkindread(mainbook, object),
           'cycle',
           CYCLE_DEFAULT,
         ),
       )
 
       // run chip code
-      const itemname = boardelementname(item.object)
+      const itemname = boardelementname(object)
       os.tick(
-        item.id,
+        id,
         DRIVER_TYPE.CODE_PAGE,
         isnumber(cycle) ? cycle : CYCLE_DEFAULT,
         timestamp,
         itemname,
-        item.code,
+        code,
       )
     }
   })
 }
 
 export function memorycli(os: OS, player: string, cli = '') {
-  const mainbook = memoryensuresoftwarebook('main')
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
@@ -423,7 +415,7 @@ function memoryloader(
   binaryfile: Uint8Array,
 ) {
   // we scan main book for loaders
-  const mainbook = memoryreadbookbysoftware('main')
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
@@ -745,7 +737,7 @@ function memoryconverttogadgetlayers(
 }
 
 export function memoryreadgadgetlayers(player: string): LAYER[] {
-  const mainbook = memoryreadbookbysoftware('main')
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const playerboard = bookplayerreadboard(mainbook, player)
 
   const layers: LAYER[] = []

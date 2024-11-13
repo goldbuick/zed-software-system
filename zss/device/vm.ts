@@ -97,19 +97,13 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       if (message.player) {
         // player input
         const flags = memoryreadflags(message.player)
-        const [input = INPUT.NONE, mods = {}] = message.data ?? {}
-
-        debugger
-        // const id = message.player
-        // const book = memoryreadbookbychip(id)
-        // if (ispresent(book)) {
-        // const inputstr = INPUT[input].toLowerCase()
-        // const inputmodsstr = Object.keys(mods).map(
-        //   (value) => INPUT[parseFloat(value)],
-        // )
-        // bookwriteflag(book, id, `input${inputstr}`, 1)
-        //   bookwriteflag(book, id, `inputmods`, inputmodsstr)
-        // }
+        const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
+        // add to input queue
+        if (!isarray(flags.inputqueue)) {
+          flags.inputqueue = []
+        }
+        flags.inputmods = mods
+        flags.inputqueue.push(input)
       }
       break
     case 'codewatch':

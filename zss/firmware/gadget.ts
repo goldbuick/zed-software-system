@@ -28,8 +28,8 @@ export const GADGET_FIRMWARE = createfirmware({
   shouldtick() {},
   tick() {
     let withname = 'scroll'
-    if (ispresent(READ_CONTEXT.object?.name)) {
-      withname = READ_CONTEXT.object.name
+    if (ispresent(READ_CONTEXT.element?.name)) {
+      withname = READ_CONTEXT.element.name
     }
     gadgetpanel(
       READ_CONTEXT.player,
@@ -41,13 +41,13 @@ export const GADGET_FIRMWARE = createfirmware({
   },
   tock() {
     const ticker = gadgetcheckscroll(READ_CONTEXT.player)
-    if (ticker && ispresent(READ_CONTEXT.object)) {
-      READ_CONTEXT.object.tickertext = ticker
-      READ_CONTEXT.object.tickertime = READ_CONTEXT.timestamp
+    if (ticker && ispresent(READ_CONTEXT.element)) {
+      READ_CONTEXT.element.tickertext = ticker
+      READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
       // send message
       const display = bookelementdisplayread(
         READ_CONTEXT.book,
-        READ_CONTEXT.object,
+        READ_CONTEXT.element,
       )
       tape_info(`$${COLOR[display.color]}$${display.char}`, ticker)
     }

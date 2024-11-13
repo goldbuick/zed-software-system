@@ -10,7 +10,11 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { memoryensuresoftwarebook, memorysetcodepageindex } from 'zss/memory'
+import {
+  MEMORY_LABEL,
+  memoryensuresoftwarebook,
+  memorysetcodepageindex,
+} from 'zss/memory'
 import {
   bookreadcodepagebyaddress,
   bookreadcodepagewithtype,
@@ -201,20 +205,23 @@ export const MODS_FIRMWARE = createfirmware({
   .command('load', (chip) => {
     const [maybename] = readargs(0, [ARG_TYPE.MAYBE_STRING])
     const name = maybename ?? ''
-    memoryensuresoftwarebook('content', chip.get(name) ?? name)
+    memoryensuresoftwarebook(MEMORY_LABEL.CONTENT, chip.get(name) ?? name)
     return 0
   })
   .command('reload', (chip) => {
     const [maybename] = readargs(0, [ARG_TYPE.MAYBE_STRING])
     const name = maybename ?? ''
-    const book = memoryensuresoftwarebook('content', chip.get(name) ?? name)
+    const book = memoryensuresoftwarebook(
+      MEMORY_LABEL.CONTENT,
+      chip.get(name) ?? name,
+    )
     // delete all codepages
     book.pages = []
     return 0
   })
   .command('mod', (chip) => {
     const modstate = readmodstate(chip.id())
-    const content = memoryensuresoftwarebook('content')
+    const content = memoryensuresoftwarebook(MEMORY_LABEL.CONTENT)
 
     const [type, maybename] = readargs(0, [
       ARG_TYPE.MAYBE_STRING,

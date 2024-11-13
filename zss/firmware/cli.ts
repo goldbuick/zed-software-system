@@ -11,6 +11,7 @@ import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
+  MEMORY_LABEL,
   memoryclearbook,
   memorycreatesoftwarebook,
   memoryensuresoftwarebook,
@@ -83,7 +84,7 @@ function writetext(text: string) {
 }
 
 function ensureopenbookinmain() {
-  return memoryensuresoftwarebook('main')
+  return memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
 }
 
 export const CLI_FIRMWARE = createfirmware({
@@ -144,7 +145,7 @@ export const CLI_FIRMWARE = createfirmware({
     const book = memoryreadbookbyaddress(name)
     if (ispresent(book)) {
       writetext(`opened [book] ${book.name}`)
-      memorysetsoftwarebook('main', book.id)
+      memorysetsoftwarebook(MEMORY_LABEL.MAIN, book.id)
       chip.command('pages')
     } else {
       api_error(
@@ -159,12 +160,12 @@ export const CLI_FIRMWARE = createfirmware({
   .command('booktrash', (chip) => {
     const [address] = readargs(0, [ARG_TYPE.STRING])
 
-    const opened = memoryreadbookbysoftware('main')
+    const opened = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     const book = memoryreadbookbyaddress(address)
     if (ispresent(book)) {
       // clear opened
       if (opened === book) {
-        memorysetsoftwarebook('main', '')
+        memorysetsoftwarebook(MEMORY_LABEL.MAIN, '')
       }
       // clear book
       memoryclearbook(address)
@@ -240,7 +241,7 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('books', () => {
     writesection(`books`)
-    const main = memoryreadbookbysoftware('main')
+    const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     writeoption('main', `${main?.name ?? 'empty'} $GREEN${main?.id ?? ''}`)
     const content = memoryreadbookbysoftware('content')
     writeoption('content', `${content?.name ?? 'empty'} ${content?.id ?? ''}`)
@@ -256,7 +257,7 @@ export const CLI_FIRMWARE = createfirmware({
     write(`!bookcreate;create a new book`)
     return 0
   })
-  .command('pages', (chip) => {
+  .command('pages', () => {
     writesection(`pages`)
     const book = ensureopenbookinmain()
     if (ispresent(book)) {
@@ -277,8 +278,6 @@ export const CLI_FIRMWARE = createfirmware({
         writetext(`@object name of object`)
         writetext(`@name of object`)
       }
-    } else {
-      chip.command('bookopen', 'main')
     }
     return 0
   })
@@ -292,7 +291,7 @@ export const CLI_FIRMWARE = createfirmware({
       })
       write('')
     }
-    const book = memoryreadbookbysoftware('main')
+    const book = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     if (ispresent(book)) {
       writetext(`pages in open ${book.name} book`)
       book.pages.forEach((page) => {

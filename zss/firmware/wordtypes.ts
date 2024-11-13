@@ -25,11 +25,10 @@ export const READ_CONTEXT = {
   // targets & lookups
   book: undefined as MAYBE<BOOK>,
   board: undefined as MAYBE<BOARD>,
-  object: undefined as MAYBE<BOARD_ELEMENT>,
+  element: undefined as MAYBE<BOARD_ELEMENT>,
   player: '',
-  // input
+  // for commands to use readargs
   words: [] as WORD[],
-  // access
   get: undefined as MAYBE<(name: string) => any>,
 }
 
@@ -937,7 +936,7 @@ export function readargs<T extends ARG_TYPES>(
           const value = READ_CONTEXT.board
             ? boardevaldir(
                 READ_CONTEXT.board,
-                READ_CONTEXT.object,
+                READ_CONTEXT.element,
                 dir,
                 READ_CONTEXT.player,
               )
@@ -1021,7 +1020,7 @@ export function readargs<T extends ARG_TYPES>(
           const value = READ_CONTEXT.board
             ? boardevaldir(
                 READ_CONTEXT.board,
-                READ_CONTEXT.object,
+                READ_CONTEXT.element,
                 dir,
                 READ_CONTEXT.player,
               )

@@ -2,7 +2,11 @@ import JSZip from 'jszip'
 import mime from 'mime/lite'
 import { api_error, tape_info } from 'zss/device/api'
 import { ispresent } from 'zss/mapping/types'
-import { memoryensuresoftwarebook, memorysetcodepageindex } from 'zss/memory'
+import {
+  MEMORY_LABEL,
+  memoryensuresoftwarebook,
+  memorysetcodepageindex,
+} from 'zss/memory'
 import { bookreadcodepagewithtype, bookwritecodepage } from 'zss/memory/book'
 import {
   codepagereadname,
@@ -40,7 +44,7 @@ function createcodepagefromtext(text: string) {
   const pagename = codepagereadname(codepage)
   const pagetype = codepagereadtypetostring(codepage)
 
-  const book = memoryensuresoftwarebook('main')
+  const book = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(book)) {
     return
   }
