@@ -44,24 +44,24 @@ function createcodepagefromtext(text: string) {
   const pagename = codepagereadname(codepage)
   const pagetype = codepagereadtypetostring(codepage)
 
-  const book = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  if (!ispresent(book)) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
     return
   }
 
   // only create if target doesn't already exist
   const codepagetype = codepagereadtype(codepage)
-  const maybepage = bookreadcodepagewithtype(book, codepagetype, pagename)
+  const maybepage = bookreadcodepagewithtype(mainbook, codepagetype, pagename)
 
   if (ispresent(maybepage)) {
     tape_info(
       'memory',
-      `${book.name} already has a [${pagetype}] named ${pagename}`,
+      `${mainbook.name} already has a [${pagetype}] named ${pagename}`,
     )
   } else {
-    bookwritecodepage(book, codepage)
-    memorysetcodepageindex(codepage.id, book.id)
-    tape_info('memory', `created [${pagetype}] ${pagename} in ${book.name}`)
+    bookwritecodepage(mainbook, codepage)
+    memorysetcodepageindex(codepage.id, mainbook.id)
+    tape_info('memory', `created [${pagetype}] ${pagename} in ${mainbook.name}`)
   }
 }
 

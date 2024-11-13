@@ -83,10 +83,6 @@ function writetext(text: string) {
   write(`${COLOR_EDGE}$blue${text}`)
 }
 
-function ensureopenbookinmain() {
-  return memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-}
-
 export const CLI_FIRMWARE = createfirmware({
   get(_, name) {
     // check player's flags
@@ -180,28 +176,31 @@ export const CLI_FIRMWARE = createfirmware({
     const [page] = readargs(0, [ARG_TYPE.STRING])
 
     // create book if needed
-    const book = ensureopenbookinmain()
-    if (!ispresent(book)) {
+    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+    if (!ispresent(mainbook)) {
       return 0
     }
 
-    const codepage = bookreadcodepagebyaddress(book, page)
+    const codepage = bookreadcodepagebyaddress(mainbook, page)
     if (ispresent(codepage)) {
       const name = codepagereadname(codepage)
       const pagetype = codepagereadtypetostring(codepage)
       writetext(`opened [${pagetype}] ${name}`)
 
       // write to modem
-      modemwriteinitstring(vm_codeaddress(book.id, codepage.id), codepage.code)
+      modemwriteinitstring(
+        vm_codeaddress(mainbook.id, codepage.id),
+        codepage.code,
+      )
 
       // tell tape to open a code editor for given page
       const type = codepagereadtypetostring(codepage)
       tape_editor_open(
         'cli',
-        book.id,
+        mainbook.id,
         codepage.id,
         type,
-        `@book ${book.name}:${name}`,
+        `@book ${mainbook.name}:${name}`,
         READ_CONTEXT.player,
       )
     } else {
@@ -217,8 +216,8 @@ export const CLI_FIRMWARE = createfirmware({
   .command('pagetrash', (chip) => {
     const [page] = readargs(0, [ARG_TYPE.STRING])
 
-    const book = ensureopenbookinmain()
-    const codepage = bookclearcodepage(book, page)
+    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+    const codepage = bookclearcodepage(mainbook, page)
     if (ispresent(page)) {
       const name = codepagereadname(codepage)
       const pagetype = codepagereadtypetostring(codepage)
@@ -259,11 +258,11 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('pages', () => {
     writesection(`pages`)
-    const book = ensureopenbookinmain()
-    if (ispresent(book)) {
-      writeoption('main', `${book.name} $GREEN${book.id}`)
-      if (book.pages.length) {
-        book.pages.forEach((page) => {
+    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+    if (ispresent(mainbook)) {
+      writeoption('main', `${mainbook.name} $GREEN${mainbook.id}`)
+      if (mainbook.pages.length) {
+        mainbook.pages.forEach((page) => {
           const name = codepagereadname(page)
           write(`!pageopen ${page.id};${name}`)
         })

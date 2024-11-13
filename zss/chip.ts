@@ -122,7 +122,8 @@ export function createchip(
   build: GeneratorBuild,
 ) {
   // chip memory
-  const flags = memoryreadflags(`${id}_chip`)
+  const mem = `${id}_chip`
+  const flags = memoryreadflags(mem)
 
   // ref to generator instance
   // eslint-disable-next-line prefer-const
@@ -160,7 +161,7 @@ export function createchip(
 
   const chip: CHIP = {
     halt() {
-      memoryclearflags(id)
+      memoryclearflags(mem)
     },
     // id
     id() {

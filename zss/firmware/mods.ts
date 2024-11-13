@@ -211,17 +211,17 @@ export const MODS_FIRMWARE = createfirmware({
   .command('reload', (chip) => {
     const [maybename] = readargs(0, [ARG_TYPE.MAYBE_STRING])
     const name = maybename ?? ''
-    const book = memoryensuresoftwarebook(
+    const mainbook = memoryensuresoftwarebook(
       MEMORY_LABEL.CONTENT,
       chip.get(name) ?? name,
     )
     // delete all codepages
-    book.pages = []
+    mainbook.pages = []
     return 0
   })
   .command('mod', (chip) => {
     const modstate = readmodstate(chip.id())
-    const content = memoryensuresoftwarebook(MEMORY_LABEL.CONTENT)
+    const contentbook = memoryensuresoftwarebook(MEMORY_LABEL.CONTENT)
 
     const [type, maybename] = readargs(0, [
       ARG_TYPE.MAYBE_STRING,
@@ -232,7 +232,7 @@ export const MODS_FIRMWARE = createfirmware({
       if (modstate.target === '') {
         write(`not currently modifying anything`)
       } else {
-        const codepage = bookreadcodepagebyaddress(content, modstate.target)
+        const codepage = bookreadcodepagebyaddress(contentbook, modstate.target)
         const pagetype = codepagereadtypetostring(codepage)
         write(
           `modifying [${pagetype}] ${codepagereadname(codepage)} ${modstate.target}`,
@@ -246,23 +246,28 @@ export const MODS_FIRMWARE = createfirmware({
     const withaddress = maybename ?? createshortnameid()
     switch (maybetype) {
       default: {
-        const codepage = bookreadcodepagebyaddress(content, type)
+        const codepage = bookreadcodepagebyaddress(contentbook, type)
         if (ispresent(codepage)) {
           applymod(modstate, codepage)
         } else {
           const named = type || createshortnameid()
-          ensurecodepage(modstate, content, CODE_PAGE_TYPE.OBJECT, named)
+          ensurecodepage(modstate, contentbook, CODE_PAGE_TYPE.OBJECT, named)
         }
         break
       }
       case CODE_PAGE_LABEL.LOADER:
-        ensurecodepage(modstate, content, CODE_PAGE_TYPE.LOADER, withaddress)
+        ensurecodepage(
+          modstate,
+          contentbook,
+          CODE_PAGE_TYPE.LOADER,
+          withaddress,
+        )
         break
       case CODE_PAGE_LABEL.BOARD:
         {
           const codepage = ensurecodepage(
             modstate,
-            content,
+            contentbook,
             CODE_PAGE_TYPE.BOARD,
             withaddress,
           )
@@ -273,21 +278,41 @@ export const MODS_FIRMWARE = createfirmware({
         }
         break
       case CODE_PAGE_LABEL.OBJECT:
-        ensurecodepage(modstate, content, CODE_PAGE_TYPE.OBJECT, withaddress)
+        ensurecodepage(
+          modstate,
+          contentbook,
+          CODE_PAGE_TYPE.OBJECT,
+          withaddress,
+        )
         break
       case CODE_PAGE_LABEL.TERRAIN:
-        ensurecodepage(modstate, content, CODE_PAGE_TYPE.TERRAIN, withaddress)
+        ensurecodepage(
+          modstate,
+          contentbook,
+          CODE_PAGE_TYPE.TERRAIN,
+          withaddress,
+        )
         break
       case CODE_PAGE_LABEL.CHARSET:
-        ensurecodepage(modstate, content, CODE_PAGE_TYPE.CHARSET, withaddress)
+        ensurecodepage(
+          modstate,
+          contentbook,
+          CODE_PAGE_TYPE.CHARSET,
+          withaddress,
+        )
         break
       case CODE_PAGE_LABEL.PALETTE:
-        ensurecodepage(modstate, content, CODE_PAGE_TYPE.PALETTE, withaddress)
+        ensurecodepage(
+          modstate,
+          contentbook,
+          CODE_PAGE_TYPE.PALETTE,
+          withaddress,
+        )
         break
       case CODE_PAGE_LABEL.EIGHT_TRACK:
         ensurecodepage(
           modstate,
-          content,
+          contentbook,
           CODE_PAGE_TYPE.EIGHT_TRACK,
           withaddress,
         )

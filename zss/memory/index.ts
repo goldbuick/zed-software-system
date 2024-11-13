@@ -177,13 +177,13 @@ export function memoryensuresoftwarebook(
 }
 
 export function memoryreadflags(id: string) {
-  const book = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  return bookreadflags(book, id)
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  return bookreadflags(mainbook, id)
 }
 
 export function memoryclearflags(id: string) {
-  const book = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  return bookclearflags(book, id)
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  return bookclearflags(mainbook, id)
 }
 
 export function memoryresetbooks(books: BOOK[]) {
@@ -312,8 +312,7 @@ export function memoryplayerscan(players: Record<string, number>) {
 }
 
 export function memorytick(os: OS) {
-  // read main book
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
@@ -324,6 +323,7 @@ export function memorytick(os: OS) {
   // loaders get more processing time
   const resethalt = CONFIG.HALT_AT_COUNT
   CONFIG.HALT_AT_COUNT = resethalt * 32
+
   // update loaders
   MEMORY.loaders.forEach((code, id) => {
     os.tick(id, DRIVER_TYPE.LOADER, 1, timestamp, 'loader', code)
@@ -333,6 +333,7 @@ export function memorytick(os: OS) {
       MEMORY.loaders.delete(id)
     }
   })
+
   // reset
   CONFIG.HALT_AT_COUNT = resethalt
 
@@ -405,17 +406,13 @@ export function memorycli(os: OS, player: string, cli = '') {
   // player id + unique id fo run
   const id = `${player}_cli`
 
-  // // write context
-  // const flags = bookreadflags(mainbook, id)
-  // flags.player = player
-  // flags.inputcurrent = 0
+  // write context
+  const flags = bookreadflags(mainbook, id)
+  flags.player = player
 
   // invoke once
   tape_debug('memory', 'running', mainbook.timestamp, id, cli)
   os.once(id, DRIVER_TYPE.CLI, mainbook.timestamp, 'cli', cli)
-
-  // ensure clean mem
-  memoryclearflags(id)
 }
 
 function memoryloader(
