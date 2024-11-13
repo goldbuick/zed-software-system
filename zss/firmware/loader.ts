@@ -3,50 +3,33 @@ import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
-import { memoryreadbookbycodepage } from 'zss/memory'
-import { bookreadflag, bookwriteflag } from 'zss/memory/book'
+import { memoryreadbinaryfile, memoryreadflags } from 'zss/memory'
 
 import { binaryloader } from './loader/binaryloader'
-import { ARG_TYPE, readargs } from './wordtypes'
+import { ARG_TYPE, READ_CONTEXT, readargs } from './wordtypes'
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
-    const memory = memoryreadchip(chip.id())
-    if (!ispresent(memory)) {
-      return [false, undefined]
-    }
-
-    switch (name.toLowerCase()) {
-      case 'filename':
-        if (ispresent(memory.binaryfile?.filename)) {
+    const binaryfile = memoryreadbinaryfile(chip.id())
+    if (ispresent(binaryfile)) {
+      switch (name.toLowerCase()) {
+        case 'filename':
           // name of binary file
-          return [true, memory.binaryfile.filename]
-        }
-        break
-      case 'cursor':
-        if (ispresent(memory.binaryfile?.cursor)) {
+          return [ispresent(binaryfile.filename), binaryfile.filename]
+        case 'cursor':
           // return where we are in the binary file ?
-          return [true, memory.binaryfile.cursor]
-        }
-        break
+          return [ispresent(binaryfile.cursor), binaryfile.cursor]
+      }
     }
 
-    // get player's flags
-    const book = memoryreadbookbycodepage(memory.board?.codepage)
-    const value = bookreadflag(book, memory.player, name)
-    // console.info('get', name, value)
+    // check player's flags
+    const value = memoryreadflags(READ_CONTEXT.player)[name]
     return [ispresent(value), value]
   },
-  set(chip, name, value) {
-    const memory = memoryreadchip(chip.id())
-    if (!ispresent(memory)) {
-      return [false, undefined]
-    }
-
+  set(_, name, value) {
     // set player's flags
-    const book = memoryreadbookbycodepage(memory.board?.codepage)
-    bookwriteflag(book, memory.player, name, value)
-    // console.info('set', name, value)
+    const flags = memoryreadflags(READ_CONTEXT.player)
+    flags[name] = value
     return [true, value]
   },
   shouldtick() {},
@@ -75,11 +58,8 @@ export const LOADER_FIRMWARE = createfirmware({
    * TODO loaders, textloader, jsonloader, imageloader, xmlloader
    * common text parsing ??
    */
-  .command('send', (chip, words) => {
-    const [target, data] = readargs(0, [
-      ARG_TYPE.STRING,
-      ARG_TYPE.ANY,
-    ])
+  .command('send', (chip) => {
+    const [target, data] = readargs(0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
     chip.message({
       id: createsid(),
       sender: chip.id(),

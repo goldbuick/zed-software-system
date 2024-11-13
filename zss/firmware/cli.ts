@@ -15,20 +15,15 @@ import {
   memorycreatesoftwarebook,
   memoryensuresoftwarebook,
   memoryreadbookbyaddress,
-  memoryreadbookbycodepage,
   memoryreadbookbysoftware,
   memoryreadbooklist,
+  memoryreadflags,
   memorysetsoftwarebook,
 } from 'zss/memory'
-import {
-  bookclearcodepage,
-  bookreadcodepagebyaddress,
-  bookreadflag,
-  bookwriteflag,
-} from 'zss/memory/book'
+import { bookclearcodepage, bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepagereadname, codepagereadtypetostring } from 'zss/memory/codepage'
 
-import { ARG_TYPE, readargs } from './wordtypes'
+import { ARG_TYPE, READ_CONTEXT, readargs } from './wordtypes'
 
 const ismac = navigator.userAgent.indexOf('Mac') !== -1
 const metakey = ismac ? 'cmd' : 'ctrl'
@@ -92,19 +87,15 @@ function ensureopenbookinmain() {
 }
 
 export const CLI_FIRMWARE = createfirmware({
-  get(chip, name) {
+  get(_, name) {
     // check player's flags
-    const memory = memoryreadchip(chip.id())
-    const book = memoryreadbookbycodepage(memory.board?.codepage)
-    // then global
-    const value = bookreadflag(book, memory.player, name)
+    const value = memoryreadflags(READ_CONTEXT.player)[name]
     return [ispresent(value), value]
   },
-  set(chip, name, value) {
-    const memory = memoryreadchip(chip.id())
-    const book = memoryreadbookbycodepage(memory.board?.codepage)
+  set(_, name, value) {
     // set player's flags
-    bookwriteflag(book, memory.player, name, value)
+    const flags = memoryreadflags(READ_CONTEXT.player)
+    flags[name] = value
     return [true, value]
   },
   shouldtick() {},
@@ -132,17 +123,14 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('hyperlink', (_, args) => {
-    // const memory = memoryreadchip(chip.id())
     const [labelword, ...words] = args
     const label = maptostring(labelword)
     const hyperlink = words.map(maptostring).join(' ')
     tape_info('$2', `!${hyperlink};${label}`)
     return 0
   })
-  .command('bookcreate', (chip, words) => {
-    const [maybename] = readargs(0, [
-      ARG_TYPE.MAYBE_STRING,
-    ])
+  .command('bookcreate', (chip) => {
+    const [maybename] = readargs(0, [ARG_TYPE.MAYBE_STRING])
 
     const book = memorycreatesoftwarebook(maybename)
     if (ispresent(book)) {
@@ -150,11 +138,8 @@ export const CLI_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('bookopen', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name] = readargs(0, [
-      ARG_TYPE.STRING,
-    ])
+  .command('bookopen', (chip) => {
+    const [name] = readargs(0, [ARG_TYPE.STRING])
 
     const book = memoryreadbookbyaddress(name)
     if (ispresent(book)) {
@@ -162,14 +147,17 @@ export const CLI_FIRMWARE = createfirmware({
       memorysetsoftwarebook('main', book.id)
       chip.command('pages')
     } else {
-      api_error('cli', 'bookopen', `book ${name} not found`, memory.player)
+      api_error(
+        'cli',
+        'bookopen',
+        `book ${name} not found`,
+        READ_CONTEXT.player,
+      )
     }
     return 0
   })
-  .command('booktrash', (chip, words) => {
-    const [address] = readargs(0, [
-      ARG_TYPE.STRING,
-    ])
+  .command('booktrash', (chip) => {
+    const [address] = readargs(0, [ARG_TYPE.STRING])
 
     const opened = memoryreadbookbysoftware('main')
     const book = memoryreadbookbyaddress(address)
@@ -187,11 +175,8 @@ export const CLI_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('pageopen', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [page] = readargs(0, [
-      ARG_TYPE.STRING,
-    ])
+  .command('pageopen', () => {
+    const [page] = readargs(0, [ARG_TYPE.STRING])
 
     // create book if needed
     const book = ensureopenbookinmain()
@@ -216,17 +201,20 @@ export const CLI_FIRMWARE = createfirmware({
         codepage.id,
         type,
         `@book ${book.name}:${name}`,
-        memory.player,
+        READ_CONTEXT.player,
       )
     } else {
-      api_error('cli', 'pageopen', `page ${page} not found`, memory.player)
+      api_error(
+        'cli',
+        'pageopen',
+        `page ${page} not found`,
+        READ_CONTEXT.player,
+      )
     }
     return 0
   })
-  .command('pagetrash', (chip, words) => {
-    const [page] = readargs(0, [
-      ARG_TYPE.STRING,
-    ])
+  .command('pagetrash', (chip) => {
+    const [page] = readargs(0, [ARG_TYPE.STRING])
 
     const book = ensureopenbookinmain()
     const codepage = bookclearcodepage(book, page)
@@ -319,11 +307,8 @@ export const CLI_FIRMWARE = createfirmware({
     vm_flush('cli')
     return 0
   })
-  .command('send', (chip, words) => {
-    const [msg, data] = readargs(0, [
-      ARG_TYPE.STRING,
-      ARG_TYPE.ANY,
-    ])
+  .command('send', () => {
+    const [msg, data] = readargs(0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
 
     switch (msg) {
       // help messages

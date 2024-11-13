@@ -13,13 +13,17 @@ import { boardevaldir } from 'zss/memory/board'
 import {
   BOARD,
   BOARD_ELEMENT,
+  BOOK,
   CATEGORY,
   COLLISION,
   WORD,
 } from 'zss/memory/types'
 
 export const READ_CONTEXT = {
-  // targets
+  // useful state
+  timestamp: 0,
+  // targets & lookups
+  book: undefined as MAYBE<BOOK>,
   board: undefined as MAYBE<BOARD>,
   object: undefined as MAYBE<BOARD_ELEMENT>,
   player: '',

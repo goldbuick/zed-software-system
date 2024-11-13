@@ -177,11 +177,8 @@ export function memoryensuresoftwarebook(
   return book
 }
 
-export function memoryreadsoftwareflags(
-  slot: keyof typeof MEMORY.software,
-  id: string,
-) {
-  const book = memoryensuresoftwarebook(slot)
+export function memoryreadflags(id: string) {
+  const book = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   return bookreadflags(book, id)
 }
 

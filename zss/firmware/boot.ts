@@ -75,7 +75,15 @@ export function firmwareget(
   chip: CHIP,
   name: string,
 ): [boolean, any] {
-  //
+  const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
+  for (let i = 0; i < lookup.length; ++i) {
+    const firmware = firmwares[lookup[i]]
+    const [result, value] = firmware.get(chip, name)
+    if (result) {
+      return [result, value]
+    }
+  }
+  return [false, undefined]
 }
 
 export function firmwareset(
@@ -84,7 +92,15 @@ export function firmwareset(
   name: string,
   value: any,
 ): [boolean, any] {
-  //
+  const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
+  for (let i = 0; i < lookup.length; ++i) {
+    const firmware = firmwares[lookup[i]]
+    const [result] = firmware.set(chip, name, value)
+    if (result) {
+      return [result, value]
+    }
+  }
+  return [false, undefined]
 }
 
 export function firmwareshouldtick(
@@ -92,25 +108,25 @@ export function firmwareshouldtick(
   chip: CHIP,
   activecycle: boolean,
 ) {
-  //
+  const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
+  for (let i = 0; i < lookup.length; ++i) {
+    const firmware = firmwares[lookup[i]]
+    firmware.shouldtick(chip, activecycle)
+  }
 }
 
 export function firmwaretick(driver: DRIVER_TYPE, chip: CHIP) {
-  //
+  const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
+  for (let i = 0; i < lookup.length; ++i) {
+    const firmware = firmwares[lookup[i]]
+    firmware.tick(chip)
+  }
 }
 
 export function firmwaretock(driver: DRIVER_TYPE, chip: CHIP) {
-  //
+  const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
+  for (let i = 0; i < lookup.length; ++i) {
+    const firmware = firmwares[lookup[i]]
+    firmware.tock(chip)
+  }
 }
-
-// type FIRMWARE_GET = (chip: CHIP, name: string) => [boolean, any]
-// type FIRMWARE_SET = (chip: CHIP, name: string, value: any) => [boolean, any]
-// type FIRMWARE_CYCLE = (chip: CHIP) => void
-// type FIRMWARE_SHOULD_TICK = (chip: CHIP, activecycle: boolean) => void
-
-// export type FIRMWARE_COMMAND = (chip: CHIP, words: WORD[]) => 0 | 1
-// get: FIRMWARE_GET
-// set: FIRMWARE_SET
-// shouldtick: FIRMWARE_SHOULD_TICK
-// tick: FIRMWARE_CYCLE
-// tock: FIRMWARE_CYCLE

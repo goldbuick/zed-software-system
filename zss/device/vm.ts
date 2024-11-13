@@ -14,9 +14,9 @@ import {
   memoryplayerscan,
   memoryplayerlogout,
   memorygetdefaultplayer,
-  memoryreadbookbychip,
+  memoryreadflags,
 } from 'zss/memory'
-import { bookreadcodepagebyaddress, bookwriteflag } from 'zss/memory/book'
+import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
 import { createos } from 'zss/os'
@@ -96,17 +96,20 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
     case 'input':
       if (message.player) {
         // player input
-        const id = message.player
-        const book = memoryreadbookbychip(id)
+        const flags = memoryreadflags(message.player)
         const [input = INPUT.NONE, mods = {}] = message.data ?? {}
-        if (ispresent(book)) {
-          const inputstr = INPUT[input].toLowerCase()
-          const inputmodsstr = Object.keys(mods).map(
-            (value) => INPUT[parseFloat(value)],
-          )
-          bookwriteflag(book, id, `input${inputstr}`, 1)
-          bookwriteflag(book, id, `inputmods`, inputmodsstr)
-        }
+
+        debugger
+        // const id = message.player
+        // const book = memoryreadbookbychip(id)
+        // if (ispresent(book)) {
+        // const inputstr = INPUT[input].toLowerCase()
+        // const inputmodsstr = Object.keys(mods).map(
+        //   (value) => INPUT[parseFloat(value)],
+        // )
+        // bookwriteflag(book, id, `input${inputstr}`, 1)
+        //   bookwriteflag(book, id, `inputmods`, inputmodsstr)
+        // }
       }
       break
     case 'codewatch':

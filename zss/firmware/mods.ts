@@ -289,7 +289,7 @@ export const MODS_FIRMWARE = createfirmware({
 
     return 0
   })
-  .command('read', (chip, words) => {
+  .command('read', (chip) => {
     const modstate = readmodstate(chip.id())
 
     if (!ispresent(modstate.value)) {
@@ -358,7 +358,7 @@ export const MODS_FIRMWARE = createfirmware({
     // #read
     return 0
   })
-  .command('write', (chip, words) => {
+  .command('write', (chip) => {
     const modstate = readmodstate(chip.id())
     const content = memoryensuresoftwarebook('content')
 

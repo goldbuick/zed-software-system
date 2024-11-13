@@ -1,7 +1,6 @@
 import { maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import { isnumber, ispresent } from 'zss/mapping/types'
-import { memoryreadcontext } from 'zss/memory'
 
 import {
   ARG_TYPE,
@@ -54,7 +53,7 @@ export const ALL_FIRMWARE = createfirmware({
     words.forEach((word) => chip.set(maptostring(word), 0))
     return 0
   })
-  .command('set', (chip, words) => {
+  .command('set', (chip) => {
     const [name, value] = readargs(0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
     chip.set(name, value)
     return 0
