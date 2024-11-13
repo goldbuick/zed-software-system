@@ -39,12 +39,17 @@ const DRIVER_FIRMWARE = {
 }
 
 const DRIVER_COMMANDS = {
-  [DRIVER_TYPE.ERROR]: new Map<string, FIRMWARE_COMMAND>(),
+  [DRIVER_TYPE.ERROR]: new Map<string, MAYBE<FIRMWARE_COMMAND>>(),
   // user input
-  [DRIVER_TYPE.CLI]: new Map<string, FIRMWARE_COMMAND>(),
-  [DRIVER_TYPE.LOADER]: new Map<string, FIRMWARE_COMMAND>(),
+  [DRIVER_TYPE.CLI]: new Map<string, MAYBE<FIRMWARE_COMMAND>>(),
+  [DRIVER_TYPE.LOADER]: new Map<string, MAYBE<FIRMWARE_COMMAND>>(),
   // codepages
-  [DRIVER_TYPE.CODE_PAGE]: new Map<string, FIRMWARE_COMMAND>(),
+  [DRIVER_TYPE.CODE_PAGE]: new Map<string, MAYBE<FIRMWARE_COMMAND>>(),
+}
+
+function getfimrwares(driver: DRIVER_TYPE) {
+  const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
+  return lookup.map((i) => firmwares[i]).filter(ispresent)
 }
 
 export function firmwaregetcommand(
@@ -55,19 +60,20 @@ export function firmwaregetcommand(
 
   // lookup from firmware
   if (!commands.has(method)) {
-    const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
-    for (let i = 0; i < lookup.length; ++i) {
-      const firmware = firmwares[lookup[i]]
-      if (ispresent(firmware)) {
-        const command = firmware.getcommand(method)
-        if (ispresent(command)) {
-          commands.set(method, command)
-        }
+    let command: MAYBE<FIRMWARE_COMMAND>
+    const wares = getfimrwares(driver)
+    for (let i = 0; i < wares.length; ++i) {
+      command = wares[i].getcommand(method)
+      if (ispresent(command)) {
+        break
       }
     }
+    commands.set(method, command)
   }
 
-  return commands.get(method)
+  const command = commands.get(method)
+  console.info(method, command)
+  return command
 }
 
 export function firmwareget(
@@ -75,10 +81,9 @@ export function firmwareget(
   chip: CHIP,
   name: string,
 ): [boolean, any] {
-  const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
-  for (let i = 0; i < lookup.length; ++i) {
-    const firmware = firmwares[lookup[i]]
-    const [result, value] = firmware.get(chip, name)
+  const wares = getfimrwares(driver)
+  for (let i = 0; i < wares.length; ++i) {
+    const [result, value] = wares[i].get(chip, name)
     if (result) {
       return [result, value]
     }
@@ -92,10 +97,9 @@ export function firmwareset(
   name: string,
   value: any,
 ): [boolean, any] {
-  const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
-  for (let i = 0; i < lookup.length; ++i) {
-    const firmware = firmwares[lookup[i]]
-    const [result] = firmware.set(chip, name, value)
+  const wares = getfimrwares(driver)
+  for (let i = 0; i < wares.length; ++i) {
+    const [result] = wares[i].set(chip, name, value)
     if (result) {
       return [result, value]
     }
@@ -108,25 +112,22 @@ export function firmwareshouldtick(
   chip: CHIP,
   activecycle: boolean,
 ) {
-  const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
-  for (let i = 0; i < lookup.length; ++i) {
-    const firmware = firmwares[lookup[i]]
-    firmware.shouldtick(chip, activecycle)
+  const wares = getfimrwares(driver)
+  for (let i = 0; i < wares.length; ++i) {
+    wares[i].shouldtick(chip, activecycle)
   }
 }
 
 export function firmwaretick(driver: DRIVER_TYPE, chip: CHIP) {
-  const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
-  for (let i = 0; i < lookup.length; ++i) {
-    const firmware = firmwares[lookup[i]]
-    firmware.tick(chip)
+  const wares = getfimrwares(driver)
+  for (let i = 0; i < wares.length; ++i) {
+    wares[i].tick(chip)
   }
 }
 
 export function firmwaretock(driver: DRIVER_TYPE, chip: CHIP) {
-  const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
-  for (let i = 0; i < lookup.length; ++i) {
-    const firmware = firmwares[lookup[i]]
-    firmware.tock(chip)
+  const wares = getfimrwares(driver)
+  for (let i = 0; i < wares.length; ++i) {
+    wares[i].tock(chip)
   }
 }

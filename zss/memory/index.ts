@@ -1,12 +1,12 @@
 import { CONFIG } from 'zss/chip'
 import { api_error, tape_debug, tape_info } from 'zss/device/api'
-import { DRIVER_TYPE } from 'zss/firmware/boot'
 import {
   mimetypeofbytesread,
   parsebinaryfile,
   parsetextfile,
   parsezipfile,
-} from 'zss/firmware/parsefile'
+} from 'zss/firmware/loader/parsefile'
+import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { READ_CONTEXT } from 'zss/firmware/wordtypes'
 import {
   createwritetextcontext,
@@ -33,11 +33,11 @@ import {
   boarddeleteobject,
   boardelementname,
   boardobjectcreatefromkind,
-  boardobjectread,
 } from './board'
 import { boardelementreadstat } from './boardelement'
 import {
   bookboardtick,
+  bookclearflags,
   bookelementdisplayread,
   bookelementkindread,
   bookplayerreadboard,
@@ -181,6 +181,11 @@ export function memoryreadflags(id: string) {
   return bookreadflags(book, id)
 }
 
+export function memoryclearflags(id: string) {
+  const book = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  return bookclearflags(book, id)
+}
+
 export function memoryresetbooks(books: BOOK[]) {
   // clear all books
   MEMORY.books.clear()
@@ -306,7 +311,16 @@ export function memoryplayerscan(players: Record<string, number>) {
   }
 }
 
-export function memorytick(os: OS, timestamp: number) {
+export function memorytick(os: OS) {
+  // read main book
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  // inc timestamp
+  const timestamp = mainbook.timestamp + 1
+
   // loaders get more processing time
   const resethalt = CONFIG.HALT_AT_COUNT
   CONFIG.HALT_AT_COUNT = resethalt * 32
@@ -322,18 +336,12 @@ export function memorytick(os: OS, timestamp: number) {
   // reset
   CONFIG.HALT_AT_COUNT = resethalt
 
-  // read main book
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const boards = bookplayerreadboards(mainbook)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
   // track tick
   mainbook.timestamp = timestamp
   READ_CONTEXT.timestamp = timestamp
 
   // update boards / build code / run chips
+  const boards = bookplayerreadboards(mainbook)
   boards.forEach((board) => {
     const run = bookboardtick(mainbook, board, timestamp)
 
@@ -397,14 +405,17 @@ export function memorycli(os: OS, player: string, cli = '') {
   // player id + unique id fo run
   const id = `${player}_cli`
 
-  // write context
-  const flags = bookreadflags(mainbook, id)
-  flags.player = player
-  flags.inputcurrent = 0
+  // // write context
+  // const flags = bookreadflags(mainbook, id)
+  // flags.player = player
+  // flags.inputcurrent = 0
 
   // invoke once
   tape_debug('memory', 'running', mainbook.timestamp, id, cli)
   os.once(id, DRIVER_TYPE.CLI, mainbook.timestamp, 'cli', cli)
+
+  // ensure clean mem
+  memoryclearflags(id)
 }
 
 function memoryloader(

@@ -213,7 +213,7 @@ export type BOOK = {
   id: string
   name: string
   timestamp: number
-  activelist: Set<string>
+  activelist: string[]
   // content list
   pages: CODE_PAGE[]
   // global flags by id

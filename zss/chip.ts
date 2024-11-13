@@ -9,7 +9,7 @@ import {
   firmwareshouldtick,
   firmwaretick,
   firmwaretock,
-} from './firmware/boot'
+} from './firmware/runner'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
@@ -21,7 +21,7 @@ import {
   isnumber,
   ispresent,
 } from './mapping/types'
-import { MEMORY_LABEL, memoryreadflags } from './memory'
+import { memoryclearflags, memoryreadflags } from './memory'
 import { WORD, WORD_RESULT } from './memory/types'
 
 export const CONFIG = { HALT_AT_COUNT: 64 }
@@ -38,6 +38,7 @@ export type STATE = Record<string, any>
 
 // may need to expand on this to encapsulate more complex values
 export type CHIP = {
+  halt: () => void
   // id
   id: () => string
   senderid: (maybeid?: string) => string
@@ -158,12 +159,15 @@ export function createchip(
   }
 
   const chip: CHIP = {
+    halt() {
+      memoryclearflags(id)
+    },
     // id
     id() {
       return id
     },
-    senderid(maybeid = chip.id()) {
-      return `vm:${maybeid ?? chip.id()}`
+    senderid(maybeid = id) {
+      return `vm:${maybeid ?? id}`
     },
 
     // internal state api

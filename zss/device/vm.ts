@@ -146,7 +146,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     case 'tick':
       // from clock
-      memorytick(os, message.data ?? 0)
+      memorytick(os)
       break
     case 'second': {
       // ensure player ids are added to tracking

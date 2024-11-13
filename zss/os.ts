@@ -1,7 +1,7 @@
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { api_error } from './device/api'
-import { DRIVER_TYPE } from './firmware/boot'
+import { DRIVER_TYPE } from './firmware/runner'
 import { GeneratorBuild, compile } from './lang/generator'
 import { ispresent, isstring } from './mapping/types'
 
@@ -59,6 +59,7 @@ export function createos() {
     halt(id) {
       const chip = chips[id]
       if (ispresent(chip)) {
+        chip.halt()
         delete chips[id]
       }
       return !!chip

@@ -40,7 +40,7 @@ export function createbook(pages: CODE_PAGE[]): BOOK {
     id: createsid(),
     name: createnameid(),
     timestamp: 0,
-    activelist: new Set(),
+    activelist: [],
     pages,
     flags: {},
   }
@@ -245,6 +245,13 @@ export function bookreadflags(book: MAYBE<BOOK>, id: string) {
   return book.flags[id]
 }
 
+export function bookclearflags(book: MAYBE<BOOK>, id: string) {
+  if (!book) {
+    return
+  }
+  delete book.flags[id]
+}
+
 export function bookreadflag(book: MAYBE<BOOK>, id: string, name: string) {
   const flags = bookreadflags(book, id)
   return flags?.[name]
@@ -274,23 +281,32 @@ export function bookplayersetboard(
   player: string,
   board: string,
 ) {
-  if (ispresent(bookreadboard(book, board))) {
-    if (board === '') {
-      book?.activelist.delete(player)
-    } else {
-      book?.activelist.add(player)
+  if (!ispresent(book)) {
+    return
+  }
+  // write board flag
+  bookwriteflag(book, player, 'board', board)
+
+  // determine if player is on a board
+  const maybeboard = bookreadboard(book, board)
+  if (ispresent(maybeboard)) {
+    // ensure player is listed as active
+    if (!book.activelist.includes(player)) {
+      book.activelist.push(player)
     }
-    bookwriteflag(book, player, 'board', board)
+  } else {
+    // ensure player is not listed as active
+    book.activelist = book.activelist.filter((id) => id !== player)
   }
 }
 
 function bookplayerreadboardids(book: MAYBE<BOOK>) {
-  const players = [...(book?.activelist.values() ?? [])]
-  const ids = players.map((player) => {
+  const activelist = book?.activelist ?? []
+  const boardids = activelist.map((player) => {
     const value = bookreadflag(book, player, 'board')
     return isstring(value) ? value : ''
   })
-  return unique(ids)
+  return unique(boardids)
 }
 
 export function bookplayerreadboards(book: MAYBE<BOOK>) {
