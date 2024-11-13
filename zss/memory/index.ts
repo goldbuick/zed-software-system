@@ -57,7 +57,6 @@ import {
   BOARD_WIDTH,
   BOOK,
   CODE_PAGE_TYPE,
-  WORD,
 } from './types'
 
 export enum MEMORY_LABEL {

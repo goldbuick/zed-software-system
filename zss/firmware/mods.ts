@@ -367,7 +367,7 @@ export const MODS_FIRMWARE = createfirmware({
   })
   .command('write', (chip) => {
     const modstate = readmodstate(chip.id())
-    const content = memoryensuresoftwarebook('content')
+    const content = memoryensuresoftwarebook(MEMORY_LABEL.CONTENT)
 
     if (!ispresent(modstate.value)) {
       write(`use #mod before #write`)

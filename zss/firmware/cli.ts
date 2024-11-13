@@ -243,7 +243,7 @@ export const CLI_FIRMWARE = createfirmware({
     writesection(`books`)
     const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     writeoption('main', `${main?.name ?? 'empty'} $GREEN${main?.id ?? ''}`)
-    const content = memoryreadbookbysoftware('content')
+    const content = memoryreadbookbysoftware(MEMORY_LABEL.CONTENT)
     writeoption('content', `${content?.name ?? 'empty'} ${content?.id ?? ''}`)
     writebbar(7)
     const list = memoryreadbooklist()

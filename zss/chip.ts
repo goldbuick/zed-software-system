@@ -152,6 +152,8 @@ export function createchip(
     if (!command) {
       throw new Error(`unknown firmware command ${name}`)
     }
+    READ_CONTEXT.get = chip.get
+    READ_CONTEXT.words = words
     command(chip, words)
   }
 
@@ -320,7 +322,7 @@ export function createchip(
     },
     getcase() {
       const label = chip.hm()
-      if (isarray(flags.message) && label) {
+      if (label && isarray(flags.message)) {
         const [, , data, sender, player] = flags.message as [
           string,
           string,
@@ -335,7 +337,7 @@ export function createchip(
 
         // this sets player focus
         if (player) {
-          chip.set(MEMORY_LABEL.PLAYER, player)
+          chip.set('player', player)
         }
 
         // clear message
