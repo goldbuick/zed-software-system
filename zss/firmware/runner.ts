@@ -71,9 +71,7 @@ export function firmwaregetcommand(
     commands.set(method, command)
   }
 
-  const command = commands.get(method)
-  console.info(method, command)
-  return command
+  return commands.get(method)
 }
 
 export function firmwareget(

@@ -266,7 +266,6 @@ export function bookwriteflag(
   const flags = bookreadflags(book, id)
   if (flags) {
     flags[name] = value
-    console.info('>>>', name, value)
   }
   return value
 }

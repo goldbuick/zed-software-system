@@ -33,6 +33,7 @@ import {
   boarddeleteobject,
   boardelementname,
   boardobjectcreatefromkind,
+  boardobjectread,
 } from './board'
 import { boardelementreadstat } from './boardelement'
 import {
@@ -407,8 +408,10 @@ export function memorycli(os: OS, player: string, cli = '') {
   const id = `${player}_cli`
 
   // write context
-  const flags = bookreadflags(mainbook, id)
-  flags.player = player
+  READ_CONTEXT.book = mainbook
+  READ_CONTEXT.board = bookplayerreadboard(mainbook, player)
+  READ_CONTEXT.element = boardobjectread(READ_CONTEXT.board, player)
+  READ_CONTEXT.player = player
 
   // invoke once
   tape_debug('memory', 'running', mainbook.timestamp, id, cli)

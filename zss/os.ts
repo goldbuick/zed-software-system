@@ -113,8 +113,8 @@ export function createos() {
       return !!chip?.tick(cycle, timestamp)
     },
     once(id, driver, timestamp, name, code) {
-      os.tick(id, driver, 1, timestamp, name, code)
-      return os.halt(id)
+      const result = os.tick(id, driver, 1, timestamp, name, code)
+      return os.halt(id) && result
     },
     message(incoming) {
       const { target, path } = parsetarget(incoming.target)
