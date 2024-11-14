@@ -312,7 +312,7 @@ export function memoryplayerscan(players: Record<string, number>) {
 }
 
 export function memorytick(os: OS) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }

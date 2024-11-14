@@ -32,10 +32,10 @@ const firmwares: Record<string, FIRMWARE> = {
 const DRIVER_FIRMWARE = {
   [DRIVER_TYPE.ERROR]: [],
   // user input
-  [DRIVER_TYPE.CLI]: ['all', 'audio', 'mods', 'element', 'cli'],
-  [DRIVER_TYPE.LOADER]: ['all', 'audio', 'mods', 'element', 'loader'],
+  [DRIVER_TYPE.CLI]: ['all', 'audio', 'mods', 'cli', 'element'],
+  [DRIVER_TYPE.LOADER]: ['all', 'audio', 'mods', 'loader', 'element'],
   // codepages
-  [DRIVER_TYPE.CODE_PAGE]: ['all', 'audio', 'mods', 'element', 'gadget'],
+  [DRIVER_TYPE.CODE_PAGE]: ['all', 'audio', 'mods', 'gadget', 'element'],
 }
 
 const DRIVER_COMMANDS = {

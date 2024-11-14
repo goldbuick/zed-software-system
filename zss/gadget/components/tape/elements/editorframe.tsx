@@ -48,7 +48,7 @@ export function EditorFrame() {
   )
 
   // make label
-  const label = tape.editor.type === 'object' ? '' : `[${tape.editor.type}] `
+  const label = `[${tape.editor.type}] `
 
   // write name
   const title = ` ${label}${tape.editor.title} `

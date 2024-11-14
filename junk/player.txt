@@ -2,10 +2,10 @@
 
 ' create ui
 #gadget right
-"                "
+"
 - - - proto - - -
  - - - editr - - -
-"                "
+"
 !hotkey bongle b;Bongle
 !hotkey wiggle w;Wiggle
 
@@ -30,7 +30,7 @@
 :wiggle
 #foreach eek 1 to 10 do
 eek: $eek
-#repeat 32 ?i
+#repeat 15 ?rnd
 #done
 #main
 

@@ -200,7 +200,7 @@ export const CLI_FIRMWARE = createfirmware({
         mainbook.id,
         codepage.id,
         type,
-        `@book ${mainbook.name}:${name}`,
+        `${name} - ${mainbook.name}`,
         READ_CONTEXT.player,
       )
     } else {

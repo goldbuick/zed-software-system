@@ -149,14 +149,17 @@ export function createchip(
     flags.endedstate = (build.errors?.length ?? 0) !== 0 ? 1 : 0
   }
 
-  function invokecommand(name: string, words: WORD[]): 0 | 1 {
-    READ_CONTEXT.words = words
+  function invokecommand(command: string, args: WORD[]): 0 | 1 {
+    READ_CONTEXT.words = args
     READ_CONTEXT.get = chip.get
-    const command = firmwaregetcommand(driver, name)
-    if (!ispresent(command) && name !== 'send') {
-      return invokecommand('send', [name, ...words])
+    const commandinvoke = firmwaregetcommand(driver, command)
+    if (!ispresent(commandinvoke)) {
+      if (command !== 'send') {
+        return invokecommand('send', [command, ...args])
+      }
+      return 0
     }
-    return command?.(chip, words) ?? 0
+    return commandinvoke(chip, args)
   }
 
   const chip: CHIP = {
