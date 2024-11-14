@@ -149,14 +149,14 @@ export function createchip(
     flags.endedstate = (build.errors?.length ?? 0) !== 0 ? 1 : 0
   }
 
-  function invokecommand(name: string, words: WORD[]) {
-    const command = firmwaregetcommand(driver, name)
-    if (!command) {
-      throw new Error(`unknown firmware command ${name}`)
-    }
-    READ_CONTEXT.get = chip.get
+  function invokecommand(name: string, words: WORD[]): 0 | 1 {
     READ_CONTEXT.words = words
-    command(chip, words)
+    READ_CONTEXT.get = chip.get
+    const command = firmwaregetcommand(driver, name)
+    if (!ispresent(command) && name !== 'send') {
+      return invokecommand('send', [name, ...words])
+    }
+    return command?.(chip, words) ?? 0
   }
 
   const chip: CHIP = {
@@ -397,22 +397,9 @@ export function createchip(
         // bail on empty commands
         return 0
       }
-
+      // invoke
       const [name, ...args] = words
-      const command = firmwaregetcommand(driver, maptostring(name))
-
-      // used in firmware
-      READ_CONTEXT.words = args
-      // memoryreadcontext(id, args)
-
-      // found command, invoke
-      if (ispresent(command)) {
-        return command(chip, args)
-      }
-
-      // unknown command,  defaults to send
-      invokecommand('send', [name, ...args])
-      return 0
+      return invokecommand(maptostring(name), args)
     },
     if(...words) {
       const [value, ii] = readargs(0, [ARG_TYPE.ANY])
