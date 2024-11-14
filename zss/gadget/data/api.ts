@@ -15,6 +15,7 @@ import {
   ispresent,
   isnumber,
   isstring,
+  MAYBE,
 } from 'zss/mapping/types'
 import { WORD } from 'zss/memory/types'
 
@@ -72,8 +73,6 @@ function findpanel(state: STATE): PANEL {
   return panel
 }
 
-const allgadgetstate: STATE = {}
-
 const HYPERLINK_TYPES = new Set([
   'hk',
   'hotkey',
@@ -111,15 +110,22 @@ const HYPERLINK_WITH_SHARED_DEFAULTS = {
   text: '',
 }
 
-export function gadgetstate(player: string) {
-  let value: GADGET_STATE = allgadgetstate[player]
+type GADGET_STATE_PROVIDER = (player: string) => GADGET_STATE
+
+const tempgadgetstate: Record<string, GADGET_STATE> = {}
+let GADGET_PROVIDER: GADGET_STATE_PROVIDER = (player: string) => {
+  let value = tempgadgetstate[player]
   return ispresent(value)
     ? value
-    : (allgadgetstate[player] = value = initstate({}, player))
+    : (tempgadgetstate[player] = value = initstate({}, player))
 }
 
-export function gadgetplayers() {
-  return Object.keys(allgadgetstate)
+export function gadgetstateprovider(provider: GADGET_STATE_PROVIDER) {
+  GADGET_PROVIDER = provider
+}
+
+export function gadgetstate(player: string) {
+  return GADGET_PROVIDER(player)
 }
 
 export function gadgetclearscroll(player: string) {
