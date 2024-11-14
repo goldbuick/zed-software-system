@@ -20,6 +20,7 @@ import {
   Command_else_ifCstChildren,
   Command_elseCstChildren,
   Command_foreachCstChildren,
+  Command_forkCstChildren,
   Command_if_blockCstChildren,
   Command_ifCstChildren,
   Command_playCstChildren,
@@ -580,13 +581,17 @@ class ScriptVisitor
     return [this.go(ctx.do_inline), this.go(ctx.line)].flat()
   }
 
+  command_fork(ctx: Command_forkCstChildren) {
+    return [this.go(ctx.do_inline), this.go(ctx.line)].flat()
+  }
+
   command_else_if(ctx: Command_else_ifCstChildren) {
     return createcodenode(ctx, {
       type: NODE.ELSE_IF,
       method: 'if',
       skipto: '',
       words: this.go(ctx.words),
-      lines: this.go(ctx.command_block),
+      lines: this.go(ctx.command_fork),
     })
   }
 
@@ -594,7 +599,7 @@ class ScriptVisitor
     return createcodenode(ctx, {
       type: NODE.ELSE,
       method: 'if',
-      lines: this.go(ctx.command_block),
+      lines: this.go(ctx.command_fork),
     })
   }
 

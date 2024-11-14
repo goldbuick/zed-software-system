@@ -259,7 +259,7 @@ export const command_repeat = createWordToken('repeat')
 export const command_waitfor = createWordToken('waitfor')
 export const command_foreach = createSimpleToken({
   name: 'foreach',
-  pattern: /for|foreach/,
+  pattern: /foreach|for/,
   longer_alt: stringliteral,
 })
 export const command_break = createWordToken('break')
@@ -323,19 +323,19 @@ export const allTokens = createTokenSet([
   newline,
   whitespace,
   // core / structure commands
-  command_debugger,
-  command_if,
-  command_done,
-  command_do,
-  command_to,
-  command_then,
-  command_else,
-  command_while,
-  command_repeat,
-  command_waitfor,
-  command_foreach,
   command_break,
   command_continue,
+  command_debugger,
+  command_done,
+  command_do,
+  command_else,
+  command_foreach,
+  command_if,
+  command_repeat,
+  command_then,
+  command_to,
+  command_waitfor,
+  command_while,
 ])
 
 const scriptLexer = new Lexer(

@@ -215,6 +215,17 @@ export type Command_blockCstChildren = {
   token_done?: IToken[]
 }
 
+export type Command_forkCstNode = {
+  name: 'command_fork'
+  children: Command_forkCstChildren
+} & CstNode
+
+export type Command_forkCstChildren = {
+  do_inline?: Do_inlineCstNode[]
+  token_do?: IToken[]
+  line?: LineCstNode[]
+}
+
 export type Command_else_ifCstNode = {
   name: 'command_else_if'
   children: Command_else_ifCstChildren
@@ -225,7 +236,7 @@ export type Command_else_ifCstChildren = {
   token_else: IToken[]
   token_if: IToken[]
   words: WordsCstNode[]
-  command_block?: Command_blockCstNode[]
+  command_fork?: Command_forkCstNode[]
 }
 
 export type Command_elseCstNode = {
@@ -236,7 +247,7 @@ export type Command_elseCstNode = {
 export type Command_elseCstChildren = {
   token_command: IToken[]
   token_else: IToken[]
-  command_block?: Command_blockCstNode[]
+  command_fork?: Command_forkCstNode[]
 }
 
 export type Command_whileCstNode = {
@@ -505,6 +516,7 @@ export type ICstNodeVisitor<IN, OUT> = {
   command_if(children: Command_ifCstChildren, param?: IN): OUT
   command_if_block(children: Command_if_blockCstChildren, param?: IN): OUT
   command_block(children: Command_blockCstChildren, param?: IN): OUT
+  command_fork(children: Command_forkCstChildren, param?: IN): OUT
   command_else_if(children: Command_else_ifCstChildren, param?: IN): OUT
   command_else(children: Command_elseCstChildren, param?: IN): OUT
   command_while(children: Command_whileCstChildren, param?: IN): OUT
