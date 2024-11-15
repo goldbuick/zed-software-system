@@ -87,6 +87,7 @@ export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
     // TODO: rework compress to binary
     const data = deepcopy(entry)
     trimUndefinedRecursively(data)
+    console.info('wrote', data)
     return pack(compress(data))
   } catch (err: any) {
     api_error('format', 'binary', err.message)

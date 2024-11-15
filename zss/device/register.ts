@@ -1,5 +1,5 @@
 import { createdevice } from 'zss/device'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
 import {
   api_error,
@@ -55,6 +55,27 @@ function erasebiosnode() {
   localStorage.removeItem(BIOS_NODE)
 }
 
+const BIOS_SELECT = 'bios-select'
+
+function readbiosselect() {
+  try {
+    return localStorage.getItem(BIOS_SELECT) ?? ''
+  } catch (err: any) {
+    api_error(register.name(), BIOS_SELECT, err.message)
+  }
+  return ''
+}
+
+function writebiosselect(select: string) {
+  try {
+    localStorage.setItem(BIOS_SELECT, select)
+  } catch (err: any) {
+    api_error(register.name(), BIOS_SELECT, err.message)
+  }
+}
+
+// softwareasmain
+
 // simple bootstrap manager
 let keepalive = 0
 
@@ -96,7 +117,7 @@ const register = createdevice(
           return
         }
         // init vm with content
-        vm_books(register.name(), books, message.player)
+        vm_books(register.name(), books, readbiosselect(), message.player)
         break
       }
       case 'ackbooks':
@@ -110,6 +131,11 @@ const register = createdevice(
       case 'flush':
         if (isstring(message.data)) {
           writestate(message.data)
+        }
+        break
+      case 'select':
+        if (isstring(message.data)) {
+          writebiosselect(message.data)
         }
         break
       case 'nodetrash':

@@ -2,40 +2,73 @@ import { compare, deepClone } from 'fast-json-patch'
 import { createdevice } from 'zss/device'
 import {
   gadgetclearscroll,
-  gadgetplayers,
   gadgetstate,
   gadgetstateprovider,
+  initstate,
 } from 'zss/gadget/data/api'
 import { GADGET_STATE } from 'zss/gadget/data/types'
-import { memoryreadflags, memoryreadgadgetlayers } from 'zss/memory'
+import { ispresent } from 'zss/mapping/types'
+import {
+  MEMORY_LABEL,
+  memoryreadbookbysoftware,
+  memoryreadflags,
+  memoryreadgadgetlayers,
+} from 'zss/memory'
 
 import { gadgetclient_patch, gadgetclient_reset } from './api'
 
-// tracking gadget state for individual players
-const syncstate: Record<string, GADGET_STATE> = {}
-
 gadgetstateprovider((player) => {
-  return memoryreadflags(`${player}_gadget`) as any
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return initstate({}, '')
+  }
+  // cheating here as data is non-WORD compliant
+  const allgadgetstate = memoryreadflags(`gadgetstate`) as any
+  // group by player
+  let value = allgadgetstate[player]
+  if (!ispresent(value)) {
+    // make sure to init state
+    value = initstate({}, player)
+    allgadgetstate[player] = value
+  }
+  return value
 })
 
+function readsyncstate(): Record<string, GADGET_STATE> {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return {}
+  }
+  // cheating here as data is non-WORD compliant
+  return memoryreadflags(`syncstate`) as any
+}
+
 const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
+  // tracking gadget state for individual players
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const syncstate = readsyncstate()
+
   switch (message.target) {
     case 'tock':
-      // todo, we need a list of active player ids here ...
-      // // we need to sync gadget here
-      // gadgetplayers().forEach((player) => {
-      //   const shared = gadgetstate(player)
+      if (mainbook?.activelist.length) {
+        for (let i = 0; i < mainbook.activelist.length; ++i) {
+          const player = mainbook.activelist[i]
 
-      //   // update gadget layers from player's current board
-      //   shared.layers = memoryreadgadgetlayers(player)
+          // get current state
+          const gadget = gadgetstate(player)
 
-      //   // write patch
-      //   const patch = compare(syncstate[player] ?? {}, shared)
-      //   if (patch.length) {
-      //     syncstate[player] = deepClone(shared)
-      //     gadgetclient_patch(gadgetserverdevice.name(), patch, player)
-      //   }
-      // })
+          // update gadget layers from player's current board
+          gadget.layers = memoryreadgadgetlayers(player)
+
+          // write patch
+          const patch = compare(syncstate[player] ?? {}, gadget)
+          if (patch.length) {
+            syncstate[player] = deepClone(gadget)
+            gadgetclient_patch(gadgetserverdevice.name(), patch, player)
+          }
+        }
+        //
+      }
       break
     case 'desync':
       if (message.player) {

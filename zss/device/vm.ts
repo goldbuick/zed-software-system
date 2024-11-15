@@ -1,7 +1,7 @@
 import { createdevice } from 'zss/device'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 import {
   memorycli,
   memoryplayerlogin,
@@ -57,11 +57,12 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     case 'books':
       doasync('vm:books', async () => {
-        if (isstring(message.data)) {
+        if (isarray(message.data)) {
+          const [maybebooks, maybeselect] = message.data as [string, string]
           // unpack books
-          const books = await decompressbooks(message.data)
+          const books = await decompressbooks(maybebooks)
           const booknames = books.map((item) => item.name)
-          memoryresetbooks(books)
+          memoryresetbooks(books, maybeselect)
           // message
           tape_info(
             vm.name(),

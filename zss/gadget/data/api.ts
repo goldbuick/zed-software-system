@@ -15,7 +15,6 @@ import {
   ispresent,
   isnumber,
   isstring,
-  MAYBE,
 } from 'zss/mapping/types'
 import { WORD } from 'zss/memory/types'
 
@@ -31,7 +30,7 @@ import {
 
 const panelshared: Record<string, PANEL_SHARED> = {}
 
-function initstate(state: STATE, player: string): GADGET_STATE {
+export function initstate(state: STATE, player: string): GADGET_STATE {
   state.player = player
   state.layers = []
   state.layout = []
@@ -113,11 +112,13 @@ const HYPERLINK_WITH_SHARED_DEFAULTS = {
 type GADGET_STATE_PROVIDER = (player: string) => GADGET_STATE
 
 const tempgadgetstate: Record<string, GADGET_STATE> = {}
-let GADGET_PROVIDER: GADGET_STATE_PROVIDER = (player: string) => {
+let GADGET_PROVIDER = (player: string) => {
   let value = tempgadgetstate[player]
-  return ispresent(value)
-    ? value
-    : (tempgadgetstate[player] = value = initstate({}, player))
+  if (!ispresent(value)) {
+    value = initstate({}, player)
+    tempgadgetstate[player] = value
+  }
+  return value
 }
 
 export function gadgetstateprovider(provider: GADGET_STATE_PROVIDER) {

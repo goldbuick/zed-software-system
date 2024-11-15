@@ -43,6 +43,10 @@ export function register_flush(sender: string, books: string) {
   hub.emit('register:flush', sender, books)
 }
 
+export function register_select(sender: string, book: string) {
+  hub.emit('register:select', sender, book)
+}
+
 export function register_nodetrash(sender: string) {
   hub.emit('register:nodetrash', sender)
 }
@@ -102,8 +106,13 @@ export function vm_init(sender: string, player: string) {
   hub.emit('vm:init', sender, undefined, player)
 }
 
-export function vm_books(sender: string, books: string, player: string) {
-  hub.emit('vm:books', sender, books, player)
+export function vm_books(
+  sender: string,
+  books: string,
+  select: string,
+  player: string,
+) {
+  hub.emit('vm:books', sender, [books, select], player)
 }
 
 export function vm_login(sender: string, player: string) {

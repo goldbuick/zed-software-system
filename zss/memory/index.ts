@@ -115,7 +115,10 @@ export function memorysetsoftwarebook(
   slot: keyof typeof MEMORY.software,
   book: string,
 ) {
-  MEMORY.software[slot] = book
+  // validate book
+  if (ispresent(memoryreadbookbyaddress(book))) {
+    MEMORY.software[slot] = book
+  }
 }
 
 export function memoryreadbookbysoftware(
@@ -167,8 +170,7 @@ export function memoryensuresoftwarebook(
 
     // success
     if (ispresent(book)) {
-      memorysetsoftwarebook(MEMORY_LABEL.MAIN, book.id)
-      tape_info('memory', `opened [book] ${book.name}`)
+      tape_info('memory', `opened [book] ${book.name} for ${slot}`)
     }
   }
 
@@ -187,7 +189,7 @@ export function memoryclearflags(id: string) {
   return bookclearflags(mainbook, id)
 }
 
-export function memoryresetbooks(books: BOOK[]) {
+export function memoryresetbooks(books: BOOK[], select: string) {
   // clear all books
   MEMORY.books.clear()
   books.forEach((book) => {
@@ -197,6 +199,12 @@ export function memoryresetbooks(books: BOOK[]) {
       MEMORY.software.main = book.id
     }
   })
+  // try select
+  const book = memoryreadbookbyaddress(select)
+  if (ispresent(book)) {
+    memorysetsoftwarebook(MEMORY_LABEL.MAIN, book.id)
+  }
+
   if (!MEMORY.software.main) {
     const first = MEMORY.books.values().next()
     if (first.value) {
