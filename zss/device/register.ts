@@ -1,8 +1,9 @@
 import { createdevice } from 'zss/device'
-import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 
 import {
   api_error,
+  gadgetserver_desync,
   tape_crash,
   tape_info,
   tape_terminal_close,
@@ -126,7 +127,10 @@ const register = createdevice(
         }
         break
       case 'acklogin':
-        tape_terminal_close(register.name())
+        if (ispresent(message.player)) {
+          tape_terminal_close(register.name())
+          gadgetserver_desync(register.name(), message.player)
+        }
         break
       case 'flush':
         if (isstring(message.data)) {

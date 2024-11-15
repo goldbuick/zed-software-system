@@ -34,19 +34,13 @@ gadgetstateprovider((player) => {
   return value
 })
 
-function readsyncstate(): Record<string, GADGET_STATE> {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return {}
-  }
-  // cheating here as data is non-WORD compliant
-  return memoryreadflags(`syncstate`) as any
-}
-
 const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
   // tracking gadget state for individual players
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const syncstate = readsyncstate()
+  // cheating here as data is non-WORD compliant
+  const syncstate = ispresent(mainbook)
+    ? (memoryreadflags(`syncstate`) as any)
+    : {}
 
   switch (message.target) {
     case 'tock':
