@@ -19,7 +19,7 @@ type DitherProps = {
 export function Dither({ width, height, alphas }: DitherProps) {
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
-  const material = createDitherMaterial()
+  const [material] = useState(() => createDitherMaterial())
 
   // create data texture
   useEffect(() => {

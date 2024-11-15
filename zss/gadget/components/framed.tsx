@@ -136,24 +136,23 @@ export function Framed({ player, layers, width, height }: FramedProps) {
                 return null
               case LAYER_TYPE.TILES:
                 return (
+                  // eslint-disable-next-line react/no-unknown-property
                   <group key={layer.id} position={[0, 0, i]}>
-                    {/* <Tiles {...layer} palette={palette} charset={charset} /> */}
+                    <Tiles {...layer} />
                   </group>
                 )
               case LAYER_TYPE.SPRITES:
                 return (
+                  // eslint-disable-next-line react/no-unknown-property
                   <group key={layer.id} position={[0, 0, i]}>
-                    {/* <Sprites
-                      palette={palette}
-                      charset={charset}
-                      sprites={layer.sprites}
-                    /> */}
+                    <Sprites sprites={layer.sprites} />
                   </group>
                 )
               case LAYER_TYPE.DITHER:
                 return (
+                  // eslint-disable-next-line react/no-unknown-property
                   <group key={layer.id} position={[0, 0, i]}>
-                    {/* <Dither {...layer} /> */}
+                    <Dither {...layer} />
                   </group>
                 )
             }

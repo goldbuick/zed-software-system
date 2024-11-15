@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { BufferGeometry } from 'three'
 
-import { BITMAP } from '../data/bitmap'
-import { convertPaletteToColors } from '../data/palette'
 import { CHAR_HEIGHT, CHAR_WIDTH } from '../data/types'
 import useBitmapTexture from '../display/textures'
 import {
@@ -11,6 +9,7 @@ import {
   createTilemapMaterial,
   updateTilemapDataTexture,
 } from '../display/tiles'
+import { loadDefaultCharset } from '../file/bytes'
 
 import { useClipping } from './clipping'
 
@@ -20,19 +19,11 @@ type TilesProps = {
   char: number[]
   color: number[]
   bg: number[]
-  charset?: BITMAP
-  palette?: BITMAP
 }
 
-export function Tiles({
-  width,
-  height,
-  char,
-  color,
-  bg,
-  charset,
-  palette,
-}: TilesProps) {
+const charset = loadDefaultCharset()
+
+export function Tiles({ width, height, char, color, bg }: TilesProps) {
   const charsetTexture = useBitmapTexture(charset)
   const clippingPlanes = useClipping()
   const [material] = useState(() => createTilemapMaterial())
@@ -65,20 +56,10 @@ export function Tiles({
 
   // create / config material
   useEffect(() => {
-    if (
-      !bgRef.current ||
-      width === 0 ||
-      height === 0 ||
-      !charsetTexture ||
-      !palette
-    ) {
+    if (width === 0 || height === 0 || !bgRef.current || !charsetTexture) {
       return
     }
     createTilemapBufferGeometry(bgRef.current, width, height)
-    const paletteColors = convertPaletteToColors(palette)
-    material.uniforms.map.value = charsetTexture
-    material.uniforms.alt.value = charsetTexture
-    material.uniforms.palette.value = paletteColors
     material.uniforms.size.value.x = 1 / width
     material.uniforms.size.value.y = 1 / height
     material.uniforms.step.value.x = 1 / Math.round(imageWidth / CHAR_WIDTH)
@@ -87,7 +68,6 @@ export function Tiles({
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
   }, [
-    palette,
     charsetTexture,
     material,
     width,

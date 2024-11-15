@@ -5,12 +5,11 @@ import {
   InterleavedBufferAttribute,
 } from 'three'
 
-import { BITMAP } from '../data/bitmap'
-import { convertPaletteToColors } from '../data/palette'
 import { CHARS_PER_ROW, CHAR_HEIGHT, CHAR_WIDTH, SPRITE } from '../data/types'
 import { time } from '../display/anim'
 import { createSpritesMaterial } from '../display/sprites'
 import useBitmapTexture from '../display/textures'
+import { loadDefaultCharset } from '../file/bytes'
 
 import { useClipping } from './clipping'
 
@@ -18,11 +17,11 @@ type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
 type SpritesProps = {
   sprites: SPRITE[]
-  charset?: BITMAP
-  palette?: BITMAP
 }
 
-export function Sprites({ sprites, charset, palette }: SpritesProps) {
+const charset = loadDefaultCharset()
+
+export function Sprites({ sprites }: SpritesProps) {
   const spritecount = sprites.length
   const charsetTexture = useBitmapTexture(charset)
   const clippingPlanes = useClipping()
@@ -154,26 +153,15 @@ export function Sprites({ sprites, charset, palette }: SpritesProps) {
     }
     const imageCols = Math.round(imageWidth / CHAR_WIDTH)
     const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
-    const paletteColors = convertPaletteToColors(palette)
 
     material.transparent = true
-    material.uniforms.map.value = charsetTexture
-    material.uniforms.alt.value = charsetTexture // alt
-    material.uniforms.palette.value = paletteColors
     material.uniforms.rows.value = imageRows - 1
     material.uniforms.step.value.x = 1 / imageCols
     material.uniforms.step.value.y = 1 / imageRows
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
-  }, [
-    charsetTexture,
-    palette,
-    material,
-    imageWidth,
-    imageHeight,
-    clippingPlanes,
-  ])
+  }, [charsetTexture, material, imageWidth, imageHeight, clippingPlanes])
 
   return (
     <points frustumCulled={false} material={material}>

@@ -1,9 +1,6 @@
 import { Color, DataTexture, ShaderMaterial } from 'three'
 
-import { loadDefaultPalette } from '../file/bytes'
-
 import { cloneMaterial } from './anim'
-import { createbitmaptexture } from './textures'
 
 export function updateDitherDataTexture(
   texture: DataTexture,
@@ -26,13 +23,10 @@ export function createDitherDataTexture(width: number, height: number) {
   return new DataTexture(data, width, height)
 }
 
-const palette = createbitmaptexture(loadDefaultPalette())
-
 const ditherMaterial = new ShaderMaterial({
   // settings
   transparent: false,
   uniforms: {
-    palette: { value: palette },
     color: { value: new Color(0, 0, 0) },
     data: { value: null },
   },

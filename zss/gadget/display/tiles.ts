@@ -10,6 +10,7 @@ import {
 } from 'three'
 import { MAYBE_NUMBER } from 'zss/mapping/types'
 
+import { convertPaletteToColors } from '../data/palette'
 import {
   CHARS_PER_ROW,
   COLOR,
@@ -107,7 +108,7 @@ export function createTilemapBufferGeometry(
   bg.computeBoundingSphere()
 }
 
-const palette = createbitmaptexture(loadDefaultPalette())
+const palette = convertPaletteToColors(loadDefaultPalette())
 const charset = createbitmaptexture(loadDefaultCharset())
 
 const tilemapMaterial = new ShaderMaterial({
