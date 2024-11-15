@@ -128,8 +128,9 @@ const register = createdevice(
         break
       case 'acklogin':
         if (ispresent(message.player)) {
+          const { player } = message
           tape_terminal_close(register.name())
-          gadgetserver_desync(register.name(), message.player)
+          setTimeout(() => gadgetserver_desync(register.name(), player), 1000)
         }
         break
       case 'flush':

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BufferGeometry } from 'three'
+import { MAYBE } from 'zss/mapping/types'
 
 import { BITMAP } from '../data/bitmap'
 import { convertPaletteToColors } from '../data/palette'
@@ -20,8 +21,8 @@ type TilesProps = {
   char: number[]
   color: number[]
   bg: number[]
-  charset: BITMAP
-  palette: BITMAP
+  charset: MAYBE<BITMAP>
+  palette: MAYBE<BITMAP>
 }
 
 export function Tiles({
@@ -35,18 +36,24 @@ export function Tiles({
 }: TilesProps) {
   const charsetTexture = useBitmapTexture(charset)
   const clippingPlanes = useClipping()
+  const material = createTilemapMaterial()
   const bgRef = useRef<BufferGeometry>(null)
-  const material = useMemo(() => createTilemapMaterial(), [])
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charsetTexture?.image ?? {}
 
   // create data texture
   useEffect(() => {
+    if (width === 0 || height === 0) {
+      return
+    }
     material.uniforms.data.value = createTilemapDataTexture(width, height)
   }, [material.uniforms.data, width, height])
 
   // set data texture
   useEffect(() => {
+    if (width === 0 || height === 0) {
+      return
+    }
     updateTilemapDataTexture(
       material.uniforms.data.value,
       width,
@@ -59,7 +66,13 @@ export function Tiles({
 
   // create / config material
   useEffect(() => {
-    if (!charsetTexture || !bgRef.current) {
+    if (
+      !bgRef.current ||
+      width === 0 ||
+      height === 0 ||
+      !charsetTexture ||
+      !palette
+    ) {
       return
     }
     createTilemapBufferGeometry(bgRef.current, width, height)

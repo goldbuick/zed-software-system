@@ -1,7 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { Group, Vector2 } from 'three'
-import { useSnapshot } from 'valtio'
 import {
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
@@ -51,8 +50,7 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
 }
 
 export function Framed({ player, layers, width, height }: FramedProps) {
-  const layersdata = useSnapshot(layers) as LAYER[]
-  const control = layersreadcontrol(layersdata)
+  const control = layersreadcontrol(layers)
 
   const viewwidth = width * DRAW_CHAR_WIDTH
   const drawwidth = control.width * DRAW_CHAR_WIDTH * control.viewscale
@@ -134,41 +132,30 @@ export function Framed({ player, layers, width, height }: FramedProps) {
         MENU_BUTTON={(mods) => sendinput(player, INPUT.MENU_BUTTON, mods)}
       />
       <Clipping width={viewwidth} height={viewheight}>
-        {}
         <group ref={ref} scale={control.viewscale}>
-          {layersdata.map((layer, i) => {
+          {layers.map((layer, i) => {
             switch (layer.type) {
               default:
               case LAYER_TYPE.BLANK:
                 return null
               case LAYER_TYPE.TILES:
                 return (
-                  palette &&
-                  charset && (
-                    // eslint-disable-next-line react/no-unknown-property
-                    <group key={layer.id} position={[0, 0, i]}>
-                      <Tiles {...layer} palette={palette} charset={charset} />
-                    </group>
-                  )
+                  <group key={layer.id} position={[0, 0, i]}>
+                    <Tiles {...layer} palette={palette} charset={charset} />
+                  </group>
                 )
               case LAYER_TYPE.SPRITES:
                 return (
-                  palette &&
-                  charset && (
-                    // eslint-disable-next-line react/no-unknown-property
-                    <group key={layer.id} position={[0, 0, i]}>
-                      <Sprites
-                        {...layer}
-                        key={layer.id}
-                        palette={palette}
-                        charset={charset}
-                      />
-                    </group>
-                  )
+                  <group key={layer.id} position={[0, 0, i]}>
+                    <Sprites
+                      palette={palette}
+                      charset={charset}
+                      sprites={layer.sprites}
+                    />
+                  </group>
                 )
               case LAYER_TYPE.DITHER:
                 return (
-                  // eslint-disable-next-line react/no-unknown-property
                   <group key={layer.id} position={[0, 0, i]}>
                     <Dither {...layer} />
                   </group>

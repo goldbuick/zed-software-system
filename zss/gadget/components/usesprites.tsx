@@ -25,7 +25,6 @@ type SpritesSnapshotProps = {
 
 export function SpritesSnapshot({ sprites }: SpritesSnapshotProps) {
   const snapshot = useSnapshot(sprites) as SPRITE[]
-
   return (
     palette &&
     charset &&

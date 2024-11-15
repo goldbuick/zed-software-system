@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Box2, BufferGeometry, MathUtils, Vector2 } from 'three'
 
 import {
@@ -19,7 +19,7 @@ type DitherProps = {
 export function Dither({ width, height, alphas }: DitherProps) {
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
-  const material = useMemo(() => createDitherMaterial(), [])
+  const material = createDitherMaterial()
 
   // create data texture
   useEffect(() => {
@@ -49,8 +49,6 @@ export function Dither({ width, height, alphas }: DitherProps) {
       <bufferGeometry ref={bgRef} />
     </mesh>
   )
-
-  return null
 }
 
 type StaticDitherProps = {

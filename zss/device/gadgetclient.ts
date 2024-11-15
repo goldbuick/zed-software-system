@@ -2,10 +2,9 @@ import {
   JsonPatchError as jsonpatcherror,
   applyPatch as applypatch,
 } from 'fast-json-patch'
-import { proxy } from 'valtio'
+import { proxy, ref } from 'valtio'
 import { createdevice } from 'zss/device'
 import { GADGET_STATE } from 'zss/gadget/data/types'
-import { deepcopy } from 'zss/mapping/types'
 
 let desync = false
 
@@ -28,8 +27,7 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
     case 'reset':
       if (message.player === syncstate.state.player) {
         desync = false
-        syncstate.state = message.data
-        console.info('reset to', deepcopy(syncstate.state))
+        syncstate.state = ref(message.data)
       }
       break
     case 'patch':

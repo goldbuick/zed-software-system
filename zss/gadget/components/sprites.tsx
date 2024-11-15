@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   BufferAttribute,
   BufferGeometry,
   InterleavedBufferAttribute,
 } from 'three'
+import { MAYBE } from 'zss/mapping/types'
 
 import { BITMAP } from '../data/bitmap'
 import { convertPaletteToColors } from '../data/palette'
@@ -18,15 +19,16 @@ type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
 type SpritesProps = {
   sprites: SPRITE[]
-  charset: BITMAP
-  palette: BITMAP
+  charset: MAYBE<BITMAP>
+  palette: MAYBE<BITMAP>
 }
 
 export function Sprites({ sprites, charset, palette }: SpritesProps) {
+  const spritecount = sprites.length
   const charsetTexture = useBitmapTexture(charset)
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
-  const material = useMemo(() => createSpritesMaterial(), [])
+  const material = createSpritesMaterial()
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charsetTexture?.image ?? {}
 
@@ -48,33 +50,30 @@ export function Sprites({ sprites, charset, palette }: SpritesProps) {
     // create
     if (
       !position ||
-      position.count !== sprites.length ||
+      position.count !== spritecount ||
       !charData ||
-      charData.count !== sprites.length ||
+      charData.count !== spritecount ||
       !lastPosition ||
-      lastPosition.count !== sprites.length ||
+      lastPosition.count !== spritecount ||
       !lastColor ||
-      lastColor.count !== sprites.length ||
+      lastColor.count !== spritecount ||
       !lastBg ||
-      lastBg.count !== sprites.length ||
+      lastBg.count !== spritecount ||
       !animShake ||
-      animShake.count !== sprites.length ||
+      animShake.count !== spritecount ||
       !animBounce ||
-      animBounce.count !== sprites.length
+      animBounce.count !== spritecount
     ) {
       // init data
-      position = new BufferAttribute(new Float32Array(sprites.length * 3), 3)
-      charData = new BufferAttribute(new Float32Array(sprites.length * 4), 4)
-      lastPosition = new BufferAttribute(
-        new Float32Array(sprites.length * 3),
-        3,
-      )
-      lastColor = new BufferAttribute(new Float32Array(sprites.length * 2), 2)
-      lastBg = new BufferAttribute(new Float32Array(sprites.length * 2), 2)
-      animShake = new BufferAttribute(new Float32Array(sprites.length * 2), 2)
-      animBounce = new BufferAttribute(new Float32Array(sprites.length * 2), 2)
+      position = new BufferAttribute(new Float32Array(spritecount * 3), 3)
+      charData = new BufferAttribute(new Float32Array(spritecount * 4), 4)
+      lastPosition = new BufferAttribute(new Float32Array(spritecount * 3), 3)
+      lastColor = new BufferAttribute(new Float32Array(spritecount * 2), 2)
+      lastBg = new BufferAttribute(new Float32Array(spritecount * 2), 2)
+      animShake = new BufferAttribute(new Float32Array(spritecount * 2), 2)
+      animBounce = new BufferAttribute(new Float32Array(spritecount * 2), 2)
 
-      for (let i = 0; i < sprites.length; ++i) {
+      for (let i = 0; i < spritecount; ++i) {
         const sprite = sprites[i]
         position.setXY(i, sprite.x, sprite.y)
         charData.setXYZW(
@@ -100,7 +99,7 @@ export function Sprites({ sprites, charset, palette }: SpritesProps) {
       current.setAttribute('animBounce', animBounce)
     } else {
       // update data
-      for (let i = 0; i < sprites.length; ++i) {
+      for (let i = 0; i < spritecount; ++i) {
         const sprite = sprites[i]
         const cx = position.getX(i)
         const cy = position.getY(i)
@@ -147,14 +146,13 @@ export function Sprites({ sprites, charset, palette }: SpritesProps) {
 
     current.computeBoundingBox()
     current.computeBoundingSphere()
-  }, [sprites])
+  }, [sprites, spritecount])
 
   // config material
   useEffect(() => {
     if (!charsetTexture || !bgRef.current) {
       return
     }
-
     const imageCols = Math.round(imageWidth / CHAR_WIDTH)
     const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
     const paletteColors = convertPaletteToColors(palette)
