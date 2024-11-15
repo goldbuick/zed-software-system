@@ -1,9 +1,14 @@
-import { ShaderMaterial, Vector2 } from 'three'
+import { ShaderMaterial, Uniform, Vector2 } from 'three'
 import { TICK_FPS } from 'zss/mapping/tick'
 
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
+import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { cloneMaterial, interval, time } from './anim'
+import { createbitmaptexture } from './textures'
+
+const palette = createbitmaptexture(loadDefaultPalette())
+const charset = createbitmaptexture(loadDefaultCharset())
 
 const spritesMaterial = new ShaderMaterial({
   // settings
@@ -11,16 +16,16 @@ const spritesMaterial = new ShaderMaterial({
   uniforms: {
     time,
     interval,
-    moverate: { value: TICK_FPS },
-    blendrate: { value: TICK_FPS * 3 },
-    map: { value: null },
-    alt: { value: null },
-    palette: { value: null },
+    moverate: new Uniform(TICK_FPS),
+    blendrate: new Uniform(TICK_FPS * 3),
+    map: new Uniform(charset),
+    alt: new Uniform(charset),
+    palette: new Uniform(palette),
     pointSize: {
       value: new Vector2(DRAW_CHAR_WIDTH, DRAW_CHAR_HEIGHT),
     },
-    rows: { value: 1 },
-    step: { value: new Vector2() },
+    rows: new Uniform(1),
+    step: new Uniform(new Vector2()),
     // todo, rework to MAX_SPRITES logic
     // where we can have a max of 2048 sprites to render
   },

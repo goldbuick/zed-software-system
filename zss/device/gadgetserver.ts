@@ -6,7 +6,6 @@ import {
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
-import { GADGET_STATE } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,

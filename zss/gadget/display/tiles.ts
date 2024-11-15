@@ -4,6 +4,7 @@ import {
   DataTexture,
   RGBAIntegerFormat,
   ShaderMaterial,
+  Uniform,
   UnsignedByteType,
   Vector2,
 } from 'three'
@@ -15,8 +16,10 @@ import {
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
 } from '../data/types'
+import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { cloneMaterial, interval, time } from './anim'
+import { createbitmaptexture } from './textures'
 
 type TILE_CHARS = MAYBE_NUMBER[]
 type TILE_COLORS = MAYBE_NUMBER[]
@@ -104,16 +107,19 @@ export function createTilemapBufferGeometry(
   bg.computeBoundingSphere()
 }
 
+const palette = createbitmaptexture(loadDefaultPalette())
+const charset = createbitmaptexture(loadDefaultCharset())
+
 const tilemapMaterial = new ShaderMaterial({
   // settings
   transparent: false,
   uniforms: {
     time,
     interval,
-    map: { value: null },
-    alt: { value: null },
-    data: { value: null },
-    palette: { value: null },
+    map: new Uniform(charset),
+    alt: new Uniform(charset),
+    data: new Uniform(null),
+    palette: new Uniform(palette),
     size: { value: new Vector2() },
     step: { value: new Vector2() },
   },

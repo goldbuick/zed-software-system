@@ -4,7 +4,6 @@ import {
   BufferGeometry,
   InterleavedBufferAttribute,
 } from 'three'
-import { MAYBE } from 'zss/mapping/types'
 
 import { BITMAP } from '../data/bitmap'
 import { convertPaletteToColors } from '../data/palette'
@@ -19,8 +18,8 @@ type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
 type SpritesProps = {
   sprites: SPRITE[]
-  charset: MAYBE<BITMAP>
-  palette: MAYBE<BITMAP>
+  charset?: BITMAP
+  palette?: BITMAP
 }
 
 export function Sprites({ sprites, charset, palette }: SpritesProps) {
@@ -28,7 +27,7 @@ export function Sprites({ sprites, charset, palette }: SpritesProps) {
   const charsetTexture = useBitmapTexture(charset)
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
-  const material = createSpritesMaterial()
+  const [material] = useState(() => createSpritesMaterial())
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charsetTexture?.image ?? {}
 

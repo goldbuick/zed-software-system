@@ -12,7 +12,6 @@ import {
   LAYER_TYPE,
   layersreadcontrol,
 } from 'zss/gadget/data/types'
-import { loadDefaultCharset, loadDefaultPalette } from 'zss/gadget/file/bytes'
 import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
@@ -22,9 +21,6 @@ import { Dither } from './dither'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
 import { UserInput, UserInputMods } from './userinput'
-
-const palette = loadDefaultPalette()
-const charset = loadDefaultCharset()
 
 const focus = new Vector2(0, 0)
 
@@ -157,7 +153,7 @@ export function Framed({ player, layers, width, height }: FramedProps) {
               case LAYER_TYPE.DITHER:
                 return (
                   <group key={layer.id} position={[0, 0, i]}>
-                    <Dither {...layer} />
+                    {/* <Dither {...layer} /> */}
                   </group>
                 )
             }

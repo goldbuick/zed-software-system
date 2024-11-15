@@ -5,7 +5,6 @@ import { proxy, useSnapshot } from 'valtio'
 import { ispresent } from 'zss/mapping/types'
 
 import { TILES } from '../data/types'
-import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { Tiles } from './tiles'
 
@@ -29,9 +28,6 @@ export function useTiles(
   return tiles
 }
 
-const palette = loadDefaultPalette()
-const charset = loadDefaultCharset()
-
 type TileSnapshotProps = {
   width: number
   height: number
@@ -41,19 +37,9 @@ type TileSnapshotProps = {
 export function TileSnapshot({ width, height, tiles }: TileSnapshotProps) {
   const { char, color, bg } = useSnapshot(tiles) as TILES
   return (
-    palette &&
-    charset &&
     width > 0 &&
     height > 0 && (
-      <Tiles
-        char={char}
-        color={color}
-        bg={bg}
-        width={width}
-        height={height}
-        palette={palette}
-        charset={charset}
-      />
+      <Tiles char={char} color={color} bg={bg} width={width} height={height} />
     )
   )
 }

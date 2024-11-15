@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BufferGeometry } from 'three'
-import { MAYBE } from 'zss/mapping/types'
 
 import { BITMAP } from '../data/bitmap'
 import { convertPaletteToColors } from '../data/palette'
@@ -21,8 +20,8 @@ type TilesProps = {
   char: number[]
   color: number[]
   bg: number[]
-  charset: MAYBE<BITMAP>
-  palette: MAYBE<BITMAP>
+  charset?: BITMAP
+  palette?: BITMAP
 }
 
 export function Tiles({
@@ -36,7 +35,7 @@ export function Tiles({
 }: TilesProps) {
   const charsetTexture = useBitmapTexture(charset)
   const clippingPlanes = useClipping()
-  const material = createTilemapMaterial()
+  const [material] = useState(() => createTilemapMaterial())
   const bgRef = useRef<BufferGeometry>(null)
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charsetTexture?.image ?? {}
