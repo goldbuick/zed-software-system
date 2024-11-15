@@ -141,17 +141,17 @@ export function Framed({ player, layers, width, height }: FramedProps) {
               case LAYER_TYPE.TILES:
                 return (
                   <group key={layer.id} position={[0, 0, i]}>
-                    <Tiles {...layer} palette={palette} charset={charset} />
+                    {/* <Tiles {...layer} palette={palette} charset={charset} /> */}
                   </group>
                 )
               case LAYER_TYPE.SPRITES:
                 return (
                   <group key={layer.id} position={[0, 0, i]}>
-                    <Sprites
+                    {/* <Sprites
                       palette={palette}
                       charset={charset}
                       sprites={layer.sprites}
-                    />
+                    /> */}
                   </group>
                 )
               case LAYER_TYPE.DITHER:
