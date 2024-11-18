@@ -8,7 +8,9 @@ import {
 import { Texture, Uniform, UnsignedByteType } from 'three'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-const CRTShapeVertShader = `
+import { halftonefragshader } from './halftone'
+
+const crtshapevertshader = `
 #ifdef ASPECT_CORRECTION
 	uniform float scale;
 #else
@@ -26,9 +28,11 @@ void mainSupport(const in vec2 uv) {
 }
 `
 
-const CRTShapeFragShader = `
+const crtshapefragshader = `
 uniform float viewheight;
 uniform sampler2D splat;
+
+${halftonefragshader}
 
 float rectdistance(vec2 uv) {
   vec2 tl = vec2(-1.0);
@@ -71,6 +75,8 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     vec4 displaycolor = texture2D(inputBuffer, bent);
     vec4 fuxtcolor = texel;
     outputColor = mix(displaycolor, fuxtcolor, 0.1);
+    // apply halftones
+    outputColor.rgb = halftone(outputColor.rgb, uv.st, 200.0);
   } else if (doot > 1.004) {
     // display shell
     // rbgb 205 205 193
@@ -84,20 +90,20 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   }
 
   // apply scanlines
-  if (doot < 1.0) {
-    float row = round(uv.y * viewheight * 0.5);
-    float alt = mod(row, 2.0);
-    float phase = time + cos(uv.x + uv.y);
-    float slowband = (cos(uv.x + uv.y - phase) + 1.0) / 2.0;
-    float fastband = (cos(uv.y + time * 0.37) + 1.0) / 2.0;
-    float blankdmix = 0.3 - 
-      pow(slowband, viewheight * 0.01) * 0.05 - 
-      pow(fastband, viewheight * 64.0) * 0.2 - 
-      pow(fastband, viewheight * 128.0) * 0.1;
-    vec3 blankd = mix(outputColor.rgb, vec3(0.0), blankdmix);
-    vec3 scanline = mix(outputColor.rgb, blankd, alt);
-    outputColor = vec4(scanline, inputColor.a);
-  }
+  // if (doot < 1.0) {
+  //   float row = round(uv.y * viewheight * 0.5);
+  //   float alt = mod(row, 2.0);
+  //   float phase = time + cos(uv.x + uv.y);
+  //   float slowband = (cos(uv.x + uv.y - phase) + 1.0) / 2.0;
+  //   float fastband = (cos(uv.y + time * 0.37) + 1.0) / 2.0;
+  //   float blankdmix = 0.3 - 
+  //     pow(slowband, viewheight * 0.01) * 0.05 - 
+  //     pow(fastband, viewheight * 64.0) * 0.2 - 
+  //     pow(fastband, viewheight * 128.0) * 0.1;
+  //   vec3 blankd = mix(outputColor.rgb, vec3(0.0), blankdmix);
+  //   vec3 scanline = mix(outputColor.rgb, blankd, alt);
+  //   outputColor = vec4(scanline, inputColor.a);
+  // }
 
   // apply inner shade && scanlines
   if (doot >= 0.5 && doot < 1.0) {
@@ -123,7 +129,7 @@ type CRTShapeOpts = {
 
 class CRTShapeEffect extends Effect {
   constructor({ splat, viewheight }: CRTShapeOpts = {}) {
-    super('CRTShapeEffect', CRTShapeFragShader, {
+    super('CRTShapeEffect', crtshapefragshader, {
       blendFunction: BlendFunction.NORMAL,
       attributes: EffectAttribute.CONVOLUTION,
       defines: new Map([
@@ -154,7 +160,7 @@ class CRTShapeEffect extends Effect {
       if (value !== null) {
         if (value.matrixAutoUpdate) {
           defines.set('UV_TRANSFORM', '1')
-          this.setVertexShader(CRTShapeVertShader)
+          this.setVertexShader(crtshapevertshader)
         } else {
           defines.delete('UV_TRANSFORM')
           this.setVertexShader(null as any)
@@ -234,32 +240,3 @@ class CRTShapeEffect extends Effect {
 
 export type CRTShapeProps = EffectProps<typeof CRTShapeEffect>
 export const CRTShape = wrapEffect(CRTShapeEffect)
-
-// const CRTLinesFragShader = `
-// uniform float viewheight;
-
-// void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-//   float row = round(uv.y * viewheight);
-//   float alt = mod(row, 2.0);
-//   outputColor = vec4(vec3(alt), inputColor.a);
-
-//   // float rate1 = 0.002;
-//   // float stab1 = 1.5;
-//   // float fuzz1 = 1.35;
-//   // float cycle1 = (uv.y + time * rate1) * viewheight * fuzz1;
-//   // float signal1 = sin(cycle1) + stab1;
-
-//   // float rate2 = 0.2;
-//   // float scale2 = 0.01;
-//   // float stab2 = 1.99;
-//   // float cycle2 = (uv.y * viewheight * scale2) - time * rate2;
-//   // float signal2 = sin(cycle2) + stab2;
-
-//   // float shade = smoothstep(0.0, 1.0, signal1);
-//   // float light = 1.0 - (smoothstep(0.0, 1.0, pow(signal2, 128.0)));
-
-//   // vec3 c = mix(vec3(0.0), vec3(1.0), smoothstep(0.0, 1.0, shade + light * 0.25));
-
-// 	// outputColor = vec4(c, inputColor.a);
-// }
-// `

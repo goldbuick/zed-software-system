@@ -56,7 +56,9 @@ export function Terminal() {
     }
   }, [stats])
 
-  const gputier = useDetectGPU()
+  const gputier = useDetectGPU({
+    benchmarksURL: '/benchmarks-min',
+  })
   const shouldcrt = !FORCE_CRT_OFF && gputier.tier > 2 && !gputier.isMobile
 
   const set = useThree(({ set }) => set)
@@ -93,7 +95,6 @@ export function Terminal() {
           <EffectComposer multisampling={0}>
             <BrightnessContrast brightness={0.04} contrast={0.1} />
             <ChromaticAberration
-              // blendFunction={BlendFunction.NORMAL}
               offset={TUG_VEC}
               radialModulation
               modulationOffset={0.5}
