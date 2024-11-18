@@ -75,8 +75,9 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     vec4 displaycolor = texture2D(inputBuffer, bent);
     vec4 fuxtcolor = texel;
     outputColor = mix(displaycolor, fuxtcolor, 0.1);
+
     // apply halftones
-    outputColor.rgb = halftone(outputColor.rgb, uv.st, 200.0);
+    outputColor.rgb = halftone(outputColor.rgb, uv.st);
   } else if (doot > 1.004) {
     // display shell
     // rbgb 205 205 193
@@ -89,7 +90,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     outputColor = vec4(mix(vec3(0.0), outputColor.rgb, 0.5), inputColor.a);
   }
 
-  // apply scanlines
+  // apply scanlines - WE USE HALFTONES now
   // if (doot < 1.0) {
   //   float row = round(uv.y * viewheight * 0.5);
   //   float alt = mod(row, 2.0);

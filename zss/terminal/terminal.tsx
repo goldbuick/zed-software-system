@@ -93,12 +93,13 @@ export function Terminal() {
       {shouldcrt && (
         <Suspense fallback={null}>
           <EffectComposer multisampling={0}>
-            <BrightnessContrast brightness={0.04} contrast={0.1} />
+          <BrightnessContrast brightness={0.1} contrast={0.1} />
+            {/* 
             <ChromaticAberration
               offset={TUG_VEC}
               radialModulation
               modulationOffset={0.5}
-            />
+            /> */}
             <CRTShape splat={splat} viewheight={viewheight} />
           </EffectComposer>
         </Suspense>
