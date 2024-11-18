@@ -1,6 +1,5 @@
 import { SyncedText } from '@syncedstore/core'
 import { createContext } from 'react'
-import { proxy, useSnapshot } from 'valtio'
 import { MODEM_SHARED_VALUE } from 'zss/device/modem'
 import {
   WRITE_TEXT_CONTEXT,
@@ -25,7 +24,7 @@ export const SCALE = 1
 export const CHAR_WIDTH = DRAW_CHAR_WIDTH * SCALE
 export const CHAR_HEIGHT = DRAW_CHAR_HEIGHT * SCALE
 
-export const tapeterminalstate = proxy({
+export const tapeterminalstate = {
   // scrolling offset
   scroll: 0,
   // cursor position & selection
@@ -36,13 +35,13 @@ export const tapeterminalstate = proxy({
   // input history
   bufferindex: 0,
   buffer: [''],
-})
-
-export function useTapeTerminal() {
-  return useSnapshot(tapeterminalstate)
 }
 
-export const tapeeditorstate = proxy({
+export function useTapeTerminal() {
+  return tapeterminalstate
+}
+
+export const tapeeditorstate = {
   // need an id for synced store
   id: '',
   // scrolling offset
@@ -50,10 +49,10 @@ export const tapeeditorstate = proxy({
   // cursor position & selection (text index)
   cursor: 0,
   select: undefined as MAYBE_NUMBER,
-})
+}
 
 export function useTapeEditor() {
-  return useSnapshot(tapeeditorstate)
+  return tapeeditorstate
 }
 
 export type TerminalItemProps = {

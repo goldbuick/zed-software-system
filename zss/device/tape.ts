@@ -1,4 +1,3 @@
-import { proxy, useSnapshot } from 'valtio'
 import { LOG_DEBUG } from 'zss/config'
 import { createdevice } from 'zss/device'
 import { createsid } from 'zss/mapping/guid'
@@ -47,7 +46,7 @@ type TAPE_STATE = {
 }
 
 // message controlled state
-const tape = proxy<TAPE_STATE>({
+const tape: TAPE_STATE = {
   layout: TAPE_DISPLAY.BOTTOM,
   terminal: {
     open: true,
@@ -62,7 +61,7 @@ const tape = proxy<TAPE_STATE>({
     type: '',
     title: '',
   },
-})
+}
 
 function terminalinclayout(inc: boolean) {
   const step = inc ? 1 : -1
@@ -86,7 +85,7 @@ function terminalinclayout(inc: boolean) {
 }
 
 export function useTape() {
-  return useSnapshot(tape)
+  return tape
 }
 
 createdevice('tape', [], (message) => {

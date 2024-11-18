@@ -1,7 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useMemo } from 'react'
 import { objectKeys } from 'ts-extras'
-import { proxy, useSnapshot } from 'valtio'
 import { ispresent } from 'zss/mapping/types'
 
 import { TILES } from '../data/types'
@@ -18,11 +17,11 @@ export function useTiles(
   const size = width * height
 
   const tiles = useMemo(() => {
-    return proxy<TILES>({
+    return {
       char: new Array(size).fill(char),
       color: new Array(size).fill(color),
       bg: new Array(size).fill(bg),
-    })
+    }
   }, [size, char, color, bg])
 
   return tiles
@@ -35,7 +34,7 @@ type TileSnapshotProps = {
 }
 
 export function TileSnapshot({ width, height, tiles }: TileSnapshotProps) {
-  const { char, color, bg } = useSnapshot(tiles) as TILES
+  const { char, color, bg } = tiles
   return (
     width > 0 &&
     height > 0 && (

@@ -1,13 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useMemo } from 'react'
-import { proxy, useSnapshot } from 'valtio'
 
 import { Dither } from './dither'
 
 export function useDither(width: number, height: number) {
   const size = width * height
   const dither = useMemo(() => {
-    return proxy<number[]>(new Array(size).fill(0))
+    return new Array(size).fill(0)
   }, [size])
 
   return dither
@@ -20,9 +19,11 @@ type DitherSnapshotProps = {
 }
 
 export function DitherSnapshot({ width, height, dither }: DitherSnapshotProps) {
-  const snapshot = useSnapshot(dither) as number[]
-
-  return <Dither width={width} height={height} alphas={snapshot} />
+  return (
+    dither.length > 0 && (
+      <Dither width={width} height={height} alphas={dither} />
+    )
+  )
 }
 
 export function resetDither(dither: number[]) {

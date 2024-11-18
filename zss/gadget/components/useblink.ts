@@ -1,12 +1,10 @@
-import { proxy, useSnapshot } from 'valtio'
-
-const toggle = proxy({ blink: false })
+const toggle = { blink: false }
 
 setInterval(() => {
   toggle.blink = !toggle.blink
 }, 333)
 
 export function useBlink() {
-  const state = useSnapshot(toggle)
+  const state = toggle
   return state.blink
 }

@@ -2,7 +2,6 @@ import {
   JsonPatchError as jsonpatcherror,
   applyPatch as applypatch,
 } from 'fast-json-patch'
-import { proxy, ref } from 'valtio'
 import { createdevice } from 'zss/device'
 import { GADGET_STATE } from 'zss/gadget/data/types'
 
@@ -12,7 +11,7 @@ type SYNC_STATE = {
   state: GADGET_STATE
 }
 
-const syncstate = proxy<SYNC_STATE>({
+const syncstate: SYNC_STATE = {
   state: {
     player: '',
     layers: [],
@@ -20,14 +19,14 @@ const syncstate = proxy<SYNC_STATE>({
     layoutreset: false,
     layoutfocus: '',
   },
-})
+}
 
 const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
   switch (message.target) {
     case 'reset':
       if (message.player === syncstate.state.player) {
         desync = false
-        syncstate.state = ref(message.data)
+        syncstate.state = message.data
       }
       break
     case 'patch':
