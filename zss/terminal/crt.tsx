@@ -42,7 +42,8 @@ float rectdistance(vec2 uv) {
 }
 
 vec2 bendy(const in vec2 xn) {
-  float distortion = 0.0137;
+  float distortion = 0.0111;
+  // float distortion = 0.07;
   vec3 xDistorted = vec3((1.0 + vec2(distortion, distortion) * dot(xn, xn)) * xn, 1.0);
 
   mat3 kk = mat3(
@@ -74,7 +75,8 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     // display
     vec4 displaycolor = texture2D(inputBuffer, bent);
     vec4 fuxtcolor = texel;
-    outputColor = mix(displaycolor, fuxtcolor, 0.1);
+    // outputColor = mix(displaycolor, fuxtcolor, 0.1);
+    outputColor = displaycolor + (fuxtcolor * 0.09);
 
     // apply halftones
     outputColor.rgb = halftone(outputColor.rgb, uv.st);

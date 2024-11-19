@@ -1,14 +1,10 @@
 import { addEffect, addAfterEffect, useThree, extend } from '@react-three/fiber'
-import {
-  BrightnessContrast,
-  ChromaticAberration,
-  EffectComposer,
-} from '@react-three/postprocessing'
+import { BrightnessContrast, EffectComposer } from '@react-three/postprocessing'
 import { getGPUTier, GetGPUTier } from 'detect-gpu'
 import { useEffect, useLayoutEffect, useRef, useState, Suspense } from 'react'
 import Stats from 'stats.js'
 import { suspend } from 'suspend-react'
-import { NearestFilter, Vector2, OrthographicCamera } from 'three'
+import { NearestFilter, OrthographicCamera } from 'three'
 import { FORCE_CRT_OFF, STATS_DEV } from 'zss/config'
 import { useTexture } from 'zss/gadget/components/usetexture'
 import { createplatform } from 'zss/platform'
@@ -20,8 +16,8 @@ import decoimageurl from './scratches.jpg'
 
 extend({ OrthographicCamera })
 
-const TUG = 0.0006
-const TUG_VEC = new Vector2(TUG, TUG * -0.5)
+// const TUG = 0.0006
+// const TUG_VEC = new Vector2(TUG, TUG * -0.5)
 
 const useDetectGPU = (props?: GetGPUTier) =>
   suspend(() => getGPUTier(props), ['useDetectGPU'])
@@ -92,14 +88,11 @@ export function Terminal() {
       </Framing>
       {shouldcrt && (
         <Suspense fallback={null}>
-          <EffectComposer multisampling={0}>
-          <BrightnessContrast brightness={0.1} contrast={0.1} />
-            {/* 
-            <ChromaticAberration
-              offset={TUG_VEC}
-              radialModulation
-              modulationOffset={0.5}
-            /> */}
+          <EffectComposer
+            multisampling={0}
+            depthBuffer={false}
+            stencilBuffer={false}
+          >
             <CRTShape splat={splat} viewheight={viewheight} />
           </EffectComposer>
         </Suspense>
