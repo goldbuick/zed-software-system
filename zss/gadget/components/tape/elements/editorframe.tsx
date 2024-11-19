@@ -1,4 +1,3 @@
-import { useTape } from 'zss/device/tape'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
@@ -36,7 +35,7 @@ export function EditorFrame() {
   setupeditoritem(false, false, 0, edge.height - 1, context, 0, 0, 0)
   tokenizeandwritetextformat(`$212${bottomchrs}$190`, context, true)
 
-  const tape = useTape()
+  // const tape = useTape()
   const blink = useBlink()
 
   const egbottom = `$205`.repeat(edge.width - 4)

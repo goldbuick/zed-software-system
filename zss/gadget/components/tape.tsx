@@ -1,11 +1,16 @@
 import { useThree } from '@react-three/fiber'
+import { useEffect } from 'react'
+import { MESSAGE } from 'zss/chip'
+import { LOG_DEBUG } from 'zss/config'
+import { createdevice } from 'zss/device'
 import { tape_terminal_open } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
-import { TAPE_DISPLAY, useTape } from 'zss/device/tape'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
 } from 'zss/gadget/data/textformat'
+import { createsid } from 'zss/mapping/guid'
+import { isarray, isboolean } from 'zss/mapping/types'
 
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 
@@ -17,14 +22,153 @@ import { PlayerContext } from './useplayer'
 import { UserFocus, UserHotkey } from './userinput'
 import { TileSnapshot, useTiles } from './usetiles'
 
-export function TapeConsole() {
+export enum TAPE_LOG_LEVEL {
+  OFF,
+  INFO,
+  DEBUG,
+}
+
+type TAPE_ROW = [string, string, string, ...any[]]
+
+export const TAPE_MAX_LINES = 128
+
+export enum TAPE_DISPLAY {
+  TOP,
+  BOTTOM,
+  FULL,
+  SPLIT_X,
+  SPLIT_X_ALT,
+  SPLIT_Y,
+  SPLIT_Y_ALT,
+  RIGHT,
+  LEFT,
+  MAX,
+}
+
+// message controlled state
+
+type TAPE_STATE = {
+  layout: TAPE_DISPLAY
+  terminal: {
+    open: boolean
+    level: TAPE_LOG_LEVEL
+    logs: TAPE_ROW[]
+  }
+  editor: {
+    open: boolean
+    player: string
+    book: string
+    page: string
+    type: string
+    title: string
+  }
+}
+
+const tape: TAPE_STATE = {
+  layout: TAPE_DISPLAY.BOTTOM,
+  terminal: {
+    open: true,
+    level: LOG_DEBUG ? TAPE_LOG_LEVEL.DEBUG : TAPE_LOG_LEVEL.INFO,
+    logs: [],
+  },
+  editor: {
+    open: false,
+    player: '',
+    book: '',
+    page: '',
+    type: '',
+    title: '',
+  },
+}
+
+function terminaladdmessage(message: MESSAGE) {
+  tape.terminal.logs.unshift([
+    createsid(),
+    message.target,
+    message.sender,
+    ...message.data,
+  ])
+  if (tape.terminal.logs.length > TAPE_MAX_LINES) {
+    tape.terminal.logs = tape.terminal.logs.slice(0, TAPE_MAX_LINES)
+  }
+}
+
+function terminalinclayout(inc: boolean) {
+  const step = inc ? 1 : -1
+  tape.layout = ((tape.layout as number) + step) as TAPE_DISPLAY
+  if ((tape.layout as number) < 0) {
+    tape.layout += TAPE_DISPLAY.MAX
+  }
+  if ((tape.layout as number) >= (TAPE_DISPLAY.MAX as number)) {
+    tape.layout -= TAPE_DISPLAY.MAX
+  }
+  if (!tape.editor.open) {
+    switch (tape.layout) {
+      case TAPE_DISPLAY.SPLIT_X:
+      case TAPE_DISPLAY.SPLIT_Y:
+      case TAPE_DISPLAY.SPLIT_X_ALT:
+      case TAPE_DISPLAY.SPLIT_Y_ALT:
+        terminalinclayout(inc)
+        break
+    }
+  }
+}
+
+export function Tape() {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
-  const {
-    layout,
-    terminal: { open },
-  } = useTape()
+  useEffect(() => {
+    createdevice('', [], (message) => {
+      switch (message.target) {
+        case 'info':
+          if (tape.terminal.level >= TAPE_LOG_LEVEL.INFO) {
+            terminaladdmessage(message)
+          }
+          break
+        case 'debug':
+          if (tape.terminal.level >= TAPE_LOG_LEVEL.DEBUG) {
+            terminaladdmessage(message)
+          }
+          break
+        case 'error':
+          if (tape.terminal.level > TAPE_LOG_LEVEL.OFF) {
+            terminaladdmessage(message)
+          }
+          break
+        case 'crash':
+          tape.terminal.open = true
+          tape.layout = TAPE_DISPLAY.FULL
+          break
+        case 'terminal:open':
+          tape.terminal.open = true
+          break
+        case 'terminal:close':
+          tape.terminal.open = false
+          break
+        case 'terminal:inclayout':
+          if (isboolean(message.data)) {
+            terminalinclayout(message.data)
+          }
+          break
+        case 'editor:open':
+          if (isarray(message.data)) {
+            const [book, page, type, title] = message.data ?? ['', '', '']
+            tape.terminal.open = true
+            tape.editor.open = true
+            tape.editor.player = message.player ?? ''
+            tape.editor.book = book
+            tape.editor.page = page
+            tape.editor.type = type
+            tape.editor.title = title
+          }
+          break
+        case 'editor:close':
+          tape.editor.open = false
+          break
+      }
+    })
+  }, [])
 
   const ditherwidth = Math.floor(viewWidth / DRAW_CHAR_WIDTH)
   const ditherheight = Math.floor(viewHeight / DRAW_CHAR_HEIGHT)
@@ -39,7 +183,7 @@ export function TapeConsole() {
   let width = cols
   let height = rows
 
-  switch (layout) {
+  switch (tape.layout) {
     case TAPE_DISPLAY.TOP:
       height = Math.round(rows * 0.5)
       break
@@ -79,7 +223,7 @@ export function TapeConsole() {
 
   return (
     <>
-      {open && (
+      {tape.terminal.open && (
         // eslint-disable-next-line react/no-unknown-property
         <group position={[0, 0, 0]}>
           <ShadeBoxDither
@@ -101,7 +245,7 @@ export function TapeConsole() {
         ]}
         scale={[SCALE, SCALE, 1.0]}
       >
-        {open ? (
+        {tape.terminal.open ? (
           <UserFocus blockhotkeys>
             <BackPlate context={context} />
             <PlayerContext.Provider value={player}>

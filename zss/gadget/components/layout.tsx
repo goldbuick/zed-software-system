@@ -89,13 +89,13 @@ function LayoutRect({
   return null
 }
 
-type LayoutProps = {
-  player: string
-  layers: LAYER[]
-  layout: PANEL[]
-}
+// type LayoutProps = {
+//   player: string
+//   layers: LAYER[]
+//   layout: PANEL[]
+// }
 
-export function Layout({ player, layers, layout }: LayoutProps) {
+export function Layout() {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 

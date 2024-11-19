@@ -19,7 +19,7 @@ import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
 import { ispresent } from 'zss/mapping/types'
 
-import { setuplogitem, tapeterminalstate, useTapeTerminal } from '../common'
+import { setuplogitem, useTapeTerminal } from '../common'
 
 type ConsoleInputProps = {
   tapeycursor: number

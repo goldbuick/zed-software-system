@@ -7,6 +7,7 @@ import {
 } from 'zss/gadget/data/textformat'
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
+import { create } from 'zustand'
 
 // deco
 export const BKG_PTRN = 250
@@ -24,36 +25,47 @@ export const SCALE = 1
 export const CHAR_WIDTH = DRAW_CHAR_WIDTH * SCALE
 export const CHAR_HEIGHT = DRAW_CHAR_HEIGHT * SCALE
 
-export const tapeterminalstate = {
+// const useBearStore = create((set) => ({
+//   bears: 0,
+//   increasePopulation: () => set((state) => ({ bears: state.bears + 1 })),
+//   removeAllBears: () => set({ bears: 0 }),
+// }))
+
+export const useTapeTerminal = create<{
+  scroll: number
+  xcursor: number
+  ycursor: number
+  xselect: MAYBE_NUMBER
+  yselect: MAYBE_NUMBER
+  bufferindex: number
+  buffer: string[]
+}>((set) => ({
   // scrolling offset
   scroll: 0,
   // cursor position & selection
   xcursor: 0,
   ycursor: 0,
-  xselect: undefined as MAYBE_NUMBER,
-  yselect: undefined as MAYBE_NUMBER,
+  xselect: undefined,
+  yselect: undefined,
   // input history
   bufferindex: 0,
   buffer: [''],
-}
+}))
 
-export function useTapeTerminal() {
-  return tapeterminalstate
-}
-
-export const tapeeditorstate = {
+export const useTapeEditor = create<{
+  id: string
+  scroll: number
+  cursor: number
+  select: MAYBE_NUMBER
+}>((set) => ({
   // need an id for synced store
   id: '',
   // scrolling offset
   scroll: 0,
   // cursor position & selection (text index)
   cursor: 0,
-  select: undefined as MAYBE_NUMBER,
-}
-
-export function useTapeEditor() {
-  return tapeeditorstate
-}
+  select: undefined,
+}))
 
 export type TerminalItemProps = {
   blink?: boolean

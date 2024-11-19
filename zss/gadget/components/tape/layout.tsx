@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { TAPE_DISPLAY, useTape } from 'zss/device/tape'
 import {
   textformatreadedges,
   WRITE_TEXT_CONTEXT,
@@ -43,7 +42,7 @@ function forkonedge(
 }
 
 export function TapeLayout({ context }: TapeLayoutProps) {
-  const tape = useTape()
+  // const tape = useTape()
   const right = context.width - 1
   const bottom = context.height - 1
   const edge = textformatreadedges(context)
