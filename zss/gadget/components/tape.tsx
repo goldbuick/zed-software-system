@@ -16,14 +16,13 @@ import {
   CHAR_WIDTH,
   FG,
   SCALE,
-  TAPE_DISPLAY,
-  useTape,
 } from './tape/common'
 import { BackPlate } from './tape/elements/backplate'
 import { TapeLayout } from './tape/layout'
 import { PlayerContext } from './useplayer'
 import { UserFocus, UserHotkey } from './userinput'
 import { TileSnapshot, useTiles } from './usetiles'
+import { TAPE_DISPLAY, useTape } from '../data/state'
 
 export function Tape() {
   const viewport = useThree((state) => state.viewport)

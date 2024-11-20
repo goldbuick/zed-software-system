@@ -9,11 +9,12 @@ import { hub } from 'zss/hub'
 import { totarget } from 'zss/mapping/string'
 import { useShallow } from 'zustand/react/shallow'
 
-import { ConsoleContext, useTape, useTapeTerminal } from './common'
+import { ConsoleContext } from './common'
 import { BackPlate } from './elements/backplate'
 import { TerminalInput } from './elements/terminalinput'
 import { TerminalItem } from './elements/terminalitem'
 import { TerminalItemActive } from './elements/terminalitemactive'
+import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 
 export function TapeTerminal() {
   const [terminallogs, editoropen] = useTape(

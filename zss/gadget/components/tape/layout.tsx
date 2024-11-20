@@ -7,9 +7,9 @@ import {
 import { ispresent, MAYBE } from 'zss/mapping/types'
 import { useShallow } from 'zustand/react/shallow'
 
-import { TAPE_DISPLAY, useTape } from './common'
 import { TapeEditor } from './editor'
 import { TapeTerminal } from './terminal'
+import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
 
 type TapeLayoutProps = {
   context: WRITE_TEXT_CONTEXT

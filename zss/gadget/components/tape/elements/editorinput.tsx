@@ -22,9 +22,8 @@ import { UserInput, modsfromevent } from '../../userinput'
 import {
   EDITOR_CODE_ROW,
   sharedtosynced,
-  useTape,
-  useTapeEditor,
 } from '../common'
+import { useTapeEditor } from 'zss/gadget/data/state'
 
 type TextinputProps = {
   ycursor: number

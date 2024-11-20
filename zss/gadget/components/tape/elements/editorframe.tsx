@@ -8,7 +8,8 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { useBlink } from '../../useblink'
 import { writeTile } from '../../usetiles'
-import { BG, FG, setupeditoritem, useTape } from '../common'
+import { BG, FG, setupeditoritem } from '../common'
+import { useTape } from 'zss/gadget/data/state'
 
 export function EditorFrame() {
   const context = useWriteText()

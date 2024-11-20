@@ -10,13 +10,12 @@ import {
   findcursorinrows,
   sharedtosynced,
   splitcoderows,
-  useTape,
-  useTapeEditor,
 } from './common'
 import { BackPlate } from './elements/backplate'
 import { EditorFrame } from './elements/editorframe'
 import { EditorInput } from './elements/editorinput'
 import { EditorRows } from './elements/editorrows'
+import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 
 export function TapeEditor() {
   const [editor] = useTape(useShallow((state) => [state.editor]))
