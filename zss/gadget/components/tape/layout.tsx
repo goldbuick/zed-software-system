@@ -5,7 +5,9 @@ import {
   WriteTextContext,
 } from 'zss/gadget/data/textformat'
 import { ispresent, MAYBE } from 'zss/mapping/types'
+import { useShallow } from 'zustand/react/shallow'
 
+import { TAPE_DISPLAY, useTape } from './common'
 import { TapeEditor } from './editor'
 import { TapeTerminal } from './terminal'
 
@@ -42,7 +44,10 @@ function forkonedge(
 }
 
 export function TapeLayout({ context }: TapeLayoutProps) {
-  // const tape = useTape()
+  const [layout, editoropen] = useTape(
+    useShallow((state) => [state.layout, state.editor.open]),
+  )
+
   const right = context.width - 1
   const bottom = context.height - 1
   const edge = textformatreadedges(context)
@@ -66,10 +71,10 @@ export function TapeLayout({ context }: TapeLayoutProps) {
     [ystep, right, bottom, context],
   )
 
-  if (tape.editor.open) {
+  if (editoropen) {
     let first: MAYBE<WRITE_TEXT_CONTEXT>
     let second: MAYBE<WRITE_TEXT_CONTEXT>
-    switch (tape.layout) {
+    switch (layout) {
       case TAPE_DISPLAY.SPLIT_X:
       case TAPE_DISPLAY.SPLIT_X_ALT:
         first = xleft
@@ -83,7 +88,7 @@ export function TapeLayout({ context }: TapeLayoutProps) {
     }
 
     if (ispresent(first) && ispresent(second)) {
-      switch (tape.layout) {
+      switch (layout) {
         case TAPE_DISPLAY.SPLIT_X:
         case TAPE_DISPLAY.SPLIT_Y:
           return (
@@ -115,7 +120,7 @@ export function TapeLayout({ context }: TapeLayoutProps) {
   return (
     <>
       <WriteTextContext.Provider value={context}>
-        {tape.editor.open ? <TapeEditor /> : <TapeTerminal />}
+        {editoropen ? <TapeEditor /> : <TapeTerminal />}
       </WriteTextContext.Provider>
     </>
   )

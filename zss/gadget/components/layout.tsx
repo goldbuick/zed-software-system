@@ -107,6 +107,8 @@ export function Layout() {
   // cache scroll
   const [scroll, setScroll] = useState<RECT>()
 
+  // const [layout] =
+
   // bail on odd states
   if (width < 1 || height < 1 || layers === undefined || layout === undefined) {
     return null

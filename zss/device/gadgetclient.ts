@@ -33,7 +33,6 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
       if (message.player === syncstate.state.player && !desync) {
         try {
           applypatch(syncstate.state, message.data, true)
-          gadgetclientdevice.emit('gadgetlayout:changed')
         } catch (err) {
           if (err instanceof jsonpatcherror) {
             // we are out of sync and need to request a refresh

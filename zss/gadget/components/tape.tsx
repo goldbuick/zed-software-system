@@ -1,34 +1,33 @@
 import { useThree } from '@react-three/fiber'
-import { useEffect } from 'react'
-import { MESSAGE } from 'zss/chip'
-import { LOG_DEBUG } from 'zss/config'
-import { createdevice } from 'zss/device'
 import { tape_terminal_open } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
 } from 'zss/gadget/data/textformat'
-import { createsid } from 'zss/mapping/guid'
-import { isarray, isboolean } from 'zss/mapping/types'
+import { useShallow } from 'zustand/react/shallow'
 
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 
 import { ShadeBoxDither } from './dither'
-import { BG, CHAR_HEIGHT, CHAR_WIDTH, FG, SCALE } from './tape/common'
+import {
+  BG,
+  CHAR_HEIGHT,
+  CHAR_WIDTH,
+  FG,
+  SCALE,
+  TAPE_DISPLAY,
+  useTape,
+} from './tape/common'
 import { BackPlate } from './tape/elements/backplate'
 import { TapeLayout } from './tape/layout'
 import { PlayerContext } from './useplayer'
 import { UserFocus, UserHotkey } from './userinput'
 import { TileSnapshot, useTiles } from './usetiles'
 
-
 export function Tape() {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
-
-  useEffect(() => {
-  }, [])
 
   const ditherwidth = Math.floor(viewWidth / DRAW_CHAR_WIDTH)
   const ditherheight = Math.floor(viewHeight / DRAW_CHAR_HEIGHT)
@@ -43,7 +42,11 @@ export function Tape() {
   let width = cols
   let height = rows
 
-  switch (tape.layout) {
+  const [layout, terminalopen] = useTape(
+    useShallow((state) => [state.layout, state.terminal.open]),
+  )
+
+  switch (layout) {
     case TAPE_DISPLAY.TOP:
       height = Math.round(rows * 0.5)
       break
@@ -83,7 +86,7 @@ export function Tape() {
 
   return (
     <>
-      {tape.terminal.open && (
+      {terminalopen && (
         // eslint-disable-next-line react/no-unknown-property
         <group position={[0, 0, 0]}>
           <ShadeBoxDither
@@ -105,7 +108,7 @@ export function Tape() {
         ]}
         scale={[SCALE, SCALE, 1.0]}
       >
-        {tape.terminal.open ? (
+        {terminalopen ? (
           <UserFocus blockhotkeys>
             <BackPlate context={context} />
             <PlayerContext.Provider value={player}>

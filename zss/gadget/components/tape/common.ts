@@ -6,66 +6,7 @@ import {
   textformatreadedges,
 } from 'zss/gadget/data/textformat'
 import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
-import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
-import create from 'zustand'
-
-
-export enum TAPE_LOG_LEVEL {
-  OFF,
-  INFO,
-  DEBUG,
-}
-
-type TAPE_ROW = [string, string, string, ...any[]]
-
-export const TAPE_MAX_LINES = 128
-
-export enum TAPE_DISPLAY {
-  TOP,
-  BOTTOM,
-  FULL,
-  SPLIT_X,
-  SPLIT_X_ALT,
-  SPLIT_Y,
-  SPLIT_Y_ALT,
-  RIGHT,
-  LEFT,
-  MAX,
-}
-
-// message controlled state
-
-export const useTape = create<{
-  layout: TAPE_DISPLAY
-  terminal: {
-    open: boolean
-    level: TAPE_LOG_LEVEL
-    logs: TAPE_ROW[]
-  }
-  editor: {
-    open: boolean
-    player: string
-    book: string
-    page: string
-    type: string
-    title: string
-  }
-}>((set) => ({
-  layout: TAPE_DISPLAY.BOTTOM,
-  terminal: {
-    open: false,
-    level: TAPE_LOG_LEVEL.INFO,
-    logs: [],
-  },
-  editor: {
-    open: false,
-    player: '',
-    book: '',
-    page: '',
-    type: '',
-    title: '',
-  }
-}))
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 // deco
 export const BKG_PTRN = 250
@@ -82,48 +23,6 @@ export const BG_ACTIVE = COLOR.BLACK
 export const SCALE = 1
 export const CHAR_WIDTH = DRAW_CHAR_WIDTH * SCALE
 export const CHAR_HEIGHT = DRAW_CHAR_HEIGHT * SCALE
-
-// const useBearStore = create((set) => ({
-//   bears: 0,
-//   increasePopulation: () => set((state) => ({ bears: state.bears + 1 })),
-//   removeAllBears: () => set({ bears: 0 }),
-// }))
-
-export const useTapeTerminal = create<{
-  scroll: number
-  xcursor: number
-  ycursor: number
-  xselect: MAYBE_NUMBER
-  yselect: MAYBE_NUMBER
-  bufferindex: number
-  buffer: string[]
-}>((set) => ({
-  // scrolling offset
-  scroll: 0,
-  // cursor position & selection
-  xcursor: 0,
-  ycursor: 0,
-  xselect: undefined,
-  yselect: undefined,
-  // input history
-  bufferindex: 0,
-  buffer: [''],
-}))
-
-export const useTapeEditor = create<{
-  id: string
-  scroll: number
-  cursor: number
-  select: MAYBE_NUMBER
-}>((set) => ({
-  // need an id for synced store
-  id: '',
-  // scrolling offset
-  scroll: 0,
-  // cursor position & selection (text index)
-  cursor: 0,
-  select: undefined,
-}))
 
 export type TerminalItemProps = {
   blink?: boolean

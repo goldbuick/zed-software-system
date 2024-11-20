@@ -4,12 +4,13 @@ import { useWaitForValueString } from 'zss/device/modem'
 import { textformatreadedges, useWriteText } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { useShallow } from 'zustand/react/shallow'
 
 import {
   findcursorinrows,
   sharedtosynced,
   splitcoderows,
-  tapeeditorstate,
+  useTape,
   useTapeEditor,
 } from './common'
 import { BackPlate } from './elements/backplate'
@@ -18,30 +19,21 @@ import { EditorInput } from './elements/editorinput'
 import { EditorRows } from './elements/editorrows'
 
 export function TapeEditor() {
-  // const tape = useTape()
+  const [editor] = useTape(useShallow((state) => [state.editor]))
+
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
   const codepage = useWaitForValueString(
-    vm_codeaddress(tape.editor.book, tape.editor.page),
+    vm_codeaddress(editor.book, editor.page),
   )
   const edge = textformatreadedges(context)
 
   useEffect(() => {
-    vm_codewatch(
-      'editor',
-      tape.editor.book,
-      tape.editor.page,
-      tape.editor.player,
-    )
+    vm_codewatch('editor', editor.book, editor.page, editor.player)
     return () => {
-      vm_coderelease(
-        'editor',
-        tape.editor.book,
-        tape.editor.page,
-        tape.editor.player,
-      )
+      vm_coderelease('editor', editor.book, editor.page, editor.player)
     }
-  }, [tape.editor.book, tape.editor.page, tape.editor.player])
+  }, [editor.book, editor.page, editor.player])
 
   // split by line
   const value = sharedtosynced(codepage)
@@ -60,15 +52,15 @@ export function TapeEditor() {
   const maxscroll = rows.length - 4
   useEffect(() => {
     const delta = ycursor - tapeeditor.scroll
-    if (delta > edge.height - 8) {
-      tapeeditorstate.scroll++
-    }
-    if (delta < 4) {
-      tapeeditorstate.scroll--
-    }
-    tapeeditorstate.scroll = Math.round(
-      clamp(tapeeditorstate.scroll, 0, maxscroll),
-    )
+    // if (delta > edge.height - 8) {
+    //   tapeeditorstate.scroll++
+    // }
+    // if (delta < 4) {
+    //   tapeeditorstate.scroll--
+    // }
+    // tapeeditorstate.scroll = Math.round(
+    //   clamp(tapeeditorstate.scroll, 0, maxscroll),
+    // )
   }, [ycursor, tapeeditor.scroll, maxscroll, edge.height])
 
   return (

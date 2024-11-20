@@ -14,6 +14,7 @@ import {
 } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { useShallow } from 'zustand/react/shallow'
 
 import { Scrollable } from '../../scrollable'
 import { useBlink } from '../../useblink'
@@ -21,7 +22,7 @@ import { UserInput, modsfromevent } from '../../userinput'
 import {
   EDITOR_CODE_ROW,
   sharedtosynced,
-  tapeeditorstate,
+  useTape,
   useTapeEditor,
 } from '../common'
 
@@ -38,7 +39,10 @@ export function EditorInput({
   rows,
   codepage,
 }: TextinputProps) {
-  // const tape = useTape()
+  // const [editortype, editortitle] = useTape(
+  //   useShallow((state) => [state.editor.type, state.editor.title]),
+  // )
+
   const blink = useBlink()
   const context = useWriteText()
   const blinkdelta = useRef<PT>()
