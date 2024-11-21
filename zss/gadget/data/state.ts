@@ -6,7 +6,7 @@ import { GADGET_STATE } from './types'
 export const useGadgetClient = create<{
   desync: boolean
   state: GADGET_STATE
-}>((set) => ({
+}>(() => ({
   desync: false,
   state: {
     player: '',
@@ -57,7 +57,7 @@ export const useTape = create<{
     type: string
     title: string
   }
-}>((set) => ({
+}>(() => ({
   layout: TAPE_DISPLAY.BOTTOM,
   terminal: {
     open: false,
@@ -82,7 +82,7 @@ export const useTapeTerminal = create<{
   yselect: MAYBE_NUMBER
   bufferindex: number
   buffer: string[]
-}>((set) => ({
+}>(() => ({
   // scrolling offset
   scroll: 0,
   // cursor position & selection
@@ -100,7 +100,7 @@ export const useTapeEditor = create<{
   scroll: number
   cursor: number
   select: MAYBE_NUMBER
-}>((set) => ({
+}>(() => ({
   // need an id for synced store
   id: '',
   // scrolling offset

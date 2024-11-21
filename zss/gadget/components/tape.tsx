@@ -1,28 +1,21 @@
 import { useThree } from '@react-three/fiber'
 import { tape_terminal_open } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
+import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
 } from 'zss/gadget/data/textformat'
+import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { useShallow } from 'zustand/react/shallow'
 
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
-
 import { ShadeBoxDither } from './dither'
-import {
-  BG,
-  CHAR_HEIGHT,
-  CHAR_WIDTH,
-  FG,
-  SCALE,
-} from './tape/common'
+import { BG, CHAR_HEIGHT, CHAR_WIDTH, FG, SCALE } from './tape/common'
 import { BackPlate } from './tape/elements/backplate'
 import { TapeLayout } from './tape/layout'
 import { PlayerContext } from './useplayer'
 import { UserFocus, UserHotkey } from './userinput'
 import { TileSnapshot, useTiles } from './usetiles'
-import { TAPE_DISPLAY, useTape } from '../data/state'
 
 export function Tape() {
   const viewport = useThree((state) => state.viewport)

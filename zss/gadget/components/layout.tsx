@@ -5,13 +5,14 @@ import { gadgetserver_clearscroll } from 'zss/device/api'
 import {
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
-  PANEL,
   PANEL_TYPE,
   PANEL_ITEM,
   LAYER,
 } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
+
+import { useGadgetClient } from '../data/state'
 
 import { StaticDither } from './dither'
 import { Framed } from './framed'
@@ -89,12 +90,6 @@ function LayoutRect({
   return null
 }
 
-// type LayoutProps = {
-//   player: string
-//   layers: LAYER[]
-//   layout: PANEL[]
-// }
-
 export function Layout() {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
@@ -107,10 +102,17 @@ export function Layout() {
   // cache scroll
   const [scroll, setScroll] = useState<RECT>()
 
+  const { state } = useGadgetClient()
+
   // const [layout] =
 
   // bail on odd states
-  if (width < 1 || height < 1 || layers === undefined || layout === undefined) {
+  if (
+    width < 1 ||
+    height < 1 ||
+    state.layers === undefined ||
+    state.layout === undefined
+  ) {
     return null
   }
 
@@ -129,7 +131,7 @@ export function Layout() {
   const rects: RECT[] = []
 
   let noscroll = true
-  layout.forEach((panel) => {
+  state.layout.forEach((panel) => {
     let rect: RECT
     switch (panel.edge) {
       case PANEL_TYPE.LEFT:
@@ -218,11 +220,11 @@ export function Layout() {
       value={{
         sendmessage(target, data) {
           // send a hyperlink message
-          hub.emit(target, 'gadget', data, player)
+          hub.emit(target, 'gadget', data, state.player)
         },
         sendclose() {
           // send a message to trigger the close
-          gadgetserver_clearscroll('gadget', player)
+          gadgetserver_clearscroll('gadget', state.player)
         },
         didclose() {
           // clear scroll state
@@ -243,7 +245,11 @@ export function Layout() {
                 i * 10,
               ]}
             >
-              <LayoutRect player={player} layers={layers} rect={rect} />
+              <LayoutRect
+                player={state.player}
+                layers={state.layers}
+                rect={rect}
+              />
             </group>
           )
         })}
@@ -264,8 +270,8 @@ export function Layout() {
               ]}
             >
               <LayoutRect
-                player={player}
-                layers={layers}
+                player={state.player}
+                layers={state.layers}
                 rect={scroll}
                 shouldclose={noscroll}
               />

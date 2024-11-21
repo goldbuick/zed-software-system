@@ -1,5 +1,6 @@
 import { vm_cli } from 'zss/device/api'
 import { gadgetstategetplayer } from 'zss/device/gadgetclient'
+import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
@@ -14,7 +15,6 @@ import { BackPlate } from './elements/backplate'
 import { TerminalInput } from './elements/terminalinput'
 import { TerminalItem } from './elements/terminalitem'
 import { TerminalItemActive } from './elements/terminalitemactive'
-import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 
 export function TapeTerminal() {
   const [terminallogs, editoropen] = useTape(

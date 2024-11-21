@@ -1,21 +1,17 @@
 import { useEffect } from 'react'
 import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
+import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { textformatreadedges, useWriteText } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { useShallow } from 'zustand/react/shallow'
 
-import {
-  findcursorinrows,
-  sharedtosynced,
-  splitcoderows,
-} from './common'
+import { findcursorinrows, sharedtosynced, splitcoderows } from './common'
 import { BackPlate } from './elements/backplate'
 import { EditorFrame } from './elements/editorframe'
 import { EditorInput } from './elements/editorinput'
 import { EditorRows } from './elements/editorrows'
-import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 
 export function TapeEditor() {
   const [editor] = useTape(useShallow((state) => [state.editor]))
@@ -51,15 +47,14 @@ export function TapeEditor() {
   const maxscroll = rows.length - 4
   useEffect(() => {
     const delta = ycursor - tapeeditor.scroll
-    // if (delta > edge.height - 8) {
-    //   tapeeditorstate.scroll++
-    // }
-    // if (delta < 4) {
-    //   tapeeditorstate.scroll--
-    // }
-    // tapeeditorstate.scroll = Math.round(
-    //   clamp(tapeeditorstate.scroll, 0, maxscroll),
-    // )
+    let scroll = tapeeditor.scroll
+    if (delta > edge.height - 8) {
+      scroll++
+    }
+    if (delta < 4) {
+      scroll--
+    }
+    useTapeEditor.setState({ scroll: Math.round(clamp(scroll, 0, maxscroll)) })
   }, [ycursor, tapeeditor.scroll, maxscroll, edge.height])
 
   return (

@@ -1,5 +1,6 @@
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
 import { useBlink } from 'zss/gadget/components/useblink'
+import { useTapeEditor } from 'zss/gadget/data/state'
 import {
   applycolortoindexes,
   textformatedges,
@@ -17,7 +18,6 @@ import {
   EDITOR_CODE_ROW,
   FG_SELECTED,
   setupeditoritem,
-  useTapeEditor,
 } from '../common'
 
 type TextrowsProps = {
