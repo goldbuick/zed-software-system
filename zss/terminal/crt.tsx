@@ -42,8 +42,8 @@ float rectdistance(vec2 uv) {
 }
 
 vec2 bendy(const in vec2 xn) {
-  float distortion = 0.0111;
-  // float distortion = 0.07;
+  // float distortion = 0.0711;
+  float distortion = 0.0173;
   vec3 xDistorted = vec3((1.0 + vec2(distortion, distortion) * dot(xn, xn)) * xn, 1.0);
 
   mat3 kk = mat3(
