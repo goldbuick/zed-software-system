@@ -23,7 +23,7 @@ export enum TAPE_LOG_LEVEL {
   DEBUG,
 }
 
-type TAPE_ROW = [string, string, string, ...any[]]
+export type TAPE_ROW = [string, string, string, ...any[]]
 
 export const TAPE_MAX_LINES = 128
 

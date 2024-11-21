@@ -47,12 +47,12 @@ export function getgadgetstate(): GADGET_STATE {
 export function gadgetstatesetplayer(player: string) {
   const { state } = useGadgetClient.getState()
   if (player && state.player === '') {
-    useGadgetClient.setState({
+    useGadgetClient.setState((gc) => ({
       state: {
-        ...state,
+        ...gc.state,
         player,
       },
-    })
+    }))
     return true
   }
   return false
