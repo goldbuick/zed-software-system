@@ -87,10 +87,12 @@ vec3 halftone(vec3 texcolor, vec2 st, float frequency) {
   cmyk.w = min(cmyk.x, min(cmyk.y, cmyk.z)); // Create K
   cmyk.xyz -= cmyk.w; // Subtract K equivalent from CMY
 
+  float flex = pow(cmyk.w, 3.0);
+
   // Distance to nearest point in a grid of
   // (frequency x frequency) points over the unit square
   
-  float t = 0.1 + n * 3.7;
+  float t = 0.1 + n * flex;
 
   vec2 Kst = frequency * mat2(0.707, -0.707, 0.707, 0.707) * st;
   vec2 Kuv = 2.0 * fract(Kst) - 1.0; 
@@ -111,11 +113,11 @@ vec3 halftone(vec3 texcolor, vec2 st, float frequency) {
   vec3 rgbscreen = 1.0 - 0.9 * vec3(c,m,y) + n;
   vec3 factor = mix(rgbscreen, rgbscreen * paper, 0.8 * k + 0.2 * n); // 0.8 * k + 0.2 * n
   // return factor;
-  return mix(factor, texcolor, clamp(pow(cmyk.w, 3.0), 0.222, 0.888));
+  return mix(factor, texcolor, clamp(pow(cmyk.w, 3.0), 0.666, 0.888));
 }
 
 vec3 halftone(vec3 texcolor, vec2 st) {
-  return halftone(texcolor, st, 256.0);
+  return halftone(texcolor, st, 512.0);
 }
 
 `
