@@ -1,5 +1,4 @@
 import { addEffect, addAfterEffect, useThree, extend } from '@react-three/fiber'
-import { BrightnessContrast, EffectComposer } from '@react-three/postprocessing'
 import { getGPUTier, GetGPUTier } from 'detect-gpu'
 import { useEffect, useLayoutEffect, useRef, useState, Suspense } from 'react'
 import Stats from 'stats.js'
@@ -9,15 +8,13 @@ import { FORCE_CRT_OFF, STATS_DEV } from 'zss/config'
 import { useTexture } from 'zss/gadget/components/usetexture'
 import { createplatform } from 'zss/platform'
 
-import { CRTShape } from './crt'
+import { CRTShape } from './fx/crt'
 import { Framing } from './framing'
 import { Gadget } from './gadget'
-import decoimageurl from './scratches.jpg'
+import decoimageurl from './fx/scratches.jpg'
+import { EffectComposer } from './fx/effectcomposer'
 
 extend({ OrthographicCamera })
-
-// const TUG = 0.0006
-// const TUG_VEC = new Vector2(TUG, TUG * -0.5)
 
 const useDetectGPU = (props?: GetGPUTier) =>
   suspend(() => getGPUTier(props), ['useDetectGPU'])
@@ -89,9 +86,6 @@ export function Terminal() {
       {shouldcrt && (
         <Suspense fallback={null}>
           <EffectComposer
-            multisampling={0}
-            depthBuffer={false}
-            stencilBuffer={false}
           >
             <CRTShape splat={splat} viewheight={viewheight} />
           </EffectComposer>

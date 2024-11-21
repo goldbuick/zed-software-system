@@ -1,4 +1,4 @@
-import { EffectProps, wrapEffect } from '@react-three/postprocessing'
+// import { EffectProps, wrapEffect } from '@react-three/postprocessing'
 import {
   BlendFunction,
   Effect,
@@ -9,6 +9,8 @@ import { Texture, Uniform, UnsignedByteType } from 'three'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { halftonefragshader } from './halftone'
+import { type ReactThreeFiber, extend, useThree } from '@react-three/fiber'
+import { forwardRef, useMemo } from 'react'
 
 const crtshapevertshader = `
 #ifdef ASPECT_CORRECTION
@@ -42,8 +44,9 @@ float rectdistance(vec2 uv) {
 }
 
 vec2 bendy(const in vec2 xn) {
-  // float distortion = 0.0711;
-  float distortion = 0.0173;
+  float distortion = 0.511;
+  float scale = 0.7;
+  // float distortion = 0.0173;
   vec3 xDistorted = vec3((1.0 + vec2(distortion, distortion) * dot(xn, xn)) * xn, 1.0);
 
   mat3 kk = mat3(
@@ -52,7 +55,7 @@ vec2 bendy(const in vec2 xn) {
     vec3(0.0, 0.0, 1.0)
   );
 
-  return (kk * xDistorted).xy;
+  return (kk * xDistorted).xy * scale;
 }
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
@@ -77,9 +80,9 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     vec4 fuxtcolor = texel;
     // outputColor = mix(displaycolor, fuxtcolor, 0.1);
     outputColor = displaycolor + (fuxtcolor * 0.09);
-
     // apply halftones
     outputColor.rgb = halftone(outputColor.rgb, uv.st);
+
   } else if (doot > 1.004) {
     // display shell
     // rbgb 205 205 193
@@ -87,26 +90,11 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     vec3 dkmatte = mix(matte, vec3(0.0), 0.25);
     float mx = pow(1.0 - bx, 16.0) + 0.2;
     outputColor = vec4(mix(matte, dkmatte, mx), inputColor.a);
+
   } else {
     // border
     outputColor = vec4(mix(vec3(0.0), outputColor.rgb, 0.5), inputColor.a);
   }
-
-  // apply scanlines - WE USE HALFTONES now
-  // if (doot < 1.0) {
-  //   float row = round(uv.y * viewheight * 0.5);
-  //   float alt = mod(row, 2.0);
-  //   float phase = time + cos(uv.x + uv.y);
-  //   float slowband = (cos(uv.x + uv.y - phase) + 1.0) / 2.0;
-  //   float fastband = (cos(uv.y + time * 0.37) + 1.0) / 2.0;
-  //   float blankdmix = 0.3 - 
-  //     pow(slowband, viewheight * 0.01) * 0.05 - 
-  //     pow(fastband, viewheight * 64.0) * 0.2 - 
-  //     pow(fastband, viewheight * 128.0) * 0.1;
-  //   vec3 blankd = mix(outputColor.rgb, vec3(0.0), blankdmix);
-  //   vec3 scanline = mix(outputColor.rgb, blankd, alt);
-  //   outputColor = vec4(scanline, inputColor.a);
-  // }
 
   // apply inner shade && scanlines
   if (doot >= 0.5 && doot < 1.0) {
@@ -241,5 +229,51 @@ class CRTShapeEffect extends Effect {
   }
 }
 
+type EffectConstructor = new (...args: any[]) => Effect
+
+type EffectProps<T extends EffectConstructor> = ReactThreeFiber.Node<
+  T extends Function ? T['prototype'] : InstanceType<T>,
+  T
+> &
+  ConstructorParameters<T>[0] & {
+    blendFunction?: BlendFunction
+    opacity?: number
+  }
+
 export type CRTShapeProps = EffectProps<typeof CRTShapeEffect>
+
+let i = 0
+const components = new WeakMap<EffectConstructor, React.ExoticComponent<any> | string>()
+
+const wrapEffect = <T extends EffectConstructor>(effect: T, defaults?: EffectProps<T>) =>
+  /* @__PURE__ */ forwardRef<T, EffectProps<T>>(function Effect(
+    { blendFunction = defaults?.blendFunction, opacity = defaults?.opacity, ...props },
+    ref
+  ) {
+    let Component = components.get(effect)
+    if (!Component) {
+      const key = `@react-three/postprocessing/${effect.name}-${i++}`
+      extend({ [key]: effect })
+      components.set(effect, (Component = key))
+    }
+
+    const camera = useThree((state) => state.camera)
+    const args = useMemo(
+      () => [...((defaults?.args ?? []) as any[]), ...((props.args ?? [{ ...defaults, ...props }]) as any[])],
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [JSON.stringify(props)]
+    )
+
+    return (
+      <Component
+        camera={camera}
+        blendMode-blendFunction={blendFunction}
+        blendMode-opacity-value={opacity}
+        {...props}
+        ref={ref}
+        args={args}
+      />
+    )
+  })
+  
 export const CRTShape = wrapEffect(CRTShapeEffect)

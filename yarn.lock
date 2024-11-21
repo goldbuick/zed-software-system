@@ -1008,17 +1008,6 @@
     suspend-react "^0.1.3"
     zustand "^3.7.1"
 
-"@react-three/postprocessing@^2.16.3":
-  version "2.16.3"
-  resolved "https://registry.npmjs.org/@react-three/postprocessing/-/postprocessing-2.16.3.tgz#91bad6a541db7573f3100f1c7edf67d22c66413e"
-  integrity sha512-ftodXpUsy0/mzn0KqyV7MBau71dD9C5UOFnB3kHhCLNoxjKYQWZa9do0olJTSkl3owYXRfNHcLriK1Xn8wxZJw==
-  dependencies:
-    buffer "^6.0.3"
-    maath "^0.6.0"
-    n8ao "^1.6.6"
-    postprocessing "^6.32.1"
-    three-stdlib "^2.23.4"
-
 "@reactivedata/react@^0.2.1":
   version "0.2.2"
   resolved "https://registry.npmjs.org/@reactivedata/react/-/react-0.2.2.tgz#967664b419c6f24b5b292ce50a56c915bac21938"
@@ -1289,11 +1278,6 @@
   resolved "https://registry.npmjs.org/@types/debounce/-/debounce-1.2.4.tgz#cb7e85d9ad5ababfac2f27183e8ac8b576b2abb3"
   integrity sha512-jBqiORIzKDOToaF63Fm//haOCHuwQuLa2202RK4MozpA6lh93eCBc+/8+wZn5OzjJt3ySdc+74SXWXB55Ewtyw==
 
-"@types/draco3d@^1.4.0":
-  version "1.4.10"
-  resolved "https://registry.npmjs.org/@types/draco3d/-/draco3d-1.4.10.tgz#63ec0ba78b30bd58203ec031f4e4f0198c596dca"
-  integrity sha512-AX22jp8Y7wwaBgAixaSvkoG4M/+PlAcm3Qs4OW8yT9DM4xUpWKeFhLueTAyZF39pviAdcDdeJoACapiAceqNcw==
-
 "@types/estree@1.0.6", "@types/estree@^1.0.6":
   version "1.0.6"
   resolved "https://registry.npmjs.org/@types/estree/-/estree-1.0.6.tgz#628effeeae2064a1b4e79f78e81d87b7e5fc7b50"
@@ -1365,22 +1349,10 @@
   dependencies:
     undici-types "~6.19.8"
 
-"@types/offscreencanvas@^2019.6.4":
-  version "2019.7.3"
-  resolved "https://registry.npmjs.org/@types/offscreencanvas/-/offscreencanvas-2019.7.3.tgz#90267db13f64d6e9ccb5ae3eac92786a7c77a516"
-  integrity sha512-ieXiYmgSRXUDeOntE1InxjWyvEelZGP63M+cGuquuRLuIKKT1osnkXjxev9B7d1nXSug5vpunx+gNlbVxMlC9A==
-
 "@types/prop-types@*":
   version "15.7.13"
   resolved "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.13.tgz#2af91918ee12d9d32914feb13f5326658461b451"
   integrity sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA==
-
-"@types/react-dom@^18.2.22":
-  version "18.3.1"
-  resolved "https://registry.npmjs.org/@types/react-dom/-/react-dom-18.3.1.tgz#1e4654c08a9cdcfb6594c780ac59b55aad42fe07"
-  integrity sha512-qW1Mfv8taImTthu4KoXgDfLuk4bydU6Q/TkADnDWWHwi4NX4BR+LWfTp2sVmTqRrsHvyDDTelgelxJ+SsejKKQ==
-  dependencies:
-    "@types/react" "*"
 
 "@types/react-reconciler@^0.26.7":
   version "0.26.7"
@@ -1426,7 +1398,7 @@
     fflate "~0.8.2"
     meshoptimizer "~0.18.1"
 
-"@types/webxr@*", "@types/webxr@^0.5.2":
+"@types/webxr@*":
   version "0.5.20"
   resolved "https://registry.npmjs.org/@types/webxr/-/webxr-0.5.20.tgz#b16b681af314ec011b2e8221b0a072d691c04953"
   integrity sha512-JGpU6qiIJQKUuVSKx1GtQnHJGxRjtfGIhzO2ilq43VZZS//f1h1Sgexbdk+Lq+7569a6EYhOWrUpIruR/1Enmg==
@@ -2252,11 +2224,6 @@ doctrine@^3.0.0:
   dependencies:
     esutils "^2.0.2"
 
-draco3d@^1.4.1:
-  version "1.5.7"
-  resolved "https://registry.npmjs.org/draco3d/-/draco3d-1.5.7.tgz#94f9bce293eb8920c159dc91a4ce9124a9e899e0"
-  integrity sha512-m6WCKt/erDXcw+70IJXnG7M3awwQPAsZvJGX5zY7beBqpELw6RDGkYVU0W43AFxye4pDZ5i2Lbyc/NNGqwjUVQ==
-
 eastasianwidth@^0.2.0:
   version "0.2.0"
   resolved "https://registry.npmjs.org/eastasianwidth/-/eastasianwidth-0.2.0.tgz#696ce2ec0aa0e6ea93a397ffcf24aa7840c827cb"
@@ -2800,11 +2767,6 @@ fb-watchman@^2.0.0:
   integrity sha512-p5161BqbuCaSnB8jIbzQHOlpgsPmK5rJVDfDKO91Axs5NC1uu3HRQm6wt9cd9/+GtQQIO53JdGXXoyDpTAsgYA==
   dependencies:
     bser "2.1.1"
-
-fflate@^0.6.9:
-  version "0.6.10"
-  resolved "https://registry.npmjs.org/fflate/-/fflate-0.6.10.tgz#5f40f9659205936a2d18abf88b2e7781662b6d43"
-  integrity sha512-IQrh3lEPM93wVCEczc9SaAOvkmcoQn/G8Bo1e8ZPlY3X3bnAxWaBdvTdvM1hP62iZp0BXWDy4vTAy4fF0+Dlpg==
 
 fflate@~0.8.2:
   version "0.8.2"
@@ -4057,11 +4019,6 @@ maath@^0.10.8:
   resolved "https://registry.npmjs.org/maath/-/maath-0.10.8.tgz#cf647544430141bf6982da6e878abb6c4b804e24"
   integrity sha512-tRvbDF0Pgqz+9XUa4jjfgAQ8/aPKmQdWXilFu2tMy4GWj4NOsx99HlULO4IeREfbO3a0sA145DZYyvXPkybm0g==
 
-maath@^0.6.0:
-  version "0.6.0"
-  resolved "https://registry.npmjs.org/maath/-/maath-0.6.0.tgz#7841d0fb95bbb37d19b08b7c5458ef70190950d2"
-  integrity sha512-dSb2xQuP7vDnaYqfoKzlApeRcR2xtN8/f7WV/TMAkBC8552TwTLtOO0JTcSygkYMjNDPoo6V01jTw/aPi4JrMw==
-
 make-dir@^4.0.0:
   version "4.0.0"
   resolved "https://registry.npmjs.org/make-dir/-/make-dir-4.0.0.tgz#c3c2307a771277cd9638305f915c29ae741b614e"
@@ -4196,11 +4153,6 @@ mz@^2.7.0:
     any-promise "^1.0.0"
     object-assign "^4.0.1"
     thenify-all "^1.0.0"
-
-n8ao@^1.6.6:
-  version "1.9.3"
-  resolved "https://registry.npmjs.org/n8ao/-/n8ao-1.9.3.tgz#f17151400401b4690602a5e66f3c5fe551cf22b0"
-  integrity sha512-OZX+u8LaEfxLi6lupuyT8gIv80D6D8FIeKbBNkCyY0nE+1wmm6sQ4yeyW3a15lFMrfTcEhe0AU8QhhDejHg7sg==
 
 nanoid-dictionary@^4.3.0:
   version "4.3.0"
@@ -4542,15 +4494,10 @@ postcss@^8.4.43, postcss@^8.4.47, postcss@^8.4.49:
     picocolors "^1.1.1"
     source-map-js "^1.2.1"
 
-postprocessing@^6.32.1:
+postprocessing@^6.36.4:
   version "6.36.4"
-  resolved "https://registry.npmjs.org/postprocessing/-/postprocessing-6.36.4.tgz#f4ad199b31ed08e224bd494df730d552ed882760"
+  resolved "https://registry.yarnpkg.com/postprocessing/-/postprocessing-6.36.4.tgz#f4ad199b31ed08e224bd494df730d552ed882760"
   integrity sha512-3fAyBGuLNR7Rg/q+f2SNlsVCI5mDrymvxhOif3tPKEej8M38z4TvwzNZm+RNpRY2tACE7qQUNE5IHyMcqgvlAg==
-
-potpack@^1.0.1:
-  version "1.0.2"
-  resolved "https://registry.npmjs.org/potpack/-/potpack-1.0.2.tgz#23b99e64eb74f5741ffe7656b5b5c4ddce8dfc14"
-  integrity sha512-choctRBIV9EMT9WGAZHn3V7t0Z2pMQyl0EZE6pFc/6ml3ssw7Dlf/oAOvFwjm1HVsqfQN8GfeFyJ+d8tRzqueQ==
 
 prelude-ls@^1.2.1:
   version "1.2.1"
@@ -4983,16 +4930,7 @@ string-length@^4.0.1:
     char-regex "^1.0.2"
     strip-ansi "^6.0.0"
 
-"string-width-cjs@npm:string-width@^4.2.0":
-  version "4.2.3"
-  resolved "https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
-  integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
-  dependencies:
-    emoji-regex "^8.0.0"
-    is-fullwidth-code-point "^3.0.0"
-    strip-ansi "^6.0.1"
-
-string-width@^4.1.0, string-width@^4.2.0, string-width@^4.2.3:
+"string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0, string-width@^4.2.0, string-width@^4.2.3:
   version "4.2.3"
   resolved "https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
@@ -5071,14 +5009,7 @@ string_decoder@~1.1.1:
   dependencies:
     safe-buffer "~5.1.0"
 
-"strip-ansi-cjs@npm:strip-ansi@^6.0.1":
-  version "6.0.1"
-  resolved "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
-  integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
-  dependencies:
-    ansi-regex "^5.0.1"
-
-strip-ansi@^6.0.0, strip-ansi@^6.0.1:
+"strip-ansi-cjs@npm:strip-ansi@^6.0.1", strip-ansi@^6.0.0, strip-ansi@^6.0.1:
   version "6.0.1"
   resolved "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
   integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
@@ -5212,18 +5143,6 @@ thenify-all@^1.0.0:
   integrity sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==
   dependencies:
     any-promise "^1.0.0"
-
-three-stdlib@^2.23.4:
-  version "2.34.0"
-  resolved "https://registry.npmjs.org/three-stdlib/-/three-stdlib-2.34.0.tgz#bc191d92037ddcc3e4d5a4ae1bd46a199a857b5b"
-  integrity sha512-U5qJYWgUKBFJqr1coMSbczA964uvouzBjQbtJlaI9LfMwy7hr+kc1Mfh0gqi/2872KmGu9utgff6lj8Oti8+VQ==
-  dependencies:
-    "@types/draco3d" "^1.4.0"
-    "@types/offscreencanvas" "^2019.6.4"
-    "@types/webxr" "^0.5.2"
-    draco3d "^1.4.1"
-    fflate "^0.6.9"
-    potpack "^1.0.1"
 
 three@0.170.0:
   version "0.170.0"
@@ -5547,16 +5466,7 @@ word-wrap@^1.2.5:
   resolved "https://registry.npmjs.org/word-wrap/-/word-wrap-1.2.5.tgz#d2c45c6dd4fbce621a66f136cbe328afd0410b34"
   integrity sha512-BN22B5eaMMI9UMtjrGd5g5eCYPpCPDUy0FJXbYsaT5zYxjFOckS53SQDE3pWkVoWpHXVb3BrYcEN4Twa55B5cA==
 
-"wrap-ansi-cjs@npm:wrap-ansi@^7.0.0":
-  version "7.0.0"
-  resolved "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
-  integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
-  dependencies:
-    ansi-styles "^4.0.0"
-    string-width "^4.1.0"
-    strip-ansi "^6.0.0"
-
-wrap-ansi@^7.0.0:
+"wrap-ansi-cjs@npm:wrap-ansi@^7.0.0", wrap-ansi@^7.0.0:
   version "7.0.0"
   resolved "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
   integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==

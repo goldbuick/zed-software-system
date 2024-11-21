@@ -110,9 +110,9 @@ vec3 halftone(vec3 texcolor, vec2 st, float frequency) {
   vec2 Yuv = 2.0 * fract(Yst) - 1.0;
   float y = aastep(0.0, sqrt(cmyk.z) + t - length(Yuv) + n);
 
-  vec3 rgbscreen = 1.0 - 0.9 * vec3(c,m,y) + n;
+  vec3 rgbscreen = 1.0 - 1.2 * vec3(c,m,y) + n;
   vec3 factor = mix(rgbscreen, rgbscreen * paper, 0.8 * k + 0.2 * n);
-  return mix(factor, texcolor, clamp(flex, 0.666, 0.888));
+  return mix(factor, texcolor, clamp(flex, 0.611, 0.888));
 }
 
 vec3 halftone(vec3 texcolor, vec2 st) {
