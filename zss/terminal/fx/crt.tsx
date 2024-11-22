@@ -1,16 +1,15 @@
-// import { EffectProps, wrapEffect } from '@react-three/postprocessing'
+import { type ReactThreeFiber, extend, useThree } from '@react-three/fiber'
 import {
   BlendFunction,
   Effect,
   EffectAttribute,
   ColorChannel,
 } from 'postprocessing'
+import { forwardRef, useMemo } from 'react'
 import { Texture, Uniform, UnsignedByteType } from 'three'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { halftonefragshader } from './halftone'
-import { type ReactThreeFiber, extend, useThree } from '@react-three/fiber'
-import { forwardRef, useMemo } from 'react'
 
 const crtshapevertshader = `
 #ifdef ASPECT_CORRECTION
@@ -46,7 +45,7 @@ float rectdistance(vec2 uv) {
 vec2 bendy(const in vec2 xn) {
   // config
   float distortion = 0.0173; // 0.0173, 0.511
-  float scale = 0.987; // 1.0, 0.7
+  float scale = 0.99; // 1.0, 0.7
   // calc
   vec3 xDistorted = vec3((1.0 + vec2(distortion, distortion) * dot(xn, xn)) * xn, 1.0);
   mat3 kk = mat3(
@@ -95,11 +94,26 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     outputColor = vec4(mix(vec3(0.0), outputColor.rgb, 0.5), inputColor.a);
   }
 
-  // apply inner shade && scanlines
+  // apply inner shade
   if (doot >= 0.5 && doot < 1.0) {
     float sh = clamp(0.0, 1.0, 1.0 - bx - 0.7);
     vec3 shade = mix(outputColor.rgb, vec3(0.0), pow(sh, 4.0));
     outputColor = vec4(shade, inputColor.a);
+  }
+
+  // apply scanlines 
+  if (doot < 1.0) {
+    float row = round(uv.y * viewheight * 0.5);
+    float alt = mod(row, 2.0);
+    float phase = time + cos(uv.x + uv.y);
+    float slowband = (cos(uv.x + uv.y - phase) + 1.0) / 2.0;
+    float fastband = (cos(uv.y + time * 0.37) + 1.0) / 2.0;
+    float blankdmix = 0.3 - 
+      pow(slowband, viewheight * 0.01) * 0.05 - 
+      pow(fastband, viewheight * 64.0) * 0.2 - 
+      pow(fastband, viewheight * 128.0) * 0.1;
+    vec3 blankd = mix(outputColor.rgb, vec3(0.0, 0.0, 0.1), blankdmix);
+    outputColor = vec4(blankd, inputColor.a);
   }
 
   // apply outer shade
@@ -231,6 +245,7 @@ class CRTShapeEffect extends Effect {
 type EffectConstructor = new (...args: any[]) => Effect
 
 type EffectProps<T extends EffectConstructor> = ReactThreeFiber.Node<
+  // eslint-disable-next-line @typescript-eslint/ban-types
   T extends Function ? T['prototype'] : InstanceType<T>,
   T
 > &
@@ -242,25 +257,38 @@ type EffectProps<T extends EffectConstructor> = ReactThreeFiber.Node<
 export type CRTShapeProps = EffectProps<typeof CRTShapeEffect>
 
 let i = 0
-const components = new WeakMap<EffectConstructor, React.ExoticComponent<any> | string>()
+const components = new WeakMap<
+  EffectConstructor,
+  React.ExoticComponent<any> | string
+>()
 
-const wrapEffect = <T extends EffectConstructor>(effect: T, defaults?: EffectProps<T>) =>
+const wrapEffect = <T extends EffectConstructor>(
+  effect: T,
+  defaults?: EffectProps<T>,
+) =>
   /* @__PURE__ */ forwardRef<T, EffectProps<T>>(function Effect(
-    { blendFunction = defaults?.blendFunction, opacity = defaults?.opacity, ...props },
-    ref
+    {
+      blendFunction = defaults?.blendFunction,
+      opacity = defaults?.opacity,
+      ...props
+    },
+    ref,
   ) {
     let Component = components.get(effect)
     if (!Component) {
-      const key = `@react-three/postprocessing/${effect.name}-${i++}`
+      const key = `FX${effect.name}-${i++}`
       extend({ [key]: effect })
       components.set(effect, (Component = key))
     }
 
     const camera = useThree((state) => state.camera)
     const args = useMemo(
-      () => [...((defaults?.args ?? []) as any[]), ...((props.args ?? [{ ...defaults, ...props }]) as any[])],
+      () => [
+        ...((defaults?.args ?? []) as any[]),
+        ...((props.args ?? [{ ...defaults, ...props }]) as any[]),
+      ],
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [JSON.stringify(props)]
+      [JSON.stringify(props)],
     )
 
     return (
@@ -274,5 +302,5 @@ const wrapEffect = <T extends EffectConstructor>(effect: T, defaults?: EffectPro
       />
     )
   })
-  
+
 export const CRTShape = wrapEffect(CRTShapeEffect)

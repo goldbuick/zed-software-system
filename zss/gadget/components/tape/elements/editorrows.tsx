@@ -109,5 +109,6 @@ export function EditorRows({
   }
   context.disablewrap = false
 
+  context.changed()
   return null
 }

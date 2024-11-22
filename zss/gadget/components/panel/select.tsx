@@ -2,10 +2,7 @@ import { useCallback } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { paneladdress } from 'zss/gadget/data/types'
 
-import {
-  useCacheWriteTextContext,
-  tokenizeandwritetextformat,
-} from '../../data/textformat'
+import { tokenizeandwritetextformat } from '../../data/textformat'
 import { useBlink } from '../useblink'
 import { UserInput, UserInputHandler } from '../userinput'
 
@@ -34,9 +31,6 @@ export function PanelItemSelect({
   const tvalue = `${values[state]}`
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
-
-  // keep stable re-renders
-  useCacheWriteTextContext(context)
 
   tokenizeandwritetextformat(` $dkred ? ${tcolor}${tlabel} `, context, false)
 

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
 import {
   textformatreadedges,
   WRITE_TEXT_CONTEXT,
@@ -9,7 +10,6 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { TapeEditor } from './editor'
 import { TapeTerminal } from './terminal'
-import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
 
 type TapeLayoutProps = {
   context: WRITE_TEXT_CONTEXT

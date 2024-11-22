@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useWaitForValueString } from 'zss/device/modem'
 import {
-  useCacheWriteTextContext,
   tokenizeandwritetextformat,
   applycolortoindexes,
   applystrtoindex,
@@ -38,9 +37,6 @@ export function PanelItemText({
   const tvalue = `${state} `
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
-
-  // keep stable re-renders
-  useCacheWriteTextContext(context)
 
   // prefix
   tokenizeandwritetextformat(

@@ -34,5 +34,6 @@ export function TerminalHyperlink({
     true,
   )
 
+  context.changed()
   return active && <UserInput OK_BUTTON={invoke} />
 }

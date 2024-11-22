@@ -112,11 +112,11 @@ vec3 halftone(vec3 texcolor, vec2 st, float frequency) {
 
   vec3 rgbscreen = 1.0 - 1.2 * vec3(c,m,y) + n;
   vec3 factor = mix(rgbscreen, rgbscreen * paper, 0.8 * k + 0.2 * n);
-  return mix(factor, texcolor, clamp(flex, 0.611, 0.888));
+  return mix(factor, texcolor, clamp(flex, 0.511, 0.888));
 }
 
 vec3 halftone(vec3 texcolor, vec2 st) {
-  return halftone(texcolor, st, 512.0);
+  return halftone(texcolor, st, 256.0);
 }
 
 `

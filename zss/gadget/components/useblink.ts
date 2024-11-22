@@ -1,10 +1,11 @@
-const toggle = { blink: false }
+import { create } from 'zustand'
+
+const useToggle = create<{ blink: boolean }>(() => ({ blink: false }))
 
 setInterval(() => {
-  toggle.blink = !toggle.blink
+  useToggle.setState((state) => ({ blink: !state.blink }))
 }, 333)
 
 export function useBlink() {
-  const state = toggle
-  return state.blink
+  return useToggle((state) => state.blink)
 }

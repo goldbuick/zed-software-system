@@ -1,5 +1,5 @@
 import { createToken, createTokenInstance, IToken, Lexer } from 'chevrotain'
-import { createContext as createcontext, useContext, useMemo } from 'react'
+import { createContext as createcontext, useContext } from 'react'
 import { LANG_DEV } from 'zss/config'
 import { colorconsts } from 'zss/firmware/wordtypes'
 import { range } from 'zss/mapping/array'
@@ -142,6 +142,8 @@ export type WRITE_TEXT_CONTEXT = {
   char: number[]
   color: number[]
   bg: number[]
+  // flag as changed
+  changed: () => void
 }
 
 export function createwritetextcontext(
@@ -183,6 +185,7 @@ export function createwritetextcontext(
     char: [],
     color: [],
     bg: [],
+    changed() {},
   }
 }
 
@@ -194,11 +197,6 @@ export function applywritetextcontext(
   dest.y = source.y
   dest.active.color = source.active.color
   dest.active.bg = source.active.bg
-}
-
-export function useCacheWriteTextContext(source: WRITE_TEXT_CONTEXT) {
-  const cache = useMemo(() => ({ ...source }), [source])
-  applywritetextcontext(source, cache)
 }
 
 export const WriteTextContext = createcontext(

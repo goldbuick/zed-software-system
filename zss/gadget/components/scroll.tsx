@@ -8,6 +8,7 @@ import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
+  WRITE_TEXT_CONTEXT,
 } from '../data/textformat'
 import {
   COLOR,
@@ -25,7 +26,7 @@ import {
   writeDither,
 } from './usedither'
 import { UserFocus, UserInput, UserInputHandler } from './userinput'
-import { TileSnapshot, useTiles, writeTile } from './usetiles'
+import { TilesData, TilesRender, useTiles, writeTile } from './usetiles'
 
 type ScrollProps = {
   player: string
@@ -52,9 +53,12 @@ export function Scroll({
   const { viewport } = useThree()
   const panelwidth = width - 3
   const panelheight = height - 3
-  const tiles = useTiles(width, height, 0, color, bg)
+  const store = useTiles(width, height, 0, color, bg)
   const dither = useDither(panelwidth, panelheight)
   const scroll = useContext(ScrollContext)
+
+  // write to tiles
+  const tiles = store.getState()
 
   // edges
   for (let x = 1; x < width - 1; ++x) {
@@ -97,7 +101,7 @@ export function Scroll({
 
   // center title
   const titleWidth = measure?.x ?? title.length
-  const context = {
+  const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, color, bg, 0, 0, width, height),
     ...tiles,
     x: Math.round(width * 0.5) - Math.round(titleWidth * 0.5),
@@ -183,36 +187,38 @@ export function Scroll({
   )
 
   return (
-    <group ref={groupref} position-y={1000000}>
-      <UserFocus>
-        <UserInput
-          MOVE_UP={up}
-          MOVE_DOWN={down}
-          CANCEL_BUTTON={scroll.sendclose}
-        />
-        <TileSnapshot tiles={tiles} width={width} height={height} />
-        <group
-          // eslint-disable-next-line react/no-unknown-property
-          position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 0]}
-        >
-          <DitherSnapshot
-            dither={dither}
-            width={panelwidth}
-            height={panelheight}
+    <TilesData store={store}>
+      <group ref={groupref} position-y={1000000}>
+        <UserFocus>
+          <UserInput
+            MOVE_UP={up}
+            MOVE_DOWN={down}
+            CANCEL_BUTTON={scroll.sendclose}
           />
-          <Panel
-            player={player}
-            name={name}
-            width={panelwidth}
-            height={panelheight}
-            margin={0}
-            color={color}
-            bg={COLOR.CLEAR}
-            text={visibletext}
-            selected={row}
-          />
-        </group>
-      </UserFocus>
-    </group>
+          <TilesRender width={width} height={height} />
+          <group
+            // eslint-disable-next-line react/no-unknown-property
+            position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 0]}
+          >
+            <DitherSnapshot
+              dither={dither}
+              width={panelwidth}
+              height={panelheight}
+            />
+            <Panel
+              player={player}
+              name={name}
+              width={panelwidth}
+              height={panelheight}
+              margin={0}
+              color={color}
+              bg={COLOR.CLEAR}
+              text={visibletext}
+              selected={row}
+            />
+          </group>
+        </UserFocus>
+      </group>
+    </TilesData>
   )
 }

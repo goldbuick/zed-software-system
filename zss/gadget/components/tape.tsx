@@ -15,7 +15,7 @@ import { BackPlate } from './tape/elements/backplate'
 import { TapeLayout } from './tape/layout'
 import { PlayerContext } from './useplayer'
 import { UserFocus, UserHotkey } from './userinput'
-import { TileSnapshot, useTiles } from './usetiles'
+import { TilesData, TilesRender, useTiles } from './usetiles'
 
 export function Tape() {
   const viewport = useThree((state) => state.viewport)
@@ -59,13 +59,10 @@ export function Tape() {
       break
   }
 
-  const tiles = useTiles(width, height, 0, FG, BG)
-
+  const store = useTiles(width, height, 0, FG, BG)
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, FG, BG),
-    char: tiles.char,
-    color: tiles.color,
-    bg: tiles.bg,
+    ...store.getState(),
   }
 
   // bail on odd states
@@ -77,7 +74,7 @@ export function Tape() {
   const player = gadgetstategetplayer()
 
   return (
-    <>
+    <TilesData store={store}>
       {terminalopen && (
         // eslint-disable-next-line react/no-unknown-property
         <group position={[0, 0, 0]}>
@@ -106,7 +103,7 @@ export function Tape() {
             <PlayerContext.Provider value={player}>
               <TapeLayout context={context} />
             </PlayerContext.Provider>
-            <TileSnapshot width={width} height={height} tiles={tiles} />
+            <TilesRender width={width} height={height} />
           </UserFocus>
         ) : (
           <UserHotkey hotkey="Shift+?">
@@ -114,6 +111,6 @@ export function Tape() {
           </UserHotkey>
         )}
       </group>
-    </>
+    </TilesData>
   )
 }

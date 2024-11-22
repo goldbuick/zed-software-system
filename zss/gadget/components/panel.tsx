@@ -7,7 +7,7 @@ import { PANEL_ITEM } from '../data/types'
 
 import { PanelItem } from './panel/panelitem'
 import { PlayerContext } from './useplayer'
-import { TileSnapshot, resetTiles, useTiles } from './usetiles'
+import { TilesData, TilesRender, resetTiles, useTiles } from './usetiles'
 
 type PanelProps = {
   margin?: number
@@ -31,8 +31,7 @@ export function Panel({
   bg,
   text,
 }: PanelProps) {
-  const tiles = useTiles(width, height, 0, color, bg)
-  resetTiles(tiles, 0, color, bg)
+  const store = useTiles(width, height, 0, color, bg)
 
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(
@@ -45,18 +44,22 @@ export function Panel({
       width - margin,
       height,
     ),
-    ...tiles,
+    ...store.getState(),
     x: margin,
   }
 
+  resetTiles(store.getState(), 0, color, bg)
+
   return (
-    <PlayerContext.Provider value={player}>
-      <WriteTextContext.Provider value={context}>
-        {text.map((item, index) => (
-          <PanelItem key={index} item={item} active={index === selected} />
-        ))}
-        <TileSnapshot width={width} height={height} tiles={tiles} />
-      </WriteTextContext.Provider>
-    </PlayerContext.Provider>
+    <TilesData store={store}>
+      <PlayerContext.Provider value={player}>
+        <WriteTextContext.Provider value={context}>
+          {text.map((item, index) => (
+            <PanelItem key={index} item={item} active={index === selected} />
+          ))}
+        </WriteTextContext.Provider>
+      </PlayerContext.Provider>
+      <TilesRender width={width} height={height} />
+    </TilesData>
   )
 }
