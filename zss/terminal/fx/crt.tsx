@@ -42,20 +42,6 @@ float rectdistance(vec2 uv) {
   return abs(length(max(vec2(0.0), d)) + min(0.0, max(d.x, d.y)));
 }
 
-vec2 bendy(const in vec2 xn) {
-  // config
-  float distortion = 0.0173; // 0.0173, 0.511
-  float scale = 0.99; // 1.0, 0.7
-  // calc
-  vec3 xDistorted = vec3((1.0 + vec2(distortion, distortion) * dot(xn, xn)) * xn, 1.0);
-  mat3 kk = mat3(
-    vec3(1.0, 0.0, 0.0),
-    vec3(0.0, 1.0, 0.0),
-    vec3(0.0, 0.0, 1.0)
-  );
-  return (kk * xDistorted).xy * scale;
-}
-
 float blendLighten(float base, float blend) {
 	return max(blend,base);
 }
@@ -80,11 +66,27 @@ vec3 blendDarken(vec3 base, vec3 blend, float opacity) {
 	return (blendDarken(base, blend) * opacity + base * (1.0 - opacity));
 }
 
+vec2 bendy(const in vec2 xn) {
+  // config
+  float distortion = 0.0173; // 0.0173, 0.511
+  float scale = 0.991; // 1.0, 0.7
+  // calc
+  vec3 xDistorted = vec3((1.0 + vec2(distortion, distortion) * dot(xn, xn)) * xn, 1.0);
+  mat3 kk = mat3(
+    vec3(1.0, 0.0, 0.0),
+    vec3(0.0, 1.0, 0.0),
+    vec3(0.0, 0.0, 1.0)
+  );
+  return (kk * xDistorted).xy * scale;
+}
+
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
 	#ifdef UV_TRANSFORM
-		vec4 texel = texture2D(splat, vUv2);
+		vec4 bright = texture2D(splat, vUv2);
+		vec4 dark = texture2D(splat, 1.0 - vUv2);
 	#else
-		vec4 texel = texture2D(splat, uv);
+		vec4 bright = texture2D(splat, uv);
+		vec4 dark = texture2D(splat, 1.0 - uv);
 	#endif
 
   vec2 xn = 2.0 * (uv.st - 0.5);
@@ -101,8 +103,8 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     outputColor = texture2D(inputBuffer, bent);
 
     // apply scratches
-    outputColor.rgb = blendLighten(outputColor.rgb, texel.rgb, 0.0666);
-    outputColor.rgb = blendDarken(outputColor.rgb, texel.rgb, 0.123);
+    outputColor.rgb = blendLighten(outputColor.rgb, bright.rgb, 0.111);
+    outputColor.rgb = blendDarken(outputColor.rgb, dark.rgb, 0.111);
 
     // apply halftones
     outputColor.rgb = halftone(outputColor.rgb, uv.st);
