@@ -103,7 +103,9 @@ export function unpackbinary(binary: Uint8Array): MAYBE<FORMAT_OBJECT> {
   try {
     const maybedata = unpack(binary)
     try {
-      return decompress(maybedata)
+      const data = decompress(maybedata)
+      console.info('read', data)
+      return data
     } catch (err: any) {
       return maybedata
     }

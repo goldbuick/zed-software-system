@@ -276,7 +276,7 @@ export function createchip(
       return 0
     },
     yield() {
-      flags.yieldstate = 0
+      flags.yieldstate = 1
     },
     sy() {
       return !!flags.yieldstate || chip.shouldhalt()

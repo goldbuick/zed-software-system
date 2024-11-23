@@ -351,19 +351,20 @@ export function bookboardmoveobject(
   }
 
   // gather meta for move
-  const idx = dest.x + dest.y * BOARD_WIDTH
+  const startidx = object.x + object.y * BOARD_WIDTH
+  const targetidx = dest.x + dest.y * BOARD_WIDTH
   const targetkind = bookelementkindread(book, object)
   const targetcollision = object.collision ?? targetkind?.collision
 
   // blocked by an object
-  const maybeobject = boardobjectread(board, board.lookup[idx] ?? '')
+  const maybeobject = boardobjectread(board, board.lookup[targetidx] ?? '')
   if (ispresent(maybeobject)) {
     // for sending interaction messages
     return { ...maybeobject }
   }
 
   // blocked by terrain
-  const mayberterrain = board.terrain[idx]
+  const mayberterrain = board.terrain[targetidx]
   if (ispresent(mayberterrain)) {
     const terrainkind = bookelementkindread(book, mayberterrain)
     const terraincollision = mayberterrain.collision ?? terrainkind?.collision
@@ -380,10 +381,9 @@ export function bookboardmoveobject(
   // if not removed, update lookup
   if (!ispresent(object.removed)) {
     // blank current lookup
-    board.lookup[idx] = undefined
-
-    // update lookup
-    board.lookup[object.x + object.y * BOARD_WIDTH] = object.id ?? ''
+    board.lookup[startidx] = undefined
+    // update lookup at dest
+    board.lookup[targetidx] = object.id ?? ''
   }
 
   // no interaction

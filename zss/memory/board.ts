@@ -57,7 +57,7 @@ enum BOARD_KEYS {
 
 export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
   return formatobject(board, BOARD_KEYS, {
-    terrain: exportboardelement,
+    terrain: (terrain) => terrain.map(exportboardelement),
     objects: (objects) =>
       Object.values<BOARD_ELEMENT>(objects).map(exportboardelement),
     codepage: FORMAT_SKIP,

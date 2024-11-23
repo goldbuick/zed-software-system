@@ -113,7 +113,7 @@ function readinput() {
   }
 
   // pull from front of queue
-  const [head = INPUT.NONE] = flags.inputqueue
+  const [head = INPUT.NONE] = flags.inputqueue as INPUT[]
 
   // write to element
 
