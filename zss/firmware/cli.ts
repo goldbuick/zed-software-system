@@ -126,8 +126,8 @@ export const CLI_FIRMWARE = createfirmware({
     tape_info('$2', `!${hyperlink};${label}`)
     return 0
   })
-  .command('bookcreate', (chip) => {
-    const [maybename] = readargs(0, [ARG_TYPE.MAYBE_STRING])
+  .command('bookcreate', (chip, words) => {
+    const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
 
     const book = memorycreatesoftwarebook(maybename)
     if (ispresent(book)) {
@@ -135,8 +135,8 @@ export const CLI_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('bookopen', (chip) => {
-    const [name] = readargs(0, [ARG_TYPE.STRING])
+  .command('bookopen', (chip, words) => {
+    const [name] = readargs(words, 0, [ARG_TYPE.STRING])
 
     const book = memoryreadbookbyaddress(name)
     if (ispresent(book)) {
@@ -153,8 +153,8 @@ export const CLI_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('booktrash', (chip) => {
-    const [address] = readargs(0, [ARG_TYPE.STRING])
+  .command('booktrash', (chip, words) => {
+    const [address] = readargs(words, 0, [ARG_TYPE.STRING])
 
     const opened = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     const book = memoryreadbookbyaddress(address)
@@ -172,8 +172,8 @@ export const CLI_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('pageopen', () => {
-    const [page] = readargs(0, [ARG_TYPE.STRING])
+  .command('pageopen', (_, words) => {
+    const [page] = readargs(words, 0, [ARG_TYPE.STRING])
 
     // create book if needed
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
@@ -213,8 +213,8 @@ export const CLI_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('pagetrash', (chip) => {
-    const [page] = readargs(0, [ARG_TYPE.STRING])
+  .command('pagetrash', (chip, words) => {
+    const [page] = readargs(words, 0, [ARG_TYPE.STRING])
 
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
     const codepage = bookclearcodepage(mainbook, page)
@@ -305,8 +305,8 @@ export const CLI_FIRMWARE = createfirmware({
     vm_flush('cli')
     return 0
   })
-  .command('send', () => {
-    const [msg, data] = readargs(0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+  .command('send', (_, words) => {
+    const [msg, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
 
     switch (msg) {
       // help messages

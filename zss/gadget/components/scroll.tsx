@@ -19,8 +19,10 @@ import {
 
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'
+import { Blinker } from './tape/blinker'
 import {
-  DitherSnapshot,
+  DitherData,
+  DitherRender,
   resetDither,
   useDither,
   writeDither,
@@ -53,12 +55,12 @@ export function Scroll({
   const { viewport } = useThree()
   const panelwidth = width - 3
   const panelheight = height - 3
-  const store = useTiles(width, height, 0, color, bg)
-  const dither = useDither(panelwidth, panelheight)
+  const tilesstore = useTiles(width, height, 0, color, bg)
+  const ditherstore = useDither(panelwidth, panelheight, 0)
   const scroll = useContext(ScrollContext)
 
   // write to tiles
-  const tiles = store.getState()
+  const tiles = tilesstore.getState()
 
   // edges
   for (let x = 1; x < width - 1; ++x) {
@@ -70,7 +72,6 @@ export function Scroll({
   }
   writeTile(tiles, width, height, 1, 0, { char: 205, color: 15 })
   writeTile(tiles, width, height, 2, 0, { char: 187, color: 15 })
-  writeTile(tiles, width, height, 1, 1, { char: 232, color: 15 })
   writeTile(tiles, width, height, 2, 1, { char: 200, color: 15 })
 
   for (let y = 1; y < height - 1; ++y) {
@@ -119,12 +120,11 @@ export function Scroll({
 
   const visibletext = text.slice(offset, offset + panelheight)
 
-  // display cursor
+  // update dither
   const row = cursor - offset
-  writeTile(tiles, width, height, 1, 2 + row, { char: 26, color: 12 })
-
   const wither = [0.001, 0.05, 0.1, 0.2]
   const WITHER_CENTER = 0.4
+  const { dither } = ditherstore.getState()
   resetDither(dither)
   for (let x = 0; x < panelwidth; ++x) {
     writeDither(dither, panelwidth, panelheight, x, row, WITHER_CENTER)
@@ -186,39 +186,41 @@ export function Scroll({
     [setCursor, text.length],
   )
 
+  // writeTile(tiles, width, height, 1, 2 + row, { char: 26, color: 12 })
+
   return (
-    <TilesData store={store}>
-      <group ref={groupref} position-y={1000000}>
-        <UserFocus>
-          <UserInput
-            MOVE_UP={up}
-            MOVE_DOWN={down}
-            CANCEL_BUTTON={scroll.sendclose}
-          />
-          <TilesRender width={width} height={height} />
-          <group
-            // eslint-disable-next-line react/no-unknown-property
-            position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 0]}
-          >
-            <DitherSnapshot
-              dither={dither}
-              width={panelwidth}
-              height={panelheight}
+    <TilesData store={tilesstore}>
+      <DitherData store={ditherstore}>
+        <group ref={groupref} position-y={1000000}>
+          <UserFocus>
+            <UserInput
+              MOVE_UP={up}
+              MOVE_DOWN={down}
+              CANCEL_BUTTON={scroll.sendclose}
             />
-            <Panel
-              player={player}
-              name={name}
-              width={panelwidth}
-              height={panelheight}
-              margin={0}
-              color={color}
-              bg={COLOR.CLEAR}
-              text={visibletext}
-              selected={row}
-            />
-          </group>
-        </UserFocus>
-      </group>
+            <TilesRender width={width} height={height} />
+            <group
+              // eslint-disable-next-line react/no-unknown-property
+              position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 0]}
+            >
+              <DitherRender width={panelwidth} height={panelheight} />
+              <Panel
+                player={player}
+                name={name}
+                width={panelwidth}
+                height={panelheight}
+                margin={0}
+                color={color}
+                bg={COLOR.CLEAR}
+                text={visibletext}
+                selected={row}
+              />
+              <Blinker x={1} y={1} />
+              <Blinker x={1} y={2 + row} on={26} alt={27} off={45} color={12} />
+            </group>
+          </UserFocus>
+        </group>
+      </DitherData>
     </TilesData>
   )
 }

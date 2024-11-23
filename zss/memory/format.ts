@@ -27,18 +27,20 @@ export function formatobject(
     let key = keys[i]
     let value = obj[key]
 
+    const formatter = formatmap[key]
+    if (ispresent(formatter)) {
+      value = formatter(value)
+      // console.info(formatter, key, value)
+    }
+
+    // map to enum key
     const mkey = keymap[key]
     if (ispresent(mkey)) {
       key = mkey
     }
 
-    const formatter = formatmap[key]
-    if (ispresent(formatter)) {
-      value = formatter(value)
-    }
-
     if (value !== null) {
-      formatted.push(mkey, value)
+      formatted.push(key, value)
     }
   }
 
@@ -61,16 +63,19 @@ export function unformatobject<T>(
       let key = formatted[i]
       let value = formatted[i + 1]
 
+      // convert from enum key
       const mkey = keymap[key]
       if (ispresent(mkey)) {
         key = mkey
       }
 
+      // handle imports
       const formatter = formatmap[key]
       if (ispresent(formatter)) {
         value = formatter(value)
       }
 
+      // set value
       obj[key] = value
     }
 

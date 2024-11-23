@@ -1,0 +1,9 @@
+@player
+:main
+#if inputshift and inputmove do
+ #shoot inputmove
+#else if inputmove do
+ ?inputmove
+#else idle
+#done
+#main

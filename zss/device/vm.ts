@@ -92,6 +92,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         // pre-reset
         memoryclearflags(message.player)
         memoryclearflags(createchipid(message.player))
+        // debugger
         // attempt login
         if (memoryplayerlogin(message.player)) {
           // start tracking

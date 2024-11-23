@@ -54,23 +54,23 @@ export const GADGET_FIRMWARE = createfirmware({
   },
 })
   // gadget output & ui
-  .command('gadget', (chip) => {
+  .command('gadget', (chip, words) => {
     const flags = memoryreadflags(chip.id())
     if (!isstring(flags.player)) {
       return 0
     }
 
-    const [edge] = readargs(0, [ARG_TYPE.STRING])
+    const [edge] = readargs(words, 0, [ARG_TYPE.STRING])
     const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
     if (edgeConst === PANEL_TYPE.SCROLL) {
-      const [, name, size] = readargs(0, [
+      const [, name, size] = readargs(words, 0, [
         ARG_TYPE.STRING,
         ARG_TYPE.MAYBE_STRING,
         ARG_TYPE.MAYBE_NUMBER,
       ])
       gadgetpanel(flags.player, edge, edgeConst, size, name)
     } else {
-      const [, size, name] = readargs(0, [
+      const [, size, name] = readargs(words, 0, [
         ARG_TYPE.STRING,
         ARG_TYPE.MAYBE_NUMBER,
         ARG_TYPE.MAYBE_STRING,

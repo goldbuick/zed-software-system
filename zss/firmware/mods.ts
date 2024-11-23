@@ -202,14 +202,14 @@ export const MODS_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  .command('load', (chip) => {
-    const [maybename] = readargs(0, [ARG_TYPE.MAYBE_STRING])
+  .command('load', (chip, words) => {
+    const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
     const name = maybename ?? ''
     memoryensuresoftwarebook(MEMORY_LABEL.CONTENT, chip.get(name) ?? name)
     return 0
   })
-  .command('reload', (chip) => {
-    const [maybename] = readargs(0, [ARG_TYPE.MAYBE_STRING])
+  .command('reload', (chip, words) => {
+    const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
     const name = maybename ?? ''
     const mainbook = memoryensuresoftwarebook(
       MEMORY_LABEL.CONTENT,
@@ -219,11 +219,11 @@ export const MODS_FIRMWARE = createfirmware({
     mainbook.pages = []
     return 0
   })
-  .command('mod', (chip) => {
+  .command('mod', (chip, words) => {
     const modstate = readmodstate(chip.id())
     const contentbook = memoryensuresoftwarebook(MEMORY_LABEL.CONTENT)
 
-    const [type, maybename] = readargs(0, [
+    const [type, maybename] = readargs(words, 0, [
       ARG_TYPE.MAYBE_STRING,
       ARG_TYPE.MAYBE_STRING,
     ])
@@ -321,7 +321,7 @@ export const MODS_FIRMWARE = createfirmware({
 
     return 0
   })
-  .command('read', (chip) => {
+  .command('read', (chip, words) => {
     const modstate = readmodstate(chip.id())
 
     if (!ispresent(modstate.value)) {
@@ -331,7 +331,7 @@ export const MODS_FIRMWARE = createfirmware({
 
     // write the value in given address into the given flag or print value to terminal
     // if we omit a stat name we print out a list of possible stats
-    const [maybestat, maybeflag] = readargs(0, [
+    const [maybestat, maybeflag] = readargs(words, 0, [
       ARG_TYPE.MAYBE_STRING,
       ARG_TYPE.MAYBE_STRING,
     ])
@@ -390,7 +390,7 @@ export const MODS_FIRMWARE = createfirmware({
     // #read
     return 0
   })
-  .command('write', (chip) => {
+  .command('write', (chip, words) => {
     const modstate = readmodstate(chip.id())
     const content = memoryensuresoftwarebook(MEMORY_LABEL.CONTENT)
 
@@ -400,7 +400,7 @@ export const MODS_FIRMWARE = createfirmware({
     }
 
     // write given value to given address
-    const [name] = readargs(0, [ARG_TYPE.STRING])
+    const [name] = readargs(words, 0, [ARG_TYPE.STRING])
 
     if (modstate.schema?.type === SCHEMA_TYPE.OBJECT) {
       const prop = modstate.schema.props?.[name]
@@ -413,7 +413,7 @@ export const MODS_FIRMWARE = createfirmware({
               collision: ARG_TYPE.COLLISION,
               color: ARG_TYPE.COLOR,
             }
-            let [maybevalue] = readargs(1, [WORD_TYPE_MAP[prop.kind]])
+            let [maybevalue] = readargs(words, 1, [WORD_TYPE_MAP[prop.kind]])
             if (prop.kind === 'color' && isstrcolor(maybevalue)) {
               const { color, bg } = mapstrcolortoattributes(maybevalue)
               maybevalue = color ?? bg ?? 0

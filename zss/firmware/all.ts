@@ -53,13 +53,13 @@ export const ALL_FIRMWARE = createfirmware({
     words.forEach((word) => chip.set(maptostring(word), 0))
     return 0
   })
-  .command('set', (chip) => {
-    const [name, value] = readargs(0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+  .command('set', (chip, words) => {
+    const [name, value] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
     chip.set(name, value)
     return 0
   })
   .command('take', (chip, words) => {
-    const [name, maybevalue, ii] = readargs(0, [
+    const [name, maybevalue, ii] = readargs(words, 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.MAYBE_NUMBER,
     ])
@@ -89,7 +89,7 @@ export const ALL_FIRMWARE = createfirmware({
     return 0
   })
   .command('give', (chip, words) => {
-    const [name, maybevalue, ii] = readargs(0, [
+    const [name, maybevalue, ii] = readargs(words, 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.MAYBE_NUMBER,
     ])

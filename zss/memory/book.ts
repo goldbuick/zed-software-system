@@ -18,6 +18,8 @@ import {
   codepagereadname,
   codepagereadstatdefaults,
   codepagereadtype,
+  exportcodepage,
+  importcodepage,
 } from './codepage'
 import { FORMAT_OBJECT, formatobject, unformatobject } from './format'
 import {
@@ -56,11 +58,15 @@ enum BOOK_KEYS {
 }
 
 export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
-  return formatobject(book, BOOK_KEYS)
+  return formatobject(book, BOOK_KEYS, {
+    pages: (pages) => pages.map(exportcodepage),
+  })
 }
 
 export function importbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
-  return unformatobject(bookentry, BOOK_KEYS)
+  return unformatobject(bookentry, BOOK_KEYS, {
+    pages: (pages) => pages.map(importcodepage),
+  })
 }
 
 export function bookhasmatch(book: MAYBE<BOOK>, ids: string[]): boolean {

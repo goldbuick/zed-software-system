@@ -15,16 +15,16 @@ export const AUDIO_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  .command('play', (chip) => {
-    const [maybebuffer] = readargs(0, [ARG_TYPE.MAYBE_STRING])
+  .command('play', (chip, words) => {
+    const [maybebuffer] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
     const buffer = maybebuffer ?? ''
     // see if we've been given a flag
     const bufferfromflag = chip.get(buffer)
     synth_play('audio', -1, isstring(bufferfromflag) ? bufferfromflag : buffer)
     return 0
   })
-  .command('bgplay', (chip) => {
-    const [maybebuffer] = readargs(0, [ARG_TYPE.MAYBE_STRING])
+  .command('bgplay', (chip, words) => {
+    const [maybebuffer] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
     const buffer = maybebuffer ?? ''
     // see if we've been given a flag
     const bufferfromflag = chip.get(buffer)

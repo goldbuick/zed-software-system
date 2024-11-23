@@ -9,7 +9,9 @@ import { TILES } from '../data/types'
 
 import { Tiles } from './tiles'
 
-type TILE_DATA = {
+export type TILE_DATA = {
+  width: number
+  height: number
   char: number[]
   color: number[]
   bg: number[]
@@ -23,6 +25,8 @@ function createtilesstore() {
       set({ render: Math.random() })
     }
     return {
+      width: 0,
+      height: 0,
       char: [],
       color: [],
       bg: [],
@@ -49,6 +53,8 @@ export function useTiles(
   const size = width * height
   const state = store.getState()
   if (state.char.length !== size) {
+    state.width = width
+    state.height = height
     state.char = new Array(size).fill(char)
     state.color = new Array(size).fill(color)
     state.bg = new Array(size).fill(bg)
@@ -64,6 +70,11 @@ type TilesDataProps = React.PropsWithChildren<{
 
 export function TilesData({ store, children }: TilesDataProps) {
   return <TilesContext.Provider value={store}>{children}</TilesContext.Provider>
+}
+
+export function useTilesData() {
+  const store = useContext(TilesContext)
+  return store.getState() // get ref to shared data/api
 }
 
 type TilesRenderProps = {

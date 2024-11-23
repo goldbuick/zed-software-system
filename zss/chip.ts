@@ -409,7 +409,7 @@ export function createchip(
       return invokecommand(maptostring(name), args)
     },
     if(...words) {
-      const [value, ii] = readargs(0, [ARG_TYPE.ANY])
+      const [value, ii] = readargs(words, 0, [ARG_TYPE.ANY])
       const result = maptoresult(value)
 
       if (result && ii < words.length) {
@@ -419,7 +419,7 @@ export function createchip(
       return result ? 1 : 0
     },
     repeatstart(index, ...words) {
-      const [value, ii] = readargs(0, [ARG_TYPE.NUMBER])
+      const [value, ii] = readargs(words, 0, [ARG_TYPE.NUMBER])
       const repeatcount = `repeatcount${index}`
       const repeatwords = `repeatwords${index}`
       flags[repeatcount] = value
@@ -444,8 +444,8 @@ export function createchip(
 
       return result ? 1 : 0
     },
-    foreachstart() {
-      const [name, maybemin, maybemax, maybestep] = readargs(0, [
+    foreachstart(...words) {
+      const [name, maybemin, maybemax, maybestep] = readargs(words, 0, [
         ARG_TYPE.STRING,
         ARG_TYPE.NUMBER,
         ARG_TYPE.NUMBER,
@@ -465,11 +465,10 @@ export function createchip(
 
       // set init state
       chip.set(name, min - step)
-
       return 0
     },
     foreach(...words) {
-      const [name, maybemin, maybemax, maybestep, ii] = readargs(0, [
+      const [name, maybemin, maybemax, maybestep, ii] = readargs(words, 0, [
         ARG_TYPE.STRING,
         ARG_TYPE.NUMBER,
         ARG_TYPE.NUMBER,
@@ -510,7 +509,7 @@ export function createchip(
     or(...words) {
       let lastvalue = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readargs(i, [ARG_TYPE.ANY])
+        const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
         lastvalue = value
         if (lastvalue) {
           break // or returns the first truthy value
@@ -522,7 +521,7 @@ export function createchip(
     and(...words) {
       let lastvalue = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readargs(i, [ARG_TYPE.ANY])
+        const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
         lastvalue = value
         if (!lastvalue) {
           break // and returns the first falsy value, or the last value
@@ -531,22 +530,19 @@ export function createchip(
       }
       return lastvalue
     },
-    not() {
-      const [value] = readargs(0, [ARG_TYPE.ANY])
+    not(...words) {
+      // invert outcome
+      const [value] = readargs(words, 0, [ARG_TYPE.ANY])
       return value ? 0 : 1
     },
-    expr() {
+    expr(...words) {
       // eval a group of words as an expression
-      const [value] = readargs(0, [ARG_TYPE.ANY])
+      const [value] = readargs(words, 0, [ARG_TYPE.ANY])
       return value
     },
     isEq(lhs, rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [lhs]
-      const [left] = readargs(0, [ARG_TYPE.ANY])
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.ANY])
-      READ_CONTEXT.words = tmp
+      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
       if (typeof left === 'object' || typeof right === 'object') {
         return isequal(left, right) ? 1 : 0
       }
@@ -556,116 +552,66 @@ export function createchip(
       return this.isEq(lhs, rhs) ? 0 : 1
     },
     isLessThan(lhs, rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [lhs]
-      const [left] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = tmp
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left < right ? 1 : 0
     },
     isGreaterThan(lhs, rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [lhs]
-      const [left] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = tmp
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left > right ? 1 : 0
     },
     isLessThanOrEq(lhs, rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [lhs]
-      const [left] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = tmp
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left <= right ? 1 : 0
     },
     isGreaterThanOrEq(lhs, rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [lhs]
-      const [left] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = tmp
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left >= right ? 1 : 0
     },
     opPlus(lhs, rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [lhs]
-      const [left] = readargs(0, [ARG_TYPE.ANY])
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.ANY])
-      READ_CONTEXT.words = tmp
+      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
       return left + right
     },
     opMinus(lhs, rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [lhs]
-      const [left] = readargs(0, [ARG_TYPE.ANY])
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.ANY])
-      READ_CONTEXT.words = tmp
+      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
       return left - right
     },
     opPower(lhs, rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [lhs]
-      const [left] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = tmp
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return Math.pow(left, right)
     },
     opMultiply(lhs, rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [lhs]
-      const [left] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = tmp
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left * right
     },
     opDivide(lhs, rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [lhs]
-      const [left] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = tmp
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left / right
     },
     opModDivide(lhs, rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [lhs]
-      const [left] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = tmp
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left % right
     },
     opFloorDivide(lhs, rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [lhs]
-      const [left] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = tmp
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return Math.floor(left / right)
     },
     opUniPlus(rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = tmp
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return +right
     },
     opUniMinus(rhs) {
-      const tmp = READ_CONTEXT.words
-      READ_CONTEXT.words = [rhs]
-      const [right] = readargs(0, [ARG_TYPE.NUMBER])
-      READ_CONTEXT.words = tmp
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return -right
     },
     debugger() {

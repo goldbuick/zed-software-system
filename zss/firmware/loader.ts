@@ -58,8 +58,8 @@ export const LOADER_FIRMWARE = createfirmware({
    * TODO loaders, textloader, jsonloader, imageloader, xmlloader
    * common text parsing ??
    */
-  .command('send', (chip) => {
-    const [target, data] = readargs(0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+  .command('send', (chip, words) => {
+    const [target, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
     chip.message({
       id: createsid(),
       sender: chip.id(),

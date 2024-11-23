@@ -599,7 +599,7 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
     // read coords for at & by
     if ((maybedir[0] === 'AT' || maybedir[0] === 'BY') && maybedir.length < 2) {
       // read args
-      const [xvalue, yvalue, iii] = readargs(ii, [
+      const [xvalue, yvalue, iii] = readargs(READ_CONTEXT.words, ii, [
         ARG_TYPE.NUMBER,
         ARG_TYPE.NUMBER,
       ])
@@ -719,22 +719,30 @@ export function readexpr(index: number, stringeval = true): [any, number] {
       // numbers
       case 'abs': {
         // ABS <a>
-        const [a, ii] = readargs(index + 1, [ARG_TYPE.NUMBER])
+        const [a, ii] = readargs(READ_CONTEXT.words, index + 1, [
+          ARG_TYPE.NUMBER,
+        ])
         return [Math.abs(a), ii]
       }
       case 'ceil': {
         // CEIL <a>
-        const [a, ii] = readargs(index + 1, [ARG_TYPE.NUMBER])
+        const [a, ii] = readargs(READ_CONTEXT.words, index + 1, [
+          ARG_TYPE.NUMBER,
+        ])
         return [Math.ceil(a), ii]
       }
       case 'floor': {
         // FLOOR <a>
-        const [a, ii] = readargs(index + 1, [ARG_TYPE.NUMBER])
+        const [a, ii] = readargs(READ_CONTEXT.words, index + 1, [
+          ARG_TYPE.NUMBER,
+        ])
         return [Math.floor(a), ii]
       }
       case 'round': {
         // ROUND <a>
-        const [a, ii] = readargs(index + 1, [ARG_TYPE.NUMBER])
+        const [a, ii] = readargs(READ_CONTEXT.words, index + 1, [
+          ARG_TYPE.NUMBER,
+        ])
         return [Math.round(a), ii]
       }
       // array
@@ -782,7 +790,7 @@ export function readexpr(index: number, stringeval = true): [any, number] {
       }
       case 'clamp': {
         // CLAMP <a> <min> <max>
-        const [a, min, max, ii] = readargs(index + 1, [
+        const [a, min, max, ii] = readargs(READ_CONTEXT.words, index + 1, [
           ARG_TYPE.NUMBER,
           ARG_TYPE.NUMBER,
           ARG_TYPE.NUMBER,
@@ -812,7 +820,7 @@ export function readexpr(index: number, stringeval = true): [any, number] {
       }
       case 'range': {
         // RANGE <a> [b] [step]
-        const [a, b, step, ii] = readargs(index + 1, [
+        const [a, b, step, ii] = readargs(READ_CONTEXT.words, index + 1, [
           ARG_TYPE.NUMBER,
           ARG_TYPE.MAYBE_NUMBER,
           ARG_TYPE.MAYBE_NUMBER,
@@ -885,9 +893,13 @@ function didexpect(msg: string, value: any) {
 }
 
 export function readargs<T extends ARG_TYPES>(
+  words: WORD[],
   index: number,
   args: T,
 ): [...ARG_TYPE_VALUES<T>, number] {
+  const tmp = READ_CONTEXT.words
+  READ_CONTEXT.words = words
+
   const values = []
 
   let ii = index
@@ -1070,6 +1082,8 @@ export function readargs<T extends ARG_TYPES>(
       }
     }
   }
+
+  READ_CONTEXT.words = tmp
 
   // @ts-expect-error any[] doesn't work
   return [...values, ii]

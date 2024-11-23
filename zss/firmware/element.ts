@@ -10,6 +10,7 @@ import {
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import {
+  deepcopy,
   isarray,
   isnumber,
   ispresent,
@@ -90,9 +91,22 @@ const readinputmap = ['NORTH', 'SOUTH', 'WEST', 'EAST']
 
 function readinput() {
   const flags = memoryreadflags(READ_CONTEXT.player)
+
+  // ensure we have the proper flags on player data
+  if (!isnumber(flags.inputmods)) {
+    flags.inputmods = 0
+  }
+  if (!isnumber(flags.inputcurrent)) {
+    flags.inputcurrent = 0
+  }
+  if (!isarray(flags.inputqueue)) {
+    flags.inputqueue = []
+  }
+
+  // we've already processed input for this tick
+  const { element } = READ_CONTEXT
   if (
-    !ispresent(flags) ||
-    !isarray(flags.inputqueue) ||
+    !ispresent(element) ||
     (isnumber(flags.inputcurrent) && flags.inputcurrent > 0)
   ) {
     return
@@ -101,33 +115,34 @@ function readinput() {
   // pull from front of queue
   const [head = INPUT.NONE] = flags.inputqueue
 
+  // write to element
+
   // clear input stats
-  flags.inputmove = []
-  flags.inputok = 0
-  flags.inputcancel = 0
-  flags.inputmenu = 0
+  element.inputmove = []
+  element.inputok = 0
+  element.inputcancel = 0
+  element.inputmenu = 0
 
   // set active input stat
   const mods = isnumber(flags.inputmods) ? flags.inputmods : 0
-  flags.inputalt = mods & INPUT_ALT ? 1 : 0
-  flags.inputctrl = mods & INPUT_CTRL ? 1 : 0
-  flags.inputshift = mods & INPUT_SHIFT ? 1 : 0
-
+  element.inputalt = mods & INPUT_ALT ? 1 : 0
+  element.inputctrl = mods & INPUT_CTRL ? 1 : 0
+  element.inputshift = mods & INPUT_SHIFT ? 1 : 0
   switch (head) {
     case INPUT.MOVE_UP:
     case INPUT.MOVE_DOWN:
     case INPUT.MOVE_LEFT:
     case INPUT.MOVE_RIGHT:
-      flags.inputmove = [readinputmap[head - INPUT.MOVE_UP]]
+      element.inputmove = [readinputmap[head - INPUT.MOVE_UP]]
       break
     case INPUT.OK_BUTTON:
-      flags.inputok = 1
+      element.inputok = 1
       break
     case INPUT.CANCEL_BUTTON:
-      flags.inputcancel = 1
+      element.inputcancel = 1
       break
     case INPUT.MENU_BUTTON:
-      flags.inputmenu = 1
+      element.inputmenu = 1
       break
   }
 
@@ -287,14 +302,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
   },
 })
-  .command('become', (chip) => {
+  .command('become', (chip, words) => {
     // track dest
     const dest: PT = {
       x: READ_CONTEXT.element?.x ?? 0,
       y: READ_CONTEXT.element?.y ?? 0,
     }
     // read
-    const [kind] = readargs(0, [ARG_TYPE.KIND])
+    const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
     // make sure lookup is created
     bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
     // make invisible
@@ -322,13 +337,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // TODO
     return 0
   })
-  .command('change', () => {
+  .command('change', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
 
     // read
-    const [target, into] = readargs(0, [ARG_TYPE.KIND, ARG_TYPE.KIND])
+    const [target, into] = readargs(words, 0, [ARG_TYPE.KIND, ARG_TYPE.KIND])
 
     // make sure lookup is created
     bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
@@ -382,23 +397,23 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     return 0
   })
-  .command('char', () => {
-    const [value] = readargs(0, [ARG_TYPE.NUMBER])
+  .command('char', (_, words) => {
+    const [value] = readargs(words, 0, [ARG_TYPE.NUMBER])
     if (ispresent(READ_CONTEXT.element)) {
       READ_CONTEXT.element.char = value
     }
     return 0
   })
-  .command('color', () => {
-    const [value] = readargs(0, [ARG_TYPE.COLOR])
+  .command('color', (_, words) => {
+    const [value] = readargs(words, 0, [ARG_TYPE.COLOR])
     if (ispresent(READ_CONTEXT.element) && ispresent(value)) {
       boardelementapplycolor(READ_CONTEXT.element, value)
     }
     return 0
   })
-  .command('cycle', () => {
+  .command('cycle', (_, words) => {
     // read cycle
-    const [cyclevalue] = readargs(0, [ARG_TYPE.NUMBER])
+    const [cyclevalue] = readargs(words, 0, [ARG_TYPE.NUMBER])
     // write cycle
     const cycle = clamp(Math.round(cyclevalue), 1, 255)
     boardelementwritestat(READ_CONTEXT.element, 'cycle', cycle)
@@ -429,14 +444,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('go', (chip) => {
+  .command('go', (chip, words) => {
     if (!ispresent(READ_CONTEXT.element)) {
       // if blocked, return 1
       return 1
     }
 
     // attempt to move
-    const [dest] = readargs(0, [ARG_TYPE.DIR])
+    const [dest] = readargs(words, 0, [ARG_TYPE.DIR])
     moveobject(
       chip,
       READ_CONTEXT.book,
@@ -451,13 +466,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
       ? 1
       : 0
   })
-  .command('put', () => {
+  .command('put', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
 
     // read
-    const [dir, kind] = readargs(0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
+    const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
 
     // make sure lookup is created
     bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
@@ -466,8 +481,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
     bookboardwrite(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
     return 0
   })
-  .command('send', (chip) => {
-    const [msg, data] = readargs(0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+  .command('send', (chip, words) => {
+    const [msg, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
 
     // determine target of send
     const [maybetarget, maybelabel] = msg.split(':')
@@ -522,7 +537,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('shoot', (chip) => {
+  .command('shoot', (chip, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
@@ -533,7 +548,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
 
     // read direction + what to shoot
-    const [maybedir, maybekind] = readargs(0, [
+    const [maybedir, maybekind] = readargs(words, 0, [
       ARG_TYPE.DIR,
       ARG_TYPE.MAYBE_KIND,
     ])
@@ -621,7 +636,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return chip.command('shoot', ...words, 'star') ? 1 : 0
   })
   .command('try', (chip, words) => {
-    const [, ii] = readargs(0, [ARG_TYPE.DIR])
+    const [, ii] = readargs(words, 0, [ARG_TYPE.DIR])
 
     // try and move
     const result = chip.command('go', ...words)
@@ -633,13 +648,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
     chip.yield()
     return 0
   })
-  .command('walk', () => {
+  .command('walk', (_, words) => {
     // invalid data
     if (!ispt(READ_CONTEXT.element)) {
       return 0
     }
     // read walk direction
-    const [maybedir] = readargs(0, [ARG_TYPE.DIR])
+    const [maybedir] = readargs(words, 0, [ARG_TYPE.DIR])
     const dir = dirfrompts(READ_CONTEXT.element, maybedir)
     const step = ptapplydir({ x: 0, y: 0 }, dir)
     // create delta from dir

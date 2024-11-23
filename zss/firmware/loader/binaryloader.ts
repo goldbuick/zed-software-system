@@ -76,17 +76,17 @@ function readbin(binaryfile: BINARY_READER, kind: string): MAYBE_NUMBER {
   }
 }
 
-export const binaryloader: FIRMWARE_COMMAND = (chip) => {
+export const binaryloader: FIRMWARE_COMMAND = (chip, words) => {
   const binaryfile = memoryreadbinaryfile(chip.id())
   if (!ispresent(binaryfile)) {
     return 0
   }
-  const [kind] = readargs(0, [ARG_TYPE.STRING])
+  const [kind] = readargs(words, 0, [ARG_TYPE.STRING])
 
   const lkind = kind.toLowerCase()
   switch (lkind) {
     case 'seek': {
-      const [cursor] = readargs(1, [ARG_TYPE.NUMBER])
+      const [cursor] = readargs(words, 1, [ARG_TYPE.NUMBER])
       binaryfile.cursor = cursor
       break
     }
@@ -110,12 +110,12 @@ export const binaryloader: FIRMWARE_COMMAND = (chip) => {
     case 'uint32le':
     case 'uint64':
     case 'uint64le': {
-      const [target] = readargs(1, [ARG_TYPE.STRING])
+      const [target] = readargs(words, 1, [ARG_TYPE.STRING])
       chip.set(target, readbin(binaryfile, lkind))
       break
     }
     case 'text': {
-      const [lengthkind, target] = readargs(1, [
+      const [lengthkind, target] = readargs(words, 1, [
         ARG_TYPE.STRING,
         ARG_TYPE.STRING,
       ])
