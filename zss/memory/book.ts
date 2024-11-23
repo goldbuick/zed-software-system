@@ -550,8 +550,9 @@ function bookboardcleanup(
   board: MAYBE<BOARD>,
   timestamp: number,
 ) {
+  const ids: string[] = []
   if (!ispresent(book) || !ispresent(board)) {
-    return
+    return ids
   }
   // iterate through objects
   const targets = Object.values(board.objects)
@@ -564,10 +565,13 @@ function bookboardcleanup(
       ispresent(target.removed) &&
       timestamp - target.removed > TICK_FPS * 5
     ) {
+      // track dropped ids
+      ids.push(target.id)
       // drop from board
       boarddeleteobject(board, target.id)
     }
   }
+  return ids
 }
 
 type BOOK_RUN_CODE_TARGETS = {
@@ -634,7 +638,16 @@ export function bookboardtick(
   }
 
   // cleanup objects flagged for deletion
-  bookboardcleanup(book, board, timestamp)
+  const stopids = bookboardcleanup(book, board, timestamp)
+  for (let i = 0; i < stopids.length; ++i) {
+    args.push({
+      id: stopids[i],
+      type: CODE_PAGE_TYPE.ERROR,
+      code: '',
+      object: undefined,
+      terrain: undefined,
+    })
+  }
 
   // return code that needs to be run
   return args

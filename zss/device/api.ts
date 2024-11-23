@@ -119,6 +119,10 @@ export function vm_login(sender: string, player: string) {
   hub.emit('vm:login', sender, undefined, player)
 }
 
+export function vm_endgame(sender: string, player: string) {
+  hub.emit('vm:endgame', sender, undefined, player)
+}
+
 export function vm_doot(sender: string, player: string) {
   hub.emit('vm:doot', sender, undefined, player)
 }

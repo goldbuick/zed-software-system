@@ -79,44 +79,56 @@ vec3 halftone(vec3 texcolor, vec2 st, float frequency) {
   n += 0.05 * snoise(st * 400.0);
   n += 0.025 * snoise(st * 800.0);
 
-  vec3 paper = vec3(n + 0.01);
-
   // Perform a rough RGB-to-CMYK conversion
   vec4 cmyk;
+  // CMY = 1-RGB
   cmyk.xyz = 1.0 - texcolor;
-  cmyk.w = min(cmyk.x, min(cmyk.y, cmyk.z)); // Create K
-  cmyk.xyz -= cmyk.w; // Subtract K equivalent from CMY
+  // Black generation: K = min(C,M,Y)
+  cmyk.w = min(cmyk.x, min(cmyk.y, cmyk.z)); 
+  // Grey component replacement: subtract K from CMY
+  cmyk.xyz -= cmyk.w; 
 
+  // K based modifier
   float flex = pow(cmyk.w, 3.11);
 
   // Distance to nearest point in a grid of
   // (frequency x frequency) points over the unit square
   
-  float t = 0.1 + n * flex;
+  float t = 0.1 + 0.1 * n + 0.11 * flex + 0.1 * cmyk.y;
 
+  // K component: 45 degrees screen angle
   vec2 Kst = frequency * mat2(0.707, -0.707, 0.707, 0.707) * st;
   vec2 Kuv = 2.0 * fract(Kst) - 1.0; 
   float k = aastep(0.0, sqrt(cmyk.w) + t - length(Kuv) + n);
   
+  // C component: 15 degrees screen angle
   vec2 Cst = frequency*mat2(0.966, -0.259, 0.259, 0.966) * st;
   vec2 Cuv = 2.0 * fract(Cst) - 1.0;
   float c = aastep(0.0, sqrt(cmyk.x) + t - length(Cuv) + n);
   
+  // M component: -15 degrees screen angle
   vec2 Mst = frequency * mat2(0.966, 0.259, -0.259, 0.966) * st;
   vec2 Muv = 2.0 * fract(Mst) - 1.0;
   float m = aastep(0.0, sqrt(cmyk.y) + t - length(Muv) + n);
 
+  // Y component: 0 degrees screen angle
   vec2 Yst = frequency * st; // 0 deg 
   vec2 Yuv = 2.0 * fract(Yst) - 1.0;
   float y = aastep(0.0, sqrt(cmyk.z) + t - length(Yuv) + n);
 
-  vec3 rgbscreen = 1.0 - 1.2 * vec3(c,m,y) + n;
-  vec3 factor = mix(rgbscreen, rgbscreen * paper, 0.8 * k + 0.2 * n);
-  return mix(factor, texcolor, clamp(flex, 0.511, 0.888));
+  // CMY screen in RGB
+  vec3 black = vec3(n + 0.01);
+  vec3 rgbscreen = 1.0 - vec3(c,m,y) + n;
+  
+  // Blend in K for final color
+  vec3 factor = mix(rgbscreen, black, 0.7 * k + 0.3 * n);
+
+  // Blend against og color
+  return mix(factor, texcolor, 0.777);
 }
 
 vec3 halftone(vec3 texcolor, vec2 st) {
-  return halftone(texcolor, st, 256.0);
+  return halftone(texcolor, st, 222.321);
 }
 
 `

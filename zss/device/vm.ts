@@ -87,6 +87,28 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         }
       }
       break
+    case 'endgame':
+      doasync('vm:endgame', async () => {
+        if (!message.player) {
+          return
+        }
+
+        // logout player
+        memoryplayerlogout(message.player)
+
+        // halt player chip
+        os.halt(message.player)
+
+        // save state
+        const books = memoryreadbooklist()
+        if (books.length) {
+          register_flush(vm.name(), await compressbooks(books))
+        }
+
+        // signal next step
+        tape_info(vm.name(), 'refresh to restart', message.player)
+      })
+      break
     case 'doot':
       if (message.player) {
         // player keepalive

@@ -1,4 +1,5 @@
 import { CHIP, maptostring } from 'zss/chip'
+import { vm_endgame } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import {
   INPUT,
@@ -423,7 +424,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('endgame', (chip) => {
-    chip.set('health', 0)
+    if (ispresent(READ_CONTEXT.element)) {
+      vm_endgame('element', chip.id())
+    }
     return 0
   })
   .command('go', (chip) => {

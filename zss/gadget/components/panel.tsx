@@ -32,7 +32,7 @@ export function Panel({
   text,
 }: PanelProps) {
   const store = useTiles(width, height, 0, color, bg)
-
+  const state = store.getState()
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(
       width,
@@ -48,7 +48,8 @@ export function Panel({
     x: margin,
   }
 
-  resetTiles(store.getState(), 0, color, bg)
+  resetTiles(state, 0, color, bg)
+  state.changed()
 
   return (
     <TilesData store={store}>

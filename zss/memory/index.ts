@@ -357,51 +357,56 @@ export function memorytick(os: OS) {
 
     // iterate code needed to update given board
     for (let i = 0; i < run.length; ++i) {
-      const { id, code, object } = run[i]
+      const { id, type, code, object } = run[i]
+      if (type === CODE_PAGE_TYPE.ERROR) {
+        // handle dead code
+        os.halt(id)
+      } else {
+        // handle active code
+        // write context
+        if (ispresent(object)) {
+          const flags = bookreadflags(mainbook, object.id ?? '')
+          READ_CONTEXT.book = mainbook
+          READ_CONTEXT.board = board
+          READ_CONTEXT.element = object
+          READ_CONTEXT.player = isstring(flags.player)
+            ? flags.player
+            : MEMORY.defaultplayer
 
-      // write context
-      if (ispresent(object)) {
-        const flags = bookreadflags(mainbook, object.id ?? '')
-        READ_CONTEXT.book = mainbook
-        READ_CONTEXT.board = board
-        READ_CONTEXT.element = object
-        READ_CONTEXT.player = isstring(flags.player)
-          ? flags.player
-          : MEMORY.defaultplayer
-
-        // clear ticker text after X number of ticks
-        if (isnumber(flags.tickertime)) {
-          if (timestamp - flags.tickertime > TICK_FPS * 5) {
-            flags.tickertime = 0
-            flags.tickertext = ''
+          // clear ticker text after X number of ticks
+          if (isnumber(flags.tickertime)) {
+            if (timestamp - flags.tickertime > TICK_FPS * 5) {
+              flags.tickertime = 0
+              flags.tickertext = ''
+            }
           }
+
+          // update state
+          flags.inputcurrent = 0
         }
 
-        // update state
-        flags.inputcurrent = 0
-      }
-
-      // read cycle
-      const cycle = boardelementreadstat(
-        object,
-        'cycle',
-        boardelementreadstat(
-          bookelementkindread(mainbook, object),
+        // read cycle
+        const cycle = boardelementreadstat(
+          object,
           'cycle',
-          CYCLE_DEFAULT,
-        ),
-      )
+          boardelementreadstat(
+            bookelementkindread(mainbook, object),
+            'cycle',
+            CYCLE_DEFAULT,
+          ),
+        )
 
-      // run chip code
-      const itemname = boardelementname(object)
-      os.tick(
-        id,
-        DRIVER_TYPE.CODE_PAGE,
-        isnumber(cycle) ? cycle : CYCLE_DEFAULT,
-        timestamp,
-        itemname,
-        code,
-      )
+        // run chip code
+        const itemname = boardelementname(object)
+        os.tick(
+          id,
+          DRIVER_TYPE.CODE_PAGE,
+          isnumber(cycle) ? cycle : CYCLE_DEFAULT,
+          timestamp,
+          itemname,
+          code,
+        )
+      }
     }
   })
 }

@@ -94,10 +94,9 @@ export function resetTiles(
   color: number,
   bg: number,
 ) {
-  console.info('resetTiles', tiles)
-  tiles.char = new Array(tiles.char.length).fill(char)
-  tiles.color = new Array(tiles.color.length).fill(color)
-  tiles.bg = new Array(tiles.bg.length).fill(bg)
+  tiles.char.fill(char)
+  tiles.color.fill(color)
+  tiles.bg.fill(bg)
 }
 
 type WRITE_TILE_VALUE = {

@@ -56,6 +56,30 @@ vec2 bendy(const in vec2 xn) {
   return (kk * xDistorted).xy * scale;
 }
 
+float blendLighten(float base, float blend) {
+	return max(blend,base);
+}
+
+vec3 blendLighten(vec3 base, vec3 blend) {
+	return vec3(blendLighten(base.r,blend.r),blendLighten(base.g,blend.g),blendLighten(base.b,blend.b));
+}
+
+vec3 blendLighten(vec3 base, vec3 blend, float opacity) {
+	return (blendLighten(base, blend) * opacity + base * (1.0 - opacity));
+}
+
+float blendDarken(float base, float blend) {
+	return min(blend,base);
+}
+
+vec3 blendDarken(vec3 base, vec3 blend) {
+	return vec3(blendDarken(base.r,blend.r),blendDarken(base.g,blend.g),blendDarken(base.b,blend.b));
+}
+
+vec3 blendDarken(vec3 base, vec3 blend, float opacity) {
+	return (blendDarken(base, blend) * opacity + base * (1.0 - opacity));
+}
+
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
 	#ifdef UV_TRANSFORM
 		vec4 texel = texture2D(splat, vUv2);
@@ -74,18 +98,20 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   float doot = max(abs(edge.x), abs(edge.y));
   if (doot < 1.0) {
     // display
-    vec4 displaycolor = texture2D(inputBuffer, bent);
-    vec4 fuxtcolor = texel;
-    // outputColor = mix(displaycolor, fuxtcolor, 0.1);
-    outputColor = displaycolor + (fuxtcolor * 0.09);
+    outputColor = texture2D(inputBuffer, bent);
+
+    // apply scratches
+    outputColor.rgb = blendLighten(outputColor.rgb, texel.rgb, 0.0666);
+    outputColor.rgb = blendDarken(outputColor.rgb, texel.rgb, 0.123);
+
     // apply halftones
     outputColor.rgb = halftone(outputColor.rgb, uv.st);
-
+  
   } else if (doot > 1.004) {
     // display shell
     // rbgb 205 205 193
     vec3 matte = vec3(205.0 / 255.0, 205.0 / 255.0, 193.0 / 255.0);
-    vec3 dkmatte = mix(matte, vec3(0.0), 0.25);
+    vec3 dkmatte = mix(matte, vec3(0.0), 0.5);
     float mx = pow(1.0 - bx, 16.0) + 0.2;
     outputColor = vec4(mix(matte, dkmatte, mx), inputColor.a);
 
@@ -99,21 +125,6 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     float sh = clamp(0.0, 1.0, 1.0 - bx - 0.7);
     vec3 shade = mix(outputColor.rgb, vec3(0.0), pow(sh, 4.0));
     outputColor = vec4(shade, inputColor.a);
-  }
-
-  // apply scanlines 
-  if (doot < 1.0) {
-    float row = round(uv.y * viewheight * 0.5);
-    float alt = mod(row, 2.0);
-    float phase = time + cos(uv.x + uv.y);
-    float slowband = (cos(uv.x + uv.y - phase) + 1.0) / 2.0;
-    float fastband = (cos(uv.y + time * 0.37) + 1.0) / 2.0;
-    float blankdmix = 0.3 - 
-      pow(slowband, viewheight * 0.01) * 0.05 - 
-      pow(fastband, viewheight * 64.0) * 0.2 - 
-      pow(fastband, viewheight * 128.0) * 0.1;
-    vec3 blankd = mix(outputColor.rgb, vec3(0.0, 0.0, 0.1), blankdmix);
-    outputColor = vec4(blankd, inputColor.a);
   }
 
   // apply outer shade

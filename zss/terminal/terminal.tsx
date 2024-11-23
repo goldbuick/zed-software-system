@@ -8,11 +8,11 @@ import { FORCE_CRT_OFF, STATS_DEV } from 'zss/config'
 import { useTexture } from 'zss/gadget/components/usetexture'
 import { createplatform } from 'zss/platform'
 
-import { CRTShape } from './fx/crt'
 import { Framing } from './framing'
-import { Gadget } from './gadget'
-import decoimageurl from './fx/scratches.jpg'
+import { CRTShape } from './fx/crt'
 import { EffectComposer } from './fx/effectcomposer'
+import decoimageurl from './fx/scratches.gif'
+import { Gadget } from './gadget'
 
 extend({ OrthographicCamera })
 
@@ -85,8 +85,7 @@ export function Terminal() {
       </Framing>
       {shouldcrt && (
         <Suspense fallback={null}>
-          <EffectComposer
-          >
+          <EffectComposer>
             <CRTShape splat={splat} viewheight={viewheight} />
           </EffectComposer>
         </Suspense>
