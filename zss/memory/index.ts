@@ -1,4 +1,4 @@
-import { CONFIG } from 'zss/chip'
+import { CONFIG, createchipid } from 'zss/chip'
 import { api_error, tape_debug, tape_info } from 'zss/device/api'
 import {
   mimetypeofbytesread,
@@ -37,6 +37,7 @@ import {
 } from './board'
 import { boardelementreadstat } from './boardelement'
 import {
+  bookboardobjectnamedlookupdelete,
   bookboardtick,
   bookclearflags,
   bookelementdisplayread,
@@ -296,11 +297,17 @@ export function memoryplayerlogin(player: string): boolean {
 
 export function memoryplayerlogout(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  MEMORY.books.forEach((book) => {
-    const board = bookplayerreadboard(book, player)
-    boarddeleteobject(board, player)
-    bookplayersetboard(mainbook, player, '')
-  })
+  const board = bookplayerreadboard(mainbook, player)
+  bookplayersetboard(mainbook, player, '')
+  // clear element
+  bookboardobjectnamedlookupdelete(
+    mainbook,
+    board,
+    boardobjectread(board, player),
+  )
+  // clear memory
+  bookclearflags(mainbook, player)
+  bookclearflags(mainbook, createchipid(player))
 }
 
 export function memoryplayerscan(players: Record<string, number>) {

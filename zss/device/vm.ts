@@ -1,3 +1,4 @@
+import { createchipid } from 'zss/chip'
 import { createdevice } from 'zss/device'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
@@ -15,6 +16,7 @@ import {
   memoryplayerlogout,
   memorygetdefaultplayer,
   memoryreadflags,
+  memoryclearflags,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -44,6 +46,14 @@ let flushtick = 0
 // track watched memory
 const watching: Record<string, Record<string, Set<string>>> = {}
 const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
+
+// save state
+async function savestate() {
+  const books = memoryreadbooklist()
+  if (books.length) {
+    register_flush(vm.name(), await compressbooks(books))
+  }
+}
 
 const vm = createdevice('vm', ['tick', 'second'], (message) => {
   // console.info(message)
@@ -79,7 +89,12 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     case 'login':
       if (message.player) {
+        // pre-reset
+        memoryclearflags(message.player)
+        memoryclearflags(createchipid(message.player))
+        // attempt login
         if (memoryplayerlogin(message.player)) {
+          // start tracking
           tracking[message.player] = 0
           tape_info(vm.name(), 'player login', message.player)
           // ack
@@ -92,19 +107,10 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         if (!message.player) {
           return
         }
-
         // logout player
         memoryplayerlogout(message.player)
-
-        // halt player chip
-        os.halt(message.player)
-
         // save state
-        const books = memoryreadbooklist()
-        if (books.length) {
-          register_flush(vm.name(), await compressbooks(books))
-        }
-
+        await savestate()
         // signal next step
         tape_info(vm.name(), 'refresh to restart', message.player)
       })
@@ -205,12 +211,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     }
     case 'flush':
-      doasync('vm:flush', async () => {
-        const books = memoryreadbooklist()
-        if (books.length) {
-          register_flush(vm.name(), await compressbooks(books))
-        }
-      })
+      doasync('vm:flush', savestate)
       break
     case 'cli':
       // user input from built-in console

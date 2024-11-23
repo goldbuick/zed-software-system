@@ -73,7 +73,7 @@ float aastep(float threshold, float value) {
   float afwidth = length(vec2(dFdx(value), dFdy(value))) * 0.70710678118654757;
   return smoothstep(threshold-afwidth, threshold+afwidth, value);
 }
-
+  
 vec3 halftone(vec3 texcolor, vec2 st, float frequency) {
   float n = 0.1 * snoise(st * 200.0); // Fractal noise
   n += 0.05 * snoise(st * 400.0);
@@ -123,7 +123,7 @@ vec3 halftone(vec3 texcolor, vec2 st, float frequency) {
   // Blend in K for final color
   vec3 factor = mix(rgbscreen, black, 1.1 * k + 0.3 * n);
 
-  // Blend against og color
+  // Blend with og color
   return mix(factor, texcolor, 0.777);
 }
 

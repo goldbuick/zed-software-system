@@ -115,6 +115,10 @@ export function maptostring(value: any) {
   return `${value ?? ''}`
 }
 
+export function createchipid(id: string) {
+  return `${id}_chip`
+}
+
 // lifecycle and control flow api
 export function createchip(
   id: string,
@@ -122,7 +126,7 @@ export function createchip(
   build: GeneratorBuild,
 ) {
   // chip memory
-  const mem = `${id}_chip`
+  const mem = createchipid(id)
   const flags = memoryreadflags(mem)
 
   // ref to generator instance

@@ -19,13 +19,16 @@ type TILE_DATA = {
 
 function createtilesstore() {
   return createStore<TILE_DATA>((set) => {
+    function inc() {
+      set({ render: Math.random() })
+    }
     return {
       char: [],
       color: [],
       bg: [],
       render: 0,
       changed() {
-        set((state) => ({ render: state.render + 1 }))
+        setTimeout(inc, 0)
       },
     }
   })
