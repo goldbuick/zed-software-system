@@ -1,4 +1,3 @@
-import { createchipid } from 'zss/chip'
 import { createdevice } from 'zss/device'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
@@ -16,7 +15,6 @@ import {
   memoryplayerlogout,
   memorygetdefaultplayer,
   memoryreadflags,
-  memoryclearflags,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -25,6 +23,7 @@ import { createos } from 'zss/os'
 
 import {
   register_flush,
+  register_refresh,
   tape_debug,
   tape_info,
   vm_codeaddress,
@@ -89,9 +88,6 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     case 'login':
       if (message.player) {
-        // pre-reset
-        memoryclearflags(message.player)
-        memoryclearflags(createchipid(message.player))
         // debugger
         // attempt login
         if (memoryplayerlogin(message.player)) {
@@ -112,8 +108,8 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         memoryplayerlogout(message.player)
         // save state
         await savestate()
-        // signal next step
-        tape_info(vm.name(), 'refresh to restart', message.player)
+        // reload page
+        register_refresh('vm')
       })
       break
     case 'doot':

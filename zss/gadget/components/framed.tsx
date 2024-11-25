@@ -8,13 +8,15 @@ import {
   INPUT_ALT,
   INPUT_CTRL,
   INPUT_SHIFT,
-  LAYER,
   LAYER_TYPE,
   layersreadcontrol,
 } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { useShallow } from 'zustand/react/shallow'
+
+import { useGadgetClient } from '../data/state'
 
 import Clipping from './clipping'
 import { Dither } from './dither'
@@ -25,8 +27,6 @@ import { UserInput, UserInputMods } from './userinput'
 const focus = new Vector2(0, 0)
 
 type FramedProps = {
-  player: string
-  layers: LAYER[]
   width: number
   height: number
 }
@@ -45,8 +45,14 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   hub.emit('vm:input', 'gadget', [input, bits], player)
 }
 
-export function Framed({ player, layers, width, height }: FramedProps) {
-  const control = layersreadcontrol(layers)
+export function Framed({ width, height }: FramedProps) {
+  const [player, layers, control] = useGadgetClient(
+    useShallow((state) => [
+      state.gadget.player,
+      state.gadget.layers,
+      layersreadcontrol(state.gadget.layers),
+    ]),
+  )
 
   const viewwidth = width * DRAW_CHAR_WIDTH
   const drawwidth = control.width * DRAW_CHAR_WIDTH * control.viewscale
@@ -135,6 +141,7 @@ export function Framed({ player, layers, width, height }: FramedProps) {
               case LAYER_TYPE.BLANK:
                 return null
               case LAYER_TYPE.TILES:
+                return null
                 return (
                   // eslint-disable-next-line react/no-unknown-property
                   <group key={layer.id} position={[0, 0, i]}>
@@ -142,6 +149,8 @@ export function Framed({ player, layers, width, height }: FramedProps) {
                   </group>
                 )
               case LAYER_TYPE.SPRITES:
+                return null
+                console.info('layer sprites', layer.sprites)
                 return (
                   // eslint-disable-next-line react/no-unknown-property
                   <group key={layer.id} position={[0, 0, i]}>
@@ -149,6 +158,7 @@ export function Framed({ player, layers, width, height }: FramedProps) {
                   </group>
                 )
               case LAYER_TYPE.DITHER:
+                return null
                 return (
                   // eslint-disable-next-line react/no-unknown-property
                   <group key={layer.id} position={[0, 0, i]}>

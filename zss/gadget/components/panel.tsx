@@ -1,3 +1,5 @@
+import { gadgetstategetplayer } from 'zss/device/gadgetclient'
+
 import {
   WRITE_TEXT_CONTEXT,
   WriteTextContext,
@@ -12,7 +14,6 @@ import { TilesData, TilesRender, resetTiles, useTiles } from './usetiles'
 type PanelProps = {
   margin?: number
   selected?: number
-  player: string
   name: string
   width: number
   height: number
@@ -24,13 +25,13 @@ type PanelProps = {
 export function Panel({
   margin = 1,
   selected = -1,
-  player,
   width,
   height,
   color,
   bg,
   text,
 }: PanelProps) {
+  const player = gadgetstategetplayer()
   const store = useTiles(width, height, 0, color, bg)
   const state = store.getState()
   const context: WRITE_TEXT_CONTEXT = {

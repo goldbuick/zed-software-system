@@ -5,15 +5,15 @@ import { GADGET_STATE } from './types'
 
 export const useGadgetClient = create<{
   desync: boolean
-  state: GADGET_STATE
+  gadget: GADGET_STATE
 }>(() => ({
   desync: false,
-  state: {
+  gadget: {
     player: '',
     layers: [],
-    layout: [],
-    layoutreset: false,
-    layoutfocus: '',
+    panels: [],
+    reset: false,
+    focus: '',
   },
 }))
 

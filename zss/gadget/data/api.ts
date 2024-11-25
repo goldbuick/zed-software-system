@@ -30,12 +30,15 @@ import {
 
 const panelshared: Record<string, PANEL_SHARED> = {}
 
-export function initstate(state: STATE, player: string): GADGET_STATE {
+export function initstate(
+  state: Partial<GADGET_STATE>,
+  player: string,
+): GADGET_STATE {
   state.player = player
   state.layers = []
-  state.layout = []
-  state.layoutreset = true
-  state.layoutfocus = 'scroll'
+  state.panels = []
+  state.reset = true
+  state.focus = 'scroll'
   return state as GADGET_STATE
 }
 
@@ -131,8 +134,8 @@ export function gadgetstate(player: string) {
 
 export function gadgetclearscroll(player: string) {
   const shared = gadgetstate(player)
-  shared.layout = shared.layout.filter(
-    (item) => item.edge !== PANEL_TYPE.SCROLL,
+  shared.panels = shared.panels.filter(
+    (panel) => panel.edge !== PANEL_TYPE.SCROLL,
   )
 }
 
@@ -157,7 +160,7 @@ export function gadgetcheckscroll(player: string) {
   let ticker = ''
   const shared = gadgetstate(player)
 
-  shared.layout = shared.layout.filter((item) => {
+  shared.panels = shared.panels.filter((item) => {
     if (item.edge === PANEL_TYPE.SCROLL) {
       const [line] = item.text
       // catch single lines of text and turn into ticker messages
@@ -184,14 +187,14 @@ export function gadgetpanel(
   const size = maybesize
   const name = maybename ?? Case.capital(edge)
 
-  const panelState: PANEL | undefined = shared.layout.find(
+  const panelState: PANEL | undefined = shared.panels.find(
     (panel: PANEL) => panel.name === name,
   )
 
   if (panelState) {
     // set focus to panel and mark for reset
-    shared.layoutreset = true
-    shared.layoutfocus = name
+    shared.reset = true
+    shared.focus = name
     // you can also resize panels
     if (isnumber(size)) {
       panelState.size = size
@@ -213,8 +216,8 @@ export function gadgetpanel(
           size: size ?? PANEL_TYPE_SIZES[edgeConst],
           text: [],
         }
-        shared.layout.push(panel)
-        shared.layoutfocus = name
+        shared.panels.push(panel)
+        shared.focus = name
         break
       }
       default:
@@ -233,8 +236,8 @@ export function gadgettext(player: string, text: string) {
   const panel = findpanel(shared)
 
   // add text
-  if (shared.layoutreset) {
-    shared.layoutreset = false
+  if (shared.reset) {
+    shared.reset = false
     resetpanel(panel)
   }
 
@@ -255,8 +258,8 @@ export function gadgethyperlink(
   const panel = findpanel(shared)
 
   // add hyperlink
-  if (shared.layoutreset) {
-    shared.layoutreset = false
+  if (shared.reset) {
+    shared.reset = false
     resetpanel(panel)
   }
 

@@ -10,7 +10,6 @@ import {
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import {
-  deepcopy,
   isarray,
   isnumber,
   ispresent,
@@ -460,11 +459,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
       dest,
     )
 
+    const moved =
+      READ_CONTEXT.element.x === dest.x && READ_CONTEXT.element.y === dest.y
+
+    if (moved) {
+      console.info('moved to', dest.x, dest.y)
+    }
     // if blocked, return 1
-    return READ_CONTEXT.element.x !== dest.x &&
-      READ_CONTEXT.element.y !== dest.y
-      ? 1
-      : 0
+    return moved ? 0 : 1
   })
   .command('put', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {

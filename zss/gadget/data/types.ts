@@ -297,9 +297,9 @@ export function paneladdress(chip: string, target: string) {
 export type GADGET_STATE = {
   player: string
   layers: LAYER[]
-  layout: PANEL[]
-  layoutreset: boolean
-  layoutfocus: string
+  panels: PANEL[]
+  reset: boolean
+  focus: string
 }
 
 export const INPUT_ALT = 0x0001

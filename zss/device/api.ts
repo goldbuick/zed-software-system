@@ -43,6 +43,10 @@ export function register_flush(sender: string, books: string) {
   hub.emit('register:flush', sender, books)
 }
 
+export function register_refresh(sender: string) {
+  hub.emit('register:refresh', sender)
+}
+
 export function register_select(sender: string, book: string) {
   hub.emit('register:select', sender, book)
 }

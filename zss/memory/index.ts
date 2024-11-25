@@ -298,13 +298,17 @@ export function memoryplayerlogin(player: string): boolean {
 export function memoryplayerlogout(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const board = bookplayerreadboard(mainbook, player)
+
+  // clear from active list
   bookplayersetboard(mainbook, player, '')
+
   // clear element
   bookboardobjectnamedlookupdelete(
     mainbook,
     board,
     boardobjectread(board, player),
   )
+
   // clear memory
   bookclearflags(mainbook, player)
   bookclearflags(mainbook, createchipid(player))

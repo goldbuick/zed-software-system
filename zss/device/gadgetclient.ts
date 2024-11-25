@@ -7,49 +7,51 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import { GADGET_STATE } from 'zss/gadget/data/types'
 
 const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
-  const { desync, state } = useGadgetClient.getState()
+  const { desync, gadget } = useGadgetClient.getState()
 
   switch (message.target) {
     case 'reset':
-      if (message.player === state.player) {
+      if (message.player === gadget.player) {
         useGadgetClient.setState({
           desync: false,
-          state: message.data,
+          gadget: message.data,
         })
       }
       break
     case 'patch':
-      if (message.player === state.player && !desync) {
-        try {
-          applypatch(state, message.data, true)
-        } catch (err) {
-          if (err instanceof jsonpatcherror) {
-            // we are out of sync and need to request a refresh
-            useGadgetClient.setState({ desync: true })
-            gadgetclientdevice.reply(
-              message,
-              'desync',
-              undefined,
-              message.player,
-            )
+      if (message.player === gadget.player && !desync) {
+        useGadgetClient.setState((gadgetclient) => {
+          try {
+            applypatch(gadgetclient.gadget, message.data, true)
+          } catch (err) {
+            if (err instanceof jsonpatcherror) {
+              // we are out of sync and need to request a refresh
+              gadgetclient.desync = true
+              gadgetclientdevice.reply(
+                message,
+                'desync',
+                undefined,
+                message.player,
+              )
+            }
           }
-        }
+          return gadgetclient
+        })
       }
       break
   }
 })
 
 export function getgadgetstate(): GADGET_STATE {
-  const { state } = useGadgetClient.getState()
-  return state
+  return useGadgetClient.getState().gadget
 }
 
 export function gadgetstatesetplayer(player: string) {
-  const { state } = useGadgetClient.getState()
-  if (player && state.player === '') {
-    useGadgetClient.setState((gc) => ({
-      state: {
-        ...gc.state,
+  const gadget = getgadgetstate()
+  if (player && gadget.player === '') {
+    useGadgetClient.setState((state) => ({
+      gadget: {
+        ...state.gadget,
         player,
       },
     }))
@@ -59,6 +61,5 @@ export function gadgetstatesetplayer(player: string) {
 }
 
 export function gadgetstategetplayer() {
-  const { state } = useGadgetClient.getState()
-  return state.player
+  return getgadgetstate().player
 }

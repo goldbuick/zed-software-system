@@ -31,7 +31,6 @@ import { UserFocus, UserInput, UserInputHandler } from './userinput'
 import { TilesData, TilesRender, useTiles, writeTile } from './usetiles'
 
 type ScrollProps = {
-  player: string
   name: string
   width: number
   height: number
@@ -43,7 +42,6 @@ type ScrollProps = {
 }
 
 export function Scroll({
-  player,
   name,
   width,
   height,
@@ -186,8 +184,6 @@ export function Scroll({
     [setCursor, text.length],
   )
 
-  // writeTile(tiles, width, height, 1, 2 + row, { char: 26, color: 12 })
-
   return (
     <TilesData store={tilesstore}>
       <DitherData store={ditherstore}>
@@ -205,7 +201,6 @@ export function Scroll({
             >
               <DitherRender width={panelwidth} height={panelheight} />
               <Panel
-                player={player}
                 name={name}
                 width={panelwidth}
                 height={panelheight}

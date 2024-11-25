@@ -1,6 +1,7 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
 import { TRACE_CODE } from 'zss/config'
 import { tokenize, MaybeFlag } from 'zss/gadget/data/textformat'
+import { ispresent } from 'zss/mapping/types'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
 
@@ -275,20 +276,36 @@ function transformNode(ast: CodeNode): SourceNode {
         ...transformNodes(ast.link),
       ])
     case NODE.MOVE:
+      if (ast.wait) {
+        return write(ast, [
+          `${DENT_CODE}while (`,
+          writeApi(ast, `move`, ['true', ...transformNodes(ast.words)]),
+          `)${BUMP_CODE}{ ${WAIT()} };${BUMP_CODE}${EOL()}`,
+        ])
+      }
       return write(ast, [
-        `${DENT_CODE}while (`,
-        writeApi(ast, `move`, [
-          ast.wait ? 'true' : 'false',
-          ...transformNodes(ast.words),
-        ]),
-        `)${BUMP_CODE}{ ${WAIT()} };${BUMP_CODE}${EOL()}`,
-      ]) // yield 1;
-    case NODE.COMMAND:
-      return write(ast, [
-        `${DENT_CODE}while (`,
-        writeApi(ast, `command`, transformNodes(ast.words)),
-        `)${BUMP_CODE}{ ${WAIT()} };${BUMP_CODE}${EOL()}`,
+        writeApi(ast, `move`, ['false', ...transformNodes(ast.words)]),
+        `; ${EOL()}`,
       ])
+    case NODE.COMMAND: {
+      const [first] = ast.words
+      const canwait =
+        ispresent(first) &&
+        first.type === NODE.LITERAL &&
+        first.literal === LITERAL.STRING &&
+        first.value.toLowerCase() === 'go'
+      if (canwait) {
+        return write(ast, [
+          `${DENT_CODE}while (`,
+          writeApi(ast, `command`, transformNodes(ast.words)),
+          `)${BUMP_CODE}{ ${WAIT()} };${BUMP_CODE}${EOL()}`,
+        ])
+      }
+      return write(ast, [
+        writeApi(ast, `command`, transformNodes(ast.words)),
+        `; ${EOL()}`,
+      ])
+    }
     // core / structure
     case NODE.IF: {
       const skipto = genlabel()
@@ -300,7 +317,7 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, [
         'if (!',
         writeApi(ast, ast.method, transformNodes(ast.words)),
-        `)${BUMP_CODE}{ `,
+        `) { `,
         writegoto(ast, skipif),
         ` }\n`,
       ])
@@ -338,7 +355,7 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, [
         'if (!',
         writeApi(ast, ast.method, transformNodes(ast.words)),
-        `)${BUMP_CODE}{ `,
+        `) { `,
         writegoto(ast, skipelseif),
         ` }\n`,
       ])
@@ -372,7 +389,7 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add([
         'if (!',
         writeApi(ast, 'if', transformNodes(ast.words)),
-        `)${BUMP_CODE}{ `,
+        `) { `,
         writegoto(ast, whiledone),
         ` }\n`,
       ])

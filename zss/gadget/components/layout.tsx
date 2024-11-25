@@ -7,10 +7,10 @@ import {
   DRAW_CHAR_WIDTH,
   PANEL_TYPE,
   PANEL_ITEM,
-  LAYER,
 } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
+import { useShallow } from 'zustand/react/shallow'
 
 import { useGadgetClient } from '../data/state'
 
@@ -37,23 +37,15 @@ type RECT = {
 }
 
 type LayoutRectProps = {
-  player: string
-  layers: LAYER[]
   rect: RECT
   shouldclose?: boolean
 }
 
-function LayoutRect({
-  player,
-  layers,
-  rect,
-  shouldclose = false,
-}: LayoutRectProps) {
+function LayoutRect({ rect, shouldclose = false }: LayoutRectProps) {
   switch (rect.type) {
     case RECT_TYPE.PANEL:
       return (
         <Panel
-          player={player}
           name={rect.name}
           width={rect.width}
           height={rect.height}
@@ -66,7 +58,6 @@ function LayoutRect({
     case RECT_TYPE.SCROLL:
       return (
         <Scroll
-          player={player}
           name={rect.name}
           width={rect.width}
           height={rect.height}
@@ -78,14 +69,7 @@ function LayoutRect({
       )
 
     case RECT_TYPE.FRAMED:
-      return (
-        <Framed
-          player={player}
-          layers={layers}
-          width={rect.width}
-          height={rect.height}
-        />
-      )
+      return <Framed width={rect.width} height={rect.height} />
   }
   return null
 }
@@ -101,18 +85,12 @@ export function Layout() {
 
   // cache scroll
   const [scroll, setScroll] = useState<RECT>()
-
-  const { state } = useGadgetClient()
-
-  // const [layout] =
+  const [player, panels] = useGadgetClient(
+    useShallow((state) => [state.gadget.player, state.gadget.panels]),
+  )
 
   // bail on odd states
-  if (
-    width < 1 ||
-    height < 1 ||
-    state.layers === undefined ||
-    state.layout === undefined
-  ) {
+  if (width < 1 || height < 1) {
     return null
   }
 
@@ -131,7 +109,7 @@ export function Layout() {
   const rects: RECT[] = []
 
   let noscroll = true
-  state.layout.forEach((panel) => {
+  panels.forEach((panel) => {
     let rect: RECT
     switch (panel.edge) {
       case PANEL_TYPE.LEFT:
@@ -220,11 +198,11 @@ export function Layout() {
       value={{
         sendmessage(target, data) {
           // send a hyperlink message
-          hub.emit(target, 'gadget', data, state.player)
+          hub.emit(target, 'gadget', data, player)
         },
         sendclose() {
           // send a message to trigger the close
-          gadgetserver_clearscroll('gadget', state.player)
+          gadgetserver_clearscroll('gadget', player)
         },
         didclose() {
           // clear scroll state
@@ -245,11 +223,7 @@ export function Layout() {
                 i * 10,
               ]}
             >
-              <LayoutRect
-                player={state.player}
-                layers={state.layers}
-                rect={rect}
-              />
+              <LayoutRect rect={rect} />
             </group>
           )
         })}
@@ -269,12 +243,7 @@ export function Layout() {
                 900,
               ]}
             >
-              <LayoutRect
-                player={state.player}
-                layers={state.layers}
-                rect={scroll}
-                shouldclose={noscroll}
-              />
+              <LayoutRect rect={scroll} shouldclose={noscroll} />
             </group>
           </React.Fragment>
         )}
