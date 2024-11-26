@@ -8,7 +8,6 @@ import { CLI_FIRMWARE } from './cli'
 import { ELEMENT_FIRMWARE } from './element'
 import { GADGET_FIRMWARE } from './gadget'
 import { LOADER_FIRMWARE } from './loader'
-import { MODS_FIRMWARE } from './mods'
 
 export enum DRIVER_TYPE {
   ERROR,
@@ -26,16 +25,15 @@ const firmwares: Record<string, FIRMWARE> = {
   element: ELEMENT_FIRMWARE,
   gadget: GADGET_FIRMWARE,
   loader: LOADER_FIRMWARE,
-  mods: MODS_FIRMWARE,
 }
 
 const DRIVER_FIRMWARE = {
   [DRIVER_TYPE.ERROR]: [],
   // user input
-  [DRIVER_TYPE.CLI]: ['all', 'audio', 'mods', 'cli', 'element'],
-  [DRIVER_TYPE.LOADER]: ['all', 'audio', 'mods', 'loader', 'element'],
+  [DRIVER_TYPE.CLI]: ['all', 'audio', 'cli', 'element'],
+  [DRIVER_TYPE.LOADER]: ['all', 'audio', 'loader', 'element'],
   // codepages
-  [DRIVER_TYPE.CODE_PAGE]: ['all', 'audio', 'mods', 'gadget', 'element'],
+  [DRIVER_TYPE.CODE_PAGE]: ['all', 'audio', 'gadget', 'element'],
 }
 
 const DRIVER_COMMANDS = {

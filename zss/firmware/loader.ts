@@ -3,7 +3,12 @@ import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
-import { memoryreadbinaryfile, memoryreadflags } from 'zss/memory'
+import {
+  MEMORY_LABEL,
+  memoryensuresoftwarebook,
+  memoryreadbinaryfile,
+  memoryreadflags,
+} from 'zss/memory'
 
 import { binaryloader } from './loader/binaryloader'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './wordtypes'
@@ -51,6 +56,20 @@ export const LOADER_FIRMWARE = createfirmware({
     const label = maptostring(labelword)
     const hyperlink = words.map(maptostring).join(' ')
     tape_info('$2', `!${hyperlink};${label}`)
+    return 0
+  })
+  .command('load', (chip, words) => {
+    const maybename = words.map(maptostring).join(' ')
+    const name = chip.get(maybename) ?? maybename
+    memoryensuresoftwarebook(MEMORY_LABEL.CONTENT, name)
+    return 0
+  })
+  .command('reload', (chip, words) => {
+    const maybename = words.map(maptostring).join(' ')
+    const name = chip.get(maybename) ?? maybename
+    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.CONTENT, name)
+    // delete all codepages
+    mainbook.pages = []
     return 0
   })
   .command('bin', binaryloader)
