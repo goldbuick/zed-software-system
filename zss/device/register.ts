@@ -1,4 +1,5 @@
 import { createdevice } from 'zss/device'
+import { useGadgetClient } from 'zss/gadget/data/state'
 import { ispresent, isstring } from 'zss/mapping/types'
 
 import {
@@ -12,7 +13,6 @@ import {
   vm_init,
   vm_login,
 } from './api'
-import { gadgetstategetplayer, gadgetstatesetplayer } from './gadgetclient'
 
 function readstate(): string {
   try {
@@ -87,6 +87,7 @@ const register = createdevice(
   'register',
   ['second', 'ready', 'error'],
   function (message) {
+    const gadgetclient = useGadgetClient.getState()
     switch (message.target) {
       case 'error:login:main':
       case 'error:login:title':
@@ -102,8 +103,20 @@ const register = createdevice(
           return
         }
         // init vm with player id
-        if (gadgetstatesetplayer(player)) {
-          vm_init(register.name(), player)
+        if (!gadgetclient.gadget.player) {
+          useGadgetClient.setState((state) => {
+            const player = message.player ?? ''
+            if (player) {
+              vm_init('register', player)
+            }
+            return {
+              ...state,
+              gadget: {
+                ...state.gadget,
+                player,
+              },
+            }
+          })
         }
         break
       }
@@ -150,9 +163,8 @@ const register = createdevice(
         ++keepalive
         if (keepalive >= signalrate) {
           keepalive -= signalrate
-          const player = gadgetstategetplayer()
-          if (player) {
-            vm_doot(register.name(), player)
+          if (gadgetclient.gadget.player) {
+            vm_doot(register.name(), gadgetclient.gadget.player)
           }
         }
         break

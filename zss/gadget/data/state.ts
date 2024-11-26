@@ -1,7 +1,22 @@
-import { MAYBE_NUMBER } from 'zss/mapping/types'
+import { useRef } from 'react'
+import { isequal, MAYBE_NUMBER } from 'zss/mapping/types'
 import { create } from 'zustand'
 
 import { GADGET_STATE } from './types'
+
+export function useEqual<S, U>(selector: (state: S) => U): (state: S) => U {
+  const prev = useRef<U>()
+  return (state) => {
+    const next = selector(state)
+    return (
+      prev.current === undefined || next === undefined
+        ? prev.current === next
+        : isequal(prev.current, next)
+    )
+      ? (prev.current as U)
+      : (prev.current = next)
+  }
+}
 
 export const useGadgetClient = create<{
   desync: boolean
@@ -16,6 +31,14 @@ export const useGadgetClient = create<{
     focus: '',
   },
 }))
+
+export function useGadgetClientPlayer() {
+  return useGadgetClient((state) => state.gadget.player)
+}
+
+export function getgadgetclientplayer() {
+  return useGadgetClient.getState().gadget.player
+}
 
 export enum TAPE_LOG_LEVEL {
   OFF,

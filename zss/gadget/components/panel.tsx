@@ -1,5 +1,4 @@
-import { gadgetstategetplayer } from 'zss/device/gadgetclient'
-
+import { useGadgetClientPlayer } from '../data/state'
 import {
   WRITE_TEXT_CONTEXT,
   WriteTextContext,
@@ -31,7 +30,7 @@ export function Panel({
   bg,
   text,
 }: PanelProps) {
-  const player = gadgetstategetplayer()
+  const player = useGadgetClientPlayer()
   const store = useTiles(width, height, 0, color, bg)
   const state = store.getState()
   const context: WRITE_TEXT_CONTEXT = {

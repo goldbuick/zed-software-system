@@ -1,6 +1,9 @@
 import { vm_cli } from 'zss/device/api'
-import { gadgetstategetplayer } from 'zss/device/gadgetclient'
-import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
+import {
+  useGadgetClientPlayer,
+  useTape,
+  useTapeTerminal,
+} from 'zss/gadget/data/state'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
@@ -17,6 +20,7 @@ import { TerminalItem } from './elements/terminalitem'
 import { TerminalItemActive } from './elements/terminalitemactive'
 
 export function TapeTerminal() {
+  const player = useGadgetClientPlayer()
   const [terminallogs, editoropen] = useTape(
     useShallow((state) => [state.terminal.logs, state.editor.open]),
   )
@@ -67,9 +71,6 @@ export function TapeTerminal() {
 
   // calculate ycoord to render cursor
   const tapeycursor = edge.bottom - tapeinput.ycursor + tapeinput.scroll
-
-  // user id
-  const player = gadgetstategetplayer()
 
   return (
     <>

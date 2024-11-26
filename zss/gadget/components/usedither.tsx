@@ -1,9 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useState } from 'react'
 import { createStore, StoreApi, useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 
-import { Dither } from './dither'
+import { Dither } from './framed/dither'
 
 type DITHER_DATA = {
   dither: number[]

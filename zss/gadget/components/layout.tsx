@@ -14,8 +14,8 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { useGadgetClient } from '../data/state'
 
-import { StaticDither } from './dither'
 import { Framed } from './framed'
+import { StaticDither } from './framed/dither'
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'
 import { Scroll } from './scroll'
@@ -54,7 +54,6 @@ function LayoutRect({ rect, shouldclose = false }: LayoutRectProps) {
           text={rect.text}
         />
       )
-
     case RECT_TYPE.SCROLL:
       return (
         <Scroll
@@ -67,7 +66,6 @@ function LayoutRect({ rect, shouldclose = false }: LayoutRectProps) {
           shouldclose={shouldclose}
         />
       )
-
     case RECT_TYPE.FRAMED:
       return <Framed width={rect.width} height={rect.height} />
   }

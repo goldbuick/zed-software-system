@@ -4,11 +4,10 @@ import {
   tape_terminal_inclayout,
   vm_cli,
 } from 'zss/device/api'
-import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import { Scrollable } from 'zss/gadget/components/scrollable'
 import { useBlink } from 'zss/gadget/components/useblink'
 import { UserInput, modsfromevent } from 'zss/gadget/components/userinput'
-import { useTapeTerminal } from 'zss/gadget/data/state'
+import { useGadgetClientPlayer, useTapeTerminal } from 'zss/gadget/data/state'
 import {
   applycolortoindexes,
   applystrtoindex,
@@ -34,6 +33,7 @@ export function TerminalInput({
   const blink = useBlink()
   const context = useWriteText()
   const tapeterminal = useTapeTerminal()
+  const player = useGadgetClientPlayer()
   const edge = textformatreadedges(context)
 
   // input & selection
@@ -283,7 +283,7 @@ export function TerminalInput({
                     .filter((item) => item !== invoke),
                 ],
               })
-              vm_cli('tape', invoke, gadgetstategetplayer())
+              vm_cli('tape', invoke, player)
             } else {
               resettoend()
             }

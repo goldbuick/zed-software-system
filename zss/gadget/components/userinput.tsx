@@ -9,8 +9,8 @@ import {
   useState,
 } from 'react'
 import { vm_cli } from 'zss/device/api'
-import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 
+import { getgadgetclientplayer } from '../data/state'
 import { INPUT } from '../data/types'
 
 // user input
@@ -62,7 +62,7 @@ document.addEventListener(
     switch (key) {
       case 's':
         if (mods.ctrl) {
-          vm_cli('tape', '#save', gadgetstategetplayer())
+          vm_cli('tape', '#save', getgadgetclientplayer())
         }
         event.preventDefault()
         break

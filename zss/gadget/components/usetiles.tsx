@@ -7,7 +7,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { TILES } from '../data/types'
 
-import { Tiles } from './tiles'
+import { Tiles } from './framed/tiles'
 
 export type TILE_DATA = {
   width: number

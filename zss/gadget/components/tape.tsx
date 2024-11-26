@@ -1,7 +1,10 @@
 import { useThree } from '@react-three/fiber'
 import { tape_terminal_open } from 'zss/device/api'
-import { gadgetstategetplayer } from 'zss/device/gadgetclient'
-import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
+import {
+  TAPE_DISPLAY,
+  useGadgetClientPlayer,
+  useTape,
+} from 'zss/gadget/data/state'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
@@ -9,7 +12,7 @@ import {
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { useShallow } from 'zustand/react/shallow'
 
-import { ShadeBoxDither } from './dither'
+import { ShadeBoxDither } from './framed/dither'
 import { BG, CHAR_HEIGHT, CHAR_WIDTH, FG, SCALE } from './tape/common'
 import { BackPlate } from './tape/elements/backplate'
 import { TapeLayout } from './tape/layout'
@@ -18,6 +21,7 @@ import { UserFocus, UserHotkey } from './userinput'
 import { TilesData, TilesRender, useTiles } from './usetiles'
 
 export function Tape() {
+  const player = useGadgetClientPlayer()
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
@@ -69,9 +73,6 @@ export function Tape() {
   if (width < 1 || height < 1) {
     return null
   }
-
-  // user id
-  const player = gadgetstategetplayer()
 
   return (
     <TilesData store={store}>

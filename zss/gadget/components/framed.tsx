@@ -8,7 +8,6 @@ import {
   INPUT_ALT,
   INPUT_CTRL,
   INPUT_SHIFT,
-  LAYER_TYPE,
   layersreadcontrol,
 } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
@@ -16,12 +15,10 @@ import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { useShallow } from 'zustand/react/shallow'
 
-import { useGadgetClient } from '../data/state'
+import { useEqual, useGadgetClient } from '../data/state'
 
 import Clipping from './clipping'
-import { Dither } from './dither'
-import { Sprites } from './sprites'
-import { Tiles } from './tiles'
+import { FramedLayer } from './framed/layer'
 import { UserInput, UserInputMods } from './userinput'
 
 const focus = new Vector2(0, 0)
@@ -46,12 +43,11 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
 }
 
 export function Framed({ width, height }: FramedProps) {
-  const [player, layers, control] = useGadgetClient(
-    useShallow((state) => [
-      state.gadget.player,
-      state.gadget.layers,
-      layersreadcontrol(state.gadget.layers),
-    ]),
+  const [player, layers] = useGadgetClient(
+    useShallow((state) => [state.gadget.player, state.gadget.layers]),
+  )
+  const control = useGadgetClient(
+    useEqual((state) => layersreadcontrol(state.gadget.layers)),
   )
 
   const viewwidth = width * DRAW_CHAR_WIDTH
@@ -135,38 +131,9 @@ export function Framed({ width, height }: FramedProps) {
       />
       <Clipping width={viewwidth} height={viewheight}>
         <group ref={ref} scale={control.viewscale}>
-          {layers.map((layer, i) => {
-            switch (layer.type) {
-              default:
-              case LAYER_TYPE.BLANK:
-                return null
-              case LAYER_TYPE.TILES:
-                return null
-                return (
-                  // eslint-disable-next-line react/no-unknown-property
-                  <group key={layer.id} position={[0, 0, i]}>
-                    <Tiles {...layer} />
-                  </group>
-                )
-              case LAYER_TYPE.SPRITES:
-                return null
-                console.info('layer sprites', layer.sprites)
-                return (
-                  // eslint-disable-next-line react/no-unknown-property
-                  <group key={layer.id} position={[0, 0, i]}>
-                    <Sprites sprites={layer.sprites} />
-                  </group>
-                )
-              case LAYER_TYPE.DITHER:
-                return null
-                return (
-                  // eslint-disable-next-line react/no-unknown-property
-                  <group key={layer.id} position={[0, 0, i]}>
-                    <Dither {...layer} />
-                  </group>
-                )
-            }
-          })}
+          {layers.map((layer, i) => (
+            <FramedLayer key={layer.id} id={layer.id} z={i * 10} />
+          ))}
         </group>
       </Clipping>
     </>

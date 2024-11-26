@@ -9,8 +9,8 @@ import {
   Points,
 } from 'three'
 import { vm_loadfile } from 'zss/device/api'
-import { gadgetstategetplayer } from 'zss/device/gadgetclient'
 import { enableaudio } from 'zss/device/synth'
+import { getgadgetclientplayer } from 'zss/gadget/data/state'
 import { ispresent } from 'zss/mapping/types'
 
 import { Terminal } from './terminal'
@@ -59,7 +59,9 @@ window.addEventListener('paste', (event) => {
 
   // read files from clipboardData
   const files = [...event.clipboardData.files]
-  files.forEach((file) => vm_loadfile('loadfile', file, gadgetstategetplayer()))
+  files.forEach((file) =>
+    vm_loadfile('loadfile', file, getgadgetclientplayer()),
+  )
 })
 
 window.addEventListener('drop', (event) => {
@@ -74,7 +76,7 @@ window.addEventListener('drop', (event) => {
       if (item.kind === 'file') {
         const file = item.getAsFile()
         if (ispresent(file)) {
-          vm_loadfile('loadfile', file, gadgetstategetplayer())
+          vm_loadfile('loadfile', file, getgadgetclientplayer())
         }
       }
     })
@@ -82,7 +84,7 @@ window.addEventListener('drop', (event) => {
     // Use DataTransfer interface to access the file(s)
     const files = [...(event.dataTransfer?.files ?? [])]
     files.forEach((file) =>
-      vm_loadfile('loadfile', file, gadgetstategetplayer()),
+      vm_loadfile('loadfile', file, getgadgetclientplayer()),
     )
   }
 })
