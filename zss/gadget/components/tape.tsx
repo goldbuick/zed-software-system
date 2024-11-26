@@ -76,9 +76,11 @@ export function Tape() {
 
   return (
     <TilesData store={store}>
-      {terminalopen && (
+      <group
         // eslint-disable-next-line react/no-unknown-property
-        <group position={[0, 0, 0]}>
+        position={[0, 0, 900]}
+      >
+        {terminalopen && (
           <ShadeBoxDither
             width={ditherwidth}
             height={ditherheight}
@@ -87,30 +89,30 @@ export function Tape() {
             right={left + width - 1}
             bottom={top + height - 1}
           />
-        </group>
-      )}
-      <group
-        // eslint-disable-next-line react/no-unknown-property
-        position={[
-          marginx * 0.5 + left * CHAR_WIDTH,
-          marginy + top * CHAR_HEIGHT,
-          1,
-        ]}
-        scale={[SCALE, SCALE, 1.0]}
-      >
-        {terminalopen ? (
-          <UserFocus blockhotkeys>
-            <BackPlate context={context} />
-            <PlayerContext.Provider value={player}>
-              <TapeLayout context={context} />
-            </PlayerContext.Provider>
-            <TilesRender width={width} height={height} />
-          </UserFocus>
-        ) : (
-          <UserHotkey hotkey="Shift+?">
-            {() => tape_terminal_open('tape')}
-          </UserHotkey>
         )}
+        <group
+          // eslint-disable-next-line react/no-unknown-property
+          position={[
+            marginx * 0.5 + left * CHAR_WIDTH,
+            marginy + top * CHAR_HEIGHT,
+            1,
+          ]}
+          scale={[SCALE, SCALE, 1.0]}
+        >
+          {terminalopen ? (
+            <UserFocus blockhotkeys>
+              <BackPlate context={context} />
+              <PlayerContext.Provider value={player}>
+                <TapeLayout context={context} />
+              </PlayerContext.Provider>
+              <TilesRender width={width} height={height} />
+            </UserFocus>
+          ) : (
+            <UserHotkey hotkey="Shift+?">
+              {() => tape_terminal_open('tape')}
+            </UserHotkey>
+          )}
+        </group>
       </group>
     </TilesData>
   )

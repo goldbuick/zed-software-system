@@ -462,9 +462,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const moved =
       READ_CONTEXT.element.x === dest.x && READ_CONTEXT.element.y === dest.y
 
-    if (moved) {
-      console.info('moved to', dest.x, dest.y)
-    }
+    // if (moved) {
+    //   console.info('moved to', dest.x, dest.y)
+    // }
     // if blocked, return 1
     return moved ? 0 : 1
   })

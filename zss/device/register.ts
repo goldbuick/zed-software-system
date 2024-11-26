@@ -104,11 +104,8 @@ const register = createdevice(
         }
         // init vm with player id
         if (!gadgetclient.gadget.player) {
+          // track player id
           useGadgetClient.setState((state) => {
-            const player = message.player ?? ''
-            if (player) {
-              vm_init('register', player)
-            }
             return {
               ...state,
               gadget: {
@@ -117,6 +114,8 @@ const register = createdevice(
               },
             }
           })
+          // signal init
+          setTimeout(() => vm_init('register', player), 256)
         }
         break
       }

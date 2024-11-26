@@ -210,7 +210,7 @@ export function Layout() {
     >
       {/* eslint-disable-next-line react/no-unknown-property */}
       <group position={[marginX * 0.5, marginY * 0.5, -512]}>
-        {rects.map((rect, i) => {
+        {rects.map((rect) => {
           return (
             <group
               key={rect.name}
@@ -218,7 +218,7 @@ export function Layout() {
               position={[
                 rect.x * DRAW_CHAR_WIDTH,
                 rect.y * DRAW_CHAR_HEIGHT,
-                i * 10,
+                0,
               ]}
             >
               <LayoutRect rect={rect} />

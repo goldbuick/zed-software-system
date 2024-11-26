@@ -14,7 +14,6 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
   const layer = useGadgetClient(
     useEqual((state) => state.gadget.layers.find((item) => item.id === id)),
   )
-  console.info(layer)
   switch (layer?.type) {
     default:
     case LAYER_TYPE.BLANK:
@@ -26,9 +25,9 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
           <Tiles
             width={layer.width}
             height={layer.height}
-            char={layer.char}
-            color={layer.color}
-            bg={layer.bg}
+            char={[...layer.char]}
+            color={[...layer.color]}
+            bg={[...layer.bg]}
           />
         </group>
       )
@@ -37,7 +36,7 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Sprites sprites={layer.sprites} />
+          <Sprites sprites={[...layer.sprites]} />
         </group>
       )
     }
@@ -48,7 +47,7 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
           <Dither
             width={layer.width}
             height={layer.height}
-            alphas={layer.alphas}
+            alphas={[...layer.alphas]}
           />
         </group>
       )

@@ -158,7 +158,6 @@ export function Sprites({ sprites }: SpritesProps) {
     const imageCols = Math.round(imageWidth / CHAR_WIDTH)
     const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
 
-    material.transparent = true
     material.uniforms.rows.value = imageRows - 1
     material.uniforms.step.value.x = 1 / imageCols
     material.uniforms.step.value.y = 1 / imageRows

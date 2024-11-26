@@ -132,7 +132,7 @@ export function Framed({ width, height }: FramedProps) {
       <Clipping width={viewwidth} height={viewheight}>
         <group ref={ref} scale={control.viewscale}>
           {layers.map((layer, i) => (
-            <FramedLayer key={layer.id} id={layer.id} z={i * 10} />
+            <FramedLayer key={layer.id} id={layer.id} z={i * 2} />
           ))}
         </group>
       </Clipping>
