@@ -9,12 +9,13 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,
   memoryclearbook,
   memorycreatesoftwarebook,
   memoryensuresoftwarebook,
+  memoryensuresoftwarecodepage,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
@@ -23,6 +24,7 @@ import {
 } from 'zss/memory'
 import { bookclearcodepage, bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepagereadname, codepagereadtypetostring } from 'zss/memory/codepage'
+import { CODE_PAGE, CODE_PAGE_LABEL, CODE_PAGE_TYPE } from 'zss/memory/types'
 
 import { ARG_TYPE, READ_CONTEXT, readargs } from './wordtypes'
 
@@ -100,18 +102,74 @@ export const CLI_FIRMWARE = createfirmware({
   tock() {},
 })
   .command('stat', (chip, words) => {
-    const [maybeargs] = words
-    if (!isstring(maybeargs)) {
-      return 0
+    // create / open content
+    let codepage: MAYBE<CODE_PAGE>
+    const [maybetype, ...args] = words.map(maptostring)
+    const maybename = args.join(' ')
+
+    // attempt to check first word as codepage type to create
+    switch (maybetype.toLowerCase()) {
+      case CODE_PAGE_LABEL.LOADER as string:
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          maybename,
+          CODE_PAGE_TYPE.LOADER,
+        )
+        break
+      default:
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          `${maybetype} ${maybename}`,
+          CODE_PAGE_TYPE.OBJECT,
+        )
+        break
+      case CODE_PAGE_LABEL.BOARD as string:
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          maybename,
+          CODE_PAGE_TYPE.BOARD,
+        )
+        break
+      case CODE_PAGE_LABEL.OBJECT as string:
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          maybename,
+          CODE_PAGE_TYPE.OBJECT,
+        )
+        break
+      case CODE_PAGE_LABEL.TERRAIN as string:
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          maybename,
+          CODE_PAGE_TYPE.TERRAIN,
+        )
+        break
+      case CODE_PAGE_LABEL.CHARSET as string:
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          maybename,
+          CODE_PAGE_TYPE.CHARSET,
+        )
+        break
+      case CODE_PAGE_LABEL.PALETTE as string:
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          maybename,
+          CODE_PAGE_TYPE.PALETTE,
+        )
+        break
+      case CODE_PAGE_LABEL.EIGHT_TRACK as string:
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          maybename,
+          CODE_PAGE_TYPE.EIGHT_TRACK,
+        )
+        break
     }
-    const [maybetype, maybename] = maybeargs.split(' ')
-    const type = ispresent(maybename) ? maptostring(maybetype) : 'object'
-    const name = ispresent(maybename)
-      ? maptostring(maybename)
-      : maptostring(maybetype)
-    // create
-    chip.command('mod', type, name)
-    chip.command('pageopen', name)
+
+    if (ispresent(codepage)) {
+      chip.command('pageopen', codepage.id)
+    }
     return 0
   })
   .command('text', (_, words) => {
@@ -171,6 +229,10 @@ export const CLI_FIRMWARE = createfirmware({
       chip.command('pages')
     }
     return 0
+  })
+  .command('pagecreate', (_, words) => {
+    //
+    //
   })
   .command('pageopen', (_, words) => {
     const [page] = readargs(words, 0, [ARG_TYPE.STRING])
@@ -264,7 +326,8 @@ export const CLI_FIRMWARE = createfirmware({
       if (mainbook.pages.length) {
         mainbook.pages.forEach((page) => {
           const name = codepagereadname(page)
-          write(`!pageopen ${page.id};${name}`)
+          const type = codepagereadtypetostring(page)
+          write(`!pageopen ${page.id};[${type}] ${name}`)
         })
       } else {
         write(``)

@@ -67,9 +67,9 @@ export const LOADER_FIRMWARE = createfirmware({
   .command('reload', (chip, words) => {
     const maybename = words.map(maptostring).join(' ')
     const name = chip.get(maybename) ?? maybename
-    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.CONTENT, name)
+    const contentbook = memoryensuresoftwarebook(MEMORY_LABEL.CONTENT, name)
     // delete all codepages
-    mainbook.pages = []
+    contentbook.pages = []
     return 0
   })
   .command('bin', binaryloader)

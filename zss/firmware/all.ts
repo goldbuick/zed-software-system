@@ -1,6 +1,7 @@
 import { maptostring } from 'zss/chip'
+import { synth_play } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
-import { isnumber, ispresent } from 'zss/mapping/types'
+import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 import {
   ARG_TYPE,
@@ -139,5 +140,21 @@ export const ALL_FIRMWARE = createfirmware({
   })
   .command('zap', (chip, words) => {
     chip.zap(maptostring(words[0]))
+    return 0
+  })
+  .command('play', (chip, words) => {
+    const [maybebuffer] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
+    const buffer = maybebuffer ?? ''
+    // see if we've been given a flag
+    const bufferfromflag = chip.get(buffer)
+    synth_play('audio', -1, isstring(bufferfromflag) ? bufferfromflag : buffer)
+    return 0
+  })
+  .command('bgplay', (chip, words) => {
+    const [maybebuffer] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
+    const buffer = maybebuffer ?? ''
+    // see if we've been given a flag
+    const bufferfromflag = chip.get(buffer)
+    synth_play('audio', 1, isstring(bufferfromflag) ? bufferfromflag : buffer)
     return 0
   })

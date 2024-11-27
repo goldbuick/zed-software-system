@@ -3,7 +3,6 @@ import { FIRMWARE, FIRMWARE_COMMAND } from 'zss/firmware'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { ALL_FIRMWARE } from './all'
-import { AUDIO_FIRMWARE } from './audio'
 import { CLI_FIRMWARE } from './cli'
 import { ELEMENT_FIRMWARE } from './element'
 import { GADGET_FIRMWARE } from './gadget'
@@ -20,7 +19,6 @@ export enum DRIVER_TYPE {
 
 const firmwares: Record<string, FIRMWARE> = {
   all: ALL_FIRMWARE,
-  audio: AUDIO_FIRMWARE,
   cli: CLI_FIRMWARE,
   element: ELEMENT_FIRMWARE,
   gadget: GADGET_FIRMWARE,
@@ -29,11 +27,12 @@ const firmwares: Record<string, FIRMWARE> = {
 
 const DRIVER_FIRMWARE = {
   [DRIVER_TYPE.ERROR]: [],
-  // user input
-  [DRIVER_TYPE.CLI]: ['all', 'audio', 'cli', 'element'],
-  [DRIVER_TYPE.LOADER]: ['all', 'audio', 'loader', 'element'],
-  // codepages
-  [DRIVER_TYPE.CODE_PAGE]: ['all', 'audio', 'gadget', 'element'],
+  // user input to drive software and terminal state
+  [DRIVER_TYPE.CLI]: ['all', 'cli', 'element'],
+  // importing external content into books
+  [DRIVER_TYPE.LOADER]: ['all', 'loader', 'element'],
+  // codepages - software to drive engine and UI
+  [DRIVER_TYPE.CODE_PAGE]: ['all', 'gadget', 'element'],
 }
 
 const DRIVER_COMMANDS = {

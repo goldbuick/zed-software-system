@@ -1,5 +1,5 @@
 import { CONFIG, createchipid } from 'zss/chip'
-import { api_error, tape_debug, tape_info } from 'zss/device/api'
+import { api_error, tape_debug, tape_info, vm_flush } from 'zss/device/api'
 import {
   mimetypeofbytesread,
   parsebinaryfile,
@@ -30,7 +30,6 @@ import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 
 import {
-  boarddeleteobject,
   boardelementname,
   boardobjectcreatefromkind,
   boardobjectread,
@@ -46,12 +45,19 @@ import {
   bookplayerreadboards,
   bookplayersetboard,
   bookreadboard,
+  bookreadcodepagebyaddress,
   bookreadcodepagesbytype,
+  bookreadcodepagewithtype,
   bookreadflags,
   bookreadobject,
+  bookwritecodepage,
   createbook,
 } from './book'
-import { codepagereadstats } from './codepage'
+import {
+  codepagereadstats,
+  codepagetypetostring,
+  createcodepage,
+} from './codepage'
 import {
   BINARY_READER,
   BOARD,
@@ -178,6 +184,33 @@ export function memoryensuresoftwarebook(
   // make sure slot is set
   memorysetsoftwarebook(slot, book.id)
   return book
+}
+
+export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
+  slot: keyof typeof MEMORY.software,
+  address: string,
+  createtype: T,
+) {
+  const book = memoryensuresoftwarebook(slot)
+
+  // lookup by address
+  let codepage = bookreadcodepagebyaddress(book, address)
+  if (ispresent(codepage)) {
+    return codepage
+  }
+
+  // create new codepage
+  const typestr = codepagetypetostring(createtype)
+  codepage = createcodepage(
+    typestr === 'object' ? `@${address}\n` : `@${typestr} ${address}\n`,
+    {},
+  )
+  bookwritecodepage(book, codepage)
+  memorysetcodepageindex(codepage.id, book.id)
+  vm_flush('memory') // tell register to save changes
+
+  // result codepage
+  return codepage
 }
 
 export function memoryreadflags(id: string) {
