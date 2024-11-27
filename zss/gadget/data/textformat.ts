@@ -1,11 +1,10 @@
 import { createToken, createTokenInstance, IToken, Lexer } from 'chevrotain'
 import { createContext as createcontext, useContext } from 'react'
 import { LANG_DEV } from 'zss/config'
-import { colorconsts } from 'zss/firmware/wordtypes'
 import { range } from 'zss/mapping/array'
 import { ispresent, MAYBE, MAYBE_NUMBER } from 'zss/mapping/types'
-
-import { COLOR, colortobg, colortofg } from './types'
+import { colorconsts, colortobg, colortofg } from 'zss/words/color'
+import { COLOR } from 'zss/words/consts'
 
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 

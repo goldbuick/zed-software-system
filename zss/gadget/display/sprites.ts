@@ -1,8 +1,9 @@
 import { ShaderMaterial, Uniform, Vector2 } from 'three'
 import { TICK_FPS } from 'zss/mapping/tick'
+import { COLOR } from 'zss/words/consts'
 
 import { convertPaletteToColors } from '../data/palette'
-import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
+import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { cloneMaterial, interval, time } from './anim'

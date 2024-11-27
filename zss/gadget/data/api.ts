@@ -16,7 +16,7 @@ import {
   isnumber,
   isstring,
 } from 'zss/mapping/types'
-import { WORD } from 'zss/memory/types'
+import { WORD } from 'zss/words/types'
 
 import {
   GADGET_STATE,

@@ -1,6 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
+import { WORD } from 'zss/words/types'
 
 import {
   FORMAT_OBJECT,
@@ -8,7 +9,7 @@ import {
   formatobject,
   unformatobject,
 } from './format'
-import { BOARD_ELEMENT, WORD } from './types'
+import { BOARD_ELEMENT } from './types'
 
 export function createboardelement() {
   const boardelement: BOARD_ELEMENT = {

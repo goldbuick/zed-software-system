@@ -20,6 +20,7 @@
     "@lookingglass/webxr": "^0.6.0",
     "@react-three/eslint-plugin": "^0.1.1",
     "@react-three/fiber": "^8.16.6",
+    "@react-three/postprocessing": "^2.16.3",
     "@syncedstore/core": "^0.6.0",
     "@syncedstore/react": "^0.6.0",
     "@types/is-hotkey": "^0.1.10",

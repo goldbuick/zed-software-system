@@ -9,14 +9,10 @@ import {
   Vector2,
 } from 'three'
 import { MAYBE_NUMBER } from 'zss/mapping/types'
+import { COLOR } from 'zss/words/consts'
 
 import { convertPaletteToColors } from '../data/palette'
-import {
-  CHARS_PER_ROW,
-  COLOR,
-  DRAW_CHAR_HEIGHT,
-  DRAW_CHAR_WIDTH,
-} from '../data/types'
+import { CHARS_PER_ROW, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { cloneMaterial, interval, time } from './anim'

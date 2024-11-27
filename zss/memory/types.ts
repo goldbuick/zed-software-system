@@ -1,25 +1,9 @@
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { MAYBE, MAYBE_STRING } from 'zss/mapping/types'
-
-// words
-
-export type WORD = string | number | undefined | WORD[]
-export type MAYBE_WORD = MAYBE<WORD>
-export type WORD_RESULT = 0 | 1
+import { CATEGORY, COLLISION } from 'zss/words/consts'
+import { WORD } from 'zss/words/types'
 
 // board elements
-
-export enum COLLISION {
-  ISSOLID,
-  ISWALK,
-  ISSWIM,
-  ISBULLET,
-}
-
-export enum CATEGORY {
-  ISTERRAIN,
-  ISOBJECT,
-}
 
 export type BOARD_ELEMENT = {
   // this element is an instance of an element type

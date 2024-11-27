@@ -50,20 +50,16 @@ import {
   bookreadflags,
   bookreadboard,
 } from 'zss/memory/book'
-import { BOARD, BOARD_ELEMENT, BOOK, COLLISION } from 'zss/memory/types'
-
+import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
+import { COLLISION } from 'zss/words/consts'
+import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
-  readargs,
-  ARG_TYPE,
-  PT,
-  ispt,
-  dirfrompts,
-  ptapplydir,
-  readstrkindname,
-  readstrkindcolor,
   readstrkindbg,
-  READ_CONTEXT,
-} from './wordtypes'
+  readstrkindcolor,
+  readstrkindname,
+} from 'zss/words/kind'
+import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { PT } from 'zss/words/types'
 
 const STAT_NAMES = new Set([
   'p1',

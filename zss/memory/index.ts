@@ -7,14 +7,12 @@ import {
   parsezipfile,
 } from 'zss/firmware/loader/parsefile'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
-import { READ_CONTEXT } from 'zss/firmware/wordtypes'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/gadget/data/textformat'
 import {
-  COLOR,
   createdither,
   createlayercontrol,
   createsprite,
@@ -28,6 +26,8 @@ import { clamp } from 'zss/mapping/number'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
+import { COLOR } from 'zss/words/consts'
+import { READ_CONTEXT } from 'zss/words/reader'
 
 import {
   boardelementname,

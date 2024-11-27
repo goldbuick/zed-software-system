@@ -1,9 +1,10 @@
-import { PT, STR_KIND } from 'zss/firmware/wordtypes'
-import { COLOR } from 'zss/gadget/data/types'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
+import { CATEGORY, COLLISION, COLOR } from 'zss/words/consts'
+import { STR_KIND } from 'zss/words/kind'
+import { PT, WORD } from 'zss/words/types'
 
 import { checkcollision } from './atomics'
 import {
@@ -28,11 +29,8 @@ import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
-  CATEGORY,
   CODE_PAGE,
   CODE_PAGE_TYPE,
-  COLLISION,
-  WORD,
 } from './types'
 
 // player state

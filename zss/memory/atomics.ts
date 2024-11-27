@@ -1,21 +1,16 @@
+import { MAYBE, ispresent } from 'zss/mapping/types'
+import { COLLISION } from 'zss/words/consts'
+import { ispt } from 'zss/words/dir'
 import {
-  PT,
-  STR_KIND,
-  ispt,
   readstrkindbg,
   readstrkindcolor,
   readstrkindname,
-} from 'zss/firmware/wordtypes'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+  STR_KIND,
+} from 'zss/words/kind'
+import { PT } from 'zss/words/types'
 
 import { boardelementbg, boardelementcolor, boardelementname } from './board'
-import {
-  BOARD,
-  BOARD_ELEMENT,
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  COLLISION,
-} from './types'
+import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 // what is atomics? a set of spatial and data related queries
 // naming convention

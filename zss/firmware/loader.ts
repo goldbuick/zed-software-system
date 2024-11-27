@@ -9,9 +9,9 @@ import {
   memoryreadbinaryfile,
   memoryreadflags,
 } from 'zss/memory'
+import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 
 import { binaryloader } from './loader/binaryloader'
-import { ARG_TYPE, READ_CONTEXT, readargs } from './wordtypes'
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {

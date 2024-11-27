@@ -2,15 +2,11 @@ import { maptostring } from 'zss/chip'
 import { synth_play } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
-
-import {
-  ARG_TYPE,
-  categoryconsts,
-  collisionconsts,
-  colorconsts,
-  dirconsts,
-  readargs,
-} from './wordtypes'
+import { categoryconsts } from 'zss/words/category'
+import { collisionconsts } from 'zss/words/collision'
+import { colorconsts } from 'zss/words/color'
+import { dirconsts } from 'zss/words/dir'
+import { ARG_TYPE, readargs } from 'zss/words/reader'
 
 function maptoconst(value: string) {
   const maybecategory = (categoryconsts as any)[value]

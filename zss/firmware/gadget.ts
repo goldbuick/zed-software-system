@@ -8,12 +8,12 @@ import {
   gadgetpanel,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { COLOR, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
+import { PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory'
 import { bookelementdisplayread } from 'zss/memory/book'
-
-import { ARG_TYPE, READ_CONTEXT, readargs } from './wordtypes'
+import { COLOR } from 'zss/words/consts'
+import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 
 export const GADGET_FIRMWARE = createfirmware({
   get() {

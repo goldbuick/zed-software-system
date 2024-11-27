@@ -1,8 +1,8 @@
 import { FIRMWARE_COMMAND } from 'zss/firmware'
-import { ARG_TYPE, readargs } from 'zss/firmware/wordtypes'
 import { isnumber, ispresent, isstring, MAYBE_NUMBER } from 'zss/mapping/types'
 import { memoryreadbinaryfile } from 'zss/memory'
 import { BINARY_READER } from 'zss/memory/types'
+import { ARG_TYPE, readargs } from 'zss/words/reader'
 
 function readbin(binaryfile: BINARY_READER, kind: string): MAYBE_NUMBER {
   if (!ispresent(binaryfile)) {

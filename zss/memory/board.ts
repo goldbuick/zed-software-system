@@ -1,20 +1,17 @@
-import {
-  PT,
-  DIR,
-  STR_DIR,
-  dirfrompts,
-  ispt,
-  STR_COLOR,
-  isstrcolor,
-  ptapplydir,
-  mapstrdirtoconst,
-  mapstrcolortoattributes,
-} from 'zss/firmware/wordtypes'
-import { COLOR } from 'zss/gadget/data/types'
 import { pick } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, noop } from 'zss/mapping/types'
+import { isstrcolor, mapstrcolortoattributes, STR_COLOR } from 'zss/words/color'
+import { COLOR, DIR } from 'zss/words/consts'
+import {
+  dirfrompts,
+  ispt,
+  mapstrdirtoconst,
+  ptapplydir,
+  STR_DIR,
+} from 'zss/words/dir'
+import { PT } from 'zss/words/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
 import { exportboardelement, importboardelement } from './boardelement'

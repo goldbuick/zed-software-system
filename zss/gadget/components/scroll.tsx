@@ -3,6 +3,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Group } from 'three'
 import { animpositiontotarget } from 'zss/mapping/anim'
 import { ispresent } from 'zss/mapping/types'
+import { COLOR } from 'zss/words/consts'
 
 import {
   createwritetextcontext,
@@ -10,12 +11,7 @@ import {
   tokenizeandwritetextformat,
   WRITE_TEXT_CONTEXT,
 } from '../data/textformat'
-import {
-  COLOR,
-  DRAW_CHAR_HEIGHT,
-  DRAW_CHAR_WIDTH,
-  PANEL_ITEM,
-} from '../data/types'
+import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from '../data/types'
 
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'

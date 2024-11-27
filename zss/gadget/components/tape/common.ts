@@ -5,8 +5,9 @@ import {
   WRITE_TEXT_CONTEXT,
   textformatreadedges,
 } from 'zss/gadget/data/textformat'
-import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
+import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { COLOR } from 'zss/words/consts'
 
 // deco
 export const BKG_PTRN = 250

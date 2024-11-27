@@ -6,7 +6,6 @@ import {
   tape_terminal_inclayout,
 } from 'zss/device/api'
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
-import { PT } from 'zss/firmware/wordtypes'
 import { useTapeEditor } from 'zss/gadget/data/state'
 import {
   applystrtoindex,
@@ -15,6 +14,7 @@ import {
 } from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { PT } from 'zss/words/types'
 
 import { Scrollable } from '../../scrollable'
 import { useBlink } from '../../useblink'

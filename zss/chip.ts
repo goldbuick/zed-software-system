@@ -10,7 +10,6 @@ import {
   firmwaretick,
   firmwaretock,
 } from './firmware/runner'
-import { ARG_TYPE, READ_CONTEXT, readargs } from './firmware/wordtypes'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
@@ -22,7 +21,8 @@ import {
   ispresent,
 } from './mapping/types'
 import { memoryclearflags, memoryreadflags } from './memory'
-import { WORD, WORD_RESULT } from './memory/types'
+import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
+import { WORD, WORD_RESULT } from './words/types'
 
 export const CONFIG = { HALT_AT_COUNT: 64 }
 

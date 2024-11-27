@@ -1,58 +1,7 @@
-import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
-import { WORD } from 'zss/memory/types'
+import { COLOR } from 'zss/words/consts'
+import { WORD } from 'zss/words/types'
 
 export const BYTES_PER_COLOR = 3
-
-export const PALETTE_COLOR_RANGE = 63
-
-export enum COLOR {
-  BLACK,
-  DKBLUE,
-  DKGREEN,
-  DKCYAN,
-  DKRED,
-  DKPURPLE,
-  DKYELLOW,
-  LTGRAY,
-  DKGRAY,
-  BLUE,
-  GREEN,
-  CYAN,
-  RED,
-  PURPLE,
-  YELLOW,
-  WHITE,
-  ONBLACK,
-  ONDKBLUE,
-  ONDKGREEN,
-  ONDKCYAN,
-  ONDKRED,
-  ONDKPURPLE,
-  ONDKYELLOW,
-  ONLTGRAY,
-  ONDKGRAY,
-  ONBLUE,
-  ONGREEN,
-  ONCYAN,
-  ONRED,
-  ONPURPLE,
-  ONYELLOW,
-  ONWHITE,
-  // special bg colors
-  CLEAR,
-  SHADOW,
-  BORROW,
-}
-
-export function colortofg(color: MAYBE<COLOR>): MAYBE_NUMBER {
-  return ispresent(color) && color < COLOR.ONBLACK ? color : undefined
-}
-
-export function colortobg(color: MAYBE<COLOR>): MAYBE_NUMBER {
-  return ispresent(color) && color > COLOR.WHITE && color < COLOR.CLEAR
-    ? color - COLOR.ONBLACK
-    : undefined
-}
 
 const CHAR_SCALE = 2
 
