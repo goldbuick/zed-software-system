@@ -1,9 +1,9 @@
 import { Lethargy } from 'lethargy-ts'
 import { ReactNode } from 'react'
 import { clamp } from 'zss/mapping/number'
+import { ismac } from 'zss/words/system'
 
 import { Rect } from './rect'
-import { ismac } from './userinput'
 
 const lethargy = new Lethargy({
   sensitivity: ismac ? 7 : 2,

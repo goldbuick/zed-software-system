@@ -3,6 +3,7 @@ import { useWaitForValueString } from 'zss/device/modem'
 import { paneladdress } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { ismac } from 'zss/words/system'
 import {
   tokenizeandwritetextformat,
   applycolortoindexes,
@@ -10,7 +11,7 @@ import {
 } from 'zss/words/textformat'
 
 import { useBlink } from '../hooks'
-import { UserFocus, UserInput, UserInputMods, ismac } from '../userinput'
+import { UserFocus, UserInput, UserInputMods } from '../userinput'
 
 import { PanelItemProps, inputcolor, mapTo } from './common'
 

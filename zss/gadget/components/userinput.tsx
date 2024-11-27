@@ -9,6 +9,7 @@ import {
   useState,
 } from 'react'
 import { vm_cli } from 'zss/device/api'
+import { ismac } from 'zss/words/system'
 
 import { getgadgetclientplayer } from '../data/state'
 import { INPUT } from '../data/types'
@@ -35,9 +36,6 @@ function invoke(input: INPUT, mods: UserInputMods) {
 
 // keyboard input
 export type KeyboardInputHandler = (event: KeyboardEvent) => void
-
-export const ismac = navigator.userAgent.indexOf('Mac') !== -1
-export const metakey = ismac ? 'cmd' : 'ctrl'
 
 export function modsfromevent(event: KeyboardEvent): UserInputMods {
   return {
