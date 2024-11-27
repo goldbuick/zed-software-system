@@ -69,6 +69,14 @@ export function createeighttrack(): EIGHT_TRACK {
   return {
     tempo: 150,
     synths: [
+      // TODO, this should be moved a central spot
+      // we only config 8 synth devices EVER
+      // and this means we do not need this date in 8tracks
+      // we still persist this to generic flag storage
+      // but we don't need this here
+      // so basically the data that needs to be edited here
+      // is what goes in the measures ??
+      // and this is just line numbers ??
       createeighttracksynthconfig(),
       createeighttracksynthconfig(),
       createeighttracksynthconfig(),

@@ -47,7 +47,6 @@ import {
   bookreadboard,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytype,
-  bookreadcodepagewithtype,
   bookreadflags,
   bookreadobject,
   bookwritecodepage,
