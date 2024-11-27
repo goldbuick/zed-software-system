@@ -1,12 +1,10 @@
 import { useMemo } from 'react'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
-import {
-  textformatreadedges,
-  WRITE_TEXT_CONTEXT,
-  WriteTextContext,
-} from 'zss/gadget/data/textformat'
 import { ispresent, MAYBE } from 'zss/mapping/types'
+import { textformatreadedges, WRITE_TEXT_CONTEXT } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
+
+import { WriteTextContext } from '../hooks'
 
 import { TapeEditor } from './editor'
 import { TapeTerminal } from './terminal'

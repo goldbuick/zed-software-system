@@ -1,13 +1,10 @@
 import { SyncedText } from '@syncedstore/core'
 import { createContext } from 'react'
 import { MODEM_SHARED_VALUE } from 'zss/device/modem'
-import {
-  WRITE_TEXT_CONTEXT,
-  textformatreadedges,
-} from 'zss/gadget/data/textformat'
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/consts'
+import { WRITE_TEXT_CONTEXT, textformatreadedges } from 'zss/words/textformat'
 
 // deco
 export const BKG_PTRN = 250

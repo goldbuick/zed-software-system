@@ -4,27 +4,28 @@ import { Group } from 'three'
 import { animpositiontotarget } from 'zss/mapping/anim'
 import { ispresent } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/consts'
-
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
   WRITE_TEXT_CONTEXT,
-} from '../data/textformat'
+} from 'zss/words/textformat'
+
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from '../data/types'
 
+import {
+  resetDither,
+  useDither,
+  useTiles,
+  writeDither,
+  writeTile,
+} from './hooks'
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'
 import { Blinker } from './tape/blinker'
-import {
-  DitherData,
-  DitherRender,
-  resetDither,
-  useDither,
-  writeDither,
-} from './usedither'
+import { DitherData, DitherRender } from './usedither'
 import { UserFocus, UserInput, UserInputHandler } from './userinput'
-import { TilesData, TilesRender, useTiles, writeTile } from './usetiles'
+import { TilesData, TilesRender } from './usetiles'
 
 type ScrollProps = {
   name: string

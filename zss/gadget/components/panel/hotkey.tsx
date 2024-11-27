@@ -1,6 +1,6 @@
 import { useCallback, useContext } from 'react'
+import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { tokenizeandwritetextformat } from '../../data/textformat'
 import { UserHotkey, UserInput } from '../userinput'
 
 import {

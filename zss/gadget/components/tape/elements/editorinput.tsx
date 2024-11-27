@@ -7,17 +7,13 @@ import {
 } from 'zss/device/api'
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
 import { useTapeEditor } from 'zss/gadget/data/state'
-import {
-  applystrtoindex,
-  textformatreadedges,
-  useWriteText,
-} from 'zss/gadget/data/textformat'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { applystrtoindex, textformatreadedges } from 'zss/words/textformat'
 import { PT } from 'zss/words/types'
 
+import { useBlink, useWriteText } from '../../hooks'
 import { Scrollable } from '../../scrollable'
-import { useBlink } from '../../useblink'
 import { UserInput, modsfromevent } from '../../userinput'
 import { EDITOR_CODE_ROW, sharedtosynced } from '../common'
 

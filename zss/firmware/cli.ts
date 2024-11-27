@@ -9,6 +9,7 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
+import { metakey } from 'zss/gadget/components/userinput'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,
@@ -26,9 +27,6 @@ import { bookclearcodepage, bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepagereadname, codepagereadtypetostring } from 'zss/memory/codepage'
 import { CODE_PAGE, CODE_PAGE_LABEL, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-
-const ismac = navigator.userAgent.indexOf('Mac') !== -1
-const metakey = ismac ? 'cmd' : 'ctrl'
 
 const COLOR_EDGE = '$dkpurple'
 

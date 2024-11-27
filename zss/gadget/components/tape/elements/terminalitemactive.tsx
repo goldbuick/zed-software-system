@@ -1,4 +1,4 @@
-import { useBlink } from '../../useblink'
+import { useBlink } from '../../hooks'
 import { TerminalItemProps } from '../common'
 
 import { TerminalItem } from './terminalitem'

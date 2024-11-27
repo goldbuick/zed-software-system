@@ -1,4 +1,4 @@
-import { compress, decompress, trimUndefinedRecursively } from 'compress-json'
+import { decompress, trimUndefinedRecursively } from 'compress-json'
 import { unpack, pack } from 'msgpackr'
 import { api_error } from 'zss/device/api'
 import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
@@ -30,7 +30,6 @@ export function formatobject(
     const formatter = formatmap[key]
     if (ispresent(formatter)) {
       value = formatter(value)
-      // console.info(formatter, key, value)
     }
 
     // map to enum key
@@ -93,7 +92,7 @@ export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
     const data = deepcopy(entry)
     trimUndefinedRecursively(data)
     console.info('wrote', data)
-    return pack(compress(data))
+    return pack(data)
   } catch (err: any) {
     api_error('format', 'binary', err.message)
   }

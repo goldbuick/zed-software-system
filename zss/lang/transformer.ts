@@ -1,7 +1,7 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
 import { TRACE_CODE } from 'zss/config'
-import { tokenize, MaybeFlag } from 'zss/gadget/data/textformat'
 import { ispresent } from 'zss/mapping/types'
+import { tokenize, MaybeFlag } from 'zss/words/textformat'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
 

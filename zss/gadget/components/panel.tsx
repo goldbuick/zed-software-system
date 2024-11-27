@@ -1,14 +1,13 @@
-import { useGadgetClientPlayer } from '../data/state'
 import {
   WRITE_TEXT_CONTEXT,
-  WriteTextContext,
   createwritetextcontext,
-} from '../data/textformat'
+} from 'zss/words/textformat'
+
 import { PANEL_ITEM } from '../data/types'
 
+import { resetTiles, useTiles, WriteTextContext } from './hooks'
 import { PanelItem } from './panel/panelitem'
-import { PlayerContext } from './useplayer'
-import { TilesData, TilesRender, resetTiles, useTiles } from './usetiles'
+import { TilesData, TilesRender } from './usetiles'
 
 type PanelProps = {
   margin?: number
@@ -30,7 +29,6 @@ export function Panel({
   bg,
   text,
 }: PanelProps) {
-  const player = useGadgetClientPlayer()
   const store = useTiles(width, height, 0, color, bg)
   const state = store.getState()
   const context: WRITE_TEXT_CONTEXT = {
@@ -53,13 +51,11 @@ export function Panel({
 
   return (
     <TilesData store={store}>
-      <PlayerContext.Provider value={player}>
-        <WriteTextContext.Provider value={context}>
-          {text.map((item, index) => (
-            <PanelItem key={index} item={item} active={index === selected} />
-          ))}
-        </WriteTextContext.Provider>
-      </PlayerContext.Provider>
+      <WriteTextContext.Provider value={context}>
+        {text.map((item, index) => (
+          <PanelItem key={index} item={item} active={index === selected} />
+        ))}
+      </WriteTextContext.Provider>
       <TilesRender width={width} height={height} />
     </TilesData>
   )

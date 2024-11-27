@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { useWaitForValueString } from 'zss/device/modem'
+import { paneladdress } from 'zss/gadget/data/types'
+import { clamp } from 'zss/mapping/number'
+import { ispresent } from 'zss/mapping/types'
 import {
   tokenizeandwritetextformat,
   applycolortoindexes,
   applystrtoindex,
-} from 'zss/gadget/data/textformat'
-import { paneladdress } from 'zss/gadget/data/types'
-import { clamp } from 'zss/mapping/number'
-import { ispresent } from 'zss/mapping/types'
+} from 'zss/words/textformat'
 
-import { useBlink } from '../useblink'
+import { useBlink } from '../hooks'
 import { UserFocus, UserInput, UserInputMods, ismac } from '../userinput'
 
 import { PanelItemProps, inputcolor, mapTo } from './common'

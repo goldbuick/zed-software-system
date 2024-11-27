@@ -8,11 +8,6 @@ import {
 } from 'zss/firmware/loader/parsefile'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import {
-  createwritetextcontext,
-  tokenizeandmeasuretextformat,
-  tokenizeandwritetextformat,
-} from 'zss/gadget/data/textformat'
-import {
   createdither,
   createlayercontrol,
   createsprite,
@@ -28,6 +23,11 @@ import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
 import { COLOR } from 'zss/words/consts'
 import { READ_CONTEXT } from 'zss/words/reader'
+import {
+  createwritetextcontext,
+  tokenizeandmeasuretextformat,
+  tokenizeandwritetextformat,
+} from 'zss/words/textformat'
 
 import {
   boardelementname,

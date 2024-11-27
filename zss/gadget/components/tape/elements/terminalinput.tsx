@@ -5,20 +5,19 @@ import {
   vm_cli,
 } from 'zss/device/api'
 import { Scrollable } from 'zss/gadget/components/scrollable'
-import { useBlink } from 'zss/gadget/components/useblink'
 import { UserInput, modsfromevent } from 'zss/gadget/components/userinput'
 import { useGadgetClientPlayer, useTapeTerminal } from 'zss/gadget/data/state'
+import { clamp } from 'zss/mapping/number'
+import { stringsplice } from 'zss/mapping/string'
+import { ispresent } from 'zss/mapping/types'
 import {
   applycolortoindexes,
   applystrtoindex,
   textformatreadedges,
   tokenizeandwritetextformat,
-  useWriteText,
-} from 'zss/gadget/data/textformat'
-import { clamp } from 'zss/mapping/number'
-import { stringsplice } from 'zss/mapping/string'
-import { ispresent } from 'zss/mapping/types'
+} from 'zss/words/textformat'
 
+import { useBlink, useWriteText } from '../../hooks'
 import { setuplogitem } from '../common'
 
 type ConsoleInputProps = {

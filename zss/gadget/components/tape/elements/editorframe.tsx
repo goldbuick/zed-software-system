@@ -1,14 +1,12 @@
+import { useBlink, useWriteText, writeTile } from 'zss/gadget/components/hooks'
 import { useTape } from 'zss/gadget/data/state'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
-  useWriteText,
-} from 'zss/gadget/data/textformat'
+} from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { useBlink } from '../../useblink'
-import { writeTile } from '../../usetiles'
 import { BG, FG, setupeditoritem } from '../common'
 
 export function EditorFrame() {

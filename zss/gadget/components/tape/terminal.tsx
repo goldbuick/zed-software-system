@@ -4,14 +4,15 @@ import {
   useTape,
   useTapeTerminal,
 } from 'zss/gadget/data/state'
+import { hub } from 'zss/hub'
+import { totarget } from 'zss/mapping/string'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
-  useWriteText,
-} from 'zss/gadget/data/textformat'
-import { hub } from 'zss/hub'
-import { totarget } from 'zss/mapping/string'
+} from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
+
+import { useWriteText } from '../hooks'
 
 import { ConsoleContext } from './common'
 import { BackPlate } from './elements/backplate'

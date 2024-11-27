@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import { WRITE_TEXT_CONTEXT } from 'zss/gadget/data/textformat'
+import { WRITE_TEXT_CONTEXT } from 'zss/words/textformat'
 import { WORD } from 'zss/words/types'
 
 export type PanelItemProps = {

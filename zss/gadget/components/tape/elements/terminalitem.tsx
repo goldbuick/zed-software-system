@@ -1,10 +1,10 @@
+import { useWriteText } from 'zss/gadget/components/hooks'
 import {
   HyperLinkText,
   textformatreadedges,
   tokenize,
   tokenizeandwritetextformat,
-  useWriteText,
-} from 'zss/gadget/data/textformat'
+} from 'zss/words/textformat'
 
 import {
   TerminalItemInputProps,

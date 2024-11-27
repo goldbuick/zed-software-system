@@ -1,23 +1,20 @@
 import { addEffect, addAfterEffect, useThree, extend } from '@react-three/fiber'
-import { getGPUTier, GetGPUTier } from 'detect-gpu'
-import { useEffect, useLayoutEffect, useRef, useState, Suspense } from 'react'
+import { EffectComposer } from '@react-three/postprocessing'
+import { getGPUTier, TierResult } from 'detect-gpu'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Stats from 'stats.js'
-import { suspend } from 'suspend-react'
 import { NearestFilter, OrthographicCamera } from 'three'
 import { FORCE_CRT_OFF, STATS_DEV } from 'zss/config'
+import { api_error } from 'zss/device/api'
 import { useTexture } from 'zss/gadget/components/usetexture'
 import { createplatform } from 'zss/platform'
 
 import { Framing } from './framing'
 import { CRTShape } from './fx/crt'
-import { EffectComposer } from './fx/effectcomposer'
 import decoimageurl from './fx/scratches.gif'
 import { Gadget } from './gadget'
 
 extend({ OrthographicCamera })
-
-const useDetectGPU = (props?: GetGPUTier) =>
-  suspend(() => getGPUTier(props), ['useDetectGPU'])
 
 createplatform()
 
@@ -49,10 +46,17 @@ export function Terminal() {
     }
   }, [stats])
 
-  const gputier = useDetectGPU({
-    benchmarksURL: '/benchmarks-min',
-  })
-  const shouldcrt = !FORCE_CRT_OFF && gputier.tier > 2 && !gputier.isMobile
+  const [gputier, setgputier] = useState<TierResult>()
+  useEffect(() => {
+    getGPUTier({
+      benchmarksURL: '/benchmarks-min',
+    })
+      .then(setgputier)
+      .catch((err) => api_error('gpu', 'detect', err))
+  }, [])
+
+  const shouldcrt =
+    !FORCE_CRT_OFF && gputier && gputier.tier > 2 && !gputier.isMobile
 
   const set = useThree(({ set }) => set)
   const size = useThree(({ size }) => size)
@@ -84,11 +88,9 @@ export function Terminal() {
         <Gadget />
       </Framing>
       {shouldcrt && (
-        <Suspense fallback={null}>
-          <EffectComposer>
-            <CRTShape splat={splat} viewheight={viewheight} />
-          </EffectComposer>
-        </Suspense>
+        <EffectComposer>
+          <CRTShape splat={splat} viewheight={viewheight} />
+        </EffectComposer>
       )}
     </>
   )

@@ -1,7 +1,7 @@
 import {
   WRITE_TEXT_CONTEXT,
   tokenizeandwritetextformat,
-} from '../../data/textformat'
+} from 'zss/words/textformat'
 
 type PanelItemContentProps = {
   item: string

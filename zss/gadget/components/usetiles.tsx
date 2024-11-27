@@ -1,68 +1,13 @@
-/* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState } from 'react'
+import { useContext } from 'react'
 import { objectKeys } from 'ts-extras'
 import { ispresent } from 'zss/mapping/types'
-import { createStore, StoreApi, useStore } from 'zustand'
+import { StoreApi, useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 
 import { TILES } from '../data/types'
 
 import { Tiles } from './framed/tiles'
-
-export type TILE_DATA = {
-  width: number
-  height: number
-  char: number[]
-  color: number[]
-  bg: number[]
-  render: number
-  changed: () => void
-}
-
-function createtilesstore() {
-  return createStore<TILE_DATA>((set) => {
-    function inc() {
-      set({ render: Math.random() })
-    }
-    return {
-      width: 0,
-      height: 0,
-      char: [],
-      color: [],
-      bg: [],
-      render: 0,
-      changed() {
-        setTimeout(inc, 0)
-      },
-    }
-  })
-}
-
-const TilesContext = createContext(createtilesstore())
-
-export function useTiles(
-  width: number,
-  height: number,
-  char: number,
-  color: number,
-  bg: number,
-): StoreApi<TILE_DATA> {
-  const [store] = useState(() => createtilesstore())
-
-  // ensure array sizes are correct
-  const size = width * height
-  const state = store.getState()
-  if (state.char.length !== size) {
-    state.width = width
-    state.height = height
-    state.char = new Array(size).fill(char)
-    state.color = new Array(size).fill(color)
-    state.bg = new Array(size).fill(bg)
-    state.render = 0
-  }
-
-  return store
-}
+import { TILE_DATA, TilesContext } from './hooks'
 
 type TilesDataProps = React.PropsWithChildren<{
   store: StoreApi<TILE_DATA>
@@ -70,11 +15,6 @@ type TilesDataProps = React.PropsWithChildren<{
 
 export function TilesData({ store, children }: TilesDataProps) {
   return <TilesContext.Provider value={store}>{children}</TilesContext.Provider>
-}
-
-export function useTilesData() {
-  const store = useContext(TilesContext)
-  return store.getState() // get ref to shared data/api
 }
 
 type TilesRenderProps = {
@@ -100,42 +40,4 @@ export function TilesRender({ width, height }: TilesRenderProps) {
       />
     )
   )
-}
-
-export function resetTiles(
-  tiles: TILES,
-  char: number,
-  color: number,
-  bg: number,
-) {
-  tiles.char.fill(char)
-  tiles.color.fill(color)
-  tiles.bg.fill(bg)
-}
-
-type WRITE_TILE_VALUE = {
-  char: number
-  color: number
-  bg: number
-}
-
-export function writeTile(
-  tiles: TILES,
-  width: number,
-  height: number,
-  x: number,
-  y: number,
-  value: Partial<WRITE_TILE_VALUE>,
-) {
-  if (x < 0 || x >= width || y < 0 || y >= height) {
-    return
-  }
-
-  const index = x + y * width
-  objectKeys(value).forEach((key) => {
-    const v = value[key]
-    if (ispresent(v)) {
-      tiles[key][index] = v
-    }
-  })
 }

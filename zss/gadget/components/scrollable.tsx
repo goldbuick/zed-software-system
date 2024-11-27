@@ -3,14 +3,16 @@ import { ReactNode } from 'react'
 import { clamp } from 'zss/mapping/number'
 
 import { Rect } from './rect'
+import { ismac } from './userinput'
 
-const lethargy = new Lethargy()
+const lethargy = new Lethargy({
+  sensitivity: ismac ? 7 : 2,
+})
 
 const STEP_COUNT_MAX = 4
 const STEP_SCALE = 0.75
 
-// eslint-disable-next-line react-refresh/only-export-components
-export function mapdeltay(deltay: number) {
+function mapdeltay(deltay: number) {
   const value = clamp(deltay, -STEP_COUNT_MAX, STEP_COUNT_MAX)
   return Math.round(value * STEP_SCALE)
 }

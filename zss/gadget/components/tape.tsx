@@ -1,27 +1,22 @@
 import { useThree } from '@react-three/fiber'
 import { tape_terminal_open } from 'zss/device/api'
-import {
-  TAPE_DISPLAY,
-  useGadgetClientPlayer,
-  useTape,
-} from 'zss/gadget/data/state'
+import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
+import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
-} from 'zss/gadget/data/textformat'
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
+} from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
 import { ShadeBoxDither } from './framed/dither'
+import { useTiles } from './hooks'
 import { BG, CHAR_HEIGHT, CHAR_WIDTH, FG, SCALE } from './tape/common'
 import { BackPlate } from './tape/elements/backplate'
 import { TapeLayout } from './tape/layout'
-import { PlayerContext } from './useplayer'
 import { UserFocus, UserHotkey } from './userinput'
-import { TilesData, TilesRender, useTiles } from './usetiles'
+import { TilesData, TilesRender } from './usetiles'
 
 export function Tape() {
-  const player = useGadgetClientPlayer()
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
@@ -102,9 +97,7 @@ export function Tape() {
           {terminalopen ? (
             <UserFocus blockhotkeys>
               <BackPlate context={context} />
-              <PlayerContext.Provider value={player}>
-                <TapeLayout context={context} />
-              </PlayerContext.Provider>
+              <TapeLayout context={context} />
               <TilesRender width={width} height={height} />
             </UserFocus>
           ) : (

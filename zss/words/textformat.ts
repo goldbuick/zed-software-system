@@ -1,5 +1,4 @@
 import { createToken, createTokenInstance, IToken, Lexer } from 'chevrotain'
-import { createContext as createcontext, useContext } from 'react'
 import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
 import { ispresent, MAYBE, MAYBE_NUMBER } from 'zss/mapping/types'
@@ -196,14 +195,6 @@ export function applywritetextcontext(
   dest.y = source.y
   dest.active.color = source.active.color
   dest.active.bg = source.active.bg
-}
-
-export const WriteTextContext = createcontext(
-  createwritetextcontext(1, 1, 15, 1),
-)
-
-export function useWriteText() {
-  return useContext(WriteTextContext)
 }
 
 export function writetextreset(context: WRITE_TEXT_CONTEXT) {

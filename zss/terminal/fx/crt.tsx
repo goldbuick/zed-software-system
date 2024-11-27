@@ -1,11 +1,10 @@
-import { type ReactThreeFiber, extend, useThree } from '@react-three/fiber'
+import { EffectProps, wrapEffect } from '@react-three/postprocessing'
 import {
   BlendFunction,
   Effect,
   EffectAttribute,
   ColorChannel,
 } from 'postprocessing'
-import { forwardRef, useMemo } from 'react'
 import { Texture, Uniform, UnsignedByteType } from 'three'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
@@ -255,65 +254,6 @@ class CRTShapeEffect extends Effect {
   }
 }
 
-type EffectConstructor = new (...args: any[]) => Effect
-
-type EffectProps<T extends EffectConstructor> = ReactThreeFiber.Node<
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  T extends Function ? T['prototype'] : InstanceType<T>,
-  T
-> &
-  ConstructorParameters<T>[0] & {
-    blendFunction?: BlendFunction
-    opacity?: number
-  }
-
 export type CRTShapeProps = EffectProps<typeof CRTShapeEffect>
-
-let i = 0
-const components = new WeakMap<
-  EffectConstructor,
-  React.ExoticComponent<any> | string
->()
-
-const wrapEffect = <T extends EffectConstructor>(
-  effect: T,
-  defaults?: EffectProps<T>,
-) =>
-  /* @__PURE__ */ forwardRef<T, EffectProps<T>>(function Effect(
-    {
-      blendFunction = defaults?.blendFunction,
-      opacity = defaults?.opacity,
-      ...props
-    },
-    ref,
-  ) {
-    let Component = components.get(effect)
-    if (!Component) {
-      const key = `FX${effect.name}-${i++}`
-      extend({ [key]: effect })
-      components.set(effect, (Component = key))
-    }
-
-    const camera = useThree((state) => state.camera)
-    const args = useMemo(
-      () => [
-        ...((defaults?.args ?? []) as any[]),
-        ...((props.args ?? [{ ...defaults, ...props }]) as any[]),
-      ],
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [JSON.stringify(props)],
-    )
-
-    return (
-      <Component
-        camera={camera}
-        blendMode-blendFunction={blendFunction}
-        blendMode-opacity-value={opacity}
-        {...props}
-        ref={ref}
-        args={args}
-      />
-    )
-  })
 
 export const CRTShape = wrapEffect(CRTShapeEffect)
