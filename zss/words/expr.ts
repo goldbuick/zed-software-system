@@ -1,8 +1,13 @@
-// read a value from words
+import { pick, range } from 'zss/mapping/array'
+import { clamp, randomInteger } from 'zss/mapping/number'
+import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
-import { READ_CONTEXT } from './reader'
+import { isstrcategory, mapstrcategory, readcategory } from './category'
+import { isstrcollision, mapstrcollision, readcollision } from './collision'
+import { isstrcolor, mapstrcolor, readcolor } from './color'
+import { ispt, isstrdir, mapstrdir, readdir } from './dir'
+import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
 
-// consider splitting out to own file
 export function readexpr(index: number, stringeval = true): [any, number] {
   const maybevalue = READ_CONTEXT.words[index]
 

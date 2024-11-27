@@ -42,6 +42,13 @@ function isstrcollisionconst(value: any): value is STR_COLLISION_CONST {
   return ispresent(COLLISION[value]) && isstring(value)
 }
 
+export function mapstrcollision(value: any): MAYBE<STR_COLLISION_CONST> {
+  if (isstring(value)) {
+    return collisionconsts[value.toLowerCase() as STR_COLLISION_KEYS]
+  }
+  return undefined
+}
+
 export function readcollision(
   index: number,
 ): [STR_COLLISION | undefined, number] {

@@ -87,7 +87,7 @@ function isstrcolorconst(value: any): value is STR_COLOR_CONST {
   return ispresent(COLOR[value]) && isstring(value)
 }
 
-function mapstrcolor(value: any): MAYBE<STR_COLOR_CONST> {
+export function mapstrcolor(value: any): MAYBE<STR_COLOR_CONST> {
   if (isstring(value)) {
     return colorconsts[value.toLowerCase() as STR_COLOR_KEYS]
   }

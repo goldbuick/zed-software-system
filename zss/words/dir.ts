@@ -108,7 +108,7 @@ export function mapstrdirtoconst(value: any): DIR {
   return DIR.IDLE
 }
 
-function mapstrdir(value: any): MAYBE<STR_DIR_CONST> {
+export function mapstrdir(value: any): MAYBE<STR_DIR_CONST> {
   if (isstring(value)) {
     return dirconsts[value.toLowerCase() as STR_DIR_KEYS]
   }
