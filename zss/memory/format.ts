@@ -1,4 +1,4 @@
-import { decompress, trimUndefinedRecursively } from 'compress-json'
+import { trimUndefinedRecursively } from 'compress-json'
 import { unpack, pack } from 'msgpackr'
 import { api_error } from 'zss/device/api'
 import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
@@ -88,7 +88,6 @@ export function unformatobject<T>(
 
 export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
   try {
-    // TODO: rework compress to binary
     const data = deepcopy(entry)
     trimUndefinedRecursively(data)
     console.info('wrote', data)
@@ -100,14 +99,9 @@ export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
 
 export function unpackbinary(binary: Uint8Array): MAYBE<FORMAT_OBJECT> {
   try {
-    const maybedata = unpack(binary)
-    try {
-      const data = decompress(maybedata)
-      console.info('read', data)
-      return data
-    } catch (err: any) {
-      return maybedata
-    }
+    const data = unpack(binary)
+    console.info('read', data)
+    return data
   } catch (err: any) {
     api_error('format', 'binary', err.message)
   }
