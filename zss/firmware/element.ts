@@ -433,10 +433,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
     chip.endofprogram()
     return 0
   })
-  .command('endgame', (chip) => {
-    if (ispresent(READ_CONTEXT.element)) {
-      vm_endgame('element', chip.id())
-    }
+  .command('endgame', () => {
+    vm_endgame('element', READ_CONTEXT.player)
     return 0
   })
   .command('go', (chip, words) => {
