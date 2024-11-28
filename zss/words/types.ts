@@ -77,13 +77,18 @@ export enum STAT_TYPE {
   // @char 2 - we have a pre-defined set of value names that work here
   VALUE,
   // -----
-  LINK, // @link north - use this for passages between boards
-  HOTKEY, // @hotkey gorp g - we can associate hotkeys with objects
   RANGE, // @range gooble R HUH; help text for stat
   SELECT, // @sl foup A B C
   NUMBER, // @number foup 0 100
   TEXT, // @text gumple
+  LINK, // @link north - use this for passages between boards
+  HOTKEY, // @hotkey gorp g - we can associate hotkeys with objects
   CODE, // @code, affords the user to write local code
+}
+
+export type STAT = {
+  type: STAT_TYPE
+  values: string[]
 }
 
 export type PT = { x: number; y: number }

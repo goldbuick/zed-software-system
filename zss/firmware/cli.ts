@@ -27,60 +27,16 @@ import { codepagereadname, codepagereadtypetostring } from 'zss/memory/codepage'
 import { CODE_PAGE, CODE_PAGE_LABEL, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { metakey } from 'zss/words/system'
-
-const COLOR_EDGE = '$dkpurple'
-
-const CHR_TM = '$196'
-const CHR_BM = '$205'
-
-function fg(color: string, text: string) {
-  return `$${color}${text}$blue`
-}
-
-function bg(color: string, text: string) {
-  return `$${color}${text}$ondkblue`
-}
-
-function write(text: string) {
-  tape_info('cli', text)
-}
-
-function writetbar(width: number) {
-  const CHR_TBAR = CHR_TM.repeat(width)
-  write(`${COLOR_EDGE}${CHR_TBAR}`)
-}
-
-function writebbar(width: number) {
-  const CHR_BBAR = CHR_BM.repeat(width)
-  write(`${COLOR_EDGE}${CHR_BBAR}`)
-}
-
-function writeheader(header: string) {
-  // const CHR_TBAR = CHR_TM.repeat(header.length + 2)
-  // const CHR_BBAR = CHR_BM.repeat(header.length + 2)
-  write(`${COLOR_EDGE} ${' '.repeat(header.length)} `)
-  writetbar(header.length + 2)
-  // write(`${COLOR_EDGE}${CHR_TBAR}`)
-  write(`${COLOR_EDGE} $white${header} `)
-  writebbar(header.length + 2)
-  // write(`${COLOR_EDGE}${CHR_BBAR}`)
-}
-
-function writesection(section: string) {
-  // const CHR_BBAR = CHR_BM.repeat(section.length + 2)
-  write(`${COLOR_EDGE} ${' '.repeat(section.length)} `)
-  write(`${COLOR_EDGE} $gray${section} `)
-  writebbar(section.length + 2)
-  // write(`${COLOR_EDGE}${CHR_BBAR}`)
-}
-
-function writeoption(option: string, label: string) {
-  write(`${COLOR_EDGE} $white${option} $blue${label}`)
-}
-
-function writetext(text: string) {
-  write(`${COLOR_EDGE}$blue${text}`)
-}
+import {
+  bg,
+  fg,
+  write,
+  writebbar,
+  writeheader,
+  writeoption,
+  writesection,
+  writetext,
+} from 'zss/words/writeui'
 
 export const CLI_FIRMWARE = createfirmware({
   get(_, name) {
