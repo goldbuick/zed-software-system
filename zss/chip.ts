@@ -34,8 +34,6 @@ export type MESSAGE = {
   player?: string
 }
 
-export type STATE = Record<string, any>
-
 // may need to expand on this to encapsulate more complex values
 export type CHIP = {
   halt: () => void

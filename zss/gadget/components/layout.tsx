@@ -2,6 +2,7 @@ import { useThree } from '@react-three/fiber'
 import { deepClone, _areEquals } from 'fast-json-patch'
 import React, { useState } from 'react'
 import { gadgetserver_clearscroll } from 'zss/device/api'
+import { useEqual, useGadgetClient } from 'zss/gadget/data/state'
 import {
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
@@ -10,9 +11,6 @@ import {
 } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
-import { useShallow } from 'zustand/react/shallow'
-
-import { useGadgetClient } from '../data/state'
 
 import { Framed } from './framed'
 import { StaticDither } from './framed/dither'
@@ -84,7 +82,7 @@ export function Layout() {
   // cache scroll
   const [scroll, setScroll] = useState<RECT>()
   const [player, panels] = useGadgetClient(
-    useShallow((state) => [state.gadget.player, state.gadget.panels]),
+    useEqual((state) => [state.gadget.player, state.gadget.panels]),
   )
 
   // bail on odd states

@@ -145,6 +145,8 @@ function createsynthplay() {
     // #play cxcxcxcxcxcxcx+cxcxcxcxcxcxcxcx;--pxcxpxcxpxcxppcxpxcxpxcxpxcx;q9999;i14011401140199
     // #play cecxcxcxcxcxcx+cecxcecxcecxcxcxf+c+c;--pxcxpxcxpxcxppcxpxcxpxcxpxcx;q9999;i14011401100199
     // #play pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx;q949494949
+    // #play fxfxfxfxxxxxcxcxcxcx+xxxx fxfxfxfxxxxxcxcxcxcx;pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx;q949494949
+    // #play -fxfxfxfxxxxxcxcxcxcx+xxxx fxfxfxfxxxxxcxcxcxcx;pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx;q949494949
     return synth
   }
 

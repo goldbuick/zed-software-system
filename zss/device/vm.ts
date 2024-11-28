@@ -104,7 +104,6 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         if (!message.player) {
           return
         }
-        debugger
         // logout player
         memoryplayerlogout(message.player)
         // save state

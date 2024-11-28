@@ -94,6 +94,9 @@ const register = createdevice(
       case 'error:login:player':
         tape_crash(register.name())
         break
+      case 'refresh':
+        window.location.reload()
+        break
       case 'ready': {
         if (!ispresent(message.player)) {
           return

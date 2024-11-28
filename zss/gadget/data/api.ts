@@ -1,5 +1,5 @@
 import Case from 'case'
-import { CHIP, STATE } from 'zss/chip'
+import { CHIP } from 'zss/chip'
 import {
   modemobservevaluenumber,
   modemobservevaluestring,
@@ -53,22 +53,20 @@ function resetpanel(panel: PANEL) {
   panelshared[panel.id] = {}
 }
 
-function findpanel(state: STATE): PANEL {
+function findpanel(state: GADGET_STATE): PANEL {
   // find slot
-  const panel = state.layout.find(
-    (panel: PANEL) => panel.name === state.layoutfocus,
-  )
+  const panel = state.panels.find((panel: PANEL) => panel.name === state.focus)
 
   if (!panel) {
     const newPanel: PANEL = {
       id: createsid(),
-      name: state.layoutfocus,
+      name: state.focus,
       edge: PANEL_TYPE.RIGHT,
       size: 20,
       text: [],
     }
-    state.layout.push(newPanel)
-    state.layoutreset = false
+    state.panels.push(newPanel)
+    state.reset = false
     return newPanel
   }
 
