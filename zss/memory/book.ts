@@ -2,7 +2,7 @@ import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
-import { CATEGORY, COLLISION, COLOR } from 'zss/words/consts'
+import { CATEGORY, COLLISION, COLOR } from 'zss/words/types'
 import { STR_KIND } from 'zss/words/kind'
 import { PT, WORD } from 'zss/words/types'
 

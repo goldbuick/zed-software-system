@@ -3,7 +3,7 @@ import { createContext } from 'react'
 import { MODEM_SHARED_VALUE } from 'zss/device/modem'
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { COLOR } from 'zss/words/consts'
+import { COLOR } from 'zss/words/types'
 import { WRITE_TEXT_CONTEXT, textformatreadedges } from 'zss/words/textformat'
 
 // deco

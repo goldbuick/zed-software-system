@@ -1,5 +1,5 @@
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { COLLISION } from 'zss/words/consts'
+import { COLLISION } from 'zss/words/types'
 import { ispt } from 'zss/words/dir'
 import {
   readstrkindbg,

@@ -1,6 +1,6 @@
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
-import { COLOR } from './consts'
+import { COLOR } from './types'
 import { readexpr } from './expr'
 import { READ_CONTEXT } from './reader'
 import { WORD } from './types'

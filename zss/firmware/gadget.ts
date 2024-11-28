@@ -9,10 +9,9 @@ import {
   gadgettext,
 } from 'zss/gadget/data/api'
 import { PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
-import { ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadflags } from 'zss/memory'
+import { ispresent } from 'zss/mapping/types'
 import { bookelementdisplayread } from 'zss/memory/book'
-import { COLOR } from 'zss/words/consts'
+import { COLOR } from 'zss/words/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 
 export const GADGET_FIRMWARE = createfirmware({
@@ -54,12 +53,7 @@ export const GADGET_FIRMWARE = createfirmware({
   },
 })
   // gadget output & ui
-  .command('gadget', (chip, words) => {
-    const flags = memoryreadflags(chip.id())
-    if (!isstring(flags.player)) {
-      return 0
-    }
-
+  .command('gadget', (_, words) => {
     const [edge] = readargs(words, 0, [ARG_TYPE.STRING])
     const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
     if (edgeConst === PANEL_TYPE.SCROLL) {
@@ -68,14 +62,14 @@ export const GADGET_FIRMWARE = createfirmware({
         ARG_TYPE.MAYBE_STRING,
         ARG_TYPE.MAYBE_NUMBER,
       ])
-      gadgetpanel(flags.player, edge, edgeConst, size, name)
+      gadgetpanel(READ_CONTEXT.player, edge, edgeConst, size, name)
     } else {
       const [, size, name] = readargs(words, 0, [
         ARG_TYPE.STRING,
         ARG_TYPE.MAYBE_NUMBER,
         ARG_TYPE.MAYBE_STRING,
       ])
-      gadgetpanel(flags.player, edge, edgeConst, size, name)
+      gadgetpanel(READ_CONTEXT.player, edge, edgeConst, size, name)
     }
 
     return 0

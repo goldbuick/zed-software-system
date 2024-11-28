@@ -1,13 +1,12 @@
 import { useEffect } from 'react'
 import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
+import { useWriteText } from 'zss/gadget/components/hooks'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
-
-import { useWriteText } from '../hooks'
 
 import { findcursorinrows, sharedtosynced, splitcoderows } from './common'
 import { BackPlate } from './elements/backplate'

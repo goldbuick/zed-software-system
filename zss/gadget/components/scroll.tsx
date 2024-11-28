@@ -3,7 +3,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Group } from 'three'
 import { animpositiontotarget } from 'zss/mapping/anim'
 import { ispresent } from 'zss/mapping/types'
-import { COLOR } from 'zss/words/consts'
+import { COLOR } from 'zss/words/types'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,

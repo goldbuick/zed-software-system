@@ -9,7 +9,7 @@ import {
   Vector2,
 } from 'three'
 import { MAYBE_NUMBER } from 'zss/mapping/types'
-import { COLOR } from 'zss/words/consts'
+import { COLOR } from 'zss/words/types'
 
 import { convertPaletteToColors } from '../data/palette'
 import { CHARS_PER_ROW, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'

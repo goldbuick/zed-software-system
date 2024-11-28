@@ -3,7 +3,7 @@ import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, noop } from 'zss/mapping/types'
 import { isstrcolor, mapstrcolortoattributes, STR_COLOR } from 'zss/words/color'
-import { COLOR, DIR } from 'zss/words/consts'
+import { COLOR, DIR } from 'zss/words/types'
 import {
   dirfrompts,
   ispt,

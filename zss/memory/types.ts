@@ -1,6 +1,6 @@
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { MAYBE, MAYBE_STRING } from 'zss/mapping/types'
-import { CATEGORY, COLLISION } from 'zss/words/consts'
+import { CATEGORY, COLLISION } from 'zss/words/types'
 import { WORD } from 'zss/words/types'
 
 // board elements

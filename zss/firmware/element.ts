@@ -51,7 +51,6 @@ import {
   bookreadboard,
 } from 'zss/memory/book'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
-import { COLLISION } from 'zss/words/consts'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
   readstrkindbg,
@@ -59,7 +58,7 @@ import {
   readstrkindname,
 } from 'zss/words/kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { PT } from 'zss/words/types'
+import { COLLISION, PT } from 'zss/words/types'
 
 const STAT_NAMES = new Set([
   'p1',

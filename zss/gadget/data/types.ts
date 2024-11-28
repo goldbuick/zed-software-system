@@ -1,4 +1,4 @@
-import { COLOR } from 'zss/words/consts'
+import { COLOR } from 'zss/words/types'
 import { WORD } from 'zss/words/types'
 
 export const BYTES_PER_COLOR = 3

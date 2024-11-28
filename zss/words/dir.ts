@@ -1,6 +1,6 @@
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
-import { DIR } from './consts'
+import { DIR } from './types'
 import { readexpr } from './expr'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
 import { PT, WORD } from './types'

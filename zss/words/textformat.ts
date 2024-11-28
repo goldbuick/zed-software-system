@@ -3,7 +3,7 @@ import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
 import { ispresent, MAYBE, MAYBE_NUMBER } from 'zss/mapping/types'
 import { colorconsts, colortobg, colortofg } from 'zss/words/color'
-import { COLOR } from 'zss/words/consts'
+import { COLOR } from 'zss/words/types'
 
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 
