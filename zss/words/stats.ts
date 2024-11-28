@@ -11,7 +11,7 @@ export function statformat(stat: string): STAT[] {
       default:
         stats.push({
           type: STAT_TYPE.VALUE,
-          values: [statstrings[i]],
+          values: [maybetype, ...values],
         })
         break
       case 'rn':
