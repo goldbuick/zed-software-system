@@ -2,10 +2,14 @@ import { CHIP } from 'zss/chip'
 import { FIRMWARE, FIRMWARE_COMMAND } from 'zss/firmware'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
-import { ALL_FIRMWARE } from './all'
+import { AUDIO_FIRMWARE } from './audio'
+import { BOARD_FIRMWARE } from './board'
 import { CLI_FIRMWARE } from './cli'
+import { CONST_FIRMWARE } from './const'
 import { ELEMENT_FIRMWARE } from './element'
+import { FLAGS_FIRMWARE } from './flags'
 import { GADGET_FIRMWARE } from './gadget'
+import { LIFECYCLE_FIRMWARE } from './lifecycle'
 import { LOADER_FIRMWARE } from './loader'
 
 export enum DRIVER_TYPE {
@@ -18,21 +22,27 @@ export enum DRIVER_TYPE {
 }
 
 const firmwares: Record<string, FIRMWARE> = {
-  all: ALL_FIRMWARE,
+  audio: AUDIO_FIRMWARE,
+  board: BOARD_FIRMWARE,
   cli: CLI_FIRMWARE,
+  const: CONST_FIRMWARE,
   element: ELEMENT_FIRMWARE,
+  flags: FLAGS_FIRMWARE,
   gadget: GADGET_FIRMWARE,
+  lifecycle: LIFECYCLE_FIRMWARE,
   loader: LOADER_FIRMWARE,
 }
+
+const standardlib = ['const', 'flags', 'audio', 'board', 'lifecycle', 'element']
 
 const DRIVER_FIRMWARE = {
   [DRIVER_TYPE.ERROR]: [],
   // user input to drive software and terminal state
-  [DRIVER_TYPE.CLI]: ['all', 'cli', 'element'],
+  [DRIVER_TYPE.CLI]: ['cli', ...standardlib],
   // importing external content into books
-  [DRIVER_TYPE.LOADER]: ['all', 'loader', 'element'],
+  [DRIVER_TYPE.LOADER]: ['loader', ...standardlib],
   // codepages - software to drive engine and UI
-  [DRIVER_TYPE.CODE_PAGE]: ['all', 'gadget', 'element'],
+  [DRIVER_TYPE.CODE_PAGE]: ['gadget', ...standardlib],
 }
 
 const DRIVER_COMMANDS = {

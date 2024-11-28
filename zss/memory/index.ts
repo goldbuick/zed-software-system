@@ -21,13 +21,13 @@ import { clamp } from 'zss/mapping/number'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { OS } from 'zss/os'
-import { COLOR } from 'zss/words/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 
 import {
   boardelementname,

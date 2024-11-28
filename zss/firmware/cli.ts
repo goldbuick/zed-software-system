@@ -54,6 +54,121 @@ export const CLI_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
+  .command('send', (_, words) => {
+    const [msg, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+
+    switch (msg) {
+      // help messages
+      case 'helpmenu':
+        writeheader('cli', `H E L P`)
+        writeoption('cli', `#help controls`, `zss controls and inputs`)
+        write('cli', `!helpcontrols;read help controls`)
+        write('cli', ``)
+        writeoption('cli', `#help text`, `text formatting`)
+        write('cli', `!helptext;read help text`)
+        write('cli', ``)
+        writeoption('cli', `#help developer`, `developer commands`)
+        write('cli', `!helpdeveloper;read help developer`)
+        write('cli', ``)
+        writeoption('cli', `#help player`, `player settings`)
+        write('cli', `!helpplayer;read help player`)
+        writesection('cli', `keyboard input`)
+        writeoption('cli', `?`, `open console`)
+        writeoption('cli', `esc`, `close console`)
+        writeoption('cli', `tab`, `move console`)
+        writeoption('cli', `up / down arrow keys`, `navigate console items`)
+        writeoption('cli', `left / right arrow keys`, `change console items`)
+        writeoption('cli', `enter`, `interact with console items`)
+        writeoption('cli', `alt + arrow keys`, `skip words and console lines`)
+        writeoption('cli', `${metakey} + up / down arrow keys`, `input history`)
+        break
+      case 'helpcontrols':
+        writeheader('cli', `zss controls and inputs`)
+        writesection('cli', `keyboard input`)
+        writeoption('cli', `arrow keys`, `move`)
+        writeoption('cli', `shift + arrow keys`, `shoot`)
+        writeoption('cli', `enter`, `ok / accept`)
+        writeoption('cli', `escape`, `cancel / close`)
+        writeoption('cli', `tab`, `menu / action`)
+        writesection('cli', `mouse input`)
+        writetext('cli', `todo ???`)
+        writesection('cli', `controller input`)
+        writeoption('cli', `left stick`, `move`)
+        writeoption('cli', `right stick`, `aim`)
+        writeoption('cli', `a`, `ok / accept`)
+        writeoption('cli', `b`, `cancel / close`)
+        writeoption('cli', `y`, `menu / action`)
+        writeoption('cli', `x`, `shoot`)
+        writeoption('cli', `triggers`, `shoot`)
+        break
+      case 'helptext':
+        writeheader('cli', `text formatting`)
+        writesection('cli', `typography`)
+        writetext('cli', `plain text`)
+        writetext('cli', `$centering text`)
+        writetext('cli', `"\\"@quoted strings for special chars\\""`)
+        writetext('cli', `$$0-255 for ascii chars $159$176$240`)
+        writetext(
+          'cli',
+          `use color names like ${fg('red', '$$red')} to change foreground color`,
+        )
+        writetext(
+          'cli',
+          `use color names like ${bg('ongreen', '$$ongreen')} to change background color`,
+        )
+        writetext(
+          'cli',
+          `use clear ${bg('clear', 'to change background to')} transparent`,
+        )
+        writesection('cli', `hyperlinks`)
+        writetext(
+          'cli',
+          `${fg('white', '"!hotkey"')} message shortcut;${fg('gray', 'Label')}`,
+        )
+        writetext(
+          'cli',
+          `${fg('white', '"!range"')} flag [labelmin] [labelmax];${fg('gray', 'Input Label')}`,
+        )
+        writetext(
+          'cli',
+          `${fg('white', '"!select"')} flag ...list of values;${fg('gray', 'Input Label')}`,
+        )
+        writetext(
+          'cli',
+          `${fg('white', '"!number"')} flag [minvalue] [maxvalue];${fg('gray', 'Input Label')}`,
+        )
+        writetext(
+          'cli',
+          `${fg('white', '"!text"')} flag;${fg('gray', 'Input Label')}`,
+        )
+        break
+      case 'helpdeveloper':
+        writeheader('cli', `developer commands`)
+        writeoption('cli', `#books`, `list books in memory`)
+        writeoption('cli', `#pages`, `list pages in opened book`)
+        writeoption(
+          'cli',
+          `@[pagetype:]page name`,
+          `create & edit a new codepage in the currently opened book`,
+        )
+        writeoption(
+          'cli',
+          `#trash`,
+          `list books and pages from open book you can delete`,
+        )
+        writeoption('cli', `#save`, `flush state to register`)
+        break
+      case 'helpplayer':
+        writeheader('cli', `player settings`)
+        writetext('cli', `todo`)
+        break
+      default:
+        tape_info('$2', `${msg} ${data ?? ''}`)
+        break
+    }
+
+    return 0
+  })
   .command('stat', (chip, words) => {
     // create / open content
     let codepage: MAYBE<CODE_PAGE>
@@ -323,120 +438,5 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('save', () => {
     vm_flush('cli')
-    return 0
-  })
-  .command('send', (_, words) => {
-    const [msg, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
-
-    switch (msg) {
-      // help messages
-      case 'helpmenu':
-        writeheader('cli', `H E L P`)
-        writeoption('cli', `#help controls`, `zss controls and inputs`)
-        write('cli', `!helpcontrols;read help controls`)
-        write('cli', ``)
-        writeoption('cli', `#help text`, `text formatting`)
-        write('cli', `!helptext;read help text`)
-        write('cli', ``)
-        writeoption('cli', `#help developer`, `developer commands`)
-        write('cli', `!helpdeveloper;read help developer`)
-        write('cli', ``)
-        writeoption('cli', `#help player`, `player settings`)
-        write('cli', `!helpplayer;read help player`)
-        writesection('cli', `keyboard input`)
-        writeoption('cli', `?`, `open console`)
-        writeoption('cli', `esc`, `close console`)
-        writeoption('cli', `tab`, `move console`)
-        writeoption('cli', `up / down arrow keys`, `navigate console items`)
-        writeoption('cli', `left / right arrow keys`, `change console items`)
-        writeoption('cli', `enter`, `interact with console items`)
-        writeoption('cli', `alt + arrow keys`, `skip words and console lines`)
-        writeoption('cli', `${metakey} + up / down arrow keys`, `input history`)
-        break
-      case 'helpcontrols':
-        writeheader('cli', `zss controls and inputs`)
-        writesection('cli', `keyboard input`)
-        writeoption('cli', `arrow keys`, `move`)
-        writeoption('cli', `shift + arrow keys`, `shoot`)
-        writeoption('cli', `enter`, `ok / accept`)
-        writeoption('cli', `escape`, `cancel / close`)
-        writeoption('cli', `tab`, `menu / action`)
-        writesection('cli', `mouse input`)
-        writetext('cli', `todo ???`)
-        writesection('cli', `controller input`)
-        writeoption('cli', `left stick`, `move`)
-        writeoption('cli', `right stick`, `aim`)
-        writeoption('cli', `a`, `ok / accept`)
-        writeoption('cli', `b`, `cancel / close`)
-        writeoption('cli', `y`, `menu / action`)
-        writeoption('cli', `x`, `shoot`)
-        writeoption('cli', `triggers`, `shoot`)
-        break
-      case 'helptext':
-        writeheader('cli', `text formatting`)
-        writesection('cli', `typography`)
-        writetext('cli', `plain text`)
-        writetext('cli', `$centering text`)
-        writetext('cli', `"\\"@quoted strings for special chars\\""`)
-        writetext('cli', `$$0-255 for ascii chars $159$176$240`)
-        writetext(
-          'cli',
-          `use color names like ${fg('red', '$$red')} to change foreground color`,
-        )
-        writetext(
-          'cli',
-          `use color names like ${bg('ongreen', '$$ongreen')} to change background color`,
-        )
-        writetext(
-          'cli',
-          `use clear ${bg('clear', 'to change background to')} transparent`,
-        )
-        writesection('cli', `hyperlinks`)
-        writetext(
-          'cli',
-          `${fg('white', '"!hotkey"')} message shortcut;${fg('gray', 'Label')}`,
-        )
-        writetext(
-          'cli',
-          `${fg('white', '"!range"')} flag [labelmin] [labelmax];${fg('gray', 'Input Label')}`,
-        )
-        writetext(
-          'cli',
-          `${fg('white', '"!select"')} flag ...list of values;${fg('gray', 'Input Label')}`,
-        )
-        writetext(
-          'cli',
-          `${fg('white', '"!number"')} flag [minvalue] [maxvalue];${fg('gray', 'Input Label')}`,
-        )
-        writetext(
-          'cli',
-          `${fg('white', '"!text"')} flag;${fg('gray', 'Input Label')}`,
-        )
-        break
-      case 'helpdeveloper':
-        writeheader('cli', `developer commands`)
-        writeoption('cli', `#books`, `list books in memory`)
-        writeoption('cli', `#pages`, `list pages in opened book`)
-        writeoption(
-          'cli',
-          `@[pagetype:]page name`,
-          `create & edit a new codepage in the currently opened book`,
-        )
-        writeoption(
-          'cli',
-          `#trash`,
-          `list books and pages from open book you can delete`,
-        )
-        writeoption('cli', `#save`, `flush state to register`)
-        break
-      case 'helpplayer':
-        writeheader('cli', `player settings`)
-        writetext('cli', `todo`)
-        break
-      default:
-        tape_info('$2', `${msg} ${data ?? ''}`)
-        break
-    }
-
     return 0
   })

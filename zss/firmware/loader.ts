@@ -7,14 +7,15 @@ import {
   MEMORY_LABEL,
   memoryensuresoftwarebook,
   memoryreadbinaryfile,
-  memoryreadflags,
 } from 'zss/memory'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { ARG_TYPE, readargs } from 'zss/words/reader'
 
 import { binaryloader } from './loader/binaryloader'
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
+    // check loader flags
+
     const binaryfile = memoryreadbinaryfile(chip.id())
     if (ispresent(binaryfile)) {
       switch (name.toLowerCase()) {
@@ -27,20 +28,25 @@ export const LOADER_FIRMWARE = createfirmware({
       }
     }
 
-    // check player's flags
-    const value = memoryreadflags(READ_CONTEXT.player)[name]
-    return [ispresent(value), value]
+    return [false, undefined]
   },
-  set(_, name, value) {
-    // set player's flags
-    const flags = memoryreadflags(READ_CONTEXT.player)
-    flags[name] = value
-    return [true, value]
+  set() {
+    return [false, undefined]
   },
   shouldtick() {},
   tick() {},
   tock() {},
 })
+  .command('send', (chip, words) => {
+    const [target, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+    chip.message({
+      id: createsid(),
+      sender: chip.id(),
+      target,
+      data,
+    })
+    return 0
+  })
   .command('stat', () => {
     // no-op
     return 0
@@ -73,17 +79,7 @@ export const LOADER_FIRMWARE = createfirmware({
     return 0
   })
   .command('bin', binaryloader)
-  /**
-   * TODO loaders, textloader, jsonloader, imageloader, xmlloader
-   * common text parsing ??
-   */
-  .command('send', (chip, words) => {
-    const [target, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
-    chip.message({
-      id: createsid(),
-      sender: chip.id(),
-      target,
-      data,
-    })
-    return 0
-  })
+/**
+ * TODO loaders, textloader, jsonloader, imageloader, xmlloader
+ * common text parsing ??
+ */
