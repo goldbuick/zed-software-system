@@ -1,6 +1,9 @@
 import { createdevice } from 'zss/device'
 import { useGadgetClient } from 'zss/gadget/data/state'
+import { doasync } from 'zss/mapping/func'
+import { waitfor } from 'zss/mapping/tick'
 import { ispresent, isstring } from 'zss/mapping/types'
+import { writeheader, writeoption } from 'zss/words/writeui'
 
 import {
   api_error,
@@ -95,7 +98,18 @@ const register = createdevice(
         tape_crash(register.name())
         break
       case 'refresh':
-        window.location.reload()
+        doasync('register:refresh', async function () {
+          writeheader(register.name(), 'restart in')
+          writeoption(register.name(), '3', '...')
+          await waitfor(1000)
+          writeoption(register.name(), '2', '...')
+          await waitfor(1000)
+          writeoption(register.name(), '1', '...')
+          await waitfor(1000)
+          writeheader(register.name(), 'BYE')
+          await waitfor(100)
+          window.location.reload()
+        })
         break
       case 'ready': {
         if (!ispresent(message.player)) {
