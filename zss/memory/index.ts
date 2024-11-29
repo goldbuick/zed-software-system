@@ -329,7 +329,7 @@ export function memoryplayerlogin(player: string): boolean {
   const kindname = playerkind.name ?? MEMORY_LABEL.PLAYER
   const obj = boardobjectcreatefromkind(titleboard, pt, kindname, player)
   if (ispresent(obj?.id)) {
-    bookplayersetboard(mainbook, player, titleboard.codepage)
+    bookplayersetboard(mainbook, player, titleboard.id)
     return true
   }
 
@@ -367,7 +367,7 @@ export function memoryplayerscan(players: Record<string, number>) {
       const objectid = object.id
       if (ispid(objectid) && ispresent(players[objectid]) === false) {
         players[objectid] = 0
-        bookplayersetboard(mainbook, objectid, board.codepage)
+        bookplayersetboard(mainbook, objectid, board.id)
       }
     }
   }

@@ -1,7 +1,6 @@
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { MAYBE, MAYBE_STRING } from 'zss/mapping/types'
-import { CATEGORY, COLLISION } from 'zss/words/types'
-import { WORD } from 'zss/words/types'
+import { CATEGORY, COLLISION, WORD } from 'zss/words/types'
 
 // board elements
 
@@ -73,7 +72,7 @@ export type BOARD = {
   restartonzap?: number
   maxplayershots?: number
   // runtime only
-  codepage: string
+  id: string
   lookup?: MAYBE_STRING[]
   named?: Record<string, Set<string | number>>
 }

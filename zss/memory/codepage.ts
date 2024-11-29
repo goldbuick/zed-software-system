@@ -19,6 +19,7 @@ import {
   unformatobject,
 } from './format'
 import {
+  BOARD_ELEMENT,
   CODE_PAGE,
   CODE_PAGE_LABEL,
   CODE_PAGE_STATS,
@@ -273,26 +274,38 @@ export function codepagereadstat(codepage: MAYBE<CODE_PAGE>, stat: string) {
   return stats[stat]
 }
 
+function applyelementstats(codepage: CODE_PAGE, element: BOARD_ELEMENT) {
+  const stats = codepagereadstatdefaults(codepage)
+  const keys = Object.keys(stats)
+  for (let i = 0; i < keys.length; ++i) {
+    const key = keys[i]
+    element[key as keyof BOARD_ELEMENT] = stats[key]
+  }
+}
+
 export function codepagereaddata<T extends CODE_PAGE_TYPE>(
   codepage: MAYBE<CODE_PAGE>,
 ): MAYBE<CODE_PAGE_TYPE_MAP[T]> {
-  switch (codepage?.stats?.type) {
+  if (!ispresent(codepage)) {
+    return
+  }
+  switch (codepagereadtype(codepage)) {
     default: {
       // empty / invalid
       return undefined
     }
     case CODE_PAGE_TYPE.ERROR: {
-      return (codepage?.code ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return (codepage.code ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.LOADER: {
-      return (codepage?.code ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return (codepage.code ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.BOARD: {
       // validate and shape board into usable state
       if (!ispresent(codepage.board)) {
         codepage.board = createboard()
       }
-      codepage.board.codepage = codepage.id
+      codepage.board.id = codepage.id
       return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {
@@ -301,6 +314,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         codepage.object = createboardelement()
       }
       codepage.object.name = codepagereadname(codepage)
+      applyelementstats(codepage, codepage.object)
       return codepage.object as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.TERRAIN: {
@@ -309,6 +323,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         codepage.terrain = createboardelement()
       }
       codepage.terrain.name = codepagereadname(codepage)
+      applyelementstats(codepage, codepage.terrain)
       return codepage.terrain as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.CHARSET: {

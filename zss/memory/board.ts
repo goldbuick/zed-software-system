@@ -31,7 +31,7 @@ export function createboard(fn = noop<BOARD>) {
     terrain: createempty(),
     objects: {},
     // runtime
-    codepage: '',
+    id: '',
   }
   return fn(board)
 }

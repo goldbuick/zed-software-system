@@ -1,7 +1,13 @@
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  MAYBE_STRING,
+  deepcopy,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { STR_KIND } from 'zss/words/kind'
 import { CATEGORY, COLLISION, COLOR, PT, WORD } from 'zss/words/types'
 
@@ -197,18 +203,14 @@ export function bookreadobject(
   const object = maybeobject ?? ''
   const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.OBJECT, object)
   if (ispresent(page)) {
-    const stats = codepagereadstatdefaults(page)
     const data = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(page)
-    const element = {
-      ...data,
-      ...stats,
+    return {
+      ...deepcopy(data),
       name: object,
       code: page.code,
-    }
-    return element as BOARD_ELEMENT
-  } else {
-    return undefined
+    } as BOARD_ELEMENT
   }
+  return undefined
 }
 
 export function bookreadterrain(
@@ -218,17 +220,14 @@ export function bookreadterrain(
   const terrain = maybeterrain ?? ''
   const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.TERRAIN, terrain)
   if (ispresent(page)) {
-    const stats = codepagereadstatdefaults(page)
     const data = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(page)
     return {
-      ...data,
-      ...stats,
+      ...deepcopy(data),
       name: terrain,
       code: page.code,
     } as BOARD_ELEMENT
-  } else {
-    return undefined
   }
+  return undefined
 }
 
 export function bookreadboard(
@@ -236,7 +235,6 @@ export function bookreadboard(
   address: string,
 ): MAYBE<BOARD> {
   const codepage = bookreadcodepagebyaddress(book, address)
-  codepagereadname(codepage)
   return codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
 }
 
