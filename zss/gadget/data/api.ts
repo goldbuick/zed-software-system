@@ -30,16 +30,14 @@ import {
 
 const panelshared: Record<string, PANEL_SHARED> = {}
 
-export function initstate(
-  state: Partial<GADGET_STATE>,
-  player: string,
-): GADGET_STATE {
-  state.player = player
-  state.layers = []
-  state.panels = []
-  state.reset = true
-  state.focus = 'scroll'
-  return state as GADGET_STATE
+export function initstate(player: string): GADGET_STATE {
+  return {
+    player,
+    layers: [],
+    panels: [],
+    reset: true,
+    focus: 'scroll',
+  }
 }
 
 function resetpanel(panel: PANEL) {
@@ -116,8 +114,7 @@ const tempgadgetstate: Record<string, GADGET_STATE> = {}
 let GADGET_PROVIDER = (player: string) => {
   let value = tempgadgetstate[player]
   if (!ispresent(value)) {
-    value = initstate({}, player)
-    tempgadgetstate[player] = value
+    tempgadgetstate[player] = value = initstate(player)
   }
   return value
 }
@@ -200,7 +197,7 @@ export function gadgetpanel(
   } else {
     switch (edgeConst) {
       case PANEL_TYPE.START:
-        initstate(shared, player)
+        initstate(player)
         break
       case PANEL_TYPE.LEFT:
       case PANEL_TYPE.RIGHT:

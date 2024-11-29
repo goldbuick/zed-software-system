@@ -10,6 +10,8 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
   switch (message.target) {
     case 'reset':
       if (message.player === gadget.player) {
+        console.info('reset', message.data)
+        console.info('----------')
         useGadgetClient.setState({
           desync: false,
           gadget: message.data,
@@ -20,7 +22,9 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
       if (message.player === gadget.player && !desync) {
         useGadgetClient.setState((gadgetclient) => {
           try {
+            console.info('message.patch', message.data)
             applypatch(gadgetclient.gadget, message.data, true)
+            console.info('----------')
             return {
               ...gadgetclient,
               gadget: {
@@ -29,6 +33,8 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
             }
           } catch (err) {
             if (err instanceof jsonpatcherror) {
+              console.info(err.message)
+              console.info('----------')
               // we are out of sync and need to request a refresh
               gadgetclient.desync = true
               gadgetclientdevice.reply(

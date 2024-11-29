@@ -72,6 +72,8 @@ export enum MEMORY_LABEL {
   TITLE = 'title',
   PLAYER = 'player',
   CONTENT = 'content',
+  GADGETSTORE = 'gadgetstore',
+  GADGETSYNC = 'gadgetsync',
 }
 
 const MEMORY = {
