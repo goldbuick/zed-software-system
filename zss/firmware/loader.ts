@@ -37,6 +37,7 @@ export const LOADER_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
+  // primary firmware
   .command('send', (chip, words) => {
     const [target, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
     chip.message({
@@ -57,13 +58,13 @@ export const LOADER_FIRMWARE = createfirmware({
     return 0
   })
   .command('hyperlink', (_, args) => {
-    // const memory = memoryreadchip(chip.id())
     const [labelword, ...words] = args
     const label = maptostring(labelword)
     const hyperlink = words.map(maptostring).join(' ')
     tape_info('$2', `!${hyperlink};${label}`)
     return 0
   })
+  // ---
   .command('load', (chip, words) => {
     const maybename = words.map(maptostring).join(' ')
     const name = chip.get(maybename) ?? maybename

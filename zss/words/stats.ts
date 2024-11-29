@@ -6,7 +6,7 @@ export function statformat(stat: string): STAT[] {
   const statstrings = stat.split(';')
   for (let i = 0; i < statstrings.length; ++i) {
     // split by spaces
-    const [maybetype, ...values] = statstrings[i].trim().split(' ')
+    const [maybetype, ...values] = statstrings[i].split(' ')
     switch (maybetype.toLowerCase()) {
       default:
         stats.push({
@@ -30,6 +30,7 @@ export function statformat(stat: string): STAT[] {
       case 'text':
         stats.push({ type: STAT_TYPE.TEXT, values })
         break
+      case 'ln':
       case 'link':
         stats.push({ type: STAT_TYPE.LINK, values })
         break

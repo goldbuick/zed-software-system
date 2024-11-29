@@ -54,6 +54,7 @@ export const CLI_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
+  // primary firmware
   .command('send', (_, words) => {
     const [msg, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
 
@@ -252,6 +253,7 @@ export const CLI_FIRMWARE = createfirmware({
     tape_info('$2', `!${hyperlink};${label}`)
     return 0
   })
+  // ---
   .command('bookcreate', (chip, words) => {
     const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
 

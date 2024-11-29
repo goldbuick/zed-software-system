@@ -3795,10 +3795,10 @@ jszip@^3.10.1:
     readable-stream "~2.3.6"
     setimmediate "^1.0.5"
 
-kademlia-table@^2.0.2:
-  version "2.0.2"
-  resolved "https://registry.npmjs.org/kademlia-table/-/kademlia-table-2.0.2.tgz#1618327a0051c17564c63bea16fefd732f6490e9"
-  integrity sha512-Q9BZJctCWxNoTG28PwWqviog3Qii1UX/VuaFXB2gQDbX7w6xOv5b08/XbrnepE+dVnuSBJMjFiAVmDPwHGvlaw==
+kademlia-table@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.npmjs.org/kademlia-table/-/kademlia-table-2.0.3.tgz#e8d5ebc88212f7e8a837e4ea93d07d9ace475abf"
+  integrity sha512-MXYcXG6gVNJcz/6RmQweiJfb4e5CWW99yf/NOM5nKu62H0+3XyEgM+952qXGSNhsjXud2wlp1Q+vG6ceBnvC6Q==
 
 keyv@^4.5.3, keyv@^4.5.4:
   version "4.5.4"

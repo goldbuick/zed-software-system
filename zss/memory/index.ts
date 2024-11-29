@@ -493,11 +493,9 @@ function memoryloader(
     mainbook,
     CODE_PAGE_TYPE.LOADER,
   ).filter((codepage) => {
-    // all blank stats must match
     const stats = codepagereadstats(codepage)
-    const names = Object.keys(stats)
-    const matched = names.filter(
-      (name) => stats[name] === '' && shouldmatch.includes(name.toLowerCase()),
+    const matched = Object.keys(stats).filter((name) =>
+      shouldmatch.includes(name.toLowerCase()),
     )
     return matched.length === shouldmatch.length
   })

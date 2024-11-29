@@ -112,6 +112,14 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
   const [stat, target, ...args] = tokens
   if (ispresent(codepage.stats) && ispresent(stat)) {
     switch (stat.image.toLowerCase()) {
+      default: {
+        // default is a list of key value pairs
+        const words = tokens.slice(1).map((token) => token.image)
+        for (let i = 0; i < words.length; i += 2) {
+          codepage.stats[words[i]] = words[i + 1] ?? ''
+        }
+        break
+      }
       case 'rn': // 1 - 9 with optional min / max labels
       case 'range':
       case 'sl': // select from a list of values
@@ -122,19 +130,14 @@ function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
       case 'text':
       case 'ln': // link to another board
       case 'link':
+      case 'hk': // invoke message via hotkey
+      case 'hotkey':
+      case 'code': // write local code
         if (ispresent(target)) {
           const ltarget = target.image.toLowerCase()
           codepage.stats[ltarget] = tokenstostrings(args ?? [])
         }
         break
-      default: {
-        // default is list of stat names
-        const names = tokens.slice(1).map((token) => token.image)
-        for (let i = 0; i < names.length; ++i) {
-          codepage.stats[names[i]] = ''
-        }
-        break
-      }
     }
   }
 }
@@ -193,6 +196,16 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
       const lmaybename = maybename.toLowerCase().trim()
 
       switch (lmaybetype) {
+        default:
+          if (first) {
+            // first default is name
+            codepage.stats.name = [lmaybetype, ...maybevalues].join(' ').trim()
+          } else {
+            // second default is boolean stats
+            codepage.stats[lmaybetype] = 1
+          }
+          break
+        case 'set':
         case 'stat': {
           // stat content is prefixed with hyperlink !
           const stat = tokenize(`!${maybename}`)
@@ -201,6 +214,10 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
           }
           break
         }
+        case CODE_PAGE_LABEL.LOADER as string:
+          codepage.stats.type = CODE_PAGE_TYPE.LOADER
+          codepage.stats.name = lmaybename
+          break
         case CODE_PAGE_LABEL.BOARD as string:
           codepage.stats.type = CODE_PAGE_TYPE.BOARD
           codepage.stats.name = lmaybename
@@ -224,19 +241,6 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
         case CODE_PAGE_LABEL.EIGHT_TRACK as string:
           codepage.stats.type = CODE_PAGE_TYPE.EIGHT_TRACK
           codepage.stats.name = lmaybename
-          break
-        case CODE_PAGE_LABEL.LOADER as string:
-          codepage.stats.type = CODE_PAGE_TYPE.LOADER
-          codepage.stats.name = lmaybename
-          break
-        default:
-          if (first) {
-            // first default is name
-            codepage.stats.name = [lmaybetype, ...maybevalues].join(' ').trim()
-          } else {
-            // second default is boolean stats
-            codepage.stats[lmaybetype] = 1
-          }
           break
       }
 

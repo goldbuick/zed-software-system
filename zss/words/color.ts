@@ -1,9 +1,8 @@
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
-import { COLOR } from './types'
 import { readexpr } from './expr'
 import { READ_CONTEXT } from './reader'
-import { WORD } from './types'
+import { COLOR, WORD } from './types'
 
 export function colortofg(color: MAYBE<COLOR>): MAYBE<number> {
   return ispresent(color) && color < COLOR.ONBLACK ? color : undefined

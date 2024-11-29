@@ -32,7 +32,6 @@ export const CONST_FIRMWARE = createfirmware({
     if (ispresent(maybeconst)) {
       return [true, maybeconst]
     }
-
     return [false, undefined]
   },
   set() {

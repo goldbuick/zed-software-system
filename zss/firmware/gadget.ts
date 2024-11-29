@@ -55,6 +55,7 @@ export const GADGET_FIRMWARE = createfirmware({
     }
   },
 })
+  // primary firmware
   .command('send', (chip, words) => {
     const [msg, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
 
@@ -112,7 +113,6 @@ export const GADGET_FIRMWARE = createfirmware({
     return 0
   })
   .command('stat', (_, words) => {
-    // all this command does for now is update name
     if (ispresent(READ_CONTEXT.element)) {
       READ_CONTEXT.element.name = words.map(maptostring).join(' ')
     }
@@ -131,7 +131,7 @@ export const GADGET_FIRMWARE = createfirmware({
     gadgethyperlink(READ_CONTEXT.player, chip, label, input, words)
     return 0
   })
-
+  // ---
   .command('gadget', (_, words) => {
     const [edge] = readargs(words, 0, [ARG_TYPE.STRING])
     const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
