@@ -1,5 +1,6 @@
 import { useEqual, useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
+import { useShallow } from 'zustand/react/shallow'
 
 import { Dither } from './dither'
 import { Sprites } from './sprites'
@@ -12,7 +13,7 @@ type FramedTilesProps = {
 
 export function FramedLayer({ id, z }: FramedTilesProps) {
   const layer = useGadgetClient(
-    useEqual((state) => state.gadget.layers.find((item) => item.id === id)),
+    useShallow((state) => state.gadget.layers.find((item) => item.id === id)),
   )
   switch (layer?.type) {
     default:
