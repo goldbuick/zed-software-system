@@ -9,6 +9,7 @@ import { Texture, Uniform, UnsignedByteType } from 'three'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { halftonefragshader } from './halftone'
+import { aastepfragshader, blendfragshader, noisefragshader } from './util'
 
 const crtshapevertshader = `
 #ifdef ASPECT_CORRECTION
@@ -32,6 +33,9 @@ const crtshapefragshader = `
 uniform float viewheight;
 uniform sampler2D splat;
 
+${blendfragshader}
+${aastepfragshader}
+${noisefragshader}
 ${halftonefragshader}
 
 float rectdistance(vec2 uv) {
@@ -41,34 +45,10 @@ float rectdistance(vec2 uv) {
   return abs(length(max(vec2(0.0), d)) + min(0.0, max(d.x, d.y)));
 }
 
-float blendLighten(float base, float blend) {
-	return max(blend,base);
-}
-
-vec3 blendLighten(vec3 base, vec3 blend) {
-	return vec3(blendLighten(base.r,blend.r),blendLighten(base.g,blend.g),blendLighten(base.b,blend.b));
-}
-
-vec3 blendLighten(vec3 base, vec3 blend, float opacity) {
-	return (blendLighten(base, blend) * opacity + base * (1.0 - opacity));
-}
-
-float blendDarken(float base, float blend) {
-	return min(blend,base);
-}
-
-vec3 blendDarken(vec3 base, vec3 blend) {
-	return vec3(blendDarken(base.r,blend.r),blendDarken(base.g,blend.g),blendDarken(base.b,blend.b));
-}
-
-vec3 blendDarken(vec3 base, vec3 blend, float opacity) {
-	return (blendDarken(base, blend) * opacity + base * (1.0 - opacity));
-}
-
-vec2 bendy(const in vec2 xn) {
+vec2 bendy(const in vec2 xn, float dn, float sn) {
   // config
-  float distortion = 0.0173; // 0.0173, 0.511
-  float scale = 0.991; // 1.0, 0.7
+  float distortion = 0.0173 + dn; // 0.0173, 0.511
+  float scale = 0.991 + sn; // 1.0, 0.7
   // calc
   vec3 xDistorted = vec3((1.0 + vec2(distortion, distortion) * dot(xn, xn)) * xn, 1.0);
   mat3 kk = mat3(
@@ -87,9 +67,13 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
 		vec4 bright = texture2D(splat, uv);
 		vec4 dark = texture2D(splat, 1.0 - uv);
 	#endif
+  
+  float n = 0.1 * snoise(uv.st * 200.0); // Fractal noise
+  n += 0.05 * snoise(uv.st * 400.0);
+  n += 0.025 * snoise(uv.st * 800.0);
 
   vec2 xn = 2.0 * (uv.st - 0.5);
-  vec2 edge = bendy(xn);
+  vec2 edge = bendy(xn, 0.02 * n, 0.01 * -n);
   vec2 bent = edge.xy * 0.5 + 0.5;
   
   float dx = rectdistance(xn);
@@ -113,7 +97,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     // rbgb 205 205 193
     vec3 matte = vec3(205.0 / 255.0, 205.0 / 255.0, 193.0 / 255.0);
     vec3 dkmatte = mix(matte, vec3(0.0), 0.5);
-    float mx = pow(1.0 - bx, 16.0) + 0.2;
+    float mx = pow(1.0 - bx, 16.0) + n;
     outputColor = vec4(mix(matte, dkmatte, mx), inputColor.a);
 
   } else {
