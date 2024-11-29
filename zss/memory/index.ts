@@ -30,6 +30,7 @@ import {
 import { COLOR } from 'zss/words/types'
 
 import {
+  boarddeleteobject,
   boardelementname,
   boardobjectcreatefromkind,
   boardobjectread,
@@ -294,6 +295,14 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
+  // try to find existing element
+  const currentboard = bookplayerreadboard(mainbook, player)
+  if (ispresent(currentboard)) {
+    // should signal to reset gadget json ??
+    return true
+  }
+
+  // place on title board
   const titleboard = bookreadboard(mainbook, MEMORY_LABEL.TITLE)
   if (!ispresent(titleboard)) {
     return api_error(
@@ -340,6 +349,7 @@ export function memoryplayerlogout(player: string) {
     board,
     boardobjectread(board, player),
   )
+  boarddeleteobject(board, player)
 
   // clear memory
   bookclearflags(mainbook, player)

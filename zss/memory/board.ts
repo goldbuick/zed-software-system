@@ -3,7 +3,6 @@ import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, noop } from 'zss/mapping/types'
 import { isstrcolor, mapstrcolortoattributes, STR_COLOR } from 'zss/words/color'
-import { COLOR, DIR } from 'zss/words/types'
 import {
   dirfrompts,
   ispt,
@@ -11,7 +10,7 @@ import {
   ptapplydir,
   STR_DIR,
 } from 'zss/words/dir'
-import { PT } from 'zss/words/types'
+import { COLOR, DIR, PT } from 'zss/words/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
 import { exportboardelement, importboardelement } from './boardelement'

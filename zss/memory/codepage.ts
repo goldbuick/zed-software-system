@@ -1,8 +1,9 @@
-import { IToken } from 'chevrotain'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { statformat } from 'zss/words/stats'
+import { STAT_TYPE } from 'zss/words/types'
 
 import { createboard, exportboard, importboard } from './board'
 import {
@@ -104,44 +105,6 @@ export function codepagehasmatch(
   return false
 }
 
-function tokenstostrings(tokens: IToken[]) {
-  return tokens.map((token) => token.image)
-}
-
-function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
-  const [stat, target, ...args] = tokens
-  if (ispresent(codepage.stats) && ispresent(stat)) {
-    switch (stat.image.toLowerCase()) {
-      default: {
-        // default is a list of key value pairs
-        const words = tokens.slice(1).map((token) => token.image)
-        for (let i = 0; i < words.length; i += 2) {
-          codepage.stats[words[i]] = words[i + 1] ?? ''
-        }
-        break
-      }
-      case 'rn': // 1 - 9 with optional min / max labels
-      case 'range':
-      case 'sl': // select from a list of values
-      case 'select':
-      case 'nm': // number input with optional min / max
-      case 'number':
-      case 'tx': // text input
-      case 'text':
-      case 'ln': // link to another board
-      case 'link':
-      case 'hk': // invoke message via hotkey
-      case 'hotkey':
-      case 'code': // write local code
-        if (ispresent(target)) {
-          const ltarget = target.image.toLowerCase()
-          codepage.stats[ltarget] = tokenstostrings(args ?? [])
-        }
-        break
-    }
-  }
-}
-
 export function codepagereadstatdefaults(
   codepage: MAYBE<CODE_PAGE>,
 ): CODE_PAGE_STATS {
@@ -207,10 +170,22 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
           break
         case 'set':
         case 'stat': {
-          // stat content is prefixed with hyperlink !
-          const stat = tokenize(`!${maybename}`)
-          if (stat.tokens.length) {
-            tokenstostats(codepage, stat.tokens)
+          const stats = statformat(maybename)
+          for (let i = 0; i < stats.length; ++i) {
+            const stat = stats[i]
+            if (stat.type === STAT_TYPE.VALUE) {
+              // key => value pairs
+              for (let v = 0; v < stat.values.length; ++v) {
+                codepage.stats[stat.values[v]] = stat.values[v + 1] ?? ''
+              }
+            } else {
+              // everything else
+              const [target, ...args] = stat.values
+              if (ispresent(target)) {
+                const ltarget = target.toLowerCase()
+                codepage.stats[ltarget] = args.join(' ')
+              }
+            }
           }
           break
         }

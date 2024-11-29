@@ -2,9 +2,8 @@ import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, MAYBE_STRING, ispresent, isstring } from 'zss/mapping/types'
-import { CATEGORY, COLLISION, COLOR } from 'zss/words/types'
 import { STR_KIND } from 'zss/words/kind'
-import { PT, WORD } from 'zss/words/types'
+import { CATEGORY, COLLISION, COLOR, PT, WORD } from 'zss/words/types'
 
 import { checkcollision } from './atomics'
 import {
@@ -236,9 +235,9 @@ export function bookreadboard(
   book: MAYBE<BOOK>,
   address: string,
 ): MAYBE<BOARD> {
-  return codepagereaddata<CODE_PAGE_TYPE.BOARD>(
-    bookreadcodepagebyaddress(book, address),
-  )
+  const codepage = bookreadcodepagebyaddress(book, address)
+  codepagereadname(codepage)
+  return codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
 }
 
 export function bookreadflags(book: MAYBE<BOOK>, id: string) {

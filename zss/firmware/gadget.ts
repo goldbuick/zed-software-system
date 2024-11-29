@@ -15,7 +15,8 @@ import { listelementsbyattr } from 'zss/memory/atomics'
 import { bookelementdisplayread } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { COLOR } from 'zss/words/types'
+import { statformat } from 'zss/words/stats'
+import { COLOR, STAT_TYPE } from 'zss/words/types'
 
 export const GADGET_FIRMWARE = createfirmware({
   get() {
@@ -113,8 +114,14 @@ export const GADGET_FIRMWARE = createfirmware({
     return 0
   })
   .command('stat', (_, words) => {
-    if (ispresent(READ_CONTEXT.element)) {
-      READ_CONTEXT.element.name = words.map(maptostring).join(' ')
+    const stats = statformat(words.map(maptostring).join(' '))
+    for (let i = 0; i < stats.length; ++i) {
+      if (
+        stats[i].type === STAT_TYPE.VALUE &&
+        ispresent(READ_CONTEXT.element)
+      ) {
+        READ_CONTEXT.element.name = stats[i].values.join(' ')
+      }
     }
     return 0
   })
