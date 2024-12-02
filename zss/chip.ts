@@ -50,6 +50,7 @@ export type CHIP = {
   isended: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
+  active: (index: number) => void
   goto: (label: string) => void
   hm: () => number
   yield: () => void
@@ -139,6 +140,8 @@ export function createchip(
     flags.locked = ''
     // we leave message unset
     flags.message = undefined
+    // we track where we are in execution
+    flags.resume = 0
     // prevent infinite loop lockup
     flags.loops = 0
     // pause until next tick
@@ -254,6 +257,10 @@ export function createchip(
         return flags.loops++ > CONFIG.HALT_AT_COUNT
       }
       return true
+    },
+    active(index) {
+      // this sets where in the chip execution will resume
+      flags.resume = index
     },
     goto(label) {
       invokecommand('send', [label])

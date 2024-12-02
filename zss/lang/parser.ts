@@ -92,7 +92,11 @@ class ScriptParser extends CstParser {
     ])
   })
 
-  do_inline = this.RULED('do_inline', () => {
+  inline = this.RULED('inline', () => {
+    this.SUBRULE(this.instmt)
+  })
+
+  instmt = this.RULED('instmt', () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.stmt_label) },
       { ALT: () => this.SUBRULE(this.stmt_stat) },
@@ -185,7 +189,7 @@ class ScriptParser extends CstParser {
     this.OR([
       {
         // inline if
-        ALT: () => this.SUBRULE(this.do_inline),
+        ALT: () => this.SUBRULE(this.inline),
       },
       {
         // block if
@@ -209,7 +213,7 @@ class ScriptParser extends CstParser {
     this.OR([
       {
         // inline
-        ALT: () => this.SUBRULE(this.do_inline),
+        ALT: () => this.SUBRULE(this.inline),
       },
       {
         // multi-line block
@@ -227,7 +231,7 @@ class ScriptParser extends CstParser {
     this.OR([
       {
         // inline
-        ALT: () => this.SUBRULE(this.do_inline),
+        ALT: () => this.SUBRULE(this.inline),
       },
       {
         // multi-line block

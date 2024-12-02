@@ -6,15 +6,15 @@ import { tokenize, MaybeFlag } from 'zss/words/textformat'
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
 
 type GenContext = {
-  internal: number
   labels: Record<string, number[]>
-  labelIndex: number
+  internal: number
+  lineindex: number
 }
 
 export const context: GenContext = {
-  internal: 0,
   labels: {},
-  labelIndex: 0,
+  internal: 0,
+  lineindex: 0,
 }
 
 const DENT_CODE = `     `
@@ -205,9 +205,8 @@ function genlabel(): string {
   return `_zc${context.internal++}_`
 }
 
-function addlabel(label: string, active = true): number {
+function addlabel(label: string, index: number, active: boolean): number {
   const llabel = label.toLowerCase()
-  const index = context.labelIndex++
   if (!context.labels[llabel]) {
     context.labels[llabel] = []
   }
@@ -216,7 +215,7 @@ function addlabel(label: string, active = true): number {
 }
 
 function writelabel(ast: CodeNode, label: string, index: number): SourceNode {
-  return write(ast, `case ${index}: // ${label}`)
+  return write(ast, `// ${index} ${label}`)
 }
 
 function writegoto(ast: CodeNode, label: string): SourceNode {
@@ -235,8 +234,7 @@ function transformNode(ast: CodeNode): SourceNode {
         `zss: while (true) {\n`,
         `switch (api.getcase()) {\n`,
         `default:\n`,
-        `case 1: \n`,
-        ...ast.lines.map((item) => [transformNode(item), `\n`]).flat(),
+        ...ast.lines.map(transformNode).flat(),
         `}\n`,
         `api.endofprogram();\n`, // end of program has been reached
         `while(true) { ${WAIT()} }\n`,
@@ -251,6 +249,12 @@ function transformNode(ast: CodeNode): SourceNode {
         `throw err;\n`,
         `}\n`,
         `//# sourceURL=${GENERATED_FILENAME}`,
+      ])
+    case NODE.LINE:
+      return write(ast, [
+        `case ${ast.lineindex}:\n`,
+        ...ast.stmts.map(transformNode).flat(),
+        `\n`,
       ])
     case NODE.LITERAL:
       switch (ast.literal) {
@@ -267,7 +271,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.STAT:
       return writeApi(ast, `stat`, [writeString(ast.value)])
     case NODE.LABEL: {
-      const index = addlabel(ast.name, ast.active)
+      const index = addlabel(ast.name, ast.lineindex, ast.active)
       return writelabel(ast, ast.name, index)
     }
     case NODE.HYPERLINK:
@@ -309,9 +313,9 @@ function transformNode(ast: CodeNode): SourceNode {
     // core / structure
     case NODE.IF: {
       const skipto = genlabel()
-      const skiptoindex = addlabel(skipto)
+      const skiptoindex = addlabel(skipto, 0, true)
       const skipif = genlabel()
-      const skipifindex = addlabel(skipif)
+      const skipifindex = addlabel(skipif, 0, true)
 
       // check if conditional
       const source = write(ast, [
@@ -344,12 +348,14 @@ function transformNode(ast: CodeNode): SourceNode {
       })
 
       // all done
+      // we don't need write label anymore
+      // we have logical lines, so it's more of figuring out __what__ the number should be
       source.add([writelabel(ast, skipto, skiptoindex), `\n`])
       return source
     }
     case NODE.ELSE_IF: {
       const skipelseif = genlabel()
-      const skipelseifindex = addlabel(skipelseif)
+      const skipelseifindex = addlabel(skipelseif, 0, true)
 
       // check if conditional
       const source = write(ast, [
@@ -376,9 +382,9 @@ function transformNode(ast: CodeNode): SourceNode {
     }
     case NODE.WHILE: {
       const whileloop = genlabel()
-      const whileloopindex = addlabel(whileloop)
+      const whileloopindex = addlabel(whileloop, 0, true)
       const whiledone = genlabel()
-      const whiledoneindex = addlabel(whiledone)
+      const whiledoneindex = addlabel(whiledone, 0, true)
 
       const source = write(ast, [
         writelabel(ast, whileloop, whileloopindex),
@@ -414,9 +420,9 @@ function transformNode(ast: CodeNode): SourceNode {
     }
     case NODE.REPEAT: {
       const repeatloop = genlabel()
-      const repeatloopindex = addlabel(repeatloop)
+      const repeatloopindex = addlabel(repeatloop, 0, true)
       const repeatdone = genlabel()
-      const repeatdoneindex = addlabel(repeatdone)
+      const repeatdoneindex = addlabel(repeatdone, 0, true)
 
       // note this is a repeat counter
       // id: number => number of iterations left
@@ -460,9 +466,9 @@ function transformNode(ast: CodeNode): SourceNode {
     }
     case NODE.WAITFOR: {
       const waitforloop = genlabel()
-      const waitforloopindex = addlabel(waitforloop)
+      const waitforloopindex = addlabel(waitforloop, 0, true)
       const waitfordone = genlabel()
-      const waitfordoneindex = addlabel(waitfordone)
+      const waitfordoneindex = addlabel(waitfordone, 0, true)
 
       // waitfor build
       const source = write(ast, [
@@ -489,9 +495,9 @@ function transformNode(ast: CodeNode): SourceNode {
     }
     case NODE.FOREACH: {
       const foreachloop = genlabel()
-      const foreachloopindex = addlabel(foreachloop)
+      const foreachloopindex = addlabel(foreachloop, 0, true)
       const foreachdone = genlabel()
-      const foreachdoneindex = addlabel(foreachdone)
+      const foreachdoneindex = addlabel(foreachdone, 0, true)
 
       // foreach build
       const source = write(ast, [
@@ -554,6 +560,35 @@ function transformNode(ast: CodeNode): SourceNode {
   }
 }
 
+function indexnode(ast: CodeNode) {
+  ast.lineindex = context.lineindex
+  switch (ast.type) {
+    case NODE.PROGRAM:
+      ast.lines.forEach(indexnode)
+      break
+    case NODE.LINE:
+      ++context.lineindex
+      ast.stmts.forEach(indexnode)
+      break
+    case NODE.IF:
+      ast.blocks.forEach(indexnode)
+      break
+    case NODE.IF_BLOCK:
+      ast.lines.forEach(indexnode)
+      ast.altlines.forEach(indexnode)
+      break
+    case NODE.ELSE_IF:
+    case NODE.ELSE:
+    case NODE.WHILE:
+    case NODE.REPEAT:
+    case NODE.FOREACH:
+      ast.lines.forEach(indexnode)
+      break
+    default:
+      break
+  }
+}
+
 export type GenContextAndCode = {
   ast?: CodeNode
 } & GenContext &
@@ -561,11 +596,12 @@ export type GenContextAndCode = {
 
 export function transformAst(ast: CodeNode): GenContextAndCode {
   // setup context
+  context.labels = {}
   context.internal = 0
-  context.labels = {
-    restart: [1],
-  }
-  context.labelIndex = 2
+  context.lineindex = 0
+
+  // build lineindex
+  indexnode(ast)
 
   // translate into js
   const source = transformNode(ast)

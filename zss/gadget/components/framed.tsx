@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { Group, Vector2 } from 'three'
+import { useGadgetClient } from 'zss/gadget/data/state'
 import {
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
@@ -13,9 +14,6 @@ import {
 import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
-import { useShallow } from 'zustand/react/shallow'
-
-import { useEqual, useGadgetClient } from '../data/state'
 
 import Clipping from './clipping'
 import { FramedLayer } from './framed/layer'

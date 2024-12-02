@@ -35,12 +35,21 @@ export type StmtCstChildren = {
   commands?: CommandsCstNode[]
 }
 
-export type Do_inlineCstNode = {
-  name: 'do_inline'
-  children: Do_inlineCstChildren
+export type InlineCstNode = {
+  name: 'inline'
+  children: InlineCstChildren
 } & CstNode
 
-export type Do_inlineCstChildren = {
+export type InlineCstChildren = {
+  instmt: InstmtCstNode[]
+}
+
+export type InstmtCstNode = {
+  name: 'instmt'
+  children: InstmtCstChildren
+} & CstNode
+
+export type InstmtCstChildren = {
   stmt_label?: Stmt_labelCstNode[]
   stmt_stat?: Stmt_statCstNode[]
   stmt_text?: Stmt_textCstNode[]
@@ -192,7 +201,7 @@ export type Command_if_blockCstNode = {
 } & CstNode
 
 export type Command_if_blockCstChildren = {
-  do_inline?: Do_inlineCstNode[]
+  inline?: InlineCstNode[]
   token_do?: IToken[]
   line?: LineCstNode[]
   command_else_if?: Command_else_ifCstNode[]
@@ -208,7 +217,7 @@ export type Command_blockCstNode = {
 } & CstNode
 
 export type Command_blockCstChildren = {
-  do_inline?: Do_inlineCstNode[]
+  inline?: InlineCstNode[]
   token_do?: IToken[]
   line?: LineCstNode[]
   token_command?: IToken[]
@@ -221,7 +230,7 @@ export type Command_forkCstNode = {
 } & CstNode
 
 export type Command_forkCstChildren = {
-  do_inline?: Do_inlineCstNode[]
+  inline?: InlineCstNode[]
   token_do?: IToken[]
   line?: LineCstNode[]
 }
@@ -500,7 +509,8 @@ export type ICstNodeVisitor<IN, OUT> = {
   program(children: ProgramCstChildren, param?: IN): OUT
   line(children: LineCstChildren, param?: IN): OUT
   stmt(children: StmtCstChildren, param?: IN): OUT
-  do_inline(children: Do_inlineCstChildren, param?: IN): OUT
+  inline(children: InlineCstChildren, param?: IN): OUT
+  instmt(children: InstmtCstChildren, param?: IN): OUT
   stmt_label(children: Stmt_labelCstChildren, param?: IN): OUT
   stmt_stat(children: Stmt_statCstChildren, param?: IN): OUT
   stmt_text(children: Stmt_textCstChildren, param?: IN): OUT
