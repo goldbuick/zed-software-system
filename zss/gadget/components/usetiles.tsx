@@ -1,10 +1,6 @@
 import { useContext } from 'react'
-import { objectKeys } from 'ts-extras'
-import { ispresent } from 'zss/mapping/types'
 import { StoreApi, useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
-
-import { TILES } from '../data/types'
 
 import { Tiles } from './framed/tiles'
 import { TILE_DATA, TilesContext } from './hooks'

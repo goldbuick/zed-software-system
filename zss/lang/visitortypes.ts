@@ -145,7 +145,6 @@ export type Structured_cmdCstNode = {
 } & CstNode
 
 export type Structured_cmdCstChildren = {
-  command_debugger?: Command_debuggerCstNode[]
   command_if?: Command_ifCstNode[]
   command_while?: Command_whileCstNode[]
   command_repeat?: Command_repeatCstNode[]
@@ -173,15 +172,6 @@ export type Short_tryCstNode = {
 export type Short_tryCstChildren = {
   token_query: IToken[]
   words: WordsCstNode[]
-}
-
-export type Command_debuggerCstNode = {
-  name: 'command_debugger'
-  children: Command_debuggerCstChildren
-} & CstNode
-
-export type Command_debuggerCstChildren = {
-  token_debugger: IToken[]
 }
 
 export type Command_ifCstNode = {
@@ -522,7 +512,6 @@ export type ICstNodeVisitor<IN, OUT> = {
   structured_cmd(children: Structured_cmdCstChildren, param?: IN): OUT
   short_go(children: Short_goCstChildren, param?: IN): OUT
   short_try(children: Short_tryCstChildren, param?: IN): OUT
-  command_debugger(children: Command_debuggerCstChildren, param?: IN): OUT
   command_if(children: Command_ifCstChildren, param?: IN): OUT
   command_if_block(children: Command_if_blockCstChildren, param?: IN): OUT
   command_block(children: Command_blockCstChildren, param?: IN): OUT
