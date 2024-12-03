@@ -5,6 +5,7 @@ import {
   IToken,
 } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
+import { createsid } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { parser } from './parser'
@@ -56,7 +57,6 @@ import {
   TokenCstChildren,
   WordsCstChildren,
 } from './visitortypes'
-import { createsid } from 'zss/mapping/guid'
 
 const CstVisitor = parser.getBaseCstVisitorConstructor()
 
@@ -180,58 +180,59 @@ type CodeNodeData =
     }
   | {
       type: NODE.IF
-      method: string
       words: CodeNode[]
       block: CodeNode
     }
   | {
       type: NODE.IF_BLOCK
-      id: string
+      skip: string
+      done: string
       lines: CodeNode[]
       altlines: CodeNode[]
     }
   | {
       type: NODE.ELSE_IF
-      id: string
-      method: string
+      skip: string
+      done: string
       words: CodeNode[]
       lines: CodeNode[]
     }
   | {
       type: NODE.ELSE
-      method: string
       lines: CodeNode[]
     }
   | {
       type: NODE.WHILE
-      id: string
-      method: string
+      loop: string
+      done: string
+      words: CodeNode[]
+      lines: CodeNode[]
+    }
+  | {
+      type: NODE.REPEAT
+      loop: string
+      done: string
+      words: CodeNode[]
+      lines: CodeNode[]
+    }
+  | {
+      type: NODE.FOREACH
+      loop: string
+      done: string
       words: CodeNode[]
       lines: CodeNode[]
     }
   | {
       type: NODE.BREAK
-      id: string
+      goto: string
     }
   | {
       type: NODE.CONTINUE
-      id: string
-    }
-  | {
-      type: NODE.REPEAT
-      id: string
-      words: CodeNode[]
-      lines: CodeNode[]
+      goto: string
     }
   | {
       type: NODE.WAITFOR
       words: CodeNode[]
-    }
-  | {
-      type: NODE.FOREACH
-      id: string
-      words: CodeNode[]
-      lines: CodeNode[]
     }
   | {
       type: NODE.OR
@@ -269,7 +270,6 @@ type CodeNodeData =
       type: NODE.EXPR
       words: CodeNode[]
     }
-
 
 export type CodeNode = CodeNodeData &
   CstNodeLocation & {
@@ -366,8 +366,11 @@ class ScriptVisitor
 
   createmarknode(ctx: CstChildrenDictionary, id: string): CodeNode[] {
     return this.createcodenode(ctx, {
-      type: NODE.MARK,
-      id,
+      type: NODE.LINE,
+      stmts: this.createcodenode(ctx, {
+        type: NODE.MARK,
+        id,
+      }),
     })
   }
 
@@ -587,100 +590,106 @@ class ScriptVisitor
     const [block] = this.go(ctx.command_if_block) ?? []
     return this.createcodenode(ctx, {
       type: NODE.IF,
-      method: 'if',
       words: this.go(ctx.words),
       block,
     })
   }
 
   command_if_block(ctx: Command_if_blockCstChildren) {
-    const id = createsid()
+    const skip = createsid()
+    const done = createsid()
     return this.createcodenode(ctx, {
       type: NODE.IF_BLOCK,
-      id,
+      skip,
+      done,
+      // mainline
       lines: [
-        // mainline
         this.go(ctx.inline),
         this.go(ctx.line),
-        this.createmarknode(ctx, `${id}_alt`),
+        // skip if line
+        this.createmarknode(ctx, skip),
       ].flat(),
+      // altline
       altlines: [
-        // altline
         this.go(ctx.command_else_if),
         this.go(ctx.command_else),
-        this.createmarknode(ctx, `${id}_done`),
+        // skip to #done
+        this.createmarknode(ctx, done),
       ].flat(),
     })
   }
 
   command_block(ctx: Command_blockCstChildren) {
-    return [
-      this.go(ctx.inline),
-      this.go(ctx.line),
-    ].flat()
+    return [this.go(ctx.inline), this.go(ctx.line)].flat()
   }
 
   command_fork(ctx: Command_forkCstChildren) {
-    return [
-      this.go(ctx.inline),
-      this.go(ctx.line),
-    ].flat()
+    return [this.go(ctx.inline), this.go(ctx.line)].flat()
   }
 
   command_else_if(ctx: Command_else_ifCstChildren) {
-    const id = createsid()
+    const skip = createsid()
     return this.createcodenode(ctx, {
       type: NODE.ELSE_IF,
-      id: createsid(),
-      method: 'if',
+      skip,
+      done: '', // filled in by #if
       words: this.go(ctx.words),
-      lines: [...this.go(ctx.command_fork), ...this.createmarknode(ctx, `${id}_skip`)],
+      lines: [...this.go(ctx.command_fork), ...this.createmarknode(ctx, skip)],
     })
   }
 
   command_else(ctx: Command_elseCstChildren) {
     return this.createcodenode(ctx, {
       type: NODE.ELSE,
-      method: 'if',
       lines: this.go(ctx.command_fork),
     })
   }
 
   command_while(ctx: Command_whileCstChildren) {
-    const id = createsid()
+    const loop = createsid()
+    const done = createsid()
     return this.createcodenode(ctx, {
       type: NODE.WHILE,
-      id: createsid(),
-      method: 'while',
+      loop,
+      done,
       words: this.go(ctx.words),
-      lines: this.go(ctx.command_block),
+      lines: [
+        ...this.createmarknode(ctx, loop),
+        ...this.go(ctx.command_block),
+        ...this.createmarknode(ctx, done),
+      ],
     })
   }
 
   command_repeat(ctx: Command_repeatCstChildren) {
-    const id = createsid()
+    const loop = createsid()
+    const done = createsid()
     return this.createcodenode(ctx, {
       type: NODE.REPEAT,
-      id: createsid(),
+      loop,
+      done,
       words: this.go(ctx.words),
-      lines: this.go(ctx.command_block),
-    })
-  }
-
-  command_waitfor(ctx: Command_waitforCstChildren) {
-    return this.createcodenode(ctx, {
-      type: NODE.WAITFOR,
-      words: this.go(ctx.words),
+      lines: [
+        ...this.createmarknode(ctx, loop),
+        ...this.go(ctx.command_block),
+        ...this.createmarknode(ctx, done),
+      ],
     })
   }
 
   command_foreach(ctx: Command_foreachCstChildren) {
-    const id = createsid()
+    const loop = createsid()
+    const done = createsid()
     return this.createcodenode(ctx, {
       type: NODE.FOREACH,
-      id: createsid(),
+      loop,
+      done,
       words: this.go(ctx.words),
-      lines: this.go(ctx.command_block),
+      lines: [
+        ...this.createmarknode(ctx, loop),
+        ...this.go(ctx.command_block),
+        ...this.createmarknode(ctx, done),
+      ],
     })
   }
 
@@ -695,6 +704,13 @@ class ScriptVisitor
     return this.createcodenode(ctx, {
       type: NODE.CONTINUE,
       id: '',
+    })
+  }
+
+  command_waitfor(ctx: Command_waitforCstChildren) {
+    return this.createcodenode(ctx, {
+      type: NODE.WAITFOR,
+      words: this.go(ctx.words),
     })
   }
 
