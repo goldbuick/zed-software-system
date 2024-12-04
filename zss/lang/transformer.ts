@@ -9,19 +9,17 @@ type GenContext = {
   labels: Record<string, number[]>
   internal: number
   lineindex: number
+  linelookup: Record<string, number>
 }
 
 export const context: GenContext = {
   labels: {},
   internal: 0,
   lineindex: 0,
+  linelookup: {},
 }
 
-const DENT_CODE = `     `
 const BUMP_CODE = `\n         `
-const JUMP_CODE = `if (api.hm()) { continue zss; }`
-const STOP_CODE = `if (api.sy()) { yield 1; }`
-const WAIT_CODE = `yield 1; ${JUMP_CODE}`
 
 let tracing = false
 const trace: Record<string, number> = {}
@@ -32,14 +30,6 @@ function TRACE(tag: string) {
   trace[tag] = trace[tag] ?? 0
   const count = trace[tag]++
   return `${BUMP_CODE}console.info('${tag}-${count}')`
-}
-
-function WAIT() {
-  return `${WAIT_CODE};${TRACE('wait')}`
-}
-
-function EOL() {
-  return `${STOP_CODE}; ${JUMP_CODE}${TRACE('eol')};`
 }
 
 export function enabletracing(name: string) {
@@ -201,25 +191,12 @@ function transformOperator(ast: CodeNode) {
   return write(ast, '')
 }
 
-function genlabel(): string {
-  return `_zc${context.internal++}_`
-}
-
-function addlabel(label: string, index: number, active: boolean): number {
-  const llabel = label.toLowerCase()
-  if (!context.labels[llabel]) {
-    context.labels[llabel] = []
-  }
-  context.labels[llabel].push(active ? index : -index)
-  return index
-}
-
 function writegoto(ast: CodeNode, line: number): SourceNode {
   return write(ast, [writeApi(ast, `goto`, [`${line}`]), `; continue zss;`])
 }
 
-function listmarks(lines: MAYBE<CodeNode[]>) {
-  return lines?.filter((item) => item.type === NODE.MARK) ?? []
+function readlookup(id: MAYBE<string>) {
+  return context.linelookup[id ?? ''] ?? 0
 }
 
 function transformNode(ast: CodeNode): SourceNode {
@@ -234,10 +211,9 @@ function transformNode(ast: CodeNode): SourceNode {
         ...ast.lines.map(transformNode).flat(),
         `}\n`,
         `api.endofprogram();\n`, // end of program has been reached
-        `while(true) { ${WAIT()} }\n`,
+        `while(true) {}\n`,
         `}\n`,
         `} catch (e) {\n`,
-        // `debugger;\n`,
         `console.error(e);\n`,
         `const source = api.stacktrace(e);\n`,
         `const err = new Error(e.message);\n`,
@@ -247,12 +223,15 @@ function transformNode(ast: CodeNode): SourceNode {
         `}\n`,
         `//# sourceURL=${GENERATED_FILENAME}`,
       ])
-    case NODE.LINE:
+    case NODE.LINE: {
       return write(ast, [
-        `case ${ast.lineindex}:\n`,
+        `case ${ast.lineindex}: api.at(${ast.lineindex});\n`,
         ...ast.stmts.map(transformNode).flat(),
-        `\n`,
+        `if (api.sy()) { yield 1; }; if (api.hm()) { continue zss; }; ${TRACE('eol')}\n`,
       ])
+    }
+    case NODE.MARK:
+      return write(ast, `// ${ast.comment}\n`)
     case NODE.LITERAL:
       switch (ast.literal) {
         case LITERAL.NUMBER:
@@ -264,267 +243,234 @@ function transformNode(ast: CodeNode): SourceNode {
       }
       return blank(ast)
     case NODE.TEXT:
-      return writeApi(ast, 'text', [writeTemplateString(ast.value)])
+      return write(ast, [
+        writeApi(ast, `text`, [writeTemplateString(ast.value)]),
+        `\n`,
+      ])
     case NODE.STAT:
-      return writeApi(ast, `stat`, [writeString(ast.value)])
-    case NODE.LABEL:
-      return write(
-        ast,
-        `// ${ast.name} ${ast.active ? 'label' : '__comment__'}`,
-      )
+      return write(ast, [writeApi(ast, `stat`, [writeString(ast.value)]), `\n`])
+    case NODE.LABEL: {
+      const llabel = ast.name.toLowerCase()
+      const ltype = ast.active ? 'label' : '__comment__'
+      if (!context.labels[llabel]) {
+        context.labels[llabel] = []
+      }
+      const lindex = (ast.active ? 1 : -1) * ast.lineindex
+      context.labels[llabel].push(lindex)
+      // document label
+      return write(ast, `// ${ast.name} ${ltype}\n`)
+    }
     case NODE.HYPERLINK:
-      return writeApi(ast, `hyperlink`, [
-        writeTemplateString(ast.text),
-        ...transformNodes(ast.link),
+      return write(ast, [
+        writeApi(ast, `hyperlink`, [
+          writeTemplateString(ast.text),
+          ...transformNodes(ast.link),
+        ]),
+        `\n`,
       ])
     case NODE.MOVE:
-      if (ast.wait) {
-        return write(ast, [
-          `${DENT_CODE}while (`,
-          writeApi(ast, `move`, ['true', ...transformNodes(ast.words)]),
-          `)${BUMP_CODE}{ ${WAIT()} };${BUMP_CODE}${EOL()}`,
-        ])
-      }
       return write(ast, [
-        writeApi(ast, `move`, ['false', ...transformNodes(ast.words)]),
-        `; ${EOL()}`,
+        writeApi(ast, `move`, [
+          ast.wait ? 'true' : 'false',
+          ...transformNodes(ast.words),
+        ]),
+        `\n`,
       ])
-    case NODE.COMMAND: {
-      const [first] = ast.words
-      const canwait =
-        ispresent(first) &&
-        first.type === NODE.LITERAL &&
-        first.literal === LITERAL.STRING &&
-        first.value.toLowerCase() === 'go'
-      if (canwait) {
-        return write(ast, [
-          `${DENT_CODE}while (`,
-          writeApi(ast, `command`, transformNodes(ast.words)),
-          `)${BUMP_CODE}{ ${WAIT()} };${BUMP_CODE}${EOL()}`,
-        ])
-      }
+    case NODE.COMMAND:
       return write(ast, [
         writeApi(ast, `command`, transformNodes(ast.words)),
-        `; ${EOL()}`,
+        `\n`,
       ])
-    }
     // core / structure
     case NODE.IF: {
       const block = ast.block.type === NODE.IF_BLOCK ? ast.block : undefined
-      const [skip] = listmarks(block?.lines)
-      const [done] = listmarks(block?.altlines)
+      const skip = readlookup(block?.skip)
+      const done = readlookup(block?.done)
 
       // check if conditional
       const source = write(ast, [
         'if (!',
         writeApi(ast, `if`, transformNodes(ast.words)),
         `) { `,
-        writegoto(ast, skip.lineindex),
+        writegoto(ast, skip),
         ` }\n`,
       ])
 
       // if true logic
-      block?.lines.forEach((item) => source.add([transformNode(item), `\n`]))
-
-      // update this
-      source.add([writegoto(ast, done.lineindex), `\n`])
+      block?.lines.forEach((item) => source.add(transformNode(item)))
+      source.add([writegoto(ast, done), `\n`])
 
       // if false (alt) logic
       block?.altlines.forEach((item) => {
-        debugger
         // write #if's done to the ELSE_IF nodes
-        return source.add([transformNode(item), `\n`])
+        if (item.type === NODE.ELSE_IF) {
+          item.goto = done
+        }
+        return source.add(transformNode(item))
       })
 
       // all done
       return source
     }
     case NODE.ELSE_IF: {
-      const skipelseif = genlabel()
-      const skipelseifindex = addlabel(skipelseif, 0, true)
+      const skip = readlookup(ast.skip)
 
       // check if conditional
       const source = write(ast, [
         'if (!',
-        writeApi(ast, ast.method, transformNodes(ast.words)),
+        writeApi(ast, `if`, transformNodes(ast.words)),
         `) { `,
-        writegoto(ast, skipelseif),
+        writegoto(ast, skip),
         ` }\n`,
       ])
 
-      // // if true logic
-      // ast.lines.forEach((item) => source.add([transformNode(item), `\n`]))
-      // source.add([writegoto(ast, ast.skipto), `\n`])
+      // if true logic
+      ast.lines.forEach((item) => source.add(transformNode(item)))
+      source.add([writegoto(ast, ast.goto), `\n`])
 
-      // // if false logic
-      // source.add([writelabel(ast, skipelseif, skipelseifindex), `\n`])
+      // if false logic
       return source
     }
     case NODE.ELSE: {
       const source = write(ast, ``)
-      ast.lines.forEach((item) => source.add([transformNode(item), `\n`]))
+      ast.lines.forEach((item) => source.add(transformNode(item)))
 
       return source
     }
     case NODE.WHILE: {
-      const whileloop = genlabel()
-      const whileloopindex = addlabel(whileloop, 0, true)
-      const whiledone = genlabel()
-      const whiledoneindex = addlabel(whiledone, 0, true)
+      const loop = readlookup(ast.loop)
+      const done = readlookup(ast.done)
+      const source = write(ast, transformNodes(ast.start))
 
-      const source = write(ast, [
-        // writelabel(ast, whileloop, whileloopindex),
-        `\n`,
+      source.add([
+        'if (!',
+        writeApi(ast, 'if', transformNodes(ast.words)),
+        `) { `,
+        writegoto(ast, done),
+        ` }\n`,
       ])
-      source.add([EOL(), `\n`])
 
-      // source.add([
-      //   'if (!',
-      //   writeApi(ast, 'if', transformNodes(ast.words)),
-      //   `) { `,
-      //   writegoto(ast, whiledone),
-      //   ` }\n`,
-      // ])
+      // while true logic
+      ast.lines.forEach((item) => {
+        switch (item.type) {
+          case NODE.BREAK:
+            item.goto = done
+            break
+          case NODE.CONTINUE:
+            item.goto = loop
+            break
+        }
+        source.add(transformNode(item))
+      })
+      source.add([writegoto(ast, loop), `\n`])
 
-      // // while true logic
-      // ast.lines.forEach((item) => {
-      //   switch (item.type) {
-      //     case NODE.BREAK:
-      //       item.skipto = whiledone
-      //       break
-      //     case NODE.CONTINUE:
-      //       item.skipto = whileloop
-      //       break
-      //   }
-      //   source.add([transformNode(item), '\n'])
-      // })
-      // source.add([writegoto(ast, whileloop), `\n`])
-
-      // // while false logic
-      // source.add([writelabel(ast, whiledone, whiledoneindex), `\n`])
+      // done logic
+      source.add(transformNodes(ast.end))
       return source
     }
     case NODE.REPEAT: {
-      const repeatloop = genlabel()
-      const repeatloopindex = addlabel(repeatloop, 0, true)
-      const repeatdone = genlabel()
-      const repeatdoneindex = addlabel(repeatdone, 0, true)
+      const loop = readlookup(ast.loop)
+      const done = readlookup(ast.done)
 
       // note this is a repeat counter
       // id: number => number of iterations left
       // and if zero, re-eval the given words to calc number of repeats
       // repeatstart should naturally reset the repeat counter before looping
+      const ci = `${context.internal++}`
+
       const source = write(ast, [
-        writeApi(ast, 'repeatstart', [
-          `${context.internal}`,
-          ...transformNodes(ast.words),
-        ]),
-        ';\n',
+        writeApi(ast, 'repeatstart', [ci, ...transformNodes(ast.words)]),
+        `\n`,
+        ...transformNodes(ast.start),
       ])
-      // source.add([writelabel(ast, repeatloop, repeatloopindex), `\n`])
-      // source.add([EOL(), `\n`])
 
-      // source.add(
-      //   [
-      //     ['if (!', writeApi(ast, 'repeat', [`${context.internal}`]), `)`],
-      //     [`${BUMP_CODE}{ `, writegoto(ast, repeatdone), ` }\n`],
-      //   ].flat(),
-      // )
-      // context.internal += 1
+      source.add([
+        'if (!',
+        writeApi(ast, 'repeat', [ci]),
+        `) { `,
+        writegoto(ast, done),
+        ` }\n`,
+      ])
 
-      // // repeat true logic
-      // ast.lines.forEach((item) => {
-      //   switch (item.type) {
-      //     case NODE.BREAK:
-      //       item.skipto = repeatdone
-      //       break
-      //     case NODE.CONTINUE:
-      //       item.skipto = repeatloop
-      //       break
-      //   }
-      //   source.add([transformNode(item), '\n'])
-      // })
-      // source.add([writegoto(ast, repeatloop), `\n`])
+      // repeat true logic
+      ast.lines.forEach((item) => {
+        switch (item.type) {
+          case NODE.BREAK:
+            item.goto = done
+            break
+          case NODE.CONTINUE:
+            item.goto = loop
+            break
+        }
+        source.add(transformNode(item))
+      })
+      source.add([writegoto(ast, loop), `\n`])
 
-      // // repeat false logic
-      // source.add([writelabel(ast, repeatdone, repeatdoneindex), `\n`])
+      // done logic
+      source.add(transformNodes(ast.end))
       return source
     }
     case NODE.WAITFOR: {
-      const waitforloop = genlabel()
-      const waitforloopindex = addlabel(waitforloop, 0, true)
-      const waitfordone = genlabel()
-      const waitfordoneindex = addlabel(waitfordone, 0, true)
+      const loop = readlookup(ast.loop)
+      const done = readlookup(ast.done)
 
       // waitfor build
-      const source = write(ast, [
-        // writelabel(ast, waitforloop, waitforloopindex),
-        '\n',
-      ])
-      // source.add([EOL(), `\n`])
+      const source = write(ast, transformNodes(ast.start))
+      source.add(
+        [
+          [`if (!`, writeApi(ast, 'if', transformNodes(ast.words)), `) `],
+          [`{ `, writegoto(ast, done), ` }\n`],
+          [writegoto(ast, loop), `\n`],
+        ].flat(),
+      )
 
-      // source.add([
-      //   'if (',
-      //   writeApi(ast, 'if', transformNodes(ast.words)),
-      //   `)${BUMP_CODE}{ `,
-      //   writegoto(ast, waitfordone),
-      //   ` }\n`,
-      // ])
-
-      // // waitfor false logic
-      // source.add(WAIT())
-      // source.add([writegoto(ast, waitforloop), `\n`])
-
-      // // waitfor true logic
-      // source.add([writelabel(ast, waitfordone, waitfordoneindex), `\n`])
+      // done logic
+      source.add(transformNodes(ast.end))
       return source
     }
     case NODE.FOREACH: {
-      const foreachloop = genlabel()
-      const foreachloopindex = addlabel(foreachloop, 0, true)
-      const foreachdone = genlabel()
-      const foreachdoneindex = addlabel(foreachdone, 0, true)
+      const loop = readlookup(ast.loop)
+      const done = readlookup(ast.done)
 
       // foreach build
       const source = write(ast, [
         writeApi(ast, 'foreachstart', transformNodes(ast.words)),
-        ';\n',
+        `\n`,
+        ...transformNodes(ast.start),
       ])
-      // source.add([writelabel(ast, foreachloop, foreachloopindex), '\n'])
-      // source.add([EOL(), `\n`])
 
-      // source.add([
-      //   'if (!',
-      //   writeApi(ast, 'foreach', transformNodes(ast.words)),
-      //   `)${BUMP_CODE}{ `,
-      //   writegoto(ast, foreachdone),
-      //   ` }\n`,
-      // ])
+      source.add([
+        'if (!',
+        writeApi(ast, 'foreach', transformNodes(ast.words)),
+        `) {`,
+        writegoto(ast, done),
+        ` }\n`,
+      ])
 
-      // // foreach true logic
-      // ast.lines.forEach((item) => {
-      //   switch (item.type) {
-      //     case NODE.BREAK:
-      //       item.skipto = foreachdone
-      //       break
-      //     case NODE.CONTINUE:
-      //       item.skipto = foreachloop
-      //       break
-      //   }
-      //   source.add([transformNode(item), '\n'])
-      // })
-      // source.add([writegoto(ast, foreachloop), `\n`])
+      // foreach true logic
+      ast.lines.forEach((item) => {
+        switch (item.type) {
+          case NODE.BREAK:
+            item.goto = done
+            break
+          case NODE.CONTINUE:
+            item.goto = loop
+            break
+        }
+        source.add(transformNode(item))
+      })
+      source.add([writegoto(ast, loop), `\n`])
 
-      // // foreach false logic
-      // source.add([writelabel(ast, foreachdone, foreachdoneindex), `\n`])
+      // done logic
+      source.add(transformNodes(ast.end))
       return source
     }
     case NODE.BREAK:
       // escape while / repeat loop
-      return write(ast, [writegoto(ast, ast.skipto), `\n`])
+      return write(ast, [writegoto(ast, ast.goto), `\n`])
     case NODE.CONTINUE:
       // skip to next while / repeat iteration
-      return write(ast, [writegoto(ast, ast.skipto), `\n`])
+      return write(ast, [writegoto(ast, ast.goto), `\n`])
     // expressions
     case NODE.OR:
       return writeApi(ast, 'or', ast.items.map(transformNode))
@@ -538,8 +484,6 @@ function transformNode(ast: CodeNode): SourceNode {
       return transformOperator(ast)
     case NODE.EXPR:
       return writeApi(ast, 'expr', ast.words.map(transformNode))
-    case NODE.DEBUGGER:
-      return writeApi(ast, 'debugger', [])
     default:
       console.error(`<unsupported node>`, ast.type, ast)
       return blank(ast)
@@ -547,23 +491,52 @@ function transformNode(ast: CodeNode): SourceNode {
 }
 
 function indexnode(ast: CodeNode) {
+  // update node
   ast.lineindex = context.lineindex
+
+  // inc line
+  if (ast.type === NODE.LINE) {
+    ++context.lineindex
+  }
+
+  // map child nodes
   switch (ast.type) {
+    case NODE.PROGRAM:
+      ast.lines.forEach(indexnode)
+      break
     case NODE.LINE:
-      ++context.lineindex
       ast.stmts.forEach(indexnode)
       break
+    case NODE.MARK:
+      context.linelookup[ast.id] = ast.lineindex
+      break
     case NODE.IF:
+      ast.words.forEach(indexnode)
       indexnode(ast.block)
       break
-    case NODE.PROGRAM:
     case NODE.IF_BLOCK:
+      ast.lines.forEach(indexnode)
+      ast.altlines.forEach(indexnode)
+      break
     case NODE.ELSE_IF:
+      ast.words.forEach(indexnode)
+      ast.lines.forEach(indexnode)
+      break
     case NODE.ELSE:
+      ast.lines.forEach(indexnode)
+      break
     case NODE.WHILE:
     case NODE.REPEAT:
     case NODE.FOREACH:
+      ast.words.forEach(indexnode)
+      ast.start.forEach(indexnode)
       ast.lines.forEach(indexnode)
+      ast.end.forEach(indexnode)
+      break
+    case NODE.MOVE:
+    case NODE.EXPR:
+    case NODE.COMMAND:
+      ast.words.forEach(indexnode)
       break
     default:
       break
@@ -583,9 +556,6 @@ export function transformAst(ast: CodeNode): GenContextAndCode {
 
   // build lineindex
   indexnode(ast)
-
-  // should we just have a list of marks to work with ?
-  // id ==> lineindex map right ?
 
   // translate into js
   const source = transformNode(ast)

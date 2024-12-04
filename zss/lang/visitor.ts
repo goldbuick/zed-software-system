@@ -135,6 +135,7 @@ type CodeNodeData =
   | {
       type: NODE.MARK
       id: string
+      comment: string
     }
   | {
       type: NODE.TEXT
@@ -193,7 +194,7 @@ type CodeNodeData =
   | {
       type: NODE.ELSE_IF
       skip: string
-      done: string
+      goto: number
       words: CodeNode[]
       lines: CodeNode[]
     }
@@ -206,6 +207,8 @@ type CodeNodeData =
       loop: string
       done: string
       words: CodeNode[]
+      start: CodeNode[]
+      end: CodeNode[]
       lines: CodeNode[]
     }
   | {
@@ -213,6 +216,8 @@ type CodeNodeData =
       loop: string
       done: string
       words: CodeNode[]
+      start: CodeNode[]
+      end: CodeNode[]
       lines: CodeNode[]
     }
   | {
@@ -220,19 +225,25 @@ type CodeNodeData =
       loop: string
       done: string
       words: CodeNode[]
+      start: CodeNode[]
+      end: CodeNode[]
       lines: CodeNode[]
     }
   | {
+      type: NODE.WAITFOR
+      loop: string
+      done: string
+      words: CodeNode[]
+      start: CodeNode[]
+      end: CodeNode[]
+    }
+  | {
       type: NODE.BREAK
-      goto: string
+      goto: number
     }
   | {
       type: NODE.CONTINUE
-      goto: string
-    }
-  | {
-      type: NODE.WAITFOR
-      words: CodeNode[]
+      goto: number
     }
   | {
       type: NODE.OR
@@ -364,13 +375,23 @@ class ScriptVisitor
     })
   }
 
-  createmarknode(ctx: CstChildrenDictionary, id: string): CodeNode[] {
+  createmarknode(
+    ctx: CstChildrenDictionary,
+    id: string,
+    comment: string,
+  ): CodeNode[] {
+    const mark = this.createcodenode(ctx, {
+      type: NODE.MARK,
+      id,
+      comment,
+    })
+    return this.createlinenode(ctx, mark)
+  }
+
+  createlinenode(ctx: CstChildrenDictionary, node: CodeNode[]): CodeNode[] {
     return this.createcodenode(ctx, {
       type: NODE.LINE,
-      stmts: this.createcodenode(ctx, {
-        type: NODE.MARK,
-        id,
-      }),
+      stmts: node,
     })
   }
 
@@ -392,16 +413,7 @@ class ScriptVisitor
   }
 
   line(ctx: LineCstChildren) {
-    if (ispresent(ctx.stmt)) {
-      // build line
-      return this.createcodenode(ctx, {
-        type: NODE.LINE,
-        stmts: this.go(ctx.stmt),
-      })
-    }
-
-    // skip blank lines
-    return []
+    return ctx.stmt ? this.go(ctx.stmt) : []
   }
 
   stmt(ctx: StmtCstChildren) {
@@ -430,11 +442,7 @@ class ScriptVisitor
   }
 
   inline(ctx: InlineCstChildren) {
-    // build line
-    return this.createcodenode(ctx, {
-      type: NODE.LINE,
-      stmts: this.go(ctx.instmt),
-    })
+    return this.go(ctx.instmt)
   }
 
   instmt(ctx: InstmtCstChildren) {
@@ -463,11 +471,14 @@ class ScriptVisitor
   }
 
   stmt_label(ctx: Stmt_labelCstChildren) {
-    return this.createcodenode(ctx, {
-      type: NODE.LABEL,
-      active: true,
-      name: tokenstring(ctx.token_label, ':').slice(1).trim(),
-    })
+    return this.createlinenode(
+      ctx,
+      this.createcodenode(ctx, {
+        type: NODE.LABEL,
+        active: true,
+        name: tokenstring(ctx.token_label, ':').slice(1).trim(),
+      }),
+    )
   }
 
   stmt_stat(ctx: Stmt_statCstChildren) {
@@ -485,11 +496,14 @@ class ScriptVisitor
   }
 
   stmt_comment(ctx: Stmt_commentCstChildren) {
-    return this.createcodenode(ctx, {
-      type: NODE.LABEL,
-      active: false,
-      name: tokenstring(ctx.token_comment, `'`).slice(1).trim(),
-    })
+    return this.createlinenode(
+      ctx,
+      this.createcodenode(ctx, {
+        type: NODE.LABEL,
+        active: false,
+        name: tokenstring(ctx.token_comment, `'`).slice(1).trim(),
+      }),
+    )
   }
 
   stmt_hyperlink(ctx: Stmt_hyperlinkCstChildren) {
@@ -519,10 +533,13 @@ class ScriptVisitor
 
   commands(ctx: CommandsCstChildren) {
     if (ctx.words) {
-      return this.createcodenode(ctx, {
-        type: NODE.COMMAND,
-        words: this.go(ctx.words),
-      })
+      return this.createlinenode(
+        ctx,
+        this.createcodenode(ctx, {
+          type: NODE.COMMAND,
+          words: this.go(ctx.words),
+        }),
+      )
     }
     if (ctx.short_go) {
       return this.go(ctx.short_go)
@@ -566,22 +583,28 @@ class ScriptVisitor
 
   short_go(ctx: Short_goCstChildren) {
     if (ctx.token_divide) {
-      return this.createcodenode(ctx, {
-        type: NODE.MOVE,
-        wait: true,
-        words: this.go(ctx.words),
-      })
+      return this.createlinenode(
+        ctx,
+        this.createcodenode(ctx, {
+          type: NODE.MOVE,
+          wait: true,
+          words: this.go(ctx.words),
+        }),
+      )
     }
     return []
   }
 
   short_try(ctx: Short_tryCstChildren) {
     if (ctx.token_query) {
-      return this.createcodenode(ctx, {
-        type: NODE.MOVE,
-        wait: false,
-        words: this.go(ctx.words),
-      })
+      return this.createlinenode(
+        ctx,
+        this.createcodenode(ctx, {
+          type: NODE.MOVE,
+          wait: false,
+          words: this.go(ctx.words),
+        }),
+      )
     }
     return []
   }
@@ -603,18 +626,13 @@ class ScriptVisitor
       skip,
       done,
       // mainline
-      lines: [
-        this.go(ctx.inline),
-        this.go(ctx.line),
-        // skip if line
-        this.createmarknode(ctx, skip),
-      ].flat(),
+      lines: [this.go(ctx.inline), this.go(ctx.line)].flat(),
       // altline
       altlines: [
+        this.createmarknode(ctx, skip, `alt logic`),
         this.go(ctx.command_else_if),
         this.go(ctx.command_else),
-        // skip to #done
-        this.createmarknode(ctx, done),
+        this.createmarknode(ctx, done, `end of if`),
       ].flat(),
     })
   }
@@ -632,9 +650,12 @@ class ScriptVisitor
     return this.createcodenode(ctx, {
       type: NODE.ELSE_IF,
       skip,
-      done: '', // filled in by #if
+      goto: 0, // filled in by #if
       words: this.go(ctx.words),
-      lines: [...this.go(ctx.command_fork), ...this.createmarknode(ctx, skip)],
+      lines: [
+        ...this.go(ctx.command_fork),
+        ...this.createmarknode(ctx, skip, `skip`),
+      ],
     })
   }
 
@@ -653,11 +674,9 @@ class ScriptVisitor
       loop,
       done,
       words: this.go(ctx.words),
-      lines: [
-        ...this.createmarknode(ctx, loop),
-        ...this.go(ctx.command_block),
-        ...this.createmarknode(ctx, done),
-      ],
+      start: this.createmarknode(ctx, loop, `start of while`),
+      end: this.createmarknode(ctx, done, `end of while`),
+      lines: this.go(ctx.command_block),
     })
   }
 
@@ -669,11 +688,9 @@ class ScriptVisitor
       loop,
       done,
       words: this.go(ctx.words),
-      lines: [
-        ...this.createmarknode(ctx, loop),
-        ...this.go(ctx.command_block),
-        ...this.createmarknode(ctx, done),
-      ],
+      start: this.createmarknode(ctx, loop, `start of repeat`),
+      end: this.createmarknode(ctx, done, `end of repeat`),
+      lines: this.go(ctx.command_block),
     })
   }
 
@@ -685,32 +702,36 @@ class ScriptVisitor
       loop,
       done,
       words: this.go(ctx.words),
-      lines: [
-        ...this.createmarknode(ctx, loop),
-        ...this.go(ctx.command_block),
-        ...this.createmarknode(ctx, done),
-      ],
+      start: this.createmarknode(ctx, loop, `start of foreach`),
+      end: this.createmarknode(ctx, done, `end of repeat`),
+      lines: this.go(ctx.command_block),
+    })
+  }
+
+  command_waitfor(ctx: Command_waitforCstChildren) {
+    const loop = createsid()
+    const done = createsid()
+    return this.createcodenode(ctx, {
+      type: NODE.WAITFOR,
+      loop,
+      done,
+      words: this.go(ctx.words),
+      start: this.createmarknode(ctx, loop, `start of waitfor`),
+      end: this.createmarknode(ctx, done, `end of waitfor`),
     })
   }
 
   command_break(ctx: Command_breakCstChildren) {
     return this.createcodenode(ctx, {
       type: NODE.BREAK,
-      id: '',
+      goto: 0,
     })
   }
 
   command_continue(ctx: Command_continueCstChildren) {
     return this.createcodenode(ctx, {
       type: NODE.CONTINUE,
-      id: '',
-    })
-  }
-
-  command_waitfor(ctx: Command_waitforCstChildren) {
-    return this.createcodenode(ctx, {
-      type: NODE.WAITFOR,
-      words: this.go(ctx.words),
+      goto: 0,
     })
   }
 
@@ -718,13 +739,16 @@ class ScriptVisitor
     const playstr = tokenstring(ctx.token_command_play, '')
       .replace('play', '')
       .trim()
-    return this.createcodenode(ctx, {
-      type: NODE.COMMAND,
-      words: [
-        this.createstringnode(ctx, 'play'),
-        this.createstringnode(ctx, playstr),
-      ].flat(),
-    })
+    return this.createlinenode(
+      ctx,
+      this.createcodenode(ctx, {
+        type: NODE.COMMAND,
+        words: [
+          this.createstringnode(ctx, 'play'),
+          this.createstringnode(ctx, playstr),
+        ].flat(),
+      }),
+    )
   }
 
   expr(ctx: ExprCstChildren) {
