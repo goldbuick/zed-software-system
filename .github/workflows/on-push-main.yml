@@ -17,19 +17,19 @@ jobs:
 
       - name: setup node
         uses: actions/setup-node@v4
-        with: 
+        with:
           node-version-file: .nvmrc
 
       - name: setup and build
         run: |
           yarn build
           yarn build:copy-cname
-    
+
       - name: Push
         uses: s0/git-publish-subdir-action@develop
         env:
           REPO: self
           BRANCH: public # The branch name where you want to push the assets
           FOLDER: ./zss/terminal/dist # The directory where your assets are generated
-          MESSAGE: "Build: ({sha}) {msg}" # The commit message
+          MESSAGE: 'Build: ({sha}) {msg}' # The commit message
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub will automatically add this - you don't need to bother getting a token

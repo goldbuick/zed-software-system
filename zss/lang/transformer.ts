@@ -1,6 +1,6 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
 import { TRACE_CODE } from 'zss/config'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
 import { tokenize, MaybeFlag } from 'zss/words/textformat'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
@@ -208,6 +208,7 @@ function transformNode(ast: CodeNode): SourceNode {
         `zss: while (true) {\n`,
         `switch (api.getcase()) {\n`,
         `default:\n`,
+        `case 0:\n`,
         ...ast.lines.map(transformNode).flat(),
         `}\n`,
         `api.endofprogram();\n`, // end of program has been reached
@@ -245,10 +246,13 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.TEXT:
       return write(ast, [
         writeApi(ast, `text`, [writeTemplateString(ast.value)]),
-        `\n`,
+        `;\n`,
       ])
     case NODE.STAT:
-      return write(ast, [writeApi(ast, `stat`, [writeString(ast.value)]), `\n`])
+      return write(ast, [
+        writeApi(ast, `stat`, [writeString(ast.value)]),
+        `;\n`,
+      ])
     case NODE.LABEL: {
       const llabel = ast.name.toLowerCase()
       const ltype = ast.active ? 'label' : '__comment__'
@@ -266,7 +270,7 @@ function transformNode(ast: CodeNode): SourceNode {
           writeTemplateString(ast.text),
           ...transformNodes(ast.link),
         ]),
-        `\n`,
+        `;\n`,
       ])
     case NODE.MOVE:
       return write(ast, [
@@ -274,7 +278,7 @@ function transformNode(ast: CodeNode): SourceNode {
           ast.wait ? 'true' : 'false',
           ...transformNodes(ast.words),
         ]),
-        `\n`,
+        `;\n`,
       ])
     case NODE.COMMAND:
       return write(ast, [
@@ -362,7 +366,7 @@ function transformNode(ast: CodeNode): SourceNode {
         }
         source.add(transformNode(item))
       })
-      source.add([writegoto(ast, loop), `\n`])
+      source.add([writegoto(ast, loop), `;\n`])
 
       // done logic
       source.add(transformNodes(ast.end))
@@ -371,6 +375,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.REPEAT: {
       const loop = readlookup(ast.loop)
       const done = readlookup(ast.done)
+      console.info({ loop, done })
 
       // note this is a repeat counter
       // id: number => number of iterations left
@@ -378,11 +383,14 @@ function transformNode(ast: CodeNode): SourceNode {
       // repeatstart should naturally reset the repeat counter before looping
       const ci = `${context.internal++}`
 
-      const source = write(ast, [
-        writeApi(ast, 'repeatstart', [ci, ...transformNodes(ast.words)]),
-        `\n`,
-        ...transformNodes(ast.start),
-      ])
+      const source = write(
+        ast,
+        [
+          writeApi(ast, 'repeatstart', [ci, ...transformNodes(ast.words)]),
+          `;\n`,
+          transformNodes(ast.start),
+        ].flat(),
+      )
 
       source.add([
         'if (!',
@@ -404,7 +412,7 @@ function transformNode(ast: CodeNode): SourceNode {
         }
         source.add(transformNode(item))
       })
-      source.add([writegoto(ast, loop), `\n`])
+      source.add([writegoto(ast, loop), `;\n`])
 
       // done logic
       source.add(transformNodes(ast.end))
@@ -418,9 +426,9 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, transformNodes(ast.start))
       source.add(
         [
-          [`if (!`, writeApi(ast, 'if', transformNodes(ast.words)), `) `],
+          [`if (!`, writeApi(ast, 'if', transformNodes(ast.words)), `)\n`],
           [`{ `, writegoto(ast, done), ` }\n`],
-          [writegoto(ast, loop), `\n`],
+          [writegoto(ast, loop), `;\n`],
         ].flat(),
       )
 
@@ -435,17 +443,16 @@ function transformNode(ast: CodeNode): SourceNode {
       // foreach build
       const source = write(ast, [
         writeApi(ast, 'foreachstart', transformNodes(ast.words)),
-        `\n`,
+        `;\n`,
         ...transformNodes(ast.start),
       ])
 
-      source.add([
-        'if (!',
-        writeApi(ast, 'foreach', transformNodes(ast.words)),
-        `) {`,
-        writegoto(ast, done),
-        ` }\n`,
-      ])
+      source.add(
+        [
+          ['if (!', writeApi(ast, 'foreach', transformNodes(ast.words)), `)\n`],
+          [`{ `, writegoto(ast, done), ` }\n`],
+        ].flat(),
+      )
 
       // foreach true logic
       ast.lines.forEach((item) => {
@@ -459,7 +466,7 @@ function transformNode(ast: CodeNode): SourceNode {
         }
         source.add(transformNode(item))
       })
-      source.add([writegoto(ast, loop), `\n`])
+      source.add([writegoto(ast, loop), `;\n`])
 
       // done logic
       source.add(transformNodes(ast.end))
@@ -467,10 +474,10 @@ function transformNode(ast: CodeNode): SourceNode {
     }
     case NODE.BREAK:
       // escape while / repeat loop
-      return write(ast, [writegoto(ast, ast.goto), `\n`])
+      return write(ast, [writegoto(ast, ast.goto), `;\n`])
     case NODE.CONTINUE:
       // skip to next while / repeat iteration
-      return write(ast, [writegoto(ast, ast.goto), `\n`])
+      return write(ast, [writegoto(ast, ast.goto), `;\n`])
     // expressions
     case NODE.OR:
       return writeApi(ast, 'or', ast.items.map(transformNode))
@@ -491,13 +498,13 @@ function transformNode(ast: CodeNode): SourceNode {
 }
 
 function indexnode(ast: CodeNode) {
-  // update node
-  ast.lineindex = context.lineindex
-
   // inc line
   if (ast.type === NODE.LINE) {
     ++context.lineindex
   }
+
+  // update node
+  ast.lineindex = context.lineindex
 
   // map child nodes
   switch (ast.type) {
@@ -533,8 +540,12 @@ function indexnode(ast: CodeNode) {
       ast.lines.forEach(indexnode)
       ast.end.forEach(indexnode)
       break
+    case NODE.WAITFOR:
+      ast.words.forEach(indexnode)
+      ast.start.forEach(indexnode)
+      ast.end.forEach(indexnode)
+      break
     case NODE.MOVE:
-    case NODE.EXPR:
     case NODE.COMMAND:
       ast.words.forEach(indexnode)
       break
@@ -556,6 +567,7 @@ export function transformAst(ast: CodeNode): GenContextAndCode {
 
   // build lineindex
   indexnode(ast)
+  console.info(deepcopy(ast))
 
   // translate into js
   const source = transformNode(ast)

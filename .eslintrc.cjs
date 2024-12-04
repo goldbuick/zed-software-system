@@ -17,7 +17,7 @@ module.exports = {
   env: { browser: true, es2020: true },
   extends: [
     'eslint:recommended',
-    'plugin:@typescript-eslint/recommended-type-checked',    
+    'plugin:@typescript-eslint/recommended-type-checked',
     'plugin:@typescript-eslint/stylistic-type-checked',
     'plugin:import/errors', // Import ordering
     'plugin:import/warnings', // Import ordering
@@ -26,8 +26,8 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
     'plugin:@react-three/recommended',
-    'plugin:prettier/recommended', 
-    // Enables eslint-plugin-prettier and eslint-config-prettier. 
+    'plugin:prettier/recommended',
+    // Enables eslint-plugin-prettier and eslint-config-prettier.
     // This will display prettier errors as ESLint errors.
     // Make sure this is always the last configuration in the extends array.
     'prettier',
@@ -65,9 +65,7 @@ module.exports = {
     '@typescript-eslint/no-unsafe-assignment': 'off',
     '@typescript-eslint/no-unsafe-member-access': 'off',
     '@typescript-eslint/no-redundant-type-constituents': 'off',
-    "@typescript-eslint/consistent-type-definitions": [
-      'error', 'type'
-    ],
+    '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
     'no-console': [
       'error',
       {
