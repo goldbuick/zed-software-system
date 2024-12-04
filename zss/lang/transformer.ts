@@ -226,9 +226,9 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
     case NODE.LINE: {
       return write(ast, [
-        `case ${ast.lineindex}: api.at(${ast.lineindex});\n`,
+        `case ${ast.lineindex}:\n`,
         ...ast.stmts.map(transformNode).flat(),
-        `if (api.sy()) { yield 1; }; if (api.hm()) { continue zss; }; ${TRACE('eol')}\n`,
+        `if (api.sy(${ast.lineindex}})) { yield 1; }; if (api.hm()) { continue zss; }; ${TRACE('eol')}\n`,
       ])
     }
     case NODE.MARK:
@@ -250,7 +250,7 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
     case NODE.STAT:
       return write(ast, [
-        writeApi(ast, `stat`, [writeString(ast.value)]),
+        writeApi(ast, `stat`, ast.value.split(` `).map(writeString)),
         `;\n`,
       ])
     case NODE.LABEL: {
@@ -283,7 +283,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.COMMAND:
       return write(ast, [
         writeApi(ast, `command`, transformNodes(ast.words)),
-        `\n`,
+        `;\n`,
       ])
     // core / structure
     case NODE.IF: {
@@ -295,7 +295,7 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, [
         'if (!',
         writeApi(ast, `if`, transformNodes(ast.words)),
-        `) { `,
+        `)\n{ `,
         writegoto(ast, skip),
         ` }\n`,
       ])
@@ -375,7 +375,6 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.REPEAT: {
       const loop = readlookup(ast.loop)
       const done = readlookup(ast.done)
-      console.info({ loop, done })
 
       // note this is a repeat counter
       // id: number => number of iterations left
@@ -388,8 +387,8 @@ function transformNode(ast: CodeNode): SourceNode {
         [
           writeApi(ast, 'repeatstart', [ci, ...transformNodes(ast.words)]),
           `;\n`,
-          transformNodes(ast.start),
-        ].flat(),
+          ...transformNodes(ast.start),
+        ],
       )
 
       source.add([

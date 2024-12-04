@@ -54,8 +54,7 @@ export type CHIP = {
   goto: (label: string) => void
   hm: () => number
   yield: () => void
-  at: (line: number) => void
-  sy: () => boolean
+  sy: (line: number) => boolean
   emit: (target: string, data?: any, player?: string) => void
   send: (chipid: string, message: string, data?: any, player?: string) => void
   lock: (allowed: string) => void
@@ -284,10 +283,8 @@ export function createchip(
     yield() {
       flags.yieldstate = 1
     },
-    at(line) {
-      // update execution cursor to new line number
-    },
-    sy() {
+    sy(line) {
+      // line, update execution cursor
       return !!flags.yieldstate || chip.shouldhalt()
     },
     emit(target, data, player) {
