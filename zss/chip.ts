@@ -50,11 +50,11 @@ export type CHIP = {
   isended: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
-  active: (index: number) => void
   goto: (label: string) => void
   hm: () => number
   yield: () => void
-  sy: (line: number) => boolean
+  next: (line: number) => void
+  sy: () => boolean
   emit: (target: string, data?: any, player?: string) => void
   send: (chipid: string, message: string, data?: any, player?: string) => void
   lock: (allowed: string) => void
@@ -133,25 +133,25 @@ export function createchip(
   let logic: Generator<number> | undefined
 
   // init
-  if (!ispresent(flags.labels)) {
+  if (!ispresent(flags.lb)) {
     // entry point state
-    flags.labels = deepcopy(Object.entries(build.labels ?? {}))
+    flags.lb = deepcopy(Object.entries(build.labels ?? {}))
     // incoming message state
-    flags.locked = ''
+    flags.lk = ''
     // we leave message unset
-    flags.message = undefined
+    flags.mg = undefined
     // we track where we are in execution
-    flags.resume = 0
+    flags.ec = 0
     // prevent infinite loop lockup
-    flags.loops = 0
+    flags.lc = 0
     // pause until next tick
-    flags.yieldstate = 0
+    flags.ys = 0
     // execution frequency
-    flags.pulse = 0
+    flags.ps = 0
     // execution timestamp
-    flags.timestamp = 0
+    flags.ts = 0
     // chip is in ended state awaiting any messages
-    flags.endedstate = (build.errors?.length ?? 0) !== 0 ? 1 : 0
+    flags.es = (build.errors?.length ?? 0) !== 0 ? 1 : 0
   }
 
   function invokecommand(command: string, args: WORD[]): 0 | 1 {
@@ -200,10 +200,10 @@ export function createchip(
     // lifecycle api
     tick(cycle, incoming) {
       // update timestamp
-      flags.timestamp = incoming
+      flags.ts = incoming
 
       // we active ?
-      const pulse = isnumber(flags.pulse) ? flags.pulse : 0
+      const pulse = isnumber(flags.ps) ? flags.ps : 0
       const activecycle = pulse % cycle === 0
 
       // invoke firmware shouldtick
@@ -215,7 +215,7 @@ export function createchip(
       }
 
       // inc pulse after checking should tick
-      flags.pulse = pulse + 1
+      flags.ps = pulse + 1
 
       // execution frequency
       if (!activecycle) {
@@ -223,8 +223,8 @@ export function createchip(
       }
 
       // reset state
-      flags.loops = 0
-      flags.yieldstate = 0
+      flags.lc = 0
+      flags.ys = 0
 
       // invoke firmware tick
       firmwaretick(driver, chip)
@@ -235,11 +235,11 @@ export function createchip(
 
         if (result?.done) {
           api_error('chip', 'crash', 'generator logic unexpectedly exited')
-          flags.endedstate = 1
+          flags.es = 1
         }
       } catch (err: any) {
         api_error('chip', 'crash', err.message)
-        flags.endedstate = 1
+        flags.es = 1
       }
 
       // invoke firmware tock
@@ -247,30 +247,26 @@ export function createchip(
       return true
     },
     isended() {
-      return flags.endedstate === 1
+      return flags.es === 1
     },
     shouldtick() {
-      return flags.endedstate === 0 || chip.hm() !== 0
+      return flags.es === 0 || chip.hm() !== 0
     },
     shouldhalt() {
-      if (isnumber(flags.loops)) {
-        return flags.loops++ > CONFIG.HALT_AT_COUNT
+      if (isnumber(flags.lc)) {
+        return flags.lc++ > CONFIG.HALT_AT_COUNT
       }
       return true
-    },
-    active(index) {
-      // this sets where in the chip execution will resume
-      flags.resume = index
     },
     goto(label) {
       invokecommand('send', [label])
     },
     hm() {
-      if (isarray(flags.message) && isarray(flags.labels)) {
-        const [, target] = flags.message as [string, string] // unpack message
+      if (isarray(flags.mg) && isarray(flags.lb)) {
+        const [, target] = flags.mg as [string, string] // unpack message
         if (ispresent(target)) {
-          for (let i = 0; i < flags.labels.length; ++i) {
-            const [name, labels] = flags.labels[i] as [string, number[]]
+          for (let i = 0; i < flags.lb.length; ++i) {
+            const [name, labels] = flags.lb[i] as [string, number[]]
             if (name === target) {
               // pick first unzapped label
               return labels.find((item) => isnumber(item) && item > 0) ?? 0
@@ -281,11 +277,14 @@ export function createchip(
       return 0
     },
     yield() {
-      flags.yieldstate = 1
+      flags.ys = 1
     },
-    sy(line) {
-      // line, update execution cursor
-      return !!flags.yieldstate || chip.shouldhalt()
+    next(line) {
+      // update execution cursor
+      flags.ec = line
+    },
+    sy() {
+      return !!flags.ys || chip.shouldhalt()
     },
     emit(target, data, player) {
       hub.emit(target, chip.senderid(), data, player)
@@ -294,17 +293,17 @@ export function createchip(
       hub.emit(`${chip.senderid(chipid)}:${message}`, id, data, player)
     },
     lock(allowed) {
-      flags.locked = allowed
+      flags.lk = allowed
     },
     unlock() {
-      flags.locked = ''
+      flags.lk = ''
     },
     message(incoming) {
       // internal messages while locked are allowed
-      if (flags.locked && incoming.sender !== flags.locked) {
+      if (flags.lk && incoming.sender !== flags.lk) {
         return
       }
-      flags.message = [
+      flags.mg = [
         incoming.id,
         incoming.target,
         incoming.data,
@@ -313,26 +312,26 @@ export function createchip(
       ]
     },
     zap(label) {
-      if (isarray(flags.labels)) {
-        for (let i = 0; i < flags.labels.length; ++i) {
-          const [name, labels] = flags.labels[i] as [string, number[]]
+      if (isarray(flags.lb)) {
+        for (let i = 0; i < flags.lb.length; ++i) {
+          const [name, lines] = flags.lb[i] as [string, number[]]
           if (name === label) {
             // zap first active label
-            const index = labels.findIndex((item) => item > 0)
+            const index = lines.findIndex((item) => item > 0)
             if (index >= 0) {
-              labels[index] *= -1
+              lines[index] *= -1
             }
           }
         }
       }
     },
     restore(label) {
-      if (isarray(flags.labels)) {
-        for (let i = 0; i < flags.labels.length; ++i) {
-          const [name, labels] = flags.labels[i] as [string, number[]]
+      if (isarray(flags.lb)) {
+        for (let i = 0; i < flags.lb.length; ++i) {
+          const [name, lines] = flags.lb[i] as [string, number[]]
           if (name === label) {
-            for (let l = 0; l < labels.length; l++) {
-              labels[i] = Math.abs(labels[i])
+            for (let l = 0; l < lines.length; l++) {
+              lines[i] = Math.abs(lines[i])
             }
           }
         }
@@ -340,8 +339,8 @@ export function createchip(
     },
     getcase() {
       const label = chip.hm()
-      if (label && isarray(flags.message)) {
-        const [, , data, sender, player] = flags.message as [
+      if (label && isarray(flags.mg)) {
+        const [, , data, sender, player] = flags.mg as [
           string,
           string,
           any,
@@ -359,19 +358,19 @@ export function createchip(
         }
 
         // clear message
-        flags.message = undefined
+        flags.mg = undefined
 
         // reset ended state
-        flags.yieldstate = 0
-        flags.endedstate = 0
+        flags.ys = 0
+        flags.es = 0
       }
 
-      // return entry point
-      return label
+      // always return ec
+      return isnumber(flags.ec) ? flags.ec : 0
     },
     endofprogram() {
       chip.yield()
-      flags.endedstate = 1
+      flags.es = 1
     },
     stacktrace(error) {
       const stack = ErrorStackParser.parse(error)

@@ -65,9 +65,7 @@ const engine = document.querySelector('canvas')
 if (ispresent(engine)) {
   const root = createRoot(engine)
 
-  // Configure the root, inject events optionally, set camera, etc
-  root.configure({
-    events: eventManagerFactory,
+  const config = {
     dpr: 1,
     flat: true,
     linear: true,
@@ -78,13 +76,26 @@ if (ispresent(engine)) {
       antialias: false,
       preserveDrawingBuffer: true,
     },
+  }
+
+  // Configure the root, inject events optionally, set camera, etc
+  root.configure({
+    ...config,
+    events: eventManagerFactory,
     onCreated({ gl }) {
       gl.localClippingEnabled = true
     },
   })
 
   const handleresize = debounce((width: number, height: number) => {
-    root.configure({ size: { width, height, top: 0, left: 0 } })
+    root.configure({ 
+      ...config,
+      events: eventManagerFactory,
+      size: { width, height, top: 0, left: 0 }, 
+      onCreated({ gl }) {
+        gl.localClippingEnabled = true
+      },  
+    })
   }, 256)
 
   window.addEventListener('resize', () => {

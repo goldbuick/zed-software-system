@@ -1,6 +1,6 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
 import { TRACE_CODE } from 'zss/config'
-import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
+import { deepcopy, MAYBE } from 'zss/mapping/types'
 import { tokenize, MaybeFlag } from 'zss/words/textformat'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
@@ -208,7 +208,7 @@ function transformNode(ast: CodeNode): SourceNode {
         `zss: while (true) {\n`,
         `switch (api.getcase()) {\n`,
         `default:\n`,
-        `case 0:\n`,
+        `case 0: api.next(1);\n`,
         ...ast.lines.map(transformNode).flat(),
         `}\n`,
         `api.endofprogram();\n`, // end of program has been reached
@@ -226,9 +226,9 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
     case NODE.LINE: {
       return write(ast, [
-        `case ${ast.lineindex}:\n`,
+        `case ${ast.lineindex}: api.next(${ast.lineindex + 1});\n`,
         ...ast.stmts.map(transformNode).flat(),
-        `if (api.sy(${ast.lineindex}})) { yield 1; }; if (api.hm()) { continue zss; }; ${TRACE('eol')}\n`,
+        `if (api.sy()) { yield 1; }; if (api.hm()) { continue zss; }; ${TRACE('eol')}\n`,
       ])
     }
     case NODE.MARK:
@@ -302,7 +302,7 @@ function transformNode(ast: CodeNode): SourceNode {
 
       // if true logic
       block?.lines.forEach((item) => source.add(transformNode(item)))
-      source.add([writegoto(ast, done), `\n`])
+      source.add([writegoto(ast, done), `;\n`])
 
       // if false (alt) logic
       block?.altlines.forEach((item) => {
@@ -323,14 +323,14 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, [
         'if (!',
         writeApi(ast, `if`, transformNodes(ast.words)),
-        `) { `,
+        `)\n{ `,
         writegoto(ast, skip),
         ` }\n`,
       ])
 
       // if true logic
       ast.lines.forEach((item) => source.add(transformNode(item)))
-      source.add([writegoto(ast, ast.goto), `\n`])
+      source.add([writegoto(ast, ast.goto), `;\n`])
 
       // if false logic
       return source
@@ -349,7 +349,7 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add([
         'if (!',
         writeApi(ast, 'if', transformNodes(ast.words)),
-        `) { `,
+        `)\n{ `,
         writegoto(ast, done),
         ` }\n`,
       ])
@@ -394,7 +394,7 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add([
         'if (!',
         writeApi(ast, 'repeat', [ci]),
-        `) { `,
+        `)\n{ `,
         writegoto(ast, done),
         ` }\n`,
       ])
@@ -423,13 +423,15 @@ function transformNode(ast: CodeNode): SourceNode {
 
       // waitfor build
       const source = write(ast, transformNodes(ast.start))
-      source.add(
-        [
-          [`if (!`, writeApi(ast, 'if', transformNodes(ast.words)), `)\n`],
-          [`{ `, writegoto(ast, done), ` }\n`],
-          [writegoto(ast, loop), `;\n`],
-        ].flat(),
-      )
+      source.add([
+        `if (!`, 
+        writeApi(ast, 'if', transformNodes(ast.words)), 
+        `)\n { `, 
+        writegoto(ast, done), 
+        ` }\n`,
+        writegoto(ast, loop),
+        `;\n`,
+      ])
 
       // done logic
       source.add(transformNodes(ast.end))
@@ -446,12 +448,13 @@ function transformNode(ast: CodeNode): SourceNode {
         ...transformNodes(ast.start),
       ])
 
-      source.add(
-        [
-          ['if (!', writeApi(ast, 'foreach', transformNodes(ast.words)), `)\n`],
-          [`{ `, writegoto(ast, done), ` }\n`],
-        ].flat(),
-      )
+      source.add([
+        'if (!',
+        writeApi(ast, 'foreach', transformNodes(ast.words)),
+        `)\n { `,
+        writegoto(ast, done),
+        ` }\n`,
+      ])
 
       // foreach true logic
       ast.lines.forEach((item) => {
@@ -566,10 +569,11 @@ export function transformAst(ast: CodeNode): GenContextAndCode {
 
   // build lineindex
   indexnode(ast)
-  console.info(deepcopy(ast))
 
   // translate into js
   const source = transformNode(ast)
+
+  console.info(deepcopy(context), deepcopy(ast))
 
   // get source js and source map
   const output = source.toStringWithSourceMap({
