@@ -50,7 +50,6 @@ export type CHIP = {
   isended: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
-  goto: (label: string) => void
   hm: () => number
   yield: () => void
   next: (line: number) => void
@@ -258,9 +257,6 @@ export function createchip(
       }
       return true
     },
-    goto(label) {
-      invokecommand('send', [label])
-    },
     hm() {
       if (isarray(flags.mg) && isarray(flags.lb)) {
         const [, target] = flags.mg as [string, string] // unpack message
@@ -280,7 +276,6 @@ export function createchip(
       flags.ys = 1
     },
     next(line) {
-      // update execution cursor
       flags.ec = line
     },
     sy() {
@@ -338,8 +333,8 @@ export function createchip(
       }
     },
     getcase() {
-      const label = chip.hm()
-      if (label && isarray(flags.mg)) {
+      const line = chip.hm()
+      if (ispresent(line) && isarray(flags.mg)) {
         const [, , data, sender, player] = flags.mg as [
           string,
           string,
@@ -363,6 +358,9 @@ export function createchip(
         // reset ended state
         flags.ys = 0
         flags.es = 0
+
+        // update ec
+        flags.ec = line
       }
 
       // always return ec
@@ -525,6 +523,7 @@ export function createchip(
     },
     and(...words) {
       let lastvalue = 0
+      debugger
       for (let i = 0; i < words.length; ) {
         const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
         lastvalue = value

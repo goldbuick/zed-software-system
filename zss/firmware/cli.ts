@@ -39,16 +39,11 @@ import {
 } from 'zss/words/writeui'
 
 export const CLI_FIRMWARE = createfirmware({
-  get(_, name) {
-    // check player's flags
-    const value = memoryreadflags(READ_CONTEXT.player)[name]
-    return [ispresent(value), value]
+  get() {
+    return [false, undefined]
   },
-  set(_, name, value) {
-    // set player's flags
-    const flags = memoryreadflags(READ_CONTEXT.player)
-    flags[name] = value
-    return [true, value]
+  set() {
+    return [false, undefined]
   },
   shouldtick() {},
   tick() {},

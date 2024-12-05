@@ -1,6 +1,6 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
 import { TRACE_CODE } from 'zss/config'
-import { deepcopy, MAYBE } from 'zss/mapping/types'
+import { MAYBE } from 'zss/mapping/types'
 import { tokenize, MaybeFlag } from 'zss/words/textformat'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
@@ -192,7 +192,7 @@ function transformOperator(ast: CodeNode) {
 }
 
 function writegoto(ast: CodeNode, line: number): SourceNode {
-  return write(ast, [writeApi(ast, `goto`, [`${line}`]), `; continue zss;`])
+  return write(ast, [writeApi(ast, `next`, [`${line}`]), `; continue zss;`])
 }
 
 function readlookup(id: MAYBE<string>) {
@@ -204,17 +204,21 @@ function transformNode(ast: CodeNode): SourceNode {
     // categories
     case NODE.PROGRAM:
       return write(ast, [
+        // error capture for source maps
         `try { // first-line\n`,
         `zss: while (true) {\n`,
+        // logic block begin
         `switch (api.getcase()) {\n`,
-        `default:\n`,
         `case 0: api.next(1);\n`,
         ...ast.lines.map(transformNode).flat(),
+        // logic block end
+        `default: api.endofprogram();\n`,
+        // end of program has been reached, this is the wait/wake loop
+        `yield 1; continue zss;\n`,
         `}\n`,
-        `api.endofprogram();\n`, // end of program has been reached
-        `while(true) {}\n`,
         `}\n`,
         `} catch (e) {\n`,
+        // log and attempt to find line & column of error
         `console.error(e);\n`,
         `const source = api.stacktrace(e);\n`,
         `const err = new Error(e.message);\n`,
@@ -228,7 +232,7 @@ function transformNode(ast: CodeNode): SourceNode {
       return write(ast, [
         `case ${ast.lineindex}: api.next(${ast.lineindex + 1});\n`,
         ...ast.stmts.map(transformNode).flat(),
-        `if (api.sy()) { yield 1; }; if (api.hm()) { continue zss; }; ${TRACE('eol')}\n`,
+        `if (api.sy()) { yield 1; }; continue zss;\n`,
       ])
     }
     case NODE.MARK:
@@ -338,7 +342,6 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.ELSE: {
       const source = write(ast, ``)
       ast.lines.forEach((item) => source.add(transformNode(item)))
-
       return source
     }
     case NODE.WHILE: {
@@ -382,14 +385,11 @@ function transformNode(ast: CodeNode): SourceNode {
       // repeatstart should naturally reset the repeat counter before looping
       const ci = `${context.internal++}`
 
-      const source = write(
-        ast,
-        [
-          writeApi(ast, 'repeatstart', [ci, ...transformNodes(ast.words)]),
-          `;\n`,
-          ...transformNodes(ast.start),
-        ],
-      )
+      const source = write(ast, [
+        writeApi(ast, 'repeatstart', [ci, ...transformNodes(ast.words)]),
+        `;\n`,
+        ...transformNodes(ast.start),
+      ])
 
       source.add([
         'if (!',
@@ -424,10 +424,10 @@ function transformNode(ast: CodeNode): SourceNode {
       // waitfor build
       const source = write(ast, transformNodes(ast.start))
       source.add([
-        `if (!`, 
-        writeApi(ast, 'if', transformNodes(ast.words)), 
-        `)\n { `, 
-        writegoto(ast, done), 
+        `if (!`,
+        writeApi(ast, 'if', transformNodes(ast.words)),
+        `)\n { `,
+        writegoto(ast, done),
         ` }\n`,
         writegoto(ast, loop),
         `;\n`,
@@ -447,11 +447,10 @@ function transformNode(ast: CodeNode): SourceNode {
         `;\n`,
         ...transformNodes(ast.start),
       ])
-
       source.add([
         'if (!',
         writeApi(ast, 'foreach', transformNodes(ast.words)),
-        `)\n { `,
+        `)\n{ `,
         writegoto(ast, done),
         ` }\n`,
       ])
@@ -567,13 +566,9 @@ export function transformAst(ast: CodeNode): GenContextAndCode {
   context.internal = 0
   context.lineindex = 0
 
-  // build lineindex
-  indexnode(ast)
-
   // translate into js
+  indexnode(ast)
   const source = transformNode(ast)
-
-  console.info(deepcopy(context), deepcopy(ast))
 
   // get source js and source map
   const output = source.toStringWithSourceMap({
