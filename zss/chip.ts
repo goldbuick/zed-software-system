@@ -97,9 +97,6 @@ export type CHIP = {
   opFloorDivide: (lhs: WORD, rhs: WORD) => WORD
   opUniPlus: (lhs: WORD, rhs: WORD) => WORD
   opUniMinus: (lhs: WORD, rhs: WORD) => WORD
-
-  // util api
-  debugger: () => WORD
 }
 
 function maptoresult(value: WORD): WORD {
@@ -523,7 +520,6 @@ export function createchip(
     },
     and(...words) {
       let lastvalue = 0
-      debugger
       for (let i = 0; i < words.length; ) {
         const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
         lastvalue = value
@@ -617,10 +613,6 @@ export function createchip(
     opUniMinus(rhs) {
       const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return -right
-    },
-    debugger() {
-      console.info('put a breakpoint here!')
-      return 0
     },
   }
 

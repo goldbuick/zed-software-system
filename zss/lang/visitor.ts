@@ -188,6 +188,8 @@ type CodeNodeData =
       type: NODE.IF_BLOCK
       skip: string
       done: string
+      start: CodeNode[]
+      end: CodeNode[]
       lines: CodeNode[]
       altlines: CodeNode[]
     }
@@ -625,14 +627,12 @@ class ScriptVisitor
       type: NODE.IF_BLOCK,
       skip,
       done,
-      // mainline
+      start: this.createmarknode(ctx, skip, `alt logic`),
+      end: this.createmarknode(ctx, done, `end of if`),
       lines: [this.go(ctx.inline), this.go(ctx.line)].flat(),
-      // altline
       altlines: [
-        this.createmarknode(ctx, skip, `alt logic`),
         this.go(ctx.command_else_if),
         this.go(ctx.command_else),
-        this.createmarknode(ctx, done, `end of if`),
       ].flat(),
     })
   }

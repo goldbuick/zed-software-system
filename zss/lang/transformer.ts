@@ -1,6 +1,6 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
 import { TRACE_CODE } from 'zss/config'
-import { MAYBE } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 import { tokenize, MaybeFlag } from 'zss/words/textformat'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
@@ -209,7 +209,7 @@ function transformNode(ast: CodeNode): SourceNode {
         `zss: while (true) {\n`,
         // logic block begin
         `switch (api.getcase()) {\n`,
-        `case 0: api.next(1);\n`,
+        `case 0:\n`,
         ...ast.lines.map(transformNode).flat(),
         // logic block end
         `default: api.endofprogram();\n`,
@@ -230,9 +230,9 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
     case NODE.LINE: {
       return write(ast, [
-        `case ${ast.lineindex}: api.next(${ast.lineindex + 1});\n`,
+        `case ${ast.lineindex}:\n`,
         ...ast.stmts.map(transformNode).flat(),
-        `if (api.sy()) { yield 1; }; continue zss;\n`,
+        `if (api.sy()) { yield 1; continue zss; }\n`,
       ])
     }
     case NODE.MARK:
@@ -266,7 +266,7 @@ function transformNode(ast: CodeNode): SourceNode {
       const lindex = (ast.active ? 1 : -1) * ast.lineindex
       context.labels[llabel].push(lindex)
       // document label
-      return write(ast, `// ${ast.name} ${ltype}\n`)
+      return write(ast, `// ${lindex} ${ast.name} ${ltype}\n`)
     }
     case NODE.HYPERLINK:
       return write(ast, [
@@ -292,8 +292,12 @@ function transformNode(ast: CodeNode): SourceNode {
     // core / structure
     case NODE.IF: {
       const block = ast.block.type === NODE.IF_BLOCK ? ast.block : undefined
-      const skip = readlookup(block?.skip)
-      const done = readlookup(block?.done)
+      if (!ispresent(block)) {
+        return write(ast, '')
+      }
+
+      const skip = readlookup(block.skip)
+      const done = readlookup(block.done)
 
       // check if conditional
       const source = write(ast, [
@@ -305,11 +309,12 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
 
       // if true logic
-      block?.lines.forEach((item) => source.add(transformNode(item)))
+      block.lines.forEach((item) => source.add(transformNode(item)))
       source.add([writegoto(ast, done), `;\n`])
 
-      // if false (alt) logic
-      block?.altlines.forEach((item) => {
+      // start of (alt) logic
+      source.add(transformNodes(block.start))
+      block.altlines.forEach((item) => {
         // write #if's done to the ELSE_IF nodes
         if (item.type === NODE.ELSE_IF) {
           item.goto = done
@@ -318,6 +323,7 @@ function transformNode(ast: CodeNode): SourceNode {
       })
 
       // all done
+      source.add(transformNodes(block.end))
       return source
     }
     case NODE.ELSE_IF: {
@@ -524,7 +530,9 @@ function indexnode(ast: CodeNode) {
       break
     case NODE.IF_BLOCK:
       ast.lines.forEach(indexnode)
+      ast.start.forEach(indexnode)
       ast.altlines.forEach(indexnode)
+      ast.end.forEach(indexnode)
       break
     case NODE.ELSE_IF:
       ast.words.forEach(indexnode)
