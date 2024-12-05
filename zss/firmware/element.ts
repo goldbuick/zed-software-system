@@ -176,10 +176,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
     if (READ_CONTEXT.element?.headless) {
       chip.command('die')
     }
-    if (ispid(chip.id())) {
-      const flags = memoryreadflags(READ_CONTEXT.player)
-      flags.inputcurrent = 0
-    }
   },
 })
   .command('become', (chip, words) => {

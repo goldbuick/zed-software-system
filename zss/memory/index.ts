@@ -418,6 +418,7 @@ export function memorytick(os: OS) {
         os.halt(id)
       } else {
         // handle active code
+
         // write context
         if (ispresent(object)) {
           const flags = bookreadflags(mainbook, object.id ?? '')
@@ -427,14 +428,6 @@ export function memorytick(os: OS) {
           READ_CONTEXT.player = isstring(flags.player)
             ? flags.player
             : MEMORY.defaultplayer
-
-          // clear ticker text after X number of ticks
-          if (isnumber(flags.tickertime)) {
-            if (timestamp - flags.tickertime > TICK_FPS * 5) {
-              flags.tickertime = 0
-              flags.tickertext = ''
-            }
-          }
         }
 
         // read cycle
@@ -458,6 +451,21 @@ export function memorytick(os: OS) {
           itemname,
           code,
         )
+
+        // clear ticker
+        if (isnumber(object?.tickertime)) {
+          // clear ticker text after X number of ticks
+          if (timestamp - object.tickertime > TICK_FPS * 5) {
+            object.tickertime = 0
+            object.tickertext = ''
+          }
+        }
+
+        // clear used input
+        if (ispid(object?.id)) {
+          const flags = memoryreadflags(object.id)
+          flags.inputcurrent = 0
+        }
       }
     }
   })
