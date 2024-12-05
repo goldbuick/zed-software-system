@@ -1,5 +1,4 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
-import { TRACE_CODE } from 'zss/config'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 import { tokenize, MaybeFlag } from 'zss/words/textformat'
 
@@ -17,23 +16,6 @@ export const context: GenContext = {
   internal: 0,
   lineindex: 0,
   linelookup: {},
-}
-
-const BUMP_CODE = `\n         `
-
-let tracing = false
-const trace: Record<string, number> = {}
-function TRACE(tag: string) {
-  if (!tracing) {
-    return ''
-  }
-  trace[tag] = trace[tag] ?? 0
-  const count = trace[tag]++
-  return `${BUMP_CODE}console.info('${tag}-${count}')`
-}
-
-export function enabletracing(name: string) {
-  tracing = name === TRACE_CODE
 }
 
 export const GENERATED_FILENAME = 'zss.js'
@@ -232,7 +214,7 @@ function transformNode(ast: CodeNode): SourceNode {
       return write(ast, [
         `case ${ast.lineindex}:\n`,
         ...ast.stmts.map(transformNode).flat(),
-        `if (api.sy()) { yield 1; continue zss; }\n`,
+        // `if (api.sy()) { yield 1; continue zss; }; if (api.hm()) { continue zss; }\n`,
       ])
     }
     case NODE.MARK:
@@ -259,7 +241,7 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
     case NODE.LABEL: {
       const llabel = ast.name.toLowerCase()
-      const ltype = ast.active ? 'label' : '__comment__'
+      const ltype = ast.active ? 'label' : 'comment'
       if (!context.labels[llabel]) {
         context.labels[llabel] = []
       }
@@ -303,14 +285,14 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, [
         'if (!',
         writeApi(ast, `if`, transformNodes(ast.words)),
-        `)\n{ `,
+        `) { `,
         writegoto(ast, skip),
         ` }\n`,
       ])
 
       // if true logic
       block.lines.forEach((item) => source.add(transformNode(item)))
-      source.add([writegoto(ast, done), `;\n`])
+      source.add([writegoto(ast, done), `\n`])
 
       // start of (alt) logic
       source.add(transformNodes(block.start))
@@ -333,14 +315,14 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, [
         'if (!',
         writeApi(ast, `if`, transformNodes(ast.words)),
-        `)\n{ `,
+        `) { `,
         writegoto(ast, skip),
         ` }\n`,
       ])
 
       // if true logic
       ast.lines.forEach((item) => source.add(transformNode(item)))
-      source.add([writegoto(ast, ast.goto), `;\n`])
+      source.add([writegoto(ast, ast.goto), `\n`])
 
       // if false logic
       return source
@@ -358,7 +340,7 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add([
         'if (!',
         writeApi(ast, 'if', transformNodes(ast.words)),
-        `)\n{ `,
+        `) { `,
         writegoto(ast, done),
         ` }\n`,
       ])
@@ -375,7 +357,7 @@ function transformNode(ast: CodeNode): SourceNode {
         }
         source.add(transformNode(item))
       })
-      source.add([writegoto(ast, loop), `;\n`])
+      source.add([writegoto(ast, loop), `\n`])
 
       // done logic
       source.add(transformNodes(ast.end))
@@ -400,7 +382,7 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add([
         'if (!',
         writeApi(ast, 'repeat', [ci]),
-        `)\n{ `,
+        `) { `,
         writegoto(ast, done),
         ` }\n`,
       ])
@@ -417,7 +399,7 @@ function transformNode(ast: CodeNode): SourceNode {
         }
         source.add(transformNode(item))
       })
-      source.add([writegoto(ast, loop), `;\n`])
+      source.add([writegoto(ast, loop), `\n`])
 
       // done logic
       source.add(transformNodes(ast.end))
@@ -432,11 +414,11 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add([
         `if (!`,
         writeApi(ast, 'if', transformNodes(ast.words)),
-        `)\n { `,
+        `) { `,
         writegoto(ast, done),
         ` }\n`,
         writegoto(ast, loop),
-        `;\n`,
+        `\n`,
       ])
 
       // done logic
@@ -473,7 +455,7 @@ function transformNode(ast: CodeNode): SourceNode {
         }
         source.add(transformNode(item))
       })
-      source.add([writegoto(ast, loop), `;\n`])
+      source.add([writegoto(ast, loop), `\n`])
 
       // done logic
       source.add(transformNodes(ast.end))
@@ -481,10 +463,10 @@ function transformNode(ast: CodeNode): SourceNode {
     }
     case NODE.BREAK:
       // escape while / repeat loop
-      return write(ast, [writegoto(ast, ast.goto), `;\n`])
+      return write(ast, [writegoto(ast, ast.goto), `\n`])
     case NODE.CONTINUE:
       // skip to next while / repeat iteration
-      return write(ast, [writegoto(ast, ast.goto), `;\n`])
+      return write(ast, [writegoto(ast, ast.goto), `\n`])
     // expressions
     case NODE.OR:
       return writeApi(ast, 'or', ast.items.map(transformNode))

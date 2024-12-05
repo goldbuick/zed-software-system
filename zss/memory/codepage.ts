@@ -170,7 +170,8 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
           }
           break
         case 'set':
-        case 'stat': {
+        case 'stat':
+        case 'stats': {
           const stats = statformat(maybename)
           for (let i = 0; i < stats.length; ++i) {
             const stat = stats[i]

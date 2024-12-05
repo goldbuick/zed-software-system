@@ -120,8 +120,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
     const defined = ispresent(maybevalue)
 
-    console.info('wwww', maybevalue, defined, name)
-
     // return result
     if (defined || STANDARD_STAT_NAMES.has(name)) {
       return [true, maybevalue]
