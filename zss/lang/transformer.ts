@@ -214,7 +214,7 @@ function transformNode(ast: CodeNode): SourceNode {
       return write(ast, [
         `case ${ast.lineindex}:\n`,
         ...ast.stmts.map(transformNode).flat(),
-        // `if (api.sy()) { yield 1; continue zss; }; if (api.hm()) { continue zss; }\n`,
+        `if (api.sy()) { yield 1; }; if (api.hm()) { continue zss; }\n`,
       ])
     }
     case NODE.MARK:
