@@ -52,9 +52,6 @@ export function exportboardelement(
   return formatobject(boardelement, BOARD_ELEMENT_KEYS, {
     category: FORMAT_SKIP,
     kinddata: FORMAT_SKIP,
-    kindcode: FORMAT_SKIP,
-    headless: FORMAT_SKIP,
-    removed: FORMAT_SKIP,
     inputmove: FORMAT_SKIP,
     inputok: FORMAT_SKIP,
     inputcancel: FORMAT_SKIP,

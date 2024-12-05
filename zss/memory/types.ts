@@ -38,7 +38,6 @@ export type BOARD_ELEMENT = {
   // runtime
   category?: CATEGORY
   kinddata?: BOARD_ELEMENT
-  kindcode?: string
   headless?: boolean
   removed?: number
   // player only
