@@ -51,8 +51,16 @@ export function register_select(sender: string, book: string) {
   hub.emit('register:select', sender, book)
 }
 
+export function register_nuke(sender: string) {
+  hub.emit('register:nuke', sender)
+}
+
 export function register_nodetrash(sender: string) {
   hub.emit('register:nodetrash', sender)
+}
+
+export function register_fullscreen(sender: string) {
+  hub.emit('register:fullscreen', sender)
 }
 
 export function synth_play(sender: string, priority: number, buffer: string) {

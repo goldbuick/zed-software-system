@@ -53,6 +53,6 @@ vec3 halftone(vec3 texcolor, vec2 st, float frequency) {
 }
 
 vec3 halftone(vec3 texcolor, vec2 st) {
-  return halftone(texcolor, st, 256.111);
+  return halftone(texcolor, st, 412.321);
 }
 `

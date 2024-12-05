@@ -6,6 +6,7 @@ import {
   vm_codeaddress,
   vm_flush,
   register_nodetrash,
+  register_nuke,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
@@ -19,7 +20,6 @@ import {
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
-  memoryreadflags,
   memorysetsoftwarebook,
 } from 'zss/memory'
 import { bookclearcodepage, bookreadcodepagebyaddress } from 'zss/memory/book'
@@ -435,5 +435,9 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('save', () => {
     vm_flush('cli')
+    return 0
+  })
+  .command('nuke', () => {
+    register_nuke('cli')
     return 0
   })

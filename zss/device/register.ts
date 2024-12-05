@@ -99,19 +99,27 @@ const register = createdevice(
         break
       case 'refresh':
         doasync('register:refresh', async function () {
-          writeheader(register.name(), 'restart in')
-          writeoption(register.name(), '3', '...')
-          await waitfor(1000)
-          writeoption(register.name(), '2', '...')
-          await waitfor(1000)
-          writeoption(register.name(), '1', '...')
-          await waitfor(1000)
           writeheader(register.name(), 'BYE')
           await waitfor(100)
           window.location.reload()
         })
         break
-      case 'ready': {
+        case 'nuke':
+          doasync('register:nuke', async function () {
+            writeheader(register.name(), 'nuke in')
+            writeoption(register.name(), '3', '...')
+            await waitfor(1000)
+            writeoption(register.name(), '2', '...')
+            await waitfor(1000)
+            writeoption(register.name(), '1', '...')
+            await waitfor(1000)
+            writeheader(register.name(), 'BYE')
+            await waitfor(100)
+            window.location.hash = ''
+            window.location.reload()
+          })
+          break
+        case 'ready': {
         if (!ispresent(message.player)) {
           return
         }
