@@ -435,9 +435,6 @@ export function memorytick(os: OS) {
               flags.tickertext = ''
             }
           }
-
-          // update state
-          flags.inputcurrent = 0
         }
 
         // read cycle

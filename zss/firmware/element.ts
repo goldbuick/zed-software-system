@@ -5,6 +5,7 @@ import {
   INPUT_CTRL,
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
+import { ispid } from 'zss/mapping/guid'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory'
 import { boardelementapplycolor } from 'zss/memory/board'
@@ -50,14 +51,10 @@ function readinput() {
   const flags = memoryreadflags(READ_CONTEXT.player)
 
   // ensure we have the proper flags on player data
-  if (!isnumber(flags.inputmods)) {
-    flags.inputmods = 0
-  }
-  if (!isnumber(flags.inputcurrent)) {
-    flags.inputcurrent = 0
-  }
   if (!isarray(flags.inputqueue)) {
     flags.inputqueue = []
+    flags.inputmods = 0
+    flags.inputcurrent = 0
   }
 
   // we've already processed input for this tick
@@ -178,6 +175,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // headless only gets a single tick to do its magic
     if (READ_CONTEXT.element?.headless) {
       chip.command('die')
+    }
+    if (ispid(chip.id())) {
+      const flags = memoryreadflags(READ_CONTEXT.player)
+      flags.inputcurrent = 0
     }
   },
 })
