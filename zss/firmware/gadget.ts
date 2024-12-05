@@ -114,7 +114,7 @@ export const GADGET_FIRMWARE = createfirmware({
     return 0
   })
   .command('stat', (_, words) => {
-    const stats = statformat(words.map(maptostring).join(' '))
+    const stats = statformat(words.map(maptostring))
     for (let i = 0; i < stats.length; ++i) {
       if (
         stats[i].type === STAT_TYPE.VALUE &&

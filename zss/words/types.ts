@@ -74,7 +74,7 @@ export enum DIR {
 export enum STAT_TYPE {
   // @banana - specifies name stat
   // @board title - specifics type of codepage data is currently set to
-  // @char 2 - we have a pre-defined set of value names that work here
+  // @set char 2 - we have a pre-defined set of value names that work here ??
   VALUE,
   // -----
   RANGE, // @range gooble R HUH; help text for stat

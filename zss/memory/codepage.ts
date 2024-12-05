@@ -150,29 +150,22 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
   const parse = tokenize(codepage.code)
 
   // extract @stat lines
-  let first = true
   for (let i = 0; i < parse.tokens.length; ++i) {
     const token = parse.tokens[i]
     if (token.tokenType === stat) {
-      const [maybetype, ...maybevalues] = token.image.slice(1).split(' ')
+      const source = token.image.slice(1)
+      const [maybetype, ...maybevalues] = source.split(' ')
       const lmaybetype = maybetype.toLowerCase()
       const maybename = maybevalues.join(' ')
       const lmaybename = maybename.toLowerCase().trim()
-
       switch (lmaybetype) {
         default:
-          if (first) {
-            // first default is name
-            codepage.stats.name = [lmaybetype, ...maybevalues].join(' ').trim()
-          } else {
-            // second default is boolean stats
-            codepage.stats[lmaybetype] = 1
-          }
+          codepage.stats.name = source.trim()
           break
         case 'set':
         case 'stat':
         case 'stats': {
-          const stats = statformat(maybename)
+          const stats = statformat(maybevalues)
           for (let i = 0; i < stats.length; ++i) {
             const stat = stats[i]
             if (stat.type === STAT_TYPE.VALUE) {
@@ -220,8 +213,6 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
           codepage.stats.name = lmaybename
           break
       }
-
-      first = false
     }
   }
 
