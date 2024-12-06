@@ -421,13 +421,11 @@ export function memorytick(os: OS) {
 
         // write context
         if (ispresent(object)) {
-          const flags = bookreadflags(mainbook, object.id ?? '')
           READ_CONTEXT.book = mainbook
           READ_CONTEXT.board = board
           READ_CONTEXT.element = object
-          READ_CONTEXT.player = isstring(flags.player)
-            ? flags.player
-            : MEMORY.defaultplayer
+          READ_CONTEXT.player = object.player ?? MEMORY.defaultplayer
+          READ_CONTEXT.isplayer = ispid(object.id ?? '')
         }
 
         // read cycle
@@ -462,8 +460,8 @@ export function memorytick(os: OS) {
         }
 
         // clear used input
-        if (ispid(object?.id)) {
-          const flags = memoryreadflags(object.id)
+        if (READ_CONTEXT.isplayer) {
+          const flags = memoryreadflags(READ_CONTEXT.player)
           flags.inputcurrent = 0
         }
       }

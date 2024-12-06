@@ -30,6 +30,7 @@ enum BOARD_ELEMENT_KEYS {
   char,
   color,
   bg,
+  player,
   pushable,
   collision,
   destructible,
@@ -52,13 +53,6 @@ export function exportboardelement(
   return formatobject(boardelement, BOARD_ELEMENT_KEYS, {
     category: FORMAT_SKIP,
     kinddata: FORMAT_SKIP,
-    inputmove: FORMAT_SKIP,
-    inputok: FORMAT_SKIP,
-    inputcancel: FORMAT_SKIP,
-    inputmenu: FORMAT_SKIP,
-    inputalt: FORMAT_SKIP,
-    inputctrl: FORMAT_SKIP,
-    inputshift: FORMAT_SKIP,
   })
 }
 

@@ -5,7 +5,6 @@ import {
   INPUT_CTRL,
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
-import { ispid } from 'zss/mapping/guid'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory'
 import { boardelementapplycolor } from 'zss/memory/board'
@@ -72,31 +71,31 @@ function readinput() {
   // write to element
 
   // clear input stats
-  element.inputmove = []
-  element.inputok = 0
-  element.inputcancel = 0
-  element.inputmenu = 0
+  flags.inputmove = []
+  flags.inputok = 0
+  flags.inputcancel = 0
+  flags.inputmenu = 0
 
   // set active input stat
   const mods = isnumber(flags.inputmods) ? flags.inputmods : 0
-  element.inputalt = mods & INPUT_ALT ? 1 : 0
-  element.inputctrl = mods & INPUT_CTRL ? 1 : 0
-  element.inputshift = mods & INPUT_SHIFT ? 1 : 0
+  flags.inputalt = mods & INPUT_ALT ? 1 : 0
+  flags.inputctrl = mods & INPUT_CTRL ? 1 : 0
+  flags.inputshift = mods & INPUT_SHIFT ? 1 : 0
   switch (head) {
     case INPUT.MOVE_UP:
     case INPUT.MOVE_DOWN:
     case INPUT.MOVE_LEFT:
     case INPUT.MOVE_RIGHT:
-      element.inputmove = [readinputmap[head - INPUT.MOVE_UP]]
+      flags.inputmove = [readinputmap[head - INPUT.MOVE_UP]]
       break
     case INPUT.OK_BUTTON:
-      element.inputok = 1
+      flags.inputok = 1
       break
     case INPUT.CANCEL_BUTTON:
-      element.inputcancel = 1
+      flags.inputcancel = 1
       break
     case INPUT.MENU_BUTTON:
-      element.inputmenu = 1
+      flags.inputmenu = 1
       break
   }
 
@@ -108,9 +107,9 @@ function readinput() {
 
 export const ELEMENT_FIRMWARE = createfirmware({
   get(_, name) {
-    // if we are reading from input, pull the next input
-    if (INPUT_STAT_NAMES.has(name)) {
-      readinput()
+    // if we are reading from input AND are a player
+    if (READ_CONTEXT.isplayer && INPUT_STAT_NAMES.has(name)) {
+      readinput() // pull the next input
     }
 
     // read stat

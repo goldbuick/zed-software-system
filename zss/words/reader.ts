@@ -19,6 +19,7 @@ export const READ_CONTEXT = {
   board: undefined as MAYBE<BOARD>,
   element: undefined as MAYBE<BOARD_ELEMENT>,
   player: '',
+  isplayer: false,
   // for commands to use readargs
   words: [] as WORD[],
   get: undefined as MAYBE<(name: string) => any>,

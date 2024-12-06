@@ -21,6 +21,7 @@ export type BOARD_ELEMENT = {
   color?: number
   bg?: number
   // interaction
+  player?: string
   pushable?: number
   collision?: COLLISION
   destructible?: number
@@ -38,16 +39,9 @@ export type BOARD_ELEMENT = {
   // runtime
   category?: CATEGORY
   kinddata?: BOARD_ELEMENT
+  // cleanup
   headless?: boolean
   removed?: number
-  // player only
-  inputmove?: string[]
-  inputok?: number
-  inputcancel?: number
-  inputmenu?: number
-  inputalt?: number
-  inputctrl?: number
-  inputshift?: number
 }
 
 // boards
