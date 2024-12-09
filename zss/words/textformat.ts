@@ -149,10 +149,10 @@ export function createwritetextcontext(
   height: number,
   color: number,
   bg: number,
-  topedge?: number | undefined,
-  leftedge?: number | undefined,
-  rightedge?: number | undefined,
-  bottomedge?: number | undefined,
+  topedge?: number,
+  leftedge?: number,
+  rightedge?: number,
+  bottomedge?: number,
 ): WRITE_TEXT_CONTEXT {
   return {
     disablewrap: false,
@@ -212,7 +212,7 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
       ++context.y
     }
     if (context.x > context.measuredwidth) {
-      context.measuredwidth = context.x + 1
+      context.measuredwidth = context.x
     }
   }
 

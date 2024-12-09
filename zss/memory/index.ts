@@ -714,9 +714,9 @@ function memoryconverttogadgetlayers(
       const measure = tokenizeandmeasuretextformat(
         object.tickertext,
         TICKER_WIDTH,
-        BOARD_HEIGHT,
+        BOARD_HEIGHT - 1,
       )
-      const width = (measure?.measuredwidth ?? 1) - 1
+      const width = measure?.measuredwidth ?? 1
       const x = object.x ?? 0
       const y = object.y ?? 0
       const upper = y < BOARD_HEIGHT * 0.5
