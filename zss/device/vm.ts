@@ -19,7 +19,6 @@ import {
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
-import { createos } from 'zss/os'
 
 import {
   register_flush,
@@ -30,9 +29,6 @@ import {
   vm_flush,
 } from './api'
 import { modemobservevaluestring } from './modem'
-
-// manages chips
-const os = createos()
 
 // tracking active player ids
 const SECOND_TIMEOUT = 16
@@ -173,7 +169,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     case 'tick':
       // from clock
-      memorytick(os)
+      memorytick()
       break
     case 'second': {
       // ensure player ids are added to tracking
@@ -214,7 +210,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
     case 'cli':
       // user input from built-in console
       if (ispresent(message.player)) {
-        memorycli(os, message.player, message.data)
+        memorycli(message.player, message.data)
       }
       break
     case 'loadfile':
@@ -225,7 +221,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     default:
       // running software messages
-      os.message(message)
+      memorymessage(message)
       break
   }
 })

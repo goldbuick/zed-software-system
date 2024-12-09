@@ -2,6 +2,7 @@ import { maptostring } from 'zss/chip'
 import { vm_endgame } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { clamp } from 'zss/mapping/number'
+import { memoryrun } from 'zss/memory'
 import { boardelementwritestat } from 'zss/memory/boardelement'
 import {
   bookboardobjectnamedlookupdelete,
@@ -74,5 +75,18 @@ export const LIFECYCLE_FIRMWARE = createfirmware({
   })
   .command('endgame', () => {
     vm_endgame('element', READ_CONTEXT.player)
+    return 0
+  })
+  .command('run', (_, words) => {
+    debugger
+    const [func] = readargs(words, 0, [ARG_TYPE.STRING])
+    // lookup codepage
+    memoryrun(func)
+    return 0
+  })
+  .command('runwith', (_, words) => {
+    const [func, value] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+    // lookup codepage
+    memoryrun(func, value)
     return 0
   })

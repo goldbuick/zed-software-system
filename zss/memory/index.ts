@@ -1,4 +1,4 @@
-import { CONFIG, createchipid } from 'zss/chip'
+import { CONFIG, createchipid, MESSAGE } from 'zss/chip'
 import { api_error, tape_debug, tape_info, vm_flush } from 'zss/device/api'
 import {
   mimetypeofbytesread,
@@ -20,14 +20,14 @@ import { createpid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { OS } from 'zss/os'
+import { createos, OS } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { COLOR } from 'zss/words/types'
+import { COLOR, WORD } from 'zss/words/types'
 
 import {
   boarddeleteobject,
@@ -66,6 +66,9 @@ import {
   BOOK,
   CODE_PAGE_TYPE,
 } from './types'
+
+// manages chips
+const os = createos()
 
 export enum MEMORY_LABEL {
   MAIN = 'main',
@@ -375,7 +378,11 @@ export function memoryplayerscan(players: Record<string, number>) {
   }
 }
 
-export function memorytick(os: OS) {
+export function memorymessage(message: MESSAGE) {
+  os.message(message)
+}
+
+export function memorytick() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -469,7 +476,7 @@ export function memorytick(os: OS) {
   })
 }
 
-export function memorycli(os: OS, player: string, cli = '') {
+export function memorycli(player: string, cli = '') {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -487,6 +494,24 @@ export function memorycli(os: OS, player: string, cli = '') {
   // invoke once
   tape_debug('memory', 'running', mainbook.timestamp, id, cli)
   os.once(id, DRIVER_TYPE.CLI, mainbook.timestamp, 'cli', cli)
+}
+
+export function memoryrun(address: string, value?: WORD) {
+  // we assume READ_CONTEXT is setup correctly when this is run
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const codepage = bookreadcodepagebyaddress(mainbook, address)
+  if (
+    !ispresent(mainbook) ||
+    !ispresent(codepage) ||
+    !ispresent(READ_CONTEXT.element)
+  ) {
+    return
+  }
+
+  const id = `${address}_run`
+  const itemname = boardelementname(READ_CONTEXT.element)
+  const itemcode = codepage?.code ?? ''
+  os.once(id, DRIVER_TYPE.CODE_PAGE, mainbook.timestamp, itemname, itemcode)
 }
 
 function memoryloader(

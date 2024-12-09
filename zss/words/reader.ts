@@ -5,11 +5,10 @@ import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 import { isstrcategory, readcategory } from './category'
 import { isstrcollision, readcollision } from './collision'
 import { isstrcolor, readcolor, STR_COLOR } from './color'
-import { CATEGORY, COLLISION } from './types'
 import { isstrdir, readdir } from './dir'
 import { readexpr } from './expr'
 import { isstrkind, readkind, STR_KIND } from './kind'
-import { PT, WORD } from './types'
+import { CATEGORY, COLLISION, PT, WORD } from './types'
 
 export const READ_CONTEXT = {
   // useful state
