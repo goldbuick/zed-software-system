@@ -264,11 +264,15 @@ function transformNode(ast: CodeNode): SourceNode {
         `;\n`,
       ])
     case NODE.MOVE:
+      if (ast.wait) {
+        return write(ast, [
+          `if (`,
+          writeApi(ast, `move`, transformNodes(ast.words)),
+          `) { yield 1; continue zss; }\n`,
+        ])
+      }
       return write(ast, [
-        writeApi(ast, `move`, [
-          ast.wait ? 'true' : 'false',
-          ...transformNodes(ast.words),
-        ]),
+        writeApi(ast, `move`, transformNodes(ast.words)),
         `;\n`,
       ])
     case NODE.COMMAND:
@@ -443,7 +447,7 @@ function transformNode(ast: CodeNode): SourceNode {
       source.add([
         'if (!',
         writeApi(ast, 'foreach', transformNodes(ast.words)),
-        `)\n{ `,
+        `) { `,
         writegoto(ast, done),
         ` }\n`,
       ])

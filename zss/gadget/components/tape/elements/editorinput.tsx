@@ -211,17 +211,14 @@ export function EditorInput({
               if (hasselection) {
                 deleteselection()
               } else {
-                value.delete(tapeeditor.cursor, 1)
+                strvaluesplice(tapeeditor.cursor, 1)
               }
               break
             case 'backspace':
               if (hasselection) {
                 deleteselection()
-              } else {
-                useTapeEditor.setState({
-                  cursor: Math.max(0, tapeeditor.cursor - 1),
-                })
-                value.delete(tapeeditor.cursor, 1)
+              } else if (strvalue.length > 0) {
+                strvaluesplice(Math.max(tapeeditor.cursor - 1, 0), 1)
               }
               break
             default:

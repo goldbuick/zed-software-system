@@ -71,7 +71,7 @@ export type CHIP = {
   hyperlink: (...words: WORD[]) => void
 
   // logic api
-  move: (wait: WORD_RESULT, ...words: WORD[]) => WORD_RESULT
+  move: (...words: WORD[]) => WORD_RESULT
   command: (...words: WORD[]) => WORD_RESULT
   if: (...words: WORD[]) => WORD_RESULT
   repeatstart: (index: number, ...words: WORD[]) => void
@@ -387,14 +387,13 @@ export function createchip(
     hyperlink(...words) {
       return invokecommand('hyperlink', words)
     },
-    move(wait, ...words) {
+    move(...words) {
       // try and move
-      const result = chip.command('go', ...words) && wait
+      const blocked = chip.command('go', ...words)
       // and yield regardless of the outcome
       chip.yield()
-      // if blocked and should wait, return 1
-      // otherwise 0
-      return result ? 1 : 0
+      // return if blocked
+      return blocked
     },
     command(...words) {
       // 0 - continue
