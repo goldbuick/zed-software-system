@@ -1,5 +1,7 @@
 @player
-@set cycle 1 char 2 color 11
+@cycle 1 
+@char 2 
+@color 11
 
 ' create ui
 #gadget right

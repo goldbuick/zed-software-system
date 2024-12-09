@@ -114,14 +114,13 @@ export const GADGET_FIRMWARE = createfirmware({
     return 0
   })
   .command('stat', (_, words) => {
-    const stats = statformat(words.map(maptostring))
-    for (let i = 0; i < stats.length; ++i) {
-      if (
-        stats[i].type === STAT_TYPE.VALUE &&
-        ispresent(READ_CONTEXT.element)
-      ) {
-        READ_CONTEXT.element.name = stats[i].values.join(' ')
-      }
+    const stat = statformat(words.map(maptostring))
+    switch (stat.type) {
+      case STAT_TYPE.OBJECT:
+        if (ispresent(READ_CONTEXT.element)) {
+          READ_CONTEXT.element.name = stat.values.join(' ')
+        }
+        break
     }
     return 0
   })

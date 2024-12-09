@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { Group, Vector2 } from 'three'
+import { vm_input } from 'zss/device/api'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import {
   DRAW_CHAR_HEIGHT,
@@ -37,7 +38,7 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   if (mods.shift) {
     bits |= INPUT_SHIFT
   }
-  hub.emit('vm:input', 'gadget', [input, bits], player)
+  vm_input('framed', input, bits, player)
 }
 
 export function Framed({ width, height }: FramedProps) {

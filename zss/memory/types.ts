@@ -137,16 +137,6 @@ export enum CODE_PAGE_TYPE {
   EIGHT_TRACK,
 }
 
-export enum CODE_PAGE_LABEL {
-  LOADER = 'loader',
-  BOARD = 'board',
-  OBJECT = 'object',
-  TERRAIN = 'terrain',
-  CHARSET = 'charset',
-  PALETTE = 'palette',
-  EIGHT_TRACK = '8track',
-}
-
 export type CODE_PAGE_STATS = {
   type?: CODE_PAGE_TYPE
   name?: string

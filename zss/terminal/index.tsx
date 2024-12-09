@@ -88,13 +88,13 @@ if (ispresent(engine)) {
   })
 
   const handleresize = debounce((width: number, height: number) => {
-    root.configure({ 
+    root.configure({
       ...config,
       events: eventManagerFactory,
-      size: { width, height, top: 0, left: 0 }, 
+      size: { width, height, top: 0, left: 0 },
       onCreated({ gl }) {
         gl.localClippingEnabled = true
-      },  
+      },
     })
   }, 256)
 

@@ -56,9 +56,10 @@ export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
     terrain: (terrain) => terrain.map(exportboardelement),
     objects: (objects) =>
       Object.values<BOARD_ELEMENT>(objects).map(exportboardelement),
-    codepage: FORMAT_SKIP,
-    lookup: FORMAT_SKIP,
+    id: FORMAT_SKIP,
     named: FORMAT_SKIP,
+    lookup: FORMAT_SKIP,
+    codepage: FORMAT_SKIP,
   })
 }
 

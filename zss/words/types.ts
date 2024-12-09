@@ -72,18 +72,22 @@ export enum DIR {
 }
 
 export enum STAT_TYPE {
-  // @banana - specifies name stat
-  // @board title - specifics type of codepage data is currently set to
-  // @set char 2 - we have a pre-defined set of value names that work here ??
-  VALUE,
-  // -----
-  RANGE, // @range gooble R HUH; help text for stat
+  LOADER, // @board title - this is a type + name stat
+  BOARD,
+  OBJECT,
+  TERRAIN,
+  CHARSET,
+  PALETTE,
+  EIGHT_TRACK,
+  CONST, //  @char 2 - @cycle 1 - the first @ is name,
+  //         all subsequent @ are key -> value paris
+  RANGE, //  @range gooble R HUH; help text for stat
   SELECT, // @sl foup A B C
   NUMBER, // @number foup 0 100
-  TEXT, // @text gumple
-  LINK, // @link north - use this for passages between boards
+  TEXT, //   @text gumple
+  LINK, //   @link north - use this for passages between boards
   HOTKEY, // @hotkey gorp g - we can associate hotkeys with objects
-  CODE, // @code, affords the user to write local code
+  SCROLL, // @scroll, affords the user to write local code
 }
 
 export type STAT = {

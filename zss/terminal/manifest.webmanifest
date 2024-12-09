@@ -3,7 +3,7 @@
   "name": "zed.cafe fullscreen",
   "description": "pin app for fullscreen",
   "scope": "/",
-  "background_color": "#000",
+  "background_color": "#003",
   "theme_color": "#00A",
   "start_url": "/",
   "display": "standalone",

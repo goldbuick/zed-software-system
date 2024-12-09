@@ -9,6 +9,7 @@ type GenContext = {
   internal: number
   lineindex: number
   linelookup: Record<string, number>
+  isfirststat: boolean
 }
 
 export const context: GenContext = {
@@ -16,6 +17,7 @@ export const context: GenContext = {
   internal: 0,
   lineindex: 0,
   linelookup: {},
+  isfirststat: true,
 }
 
 export const GENERATED_FILENAME = 'zss.js'
@@ -214,7 +216,8 @@ function transformNode(ast: CodeNode): SourceNode {
       return write(ast, [
         `case ${ast.lineindex}:\n`,
         ...ast.stmts.map(transformNode).flat(),
-        `if (api.sy()) { yield 1; }; if (api.hm()) { continue zss; }\n`,
+        `if (api.sy()) { api.next(${ast.lineindex + 1}); yield 1; }; `,
+        `if (api.hm()) { continue zss; }\n`,
       ])
     }
     case NODE.MARK:
@@ -235,10 +238,12 @@ function transformNode(ast: CodeNode): SourceNode {
         `;\n`,
       ])
     case NODE.STAT:
-      return write(ast, [
-        writeApi(ast, `stat`, ast.value.split(` `).map(writeString)),
-        `;\n`,
-      ])
+      if (context.isfirststat) {
+        context.isfirststat = false
+        const words = ast.value.split(` `).map(writeString)
+        return write(ast, [writeApi(ast, `stat`, words), `;\n`])
+      }
+      return write(ast, `// skipped ${ast.value}`)
     case NODE.LABEL: {
       const llabel = ast.name.toLowerCase()
       const ltype = ast.active ? 'label' : 'comment'
@@ -555,6 +560,7 @@ export function transformAst(ast: CodeNode): GenContextAndCode {
   context.labels = {}
   context.internal = 0
   context.lineindex = 0
+  context.isfirststat = true
 
   // translate into js
   indexnode(ast)

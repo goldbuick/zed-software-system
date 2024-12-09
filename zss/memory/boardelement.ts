@@ -44,6 +44,8 @@ enum BOARD_ELEMENT_KEYS {
   stepy,
   sender,
   data,
+  headless,
+  removed,
 }
 
 // safe to serialize copy of boardelement

@@ -142,7 +142,7 @@ export function vm_doot(sender: string, player: string) {
 export function vm_input(
   sender: string,
   input: INPUT,
-  mods: Record<INPUT, number>,
+  mods: number,
   player: string,
 ) {
   hub.emit('vm:input', sender, [input, mods], player)

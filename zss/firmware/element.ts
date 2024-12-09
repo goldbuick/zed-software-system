@@ -22,7 +22,7 @@ import { PT } from 'zss/words/types'
 
 import { moveobject } from './board'
 
-const INPUT_STAT_NAMES = new Set([
+const INPUT_FLAG_NAMES = new Set([
   'inputmove',
   'inputalt',
   'inputctrl',
@@ -33,7 +33,12 @@ const INPUT_STAT_NAMES = new Set([
 ])
 
 const STANDARD_STAT_NAMES = new Set([
-  ...INPUT_STAT_NAMES,
+  // interaction
+  'player',
+  'pushable',
+  'collision',
+  'destructible',
+  // config
   'p1',
   'p2',
   'p3',
@@ -52,41 +57,34 @@ function readinput() {
   // ensure we have the proper flags on player data
   if (!isarray(flags.inputqueue)) {
     flags.inputqueue = []
-    flags.inputmods = 0
     flags.inputcurrent = 0
   }
 
   // we've already processed input for this tick
-  const { element } = READ_CONTEXT
-  if (
-    !ispresent(element) ||
-    (isnumber(flags.inputcurrent) && flags.inputcurrent > 0)
-  ) {
+  if (isnumber(flags.inputcurrent) && flags.inputcurrent > 0) {
     return
   }
 
   // pull from front of queue
-  const [head = INPUT.NONE] = flags.inputqueue as INPUT[]
+  const [head] = flags.inputqueue as [INPUT, number][]
+  const [input = INPUT.NONE, mods = 0] = head ?? [INPUT.NONE, 0]
 
-  // write to element
-
-  // clear input stats
+  // clear input flags
   flags.inputmove = []
   flags.inputok = 0
   flags.inputcancel = 0
   flags.inputmenu = 0
 
-  // set active input stat
-  const mods = isnumber(flags.inputmods) ? flags.inputmods : 0
+  // set active input flag
   flags.inputalt = mods & INPUT_ALT ? 1 : 0
   flags.inputctrl = mods & INPUT_CTRL ? 1 : 0
   flags.inputshift = mods & INPUT_SHIFT ? 1 : 0
-  switch (head) {
+  switch (input) {
     case INPUT.MOVE_UP:
     case INPUT.MOVE_DOWN:
     case INPUT.MOVE_LEFT:
     case INPUT.MOVE_RIGHT:
-      flags.inputmove = [readinputmap[head - INPUT.MOVE_UP]]
+      flags.inputmove = [readinputmap[input - INPUT.MOVE_UP]]
       break
     case INPUT.OK_BUTTON:
       flags.inputok = 1
@@ -100,15 +98,19 @@ function readinput() {
   }
 
   // set active input
-  flags.inputcurrent = head
+  flags.inputcurrent = input
+
   // clear used input
-  flags.inputqueue = flags.inputqueue.filter((item) => item !== head)
+  flags.inputqueue = flags.inputqueue.filter((item) => {
+    const [check] = item as [INPUT, number]
+    return check !== INPUT.NONE && check !== input
+  })
 }
 
 export const ELEMENT_FIRMWARE = createfirmware({
   get(_, name) {
     // if we are reading from input AND are a player
-    if (READ_CONTEXT.isplayer && INPUT_STAT_NAMES.has(name)) {
+    if (READ_CONTEXT.isplayer && INPUT_FLAG_NAMES.has(name)) {
       readinput() // pull the next input
     }
 

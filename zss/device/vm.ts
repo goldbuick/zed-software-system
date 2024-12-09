@@ -128,8 +128,9 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         if (!isarray(flags.inputqueue)) {
           flags.inputqueue = []
         }
-        flags.inputmods = mods
-        flags.inputqueue.push(input)
+        if (input !== INPUT.NONE) {
+          flags.inputqueue.push([input, mods])
+        }
       }
       break
     case 'codewatch':

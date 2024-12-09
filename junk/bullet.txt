@@ -1,5 +1,8 @@
 @bullet
-@set cycle 1 char 72 color 15
+@cycle 1
+@char 72 
+@color 15
+
 #repeat 4 ?rnd?i
 #cycle 2
 #repeat 2 ?rnd?i

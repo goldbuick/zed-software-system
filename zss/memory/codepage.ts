@@ -1,8 +1,8 @@
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
-import { statformat } from 'zss/words/stats'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { statformat, stattypestring } from 'zss/words/stats'
 import { STAT_TYPE } from 'zss/words/types'
 
 import { createboard, exportboard, importboard } from './board'
@@ -21,7 +21,6 @@ import {
 import {
   BOARD_ELEMENT,
   CODE_PAGE,
-  CODE_PAGE_LABEL,
   CODE_PAGE_STATS,
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
@@ -150,68 +149,74 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
   const parse = tokenize(codepage.code)
 
   // extract @stat lines
+  let isfirst = true
   for (let i = 0; i < parse.tokens.length; ++i) {
     const token = parse.tokens[i]
     if (token.tokenType === stat) {
       const source = token.image.slice(1)
-      const [maybetype, ...maybevalues] = source.split(' ')
-      const lmaybetype = maybetype.toLowerCase()
-      const maybename = maybevalues.join(' ')
-      const lmaybename = maybename.toLowerCase().trim()
-      switch (lmaybetype) {
-        default:
-          codepage.stats.name = source.trim()
+      const words = source.split(' ')
+      const stat = statformat(words, isfirst)
+      isfirst = false
+
+      switch (stat.type) {
+        case STAT_TYPE.LOADER:
+          codepage.stats.type = CODE_PAGE_TYPE.LOADER
+          codepage.stats.name = stat.values.join(' ')
           break
-        case 'set':
-        case 'stat':
-        case 'stats': {
-          const stats = statformat(maybevalues)
-          for (let i = 0; i < stats.length; ++i) {
-            const stat = stats[i]
-            if (stat.type === STAT_TYPE.VALUE) {
-              // key => value pairs
-              for (let v = 0; v < stat.values.length; ++v) {
-                codepage.stats[stat.values[v]] = stat.values[v + 1] ?? ''
-              }
-            } else {
-              // everything else
-              const [target, ...args] = stat.values
-              if (ispresent(target)) {
-                const ltarget = target.toLowerCase()
-                codepage.stats[ltarget] = args.join(' ')
-              }
+        case STAT_TYPE.BOARD:
+          codepage.stats.type = CODE_PAGE_TYPE.BOARD
+          codepage.stats.name = stat.values.join(' ')
+          break
+        case STAT_TYPE.OBJECT:
+          codepage.stats.type = CODE_PAGE_TYPE.OBJECT
+          codepage.stats.name = stat.values.join(' ')
+          break
+        case STAT_TYPE.TERRAIN:
+          codepage.stats.type = CODE_PAGE_TYPE.TERRAIN
+          codepage.stats.name = stat.values.join(' ')
+          break
+        case STAT_TYPE.CHARSET:
+          codepage.stats.type = CODE_PAGE_TYPE.CHARSET
+          codepage.stats.name = stat.values.join(' ')
+          break
+        case STAT_TYPE.PALETTE:
+          codepage.stats.type = CODE_PAGE_TYPE.PALETTE
+          codepage.stats.name = stat.values.join(' ')
+          break
+        case STAT_TYPE.EIGHT_TRACK:
+          codepage.stats.type = CODE_PAGE_TYPE.EIGHT_TRACK
+          codepage.stats.name = stat.values.join(' ')
+          break
+        case STAT_TYPE.CONST: {
+          const [maybename, maybevalue] = stat.values
+          if (isstring(maybename)) {
+            const name = maybename.toLowerCase()
+            if (isstring(maybevalue)) {
+              // can we parse consts here ???? too ????
+              const numbervalue = parseFloat(maybevalue)
+              codepage.stats[name] = isnumber(numbervalue)
+                ? numbervalue
+                : maybevalue
+            } else if (isnumber(maybevalue)) {
+              codepage.stats[name] = maybevalue
             }
           }
           break
         }
-        case CODE_PAGE_LABEL.LOADER as string:
-          codepage.stats.type = CODE_PAGE_TYPE.LOADER
-          codepage.stats.name = lmaybename
+        case STAT_TYPE.RANGE:
+        case STAT_TYPE.SELECT:
+        case STAT_TYPE.NUMBER:
+        case STAT_TYPE.TEXT:
+        case STAT_TYPE.LINK:
+        case STAT_TYPE.HOTKEY:
+        case STAT_TYPE.SCROLL: {
+          const [maybename, ...args] = stat.values
+          if (isstring(maybename)) {
+            const name = maybename.toLowerCase()
+            codepage.stats[name] = args
+          }
           break
-        case CODE_PAGE_LABEL.BOARD as string:
-          codepage.stats.type = CODE_PAGE_TYPE.BOARD
-          codepage.stats.name = lmaybename
-          break
-        case CODE_PAGE_LABEL.OBJECT as string:
-          codepage.stats.type = CODE_PAGE_TYPE.OBJECT
-          codepage.stats.name = lmaybename
-          break
-        case CODE_PAGE_LABEL.TERRAIN as string:
-          codepage.stats.type = CODE_PAGE_TYPE.TERRAIN
-          codepage.stats.name = lmaybename
-          break
-        case CODE_PAGE_LABEL.CHARSET as string:
-          codepage.stats.type = CODE_PAGE_TYPE.CHARSET
-          codepage.stats.name = lmaybename
-          break
-        case CODE_PAGE_LABEL.PALETTE as string:
-          codepage.stats.type = CODE_PAGE_TYPE.PALETTE
-          codepage.stats.name = lmaybename
-          break
-        case CODE_PAGE_LABEL.EIGHT_TRACK as string:
-          codepage.stats.type = CODE_PAGE_TYPE.EIGHT_TRACK
-          codepage.stats.name = lmaybename
-          break
+        }
       }
     }
   }
@@ -231,19 +236,19 @@ export function codepagetypetostring(type: MAYBE<CODE_PAGE_TYPE>): string {
     case CODE_PAGE_TYPE.ERROR:
       return 'error'
     case CODE_PAGE_TYPE.LOADER:
-      return CODE_PAGE_LABEL.LOADER
+      return stattypestring(STAT_TYPE.LOADER)
     case CODE_PAGE_TYPE.BOARD:
-      return CODE_PAGE_LABEL.BOARD
+      return stattypestring(STAT_TYPE.BOARD)
     case CODE_PAGE_TYPE.OBJECT:
-      return CODE_PAGE_LABEL.OBJECT
+      return stattypestring(STAT_TYPE.OBJECT)
     case CODE_PAGE_TYPE.TERRAIN:
-      return CODE_PAGE_LABEL.TERRAIN
+      return stattypestring(STAT_TYPE.TERRAIN)
     case CODE_PAGE_TYPE.CHARSET:
-      return CODE_PAGE_LABEL.CHARSET
+      return stattypestring(STAT_TYPE.CHARSET)
     case CODE_PAGE_TYPE.PALETTE:
-      return CODE_PAGE_LABEL.PALETTE
+      return stattypestring(STAT_TYPE.PALETTE)
     case CODE_PAGE_TYPE.EIGHT_TRACK:
-      return CODE_PAGE_LABEL.EIGHT_TRACK
+      return stattypestring(STAT_TYPE.EIGHT_TRACK)
   }
 }
 

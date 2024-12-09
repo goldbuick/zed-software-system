@@ -24,9 +24,11 @@ import {
 } from 'zss/memory'
 import { bookclearcodepage, bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepagereadname, codepagereadtypetostring } from 'zss/memory/codepage'
-import { CODE_PAGE, CODE_PAGE_LABEL, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { stattypestring } from 'zss/words/stats'
 import { metakey } from 'zss/words/system'
+import { STAT_TYPE } from 'zss/words/types'
 import {
   bg,
   fg,
@@ -170,10 +172,9 @@ export const CLI_FIRMWARE = createfirmware({
     let codepage: MAYBE<CODE_PAGE>
     const [maybetype, ...args] = words.map(maptostring)
     const maybename = args.join(' ')
-
     // attempt to check first word as codepage type to create
     switch (maybetype.toLowerCase()) {
-      case CODE_PAGE_LABEL.LOADER as string:
+      case stattypestring(STAT_TYPE.LOADER):
         codepage = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           maybename,
@@ -187,42 +188,42 @@ export const CLI_FIRMWARE = createfirmware({
           CODE_PAGE_TYPE.OBJECT,
         )
         break
-      case CODE_PAGE_LABEL.BOARD as string:
+      case stattypestring(STAT_TYPE.BOARD):
         codepage = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           maybename,
           CODE_PAGE_TYPE.BOARD,
         )
         break
-      case CODE_PAGE_LABEL.OBJECT as string:
+      case stattypestring(STAT_TYPE.OBJECT):
         codepage = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           maybename,
           CODE_PAGE_TYPE.OBJECT,
         )
         break
-      case CODE_PAGE_LABEL.TERRAIN as string:
+      case stattypestring(STAT_TYPE.TERRAIN):
         codepage = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           maybename,
           CODE_PAGE_TYPE.TERRAIN,
         )
         break
-      case CODE_PAGE_LABEL.CHARSET as string:
+      case stattypestring(STAT_TYPE.CHARSET):
         codepage = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           maybename,
           CODE_PAGE_TYPE.CHARSET,
         )
         break
-      case CODE_PAGE_LABEL.PALETTE as string:
+      case stattypestring(STAT_TYPE.PALETTE):
         codepage = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           maybename,
           CODE_PAGE_TYPE.PALETTE,
         )
         break
-      case CODE_PAGE_LABEL.EIGHT_TRACK as string:
+      case stattypestring(STAT_TYPE.EIGHT_TRACK):
         codepage = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           maybename,
@@ -230,7 +231,6 @@ export const CLI_FIRMWARE = createfirmware({
         )
         break
     }
-
     if (ispresent(codepage)) {
       chip.command('pageopen', codepage.id)
     }
