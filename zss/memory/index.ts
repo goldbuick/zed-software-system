@@ -476,6 +476,10 @@ export function memorytick() {
   })
 }
 
+export function memorycleanup() {
+  os.gc()
+}
+
 export function memorycli(player: string, cli = '') {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {

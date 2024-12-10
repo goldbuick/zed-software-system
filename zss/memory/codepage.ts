@@ -158,7 +158,6 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
       const stat = statformat(words, isfirst)
       const maybename = stat.values.join(' ').toLowerCase().trim()
       isfirst = false
-
       switch (stat.type) {
         case STAT_TYPE.LOADER:
           codepage.stats.type = CODE_PAGE_TYPE.LOADER

@@ -16,6 +16,7 @@ import {
   memorygetdefaultplayer,
   memoryreadflags,
   memorymessage,
+  memorycleanup,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -197,6 +198,9 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           vm.emit('logout', undefined, player)
         }
       }
+
+      // gc chips
+      memorycleanup()
 
       // autosave to url
       if (++flushtick >= FLUSH_RATE) {

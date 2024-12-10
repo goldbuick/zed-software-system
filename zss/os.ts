@@ -18,6 +18,7 @@ export type OS = {
   has: (id: string) => boolean
   isended: (id: string) => boolean
   halt: (id: string) => boolean
+  gc: () => void
   tick: (
     id: string,
     driver: DRIVER_TYPE,
@@ -63,6 +64,14 @@ export function createos() {
         delete chips[id]
       }
       return !!chip
+    },
+    gc() {
+      const ids = os.ids()
+      for (let i = 0; i < ids.length; ++i) {
+        if (os.isended(ids[i])) {
+          os.halt(ids[i])
+        }
+      }
     },
     tick(id, driver, cycle, timestamp, name, code) {
       let chip = chips[id]

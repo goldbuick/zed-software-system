@@ -52,7 +52,7 @@ export type CHIP = {
   shouldhalt: () => boolean
   hm: () => number
   yield: () => void
-  next: (line: number) => void
+  i: (line: number) => void
   sy: () => boolean
   emit: (target: string, data?: any, player?: string) => void
   send: (chipid: string, message: string, data?: any, player?: string) => void
@@ -71,7 +71,6 @@ export type CHIP = {
   hyperlink: (...words: WORD[]) => void
 
   // logic api
-  move: (...words: WORD[]) => WORD_RESULT
   command: (...words: WORD[]) => WORD_RESULT
   if: (...words: WORD[]) => WORD_RESULT
   repeatstart: (index: number, ...words: WORD[]) => void
@@ -129,7 +128,7 @@ export function createchip(
   let logic: Generator<number> | undefined
 
   // init
-  if (!ispresent(flags.lb)) {
+  if (!isarray(flags.lb)) {
     // entry point state
     flags.lb = deepcopy(Object.entries(build.labels ?? {}))
     // incoming message state
@@ -137,7 +136,7 @@ export function createchip(
     // we leave message unset
     flags.mg = undefined
     // we track where we are in execution
-    flags.ec = 0
+    flags.ec = 9
     // prevent infinite loop lockup
     flags.lc = 0
     // pause until next tick
@@ -249,7 +248,7 @@ export function createchip(
     },
     shouldhalt() {
       if (isnumber(flags.lc)) {
-        return flags.lc++ > CONFIG.HALT_AT_COUNT
+        return ++flags.lc > CONFIG.HALT_AT_COUNT
       }
       return true
     },
@@ -271,8 +270,8 @@ export function createchip(
     yield() {
       flags.ys = 1
     },
-    next(line) {
-      flags.ec = line
+    i(line) {
+      flags.ec = line - 1
     },
     sy() {
       return !!flags.ys || chip.shouldhalt()
@@ -330,7 +329,7 @@ export function createchip(
     },
     getcase() {
       const line = chip.hm()
-      if (ispresent(line) && isarray(flags.mg)) {
+      if (line && isarray(flags.mg)) {
         const [, , arg, sender, player] = flags.mg as [
           string,
           string,
@@ -359,8 +358,16 @@ export function createchip(
         flags.ec = line
       }
 
-      // always return ec
-      return isnumber(flags.ec) ? flags.ec : 0
+      // get execution cursor state
+      const cursor = isnumber(flags.ec) ? flags.ec : 0
+
+      // inc it
+      flags.ec = cursor + 1
+
+      console.info('flags.ec', flags.ec)
+
+      // always return flags.ec
+      return flags.ec
     },
     endofprogram() {
       chip.yield()
@@ -386,14 +393,6 @@ export function createchip(
     },
     hyperlink(...words) {
       return invokecommand('hyperlink', words)
-    },
-    move(...words) {
-      // try and move
-      const blocked = chip.command('go', ...words)
-      // and yield regardless of the outcome
-      chip.yield()
-      // return if blocked
-      return blocked
     },
     command(...words) {
       // 0 - continue

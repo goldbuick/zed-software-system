@@ -65,6 +65,8 @@ export enum NODE {
   PROGRAM,
   LINE,
   MARK,
+  GOTO,
+  COUNT,
   TEXT,
   LABEL,
   HYPERLINK,
@@ -74,6 +76,7 @@ export enum NODE {
   LITERAL,
   // structure
   IF,
+  IF_CHECK,
   IF_BLOCK,
   ELSE_IF,
   ELSE,
@@ -138,6 +141,15 @@ type CodeNodeData =
       comment: string
     }
   | {
+      type: NODE.GOTO
+      id: string
+      comment: string
+    }
+  | {
+      type: NODE.COUNT
+      index: number
+    }
+  | {
       type: NODE.TEXT
       value: string
     }
@@ -181,23 +193,25 @@ type CodeNodeData =
     }
   | {
       type: NODE.IF
-      words: CodeNode[]
+      check: CodeNode
       block: CodeNode
+    }
+  | {
+      type: NODE.IF_CHECK
+      skip: string
+      method: string
+      words: CodeNode[]
     }
   | {
       type: NODE.IF_BLOCK
       skip: string
       done: string
-      start: CodeNode[]
-      end: CodeNode[]
       lines: CodeNode[]
       altlines: CodeNode[]
     }
   | {
       type: NODE.ELSE_IF
-      skip: string
-      goto: number
-      words: CodeNode[]
+      done: string
       lines: CodeNode[]
     }
   | {
@@ -208,36 +222,23 @@ type CodeNodeData =
       type: NODE.WHILE
       loop: string
       done: string
-      words: CodeNode[]
-      start: CodeNode[]
-      end: CodeNode[]
       lines: CodeNode[]
     }
   | {
       type: NODE.REPEAT
       loop: string
       done: string
-      words: CodeNode[]
-      start: CodeNode[]
-      end: CodeNode[]
       lines: CodeNode[]
     }
   | {
       type: NODE.FOREACH
       loop: string
       done: string
-      words: CodeNode[]
-      start: CodeNode[]
-      end: CodeNode[]
       lines: CodeNode[]
     }
   | {
       type: NODE.WAITFOR
-      loop: string
-      done: string
       words: CodeNode[]
-      start: CodeNode[]
-      end: CodeNode[]
     }
   | {
       type: NODE.BREAK
@@ -308,6 +309,8 @@ class ScriptVisitor
   extends CstVisitor
   implements ICstNodeVisitor<any, CodeNode[]>
 {
+  unique = 0
+
   constructor() {
     super()
     if (LANG_DEV) {
@@ -382,18 +385,59 @@ class ScriptVisitor
     id: string,
     comment: string,
   ): CodeNode[] {
-    const mark = this.createcodenode(ctx, {
-      type: NODE.MARK,
-      id,
-      comment,
-    })
-    return this.createlinenode(ctx, mark)
+    return this.createlinenode(
+      ctx,
+      this.createcodenode(ctx, {
+        type: NODE.MARK,
+        id,
+        comment,
+      }),
+    )
+  }
+
+  creategotonode(
+    ctx: CstChildrenDictionary,
+    id: string,
+    comment: string,
+  ): CodeNode[] {
+    return this.createlinenode(
+      ctx,
+      this.createcodenode(ctx, {
+        type: NODE.GOTO,
+        id,
+        comment,
+      }),
+    )
   }
 
   createlinenode(ctx: CstChildrenDictionary, node: CodeNode[]): CodeNode[] {
     return this.createcodenode(ctx, {
       type: NODE.LINE,
       stmts: node,
+    })
+  }
+
+  createlogicnode(
+    ctx: CstChildrenDictionary,
+    method: string,
+    skip: string,
+    words: CodeNode[],
+  ) {
+    return this.createlinenode(
+      ctx,
+      this.createcodenode(ctx, {
+        type: NODE.IF_CHECK,
+        skip,
+        words,
+        method,
+      }),
+    )
+  }
+
+  createcountnode(ctx: CstChildrenDictionary): CodeNode[] {
+    return this.createcodenode(ctx, {
+      type: NODE.COUNT,
+      index: this.unique++,
     })
   }
 
@@ -408,9 +452,20 @@ class ScriptVisitor
   }
 
   program(ctx: ProgramCstChildren) {
+    this.unique = 0
     return this.createcodenode(ctx, {
       type: NODE.PROGRAM,
-      lines: this.go(ctx.line),
+      lines: [
+        ...this.createlinenode(
+          ctx,
+          this.createcodenode(ctx, {
+            type: NODE.LABEL,
+            active: true,
+            name: 'restart',
+          }),
+        ),
+        ...this.go(ctx.line),
+      ],
     })
   }
 
@@ -484,17 +539,23 @@ class ScriptVisitor
   }
 
   stmt_stat(ctx: Stmt_statCstChildren) {
-    return this.createcodenode(ctx, {
-      type: NODE.STAT,
-      value: tokenstring(ctx.token_stat, '@').slice(1),
-    })
+    return this.createlinenode(
+      ctx,
+      this.createcodenode(ctx, {
+        type: NODE.STAT,
+        value: tokenstring(ctx.token_stat, '@').slice(1),
+      }),
+    )
   }
 
   stmt_text(ctx: Stmt_textCstChildren) {
-    return this.createcodenode(ctx, {
-      type: NODE.TEXT,
-      value: tokenstring(ctx.token_text, ''),
-    })
+    return this.createlinenode(
+      ctx,
+      this.createcodenode(ctx, {
+        type: NODE.TEXT,
+        value: tokenstring(ctx.token_text, ''),
+      }),
+    )
   }
 
   stmt_comment(ctx: Stmt_commentCstChildren) {
@@ -509,11 +570,14 @@ class ScriptVisitor
   }
 
   stmt_hyperlink(ctx: Stmt_hyperlinkCstChildren) {
-    return this.createcodenode(ctx, {
-      type: NODE.HYPERLINK,
-      link: this.go(ctx.words),
-      text: tokenstring(ctx.token_hyperlinktext, ';').slice(1),
-    })
+    return this.createlinenode(
+      ctx,
+      this.createcodenode(ctx, {
+        type: NODE.HYPERLINK,
+        link: this.go(ctx.words),
+        text: tokenstring(ctx.token_hyperlinktext, ';').slice(1),
+      }),
+    )
   }
 
   stmt_command(ctx: Stmt_commandCstChildren) {
@@ -612,10 +676,11 @@ class ScriptVisitor
   }
 
   command_if(ctx: Command_ifCstChildren) {
+    const [check] = this.createlogicnode(ctx, 'if', '', this.go(ctx.words))
     const [block] = this.go(ctx.command_if_block) ?? []
     return this.createcodenode(ctx, {
       type: NODE.IF,
-      words: this.go(ctx.words),
+      check,
       block,
     })
   }
@@ -627,12 +692,16 @@ class ScriptVisitor
       type: NODE.IF_BLOCK,
       skip,
       done,
-      start: this.createmarknode(ctx, skip, `alt logic`),
-      end: this.createmarknode(ctx, done, `end of if`),
-      lines: [this.go(ctx.inline), this.go(ctx.line)].flat(),
+      lines: [
+        this.go(ctx.inline),
+        this.go(ctx.line),
+        this.creategotonode(ctx, done, `end of if`),
+        this.createmarknode(ctx, skip, `alt logic`),
+      ].flat(),
       altlines: [
         this.go(ctx.command_else_if),
         this.go(ctx.command_else),
+        this.createmarknode(ctx, done, `end of if`),
       ].flat(),
     })
   }
@@ -647,16 +716,18 @@ class ScriptVisitor
 
   command_else_if(ctx: Command_else_ifCstChildren) {
     const skip = createsid()
-    return this.createcodenode(ctx, {
-      type: NODE.ELSE_IF,
-      skip,
-      goto: 0, // filled in by #if
-      words: this.go(ctx.words),
-      lines: [
-        ...this.go(ctx.command_fork),
-        ...this.createmarknode(ctx, skip, `skip`),
-      ],
-    })
+    return this.createlinenode(
+      ctx,
+      this.createcodenode(ctx, {
+        type: NODE.ELSE_IF,
+        done: '', // filled in by #if
+        lines: [
+          this.createlogicnode(ctx, 'if', skip, this.go(ctx.words)),
+          this.go(ctx.command_fork),
+          this.createmarknode(ctx, skip, `skip`),
+        ].flat(),
+      }),
+    )
   }
 
   command_else(ctx: Command_elseCstChildren) {
@@ -673,51 +744,68 @@ class ScriptVisitor
       type: NODE.WHILE,
       loop,
       done,
-      words: this.go(ctx.words),
-      start: this.createmarknode(ctx, loop, `start of while`),
-      end: this.createmarknode(ctx, done, `end of while`),
-      lines: this.go(ctx.command_block),
+      lines: [
+        this.createmarknode(ctx, loop, `start of while`),
+        this.createlogicnode(ctx, 'if', done, this.go(ctx.words)),
+        this.go(ctx.command_block),
+        this.creategotonode(ctx, loop, `loop of while`),
+        this.createmarknode(ctx, done, `end of while`),
+      ].flat(),
     })
   }
 
   command_repeat(ctx: Command_repeatCstChildren) {
     const loop = createsid()
     const done = createsid()
+    const index = this.createcountnode(ctx)
     return this.createcodenode(ctx, {
       type: NODE.REPEAT,
       loop,
       done,
-      words: this.go(ctx.words),
-      start: this.createmarknode(ctx, loop, `start of repeat`),
-      end: this.createmarknode(ctx, done, `end of repeat`),
-      lines: this.go(ctx.command_block),
+      lines: [
+        this.createlogicnode(
+          ctx,
+          'repeatstart',
+          '',
+          [index, this.go(ctx.words)].flat(),
+        ),
+        this.createmarknode(ctx, loop, `start of repeat`),
+        this.createlogicnode(ctx, 'repeat', done, index),
+        this.go(ctx.command_block),
+        this.creategotonode(ctx, loop, `loop of repeat`),
+        this.createmarknode(ctx, done, `end of repeat`),
+      ].flat(),
     })
   }
 
   command_foreach(ctx: Command_foreachCstChildren) {
     const loop = createsid()
     const done = createsid()
+    const index = this.createcountnode(ctx)
     return this.createcodenode(ctx, {
       type: NODE.FOREACH,
       loop,
       done,
-      words: this.go(ctx.words),
-      start: this.createmarknode(ctx, loop, `start of foreach`),
-      end: this.createmarknode(ctx, done, `end of repeat`),
-      lines: this.go(ctx.command_block),
+      lines: [
+        this.createlogicnode(
+          ctx,
+          'foreachstart',
+          '',
+          [index, this.go(ctx.words)].flat(),
+        ),
+        this.createmarknode(ctx, loop, `start of foreach`),
+        this.createlogicnode(ctx, 'foreach', done, index),
+        this.go(ctx.command_block),
+        this.creategotonode(ctx, loop, `loop of foreach`),
+        this.createmarknode(ctx, done, `end of foreach`),
+      ].flat(),
     })
   }
 
   command_waitfor(ctx: Command_waitforCstChildren) {
-    const loop = createsid()
-    const done = createsid()
     return this.createcodenode(ctx, {
       type: NODE.WAITFOR,
-      loop,
-      done,
       words: this.go(ctx.words),
-      start: this.createmarknode(ctx, loop, `start of waitfor`),
-      end: this.createmarknode(ctx, done, `end of waitfor`),
     })
   }
 
