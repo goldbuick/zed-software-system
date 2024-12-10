@@ -34,8 +34,9 @@ export type BOARD_ELEMENT = {
   cycle?: number
   stepx?: number
   stepy?: number
+  // messages
   sender?: string
-  data?: any
+  arg?: any
   // runtime
   category?: CATEGORY
   kinddata?: BOARD_ELEMENT

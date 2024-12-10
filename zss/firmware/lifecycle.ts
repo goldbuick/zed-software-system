@@ -78,15 +78,12 @@ export const LIFECYCLE_FIRMWARE = createfirmware({
     return 0
   })
   .command('run', (_, words) => {
-    debugger
     const [func] = readargs(words, 0, [ARG_TYPE.STRING])
-    // lookup codepage
     memoryrun(func)
     return 0
   })
   .command('runwith', (_, words) => {
     const [func, value] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
-    // lookup codepage
     memoryrun(func, value)
     return 0
   })

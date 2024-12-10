@@ -1,9 +1,8 @@
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
-import { DIR } from './types'
 import { readexpr } from './expr'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
-import { PT, WORD } from './types'
+import { DIR, PT, WORD } from './types'
 
 export function ispt(value: any): value is PT {
   return ispresent(value) && ispresent(value.x) && ispresent(value.y)

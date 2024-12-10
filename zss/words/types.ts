@@ -40,8 +40,8 @@ export enum COLOR {
 }
 
 export enum COLLISION {
-  ISSOLID,
   ISWALK,
+  ISSOLID,
   ISSWIM,
   ISBULLET,
 }

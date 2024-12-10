@@ -14,8 +14,8 @@ type GenContext = {
 
 export const context: GenContext = {
   labels: {},
-  internal: 0,
-  lineindex: 0,
+  internal: 1,
+  lineindex: 1,
   linelookup: {},
   isfirststat: true,
 }
@@ -562,8 +562,8 @@ export type GenContextAndCode = {
 export function transformAst(ast: CodeNode): GenContextAndCode {
   // setup context
   context.labels = {}
-  context.internal = 0
-  context.lineindex = 0
+  context.internal = 1
+  context.lineindex = 1
   context.isfirststat = true
 
   // translate into js

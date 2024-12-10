@@ -43,7 +43,7 @@ enum BOARD_ELEMENT_KEYS {
   stepx,
   stepy,
   sender,
-  data,
+  arg,
   headless,
   removed,
 }

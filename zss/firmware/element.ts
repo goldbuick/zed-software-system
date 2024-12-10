@@ -45,8 +45,9 @@ const STANDARD_STAT_NAMES = new Set([
   'cycle',
   'stepx',
   'stepy',
+  // messages & run
   'sender',
-  'data',
+  'arg',
 ])
 
 const readinputmap = ['NORTH', 'SOUTH', 'WEST', 'EAST']

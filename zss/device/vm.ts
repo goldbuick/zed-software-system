@@ -15,6 +15,7 @@ import {
   memoryplayerlogout,
   memorygetdefaultplayer,
   memoryreadflags,
+  memorymessage,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'

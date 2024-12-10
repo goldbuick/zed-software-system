@@ -105,8 +105,10 @@ function createsynthplay() {
         release: 0.01,
       },
       oscillator: {
+        // type: 'pulse',
+        // width: -0.5,
         // type: 'sine',
-        type: 'square',
+        // type: 'square',
         // type: 'triangle',
         // type: 'sawtooth',
         // type: 'fmsine',
@@ -114,7 +116,7 @@ function createsynthplay() {
         // type: 'fmtriangle',
         // type: 'fmsawtooth',
         // type: 'amsine',
-        // type: 'amsquare',
+        type: 'amsquare',
         // type: 'amtriangle',
         // type: 'amsawtooth',
         // type: 'fatsquare',
@@ -133,6 +135,7 @@ function createsynthplay() {
         // type: 'amtriangle14',
         // type: 'amsawtooth14',
         // type: 'custom',
+        // harmonicity: 6,
         // partials: [0.75, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15],
         // partials: [
         //   0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15,

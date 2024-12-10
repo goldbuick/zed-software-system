@@ -1,9 +1,8 @@
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
-import { COLLISION } from './types'
 import { readexpr } from './expr'
 import { READ_CONTEXT } from './reader'
-import { WORD } from './types'
+import { COLLISION, WORD } from './types'
 
 export const collisionconsts = {
   issolid: 'ISSOLID',

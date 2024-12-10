@@ -331,7 +331,7 @@ export function createchip(
     getcase() {
       const line = chip.hm()
       if (ispresent(line) && isarray(flags.mg)) {
-        const [, , data, sender, player] = flags.mg as [
+        const [, , arg, sender, player] = flags.mg as [
           string,
           string,
           any,
@@ -341,7 +341,7 @@ export function createchip(
 
         // update chip state based on incoming message
         chip.set('sender', sender)
-        chip.set('data', data)
+        chip.set('arg', arg)
 
         // this sets player focus
         if (player) {

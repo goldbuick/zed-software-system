@@ -156,36 +156,37 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
       const source = token.image.slice(1)
       const words = source.split(' ')
       const stat = statformat(words, isfirst)
+      const maybename = stat.values.join(' ').toLowerCase().trim()
       isfirst = false
 
       switch (stat.type) {
         case STAT_TYPE.LOADER:
           codepage.stats.type = CODE_PAGE_TYPE.LOADER
-          codepage.stats.name = stat.values.join(' ')
+          codepage.stats.name = maybename
           break
         case STAT_TYPE.BOARD:
           codepage.stats.type = CODE_PAGE_TYPE.BOARD
-          codepage.stats.name = stat.values.join(' ')
+          codepage.stats.name = maybename
           break
         case STAT_TYPE.OBJECT:
           codepage.stats.type = CODE_PAGE_TYPE.OBJECT
-          codepage.stats.name = stat.values.join(' ')
+          codepage.stats.name = maybename
           break
         case STAT_TYPE.TERRAIN:
           codepage.stats.type = CODE_PAGE_TYPE.TERRAIN
-          codepage.stats.name = stat.values.join(' ')
+          codepage.stats.name = maybename
           break
         case STAT_TYPE.CHARSET:
           codepage.stats.type = CODE_PAGE_TYPE.CHARSET
-          codepage.stats.name = stat.values.join(' ')
+          codepage.stats.name = maybename
           break
         case STAT_TYPE.PALETTE:
           codepage.stats.type = CODE_PAGE_TYPE.PALETTE
-          codepage.stats.name = stat.values.join(' ')
+          codepage.stats.name = maybename
           break
         case STAT_TYPE.EIGHT_TRACK:
           codepage.stats.type = CODE_PAGE_TYPE.EIGHT_TRACK
-          codepage.stats.name = stat.values.join(' ')
+          codepage.stats.name = maybename
           break
         case STAT_TYPE.CONST: {
           const [maybename, maybevalue] = stat.values
@@ -212,7 +213,7 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
         case STAT_TYPE.SCROLL: {
           const [maybename, ...args] = stat.values
           if (isstring(maybename)) {
-            const name = maybename.toLowerCase()
+            const name = maybename.toLowerCase().trim()
             codepage.stats[name] = args
           }
           break
