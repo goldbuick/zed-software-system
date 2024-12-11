@@ -62,6 +62,7 @@ export type CHIP = {
   zap: (label: string) => void
   restore: (label: string) => void
   getcase: () => number
+  nextcase: () => void
   endofprogram: () => void
   stacktrace: (error: Error) => void
 
@@ -136,7 +137,7 @@ export function createchip(
     // we leave message unset
     flags.mg = undefined
     // we track where we are in execution
-    flags.ec = 9
+    flags.ec = 1
     // prevent infinite loop lockup
     flags.lc = 0
     // pause until next tick
@@ -271,7 +272,7 @@ export function createchip(
       flags.ys = 1
     },
     i(line) {
-      flags.ec = line - 1
+      flags.ec = line
     },
     sy() {
       return !!flags.ys || chip.shouldhalt()
@@ -328,6 +329,10 @@ export function createchip(
       }
     },
     getcase() {
+      // ensure execution cursor
+      flags.ec = isnumber(flags.ec) ? flags.ec : 1
+
+      // check for pending messages
       const line = chip.hm()
       if (line && isarray(flags.mg)) {
         const [, , arg, sender, player] = flags.mg as [
@@ -358,14 +363,14 @@ export function createchip(
         flags.ec = line
       }
 
+      // always return flags.ec
+      return flags.ec
+    },
+    nextcase() {
       // get execution cursor state
-      const cursor = isnumber(flags.ec) ? flags.ec : 0
-
+      const cursor = isnumber(flags.ec) ? flags.ec : 1
       // inc it
       flags.ec = cursor + 1
-
-      console.info('flags.ec', flags.ec)
-
       // always return flags.ec
       return flags.ec
     },

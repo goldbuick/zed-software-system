@@ -176,11 +176,36 @@ function transformOperator(ast: CodeNode) {
 }
 
 function writegoto(ast: CodeNode, line: number): SourceNode {
-  return write(ast, [writeApi(ast, `i`, [`${line - 1}`]), `; continue;`])
+  return write(ast, [writeApi(ast, `i`, [`${line}`]), `; continue;`])
 }
 
 function readlookup(id: MAYBE<string>) {
   return context.linelookup[id ?? ''] ?? 0
+}
+
+function writelookup(lines: CodeNode[], type: NODE, value: string) {
+  for (let i = 0; i < lines.length; ++i) {
+    const node = lines[i]
+    switch (node.type) {
+      case NODE.WHILE:
+      case NODE.REPEAT:
+      case NODE.FOREACH:
+      case NODE.ELSE_IF:
+        if (node.type === type) {
+          node.done = value
+        }
+        break
+      case NODE.IF_BLOCK:
+      case NODE.IF_CHECK:
+        if (node.type === type) {
+          node.skip = value
+        }
+        break
+      case NODE.LINE:
+        writelookup(node.stmts, type, value)
+        break
+    }
+  }
 }
 
 function transformNode(ast: CodeNode): SourceNode {
@@ -197,10 +222,12 @@ function transformNode(ast: CodeNode): SourceNode {
         ...ast.lines.map(transformNode).flat(),
         // logic block end
         `default:\n`,
-        `api.endofprogram();\n`,
+        `  api.endofprogram();\n`,
         // end of program has been reached, this is the wait/wake loop
-        `while (api.hm() === 0) { yield 1; }; continue;\n`,
+        `  while (api.hm() === 0) { yield 1; }; continue;\n`,
+        `  break;\n`,
         `}\n`,
+        `api.nextcase()\n`,
         `}\n`,
         `} catch (e) {\n`,
         // log and attempt to find line & column of error
@@ -299,49 +326,31 @@ function transformNode(ast: CodeNode): SourceNode {
       }
 
       // check if conditional
-      if (ast.check.type === NODE.IF_CHECK) {
-        ast.check.skip = readlookup(block.skip)
-      }
+      writelookup([ast.check], NODE.IF_CHECK, block.skip)
       const source = write(ast, transformNode(ast.check))
 
       // if true logic
       block.lines.forEach((item) => source.add(transformNode(item)))
 
       // start of (alt) logic
-      block.altlines.forEach((item) => {
-        // write #if's done to the ELSE_IF nodes
-        if (item.type === NODE.ELSE_IF) {
-          item.goto = readlookup(block.done)
-        }
-        return source.add(transformNode(item))
-      })
+      writelookup(block.altlines, NODE.ELSE_IF, block.done)
+      block.altlines.forEach((item) => source.add(transformNode(item)))
 
       // all done
       return source
     }
     case NODE.IF_CHECK: {
+      const skip = readlookup(ast.skip)
       const source = write(ast, [
         'if (!',
         writeApi(ast, ast.method, transformNodes(ast.words)),
         `) { `,
-        writegoto(ast, ast.skip),
+        writegoto(ast, skip),
         ` }\n`,
       ])
       return source
     }
-    case NODE.ELSE_IF: {
-      // check else if conditional
-      if (ast.check.type === NODE.IF_CHECK) {
-        ast.check.skip = readlookup(ast.skip)
-      }
-      const source = write(ast, transformNode(ast.check))
-
-      // if true logic
-      ast.lines.forEach((item) => source.add(transformNode(item)))
-
-      // if false logic
-      return source
-    }
+    case NODE.ELSE_IF:
     case NODE.ELSE: {
       const source = write(ast, ``)
       ast.lines.forEach((item) => source.add(transformNode(item)))
@@ -353,12 +362,9 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, ``)
 
       // while true logic
+      writelookup(ast.lines, NODE.IF_CHECK, ast.done)
       ast.lines.forEach((item) => {
         switch (item.type) {
-          case NODE.IF_CHECK:
-            // have to scan each item for IF_CHECK :/
-            item.skip = done
-            break
           case NODE.BREAK:
             item.goto = done
             break
@@ -378,11 +384,9 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, ``)
 
       // repeat true logic
+      writelookup(ast.lines, NODE.IF_CHECK, ast.done)
       ast.lines.forEach((item) => {
         switch (item.type) {
-          case NODE.IF_CHECK:
-            item.skip = done
-            break
           case NODE.BREAK:
             item.goto = done
             break
@@ -414,11 +418,9 @@ function transformNode(ast: CodeNode): SourceNode {
       const source = write(ast, ``)
 
       // foreach true logic
+      writelookup(ast.lines, NODE.IF_CHECK, ast.done)
       ast.lines.forEach((item) => {
         switch (item.type) {
-          case NODE.IF_CHECK:
-            item.skip = done
-            break
           case NODE.BREAK:
             item.goto = done
             break
@@ -486,7 +488,6 @@ function indexnode(ast: CodeNode) {
       ast.altlines.forEach(indexnode)
       break
     case NODE.ELSE_IF:
-      indexnode(ast.check)
       ast.lines.forEach(indexnode)
       break
     case NODE.ELSE:

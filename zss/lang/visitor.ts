@@ -456,7 +456,7 @@ class ScriptVisitor
     return this.createcodenode(ctx, {
       type: NODE.PROGRAM,
       lines: [
-        ...this.createlinenode(
+        this.createlinenode(
           ctx,
           this.createcodenode(ctx, {
             type: NODE.LABEL,
@@ -464,8 +464,8 @@ class ScriptVisitor
             name: 'restart',
           }),
         ),
-        ...this.go(ctx.line),
-      ],
+        this.go(ctx.line),
+      ].flat(),
     })
   }
 
@@ -716,18 +716,15 @@ class ScriptVisitor
 
   command_else_if(ctx: Command_else_ifCstChildren) {
     const skip = createsid()
-    return this.createlinenode(
-      ctx,
-      this.createcodenode(ctx, {
-        type: NODE.ELSE_IF,
-        done: '', // filled in by #if
-        lines: [
-          this.createlogicnode(ctx, 'if', skip, this.go(ctx.words)),
-          this.go(ctx.command_fork),
-          this.createmarknode(ctx, skip, `skip`),
-        ].flat(),
-      }),
-    )
+    return this.createcodenode(ctx, {
+      type: NODE.ELSE_IF,
+      done: '', // filled in by #if
+      lines: [
+        this.createlogicnode(ctx, 'if', skip, this.go(ctx.words)),
+        this.go(ctx.command_fork),
+        this.createmarknode(ctx, skip, `skip`),
+      ].flat(),
+    })
   }
 
   command_else(ctx: Command_elseCstChildren) {
