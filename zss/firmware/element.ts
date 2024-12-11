@@ -255,34 +255,31 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // if blocked, return 1
     return 1
   })
-  .command('move', (chip, words) => {
-    if (ispresent(READ_CONTEXT.element)) {
-      // attempt to move
-      const [dest] = readargs(words, 0, [ARG_TYPE.DIR])
-      moveobject(
-        chip,
-        READ_CONTEXT.book,
-        READ_CONTEXT.board,
-        READ_CONTEXT.element,
-        dest,
-      )
+  // .command('move', (chip, words) => {
+  //   if (ispresent(READ_CONTEXT.element)) {
+  //     // attempt to move
+  //     const [dest] = readargs(words, 0, [ARG_TYPE.DIR])
+  //     moveobject(
+  //       chip,
+  //       READ_CONTEXT.book,
+  //       READ_CONTEXT.board,
+  //       READ_CONTEXT.element,
+  //       dest,
+  //     )
 
-      // always yield
-      chip.yield()
-    }
-    return 0
-  })
+  //     // always yield
+  //     chip.yield()
+  //   }
+  //   return 0
+  // })
   .command('try', (chip, words) => {
     const [, ii] = readargs(words, 0, [ARG_TYPE.DIR])
-
     // try and move
     const result = chip.command('go', ...words)
     if (result && ii < words.length) {
       chip.command(...words.slice(ii))
     }
 
-    // and yield regardless of the outcome
-    chip.yield()
     return 0
   })
   .command('walk', (_, words) => {

@@ -176,7 +176,7 @@ function transformOperator(ast: CodeNode) {
 }
 
 function writegoto(ast: CodeNode, line: number): SourceNode {
-  return write(ast, [writeApi(ast, `i`, [`${line}`]), `; continue;`])
+  return write(ast, [writeApi(ast, `jump`, [`${line}`]), `; continue;`])
 }
 
 function readlookup(id: MAYBE<string>) {
@@ -217,20 +217,16 @@ function transformNode(ast: CodeNode): SourceNode {
         `try { // first-line\n`,
         `while (true) {\n`,
         `if (api.sy()) { yield 1; }\n`,
-        // logic block begin
         `switch (api.getcase()) {\n`,
         ...ast.lines.map(transformNode).flat(),
-        // logic block end
         `default:\n`,
         `  api.endofprogram();\n`,
-        // end of program has been reached, this is the wait/wake loop
-        `  while (api.hm() === 0) { yield 1; }; continue;\n`,
-        `  break;\n`,
+        `  while (api.hm() === 0) { yield 1; };\n`,
+        `  continue;\n`,
         `}\n`,
-        `api.nextcase()\n`,
-        `}\n`,
+        `api.nextcase();\n`,
+        `} // end of logic\n`,
         `} catch (e) {\n`,
-        // log and attempt to find line & column of error
         `console.error(e);\n`,
         `const source = api.stacktrace(e);\n`,
         `const err = new Error(e.message);\n`,
@@ -244,14 +240,14 @@ function transformNode(ast: CodeNode): SourceNode {
       return write(ast, [
         `case ${ast.lineindex}:\n`,
         ...ast.stmts.map(transformNode).flat(),
-        `break;\n`,
+        `  break;\n`,
       ])
     }
     case NODE.MARK:
-      return write(ast, `// ${ast.comment}\n`)
+      return write(ast, `  // ${ast.comment}\n`)
     case NODE.GOTO: {
       const line = readlookup(ast.id)
-      return write(ast, [writegoto(ast, line), `\n`])
+      return write(ast, [`  `, writegoto(ast, line), `\n`])
     }
     case NODE.COUNT:
       return write(ast, `${ast.index}`)
@@ -267,6 +263,7 @@ function transformNode(ast: CodeNode): SourceNode {
       return blank(ast)
     case NODE.TEXT:
       return write(ast, [
+        `  `,
         writeApi(ast, `text`, [writeTemplateString(ast.value)]),
         `;\n`,
       ])
@@ -274,9 +271,9 @@ function transformNode(ast: CodeNode): SourceNode {
       if (context.isfirststat) {
         context.isfirststat = false
         const words = ast.value.split(` `).map(writestring)
-        return write(ast, [writeApi(ast, `stat`, words), `;\n`])
+        return write(ast, [`  `, writeApi(ast, `stat`, words), `;\n`])
       }
-      return write(ast, `// skipped ${ast.value}\n`)
+      return write(ast, `  // skipped ${ast.value}\n`)
     case NODE.LABEL: {
       const llabel = ast.name.toLowerCase()
       const ltype = ast.active ? 'label' : 'comment'
@@ -286,35 +283,32 @@ function transformNode(ast: CodeNode): SourceNode {
       const lindex = (ast.active ? 1 : -1) * ast.lineindex
       context.labels[llabel].push(lindex)
       // document label
-      return write(ast, `// ${lindex} ${ast.name} ${ltype}\n`)
+      return write(ast, `  // ${lindex} ${ast.name} ${ltype}\n`)
     }
     case NODE.HYPERLINK:
       return write(ast, [
+        `  `,
         writeApi(ast, `hyperlink`, [
           writeTemplateString(ast.text),
           ...transformNodes(ast.link),
         ]),
         `;\n`,
       ])
-    case NODE.MOVE:
+    case NODE.MOVE: {
+      const movecmd = writeApi(
+        ast,
+        `command`,
+        [writestring(`go`), transformNodes(ast.words)].flat(),
+      )
       if (ast.wait) {
-        return write(ast, [
-          writeApi(ast, `command`, [
-            writestring('go'),
-            ...transformNodes(ast.words),
-          ]),
-          `;\n`,
-        ])
+        return write(ast, [`  if (`, movecmd, `) { continue; };\n`])
       }
-      return write(ast, [
-        writeApi(ast, `command`, [
-          writestring('move'),
-          ...transformNodes(ast.words),
-        ]),
-        `;\n`,
-      ])
+      return write(ast, [`  `, movecmd, `;\n`])
+    }
+
     case NODE.COMMAND:
       return write(ast, [
+        `  `,
         writeApi(ast, `command`, transformNodes(ast.words)),
         `;\n`,
       ])
@@ -342,7 +336,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.IF_CHECK: {
       const skip = readlookup(ast.skip)
       const source = write(ast, [
-        'if (!',
+        `  if (!`,
         writeApi(ast, ast.method, transformNodes(ast.words)),
         `) { `,
         writegoto(ast, skip),
@@ -404,7 +398,7 @@ function transformNode(ast: CodeNode): SourceNode {
       // waitfor build
       const source = write(ast, ``)
       source.add([
-        `if (!`,
+        `  if (!`,
         writeApi(ast, 'if', transformNodes(ast.words)),
         `) { api.i(${ast.lineindex - 1}); }\n`,
       ])
@@ -436,10 +430,10 @@ function transformNode(ast: CodeNode): SourceNode {
     }
     case NODE.BREAK:
       // escape while / repeat loop
-      return write(ast, [writegoto(ast, ast.goto), `\n`])
+      return write(ast, [`  `, writegoto(ast, ast.goto), `\n`])
     case NODE.CONTINUE:
       // skip to next while / repeat iteration
-      return write(ast, [writegoto(ast, ast.goto), `\n`])
+      return write(ast, [`  `, writegoto(ast, ast.goto), `\n`])
     // expressions
     case NODE.OR:
       return writeApi(ast, 'or', ast.items.map(transformNode))

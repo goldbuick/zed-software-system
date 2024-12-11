@@ -52,7 +52,7 @@ export type CHIP = {
   shouldhalt: () => boolean
   hm: () => number
   yield: () => void
-  i: (line: number) => void
+  jump: (line: number) => void
   sy: () => boolean
   emit: (target: string, data?: any, player?: string) => void
   send: (chipid: string, message: string, data?: any, player?: string) => void
@@ -76,8 +76,8 @@ export type CHIP = {
   if: (...words: WORD[]) => WORD_RESULT
   repeatstart: (index: number, ...words: WORD[]) => void
   repeat: (index: number) => WORD_RESULT
-  foreachstart: (...words: WORD[]) => WORD_RESULT
-  foreach: (...words: WORD[]) => WORD_RESULT
+  foreachstart: (index: number, ...words: WORD[]) => WORD_RESULT
+  foreach: (index: number, ...words: WORD[]) => WORD_RESULT
   or: (...words: WORD[]) => WORD
   and: (...words: WORD[]) => WORD
   not: (...words: WORD[]) => WORD
@@ -271,7 +271,7 @@ export function createchip(
     yield() {
       flags.ys = 1
     },
-    i(line) {
+    jump(line) {
       flags.ec = line
     },
     sy() {
@@ -446,7 +446,7 @@ export function createchip(
 
       return result ? 1 : 0
     },
-    foreachstart(...words) {
+    foreachstart(index, ...words) {
       const [name, maybemin, maybemax, maybestep] = readargs(words, 0, [
         ARG_TYPE.STRING,
         ARG_TYPE.NUMBER,
@@ -469,7 +469,7 @@ export function createchip(
       chip.set(name, min - step)
       return 0
     },
-    foreach(...words) {
+    foreach(index, ...words) {
       const [name, maybemin, maybemax, maybestep, ii] = readargs(words, 0, [
         ARG_TYPE.STRING,
         ARG_TYPE.NUMBER,

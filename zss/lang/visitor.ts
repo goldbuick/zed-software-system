@@ -755,19 +755,15 @@ class ScriptVisitor
     const loop = createsid()
     const done = createsid()
     const index = this.createcountnode(ctx)
+    const args = [index, this.go(ctx.words)].flat()
     return this.createcodenode(ctx, {
       type: NODE.REPEAT,
       loop,
       done,
       lines: [
-        this.createlogicnode(
-          ctx,
-          'repeatstart',
-          '',
-          [index, this.go(ctx.words)].flat(),
-        ),
+        this.createlogicnode(ctx, 'repeatstart', '', args),
         this.createmarknode(ctx, loop, `start of repeat`),
-        this.createlogicnode(ctx, 'repeat', done, index),
+        this.createlogicnode(ctx, 'repeat', done, args),
         this.go(ctx.command_block),
         this.creategotonode(ctx, loop, `loop of repeat`),
         this.createmarknode(ctx, done, `end of repeat`),
@@ -779,19 +775,15 @@ class ScriptVisitor
     const loop = createsid()
     const done = createsid()
     const index = this.createcountnode(ctx)
+    const args = [index, this.go(ctx.words)].flat()
     return this.createcodenode(ctx, {
       type: NODE.FOREACH,
       loop,
       done,
       lines: [
-        this.createlogicnode(
-          ctx,
-          'foreachstart',
-          '',
-          [index, this.go(ctx.words)].flat(),
-        ),
+        this.createlogicnode(ctx, 'foreachstart', '', args),
         this.createmarknode(ctx, loop, `start of foreach`),
-        this.createlogicnode(ctx, 'foreach', done, index),
+        this.createlogicnode(ctx, 'foreach', done, args),
         this.go(ctx.command_block),
         this.creategotonode(ctx, loop, `loop of foreach`),
         this.createmarknode(ctx, done, `end of foreach`),
@@ -822,15 +814,15 @@ class ScriptVisitor
 
   command_play(ctx: Command_playCstChildren) {
     const playstr = tokenstring(ctx.token_command_play, '')
-      .replace('play', '')
-      .trim()
+    const playcontent = playstr.replace('bgplay', '').replace('play', '').trim()
+    const isbg = playstr.includes('bgplay')
     return this.createlinenode(
       ctx,
       this.createcodenode(ctx, {
         type: NODE.COMMAND,
         words: [
-          this.createstringnode(ctx, 'play'),
-          this.createstringnode(ctx, playstr),
+          this.createstringnode(ctx, isbg ? 'bgplay' : 'play'),
+          this.createstringnode(ctx, playcontent),
         ].flat(),
       }),
     )
