@@ -236,6 +236,12 @@ function transformNode(ast: CodeNode): SourceNode {
         `}\n`,
         `//# sourceURL=${GENERATED_FILENAME}`,
       ])
+    case NODE.API:
+      return write(ast, [
+        `  `,
+        writeApi(ast, ast.method, transformNodes(ast.words)),
+        `;\n`,
+      ])
     case NODE.LINE: {
       return write(ast, [
         `case ${ast.lineindex}:\n`,

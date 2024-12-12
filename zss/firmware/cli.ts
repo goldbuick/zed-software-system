@@ -1,3 +1,4 @@
+import screenfull from 'screenfull'
 import { maptostring } from 'zss/chip'
 import {
   api_error,
@@ -7,6 +8,7 @@ import {
   vm_flush,
   register_nodetrash,
   register_nuke,
+  register_fullscreen,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
@@ -249,6 +251,10 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   // ---
+  .command('fullscreen', () => {
+    register_fullscreen('cli')
+    return 0
+  })
   .command('bookcreate', (chip, words) => {
     const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
 

@@ -97,6 +97,15 @@ const register = createdevice(
       case 'error:login:player':
         tape_crash(register.name())
         break
+      case 'fullscreen':
+        doasync('register:fullscreen', async function () {
+          if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen()
+          } else if (document.exitFullscreen) {
+            await document.exitFullscreen()
+          }
+        })
+        break
       case 'refresh':
         doasync('register:refresh', async function () {
           writeheader(register.name(), 'BYE')

@@ -63,6 +63,7 @@ const CstVisitor = parser.getBaseCstVisitorConstructor()
 export enum NODE {
   // categories
   PROGRAM,
+  API,
   LINE,
   MARK,
   GOTO,
@@ -130,6 +131,11 @@ type CodeNodeData =
   | {
       type: NODE.PROGRAM
       lines: CodeNode[]
+    }
+  | {
+      type: NODE.API
+      method: string
+      words: CodeNode[]
     }
   | {
       type: NODE.LINE
@@ -415,6 +421,17 @@ class ScriptVisitor
       type: NODE.LINE,
       stmts: node,
     })
+  }
+
+  createapinode(ctx: CstChildrenDictionary, method: string, words: CodeNode[]) {
+    return this.createlinenode(
+      ctx,
+      this.createcodenode(ctx, {
+        type: NODE.API,
+        words,
+        method,
+      }),
+    )
   }
 
   createlogicnode(
@@ -761,7 +778,7 @@ class ScriptVisitor
       loop,
       done,
       lines: [
-        this.createlogicnode(ctx, 'repeatstart', '', args),
+        this.createapinode(ctx, 'repeatstart', args),
         this.createmarknode(ctx, loop, `start of repeat`),
         this.createlogicnode(ctx, 'repeat', done, args),
         this.go(ctx.command_block),
@@ -781,7 +798,7 @@ class ScriptVisitor
       loop,
       done,
       lines: [
-        this.createlogicnode(ctx, 'foreachstart', '', args),
+        this.createapinode(ctx, 'foreachstart', args),
         this.createmarknode(ctx, loop, `start of foreach`),
         this.createlogicnode(ctx, 'foreach', done, args),
         this.go(ctx.command_block),
