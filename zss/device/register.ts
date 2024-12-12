@@ -1,9 +1,10 @@
+import { shortenUrl } from 'shaveurl'
 import { createdevice } from 'zss/device'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { ispresent, isstring } from 'zss/mapping/types'
-import { writeheader, writeoption } from 'zss/words/writeui'
+import { writeheader, writeoption, writetext } from 'zss/words/writeui'
 
 import {
   api_error,
@@ -104,6 +105,12 @@ const register = createdevice(
           } else if (document.exitFullscreen) {
             await document.exitFullscreen()
           }
+        })
+        break
+      case 'share':
+        doasync('register:share', async function () {
+          const shorturl = await shortenUrl(window.location.href)
+          writetext('share', shorturl)
         })
         break
       case 'refresh':

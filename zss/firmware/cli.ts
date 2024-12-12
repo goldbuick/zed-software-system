@@ -1,4 +1,3 @@
-import screenfull from 'screenfull'
 import { maptostring } from 'zss/chip'
 import {
   api_error,
@@ -9,6 +8,7 @@ import {
   register_nodetrash,
   register_nuke,
   register_fullscreen,
+  register_share,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
@@ -253,6 +253,10 @@ export const CLI_FIRMWARE = createfirmware({
   // ---
   .command('fullscreen', () => {
     register_fullscreen('cli')
+    return 0
+  })
+  .command('share', () => {
+    register_share('cli', READ_CONTEXT.player)
     return 0
   })
   .command('bookcreate', (chip, words) => {
