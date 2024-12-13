@@ -1,12 +1,19 @@
 import * as Tone from 'tone'
 import { createdevice } from 'zss/device'
+import { createsource } from 'zss/gadget/audio/source'
 import {
   invokeplay,
   parseplay,
   SYNTH_INVOKES,
   SYNTH_NOTE_ON,
 } from 'zss/mapping/play'
-import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+  NUMBER_OR_STRING,
+} from 'zss/mapping/types'
 
 import { tape_info } from './api'
 
@@ -30,7 +37,7 @@ export function enableaudio() {
     .catch(() => {})
 }
 
-function createsynthplay() {
+function createsynth() {
   const maincompressor = new Tone.Compressor({
     threshold: -20,
     ratio: 12,
@@ -39,133 +46,24 @@ function createsynthplay() {
   })
   maincompressor.toDestination()
 
-  // const reverb = new Tone.Reverb()
-  // reverb.set({
-  //   wet: 0.125,
-  // })
-  // reverb.connect(maincompressor)
-
-  // const echo = new Tone.FeedbackDelay()
-  // echo.set({
-  //   wet: 0.125,
-  //   delayTime: '4n.',
-  //   maxDelay: '1n',
-  //   feedback: 0.371,
-  // })
-  // echo.connect(reverb)
-
-  // const chorus = new Tone.Chorus()
-  // chorus.set({
-  //   wet: 0.5,
-  //   depth: 0.999,
-  //   frequency: 7,
-  //   feedback: 0.666,
-  // })
-  // chorus.connect(maincompressor)
-
-  // const phaser = new Tone.Phaser()
-  // phaser.set({
-  //   wet: 0.5,
-  //   // frequency: 7,
-  //   // octaves: 3,
-  //   // stages: 10,
-  //   Q: 10,
-  //   // baseFrequency: 250,
-  // })
-  // phaser.connect(maincompressor)
-
-  // const distortion = new Tone.Distortion()
-  // distortion.set({
-  //   wet: 0.25 * 0.25,
-  //   distortion: 0.9,
-  // })
-  // distortion.connect(phaser)
-
-  // const vibrato = new Tone.Vibrato()
-  // vibrato.set({
-  //   wet: 0.5 * 0,
-  //   depth: 0.2,
-  // })
-  // vibrato.connect(distortion)
-
   const maingain = new Tone.Gain()
   maingain.connect(maincompressor)
 
   const drumgain = new Tone.Gain()
   drumgain.connect(maincompressor)
 
-  function createsynth() {
-    const synth = new Tone.PolySynth()
-    synth.maxPolyphony = 8
-    synth.set({
-      envelope: {
-        attack: 0.01,
-        decay: 0.01,
-        sustain: 0.5,
-        release: 0.01,
-      },
-      oscillator: {
-        // type: 'pulse',
-        // width: -0.5,
-        // type: 'sine',
-        // type: 'square',
-        // type: 'triangle',
-        // type: 'sawtooth',
-        // type: 'fmsine',
-        // type: 'fmsquare',
-        // type: 'fmtriangle',
-        // type: 'fmsawtooth',
-        // type: 'amsine',
-        // type: 'amsquare',
-        // type: 'amtriangle',
-        // type: 'amsawtooth',
-        // type: 'fatsquare',
-        // type: 'fattriangle',
-        // type: 'fatsawtooth',
-        // type: 'sine14',
-        type: 'square14',
-        // type: 'triangle14',
-        // type: 'sawtooth14',
-        // type: 'fmsine14',
-        // type: 'fmsquare14',
-        // type: 'fmtriangle14',
-        // type: 'fmsawtooth14',
-        // type: 'amsine14',
-        // type: 'amsquare14',
-        // type: 'amtriangle14',
-        // type: 'amsawtooth14',
-        // type: 'custom',
-        // harmonicity: 6,
-        // partials: [0.75, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15],
-        // partials: [
-        //   0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15,
-        //   0.15, 0.15, 0.15, 0.15, 0.15,
-        // ],
-      },
-    })
-    synth.connect(maingain)
-    // #play cxcxcxcxcxcxcxcxcxcxcxcxcxcxcx;--pxcxpxcxpxcxpxcxpxcxpxcxpxcx;q9999;i10011001100199
-    // #play cxcxcxcxcxcxcx+cxcxcxcxcxcxcxcx;--pxcxpxcxpxcxppcxpxcxpxcxpxcx;q9999;i14011401140199
-    // #play cecxcxcxcxcxcx+cecxcecxcecxcxcxf+c+c;--pxcxpxcxpxcxppcxpxcxpxcxpxcx;q9999;i14011401100199
-    // #play pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx;q949494949
-    // #play fxfxfxfxxxxxcxcxcxcx+xxxx fxfxfxfxxxxxcxcxcxcx;pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx;q949494949
-    // #play -fxfxfxfxxxxxcxcxcxcx+xxxx fxfxfxfxxxxxcxcxcxcx;pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx pxpxpxxxxxpxxxxx;q949494949
-    return synth
-  }
-
-  const SYNTH = [
-    // for play
-    createsynth(),
+  const SOURCE = [
     // for sfx
-    createsynth(),
+    createsource(),
     // + 8track synths
-    createsynth(),
-    createsynth(),
-    createsynth(),
-    createsynth(),
-    createsynth(),
-    createsynth(),
-    createsynth(),
+    createsource(),
+    createsource(),
+    createsource(),
+    createsource(),
+    createsource(),
+    createsource(),
+    createsource(),
+    createsource(),
   ]
 
   // config drums
@@ -552,8 +450,8 @@ function createsynthplay() {
       return
     }
     const [chan, duration, note] = value
-    if (isstring(note) && ispresent(SYNTH[chan])) {
-      SYNTH[chan].triggerAttackRelease(note, duration, time)
+    if (isstring(note) && ispresent(SOURCE[chan])) {
+      SOURCE[chan].source.triggerAttackRelease(note, duration, time)
     }
     if (isnumber(note)) {
       switch (note) {
@@ -650,13 +548,14 @@ function createsynthplay() {
   // start it
   pacer.start(0)
 
-  return synthplay
+  return { synthplay }
 }
 
 let synthplayfunc: (priority: number, buffer: string) => void | undefined
 function usesynthplay() {
   if (enabled && !ispresent(synthplayfunc)) {
-    synthplayfunc = createsynthplay()
+    const synth = createsynth()
+    synthplayfunc = synth.synthplay
   }
   return synthplayfunc
 }
@@ -672,6 +571,25 @@ createdevice('synth', [], (message) => {
       if (isarray(message.data)) {
         const [priority, buffer] = message.data as [number, string]
         synthplay(priority, buffer)
+      }
+      break
+    case 'voice':
+      if (isarray(message.data)) {
+        const [idx, config, value] = message.data as [
+          number,
+          string,
+          NUMBER_OR_STRING,
+        ]
+      }
+      break
+    case 'voicefx':
+      if (isarray(message.data)) {
+        const [idx, fx, config, value] = message.data as [
+          number,
+          string,
+          string,
+          NUMBER_OR_STRING,
+        ]
       }
       break
   }

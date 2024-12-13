@@ -5,6 +5,7 @@ without having to include device code
 
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
+import { NUMBER_OR_STRING } from 'zss/mapping/types'
 
 // be careful to keep imports here minimal
 
@@ -69,6 +70,25 @@ export function register_fullscreen(sender: string) {
 
 export function synth_play(sender: string, priority: number, buffer: string) {
   hub.emit('synth:play', sender, [priority, buffer])
+}
+
+export function synth_voice(
+  sender: string,
+  idx: number,
+  config: string,
+  value: NUMBER_OR_STRING,
+) {
+  hub.emit('synth:voice', sender, [idx, config, value])
+}
+
+export function synth_voicefx(
+  sender: string,
+  idx: number,
+  fx: string,
+  config: string,
+  value: NUMBER_OR_STRING,
+) {
+  hub.emit('synth:voicefx', sender, [idx, fx, config, value])
 }
 
 export function tape_info(sender: string, ...message: any[]) {
