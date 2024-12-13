@@ -1,7 +1,7 @@
 import { createToken, createTokenInstance, IToken, Lexer } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
-import { ispresent, MAYBE, MAYBE_NUMBER } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 import { colorconsts, colortobg, colortofg } from 'zss/words/color'
 import { COLOR } from 'zss/words/types'
 
@@ -124,7 +124,7 @@ export type WRITE_TEXT_CONTEXT = {
   disablewrap: boolean
   measureonly: boolean
   measuredwidth: number
-  writefullwidth: MAYBE_NUMBER
+  writefullwidth: MAYBE<number>
   // cursor
   x: number
   y: number

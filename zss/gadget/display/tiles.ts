@@ -8,7 +8,7 @@ import {
   UnsignedByteType,
   Vector2,
 } from 'three'
-import { MAYBE_NUMBER } from 'zss/mapping/types'
+import { MAYBE } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
 import { convertPaletteToColors } from '../data/palette'
@@ -18,8 +18,8 @@ import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 import { cloneMaterial, interval, time } from './anim'
 import { createbitmaptexture } from './textures'
 
-type TILE_CHARS = MAYBE_NUMBER[]
-type TILE_COLORS = MAYBE_NUMBER[]
+type TILE_CHARS = MAYBE<number>[]
+type TILE_COLORS = MAYBE<number>[]
 
 const BOTTOM_LEFT = [0, 1, 0]
 const BOTTOM_RIGHT = [1, 1, 0]

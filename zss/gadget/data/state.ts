@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { isequal, MAYBE_NUMBER } from 'zss/mapping/types'
+import { isequal, MAYBE } from 'zss/mapping/types'
 import { create } from 'zustand'
 
 import { GADGET_STATE } from './types'
@@ -101,8 +101,8 @@ export const useTapeTerminal = create<{
   scroll: number
   xcursor: number
   ycursor: number
-  xselect: MAYBE_NUMBER
-  yselect: MAYBE_NUMBER
+  xselect: MAYBE<number>
+  yselect: MAYBE<number>
   bufferindex: number
   buffer: string[]
 }>(() => ({
@@ -122,7 +122,7 @@ export const useTapeEditor = create<{
   id: string
   scroll: number
   cursor: number
-  select: MAYBE_NUMBER
+  select: MAYBE<number>
 }>(() => ({
   // need an id for synced store
   id: '',

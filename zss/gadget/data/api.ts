@@ -9,13 +9,7 @@ import {
   modemwritevaluestring,
 } from 'zss/device/modem'
 import { createsid } from 'zss/mapping/guid'
-import {
-  MAYBE_NUMBER,
-  MAYBE_STRING,
-  ispresent,
-  isnumber,
-  isstring,
-} from 'zss/mapping/types'
+import { ispresent, isnumber, isstring, MAYBE } from 'zss/mapping/types'
 import { WORD } from 'zss/words/types'
 
 import {
@@ -174,8 +168,8 @@ export function gadgetpanel(
   player: string,
   edge: string,
   edgeConst: PANEL_TYPE,
-  maybesize: MAYBE_NUMBER,
-  maybename: MAYBE_STRING,
+  maybesize: MAYBE<number>,
+  maybename: MAYBE<string>,
 ) {
   // get state
   const shared = gadgetstate(player)

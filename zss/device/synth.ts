@@ -24,13 +24,7 @@ import {
   SYNTH_INVOKES,
   SYNTH_NOTE_ON,
 } from 'zss/mapping/play'
-import {
-  isarray,
-  isnumber,
-  ispresent,
-  isstring,
-  NUMBER_OR_STRING,
-} from 'zss/mapping/types'
+import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 import { api_error, tape_info } from './api'
 
@@ -633,7 +627,7 @@ const synthdevice = createdevice('synth', [], (message) => {
         const [idx, config, value] = message.data as [
           number,
           string,
-          NUMBER_OR_STRING,
+          number | string,
         ]
         const voice = synth.SOURCE[idx]
         const fx = voice?.fx[config as keyof typeof voice.fx]
@@ -688,7 +682,7 @@ const synthdevice = createdevice('synth', [], (message) => {
           number,
           string,
           string,
-          NUMBER_OR_STRING,
+          number | string,
         ]
         const voice = synth.SOURCE[idx]
         const fx = voice?.fx[fxname as keyof typeof voice.fx]

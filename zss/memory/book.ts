@@ -1,13 +1,7 @@
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
-import {
-  MAYBE,
-  MAYBE_STRING,
-  deepcopy,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { STR_KIND } from 'zss/words/kind'
 import { CATEGORY, COLLISION, COLOR, PT, WORD } from 'zss/words/types'
 
@@ -198,7 +192,7 @@ export function bookelementdisplayread(
 
 export function bookreadobject(
   book: MAYBE<BOOK>,
-  maybeobject: MAYBE_STRING,
+  maybeobject: MAYBE<string>,
 ): MAYBE<BOARD_ELEMENT> {
   const object = maybeobject ?? ''
   const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.OBJECT, object)
@@ -215,7 +209,7 @@ export function bookreadobject(
 
 export function bookreadterrain(
   book: MAYBE<BOOK>,
-  maybeterrain: MAYBE_STRING,
+  maybeterrain: MAYBE<string>,
 ): MAYBE<BOARD_ELEMENT> {
   const terrain = maybeterrain ?? ''
   const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.TERRAIN, terrain)
