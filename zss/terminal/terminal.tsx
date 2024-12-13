@@ -7,11 +7,11 @@ import { NearestFilter, OrthographicCamera } from 'three'
 import { FORCE_CRT_OFF, STATS_DEV } from 'zss/config'
 import { api_error } from 'zss/device/api'
 import { useTexture } from 'zss/gadget/components/usetexture'
+import { CRTShape } from 'zss/gadget/fx/crt'
+import decoimageurl from 'zss/gadget/fx/scratches.gif'
 import { createplatform } from 'zss/platform'
 
 import { Framing } from './framing'
-import { CRTShape } from './fx/crt'
-import decoimageurl from './fx/scratches.gif'
 import { Gadget } from './gadget'
 
 extend({ OrthographicCamera })
