@@ -5,20 +5,17 @@ import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { WORD } from 'zss/words/types'
 
 const isfx = ['echo', 'reverb', 'chorus', 'phaser', 'distortion', 'vibrato']
-const istoggle = ['on', 'off']
 
 function synthvoice(idx: number, words: WORD[]) {
   const [configorfx] = readargs(words, 0, [ARG_TYPE.STRING])
   if (isfx.includes(configorfx.toLowerCase())) {
-    const [config] = readargs(words, 1, [ARG_TYPE.STRING])
-    if (istoggle.includes(config.toLowerCase())) {
-      synth_voice('audio', idx, configorfx, config)
-    } else {
-      const [value] = readargs(words, 2, [ARG_TYPE.NUMBER_OR_STRING])
-      synth_voicefx('audio', idx, configorfx, config, value)
-    }
+    const [config, maybevalue] = readargs(words, 1, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+    ])
+    synth_voicefx('audio', idx, configorfx, config, maybevalue)
   } else {
-    const [value] = readargs(words, 1, [ARG_TYPE.NUMBER_OR_STRING])
+    const [value] = readargs(words, 1, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
     synth_voice('audio', idx, configorfx, value)
   }
 }

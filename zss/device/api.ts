@@ -5,7 +5,7 @@ without having to include device code
 
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
-import { NUMBER_OR_STRING } from 'zss/mapping/types'
+import { MAYBE, NUMBER_OR_STRING } from 'zss/mapping/types'
 
 // be careful to keep imports here minimal
 
@@ -76,7 +76,7 @@ export function synth_voice(
   sender: string,
   idx: number,
   config: string,
-  value: NUMBER_OR_STRING,
+  value: MAYBE<NUMBER_OR_STRING>,
 ) {
   hub.emit('synth:voice', sender, [idx, config, value])
 }

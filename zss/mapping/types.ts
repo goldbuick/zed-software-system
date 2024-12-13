@@ -5,10 +5,6 @@ import { isPresent } from 'ts-extras'
 export { isEqual as isequal, isPresent as ispresent }
 
 export type MAYBE<T> = T | undefined
-export type NUMBER_OR_STRING = number | string
-export type MAYBE_NUMBER = MAYBE<number>
-export type MAYBE_STRING = MAYBE<string>
-export type MAYBE_NUMBER_OR_STRING = MAYBE<number | string>
 
 export function deepcopy<T>(word: T): T {
   return deepClone(word) as T
@@ -22,7 +18,7 @@ export function isnumber(word: any): word is number {
   return typeof word === 'number'
 }
 
-export function ismaybenumber(word: any): word is MAYBE_NUMBER {
+export function ismaybenumber(word: any): word is MAYBE<number> {
   return typeof word === 'number' || word === undefined
 }
 
@@ -30,7 +26,7 @@ export function isstring(word: any): word is string {
   return typeof word === 'string'
 }
 
-export function ismaybestring(word: any): word is MAYBE_STRING {
+export function ismaybestring(word: any): word is MAYBE<string> {
   return typeof word === 'string' || word === undefined
 }
 
