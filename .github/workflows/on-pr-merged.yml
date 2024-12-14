@@ -17,3 +17,20 @@ jobs:
           github_token: ${{ github.token }}
           target_branch: 'dev'
           commit_message: 'Branch {target_branch} auto-merged {source_ref}'
+
+  bump-version:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 'cat package.json'
+        run: cat ./package.json
+      - name: 'inc version'
+        id: version-bump
+        uses: 'phips28/gh-action-bump-version@master'
+        with:
+          tag-prefix: 'v'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 'cat package.json'
+        run: cat ./package.json
