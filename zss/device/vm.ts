@@ -51,10 +51,11 @@ async function savestate() {
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
+    const content = await compressbooks(books)
     register_flush(
       vm.name(),
-      `${new Date().toISOString()} ${mainbook.name}`,
-      await compressbooks(books),
+      `${new Date().toISOString()} ${mainbook.name} ${content.length} chars`,
+      content,
     )
   }
 }
