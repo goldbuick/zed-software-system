@@ -1,6 +1,7 @@
 import { shortenUrl } from 'shaveurl'
 import { createdevice } from 'zss/device'
 import { useGadgetClient } from 'zss/gadget/data/state'
+import { pick } from 'zss/mapping/array'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
@@ -109,7 +110,10 @@ const register = createdevice(
         break
       case 'share':
         doasync('register:share', async function () {
-          const shorturl = await shortenUrl(window.location.href)
+          const shorturl = await shortenUrl(
+            window.location.href,
+            pick('1pt', 'cleanuri', 'isgd', 'shrtcode'),
+          )
           writecopyit('share', shorturl, shorturl)
         })
         break
