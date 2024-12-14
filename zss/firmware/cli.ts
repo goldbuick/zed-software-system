@@ -141,6 +141,10 @@ export const CLI_FIRMWARE = createfirmware({
           'cli',
           `${fg('white', '"!text"')} flag;${fg('gray', 'Input Label')}`,
         )
+        writetext(
+          'cli',
+          `${fg('white', '"!copyit"')} flag;${fg('gray', 'Input Label')}`,
+        )
         break
       case 'helpdeveloper':
         writeheader('cli', `developer commands`)

@@ -53,3 +53,11 @@ export function writeoption(from: string, option: string, label: string) {
 export function writetext(from: string, text: string) {
   write(from, `${COLOR_EDGE}$blue${text}`)
 }
+
+export function writehyperlink(from: string, hyperlink: string, label: string) {
+  write(from, `!${hyperlink};${label}`)
+}
+
+export function writecopyit(from: string, content: string, label: string) {
+  write(from, `!copyit ${content};${label}`)
+}

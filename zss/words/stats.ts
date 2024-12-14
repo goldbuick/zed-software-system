@@ -86,6 +86,11 @@ export function statformat(words: string[], first = true) {
         type: STAT_TYPE.SCROLL,
         values,
       }
+    case 'copyit':
+      return {
+        type: STAT_TYPE.COPYIT,
+        values,
+      }
   }
 }
 
@@ -119,5 +124,7 @@ export function stattypestring(type: STAT_TYPE) {
       return 'hotkey'
     case STAT_TYPE.SCROLL:
       return 'scroll'
+    case STAT_TYPE.COPYIT:
+      return 'copyit'
   }
 }

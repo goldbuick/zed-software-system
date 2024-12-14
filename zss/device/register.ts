@@ -4,7 +4,7 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { ispresent, isstring } from 'zss/mapping/types'
-import { writeheader, writeoption, writetext } from 'zss/words/writeui'
+import { writecopyit, writeheader, writeoption } from 'zss/words/writeui'
 
 import {
   api_error,
@@ -110,7 +110,7 @@ const register = createdevice(
       case 'share':
         doasync('register:share', async function () {
           const shorturl = await shortenUrl(window.location.href)
-          writetext('share', shorturl)
+          writecopyit('share', shorturl, shorturl)
         })
         break
       case 'refresh':
