@@ -7,7 +7,6 @@ import {
   vm_flush,
   register_nodetrash,
   register_nuke,
-  register_fullscreen,
   register_share,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
@@ -248,11 +247,8 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   // ---
-  .command('fullscreen', () => {
-    register_fullscreen('cli')
-    return 0
-  })
   .command('share', () => {
+    vm_flush('cli')
     register_share('cli', READ_CONTEXT.player)
     return 0
   })
