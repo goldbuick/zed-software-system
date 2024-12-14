@@ -1,9 +1,9 @@
 {
   "short_name": "zed.cafe",
   "name": "zed.cafe fullscreen",
-  "description": "used to pinned to home",
+  "description": "pin app for fullscreen",
   "scope": "/",
-  "background_color": "#000",
+  "background_color": "#003",
   "theme_color": "#00A",
   "start_url": "/",
   "display": "standalone",
