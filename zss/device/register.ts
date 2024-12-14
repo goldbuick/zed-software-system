@@ -87,9 +87,9 @@ async function shorturl(url: string) {
     body: formData,
   })
   const response = await fetch(request)
-  console.info(response)
-  debugger
-  return 'ffff'
+  const shortcontent = await response.text()
+  // return new bytes url
+  return shortcontent
 }
 
 // softwareasmain
