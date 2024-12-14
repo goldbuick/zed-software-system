@@ -179,7 +179,9 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     case 'tick':
       // from clock
-      memorytick()
+      if (message.player !== 'locked') {
+        memorytick()
+      }
       break
     case 'second': {
       // ensure player ids are added to tracking

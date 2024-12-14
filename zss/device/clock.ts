@@ -17,17 +17,18 @@ let previous = performance.now()
 function wake() {
   const now = performance.now()
   const delta = now - previous
+  const islocked = window.location.href.includes(`/locked/`) ? 'locked' : ''
 
   acc += delta
   if (acc >= TICK_RATE) {
     acc %= TICK_RATE
-    clockdevice.emit('tick', timestamp)
-    clockdevice.emit('tock', timestamp)
+    clockdevice.emit('tick', timestamp, islocked)
+    clockdevice.emit('tock', timestamp, islocked)
     ++clock
     ++timestamp
     if (clock >= TICK_FPS) {
       clock %= TICK_FPS
-      clockdevice.emit('second', timestamp)
+      clockdevice.emit('second', timestamp, islocked)
     }
   }
 

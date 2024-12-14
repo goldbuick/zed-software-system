@@ -112,17 +112,27 @@ const register = createdevice(
         break
       case 'dev':
         doasync('register:dev', async function () {
-          writeheader(register.name(), `creating locked terminal`)
-          await waitfor(100)
-          window.location.href = window.location.href.replace(`/#`, `/locked/#`)
-          // todo, if we're in a locked term, create a share link that includes locked
+          const islocked = window.location.href.includes(`/locked/`)
+            ? 'locked'
+            : ''
+          if (islocked) {
+            const url = await shorturl(window.location.href)
+            writecopyit('devshare', url, url)
+          } else {
+            writeheader(register.name(), `creating locked terminal`)
+            await waitfor(100)
+            window.location.href = window.location.href.replace(
+              `/#`,
+              `/locked/#`,
+            )
+          }
         })
         break
       case 'share':
         doasync('register:share', async function () {
           const url = await shorturl(
             // drop /locked from shared short url if found
-            window.location.href.replace(`/locked/`, ``),
+            window.location.href.replace(/cafe.*locked/, `cafe`),
           )
           writecopyit('share', url, url)
         })
