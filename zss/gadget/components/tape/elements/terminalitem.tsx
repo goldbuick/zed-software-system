@@ -12,6 +12,7 @@ import {
   setuplogitem,
 } from '../common'
 
+import { TerminalCopyIt } from './terminalcopyit'
 import { TerminalHyperlink } from './terminalhyperlink'
 
 export function TerminalItem({ blink, active, text, y }: TerminalItemProps) {
@@ -73,6 +74,8 @@ export function TerminalItem({ blink, active, text, y }: TerminalItemProps) {
       case 'tx':
       case 'text':
         return null
+      case 'copyit':
+        return <TerminalCopyIt {...props} words={words} />
       default:
       case 'hyperlink':
         return <TerminalHyperlink {...props} words={words} />

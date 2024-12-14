@@ -87,6 +87,7 @@ export enum STAT_TYPE {
   LINK, //   @link north - use this for passages between boards
   HOTKEY, // @hotkey gorp g - we can associate hotkeys with objects
   SCROLL, // @scroll, affords the user to write local code
+  COPYIT, // only useful in hyperlinks, used to copy into the clipboard
 }
 
 export type STAT = {
