@@ -1,4 +1,3 @@
-import { shortenUrl } from 'shaveurl'
 import { createdevice } from 'zss/device'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { pick } from 'zss/mapping/array'
@@ -80,6 +79,19 @@ function writebiosselect(select: string) {
   }
 }
 
+async function shorturl(url: string) {
+  const formData = new FormData()
+  formData.append('url', url)
+  const request = new Request('https://bytes.zed.cafe', {
+    method: 'POST',
+    body: formData,
+  })
+  const response = await fetch(request)
+  console.info(response)
+  debugger
+  return 'ffff'
+}
+
 // softwareasmain
 
 // simple bootstrap manager
@@ -110,11 +122,8 @@ const register = createdevice(
         break
       case 'share':
         doasync('register:share', async function () {
-          const shorturl = await shortenUrl(
-            window.location.href,
-            pick('1pt', 'cleanuri', 'isgd', 'shrtcode'),
-          )
-          writecopyit('share', shorturl, shorturl)
+          const url = await shorturl(window.location.href)
+          writecopyit('share', url, url)
         })
         break
       case 'refresh':
