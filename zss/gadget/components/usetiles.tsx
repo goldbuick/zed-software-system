@@ -1,111 +1,39 @@
-/* eslint-disable react-refresh/only-export-components */
-import { useMemo } from 'react'
-import { objectKeys } from 'ts-extras'
-import { proxy, useSnapshot } from 'valtio'
-import { ispresent } from 'zss/mapping/types'
+import { useContext } from 'react'
+import { StoreApi, useStore } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
 
-import { TILES } from '../data/types'
-import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
+import { Tiles } from './framed/tiles'
+import { TILE_DATA, TilesContext } from './hooks'
 
-import { Tiles } from './tiles'
+type TilesDataProps = React.PropsWithChildren<{
+  store: StoreApi<TILE_DATA>
+}>
 
-export function useTiles(
-  width: number,
-  height: number,
-  char: number,
-  color: number,
-  bg: number,
-) {
-  const size = width * height
-
-  const tiles = useMemo(() => {
-    return proxy<TILES>({
-      char: new Array(size).fill(char),
-      color: new Array(size).fill(color),
-      bg: new Array(size).fill(bg),
-    })
-  }, [size, char, color, bg])
-
-  return tiles
+export function TilesData({ store, children }: TilesDataProps) {
+  return <TilesContext.Provider value={store}>{children}</TilesContext.Provider>
 }
 
-const palette = loadDefaultPalette()
-const charset = loadDefaultCharset()
-
-type TileSnapshotProps = {
+type TilesRenderProps = {
   width: number
   height: number
-  tiles: TILES
 }
 
-export function TileSnapshot({ width, height, tiles }: TileSnapshotProps) {
-  const { char, color, bg } = useSnapshot(tiles) as TILES
+export function TilesRender({ width, height }: TilesRenderProps) {
+  const store = useContext(TilesContext)
+  const [char, color, bg] = useStore(
+    store,
+    useShallow((state) => [state.char, state.color, state.bg, state.render]),
+  )
   return (
-    palette &&
-    charset &&
     width > 0 &&
     height > 0 && (
       <Tiles
-        char={char}
-        color={color}
-        bg={bg}
+        char={char.slice()}
+        color={color.slice()}
+        bg={bg.slice()}
         width={width}
         height={height}
-        palette={palette}
-        charset={charset}
       />
     )
   )
-}
-
-export function resetTiles(
-  tiles: TILES,
-  char: number,
-  color: number,
-  bg: number,
-) {
-  tiles.char = new Array(tiles.char.length).fill(char)
-  tiles.color = new Array(tiles.color.length).fill(color)
-  tiles.bg = new Array(tiles.bg.length).fill(bg)
-}
-
-export function readTile(
-  tiles: TILES,
-  width: number,
-  height: number,
-  x: number,
-  y: number,
-  key: keyof TILES,
-): number {
-  if (x < 0 || x >= width || y < 0 || y >= height) {
-    return -1
-  }
-  const index = x + y * width
-  return tiles[key][index]
-}
-
-type WRITE_TILE_VALUE = {
-  char: number
-  color: number
-  bg: number
-}
-
-export function writeTile(
-  tiles: TILES,
-  width: number,
-  height: number,
-  x: number,
-  y: number,
-  value: Partial<WRITE_TILE_VALUE>,
-) {
-  if (x < 0 || x >= width || y < 0 || y >= height) {
-    return
-  }
-  const index = x + y * width
-  objectKeys(value).forEach((key) => {
-    const v = value[key]
-    if (ispresent(v)) {
-      tiles[key][index] = v
-    }
-  })
 }

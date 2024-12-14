@@ -1,21 +1,28 @@
 import ErrorStackParser from 'error-stack-parser'
 
 import { api_error } from './device/api'
-import { FIRMWARE, FIRMWARE_COMMAND } from './firmware'
-import { ARG_TYPE, readargs } from './firmware/wordtypes'
+import {
+  DRIVER_TYPE,
+  firmwareget,
+  firmwaregetcommand,
+  firmwareset,
+  firmwareshouldtick,
+  firmwaretick,
+  firmwaretock,
+} from './firmware/runner'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
 import {
-  MAYBE,
   deepcopy,
   isarray,
   isequal,
   isnumber,
   ispresent,
 } from './mapping/types'
-import { memoryreadcontext } from './memory'
-import { WORD, WORD_RESULT } from './memory/types'
+import { memoryclearflags, memoryreadflags } from './memory'
+import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
+import { WORD, WORD_RESULT } from './words/types'
 
 export const CONFIG = { HALT_AT_COUNT: 64 }
 
@@ -27,36 +34,25 @@ export type MESSAGE = {
   player?: string
 }
 
-export type STATE = Record<string, any>
-
 // may need to expand on this to encapsulate more complex values
 export type CHIP = {
+  halt: () => void
   // id
   id: () => string
   senderid: (maybeid?: string) => string
-
-  // set firmware on chip
-  install: (firmware: MAYBE<FIRMWARE>) => void
-
-  // export chip run state
-  // import chip run state
-  // should the global tick increment be actual part of the individual book ??
-  // the answer is yes!
 
   // state api
   set: (name: string, value: any) => any
   get: (name: string) => any
 
   // lifecycle api
-  // cycle: (incoming: number) => void
-  timestamp: () => number
   tick: (cycle: number, incoming: number) => boolean
   isended: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
-  goto: (label: string) => void
   hm: () => number
   yield: () => void
+  jump: (line: number) => void
   sy: () => boolean
   emit: (target: string, data?: any, player?: string) => void
   send: (chipid: string, message: string, data?: any, player?: string) => void
@@ -66,6 +62,7 @@ export type CHIP = {
   zap: (label: string) => void
   restore: (label: string) => void
   getcase: () => number
+  nextcase: () => void
   endofprogram: () => void
   stacktrace: (error: Error) => void
 
@@ -75,13 +72,12 @@ export type CHIP = {
   hyperlink: (...words: WORD[]) => void
 
   // logic api
-  move: (wait: WORD_RESULT, ...words: WORD[]) => WORD_RESULT
   command: (...words: WORD[]) => WORD_RESULT
   if: (...words: WORD[]) => WORD_RESULT
   repeatstart: (index: number, ...words: WORD[]) => void
   repeat: (index: number) => WORD_RESULT
-  foreachstart: (...words: WORD[]) => WORD_RESULT
-  foreach: (...words: WORD[]) => WORD_RESULT
+  foreachstart: (index: number, ...words: WORD[]) => WORD_RESULT
+  foreach: (index: number, ...words: WORD[]) => WORD_RESULT
   or: (...words: WORD[]) => WORD
   and: (...words: WORD[]) => WORD
   not: (...words: WORD[]) => WORD
@@ -114,125 +110,100 @@ export function maptostring(value: any) {
   return `${value ?? ''}`
 }
 
+export function createchipid(id: string) {
+  return `${id}_chip`
+}
+
 // lifecycle and control flow api
-export function createchip(id: string, build: GeneratorBuild) {
-  // entry point state
-  const labels = deepcopy(build.labels ?? {})
+export function createchip(
+  id: string,
+  driver: DRIVER_TYPE,
+  build: GeneratorBuild,
+) {
+  // chip memory
+  const mem = createchipid(id)
+  const flags = memoryreadflags(mem)
 
   // ref to generator instance
   // eslint-disable-next-line prefer-const
   let logic: Generator<number> | undefined
 
-  // incoming message state
-  let locked = ''
-  let message: MESSAGE | undefined = undefined
-
-  // prevent infinite loop lockup
-  let loops = 0
-
-  // tracking for repeats
-  const repeats: Record<number, number> = {}
-  const repeatscommand: Record<number, undefined | WORD[]> = {}
-
-  // pause until next tick
-  let yieldstate = false
-
-  // execution frequency
-  let pulse = 0
-  // execution timestamp
-  let timestamp = 0
-
-  // chip is in ended state awaiting any messages
-  let endedstate = (build.errors?.length ?? 0) !== 0
-
-  // chip invokes
-  const firmwares: FIRMWARE[] = []
-  let invokes: Record<string, FIRMWARE_COMMAND> = {}
-
-  function getcommand(name: string) {
-    if (invokes[name] === undefined) {
-      for (let i = 0; i < firmwares.length; ++i) {
-        const command = firmwares[i].getcommand(name)
-        if (command) {
-          invokes[name] = command
-        }
-      }
-    }
-
-    return invokes[name]
+  // init
+  if (!isarray(flags.lb)) {
+    // entry point state
+    flags.lb = deepcopy(Object.entries(build.labels ?? {}))
+    // incoming message state
+    flags.lk = ''
+    // we leave message unset
+    flags.mg = undefined
+    // we track where we are in execution
+    flags.ec = 1
+    // prevent infinite loop lockup
+    flags.lc = 0
+    // pause until next tick
+    flags.ys = 0
+    // execution frequency
+    flags.ps = 0
+    // execution timestamp
+    flags.ts = 0
+    // chip is in ended state awaiting any messages
+    flags.es = (build.errors?.length ?? 0) !== 0 ? 1 : 0
   }
 
-  function invokecommand(name: string, words: WORD[]) {
-    const command = getcommand(name)
-    if (!command) {
-      throw new Error(`unknown firmware command ${name}`)
+  function invokecommand(command: string, args: WORD[]): 0 | 1 {
+    READ_CONTEXT.words = args
+    READ_CONTEXT.get = chip.get
+    const commandinvoke = firmwaregetcommand(driver, command)
+    if (!ispresent(commandinvoke)) {
+      if (command !== 'send') {
+        return invokecommand('send', [command, ...args])
+      }
+      return 0
     }
-    command(chip, words)
+    return commandinvoke(chip, args)
   }
 
   const chip: CHIP = {
+    halt() {
+      memoryclearflags(mem)
+    },
     // id
     id() {
       return id
     },
-    senderid(maybeid = chip.id()) {
-      return `vm:${maybeid ?? chip.id()}`
-    },
-
-    // invokes api
-    install(firmware) {
-      if (!ispresent(firmware)) {
-        return
-      }
-      // clear invoke cache
-      invokes = {}
-      // add firmware
-      firmwares.push(firmware)
+    senderid(maybeid = id) {
+      return `vm:${maybeid ?? id}`
     },
 
     // internal state api
     set(name, value) {
-      const lname = name.toLowerCase()
-
-      for (let i = 0; i < firmwares.length; ++i) {
-        const [result] = firmwares[i].set(chip, lname, value)
-        if (result) {
-          return value
-        }
+      const [result, resultvalue] = firmwareset(driver, chip, name, value)
+      if (result) {
+        return resultvalue
       }
-
-      // raise an error ??
-      return value
+      // no result, return undefined
+      return undefined
     },
     get(name) {
-      const lname = name.toLowerCase()
-
-      for (let i = 0; i < firmwares.length; ++i) {
-        const [result, value] = firmwares[i].get(chip, lname)
-        if (result) {
-          return value
-        }
+      const [result, resultvalue] = firmwareget(driver, chip, name)
+      if (result) {
+        return resultvalue
       }
-
       // no result, return undefined
       return undefined
     },
 
     // lifecycle api
-    timestamp() {
-      return timestamp
-    },
     tick(cycle, incoming) {
       // update timestamp
-      timestamp = incoming
+      flags.ts = incoming
 
       // we active ?
+      const pulse = isnumber(flags.ps) ? flags.ps : 0
       const activecycle = pulse % cycle === 0
 
       // invoke firmware shouldtick
-      for (let i = 0; i < firmwares.length; ++i) {
-        firmwares[i].shouldtick(chip, activecycle)
-      }
+      firmwareshouldtick(driver, chip, activecycle)
 
       // chip is yield / ended state
       if (!chip.shouldtick()) {
@@ -240,7 +211,7 @@ export function createchip(id: string, build: GeneratorBuild) {
       }
 
       // inc pulse after checking should tick
-      ++pulse
+      flags.ps = pulse + 1
 
       // execution frequency
       if (!activecycle) {
@@ -248,58 +219,63 @@ export function createchip(id: string, build: GeneratorBuild) {
       }
 
       // reset state
-      loops = 0
-      yieldstate = false
+      flags.lc = 0
+      flags.ys = 0
 
       // invoke firmware tick
-      for (let i = 0; i < firmwares.length; ++i) {
-        firmwares[i].tick(chip)
-      }
+      firmwaretick(driver, chip)
 
       // invoke generator
       try {
         const result = logic?.next()
-
         if (result?.done) {
           api_error('chip', 'crash', 'generator logic unexpectedly exited')
-          endedstate = true
+          flags.es = 1
         }
       } catch (err: any) {
         api_error('chip', 'crash', err.message)
-        endedstate = true
+        flags.es = 1
       }
 
       // invoke firmware tock
-      for (let i = 0; i < firmwares.length; ++i) {
-        firmwares[i].tock(chip)
-      }
-
+      firmwaretock(driver, chip)
       return true
     },
     isended() {
-      return endedstate === true
+      return flags.es === 1
     },
     shouldtick() {
-      return endedstate === false || chip.hm() !== 0
+      return flags.es === 0 || chip.hm() !== 0
     },
     shouldhalt() {
-      return loops++ > CONFIG.HALT_AT_COUNT
-    },
-    goto(label) {
-      invokecommand('send', [label])
+      if (isnumber(flags.lc)) {
+        return ++flags.lc > CONFIG.HALT_AT_COUNT
+      }
+      return true
     },
     hm() {
-      const target = message?.target ?? ''
-      if (ispresent(message?.target)) {
-        return labels[target]?.find((item) => item > 0) ?? 0
+      if (isarray(flags.mg) && isarray(flags.lb)) {
+        const [, target] = flags.mg as [string, string] // unpack message
+        if (ispresent(target)) {
+          for (let i = 0; i < flags.lb.length; ++i) {
+            const [name, labels] = flags.lb[i] as [string, number[]]
+            if (name === target) {
+              // pick first unzapped label
+              return labels.find((item) => isnumber(item) && item > 0) ?? 0
+            }
+          }
+        }
       }
       return 0
     },
     yield() {
-      yieldstate = true
+      flags.ys = 1
+    },
+    jump(line) {
+      flags.ec = line
     },
     sy() {
-      return yieldstate || chip.shouldhalt()
+      return !!flags.ys || chip.shouldhalt()
     },
     emit(target, data, player) {
       hub.emit(target, chip.senderid(), data, player)
@@ -308,61 +284,99 @@ export function createchip(id: string, build: GeneratorBuild) {
       hub.emit(`${chip.senderid(chipid)}:${message}`, id, data, player)
     },
     lock(allowed) {
-      locked = allowed
+      flags.lk = allowed
     },
     unlock() {
-      locked = ''
+      flags.lk = ''
     },
     message(incoming) {
       // internal messages while locked are allowed
-      if (locked && incoming.sender !== locked) {
+      if (flags.lk && incoming.sender !== flags.lk) {
         return
       }
-      message = incoming
+      flags.mg = [
+        incoming.id,
+        incoming.target,
+        incoming.data,
+        incoming.sender,
+        incoming.player,
+      ]
     },
     zap(label) {
-      const labelset = labels[label]
-      if (labelset) {
-        const index = labelset.findIndex((item) => item > 0)
-        if (index >= 0) {
-          labelset[index] *= -1
+      if (isarray(flags.lb)) {
+        for (let i = 0; i < flags.lb.length; ++i) {
+          const [name, lines] = flags.lb[i] as [string, number[]]
+          if (name === label) {
+            // zap first active label
+            const index = lines.findIndex((item) => item > 0)
+            if (index >= 0) {
+              lines[index] *= -1
+            }
+          }
         }
       }
     },
     restore(label) {
-      const labelset = labels[label]
-      if (labelset) {
-        for (let i = 0; i < labelset.length; i++) {
-          labelset[i] = Math.abs(labelset[i])
+      if (isarray(flags.lb)) {
+        for (let i = 0; i < flags.lb.length; ++i) {
+          const [name, lines] = flags.lb[i] as [string, number[]]
+          if (name === label) {
+            for (let l = 0; l < lines.length; l++) {
+              lines[i] = Math.abs(lines[i])
+            }
+          }
         }
       }
     },
     getcase() {
-      const label = chip.hm()
-      if (label && ispresent(message)) {
+      // ensure execution cursor
+      flags.ec = isnumber(flags.ec) ? flags.ec : 1
+
+      // check for pending messages
+      const line = chip.hm()
+      if (line && isarray(flags.mg)) {
+        const [, , arg, sender, player] = flags.mg as [
+          string,
+          string,
+          any,
+          string,
+          string,
+        ]
+
         // update chip state based on incoming message
-        chip.set('sender', message.sender)
-        chip.set('data', message.data)
+        chip.set('sender', sender)
+        chip.set('arg', arg)
 
         // this sets player focus
-        if (message.player) {
-          chip.set('player', message.player)
+        if (player) {
+          chip.set('player', player)
         }
 
         // clear message
-        message = undefined
+        flags.mg = undefined
 
         // reset ended state
-        yieldstate = false
-        endedstate = false
+        flags.ys = 0
+        flags.es = 0
+
+        // update ec
+        flags.ec = line
       }
 
-      // return entry point
-      return label
+      // always return flags.ec
+      return flags.ec
+    },
+    nextcase() {
+      // get execution cursor state
+      const cursor = isnumber(flags.ec) ? flags.ec : 1
+      // inc it
+      flags.ec = cursor + 1
+      // always return flags.ec
+      return flags.ec
     },
     endofprogram() {
       chip.yield()
-      endedstate = true
+      flags.es = 1
     },
     stacktrace(error) {
       const stack = ErrorStackParser.parse(error)
@@ -385,15 +399,6 @@ export function createchip(id: string, build: GeneratorBuild) {
     hyperlink(...words) {
       return invokecommand('hyperlink', words)
     },
-    move(wait, ...words) {
-      // try and move
-      const result = chip.command('go', ...words) && wait
-      // and yield regardless of the outcome
-      chip.yield()
-      // if blocked and should wait, return 1
-      // otherwise 0
-      return result ? 1 : 0
-    },
     command(...words) {
       // 0 - continue
       // 1 - retrys
@@ -401,23 +406,12 @@ export function createchip(id: string, build: GeneratorBuild) {
         // bail on empty commands
         return 0
       }
-
+      // invoke
       const [name, ...args] = words
-      const command = getcommand(maptostring(name))
-
-      // found command, invoke
-      if (ispresent(command)) {
-        return command(chip, args)
-      }
-
-      // unknown command,  defaults to send
-      invokecommand('send', [name, ...args])
-      return 0
+      return invokecommand(maptostring(name), args)
     },
     if(...words) {
-      const [value, ii] = readargs(memoryreadcontext(chip, words), 0, [
-        ARG_TYPE.ANY,
-      ])
+      const [value, ii] = readargs(words, 0, [ARG_TYPE.ANY])
       const result = maptoresult(value)
 
       if (result && ii < words.length) {
@@ -427,37 +421,38 @@ export function createchip(id: string, build: GeneratorBuild) {
       return result ? 1 : 0
     },
     repeatstart(index, ...words) {
-      const [value, ii] = readargs(memoryreadcontext(chip, words), 0, [
-        ARG_TYPE.NUMBER,
-      ])
-
-      repeats[index] = value
-      repeatscommand[index] = ii < words.length ? words.slice(ii) : undefined
+      const [value, ii] = readargs(words, 0, [ARG_TYPE.NUMBER])
+      const repeatcount = `repeatcount${index}`
+      const repeatwords = `repeatwords${index}`
+      flags[repeatcount] = value
+      flags[repeatwords] = ii < words.length ? words.slice(ii) : undefined
     },
     repeat(index) {
-      const count = repeats[index] ?? 0
-      repeats[index] = count - 1
+      const repeatcount = `repeatcount${index}`
+      const repeatwords = `repeatwords${index}`
+      if (!isnumber(flags[repeatcount])) {
+        return 0
+      }
+
+      const count = flags[repeatcount]
+      flags[repeatcount] = count - 1
 
       const result = count > 0
-      const repeatcmd = repeatscommand[index]
+      const repeatcmd = flags[repeatwords]
 
-      if (result && repeatcmd) {
+      if (result && isarray(repeatcmd)) {
         chip.command(...repeatcmd)
       }
 
       return result ? 1 : 0
     },
-    foreachstart(...words) {
-      const [name, maybemin, maybemax, maybestep] = readargs(
-        memoryreadcontext(chip, words),
-        0,
-        [
-          ARG_TYPE.STRING,
-          ARG_TYPE.NUMBER,
-          ARG_TYPE.NUMBER,
-          ARG_TYPE.MAYBE_NUMBER,
-        ],
-      )
+    foreachstart(index, ...words) {
+      const [name, maybemin, maybemax, maybestep] = readargs(words, 0, [
+        ARG_TYPE.STRING,
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.MAYBE_NUMBER,
+      ])
 
       let min = Math.min(maybemin, maybemax)
       let max = Math.max(maybemin, maybemax)
@@ -472,20 +467,15 @@ export function createchip(id: string, build: GeneratorBuild) {
 
       // set init state
       chip.set(name, min - step)
-
       return 0
     },
-    foreach(...words) {
-      const [name, maybemin, maybemax, maybestep, ii] = readargs(
-        memoryreadcontext(chip, words),
-        0,
-        [
-          ARG_TYPE.STRING,
-          ARG_TYPE.NUMBER,
-          ARG_TYPE.NUMBER,
-          ARG_TYPE.MAYBE_NUMBER,
-        ],
-      )
+    foreach(index, ...words) {
+      const [name, maybemin, maybemax, maybestep, ii] = readargs(words, 0, [
+        ARG_TYPE.STRING,
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.MAYBE_NUMBER,
+      ])
 
       let min = Math.min(maybemin, maybemax)
       let max = Math.max(maybemin, maybemax)
@@ -521,9 +511,7 @@ export function createchip(id: string, build: GeneratorBuild) {
     or(...words) {
       let lastvalue = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readargs(memoryreadcontext(chip, words), i, [
-          ARG_TYPE.ANY,
-        ])
+        const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
         lastvalue = value
         if (lastvalue) {
           break // or returns the first truthy value
@@ -535,9 +523,7 @@ export function createchip(id: string, build: GeneratorBuild) {
     and(...words) {
       let lastvalue = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readargs(memoryreadcontext(chip, words), i, [
-          ARG_TYPE.ANY,
-        ])
+        const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
         lastvalue = value
         if (!lastvalue) {
           break // and returns the first falsy value, or the last value
@@ -547,137 +533,87 @@ export function createchip(id: string, build: GeneratorBuild) {
       return lastvalue
     },
     not(...words) {
-      const [value] = readargs(memoryreadcontext(chip, words), 0, [
-        ARG_TYPE.ANY,
-      ])
+      // invert outcome
+      const [value] = readargs(words, 0, [ARG_TYPE.ANY])
       return value ? 0 : 1
     },
     expr(...words) {
       // eval a group of words as an expression
-      const [value] = readargs(memoryreadcontext(chip, words), 0, [
-        ARG_TYPE.ANY,
-      ])
+      const [value] = readargs(words, 0, [ARG_TYPE.ANY])
       return value
     },
     isEq(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.ANY,
-      ])
-      return isequal(left, right) ? 1 : 0
+      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
+      if (typeof left === 'object' || typeof right === 'object') {
+        return isequal(left, right) ? 1 : 0
+      }
+      return left === right ? 1 : 0
     },
     isNotEq(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.ANY,
-      ])
-      return left !== right ? 1 : 0
+      return this.isEq(lhs, rhs) ? 0 : 1
     },
     isLessThan(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left < right ? 1 : 0
     },
     isGreaterThan(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left > right ? 1 : 0
     },
     isLessThanOrEq(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left <= right ? 1 : 0
     },
     isGreaterThanOrEq(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left >= right ? 1 : 0
     },
     opPlus(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.ANY,
-      ])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
       return left + right
     },
     opMinus(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [ARG_TYPE.ANY])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.ANY,
-      ])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
       return left - right
     },
     opPower(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return Math.pow(left, right)
     },
     opMultiply(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left * right
     },
     opDivide(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left / right
     },
     opModDivide(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left % right
     },
     opFloorDivide(lhs, rhs) {
-      const [left] = readargs(memoryreadcontext(chip, [lhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return Math.floor(left / right)
     },
     opUniPlus(rhs) {
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return +right
     },
     opUniMinus(rhs) {
-      const [right] = readargs(memoryreadcontext(chip, [rhs]), 0, [
-        ARG_TYPE.NUMBER,
-      ])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return -right
     },
   }

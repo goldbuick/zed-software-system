@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { useWaitForValueString } from 'zss/device/modem'
-import {
-  useCacheWriteTextContext,
-  tokenizeandwritetextformat,
-  applycolortoindexes,
-  applystrtoindex,
-} from 'zss/gadget/data/textformat'
 import { paneladdress } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { ismac } from 'zss/words/system'
+import {
+  tokenizeandwritetextformat,
+  applycolortoindexes,
+  applystrtoindex,
+} from 'zss/words/textformat'
 
-import { useBlink } from '../useblink'
-import { UserFocus, UserInput, UserInputMods, ismac } from '../userinput'
+import { useBlink } from '../hooks'
+import { UserFocus, UserInput, UserInputMods } from '../userinput'
 
 import { PanelItemProps, inputcolor, mapTo } from './common'
 
@@ -38,9 +38,6 @@ export function PanelItemText({
   const tvalue = `${state} `
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
-
-  // keep stable re-renders
-  useCacheWriteTextContext(context)
 
   // prefix
   tokenizeandwritetextformat(

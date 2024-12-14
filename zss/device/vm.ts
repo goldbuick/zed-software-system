@@ -1,13 +1,12 @@
 import { createdevice } from 'zss/device'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 import {
   memorycli,
   memoryplayerlogin,
   memoryreadbookbyaddress,
   memoryreadbooklist,
-  memoryreadchip,
   memoryresetbooks,
   memorytick,
   memoryloadfile,
@@ -15,26 +14,23 @@ import {
   memoryplayerscan,
   memoryplayerlogout,
   memorygetdefaultplayer,
+  memoryreadflags,
+  memorymessage,
+  memorycleanup,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
-import { createos } from 'zss/os'
 
 import {
   register_flush,
+  register_refresh,
   tape_debug,
   tape_info,
   vm_codeaddress,
   vm_flush,
 } from './api'
 import { modemobservevaluestring } from './modem'
-
-// manages chips
-const os = createos()
-
-// remember last tick for cli invokes
-let lasttick = 0
 
 // tracking active player ids
 const SECOND_TIMEOUT = 16
@@ -48,6 +44,14 @@ let flushtick = 0
 const watching: Record<string, Record<string, Set<string>>> = {}
 const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
+// save state
+async function savestate() {
+  const books = memoryreadbooklist()
+  if (books.length) {
+    register_flush(vm.name(), await compressbooks(books))
+  }
+}
+
 const vm = createdevice('vm', ['tick', 'second'], (message) => {
   // console.info(message)
   switch (message.target) {
@@ -60,11 +64,12 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     case 'books':
       doasync('vm:books', async () => {
-        if (isstring(message.data)) {
+        if (isarray(message.data)) {
+          const [maybebooks, maybeselect] = message.data as [string, string]
           // unpack books
-          const books = await decompressbooks(message.data)
+          const books = await decompressbooks(maybebooks)
           const booknames = books.map((item) => item.name)
-          memoryresetbooks(books)
+          memoryresetbooks(books, maybeselect)
           // message
           tape_info(
             vm.name(),
@@ -81,13 +86,29 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     case 'login':
       if (message.player) {
+        // debugger
+        // attempt login
         if (memoryplayerlogin(message.player)) {
+          // start tracking
           tracking[message.player] = 0
           tape_info(vm.name(), 'player login', message.player)
           // ack
           vm.reply(message, 'acklogin', true, message.player)
         }
       }
+      break
+    case 'endgame':
+      doasync('vm:endgame', async () => {
+        if (!message.player) {
+          return
+        }
+        // logout player
+        memoryplayerlogout(message.player)
+        // save state
+        await savestate()
+        // reload page
+        register_refresh('vm')
+      })
       break
     case 'doot':
       if (message.player) {
@@ -99,10 +120,15 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
     case 'input':
       if (message.player) {
         // player input
-        const memory = memoryreadchip(message.player)
-        const [input = INPUT.NONE, mods = 0] = message.data ?? {}
-        memory.inputqueue.add(input)
-        memory.inputmods[input as INPUT] = mods
+        const flags = memoryreadflags(message.player)
+        const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
+        // add to input queue
+        if (!isarray(flags.inputqueue)) {
+          flags.inputqueue = []
+        }
+        if (input !== INPUT.NONE) {
+          flags.inputqueue.push([input, mods])
+        }
       }
       break
     case 'codewatch':
@@ -145,8 +171,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     case 'tick':
       // from clock
-      lasttick = message.data ?? 0
-      memorytick(os, lasttick)
+      memorytick()
       break
     case 'second': {
       // ensure player ids are added to tracking
@@ -174,6 +199,9 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         }
       }
 
+      // gc chips
+      memorycleanup()
+
       // autosave to url
       if (++flushtick >= FLUSH_RATE) {
         flushtick = 0
@@ -182,28 +210,23 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     }
     case 'flush':
-      doasync('vm:flush', async () => {
-        const books = memoryreadbooklist()
-        if (books.length) {
-          register_flush(vm.name(), await compressbooks(books))
-        }
-      })
+      doasync('vm:flush', savestate)
       break
     case 'cli':
       // user input from built-in console
       if (ispresent(message.player)) {
-        memorycli(os, lasttick, message.player, message.data ?? '')
+        memorycli(message.player, message.data)
       }
       break
     case 'loadfile':
       // user input from built-in console
       if (ispresent(message.player)) {
-        memoryloadfile(lasttick, message.player, message.data)
+        memoryloadfile(message.player, message.data)
       }
       break
     default:
       // running software messages
-      os.message(message)
+      memorymessage(message)
       break
   }
 })

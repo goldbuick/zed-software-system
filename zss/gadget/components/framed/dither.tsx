@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Box2, BufferGeometry, MathUtils, Vector2 } from 'three'
-
 import {
   createDitherDataTexture,
   createDitherMaterial,
   updateDitherDataTexture,
-} from '../display/dither'
-import { createTilemapBufferGeometry } from '../display/tiles'
+} from 'zss/gadget/display/dither'
+import { createTilemapBufferGeometry } from 'zss/gadget/display/tiles'
 
-import { useClipping } from './clipping'
+import { useClipping } from '../clipping'
 
 type DitherProps = {
   width: number
@@ -19,7 +18,7 @@ type DitherProps = {
 export function Dither({ width, height, alphas }: DitherProps) {
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
-  const material = useMemo(() => createDitherMaterial(), [])
+  const [material] = useState(() => createDitherMaterial())
 
   // create data texture
   useEffect(() => {
@@ -49,8 +48,6 @@ export function Dither({ width, height, alphas }: DitherProps) {
       <bufferGeometry ref={bgRef} />
     </mesh>
   )
-
-  return null
 }
 
 type StaticDitherProps = {

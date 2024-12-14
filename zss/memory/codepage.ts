@@ -1,8 +1,9 @@
-import { IToken } from 'chevrotain'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { statformat, stattypestring } from 'zss/words/stats'
+import { STAT_TYPE } from 'zss/words/types'
 
 import { createboard, exportboard, importboard } from './board'
 import {
@@ -10,7 +11,6 @@ import {
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import { exporteighttrack, importeighttrack } from './eighttrack'
 import {
   FORMAT_OBJECT,
   FORMAT_SKIP,
@@ -18,8 +18,8 @@ import {
   unformatobject,
 } from './format'
 import {
+  BOARD_ELEMENT,
   CODE_PAGE,
-  CODE_PAGE_LABEL,
   CODE_PAGE_STATS,
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
@@ -71,7 +71,6 @@ export function exportcodepage(
     terrain: exportboardelement,
     charset: exportbitmap,
     palette: exportbitmap,
-    eighttrack: exporteighttrack,
     stats: FORMAT_SKIP,
   })
 }
@@ -86,7 +85,6 @@ export function importcodepage(
     terrain: importboardelement,
     charset: importbitmap,
     palette: importbitmap,
-    eighttrack: importeighttrack,
   })
 }
 
@@ -102,41 +100,6 @@ export function codepagehasmatch(
     return true
   }
   return false
-}
-
-function tokenstostrings(tokens: IToken[]) {
-  return tokens.map((token) => token.image)
-}
-
-function tokenstostats(codepage: CODE_PAGE, tokens: IToken[]) {
-  const [stat, target, ...args] = tokens
-  if (ispresent(codepage.stats) && ispresent(stat)) {
-    switch (stat.image.toLowerCase()) {
-      case 'rn': // 1 - 9 with optional min / max labels
-      case 'range':
-      case 'sl': // select from a list of values
-      case 'select':
-      case 'nm': // number input with optional min / max
-      case 'number':
-      case 'tx': // text input
-      case 'text':
-      case 'ln': // link to another board
-      case 'link':
-        if (ispresent(target)) {
-          const ltarget = target.image.toLowerCase()
-          codepage.stats[ltarget] = tokenstostrings(args ?? [])
-        }
-        break
-      default: {
-        // default is list of stat names
-        const names = tokens.slice(1).map((token) => token.image)
-        for (let i = 0; i < names.length; ++i) {
-          codepage.stats[names[i]] = ''
-        }
-        break
-      }
-    }
-  }
 }
 
 export function codepagereadstatdefaults(
@@ -183,64 +146,71 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
   const parse = tokenize(codepage.code)
 
   // extract @stat lines
-  let first = true
+  let isfirst = true
   for (let i = 0; i < parse.tokens.length; ++i) {
     const token = parse.tokens[i]
     if (token.tokenType === stat) {
-      const [maybetype, ...maybevalues] = token.image.slice(1).split(' ')
-      const lmaybetype = maybetype.toLowerCase()
-      const maybename = maybevalues.join(' ')
-      const lmaybename = maybename.toLowerCase().trim()
-
-      switch (lmaybetype) {
-        case 'stat': {
-          // stat content is prefixed with hyperlink !
-          const stat = tokenize(`!${maybename}`)
-          if (stat.tokens.length) {
-            tokenstostats(codepage, stat.tokens)
+      const source = token.image.slice(1)
+      const words = source.split(' ')
+      const stat = statformat(words, isfirst)
+      const maybename = stat.values.join(' ').toLowerCase().trim()
+      isfirst = false
+      switch (stat.type) {
+        case STAT_TYPE.LOADER:
+          codepage.stats.type = CODE_PAGE_TYPE.LOADER
+          codepage.stats.name = maybename
+          break
+        case STAT_TYPE.BOARD:
+          codepage.stats.type = CODE_PAGE_TYPE.BOARD
+          codepage.stats.name = maybename
+          break
+        case STAT_TYPE.OBJECT:
+          codepage.stats.type = CODE_PAGE_TYPE.OBJECT
+          codepage.stats.name = maybename
+          break
+        case STAT_TYPE.TERRAIN:
+          codepage.stats.type = CODE_PAGE_TYPE.TERRAIN
+          codepage.stats.name = maybename
+          break
+        case STAT_TYPE.CHARSET:
+          codepage.stats.type = CODE_PAGE_TYPE.CHARSET
+          codepage.stats.name = maybename
+          break
+        case STAT_TYPE.PALETTE:
+          codepage.stats.type = CODE_PAGE_TYPE.PALETTE
+          codepage.stats.name = maybename
+          break
+        case STAT_TYPE.CONST: {
+          const [maybename, maybevalue] = stat.values
+          if (isstring(maybename)) {
+            const name = maybename.toLowerCase()
+            if (isstring(maybevalue)) {
+              // can we parse consts here ???? too ????
+              const numbervalue = parseFloat(maybevalue)
+              codepage.stats[name] = isnumber(numbervalue)
+                ? numbervalue
+                : maybevalue
+            } else if (isnumber(maybevalue)) {
+              codepage.stats[name] = maybevalue
+            }
           }
           break
         }
-        case CODE_PAGE_LABEL.BOARD as string:
-          codepage.stats.type = CODE_PAGE_TYPE.BOARD
-          codepage.stats.name = lmaybename
-          break
-        case CODE_PAGE_LABEL.OBJECT as string:
-          codepage.stats.type = CODE_PAGE_TYPE.OBJECT
-          codepage.stats.name = lmaybename
-          break
-        case CODE_PAGE_LABEL.TERRAIN as string:
-          codepage.stats.type = CODE_PAGE_TYPE.TERRAIN
-          codepage.stats.name = lmaybename
-          break
-        case CODE_PAGE_LABEL.CHARSET as string:
-          codepage.stats.type = CODE_PAGE_TYPE.CHARSET
-          codepage.stats.name = lmaybename
-          break
-        case CODE_PAGE_LABEL.PALETTE as string:
-          codepage.stats.type = CODE_PAGE_TYPE.PALETTE
-          codepage.stats.name = lmaybename
-          break
-        case CODE_PAGE_LABEL.EIGHT_TRACK as string:
-          codepage.stats.type = CODE_PAGE_TYPE.EIGHT_TRACK
-          codepage.stats.name = lmaybename
-          break
-        case CODE_PAGE_LABEL.LOADER as string:
-          codepage.stats.type = CODE_PAGE_TYPE.LOADER
-          codepage.stats.name = lmaybename
-          break
-        default:
-          if (first) {
-            // first default is name
-            codepage.stats.name = [lmaybetype, ...maybevalues].join(' ').trim()
-          } else {
-            // second default is boolean stats
-            codepage.stats[lmaybetype] = 1
+        case STAT_TYPE.RANGE:
+        case STAT_TYPE.SELECT:
+        case STAT_TYPE.NUMBER:
+        case STAT_TYPE.TEXT:
+        case STAT_TYPE.LINK:
+        case STAT_TYPE.HOTKEY:
+        case STAT_TYPE.SCROLL: {
+          const [maybename, ...args] = stat.values
+          if (isstring(maybename)) {
+            const name = maybename.toLowerCase().trim()
+            codepage.stats[name] = args
           }
           break
+        }
       }
-
-      first = false
     }
   }
 
@@ -259,19 +229,17 @@ export function codepagetypetostring(type: MAYBE<CODE_PAGE_TYPE>): string {
     case CODE_PAGE_TYPE.ERROR:
       return 'error'
     case CODE_PAGE_TYPE.LOADER:
-      return CODE_PAGE_LABEL.LOADER
+      return stattypestring(STAT_TYPE.LOADER)
     case CODE_PAGE_TYPE.BOARD:
-      return CODE_PAGE_LABEL.BOARD
+      return stattypestring(STAT_TYPE.BOARD)
     case CODE_PAGE_TYPE.OBJECT:
-      return CODE_PAGE_LABEL.OBJECT
+      return stattypestring(STAT_TYPE.OBJECT)
     case CODE_PAGE_TYPE.TERRAIN:
-      return CODE_PAGE_LABEL.TERRAIN
+      return stattypestring(STAT_TYPE.TERRAIN)
     case CODE_PAGE_TYPE.CHARSET:
-      return CODE_PAGE_LABEL.CHARSET
+      return stattypestring(STAT_TYPE.CHARSET)
     case CODE_PAGE_TYPE.PALETTE:
-      return CODE_PAGE_LABEL.PALETTE
-    case CODE_PAGE_TYPE.EIGHT_TRACK:
-      return CODE_PAGE_LABEL.EIGHT_TRACK
+      return stattypestring(STAT_TYPE.PALETTE)
   }
 }
 
@@ -294,26 +262,38 @@ export function codepagereadstat(codepage: MAYBE<CODE_PAGE>, stat: string) {
   return stats[stat]
 }
 
+function applyelementstats(codepage: CODE_PAGE, element: BOARD_ELEMENT) {
+  const stats = codepagereadstatdefaults(codepage)
+  const keys = Object.keys(stats)
+  for (let i = 0; i < keys.length; ++i) {
+    const key = keys[i]
+    element[key as keyof BOARD_ELEMENT] = stats[key]
+  }
+}
+
 export function codepagereaddata<T extends CODE_PAGE_TYPE>(
   codepage: MAYBE<CODE_PAGE>,
 ): MAYBE<CODE_PAGE_TYPE_MAP[T]> {
-  switch (codepage?.stats?.type) {
+  if (!ispresent(codepage)) {
+    return
+  }
+  switch (codepagereadtype(codepage)) {
     default: {
       // empty / invalid
       return undefined
     }
     case CODE_PAGE_TYPE.ERROR: {
-      return (codepage?.code ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return (codepage.code ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.LOADER: {
-      return (codepage?.code ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return (codepage.code ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.BOARD: {
       // validate and shape board into usable state
       if (!ispresent(codepage.board)) {
         codepage.board = createboard()
       }
-      codepage.board.codepage = codepage.id
+      codepage.board.id = codepage.id
       return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {
@@ -322,6 +302,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         codepage.object = createboardelement()
       }
       codepage.object.name = codepagereadname(codepage)
+      applyelementstats(codepage, codepage.object)
       return codepage.object as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.TERRAIN: {
@@ -330,6 +311,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         codepage.terrain = createboardelement()
       }
       codepage.terrain.name = codepagereadname(codepage)
+      applyelementstats(codepage, codepage.terrain)
       return codepage.terrain as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.CHARSET: {
@@ -345,13 +327,6 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         // codepage.palette = {}
       }
       return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
-    }
-    case CODE_PAGE_TYPE.EIGHT_TRACK: {
-      // validate and shape eighttrack into usable state
-      if (!ispresent(codepage.eighttrack)) {
-        // codepage.eighttrack = {}
-      }
-      return codepage.eighttrack as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
   }
 }

@@ -43,7 +43,6 @@ export default defineConfig(({ mode }) => {
       mkcert(),
       ...(hmronly ? [] : [fullreload(['**/*.ts', '**/*.tsx'])]),
       ...(useanalyzer ? [analyzer()] : []),
-      // ,
     ],
     resolve: {
       alias: {

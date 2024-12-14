@@ -1,6 +1,5 @@
 import * as Tone from 'tone'
 
-import { pick, range } from './array'
 import { isnumber, ispresent } from './types'
 
 export enum SYNTH_OP {

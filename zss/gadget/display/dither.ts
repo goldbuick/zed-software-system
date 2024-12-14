@@ -27,7 +27,6 @@ const ditherMaterial = new ShaderMaterial({
   // settings
   transparent: false,
   uniforms: {
-    palette: { value: null },
     color: { value: new Color(0, 0, 0) },
     data: { value: null },
   },

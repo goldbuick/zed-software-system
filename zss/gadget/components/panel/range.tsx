@@ -1,12 +1,9 @@
 import { useCallback } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { paneladdress } from 'zss/gadget/data/types'
+import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import {
-  useCacheWriteTextContext,
-  tokenizeandwritetextformat,
-} from '../../data/textformat'
-import { useBlink } from '../useblink'
+import { useBlink } from '../hooks'
 import { UserInput, UserInputHandler } from '../userinput'
 
 import { PanelItemProps, inputcolor, mapTo, strsplice } from './common'
@@ -48,9 +45,6 @@ export function PanelItemRange({
   const blink = useBlink()
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
-
-  // keep stable re-renders
-  useCacheWriteTextContext(context)
 
   tokenizeandwritetextformat(` $red $29 ${tcolor}${tlabel} `, context, false)
 

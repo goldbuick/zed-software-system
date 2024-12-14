@@ -1,8 +1,14 @@
+import { shortenUrl } from 'shaveurl'
 import { createdevice } from 'zss/device'
+import { useGadgetClient } from 'zss/gadget/data/state'
+import { doasync } from 'zss/mapping/func'
+import { waitfor } from 'zss/mapping/tick'
 import { ispresent, isstring } from 'zss/mapping/types'
+import { writeheader, writeoption, writetext } from 'zss/words/writeui'
 
 import {
   api_error,
+  gadgetserver_desync,
   tape_crash,
   tape_info,
   tape_terminal_close,
@@ -11,7 +17,6 @@ import {
   vm_init,
   vm_login,
 } from './api'
-import { gadgetstategetplayer, gadgetstatesetplayer } from './gadgetclient'
 
 function readstate(): string {
   try {
@@ -55,6 +60,27 @@ function erasebiosnode() {
   localStorage.removeItem(BIOS_NODE)
 }
 
+const BIOS_SELECT = 'bios-select'
+
+function readbiosselect() {
+  try {
+    return localStorage.getItem(BIOS_SELECT) ?? ''
+  } catch (err: any) {
+    api_error(register.name(), BIOS_SELECT, err.message)
+  }
+  return ''
+}
+
+function writebiosselect(select: string) {
+  try {
+    localStorage.setItem(BIOS_SELECT, select)
+  } catch (err: any) {
+    api_error(register.name(), BIOS_SELECT, err.message)
+  }
+}
+
+// softwareasmain
+
 // simple bootstrap manager
 let keepalive = 0
 
@@ -65,11 +91,49 @@ const register = createdevice(
   'register',
   ['second', 'ready', 'error'],
   function (message) {
+    const gadgetclient = useGadgetClient.getState()
     switch (message.target) {
       case 'error:login:main':
       case 'error:login:title':
       case 'error:login:player':
         tape_crash(register.name())
+        break
+      case 'fullscreen':
+        doasync('register:fullscreen', async function () {
+          if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen()
+          } else if (document.exitFullscreen) {
+            await document.exitFullscreen()
+          }
+        })
+        break
+      case 'share':
+        doasync('register:share', async function () {
+          const shorturl = await shortenUrl(window.location.href)
+          writetext('share', shorturl)
+        })
+        break
+      case 'refresh':
+        doasync('register:refresh', async function () {
+          writeheader(register.name(), 'BYE')
+          await waitfor(100)
+          window.location.reload()
+        })
+        break
+      case 'nuke':
+        doasync('register:nuke', async function () {
+          writeheader(register.name(), 'nuke in')
+          writeoption(register.name(), '3', '...')
+          await waitfor(1000)
+          writeoption(register.name(), '2', '...')
+          await waitfor(1000)
+          writeoption(register.name(), '1', '...')
+          await waitfor(1000)
+          writeheader(register.name(), 'BYE')
+          await waitfor(100)
+          window.location.hash = ''
+          window.location.reload()
+        })
         break
       case 'ready': {
         if (!ispresent(message.player)) {
@@ -80,8 +144,19 @@ const register = createdevice(
           return
         }
         // init vm with player id
-        if (gadgetstatesetplayer(player)) {
-          vm_init(register.name(), player)
+        if (!gadgetclient.gadget.player) {
+          // track player id
+          useGadgetClient.setState((state) => {
+            return {
+              ...state,
+              gadget: {
+                ...state.gadget,
+                player,
+              },
+            }
+          })
+          // signal init
+          setTimeout(() => vm_init('register', player), 256)
         }
         break
       }
@@ -96,7 +171,7 @@ const register = createdevice(
           return
         }
         // init vm with content
-        vm_books(register.name(), books, message.player)
+        vm_books(register.name(), books, readbiosselect(), message.player)
         break
       }
       case 'ackbooks':
@@ -105,11 +180,20 @@ const register = createdevice(
         }
         break
       case 'acklogin':
-        tape_terminal_close(register.name())
+        if (ispresent(message.player)) {
+          const { player } = message
+          tape_terminal_close(register.name())
+          setTimeout(() => gadgetserver_desync(register.name(), player), 1000)
+        }
         break
       case 'flush':
         if (isstring(message.data)) {
           writestate(message.data)
+        }
+        break
+      case 'select':
+        if (isstring(message.data)) {
+          writebiosselect(message.data)
         }
         break
       case 'nodetrash':
@@ -119,9 +203,8 @@ const register = createdevice(
         ++keepalive
         if (keepalive >= signalrate) {
           keepalive -= signalrate
-          const player = gadgetstategetplayer()
-          if (player) {
-            vm_doot(register.name(), player)
+          if (gadgetclient.gadget.player) {
+            vm_doot(register.name(), gadgetclient.gadget.player)
           }
         }
         break

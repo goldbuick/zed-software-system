@@ -1,25 +1,8 @@
 import { BITMAP } from 'zss/gadget/data/bitmap'
-import { MAYBE, MAYBE_STRING } from 'zss/mapping/types'
-
-// words
-
-export type WORD = string | number | undefined | WORD[]
-export type MAYBE_WORD = MAYBE<WORD>
-export type WORD_RESULT = 0 | 1
+import { MAYBE } from 'zss/mapping/types'
+import { CATEGORY, COLLISION, WORD } from 'zss/words/types'
 
 // board elements
-
-export enum COLLISION {
-  ISSOLID,
-  ISWALK,
-  ISSWIM,
-  ISBULLET,
-}
-
-export enum CATEGORY {
-  ISTERRAIN,
-  ISOBJECT,
-}
 
 export type BOARD_ELEMENT = {
   // this element is an instance of an element type
@@ -38,6 +21,7 @@ export type BOARD_ELEMENT = {
   color?: number
   bg?: number
   // interaction
+  player?: string
   pushable?: number
   collision?: COLLISION
   destructible?: number
@@ -50,22 +34,15 @@ export type BOARD_ELEMENT = {
   cycle?: number
   stepx?: number
   stepy?: number
+  // messages
   sender?: string
-  data?: any
+  arg?: any
   // runtime
   category?: CATEGORY
   kinddata?: BOARD_ELEMENT
-  kindcode?: string
+  // cleanup
   headless?: boolean
   removed?: number
-  // player only
-  inputmove?: string[]
-  inputok?: number
-  inputcancel?: number
-  inputmenu?: number
-  inputalt?: number
-  inputctrl?: number
-  inputshift?: number
 }
 
 // boards
@@ -89,64 +66,14 @@ export type BOARD = {
   restartonzap?: number
   maxplayershots?: number
   // runtime only
-  codepage: string
-  lookup?: MAYBE_STRING[]
+  id: string
+  lookup?: MAYBE<string>[]
   named?: Record<string, Set<string | number>>
 }
 
 export const BOARD_WIDTH = 60
 export const BOARD_HEIGHT = 25
 export const BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT
-
-// 8tracks
-
-export enum EIGHT_FX {
-  ECHO,
-  REVERB,
-  DISTORTION,
-}
-
-export type EIGHT_FX_CONFIG = {
-  fx: EIGHT_FX
-  settings: Record<number, WORD>
-}
-
-export enum EIGHT_SYNTH {
-  SQUARE,
-  TRIANGLE,
-}
-
-export type EIGHT_SYNTH_CONFIG = {
-  synth: EIGHT_SYNTH
-  effects: EIGHT_FX_CONFIG[]
-  settings: Record<number, WORD>
-}
-
-export type EIGHT_MEASURE = [
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-]
-
-export type EIGHT_TRACK = {
-  tempo: number
-  synths: [
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-  ]
-  measures: EIGHT_MEASURE[]
-}
 
 // codepages
 
@@ -158,17 +85,6 @@ export enum CODE_PAGE_TYPE {
   TERRAIN,
   CHARSET,
   PALETTE,
-  EIGHT_TRACK,
-}
-
-export enum CODE_PAGE_LABEL {
-  LOADER = 'loader',
-  BOARD = 'board',
-  OBJECT = 'object',
-  TERRAIN = 'terrain',
-  CHARSET = 'charset',
-  PALETTE = 'palette',
-  EIGHT_TRACK = '8track',
 }
 
 export type CODE_PAGE_STATS = {
@@ -187,7 +103,6 @@ export type CODE_PAGE = {
   terrain?: BOARD_ELEMENT
   charset?: BITMAP
   palette?: BITMAP
-  eighttrack?: EIGHT_TRACK
   // common parsed values
   stats?: CODE_PAGE_STATS
 }
@@ -202,20 +117,28 @@ export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
   [CODE_PAGE_TYPE.CHARSET]: BITMAP
   [CODE_PAGE_TYPE.PALETTE]: BITMAP
-  [CODE_PAGE_TYPE.EIGHT_TRACK]: EIGHT_TRACK
 }
 
 // book
 
 export type BOOK_FLAGS = Record<string, WORD>
 
-// player location tracking
-export type BOOK_PLAYER = string
-
 export type BOOK = {
   id: string
   name: string
+  timestamp: number
+  activelist: string[]
+  // content list
   pages: CODE_PAGE[]
+  // global flags by id
   flags: Record<string, BOOK_FLAGS>
-  players: Record<string, BOOK_PLAYER>
+}
+
+// readers
+
+export type BINARY_READER = {
+  filename: string
+  cursor: number
+  bytes: Uint8Array
+  dataview: DataView
 }

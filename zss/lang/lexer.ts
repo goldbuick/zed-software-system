@@ -90,7 +90,7 @@ function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
   }
 
   // detect beginning of text
-  if (`@#/?':!"`.includes(text[cursor])) {
+  if (`@#/?':!`.includes(text[cursor])) {
     return null
   }
 
@@ -102,6 +102,12 @@ function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
 
   // return match
   const match = text.substring(startOffset, i)
+
+  // do not match empty strings
+  if (match.trim().length === 0) {
+    return null
+  }
+
   return [match] as RegExpExecArray
 }
 
@@ -234,13 +240,14 @@ export const rparen = createSimpleToken({
 
 export const command_play = createSimpleToken({
   name: 'command_play',
-  pattern: /play .*/,
+  pattern: /(play|bgplay) .*/,
   start_chars_hint: all_chars,
   longer_alt: stringliteral,
 })
 
 // core / structure commands
 
+export const command_debugger = createWordToken('debugger')
 export const command_if = createWordToken('if')
 export const command_do = createWordToken('do')
 export const command_to = createWordToken('to', true)
@@ -250,7 +257,11 @@ export const command_else = createWordToken('else')
 export const command_while = createWordToken('while')
 export const command_repeat = createWordToken('repeat')
 export const command_waitfor = createWordToken('waitfor')
-export const command_foreach = createWordToken('foreach')
+export const command_foreach = createSimpleToken({
+  name: 'foreach',
+  pattern: /foreach|for/,
+  longer_alt: stringliteral,
+})
 export const command_break = createWordToken('break')
 export const command_continue = createWordToken('continue')
 
@@ -312,18 +323,19 @@ export const allTokens = createTokenSet([
   newline,
   whitespace,
   // core / structure commands
-  command_if,
-  command_done,
-  command_do,
-  command_to,
-  command_then,
-  command_else,
-  command_while,
-  command_repeat,
-  command_waitfor,
-  command_foreach,
   command_break,
   command_continue,
+  command_debugger,
+  command_done,
+  command_do,
+  command_else,
+  command_foreach,
+  command_if,
+  command_repeat,
+  command_then,
+  command_to,
+  command_waitfor,
+  command_while,
 ])
 
 const scriptLexer = new Lexer(

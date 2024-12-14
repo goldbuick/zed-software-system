@@ -6,24 +6,16 @@ import {
   tape_terminal_inclayout,
 } from 'zss/device/api'
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
-import { PT } from 'zss/firmware/wordtypes'
-import {
-  applystrtoindex,
-  textformatreadedges,
-  useWriteText,
-} from 'zss/gadget/data/textformat'
+import { useTapeEditor } from 'zss/gadget/data/state'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { applystrtoindex, textformatreadedges } from 'zss/words/textformat'
+import { PT } from 'zss/words/types'
 
+import { useBlink, useWriteText } from '../../hooks'
 import { Scrollable } from '../../scrollable'
-import { useBlink } from '../../useblink'
 import { UserInput, modsfromevent } from '../../userinput'
-import {
-  EDITOR_CODE_ROW,
-  sharedtosynced,
-  tapeeditorstate,
-  useTapeEditor,
-} from '../common'
+import { EDITOR_CODE_ROW, sharedtosynced } from '../common'
 
 type TextinputProps = {
   ycursor: number
@@ -38,7 +30,6 @@ export function EditorInput({
   rows,
   codepage,
 }: TextinputProps) {
-  // const tape = useTape()
   const blink = useBlink()
   const context = useWriteText()
   const blinkdelta = useRef<PT>()
@@ -94,10 +85,11 @@ export function EditorInput({
   function trackselection(active: boolean) {
     if (active) {
       if (!ispresent(tapeeditor.select)) {
-        tapeeditorstate.select = tapeeditor.cursor
+        useTapeEditor.setState({ select: tapeeditor.cursor })
       }
     } else {
-      tapeeditorstate.select = undefined
+      // hopefully this works ?
+      useTapeEditor.setState({ select: undefined })
     }
   }
 
@@ -108,38 +100,41 @@ export function EditorInput({
     if (ispresent(insert)) {
       value?.insert(index, insert)
     }
-    tapeeditorstate.cursor = index + (insert ?? '').length
-    tapeeditorstate.select = undefined
+    useTapeEditor.setState({
+      cursor: index + (insert ?? '').length,
+      select: undefined,
+    })
   }
 
   function deleteselection() {
     if (ispresent(tapeeditor.select)) {
-      tapeeditorstate.cursor = ii1
+      useTapeEditor.setState({ cursor: ii1 })
       strvaluesplice(ii1, iic)
     }
   }
 
   function resettoend() {
-    tapeeditorstate.cursor = codeend
-    tapeeditorstate.select = undefined
+    useTapeEditor.setState({ cursor: codeend, select: undefined })
   }
 
   const movecursor = useCallback(
     function movecursor(inc: number) {
       const ycheck = Math.round(ycursor + inc)
       if (ycheck < 0) {
-        tapeeditorstate.cursor = 0
+        useTapeEditor.setState({ cursor: 0 })
       } else if (ycheck > rowsend) {
-        tapeeditorstate.cursor = codeend
+        useTapeEditor.setState({ cursor: codeend })
       } else {
         const row = rows[ycheck]
-        tapeeditorstate.cursor =
-          row.start + Math.min(xcursor, row.code.length - 1)
+        useTapeEditor.setState({
+          cursor: row.start + Math.min(xcursor, row.code.length - 1),
+        })
       }
     },
     [codeend, rows, rowsend, xcursor, ycursor],
   )
 
+  context.changed()
   return (
     <>
       <Scrollable
@@ -154,25 +149,25 @@ export function EditorInput({
         MOVE_LEFT={(mods) => {
           trackselection(mods.shift)
           if (mods.ctrl) {
-            tapeeditorstate.cursor = coderow.start
+            useTapeEditor.setState({ cursor: coderow.start })
           } else {
-            const cursor = tapeeditorstate.cursor - (mods.alt ? 10 : 1)
-            tapeeditorstate.cursor = clamp(cursor, 0, codeend)
+            const cursor = tapeeditor.cursor - (mods.alt ? 10 : 1)
+            useTapeEditor.setState({ cursor: clamp(cursor, 0, codeend) })
           }
         }}
         MOVE_RIGHT={(mods) => {
           trackselection(mods.shift)
           if (mods.ctrl) {
-            tapeeditorstate.cursor = coderow.end
+            useTapeEditor.setState({ cursor: coderow.end })
           } else {
-            const cursor = tapeeditorstate.cursor + (mods.alt ? 10 : 1)
-            tapeeditorstate.cursor = clamp(cursor, 0, codeend)
+            const cursor = tapeeditor.cursor + (mods.alt ? 10 : 1)
+            useTapeEditor.setState({ cursor: clamp(cursor, 0, codeend) })
           }
         }}
         MOVE_UP={(mods) => {
           trackselection(mods.shift)
           if (mods.ctrl) {
-            tapeeditorstate.cursor = 0
+            useTapeEditor.setState({ cursor: 0 })
           } else {
             movecursor(mods.alt ? -10 : -1)
           }
@@ -180,7 +175,7 @@ export function EditorInput({
         MOVE_DOWN={(mods) => {
           trackselection(mods.shift)
           if (mods.ctrl) {
-            tapeeditorstate.cursor = codeend
+            useTapeEditor.setState({ cursor: codeend })
           } else {
             movecursor(mods.alt ? 10 : 1)
           }
@@ -189,7 +184,7 @@ export function EditorInput({
           if (ispresent(value)) {
             // insert newline !
             value.insert(tapeeditor.cursor, `\n`)
-            tapeeditorstate.cursor += 1
+            useTapeEditor.setState({ cursor: tapeeditor.cursor + 1 })
           }
         }}
         CANCEL_BUTTON={(mods) => {
@@ -216,23 +211,21 @@ export function EditorInput({
               if (hasselection) {
                 deleteselection()
               } else {
-                value.delete(tapeeditor.cursor, 1)
+                strvaluesplice(tapeeditor.cursor, 1)
               }
               break
             case 'backspace':
               if (hasselection) {
                 deleteselection()
-              } else {
-                tapeeditorstate.cursor = Math.max(0, tapeeditorstate.cursor - 1)
-                value.delete(tapeeditorstate.cursor, 1)
+              } else if (strvalue.length > 0) {
+                strvaluesplice(Math.max(tapeeditor.cursor - 1, 0), 1)
               }
               break
             default:
               if (mods.ctrl) {
                 switch (lkey) {
                   case 'a':
-                    tapeeditorstate.select = 0
-                    tapeeditorstate.cursor = codeend
+                    useTapeEditor.setState({ cursor: codeend, select: 0 })
                     break
                   case 'c':
                     if (ispresent(navigator.clipboard)) {
@@ -276,7 +269,9 @@ export function EditorInput({
                 // or jump by 10 or by word ??
               } else if (key.length === 1) {
                 value.insert(tapeeditor.cursor, key)
-                tapeeditorstate.cursor += key.length
+                useTapeEditor.setState({
+                  cursor: tapeeditor.cursor + key.length,
+                })
               }
               break
           }

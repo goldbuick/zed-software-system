@@ -2,67 +2,50 @@ import {
   JsonPatchError as jsonpatcherror,
   applyPatch as applypatch,
 } from 'fast-json-patch'
-import { proxy } from 'valtio'
 import { createdevice } from 'zss/device'
-import { GADGET_STATE } from 'zss/gadget/data/types'
-
-let desync = false
-
-type SYNC_STATE = {
-  state: GADGET_STATE
-}
-
-const syncstate = proxy<SYNC_STATE>({
-  state: {
-    player: '',
-    layers: [],
-    layout: [],
-    layoutreset: false,
-    layoutfocus: '',
-  },
-})
+import { useGadgetClient } from 'zss/gadget/data/state'
 
 const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
+  const { desync, gadget } = useGadgetClient.getState()
   switch (message.target) {
     case 'reset':
-      if (message.player === syncstate.state.player) {
-        desync = false
-        syncstate.state = message.data
+      if (message.player === gadget.player) {
+        useGadgetClient.setState({
+          desync: false,
+          gadget: message.data,
+        })
       }
       break
     case 'patch':
-      if (message.player === syncstate.state.player && !desync) {
-        try {
-          applypatch(syncstate.state, message.data, true)
-        } catch (err) {
-          if (err instanceof jsonpatcherror) {
-            // we are out of sync and need to request a refresh
-            desync = true
-            gadgetclientdevice.reply(
-              message,
-              'desync',
-              undefined,
-              message.player,
+      if (message.player === gadget.player && !desync) {
+        useGadgetClient.setState((gadgetclient) => {
+          try {
+            const { newDocument } = applypatch(
+              gadgetclient.gadget,
+              message.data,
+              true,
+              false,
             )
+            return {
+              ...gadgetclient,
+              gadget: newDocument,
+            }
+          } catch (err) {
+            if (err instanceof jsonpatcherror) {
+              useGadgetClient.setState({ desync: true })
+              // we are out of sync and need to request a refresh
+              gadgetclientdevice.reply(
+                message,
+                'desync',
+                undefined,
+                message.player,
+              )
+            }
           }
-        }
+
+          return gadgetclient
+        })
       }
       break
   }
 })
-
-export function getgadgetstate(): GADGET_STATE {
-  return syncstate.state
-}
-
-export function gadgetstatesetplayer(player: string) {
-  if (player && syncstate.state.player === '') {
-    syncstate.state.player = player
-    return true
-  }
-  return false
-}
-
-export function gadgetstategetplayer() {
-  return syncstate.state.player
-}

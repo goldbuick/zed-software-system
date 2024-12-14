@@ -1,0 +1,126 @@
+@loader zztview
+@stat binaryfile zzt
+ 
+'the idea here is that we 
+'have stats binary & zzt now
+'and when a binary file with a zzt extension 
+'gets dropped on zed.cafe this code will be run
+
+#bin seek 2
+#bin int16le boardcount
+"$filename has $boardcount board(s)
+
+#bin seek 29
+#bin text uint8 worldname
+"$filename has a world named $worldname
+
+'create book from given worldname
+#reload worldname
+
+Reading all the boards
+
+#set index 1
+#set offset 512
+#repeat boardcount do
+ #play p
+
+ #bin seek offset
+ #bin int16le boardsize
+ "boardsize: $boardsize
+
+ #bin text uint8 boardname
+ "BOARD $index - $boardname
+
+ #bin seek offset + 53
+
+ 'create/modify board by given name
+ #mod board "$index $boardname"
+
+ #clear tx ty tiles tkind
+ #while tiles < 1500 do
+  #bin uint8 tcount
+  #bin uint8 telem
+  #bin uint8 tcolor
+
+  'plot elements
+  #for tc 1 to tcount do
+   #set pt at tx ty
+   
+   'plot by element number
+   #if telem is 0 put pt empty
+   #if telem is 1 put pt edge
+   #if telem is 2 put pt empty
+   #if telem is 3 put pt empty
+   #if telem is 4 put pt empty
+   #if telem is 5 put pt ammo
+   #if telem is 6 put pt torch
+   #if telem is 7 put pt gem
+   #if telem is 8 put pt key
+   #if telem is 9 put pt door
+   #if telem is 10 put pt scroll
+   #if telem is 11 put pt passage
+   #if telem is 12 put pt duplicator
+   #if telem is 13 put pt bomb
+   #if telem is 14 put pt enegizer
+   #if telem is 15 put pt star
+   #if telem is 16 put pt clockwise
+   #if telem is 17 put pt counter
+   #if telem is 18 put pt bullet
+   #if telem is 19 put pt water
+   #if telem is 20 put pt forest
+   #if telem is 21 put pt solid
+   #if telem is 22 put pt normal
+   #if telem is 23 put pt breakable
+   #if telem is 24 put pt boulder
+   #if telem is 25 put pt sliderns
+   #if telem is 26 put pt sliderew
+   #if telem is 27 put pt fake
+   #if telem is 28 put pt invisible
+   #if telem is 29 put pt blinkwall
+   #if telem is 30 put pt transporter
+   #if telem is 31 put pt line
+   #if telem is 32 put pt ricochet
+   #if telem is 33 put pt blinkrayhorz
+   #if telem is 34 put pt bear
+   #if telem is 35 put pt ruffian
+   #if telem is 36 put pt object
+   #if telem is 37 put pt slime
+   #if telem is 38 put pt shark
+   #if telem is 39 put pt spinninggun
+   #if telem is 40 put pt pusher
+   #if telem is 41 put pt lion
+   #if telem is 42 put pt tiger
+   #if telem is 43 put pt blinkrayvert
+   #if telem is 44 put pt head
+   #if telem is 45 put pt segment
+   #if telem is 46 put pt empty
+   #if telem is 47 put pt text
+   #if telem is 48 put pt text
+   #if telem is 49 put pt text
+   #if telem is 50 put pt text
+   #if telem is 51 put pt text
+   #if telem is 52 put pt text
+   #if telem is 53 put pt text
+   
+   'move cursor
+   #give tx
+   #give tiles
+
+   'wrap cursor
+   #if tx is 60 do
+    #clear tx
+    #give ty
+   #done
+
+  #done
+ #done
+
+ #break
+ 
+ 'next
+ #give index
+ #give offset boardsize + 2
+#done
+
+Exited !!!!
+#play cxaxdx+cxaxdx+cxaxdx+cxaxdx+; 9xx7xx9xx7xx9xx7xx9xx7xx77

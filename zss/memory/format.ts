@@ -1,6 +1,7 @@
+import { trimUndefinedRecursively } from 'compress-json'
 import { unpack, pack } from 'msgpackr'
 import { api_error } from 'zss/device/api'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
 
 export type FORMAT_OBJECT = [string?, any?, ...FORMAT_OBJECT[]]
 
@@ -26,18 +27,19 @@ export function formatobject(
     let key = keys[i]
     let value = obj[key]
 
-    const mkey = keymap[key]
-    if (ispresent(mkey)) {
-      key = mkey
-    }
-
     const formatter = formatmap[key]
     if (ispresent(formatter)) {
       value = formatter(value)
     }
 
+    // map to enum key
+    const mkey = keymap[key]
+    if (ispresent(mkey)) {
+      key = mkey
+    }
+
     if (value !== null) {
-      formatted.push(mkey, value)
+      formatted.push(key, value)
     }
   }
 
@@ -60,22 +62,25 @@ export function unformatobject<T>(
       let key = formatted[i]
       let value = formatted[i + 1]
 
+      // convert from enum key
       const mkey = keymap[key]
       if (ispresent(mkey)) {
         key = mkey
       }
 
+      // handle imports
       const formatter = formatmap[key]
       if (ispresent(formatter)) {
         value = formatter(value)
       }
 
+      // set value
       obj[key] = value
     }
 
     return obj as T
-  } catch (err) {
-    //
+  } catch (err: any) {
+    api_error('format', 'binary', err.message)
   }
 }
 
@@ -83,7 +88,10 @@ export function unformatobject<T>(
 
 export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
   try {
-    return pack(entry)
+    const data = deepcopy(entry)
+    trimUndefinedRecursively(data)
+    console.info('wrote', deepcopy(data))
+    return pack(data)
   } catch (err: any) {
     api_error('format', 'binary', err.message)
   }
@@ -91,7 +99,9 @@ export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
 
 export function unpackbinary(binary: Uint8Array): MAYBE<FORMAT_OBJECT> {
   try {
-    return unpack(binary)
+    const data = unpack(binary)
+    console.info('read', deepcopy(data))
+    return data
   } catch (err: any) {
     api_error('format', 'binary', err.message)
   }

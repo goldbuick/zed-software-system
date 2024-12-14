@@ -8,85 +8,154 @@ import {
   gadgetpanel,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { COLOR, PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
-import { ispresent } from 'zss/mapping/types'
-import { memoryreadchip, memoryreadcontext } from 'zss/memory'
+import { PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
+import { createsid } from 'zss/mapping/guid'
+import { isarray, ispresent } from 'zss/mapping/types'
+import { listelementsbyattr } from 'zss/memory/atomics'
 import { bookelementdisplayread } from 'zss/memory/book'
-
-import { ARG_TYPE, readargs } from './wordtypes'
+import { BOARD_ELEMENT } from 'zss/memory/types'
+import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { statformat } from 'zss/words/stats'
+import { COLOR, STAT_TYPE } from 'zss/words/types'
 
 export const GADGET_FIRMWARE = createfirmware({
   get() {
     return [false, undefined]
   },
   set(chip, name, value) {
-    // how about we split this out into gadget firmware
     // we monitor changes on shared values here
     gadgetcheckset(chip, name, value)
     // return has unhandled
     return [false, undefined]
   },
   shouldtick() {},
-  tick(chip) {
-    const memory = memoryreadchip(chip.id())
-
+  tick() {
     let withname = 'scroll'
-    if (ispresent(memory.object?.name)) {
-      withname = memory.object.name
+    if (ispresent(READ_CONTEXT.element?.name)) {
+      withname = READ_CONTEXT.element.name
     }
-
-    gadgetpanel(memory.player, 'scroll', PANEL_TYPE.SCROLL, undefined, withname)
+    gadgetpanel(
+      READ_CONTEXT.player,
+      'scroll',
+      PANEL_TYPE.SCROLL,
+      undefined,
+      withname,
+    )
   },
-  tock(chip) {
-    const memory = memoryreadchip(chip.id())
-    const ticker = gadgetcheckscroll(memory.player)
-    if (ticker && ispresent(memory.object)) {
-      const timestamp = chip.timestamp()
-      memory.object.tickertext = ticker
-      memory.object.tickertime = timestamp
+  tock() {
+    const ticker = gadgetcheckscroll(READ_CONTEXT.player)
+    if (ticker && ispresent(READ_CONTEXT.element)) {
+      READ_CONTEXT.element.tickertext = ticker
+      READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
       // send message
-      const display = bookelementdisplayread(memory.book, memory.object)
+      const display = bookelementdisplayread(
+        READ_CONTEXT.book,
+        READ_CONTEXT.element,
+      )
       tape_info(`$${COLOR[display.color]}$${display.char}`, ticker)
     }
   },
 })
-  // gadget output & ui
-  .command('gadget', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const context = memoryreadcontext(chip, words)
+  // primary firmware
+  .command('send', (chip, words) => {
+    const [msg, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
 
-    const [edge] = readargs(context, 0, [ARG_TYPE.STRING])
-    const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
-    if (edgeConst === PANEL_TYPE.SCROLL) {
-      const [, name, size] = readargs(context, 0, [
-        ARG_TYPE.STRING,
-        ARG_TYPE.MAYBE_STRING,
-        ARG_TYPE.MAYBE_NUMBER,
-      ])
-      gadgetpanel(memory.player, edge, edgeConst, size, name)
-    } else {
-      const [, size, name] = readargs(context, 0, [
-        ARG_TYPE.STRING,
-        ARG_TYPE.MAYBE_NUMBER,
-        ARG_TYPE.MAYBE_STRING,
-      ])
-      gadgetpanel(memory.player, edge, edgeConst, size, name)
+    // determine target of send
+    const [maybetarget, maybelabel] = msg.split(':')
+
+    const target = ispresent(maybelabel) ? maybetarget : 'self'
+    const label = maybelabel ?? maybetarget
+
+    function sendtoelements(elements: BOARD_ELEMENT[]) {
+      elements.forEach((element) => {
+        if (ispresent(element.id)) {
+          chip.send(element.id, label, data)
+        }
+      })
     }
 
+    // the intent here is to gather a list of target chip ids
+    const ltarget = target.toLowerCase()
+    switch (ltarget) {
+      case 'all':
+        for (const id of Object.keys(READ_CONTEXT.board?.objects ?? {})) {
+          chip.send(id, label, data)
+        }
+        break
+      case 'self':
+        chip.message({
+          id: createsid(),
+          sender: chip.id(),
+          target: label,
+          data,
+        })
+        break
+      case 'others':
+        for (const id of Object.keys(READ_CONTEXT.board?.objects ?? {})) {
+          if (id !== chip.id()) {
+            chip.send(id, label, data)
+          }
+        }
+        break
+      default: {
+        // check named elements first
+        sendtoelements(listelementsbyattr(READ_CONTEXT.board, [target]))
+        // check to see if its a flag
+        const maybeattr = chip.get(ltarget)
+        // check to see if array
+        if (isarray(maybeattr)) {
+          sendtoelements(listelementsbyattr(READ_CONTEXT.board, maybeattr))
+        } else {
+          sendtoelements(listelementsbyattr(READ_CONTEXT.board, [maybeattr]))
+        }
+        break
+      }
+    }
     return 0
   })
-  .command('text', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
+  .command('stat', (_, words) => {
+    const stat = statformat(words.map(maptostring))
+    switch (stat.type) {
+      case STAT_TYPE.OBJECT:
+        if (ispresent(READ_CONTEXT.element)) {
+          READ_CONTEXT.element.name = stat.values.join(' ')
+        }
+        break
+    }
+    return 0
+  })
+  .command('text', (_, words) => {
     const text = words.map(maptostring).join('')
-    gadgettext(memory.player, text)
+    gadgettext(READ_CONTEXT.player, text)
     return 0
   })
   .command('hyperlink', (chip, args) => {
-    const memory = memoryreadchip(chip.id())
     // package into a panel item
     const [labelword, inputword, ...words] = args
     const label = maptostring(labelword)
     const input = maptostring(inputword)
-    gadgethyperlink(memory.player, chip, label, input, words)
+    gadgethyperlink(READ_CONTEXT.player, chip, label, input, words)
+    return 0
+  })
+  // ---
+  .command('gadget', (_, words) => {
+    const [edge] = readargs(words, 0, [ARG_TYPE.STRING])
+    const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
+    if (edgeConst === PANEL_TYPE.SCROLL) {
+      const [, name, size] = readargs(words, 0, [
+        ARG_TYPE.STRING,
+        ARG_TYPE.MAYBE_STRING,
+        ARG_TYPE.MAYBE_NUMBER,
+      ])
+      gadgetpanel(READ_CONTEXT.player, edge, edgeConst, size, name)
+    } else {
+      const [, size, name] = readargs(words, 0, [
+        ARG_TYPE.STRING,
+        ARG_TYPE.MAYBE_NUMBER,
+        ARG_TYPE.MAYBE_STRING,
+      ])
+      gadgetpanel(READ_CONTEXT.player, edge, edgeConst, size, name)
+    }
+
     return 0
   })

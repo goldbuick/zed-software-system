@@ -1,12 +1,9 @@
 import { useCallback, useState } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { paneladdress } from 'zss/gadget/data/types'
+import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import {
-  useCacheWriteTextContext,
-  tokenizeandwritetextformat,
-} from '../../data/textformat'
-import { useBlink } from '../useblink'
+import { useBlink } from '../hooks'
 import {
   UserFocus,
   UserHotkey,
@@ -56,9 +53,6 @@ export function PanelItemNumber({
   let tvalue = `${state}`
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
-
-  // keep stable re-renders
-  useCacheWriteTextContext(context)
 
   if (focus) {
     tvalue = blink ? strsplice(strvalue, cursor, 1, '$219+') : strvalue

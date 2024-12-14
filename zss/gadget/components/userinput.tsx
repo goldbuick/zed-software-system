@@ -9,9 +9,9 @@ import {
   useState,
 } from 'react'
 import { vm_cli } from 'zss/device/api'
-import { gadgetstategetplayer } from 'zss/device/gadgetclient'
-import { enableaudio } from 'zss/device/synth'
+import { ismac } from 'zss/words/system'
 
+import { getgadgetclientplayer } from '../data/state'
 import { INPUT } from '../data/types'
 
 // user input
@@ -37,9 +37,6 @@ function invoke(input: INPUT, mods: UserInputMods) {
 // keyboard input
 export type KeyboardInputHandler = (event: KeyboardEvent) => void
 
-export const ismac = navigator.userAgent.indexOf('Mac') !== -1
-export const metakey = ismac ? 'cmd' : 'ctrl'
-
 export function modsfromevent(event: KeyboardEvent): UserInputMods {
   return {
     alt: event.altKey,
@@ -51,7 +48,6 @@ export function modsfromevent(event: KeyboardEvent): UserInputMods {
 document.addEventListener(
   'keydown',
   (event) => {
-    enableaudio().catch((err) => err)
     const key = event.key.toLowerCase()
     const mods = modsfromevent(event)
 
@@ -64,7 +60,7 @@ document.addEventListener(
     switch (key) {
       case 's':
         if (mods.ctrl) {
-          vm_cli('tape', '#save', gadgetstategetplayer())
+          vm_cli('tape', '#save', getgadgetclientplayer())
         }
         event.preventDefault()
         break

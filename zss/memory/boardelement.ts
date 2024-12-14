@@ -1,6 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
+import { WORD } from 'zss/words/types'
 
 import {
   FORMAT_OBJECT,
@@ -8,7 +9,7 @@ import {
   formatobject,
   unformatobject,
 } from './format'
-import { BOARD_ELEMENT, WORD } from './types'
+import { BOARD_ELEMENT } from './types'
 
 export function createboardelement() {
   const boardelement: BOARD_ELEMENT = {
@@ -29,6 +30,7 @@ enum BOARD_ELEMENT_KEYS {
   char,
   color,
   bg,
+  player,
   pushable,
   collision,
   destructible,
@@ -41,7 +43,9 @@ enum BOARD_ELEMENT_KEYS {
   stepx,
   stepy,
   sender,
-  data,
+  arg,
+  headless,
+  removed,
 }
 
 // safe to serialize copy of boardelement
@@ -51,16 +55,6 @@ export function exportboardelement(
   return formatobject(boardelement, BOARD_ELEMENT_KEYS, {
     category: FORMAT_SKIP,
     kinddata: FORMAT_SKIP,
-    kindcode: FORMAT_SKIP,
-    headless: FORMAT_SKIP,
-    removed: FORMAT_SKIP,
-    inputmove: FORMAT_SKIP,
-    inputok: FORMAT_SKIP,
-    inputcancel: FORMAT_SKIP,
-    inputmenu: FORMAT_SKIP,
-    inputalt: FORMAT_SKIP,
-    inputctrl: FORMAT_SKIP,
-    inputshift: FORMAT_SKIP,
   })
 }
 

@@ -1,11 +1,9 @@
 import { createToken, createTokenInstance, IToken, Lexer } from 'chevrotain'
-import { createContext as createcontext, useContext, useMemo } from 'react'
 import { LANG_DEV } from 'zss/config'
-import { colorconsts } from 'zss/firmware/wordtypes'
 import { range } from 'zss/mapping/array'
-import { ispresent, MAYBE, MAYBE_NUMBER } from 'zss/mapping/types'
-
-import { COLOR, colortobg, colortofg } from './types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
+import { colorconsts, colortobg, colortofg } from 'zss/words/color'
+import { COLOR } from 'zss/words/types'
 
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 
@@ -45,7 +43,8 @@ export const EscapedDollar = createToken({
 
 export const MaybeFlag = createToken({
   name: 'MaybeFlag',
-  pattern: /\$[^ $\r\n]+/,
+  pattern: /\$[^-0-9"!;@#/?\s]+[^-"!;@#/?\s]*/,
+  // pattern: /\$[^ $\r\n]+/,
 })
 
 export const NumberLiteral = createToken({
@@ -125,7 +124,7 @@ export type WRITE_TEXT_CONTEXT = {
   disablewrap: boolean
   measureonly: boolean
   measuredwidth: number
-  writefullwidth: MAYBE_NUMBER
+  writefullwidth: MAYBE<number>
   // cursor
   x: number
   y: number
@@ -141,6 +140,8 @@ export type WRITE_TEXT_CONTEXT = {
   char: number[]
   color: number[]
   bg: number[]
+  // flag as changed
+  changed: () => void
 }
 
 export function createwritetextcontext(
@@ -148,10 +149,10 @@ export function createwritetextcontext(
   height: number,
   color: number,
   bg: number,
-  topedge?: number | undefined,
-  leftedge?: number | undefined,
-  rightedge?: number | undefined,
-  bottomedge?: number | undefined,
+  topedge?: number,
+  leftedge?: number,
+  rightedge?: number,
+  bottomedge?: number,
 ): WRITE_TEXT_CONTEXT {
   return {
     disablewrap: false,
@@ -182,6 +183,7 @@ export function createwritetextcontext(
     char: [],
     color: [],
     bg: [],
+    changed() {},
   }
 }
 
@@ -193,19 +195,6 @@ export function applywritetextcontext(
   dest.y = source.y
   dest.active.color = source.active.color
   dest.active.bg = source.active.bg
-}
-
-export function useCacheWriteTextContext(source: WRITE_TEXT_CONTEXT) {
-  const cache = useMemo(() => ({ ...source }), [source])
-  applywritetextcontext(source, cache)
-}
-
-export const WriteTextContext = createcontext(
-  createwritetextcontext(1, 1, 15, 1),
-)
-
-export function useWriteText() {
-  return useContext(WriteTextContext)
 }
 
 export function writetextreset(context: WRITE_TEXT_CONTEXT) {
@@ -223,7 +212,7 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
       ++context.y
     }
     if (context.x > context.measuredwidth) {
-      context.measuredwidth = context.x + 1
+      context.measuredwidth = context.x
     }
   }
 

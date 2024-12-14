@@ -1,9 +1,9 @@
-import { PT, STR_KIND } from 'zss/firmware/wordtypes'
-import { COLOR } from 'zss/gadget/data/types'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, MAYBE_STRING, ispresent } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
+import { STR_KIND } from 'zss/words/kind'
+import { CATEGORY, COLLISION, COLOR, PT, WORD } from 'zss/words/types'
 
 import { checkcollision } from './atomics'
 import {
@@ -28,12 +28,8 @@ import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
-  BOOK_FLAGS,
-  CATEGORY,
   CODE_PAGE,
   CODE_PAGE_TYPE,
-  COLLISION,
-  WORD,
 } from './types'
 
 // player state
@@ -42,26 +38,32 @@ export function createbook(pages: CODE_PAGE[]): BOOK {
   return {
     id: createsid(),
     name: createnameid(),
+    timestamp: 0,
+    activelist: [],
     pages,
     flags: {},
-    players: {},
   }
 }
 
 enum BOOK_KEYS {
   id,
   name,
+  timestamp,
+  activelist,
   pages,
   flags,
-  players,
 }
 
 export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
-  return formatobject(book, BOOK_KEYS)
+  return formatobject(book, BOOK_KEYS, {
+    pages: (pages) => pages.map(exportcodepage),
+  })
 }
 
 export function importbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
-  return unformatobject(bookentry, BOOK_KEYS)
+  return unformatobject(bookentry, BOOK_KEYS, {
+    pages: (pages) => pages.map(importcodepage),
+  })
 }
 
 export function bookhasmatch(book: MAYBE<BOOK>, ids: string[]): boolean {
@@ -190,74 +192,73 @@ export function bookelementdisplayread(
 
 export function bookreadobject(
   book: MAYBE<BOOK>,
-  maybeobject: MAYBE_STRING,
+  maybeobject: MAYBE<string>,
 ): MAYBE<BOARD_ELEMENT> {
   const object = maybeobject ?? ''
   const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.OBJECT, object)
   if (ispresent(page)) {
-    const stats = codepagereadstatdefaults(page)
     const data = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(page)
-    const element = {
-      ...data,
-      ...stats,
+    return {
+      ...deepcopy(data),
       name: object,
       code: page.code,
-    }
-    return element as BOARD_ELEMENT
-  } else {
-    return undefined
+    } as BOARD_ELEMENT
   }
+  return undefined
 }
 
 export function bookreadterrain(
   book: MAYBE<BOOK>,
-  maybeterrain: MAYBE_STRING,
+  maybeterrain: MAYBE<string>,
 ): MAYBE<BOARD_ELEMENT> {
   const terrain = maybeterrain ?? ''
   const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.TERRAIN, terrain)
   if (ispresent(page)) {
-    const stats = codepagereadstatdefaults(page)
     const data = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(page)
     return {
-      ...data,
-      ...stats,
+      ...deepcopy(data),
       name: terrain,
       code: page.code,
     } as BOARD_ELEMENT
-  } else {
-    return undefined
   }
+  return undefined
 }
 
 export function bookreadboard(
   book: MAYBE<BOOK>,
   address: string,
 ): MAYBE<BOARD> {
-  return codepagereaddata<CODE_PAGE_TYPE.BOARD>(
-    bookreadcodepagebyaddress(book, address),
-  )
+  const codepage = bookreadcodepagebyaddress(book, address)
+  return codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
 }
 
-export function bookreadflags(book: MAYBE<BOOK>, player: string) {
+export function bookreadflags(book: MAYBE<BOOK>, id: string) {
   if (!book) {
-    return undefined
+    return {}
   }
-  book.flags[player] = book.flags[player] ?? {}
-  return book.flags[player]
+  book.flags[id] = book.flags[id] ?? {}
+  return book.flags[id]
 }
 
-export function bookreadflag(book: MAYBE<BOOK>, player: string, name: string) {
-  const flags = bookreadflags(book, player)
+export function bookclearflags(book: MAYBE<BOOK>, id: string) {
+  if (!book) {
+    return
+  }
+  delete book.flags[id]
+}
+
+export function bookreadflag(book: MAYBE<BOOK>, id: string, name: string) {
+  const flags = bookreadflags(book, id)
   return flags?.[name]
 }
 
-export function booksetflag(
+export function bookwriteflag(
   book: MAYBE<BOOK>,
-  player: string,
+  id: string,
   name: string,
   value: WORD,
 ) {
-  const flags = bookreadflags(book, player)
+  const flags = bookreadflags(book, id)
   if (flags) {
     flags[name] = value
   }
@@ -265,7 +266,8 @@ export function booksetflag(
 }
 
 export function bookplayerreadboard(book: MAYBE<BOOK>, player: string) {
-  return bookreadboard(book, book?.players[player] ?? '')
+  const value = bookreadflag(book, player, 'board')
+  return bookreadboard(book, isstring(value) ? value : '')
 }
 
 export function bookplayersetboard(
@@ -273,13 +275,36 @@ export function bookplayersetboard(
   player: string,
   board: string,
 ) {
-  if (ispresent(book) && ispresent(bookreadboard(book, board))) {
-    book.players[player] = board
+  if (!ispresent(book)) {
+    return
+  }
+  // write board flag
+  bookwriteflag(book, player, 'board', board)
+
+  // determine if player is on a board
+  const maybeboard = bookreadboard(book, board)
+  if (ispresent(maybeboard)) {
+    // ensure player is listed as active
+    if (!book.activelist.includes(player)) {
+      book.activelist.push(player)
+    }
+  } else {
+    // ensure player is not listed as active
+    book.activelist = book.activelist.filter((id) => id !== player)
   }
 }
 
+function bookplayerreadboardids(book: MAYBE<BOOK>) {
+  const activelist = book?.activelist ?? []
+  const boardids = activelist.map((player) => {
+    const value = bookreadflag(book, player, 'board')
+    return isstring(value) ? value : ''
+  })
+  return unique(boardids)
+}
+
 export function bookplayerreadboards(book: MAYBE<BOOK>) {
-  const ids = unique(Object.values(book?.players ?? {}))
+  const ids = bookplayerreadboardids(book)
   return ids.map((address) => bookreadboard(book, address)).filter(ispresent)
 }
 
@@ -315,19 +340,20 @@ export function bookboardmoveobject(
   }
 
   // gather meta for move
-  const idx = dest.x + dest.y * BOARD_WIDTH
+  const startidx = object.x + object.y * BOARD_WIDTH
+  const targetidx = dest.x + dest.y * BOARD_WIDTH
   const targetkind = bookelementkindread(book, object)
   const targetcollision = object.collision ?? targetkind?.collision
 
   // blocked by an object
-  const maybeobject = boardobjectread(board, board.lookup[idx] ?? '')
+  const maybeobject = boardobjectread(board, board.lookup[targetidx] ?? '')
   if (ispresent(maybeobject)) {
     // for sending interaction messages
     return { ...maybeobject }
   }
 
   // blocked by terrain
-  const mayberterrain = board.terrain[idx]
+  const mayberterrain = board.terrain[targetidx]
   if (ispresent(mayberterrain)) {
     const terrainkind = bookelementkindread(book, mayberterrain)
     const terraincollision = mayberterrain.collision ?? terrainkind?.collision
@@ -344,10 +370,9 @@ export function bookboardmoveobject(
   // if not removed, update lookup
   if (!ispresent(object.removed)) {
     // blank current lookup
-    board.lookup[idx] = undefined
-
-    // update lookup
-    board.lookup[object.x + object.y * BOARD_WIDTH] = object.id ?? ''
+    board.lookup[startidx] = undefined
+    // update lookup at dest
+    board.lookup[targetidx] = object.id ?? ''
   }
 
   // no interaction
@@ -520,8 +545,9 @@ function bookboardcleanup(
   board: MAYBE<BOARD>,
   timestamp: number,
 ) {
+  const ids: string[] = []
   if (!ispresent(book) || !ispresent(board)) {
-    return
+    return ids
   }
   // iterate through objects
   const targets = Object.values(board.objects)
@@ -534,10 +560,13 @@ function bookboardcleanup(
       ispresent(target.removed) &&
       timestamp - target.removed > TICK_FPS * 5
     ) {
+      // track dropped ids
+      ids.push(target.id)
       // drop from board
       boarddeleteobject(board, target.id)
     }
   }
+  return ids
 }
 
 type BOOK_RUN_CODE_TARGETS = {
@@ -604,7 +633,16 @@ export function bookboardtick(
   }
 
   // cleanup objects flagged for deletion
-  bookboardcleanup(book, board, timestamp)
+  const stopids = bookboardcleanup(book, board, timestamp)
+  for (let i = 0; i < stopids.length; ++i) {
+    args.push({
+      id: stopids[i],
+      type: CODE_PAGE_TYPE.ERROR,
+      code: '',
+      object: undefined,
+      terrain: undefined,
+    })
+  }
 
   // return code that needs to be run
   return args

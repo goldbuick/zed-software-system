@@ -1,48 +1,35 @@
 import { useEffect } from 'react'
 import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
-import { useTape } from 'zss/device/tape'
-import { textformatreadedges, useWriteText } from 'zss/gadget/data/textformat'
+import { useWriteText } from 'zss/gadget/components/hooks'
+import { useTape, useTapeEditor } from 'zss/gadget/data/state'
+import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { textformatreadedges } from 'zss/words/textformat'
+import { useShallow } from 'zustand/react/shallow'
 
-import {
-  findcursorinrows,
-  sharedtosynced,
-  splitcoderows,
-  tapeeditorstate,
-  useTapeEditor,
-} from './common'
+import { findcursorinrows, sharedtosynced, splitcoderows } from './common'
 import { BackPlate } from './elements/backplate'
 import { EditorFrame } from './elements/editorframe'
 import { EditorInput } from './elements/editorinput'
 import { EditorRows } from './elements/editorrows'
-import { clamp } from 'zss/mapping/number'
 
 export function TapeEditor() {
-  const tape = useTape()
+  const [editor] = useTape(useShallow((state) => [state.editor]))
+
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
   const codepage = useWaitForValueString(
-    vm_codeaddress(tape.editor.book, tape.editor.page),
+    vm_codeaddress(editor.book, editor.page),
   )
   const edge = textformatreadedges(context)
 
   useEffect(() => {
-    vm_codewatch(
-      'editor',
-      tape.editor.book,
-      tape.editor.page,
-      tape.editor.player,
-    )
+    vm_codewatch('editor', editor.book, editor.page, editor.player)
     return () => {
-      vm_coderelease(
-        'editor',
-        tape.editor.book,
-        tape.editor.page,
-        tape.editor.player,
-      )
+      vm_coderelease('editor', editor.book, editor.page, editor.player)
     }
-  }, [tape.editor.book, tape.editor.page, tape.editor.player])
+  }, [editor.book, editor.page, editor.player])
 
   // split by line
   const value = sharedtosynced(codepage)
@@ -61,15 +48,14 @@ export function TapeEditor() {
   const maxscroll = rows.length - 4
   useEffect(() => {
     const delta = ycursor - tapeeditor.scroll
+    let scroll = tapeeditor.scroll
     if (delta > edge.height - 8) {
-      tapeeditorstate.scroll++
+      scroll++
     }
     if (delta < 4) {
-      tapeeditorstate.scroll--
+      scroll--
     }
-    tapeeditorstate.scroll = Math.round(
-      clamp(tapeeditorstate.scroll, 0, maxscroll),
-    )
+    useTapeEditor.setState({ scroll: Math.round(clamp(scroll, 0, maxscroll)) })
   }, [ycursor, tapeeditor.scroll, maxscroll, edge.height])
 
   return (

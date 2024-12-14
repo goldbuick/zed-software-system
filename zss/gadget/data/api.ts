@@ -1,5 +1,5 @@
 import Case from 'case'
-import { CHIP, STATE } from 'zss/chip'
+import { CHIP } from 'zss/chip'
 import {
   modemobservevaluenumber,
   modemobservevaluestring,
@@ -9,14 +9,8 @@ import {
   modemwritevaluestring,
 } from 'zss/device/modem'
 import { createsid } from 'zss/mapping/guid'
-import {
-  MAYBE_NUMBER,
-  MAYBE_STRING,
-  ispresent,
-  isnumber,
-  isstring,
-} from 'zss/mapping/types'
-import { WORD } from 'zss/memory/types'
+import { ispresent, isnumber, isstring, MAYBE } from 'zss/mapping/types'
+import { WORD } from 'zss/words/types'
 
 import {
   GADGET_STATE,
@@ -30,13 +24,14 @@ import {
 
 const panelshared: Record<string, PANEL_SHARED> = {}
 
-function initstate(state: STATE, player: string): GADGET_STATE {
-  state.player = player
-  state.layers = []
-  state.layout = []
-  state.layoutreset = true
-  state.layoutfocus = 'scroll'
-  return state as GADGET_STATE
+export function initstate(player: string): GADGET_STATE {
+  return {
+    player,
+    layers: [],
+    panels: [],
+    reset: true,
+    focus: 'scroll',
+  }
 }
 
 function resetpanel(panel: PANEL) {
@@ -50,29 +45,25 @@ function resetpanel(panel: PANEL) {
   panelshared[panel.id] = {}
 }
 
-function findpanel(state: STATE): PANEL {
+function findpanel(state: GADGET_STATE): PANEL {
   // find slot
-  const panel = state.layout.find(
-    (panel: PANEL) => panel.name === state.layoutfocus,
-  )
+  const panel = state.panels.find((panel: PANEL) => panel.name === state.focus)
 
   if (!panel) {
     const newPanel: PANEL = {
       id: createsid(),
-      name: state.layoutfocus,
+      name: state.focus,
       edge: PANEL_TYPE.RIGHT,
       size: 20,
       text: [],
     }
-    state.layout.push(newPanel)
-    state.layoutreset = false
+    state.panels.push(newPanel)
+    state.reset = false
     return newPanel
   }
 
   return panel
 }
-
-const allgadgetstate: STATE = {}
 
 const HYPERLINK_TYPES = new Set([
   'hk',
@@ -111,21 +102,29 @@ const HYPERLINK_WITH_SHARED_DEFAULTS = {
   text: '',
 }
 
-export function gadgetstate(player: string) {
-  let value: GADGET_STATE = allgadgetstate[player]
-  return ispresent(value)
-    ? value
-    : (allgadgetstate[player] = value = initstate({}, player))
+type GADGET_STATE_PROVIDER = (player: string) => GADGET_STATE
+
+const tempgadgetstate: Record<string, GADGET_STATE> = {}
+let GADGET_PROVIDER = (player: string) => {
+  let value = tempgadgetstate[player]
+  if (!ispresent(value)) {
+    tempgadgetstate[player] = value = initstate(player)
+  }
+  return value
 }
 
-export function gadgetplayers() {
-  return Object.keys(allgadgetstate)
+export function gadgetstateprovider(provider: GADGET_STATE_PROVIDER) {
+  GADGET_PROVIDER = provider
+}
+
+export function gadgetstate(player: string) {
+  return GADGET_PROVIDER(player)
 }
 
 export function gadgetclearscroll(player: string) {
   const shared = gadgetstate(player)
-  shared.layout = shared.layout.filter(
-    (item) => item.edge !== PANEL_TYPE.SCROLL,
+  shared.panels = shared.panels.filter(
+    (panel) => panel.edge !== PANEL_TYPE.SCROLL,
   )
 }
 
@@ -150,7 +149,7 @@ export function gadgetcheckscroll(player: string) {
   let ticker = ''
   const shared = gadgetstate(player)
 
-  shared.layout = shared.layout.filter((item) => {
+  shared.panels = shared.panels.filter((item) => {
     if (item.edge === PANEL_TYPE.SCROLL) {
       const [line] = item.text
       // catch single lines of text and turn into ticker messages
@@ -169,22 +168,22 @@ export function gadgetpanel(
   player: string,
   edge: string,
   edgeConst: PANEL_TYPE,
-  maybesize: MAYBE_NUMBER,
-  maybename: MAYBE_STRING,
+  maybesize: MAYBE<number>,
+  maybename: MAYBE<string>,
 ) {
   // get state
   const shared = gadgetstate(player)
   const size = maybesize
   const name = maybename ?? Case.capital(edge)
 
-  const panelState: PANEL | undefined = shared.layout.find(
+  const panelState: PANEL | undefined = shared.panels.find(
     (panel: PANEL) => panel.name === name,
   )
 
   if (panelState) {
     // set focus to panel and mark for reset
-    shared.layoutreset = true
-    shared.layoutfocus = name
+    shared.reset = true
+    shared.focus = name
     // you can also resize panels
     if (isnumber(size)) {
       panelState.size = size
@@ -192,7 +191,7 @@ export function gadgetpanel(
   } else {
     switch (edgeConst) {
       case PANEL_TYPE.START:
-        initstate(shared, player)
+        initstate(player)
         break
       case PANEL_TYPE.LEFT:
       case PANEL_TYPE.RIGHT:
@@ -206,8 +205,8 @@ export function gadgetpanel(
           size: size ?? PANEL_TYPE_SIZES[edgeConst],
           text: [],
         }
-        shared.layout.push(panel)
-        shared.layoutfocus = name
+        shared.panels.push(panel)
+        shared.focus = name
         break
       }
       default:
@@ -226,8 +225,8 @@ export function gadgettext(player: string, text: string) {
   const panel = findpanel(shared)
 
   // add text
-  if (shared.layoutreset) {
-    shared.layoutreset = false
+  if (shared.reset) {
+    shared.reset = false
     resetpanel(panel)
   }
 
@@ -248,8 +247,8 @@ export function gadgethyperlink(
   const panel = findpanel(shared)
 
   // add hyperlink
-  if (shared.layoutreset) {
-    shared.layoutreset = false
+  if (shared.reset) {
+    shared.reset = false
     resetpanel(panel)
   }
 
@@ -298,12 +297,6 @@ export function gadgethyperlink(
           address,
           (value) => {
             if (ispresent(value) && value !== chip.get(name)) {
-              console.info(
-                'modemobservevaluestring??',
-                name,
-                value,
-                chip.get(name),
-              )
               chip.set(name, value)
             }
           },
@@ -313,12 +306,6 @@ export function gadgethyperlink(
           address,
           (value) => {
             if (ispresent(value) && value !== chip.get(name)) {
-              console.info(
-                'modemobservevaluenumber??',
-                name,
-                value,
-                chip.get(name),
-              )
               chip.set(name, value)
             }
           },

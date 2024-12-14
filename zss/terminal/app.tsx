@@ -1,16 +1,50 @@
+import { extend } from '@react-three/fiber'
+import {
+  BufferGeometry,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  OrthographicCamera,
+  PlaneGeometry,
+  Points,
+} from 'three'
 import { vm_loadfile } from 'zss/device/api'
-import { gadgetstategetplayer } from 'zss/device/gadgetclient'
+import { enableaudio } from 'zss/device/synth'
+import { getgadgetclientplayer } from 'zss/gadget/data/state'
 import { ispresent } from 'zss/mapping/types'
+
+import { Terminal } from './terminal'
 
 import 'zss/platform'
 
-import { Terminal } from './terminal'
+extend({
+  BufferGeometry,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  OrthographicCamera,
+  PlaneGeometry,
+  Points,
+})
+
+document.addEventListener('keydown', () => {
+  enableaudio()
+})
+
+window.addEventListener('touchstart', () => {
+  enableaudio()
+})
+
+window.addEventListener('click', () => {
+  enableaudio()
+})
 
 window.addEventListener('dragover', (event) => {
   event.preventDefault()
 })
 
 window.addEventListener('contextmenu', (event) => {
+  enableaudio()
   event.preventDefault()
 })
 
@@ -20,15 +54,20 @@ window.addEventListener('paste', (event) => {
   }
 
   // Prevent the default behavior, so you can code your own logic.
+  enableaudio()
   event.preventDefault()
 
   // read files from clipboardData
   const files = [...event.clipboardData.files]
-  files.forEach((file) => vm_loadfile('loadfile', file, gadgetstategetplayer()))
+  files.forEach((file) =>
+    vm_loadfile('loadfile', file, getgadgetclientplayer()),
+  )
 })
 
 window.addEventListener('drop', (event) => {
+  enableaudio()
   event.preventDefault()
+
   if (event.dataTransfer?.items) {
     const items = [...event.dataTransfer.items]
     // Use DataTransferItemList interface to access the file(s)
@@ -37,7 +76,7 @@ window.addEventListener('drop', (event) => {
       if (item.kind === 'file') {
         const file = item.getAsFile()
         if (ispresent(file)) {
-          vm_loadfile('loadfile', file, gadgetstategetplayer())
+          vm_loadfile('loadfile', file, getgadgetclientplayer())
         }
       }
     })
@@ -45,7 +84,7 @@ window.addEventListener('drop', (event) => {
     // Use DataTransfer interface to access the file(s)
     const files = [...(event.dataTransfer?.files ?? [])]
     files.forEach((file) =>
-      vm_loadfile('loadfile', file, gadgetstategetplayer()),
+      vm_loadfile('loadfile', file, getgadgetclientplayer()),
     )
   }
 })

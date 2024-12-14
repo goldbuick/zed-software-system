@@ -5,6 +5,7 @@ without having to include device code
 
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
+import { MAYBE } from 'zss/mapping/types'
 
 // be careful to keep imports here minimal
 
@@ -43,12 +44,51 @@ export function register_flush(sender: string, books: string) {
   hub.emit('register:flush', sender, books)
 }
 
+export function register_share(sender: string, player: string) {
+  hub.emit('register:share', sender, undefined, player)
+}
+
+export function register_refresh(sender: string) {
+  hub.emit('register:refresh', sender)
+}
+
+export function register_select(sender: string, book: string) {
+  hub.emit('register:select', sender, book)
+}
+
+export function register_nuke(sender: string) {
+  hub.emit('register:nuke', sender)
+}
+
 export function register_nodetrash(sender: string) {
   hub.emit('register:nodetrash', sender)
 }
 
+export function register_fullscreen(sender: string) {
+  hub.emit('register:fullscreen', sender)
+}
+
 export function synth_play(sender: string, priority: number, buffer: string) {
   hub.emit('synth:play', sender, [priority, buffer])
+}
+
+export function synth_voice(
+  sender: string,
+  idx: number,
+  config: number | string,
+  value: MAYBE<number | string>,
+) {
+  hub.emit('synth:voice', sender, [idx, config, value])
+}
+
+export function synth_voicefx(
+  sender: string,
+  idx: number,
+  fx: string,
+  config: number | string,
+  value: number | string,
+) {
+  hub.emit('synth:voicefx', sender, [idx, fx, config, value])
 }
 
 export function tape_info(sender: string, ...message: any[]) {
@@ -102,12 +142,21 @@ export function vm_init(sender: string, player: string) {
   hub.emit('vm:init', sender, undefined, player)
 }
 
-export function vm_books(sender: string, books: string, player: string) {
-  hub.emit('vm:books', sender, books, player)
+export function vm_books(
+  sender: string,
+  books: string,
+  select: string,
+  player: string,
+) {
+  hub.emit('vm:books', sender, [books, select], player)
 }
 
 export function vm_login(sender: string, player: string) {
   hub.emit('vm:login', sender, undefined, player)
+}
+
+export function vm_endgame(sender: string, player: string) {
+  hub.emit('vm:endgame', sender, undefined, player)
 }
 
 export function vm_doot(sender: string, player: string) {
@@ -117,7 +166,7 @@ export function vm_doot(sender: string, player: string) {
 export function vm_input(
   sender: string,
   input: INPUT,
-  mods: Record<INPUT, number>,
+  mods: number,
   player: string,
 ) {
   hub.emit('vm:input', sender, [input, mods], player)

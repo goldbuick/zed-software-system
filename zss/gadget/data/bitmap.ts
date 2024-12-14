@@ -1,5 +1,3 @@
-import { createsid } from 'zss/mapping/guid'
-
 export type BITMAP = {
   width: number
   height: number

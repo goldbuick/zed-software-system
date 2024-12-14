@@ -1,13 +1,12 @@
-import { useTape } from 'zss/device/tape'
+import { useBlink, useWriteText, writeTile } from 'zss/gadget/components/hooks'
+import { useTape } from 'zss/gadget/data/state'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
-  useWriteText,
-} from 'zss/gadget/data/textformat'
+} from 'zss/words/textformat'
+import { useShallow } from 'zustand/react/shallow'
 
-import { useBlink } from '../../useblink'
-import { writeTile } from '../../usetiles'
 import { BG, FG, setupeditoritem } from '../common'
 
 export function EditorFrame() {
@@ -36,7 +35,10 @@ export function EditorFrame() {
   setupeditoritem(false, false, 0, edge.height - 1, context, 0, 0, 0)
   tokenizeandwritetextformat(`$212${bottomchrs}$190`, context, true)
 
-  const tape = useTape()
+  const [editortype, editortitle] = useTape(
+    useShallow((state) => [state.editor.type, state.editor.title]),
+  )
+
   const blink = useBlink()
 
   const egbottom = `$205`.repeat(edge.width - 4)
@@ -48,15 +50,16 @@ export function EditorFrame() {
   )
 
   // make label
-  const label = tape.editor.type === 'object' ? '' : `[${tape.editor.type}] `
+  const label = `[${editortype}] `
 
   // write name
-  const title = ` ${label}${tape.editor.title} `
+  const title = ` ${label}${editortitle} `
   const result = tokenizeandmeasuretextformat(title, edge.width, edge.height)
   const titlewidth = result?.measuredwidth ?? 1
   const titlex = Math.round(edge.width * 0.5) - Math.round(titlewidth * 0.5)
   setupeditoritem(false, false, titlex, 0, context, 0, 0, 0)
   tokenizeandwritetextformat(title, context, true)
 
+  context.changed()
   return null
 }

@@ -1,8 +1,8 @@
-import { useWriteText, writetextreset } from 'zss/gadget/data/textformat'
+import { useWriteText } from 'zss/gadget/components/hooks'
+import { useGadgetClientPlayer } from 'zss/gadget/data/state'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { isarray } from 'zss/mapping/types'
-
-import { usePlayer } from '../useplayer'
+import { writetextreset } from 'zss/words/textformat'
 
 import { PanelItemContent } from './content'
 import { PanelItemHotkey } from './hotkey'
@@ -18,7 +18,7 @@ type PanelItemProps = {
 }
 
 export function PanelItem({ item, active }: PanelItemProps) {
-  const player = usePlayer()
+  const player = useGadgetClientPlayer()
   const context = useWriteText()
 
   context.iseven = context.y % 2 === 0

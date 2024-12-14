@@ -1,40 +1,74 @@
-import { compare, deepClone } from 'fast-json-patch'
+import { compare } from 'fast-json-patch'
 import { createdevice } from 'zss/device'
 import {
   gadgetclearscroll,
-  gadgetplayers,
   gadgetstate,
+  gadgetstateprovider,
+  initstate,
 } from 'zss/gadget/data/api'
-import { GADGET_STATE } from 'zss/gadget/data/types'
-import { memoryreadgadgetlayers } from 'zss/memory'
+import { deepcopy, ispresent } from 'zss/mapping/types'
+import {
+  MEMORY_LABEL,
+  memoryreadbookbysoftware,
+  memoryreadgadgetlayers,
+} from 'zss/memory'
+import { bookreadflags } from 'zss/memory/book'
 
 import { gadgetclient_patch, gadgetclient_reset } from './api'
 
-// tracking gadget state for individual players
-const syncstate: Record<string, GADGET_STATE> = {}
+gadgetstateprovider((player) => {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return initstate('')
+  }
+  // cheating here as data is non-WORD compliant
+  const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
+
+  // group by player
+  let value = gadgetstore[player]
+
+  // make sure to init state
+  if (!ispresent(value)) {
+    gadgetstore[player] = value = initstate(player)
+  }
+  return value
+})
 
 const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
+  // get list of active players
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const activelist = mainbook?.activelist ?? []
+
+  // cheating here as data is non-WORD compliant
+  const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
+
   switch (message.target) {
     case 'tock':
-      // we need to sync gadget here
-      gadgetplayers().forEach((player) => {
-        const shared = gadgetstate(player)
+      for (let i = 0; i < activelist.length; ++i) {
+        const player = activelist[i]
+
+        // get current state
+        const gadget = gadgetstate(player)
 
         // update gadget layers from player's current board
-        shared.layers = memoryreadgadgetlayers(player)
+        gadget.layers = memoryreadgadgetlayers(player)
 
         // write patch
-        const patch = compare(syncstate[player] ?? {}, shared)
+        const previous = gadgetsync[player] ?? {}
+        const patch = compare(previous, gadget)
         if (patch.length) {
-          syncstate[player] = deepClone(shared)
+          gadgetsync[player] = deepcopy(gadget)
           gadgetclient_patch(gadgetserverdevice.name(), patch, player)
         }
-      })
+      }
       break
     case 'desync':
       if (message.player) {
-        const state = gadgetstate(message.player)
-        gadgetclient_reset(gadgetserverdevice.name(), state, message.player)
+        gadgetclient_reset(
+          gadgetserverdevice.name(),
+          gadgetstate(message.player),
+          message.player,
+        )
       }
       break
     case 'clearscroll':

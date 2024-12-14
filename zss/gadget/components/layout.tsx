@@ -2,19 +2,18 @@ import { useThree } from '@react-three/fiber'
 import { deepClone, _areEquals } from 'fast-json-patch'
 import React, { useState } from 'react'
 import { gadgetserver_clearscroll } from 'zss/device/api'
+import { useEqual, useGadgetClient } from 'zss/gadget/data/state'
 import {
   DRAW_CHAR_HEIGHT,
   DRAW_CHAR_WIDTH,
-  PANEL,
   PANEL_TYPE,
   PANEL_ITEM,
-  LAYER,
 } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
 
-import { StaticDither } from './dither'
 import { Framed } from './framed'
+import { StaticDither } from './framed/dither'
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'
 import { Scroll } from './scroll'
@@ -36,23 +35,15 @@ type RECT = {
 }
 
 type LayoutRectProps = {
-  player: string
-  layers: LAYER[]
   rect: RECT
   shouldclose?: boolean
 }
 
-function LayoutRect({
-  player,
-  layers,
-  rect,
-  shouldclose = false,
-}: LayoutRectProps) {
+function LayoutRect({ rect, shouldclose = false }: LayoutRectProps) {
   switch (rect.type) {
     case RECT_TYPE.PANEL:
       return (
         <Panel
-          player={player}
           name={rect.name}
           width={rect.width}
           height={rect.height}
@@ -61,11 +52,9 @@ function LayoutRect({
           text={rect.text}
         />
       )
-
     case RECT_TYPE.SCROLL:
       return (
         <Scroll
-          player={player}
           name={rect.name}
           width={rect.width}
           height={rect.height}
@@ -75,27 +64,13 @@ function LayoutRect({
           shouldclose={shouldclose}
         />
       )
-
     case RECT_TYPE.FRAMED:
-      return (
-        <Framed
-          player={player}
-          layers={layers}
-          width={rect.width}
-          height={rect.height}
-        />
-      )
+      return <Framed width={rect.width} height={rect.height} />
   }
   return null
 }
 
-type LayoutProps = {
-  player: string
-  layers: LAYER[]
-  layout: PANEL[]
-}
-
-export function Layout({ player, layers, layout }: LayoutProps) {
+export function Layout() {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
@@ -106,9 +81,12 @@ export function Layout({ player, layers, layout }: LayoutProps) {
 
   // cache scroll
   const [scroll, setScroll] = useState<RECT>()
+  const [player, panels] = useGadgetClient(
+    useEqual((state) => [state.gadget.player, state.gadget.panels]),
+  )
 
   // bail on odd states
-  if (width < 1 || height < 1 || layers === undefined || layout === undefined) {
+  if (width < 1 || height < 1) {
     return null
   }
 
@@ -127,7 +105,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
   const rects: RECT[] = []
 
   let noscroll = true
-  layout.forEach((panel) => {
+  panels.forEach((panel) => {
     let rect: RECT
     switch (panel.edge) {
       case PANEL_TYPE.LEFT:
@@ -230,7 +208,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
     >
       {/* eslint-disable-next-line react/no-unknown-property */}
       <group position={[marginX * 0.5, marginY * 0.5, -512]}>
-        {rects.map((rect, i) => {
+        {rects.map((rect) => {
           return (
             <group
               key={rect.name}
@@ -238,10 +216,10 @@ export function Layout({ player, layers, layout }: LayoutProps) {
               position={[
                 rect.x * DRAW_CHAR_WIDTH,
                 rect.y * DRAW_CHAR_HEIGHT,
-                i * 10,
+                0,
               ]}
             >
-              <LayoutRect player={player} layers={layers} rect={rect} />
+              <LayoutRect rect={rect} />
             </group>
           )
         })}
@@ -261,12 +239,7 @@ export function Layout({ player, layers, layout }: LayoutProps) {
                 900,
               ]}
             >
-              <LayoutRect
-                player={player}
-                layers={layers}
-                rect={scroll}
-                shouldclose={noscroll}
-              />
+              <LayoutRect rect={scroll} shouldclose={noscroll} />
             </group>
           </React.Fragment>
         )}

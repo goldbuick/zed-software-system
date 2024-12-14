@@ -1,15 +1,15 @@
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
-import { useBlink } from 'zss/gadget/components/useblink'
+import { useTapeEditor } from 'zss/gadget/data/state'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   applycolortoindexes,
   textformatedges,
   textformatreadedges,
   tokenizeandwritetextformat,
-  useWriteText,
   writeplaintext,
-} from 'zss/gadget/data/textformat'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+} from 'zss/words/textformat'
 
+import { useBlink, useWriteText } from '../../hooks'
 import {
   BG,
   BG_ACTIVE,
@@ -17,7 +17,6 @@ import {
   EDITOR_CODE_ROW,
   FG_SELECTED,
   setupeditoritem,
-  useTapeEditor,
 } from '../common'
 
 type TextrowsProps = {
@@ -109,5 +108,6 @@ export function EditorRows({
   }
   context.disablewrap = false
 
+  context.changed()
   return null
 }

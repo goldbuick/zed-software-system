@@ -6,125 +6,229 @@ import {
   vm_codeaddress,
   vm_flush,
   register_nodetrash,
+  register_nuke,
+  register_fullscreen,
+  register_share,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 import {
+  MEMORY_LABEL,
   memoryclearbook,
   memorycreatesoftwarebook,
   memoryensuresoftwarebook,
+  memoryensuresoftwarecodepage,
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
-  memoryreadchip,
-  memoryreadcontext,
-  memorysetbook,
   memorysetsoftwarebook,
 } from 'zss/memory'
-import {
-  bookclearcodepage,
-  bookreadcodepagebyaddress,
-  bookreadflag,
-  booksetflag,
-  createbook,
-} from 'zss/memory/book'
+import { bookclearcodepage, bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepagereadname, codepagereadtypetostring } from 'zss/memory/codepage'
-
-import { ARG_TYPE, readargs } from './wordtypes'
-
-const ismac = navigator.userAgent.indexOf('Mac') !== -1
-const metakey = ismac ? 'cmd' : 'ctrl'
-
-const COLOR_EDGE = '$dkpurple'
-
-const CHR_TM = '$196'
-const CHR_BM = '$205'
-
-function fg(color: string, text: string) {
-  return `$${color}${text}$blue`
-}
-
-function bg(color: string, text: string) {
-  return `$${color}${text}$ondkblue`
-}
-
-function write(text: string) {
-  tape_info('cli', text)
-}
-
-function writetbar(width: number) {
-  const CHR_TBAR = CHR_TM.repeat(width)
-  write(`${COLOR_EDGE}${CHR_TBAR}`)
-}
-
-function writebbar(width: number) {
-  const CHR_BBAR = CHR_BM.repeat(width)
-  write(`${COLOR_EDGE}${CHR_BBAR}`)
-}
-
-function writeheader(header: string) {
-  // const CHR_TBAR = CHR_TM.repeat(header.length + 2)
-  // const CHR_BBAR = CHR_BM.repeat(header.length + 2)
-  write(`${COLOR_EDGE} ${' '.repeat(header.length)} `)
-  writetbar(header.length + 2)
-  // write(`${COLOR_EDGE}${CHR_TBAR}`)
-  write(`${COLOR_EDGE} $white${header} `)
-  writebbar(header.length + 2)
-  // write(`${COLOR_EDGE}${CHR_BBAR}`)
-}
-
-function writesection(section: string) {
-  // const CHR_BBAR = CHR_BM.repeat(section.length + 2)
-  write(`${COLOR_EDGE} ${' '.repeat(section.length)} `)
-  write(`${COLOR_EDGE} $gray${section} `)
-  writebbar(section.length + 2)
-  // write(`${COLOR_EDGE}${CHR_BBAR}`)
-}
-
-function writeoption(option: string, label: string) {
-  write(`${COLOR_EDGE} $white${option} $blue${label}`)
-}
-
-function writetext(text: string) {
-  write(`${COLOR_EDGE}$blue${text}`)
-}
-
-function ensureopenbookinmain() {
-  return memoryensuresoftwarebook('main')
-}
+import { CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { stattypestring } from 'zss/words/stats'
+import { metakey } from 'zss/words/system'
+import { STAT_TYPE } from 'zss/words/types'
+import {
+  bg,
+  fg,
+  write,
+  writebbar,
+  writeheader,
+  writeoption,
+  writesection,
+  writetext,
+} from 'zss/words/writeui'
 
 export const CLI_FIRMWARE = createfirmware({
-  get(chip, name) {
-    // check player's flags
-    const memory = memoryreadchip(chip.id())
-    // then global
-    const value = bookreadflag(memory.book, memory.player, name)
-    return [ispresent(value), value]
+  get() {
+    return [false, undefined]
   },
-  set(chip, name, value) {
-    const memory = memoryreadchip(chip.id())
-    // set player's flags
-    booksetflag(memory.book, memory.player, name, value)
-    return [true, value]
+  set() {
+    return [false, undefined]
   },
   shouldtick() {},
   tick() {},
   tock() {},
 })
-  .command('stat', (chip, words) => {
-    const [maybeargs] = words
-    if (!isstring(maybeargs)) {
-      return 0
+  // primary firmware
+  .command('send', (_, words) => {
+    const [msg, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+
+    switch (msg) {
+      // help messages
+      case 'helpmenu':
+        writeheader('cli', `H E L P`)
+        writeoption('cli', `#help controls`, `zss controls and inputs`)
+        write('cli', `!helpcontrols;read help controls`)
+        write('cli', ``)
+        writeoption('cli', `#help text`, `text formatting`)
+        write('cli', `!helptext;read help text`)
+        write('cli', ``)
+        writeoption('cli', `#help developer`, `developer commands`)
+        write('cli', `!helpdeveloper;read help developer`)
+        write('cli', ``)
+        writeoption('cli', `#help player`, `player settings`)
+        write('cli', `!helpplayer;read help player`)
+        writesection('cli', `keyboard input`)
+        writeoption('cli', `?`, `open console`)
+        writeoption('cli', `esc`, `close console`)
+        writeoption('cli', `tab`, `move console`)
+        writeoption('cli', `up / down arrow keys`, `navigate console items`)
+        writeoption('cli', `left / right arrow keys`, `change console items`)
+        writeoption('cli', `enter`, `interact with console items`)
+        writeoption('cli', `alt + arrow keys`, `skip words and console lines`)
+        writeoption('cli', `${metakey} + up / down arrow keys`, `input history`)
+        break
+      case 'helpcontrols':
+        writeheader('cli', `zss controls and inputs`)
+        writesection('cli', `keyboard input`)
+        writeoption('cli', `arrow keys`, `move`)
+        writeoption('cli', `shift + arrow keys`, `shoot`)
+        writeoption('cli', `enter`, `ok / accept`)
+        writeoption('cli', `escape`, `cancel / close`)
+        writeoption('cli', `tab`, `menu / action`)
+        writesection('cli', `mouse input`)
+        writetext('cli', `todo ???`)
+        writesection('cli', `controller input`)
+        writeoption('cli', `left stick`, `move`)
+        writeoption('cli', `right stick`, `aim`)
+        writeoption('cli', `a`, `ok / accept`)
+        writeoption('cli', `b`, `cancel / close`)
+        writeoption('cli', `y`, `menu / action`)
+        writeoption('cli', `x`, `shoot`)
+        writeoption('cli', `triggers`, `shoot`)
+        break
+      case 'helptext':
+        writeheader('cli', `text formatting`)
+        writesection('cli', `typography`)
+        writetext('cli', `plain text`)
+        writetext('cli', `$centering text`)
+        writetext('cli', `"\\"@quoted strings for special chars\\""`)
+        writetext('cli', `$$0-255 for ascii chars $159$176$240`)
+        writetext(
+          'cli',
+          `use color names like ${fg('red', '$$red')} to change foreground color`,
+        )
+        writetext(
+          'cli',
+          `use color names like ${bg('ongreen', '$$ongreen')} to change background color`,
+        )
+        writetext(
+          'cli',
+          `use clear ${bg('clear', 'to change background to')} transparent`,
+        )
+        writesection('cli', `hyperlinks`)
+        writetext(
+          'cli',
+          `${fg('white', '"!hotkey"')} message shortcut;${fg('gray', 'Label')}`,
+        )
+        writetext(
+          'cli',
+          `${fg('white', '"!range"')} flag [labelmin] [labelmax];${fg('gray', 'Input Label')}`,
+        )
+        writetext(
+          'cli',
+          `${fg('white', '"!select"')} flag ...list of values;${fg('gray', 'Input Label')}`,
+        )
+        writetext(
+          'cli',
+          `${fg('white', '"!number"')} flag [minvalue] [maxvalue];${fg('gray', 'Input Label')}`,
+        )
+        writetext(
+          'cli',
+          `${fg('white', '"!text"')} flag;${fg('gray', 'Input Label')}`,
+        )
+        break
+      case 'helpdeveloper':
+        writeheader('cli', `developer commands`)
+        writeoption('cli', `#books`, `list books in memory`)
+        writeoption('cli', `#pages`, `list pages in opened book`)
+        writeoption(
+          'cli',
+          `@[pagetype:]page name`,
+          `create & edit a new codepage in the currently opened book`,
+        )
+        writeoption(
+          'cli',
+          `#trash`,
+          `list books and pages from open book you can delete`,
+        )
+        writeoption('cli', `#save`, `flush state to register`)
+        break
+      case 'helpplayer':
+        writeheader('cli', `player settings`)
+        writetext('cli', `todo`)
+        break
+      default:
+        tape_info('$2', `${msg} ${data ?? ''}`)
+        break
     }
-    const [maybetype, maybename] = maybeargs.split(' ')
-    const type = ispresent(maybename) ? maptostring(maybetype) : 'object'
-    const name = ispresent(maybename)
-      ? maptostring(maybename)
-      : maptostring(maybetype)
-    // create
-    chip.command('mod', type, name)
-    chip.command('pageopen', name)
+
+    return 0
+  })
+  .command('stat', (chip, words) => {
+    // create / open content
+    let codepage: MAYBE<CODE_PAGE>
+    const [maybetype, ...args] = words.map(maptostring)
+    const maybename = args.join(' ')
+    // attempt to check first word as codepage type to create
+    switch (maybetype.toLowerCase()) {
+      case stattypestring(STAT_TYPE.LOADER):
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          maybename,
+          CODE_PAGE_TYPE.LOADER,
+        )
+        break
+      default:
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          `${maybetype} ${maybename}`,
+          CODE_PAGE_TYPE.OBJECT,
+        )
+        break
+      case stattypestring(STAT_TYPE.BOARD):
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          maybename,
+          CODE_PAGE_TYPE.BOARD,
+        )
+        break
+      case stattypestring(STAT_TYPE.OBJECT):
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          maybename,
+          CODE_PAGE_TYPE.OBJECT,
+        )
+        break
+      case stattypestring(STAT_TYPE.TERRAIN):
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          maybename,
+          CODE_PAGE_TYPE.TERRAIN,
+        )
+        break
+      case stattypestring(STAT_TYPE.CHARSET):
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          maybename,
+          CODE_PAGE_TYPE.CHARSET,
+        )
+        break
+      case stattypestring(STAT_TYPE.PALETTE):
+        codepage = memoryensuresoftwarecodepage(
+          MEMORY_LABEL.CONTENT,
+          maybename,
+          CODE_PAGE_TYPE.PALETTE,
+        )
+        break
+    }
+    if (ispresent(codepage)) {
+      chip.command('pageopen', codepage.id)
+    }
     return 0
   })
   .command('text', (_, words) => {
@@ -133,17 +237,23 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('hyperlink', (_, args) => {
-    // const memory = memoryreadchip(chip.id())
     const [labelword, ...words] = args
     const label = maptostring(labelword)
     const hyperlink = words.map(maptostring).join(' ')
     tape_info('$2', `!${hyperlink};${label}`)
     return 0
   })
+  // ---
+  .command('fullscreen', () => {
+    register_fullscreen('cli')
+    return 0
+  })
+  .command('share', () => {
+    register_share('cli', READ_CONTEXT.player)
+    return 0
+  })
   .command('bookcreate', (chip, words) => {
-    const [maybename] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.MAYBE_STRING,
-    ])
+    const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
 
     const book = memorycreatesoftwarebook(maybename)
     if (ispresent(book)) {
@@ -152,89 +262,92 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('bookopen', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [name] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
+    const [name] = readargs(words, 0, [ARG_TYPE.STRING])
 
     const book = memoryreadbookbyaddress(name)
     if (ispresent(book)) {
-      writetext(`opened [book] ${book.name}`)
-      memorysetsoftwarebook('main', book.id)
+      writetext('cli', `opened [book] ${book.name}`)
+      memorysetsoftwarebook(MEMORY_LABEL.MAIN, book.id)
       chip.command('pages')
     } else {
-      api_error('cli', 'bookopen', `book ${name} not found`, memory.player)
+      api_error(
+        'cli',
+        'bookopen',
+        `book ${name} not found`,
+        READ_CONTEXT.player,
+      )
     }
     return 0
   })
   .command('booktrash', (chip, words) => {
-    const [address] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
+    const [address] = readargs(words, 0, [ARG_TYPE.STRING])
 
-    const opened = memoryreadbookbysoftware('main')
+    const opened = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     const book = memoryreadbookbyaddress(address)
     if (ispresent(book)) {
       // clear opened
       if (opened === book) {
-        memorysetsoftwarebook('main', '')
+        memorysetsoftwarebook(MEMORY_LABEL.MAIN, '')
       }
       // clear book
       memoryclearbook(address)
-      writetext(`trashed [book] ${book.name}`)
+      writetext('cli', `trashed [book] ${book.name}`)
       vm_flush('cli')
       // reset to good state
       chip.command('pages')
     }
     return 0
   })
-  .command('pageopen', (chip, words) => {
-    const memory = memoryreadchip(chip.id())
-    const [page] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
+  .command('pageopen', (_, words) => {
+    const [page] = readargs(words, 0, [ARG_TYPE.STRING])
 
     // create book if needed
-    const book = ensureopenbookinmain()
-    if (!ispresent(book)) {
+    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+    if (!ispresent(mainbook)) {
       return 0
     }
 
-    const codepage = bookreadcodepagebyaddress(book, page)
+    const codepage = bookreadcodepagebyaddress(mainbook, page)
     if (ispresent(codepage)) {
       const name = codepagereadname(codepage)
       const pagetype = codepagereadtypetostring(codepage)
-      writetext(`opened [${pagetype}] ${name}`)
+      writetext('cli', `opened [${pagetype}] ${name}`)
 
       // write to modem
-      modemwriteinitstring(vm_codeaddress(book.id, codepage.id), codepage.code)
+      modemwriteinitstring(
+        vm_codeaddress(mainbook.id, codepage.id),
+        codepage.code,
+      )
 
       // tell tape to open a code editor for given page
       const type = codepagereadtypetostring(codepage)
       tape_editor_open(
         'cli',
-        book.id,
+        mainbook.id,
         codepage.id,
         type,
-        `@book ${book.name}:${name}`,
-        memory.player,
+        `${name} - ${mainbook.name}`,
+        READ_CONTEXT.player,
       )
     } else {
-      api_error('cli', 'pageopen', `page ${page} not found`, memory.player)
+      api_error(
+        'cli',
+        'pageopen',
+        `page ${page} not found`,
+        READ_CONTEXT.player,
+      )
     }
     return 0
   })
   .command('pagetrash', (chip, words) => {
-    const [page] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-    ])
+    const [page] = readargs(words, 0, [ARG_TYPE.STRING])
 
-    const book = ensureopenbookinmain()
-    const codepage = bookclearcodepage(book, page)
+    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+    const codepage = bookclearcodepage(mainbook, page)
     if (ispresent(page)) {
       const name = codepagereadname(codepage)
       const pagetype = codepagereadtypetostring(codepage)
-      writetext(`trashed [${pagetype}] ${name}`)
+      writetext('cli', `trashed [${pagetype}] ${name}`)
       vm_flush('cli')
       chip.command('pages')
     }
@@ -243,7 +356,7 @@ export const CLI_FIRMWARE = createfirmware({
   })
   .command('nodetrash', () => {
     register_nodetrash('cli')
-    writetext(`node id changed, refreshing page recommended`)
+    writetext('cli', `node id changed, refreshing page recommended`)
     return 0
   })
   .command('help', (chip, words) => {
@@ -252,67 +365,74 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   .command('books', () => {
-    writesection(`books`)
-    const main = memoryreadbookbysoftware('main')
-    writeoption('main', `${main?.name ?? 'empty'} $GREEN${main?.id ?? ''}`)
-    const content = memoryreadbookbysoftware('content')
-    writeoption('content', `${content?.name ?? 'empty'} ${content?.id ?? ''}`)
-    writebbar(7)
+    writesection('cli', `books`)
+    const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    writeoption(
+      'cli',
+      'main',
+      `${main?.name ?? 'empty'} $GREEN${main?.id ?? ''}`,
+    )
+    const content = memoryreadbookbysoftware(MEMORY_LABEL.CONTENT)
+    writeoption(
+      'cli',
+      'content',
+      `${content?.name ?? 'empty'} ${content?.id ?? ''}`,
+    )
+    writebbar('cli', 7)
     const list = memoryreadbooklist()
     if (list.length) {
       list.forEach((book) => {
-        write(`!bookopen ${book.id};${book.name}`)
+        write('cli', `!bookopen ${book.id};${book.name}`)
       })
     } else {
-      writetext(`no books found`)
+      writetext('cli', `no books found`)
     }
-    write(`!bookcreate;create a new book`)
+    write('cli', `!bookcreate;create a new book`)
     return 0
   })
-  .command('pages', (chip) => {
-    writesection(`pages`)
-    const book = ensureopenbookinmain()
-    if (ispresent(book)) {
-      writeoption('main', `${book.name} $GREEN${book.id}`)
-      if (book.pages.length) {
-        book.pages.forEach((page) => {
+  .command('pages', () => {
+    writesection('cli', `pages`)
+    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+    if (ispresent(mainbook)) {
+      writeoption('cli', 'main', `${mainbook.name} $GREEN${mainbook.id}`)
+      if (mainbook.pages.length) {
+        mainbook.pages.forEach((page) => {
           const name = codepagereadname(page)
-          write(`!pageopen ${page.id};${name}`)
+          const type = codepagereadtypetostring(page)
+          write('cli', `!pageopen ${page.id};[${type}] ${name}`)
         })
       } else {
-        write(``)
-        writetext(`no pages found`)
-        writetext(`use @ to create a page`)
-        writetext(`@board name of board`)
-        writetext(`@object name of object`)
-        writetext(`@terrain name of terrain`)
-        writetext(`You can omit the type and it will default to object`)
-        writetext(`@object name of object`)
-        writetext(`@name of object`)
+        write('cli', ``)
+        writetext('cli', `no pages found`)
+        writetext('cli', `use @ to create a page`)
+        writetext('cli', `@board name of board`)
+        writetext('cli', `@object name of object`)
+        writetext('cli', `@terrain name of terrain`)
+        writetext('cli', `You can omit the type and it will default to object`)
+        writetext('cli', `@object name of object`)
+        writetext('cli', `@name of object`)
       }
-    } else {
-      chip.command('bookopen', 'main')
     }
     return 0
   })
   .command('trash', () => {
-    writesection(`$REDTRASH`)
-    writetext(`books`)
+    writesection('cli', `$REDTRASH`)
+    writetext('cli', `books`)
     const list = memoryreadbooklist()
     if (list.length) {
       list.forEach((book) => {
-        write(`!booktrash ${book.id};$REDTRASH ${book.name}`)
+        write('cli', `!booktrash ${book.id};$REDTRASH ${book.name}`)
       })
-      write('')
+      write('cli', '')
     }
-    const book = memoryreadbookbysoftware('main')
+    const book = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     if (ispresent(book)) {
-      writetext(`pages in open ${book.name} book`)
+      writetext('cli', `pages in open ${book.name} book`)
       book.pages.forEach((page) => {
         const name = codepagereadname(page)
-        write(`!pagetrash ${page.id};$REDTRASH ${name}`)
+        write('cli', `!pagetrash ${page.id};$REDTRASH ${name}`)
       })
-      write('')
+      write('cli', '')
     }
     return 0
   })
@@ -320,109 +440,7 @@ export const CLI_FIRMWARE = createfirmware({
     vm_flush('cli')
     return 0
   })
-  .command('send', (chip, words) => {
-    const [msg, data] = readargs(memoryreadcontext(chip, words), 0, [
-      ARG_TYPE.STRING,
-      ARG_TYPE.ANY,
-    ])
-
-    switch (msg) {
-      // help messages
-      case 'helpmenu':
-        writeheader(`H E L P`)
-        writeoption(`#help controls`, `zss controls and inputs`)
-        write(`!helpcontrols;read help controls`)
-        write(``)
-        writeoption(`#help text`, `text formatting`)
-        write(`!helptext;read help text`)
-        write(``)
-        writeoption(`#help developer`, `developer commands`)
-        write(`!helpdeveloper;read help developer`)
-        write(``)
-        writeoption(`#help player`, `player settings`)
-        write(`!helpplayer;read help player`)
-        writesection(`keyboard input`)
-        writeoption(`?`, `open console`)
-        writeoption(`esc`, `close console`)
-        writeoption(`tab`, `move console`)
-        writeoption(`up / down arrow keys`, `navigate console items`)
-        writeoption(`left / right arrow keys`, `change console items`)
-        writeoption(`enter`, `interact with console items`)
-        writeoption(`alt + arrow keys`, `skip words and console lines`)
-        writeoption(`${metakey} + up / down arrow keys`, `input history`)
-        break
-      case 'helpcontrols':
-        writeheader(`zss controls and inputs`)
-        writesection(`keyboard input`)
-        writeoption(`arrow keys`, `move`)
-        writeoption(`shift + arrow keys`, `shoot`)
-        writeoption(`enter`, `ok / accept`)
-        writeoption(`escape`, `cancel / close`)
-        writeoption(`tab`, `menu / action`)
-        writesection(`mouse input`)
-        writetext(`todo ???`)
-        writesection(`controller input`)
-        writeoption(`left stick`, `move`)
-        writeoption(`right stick`, `aim`)
-        writeoption(`a`, `ok / accept`)
-        writeoption(`b`, `cancel / close`)
-        writeoption(`y`, `menu / action`)
-        writeoption(`x`, `shoot`)
-        writeoption(`triggers`, `shoot`)
-        break
-      case 'helptext':
-        writeheader(`text formatting`)
-        writesection(`typography`)
-        writetext(`plain text`)
-        writetext(`$centering text`)
-        writetext(`"\\"@quoted strings for special chars\\""`)
-        writetext(`$$0-255 for ascii chars $159$176$240`)
-        writetext(
-          `use color names like ${fg('red', '$$red')} to change foreground color`,
-        )
-        writetext(
-          `use color names like ${bg('ongreen', '$$ongreen')} to change background color`,
-        )
-        writetext(
-          `use clear ${bg('clear', 'to change background to')} transparent`,
-        )
-        writesection(`hyperlinks`)
-        writetext(
-          `${fg('white', '"!hotkey"')} message shortcut;${fg('gray', 'Label')}`,
-        )
-        writetext(
-          `${fg('white', '"!range"')} flag [labelmin] [labelmax];${fg('gray', 'Input Label')}`,
-        )
-        writetext(
-          `${fg('white', '"!select"')} flag ...list of values;${fg('gray', 'Input Label')}`,
-        )
-        writetext(
-          `${fg('white', '"!number"')} flag [minvalue] [maxvalue];${fg('gray', 'Input Label')}`,
-        )
-        writetext(`${fg('white', '"!text"')} flag;${fg('gray', 'Input Label')}`)
-        break
-      case 'helpdeveloper':
-        writeheader(`developer commands`)
-        writeoption(`#books`, `list books in memory`)
-        writeoption(`#pages`, `list pages in opened book`)
-        writeoption(
-          `@[pagetype:]page name`,
-          `create & edit a new codepage in the currently opened book`,
-        )
-        writeoption(
-          `#trash`,
-          `list books and pages from open book you can delete`,
-        )
-        writeoption(`#save`, `flush state to register`)
-        break
-      case 'helpplayer':
-        writeheader(`player settings`)
-        writetext(`todo`)
-        break
-      default:
-        tape_info('$2', `${msg} ${data ?? ''}`)
-        break
-    }
-
+  .command('nuke', () => {
+    register_nuke('cli')
     return 0
   })

@@ -2,13 +2,13 @@ import humanid from 'human-id'
 import { customAlphabet, nanoid } from 'nanoid'
 import { lowercase, numbers } from 'nanoid-dictionary'
 
-import { MAYBE_STRING } from './types'
+import { MAYBE } from './types'
 
 export function createsid() {
   return `sid_${nanoid(12).replaceAll('-', '.')}`
 }
 
-export function issid(id: MAYBE_STRING): id is string {
+export function issid(id: MAYBE<string>): id is string {
   return id?.startsWith('sid_') ?? false
 }
 
@@ -19,7 +19,7 @@ export function createpid() {
   return `pid_${justNumberChars()}_${mixedChars()}`
 }
 
-export function ispid(id: MAYBE_STRING): id is string {
+export function ispid(id: MAYBE<string>): id is string {
   return id?.startsWith('pid_') ?? false
 }
 

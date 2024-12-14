@@ -1,28 +1,37 @@
 import { vm_cli } from 'zss/device/api'
-import { gadgetstategetplayer } from 'zss/device/gadgetclient'
-import { useTape } from 'zss/device/tape'
+import {
+  useGadgetClientPlayer,
+  useTape,
+  useTapeTerminal,
+} from 'zss/gadget/data/state'
+import { hub } from 'zss/hub'
+import { totarget } from 'zss/mapping/string'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
-  useWriteText,
-} from 'zss/gadget/data/textformat'
-import { hub } from 'zss/hub'
-import { totarget } from 'zss/mapping/string'
+} from 'zss/words/textformat'
+import { useShallow } from 'zustand/react/shallow'
 
-import { ConsoleContext, useTapeTerminal } from './common'
+import { useWriteText } from '../hooks'
+
+import { ConsoleContext } from './common'
 import { BackPlate } from './elements/backplate'
 import { TerminalInput } from './elements/terminalinput'
 import { TerminalItem } from './elements/terminalitem'
 import { TerminalItemActive } from './elements/terminalitemactive'
 
 export function TapeTerminal() {
-  const tape = useTape()
+  const player = useGadgetClientPlayer()
+  const [terminallogs, editoropen] = useTape(
+    useShallow((state) => [state.terminal.logs, state.editor.open]),
+  )
+
   const context = useWriteText()
   const tapeinput = useTapeTerminal()
   const edge = textformatreadedges(context)
 
   // render to strings
-  const logrows: string[] = tape.terminal.logs.map((item) => {
+  const logrows: string[] = terminallogs.map((item) => {
     const [, maybelevel, source, ...message] = item
     let level = '$white'
     switch (maybelevel) {
@@ -64,9 +73,6 @@ export function TapeTerminal() {
   // calculate ycoord to render cursor
   const tapeycursor = edge.bottom - tapeinput.ycursor + tapeinput.scroll
 
-  // user id
-  const player = gadgetstategetplayer()
-
   return (
     <>
       <BackPlate context={context} />
@@ -90,15 +96,13 @@ export function TapeTerminal() {
           if (ybottom < 0 || y > edge.bottom - 1) {
             return null
           }
-          return !tape.editor.open &&
-            tapeycursor >= y &&
-            tapeycursor < ybottom ? (
+          return !editoropen && tapeycursor >= y && tapeycursor < ybottom ? (
             <TerminalItemActive key={index} text={text} y={y} />
           ) : (
             <TerminalItem key={index} text={text} y={y} />
           )
         })}
-        {!tape.editor.open && (
+        {!editoropen && (
           <TerminalInput
             tapeycursor={tapeycursor}
             logrowtotalheight={logrowtotalheight}

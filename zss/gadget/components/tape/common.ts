@@ -1,13 +1,10 @@
 import { SyncedText } from '@syncedstore/core'
 import { createContext } from 'react'
-import { proxy, useSnapshot } from 'valtio'
 import { MODEM_SHARED_VALUE } from 'zss/device/modem'
-import {
-  WRITE_TEXT_CONTEXT,
-  textformatreadedges,
-} from 'zss/gadget/data/textformat'
-import { COLOR, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
-import { MAYBE, MAYBE_NUMBER, ispresent } from 'zss/mapping/types'
+import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
+import { COLOR } from 'zss/words/types'
+import { WRITE_TEXT_CONTEXT, textformatreadedges } from 'zss/words/textformat'
 
 // deco
 export const BKG_PTRN = 250
@@ -24,37 +21,6 @@ export const BG_ACTIVE = COLOR.BLACK
 export const SCALE = 1
 export const CHAR_WIDTH = DRAW_CHAR_WIDTH * SCALE
 export const CHAR_HEIGHT = DRAW_CHAR_HEIGHT * SCALE
-
-export const tapeterminalstate = proxy({
-  // scrolling offset
-  scroll: 0,
-  // cursor position & selection
-  xcursor: 0,
-  ycursor: 0,
-  xselect: undefined as MAYBE_NUMBER,
-  yselect: undefined as MAYBE_NUMBER,
-  // input history
-  bufferindex: 0,
-  buffer: [''],
-})
-
-export function useTapeTerminal() {
-  return useSnapshot(tapeterminalstate)
-}
-
-export const tapeeditorstate = proxy({
-  // need an id for synced store
-  id: '',
-  // scrolling offset
-  scroll: 0,
-  // cursor position & selection (text index)
-  cursor: 0,
-  select: undefined as MAYBE_NUMBER,
-})
-
-export function useTapeEditor() {
-  return useSnapshot(tapeeditorstate)
-}
 
 export type TerminalItemProps = {
   blink?: boolean

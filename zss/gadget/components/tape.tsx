@@ -1,30 +1,24 @@
 import { useThree } from '@react-three/fiber'
 import { tape_terminal_open } from 'zss/device/api'
-import { gadgetstategetplayer } from 'zss/device/gadgetclient'
-import { TAPE_DISPLAY, useTape } from 'zss/device/tape'
+import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
+import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
-} from 'zss/gadget/data/textformat'
+} from 'zss/words/textformat'
+import { useShallow } from 'zustand/react/shallow'
 
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
-
-import { ShadeBoxDither } from './dither'
+import { ShadeBoxDither } from './framed/dither'
+import { useTiles } from './hooks'
 import { BG, CHAR_HEIGHT, CHAR_WIDTH, FG, SCALE } from './tape/common'
 import { BackPlate } from './tape/elements/backplate'
 import { TapeLayout } from './tape/layout'
-import { PlayerContext } from './useplayer'
 import { UserFocus, UserHotkey } from './userinput'
-import { TileSnapshot, useTiles } from './usetiles'
+import { TilesData, TilesRender } from './usetiles'
 
-export function TapeConsole() {
+export function Tape() {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
-
-  const {
-    layout,
-    terminal: { open },
-  } = useTape()
 
   const ditherwidth = Math.floor(viewWidth / DRAW_CHAR_WIDTH)
   const ditherheight = Math.floor(viewHeight / DRAW_CHAR_HEIGHT)
@@ -38,6 +32,10 @@ export function TapeConsole() {
   let left = 0
   let width = cols
   let height = rows
+
+  const [layout, terminalopen] = useTape(
+    useShallow((state) => [state.layout, state.terminal.open]),
+  )
 
   switch (layout) {
     case TAPE_DISPLAY.TOP:
@@ -60,13 +58,10 @@ export function TapeConsole() {
       break
   }
 
-  const tiles = useTiles(width, height, 0, FG, BG)
-
+  const store = useTiles(width, height, 0, FG, BG)
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, FG, BG),
-    char: tiles.char,
-    color: tiles.color,
-    bg: tiles.bg,
+    ...store.getState(),
   }
 
   // bail on odd states
@@ -74,14 +69,13 @@ export function TapeConsole() {
     return null
   }
 
-  // user id
-  const player = gadgetstategetplayer()
-
   return (
-    <>
-      {open && (
+    <TilesData store={store}>
+      <group
         // eslint-disable-next-line react/no-unknown-property
-        <group position={[0, 0, 0]}>
+        position={[0, 0, 900]}
+      >
+        {terminalopen && (
           <ShadeBoxDither
             width={ditherwidth}
             height={ditherheight}
@@ -90,31 +84,29 @@ export function TapeConsole() {
             right={left + width - 1}
             bottom={top + height - 1}
           />
-        </group>
-      )}
-      <group
-        // eslint-disable-next-line react/no-unknown-property
-        position={[
-          marginx * 0.5 + left * CHAR_WIDTH,
-          marginy + top * CHAR_HEIGHT,
-          1,
-        ]}
-        scale={[SCALE, SCALE, 1.0]}
-      >
-        {open ? (
-          <UserFocus blockhotkeys>
-            <BackPlate context={context} />
-            <PlayerContext.Provider value={player}>
-              <TapeLayout context={context} />
-            </PlayerContext.Provider>
-            <TileSnapshot width={width} height={height} tiles={tiles} />
-          </UserFocus>
-        ) : (
-          <UserHotkey hotkey="Shift+?">
-            {() => tape_terminal_open('tape')}
-          </UserHotkey>
         )}
+        <group
+          // eslint-disable-next-line react/no-unknown-property
+          position={[
+            marginx * 0.5 + left * CHAR_WIDTH,
+            marginy + top * CHAR_HEIGHT,
+            1,
+          ]}
+          scale={[SCALE, SCALE, 1.0]}
+        >
+          {terminalopen ? (
+            <UserFocus blockhotkeys>
+              <BackPlate context={context} />
+              <TapeLayout context={context} />
+              <TilesRender width={width} height={height} />
+            </UserFocus>
+          ) : (
+            <UserHotkey hotkey="Shift+?">
+              {() => tape_terminal_open('tape')}
+            </UserHotkey>
+          )}
+        </group>
       </group>
-    </>
+    </TilesData>
   )
 }

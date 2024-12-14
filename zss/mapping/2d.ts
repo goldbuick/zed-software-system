@@ -1,4 +1,4 @@
-import { PT } from 'zss/firmware/wordtypes'
+import { PT } from 'zss/words/types'
 
 export function indextox(index: number, width: number) {
   return index % width

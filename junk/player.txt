@@ -1,17 +1,19 @@
 @player
+@cycle 1 
+@char 2 
+@color 11
 
-' create ui
+' reate ui
 #gadget right
-"                "
+"
 - - - proto - - -
  - - - editr - - -
-"                "
+"
 !hotkey bongle b;Bongle
 !hotkey wiggle w;Wiggle
+!hotkey emit e;Make stuff
 
-:head
 #idle
-
 :main
 
 #if inputshift and inputmove do
@@ -30,8 +32,21 @@
 :wiggle
 #foreach eek 1 to 10 do
 eek: $eek
-#repeat 32 ?i
+#repeat 15 ?rnd
 #done
 #main
 
+:emit
+#zap emit
+#put rnd red surface
+#main
 
+:emit
+#zap emit
+#put rnd green surface
+#main
+
+:emit
+#restore emit
+#put rnd blue surface
+#main
