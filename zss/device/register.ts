@@ -88,7 +88,7 @@ async function shorturl(url: string) {
   })
   const response = await fetch(request)
   const shortcontent = await response.text()
-  console.info(response, shortcontent)
+  // return new bytes url
   return shortcontent
 }
 
