@@ -15,7 +15,7 @@ export function isboolean(word: any): word is boolean {
 }
 
 export function isnumber(word: any): word is number {
-  return typeof word === 'number'
+  return typeof word === 'number' && isNaN(word) === false
 }
 
 export function ismaybenumber(word: any): word is MAYBE<number> {

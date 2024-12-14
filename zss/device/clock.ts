@@ -1,28 +1,6 @@
 import { createdevice } from 'zss/device'
 import { TICK_FPS, TICK_RATE } from 'zss/mapping/tick'
 
-type TIMEOUT_FN = () => void
-
-const timeouts: TIMEOUT_FN[] = []
-const messageName = 'zed-clock-proc'
-
-function schedule(fn: TIMEOUT_FN) {
-  timeouts.push(fn)
-  window.postMessage(messageName, '*')
-}
-
-window.addEventListener(
-  'message',
-  (event) => {
-    if (event.source == window && event.data == messageName) {
-      event.stopPropagation()
-      const fn = timeouts.shift()
-      fn?.()
-    }
-  },
-  true,
-)
-
 const clockdevice = createdevice('clock', [], () => {
   // no-op
 })
@@ -54,7 +32,7 @@ function wake() {
   }
 
   previous = now
-  schedule(wake)
+  setTimeout(wake, 1)
 }
 
 // server is ready

@@ -17,6 +17,8 @@ import {
   memoryreadflags,
   memorymessage,
   memorycleanup,
+  memoryreadbookbysoftware,
+  MEMORY_LABEL,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -47,8 +49,13 @@ const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 // save state
 async function savestate() {
   const books = memoryreadbooklist()
-  if (books.length) {
-    register_flush(vm.name(), await compressbooks(books))
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (books.length && ispresent(mainbook)) {
+    register_flush(
+      vm.name(),
+      `${new Date().toISOString()} ${mainbook.name}`,
+      await compressbooks(books),
+    )
   }
 }
 

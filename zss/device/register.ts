@@ -3,7 +3,7 @@ import { createdevice } from 'zss/device'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { writecopyit, writeheader, writeoption } from 'zss/words/writeui'
 
 import {
@@ -187,8 +187,12 @@ const register = createdevice(
         }
         break
       case 'flush':
-        if (isstring(message.data)) {
-          writestate(message.data)
+        if (isarray(message.data)) {
+          const [maybehistorylabel, maybecontent] = message.data
+          if (isstring(maybehistorylabel) && isstring(maybecontent)) {
+            document.title = maybehistorylabel
+            writestate(maybecontent)
+          }
         }
         break
       case 'select':
