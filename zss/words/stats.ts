@@ -45,11 +45,6 @@ export function statformat(words: string[], first = true) {
         type: STAT_TYPE.PALETTE,
         values,
       }
-    case '8track':
-      return {
-        type: STAT_TYPE.EIGHT_TRACK,
-        values,
-      }
     case 'rn':
     case 'range':
       return {
@@ -108,8 +103,6 @@ export function stattypestring(type: STAT_TYPE) {
       return 'charset'
     case STAT_TYPE.PALETTE:
       return 'palette'
-    case STAT_TYPE.EIGHT_TRACK:
-      return '8track'
     case STAT_TYPE.CONST:
       return 'const'
     case STAT_TYPE.RANGE:

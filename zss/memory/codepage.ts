@@ -11,7 +11,6 @@ import {
   exportboardelement,
   importboardelement,
 } from './boardelement'
-import { exporteighttrack, importeighttrack } from './eighttrack'
 import {
   FORMAT_OBJECT,
   FORMAT_SKIP,
@@ -72,7 +71,6 @@ export function exportcodepage(
     terrain: exportboardelement,
     charset: exportbitmap,
     palette: exportbitmap,
-    eighttrack: exporteighttrack,
     stats: FORMAT_SKIP,
   })
 }
@@ -87,7 +85,6 @@ export function importcodepage(
     terrain: importboardelement,
     charset: importbitmap,
     palette: importbitmap,
-    eighttrack: importeighttrack,
   })
 }
 
@@ -183,10 +180,6 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
           codepage.stats.type = CODE_PAGE_TYPE.PALETTE
           codepage.stats.name = maybename
           break
-        case STAT_TYPE.EIGHT_TRACK:
-          codepage.stats.type = CODE_PAGE_TYPE.EIGHT_TRACK
-          codepage.stats.name = maybename
-          break
         case STAT_TYPE.CONST: {
           const [maybename, maybevalue] = stat.values
           if (isstring(maybename)) {
@@ -247,8 +240,6 @@ export function codepagetypetostring(type: MAYBE<CODE_PAGE_TYPE>): string {
       return stattypestring(STAT_TYPE.CHARSET)
     case CODE_PAGE_TYPE.PALETTE:
       return stattypestring(STAT_TYPE.PALETTE)
-    case CODE_PAGE_TYPE.EIGHT_TRACK:
-      return stattypestring(STAT_TYPE.EIGHT_TRACK)
   }
 }
 
@@ -336,13 +327,6 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         // codepage.palette = {}
       }
       return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
-    }
-    case CODE_PAGE_TYPE.EIGHT_TRACK: {
-      // validate and shape eighttrack into usable state
-      if (!ispresent(codepage.eighttrack)) {
-        // codepage.eighttrack = {}
-      }
-      return codepage.eighttrack as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
   }
 }

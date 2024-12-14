@@ -15,6 +15,7 @@ import {
   EQ3,
   Reverb,
   Part,
+  Phaser,
 } from 'tone'
 import { createdevice } from 'zss/device'
 import { createsource } from 'zss/gadget/audio/source'
@@ -497,32 +498,34 @@ function createsynth() {
           drumbasstrigger(time)
           break
         case -1: // END OF PATTERN
+          // reset starting offset
           --pacercount
           if (pacercount === 0) {
             pacertime = -1
           }
+          // reset priority ?
+          synthsfxpriority = -1
           break
       }
     }
   }
 
-  let pacertime = -1
-  let pacercount = 0
+  function synthplaystart(
+    starttime: number,
+    idx: number,
+    invokes: SYNTH_INVOKES,
+  ) {
+    let endtime = starttime
 
-  function synthplaystart(invokes: SYNTH_INVOKES) {
     // invoke synth ops
-    const starttime = pacertime
     for (let i = 0; i < invokes.length; ++i) {
-      // inc invoke tracker
-      ++pacercount
-
       // build tone.js pattern
-      const pattern = invokeplay(0, starttime, invokes[i])
+      const pattern = invokeplay(idx, starttime, invokes[i])
 
-      // track current max pacertime
+      // track endtime
       const last = pattern[pattern.length - 1]
       if (ispresent(last)) {
-        pacertime = Math.max(pacertime, last[0])
+        endtime = Math.max(endtime, last[0])
       }
 
       // write pattern to pacer
@@ -531,28 +534,34 @@ function createsynth() {
         pacer.add(time, value)
       }
     }
+
+    return endtime
   }
 
+  let pacertime = -1
+  let pacercount = 0
   let synthsfxpriority = -1
   function addplay(priority: number, buffer: string) {
     // parse ops
     const invokes = parseplay(buffer)
+    const seconds = getTransport().seconds
 
     // reset note offset
     if (pacertime === -1) {
-      pacertime = getTransport().seconds
+      pacertime = seconds
     }
 
     // music queue
     if (priority < 0) {
-      synthplaystart(invokes)
+      pacercount += invokes.length
+      pacertime = synthplaystart(pacertime, -priority, invokes)
       return
     }
 
     // sfx /w priority
     if (synthsfxpriority === -1 || priority >= synthsfxpriority) {
       synthsfxpriority = priority
-      synthplaystart(invokes)
+      synthplaystart(seconds, 0, invokes)
     }
   }
 
@@ -577,6 +586,7 @@ function validatesynthtype(value: string) {
       if (type.startsWith('fat')) {
         type = type.substring(3)
       }
+
       // validate waveform types
       if (type.startsWith('sine')) {
         type = type.substring(4)
@@ -590,16 +600,20 @@ function validatesynthtype(value: string) {
       if (type.startsWith('sawtooth')) {
         type = type.substring(8)
       }
-      // validate suffix numbers
+
+      // no suffix numbers
       if (type === '') {
         return true
       }
-      const partial = parseInt(type, 10)
-      if (isNaN(partial)) {
-        return false
+
+      // validate suffix numbers
+      const partial = parseFloat(type)
+      if (isnumber(partial)) {
+        return true
       }
-      // passed
-      return true
+
+      // failed
+      return false
     }
   }
 }
@@ -626,49 +640,38 @@ const synthdevice = createdevice('synth', [], (message) => {
       if (isarray(message.data)) {
         const [idx, config, value] = message.data as [
           number,
-          string,
+          number | string,
           number | string,
         ]
         const voice = synth.SOURCE[idx]
-        const fx = voice?.fx[config as keyof typeof voice.fx]
-        console.info(voice.source.get())
-        if (ispresent(fx)) {
-          switch (value) {
-            case 'on':
-              fx.wet.value = 1.0
+        if (ispresent(voice)) {
+          switch (config) {
+            case 'bpm':
+              if (isnumber(value)) {
+                getTransport().bpm.value = value
+              }
               break
-            case 'off':
-              fx.wet.value = 0.0
+            case 'vol':
+            case 'volume':
+              if (isnumber(value)) {
+                voice.source.volume.value = value
+              }
               break
             default:
-              if (isnumber(value)) {
-                fx.wet.value = value
+              if (isstring(config) && validatesynthtype(config)) {
+                voice.source.set({
+                  oscillator: {
+                    // @ts-expect-error lazy
+                    type: config,
+                  },
+                })
               } else {
                 api_error(
                   synthdevice.name(),
                   message.target,
-                  `expected on, off, or number between 0.0 and 1.0`,
+                  `unknown voice config ${config}`,
                 )
               }
-              break
-          }
-        } else if (ispresent(voice)) {
-          if (isstring(config) && validatesynthtype(config)) {
-            voice.source.set({
-              oscillator: {
-                // @ts-expect-error lazy
-                type: config,
-              },
-            })
-          }
-          // switch ()
-          switch (config) {
-            default:
-              api_error(
-                synthdevice.name(),
-                message.target,
-                `unknown config ${config}`,
-              )
               break
           }
         } else {
@@ -681,90 +684,141 @@ const synthdevice = createdevice('synth', [], (message) => {
         const [idx, fxname, config, value] = message.data as [
           number,
           string,
-          string,
+          number | string,
           number | string,
         ]
         const voice = synth.SOURCE[idx]
         const fx = voice?.fx[fxname as keyof typeof voice.fx]
         if (ispresent(fx)) {
-          switch (fxname) {
-            case 'vibrato': {
-              switch (config) {
-                default:
-                  api_error(
-                    synthdevice.name(),
-                    message.target,
-                    `unknown config ${config}`,
-                  )
-                  break
+          switch (config) {
+            case 'on':
+              fx.wet.value = 0.1
+              break
+            case 'off':
+              fx.wet.value = 0.0
+              break
+            default:
+              if (isnumber(value)) {
+                fx.wet.value = 0.1 * value
+              } else {
+                switch (fxname) {
+                  case 'vibrato': {
+                    switch (config) {
+                      default:
+                        api_error(
+                          synthdevice.name(),
+                          message.target,
+                          `unknown ${fxname} config ${config}`,
+                        )
+                        break
+                    }
+                    break
+                  }
+                  case 'chorus': {
+                    switch (config) {
+                      default:
+                        api_error(
+                          synthdevice.name(),
+                          message.target,
+                          `unknown ${fxname} config ${config}`,
+                        )
+                        break
+                    }
+                    break
+                  }
+                  case 'phaser': {
+                    const phaser = fx as Phaser
+                    switch (config) {
+                      case 'q':
+                        if (isnumber(value)) {
+                          phaser.Q.value = value
+                        }
+                        break
+                      case 'octaves':
+                        if (isnumber(value)) {
+                          phaser.octaves = value
+                        }
+                        break
+                      case 'basefrequency':
+                        if (isnumber(value)) {
+                          phaser.baseFrequency = value
+                        }
+                        break
+                      default:
+                        api_error(
+                          synthdevice.name(),
+                          message.target,
+                          `unknown ${fxname} config ${config}`,
+                        )
+                        break
+                    }
+                    break
+                  }
+                  case 'distortion': {
+                    const distortion = fx as Distortion
+                    switch (config) {
+                      case 'distortion':
+                        if (isnumber(value)) {
+                          distortion.distortion = value
+                        }
+                        break
+                      case 'oversample':
+                        switch (value) {
+                          case '2x':
+                          case '4x':
+                          case 'none':
+                            distortion.oversample = value
+                            break
+                        }
+                        break
+                      default:
+                        api_error(
+                          synthdevice.name(),
+                          message.target,
+                          `unknown ${fxname} config ${config}`,
+                        )
+                        break
+                    }
+                    break
+                  }
+                  case 'echo': {
+                    const echo = fx as FeedbackDelay
+                    switch (config) {
+                      case 'delaytime':
+                        echo.delayTime.value = value
+                        break
+                      default:
+                        api_error(
+                          synthdevice.name(),
+                          message.target,
+                          `unknown ${fxname} config ${config}`,
+                        )
+                        break
+                    }
+                    break
+                  }
+                  case 'reverb': {
+                    const reverb = fx as Reverb
+                    switch (config) {
+                      case 'decay':
+                        reverb.decay = value
+                        break
+                      case 'predelay':
+                        reverb.preDelay = value
+                        break
+                      default:
+                        api_error(
+                          synthdevice.name(),
+                          message.target,
+                          `unknown ${fxname} config ${config}`,
+                        )
+                        break
+                    }
+                    break
+                  }
+                }
               }
               break
-            }
-            case 'chorus': {
-              switch (config) {
-                default:
-                  api_error(
-                    synthdevice.name(),
-                    message.target,
-                    `unknown config ${config}`,
-                  )
-                  break
-              }
-              break
-            }
-            case 'phaser': {
-              switch (config) {
-                default:
-                  api_error(
-                    synthdevice.name(),
-                    message.target,
-                    `unknown config ${config}`,
-                  )
-                  break
-              }
-              break
-            }
-            case 'distortion': {
-              switch (config) {
-                default:
-                  api_error(
-                    synthdevice.name(),
-                    message.target,
-                    `unknown config ${config}`,
-                  )
-                  break
-              }
-              break
-            }
-            case 'echo': {
-              const echo = fx as FeedbackDelay
-              switch (config) {
-                case 'delaytime':
-                  echo.delayTime.value = value
-                  break
-                default:
-                  api_error(
-                    synthdevice.name(),
-                    message.target,
-                    `unknown config ${config}`,
-                  )
-                  break
-              }
-              break
-            }
-            case 'reverb': {
-              const reverb = fx as Reverb
-              switch (config) {
-                default:
-                  api_error(
-                    synthdevice.name(),
-                    message.target,
-                    `unknown config ${config}`,
-                  )
-                  break
-              }
-              break
-            }
           }
         } else {
           api_error(synthdevice.name(), message.target, `unknown fx ${fxname}`)

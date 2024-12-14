@@ -166,11 +166,18 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.NUMBER_OR_STRING: {
         const [value, iii] = readexpr(ii, false)
-        if (!isnumber(value) && !isstring(value)) {
-          didexpect('number or string', value)
+        let maybevalue = value
+        if (isstring(maybevalue)) {
+          // can we convert to number ?
+          const maybernumber = parseFloat(maybevalue)
+          if (isnumber(maybernumber)) {
+            maybevalue = maybernumber
+          }
+        } else if (!isnumber(maybevalue)) {
+          didexpect('number or string', maybevalue)
         }
         ii = iii
-        values.push(value)
+        values.push(maybevalue)
         break
       }
       case ARG_TYPE.MAYBE_CATEGORY: {
@@ -253,11 +260,18 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.MAYBE_NUMBER_OR_STRING: {
         const [value, iii] = readexpr(ii, false)
-        if (value !== undefined && !isnumber(value) && !isstring(value)) {
-          didexpect('optional number or string', value)
+        let maybevalue = value
+        if (isstring(maybevalue)) {
+          // can we convert to number ?
+          const maybernumber = parseFloat(maybevalue)
+          if (isnumber(maybernumber)) {
+            maybevalue = maybernumber
+          }
+        } else if (maybevalue !== undefined && !isnumber(maybevalue)) {
+          didexpect('number or string', maybevalue)
         }
         ii = iii
-        values.push(value)
+        values.push(maybevalue)
         break
       }
       case ARG_TYPE.ANY: {

@@ -75,56 +75,6 @@ export const BOARD_WIDTH = 60
 export const BOARD_HEIGHT = 25
 export const BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT
 
-// 8tracks
-
-export enum EIGHT_FX {
-  ECHO,
-  REVERB,
-  DISTORTION,
-}
-
-export type EIGHT_FX_CONFIG = {
-  fx: EIGHT_FX
-  settings: Record<number, WORD>
-}
-
-export enum EIGHT_SYNTH {
-  SQUARE,
-  TRIANGLE,
-}
-
-export type EIGHT_SYNTH_CONFIG = {
-  synth: EIGHT_SYNTH
-  effects: EIGHT_FX_CONFIG[]
-  settings: Record<number, WORD>
-}
-
-export type EIGHT_MEASURE = [
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-]
-
-export type EIGHT_TRACK = {
-  tempo: number
-  synths: [
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-    EIGHT_SYNTH_CONFIG,
-  ]
-  measures: EIGHT_MEASURE[]
-}
-
 // codepages
 
 export enum CODE_PAGE_TYPE {
@@ -135,7 +85,6 @@ export enum CODE_PAGE_TYPE {
   TERRAIN,
   CHARSET,
   PALETTE,
-  EIGHT_TRACK,
 }
 
 export type CODE_PAGE_STATS = {
@@ -154,7 +103,6 @@ export type CODE_PAGE = {
   terrain?: BOARD_ELEMENT
   charset?: BITMAP
   palette?: BITMAP
-  eighttrack?: EIGHT_TRACK
   // common parsed values
   stats?: CODE_PAGE_STATS
 }
@@ -169,7 +117,6 @@ export type CODE_PAGE_TYPE_MAP = {
   [CODE_PAGE_TYPE.TERRAIN]: BOARD_ELEMENT
   [CODE_PAGE_TYPE.CHARSET]: BITMAP
   [CODE_PAGE_TYPE.PALETTE]: BITMAP
-  [CODE_PAGE_TYPE.EIGHT_TRACK]: EIGHT_TRACK
 }
 
 // book

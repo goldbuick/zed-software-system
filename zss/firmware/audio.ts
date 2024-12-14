@@ -1,22 +1,34 @@
+import { CHIP } from 'zss/chip'
 import { synth_play, synth_voice, synth_voicefx } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
-import { isstring } from 'zss/mapping/types'
+import { isnumber, isstring } from 'zss/mapping/types'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { WORD } from 'zss/words/types'
 
 const isfx = ['echo', 'reverb', 'chorus', 'phaser', 'distortion', 'vibrato']
 
-function synthvoice(idx: number, words: WORD[]) {
-  const [configorfx] = readargs(words, 0, [ARG_TYPE.STRING])
-  if (isfx.includes(configorfx.toLowerCase())) {
-    const [config, maybevalue] = readargs(words, 1, [
-      ARG_TYPE.STRING,
+function handlesynthplay(idx: number, chip: CHIP, words: WORD[]) {
+  const [maybebuffer] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
+  // see if we've been given a flag
+  const buffer = maybebuffer ?? ''
+  const bufferfromflag = chip.get(buffer)
+  // flip index -1 means play, 1 means bgplay
+  synth_play('audio', -idx, isstring(bufferfromflag) ? bufferfromflag : buffer)
+}
+
+function handlesynthvoice(idx: number, words: WORD[]) {
+  const [configorfx] = readargs(words, 0, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
+  if (isnumber(configorfx)) {
+    synth_voice('audio', idx, 'volume', configorfx)
+  } else if (isfx.includes(configorfx.toLowerCase())) {
+    const [maybeconfig, maybevalue] = readargs(words, 1, [
+      ARG_TYPE.MAYBE_NUMBER_OR_STRING,
       ARG_TYPE.MAYBE_NUMBER_OR_STRING,
     ])
-    synth_voicefx('audio', idx, configorfx, config, maybevalue)
+    synth_voicefx('audio', idx, configorfx, maybeconfig, maybevalue)
   } else {
-    const [value] = readargs(words, 1, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
-    synth_voice('audio', idx, configorfx, value)
+    const [maybevalue] = readargs(words, 1, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
+    synth_voice('audio', idx, configorfx, maybevalue)
   }
 }
 
@@ -31,55 +43,19 @@ export const AUDIO_FIRMWARE = createfirmware({
   tick() {},
   tock() {},
 })
-  .command('bgplay', (chip, words) => {
-    const [maybebuffer] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
-    const buffer = maybebuffer ?? ''
-    // see if we've been given a flag
-    const bufferfromflag = chip.get(buffer)
-    synth_play('audio', 1, isstring(bufferfromflag) ? bufferfromflag : buffer)
-    return 0
-  })
-  .command('bgsynth', (_, words) => {
-    synthvoice(0, words)
-    return 0
-  })
   .command('play', (chip, words) => {
-    const [maybebuffer] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
-    const buffer = maybebuffer ?? ''
-    // see if we've been given a flag
-    const bufferfromflag = chip.get(buffer)
-    synth_play('audio', -1, isstring(bufferfromflag) ? bufferfromflag : buffer)
+    handlesynthplay(1, chip, words)
     return 0
   })
   .command('synth', (_, words) => {
-    synthvoice(1, words)
+    handlesynthvoice(1, words)
     return 0
   })
-  .command('synth2', (_, words) => {
-    synthvoice(2, words)
+  .command('bgplay', (chip, words) => {
+    handlesynthplay(-1, chip, words)
     return 0
   })
-  .command('synth3', (_, words) => {
-    synthvoice(3, words)
-    return 0
-  })
-  .command('synth4', (_, words) => {
-    synthvoice(4, words)
-    return 0
-  })
-  .command('synth5', (_, words) => {
-    synthvoice(5, words)
-    return 0
-  })
-  .command('synth6', (_, words) => {
-    synthvoice(6, words)
-    return 0
-  })
-  .command('synth7', (_, words) => {
-    synthvoice(7, words)
-    return 0
-  })
-  .command('synth8', (_, words) => {
-    synthvoice(8, words)
+  .command('bgsynth', (_, words) => {
+    handlesynthvoice(0, words)
     return 0
   })

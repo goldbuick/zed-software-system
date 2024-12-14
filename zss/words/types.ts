@@ -78,7 +78,6 @@ export enum STAT_TYPE {
   TERRAIN,
   CHARSET,
   PALETTE,
-  EIGHT_TRACK,
   CONST, //  @char 2 - @cycle 1 - the first @ is name,
   //         all subsequent @ are key -> value paris
   RANGE, //  @range gooble R HUH; help text for stat

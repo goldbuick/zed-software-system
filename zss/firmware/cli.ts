@@ -225,13 +225,6 @@ export const CLI_FIRMWARE = createfirmware({
           CODE_PAGE_TYPE.PALETTE,
         )
         break
-      case stattypestring(STAT_TYPE.EIGHT_TRACK):
-        codepage = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
-          maybename,
-          CODE_PAGE_TYPE.EIGHT_TRACK,
-        )
-        break
     }
     if (ispresent(codepage)) {
       chip.command('pageopen', codepage.id)

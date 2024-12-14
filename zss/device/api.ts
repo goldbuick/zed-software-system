@@ -75,7 +75,7 @@ export function synth_play(sender: string, priority: number, buffer: string) {
 export function synth_voice(
   sender: string,
   idx: number,
-  config: string,
+  config: number | string,
   value: MAYBE<number | string>,
 ) {
   hub.emit('synth:voice', sender, [idx, config, value])
@@ -85,7 +85,7 @@ export function synth_voicefx(
   sender: string,
   idx: number,
   fx: string,
-  config: string,
+  config: number | string,
   value: number | string,
 ) {
   hub.emit('synth:voicefx', sender, [idx, fx, config, value])
