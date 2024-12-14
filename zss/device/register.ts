@@ -1,6 +1,5 @@
 import { createdevice } from 'zss/device'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { pick } from 'zss/mapping/array'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
@@ -110,15 +109,6 @@ const register = createdevice(
       case 'error:login:title':
       case 'error:login:player':
         tape_crash(register.name())
-        break
-      case 'fullscreen':
-        doasync('register:fullscreen', async function () {
-          if (!document.fullscreenElement) {
-            await document.documentElement.requestFullscreen()
-          } else if (document.exitFullscreen) {
-            await document.exitFullscreen()
-          }
-        })
         break
       case 'share':
         doasync('register:share', async function () {
