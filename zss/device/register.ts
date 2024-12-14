@@ -110,9 +110,20 @@ const register = createdevice(
       case 'error:login:player':
         tape_crash(register.name())
         break
+      case 'dev':
+        doasync('register:dev', async function () {
+          writeheader(register.name(), `creating locked terminal`)
+          await waitfor(100)
+          window.location.href = window.location.href.replace(`/#`, `/locked/#`)
+          // todo, if we're in a locked term, create a share link that includes locked
+        })
+        break
       case 'share':
         doasync('register:share', async function () {
-          const url = await shorturl(window.location.href)
+          const url = await shorturl(
+            // drop /locked from shared short url if found
+            window.location.href.replace(`/locked/`, ``),
+          )
           writecopyit('share', url, url)
         })
         break
