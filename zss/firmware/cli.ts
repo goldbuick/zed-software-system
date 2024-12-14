@@ -8,6 +8,7 @@ import {
   register_nodetrash,
   register_nuke,
   register_share,
+  register_dev,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
@@ -247,6 +248,11 @@ export const CLI_FIRMWARE = createfirmware({
     return 0
   })
   // ---
+  .command('dev', () => {
+    vm_flush('cli')
+    register_dev('cli', READ_CONTEXT.player)
+    return 0
+  })
   .command('share', () => {
     vm_flush('cli')
     register_share('cli', READ_CONTEXT.player)

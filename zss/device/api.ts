@@ -48,6 +48,10 @@ export function register_flush(
   hub.emit('register:flush', sender, [historylabel, books])
 }
 
+export function register_dev(sender: string, player: string) {
+  hub.emit('register:dev', sender, undefined, player)
+}
+
 export function register_share(sender: string, player: string) {
   hub.emit('register:share', sender, undefined, player)
 }

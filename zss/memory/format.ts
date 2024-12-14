@@ -86,6 +86,18 @@ export function unformatobject<T>(
 
 // read / write helpers
 
+/*
+
+compression thoughts idea:
+we have string lookup table for __all__ strings
+
+keys are base64 encoded index starting at 0,1,2, etc.. to create 
+the smallest keysize possible with a string ?
+
+so part of the pack process is de-duping strings
+
+*/
+
 export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
   try {
     const data = deepcopy(entry)
