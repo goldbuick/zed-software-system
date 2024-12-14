@@ -102,7 +102,7 @@ export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
   try {
     const data = deepcopy(entry)
     trimUndefinedRecursively(data)
-    console.info('wrote', deepcopy(data))
+    // console.info('wrote', deepcopy(data))
     return pack(data)
   } catch (err: any) {
     api_error('format', 'binary', err.message)
@@ -112,7 +112,7 @@ export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
 export function unpackbinary(binary: Uint8Array): MAYBE<FORMAT_OBJECT> {
   try {
     const data = unpack(binary)
-    console.info('read', deepcopy(data))
+    // console.info('read', deepcopy(data))
     return data
   } catch (err: any) {
     api_error('format', 'binary', err.message)

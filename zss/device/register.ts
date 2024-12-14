@@ -29,9 +29,21 @@ function readstate(): string {
   return ''
 }
 
+let shouldreload = true
+window.addEventListener('hashchange', () => {
+  if (shouldreload) {
+    window.location.reload()
+  } else {
+    // reset after a single pass
+    shouldreload = true
+  }
+})
+
 function writestate(exportedbooks: string) {
   const out = `#${exportedbooks}`
   if (window.location.hash !== out) {
+    // saving current state, don't interrupt the user
+    shouldreload = false
     window.location.hash = out
     tape_info(
       register.name(),
