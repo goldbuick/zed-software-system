@@ -1,9 +1,7 @@
 import { createdevice } from 'zss/device'
 import { TICK_FPS, TICK_RATE } from 'zss/mapping/tick'
 
-const clockdevice = createdevice('clock', [], () => {
-  // no-op
-})
+const clockdevice = createdevice('clock', [], () => {})
 
 // tracking
 let clock = 0

@@ -2681,6 +2681,11 @@ functions-have-names@^1.2.3:
   resolved "https://registry.npmjs.org/functions-have-names/-/functions-have-names-1.2.3.tgz#0404fe4ee2ba2f607f0e0ec3c80bae994133b834"
   integrity sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==
 
+gamepad-helper@^1.2.3:
+  version "1.2.3"
+  resolved "https://registry.npmjs.org/gamepad-helper/-/gamepad-helper-1.2.3.tgz#b069978e6d0426763a94880d59cb71ebb3d016ab"
+  integrity sha512-pPfv2ReJQJWNMUoRkk40GHFDBhD2iSx0kvSbdO/haWs25oEFmZtSFtSqRmdBQUW9qJpHeLyANS/MK9NRAVMPew==
+
 gensync@^1.0.0-beta.2:
   version "1.0.0-beta.2"
   resolved "https://registry.npmjs.org/gensync/-/gensync-1.0.0-beta.2.tgz#32a6ee76c3d7f52d46b2b1ae5d93fea8580a25e0"
