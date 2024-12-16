@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
+import { GamepadHelper, IGamepadButtonEventDetail } from 'gamepad-helper'
 import isHotKey from 'is-hotkey'
 import mitt from 'mitt'
 import {
@@ -9,10 +10,9 @@ import {
   useState,
 } from 'react'
 import { vm_cli } from 'zss/device/api'
+import { getgadgetclientplayer } from 'zss/gadget/data/state'
+import { INPUT } from 'zss/gadget/data/types'
 import { ismac } from 'zss/words/system'
-
-import { getgadgetclientplayer } from '../data/state'
-import { INPUT } from '../data/types'
 
 // user input
 
@@ -20,6 +20,40 @@ export type UserInputMods = {
   alt: boolean
   ctrl: boolean
   shift: boolean
+}
+
+const inputstate: Record<INPUT, boolean> = {
+  [INPUT.NONE]: false,
+  [INPUT.ALT]: false,
+  [INPUT.CTRL]: false,
+  [INPUT.SHIFT]: false,
+  [INPUT.MOVE_UP]: false,
+  [INPUT.MOVE_DOWN]: false,
+  [INPUT.MOVE_LEFT]: false,
+  [INPUT.MOVE_RIGHT]: false,
+  [INPUT.OK_BUTTON]: false,
+  [INPUT.CANCEL_BUTTON]: false,
+  [INPUT.MENU_BUTTON]: false,
+  [INPUT.SHOOT_UP]: false,
+  [INPUT.SHOOT_DOWN]: false,
+  [INPUT.SHOOT_LEFT]: false,
+  [INPUT.SHOOT_RIGHT]: false,
+}
+
+function inputdown(input: INPUT) {
+  // make sure to trigger input event
+  if (!inputstate[input]) {
+    invoke(input, {
+      alt: inputstate[INPUT.ALT],
+      ctrl: inputstate[INPUT.CTRL],
+      shift: inputstate[INPUT.SHIFT],
+    })
+  }
+  inputstate[input] = true
+}
+
+function inputup(input: INPUT) {
+  inputstate[input] = false
 }
 
 // focus
@@ -30,10 +64,6 @@ const user = {
 }
 export const UserInputContext = createContext(user.root)
 
-function invoke(input: INPUT, mods: UserInputMods) {
-  user.root.emit(INPUT[input], mods)
-}
-
 // keyboard input
 export type KeyboardInputHandler = (event: KeyboardEvent) => void
 
@@ -43,6 +73,10 @@ export function modsfromevent(event: KeyboardEvent): UserInputMods {
     ctrl: ismac ? event.metaKey : event.ctrlKey,
     shift: event.shiftKey,
   }
+}
+
+function invoke(input: INPUT, mods: UserInputMods) {
+  user.root.emit(INPUT[input], mods)
 }
 
 document.addEventListener(
@@ -97,29 +131,45 @@ document.addEventListener(
         break
     }
 
+    if (mods.alt) {
+      inputdown(INPUT.ALT)
+    } else {
+      inputup(INPUT.ALT)
+    }
+    if (mods.ctrl) {
+      inputdown(INPUT.CTRL)
+    } else {
+      inputup(INPUT.CTRL)
+    }
+    if (mods.shift) {
+      inputdown(INPUT.SHIFT)
+    } else {
+      inputup(INPUT.SHIFT)
+    }
+
     // keyboard built-in player inputs
     switch (key) {
       case 'arrowleft':
-        invoke(INPUT.MOVE_LEFT, mods)
+        inputdown(INPUT.MOVE_LEFT)
         break
       case 'arrowright':
-        invoke(INPUT.MOVE_RIGHT, mods)
+        inputdown(INPUT.MOVE_RIGHT)
         break
       case 'arrowup':
-        invoke(INPUT.MOVE_UP, mods)
+        inputdown(INPUT.MOVE_UP)
         break
       case 'arrowdown':
-        invoke(INPUT.MOVE_DOWN, mods)
+        inputdown(INPUT.MOVE_DOWN)
         break
       case 'enter':
-        invoke(INPUT.OK_BUTTON, mods)
+        inputdown(INPUT.OK_BUTTON)
         break
       case 'esc':
       case 'escape':
-        invoke(INPUT.CANCEL_BUTTON, mods)
+        inputdown(INPUT.CANCEL_BUTTON)
         break
       case 'tab':
-        invoke(INPUT.MENU_BUTTON, mods)
+        inputdown(INPUT.MENU_BUTTON)
         break
     }
 
@@ -132,20 +182,157 @@ document.addEventListener(
   { capture: true },
 )
 
-// gamepad input
-// yes
+document.addEventListener(
+  'keyup',
+  (event) => {
+    const key = event.key.toLowerCase()
+    const mods = modsfromevent(event)
 
-// mouse input ??
-// touch input ??
+    if (mods.alt) {
+      inputdown(INPUT.ALT)
+    } else {
+      inputup(INPUT.ALT)
+    }
+    if (mods.ctrl) {
+      inputdown(INPUT.CTRL)
+    } else {
+      inputup(INPUT.CTRL)
+    }
+    if (mods.shift) {
+      inputdown(INPUT.SHIFT)
+    } else {
+      inputup(INPUT.SHIFT)
+    }
+
+    // keyboard built-in player inputs
+    switch (key) {
+      case 'arrowleft':
+        inputup(INPUT.MOVE_LEFT)
+        break
+      case 'arrowright':
+        inputup(INPUT.MOVE_RIGHT)
+        break
+      case 'arrowup':
+        inputup(INPUT.MOVE_UP)
+        break
+      case 'arrowdown':
+        inputup(INPUT.MOVE_DOWN)
+        break
+      case 'enter':
+        inputup(INPUT.OK_BUTTON)
+        break
+      case 'esc':
+      case 'escape':
+        inputup(INPUT.CANCEL_BUTTON)
+        break
+      case 'tab':
+        inputup(INPUT.MENU_BUTTON)
+        break
+    }
+  },
+  { capture: true },
+)
+
+// gamepad input
+
+const BUTTON_A = 0
+const BUTTON_B = 1
+
+const BUTTON_X = 2
+const BUTTON_Y = 3
+
+const BUTTON_LEFT_SHOULDER = 4
+const BUTTON_RIGHT_SHOULDER = 5
+const BUTTON_LEFT_TRIGGER = 6
+const BUTTON_RIGHT_TRIGGER = 7
+
+const BUTTON_MENU = 9
+
+const BUTTON_UP = 12
+const BUTTON_DOWN = 13
+const BUTTON_LEFT = 14
+const BUTTON_RIGHT = 15
+
+const buttonlookup: Record<number, INPUT> = {
+  [BUTTON_A]: INPUT.OK_BUTTON,
+  [BUTTON_B]: INPUT.CANCEL_BUTTON,
+  [BUTTON_X]: INPUT.OK_BUTTON,
+  [BUTTON_Y]: INPUT.CANCEL_BUTTON,
+  [BUTTON_LEFT_SHOULDER]: INPUT.ALT,
+  [BUTTON_RIGHT_SHOULDER]: INPUT.ALT,
+  [BUTTON_LEFT_TRIGGER]: INPUT.CTRL,
+  [BUTTON_RIGHT_TRIGGER]: INPUT.CTRL,
+  [BUTTON_MENU]: INPUT.MENU_BUTTON,
+  [BUTTON_UP]: INPUT.MOVE_UP,
+  [BUTTON_DOWN]: INPUT.MOVE_DOWN,
+  [BUTTON_LEFT]: INPUT.MOVE_LEFT,
+  [BUTTON_RIGHT]: INPUT.MOVE_RIGHT,
+}
+
+type GamepadEvent = CustomEvent<IGamepadButtonEventDetail>
+
+document.addEventListener('gamepadbuttondown', (event: GamepadEvent) => {
+  inputdown(buttonlookup[event.detail.button])
+})
+
+document.addEventListener('gamepadbuttonup', (event: GamepadEvent) => {
+  inputup(buttonlookup[event.detail.button])
+})
+
+// handle input repeat
+let acc = 0
+let previous = performance.now()
+const INPUT_RATE = 250
+
+function inputpoll() {
+  const now = performance.now()
+  const delta = now - previous
+
+  acc += delta
+  if (acc >= INPUT_RATE) {
+    acc %= INPUT_RATE
+    // signal input state
+    const mods: UserInputMods = {
+      alt: !!inputstate[INPUT.ALT],
+      ctrl: !!inputstate[INPUT.CTRL],
+      shift: !!inputstate[INPUT.SHIFT],
+    }
+    const inputs = [
+      INPUT.MOVE_UP,
+      INPUT.MOVE_DOWN,
+      INPUT.MOVE_LEFT,
+      INPUT.MOVE_RIGHT,
+      INPUT.OK_BUTTON,
+      INPUT.CANCEL_BUTTON,
+      INPUT.MENU_BUTTON,
+      INPUT.SHOOT_UP,
+      INPUT.SHOOT_DOWN,
+      INPUT.SHOOT_LEFT,
+      INPUT.SHOOT_RIGHT,
+    ]
+    inputs.forEach((input) => {
+      if (inputstate[input]) {
+        invoke(input, mods)
+      }
+    })
+  }
+
+  previous = now
+  GamepadHelper.update()
+  setTimeout(inputpoll, 1)
+}
+inputpoll()
+
+// mouse && touch input - used to activate :tap labels
 
 // components
+
+const HOTKEY_EVENT = 'keyup'
 
 type UserHotkeyProps = {
   hotkey: string
   children: () => void
 }
-
-const HOTKEY_EVENT = 'keyup'
 
 export function UserHotkey({ hotkey, children }: UserHotkeyProps) {
   useEffect(() => {

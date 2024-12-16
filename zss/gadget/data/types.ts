@@ -1,5 +1,4 @@
-import { COLOR } from 'zss/words/types'
-import { WORD } from 'zss/words/types'
+import { COLOR, WORD } from 'zss/words/types'
 
 export const BYTES_PER_COLOR = 3
 
@@ -257,6 +256,9 @@ export const INPUT_SHIFT = 0x0100
 
 export enum INPUT {
   NONE,
+  ALT,
+  CTRL,
+  SHIFT,
   MOVE_UP,
   MOVE_DOWN,
   MOVE_LEFT,
@@ -264,4 +266,8 @@ export enum INPUT {
   OK_BUTTON,
   CANCEL_BUTTON,
   MENU_BUTTON,
+  SHOOT_UP,
+  SHOOT_DOWN,
+  SHOOT_LEFT,
+  SHOOT_RIGHT,
 }
