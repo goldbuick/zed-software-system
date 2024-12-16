@@ -34,6 +34,10 @@ const inputstate: Record<INPUT, boolean> = {
   [INPUT.OK_BUTTON]: false,
   [INPUT.CANCEL_BUTTON]: false,
   [INPUT.MENU_BUTTON]: false,
+  [INPUT.SHOOT_UP]: false,
+  [INPUT.SHOOT_DOWN]: false,
+  [INPUT.SHOOT_LEFT]: false,
+  [INPUT.SHOOT_RIGHT]: false,
 }
 
 function inputdown(input: INPUT) {
@@ -230,30 +234,105 @@ document.addEventListener(
 )
 
 // gamepad input
-document.addEventListener(
-  'gamepadbuttondown',
-  (event: CustomEvent<IGamepadButtonEventDetail>) => {
-    // inputdown(event.button)
-  },
-)
 
-document.addEventListener(
-  'gamepadbuttonup',
-  (event: CustomEvent<IGamepadButtonEventDetail>) => {
-    // inputup(event.button)
-  },
-)
+const BUTTON_A = 0
+const BUTTON_B = 1
+
+const BUTTON_X = 2
+const BUTTON_Y = 3
+
+const BUTTON_LEFT_SHOULDER = 4
+const BUTTON_RIGHT_SHOULDER = 5
+const BUTTON_LEFT_TRIGGER = 6
+const BUTTON_RIGHT_TRIGGER = 7
+
+const BUTTON_MENU = 9
+
+const BUTTON_UP = 12
+const BUTTON_DOWN = 13
+const BUTTON_LEFT = 14
+const BUTTON_RIGHT = 15
+
+const buttonlookup: Record<number, INPUT> = {
+  [BUTTON_A]: INPUT.OK_BUTTON,
+  [BUTTON_B]: INPUT.CANCEL_BUTTON,
+  [BUTTON_X]: INPUT.OK_BUTTON,
+  [BUTTON_Y]: INPUT.CANCEL_BUTTON,
+  [BUTTON_LEFT_SHOULDER]: INPUT.ALT,
+  [BUTTON_RIGHT_SHOULDER]: INPUT.ALT,
+  [BUTTON_LEFT_TRIGGER]: INPUT.CTRL,
+  [BUTTON_RIGHT_TRIGGER]: INPUT.CTRL,
+  [BUTTON_MENU]: INPUT.MENU_BUTTON,
+  [BUTTON_UP]: INPUT.MOVE_UP,
+  [BUTTON_DOWN]: INPUT.MOVE_DOWN,
+  [BUTTON_LEFT]: INPUT.MOVE_LEFT,
+  [BUTTON_RIGHT]: INPUT.MOVE_RIGHT,
+}
+
+type GamepadEvent = CustomEvent<IGamepadButtonEventDetail>
+
+document.addEventListener('gamepadbuttondown', (event: GamepadEvent) => {
+  inputdown(buttonlookup[event.detail.button])
+})
+
+document.addEventListener('gamepadbuttonup', (event: GamepadEvent) => {
+  inputup(buttonlookup[event.detail.button])
+})
+
+// handle input repeat
+let acc = 0
+let previous = performance.now()
+const INPUT_RATE = 250
+
+function inputpoll() {
+  const now = performance.now()
+  const delta = now - previous
+
+  acc += delta
+  if (acc >= INPUT_RATE) {
+    acc %= INPUT_RATE
+    // signal input state
+    const mods: UserInputMods = {
+      alt: !!inputstate[INPUT.ALT],
+      ctrl: !!inputstate[INPUT.CTRL],
+      shift: !!inputstate[INPUT.SHIFT],
+    }
+    const inputs = [
+      INPUT.MOVE_UP,
+      INPUT.MOVE_DOWN,
+      INPUT.MOVE_LEFT,
+      INPUT.MOVE_RIGHT,
+      INPUT.OK_BUTTON,
+      INPUT.CANCEL_BUTTON,
+      INPUT.MENU_BUTTON,
+      INPUT.SHOOT_UP,
+      INPUT.SHOOT_DOWN,
+      INPUT.SHOOT_LEFT,
+      INPUT.SHOOT_RIGHT,
+    ]
+    inputs.forEach((input) => {
+      if (inputstate[input]) {
+        invoke(input, mods)
+      }
+    })
+  }
+
+  previous = now
+  GamepadHelper.update()
+  setTimeout(inputpoll, 1)
+}
+inputpoll()
 
 // mouse && touch input - used to activate :tap labels
 
 // components
 
+const HOTKEY_EVENT = 'keyup'
+
 type UserHotkeyProps = {
   hotkey: string
   children: () => void
 }
-
-const HOTKEY_EVENT = 'keyup'
 
 export function UserHotkey({ hotkey, children }: UserHotkeyProps) {
   useEffect(() => {
