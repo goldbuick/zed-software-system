@@ -3,7 +3,6 @@ import { useTapeEditor } from 'zss/gadget/data/state'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   applycolortoindexes,
-  textformatedges,
   textformatreadedges,
   tokenizeandwritetextformat,
   writeplaintext,
@@ -21,13 +20,15 @@ import {
 
 type TextrowsProps = {
   ycursor: number
+  xoffset: number
   yoffset: number
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<MODEM_SHARED_STRING>
 }
 
 export function EditorRows({
-  ycursor,
+  ycursor: cursor,
+  xoffset,
   yoffset,
   rows,
   codepage,
@@ -60,43 +61,31 @@ export function EditorRows({
   }
 
   // render lines
+  const left = edge.left + 1 - xoffset
   setupeditoritem(false, false, 0, -yoffset, context, 1, 2, 1)
   for (let i = 0; i < rows.length; ++i) {
+    if (context.y <= edge.top + 1) {
+      ++context.y
+      continue
+    }
+
     // setup
     const row = rows[i]
-
-    // const yrow = i + 2
-    const active = i === ycursor
+    const active = i === cursor
     const text = row.code.replaceAll('\n', '')
 
     // render
+    context.x = left
     context.iseven = context.y % 2 === 0
     context.active.bg = active ? BG_ACTIVE : BG
-
-    const cx = context.x
-    const cy = context.y
-
     context.disablewrap = true
-    textformatedges(
-      edge.top + 2,
-      edge.left + 1,
-      edge.right - 2,
-      edge.bottom - 1,
-      context,
-    )
     writeplaintext(`${text}`, context, false)
-    context.x = edge.left + 1
-    ++context.y
-
-    if (context.y >= edge.bottom) {
-      break
-    }
 
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
-      const index = cx + cy * context.width
-      const start = Math.max(row.start, ii1) - row.start
-      const end = Math.min(row.end, ii2) - row.start
+      const index = left + context.y * context.width
+      const start = Math.max(0, ii1 - row.start)
+      const end = Math.min(row.end - row.start, ii2 - row.start)
       applycolortoindexes(
         index + start,
         index + end,
@@ -105,9 +94,14 @@ export function EditorRows({
         context,
       )
     }
+
+    // next line
+    ++context.y
+    if (context.y >= edge.bottom) {
+      break
+    }
   }
   context.disablewrap = false
 
-  context.changed()
   return null
 }

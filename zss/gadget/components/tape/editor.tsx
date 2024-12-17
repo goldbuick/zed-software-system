@@ -39,7 +39,8 @@ export function TapeEditor() {
 
   // measure edges once
   const props = {
-    yoffset: tapeeditor.scroll,
+    xoffset: tapeeditor.xscroll,
+    yoffset: tapeeditor.yscroll,
     codepage,
     ycursor,
     rows,
@@ -47,16 +48,28 @@ export function TapeEditor() {
 
   const maxscroll = rows.length - 4
   useEffect(() => {
-    const delta = ycursor - tapeeditor.scroll
-    let scroll = tapeeditor.scroll
-    if (delta > edge.height - 8) {
-      scroll++
+    let yscroll = tapeeditor.yscroll
+    const delta = ycursor - tapeeditor.yscroll
+    const bottom = edge.height - 8
+    const maxstep = Math.round(bottom * 0.75)
+    let step = clamp(Math.round(Math.abs(delta) * 0.25), 1, maxstep)
+    if (step < 8) {
+      step = 1
+    }
+    if (delta > bottom) {
+      yscroll += step
     }
     if (delta < 4) {
-      scroll--
+      yscroll -= step
     }
-    useTapeEditor.setState({ scroll: Math.round(clamp(scroll, 0, maxscroll)) })
-  }, [ycursor, tapeeditor.scroll, maxscroll, edge.height])
+    setTimeout(
+      () =>
+        useTapeEditor.setState({
+          yscroll: Math.round(clamp(yscroll, 0, maxscroll)),
+        }),
+      16,
+    )
+  }, [ycursor, tapeeditor.yscroll, maxscroll, edge.height])
 
   return (
     <>
