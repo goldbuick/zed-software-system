@@ -210,7 +210,6 @@ export function TerminalInput({
           const { key } = event
           const lkey = key.toLowerCase()
           const mods = modsfromevent(event)
-
           switch (lkey) {
             case 'arrowleft':
               trackselection(mods.shift)
