@@ -40,15 +40,25 @@ const inputstate: Record<INPUT, boolean> = {
   [INPUT.SHOOT_RIGHT]: false,
 }
 
+// handle input repeat
+let acc = 0
+let previous = performance.now()
+const INPUT_RATE = 250
+
 function inputdown(input: INPUT) {
   // make sure to trigger input event
+  // when we change from false to true state
   if (!inputstate[input]) {
+    // reset input repeat
+    acc = 0
+    // emit input event
     invoke(input, {
       alt: inputstate[INPUT.ALT],
       ctrl: inputstate[INPUT.CTRL],
       shift: inputstate[INPUT.SHIFT],
     })
   }
+  // track state change
   inputstate[input] = true
 }
 
@@ -271,18 +281,15 @@ const buttonlookup: Record<number, INPUT> = {
 
 type GamepadEvent = CustomEvent<IGamepadButtonEventDetail>
 
+// @ts-expect-error added by gamepad helper
 document.addEventListener('gamepadbuttondown', (event: GamepadEvent) => {
   inputdown(buttonlookup[event.detail.button])
 })
 
+// @ts-expect-error added by gamepad helper
 document.addEventListener('gamepadbuttonup', (event: GamepadEvent) => {
   inputup(buttonlookup[event.detail.button])
 })
-
-// handle input repeat
-let acc = 0
-let previous = performance.now()
-const INPUT_RATE = 250
 
 function inputpoll() {
   const now = performance.now()

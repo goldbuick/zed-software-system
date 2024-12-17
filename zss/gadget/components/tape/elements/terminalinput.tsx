@@ -206,97 +206,100 @@ export function TerminalInput({
         }}
       />
       <UserInput
-        MENU_BUTTON={(mods) => tape_terminal_inclayout('tape', !mods.shift)}
-        MOVE_UP={(mods) => {
-          if (mods.ctrl) {
-            inputstateswitch(tapeterminal.bufferindex + 1)
-          } else {
-            trackselection(mods.shift)
-            useTapeTerminal.setState({
-              ycursor: clamp(
-                Math.round(tapeterminal.ycursor + (mods.alt ? 10 : 1)),
-                0,
-                logrowtotalheight,
-              ),
-            })
-          }
-        }}
-        MOVE_DOWN={(mods) => {
-          if (mods.ctrl) {
-            inputstateswitch(tapeterminal.bufferindex - 1)
-          } else {
-            trackselection(mods.shift)
-            useTapeTerminal.setState({
-              ycursor: clamp(
-                Math.round(tapeterminal.ycursor - (mods.alt ? 10 : 1)),
-                0,
-                logrowtotalheight,
-              ),
-            })
-          }
-        }}
-        MOVE_LEFT={(mods) => {
-          trackselection(mods.shift)
-          if (mods.ctrl) {
-            useTapeTerminal.setState({ xcursor: 0 })
-          } else {
-            useTapeTerminal.setState({
-              xcursor: clamp(
-                tapeterminal.xcursor - (mods.alt ? 10 : 1),
-                0,
-                edge.right,
-              ),
-            })
-          }
-        }}
-        MOVE_RIGHT={(mods) => {
-          trackselection(mods.shift)
-          if (mods.ctrl) {
-            useTapeTerminal.setState({
-              xcursor: inputstateactive ? inputstate.length : edge.right,
-            })
-          } else {
-            useTapeTerminal.setState({
-              xcursor: clamp(
-                tapeterminal.xcursor + (mods.alt ? 10 : 1),
-                0,
-                edge.right,
-              ),
-            })
-          }
-        }}
-        OK_BUTTON={() => {
-          const invoke = hasselection ? inputstateselected : inputstate
-          if (invoke.length) {
-            if (inputstateactive) {
-              useTapeTerminal.setState({
-                xcursor: 0,
-                bufferindex: 0,
-                xselect: undefined,
-                yselect: undefined,
-                buffer: [
-                  '',
-                  invoke,
-                  ...tapeterminal.buffer
-                    .slice(1)
-                    .filter((item) => item !== invoke),
-                ],
-              })
-              vm_cli('tape', invoke, player)
-            } else {
-              resettoend()
-            }
-          }
-        }}
-        CANCEL_BUTTON={() => {
-          tape_terminal_close('tape')
-        }}
         keydown={(event) => {
           const { key } = event
           const lkey = key.toLowerCase()
           const mods = modsfromevent(event)
-
           switch (lkey) {
+            case 'arrowleft':
+              trackselection(mods.shift)
+              if (mods.ctrl) {
+                useTapeTerminal.setState({ xcursor: 0 })
+              } else {
+                useTapeTerminal.setState({
+                  xcursor: clamp(
+                    tapeterminal.xcursor - (mods.alt ? 10 : 1),
+                    0,
+                    edge.right,
+                  ),
+                })
+              }
+              break
+            case 'arrowright':
+              trackselection(mods.shift)
+              if (mods.ctrl) {
+                useTapeTerminal.setState({
+                  xcursor: inputstateactive ? inputstate.length : edge.right,
+                })
+              } else {
+                useTapeTerminal.setState({
+                  xcursor: clamp(
+                    tapeterminal.xcursor + (mods.alt ? 10 : 1),
+                    0,
+                    edge.right,
+                  ),
+                })
+              }
+              break
+            case 'arrowup':
+              if (mods.ctrl) {
+                inputstateswitch(tapeterminal.bufferindex + 1)
+              } else {
+                trackselection(mods.shift)
+                useTapeTerminal.setState({
+                  ycursor: clamp(
+                    Math.round(tapeterminal.ycursor + (mods.alt ? 10 : 1)),
+                    0,
+                    logrowtotalheight,
+                  ),
+                })
+              }
+              break
+            case 'arrowdown':
+              if (mods.ctrl) {
+                inputstateswitch(tapeterminal.bufferindex - 1)
+              } else {
+                trackselection(mods.shift)
+                useTapeTerminal.setState({
+                  ycursor: clamp(
+                    Math.round(tapeterminal.ycursor - (mods.alt ? 10 : 1)),
+                    0,
+                    logrowtotalheight,
+                  ),
+                })
+              }
+              break
+            case 'enter': {
+              const invoke = hasselection ? inputstateselected : inputstate
+              if (invoke.length) {
+                if (inputstateactive) {
+                  useTapeTerminal.setState({
+                    xcursor: 0,
+                    bufferindex: 0,
+                    xselect: undefined,
+                    yselect: undefined,
+                    buffer: [
+                      '',
+                      invoke,
+                      ...tapeterminal.buffer
+                        .slice(1)
+                        .filter((item) => item !== invoke),
+                    ],
+                  })
+                  vm_cli('tape', invoke, player)
+                } else {
+                  resettoend()
+                }
+              }
+              break
+            }
+            case 'esc':
+            case 'escape':
+              tape_terminal_close('tape')
+              break
+            case 'tab':
+              tape_terminal_inclayout('tape', !mods.shift)
+              break
             case 'delete':
               // single line only
               if (inputstateactive) {

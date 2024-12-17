@@ -146,57 +146,6 @@ export function EditorInput({
         onScroll={(ydelta) => movecursor(ydelta * 0.75)}
       />
       <UserInput
-        MOVE_LEFT={(mods) => {
-          trackselection(mods.shift)
-          if (mods.ctrl) {
-            useTapeEditor.setState({ cursor: coderow.start })
-          } else {
-            const cursor = tapeeditor.cursor - (mods.alt ? 10 : 1)
-            useTapeEditor.setState({ cursor: clamp(cursor, 0, codeend) })
-          }
-        }}
-        MOVE_RIGHT={(mods) => {
-          trackselection(mods.shift)
-          if (mods.ctrl) {
-            useTapeEditor.setState({ cursor: coderow.end })
-          } else {
-            const cursor = tapeeditor.cursor + (mods.alt ? 10 : 1)
-            useTapeEditor.setState({ cursor: clamp(cursor, 0, codeend) })
-          }
-        }}
-        MOVE_UP={(mods) => {
-          trackselection(mods.shift)
-          if (mods.ctrl) {
-            useTapeEditor.setState({ cursor: 0 })
-          } else {
-            movecursor(mods.alt ? -10 : -1)
-          }
-        }}
-        MOVE_DOWN={(mods) => {
-          trackselection(mods.shift)
-          if (mods.ctrl) {
-            useTapeEditor.setState({ cursor: codeend })
-          } else {
-            movecursor(mods.alt ? 10 : 1)
-          }
-        }}
-        OK_BUTTON={() => {
-          if (ispresent(value)) {
-            // insert newline !
-            value.insert(tapeeditor.cursor, `\n`)
-            useTapeEditor.setState({ cursor: tapeeditor.cursor + 1 })
-          }
-        }}
-        CANCEL_BUTTON={(mods) => {
-          if (mods.shift || mods.alt || mods.ctrl) {
-            tape_terminal_close('tape')
-          } else {
-            tape_editor_close('editor')
-          }
-        }}
-        MENU_BUTTON={(mods) => {
-          tape_terminal_inclayout('editor', !mods.shift)
-        }}
         keydown={(event) => {
           if (!ispresent(value)) {
             return
@@ -207,6 +156,58 @@ export function EditorInput({
           const mods = modsfromevent(event)
 
           switch (lkey) {
+            case 'arrowleft':
+              trackselection(mods.shift)
+              if (mods.ctrl) {
+                useTapeEditor.setState({ cursor: coderow.start })
+              } else {
+                const cursor = tapeeditor.cursor - (mods.alt ? 10 : 1)
+                useTapeEditor.setState({ cursor: clamp(cursor, 0, codeend) })
+              }
+              break
+            case 'arrowright':
+              trackselection(mods.shift)
+              if (mods.ctrl) {
+                useTapeEditor.setState({ cursor: coderow.end })
+              } else {
+                const cursor = tapeeditor.cursor + (mods.alt ? 10 : 1)
+                useTapeEditor.setState({ cursor: clamp(cursor, 0, codeend) })
+              }
+              break
+            case 'arrowup':
+              trackselection(mods.shift)
+              if (mods.ctrl) {
+                useTapeEditor.setState({ cursor: 0 })
+              } else {
+                movecursor(mods.alt ? -10 : -1)
+              }
+              break
+            case 'arrowdown':
+              trackselection(mods.shift)
+              if (mods.ctrl) {
+                useTapeEditor.setState({ cursor: codeend })
+              } else {
+                movecursor(mods.alt ? 10 : 1)
+              }
+              break
+            case 'enter':
+              if (ispresent(value)) {
+                // insert newline !
+                value.insert(tapeeditor.cursor, `\n`)
+                useTapeEditor.setState({ cursor: tapeeditor.cursor + 1 })
+              }
+              break
+            case 'esc':
+            case 'escape':
+              if (mods.shift || mods.alt || mods.ctrl) {
+                tape_terminal_close('tape')
+              } else {
+                tape_editor_close('editor')
+              }
+              break
+            case 'tab':
+              tape_terminal_inclayout('editor', !mods.shift)
+              break
             case 'delete':
               if (hasselection) {
                 deleteselection()
