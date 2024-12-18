@@ -19,6 +19,7 @@ import {
 } from 'tone'
 import { createdevice } from 'zss/device'
 import { createsource } from 'zss/gadget/audio/source'
+import { clamp } from 'zss/mapping/number'
 import {
   invokeplay,
   parseplay,
@@ -601,6 +602,11 @@ function validatesynthtype(value: string) {
         type = type.substring(8)
       }
 
+      // catch custom
+      if (type.startsWith('custom')) {
+        type = type.substring(6)
+      }
+
       // no suffix numbers
       if (type === '') {
         return true
@@ -641,7 +647,7 @@ const synthdevice = createdevice('synth', [], (message) => {
         const [idx, config, value] = message.data as [
           number,
           number | string,
-          number | string,
+          number | string | number[],
         ]
         const voice = synth.SOURCE[idx]
         if (ispresent(voice)) {
@@ -659,12 +665,23 @@ const synthdevice = createdevice('synth', [], (message) => {
               break
             default:
               if (isstring(config) && validatesynthtype(config)) {
-                voice.source.set({
-                  oscillator: {
-                    // @ts-expect-error lazy
-                    type: config,
-                  },
-                })
+                if (isarray(value)) {
+                  // TODO: validate config value works with partials
+                  voice.source.set({
+                    oscillator: {
+                      // @ts-expect-error lazy
+                      type: config,
+                      partials: value,
+                    },
+                  })
+                } else {
+                  voice.source.set({
+                    oscillator: {
+                      // @ts-expect-error lazy
+                      type: config,
+                    },
+                  })
+                }
               } else {
                 api_error(
                   synthdevice.name(),
@@ -692,14 +709,16 @@ const synthdevice = createdevice('synth', [], (message) => {
         if (ispresent(fx)) {
           switch (config) {
             case 'on':
-              fx.wet.value = 0.1
+              // default on value
+              fx.wet.value = 0.2
               break
             case 'off':
               fx.wet.value = 0.0
               break
             default:
-              if (isnumber(value)) {
-                fx.wet.value = 0.1 * value
+              if (isnumber(config)) {
+                // specify wet in terms of percent
+                fx.wet.value = clamp(0.01 * config, 0, 1)
               } else {
                 switch (fxname) {
                   case 'vibrato': {

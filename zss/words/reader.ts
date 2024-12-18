@@ -56,14 +56,14 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.NUMBER]: number
   [ARG_TYPE.STRING]: string
   [ARG_TYPE.NUMBER_OR_STRING]: number | string
-  [ARG_TYPE.MAYBE_CATEGORY]: CATEGORY | undefined
-  [ARG_TYPE.MAYBE_COLLISION]: COLLISION | undefined
-  [ARG_TYPE.MAYBE_COLOR]: STR_COLOR | undefined
-  [ARG_TYPE.MAYBE_KIND]: STR_KIND | undefined
-  [ARG_TYPE.MAYBE_DIR]: PT | undefined
-  [ARG_TYPE.MAYBE_NUMBER]: number | undefined
-  [ARG_TYPE.MAYBE_STRING]: string | undefined
-  [ARG_TYPE.MAYBE_NUMBER_OR_STRING]: number | string
+  [ARG_TYPE.MAYBE_CATEGORY]: MAYBE<CATEGORY>
+  [ARG_TYPE.MAYBE_COLLISION]: MAYBE<COLLISION>
+  [ARG_TYPE.MAYBE_COLOR]: MAYBE<STR_COLOR>
+  [ARG_TYPE.MAYBE_KIND]: MAYBE<STR_KIND>
+  [ARG_TYPE.MAYBE_DIR]: MAYBE<PT>
+  [ARG_TYPE.MAYBE_NUMBER]: MAYBE<number>
+  [ARG_TYPE.MAYBE_STRING]: MAYBE<string>
+  [ARG_TYPE.MAYBE_NUMBER_OR_STRING]: MAYBE<number | string>
   [ARG_TYPE.ANY]: any
 }
 
@@ -148,11 +148,19 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.NUMBER: {
         const [value, iii] = readexpr(ii)
-        if (!isnumber(value)) {
+        if (isstring(value)) {
+          const maybevalue = parseFloat(value)
+          if (isnumber(maybevalue)) {
+            values.push(maybevalue)
+          } else {
+            didexpect('number', value)
+          }
+        } else if (isnumber(value)) {
+          values.push(value)
+        } else {
           didexpect('number', value)
         }
         ii = iii
-        values.push(value)
         break
       }
       case ARG_TYPE.STRING: {
@@ -242,11 +250,19 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.MAYBE_NUMBER: {
         const [value, iii] = readexpr(ii)
-        if (value !== undefined && !isnumber(value)) {
+        if (isstring(value)) {
+          const maybevalue = parseFloat(value)
+          if (isnumber(maybevalue)) {
+            values.push(maybevalue)
+          } else {
+            didexpect('optional number', value)
+          }
+        } else if (isnumber(value) || value === undefined) {
+          values.push(value)
+        } else {
           didexpect('optional number', value)
         }
         ii = iii
-        values.push(value)
         break
       }
       case ARG_TYPE.MAYBE_STRING: {

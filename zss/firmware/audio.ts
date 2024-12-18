@@ -17,18 +17,30 @@ function handlesynthplay(idx: number, chip: CHIP, words: WORD[]) {
 }
 
 function handlesynthvoice(idx: number, words: WORD[]) {
-  const [configorfx] = readargs(words, 0, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
-  if (isnumber(configorfx)) {
-    synth_voice('audio', idx, 'volume', configorfx)
-  } else if (isfx.includes(configorfx.toLowerCase())) {
+  const [voiceorfx] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
+  if (isnumber(voiceorfx)) {
+    synth_voice('audio', idx, 'volume', voiceorfx)
+  } else if (isfx.includes(voiceorfx.toLowerCase())) {
     const [maybeconfig, maybevalue] = readargs(words, 1, [
-      ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+      ARG_TYPE.NUMBER_OR_STRING,
       ARG_TYPE.MAYBE_NUMBER_OR_STRING,
     ])
-    synth_voicefx('audio', idx, configorfx, maybeconfig, maybevalue)
+    synth_voicefx('audio', idx, voiceorfx, maybeconfig, maybevalue)
   } else {
-    const [maybevalue] = readargs(words, 1, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
-    synth_voice('audio', idx, configorfx, maybevalue)
+    // check for a list of numbers
+    const [configorpartials] = readargs(words, 1, [
+      ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+    ])
+    if (isnumber(configorpartials)) {
+      const count = words.length - 1
+      const argtypes = new Array<ARG_TYPE>(count).fill(ARG_TYPE.NUMBER)
+      // @ts-expect-error argtypes ?
+      const partials = readargs(words, 1, argtypes).slice(0, count)
+      synth_voice('audio', idx, voiceorfx, partials)
+    } else {
+      const [maybevalue] = readargs(words, 1, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
+      synth_voice('audio', idx, voiceorfx, maybevalue)
+    }
   }
 }
 
