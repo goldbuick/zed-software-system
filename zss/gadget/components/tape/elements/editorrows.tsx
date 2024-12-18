@@ -61,8 +61,8 @@ export function EditorRows({
   }
 
   // render lines
-  const left = edge.left + 1 - xoffset
-  setupeditoritem(false, false, 0, -yoffset, context, 1, 2, 1)
+  const left = edge.left + 1
+  setupeditoritem(false, false, -xoffset, -yoffset, context, 1, 2, 1)
   for (let i = 0; i < rows.length; ++i) {
     if (context.y <= edge.top + 1) {
       ++context.y
@@ -75,24 +75,32 @@ export function EditorRows({
     const text = row.code.replaceAll('\n', '')
 
     // render
-    context.x = left
+    context.x = left - xoffset
     context.iseven = context.y % 2 === 0
     context.active.bg = active ? BG_ACTIVE : BG
     context.disablewrap = true
-    writeplaintext(`${text}`, context, false)
+    writeplaintext(`${text} `, context, false)
 
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
-      const index = left + context.y * context.width
-      const start = Math.max(0, ii1 - row.start)
-      const end = Math.min(row.end - row.start, ii2 - row.start)
-      applycolortoindexes(
-        index + start,
-        index + end,
-        FG_SELECTED,
-        BG_SELECTED,
-        context,
-      )
+      const maybestart = Math.max(row.start, ii1) - row.start - xoffset
+      const maybeend = Math.min(row.end, ii2) - row.start - xoffset
+
+      // start of drawn line
+      const right = edge.width - 3
+      const index = 1 + context.y * context.width
+      const start = Math.max(0, maybestart)
+      const end = Math.min(right, maybeend)
+
+      if (start <= right && end >= left) {
+        applycolortoindexes(
+          index + start,
+          index + end,
+          FG_SELECTED,
+          BG_SELECTED,
+          context,
+        )
+      }
     }
 
     // next line

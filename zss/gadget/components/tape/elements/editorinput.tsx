@@ -18,14 +18,18 @@ import { UserInput, modsfromevent } from '../../userinput'
 import { EDITOR_CODE_ROW, sharedtosynced } from '../common'
 
 type TextinputProps = {
+  xcursor: number
   ycursor: number
+  xoffset: number
   yoffset: number
   rows: EDITOR_CODE_ROW[]
   codepage: MAYBE<MODEM_SHARED_STRING>
 }
 
 export function EditorInput({
+  xcursor,
   ycursor,
+  xoffset,
   yoffset,
   rows,
   codepage,
@@ -41,11 +45,8 @@ export function EditorInput({
   const strvalue = ispresent(value) ? value.toJSON() : ''
   const rowsend = rows.length - 1
 
-  // translate index to x, y
-  const xcursor = tapeeditor.cursor - rows[ycursor].start
-
   // draw cursor
-  const xblink = xcursor + 1
+  const xblink = xcursor + 1 - xoffset
   const yblink = ycursor + 2 - yoffset
   if (ispresent(codepage)) {
     const moving =
@@ -53,7 +54,19 @@ export function EditorInput({
     if (blink || moving) {
       const x = edge.left + xblink
       const y = edge.top + yblink
-      applystrtoindex(x + y * context.width, String.fromCharCode(221), context)
+      // visibility clip
+      if (
+        y > edge.top + 1 &&
+        y < edge.bottom &&
+        x > edge.left &&
+        x < edge.right
+      ) {
+        applystrtoindex(
+          x + y * context.width,
+          String.fromCharCode(221),
+          context,
+        )
+      }
     }
   }
   blinkdelta.current = { x: xblink, y: yblink }
