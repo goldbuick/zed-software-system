@@ -80,7 +80,7 @@ export function synth_voice(
   sender: string,
   idx: number,
   config: number | string,
-  value: MAYBE<number | string>,
+  value: MAYBE<number | string | number[]>,
 ) {
   hub.emit('synth:voice', sender, [idx, config, value])
 }
@@ -90,7 +90,7 @@ export function synth_voicefx(
   idx: number,
   fx: string,
   config: number | string,
-  value: number | string,
+  value: MAYBE<number | string>,
 ) {
   hub.emit('synth:voicefx', sender, [idx, fx, config, value])
 }
