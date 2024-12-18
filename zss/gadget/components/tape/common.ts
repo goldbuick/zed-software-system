@@ -3,8 +3,8 @@ import { createContext } from 'react'
 import { MODEM_SHARED_VALUE } from 'zss/device/modem'
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { COLOR } from 'zss/words/types'
 import { WRITE_TEXT_CONTEXT, textformatreadedges } from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 
 // deco
 export const BKG_PTRN = 250
@@ -110,6 +110,13 @@ export function splitcoderows(code: string): EDITOR_CODE_ROW[] {
       end: start + code.length,
     }
   })
+}
+
+export function findmaxwidthinrows(rows: EDITOR_CODE_ROW[]): number {
+  return rows.reduce((maxwidth, row) => {
+    const width = row.code.length
+    return width > maxwidth ? width : maxwidth
+  }, 0)
 }
 
 export function findcursorinrows(cursor: number, rows: EDITOR_CODE_ROW[]) {

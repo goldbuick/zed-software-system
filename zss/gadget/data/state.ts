@@ -120,14 +120,16 @@ export const useTapeTerminal = create<{
 
 export const useTapeEditor = create<{
   id: string
-  scroll: number
+  xscroll: number
+  yscroll: number
   cursor: number
   select: MAYBE<number>
 }>(() => ({
   // need an id for synced store
   id: '',
   // scrolling offset
-  scroll: 0,
+  xscroll: 0,
+  yscroll: 0,
   // cursor position & selection (text index)
   cursor: 0,
   select: undefined,

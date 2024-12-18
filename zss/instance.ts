@@ -14,4 +14,4 @@ onmessage = function handleMessage(event) {
 }
 
 // begin process
-queueMicrotask(ready)
+setTimeout(ready)
