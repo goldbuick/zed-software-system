@@ -16,6 +16,7 @@ import {
   Reverb,
   Part,
   Phaser,
+  Volume,
 } from 'tone'
 import { createdevice } from 'zss/device'
 import { createsource } from 'zss/gadget/audio/source'
@@ -23,7 +24,7 @@ import { clamp } from 'zss/mapping/number'
 import {
   invokeplay,
   parseplay,
-  SYNTH_INVOKES,
+  SYNTH_INVOKE,
   SYNTH_NOTE_ON,
 } from 'zss/mapping/play'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -51,18 +52,22 @@ export function enableaudio() {
 }
 
 function createsynth() {
+  const mainvolume = new Volume(8)
+  mainvolume.toDestination()
+
   const maincompressor = new Compressor({
-    threshold: -20,
-    ratio: 12,
-    attack: 0,
-    release: 0.3,
+    threshold: -24,
+    ratio: 4,
+    attack: 0.003,
+    release: 0.25,
+    knee: 30,
   })
-  maincompressor.toDestination()
+  maincompressor.connect(mainvolume)
 
   const maingain = new Gain()
   maingain.connect(maincompressor)
 
-  const drumgain = new Gain(0.8)
+  const drumgain = new Gain()
   drumgain.connect(maincompressor)
 
   const SOURCE = [
@@ -512,28 +517,25 @@ function createsynth() {
   }
 
   function synthplaystart(
-    starttime: number,
     idx: number,
-    invokes: SYNTH_INVOKES,
+    starttime: number,
+    invoke: SYNTH_INVOKE,
   ) {
     let endtime = starttime
 
-    // invoke synth ops
-    for (let i = 0; i < invokes.length; ++i) {
-      // build tone.js pattern
-      const pattern = invokeplay(idx, starttime, invokes[i])
+    // build tone.js pattern
+    const pattern = invokeplay(idx, starttime, invoke)
 
-      // track endtime
-      const last = pattern[pattern.length - 1]
-      if (ispresent(last)) {
-        endtime = Math.max(endtime, last[0])
-      }
+    // track endtime
+    const last = pattern[pattern.length - 1]
+    if (ispresent(last)) {
+      endtime = Math.max(endtime, last[0])
+    }
 
-      // write pattern to pacer
-      for (let p = 0; p < pattern.length; ++p) {
-        const [time, value] = pattern[p]
-        pacer.add(time, value)
-      }
+    // write pattern to pacer
+    for (let p = 0; p < pattern.length; ++p) {
+      const [time, value] = pattern[p]
+      pacer.add(time, value)
     }
 
     return endtime
@@ -555,14 +557,20 @@ function createsynth() {
     // music queue
     if (priority < 0) {
       pacercount += invokes.length
-      pacertime = synthplaystart(pacertime, -priority, invokes)
+      const starttime = pacertime
+      for (let i = 0; i < invokes.length; ++i) {
+        const endtime = synthplaystart(i + 1, starttime, invokes[i])
+        pacertime = Math.max(pacertime, endtime)
+      }
       return
     }
 
     // sfx /w priority
     if (synthsfxpriority === -1 || priority >= synthsfxpriority) {
       synthsfxpriority = priority
-      synthplaystart(seconds, 0, invokes)
+      for (let i = 0; i < invokes.length; ++i) {
+        synthplaystart(0, seconds, invokes[i])
+      }
     }
   }
 
@@ -681,6 +689,13 @@ const synthdevice = createdevice('synth', [], (message) => {
           case 'volume':
             if (isnumber(value)) {
               voice.source.volume.value = value
+              return
+            }
+            break
+          case 'port':
+          case 'portamento':
+            if (isnumber(value)) {
+              voice.source.portamento = value
               return
             }
             break

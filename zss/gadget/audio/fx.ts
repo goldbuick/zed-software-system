@@ -16,9 +16,9 @@ export function createfx() {
   const echo = new FeedbackDelay()
   echo.set({
     wet: 0,
-    delayTime: '4n.',
+    delayTime: '8n',
     maxDelay: '1n',
-    feedback: 0.371,
+    feedback: 0.666,
   })
 
   const chorus = new Chorus()
