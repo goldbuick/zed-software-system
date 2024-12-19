@@ -36,7 +36,8 @@ function handlesynthvoice(idx: number, words: WORD[]) {
       const argtypes = new Array<ARG_TYPE>(count).fill(ARG_TYPE.NUMBER)
       // @ts-expect-error argtypes ?
       const partials = readargs(words, 1, argtypes).slice(0, count)
-      synth_voice('audio', idx, voiceorfx, partials)
+      const maybevalue = partials.length === 1 ? partials[0] : partials
+      synth_voice('audio', idx, voiceorfx, maybevalue)
     } else {
       const [maybevalue] = readargs(words, 1, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
       synth_voice('audio', idx, voiceorfx, maybevalue)
