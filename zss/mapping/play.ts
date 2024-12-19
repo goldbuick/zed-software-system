@@ -224,10 +224,10 @@ export function invokeplay(synth: number, starttime: number, play: SYNTH_OP[]) {
   return pattern
 }
 
-export type SYNTH_INVOKES = SYNTH_OP[][]
+export type SYNTH_INVOKE = SYNTH_OP[]
 
-export function parseplay(play: string): SYNTH_INVOKES {
-  const playops: SYNTH_INVOKES = []
+export function parseplay(play: string): SYNTH_INVOKE[] {
+  const playops: SYNTH_INVOKE[] = []
   const invokes = play.split(';')
 
   for (let p = 0; p < invokes.length; ++p) {

@@ -1,12 +1,10 @@
-import { Gain, PolySynth } from 'tone'
+import { Gain, Synth } from 'tone'
 
 import { createfx } from './fx'
 
 export function createsource(maingain: Gain) {
-  const source = new PolySynth()
-  source.maxPolyphony = 8
+  const source = new Synth()
   source.set({
-    volume: 8.0,
     envelope: {
       attack: 0.01,
       decay: 0.01,
