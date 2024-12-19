@@ -62,21 +62,21 @@ function createsynth() {
   const maingain = new Gain()
   maingain.connect(maincompressor)
 
-  const drumgain = new Gain()
+  const drumgain = new Gain(0.8)
   drumgain.connect(maincompressor)
 
   const SOURCE = [
     // for sfx
-    createsource(),
+    createsource(maingain),
     // + 8track synths
-    createsource(),
-    createsource(),
-    createsource(),
-    createsource(),
-    createsource(),
-    createsource(),
-    createsource(),
-    createsource(),
+    createsource(maingain),
+    createsource(maingain),
+    createsource(maingain),
+    createsource(maingain),
+    createsource(maingain),
+    createsource(maingain),
+    createsource(maingain),
+    createsource(maingain),
   ]
 
   // config drums
