@@ -20,7 +20,7 @@ export function PanelItemHotkey({
 }: PanelItemProps) {
   const [target, shortcut, maybetext] = [
     mapTo(args[0], ''),
-    mapTo(args[1], ''),
+    mapTo(args[1], args[1]?.toString() ?? ''),
     mapTo(args[2], ''),
   ]
 

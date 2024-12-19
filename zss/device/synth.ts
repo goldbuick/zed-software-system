@@ -572,55 +572,64 @@ function createsynth() {
   return { addplay, SOURCE }
 }
 
-function validatesynthtype(value: string) {
+function validatesynthtype(
+  value: string,
+  maybepartials: string | number | number[],
+) {
   if (isstring(value)) {
     const maybetype = value.toLowerCase()
     let type = maybetype
+
+    // validate partials
+    if (isarray(maybepartials)) {
+      return (
+        type === 'custom' ||
+        type === 'amcustom' ||
+        type === 'fmcustom' ||
+        type === 'fatcustom'
+      )
+    }
+
     // validate whole values only
     if (type === 'pwm' || type === 'pulse') {
       return true
-    } else {
-      // validate prefixes
-      if (type.startsWith('am') || type.startsWith('fm')) {
-        type = type.substring(2)
-      }
-      if (type.startsWith('fat')) {
-        type = type.substring(3)
-      }
-
-      // validate waveform types
-      if (type.startsWith('sine')) {
-        type = type.substring(4)
-      }
-      if (type.startsWith('square')) {
-        type = type.substring(6)
-      }
-      if (type.startsWith('triangle')) {
-        type = type.substring(8)
-      }
-      if (type.startsWith('sawtooth')) {
-        type = type.substring(8)
-      }
-
-      // catch custom
-      if (type.startsWith('custom')) {
-        type = type.substring(6)
-      }
-
-      // no suffix numbers
-      if (type === '') {
-        return true
-      }
-
-      // validate suffix numbers
-      const partial = parseFloat(type)
-      if (isnumber(partial)) {
-        return true
-      }
-
-      // failed
-      return false
     }
+
+    // validate prefixes
+    if (type.startsWith('am') || type.startsWith('fm')) {
+      type = type.substring(2)
+    }
+    if (type.startsWith('fat')) {
+      type = type.substring(3)
+    }
+
+    // validate waveform types
+    if (type.startsWith('sine')) {
+      type = type.substring(4)
+    }
+    if (type.startsWith('square')) {
+      type = type.substring(6)
+    }
+    if (type.startsWith('triangle')) {
+      type = type.substring(8)
+    }
+    if (type.startsWith('sawtooth')) {
+      type = type.substring(8)
+    }
+
+    // no suffix numbers
+    if (type === '') {
+      return true
+    }
+
+    // validate suffix numbers
+    const partial = parseInt(type, 10)
+    if (isnumber(partial)) {
+      return true
+    }
+
+    // failed
+    return false
   }
 }
 
@@ -644,67 +653,279 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'voice':
       if (isarray(message.data)) {
-        const [idx, config, value] = message.data as [
+        const [index, config, value] = message.data as [
           number,
           number | string,
           number | string | number[],
         ]
-        const voice = synth.SOURCE[idx]
-        if (ispresent(voice)) {
-          switch (config) {
-            case 'bpm':
-              if (isnumber(value)) {
-                getTransport().bpm.value = value
-              }
-              break
-            case 'vol':
-            case 'volume':
-              if (isnumber(value)) {
-                voice.source.volume.value = value
-              }
-              break
-            default:
-              if (isstring(config) && validatesynthtype(config)) {
+
+        // validate index
+        const voice = synth.SOURCE[index]
+        if (!ispresent(voice)) {
+          api_error(
+            synthdevice.name(),
+            message.target,
+            `unknown voice ${index}`,
+          )
+          return
+        }
+
+        switch (config) {
+          case 'bpm':
+            if (isnumber(value)) {
+              getTransport().bpm.value = value
+              return
+            }
+            break
+          case 'vol':
+          case 'volume':
+            if (isnumber(value)) {
+              voice.source.volume.value = value
+              return
+            }
+            break
+          case 'env':
+          case 'envelope':
+            if (isarray(value)) {
+              const [attack, decay, sustain, release] = value
+              voice.source.set({
+                envelope: {
+                  attack,
+                  decay,
+                  sustain,
+                  release,
+                },
+              })
+              return
+            }
+            break
+          default:
+            if (isstring(config)) {
+              // change oscillator type
+              if (validatesynthtype(config, value)) {
+                voice.source.set({
+                  // @ts-expect-error should be type
+                  oscillator: { type: config },
+                })
                 if (isarray(value)) {
-                  // TODO: validate config value works with partials
                   voice.source.set({
-                    oscillator: {
-                      // @ts-expect-error lazy
-                      type: config,
-                      partials: value,
-                    },
-                  })
-                } else {
-                  voice.source.set({
-                    oscillator: {
-                      // @ts-expect-error lazy
-                      type: config,
-                    },
+                    oscillator: { partials: value },
                   })
                 }
-              } else {
-                api_error(
-                  synthdevice.name(),
-                  message.target,
-                  `unknown voice config ${config}`,
-                )
+                if (isnumber(value)) {
+                  voice.source.set({
+                    oscillator: { partials: [value] },
+                  })
+                }
+                return
               }
-              break
-          }
-        } else {
-          api_error(synthdevice.name(), message.target, `unknown voice ${idx}`)
+
+              // change oscillator config
+              const kind = voice.source.get().oscillator.type
+              switch (kind) {
+                case 'pwm':
+                  switch (config) {
+                    case 'modfreq':
+                    case 'modulationfrequency':
+                      if (isnumber(value)) {
+                        voice.source.set({
+                          oscillator: {
+                            modulationFrequency: value,
+                          },
+                        })
+                        return
+                      }
+                      break
+                  }
+                  break
+                case 'pulse':
+                  switch (config) {
+                    case 'width':
+                      if (isnumber(value)) {
+                        voice.source.set({
+                          oscillator: { width: value },
+                        })
+                        return
+                      }
+                      break
+                  }
+                  break
+                case 'custom':
+                case 'sine':
+                case 'square':
+                case 'triangle':
+                case 'sawtooth':
+                  switch (config) {
+                    case 'phase':
+                      if (isnumber(value)) {
+                        voice.source.set({
+                          oscillator: { phase: value },
+                        })
+                        return
+                      }
+                      break
+                  }
+                  break
+                case 'amcustom':
+                case 'amsine':
+                case 'amsquare':
+                case 'amtriangle':
+                case 'amsawtooth':
+                  switch (config) {
+                    case 'harmonicity':
+                      if (isnumber(value)) {
+                        voice.source.set({
+                          oscillator: { harmonicity: value },
+                        })
+                        return
+                      }
+                      break
+                    case 'modtype':
+                    case 'modulationtype':
+                      if (isstring(value)) {
+                        voice.source.set({
+                          oscillator: {
+                            // @ts-expect-error yes
+                            modulationType: value,
+                          },
+                        })
+                        return
+                      }
+                      break
+                    case 'modenv':
+                    case 'modulationenvelope':
+                      if (isarray(value)) {
+                        const [attack, decay, sustain, release] = value
+                        voice.source.set({
+                          oscillator: {
+                            // @ts-expect-error yes
+                            modulationEnvelope: {
+                              attack,
+                              decay,
+                              sustain,
+                              release,
+                            },
+                          },
+                        })
+                        return
+                      }
+                      break
+                  }
+                  break
+                case 'fmcustom':
+                case 'fmsine':
+                case 'fmsquare':
+                case 'fmtriangle':
+                case 'fmsawtooth':
+                  switch (config) {
+                    case 'harmonicity':
+                      if (isnumber(value)) {
+                        voice.source.set({
+                          oscillator: {
+                            harmonicity: value,
+                          },
+                        })
+                        return
+                      }
+                      break
+                    case 'modindex':
+                      if (isnumber(value)) {
+                        voice.source.set({
+                          oscillator: {
+                            modulationIndex: value,
+                          },
+                        })
+                        return
+                      }
+                      break
+                    case 'modtype':
+                      if (isstring(value)) {
+                        voice.source.set({
+                          oscillator: {
+                            // @ts-expect-error yes
+                            modulationType: value,
+                          },
+                        })
+                        return
+                      }
+                      break
+                    case 'modenv':
+                      if (isarray(value)) {
+                        const [attack, decay, sustain, release] = value
+                        voice.source.set({
+                          oscillator: {
+                            // @ts-expect-error yes
+                            modulationEnvelope: {
+                              attack,
+                              decay,
+                              sustain,
+                              release,
+                            },
+                          },
+                        })
+                        return
+                      }
+                      break
+                  }
+                  break
+                case 'fatcustom':
+                case 'fatsine':
+                case 'fatsquare':
+                case 'fattriangle':
+                case 'fatsawtooth':
+                  switch (config) {
+                    case 'count':
+                      if (isnumber(value)) {
+                        voice.source.set({
+                          oscillator: {
+                            count: value,
+                          },
+                        })
+                        return
+                      }
+                      break
+                    case 'phase':
+                      if (isnumber(value)) {
+                        voice.source.set({
+                          oscillator: {
+                            phase: value,
+                          },
+                        })
+                        return
+                      }
+                      break
+                    case 'spread':
+                      if (isnumber(value)) {
+                        voice.source.set({
+                          oscillator: {
+                            spread: value,
+                          },
+                        })
+                        return
+                      }
+                      break
+                  }
+                  break
+              }
+              api_error(
+                synthdevice.name(),
+                message.target,
+                `unknown ${kind} config ${config}`,
+              )
+            }
+            break
         }
       }
       break
     case 'voicefx':
       if (isarray(message.data)) {
-        const [idx, fxname, config, value] = message.data as [
+        const [index, fxname, config, value] = message.data as [
           number,
           string,
           number | string,
           number | string,
         ]
-        const voice = synth.SOURCE[idx]
+        const voice = synth.SOURCE[index]
         const fx = voice?.fx[fxname as keyof typeof voice.fx]
         if (ispresent(fx)) {
           switch (config) {
@@ -839,9 +1060,9 @@ const synthdevice = createdevice('synth', [], (message) => {
               }
               break
           }
-        } else {
-          api_error(synthdevice.name(), message.target, `unknown fx ${fxname}`)
+          return
         }
+        api_error(synthdevice.name(), message.target, `unknown fx ${fxname}`)
       }
       break
   }
