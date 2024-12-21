@@ -146,18 +146,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return [true, value]
   },
   everytick(chip) {
-    // headless only gets a single tick to do its magic
-    if (READ_CONTEXT.element?.headless) {
-      chip.command('die')
-    }
-
+    // handle walk movement
     if (
-      ispresent(READ_CONTEXT.element) &&
-      ispresent(READ_CONTEXT.element.x) &&
-      ispresent(READ_CONTEXT.element.stepx) &&
+      ispresent(READ_CONTEXT.element?.x) &&
       ispresent(READ_CONTEXT.element.y) &&
+      ispresent(READ_CONTEXT.element.stepx) &&
       ispresent(READ_CONTEXT.element.stepy) &&
-      !moveobject(
+      moveobject(
         chip,
         READ_CONTEXT.book,
         READ_CONTEXT.board,
@@ -166,12 +161,16 @@ export const ELEMENT_FIRMWARE = createfirmware({
           x: READ_CONTEXT.element.x + READ_CONTEXT.element.stepx,
           y: READ_CONTEXT.element.y + READ_CONTEXT.element.stepy,
         },
-      )
+      ) === false
     ) {
       boardelementwritestats(READ_CONTEXT.element, {
         stepx: 0,
         stepy: 0,
       })
+    }
+    // headless only gets a single tick to do its magic
+    if (READ_CONTEXT.element?.headless) {
+      chip.command('die')
     }
   },
 })
