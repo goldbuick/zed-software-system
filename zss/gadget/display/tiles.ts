@@ -164,7 +164,7 @@ const tilemapMaterial = new ShaderMaterial({
       vec3 blip = useAlt ? texture(alt, uv).rgb : texture(map, uv).rgb;
 
       if (blip.r == 0.0) {
-        if (bgi >= ${COLOR.CLEAR}) {
+        if (bgi >= ${COLOR.ONCLEAR}) {
           discard;
         }
         color = palette[bgi];

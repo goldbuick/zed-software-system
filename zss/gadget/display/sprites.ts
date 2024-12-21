@@ -18,8 +18,8 @@ const spritesMaterial = new ShaderMaterial({
   uniforms: {
     time,
     interval,
-    moverate: new Uniform(TICK_FPS),
-    blendrate: new Uniform(TICK_FPS * 3),
+    moverate: new Uniform(TICK_FPS * 2),
+    blendrate: new Uniform(TICK_FPS * 2),
     map: new Uniform(charset),
     alt: new Uniform(charset),
     palette: new Uniform(palette),
@@ -65,7 +65,7 @@ const spritesMaterial = new ShaderMaterial({
     vec4 empty;
 
     vec4 bgFromIndex(float index) {
-      if (int(index) >= ${COLOR.CLEAR}) {
+      if (int(index) >= ${COLOR.ONCLEAR}) {
         return empty;
       }
       vec4 bg;

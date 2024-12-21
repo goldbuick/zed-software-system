@@ -3,13 +3,13 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Group } from 'three'
 import { animpositiontotarget } from 'zss/mapping/anim'
 import { ispresent } from 'zss/mapping/types'
-import { COLOR } from 'zss/words/types'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
   WRITE_TEXT_CONTEXT,
 } from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from '../data/types'
 
@@ -203,7 +203,7 @@ export function Scroll({
                 height={panelheight}
                 margin={0}
                 color={color}
-                bg={COLOR.CLEAR}
+                bg={COLOR.ONCLEAR}
                 text={visibletext}
                 selected={row}
               />

@@ -649,7 +649,7 @@ function memoryconverttogadgetlayers(
   const isbaseboard = i === 0
   const boardwidth = BOARD_WIDTH
   const boardheight = BOARD_HEIGHT
-  const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.CLEAR
+  const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR
 
   const tiles = createtiles(player, i++, boardwidth, boardheight, defaultcolor)
   layers.push(tiles)
@@ -661,7 +661,13 @@ function memoryconverttogadgetlayers(
   const objects = createsprites(player, objectindex)
   layers.push(objects)
 
-  const tickers = createtiles(player, i++, boardwidth, boardheight, COLOR.CLEAR)
+  const tickers = createtiles(
+    player,
+    i++,
+    boardwidth,
+    boardheight,
+    COLOR.ONCLEAR,
+  )
   layers.push(tickers)
 
   const tickercontext = {
@@ -669,7 +675,7 @@ function memoryconverttogadgetlayers(
       BOARD_WIDTH,
       BOARD_HEIGHT,
       readdecotickercolor(),
-      COLOR.CLEAR,
+      COLOR.ONCLEAR,
     ),
     ...tickers,
   }
@@ -687,7 +693,7 @@ function memoryconverttogadgetlayers(
       tiles.color[i] = tile.color ?? kind?.color ?? defaultcolor
       tiles.bg[i] = tile.bg ?? kind?.bg ?? defaultcolor
       // write to borrow buffer
-      if (tiles.color[i] !== (COLOR.CLEAR as number)) {
+      if (tiles.color[i] !== (COLOR.ONCLEAR as number)) {
         borrowbuffer[i] = tiles.color[i]
       }
     }
@@ -713,22 +719,22 @@ function memoryconverttogadgetlayers(
     sprite.y = object.y ?? 0
     sprite.char = object.char ?? display?.char ?? 1
     sprite.color = object.color ?? display?.color ?? COLOR.WHITE
-    sprite.bg = object.bg ?? display?.bg ?? COLOR.BORROW
+    sprite.bg = object.bg ?? display?.bg ?? COLOR.ONBORROW
     objects.sprites.push(sprite)
 
     // plot shadow
-    if (sprite.bg === COLOR.SHADOW) {
-      sprite.bg = COLOR.CLEAR
+    if (sprite.bg === COLOR.ONSHADOW) {
+      sprite.bg = COLOR.ONCLEAR
       shadow.alphas[lx + ly * boardwidth] = 0.5
     }
 
     // borrow color
-    if (sprite.bg === COLOR.BORROW) {
+    if (sprite.bg === COLOR.ONBORROW) {
       sprite.bg = borrowbuffer[li] ?? COLOR.BLACK
     }
 
     // write to borrow buffer
-    if (sprite.color !== (COLOR.CLEAR as number)) {
+    if (sprite.color !== (COLOR.ONCLEAR as number)) {
       borrowbuffer[li] = sprite.color
     }
 
