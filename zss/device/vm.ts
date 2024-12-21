@@ -48,6 +48,9 @@ const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
 // save state
 async function savestate() {
+  // gc chips
+  memorycleanup()
+  // export books
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
@@ -208,9 +211,6 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           vm.emit('logout', undefined, player)
         }
       }
-
-      // gc chips
-      memorycleanup()
 
       // autosave to url
       if (++flushtick >= FLUSH_RATE) {
