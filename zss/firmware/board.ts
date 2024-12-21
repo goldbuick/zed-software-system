@@ -169,9 +169,6 @@ export const BOARD_FIRMWARE = createfirmware()
     bookboardwrite(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
     return 0
   })
-  .command('shootwith', (chip, words) => {
-    return 0
-  })
   .command('shoot', (chip, words) => {
     // invalid data
     if (!ispt(READ_CONTEXT.element)) {

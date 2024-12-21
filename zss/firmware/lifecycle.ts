@@ -16,9 +16,13 @@ export const LIFECYCLE_FIRMWARE = createfirmware()
     return 0
   })
   .command('end', (chip) => {
-    // future, this will also afford giving a return value #end <value>
     chip.endofprogram()
     return 0
+  })
+  .command('endwith', (chip, words) => {
+    const [maybearg] = readargs(words, 0, [ARG_TYPE.ANY])
+    chip.set('arg', maybearg)
+    return chip.command('end')
   })
   .command('lock', (chip) => {
     chip.lock(chip.id())
@@ -73,7 +77,7 @@ export const LIFECYCLE_FIRMWARE = createfirmware()
     return 0
   })
   .command('runwith', (_, words) => {
-    const [func, value] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+    const [value, func] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.STRING])
     memoryrun(func, value)
     return 0
   })
