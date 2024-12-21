@@ -277,7 +277,7 @@ function transformNode(ast: CodeNode): SourceNode {
     case NODE.STAT:
       if (context.isfirststat) {
         context.isfirststat = false
-        const words = ast.value.split(` `).map(writestring)
+        const words = ast.value.trim().split(' ').map(writestring)
         return write(ast, [`  `, writeApi(ast, `stat`, words), `;\n`])
       }
       return write(ast, `  // skipped ${ast.value}\n`)
