@@ -9,6 +9,7 @@ import {
   applycolortoindexes,
   applystrtoindex,
 } from 'zss/words/textformat'
+import { NAME } from 'zss/words/types'
 
 import { useBlink } from '../hooks'
 import { UserFocus, UserInput, UserInputMods } from '../userinput'
@@ -126,7 +127,7 @@ export function PanelItemText({
               }
 
               const { key } = event
-              const lkey = key.toLowerCase()
+              const lkey = NAME(key)
               const mods: UserInputMods = {
                 alt: event.altKey,
                 ctrl: ismac ? event.metaKey : event.ctrlKey,

@@ -9,6 +9,7 @@ import {
   memoryreadbinaryfile,
 } from 'zss/memory'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
+import { NAME } from 'zss/words/types'
 
 import { binaryloader } from './loader/binaryloader'
 
@@ -18,7 +19,7 @@ export const LOADER_FIRMWARE = createfirmware({
 
     const binaryfile = memoryreadbinaryfile(chip.id())
     if (ispresent(binaryfile)) {
-      switch (name.toLowerCase()) {
+      switch (NAME(name)) {
         case 'filename':
           // name of binary file
           return [ispresent(binaryfile.filename), binaryfile.filename]

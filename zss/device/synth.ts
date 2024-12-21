@@ -28,6 +28,7 @@ import {
   SYNTH_NOTE_ON,
 } from 'zss/mapping/play'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { NAME } from 'zss/words/types'
 
 import { api_error, tape_info } from './api'
 
@@ -585,7 +586,7 @@ function validatesynthtype(
   maybepartials: string | number | number[],
 ) {
   if (isstring(value)) {
-    const maybetype = value.toLowerCase()
+    const maybetype = NAME(value)
     let type = maybetype
 
     // validate partials

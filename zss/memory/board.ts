@@ -10,7 +10,7 @@ import {
   ptapplydir,
   STR_DIR,
 } from 'zss/words/dir'
-import { COLOR, DIR, PT } from 'zss/words/types'
+import { COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
 import { exportboardelement, importboardelement } from './boardelement'
@@ -113,7 +113,7 @@ export function boardelementread(
 }
 
 export function boardelementname(element: MAYBE<BOARD_ELEMENT>) {
-  return (element?.name ?? element?.kinddata?.name ?? 'object').toLowerCase()
+  return NAME(element?.name ?? element?.kinddata?.name ?? 'object')
 }
 
 export function boardelementcolor(element: MAYBE<BOARD_ELEMENT>) {
@@ -224,8 +224,9 @@ export function boardobjectread(
 export function boardevaldir(
   board: MAYBE<BOARD>,
   target: MAYBE<BOARD_ELEMENT>,
-  dir: STR_DIR,
   player: string,
+  dir: STR_DIR,
+  startpt: PT,
 ): PT {
   if (!ispresent(board) || !ispresent(target)) {
     return { x: 0, y: 0 }
@@ -241,7 +242,6 @@ export function boardevaldir(
   }
 
   // we need to know current flow etc..
-  const start: PT = { ...pt }
   const flow = dirfrompts(lpt, pt)
   const xmax = BOARD_WIDTH - 1
   const ymax = BOARD_HEIGHT - 1
@@ -285,7 +285,7 @@ export function boardevaldir(
       case DIR.SEEK: {
         const playerobject = boardfindplayer(board, target, player)
         if (ispt(playerobject)) {
-          ptapplydir(pt, dirfrompts(start, playerobject))
+          ptapplydir(pt, dirfrompts(startpt, playerobject))
         }
         break
       }
@@ -299,31 +299,80 @@ export function boardevaldir(
         ptapplydir(pt, pick(DIR.NORTH, DIR.SOUTH, DIR.WEST, DIR.EAST))
         break
       // modifiers
-      case DIR.CW: {
-        const modpt = boardevaldir(board, target, dir.slice(i + 1), player)
-        ptapplydir(pt, dirfrompts(start, modpt))
-        break
-      }
-      case DIR.CCW: {
-        const modpt = boardevaldir(board, target, dir.slice(i + 1), player)
-        ptapplydir(pt, dirfrompts(start, modpt))
-        break
-      }
-      case DIR.OPP: {
-        const modpt = boardevaldir(board, target, dir.slice(i + 1), player)
-        ptapplydir(pt, dirfrompts(start, modpt))
-        break
-      }
+      case DIR.CW:
+      case DIR.CCW:
+      case DIR.OPP:
       case DIR.RNDP: {
-        const modpt = boardevaldir(board, target, dir.slice(i + 1), player)
-        switch (dirfrompts(start, modpt)) {
-          case DIR.NORTH:
-          case DIR.SOUTH:
-            pt.x += pick(-1, 1)
+        const modpt = boardevaldir(
+          board,
+          target,
+          player,
+          dir.slice(i + 1),
+          startpt,
+        )
+        // reset to startpt
+        pt.x = startpt.x
+        pt.y = startpt.y
+        switch (dirconst) {
+          case DIR.CW:
+            switch (dirfrompts(startpt, modpt)) {
+              case DIR.NORTH:
+                ptapplydir(pt, DIR.EAST)
+                break
+              case DIR.SOUTH:
+                ptapplydir(pt, DIR.WEST)
+                break
+              case DIR.EAST:
+                ptapplydir(pt, DIR.SOUTH)
+                break
+              case DIR.WEST:
+                ptapplydir(pt, DIR.NORTH)
+                break
+            }
             break
-          case DIR.WEST:
-          case DIR.EAST:
-            pt.y += pick(-1, 1)
+          case DIR.CCW:
+            switch (dirfrompts(startpt, modpt)) {
+              case DIR.NORTH:
+                ptapplydir(pt, DIR.WEST)
+                break
+              case DIR.SOUTH:
+                ptapplydir(pt, DIR.EAST)
+                break
+              case DIR.EAST:
+                ptapplydir(pt, DIR.NORTH)
+                break
+              case DIR.WEST:
+                ptapplydir(pt, DIR.SOUTH)
+                break
+            }
+            break
+          case DIR.OPP:
+            switch (dirfrompts(startpt, modpt)) {
+              case DIR.NORTH:
+                ptapplydir(pt, DIR.SOUTH)
+                break
+              case DIR.SOUTH:
+                ptapplydir(pt, DIR.NORTH)
+                break
+              case DIR.EAST:
+                ptapplydir(pt, DIR.WEST)
+                break
+              case DIR.WEST:
+                ptapplydir(pt, DIR.EAST)
+                break
+            }
+            break
+          case DIR.RNDP:
+            switch (dirfrompts(startpt, modpt)) {
+              case DIR.NORTH:
+              case DIR.SOUTH:
+                pt.x += pick(-1, 1)
+                break
+              case DIR.WEST:
+              case DIR.EAST:
+                pt.y += pick(-1, 1)
+                break
+            }
             break
         }
         break

@@ -16,6 +16,7 @@ import {
   textformatreadedges,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
+import { NAME } from 'zss/words/types'
 
 import { useBlink, useWriteText } from '../../hooks'
 import { setuplogitem } from '../common'
@@ -208,7 +209,7 @@ export function TerminalInput({
       <UserInput
         keydown={(event) => {
           const { key } = event
-          const lkey = key.toLowerCase()
+          const lkey = NAME(key)
           const mods = modsfromevent(event)
           switch (lkey) {
             case 'arrowleft':

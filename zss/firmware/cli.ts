@@ -30,7 +30,7 @@ import { CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { stattypestring } from 'zss/words/stats'
 import { metakey } from 'zss/words/system'
-import { STAT_TYPE } from 'zss/words/types'
+import { NAME, STAT_TYPE } from 'zss/words/types'
 import {
   bg,
   fg,
@@ -179,7 +179,7 @@ export const CLI_FIRMWARE = createfirmware({
     const [maybetype, ...args] = words.map(maptostring)
     const maybename = args.join(' ')
     // attempt to check first word as codepage type to create
-    switch (maybetype.toLowerCase()) {
+    switch (NAME(maybetype)) {
       case stattypestring(STAT_TYPE.LOADER):
         codepage = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
@@ -190,7 +190,7 @@ export const CLI_FIRMWARE = createfirmware({
       default:
         codepage = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
-          `${maybetype} ${maybename}`,
+          [maybetype, ...args].join(' '),
           CODE_PAGE_TYPE.OBJECT,
         )
         break

@@ -1,15 +1,16 @@
 import { FIRMWARE_COMMAND } from 'zss/firmware'
-import { isnumber, ispresent, isstring, MAYBE_NUMBER } from 'zss/mapping/types'
+import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { memoryreadbinaryfile } from 'zss/memory'
 import { BINARY_READER } from 'zss/memory/types'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
+import { NAME } from 'zss/words/types'
 
-function readbin(binaryfile: BINARY_READER, kind: string): MAYBE_NUMBER {
+function readbin(binaryfile: BINARY_READER, kind: string): MAYBE<number> {
   if (!ispresent(binaryfile)) {
     return undefined
   }
 
-  const lkind = kind.toLowerCase()
+  const lkind = NAME(kind)
   const le = lkind.endsWith('le')
   switch (lkind) {
     case 'float32':
@@ -83,7 +84,7 @@ export const binaryloader: FIRMWARE_COMMAND = (chip, words) => {
   }
   const [kind] = readargs(words, 0, [ARG_TYPE.STRING])
 
-  const lkind = kind.toLowerCase()
+  const lkind = NAME(kind)
   switch (lkind) {
     case 'seek': {
       const [cursor] = readargs(words, 1, [ARG_TYPE.NUMBER])

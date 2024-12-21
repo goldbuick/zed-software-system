@@ -14,6 +14,7 @@ import {
   codepagereadtypetostring,
   createcodepage,
 } from 'zss/memory/codepage'
+import { NAME } from 'zss/words/types'
 
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
   const bytes = [...filebytes.slice(0, 4)]
@@ -106,8 +107,8 @@ export async function parsebinaryfile(
   try {
     tape_info('parsebinaryfile', file.name)
     const arraybuffer = await file.arrayBuffer()
-    const ext = file.name.split('.').slice(-1)[0]
-    onbuffer((ext ?? '').toLowerCase(), new Uint8Array(arraybuffer))
+    const ext = file.name.split('.').slice(-1)[0] ?? ''
+    onbuffer(NAME(ext), new Uint8Array(arraybuffer))
   } catch (err: any) {
     api_error('memory', 'crash', err.message)
   }

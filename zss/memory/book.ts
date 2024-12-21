@@ -3,7 +3,7 @@ import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { STR_KIND } from 'zss/words/kind'
-import { CATEGORY, COLLISION, COLOR, PT, WORD } from 'zss/words/types'
+import { CATEGORY, COLLISION, COLOR, NAME, PT, WORD } from 'zss/words/types'
 
 import { checkcollision } from './atomics'
 import {
@@ -84,7 +84,7 @@ export function bookreadcodepagebyaddress(
     return undefined
   }
 
-  const laddress = address.toLowerCase()
+  const laddress = NAME(address)
   const codepage = book.pages.find(
     (item) => item.id === address || laddress === codepagereadname(item),
   )
@@ -101,7 +101,7 @@ export function bookreadcodepagewithtype(
     return undefined
   }
 
-  const laddress = address.toLowerCase()
+  const laddress = NAME(address)
   const codepage = book.pages.find(
     (item) =>
       codepagereadtype(item) === type &&
@@ -155,7 +155,7 @@ export function bookwritecodepage(
 export function bookclearcodepage(book: MAYBE<BOOK>, address: string) {
   const codepage = bookreadcodepagebyaddress(book, address)
   if (ispresent(book) && ispresent(codepage)) {
-    const laddress = address.toLowerCase()
+    const laddress = NAME(address)
     book.pages = book.pages.filter(
       (item) => item.id !== address && laddress !== codepagereadname(item),
     )
@@ -385,9 +385,9 @@ export function bookboardelementreadname(
 ) {
   const kind = bookelementkindread(book, element)
   if (ispresent(element?.id) && ispresent(element.x) && ispresent(element.y)) {
-    return (element.name ?? kind?.name ?? 'object').toLowerCase()
+    return NAME(element.name ?? kind?.name ?? 'object')
   }
-  return (element?.name ?? kind?.name ?? 'terrain').toLowerCase()
+  return NAME(element?.name ?? kind?.name ?? 'terrain')
 }
 
 export function bookboardnamedwrite(

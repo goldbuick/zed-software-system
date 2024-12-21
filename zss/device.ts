@@ -1,6 +1,7 @@
 import { MESSAGE } from './chip'
 import { hub } from './hub'
 import { createsid } from './mapping/guid'
+import { NAME } from './words/types'
 
 export function createmessage(
   target: string,
@@ -33,8 +34,8 @@ export function createdevice(
   onMessage: MESSAGE_FUNC,
 ) {
   const id = createsid()
-  const iname = name.toLowerCase()
-  const itopics = topics.map((tag) => tag.toLowerCase())
+  const iname = NAME(name)
+  const itopics = topics.map(NAME)
 
   const device: DEVICE = {
     id() {
@@ -54,7 +55,7 @@ export function createdevice(
     },
     handle(message) {
       const { target, path } = parsetarget(message.target)
-      const itarget = target.toLowerCase()
+      const itarget = NAME(target)
 
       // we match by topics
       if (itopics.findIndex((tag) => tag === 'all' || tag === itarget) !== -1) {

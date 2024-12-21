@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { paneladdress } from 'zss/gadget/data/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
+import { NAME } from 'zss/words/types'
 
 import { useBlink } from '../hooks'
 import {
@@ -132,7 +133,7 @@ export function PanelItemNumber({
               CANCEL_BUTTON={ok}
               OK_BUTTON={ok}
               keydown={(event) => {
-                switch (event.key.toLowerCase()) {
+                switch (NAME(event.key)) {
                   case 'delete':
                     if (strvalue.length > 0) {
                       setstrValue((state) => strsplice(state, cursor, 1))

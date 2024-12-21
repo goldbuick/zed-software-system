@@ -5,6 +5,7 @@ import {
   tokenize,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
+import { NAME } from 'zss/words/types'
 
 import {
   TerminalItemInputProps,
@@ -58,7 +59,7 @@ export function TerminalItem({ blink, active, text, y }: TerminalItemProps) {
     }
 
     // render hyperlink
-    switch (input.toLowerCase()) {
+    switch (NAME(input)) {
       case 'hk':
       case 'hotkey':
         return null

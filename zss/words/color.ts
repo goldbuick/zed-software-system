@@ -2,7 +2,7 @@ import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
 import { readexpr } from './expr'
 import { READ_CONTEXT } from './reader'
-import { COLOR, WORD } from './types'
+import { COLOR, NAME, WORD } from './types'
 
 export function colortofg(color: MAYBE<COLOR>): MAYBE<number> {
   return ispresent(color) && color < COLOR.ONBLACK ? color : undefined
@@ -88,7 +88,7 @@ function isstrcolorconst(value: any): value is STR_COLOR_CONST {
 
 export function mapstrcolor(value: any): MAYBE<STR_COLOR_CONST> {
   if (isstring(value)) {
-    return colorconsts[value.toLowerCase() as STR_COLOR_KEYS]
+    return colorconsts[NAME(value) as STR_COLOR_KEYS]
   }
   return undefined
 }

@@ -1,4 +1,4 @@
-import { isnumber, isstring, MAYBE } from 'zss/mapping/types'
+import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { boardevaldir } from 'zss/memory/board'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 
@@ -131,14 +131,19 @@ export function readargs<T extends ARG_TYPES>(
       case ARG_TYPE.DIR: {
         const [dir, iii] = readdir(ii)
         if (isstrdir(dir)) {
-          const value = READ_CONTEXT.board
-            ? boardevaldir(
-                READ_CONTEXT.board,
-                READ_CONTEXT.element,
-                dir,
-                READ_CONTEXT.player,
-              )
-            : { x: 0, y: 0 }
+          const x = READ_CONTEXT.element?.x ?? 0
+          const y = READ_CONTEXT.element?.y ?? 0
+          const pt = { x, y }
+          const value =
+            ispresent(READ_CONTEXT.board) && ispresent(READ_CONTEXT.element)
+              ? boardevaldir(
+                  READ_CONTEXT.board,
+                  READ_CONTEXT.element,
+                  READ_CONTEXT.player,
+                  dir,
+                  pt,
+                )
+              : pt
           ii = iii
           values.push(value)
         } else {
@@ -230,14 +235,18 @@ export function readargs<T extends ARG_TYPES>(
       case ARG_TYPE.MAYBE_DIR: {
         const [dir, iii] = readdir(ii)
         if (isstrdir(dir)) {
+          const x = READ_CONTEXT.element?.x ?? 0
+          const y = READ_CONTEXT.element?.y ?? 0
+          const pt = { x, y }
           const value = READ_CONTEXT.board
             ? boardevaldir(
                 READ_CONTEXT.board,
                 READ_CONTEXT.element,
-                dir,
                 READ_CONTEXT.player,
+                dir,
+                pt,
               )
-            : { x: 0, y: 0 }
+            : pt
           ii = iii
           values.push(value)
         } else if (dir === undefined) {

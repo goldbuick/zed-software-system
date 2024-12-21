@@ -3,6 +3,7 @@ import { useGadgetClientPlayer } from 'zss/gadget/data/state'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { isarray } from 'zss/mapping/types'
 import { writetextreset } from 'zss/words/textformat'
+import { NAME } from 'zss/words/types'
 
 import { PanelItemContent } from './content'
 import { PanelItemHotkey } from './hotkey'
@@ -45,7 +46,7 @@ export function PanelItem({ item, active }: PanelItemProps) {
       context,
     }
 
-    switch (input.toLowerCase()) {
+    switch (NAME(input)) {
       case 'hk':
       case 'hotkey':
         return <PanelItemHotkey {...props} />

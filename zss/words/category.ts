@@ -2,7 +2,7 @@ import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
 import { readexpr } from './expr'
 import { READ_CONTEXT } from './reader'
-import { CATEGORY, WORD } from './types'
+import { CATEGORY, NAME, WORD } from './types'
 
 export const categoryconsts = {
   isterrain: 'ISTERRAIN',
@@ -24,7 +24,7 @@ function isstrcategoryconst(value: any): value is STR_CATEGORY_CONST {
 
 export function mapstrcategory(value: any): MAYBE<STR_CATEGORY_CONST> {
   if (isstring(value)) {
-    return categoryconsts[value.toLowerCase() as STR_CATEGORY_KEYS]
+    return categoryconsts[NAME(value) as STR_CATEGORY_KEYS]
   }
   return undefined
 }
