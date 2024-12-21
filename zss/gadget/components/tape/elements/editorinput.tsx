@@ -10,7 +10,7 @@ import { useTapeEditor } from 'zss/gadget/data/state'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { applystrtoindex, textformatreadedges } from 'zss/words/textformat'
-import { PT } from 'zss/words/types'
+import { NAME, PT } from 'zss/words/types'
 
 import { useBlink, useWriteText } from '../../hooks'
 import { Scrollable } from '../../scrollable'
@@ -165,7 +165,7 @@ export function EditorInput({
           }
 
           const { key } = event
-          const lkey = key.toLowerCase()
+          const lkey = NAME(key)
           const mods = modsfromevent(event)
 
           switch (lkey) {

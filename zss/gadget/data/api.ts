@@ -10,7 +10,7 @@ import {
 } from 'zss/device/modem'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, isnumber, isstring, MAYBE } from 'zss/mapping/types'
-import { WORD } from 'zss/words/types'
+import { NAME, WORD } from 'zss/words/types'
 
 import {
   GADGET_STATE,
@@ -253,7 +253,7 @@ export function gadgethyperlink(
   }
 
   // package into a panel item
-  const linput = input.toLowerCase()
+  const linput = NAME(input)
 
   const hyperlink: WORD[] = [
     chip.id(),

@@ -1,6 +1,7 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
 import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
 import { tokenize, MaybeFlag } from 'zss/words/textformat'
+import { NAME } from 'zss/words/types'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
 
@@ -281,7 +282,7 @@ function transformNode(ast: CodeNode): SourceNode {
       }
       return write(ast, `  // skipped ${ast.value}\n`)
     case NODE.LABEL: {
-      const llabel = ast.name.toLowerCase()
+      const llabel = NAME(ast.name)
       const ltype = ast.active ? 'label' : 'comment'
       if (!context.labels[llabel]) {
         context.labels[llabel] = []
@@ -289,7 +290,7 @@ function transformNode(ast: CodeNode): SourceNode {
       const lindex = (ast.active ? 1 : -1) * ast.lineindex
       context.labels[llabel].push(lindex)
       // document label
-      return write(ast, `  // ${lindex} ${ast.name} ${ltype}\n`)
+      return write(ast, `  // ${lindex} '${llabel}' ${ltype}\n`)
     }
     case NODE.HYPERLINK:
       return write(ast, [

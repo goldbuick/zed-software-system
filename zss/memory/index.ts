@@ -27,7 +27,7 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { COLOR, WORD } from 'zss/words/types'
+import { COLOR, NAME, WORD } from 'zss/words/types'
 
 import {
   boarddeleteobject,
@@ -116,10 +116,10 @@ export function memoryreadfirstbook(): MAYBE<BOOK> {
 }
 
 export function memoryreadbookbyaddress(address: string): MAYBE<BOOK> {
-  const laddress = address.toLowerCase()
+  const laddress = NAME(address)
   return (
     MEMORY.books.get(address) ??
-    memoryreadbooklist().find((item) => item.name.toLowerCase() === laddress)
+    memoryreadbooklist().find((item) => item.name === laddress)
   )
 }
 
@@ -234,7 +234,7 @@ export function memoryresetbooks(books: BOOK[], select: string) {
   books.forEach((book) => {
     MEMORY.books.set(book.id, book)
     // attempt default for main
-    if (book.name.toLowerCase() === 'main') {
+    if (book.name === 'main') {
       MEMORY.software.main = book.id
     }
   })
@@ -539,7 +539,7 @@ function memoryloader(
   ).filter((codepage) => {
     const stats = codepagereadstats(codepage)
     const matched = Object.keys(stats).filter((name) =>
-      shouldmatch.includes(name.toLowerCase()),
+      shouldmatch.includes(NAME(name)),
     )
     return matched.length === shouldmatch.length
   })

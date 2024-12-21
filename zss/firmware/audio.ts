@@ -3,7 +3,7 @@ import { synth_play, synth_voice, synth_voicefx } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { isnumber, isstring } from 'zss/mapping/types'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
-import { WORD } from 'zss/words/types'
+import { NAME, WORD } from 'zss/words/types'
 
 const isfx = ['echo', 'reverb', 'chorus', 'phaser', 'distortion', 'vibrato']
 
@@ -20,7 +20,7 @@ function handlesynthvoice(idx: number, words: WORD[]) {
   const [voiceorfx] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
   if (isnumber(voiceorfx)) {
     synth_voice('audio', idx, 'volume', voiceorfx)
-  } else if (isfx.includes(voiceorfx.toLowerCase())) {
+  } else if (isfx.includes(NAME(voiceorfx))) {
     const [maybeconfig, maybevalue] = readargs(words, 1, [
       ARG_TYPE.NUMBER_OR_STRING,
       ARG_TYPE.MAYBE_NUMBER_OR_STRING,

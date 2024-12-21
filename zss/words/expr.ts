@@ -7,6 +7,7 @@ import { isstrcollision, mapstrcollision, readcollision } from './collision'
 import { isstrcolor, mapstrcolor, readcolor } from './color'
 import { ispt, isstrdir, mapstrdir, readdir } from './dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
+import { NAME } from './types'
 
 export function readexpr(index: number, stringeval = true): [any, number] {
   const maybevalue = READ_CONTEXT.words[index]
@@ -34,7 +35,7 @@ export function readexpr(index: number, stringeval = true): [any, number] {
   }
 
   // special case rnd expression
-  if (isstring(maybevalue) && maybevalue.toLowerCase() === 'rnd') {
+  if (isstring(maybevalue) && NAME(maybevalue) === 'rnd') {
     // RND - returns 0 or 1
     // RND <number> - return 0 to number
     // RND <number> <number> - return number to number
@@ -70,7 +71,7 @@ export function readexpr(index: number, stringeval = true): [any, number] {
 
   // check for flags and expressions
   if (isstring(maybevalue)) {
-    const maybeexpr = maybevalue.toLowerCase()
+    const maybeexpr = NAME(maybevalue)
 
     // check for flag
     if (stringeval) {

@@ -2,7 +2,7 @@ import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
 import { readexpr } from './expr'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
-import { DIR, PT, WORD } from './types'
+import { DIR, NAME, PT, WORD } from './types'
 
 export function ispt(value: any): value is PT {
   return ispresent(value) && ispresent(value.x) && ispresent(value.y)
@@ -109,7 +109,7 @@ export function mapstrdirtoconst(value: any): DIR {
 
 export function mapstrdir(value: any): MAYBE<STR_DIR_CONST> {
   if (isstring(value)) {
-    return dirconsts[value.toLowerCase() as STR_DIR_KEYS]
+    return dirconsts[NAME(value) as STR_DIR_KEYS]
   }
   return undefined
 }

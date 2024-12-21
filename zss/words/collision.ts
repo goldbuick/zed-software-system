@@ -2,7 +2,7 @@ import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
 import { readexpr } from './expr'
 import { READ_CONTEXT } from './reader'
-import { COLLISION, WORD } from './types'
+import { COLLISION, NAME, WORD } from './types'
 
 export const collisionconsts = {
   issolid: 'ISSOLID',
@@ -34,7 +34,7 @@ export function isstrcollision(value: any): value is STR_COLLISION {
 }
 
 export function mapstrcollisiontoenum(value: STR_COLLISION): COLLISION {
-  return collisionenums[value[0].toLowerCase() as keyof typeof collisionenums]
+  return collisionenums[NAME(value[0]) as keyof typeof collisionenums]
 }
 
 function isstrcollisionconst(value: any): value is STR_COLLISION_CONST {
@@ -43,7 +43,7 @@ function isstrcollisionconst(value: any): value is STR_COLLISION_CONST {
 
 export function mapstrcollision(value: any): MAYBE<STR_COLLISION_CONST> {
   if (isstring(value)) {
-    return collisionconsts[value.toLowerCase() as STR_COLLISION_KEYS]
+    return collisionconsts[NAME(value) as STR_COLLISION_KEYS]
   }
   return undefined
 }

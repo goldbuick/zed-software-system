@@ -1,5 +1,4 @@
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { COLLISION } from 'zss/words/types'
 import { ispt } from 'zss/words/dir'
 import {
   readstrkindbg,
@@ -7,7 +6,7 @@ import {
   readstrkindname,
   STR_KIND,
 } from 'zss/words/kind'
-import { PT } from 'zss/words/types'
+import { COLLISION, NAME, PT } from 'zss/words/types'
 
 import { boardelementbg, boardelementcolor, boardelementname } from './board'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
@@ -95,7 +94,7 @@ export function listelementsbyattr(
           return maybebyid
         }
         // check by name
-        const maybebyname = listnamedelements(board, idnameorpt.toLowerCase())
+        const maybebyname = listnamedelements(board, NAME(idnameorpt))
         if (maybebyname.length) {
           return maybebyname
         }

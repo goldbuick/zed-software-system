@@ -98,3 +98,7 @@ export type STAT = {
 export type PT = { x: number; y: number }
 export type WORD = string | number | undefined | WORD[]
 export type WORD_RESULT = 0 | 1
+
+export function NAME(name: string) {
+  return name.toLowerCase().trim()
+}

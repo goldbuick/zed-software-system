@@ -13,6 +13,7 @@ import { vm_cli } from 'zss/device/api'
 import { getgadgetclientplayer } from 'zss/gadget/data/state'
 import { INPUT } from 'zss/gadget/data/types'
 import { ismac } from 'zss/words/system'
+import { NAME } from 'zss/words/types'
 
 // user input
 
@@ -92,7 +93,7 @@ function invoke(input: INPUT, mods: UserInputMods) {
 document.addEventListener(
   'keydown',
   (event) => {
-    const key = event.key.toLowerCase()
+    const key = NAME(event.key)
     const mods = modsfromevent(event)
 
     // allowed shortcuts, all others we attempt to block
@@ -195,7 +196,7 @@ document.addEventListener(
 document.addEventListener(
   'keyup',
   (event) => {
-    const key = event.key.toLowerCase()
+    const key = NAME(event.key)
     const mods = modsfromevent(event)
 
     if (mods.alt) {

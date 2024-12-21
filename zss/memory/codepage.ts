@@ -3,7 +3,7 @@ import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { statformat, stattypestring } from 'zss/words/stats'
-import { STAT_TYPE } from 'zss/words/types'
+import { NAME, STAT_TYPE } from 'zss/words/types'
 
 import { createboard, exportboard, importboard } from './board'
 import {
@@ -153,7 +153,7 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
       const source = token.image.slice(1)
       const words = source.split(' ')
       const stat = statformat(words, isfirst)
-      const maybename = stat.values.join(' ').toLowerCase().trim()
+      const maybename = NAME(stat.values.join(' '))
       isfirst = false
       switch (stat.type) {
         case STAT_TYPE.LOADER:
@@ -183,7 +183,7 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
         case STAT_TYPE.CONST: {
           const [maybename, maybevalue] = stat.values
           if (isstring(maybename)) {
-            const name = maybename.toLowerCase()
+            const name = NAME(maybename)
             if (isstring(maybevalue)) {
               // can we parse consts here ???? too ????
               const numbervalue = parseFloat(maybevalue)
@@ -205,7 +205,7 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
         case STAT_TYPE.SCROLL: {
           const [maybename, ...args] = stat.values
           if (isstring(maybename)) {
-            const name = maybename.toLowerCase().trim()
+            const name = NAME(maybename)
             codepage.stats[name] = args
           }
           break
@@ -254,7 +254,7 @@ export function codepagereadtypetostring(codepage: MAYBE<CODE_PAGE>) {
 
 export function codepagereadname(codepage: MAYBE<CODE_PAGE>) {
   const stats = codepagereadstats(codepage)
-  return (stats.name ?? '').toLowerCase()
+  return stats.name ?? ''
 }
 
 export function codepagereadstat(codepage: MAYBE<CODE_PAGE>, stat: string) {

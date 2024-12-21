@@ -16,7 +16,7 @@ import { bookelementdisplayread } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { statformat } from 'zss/words/stats'
-import { COLOR, STAT_TYPE } from 'zss/words/types'
+import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
 
 export const GADGET_FIRMWARE = createfirmware({
   get() {
@@ -75,7 +75,7 @@ export const GADGET_FIRMWARE = createfirmware({
     }
 
     // the intent here is to gather a list of target chip ids
-    const ltarget = target.toLowerCase()
+    const ltarget = NAME(target)
     switch (ltarget) {
       case 'all':
         for (const id of Object.keys(READ_CONTEXT.board?.objects ?? {})) {
@@ -140,7 +140,7 @@ export const GADGET_FIRMWARE = createfirmware({
   // ---
   .command('gadget', (_, words) => {
     const [edge] = readargs(words, 0, [ARG_TYPE.STRING])
-    const edgeConst = PANEL_TYPE_MAP[edge.toLowerCase()]
+    const edgeConst = PANEL_TYPE_MAP[NAME(edge)]
     if (edgeConst === PANEL_TYPE.SCROLL) {
       const [, name, size] = readargs(words, 0, [
         ARG_TYPE.STRING,

@@ -10,7 +10,7 @@ import {
   ptapplydir,
   STR_DIR,
 } from 'zss/words/dir'
-import { COLOR, DIR, PT } from 'zss/words/types'
+import { COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
 import { exportboardelement, importboardelement } from './boardelement'
@@ -113,7 +113,7 @@ export function boardelementread(
 }
 
 export function boardelementname(element: MAYBE<BOARD_ELEMENT>) {
-  return (element?.name ?? element?.kinddata?.name ?? 'object').toLowerCase()
+  return NAME(element?.name ?? element?.kinddata?.name ?? 'object')
 }
 
 export function boardelementcolor(element: MAYBE<BOARD_ELEMENT>) {

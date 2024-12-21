@@ -1,8 +1,8 @@
-import { STAT_TYPE } from './types'
+import { NAME, STAT_TYPE } from './types'
 
 export function statformat(words: string[], first = true) {
   const [maybetype, ...values] = words
-  switch (maybetype.toLowerCase()) {
+  switch (NAME(maybetype)) {
     default:
       if (first) {
         return {
