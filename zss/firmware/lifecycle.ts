@@ -10,17 +10,7 @@ import {
 } from 'zss/memory/book'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 
-export const LIFECYCLE_FIRMWARE = createfirmware({
-  get() {
-    return [false, undefined]
-  },
-  set() {
-    return [false, undefined]
-  },
-  shouldtick() {},
-  tick() {},
-  tock() {},
-})
+export const LIFECYCLE_FIRMWARE = createfirmware()
   .command('idle', (chip) => {
     chip.yield()
     return 0

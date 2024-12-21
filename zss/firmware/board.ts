@@ -93,17 +93,7 @@ export function moveobject(
   return true
 }
 
-export const BOARD_FIRMWARE = createfirmware({
-  get() {
-    return [false, undefined]
-  },
-  set() {
-    return [false, undefined]
-  },
-  shouldtick() {},
-  tick() {},
-  tock() {},
-})
+export const BOARD_FIRMWARE = createfirmware()
   .command('change', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
@@ -179,11 +169,10 @@ export const BOARD_FIRMWARE = createfirmware({
     bookboardwrite(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
     return 0
   })
+  .command('shootwith', (chip, words) => {
+    return 0
+  })
   .command('shoot', (chip, words) => {
-    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
-      return 0
-    }
-
     // invalid data
     if (!ispt(READ_CONTEXT.element)) {
       return 0

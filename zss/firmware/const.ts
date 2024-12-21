@@ -34,10 +34,4 @@ export const CONST_FIRMWARE = createfirmware({
     }
     return [false, undefined]
   },
-  set() {
-    return [false, undefined]
-  },
-  shouldtick() {},
-  tick() {},
-  tock() {},
 })

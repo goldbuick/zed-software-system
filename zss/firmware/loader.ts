@@ -31,12 +31,6 @@ export const LOADER_FIRMWARE = createfirmware({
 
     return [false, undefined]
   },
-  set() {
-    return [false, undefined]
-  },
-  shouldtick() {},
-  tick() {},
-  tock() {},
 })
   // primary firmware
   .command('send', (chip, words) => {

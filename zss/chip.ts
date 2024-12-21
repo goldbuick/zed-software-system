@@ -3,12 +3,11 @@ import ErrorStackParser from 'error-stack-parser'
 import { api_error } from './device/api'
 import {
   DRIVER_TYPE,
+  firmwareeverytick,
   firmwareget,
   firmwaregetcommand,
   firmwareset,
-  firmwareshouldtick,
   firmwaretick,
-  firmwaretock,
 } from './firmware/runner'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
@@ -198,23 +197,19 @@ export function createchip(
       // update timestamp
       flags.ts = incoming
 
-      // we active ?
+      // update execution frequency
       const pulse = isnumber(flags.ps) ? flags.ps : 0
       const activecycle = pulse % cycle === 0
-
-      // invoke firmware shouldtick
-      firmwareshouldtick(driver, chip, activecycle)
-
-      // chip is yield / ended state
-      if (!chip.shouldtick()) {
-        return false
-      }
-
-      // inc pulse after checking should tick
       flags.ps = pulse + 1
 
       // execution frequency
-      if (!activecycle) {
+      if (activecycle === false) {
+        return false
+      }
+
+      // chip is yield / ended state
+      if (chip.shouldtick() === false) {
+        firmwareeverytick(driver, chip)
         return false
       }
 
@@ -237,8 +232,8 @@ export function createchip(
         flags.es = 1
       }
 
-      // invoke firmware tock
-      firmwaretock(driver, chip)
+      // cleanup
+      firmwareeverytick(driver, chip)
       return true
     },
     isended() {

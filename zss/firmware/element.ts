@@ -1,3 +1,4 @@
+import { is } from '@react-three/fiber/dist/declarations/src/core/utils'
 import { createfirmware } from 'zss/firmware'
 import {
   INPUT,
@@ -144,17 +145,18 @@ export const ELEMENT_FIRMWARE = createfirmware({
     flags[name] = value
     return [true, value]
   },
-  shouldtick(chip, activecycle) {
-    if (
-      !activecycle ||
-      !ispresent(READ_CONTEXT.element?.x) ||
-      !ispresent(READ_CONTEXT.element?.y) ||
-      !ispresent(READ_CONTEXT.element?.stepx) ||
-      !ispresent(READ_CONTEXT.element?.stepy)
-    ) {
-      return
+  everytick(chip) {
+    // headless only gets a single tick to do its magic
+    if (READ_CONTEXT.element?.headless) {
+      chip.command('die')
     }
+
     if (
+      ispresent(READ_CONTEXT.element) &&
+      ispresent(READ_CONTEXT.element.x) &&
+      ispresent(READ_CONTEXT.element.stepx) &&
+      ispresent(READ_CONTEXT.element.y) &&
+      ispresent(READ_CONTEXT.element.stepy) &&
       !moveobject(
         chip,
         READ_CONTEXT.book,
@@ -170,13 +172,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
         stepx: 0,
         stepy: 0,
       })
-    }
-  },
-  tick() {},
-  tock(chip) {
-    // headless only gets a single tick to do its magic
-    if (READ_CONTEXT.element?.headless) {
-      chip.command('die')
     }
   },
 })
