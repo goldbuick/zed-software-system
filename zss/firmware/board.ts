@@ -169,6 +169,11 @@ export const BOARD_FIRMWARE = createfirmware()
     bookboardwrite(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
     return 0
   })
+  .command('shootwith', (chip, words) => {
+    const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+    chip.set('arg', arg)
+    return chip.command('shoot', words.slice(ii))
+  })
   .command('shoot', (chip, words) => {
     // invalid data
     if (!ispt(READ_CONTEXT.element)) {
@@ -260,6 +265,7 @@ export const BOARD_FIRMWARE = createfirmware()
     chip.yield()
     return 0
   })
-  .command('throwstar', (chip, words) => {
-    return chip.command('shoot', ...words, 'star') ? 1 : 0
+  .command('throwstar', () => {
+    // TODO, may not be needed
+    return 0
   })

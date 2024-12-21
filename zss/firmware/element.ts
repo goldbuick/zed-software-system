@@ -206,7 +206,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('bind', () => {
-    // TODO
+    // TODO, may not be needed
     return 0
   })
   .command('char', (_, words) => {

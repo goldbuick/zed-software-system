@@ -31,6 +31,7 @@ enum BOARD_ELEMENT_KEYS {
   color,
   bg,
   player,
+  bucket,
   pushable,
   collision,
   destructible,

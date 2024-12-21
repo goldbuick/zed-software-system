@@ -76,8 +76,9 @@ export const LIFECYCLE_FIRMWARE = createfirmware()
     memoryrun(func)
     return 0
   })
-  .command('runwith', (_, words) => {
-    const [value, func] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.STRING])
-    memoryrun(func, value)
+  .command('runwith', (chip, words) => {
+    const [arg, func] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.STRING])
+    chip.set('arg', arg)
+    memoryrun(func)
     return 0
   })

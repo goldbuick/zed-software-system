@@ -500,7 +500,7 @@ export function memorycli(player: string, cli = '') {
   os.once(id, DRIVER_TYPE.CLI, mainbook.timestamp, 'cli', cli)
 }
 
-export function memoryrun(address: string, value?: WORD) {
+export function memoryrun(address: string) {
   // we assume READ_CONTEXT is setup correctly when this is run
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   const codepage = bookreadcodepagebyaddress(mainbook, address)
@@ -515,6 +515,7 @@ export function memoryrun(address: string, value?: WORD) {
   const id = `${address}_run`
   const itemname = boardelementname(READ_CONTEXT.element)
   const itemcode = codepage?.code ?? ''
+  // set arg to value on chip with id = id
   os.once(id, DRIVER_TYPE.CODE_PAGE, mainbook.timestamp, itemname, itemcode)
 }
 
