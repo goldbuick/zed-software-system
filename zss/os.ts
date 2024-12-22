@@ -5,14 +5,6 @@ import { DRIVER_TYPE } from './firmware/runner'
 import { GeneratorBuild, compile } from './lang/generator'
 import { ispresent, isstring } from './mapping/types'
 
-export type OS_INVOKE = (
-  id: string,
-  driver: DRIVER_TYPE,
-  timestamp: number,
-  name: string,
-  code: string,
-) => boolean
-
 export type OS = {
   ids: () => string[]
   has: (id: string) => boolean
@@ -23,11 +15,10 @@ export type OS = {
     id: string,
     driver: DRIVER_TYPE,
     cycle: number,
-    timestamp: number,
     name: string,
     code: string,
   ) => boolean
-  once: OS_INVOKE
+  once: (id: string, driver: DRIVER_TYPE, name: string, code: string) => boolean
   message: MESSAGE_FUNC
 }
 
@@ -73,7 +64,7 @@ export function createos() {
         }
       }
     },
-    tick(id, driver, cycle, timestamp, name, code) {
+    tick(id, driver, cycle, name, code) {
       let chip = chips[id]
 
       // attempt to create chip
@@ -119,10 +110,10 @@ export function createos() {
       }
 
       // run it
-      return !!chip?.tick(cycle, timestamp)
+      return !!chip?.tick(cycle)
     },
-    once(id, driver, timestamp, name, code) {
-      const result = os.tick(id, driver, 1, timestamp, name, code)
+    once(id, driver, name, code) {
+      const result = os.tick(id, driver, 1, name, code)
       return os.halt(id) && result
     },
     message(incoming) {

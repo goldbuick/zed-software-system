@@ -43,9 +43,10 @@ export type CHIP = {
   // state api
   set: (name: string, value: any) => any
   get: (name: string) => any
+  bucket: (value: any) => void
 
   // lifecycle api
-  tick: (cycle: number, incoming: number) => boolean
+  tick: (cycle: number) => boolean
   isended: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
@@ -143,8 +144,6 @@ export function createchip(
     flags.ys = 0
     // execution frequency
     flags.ps = 0
-    // execution timestamp
-    flags.ts = 0
     // chip is in ended state awaiting any messages
     flags.es = (build.errors?.length ?? 0) !== 0 ? 1 : 0
   }
@@ -191,12 +190,17 @@ export function createchip(
       // no result, return undefined
       return undefined
     },
+    bucket(value) {
+      const bucket = chip.get('bucket')
+      if (isarray(bucket)) {
+        bucket.push(value)
+      } else {
+        chip.set('bucket', [value])
+      }
+    },
 
     // lifecycle api
-    tick(cycle, incoming) {
-      // update timestamp
-      flags.ts = incoming
-
+    tick(cycle) {
       // update execution frequency
       const pulse = isnumber(flags.ps) ? flags.ps : 0
       const activecycle = pulse % cycle === 0

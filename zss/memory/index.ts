@@ -1,3 +1,4 @@
+import { objectKeys } from 'ts-extras'
 import { CONFIG, createchipid, MESSAGE } from 'zss/chip'
 import { api_error, tape_debug, tape_info, vm_flush } from 'zss/device/api'
 import {
@@ -20,14 +21,14 @@ import { createpid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { createos, OS } from 'zss/os'
+import { createos } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { COLOR, NAME, WORD } from 'zss/words/types'
+import { COLOR, NAME } from 'zss/words/types'
 
 import {
   boarddeleteobject,
@@ -61,6 +62,7 @@ import {
 import {
   BINARY_READER,
   BOARD,
+  BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
@@ -382,6 +384,71 @@ export function memorymessage(message: MESSAGE) {
   os.message(message)
 }
 
+export function memorytickobject(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  object: MAYBE<BOARD_ELEMENT>,
+  code: string,
+  cycledefault = CYCLE_DEFAULT,
+) {
+  if (!ispresent(book) || !ispresent(board) || !ispresent(object)) {
+    return
+  }
+
+  // cache context
+  const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
+
+  // write context
+  READ_CONTEXT.book = book
+  READ_CONTEXT.board = board
+  READ_CONTEXT.element = object
+  READ_CONTEXT.player = object.player ?? MEMORY.defaultplayer
+  READ_CONTEXT.isplayer = ispid(object.id ?? '')
+
+  // read cycle
+  const cycle = boardelementreadstat(
+    object,
+    'cycle',
+    boardelementreadstat(
+      bookelementkindread(book, object),
+      'cycle',
+      cycledefault,
+    ),
+  )
+
+  // run chip code
+  const id = object.id ?? ''
+  const itemname = boardelementname(object)
+  os.tick(
+    id,
+    DRIVER_TYPE.CODE_PAGE,
+    isnumber(cycle) ? cycle : cycledefault,
+    itemname,
+    code,
+  )
+
+  // clear ticker
+  if (isnumber(object?.tickertime)) {
+    // clear ticker text after X number of ticks
+    if (READ_CONTEXT.timestamp - object.tickertime > TICK_FPS * 5) {
+      object.tickertime = 0
+      object.tickertext = ''
+    }
+  }
+
+  // clear used input
+  if (READ_CONTEXT.isplayer) {
+    const flags = memoryreadflags(READ_CONTEXT.player)
+    flags.inputcurrent = 0
+  }
+
+  // restore context
+  objectKeys(OLD_CONTEXT).forEach((key) => {
+    // @ts-expect-error dont bother me
+    READ_CONTEXT[key] = OLD_CONTEXT[key]
+  })
+}
+
 export function memorytick() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -397,7 +464,7 @@ export function memorytick() {
 
   // update loaders
   MEMORY.loaders.forEach((code, id) => {
-    os.tick(id, DRIVER_TYPE.LOADER, 1, timestamp, 'loader', code)
+    os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
     // teardown
     if (os.isended(id)) {
       os.halt(id)
@@ -416,7 +483,6 @@ export function memorytick() {
   const boards = bookplayerreadboards(mainbook)
   boards.forEach((board) => {
     const run = bookboardtick(mainbook, board, timestamp)
-
     // iterate code needed to update given board
     for (let i = 0; i < run.length; ++i) {
       const { id, type, code, object } = run[i]
@@ -425,52 +491,7 @@ export function memorytick() {
         os.halt(id)
       } else {
         // handle active code
-
-        // write context
-        if (ispresent(object)) {
-          READ_CONTEXT.book = mainbook
-          READ_CONTEXT.board = board
-          READ_CONTEXT.element = object
-          READ_CONTEXT.player = object.player ?? MEMORY.defaultplayer
-          READ_CONTEXT.isplayer = ispid(object.id ?? '')
-        }
-
-        // read cycle
-        const cycle = boardelementreadstat(
-          object,
-          'cycle',
-          boardelementreadstat(
-            bookelementkindread(mainbook, object),
-            'cycle',
-            CYCLE_DEFAULT,
-          ),
-        )
-
-        // run chip code
-        const itemname = boardelementname(object)
-        os.tick(
-          id,
-          DRIVER_TYPE.CODE_PAGE,
-          isnumber(cycle) ? cycle : CYCLE_DEFAULT,
-          timestamp,
-          itemname,
-          code,
-        )
-
-        // clear ticker
-        if (isnumber(object?.tickertime)) {
-          // clear ticker text after X number of ticks
-          if (timestamp - object.tickertime > TICK_FPS * 5) {
-            object.tickertime = 0
-            object.tickertext = ''
-          }
-        }
-
-        // clear used input
-        if (READ_CONTEXT.isplayer) {
-          const flags = memoryreadflags(READ_CONTEXT.player)
-          flags.inputcurrent = 0
-        }
+        memorytickobject(mainbook, board, object, code)
       }
     }
   })
@@ -497,7 +518,7 @@ export function memorycli(player: string, cli = '') {
 
   // invoke once
   tape_debug('memory', 'running', mainbook.timestamp, id, cli)
-  os.once(id, DRIVER_TYPE.CLI, mainbook.timestamp, 'cli', cli)
+  os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
 }
 
 export function memoryrun(address: string) {
@@ -516,7 +537,7 @@ export function memoryrun(address: string) {
   const itemname = boardelementname(READ_CONTEXT.element)
   const itemcode = codepage?.code ?? ''
   // set arg to value on chip with id = id
-  os.once(id, DRIVER_TYPE.CODE_PAGE, mainbook.timestamp, itemname, itemcode)
+  os.once(id, DRIVER_TYPE.CODE_PAGE, itemname, itemcode)
 }
 
 function memoryloader(
