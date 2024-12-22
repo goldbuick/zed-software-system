@@ -42,17 +42,7 @@ import {
   writetext,
 } from 'zss/words/writeui'
 
-export const CLI_FIRMWARE = createfirmware({
-  get() {
-    return [false, undefined]
-  },
-  set() {
-    return [false, undefined]
-  },
-  shouldtick() {},
-  tick() {},
-  tock() {},
-})
+export const CLI_FIRMWARE = createfirmware()
   // primary firmware
   .command('send', (_, words) => {
     const [msg, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
@@ -118,7 +108,7 @@ export const CLI_FIRMWARE = createfirmware({
         )
         writetext(
           'cli',
-          `use clear ${bg('clear', 'to change background to')} transparent`,
+          `use clear ${bg('onclear', 'to change background to')} transparent`,
         )
         writesection('cli', `hyperlinks`)
         writetext(

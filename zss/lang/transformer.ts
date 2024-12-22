@@ -1,5 +1,5 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
-import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 import { tokenize, MaybeFlag } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
@@ -181,7 +181,7 @@ function writegoto(ast: CodeNode, line: number): SourceNode {
 }
 
 function readlookup(id: MAYBE<string>) {
-  return context.linelookup[id ?? ''] ?? 0
+  return context.linelookup[id ?? ''] ?? -1
 }
 
 function writelookup(lines: CodeNode[], type: NODE, value: string) {
@@ -321,35 +321,42 @@ function transformNode(ast: CodeNode): SourceNode {
       ])
     // core / structure
     case NODE.IF: {
-      const block = ast.block.type === NODE.IF_BLOCK ? ast.block : undefined
-      if (!ispresent(block)) {
-        return write(ast, '')
+      const block = ast.block?.type === NODE.IF_BLOCK ? ast.block : undefined
+      if (ispresent(block)) {
+        // check if conditional
+        writelookup([ast.check], NODE.IF_CHECK, block.skip)
+        const source = write(ast, transformNode(ast.check))
+
+        // if true logic
+        block.lines.forEach((item) => source.add(transformNode(item)))
+
+        // start of (alt) logic
+        writelookup(block.altlines, NODE.ELSE_IF, block.done)
+        block.altlines.forEach((item) => source.add(transformNode(item)))
+
+        // all done
+        return source
       }
 
-      // check if conditional
-      writelookup([ast.check], NODE.IF_CHECK, block.skip)
-      const source = write(ast, transformNode(ast.check))
-
-      // if true logic
-      block.lines.forEach((item) => source.add(transformNode(item)))
-
-      // start of (alt) logic
-      writelookup(block.altlines, NODE.ELSE_IF, block.done)
-      block.altlines.forEach((item) => source.add(transformNode(item)))
-
-      // all done
-      return source
+      // check if conditional only inline nested commands only
+      return write(ast, transformNode(ast.check))
     }
     case NODE.IF_CHECK: {
       const skip = readlookup(ast.skip)
-      const source = write(ast, [
+      if (skip === -1) {
+        return write(ast, [
+          `  `,
+          writeApi(ast, ast.method, transformNodes(ast.words)),
+          `;\n`,
+        ])
+      }
+      return write(ast, [
         `  if (!`,
         writeApi(ast, ast.method, transformNodes(ast.words)),
         `) { `,
         writegoto(ast, skip),
         ` }\n`,
       ])
-      return source
     }
     case NODE.ELSE_IF:
     case NODE.ELSE: {
@@ -461,6 +468,11 @@ function transformNode(ast: CodeNode): SourceNode {
 }
 
 function indexnode(ast: CodeNode) {
+  // bail on blank nodes
+  if (!ispresent(ast)) {
+    return
+  }
+
   // inc line
   if (ast.type === NODE.LINE) {
     ++context.lineindex

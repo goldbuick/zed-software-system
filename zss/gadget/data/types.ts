@@ -125,7 +125,7 @@ export function createsprite(
     y: 0,
     char,
     color,
-    bg: COLOR.CLEAR,
+    bg: COLOR.ONCLEAR,
   }
 }
 

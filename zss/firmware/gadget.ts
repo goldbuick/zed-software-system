@@ -28,12 +28,8 @@ export const GADGET_FIRMWARE = createfirmware({
     // return has unhandled
     return [false, undefined]
   },
-  shouldtick() {},
   tick() {
-    let withname = 'scroll'
-    if (ispresent(READ_CONTEXT.element?.name)) {
-      withname = READ_CONTEXT.element.name
-    }
+    const withname = READ_CONTEXT.element?.name ?? 'scroll'
     gadgetpanel(
       READ_CONTEXT.player,
       'scroll',
@@ -42,7 +38,7 @@ export const GADGET_FIRMWARE = createfirmware({
       withname,
     )
   },
-  tock() {
+  everytick() {
     const ticker = gadgetcheckscroll(READ_CONTEXT.player)
     if (ticker && ispresent(READ_CONTEXT.element)) {
       READ_CONTEXT.element.tickertext = ticker

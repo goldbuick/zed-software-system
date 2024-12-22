@@ -12,14 +12,15 @@ import { createbitmaptexture } from './textures'
 const palette = convertPaletteToColors(loadDefaultPalette())
 const charset = createbitmaptexture(loadDefaultCharset())
 
+const smoothrate = TICK_FPS * 3
+
 const spritesMaterial = new ShaderMaterial({
   // settings
   transparent: false,
   uniforms: {
     time,
     interval,
-    moverate: new Uniform(TICK_FPS),
-    blendrate: new Uniform(TICK_FPS * 3),
+    smoothrate: new Uniform(smoothrate),
     map: new Uniform(charset),
     alt: new Uniform(charset),
     palette: new Uniform(palette),
@@ -42,8 +43,7 @@ const spritesMaterial = new ShaderMaterial({
     attribute vec2 animShake;
     attribute vec2 animBounce;
 
-    uniform float moverate;
-    uniform float blendrate;
+    uniform float smoothrate;
     uniform float time;
     uniform float interval;
     uniform vec2 pointSize;
@@ -65,7 +65,7 @@ const spritesMaterial = new ShaderMaterial({
     vec4 empty;
 
     vec4 bgFromIndex(float index) {
-      if (int(index) >= ${COLOR.CLEAR}) {
+      if (int(index) >= ${COLOR.ONCLEAR}) {
         return empty;
       }
       vec4 bg;
@@ -83,24 +83,24 @@ const spritesMaterial = new ShaderMaterial({
     }
 
     void main() {
-      float deltaPosition = clamp((time - lastPosition.z) * moverate, 0.0, 1.0);
+      float deltaPosition = clamp((time - lastPosition.z) * smoothrate, 0.0, 1.0);
       vec2 animPosition = mix(lastPosition.xy, position.xy, deltaPosition);
 
-      float deltaShake = 1.0 - animDelta(animShake.y, moverate * 0.5, 1.0); 
+      float deltaShake = 1.0 - animDelta(animShake.y, smoothrate * 0.5, 1.0); 
       animPosition += vec2(
         deltaShake - rand(cos(time) + animShake.x) * deltaShake * 2.0,
         deltaShake - rand(sin(time) + animShake.x) * deltaShake * 2.0
       ) * 0.5;
 
-      float deltaBounce = 1.0 - abs(1.0 - animDelta(animBounce.y, moverate, 2.0));
+      float deltaBounce = 1.0 - abs(1.0 - animDelta(animBounce.y, smoothrate, 2.0));
       animPosition.y -= smoothstep(0.0, 1.0, deltaBounce);
 
-      float deltaColor = animDelta(lastColor.y, blendrate, 1.0);
+      float deltaColor = animDelta(lastColor.y, smoothrate, 1.0);
       vec3 sourceColor = colorFromIndex(lastColor.x);
       vec3 destColor = colorFromIndex(charData.z);
       vColor = mix(sourceColor, destColor, deltaColor);
 
-      float deltaBg = animDelta(lastBg.y, blendrate, 1.0);
+      float deltaBg = animDelta(lastBg.y, smoothrate, 1.0);
       vec4 sourceBg = bgFromIndex(lastBg.x);
       vec4 destBg = bgFromIndex(charData.w);
       vBg = mix(sourceBg, destBg, deltaBg);

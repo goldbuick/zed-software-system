@@ -2,33 +2,27 @@ import { maptostring } from 'zss/chip'
 import { vm_endgame } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { clamp } from 'zss/mapping/number'
+import { ispresent } from 'zss/mapping/types'
 import { memoryrun } from 'zss/memory'
-import { boardelementwritestat } from 'zss/memory/boardelement'
 import {
   bookboardobjectnamedlookupdelete,
   bookboardobjectsafedelete,
 } from 'zss/memory/book'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 
-export const LIFECYCLE_FIRMWARE = createfirmware({
-  get() {
-    return [false, undefined]
-  },
-  set() {
-    return [false, undefined]
-  },
-  shouldtick() {},
-  tick() {},
-  tock() {},
-})
+export const LIFECYCLE_FIRMWARE = createfirmware()
   .command('idle', (chip) => {
     chip.yield()
     return 0
   })
   .command('end', (chip) => {
-    // future, this will also afford giving a return value #end <value>
     chip.endofprogram()
     return 0
+  })
+  .command('endwith', (chip, words) => {
+    const [maybearg] = readargs(words, 0, [ARG_TYPE.ANY])
+    chip.set('arg', maybearg)
+    return chip.command('end')
   })
   .command('lock', (chip) => {
     chip.lock(chip.id())
@@ -47,11 +41,12 @@ export const LIFECYCLE_FIRMWARE = createfirmware({
     return 0
   })
   .command('cycle', (_, words) => {
-    // read cycle
-    const [cyclevalue] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    // write cycle
-    const cycle = clamp(Math.round(cyclevalue), 1, 255)
-    boardelementwritestat(READ_CONTEXT.element, 'cycle', cycle)
+    if (ispresent(READ_CONTEXT.element)) {
+      // read cycle
+      const [cyclevalue] = readargs(words, 0, [ARG_TYPE.NUMBER])
+      // write cycle
+      READ_CONTEXT.element.cycle = clamp(Math.round(cyclevalue), 1, 255)
+    }
     return 0
   })
   .command('die', (chip) => {
@@ -82,8 +77,9 @@ export const LIFECYCLE_FIRMWARE = createfirmware({
     memoryrun(func)
     return 0
   })
-  .command('runwith', (_, words) => {
-    const [func, value] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
-    memoryrun(func, value)
+  .command('runwith', (chip, words) => {
+    const [arg, func] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.STRING])
+    chip.set('arg', arg)
+    memoryrun(func)
     return 0
   })

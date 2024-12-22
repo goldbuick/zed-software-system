@@ -1,7 +1,5 @@
-import { objectKeys } from 'ts-extras'
 import { createsid } from 'zss/mapping/guid'
-import { ispresent, MAYBE } from 'zss/mapping/types'
-import { WORD } from 'zss/words/types'
+import { MAYBE } from 'zss/mapping/types'
 
 import {
   FORMAT_OBJECT,
@@ -31,6 +29,7 @@ enum BOARD_ELEMENT_KEYS {
   color,
   bg,
   player,
+  bucket,
   pushable,
   collision,
   destructible,
@@ -63,36 +62,4 @@ export function importboardelement(
   boardelemententry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<BOARD_ELEMENT> {
   return unformatobject(boardelemententry, BOARD_ELEMENT_KEYS)
-}
-
-export function boardelementreadstat(
-  boardelement: MAYBE<BOARD_ELEMENT>,
-  key: keyof BOARD_ELEMENT,
-  defaultvalue: WORD,
-): WORD {
-  if (!ispresent(boardelement)) {
-    return
-  }
-  const value = boardelement[key]
-  return value ?? defaultvalue
-}
-
-export function boardelementwritestat(
-  boardelement: MAYBE<BOARD_ELEMENT>,
-  key: keyof BOARD_ELEMENT,
-  value: WORD,
-) {
-  if (!ispresent(boardelement)) {
-    return
-  }
-  boardelement[key] = value
-}
-
-export function boardelementwritestats(
-  boardelement: MAYBE<BOARD_ELEMENT>,
-  stats: BOARD_ELEMENT,
-) {
-  objectKeys(stats).forEach((key) =>
-    boardelementwritestat(boardelement, key, stats[key]),
-  )
 }

@@ -1,3 +1,4 @@
+import { objectKeys } from 'ts-extras'
 import { CONFIG, createchipid, MESSAGE } from 'zss/chip'
 import { api_error, tape_debug, tape_info, vm_flush } from 'zss/device/api'
 import {
@@ -20,14 +21,14 @@ import { createpid, ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { createos, OS } from 'zss/os'
+import { createos } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { COLOR, NAME, WORD } from 'zss/words/types'
+import { COLOR, NAME } from 'zss/words/types'
 
 import {
   boarddeleteobject,
@@ -35,7 +36,6 @@ import {
   boardobjectcreatefromkind,
   boardobjectread,
 } from './board'
-import { boardelementreadstat } from './boardelement'
 import {
   bookboardobjectnamedlookupdelete,
   bookboardtick,
@@ -61,6 +61,7 @@ import {
 import {
   BINARY_READER,
   BOARD,
+  BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
@@ -382,6 +383,64 @@ export function memorymessage(message: MESSAGE) {
   os.message(message)
 }
 
+export function memorytickobject(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  object: MAYBE<BOARD_ELEMENT>,
+  code: string,
+  cycledefault = CYCLE_DEFAULT,
+) {
+  if (!ispresent(book) || !ispresent(board) || !ispresent(object)) {
+    return
+  }
+
+  // cache context
+  const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
+
+  // write context
+  READ_CONTEXT.book = book
+  READ_CONTEXT.board = board
+  READ_CONTEXT.element = object
+  READ_CONTEXT.player = object.player ?? MEMORY.defaultplayer
+  READ_CONTEXT.isplayer = ispid(object.id ?? '')
+
+  // read cycle
+  const kinddata = bookelementkindread(book, object)
+  const cycle = object.cycle ?? kinddata?.cycle ?? cycledefault
+
+  // run chip code
+  const id = object.id ?? ''
+  const itemname = boardelementname(object)
+  os.tick(
+    id,
+    DRIVER_TYPE.CODE_PAGE,
+    isnumber(cycle) ? cycle : cycledefault,
+    itemname,
+    code,
+  )
+
+  // clear ticker
+  if (isnumber(object?.tickertime)) {
+    // clear ticker text after X number of ticks
+    if (READ_CONTEXT.timestamp - object.tickertime > TICK_FPS * 5) {
+      object.tickertime = 0
+      object.tickertext = ''
+    }
+  }
+
+  // clear used input
+  if (READ_CONTEXT.isplayer) {
+    const flags = memoryreadflags(READ_CONTEXT.player)
+    flags.inputcurrent = 0
+  }
+
+  // restore context
+  objectKeys(OLD_CONTEXT).forEach((key) => {
+    // @ts-expect-error dont bother me
+    READ_CONTEXT[key] = OLD_CONTEXT[key]
+  })
+}
+
 export function memorytick() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -397,7 +456,7 @@ export function memorytick() {
 
   // update loaders
   MEMORY.loaders.forEach((code, id) => {
-    os.tick(id, DRIVER_TYPE.LOADER, 1, timestamp, 'loader', code)
+    os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
     // teardown
     if (os.isended(id)) {
       os.halt(id)
@@ -416,7 +475,6 @@ export function memorytick() {
   const boards = bookplayerreadboards(mainbook)
   boards.forEach((board) => {
     const run = bookboardtick(mainbook, board, timestamp)
-
     // iterate code needed to update given board
     for (let i = 0; i < run.length; ++i) {
       const { id, type, code, object } = run[i]
@@ -425,52 +483,7 @@ export function memorytick() {
         os.halt(id)
       } else {
         // handle active code
-
-        // write context
-        if (ispresent(object)) {
-          READ_CONTEXT.book = mainbook
-          READ_CONTEXT.board = board
-          READ_CONTEXT.element = object
-          READ_CONTEXT.player = object.player ?? MEMORY.defaultplayer
-          READ_CONTEXT.isplayer = ispid(object.id ?? '')
-        }
-
-        // read cycle
-        const cycle = boardelementreadstat(
-          object,
-          'cycle',
-          boardelementreadstat(
-            bookelementkindread(mainbook, object),
-            'cycle',
-            CYCLE_DEFAULT,
-          ),
-        )
-
-        // run chip code
-        const itemname = boardelementname(object)
-        os.tick(
-          id,
-          DRIVER_TYPE.CODE_PAGE,
-          isnumber(cycle) ? cycle : CYCLE_DEFAULT,
-          timestamp,
-          itemname,
-          code,
-        )
-
-        // clear ticker
-        if (isnumber(object?.tickertime)) {
-          // clear ticker text after X number of ticks
-          if (timestamp - object.tickertime > TICK_FPS * 5) {
-            object.tickertime = 0
-            object.tickertext = ''
-          }
-        }
-
-        // clear used input
-        if (READ_CONTEXT.isplayer) {
-          const flags = memoryreadflags(READ_CONTEXT.player)
-          flags.inputcurrent = 0
-        }
+        memorytickobject(mainbook, board, object, code)
       }
     }
   })
@@ -497,10 +510,10 @@ export function memorycli(player: string, cli = '') {
 
   // invoke once
   tape_debug('memory', 'running', mainbook.timestamp, id, cli)
-  os.once(id, DRIVER_TYPE.CLI, mainbook.timestamp, 'cli', cli)
+  os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
 }
 
-export function memoryrun(address: string, value?: WORD) {
+export function memoryrun(address: string) {
   // we assume READ_CONTEXT is setup correctly when this is run
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   const codepage = bookreadcodepagebyaddress(mainbook, address)
@@ -515,7 +528,8 @@ export function memoryrun(address: string, value?: WORD) {
   const id = `${address}_run`
   const itemname = boardelementname(READ_CONTEXT.element)
   const itemcode = codepage?.code ?? ''
-  os.once(id, DRIVER_TYPE.CODE_PAGE, mainbook.timestamp, itemname, itemcode)
+  // set arg to value on chip with id = id
+  os.once(id, DRIVER_TYPE.CODE_PAGE, itemname, itemcode)
 }
 
 function memoryloader(
@@ -649,7 +663,7 @@ function memoryconverttogadgetlayers(
   const isbaseboard = i === 0
   const boardwidth = BOARD_WIDTH
   const boardheight = BOARD_HEIGHT
-  const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.CLEAR
+  const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR
 
   const tiles = createtiles(player, i++, boardwidth, boardheight, defaultcolor)
   layers.push(tiles)
@@ -661,7 +675,13 @@ function memoryconverttogadgetlayers(
   const objects = createsprites(player, objectindex)
   layers.push(objects)
 
-  const tickers = createtiles(player, i++, boardwidth, boardheight, COLOR.CLEAR)
+  const tickers = createtiles(
+    player,
+    i++,
+    boardwidth,
+    boardheight,
+    COLOR.ONCLEAR,
+  )
   layers.push(tickers)
 
   const tickercontext = {
@@ -669,7 +689,7 @@ function memoryconverttogadgetlayers(
       BOARD_WIDTH,
       BOARD_HEIGHT,
       readdecotickercolor(),
-      COLOR.CLEAR,
+      COLOR.ONCLEAR,
     ),
     ...tickers,
   }
@@ -687,7 +707,7 @@ function memoryconverttogadgetlayers(
       tiles.color[i] = tile.color ?? kind?.color ?? defaultcolor
       tiles.bg[i] = tile.bg ?? kind?.bg ?? defaultcolor
       // write to borrow buffer
-      if (tiles.color[i] !== (COLOR.CLEAR as number)) {
+      if (tiles.color[i] !== (COLOR.ONCLEAR as number)) {
         borrowbuffer[i] = tiles.color[i]
       }
     }
@@ -713,22 +733,22 @@ function memoryconverttogadgetlayers(
     sprite.y = object.y ?? 0
     sprite.char = object.char ?? display?.char ?? 1
     sprite.color = object.color ?? display?.color ?? COLOR.WHITE
-    sprite.bg = object.bg ?? display?.bg ?? COLOR.BORROW
+    sprite.bg = object.bg ?? display?.bg ?? COLOR.ONBORROW
     objects.sprites.push(sprite)
 
     // plot shadow
-    if (sprite.bg === COLOR.SHADOW) {
-      sprite.bg = COLOR.CLEAR
+    if (sprite.bg === COLOR.ONSHADOW) {
+      sprite.bg = COLOR.ONCLEAR
       shadow.alphas[lx + ly * boardwidth] = 0.5
     }
 
     // borrow color
-    if (sprite.bg === COLOR.BORROW) {
+    if (sprite.bg === COLOR.ONBORROW) {
       sprite.bg = borrowbuffer[li] ?? COLOR.BLACK
     }
 
     // write to borrow buffer
-    if (sprite.color !== (COLOR.CLEAR as number)) {
+    if (sprite.color !== (COLOR.ONCLEAR as number)) {
       borrowbuffer[li] = sprite.color
     }
 

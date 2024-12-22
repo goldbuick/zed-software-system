@@ -3,12 +3,11 @@ import ErrorStackParser from 'error-stack-parser'
 import { api_error } from './device/api'
 import {
   DRIVER_TYPE,
+  firmwareeverytick,
   firmwareget,
   firmwaregetcommand,
   firmwareset,
-  firmwareshouldtick,
   firmwaretick,
-  firmwaretock,
 } from './firmware/runner'
 import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
@@ -44,9 +43,10 @@ export type CHIP = {
   // state api
   set: (name: string, value: any) => any
   get: (name: string) => any
+  bucket: (value: any) => void
 
   // lifecycle api
-  tick: (cycle: number, incoming: number) => boolean
+  tick: (cycle: number) => boolean
   isended: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
@@ -144,8 +144,6 @@ export function createchip(
     flags.ys = 0
     // execution frequency
     flags.ps = 0
-    // execution timestamp
-    flags.ts = 0
     // chip is in ended state awaiting any messages
     flags.es = (build.errors?.length ?? 0) !== 0 ? 1 : 0
   }
@@ -192,29 +190,30 @@ export function createchip(
       // no result, return undefined
       return undefined
     },
+    bucket(value) {
+      const bucket = chip.get('bucket')
+      if (isarray(bucket)) {
+        bucket.push(value)
+      } else {
+        chip.set('bucket', [value])
+      }
+    },
 
     // lifecycle api
-    tick(cycle, incoming) {
-      // update timestamp
-      flags.ts = incoming
-
-      // we active ?
+    tick(cycle) {
+      // update execution frequency
       const pulse = isnumber(flags.ps) ? flags.ps : 0
       const activecycle = pulse % cycle === 0
-
-      // invoke firmware shouldtick
-      firmwareshouldtick(driver, chip, activecycle)
-
-      // chip is yield / ended state
-      if (!chip.shouldtick()) {
-        return false
-      }
-
-      // inc pulse after checking should tick
       flags.ps = pulse + 1
 
       // execution frequency
-      if (!activecycle) {
+      if (activecycle === false) {
+        return false
+      }
+
+      // chip is yield / ended state
+      if (chip.shouldtick() === false) {
+        firmwareeverytick(driver, chip)
         return false
       }
 
@@ -237,8 +236,8 @@ export function createchip(
         flags.es = 1
       }
 
-      // invoke firmware tock
-      firmwaretock(driver, chip)
+      // cleanup
+      firmwareeverytick(driver, chip)
       return true
     },
     isended() {
@@ -345,7 +344,9 @@ export function createchip(
 
         // update chip state based on incoming message
         chip.set('sender', sender)
-        chip.set('arg', arg)
+        if (ispresent(arg)) {
+          chip.set('arg', arg)
+        }
 
         // this sets player focus
         if (player) {

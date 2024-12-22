@@ -75,9 +75,9 @@ export function readexpr(index: number, stringeval = true): [any, number] {
 
     // check for flag
     if (stringeval) {
-      const maybeflag = READ_CONTEXT.get?.(maybevalue)
-      if (ispresent(maybeflag)) {
-        return [maybeflag, index + 1]
+      const maybeflagfromvalue = READ_CONTEXT.get?.(maybevalue)
+      if (ispresent(maybeflagfromvalue)) {
+        return [maybeflagfromvalue, index + 1]
       }
     }
 

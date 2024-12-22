@@ -112,17 +112,6 @@ export function firmwareset(
   return [false, undefined]
 }
 
-export function firmwareshouldtick(
-  driver: DRIVER_TYPE,
-  chip: CHIP,
-  activecycle: boolean,
-) {
-  const wares = getfimrwares(driver)
-  for (let i = 0; i < wares.length; ++i) {
-    wares[i].shouldtick(chip, activecycle)
-  }
-}
-
 export function firmwaretick(driver: DRIVER_TYPE, chip: CHIP) {
   const wares = getfimrwares(driver)
   for (let i = 0; i < wares.length; ++i) {
@@ -130,9 +119,9 @@ export function firmwaretick(driver: DRIVER_TYPE, chip: CHIP) {
   }
 }
 
-export function firmwaretock(driver: DRIVER_TYPE, chip: CHIP) {
+export function firmwareeverytick(driver: DRIVER_TYPE, chip: CHIP) {
   const wares = getfimrwares(driver)
   for (let i = 0; i < wares.length; ++i) {
-    wares[i].tock(chip)
+    wares[i].everytick(chip)
   }
 }

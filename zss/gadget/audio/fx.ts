@@ -4,8 +4,12 @@ import {
   FeedbackDelay,
   Phaser,
   Reverb,
+  Time,
   Vibrato,
 } from 'tone'
+
+export const ECHO_OFF = Time('256n').toSeconds()
+export const ECHO_ON = Time('8n').toSeconds()
 
 export function createfx() {
   const reverb = new Reverb()
@@ -16,7 +20,7 @@ export function createfx() {
   const echo = new FeedbackDelay()
   echo.set({
     wet: 0,
-    delayTime: '8n',
+    delayTime: ECHO_OFF,
     maxDelay: '1n',
     feedback: 0.666,
   })

@@ -45,17 +45,7 @@ function handlesynthvoice(idx: number, words: WORD[]) {
   }
 }
 
-export const AUDIO_FIRMWARE = createfirmware({
-  get() {
-    return [false, undefined]
-  },
-  set() {
-    return [false, undefined]
-  },
-  shouldtick() {},
-  tick() {},
-  tock() {},
-})
+export const AUDIO_FIRMWARE = createfirmware()
   .command('play', (chip, words) => {
     handlesynthplay(1, chip, words)
     return 0

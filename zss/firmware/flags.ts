@@ -3,17 +3,7 @@ import { createfirmware } from 'zss/firmware'
 import { isnumber } from 'zss/mapping/types'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
 
-export const FLAGS_FIRMWARE = createfirmware({
-  get() {
-    return [false, undefined]
-  },
-  set() {
-    return [false, undefined]
-  },
-  shouldtick() {},
-  tick() {},
-  tock() {},
-})
+export const FLAGS_FIRMWARE = createfirmware()
   .command('clear', (chip, words) => {
     words.forEach((word) => chip.set(maptostring(word), 0))
     return 0

@@ -8,7 +8,6 @@ import {
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory'
 import { boardelementapplycolor } from 'zss/memory/board'
-import { boardelementwritestats } from 'zss/memory/boardelement'
 import {
   bookboardwrite,
   bookboardobjectsafedelete,
@@ -16,7 +15,6 @@ import {
   bookboardobjectnamedlookupdelete,
 } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
-import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
 
@@ -144,18 +142,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
     flags[name] = value
     return [true, value]
   },
-  shouldtick(chip, activecycle) {
+  everytick(chip) {
+    // handle walk movement
     if (
-      !activecycle ||
-      !ispresent(READ_CONTEXT.element?.x) ||
-      !ispresent(READ_CONTEXT.element?.y) ||
-      !ispresent(READ_CONTEXT.element?.stepx) ||
-      !ispresent(READ_CONTEXT.element?.stepy)
-    ) {
-      return
-    }
-    if (
-      !moveobject(
+      ispresent(READ_CONTEXT.element?.x) &&
+      ispresent(READ_CONTEXT.element.y) &&
+      ispresent(READ_CONTEXT.element.stepx) &&
+      ispresent(READ_CONTEXT.element.stepy) &&
+      moveobject(
         chip,
         READ_CONTEXT.book,
         READ_CONTEXT.board,
@@ -164,16 +158,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
           x: READ_CONTEXT.element.x + READ_CONTEXT.element.stepx,
           y: READ_CONTEXT.element.y + READ_CONTEXT.element.stepy,
         },
-      )
+      ) === false
     ) {
-      boardelementwritestats(READ_CONTEXT.element, {
-        stepx: 0,
-        stepy: 0,
-      })
+      READ_CONTEXT.element.stepx = 0
+      READ_CONTEXT.element.stepy = 0
     }
-  },
-  tick() {},
-  tock(chip) {
     // headless only gets a single tick to do its magic
     if (READ_CONTEXT.element?.headless) {
       chip.command('die')
@@ -212,7 +201,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('bind', () => {
-    // TODO
+    // TODO, may not be needed
     return 0
   })
   .command('char', (_, words) => {
@@ -257,6 +246,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command('try', (chip, words) => {
     const [, ii] = readargs(words, 0, [ARG_TYPE.DIR])
+
     // try and move
     const result = chip.command('go', ...words)
     if (result && ii < words.length) {
@@ -266,20 +256,17 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('walk', (_, words) => {
-    // invalid data
-    if (!ispt(READ_CONTEXT.element)) {
+    if (!ispresent(READ_CONTEXT.element)) {
       return 0
     }
 
     // read walk direction
-    const [maybedir] = readargs(words, 0, [ARG_TYPE.DIR])
-    const dir = dirfrompts(READ_CONTEXT.element, maybedir)
-    const step = ptapplydir({ x: 0, y: 0 }, dir)
+    const [dest] = readargs(words, 0, [ARG_TYPE.DIR])
+    const x = READ_CONTEXT.element.x ?? 0
+    const y = READ_CONTEXT.element.y ?? 0
 
     // create delta from dir
-    boardelementwritestats(READ_CONTEXT.element, {
-      stepx: step.x,
-      stepy: step.y,
-    })
+    READ_CONTEXT.element.stepx = dest.x - x
+    READ_CONTEXT.element.stepy = dest.y - y
     return 0
   })

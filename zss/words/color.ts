@@ -9,7 +9,7 @@ export function colortofg(color: MAYBE<COLOR>): MAYBE<number> {
 }
 
 export function colortobg(color: MAYBE<COLOR>): MAYBE<number> {
-  return ispresent(color) && color > COLOR.WHITE && color < COLOR.CLEAR
+  return ispresent(color) && color > COLOR.WHITE && color < COLOR.ONCLEAR
     ? color - COLOR.ONBLACK
     : undefined
 }
@@ -31,9 +31,6 @@ export const colorconsts = {
   purple: 'PURPLE',
   yellow: 'YELLOW',
   white: 'WHITE',
-  clear: 'CLEAR',
-  shadow: 'SHADOW',
-  borrow: 'BORROW',
   // aliases
   brown: 'DKYELLOW',
   dkwhite: 'LTGRAY',
@@ -67,6 +64,10 @@ export const colorconsts = {
   ongrey: 'ONLTGRAY',
   ondkgrey: 'ONDKGRAY',
   onltblack: 'ONDKGRAY',
+  // special bg colors
+  onclear: 'ONCLEAR',
+  onshadow: 'ONSHADOW',
+  onborrow: 'ONBORROW',
 } as const
 
 export type STR_COLOR_TYPE = typeof colorconsts

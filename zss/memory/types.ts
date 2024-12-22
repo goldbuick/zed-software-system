@@ -22,15 +22,16 @@ export type BOARD_ELEMENT = {
   bg?: number
   // interaction
   player?: string
+  bucket?: (number | string)[]
   pushable?: number
   collision?: COLLISION
   destructible?: number
   tickertext?: string
   tickertime?: number
   // config
-  p1?: string
-  p2?: string
-  p3?: string
+  p1?: number
+  p2?: number
+  p3?: number
   cycle?: number
   stepx?: number
   stepy?: number

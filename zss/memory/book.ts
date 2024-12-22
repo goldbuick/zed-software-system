@@ -16,7 +16,6 @@ import {
 import {
   codepagereaddata,
   codepagereadname,
-  codepagereadstatdefaults,
   codepagereadtype,
   exportcodepage,
   importcodepage,
@@ -186,7 +185,7 @@ export function bookelementdisplayread(
   return {
     char: element?.char ?? kind?.char ?? 1,
     color: element?.color ?? kind?.color ?? COLOR.WHITE,
-    bg: element?.bg ?? kind?.bg ?? COLOR.BORROW,
+    bg: element?.bg ?? kind?.bg ?? COLOR.ONBORROW,
   }
 }
 
@@ -529,7 +528,7 @@ export function bookboardobjectnamedlookupdelete(
     if (ispresent(board.lookup) && ispresent(object.x) && ispresent(object.y)) {
       const index = object.x + object.y * BOARD_WIDTH
       if (board.lookup[index] === object.id) {
-        delete board.lookup[index]
+        board.lookup.splice(index, 1)
       }
     }
     // remove from named
@@ -648,7 +647,7 @@ export function bookboardtick(
   return args
 }
 
-export function bookboardwriteheadlessobject(
+export function bookboardwritebulletobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
   kind: MAYBE<STR_KIND>,
@@ -660,14 +659,11 @@ export function bookboardwriteheadlessobject(
     if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
       // create new object element
       const object = boardobjectcreatefromkind(board, dest, name)
-      if (ispresent(object)) {
-        // mark as headless
-        object.headless = true
-        // update color
-        boardelementapplycolor(object, maybecolor)
-        // update named (terrain & objects)
-        bookboardnamedwrite(book, board, object)
-      }
+      // update color
+      boardelementapplycolor(object, maybecolor)
+      // skip lookup for bullets, will get set after first tick
+      // update named (terrain & objects)
+      bookboardnamedwrite(book, board, object)
       // return result
       return object
     }
@@ -711,5 +707,6 @@ export function bookboardwrite(
       return object
     }
   }
+
   return undefined
 }
