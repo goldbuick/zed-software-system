@@ -17,8 +17,10 @@ import {
   Part,
   Phaser,
   Volume,
+  getDestination,
 } from 'tone'
 import { createdevice } from 'zss/device'
+import { ECHO_OFF, ECHO_ON } from 'zss/gadget/audio/fx'
 import { createsource } from 'zss/gadget/audio/source'
 import { clamp } from 'zss/mapping/number'
 import {
@@ -53,8 +55,10 @@ export function enableaudio() {
 }
 
 function createsynth() {
-  const mainvolume = new Volume(8)
-  mainvolume.toDestination()
+  const destination = getDestination()
+
+  const mainvolume = new Volume(6)
+  mainvolume.connect(destination)
 
   const maincompressor = new Compressor({
     threshold: -24,
@@ -65,10 +69,10 @@ function createsynth() {
   })
   maincompressor.connect(mainvolume)
 
-  const maingain = new Gain()
+  const maingain = new Gain(0.888)
   maingain.connect(maincompressor)
 
-  const drumgain = new Gain()
+  const drumgain = new Gain(0.777)
   drumgain.connect(maincompressor)
 
   const SOURCE = [
@@ -1075,6 +1079,14 @@ const synthdevice = createdevice('synth', [], (message) => {
                 }
               }
               break
+          }
+          // edge case for echo
+          if (fx instanceof FeedbackDelay) {
+            if (fx.wet.value === 0) {
+              fx.set({ delayTime: ECHO_OFF })
+            } else if (fx.get().delayTime === ECHO_OFF) {
+              fx.set({ delayTime: ECHO_ON })
+            }
           }
           return
         }
