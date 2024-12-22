@@ -2,8 +2,8 @@ import { maptostring } from 'zss/chip'
 import { vm_endgame } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { clamp } from 'zss/mapping/number'
+import { ispresent } from 'zss/mapping/types'
 import { memoryrun } from 'zss/memory'
-import { boardelementwritestat } from 'zss/memory/boardelement'
 import {
   bookboardobjectnamedlookupdelete,
   bookboardobjectsafedelete,
@@ -41,11 +41,12 @@ export const LIFECYCLE_FIRMWARE = createfirmware()
     return 0
   })
   .command('cycle', (_, words) => {
-    // read cycle
-    const [cyclevalue] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    // write cycle
-    const cycle = clamp(Math.round(cyclevalue), 1, 255)
-    boardelementwritestat(READ_CONTEXT.element, 'cycle', cycle)
+    if (ispresent(READ_CONTEXT.element)) {
+      // read cycle
+      const [cyclevalue] = readargs(words, 0, [ARG_TYPE.NUMBER])
+      // write cycle
+      READ_CONTEXT.element.cycle = clamp(Math.round(cyclevalue), 1, 255)
+    }
     return 0
   })
   .command('die', (chip) => {

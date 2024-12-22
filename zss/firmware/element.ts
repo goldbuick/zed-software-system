@@ -1,4 +1,3 @@
-import { is } from '@react-three/fiber/dist/declarations/src/core/utils'
 import { createfirmware } from 'zss/firmware'
 import {
   INPUT,
@@ -9,7 +8,6 @@ import {
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory'
 import { boardelementapplycolor } from 'zss/memory/board'
-import { boardelementwritestats } from 'zss/memory/boardelement'
 import {
   bookboardwrite,
   bookboardobjectsafedelete,
@@ -17,7 +15,6 @@ import {
   bookboardobjectnamedlookupdelete,
 } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
-import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
 
@@ -163,10 +160,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
         },
       ) === false
     ) {
-      boardelementwritestats(READ_CONTEXT.element, {
-        stepx: 0,
-        stepy: 0,
-      })
+      READ_CONTEXT.element.stepx = 0
+      READ_CONTEXT.element.stepy = 0
     }
     // headless only gets a single tick to do its magic
     if (READ_CONTEXT.element?.headless) {
@@ -251,6 +246,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command('try', (chip, words) => {
     const [, ii] = readargs(words, 0, [ARG_TYPE.DIR])
+
     // try and move
     const result = chip.command('go', ...words)
     if (result && ii < words.length) {
@@ -260,20 +256,17 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('walk', (_, words) => {
-    // invalid data
-    if (!ispt(READ_CONTEXT.element)) {
+    if (!ispresent(READ_CONTEXT.element)) {
       return 0
     }
 
     // read walk direction
-    const [maybedir] = readargs(words, 0, [ARG_TYPE.DIR])
-    const dir = dirfrompts(READ_CONTEXT.element, maybedir)
-    const step = ptapplydir({ x: 0, y: 0 }, dir)
+    const [dest] = readargs(words, 0, [ARG_TYPE.DIR])
+    const x = READ_CONTEXT.element.x ?? 0
+    const y = READ_CONTEXT.element.y ?? 0
 
     // create delta from dir
-    boardelementwritestats(READ_CONTEXT.element, {
-      stepx: step.x,
-      stepy: step.y,
-    })
+    READ_CONTEXT.element.stepx = dest.x - x
+    READ_CONTEXT.element.stepy = dest.y - y
     return 0
   })

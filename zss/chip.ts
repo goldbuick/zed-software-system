@@ -344,7 +344,9 @@ export function createchip(
 
         // update chip state based on incoming message
         chip.set('sender', sender)
-        chip.set('arg', arg)
+        if (ispresent(arg)) {
+          chip.set('arg', arg)
+        }
 
         // this sets player focus
         if (player) {

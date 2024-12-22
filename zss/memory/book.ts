@@ -16,7 +16,6 @@ import {
 import {
   codepagereaddata,
   codepagereadname,
-  codepagereadstatdefaults,
   codepagereadtype,
   exportcodepage,
   importcodepage,

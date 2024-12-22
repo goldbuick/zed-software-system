@@ -281,7 +281,7 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
         const maybename = colorconsts[tokenname]
         const maybecolor = colortofg(COLOR[maybename])
         const maybebg = colortobg(COLOR[maybename])
-        if (maybename === 'CLEAR') {
+        if (maybename === 'ONCLEAR') {
           // reset colors
           context.active.color = context.reset.color
           context.active.bg = context.reset.bg

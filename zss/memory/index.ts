@@ -36,7 +36,6 @@ import {
   boardobjectcreatefromkind,
   boardobjectread,
 } from './board'
-import { boardelementreadstat } from './boardelement'
 import {
   bookboardobjectnamedlookupdelete,
   bookboardtick,
@@ -406,15 +405,8 @@ export function memorytickobject(
   READ_CONTEXT.isplayer = ispid(object.id ?? '')
 
   // read cycle
-  const cycle = boardelementreadstat(
-    object,
-    'cycle',
-    boardelementreadstat(
-      bookelementkindread(book, object),
-      'cycle',
-      cycledefault,
-    ),
-  )
+  const kinddata = bookelementkindread(book, object)
+  const cycle = object.cycle ?? kinddata?.cycle ?? cycledefault
 
   // run chip code
   const id = object.id ?? ''

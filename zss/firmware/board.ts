@@ -4,7 +4,6 @@ import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { MEMORY_LABEL, memorytickobject } from 'zss/memory'
 import { listelementsbykind, listnamedelements } from 'zss/memory/atomics'
 import { boardterrainsetfromkind } from 'zss/memory/board'
-import { boardelementwritestats } from 'zss/memory/boardelement'
 import {
   bookboardelementreadname,
   bookboardmoveobject,
@@ -98,12 +97,6 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // read direction + what to shoot
   const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.MAYBE_KIND])
 
-  // set walking direction
-  const step = {
-    x: dir.x - READ_CONTEXT.element.x,
-    y: dir.y - READ_CONTEXT.element.y,
-  }
-
   // write new element
   const bulletkind = kind ?? ['bullet']
   const bullet = bookboardwritebulletobject(
@@ -118,17 +111,14 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 
   // success ! get it moving
   if (ispresent(bullet)) {
-    // write arg if set
-    if (ispresent(arg)) {
-      bullet.arg = arg
-    }
+    // write arg
+    bullet.arg = arg
 
     // ensure correct collection type
     bullet.collision = COLLISION.ISBULLET
-    boardelementwritestats(bullet, {
-      stepx: step.x,
-      stepy: step.y,
-    })
+    // set walking direction
+    bullet.stepx = dir.x - READ_CONTEXT.element.x
+    bullet.stepy = dir.y - READ_CONTEXT.element.y
 
     // object code
     const kind = bookelementkindread(READ_CONTEXT.book, bullet)
@@ -137,6 +127,7 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     // bullets get one immediate tick
     memorytickobject(READ_CONTEXT.book, READ_CONTEXT.board, bullet, code, 1)
 
+    // determine outcome
     if (
       bullet.x === READ_CONTEXT.element.x &&
       bullet.y === READ_CONTEXT.element.y
