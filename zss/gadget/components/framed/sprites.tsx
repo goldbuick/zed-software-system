@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   BufferAttribute,
   BufferGeometry,
@@ -14,6 +14,7 @@ import { time } from 'zss/gadget/display/anim'
 import { createSpritesMaterial } from 'zss/gadget/display/sprites'
 import useBitmapTexture from 'zss/gadget/display/textures'
 import { loadDefaultCharset } from 'zss/gadget/file/bytes'
+import { ispresent } from 'zss/mapping/types'
 
 import { useClipping } from '../clipping'
 
@@ -31,13 +32,65 @@ export function Sprites({ sprites }: SpritesProps) {
   const charsetTexture = useBitmapTexture(charset)
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
+  const spritepool = useRef<SPRITE[]>([])
   const [material] = useState(() => createSpritesMaterial())
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charsetTexture?.image ?? {}
 
+  useMemo(() => {
+    // setup sprite pool
+    if (spritepool.current.length === 0) {
+      spritepool.current = Array.from({ length: SPRITE_COUNT }, () => ({
+        id: '',
+        x: 0,
+        y: 0,
+        char: 0,
+        color: 0,
+        bg: 0,
+      }))
+    }
+
+    // build lookups
+    const spritesbyid: Record<string, SPRITE> = {}
+    for (let i = 0; i < sprites.length; ++i) {
+      spritesbyid[sprites[i].id] = sprites[i]
+    }
+    const activeids = new Set(spritepool.current.map((s) => s.id))
+
+    // update sprite pool
+    let cursor = 0
+    for (let i = 0; i < SPRITE_COUNT; ++i) {
+      if (spritepool.current[i].id) {
+        // validate id is still in use
+        const activesprite = spritesbyid[spritepool.current[i].id]
+        if (ispresent(activesprite)) {
+          // update sprite
+          spritepool.current[i] = {
+            ...activesprite,
+          }
+        } else {
+          // clear sprite
+          spritepool.current[i].id = ''
+        }
+      } else if (cursor < sprites.length) {
+        // scan for sprites that need slotted
+        while (activeids.has(sprites[cursor]?.id) === true) {
+          ++cursor
+        }
+        // slot sprite
+        if (cursor < sprites.length) {
+          spritepool.current[i] = {
+            ...sprites[cursor++],
+          }
+        }
+      }
+    }
+  }, [sprites])
+
   useEffect(() => {
     const { current } = bgRef
-    if (!current) {
+    const { current: sprites } = spritepool
+    if (!current || !sprites) {
       return
     }
 
@@ -53,39 +106,26 @@ export function Sprites({ sprites }: SpritesProps) {
     let animBounce: MaybeBufferAttr = current.getAttribute('animBounce')
 
     // create
-    if (
-      !visible ||
-      visible.count !== SPRITE_COUNT ||
-      !position ||
-      position.count !== SPRITE_COUNT ||
-      !charData ||
-      charData.count !== SPRITE_COUNT ||
-      !lastPosition ||
-      lastPosition.count !== SPRITE_COUNT ||
-      !lastColor ||
-      lastColor.count !== SPRITE_COUNT ||
-      !lastBg ||
-      lastBg.count !== SPRITE_COUNT ||
-      !animShake ||
-      animShake.count !== SPRITE_COUNT ||
-      !animBounce ||
-      animBounce.count !== SPRITE_COUNT
-    ) {
+    if (!visible || visible.count !== sprites.length) {
       // init data
-      visible = new BufferAttribute(new Float32Array(SPRITE_COUNT), 1)
-      lastVisible = new BufferAttribute(new Float32Array(SPRITE_COUNT), 1)
-      position = new BufferAttribute(new Float32Array(SPRITE_COUNT * 3), 3)
-      charData = new BufferAttribute(new Float32Array(SPRITE_COUNT * 4), 4)
-      lastPosition = new BufferAttribute(new Float32Array(SPRITE_COUNT * 3), 3)
-      lastColor = new BufferAttribute(new Float32Array(SPRITE_COUNT * 2), 2)
-      lastBg = new BufferAttribute(new Float32Array(SPRITE_COUNT * 2), 2)
-      animShake = new BufferAttribute(new Float32Array(SPRITE_COUNT * 2), 2)
-      animBounce = new BufferAttribute(new Float32Array(SPRITE_COUNT * 2), 2)
+      visible = new BufferAttribute(new Float32Array(sprites.length), 1)
+      lastVisible = new BufferAttribute(new Float32Array(sprites.length), 1)
+      position = new BufferAttribute(new Float32Array(sprites.length * 3), 3)
+      charData = new BufferAttribute(new Float32Array(sprites.length * 4), 4)
+      lastPosition = new BufferAttribute(
+        new Float32Array(sprites.length * 3),
+        3,
+      )
+      lastColor = new BufferAttribute(new Float32Array(sprites.length * 2), 2)
+      lastBg = new BufferAttribute(new Float32Array(sprites.length * 2), 2)
+      animShake = new BufferAttribute(new Float32Array(sprites.length * 2), 2)
+      animBounce = new BufferAttribute(new Float32Array(sprites.length * 2), 2)
 
       for (let i = 0; i < sprites.length; ++i) {
         const sprite = sprites[i]
-        visible.setX(i, 1)
-        lastVisible.setX(i, 1)
+        const isvisible = sprite.id ? 1 : 0
+        visible.setX(i, isvisible)
+        lastVisible.setX(i, isvisible)
         position.setXY(i, sprite.x, sprite.y)
         charData.setXYZW(
           i,
@@ -99,10 +139,6 @@ export function Sprites({ sprites }: SpritesProps) {
         lastBg.setXY(i, sprite.bg, time.value)
         animShake.setXY(i, 0, time.value - 1000000)
         animBounce.setXY(i, 0, time.value - 1000000)
-      }
-      for (let i = sprites.length; i < SPRITE_COUNT; ++i) {
-        visible.setX(i, 0)
-        lastVisible.setX(i, 0)
       }
 
       current.setAttribute('visible', visible)
@@ -125,13 +161,15 @@ export function Sprites({ sprites }: SpritesProps) {
         const ccolor = charData.getZ(i)
         const cbg = charData.getW(i)
 
-        // check for first frame
-        const firstframe = lastVisible.getX(i) === 0
-
         // update visible
         lastVisible.setX(i, visible.getX(i))
-        visible.setX(i, 1)
+        lastVisible.needsUpdate = true
 
+        visible.setX(i, sprite.id ? 1 : 0)
+        visible.needsUpdate = true
+
+        // check for first frame
+        const firstframe = lastVisible.getX(i) === 0 && visible.getX(i) === 1
         if (firstframe || cx !== sprite.x || cy !== sprite.y) {
           lastPosition.setXYZ(
             i,
@@ -145,7 +183,7 @@ export function Sprites({ sprites }: SpritesProps) {
           position.needsUpdate = true
         }
 
-        if (ccolor !== sprite.color) {
+        if (firstframe || ccolor !== sprite.color) {
           lastColor.setXY(i, firstframe ? sprite.color : ccolor, time.value)
           lastColor.needsUpdate = true
 
@@ -153,7 +191,7 @@ export function Sprites({ sprites }: SpritesProps) {
           charData.needsUpdate = true
         }
 
-        if (cbg !== sprite.bg) {
+        if (firstframe || cbg !== sprite.bg) {
           lastBg.setXY(i, firstframe ? sprite.bg : cbg, time.value)
           lastBg.needsUpdate = true
 
@@ -171,15 +209,6 @@ export function Sprites({ sprites }: SpritesProps) {
           charData.needsUpdate = true
         }
       }
-      // clear remaining sprites
-      for (let i = sprites.length; i < SPRITE_COUNT; ++i) {
-        if (visible.getX(i) !== lastVisible.getX(i)) {
-          lastVisible.setX(i, visible.getX(i))
-        }
-        visible.setX(i, 0)
-      }
-      visible.needsUpdate = true
-      lastVisible.needsUpdate = true
     }
 
     current.computeBoundingBox()
