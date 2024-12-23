@@ -951,7 +951,7 @@ const synthdevice = createdevice('synth', [], (message) => {
           switch (config) {
             case 'on':
               // default on value
-              fx.wet.value = 0.2
+              fx.wet.value = 0.333
               break
             case 'off':
               fx.wet.value = 0.0
