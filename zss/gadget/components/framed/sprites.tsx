@@ -25,8 +25,9 @@ type SpritesProps = {
 
 const charset = loadDefaultCharset()
 
+const SPRITE_COUNT = 2048
+
 export function Sprites({ sprites }: SpritesProps) {
-  const spritecount = sprites.length
   const charsetTexture = useBitmapTexture(charset)
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
@@ -41,6 +42,8 @@ export function Sprites({ sprites }: SpritesProps) {
     }
 
     // get data
+    let visible: MaybeBufferAttr = current.getAttribute('visible')
+    let lastVisible: MaybeBufferAttr = current.getAttribute('lastVisible')
     let position: MaybeBufferAttr = current.getAttribute('position')
     let charData: MaybeBufferAttr = current.getAttribute('charData')
     let lastPosition: MaybeBufferAttr = current.getAttribute('lastPosition')
@@ -51,32 +54,38 @@ export function Sprites({ sprites }: SpritesProps) {
 
     // create
     if (
+      !visible ||
+      visible.count !== SPRITE_COUNT ||
       !position ||
-      position.count !== spritecount ||
+      position.count !== SPRITE_COUNT ||
       !charData ||
-      charData.count !== spritecount ||
+      charData.count !== SPRITE_COUNT ||
       !lastPosition ||
-      lastPosition.count !== spritecount ||
+      lastPosition.count !== SPRITE_COUNT ||
       !lastColor ||
-      lastColor.count !== spritecount ||
+      lastColor.count !== SPRITE_COUNT ||
       !lastBg ||
-      lastBg.count !== spritecount ||
+      lastBg.count !== SPRITE_COUNT ||
       !animShake ||
-      animShake.count !== spritecount ||
+      animShake.count !== SPRITE_COUNT ||
       !animBounce ||
-      animBounce.count !== spritecount
+      animBounce.count !== SPRITE_COUNT
     ) {
       // init data
-      position = new BufferAttribute(new Float32Array(spritecount * 3), 3)
-      charData = new BufferAttribute(new Float32Array(spritecount * 4), 4)
-      lastPosition = new BufferAttribute(new Float32Array(spritecount * 3), 3)
-      lastColor = new BufferAttribute(new Float32Array(spritecount * 2), 2)
-      lastBg = new BufferAttribute(new Float32Array(spritecount * 2), 2)
-      animShake = new BufferAttribute(new Float32Array(spritecount * 2), 2)
-      animBounce = new BufferAttribute(new Float32Array(spritecount * 2), 2)
+      visible = new BufferAttribute(new Float32Array(SPRITE_COUNT), 1)
+      lastVisible = new BufferAttribute(new Float32Array(SPRITE_COUNT), 1)
+      position = new BufferAttribute(new Float32Array(SPRITE_COUNT * 3), 3)
+      charData = new BufferAttribute(new Float32Array(SPRITE_COUNT * 4), 4)
+      lastPosition = new BufferAttribute(new Float32Array(SPRITE_COUNT * 3), 3)
+      lastColor = new BufferAttribute(new Float32Array(SPRITE_COUNT * 2), 2)
+      lastBg = new BufferAttribute(new Float32Array(SPRITE_COUNT * 2), 2)
+      animShake = new BufferAttribute(new Float32Array(SPRITE_COUNT * 2), 2)
+      animBounce = new BufferAttribute(new Float32Array(SPRITE_COUNT * 2), 2)
 
-      for (let i = 0; i < spritecount; ++i) {
+      for (let i = 0; i < sprites.length; ++i) {
         const sprite = sprites[i]
+        visible.setX(i, 1)
+        lastVisible.setX(i, 1)
         position.setXY(i, sprite.x, sprite.y)
         charData.setXYZW(
           i,
@@ -91,7 +100,13 @@ export function Sprites({ sprites }: SpritesProps) {
         animShake.setXY(i, 0, time.value - 1000000)
         animBounce.setXY(i, 0, time.value - 1000000)
       }
+      for (let i = sprites.length; i < SPRITE_COUNT; ++i) {
+        visible.setX(i, 0)
+        lastVisible.setX(i, 0)
+      }
 
+      current.setAttribute('visible', visible)
+      current.setAttribute('lastVisible', lastVisible)
       current.setAttribute('position', position)
       current.setAttribute('charData', charData)
       current.setAttribute('lastPosition', lastPosition)
@@ -101,7 +116,7 @@ export function Sprites({ sprites }: SpritesProps) {
       current.setAttribute('animBounce', animBounce)
     } else {
       // update data
-      for (let i = 0; i < spritecount; ++i) {
+      for (let i = 0; i < sprites.length; ++i) {
         const sprite = sprites[i]
         const cx = position.getX(i)
         const cy = position.getY(i)
@@ -110,8 +125,20 @@ export function Sprites({ sprites }: SpritesProps) {
         const ccolor = charData.getZ(i)
         const cbg = charData.getW(i)
 
-        if (cx !== sprite.x || cy !== sprite.y) {
-          lastPosition.setXYZ(i, cx, cy, time.value)
+        // check for first frame
+        const firstframe = lastVisible.getX(i) === 0
+
+        // update visible
+        lastVisible.setX(i, visible.getX(i))
+        visible.setX(i, 1)
+
+        if (firstframe || cx !== sprite.x || cy !== sprite.y) {
+          lastPosition.setXYZ(
+            i,
+            firstframe ? sprite.x : cx,
+            firstframe ? sprite.y : cy,
+            time.value,
+          )
           lastPosition.needsUpdate = true
 
           position.setXY(i, sprite.x, sprite.y)
@@ -119,7 +146,7 @@ export function Sprites({ sprites }: SpritesProps) {
         }
 
         if (ccolor !== sprite.color) {
-          lastColor.setXY(i, ccolor, time.value)
+          lastColor.setXY(i, firstframe ? sprite.color : ccolor, time.value)
           lastColor.needsUpdate = true
 
           charData.setZ(i, sprite.color)
@@ -127,7 +154,7 @@ export function Sprites({ sprites }: SpritesProps) {
         }
 
         if (cbg !== sprite.bg) {
-          lastBg.setXY(i, cbg, time.value)
+          lastBg.setXY(i, firstframe ? sprite.bg : cbg, time.value)
           lastBg.needsUpdate = true
 
           charData.setW(i, sprite.bg)
@@ -144,11 +171,20 @@ export function Sprites({ sprites }: SpritesProps) {
           charData.needsUpdate = true
         }
       }
+      // clear remaining sprites
+      for (let i = sprites.length; i < SPRITE_COUNT; ++i) {
+        if (visible.getX(i) !== lastVisible.getX(i)) {
+          lastVisible.setX(i, visible.getX(i))
+        }
+        visible.setX(i, 0)
+      }
+      visible.needsUpdate = true
+      lastVisible.needsUpdate = true
     }
 
     current.computeBoundingBox()
     current.computeBoundingSphere()
-  }, [sprites, spritecount])
+  }, [sprites])
 
   // config material
   useEffect(() => {
