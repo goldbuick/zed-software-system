@@ -184,6 +184,10 @@ function readlookup(id: MAYBE<string>) {
   return context.linelookup[id ?? ''] ?? -1
 }
 
+function updatelookup(id: string, value: number) {
+  context.linelookup[id] = value
+}
+
 function writelookup(lines: CodeNode[], type: NODE, value: string) {
   for (let i = 0; i < lines.length; ++i) {
     const node = lines[i]
@@ -204,6 +208,31 @@ function writelookup(lines: CodeNode[], type: NODE, value: string) {
         break
       case NODE.LINE:
         writelookup(node.stmts, type, value)
+        break
+    }
+  }
+}
+
+function writelookupline(lines: CodeNode[], type: NODE, line: number) {
+  for (let i = 0; i < lines.length; ++i) {
+    const node = lines[i]
+    switch (node.type) {
+      case NODE.WHILE:
+      case NODE.REPEAT:
+      case NODE.FOREACH:
+      case NODE.ELSE_IF:
+        if (node.type === type) {
+          updatelookup(node.done, line)
+        }
+        break
+      case NODE.IF_BLOCK:
+      case NODE.IF_CHECK:
+        if (node.type === type) {
+          updatelookup(node.skip, line)
+        }
+        break
+      case NODE.LINE:
+        writelookupline(node.stmts, type, line)
         break
     }
   }
@@ -331,7 +360,7 @@ function transformNode(ast: CodeNode): SourceNode {
         block.lines.forEach((item) => source.add(transformNode(item)))
 
         // start of (alt) logic
-        writelookup(block.altlines, NODE.ELSE_IF, block.done)
+        writelookupline(block.altlines, NODE.ELSE_IF, readlookup(block.done))
         block.altlines.forEach((item) => source.add(transformNode(item)))
 
         // all done
@@ -490,7 +519,7 @@ function indexnode(ast: CodeNode) {
       ast.stmts.forEach(indexnode)
       break
     case NODE.MARK:
-      context.linelookup[ast.id] = ast.lineindex
+      updatelookup(ast.id, ast.lineindex)
       break
     case NODE.IF:
       indexnode(ast.check)

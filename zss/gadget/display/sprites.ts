@@ -29,13 +29,12 @@ const spritesMaterial = new ShaderMaterial({
     },
     rows: new Uniform(1),
     step: new Uniform(new Vector2()),
-    // todo, rework to MAX_SPRITES logic
-    // where we can have a max of 2048 sprites to render
   },
   // vertex shader
   vertexShader: `
     #include <clipping_planes_pars_vertex>
 
+    attribute float visible;
     attribute vec4 charData;
     attribute vec3 lastPosition;
     attribute vec2 lastColor;
@@ -50,10 +49,11 @@ const spritesMaterial = new ShaderMaterial({
     uniform vec3 palette[16];
     uniform float tindex;
 
+    varying float vVisible;
     varying vec2 vCharData;
     varying vec3 vColor;
     varying vec4 vBg;
-    
+
     float rand(float co) {
       return fract(sin(co*(91.3458)) * 47453.5453);
     }
@@ -83,6 +83,8 @@ const spritesMaterial = new ShaderMaterial({
     }
 
     void main() {
+      vVisible = visible;
+
       float deltaPosition = clamp((time - lastPosition.z) * smoothrate, 0.0, 1.0);
       vec2 animPosition = mix(lastPosition.xy, position.xy, deltaPosition);
 
@@ -132,6 +134,7 @@ const spritesMaterial = new ShaderMaterial({
     uniform vec2 step;
     uniform vec2 pointSize;
 
+    varying float vVisible;
     varying vec2 vCharData;
     varying vec3 vColor;
     varying vec4 vBg;
@@ -142,7 +145,7 @@ const spritesMaterial = new ShaderMaterial({
       float xscale = pointSize.y / pointSize.x;
       float px = gl_PointCoord.x * xscale;
       
-      if (px >= 1.0) {
+      if (vVisible == 0.0 || px >= 1.0) {
         discard;
       }
 

@@ -733,12 +733,14 @@ class ScriptVisitor
 
   command_else_if(ctx: Command_else_ifCstChildren) {
     const skip = createsid()
+    const done = createsid()
     return this.createcodenode(ctx, {
       type: NODE.ELSE_IF,
-      done: '', // filled in by #if
+      done,
       lines: [
         this.createlogicnode(ctx, 'if', skip, this.go(ctx.words)),
         this.go(ctx.command_fork),
+        this.creategotonode(ctx, done, `end of if`),
         this.createmarknode(ctx, skip, `skip`),
       ].flat(),
     })
