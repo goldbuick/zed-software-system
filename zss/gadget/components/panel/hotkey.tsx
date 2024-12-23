@@ -30,7 +30,7 @@ export function PanelItemHotkey({
   tokenizeandwritetextformat(
     `${
       context.iseven ? '$black$onltgray' : '$black$ondkcyan'
-    }${text}${tcolor}$clear ${label}\n`,
+    }${text}${tcolor}$onclear ${label}\n`,
     context,
     true,
   )
