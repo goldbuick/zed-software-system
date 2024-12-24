@@ -16,6 +16,18 @@ import { bookreadflags } from 'zss/memory/book'
 
 import { gadgetclient_patch, gadgetclient_reset } from './api'
 
+function clearplayer(player: string) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return initstate('')
+  }
+  // cheating here as data is non-WORD compliant
+  const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
+
+  // group by player
+  delete gadgetstore[player]
+}
+
 gadgetstateprovider((player) => {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -74,6 +86,11 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
     case 'clearscroll':
       if (message.player) {
         gadgetclearscroll(message.player)
+      }
+      break
+    case 'clearplayer':
+      if (message.player) {
+        clearplayer(message.player)
       }
       break
   }

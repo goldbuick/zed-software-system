@@ -25,6 +25,7 @@ import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
 
 import {
+  gadgetserver_clearplayer,
   register_flush,
   register_refresh,
   tape_debug,
@@ -115,6 +116,8 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         }
         // logout player
         memoryplayerlogout(message.player)
+        // clear ui
+        gadgetserver_clearplayer('vm', message.player)
         // save state
         await savestate()
         // reload page

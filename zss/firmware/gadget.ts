@@ -138,20 +138,17 @@ export const GADGET_FIRMWARE = createfirmware({
     const [edge] = readargs(words, 0, [ARG_TYPE.STRING])
     const edgeConst = PANEL_TYPE_MAP[NAME(edge)]
     if (edgeConst === PANEL_TYPE.SCROLL) {
-      const [, name, size] = readargs(words, 0, [
-        ARG_TYPE.STRING,
+      const [name, size] = readargs(words, 1, [
         ARG_TYPE.MAYBE_STRING,
         ARG_TYPE.MAYBE_NUMBER,
       ])
       gadgetpanel(READ_CONTEXT.player, edge, edgeConst, size, name)
-    } else {
-      const [, size, name] = readargs(words, 0, [
-        ARG_TYPE.STRING,
+    } else if (ispresent(edgeConst)) {
+      const [size, name] = readargs(words, 1, [
         ARG_TYPE.MAYBE_NUMBER,
         ARG_TYPE.MAYBE_STRING,
       ])
       gadgetpanel(READ_CONTEXT.player, edge, edgeConst, size, name)
     }
-
     return 0
   })

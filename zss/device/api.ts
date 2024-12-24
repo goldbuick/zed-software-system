@@ -40,6 +40,10 @@ export function gadgetserver_clearscroll(sender: string, player: string) {
   hub.emit('gadgetserver:clearscroll', sender, undefined, player)
 }
 
+export function gadgetserver_clearplayer(sender: string, player: string) {
+  hub.emit('gadgetserver:clearplayer', sender, undefined, player)
+}
+
 export function register_flush(
   sender: string,
   historylabel: string,
