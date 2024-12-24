@@ -1,3 +1,4 @@
+import { renderUnicodeCompact } from 'uqr'
 import { tape_info } from 'zss/device/api'
 
 /**
@@ -59,5 +60,23 @@ export function writehyperlink(from: string, hyperlink: string, label: string) {
 }
 
 export function writecopyit(from: string, content: string, label: string) {
+  const ascii = renderUnicodeCompact(content).split('\n')
+  const rendermap: Record<number, number> = {
+    [32]: 32, // space
+    [9600]: 223, // top half
+    [9604]: 220, // bottom half
+    [9608]: 219, // full
+  }
+
+  for (let i = 0; i < ascii.length; i++) {
+    const lineascii = [...ascii[i]]
+      .map((c) => {
+        const chr = rendermap[c.charCodeAt(0)]
+        return `$${chr}`
+      })
+      .join('')
+    write(from, lineascii)
+  }
+
   write(from, `!copyit ${content};${label}`)
 }
