@@ -1,11 +1,19 @@
 import { pick, range } from 'zss/mapping/array'
-import { clamp, randomInteger } from 'zss/mapping/number'
+import { clamp, randominteger } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { memoryrun } from 'zss/memory'
+import {
+  findplayerforelement,
+  listelementsbykind,
+  listnamedelements,
+} from 'zss/memory/atomics'
+import { bookboardcheckmoveobject } from 'zss/memory/book'
 
 import { isstrcategory, mapstrcategory, readcategory } from './category'
 import { isstrcollision, mapstrcollision, readcollision } from './collision'
 import { isstrcolor, mapstrcolor, readcolor } from './color'
 import { ispt, isstrdir, mapstrdir, readdir } from './dir'
+import { readstrkindname } from './kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
 import { NAME } from './types'
 
@@ -42,12 +50,12 @@ export function readexpr(index: number, stringeval = true): [any, number] {
     const [min, ii] = readexpr(index + 1)
     const [max, iii] = readexpr(ii)
     if (isnumber(min) && isnumber(max)) {
-      return [randomInteger(min, max), iii]
+      return [randominteger(min, max), iii]
     }
     if (isnumber(min)) {
-      return [randomInteger(0, min), ii]
+      return [randominteger(0, min), ii]
     }
-    return [randomInteger(0, 1), index + 1]
+    return [randominteger(0, 1), index + 1]
   }
 
   if (mapstrdir(maybevalue)) {
@@ -88,26 +96,78 @@ export function readexpr(index: number, stringeval = true): [any, number] {
       case 'alligned': {
         // ALLIGNED
         // This flag is SET whenever the object is aligned with the player either horizontally or vertically.
-        break
+        const maybeplayer = findplayerforelement(
+          READ_CONTEXT.board,
+          READ_CONTEXT.element,
+          READ_CONTEXT.player,
+        )
+        if (!ispresent(READ_CONTEXT.element) || !ispresent(maybeplayer)) {
+          return [0, index + 1]
+        }
+        return [
+          READ_CONTEXT.element.x === maybeplayer.x ||
+          READ_CONTEXT.element.y === maybeplayer.y
+            ? 1
+            : 0,
+          index + 1,
+        ]
       }
       case 'contact': {
         // CONTACT
         // This flag is SET whenever the object is adjacent to (touching) the player.
-        break
+        const maybeplayer = findplayerforelement(
+          READ_CONTEXT.board,
+          READ_CONTEXT.element,
+          READ_CONTEXT.player,
+        )
+        if (!ispresent(READ_CONTEXT.element) || !ispresent(maybeplayer)) {
+          return [0, index + 1]
+        }
+        const dx = (maybeplayer.x ?? 0) - (READ_CONTEXT.element?.x ?? 0)
+        const dy = (maybeplayer.y ?? 0) - (READ_CONTEXT.element?.y ?? 0)
+        return [
+          (dx === 0 && Math.abs(dy) < 2) || (dy === 0 && Math.abs(dx) < 2)
+            ? 1
+            : 0,
+          index + 1,
+        ]
       }
       case 'blocked': {
         // BLOCKED <direction>
         // This flag is SET when the object is not free to move in the given direction, and
         // CLEAR when the object is free to move in the direction.
-        break
+        const [dir, ii] = readargs(READ_CONTEXT.words, index + 1, [
+          ARG_TYPE.DIR,
+        ])
+        return [
+          bookboardcheckmoveobject(
+            READ_CONTEXT.book,
+            READ_CONTEXT.board,
+            READ_CONTEXT.element,
+            dir,
+          )
+            ? 1
+            : 0,
+          ii,
+        ]
       }
       case 'any': {
         // ANY <color> <item>
         // This flag is SET whenever the given kind is visible on the board
-        break
+        const [target, ii] = readargs(READ_CONTEXT.words, index + 1, [
+          ARG_TYPE.KIND,
+        ])
+        // begin filtering
+        const targetname = readstrkindname(target) ?? ''
+        const boardelements = listnamedelements(READ_CONTEXT.board, targetname)
+        const targetelements = listelementsbykind(boardelements, target)
+        return [targetelements.length ? 1 : 0, ii]
       }
       // zss
       // numbers
+      case 'rnd': {
+        return [randominteger(0, 1), index + 1]
+      }
       case 'abs': {
         // ABS <a>
         const [a, ii] = readargs(READ_CONTEXT.words, index + 1, [
@@ -219,8 +279,23 @@ export function readexpr(index: number, stringeval = true): [any, number] {
         return [range(a, b, step), ii]
       }
       // advanced
-      case 'func': {
-        break
+      case 'run': {
+        const [func, ii] = readargs(READ_CONTEXT.words, index + 1, [
+          ARG_TYPE.STRING,
+        ])
+        memoryrun(func)
+        return [READ_CONTEXT.get?.('arg'), ii]
+      }
+      case 'runwith': {
+        const [arg, func, ii] = readargs(READ_CONTEXT.words, index + 1, [
+          ARG_TYPE.ANY,
+          ARG_TYPE.STRING,
+        ])
+        if (ispresent(READ_CONTEXT.element)) {
+          READ_CONTEXT.element.arg = arg
+        }
+        memoryrun(func)
+        return [READ_CONTEXT.get?.('arg'), ii]
       }
     }
   }

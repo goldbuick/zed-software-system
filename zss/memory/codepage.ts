@@ -3,7 +3,7 @@ import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { statformat, stattypestring } from 'zss/words/stats'
-import { NAME, STAT_TYPE } from 'zss/words/types'
+import { COLLISION, NAME, STAT_TYPE } from 'zss/words/types'
 
 import { createboard, exportboard, importboard } from './board'
 import {
@@ -192,6 +192,8 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
                 : maybevalue
             } else if (isnumber(maybevalue)) {
               codepage.stats[name] = maybevalue
+            } else {
+              codepage.stats[name] = 1
             }
           }
           break
@@ -267,7 +269,45 @@ function applyelementstats(codepage: CODE_PAGE, element: BOARD_ELEMENT) {
   const keys = Object.keys(stats)
   for (let i = 0; i < keys.length; ++i) {
     const key = keys[i]
-    element[key as keyof BOARD_ELEMENT] = stats[key]
+    switch (key) {
+      case 'char':
+      case 'color':
+      case 'bg':
+      case 'p1':
+      case 'p2':
+      case 'p3':
+      case 'cycle':
+      case 'stepx':
+      case 'stepy':
+        // @ts-expect-error - we are doing this on purpose
+        element[key] = stats[key]
+        break
+      case 'canpush':
+      case 'ispushable':
+        element.pushable = 1
+        break
+      case 'iswalk':
+      case 'iswalkable':
+        element.collision = COLLISION.ISWALK
+        break
+      case 'isswim':
+      case 'isswimable':
+        element.collision = COLLISION.ISSWIM
+        break
+      case 'issolid':
+        element.collision = COLLISION.ISSOLID
+        break
+      case 'isbullet':
+        element.collision = COLLISION.ISBULLET
+        break
+      case 'canshoot':
+      case 'isdestructible':
+        element.destructible = 1
+        break
+      default:
+        // TODO: raise error for unknown stat
+        break
+    }
   }
 }
 
