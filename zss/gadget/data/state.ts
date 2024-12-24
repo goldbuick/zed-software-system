@@ -54,8 +54,8 @@ export enum TAPE_DISPLAY {
   TOP,
   BOTTOM,
   FULL,
-  SPLIT_X,
-  SPLIT_X_ALT,
+  SPLIT_Y,
+  SPLIT_Y_ALT,
   MAX,
 }
 

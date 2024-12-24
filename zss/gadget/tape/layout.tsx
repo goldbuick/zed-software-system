@@ -48,31 +48,31 @@ export function TapeLayout({ context }: TapeLayoutProps) {
   const right = context.width - 1
   const bottom = context.height - 1
   const edge = textformatreadedges(context)
-  const xstep = Math.floor(edge.width * 0.5)
+  const ystep = Math.floor(edge.height * 0.5)
 
-  const xleft = useMemo(
-    () => forkonedge(0, 0, xstep - 1, bottom, context),
-    [xstep, bottom, context],
+  const ytop = useMemo(
+    () => forkonedge(0, 0, right, ystep - 1, context),
+    [ystep, right, context],
   )
-  const xright = useMemo(
-    () => forkonedge(xstep, 0, right, bottom, context),
-    [xstep, right, bottom, context],
+  const ybottom = useMemo(
+    () => forkonedge(0, ystep, right, bottom, context),
+    [ystep, right, bottom, context],
   )
 
   if (editoropen) {
     let first: MAYBE<WRITE_TEXT_CONTEXT>
     let second: MAYBE<WRITE_TEXT_CONTEXT>
     switch (layout) {
-      case TAPE_DISPLAY.SPLIT_X:
-      case TAPE_DISPLAY.SPLIT_X_ALT:
-        first = xleft
-        second = xright
+      case TAPE_DISPLAY.SPLIT_Y:
+      case TAPE_DISPLAY.SPLIT_Y_ALT:
+        first = ytop
+        second = ybottom
         break
     }
 
     if (ispresent(first) && ispresent(second)) {
       switch (layout) {
-        case TAPE_DISPLAY.SPLIT_X:
+        case TAPE_DISPLAY.SPLIT_Y:
           return (
             <>
               <WriteTextContext.Provider value={first}>
@@ -83,7 +83,7 @@ export function TapeLayout({ context }: TapeLayoutProps) {
               </WriteTextContext.Provider>
             </>
           )
-        case TAPE_DISPLAY.SPLIT_X_ALT:
+        case TAPE_DISPLAY.SPLIT_Y_ALT:
           return (
             <>
               <WriteTextContext.Provider value={first}>
