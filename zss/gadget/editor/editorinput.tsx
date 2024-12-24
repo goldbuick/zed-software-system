@@ -282,10 +282,15 @@ export function EditorInput({
                 // no-op ?? - could this shove text around when you have selection ??
                 // or jump by 10 or by word ??
               } else if (key.length === 1) {
-                value.insert(tapeeditor.cursor, key)
-                useTapeEditor.setState({
-                  cursor: tapeeditor.cursor + key.length,
-                })
+                if (hasselection) {
+                  strvaluesplice(ii1, iic, key)
+                } else {
+                  const cursor = tapeeditor.cursor + key.length
+                  value.insert(tapeeditor.cursor, key)
+                  useTapeEditor.setState({
+                    cursor,
+                  })
+                }
               }
               break
           }

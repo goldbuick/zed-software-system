@@ -5,17 +5,17 @@ import { writetext } from 'zss/words/writeui'
 
 import { useWriteText } from '../hooks'
 import { inputcolor } from '../panel/common'
-import { setuplogitem, TerminalItemInputProps } from '../tape/common'
+import { setuplogitem, ConsoleItemInputProps } from '../tape/common'
 import { UserInput } from '../userinput'
 
-export function TerminalCopyIt({
+export function ConsoleCopyIt({
   blink,
   active,
   prefix,
   label,
   words,
   y,
-}: TerminalItemInputProps) {
+}: ConsoleItemInputProps) {
   const context = useWriteText()
 
   const invoke = useCallback(() => {

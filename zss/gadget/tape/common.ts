@@ -22,14 +22,14 @@ export const SCALE = 1
 export const CHAR_WIDTH = DRAW_CHAR_WIDTH * SCALE
 export const CHAR_HEIGHT = DRAW_CHAR_HEIGHT * SCALE
 
-export type TerminalItemProps = {
+export type ConsoleItemProps = {
   blink?: boolean
   active?: boolean
   text: string
   y: number
 }
 
-export type TerminalItemInputProps = {
+export type ConsoleItemInputProps = {
   blink?: boolean
   active?: boolean
   prefix: string

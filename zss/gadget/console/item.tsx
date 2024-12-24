@@ -8,15 +8,15 @@ import {
 import { NAME } from 'zss/words/types'
 
 import {
-  TerminalItemInputProps,
-  TerminalItemProps,
+  ConsoleItemInputProps,
+  ConsoleItemProps,
   setuplogitem,
 } from '../tape/common'
 
-import { TerminalCopyIt } from './terminalcopyit'
-import { TerminalHyperlink } from './terminalhyperlink'
+import { ConsoleCopyIt } from './copyit'
+import { ConsoleHyperlink } from './hyperlink'
 
-export function TerminalItem({ blink, active, text, y }: TerminalItemProps) {
+export function ConsoleItem({ blink, active, text, y }: ConsoleItemProps) {
   const context = useWriteText()
   const edge = textformatreadedges(context)
   const ishyperlink = text.startsWith('!')
@@ -49,7 +49,7 @@ export function TerminalItem({ blink, active, text, y }: TerminalItemProps) {
 
     // setup input props
     const [input, ...args] = words
-    const props: TerminalItemInputProps = {
+    const props: ConsoleItemInputProps = {
       blink,
       active,
       prefix,
@@ -76,10 +76,10 @@ export function TerminalItem({ blink, active, text, y }: TerminalItemProps) {
       case 'text':
         return null
       case 'copyit':
-        return <TerminalCopyIt {...props} words={words} />
+        return <ConsoleCopyIt {...props} words={words} />
       default:
       case 'hyperlink':
-        return <TerminalHyperlink {...props} words={words} />
+        return <ConsoleHyperlink {...props} words={words} />
     }
   }
 

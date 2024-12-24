@@ -26,7 +26,7 @@ type ConsoleInputProps = {
   logrowtotalheight: number
 }
 
-export function TerminalInput({
+export function ConsoleInput({
   tapeycursor,
   logrowtotalheight,
 }: ConsoleInputProps) {

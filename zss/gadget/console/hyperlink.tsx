@@ -5,19 +5,19 @@ import { useWriteText } from '../hooks'
 import { inputcolor } from '../panel/common'
 import {
   ConsoleContext,
-  TerminalItemInputProps,
+  ConsoleItemInputProps,
   setuplogitem,
 } from '../tape/common'
 import { UserInput } from '../userinput'
 
-export function TerminalHyperlink({
+export function ConsoleHyperlink({
   blink,
   active,
   prefix,
   label,
   words,
   y,
-}: TerminalItemInputProps) {
+}: ConsoleItemInputProps) {
   const context = useWriteText()
 
   const cc = useContext(ConsoleContext)

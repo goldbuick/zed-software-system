@@ -4,7 +4,7 @@ import { ispresent, MAYBE } from 'zss/mapping/types'
 import { textformatreadedges, WRITE_TEXT_CONTEXT } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { TapeTerminal } from '../console/component'
+import { TapeConsole } from '../console/component'
 import { TapeEditor } from '../editor/component'
 import { WriteTextContext } from '../hooks'
 
@@ -76,7 +76,7 @@ export function TapeLayout({ context }: TapeLayoutProps) {
           return (
             <>
               <WriteTextContext.Provider value={first}>
-                <TapeTerminal />
+                <TapeConsole />
               </WriteTextContext.Provider>
               <WriteTextContext.Provider value={second}>
                 <TapeEditor />
@@ -90,7 +90,7 @@ export function TapeLayout({ context }: TapeLayoutProps) {
                 <TapeEditor />
               </WriteTextContext.Provider>
               <WriteTextContext.Provider value={second}>
-                <TapeTerminal />
+                <TapeConsole />
               </WriteTextContext.Provider>
             </>
           )
@@ -101,7 +101,7 @@ export function TapeLayout({ context }: TapeLayoutProps) {
   return (
     <>
       <WriteTextContext.Provider value={context}>
-        {editoropen ? <TapeEditor /> : <TapeTerminal />}
+        {editoropen ? <TapeEditor /> : <TapeConsole />}
       </WriteTextContext.Provider>
     </>
   )

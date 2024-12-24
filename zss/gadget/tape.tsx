@@ -29,8 +29,8 @@ export function Tape() {
   const marginy = viewHeight - rows * CHAR_HEIGHT
 
   let top = 0
-  let left = 0
-  let width = cols
+  const left = 0
+  const width = cols
   let height = rows
 
   const [layout, terminalopen] = useTape(
@@ -41,16 +41,9 @@ export function Tape() {
     case TAPE_DISPLAY.TOP:
       height = Math.round(rows * 0.5)
       break
-    case TAPE_DISPLAY.RIGHT:
-      width = Math.round(cols * 0.5)
-      left = cols - width
-      break
     case TAPE_DISPLAY.BOTTOM:
       height = Math.round(rows * 0.5)
       top = rows - height
-      break
-    case TAPE_DISPLAY.LEFT:
-      width = Math.round(cols * 0.5)
       break
     default:
     case TAPE_DISPLAY.FULL:
