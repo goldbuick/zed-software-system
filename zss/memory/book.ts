@@ -307,6 +307,61 @@ export function bookplayerreadboards(book: MAYBE<BOOK>) {
   return ids.map((address) => bookreadboard(book, address)).filter(ispresent)
 }
 
+export function bookboardcheckmoveobject(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  target: MAYBE<BOARD_ELEMENT>,
+  dest: PT,
+): boolean {
+  const object = boardobjectread(board, target?.id ?? '')
+
+  // first pass clipping
+  if (
+    !ispresent(book) ||
+    !ispresent(board) ||
+    !ispresent(object) ||
+    !ispresent(object.x) ||
+    !ispresent(object.y) ||
+    !ispresent(board.lookup) ||
+    dest.x < 0 ||
+    dest.x >= BOARD_WIDTH ||
+    dest.y < 0 ||
+    dest.y >= BOARD_HEIGHT
+  ) {
+    return true
+  }
+
+  // second pass, are we actually trying to move ?
+  if (object.x - dest.x === 0 && object.y - dest.y === 0) {
+    // no interaction due to no movement
+    return true
+  }
+
+  // gather meta for move
+  const targetidx = dest.x + dest.y * BOARD_WIDTH
+  const targetkind = bookelementkindread(book, object)
+  const targetcollision = object.collision ?? targetkind?.collision
+
+  // blocked by an object
+  const maybeobject = boardobjectread(board, board.lookup[targetidx] ?? '')
+  if (ispresent(maybeobject)) {
+    // for sending interaction messages
+    return true
+  }
+
+  // blocked by terrain
+  const mayberterrain = board.terrain[targetidx]
+  if (ispresent(mayberterrain)) {
+    const terrainkind = bookelementkindread(book, mayberterrain)
+    const terraincollision = mayberterrain.collision ?? terrainkind?.collision
+    if (checkcollision(targetcollision, terraincollision)) {
+      return true
+    }
+  }
+
+  return false
+}
+
 export function bookboardmoveobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,

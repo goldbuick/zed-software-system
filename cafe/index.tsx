@@ -1,7 +1,7 @@
 import { createRoot, events, Canvas } from '@react-three/fiber'
 import debounce from 'debounce'
 import { Intersection, Plane, Vector3 } from 'three'
-import { makeEven } from 'zss/mapping/number'
+import { makeeven } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
 import { App } from './app'
@@ -99,7 +99,7 @@ if (ispresent(engine)) {
   }, 256)
 
   window.addEventListener('resize', () => {
-    handleresize(makeEven(window.innerWidth), makeEven(window.innerHeight))
+    handleresize(makeeven(window.innerWidth), makeeven(window.innerHeight))
   })
 
   // Render entry point

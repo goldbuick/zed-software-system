@@ -35,6 +35,26 @@ export function checkcollision(
   }
 }
 
+export function findplayerforelement(
+  board: MAYBE<BOARD>,
+  element: MAYBE<BOARD_ELEMENT>,
+  player: string,
+): MAYBE<BOARD_ELEMENT> {
+  // check aggro
+  const maybelplayer = board?.objects[player]
+  if (ispresent(maybelplayer)) {
+    return maybelplayer
+  }
+  // find nearest player to element
+  if (ispresent(element)) {
+    const players = listnamedelements(board, 'player')
+    const pt = { x: element.x ?? 0, y: element.y ?? 0 }
+    picknearestpt(pt, players)
+  }
+  // not found
+  return undefined
+}
+
 export function listnamedelements(
   board: MAYBE<BOARD>,
   name: string,
