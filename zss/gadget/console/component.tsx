@@ -13,14 +13,14 @@ import {
 import { useShallow } from 'zustand/react/shallow'
 
 import { useWriteText } from '../hooks'
+import { BackPlate } from '../tape/backplate'
+import { ConsoleContext } from '../tape/common'
 
-import { ConsoleContext } from './common'
-import { BackPlate } from './elements/backplate'
-import { TerminalInput } from './elements/terminalinput'
-import { TerminalItem } from './elements/terminalitem'
-import { TerminalItemActive } from './elements/terminalitemactive'
+import { ConsoleInput } from './input'
+import { ConsoleItem } from './item'
+import { ConsoleItemActive } from './itemactive'
 
-export function TapeTerminal() {
+export function TapeConsole() {
   const player = useGadgetClientPlayer()
   const [terminallogs, editoropen] = useTape(
     useShallow((state) => [state.terminal.logs, state.editor.open]),
@@ -97,13 +97,13 @@ export function TapeTerminal() {
             return null
           }
           return !editoropen && tapeycursor >= y && tapeycursor < ybottom ? (
-            <TerminalItemActive key={index} text={text} y={y} />
+            <ConsoleItemActive key={index} text={text} y={y} />
           ) : (
-            <TerminalItem key={index} text={text} y={y} />
+            <ConsoleItem key={index} text={text} y={y} />
           )
         })}
         {!editoropen && (
-          <TerminalInput
+          <ConsoleInput
             tapeycursor={tapeycursor}
             logrowtotalheight={logrowtotalheight}
           />

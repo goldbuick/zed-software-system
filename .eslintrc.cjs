@@ -1,6 +1,6 @@
 const fs = require('fs')
 
-const prefixes = ['zss']
+const prefixes = ['zss', 'cafe']
 
 const srcFolders = prefixes
   .map((folder) =>

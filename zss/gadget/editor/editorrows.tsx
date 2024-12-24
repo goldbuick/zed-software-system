@@ -8,7 +8,7 @@ import {
   writeplaintext,
 } from 'zss/words/textformat'
 
-import { useBlink, useWriteText } from '../../hooks'
+import { useBlink, useWriteText } from '../hooks'
 import {
   BG,
   BG_ACTIVE,
@@ -16,7 +16,7 @@ import {
   EDITOR_CODE_ROW,
   FG_SELECTED,
   setupeditoritem,
-} from '../common'
+} from '../tape/common'
 
 type TextrowsProps = {
   ycursor: number

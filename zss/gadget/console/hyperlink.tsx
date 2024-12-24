@@ -1,19 +1,23 @@
 import { useCallback, useContext } from 'react'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { useWriteText } from '../../hooks'
-import { inputcolor } from '../../panel/common'
-import { UserInput } from '../../userinput'
-import { ConsoleContext, TerminalItemInputProps, setuplogitem } from '../common'
+import { useWriteText } from '../hooks'
+import { inputcolor } from '../panel/common'
+import {
+  ConsoleContext,
+  ConsoleItemInputProps,
+  setuplogitem,
+} from '../tape/common'
+import { UserInput } from '../userinput'
 
-export function TerminalHyperlink({
+export function ConsoleHyperlink({
   blink,
   active,
   prefix,
   label,
   words,
   y,
-}: TerminalItemInputProps) {
+}: ConsoleItemInputProps) {
   const context = useWriteText()
 
   const cc = useContext(ConsoleContext)

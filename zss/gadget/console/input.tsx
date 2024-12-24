@@ -4,9 +4,9 @@ import {
   tape_terminal_inclayout,
   vm_cli,
 } from 'zss/device/api'
-import { Scrollable } from 'zss/gadget/components/scrollable'
-import { UserInput, modsfromevent } from 'zss/gadget/components/userinput'
 import { useGadgetClientPlayer, useTapeTerminal } from 'zss/gadget/data/state'
+import { Scrollable } from 'zss/gadget/scrollable'
+import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
 import { ispresent } from 'zss/mapping/types'
@@ -18,15 +18,15 @@ import {
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
-import { useBlink, useWriteText } from '../../hooks'
-import { setuplogitem } from '../common'
+import { useBlink, useWriteText } from '../hooks'
+import { setuplogitem } from '../tape/common'
 
 type ConsoleInputProps = {
   tapeycursor: number
   logrowtotalheight: number
 }
 
-export function TerminalInput({
+export function ConsoleInput({
   tapeycursor,
   logrowtotalheight,
 }: ConsoleInputProps) {

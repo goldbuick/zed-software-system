@@ -12,7 +12,7 @@ import { createbitmaptexture } from './textures'
 const palette = convertPaletteToColors(loadDefaultPalette())
 const charset = createbitmaptexture(loadDefaultCharset())
 
-const smoothrate = TICK_FPS * 3
+const smoothrate = TICK_FPS * 2
 
 const spritesMaterial = new ShaderMaterial({
   // settings

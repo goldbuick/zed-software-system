@@ -57,7 +57,8 @@ export function enableaudio() {
 function createsynth() {
   const destination = getDestination()
 
-  const mainvolume = new Volume(6)
+  const mainvolume = new Volume()
+  mainvolume.volume.value = 8
   mainvolume.connect(destination)
 
   const maincompressor = new Compressor({
@@ -69,10 +70,10 @@ function createsynth() {
   })
   maincompressor.connect(mainvolume)
 
-  const maingain = new Gain(0.888)
+  const maingain = new Gain()
   maingain.connect(maincompressor)
 
-  const drumgain = new Gain(0.777)
+  const drumgain = new Gain()
   drumgain.connect(maincompressor)
 
   const SOURCE = [
@@ -582,7 +583,14 @@ function createsynth() {
   // start it
   pacer.start(0)
 
-  return { addplay, SOURCE }
+  // stop playback
+  function stopplay() {
+    pacer.clear()
+    pacertime = -1
+    pacercount = 0
+  }
+
+  return { addplay, stopplay, SOURCE }
 }
 
 function validatesynthtype(
@@ -661,7 +669,13 @@ const synthdevice = createdevice('synth', [], (message) => {
         // -negative priority means music synth 1-9
         // positive priority means sfx synth 0
         // only a single set of drums between music & sfx
-        synth.addplay(priority, buffer)
+        if (buffer === '') {
+          // stop playback
+          synth.stopplay()
+        } else {
+          // add to playback
+          synth.addplay(priority, buffer)
+        }
       }
       break
     case 'voice':
@@ -951,7 +965,7 @@ const synthdevice = createdevice('synth', [], (message) => {
           switch (config) {
             case 'on':
               // default on value
-              fx.wet.value = 0.333
+              fx.wet.value = 0.2
               break
             case 'off':
               fx.wet.value = 0.0

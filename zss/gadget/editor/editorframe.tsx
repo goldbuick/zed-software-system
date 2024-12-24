@@ -1,5 +1,5 @@
-import { useBlink, useWriteText, writeTile } from 'zss/gadget/components/hooks'
 import { useTape } from 'zss/gadget/data/state'
+import { useBlink, useWriteText, writeTile } from 'zss/gadget/hooks'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
@@ -7,7 +7,7 @@ import {
 } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { BG, FG, setupeditoritem } from '../common'
+import { BG, FG, setupeditoritem } from '../tape/common'
 
 export function EditorFrame() {
   const context = useWriteText()

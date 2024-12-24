@@ -1,6 +1,6 @@
-import { useWriteText } from 'zss/gadget/components/hooks'
 import { useGadgetClientPlayer } from 'zss/gadget/data/state'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
+import { useWriteText } from 'zss/gadget/hooks'
 import { isarray } from 'zss/mapping/types'
 import { writetextreset } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'

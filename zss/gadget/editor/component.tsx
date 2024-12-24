@@ -1,23 +1,24 @@
 import { useEffect } from 'react'
 import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
-import { useWriteText } from 'zss/gadget/components/hooks'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
+import { useWriteText } from 'zss/gadget/hooks'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
+import { BackPlate } from '../tape/backplate'
 import {
   findcursorinrows,
   findmaxwidthinrows,
   sharedtosynced,
   splitcoderows,
-} from './common'
-import { BackPlate } from './elements/backplate'
-import { EditorFrame } from './elements/editorframe'
-import { EditorInput } from './elements/editorinput'
-import { EditorRows } from './elements/editorrows'
+} from '../tape/common'
+
+import { EditorFrame } from './editorframe'
+import { EditorInput } from './editorinput'
+import { EditorRows } from './editorrows'
 
 export function TapeEditor() {
   const [editor] = useTape(useShallow((state) => [state.editor]))

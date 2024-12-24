@@ -11,8 +11,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from '../data/types'
-
+import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from './data/types'
 import {
   resetDither,
   useDither,

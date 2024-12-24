@@ -3,19 +3,19 @@ import { ispresent } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { writetext } from 'zss/words/writeui'
 
-import { useWriteText } from '../../hooks'
-import { inputcolor } from '../../panel/common'
-import { UserInput } from '../../userinput'
-import { TerminalItemInputProps, setuplogitem } from '../common'
+import { useWriteText } from '../hooks'
+import { inputcolor } from '../panel/common'
+import { setuplogitem, ConsoleItemInputProps } from '../tape/common'
+import { UserInput } from '../userinput'
 
-export function TerminalCopyIt({
+export function ConsoleCopyIt({
   blink,
   active,
   prefix,
   label,
   words,
   y,
-}: TerminalItemInputProps) {
+}: ConsoleItemInputProps) {
   const context = useWriteText()
 
   const invoke = useCallback(() => {

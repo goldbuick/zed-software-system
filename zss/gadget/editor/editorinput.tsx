@@ -4,18 +4,20 @@ import {
   tape_editor_close,
   tape_terminal_close,
   tape_terminal_inclayout,
+  vm_cli,
 } from 'zss/device/api'
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
-import { useTapeEditor } from 'zss/gadget/data/state'
+import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { applystrtoindex, textformatreadedges } from 'zss/words/textformat'
 import { NAME, PT } from 'zss/words/types'
+import { writetext } from 'zss/words/writeui'
 
-import { useBlink, useWriteText } from '../../hooks'
-import { Scrollable } from '../../scrollable'
-import { UserInput, modsfromevent } from '../../userinput'
-import { EDITOR_CODE_ROW, sharedtosynced } from '../common'
+import { useBlink, useWriteText } from '../hooks'
+import { Scrollable } from '../scrollable'
+import { EDITOR_CODE_ROW, sharedtosynced } from '../tape/common'
+import { UserInput, modsfromevent } from '../userinput'
 
 type TextinputProps = {
   xcursor: number
@@ -39,6 +41,7 @@ export function EditorInput({
   const blinkdelta = useRef<PT>()
   const tapeeditor = useTapeEditor()
   const edge = textformatreadedges(context)
+  const player = useTape((state) => state.editor.player)
 
   // split by line
   const value = sharedtosynced(codepage)
@@ -277,15 +280,24 @@ export function EditorInput({
                       resettoend()
                     }
                     break
+                  case 'p':
+                    vm_cli('editor', strvalueselected, player)
+                    writetext('editor', `running: ${strvalueselected}`)
+                    break
                 }
               } else if (mods.alt) {
                 // no-op ?? - could this shove text around when you have selection ??
                 // or jump by 10 or by word ??
               } else if (key.length === 1) {
-                value.insert(tapeeditor.cursor, key)
-                useTapeEditor.setState({
-                  cursor: tapeeditor.cursor + key.length,
-                })
+                if (hasselection) {
+                  strvaluesplice(ii1, iic, key)
+                } else {
+                  const cursor = tapeeditor.cursor + key.length
+                  value.insert(tapeeditor.cursor, key)
+                  useTapeEditor.setState({
+                    cursor,
+                  })
+                }
               }
               break
           }

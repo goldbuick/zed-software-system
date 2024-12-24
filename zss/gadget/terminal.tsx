@@ -6,13 +6,14 @@ import Stats from 'stats.js'
 import { NearestFilter, OrthographicCamera } from 'three'
 import { FORCE_CRT_OFF, STATS_DEV } from 'zss/config'
 import { api_error } from 'zss/device/api'
-import { useTexture } from 'zss/gadget/components/usetexture'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import decoimageurl from 'zss/gadget/fx/scratches.gif'
+import { useTexture } from 'zss/gadget/usetexture'
 import { createplatform } from 'zss/platform'
 
-import { Framing } from './framing'
-import { Gadget } from './gadget'
+import { Layout } from './layout'
+import { Tape } from './tape'
+import { UserFocus } from './userinput'
 
 extend({ OrthographicCamera })
 
@@ -21,7 +22,7 @@ createplatform()
 export function Terminal() {
   const viewport = useThree((state) => state.viewport)
   const cameraRef = useRef<OrthographicCamera>(null)
-  const { height: viewheight } = viewport.getCurrentViewport()
+  const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
 
   const splat = useTexture(decoimageurl)
   splat.minFilter = NearestFilter
@@ -84,9 +85,14 @@ export function Terminal() {
         far={2000}
         position={[0, 0, 1000]}
       />
-      <Framing>
-        <Gadget />
-      </Framing>
+      <group scale-x={-1} rotation-z={Math.PI}>
+        <group position={[viewwidth * -0.5, viewheight * -0.5, 0]}>
+          <UserFocus>
+            <Layout />
+            <Tape />
+          </UserFocus>
+        </group>
+      </group>
       {shouldcrt && (
         <EffectComposer>
           <CRTShape splat={splat} viewheight={viewheight} />

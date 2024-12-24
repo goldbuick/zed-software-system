@@ -1,7 +1,8 @@
 import { textformatreadedges, WRITE_TEXT_CONTEXT } from 'zss/words/textformat'
 
-import { writeTile } from '../../hooks'
-import { BG, BKG_PTRN, BKG_PTRN_ALT, FG } from '../common'
+import { writeTile } from '../hooks'
+
+import { BG, BKG_PTRN, BKG_PTRN_ALT, FG } from './common'
 
 type BackPlateProps = {
   context: WRITE_TEXT_CONTEXT
