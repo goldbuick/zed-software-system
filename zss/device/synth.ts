@@ -21,14 +21,14 @@ import {
 } from 'tone'
 import { createdevice } from 'zss/device'
 import { ECHO_OFF, ECHO_ON } from 'zss/gadget/audio/fx'
-import { createsource } from 'zss/gadget/audio/source'
-import { clamp } from 'zss/mapping/number'
 import {
   invokeplay,
   parseplay,
   SYNTH_INVOKE,
   SYNTH_NOTE_ON,
-} from 'zss/mapping/play'
+} from 'zss/gadget/audio/play'
+import { createsource } from 'zss/gadget/audio/source'
+import { clamp } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 

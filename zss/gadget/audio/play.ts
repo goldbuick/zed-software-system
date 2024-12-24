@@ -1,6 +1,5 @@
 import * as Tone from 'tone'
-
-import { isnumber, ispresent } from './types'
+import { isnumber, ispresent } from 'zss/mapping/types'
 
 export enum SYNTH_OP {
   OFF,
