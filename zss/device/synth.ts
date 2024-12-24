@@ -1,4 +1,4 @@
-import { MicrosoftSpeechTTS } from '@lobehub/tts'
+import { EdgeSpeechTTS } from '@lobehub/tts'
 import {
   Compressor,
   Distortion,
@@ -517,8 +517,6 @@ function createsynth() {
           if (pacercount === 0) {
             pacertime = -1
           }
-          // reset priority ?
-          synthsfxpriority = -1
           break
       }
     }
@@ -653,7 +651,7 @@ function validatesynthtype(
 }
 
 // get MicrosoftSpeechTTS instance
-const tts = new MicrosoftSpeechTTS({ locale: 'en-US' })
+const tts = new EdgeSpeechTTS({ locale: 'en-US' })
 
 function playaudiobuffer(audiobuffer: AudioBuffer) {
   const player = new Player(audiobuffer).toDestination()
@@ -666,7 +664,6 @@ async function handletts(voice: string, phrase: string) {
     input: phrase,
     options: {
       voice,
-      style: 'general',
     },
   })
   // play the audio
@@ -686,7 +683,7 @@ const synthdevice = createdevice('synth', [], (message) => {
       doasync('tts', async () => {
         if (isarray(message.data)) {
           const [voice, phrase] = message.data as [string, string]
-          const withvoice = voice === '' ? 'en-US-JacobNeural' : voice
+          const withvoice = voice === '' ? 'en-US-GuyNeural' : voice
           await handletts(withvoice, phrase)
         }
       })
