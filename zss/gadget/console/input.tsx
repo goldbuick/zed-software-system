@@ -15,6 +15,7 @@ import {
   applystrtoindex,
   textformatreadedges,
   tokenizeandwritetextformat,
+  writeplaintext,
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
@@ -144,7 +145,7 @@ export function ConsoleInput({
   // draw input line
   const inputline = inputstate.padEnd(edge.width, ' ')
   setuplogitem(false, false, 0, edge.height - 1, context)
-  tokenizeandwritetextformat(inputline, context, true)
+  writeplaintext(inputline, context, true)
 
   // draw selection
   if (
