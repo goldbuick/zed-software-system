@@ -1,6 +1,6 @@
-import { Layout } from 'zss/gadget/components/layout'
-import { Tape } from 'zss/gadget/components/tape'
-import { UserFocus } from 'zss/gadget/components/userinput'
+import { Layout } from 'zss/gadget/layout'
+import { Tape } from 'zss/gadget/tape'
+import { UserFocus } from 'zss/gadget/userinput'
 
 export function Gadget() {
   return (

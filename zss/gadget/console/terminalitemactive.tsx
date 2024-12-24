@@ -1,5 +1,5 @@
-import { useBlink } from '../../hooks'
-import { TerminalItemProps } from '../common'
+import { useBlink } from '../hooks'
+import { TerminalItemProps } from '../tape/common'
 
 import { TerminalItem } from './terminalitem'
 

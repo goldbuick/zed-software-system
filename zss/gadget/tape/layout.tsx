@@ -4,10 +4,9 @@ import { ispresent, MAYBE } from 'zss/mapping/types'
 import { textformatreadedges, WRITE_TEXT_CONTEXT } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
+import { TapeTerminal } from '../console/component'
+import { TapeEditor } from '../editor/component'
 import { WriteTextContext } from '../hooks'
-
-import { TapeEditor } from './editor'
-import { TapeTerminal } from './terminal'
 
 type TapeLayoutProps = {
   context: WRITE_TEXT_CONTEXT

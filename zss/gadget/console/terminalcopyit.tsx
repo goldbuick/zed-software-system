@@ -3,10 +3,10 @@ import { ispresent } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { writetext } from 'zss/words/writeui'
 
-import { useWriteText } from '../../hooks'
-import { inputcolor } from '../../panel/common'
-import { UserInput } from '../../userinput'
-import { TerminalItemInputProps, setuplogitem } from '../common'
+import { useWriteText } from '../hooks'
+import { inputcolor } from '../panel/common'
+import { setuplogitem, TerminalItemInputProps } from '../tape/common'
+import { UserInput } from '../userinput'
 
 export function TerminalCopyIt({
   blink,

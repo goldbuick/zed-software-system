@@ -1,4 +1,4 @@
-import { useWriteText } from 'zss/gadget/components/hooks'
+import { useWriteText } from 'zss/gadget/hooks'
 import {
   HyperLinkText,
   textformatreadedges,
@@ -11,7 +11,7 @@ import {
   TerminalItemInputProps,
   TerminalItemProps,
   setuplogitem,
-} from '../common'
+} from '../tape/common'
 
 import { TerminalCopyIt } from './terminalcopyit'
 import { TerminalHyperlink } from './terminalhyperlink'

@@ -12,10 +12,10 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { applystrtoindex, textformatreadedges } from 'zss/words/textformat'
 import { NAME, PT } from 'zss/words/types'
 
-import { useBlink, useWriteText } from '../../hooks'
-import { Scrollable } from '../../scrollable'
-import { UserInput, modsfromevent } from '../../userinput'
-import { EDITOR_CODE_ROW, sharedtosynced } from '../common'
+import { useBlink, useWriteText } from '../hooks'
+import { Scrollable } from '../scrollable'
+import { EDITOR_CODE_ROW, sharedtosynced } from '../tape/common'
+import { UserInput, modsfromevent } from '../userinput'
 
 type TextinputProps = {
   xcursor: number

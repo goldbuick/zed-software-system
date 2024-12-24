@@ -13,12 +13,12 @@ import {
 import { useShallow } from 'zustand/react/shallow'
 
 import { useWriteText } from '../hooks'
+import { BackPlate } from '../tape/backplate'
+import { ConsoleContext } from '../tape/common'
 
-import { ConsoleContext } from './common'
-import { BackPlate } from './elements/backplate'
-import { TerminalInput } from './elements/terminalinput'
-import { TerminalItem } from './elements/terminalitem'
-import { TerminalItemActive } from './elements/terminalitemactive'
+import { TerminalInput } from './terminalinput'
+import { TerminalItem } from './terminalitem'
+import { TerminalItemActive } from './terminalitemactive'
 
 export function TapeTerminal() {
   const player = useGadgetClientPlayer()
