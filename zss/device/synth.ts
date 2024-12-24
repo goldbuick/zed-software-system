@@ -1,3 +1,4 @@
+import { MicrosoftSpeechTTS } from '@lobehub/tts'
 import {
   Compressor,
   Distortion,
@@ -18,6 +19,7 @@ import {
   Phaser,
   Volume,
   getDestination,
+  Player,
 } from 'tone'
 import { createdevice } from 'zss/device'
 import { ECHO_OFF, ECHO_ON } from 'zss/gadget/audio/fx'
@@ -28,6 +30,7 @@ import {
   SYNTH_NOTE_ON,
 } from 'zss/gadget/audio/play'
 import { createsource } from 'zss/gadget/audio/source'
+import { doasync } from 'zss/mapping/func'
 import { clamp } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
@@ -548,8 +551,7 @@ function createsynth() {
 
   let pacertime = -1
   let pacercount = 0
-  let synthsfxpriority = -1
-  function addplay(priority: number, buffer: string) {
+  function addplay(mode: number, buffer: string) {
     // parse ops
     const invokes = parseplay(buffer)
     const seconds = getTransport().seconds
@@ -560,22 +562,19 @@ function createsynth() {
     }
 
     // music queue
-    if (priority < 0) {
+    if (mode === 0) {
       pacercount += invokes.length
       const starttime = pacertime
       for (let i = 0; i < invokes.length; ++i) {
-        const endtime = synthplaystart(i + 1, starttime, invokes[i])
+        const endtime = synthplaystart(1 + i, starttime, invokes[i])
         pacertime = Math.max(pacertime, endtime)
       }
       return
     }
 
-    // sfx /w priority
-    if (synthsfxpriority === -1 || priority >= synthsfxpriority) {
-      synthsfxpriority = priority
-      for (let i = 0; i < invokes.length; ++i) {
-        synthplaystart(0, seconds, invokes[i])
-      }
+    // sfx
+    for (let i = 0; i < invokes.length; ++i) {
+      synthplaystart(0, seconds, invokes[i])
     }
   }
 
@@ -653,6 +652,27 @@ function validatesynthtype(
   }
 }
 
+// get MicrosoftSpeechTTS instance
+const tts = new MicrosoftSpeechTTS({ locale: 'en-US' })
+
+function playaudiobuffer(audiobuffer: AudioBuffer) {
+  const player = new Player(audiobuffer).toDestination()
+  player.start(0)
+  console.info('playing audio buffer', player)
+}
+
+async function handletts(voice: string, phrase: string) {
+  const audiobuffer = await tts.createAudio({
+    input: phrase,
+    options: {
+      voice,
+      style: 'general',
+    },
+  })
+  // play the audio
+  playaudiobuffer(audiobuffer)
+}
+
 let synth: ReturnType<typeof createsynth>
 const synthdevice = createdevice('synth', [], (message) => {
   if (enabled && !ispresent(synth)) {
@@ -662,18 +682,24 @@ const synthdevice = createdevice('synth', [], (message) => {
     return
   }
   switch (message.target) {
+    case 'tts':
+      doasync('tts', async () => {
+        if (isarray(message.data)) {
+          const [voice, phrase] = message.data as [string, string]
+          const withvoice = voice === '' ? 'en-US-JacobNeural' : voice
+          await handletts(withvoice, phrase)
+        }
+      })
+      break
     case 'play':
       if (isarray(message.data)) {
-        const [priority, buffer] = message.data as [number, string]
-        // -negative priority means music synth 1-9
-        // positive priority means sfx synth 0
-        // only a single set of drums between music & sfx
+        const [mode, buffer] = message.data as [number, string]
         if (buffer === '') {
           // stop playback
           synth.stopplay()
         } else {
           // add to playback
-          synth.addplay(priority, buffer)
+          synth.addplay(mode, buffer)
         }
       }
       break
