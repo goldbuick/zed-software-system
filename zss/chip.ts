@@ -23,7 +23,7 @@ import { memoryclearflags, memoryreadflags } from './memory'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
 import { WORD, WORD_RESULT } from './words/types'
 
-export const CONFIG = { HALT_AT_COUNT: 96 }
+export const CONFIG = { HALT_AT_COUNT: 256 }
 
 export type MESSAGE = {
   id: string
