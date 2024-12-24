@@ -57,8 +57,7 @@ export function enableaudio() {
 function createsynth() {
   const destination = getDestination()
 
-  const mainvolume = new Volume()
-  mainvolume.volume.value = 8
+  const mainvolume = new Volume(8)
   mainvolume.connect(destination)
 
   const maincompressor = new Compressor({
@@ -73,8 +72,8 @@ function createsynth() {
   const maingain = new Gain()
   maingain.connect(maincompressor)
 
-  const drumgain = new Gain()
-  drumgain.connect(maincompressor)
+  const drumvolume = new Volume(2)
+  drumvolume.connect(maincompressor)
 
   const SOURCE = [
     // for sfx
@@ -94,7 +93,7 @@ function createsynth() {
 
   // drumtick
 
-  const drumtick = new PolySynth().connect(drumgain)
+  const drumtick = new PolySynth().connect(drumvolume)
   drumtick.maxPolyphony = 8
   drumtick.set({
     envelope: {
@@ -114,7 +113,7 @@ function createsynth() {
 
   // drumtweet
 
-  const drumtweet = new Synth().connect(drumgain)
+  const drumtweet = new Synth().connect(drumvolume)
   drumtick.set({
     envelope: {
       attack: 0.001,
@@ -135,7 +134,7 @@ function createsynth() {
 
   // drumcowbell
 
-  const drumcowbellfilter = new Filter(350, 'bandpass').connect(drumgain)
+  const drumcowbellfilter = new Filter(350, 'bandpass').connect(drumvolume)
 
   const drumcowbellgain = new Gain().connect(drumcowbellfilter)
   drumcowbellgain.gain.value = 0
@@ -163,7 +162,7 @@ function createsynth() {
 
   // drumclap
 
-  const drumclapeq = new EQ3(-10, 10, -1).connect(drumgain)
+  const drumclapeq = new EQ3(-10, 10, -1).connect(drumvolume)
 
   const drumclapfilter = new Filter(800, 'highpass', -12)
   drumclapfilter.connect(drumclapeq)
@@ -185,7 +184,7 @@ function createsynth() {
 
   // drumhisnare
 
-  const drumhisnaredistortion = new Distortion().connect(drumgain)
+  const drumhisnaredistortion = new Distortion().connect(drumvolume)
   drumhisnaredistortion.set({
     distortion: 0.666,
   })
@@ -246,7 +245,7 @@ function createsynth() {
     frequency: 256,
     Q: 0.17,
   })
-  drumhiwoodblockfilter.connect(drumgain)
+  drumhiwoodblockfilter.connect(drumvolume)
 
   const drumhiwoodblockclack = new Synth()
   drumhiwoodblockclack.set({
@@ -291,7 +290,7 @@ function createsynth() {
 
   // drumlowsnare
 
-  const drumlowsnaredistortion = new Distortion().connect(drumgain)
+  const drumlowsnaredistortion = new Distortion().connect(drumvolume)
   drumlowsnaredistortion.set({
     distortion: 0.876,
   })
@@ -346,7 +345,7 @@ function createsynth() {
 
   // drumlowtom
 
-  const drumlowtomosc = new Synth().connect(drumgain)
+  const drumlowtomosc = new Synth().connect(drumvolume)
   drumlowtomosc.set({
     envelope: {
       attack: 0.01,
@@ -359,7 +358,7 @@ function createsynth() {
     },
   })
 
-  const drumlowtomosc2 = new Synth().connect(drumgain)
+  const drumlowtomosc2 = new Synth().connect(drumvolume)
   drumlowtomosc.set({
     envelope: {
       attack: 0.01,
@@ -372,7 +371,7 @@ function createsynth() {
     },
   })
 
-  const drumlowtomnoise = new NoiseSynth().connect(drumgain)
+  const drumlowtomnoise = new NoiseSynth().connect(drumvolume)
   drumlowtomnoise.set({
     envelope: {
       attack: 0.01,
@@ -412,7 +411,7 @@ function createsynth() {
     frequency: 256,
     Q: 0.17,
   })
-  drumlowwoodblockfilter.connect(drumgain)
+  drumlowwoodblockfilter.connect(drumvolume)
 
   const drumlowwoodblockclack = new Synth()
   drumlowwoodblockclack.set({
@@ -457,7 +456,7 @@ function createsynth() {
 
   // drumbass
 
-  const drumbass = new MembraneSynth().connect(drumgain)
+  const drumbass = new MembraneSynth().connect(drumvolume)
   drumbass.set({
     octaves: 8,
   })
