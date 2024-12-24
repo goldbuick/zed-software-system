@@ -452,7 +452,7 @@ export function memorytick() {
 
   // loaders get more processing time
   const resethalt = CONFIG.HALT_AT_COUNT
-  CONFIG.HALT_AT_COUNT = resethalt * 32
+  CONFIG.HALT_AT_COUNT = 256
 
   // update loaders
   MEMORY.loaders.forEach((code, id) => {
