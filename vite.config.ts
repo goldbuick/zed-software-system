@@ -47,6 +47,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         zss: path.resolve(__dirname, './zss'),
+        cafe: path.resolve(__dirname, './cafe'),
       },
     },
   }
