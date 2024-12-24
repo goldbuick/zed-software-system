@@ -41,11 +41,9 @@ createdevice('tape', [], (message) => {
     if (!editor.open) {
       switch (nextlayout as TAPE_DISPLAY) {
         case TAPE_DISPLAY.SPLIT_X:
-        case TAPE_DISPLAY.SPLIT_Y:
         case TAPE_DISPLAY.SPLIT_X_ALT:
-        case TAPE_DISPLAY.SPLIT_Y_ALT:
           // skip over these to right
-          nextlayout = TAPE_DISPLAY.RIGHT
+          nextlayout = TAPE_DISPLAY.TOP
           break
       }
     }

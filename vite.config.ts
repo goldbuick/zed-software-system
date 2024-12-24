@@ -13,7 +13,7 @@ import pkg from './package.json'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const envprefix = 'ZSS_'
-  const root = path.join('zss', 'terminal')
+  const root = path.join('cafe')
   const apppath = path.join(process.cwd(), root)
 
   // Load app-level env vars to node-level env vars.

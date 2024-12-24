@@ -12,9 +12,7 @@ import { vm_loadfile } from 'zss/device/api'
 import { enableaudio } from 'zss/device/synth'
 import { getgadgetclientplayer } from 'zss/gadget/data/state'
 import { ispresent } from 'zss/mapping/types'
-
-import { Terminal } from './terminal'
-
+import { Terminal } from 'zss/terminal/terminal'
 import 'zss/platform'
 
 extend({

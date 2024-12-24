@@ -3,10 +3,22 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "paths": {
-      "zss/*": ["./zss/*"]
+      "zss/*": [
+        "./zss/*"
+      ],
+      "cafe/*": [
+        "./cafe/*"
+      ],
     },
-    "lib": ["ES2021", "DOM", "DOM.Iterable", "WEBWORKER"],
-    "types": ["vite-plugin-arraybuffer/types"],
+    "lib": [
+      "ES2021",
+      "DOM",
+      "DOM.Iterable",
+      "WEBWORKER"
+    ],
+    "types": [
+      "vite-plugin-arraybuffer/types"
+    ],
     "module": "ESNext",
     "skipLibCheck": true,
     /* Bundler mode */
@@ -22,7 +34,10 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["zss"],
+  "include": [
+    "zss",
+    "cafe",
+  ],
   "references": [
     {
       "path": "./tsconfig.node.json"

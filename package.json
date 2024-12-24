@@ -12,8 +12,8 @@
     "preview": "yarn && yarn clear && vite preview",
     "build": "yarn && yarn clear && vite build",
     "build:strict": "tsc && vite build",
-    "build:copy-404": "cp ./404.html ./zss/terminal/dist",
-    "build:copy-cname": "cp .github/CNAME ./zss/terminal/dist"
+    "build:copy-404": "cp ./404.html ./cafe/dist",
+    "build:copy-cname": "cp .github/CNAME ./cafe/dist"
   },
   "dependencies": {},
   "devDependencies": {
