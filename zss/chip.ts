@@ -150,7 +150,6 @@ export function createchip(
 
   function invokecommand(command: string, args: WORD[]): 0 | 1 {
     READ_CONTEXT.words = args
-    READ_CONTEXT.get = chip.get
     const commandinvoke = firmwaregetcommand(driver, command)
     if (!ispresent(commandinvoke)) {
       if (command !== 'send') {
@@ -220,6 +219,9 @@ export function createchip(
       // reset state
       flags.lc = 0
       flags.ys = 0
+
+      // setup read context get
+      READ_CONTEXT.get = chip.get
 
       // invoke firmware tick
       firmwaretick(driver, chip)
