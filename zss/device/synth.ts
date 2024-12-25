@@ -554,25 +554,26 @@ function createsynth() {
     const invokes = parseplay(buffer)
     const seconds = getTransport().seconds
 
-    // reset note offset
-    if (pacertime === -1) {
-      pacertime = seconds
-    }
+    if (mode) {
+      // handle music
 
-    // music queue
-    if (mode === 0) {
+      // reset note offset
+      if (pacertime === -1) {
+        pacertime = seconds
+      }
+
+      // update count
       pacercount += invokes.length
       const starttime = pacertime
       for (let i = 0; i < invokes.length; ++i) {
         const endtime = synthplaystart(1 + i, starttime, invokes[i])
         pacertime = Math.max(pacertime, endtime)
       }
-      return
-    }
-
-    // sfx
-    for (let i = 0; i < invokes.length; ++i) {
-      synthplaystart(0, seconds, invokes[i])
+    } else {
+      // handle sfx
+      for (let i = 0; i < invokes.length; ++i) {
+        synthplaystart(0, seconds, invokes[i])
+      }
     }
   }
 
