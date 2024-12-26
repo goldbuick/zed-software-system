@@ -430,6 +430,11 @@ export const CLI_FIRMWARE = createfirmware()
     vm_flush('cli')
     return 0
   })
+  .command('savewith', (_, words) => {
+    const [tag] = readargs(words, 0, [ARG_TYPE.STRING])
+    vm_flush('cli', tag)
+    return 0
+  })
   .command('nuke', () => {
     register_nuke('cli')
     return 0

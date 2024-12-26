@@ -32,19 +32,15 @@ async function writeidb<T>(
   return idbupdate(key, updater)
 }
 
-// async function deleteidb(key: string): Promise<void> {
-//   return idbdelete(key)
-// }
-
 // read / write from session
 
 function readsession(key: string): MAYBE<string> {
   try {
-    return sessionStorage.getItem(key) ?? ''
+    return sessionStorage.getItem(key) ?? undefined
   } catch (err: any) {
     api_error(register.name(), `readsession ${key}`, err.message)
   }
-  return ''
+  return undefined
 }
 
 function writesession(key: string, value: MAYBE<string>) {
@@ -190,8 +186,7 @@ const register = createdevice(
         // get unqiue session id for window
         const name = 'SESSION_ID'
         const sessionid = readsession(name) ?? message.player
-        writesession(name, message.player)
-        writeoption(register.name(), 'sessionid', sessionid)
+        writesession(name, sessionid)
         // init gadget & vm with player id
         if (!gadgetclient.gadget.player) {
           // track player id
@@ -223,7 +218,6 @@ const register = createdevice(
           }
           // init vm with content
           const selectedid = (await readselectedid()) ?? ''
-          writeoption(register.name(), 'selectedid', selectedid)
           vm_books(register.name(), books, selectedid, message.player)
         })
         break
