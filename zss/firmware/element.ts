@@ -50,8 +50,8 @@ const STANDARD_STAT_NAMES = new Set([
 
 const readinputmap = ['NORTH', 'SOUTH', 'WEST', 'EAST']
 
-function readinput() {
-  const flags = memoryreadflags(READ_CONTEXT.player)
+function readinput(player: string) {
+  const flags = memoryreadflags(player)
 
   // ensure we have the proper flags on player data
   if (!isarray(flags.inputqueue)) {
@@ -107,10 +107,11 @@ function readinput() {
 }
 
 export const ELEMENT_FIRMWARE = createfirmware({
-  get(_, name) {
+  get(chip, name) {
     // if we are reading from input AND are a player
     if (READ_CONTEXT.isplayer && INPUT_FLAG_NAMES.has(name)) {
-      readinput() // pull the next input
+      // pull the next input
+      readinput(chip.id())
     }
 
     // read stat

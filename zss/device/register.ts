@@ -1,13 +1,15 @@
+import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice } from 'zss/device'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
-import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { writecopyit, writeheader, writeoption } from 'zss/words/writeui'
 
 import {
   api_error,
   gadgetserver_desync,
+  register_refresh,
   tape_crash,
   tape_info,
   tape_terminal_close,
@@ -17,7 +19,45 @@ import {
   vm_login,
 } from './api'
 
-function readstate(): string {
+// read / write from indexdb
+
+async function readidb<T>(key: string): Promise<T | undefined> {
+  return idbget(key)
+}
+
+async function writeidb<T>(
+  key: string,
+  updater: (oldValue: T | undefined) => T,
+): Promise<void> {
+  return idbupdate(key, updater)
+}
+
+// read / write from session
+
+function readsession(key: string): MAYBE<string> {
+  try {
+    return sessionStorage.getItem(key) ?? undefined
+  } catch (err: any) {
+    api_error(register.name(), `readsession ${key}`, err.message)
+  }
+  return undefined
+}
+
+function writesession(key: string, value: MAYBE<string>) {
+  try {
+    if (ispresent(value)) {
+      sessionStorage.setItem(key, value)
+    } else {
+      sessionStorage.removeItem(key)
+    }
+  } catch (err: any) {
+    api_error(register.name(), `writesession ${key} <- ${value}`, err.message)
+  }
+}
+
+// read / write from window url #hash
+
+function readurlhash(): string {
   try {
     const hash = window.location.hash.slice(1)
     if (hash.length) {
@@ -39,7 +79,7 @@ window.addEventListener('hashchange', () => {
   }
 })
 
-function writestate(exportedbooks: string) {
+function writeurlhash(exportedbooks: string) {
   const out = `#${exportedbooks}`
   if (window.location.hash !== out) {
     // saving current state, don't interrupt the user
@@ -49,44 +89,6 @@ function writestate(exportedbooks: string) {
       register.name(),
       `wrote ${exportedbooks?.length ?? 0} chars [${exportedbooks.slice(0, 8)}...${exportedbooks.slice(-8)}]`,
     )
-  }
-}
-
-const BIOS_NODE = 'bios-node'
-
-function readbiosnode(defaultnode: string) {
-  try {
-    const node = localStorage.getItem(BIOS_NODE)
-    if (ispresent(node)) {
-      return node
-    }
-    localStorage.setItem(BIOS_NODE, defaultnode)
-    return defaultnode
-  } catch (err: any) {
-    api_error(register.name(), BIOS_NODE, err.message)
-  }
-}
-
-function erasebiosnode() {
-  localStorage.removeItem(BIOS_NODE)
-}
-
-const BIOS_SELECT = 'bios-select'
-
-function readbiosselect() {
-  try {
-    return localStorage.getItem(BIOS_SELECT) ?? ''
-  } catch (err: any) {
-    api_error(register.name(), BIOS_SELECT, err.message)
-  }
-  return ''
-}
-
-function writebiosselect(select: string) {
-  try {
-    localStorage.setItem(BIOS_SELECT, select)
-  } catch (err: any) {
-    api_error(register.name(), BIOS_SELECT, err.message)
   }
 }
 
@@ -103,7 +105,13 @@ async function shorturl(url: string) {
   return shortcontent
 }
 
-// softwareasmain
+async function readselectedid() {
+  return readidb<string>('SELECTED_ID')
+}
+
+async function writeselectedid(selectedid: string) {
+  return writeidb('SELECTED_ID', () => selectedid)
+}
 
 // simple bootstrap manager
 let keepalive = 0
@@ -175,11 +183,11 @@ const register = createdevice(
         if (!ispresent(message.player)) {
           return
         }
-        const player = readbiosnode(message.player)
-        if (!ispresent(player)) {
-          return
-        }
-        // init vm with player id
+        // get unqiue session id for window
+        const name = 'SESSION_ID'
+        const sessionid = readsession(name) ?? message.player
+        writesession(name, sessionid)
+        // init gadget & vm with player id
         if (!gadgetclient.gadget.player) {
           // track player id
           useGadgetClient.setState((state) => {
@@ -187,27 +195,31 @@ const register = createdevice(
               ...state,
               gadget: {
                 ...state.gadget,
-                player,
+                player: sessionid,
               },
             }
           })
           // signal init
-          setTimeout(() => vm_init('register', player), 256)
+          setTimeout(() => vm_init('register', sessionid), 256)
         }
         break
       }
       case 'ackinit': {
-        if (!ispresent(message.player)) {
-          return
-        }
-        const books = readstate()
-        if (books.length === 0) {
-          api_error(register.name(), 'content', 'no content found')
-          tape_crash(register.name())
-          return
-        }
-        // init vm with content
-        vm_books(register.name(), books, readbiosselect(), message.player)
+        doasync('register:ackinit', async () => {
+          if (!ispresent(message.player)) {
+            return
+          }
+          // pull data
+          const books = readurlhash()
+          if (books.length === 0) {
+            api_error(register.name(), 'content', 'no content found')
+            tape_crash(register.name())
+            return
+          }
+          // init vm with content
+          const selectedid = (await readselectedid()) ?? ''
+          vm_books(register.name(), books, selectedid, message.player)
+        })
         break
       }
       case 'ackbooks':
@@ -227,17 +239,17 @@ const register = createdevice(
           const [maybehistorylabel, maybecontent] = message.data
           if (isstring(maybehistorylabel) && isstring(maybecontent)) {
             document.title = maybehistorylabel
-            writestate(maybecontent)
+            writeurlhash(maybecontent)
           }
         }
         break
       case 'select':
-        if (isstring(message.data)) {
-          writebiosselect(message.data)
-        }
-        break
-      case 'nodetrash':
-        erasebiosnode()
+        doasync('register:select', async () => {
+          if (isstring(message.data)) {
+            await writeselectedid(message.data)
+            register_refresh(register.name())
+          }
+        })
         break
       case 'second':
         ++keepalive

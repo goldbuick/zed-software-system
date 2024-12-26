@@ -5,7 +5,6 @@ import {
   tape_info,
   vm_codeaddress,
   vm_flush,
-  register_nodetrash,
   register_nuke,
   register_share,
   register_dev,
@@ -350,11 +349,6 @@ export const CLI_FIRMWARE = createfirmware()
 
     return 0
   })
-  .command('nodetrash', () => {
-    register_nodetrash('cli')
-    writetext('cli', `node id changed, refreshing page recommended`)
-    return 0
-  })
   .command('help', (chip, words) => {
     const text = words.map(maptostring).join(' ') || 'menu'
     chip.command(`help${text}`)
@@ -434,6 +428,11 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('save', () => {
     vm_flush('cli')
+    return 0
+  })
+  .command('savewith', (_, words) => {
+    const [tag] = readargs(words, 0, [ARG_TYPE.STRING])
+    vm_flush('cli', tag)
     return 0
   })
   .command('nuke', () => {

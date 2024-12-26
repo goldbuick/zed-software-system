@@ -1,7 +1,7 @@
 import { createdevice } from 'zss/device'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
-import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memorycli,
   memoryplayerlogin,
@@ -23,6 +23,7 @@ import {
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
+import { writeoption } from 'zss/words/writeui'
 
 import {
   gadgetserver_clearplayer,
@@ -48,7 +49,7 @@ const watching: Record<string, Record<string, Set<string>>> = {}
 const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
 // save state
-async function savestate() {
+async function savestate(tag = ``) {
   // gc chips
   memorycleanup()
   // export books
@@ -56,11 +57,8 @@ async function savestate() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
-    register_flush(
-      vm.name(),
-      `${new Date().toISOString()} ${mainbook.name} ${content.length} chars`,
-      content,
-    )
+    const historylabel = `${tag}${new Date().toISOString()}${mainbook.name} ${content.length} chars`
+    register_flush(vm.name(), historylabel, content)
   }
 }
 
@@ -82,15 +80,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
           const books = await decompressbooks(maybebooks)
           const booknames = books.map((item) => item.name)
           memoryresetbooks(books, maybeselect)
-          // message
-          tape_info(
-            vm.name(),
-            'reset by',
-            message.sender,
-            'with',
-            ...booknames,
-            message.player,
-          )
+          writeoption(vm.name(), 'loading', booknames.join(', '))
           // ack
           vm.reply(message, 'ackbooks', true, message.player)
         }
@@ -103,7 +93,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         if (memoryplayerlogin(message.player)) {
           // start tracking
           tracking[message.player] = 0
-          tape_info(vm.name(), 'player login', message.player)
+          writeoption(vm.name(), 'player login', message.player)
           // ack
           vm.reply(message, 'acklogin', true, message.player)
         }
@@ -223,7 +213,13 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       break
     }
     case 'flush':
-      doasync('vm:flush', savestate)
+      doasync('vm:flush', async () => {
+        if (isstring(message.data)) {
+          await savestate(`${message.data} `)
+        } else {
+          await savestate()
+        }
+      })
       break
     case 'cli':
       // user input from built-in console

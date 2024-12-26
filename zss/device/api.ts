@@ -72,10 +72,6 @@ export function register_nuke(sender: string) {
   hub.emit('register:nuke', sender)
 }
 
-export function register_nodetrash(sender: string) {
-  hub.emit('register:nodetrash', sender)
-}
-
 export function synth_tts(sender: string, voice: string, phrase: string) {
   hub.emit('synth:tts', sender, [voice, phrase])
 }
@@ -210,8 +206,8 @@ export function vm_cli(sender: string, input: string, player: string) {
   hub.emit('vm:cli', sender, input, player)
 }
 
-export function vm_flush(sender: string) {
-  hub.emit('vm:flush', sender)
+export function vm_flush(sender: string, tag = '') {
+  hub.emit('vm:flush', sender, tag)
 }
 
 export function vm_loadfile(sender: string, file: File, player: string) {
