@@ -44,7 +44,7 @@ const inputstate: Record<INPUT, boolean> = {
 // handle input repeat
 let acc = 0
 let previous = performance.now()
-const INPUT_RATE = 250
+const INPUT_RATE = 200
 
 function inputdown(input: INPUT) {
   // make sure to trigger input event
