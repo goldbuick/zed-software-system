@@ -607,6 +607,16 @@ function validatesynthtype(
         type === 'fatcustom'
       )
     }
+    switch (type) {
+      case 'custom':
+      case 'amcustom':
+      case 'fmcustom':
+      case 'fatcustom':
+        if (!isarray(maybepartials)) {
+          return false
+        }
+        break
+    }
 
     // validate whole values only
     if (type === 'pwm' || type === 'pulse') {
