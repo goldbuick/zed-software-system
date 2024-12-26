@@ -5,7 +5,6 @@ import {
   tape_info,
   vm_codeaddress,
   vm_flush,
-  register_nodetrash,
   register_nuke,
   register_share,
   register_dev,
@@ -348,11 +347,6 @@ export const CLI_FIRMWARE = createfirmware()
       chip.command('pages')
     }
 
-    return 0
-  })
-  .command('nodetrash', () => {
-    register_nodetrash('cli')
-    writetext('cli', `node id changed, refreshing page recommended`)
     return 0
   })
   .command('help', (chip, words) => {

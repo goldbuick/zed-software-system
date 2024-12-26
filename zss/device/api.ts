@@ -72,10 +72,6 @@ export function register_nuke(sender: string) {
   hub.emit('register:nuke', sender)
 }
 
-export function register_nodetrash(sender: string) {
-  hub.emit('register:nodetrash', sender)
-}
-
 export function synth_tts(sender: string, voice: string, phrase: string) {
   hub.emit('synth:tts', sender, [voice, phrase])
 }
