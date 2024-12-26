@@ -107,5 +107,6 @@ export const AUDIO_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_STRING,
     ])
     synth_tts('audio', voice ?? '', phrase)
+    // https://github.com/lobehub/lobe-tts/blob/master/src/core/data/voiceList.ts
     return 0
   })
