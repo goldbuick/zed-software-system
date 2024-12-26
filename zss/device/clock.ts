@@ -34,5 +34,5 @@ function wake() {
   setTimeout(wake, 1)
 }
 
-// server is ready
+// start clock
 wake()

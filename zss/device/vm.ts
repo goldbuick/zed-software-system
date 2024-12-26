@@ -27,6 +27,7 @@ import { writeoption } from 'zss/words/writeui'
 
 import {
   gadgetserver_clearplayer,
+  platform_started,
   register_flush,
   register_refresh,
   tape_debug,
@@ -240,7 +241,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
   }
 })
 
-export function ready() {
+export function started() {
   // signal ready state
-  vm.emit('ready', undefined, memorygetdefaultplayer())
+  platform_started(vm.name(), memorygetdefaultplayer())
 }

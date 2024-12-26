@@ -1,9 +1,6 @@
 import { createforward } from './device/forward'
-import { ready } from './device/vm'
-
-// these are all back-end devices
-// devices that operate within the web worker
-//     './device/vm'
+// these are all back-end devices that operate within the web worker
+import { started } from './device/vm'
 import './device/gadgetserver'
 import './device/modem'
 
@@ -14,4 +11,4 @@ onmessage = function handleMessage(event) {
 }
 
 // begin process
-setTimeout(ready)
+setTimeout(started, 100)

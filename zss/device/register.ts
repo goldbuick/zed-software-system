@@ -4,11 +4,13 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { createplatform } from 'zss/platform'
 import { writecopyit, writeheader, writeoption } from 'zss/words/writeui'
 
 import {
   api_error,
   gadgetserver_desync,
+  register_ready,
   register_refresh,
   tape_crash,
   tape_info,
@@ -119,23 +121,88 @@ let keepalive = 0
 // send keepalive message every 24 seconds
 const signalrate = 1
 
+// assess what mode we're running in
+export function isjoin() {
+  return window.location.href.includes(`/join/`)
+}
+
+export function islocked() {
+  return window.location.href.includes(`/locked/`)
+}
+
 const register = createdevice(
   'register',
-  ['second', 'ready', 'error'],
+  ['started', 'second', 'error'],
   function (message) {
     const gadgetclient = useGadgetClient.getState()
     switch (message.target) {
+      case 'ready': {
+        createplatform(isjoin())
+        break
+      }
+      case 'started': {
+        if (!ispresent(message.player)) {
+          return
+        }
+        // get unqiue session id for window
+        const name = 'SESSION_ID'
+        const sessionid = readsession(name) ?? message.player
+        writesession(name, sessionid)
+        // init gadget & vm with player id
+        if (!gadgetclient.gadget.player) {
+          // track player id
+          useGadgetClient.setState((state) => {
+            return {
+              ...state,
+              gadget: {
+                ...state.gadget,
+                player: sessionid,
+              },
+            }
+          })
+          // signal init
+          setTimeout(() => vm_init('register', sessionid), 256)
+        }
+        break
+      }
       case 'error:login:main':
       case 'error:login:title':
       case 'error:login:player':
         tape_crash(register.name())
         break
+      case 'ackinit': {
+        doasync('register:ackinit', async () => {
+          if (!ispresent(message.player)) {
+            return
+          }
+          // pull data
+          const books = readurlhash()
+          if (books.length === 0) {
+            api_error(register.name(), 'content', 'no content found')
+            tape_crash(register.name())
+            return
+          }
+          // init vm with content
+          const selectedid = (await readselectedid()) ?? ''
+          vm_books(register.name(), books, selectedid, message.player)
+        })
+        break
+      }
+      case 'ackbooks':
+        if (ispresent(message.player)) {
+          vm_login(register.name(), message.player)
+        }
+        break
+      case 'acklogin':
+        if (ispresent(message.player)) {
+          const { player } = message
+          tape_terminal_close(register.name())
+          setTimeout(() => gadgetserver_desync(register.name(), player), 1000)
+        }
+        break
       case 'dev':
         doasync('register:dev', async function () {
-          const islocked = window.location.href.includes(`/locked/`)
-            ? 'locked'
-            : ''
-          if (islocked) {
+          if (islocked()) {
             const url = await shorturl(window.location.href)
             writecopyit('devshare', url, url)
           } else {
@@ -179,61 +246,6 @@ const register = createdevice(
           window.location.reload()
         })
         break
-      case 'ready': {
-        if (!ispresent(message.player)) {
-          return
-        }
-        // get unqiue session id for window
-        const name = 'SESSION_ID'
-        const sessionid = readsession(name) ?? message.player
-        writesession(name, sessionid)
-        // init gadget & vm with player id
-        if (!gadgetclient.gadget.player) {
-          // track player id
-          useGadgetClient.setState((state) => {
-            return {
-              ...state,
-              gadget: {
-                ...state.gadget,
-                player: sessionid,
-              },
-            }
-          })
-          // signal init
-          setTimeout(() => vm_init('register', sessionid), 256)
-        }
-        break
-      }
-      case 'ackinit': {
-        doasync('register:ackinit', async () => {
-          if (!ispresent(message.player)) {
-            return
-          }
-          // pull data
-          const books = readurlhash()
-          if (books.length === 0) {
-            api_error(register.name(), 'content', 'no content found')
-            tape_crash(register.name())
-            return
-          }
-          // init vm with content
-          const selectedid = (await readselectedid()) ?? ''
-          vm_books(register.name(), books, selectedid, message.player)
-        })
-        break
-      }
-      case 'ackbooks':
-        if (ispresent(message.player)) {
-          vm_login(register.name(), message.player)
-        }
-        break
-      case 'acklogin':
-        if (ispresent(message.player)) {
-          const { player } = message
-          tape_terminal_close(register.name())
-          setTimeout(() => gadgetserver_desync(register.name(), player), 1000)
-        }
-        break
       case 'flush':
         if (isarray(message.data)) {
           const [maybehistorylabel, maybecontent] = message.data
@@ -263,3 +275,5 @@ const register = createdevice(
     }
   },
 )
+
+setTimeout(register_ready, 100)

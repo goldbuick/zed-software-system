@@ -44,6 +44,14 @@ export function gadgetserver_clearplayer(sender: string, player: string) {
   hub.emit('gadgetserver:clearplayer', sender, undefined, player)
 }
 
+export function platform_started(sender: string, player: string) {
+  hub.emit('started', sender, undefined, player)
+}
+
+export function register_ready(sender: string) {
+  hub.emit('register:ready', sender)
+}
+
 export function register_flush(
   sender: string,
   historylabel: string,
