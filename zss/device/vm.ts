@@ -63,7 +63,7 @@ async function savestate(tag = ``) {
   }
 }
 
-const vm = createdevice('vm', ['tick', 'second'], (message) => {
+const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
   // console.info(message)
   switch (message.target) {
     case 'init':

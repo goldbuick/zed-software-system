@@ -439,3 +439,7 @@ export const CLI_FIRMWARE = createfirmware()
     register_nuke('cli')
     return 0
   })
+  .command('host', () => {
+    //
+    return 0
+  })

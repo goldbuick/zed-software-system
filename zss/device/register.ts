@@ -10,6 +10,7 @@ import { writecopyit, writeheader, writeoption } from 'zss/words/writeui'
 import {
   api_error,
   gadgetserver_desync,
+  platform_init,
   register_ready,
   register_refresh,
   tape_crash,
@@ -17,7 +18,6 @@ import {
   tape_terminal_close,
   vm_books,
   vm_doot,
-  vm_init,
   vm_login,
 } from './api'
 
@@ -161,7 +161,7 @@ const register = createdevice(
             }
           })
           // signal init
-          setTimeout(() => vm_init('register', sessionid), 256)
+          setTimeout(() => platform_init('register', sessionid), 256)
         }
         break
       }

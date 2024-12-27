@@ -10,5 +10,5 @@ onmessage = function handleMessage(event) {
   forward(event.data)
 }
 
-// begin process
+// begin simspace
 setTimeout(started, 100)
