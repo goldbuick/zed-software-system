@@ -1,5 +1,6 @@
 import { createdevice } from 'zss/device'
 import { TICK_FPS, TICK_RATE } from 'zss/mapping/tick'
+import { islocked } from 'zss/mapping/url'
 
 const clockdevice = createdevice('clock', [], () => {})
 
@@ -15,18 +16,18 @@ let previous = performance.now()
 function wake() {
   const now = performance.now()
   const delta = now - previous
-  const islocked = window.location.href.includes(`/locked/`) ? 'locked' : ''
+  const locked = islocked() ? 'locked' : ''
 
   acc += delta
   if (acc >= TICK_RATE) {
     acc %= TICK_RATE
-    clockdevice.emit('tick', timestamp, islocked)
-    clockdevice.emit('tock', timestamp, islocked)
+    clockdevice.emit('tick', timestamp, locked)
+    clockdevice.emit('tock', timestamp, locked)
     ++clock
     ++timestamp
     if (clock >= TICK_FPS) {
       clock %= TICK_FPS
-      clockdevice.emit('second', timestamp, islocked)
+      clockdevice.emit('second', timestamp, locked)
     }
   }
 

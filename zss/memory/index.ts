@@ -213,7 +213,7 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
   )
   bookwritecodepage(book, codepage)
   memorysetcodepageindex(codepage.id, book.id)
-  vm_flush('memory') // tell register to save changes
+  vm_flush('memory', '', MEMORY.defaultplayer)
 
   // result codepage
   return codepage

@@ -6,12 +6,11 @@ import stubspace from './stubspace??worker'
 let platform: Worker
 
 export function createplatform(isstub = false) {
-  if (ispresent(platform)) {
-    return
+  if (!ispresent(platform)) {
+    // create backend
+    platform = isstub ? new stubspace() : new simspace()
+    // create bridge
+    const forward = createforward((message) => platform.postMessage(message))
+    platform.addEventListener('message', (event) => forward(event.data))
   }
-  // create backend
-  platform = isstub ? new stubspace() : new simspace()
-  // create bridge
-  const forward = createforward((message) => platform.postMessage(message))
-  platform.addEventListener('message', (event) => forward(event.data))
 }

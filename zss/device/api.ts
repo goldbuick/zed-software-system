@@ -44,12 +44,24 @@ export function gadgetserver_clearplayer(sender: string, player: string) {
   hub.emit('gadgetserver:clearplayer', sender, undefined, player)
 }
 
-export function peer_host(sender: string, player: string) {
-  hub.emit('peer:host', sender, undefined, player)
+export function peer_create(sender: string, joinid: string, player: string) {
+  hub.emit('peer:create', sender, joinid, player)
 }
 
-export function peer_join(sender: string, player: string) {
-  hub.emit('peer:host', sender, undefined, player)
+export function peer_joincode(sender: string, player: string) {
+  hub.emit('peer:joincode', sender, undefined, player)
+}
+
+export function peer_open(sender: string, player: string) {
+  hub.emit('peer:open', sender, undefined, player)
+}
+
+export function peer_close(sender: string, player: string) {
+  hub.emit('peer:close', sender, undefined, player)
+}
+
+export function peer_disconnected(sender: string, player: string) {
+  hub.emit('peer:disconnected', sender, undefined, player)
 }
 
 export function platform_started(sender: string, player: string) {
@@ -222,8 +234,8 @@ export function vm_cli(sender: string, input: string, player: string) {
   hub.emit('vm:cli', sender, input, player)
 }
 
-export function vm_flush(sender: string, tag = '') {
-  hub.emit('vm:flush', sender, tag)
+export function vm_flush(sender: string, tag: string, player: string) {
+  hub.emit('vm:flush', sender, tag, player)
 }
 
 export function vm_loadfile(sender: string, file: File, player: string) {

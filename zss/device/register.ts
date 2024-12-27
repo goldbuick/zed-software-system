@@ -4,18 +4,21 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { isjoin, islocked, shorturl } from 'zss/mapping/url'
 import { createplatform } from 'zss/platform'
-import { writecopyit, writeheader, writeoption } from 'zss/words/writeui'
+import { write, writecopyit, writeheader, writeoption } from 'zss/words/writeui'
 
 import {
   api_error,
   gadgetserver_desync,
+  peer_create,
   platform_init,
   register_ready,
   register_refresh,
   tape_crash,
   tape_info,
   tape_terminal_close,
+  tape_terminal_open,
   vm_books,
   vm_doot,
   vm_login,
@@ -61,7 +64,7 @@ function writesession(key: string, value: MAYBE<string>) {
 
 function readurlhash(): string {
   try {
-    const hash = window.location.hash.slice(1)
+    const hash = location.hash.slice(1)
     if (hash.length) {
       return hash
     }
@@ -74,7 +77,7 @@ function readurlhash(): string {
 let shouldreload = true
 window.addEventListener('hashchange', () => {
   if (shouldreload) {
-    window.location.reload()
+    location.reload()
   } else {
     // reset after a single pass
     shouldreload = true
@@ -83,28 +86,15 @@ window.addEventListener('hashchange', () => {
 
 function writeurlhash(exportedbooks: string) {
   const out = `#${exportedbooks}`
-  if (window.location.hash !== out) {
+  if (location.hash !== out) {
     // saving current state, don't interrupt the user
     shouldreload = false
-    window.location.hash = out
+    location.hash = out
     tape_info(
       register.name(),
       `wrote ${exportedbooks?.length ?? 0} chars [${exportedbooks.slice(0, 8)}...${exportedbooks.slice(-8)}]`,
     )
   }
-}
-
-async function shorturl(url: string) {
-  const formData = new FormData()
-  formData.append('url', url)
-  const request = new Request('https://bytes.zed.cafe', {
-    method: 'POST',
-    body: formData,
-  })
-  const response = await fetch(request)
-  const shortcontent = await response.text()
-  // return new bytes url
-  return shortcontent
 }
 
 async function readselectedid() {
@@ -121,15 +111,6 @@ let keepalive = 0
 // send keepalive message every 24 seconds
 const signalrate = 1
 
-// assess what mode we're running in
-export function isjoin() {
-  return window.location.href.includes(`/join/`)
-}
-
-export function islocked() {
-  return window.location.href.includes(`/locked/`)
-}
-
 const register = createdevice(
   'register',
   ['started', 'second', 'error'],
@@ -137,11 +118,12 @@ const register = createdevice(
     const gadgetclient = useGadgetClient.getState()
     switch (message.target) {
       case 'ready': {
+        write('register', 'creating platform')
         createplatform(isjoin())
         break
       }
       case 'started': {
-        if (!ispresent(message.player)) {
+        if (!ispresent(message.player) || gadgetclient.gadget.player) {
           return
         }
         // get unqiue session id for window
@@ -149,20 +131,19 @@ const register = createdevice(
         const sessionid = readsession(name) ?? message.player
         writesession(name, sessionid)
         // init gadget & vm with player id
-        if (!gadgetclient.gadget.player) {
-          // track player id
-          useGadgetClient.setState((state) => {
-            return {
-              ...state,
-              gadget: {
-                ...state.gadget,
-                player: sessionid,
-              },
-            }
-          })
-          // signal init
-          setTimeout(() => platform_init('register', sessionid), 256)
-        }
+        write('register', `sessionid ${sessionid}`)
+        // track player id
+        useGadgetClient.setState((state) => {
+          return {
+            ...state,
+            gadget: {
+              ...state.gadget,
+              player: sessionid,
+            },
+          }
+        })
+        // signal init
+        setTimeout(() => platform_init('register', sessionid), 256)
         break
       }
       case 'error:login:main':
@@ -175,16 +156,21 @@ const register = createdevice(
           if (!ispresent(message.player)) {
             return
           }
-          // pull data
-          const books = readurlhash()
-          if (books.length === 0) {
-            api_error(register.name(), 'content', 'no content found')
-            tape_crash(register.name())
-            return
+          if (isjoin()) {
+            tape_terminal_open('register')
+            peer_create('register', readurlhash(), message.player)
+          } else {
+            // pull data
+            const books = readurlhash()
+            if (books.length === 0) {
+              api_error(register.name(), 'content', 'no content found')
+              tape_crash(register.name())
+              return
+            }
+            // init vm with content
+            const selectedid = (await readselectedid()) ?? ''
+            vm_books(register.name(), books, selectedid, message.player)
           }
-          // init vm with content
-          const selectedid = (await readselectedid()) ?? ''
-          vm_books(register.name(), books, selectedid, message.player)
         })
         break
       }
@@ -203,15 +189,12 @@ const register = createdevice(
       case 'dev':
         doasync('register:dev', async function () {
           if (islocked()) {
-            const url = await shorturl(window.location.href)
+            const url = await shorturl(location.href)
             writecopyit('devshare', url, url)
           } else {
             writeheader(register.name(), `creating locked terminal`)
             await waitfor(100)
-            window.location.href = window.location.href.replace(
-              `/#`,
-              `/locked/#`,
-            )
+            location.href = location.href.replace(`/#`, `/locked/#`)
           }
         })
         break
@@ -219,7 +202,7 @@ const register = createdevice(
         doasync('register:share', async function () {
           const url = await shorturl(
             // drop /locked from shared short url if found
-            window.location.href.replace(/cafe.*locked/, `cafe`),
+            location.href.replace(/cafe.*locked/, `cafe`),
           )
           writecopyit('share', url, url)
         })
@@ -228,7 +211,7 @@ const register = createdevice(
         doasync('register:refresh', async function () {
           writeheader(register.name(), 'BYE')
           await waitfor(100)
-          window.location.reload()
+          location.reload()
         })
         break
       case 'nuke':
@@ -242,8 +225,8 @@ const register = createdevice(
           await waitfor(1000)
           writeheader(register.name(), 'BYE')
           await waitfor(100)
-          window.location.hash = ''
-          window.location.reload()
+          location.hash = ''
+          location.reload()
         })
         break
       case 'flush':

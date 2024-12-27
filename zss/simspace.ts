@@ -1,8 +1,9 @@
 import { createforward } from './device/forward'
 // these are all back-end devices that operate within the web worker
-import { started } from './device/vm'
+import './device/clock'
 import './device/gadgetserver'
 import './device/modem'
+import { started } from './device/vm'
 
 const forward = createforward((message) => postMessage(message))
 

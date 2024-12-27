@@ -2,6 +2,7 @@ import { createdevice } from 'zss/device'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { isjoin } from 'zss/mapping/url'
 import {
   memorycli,
   memoryplayerlogin,
@@ -23,7 +24,7 @@ import {
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
-import { writeoption } from 'zss/words/writeui'
+import { write } from 'zss/words/writeui'
 
 import {
   gadgetserver_clearplayer,
@@ -64,7 +65,6 @@ async function savestate(tag = ``) {
 }
 
 const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
-  // console.info(message)
   switch (message.target) {
     case 'init':
       if (ispresent(message.player)) {
@@ -81,7 +81,7 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
           const books = await decompressbooks(maybebooks)
           const booknames = books.map((item) => item.name)
           memoryresetbooks(books, maybeselect)
-          writeoption(vm.name(), 'loading', booknames.join(', '))
+          write(vm.name(), `loading ${booknames.join(', ')}`)
           // ack
           vm.reply(message, 'ackbooks', true, message.player)
         }
@@ -94,7 +94,7 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
         if (memoryplayerlogin(message.player)) {
           // start tracking
           tracking[message.player] = 0
-          writeoption(vm.name(), 'player login', message.player)
+          write(vm.name(), `login from ${message.player}`)
           // ack
           vm.reply(message, 'acklogin', true, message.player)
         }
@@ -207,9 +207,9 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
       }
 
       // autosave to url
-      if (++flushtick >= FLUSH_RATE) {
+      if (isjoin() === false && ++flushtick >= FLUSH_RATE) {
         flushtick = 0
-        vm_flush(vm.name())
+        vm_flush(vm.name(), '', memorygetdefaultplayer())
       }
       break
     }

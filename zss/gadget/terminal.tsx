@@ -101,6 +101,3 @@ export function Terminal() {
     </>
   )
 }
-
-// start platform
-// createplatform(isjoin())
