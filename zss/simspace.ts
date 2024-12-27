@@ -5,7 +5,7 @@ import './device/gadgetserver'
 import './device/modem'
 import { started } from './device/vm'
 
-const forward = createforward((message) => postMessage(message))
+const { forward } = createforward((message) => postMessage(message))
 
 onmessage = function handleMessage(event) {
   forward(event.data)

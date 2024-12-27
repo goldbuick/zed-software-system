@@ -20,13 +20,16 @@ function handledataconnection(remote: DataConnection, onopen?: () => void) {
   // signal connected
   remote.on('open', () => {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    const forward = createforward((message) => remote.send(message))
+    const { forward, disconnect } = createforward((message) =>
+      remote.send(message),
+    )
     remote.on('data', forward)
     onopen?.()
+    remote.on('close', () => {
+      disconnect()
+      write(peer.name(), `remote ${remote.peer} disconnected`)
+    })
   })
-  remote.on('close', () =>
-    write(peer.name(), `remote ${remote.peer} disconnected`),
-  )
   remote.on('error', (error) => {
     const id = node?.id ?? ''
     api_error(peer.name(), `${id}-${remote.peer}`, error.message)

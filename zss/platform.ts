@@ -10,7 +10,9 @@ export function createplatform(isstub = false) {
     // create backend
     platform = isstub ? new stubspace() : new simspace()
     // create bridge
-    const forward = createforward((message) => platform.postMessage(message))
+    const { forward } = createforward((message) =>
+      platform.postMessage(message),
+    )
     platform.addEventListener('message', (event) => forward(event.data))
   }
 }
