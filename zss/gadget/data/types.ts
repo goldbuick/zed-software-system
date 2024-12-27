@@ -243,7 +243,7 @@ export function paneladdress(chip: string, target: string) {
 }
 
 export type GADGET_STATE = {
-  player: string
+  // player: string
   layers: LAYER[]
   panels: PANEL[]
   reset: boolean

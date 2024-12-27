@@ -36,7 +36,7 @@ import {
   vm_codeaddress,
   vm_flush,
 } from './api'
-import { modemobservevaluestring } from './modem'
+import { modemobservevaluestring, modemwriteplayer } from './modem'
 
 // tracking active player ids
 const SECOND_TIMEOUT = 16
@@ -60,32 +60,37 @@ async function savestate(tag = ``) {
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
     const historylabel = `${tag}${new Date().toISOString()}${mainbook.name} ${content.length} chars`
-    register_flush(vm.name(), historylabel, content)
+    register_flush(vm.name(), historylabel, content, memorygetdefaultplayer())
   }
 }
 
+let init = false
 const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
   switch (message.target) {
     case 'init':
-      if (ispresent(message.player)) {
+      if (ispresent(message.player) && !init) {
+        init = true
+        modemwriteplayer(message.player)
         memorysetdefaultplayer(message.player)
         // ack
         vm.reply(message, 'ackinit', true, message.player)
       }
       break
     case 'books':
-      doasync('vm:books', async () => {
-        if (isarray(message.data)) {
-          const [maybebooks, maybeselect] = message.data as [string, string]
-          // unpack books
-          const books = await decompressbooks(maybebooks)
-          const booknames = books.map((item) => item.name)
-          memoryresetbooks(books, maybeselect)
-          write(vm.name(), `loading ${booknames.join(', ')}`)
-          // ack
-          vm.reply(message, 'ackbooks', true, message.player)
-        }
-      })
+      if (message.player === memorygetdefaultplayer()) {
+        doasync('vm:books', async () => {
+          if (isarray(message.data)) {
+            const [maybebooks, maybeselect] = message.data as [string, string]
+            // unpack books
+            const books = await decompressbooks(maybebooks)
+            const booknames = books.map((item) => item.name)
+            memoryresetbooks(books, maybeselect)
+            write(vm.name(), `loading ${booknames.join(', ')}`)
+            // ack
+            vm.reply(message, 'ackbooks', true, message.player)
+          }
+        })
+      }
       break
     case 'login':
       if (message.player) {
@@ -101,19 +106,21 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
       }
       break
     case 'endgame':
-      doasync('vm:endgame', async () => {
-        if (!message.player) {
-          return
-        }
-        // logout player
-        memoryplayerlogout(message.player)
-        // clear ui
-        gadgetserver_clearplayer('vm', message.player)
-        // save state
-        await savestate()
-        // reload page
-        register_refresh('vm')
-      })
+      if (message.player === memorygetdefaultplayer()) {
+        doasync('vm:endgame', async () => {
+          if (!message.player) {
+            return
+          }
+          // logout player
+          memoryplayerlogout(message.player)
+          // clear ui
+          gadgetserver_clearplayer('vm', message.player)
+          // save state
+          await savestate()
+          // reload page
+          register_refresh('vm')
+        })
+      }
       break
     case 'doot':
       if (message.player) {
@@ -214,23 +221,25 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
       break
     }
     case 'flush':
-      doasync('vm:flush', async () => {
-        if (isstring(message.data)) {
-          await savestate(`${message.data} `)
-        } else {
-          await savestate()
-        }
-      })
+      if (message.player === memorygetdefaultplayer()) {
+        doasync('vm:flush', async () => {
+          if (isstring(message.data)) {
+            await savestate(`${message.data} `)
+          } else {
+            await savestate()
+          }
+        })
+      }
       break
     case 'cli':
       // user input from built-in console
-      if (ispresent(message.player)) {
+      if (message.player === memorygetdefaultplayer()) {
         memorycli(message.player, message.data)
       }
       break
     case 'loadfile':
       // user input from built-in console
-      if (ispresent(message.player)) {
+      if (message.player === memorygetdefaultplayer()) {
         memoryloadfile(message.player, message.data)
       }
       break

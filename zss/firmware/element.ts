@@ -63,6 +63,7 @@ function readinput(player: string) {
   if (isnumber(flags.inputcurrent) && flags.inputcurrent > 0) {
     return
   }
+  console.info(player)
 
   // pull from front of queue
   const [head] = flags.inputqueue as [INPUT, number][]
@@ -107,11 +108,11 @@ function readinput(player: string) {
 }
 
 export const ELEMENT_FIRMWARE = createfirmware({
-  get(chip, name) {
+  get(_, name) {
     // if we are reading from input AND are a player
     if (READ_CONTEXT.isplayer && INPUT_FLAG_NAMES.has(name)) {
       // pull the next input
-      readinput(chip.id())
+      readinput(READ_CONTEXT.element?.id ?? '')
     }
 
     // read stat

@@ -1,7 +1,7 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice } from 'zss/device'
-import { useGadgetClient } from 'zss/gadget/data/state'
 import { doasync } from 'zss/mapping/func'
+import { createpid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { isjoin, islocked, shorturl } from 'zss/mapping/url'
@@ -23,6 +23,7 @@ import {
   vm_doot,
   vm_login,
 } from './api'
+import { modemwriteplayer } from './modem'
 
 // read / write from indexdb
 
@@ -111,11 +112,18 @@ let keepalive = 0
 // send keepalive message every 24 seconds
 const signalrate = 1
 
+// stable unique id
+const sessionid = readsession('SESSION_ID') ?? createpid()
+writesession('SESSION_ID', sessionid)
+
+export function registerreadplayer() {
+  return sessionid
+}
+
 const register = createdevice(
   'register',
   ['started', 'second', 'error'],
   function (message) {
-    const gadgetclient = useGadgetClient.getState()
     switch (message.target) {
       case 'ready': {
         write('register', 'creating platform')
@@ -123,48 +131,35 @@ const register = createdevice(
         break
       }
       case 'started': {
-        if (!ispresent(message.player) || gadgetclient.gadget.player) {
-          return
-        }
-        // get unqiue session id for window
-        const name = 'SESSION_ID'
-        const sessionid = readsession(name) ?? message.player
-        writesession(name, sessionid)
-        // init gadget & vm with player id
-        write('register', `sessionid ${sessionid}`)
-        // track player id
-        useGadgetClient.setState((state) => {
-          return {
-            ...state,
-            gadget: {
-              ...state.gadget,
-              player: sessionid,
-            },
-          }
-        })
+        modemwriteplayer(sessionid)
         // signal init
-        setTimeout(() => platform_init('register', sessionid), 256)
+        setTimeout(() => {
+          write('register', `sessionid ${sessionid}`)
+          platform_init('register', sessionid)
+        }, 256)
         break
       }
       case 'error:login:main':
       case 'error:login:title':
       case 'error:login:player':
-        tape_crash(register.name())
+        if (message.player === sessionid) {
+          tape_crash(register.name(), sessionid)
+        }
         break
       case 'ackinit': {
         doasync('register:ackinit', async () => {
-          if (!ispresent(message.player)) {
+          if (message.player !== sessionid) {
             return
           }
           if (isjoin()) {
-            tape_terminal_open('register')
-            peer_create('register', readurlhash(), message.player)
+            tape_terminal_open(register.name(), sessionid)
+            peer_create(register.name(), readurlhash(), message.player)
           } else {
             // pull data
             const books = readurlhash()
             if (books.length === 0) {
               api_error(register.name(), 'content', 'no content found')
-              tape_crash(register.name())
+              tape_crash(register.name(), sessionid)
               return
             }
             // init vm with content
@@ -175,62 +170,70 @@ const register = createdevice(
         break
       }
       case 'ackbooks':
-        if (ispresent(message.player)) {
+        if (message.player === sessionid) {
           vm_login(register.name(), message.player)
         }
         break
       case 'acklogin':
-        if (ispresent(message.player)) {
+        if (message.player === sessionid) {
           const { player } = message
-          tape_terminal_close(register.name())
+          tape_terminal_close(register.name(), sessionid)
           setTimeout(() => gadgetserver_desync(register.name(), player), 1000)
         }
         break
       case 'dev':
-        doasync('register:dev', async function () {
-          if (islocked()) {
-            const url = await shorturl(location.href)
-            writecopyit('devshare', url, url)
-          } else {
-            writeheader(register.name(), `creating locked terminal`)
-            await waitfor(100)
-            location.href = location.href.replace(`/#`, `/locked/#`)
-          }
-        })
+        if (message.player === sessionid) {
+          doasync('register:dev', async function () {
+            if (islocked()) {
+              const url = await shorturl(location.href)
+              writecopyit('devshare', url, url)
+            } else {
+              writeheader(register.name(), `creating locked terminal`)
+              await waitfor(100)
+              location.href = location.href.replace(`/#`, `/locked/#`)
+            }
+          })
+        }
         break
       case 'share':
-        doasync('register:share', async function () {
-          const url = await shorturl(
-            // drop /locked from shared short url if found
-            location.href.replace(/cafe.*locked/, `cafe`),
-          )
-          writecopyit('share', url, url)
-        })
+        if (message.player === sessionid) {
+          doasync('register:share', async function () {
+            const url = await shorturl(
+              // drop /locked from shared short url if found
+              location.href.replace(/cafe.*locked/, `cafe`),
+            )
+            writecopyit('share', url, url)
+          })
+        }
         break
       case 'refresh':
-        doasync('register:refresh', async function () {
-          writeheader(register.name(), 'BYE')
-          await waitfor(100)
-          location.reload()
-        })
+        if (message.player === sessionid) {
+          doasync('register:refresh', async function () {
+            writeheader(register.name(), 'BYE')
+            await waitfor(100)
+            location.reload()
+          })
+        }
         break
       case 'nuke':
-        doasync('register:nuke', async function () {
-          writeheader(register.name(), 'nuke in')
-          writeoption(register.name(), '3', '...')
-          await waitfor(1000)
-          writeoption(register.name(), '2', '...')
-          await waitfor(1000)
-          writeoption(register.name(), '1', '...')
-          await waitfor(1000)
-          writeheader(register.name(), 'BYE')
-          await waitfor(100)
-          location.hash = ''
-          location.reload()
-        })
+        if (message.player === sessionid) {
+          doasync('register:nuke', async function () {
+            writeheader(register.name(), 'nuke in')
+            writeoption(register.name(), '3', '...')
+            await waitfor(1000)
+            writeoption(register.name(), '2', '...')
+            await waitfor(1000)
+            writeoption(register.name(), '1', '...')
+            await waitfor(1000)
+            writeheader(register.name(), 'BYE')
+            await waitfor(100)
+            location.hash = ''
+            location.reload()
+          })
+        }
         break
       case 'flush':
-        if (isarray(message.data)) {
+        if (message.player === sessionid && isarray(message.data)) {
           const [maybehistorylabel, maybecontent] = message.data
           if (isstring(maybehistorylabel) && isstring(maybecontent)) {
             document.title = maybehistorylabel
@@ -239,20 +242,20 @@ const register = createdevice(
         }
         break
       case 'select':
-        doasync('register:select', async () => {
-          if (isstring(message.data)) {
-            await writeselectedid(message.data)
-            register_refresh(register.name())
-          }
-        })
+        if (message.player === sessionid) {
+          doasync('register:select', async () => {
+            if (isstring(message.data)) {
+              await writeselectedid(message.data)
+              register_refresh(register.name())
+            }
+          })
+        }
         break
       case 'second':
         ++keepalive
         if (keepalive >= signalrate) {
           keepalive -= signalrate
-          if (gadgetclient.gadget.player) {
-            vm_doot(register.name(), gadgetclient.gadget.player)
-          }
+          vm_doot(register.name(), registerreadplayer())
         }
         break
     }

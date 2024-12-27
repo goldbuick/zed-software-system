@@ -27,7 +27,6 @@ export function createforward(handler: (message: MESSAGE) => void) {
       hub.invoke(message)
     }
   }
-  // disconnect
 
   const device = createdevice('forward', ['all'], (message) => {
     if (!syncids.has(message.id)) {

@@ -100,6 +100,7 @@ const MEMORY = {
 }
 
 export function memorysetdefaultplayer(player: string) {
+  console.info('memorysetdefaultplayer', player)
   MEMORY.defaultplayer = player
 }
 
@@ -503,10 +504,12 @@ export function memorycli(player: string, cli = '') {
   const id = `${player}_cli`
 
   // write context
+  READ_CONTEXT.timestamp = mainbook.timestamp
   READ_CONTEXT.book = mainbook
   READ_CONTEXT.board = bookplayerreadboard(mainbook, player)
   READ_CONTEXT.element = boardobjectread(READ_CONTEXT.board, player)
   READ_CONTEXT.player = player
+  READ_CONTEXT.isplayer = true
 
   // invoke once
   tape_debug('memory', 'running', mainbook.timestamp, id, cli)

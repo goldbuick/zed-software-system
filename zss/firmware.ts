@@ -1,5 +1,4 @@
 import { CHIP } from './chip'
-import { MAYBE } from './mapping/types'
 import { WORD } from './words/types'
 
 type FIRMWARE_GET = (chip: CHIP, name: string) => [boolean, any]

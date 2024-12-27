@@ -32,14 +32,6 @@ export const useGadgetClient = create<{
   },
 }))
 
-export function useGadgetClientPlayer() {
-  return useGadgetClient((state) => state.gadget.player)
-}
-
-export function getgadgetclientplayer() {
-  return useGadgetClient.getState().gadget.player
-}
-
 export enum TAPE_LOG_LEVEL {
   OFF,
   INFO,

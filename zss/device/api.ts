@@ -80,8 +80,9 @@ export function register_flush(
   sender: string,
   historylabel: string,
   books: string,
+  player: string,
 ) {
-  hub.emit('register:flush', sender, [historylabel, books])
+  hub.emit('register:flush', sender, [historylabel, books], player)
 }
 
 export function register_dev(sender: string, player: string) {
@@ -147,20 +148,24 @@ function tape_error(sender: string, ...message: any[]) {
   return false
 }
 
-export function tape_terminal_open(sender: string) {
-  hub.emit('tape:terminal:open', sender)
+export function tape_terminal_open(sender: string, player: string) {
+  hub.emit('tape:terminal:open', sender, undefined, player)
 }
 
-export function tape_terminal_close(sender: string) {
-  hub.emit('tape:terminal:close', sender)
+export function tape_terminal_close(sender: string, player: string) {
+  hub.emit('tape:terminal:close', sender, undefined, player)
 }
 
-export function tape_terminal_inclayout(sender: string, inc: boolean) {
-  hub.emit('tape:terminal:inclayout', sender, inc)
+export function tape_terminal_inclayout(
+  sender: string,
+  inc: boolean,
+  player: string,
+) {
+  hub.emit('tape:terminal:inclayout', sender, inc, player)
 }
 
-export function tape_crash(sender: string) {
-  hub.emit('tape:crash', sender)
+export function tape_crash(sender: string, player: string) {
+  hub.emit('tape:crash', sender, undefined, player)
 }
 
 export function tape_editor_open(
@@ -174,8 +179,8 @@ export function tape_editor_open(
   hub.emit('tape:editor:open', sender, [book, page, type, title], player)
 }
 
-export function tape_editor_close(sender: string) {
-  hub.emit('tape:editor:close', sender)
+export function tape_editor_close(sender: string, player: string) {
+  hub.emit('tape:editor:close', sender, undefined, player)
 }
 
 export function vm_books(

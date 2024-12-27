@@ -1,9 +1,6 @@
 import { vm_cli } from 'zss/device/api'
-import {
-  useGadgetClientPlayer,
-  useTape,
-  useTapeTerminal,
-} from 'zss/gadget/data/state'
+import { registerreadplayer } from 'zss/device/register'
+import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import { hub } from 'zss/hub'
 import { totarget } from 'zss/mapping/string'
 import {
@@ -21,7 +18,7 @@ import { ConsoleItem } from './item'
 import { ConsoleItemActive } from './itemactive'
 
 export function TapeConsole() {
-  const player = useGadgetClientPlayer()
+  const player = registerreadplayer()
   const [terminallogs, editoropen] = useTape(
     useShallow((state) => [state.terminal.logs, state.editor.open]),
   )

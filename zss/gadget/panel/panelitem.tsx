@@ -1,4 +1,4 @@
-import { useGadgetClientPlayer } from 'zss/gadget/data/state'
+import { registerreadplayer } from 'zss/device/register'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { useWriteText } from 'zss/gadget/hooks'
 import { isarray } from 'zss/mapping/types'
@@ -19,7 +19,7 @@ type PanelItemProps = {
 }
 
 export function PanelItem({ item, active }: PanelItemProps) {
-  const player = useGadgetClientPlayer()
+  const player = registerreadplayer()
   const context = useWriteText()
 
   context.iseven = context.y % 2 === 0

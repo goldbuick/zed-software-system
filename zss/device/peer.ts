@@ -1,12 +1,13 @@
 import Peer, { DataConnection } from 'peerjs'
 import { createdevice } from 'zss/device'
 import { doasync } from 'zss/mapping/func'
-import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 import { shorturl } from 'zss/mapping/url'
 import { write, writecopyit } from 'zss/words/writeui'
 
 import { api_error, peer_create, peer_joincode, vm_login } from './api'
 import { createforward } from './forward'
+import { registerreadplayer } from './register'
 
 let node: MAYBE<Peer>
 // nuke it for cleaner close
@@ -23,12 +24,12 @@ function handledataconnection(remote: DataConnection, onopen?: () => void) {
     const { forward, disconnect } = createforward((message) =>
       remote.send(message),
     )
-    remote.on('data', forward)
-    onopen?.()
     remote.on('close', () => {
       disconnect()
       write(peer.name(), `remote ${remote.peer} disconnected`)
     })
+    remote.on('data', forward)
+    onopen?.()
   })
   remote.on('error', (error) => {
     const id = node?.id ?? ''
@@ -41,9 +42,7 @@ function createhost(player: string) {
   node = new Peer(player)
   node.on('open', () => {
     if (ispresent(node)) {
-      node.on('connection', (remote) => {
-        handledataconnection(remote)
-      })
+      node.on('connection', handledataconnection)
       node.on('close', () => write(peer.name(), `closed`))
       peer_joincode(peer.name(), player)
     }
@@ -74,7 +73,7 @@ function createjoin(player: string, joincode: string) {
 const peer = createdevice('peer', ['second'], (message) => {
   switch (message.target) {
     case 'create':
-      if (isstring(message.data) && isstring(message.player)) {
+      if (message.player === registerreadplayer()) {
         if (!message.data) {
           createhost(message.player)
         } else {
@@ -83,21 +82,23 @@ const peer = createdevice('peer', ['second'], (message) => {
       }
       break
     case 'joincode': {
-      doasync('peer:joincode', async () => {
-        if (!ispresent(message.player)) {
-          return
-        }
-        if (!ispresent(node)) {
-          // create a host peer
-          peer_create(peer.name(), '', message.player)
-        } else {
-          // draw the code to the console
-          const joinurl = `${location.origin}/join/#${node.id}`
-          const url = await shorturl(joinurl)
-          writecopyit(peer.name(), url, url)
-          write(peer.name(), 'ready to join')
-        }
-      })
+      if (message.player === registerreadplayer()) {
+        doasync('peer:joincode', async () => {
+          if (!ispresent(message.player)) {
+            return
+          }
+          if (!ispresent(node)) {
+            // create a host peer
+            peer_create(peer.name(), '', message.player)
+          } else {
+            // draw the code to the console
+            const joinurl = `${location.origin}/join/#${node.id}`
+            const url = await shorturl(joinurl)
+            writecopyit(peer.name(), url, url)
+            write(peer.name(), 'ready to join')
+          }
+        })
+      }
       break
     }
     case 'second': {

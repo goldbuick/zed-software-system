@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react'
 import { vm_cli } from 'zss/device/api'
-import { getgadgetclientplayer } from 'zss/gadget/data/state'
+import { registerreadplayer } from 'zss/device/register'
 import { INPUT } from 'zss/gadget/data/types'
 import { ismac } from 'zss/words/system'
 import { NAME } from 'zss/words/types'
@@ -105,7 +105,7 @@ document.addEventListener(
     switch (key) {
       case 's':
         if (mods.ctrl) {
-          vm_cli('tape', '#save', getgadgetclientplayer())
+          vm_cli('tape', '#save', registerreadplayer())
         }
         event.preventDefault()
         break

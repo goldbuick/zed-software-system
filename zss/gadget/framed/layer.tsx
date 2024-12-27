@@ -1,4 +1,4 @@
-import { useEqual, useGadgetClient } from 'zss/gadget/data/state'
+import { useGadgetClient } from 'zss/gadget/data/state'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { useShallow } from 'zustand/react/shallow'
 

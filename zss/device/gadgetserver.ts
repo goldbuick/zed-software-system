@@ -18,30 +18,21 @@ import { gadgetclient_patch, gadgetclient_reset } from './api'
 
 function clearplayer(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return initstate('')
-  }
   // cheating here as data is non-WORD compliant
   const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
-
   // group by player
   delete gadgetstore[player]
 }
 
 gadgetstateprovider((player) => {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return initstate('')
-  }
   // cheating here as data is non-WORD compliant
   const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
-
   // group by player
   let value = gadgetstore[player]
-
   // make sure to init state
   if (!ispresent(value)) {
-    gadgetstore[player] = value = initstate(player)
+    gadgetstore[player] = value = initstate()
   }
   return value
 })
