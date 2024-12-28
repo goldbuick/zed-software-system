@@ -1,4 +1,3 @@
-import { trimUndefinedRecursively } from 'compress-json'
 import { unpack, pack } from 'msgpackr'
 import { api_error } from 'zss/device/api'
 import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'

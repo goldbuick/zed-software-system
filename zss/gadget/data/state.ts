@@ -71,7 +71,7 @@ export const useTape = create<{
 }>(() => ({
   layout: TAPE_DISPLAY.BOTTOM,
   terminal: {
-    open: false,
+    open: true,
     level: TAPE_LOG_LEVEL.INFO,
     logs: [],
   },

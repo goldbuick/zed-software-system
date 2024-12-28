@@ -12,6 +12,8 @@ import { createdevice } from 'zss/device'
 import { UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
+import { api_error } from './api'
+
 export enum MODEM_SHARED_TYPE {
   NUMBER,
   STRING,
@@ -220,9 +222,8 @@ const modem = createdevice('modem', ['second'], (message) => {
           if (syncMessageType === syncprotocol.messageYjsSyncStep1) {
             modem.emit('modem:sync', modemmessage(syncEncoder))
           }
-        } catch (err) {
-          console.info(err)
-          console.info(message.data)
+        } catch (err: any) {
+          api_error(modem.name(), 'sync', err.message)
         }
       }
       break

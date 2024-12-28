@@ -441,7 +441,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('nuke', () => {
-    register_nuke('cli')
+    register_nuke('cli', READ_CONTEXT.player)
     return 0
   })
   .command('joincode', () => {

@@ -72,8 +72,12 @@ export function platform_init(sender: string, player: string) {
   hub.emit('init', sender, undefined, player)
 }
 
-export function register_ready(sender: string) {
-  hub.emit('register:ready', sender)
+export function register_ready(sender: string, player: string) {
+  hub.emit('register:ready', sender, undefined, player)
+}
+
+export function register_ackbooks(sender: string, player: string) {
+  hub.emit('register:ackbooks', sender, true, player)
 }
 
 export function register_flush(
@@ -93,16 +97,16 @@ export function register_share(sender: string, player: string) {
   hub.emit('register:share', sender, undefined, player)
 }
 
-export function register_refresh(sender: string) {
-  hub.emit('register:refresh', sender)
+export function register_refresh(sender: string, player: string) {
+  hub.emit('register:refresh', sender, undefined, player)
 }
 
-export function register_select(sender: string, book: string) {
-  hub.emit('register:select', sender, book)
+export function register_select(sender: string, book: string, player: string) {
+  hub.emit('register:select', sender, book, player)
 }
 
-export function register_nuke(sender: string) {
-  hub.emit('register:nuke', sender)
+export function register_nuke(sender: string, player: string) {
+  hub.emit('register:nuke', sender, undefined, player)
 }
 
 export function synth_tts(sender: string, voice: string, phrase: string) {

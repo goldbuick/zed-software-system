@@ -131,12 +131,13 @@ const register = createdevice(
         break
       }
       case 'started': {
-        modemwriteplayer(sessionid)
-        // signal init
-        setTimeout(() => {
+        doasync('register:started', async () => {
+          modemwriteplayer(sessionid)
+          // signal init
+          await waitfor(256)
           write('register', `sessionid ${sessionid}`)
           platform_init('register', sessionid)
-        }, 256)
+        })
         break
       }
       case 'error:login:main':
@@ -175,11 +176,15 @@ const register = createdevice(
         }
         break
       case 'acklogin':
-        if (message.player === sessionid) {
-          const { player } = message
-          tape_terminal_close(register.name(), sessionid)
-          setTimeout(() => gadgetserver_desync(register.name(), player), 1000)
-        }
+        doasync('register:acklogin', async () => {
+          if (message.player === sessionid) {
+            const { player } = message
+            await waitfor(128)
+            gadgetserver_desync(register.name(), player)
+            await waitfor(512)
+            tape_terminal_close(register.name(), sessionid)
+          }
+        })
         break
       case 'dev':
         if (message.player === sessionid) {
@@ -246,7 +251,7 @@ const register = createdevice(
           doasync('register:select', async () => {
             if (isstring(message.data)) {
               await writeselectedid(message.data)
-              register_refresh(register.name())
+              register_refresh(register.name(), sessionid)
             }
           })
         }
@@ -262,4 +267,4 @@ const register = createdevice(
   },
 )
 
-setTimeout(register_ready, 100)
+setTimeout(() => register_ready(register.name(), sessionid), 100)

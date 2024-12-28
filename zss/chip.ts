@@ -449,7 +449,7 @@ export function createchip(
 
       return result ? 1 : 0
     },
-    foreachstart(index, ...words) {
+    foreachstart(_, ...words) {
       const [name, maybemin, maybemax, maybestep] = readargs(words, 0, [
         ARG_TYPE.STRING,
         ARG_TYPE.NUMBER,
@@ -472,7 +472,7 @@ export function createchip(
       chip.set(name, min - step)
       return 0
     },
-    foreach(index, ...words) {
+    foreach(_, ...words) {
       const [name, maybemin, maybemax, maybestep, ii] = readargs(words, 0, [
         ARG_TYPE.STRING,
         ARG_TYPE.NUMBER,

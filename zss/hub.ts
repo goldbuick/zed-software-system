@@ -17,9 +17,6 @@ const devices = new Set<DEVICE>()
 
 export const hub: HUB = {
   emit(target, sender, data, player) {
-    // if (target !== 'tick' && target !== 'tock') {
-    //   console.info(player, '-', sender, target, data)
-    // }
     hub.invoke(createmessage(target, sender, data, player))
   },
   invoke(message) {

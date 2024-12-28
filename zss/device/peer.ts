@@ -5,7 +5,13 @@ import { ispresent, MAYBE } from 'zss/mapping/types'
 import { shorturl } from 'zss/mapping/url'
 import { write, writecopyit } from 'zss/words/writeui'
 
-import { api_error, peer_create, peer_joincode, vm_login } from './api'
+import {
+  api_error,
+  peer_create,
+  peer_joincode,
+  register_ackbooks,
+  vm_login,
+} from './api'
 import { createforward } from './forward'
 import { registerreadplayer } from './register'
 
@@ -61,7 +67,7 @@ function createjoin(player: string, joincode: string) {
       const remote = node.connect(joincode, { reliable: true })
       handledataconnection(remote, () => {
         write(peer.name(), 'connected')
-        vm_login(peer.name(), player)
+        register_ackbooks(peer.name(), player)
       })
     }
   })

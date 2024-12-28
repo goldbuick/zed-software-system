@@ -118,7 +118,7 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
           // save state
           await savestate()
           // reload page
-          register_refresh('vm')
+          register_refresh('vm', message.player)
         })
       }
       break
