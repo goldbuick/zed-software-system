@@ -1,10 +1,11 @@
 import { addEffect, addAfterEffect, useThree, extend } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
 import { getGPUTier, TierResult } from 'detect-gpu'
+import { deviceType, primaryInput } from 'detect-it'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Stats from 'stats.js'
 import { NearestFilter, OrthographicCamera } from 'three'
-import { FORCE_CRT_OFF, STATS_DEV } from 'zss/config'
+import { FORCE_CRT_OFF, RUNTIME, STATS_DEV } from 'zss/config'
 import { api_error } from 'zss/device/api'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import decoimageurl from 'zss/gadget/fx/scratches.gif'
@@ -20,7 +21,7 @@ import 'zss/userspace'
 extend({ OrthographicCamera })
 
 export function Terminal() {
-  const viewport = useThree((state) => state.viewport)
+  const { viewport, set, size, camera } = useThree()
   const cameraRef = useRef<OrthographicCamera>(null)
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
 
@@ -56,22 +57,28 @@ export function Terminal() {
       .catch((err) => api_error('gpu', 'detect', err))
   }, [])
 
-  const shouldcrt =
-    !FORCE_CRT_OFF && gputier && gputier.tier > 2 && !gputier.isMobile
-
-  const set = useThree(({ set }) => set)
-  const size = useThree(({ size }) => size)
-  const camera = useThree(({ camera }) => camera)
-
-  useLayoutEffect(() => {
-    cameraRef.current?.updateProjectionMatrix()
-  })
-
   useLayoutEffect(() => {
     const oldCam = camera
+    camera.updateProjectionMatrix()
     set(() => ({ camera: cameraRef.current! }))
     return () => set(() => ({ camera: oldCam }))
   }, [set, camera, cameraRef])
+
+  // config DRAW_CHAR_SCALE
+  const minrez = Math.min(viewwidth, viewheight)
+  const islowrez = minrez < 512
+  RUNTIME.DRAW_CHAR_SCALE = islowrez ? 1 : 2
+
+  const islandscape = viewwidth > viewheight
+
+  const shouldcrt =
+    !FORCE_CRT_OFF &&
+    !islowrez &&
+    gputier &&
+    gputier.tier > 2 &&
+    !gputier.isMobile
+
+  console.info({ shouldcrt, minrez, islowrez, islandscape })
 
   return (
     <>
@@ -87,7 +94,7 @@ export function Terminal() {
       />
       <group scale-x={-1} rotation-z={Math.PI}>
         <group position={[viewwidth * -0.5, viewheight * -0.5, 0]}>
-          <UserFocus>
+          <UserFocus key={islowrez ? 'lowrez' : 'rez'}>
             <Layout />
             <Tape />
           </UserFocus>

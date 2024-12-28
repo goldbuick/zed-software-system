@@ -18,7 +18,7 @@ import { UserFocus, UserHotkey } from './userinput'
 import { TilesData, TilesRender } from './usetiles'
 
 export function Tape() {
-  const viewport = useThree((state) => state.viewport)
+  const { viewport } = useThree()
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
   const ditherwidth = Math.floor(viewWidth / RUNTIME.DRAW_CHAR_WIDTH())

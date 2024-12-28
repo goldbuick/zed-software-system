@@ -68,7 +68,7 @@ function LayoutRect({ rect, shouldclose = false }: LayoutRectProps) {
 }
 
 export function Layout() {
-  const viewport = useThree((state) => state.viewport)
+  const { viewport } = useThree()
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
   const width = Math.floor(viewWidth / RUNTIME.DRAW_CHAR_WIDTH())
