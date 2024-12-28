@@ -2,12 +2,8 @@ import { COLOR, WORD } from 'zss/words/types'
 
 export const BYTES_PER_COLOR = 3
 
-const CHAR_SCALE = 2
-
 export const CHAR_WIDTH = 8
 export const CHAR_HEIGHT = 14
-export const DRAW_CHAR_WIDTH = CHAR_WIDTH * CHAR_SCALE
-export const DRAW_CHAR_HEIGHT = CHAR_HEIGHT * CHAR_SCALE
 export const BYTES_PER_CHAR = CHAR_WIDTH * CHAR_HEIGHT
 export const CHARS_PER_ROW = 16
 

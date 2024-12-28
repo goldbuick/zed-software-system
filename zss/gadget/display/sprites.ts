@@ -3,7 +3,6 @@ import { TICK_FPS } from 'zss/mapping/tick'
 import { COLOR } from 'zss/words/types'
 
 import { convertPaletteToColors } from '../data/palette'
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
 import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { cloneMaterial, interval, time } from './anim'
@@ -25,7 +24,7 @@ const spritesMaterial = new ShaderMaterial({
     alt: new Uniform(charset),
     palette: new Uniform(palette),
     pointSize: {
-      value: new Vector2(DRAW_CHAR_WIDTH, DRAW_CHAR_HEIGHT),
+      value: new Vector2(1, 1),
     },
     rows: new Uniform(1),
     step: new Uniform(new Vector2()),

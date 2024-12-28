@@ -1,5 +1,6 @@
 import ErrorStackParser from 'error-stack-parser'
 
+import { RUNTIME } from './config'
 import { api_error } from './device/api'
 import {
   DRIVER_TYPE,
@@ -22,8 +23,6 @@ import {
 import { memoryclearflags, memoryreadflags } from './memory'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
 import { WORD, WORD_RESULT } from './words/types'
-
-export const CONFIG = { HALT_AT_COUNT: 256 }
 
 export type MESSAGE = {
   id: string
@@ -250,7 +249,7 @@ export function createchip(
     },
     shouldhalt() {
       if (isnumber(flags.lc)) {
-        return ++flags.lc > CONFIG.HALT_AT_COUNT
+        return ++flags.lc > RUNTIME.HALT_AT_COUNT
       }
       return true
     },

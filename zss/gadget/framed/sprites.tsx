@@ -4,6 +4,7 @@ import {
   BufferGeometry,
   InterleavedBufferAttribute,
 } from 'three'
+import { RUNTIME } from 'zss/config'
 import {
   CHARS_PER_ROW,
   CHAR_HEIGHT,
@@ -222,7 +223,8 @@ export function Sprites({ sprites }: SpritesProps) {
     }
     const imageCols = Math.round(imageWidth / CHAR_WIDTH)
     const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
-
+    material.uniforms.pointSize.value.x = RUNTIME.DRAW_CHAR_WIDTH()
+    material.uniforms.pointSize.value.y = RUNTIME.DRAW_CHAR_HEIGHT()
     material.uniforms.rows.value = imageRows - 1
     material.uniforms.step.value.x = 1 / imageCols
     material.uniforms.step.value.y = 1 / imageRows

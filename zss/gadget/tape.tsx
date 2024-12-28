@@ -1,8 +1,8 @@
 import { useThree } from '@react-three/fiber'
+import { RUNTIME } from 'zss/config'
 import { tape_terminal_open } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
@@ -12,7 +12,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { ShadeBoxDither } from './framed/dither'
 import { useTiles } from './hooks'
 import { BackPlate } from './tape/backplate'
-import { BG, CHAR_HEIGHT, CHAR_WIDTH, FG, SCALE } from './tape/common'
+import { BG, FG } from './tape/common'
 import { TapeLayout } from './tape/layout'
 import { UserFocus, UserHotkey } from './userinput'
 import { TilesData, TilesRender } from './usetiles'
@@ -21,8 +21,13 @@ export function Tape() {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
-  const ditherwidth = Math.floor(viewWidth / DRAW_CHAR_WIDTH)
-  const ditherheight = Math.floor(viewHeight / DRAW_CHAR_HEIGHT)
+  const ditherwidth = Math.floor(viewWidth / RUNTIME.DRAW_CHAR_WIDTH())
+  const ditherheight = Math.floor(viewHeight / RUNTIME.DRAW_CHAR_HEIGHT())
+
+  // sizing
+  const SCALE = 1
+  const CHAR_WIDTH = RUNTIME.DRAW_CHAR_WIDTH() * SCALE
+  const CHAR_HEIGHT = RUNTIME.DRAW_CHAR_HEIGHT() * SCALE
 
   const cols = Math.floor(viewWidth / CHAR_WIDTH)
   const rows = Math.floor(viewHeight / CHAR_HEIGHT)

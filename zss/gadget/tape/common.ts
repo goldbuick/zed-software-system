@@ -1,7 +1,6 @@
 import { SyncedText } from '@syncedstore/core'
 import { createContext } from 'react'
 import { MODEM_SHARED_VALUE } from 'zss/device/modem'
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { WRITE_TEXT_CONTEXT, textformatreadedges } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
@@ -16,11 +15,6 @@ export const FG_SELECTED = COLOR.WHITE
 export const BG = COLOR.DKBLUE
 export const BG_SELECTED = COLOR.DKGRAY
 export const BG_ACTIVE = COLOR.BLACK
-
-// sizing
-export const SCALE = 1
-export const CHAR_WIDTH = DRAW_CHAR_WIDTH * SCALE
-export const CHAR_HEIGHT = DRAW_CHAR_HEIGHT * SCALE
 
 export type ConsoleItemProps = {
   blink?: boolean

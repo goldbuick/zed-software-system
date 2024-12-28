@@ -1,12 +1,11 @@
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { Group, Vector2 } from 'three'
+import { RUNTIME } from 'zss/config'
 import { vm_input } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import {
-  DRAW_CHAR_HEIGHT,
-  DRAW_CHAR_WIDTH,
   INPUT,
   INPUT_ALT,
   INPUT_CTRL,
@@ -45,8 +44,8 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
 }
 
 export function Framed({ width, height }: FramedProps) {
-  const viewwidth = width * DRAW_CHAR_WIDTH
-  const viewheight = height * DRAW_CHAR_HEIGHT
+  const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
+  const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
   const ref = useRef<Group>(null)
 
@@ -59,18 +58,22 @@ export function Framed({ width, height }: FramedProps) {
     // camera focus logic
     const control = layersreadcontrol(useGadgetClient.getState().gadget.layers)
 
-    const drawwidth = control.width * DRAW_CHAR_WIDTH * control.viewscale
+    const drawwidth =
+      control.width * RUNTIME.DRAW_CHAR_WIDTH() * control.viewscale
     const marginx = drawwidth - viewwidth
 
-    const drawheight = control.height * DRAW_CHAR_HEIGHT * control.viewscale
+    const drawheight =
+      control.height * RUNTIME.DRAW_CHAR_HEIGHT() * control.viewscale
     const marginy = drawheight - viewheight
 
     const zone = Math.round(Math.min(viewwidth, viewheight) * 0.3333)
 
-    const offsetx = -control.focusx * DRAW_CHAR_WIDTH * control.viewscale
+    const offsetx =
+      -control.focusx * RUNTIME.DRAW_CHAR_WIDTH() * control.viewscale
     const centerx = viewwidth * 0.5 + offsetx
 
-    const offsety = -control.focusy * DRAW_CHAR_HEIGHT * control.viewscale
+    const offsety =
+      -control.focusy * RUNTIME.DRAW_CHAR_HEIGHT() * control.viewscale
     const centery = viewheight * 0.5 + offsety
 
     const left = drawwidth < viewwidth ? marginx * -0.5 : centerx

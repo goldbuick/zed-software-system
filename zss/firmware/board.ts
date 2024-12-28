@@ -116,6 +116,8 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 
     // ensure correct collection type
     bullet.collision = COLLISION.ISBULLET
+    // ensure destructible
+    bullet.destructible = 1
     // set walking direction
     bullet.stepx = dir.x - READ_CONTEXT.element.x
     bullet.stepy = dir.y - READ_CONTEXT.element.y

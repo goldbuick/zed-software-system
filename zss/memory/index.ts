@@ -1,5 +1,6 @@
 import { objectKeys } from 'ts-extras'
-import { CONFIG, createchipid, MESSAGE } from 'zss/chip'
+import { createchipid, MESSAGE } from 'zss/chip'
+import { RUNTIME } from 'zss/config'
 import { api_error, tape_debug, tape_info, vm_flush } from 'zss/device/api'
 import {
   mimetypeofbytesread,
@@ -460,8 +461,8 @@ export function memorytick() {
   const timestamp = mainbook.timestamp + 1
 
   // loaders get more processing time
-  const resethalt = CONFIG.HALT_AT_COUNT
-  CONFIG.HALT_AT_COUNT = resethalt * 2
+  const resethalt = RUNTIME.HALT_AT_COUNT
+  RUNTIME.HALT_AT_COUNT = resethalt * 2
 
   // update loaders
   MEMORY.loaders.forEach((code, id) => {
@@ -474,7 +475,7 @@ export function memorytick() {
   })
 
   // reset
-  CONFIG.HALT_AT_COUNT = resethalt
+  RUNTIME.HALT_AT_COUNT = resethalt
 
   // track tick
   mainbook.timestamp = timestamp

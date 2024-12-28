@@ -13,6 +13,7 @@ import {
   bookboardobjectsafedelete,
   bookboardsetlookup,
   bookboardobjectnamedlookupdelete,
+  bookelementstatread,
 } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
@@ -149,6 +150,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return [true, value]
   },
   everytick(chip) {
+    // headless only gets a single tick to do its magic
+    if (READ_CONTEXT.element?.headless) {
+      chip.command('die')
+    }
     // handle walk movement
     if (
       ispresent(READ_CONTEXT.element?.x) &&
@@ -168,10 +173,23 @@ export const ELEMENT_FIRMWARE = createfirmware({
     ) {
       READ_CONTEXT.element.stepx = 0
       READ_CONTEXT.element.stepy = 0
-    }
-    // headless only gets a single tick to do its magic
-    if (READ_CONTEXT.element?.headless) {
-      chip.command('die')
+      // walking destructibles get bonked
+      if (
+        bookelementstatread(
+          READ_CONTEXT.book,
+          READ_CONTEXT.element,
+          'destructible',
+        )
+      ) {
+        // drop visually
+        READ_CONTEXT.element.headless = true
+        // mark target for deletion
+        bookboardobjectsafedelete(
+          READ_CONTEXT.book,
+          READ_CONTEXT.element,
+          READ_CONTEXT.timestamp,
+        )
+      }
     }
   },
 })

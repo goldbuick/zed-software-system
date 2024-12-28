@@ -24,6 +24,7 @@ import { FORMAT_OBJECT, formatobject, unformatobject } from './format'
 import {
   BOARD,
   BOARD_ELEMENT,
+  BOARD_ELEMENT_STAT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
@@ -175,6 +176,15 @@ export function bookelementkindread(
     return element.kinddata
   }
   return undefined
+}
+
+export function bookelementstatread(
+  book: MAYBE<BOOK>,
+  element: MAYBE<BOARD_ELEMENT>,
+  stat: BOARD_ELEMENT_STAT,
+) {
+  const kind = bookelementkindread(book, element)
+  return element?.[stat] ?? kind?.[stat]
 }
 
 export function bookelementdisplayread(
