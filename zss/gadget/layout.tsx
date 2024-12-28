@@ -1,15 +1,11 @@
 import { useThree } from '@react-three/fiber'
 import { deepClone, _areEquals } from 'fast-json-patch'
 import React, { useState } from 'react'
+import { RUNTIME } from 'zss/config'
 import { gadgetserver_clearscroll } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { useEqual, useGadgetClient } from 'zss/gadget/data/state'
-import {
-  DRAW_CHAR_HEIGHT,
-  DRAW_CHAR_WIDTH,
-  PANEL_TYPE,
-  PANEL_ITEM,
-} from 'zss/gadget/data/types'
+import { PANEL_TYPE, PANEL_ITEM } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
 
@@ -75,10 +71,10 @@ export function Layout() {
   const viewport = useThree((state) => state.viewport)
   const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
 
-  const width = Math.floor(viewWidth / DRAW_CHAR_WIDTH)
-  const height = Math.floor(viewHeight / DRAW_CHAR_HEIGHT)
-  const marginX = viewWidth - width * DRAW_CHAR_WIDTH
-  const marginY = viewHeight - height * DRAW_CHAR_HEIGHT
+  const width = Math.floor(viewWidth / RUNTIME.DRAW_CHAR_WIDTH())
+  const height = Math.floor(viewHeight / RUNTIME.DRAW_CHAR_HEIGHT())
+  const marginX = viewWidth - width * RUNTIME.DRAW_CHAR_WIDTH()
+  const marginY = viewHeight - height * RUNTIME.DRAW_CHAR_HEIGHT()
 
   // cache scroll
   const [scroll, setScroll] = useState<RECT>()
@@ -215,8 +211,8 @@ export function Layout() {
               key={rect.name}
               // eslint-disable-next-line react/no-unknown-property
               position={[
-                rect.x * DRAW_CHAR_WIDTH,
-                rect.y * DRAW_CHAR_HEIGHT,
+                rect.x * RUNTIME.DRAW_CHAR_WIDTH(),
+                rect.y * RUNTIME.DRAW_CHAR_HEIGHT(),
                 0,
               ]}
             >
@@ -235,8 +231,8 @@ export function Layout() {
             <group
               // eslint-disable-next-line react/no-unknown-property
               position={[
-                scroll.x * DRAW_CHAR_WIDTH,
-                scroll.y * DRAW_CHAR_HEIGHT,
+                scroll.x * RUNTIME.DRAW_CHAR_WIDTH(),
+                scroll.y * RUNTIME.DRAW_CHAR_HEIGHT(),
                 900,
               ]}
             >

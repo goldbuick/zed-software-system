@@ -8,11 +8,12 @@ import {
   UnsignedByteType,
   Vector2,
 } from 'three'
+import { RUNTIME } from 'zss/config'
 import { MAYBE } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
 import { convertPaletteToColors } from '../data/palette'
-import { CHARS_PER_ROW, DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from '../data/types'
+import { CHARS_PER_ROW } from '../data/types'
 import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { cloneMaterial, interval, time } from './anim'
@@ -84,8 +85,8 @@ export function createTilemapBufferGeometry(
   width: number,
   height: number,
 ) {
-  const right = width * DRAW_CHAR_WIDTH
-  const bottom = height * DRAW_CHAR_HEIGHT
+  const right = width * RUNTIME.DRAW_CHAR_WIDTH()
+  const bottom = height * RUNTIME.DRAW_CHAR_HEIGHT()
   const positions = QUAD_POSITIONS.map((v, index) => {
     switch (index % 3) {
       case 0:

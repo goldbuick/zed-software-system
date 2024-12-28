@@ -1,6 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Group } from 'three'
+import { RUNTIME } from 'zss/config'
 import { animpositiontotarget } from 'zss/mapping/anim'
 import { ispresent } from 'zss/mapping/types'
 import {
@@ -11,7 +12,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH, PANEL_ITEM } from './data/types'
+import { PANEL_ITEM } from './data/types'
 import {
   resetDither,
   useDither,
@@ -153,7 +154,9 @@ export function Scroll({
     useCallback(
       (_, delta) => {
         if (ispresent(groupref.current)) {
-          const target = shouldclose ? height * 2 * -DRAW_CHAR_HEIGHT : 0
+          const target = shouldclose
+            ? height * 2 * -RUNTIME.DRAW_CHAR_HEIGHT()
+            : 0
           if (animpositiontotarget(groupref.current, 'y', target, delta)) {
             // signal completion
             didstop()
@@ -193,7 +196,11 @@ export function Scroll({
             <TilesRender width={width} height={height} />
             <group
               // eslint-disable-next-line react/no-unknown-property
-              position={[2 * DRAW_CHAR_WIDTH, 2 * DRAW_CHAR_HEIGHT, 0]}
+              position={[
+                2 * RUNTIME.DRAW_CHAR_WIDTH(),
+                2 * RUNTIME.DRAW_CHAR_HEIGHT(),
+                0,
+              ]}
             >
               <DitherRender width={panelwidth} height={panelheight} />
               <Panel

@@ -3806,6 +3806,11 @@ keyv@^4.5.3:
   dependencies:
     json-buffer "3.0.1"
 
+kioskboard@^2.3.0:
+  version "2.3.0"
+  resolved "https://registry.npmjs.org/kioskboard/-/kioskboard-2.3.0.tgz#cf2a34d636b353ee58d1c4f331edaaf2d8ce5278"
+  integrity sha512-dR5ZcNXpV22rDz+OELYxi3LsBc49j82witHZQWfMmsT6DIMZSqIXEoJo2uCTR3mDBzW75puwyHrnqNWrvUO+Qg==
+
 kleur@^3.0.3:
   version "3.0.3"
   resolved "https://registry.npmjs.org/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"

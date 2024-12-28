@@ -1,6 +1,6 @@
 import React from 'react'
 import { Mesh } from 'three'
-import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
+import { RUNTIME } from 'zss/config'
 
 import { useClipping } from './clipping'
 
@@ -56,15 +56,18 @@ export const Rect = React.forwardRef<typeof PlaneComponent, Props>(
     const hw = width * 0.5
     const hh = height * 0.5
     const position: [number, number, number] = [
-      (x + hw) * DRAW_CHAR_WIDTH,
-      (y + hh) * DRAW_CHAR_HEIGHT,
+      (x + hw) * RUNTIME.DRAW_CHAR_WIDTH(),
+      (y + hh) * RUNTIME.DRAW_CHAR_HEIGHT(),
       0,
     ]
     const clippingPlanes = useClipping()
     return (
       <PlaneComponent
         ref={forwardedRef}
-        args={[width * DRAW_CHAR_WIDTH, height * DRAW_CHAR_HEIGHT]}
+        args={[
+          width * RUNTIME.DRAW_CHAR_WIDTH(),
+          height * RUNTIME.DRAW_CHAR_HEIGHT(),
+        ]}
         userData={{ blocking, cursor, clippingPlanes }}
         onClick={blocking ? noop : undefined}
         onPointerMove={blocking ? noop : undefined}
