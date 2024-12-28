@@ -1,8 +1,7 @@
 import { createRoot, events, Canvas } from '@react-three/fiber'
 import debounce from 'debounce'
 import { Intersection, Plane, Vector3 } from 'three'
-import { makeeven } from 'zss/mapping/number'
-import { ispresent } from 'zss/mapping/types'
+import { deepcopy, ispresent } from 'zss/mapping/types'
 
 import { App } from './app'
 
@@ -60,47 +59,44 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   },
 })
 
+const config = {
+  dpr: 1,
+  flat: true,
+  linear: true,
+  shadows: false,
+  gl: {
+    alpha: false,
+    stencil: false,
+    antialias: false,
+    preserveDrawingBuffer: true,
+  },
+}
+
 // Create a react root
 const engine = document.querySelector('canvas')
 if (ispresent(engine)) {
   const root = createRoot(engine)
 
-  const config = {
-    dpr: 1,
-    flat: true,
-    linear: true,
-    shadows: false,
-    gl: {
-      alpha: false,
-      stencil: false,
-      antialias: false,
-      preserveDrawingBuffer: true,
-    },
-  }
-
   // Configure the root, inject events optionally, set camera, etc
-  root.configure({
-    ...config,
-    events: eventManagerFactory,
-    onCreated({ gl }) {
-      gl.localClippingEnabled = true
-    },
-  })
-
-  const handleresize = debounce((width: number, height: number) => {
+  const applyconfig = (width: number, height: number) => {
     root.configure({
-      ...config,
+      ...deepcopy(config),
       events: eventManagerFactory,
       size: { width, height, top: 0, left: 0 },
       onCreated({ gl }) {
         gl.localClippingEnabled = true
       },
     })
-  }, 256)
+  }
+
+  const handleresize = debounce(applyconfig, 256)
 
   window.addEventListener('resize', () => {
-    handleresize(makeeven(window.innerWidth), makeeven(window.innerHeight))
+    handleresize(window.innerWidth, window.innerHeight)
   })
+
+  // init
+  applyconfig(window.innerWidth, window.innerHeight)
 
   // Render entry point
   root.render(<App />)
