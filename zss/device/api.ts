@@ -44,12 +44,49 @@ export function gadgetserver_clearplayer(sender: string, player: string) {
   hub.emit('gadgetserver:clearplayer', sender, undefined, player)
 }
 
+export function peer_create(sender: string, joinid: string, player: string) {
+  hub.emit('peer:create', sender, joinid, player)
+}
+
+export function peer_joincode(sender: string, player: string) {
+  hub.emit('peer:joincode', sender, undefined, player)
+}
+
+export function peer_open(sender: string, player: string) {
+  hub.emit('peer:open', sender, undefined, player)
+}
+
+export function peer_close(sender: string, player: string) {
+  hub.emit('peer:close', sender, undefined, player)
+}
+
+export function peer_disconnected(sender: string, player: string) {
+  hub.emit('peer:disconnected', sender, undefined, player)
+}
+
+export function platform_started(sender: string, player: string) {
+  hub.emit('started', sender, undefined, player)
+}
+
+export function platform_init(sender: string, player: string) {
+  hub.emit('init', sender, undefined, player)
+}
+
+export function register_ready(sender: string, player: string) {
+  hub.emit('register:ready', sender, undefined, player)
+}
+
+export function register_ackbooks(sender: string, player: string) {
+  hub.emit('register:ackbooks', sender, true, player)
+}
+
 export function register_flush(
   sender: string,
   historylabel: string,
   books: string,
+  player: string,
 ) {
-  hub.emit('register:flush', sender, [historylabel, books])
+  hub.emit('register:flush', sender, [historylabel, books], player)
 }
 
 export function register_dev(sender: string, player: string) {
@@ -60,16 +97,16 @@ export function register_share(sender: string, player: string) {
   hub.emit('register:share', sender, undefined, player)
 }
 
-export function register_refresh(sender: string) {
-  hub.emit('register:refresh', sender)
+export function register_refresh(sender: string, player: string) {
+  hub.emit('register:refresh', sender, undefined, player)
 }
 
-export function register_select(sender: string, book: string) {
-  hub.emit('register:select', sender, book)
+export function register_select(sender: string, book: string, player: string) {
+  hub.emit('register:select', sender, book, player)
 }
 
-export function register_nuke(sender: string) {
-  hub.emit('register:nuke', sender)
+export function register_nuke(sender: string, player: string) {
+  hub.emit('register:nuke', sender, undefined, player)
 }
 
 export function synth_tts(sender: string, voice: string, phrase: string) {
@@ -115,20 +152,24 @@ function tape_error(sender: string, ...message: any[]) {
   return false
 }
 
-export function tape_terminal_open(sender: string) {
-  hub.emit('tape:terminal:open', sender)
+export function tape_terminal_open(sender: string, player: string) {
+  hub.emit('tape:terminal:open', sender, undefined, player)
 }
 
-export function tape_terminal_close(sender: string) {
-  hub.emit('tape:terminal:close', sender)
+export function tape_terminal_close(sender: string, player: string) {
+  hub.emit('tape:terminal:close', sender, undefined, player)
 }
 
-export function tape_terminal_inclayout(sender: string, inc: boolean) {
-  hub.emit('tape:terminal:inclayout', sender, inc)
+export function tape_terminal_inclayout(
+  sender: string,
+  inc: boolean,
+  player: string,
+) {
+  hub.emit('tape:terminal:inclayout', sender, inc, player)
 }
 
-export function tape_crash(sender: string) {
-  hub.emit('tape:crash', sender)
+export function tape_crash(sender: string, player: string) {
+  hub.emit('tape:crash', sender, undefined, player)
 }
 
 export function tape_editor_open(
@@ -142,12 +183,8 @@ export function tape_editor_open(
   hub.emit('tape:editor:open', sender, [book, page, type, title], player)
 }
 
-export function tape_editor_close(sender: string) {
-  hub.emit('tape:editor:close', sender)
-}
-
-export function vm_init(sender: string, player: string) {
-  hub.emit('vm:init', sender, undefined, player)
+export function tape_editor_close(sender: string, player: string) {
+  hub.emit('tape:editor:close', sender, undefined, player)
 }
 
 export function vm_books(
@@ -206,8 +243,8 @@ export function vm_cli(sender: string, input: string, player: string) {
   hub.emit('vm:cli', sender, input, player)
 }
 
-export function vm_flush(sender: string, tag = '') {
-  hub.emit('vm:flush', sender, tag)
+export function vm_flush(sender: string, tag: string, player: string) {
+  hub.emit('vm:flush', sender, tag, player)
 }
 
 export function vm_loadfile(sender: string, file: File, player: string) {

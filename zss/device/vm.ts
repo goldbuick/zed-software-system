@@ -2,6 +2,7 @@ import { createdevice } from 'zss/device'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { isjoin } from 'zss/mapping/url'
 import {
   memorycli,
   memoryplayerlogin,
@@ -23,10 +24,11 @@ import {
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
-import { writeoption } from 'zss/words/writeui'
+import { write } from 'zss/words/writeui'
 
 import {
   gadgetserver_clearplayer,
+  platform_started,
   register_flush,
   register_refresh,
   tape_debug,
@@ -34,7 +36,7 @@ import {
   vm_codeaddress,
   vm_flush,
 } from './api'
-import { modemobservevaluestring } from './modem'
+import { modemobservevaluestring, modemwriteplayer } from './modem'
 
 // tracking active player ids
 const SECOND_TIMEOUT = 16
@@ -58,33 +60,37 @@ async function savestate(tag = ``) {
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
     const historylabel = `${tag}${new Date().toISOString()}${mainbook.name} ${content.length} chars`
-    register_flush(vm.name(), historylabel, content)
+    register_flush(vm.name(), historylabel, content, memorygetdefaultplayer())
   }
 }
 
-const vm = createdevice('vm', ['tick', 'second'], (message) => {
-  // console.info(message)
+let init = false
+const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
   switch (message.target) {
     case 'init':
-      if (ispresent(message.player)) {
+      if (ispresent(message.player) && !init) {
+        init = true
+        modemwriteplayer(message.player)
         memorysetdefaultplayer(message.player)
         // ack
         vm.reply(message, 'ackinit', true, message.player)
       }
       break
     case 'books':
-      doasync('vm:books', async () => {
-        if (isarray(message.data)) {
-          const [maybebooks, maybeselect] = message.data as [string, string]
-          // unpack books
-          const books = await decompressbooks(maybebooks)
-          const booknames = books.map((item) => item.name)
-          memoryresetbooks(books, maybeselect)
-          writeoption(vm.name(), 'loading', booknames.join(', '))
-          // ack
-          vm.reply(message, 'ackbooks', true, message.player)
-        }
-      })
+      if (message.player === memorygetdefaultplayer()) {
+        doasync('vm:books', async () => {
+          if (isarray(message.data)) {
+            const [maybebooks, maybeselect] = message.data as [string, string]
+            // unpack books
+            const books = await decompressbooks(maybebooks)
+            const booknames = books.map((item) => item.name)
+            memoryresetbooks(books, maybeselect)
+            write(vm.name(), `loading ${booknames.join(', ')}`)
+            // ack
+            vm.reply(message, 'ackbooks', true, message.player)
+          }
+        })
+      }
       break
     case 'login':
       if (message.player) {
@@ -93,26 +99,28 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
         if (memoryplayerlogin(message.player)) {
           // start tracking
           tracking[message.player] = 0
-          writeoption(vm.name(), 'player login', message.player)
+          write(vm.name(), `login from ${message.player}`)
           // ack
           vm.reply(message, 'acklogin', true, message.player)
         }
       }
       break
     case 'endgame':
-      doasync('vm:endgame', async () => {
-        if (!message.player) {
-          return
-        }
-        // logout player
-        memoryplayerlogout(message.player)
-        // clear ui
-        gadgetserver_clearplayer('vm', message.player)
-        // save state
-        await savestate()
-        // reload page
-        register_refresh('vm')
-      })
+      if (message.player === memorygetdefaultplayer()) {
+        doasync('vm:endgame', async () => {
+          if (!message.player) {
+            return
+          }
+          // logout player
+          memoryplayerlogout(message.player)
+          // clear ui
+          gadgetserver_clearplayer('vm', message.player)
+          // save state
+          await savestate()
+          // reload page
+          register_refresh('vm', message.player)
+        })
+      }
       break
     case 'doot':
       if (message.player) {
@@ -206,30 +214,32 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
       }
 
       // autosave to url
-      if (++flushtick >= FLUSH_RATE) {
+      if (isjoin() === false && ++flushtick >= FLUSH_RATE) {
         flushtick = 0
-        vm_flush(vm.name())
+        vm_flush(vm.name(), '', memorygetdefaultplayer())
       }
       break
     }
     case 'flush':
-      doasync('vm:flush', async () => {
-        if (isstring(message.data)) {
-          await savestate(`${message.data} `)
-        } else {
-          await savestate()
-        }
-      })
+      if (message.player === memorygetdefaultplayer()) {
+        doasync('vm:flush', async () => {
+          if (isstring(message.data)) {
+            await savestate(`${message.data} `)
+          } else {
+            await savestate()
+          }
+        })
+      }
       break
     case 'cli':
       // user input from built-in console
-      if (ispresent(message.player)) {
+      if (message.player === memorygetdefaultplayer()) {
         memorycli(message.player, message.data)
       }
       break
     case 'loadfile':
       // user input from built-in console
-      if (ispresent(message.player)) {
+      if (message.player === memorygetdefaultplayer()) {
         memoryloadfile(message.player, message.data)
       }
       break
@@ -240,7 +250,7 @@ const vm = createdevice('vm', ['tick', 'second'], (message) => {
   }
 })
 
-export function ready() {
+export function started() {
   // signal ready state
-  vm.emit('ready', undefined, memorygetdefaultplayer())
+  platform_started(vm.name(), memorygetdefaultplayer())
 }

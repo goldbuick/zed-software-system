@@ -1978,11 +1978,6 @@ commander@^11.0.0:
   resolved "https://registry.npmjs.org/commander/-/commander-11.1.0.tgz#62fdce76006a68e5c1ab3314dc92e800eb83d906"
   integrity sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==
 
-compress-json@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.npmjs.org/compress-json/-/compress-json-3.1.0.tgz#337e0a5b28b180fb849bcb6913bf361a5b3c0d57"
-  integrity sha512-Zcq4jRC5ZpfaOY3mbBWOANtGuMHJ/hsTENcwN1/lEkrogcoAF7HBma1RLe/CICZO6IquK1U0EaPzmnlDIFRNjA==
-
 concat-map@0.0.1:
   version "0.0.1"
   resolved "https://registry.npmjs.org/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
@@ -3780,10 +3775,12 @@ jszip@^3.10.1:
     readable-stream "~2.3.6"
     setimmediate "^1.0.5"
 
-kademlia-table@^2.0.3:
-  version "2.0.3"
-  resolved "https://registry.npmjs.org/kademlia-table/-/kademlia-table-2.0.3.tgz#e8d5ebc88212f7e8a837e4ea93d07d9ace475abf"
-  integrity sha512-MXYcXG6gVNJcz/6RmQweiJfb4e5CWW99yf/NOM5nKu62H0+3XyEgM+952qXGSNhsjXud2wlp1Q+vG6ceBnvC6Q==
+kademlia-table@^2.0.4:
+  version "2.0.4"
+  resolved "https://registry.npmjs.org/kademlia-table/-/kademlia-table-2.0.4.tgz#f72ad5dfc6dfe8eb7f8f36e750e5347c4a354032"
+  integrity sha512-iZbQLBjaPkF/ncOdMcHrG9DKx4mqLOahRfLwsiZRoND041c6L/ezAnfz2z6bg9yW504KCYcIvdT6jr5DRT3cdA==
+  dependencies:
+    uint8array-tools "^0.0.9"
 
 keyv@^4.5.3:
   version "4.5.4"
@@ -5517,6 +5514,11 @@ typescript@^5.2.2:
   version "5.6.3"
   resolved "https://registry.npmjs.org/typescript/-/typescript-5.6.3.tgz#5f3449e31c9d94febb17de03cc081dd56d81db5b"
   integrity sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==
+
+uint8array-tools@^0.0.9:
+  version "0.0.9"
+  resolved "https://registry.npmjs.org/uint8array-tools/-/uint8array-tools-0.0.9.tgz#e29e6d05f3472273db1b0e370ac1d91e4a0a4e6f"
+  integrity sha512-9vqDWmoSXOoi+K14zNaf6LBV51Q8MayF0/IiQs3GlygIKUYtog603e6virExkjjFosfJUBI4LhbQK1iq8IG11A==
 
 unbox-primitive@^1.0.2:
   version "1.0.2"

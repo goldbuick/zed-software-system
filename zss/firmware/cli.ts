@@ -8,6 +8,7 @@ import {
   register_nuke,
   register_share,
   register_dev,
+  peer_joincode,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
@@ -40,6 +41,10 @@ import {
   writesection,
   writetext,
 } from 'zss/words/writeui'
+
+function vm_flush_player(tag = '') {
+  vm_flush('cli', tag, READ_CONTEXT.player)
+}
 
 export const CLI_FIRMWARE = createfirmware()
   // primary firmware
@@ -238,12 +243,12 @@ export const CLI_FIRMWARE = createfirmware()
   })
   // ---
   .command('dev', () => {
-    vm_flush('cli')
+    vm_flush_player()
     register_dev('cli', READ_CONTEXT.player)
     return 0
   })
   .command('share', () => {
-    vm_flush('cli')
+    vm_flush_player()
     register_share('cli', READ_CONTEXT.player)
     return 0
   })
@@ -287,7 +292,7 @@ export const CLI_FIRMWARE = createfirmware()
       // clear book
       memoryclearbook(address)
       writetext('cli', `trashed [book] ${book.name}`)
-      vm_flush('cli')
+      vm_flush_player()
       // reset to good state
       chip.command('pages')
     }
@@ -343,7 +348,7 @@ export const CLI_FIRMWARE = createfirmware()
       const name = codepagereadname(codepage)
       const pagetype = codepagereadtypetostring(codepage)
       writetext('cli', `trashed [${pagetype}] ${name}`)
-      vm_flush('cli')
+      vm_flush_player()
       chip.command('pages')
     }
 
@@ -427,15 +432,19 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('save', () => {
-    vm_flush('cli')
+    vm_flush_player()
     return 0
   })
   .command('savewith', (_, words) => {
     const [tag] = readargs(words, 0, [ARG_TYPE.STRING])
-    vm_flush('cli', tag)
+    vm_flush_player(tag)
     return 0
   })
   .command('nuke', () => {
-    register_nuke('cli')
+    register_nuke('cli', READ_CONTEXT.player)
+    return 0
+  })
+  .command('joincode', () => {
+    peer_joincode('cli', READ_CONTEXT.player)
     return 0
   })

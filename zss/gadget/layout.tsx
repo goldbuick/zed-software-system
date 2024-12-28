@@ -2,6 +2,7 @@ import { useThree } from '@react-three/fiber'
 import { deepClone, _areEquals } from 'fast-json-patch'
 import React, { useState } from 'react'
 import { gadgetserver_clearscroll } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/register'
 import { useEqual, useGadgetClient } from 'zss/gadget/data/state'
 import {
   DRAW_CHAR_HEIGHT,
@@ -81,9 +82,7 @@ export function Layout() {
 
   // cache scroll
   const [scroll, setScroll] = useState<RECT>()
-  const [player, panels] = useGadgetClient(
-    useEqual((state) => [state.gadget.player, state.gadget.panels]),
-  )
+  const panels = useGadgetClient(useEqual((state) => state.gadget.panels))
 
   // bail on odd states
   if (width < 1 || height < 1) {
@@ -188,6 +187,8 @@ export function Layout() {
   // ending region is main
   // but we start with main
   rects.unshift(frame)
+
+  const player = registerreadplayer()
 
   return (
     <ScrollContext.Provider

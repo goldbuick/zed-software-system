@@ -607,6 +607,16 @@ function validatesynthtype(
         type === 'fatcustom'
       )
     }
+    switch (type) {
+      case 'custom':
+      case 'amcustom':
+      case 'fmcustom':
+      case 'fatcustom':
+        if (!isarray(maybepartials)) {
+          return false
+        }
+        break
+    }
 
     // validate whole values only
     if (type === 'pwm' || type === 'pulse') {
@@ -663,7 +673,7 @@ function playaudiobuffer(audiobuffer: AudioBuffer) {
 async function handletts(voice: string, phrase: string) {
   const audiobuffer = await tts.createAudio({
     input: phrase,
-    options: { voice },
+    options: { voice: voice || 'en-US-GuyNeural' },
   })
   // play the audio
   playaudiobuffer(audiobuffer)
@@ -682,8 +692,7 @@ const synthdevice = createdevice('synth', [], (message) => {
       doasync('tts', async () => {
         if (isarray(message.data)) {
           const [voice, phrase] = message.data as [string, string]
-          const withvoice = voice || 'en-US-GuyNeural'
-          await handletts(withvoice, phrase)
+          await handletts(voice, phrase)
         }
       })
       break

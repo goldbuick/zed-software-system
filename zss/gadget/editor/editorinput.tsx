@@ -216,13 +216,13 @@ export function EditorInput({
             case 'esc':
             case 'escape':
               if (mods.shift || mods.alt || mods.ctrl) {
-                tape_terminal_close('tape')
+                tape_terminal_close('tape', player)
               } else {
-                tape_editor_close('editor')
+                tape_editor_close('editor', player)
               }
               break
             case 'tab':
-              tape_terminal_inclayout('editor', !mods.shift)
+              tape_terminal_inclayout('editor', !mods.shift, player)
               break
             case 'delete':
               if (hasselection) {

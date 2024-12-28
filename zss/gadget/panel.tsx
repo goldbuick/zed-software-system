@@ -3,8 +3,7 @@ import {
   createwritetextcontext,
 } from 'zss/words/textformat'
 
-import { PANEL_ITEM } from '../data/types'
-
+import { PANEL_ITEM } from './data/types'
 import { resetTiles, useTiles, WriteTextContext } from './hooks'
 import { PanelItem } from './panel/panelitem'
 import { TilesData, TilesRender } from './usetiles'

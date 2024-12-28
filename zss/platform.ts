@@ -1,22 +1,18 @@
 import { createforward } from './device/forward'
-import ZSSWorker from './instance??worker'
-// these are all front-end devices
-import './device/gadgetclient'
-import './device/modem'
-import './device/register'
-import './device/tape'
-import './device/clock'
-import './device/synth'
 import { ispresent } from './mapping/types'
+import simspace from './simspace??worker'
+import stubspace from './stubspace??worker'
 
-let instance: Worker
+let platform: Worker
 
-export function createplatform() {
-  if (ispresent(instance)) {
-    return
+export function createplatform(isstub = false) {
+  if (!ispresent(platform)) {
+    // create backend
+    platform = isstub ? new stubspace() : new simspace()
+    // create bridge
+    const { forward } = createforward((message) =>
+      platform.postMessage(message),
+    )
+    platform.addEventListener('message', (event) => forward(event.data))
   }
-
-  instance = new ZSSWorker()
-  const forward = createforward((message) => instance.postMessage(message))
-  instance.addEventListener('message', (event) => forward(event.data))
 }

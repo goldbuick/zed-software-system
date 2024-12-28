@@ -5,11 +5,13 @@ import {
 import { createdevice } from 'zss/device'
 import { useGadgetClient } from 'zss/gadget/data/state'
 
+import { registerreadplayer } from './register'
+
 const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
-  const { desync, gadget } = useGadgetClient.getState()
+  const { desync } = useGadgetClient.getState()
   switch (message.target) {
     case 'reset':
-      if (message.player === gadget.player) {
+      if (message.player === registerreadplayer()) {
         useGadgetClient.setState({
           desync: false,
           gadget: message.data,
@@ -17,7 +19,7 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
       }
       break
     case 'patch':
-      if (message.player === gadget.player && !desync) {
+      if (message.player === registerreadplayer() && !desync) {
         useGadgetClient.setState((gadgetclient) => {
           try {
             const { newDocument } = applypatch(

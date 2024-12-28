@@ -4,7 +4,8 @@ import {
   tape_terminal_inclayout,
   vm_cli,
 } from 'zss/device/api'
-import { useGadgetClientPlayer, useTapeTerminal } from 'zss/gadget/data/state'
+import { registerreadplayer } from 'zss/device/register'
+import { useTapeTerminal } from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
@@ -34,7 +35,7 @@ export function ConsoleInput({
   const blink = useBlink()
   const context = useWriteText()
   const tapeterminal = useTapeTerminal()
-  const player = useGadgetClientPlayer()
+  const player = registerreadplayer()
   const edge = textformatreadedges(context)
 
   // input & selection
@@ -297,10 +298,10 @@ export function ConsoleInput({
             }
             case 'esc':
             case 'escape':
-              tape_terminal_close('tape')
+              tape_terminal_close('tape', player)
               break
             case 'tab':
-              tape_terminal_inclayout('tape', !mods.shift)
+              tape_terminal_inclayout('tape', !mods.shift, player)
               break
             case 'delete':
               // single line only

@@ -1,5 +1,6 @@
 import { useThree } from '@react-three/fiber'
 import { tape_terminal_open } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/register'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
 import { DRAW_CHAR_HEIGHT, DRAW_CHAR_WIDTH } from 'zss/gadget/data/types'
 import {
@@ -62,6 +63,8 @@ export function Tape() {
     return null
   }
 
+  const player = registerreadplayer()
+
   return (
     <TilesData store={store}>
       <group
@@ -95,7 +98,7 @@ export function Tape() {
             </UserFocus>
           ) : (
             <UserHotkey hotkey="Shift+?">
-              {() => tape_terminal_open('tape')}
+              {() => tape_terminal_open('tape', player)}
             </UserHotkey>
           )}
         </group>

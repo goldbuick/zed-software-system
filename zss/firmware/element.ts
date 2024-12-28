@@ -54,14 +54,16 @@ function readinput(player: string) {
   const flags = memoryreadflags(player)
 
   // ensure we have the proper flags on player data
+  if (!isnumber(flags.inputcurrent)) {
+    flags.inputcurrent = 0
+  }
   if (!isarray(flags.inputqueue)) {
     flags.inputqueue = []
-    flags.inputcurrent = 0
   }
 
   // we've already processed input for this tick
-  if (isnumber(flags.inputcurrent) && flags.inputcurrent > 0) {
-    return
+  if (flags.inputcurrent > 0) {
+    return flags
   }
 
   // pull from front of queue
@@ -104,14 +106,17 @@ function readinput(player: string) {
     const [check] = item as [INPUT, number]
     return check !== INPUT.NONE && check !== input
   })
+
+  return flags
 }
 
 export const ELEMENT_FIRMWARE = createfirmware({
-  get(chip, name) {
+  get(_, name) {
     // if we are reading from input AND are a player
     if (READ_CONTEXT.isplayer && INPUT_FLAG_NAMES.has(name)) {
       // pull the next input
-      readinput(chip.id())
+      const value = readinput(READ_CONTEXT.element?.id ?? '')[name]
+      return [ispresent(value), value]
     }
 
     // read stat

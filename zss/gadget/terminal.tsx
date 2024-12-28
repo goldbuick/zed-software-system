@@ -9,15 +9,15 @@ import { api_error } from 'zss/device/api'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import decoimageurl from 'zss/gadget/fx/scratches.gif'
 import { useTexture } from 'zss/gadget/usetexture'
-import { createplatform } from 'zss/platform'
 
 import { Layout } from './layout'
 import { Tape } from './tape'
 import { UserFocus } from './userinput'
 
-extend({ OrthographicCamera })
+// include all front-end devices
+import 'zss/userspace'
 
-createplatform()
+extend({ OrthographicCamera })
 
 export function Terminal() {
   const viewport = useThree((state) => state.viewport)
@@ -101,5 +101,3 @@ export function Terminal() {
     </>
   )
 }
-
-// texture

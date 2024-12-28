@@ -100,6 +100,7 @@ const MEMORY = {
 }
 
 export function memorysetdefaultplayer(player: string) {
+  console.info('memorysetdefaultplayer', player)
   MEMORY.defaultplayer = player
 }
 
@@ -213,7 +214,7 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
   )
   bookwritecodepage(book, codepage)
   memorysetcodepageindex(codepage.id, book.id)
-  vm_flush('memory') // tell register to save changes
+  vm_flush('memory', '', MEMORY.defaultplayer)
 
   // result codepage
   return codepage
@@ -331,10 +332,17 @@ export function memoryplayerlogin(player: string): boolean {
 
   // TODO: what is a sensible way to place here ?
   // via player token I think ..
-  const pt = { x: 0, y: 0 }
   const kindname = playerkind.name ?? MEMORY_LABEL.PLAYER
-  const obj = boardobjectcreatefromkind(titleboard, pt, kindname, player)
+  const obj = boardobjectcreatefromkind(
+    titleboard,
+    { x: 0, y: 0 },
+    kindname,
+    player,
+  )
   if (ispresent(obj?.id)) {
+    // all players self-aggro
+    obj.player = player
+    // track current board
     bookplayersetboard(mainbook, player, titleboard.id)
     return true
   }
@@ -398,11 +406,12 @@ export function memorytickobject(
   const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
   // write context
+  const objectid = object.id ?? ''
   READ_CONTEXT.book = book
   READ_CONTEXT.board = board
   READ_CONTEXT.element = object
+  READ_CONTEXT.isplayer = ispid(objectid)
   READ_CONTEXT.player = object.player ?? MEMORY.defaultplayer
-  READ_CONTEXT.isplayer = ispid(object.id ?? '')
 
   // read cycle
   const kinddata = bookelementkindread(book, object)
@@ -430,7 +439,7 @@ export function memorytickobject(
 
   // clear used input
   if (READ_CONTEXT.isplayer) {
-    const flags = memoryreadflags(READ_CONTEXT.player)
+    const flags = memoryreadflags(READ_CONTEXT.element.id ?? '')
     flags.inputcurrent = 0
   }
 
@@ -503,10 +512,12 @@ export function memorycli(player: string, cli = '') {
   const id = `${player}_cli`
 
   // write context
+  READ_CONTEXT.timestamp = mainbook.timestamp
   READ_CONTEXT.book = mainbook
   READ_CONTEXT.board = bookplayerreadboard(mainbook, player)
   READ_CONTEXT.element = boardobjectread(READ_CONTEXT.board, player)
   READ_CONTEXT.player = player
+  READ_CONTEXT.isplayer = true
 
   // invoke once
   tape_debug('memory', 'running', mainbook.timestamp, id, cli)

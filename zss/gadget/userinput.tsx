@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react'
 import { vm_cli } from 'zss/device/api'
-import { getgadgetclientplayer } from 'zss/gadget/data/state'
+import { registerreadplayer } from 'zss/device/register'
 import { INPUT } from 'zss/gadget/data/types'
 import { ismac } from 'zss/words/system'
 import { NAME } from 'zss/words/types'
@@ -44,7 +44,7 @@ const inputstate: Record<INPUT, boolean> = {
 // handle input repeat
 let acc = 0
 let previous = performance.now()
-const INPUT_RATE = 250
+const INPUT_RATE = 200
 
 function inputdown(input: INPUT) {
   // make sure to trigger input event
@@ -105,7 +105,7 @@ document.addEventListener(
     switch (key) {
       case 's':
         if (mods.ctrl) {
-          vm_cli('tape', '#save', getgadgetclientplayer())
+          vm_cli('tape', '#save', registerreadplayer())
         }
         event.preventDefault()
         break

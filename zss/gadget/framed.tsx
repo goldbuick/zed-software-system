@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { Group, Vector2 } from 'three'
 import { vm_input } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/register'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import {
   DRAW_CHAR_HEIGHT,
@@ -12,7 +13,7 @@ import {
   INPUT_SHIFT,
   layersreadcontrol,
 } from 'zss/gadget/data/types'
-import { hub } from 'zss/hub'
+import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
@@ -38,7 +39,9 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   if (mods.shift) {
     bits |= INPUT_SHIFT
   }
-  vm_input('framed', input, bits, player)
+  if (ispid(player)) {
+    vm_input('framed', input, bits, player)
+  }
 }
 
 export function Framed({ width, height }: FramedProps) {
@@ -121,7 +124,7 @@ export function Framed({ width, height }: FramedProps) {
     }
   })
 
-  const player = useGadgetClient((state) => state.gadget.player)
+  const player = registerreadplayer()
 
   // re-render only when layer count changes
   useGadgetClient((state) => state.gadget.layers.length)

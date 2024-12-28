@@ -24,9 +24,8 @@ import {
 
 const panelshared: Record<string, PANEL_SHARED> = {}
 
-export function initstate(player: string): GADGET_STATE {
+export function initstate(): GADGET_STATE {
   return {
-    player,
     layers: [],
     panels: [],
     reset: true,
@@ -108,7 +107,7 @@ const tempgadgetstate: Record<string, GADGET_STATE> = {}
 let GADGET_PROVIDER = (player: string) => {
   let value = tempgadgetstate[player]
   if (!ispresent(value)) {
-    tempgadgetstate[player] = value = initstate(player)
+    tempgadgetstate[player] = value = initstate()
   }
   return value
 }
@@ -190,9 +189,10 @@ export function gadgetpanel(
     }
   } else {
     switch (edgeConst) {
-      case PANEL_TYPE.START:
-        initstate(player)
+      case PANEL_TYPE.START: {
+        tempgadgetstate[player] = initstate()
         break
+      }
       case PANEL_TYPE.LEFT:
       case PANEL_TYPE.RIGHT:
       case PANEL_TYPE.TOP:

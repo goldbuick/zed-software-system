@@ -14,3 +14,7 @@ export function indextopt(index: number, width: number): PT {
     y: indextoy(index, width),
   }
 }
+
+export function pttoindex(pt: PT, width: number) {
+  return pt.x + pt.y * width
+}
