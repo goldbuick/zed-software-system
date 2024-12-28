@@ -33,21 +33,36 @@ export function UserScreen({
   const cameraRef = useRef<OrthographicCamera>(null)
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
 
-  const rcols = viewwidth / RUNTIME.DRAW_CHAR_WIDTH()
-  const rrows = viewheight / RUNTIME.DRAW_CHAR_HEIGHT()
-  const cols = islowrez ? Math.ceil(rcols) : Math.floor(rcols)
-  const rows = islowrez ? Math.ceil(rrows) : Math.floor(rrows)
-  const marginx = (viewwidth - cols * RUNTIME.DRAW_CHAR_WIDTH()) * 0.5
-  const marginy = (viewheight - rows * RUNTIME.DRAW_CHAR_HEIGHT()) * 0.5
-  const withmarginx = islowrez ? 0 : marginx
-  const withmarginy = islowrez ? 0 : marginy
-
   useLayoutEffect(() => {
     const oldCam = camera
     camera.updateProjectionMatrix()
     set(() => ({ camera: cameraRef.current! }))
     return () => set(() => ({ camera: oldCam }))
   }, [set, camera, cameraRef])
+
+  const rrows = viewheight / RUNTIME.DRAW_CHAR_HEIGHT()
+  let cols = Math.floor(viewwidth / RUNTIME.DRAW_CHAR_WIDTH())
+  let rows = islowrez ? Math.ceil(rrows) : Math.floor(rrows)
+  const marginx = (viewwidth - cols * RUNTIME.DRAW_CHAR_WIDTH()) * 0.5
+  const marginy = (viewheight - rows * RUNTIME.DRAW_CHAR_HEIGHT()) * 0.5
+  let withmarginx = islowrez ? 0 : marginx
+  let withmarginy = islowrez ? 0 : marginy
+
+  showtouchcontrols = true
+
+  if (islowrez || showtouchcontrols) {
+    withmarginx = 0
+    withmarginy = 0
+  }
+  if (showtouchcontrols) {
+    if (islandscape) {
+      const inset = 3
+      withmarginx = inset * RUNTIME.DRAW_CHAR_WIDTH()
+      cols -= inset * 2
+    } else {
+      rows = Math.round(rows * 0.75)
+    }
+  }
 
   return (
     <Screensize.Provider value={{ cols, rows }}>
@@ -69,7 +84,7 @@ export function UserScreen({
             0,
           ]}
         >
-          {children}
+          {cols >= 10 && rows >= 10 && children}
         </group>
       </group>
     </Screensize.Provider>
