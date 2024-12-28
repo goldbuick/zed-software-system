@@ -90,6 +90,8 @@ function invoke(input: INPUT, mods: UserInputMods) {
   user.root.emit(INPUT[input], mods)
 }
 
+const islocaldev = location.hostname === 'localhost'
+
 document.addEventListener(
   'keydown',
   (event) => {
@@ -97,44 +99,56 @@ document.addEventListener(
     const mods = modsfromevent(event)
 
     // allowed shortcuts, all others we attempt to block
-    // paste ; Ctrl + V / Cmd + V
+    // paste ; Ctrl + V / Cmd + V, C & X
     // refresh page : Ctrl + R / Cmd + R
     // open / close devtools : Ctrl + Shift + I / Cmd + Alt + I
     // open / close js console : Ctrl + Shift + J / Cmd + Alt + J
     // save ; Ctrl + S
     switch (key) {
-      case 's':
-        if (mods.ctrl) {
-          vm_cli('tape', '#save', registerreadplayer())
-        }
-        event.preventDefault()
-        break
+      case 'c':
+      case 'x':
       case 'v':
-      case 'r':
         if (mods.ctrl) {
+          // no-op
+        } else {
+          event.preventDefault()
+        }
+        break
+      case 'r':
+        if (mods.ctrl && islocaldev) {
           // no-op
         } else {
           event.preventDefault()
         }
         break
       case 'i':
-        if (!ismac && mods.shift && mods.ctrl) {
+        if (!ismac && mods.shift && mods.ctrl && islocaldev) {
           // no-op
         } else {
           event.preventDefault()
         }
         break
       case 'dead':
-        if (ismac && mods.alt && mods.ctrl) {
+        if (ismac && mods.alt && mods.ctrl && islocaldev) {
           // no-op
         } else {
           event.preventDefault()
         }
         break
+      case 's':
+        if (mods.ctrl) {
+          vm_cli('tape', '#save', registerreadplayer())
+        }
+        event.preventDefault()
+        break
       case 'alt':
       case 'meta':
       case 'shift':
       case 'control':
+      case 'arrowleft':
+      case 'arrowright':
+      case 'arrowup':
+      case 'arrowdown':
         // no-op
         break
       default:

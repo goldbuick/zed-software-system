@@ -46,6 +46,8 @@ export type BOARD_ELEMENT = {
   removed?: number
 }
 
+export type BOARD_ELEMENT_STAT = keyof BOARD_ELEMENT
+
 // boards
 
 export type BOARD = {
