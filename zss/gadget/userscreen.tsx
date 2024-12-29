@@ -10,6 +10,8 @@ import {
 import { OrthographicCamera } from 'three'
 import { RUNTIME } from 'zss/config'
 
+import { TouchUI } from './touchui/component'
+
 // screensize in chars
 const Screensize = createContext({ cols: 1, rows: 1 })
 
@@ -40,9 +42,13 @@ export function UserScreen({
     return () => set(() => ({ camera: oldCam }))
   }, [set, camera, cameraRef])
 
+  // cols
+  const rcols = viewwidth / RUNTIME.DRAW_CHAR_WIDTH()
+  let cols = Math.floor(rcols)
+  // rows
   const rrows = viewheight / RUNTIME.DRAW_CHAR_HEIGHT()
-  let cols = Math.floor(viewwidth / RUNTIME.DRAW_CHAR_WIDTH())
   let rows = islowrez ? Math.ceil(rrows) : Math.floor(rrows)
+  // margins
   const marginx = (viewwidth - cols * RUNTIME.DRAW_CHAR_WIDTH()) * 0.5
   const marginy = (viewheight - rows * RUNTIME.DRAW_CHAR_HEIGHT()) * 0.5
   let withmarginx = islowrez ? 0 : marginx
@@ -50,16 +56,17 @@ export function UserScreen({
 
   showtouchcontrols = true
 
-  if (islowrez || showtouchcontrols) {
+  if (islowrez) {
     withmarginx = 0
     withmarginy = 0
   }
   if (showtouchcontrols) {
     if (islandscape) {
-      const inset = 3
+      const inset = 5
       withmarginx = inset * RUNTIME.DRAW_CHAR_WIDTH()
       cols -= inset * 2
     } else {
+      withmarginy = 0
       rows = Math.round(rows * 0.75)
     }
   }
@@ -76,17 +83,22 @@ export function UserScreen({
         far={2000}
         position={[0, 0, 1000]}
       />
-      <group scale-x={-1} rotation-z={Math.PI}>
-        <group
-          position={[
-            viewwidth * -0.5 + withmarginx,
-            viewheight * -0.5 + withmarginy,
-            0,
-          ]}
-        >
-          {cols >= 10 && rows >= 10 && children}
+      {cols >= 10 && rows >= 10 && (
+        <group scale-x={-1} rotation-z={Math.PI}>
+          <group
+            position={[
+              viewwidth * -0.5 + withmarginx,
+              viewheight * -0.5 + withmarginy,
+              0,
+            ]}
+          >
+            {children}
+            {showtouchcontrols && (
+              <TouchUI width={Math.round(rcols)} height={Math.round(rrows)} />
+            )}
+          </group>
         </group>
-      </group>
+      )}
     </Screensize.Provider>
   )
 }

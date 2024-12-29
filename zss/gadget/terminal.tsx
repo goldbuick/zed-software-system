@@ -2,7 +2,7 @@ import { addEffect, addAfterEffect, useThree, extend } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
 import { getGPUTier, TierResult } from 'detect-gpu'
 import { deviceType, primaryInput } from 'detect-it'
-import { Fragment, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { NearestFilter, OrthographicCamera } from 'three'
 import { FORCE_CRT_OFF, RUNTIME, STATS_DEV } from 'zss/config'
@@ -76,16 +76,16 @@ export function Terminal() {
 
   return (
     <>
-      <UserScreen
-        islowrez={islowrez}
-        islandscape={islandscape}
-        showtouchcontrols={showtouchcontrols}
-      >
-        <UserFocus>
+      <UserFocus>
+        <UserScreen
+          islowrez={islowrez}
+          islandscape={islandscape}
+          showtouchcontrols={showtouchcontrols}
+        >
           <PanelLayout />
           <Tape />
-        </UserFocus>
-      </UserScreen>
+        </UserScreen>
+      </UserFocus>
       {shouldcrt && (
         <EffectComposer>
           <CRTShape splat={splat} viewheight={viewheight} />
