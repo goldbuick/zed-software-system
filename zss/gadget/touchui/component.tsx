@@ -1,14 +1,13 @@
 /* eslint-disable react/no-unknown-property */
-import { RUNTIME } from 'zss/config'
-import { tape_terminal_open } from 'zss/device/api'
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
 } from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 
 import { ShadeBoxDither } from '../framed/dither'
 import { useTiles } from '../hooks'
-import { BG, FG } from '../tape/common'
+import { FG } from '../tape/common'
 import { useScreenSize } from '../userscreen'
 import { TilesData, TilesRender } from '../usetiles'
 
@@ -20,9 +19,9 @@ export type TouchUIProps = {
 export function TouchUI({ width, height }: TouchUIProps) {
   const screensize = useScreenSize()
 
-  const store = useTiles(width, height, 0, FG, BG)
+  const store = useTiles(width, height, 0, FG, COLOR.ONCLEAR)
   const context: WRITE_TEXT_CONTEXT = {
-    ...createwritetextcontext(width, height, FG, BG),
+    ...createwritetextcontext(width, height, FG, COLOR.ONCLEAR),
     ...store.getState(),
   }
 
@@ -35,9 +34,25 @@ export function TouchUI({ width, height }: TouchUIProps) {
     <TilesData store={store}>
       <group
         // eslint-disable-next-line react/no-unknown-property
-        position={[0, 0, 900]}
+        position={[0, 0, 999]}
       >
-        {/* // */}
+        <ShadeBoxDither
+          width={width}
+          height={height}
+          top={1}
+          left={0}
+          right={5}
+          bottom={height - 2}
+        />
+        <ShadeBoxDither
+          width={width}
+          height={height}
+          top={1}
+          left={width - 6}
+          right={width - 1}
+          bottom={height - 2}
+        />
+        <TilesRender width={width} height={height} />
       </group>
     </TilesData>
   )

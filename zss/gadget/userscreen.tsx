@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 /* eslint-disable react-refresh/only-export-components */
 import { useThree } from '@react-three/fiber'
 import {
@@ -47,27 +48,28 @@ export function UserScreen({
   let cols = Math.floor(rcols)
   // rows
   const rrows = viewheight / RUNTIME.DRAW_CHAR_HEIGHT()
-  let rows = islowrez ? Math.ceil(rrows) : Math.floor(rrows)
+  let rows = Math.floor(rrows)
   // margins
   const marginx = (viewwidth - cols * RUNTIME.DRAW_CHAR_WIDTH()) * 0.5
   const marginy = (viewheight - rows * RUNTIME.DRAW_CHAR_HEIGHT()) * 0.5
-  let withmarginx = islowrez ? 0 : marginx
-  let withmarginy = islowrez ? 0 : marginy
 
   showtouchcontrols = true
 
-  if (islowrez) {
-    withmarginx = 0
-    withmarginy = 0
-  }
+  let insetx = 0
+  let insety = 0
+  let insetrows = Math.round(rrows)
   if (showtouchcontrols) {
     if (islandscape) {
       const inset = 5
-      withmarginx = inset * RUNTIME.DRAW_CHAR_WIDTH()
+      insetx = inset * RUNTIME.DRAW_CHAR_WIDTH()
       cols -= inset * 2
     } else {
-      withmarginy = 0
+      // withmarginy = 0
       rows = Math.round(rows * 0.75)
+      // adjust overlap
+      const overlap = rows - 1
+      insetrows -= overlap
+      insety = overlap * RUNTIME.DRAW_CHAR_HEIGHT()
     }
   }
 
@@ -87,14 +89,16 @@ export function UserScreen({
         <group scale-x={-1} rotation-z={Math.PI}>
           <group
             position={[
-              viewwidth * -0.5 + withmarginx,
-              viewheight * -0.5 + withmarginy,
+              viewwidth * -0.5 + marginx,
+              viewheight * -0.5 + marginy,
               0,
             ]}
           >
-            {children}
+            <group position={[insetx, 0, 0]}>{children}</group>
             {showtouchcontrols && (
-              <TouchUI width={Math.round(rcols)} height={Math.round(rrows)} />
+              <group position={[0, insety, 0]}>
+                <TouchUI width={Math.round(rcols)} height={insetrows} />
+              </group>
             )}
           </group>
         </group>
