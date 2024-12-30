@@ -20,7 +20,7 @@ export function useTexture<
   input: Url,
   onLoad?: (texture: MappedTextureType<Url>) => void,
 ): MappedTextureType<Url> {
-  const gl = useThree((state) => state.gl)
+  const { gl } = useThree()
   const textures = useLoader(
     TextureLoader,
     IsObject(input) ? Object.values(input) : input,

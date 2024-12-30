@@ -1,4 +1,3 @@
-import { useThree } from '@react-three/fiber'
 import { deepClone, _areEquals } from 'fast-json-patch'
 import React, { useState } from 'react'
 import { RUNTIME } from 'zss/config'
@@ -14,6 +13,7 @@ import { StaticDither } from './framed/dither'
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'
 import { Scroll } from './scroll'
+import { useScreenSize } from './userscreen'
 
 enum RECT_TYPE {
   PANEL,
@@ -67,21 +67,15 @@ function LayoutRect({ rect, shouldclose = false }: LayoutRectProps) {
   return null
 }
 
-export function Layout() {
-  const viewport = useThree((state) => state.viewport)
-  const { width: viewWidth, height: viewHeight } = viewport.getCurrentViewport()
-
-  const width = Math.floor(viewWidth / RUNTIME.DRAW_CHAR_WIDTH())
-  const height = Math.floor(viewHeight / RUNTIME.DRAW_CHAR_HEIGHT())
-  const marginX = viewWidth - width * RUNTIME.DRAW_CHAR_WIDTH()
-  const marginY = viewHeight - height * RUNTIME.DRAW_CHAR_HEIGHT()
+export function PanelLayout() {
+  const screensize = useScreenSize()
 
   // cache scroll
   const [scroll, setScroll] = useState<RECT>()
   const panels = useGadgetClient(useEqual((state) => state.gadget.panels))
 
   // bail on odd states
-  if (width < 1 || height < 1) {
+  if (screensize.cols < 10 || screensize.rows < 10) {
     return null
   }
 
@@ -91,9 +85,9 @@ export function Layout() {
     type: RECT_TYPE.FRAMED,
     x: 0,
     y: 0,
-    width,
-    height,
     text: [],
+    width: screensize.cols,
+    height: screensize.rows,
   }
 
   // iterate layout
@@ -204,7 +198,7 @@ export function Layout() {
       }}
     >
       {/* eslint-disable-next-line react/no-unknown-property */}
-      <group position={[marginX * 0.5, marginY * 0.5, -512]}>
+      <group position={[0, 0, -512]}>
         {rects.map((rect) => {
           return (
             <group
@@ -226,7 +220,11 @@ export function Layout() {
               // eslint-disable-next-line react/no-unknown-property
               position={[0, 0, 800]}
             >
-              <StaticDither width={width} height={height} alpha={0.14} />
+              <StaticDither
+                width={screensize.cols}
+                height={screensize.rows}
+                alpha={0.14}
+              />
             </group>
             <group
               // eslint-disable-next-line react/no-unknown-property
