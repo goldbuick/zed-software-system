@@ -53,10 +53,10 @@ export function UserScreen({
   const marginx = (viewwidth - cols * RUNTIME.DRAW_CHAR_WIDTH()) * 0.5
   const marginy = (viewheight - rows * RUNTIME.DRAW_CHAR_HEIGHT()) * 0.5
 
-  showtouchcontrols = true
-
+  // touch ui
   let insetx = 0
   let insety = 0
+  const insetcols = Math.round(rcols)
   let insetrows = Math.round(rrows)
   if (showtouchcontrols) {
     if (islandscape) {
@@ -64,7 +64,6 @@ export function UserScreen({
       insetx = inset * RUNTIME.DRAW_CHAR_WIDTH()
       cols -= inset * 2
     } else {
-      // withmarginy = 0
       rows = Math.round(rows * 0.75)
       // adjust overlap
       const overlap = rows - 1
@@ -97,7 +96,11 @@ export function UserScreen({
             <group position={[insetx, 0, 0]}>{children}</group>
             {showtouchcontrols && (
               <group position={[0, insety, 0]}>
-                <TouchUI width={Math.round(rcols)} height={insetrows} />
+                <TouchUI
+                  key={insetcols * insetrows}
+                  width={insetcols}
+                  height={insetrows}
+                />
               </group>
             )}
           </group>

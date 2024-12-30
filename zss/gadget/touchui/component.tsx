@@ -2,12 +2,13 @@
 import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
+  textformatedges,
+  tokenizeandwritetextformat,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
 import { ShadeBoxDither } from '../framed/dither'
 import { useTiles } from '../hooks'
-import { FG } from '../tape/common'
 import { useScreenSize } from '../userscreen'
 import { TilesData, TilesRender } from '../usetiles'
 
@@ -19,15 +20,39 @@ export type TouchUIProps = {
 export function TouchUI({ width, height }: TouchUIProps) {
   const screensize = useScreenSize()
 
-  const store = useTiles(width, height, 0, FG, COLOR.ONCLEAR)
+  const FG = COLOR.PURPLE
+  const BG = COLOR.ONCLEAR
+  const store = useTiles(width, height, 0, FG, BG)
   const context: WRITE_TEXT_CONTEXT = {
-    ...createwritetextcontext(width, height, FG, COLOR.ONCLEAR),
+    ...createwritetextcontext(width, height, FG, BG),
     ...store.getState(),
   }
 
   // bail on odd states
   if (screensize.cols < 10 || screensize.rows < 10) {
     return null
+  }
+
+  // render ui
+  textformatedges(1, 1, width - 2, height - 2, context)
+
+  // action button targets
+  context.y = 1
+  for (let i = 0; i < 3; ++i) {
+    context.x = context.active.leftedge = 1
+    tokenizeandwritetextformat(`$PURPLE$177$177$177$177$177`, context, false)
+    context.x = context.active.leftedge = width - 7
+    tokenizeandwritetextformat(`$PURPLE$177$177$177$177$177`, context, false)
+    ++context.y
+  }
+
+  context.y = height - 5
+  for (let i = 0; i < 3; ++i) {
+    context.x = context.active.leftedge = 1
+    tokenizeandwritetextformat(`$GREEN$177$177$177$177$177`, context, false)
+    context.x = context.active.leftedge = width - 7
+    tokenizeandwritetextformat(`$RED$177$177$177$177$177`, context, false)
+    ++context.y
   }
 
   return (

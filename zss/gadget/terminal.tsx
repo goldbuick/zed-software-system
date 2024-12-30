@@ -57,14 +57,6 @@ export function Terminal() {
   const islowrez = minrez < 600
   RUNTIME.DRAW_CHAR_SCALE = islowrez ? 1 : 2
 
-  // config FX
-  const shouldcrt =
-    !FORCE_CRT_OFF &&
-    !islowrez &&
-    gputier &&
-    gputier.tier > 2 &&
-    !gputier.isMobile
-
   // config LAYOUT
   const islandscape = viewwidth > viewheight
   const showtouchcontrols = deviceType === 'hybrid' || primaryInput === 'touch'
@@ -73,6 +65,15 @@ export function Terminal() {
   const splat = useTexture(decoimageurl)
   splat.minFilter = NearestFilter
   splat.magFilter = NearestFilter
+
+  // config FX
+  const shouldcrt =
+    !FORCE_CRT_OFF &&
+    !islowrez &&
+    !showtouchcontrols &&
+    gputier &&
+    gputier.tier > 2 &&
+    !gputier.isMobile
 
   return (
     <>
