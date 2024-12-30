@@ -66,7 +66,7 @@ export function UserScreen({
     } else {
       rows = Math.round(rows * 0.666)
       // adjust overlap
-      const overlap = rows - 2
+      const overlap = rows - 4
       insetrows -= overlap
       insety = overlap * RUNTIME.DRAW_CHAR_HEIGHT()
     }

@@ -9,6 +9,7 @@ import {
   useEffect,
   useState,
 } from 'react'
+import { createdevice } from 'zss/device'
 import { vm_cli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { INPUT } from 'zss/gadget/data/types'
@@ -35,10 +36,6 @@ const inputstate: Record<INPUT, boolean> = {
   [INPUT.OK_BUTTON]: false,
   [INPUT.CANCEL_BUTTON]: false,
   [INPUT.MENU_BUTTON]: false,
-  [INPUT.SHOOT_UP]: false,
-  [INPUT.SHOOT_DOWN]: false,
-  [INPUT.SHOOT_LEFT]: false,
-  [INPUT.SHOOT_RIGHT]: false,
 }
 
 // handle input repeat
@@ -53,7 +50,7 @@ function inputdown(input: INPUT) {
     // reset input repeat
     acc = 0
     // emit input event
-    invoke(input, {
+    userinputinvoke(input, {
       alt: inputstate[INPUT.ALT],
       ctrl: inputstate[INPUT.CTRL],
       shift: inputstate[INPUT.SHIFT],
@@ -86,11 +83,15 @@ export function modsfromevent(event: KeyboardEvent): UserInputMods {
   }
 }
 
-function invoke(input: INPUT, mods: UserInputMods) {
+function userinputinvoke(input: INPUT, mods: UserInputMods) {
   user.root.emit(INPUT[input], mods)
 }
 
 const islocaldev = location.hostname === 'localhost'
+
+createdevice('thing', [], () => {
+  //
+})
 
 document.addEventListener(
   'keydown',
@@ -327,14 +328,10 @@ function inputpoll() {
       INPUT.OK_BUTTON,
       INPUT.CANCEL_BUTTON,
       INPUT.MENU_BUTTON,
-      INPUT.SHOOT_UP,
-      INPUT.SHOOT_DOWN,
-      INPUT.SHOOT_LEFT,
-      INPUT.SHOOT_RIGHT,
     ]
     inputs.forEach((input) => {
       if (inputstate[input]) {
-        invoke(input, mods)
+        userinputinvoke(input, mods)
       }
     })
   }
