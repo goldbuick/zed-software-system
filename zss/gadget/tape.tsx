@@ -1,5 +1,4 @@
 /* eslint-disable react/no-unknown-property */
-import { useThree } from '@react-three/fiber'
 import { RUNTIME } from 'zss/config'
 import { tape_terminal_open } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
