@@ -2,7 +2,7 @@
 import nipplejs from 'nipplejs'
 import { useEffect, useRef } from 'react'
 import { RUNTIME } from 'zss/config'
-import { tape_terminal_open } from 'zss/device/api'
+import { tape_terminal_open, vm_input } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { ispresent } from 'zss/mapping/types'
 import {
@@ -17,7 +17,6 @@ import { Clickable } from '../clickable'
 import { INPUT } from '../data/types'
 import { ShadeBoxDither } from '../framed/dither'
 import { useTiles } from '../hooks'
-import { userinputinvoke } from '../userinput'
 import { useScreenSize } from '../userscreen'
 import { TilesData, TilesRender } from '../usetiles'
 
@@ -30,11 +29,10 @@ export function TouchUI({ width, height }: TouchUIProps) {
   const screensize = useScreenSize()
   const sticksref = useRef(
     nipplejs.create({
+      zone: document.getElementById('frame') ?? undefined,
       color: '#00A',
       mode: 'dynamic',
-      multitouch: true,
-      dynamicPage: true,
-      maxNumberOfNipples: 2,
+      dataOnly: true,
     }),
   )
   const player = registerreadplayer()
@@ -56,39 +54,36 @@ export function TouchUI({ width, height }: TouchUIProps) {
       return
     }
 
-    function handledirevt(evt: any, data: any) {
-      const mods = {
-        alt: false,
-        ctrl: false,
-        shift: data.id > 0,
-      }
-      console.info('handledirevt', mods)
+    function handledirevt(evt: any) {
       switch (evt.type) {
         case 'removed':
-          data.off('all done')
           break
         case 'dir:up':
-          userinputinvoke(INPUT.MOVE_UP, mods)
+          vm_input('touchui', INPUT.MOVE_UP, 0, player)
           break
         case 'dir:down':
-          userinputinvoke(INPUT.MOVE_DOWN, mods)
-          break
-        case 'dir:right':
-          userinputinvoke(INPUT.MOVE_RIGHT, mods)
+          vm_input('touchui', INPUT.MOVE_DOWN, 0, player)
           break
         case 'dir:left':
-          userinputinvoke(INPUT.MOVE_LEFT, mods)
+          vm_input('touchui', INPUT.MOVE_LEFT, 0, player)
+          break
+        case 'dir:right':
+          vm_input('touchui', INPUT.MOVE_RIGHT, 0, player)
           break
       }
     }
 
-    current.on('dir', handledirevt)
-    current.on('removed', handledirevt)
+    current.on('dir:up', handledirevt)
+    current.on('dir:down', handledirevt)
+    current.on('dir:left', handledirevt)
+    current.on('dir:right', handledirevt)
     return () => {
-      current.off('dir', handledirevt)
-      current.off('removed', handledirevt)
+      current.off('dir:up', handledirevt)
+      current.off('dir:down', handledirevt)
+      current.off('dir:left', handledirevt)
+      current.off('dir:right', handledirevt)
     }
-  }, [])
+  }, [player])
 
   // bail on odd states
   if (screensize.cols < 10 || screensize.rows < 10) {
@@ -167,11 +162,7 @@ export function TouchUI({ width, height }: TouchUIProps) {
             height={BUTTON_HEIGHT}
             onClick={() => {
               // top-right button
-              userinputinvoke(INPUT.MENU_BUTTON, {
-                alt: false,
-                ctrl: false,
-                shift: false,
-              })
+              vm_input('touchui', INPUT.MENU_BUTTON, 0, player)
             }}
           />
         </group>
@@ -188,11 +179,7 @@ export function TouchUI({ width, height }: TouchUIProps) {
             height={BUTTON_HEIGHT}
             onClick={() => {
               // bottom-left button
-              userinputinvoke(INPUT.OK_BUTTON, {
-                alt: false,
-                ctrl: false,
-                shift: false,
-              })
+              vm_input('touchui', INPUT.OK_BUTTON, 0, player)
             }}
           />
         </group>
@@ -209,11 +196,7 @@ export function TouchUI({ width, height }: TouchUIProps) {
             height={BUTTON_HEIGHT}
             onClick={() => {
               // bottom-right button
-              userinputinvoke(INPUT.CANCEL_BUTTON, {
-                alt: false,
-                ctrl: false,
-                shift: false,
-              })
+              vm_input('touchui', INPUT.CANCEL_BUTTON, 0, player)
             }}
           />
         </group>

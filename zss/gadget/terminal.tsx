@@ -59,7 +59,7 @@ export function Terminal() {
 
   // config LAYOUT
   const islandscape = viewwidth > viewheight
-  const showtouchcontrols = true //deviceType === 'hybrid' || primaryInput === 'touch'
+  const showtouchcontrols = deviceType === 'hybrid' || primaryInput === 'touch'
 
   // grit texture
   const splat = useTexture(decoimageurl)

@@ -9,7 +9,6 @@ import {
   useEffect,
   useState,
 } from 'react'
-import { createdevice } from 'zss/device'
 import { vm_cli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { INPUT } from 'zss/gadget/data/types'
@@ -88,10 +87,6 @@ function userinputinvoke(input: INPUT, mods: UserInputMods) {
 }
 
 const islocaldev = location.hostname === 'localhost'
-
-createdevice('thing', [], () => {
-  //
-})
 
 document.addEventListener(
   'keydown',
