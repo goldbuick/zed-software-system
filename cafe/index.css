@@ -4,6 +4,17 @@ body {
   padding: 0;
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
   background: rgb(0, 0, 0);
-  background: linear-gradient(1deg, rgba(236, 236, 172, 1) 0%, rgba(247, 255, 71, 1) 11%, rgba(0, 0, 0, 1) 16%, rgba(247, 255, 71, 1) 20%, rgba(74, 42, 42, 1) 100%);
+}
+
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  user-select: none;
+  touch-action: none;
+  image-rendering: pixelated;
 }

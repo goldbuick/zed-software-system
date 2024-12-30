@@ -64,9 +64,9 @@ export function UserScreen({
       insetx = inset * RUNTIME.DRAW_CHAR_WIDTH()
       cols -= inset * 2
     } else {
-      rows = Math.round(rows * 0.75)
+      rows = Math.round(rows * 0.666)
       // adjust overlap
-      const overlap = rows - 1
+      const overlap = rows - 2
       insetrows -= overlap
       insety = overlap * RUNTIME.DRAW_CHAR_HEIGHT()
     }

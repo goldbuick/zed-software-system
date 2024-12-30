@@ -6,6 +6,7 @@
   "background_color": "#003",
   "theme_color": "#00A",
   "start_url": "/",
-  "display": "standalone",
+  "display": "fullscreen",
+  "orientation": "portait",
   "icons": []
 }

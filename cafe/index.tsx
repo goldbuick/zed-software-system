@@ -59,19 +59,6 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   },
 })
 
-const config = {
-  dpr: 1,
-  flat: true,
-  linear: true,
-  shadows: false,
-  gl: {
-    alpha: false,
-    stencil: false,
-    antialias: false,
-    preserveDrawingBuffer: true,
-  },
-}
-
 // Create a react root
 const engine = document.querySelector('canvas')
 if (ispresent(engine)) {
@@ -80,7 +67,18 @@ if (ispresent(engine)) {
   // Configure the root, inject events optionally, set camera, etc
   const applyconfig = (width: number, height: number) => {
     root.configure({
-      ...deepcopy(config),
+      ...deepcopy({
+        flat: true,
+        linear: true,
+        shadows: false,
+        gl: {
+          alpha: false,
+          stencil: false,
+          antialias: false,
+          powerPreference: 'low-power',
+          preserveDrawingBuffer: true,
+        },
+      }),
       events: eventManagerFactory,
       size: { width, height, top: 0, left: 0 },
       onCreated({ gl }) {
