@@ -187,6 +187,18 @@ export function tape_editor_close(sender: string, player: string) {
   hub.emit('tape:editor:close', sender, undefined, player)
 }
 
+export function userinput_up(sender: string, input: INPUT, player: string) {
+  hub.emit('userinput:up', sender, input, player)
+}
+
+export function userinput_down(sender: string, input: INPUT, player: string) {
+  hub.emit('userinput:down', sender, input, player)
+}
+
+export function userinput_update(sender: string, player: string) {
+  hub.emit('userinput:update', sender, undefined, player)
+}
+
 export function vm_books(
   sender: string,
   books: string,

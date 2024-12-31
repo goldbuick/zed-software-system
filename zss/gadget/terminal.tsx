@@ -5,7 +5,13 @@ import { deviceType, primaryInput } from 'detect-it'
 import { useEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { NearestFilter, OrthographicCamera } from 'three'
-import { FORCE_CRT_OFF, RUNTIME, STATS_DEV } from 'zss/config'
+import {
+  FORCE_CRT_OFF,
+  FORCE_LOW_REZ,
+  FORCE_TOUCH_UI,
+  RUNTIME,
+  STATS_DEV,
+} from 'zss/config'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import decoimageurl from 'zss/gadget/fx/scratches.gif'
 import { useTexture } from 'zss/gadget/usetexture'
@@ -54,12 +60,13 @@ export function Terminal() {
 
   // config DRAW_CHAR_SCALE
   const minrez = Math.min(viewwidth, viewheight)
-  const islowrez = minrez < 600
+  const islowrez = minrez < 600 || FORCE_LOW_REZ
   RUNTIME.DRAW_CHAR_SCALE = islowrez ? 1 : 2
 
   // config LAYOUT
   const islandscape = viewwidth > viewheight
-  const showtouchcontrols = deviceType === 'hybrid' || primaryInput === 'touch'
+  const showtouchcontrols =
+    FORCE_TOUCH_UI || deviceType === 'hybrid' || primaryInput === 'touch'
 
   // grit texture
   const splat = useTexture(decoimageurl)

@@ -9,9 +9,11 @@ import {
   useEffect,
   useState,
 } from 'react'
+import { createdevice } from 'zss/device'
 import { vm_cli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { INPUT } from 'zss/gadget/data/types'
+import { isnumber } from 'zss/mapping/types'
 import { ismac } from 'zss/words/system'
 import { NAME } from 'zss/words/types'
 
@@ -254,6 +256,54 @@ document.addEventListener(
   { capture: true },
 )
 
+createdevice('userinput', ['tock'], (message) => {
+  switch (message.target) {
+    case 'up':
+      if (isnumber(message.data)) {
+        inputup(message.data)
+      }
+      break
+    case 'down':
+      if (isnumber(message.data)) {
+        inputdown(message.data)
+      }
+      break
+    case 'update': {
+      const now = performance.now()
+      const delta = now - previous
+
+      acc += delta
+      if (acc >= INPUT_RATE) {
+        acc %= INPUT_RATE
+        // signal input state
+        const mods: UserInputMods = {
+          alt: !!inputstate[INPUT.ALT],
+          ctrl: !!inputstate[INPUT.CTRL],
+          shift: !!inputstate[INPUT.SHIFT],
+        }
+        const inputs = [
+          INPUT.MOVE_UP,
+          INPUT.MOVE_DOWN,
+          INPUT.MOVE_LEFT,
+          INPUT.MOVE_RIGHT,
+          INPUT.OK_BUTTON,
+          INPUT.CANCEL_BUTTON,
+          INPUT.MENU_BUTTON,
+        ]
+        inputs.forEach((input) => {
+          if (inputstate[input]) {
+            userinputinvoke(input, mods)
+          }
+        })
+      }
+
+      previous = now
+      GamepadHelper.update()
+      break
+    }
+  }
+})
+
 // gamepad input
 
 const BUTTON_A = 0
@@ -280,9 +330,9 @@ const buttonlookup: Record<number, INPUT> = {
   [BUTTON_X]: INPUT.OK_BUTTON,
   [BUTTON_Y]: INPUT.CANCEL_BUTTON,
   [BUTTON_LEFT_SHOULDER]: INPUT.ALT,
-  [BUTTON_RIGHT_SHOULDER]: INPUT.ALT,
-  [BUTTON_LEFT_TRIGGER]: INPUT.CTRL,
-  [BUTTON_RIGHT_TRIGGER]: INPUT.CTRL,
+  [BUTTON_RIGHT_SHOULDER]: INPUT.CTRL,
+  [BUTTON_LEFT_TRIGGER]: INPUT.SHIFT,
+  [BUTTON_RIGHT_TRIGGER]: INPUT.SHIFT,
   [BUTTON_MENU]: INPUT.MENU_BUTTON,
   [BUTTON_UP]: INPUT.MOVE_UP,
   [BUTTON_DOWN]: INPUT.MOVE_DOWN,
@@ -301,41 +351,6 @@ document.addEventListener('gamepadbuttondown', (event: GamepadEvent) => {
 document.addEventListener('gamepadbuttonup', (event: GamepadEvent) => {
   inputup(buttonlookup[event.detail.button])
 })
-
-function inputpoll() {
-  const now = performance.now()
-  const delta = now - previous
-
-  acc += delta
-  if (acc >= INPUT_RATE) {
-    acc %= INPUT_RATE
-    // signal input state
-    const mods: UserInputMods = {
-      alt: !!inputstate[INPUT.ALT],
-      ctrl: !!inputstate[INPUT.CTRL],
-      shift: !!inputstate[INPUT.SHIFT],
-    }
-    const inputs = [
-      INPUT.MOVE_UP,
-      INPUT.MOVE_DOWN,
-      INPUT.MOVE_LEFT,
-      INPUT.MOVE_RIGHT,
-      INPUT.OK_BUTTON,
-      INPUT.CANCEL_BUTTON,
-      INPUT.MENU_BUTTON,
-    ]
-    inputs.forEach((input) => {
-      if (inputstate[input]) {
-        userinputinvoke(input, mods)
-      }
-    })
-  }
-
-  previous = now
-  GamepadHelper.update()
-  setTimeout(inputpoll, 1)
-}
-inputpoll()
 
 // mouse && touch input - used to activate :tap labels
 
