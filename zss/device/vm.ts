@@ -131,7 +131,6 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
       break
     case 'input':
       if (message.player) {
-        console.info(message)
         // player input
         const flags = memoryreadflags(message.player)
         const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]

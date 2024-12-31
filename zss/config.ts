@@ -8,6 +8,8 @@ const SHOW_CODE = !!JSON.parse(import.meta.env.ZSS_SHOW_CODE)
 const TRACE_CODE = `${import.meta.env.ZSS_TRACE_CODE}`
 const LOG_DEBUG = !!JSON.parse(import.meta.env.ZSS_LOG_DEBUG)
 const FORCE_CRT_OFF = !!JSON.parse(import.meta.env.ZSS_FORCE_CRT_OFF)
+const FORCE_LOW_REZ = !!JSON.parse(import.meta.env.ZSS_FORCE_LOW_REZ)
+const FORCE_TOUCH_UI = !!JSON.parse(import.meta.env.ZSS_FORCE_TOUCH_UI)
 
 // runtime config
 export const RUNTIME = {
@@ -31,4 +33,6 @@ export {
   TRACE_CODE,
   LOG_DEBUG,
   FORCE_CRT_OFF,
+  FORCE_LOW_REZ,
+  FORCE_TOUCH_UI,
 }
