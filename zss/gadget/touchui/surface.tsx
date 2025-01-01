@@ -32,12 +32,13 @@ const motion = new Vector2()
 const point = new Vector3()
 
 function coords(width: number, height: number) {
+  const cw = RUNTIME.DRAW_CHAR_WIDTH()
+  const ch = RUNTIME.DRAW_CHAR_HEIGHT()
+  const px = point.x + cw * 0.5
+  const py = point.y + ch * 0.5
   return {
-    cx:
-      Math.floor(width * 0.5) + Math.floor(point.x / RUNTIME.DRAW_CHAR_WIDTH()),
-    cy:
-      Math.floor(height * 0.5) +
-      Math.floor(point.y / RUNTIME.DRAW_CHAR_HEIGHT()),
+    cx: Math.floor(width * 0.5) + Math.floor(px / cw),
+    cy: Math.floor(height * 0.5) + Math.floor(py / ch),
   }
 }
 
@@ -86,6 +87,13 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
     movestick.tipx = -1
     movestick.tipy = -1
     movestick.pointerId = -1
+    // update visuals
+    onDrawStick(
+      movestick.startx,
+      movestick.starty,
+      movestick.tipx,
+      movestick.tipy,
+    )
   }
 
   return (
@@ -118,7 +126,7 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
           const { cx, cy } = coords(width, height)
           // calc angle
           motion.set(movestick.startx - cx, movestick.starty - cy)
-          if (motion.length() > 6) {
+          if (movestick.tipx !== -1 || motion.length() > 3) {
             const snapdir = snap(radToDeg(motion.angle()), 45)
             // track for visuals
             movestick.tipx = cx

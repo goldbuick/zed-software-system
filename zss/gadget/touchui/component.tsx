@@ -68,7 +68,7 @@ export function TouchUI({ width, height, islandscape }: TouchUIProps) {
         <ShadeBoxDither
           width={width}
           height={height}
-          top={5}
+          top={3}
           left={0}
           right={5}
           bottom={height - 6}
@@ -76,7 +76,7 @@ export function TouchUI({ width, height, islandscape }: TouchUIProps) {
         <ShadeBoxDither
           width={width}
           height={height}
-          top={5}
+          top={3}
           left={width - 6}
           right={width - 1}
           bottom={height - 6}
