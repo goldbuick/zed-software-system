@@ -21,13 +21,11 @@ export function useScreenSize() {
 }
 
 type UserScreenProps = PropsWithChildren<{
-  islowrez: boolean
   islandscape: boolean
   showtouchcontrols: boolean
 }>
 
 export function UserScreen({
-  islowrez,
   islandscape,
   showtouchcontrols,
   children,
@@ -100,6 +98,7 @@ export function UserScreen({
                   key={insetcols * insetrows}
                   width={insetcols}
                   height={insetrows}
+                  islandscape={islandscape}
                 />
               </group>
             )}

@@ -209,12 +209,6 @@ export function ConsoleInput({
         }}
       />
       <UserInput
-        CANCEL_BUTTON={() => {
-          tape_terminal_close('tape', player)
-        }}
-        MENU_BUTTON={() => {
-          tape_terminal_inclayout('tape', true, player)
-        }}
         keydown={(event) => {
           const { key } = event
           const lkey = NAME(key)

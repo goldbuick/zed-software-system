@@ -91,6 +91,14 @@ createdevice('tape', [], (message) => {
         },
       }))
       break
+    case 'terminal:toggle':
+      useTape.setState((state) => ({
+        terminal: {
+          ...state.terminal,
+          open: !state.terminal.open,
+        },
+      }))
+      break
     case 'terminal:inclayout':
       if (isboolean(message.data)) {
         terminalinclayout(message.data)

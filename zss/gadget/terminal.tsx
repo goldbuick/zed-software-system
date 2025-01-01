@@ -86,7 +86,6 @@ export function Terminal() {
     <>
       <UserFocus>
         <UserScreen
-          islowrez={islowrez}
           islandscape={islandscape}
           showtouchcontrols={showtouchcontrols}
         >
