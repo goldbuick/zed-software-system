@@ -8,12 +8,15 @@ import {
   PlaneGeometry,
   Points,
 } from 'three'
+import unmuteaudio from 'unmute-ios-audio'
 import { vm_loadfile } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { enableaudio } from 'zss/device/synth'
 import { Terminal } from 'zss/gadget/terminal'
 import { ispresent } from 'zss/mapping/types'
 import 'zss/platform'
+
+unmuteaudio()
 
 extend({
   BufferGeometry,
