@@ -160,6 +160,10 @@ export function tape_terminal_close(sender: string, player: string) {
   hub.emit('tape:terminal:close', sender, undefined, player)
 }
 
+export function tape_terminal_toggle(sender: string, player: string) {
+  hub.emit('tape:terminal:toggle', sender, undefined, player)
+}
+
 export function tape_terminal_inclayout(
   sender: string,
   inc: boolean,

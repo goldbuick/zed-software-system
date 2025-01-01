@@ -18,3 +18,14 @@ export function indextopt(index: number, width: number): PT {
 export function pttoindex(pt: PT, width: number) {
   return pt.x + pt.y * width
 }
+
+export function ptwithin(
+  x: number,
+  y: number,
+  top: number,
+  right: number,
+  bottom: number,
+  left: number,
+) {
+  return x >= left && x <= right && y >= top && y <= bottom
+}
