@@ -48,12 +48,12 @@ export function enableaudio() {
   start()
     .then(() => {
       if (!enabled) {
-        unmuteaudio()
         const transport = getTransport()
         transport.bpm.value = 107
         transport.start()
         tape_info('synth', 'audio is enabled!')
         enabled = true
+        unmuteaudio()
       }
     })
     .catch(() => {})
