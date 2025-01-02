@@ -24,12 +24,12 @@ export function range(a: number, b?: number, step?: number) {
   return list
 }
 
-function randomItem<T>(array: T[]) {
+function randomitem<T>(array: T[]) {
   return array[randominteger(0, array.length - 1)]
 }
 
 export function pick<T>(...args: T[]) {
-  return randomItem(args.flat())
+  return randomitem(args.flat())
 }
 
 export function addToArray<T>(array: T[], value: T) {

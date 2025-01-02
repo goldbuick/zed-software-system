@@ -1,4 +1,5 @@
 import { clamp } from 'maath/misc'
+import { Vector2 } from 'three'
 import {
   createdither,
   createlayercontrol,
@@ -7,6 +8,7 @@ import {
   createtiles,
   LAYER,
 } from 'zss/gadget/data/types'
+import { circlepoints, linepoints } from 'zss/mapping/2d'
 import { average } from 'zss/mapping/array'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
@@ -14,61 +16,12 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { COLOR } from 'zss/words/types'
+import { COLLISION, COLOR } from 'zss/words/types'
 
-import {
-  bookelementdisplayread,
-  bookelementkindread,
-  bookreadcodepagebyaddress,
-} from './book'
-import { codepagereadstat } from './codepage'
+import { checkcollision } from './atomics'
+import { boardelementindex, boardelementread, boardobjectread } from './board'
+import { bookelementdisplayread, bookelementkindread } from './book'
 import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK } from './types'
-
-/*
-
-Object.values(gameState.board.objects).forEach((object) => {
-          const objectType = gameState.getObjectType(object)
-          const light =
-            object.stats.light || objectType?.stats.light || LIGHT.OFF
-
-          if (light !== LIGHT.OFF) {
-            darkness[object.x + object.y * boardWidth] = 0
-
-            const cpoints = [
-              circlePoints(object.x, object.y, light),
-              circlePoints(object.x, object.y, light - 1),
-            ].flat()
-
-            cpoints.forEach((cp) => {
-              const line = linePoints(object.x, object.y, cp.x, cp.y)
-              for (let i = 1; i < line.length; i++) {
-                const lp = line[i]
-                if (
-                  lp.x < 0 ||
-                  lp.x >= (gameState.board?.width || 1) ||
-                  lp.y < 0 ||
-                  lp.y >= (gameState.board?.height || 1)
-                ) {
-                  break
-                }
-
-                darkness[lp.x + lp.y * boardWidth] = 0
-
-                const element =
-                  gameState.lookup.coords[lp.x + lp.y * gameState.lookup.width]
-                if (
-                  isObject(element) ||
-                  element?.stats.collision === COLLISION.SOLID
-                ) {
-                  break
-                }
-              }
-            })
-          }
-        })
-
-
-*/
 
 let decoticker = 0
 function readdecotickercolor(): COLOR {
@@ -90,6 +43,8 @@ function readdecotickercolor(): COLOR {
       return COLOR.WHITE
   }
 }
+
+const pt1 = new Vector2()
 
 export function memoryconverttogadgetlayers(
   player: string,
@@ -167,19 +122,67 @@ export function memoryconverttogadgetlayers(
     const id = object.id ?? ''
     const display = bookelementdisplayread(book, object)
     const sprite = createsprite(player, objectindex, id)
-    const lx = object.lx ?? object.x ?? 0
-    const ly = object.ly ?? object.y ?? 0
-    const li = lx + ly * BOARD_WIDTH
 
     // setup sprite
     sprite.x = object.x ?? 0
     sprite.y = object.y ?? 0
-    sprite.char = object.char ?? display?.char ?? 1
-    sprite.color = object.color ?? display?.color ?? COLOR.WHITE
-    sprite.bg = object.bg ?? display?.bg ?? COLOR.ONCLEAR
+    sprite.char = display.char
+    sprite.color = display.color
+    sprite.bg = display.bg
     objects.sprites.push(sprite)
 
     // write lighting if needed
+    if (board.isdark && isnumber(display.light)) {
+      const cpoints = [
+        circlepoints(sprite.x, sprite.y, display.light),
+        circlepoints(sprite.x, sprite.y, display.light - 1),
+      ].flat()
+      for (let c = 0; c < cpoints.length; ++c) {
+        let falloff = 0
+        const cp = cpoints[c]
+        const line = linepoints(sprite.x, sprite.y, cp.x, cp.y)
+        for (let i = 0; i < line.length; i++) {
+          const lp = line[i]
+          if (
+            lp.x < 0 ||
+            lp.x >= boardwidth ||
+            lp.y < 0 ||
+            lp.y >= boardheight
+          ) {
+            break
+          }
+
+          // measure dist
+          const dist = pt1.subVectors(lp, sprite).length()
+          const ratio = dist / (display.light + 1)
+          const value = clamp(ratio + falloff, 0, 0.99)
+          const li = lp.x + lp.y * boardwidth
+          lighting.alphas[li] = Math.min(lighting.alphas[li], value)
+
+          // clipping
+          const index = boardelementindex(board, lp)
+          if (index < 0 || !ispresent(board?.lookup)) {
+            break
+          }
+
+          // check lookup
+          if (lp.x !== sprite.x || lp.y !== sprite.y) {
+            const object = boardobjectread(board, board.lookup[index] ?? '')
+            if (ispresent(object)) {
+              falloff += 0.25
+            }
+          }
+
+          const maybeterrain = board.terrain[index]
+          const terrainkind = bookelementkindread(book, maybeterrain)
+          const terraincollision =
+            maybeterrain?.collision ?? terrainkind?.collision
+          if (checkcollision(COLLISION.ISWALK, terraincollision)) {
+            break
+          }
+        }
+      }
+    }
 
     // write ticker messages
     if (

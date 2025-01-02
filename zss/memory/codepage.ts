@@ -273,6 +273,7 @@ function applyelementstats(codepage: CODE_PAGE, element: BOARD_ELEMENT) {
       case 'char':
       case 'color':
       case 'bg':
+      case 'light':
       case 'p1':
       case 'p2':
       case 'p3':
