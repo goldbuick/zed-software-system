@@ -66,8 +66,6 @@ export const colorconsts = {
   onltblack: 'ONDKGRAY',
   // special bg colors
   onclear: 'ONCLEAR',
-  onshadow: 'ONSHADOW',
-  onborrow: 'ONBORROW',
 } as const
 
 export type STR_COLOR_TYPE = typeof colorconsts

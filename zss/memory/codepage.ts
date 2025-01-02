@@ -273,6 +273,7 @@ function applyelementstats(codepage: CODE_PAGE, element: BOARD_ELEMENT) {
       case 'char':
       case 'color':
       case 'bg':
+      case 'light':
       case 'p1':
       case 'p2':
       case 'p3':
@@ -334,6 +335,28 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         codepage.board = createboard()
       }
       codepage.board.id = codepage.id
+      const stats = codepagereadstatdefaults(codepage)
+      codepage.board.isdark = ispresent(stats.isdark) && stats.isdark ? 1 : 0
+      // @ts-expect-error ugh
+      codepage.board.over = stats.over ?? codepage.board.over
+      // @ts-expect-error ugh
+      codepage.board.under = stats.under ?? codepage.board.under
+      // @ts-expect-error ugh
+      codepage.board.exitnorth = stats.exitnorth ?? codepage.board.exitnorth
+      // @ts-expect-error ugh
+      codepage.board.exitsouth = stats.exitsouth ?? codepage.board.exitsouth
+      // @ts-expect-error ugh
+      codepage.board.exitwest = stats.exitwest ?? codepage.board.exitwest
+      // @ts-expect-error ugh
+      codepage.board.exiteast = stats.exiteast ?? codepage.board.exiteast
+      // @ts-expect-error ugh
+      codepage.board.timelimit = stats.timelimit ?? codepage.board.timelimit
+      // @ts-expect-error ugh
+      codepage.board.restartonzap =
+        stats.restartonzap ?? codepage.board.restartonzap
+      // @ts-expect-error ugh
+      codepage.board.maxplayershots =
+        stats.maxplayershots ?? codepage.board.maxplayershots
       return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {

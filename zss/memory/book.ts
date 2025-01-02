@@ -195,7 +195,8 @@ export function bookelementdisplayread(
   return {
     char: element?.char ?? kind?.char ?? 1,
     color: element?.color ?? kind?.color ?? COLOR.WHITE,
-    bg: element?.bg ?? kind?.bg ?? COLOR.ONBORROW,
+    bg: element?.bg ?? kind?.bg ?? COLOR.ONCLEAR,
+    light: element?.light ?? kind?.light,
   }
 }
 
