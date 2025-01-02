@@ -28,6 +28,7 @@ enum BOARD_ELEMENT_KEYS {
   char,
   color,
   bg,
+  light,
   player,
   bucket,
   pushable,

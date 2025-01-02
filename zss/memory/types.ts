@@ -20,6 +20,7 @@ export type BOARD_ELEMENT = {
   char?: number
   color?: number
   bg?: number
+  light?: number
   // interaction
   player?: string
   bucket?: (number | string)[]
