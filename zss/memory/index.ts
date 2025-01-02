@@ -635,8 +635,6 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
     return layers
   }
 
-  const borrowbuffer: number[] = new Array(BOARD_WIDTH * BOARD_HEIGHT).fill(0)
-
   // read over board
   const over = bookreadboard(mainbook, playerboard.over ?? '')
 
@@ -655,7 +653,6 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
       mainbook,
       board,
       board === playerboard,
-      borrowbuffer,
     )
     i += view.length
     layers.push(...view)

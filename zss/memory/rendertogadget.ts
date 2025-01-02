@@ -16,7 +16,12 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { bookelementdisplayread, bookelementkindread } from './book'
+import {
+  bookelementdisplayread,
+  bookelementkindread,
+  bookreadcodepagebyaddress,
+} from './book'
+import { codepagereadstat } from './codepage'
 import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK } from './types'
 
 /*
@@ -92,7 +97,6 @@ export function memoryconverttogadgetlayers(
   book: BOOK,
   board: BOARD,
   isprimary: boolean,
-  borrowbuffer: number[],
 ): LAYER[] {
   const layers: LAYER[] = []
 
@@ -105,12 +109,18 @@ export function memoryconverttogadgetlayers(
   const tiles = createtiles(player, i++, boardwidth, boardheight, defaultcolor)
   layers.push(tiles)
 
-  const shadow = createdither(player, i++, boardwidth, boardheight)
-  layers.push(shadow)
-
   const objectindex = i++
   const objects = createsprites(player, objectindex)
   layers.push(objects)
+
+  const lighting = createdither(
+    player,
+    i++,
+    boardwidth,
+    boardheight,
+    board.isdark ? 1 : 0,
+  )
+  layers.push(lighting)
 
   const tickers = createtiles(
     player,
@@ -143,10 +153,6 @@ export function memoryconverttogadgetlayers(
       tiles.char[i] = tile.char ?? kind?.char ?? 0
       tiles.color[i] = tile.color ?? kind?.color ?? defaultcolor
       tiles.bg[i] = tile.bg ?? kind?.bg ?? defaultcolor
-      // write to borrow buffer
-      if (tiles.color[i] !== (COLOR.ONCLEAR as number)) {
-        borrowbuffer[i] = tiles.color[i]
-      }
     }
   })
 
@@ -173,10 +179,7 @@ export function memoryconverttogadgetlayers(
     sprite.bg = object.bg ?? display?.bg ?? COLOR.ONCLEAR
     objects.sprites.push(sprite)
 
-    // write to borrow buffer
-    if (sprite.color !== (COLOR.ONCLEAR as number)) {
-      borrowbuffer[li] = sprite.color
-    }
+    // write lighting if needed
 
     // write ticker messages
     if (
@@ -215,76 +218,6 @@ export function memoryconverttogadgetlayers(
       control.focusid = id
     }
   })
-
-  // smooth shadows
-  function aa(x: number, y: number) {
-    if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT) {
-      return undefined
-    }
-    return shadow.alphas[x + y * BOARD_WIDTH]
-  }
-
-  const weights = [
-    [1, 1, 1, 1, 1],
-    [1, 3, 5, 3, 1],
-    [1, 5, 12, 5, 1],
-    [1, 3, 5, 3, 1],
-    [1, 1, 1, 1, 1],
-  ].flat()
-
-  const alphas = new Array<number>(shadow.alphas.length)
-  for (let i = 0; i < shadow.alphas.length; ++i) {
-    // coords
-    const cx = i % BOARD_WIDTH
-    const cy = Math.floor(i / BOARD_WIDTH)
-
-    // weighted average
-    const values = [
-      [
-        aa(cx - 2, cy - 2),
-        aa(cx - 1, cy - 2),
-        aa(cx, cy - 2),
-        aa(cx + 1, cy - 2),
-        aa(cx + 2, cy - 2),
-      ],
-      [
-        aa(cx - 2, cy - 1),
-        aa(cx - 1, cy - 1),
-        aa(cx, cy - 1),
-        aa(cx + 1, cy - 1),
-        aa(cx + 2, cy - 1),
-      ],
-      [
-        aa(cx - 2, cy),
-        aa(cx - 1, cy),
-        aa(cx, cy),
-        aa(cx + 1, cy),
-        aa(cx + 2, cy),
-      ],
-      [
-        aa(cx - 2, cy + 1),
-        aa(cx - 1, cy + 1),
-        aa(cx, cy + 1),
-        aa(cx + 1, cy + 1),
-        aa(cx + 2, cy + 1),
-      ],
-      [
-        aa(cx - 2, cy + 2),
-        aa(cx - 1, cy + 2),
-        aa(cx, cy + 2),
-        aa(cx + 1, cy + 2),
-        aa(cx + 2, cy + 2),
-      ],
-    ]
-      .flat()
-      .map((value, i) => (ispresent(value) ? value * weights[i] : undefined))
-      .filter(ispresent)
-    // final shade
-    alphas[i] = clamp(average(values), 0, 1)
-  }
-
-  // update shadows
-  shadow.alphas = alphas
 
   // return result
   return layers
