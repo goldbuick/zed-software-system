@@ -229,7 +229,6 @@ export function createchip(
       try {
         const result = logic?.next()
         if (result?.done) {
-          api_error('chip', 'crash', 'generator logic unexpectedly exited')
           flags.es = 1
         }
       } catch (err: any) {
