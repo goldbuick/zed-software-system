@@ -53,7 +53,7 @@ export function Terminal() {
   const [gputier, setgputier] = useState<TierResult>()
   useEffect(() => {
     doasync('gpudetect', async () => {
-      const result = await getGPUTier({ benchmarksURL: '/benchmarks-min' })
+      const result = await getGPUTier()
       setgputier(result)
     })
   }, [])

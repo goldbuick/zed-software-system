@@ -21,6 +21,7 @@ import {
   getDestination,
   Player,
 } from 'tone'
+import unmuteaudio from 'unmute-ios-audio'
 import { createdevice } from 'zss/device'
 import { ECHO_OFF, ECHO_ON } from 'zss/gadget/audio/fx'
 import {
@@ -47,6 +48,7 @@ export function enableaudio() {
   start()
     .then(() => {
       if (!enabled) {
+        unmuteaudio()
         const transport = getTransport()
         transport.bpm.value = 107
         transport.start()

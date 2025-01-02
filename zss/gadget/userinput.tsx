@@ -85,6 +85,7 @@ export function modsfromevent(event: KeyboardEvent): UserInputMods {
 }
 
 function userinputinvoke(input: INPUT, mods: UserInputMods) {
+  // console.info('userinputinvoke', INPUT[input], mods)
   user.root.emit(INPUT[input], mods)
 }
 
@@ -139,16 +140,6 @@ document.addEventListener(
         }
         event.preventDefault()
         break
-      case 'alt':
-      case 'meta':
-      case 'shift':
-      case 'control':
-      case 'arrowleft':
-      case 'arrowright':
-      case 'arrowup':
-      case 'arrowdown':
-        // no-op
-        break
       default:
         event.preventDefault()
         break
@@ -195,11 +186,6 @@ document.addEventListener(
         inputdown(INPUT.MENU_BUTTON)
         break
     }
-
-    // always invoke keydown
-    // we should have gamepad input that moves between hotkey inputs,
-    // which then can be activated with the ok button
-    // maybe d-pad ?
     user.root.emit('keydown', event)
   },
   { capture: true },
@@ -229,6 +215,13 @@ document.addEventListener(
 
     // keyboard built-in player inputs
     switch (key) {
+      case 'meta':
+        // special case for macos cmd + arrow keys
+        inputup(INPUT.MOVE_LEFT)
+        inputup(INPUT.MOVE_RIGHT)
+        inputup(INPUT.MOVE_UP)
+        inputup(INPUT.MOVE_DOWN)
+        break
       case 'arrowleft':
         inputup(INPUT.MOVE_LEFT)
         break
