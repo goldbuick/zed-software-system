@@ -20,8 +20,8 @@ import {
   Volume,
   getDestination,
   Player,
+  getContext,
 } from 'tone'
-import unmuteaudio from 'unmute-ios-audio'
 import { createdevice } from 'zss/device'
 import { ECHO_OFF, ECHO_ON } from 'zss/gadget/audio/fx'
 import {
@@ -31,9 +31,16 @@ import {
   SYNTH_NOTE_ON,
 } from 'zss/gadget/audio/play'
 import { createsource } from 'zss/gadget/audio/source'
+import { unmute } from 'zss/gadget/audio/unmute'
 import { doasync } from 'zss/mapping/func'
 import { clamp } from 'zss/mapping/number'
-import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+  MAYBE,
+} from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
 import { api_error, tape_info } from './api'
@@ -48,12 +55,13 @@ export function enableaudio() {
   start()
     .then(() => {
       if (!enabled) {
+        const context: AudioContext = getContext() as unknown as AudioContext
         const transport = getTransport()
-        transport.bpm.value = 107
-        transport.start()
-        tape_info('synth', 'audio is enabled!')
         enabled = true
-        unmuteaudio()
+        transport.start()
+        transport.bpm.value = 107
+        unmute(context, true)
+        tape_info('synth', 'audio is enabled!')
       }
     })
     .catch(() => {})
@@ -61,9 +69,11 @@ export function enableaudio() {
 
 function createsynth() {
   const destination = getDestination()
+  const broadcastdestination = getContext().createMediaStreamDestination()
 
   const mainvolume = new Volume(8)
   mainvolume.connect(destination)
+  mainvolume.connect(broadcastdestination)
 
   const maincompressor = new Compressor({
     threshold: -24,
@@ -590,7 +600,7 @@ function createsynth() {
     pacercount = 0
   }
 
-  return { addplay, stopplay, SOURCE }
+  return { broadcastdestination, addplay, stopplay, SOURCE }
 }
 
 function validatesynthtype(
@@ -683,6 +693,11 @@ async function handletts(voice: string, phrase: string) {
 }
 
 let synth: ReturnType<typeof createsynth>
+
+export function synthbroadcastdestination(): MAYBE<MediaStreamAudioDestinationNode> {
+  return synth.broadcastdestination
+}
+
 const synthdevice = createdevice('synth', [], (message) => {
   if (enabled && !ispresent(synth)) {
     synth = createsynth()
