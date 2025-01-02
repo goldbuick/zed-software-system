@@ -10,7 +10,7 @@ import {
 } from 'zss/gadget/data/types'
 import { circlepoints, linepoints } from 'zss/mapping/2d'
 import { average } from 'zss/mapping/array'
-import { isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
@@ -19,7 +19,7 @@ import {
 import { COLLISION, COLOR } from 'zss/words/types'
 
 import { checkcollision } from './atomics'
-import { boardelementindex, boardelementread, boardobjectread } from './board'
+import { boardelementindex, boardobjectread } from './board'
 import { bookelementdisplayread, bookelementkindread } from './book'
 import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK } from './types'
 
@@ -133,10 +133,7 @@ export function memoryconverttogadgetlayers(
 
     // write lighting if needed
     if (board.isdark && isnumber(display.light)) {
-      const cpoints = [
-        circlepoints(sprite.x, sprite.y, display.light),
-        circlepoints(sprite.x, sprite.y, display.light - 1),
-      ].flat()
+      const cpoints = circlepoints(sprite.x, sprite.y, display.light)
       for (let c = 0; c < cpoints.length; ++c) {
         let falloff = 0
         const cp = cpoints[c]
@@ -155,9 +152,10 @@ export function memoryconverttogadgetlayers(
           // measure dist
           const dist = pt1.subVectors(lp, sprite).length()
           const ratio = dist / (display.light + 1)
-          const value = clamp(ratio + falloff, 0, 0.99)
+          const value = clamp(ratio + falloff, 0, 1)
+          const invert = 1 - value
           const li = lp.x + lp.y * boardwidth
-          lighting.alphas[li] = Math.min(lighting.alphas[li], value)
+          lighting.alphas[li] = clamp(lighting.alphas[li] - invert, 0, 1)
 
           // clipping
           const index = boardelementindex(board, lp)
@@ -169,7 +167,7 @@ export function memoryconverttogadgetlayers(
           if (lp.x !== sprite.x || lp.y !== sprite.y) {
             const object = boardobjectread(board, board.lookup[index] ?? '')
             if (ispresent(object)) {
-              falloff += 0.25
+              falloff += 0.5
             }
           }
 
@@ -183,6 +181,49 @@ export function memoryconverttogadgetlayers(
         }
       }
     }
+
+    // smooth lighting
+    function aa(x: number, y: number) {
+      if (x < 0 || x >= boardwidth || y < 0 || y >= boardheight) {
+        return undefined
+      }
+      return lighting.alphas[x + y * boardwidth]
+    }
+
+    const weights = [
+      [0.01, 0.01, 0.01],
+      [0.01, 1.0, 0.01],
+      [0.01, 0.01, 0.01],
+    ].flat()
+
+    const alphas = deepcopy(lighting.alphas)
+    for (let i = 0; i < lighting.alphas.length; ++i) {
+      // coords
+      const cx = i % boardwidth
+      const cy = Math.floor(i / boardwidth)
+
+      // weighted average
+      const values = [
+        [aa(cx - 1, cy - 1), aa(cx, cy - 1), aa(cx + 1, cy - 1)],
+        [aa(cx - 1, cy), aa(cx, cy), aa(cx + 1, cy)],
+        [aa(cx - 1, cy + 1), aa(cx, cy + 1), aa(cx + 1, cy + 1)],
+      ]
+        .flat()
+        .map((value, i) =>
+          ispresent(value) ? [value * weights[i], weights[i]] : undefined,
+        )
+        .filter(ispresent)
+
+      const wtotal = values
+        .map(([, weight]) => weight)
+        .reduce((t, v) => t + v, 0)
+      const vtotal = values.map(([value]) => value).reduce((t, v) => t + v, 0)
+      // final shade
+      alphas[i] = vtotal / wtotal
+    }
+
+    // update lighting data
+    lighting.alphas = deepcopy(alphas)
 
     // write ticker messages
     if (
