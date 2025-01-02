@@ -517,6 +517,7 @@ function createsynth() {
           // reset starting offset
           --pacercount
           if (pacercount === 0) {
+            pacer.clear()
             pacertime = -1
           }
           break

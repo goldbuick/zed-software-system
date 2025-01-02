@@ -44,8 +44,8 @@ export const TAPE_MAX_LINES = 128
 
 export enum TAPE_DISPLAY {
   TOP,
-  BOTTOM,
   FULL,
+  BOTTOM,
   SPLIT_Y,
   SPLIT_Y_ALT,
   MAX,

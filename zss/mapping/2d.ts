@@ -30,7 +30,7 @@ export function ptwithin(
   return x >= left && x <= right && y >= top && y <= bottom
 }
 
-export function linePoints(
+export function linepoints(
   x0: number,
   y0: number,
   x1: number,
@@ -62,7 +62,7 @@ export function linePoints(
   return points
 }
 
-function ellipsePoints(
+function ellipsepoints(
   points: PT[],
   x0: number,
   y0: number,
@@ -75,7 +75,7 @@ function ellipsePoints(
   points.push({ x: x0 - x, y: y0 - y })
 }
 
-export function circlePoints(x0: number, y0: number, r: number) {
+export function circlepoints(x0: number, y0: number, r: number) {
   const points: PT[] = []
 
   let d = 5 - 4 * r
@@ -87,8 +87,8 @@ export function circlePoints(x0: number, y0: number, r: number) {
   let deltaB = 3 * 4
 
   while (x <= y) {
-    ellipsePoints(points, x0, y0, x, y)
-    ellipsePoints(points, x0, y0, y, x)
+    ellipsepoints(points, x0, y0, x, y)
+    ellipsepoints(points, x0, y0, y, x)
 
     if (d > 0) {
       d += deltaA
