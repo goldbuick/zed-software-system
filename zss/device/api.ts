@@ -20,6 +20,26 @@ export function api_error(
   return tape_error(sender, message, player)
 }
 
+export function broadcast_createsession(sender: string, player: string) {
+  hub.emit('broadcast:createsession', sender, undefined, player)
+}
+
+export function broadcast_closesession(sender: string, player: string) {
+  hub.emit('broadcast:closesession', sender, undefined, player)
+}
+
+export function broadcast_startstream(
+  sender: string,
+  streamkey: string,
+  player: string,
+) {
+  hub.emit('broadcast:startstream', sender, streamkey, player)
+}
+
+export function broadcast_stopstream(sender: string, player: string) {
+  hub.emit('broadcast:stopstream', sender, undefined, player)
+}
+
 export function gadgetclient_reset(
   sender: string,
   gadgetstate: GADGET_STATE,
