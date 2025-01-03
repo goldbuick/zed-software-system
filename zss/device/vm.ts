@@ -59,7 +59,7 @@ async function savestate(tag = ``) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
-    const historylabel = `${tag}${new Date().toISOString()}${mainbook.name} ${content.length} chars`
+    const historylabel = `${tag}${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
     register_flush(vm.name(), historylabel, content, memorygetdefaultplayer())
   }
 }
