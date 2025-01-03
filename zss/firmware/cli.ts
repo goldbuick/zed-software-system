@@ -9,6 +9,10 @@ import {
   register_share,
   register_dev,
   peer_joincode,
+  broadcast_closesession,
+  broadcast_startstream,
+  broadcast_stopstream,
+  broadcast_createsession,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
@@ -446,5 +450,26 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('joincode', () => {
     peer_joincode('cli', READ_CONTEXT.player)
+    return 0
+  })
+  .command('broadcast', (_, words) => {
+    const [maybeaction, ii] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
+    switch (NAME(maybeaction ?? '')) {
+      default:
+      case 'create':
+        broadcast_createsession('cli', READ_CONTEXT.player)
+        break
+      case 'close':
+        broadcast_closesession('cli', READ_CONTEXT.player)
+        break
+      case 'start': {
+        const [streamkey] = readargs(words, ii, [ARG_TYPE.STRING])
+        broadcast_startstream('cli', streamkey, READ_CONTEXT.player)
+        break
+      }
+      case 'stop':
+        broadcast_stopstream('cli', READ_CONTEXT.player)
+        break
+    }
     return 0
   })

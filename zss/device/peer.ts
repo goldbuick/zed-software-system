@@ -5,13 +5,7 @@ import { ispresent, MAYBE } from 'zss/mapping/types'
 import { shorturl } from 'zss/mapping/url'
 import { write, writecopyit } from 'zss/words/writeui'
 
-import {
-  api_error,
-  peer_create,
-  peer_joincode,
-  register_ackbooks,
-  vm_login,
-} from './api'
+import { api_error, peer_create, peer_joincode, register_ackbooks } from './api'
 import { createforward } from './forward'
 import { registerreadplayer } from './register'
 
