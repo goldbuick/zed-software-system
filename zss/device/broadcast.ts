@@ -1,8 +1,9 @@
 import IVSBroadcastClient, { Callback } from 'amazon-ivs-web-broadcast'
 import { createdevice } from 'zss/device'
 import { doasync } from 'zss/mapping/func'
+import { waitfor } from 'zss/mapping/tick'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
-import { write } from 'zss/words/writeui'
+import { write, writeheader, writeoption } from 'zss/words/writeui'
 
 import { api_error } from './api'
 import { synthbroadcastdestination } from './synth'
@@ -93,6 +94,14 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
     case 'startstream':
       doasync('broadcast:startstream', async () => {
         if (isstring(message.data) && ispresent(broadcastclient)) {
+          writeheader(broadcast.name(), 'broadcasting in')
+          writeoption(broadcast.name(), '3', '...')
+          await waitfor(1000)
+          writeoption(broadcast.name(), '2', '...')
+          await waitfor(1000)
+          writeoption(broadcast.name(), '1', '...')
+          await waitfor(1000)
+          writeheader(broadcast.name(), 'GOING LIVE')
           await broadcastclient.startBroadcast(
             message.data,
             'https://g.webrtc.live-video.net:4443',

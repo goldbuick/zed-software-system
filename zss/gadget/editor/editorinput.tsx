@@ -282,7 +282,10 @@ export function EditorInput({
                     break
                   case 'p':
                     vm_cli('editor', strvalueselected, player)
-                    writetext('editor', `running: ${strvalueselected}`)
+                    writetext(
+                      'editor',
+                      `running: ${strvalueselected.substring(0, 18)}`,
+                    )
                     break
                 }
               } else if (mods.alt) {

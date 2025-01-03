@@ -55,23 +55,29 @@ export function enableaudio() {
   start()
     .then(() => {
       if (!enabled) {
-        const context: AudioContext = getContext() as unknown as AudioContext
         const transport = getTransport()
         enabled = true
         transport.start()
         transport.bpm.value = 107
-        unmute(context, true)
         tape_info('synth', 'audio is enabled!')
+        try {
+          const context: AudioContext = getContext() as unknown as AudioContext
+          unmute(context, true)
+        } catch (error) {
+          console.debug(error)
+        }
       }
     })
-    .catch(() => {})
+    .catch((err: any) => {
+      api_error('synth', 'audio', err.message)
+    })
 }
 
 function createsynth() {
   const destination = getDestination()
   const broadcastdestination = getContext().createMediaStreamDestination()
 
-  const mainvolume = new Volume(8)
+  const mainvolume = new Volume(4)
   mainvolume.connect(destination)
   mainvolume.connect(broadcastdestination)
 
@@ -692,10 +698,10 @@ async function handletts(voice: string, phrase: string) {
   playaudiobuffer(audiobuffer)
 }
 
-let synth: ReturnType<typeof createsynth>
+let synth: MAYBE<ReturnType<typeof createsynth>>
 
 export function synthbroadcastdestination(): MAYBE<MediaStreamAudioDestinationNode> {
-  return synth.broadcastdestination
+  return synth?.broadcastdestination
 }
 
 const synthdevice = createdevice('synth', [], (message) => {

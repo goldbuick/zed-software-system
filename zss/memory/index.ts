@@ -15,7 +15,7 @@ import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { COLOR, NAME } from 'zss/words/types'
+import { NAME } from 'zss/words/types'
 
 import {
   boarddeleteobject,
@@ -506,9 +506,15 @@ export function memorycli(player: string, cli = '') {
   READ_CONTEXT.player = player
   READ_CONTEXT.isplayer = true
 
+  // cli invokes get more processing time
+  const resethalt = RUNTIME.HALT_AT_COUNT
+  RUNTIME.HALT_AT_COUNT = resethalt * 8
+
   // invoke once
   tape_debug('memory', 'running', mainbook.timestamp, id, cli)
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
+
+  RUNTIME.HALT_AT_COUNT = resethalt
 }
 
 export function memoryrun(address: string) {
