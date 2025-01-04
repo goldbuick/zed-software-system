@@ -1,65 +1,29 @@
 import { tape_info } from 'zss/device/api'
-import {
-  mimetypeofbytesread,
-  parsebinaryfile,
-  parsetextfile,
-  parsezipfile,
-} from 'zss/firmware/loader/parsefile'
+import { createsid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
-import { NAME } from 'zss/words/types'
 
 import { bookreadcodepagesbytype } from './book'
 import { codepagereadstats } from './codepage'
 import { CODE_PAGE_TYPE } from './types'
 
-import { MEMORY_LABEL, memoryreadbookbysoftware } from '.'
+import { MEMORY_LABEL, memoryloaderstart, memoryreadbookbysoftware } from '.'
 
-// export function memoryloader(
-//   player: string,
-//   file: File,
-//   fileext: string,
-//   binaryfile: Uint8Array,
-// ) {
+const EVENT_BY_ID: Record<string, any> = {}
+const CONTENT_BY_ID: Record<string, any> = {}
 
-//   const shouldmatch = ['binaryfile', fileext]
-//   tape_info('memory', 'looking for stats', ...shouldmatch)
+export function memoryloaderdone(id: string) {
+  delete CONTENT_BY_ID[id]
+}
 
-//   const loaders = bookreadcodepagesbytype(
-//     mainbook,
-//     CODE_PAGE_TYPE.LOADER,
-//   ).filter((codepage) => {
-//     const stats = codepagereadstats(codepage)
-//     const matched = Object.keys(stats).filter((name) =>
-//       shouldmatch.includes(NAME(name)),
-//     )
-//     return matched.length === shouldmatch.length
-//   })
+export function memoryloaderevent(id: string) {
+  return EVENT_BY_ID[id]
+}
 
-//   for (let i = 0; i < loaders.length; ++i) {
-//     const loader = loaders[i]
+export function memoryloadercontent(id: string) {
+  return CONTENT_BY_ID[id]
+}
 
-//     // player id + unique id fo run
-//     const id = `${player}_load_${loader.id}`
-
-//     // create binary file loader
-//     MEMORY.binaryfiles.set(id, {
-//       filename: file.name,
-//       cursor: 0,
-//       bytes: binaryfile,
-//       dataview: new DataView(binaryfile.buffer),
-//     })
-
-//     // add code to active loaders
-//     tape_info('memory', 'starting loader', mainbook.timestamp, id)
-//     MEMORY.loaders.set(id, loader.code)
-//   }
-// }
-
-// export function memoryreadbinaryfile(id: string) {
-//   return MEMORY.binaryfiles.get(id)
-// }
-
-export function memoryloader(event: string, content: any, player: string) {
+export function memoryloader(event: string, content: any) {
   // we scan main book for loaders
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -75,12 +39,12 @@ export function memoryloader(event: string, content: any, player: string) {
     return !!stats[event]
   })
 
-  switch (event) {
-    case 'chat':
-      console.info(content, loaders)
-      break
-    case 'file':
-      console.info(content, loaders)
-      break
+  // run matched loaders
+  for (let i = 0; i < loaders.length; ++i) {
+    const id = createsid()
+    EVENT_BY_ID[id] = event
+    CONTENT_BY_ID[id] = content
+    memoryloaderstart(id, loaders[i].code)
+    tape_info('memory', 'starting loader', mainbook.timestamp, id)
   }
 }

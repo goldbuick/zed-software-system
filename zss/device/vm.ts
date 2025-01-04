@@ -10,7 +10,6 @@ import {
   memoryreadbooklist,
   memoryresetbooks,
   memorytick,
-  memoryloader,
   memorysetdefaultplayer,
   memoryplayerscan,
   memoryplayerlogout,
@@ -24,6 +23,7 @@ import {
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
+import { memoryloader } from 'zss/memory/loader'
 import { write } from 'zss/words/writeui'
 
 import {

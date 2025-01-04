@@ -66,10 +66,6 @@ const MEMORY = {
   // running code
   chips: new Map<string, string>(),
   loaders: new Map<string, string>(),
-  // book indexes for running code
-  // codepageindex: new Map<string, string>(),
-  // external content loaders
-  binaryfiles: new Map<string, BINARY_READER>(),
 }
 
 export function memorysetdefaultplayer(player: string) {
@@ -420,6 +416,10 @@ export function memorytickobject(
     // @ts-expect-error dont bother me
     READ_CONTEXT[key] = OLD_CONTEXT[key]
   })
+}
+
+export function memoryloaderstart(id: string, code: string) {
+  MEMORY.loaders.set(id, code)
 }
 
 export function memorytick() {

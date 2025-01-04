@@ -8,6 +8,7 @@ import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
 import { binaryloader } from './loader/binaryloader'
+import { textloader } from './loader/textloader'
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
@@ -71,7 +72,4 @@ export const LOADER_FIRMWARE = createfirmware({
     return 0
   })
   .command('bin', binaryloader)
-/**
- * TODO loaders, textloader, jsonloader, imageloader, xmlloader
- * common text parsing ??
- */
+  .command('txt', textloader)
