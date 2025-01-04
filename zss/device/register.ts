@@ -14,7 +14,6 @@ import {
   peer_create,
   platform_init,
   register_ready,
-  register_refresh,
   tape_crash,
   tape_info,
   tape_terminal_close,
@@ -78,7 +77,11 @@ function readurlhash(): string {
 let shouldreload = true
 window.addEventListener('hashchange', () => {
   if (shouldreload) {
-    location.reload()
+    // location.reload()
+    // how do we clear the state here ??
+    // do we tear down platform and re-make it ??
+    // question, should we then just shove another vm_init ??
+    // ie: here is your starting point again ??
   } else {
     // reset after a single pass
     shouldreload = true
@@ -211,15 +214,6 @@ const register = createdevice(
           })
         }
         break
-      case 'refresh':
-        if (message.player === sessionid) {
-          doasync('register:refresh', async function () {
-            writeheader(register.name(), 'BYE')
-            await waitfor(100)
-            location.reload()
-          })
-        }
-        break
       case 'nuke':
         if (message.player === sessionid) {
           doasync('register:nuke', async function () {
@@ -232,6 +226,7 @@ const register = createdevice(
             await waitfor(1000)
             writeheader(register.name(), 'BYE')
             await waitfor(100)
+            // nuke is the only valid case for reload
             location.hash = ''
             location.reload()
           })
@@ -251,7 +246,8 @@ const register = createdevice(
           doasync('register:select', async () => {
             if (isstring(message.data)) {
               await writeselectedid(message.data)
-              register_refresh(register.name(), sessionid)
+              // use same solution as a hash change here ...
+              // re-run the vm_init flow
             }
           })
         }

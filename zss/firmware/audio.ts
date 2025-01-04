@@ -4,6 +4,7 @@ import {
   synth_mainvolume,
   synth_play,
   synth_tts,
+  synth_ttsvolume,
   synth_voice,
   synth_voicefx,
 } from 'zss/device/api'
@@ -61,6 +62,11 @@ export const AUDIO_FIRMWARE = createfirmware()
   .command('drumvolume', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
     synth_drumvolume('audio', volume, READ_CONTEXT.player)
+    return 0
+  })
+  .command('ttsvolume', (_, words) => {
+    const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
+    synth_ttsvolume('audio', volume, READ_CONTEXT.player)
     return 0
   })
   .command('play', (chip, words) => {
