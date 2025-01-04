@@ -237,11 +237,12 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
         memorycli(message.player, message.data)
       }
       break
-    case 'loadfile':
+    case 'loader':
+      console.info(message.data)
       // user input from built-in console
-      if (message.player === memorygetdefaultplayer()) {
-        memoryloadfile(message.player, message.data)
-      }
+      // if (message.player === memorygetdefaultplayer()) {
+      //   memoryloadfile(message.player, message.data)
+      // }
       break
     default:
       // running software messages

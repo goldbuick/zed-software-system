@@ -40,6 +40,14 @@ export function broadcast_stopstream(sender: string, player: string) {
   hub.emit('broadcast:stopstream', sender, undefined, player)
 }
 
+export function chat_connect(sender: string, channel: string, player: string) {
+  hub.emit('chat:connect', sender, channel, player)
+}
+
+export function chat_disconnect(sender: string, player: string) {
+  hub.emit('chat:disconnect', sender, undefined, player)
+}
+
 export function gadgetclient_reset(
   sender: string,
   gadgetstate: GADGET_STATE,
@@ -283,6 +291,11 @@ export function vm_flush(sender: string, tag: string, player: string) {
   hub.emit('vm:flush', sender, tag, player)
 }
 
-export function vm_loadfile(sender: string, file: File, player: string) {
-  hub.emit('vm:loadfile', sender, file, player)
+export function vm_loader(
+  sender: string,
+  event: string,
+  content: any,
+  player: string,
+) {
+  hub.emit('vm:loader', sender, [event, content], player)
 }

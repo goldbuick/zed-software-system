@@ -13,6 +13,8 @@ import {
   broadcast_startstream,
   broadcast_stopstream,
   broadcast_createsession,
+  chat_connect,
+  chat_disconnect,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { createfirmware } from 'zss/firmware'
@@ -450,6 +452,20 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('joincode', () => {
     peer_joincode('cli', READ_CONTEXT.player)
+    return 0
+  })
+  .command('chat', (_, words) => {
+    const [maybeaction, ii] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
+    switch (NAME(maybeaction ?? '')) {
+      case 'connect': {
+        const [channel] = readargs(words, ii, [ARG_TYPE.STRING])
+        chat_connect('cli', channel, READ_CONTEXT.player)
+        break
+      }
+      case 'close':
+        chat_disconnect('cli', READ_CONTEXT.player)
+        break
+    }
     return 0
   })
   .command('broadcast', (_, words) => {
