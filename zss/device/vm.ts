@@ -1,6 +1,7 @@
 import { createdevice } from 'zss/device'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
+import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { isjoin } from 'zss/mapping/url'
 import {
@@ -30,11 +31,11 @@ import {
   gadgetserver_clearplayer,
   platform_started,
   register_flush,
-  register_refresh,
   tape_debug,
   tape_info,
   vm_codeaddress,
   vm_flush,
+  vm_login,
 } from './api'
 import { modemobservevaluestring, modemwriteplayer } from './modem'
 
@@ -117,8 +118,9 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
           gadgetserver_clearplayer('vm', message.player)
           // save state
           await savestate()
-          // reload page
-          register_refresh('vm', message.player)
+          // attempt re-login
+          await waitfor(1000)
+          vm_login(vm.name(), message.player)
         })
       }
       break

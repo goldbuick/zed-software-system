@@ -77,7 +77,7 @@ function createsynth() {
   const destination = getDestination()
   const broadcastdestination = getContext().createMediaStreamDestination()
 
-  const mainvolume = new Volume(4)
+  const mainvolume = new Volume(0)
   mainvolume.connect(destination)
   mainvolume.connect(broadcastdestination)
 
@@ -90,24 +90,27 @@ function createsynth() {
   })
   maincompressor.connect(mainvolume)
 
-  const maingain = new Gain()
-  maingain.connect(maincompressor)
+  const playvolume = new Volume(0)
+  playvolume.connect(maincompressor)
 
-  const drumvolume = new Volume(2)
+  const drumvolume = new Volume(1)
   drumvolume.connect(maincompressor)
+
+  const ttsvolume = new Volume(3)
+  ttsvolume.connect(maincompressor)
 
   const SOURCE = [
     // for sfx
-    createsource(maingain),
+    createsource(playvolume),
     // + 8track synths
-    createsource(maingain),
-    createsource(maingain),
-    createsource(maingain),
-    createsource(maingain),
-    createsource(maingain),
-    createsource(maingain),
-    createsource(maingain),
-    createsource(maingain),
+    createsource(playvolume),
+    createsource(playvolume),
+    createsource(playvolume),
+    createsource(playvolume),
+    createsource(playvolume),
+    createsource(playvolume),
+    createsource(playvolume),
+    createsource(playvolume),
   ]
 
   // config drums
@@ -606,7 +609,34 @@ function createsynth() {
     pacercount = 0
   }
 
-  return { broadcastdestination, addplay, stopplay, SOURCE }
+  // adjust main volumes
+  function setmainvolume(volume: number) {
+    mainvolume.volume.value = volume
+  }
+  function setdrumvolume(volume: number) {
+    drumvolume.volume.value = volume
+  }
+
+  // tts output
+  function addttsaudiobuffer(audiobuffer: AudioBuffer) {
+    const player = new Player(audiobuffer).connect(ttsvolume)
+    player.start(0)
+  }
+
+  function setttsvolume(volume: number) {
+    ttsvolume.volume.value = volume
+  }
+
+  return {
+    broadcastdestination,
+    addplay,
+    stopplay,
+    addttsaudiobuffer,
+    setmainvolume,
+    setdrumvolume,
+    setttsvolume,
+    SOURCE,
+  }
 }
 
 function validatesynthtype(
@@ -681,22 +711,7 @@ function validatesynthtype(
 }
 
 // get MicrosoftSpeechTTS instance
-const tts = new EdgeSpeechTTS({ locale: 'en-US' })
-
-function playaudiobuffer(audiobuffer: AudioBuffer) {
-  const player = new Player(audiobuffer).toDestination()
-  player.start(0)
-  console.info('playing audio buffer', player)
-}
-
-async function handletts(voice: string, phrase: string) {
-  const audiobuffer = await tts.createAudio({
-    input: phrase,
-    options: { voice: voice || 'en-US-GuyNeural' },
-  })
-  // play the audio
-  playaudiobuffer(audiobuffer)
-}
+let tts: MAYBE<EdgeSpeechTTS>
 
 let synth: MAYBE<ReturnType<typeof createsynth>>
 
@@ -712,13 +727,20 @@ const synthdevice = createdevice('synth', [], (message) => {
     return
   }
   switch (message.target) {
-    case 'tts':
-      doasync('tts', async () => {
-        if (isarray(message.data)) {
-          const [voice, phrase] = message.data as [string, string]
-          await handletts(voice, phrase)
-        }
-      })
+    case 'mainvolume':
+      if (isnumber(message.data)) {
+        synth.setmainvolume(message.data)
+      }
+      break
+    case 'drumvolume':
+      if (isnumber(message.data)) {
+        synth.setdrumvolume(message.data)
+      }
+      break
+    case 'ttsvolume':
+      if (isnumber(message.data)) {
+        synth.setttsvolume(message.data)
+      }
       break
     case 'play':
       if (isarray(message.data)) {
@@ -1160,6 +1182,22 @@ const synthdevice = createdevice('synth', [], (message) => {
         }
         api_error(synthdevice.name(), message.target, `unknown fx ${fxname}`)
       }
+      break
+    case 'tts':
+      doasync('tts', async () => {
+        if (!ispresent(tts)) {
+          tts = new EdgeSpeechTTS({ locale: 'en-US' })
+        }
+        if (ispresent(synth) && isarray(message.data)) {
+          const [voice, phrase] = message.data as [string, string]
+          const audiobuffer = await tts.createAudio({
+            input: phrase,
+            options: { voice: voice || 'en-US-GuyNeural' },
+          })
+          // play the audio
+          synth.addttsaudiobuffer(audiobuffer)
+        }
+      })
       break
   }
 })

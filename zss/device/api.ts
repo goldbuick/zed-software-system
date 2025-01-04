@@ -125,10 +125,6 @@ export function register_share(sender: string, player: string) {
   hub.emit('register:share', sender, undefined, player)
 }
 
-export function register_refresh(sender: string, player: string) {
-  hub.emit('register:refresh', sender, undefined, player)
-}
-
 export function register_select(sender: string, book: string, player: string) {
   hub.emit('register:select', sender, book, player)
 }
@@ -143,6 +139,30 @@ export function synth_tts(sender: string, voice: string, phrase: string) {
 
 export function synth_play(sender: string, priority: number, buffer: string) {
   hub.emit('synth:play', sender, [priority, buffer])
+}
+
+export function synth_mainvolume(
+  sender: string,
+  volume: number,
+  player: string,
+) {
+  hub.emit('synth:mainvolume', sender, volume, player)
+}
+
+export function synth_drumvolume(
+  sender: string,
+  volume: number,
+  player: string,
+) {
+  hub.emit('synth:drumvolume', sender, volume, player)
+}
+
+export function synth_ttsvolume(
+  sender: string,
+  volume: number,
+  player: string,
+) {
+  hub.emit('synth:ttsvolume', sender, volume, player)
 }
 
 export function synth_voice(

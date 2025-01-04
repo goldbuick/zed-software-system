@@ -1,8 +1,8 @@
-import { Gain, Synth } from 'tone'
+import { Synth, Volume } from 'tone'
 
 import { createfx } from './fx'
 
-export function createsource(maingain: Gain) {
+export function createsource(playvolume: Volume) {
   const source = new Synth()
   source.set({
     envelope: {
@@ -24,7 +24,7 @@ export function createsource(maingain: Gain) {
     fx.distortion,
     fx.echo,
     fx.reverb,
-    maingain,
+    playvolume,
   )
 
   return { source, fx }

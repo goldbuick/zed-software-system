@@ -1,13 +1,16 @@
 import { CHIP } from 'zss/chip'
 import {
+  synth_drumvolume,
+  synth_mainvolume,
   synth_play,
   synth_tts,
+  synth_ttsvolume,
   synth_voice,
   synth_voicefx,
 } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { isnumber, isstring } from 'zss/mapping/types'
-import { ARG_TYPE, readargs } from 'zss/words/reader'
+import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
 const isfx = ['echo', 'reverb', 'chorus', 'phaser', 'distortion', 'vibrato']
@@ -51,6 +54,21 @@ function handlesynthvoice(idx: number, words: WORD[]) {
 }
 
 export const AUDIO_FIRMWARE = createfirmware()
+  .command('mainvolume', (_, words) => {
+    const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
+    synth_mainvolume('audio', volume, READ_CONTEXT.player)
+    return 0
+  })
+  .command('drumvolume', (_, words) => {
+    const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
+    synth_drumvolume('audio', volume, READ_CONTEXT.player)
+    return 0
+  })
+  .command('ttsvolume', (_, words) => {
+    const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
+    synth_ttsvolume('audio', volume, READ_CONTEXT.player)
+    return 0
+  })
   .command('play', (chip, words) => {
     handlesynthplay(1, chip, words)
     return 0
