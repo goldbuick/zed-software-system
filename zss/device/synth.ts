@@ -606,7 +606,22 @@ function createsynth() {
     pacercount = 0
   }
 
-  return { broadcastdestination, addplay, stopplay, SOURCE }
+  // adjust main volumes
+  function setmainvolume(volume: number) {
+    mainvolume.volume.value = volume
+  }
+  function setdrumvolume(volume: number) {
+    drumvolume.volume.value = volume
+  }
+
+  return {
+    broadcastdestination,
+    addplay,
+    stopplay,
+    setmainvolume,
+    setdrumvolume,
+    SOURCE,
+  }
 }
 
 function validatesynthtype(
@@ -712,13 +727,15 @@ const synthdevice = createdevice('synth', [], (message) => {
     return
   }
   switch (message.target) {
-    case 'tts':
-      doasync('tts', async () => {
-        if (isarray(message.data)) {
-          const [voice, phrase] = message.data as [string, string]
-          await handletts(voice, phrase)
-        }
-      })
+    case 'mainvolume':
+      if (isnumber(message.data)) {
+        synth.setmainvolume(message.data)
+      }
+      break
+    case 'drumvolume':
+      if (isnumber(message.data)) {
+        synth.setdrumvolume(message.data)
+      }
       break
     case 'play':
       if (isarray(message.data)) {
@@ -1160,6 +1177,14 @@ const synthdevice = createdevice('synth', [], (message) => {
         }
         api_error(synthdevice.name(), message.target, `unknown fx ${fxname}`)
       }
+      break
+    case 'tts':
+      doasync('tts', async () => {
+        if (isarray(message.data)) {
+          const [voice, phrase] = message.data as [string, string]
+          await handletts(voice, phrase)
+        }
+      })
       break
   }
 })

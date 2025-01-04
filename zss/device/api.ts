@@ -145,6 +145,22 @@ export function synth_play(sender: string, priority: number, buffer: string) {
   hub.emit('synth:play', sender, [priority, buffer])
 }
 
+export function synth_mainvolume(
+  sender: string,
+  volume: number,
+  player: string,
+) {
+  hub.emit('synth:mainvolume', sender, volume, player)
+}
+
+export function synth_drumvolume(
+  sender: string,
+  volume: number,
+  player: string,
+) {
+  hub.emit('synth:drumvolume', sender, volume, player)
+}
+
 export function synth_voice(
   sender: string,
   idx: number,
