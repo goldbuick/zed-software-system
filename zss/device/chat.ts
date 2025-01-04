@@ -27,7 +27,8 @@ const chat = createdevice('chat', [], (message) => {
           vm_loader(
             chat.name(),
             'chat',
-            `${user}: ${text}`,
+            message.data,
+            `${user}:${text}`,
             registerreadplayer(),
           )
         })

@@ -294,8 +294,39 @@ export function vm_flush(sender: string, tag: string, player: string) {
 export function vm_loader(
   sender: string,
   event: string,
+  filename: string,
   content: any,
   player: string,
 ) {
-  hub.emit('vm:loader', sender, [event, content], player)
+  function createtextreader() {
+    return {
+      filename,
+      cursor: 0,
+      lines: content.split('\n'),
+    }
+  }
+  function createbinaryreader() {
+    return {
+      filename,
+      cursor: 0,
+      bytes: content,
+      dataview: new DataView(content.buffer),
+    }
+  }
+  let withcontent: any
+  switch (event) {
+    case 'file':
+      withcontent = content
+      break
+    case 'chat':
+      withcontent = createtextreader()
+      break
+    case 'text':
+      withcontent = createtextreader()
+      break
+    case 'binary':
+      withcontent = createbinaryreader()
+      break
+  }
+  hub.emit('vm:loader', sender, [event, withcontent], player)
 }

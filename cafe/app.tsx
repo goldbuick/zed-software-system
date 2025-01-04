@@ -57,7 +57,9 @@ window.addEventListener('paste', (event) => {
 
   // read files from clipboardData
   const files = [...event.clipboardData.files]
-  files.forEach((file) => vm_loader('app', 'file', file, registerreadplayer()))
+  files.forEach((file) =>
+    vm_loader('app', 'file', file.name, file, registerreadplayer()),
+  )
 })
 
 window.addEventListener('drop', (event) => {
@@ -72,7 +74,7 @@ window.addEventListener('drop', (event) => {
       if (item.kind === 'file') {
         const file = item.getAsFile()
         if (ispresent(file)) {
-          vm_loader('app', 'file', file, registerreadplayer())
+          vm_loader('app', 'file', file.name, file, registerreadplayer())
         }
       }
     })
@@ -80,7 +82,7 @@ window.addEventListener('drop', (event) => {
     // Use DataTransfer interface to access the file(s)
     const files = [...(event.dataTransfer?.files ?? [])]
     files.forEach((file) =>
-      vm_loader('app', 'file', file, registerreadplayer()),
+      vm_loader('app', 'file', file.name, file, registerreadplayer()),
     )
   }
 })

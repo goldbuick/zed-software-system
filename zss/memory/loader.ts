@@ -1,4 +1,3 @@
-import { tape_info } from 'zss/device/api'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 
@@ -45,6 +44,5 @@ export function memoryloader(event: string, content: any) {
     EVENT_BY_ID[id] = event
     CONTENT_BY_ID[id] = content
     memoryloaderstart(id, loaders[i].code)
-    tape_info('memory', 'starting loader', mainbook.timestamp, id)
   }
 }
