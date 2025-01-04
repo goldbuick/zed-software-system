@@ -74,18 +74,29 @@ function readurlhash(): string {
   return ''
 }
 
+async function loadmem(player: string) {
+  // pull data
+  const books = readurlhash()
+  if (books.length === 0) {
+    api_error(register.name(), 'content', 'no content found')
+    tape_crash(register.name(), sessionid)
+    return
+  }
+  // init vm with content
+  const selectedid = (await readselectedid()) ?? ''
+  vm_books(register.name(), books, selectedid, player)
+}
+
 let shouldreload = true
 window.addEventListener('hashchange', () => {
-  if (shouldreload) {
-    // location.reload()
-    // how do we clear the state here ??
-    // do we tear down platform and re-make it ??
-    // question, should we then just shove another vm_init ??
-    // ie: here is your starting point again ??
-  } else {
-    // reset after a single pass
-    shouldreload = true
-  }
+  doasync('registoer:hashchange', async () => {
+    if (shouldreload) {
+      await loadmem(sessionid)
+    } else {
+      // reset after a single pass
+      shouldreload = true
+    }
+  })
 })
 
 function writeurlhash(exportedbooks: string) {
@@ -159,16 +170,8 @@ const register = createdevice(
             tape_terminal_open(register.name(), sessionid)
             peer_create(register.name(), readurlhash(), message.player)
           } else {
-            // pull data
-            const books = readurlhash()
-            if (books.length === 0) {
-              api_error(register.name(), 'content', 'no content found')
-              tape_crash(register.name(), sessionid)
-              return
-            }
-            // init vm with content
-            const selectedid = (await readselectedid()) ?? ''
-            vm_books(register.name(), books, selectedid, message.player)
+            // pull data && init
+            await loadmem(message.player)
           }
         })
         break
@@ -244,9 +247,10 @@ const register = createdevice(
       case 'select':
         if (message.player === sessionid) {
           doasync('register:select', async () => {
-            if (isstring(message.data)) {
+            if (isstring(message.player) && isstring(message.data)) {
               await writeselectedid(message.data)
               // use same solution as a hash change here ...
+              await loadmem(message.player)
               // re-run the vm_init flow
             }
           })
