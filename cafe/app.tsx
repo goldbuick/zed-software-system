@@ -8,7 +8,7 @@ import {
   PlaneGeometry,
   Points,
 } from 'three'
-import { vm_loadfile } from 'zss/device/api'
+import { vm_loader } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { enableaudio } from 'zss/device/synth'
 import { Terminal } from 'zss/gadget/terminal'
@@ -57,7 +57,9 @@ window.addEventListener('paste', (event) => {
 
   // read files from clipboardData
   const files = [...event.clipboardData.files]
-  files.forEach((file) => vm_loadfile('loadfile', file, registerreadplayer()))
+  files.forEach((file) =>
+    vm_loader('app', 'file', file.name, file, registerreadplayer()),
+  )
 })
 
 window.addEventListener('drop', (event) => {
@@ -72,14 +74,16 @@ window.addEventListener('drop', (event) => {
       if (item.kind === 'file') {
         const file = item.getAsFile()
         if (ispresent(file)) {
-          vm_loadfile('loadfile', file, registerreadplayer())
+          vm_loader('app', 'file', file.name, file, registerreadplayer())
         }
       }
     })
   } else {
     // Use DataTransfer interface to access the file(s)
     const files = [...(event.dataTransfer?.files ?? [])]
-    files.forEach((file) => vm_loadfile('loadfile', file, registerreadplayer()))
+    files.forEach((file) =>
+      vm_loader('app', 'file', file.name, file, registerreadplayer()),
+    )
   }
 })
 

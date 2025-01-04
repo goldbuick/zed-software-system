@@ -1,19 +1,7 @@
 import JSZip from 'jszip'
 import mime from 'mime/lite'
-import { api_error, tape_info } from 'zss/device/api'
+import { api_error, tape_info, vm_loader } from 'zss/device/api'
 import { ispresent } from 'zss/mapping/types'
-import {
-  MEMORY_LABEL,
-  memoryensuresoftwarebook,
-  memorysetcodepageindex,
-} from 'zss/memory'
-import { bookreadcodepagewithtype, bookwritecodepage } from 'zss/memory/book'
-import {
-  codepagereadname,
-  codepagereadtype,
-  codepagereadtypetostring,
-  createcodepage,
-} from 'zss/memory/codepage'
 import { NAME } from 'zss/words/types'
 
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
@@ -39,39 +27,7 @@ export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
   return mime.getType(filename) ?? 'application/octet-stream'
 }
 
-// create codepage from source text
-function createcodepagefromtext(text: string) {
-  const codepage = createcodepage(text, {})
-  const pagename = codepagereadname(codepage)
-  const pagetype = codepagereadtypetostring(codepage)
-
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
-  // only create if target doesn't already exist
-  const codepagetype = codepagereadtype(codepage)
-  const maybepage = bookreadcodepagewithtype(mainbook, codepagetype, pagename)
-
-  if (ispresent(maybepage)) {
-    tape_info(
-      'memory',
-      `${mainbook.name} already has a [${pagetype}] named ${pagename}`,
-    )
-  } else {
-    bookwritecodepage(mainbook, codepage)
-    memorysetcodepageindex(codepage.id, mainbook.id)
-    tape_info('memory', `created [${pagetype}] ${pagename} in ${mainbook.name}`)
-  }
-}
-
 // various handlers
-export async function parsetextfile(file: File) {
-  const text = await file.text()
-  createcodepagefromtext(text)
-}
-
 export async function parsezipfile(
   file: File,
   onreadfile: (zipfile: File) => void,
@@ -112,4 +68,53 @@ export async function parsebinaryfile(
   } catch (err: any) {
     api_error('memory', 'crash', err.message)
   }
+}
+
+export function parsewebfile(player: string, file: File | undefined) {
+  function handlefiletype(type: string) {
+    if (!ispresent(file)) {
+      return
+    }
+    switch (type) {
+      case 'text/plain':
+        file
+          .text()
+          .then((content) =>
+            vm_loader('parsefile', 'text', file.name, content, player),
+          )
+          .catch((err) => api_error('fileloader', 'crash', err.message))
+        break
+      case 'application/zip':
+        parsezipfile(file, (ifile) => parsewebfile(player, ifile)).catch(
+          (err) => api_error('fileloader', 'crash', err.message),
+        )
+        break
+      case 'application/octet-stream':
+        parsebinaryfile(file, (fileext, binaryfile) =>
+          vm_loader('parsefile', 'binary', fileext, binaryfile, player),
+        ).catch((err) => api_error('memory', 'crash', err.message))
+        break
+      default:
+        file
+          .arrayBuffer()
+          .then((arraybuffer) => {
+            const type = mimetypeofbytesread(
+              file.name,
+              new Uint8Array(arraybuffer),
+            )
+            if (type) {
+              handlefiletype(type)
+            } else {
+              return api_error(
+                'memory',
+                'loadfile',
+                `unsupported file ${file.name}`,
+              )
+            }
+          })
+          .catch((err) => api_error('memory', 'crash', err.message))
+        return
+    }
+  }
+  handlefiletype(file?.type ?? '')
 }

@@ -2,12 +2,6 @@ import { objectKeys } from 'ts-extras'
 import { createchipid, MESSAGE } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
 import { api_error, tape_debug, tape_info, vm_flush } from 'zss/device/api'
-import {
-  mimetypeofbytesread,
-  parsebinaryfile,
-  parsetextfile,
-  parsezipfile,
-} from 'zss/firmware/loader/parsefile'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
 import { createpid, ispid } from 'zss/mapping/guid'
@@ -33,24 +27,17 @@ import {
   bookplayersetboard,
   bookreadboard,
   bookreadcodepagebyaddress,
-  bookreadcodepagesbytype,
   bookreadflags,
   bookreadobject,
   bookwritecodepage,
   createbook,
 } from './book'
-import {
-  codepagereadstats,
-  codepagetypetostring,
-  createcodepage,
-} from './codepage'
+import { codepagetypetostring, createcodepage } from './codepage'
 import { memoryconverttogadgetlayers } from './rendertogadget'
 import {
   BINARY_READER,
   BOARD,
   BOARD_ELEMENT,
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
   BOOK,
   CODE_PAGE_TYPE,
 } from './types'
@@ -79,15 +66,10 @@ const MEMORY = {
   // running code
   chips: new Map<string, string>(),
   loaders: new Map<string, string>(),
-  // book indexes for running code
-  chipindex: new Map<string, string>(),
-  codepageindex: new Map<string, string>(),
-  // external content loaders
-  binaryfiles: new Map<string, BINARY_READER>(),
 }
 
 export function memorysetdefaultplayer(player: string) {
-  console.info('memorysetdefaultplayer', player)
+  // console.info('memorysetdefaultplayer', player)
   MEMORY.defaultplayer = player
 }
 
@@ -200,7 +182,6 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
     {},
   )
   bookwritecodepage(book, codepage)
-  memorysetcodepageindex(codepage.id, book.id)
   vm_flush('memory', '', MEMORY.defaultplayer)
 
   // result codepage
@@ -253,21 +234,21 @@ export function memoryclearbook(address: string) {
   }
 }
 
-export function memorysetcodepageindex(codepage: string, book: string) {
-  MEMORY.codepageindex.set(codepage, book)
-}
+// export function memorysetcodepageindex(codepage: string, book: string) {
+//   MEMORY.codepageindex.set(codepage, book)
+// }
 
-export function memoryreadbookbycodepage(codepage: MAYBE<string>): MAYBE<BOOK> {
-  return memoryreadbookbyaddress(MEMORY.codepageindex.get(codepage ?? '') ?? '')
-}
+// export function memoryreadbookbycodepage(codepage: MAYBE<string>): MAYBE<BOOK> {
+//   return memoryreadbookbyaddress(MEMORY.codepageindex.get(codepage ?? '') ?? '')
+// }
 
-export function memorysetchipindex(chip: string, book: string) {
-  MEMORY.chipindex.set(chip, book)
-}
+// export function memorysetchipindex(chip: string, book: string) {
+//   MEMORY.chipindex.set(chip, book)
+// }
 
-export function memoryreadbookbychip(chip: MAYBE<string>): MAYBE<BOOK> {
-  return memoryreadbookbyaddress(MEMORY.chipindex.get(chip ?? '') ?? '')
-}
+// export function memoryreadbookbychip(chip: MAYBE<string>): MAYBE<BOOK> {
+//   return memoryreadbookbyaddress(MEMORY.chipindex.get(chip ?? '') ?? '')
+// }
 
 export function memoryplayerlogin(player: string): boolean {
   if (!isstring(player) || !player) {
@@ -437,6 +418,10 @@ export function memorytickobject(
   })
 }
 
+export function memoryloaderstart(id: string, code: string) {
+  MEMORY.loaders.set(id, code)
+}
+
 export function memorytick() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -534,102 +519,6 @@ export function memoryrun(address: string) {
   const itemcode = codepage?.code ?? ''
   // set arg to value on chip with id = id
   os.once(id, DRIVER_TYPE.CODE_PAGE, itemname, itemcode)
-}
-
-function memoryloader(
-  player: string,
-  file: File,
-  fileext: string,
-  binaryfile: Uint8Array,
-) {
-  // we scan main book for loaders
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  if (!ispresent(mainbook)) {
-    return
-  }
-
-  const shouldmatch = ['binaryfile', fileext]
-  tape_info('memory', 'looking for stats', ...shouldmatch)
-
-  const loaders = bookreadcodepagesbytype(
-    mainbook,
-    CODE_PAGE_TYPE.LOADER,
-  ).filter((codepage) => {
-    const stats = codepagereadstats(codepage)
-    const matched = Object.keys(stats).filter((name) =>
-      shouldmatch.includes(NAME(name)),
-    )
-    return matched.length === shouldmatch.length
-  })
-
-  for (let i = 0; i < loaders.length; ++i) {
-    const loader = loaders[i]
-
-    // player id + unique id fo run
-    const id = `${player}_load_${loader.id}`
-
-    // create binary file loader
-    MEMORY.binaryfiles.set(id, {
-      filename: file.name,
-      cursor: 0,
-      bytes: binaryfile,
-      dataview: new DataView(binaryfile.buffer),
-    })
-
-    // add code to active loaders
-    tape_info('memory', 'starting loader', mainbook.timestamp, id)
-    MEMORY.loaders.set(id, loader.code)
-  }
-}
-
-export function memoryreadbinaryfile(id: string) {
-  return MEMORY.binaryfiles.get(id)
-}
-
-export function memoryloadfile(player: string, file: File | undefined) {
-  function handlefiletype(type: string) {
-    if (!ispresent(file)) {
-      return
-    }
-    switch (type) {
-      case 'text/plain':
-        parsetextfile(file).catch((err) =>
-          api_error('memory', 'crash', err.message),
-        )
-        break
-      case 'application/zip':
-        parsezipfile(file, (zipfile) => memoryloadfile(player, zipfile)).catch(
-          (err) => api_error('memory', 'crash', err.message),
-        )
-        break
-      case 'application/octet-stream':
-        parsebinaryfile(file, (fileext, binaryfile) => {
-          memoryloader(player, file, fileext, binaryfile)
-        }).catch((err) => api_error('memory', 'crash', err.message))
-        break
-      default:
-        file
-          .arrayBuffer()
-          .then((arraybuffer) => {
-            const type = mimetypeofbytesread(
-              file.name,
-              new Uint8Array(arraybuffer),
-            )
-            if (type) {
-              handlefiletype(type)
-            } else {
-              return api_error(
-                'memory',
-                'loadfile',
-                `unsupported file ${file.name}`,
-              )
-            }
-          })
-          .catch((err) => api_error('memory', 'crash', err.message))
-        return
-    }
-  }
-  handlefiletype(file?.type ?? '')
 }
 
 export function memoryreadgadgetlayers(player: string): LAYER[] {

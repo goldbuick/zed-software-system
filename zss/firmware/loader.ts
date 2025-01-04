@@ -2,33 +2,43 @@ import { maptostring } from 'zss/chip'
 import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { createsid } from 'zss/mapping/guid'
-import { ispresent } from 'zss/mapping/types'
-import {
-  MEMORY_LABEL,
-  memoryensuresoftwarebook,
-  memoryreadbinaryfile,
-} from 'zss/memory'
+import { MEMORY_LABEL, memoryensuresoftwarebook } from 'zss/memory'
+import { memoryloadercontent, memoryloaderevent } from 'zss/memory/loader'
+import { BINARY_READER, TEXT_READER } from 'zss/memory/types'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
-import { NAME } from 'zss/words/types'
 
 import { binaryloader } from './loader/binaryloader'
+import { textloader } from './loader/textloader'
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
-    // check loader flags
-
-    const binaryfile = memoryreadbinaryfile(chip.id())
-    if (ispresent(binaryfile)) {
-      switch (NAME(name)) {
-        case 'filename':
-          // name of binary file
-          return [ispresent(binaryfile.filename), binaryfile.filename]
-        case 'cursor':
-          // return where we are in the binary file ?
-          return [ispresent(binaryfile.cursor), binaryfile.cursor]
+    const type = memoryloaderevent(chip.id())
+    switch (type) {
+      case 'chat': {
+        const textreader: TEXT_READER = memoryloadercontent(chip.id())
+        switch (name) {
+          case 'filename':
+            return [true, textreader.filename]
+          case 'cursor':
+            return [true, textreader.cursor]
+          case 'lines':
+            return [true, textreader.lines.length]
+        }
+        break
+      }
+      case 'binary': {
+        const binaryreader: BINARY_READER = memoryloadercontent(chip.id())
+        switch (name) {
+          case 'filename':
+            return [true, binaryreader.filename]
+          case 'cursor':
+            return [true, binaryreader.cursor]
+          case 'bytes':
+            return [true, binaryreader.bytes.length]
+        }
+        break
       }
     }
-
     return [false, undefined]
   },
 })
@@ -75,7 +85,4 @@ export const LOADER_FIRMWARE = createfirmware({
     return 0
   })
   .command('bin', binaryloader)
-/**
- * TODO loaders, textloader, jsonloader, imageloader, xmlloader
- * common text parsing ??
- */
+  .command('txt', textloader)

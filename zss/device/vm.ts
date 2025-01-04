@@ -10,7 +10,6 @@ import {
   memoryreadbooklist,
   memoryresetbooks,
   memorytick,
-  memoryloadfile,
   memorysetdefaultplayer,
   memoryplayerscan,
   memoryplayerlogout,
@@ -24,6 +23,7 @@ import {
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
+import { memoryloader } from 'zss/memory/loader'
 import { write } from 'zss/words/writeui'
 
 import {
@@ -59,7 +59,7 @@ async function savestate(tag = ``) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
-    const historylabel = `${tag}${new Date().toISOString()}${mainbook.name} ${content.length} chars`
+    const historylabel = `${tag}${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
     register_flush(vm.name(), historylabel, content, memorygetdefaultplayer())
   }
 }
@@ -237,10 +237,16 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
         memorycli(message.player, message.data)
       }
       break
-    case 'loadfile':
+    case 'loader':
       // user input from built-in console
-      if (message.player === memorygetdefaultplayer()) {
-        memoryloadfile(message.player, message.data)
+      if (
+        message.player === memorygetdefaultplayer() &&
+        isarray(message.data)
+      ) {
+        const [event, content] = message.data
+        if (isstring(event)) {
+          memoryloader(event, content, memorygetdefaultplayer())
+        }
       }
       break
     default:
