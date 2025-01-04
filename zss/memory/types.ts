@@ -146,3 +146,9 @@ export type BINARY_READER = {
   bytes: Uint8Array
   dataview: DataView
 }
+
+export type TEXT_READER = {
+  filename: string
+  cursor: number
+  lines: string
+}

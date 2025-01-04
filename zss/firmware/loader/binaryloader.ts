@@ -82,12 +82,11 @@ export const binaryloader: FIRMWARE_COMMAND = (chip, words) => {
   if (!ispresent(binaryreader)) {
     return 0
   }
-  const [kind] = readargs(words, 0, [ARG_TYPE.STRING])
-
+  const [kind, ii] = readargs(words, 0, [ARG_TYPE.STRING])
   const lkind = NAME(kind)
   switch (lkind) {
     case 'seek': {
-      const [cursor] = readargs(words, 1, [ARG_TYPE.NUMBER])
+      const [cursor] = readargs(words, ii, [ARG_TYPE.NUMBER])
       binaryreader.cursor = cursor
       break
     }
@@ -111,12 +110,12 @@ export const binaryloader: FIRMWARE_COMMAND = (chip, words) => {
     case 'uint32le':
     case 'uint64':
     case 'uint64le': {
-      const [target] = readargs(words, 1, [ARG_TYPE.STRING])
+      const [target] = readargs(words, ii, [ARG_TYPE.STRING])
       chip.set(target, readbin(binaryreader, lkind))
       break
     }
     case 'text': {
-      const [lengthkind, target] = readargs(words, 1, [
+      const [lengthkind, target] = readargs(words, ii, [
         ARG_TYPE.STRING,
         ARG_TYPE.STRING,
       ])
