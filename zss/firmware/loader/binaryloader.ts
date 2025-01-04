@@ -1,6 +1,6 @@
 import { FIRMWARE_COMMAND } from 'zss/firmware'
 import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
-import { memoryreadbinaryfile } from 'zss/memory'
+// import { memoryreadbinaryfile } from 'zss/memory'
 import { BINARY_READER } from 'zss/memory/types'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
@@ -78,63 +78,63 @@ function readbin(binaryfile: BINARY_READER, kind: string): MAYBE<number> {
 }
 
 export const binaryloader: FIRMWARE_COMMAND = (chip, words) => {
-  const binaryfile = memoryreadbinaryfile(chip.id())
-  if (!ispresent(binaryfile)) {
-    return 0
-  }
-  const [kind] = readargs(words, 0, [ARG_TYPE.STRING])
+  // const binaryfile = memoryreadbinaryfile(chip.id())
+  // if (!ispresent(binaryfile)) {
+  //   return 0
+  // }
+  // const [kind] = readargs(words, 0, [ARG_TYPE.STRING])
 
-  const lkind = NAME(kind)
-  switch (lkind) {
-    case 'seek': {
-      const [cursor] = readargs(words, 1, [ARG_TYPE.NUMBER])
-      binaryfile.cursor = cursor
-      break
-    }
-    case 'float32':
-    case 'float32le':
-    case 'float64':
-    case 'float64le':
-    case 'int8':
-    case 'int8le':
-    case 'int16':
-    case 'int16le':
-    case 'int32':
-    case 'int32le':
-    case 'int64':
-    case 'int64le':
-    case 'uint8':
-    case 'uint8le':
-    case 'uint16':
-    case 'uint16le':
-    case 'uint32':
-    case 'uint32le':
-    case 'uint64':
-    case 'uint64le': {
-      const [target] = readargs(words, 1, [ARG_TYPE.STRING])
-      chip.set(target, readbin(binaryfile, lkind))
-      break
-    }
-    case 'text': {
-      const [lengthkind, target] = readargs(words, 1, [
-        ARG_TYPE.STRING,
-        ARG_TYPE.STRING,
-      ])
-      const length = readbin(binaryfile, lengthkind)
-      if (isnumber(length) && isstring(target)) {
-        const bytes = new Uint8Array(
-          binaryfile.bytes.buffer,
-          binaryfile.cursor,
-          length,
-        )
-        // Using decode method to get string output
-        const decoder = new TextDecoder('utf-8')
-        const value = decoder.decode(bytes)
-        chip.set(target, value)
-        binaryfile.cursor += length
-      }
-      break
-    }
-  }
+  // const lkind = NAME(kind)
+  // switch (lkind) {
+  //   case 'seek': {
+  //     const [cursor] = readargs(words, 1, [ARG_TYPE.NUMBER])
+  //     binaryfile.cursor = cursor
+  //     break
+  //   }
+  //   case 'float32':
+  //   case 'float32le':
+  //   case 'float64':
+  //   case 'float64le':
+  //   case 'int8':
+  //   case 'int8le':
+  //   case 'int16':
+  //   case 'int16le':
+  //   case 'int32':
+  //   case 'int32le':
+  //   case 'int64':
+  //   case 'int64le':
+  //   case 'uint8':
+  //   case 'uint8le':
+  //   case 'uint16':
+  //   case 'uint16le':
+  //   case 'uint32':
+  //   case 'uint32le':
+  //   case 'uint64':
+  //   case 'uint64le': {
+  //     const [target] = readargs(words, 1, [ARG_TYPE.STRING])
+  //     chip.set(target, readbin(binaryfile, lkind))
+  //     break
+  //   }
+  //   case 'text': {
+  //     const [lengthkind, target] = readargs(words, 1, [
+  //       ARG_TYPE.STRING,
+  //       ARG_TYPE.STRING,
+  //     ])
+  //     const length = readbin(binaryfile, lengthkind)
+  //     if (isnumber(length) && isstring(target)) {
+  //       const bytes = new Uint8Array(
+  //         binaryfile.bytes.buffer,
+  //         binaryfile.cursor,
+  //         length,
+  //       )
+  //       // Using decode method to get string output
+  //       const decoder = new TextDecoder('utf-8')
+  //       const value = decoder.decode(bytes)
+  //       chip.set(target, value)
+  //       binaryfile.cursor += length
+  //     }
+  //     break
+  //   }
+  // }
   return 0
 }

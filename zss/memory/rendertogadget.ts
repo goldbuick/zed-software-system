@@ -9,7 +9,6 @@ import {
   LAYER,
 } from 'zss/gadget/data/types'
 import { circlepoints, linepoints } from 'zss/mapping/2d'
-import { average } from 'zss/mapping/array'
 import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
   createwritetextcontext,

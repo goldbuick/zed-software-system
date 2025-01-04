@@ -3,11 +3,7 @@ import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
-import {
-  MEMORY_LABEL,
-  memoryensuresoftwarebook,
-  memoryreadbinaryfile,
-} from 'zss/memory'
+import { MEMORY_LABEL, memoryensuresoftwarebook } from 'zss/memory'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
@@ -17,17 +13,17 @@ export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
     // check loader flags
 
-    const binaryfile = memoryreadbinaryfile(chip.id())
-    if (ispresent(binaryfile)) {
-      switch (NAME(name)) {
-        case 'filename':
-          // name of binary file
-          return [ispresent(binaryfile.filename), binaryfile.filename]
-        case 'cursor':
-          // return where we are in the binary file ?
-          return [ispresent(binaryfile.cursor), binaryfile.cursor]
-      }
-    }
+    // const binaryfile = memoryreadbinaryfile(chip.id())
+    // if (ispresent(binaryfile)) {
+    //   switch (NAME(name)) {
+    //     case 'filename':
+    //       // name of binary file
+    //       return [ispresent(binaryfile.filename), binaryfile.filename]
+    //     case 'cursor':
+    //       // return where we are in the binary file ?
+    //       return [ispresent(binaryfile.cursor), binaryfile.cursor]
+    //   }
+    // }
 
     return [false, undefined]
   },

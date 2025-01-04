@@ -10,7 +10,7 @@ import {
   memoryreadbooklist,
   memoryresetbooks,
   memorytick,
-  memoryloadfile,
+  memoryloader,
   memorysetdefaultplayer,
   memoryplayerscan,
   memoryplayerlogout,
@@ -238,11 +238,16 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
       }
       break
     case 'loader':
-      console.info(message.data)
       // user input from built-in console
-      // if (message.player === memorygetdefaultplayer()) {
-      //   memoryloadfile(message.player, message.data)
-      // }
+      if (
+        message.player === memorygetdefaultplayer() &&
+        isarray(message.data)
+      ) {
+        const [event, content] = message.data
+        if (isstring(event)) {
+          memoryloader(event, content, memorygetdefaultplayer())
+        }
+      }
       break
     default:
       // running software messages

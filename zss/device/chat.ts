@@ -24,7 +24,12 @@ const chat = createdevice('chat', [], (message) => {
           write(chat.name(), 'disconnected')
         })
         twitchchatclient.onMessage((_, user, text) => {
-          vm_loader(chat.name(), 'chat', [user, text], registerreadplayer())
+          vm_loader(
+            chat.name(),
+            'chat',
+            `${user}: ${text}`,
+            registerreadplayer(),
+          )
         })
       }
       break
@@ -37,7 +42,6 @@ const chat = createdevice('chat', [], (message) => {
         api_error(chat.name(), 'connection', 'chat is already disconnected')
       }
       break
-
     default:
       break
   }
