@@ -1,7 +1,7 @@
 import { pick } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, isnumber, ispresent, noop } from 'zss/mapping/types'
+import { MAYBE, deepcopy, isnumber, ispresent, noop } from 'zss/mapping/types'
 import { isstrcolor, mapstrcolortoattributes, STR_COLOR } from 'zss/words/color'
 import {
   dirfrompts,
@@ -167,11 +167,13 @@ export function boardsetterrain(
     return undefined
   }
 
-  const terrain = { ...from }
+  // add to terrain
+  const terrain = deepcopy(from)
   const index = from.x + from.y * BOARD_WIDTH
   board.terrain[index] = terrain
 
-  return from
+  // return created element
+  return board.terrain[index]
 }
 
 export function boardobjectcreate(
@@ -182,16 +184,13 @@ export function boardobjectcreate(
     return undefined
   }
 
-  const object = {
-    ...from,
-    id: from.id ?? createsid(),
-  }
-
   // add to board
-  board.objects[object.id] = object as BOARD_ELEMENT
+  const object = deepcopy(from)
+  object.id = object.id ?? createsid()
+  board.objects[object.id] = object
 
-  // return object
-  return object as BOARD_ELEMENT
+  // return created element
+  return board.objects[object.id]
 }
 
 export function boardterrainsetfromkind(
@@ -208,7 +207,11 @@ export function boardobjectcreatefromkind(
   kind: string,
   id?: string,
 ): MAYBE<BOARD_ELEMENT> {
-  return boardobjectcreate(board, { ...pt, id: id ?? undefined, kind })
+  const object = boardobjectcreate(board, { ...pt, kind })
+  if (ispresent(id) && ispresent(object)) {
+    object.id = id
+  }
+  return object
 }
 
 export function boardobjectread(

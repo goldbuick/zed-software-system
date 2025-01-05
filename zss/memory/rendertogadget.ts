@@ -101,25 +101,45 @@ export function memoryconverttogadgetlayers(
     layers.push(control)
   }
 
-  board.terrain.forEach((tile, i) => {
-    if (tile) {
-      const kind = bookelementkindread(book, tile)
-      tiles.char[i] = tile.char ?? kind?.char ?? 0
-      tiles.color[i] = tile.color ?? kind?.color ?? defaultcolor
-      tiles.bg[i] = tile.bg ?? kind?.bg ?? defaultcolor
-    }
-  })
+  for (let i = 0; i < board.terrain.length; ++i) {
+    const tile = board.terrain[i]
+    const display = bookelementdisplayread(
+      book,
+      tile,
+      0,
+      COLOR.BLACK,
+      COLOR.ONCLEAR,
+    )
+    tiles.char[i] = display.char
+    tiles.color[i] = display.color
+    tiles.bg[i] = display.bg
+  }
 
-  const boardobjects = board.objects ?? {}
-  Object.values(boardobjects).forEach((object) => {
+  // smooth lighting
+  function aa(x: number, y: number) {
+    if (x < 0 || x >= boardwidth || y < 0 || y >= boardheight) {
+      return undefined
+    }
+    return lighting.alphas[x + y * boardwidth]
+  }
+
+  const boardobjects = Object.values(board.objects ?? {})
+  for (let i = 0; i < boardobjects.length; ++i) {
+    const object = boardobjects[i]
     // skip if marked for removal or headless
     if (ispresent(object.removed) || ispresent(object.headless)) {
-      return
+      continue
     }
 
     // should we have bg transparent or match the bg color of the terrain ?
     const id = object.id ?? ''
-    const display = bookelementdisplayread(book, object)
+    const display = bookelementdisplayread(
+      book,
+      object,
+      1,
+      COLOR.WHITE,
+      COLOR.ONCLEAR,
+    )
     const sprite = createsprite(player, objectindex, id)
 
     // setup sprite
@@ -179,14 +199,6 @@ export function memoryconverttogadgetlayers(
           }
         }
       }
-    }
-
-    // smooth lighting
-    function aa(x: number, y: number) {
-      if (x < 0 || x >= boardwidth || y < 0 || y >= boardheight) {
-        return undefined
-      }
-      return lighting.alphas[x + y * boardwidth]
     }
 
     const weights = [
@@ -260,7 +272,7 @@ export function memoryconverttogadgetlayers(
       control.focusy = sprite.y
       control.focusid = id
     }
-  })
+  }
 
   // return result
   return layers

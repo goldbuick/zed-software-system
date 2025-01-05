@@ -47,6 +47,9 @@ export const GADGET_FIRMWARE = createfirmware({
       const display = bookelementdisplayread(
         READ_CONTEXT.book,
         READ_CONTEXT.element,
+        1,
+        COLOR.WHITE,
+        COLOR.ONCLEAR,
       )
       tape_info(`$${COLOR[display.color]}$${display.char}`, ticker)
     }
