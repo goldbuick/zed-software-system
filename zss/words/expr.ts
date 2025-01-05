@@ -1,4 +1,4 @@
-import { pick, range } from 'zss/mapping/array'
+import { pick, pickwith, range } from 'zss/mapping/array'
 import { clamp, randominteger } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryrun } from 'zss/memory'
@@ -268,6 +268,32 @@ export function readexpr(index: number, stringeval = true): [any, number] {
           values.push(value)
         }
         return [pick(values), READ_CONTEXT.words.length]
+      }
+      case 'pickwith': {
+        // PICKWITH <seed> <a> [b] [c] [d]
+        const [seed, ii] = readargs(READ_CONTEXT.words, index, [
+          ARG_TYPE.STRING,
+          ARG_TYPE.MAYBE_NUMBER,
+          ARG_TYPE.MAYBE_NUMBER,
+        ])
+        const values: any[] = []
+        for (let iii = ii ?? index; iii < READ_CONTEXT.words.length; ) {
+          const [value, iiii] = readexpr(iii)
+          // if we're given array, we pick from it
+          if (
+            isarray(value) &&
+            !ispt(value) &&
+            !isstrdir(value) &&
+            !isstrcategory(value) &&
+            !isstrcollision(value) &&
+            !isstrcolor(value)
+          ) {
+            return [pickwith(seed, value), iiii]
+          }
+          iii = iiii
+          values.push(value)
+        }
+        return [pickwith(seed, values), READ_CONTEXT.words.length]
       }
       case 'range': {
         // RANGE <a> [b] [step]

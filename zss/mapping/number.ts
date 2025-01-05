@@ -17,6 +17,11 @@ export function randomnumber() {
   return prng()
 }
 
+export function randomnumberwith(seed: string) {
+  const rng = Alea(seed)
+  return rng()
+}
+
 export function randominteger(a: number, b: number) {
   const min = Math.min(a, b)
   const max = Math.max(a, b)
@@ -24,7 +29,9 @@ export function randominteger(a: number, b: number) {
   return min + Math.floor(randomnumber() * delta)
 }
 
-export function randompick<T>(seed: string, items: T[]) {
-  const rng = Alea(seed)
-  return items[Math.floor(rng() * items.length)]
+export function randomintegerwith(seed: string, a: number, b: number) {
+  const min = Math.min(a, b)
+  const max = Math.max(a, b)
+  const delta = max - min + 1
+  return min + Math.floor(randomnumberwith(seed) * delta)
 }

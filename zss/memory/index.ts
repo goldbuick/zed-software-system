@@ -4,8 +4,8 @@ import { RUNTIME } from 'zss/config'
 import { api_error, tape_debug, tape_info, vm_flush } from 'zss/device/api'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
+import { pickwith } from 'zss/mapping/array'
 import { createpid, ispid } from 'zss/mapping/guid'
-import { randompick } from 'zss/mapping/number'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
@@ -41,13 +41,7 @@ import {
   createcodepage,
 } from './codepage'
 import { memoryconverttogadgetlayers } from './rendertogadget'
-import {
-  BINARY_READER,
-  BOARD,
-  BOARD_ELEMENT,
-  BOOK,
-  CODE_PAGE_TYPE,
-} from './types'
+import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from './types'
 
 // manages chips
 const os = createos()
@@ -299,7 +293,7 @@ export function memoryplayerlogin(player: string): boolean {
   // via player token I think ..
 
   const titleboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(
-    randompick(player, titleboards),
+    pickwith(player, titleboards),
   )
   if (ispresent(titleboard)) {
     const kindname = playerkind.name ?? MEMORY_LABEL.PLAYER
