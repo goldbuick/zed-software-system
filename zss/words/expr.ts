@@ -1,4 +1,4 @@
-import { pick, range } from 'zss/mapping/array'
+import { pick, pickwith, range } from 'zss/mapping/array'
 import { clamp, randominteger } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryrun } from 'zss/memory'
@@ -12,13 +12,14 @@ import { bookboardcheckmoveobject } from 'zss/memory/book'
 import { isstrcategory, mapstrcategory, readcategory } from './category'
 import { isstrcollision, mapstrcollision, readcollision } from './collision'
 import { isstrcolor, mapstrcolor, readcolor } from './color'
-import { ispt, isstrdir, mapstrdir, readdir } from './dir'
+import { isstrdir, mapstrdir, readdir } from './dir'
 import { readstrkindname } from './kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
 import { NAME } from './types'
 
 export function readexpr(index: number, stringeval = true): [any, number] {
   const maybevalue = READ_CONTEXT.words[index]
+  const ii = index + 1
 
   // check consts
   if (mapstrcategory(maybevalue)) {
@@ -47,21 +48,21 @@ export function readexpr(index: number, stringeval = true): [any, number] {
     // RND - returns 0 or 1
     // RND <number> - return 0 to number
     // RND <number> <number> - return number to number
-    const [min, ii] = readexpr(index + 1)
-    const [max, iii] = readexpr(ii)
+    const [min, iii] = readexpr(ii)
+    const [max, iiii] = readexpr(iii)
     if (isnumber(min) && isnumber(max)) {
-      return [randominteger(min, max), iii]
+      return [randominteger(min, max), iiii]
     }
     if (isnumber(min)) {
-      return [randominteger(0, min), ii]
+      return [randominteger(0, min), iii]
     }
-    return [randominteger(0, 1), index + 1]
+    return [randominteger(0, 1), ii]
   }
 
   if (mapstrdir(maybevalue)) {
-    const [maybedir, n4] = readdir(index)
+    const [maybedir, iii] = readdir(index)
     if (ispresent(maybedir)) {
-      return [maybedir, n4]
+      return [maybedir, iii]
     }
   }
 
@@ -73,8 +74,8 @@ export function readexpr(index: number, stringeval = true): [any, number] {
   }
 
   // check for pt, number, or array
-  if (ispt(maybevalue) || isnumber(maybevalue) || isarray(maybevalue)) {
-    return [maybevalue, index + 1]
+  if (isnumber(maybevalue) || isarray(maybevalue)) {
+    return [maybevalue, ii]
   }
 
   // check for flags and expressions
@@ -85,7 +86,7 @@ export function readexpr(index: number, stringeval = true): [any, number] {
     if (stringeval) {
       const maybeflagfromvalue = READ_CONTEXT.get?.(maybevalue)
       if (ispresent(maybeflagfromvalue)) {
-        return [maybeflagfromvalue, index + 1]
+        return [maybeflagfromvalue, ii]
       }
     }
 
@@ -102,14 +103,14 @@ export function readexpr(index: number, stringeval = true): [any, number] {
           READ_CONTEXT.player,
         )
         if (!ispresent(READ_CONTEXT.element) || !ispresent(maybeplayer)) {
-          return [0, index + 1]
+          return [0, ii]
         }
         return [
           READ_CONTEXT.element.x === maybeplayer.x ||
           READ_CONTEXT.element.y === maybeplayer.y
             ? 1
             : 0,
-          index + 1,
+          ii,
         ]
       }
       case 'contact': {
@@ -121,99 +122,90 @@ export function readexpr(index: number, stringeval = true): [any, number] {
           READ_CONTEXT.player,
         )
         if (!ispresent(READ_CONTEXT.element) || !ispresent(maybeplayer)) {
-          return [0, index + 1]
+          return [0, ii]
         }
         const dx = (maybeplayer.x ?? 0) - (READ_CONTEXT.element?.x ?? 0)
         const dy = (maybeplayer.y ?? 0) - (READ_CONTEXT.element?.y ?? 0)
-        return [
+        const iscontact =
           (dx === 0 && Math.abs(dy) < 2) || (dy === 0 && Math.abs(dx) < 2)
             ? 1
-            : 0,
-          index + 1,
-        ]
+            : 0
+        return [iscontact, ii]
       }
       case 'blocked': {
         // BLOCKED <direction>
         // This flag is SET when the object is not free to move in the given direction, and
         // CLEAR when the object is free to move in the direction.
-        const [dir, ii] = readargs(READ_CONTEXT.words, index + 1, [
-          ARG_TYPE.DIR,
-        ])
-        return [
-          bookboardcheckmoveobject(
-            READ_CONTEXT.book,
-            READ_CONTEXT.board,
-            READ_CONTEXT.element,
-            dir,
-          )
-            ? 1
-            : 0,
-          ii,
-        ]
+        const [dir, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.DIR])
+        const isblocked = bookboardcheckmoveobject(
+          READ_CONTEXT.book,
+          READ_CONTEXT.board,
+          READ_CONTEXT.element,
+          dir,
+        )
+        return [isblocked ? 1 : 0, iii]
       }
       case 'any': {
         // ANY <color> <item>
         // This flag is SET whenever the given kind is visible on the board
-        const [target, ii] = readargs(READ_CONTEXT.words, index + 1, [
-          ARG_TYPE.KIND,
-        ])
+        const [target, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.KIND])
         // begin filtering
         const targetname = readstrkindname(target) ?? ''
         const boardelements = listnamedelements(READ_CONTEXT.board, targetname)
         const targetelements = listelementsbykind(boardelements, target)
-        return [targetelements.length ? 1 : 0, ii]
+        return [targetelements.length ? 1 : 0, iii]
       }
       // zss
       // numbers
       case 'rnd': {
-        return [randominteger(0, 1), index + 1]
+        return [randominteger(0, 1), ii]
       }
       case 'abs': {
         // ABS <a>
-        const [a, ii] = readargs(READ_CONTEXT.words, index + 1, [
-          ARG_TYPE.NUMBER,
-        ])
-        return [Math.abs(a), ii]
+        const [a, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
+        return [Math.abs(a), iii]
       }
       case 'ceil': {
         // CEIL <a>
-        const [a, ii] = readargs(READ_CONTEXT.words, index + 1, [
-          ARG_TYPE.NUMBER,
-        ])
-        return [Math.ceil(a), ii]
+        const [a, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
+        return [Math.ceil(a), iii]
       }
       case 'floor': {
         // FLOOR <a>
-        const [a, ii] = readargs(READ_CONTEXT.words, index + 1, [
-          ARG_TYPE.NUMBER,
-        ])
-        return [Math.floor(a), ii]
+        const [a, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
+        return [Math.floor(a), iii]
       }
       case 'round': {
         // ROUND <a>
-        const [a, ii] = readargs(READ_CONTEXT.words, index + 1, [
+        const [a, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
+        return [Math.round(a), iii]
+      }
+      case 'clamp': {
+        // CLAMP <a> <min> <max>
+        const [a, min, max, iii] = readargs(READ_CONTEXT.words, ii, [
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.NUMBER,
           ARG_TYPE.NUMBER,
         ])
-        return [Math.round(a), ii]
+        return [clamp(a, min, max), iii]
       }
       // array
       case 'min': {
         // MIN <a> [b] [c] [d]
         const values: any[] = []
-        for (let ii = index + 1; ii < READ_CONTEXT.words.length; ) {
-          const [value, iii] = readexpr(ii)
-          // if we're given array, we pick from it
+        for (let iii = ii; iii < READ_CONTEXT.words.length; ) {
+          const [value, iiii] = readexpr(iii)
+          // if we're given array, we use values from it
           if (
             isarray(value) &&
-            !ispt(value) &&
             !isstrdir(value) &&
             !isstrcategory(value) &&
             !isstrcollision(value) &&
             !isstrcolor(value)
           ) {
-            return [pick(value), iii]
+            values.push(...value)
           }
-          ii = iii
+          iii = iiii
           values.push(value)
         }
         return [Math.min(...values), READ_CONTEXT.words.length]
@@ -221,73 +213,81 @@ export function readexpr(index: number, stringeval = true): [any, number] {
       case 'max': {
         // MAX <a> [b] [c] [d]
         const values: any[] = []
-        for (let ii = index + 1; ii < READ_CONTEXT.words.length; ) {
-          const [value, iii] = readexpr(ii)
-          // if we're given array, we pick from it
+        for (let iii = ii; iii < READ_CONTEXT.words.length; ) {
+          const [value, iiii] = readexpr(iii)
+          // if we're given array, we use values from it
           if (
             isarray(value) &&
-            !ispt(value) &&
             !isstrdir(value) &&
             !isstrcategory(value) &&
             !isstrcollision(value) &&
             !isstrcolor(value)
           ) {
-            return [pick(value), iii]
+            values.push(...value)
           }
-          ii = iii
+          iii = iiii
           values.push(value)
         }
         return [Math.max(...values), READ_CONTEXT.words.length]
       }
-      case 'clamp': {
-        // CLAMP <a> <min> <max>
-        const [a, min, max, ii] = readargs(READ_CONTEXT.words, index + 1, [
-          ARG_TYPE.NUMBER,
-          ARG_TYPE.NUMBER,
-          ARG_TYPE.NUMBER,
-        ])
-        return [clamp(a, min, max), ii]
-      }
       case 'pick': {
         // PICK <a> [b] [c] [d]
         const values: any[] = []
-        for (let ii = index + 1; ii < READ_CONTEXT.words.length; ) {
-          const [value, iii] = readexpr(ii)
-          // if we're given array, we pick from it
+        for (let iii = ii; iii < READ_CONTEXT.words.length; ) {
+          const [value, iiii] = readexpr(iii)
+          // if we're given array, we use values from it
           if (
             isarray(value) &&
-            !ispt(value) &&
             !isstrdir(value) &&
             !isstrcategory(value) &&
             !isstrcollision(value) &&
             !isstrcolor(value)
           ) {
-            return [pick(value), iii]
+            values.push(...value)
           }
-          ii = iii
+          iii = iiii
           values.push(value)
         }
         return [pick(values), READ_CONTEXT.words.length]
       }
+      case 'pickwith': {
+        // PICKWITH <seed> <a> [b] [c] [d]
+        const values: any[] = []
+        const [seed, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.STRING])
+        for (let iiii = iii; iiii < READ_CONTEXT.words.length; ) {
+          const [value, iiiii] = readexpr(iiii)
+          // if we're given array, we use values from it
+          if (
+            isarray(value) &&
+            !isstrdir(value) &&
+            !isstrcategory(value) &&
+            !isstrcollision(value) &&
+            !isstrcolor(value)
+          ) {
+            values.push(...value)
+          }
+          iiii = iiiii
+          values.push(value)
+        }
+        return [pickwith(seed, values), READ_CONTEXT.words.length]
+      }
       case 'range': {
         // RANGE <a> [b] [step]
-        const [a, b, step, ii] = readargs(READ_CONTEXT.words, index + 1, [
+        const [a, b, step, iii] = readargs(READ_CONTEXT.words, ii, [
           ARG_TYPE.NUMBER,
           ARG_TYPE.MAYBE_NUMBER,
           ARG_TYPE.MAYBE_NUMBER,
         ])
-        return [range(a, b, step), ii]
+        return [range(a, b, step), iii]
       }
       // advanced
       case 'run': {
-        const [func, ii] = readargs(READ_CONTEXT.words, index + 1, [
-          ARG_TYPE.STRING,
-        ])
+        const [func, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.STRING])
         memoryrun(func)
-        return [READ_CONTEXT.get?.('arg'), ii]
+        return [READ_CONTEXT.get?.('arg'), iii]
       }
       case 'runwith': {
-        const [arg, func, ii] = readargs(READ_CONTEXT.words, index + 1, [
+        const [arg, func, iii] = readargs(READ_CONTEXT.words, ii, [
           ARG_TYPE.ANY,
           ARG_TYPE.STRING,
         ])
@@ -295,11 +295,11 @@ export function readexpr(index: number, stringeval = true): [any, number] {
           READ_CONTEXT.element.arg = arg
         }
         memoryrun(func)
-        return [READ_CONTEXT.get?.('arg'), ii]
+        return [READ_CONTEXT.get?.('arg'), iii]
       }
     }
   }
 
   // pass through everything else
-  return [maybevalue, index + 1]
+  return [maybevalue, ii]
 }

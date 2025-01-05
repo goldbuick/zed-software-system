@@ -4,6 +4,7 @@ import { RUNTIME } from 'zss/config'
 import { api_error, tape_debug, tape_info, vm_flush } from 'zss/device/api'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
+import { pickwith } from 'zss/mapping/array'
 import { createpid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -27,20 +28,20 @@ import {
   bookplayersetboard,
   bookreadboard,
   bookreadcodepagebyaddress,
+  bookreadcodepagesbytype,
   bookreadflags,
   bookreadobject,
   bookwritecodepage,
   createbook,
 } from './book'
-import { codepagetypetostring, createcodepage } from './codepage'
-import { memoryconverttogadgetlayers } from './rendertogadget'
 import {
-  BINARY_READER,
-  BOARD,
-  BOARD_ELEMENT,
-  BOOK,
-  CODE_PAGE_TYPE,
-} from './types'
+  codepagereaddata,
+  codepagereadstats,
+  codepagetypetostring,
+  createcodepage,
+} from './codepage'
+import { memoryconverttogadgetlayers } from './rendertogadget'
+import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from './types'
 
 // manages chips
 const os = createos()
@@ -234,22 +235,6 @@ export function memoryclearbook(address: string) {
   }
 }
 
-// export function memorysetcodepageindex(codepage: string, book: string) {
-//   MEMORY.codepageindex.set(codepage, book)
-// }
-
-// export function memoryreadbookbycodepage(codepage: MAYBE<string>): MAYBE<BOOK> {
-//   return memoryreadbookbyaddress(MEMORY.codepageindex.get(codepage ?? '') ?? '')
-// }
-
-// export function memorysetchipindex(chip: string, book: string) {
-//   MEMORY.chipindex.set(chip, book)
-// }
-
-// export function memoryreadbookbychip(chip: MAYBE<string>): MAYBE<BOOK> {
-//   return memoryreadbookbyaddress(MEMORY.chipindex.get(chip ?? '') ?? '')
-// }
-
 export function memoryplayerlogin(player: string): boolean {
   if (!isstring(player) || !player) {
     return api_error(
@@ -277,13 +262,19 @@ export function memoryplayerlogin(player: string): boolean {
     return true
   }
 
-  // place on title board
-  const titleboard = bookreadboard(mainbook, MEMORY_LABEL.TITLE)
-  if (!ispresent(titleboard)) {
+  // place on a title board
+  const titleboards = bookreadcodepagesbytype(
+    mainbook,
+    CODE_PAGE_TYPE.BOARD,
+  ).filter((codepage) => {
+    const stats = codepagereadstats(codepage)
+    return ispresent(stats.title)
+  })
+  if (titleboards.length === 0) {
     return api_error(
       'memory',
       'login:title',
-      `login failed to find board '${MEMORY_LABEL.TITLE}'`,
+      `login failed to find board with '${MEMORY_LABEL.TITLE}' stat`,
       player,
     )
   }
@@ -300,19 +291,25 @@ export function memoryplayerlogin(player: string): boolean {
 
   // TODO: what is a sensible way to place here ?
   // via player token I think ..
-  const kindname = playerkind.name ?? MEMORY_LABEL.PLAYER
-  const obj = boardobjectcreatefromkind(
-    titleboard,
-    { x: 0, y: 0 },
-    kindname,
-    player,
+
+  const titleboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(
+    pickwith(player, titleboards),
   )
-  if (ispresent(obj?.id)) {
-    // all players self-aggro
-    obj.player = player
-    // track current board
-    bookplayersetboard(mainbook, player, titleboard.id)
-    return true
+  if (ispresent(titleboard)) {
+    const kindname = playerkind.name ?? MEMORY_LABEL.PLAYER
+    const obj = boardobjectcreatefromkind(
+      titleboard,
+      { x: 0, y: 0 },
+      kindname,
+      player,
+    )
+    if (ispresent(obj?.id)) {
+      // all players self-aggro
+      obj.player = player
+      // track current board
+      bookplayersetboard(mainbook, player, titleboard.id)
+      return true
+    }
   }
 
   return false

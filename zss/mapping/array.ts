@@ -1,4 +1,4 @@
-import { randominteger } from './number'
+import { randominteger, randomintegerwith, randomnumberwith } from './number'
 import { ispresent, MAYBE } from './types'
 
 export function range(a: number, b?: number, step?: number) {
@@ -28,8 +28,16 @@ function randomitem<T>(array: T[]) {
   return array[randominteger(0, array.length - 1)]
 }
 
+function randomitemwith<T>(seed: string, array: T[]) {
+  return array[randomintegerwith(seed, 0, array.length - 1)]
+}
+
 export function pick<T>(...args: T[]) {
   return randomitem(args.flat())
+}
+
+export function pickwith<T>(seed: string, ...args: T[]) {
+  return randomitemwith(seed, args.flat())
 }
 
 export function addToArray<T>(array: T[], value: T) {

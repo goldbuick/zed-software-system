@@ -190,13 +190,16 @@ export function bookelementstatread(
 export function bookelementdisplayread(
   book: MAYBE<BOOK>,
   element: MAYBE<BOARD_ELEMENT>,
+  defaultchar: number,
+  defaultcolor: number,
+  defaultbg: number,
 ) {
   const kind = bookelementkindread(book, element)
   return {
-    char: element?.char ?? kind?.char ?? 1,
-    color: element?.color ?? kind?.color ?? COLOR.WHITE,
-    bg: element?.bg ?? kind?.bg ?? COLOR.ONCLEAR,
-    light: element?.light ?? kind?.light,
+    char: element?.char ?? kind?.char ?? defaultchar,
+    color: element?.color ?? kind?.color ?? defaultcolor,
+    bg: element?.bg ?? kind?.bg ?? defaultbg,
+    light: element?.light ?? kind?.light ?? 0,
   }
 }
 

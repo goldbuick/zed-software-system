@@ -63,8 +63,9 @@ export function enableaudio() {
         try {
           const context: AudioContext = getContext() as unknown as AudioContext
           unmute(context, true)
-        } catch (error) {
-          console.debug(error)
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (err) {
+          //
         }
       }
     })
