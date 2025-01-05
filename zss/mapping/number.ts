@@ -23,3 +23,8 @@ export function randominteger(a: number, b: number) {
   const delta = max - min + 1
   return min + Math.floor(randomnumber() * delta)
 }
+
+export function randompick<T>(seed: string, items: T[]) {
+  const rng = Alea(seed)
+  return items[Math.floor(rng() * items.length)]
+}
