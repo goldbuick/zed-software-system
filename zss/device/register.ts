@@ -74,9 +74,7 @@ function readurlhash(): string {
   return ''
 }
 
-async function loadmem(player: string) {
-  // pull data
-  const books = readurlhash()
+async function loadmem(books: string, player: string) {
   if (books.length === 0) {
     api_error(register.name(), 'content', 'no content found')
     tape_crash(register.name(), sessionid)
@@ -87,14 +85,13 @@ async function loadmem(player: string) {
   vm_books(register.name(), books, selectedid, player)
 }
 
-let shouldreload = true
+let currenthash = ''
 window.addEventListener('hashchange', () => {
   doasync('registoer:hashchange', async () => {
-    if (shouldreload) {
-      await loadmem(sessionid)
-    } else {
-      // reset after a single pass
-      shouldreload = true
+    const books = readurlhash()
+    if (currenthash !== books) {
+      currenthash = books
+      await loadmem(books, sessionid)
     }
   })
 })
@@ -103,7 +100,7 @@ function writeurlhash(exportedbooks: string) {
   const out = `#${exportedbooks}`
   if (location.hash !== out) {
     // saving current state, don't interrupt the user
-    shouldreload = false
+    currenthash = out
     location.hash = out
     tape_info(
       register.name(),
@@ -166,12 +163,13 @@ const register = createdevice(
           if (message.player !== sessionid) {
             return
           }
+          const books = readurlhash()
           if (isjoin()) {
             tape_terminal_open(register.name(), sessionid)
-            peer_create(register.name(), readurlhash(), message.player)
+            peer_create(register.name(), books, message.player)
           } else {
             // pull data && init
-            await loadmem(message.player)
+            await loadmem(books, message.player)
           }
         })
         break
@@ -231,6 +229,7 @@ const register = createdevice(
             await waitfor(100)
             // nuke is the only valid case for reload
             location.hash = ''
+            currenthash = location.hash
             location.reload()
           })
         }
@@ -250,7 +249,7 @@ const register = createdevice(
             if (isstring(message.player) && isstring(message.data)) {
               await writeselectedid(message.data)
               // use same solution as a hash change here ...
-              await loadmem(message.player)
+              await loadmem(readurlhash(), message.player)
               // re-run the vm_init flow
             }
           })

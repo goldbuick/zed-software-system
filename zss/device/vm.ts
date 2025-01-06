@@ -35,7 +35,6 @@ import {
   tape_info,
   vm_codeaddress,
   vm_flush,
-  vm_login,
 } from './api'
 import { modemobservevaluestring, modemwriteplayer } from './modem'
 
@@ -78,20 +77,22 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
       }
       break
     case 'books':
-      if (message.player === memorygetdefaultplayer()) {
-        doasync('vm:books', async () => {
-          if (isarray(message.data)) {
-            const [maybebooks, maybeselect] = message.data as [string, string]
-            // unpack books
-            const books = await decompressbooks(maybebooks)
-            const booknames = books.map((item) => item.name)
-            memoryresetbooks(books, maybeselect)
-            write(vm.name(), `loading ${booknames.join(', ')}`)
-            // ack
-            vm.reply(message, 'ackbooks', true, message.player)
-          }
-        })
-      }
+      doasync('vm:books', async () => {
+        if (
+          message.player === memorygetdefaultplayer() &&
+          isarray(message.data)
+        ) {
+          const [maybebooks, maybeselect] = message.data as [string, string]
+          // unpack books
+          const books = await decompressbooks(maybebooks)
+          const booknames = books.map((item) => item.name)
+          memoryresetbooks(books, maybeselect)
+          write(vm.name(), `loading ${booknames.join(', ')}`)
+          // ack
+          vm.reply(message, 'ackbooks', true, message.player)
+        }
+      })
+
       break
     case 'login':
       if (message.player) {
@@ -107,22 +108,13 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
       }
       break
     case 'endgame':
-      if (message.player === memorygetdefaultplayer()) {
-        doasync('vm:endgame', async () => {
-          if (!message.player) {
-            return
-          }
-          // logout player
-          memoryplayerlogout(message.player)
-          // clear ui
-          gadgetserver_clearplayer('vm', message.player)
-          // save state
-          await savestate()
-          // attempt re-login
-          await waitfor(1000)
-          vm_login(vm.name(), message.player)
-        })
+      if (message.player !== memorygetdefaultplayer()) {
+        return
       }
+      // logout player
+      memoryplayerlogout(message.player)
+      // clear ui
+      gadgetserver_clearplayer('vm', message.player)
       break
     case 'doot':
       if (message.player) {
@@ -223,15 +215,16 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
       break
     }
     case 'flush':
-      if (message.player === memorygetdefaultplayer()) {
-        doasync('vm:flush', async () => {
-          if (isstring(message.data)) {
-            await savestate(`${message.data} `)
-          } else {
-            await savestate()
-          }
-        })
-      }
+      doasync('vm:flush', async () => {
+        if (
+          message.player === memorygetdefaultplayer() &&
+          isstring(message.data)
+        ) {
+          await savestate(`${message.data} `)
+        } else {
+          await savestate()
+        }
+      })
       break
     case 'cli':
       // user input from built-in console
@@ -241,13 +234,14 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
       break
     case 'loader':
       // user input from built-in console
+      // or events from devices
       if (
         message.player === memorygetdefaultplayer() &&
         isarray(message.data)
       ) {
         const [event, content] = message.data
         if (isstring(event)) {
-          memoryloader(event, content, memorygetdefaultplayer())
+          memoryloader(event, content)
         }
       }
       break
