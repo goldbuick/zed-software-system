@@ -9,10 +9,8 @@ import {
   register_share,
   register_dev,
   peer_joincode,
-  broadcast_closesession,
   broadcast_startstream,
   broadcast_stopstream,
-  broadcast_createsession,
   chat_connect,
   chat_disconnect,
 } from 'zss/device/api'

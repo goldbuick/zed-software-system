@@ -20,14 +20,6 @@ export function api_error(
   return tape_error(sender, message, player)
 }
 
-export function broadcast_createsession(sender: string, player: string) {
-  hub.emit('broadcast:createsession', sender, undefined, player)
-}
-
-export function broadcast_closesession(sender: string, player: string) {
-  hub.emit('broadcast:closesession', sender, undefined, player)
-}
-
 export function broadcast_startstream(
   sender: string,
   streamkey: string,

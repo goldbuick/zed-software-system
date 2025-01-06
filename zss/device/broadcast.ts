@@ -12,8 +12,8 @@ let broadcastclient: MAYBE<IVSBroadcastClient.AmazonIVSBroadcastClient>
 
 const broadcast = createdevice('broadcast', ['second'], (message) => {
   switch (message.target) {
-    case 'createsession':
-      doasync('broadcast:createsession', async () => {
+    case 'startstream':
+      doasync('broadcast:startstream', async () => {
         if (ispresent(broadcastclient)) {
           api_error(broadcast.name(), 'session', 'session is already open')
         } else {
@@ -80,19 +80,6 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
           // signal success
           write(broadcast.name(), `created client`)
         }
-      })
-      break
-    case 'closesession':
-      if (ispresent(broadcastclient)) {
-        broadcastclient.delete()
-        broadcastclient = undefined
-        write(broadcast.name(), `closed client`)
-      } else {
-        api_error(broadcast.name(), 'session', 'session is already closed')
-      }
-      break
-    case 'startstream':
-      doasync('broadcast:startstream', async () => {
         if (isstring(message.data) && ispresent(broadcastclient)) {
           writeheader(broadcast.name(), 'broadcasting in')
           writeoption(broadcast.name(), '3', '...')
@@ -112,6 +99,9 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
     case 'stopstream':
       if (ispresent(broadcastclient)) {
         broadcastclient.stopBroadcast()
+        broadcastclient.delete()
+        broadcastclient = undefined
+        write(broadcast.name(), `closed client`)
       } else {
         api_error(
           broadcast.name(),
