@@ -100,7 +100,7 @@ function writeurlhash(exportedbooks: string) {
   const out = `#${exportedbooks}`
   if (location.hash !== out) {
     // saving current state, don't interrupt the user
-    currenthash = out
+    currenthash = exportedbooks
     location.hash = out
     tape_info(
       register.name(),
