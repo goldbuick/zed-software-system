@@ -57,7 +57,7 @@ export const GADGET_FIRMWARE = createfirmware({
 })
   // primary firmware
   .command('send', (chip, words) => {
-    const [msg, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+    const [msg, data] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
 
     // determine target of send
     const [maybetarget, maybelabel] = msg.split(':')
@@ -138,18 +138,18 @@ export const GADGET_FIRMWARE = createfirmware({
   })
   // ---
   .command('gadget', (_, words) => {
-    const [edge] = readargs(words, 0, [ARG_TYPE.STRING])
+    const [edge] = readargs(words, 0, [ARG_TYPE.NAME])
     const edgeConst = PANEL_TYPE_MAP[NAME(edge)]
     if (edgeConst === PANEL_TYPE.SCROLL) {
       const [name, size] = readargs(words, 1, [
-        ARG_TYPE.MAYBE_STRING,
+        ARG_TYPE.MAYBE_NAME,
         ARG_TYPE.MAYBE_NUMBER,
       ])
       gadgetpanel(READ_CONTEXT.player, edge, edgeConst, size, name)
     } else if (ispresent(edgeConst)) {
       const [size, name] = readargs(words, 1, [
         ARG_TYPE.MAYBE_NUMBER,
-        ARG_TYPE.MAYBE_STRING,
+        ARG_TYPE.MAYBE_NAME,
       ])
       gadgetpanel(READ_CONTEXT.player, edge, edgeConst, size, name)
     }

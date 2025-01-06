@@ -44,7 +44,7 @@ export const LOADER_FIRMWARE = createfirmware({
 })
   // primary firmware
   .command('send', (chip, words) => {
-    const [target, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+    const [target, data] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
     chip.message({
       id: createsid(),
       sender: chip.id(),

@@ -33,6 +33,7 @@ export enum ARG_TYPE {
   COLOR,
   KIND,
   DIR,
+  NAME,
   NUMBER,
   STRING,
   NUMBER_OR_STRING,
@@ -41,6 +42,7 @@ export enum ARG_TYPE {
   MAYBE_COLOR,
   MAYBE_KIND,
   MAYBE_DIR,
+  MAYBE_NAME,
   MAYBE_NUMBER,
   MAYBE_STRING,
   MAYBE_NUMBER_OR_STRING,
@@ -53,6 +55,7 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.COLOR]: STR_COLOR
   [ARG_TYPE.KIND]: STR_KIND
   [ARG_TYPE.DIR]: PT
+  [ARG_TYPE.NAME]: string
   [ARG_TYPE.NUMBER]: number
   [ARG_TYPE.STRING]: string
   [ARG_TYPE.NUMBER_OR_STRING]: number | string
@@ -61,6 +64,7 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.MAYBE_COLOR]: MAYBE<STR_COLOR>
   [ARG_TYPE.MAYBE_KIND]: MAYBE<STR_KIND>
   [ARG_TYPE.MAYBE_DIR]: MAYBE<PT>
+  [ARG_TYPE.MAYBE_NAME]: MAYBE<string>
   [ARG_TYPE.MAYBE_NUMBER]: MAYBE<number>
   [ARG_TYPE.MAYBE_STRING]: MAYBE<string>
   [ARG_TYPE.MAYBE_NUMBER_OR_STRING]: MAYBE<number | string>
@@ -151,6 +155,15 @@ export function readargs<T extends ARG_TYPES>(
         }
         break
       }
+      case ARG_TYPE.NAME: {
+        const value = READ_CONTEXT.words[ii]
+        if (!isstring(value)) {
+          didexpect('string', value)
+        }
+        ++ii
+        values.push(value)
+        break
+      }
       case ARG_TYPE.NUMBER: {
         const [value, iii] = readexpr(ii)
         if (isstring(value)) {
@@ -169,11 +182,11 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.STRING: {
-        const value = READ_CONTEXT.words[ii]
+        const [value, iii] = readexpr(ii)
         if (!isstring(value)) {
           didexpect('string', value)
         }
-        ++ii
+        ii = iii
         values.push(value)
         break
       }
@@ -257,6 +270,15 @@ export function readargs<T extends ARG_TYPES>(
         }
         break
       }
+      case ARG_TYPE.MAYBE_NAME: {
+        const value = READ_CONTEXT.words[ii]
+        if (value !== undefined && !isstring(value)) {
+          didexpect('optional string', value)
+        }
+        ++ii
+        values.push(value)
+        break
+      }
       case ARG_TYPE.MAYBE_NUMBER: {
         const [value, iii] = readexpr(ii)
         if (isstring(value)) {
@@ -275,11 +297,11 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.MAYBE_STRING: {
-        const value = READ_CONTEXT.words[ii]
+        const [value, iii] = readexpr(ii)
         if (value !== undefined && !isstring(value)) {
           didexpect('optional string', value)
         }
-        ++ii
+        ii = iii
         values.push(value)
         break
       }

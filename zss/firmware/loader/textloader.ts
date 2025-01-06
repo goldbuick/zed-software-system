@@ -12,7 +12,7 @@ export const textloader: FIRMWARE_COMMAND = (chip, words) => {
     return 0
   }
 
-  const [kind, ii] = readargs(words, 0, [ARG_TYPE.STRING])
+  const [kind, ii] = readargs(words, 0, [ARG_TYPE.NAME])
   const lkind = NAME(kind)
   switch (lkind) {
     case 'seek': {
@@ -36,7 +36,7 @@ export const textloader: FIRMWARE_COMMAND = (chip, words) => {
         let m = 1
         for (let i = ii; i < words.length; ) {
           // read next name to set
-          const [name, next] = readargs(words, i, [ARG_TYPE.STRING])
+          const [name, next] = readargs(words, i, [ARG_TYPE.NAME])
           // set entry
           if (ispresent(result[m])) {
             chip.set(name, result[m])

@@ -9,13 +9,13 @@ export const FLAGS_FIRMWARE = createfirmware()
     return 0
   })
   .command('set', (chip, words) => {
-    const [name, value] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
+    const [name, value] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
     chip.set(name, value)
     return 0
   })
   .command('take', (chip, words) => {
     const [name, maybevalue, ii] = readargs(words, 0, [
-      ARG_TYPE.STRING,
+      ARG_TYPE.NAME,
       ARG_TYPE.MAYBE_NUMBER,
     ])
 
@@ -45,7 +45,7 @@ export const FLAGS_FIRMWARE = createfirmware()
   })
   .command('give', (chip, words) => {
     const [name, maybevalue, ii] = readargs(words, 0, [
-      ARG_TYPE.STRING,
+      ARG_TYPE.NAME,
       ARG_TYPE.MAYBE_NUMBER,
     ])
 

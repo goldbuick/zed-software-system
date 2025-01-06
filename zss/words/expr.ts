@@ -282,14 +282,14 @@ export function readexpr(index: number, stringeval = true): [any, number] {
       }
       // advanced
       case 'run': {
-        const [func, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.STRING])
+        const [func, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NAME])
         memoryrun(func)
         return [READ_CONTEXT.get?.('arg'), iii]
       }
       case 'runwith': {
         const [arg, func, iii] = readargs(READ_CONTEXT.words, ii, [
           ARG_TYPE.ANY,
-          ARG_TYPE.STRING,
+          ARG_TYPE.NAME,
         ])
         if (ispresent(READ_CONTEXT.element)) {
           READ_CONTEXT.element.arg = arg
