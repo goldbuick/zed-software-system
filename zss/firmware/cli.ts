@@ -55,8 +55,7 @@ function vm_flush_player(tag = '') {
 export const CLI_FIRMWARE = createfirmware()
   // primary firmware
   .command('send', (_, words) => {
-    const [msg, data] = readargs(words, 0, [ARG_TYPE.STRING, ARG_TYPE.ANY])
-
+    const [msg, data] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
     switch (msg) {
       // help messages
       case 'helpmenu':
@@ -259,7 +258,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('bookcreate', (chip, words) => {
-    const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
+    const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
 
     const book = memorycreatesoftwarebook(maybename)
     if (ispresent(book)) {
@@ -268,7 +267,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('bookopen', (chip, words) => {
-    const [name] = readargs(words, 0, [ARG_TYPE.STRING])
+    const [name] = readargs(words, 0, [ARG_TYPE.NAME])
 
     const book = memoryreadbookbyaddress(name)
     if (ispresent(book)) {
@@ -286,7 +285,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('booktrash', (chip, words) => {
-    const [address] = readargs(words, 0, [ARG_TYPE.STRING])
+    const [address] = readargs(words, 0, [ARG_TYPE.NAME])
 
     const opened = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     const book = memoryreadbookbyaddress(address)
@@ -305,7 +304,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('pageopen', (_, words) => {
-    const [page] = readargs(words, 0, [ARG_TYPE.STRING])
+    const [page] = readargs(words, 0, [ARG_TYPE.NAME])
 
     // create book if needed
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
@@ -346,7 +345,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('pagetrash', (chip, words) => {
-    const [page] = readargs(words, 0, [ARG_TYPE.STRING])
+    const [page] = readargs(words, 0, [ARG_TYPE.NAME])
 
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
     const codepage = bookclearcodepage(mainbook, page)
@@ -442,7 +441,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('savewith', (_, words) => {
-    const [tag] = readargs(words, 0, [ARG_TYPE.STRING])
+    const [tag] = readargs(words, 0, [ARG_TYPE.NAME])
     vm_flush_player(tag)
     return 0
   })
@@ -455,13 +454,11 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('chat', (_, words) => {
-    const [maybeaction, ii] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
-    switch (NAME(maybeaction ?? '')) {
-      case 'connect': {
-        const [channel] = readargs(words, ii, [ARG_TYPE.STRING])
-        chat_connect('cli', channel, READ_CONTEXT.player)
+    const [maybechannel] = readargs(words, 0, [ARG_TYPE.NAME])
+    switch (NAME(maybechannel)) {
+      default:
+        chat_connect('cli', maybechannel, READ_CONTEXT.player)
         break
-      }
       case 'close':
         chat_disconnect('cli', READ_CONTEXT.player)
         break
@@ -469,20 +466,11 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('broadcast', (_, words) => {
-    const [maybeaction, ii] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
-    switch (NAME(maybeaction ?? '')) {
+    const [maybestreamkey] = readargs(words, 0, [ARG_TYPE.NAME])
+    switch (NAME(maybestreamkey)) {
       default:
-      case 'create':
-        broadcast_createsession('cli', READ_CONTEXT.player)
+        broadcast_startstream('cli', maybestreamkey, READ_CONTEXT.player)
         break
-      case 'close':
-        broadcast_closesession('cli', READ_CONTEXT.player)
-        break
-      case 'start': {
-        const [streamkey] = readargs(words, ii, [ARG_TYPE.STRING])
-        broadcast_startstream('cli', streamkey, READ_CONTEXT.player)
-        break
-      }
       case 'stop':
         broadcast_stopstream('cli', READ_CONTEXT.player)
         break

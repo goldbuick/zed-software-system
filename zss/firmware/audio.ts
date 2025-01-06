@@ -1,4 +1,3 @@
-import { CHIP } from 'zss/chip'
 import {
   synth_drumvolume,
   synth_mainvolume,
@@ -9,19 +8,16 @@ import {
   synth_voicefx,
 } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
-import { isnumber, isstring } from 'zss/mapping/types'
+import { isnumber } from 'zss/mapping/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
 const isfx = ['echo', 'reverb', 'chorus', 'phaser', 'distortion', 'vibrato']
 
-function handlesynthplay(idx: number, chip: CHIP, words: WORD[]) {
-  const [maybebuffer] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
-  // see if we've been given a flag
-  const buffer = maybebuffer ?? ''
-  const bufferfromflag = chip.get(buffer)
+function handlesynthplay(idx: number, words: WORD[]) {
+  const [buffer] = readargs(words, 0, [ARG_TYPE.STRING])
   // index 1 means play, 0 means bgplay
-  synth_play('audio', idx, isstring(bufferfromflag) ? bufferfromflag : buffer)
+  synth_play('audio', idx, buffer)
 }
 
 function handlesynthvoice(idx: number, words: WORD[]) {
@@ -69,8 +65,8 @@ export const AUDIO_FIRMWARE = createfirmware()
     synth_ttsvolume('audio', volume, READ_CONTEXT.player)
     return 0
   })
-  .command('play', (chip, words) => {
-    handlesynthplay(1, chip, words)
+  .command('play', (_, words) => {
+    handlesynthplay(1, words)
     return 0
   })
   .command('synth', (_, words) => {
@@ -111,8 +107,8 @@ export const AUDIO_FIRMWARE = createfirmware()
     handlesynthvoice(8, words)
     return 0
   })
-  .command('bgplay', (chip, words) => {
-    handlesynthplay(0, chip, words)
+  .command('bgplay', (_, words) => {
+    handlesynthplay(0, words)
     return 0
   })
   .command('bgsynth', (_, words) => {
