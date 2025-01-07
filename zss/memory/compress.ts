@@ -23,6 +23,7 @@ function base64tobase64url(base64String: string) {
 const FIXED_DATE = new Date('1980/09/02')
 
 export async function compressbooks(books: BOOK[]) {
+  console.info('saved', books)
   return new Promise<string>((resolve, reject) => {
     const zip = new JSZip()
     for (let i = 0; i < books.length; ++i) {

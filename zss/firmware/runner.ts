@@ -6,6 +6,7 @@ import { AUDIO_FIRMWARE } from './audio'
 import { BOARD_FIRMWARE } from './board'
 import { CLI_FIRMWARE } from './cli'
 import { CONST_FIRMWARE } from './const'
+import { DISPLAY_FIRMWARE } from './display'
 import { ELEMENT_FIRMWARE } from './element'
 import { FLAGS_FIRMWARE } from './flags'
 import { GADGET_FIRMWARE } from './gadget'
@@ -26,6 +27,7 @@ const firmwares: Record<string, FIRMWARE> = {
   board: BOARD_FIRMWARE,
   cli: CLI_FIRMWARE,
   const: CONST_FIRMWARE,
+  display: DISPLAY_FIRMWARE,
   element: ELEMENT_FIRMWARE,
   flags: FLAGS_FIRMWARE,
   gadget: GADGET_FIRMWARE,
@@ -33,7 +35,15 @@ const firmwares: Record<string, FIRMWARE> = {
   loader: LOADER_FIRMWARE,
 }
 
-const standardlib = ['const', 'flags', 'audio', 'board', 'lifecycle', 'element']
+const standardlib = [
+  'const',
+  'flags',
+  'audio',
+  'board',
+  'display',
+  'lifecycle',
+  'element',
+]
 
 const DRIVER_FIRMWARE = {
   [DRIVER_TYPE.ERROR]: [],

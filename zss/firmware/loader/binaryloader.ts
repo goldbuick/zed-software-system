@@ -134,6 +134,22 @@ export const binaryloader: FIRMWARE_COMMAND = (chip, words) => {
       }
       break
     }
+    case 'palette': {
+      const [target, length] = readargs(words, ii, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.NUMBER,
+      ])
+      // x number of palette bytes into mem
+      break
+    }
+    case 'charset': {
+      const [target, length] = readargs(words, ii, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.NUMBER,
+      ])
+      // x number of charset bytes into mem
+      break
+    }
   }
   return 0
 }
