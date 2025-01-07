@@ -2,11 +2,12 @@ import { clamp } from 'maath/misc'
 import { Vector2 } from 'three'
 import {
   createdither,
-  createlayercontrol,
+  createcontrol,
   createsprite,
   createsprites,
   createtiles,
   LAYER,
+  createmedia,
 } from 'zss/gadget/data/types'
 import { circlepoints, linepoints } from 'zss/mapping/2d'
 import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -19,8 +20,15 @@ import { COLLISION, COLOR } from 'zss/words/types'
 
 import { checkcollision } from './atomics'
 import { boardelementindex, boardobjectread } from './board'
-import { bookelementdisplayread, bookelementkindread } from './book'
-import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK } from './types'
+import {
+  bookelementdisplayread,
+  bookelementkindread,
+  bookreadcodepagebyaddress,
+  bookreadcodepagewithtype,
+} from './book'
+import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK, CODE_PAGE_TYPE } from './types'
+
+import { MEMORY_LABEL, memoryreadbookbysoftware, memoryreadbookflags } from '.'
 
 let decoticker = 0
 function readdecotickercolor(): COLOR {
@@ -54,22 +62,28 @@ export function memoryconverttogadgetlayers(
 ): LAYER[] {
   const layers: LAYER[] = []
 
-  let i = index
-  const isbaseboard = i === 0
+  let iiii = index
+  const isbaseboard = iiii === 0
   const boardwidth = BOARD_WIDTH
   const boardheight = BOARD_HEIGHT
   const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR
 
-  const tiles = createtiles(player, i++, boardwidth, boardheight, defaultcolor)
+  const tiles = createtiles(
+    player,
+    iiii++,
+    boardwidth,
+    boardheight,
+    defaultcolor,
+  )
   layers.push(tiles)
 
-  const objectindex = i++
+  const objectindex = iiii++
   const objects = createsprites(player, objectindex)
   layers.push(objects)
 
   const lighting = createdither(
     player,
-    i++,
+    iiii++,
     boardwidth,
     boardheight,
     board.isdark ? 1 : 0,
@@ -78,7 +92,7 @@ export function memoryconverttogadgetlayers(
 
   const tickers = createtiles(
     player,
-    i++,
+    iiii++,
     boardwidth,
     boardheight,
     COLOR.ONCLEAR,
@@ -95,7 +109,7 @@ export function memoryconverttogadgetlayers(
     ...tickers,
   }
 
-  const control = createlayercontrol(player, i++)
+  const control = createcontrol(player, iiii++)
   // hack to keep only one control layer
   if (isprimary) {
     layers.push(control)
@@ -271,6 +285,38 @@ export function memoryconverttogadgetlayers(
       control.focusx = sprite.x
       control.focusy = sprite.y
       control.focusid = id
+    }
+  }
+
+  // check for display media
+  const bookflags = memoryreadbookflags()
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+
+  // check for palette
+  if (isstring(bookflags.palette)) {
+    const codepage = bookreadcodepagewithtype(
+      mainbook,
+      CODE_PAGE_TYPE.PALETTE,
+      bookflags.palette,
+    )
+    if (ispresent(codepage?.palette?.bits)) {
+      layers.push(
+        createmedia(player, iiii++, 'image/palette', codepage.palette.bits),
+      )
+    }
+  }
+
+  // check for charset
+  if (isstring(bookflags.charset)) {
+    const codepage = bookreadcodepagewithtype(
+      mainbook,
+      CODE_PAGE_TYPE.CHARSET,
+      bookflags.charset,
+    )
+    if (ispresent(codepage?.charset?.bits)) {
+      layers.push(
+        createmedia(player, iiii++, 'image/charset', codepage.charset.bits),
+      )
     }
   }
 

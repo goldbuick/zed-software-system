@@ -1,4 +1,5 @@
 import { createfirmware } from 'zss/firmware'
+import { clamp } from 'zss/mapping/number'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,
@@ -38,9 +39,9 @@ export const DISPLAY_FIRMWARE = createfirmware()
       const bytes = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(palette)
       if (ispresent(bytes) && maybecolor >= 0 && maybecolor <= 16) {
         const row = maybecolor * 3
-        bytes.bits[row + 0] = r
-        bytes.bits[row + 1] = g
-        bytes.bits[row + 2] = b
+        bytes.bits[row + 0] = clamp(r, 0, 63)
+        bytes.bits[row + 1] = clamp(g, 0, 63)
+        bytes.bits[row + 2] = clamp(b, 0, 63)
       }
     } else {
       const palette = bookreadcodepagewithtype(

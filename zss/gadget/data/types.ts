@@ -65,7 +65,8 @@ export type LAYER_DITHER = {
 export type LAYER_MEDIA = {
   id: string
   type: LAYER_TYPE.MEDIA
-  media: string
+  mime: string
+  media: string | Uint8Array
 }
 
 export type LAYER_CONTROL = {
@@ -150,10 +151,21 @@ export function createdither(
   }
 }
 
-export function createlayercontrol(
+export function createmedia(
   player: string,
   index: number,
-): LAYER_CONTROL {
+  mime: string,
+  media: string | Uint8Array,
+): LAYER_MEDIA {
+  return {
+    id: `media:${player}:${index}`,
+    type: LAYER_TYPE.MEDIA,
+    mime,
+    media,
+  }
+}
+
+export function createcontrol(player: string, index: number): LAYER_CONTROL {
   return {
     id: `control:${player}:${index}`,
     type: LAYER_TYPE.CONTROL,
