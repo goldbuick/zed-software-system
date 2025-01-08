@@ -11,6 +11,11 @@ type FramedTilesProps = {
   z: number
 }
 
+/*
+make a hook to read the current palette & charset for sprites & tiles
+and these layers here will set the current value for palette & charset !
+*/
+
 export function FramedLayer({ id, z }: FramedTilesProps) {
   const layer = useGadgetClient(
     useShallow((state) => state.gadget.layers.find((item) => item.id === id)),
@@ -52,6 +57,11 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
           />
         </group>
       )
+    }
+    case LAYER_TYPE.MEDIA: {
+      // write to media context here
+      // mimetype => content
+      return null
     }
   }
 }
