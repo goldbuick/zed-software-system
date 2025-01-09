@@ -23,7 +23,6 @@ import { boardelementindex, boardobjectread } from './board'
 import {
   bookelementdisplayread,
   bookelementkindread,
-  bookreadcodepagebyaddress,
   bookreadcodepagewithtype,
 } from './book'
 import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK, CODE_PAGE_TYPE } from './types'

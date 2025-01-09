@@ -23,6 +23,7 @@ const spritesMaterial = new ShaderMaterial({
     map: new Uniform(charset),
     alt: new Uniform(charset),
     palette: new Uniform(palette),
+    dpr: new Uniform(1),
     pointSize: {
       value: new Vector2(1, 1),
     },
