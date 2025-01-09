@@ -1,9 +1,11 @@
 import { createContext, useContext, useState } from 'react'
 import { objectKeys } from 'ts-extras'
 import { TILES } from 'zss/gadget/data/types'
-import { ispresent } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 import { createwritetextcontext } from 'zss/words/textformat'
 import { create, createStore, StoreApi } from 'zustand'
+
+import { BITMAP } from './data/bitmap'
 
 export const WriteTextContext = createContext(
   createwritetextcontext(1, 1, 15, 1),
@@ -178,4 +180,13 @@ export function useTiles(
 export function useTilesData() {
   const store = useContext(TilesContext)
   return store.getState() // get ref to shared data/api
+}
+
+export const MediaContext = createContext({
+  palette: undefined as MAYBE<BITMAP>,
+  charset: undefined as MAYBE<BITMAP>,
+})
+
+export function useMediaContext() {
+  return useContext(MediaContext)
 }
