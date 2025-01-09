@@ -125,6 +125,10 @@ export function register_nuke(sender: string, player: string) {
   hub.emit('register:nuke', sender, undefined, player)
 }
 
+export function synth_audioenabled(sender: string) {
+  hub.emit('synth:audioenabled', sender, undefined)
+}
+
 export function synth_tts(sender: string, voice: string, phrase: string) {
   hub.emit('synth:tts', sender, [voice, phrase])
 }

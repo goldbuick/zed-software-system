@@ -43,7 +43,7 @@ import {
 } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { api_error, tape_info } from './api'
+import { api_error, synth_audioenabled, tape_info } from './api'
 
 // synth setup
 
@@ -67,6 +67,7 @@ export function enableaudio() {
         } catch (err) {
           //
         }
+        synth_audioenabled('synth')
       }
     })
     .catch((err: any) => {
@@ -728,6 +729,9 @@ const synthdevice = createdevice('synth', [], (message) => {
     return
   }
   switch (message.target) {
+    case 'audioenabled':
+      // no-op only thing needed is to create the synth
+      break
     case 'mainvolume':
       if (isnumber(message.data)) {
         synth.setmainvolume(message.data)
