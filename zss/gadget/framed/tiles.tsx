@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { BufferGeometry } from 'three'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
-import useBitmapTexture from 'zss/gadget/display/textures'
 import {
   createTilemapBufferGeometry,
   createTilemapDataTexture,
   createTilemapMaterial,
   updateTilemapDataTexture,
 } from 'zss/gadget/display/tiles'
-import { loadDefaultCharset } from 'zss/gadget/file/bytes'
 
 import { useClipping } from '../clipping'
+import { useMediaContext } from '../hooks'
 
 type TilesProps = {
   width: number
@@ -20,15 +19,13 @@ type TilesProps = {
   bg: number[]
 }
 
-const charset = loadDefaultCharset()
-
 export function Tiles({ width, height, char, color, bg }: TilesProps) {
-  const charsetTexture = useBitmapTexture(charset)
+  const media = useMediaContext()
   const clippingPlanes = useClipping()
   const [material] = useState(() => createTilemapMaterial())
   const bgRef = useRef<BufferGeometry>(null)
   const { width: imageWidth = 0, height: imageHeight = 0 } =
-    charsetTexture?.image ?? {}
+    media.charset?.image ?? {}
 
   // create data texture
   useEffect(() => {
@@ -55,10 +52,13 @@ export function Tiles({ width, height, char, color, bg }: TilesProps) {
 
   // create / config material
   useEffect(() => {
-    if (width === 0 || height === 0 || !bgRef.current || !charsetTexture) {
+    if (width === 0 || height === 0 || !bgRef.current || !media.charset) {
       return
     }
     createTilemapBufferGeometry(bgRef.current, width, height)
+    material.uniforms.map.value = media.charset
+    material.uniforms.alt.value = media.altcharset ?? media.charset
+    material.uniforms.palette.value = media.palette
     material.uniforms.size.value.x = 1 / width
     material.uniforms.size.value.y = 1 / height
     material.uniforms.step.value.x = 1 / Math.round(imageWidth / CHAR_WIDTH)
@@ -67,7 +67,9 @@ export function Tiles({ width, height, char, color, bg }: TilesProps) {
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
   }, [
-    charsetTexture,
+    media.charset,
+    media.altcharset,
+    media.palette,
     material,
     width,
     height,

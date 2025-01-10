@@ -1,6 +1,13 @@
+import { useEffect, useState } from 'react'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { LAYER_TYPE } from 'zss/gadget/data/types'
+import { CHAR_HEIGHT, CHAR_WIDTH, LAYER_TYPE } from 'zss/gadget/data/types'
+import { ispresent } from 'zss/mapping/types'
 import { useShallow } from 'zustand/react/shallow'
+
+import { createbitmapfromarray } from '../data/bitmap'
+import { convertPaletteToColors } from '../data/palette'
+import { createbitmaptexture } from '../display/textures'
+import { useMediaContext } from '../hooks'
 
 import { Dither } from './dither'
 import { Sprites } from './sprites'
@@ -11,18 +18,68 @@ type FramedTilesProps = {
   z: number
 }
 
-/*
-make a hook to read the current palette & charset for sprites & tiles
-and these layers here will set the current value for palette & charset !
-*/
-
 export function FramedLayer({ id, z }: FramedTilesProps) {
+  const media = useMediaContext()
   const layer = useGadgetClient(
     useShallow((state) => state.gadget.layers.find((item) => item.id === id)),
   )
+
+  // special case for media elements
+  const [content, updatecontent] = useState<Uint8Array>()
+  const medialayer = layer?.type === LAYER_TYPE.MEDIA ? layer : undefined
+  useEffect(() => {
+    switch (medialayer?.mime) {
+      case 'image/palette':
+        if (
+          medialayer.media instanceof Uint8Array &&
+          medialayer.media !== content
+        ) {
+          updatecontent(medialayer.media)
+          const data = createbitmapfromarray(3, 16, medialayer.media)
+          media.setpalette(convertPaletteToColors(data))
+        }
+        break
+      case 'image/charset':
+        if (
+          medialayer.media instanceof Uint8Array &&
+          medialayer.media !== content
+        ) {
+          updatecontent(medialayer.media)
+          const data = createbitmapfromarray(
+            16 * CHAR_WIDTH,
+            16 * CHAR_HEIGHT,
+            medialayer.media,
+          )
+          const charset = createbitmaptexture(data)
+          if (ispresent(charset)) {
+            media.setcharset(charset)
+          }
+        }
+        break
+      case 'image/altcharset':
+        if (
+          medialayer.media instanceof Uint8Array &&
+          medialayer.media !== content
+        ) {
+          updatecontent(medialayer.media)
+          const data = createbitmapfromarray(
+            16 * CHAR_WIDTH,
+            16 * CHAR_HEIGHT,
+            medialayer.media,
+          )
+          const altcharset = createbitmaptexture(data)
+          if (ispresent(altcharset)) {
+            media.setaltcharset(altcharset)
+          }
+        }
+        break
+    }
+  }, [media, content, medialayer])
+
   switch (layer?.type) {
     default:
     case LAYER_TYPE.BLANK:
+    case LAYER_TYPE.MEDIA:
       return null
     case LAYER_TYPE.TILES: {
       return (
@@ -57,11 +114,6 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
           />
         </group>
       )
-    }
-    case LAYER_TYPE.MEDIA: {
-      // write to media context here
-      // mimetype => content
-      return null
     }
   }
 }

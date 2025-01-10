@@ -1,11 +1,14 @@
 import { createContext, useContext, useState } from 'react'
+import { CanvasTexture, Color } from 'three'
 import { objectKeys } from 'ts-extras'
 import { TILES } from 'zss/gadget/data/types'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import { createwritetextcontext } from 'zss/words/textformat'
 import { create, createStore, StoreApi } from 'zustand'
 
-import { BITMAP } from './data/bitmap'
+import { convertPaletteToColors } from './data/palette'
+import { createbitmaptexture } from './display/textures'
+import { loadDefaultCharset, loadDefaultPalette } from './file/bytes'
 
 export const WriteTextContext = createContext(
   createwritetextcontext(1, 1, 15, 1),
@@ -182,11 +185,36 @@ export function useTilesData() {
   return store.getState() // get ref to shared data/api
 }
 
-export const MediaContext = createContext({
-  palette: undefined as MAYBE<BITMAP>,
-  charset: undefined as MAYBE<BITMAP>,
-})
+export type MEDIA_DATA = {
+  palette?: Color[]
+  charset?: CanvasTexture
+  altcharset?: CanvasTexture
+  setpalette: (palette: Color[]) => void
+  setcharset: (charset: CanvasTexture) => void
+  setaltcharset: (altcharset: CanvasTexture) => void
+}
+
+function createmediastore() {
+  return createStore<MEDIA_DATA>((set) => {
+    return {
+      palette: convertPaletteToColors(loadDefaultPalette()),
+      charset: createbitmaptexture(loadDefaultCharset()),
+      setpalette(palette) {
+        set({ palette })
+      },
+      setcharset(charset) {
+        set({ charset })
+      },
+      setaltcharset(altcharset) {
+        set({ altcharset })
+      },
+    }
+  })
+}
+
+export const MediaContext = createContext(createmediastore())
 
 export function useMediaContext() {
-  return useContext(MediaContext)
+  const store = useContext(MediaContext)
+  return store.getState() // get ref to shared data/api
 }

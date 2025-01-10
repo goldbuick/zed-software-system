@@ -142,3 +142,16 @@ export function resizeBitmap(bitmap: BITMAP, width: number, height: number) {
   copyBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, newBitmap, 0, 0)
   return newBitmap
 }
+
+export function createbitmapfromarray(
+  width: number,
+  height: number,
+  bits: Uint8Array,
+): BITMAP {
+  return {
+    width,
+    height,
+    size: width * height,
+    bits,
+  }
+}
