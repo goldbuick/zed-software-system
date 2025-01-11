@@ -121,12 +121,12 @@ export function createbitmap(width: number, height: number): BITMAP {
 export function createbitmapfromarray(
   width: number,
   height: number,
-  bits: Uint8Array,
+  bits: number[],
 ): BITMAP {
   return {
     width,
     height,
     size: width * height,
-    bits,
+    bits: new Uint8Array(bits),
   }
 }

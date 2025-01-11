@@ -2,7 +2,7 @@ import { createContext, useContext, useState } from 'react'
 import { CanvasTexture, Color } from 'three'
 import { objectKeys } from 'ts-extras'
 import { TILES } from 'zss/gadget/data/types'
-import { isequal, ispresent } from 'zss/mapping/types'
+import { isequal, ispresent, MAYBE } from 'zss/mapping/types'
 import { createwritetextcontext } from 'zss/words/textformat'
 import { create, createStore, StoreApi } from 'zustand'
 
@@ -189,9 +189,9 @@ export type MEDIA_DATA = {
   palette?: Color[]
   charset?: CanvasTexture
   altcharset?: CanvasTexture
-  setpalette: (palette: Color[]) => void
-  setcharset: (charset: CanvasTexture) => void
-  setaltcharset: (altcharset: CanvasTexture) => void
+  setpalette: (palette: MAYBE<Color[]>) => void
+  setcharset: (charset: MAYBE<CanvasTexture>) => void
+  setaltcharset: (altcharset: MAYBE<CanvasTexture>) => void
 }
 
 function createmediastore() {

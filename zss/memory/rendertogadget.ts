@@ -305,7 +305,7 @@ export function memoryconverttogadgetlayers(
           player,
           iiii++,
           'image/palette',
-          Uint8Array.from([...codepage.palette.bits]),
+          Array.from(codepage.palette.bits),
         ),
       )
     }
@@ -324,7 +324,7 @@ export function memoryconverttogadgetlayers(
           player,
           iiii++,
           'image/charset',
-          Uint8Array.from(codepage.charset.bits),
+          Array.from(codepage.charset.bits),
         ),
       )
     }

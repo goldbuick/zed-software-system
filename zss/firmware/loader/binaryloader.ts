@@ -1,4 +1,12 @@
 import { FIRMWARE_COMMAND } from 'zss/firmware'
+import {
+  CHAR_HEIGHT,
+  CHAR_WIDTH,
+  CHARS_PER_ROW,
+  CHARS_TOTAL_ROWS,
+  PALETTE_COLORS,
+  PALETTE_RGB,
+} from 'zss/gadget/data/types'
 import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { memoryloadercontent } from 'zss/memory/loader'
 import { BINARY_READER } from 'zss/memory/types'
@@ -135,18 +143,17 @@ export const binaryloader: FIRMWARE_COMMAND = (chip, words) => {
       break
     }
     case 'palette': {
-      const [target, length] = readargs(words, ii, [
-        ARG_TYPE.NAME,
-        ARG_TYPE.NUMBER,
-      ])
+      const [target] = readargs(words, ii, [ARG_TYPE.NAME])
+      const numberofbytes = PALETTE_RGB * PALETTE_COLORS
+      //
       // x number of palette bytes into mem
       break
     }
     case 'charset': {
-      const [target, length] = readargs(words, ii, [
-        ARG_TYPE.NAME,
-        ARG_TYPE.NUMBER,
-      ])
+      const [target] = readargs(words, ii, [ARG_TYPE.NAME])
+      const numberofbytes =
+        CHARS_PER_ROW * CHAR_WIDTH * CHARS_TOTAL_ROWS * CHAR_HEIGHT
+      //
       // x number of charset bytes into mem
       break
     }

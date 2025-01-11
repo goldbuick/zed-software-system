@@ -1,7 +1,7 @@
 import { createdevice } from 'zss/device'
+import { parsewebfile } from 'zss/firmware/loader/parsefile'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
-import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { isjoin } from 'zss/mapping/url'
 import {
@@ -241,7 +241,11 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
       ) {
         const [event, content] = message.data
         if (isstring(event)) {
-          memoryloader(event, content)
+          if (event === 'file') {
+            parsewebfile(message.player, content)
+          } else {
+            memoryloader(event, content)
+          }
         }
       }
       break

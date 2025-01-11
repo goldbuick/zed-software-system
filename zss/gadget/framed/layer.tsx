@@ -9,7 +9,7 @@ import {
   PALETTE_COLORS,
   PALETTE_RGB,
 } from 'zss/gadget/data/types'
-import { ispresent } from 'zss/mapping/types'
+import { isarray, ispresent } from 'zss/mapping/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { createbitmapfromarray } from '../data/bitmap'
@@ -37,39 +37,42 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
   useEffect(() => {
     switch (medialayer?.mime) {
       case 'image/palette':
-        if (medialayer.media instanceof Uint8Array) {
-          const data = createbitmapfromarray(
-            PALETTE_RGB,
-            PALETTE_COLORS,
-            medialayer.media,
+        if (isarray(medialayer.media)) {
+          media.setpalette(
+            convertPaletteToColors(
+              createbitmapfromarray(
+                PALETTE_RGB,
+                PALETTE_COLORS,
+                medialayer.media,
+              ),
+            ),
           )
-          media.setpalette(convertPaletteToColors(data))
         }
         break
       case 'image/charset':
-        if (medialayer.media instanceof Uint8Array) {
-          const data = createbitmapfromarray(
-            CHARS_PER_ROW * CHAR_WIDTH,
-            CHARS_TOTAL_ROWS * CHAR_HEIGHT,
-            medialayer.media,
+        if (isarray(medialayer.media)) {
+          media.setcharset(
+            createbitmaptexture(
+              createbitmapfromarray(
+                CHARS_PER_ROW * CHAR_WIDTH,
+                CHARS_TOTAL_ROWS * CHAR_HEIGHT,
+                medialayer.media,
+              ),
+            ),
           )
-          const charset = createbitmaptexture(data)
-          if (ispresent(charset)) {
-            media.setcharset(charset)
-          }
         }
         break
       case 'image/altcharset':
-        if (medialayer.media instanceof Uint8Array) {
-          const data = createbitmapfromarray(
-            CHARS_PER_ROW * CHAR_WIDTH,
-            CHARS_TOTAL_ROWS * CHAR_HEIGHT,
-            medialayer.media,
+        if (isarray(medialayer.media)) {
+          media.setaltcharset(
+            createbitmaptexture(
+              createbitmapfromarray(
+                CHARS_PER_ROW * CHAR_WIDTH,
+                CHARS_TOTAL_ROWS * CHAR_HEIGHT,
+                medialayer.media,
+              ),
+            ),
           )
-          const altcharset = createbitmaptexture(data)
-          if (ispresent(altcharset)) {
-            media.setaltcharset(altcharset)
-          }
         }
         break
     }

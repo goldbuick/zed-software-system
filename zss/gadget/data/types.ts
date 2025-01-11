@@ -71,7 +71,7 @@ export type LAYER_MEDIA = {
   id: string
   type: LAYER_TYPE.MEDIA
   mime: string
-  media: string | Uint8Array
+  media: string | number[]
 }
 
 export type LAYER_CONTROL = {
@@ -160,7 +160,7 @@ export function createmedia(
   player: string,
   index: number,
   mime: string,
-  media: string | Uint8Array,
+  media: string | number[],
 ): LAYER_MEDIA {
   return {
     id: `media:${player}:${index}`,
