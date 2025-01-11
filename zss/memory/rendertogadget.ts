@@ -24,10 +24,11 @@ import {
   bookelementdisplayread,
   bookelementkindread,
   bookreadcodepagewithtype,
+  bookreadflags,
 } from './book'
 import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK, CODE_PAGE_TYPE } from './types'
 
-import { MEMORY_LABEL, memoryreadbookbysoftware, memoryreadbookflags } from '.'
+import { MEMORY_LABEL, memoryreadbookbysoftware } from '.'
 
 let decoticker = 0
 function readdecotickercolor(): COLOR {
@@ -288,8 +289,8 @@ export function memoryconverttogadgetlayers(
   }
 
   // check for display media
-  const bookflags = memoryreadbookflags()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const bookflags = bookreadflags(mainbook, MEMORY_LABEL.MAIN)
 
   // check for palette
   if (isstring(bookflags.palette)) {
@@ -300,7 +301,12 @@ export function memoryconverttogadgetlayers(
     )
     if (ispresent(codepage?.palette?.bits)) {
       layers.push(
-        createmedia(player, iiii++, 'image/palette', codepage.palette.bits),
+        createmedia(
+          player,
+          iiii++,
+          'image/palette',
+          Uint8Array.from([...codepage.palette.bits]),
+        ),
       )
     }
   }
@@ -314,7 +320,12 @@ export function memoryconverttogadgetlayers(
     )
     if (ispresent(codepage?.charset?.bits)) {
       layers.push(
-        createmedia(player, iiii++, 'image/charset', codepage.charset.bits),
+        createmedia(
+          player,
+          iiii++,
+          'image/charset',
+          Uint8Array.from(codepage.charset.bits),
+        ),
       )
     }
   }

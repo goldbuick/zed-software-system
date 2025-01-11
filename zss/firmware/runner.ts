@@ -12,6 +12,7 @@ import { FLAGS_FIRMWARE } from './flags'
 import { GADGET_FIRMWARE } from './gadget'
 import { LIFECYCLE_FIRMWARE } from './lifecycle'
 import { LOADER_FIRMWARE } from './loader'
+import { NETWORK_FIRMWARE } from './network'
 
 export enum DRIVER_TYPE {
   ERROR,
@@ -33,6 +34,7 @@ const firmwares: Record<string, FIRMWARE> = {
   gadget: GADGET_FIRMWARE,
   lifecycle: LIFECYCLE_FIRMWARE,
   loader: LOADER_FIRMWARE,
+  network: NETWORK_FIRMWARE,
 }
 
 const standardlib = [
@@ -41,6 +43,7 @@ const standardlib = [
   'audio',
   'board',
   'display',
+  'network',
   'lifecycle',
   'element',
 ]

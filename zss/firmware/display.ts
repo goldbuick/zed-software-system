@@ -1,4 +1,6 @@
+import { api_error } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
+import { PALETTE_RGB } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import {
@@ -30,19 +32,20 @@ export const DISPLAY_FIRMWARE = createfirmware()
         ARG_TYPE.NUMBER,
       ])
       // read target palette to update
-      const id = isstring(bookflags.palette) ? bookflags.palette : ''
       const palette = memoryensuresoftwarecodepage(
         MEMORY_LABEL.MAIN,
-        id || MEMORY_LABEL.MAIN,
+        isstring(bookflags.palette) ? bookflags.palette : MEMORY_LABEL.MAIN,
         CODE_PAGE_TYPE.PALETTE,
       )
       const bytes = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(palette)
       if (ispresent(bytes) && maybecolor >= 0 && maybecolor <= 16) {
-        const row = maybecolor * 3
+        const row = maybecolor * PALETTE_RGB
         bytes.bits[row + 0] = clamp(r, 0, 63)
         bytes.bits[row + 1] = clamp(g, 0, 63)
         bytes.bits[row + 2] = clamp(b, 0, 63)
       }
+      // ensure palette is active
+      bookflags.palette = palette.id
     } else {
       const palette = bookreadcodepagewithtype(
         READ_CONTEXT.book,
@@ -52,7 +55,7 @@ export const DISPLAY_FIRMWARE = createfirmware()
       if (ispresent(palette)) {
         bookflags.palette = palette.id
       } else {
-        // TODO raise 404
+        api_error('display', 'not-found', `unabled to find palette ${target}`)
       }
     }
     return 0
@@ -68,7 +71,7 @@ export const DISPLAY_FIRMWARE = createfirmware()
     if (ispresent(charset)) {
       bookflags.charset = charset.id
     } else {
-      // TODO raise 404
+      api_error('display', 'not-found', `unabled to find charset ${target}`)
     }
     return 0
   })

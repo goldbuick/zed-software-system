@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { CHAR_HEIGHT, CHAR_WIDTH, LAYER_TYPE } from 'zss/gadget/data/types'
+import {
+  CHAR_HEIGHT,
+  CHAR_WIDTH,
+  CHARS_PER_ROW,
+  CHARS_TOTAL_ROWS,
+  LAYER_TYPE,
+  PALETTE_COLORS,
+  PALETTE_RGB,
+} from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -25,29 +33,24 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
   )
 
   // special case for media elements
-  const [content, updatecontent] = useState<Uint8Array>()
   const medialayer = layer?.type === LAYER_TYPE.MEDIA ? layer : undefined
   useEffect(() => {
     switch (medialayer?.mime) {
       case 'image/palette':
-        if (
-          medialayer.media instanceof Uint8Array &&
-          medialayer.media !== content
-        ) {
-          updatecontent(medialayer.media)
-          const data = createbitmapfromarray(3, 16, medialayer.media)
+        if (medialayer.media instanceof Uint8Array) {
+          const data = createbitmapfromarray(
+            PALETTE_RGB,
+            PALETTE_COLORS,
+            medialayer.media,
+          )
           media.setpalette(convertPaletteToColors(data))
         }
         break
       case 'image/charset':
-        if (
-          medialayer.media instanceof Uint8Array &&
-          medialayer.media !== content
-        ) {
-          updatecontent(medialayer.media)
+        if (medialayer.media instanceof Uint8Array) {
           const data = createbitmapfromarray(
-            16 * CHAR_WIDTH,
-            16 * CHAR_HEIGHT,
+            CHARS_PER_ROW * CHAR_WIDTH,
+            CHARS_TOTAL_ROWS * CHAR_HEIGHT,
             medialayer.media,
           )
           const charset = createbitmaptexture(data)
@@ -57,14 +60,10 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
         }
         break
       case 'image/altcharset':
-        if (
-          medialayer.media instanceof Uint8Array &&
-          medialayer.media !== content
-        ) {
-          updatecontent(medialayer.media)
+        if (medialayer.media instanceof Uint8Array) {
           const data = createbitmapfromarray(
-            16 * CHAR_WIDTH,
-            16 * CHAR_HEIGHT,
+            CHARS_PER_ROW * CHAR_WIDTH,
+            CHARS_TOTAL_ROWS * CHAR_HEIGHT,
             medialayer.media,
           )
           const altcharset = createbitmaptexture(data)
@@ -74,7 +73,7 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
         }
         break
     }
-  }, [media, content, medialayer])
+  }, [media, medialayer])
 
   switch (layer?.type) {
     default:

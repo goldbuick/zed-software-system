@@ -1,4 +1,4 @@
-import { BITMAP, createBitmap } from '../data/bitmap'
+import { BITMAP, createbitmap } from '../data/bitmap'
 import {
   BYTES_PER_COLOR,
   CHARS_PER_ROW,
@@ -17,7 +17,7 @@ export function loadPaletteFromBytes(bytes: Uint8Array): BITMAP | undefined {
     return undefined
   }
 
-  const bitmap = createBitmap(3, count)
+  const bitmap = createbitmap(3, count)
 
   for (let i = 0; i < bitmap.bits.length; ++i) {
     bitmap.bits[i] = bytes[i]
@@ -47,7 +47,7 @@ export function loadCharsetFromBytes(data: Uint8Array): BITMAP | undefined {
 
   const rows = Math.ceil(count / CHARS_PER_ROW)
   const rowWidth = CHAR_WIDTH * CHARS_PER_ROW
-  const bitmap = createBitmap(rowWidth, CHAR_HEIGHT * rows)
+  const bitmap = createbitmap(rowWidth, CHAR_HEIGHT * rows)
 
   // unpack data so this is the only place bitmasking happens
   let cx = 0

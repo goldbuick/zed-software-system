@@ -232,15 +232,7 @@ export function Sprites({ sprites }: SpritesProps) {
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
-  }, [
-    media.charset,
-    media.altcharset,
-    media.palette,
-    material,
-    imageWidth,
-    imageHeight,
-    clippingPlanes,
-  ])
+  }, [media, material, imageWidth, imageHeight, clippingPlanes])
 
   return (
     <points frustumCulled={false} material={material}>

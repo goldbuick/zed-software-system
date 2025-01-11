@@ -66,17 +66,7 @@ export function Tiles({ width, height, char, color, bg }: TilesProps) {
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
-  }, [
-    media.charset,
-    media.altcharset,
-    media.palette,
-    material,
-    width,
-    height,
-    imageWidth,
-    imageHeight,
-    clippingPlanes,
-  ])
+  }, [media, material, width, height, imageWidth, imageHeight, clippingPlanes])
 
   return (
     <mesh material={material}>
