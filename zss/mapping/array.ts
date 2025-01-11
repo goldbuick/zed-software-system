@@ -1,4 +1,4 @@
-import { randominteger, randomintegerwith, randomnumberwith } from './number'
+import { randominteger, randomintegerwith } from './number'
 import { ispresent, MAYBE } from './types'
 
 export function range(a: number, b?: number, step?: number) {

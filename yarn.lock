@@ -5929,11 +5929,6 @@ vite-bundle-analyzer@^0.13.1:
   resolved "https://registry.npmjs.org/vite-bundle-analyzer/-/vite-bundle-analyzer-0.13.1.tgz#8898e92d80ae4c86239aa810c9331b72576d030f"
   integrity sha512-471KXy0cq8L9voQnkLwintkDewhUDxSOUfUq5qgCXalORVmMt4W5JbcLVR6ybEHG6K83afs9/pD7LAlnJYS4mQ==
 
-vite-plugin-arraybuffer@^0.0.8:
-  version "0.0.8"
-  resolved "https://registry.npmjs.org/vite-plugin-arraybuffer/-/vite-plugin-arraybuffer-0.0.8.tgz#6dce252c6084e55bee0cb8169a9e6e0dc126d6fe"
-  integrity sha512-F+InDQuxd93YDVRdXTjBr3lydgjyVHSpgRZS4izK/i85Anl5kmbvf2NwJ//XHAccHh1TScfX70MFJfBx/rf3cg==
-
 vite-plugin-full-reload@^1.2.0:
   version "1.2.0"
   resolved "https://registry.npmjs.org/vite-plugin-full-reload/-/vite-plugin-full-reload-1.2.0.tgz#bc4bfdc842abb4d24309ca802be8b955fce1c0c6"

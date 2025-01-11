@@ -22,6 +22,9 @@ import { Tape } from './tape'
 import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
 
+import 'zss/file/charset'
+import 'zss/file/palette'
+
 // include all front-end devices
 import 'zss/userspace'
 

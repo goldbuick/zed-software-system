@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BufferGeometry } from 'three'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import {

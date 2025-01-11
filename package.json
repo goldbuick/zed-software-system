@@ -88,7 +88,6 @@
     "uqr": "^0.1.2",
     "vite": "^5.4.11",
     "vite-bundle-analyzer": "^0.13.1",
-    "vite-plugin-arraybuffer": "^0.0.8",
     "vite-plugin-full-reload": "^1.2.0",
     "vite-plugin-mkcert": "^1.17.5",
     "y-protocols": "^1.0.6",

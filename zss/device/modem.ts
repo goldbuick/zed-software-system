@@ -183,9 +183,9 @@ const modem = createdevice('modem', ['second'], (message) => {
   switch (message.target) {
     case 'second':
       // send join message
-      // if (!joined && message.data % 2 === 0) {
-      //   modem.emit('modem:join')
-      // }
+      if (!joined && message.data % 2 === 0) {
+        modem.emit('modem:join')
+      }
       break
     case 'join':
       if (message.sender !== modem.id()) {
