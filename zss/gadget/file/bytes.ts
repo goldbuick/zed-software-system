@@ -1,4 +1,4 @@
-import { BITMAP, createBitmap } from '../data/bitmap'
+import { BITMAP, createbitmap } from '../data/bitmap'
 import {
   BYTES_PER_COLOR,
   CHARS_PER_ROW,
@@ -9,6 +9,8 @@ import {
 import DEFAULT_CHR from './default.chr?uint8array'
 import DEFAULT_PAL from './default.pal?uint8array'
 
+export const FILE_BYTES_PER_COLOR = 3
+
 export function loadPaletteFromBytes(bytes: Uint8Array): BITMAP | undefined {
   const count = Math.floor(bytes.length / BYTES_PER_COLOR)
 
@@ -17,7 +19,7 @@ export function loadPaletteFromBytes(bytes: Uint8Array): BITMAP | undefined {
     return undefined
   }
 
-  const bitmap = createBitmap(3, count)
+  const bitmap = createbitmap(3, count)
 
   for (let i = 0; i < bitmap.bits.length; ++i) {
     bitmap.bits[i] = bytes[i]
@@ -31,13 +33,13 @@ export function loadDefaultPalette() {
   return defaultpalette
 }
 
-const FILE_BYTES_PER_CHAR = 14
+export const FILE_BYTES_PER_CHAR = 14
 
 function isBitOn(value: number, index: number) {
   return value & (1 << index) ? 255 : 0
 }
 
-export function loadCharsetFromBytes(data: Uint8Array): BITMAP | undefined {
+export function loadcharsetfrombytes(data: Uint8Array): BITMAP | undefined {
   const count = Math.floor(data.length / FILE_BYTES_PER_CHAR)
 
   // data must be multiples of 14
@@ -47,7 +49,7 @@ export function loadCharsetFromBytes(data: Uint8Array): BITMAP | undefined {
 
   const rows = Math.ceil(count / CHARS_PER_ROW)
   const rowWidth = CHAR_WIDTH * CHARS_PER_ROW
-  const bitmap = createBitmap(rowWidth, CHAR_HEIGHT * rows)
+  const bitmap = createbitmap(rowWidth, CHAR_HEIGHT * rows)
 
   // unpack data so this is the only place bitmasking happens
   let cx = 0
@@ -76,7 +78,7 @@ export function loadCharsetFromBytes(data: Uint8Array): BITMAP | undefined {
   return bitmap
 }
 
-const defaultcharset = loadCharsetFromBytes(DEFAULT_CHR)
+const defaultcharset = loadcharsetfrombytes(DEFAULT_CHR)
 export function loadDefaultCharset() {
   return defaultcharset
 }

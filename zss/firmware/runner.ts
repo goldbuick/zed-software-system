@@ -6,11 +6,13 @@ import { AUDIO_FIRMWARE } from './audio'
 import { BOARD_FIRMWARE } from './board'
 import { CLI_FIRMWARE } from './cli'
 import { CONST_FIRMWARE } from './const'
+import { DISPLAY_FIRMWARE } from './display'
 import { ELEMENT_FIRMWARE } from './element'
 import { FLAGS_FIRMWARE } from './flags'
 import { GADGET_FIRMWARE } from './gadget'
 import { LIFECYCLE_FIRMWARE } from './lifecycle'
 import { LOADER_FIRMWARE } from './loader'
+import { NETWORK_FIRMWARE } from './network'
 
 export enum DRIVER_TYPE {
   ERROR,
@@ -26,14 +28,25 @@ const firmwares: Record<string, FIRMWARE> = {
   board: BOARD_FIRMWARE,
   cli: CLI_FIRMWARE,
   const: CONST_FIRMWARE,
+  display: DISPLAY_FIRMWARE,
   element: ELEMENT_FIRMWARE,
   flags: FLAGS_FIRMWARE,
   gadget: GADGET_FIRMWARE,
   lifecycle: LIFECYCLE_FIRMWARE,
   loader: LOADER_FIRMWARE,
+  network: NETWORK_FIRMWARE,
 }
 
-const standardlib = ['const', 'flags', 'audio', 'board', 'lifecycle', 'element']
+const standardlib = [
+  'const',
+  'flags',
+  'audio',
+  'board',
+  'display',
+  'network',
+  'lifecycle',
+  'element',
+]
 
 const DRIVER_FIRMWARE = {
   [DRIVER_TYPE.ERROR]: [],

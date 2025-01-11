@@ -13,11 +13,10 @@ import {
 } from 'zss/gadget/data/types'
 import { time } from 'zss/gadget/display/anim'
 import { createSpritesMaterial } from 'zss/gadget/display/sprites'
-import useBitmapTexture from 'zss/gadget/display/textures'
-import { loadDefaultCharset } from 'zss/gadget/file/bytes'
 import { ispresent } from 'zss/mapping/types'
 
 import { useClipping } from '../clipping'
+import { useMedia } from '../hooks'
 
 type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
@@ -25,18 +24,19 @@ type SpritesProps = {
   sprites: SPRITE[]
 }
 
-const charset = loadDefaultCharset()
-
 const SPRITE_COUNT = 2048
 
 export function Sprites({ sprites }: SpritesProps) {
-  const charsetTexture = useBitmapTexture(charset)
+  const palette = useMedia((state) => state.palettedata)
+  const charset = useMedia((state) => state.charsetdata)
+  const altcharset = useMedia((state) => state.altcharsetdata)
+
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
   const spritepool = useRef<SPRITE[]>([])
   const [material] = useState(() => createSpritesMaterial())
   const { width: imageWidth = 0, height: imageHeight = 0 } =
-    charsetTexture?.image ?? {}
+    charset?.image ?? {}
 
   useMemo(() => {
     // setup sprite pool
@@ -218,11 +218,15 @@ export function Sprites({ sprites }: SpritesProps) {
 
   // config material
   useEffect(() => {
-    if (!charsetTexture || !bgRef.current) {
+    if (!charset || !bgRef.current) {
       return
     }
     const imageCols = Math.round(imageWidth / CHAR_WIDTH)
     const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
+    material.uniforms.palette.value = palette
+    material.uniforms.map.value = charset
+    material.uniforms.alt.value = altcharset ?? charset
+    material.uniforms.dpr.value = window.devicePixelRatio
     material.uniforms.pointSize.value.x = RUNTIME.DRAW_CHAR_WIDTH()
     material.uniforms.pointSize.value.y = RUNTIME.DRAW_CHAR_HEIGHT()
     material.uniforms.rows.value = imageRows - 1
@@ -231,7 +235,15 @@ export function Sprites({ sprites }: SpritesProps) {
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
-  }, [charsetTexture, material, imageWidth, imageHeight, clippingPlanes])
+  }, [
+    palette,
+    charset,
+    altcharset,
+    material,
+    imageWidth,
+    imageHeight,
+    clippingPlanes,
+  ])
 
   return (
     <points frustumCulled={false} material={material}>

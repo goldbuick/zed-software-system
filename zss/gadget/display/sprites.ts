@@ -23,6 +23,7 @@ const spritesMaterial = new ShaderMaterial({
     map: new Uniform(charset),
     alt: new Uniform(charset),
     palette: new Uniform(palette),
+    dpr: new Uniform(1),
     pointSize: {
       value: new Vector2(1, 1),
     },
@@ -46,6 +47,7 @@ const spritesMaterial = new ShaderMaterial({
     uniform float interval;
     uniform vec2 pointSize;
     uniform vec3 palette[16];
+    uniform float dpr;
     uniform float tindex;
 
     varying float vVisible;
@@ -116,7 +118,7 @@ const spritesMaterial = new ShaderMaterial({
       gl_Position = projectionMatrix * mvPosition;      
 
       // this handles things being scaled
-      gl_PointSize = pointSize.y * modelViewMatrix[0][0] * 2.0;
+      gl_PointSize = pointSize.y * modelViewMatrix[0][0] * dpr;
       
       #include <clipping_planes_vertex>
     }

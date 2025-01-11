@@ -15,6 +15,7 @@ import {
   platform_init,
   register_ready,
   tape_crash,
+  tape_debug,
   tape_info,
   tape_terminal_close,
   tape_terminal_open,
@@ -102,7 +103,7 @@ function writeurlhash(exportedbooks: string) {
     // saving current state, don't interrupt the user
     currenthash = exportedbooks
     location.hash = out
-    tape_info(
+    tape_debug(
       register.name(),
       `wrote ${exportedbooks?.length ?? 0} chars [${exportedbooks.slice(0, 8)}...${exportedbooks.slice(-8)}]`,
     )

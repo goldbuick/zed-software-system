@@ -23,6 +23,7 @@ import {
   bookboardtick,
   bookclearflags,
   bookelementkindread,
+  bookensurecodepagewithtype,
   bookplayerreadboard,
   bookplayerreadboards,
   bookplayersetboard,
@@ -168,22 +169,15 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
   address: string,
   createtype: T,
 ) {
-  const book = memoryensuresoftwarebook(slot)
-
-  // lookup by address
-  let codepage = bookreadcodepagebyaddress(book, address)
-  if (ispresent(codepage)) {
-    return codepage
-  }
-
-  // create new codepage
-  const typestr = codepagetypetostring(createtype)
-  codepage = createcodepage(
-    typestr === 'object' ? `@${address}\n` : `@${typestr} ${address}\n`,
-    {},
+  const codepage = bookensurecodepagewithtype(
+    memoryensuresoftwarebook(slot),
+    createtype,
+    address,
   )
-  bookwritecodepage(book, codepage)
-  vm_flush('memory', '', MEMORY.defaultplayer)
+
+  if (ispresent(codepage)) {
+    vm_flush('memory', '', MEMORY.defaultplayer)
+  }
 
   // result codepage
   return codepage
@@ -192,6 +186,11 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
 export function memoryreadflags(id: string) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   return bookreadflags(mainbook, id)
+}
+
+export function memoryreadbookflags() {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  return bookreadflags(mainbook, MEMORY_LABEL.MAIN)
 }
 
 export function memoryclearflags(id: string) {

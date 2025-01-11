@@ -86,8 +86,8 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     outputColor = texture2D(inputBuffer, bent);
 
     // apply scratches
-    outputColor.rgb = blendLighten(outputColor.rgb, bright.rgb, 0.111);
-    outputColor.rgb = blendDarken(outputColor.rgb, dark.rgb, 0.111);
+    outputColor.rgb = blendLighten(outputColor.rgb, bright.rgb, 0.079);
+    outputColor.rgb = blendDarken(outputColor.rgb, dark.rgb, 0.0666);
 
     // apply halftones
     outputColor.rgb = halftone(outputColor.rgb, uv.st);

@@ -1,9 +1,15 @@
 import { createContext, useContext, useState } from 'react'
+import { CanvasTexture, Color } from 'three'
 import { objectKeys } from 'ts-extras'
 import { TILES } from 'zss/gadget/data/types'
-import { ispresent } from 'zss/mapping/types'
+import { isequal, ispresent, MAYBE } from 'zss/mapping/types'
 import { createwritetextcontext } from 'zss/words/textformat'
 import { create, createStore, StoreApi } from 'zustand'
+
+import { BITMAP } from './data/bitmap'
+import { convertPaletteToColors } from './data/palette'
+import { createbitmaptexture } from './display/textures'
+import { loadDefaultCharset, loadDefaultPalette } from './file/bytes'
 
 export const WriteTextContext = createContext(
   createwritetextcontext(1, 1, 15, 1),
@@ -179,3 +185,48 @@ export function useTilesData() {
   const store = useContext(TilesContext)
   return store.getState() // get ref to shared data/api
 }
+
+export type MEDIA_DATA = {
+  palette?: BITMAP
+  charset?: BITMAP
+  altcharset?: BITMAP
+  palettedata?: Color[]
+  charsetdata?: CanvasTexture
+  altcharsetdata?: CanvasTexture
+  setpalette: (palette: MAYBE<BITMAP>) => void
+  setcharset: (charset: MAYBE<BITMAP>) => void
+  setaltcharset: (altcharset: MAYBE<BITMAP>) => void
+}
+
+export const useMedia = create<MEDIA_DATA>((set) => ({
+  palette: loadDefaultPalette(),
+  charset: loadDefaultCharset(),
+  setpalette(palette) {
+    set((state) => {
+      if (isequal(state.palette, palette)) {
+        return state
+      }
+      return { ...state, palette, palettedata: convertPaletteToColors(palette) }
+    })
+  },
+  setcharset(charset) {
+    set((state) => {
+      if (isequal(state.charset, charset)) {
+        return state
+      }
+      return { ...state, charset, charsetdata: createbitmaptexture(charset) }
+    })
+  },
+  setaltcharset(altcharset) {
+    set((state) => {
+      if (isequal(state.altcharset, altcharset)) {
+        return state
+      }
+      return {
+        ...state,
+        altcharset,
+        altcharsetdata: createbitmaptexture(altcharset),
+      }
+    })
+  },
+}))

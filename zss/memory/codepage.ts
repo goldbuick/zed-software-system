@@ -1,4 +1,5 @@
 import { BITMAP } from 'zss/gadget/data/bitmap'
+import { loadDefaultCharset, loadDefaultPalette } from 'zss/gadget/file/bytes'
 import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -32,11 +33,15 @@ enum BITMAP_KEYS {
 }
 
 export function exportbitmap(bitmap: MAYBE<BITMAP>): MAYBE<FORMAT_OBJECT> {
-  return formatobject(bitmap, BITMAP_KEYS)
+  return formatobject(bitmap, BITMAP_KEYS, {
+    bits: (bits: Uint8Array) => Array.from(bits),
+  })
 }
 
 export function importbitmap(bitmapentry: MAYBE<FORMAT_OBJECT>): MAYBE<BITMAP> {
-  return unformatobject(bitmapentry, BITMAP_KEYS)
+  return unformatobject(bitmapentry, BITMAP_KEYS, {
+    bits: (bits: number[]) => new Uint8Array(bits),
+  })
 }
 
 export function createcodepage(
@@ -380,14 +385,16 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
     case CODE_PAGE_TYPE.CHARSET: {
       // validate and shape charset into usable state
       if (!ispresent(codepage.charset)) {
-        // codepage.charset = {}
+        // clone default
+        codepage.charset = loadDefaultCharset()
       }
       return codepage.charset as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.PALETTE: {
       // validate and shape palette into usable state
       if (!ispresent(codepage.palette)) {
-        // codepage.palette = {}
+        // clone default
+        codepage.palette = loadDefaultPalette()
       }
       return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
