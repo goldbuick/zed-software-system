@@ -1,4 +1,3 @@
-import { vm_flush } from 'zss/device/api'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'

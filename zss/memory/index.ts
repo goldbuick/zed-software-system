@@ -32,7 +32,6 @@ import {
   bookreadcodepagesbytype,
   bookreadflags,
   bookreadobject,
-  bookwritecodepage,
   createbook,
 } from './book'
 import { codepagereaddata, codepagereadstats } from './codepage'

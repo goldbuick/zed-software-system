@@ -200,10 +200,14 @@ export type MEDIA_DATA = {
   setcharset: (charset: MAYBE<BITMAP>) => void
   setaltcharset: (altcharset: MAYBE<BITMAP>) => void
 }
+const palette = loadpalettefrombytes(PALETTE)
+const charset = loadcharsetfrombytes(CHARSET)
 
 export const useMedia = create<MEDIA_DATA>((set) => ({
-  palette: loadpalettefrombytes(PALETTE),
-  charset: loadcharsetfrombytes(CHARSET),
+  palette,
+  charset,
+  palettedata: convertpalettetocolors(palette),
+  charsetdata: createbitmaptexture(charset),
   setpalette(palette) {
     set((state) => {
       if (isequal(state.palette, palette)) {
