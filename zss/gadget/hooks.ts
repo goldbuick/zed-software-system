@@ -6,6 +6,7 @@ import { isequal, ispresent, MAYBE } from 'zss/mapping/types'
 import { createwritetextcontext } from 'zss/words/textformat'
 import { create, createStore, StoreApi } from 'zustand'
 
+import { BITMAP } from './data/bitmap'
 import { convertPaletteToColors } from './data/palette'
 import { createbitmaptexture } from './display/textures'
 import { loadDefaultCharset, loadDefaultPalette } from './file/bytes'
@@ -186,50 +187,46 @@ export function useTilesData() {
 }
 
 export type MEDIA_DATA = {
-  palette?: Color[]
-  charset?: CanvasTexture
-  altcharset?: CanvasTexture
-  setpalette: (palette: MAYBE<Color[]>) => void
-  setcharset: (charset: MAYBE<CanvasTexture>) => void
-  setaltcharset: (altcharset: MAYBE<CanvasTexture>) => void
+  palette?: BITMAP
+  charset?: BITMAP
+  altcharset?: BITMAP
+  palettedata?: Color[]
+  charsetdata?: CanvasTexture
+  altcharsetdata?: CanvasTexture
+  setpalette: (palette: MAYBE<BITMAP>) => void
+  setcharset: (charset: MAYBE<BITMAP>) => void
+  setaltcharset: (altcharset: MAYBE<BITMAP>) => void
 }
 
-function createmediastore() {
-  return createStore<MEDIA_DATA>((set) => {
-    return {
-      palette: convertPaletteToColors(loadDefaultPalette()),
-      charset: createbitmaptexture(loadDefaultCharset()),
-      setpalette(palette) {
-        set((state) => {
-          if (isequal(state.palette, palette)) {
-            return state
-          }
-          return { ...state, palette }
-        })
-      },
-      setcharset(charset) {
-        set((state) => {
-          if (isequal(state.charset, charset)) {
-            return state
-          }
-          return { ...state, charset }
-        })
-      },
-      setaltcharset(altcharset) {
-        set((state) => {
-          if (isequal(state.altcharset, altcharset)) {
-            return state
-          }
-          return { ...state, altcharset }
-        })
-      },
-    }
-  })
-}
-
-export const MediaContext = createContext(createmediastore())
-
-export function useMediaContext() {
-  const store = useContext(MediaContext)
-  return store.getState() // get ref to shared data/api
-}
+export const useMedia = create<MEDIA_DATA>((set) => ({
+  palette: loadDefaultPalette(),
+  charset: loadDefaultCharset(),
+  setpalette(palette) {
+    set((state) => {
+      if (isequal(state.palette, palette)) {
+        return state
+      }
+      return { ...state, palette, palettedata: convertPaletteToColors(palette) }
+    })
+  },
+  setcharset(charset) {
+    set((state) => {
+      if (isequal(state.charset, charset)) {
+        return state
+      }
+      return { ...state, charset, charsetdata: createbitmaptexture(charset) }
+    })
+  },
+  setaltcharset(altcharset) {
+    set((state) => {
+      if (isequal(state.altcharset, altcharset)) {
+        return state
+      }
+      return {
+        ...state,
+        altcharset,
+        altcharsetdata: createbitmaptexture(altcharset),
+      }
+    })
+  },
+}))

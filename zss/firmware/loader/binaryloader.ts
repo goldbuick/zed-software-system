@@ -1,13 +1,12 @@
 import { FIRMWARE_COMMAND } from 'zss/firmware'
 import {
-  CHAR_HEIGHT,
-  CHAR_WIDTH,
   CHARS_PER_ROW,
   CHARS_TOTAL_ROWS,
   PALETTE_COLORS,
-  PALETTE_RGB,
 } from 'zss/gadget/data/types'
 import {
+  FILE_BYTES_PER_CHAR,
+  FILE_BYTES_PER_COLOR,
   loadcharsetfrombytes,
   loadPaletteFromBytes,
 } from 'zss/gadget/file/bytes'
@@ -157,7 +156,7 @@ export const binaryloader: FIRMWARE_COMMAND = (chip, words) => {
       )
       const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
       if (ispresent(palette)) {
-        const numberofbytes = PALETTE_RGB * PALETTE_COLORS
+        const numberofbytes = PALETTE_COLORS * FILE_BYTES_PER_COLOR
         const bitmap = loadPaletteFromBytes(
           new Uint8Array(
             binaryreader.bytes.buffer,
@@ -181,7 +180,8 @@ export const binaryloader: FIRMWARE_COMMAND = (chip, words) => {
       )
       const charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(codepage)
       if (ispresent(charset)) {
-        const numberofbytes = CHARS_PER_ROW * CHAR_WIDTH * CHARS_TOTAL_ROWS
+        const numberofbytes =
+          CHARS_PER_ROW * CHARS_TOTAL_ROWS * FILE_BYTES_PER_CHAR
         const bitmap = loadcharsetfrombytes(
           new Uint8Array(
             binaryreader.bytes.buffer,

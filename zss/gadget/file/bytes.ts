@@ -9,6 +9,8 @@ import {
 import DEFAULT_CHR from './default.chr?uint8array'
 import DEFAULT_PAL from './default.pal?uint8array'
 
+export const FILE_BYTES_PER_COLOR = 3
+
 export function loadPaletteFromBytes(bytes: Uint8Array): BITMAP | undefined {
   const count = Math.floor(bytes.length / BYTES_PER_COLOR)
 
@@ -31,7 +33,7 @@ export function loadDefaultPalette() {
   return defaultpalette
 }
 
-const FILE_BYTES_PER_CHAR = 14
+export const FILE_BYTES_PER_CHAR = 14
 
 function isBitOn(value: number, index: number) {
   return value & (1 << index) ? 255 : 0

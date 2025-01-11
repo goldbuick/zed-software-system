@@ -16,7 +16,7 @@ import { createSpritesMaterial } from 'zss/gadget/display/sprites'
 import { ispresent } from 'zss/mapping/types'
 
 import { useClipping } from '../clipping'
-import { useMediaContext } from '../hooks'
+import { useMedia } from '../hooks'
 
 type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
@@ -27,13 +27,16 @@ type SpritesProps = {
 const SPRITE_COUNT = 2048
 
 export function Sprites({ sprites }: SpritesProps) {
-  const media = useMediaContext()
+  const palette = useMedia((state) => state.palettedata)
+  const charset = useMedia((state) => state.charsetdata)
+  const altcharset = useMedia((state) => state.altcharsetdata)
+
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
   const spritepool = useRef<SPRITE[]>([])
   const [material] = useState(() => createSpritesMaterial())
   const { width: imageWidth = 0, height: imageHeight = 0 } =
-    media.charset?.image ?? {}
+    charset?.image ?? {}
 
   useMemo(() => {
     // setup sprite pool
@@ -215,14 +218,14 @@ export function Sprites({ sprites }: SpritesProps) {
 
   // config material
   useEffect(() => {
-    if (!media.charset || !bgRef.current) {
+    if (!charset || !bgRef.current) {
       return
     }
     const imageCols = Math.round(imageWidth / CHAR_WIDTH)
     const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
-    material.uniforms.map.value = media.charset
-    material.uniforms.alt.value = media.altcharset ?? media.charset
-    material.uniforms.palette.value = media.palette
+    material.uniforms.palette.value = palette
+    material.uniforms.map.value = charset
+    material.uniforms.alt.value = altcharset ?? charset
     material.uniforms.dpr.value = window.devicePixelRatio
     material.uniforms.pointSize.value.x = RUNTIME.DRAW_CHAR_WIDTH()
     material.uniforms.pointSize.value.y = RUNTIME.DRAW_CHAR_HEIGHT()
@@ -232,7 +235,15 @@ export function Sprites({ sprites }: SpritesProps) {
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
-  }, [media, material, imageWidth, imageHeight, clippingPlanes])
+  }, [
+    palette,
+    charset,
+    altcharset,
+    material,
+    imageWidth,
+    imageHeight,
+    clippingPlanes,
+  ])
 
   return (
     <points frustumCulled={false} material={material}>

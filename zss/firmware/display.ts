@@ -1,6 +1,6 @@
 import { api_error } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
-import { PALETTE_RGB } from 'zss/gadget/data/types'
+import { FILE_BYTES_PER_COLOR } from 'zss/gadget/file/bytes'
 import { clamp } from 'zss/mapping/number'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import {
@@ -40,7 +40,7 @@ export const DISPLAY_FIRMWARE = createfirmware()
       )
       const bytes = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(palette)
       if (ispresent(bytes) && maybecolor >= 0 && maybecolor <= 16) {
-        const row = maybecolor * PALETTE_RGB
+        const row = maybecolor * FILE_BYTES_PER_COLOR
         bytes.bits[row + 0] = clamp(r, 0, 63)
         bytes.bits[row + 1] = clamp(g, 0, 63)
         bytes.bits[row + 2] = clamp(b, 0, 63)

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import {
   CHAR_HEIGHT,
@@ -7,15 +7,13 @@ import {
   CHARS_TOTAL_ROWS,
   LAYER_TYPE,
   PALETTE_COLORS,
-  PALETTE_RGB,
 } from 'zss/gadget/data/types'
 import { isarray } from 'zss/mapping/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { createbitmapfromarray } from '../data/bitmap'
-import { convertPaletteToColors } from '../data/palette'
-import { createbitmaptexture } from '../display/textures'
-import { useMediaContext } from '../hooks'
+import { FILE_BYTES_PER_COLOR } from '../file/bytes'
+import { useMedia } from '../hooks'
 
 import { Dither } from './dither'
 import { Sprites } from './sprites'
@@ -27,7 +25,7 @@ type FramedTilesProps = {
 }
 
 export function FramedLayer({ id, z }: FramedTilesProps) {
-  const media = useMediaContext()
+  const media = useMedia()
   const layer = useGadgetClient(
     useShallow((state) => state.gadget.layers.find((item) => item.id === id)),
   )
@@ -39,12 +37,10 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
       case 'image/palette':
         if (isarray(medialayer.media)) {
           media.setpalette(
-            convertPaletteToColors(
-              createbitmapfromarray(
-                PALETTE_RGB,
-                PALETTE_COLORS,
-                medialayer.media,
-              ),
+            createbitmapfromarray(
+              FILE_BYTES_PER_COLOR,
+              PALETTE_COLORS,
+              medialayer.media,
             ),
           )
         }
@@ -52,12 +48,10 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
       case 'image/charset':
         if (isarray(medialayer.media)) {
           media.setcharset(
-            createbitmaptexture(
-              createbitmapfromarray(
-                CHARS_PER_ROW * CHAR_WIDTH,
-                CHARS_TOTAL_ROWS * CHAR_HEIGHT,
-                medialayer.media,
-              ),
+            createbitmapfromarray(
+              CHARS_PER_ROW * CHAR_WIDTH,
+              CHARS_TOTAL_ROWS * CHAR_HEIGHT,
+              medialayer.media,
             ),
           )
         }
@@ -65,12 +59,10 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
       case 'image/altcharset':
         if (isarray(medialayer.media)) {
           media.setaltcharset(
-            createbitmaptexture(
-              createbitmapfromarray(
-                CHARS_PER_ROW * CHAR_WIDTH,
-                CHARS_TOTAL_ROWS * CHAR_HEIGHT,
-                medialayer.media,
-              ),
+            createbitmapfromarray(
+              CHARS_PER_ROW * CHAR_WIDTH,
+              CHARS_TOTAL_ROWS * CHAR_HEIGHT,
+              medialayer.media,
             ),
           )
         }
