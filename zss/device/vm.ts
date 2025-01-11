@@ -11,10 +11,8 @@ import {
   memoryreadbooklist,
   memoryresetbooks,
   memorytick,
-  memorysetdefaultplayer,
   memoryplayerscan,
   memoryplayerlogout,
-  memorygetdefaultplayer,
   memoryreadflags,
   memorymessage,
   memorycleanup,
@@ -70,8 +68,8 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
     case 'init':
       if (ispresent(message.player) && !init) {
         init = true
-        modemwriteplayer(message.player)
-        memorysetdefaultplayer(message.player)
+        // modemwriteplayer(message.player)
+        // memorysetdefaultplayer(message.player)
         // ack
         vm.reply(message, 'ackinit', true, message.player)
       }

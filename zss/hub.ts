@@ -7,7 +7,13 @@ export type HUB_MESSAGE = {
 }
 
 export type HUB = {
-  emit: (target: string, sender: string, data?: any, player?: string) => void
+  emit: (
+    session: string,
+    target: string,
+    sender: string,
+    data?: any,
+    player?: string,
+  ) => void
   invoke: (message: MESSAGE) => void
   connect: (device: DEVICE) => void
   disconnect: (device: DEVICE) => void
@@ -16,8 +22,8 @@ export type HUB = {
 const devices = new Set<DEVICE>()
 
 export const hub: HUB = {
-  emit(target, sender, data, player) {
-    hub.invoke(createmessage(target, sender, data, player))
+  emit(session, target, sender, data, player) {
+    hub.invoke(createmessage(session, target, sender, data, player))
   },
   invoke(message) {
     devices.forEach((device) => device.handle(message))

@@ -10,217 +10,310 @@ import { MAYBE } from 'zss/mapping/types'
 // be careful to keep imports here minimal
 
 export function api_error(
+  session: string,
   sender: string,
   kind: string,
   message: string,
   maybeplayer?: string,
 ) {
   const player = maybeplayer ?? ''
-  hub.emit(`error:${kind}`, sender, message, player)
+  hub.emit(session, `error:${kind}`, sender, message, player)
   return tape_error(sender, message, player)
 }
 
 export function broadcast_startstream(
+  session: string,
   sender: string,
   streamkey: string,
   player: string,
 ) {
-  hub.emit('broadcast:startstream', sender, streamkey, player)
+  hub.emit(session, 'broadcast:startstream', sender, streamkey, player)
 }
 
-export function broadcast_stopstream(sender: string, player: string) {
-  hub.emit('broadcast:stopstream', sender, undefined, player)
+export function broadcast_stopstream(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'broadcast:stopstream', sender, undefined, player)
 }
 
-export function chat_connect(sender: string, channel: string, player: string) {
-  hub.emit('chat:connect', sender, channel, player)
+export function chat_connect(
+  session: string,
+  sender: string,
+  channel: string,
+  player: string,
+) {
+  hub.emit(session, 'chat:connect', sender, channel, player)
 }
 
-export function chat_disconnect(sender: string, player: string) {
-  hub.emit('chat:disconnect', sender, undefined, player)
+export function chat_disconnect(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'chat:disconnect', sender, undefined, player)
 }
 
 export function gadgetclient_reset(
+  session: string,
   sender: string,
   gadgetstate: GADGET_STATE,
   player: string,
 ) {
-  hub.emit('gadgetclient:reset', sender, gadgetstate, player)
+  hub.emit(session, 'gadgetclient:reset', sender, gadgetstate, player)
 }
 
-export function gadgetclient_patch(sender: string, json: any, player: string) {
-  hub.emit('gadgetclient:patch', sender, json, player)
+export function gadgetclient_patch(
+  session: string,
+  sender: string,
+  json: any,
+  player: string,
+) {
+  hub.emit(session, 'gadgetclient:patch', sender, json, player)
 }
 
-export function gadgetserver_desync(sender: string, player: string) {
-  hub.emit('gadgetserver:desync', sender, undefined, player)
+export function gadgetserver_desync(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'gadgetserver:desync', sender, undefined, player)
 }
 
-export function gadgetserver_clearscroll(sender: string, player: string) {
-  hub.emit('gadgetserver:clearscroll', sender, undefined, player)
+export function gadgetserver_clearscroll(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'gadgetserver:clearscroll', sender, undefined, player)
 }
 
-export function gadgetserver_clearplayer(sender: string, player: string) {
-  hub.emit('gadgetserver:clearplayer', sender, undefined, player)
+export function gadgetserver_clearplayer(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'gadgetserver:clearplayer', sender, undefined, player)
 }
 
-export function peer_create(sender: string, joinid: string, player: string) {
-  hub.emit('peer:create', sender, joinid, player)
+export function peer_create(
+  session: string,
+  sender: string,
+  joinid: string,
+  player: string,
+) {
+  hub.emit(session, 'peer:create', sender, joinid, player)
 }
 
-export function peer_joincode(sender: string, player: string) {
-  hub.emit('peer:joincode', sender, undefined, player)
+export function peer_joincode(session: string, sender: string, player: string) {
+  hub.emit(session, 'peer:joincode', sender, undefined, player)
 }
 
-export function peer_open(sender: string, player: string) {
-  hub.emit('peer:open', sender, undefined, player)
+export function peer_open(session: string, sender: string, player: string) {
+  hub.emit(session, 'peer:open', sender, undefined, player)
 }
 
-export function peer_close(sender: string, player: string) {
-  hub.emit('peer:close', sender, undefined, player)
+export function peer_close(session: string, sender: string, player: string) {
+  hub.emit(session, 'peer:close', sender, undefined, player)
 }
 
-export function peer_disconnected(sender: string, player: string) {
-  hub.emit('peer:disconnected', sender, undefined, player)
+export function peer_disconnected(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'peer:disconnected', sender, undefined, player)
 }
 
-export function platform_started(sender: string, player: string) {
-  hub.emit('started', sender, undefined, player)
+export function platform_started(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'started', sender, undefined, player)
 }
 
-export function platform_init(sender: string, player: string) {
-  hub.emit('init', sender, undefined, player)
+export function platform_init(session: string, sender: string, player: string) {
+  hub.emit(session, 'init', sender, undefined, player)
 }
 
-export function register_ready(sender: string, player: string) {
-  hub.emit('register:ready', sender, undefined, player)
+export function register_ready(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'register:ready', sender, undefined, player)
 }
 
-export function register_ackbooks(sender: string, player: string) {
-  hub.emit('register:ackbooks', sender, true, player)
+export function register_ackbooks(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'register:ackbooks', sender, true, player)
 }
 
 export function register_flush(
+  session: string,
   sender: string,
   historylabel: string,
   books: string,
   player: string,
 ) {
-  hub.emit('register:flush', sender, [historylabel, books], player)
+  hub.emit(session, 'register:flush', sender, [historylabel, books], player)
 }
 
-export function register_dev(sender: string, player: string) {
-  hub.emit('register:dev', sender, undefined, player)
+export function register_dev(session: string, sender: string, player: string) {
+  hub.emit(session, 'register:dev', sender, undefined, player)
 }
 
-export function register_share(sender: string, player: string) {
-  hub.emit('register:share', sender, undefined, player)
+export function register_share(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'register:share', sender, undefined, player)
 }
 
-export function register_select(sender: string, book: string, player: string) {
-  hub.emit('register:select', sender, book, player)
+export function register_select(
+  session: string,
+  sender: string,
+  book: string,
+  player: string,
+) {
+  hub.emit(session, 'register:select', sender, book, player)
 }
 
-export function register_nuke(sender: string, player: string) {
-  hub.emit('register:nuke', sender, undefined, player)
+export function register_nuke(session: string, sender: string, player: string) {
+  hub.emit(session, 'register:nuke', sender, undefined, player)
 }
 
-export function synth_audioenabled(sender: string) {
-  hub.emit('synth:audioenabled', sender, undefined)
+export function synth_audioenabled(session: string, sender: string) {
+  hub.emit(session, 'synth:audioenabled', sender, undefined)
 }
 
-export function synth_tts(sender: string, voice: string, phrase: string) {
-  hub.emit('synth:tts', sender, [voice, phrase])
+export function synth_tts(
+  session: string,
+  sender: string,
+  voice: string,
+  phrase: string,
+) {
+  hub.emit(session, 'synth:tts', sender, [voice, phrase])
 }
 
-export function synth_play(sender: string, priority: number, buffer: string) {
-  hub.emit('synth:play', sender, [priority, buffer])
+export function synth_play(
+  session: string,
+  sender: string,
+  priority: number,
+  buffer: string,
+) {
+  hub.emit(session, 'synth:play', sender, [priority, buffer])
 }
 
 export function synth_mainvolume(
+  session: string,
   sender: string,
   volume: number,
   player: string,
 ) {
-  hub.emit('synth:mainvolume', sender, volume, player)
+  hub.emit(session, 'synth:mainvolume', sender, volume, player)
 }
 
 export function synth_drumvolume(
+  session: string,
   sender: string,
   volume: number,
   player: string,
 ) {
-  hub.emit('synth:drumvolume', sender, volume, player)
+  hub.emit(session, 'synth:drumvolume', sender, volume, player)
 }
 
 export function synth_ttsvolume(
+  session: string,
   sender: string,
   volume: number,
   player: string,
 ) {
-  hub.emit('synth:ttsvolume', sender, volume, player)
+  hub.emit(session, 'synth:ttsvolume', sender, volume, player)
 }
 
 export function synth_voice(
+  session: string,
   sender: string,
   idx: number,
   config: number | string,
   value: MAYBE<number | string | number[]>,
 ) {
-  hub.emit('synth:voice', sender, [idx, config, value])
+  hub.emit(session, 'synth:voice', sender, [idx, config, value])
 }
 
 export function synth_voicefx(
+  session: string,
   sender: string,
   idx: number,
   fx: string,
   config: number | string,
   value: MAYBE<number | string>,
 ) {
-  hub.emit('synth:voicefx', sender, [idx, fx, config, value])
+  hub.emit(session, 'synth:voicefx', sender, [idx, fx, config, value])
 }
 
-export function tape_info(sender: string, ...message: any[]) {
-  hub.emit('tape:info', sender, message)
+export function tape_info(session: string, sender: string, ...message: any[]) {
+  hub.emit(session, 'tape:info', sender, message)
   return true
 }
 
-export function tape_debug(sender: string, ...message: any[]) {
-  hub.emit('tape:debug', sender, message)
+export function tape_debug(session: string, sender: string, ...message: any[]) {
+  hub.emit(session, 'tape:debug', sender, message)
   return true
 }
 
 // internal only, use api_error
-function tape_error(sender: string, ...message: any[]) {
-  hub.emit('tape:error', sender, message)
+function tape_error(session: string, sender: string, ...message: any[]) {
+  hub.emit(session, 'tape:error', sender, message)
   return false
 }
 
-export function tape_terminal_open(sender: string, player: string) {
-  hub.emit('tape:terminal:open', sender, undefined, player)
+export function tape_terminal_open(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'tape:terminal:open', sender, undefined, player)
 }
 
-export function tape_terminal_close(sender: string, player: string) {
-  hub.emit('tape:terminal:close', sender, undefined, player)
+export function tape_terminal_close(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'tape:terminal:close', sender, undefined, player)
 }
 
-export function tape_terminal_toggle(sender: string, player: string) {
-  hub.emit('tape:terminal:toggle', sender, undefined, player)
+export function tape_terminal_toggle(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'tape:terminal:toggle', sender, undefined, player)
 }
 
 export function tape_terminal_inclayout(
+  session: string,
   sender: string,
   inc: boolean,
   player: string,
 ) {
-  hub.emit('tape:terminal:inclayout', sender, inc, player)
+  hub.emit(session, 'tape:terminal:inclayout', sender, inc, player)
 }
 
-export function tape_crash(sender: string, player: string) {
-  hub.emit('tape:crash', sender, undefined, player)
+export function tape_crash(session: string, sender: string, player: string) {
+  hub.emit(session, 'tape:crash', sender, undefined, player)
 }
 
 export function tape_editor_open(
+  session: string,
   sender: string,
   book: string,
   page: string,
@@ -228,86 +321,129 @@ export function tape_editor_open(
   title: string,
   player: string,
 ) {
-  hub.emit('tape:editor:open', sender, [book, page, type, title], player)
+  hub.emit(
+    session,
+    'tape:editor:open',
+    sender,
+    [book, page, type, title],
+    player,
+  )
 }
 
-export function tape_editor_close(sender: string, player: string) {
-  hub.emit('tape:editor:close', sender, undefined, player)
+export function tape_editor_close(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'tape:editor:close', sender, undefined, player)
 }
 
-export function userinput_up(sender: string, input: INPUT, player: string) {
-  hub.emit('userinput:up', sender, input, player)
+export function userinput_up(
+  session: string,
+  sender: string,
+  input: INPUT,
+  player: string,
+) {
+  hub.emit(session, 'userinput:up', sender, input, player)
 }
 
-export function userinput_down(sender: string, input: INPUT, player: string) {
-  hub.emit('userinput:down', sender, input, player)
+export function userinput_down(
+  session: string,
+  sender: string,
+  input: INPUT,
+  player: string,
+) {
+  hub.emit(session, 'userinput:down', sender, input, player)
 }
 
-export function userinput_update(sender: string, player: string) {
-  hub.emit('userinput:update', sender, undefined, player)
+export function userinput_update(
+  session: string,
+  sender: string,
+  player: string,
+) {
+  hub.emit(session, 'userinput:update', sender, undefined, player)
 }
 
 export function vm_books(
+  session: string,
   sender: string,
   books: string,
   select: string,
   player: string,
 ) {
-  hub.emit('vm:books', sender, [books, select], player)
+  hub.emit(session, 'vm:books', sender, [books, select], player)
 }
 
-export function vm_login(sender: string, player: string) {
-  hub.emit('vm:login', sender, undefined, player)
+export function vm_login(session: string, sender: string, player: string) {
+  hub.emit(session, 'vm:login', sender, undefined, player)
 }
 
-export function vm_endgame(sender: string, player: string) {
-  hub.emit('vm:endgame', sender, undefined, player)
+export function vm_endgame(session: string, sender: string, player: string) {
+  hub.emit(session, 'vm:endgame', sender, undefined, player)
 }
 
-export function vm_doot(sender: string, player: string) {
-  hub.emit('vm:doot', sender, undefined, player)
+export function vm_doot(session: string, sender: string, player: string) {
+  hub.emit(session, 'vm:doot', sender, undefined, player)
 }
 
 export function vm_input(
+  session: string,
   sender: string,
   input: INPUT,
   mods: number,
   player: string,
 ) {
-  hub.emit('vm:input', sender, [input, mods], player)
+  hub.emit(session, 'vm:input', sender, [input, mods], player)
 }
 
-export function vm_codeaddress(book: string, codepage: string) {
+export function vm_codeaddress(
+  session: string,
+  book: string,
+  codepage: string,
+) {
   return `${book}${codepage}`
 }
 
 export function vm_codewatch(
+  session: string,
   sender: string,
   book: string,
   codepage: string,
   player: string,
 ) {
-  hub.emit('vm:codewatch', sender, [book, codepage], player)
+  hub.emit(session, 'vm:codewatch', sender, [book, codepage], player)
 }
 
 export function vm_coderelease(
+  session: string,
   sender: string,
   book: string,
   codepage: string,
   player: string,
 ) {
-  hub.emit('vm:coderelease', sender, [book, codepage], player)
+  hub.emit(session, 'vm:coderelease', sender, [book, codepage], player)
 }
 
-export function vm_cli(sender: string, input: string, player: string) {
-  hub.emit('vm:cli', sender, input, player)
+export function vm_cli(
+  session: string,
+  sender: string,
+  input: string,
+  player: string,
+) {
+  hub.emit(session, 'vm:cli', sender, input, player)
 }
 
-export function vm_flush(sender: string, tag: string, player: string) {
-  hub.emit('vm:flush', sender, tag, player)
+export function vm_flush(
+  session: string,
+  sender: string,
+  tag: string,
+  player: string,
+) {
+  hub.emit(session, 'vm:flush', sender, tag, player)
 }
 
 export function vm_loader(
+  session: string,
   sender: string,
   event: string,
   filename: string,
@@ -344,5 +480,5 @@ export function vm_loader(
       withcontent = createbinaryreader()
       break
   }
-  hub.emit('vm:loader', sender, [event, withcontent], player)
+  hub.emit(session, 'vm:loader', sender, [event, withcontent], player)
 }

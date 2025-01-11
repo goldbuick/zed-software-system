@@ -25,6 +25,7 @@ import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
 import { WORD, WORD_RESULT } from './words/types'
 
 export type MESSAGE = {
+  session: string
   id: string
   target: string
   data?: any

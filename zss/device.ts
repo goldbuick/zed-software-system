@@ -4,12 +4,13 @@ import { createsid } from './mapping/guid'
 import { NAME } from './words/types'
 
 export function createmessage(
+  session: string,
   target: string,
   sender: string,
   data?: any,
   player?: string,
 ): MESSAGE {
-  return { id: createsid(), target, sender, data, player }
+  return { session, id: createsid(), target, sender, data, player }
 }
 
 export type MESSAGE_FUNC = (message: MESSAGE) => void

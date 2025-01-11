@@ -5,7 +5,7 @@ import { api_error, tape_debug, tape_info, vm_flush } from 'zss/device/api'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
 import { pickwith } from 'zss/mapping/array'
-import { createpid, ispid } from 'zss/mapping/guid'
+import { createpid, createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
@@ -51,8 +51,8 @@ export enum MEMORY_LABEL {
 }
 
 const MEMORY = {
-  // default player for aggro
-  defaultplayer: createpid(),
+  // unique id for messages
+  session: createsid(),
   // active software
   software: {
     main: '',
@@ -64,13 +64,8 @@ const MEMORY = {
   loaders: new Map<string, string>(),
 }
 
-export function memorysetdefaultplayer(player: string) {
-  // console.info('memorysetdefaultplayer', player)
-  MEMORY.defaultplayer = player
-}
-
-export function memorygetdefaultplayer() {
-  return MEMORY.defaultplayer
+export function memoryreadsession() {
+  return MEMORY.session
 }
 
 export function memoryreadbooklist(): BOOK[] {
