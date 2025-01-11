@@ -1,3 +1,4 @@
+import { vm_flush } from 'zss/device/api'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
@@ -17,6 +18,8 @@ import {
   codepagereaddata,
   codepagereadname,
   codepagereadtype,
+  codepagetypetostring,
+  createcodepage,
   exportcodepage,
   importcodepage,
 } from './codepage'
@@ -108,6 +111,24 @@ export function bookreadcodepagewithtype(
       (item.id === address || laddress === codepagereadname(item)),
   )
 
+  return codepage
+}
+
+export function bookensurecodepagewithtype(
+  book: MAYBE<BOOK>,
+  type: CODE_PAGE_TYPE,
+  address: string,
+): MAYBE<CODE_PAGE> {
+  let codepage = bookreadcodepagewithtype(book, type, address)
+  if (!ispresent(codepage)) {
+    // create new codepage
+    const typestr = codepagetypetostring(type)
+    codepage = createcodepage(
+      typestr === 'object' ? `@${address}\n` : `@${typestr} ${address}\n`,
+      {},
+    )
+    bookwritecodepage(book, codepage)
+  }
   return codepage
 }
 
