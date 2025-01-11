@@ -9,10 +9,13 @@ import {
   Vector2,
 } from 'three'
 import { RUNTIME } from 'zss/config'
+import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/file/bytes'
+import { CHARSET } from 'zss/file/charset'
+import { PALETTE } from 'zss/file/palette'
 import { MAYBE } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
-import { convertPaletteToColors } from '../data/palette'
+import { convertpalettetocolors } from '../data/palette'
 import { CHARS_PER_ROW } from '../data/types'
 
 import { cloneMaterial, interval, time } from './anim'
@@ -104,16 +107,19 @@ export function createTilemapBufferGeometry(
   bg.computeBoundingSphere()
 }
 
+const palette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
+const charset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
+
 const tilemapMaterial = new ShaderMaterial({
   // settings
   transparent: false,
   uniforms: {
     time,
     interval,
-    map: new Uniform(undefined),
-    alt: new Uniform(undefined),
+    palette: new Uniform(palette),
+    map: new Uniform(charset),
+    alt: new Uniform(charset),
     data: new Uniform(null),
-    palette: new Uniform(undefined),
     size: { value: new Vector2() },
     step: { value: new Vector2() },
   },

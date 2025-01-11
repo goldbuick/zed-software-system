@@ -1,8 +1,8 @@
 import { createContext, useContext, useState } from 'react'
 import { CanvasTexture, Color } from 'three'
 import { objectKeys } from 'ts-extras'
-import cafecharset from 'zss/file/cafe.chr?uint8array'
-import cafepalette from 'zss/file/cafe.pal?uint8array'
+import { CHARSET } from 'zss/file/charset'
+import { PALETTE } from 'zss/file/palette'
 import { TILES } from 'zss/gadget/data/types'
 import { isequal, ispresent, MAYBE } from 'zss/mapping/types'
 import { createwritetextcontext } from 'zss/words/textformat'
@@ -11,7 +11,7 @@ import { create, createStore, StoreApi } from 'zustand'
 import { loadcharsetfrombytes, loadpalettefrombytes } from '../file/bytes'
 
 import { BITMAP } from './data/bitmap'
-import { convertPaletteToColors } from './data/palette'
+import { convertpalettetocolors } from './data/palette'
 import { createbitmaptexture } from './display/textures'
 
 export const WriteTextContext = createContext(
@@ -200,16 +200,20 @@ export type MEDIA_DATA = {
   setcharset: (charset: MAYBE<BITMAP>) => void
   setaltcharset: (altcharset: MAYBE<BITMAP>) => void
 }
+const palette = loadpalettefrombytes(PALETTE)
+const charset = loadcharsetfrombytes(CHARSET)
 
 export const useMedia = create<MEDIA_DATA>((set) => ({
-  palette: loadpalettefrombytes(cafepalette),
-  charset: loadcharsetfrombytes(cafecharset),
+  palette,
+  charset,
+  palettedata: convertpalettetocolors(palette),
+  charsetdata: createbitmaptexture(charset),
   setpalette(palette) {
     set((state) => {
       if (isequal(state.palette, palette)) {
         return state
       }
-      return { ...state, palette, palettedata: convertPaletteToColors(palette) }
+      return { ...state, palette, palettedata: convertpalettetocolors(palette) }
     })
   },
   setcharset(charset) {

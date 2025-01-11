@@ -4,7 +4,7 @@ import { range } from 'zss/mapping/array'
 import { BITMAP } from './bitmap'
 import { FILE_BYTES_PER_COLOR } from './types'
 
-export function convertPaletteToColors(
+export function convertpalettetocolors(
   palette: BITMAP | undefined,
   count = 16,
 ): Color[] {

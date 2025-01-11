@@ -32,15 +32,9 @@ import {
   bookreadcodepagesbytype,
   bookreadflags,
   bookreadobject,
-  bookwritecodepage,
   createbook,
 } from './book'
-import {
-  codepagereaddata,
-  codepagereadstats,
-  codepagetypetostring,
-  createcodepage,
-} from './codepage'
+import { codepagereaddata, codepagereadstats } from './codepage'
 import { memoryconverttogadgetlayers } from './rendertogadget'
 import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from './types'
 

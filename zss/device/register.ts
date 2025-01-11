@@ -16,7 +16,6 @@ import {
   register_ready,
   tape_crash,
   tape_debug,
-  tape_info,
   tape_terminal_close,
   tape_terminal_open,
   vm_books,

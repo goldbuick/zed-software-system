@@ -16,9 +16,6 @@
       "DOM.Iterable",
       "WEBWORKER"
     ],
-    "types": [
-      "vite-plugin-arraybuffer/types"
-    ],
     "module": "ESNext",
     "skipLibCheck": true,
     /* Bundler mode */

@@ -1,10 +1,19 @@
 import { ShaderMaterial, Uniform, Vector2 } from 'three'
+import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/file/bytes'
+import { CHARSET } from 'zss/file/charset'
+import { PALETTE } from 'zss/file/palette'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { COLOR } from 'zss/words/types'
 
+import { convertpalettetocolors } from '../data/palette'
+
 import { cloneMaterial, interval, time } from './anim'
+import { createbitmaptexture } from './textures'
 
 const smoothrate = TICK_FPS * 2
+
+const palette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
+const charset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
 
 const spritesMaterial = new ShaderMaterial({
   // settings
@@ -13,9 +22,9 @@ const spritesMaterial = new ShaderMaterial({
     time,
     interval,
     smoothrate: new Uniform(smoothrate),
-    map: new Uniform(undefined),
-    alt: new Uniform(undefined),
-    palette: new Uniform(undefined),
+    palette: new Uniform(palette),
+    map: new Uniform(charset),
+    alt: new Uniform(charset),
     dpr: new Uniform(1),
     pointSize: {
       value: new Vector2(1, 1),

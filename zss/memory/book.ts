@@ -1,10 +1,9 @@
-import { vm_flush } from 'zss/device/api'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { STR_KIND } from 'zss/words/kind'
-import { CATEGORY, COLLISION, COLOR, NAME, PT, WORD } from 'zss/words/types'
+import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
 import { checkcollision } from './atomics'
 import {
