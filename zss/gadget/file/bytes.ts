@@ -37,7 +37,7 @@ function isBitOn(value: number, index: number) {
   return value & (1 << index) ? 255 : 0
 }
 
-export function loadCharsetFromBytes(data: Uint8Array): BITMAP | undefined {
+export function loadcharsetfrombytes(data: Uint8Array): BITMAP | undefined {
   const count = Math.floor(data.length / FILE_BYTES_PER_CHAR)
 
   // data must be multiples of 14
@@ -76,7 +76,7 @@ export function loadCharsetFromBytes(data: Uint8Array): BITMAP | undefined {
   return bitmap
 }
 
-const defaultcharset = loadCharsetFromBytes(DEFAULT_CHR)
+const defaultcharset = loadcharsetfrombytes(DEFAULT_CHR)
 export function loadDefaultCharset() {
   return defaultcharset
 }

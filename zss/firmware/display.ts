@@ -45,7 +45,9 @@ export const DISPLAY_FIRMWARE = createfirmware()
         bytes.bits[row + 2] = clamp(b, 0, 63)
       }
       // ensure palette is active
-      bookflags.palette = palette.id
+      if (ispresent(palette)) {
+        bookflags.palette = palette.id
+      }
     } else {
       const palette = bookreadcodepagewithtype(
         READ_CONTEXT.book,
