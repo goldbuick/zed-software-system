@@ -1,5 +1,7 @@
+import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/file/bytes'
+import cafecharset from 'zss/file/cafe.chr?uint8array'
+import cafepalette from 'zss/file/cafe.pal?uint8array'
 import { BITMAP } from 'zss/gadget/data/bitmap'
-import { loadDefaultCharset, loadDefaultPalette } from 'zss/gadget/file/bytes'
 import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -386,7 +388,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       // validate and shape charset into usable state
       if (!ispresent(codepage.charset)) {
         // clone default
-        codepage.charset = loadDefaultCharset()
+        codepage.charset = loadcharsetfrombytes(cafecharset)
       }
       return codepage.charset as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
@@ -394,7 +396,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       // validate and shape palette into usable state
       if (!ispresent(codepage.palette)) {
         // clone default
-        codepage.palette = loadDefaultPalette()
+        codepage.palette = loadpalettefrombytes(cafepalette)
       }
       return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }

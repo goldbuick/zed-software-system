@@ -14,7 +14,6 @@ import { COLOR } from 'zss/words/types'
 
 import { convertPaletteToColors } from '../data/palette'
 import { CHARS_PER_ROW } from '../data/types'
-import { loadDefaultCharset, loadDefaultPalette } from '../file/bytes'
 
 import { cloneMaterial, interval, time } from './anim'
 import { createbitmaptexture } from './textures'
@@ -105,19 +104,16 @@ export function createTilemapBufferGeometry(
   bg.computeBoundingSphere()
 }
 
-const palette = convertPaletteToColors(loadDefaultPalette())
-const charset = createbitmaptexture(loadDefaultCharset())
-
 const tilemapMaterial = new ShaderMaterial({
   // settings
   transparent: false,
   uniforms: {
     time,
     interval,
-    map: new Uniform(charset),
-    alt: new Uniform(charset),
+    map: new Uniform(undefined),
+    alt: new Uniform(undefined),
     data: new Uniform(null),
-    palette: new Uniform(palette),
+    palette: new Uniform(undefined),
     size: { value: new Vector2() },
     step: { value: new Vector2() },
   },

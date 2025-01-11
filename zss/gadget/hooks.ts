@@ -1,15 +1,18 @@
 import { createContext, useContext, useState } from 'react'
 import { CanvasTexture, Color } from 'three'
 import { objectKeys } from 'ts-extras'
+import cafecharset from 'zss/file/cafe.chr?uint8array'
+import cafepalette from 'zss/file/cafe.pal?uint8array'
 import { TILES } from 'zss/gadget/data/types'
 import { isequal, ispresent, MAYBE } from 'zss/mapping/types'
 import { createwritetextcontext } from 'zss/words/textformat'
 import { create, createStore, StoreApi } from 'zustand'
 
+import { loadcharsetfrombytes, loadpalettefrombytes } from '../file/bytes'
+
 import { BITMAP } from './data/bitmap'
 import { convertPaletteToColors } from './data/palette'
 import { createbitmaptexture } from './display/textures'
-import { loadDefaultCharset, loadDefaultPalette } from './file/bytes'
 
 export const WriteTextContext = createContext(
   createwritetextcontext(1, 1, 15, 1),
@@ -199,8 +202,8 @@ export type MEDIA_DATA = {
 }
 
 export const useMedia = create<MEDIA_DATA>((set) => ({
-  palette: loadDefaultPalette(),
-  charset: loadDefaultCharset(),
+  palette: loadpalettefrombytes(cafepalette),
+  charset: loadcharsetfrombytes(cafecharset),
   setpalette(palette) {
     set((state) => {
       if (isequal(state.palette, palette)) {

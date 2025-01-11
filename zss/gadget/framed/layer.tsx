@@ -5,6 +5,7 @@ import {
   CHAR_WIDTH,
   CHARS_PER_ROW,
   CHARS_TOTAL_ROWS,
+  FILE_BYTES_PER_COLOR,
   LAYER_TYPE,
   PALETTE_COLORS,
 } from 'zss/gadget/data/types'
@@ -12,7 +13,6 @@ import { isarray } from 'zss/mapping/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { createbitmapfromarray } from '../data/bitmap'
-import { FILE_BYTES_PER_COLOR } from '../file/bytes'
 import { useMedia } from '../hooks'
 
 import { Dither } from './dither'
