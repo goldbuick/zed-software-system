@@ -1,6 +1,6 @@
 import { api_error } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
-import { FILE_BYTES_PER_COLOR } from 'zss/gadget/file/bytes'
+import { FILE_BYTES_PER_COLOR } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import {

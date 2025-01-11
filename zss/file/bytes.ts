@@ -1,21 +1,17 @@
-import { BITMAP, createbitmap } from '../data/bitmap'
+import { BITMAP, createbitmap } from '../gadget/data/bitmap'
 import {
-  BYTES_PER_COLOR,
   CHARS_PER_ROW,
   CHAR_HEIGHT,
   CHAR_WIDTH,
-} from '../data/types'
+  FILE_BYTES_PER_CHAR,
+  FILE_BYTES_PER_COLOR,
+} from '../gadget/data/types'
 
-import DEFAULT_CHR from './default.chr?uint8array'
-import DEFAULT_PAL from './default.pal?uint8array'
-
-export const FILE_BYTES_PER_COLOR = 3
-
-export function loadPaletteFromBytes(bytes: Uint8Array): BITMAP | undefined {
-  const count = Math.floor(bytes.length / BYTES_PER_COLOR)
+export function loadpalettefrombytes(bytes: Uint8Array): BITMAP | undefined {
+  const count = Math.floor(bytes.length / FILE_BYTES_PER_COLOR)
 
   // data must be multiples of 3
-  if (count * BYTES_PER_COLOR !== bytes.length) {
+  if (count * FILE_BYTES_PER_COLOR !== bytes.length) {
     return undefined
   }
 
@@ -27,13 +23,6 @@ export function loadPaletteFromBytes(bytes: Uint8Array): BITMAP | undefined {
 
   return bitmap
 }
-
-const defaultpalette = loadPaletteFromBytes(DEFAULT_PAL)
-export function loadDefaultPalette() {
-  return defaultpalette
-}
-
-export const FILE_BYTES_PER_CHAR = 14
 
 function isBitOn(value: number, index: number) {
   return value & (1 << index) ? 255 : 0
@@ -76,9 +65,4 @@ export function loadcharsetfrombytes(data: Uint8Array): BITMAP | undefined {
   }
 
   return bitmap
-}
-
-const defaultcharset = loadcharsetfrombytes(DEFAULT_CHR)
-export function loadDefaultCharset() {
-  return defaultcharset
 }

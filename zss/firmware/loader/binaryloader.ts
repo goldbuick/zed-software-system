@@ -1,15 +1,12 @@
+import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/file/bytes'
 import { FIRMWARE_COMMAND } from 'zss/firmware'
 import {
   CHARS_PER_ROW,
   CHARS_TOTAL_ROWS,
-  PALETTE_COLORS,
-} from 'zss/gadget/data/types'
-import {
   FILE_BYTES_PER_CHAR,
   FILE_BYTES_PER_COLOR,
-  loadcharsetfrombytes,
-  loadPaletteFromBytes,
-} from 'zss/gadget/file/bytes'
+  PALETTE_COLORS,
+} from 'zss/gadget/data/types'
 import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { bookensurecodepagewithtype } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
@@ -157,7 +154,7 @@ export const binaryloader: FIRMWARE_COMMAND = (chip, words) => {
       const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
       if (ispresent(palette)) {
         const numberofbytes = PALETTE_COLORS * FILE_BYTES_PER_COLOR
-        const bitmap = loadPaletteFromBytes(
+        const bitmap = loadpalettefrombytes(
           new Uint8Array(
             binaryreader.bytes.buffer,
             binaryreader.cursor,

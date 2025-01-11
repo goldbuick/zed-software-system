@@ -1,6 +1,7 @@
 import { COLOR, WORD } from 'zss/words/types'
 
-export const BYTES_PER_COLOR = 3
+export const FILE_BYTES_PER_CHAR = 14
+export const FILE_BYTES_PER_COLOR = 3
 
 export const CHAR_WIDTH = 8
 export const CHAR_HEIGHT = 14
