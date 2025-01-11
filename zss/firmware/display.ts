@@ -14,6 +14,7 @@ import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { mapstrcolor, readstrcolor } from 'zss/words/color'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
+import { write } from 'zss/words/writeui'
 
 export const DISPLAY_FIRMWARE = createfirmware()
   .command('palette', (_, words) => {
@@ -56,6 +57,7 @@ export const DISPLAY_FIRMWARE = createfirmware()
       )
       if (ispresent(palette)) {
         bookflags.palette = palette.id
+        write('display', `loaded palette ${target}`)
       } else {
         api_error('display', 'not-found', `unabled to find palette ${target}`)
       }
@@ -72,6 +74,7 @@ export const DISPLAY_FIRMWARE = createfirmware()
     )
     if (ispresent(charset)) {
       bookflags.charset = charset.id
+      write('display', `loaded charset ${target}`)
     } else {
       api_error('display', 'not-found', `unabled to find charset ${target}`)
     }

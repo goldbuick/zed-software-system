@@ -19,9 +19,8 @@ import { ConsoleItemActive } from './itemactive'
 
 export function TapeConsole() {
   const player = registerreadplayer()
-  const [terminallogs, editoropen] = useTape(
-    useShallow((state) => [state.terminal.logs, state.editor.open]),
-  )
+  const [editoropen] = useTape(useShallow((state) => [state.editor.open]))
+  const terminallogs = useTape(useShallow((state) => state.terminal.logs))
 
   const context = useWriteText()
   const tapeinput = useTapeTerminal()
@@ -55,9 +54,12 @@ export function TapeConsole() {
     return measure?.y ?? 1
   })
 
+  // baseline
+  const baseline = edge.bottom - edge.top - (editoropen ? 0 : 2)
+
   // upper bound on ycursor
   let logrowtotalheight = 0
-  let logrowycoord = edge.bottom - 1
+  let logrowycoord = baseline + 1
 
   // ycoords for rows
   const logrowycoords: number[] = logrowheights.map((rowheight) => {
@@ -90,7 +92,7 @@ export function TapeConsole() {
           const y = logrowycoords[index] + tapeinput.scroll
           const yheight = logrowheights[index]
           const ybottom = y + yheight
-          if (ybottom < 0 || y > edge.bottom - 1) {
+          if (ybottom < 0 || y > baseline) {
             return null
           }
           return !editoropen && tapeycursor >= y && tapeycursor < ybottom ? (

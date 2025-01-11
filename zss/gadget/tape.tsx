@@ -30,10 +30,10 @@ export function Tape() {
 
   switch (layout) {
     case TAPE_DISPLAY.TOP:
-      height = Math.round(screensize.rows * 0.5)
+      height = Math.floor(screensize.rows * 0.5)
       break
     case TAPE_DISPLAY.BOTTOM:
-      height = Math.round(screensize.rows * 0.5)
+      height = Math.ceil(screensize.rows * 0.5)
       top = screensize.rows - height
       break
     default:

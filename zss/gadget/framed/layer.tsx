@@ -9,7 +9,7 @@ import {
   PALETTE_COLORS,
   PALETTE_RGB,
 } from 'zss/gadget/data/types'
-import { isarray, ispresent } from 'zss/mapping/types'
+import { isarray } from 'zss/mapping/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { createbitmapfromarray } from '../data/bitmap'
