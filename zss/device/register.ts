@@ -12,8 +12,6 @@ import {
   api_error,
   gadgetserver_desync,
   peer_create,
-  platform_init,
-  register_ready,
   tape_crash,
   tape_debug,
   tape_terminal_close,
@@ -22,7 +20,6 @@ import {
   vm_doot,
   vm_login,
 } from './api'
-import { modemwriteplayer } from './modem'
 
 // read / write from indexdb
 
@@ -43,7 +40,12 @@ function readsession(key: string): MAYBE<string> {
   try {
     return sessionStorage.getItem(key) ?? undefined
   } catch (err: any) {
-    api_error(register.name(), `readsession ${key}`, err.message)
+    api_error(
+      register.session(),
+      register.name(),
+      `readsession ${key}`,
+      err.message,
+    )
   }
   return undefined
 }
@@ -56,7 +58,12 @@ function writesession(key: string, value: MAYBE<string>) {
       sessionStorage.removeItem(key)
     }
   } catch (err: any) {
-    api_error(register.name(), `writesession ${key} <- ${value}`, err.message)
+    api_error(
+      register.session(),
+      register.name(),
+      `writesession ${key} <- ${value}`,
+      err.message,
+    )
   }
 }
 
@@ -69,20 +76,25 @@ function readurlhash(): string {
       return hash
     }
   } catch (err: any) {
-    api_error('register', 'crash', err.message)
+    api_error(register.session(), register.name(), 'crash', err.message)
   }
   return ''
 }
 
 async function loadmem(books: string, player: string) {
   if (books.length === 0) {
-    api_error(register.name(), 'content', 'no content found')
-    tape_crash(register.name(), sessionid)
+    api_error(
+      register.session(),
+      register.name(),
+      'content',
+      'no content found',
+    )
+    tape_crash(register.session(), register.name(), sessionid)
     return
   }
   // init vm with content
   const selectedid = (await readselectedid()) ?? ''
-  vm_books(register.name(), books, selectedid, player)
+  vm_books(register.session(), register.name(), books, selectedid, player)
 }
 
 let currenthash = ''
@@ -133,29 +145,27 @@ export function registerreadplayer() {
 
 const register = createdevice(
   'register',
-  ['started', 'second', 'error'],
+  ['ready', 'second', 'error'],
   function (message) {
+    if (!register.session(message)) {
+      return
+    }
     switch (message.target) {
-      case 'ready': {
-        write('register', 'creating platform')
-        createplatform(isjoin())
-        break
-      }
-      case 'started': {
-        doasync('register:started', async () => {
-          modemwriteplayer(sessionid)
-          // signal init
-          await waitfor(256)
-          write('register', `sessionid ${sessionid}`)
-          platform_init('register', sessionid)
-        })
-        break
-      }
+      // case 'started': {
+      //   doasync('register:started', async () => {
+      //     modemwriteplayer(sessionid)
+      //     // signal init
+      //     await waitfor(256)
+      //     write('register', `sessionid ${sessionid}`)
+      //     // platform_init('register', sessionid)
+      //   })
+      //   break
+      // }
       case 'error:login:main':
       case 'error:login:title':
       case 'error:login:player':
         if (message.player === sessionid) {
-          tape_crash(register.name(), sessionid)
+          tape_crash(register.session(), register.name(), sessionid)
         }
         break
       case 'ackinit': {
@@ -165,8 +175,13 @@ const register = createdevice(
           }
           const books = readurlhash()
           if (isjoin()) {
-            tape_terminal_open(register.name(), sessionid)
-            peer_create(register.name(), books, message.player)
+            tape_terminal_open(register.session(), register.name(), sessionid)
+            peer_create(
+              register.session(),
+              register.name(),
+              books,
+              message.player,
+            )
           } else {
             // pull data && init
             await loadmem(books, message.player)
@@ -176,7 +191,7 @@ const register = createdevice(
       }
       case 'ackbooks':
         if (message.player === sessionid) {
-          vm_login(register.name(), message.player)
+          vm_login(register.session(), register.name(), message.player)
         }
         break
       case 'acklogin':
@@ -184,9 +199,9 @@ const register = createdevice(
           if (message.player === sessionid) {
             const { player } = message
             await waitfor(128)
-            gadgetserver_desync(register.name(), player)
+            gadgetserver_desync(register.session(), register.name(), player)
             await waitfor(512)
-            tape_terminal_close(register.name(), sessionid)
+            tape_terminal_close(register.session(), register.name(), sessionid)
           }
         })
         break
@@ -259,11 +274,14 @@ const register = createdevice(
         ++keepalive
         if (keepalive >= signalrate) {
           keepalive -= signalrate
-          vm_doot(register.name(), registerreadplayer())
+          vm_doot(register.session(), register.name(), registerreadplayer())
         }
         break
     }
   },
 )
 
-setTimeout(() => register_ready(register.name(), sessionid), 100)
+setTimeout(function () {
+  write('register', 'creating platform')
+  createplatform(isjoin())
+}, 100)

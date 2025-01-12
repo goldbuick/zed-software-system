@@ -12,6 +12,7 @@ import { CATEGORY, COLLISION, PT, WORD } from './types'
 
 export const READ_CONTEXT = {
   // useful state
+  session: '',
   timestamp: 0,
   // targets & lookups
   book: undefined as MAYBE<BOOK>,

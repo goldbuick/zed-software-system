@@ -59,7 +59,11 @@ export function enableaudio() {
         enabled = true
         transport.start()
         transport.bpm.value = 107
-        tape_info('synth', 'audio is enabled!')
+        tape_info(
+          synthdevice.session(),
+          synthdevice.name(),
+          'audio is enabled!',
+        )
         try {
           const context: AudioContext = getContext() as unknown as AudioContext
           unmute(context, true)
@@ -67,11 +71,11 @@ export function enableaudio() {
         } catch (err) {
           //
         }
-        synth_audioenabled('synth')
+        synth_audioenabled(synthdevice.session(), synthdevice.name())
       }
     })
     .catch((err: any) => {
-      api_error('synth', 'audio', err.message)
+      api_error(synthdevice.session(), synthdevice.name(), 'audio', err.message)
     })
 }
 
@@ -722,6 +726,9 @@ export function synthbroadcastdestination(): MAYBE<MediaStreamAudioDestinationNo
 }
 
 const synthdevice = createdevice('synth', [], (message) => {
+  if (!synthdevice.session(message)) {
+    return
+  }
   if (enabled && !ispresent(synth)) {
     synth = createsynth()
   }
@@ -771,6 +778,7 @@ const synthdevice = createdevice('synth', [], (message) => {
         const voice = synth.SOURCE[index]
         if (!ispresent(voice)) {
           api_error(
+            synthdevice.session(),
             synthdevice.name(),
             message.target,
             `unknown voice ${index}`,

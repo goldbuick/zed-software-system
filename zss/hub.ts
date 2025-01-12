@@ -26,6 +26,7 @@ export const hub: HUB = {
     hub.invoke(createmessage(session, target, sender, data, player))
   },
   invoke(message) {
+    console.info(message)
     devices.forEach((device) => device.handle(message))
   },
   connect(device) {

@@ -9,10 +9,18 @@ import { registerreadplayer } from './register'
 let twitchchatclient: MAYBE<ChatClient>
 
 const chat = createdevice('chat', [], (message) => {
+  if (!chat.session(message)) {
+    return
+  }
   switch (message.target) {
     case 'connect':
       if (ispresent(twitchchatclient)) {
-        api_error(chat.name(), 'connection', 'chat is already connected')
+        api_error(
+          chat.session(),
+          chat.name(),
+          'connection',
+          'chat is already connected',
+        )
       } else if (isstring(message.data)) {
         write(chat.name(), 'connecting')
         twitchchatclient = new ChatClient({ channels: [message.data] })
@@ -25,6 +33,7 @@ const chat = createdevice('chat', [], (message) => {
         })
         twitchchatclient.onMessage((_, user, text) => {
           vm_loader(
+            chat.session(),
             chat.name(),
             'chat',
             message.data,
@@ -40,7 +49,12 @@ const chat = createdevice('chat', [], (message) => {
         twitchchatclient = undefined
         write(chat.name(), 'client quit')
       } else {
-        api_error(chat.name(), 'connection', 'chat is already disconnected')
+        api_error(
+          chat.session(),
+          chat.name(),
+          'connection',
+          'chat is already disconnected',
+        )
       }
       break
     default:

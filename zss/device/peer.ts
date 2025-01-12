@@ -33,7 +33,12 @@ function handledataconnection(remote: DataConnection, onopen?: () => void) {
   })
   remote.on('error', (error) => {
     const id = node?.id ?? ''
-    api_error(peer.name(), `${id}-${remote.peer}`, error.message)
+    api_error(
+      peer.session(),
+      peer.name(),
+      `${id}-${remote.peer}`,
+      error.message,
+    )
   })
 }
 
@@ -44,11 +49,11 @@ function createhost(player: string) {
     if (ispresent(node)) {
       node.on('connection', handledataconnection)
       node.on('close', () => write(peer.name(), `closed`))
-      peer_joincode(peer.name(), player)
+      peer_joincode(peer.session(), peer.name(), player)
     }
   })
   node.on('error', (error) =>
-    api_error(peer.name(), node?.id ?? '', error.message),
+    api_error(peer.session(), peer.name(), node?.id ?? '', error.message),
   )
 }
 
@@ -61,16 +66,19 @@ function createjoin(player: string, joincode: string) {
       const remote = node.connect(joincode, { reliable: true })
       handledataconnection(remote, () => {
         write(peer.name(), 'connected')
-        register_ackbooks(peer.name(), player)
+        register_ackbooks(peer.session(), peer.name(), player)
       })
     }
   })
   node.on('error', (error) =>
-    api_error(peer.name(), node?.id ?? '', error.message),
+    api_error(peer.session(), peer.name(), node?.id ?? '', error.message),
   )
 }
 
-const peer = createdevice('peer', ['second'], (message) => {
+const peer = createdevice('peer', [], (message) => {
+  if (!peer.session(message)) {
+    return
+  }
   switch (message.target) {
     case 'create':
       if (message.player === registerreadplayer()) {
@@ -89,7 +97,7 @@ const peer = createdevice('peer', ['second'], (message) => {
           }
           if (!ispresent(node)) {
             // create a host peer
-            peer_create(peer.name(), '', message.player)
+            peer_create(peer.session(), peer.name(), '', message.player)
           } else {
             // draw the code to the console
             const joinurl = `${location.origin}/join/#${node.id}`
@@ -99,10 +107,6 @@ const peer = createdevice('peer', ['second'], (message) => {
           }
         })
       }
-      break
-    }
-    case 'second': {
-      //
       break
     }
   }

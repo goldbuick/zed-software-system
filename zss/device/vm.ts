@@ -18,6 +18,7 @@ import {
   memorycleanup,
   memoryreadbookbysoftware,
   MEMORY_LABEL,
+  memoryreadsession,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -27,14 +28,14 @@ import { write } from 'zss/words/writeui'
 
 import {
   gadgetserver_clearplayer,
-  platform_started,
+  platform_ready,
   register_flush,
   tape_debug,
   tape_info,
   vm_codeaddress,
   vm_flush,
 } from './api'
-import { modemobservevaluestring, modemwriteplayer } from './modem'
+import { modemobservevaluestring } from './modem'
 
 // tracking active player ids
 const SECOND_TIMEOUT = 16
@@ -64,6 +65,9 @@ async function savestate(tag = ``) {
 
 let init = false
 const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
+  if (!vm.session(message)) {
+    return
+  }
   switch (message.target) {
     case 'init':
       if (ispresent(message.player) && !init) {
@@ -76,16 +80,13 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
       break
     case 'books':
       doasync('vm:books', async () => {
-        if (
-          message.player === memorygetdefaultplayer() &&
-          isarray(message.data)
-        ) {
+        if (message.player && isarray(message.data)) {
           const [maybebooks, maybeselect] = message.data as [string, string]
           // unpack books
           const books = await decompressbooks(maybebooks)
           const booknames = books.map((item) => item.name)
           memoryresetbooks(books, maybeselect)
-          write(vm.name(), `loading ${booknames.join(', ')}`)
+          write(vm.session(), vm.name(), `loading ${booknames.join(', ')}`)
           // ack
           vm.reply(message, 'ackbooks', true, message.player)
         }
@@ -99,26 +100,25 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
         if (memoryplayerlogin(message.player)) {
           // start tracking
           tracking[message.player] = 0
-          write(vm.name(), `login from ${message.player}`)
+          write(vm.session(), vm.name(), `login from ${message.player}`)
           // ack
           vm.reply(message, 'acklogin', true, message.player)
         }
       }
       break
     case 'endgame':
-      if (message.player !== memorygetdefaultplayer()) {
-        return
+      if (message.player) {
+        // logout player
+        memoryplayerlogout(message.player)
+        // clear ui
+        gadgetserver_clearplayer(vm.session(), vm.name(), message.player)
       }
-      // logout player
-      memoryplayerlogout(message.player)
-      // clear ui
-      gadgetserver_clearplayer('vm', message.player)
       break
     case 'doot':
       if (message.player) {
         // player keepalive
         tracking[message.player] = 0
-        tape_debug(vm.name(), 'active', message.player)
+        tape_debug(vm.session(), vm.name(), 'active', message.player)
       }
       break
     case 'input':
@@ -200,7 +200,7 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
           delete tracking[player]
           memoryplayerlogout(player)
           // message outcome
-          tape_info(vm.name(), 'player logout', player)
+          tape_info(vm.session(), vm.name(), 'player logout', player)
           vm.emit('logout', undefined, player)
         }
       }
@@ -208,16 +208,13 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
       // autosave to url
       if (isjoin() === false && ++flushtick >= FLUSH_RATE) {
         flushtick = 0
-        vm_flush(vm.name(), '', memorygetdefaultplayer())
+        vm_flush(vm.session(), vm.name(), '')
       }
       break
     }
     case 'flush':
       doasync('vm:flush', async () => {
-        if (
-          message.player === memorygetdefaultplayer() &&
-          isstring(message.data)
-        ) {
+        if (isstring(message.data)) {
           await savestate(`${message.data} `)
         } else {
           await savestate()
@@ -226,17 +223,14 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
       break
     case 'cli':
       // user input from built-in console
-      if (message.player === memorygetdefaultplayer()) {
+      if (isstring(message.player)) {
         memorycli(message.player, message.data)
       }
       break
     case 'loader':
       // user input from built-in console
       // or events from devices
-      if (
-        message.player === memorygetdefaultplayer() &&
-        isarray(message.data)
-      ) {
+      if (isstring(message.player) && isarray(message.data)) {
         const [event, content] = message.data
         if (isstring(event)) {
           if (event === 'file') {
@@ -256,5 +250,5 @@ const vm = createdevice('vm', ['init', 'tick', 'second'], (message) => {
 
 export function started() {
   // signal ready state
-  platform_started(vm.name(), memorygetdefaultplayer())
+  platform_ready(memoryreadsession())
 }

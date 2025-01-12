@@ -1,11 +1,12 @@
 import { objectKeys } from 'ts-extras'
 import { createchipid, MESSAGE } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
-import { api_error, tape_debug, tape_info, vm_flush } from 'zss/device/api'
+import { createdevice } from 'zss/device'
+import { api_error, tape_debug, tape_info } from 'zss/device/api'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
 import { pickwith } from 'zss/mapping/array'
-import { createpid, createsid, ispid } from 'zss/mapping/guid'
+import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
@@ -163,10 +164,6 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
     createtype,
     address,
   )
-
-  if (ispresent(codepage)) {
-    vm_flush('memory', '', MEMORY.defaultplayer)
-  }
 
   // result codepage
   return codepage
@@ -364,7 +361,7 @@ export function memorytickobject(
   READ_CONTEXT.board = board
   READ_CONTEXT.element = object
   READ_CONTEXT.isplayer = ispid(objectid)
-  READ_CONTEXT.player = object.player ?? MEMORY.defaultplayer
+  READ_CONTEXT.player = object.player ?? ''
 
   // read cycle
   const kinddata = bookelementkindread(book, object)

@@ -10,7 +10,10 @@ import {
 import { createsid } from 'zss/mapping/guid'
 import { isarray, isboolean, ispresent } from 'zss/mapping/types'
 
-createdevice('tape', [], (message) => {
+const tape = createdevice('tape', [], (message) => {
+  if (!tape.session(message)) {
+    return
+  }
   const { layout, terminal, editor } = useTape.getState()
 
   function terminaladdmessage(message: MESSAGE) {

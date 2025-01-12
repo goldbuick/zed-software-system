@@ -1,8 +1,11 @@
 import JSZip from 'jszip'
 import mime from 'mime/lite'
+import { createdevice } from 'zss/device'
 import { api_error, tape_info, vm_loader } from 'zss/device/api'
 import { ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
+
+const parse = createdevice('parsefile', [], () => {})
 
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
   const bytes = [...filebytes.slice(0, 4)]
@@ -33,7 +36,7 @@ export async function parsezipfile(
   onreadfile: (zipfile: File) => void,
 ) {
   try {
-    tape_info('parsezipfile', file.name)
+    tape_info(parse.session(), parse.name(), file.name)
     const arraybuffer = await file.arrayBuffer()
     const ziplib = new JSZip()
     const zip = await ziplib.loadAsync(arraybuffer)
@@ -48,11 +51,11 @@ export async function parsezipfile(
           onreadfile(zipfile)
         })
         .catch((err) => {
-          api_error('memory', 'crash', err.message)
+          api_error(parse.session(), parse.name(), 'crash', err.message)
         })
     })
   } catch (err: any) {
-    api_error('memory', 'crash', err.message)
+    api_error(parse.session(), parse.name(), 'crash', err.message)
   }
 }
 
@@ -66,7 +69,7 @@ export async function parsebinaryfile(
     const ext = file.name.split('.').slice(-1)[0] ?? ''
     onbuffer(NAME(ext), new Uint8Array(arraybuffer))
   } catch (err: any) {
-    api_error('memory', 'crash', err.message)
+    api_error(parse.session(), parse.name(), 'crash', err.message)
   }
 }
 
@@ -80,19 +83,38 @@ export function parsewebfile(player: string, file: File | undefined) {
         file
           .text()
           .then((content) =>
-            vm_loader('parsefile', 'text', file.name, content, player),
+            vm_loader(
+              parse.session(),
+              parse.name(),
+              'text',
+              file.name,
+              content,
+              player,
+            ),
           )
-          .catch((err) => api_error('fileloader', 'crash', err.message))
+          .catch((err) =>
+            api_error(parse.session(), parse.name(), 'crash', err.message),
+          )
         break
       case 'application/zip':
         parsezipfile(file, (ifile) => parsewebfile(player, ifile)).catch(
-          (err) => api_error('fileloader', 'crash', err.message),
+          (err) =>
+            api_error(parse.session(), parse.name(), 'crash', err.message),
         )
         break
       case 'application/octet-stream':
         parsebinaryfile(file, (fileext, binaryfile) =>
-          vm_loader('parsefile', 'binary', fileext, binaryfile, player),
-        ).catch((err) => api_error('memory', 'crash', err.message))
+          vm_loader(
+            parse.session(),
+            parse.name(),
+            'binary',
+            fileext,
+            binaryfile,
+            player,
+          ),
+        ).catch((err) =>
+          api_error(parse.session(), parse.name(), 'crash', err.message),
+        )
         break
       default:
         file
@@ -106,13 +128,16 @@ export function parsewebfile(player: string, file: File | undefined) {
               handlefiletype(type)
             } else {
               return api_error(
-                'memory',
+                parse.session(),
+                parse.name(),
                 'loadfile',
                 `unsupported file ${file.name}`,
               )
             }
           })
-          .catch((err) => api_error('memory', 'crash', err.message))
+          .catch((err) =>
+            api_error(parse.session(), parse.name(), 'crash', err.message),
+          )
         return
     }
   }

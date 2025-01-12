@@ -20,46 +20,61 @@ export function bg(color: string, text: string) {
   return `$${color}${text}$ondkblue`
 }
 
-export function write(from: string, text: string) {
-  tape_info(from, text)
+export function write(session: string, from: string, text: string) {
+  tape_info(session, from, text)
 }
 
-export function writetbar(from: string, width: number) {
+export function writetbar(session: string, from: string, width: number) {
   const CHR_TBAR = CHR_TM.repeat(width)
-  write(from, `${COLOR_EDGE}${CHR_TBAR}`)
+  write(session, from, `${COLOR_EDGE}${CHR_TBAR}`)
 }
 
-export function writebbar(from: string, width: number) {
+export function writebbar(session: string, from: string, width: number) {
   const CHR_BBAR = CHR_BM.repeat(width)
-  write(from, `${COLOR_EDGE}${CHR_BBAR}`)
+  write(session, from, `${COLOR_EDGE}${CHR_BBAR}`)
 }
 
-export function writeheader(from: string, header: string) {
-  write(from, `${COLOR_EDGE} ${' '.repeat(header.length)} `)
-  writetbar(from, header.length + 2)
-  write(from, `${COLOR_EDGE} $white${header} `)
-  writebbar(from, header.length + 2)
+export function writeheader(session: string, from: string, header: string) {
+  write(session, from, `${COLOR_EDGE} ${' '.repeat(header.length)} `)
+  writetbar(session, from, header.length + 2)
+  write(session, from, `${COLOR_EDGE} $white${header} `)
+  writebbar(session, from, header.length + 2)
 }
 
-export function writesection(from: string, section: string) {
-  write(from, `${COLOR_EDGE} ${' '.repeat(section.length)} `)
-  write(from, `${COLOR_EDGE} $gray${section} `)
-  writebbar(from, section.length + 2)
+export function writesection(session: string, from: string, section: string) {
+  write(session, from, `${COLOR_EDGE} ${' '.repeat(section.length)} `)
+  write(session, from, `${COLOR_EDGE} $gray${section} `)
+  writebbar(session, from, section.length + 2)
 }
 
-export function writeoption(from: string, option: string, label: string) {
-  write(from, `${COLOR_EDGE} $white${option} $blue${label}`)
+export function writeoption(
+  session: string,
+  from: string,
+  option: string,
+  label: string,
+) {
+  write(session, from, `${COLOR_EDGE} $white${option} $blue${label}`)
 }
 
-export function writetext(from: string, text: string) {
-  write(from, `${COLOR_EDGE}$blue${text}`)
+export function writetext(session: string, from: string, text: string) {
+  write(session, from, `${COLOR_EDGE}$blue${text}`)
 }
 
-export function writehyperlink(from: string, hyperlink: string, label: string) {
-  write(from, `!${hyperlink};${label}`)
+export function writehyperlink(
+  session: string,
+  from: string,
+  hyperlink: string,
+  label: string,
+) {
+  write(session, from, `!${hyperlink};${label}`)
 }
 
-export function writecopyit(from: string, content: string, label: string) {
+export function writecopyit(
+  session: string,
+  from: string,
+  content: string,
+  label: string,
+) {
   const ascii = renderUnicodeCompact(content).split('\n')
   const rendermap: Record<number, number> = {
     [32]: 32, // space
@@ -75,8 +90,8 @@ export function writecopyit(from: string, content: string, label: string) {
         return `$${chr}`
       })
       .join('')
-    write(from, lineascii)
+    write(session, from, lineascii)
   }
 
-  write(from, `!copyit ${content};${label}`)
+  write(session, from, `!copyit ${content};${label}`)
 }

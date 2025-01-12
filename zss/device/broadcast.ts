@@ -11,11 +11,19 @@ import { synthbroadcastdestination } from './synth'
 let broadcastclient: MAYBE<IVSBroadcastClient.AmazonIVSBroadcastClient>
 
 const broadcast = createdevice('broadcast', ['second'], (message) => {
+  if (!broadcast.session(message)) {
+    return
+  }
   switch (message.target) {
     case 'startstream':
       doasync('broadcast:startstream', async () => {
         if (ispresent(broadcastclient)) {
-          api_error(broadcast.name(), 'session', 'session is already open')
+          api_error(
+            broadcast.session(),
+            broadcast.name(),
+            'session',
+            'session is already open',
+          )
         } else {
           const isportrait = window.innerHeight > window.innerWidth
           broadcastclient = IVSBroadcastClient.create({
@@ -44,7 +52,12 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
           broadcastclient.on(
             IVSBroadcastClient.BroadcastClientEvents.ERROR,
             function (error: string) {
-              api_error(broadcast.name(), 'connection', error)
+              api_error(
+                broadcast.session(),
+                broadcast.name(),
+                'connection',
+                error,
+              )
               broadcastclient = undefined
             } as Callback,
           )
@@ -55,6 +68,7 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
             await broadcastclient.addImageSource(video, 'video', { index: 1 })
           } else {
             api_error(
+              broadcast.session(),
               broadcast.name(),
               'video',
               'unabled to find canvas element',
@@ -69,6 +83,7 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
             await broadcastclient.addAudioInputDevice(audio.stream, 'audio')
           } else {
             api_error(
+              broadcast.session(),
               broadcast.name(),
               'video',
               'unable create media audio node destination',
@@ -104,6 +119,7 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
         write(broadcast.name(), `closed client`)
       } else {
         api_error(
+          broadcast.session(),
           broadcast.name(),
           'session',
           'need an active session to stop stream',
