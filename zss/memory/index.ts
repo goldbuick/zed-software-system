@@ -65,6 +65,8 @@ const MEMORY = {
   loaders: new Map<string, string>(),
 }
 
+const memdevice = createdevice('memory', undefined, undefined, MEMORY.session)
+
 export function memoryreadsession() {
   return MEMORY.session
 }
@@ -108,7 +110,7 @@ export function memorycreatesoftwarebook(maybename?: string) {
     book.name = maybename
   }
   memorysetbook(book)
-  tape_info('memory', `created [book] ${book.name}`)
+  tape_info(memdevice, `created [book] ${book.name}`)
   return book
 }
 
@@ -119,7 +121,7 @@ export function memoryensurebookbyname(name: string) {
     book.name = name
   }
   memorysetbook(book)
-  tape_info('memory', `created [book] ${book.name}`)
+  tape_info(memdevice, `created [book] ${book.name}`)
   return book
 }
 
@@ -145,7 +147,7 @@ export function memoryensuresoftwarebook(
 
     // success
     if (ispresent(book)) {
-      tape_info('memory', `opened [book] ${book.name} for ${slot}`)
+      tape_info(memdevice, `opened [book] ${book.name} for ${slot}`)
     }
   }
 
@@ -223,7 +225,7 @@ export function memoryclearbook(address: string) {
 export function memoryplayerlogin(player: string): boolean {
   if (!isstring(player) || !player) {
     return api_error(
-      'memory',
+      memdevice,
       'login',
       `failed for playerid ==>${player}<==`,
       player,
@@ -233,7 +235,7 @@ export function memoryplayerlogin(player: string): boolean {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return api_error(
-      'memory',
+      memdevice,
       'login:main',
       `login failed to find book 'main'`,
       player,
@@ -257,7 +259,7 @@ export function memoryplayerlogin(player: string): boolean {
   })
   if (titleboards.length === 0) {
     return api_error(
-      'memory',
+      memdevice,
       'login:title',
       `login failed to find board with '${MEMORY_LABEL.TITLE}' stat`,
       player,
@@ -267,7 +269,7 @@ export function memoryplayerlogin(player: string): boolean {
   const playerkind = bookreadobject(mainbook, MEMORY_LABEL.PLAYER)
   if (!ispresent(playerkind)) {
     return api_error(
-      'memory',
+      memdevice,
       'login:player',
       `login failed to find object type '${MEMORY_LABEL.PLAYER}'`,
       player,
@@ -478,7 +480,7 @@ export function memorycli(player: string, cli = '') {
   RUNTIME.HALT_AT_COUNT = resethalt * 8
 
   // invoke once
-  tape_debug('memory', 'running', mainbook.timestamp, id, cli)
+  tape_debug(memdevice, 'running', mainbook.timestamp, id, cli)
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
 
   RUNTIME.HALT_AT_COUNT = resethalt

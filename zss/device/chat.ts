@@ -15,26 +15,20 @@ const chat = createdevice('chat', [], (message) => {
   switch (message.target) {
     case 'connect':
       if (ispresent(twitchchatclient)) {
-        api_error(
-          chat.session(),
-          chat.name(),
-          'connection',
-          'chat is already connected',
-        )
+        api_error(chat, 'connection', 'chat is already connected')
       } else if (isstring(message.data)) {
-        write(chat.name(), 'connecting')
+        write(chat, 'connecting')
         twitchchatclient = new ChatClient({ channels: [message.data] })
         twitchchatclient.connect()
         twitchchatclient.onConnect(() => {
-          write(chat.name(), 'connected')
+          write(chat, 'connected')
         })
         twitchchatclient.onDisconnect(() => {
-          write(chat.name(), 'disconnected')
+          write(chat, 'disconnected')
         })
         twitchchatclient.onMessage((_, user, text) => {
           vm_loader(
-            chat.session(),
-            chat.name(),
+            chat,
             'chat',
             message.data,
             `${user}:${text}`,
@@ -47,14 +41,9 @@ const chat = createdevice('chat', [], (message) => {
       if (ispresent(twitchchatclient)) {
         twitchchatclient.quit()
         twitchchatclient = undefined
-        write(chat.name(), 'client quit')
+        write(chat, 'client quit')
       } else {
-        api_error(
-          chat.session(),
-          chat.name(),
-          'connection',
-          'chat is already disconnected',
-        )
+        api_error(chat, 'connection', 'chat is already disconnected')
       }
       break
     default:

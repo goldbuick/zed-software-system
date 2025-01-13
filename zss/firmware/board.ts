@@ -1,4 +1,5 @@
 import { CHIP } from 'zss/chip'
+import { createdevice } from 'zss/device'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { MEMORY_LABEL, memorytickobject } from 'zss/memory'
@@ -23,6 +24,8 @@ import {
 } from 'zss/words/kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { COLLISION, PT, WORD } from 'zss/words/types'
+
+const boardware = createdevice('boardware')
 
 function sendinteraction(
   chip: CHIP,

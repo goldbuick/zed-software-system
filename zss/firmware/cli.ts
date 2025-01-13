@@ -1,4 +1,5 @@
 import { maptostring } from 'zss/chip'
+import { createdevice } from 'zss/device'
 import {
   api_error,
   tape_editor_open,
@@ -45,6 +46,8 @@ import {
   writesection,
   writetext,
 } from 'zss/words/writeui'
+
+const cliware = createdevice('cliware')
 
 function vm_flush_player(tag = '') {
   vm_flush(READ_CONTEXT.session, 'cli', tag)

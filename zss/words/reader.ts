@@ -18,8 +18,8 @@ export const READ_CONTEXT = {
   book: undefined as MAYBE<BOOK>,
   board: undefined as MAYBE<BOARD>,
   element: undefined as MAYBE<BOARD_ELEMENT>,
-  player: '',
-  isplayer: false,
+  isplayer: false, // this refers to the element isplayer
+  player: '', // todo rename this to focus to be less confusing
   // for commands to use readargs
   words: [] as WORD[],
   get: undefined as MAYBE<(name: string) => any>,

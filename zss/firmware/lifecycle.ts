@@ -1,4 +1,5 @@
 import { maptostring } from 'zss/chip'
+import { createdevice } from 'zss/device'
 import { vm_endgame } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import { clamp } from 'zss/mapping/number'
@@ -9,6 +10,8 @@ import {
   bookboardobjectsafedelete,
 } from 'zss/memory/book'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+
+const lifecycleware = createdevice('lifecycleware')
 
 export const LIFECYCLE_FIRMWARE = createfirmware()
   .command('idle', (chip) => {
@@ -69,7 +72,10 @@ export const LIFECYCLE_FIRMWARE = createfirmware()
     return 0
   })
   .command('endgame', () => {
-    vm_endgame('element', READ_CONTEXT.player)
+    // this is wrong! this should be element id
+    if (READ_CONTEXT.isplayer) {
+      vm_endgame(lifecycleware, READ_CONTEXT.element?.id ?? '')
+    }
     return 0
   })
   .command('run', (_, words) => {

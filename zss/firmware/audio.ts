@@ -1,3 +1,4 @@
+import { createdevice } from 'zss/device'
 import {
   synth_drumvolume,
   synth_mainvolume,
@@ -11,6 +12,8 @@ import { createfirmware } from 'zss/firmware'
 import { isnumber } from 'zss/mapping/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
+
+const audioware = createdevice('audioware')
 
 const isfx = ['echo', 'reverb', 'chorus', 'phaser', 'distortion', 'vibrato']
 

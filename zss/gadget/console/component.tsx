@@ -1,3 +1,4 @@
+import { createdevice } from 'zss/device'
 import { vm_cli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
@@ -16,6 +17,8 @@ import { ConsoleContext } from '../tape/common'
 import { ConsoleInput } from './input'
 import { ConsoleItem } from './item'
 import { ConsoleItemActive } from './itemactive'
+
+const gadgetconsole = createdevice('gadgetconsole')
 
 export function TapeConsole() {
   const player = registerreadplayer()
@@ -81,7 +84,7 @@ export function TapeConsole() {
             const [target, message] = totarget(maybetarget)
             if (target === 'self') {
               const input = `#${message} ${data ?? ''}`
-              vm_cli('tape', input, player)
+              vm_cli(gadgetconsole, input, player)
             } else {
               hub.emit(`${target}:${message}`, 'gadget', data, player)
             }

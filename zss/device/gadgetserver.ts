@@ -62,20 +62,14 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
         const patch = compare(previous, gadget)
         if (patch.length) {
           gadgetsync[player] = deepcopy(gadget)
-          gadgetclient_patch(
-            gadgetserver.session(),
-            gadgetserver.name(),
-            patch,
-            player,
-          )
+          gadgetclient_patch(gadgetserver, patch, player)
         }
       }
       break
     case 'desync':
       if (message.player) {
         gadgetclient_reset(
-          gadgetserver.session(),
-          gadgetserver.name(),
+          gadgetserver,
           gadgetstate(message.player),
           message.player,
         )

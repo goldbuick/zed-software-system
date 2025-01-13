@@ -1,4 +1,5 @@
 import { maptostring } from 'zss/chip'
+import { createdevice } from 'zss/device'
 import { tape_info } from 'zss/device/api'
 import { createfirmware } from 'zss/firmware'
 import {
@@ -17,6 +18,8 @@ import { BOARD_ELEMENT } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { statformat } from 'zss/words/stats'
 import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
+
+const gadgetware = createdevice('gadgetware')
 
 export const GADGET_FIRMWARE = createfirmware({
   get() {
@@ -51,7 +54,7 @@ export const GADGET_FIRMWARE = createfirmware({
         COLOR.WHITE,
         COLOR.ONCLEAR,
       )
-      tape_info(`$${COLOR[display.color]}$${display.char}`, ticker)
+      tape_info(gadgetware, `$${COLOR[display.color]}$${display.char}`, ticker)
     }
   },
 })
@@ -83,6 +86,7 @@ export const GADGET_FIRMWARE = createfirmware({
         break
       case 'self':
         chip.message({
+          session: gadgetware.session(),
           id: createsid(),
           sender: chip.id(),
           target: label,

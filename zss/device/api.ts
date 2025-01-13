@@ -8,7 +8,7 @@ import { MAYBE } from 'zss/mapping/types'
 
 // be careful to keep imports here minimal
 
-type DEVICELIKE = {
+export type DEVICELIKE = {
   emit: (target: string, data?: any, player?: string) => void
 }
 
@@ -100,40 +100,35 @@ export function peer_disconnected(device: DEVICELIKE, player: string) {
 }
 
 export function platform_ready(device: DEVICELIKE) {
-  device.emit('ready', '')
+  device.emit('ready')
 }
 
-export function register_ackbooks(device: DEVICELIKE, player: string) {
-  device.emit('register:ackbooks', true, player)
+export function register_ackbooks(device: DEVICELIKE) {
+  device.emit('register:ackbooks', true)
 }
 
 export function register_flush(
   device: DEVICELIKE,
   historylabel: string,
   books: string,
-  player: string,
 ) {
-  device.emit('register:flush', [historylabel, books], player)
+  device.emit('register:flush', [historylabel, books])
 }
 
-export function register_dev(device: DEVICELIKE, player: string) {
-  device.emit('register:dev', undefined, player)
+export function register_dev(device: DEVICELIKE) {
+  device.emit('register:dev')
 }
 
-export function register_share(device: DEVICELIKE, player: string) {
-  device.emit('register:share', undefined, player)
+export function register_share(device: DEVICELIKE) {
+  device.emit('register:share')
 }
 
-export function register_select(
-  device: DEVICELIKE,
-  book: string,
-  player: string,
-) {
-  device.emit('register:select', book, player)
+export function register_select(device: DEVICELIKE, book: string) {
+  device.emit('register:select', book)
 }
 
-export function register_nuke(device: DEVICELIKE, player: string) {
-  device.emit('register:nuke', undefined, player)
+export function register_nuke(device: DEVICELIKE) {
+  device.emit('register:nuke')
 }
 
 export function synth_audioenabled(device: DEVICELIKE) {
@@ -152,28 +147,16 @@ export function synth_play(
   device.emit('synth:play', [priority, buffer])
 }
 
-export function synth_mainvolume(
-  device: DEVICELIKE,
-  volume: number,
-  player: string,
-) {
-  device.emit('synth:mainvolume', volume, player)
+export function synth_mainvolume(device: DEVICELIKE, volume: number) {
+  device.emit('synth:mainvolume', volume)
 }
 
-export function synth_drumvolume(
-  device: DEVICELIKE,
-  volume: number,
-  player: string,
-) {
-  device.emit('synth:drumvolume', volume, player)
+export function synth_drumvolume(device: DEVICELIKE, volume: number) {
+  device.emit('synth:drumvolume', volume)
 }
 
-export function synth_ttsvolume(
-  device: DEVICELIKE,
-  volume: number,
-  player: string,
-) {
-  device.emit('synth:ttsvolume', volume, player)
+export function synth_ttsvolume(device: DEVICELIKE, volume: number) {
+  device.emit('synth:ttsvolume', volume)
 }
 
 export function synth_voice(
@@ -231,8 +214,8 @@ export function tape_terminal_inclayout(
   device.emit('tape:terminal:inclayout', inc, player)
 }
 
-export function tape_crash(device: DEVICELIKE, player: string) {
-  device.emit('tape:crash', undefined, player)
+export function tape_crash(device: DEVICELIKE) {
+  device.emit('tape:crash')
 }
 
 export function tape_editor_open(
@@ -266,13 +249,8 @@ export function userinput_update(device: DEVICELIKE, player: string) {
   device.emit('userinput:update', undefined, player)
 }
 
-export function vm_books(
-  device: DEVICELIKE,
-  books: string,
-  select: string,
-  player: string,
-) {
-  device.emit('vm:books', [books, select], player)
+export function vm_books(device: DEVICELIKE, books: string, select: string) {
+  device.emit('vm:books', [books, select])
 }
 
 export function vm_login(device: DEVICELIKE, player: string) {
@@ -296,6 +274,7 @@ export function vm_input(
   device.emit('vm:input', [input, mods], player)
 }
 
+// odd one out here as this is not a message
 export function vm_codeaddress(book: string, codepage: string) {
   return `${book}${codepage}`
 }

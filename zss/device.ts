@@ -1,7 +1,7 @@
 import { MESSAGE } from './chip'
 import { hub } from './hub'
 import { createsid } from './mapping/guid'
-import { ispresent } from './mapping/types'
+import { ispresent, noop } from './mapping/types'
 import { NAME } from './words/types'
 
 export function createmessage(
@@ -33,14 +33,15 @@ export function parsetarget(targetString: string) {
 
 export function createdevice(
   name: string,
-  topics: string[],
-  onMessage: MESSAGE_FUNC,
+  topics: string[] = [],
+  onMessage: MESSAGE_FUNC = noop,
+  withsession = '',
 ) {
   const id = createsid()
   const iname = NAME(name)
   const itopics = topics.map(NAME)
   // we have a session id we accept once
-  let session = ''
+  let session = withsession
 
   const device: DEVICE = {
     id() {

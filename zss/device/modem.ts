@@ -217,7 +217,7 @@ const modem = createdevice('modem', ['second'], (message) => {
             modem.emit('modem:sync', modemmessage(syncEncoder))
           }
         } catch (err: any) {
-          api_error(modem.session(), modem.name(), 'sync', err.message)
+          api_error(modem, 'sync', err.message)
         }
       }
       break
