@@ -82,7 +82,7 @@ const vm = createdevice(
         }
         break
       case 'books':
-        doasync('vm:books', async () => {
+        doasync(vm, async () => {
           if (message.player && isarray(message.data)) {
             const [maybebooks, maybeselect] = message.data as [string, string]
             // unpack books
@@ -216,7 +216,7 @@ const vm = createdevice(
         break
       }
       case 'flush':
-        doasync('vm:flush', async () => {
+        doasync(vm, async () => {
           if (isstring(message.data)) {
             await savestate(`${message.data} `)
           } else {

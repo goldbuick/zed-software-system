@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
-import { createdevice } from 'zss/device'
 import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
+import { SOFTWARE } from 'zss/device/session'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
 import { clamp } from 'zss/mapping/number'
@@ -21,8 +21,6 @@ import { EditorFrame } from './editorframe'
 import { EditorInput } from './editorinput'
 import { EditorRows } from './editorrows'
 
-const gadgeteditor = createdevice('gadgeteditor')
-
 export function TapeEditor() {
   const [editor] = useTape(useShallow((state) => [state.editor]))
 
@@ -34,9 +32,9 @@ export function TapeEditor() {
   const edge = textformatreadedges(context)
 
   useEffect(() => {
-    vm_codewatch(gadgeteditor, editor.book, editor.page, editor.player)
+    vm_codewatch(SOFTWARE, editor.book, editor.page, editor.player)
     return () => {
-      vm_coderelease(gadgeteditor, editor.book, editor.page, editor.player)
+      vm_coderelease(SOFTWARE, editor.book, editor.page, editor.player)
     }
   }, [editor.book, editor.page, editor.player])
 

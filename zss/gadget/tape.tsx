@@ -2,6 +2,7 @@
 import { RUNTIME } from 'zss/config'
 import { tape_terminal_open } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
 import {
   WRITE_TEXT_CONTEXT,
@@ -81,7 +82,7 @@ export function Tape() {
           </UserFocus>
         ) : (
           <UserHotkey hotkey="Shift+?">
-            {() => tape_terminal_open('tape', player)}
+            {() => tape_terminal_open(SOFTWARE, player)}
           </UserHotkey>
         )}
       </group>

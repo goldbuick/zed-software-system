@@ -5,6 +5,7 @@ import {
   vm_cli,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
 import { useTapeTerminal } from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
@@ -289,7 +290,7 @@ export function ConsoleInput({
                         .filter((item) => item !== invoke),
                     ],
                   })
-                  vm_cli('tape', invoke, player)
+                  vm_cli(SOFTWARE, invoke, player)
                 } else {
                   resettoend()
                 }
@@ -298,10 +299,10 @@ export function ConsoleInput({
             }
             case 'esc':
             case 'escape':
-              tape_terminal_close('tape', player)
+              tape_terminal_close(SOFTWARE, player)
               break
             case 'tab':
-              tape_terminal_inclayout('tape', !mods.shift, player)
+              tape_terminal_inclayout(SOFTWARE, !mods.shift, player)
               break
             case 'delete':
               // single line only

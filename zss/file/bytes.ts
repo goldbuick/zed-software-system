@@ -1,5 +1,5 @@
-import { createdevice } from 'zss/device'
 import { api_error } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 
 import { BITMAP, createbitmap } from '../gadget/data/bitmap'
 import {
@@ -10,14 +10,12 @@ import {
   FILE_BYTES_PER_COLOR,
 } from '../gadget/data/types'
 
-const filebytes = createdevice('file/bytes')
-
 export function loadpalettefrombytes(bytes: Uint8Array): BITMAP | undefined {
   const count = Math.floor(bytes.length / FILE_BYTES_PER_COLOR)
 
   // data must be multiples of 3
   if (count * FILE_BYTES_PER_COLOR !== bytes.length) {
-    api_error(filebytes, 'size', `wrong number of bytes for a palette`)
+    api_error(SOFTWARE, 'size', `wrong number of bytes for a palette`)
     return undefined
   }
 
@@ -39,7 +37,7 @@ export function loadcharsetfrombytes(data: Uint8Array): BITMAP | undefined {
 
   // data must be multiples of 14
   if (count * FILE_BYTES_PER_CHAR !== data.length) {
-    api_error(filebytes, 'size', `wrong number of bytes for a charset`)
+    api_error(SOFTWARE, 'size', `wrong number of bytes for a charset`)
     return undefined
   }
 

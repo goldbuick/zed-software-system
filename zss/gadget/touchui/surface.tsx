@@ -2,13 +2,13 @@ import { radToDeg } from 'maath/misc'
 import { useState } from 'react'
 import { Vector2, Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { createdevice } from 'zss/device'
 import {
   tape_terminal_toggle,
   userinput_down,
   userinput_up,
   vm_input,
 } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { ptwithin } from 'zss/mapping/2d'
 import { snap } from 'zss/mapping/number'
 
@@ -16,8 +16,6 @@ import { INPUT } from '../data/types'
 import { Rect } from '../rect'
 
 import { handlestickdir } from './inputs'
-
-const touchui = createdevice('touchuisurface')
 
 type SurfaceProps = {
   width: number
@@ -59,30 +57,30 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
       // check touch targets
       if (ptwithin(cx, cy, 3, 6, 6, 1)) {
         // top-left button
-        tape_terminal_toggle(touchui, player)
+        tape_terminal_toggle(SOFTWARE, player)
         console.info('top-left')
       }
       if (ptwithin(cx, cy, 3, width - 2, 6, width - 6)) {
         // top-right button
-        vm_input(touchui, INPUT.MENU_BUTTON, 0, player)
+        vm_input(SOFTWARE, INPUT.MENU_BUTTON, 0, player)
         console.info('top-right')
       }
       if (ptwithin(cx, cy, height - 5, 6, height - 2, 1)) {
         // bottom-left button
-        vm_input(touchui, INPUT.OK_BUTTON, 0, player)
+        vm_input(SOFTWARE, INPUT.OK_BUTTON, 0, player)
         console.info('bottom-left')
       }
       if (ptwithin(cx, cy, height - 5, width - 2, height - 2, width - 6)) {
         // bottom-right button
-        vm_input(touchui, INPUT.CANCEL_BUTTON, 0, player)
+        vm_input(SOFTWARE, INPUT.CANCEL_BUTTON, 0, player)
         console.info('bottom-right')
       }
     } else {
       // reset input
-      userinput_up(touchui, INPUT.MOVE_UP, player)
-      userinput_up(touchui, INPUT.MOVE_DOWN, player)
-      userinput_up(touchui, INPUT.MOVE_LEFT, player)
-      userinput_up(touchui, INPUT.MOVE_RIGHT, player)
+      userinput_up(SOFTWARE, INPUT.MOVE_UP, player)
+      userinput_up(SOFTWARE, INPUT.MOVE_DOWN, player)
+      userinput_up(SOFTWARE, INPUT.MOVE_LEFT, player)
+      userinput_up(SOFTWARE, INPUT.MOVE_RIGHT, player)
     }
     // reset
     movestick.startx = -1
@@ -118,7 +116,7 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
           movestick.pointerId = e.pointerId
         } else {
           // flag as shooting now
-          userinput_down(touchui, INPUT.SHIFT, player)
+          userinput_down(SOFTWARE, INPUT.SHIFT, player)
         }
       }}
       onPointerMove={(e) => {
@@ -155,7 +153,7 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
           clearmovestick(cx, cy)
         } else {
           // flag off shift
-          userinput_up(touchui, INPUT.SHIFT, player)
+          userinput_up(SOFTWARE, INPUT.SHIFT, player)
         }
       }}
     />

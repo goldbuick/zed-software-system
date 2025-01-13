@@ -1,4 +1,3 @@
-import { createdevice } from 'zss/device'
 import {
   synth_drumvolume,
   synth_mainvolume,
@@ -8,31 +7,30 @@ import {
   synth_voice,
   synth_voicefx,
 } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isnumber } from 'zss/mapping/types'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
-
-const audioware = createdevice('audioware')
 
 const isfx = ['echo', 'reverb', 'chorus', 'phaser', 'distortion', 'vibrato']
 
 function handlesynthplay(idx: number, words: WORD[]) {
   const [buffer] = readargs(words, 0, [ARG_TYPE.STRING])
   // index 1 means play, 0 means bgplay
-  synth_play('audio', idx, buffer)
+  synth_play(SOFTWARE, idx, buffer)
 }
 
 function handlesynthvoice(idx: number, words: WORD[]) {
   const [voiceorfx] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
   if (isnumber(voiceorfx)) {
-    synth_voice('audio', idx, 'volume', voiceorfx)
+    synth_voice(SOFTWARE, idx, 'volume', voiceorfx)
   } else if (isfx.includes(NAME(voiceorfx))) {
     const [maybeconfig, maybevalue] = readargs(words, 1, [
       ARG_TYPE.NUMBER_OR_STRING,
       ARG_TYPE.MAYBE_NUMBER_OR_STRING,
     ])
-    synth_voicefx('audio', idx, voiceorfx, maybeconfig, maybevalue)
+    synth_voicefx(SOFTWARE, idx, voiceorfx, maybeconfig, maybevalue)
   } else {
     // check for a list of numbers
     const [configorpartials] = readargs(words, 1, [
@@ -44,10 +42,10 @@ function handlesynthvoice(idx: number, words: WORD[]) {
       // @ts-expect-error argtypes ?
       const partials = readargs(words, 1, argtypes).slice(0, count)
       const maybevalue = partials.length === 1 ? partials[0] : partials
-      synth_voice('audio', idx, voiceorfx, maybevalue)
+      synth_voice(SOFTWARE, idx, voiceorfx, maybevalue)
     } else {
       const [maybevalue] = readargs(words, 1, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
-      synth_voice('audio', idx, voiceorfx, maybevalue)
+      synth_voice(SOFTWARE, idx, voiceorfx, maybevalue)
     }
   }
 }
@@ -55,17 +53,17 @@ function handlesynthvoice(idx: number, words: WORD[]) {
 export const AUDIO_FIRMWARE = createfirmware()
   .command('mainvolume', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synth_mainvolume('audio', volume, READ_CONTEXT.player)
+    synth_mainvolume(SOFTWARE, volume)
     return 0
   })
   .command('drumvolume', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synth_drumvolume('audio', volume, READ_CONTEXT.player)
+    synth_drumvolume(SOFTWARE, volume)
     return 0
   })
   .command('ttsvolume', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synth_ttsvolume('audio', volume, READ_CONTEXT.player)
+    synth_ttsvolume(SOFTWARE, volume)
     return 0
   })
   .command('play', (_, words) => {
@@ -123,7 +121,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       ARG_TYPE.STRING,
       ARG_TYPE.MAYBE_STRING,
     ])
-    synth_tts('audio', voice ?? '', phrase)
+    synth_tts(SOFTWARE, voice ?? '', phrase)
     // https://github.com/lobehub/lobe-tts/blob/master/src/core/data/voiceList.ts
     return 0
   })

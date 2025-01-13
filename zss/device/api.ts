@@ -245,10 +245,6 @@ export function userinput_down(
   device.emit('userinput:down', input, player)
 }
 
-export function userinput_update(device: DEVICELIKE, player: string) {
-  device.emit('userinput:update', undefined, player)
-}
-
 export function vm_books(device: DEVICELIKE, books: string, select: string) {
   device.emit('vm:books', [books, select])
 }

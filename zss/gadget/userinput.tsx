@@ -12,6 +12,7 @@ import {
 import { createdevice } from 'zss/device'
 import { vm_cli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
 import { isnumber } from 'zss/mapping/types'
 import { ismac } from 'zss/words/system'
@@ -43,6 +44,41 @@ const inputstate: Record<INPUT, boolean> = {
 let acc = 0
 let previous = performance.now()
 const INPUT_RATE = 200
+
+function pollinput() {
+  const now = performance.now()
+  const delta = now - previous
+
+  acc += delta
+  if (acc >= INPUT_RATE) {
+    acc %= INPUT_RATE
+    // signal input state
+    const mods: UserInputMods = {
+      alt: !!inputstate[INPUT.ALT],
+      ctrl: !!inputstate[INPUT.CTRL],
+      shift: !!inputstate[INPUT.SHIFT],
+    }
+    const inputs = [
+      INPUT.MOVE_UP,
+      INPUT.MOVE_DOWN,
+      INPUT.MOVE_LEFT,
+      INPUT.MOVE_RIGHT,
+      INPUT.OK_BUTTON,
+      INPUT.CANCEL_BUTTON,
+      INPUT.MENU_BUTTON,
+    ]
+    inputs.forEach((input) => {
+      if (inputstate[input]) {
+        userinputinvoke(input, mods)
+      }
+    })
+  }
+
+  previous = now
+  GamepadHelper.update()
+  setTimeout(pollinput, 100)
+}
+pollinput()
 
 function inputdown(input: INPUT) {
   // make sure to trigger input event
@@ -136,7 +172,7 @@ document.addEventListener(
         break
       case 's':
         if (mods.ctrl) {
-          vm_cli('tape', '#save', registerreadplayer())
+          vm_cli(SOFTWARE, '#save', registerreadplayer())
         }
         event.preventDefault()
         break
@@ -261,39 +297,6 @@ createdevice('userinput', ['tock'], (message) => {
         inputdown(message.data)
       }
       break
-    case 'update': {
-      const now = performance.now()
-      const delta = now - previous
-
-      acc += delta
-      if (acc >= INPUT_RATE) {
-        acc %= INPUT_RATE
-        // signal input state
-        const mods: UserInputMods = {
-          alt: !!inputstate[INPUT.ALT],
-          ctrl: !!inputstate[INPUT.CTRL],
-          shift: !!inputstate[INPUT.SHIFT],
-        }
-        const inputs = [
-          INPUT.MOVE_UP,
-          INPUT.MOVE_DOWN,
-          INPUT.MOVE_LEFT,
-          INPUT.MOVE_RIGHT,
-          INPUT.OK_BUTTON,
-          INPUT.CANCEL_BUTTON,
-          INPUT.MENU_BUTTON,
-        ]
-        inputs.forEach((input) => {
-          if (inputstate[input]) {
-            userinputinvoke(input, mods)
-          }
-        })
-      }
-
-      previous = now
-      GamepadHelper.update()
-      break
-    }
   }
 })
 

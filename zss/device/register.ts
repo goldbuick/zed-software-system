@@ -40,12 +40,7 @@ function readsession(key: string): MAYBE<string> {
   try {
     return sessionStorage.getItem(key) ?? undefined
   } catch (err: any) {
-    api_error(
-      register.session(),
-      register.name(),
-      `readsession ${key}`,
-      err.message,
-    )
+    api_error(register, `readsession ${key}`, err.message)
   }
   return undefined
 }
@@ -58,12 +53,7 @@ function writesession(key: string, value: MAYBE<string>) {
       sessionStorage.removeItem(key)
     }
   } catch (err: any) {
-    api_error(
-      register.session(),
-      register.name(),
-      `writesession ${key} <- ${value}`,
-      err.message,
-    )
+    api_error(register, `writesession ${key} <- ${value}`, err.message)
   }
 }
 
@@ -76,34 +66,29 @@ function readurlhash(): string {
       return hash
     }
   } catch (err: any) {
-    api_error(register.session(), register.name(), 'crash', err.message)
+    api_error(register, 'crash', err.message)
   }
   return ''
 }
 
-async function loadmem(books: string, player: string) {
+async function loadmem(books: string) {
   if (books.length === 0) {
-    api_error(
-      register.session(),
-      register.name(),
-      'content',
-      'no content found',
-    )
-    tape_crash(register.session(), register.name(), sessionid)
+    api_error(register, 'content', 'no content found')
+    tape_crash(register)
     return
   }
   // init vm with content
   const selectedid = (await readselectedid()) ?? ''
-  vm_books(register.session(), register.name(), books, selectedid, player)
+  vm_books(register, books, selectedid)
 }
 
 let currenthash = ''
 window.addEventListener('hashchange', () => {
-  doasync('registoer:hashchange', async () => {
+  doasync(register, async () => {
     const books = readurlhash()
     if (currenthash !== books) {
       currenthash = books
-      await loadmem(books, sessionid)
+      await loadmem(books)
     }
   })
 })
@@ -115,7 +100,7 @@ function writeurlhash(exportedbooks: string) {
     currenthash = exportedbooks
     location.hash = out
     tape_debug(
-      register.name(),
+      register,
       `wrote ${exportedbooks?.length ?? 0} chars [${exportedbooks.slice(0, 8)}...${exportedbooks.slice(-8)}]`,
     )
   }
@@ -152,7 +137,7 @@ const register = createdevice(
     }
     switch (message.target) {
       // case 'started': {
-      //   doasync('register:started', async () => {
+      //   doasynregister, async () => {
       //     modemwriteplayer(sessionid)
       //     // signal init
       //     await waitfor(256)
@@ -165,54 +150,49 @@ const register = createdevice(
       case 'error:login:title':
       case 'error:login:player':
         if (message.player === sessionid) {
-          tape_crash(register.session(), register.name(), sessionid)
+          tape_crash(register)
         }
         break
       case 'ackinit': {
-        doasync('register:ackinit', async () => {
+        doasync(register, async () => {
           if (message.player !== sessionid) {
             return
           }
           const books = readurlhash()
           if (isjoin()) {
-            tape_terminal_open(register.session(), register.name(), sessionid)
-            peer_create(
-              register.session(),
-              register.name(),
-              books,
-              message.player,
-            )
+            tape_terminal_open(register, sessionid)
+            peer_create(register, books, sessionid)
           } else {
             // pull data && init
-            await loadmem(books, message.player)
+            await loadmem(books)
           }
         })
         break
       }
       case 'ackbooks':
         if (message.player === sessionid) {
-          vm_login(register.session(), register.name(), message.player)
+          vm_login(register, message.player)
         }
         break
       case 'acklogin':
-        doasync('register:acklogin', async () => {
+        doasync(register, async () => {
           if (message.player === sessionid) {
             const { player } = message
             await waitfor(128)
-            gadgetserver_desync(register.session(), register.name(), player)
+            gadgetserver_desync(register, player)
             await waitfor(512)
-            tape_terminal_close(register.session(), register.name(), sessionid)
+            tape_terminal_close(register, sessionid)
           }
         })
         break
       case 'dev':
         if (message.player === sessionid) {
-          doasync('register:dev', async function () {
+          doasync(register, async function () {
             if (islocked()) {
               const url = await shorturl(location.href)
-              writecopyit('devshare', url, url)
+              writecopyit(register, url, url)
             } else {
-              writeheader(register.name(), `creating locked terminal`)
+              writeheader(register, `creating locked terminal`)
               await waitfor(100)
               location.href = location.href.replace(`/#`, `/locked/#`)
             }
@@ -221,26 +201,26 @@ const register = createdevice(
         break
       case 'share':
         if (message.player === sessionid) {
-          doasync('register:share', async function () {
+          doasync(register, async function () {
             const url = await shorturl(
               // drop /locked from shared short url if found
               location.href.replace(/cafe.*locked/, `cafe`),
             )
-            writecopyit('share', url, url)
+            writecopyit(register, url, url)
           })
         }
         break
       case 'nuke':
         if (message.player === sessionid) {
-          doasync('register:nuke', async function () {
-            writeheader(register.name(), 'nuke in')
-            writeoption(register.name(), '3', '...')
+          doasync(register, async function () {
+            writeheader(register, 'nuke in')
+            writeoption(register, '3', '...')
             await waitfor(1000)
-            writeoption(register.name(), '2', '...')
+            writeoption(register, '2', '...')
             await waitfor(1000)
-            writeoption(register.name(), '1', '...')
+            writeoption(register, '1', '...')
             await waitfor(1000)
-            writeheader(register.name(), 'BYE')
+            writeheader(register, 'BYE')
             await waitfor(100)
             // nuke is the only valid case for reload
             location.hash = ''
@@ -260,11 +240,11 @@ const register = createdevice(
         break
       case 'select':
         if (message.player === sessionid) {
-          doasync('register:select', async () => {
+          doasync(register, async () => {
             if (isstring(message.player) && isstring(message.data)) {
               await writeselectedid(message.data)
               // use same solution as a hash change here ...
-              await loadmem(readurlhash(), message.player)
+              await loadmem(readurlhash())
               // re-run the vm_init flow
             }
           })
@@ -274,7 +254,7 @@ const register = createdevice(
         ++keepalive
         if (keepalive >= signalrate) {
           keepalive -= signalrate
-          vm_doot(register.session(), register.name(), registerreadplayer())
+          vm_doot(register, registerreadplayer())
         }
         break
     }
@@ -282,6 +262,6 @@ const register = createdevice(
 )
 
 setTimeout(function () {
-  write('register', 'creating platform')
+  write(register, 'creating platform')
   createplatform(isjoin())
 }, 100)

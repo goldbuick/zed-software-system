@@ -1,5 +1,5 @@
-import { createdevice } from 'zss/device'
 import { api_error } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { FILE_BYTES_PER_COLOR } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
@@ -16,8 +16,6 @@ import { mapstrcolor, readstrcolor } from 'zss/words/color'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 import { write } from 'zss/words/writeui'
-
-const displayware = createdevice('displayware')
 
 export const DISPLAY_FIRMWARE = createfirmware()
   .command('palette', (_, words) => {
@@ -60,9 +58,9 @@ export const DISPLAY_FIRMWARE = createfirmware()
       )
       if (ispresent(palette)) {
         bookflags.palette = palette.id
-        write(displayware, `loaded palette ${target}`)
+        write(SOFTWARE, `loaded palette ${target}`)
       } else {
-        api_error(displayware, 'not-found', `unabled to find palette ${target}`)
+        api_error(SOFTWARE, 'not-found', `unabled to find palette ${target}`)
       }
     }
     return 0
@@ -77,9 +75,9 @@ export const DISPLAY_FIRMWARE = createfirmware()
     )
     if (ispresent(charset)) {
       bookflags.charset = charset.id
-      write(displayware, `loaded charset ${target}`)
+      write(SOFTWARE, `loaded charset ${target}`)
     } else {
-      api_error(displayware, 'not-found', `unabled to find charset ${target}`)
+      api_error(SOFTWARE, 'not-found', `unabled to find charset ${target}`)
     }
     return 0
   })

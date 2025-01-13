@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { SOFTWARE } from 'zss/device/session'
 import { ispresent } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { writetext } from 'zss/words/writeui'
@@ -24,7 +25,7 @@ export function ConsoleCopyIt({
       const content = values.join(' ')
       navigator.clipboard
         .writeText(content)
-        .then(() => writetext('copyit', `copied!`))
+        .then(() => writetext(SOFTWARE, `copied!`))
         .catch((err) => console.error(err))
     }
   }, [words])

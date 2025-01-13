@@ -2,9 +2,9 @@ import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { Group, Vector2 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { createdevice } from 'zss/device'
 import { vm_input } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import {
   INPUT,
@@ -23,8 +23,6 @@ import { UserInput, UserInputMods } from './userinput'
 
 const focus = new Vector2(0, 0)
 
-const framed = createdevice('framed')
-
 function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   let bits = 0
   if (mods.alt) {
@@ -37,7 +35,7 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
     bits |= INPUT_SHIFT
   }
   if (ispid(player)) {
-    vm_input(framed, input, bits, player)
+    vm_input(SOFTWARE, input, bits, player)
   }
 }
 

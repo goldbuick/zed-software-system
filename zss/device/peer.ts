@@ -59,7 +59,7 @@ function createjoin(player: string, joincode: string) {
       const remote = node.connect(joincode, { reliable: true })
       handledataconnection(remote, () => {
         write(peer, 'connected')
-        register_ackbooks(peer, player)
+        register_ackbooks(peer)
       })
     }
   })
@@ -82,7 +82,7 @@ const peer = createdevice('peer', [], (message) => {
       break
     case 'joincode': {
       if (message.player === registerreadplayer()) {
-        doasync('peer:joincode', async () => {
+        doasync(peer, async () => {
           if (!ispresent(message.player)) {
             return
           }

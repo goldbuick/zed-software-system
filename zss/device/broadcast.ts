@@ -16,7 +16,7 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
   }
   switch (message.target) {
     case 'startstream':
-      doasync('broadcast:startstream', async () => {
+      doasync(broadcast, async () => {
         if (ispresent(broadcastclient)) {
           api_error(broadcast, 'session', 'session is already open')
         } else {

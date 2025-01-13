@@ -2,6 +2,7 @@ import ErrorStackParser from 'error-stack-parser'
 
 import { RUNTIME } from './config'
 import { api_error } from './device/api'
+import { SOFTWARE } from './device/session'
 import {
   DRIVER_TYPE,
   firmwareeverytick,
@@ -233,7 +234,7 @@ export function createchip(
           flags.es = 1
         }
       } catch (err: any) {
-        api_error('chip', 'crash', err.message)
+        api_error(SOFTWARE, 'crash', err.message)
         flags.es = 1
       }
 

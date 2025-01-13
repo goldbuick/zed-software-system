@@ -1,5 +1,4 @@
 import { useCallback, useRef } from 'react'
-import { createdevice } from 'zss/device'
 import {
   api_error,
   tape_editor_close,
@@ -8,6 +7,7 @@ import {
   vm_cli,
 } from 'zss/device/api'
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
+import { SOFTWARE } from 'zss/device/session'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -19,8 +19,6 @@ import { useBlink, useWriteText } from '../hooks'
 import { Scrollable } from '../scrollable'
 import { EDITOR_CODE_ROW, sharedtosynced } from '../tape/common'
 import { UserInput, modsfromevent } from '../userinput'
-
-const gadgeteditorinput = createdevice('gadgeteditorinput')
 
 type TextinputProps = {
   xcursor: number
@@ -219,13 +217,13 @@ export function EditorInput({
             case 'esc':
             case 'escape':
               if (mods.shift || mods.alt || mods.ctrl) {
-                tape_terminal_close(gadgeteditorinput, player)
+                tape_terminal_close(SOFTWARE, player)
               } else {
-                tape_editor_close(gadgeteditorinput, player)
+                tape_editor_close(SOFTWARE, player)
               }
               break
             case 'tab':
-              tape_terminal_inclayout(gadgeteditorinput, !mods.shift, player)
+              tape_terminal_inclayout(SOFTWARE, !mods.shift, player)
               break
             case 'delete':
               if (hasselection) {
@@ -251,9 +249,7 @@ export function EditorInput({
                     if (ispresent(navigator.clipboard)) {
                       navigator.clipboard
                         .writeText(strvalueselected)
-                        .catch((err) =>
-                          api_error(gadgeteditorinput, 'clipboard', err),
-                        )
+                        .catch((err) => api_error(SOFTWARE, 'clipboard', err))
                     } else {
                       resettoend()
                     }
@@ -270,9 +266,7 @@ export function EditorInput({
                             strvaluesplice(tapeeditor.cursor, 0, cleantext)
                           }
                         })
-                        .catch((err) =>
-                          api_error(gadgeteditorinput, 'clipboard', err),
-                        )
+                        .catch((err) => api_error(SOFTWARE, 'clipboard', err))
                     } else {
                       resettoend()
                     }
@@ -282,17 +276,15 @@ export function EditorInput({
                       navigator.clipboard
                         .writeText(strvalueselected)
                         .then(() => deleteselection())
-                        .catch((err) =>
-                          api_error(gadgeteditorinput, 'clipboard', err),
-                        )
+                        .catch((err) => api_error(SOFTWARE, 'clipboard', err))
                     } else {
                       resettoend()
                     }
                     break
                   case 'p':
-                    vm_cli(gadgeteditorinput, strvalueselected, player)
+                    vm_cli(SOFTWARE, strvalueselected, player)
                     writetext(
-                      gadgeteditorinput,
+                      SOFTWARE,
                       `running: ${strvalueselected.substring(0, 18)}`,
                     )
                     break

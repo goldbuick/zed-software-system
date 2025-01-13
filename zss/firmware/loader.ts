@@ -1,6 +1,6 @@
 import { maptostring } from 'zss/chip'
-import { createdevice } from 'zss/device'
 import { tape_info } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { createsid } from 'zss/mapping/guid'
 import {
@@ -14,8 +14,6 @@ import { ARG_TYPE, readargs } from 'zss/words/reader'
 
 import { binaryloader } from './loader/binaryloader'
 import { textloader } from './loader/textloader'
-
-const loaderware = createdevice('loaderware')
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
@@ -67,14 +65,14 @@ export const LOADER_FIRMWARE = createfirmware({
   })
   .command('text', (_, words) => {
     const text = words.map(maptostring).join(' ')
-    tape_info(loaderware, '$2', text)
+    tape_info(SOFTWARE, '$2', text)
     return 0
   })
   .command('hyperlink', (_, args) => {
     const [labelword, ...words] = args
     const label = maptostring(labelword)
     const hyperlink = words.map(maptostring).join(' ')
-    tape_info(loaderware, '$2', `!${hyperlink};${label}`)
+    tape_info(SOFTWARE, '$2', `!${hyperlink};${label}`)
     return 0
   })
   // ---

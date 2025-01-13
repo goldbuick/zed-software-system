@@ -59,11 +59,7 @@ export function enableaudio() {
         enabled = true
         transport.start()
         transport.bpm.value = 107
-        tape_info(
-          synthdevice.session(),
-          synthdevice.name(),
-          'audio is enabled!',
-        )
+        tape_info(synthdevice, 'audio is enabled!')
         try {
           const context: AudioContext = getContext() as unknown as AudioContext
           unmute(context, true)
@@ -71,11 +67,11 @@ export function enableaudio() {
         } catch (err) {
           //
         }
-        synth_audioenabled(synthdevice.session(), synthdevice.name())
+        synth_audioenabled(synthdevice)
       }
     })
     .catch((err: any) => {
-      api_error(synthdevice.session(), synthdevice.name(), 'audio', err.message)
+      api_error(synthdevice, 'audio', err.message)
     })
 }
 
@@ -777,12 +773,7 @@ const synthdevice = createdevice('synth', [], (message) => {
         // validate index
         const voice = synth.SOURCE[index]
         if (!ispresent(voice)) {
-          api_error(
-            synthdevice.session(),
-            synthdevice.name(),
-            message.target,
-            `unknown voice ${index}`,
-          )
+          api_error(synthdevice, message.target, `unknown voice ${index}`)
           return
         }
 
@@ -1031,7 +1022,7 @@ const synthdevice = createdevice('synth', [], (message) => {
                   break
               }
               api_error(
-                synthdevice.name(),
+                synthdevice,
                 message.target,
                 `unknown ${kind} config ${config}`,
               )
@@ -1069,7 +1060,7 @@ const synthdevice = createdevice('synth', [], (message) => {
                     switch (config) {
                       default:
                         api_error(
-                          synthdevice.name(),
+                          synthdevice,
                           message.target,
                           `unknown ${fxname} config ${config}`,
                         )
@@ -1081,7 +1072,7 @@ const synthdevice = createdevice('synth', [], (message) => {
                     switch (config) {
                       default:
                         api_error(
-                          synthdevice.name(),
+                          synthdevice,
                           message.target,
                           `unknown ${fxname} config ${config}`,
                         )
@@ -1109,7 +1100,7 @@ const synthdevice = createdevice('synth', [], (message) => {
                         break
                       default:
                         api_error(
-                          synthdevice.name(),
+                          synthdevice,
                           message.target,
                           `unknown ${fxname} config ${config}`,
                         )
@@ -1136,7 +1127,7 @@ const synthdevice = createdevice('synth', [], (message) => {
                         break
                       default:
                         api_error(
-                          synthdevice.name(),
+                          synthdevice,
                           message.target,
                           `unknown ${fxname} config ${config}`,
                         )
@@ -1152,7 +1143,7 @@ const synthdevice = createdevice('synth', [], (message) => {
                         break
                       default:
                         api_error(
-                          synthdevice.name(),
+                          synthdevice,
                           message.target,
                           `unknown ${fxname} config ${config}`,
                         )
@@ -1171,7 +1162,7 @@ const synthdevice = createdevice('synth', [], (message) => {
                         break
                       default:
                         api_error(
-                          synthdevice.name(),
+                          synthdevice,
                           message.target,
                           `unknown ${fxname} config ${config}`,
                         )
@@ -1193,11 +1184,11 @@ const synthdevice = createdevice('synth', [], (message) => {
           }
           return
         }
-        api_error(synthdevice.name(), message.target, `unknown fx ${fxname}`)
+        api_error(synthdevice, message.target, `unknown fx ${fxname}`)
       }
       break
     case 'tts':
-      doasync('tts', async () => {
+      doasync(synthdevice, async () => {
         if (!ispresent(tts)) {
           tts = new EdgeSpeechTTS({ locale: 'en-US' })
         }

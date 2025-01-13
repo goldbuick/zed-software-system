@@ -1,6 +1,7 @@
 import { CHIP, createchip } from './chip'
 import { MESSAGE_FUNC, parsetarget } from './device'
 import { api_error } from './device/api'
+import { SOFTWARE } from './device/session'
 import { DRIVER_TYPE } from './firmware/runner'
 import { GeneratorBuild, compile } from './lang/generator'
 import { ispresent, isstring } from './mapping/types'
@@ -83,7 +84,7 @@ export function createos() {
             .map((line, index) => [line, index])
 
           codelines.slice(errorline - 5, errorline).forEach(([line, index]) => {
-            api_error('os', 'build', `$grey${index + 1} $grey${line}`)
+            api_error(SOFTWARE, 'build', `$grey${index + 1} $grey${line}`)
           })
 
           const [hline, hindex] = codelines[errorline] ?? []
@@ -95,14 +96,14 @@ export function createos() {
             const b = hlinepadded.substring(start, end)
             const c = hlinepadded.substring(end)
             api_error(
-              'os',
+              SOFTWARE,
               'build',
               `$red${hindex + 1} $grey${a}$red${b}$grey${c}`,
             )
           }
 
           primary.message.split('\n').forEach((message) => {
-            api_error('os', 'build', message)
+            api_error(SOFTWARE, 'build', message)
           })
 
           return false
