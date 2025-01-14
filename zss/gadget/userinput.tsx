@@ -125,7 +125,7 @@ function userinputinvoke(input: INPUT, mods: UserInputMods) {
   user.root.emit(INPUT[input], mods)
 }
 
-const islocaldev = location.hostname === 'localhost'
+const islocaldev = location.port === '7777'
 
 document.addEventListener(
   'keydown',

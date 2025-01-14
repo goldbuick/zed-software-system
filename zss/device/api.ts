@@ -245,8 +245,17 @@ export function userinput_down(
   device.emit('userinput:down', input, player)
 }
 
-export function vm_books(device: DEVICELIKE, books: string, select: string) {
-  device.emit('vm:books', [books, select])
+export function vm_operator(device: DEVICELIKE, player: string) {
+  device.emit('vm:operator', undefined, player)
+}
+
+export function vm_books(
+  device: DEVICELIKE,
+  books: string,
+  select: string,
+  player: string,
+) {
+  device.emit('vm:books', [books, select], player)
 }
 
 export function vm_login(device: DEVICELIKE, player: string) {
@@ -297,8 +306,8 @@ export function vm_cli(device: DEVICELIKE, input: string, player: string) {
   device.emit('vm:cli', input, player)
 }
 
-export function vm_flush(device: DEVICELIKE, tag: string) {
-  device.emit('vm:flush', tag)
+export function vm_flush(device: DEVICELIKE, tag: string, player: string) {
+  device.emit('vm:flush', tag, player)
 }
 
 export function vm_loader(

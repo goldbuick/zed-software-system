@@ -27,6 +27,7 @@ import {
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
+  memoryreadoperator,
   memorysetsoftwarebook,
 } from 'zss/memory'
 import { bookclearcodepage, bookreadcodepagebyaddress } from 'zss/memory/book'
@@ -47,8 +48,8 @@ import {
   writetext,
 } from 'zss/words/writeui'
 
-function vm_flush_player(tag = '') {
-  vm_flush(SOFTWARE, tag)
+function vm_flush_op(tag = '') {
+  vm_flush(SOFTWARE, tag, memoryreadoperator())
 }
 
 export const CLI_FIRMWARE = createfirmware()
@@ -255,12 +256,12 @@ export const CLI_FIRMWARE = createfirmware()
   })
   // ---
   .command('dev', () => {
-    vm_flush_player()
+    vm_flush_op()
     register_dev(SOFTWARE)
     return 0
   })
   .command('share', () => {
-    vm_flush_player()
+    vm_flush_op()
     register_share(SOFTWARE)
     return 0
   })
@@ -304,7 +305,7 @@ export const CLI_FIRMWARE = createfirmware()
       // clear book
       memoryclearbook(address)
       writetext(SOFTWARE, `trashed [book] ${book.name}`)
-      vm_flush_player()
+      vm_flush_op()
       // reset to good state
       chip.command('pages')
     }
@@ -360,7 +361,7 @@ export const CLI_FIRMWARE = createfirmware()
       const name = codepagereadname(codepage)
       const pagetype = codepagereadtypetostring(codepage)
       writetext(SOFTWARE, `trashed [${pagetype}] ${name}`)
-      vm_flush_player()
+      vm_flush_op()
       chip.command('pages')
     }
 
@@ -447,12 +448,12 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('save', () => {
-    vm_flush_player()
+    vm_flush_op()
     return 0
   })
   .command('savewith', (_, words) => {
     const [tag] = readargs(words, 0, [ARG_TYPE.NAME])
-    vm_flush_player(tag)
+    vm_flush_op(tag)
     return 0
   })
   .command('nuke', () => {

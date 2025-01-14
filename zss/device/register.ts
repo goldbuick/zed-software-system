@@ -19,6 +19,7 @@ import {
   vm_books,
   vm_doot,
   vm_login,
+  vm_operator,
 } from './api'
 
 // read / write from indexdb
@@ -79,7 +80,7 @@ async function loadmem(books: string) {
   }
   // init vm with content
   const selectedid = (await readselectedid()) ?? ''
-  vm_books(register, books, selectedid)
+  vm_books(register, books, selectedid, myplayerid)
 }
 
 let currenthash = ''
@@ -121,11 +122,11 @@ let keepalive = 0
 const signalrate = 1
 
 // stable unique id
-const sessionid = readsession('SESSION_ID') ?? createpid()
-writesession('SESSION_ID', sessionid)
+const myplayerid = readsession('PLAYER') ?? createpid()
+writesession('PLAYER', myplayerid)
 
 export function registerreadplayer() {
-  return sessionid
+  return myplayerid
 }
 
 const register = createdevice(
@@ -136,32 +137,31 @@ const register = createdevice(
       return
     }
     switch (message.target) {
-      // case 'started': {
-      //   doasynregister, async () => {
-      //     modemwriteplayer(sessionid)
-      //     // signal init
-      //     await waitfor(256)
-      //     write('register', `sessionid ${sessionid}`)
-      //     // platform_init('register', sessionid)
-      //   })
-      //   break
-      // }
+      case 'ready': {
+        doasync(register, async () => {
+          // signal init
+          await waitfor(256)
+          write(register, `myplayerid ${myplayerid}`)
+          vm_operator(register, myplayerid)
+        })
+        break
+      }
       case 'error:login:main':
       case 'error:login:title':
       case 'error:login:player':
-        if (message.player === sessionid) {
+        if (message.player === myplayerid) {
           tape_crash(register)
         }
         break
-      case 'ackinit': {
+      case 'ackoperator': {
         doasync(register, async () => {
-          if (message.player !== sessionid) {
+          if (message.player !== myplayerid) {
             return
           }
           const books = readurlhash()
           if (isjoin()) {
-            tape_terminal_open(register, sessionid)
-            peer_create(register, books, sessionid)
+            tape_terminal_open(register, myplayerid)
+            peer_create(register, books, myplayerid)
           } else {
             // pull data && init
             await loadmem(books)
@@ -170,23 +170,21 @@ const register = createdevice(
         break
       }
       case 'ackbooks':
-        if (message.player === sessionid) {
-          vm_login(register, message.player)
-        }
+        vm_login(register, myplayerid)
         break
       case 'acklogin':
         doasync(register, async () => {
-          if (message.player === sessionid) {
+          if (message.player === myplayerid) {
             const { player } = message
             await waitfor(128)
             gadgetserver_desync(register, player)
             await waitfor(512)
-            tape_terminal_close(register, sessionid)
+            tape_terminal_close(register, myplayerid)
           }
         })
         break
       case 'dev':
-        if (message.player === sessionid) {
+        if (message.player === myplayerid) {
           doasync(register, async function () {
             if (islocked()) {
               const url = await shorturl(location.href)
@@ -200,7 +198,7 @@ const register = createdevice(
         }
         break
       case 'share':
-        if (message.player === sessionid) {
+        if (message.player === myplayerid) {
           doasync(register, async function () {
             const url = await shorturl(
               // drop /locked from shared short url if found
@@ -211,7 +209,7 @@ const register = createdevice(
         }
         break
       case 'nuke':
-        if (message.player === sessionid) {
+        if (message.player === myplayerid) {
           doasync(register, async function () {
             writeheader(register, 'nuke in')
             writeoption(register, '3', '...')
@@ -230,7 +228,7 @@ const register = createdevice(
         }
         break
       case 'flush':
-        if (message.player === sessionid && isarray(message.data)) {
+        if (message.player === myplayerid && isarray(message.data)) {
           const [maybehistorylabel, maybecontent] = message.data
           if (isstring(maybehistorylabel) && isstring(maybecontent)) {
             document.title = maybehistorylabel
@@ -239,7 +237,7 @@ const register = createdevice(
         }
         break
       case 'select':
-        if (message.player === sessionid) {
+        if (message.player === myplayerid) {
           doasync(register, async () => {
             if (isstring(message.player) && isstring(message.data)) {
               await writeselectedid(message.data)
@@ -262,6 +260,5 @@ const register = createdevice(
 )
 
 setTimeout(function () {
-  write(register, 'creating platform')
   createplatform(isjoin())
 }, 100)

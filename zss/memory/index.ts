@@ -54,6 +54,8 @@ export enum MEMORY_LABEL {
 const MEMORY = {
   // unique id for messages
   session: createsid(),
+  // player id in charge of vm
+  operator: '',
   // active software
   software: {
     main: '',
@@ -69,6 +71,14 @@ const memdevice = createdevice('memory', undefined, undefined, MEMORY.session)
 
 export function memoryreadsession() {
   return MEMORY.session
+}
+
+export function memoryreadoperator() {
+  return MEMORY.operator
+}
+
+export function memorywriteoperator(operator: string) {
+  MEMORY.operator = operator
 }
 
 export function memoryreadbooklist(): BOOK[] {

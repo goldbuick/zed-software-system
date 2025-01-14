@@ -19,6 +19,8 @@ import {
   memoryreadbookbysoftware,
   MEMORY_LABEL,
   memoryreadsession,
+  memorywriteoperator,
+  memoryreadoperator,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -63,22 +65,22 @@ async function savestate(tag = ``) {
   }
 }
 
-let init = false
 const vm = createdevice(
   'vm',
-  ['init', 'tick', 'second'],
+  ['tick', 'second'],
   (message) => {
     if (!vm.session(message)) {
       return
     }
     switch (message.target) {
-      case 'init':
-        if (ispresent(message.player) && !init) {
-          init = true
-          // modemwriteplayer(message.player)
-          // memorysetdefaultplayer(message.player)
+      case 'operator':
+        if (ispresent(message.player)) {
+          memorywriteoperator(message.player)
+          write(vm, `operator set to ${message.player}`)
           // ack
-          vm.reply(message, 'ackinit', true, message.player)
+          vm.reply(message, 'ackoperator', true, message.player)
+        } else {
+          // throw error ?
         }
         break
       case 'books':
@@ -211,7 +213,7 @@ const vm = createdevice(
         // autosave to url
         if (isjoin() === false && ++flushtick >= FLUSH_RATE) {
           flushtick = 0
-          vm_flush(vm, '')
+          vm_flush(vm, '', memoryreadoperator())
         }
         break
       }
