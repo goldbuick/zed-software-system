@@ -26,6 +26,7 @@ const messagecrew: string[] = [
   '$white$31',
   '$red$234',
   '$cyan$227',
+  '$dkpurple$227',
 ]
 
 function terminaladdmessage(message: MESSAGE) {

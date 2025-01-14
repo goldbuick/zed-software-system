@@ -15,7 +15,6 @@ import {
   memoryplayerlogout,
   memoryreadflags,
   memorymessage,
-  memorycleanup,
   memoryreadbookbysoftware,
   MEMORY_LABEL,
   memoryreadsession,
@@ -31,7 +30,7 @@ import { write } from 'zss/words/writeui'
 import {
   gadgetserver_clearplayer,
   platform_ready,
-  register_flush,
+  register_savemem,
   tape_debug,
   tape_info,
   vm_codeaddress,
@@ -53,15 +52,12 @@ const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
 // save state
 async function savestate(tag = ``) {
-  // gc chips
-  memorycleanup()
-  // export books
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
     const historylabel = `${tag}${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
-    register_flush(vm, historylabel, content)
+    register_savemem(vm, historylabel, content, memoryreadoperator())
   }
 }
 
@@ -79,8 +75,6 @@ const vm = createdevice(
           write(vm, `operator set to ${message.player}`)
           // ack
           vm.reply(message, 'ackoperator', true, message.player)
-        } else {
-          // throw error ?
         }
         break
       case 'books':
@@ -99,7 +93,7 @@ const vm = createdevice(
 
         break
       case 'login':
-        if (message.player) {
+        if (ispresent(message.player)) {
           // debugger
           // attempt login
           if (memoryplayerlogin(message.player)) {
@@ -112,7 +106,7 @@ const vm = createdevice(
         }
         break
       case 'endgame':
-        if (message.player) {
+        if (ispresent(message.player)) {
           // logout player
           memoryplayerlogout(message.player)
           // clear ui
@@ -120,14 +114,14 @@ const vm = createdevice(
         }
         break
       case 'doot':
-        if (message.player) {
+        if (ispresent(message.player)) {
           // player keepalive
           tracking[message.player] = 0
           tape_debug(vm, 'active', message.player)
         }
         break
       case 'input':
-        if (message.player) {
+        if (ispresent(message.player)) {
           // player input
           const flags = memoryreadflags(message.player)
           const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
@@ -141,7 +135,7 @@ const vm = createdevice(
         }
         break
       case 'codewatch':
-        if (message.player && isarray(message.data)) {
+        if (ispresent(message.player) && isarray(message.data)) {
           const [book, codepage] = message.data
           // start watching
           if (!ispresent(observers[codepage])) {
@@ -213,7 +207,7 @@ const vm = createdevice(
         // autosave to url
         if (isjoin() === false && ++flushtick >= FLUSH_RATE) {
           flushtick = 0
-          vm_flush(vm, '', memoryreadoperator())
+          vm_flush(vm, 'autosave', memoryreadoperator())
         }
         break
       }

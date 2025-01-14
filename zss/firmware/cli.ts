@@ -257,12 +257,12 @@ export const CLI_FIRMWARE = createfirmware()
   // ---
   .command('dev', () => {
     vm_flush_op()
-    register_dev(SOFTWARE)
+    register_dev(SOFTWARE, READ_CONTEXT.player)
     return 0
   })
   .command('share', () => {
     vm_flush_op()
-    register_share(SOFTWARE)
+    register_share(SOFTWARE, READ_CONTEXT.player)
     return 0
   })
   .command('bookcreate', (chip, words) => {
@@ -457,7 +457,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('nuke', () => {
-    register_nuke(SOFTWARE)
+    register_nuke(SOFTWARE, READ_CONTEXT.player)
     return 0
   })
   .command('joincode', () => {

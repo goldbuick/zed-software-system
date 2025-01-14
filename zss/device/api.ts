@@ -107,32 +107,37 @@ export function register_ackbooks(device: DEVICELIKE) {
   device.emit('register:ackbooks', true)
 }
 
-export function register_flush(
+export function register_savemem(
   device: DEVICELIKE,
   historylabel: string,
   books: string,
+  player: string,
 ) {
-  device.emit('register:flush', [historylabel, books])
+  device.emit('register:savemem', [historylabel, books], player)
 }
 
-export function register_dev(device: DEVICELIKE) {
-  device.emit('register:dev')
+export function register_dev(device: DEVICELIKE, player: string) {
+  device.emit('register:dev', undefined, player)
 }
 
-export function register_share(device: DEVICELIKE) {
-  device.emit('register:share')
+export function register_share(device: DEVICELIKE, player: string) {
+  device.emit('register:share', undefined, player)
 }
 
-export function register_select(device: DEVICELIKE, book: string) {
-  device.emit('register:select', book)
+export function register_select(
+  device: DEVICELIKE,
+  book: string,
+  player: string,
+) {
+  device.emit('register:select', book, player)
 }
 
-export function register_nuke(device: DEVICELIKE) {
-  device.emit('register:nuke')
+export function register_nuke(device: DEVICELIKE, player: string) {
+  device.emit('register:nuke', undefined, player)
 }
 
-export function synth_audioenabled(device: DEVICELIKE) {
-  device.emit('synth:audioenabled', undefined)
+export function synth_audioenabled(device: DEVICELIKE, player: string) {
+  device.emit('synth:audioenabled', undefined, player)
 }
 
 export function synth_tts(device: DEVICELIKE, voice: string, phrase: string) {

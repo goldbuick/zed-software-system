@@ -44,6 +44,7 @@ import {
 import { NAME } from 'zss/words/types'
 
 import { api_error, synth_audioenabled, tape_info } from './api'
+import { registerreadplayer } from './register'
 
 // synth setup
 
@@ -67,7 +68,7 @@ export function enableaudio() {
         } catch (err) {
           //
         }
-        synth_audioenabled(synthdevice)
+        synth_audioenabled(synthdevice, registerreadplayer())
       }
     })
     .catch((err: any) => {

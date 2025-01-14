@@ -14,6 +14,7 @@ import {
   peer_create,
   tape_crash,
   tape_debug,
+  tape_info,
   tape_terminal_close,
   tape_terminal_open,
   vm_books,
@@ -94,16 +95,21 @@ window.addEventListener('hashchange', () => {
   })
 })
 
-function writeurlhash(exportedbooks: string) {
+function writeurlhash(exportedbooks: string, label: string) {
   const out = `#${exportedbooks}`
   if (location.hash !== out) {
     // saving current state, don't interrupt the user
     currenthash = exportedbooks
     location.hash = out
-    tape_debug(
-      register,
-      `wrote ${exportedbooks?.length ?? 0} chars [${exportedbooks.slice(0, 8)}...${exportedbooks.slice(-8)}]`,
-    )
+    const msg = `wrote ${exportedbooks?.length ?? 0} chars [${exportedbooks.slice(0, 8)}...${exportedbooks.slice(-8)}]`
+    if (label === 'autosave') {
+      tape_debug(register, msg)
+    } else {
+      if (label.length) {
+        document.title = label
+      }
+      tape_info(register, msg)
+    }
   }
 }
 
@@ -227,12 +233,11 @@ const register = createdevice(
           })
         }
         break
-      case 'flush':
+      case 'savemem':
         if (message.player === myplayerid && isarray(message.data)) {
           const [maybehistorylabel, maybecontent] = message.data
           if (isstring(maybehistorylabel) && isstring(maybecontent)) {
-            document.title = maybehistorylabel
-            writeurlhash(maybecontent)
+            writeurlhash(maybecontent, maybehistorylabel)
           }
         }
         break
