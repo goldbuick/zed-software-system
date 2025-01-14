@@ -3,6 +3,7 @@ import { createchipid, MESSAGE } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
 import { createdevice } from 'zss/device'
 import { api_error, tape_debug, tape_info } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
 import { pickwith } from 'zss/mapping/array'
@@ -67,8 +68,6 @@ const MEMORY = {
   loaders: new Map<string, string>(),
 }
 
-const memdevice = createdevice('memory', undefined, undefined, MEMORY.session)
-
 export function memoryreadsession() {
   return MEMORY.session
 }
@@ -120,7 +119,7 @@ export function memorycreatesoftwarebook(maybename?: string) {
     book.name = maybename
   }
   memorysetbook(book)
-  tape_info(memdevice, `created [book] ${book.name}`)
+  tape_info(SOFTWARE, `created [book] ${book.name}`)
   return book
 }
 
@@ -131,7 +130,7 @@ export function memoryensurebookbyname(name: string) {
     book.name = name
   }
   memorysetbook(book)
-  tape_info(memdevice, `created [book] ${book.name}`)
+  tape_info(SOFTWARE, `created [book] ${book.name}`)
   return book
 }
 
@@ -157,7 +156,7 @@ export function memoryensuresoftwarebook(
 
     // success
     if (ispresent(book)) {
-      tape_info(memdevice, `opened [book] ${book.name} for ${slot}`)
+      tape_info(SOFTWARE, `opened [book] ${book.name} for ${slot}`)
     }
   }
 
@@ -235,7 +234,7 @@ export function memoryclearbook(address: string) {
 export function memoryplayerlogin(player: string): boolean {
   if (!isstring(player) || !player) {
     return api_error(
-      memdevice,
+      SOFTWARE,
       'login',
       `failed for playerid ==>${player}<==`,
       player,
@@ -245,7 +244,7 @@ export function memoryplayerlogin(player: string): boolean {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return api_error(
-      memdevice,
+      SOFTWARE,
       'login:main',
       `login failed to find book 'main'`,
       player,
@@ -269,7 +268,7 @@ export function memoryplayerlogin(player: string): boolean {
   })
   if (titleboards.length === 0) {
     return api_error(
-      memdevice,
+      SOFTWARE,
       'login:title',
       `login failed to find board with '${MEMORY_LABEL.TITLE}' stat`,
       player,
@@ -279,7 +278,7 @@ export function memoryplayerlogin(player: string): boolean {
   const playerkind = bookreadobject(mainbook, MEMORY_LABEL.PLAYER)
   if (!ispresent(playerkind)) {
     return api_error(
-      memdevice,
+      SOFTWARE,
       'login:player',
       `login failed to find object type '${MEMORY_LABEL.PLAYER}'`,
       player,
@@ -493,7 +492,7 @@ export function memorycli(player: string, cli = '') {
   RUNTIME.HALT_AT_COUNT = resethalt * 8
 
   // invoke once
-  tape_debug(memdevice, 'running', mainbook.timestamp, id, cli)
+  tape_debug(SOFTWARE, 'running', mainbook.timestamp, id, cli)
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
 
   RUNTIME.HALT_AT_COUNT = resethalt
