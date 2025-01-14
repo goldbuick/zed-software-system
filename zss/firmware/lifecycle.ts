@@ -70,9 +70,9 @@ export const LIFECYCLE_FIRMWARE = createfirmware()
     return 0
   })
   .command('endgame', () => {
-    // this is wrong! this should be element id
-    if (READ_CONTEXT.isplayer) {
-      vm_endgame(SOFTWARE, READ_CONTEXT.element?.id ?? '')
+    debugger
+    if (READ_CONTEXT.elementisplayer) {
+      vm_endgame(SOFTWARE, READ_CONTEXT.elementid)
     }
     return 0
   })

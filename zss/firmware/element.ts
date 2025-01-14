@@ -7,6 +7,7 @@ import {
 } from 'zss/gadget/data/types'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory'
+import { findplayerforelement } from 'zss/memory/atomics'
 import { boardelementapplycolor } from 'zss/memory/board'
 import {
   bookboardwrite,
@@ -115,9 +116,9 @@ function readinput(player: string) {
 export const ELEMENT_FIRMWARE = createfirmware({
   get(_, name) {
     // if we are reading from input AND are a player
-    if (READ_CONTEXT.isplayer && INPUT_FLAG_NAMES.has(name)) {
+    if (READ_CONTEXT.elementisplayer && INPUT_FLAG_NAMES.has(name)) {
       // pull the next input
-      const value = readinput(READ_CONTEXT.element?.id ?? '')[name]
+      const value = readinput(READ_CONTEXT.elementid)[name]
       return [ispresent(value), value]
     }
 
@@ -131,7 +132,17 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
 
     // check player's flags
-    const value = memoryreadflags(READ_CONTEXT.player)[name]
+    // >>> this <<< uses focus
+    const focus = findplayerforelement(
+      READ_CONTEXT.board,
+      READ_CONTEXT.element,
+      READ_CONTEXT.fromplayer,
+    )
+    if (!ispresent(focus)) {
+      return [false, undefined]
+    }
+
+    const value = memoryreadflags(focus.id ?? '')[name]
     return [ispresent(value), value]
   },
   set(_, name, value) {
@@ -145,10 +156,26 @@ export const ELEMENT_FIRMWARE = createfirmware({
       return [true, value]
     }
 
+    // check player's flags
+    // >>> this <<< uses focus
+    const focus = findplayerforelement(
+      READ_CONTEXT.board,
+      READ_CONTEXT.element,
+      READ_CONTEXT.fromplayer,
+    )
+    if (!ispresent(focus)) {
+      return [false, value]
+    }
+
     // set player's flags
-    const flags = memoryreadflags(READ_CONTEXT.player)
-    flags[name] = value
-    return [true, value]
+    const flags = memoryreadflags(focus.id ?? '')
+    if (ispresent(flags)) {
+      flags[name] = value
+      return [true, value]
+    }
+
+    // notfound
+    return [false, value]
   },
   everytick(chip) {
     // headless only gets a single tick to do its magic

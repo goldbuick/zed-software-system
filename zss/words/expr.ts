@@ -100,7 +100,7 @@ export function readexpr(index: number, stringeval = true): [any, number] {
         const maybeplayer = findplayerforelement(
           READ_CONTEXT.board,
           READ_CONTEXT.element,
-          READ_CONTEXT.player,
+          READ_CONTEXT.fromplayer,
         )
         if (!ispresent(READ_CONTEXT.element) || !ispresent(maybeplayer)) {
           return [0, ii]
@@ -119,7 +119,7 @@ export function readexpr(index: number, stringeval = true): [any, number] {
         const maybeplayer = findplayerforelement(
           READ_CONTEXT.board,
           READ_CONTEXT.element,
-          READ_CONTEXT.player,
+          READ_CONTEXT.fromplayer,
         )
         if (!ispresent(READ_CONTEXT.element) || !ispresent(maybeplayer)) {
           return [0, ii]

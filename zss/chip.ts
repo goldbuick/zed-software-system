@@ -256,7 +256,7 @@ export function createchip(
     },
     hm() {
       if (isarray(flags.mg) && isarray(flags.lb)) {
-        const [, target] = flags.mg as [string, string] // unpack message
+        const [target] = flags.mg as [string] // unpack message
         if (ispresent(target)) {
           for (let i = 0; i < flags.lb.length; ++i) {
             const [name, labels] = flags.lb[i] as [string, number[]]
@@ -296,11 +296,12 @@ export function createchip(
         return
       }
       flags.mg = [
-        incoming.id,
         incoming.target,
         incoming.data,
+        incoming.id,
         incoming.sender,
         incoming.player,
+        incoming.session,
       ]
     },
     zap(label) {
@@ -336,8 +337,7 @@ export function createchip(
       // check for pending messages
       const line = chip.hm()
       if (line && isarray(flags.mg)) {
-        const [, , arg, sender, player] = flags.mg as [
-          string,
+        const [, arg, sender, player] = flags.mg as [
           string,
           any,
           string,

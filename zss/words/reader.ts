@@ -12,14 +12,15 @@ import { CATEGORY, COLLISION, PT, WORD } from './types'
 
 export const READ_CONTEXT = {
   // useful state
-  session: '',
   timestamp: 0,
+  fromplayer: '',
   // targets & lookups
   book: undefined as MAYBE<BOOK>,
   board: undefined as MAYBE<BOARD>,
+  // current element info
   element: undefined as MAYBE<BOARD_ELEMENT>,
-  isplayer: false, // this refers to the element isplayer
-  player: '', // todo rename this to focus to be less confusing
+  elementid: '',
+  elementisplayer: false,
   // for commands to use readargs
   words: [] as WORD[],
   get: undefined as MAYBE<(name: string) => any>,
@@ -144,7 +145,7 @@ export function readargs<T extends ARG_TYPES>(
               ? boardevaldir(
                   READ_CONTEXT.board,
                   READ_CONTEXT.element,
-                  READ_CONTEXT.player,
+                  READ_CONTEXT.fromplayer,
                   dir,
                   pt,
                 )
@@ -256,7 +257,7 @@ export function readargs<T extends ARG_TYPES>(
             ? boardevaldir(
                 READ_CONTEXT.board,
                 READ_CONTEXT.element,
-                READ_CONTEXT.player,
+                READ_CONTEXT.fromplayer,
                 dir,
                 pt,
               )

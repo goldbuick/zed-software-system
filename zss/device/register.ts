@@ -80,7 +80,7 @@ async function loadmem(books: string) {
     return
   }
   // init vm with content
-  const selectedid = (await readselectedid()) ?? ''
+  const selectedid = (await readselected()) ?? ''
   vm_books(register, books, selectedid, myplayerid)
 }
 
@@ -102,7 +102,7 @@ function writeurlhash(exportedbooks: string, label: string) {
     currenthash = exportedbooks
     location.hash = out
     const msg = `wrote ${exportedbooks?.length ?? 0} chars [${exportedbooks.slice(0, 8)}...${exportedbooks.slice(-8)}]`
-    if (label === 'autosave') {
+    if (label.includes('autosave')) {
       tape_debug(register, msg)
     } else {
       if (label.length) {
@@ -113,12 +113,12 @@ function writeurlhash(exportedbooks: string, label: string) {
   }
 }
 
-async function readselectedid() {
-  return readidb<string>('SELECTED_ID')
+async function readselected() {
+  return readidb<string>('SELECTED')
 }
 
-async function writeselectedid(selectedid: string) {
-  return writeidb('SELECTED_ID', () => selectedid)
+async function writeselected(selected: string) {
+  return writeidb('SELECTED', () => selected)
 }
 
 // simple bootstrap manager
@@ -245,7 +245,7 @@ const register = createdevice(
         if (message.player === myplayerid) {
           doasync(register, async () => {
             if (isstring(message.player) && isstring(message.data)) {
-              await writeselectedid(message.data)
+              await writeselected(message.data)
               // use same solution as a hash change here ...
               await loadmem(readurlhash())
               // re-run the vm_init flow

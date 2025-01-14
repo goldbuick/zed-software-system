@@ -368,12 +368,14 @@ export function memorytickobject(
   const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
   // write context
-  const objectid = object.id ?? ''
   READ_CONTEXT.book = book
   READ_CONTEXT.board = board
   READ_CONTEXT.element = object
-  READ_CONTEXT.isplayer = ispid(objectid)
-  READ_CONTEXT.player = object.player ?? ''
+  READ_CONTEXT.elementid = object.id ?? ''
+  READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
+  READ_CONTEXT.fromplayer = READ_CONTEXT.elementisplayer
+    ? READ_CONTEXT.elementid
+    : MEMORY.operator
 
   // read cycle
   const kinddata = bookelementkindread(book, object)
@@ -400,8 +402,8 @@ export function memorytickobject(
   }
 
   // clear used input
-  if (READ_CONTEXT.isplayer) {
-    const flags = memoryreadflags(READ_CONTEXT.element.id ?? '')
+  if (READ_CONTEXT.elementisplayer) {
+    const flags = memoryreadflags(READ_CONTEXT.elementid)
     flags.inputcurrent = 0
   }
 
@@ -478,12 +480,13 @@ export function memorycli(player: string, cli = '') {
   const id = `${player}_cli`
 
   // write context
+  READ_CONTEXT.fromplayer = player
   READ_CONTEXT.timestamp = mainbook.timestamp
   READ_CONTEXT.book = mainbook
   READ_CONTEXT.board = bookplayerreadboard(mainbook, player)
   READ_CONTEXT.element = boardobjectread(READ_CONTEXT.board, player)
-  READ_CONTEXT.player = player
-  READ_CONTEXT.isplayer = true
+  READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
+  READ_CONTEXT.elementisplayer = true
 
   // cli invokes get more processing time
   const resethalt = RUNTIME.HALT_AT_COUNT
