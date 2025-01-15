@@ -38,7 +38,9 @@ function sendinteraction(
 
   // object elements will have ids
   const from = fromid ?? frompt
+
   if (ispresent(toid) && ispresent(from)) {
+    console.info('sendinteraction', message, maybeto, toid, from)
     chip.send(toid, message, from)
   }
 }
