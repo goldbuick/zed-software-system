@@ -11,7 +11,7 @@ import { findplayerforelement } from 'zss/memory/atomics'
 import { boardelementapplycolor } from 'zss/memory/board'
 import {
   bookboardwrite,
-  bookboardobjectsafedelete,
+  bookboardsafedelete,
   bookboardsetlookup,
   bookboardobjectnamedlookupdelete,
   bookelementstatread,
@@ -178,10 +178,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return [false, value]
   },
   everytick(chip) {
-    // headless only gets a single tick to do its magic
-    if (READ_CONTEXT.element?.headless) {
-      chip.command('die')
-    }
     // handle walk movement
     if (
       ispresent(READ_CONTEXT.element?.x) &&
@@ -209,11 +205,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
           'destructible',
         )
       ) {
-        // drop visually
-        READ_CONTEXT.element.headless = true
         // mark target for deletion
-        bookboardobjectsafedelete(
+        bookboardsafedelete(
           READ_CONTEXT.book,
+          READ_CONTEXT.board,
           READ_CONTEXT.element,
           READ_CONTEXT.timestamp,
         )
@@ -239,8 +234,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
     )
     // nuke self
     if (
-      bookboardobjectsafedelete(
+      bookboardsafedelete(
         READ_CONTEXT.book,
+        READ_CONTEXT.board,
         READ_CONTEXT.element,
         READ_CONTEXT.timestamp,
       )

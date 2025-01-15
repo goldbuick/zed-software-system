@@ -141,7 +141,7 @@ export function memoryconverttogadgetlayers(
   for (let i = 0; i < boardobjects.length; ++i) {
     const object = boardobjects[i]
     // skip if marked for removal or headless
-    if (ispresent(object.removed) || ispresent(object.headless)) {
+    if (ispresent(object.removed)) {
       continue
     }
 

@@ -290,7 +290,6 @@ function applyelementstats(codepage: CODE_PAGE, element: BOARD_ELEMENT) {
         // @ts-expect-error - we are doing this on purpose
         element[key] = stats[key]
         break
-      case 'canpush':
       case 'ispushable':
         element.pushable = 1
         break
@@ -308,7 +307,6 @@ function applyelementstats(codepage: CODE_PAGE, element: BOARD_ELEMENT) {
       case 'isbullet':
         element.collision = COLLISION.ISBULLET
         break
-      case 'canshoot':
       case 'isdestructible':
         element.destructible = 1
         break
