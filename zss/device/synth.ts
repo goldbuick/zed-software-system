@@ -550,11 +550,12 @@ function createsynth() {
     idx: number,
     starttime: number,
     invoke: SYNTH_INVOKE,
+    withendofpattern = true,
   ) {
     let endtime = starttime
 
     // build tone.js pattern
-    const pattern = invokeplay(idx, starttime, invoke)
+    const pattern = invokeplay(idx, starttime, invoke, withendofpattern)
 
     // track endtime
     const last = pattern[pattern.length - 1]

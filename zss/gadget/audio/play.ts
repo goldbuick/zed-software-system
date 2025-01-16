@@ -76,9 +76,12 @@ export type SYNTH_NOTE = null | string | number
 export type SYNTH_NOTE_ON = [number, string, SYNTH_NOTE]
 export type SYNTH_NOTE_ENTRY = [number, SYNTH_NOTE_ON]
 
-let endofplaymarker = 0
-
-export function invokeplay(synth: number, starttime: number, play: SYNTH_OP[]) {
+export function invokeplay(
+  synth: number,
+  starttime: number,
+  play: SYNTH_OP[],
+  withendofpattern = true,
+) {
   // translate ops into time, note pairs
   let time = starttime
   let octave = 3
@@ -219,8 +222,9 @@ export function invokeplay(synth: number, starttime: number, play: SYNTH_OP[]) {
   // write final note
   writenote()
 
-  // write end of pattern
-  pattern.push([time, [--endofplaymarker, '8n', -1]])
+  if (withendofpattern) {
+    pattern.push([time, [synth, '8n', -1]])
+  }
 
   return pattern
 }
