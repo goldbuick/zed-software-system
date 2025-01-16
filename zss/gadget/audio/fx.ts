@@ -3,7 +3,7 @@ import {
   Distortion,
   FeedbackDelay,
   Phaser,
-  Reverb,
+  // Reverb,
   Time,
   Vibrato,
 } from 'tone'
@@ -12,10 +12,10 @@ export const ECHO_OFF = Time('256n').toSeconds()
 export const ECHO_ON = Time('8n').toSeconds()
 
 export function createfx() {
-  const reverb = new Reverb()
-  reverb.set({
-    wet: 0,
-  })
+  // const reverb = new Reverb()
+  // reverb.set({
+  //   wet: 0,
+  // })
 
   const echo = new FeedbackDelay()
   echo.set({
@@ -52,7 +52,7 @@ export function createfx() {
   })
 
   return {
-    reverb,
+    // reverb,
     echo,
     chorus,
     phaser,

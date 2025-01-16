@@ -5,6 +5,8 @@ import { MEMORY_LABEL, memorytickobject } from 'zss/memory'
 import { listelementsbykind, listnamedelements } from 'zss/memory/atomics'
 import { boardterrainsetfromkind } from 'zss/memory/board'
 import {
+  bookboardcheckblockedobject,
+  bookboardcheckmoveobject,
   bookboardelementreadname,
   bookboardmoveobject,
   bookboardobjectnamedlookupdelete,
@@ -203,11 +205,19 @@ export const BOARD_FIRMWARE = createfirmware()
     // read
     const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
 
-    // make sure lookup is created
-    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
-
-    // write new element
-    bookboardwrite(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
+    // check if we are blocked ?
+    const blocked = bookboardcheckblockedobject(
+      READ_CONTEXT.book,
+      READ_CONTEXT.board,
+      COLLISION.ISWALK, // this should be the collision of the thing being plotted
+      dir,
+    )
+    if (!blocked) {
+      // make sure lookup is created
+      bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+      // write new element
+      bookboardwrite(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
+    }
     return 0
   })
   .command('shootwith', (chip, words) => {

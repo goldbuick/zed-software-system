@@ -1152,25 +1152,25 @@ const synthdevice = createdevice('synth', [], (message) => {
                     }
                     break
                   }
-                  case 'reverb': {
-                    const reverb = fx as Reverb
-                    switch (config) {
-                      case 'decay':
-                        reverb.decay = value
-                        break
-                      case 'predelay':
-                        reverb.preDelay = value
-                        break
-                      default:
-                        api_error(
-                          synthdevice,
-                          message.target,
-                          `unknown ${fxname} config ${config}`,
-                        )
-                        break
-                    }
-                    break
-                  }
+                  // case 'reverb': {
+                  //   const reverb = fx as Reverb
+                  //   switch (config) {
+                  //     case 'decay':
+                  //       reverb.decay = value
+                  //       break
+                  //     case 'predelay':
+                  //       reverb.preDelay = value
+                  //       break
+                  //     default:
+                  //       api_error(
+                  //         synthdevice,
+                  //         message.target,
+                  //         `unknown ${fxname} config ${config}`,
+                  //       )
+                  //       break
+                  //   }
+                  //   break
+                  // }
                 }
               }
               break

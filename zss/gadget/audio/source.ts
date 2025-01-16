@@ -23,7 +23,7 @@ export function createsource(playvolume: Volume) {
     fx.phaser,
     fx.distortion,
     fx.echo,
-    fx.reverb,
+    // fx.reverb,
     playvolume,
   )
 
