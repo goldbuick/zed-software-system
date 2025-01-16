@@ -136,7 +136,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const focus = findplayerforelement(
       READ_CONTEXT.board,
       READ_CONTEXT.element,
-      READ_CONTEXT.fromplayer,
+      READ_CONTEXT.elementfocus,
     )
     if (!ispresent(focus)) {
       return [false, undefined]
@@ -161,7 +161,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const focus = findplayerforelement(
       READ_CONTEXT.board,
       READ_CONTEXT.element,
-      READ_CONTEXT.fromplayer,
+      READ_CONTEXT.elementfocus,
     )
     if (!ispresent(focus)) {
       return [false, value]

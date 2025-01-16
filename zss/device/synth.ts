@@ -29,6 +29,7 @@ import {
   parseplay,
   SYNTH_INVOKE,
   SYNTH_NOTE_ON,
+  SYNTH_SFX_RESET,
 } from 'zss/gadget/audio/play'
 import { createsource } from 'zss/gadget/audio/source'
 import { unmute } from 'zss/gadget/audio/unmute'
@@ -102,10 +103,8 @@ function createsynth() {
   const ttsvolume = new Volume(3)
   ttsvolume.connect(maincompressor)
 
+  // 8tracks
   const SOURCE = [
-    // for sfx
-    createsource(playvolume),
-    // + 8track synths
     createsource(playvolume),
     createsource(playvolume),
     createsource(playvolume),
@@ -574,6 +573,7 @@ function createsynth() {
 
   let pacertime = -1
   let pacercount = 0
+  let bgplayindex = SYNTH_SFX_RESET
   function addplay(mode: number, buffer: string) {
     // parse ops
     const invokes = parseplay(buffer)
@@ -590,14 +590,17 @@ function createsynth() {
       // update count
       pacercount += invokes.length
       const starttime = pacertime
-      for (let i = 0; i < invokes.length; ++i) {
-        const endtime = synthplaystart(1 + i, starttime, invokes[i])
+      for (let i = 0; i < invokes.length && i < SOURCE.length; ++i) {
+        const endtime = synthplaystart(i, starttime, invokes[i])
         pacertime = Math.max(pacertime, endtime)
       }
     } else {
       // handle sfx
       for (let i = 0; i < invokes.length; ++i) {
-        synthplaystart(0, seconds, invokes[i])
+        synthplaystart(bgplayindex++, seconds, invokes[i])
+        if (bgplayindex >= SOURCE.length) {
+          bgplayindex = SYNTH_SFX_RESET
+        }
       }
     }
   }
@@ -1152,25 +1155,25 @@ const synthdevice = createdevice('synth', [], (message) => {
                     }
                     break
                   }
-                  // case 'reverb': {
-                  //   const reverb = fx as Reverb
-                  //   switch (config) {
-                  //     case 'decay':
-                  //       reverb.decay = value
-                  //       break
-                  //     case 'predelay':
-                  //       reverb.preDelay = value
-                  //       break
-                  //     default:
-                  //       api_error(
-                  //         synthdevice,
-                  //         message.target,
-                  //         `unknown ${fxname} config ${config}`,
-                  //       )
-                  //       break
-                  //   }
-                  //   break
-                  // }
+                  case 'reverb': {
+                    const reverb = fx as Reverb
+                    switch (config) {
+                      case 'decay':
+                        reverb.decay = value
+                        break
+                      case 'predelay':
+                        reverb.preDelay = value
+                        break
+                      default:
+                        api_error(
+                          synthdevice,
+                          message.target,
+                          `unknown ${fxname} config ${config}`,
+                        )
+                        break
+                    }
+                    break
+                  }
                 }
               }
               break

@@ -1,6 +1,8 @@
 import * as Tone from 'tone'
 import { isnumber, ispresent } from 'zss/mapping/types'
 
+export const SYNTH_SFX_RESET = 4
+
 export enum SYNTH_OP {
   OFF,
   NOTE_A,

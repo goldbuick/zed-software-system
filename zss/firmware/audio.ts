@@ -13,14 +13,7 @@ import { isnumber } from 'zss/mapping/types'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
-const isfx = [
-  'echo',
-  /*'reverb', */
-  'chorus',
-  'phaser',
-  'distortion',
-  'vibrato',
-]
+const isfx = ['echo', 'reverb', 'chorus', 'phaser', 'distortion', 'vibrato']
 
 function handlesynthplay(idx: number, words: WORD[]) {
   const [buffer] = readargs(words, 0, [ARG_TYPE.STRING])

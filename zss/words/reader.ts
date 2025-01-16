@@ -13,7 +13,6 @@ import { CATEGORY, COLLISION, PT, WORD } from './types'
 export const READ_CONTEXT = {
   // useful state
   timestamp: 0,
-  fromplayer: '',
   // targets & lookups
   book: undefined as MAYBE<BOOK>,
   board: undefined as MAYBE<BOARD>,
@@ -21,6 +20,7 @@ export const READ_CONTEXT = {
   element: undefined as MAYBE<BOARD_ELEMENT>,
   elementid: '',
   elementisplayer: false,
+  elementfocus: '',
   // for commands to use readargs
   words: [] as WORD[],
   get: undefined as MAYBE<(name: string) => any>,
@@ -145,7 +145,7 @@ export function readargs<T extends ARG_TYPES>(
               ? boardevaldir(
                   READ_CONTEXT.board,
                   READ_CONTEXT.element,
-                  READ_CONTEXT.fromplayer,
+                  READ_CONTEXT.elementfocus,
                   dir,
                   pt,
                 )
@@ -257,7 +257,7 @@ export function readargs<T extends ARG_TYPES>(
             ? boardevaldir(
                 READ_CONTEXT.board,
                 READ_CONTEXT.element,
-                READ_CONTEXT.fromplayer,
+                READ_CONTEXT.elementfocus,
                 dir,
                 pt,
               )
