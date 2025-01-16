@@ -8,7 +8,7 @@ import {
   bookboardelementreadname,
   bookboardmoveobject,
   bookboardobjectnamedlookupdelete,
-  bookboardobjectsafedelete,
+  bookboardsafedelete,
   bookboardsetlookup,
   bookboardwrite,
   bookboardwritebulletobject,
@@ -38,24 +38,9 @@ function sendinteraction(
 
   // object elements will have ids
   const from = fromid ?? frompt
+
   if (ispresent(toid) && ispresent(from)) {
     chip.send(toid, message, from)
-  }
-}
-
-function bonkelement(
-  book: MAYBE<BOOK>,
-  board: MAYBE<BOARD>,
-  blocked: MAYBE<BOARD_ELEMENT>,
-  dest: PT,
-) {
-  if (ispresent(blocked?.id)) {
-    // mark headless
-    blocked.headless = true
-    // drop from luts
-    bookboardobjectnamedlookupdelete(book, board, blocked)
-  } else {
-    boardterrainsetfromkind(board, dest, 'empty')
   }
 }
 
@@ -71,7 +56,6 @@ export function moveobject(
     sendinteraction(chip, blocked, chip.id(), 'thud')
     if (target.kind === MEMORY_LABEL.PLAYER) {
       sendinteraction(chip, chip.id(), blocked, 'touch')
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     } else if (target.collision === COLLISION.ISBULLET) {
       sendinteraction(chip, chip.id(), blocked, 'shot')
     } else {
@@ -80,9 +64,20 @@ export function moveobject(
     // delete destructible elements
     const blockedkind = bookelementkindread(book, blocked)
     if (blocked.destructible ?? blockedkind?.destructible) {
-      bonkelement(book, board, blocked, dest)
+      if (ispresent(blocked?.id)) {
+        // mark target for deletion
+        bookboardsafedelete(
+          READ_CONTEXT.book,
+          READ_CONTEXT.board,
+          blocked,
+          READ_CONTEXT.timestamp,
+        )
+      } else {
+        // overwrite terrain with empty
+        boardterrainsetfromkind(board, dest, 'empty')
+      }
+      return true
     }
-
     return false
   }
   return true
@@ -131,12 +126,10 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 
     // determine outcome
     if (
-      bullet.x === READ_CONTEXT.element.x &&
-      bullet.y === READ_CONTEXT.element.y
+      bullet.x !== READ_CONTEXT.element.x ||
+      bullet.y !== READ_CONTEXT.element.y
     ) {
-      // if we run into something set the headless flag
-      bullet.headless = true
-    } else {
+      // if we run into something skip
       // otherwise add to bucket
       chip.bucket(bullet.id)
     }
@@ -189,8 +182,9 @@ export const BOARD_FIRMWARE = createfirmware()
           )
           // hit with delete
           if (
-            !bookboardobjectsafedelete(
+            !bookboardsafedelete(
               READ_CONTEXT.book,
+              READ_CONTEXT.board,
               element,
               READ_CONTEXT.timestamp,
             )

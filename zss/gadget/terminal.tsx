@@ -12,6 +12,7 @@ import {
   RUNTIME,
   STATS_DEV,
 } from 'zss/config'
+import { SOFTWARE } from 'zss/device/session'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import decoimageurl from 'zss/gadget/fx/scratches.gif'
 import { useTexture } from 'zss/gadget/usetexture'
@@ -52,7 +53,7 @@ export function Terminal() {
   // detect gpu info
   const [gputier, setgputier] = useState<TierResult>()
   useEffect(() => {
-    doasync('gpudetect', async () => {
+    doasync(SOFTWARE, async () => {
       const result = await getGPUTier()
       setgputier(result)
     })

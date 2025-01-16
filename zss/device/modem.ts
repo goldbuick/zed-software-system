@@ -58,15 +58,6 @@ export function useModem() {
   return modem
 }
 
-let defaultplayer = ''
-export function modemwriteplayer(player: string) {
-  defaultplayer = player
-}
-
-export function modemreadplayer() {
-  return defaultplayer
-}
-
 // tape editor uses this to wait for shared value to populate
 // scroll hyperlinks use this to wait for shared value to populate
 
@@ -180,6 +171,9 @@ let joined = false
 const doc = getYjsDoc(store)
 
 const modem = createdevice('modem', ['second'], (message) => {
+  if (!modem.session(message)) {
+    return
+  }
   switch (message.target) {
     case 'second':
       // send join message
@@ -223,7 +217,7 @@ const modem = createdevice('modem', ['second'], (message) => {
             modem.emit('modem:sync', modemmessage(syncEncoder))
           }
         } catch (err: any) {
-          api_error(modem.name(), 'sync', err.message)
+          api_error(modem, 'sync', err.message)
         }
       }
       break

@@ -1,6 +1,7 @@
 import { createRoot, events, Canvas } from '@react-three/fiber'
 import debounce from 'debounce'
 import { Intersection, Plane, Vector3 } from 'three'
+import { makeeven } from 'zss/mapping/number'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 
 import { App } from './app'
@@ -65,7 +66,9 @@ if (ispresent(engine)) {
   const root = createRoot(engine)
 
   // Configure the root, inject events optionally, set camera, etc
-  const applyconfig = (width: number, height: number) => {
+  const applyconfig = (maybewidth: number, maybeheight: number) => {
+    const width = makeeven(maybewidth)
+    const height = makeeven(maybeheight)
     root.configure({
       ...deepcopy({
         flat: true,

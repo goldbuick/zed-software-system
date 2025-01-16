@@ -1,5 +1,6 @@
 import { maptostring } from 'zss/chip'
 import { tape_info } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
   gadgetcheckscroll,
@@ -31,7 +32,7 @@ export const GADGET_FIRMWARE = createfirmware({
   tick() {
     const withname = READ_CONTEXT.element?.name ?? 'scroll'
     gadgetpanel(
-      READ_CONTEXT.player,
+      READ_CONTEXT.elementid,
       'scroll',
       PANEL_TYPE.SCROLL,
       undefined,
@@ -39,7 +40,7 @@ export const GADGET_FIRMWARE = createfirmware({
     )
   },
   everytick() {
-    const ticker = gadgetcheckscroll(READ_CONTEXT.player)
+    const ticker = gadgetcheckscroll(READ_CONTEXT.elementid)
     if (ticker && ispresent(READ_CONTEXT.element)) {
       READ_CONTEXT.element.tickertext = ticker
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
@@ -51,7 +52,7 @@ export const GADGET_FIRMWARE = createfirmware({
         COLOR.WHITE,
         COLOR.ONCLEAR,
       )
-      tape_info(`$${COLOR[display.color]}$${display.char}`, ticker)
+      tape_info(SOFTWARE, `$${COLOR[display.color]}$${display.char}`, ticker)
     }
   },
 })
@@ -83,6 +84,7 @@ export const GADGET_FIRMWARE = createfirmware({
         break
       case 'self':
         chip.message({
+          session: SOFTWARE.session(),
           id: createsid(),
           sender: chip.id(),
           target: label,
@@ -125,7 +127,7 @@ export const GADGET_FIRMWARE = createfirmware({
   })
   .command('text', (_, words) => {
     const text = words.map(maptostring).join('')
-    gadgettext(READ_CONTEXT.player, text)
+    gadgettext(READ_CONTEXT.elementid, text)
     return 0
   })
   .command('hyperlink', (chip, args) => {
@@ -133,7 +135,7 @@ export const GADGET_FIRMWARE = createfirmware({
     const [labelword, inputword, ...words] = args
     const label = maptostring(labelword)
     const input = maptostring(inputword)
-    gadgethyperlink(READ_CONTEXT.player, chip, label, input, words)
+    gadgethyperlink(READ_CONTEXT.elementid, chip, label, input, words)
     return 0
   })
   // ---
@@ -145,13 +147,13 @@ export const GADGET_FIRMWARE = createfirmware({
         ARG_TYPE.MAYBE_NAME,
         ARG_TYPE.MAYBE_NUMBER,
       ])
-      gadgetpanel(READ_CONTEXT.player, edge, edgeConst, size, name)
+      gadgetpanel(READ_CONTEXT.elementid, edge, edgeConst, size, name)
     } else if (ispresent(edgeConst)) {
       const [size, name] = readargs(words, 1, [
         ARG_TYPE.MAYBE_NUMBER,
         ARG_TYPE.MAYBE_NAME,
       ])
-      gadgetpanel(READ_CONTEXT.player, edge, edgeConst, size, name)
+      gadgetpanel(READ_CONTEXT.elementid, edge, edgeConst, size, name)
     }
     return 0
   })

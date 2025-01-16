@@ -8,6 +8,9 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import { registerreadplayer } from './register'
 
 const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
+  if (!gadgetclientdevice.session(message)) {
+    return
+  }
   const { desync } = useGadgetClient.getState()
   switch (message.target) {
     case 'reset':

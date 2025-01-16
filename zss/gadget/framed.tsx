@@ -4,6 +4,7 @@ import { Group, Vector2 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { vm_input } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import {
   INPUT,
@@ -22,11 +23,6 @@ import { UserInput, UserInputMods } from './userinput'
 
 const focus = new Vector2(0, 0)
 
-type FramedProps = {
-  width: number
-  height: number
-}
-
 function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   let bits = 0
   if (mods.alt) {
@@ -39,8 +35,13 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
     bits |= INPUT_SHIFT
   }
   if (ispid(player)) {
-    vm_input('framed', input, bits, player)
+    vm_input(SOFTWARE, input, bits, player)
   }
+}
+
+type FramedProps = {
+  width: number
+  height: number
 }
 
 export function Framed({ width, height }: FramedProps) {

@@ -593,18 +593,33 @@ export function bookboardsetlookup(book: MAYBE<BOOK>, board: MAYBE<BOARD>) {
   board.named = named
 }
 
-export function bookboardobjectsafedelete(
+export function bookboardsafedelete(
   book: MAYBE<BOOK>,
-  object: MAYBE<BOARD_ELEMENT>,
+  board: MAYBE<BOARD>,
+  element: MAYBE<BOARD_ELEMENT>,
   timestamp: number,
 ) {
-  const name = bookboardelementreadname(book, object)
-  if (name !== 'player' && ispresent(object)) {
-    // mark for cleanup
-    object.removed = timestamp
-    return true
+  if (
+    !ispresent(element) ||
+    NAME(bookboardelementreadname(book, element)) === 'player'
+  ) {
+    return false
   }
-  return false
+
+  const id = element.id ?? ''
+  const x = element.x ?? 0
+  const y = element.y ?? 0
+
+  if (id) {
+    // mark for cleanup
+    element.removed = timestamp
+    // drop from luts
+    bookboardobjectnamedlookupdelete(book, board, element)
+  } else {
+    boardterrainsetfromkind(board, { x, y }, 'empty')
+  }
+
+  return true
 }
 
 export function bookboardobjectnamedlookupdelete(

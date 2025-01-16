@@ -1,5 +1,6 @@
 import { unpack, pack } from 'msgpackr'
 import { api_error } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
 
 export type FORMAT_OBJECT = [string?, any?, ...FORMAT_OBJECT[]]
@@ -79,7 +80,7 @@ export function unformatobject<T>(
 
     return obj as T
   } catch (err: any) {
-    api_error('format', 'binary', err.message)
+    api_error(SOFTWARE, 'binary', err.message)
   }
 }
 
@@ -102,7 +103,7 @@ export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
     const data = deepcopy(entry)
     return pack(data)
   } catch (err: any) {
-    api_error('format', 'binary', err.message)
+    api_error(SOFTWARE, 'binary', err.message)
   }
 }
 
@@ -112,6 +113,6 @@ export function unpackbinary(binary: Uint8Array): MAYBE<FORMAT_OBJECT> {
     // console.info('read', deepcopy(data))
     return data
   } catch (err: any) {
-    api_error('format', 'binary', err.message)
+    api_error(SOFTWARE, 'binary', err.message)
   }
 }

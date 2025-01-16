@@ -43,7 +43,6 @@ export type BOARD_ELEMENT = {
   category?: CATEGORY
   kinddata?: BOARD_ELEMENT
   // cleanup
-  headless?: boolean
   removed?: number
 }
 

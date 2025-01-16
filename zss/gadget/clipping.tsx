@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useFrame } from '@react-three/fiber'
 import { createContext, useContext, useRef, useState } from 'react'
 import { Group, Plane, Vector3 } from 'three'

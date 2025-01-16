@@ -1,12 +1,13 @@
 import { maptostring } from 'zss/chip'
 import { vm_endgame } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { memoryrun } from 'zss/memory'
 import {
   bookboardobjectnamedlookupdelete,
-  bookboardobjectsafedelete,
+  bookboardsafedelete,
 } from 'zss/memory/book'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 
@@ -50,17 +51,9 @@ export const LIFECYCLE_FIRMWARE = createfirmware()
     return 0
   })
   .command('die', (chip) => {
-    // drop from lookups if not headless
-    if (READ_CONTEXT.element?.headless) {
-      bookboardobjectnamedlookupdelete(
-        READ_CONTEXT.book,
-        READ_CONTEXT.board,
-        READ_CONTEXT.element,
-      )
-    }
-    // mark target for deletion
-    bookboardobjectsafedelete(
+    bookboardsafedelete(
       READ_CONTEXT.book,
+      READ_CONTEXT.board,
       READ_CONTEXT.element,
       READ_CONTEXT.timestamp,
     )
@@ -69,7 +62,9 @@ export const LIFECYCLE_FIRMWARE = createfirmware()
     return 0
   })
   .command('endgame', () => {
-    vm_endgame('element', READ_CONTEXT.player)
+    if (READ_CONTEXT.elementisplayer) {
+      vm_endgame(SOFTWARE, READ_CONTEXT.elementid)
+    }
     return 0
   })
   .command('run', (_, words) => {

@@ -7,49 +7,77 @@ import {
   TAPE_ROW,
   useTape,
 } from 'zss/gadget/data/state'
+import { pickwith } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { isarray, isboolean, ispresent } from 'zss/mapping/types'
 
-createdevice('tape', [], (message) => {
-  const { layout, terminal, editor } = useTape.getState()
+const messagecrew: string[] = [
+  '$brown$153',
+  '$purple$5',
+  '$green$42',
+  '$ltgray$94',
+  '$white$24',
+  '$white$25',
+  '$white$26',
+  '$white$27',
+  '$white$16',
+  '$white$17',
+  '$white$30',
+  '$white$31',
+  '$red$234',
+  '$cyan$227',
+  '$dkpurple$227',
+]
 
-  function terminaladdmessage(message: MESSAGE) {
-    let logs: TAPE_ROW[] = [
-      [createsid(), message.target, message.sender, ...message.data],
-      ...terminal.logs,
-    ]
-    if (logs.length > TAPE_MAX_LINES) {
-      logs = logs.slice(0, TAPE_MAX_LINES)
-    }
-    useTape.setState((state) => ({
-      terminal: {
-        ...state.terminal,
-        logs,
-      },
-    }))
+function terminaladdmessage(message: MESSAGE) {
+  const { terminal } = useTape.getState()
+  let logs: TAPE_ROW[] = [
+    [
+      createsid(),
+      message.target,
+      pickwith(message.sender, messagecrew),
+      ...message.data,
+    ],
+    ...terminal.logs,
+  ]
+  if (logs.length > TAPE_MAX_LINES) {
+    logs = logs.slice(0, TAPE_MAX_LINES)
   }
+  useTape.setState((state) => ({
+    terminal: {
+      ...state.terminal,
+      logs,
+    },
+  }))
+}
 
-  function terminalinclayout(inc: boolean) {
-    const step = inc ? 1 : -1
-    let nextlayout = (layout as number) + step
-    if (nextlayout < 0) {
-      nextlayout += TAPE_DISPLAY.MAX
-    }
-    if (nextlayout >= (TAPE_DISPLAY.MAX as number)) {
-      nextlayout -= TAPE_DISPLAY.MAX
-    }
-    if (!editor.open) {
-      switch (nextlayout as TAPE_DISPLAY) {
-        case TAPE_DISPLAY.SPLIT_Y:
-        case TAPE_DISPLAY.SPLIT_Y_ALT:
-          // skip over these to right
-          nextlayout = TAPE_DISPLAY.TOP
-          break
-      }
-    }
-    useTape.setState({ layout: nextlayout })
+function terminalinclayout(inc: boolean) {
+  const { layout, editor } = useTape.getState()
+  const step = inc ? 1 : -1
+  let nextlayout = (layout as number) + step
+  if (nextlayout < 0) {
+    nextlayout += TAPE_DISPLAY.MAX
   }
+  if (nextlayout >= (TAPE_DISPLAY.MAX as number)) {
+    nextlayout -= TAPE_DISPLAY.MAX
+  }
+  if (!editor.open) {
+    switch (nextlayout as TAPE_DISPLAY) {
+      case TAPE_DISPLAY.SPLIT_Y:
+      case TAPE_DISPLAY.SPLIT_Y_ALT:
+        // skip over these to right
+        nextlayout = TAPE_DISPLAY.TOP
+        break
+    }
+  }
+  useTape.setState({ layout: nextlayout })
+}
 
+const tape = createdevice('tape', [], (message) => {
+  if (!tape.session(message)) {
+    return
+  }
+  const { terminal } = useTape.getState()
   switch (message.target) {
     case 'info':
       if (terminal.level >= TAPE_LOG_LEVEL.INFO) {

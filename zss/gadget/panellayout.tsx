@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { RUNTIME } from 'zss/config'
 import { gadgetserver_clearscroll } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
 import { useEqual, useGadgetClient } from 'zss/gadget/data/state'
 import { PANEL_TYPE, PANEL_ITEM } from 'zss/gadget/data/types'
 import { hub } from 'zss/hub'
@@ -189,7 +190,7 @@ export function PanelLayout() {
         },
         sendclose() {
           // send a message to trigger the close
-          gadgetserver_clearscroll('gadget', player)
+          gadgetserver_clearscroll(SOFTWARE, player)
         },
         didclose() {
           // clear scroll state

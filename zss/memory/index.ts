@@ -1,11 +1,12 @@
 import { objectKeys } from 'ts-extras'
 import { createchipid, MESSAGE } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
-import { api_error, tape_debug, tape_info, vm_flush } from 'zss/device/api'
+import { api_error, tape_debug, tape_info } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
 import { pickwith } from 'zss/mapping/array'
-import { createpid, ispid } from 'zss/mapping/guid'
+import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
@@ -51,8 +52,10 @@ export enum MEMORY_LABEL {
 }
 
 const MEMORY = {
-  // default player for aggro
-  defaultplayer: createpid(),
+  // unique id for messages
+  session: createsid(),
+  // player id in charge of vm
+  operator: '',
   // active software
   software: {
     main: '',
@@ -64,13 +67,16 @@ const MEMORY = {
   loaders: new Map<string, string>(),
 }
 
-export function memorysetdefaultplayer(player: string) {
-  // console.info('memorysetdefaultplayer', player)
-  MEMORY.defaultplayer = player
+export function memoryreadsession() {
+  return MEMORY.session
 }
 
-export function memorygetdefaultplayer() {
-  return MEMORY.defaultplayer
+export function memoryreadoperator() {
+  return MEMORY.operator
+}
+
+export function memorywriteoperator(operator: string) {
+  MEMORY.operator = operator
 }
 
 export function memoryreadbooklist(): BOOK[] {
@@ -112,7 +118,7 @@ export function memorycreatesoftwarebook(maybename?: string) {
     book.name = maybename
   }
   memorysetbook(book)
-  tape_info('memory', `created [book] ${book.name}`)
+  tape_info(SOFTWARE, `created [book] ${book.name}`)
   return book
 }
 
@@ -123,7 +129,7 @@ export function memoryensurebookbyname(name: string) {
     book.name = name
   }
   memorysetbook(book)
-  tape_info('memory', `created [book] ${book.name}`)
+  tape_info(SOFTWARE, `created [book] ${book.name}`)
   return book
 }
 
@@ -149,7 +155,7 @@ export function memoryensuresoftwarebook(
 
     // success
     if (ispresent(book)) {
-      tape_info('memory', `opened [book] ${book.name} for ${slot}`)
+      tape_info(SOFTWARE, `opened [book] ${book.name} for ${slot}`)
     }
   }
 
@@ -168,10 +174,6 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
     createtype,
     address,
   )
-
-  if (ispresent(codepage)) {
-    vm_flush('memory', '', MEMORY.defaultplayer)
-  }
 
   // result codepage
   return codepage
@@ -231,7 +233,7 @@ export function memoryclearbook(address: string) {
 export function memoryplayerlogin(player: string): boolean {
   if (!isstring(player) || !player) {
     return api_error(
-      'memory',
+      SOFTWARE,
       'login',
       `failed for playerid ==>${player}<==`,
       player,
@@ -241,7 +243,7 @@ export function memoryplayerlogin(player: string): boolean {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return api_error(
-      'memory',
+      SOFTWARE,
       'login:main',
       `login failed to find book 'main'`,
       player,
@@ -265,7 +267,7 @@ export function memoryplayerlogin(player: string): boolean {
   })
   if (titleboards.length === 0) {
     return api_error(
-      'memory',
+      SOFTWARE,
       'login:title',
       `login failed to find board with '${MEMORY_LABEL.TITLE}' stat`,
       player,
@@ -275,7 +277,7 @@ export function memoryplayerlogin(player: string): boolean {
   const playerkind = bookreadobject(mainbook, MEMORY_LABEL.PLAYER)
   if (!ispresent(playerkind)) {
     return api_error(
-      'memory',
+      SOFTWARE,
       'login:player',
       `login failed to find object type '${MEMORY_LABEL.PLAYER}'`,
       player,
@@ -364,12 +366,14 @@ export function memorytickobject(
   const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
 
   // write context
-  const objectid = object.id ?? ''
   READ_CONTEXT.book = book
   READ_CONTEXT.board = board
   READ_CONTEXT.element = object
-  READ_CONTEXT.isplayer = ispid(objectid)
-  READ_CONTEXT.player = object.player ?? MEMORY.defaultplayer
+  READ_CONTEXT.elementid = object.id ?? ''
+  READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
+  READ_CONTEXT.fromplayer = READ_CONTEXT.elementisplayer
+    ? READ_CONTEXT.elementid
+    : MEMORY.operator
 
   // read cycle
   const kinddata = bookelementkindread(book, object)
@@ -396,8 +400,8 @@ export function memorytickobject(
   }
 
   // clear used input
-  if (READ_CONTEXT.isplayer) {
-    const flags = memoryreadflags(READ_CONTEXT.element.id ?? '')
+  if (READ_CONTEXT.elementisplayer) {
+    const flags = memoryreadflags(READ_CONTEXT.elementid)
     flags.inputcurrent = 0
   }
 
@@ -474,19 +478,20 @@ export function memorycli(player: string, cli = '') {
   const id = `${player}_cli`
 
   // write context
+  READ_CONTEXT.fromplayer = player
   READ_CONTEXT.timestamp = mainbook.timestamp
   READ_CONTEXT.book = mainbook
   READ_CONTEXT.board = bookplayerreadboard(mainbook, player)
   READ_CONTEXT.element = boardobjectread(READ_CONTEXT.board, player)
-  READ_CONTEXT.player = player
-  READ_CONTEXT.isplayer = true
+  READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
+  READ_CONTEXT.elementisplayer = true
 
   // cli invokes get more processing time
   const resethalt = RUNTIME.HALT_AT_COUNT
   RUNTIME.HALT_AT_COUNT = resethalt * 8
 
   // invoke once
-  tape_debug('memory', 'running', mainbook.timestamp, id, cli)
+  tape_debug(SOFTWARE, 'running', mainbook.timestamp, id, cli)
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
 
   RUNTIME.HALT_AT_COUNT = resethalt

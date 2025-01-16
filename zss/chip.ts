@@ -2,6 +2,7 @@ import ErrorStackParser from 'error-stack-parser'
 
 import { RUNTIME } from './config'
 import { api_error } from './device/api'
+import { SOFTWARE } from './device/session'
 import {
   DRIVER_TYPE,
   firmwareeverytick,
@@ -10,7 +11,6 @@ import {
   firmwareset,
   firmwaretick,
 } from './firmware/runner'
-import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
 import {
@@ -25,6 +25,7 @@ import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
 import { WORD, WORD_RESULT } from './words/types'
 
 export type MESSAGE = {
+  session: string
   id: string
   target: string
   data?: any
@@ -53,7 +54,6 @@ export type CHIP = {
   yield: () => void
   jump: (line: number) => void
   sy: () => boolean
-  emit: (target: string, data?: any, player?: string) => void
   send: (chipid: string, message: string, data?: any, player?: string) => void
   lock: (allowed: string) => void
   unlock: () => void
@@ -232,7 +232,7 @@ export function createchip(
           flags.es = 1
         }
       } catch (err: any) {
-        api_error('chip', 'crash', err.message)
+        api_error(SOFTWARE, 'crash', err.message)
         flags.es = 1
       }
 
@@ -254,7 +254,7 @@ export function createchip(
     },
     hm() {
       if (isarray(flags.mg) && isarray(flags.lb)) {
-        const [, target] = flags.mg as [string, string] // unpack message
+        const [target] = flags.mg as [string] // unpack message
         if (ispresent(target)) {
           for (let i = 0; i < flags.lb.length; ++i) {
             const [name, labels] = flags.lb[i] as [string, number[]]
@@ -276,11 +276,8 @@ export function createchip(
     sy() {
       return !!flags.ys || chip.shouldhalt()
     },
-    emit(target, data, player) {
-      hub.emit(target, chip.senderid(), data, player)
-    },
     send(chipid, message, data, player) {
-      hub.emit(`${chip.senderid(chipid)}:${message}`, id, data, player)
+      SOFTWARE.emit(`${chip.senderid(chipid)}:${message}`, data, player)
     },
     lock(allowed) {
       flags.lk = allowed
@@ -294,11 +291,12 @@ export function createchip(
         return
       }
       flags.mg = [
-        incoming.id,
         incoming.target,
         incoming.data,
+        incoming.id,
         incoming.sender,
         incoming.player,
+        incoming.session,
       ]
     },
     zap(label) {
@@ -334,8 +332,7 @@ export function createchip(
       // check for pending messages
       const line = chip.hm()
       if (line && isarray(flags.mg)) {
-        const [, , arg, sender, player] = flags.mg as [
-          string,
+        const [, arg, sender, player] = flags.mg as [
           string,
           any,
           string,

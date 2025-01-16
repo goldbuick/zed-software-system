@@ -26,51 +26,50 @@ function handledataconnection(remote: DataConnection, onopen?: () => void) {
     )
     remote.on('close', () => {
       disconnect()
-      write(peer.name(), `remote ${remote.peer} disconnected`)
+      write(peer, `remote ${remote.peer} disconnected`)
     })
     remote.on('data', forward)
     onopen?.()
   })
   remote.on('error', (error) => {
     const id = node?.id ?? ''
-    api_error(peer.name(), `${id}-${remote.peer}`, error.message)
+    api_error(peer, `${id}-${remote.peer}`, error.message)
   })
 }
 
 function createhost(player: string) {
-  write(peer.name(), 'connecting...')
+  write(peer, 'connecting...')
   node = new Peer(player)
   node.on('open', () => {
     if (ispresent(node)) {
       node.on('connection', handledataconnection)
-      node.on('close', () => write(peer.name(), `closed`))
-      peer_joincode(peer.name(), player)
+      node.on('close', () => write(peer, `closed`))
+      peer_joincode(peer, player)
     }
   })
-  node.on('error', (error) =>
-    api_error(peer.name(), node?.id ?? '', error.message),
-  )
+  node.on('error', (error) => api_error(peer, node?.id ?? '', error.message))
 }
 
 function createjoin(player: string, joincode: string) {
-  write(peer.name(), `connecting to ${joincode}`)
+  write(peer, `connecting to ${joincode}`)
   node = new Peer(player)
   node.on('open', () => {
     if (ispresent(node)) {
-      node.on('close', () => write(peer.name(), `closed`))
+      node.on('close', () => write(peer, `closed`))
       const remote = node.connect(joincode, { reliable: true })
       handledataconnection(remote, () => {
-        write(peer.name(), 'connected')
-        register_ackbooks(peer.name(), player)
+        write(peer, 'connected')
+        register_ackbooks(peer)
       })
     }
   })
-  node.on('error', (error) =>
-    api_error(peer.name(), node?.id ?? '', error.message),
-  )
+  node.on('error', (error) => api_error(peer, node?.id ?? '', error.message))
 }
 
-const peer = createdevice('peer', ['second'], (message) => {
+const peer = createdevice('peer', [], (message) => {
+  if (!peer.session(message)) {
+    return
+  }
   switch (message.target) {
     case 'create':
       if (message.player === registerreadplayer()) {
@@ -83,26 +82,22 @@ const peer = createdevice('peer', ['second'], (message) => {
       break
     case 'joincode': {
       if (message.player === registerreadplayer()) {
-        doasync('peer:joincode', async () => {
+        doasync(peer, async () => {
           if (!ispresent(message.player)) {
             return
           }
           if (!ispresent(node)) {
             // create a host peer
-            peer_create(peer.name(), '', message.player)
+            peer_create(peer, '', message.player)
           } else {
             // draw the code to the console
             const joinurl = `${location.origin}/join/#${node.id}`
             const url = await shorturl(joinurl)
-            writecopyit(peer.name(), url, url)
-            write(peer.name(), 'ready to join')
+            writecopyit(peer, url, url)
+            write(peer, 'ready to join')
           }
         })
       }
-      break
-    }
-    case 'second': {
-      //
       break
     }
   }

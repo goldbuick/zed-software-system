@@ -1,5 +1,5 @@
 import { renderUnicodeCompact } from 'uqr'
-import { tape_info } from 'zss/device/api'
+import { DEVICELIKE, tape_info } from 'zss/device/api'
 
 /**
  * what is writeui ?
@@ -20,46 +20,54 @@ export function bg(color: string, text: string) {
   return `$${color}${text}$ondkblue`
 }
 
-export function write(from: string, text: string) {
-  tape_info(from, text)
+export function write(device: DEVICELIKE, text: string) {
+  tape_info(device, text)
 }
 
-export function writetbar(from: string, width: number) {
+export function writetbar(device: DEVICELIKE, width: number) {
   const CHR_TBAR = CHR_TM.repeat(width)
-  write(from, `${COLOR_EDGE}${CHR_TBAR}`)
+  write(device, `${COLOR_EDGE}${CHR_TBAR}`)
 }
 
-export function writebbar(from: string, width: number) {
+export function writebbar(device: DEVICELIKE, width: number) {
   const CHR_BBAR = CHR_BM.repeat(width)
-  write(from, `${COLOR_EDGE}${CHR_BBAR}`)
+  write(device, `${COLOR_EDGE}${CHR_BBAR}`)
 }
 
-export function writeheader(from: string, header: string) {
-  write(from, `${COLOR_EDGE} ${' '.repeat(header.length)} `)
-  writetbar(from, header.length + 2)
-  write(from, `${COLOR_EDGE} $white${header} `)
-  writebbar(from, header.length + 2)
+export function writeheader(device: DEVICELIKE, header: string) {
+  write(device, `${COLOR_EDGE} ${' '.repeat(header.length)} `)
+  writetbar(device, header.length + 2)
+  write(device, `${COLOR_EDGE} $white${header} `)
+  writebbar(device, header.length + 2)
 }
 
-export function writesection(from: string, section: string) {
-  write(from, `${COLOR_EDGE} ${' '.repeat(section.length)} `)
-  write(from, `${COLOR_EDGE} $gray${section} `)
-  writebbar(from, section.length + 2)
+export function writesection(device: DEVICELIKE, section: string) {
+  write(device, `${COLOR_EDGE} ${' '.repeat(section.length)} `)
+  write(device, `${COLOR_EDGE} $gray${section} `)
+  writebbar(device, section.length + 2)
 }
 
-export function writeoption(from: string, option: string, label: string) {
-  write(from, `${COLOR_EDGE} $white${option} $blue${label}`)
+export function writeoption(device: DEVICELIKE, option: string, label: string) {
+  write(device, `${COLOR_EDGE} $white${option} $blue${label}`)
 }
 
-export function writetext(from: string, text: string) {
-  write(from, `${COLOR_EDGE}$blue${text}`)
+export function writetext(device: DEVICELIKE, text: string) {
+  write(device, `${COLOR_EDGE}$blue${text}`)
 }
 
-export function writehyperlink(from: string, hyperlink: string, label: string) {
-  write(from, `!${hyperlink};${label}`)
+export function writehyperlink(
+  device: DEVICELIKE,
+  hyperlink: string,
+  label: string,
+) {
+  write(device, `!${hyperlink};${label}`)
 }
 
-export function writecopyit(from: string, content: string, label: string) {
+export function writecopyit(
+  device: DEVICELIKE,
+  content: string,
+  label: string,
+) {
   const ascii = renderUnicodeCompact(content).split('\n')
   const rendermap: Record<number, number> = {
     [32]: 32, // space
@@ -75,8 +83,8 @@ export function writecopyit(from: string, content: string, label: string) {
         return `$${chr}`
       })
       .join('')
-    write(from, lineascii)
+    write(device, lineascii)
   }
 
-  write(from, `!copyit ${content};${label}`)
+  write(device, `!copyit ${content};${label}`)
 }

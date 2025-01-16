@@ -1,4 +1,5 @@
 import { api_error } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { FILE_BYTES_PER_COLOR } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
@@ -57,9 +58,9 @@ export const DISPLAY_FIRMWARE = createfirmware()
       )
       if (ispresent(palette)) {
         bookflags.palette = palette.id
-        write('display', `loaded palette ${target}`)
+        write(SOFTWARE, `loaded palette ${target}`)
       } else {
-        api_error('display', 'not-found', `unabled to find palette ${target}`)
+        api_error(SOFTWARE, 'not-found', `unabled to find palette ${target}`)
       }
     }
     return 0
@@ -74,9 +75,9 @@ export const DISPLAY_FIRMWARE = createfirmware()
     )
     if (ispresent(charset)) {
       bookflags.charset = charset.id
-      write('display', `loaded charset ${target}`)
+      write(SOFTWARE, `loaded charset ${target}`)
     } else {
-      api_error('display', 'not-found', `unabled to find charset ${target}`)
+      api_error(SOFTWARE, 'not-found', `unabled to find charset ${target}`)
     }
     return 0
   })

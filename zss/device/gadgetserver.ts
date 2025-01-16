@@ -37,14 +37,15 @@ gadgetstateprovider((player) => {
   return value
 })
 
-const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
+const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
+  if (!gadgetserver.session(message)) {
+    return
+  }
   // get list of active players
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const activelist = mainbook?.activelist ?? []
-
   // cheating here as data is non-WORD compliant
   const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
-
   switch (message.target) {
     case 'tock':
       for (let i = 0; i < activelist.length; ++i) {
@@ -61,14 +62,14 @@ const gadgetserverdevice = createdevice('gadgetserver', ['tock'], (message) => {
         const patch = compare(previous, gadget)
         if (patch.length) {
           gadgetsync[player] = deepcopy(gadget)
-          gadgetclient_patch(gadgetserverdevice.name(), patch, player)
+          gadgetclient_patch(gadgetserver, patch, player)
         }
       }
       break
     case 'desync':
       if (message.player) {
         gadgetclient_reset(
-          gadgetserverdevice.name(),
+          gadgetserver,
           gadgetstate(message.player),
           message.player,
         )

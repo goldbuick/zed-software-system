@@ -1,9 +1,8 @@
-import { api_error } from 'zss/device/api'
+import { api_error, DEVICELIKE } from 'zss/device/api'
 
-export function doasync(label: string, asyncfunc: () => Promise<void>) {
+export function doasync(device: DEVICELIKE, asyncfunc: () => Promise<void>) {
   function logerror(error: Error) {
-    console.error(error)
-    api_error(label, 'crash', error.message)
+    api_error(device, 'crash', error.message)
   }
   asyncfunc().catch(logerror)
 }

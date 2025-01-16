@@ -1,8 +1,13 @@
 import { maptostring } from 'zss/chip'
 import { tape_info } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { createsid } from 'zss/mapping/guid'
-import { MEMORY_LABEL, memoryensuresoftwarebook } from 'zss/memory'
+import {
+  MEMORY_LABEL,
+  memoryensuresoftwarebook,
+  memoryreadsession,
+} from 'zss/memory'
 import { memoryloadercontent, memoryloaderevent } from 'zss/memory/loader'
 import { BINARY_READER, TEXT_READER } from 'zss/memory/types'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
@@ -46,6 +51,7 @@ export const LOADER_FIRMWARE = createfirmware({
   .command('send', (chip, words) => {
     const [target, data] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
     chip.message({
+      session: memoryreadsession(),
       id: createsid(),
       sender: chip.id(),
       target,
@@ -59,14 +65,14 @@ export const LOADER_FIRMWARE = createfirmware({
   })
   .command('text', (_, words) => {
     const text = words.map(maptostring).join(' ')
-    tape_info('$2', text)
+    tape_info(SOFTWARE, '$2', text)
     return 0
   })
   .command('hyperlink', (_, args) => {
     const [labelword, ...words] = args
     const label = maptostring(labelword)
     const hyperlink = words.map(maptostring).join(' ')
-    tape_info('$2', `!${hyperlink};${label}`)
+    tape_info(SOFTWARE, '$2', `!${hyperlink};${label}`)
     return 0
   })
   // ---

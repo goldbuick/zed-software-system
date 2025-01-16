@@ -7,6 +7,7 @@ import {
   vm_cli,
 } from 'zss/device/api'
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
+import { SOFTWARE } from 'zss/device/session'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -216,13 +217,13 @@ export function EditorInput({
             case 'esc':
             case 'escape':
               if (mods.shift || mods.alt || mods.ctrl) {
-                tape_terminal_close('tape', player)
+                tape_terminal_close(SOFTWARE, player)
               } else {
-                tape_editor_close('editor', player)
+                tape_editor_close(SOFTWARE, player)
               }
               break
             case 'tab':
-              tape_terminal_inclayout('editor', !mods.shift, player)
+              tape_terminal_inclayout(SOFTWARE, !mods.shift, player)
               break
             case 'delete':
               if (hasselection) {
@@ -248,7 +249,7 @@ export function EditorInput({
                     if (ispresent(navigator.clipboard)) {
                       navigator.clipboard
                         .writeText(strvalueselected)
-                        .catch((err) => api_error('tape', 'clipboard', err))
+                        .catch((err) => api_error(SOFTWARE, 'clipboard', err))
                     } else {
                       resettoend()
                     }
@@ -265,7 +266,7 @@ export function EditorInput({
                             strvaluesplice(tapeeditor.cursor, 0, cleantext)
                           }
                         })
-                        .catch((err) => api_error('tape', 'clipboard', err))
+                        .catch((err) => api_error(SOFTWARE, 'clipboard', err))
                     } else {
                       resettoend()
                     }
@@ -275,15 +276,15 @@ export function EditorInput({
                       navigator.clipboard
                         .writeText(strvalueselected)
                         .then(() => deleteselection())
-                        .catch((err) => api_error('tape', 'clipboard', err))
+                        .catch((err) => api_error(SOFTWARE, 'clipboard', err))
                     } else {
                       resettoend()
                     }
                     break
                   case 'p':
-                    vm_cli('editor', strvalueselected, player)
+                    vm_cli(SOFTWARE, strvalueselected, player)
                     writetext(
-                      'editor',
+                      SOFTWARE,
                       `running: ${strvalueselected.substring(0, 18)}`,
                     )
                     break

@@ -154,7 +154,6 @@ class ScriptParser extends CstParser {
 
   structured_cmd = this.RULED('structured_cmd', () => {
     this.OR([
-      { ALT: () => this.SUBRULE(this.command_debugger) },
       { ALT: () => this.SUBRULE(this.command_if) },
       { ALT: () => this.SUBRULE(this.command_while) },
       { ALT: () => this.SUBRULE(this.command_repeat) },
@@ -173,10 +172,6 @@ class ScriptParser extends CstParser {
   short_try = this.RULED('short_try', () => {
     this.CONSUME(lexer.query)
     this.SUBRULE(this.words)
-  })
-
-  command_debugger = this.RULED('command_debugger', () => {
-    this.CONSUME(lexer.command_debugger)
   })
 
   command_if = this.RULED('command_if', () => {
