@@ -6,7 +6,6 @@ import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useEqual, useGadgetClient } from 'zss/gadget/data/state'
 import { PANEL_TYPE, PANEL_ITEM } from 'zss/gadget/data/types'
-import { hub } from 'zss/hub'
 import { clamp } from 'zss/mapping/number'
 
 import { Framed } from './framed'
@@ -186,7 +185,7 @@ export function PanelLayout() {
       value={{
         sendmessage(target, data) {
           // send a hyperlink message
-          hub.emit(target, 'gadget', data, player)
+          SOFTWARE.emit(target, data, player)
         },
         sendclose() {
           // send a message to trigger the close

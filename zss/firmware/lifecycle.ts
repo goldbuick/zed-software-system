@@ -4,7 +4,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
-import { memoryrun } from 'zss/memory'
+import { memorycleanup, memoryrun } from 'zss/memory'
 import {
   bookboardobjectnamedlookupdelete,
   bookboardsafedelete,
@@ -63,6 +63,7 @@ export const LIFECYCLE_FIRMWARE = createfirmware()
   })
   .command('endgame', () => {
     if (READ_CONTEXT.elementisplayer) {
+      memorycleanup()
       vm_endgame(SOFTWARE, READ_CONTEXT.elementid)
     }
     return 0

@@ -165,15 +165,14 @@ export function gadgetcheckscroll(player: string) {
 
 export function gadgetpanel(
   player: string,
-  edge: string,
-  edgeConst: PANEL_TYPE,
+  edge: PANEL_TYPE,
   maybesize: MAYBE<number>,
   maybename: MAYBE<string>,
 ) {
   // get state
   const shared = gadgetstate(player)
   const size = maybesize
-  const name = maybename ?? Case.capital(edge)
+  const name = maybename ?? Case.capital(PANEL_TYPE[edge])
 
   const panelState: PANEL | undefined = shared.panels.find(
     (panel: PANEL) => panel.name === name,
@@ -188,7 +187,7 @@ export function gadgetpanel(
       panelState.size = size
     }
   } else {
-    switch (edgeConst) {
+    switch (edge) {
       case PANEL_TYPE.START: {
         tempgadgetstate[player] = initstate()
         break
@@ -201,8 +200,8 @@ export function gadgetpanel(
         const panel: PANEL = {
           id: createsid(),
           name: name,
-          edge: edgeConst,
-          size: size ?? PANEL_TYPE_SIZES[edgeConst],
+          edge: edge,
+          size: size ?? PANEL_TYPE_SIZES[edge],
           text: [],
         }
         shared.panels.push(panel)

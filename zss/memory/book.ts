@@ -632,7 +632,7 @@ export function bookboardobjectnamedlookupdelete(
     if (ispresent(board.lookup) && ispresent(object.x) && ispresent(object.y)) {
       const index = object.x + object.y * BOARD_WIDTH
       if (board.lookup[index] === object.id) {
-        board.lookup.splice(index, 1)
+        board.lookup[index] = undefined
       }
     }
     // remove from named

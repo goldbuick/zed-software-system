@@ -132,6 +132,10 @@ export function register_select(
   device.emit('register:select', book, player)
 }
 
+export function register_relogin(device: DEVICELIKE, player: string) {
+  device.emit('register:relogin', undefined, player)
+}
+
 export function register_nuke(device: DEVICELIKE, player: string) {
   device.emit('register:nuke', undefined, player)
 }

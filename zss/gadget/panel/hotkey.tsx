@@ -1,7 +1,6 @@
 import { useCallback, useContext } from 'react'
+import { UserHotkey, UserInput } from 'zss/gadget/userinput'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
-
-import { UserHotkey, UserInput } from '../userinput'
 
 import {
   PanelItemProps,
