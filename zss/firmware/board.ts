@@ -173,25 +173,18 @@ export const BOARD_FIRMWARE = createfirmware()
         }
       } else {
         // delete object
-        if (ispresent(element.id)) {
-          // make invisible
-          bookboardobjectnamedlookupdelete(
+        if (
+          ispresent(element.id) &&
+          bookboardsafedelete(
             READ_CONTEXT.book,
             READ_CONTEXT.board,
             element,
+            READ_CONTEXT.timestamp,
           )
-          // hit with delete
-          if (
-            !bookboardsafedelete(
-              READ_CONTEXT.book,
-              READ_CONTEXT.board,
-              element,
-              READ_CONTEXT.timestamp,
-            )
-          ) {
-            // bail
-            return
-          }
+        ) {
+          // bail and mark chip as ended
+          element.stopped = 1
+          return
         }
         // create new element
         if (ispt(element)) {

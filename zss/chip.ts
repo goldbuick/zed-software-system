@@ -247,6 +247,7 @@ export function createchip(
       return flags.ps === 1
     },
     shouldtick() {
+      // stopped
       return flags.es === 0 || chip.hm() !== 0
     },
     shouldhalt() {
