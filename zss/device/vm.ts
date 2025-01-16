@@ -94,7 +94,6 @@ const vm = createdevice(
         break
       case 'login':
         if (ispresent(message.player)) {
-          // debugger
           // attempt login
           if (memoryplayerlogin(message.player)) {
             // start tracking

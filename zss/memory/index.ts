@@ -1,7 +1,6 @@
 import { objectKeys } from 'ts-extras'
 import { createchipid, MESSAGE } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
-import { createdevice } from 'zss/device'
 import { api_error, tape_debug, tape_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'

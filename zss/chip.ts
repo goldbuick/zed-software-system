@@ -11,7 +11,6 @@ import {
   firmwareset,
   firmwaretick,
 } from './firmware/runner'
-import { hub } from './hub'
 import { GeneratorBuild } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
 import {
@@ -55,7 +54,6 @@ export type CHIP = {
   yield: () => void
   jump: (line: number) => void
   sy: () => boolean
-  emit: (target: string, data?: any, player?: string) => void
   send: (chipid: string, message: string, data?: any, player?: string) => void
   lock: (allowed: string) => void
   unlock: () => void
@@ -278,11 +276,8 @@ export function createchip(
     sy() {
       return !!flags.ys || chip.shouldhalt()
     },
-    emit(target, data, player) {
-      hub.emit(target, chip.senderid(), data, player)
-    },
     send(chipid, message, data, player) {
-      hub.emit(`${chip.senderid(chipid)}:${message}`, id, data, player)
+      SOFTWARE.emit(`${chip.senderid(chipid)}:${message}`, data, player)
     },
     lock(allowed) {
       flags.lk = allowed

@@ -40,7 +40,6 @@ function sendinteraction(
   const from = fromid ?? frompt
 
   if (ispresent(toid) && ispresent(from)) {
-    console.info('sendinteraction', message, maybeto, toid, from)
     chip.send(toid, message, from)
   }
 }
@@ -57,7 +56,6 @@ export function moveobject(
     sendinteraction(chip, blocked, chip.id(), 'thud')
     if (target.kind === MEMORY_LABEL.PLAYER) {
       sendinteraction(chip, chip.id(), blocked, 'touch')
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     } else if (target.collision === COLLISION.ISBULLET) {
       sendinteraction(chip, chip.id(), blocked, 'shot')
     } else {
