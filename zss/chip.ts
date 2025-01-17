@@ -43,6 +43,7 @@ export type CHIP = {
   set: (name: string, value: any) => any
   get: (name: string) => any
   bucket: (value: any) => void
+  bucketempty: () => void
 
   // lifecycle api
   tick: (cycle: number) => boolean
@@ -194,6 +195,12 @@ export function createchip(
         bucket.push(value)
       } else {
         chip.set('bucket', [value])
+      }
+    },
+    bucketempty() {
+      const bucket = chip.get('bucket')
+      if (isarray(bucket)) {
+        chip.set('bucket', 0)
       }
     },
 
