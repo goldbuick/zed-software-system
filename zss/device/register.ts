@@ -176,7 +176,11 @@ const register = createdevice(
         break
       }
       case 'ackbooks':
-        vm_login(register, myplayerid)
+      case 'relogin':
+        doasync(register, async () => {
+          await waitfor(1000)
+          vm_login(register, myplayerid)
+        })
         break
       case 'acklogin':
         doasync(register, async () => {

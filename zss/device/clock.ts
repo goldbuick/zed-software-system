@@ -2,7 +2,7 @@ import { createdevice } from 'zss/device'
 import { TICK_FPS, TICK_RATE } from 'zss/mapping/tick'
 import { islocked } from 'zss/mapping/url'
 
-const clockdevice = createdevice('clock', [], () => {})
+const clockdevice = createdevice('clock')
 
 // tracking
 let clock = 0

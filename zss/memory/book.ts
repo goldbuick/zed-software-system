@@ -341,21 +341,16 @@ export function bookplayerreadboards(book: MAYBE<BOOK>) {
   return ids.map((address) => bookreadboard(book, address)).filter(ispresent)
 }
 
-export function bookboardcheckmoveobject(
+export function bookboardcheckblockedobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
-  target: MAYBE<BOARD_ELEMENT>,
+  collision: MAYBE<COLLISION>,
   dest: PT,
 ): boolean {
-  const object = boardobjectread(board, target?.id ?? '')
-
   // first pass clipping
   if (
     !ispresent(book) ||
     !ispresent(board) ||
-    !ispresent(object) ||
-    !ispresent(object.x) ||
-    !ispresent(object.y) ||
     !ispresent(board.lookup) ||
     dest.x < 0 ||
     dest.x >= BOARD_WIDTH ||
@@ -365,19 +360,11 @@ export function bookboardcheckmoveobject(
     return true
   }
 
-  // second pass, are we actually trying to move ?
-  if (object.x - dest.x === 0 && object.y - dest.y === 0) {
-    // no interaction due to no movement
-    return true
-  }
-
   // gather meta for move
   const targetidx = dest.x + dest.y * BOARD_WIDTH
-  const targetkind = bookelementkindread(book, object)
-  const targetcollision = object.collision ?? targetkind?.collision
 
   // blocked by an object
-  const maybeobject = boardobjectread(board, board.lookup[targetidx] ?? '')
+  const maybeobject = boardobjectread(board, board.lookup[targetidx] ?? '404')
   if (ispresent(maybeobject)) {
     // for sending interaction messages
     return true
@@ -388,12 +375,28 @@ export function bookboardcheckmoveobject(
   if (ispresent(mayberterrain)) {
     const terrainkind = bookelementkindread(book, mayberterrain)
     const terraincollision = mayberterrain.collision ?? terrainkind?.collision
-    if (checkcollision(targetcollision, terraincollision)) {
-      return true
-    }
+    return checkcollision(collision, terraincollision)
   }
 
   return false
+}
+
+export function bookboardcheckmoveobject(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  target: MAYBE<BOARD_ELEMENT>,
+  dest: PT,
+): boolean {
+  const object = boardobjectread(board, target?.id ?? '')
+  const objectx = object?.x ?? -1
+  const objecty = object?.y ?? -1
+  // first pass, are we actually trying to move ?
+  if (objectx - dest.x === 0 && objecty - dest.y === 0) {
+    // no interaction due to no movement
+    return true
+  }
+  const collsion = bookelementstatread(book, object, 'collision')
+  return bookboardcheckblockedobject(book, board, collsion, dest)
 }
 
 export function bookboardmoveobject(
@@ -632,7 +635,7 @@ export function bookboardobjectnamedlookupdelete(
     if (ispresent(board.lookup) && ispresent(object.x) && ispresent(object.y)) {
       const index = object.x + object.y * BOARD_WIDTH
       if (board.lookup[index] === object.id) {
-        board.lookup.splice(index, 1)
+        board.lookup[index] = undefined
       }
     }
     // remove from named
@@ -658,15 +661,14 @@ function bookboardcleanup(
     const target = targets[i]
     // check that we have an id and are marked for removal
     // 5 seconds after marked for removal
-    if (
-      ispresent(target.id) &&
-      ispresent(target.removed) &&
-      timestamp - target.removed > TICK_FPS * 5
-    ) {
-      // track dropped ids
-      ids.push(target.id)
-      // drop from board
-      boarddeleteobject(board, target.id)
+    if (ispresent(target.id) && ispresent(target.removed)) {
+      const delta = timestamp - target.removed
+      if (delta > TICK_FPS * 5) {
+        // track dropped ids
+        ids.push(target.id)
+        // drop from board
+        boarddeleteobject(board, target.id)
+      }
     }
   }
   return ids
@@ -705,7 +707,7 @@ export function bookboardtick(
   for (let i = 0; i < objects.length; ++i) {
     const object = objects[i]
 
-    // check that we have an id
+    // check that we have an id and not stopped
     if (!ispresent(object.id)) {
       continue
     }
@@ -721,7 +723,7 @@ export function bookboardtick(
     const code = object.code ?? kind?.code ?? ''
 
     // check that we have code to execute
-    if (!code) {
+    if (!code || object.stopped) {
       continue
     }
 

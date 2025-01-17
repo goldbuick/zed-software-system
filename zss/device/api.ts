@@ -132,6 +132,10 @@ export function register_select(
   device.emit('register:select', book, player)
 }
 
+export function register_relogin(device: DEVICELIKE, player: string) {
+  device.emit('register:relogin', undefined, player)
+}
+
 export function register_nuke(device: DEVICELIKE, player: string) {
   device.emit('register:nuke', undefined, player)
 }
@@ -146,10 +150,10 @@ export function synth_tts(device: DEVICELIKE, voice: string, phrase: string) {
 
 export function synth_play(
   device: DEVICELIKE,
-  priority: number,
   buffer: string,
+  bgplay: boolean,
 ) {
-  device.emit('synth:play', [priority, buffer])
+  device.emit('synth:play', [buffer, bgplay])
 }
 
 export function synth_mainvolume(device: DEVICELIKE, volume: number) {

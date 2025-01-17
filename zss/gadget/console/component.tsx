@@ -2,7 +2,6 @@ import { vm_cli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
-import { hub } from 'zss/hub'
 import { totarget } from 'zss/mapping/string'
 import {
   textformatreadedges,
@@ -84,7 +83,7 @@ export function TapeConsole() {
               const input = `#${message} ${data ?? ''}`
               vm_cli(SOFTWARE, input, player)
             } else {
-              hub.emit(`${target}:${message}`, 'gadget', data, player)
+              SOFTWARE.emit(`${target}:${message}`, data, player)
             }
           },
         }}

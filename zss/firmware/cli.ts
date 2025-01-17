@@ -257,12 +257,12 @@ export const CLI_FIRMWARE = createfirmware()
   // ---
   .command('dev', () => {
     vm_flush_op()
-    register_dev(SOFTWARE, READ_CONTEXT.fromplayer)
+    register_dev(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('share', () => {
     vm_flush_op()
-    register_share(SOFTWARE, READ_CONTEXT.fromplayer)
+    register_share(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('bookcreate', (chip, words) => {
@@ -287,7 +287,7 @@ export const CLI_FIRMWARE = createfirmware()
         SOFTWARE,
         'bookopen',
         `book ${name} not found`,
-        READ_CONTEXT.fromplayer,
+        READ_CONTEXT.elementfocus,
       )
     }
     return 0
@@ -340,14 +340,14 @@ export const CLI_FIRMWARE = createfirmware()
         codepage.id,
         type,
         `${name} - ${mainbook.name}`,
-        READ_CONTEXT.fromplayer,
+        READ_CONTEXT.elementfocus,
       )
     } else {
       api_error(
         SOFTWARE,
         'pageopen',
         `page ${page} not found`,
-        READ_CONTEXT.fromplayer,
+        READ_CONTEXT.elementfocus,
       )
     }
     return 0
@@ -457,21 +457,21 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('nuke', () => {
-    register_nuke(SOFTWARE, READ_CONTEXT.fromplayer)
+    register_nuke(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('joincode', () => {
-    peer_joincode(SOFTWARE, READ_CONTEXT.fromplayer)
+    peer_joincode(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('chat', (_, words) => {
     const [maybechannel] = readargs(words, 0, [ARG_TYPE.NAME])
     switch (NAME(maybechannel)) {
       default:
-        chat_connect(SOFTWARE, maybechannel, READ_CONTEXT.fromplayer)
+        chat_connect(SOFTWARE, maybechannel, READ_CONTEXT.elementfocus)
         break
       case 'close':
-        chat_disconnect(SOFTWARE, READ_CONTEXT.fromplayer)
+        chat_disconnect(SOFTWARE, READ_CONTEXT.elementfocus)
         break
     }
     return 0
@@ -480,10 +480,14 @@ export const CLI_FIRMWARE = createfirmware()
     const [maybestreamkey] = readargs(words, 0, [ARG_TYPE.NAME])
     switch (NAME(maybestreamkey)) {
       default:
-        broadcast_startstream(SOFTWARE, maybestreamkey, READ_CONTEXT.fromplayer)
+        broadcast_startstream(
+          SOFTWARE,
+          maybestreamkey,
+          READ_CONTEXT.elementfocus,
+        )
         break
       case 'stop':
-        broadcast_stopstream(SOFTWARE, READ_CONTEXT.fromplayer)
+        broadcast_stopstream(SOFTWARE, READ_CONTEXT.elementfocus)
         break
     }
     return 0

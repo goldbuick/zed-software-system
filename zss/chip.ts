@@ -38,16 +38,17 @@ export type CHIP = {
   halt: () => void
   // id
   id: () => string
-  senderid: (maybeid?: string) => string
 
   // state api
   set: (name: string, value: any) => any
   get: (name: string) => any
   bucket: (value: any) => void
+  bucketempty: () => void
 
   // lifecycle api
   tick: (cycle: number) => boolean
   isended: () => boolean
+  isfirstpulse: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
   hm: () => number
@@ -159,6 +160,10 @@ export function createchip(
     return commandinvoke(chip, args)
   }
 
+  function senderid(maybeid = id) {
+    return `vm:${maybeid ?? id}`
+  }
+
   const chip: CHIP = {
     halt() {
       memoryclearflags(mem)
@@ -167,10 +172,6 @@ export function createchip(
     id() {
       return id
     },
-    senderid(maybeid = id) {
-      return `vm:${maybeid ?? id}`
-    },
-
     // internal state api
     set(name, value) {
       const [result, resultvalue] = firmwareset(driver, chip, name, value)
@@ -194,6 +195,12 @@ export function createchip(
         bucket.push(value)
       } else {
         chip.set('bucket', [value])
+      }
+    },
+    bucketempty() {
+      const bucket = chip.get('bucket')
+      if (isarray(bucket)) {
+        chip.set('bucket', 0)
       }
     },
 
@@ -243,7 +250,11 @@ export function createchip(
     isended() {
       return flags.es === 1
     },
+    isfirstpulse() {
+      return flags.ps === 1
+    },
     shouldtick() {
+      // stopped
       return flags.es === 0 || chip.hm() !== 0
     },
     shouldhalt() {
@@ -277,7 +288,7 @@ export function createchip(
       return !!flags.ys || chip.shouldhalt()
     },
     send(chipid, message, data, player) {
-      SOFTWARE.emit(`${chip.senderid(chipid)}:${message}`, data, player)
+      SOFTWARE.emit(`${senderid(chipid)}:${message}`, data, player)
     },
     lock(allowed) {
       flags.lk = allowed

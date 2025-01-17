@@ -369,11 +369,14 @@ export function memorytickobject(
   READ_CONTEXT.book = book
   READ_CONTEXT.board = board
   READ_CONTEXT.element = object
+
   READ_CONTEXT.elementid = object.id ?? ''
   READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
-  READ_CONTEXT.fromplayer = READ_CONTEXT.elementisplayer
+
+  const playerfromelement = READ_CONTEXT.element.player ?? MEMORY.operator
+  READ_CONTEXT.elementfocus = READ_CONTEXT.elementisplayer
     ? READ_CONTEXT.elementid
-    : MEMORY.operator
+    : playerfromelement
 
   // read cycle
   const kinddata = bookelementkindread(book, object)
@@ -478,13 +481,13 @@ export function memorycli(player: string, cli = '') {
   const id = `${player}_cli`
 
   // write context
-  READ_CONTEXT.fromplayer = player
   READ_CONTEXT.timestamp = mainbook.timestamp
   READ_CONTEXT.book = mainbook
   READ_CONTEXT.board = bookplayerreadboard(mainbook, player)
   READ_CONTEXT.element = boardobjectread(READ_CONTEXT.board, player)
   READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
   READ_CONTEXT.elementisplayer = true
+  READ_CONTEXT.elementfocus = READ_CONTEXT.elementid
 
   // cli invokes get more processing time
   const resethalt = RUNTIME.HALT_AT_COUNT

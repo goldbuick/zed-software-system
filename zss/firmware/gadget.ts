@@ -1,3 +1,4 @@
+import Case from 'case'
 import { maptostring } from 'zss/chip'
 import { tape_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -29,15 +30,13 @@ export const GADGET_FIRMWARE = createfirmware({
     // return has unhandled
     return [false, undefined]
   },
-  tick() {
-    const withname = READ_CONTEXT.element?.name ?? 'scroll'
-    gadgetpanel(
-      READ_CONTEXT.elementid,
-      'scroll',
-      PANEL_TYPE.SCROLL,
-      undefined,
-      withname,
-    )
+  tick(chip) {
+    // if player, first tick we default to #gadget right
+    const edge = chip.isfirstpulse() ? PANEL_TYPE.RIGHT : PANEL_TYPE.SCROLL
+    // use name from element, fallback to edge name
+    const withname =
+      READ_CONTEXT.element?.name ?? Case.capital(PANEL_TYPE[edge])
+    gadgetpanel(READ_CONTEXT.elementid, edge, undefined, withname)
   },
   everytick() {
     const ticker = gadgetcheckscroll(READ_CONTEXT.elementid)
@@ -140,20 +139,20 @@ export const GADGET_FIRMWARE = createfirmware({
   })
   // ---
   .command('gadget', (_, words) => {
-    const [edge] = readargs(words, 0, [ARG_TYPE.NAME])
-    const edgeConst = PANEL_TYPE_MAP[NAME(edge)]
-    if (edgeConst === PANEL_TYPE.SCROLL) {
+    const [maybeedge] = readargs(words, 0, [ARG_TYPE.NAME])
+    const edge = PANEL_TYPE_MAP[NAME(maybeedge)]
+    if (edge === PANEL_TYPE.SCROLL) {
       const [name, size] = readargs(words, 1, [
         ARG_TYPE.MAYBE_NAME,
         ARG_TYPE.MAYBE_NUMBER,
       ])
-      gadgetpanel(READ_CONTEXT.elementid, edge, edgeConst, size, name)
-    } else if (ispresent(edgeConst)) {
+      gadgetpanel(READ_CONTEXT.elementid, edge, size, name)
+    } else if (ispresent(edge)) {
       const [size, name] = readargs(words, 1, [
         ARG_TYPE.MAYBE_NUMBER,
         ARG_TYPE.MAYBE_NAME,
       ])
-      gadgetpanel(READ_CONTEXT.elementid, edge, edgeConst, size, name)
+      gadgetpanel(READ_CONTEXT.elementid, edge, size, name)
     }
     return 0
   })

@@ -30,6 +30,7 @@ import { write } from 'zss/words/writeui'
 import {
   gadgetserver_clearplayer,
   platform_ready,
+  register_relogin,
   register_savemem,
   tape_debug,
   tape_info,
@@ -110,6 +111,8 @@ const vm = createdevice(
           memoryplayerlogout(message.player)
           // clear ui
           gadgetserver_clearplayer(vm, message.player)
+          // tell register what happened
+          register_relogin(vm, message.player)
         }
         break
       case 'doot':
@@ -221,14 +224,14 @@ const vm = createdevice(
         break
       case 'cli':
         // user input from built-in console
-        if (isstring(message.player)) {
+        if (ispresent(message.player)) {
           memorycli(message.player, message.data)
         }
         break
       case 'loader':
         // user input from built-in console
         // or events from devices
-        if (isstring(message.player) && isarray(message.data)) {
+        if (ispresent(message.player) && isarray(message.data)) {
           const [event, content] = message.data
           if (isstring(event)) {
             if (event === 'file') {

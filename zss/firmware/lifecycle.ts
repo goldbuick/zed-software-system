@@ -4,11 +4,8 @@ import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
-import { memoryrun } from 'zss/memory'
-import {
-  bookboardobjectnamedlookupdelete,
-  bookboardsafedelete,
-} from 'zss/memory/book'
+import { memorycleanup, memoryrun } from 'zss/memory'
+import { bookboardsafedelete } from 'zss/memory/book'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 
 export const LIFECYCLE_FIRMWARE = createfirmware()
@@ -63,6 +60,7 @@ export const LIFECYCLE_FIRMWARE = createfirmware()
   })
   .command('endgame', () => {
     if (READ_CONTEXT.elementisplayer) {
+      memorycleanup()
       vm_endgame(SOFTWARE, READ_CONTEXT.elementid)
     }
     return 0

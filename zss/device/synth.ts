@@ -29,6 +29,7 @@ import {
   parseplay,
   SYNTH_INVOKE,
   SYNTH_NOTE_ON,
+  SYNTH_SFX_RESET,
 } from 'zss/gadget/audio/play'
 import { createsource } from 'zss/gadget/audio/source'
 import { unmute } from 'zss/gadget/audio/unmute'
@@ -102,10 +103,8 @@ function createsynth() {
   const ttsvolume = new Volume(3)
   ttsvolume.connect(maincompressor)
 
+  // 8tracks
   const SOURCE = [
-    // for sfx
-    createsource(playvolume),
-    // + 8track synths
     createsource(playvolume),
     createsource(playvolume),
     createsource(playvolume),
@@ -551,11 +550,12 @@ function createsynth() {
     idx: number,
     starttime: number,
     invoke: SYNTH_INVOKE,
+    withendofpattern = true,
   ) {
     let endtime = starttime
 
     // build tone.js pattern
-    const pattern = invokeplay(idx, starttime, invoke)
+    const pattern = invokeplay(idx, starttime, invoke, withendofpattern)
 
     // track endtime
     const last = pattern[pattern.length - 1]
@@ -574,12 +574,21 @@ function createsynth() {
 
   let pacertime = -1
   let pacercount = 0
-  function addplay(mode: number, buffer: string) {
+  let bgplayindex = SYNTH_SFX_RESET
+  function addplay(buffer: string, bgplay: boolean) {
     // parse ops
     const invokes = parseplay(buffer)
     const seconds = getTransport().seconds
 
-    if (mode) {
+    if (bgplay) {
+      // handle sfx
+      for (let i = 0; i < invokes.length; ++i) {
+        synthplaystart(bgplayindex++, seconds, invokes[i], false)
+        if (bgplayindex >= SOURCE.length) {
+          bgplayindex = SYNTH_SFX_RESET
+        }
+      }
+    } else {
       // handle music
 
       // reset note offset
@@ -590,14 +599,9 @@ function createsynth() {
       // update count
       pacercount += invokes.length
       const starttime = pacertime
-      for (let i = 0; i < invokes.length; ++i) {
-        const endtime = synthplaystart(1 + i, starttime, invokes[i])
+      for (let i = 0; i < invokes.length && i < SOURCE.length; ++i) {
+        const endtime = synthplaystart(i, starttime, invokes[i])
         pacertime = Math.max(pacertime, endtime)
-      }
-    } else {
-      // handle sfx
-      for (let i = 0; i < invokes.length; ++i) {
-        synthplaystart(0, seconds, invokes[i])
       }
     }
   }
@@ -753,13 +757,13 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'play':
       if (isarray(message.data)) {
-        const [mode, buffer] = message.data as [number, string]
+        const [buffer, bgplay] = message.data as [string, boolean]
         if (buffer === '') {
           // stop playback
           synth.stopplay()
         } else {
           // add to playback
-          synth.addplay(mode, buffer)
+          synth.addplay(buffer, bgplay)
         }
       }
       break

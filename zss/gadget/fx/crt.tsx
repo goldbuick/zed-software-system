@@ -73,7 +73,8 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   n += 0.025 * snoise(uv.st * 800.0);
 
   vec2 xn = 2.0 * (uv.st - 0.5);
-  vec2 edge = bendy(xn, 0.0091 * n, 0.0011 * -n);
+  float fz = 0.005;
+  vec2 edge = bendy(xn, fz * n, -fz * n);
   vec2 bent = edge.xy * 0.5 + 0.5;
   
   float dx = rectdistance(xn);

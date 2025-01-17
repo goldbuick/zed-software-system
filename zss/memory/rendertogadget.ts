@@ -138,10 +138,12 @@ export function memoryconverttogadgetlayers(
   }
 
   const boardobjects = Object.values(board.objects ?? {})
+  // console.info(boardobjects.length)
   for (let i = 0; i < boardobjects.length; ++i) {
     const object = boardobjects[i]
     // skip if marked for removal or headless
     if (ispresent(object.removed)) {
+      // console.info(object.removed)
       continue
     }
 
