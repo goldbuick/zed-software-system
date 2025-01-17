@@ -598,7 +598,7 @@ function createsynth() {
     } else {
       // handle sfx
       for (let i = 0; i < invokes.length; ++i) {
-        synthplaystart(bgplayindex++, seconds, invokes[i])
+        synthplaystart(bgplayindex++, seconds, invokes[i], false)
         if (bgplayindex >= SOURCE.length) {
           bgplayindex = SYNTH_SFX_RESET
         }
