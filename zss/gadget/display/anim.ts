@@ -1,4 +1,5 @@
 import { ShaderMaterial } from 'three'
+import { getTransport } from 'tone'
 const epoch = Date.now()
 
 export const time = {
@@ -13,6 +14,7 @@ const INTERVAL_RATE = 120
 let intervalValue = 0
 export function setAltInterval(bpm: number) {
   intervalValue = INTERVAL_RATE / bpm
+  getTransport().bpm.value = bpm
 }
 
 // default to 150

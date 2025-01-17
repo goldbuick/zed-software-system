@@ -156,6 +156,10 @@ export function synth_play(
   device.emit('synth:play', [buffer, bgplay])
 }
 
+export function synth_bpm(device: DEVICELIKE, bpm: number) {
+  device.emit('synth:bpm', bpm)
+}
+
 export function synth_mainvolume(device: DEVICELIKE, volume: number) {
   device.emit('synth:mainvolume', volume)
 }
