@@ -33,6 +33,7 @@ import {
 } from 'zss/gadget/audio/play'
 import { createsource } from 'zss/gadget/audio/source'
 import { unmute } from 'zss/gadget/audio/unmute'
+import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
 import { clamp } from 'zss/mapping/number'
 import {
@@ -60,8 +61,8 @@ export function enableaudio() {
         const transport = getTransport()
         enabled = true
         transport.start()
-        transport.bpm.value = 107
         tape_info(synthdevice, 'audio is enabled!')
+        setAltInterval(107)
         try {
           const context: AudioContext = getContext() as unknown as AudioContext
           unmute(context, true)
@@ -740,6 +741,11 @@ const synthdevice = createdevice('synth', [], (message) => {
     case 'audioenabled':
       // no-op only thing needed is to create the synth
       break
+    case 'bpm':
+      if (isnumber(message.data)) {
+        setAltInterval(message.data)
+      }
+      break
     case 'mainvolume':
       if (isnumber(message.data)) {
         synth.setmainvolume(message.data)
@@ -783,12 +789,6 @@ const synthdevice = createdevice('synth', [], (message) => {
         }
 
         switch (config) {
-          case 'bpm':
-            if (isnumber(value)) {
-              getTransport().bpm.value = value
-              return
-            }
-            break
           case 'vol':
           case 'volume':
             if (isnumber(value)) {

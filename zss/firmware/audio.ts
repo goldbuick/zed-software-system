@@ -1,4 +1,5 @@
 import {
+  synth_bpm,
   synth_drumvolume,
   synth_mainvolume,
   synth_play,
@@ -50,6 +51,11 @@ function handlesynthvoice(idx: number, words: WORD[]) {
 }
 
 export const AUDIO_FIRMWARE = createfirmware()
+  .command('synthbpm', (_, words) => {
+    const [bpm] = readargs(words, 0, [ARG_TYPE.NUMBER])
+    synth_bpm(SOFTWARE, bpm)
+    return 0
+  })
   .command('mainvolume', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
     synth_mainvolume(SOFTWARE, volume)
