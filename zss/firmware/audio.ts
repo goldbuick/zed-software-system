@@ -70,40 +70,40 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('synth', (_, words) => {
-    for (let i = 1; i <= 8; ++i) {
+    for (let i = 0; i < 8; ++i) {
       handlesynthvoice(i, words)
     }
     return 0
   })
-  .command('synth0', (_, words) => {
+  .command('synth1', (_, words) => {
     handlesynthvoice(0, words)
     return 0
   })
-  .command('synth1', (_, words) => {
+  .command('synth2', (_, words) => {
     handlesynthvoice(1, words)
     return 0
   })
-  .command('synth2', (_, words) => {
+  .command('synth3', (_, words) => {
     handlesynthvoice(2, words)
     return 0
   })
-  .command('synth3', (_, words) => {
+  .command('synth4', (_, words) => {
     handlesynthvoice(3, words)
     return 0
   })
-  .command('synth4', (_, words) => {
+  .command('synth5', (_, words) => {
     handlesynthvoice(4, words)
     return 0
   })
-  .command('synth5', (_, words) => {
+  .command('synth6', (_, words) => {
     handlesynthvoice(5, words)
     return 0
   })
-  .command('synth6', (_, words) => {
+  .command('synth7', (_, words) => {
     handlesynthvoice(6, words)
     return 0
   })
-  .command('synth7', (_, words) => {
+  .command('synth8', (_, words) => {
     handlesynthvoice(7, words)
     return 0
   })
