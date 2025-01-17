@@ -575,12 +575,20 @@ function createsynth() {
   let pacertime = -1
   let pacercount = 0
   let bgplayindex = SYNTH_SFX_RESET
-  function addplay(mode: number, buffer: string) {
+  function addplay(buffer: string, bgplay: boolean) {
     // parse ops
     const invokes = parseplay(buffer)
     const seconds = getTransport().seconds
 
-    if (mode) {
+    if (bgplay) {
+      // handle sfx
+      for (let i = 0; i < invokes.length; ++i) {
+        synthplaystart(bgplayindex++, seconds, invokes[i], false)
+        if (bgplayindex >= SOURCE.length) {
+          bgplayindex = SYNTH_SFX_RESET
+        }
+      }
+    } else {
       // handle music
 
       // reset note offset
@@ -594,14 +602,6 @@ function createsynth() {
       for (let i = 0; i < invokes.length && i < SOURCE.length; ++i) {
         const endtime = synthplaystart(i, starttime, invokes[i])
         pacertime = Math.max(pacertime, endtime)
-      }
-    } else {
-      // handle sfx
-      for (let i = 0; i < invokes.length; ++i) {
-        synthplaystart(bgplayindex++, seconds, invokes[i], false)
-        if (bgplayindex >= SOURCE.length) {
-          bgplayindex = SYNTH_SFX_RESET
-        }
       }
     }
   }
@@ -757,13 +757,13 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'play':
       if (isarray(message.data)) {
-        const [mode, buffer] = message.data as [number, string]
+        const [buffer, bgplay] = message.data as [string, boolean]
         if (buffer === '') {
           // stop playback
           synth.stopplay()
         } else {
           // add to playback
-          synth.addplay(mode, buffer)
+          synth.addplay(buffer, bgplay)
         }
       }
       break

@@ -15,10 +15,9 @@ import { NAME, WORD } from 'zss/words/types'
 
 const isfx = ['echo', 'reverb', 'chorus', 'phaser', 'distortion', 'vibrato']
 
-function handlesynthplay(idx: number, words: WORD[]) {
+function handlesynthplay(words: WORD[], bgplay: boolean) {
   const [buffer] = readargs(words, 0, [ARG_TYPE.STRING])
-  // index 1 means play, 0 means bgplay
-  synth_play(SOFTWARE, idx, buffer)
+  synth_play(SOFTWARE, buffer, bgplay)
 }
 
 function handlesynthvoice(idx: number, words: WORD[]) {
@@ -67,13 +66,17 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('play', (_, words) => {
-    handlesynthplay(1, words)
+    handlesynthplay(words, false)
     return 0
   })
   .command('synth', (_, words) => {
     for (let i = 1; i <= 8; ++i) {
       handlesynthvoice(i, words)
     }
+    return 0
+  })
+  .command('synth0', (_, words) => {
+    handlesynthvoice(0, words)
     return 0
   })
   .command('synth1', (_, words) => {
@@ -104,16 +107,8 @@ export const AUDIO_FIRMWARE = createfirmware()
     handlesynthvoice(7, words)
     return 0
   })
-  .command('synth8', (_, words) => {
-    handlesynthvoice(8, words)
-    return 0
-  })
   .command('bgplay', (_, words) => {
-    handlesynthplay(0, words)
-    return 0
-  })
-  .command('bgsynth', (_, words) => {
-    handlesynthvoice(0, words)
+    handlesynthplay(words, true)
     return 0
   })
   .command('tts', (_, words) => {

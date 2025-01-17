@@ -150,10 +150,10 @@ export function synth_tts(device: DEVICELIKE, voice: string, phrase: string) {
 
 export function synth_play(
   device: DEVICELIKE,
-  priority: number,
   buffer: string,
+  bgplay: boolean,
 ) {
-  device.emit('synth:play', [priority, buffer])
+  device.emit('synth:play', [buffer, bgplay])
 }
 
 export function synth_mainvolume(device: DEVICELIKE, volume: number) {
