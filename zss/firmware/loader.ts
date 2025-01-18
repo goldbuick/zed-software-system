@@ -1,25 +1,26 @@
 import { maptostring } from 'zss/chip'
-import { tape_info } from 'zss/device/api'
+import {
+  BINARY_READER,
+  JSON_READER,
+  tape_info,
+  TEXT_READER,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { createsid } from 'zss/mapping/guid'
-import {
-  MEMORY_LABEL,
-  memoryensuresoftwarebook,
-  memoryreadsession,
-} from 'zss/memory'
-import { memoryloadercontent, memoryloaderevent } from 'zss/memory/loader'
-import { BINARY_READER, TEXT_READER } from 'zss/memory/types'
+import { memoryreadsession } from 'zss/memory'
+import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
 
 import { binaryloader } from './loader/binaryloader'
+import { jsonloader } from './loader/jsonloader'
 import { textloader } from './loader/textloader'
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
-    const type = memoryloaderevent(chip.id())
+    const type = memoryloaderformat(chip.id())
     switch (type) {
-      case 'chat': {
+      case 'text': {
         const textreader: TEXT_READER = memoryloadercontent(chip.id())
         switch (name) {
           case 'filename':
@@ -28,6 +29,14 @@ export const LOADER_FIRMWARE = createfirmware({
             return [true, textreader.cursor]
           case 'lines':
             return [true, textreader.lines.length]
+        }
+        break
+      }
+      case 'json': {
+        const jsonreader: JSON_READER = memoryloadercontent(chip.id())
+        switch (name) {
+          case 'filename':
+            return [true, jsonreader.filename]
         }
         break
       }
@@ -75,20 +84,6 @@ export const LOADER_FIRMWARE = createfirmware({
     tape_info(SOFTWARE, '$2', `!${hyperlink};${label}`)
     return 0
   })
-  // ---
-  .command('load', (chip, words) => {
-    const maybename = words.map(maptostring).join(' ')
-    const name = chip.get(maybename) ?? maybename
-    memoryensuresoftwarebook(MEMORY_LABEL.CONTENT, name)
-    return 0
-  })
-  .command('reload', (chip, words) => {
-    const maybename = words.map(maptostring).join(' ')
-    const name = chip.get(maybename) ?? maybename
-    const contentbook = memoryensuresoftwarebook(MEMORY_LABEL.CONTENT, name)
-    // delete all codepages
-    contentbook.pages = []
-    return 0
-  })
-  .command('bin', binaryloader)
   .command('txt', textloader)
+  .command('json', jsonloader)
+  .command('bin', binaryloader)

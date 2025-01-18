@@ -29,7 +29,7 @@ const chat = createdevice('chat', [], (message) => {
         twitchchatclient.onMessage((_, user, text) => {
           vm_loader(
             chat,
-            'chat',
+            'text',
             message.data,
             `${user}:${text}`,
             registerreadplayer(),

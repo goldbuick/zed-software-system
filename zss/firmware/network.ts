@@ -1,14 +1,16 @@
+import { network_fetch } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isarray } from 'zss/mapping/types'
 import { isstrcategory } from 'zss/words/category'
 import { isstrcollision } from 'zss/words/collision'
 import { isstrcolor } from 'zss/words/color'
 import { isstrdir } from 'zss/words/dir'
-import { ARG_TYPE, readargs } from 'zss/words/reader'
+import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
 function fetchcommand(
-  maybearg: any,
+  arg: any,
   url: string,
   method: string,
   words: WORD[],
@@ -27,13 +29,22 @@ function fetchcommand(
       !isstrcolor(value)
     ) {
       values.push(...value)
+    } else {
+      values.push(value)
     }
     iii = iiii
   }
   switch (NAME(method)) {
     case 'get':
-      break
     case 'post':
+      network_fetch(
+        SOFTWARE,
+        arg,
+        url,
+        method,
+        values,
+        READ_CONTEXT.elementfocus,
+      )
       break
   }
   return 0

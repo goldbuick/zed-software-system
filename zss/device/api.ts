@@ -75,6 +75,21 @@ export function gadgetserver_clearplayer(device: DEVICELIKE, player: string) {
   device.emit('gadgetserver:clearplayer', undefined, player)
 }
 
+export function gadgetserver_fetch(device: DEVICELIKE, player: string) {
+  device.emit('gadgetserver:fetch', undefined, player)
+}
+
+export function network_fetch(
+  device: DEVICELIKE,
+  arg: any,
+  url: string,
+  method: string,
+  words: any[],
+  player: string,
+) {
+  device.emit('network:fetch', [arg, url, method, words], player)
+}
+
 export function peer_create(
   device: DEVICELIKE,
   joinid: string,
@@ -323,42 +338,74 @@ export function vm_flush(device: DEVICELIKE, tag: string, player: string) {
   device.emit('vm:flush', tag, player)
 }
 
+export type TEXT_READER = {
+  filename: string
+  cursor: number
+  lines: string[]
+}
+
+function createtextreader(filename: string, content: string): TEXT_READER {
+  return {
+    filename,
+    cursor: 0,
+    lines: content.split('\n'),
+  }
+}
+
+export type JSON_READER = {
+  filename: string
+  json: string
+}
+
+function createjsonreader(filename: string, content: any): JSON_READER {
+  return {
+    filename,
+    json: content,
+  }
+}
+
+export type BINARY_READER = {
+  filename: string
+  cursor: number
+  bytes: Uint8Array
+  dataview: DataView
+}
+
+export function createbinaryreader(
+  filename: string,
+  content: Uint8Array,
+): BINARY_READER {
+  return {
+    filename,
+    cursor: 0,
+    bytes: content,
+    dataview: new DataView(content.buffer),
+  }
+}
+
 export function vm_loader(
   device: DEVICELIKE,
-  event: string,
+  format: 'file' | 'text' | 'json' | 'binary',
   filename: string,
   content: any,
   player: string,
 ) {
-  function createtextreader() {
-    return {
-      filename,
-      cursor: 0,
-      lines: content.split('\n'),
-    }
-  }
-  function createbinaryreader() {
-    return {
-      filename,
-      cursor: 0,
-      bytes: content,
-      dataview: new DataView(content.buffer),
-    }
-  }
   let withcontent: any
-  switch (event) {
+  switch (format) {
     case 'file':
       withcontent = content
       break
-    case 'chat':
-      withcontent = createtextreader()
-      break
     case 'text':
-      withcontent = createtextreader()
+      withcontent = createtextreader(filename, content)
+      break
+    case 'json':
+      withcontent = createjsonreader(filename, content)
       break
     case 'binary':
-      withcontent = createbinaryreader()
+      withcontent = createbinaryreader(filename, content)
       break
   }
-  device.emit('vm:loader', [event, withcontent], player)
+  setTimeout(() => {
+    device.emit('vm:loader', [format, filename, withcontent], player)
+  }, 1)
 }

@@ -1,3 +1,4 @@
+import { BINARY_READER } from 'zss/device/api'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/file/bytes'
 import { FIRMWARE_COMMAND } from 'zss/firmware'
 import {
@@ -11,7 +12,7 @@ import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { bookensurecodepagewithtype } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
 import { memoryloadercontent } from 'zss/memory/loader'
-import { BINARY_READER, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
@@ -92,6 +93,7 @@ export const binaryloader: FIRMWARE_COMMAND = (chip, words) => {
   if (!ispresent(binaryreader)) {
     return 0
   }
+
   const [kind, ii] = readargs(words, 0, [ARG_TYPE.NAME])
   const lkind = NAME(kind)
   switch (lkind) {

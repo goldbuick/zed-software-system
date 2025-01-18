@@ -137,18 +137,3 @@ export type BOOK = {
   // global flags by id
   flags: Record<string, BOOK_FLAGS>
 }
-
-// readers
-
-export type BINARY_READER = {
-  filename: string
-  cursor: number
-  bytes: Uint8Array
-  dataview: DataView
-}
-
-export type TEXT_READER = {
-  filename: string
-  cursor: number
-  lines: string
-}
