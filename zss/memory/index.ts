@@ -443,7 +443,7 @@ export function memorytick() {
     READ_CONTEXT.board = undefined
     READ_CONTEXT.element = undefined
     READ_CONTEXT.elementid = ''
-    READ_CONTEXT.elementisplayer = true
+    READ_CONTEXT.elementisplayer = false
     READ_CONTEXT.elementfocus = MEMORY.operator
 
     // run code
