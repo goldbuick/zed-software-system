@@ -1,8 +1,8 @@
+import { TEXT_READER } from 'zss/device/api'
 import { FIRMWARE_COMMAND } from 'zss/firmware'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { memoryloadercontent } from 'zss/memory/loader'
-import { TEXT_READER } from 'zss/memory/types'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 

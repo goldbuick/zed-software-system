@@ -138,11 +138,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
       READ_CONTEXT.element,
       READ_CONTEXT.elementfocus,
     )
-    if (!ispresent(focus)) {
-      return [false, undefined]
-    }
+    const player = focus?.id ?? READ_CONTEXT.elementfocus
 
-    const value = memoryreadflags(focus.id ?? '')[name]
+    // read value
+    const value = memoryreadflags(player)[name]
     return [ispresent(value), value]
   },
   set(_, name, value) {
@@ -163,12 +162,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
       READ_CONTEXT.element,
       READ_CONTEXT.elementfocus,
     )
-    if (!ispresent(focus)) {
-      return [false, value]
-    }
+    const player = focus?.id ?? READ_CONTEXT.elementfocus
 
     // set player's flags
-    const flags = memoryreadflags(focus.id ?? '')
+    const flags = memoryreadflags(player)
     if (ispresent(flags)) {
       flags[name] = value
       return [true, value]

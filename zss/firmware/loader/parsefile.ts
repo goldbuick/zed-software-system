@@ -85,6 +85,14 @@ export function parsewebfile(player: string, file: File | undefined) {
           )
           .catch((err) => api_error(SOFTWARE, 'crash', err.message))
         break
+      case 'application/json':
+        file
+          .text()
+          .then((content) =>
+            vm_loader(SOFTWARE, 'json', file.name, content, player),
+          )
+          .catch((err) => api_error(SOFTWARE, 'crash', err.message))
+        break
       case 'application/zip':
         parsezipfile(file, (ifile) => parsewebfile(player, ifile)).catch(
           (err) => api_error(SOFTWARE, 'crash', err.message),
@@ -108,7 +116,7 @@ export function parsewebfile(player: string, file: File | undefined) {
             } else {
               return api_error(
                 SOFTWARE,
-                'loadfile',
+                'parsewebfile',
                 `unsupported file ${file.name}`,
               )
             }

@@ -232,13 +232,11 @@ const vm = createdevice(
         // user input from built-in console
         // or events from devices
         if (ispresent(message.player) && isarray(message.data)) {
-          const [event, content] = message.data
-          if (isstring(event)) {
-            if (event === 'file') {
-              parsewebfile(message.player, content)
-            } else {
-              memoryloader(event, content)
-            }
+          const [format, filename, content] = message.data
+          if (format === 'file') {
+            parsewebfile(message.player, content)
+          } else {
+            memoryloader(format, filename, content, message.player)
           }
         }
         break

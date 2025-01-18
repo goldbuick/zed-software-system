@@ -415,7 +415,7 @@ export function memorytickobject(
   })
 }
 
-export function memoryloaderstart(id: string, code: string) {
+export function memorystartloader(id: string, code: string) {
   MEMORY.loaders.set(id, code)
 }
 
@@ -434,12 +434,32 @@ export function memorytick() {
 
   // update loaders
   MEMORY.loaders.forEach((code, id) => {
+    // cache context
+    const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
+
+    // write context
+    READ_CONTEXT.timestamp = mainbook.timestamp
+    READ_CONTEXT.book = mainbook
+    READ_CONTEXT.board = undefined
+    READ_CONTEXT.element = undefined
+    READ_CONTEXT.elementid = ''
+    READ_CONTEXT.elementisplayer = false
+    READ_CONTEXT.elementfocus = MEMORY.operator
+
+    // run code
     os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
-    // teardown
+
+    // teardown on ended
     if (os.isended(id)) {
       os.halt(id)
       MEMORY.loaders.delete(id)
     }
+
+    // restore context
+    objectKeys(OLD_CONTEXT).forEach((key) => {
+      // @ts-expect-error dont bother me
+      READ_CONTEXT[key] = OLD_CONTEXT[key]
+    })
   })
 
   // reset
@@ -487,7 +507,7 @@ export function memorycli(player: string, cli = '') {
   READ_CONTEXT.element = boardobjectread(READ_CONTEXT.board, player)
   READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
   READ_CONTEXT.elementisplayer = true
-  READ_CONTEXT.elementfocus = READ_CONTEXT.elementid
+  READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
 
   // cli invokes get more processing time
   const resethalt = RUNTIME.HALT_AT_COUNT
