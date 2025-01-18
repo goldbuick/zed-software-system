@@ -236,7 +236,7 @@ const vm = createdevice(
           if (format === 'file') {
             parsewebfile(message.player, content)
           } else {
-            memoryloader(format, filename, content)
+            memoryloader(format, filename, content, message.player)
           }
         }
         break
