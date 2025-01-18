@@ -81,7 +81,7 @@ export function parsewebfile(player: string, file: File | undefined) {
         file
           .text()
           .then((content) =>
-            vm_loader(SOFTWARE, 'text', file.name, content, player),
+            vm_loader(SOFTWARE, undefined, 'text', file.name, content, player),
           )
           .catch((err) => api_error(SOFTWARE, 'crash', err.message))
         break
@@ -89,7 +89,7 @@ export function parsewebfile(player: string, file: File | undefined) {
         file
           .text()
           .then((content) =>
-            vm_loader(SOFTWARE, 'json', file.name, content, player),
+            vm_loader(SOFTWARE, undefined, 'json', file.name, content, player),
           )
           .catch((err) => api_error(SOFTWARE, 'crash', err.message))
         break
@@ -100,7 +100,7 @@ export function parsewebfile(player: string, file: File | undefined) {
         break
       case 'application/octet-stream':
         parsebinaryfile(file, (fileext, binaryfile) =>
-          vm_loader(SOFTWARE, 'binary', fileext, binaryfile, player),
+          vm_loader(SOFTWARE, undefined, 'binary', fileext, binaryfile, player),
         ).catch((err) => api_error(SOFTWARE, 'crash', err.message))
         break
       default:

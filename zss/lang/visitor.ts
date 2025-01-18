@@ -244,7 +244,8 @@ type CodeNodeData =
     }
   | {
       type: NODE.WAITFOR
-      words: CodeNode[]
+      loop: string
+      lines: CodeNode[]
     }
   | {
       type: NODE.BREAK
@@ -811,9 +812,14 @@ class ScriptVisitor
   }
 
   command_waitfor(ctx: Command_waitforCstChildren) {
+    const loop = createsid()
     return this.createcodenode(ctx, {
       type: NODE.WAITFOR,
-      words: this.go(ctx.words),
+      loop,
+      lines: [
+        this.createmarknode(ctx, loop, `start of waitfor`),
+        this.createlogicnode(ctx, 'waitfor', loop, this.go(ctx.words)),
+      ].flat(),
     })
   }
 

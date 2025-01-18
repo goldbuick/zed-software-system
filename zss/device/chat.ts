@@ -29,6 +29,7 @@ const chat = createdevice('chat', [], (message) => {
         twitchchatclient.onMessage((_, user, text) => {
           vm_loader(
             chat,
+            undefined,
             'text',
             message.data,
             `${user}:${text}`,

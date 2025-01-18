@@ -3,7 +3,6 @@ import {
   synth_drumvolume,
   synth_mainvolume,
   synth_play,
-  synth_tts,
   synth_ttsvolume,
   synth_voice,
   synth_voicefx,
@@ -115,14 +114,5 @@ export const AUDIO_FIRMWARE = createfirmware()
   })
   .command('bgplay', (_, words) => {
     handlesynthplay(words, true)
-    return 0
-  })
-  .command('tts', (_, words) => {
-    const [phrase, voice] = readargs(words, 0, [
-      ARG_TYPE.STRING,
-      ARG_TYPE.MAYBE_STRING,
-    ])
-    synth_tts(SOFTWARE, voice ?? '', phrase)
-    // https://github.com/lobehub/lobe-tts/blob/master/src/core/data/voiceList.ts
     return 0
   })

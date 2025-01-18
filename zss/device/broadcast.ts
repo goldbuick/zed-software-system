@@ -23,8 +23,8 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
           const isportrait = window.innerHeight > window.innerWidth
           broadcastclient = IVSBroadcastClient.create({
             streamConfig: isportrait
-              ? IVSBroadcastClient.BASIC_FULL_HD_PORTRAIT
-              : IVSBroadcastClient.BASIC_FULL_HD_LANDSCAPE,
+              ? IVSBroadcastClient.STANDARD_PORTRAIT
+              : IVSBroadcastClient.STANDARD_LANDSCAPE,
             logLevel: IVSBroadcastClient.LOG_LEVEL.DEBUG,
           })
 

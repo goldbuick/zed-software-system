@@ -1,5 +1,6 @@
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { WORD } from 'zss/words/types'
 
 import { bookreadcodepagesbytype } from './book'
 import { codepagereadstats } from './codepage'
@@ -8,6 +9,7 @@ import { CODE_PAGE_TYPE } from './types'
 import { MEMORY_LABEL, memorystartloader, memoryreadbookbysoftware } from '.'
 
 type LOADER_ENTRY = {
+  arg: any
   format: string
   content: any
   player: string
@@ -17,6 +19,10 @@ const LOADER_REFS: Record<string, LOADER_ENTRY> = {}
 
 export function memoryloaderdone(id: string) {
   delete LOADER_REFS[id]
+}
+
+export function memoryloaderarg(id: string): MAYBE<WORD> {
+  return LOADER_REFS[id]?.arg
 }
 
 export function memoryloaderformat(id: string): MAYBE<string> {
@@ -32,6 +38,7 @@ export function memoryloaderplayer(id: string): MAYBE<string> {
 }
 
 export function memoryloader(
+  arg: any,
   format: string,
   filename: string,
   content: any,
@@ -57,8 +64,9 @@ export function memoryloader(
 
   // run matched loaders
   for (let i = 0; i < loaders.length; ++i) {
-    const id = createsid()
+    const id = `${createsid()}_loader`
     LOADER_REFS[id] = {
+      arg,
       format,
       content,
       player,

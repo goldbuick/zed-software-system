@@ -78,6 +78,7 @@ export type CHIP = {
   repeat: (index: number) => WORD_RESULT
   foreachstart: (index: number, ...words: WORD[]) => WORD_RESULT
   foreach: (index: number, ...words: WORD[]) => WORD_RESULT
+  waitfor: (...words: WORD[]) => WORD_RESULT
   or: (...words: WORD[]) => WORD
   and: (...words: WORD[]) => WORD
   not: (...words: WORD[]) => WORD
@@ -516,6 +517,17 @@ export function createchip(
       }
 
       return result
+    },
+    waitfor(...words) {
+      const [value] = readargs(words, 0, [ARG_TYPE.ANY])
+      const result = maptoresult(value)
+
+      if (!result) {
+        // conditional failed, yield until next tick
+        chip.yield()
+      }
+
+      return result ? 1 : 0
     },
     or(...words) {
       let lastvalue = 0

@@ -36,6 +36,7 @@ import {
   createbook,
 } from './book'
 import { codepagereaddata, codepagereadstats } from './codepage'
+import { memoryloaderarg } from './loader'
 import { memoryconverttogadgetlayers } from './rendertogadget'
 import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from './types'
 
@@ -445,6 +446,12 @@ export function memorytick() {
     READ_CONTEXT.elementid = ''
     READ_CONTEXT.elementisplayer = false
     READ_CONTEXT.elementfocus = MEMORY.operator
+
+    // set chip
+    const maybearg = memoryloaderarg(id)
+    if (ispresent(maybearg)) {
+      os.arg(id, maybearg)
+    }
 
     // run code
     os.tick(id, DRIVER_TYPE.LOADER, 1, 'loader', code)
