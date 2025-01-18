@@ -125,58 +125,24 @@ function userinputinvoke(input: INPUT, mods: UserInputMods) {
   user.root.emit(INPUT[input], mods)
 }
 
-const islocaldev = location.port === '7777'
-
 document.addEventListener(
   'keydown',
   (event) => {
     const key = NAME(event.key)
     const mods = modsfromevent(event)
 
-    // allowed shortcuts, all others we attempt to block
-    // paste ; Ctrl + V / Cmd + V, C & X
-    // refresh page : Ctrl + R / Cmd + R
-    // open / close devtools : Ctrl + Shift + I / Cmd + Alt + I
-    // open / close js console : Ctrl + Shift + J / Cmd + Alt + J
-    // save ; Ctrl + S
+    // block default browser behavior that messes with things
     switch (key) {
-      case 'c':
-      case 'x':
-      case 'v':
-        if (mods.ctrl) {
-          // no-op
-        } else {
-          event.preventDefault()
-        }
-        break
-      case 'r':
-        if (mods.ctrl && islocaldev) {
-          // no-op
-        } else {
-          event.preventDefault()
-        }
-        break
-      case 'i':
-        if (!ismac && mods.shift && mods.ctrl && islocaldev) {
-          // no-op
-        } else {
-          event.preventDefault()
-        }
-        break
-      case 'dead':
-        if (ismac && mods.alt && mods.ctrl && islocaldev) {
-          // no-op
-        } else {
-          event.preventDefault()
-        }
-        break
       case 's':
+      case 'arrowleft':
+      case 'arrowright':
+      case 'arrowup':
+      case 'arrowdown':
         if (mods.ctrl) {
-          vm_cli(SOFTWARE, '#save', registerreadplayer())
+          event.preventDefault()
         }
-        event.preventDefault()
         break
-      default:
+      case 'tab':
         event.preventDefault()
         break
     }
@@ -220,6 +186,11 @@ document.addEventListener(
         break
       case 'tab':
         inputdown(INPUT.MENU_BUTTON)
+        break
+      case 's':
+        if (mods.ctrl) {
+          vm_cli(SOFTWARE, '#save', registerreadplayer())
+        }
         break
     }
     user.root.emit('keydown', event)
