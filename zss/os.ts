@@ -5,13 +5,14 @@ import { SOFTWARE } from './device/session'
 import { DRIVER_TYPE } from './firmware/runner'
 import { GeneratorBuild, compile } from './lang/generator'
 import { ispresent, isstring } from './mapping/types'
-
+// memoryloaderarg
 export type OS = {
   ids: () => string[]
   has: (id: string) => boolean
   isended: (id: string) => boolean
   halt: (id: string) => boolean
   gc: () => void
+  arg: (id: string, value: any) => void
   tick: (
     id: string,
     driver: DRIVER_TYPE,
@@ -63,6 +64,12 @@ export function createos() {
         if (os.isended(ids[i])) {
           os.halt(ids[i])
         }
+      }
+    },
+    arg(id, value) {
+      const chip = chips[id]
+      if (ispresent(chip)) {
+        chip.set('arg', value)
       }
     },
     tick(id, driver, cycle, name, code) {

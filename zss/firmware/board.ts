@@ -6,10 +6,8 @@ import { listelementsbykind, listnamedelements } from 'zss/memory/atomics'
 import { boardterrainsetfromkind } from 'zss/memory/board'
 import {
   bookboardcheckblockedobject,
-  bookboardcheckmoveobject,
   bookboardelementreadname,
   bookboardmoveobject,
-  bookboardobjectnamedlookupdelete,
   bookboardsafedelete,
   bookboardsetlookup,
   bookboardwrite,

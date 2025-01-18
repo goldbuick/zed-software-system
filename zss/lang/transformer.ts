@@ -341,12 +341,11 @@ function transformNode(ast: CodeNode): SourceNode {
       }
       return write(ast, [`  `, movecmd, `;\n`])
     }
-
     case NODE.COMMAND:
       return write(ast, [
-        `  `,
+        `  if (`,
         writeApi(ast, `command`, transformNodes(ast.words)),
-        `;\n`,
+        `) { continue; };\n`,
       ])
     // core / structure
     case NODE.IF: {
@@ -438,13 +437,13 @@ function transformNode(ast: CodeNode): SourceNode {
       return source
     }
     case NODE.WAITFOR: {
-      // waitfor build
       const source = write(ast, ``)
-      source.add([
-        `  if (!`,
-        writeApi(ast, 'if', transformNodes(ast.words)),
-        `) { api.i(${ast.lineindex - 1}); }\n`,
-      ])
+
+      // waitfor logic
+      writelookup(ast.lines, NODE.IF_CHECK, ast.loop)
+      ast.lines.forEach((item) => {
+        source.add(transformNode(item))
+      })
 
       // done logic
       return source
@@ -536,11 +535,11 @@ function indexnode(ast: CodeNode) {
     case NODE.WHILE:
     case NODE.REPEAT:
     case NODE.FOREACH:
+    case NODE.WAITFOR:
       ast.lines.forEach(indexnode)
       break
     case NODE.MOVE:
     case NODE.COMMAND:
-    case NODE.WAITFOR:
     case NODE.IF_CHECK:
       ast.words.forEach(indexnode)
       break

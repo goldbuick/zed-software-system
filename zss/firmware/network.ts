@@ -1,4 +1,4 @@
-import { network_fetch } from 'zss/device/api'
+import { network_fetch, synth_tts } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isarray } from 'zss/mapping/types'
@@ -11,6 +11,7 @@ import { NAME, WORD } from 'zss/words/types'
 
 function fetchcommand(
   arg: any,
+  label: string,
   url: string,
   method: string,
   words: WORD[],
@@ -36,10 +37,11 @@ function fetchcommand(
   }
   switch (NAME(method)) {
     case 'get':
-    case 'post':
+    case 'post:json':
       network_fetch(
         SOFTWARE,
         arg,
+        label,
         url,
         method,
         values,
@@ -51,18 +53,35 @@ function fetchcommand(
 }
 
 export const NETWORK_FIRMWARE = createfirmware()
-  .command('fetch', (_, words) => {
-    const [url, maybemethod = 'get', ii] = readargs(words, 0, [
+  .command('tts', (_, words) => {
+    const [phrase, voice] = readargs(words, 0, [
       ARG_TYPE.STRING,
       ARG_TYPE.MAYBE_STRING,
     ])
-    return fetchcommand(undefined, url, maybemethod, words, ii)
+    synth_tts(SOFTWARE, voice ?? '', phrase)
+    // https://github.com/lobehub/lobe-tts/blob/master/src/core/data/voiceList.ts
+    return 0
+  })
+  .command('fetch', (_, words) => {
+    const [label, url, maybemethod = 'get', ii] = readargs(words, 0, [
+      ARG_TYPE.NAME,
+      ARG_TYPE.NAME,
+      ARG_TYPE.MAYBE_STRING,
+    ])
+
+    // return 1 while waiting on data
+    fetchcommand(undefined, label, url, maybemethod, words, ii)
+    return 0
   })
   .command('fetchwith', (_, words) => {
-    const [arg, url, maybemethod = 'get', ii] = readargs(words, 0, [
+    const [arg, label, url, maybemethod = 'get', ii] = readargs(words, 0, [
       ARG_TYPE.ANY,
-      ARG_TYPE.STRING,
+      ARG_TYPE.NAME,
+      ARG_TYPE.NAME,
       ARG_TYPE.MAYBE_STRING,
     ])
-    return fetchcommand(arg, url, maybemethod, words, ii)
+
+    // return 1 while waiting on data
+    fetchcommand(arg, label, url, maybemethod, words, ii)
+    return 1
   })

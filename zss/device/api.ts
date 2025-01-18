@@ -75,19 +75,16 @@ export function gadgetserver_clearplayer(device: DEVICELIKE, player: string) {
   device.emit('gadgetserver:clearplayer', undefined, player)
 }
 
-export function gadgetserver_fetch(device: DEVICELIKE, player: string) {
-  device.emit('gadgetserver:fetch', undefined, player)
-}
-
 export function network_fetch(
   device: DEVICELIKE,
   arg: any,
+  label: string,
   url: string,
   method: string,
   words: any[],
   player: string,
 ) {
-  device.emit('network:fetch', [arg, url, method, words], player)
+  device.emit('network:fetch', [arg, label, url, method, words], player)
 }
 
 export function peer_create(
@@ -385,6 +382,7 @@ export function createbinaryreader(
 
 export function vm_loader(
   device: DEVICELIKE,
+  arg: any,
   format: 'file' | 'text' | 'json' | 'binary',
   filename: string,
   content: any,
@@ -406,6 +404,6 @@ export function vm_loader(
       break
   }
   setTimeout(() => {
-    device.emit('vm:loader', [format, filename, withcontent], player)
+    device.emit('vm:loader', [arg, format, filename, withcontent], player)
   }, 1)
 }
