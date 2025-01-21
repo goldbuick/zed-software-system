@@ -1,6 +1,8 @@
-import Client from 'bittorrent-tracker'
+// @ts-expect-error jsonly
 import Peer from '@thaunknown/simple-peer/lite.js'
-
+// @ts-expect-error jsonly
+// eslint-disable-next-line import/no-named-as-default
+import Client from 'bittorrent-tracker'
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import { doasync } from 'zss/mapping/func'
@@ -98,7 +100,7 @@ function createpeer(player: string, infohash: string) {
   finder.on('warning', (warning) => {
     console.info({ warning })
   })
-  finder.on('peer', (peer) => {
+  finder.on('peer', (peer: Peer) => {
     console.info({ peer })
   })
   // node = new Peer(player)
@@ -149,22 +151,18 @@ const network = createdevice('network', [], (message) => {
           if (!ispresent(message.player)) {
             return
           }
-
-          const infohash = createinfohash(message.player)
-          
+          // create network peer & infohash
           if (!ispresent(finder)) {
-            network_peer(
-              network,
-              infohash,
-              message.player,
-            )
-          }  
-            
+            const infohash = createinfohash(message.player)
+            network_peer(network, infohash, message.player)
+          }
           // draw the code to the console
-          const joinurl = `${location.origin}/join/#${infohash}`
-          const url = await shorturl(joinurl)
-          writecopyit(network, url, url)
-          write(network, 'ready to join')          
+          if (ispresent(finder)) {
+            const joinurl = `${location.origin}/join/#${finder.infohash}`
+            const url = await shorturl(joinurl)
+            writecopyit(network, url, url)
+            write(network, 'ready to join')
+          }
         })
       }
       break

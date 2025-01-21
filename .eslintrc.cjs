@@ -2,6 +2,11 @@ const fs = require('fs')
 
 const prefixes = ['zss', 'cafe']
 
+const alias = { 'chevrotain': '.' }
+prefixes.forEach((item) => {
+  alias[`/${item}`] = `./${item}`
+})
+
 const srcFolders = prefixes
   .map((folder) =>
     fs
@@ -43,11 +48,8 @@ module.exports = {
       '@typescript-eslint/parser': ['.ts', '.tsx', '.js', '.jsx', '.json'],
     },
     'import/resolver': {
-      alias: {
-        map: [
-          ...prefixes.map((item) => [`/${item}`, `./${item}`]),
-          ['chevrotain', '.'],
-        ],
+      'eslint-import-resolver-custom-alias': {
+        alias,
         extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
       },
     },
