@@ -1,11 +1,16 @@
+import Client from 'bittorrent-tracker'
+import Peer from '@thaunknown/simple-peer/lite.js'
+
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import { doasync } from 'zss/mapping/func'
-import { isarray, MAYBE } from 'zss/mapping/types'
+import { createinfohash } from 'zss/mapping/guid'
+import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { shorturl } from 'zss/mapping/url'
 import { NAME } from 'zss/words/types'
-import { write } from 'zss/words/writeui'
+import { write, writecopyit } from 'zss/words/writeui'
 
-import { vm_loader } from './api'
+import { network_peer, vm_loader } from './api'
 import { registerreadplayer } from './register'
 import { SOFTWARE } from './session'
 
@@ -68,6 +73,48 @@ async function runnetworkfetch(
   }
 }
 
+let finder: MAYBE<Client>
+
+const trackerlist = `
+wss://tracker.btorrent.xyz
+wss://tracker.webtorrent.dev
+wss://tracker.openwebtorrent.com
+`
+  .split('\n')
+  .map((item) => item.trim())
+  .filter((item) => item)
+
+function createpeer(player: string, infohash: string) {
+  write(network, `connecting to ${infohash}`)
+  const peerid = createinfohash(player)
+  finder = new Client({
+    infoHash: infohash,
+    peerId: peerid,
+    announce: trackerlist,
+  })
+  finder.on('error', (err) => {
+    console.info({ err })
+  })
+  finder.on('warning', (warning) => {
+    console.info({ warning })
+  })
+  finder.on('peer', (peer) => {
+    console.info({ peer })
+  })
+  // node = new Peer(player)
+  // node.on('open', () => {
+  //   if (ispresent(node)) {
+  //     node.on('close', () => write(network, `closed`))
+  //     const remote = node.connect(joincode, { reliable: true })
+  //     handledataconnection(remote, () => {
+  //       write(network, 'connected')
+  //       register_ackbooks(peer)
+  //     })
+  //   }
+  // })
+  // node.on('error', (error) => api_error(peer, node?.id ?? '', error.message))
+}
+
 const network = createdevice('network', [], (message) => {
   if (!network.session(message)) {
     return
@@ -88,5 +135,39 @@ const network = createdevice('network', [], (message) => {
         })
       }
       break
+    case 'peer':
+      if (message.player === registerreadplayer() && isstring(message.data)) {
+        createpeer(message.player, message.data)
+        if (ispresent(finder)) {
+          finder.start()
+        }
+      }
+      break
+    case 'requestjoincode': {
+      if (message.player === registerreadplayer()) {
+        doasync(network, async () => {
+          if (!ispresent(message.player)) {
+            return
+          }
+
+          const infohash = createinfohash(message.player)
+          
+          if (!ispresent(finder)) {
+            network_peer(
+              network,
+              infohash,
+              message.player,
+            )
+          }  
+            
+          // draw the code to the console
+          const joinurl = `${location.origin}/join/#${infohash}`
+          const url = await shorturl(joinurl)
+          writecopyit(network, url, url)
+          write(network, 'ready to join')          
+        })
+      }
+      break
+    }
   }
 })

@@ -1,3 +1,4 @@
+import Alea from 'alea'
 import humanid from 'human-id'
 import { customAlphabet, nanoid } from 'nanoid'
 import { lowercase, numbers } from 'nanoid-dictionary'
@@ -36,4 +37,17 @@ export function createshortnameid() {
     capitalize: false,
     adjectiveCount: 0,
   })
+}
+
+const PEER_ID_LENGTH = 20
+const HEX_CHARS =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+
+export function createinfohash(source: string): string {
+  const rng = Alea(source)
+  const chars: string[] = []
+  for (let i = 0; i < PEER_ID_LENGTH; ++i) {
+    chars.push(HEX_CHARS[Math.floor(rng() * HEX_CHARS.length)])
+  }
+  return chars.join('')
 }

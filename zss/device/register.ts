@@ -11,7 +11,7 @@ import { write, writecopyit, writeheader, writeoption } from 'zss/words/writeui'
 import {
   api_error,
   gadgetserver_desync,
-  peer_create,
+  network_peer,
   tape_crash,
   tape_debug,
   tape_info,
@@ -167,7 +167,7 @@ const register = createdevice(
           const books = readurlhash()
           if (isjoin()) {
             tape_terminal_open(register, myplayerid)
-            peer_create(register, books, myplayerid)
+            network_peer(register, books, myplayerid)
           } else {
             // pull data && init
             await loadmem(books)

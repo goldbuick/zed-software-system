@@ -87,28 +87,16 @@ export function network_fetch(
   device.emit('network:fetch', [arg, label, url, method, words], player)
 }
 
-export function peer_create(
+export function network_peer(
   device: DEVICELIKE,
-  joinid: string,
+  infohash: string,
   player: string,
 ) {
-  device.emit('peer:create', joinid, player)
+  device.emit('network:peer', infohash, player)
 }
 
-export function peer_joincode(device: DEVICELIKE, player: string) {
-  device.emit('peer:joincode', undefined, player)
-}
-
-export function peer_open(device: DEVICELIKE, player: string) {
-  device.emit('peer:open', undefined, player)
-}
-
-export function peer_close(device: DEVICELIKE, player: string) {
-  device.emit('peer:close', undefined, player)
-}
-
-export function peer_disconnected(device: DEVICELIKE, player: string) {
-  device.emit('peer:disconnected', undefined, player)
+export function network_requestjoincode(device: DEVICELIKE, player: string) {
+  device.emit('network:requestjoincode', undefined, player)
 }
 
 export function platform_ready(device: DEVICELIKE) {

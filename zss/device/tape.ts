@@ -82,16 +82,22 @@ const tape = createdevice('tape', [], (message) => {
     case 'info':
       if (terminal.level >= TAPE_LOG_LEVEL.INFO) {
         terminaladdmessage(message)
+      } else {
+        // dump to devtools
       }
       break
     case 'debug':
       if (terminal.level >= TAPE_LOG_LEVEL.DEBUG) {
         terminaladdmessage(message)
+      } else {
+        // dump to devtools
       }
       break
     case 'error':
       if (terminal.level > TAPE_LOG_LEVEL.OFF) {
         terminaladdmessage(message)
+      } else {
+        // dump to devtools
       }
       break
     case 'crash':

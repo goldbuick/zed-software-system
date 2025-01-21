@@ -25,6 +25,7 @@
     "@react-three/postprocessing": "^2.16.3",
     "@syncedstore/core": "^0.6.0",
     "@syncedstore/react": "^0.6.0",
+    "@thaunknown/simple-peer": "^10.0.11",
     "@twurple/auth": "^7.2.1",
     "@twurple/chat": "^7.2.1",
     "@types/is-hotkey": "^0.1.10",
@@ -39,6 +40,7 @@
     "@vitejs/plugin-react-swc": "^3.7.0",
     "alea": "^1.0.1",
     "amazon-ivs-web-broadcast": "^1.19.0",
+    "bittorrent-tracker": "^11.2.0",
     "case": "^1.6.3",
     "chevrotain": "^11.0.3",
     "debounce": "^2.2.0",
@@ -91,6 +93,7 @@
     "vite-bundle-analyzer": "^0.13.1",
     "vite-plugin-full-reload": "^1.2.0",
     "vite-plugin-mkcert": "^1.17.5",
+    "vite-plugin-node-polyfills": "^0.23.0",
     "y-protocols": "^1.0.6",
     "yjs": "^13.6.15",
     "zustand": "^5.0.1"
