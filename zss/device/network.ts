@@ -1,4 +1,4 @@
-import P2PT, { Peer } from 'p2pt'
+import P2PT from 'p2pt'
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import { doasync } from 'zss/mapping/func'

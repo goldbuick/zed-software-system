@@ -1471,12 +1471,27 @@
   resolved "https://registry.npmjs.org/@types/nanoid-dictionary/-/nanoid-dictionary-4.2.3.tgz#4fb3043cfa56ea0f9046b1cbe7abc611c75fbf6c"
   integrity sha512-T98Halw1f2aJ802GtCNMHZgqX2q1LX85eMP+K7N+OXSLagdmAzooAEhB565FQXTiCxdF4wNijOBroAQJat4uig==
 
+"@types/node-fetch@^2.6.4":
+  version "2.6.12"
+  resolved "https://registry.yarnpkg.com/@types/node-fetch/-/node-fetch-2.6.12.tgz#8ab5c3ef8330f13100a7479e2cd56d3386830a03"
+  integrity sha512-8nneRWKCg3rMtF69nLQJnOYUcbafYeFSjqkw3jCRLsqkWFlHaoQrr5mXmofFGOx3DKn7UfmBMyov8ySvLRVldA==
+  dependencies:
+    "@types/node" "*"
+    form-data "^4.0.0"
+
 "@types/node@*", "@types/node@^22.9.0":
   version "22.9.0"
   resolved "https://registry.npmjs.org/@types/node/-/node-22.9.0.tgz#b7f16e5c3384788542c72dc3d561a7ceae2c0365"
   integrity sha512-vuyHg81vvWA1Z1ELfvLko2c8f34gyA0zaic0+Rllc5lbCnbSyuvb2Oxpm6TAUAC/2xZN3QGqxBNggD1nNR2AfQ==
   dependencies:
     undici-types "~6.19.8"
+
+"@types/node@^18.11.18":
+  version "18.19.71"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.19.71.tgz#96d4f0a0be735ead6c8998c62a4b2c0012a5d09a"
+  integrity sha512-evXpcgtZm8FY4jqBSN8+DmOTcVkkvTmAayeo4Wf3m1xAruyVGzGuDh/Fb/WWX2yLItUiho42ozyJjB0dw//Tkw==
+  dependencies:
+    undici-types "~5.26.4"
 
 "@types/offscreencanvas@^2019.6.4":
   version "2019.7.3"
@@ -1695,6 +1710,13 @@ addr-to-ip-port@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/addr-to-ip-port/-/addr-to-ip-port-2.0.0.tgz#ab383c140392f3e99d5e9c34b88c259fa35274b1"
   integrity sha512-9bYbtjamtdLHZSqVIUXhilOryNPiL+x+Q5J/Unpg4VY3ZIkK3fT52UoErj1NdUeVm3J1t2iBEAur4Ywbl/bahw==
+
+agentkeepalive@^4.2.1:
+  version "4.6.0"
+  resolved "https://registry.yarnpkg.com/agentkeepalive/-/agentkeepalive-4.6.0.tgz#35f73e94b3f40bf65f105219c623ad19c136ea6a"
+  integrity sha512-kja8j7PjmncONqaTsB8fQ+wE2mSU2DJ9D4XKoJ5PFWIdRMa6SLSN1ff4mOr4jCbfRSsxR4keIiySJU0N9T5hIQ==
+  dependencies:
+    humanize-ms "^1.2.1"
 
 ajv@^6.12.4:
   version "6.12.6"
@@ -3504,6 +3526,11 @@ for-each@^0.3.3:
   dependencies:
     is-callable "^1.1.3"
 
+form-data-encoder@1.7.2:
+  version "1.7.2"
+  resolved "https://registry.yarnpkg.com/form-data-encoder/-/form-data-encoder-1.7.2.tgz#1f1ae3dccf58ed4690b86d87e4f57c654fbab040"
+  integrity sha512-qfqtYan3rxrnCk1VYaA4H+Ms9xdpPqvLZa6xmMgFvhO32x7/3J/ExcTd6qpxM0vH2GdMI+poehyBZvqfMTto8A==
+
 form-data@^4.0.0:
   version "4.0.1"
   resolved "https://registry.npmjs.org/form-data/-/form-data-4.0.1.tgz#ba1076daaaa5bfd7e99c1a6cb02aa0a5cff90d48"
@@ -3512,6 +3539,14 @@ form-data@^4.0.0:
     asynckit "^0.4.0"
     combined-stream "^1.0.8"
     mime-types "^2.1.12"
+
+formdata-node@^4.3.2:
+  version "4.4.1"
+  resolved "https://registry.yarnpkg.com/formdata-node/-/formdata-node-4.4.1.tgz#23f6a5cb9cb55315912cbec4ff7b0f59bbd191e2"
+  integrity sha512-0iirZp3uVDjVGt9p49aTaqjk84TrglENEDuqfdlZQ1roC9CWlPk6Avf8EEnZNcAqPonwkG35x4n3ww/1THYAeQ==
+  dependencies:
+    node-domexception "1.0.0"
+    web-streams-polyfill "4.0.0-beta.3"
 
 formdata-polyfill@^4.0.10:
   version "4.0.10"
@@ -3845,6 +3880,13 @@ human-signals@^2.1.0:
   version "2.1.0"
   resolved "https://registry.npmjs.org/human-signals/-/human-signals-2.1.0.tgz#dc91fcba42e4d06e4abaed33b3e7a3c02f514ea0"
   integrity sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==
+
+humanize-ms@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/humanize-ms/-/humanize-ms-1.2.1.tgz#c46e3159a293f6b896da29316d8b6fe8bb79bbed"
+  integrity sha512-Fl70vYtsAFb/C06PTS9dZBo7ihau+Tu/DNCk/OyHhea07S+aeMWpFFkUaXRa8fI+ScZbEI8dfSxwY7gxZ9SAVQ==
+  dependencies:
+    ms "^2.0.0"
 
 iconv-lite@^0.4.4:
   version "0.4.24"
@@ -5506,7 +5548,7 @@ mri@^1.1.0:
   resolved "https://registry.npmjs.org/mri/-/mri-1.2.0.tgz#6721480fec2a11a4889861115a48b6cbe7cc8f0b"
   integrity sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==
 
-ms@^2.1.1, ms@^2.1.3:
+ms@^2.0.0, ms@^2.1.1, ms@^2.1.3:
   version "2.1.3"
   resolved "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
@@ -5586,7 +5628,7 @@ node-datachannel@^v0.12.0:
     node-domexception "^2.0.1"
     prebuild-install "^7.0.1"
 
-node-domexception@^1.0.0:
+node-domexception@1.0.0, node-domexception@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/node-domexception/-/node-domexception-1.0.0.tgz#6888db46a1f71c0b76b3f7555016b63fe64766e5"
   integrity sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==
@@ -5596,7 +5638,7 @@ node-domexception@^2.0.1:
   resolved "https://registry.npmjs.org/node-domexception/-/node-domexception-2.0.1.tgz#83b0d101123b5bbf91018fd569a58b88ae985e5b"
   integrity sha512-M85rnSC7WQ7wnfQTARPT4LrK7nwCHLdDFOCcItZMhTQjyCebJH8GciKqYJNgaOFZs9nFmTmd/VMyi3OW5jA47w==
 
-node-fetch@^2.6.12:
+node-fetch@^2.6.12, node-fetch@^2.6.7:
   version "2.7.0"
   resolved "https://registry.npmjs.org/node-fetch/-/node-fetch-2.7.0.tgz#d0f0fa6e3e2dc1d27efcd8ad99d550bda94d187d"
   integrity sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==
@@ -5827,6 +5869,19 @@ onetime@^5.1.2:
   integrity sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg==
   dependencies:
     mimic-fn "^2.1.0"
+
+openai@^4.79.1:
+  version "4.79.1"
+  resolved "https://registry.yarnpkg.com/openai/-/openai-4.79.1.tgz#2976f4d20d577cb5f9b7c6664de08745348d5461"
+  integrity sha512-M7P5/PKnT/S/B5v0D64giC9mjyxFYkqlCuQFzR5hkdzMdqUuHf8T1gHhPGPF5oAvu4+PO3TvJv/qhZoS2bqAkw==
+  dependencies:
+    "@types/node" "^18.11.18"
+    "@types/node-fetch" "^2.6.4"
+    abort-controller "^3.0.0"
+    agentkeepalive "^4.2.1"
+    form-data-encoder "1.7.2"
+    formdata-node "^4.3.2"
+    node-fetch "^2.6.7"
 
 optionator@^0.9.3:
   version "0.9.4"
@@ -7281,6 +7336,11 @@ unbox-primitive@^1.0.2:
     has-symbols "^1.0.3"
     which-boxed-primitive "^1.0.2"
 
+undici-types@~5.26.4:
+  version "5.26.5"
+  resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-5.26.5.tgz#bcd539893d00b56e964fd2657a4866b221a65617"
+  integrity sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==
+
 undici-types@~6.19.8:
   version "6.19.8"
   resolved "https://registry.npmjs.org/undici-types/-/undici-types-6.19.8.tgz#35111c9d1437ab83a7cdc0abae2f26d88eda0a02"
@@ -7563,6 +7623,11 @@ walker@^1.0.8:
   integrity sha512-ts/8E8l5b7kY0vlWLewOkDXMmPdLcVV4GmOQLyxuSswIJsweeFZtAsMF7k1Nszz+TYBQrlYRmzOnr398y1JemQ==
   dependencies:
     makeerror "1.0.12"
+
+web-streams-polyfill@4.0.0-beta.3:
+  version "4.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/web-streams-polyfill/-/web-streams-polyfill-4.0.0-beta.3.tgz#2898486b74f5156095e473efe989dcf185047a38"
+  integrity sha512-QW95TCTaHmsYfHDybGMwO5IJIM93I/6vTRk+daHTWFPhwh+C8Cg7j7XyKrwrj8Ib6vYXe0ocYNrmzY4xAAN6ug==
 
 web-streams-polyfill@^3.0.3:
   version "3.3.3"

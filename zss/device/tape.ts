@@ -29,6 +29,13 @@ const messagecrew: string[] = [
   '$dkpurple$227',
 ]
 
+function terminallog(message: MESSAGE): string {
+  if (isarray(message.data)) {
+    return [message.sender, ...message.data.map((v) => `${v}`)].join(' ')
+  }
+  return ''
+}
+
 function terminaladdmessage(message: MESSAGE) {
   const { terminal } = useTape.getState()
   let logs: TAPE_ROW[] = [
@@ -82,23 +89,21 @@ const tape = createdevice('tape', [], (message) => {
     case 'info':
       if (terminal.level >= TAPE_LOG_LEVEL.INFO) {
         terminaladdmessage(message)
-      } else {
-        // dump to devtools
       }
+      // eslint-disable-next-line no-console
+      console.log(terminallog(message))
       break
     case 'debug':
       if (terminal.level >= TAPE_LOG_LEVEL.DEBUG) {
         terminaladdmessage(message)
-      } else {
-        // dump to devtools
       }
+      console.info(terminallog(message))
       break
     case 'error':
       if (terminal.level > TAPE_LOG_LEVEL.OFF) {
         terminaladdmessage(message)
-      } else {
-        // dump to devtools
       }
+      console.error(terminallog(message))
       break
     case 'crash':
       useTape.setState((state) => ({
