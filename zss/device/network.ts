@@ -1,8 +1,4 @@
-// @ts-expect-error jsonly
-import Peer from '@thaunknown/simple-peer/lite.js'
-// @ts-expect-error jsonly
-// eslint-disable-next-line import/no-named-as-default
-import Client from 'bittorrent-tracker'
+import P2PT, { Peer } from 'p2pt'
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import { doasync } from 'zss/mapping/func'
@@ -12,7 +8,8 @@ import { shorturl } from 'zss/mapping/url'
 import { NAME } from 'zss/words/types'
 import { write, writecopyit } from 'zss/words/writeui'
 
-import { network_peer, vm_loader } from './api'
+import { api_error, network_peer, vm_loader } from './api'
+import { createforward } from './forward'
 import { registerreadplayer } from './register'
 import { SOFTWARE } from './session'
 
@@ -75,7 +72,8 @@ async function runnetworkfetch(
   }
 }
 
-let finder: MAYBE<Client>
+let finder: MAYBE<P2PT<any>>
+const forwards: Record<string, ReturnType<typeof createforward>> = {}
 
 const trackerlist = `
 wss://tracker.btorrent.xyz
@@ -86,35 +84,31 @@ wss://tracker.openwebtorrent.com
   .map((item) => item.trim())
   .filter((item) => item)
 
-function createpeer(player: string, infohash: string) {
+function createpeer(infohash: string) {
   write(network, `connecting to ${infohash}`)
-  const peerid = createinfohash(player)
-  finder = new Client({
-    infoHash: infohash,
-    peerId: peerid,
-    announce: trackerlist,
+  finder = new P2PT<any>(trackerlist, infohash)
+  finder.on('peerconnect', (peer) => {
+    forwards[peer.id] = createforward((message) => {
+      if (ispresent(finder)) {
+        finder.send(peer, message).catch((err) => {
+          api_error(network, 'send', err.message)
+        })
+      }
+    })
+    write(network, `remote connected ${peer.id}`)
   })
-  finder.on('error', (err) => {
-    console.info({ err })
+  finder.on('msg', (peer, msg) => {
+    const { forward } = forwards[peer.id] ?? {}
+    forward?.(msg)
   })
-  finder.on('warning', (warning) => {
-    console.info({ warning })
+  finder.on('peerclose', (peer) => {
+    write(network, `remote disconnected ${peer.id}`)
+    const { disconnect } = forwards[peer.id] ?? {}
+    disconnect?.()
   })
-  finder.on('peer', (peer: Peer) => {
-    console.info({ peer })
-  })
-  // node = new Peer(player)
-  // node.on('open', () => {
-  //   if (ispresent(node)) {
-  //     node.on('close', () => write(network, `closed`))
-  //     const remote = node.connect(joincode, { reliable: true })
-  //     handledataconnection(remote, () => {
-  //       write(network, 'connected')
-  //       register_ackbooks(peer)
-  //     })
-  //   }
-  // })
-  // node.on('error', (error) => api_error(peer, node?.id ?? '', error.message))
+  finder.on('trackerconnect', console.info)
+  finder.on('trackerwarning', console.info)
+  finder.start()
 }
 
 const network = createdevice('network', [], (message) => {
@@ -139,10 +133,7 @@ const network = createdevice('network', [], (message) => {
       break
     case 'peer':
       if (message.player === registerreadplayer() && isstring(message.data)) {
-        createpeer(message.player, message.data)
-        if (ispresent(finder)) {
-          finder.start()
-        }
+        createpeer(message.data)
       }
       break
     case 'requestjoincode': {
@@ -151,14 +142,14 @@ const network = createdevice('network', [], (message) => {
           if (!ispresent(message.player)) {
             return
           }
+          const infohash = createinfohash(message.player)
           // create network peer & infohash
           if (!ispresent(finder)) {
-            const infohash = createinfohash(message.player)
             network_peer(network, infohash, message.player)
           }
           // draw the code to the console
           if (ispresent(finder)) {
-            const joinurl = `${location.origin}/join/#${finder.infohash}`
+            const joinurl = `${location.origin}/join/#${infohash}`
             const url = await shorturl(joinurl)
             writecopyit(network, url, url)
             write(network, 'ready to join')

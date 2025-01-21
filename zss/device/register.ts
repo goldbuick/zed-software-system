@@ -164,13 +164,13 @@ const register = createdevice(
           if (message.player !== myplayerid) {
             return
           }
-          const books = readurlhash()
+          const urlcontent = readurlhash()
           if (isjoin()) {
             tape_terminal_open(register, myplayerid)
-            network_peer(register, books, myplayerid)
+            network_peer(register, urlcontent, myplayerid)
           } else {
             // pull data && init
-            await loadmem(books)
+            await loadmem(urlcontent)
           }
         })
         break
