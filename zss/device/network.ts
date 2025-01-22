@@ -3,12 +3,18 @@ import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
-import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import {
+  deepcopy,
+  isarray,
+  ispresent,
+  isstring,
+  MAYBE,
+} from 'zss/mapping/types'
 import { shorturl } from 'zss/mapping/url'
 import { NAME } from 'zss/words/types'
 import { write, writecopyit } from 'zss/words/writeui'
 
-import { api_error, network_peer, vm_loader } from './api'
+import { api_error, network_start, platform_bridge, vm_loader } from './api'
 import { createforward } from './forward'
 import { registerreadplayer } from './register'
 import { SOFTWARE } from './session'
@@ -73,6 +79,7 @@ async function runnetworkfetch(
 }
 
 let finder: MAYBE<P2PT<any>>
+const remotes: Record<string, string> = {}
 const forwards: Record<string, ReturnType<typeof createforward>> = {}
 
 const trackerlist = `
@@ -84,22 +91,60 @@ wss://tracker.openwebtorrent.com
   .map((item) => item.trim())
   .filter((item) => item)
 
-function createpeer(infohash: string) {
+function createpeer(infohash: string, ishost = true) {
   write(network, `connecting to ${infohash}`)
   finder = new P2PT<any>(trackerlist, infohash)
   finder.on('peerconnect', (peer) => {
     forwards[peer.id] = createforward((message) => {
-      if (ispresent(finder)) {
-        finder.send(peer, message).catch((err) => {
-          api_error(network, 'send', err.message)
-        })
+      const session = remotes[peer.id]
+      // we are never getting the session ?
+      if (session && ispresent(finder)) {
+        switch (message.target) {
+          case 'vm:cli':
+          case 'vm:doot':
+          case 'vm:input':
+          case 'vm:login':
+          case 'vm:endgame': {
+            // we have to translate to their session id
+            const bridgemessage = deepcopy({ ...message, session })
+            console.info('send', bridgemessage)
+            finder.send(peer, bridgemessage).catch((err) => {
+              api_error(network, 'send', err.message)
+            })
+            break
+          }
+          default:
+            break
+        }
       }
     })
     write(network, `remote connected ${peer.id}`)
   })
-  finder.on('msg', (peer, msg) => {
+  finder.on('msg', (peer, message) => {
     const { forward } = forwards[peer.id] ?? {}
-    forward?.(msg)
+    // track remote session ids
+    if (!ispresent(remotes[peer.id])) {
+      remotes[peer.id] = message.session
+    }
+    switch (message.target) {
+      case 'vm:cli':
+      case 'vm:doot':
+      case 'vm:input':
+      case 'vm:login':
+      case 'vm:endgame': {
+        // we have to translate to OUR session id
+        const bridgemessage = deepcopy({
+          ...message,
+          session: network.session(),
+        })
+        console.info('recv', bridgemessage)
+        forward?.(bridgemessage)
+        break
+      }
+      default:
+        // drop it
+        break
+    }
   })
   finder.on('peerclose', (peer) => {
     write(network, `remote disconnected ${peer.id}`)
@@ -131,9 +176,14 @@ const network = createdevice('network', [], (message) => {
         })
       }
       break
-    case 'peer':
+    case 'start':
       if (message.player === registerreadplayer() && isstring(message.data)) {
-        createpeer(message.data)
+        createpeer(message.data, true)
+      }
+      break
+    case 'join':
+      if (message.player === registerreadplayer() && isstring(message.data)) {
+        createpeer(message.data, false)
       }
       break
     case 'requestjoincode': {
@@ -145,7 +195,7 @@ const network = createdevice('network', [], (message) => {
           const infohash = createinfohash(message.player)
           // create network peer & infohash
           if (!ispresent(finder)) {
-            network_peer(network, infohash, message.player)
+            network_start(network, infohash, message.player)
           }
           // draw the code to the console
           if (ispresent(finder)) {

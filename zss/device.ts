@@ -74,6 +74,11 @@ export function createdevice(
         session = message.session
       }
 
+      // we are bridging into a new session
+      if (itarget === 'bridge' && ispresent(message.session)) {
+        session = message.session
+      }
+
       // we match by topics
       if (itopics.findIndex((tag) => tag === 'all' || tag === itarget) !== -1) {
         onMessage(message)

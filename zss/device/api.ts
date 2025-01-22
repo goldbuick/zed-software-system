@@ -87,12 +87,20 @@ export function network_fetch(
   device.emit('network:fetch', [arg, label, url, method, words], player)
 }
 
-export function network_peer(
+export function network_join(
   device: DEVICELIKE,
   infohash: string,
   player: string,
 ) {
-  device.emit('network:peer', infohash, player)
+  device.emit('network:join', infohash, player)
+}
+
+export function network_start(
+  device: DEVICELIKE,
+  infohash: string,
+  player: string,
+) {
+  device.emit('network:start', infohash, player)
 }
 
 export function network_requestjoincode(device: DEVICELIKE, player: string) {
@@ -101,6 +109,10 @@ export function network_requestjoincode(device: DEVICELIKE, player: string) {
 
 export function platform_ready(device: DEVICELIKE) {
   device.emit('ready')
+}
+
+export function platform_bridge(device: DEVICELIKE, session: string) {
+  device.emit('bridge', session)
 }
 
 export function register_ackbooks(device: DEVICELIKE) {
