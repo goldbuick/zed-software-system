@@ -4821,7 +4821,7 @@ jszip@^3.10.1:
 
 kademlia-table@^2.0.4:
   version "2.0.4"
-  resolved "https://registry.npmjs.org/kademlia-table/-/kademlia-table-2.0.4.tgz#f72ad5dfc6dfe8eb7f8f36e750e5347c4a354032"
+  resolved "https://registry.yarnpkg.com/kademlia-table/-/kademlia-table-2.0.4.tgz#f72ad5dfc6dfe8eb7f8f36e750e5347c4a354032"
   integrity sha512-iZbQLBjaPkF/ncOdMcHrG9DKx4mqLOahRfLwsiZRoND041c6L/ezAnfz2z6bg9yW504KCYcIvdT6jr5DRT3cdA==
   dependencies:
     uint8array-tools "^0.0.9"
@@ -7323,7 +7323,7 @@ uint8-util@^2.2.2, uint8-util@^2.2.5:
 
 uint8array-tools@^0.0.9:
   version "0.0.9"
-  resolved "https://registry.npmjs.org/uint8array-tools/-/uint8array-tools-0.0.9.tgz#e29e6d05f3472273db1b0e370ac1d91e4a0a4e6f"
+  resolved "https://registry.yarnpkg.com/uint8array-tools/-/uint8array-tools-0.0.9.tgz#e29e6d05f3472273db1b0e370ac1d91e4a0a4e6f"
   integrity sha512-9vqDWmoSXOoi+K14zNaf6LBV51Q8MayF0/IiQs3GlygIKUYtog603e6virExkjjFosfJUBI4LhbQK1iq8IG11A==
 
 unbox-primitive@^1.0.2:

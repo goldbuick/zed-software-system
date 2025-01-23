@@ -5,7 +5,7 @@ import { SOFTWARE } from './device/session'
 import { DRIVER_TYPE } from './firmware/runner'
 import { GeneratorBuild, compile } from './lang/generator'
 import { ispresent, isstring } from './mapping/types'
-// memoryloaderarg
+
 export type OS = {
   ids: () => string[]
   has: (id: string) => boolean

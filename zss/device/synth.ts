@@ -789,6 +789,9 @@ const synthdevice = createdevice('synth', [], (message) => {
         }
 
         switch (config) {
+          case 'reset':
+            voice.applyreset()
+            return
           case 'vol':
           case 'volume':
             if (isnumber(value)) {

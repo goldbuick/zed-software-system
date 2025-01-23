@@ -1,3 +1,4 @@
+import { KademliaTables } from 'kademlia-tables'
 import P2PT from 'p2pt'
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
@@ -14,7 +15,13 @@ import { shorturl } from 'zss/mapping/url'
 import { NAME } from 'zss/words/types'
 import { write, writecopyit } from 'zss/words/writeui'
 
-import { api_error, network_start, platform_bridge, vm_loader } from './api'
+import {
+  api_error,
+  MESSAGE,
+  network_start,
+  platform_bridge,
+  vm_loader,
+} from './api'
 import { createforward } from './forward'
 import { registerreadplayer } from './register'
 import { SOFTWARE } from './session'
@@ -78,10 +85,6 @@ async function runnetworkfetch(
   }
 }
 
-let finder: MAYBE<P2PT<any>>
-const remotes: Record<string, string> = {}
-const forwards: Record<string, ReturnType<typeof createforward>> = {}
-
 const trackerlist = `
 wss://tracker.btorrent.xyz
 wss://tracker.webtorrent.dev
@@ -91,65 +94,76 @@ wss://tracker.openwebtorrent.com
   .map((item) => item.trim())
   .filter((item) => item)
 
-function createpeer(infohash: string, ishost = true) {
-  write(network, `connecting to ${infohash}`)
-  finder = new P2PT<any>(trackerlist, infohash)
+const finder = new P2PT<MESSAGE>(
+  trackerlist,
+  `${import.meta.env.ZSS_COMMIT_HASH}`,
+)
+
+// type NetworkNode = {
+//   id: string
+// }
+
+function createpeer(host: string) {
+  write(network, `connecting to hubworld for ${host}`)
+  // finder._peerId
   finder.on('peerconnect', (peer) => {
-    forwards[peer.id] = createforward((message) => {
-      const session = remotes[peer.id]
-      // we are never getting the session ?
-      if (session && ispresent(finder)) {
-        switch (message.target) {
-          case 'vm:cli':
-          case 'vm:doot':
-          case 'vm:input':
-          case 'vm:login':
-          case 'vm:endgame': {
-            // we have to translate to their session id
-            const bridgemessage = deepcopy({ ...message, session })
-            console.info('send', bridgemessage)
-            finder.send(peer, bridgemessage).catch((err) => {
-              api_error(network, 'send', err.message)
-            })
-            break
-          }
-          default:
-            break
-        }
-      }
-    })
-    write(network, `remote connected ${peer.id}`)
+    // forwards[peer.id] = createforward((message) => {
+    //   // const session = remotes[peer.id]
+    //   // we are never getting the session ?
+    //   // if (session && ispresent(finder)) {
+    //   //   switch (message.target) {
+    //   //     case 'vm:cli':
+    //   //     case 'vm:doot':
+    //   //     case 'vm:input':
+    //   //     case 'vm:login':
+    //   //     case 'vm:endgame': {
+    //   //       // we have to translate to their session id
+    //   //       const bridgemessage = deepcopy({ ...message, session })
+    //   //       console.info('send', bridgemessage)
+    //   //       finder.send(peer, bridgemessage).catch((err) => {
+    //   //         api_error(network, 'send', err.message)
+    //   //       })
+    //   //       break
+    //   //     }
+    //   //     default:
+    //   //       break
+    //   //   }
+    //   // }
+    //   console.info('?????', infohash, peer.id)
+    // })
+    // write(network, `remote connected ${peer.id}`)
   })
   finder.on('msg', (peer, message) => {
-    const { forward } = forwards[peer.id] ?? {}
-    // track remote session ids
-    if (!ispresent(remotes[peer.id])) {
-      remotes[peer.id] = message.session
-    }
-    switch (message.target) {
-      case 'vm:cli':
-      case 'vm:doot':
-      case 'vm:input':
-      case 'vm:login':
-      case 'vm:endgame': {
-        // we have to translate to OUR session id
-        const bridgemessage = deepcopy({
-          ...message,
-          session: network.session(),
-        })
-        console.info('recv', bridgemessage)
-        forward?.(bridgemessage)
-        break
-      }
-      default:
-        // drop it
-        break
-    }
+    // const { forward } = forwards[peer.id] ?? {}
+    // // track remote session ids
+    // if (!ispresent(remotes[peer.id])) {
+    //   remotes[peer.id] = message.session
+    // }
+    // switch (message.target) {
+    //   case 'vm:cli':
+    //   case 'vm:doot':
+    //   case 'vm:input':
+    //   case 'vm:login':
+    //   case 'vm:endgame': {
+    //     // we have to translate to OUR session id
+    //     const bridgemessage = deepcopy({
+    //       ...message,
+    //       session: network.session(),
+    //     })
+    //     console.info('recv', bridgemessage)
+    //     forward?.(bridgemessage)
+    //     break
+    //   }
+    //   default:
+    //     // drop it
+    //     break
+    // }
+    // console.info('from peer', message.session, peer.id, message)
   })
   finder.on('peerclose', (peer) => {
-    write(network, `remote disconnected ${peer.id}`)
-    const { disconnect } = forwards[peer.id] ?? {}
-    disconnect?.()
+    // write(network, `remote disconnected ${peer.id}`)
+    // const { disconnect } = forwards[peer.id] ?? {}
+    // disconnect?.()
   })
   finder.on('trackerconnect', console.info)
   finder.on('trackerwarning', console.info)
@@ -178,12 +192,12 @@ const network = createdevice('network', [], (message) => {
       break
     case 'start':
       if (message.player === registerreadplayer() && isstring(message.data)) {
-        createpeer(message.data, true)
+        createpeer(message.data)
       }
       break
     case 'join':
       if (message.player === registerreadplayer() && isstring(message.data)) {
-        createpeer(message.data, false)
+        createpeer(message.data)
       }
       break
     case 'requestjoincode': {

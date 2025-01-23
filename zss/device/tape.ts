@@ -1,4 +1,3 @@
-import { MESSAGE } from 'zss/chip'
 import { createdevice } from 'zss/device'
 import {
   TAPE_DISPLAY,
@@ -10,6 +9,8 @@ import {
 import { pickwith } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { isarray, isboolean, ispresent } from 'zss/mapping/types'
+
+import { MESSAGE } from './api'
 
 const messagecrew: string[] = [
   '$brown$153',

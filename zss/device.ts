@@ -1,4 +1,4 @@
-import { MESSAGE } from './chip'
+import { MESSAGE } from './device/api'
 import { hub } from './hub'
 import { createsid } from './mapping/guid'
 import { ispresent, noop } from './mapping/types'

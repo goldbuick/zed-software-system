@@ -4,12 +4,31 @@ without having to include device code
 */
 
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
-import { MAYBE } from 'zss/mapping/types'
+import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
 // be careful to keep imports here minimal
 
 export type DEVICELIKE = {
   emit: (target: string, data?: any, player?: string) => void
+}
+
+export type MESSAGE = {
+  session: string
+  id: string
+  target: string
+  data?: any
+  sender: string
+  player?: string
+}
+
+export function ismessage(value: any): value is MESSAGE {
+  return (
+    ispresent(value) &&
+    typeof value === 'object' &&
+    isstring(value.id) &&
+    isstring(value.target) &&
+    isstring(value.sender)
+  )
 }
 
 export function api_error(
@@ -89,18 +108,18 @@ export function network_fetch(
 
 export function network_join(
   device: DEVICELIKE,
-  infohash: string,
+  topic: string,
   player: string,
 ) {
-  device.emit('network:join', infohash, player)
+  device.emit('network:join', topic, player)
 }
 
 export function network_start(
   device: DEVICELIKE,
-  infohash: string,
+  topic: string,
   player: string,
 ) {
-  device.emit('network:start', infohash, player)
+  device.emit('network:start', topic, player)
 }
 
 export function network_requestjoincode(device: DEVICELIKE, player: string) {

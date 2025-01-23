@@ -1,7 +1,7 @@
 import ErrorStackParser from 'error-stack-parser'
 
 import { RUNTIME } from './config'
-import { api_error } from './device/api'
+import { api_error, MESSAGE } from './device/api'
 import { SOFTWARE } from './device/session'
 import {
   DRIVER_TYPE,
@@ -23,15 +23,6 @@ import {
 import { memoryclearflags, memoryreadflags } from './memory'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
 import { WORD, WORD_RESULT } from './words/types'
-
-export type MESSAGE = {
-  session: string
-  id: string
-  target: string
-  data?: any
-  sender: string
-  player?: string
-}
 
 // may need to expand on this to encapsulate more complex values
 export type CHIP = {
