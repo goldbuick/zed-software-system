@@ -790,6 +790,7 @@ const synthdevice = createdevice('synth', [], (message) => {
 
         switch (config) {
           case 'reset':
+          case 'restart':
             voice.applyreset()
             return
           case 'vol':

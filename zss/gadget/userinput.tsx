@@ -133,6 +133,7 @@ document.addEventListener(
 
     // block default browser behavior that messes with things
     switch (key) {
+      case 'p':
       case 's':
       case 'arrowleft':
       case 'arrowright':

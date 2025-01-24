@@ -7,16 +7,16 @@ export function createsource(playvolume: Volume) {
   const source = new Synth()
   const resetvalues = deepcopy(source.get())
 
-  const fx = createfx()
-  source.chain(
-    fx.vibrato,
-    fx.chorus,
-    fx.phaser,
-    fx.distortion,
-    fx.echo,
-    fx.reverb,
-    playvolume,
-  )
+  const {
+    vibrato,
+    chorus,
+    phaser,
+    distortion,
+    echo,
+    reverb,
+    applyreset: fxapplyreset,
+  } = createfx()
+  source.chain(vibrato, chorus, phaser, distortion, echo, reverb, playvolume)
 
   function applyreset() {
     // reset source(s)
@@ -35,10 +35,21 @@ export function createsource(playvolume: Volume) {
       },
     })
     // reset fx
-    fx.applyreset()
+    fxapplyreset()
   }
 
   applyreset()
 
-  return { source, fx, applyreset }
+  return {
+    source,
+    fx: {
+      vibrato,
+      chorus,
+      phaser,
+      distortion,
+      echo,
+      reverb,
+    },
+    applyreset,
+  }
 }
