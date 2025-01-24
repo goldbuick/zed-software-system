@@ -61,6 +61,7 @@ finder.on('peerclose', (peer) => {
 // general routing info
 const sublastseen = new Map<string, Map<string, number>>()
 finder.on('msg', (peer, msg: ROUTING_MESSAGE) => {
+  console.info('msg gme', msg.gme)
   // grab timestamp
   const current = Date.now()
 
@@ -80,6 +81,7 @@ finder.on('msg', (peer, msg: ROUTING_MESSAGE) => {
     if (msg.topic === topic && ispresent(msg.gme)) {
       console.info('maybe bridge AAAA ???', msg.gme)
     }
+
     // build an aggregate list of peers to forward to
     const nextpeers = new Set<Peer>()
     for (const [peerid] of lastseen) {
@@ -90,6 +92,7 @@ finder.on('msg', (peer, msg: ROUTING_MESSAGE) => {
         }
       }
     }
+
     // forward message to all peers that care about given topic
     for (const peer of nextpeers) {
       finder.send(peer, msg).catch(console.error)
@@ -97,9 +100,10 @@ finder.on('msg', (peer, msg: ROUTING_MESSAGE) => {
   } else if ('sub' in msg) {
     // write to list of last seen peer for given topic
     lastseen.set(msg.sub, current)
+    // handoff message
     if (istopichost) {
-      // if we are topic host bridge to system if needed
-      if (ispresent(msg.gme)) {
+      // forward message to system
+      if (msg.topic === topic && ispresent(msg.gme)) {
         console.info('maybe bridge AAAA ???', msg.gme)
       }
     } else {
@@ -135,6 +139,7 @@ function peerusehost(host: string, player: string) {
     isstarted = true
     topicplayer = player
     topic = host
+    istopichost = host === finder._peerId
     finder.start()
     write(SOFTWARE, `${topicplayer} connecting to hubworld for ${host}`)
   }
@@ -149,7 +154,6 @@ function peerpublishmessage(gme: MESSAGE) {
 }
 
 export function peerstart(player: string) {
-  istopichost = true
   peerusehost(finder._peerId, player)
   network_showjoincode(SOFTWARE, topic, player)
   // open bridge between peers
@@ -190,7 +194,6 @@ function peersubscribe() {
 }
 
 export function peerjoin(host: string, player: string) {
-  istopichost = false
   peerusehost(host, player)
   peersubscribe()
   // open bridge between peers
