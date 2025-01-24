@@ -41,8 +41,8 @@ export function TapeConsole() {
 
     const messagetext = message.map((v) => `${v}`).join(' ')
     const ishyperlink = messagetext.startsWith('!')
-    const prefix = `$blue[${level}${source}$blue]`
-    return `${ishyperlink ? '!' : ''}${prefix} ${messagetext}`
+    const prefix = `$blue${level}${source}$blue$180$blue`
+    return `${ishyperlink ? '!' : ''}${prefix}${messagetext}`
   })
 
   // measure rows

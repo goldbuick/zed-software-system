@@ -51,17 +51,18 @@ const routingtable = new KademliaTable<ROUTING_NODE>(
 )
 
 finder.on('peerconnect', (peer) => {
+  write(SOFTWARE, `remote connected ${peer.id}`)
   routingtable.add({ id: peerstringtobytes(peer.id), peer })
 })
 
 finder.on('peerclose', (peer) => {
+  write(SOFTWARE, `remote closed ${peer.id}`)
   routingtable.remove(peerstringtobytes(peer.id))
 })
 
 // general routing info
 const sublastseen = new Map<string, Map<string, number>>()
 finder.on('msg', (peer, msg: ROUTING_MESSAGE) => {
-  console.info('msg gme', msg.gme)
   // grab timestamp
   const current = Date.now()
 
@@ -79,7 +80,7 @@ finder.on('msg', (peer, msg: ROUTING_MESSAGE) => {
   if ('pub' in msg) {
     // forward message to system
     if (msg.topic === topic && ispresent(msg.gme)) {
-      console.info('maybe bridge AAAA ???', msg.gme)
+      console.info('AAAA PUB maybe bridge ???', msg.gme)
     }
 
     // build an aggregate list of peers to forward to
@@ -104,7 +105,7 @@ finder.on('msg', (peer, msg: ROUTING_MESSAGE) => {
     if (istopichost) {
       // forward message to system
       if (msg.topic === topic && ispresent(msg.gme)) {
-        console.info('maybe bridge AAAA ???', msg.gme)
+        console.info('AAAA SUB maybe bridge ???', msg.gme)
       }
     } else {
       // forwards towards topic host peer
@@ -159,11 +160,11 @@ export function peerstart(player: string) {
   // open bridge between peers
   topicbridge = createforward((message) => {
     switch (message.target) {
-      case 'vm:cli':
-      case 'vm:doot':
-      case 'vm:input':
-      case 'vm:login':
-      case 'vm:endgame': {
+      case 'tape:info':
+      case 'tape:error':
+      case 'tape:debug':
+      case 'gadgetclient:reset':
+      case 'gadgetclient:patch': {
         peerpublishmessage(message)
         break
       }
@@ -202,12 +203,12 @@ export function peerjoin(host: string, player: string) {
       case 'vm:cli':
       case 'vm:doot':
       case 'vm:input':
-      case 'vm:login':
-      case 'vm:endgame': {
+      case 'vm:login': {
         peersubscribemessage(finder._peerId, message)
         break
       }
       default:
+        console.info(message.target)
         break
     }
   })
