@@ -8,7 +8,7 @@ import {
   register_nuke,
   register_share,
   register_dev,
-  network_requestjoincode,
+  network_start,
   broadcast_startstream,
   broadcast_stopstream,
   chat_connect,
@@ -461,7 +461,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('joincode', () => {
-    network_requestjoincode(SOFTWARE, READ_CONTEXT.elementfocus)
+    network_start(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('chat', (_, words) => {
