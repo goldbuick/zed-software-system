@@ -61,18 +61,23 @@ finder.on('peerclose', (peer) => {
 })
 
 // general routing info
-const sublastseen = new Map<string, Map<string, number>>()
+let subscribetopic = ''
+const subscribelastseen = new Map<string, Map<string, number>>()
 finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
   // grab timestamp
   const current = Date.now()
   // ensure we have a list of last seen peer for given topic
-  const lastseen = sublastseen.get(msg.topic) ?? new Map<string, number>()
+  const lastseen = subscribelastseen.get(msg.topic) ?? new Map<string, number>()
 
   // handle message
   if ('pub' in msg) {
     // are we subscribed to this topic ?
-    if (msg.topic === peerjoinhost) {
-      console.info('AAAA PUB maybe bridge ???', msg.gme)
+    if (msg.topic === subscribetopic) {
+      topicbridge?.forward({
+        ...msg.gme,
+        // translate to software session
+        session: SOFTWARE.session(),
+      })
     }
     // peers that care about this topic
     for (const [peerid, delay] of lastseen) {
@@ -95,15 +100,19 @@ finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
     // track that this peer cares about this topic
     lastseen.set(msg.sub, current)
     // are we the host of this topic ?
-    if (msg.topic === finder._peerId) {
-      console.info('AAAA SUB maybe bridge ???', msg.gme)
+    if (msg.topic === subscribetopic && finder._peerId === subscribetopic) {
+      topicbridge?.forward({
+        ...msg.gme,
+        // translate to software session
+        session: SOFTWARE.session(),
+      })
     } else {
       // forwards towards host peer
       peersubscribemessage(msg.topic, msg.sub, msg.gme)
     }
   }
   // update last seen for given topic
-  sublastseen.set(msg.topic, lastseen)
+  subscribelastseen.set(msg.topic, lastseen)
 })
 
 finder.on('trackerconnect', console.info)
@@ -115,6 +124,7 @@ let topicbridge: MAYBE<ReturnType<typeof createforward>>
 function peerusehost(host: string, player: string) {
   if (!isstarted) {
     isstarted = true
+    subscribetopic = host
     finder.start()
     write(SOFTWARE, `${player} connecting to hubworld for ${host}`)
   }
@@ -129,8 +139,9 @@ function peerpublishmessage(topic: string, gme: MESSAGE) {
 }
 
 export function peerstart(player: string) {
-  peerusehost(finder._peerId, player)
-  network_showjoincode(SOFTWARE, finder._peerId, player)
+  const host = finder._peerId
+  peerusehost(host, player)
+  network_showjoincode(SOFTWARE, host, player)
   // open bridge between peers
   topicbridge = createforward((message) => {
     switch (message.target) {
@@ -139,7 +150,7 @@ export function peerstart(player: string) {
       case 'tape:debug':
       case 'gadgetclient:reset':
       case 'gadgetclient:patch': {
-        peerpublishmessage(finder._peerId, message)
+        peerpublishmessage(host, message)
         break
       }
       default:
@@ -163,9 +174,7 @@ function peersubscribe(topic: string) {
   setTimeout(() => peersubscribe(topic), 1000 * 3)
 }
 
-let peerjoinhost = ''
 export function peerjoin(host: string, player: string) {
-  peerjoinhost = host
   peerusehost(host, player)
   peersubscribe(host)
   // open bridge between peers
@@ -175,7 +184,8 @@ export function peerjoin(host: string, player: string) {
       case 'vm:doot':
       case 'vm:input':
       case 'vm:login': {
-        peersubscribemessage(host, finder._peerId, message)
+        const self = finder._peerId
+        peersubscribemessage(host, self, message)
         break
       }
       default:
