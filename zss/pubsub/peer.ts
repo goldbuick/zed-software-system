@@ -160,7 +160,7 @@ function peersubscribe(topic: string) {
   // forwards towards topic host peer
   peersubscribemessage(topic, finder._peerId)
   // not sure how slow of a poll this should be
-  setTimeout(peersubscribe, 1000 * 3)
+  setTimeout(() => peersubscribe(topic), 1000 * 3)
 }
 
 let peerjoinhost = ''
