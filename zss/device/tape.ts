@@ -92,19 +92,19 @@ const tape = createdevice('tape', [], (message) => {
         terminaladdmessage(message)
       }
       // eslint-disable-next-line no-console
-      console.log(terminallog(message))
+      // console.log(terminallog(message))
       break
     case 'debug':
       if (terminal.level >= TAPE_LOG_LEVEL.DEBUG) {
         terminaladdmessage(message)
       }
-      console.info(terminallog(message))
+      // console.info(terminallog(message))
       break
     case 'error':
       if (terminal.level > TAPE_LOG_LEVEL.OFF) {
         terminaladdmessage(message)
       }
-      console.error(terminallog(message))
+      // console.error(terminallog(message))
       break
     case 'crash':
       useTape.setState((state) => ({

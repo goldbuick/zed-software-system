@@ -62,65 +62,46 @@ finder.on('peerclose', (peer) => {
 
 // general routing info
 const sublastseen = new Map<string, Map<string, number>>()
-finder.on('msg', (peer, msg: ROUTING_MESSAGE) => {
+finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
   // grab timestamp
   const current = Date.now()
-
   // ensure we have a list of last seen peer for given topic
   const lastseen = sublastseen.get(msg.topic) ?? new Map<string, number>()
 
-  // filter out peers that no longer care about given topic
-  for (const [peerid, delay] of lastseen) {
-    const delta = current - delay
-    if (delta > 1000 * 60) {
-      lastseen.delete(peerid)
-    }
-  }
-
+  // handle message
   if ('pub' in msg) {
-    // forward message to system
-    if (msg.topic === topic && ispresent(msg.gme)) {
+    // are we subscribed to this topic ?
+    if (msg.topic === peerjoinhost) {
       console.info('AAAA PUB maybe bridge ???', msg.gme)
     }
-
-    // build an aggregate list of peers to forward to
-    const nextpeers = new Set<Peer>()
-    for (const [peerid] of lastseen) {
-      const nodes = routingtable.listClosestToId(peerstringtobytes(peerid), 5)
-      for (let i = 0; i < nodes.length; i++) {
-        if (nodes[i].peer !== peer) {
-          nextpeers.add(nodes[i].peer)
+    // peers that care about this topic
+    for (const [peerid, delay] of lastseen) {
+      const delta = current - delay
+      // filter out peers that no longer care about given topic
+      if (delta > 1000 * 60) {
+        lastseen.delete(peerid)
+      } else {
+        // forward message to peer
+        const [node] = routingtable.listClosestToId(
+          peerstringtobytes(peerid),
+          1,
+        )
+        if (ispresent(node)) {
+          finder.send(node.peer, msg).catch(console.error)
         }
       }
-    }
-
-    // forward message to all peers that care about given topic
-    for (const peer of nextpeers) {
-      finder.send(peer, msg).catch(console.error)
     }
   } else if ('sub' in msg) {
-    // write to list of last seen peer for given topic
+    // track that this peer cares about this topic
     lastseen.set(msg.sub, current)
-    // handoff message
-    if (istopichost) {
-      // forward message to system
-      if (msg.topic === topic && ispresent(msg.gme)) {
-        console.info('AAAA SUB maybe bridge ???', msg.gme)
-      }
+    // are we the host of this topic ?
+    if (msg.topic === finder._peerId) {
+      console.info('AAAA SUB maybe bridge ???', msg.gme)
     } else {
-      // forwards towards topic host peer
-      const nodes = routingtable.listClosestToId(
-        peerstringtobytes(msg.topic),
-        5,
-      )
-      for (let i = 0; i < nodes.length; i++) {
-        if (nodes[i].peer !== peer) {
-          finder.send(nodes[i].peer, msg).catch(console.error)
-        }
-      }
+      // forwards towards host peer
+      peersubscribemessage(msg.topic, msg.sub, msg.gme)
     }
   }
-
   // update last seen for given topic
   sublastseen.set(msg.topic, lastseen)
 })
@@ -129,34 +110,27 @@ finder.on('trackerconnect', console.info)
 finder.on('trackerwarning', console.info)
 
 // topic related state
-let topic = ''
-let topicplayer = ''
 let isstarted = false
-let istopichost = false
 let topicbridge: MAYBE<ReturnType<typeof createforward>>
-
 function peerusehost(host: string, player: string) {
   if (!isstarted) {
     isstarted = true
-    topicplayer = player
-    topic = host
-    istopichost = host === finder._peerId
     finder.start()
-    write(SOFTWARE, `${topicplayer} connecting to hubworld for ${host}`)
+    write(SOFTWARE, `${player} connecting to hubworld for ${host}`)
   }
 }
 
-function peerpublishmessage(gme: MESSAGE) {
+function peerpublishmessage(topic: string, gme: MESSAGE) {
   // forwards towards topic host peer
-  const nodes = routingtable.listClosestToId(peerstringtobytes(topic), 5)
-  for (let i = 0; i < nodes.length; i++) {
-    finder.send(nodes[i].peer, { topic, pub: true, gme }).catch(console.error)
+  const [node] = routingtable.listClosestToId(peerstringtobytes(topic), 1)
+  if (ispresent(node)) {
+    finder.send(node.peer, { topic, pub: true, gme }).catch(console.error)
   }
 }
 
 export function peerstart(player: string) {
   peerusehost(finder._peerId, player)
-  network_showjoincode(SOFTWARE, topic, player)
+  network_showjoincode(SOFTWARE, finder._peerId, player)
   // open bridge between peers
   topicbridge = createforward((message) => {
     switch (message.target) {
@@ -165,7 +139,7 @@ export function peerstart(player: string) {
       case 'tape:debug':
       case 'gadgetclient:reset':
       case 'gadgetclient:patch': {
-        peerpublishmessage(message)
+        peerpublishmessage(finder._peerId, message)
         break
       }
       default:
@@ -174,29 +148,26 @@ export function peerstart(player: string) {
   })
 }
 
-function peersubscribemessage(sub: string, gme?: MESSAGE) {
+function peersubscribemessage(topic: string, sub: string, gme?: MESSAGE) {
   // forwards towards topic host peer
-  const nodes = routingtable.listClosestToId(peerstringtobytes(topic), 5)
-  for (let i = 0; i < nodes.length; i++) {
-    finder.send(nodes[i].peer, { topic, sub, gme }).catch(console.error)
+  const [node] = routingtable.listClosestToId(peerstringtobytes(topic), 1)
+  if (ispresent(node)) {
+    finder.send(node.peer, { topic, sub, gme }).catch(console.error)
   }
 }
 
-function peersubscribe() {
-  if (!topic) {
-    return
-  }
-
+function peersubscribe(topic: string) {
   // forwards towards topic host peer
-  peersubscribemessage(finder._peerId)
-
+  peersubscribemessage(topic, finder._peerId)
   // not sure how slow of a poll this should be
   setTimeout(peersubscribe, 1000 * 3)
 }
 
+let peerjoinhost = ''
 export function peerjoin(host: string, player: string) {
+  peerjoinhost = host
   peerusehost(host, player)
-  peersubscribe()
+  peersubscribe(host)
   // open bridge between peers
   topicbridge = createforward((message) => {
     switch (message.target) {
@@ -204,18 +175,16 @@ export function peerjoin(host: string, player: string) {
       case 'vm:doot':
       case 'vm:input':
       case 'vm:login': {
-        peersubscribemessage(finder._peerId, message)
+        peersubscribemessage(host, finder._peerId, message)
         break
       }
       default:
-        console.info(message.target)
         break
     }
   })
 }
 
 export function peerleave() {
-  topic = ''
   // close bridge between peers
   topicbridge?.disconnect()
   topicbridge = undefined
