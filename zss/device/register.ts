@@ -176,7 +176,7 @@ const register = createdevice(
         break
       }
       case 'ackbooks':
-      case 'relogin':
+      case 'restart':
         doasync(register, async () => {
           await waitfor(1000)
           vm_login(register, myplayerid)

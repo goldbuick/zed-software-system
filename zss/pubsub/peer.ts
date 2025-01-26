@@ -1,6 +1,7 @@
 import { KademliaTable } from 'kademlia-table'
 import P2PT, { Peer } from 'p2pt'
 import { hex2arr } from 'uint8-util'
+import { createmessage } from 'zss/device'
 import { MESSAGE, network_showjoincode } from 'zss/device/api'
 import { createforward } from 'zss/device/forward'
 import { SOFTWARE } from 'zss/device/session'
@@ -106,7 +107,7 @@ finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
         // translate to software session
         session: SOFTWARE.session(),
       })
-    } else {
+    } else if (ispresent(msg.gme)) {
       // forwards towards host peer
       peersubscribemessage(msg.topic, msg.sub, msg.gme)
     }
@@ -148,6 +149,7 @@ export function peerstart(player: string) {
       case 'tape:info':
       case 'tape:error':
       case 'tape:debug':
+      case 'register:restart':
       case 'gadgetclient:reset':
       case 'gadgetclient:patch': {
         peerpublishmessage(host, message)
@@ -159,7 +161,7 @@ export function peerstart(player: string) {
   })
 }
 
-function peersubscribemessage(topic: string, sub: string, gme?: MESSAGE) {
+function peersubscribemessage(topic: string, sub: string, gme: MESSAGE) {
   // forwards towards topic host peer
   const [node] = routingtable.listClosestToId(peerstringtobytes(topic), 1)
   if (ispresent(node)) {
@@ -167,23 +169,34 @@ function peersubscribemessage(topic: string, sub: string, gme?: MESSAGE) {
   }
 }
 
-function peersubscribe(topic: string) {
+function peersubscribe(topic: string, player: string) {
   // forwards towards topic host peer
-  peersubscribemessage(topic, finder._peerId)
+  peersubscribemessage(
+    topic,
+    finder._peerId,
+    createmessage(
+      SOFTWARE.session(),
+      `vm:joinack`,
+      SOFTWARE.id(),
+      topic,
+      player,
+    ),
+  )
   // not sure how slow of a poll this should be
-  setTimeout(() => peersubscribe(topic), 1000 * 3)
+  setTimeout(() => peersubscribe(topic, player), 1000 * 3)
 }
 
 export function peerjoin(host: string, player: string) {
   peerusehost(host, player)
-  peersubscribe(host)
+  peersubscribe(host, player)
   // open bridge between peers
   topicbridge = createforward((message) => {
     switch (message.target) {
       case 'vm:cli':
       case 'vm:doot':
       case 'vm:input':
-      case 'vm:login': {
+      case 'vm:login':
+      case 'vm:joinack': {
         const self = finder._peerId
         peersubscribemessage(host, self, message)
         break

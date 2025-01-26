@@ -1,3 +1,4 @@
+import { createchipid } from 'zss/chip'
 import { createdevice } from 'zss/device'
 import { parsewebfile } from 'zss/firmware/loader/parsefile'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
@@ -20,7 +21,10 @@ import {
   memoryreadsession,
   memorywriteoperator,
   memoryreadoperator,
+  memoryreadplayeractive,
+  memoryreadplayerboard,
 } from 'zss/memory'
+import { boardobjectread } from 'zss/memory/board'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
@@ -30,10 +34,9 @@ import { write } from 'zss/words/writeui'
 import {
   gadgetserver_clearplayer,
   platform_ready,
-  register_relogin,
+  register_restart,
   register_savemem,
   tape_debug,
-  tape_info,
   vm_codeaddress,
   vm_flush,
 } from './api'
@@ -91,7 +94,23 @@ const vm = createdevice(
             vm.reply(message, 'ackbooks', true, message.player)
           }
         })
+        break
+      case 'joinack':
+        if (ispresent(message.player)) {
+          const board = memoryreadplayerboard(message.player)
+          const playerelement = boardobjectread(board, message.player)
+          // chip memory
+          // message.player
+          const mem = createchipid(message.player)
+          const flags = memoryreadflags(mem)
 
+          console.info('?????', flags.es, playerelement)
+          // validate player is active
+          // if (!memoryreadplayeractive(message.player)) {
+          //   // send register restart
+          //   register_restart(vm, message.player)
+          // }
+        }
         break
       case 'login':
         if (ispresent(message.player)) {
@@ -105,14 +124,17 @@ const vm = createdevice(
           }
         }
         break
-      case 'endgame':
+      case 'logout':
         if (ispresent(message.player)) {
           // logout player
           memoryplayerlogout(message.player)
+          // stop tracking
+          delete tracking[message.player]
+          write(vm, `player ${message.player} logout`)
           // clear ui
           gadgetserver_clearplayer(vm, message.player)
           // tell register what happened
-          register_relogin(vm, message.player)
+          register_restart(vm, message.player)
         }
         break
       case 'doot':
@@ -198,11 +220,11 @@ const vm = createdevice(
           const player = players[i]
           if (tracking[player] >= SECOND_TIMEOUT) {
             // drop inactive players (logout)
-            delete tracking[player]
-            memoryplayerlogout(player)
-            // message outcome
-            tape_info(vm, 'player logout', player)
-            vm.emit('logout', undefined, player)
+            // delete tracking[player]
+            // memoryplayerlogout(player)
+            // // message outcome
+            // tape_info(vm, 'player logout', player)
+            // vm.emit('logout', undefined, player)
           }
         }
 

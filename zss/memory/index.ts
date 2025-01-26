@@ -25,6 +25,7 @@ import {
   bookclearflags,
   bookelementkindread,
   bookensurecodepagewithtype,
+  bookplayerreadactive,
   bookplayerreadboard,
   bookplayerreadboards,
   bookplayersetboard,
@@ -329,6 +330,11 @@ export function memoryplayerlogout(player: string) {
   // clear memory
   bookclearflags(mainbook, player)
   bookclearflags(mainbook, createchipid(player))
+}
+
+export function memoryreadplayerboard(player: string) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  return bookplayerreadboard(mainbook, player)
 }
 
 export function memoryplayerscan(players: Record<string, number>) {

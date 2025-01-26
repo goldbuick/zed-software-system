@@ -130,10 +130,6 @@ export function platform_ready(device: DEVICELIKE) {
   device.emit('ready')
 }
 
-export function platform_bridge(device: DEVICELIKE, session: string) {
-  device.emit('bridge', session)
-}
-
 export function register_ackbooks(device: DEVICELIKE) {
   device.emit('register:ackbooks', true)
 }
@@ -163,8 +159,8 @@ export function register_select(
   device.emit('register:select', book, player)
 }
 
-export function register_relogin(device: DEVICELIKE, player: string) {
-  device.emit('register:relogin', undefined, player)
+export function register_restart(device: DEVICELIKE, player: string) {
+  device.emit('register:restart', undefined, player)
 }
 
 export function register_nuke(device: DEVICELIKE, player: string) {
@@ -306,8 +302,8 @@ export function vm_login(device: DEVICELIKE, player: string) {
   device.emit('vm:login', undefined, player)
 }
 
-export function vm_endgame(device: DEVICELIKE, player: string) {
-  device.emit('vm:endgame', undefined, player)
+export function vm_logout(device: DEVICELIKE, player: string) {
+  device.emit('vm:logout', undefined, player)
 }
 
 export function vm_doot(device: DEVICELIKE, player: string) {

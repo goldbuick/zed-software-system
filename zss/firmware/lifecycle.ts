@@ -1,5 +1,5 @@
 import { maptostring } from 'zss/chip'
-import { vm_endgame } from 'zss/device/api'
+import { vm_logout } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { clamp } from 'zss/mapping/number'
@@ -60,8 +60,8 @@ export const LIFECYCLE_FIRMWARE = createfirmware()
   })
   .command('endgame', () => {
     if (READ_CONTEXT.elementisplayer) {
+      vm_logout(SOFTWARE, READ_CONTEXT.elementid)
       memorycleanup()
-      vm_endgame(SOFTWARE, READ_CONTEXT.elementid)
     }
     return 0
   })
