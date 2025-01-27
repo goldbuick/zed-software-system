@@ -14,7 +14,7 @@ import {
 } from 'zss/memory'
 import { bookreadflags } from 'zss/memory/book'
 
-import { gadgetclient_patch, gadgetclient_reset } from './api'
+import { gadgetclient_paint, gadgetclient_patch } from './api'
 
 function clearplayer(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -68,7 +68,7 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
       break
     case 'desync':
       if (message.player) {
-        gadgetclient_reset(
+        gadgetclient_paint(
           gadgetserver,
           gadgetstate(message.player),
           message.player,

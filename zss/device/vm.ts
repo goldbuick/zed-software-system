@@ -30,6 +30,7 @@ import { memoryloader } from 'zss/memory/loader'
 import { write } from 'zss/words/writeui'
 
 import {
+  gadgetclient_restart,
   gadgetserver_clearplayer,
   platform_ready,
   register_restart,
@@ -105,15 +106,13 @@ const vm = createdevice(
         }
         break
       case 'login':
-        if (ispresent(message.player)) {
-          // attempt login
-          if (memoryplayerlogin(message.player)) {
-            // start tracking
-            tracking[message.player] = 0
-            write(vm, `login from ${message.player}`)
-            // ack
-            vm.reply(message, 'acklogin', true, message.player)
-          }
+        // attempt login
+        if (ispresent(message.player) && memoryplayerlogin(message.player)) {
+          // start tracking
+          tracking[message.player] = 0
+          write(vm, `login from ${message.player}`)
+          // ack
+          vm.reply(message, 'acklogin', true, message.player)
         }
         break
       case 'logout':
@@ -126,6 +125,7 @@ const vm = createdevice(
               delete tracking[message.player]
               write(vm, `player ${message.player} logout`)
               // clear ui
+              gadgetclient_restart(vm, message.player)
               gadgetserver_clearplayer(vm, message.player)
               await waitfor(1000)
               // tell register what happened

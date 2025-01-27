@@ -66,12 +66,16 @@ export function chat_disconnect(device: DEVICELIKE, player: string) {
   device.emit('chat:disconnect', undefined, player)
 }
 
-export function gadgetclient_reset(
+export function gadgetclient_restart(device: DEVICELIKE, player: string) {
+  device.emit('gadgetclient:restart', undefined, player)
+}
+
+export function gadgetclient_paint(
   device: DEVICELIKE,
   gadgetstate: GADGET_STATE,
   player: string,
 ) {
-  device.emit('gadgetclient:reset', gadgetstate, player)
+  device.emit('gadgetclient:paint', gadgetstate, player)
 }
 
 export function gadgetclient_patch(
