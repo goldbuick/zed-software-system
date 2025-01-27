@@ -76,7 +76,7 @@ function readurlhash(): string {
 async function loadmem(books: string) {
   if (books.length === 0) {
     api_error(register, 'content', 'no content found')
-    tape_crash(register)
+    tape_crash(register, myplayerid)
     return
   }
   // init vm with content
@@ -156,42 +156,44 @@ const register = createdevice(
       case 'error:login:title':
       case 'error:login:player':
         if (message.player === myplayerid) {
-          tape_crash(register)
+          tape_crash(register, myplayerid)
         }
         break
       case 'ackoperator': {
-        doasync(register, async () => {
-          if (message.player !== myplayerid) {
-            return
-          }
-          const urlcontent = readurlhash()
-          if (isjoin()) {
-            tape_terminal_open(register, myplayerid)
-            network_join(register, urlcontent, myplayerid)
-          } else {
-            // pull data && init
-            await loadmem(urlcontent)
-          }
-        })
+        if (message.player === myplayerid) {
+          doasync(register, async () => {
+            const urlcontent = readurlhash()
+            if (isjoin()) {
+              tape_terminal_open(register, myplayerid)
+              network_join(register, urlcontent, myplayerid)
+            } else {
+              // pull data && init
+              await loadmem(urlcontent)
+            }
+          })
+        }
         break
       }
       case 'ackbooks':
       case 'restart':
-        doasync(register, async () => {
-          await waitfor(1000)
-          vm_login(register, myplayerid)
-        })
+        if (message.player === myplayerid) {
+          doasync(register, async () => {
+            await waitfor(1000)
+            vm_login(register, myplayerid)
+          })
+        }
         break
       case 'acklogin':
-        doasync(register, async () => {
-          if (message.player === myplayerid) {
-            const { player } = message
-            await waitfor(128)
-            gadgetserver_desync(register, player)
-            await waitfor(512)
-            tape_terminal_close(register, myplayerid)
-          }
-        })
+        if (message.player === myplayerid) {
+          doasync(register, async () => {
+            if (ispresent(message.player)) {
+              await waitfor(128)
+              gadgetserver_desync(register, message.player)
+              await waitfor(512)
+              tape_terminal_close(register, myplayerid)
+            }
+          })
+        }
         break
       case 'dev':
         if (message.player === myplayerid) {

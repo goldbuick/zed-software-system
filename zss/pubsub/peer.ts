@@ -149,12 +149,32 @@ export function peerstart(player: string) {
       case 'tape:info':
       case 'tape:error':
       case 'tape:debug':
+      case 'tape:terminal:open':
+      case 'tape:terminal:close':
+      case 'tape:terminal:toggle':
+      case 'tape:terminal:inclayout':
+      case 'tape:terminal:crash':
       case 'register:restart':
+      case 'synth:audioenabled':
+      case 'synth:tts':
+      case 'synth:play':
+      case 'synth:bpm':
+      case 'synth:mainvolume':
+      case 'synth:drumvolume':
+      case 'synth:ttsvolume':
+      case 'synth:voice':
+      case 'synth:voicefx':
       case 'gadgetclient:reset':
       case 'gadgetclient:patch':
         peerpublishmessage(host, message)
         break
       default:
+        if (
+          message.target.startsWith('error:') ||
+          message.target.endsWith(':acklogin')
+        ) {
+          peerpublishmessage(host, message)
+        }
         break
     }
   })

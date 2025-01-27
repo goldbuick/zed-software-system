@@ -15,7 +15,6 @@ const stub = createdevice(
     if (!stub.session(message)) {
       return
     }
-    console.info(stub.name(), message)
     switch (message.target) {
       case 'operator':
         if (ispresent(message.player)) {

@@ -254,8 +254,8 @@ export function tape_terminal_inclayout(
   device.emit('tape:terminal:inclayout', inc, player)
 }
 
-export function tape_crash(device: DEVICELIKE) {
-  device.emit('tape:crash')
+export function tape_crash(device: DEVICELIKE, player: string) {
+  device.emit('tape:crash', undefined, player)
 }
 
 export function tape_editor_open(

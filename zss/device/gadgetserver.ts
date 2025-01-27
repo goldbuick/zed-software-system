@@ -18,10 +18,10 @@ import { gadgetclient_patch, gadgetclient_reset } from './api'
 
 function clearplayer(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  // cheating here as data is non-WORD compliant
   const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
-  // group by player
   delete gadgetstore[player]
+  const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
+  delete gadgetsync[player]
 }
 
 gadgetstateprovider((player) => {
@@ -44,7 +44,7 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
   // get list of active players
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const activelist = mainbook?.activelist ?? []
-  // cheating here as data is non-WORD compliant
+  // only send deltas
   const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
   switch (message.target) {
     case 'tock':

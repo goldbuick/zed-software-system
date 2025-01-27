@@ -2,6 +2,7 @@ import { createdevice } from 'zss/device'
 import { parsewebfile } from 'zss/firmware/loader/parsefile'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
+import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { isjoin } from 'zss/mapping/url'
 import {
@@ -20,14 +21,9 @@ import {
   memoryreadsession,
   memorywriteoperator,
   memoryreadoperator,
-  memoryreadplayerboard,
+  memoryreadplayeractive,
 } from 'zss/memory'
-import { boardobjectread } from 'zss/memory/board'
-import {
-  bookplayerreadactive,
-  bookplayerreadboard,
-  bookreadcodepagebyaddress,
-} from 'zss/memory/book'
+import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
 import { memoryloader } from 'zss/memory/loader'
@@ -85,29 +81,27 @@ const vm = createdevice(
         }
         break
       case 'books':
-        doasync(vm, async () => {
-          if (message.player && isarray(message.data)) {
-            const [maybebooks, maybeselect] = message.data as [string, string]
-            // unpack books
-            const books = await decompressbooks(maybebooks)
-            const booknames = books.map((item) => item.name)
-            memoryresetbooks(books, maybeselect)
-            write(vm, `loading ${booknames.join(', ')}`)
-            // ack
-            vm.reply(message, 'ackbooks', true, message.player)
-          }
-        })
+        if (message.player === memoryreadoperator())
+          doasync(vm, async () => {
+            if (message.player && isarray(message.data)) {
+              const [maybebooks, maybeselect] = message.data as [string, string]
+              // unpack books
+              const books = await decompressbooks(maybebooks)
+              const booknames = books.map((item) => item.name)
+              memoryresetbooks(books, maybeselect)
+              write(vm, `loading ${booknames.join(', ')}`)
+              // ack
+              vm.reply(message, 'ackbooks', true, message.player)
+            }
+          })
         break
       case 'joinack':
-        if (ispresent(message.player)) {
-          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-          const isactive = bookplayerreadactive(mainbook, message.player)
-          const board = bookplayerreadboard(mainbook, message.player)
-          const playerelement = boardobjectread(board, message.player)
-          if (!isactive || !ispresent(playerelement)) {
-            // send register restart
-            register_restart(vm, message.player)
-          }
+        if (
+          ispresent(message.player) &&
+          !memoryreadplayeractive(message.player)
+        ) {
+          // send register restart
+          register_restart(vm, message.player)
         }
         break
       case 'login':
@@ -124,15 +118,20 @@ const vm = createdevice(
         break
       case 'logout':
         if (ispresent(message.player)) {
-          // logout player
-          memoryplayerlogout(message.player)
-          // stop tracking
-          delete tracking[message.player]
-          write(vm, `player ${message.player} logout`)
-          // clear ui
-          gadgetserver_clearplayer(vm, message.player)
-          // tell register what happened
-          register_restart(vm, message.player)
+          doasync(vm, async () => {
+            if (ispresent(message.player)) {
+              // logout player
+              memoryplayerlogout(message.player)
+              // stop tracking
+              delete tracking[message.player]
+              write(vm, `player ${message.player} logout`)
+              // clear ui
+              gadgetserver_clearplayer(vm, message.player)
+              await waitfor(1000)
+              // tell register what happened
+              register_restart(vm, message.player)
+            }
+          })
         }
         break
       case 'doot':
