@@ -122,12 +122,12 @@ finder.on('trackerwarning', console.info)
 // topic related state
 let isstarted = false
 let topicbridge: MAYBE<ReturnType<typeof createforward>>
-function peerusehost(host: string, player: string) {
+function peerusehost(host: string) {
   if (!isstarted) {
     isstarted = true
     subscribetopic = host
     finder.start()
-    write(SOFTWARE, `${player} connecting to hubworld for ${host}`)
+    write(SOFTWARE, `connecting to hubworld for ${host}`)
   }
 }
 
@@ -141,7 +141,7 @@ function peerpublishmessage(topic: string, gme: MESSAGE) {
 
 export function peerstart(player: string) {
   const host = finder._peerId
-  peerusehost(host, player)
+  peerusehost(host)
   network_showjoincode(SOFTWARE, host, player)
   // open bridge between peers
   topicbridge = createforward((message) => {
@@ -151,10 +151,9 @@ export function peerstart(player: string) {
       case 'tape:debug':
       case 'register:restart':
       case 'gadgetclient:reset':
-      case 'gadgetclient:patch': {
+      case 'gadgetclient:patch':
         peerpublishmessage(host, message)
         break
-      }
       default:
         break
     }
@@ -187,7 +186,7 @@ function peersubscribe(topic: string, player: string) {
 }
 
 export function peerjoin(host: string, player: string) {
-  peerusehost(host, player)
+  peerusehost(host)
   peersubscribe(host, player)
   // open bridge between peers
   topicbridge = createforward((message) => {
@@ -196,11 +195,9 @@ export function peerjoin(host: string, player: string) {
       case 'vm:doot':
       case 'vm:input':
       case 'vm:login':
-      case 'vm:joinack': {
-        const self = finder._peerId
-        peersubscribemessage(host, self, message)
+      case 'vm:joinack':
+        peersubscribemessage(host, finder._peerId, message)
         break
-      }
       default:
         break
     }

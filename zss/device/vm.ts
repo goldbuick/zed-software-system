@@ -1,4 +1,3 @@
-import { createchipid } from 'zss/chip'
 import { createdevice } from 'zss/device'
 import { parsewebfile } from 'zss/firmware/loader/parsefile'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
@@ -21,11 +20,14 @@ import {
   memoryreadsession,
   memorywriteoperator,
   memoryreadoperator,
-  memoryreadplayeractive,
   memoryreadplayerboard,
 } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
-import { bookreadcodepagebyaddress } from 'zss/memory/book'
+import {
+  bookplayerreadactive,
+  bookplayerreadboard,
+  bookreadcodepagebyaddress,
+} from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
 import { memoryloader } from 'zss/memory/loader'
@@ -39,6 +41,7 @@ import {
   tape_debug,
   vm_codeaddress,
   vm_flush,
+  vm_logout,
 } from './api'
 import { modemobservevaluestring } from './modem'
 
@@ -97,19 +100,14 @@ const vm = createdevice(
         break
       case 'joinack':
         if (ispresent(message.player)) {
-          const board = memoryreadplayerboard(message.player)
+          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+          const isactive = bookplayerreadactive(mainbook, message.player)
+          const board = bookplayerreadboard(mainbook, message.player)
           const playerelement = boardobjectread(board, message.player)
-          // chip memory
-          // message.player
-          const mem = createchipid(message.player)
-          const flags = memoryreadflags(mem)
-
-          console.info('?????', flags.es, playerelement)
-          // validate player is active
-          // if (!memoryreadplayeractive(message.player)) {
-          //   // send register restart
-          //   register_restart(vm, message.player)
-          // }
+          if (!isactive || !ispresent(playerelement)) {
+            // send register restart
+            register_restart(vm, message.player)
+          }
         }
         break
       case 'login':
@@ -219,12 +217,7 @@ const vm = createdevice(
         for (let i = 0; i < players.length; ++i) {
           const player = players[i]
           if (tracking[player] >= SECOND_TIMEOUT) {
-            // drop inactive players (logout)
-            // delete tracking[player]
-            // memoryplayerlogout(player)
-            // // message outcome
-            // tape_info(vm, 'player logout', player)
-            // vm.emit('logout', undefined, player)
+            vm_logout(vm, player)
           }
         }
 
