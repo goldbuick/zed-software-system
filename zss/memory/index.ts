@@ -402,7 +402,7 @@ export function memorytickobject(
   const itemname = boardelementname(object)
   os.tick(
     id,
-    DRIVER_TYPE.CODE_PAGE,
+    DRIVER_TYPE.RUNTIME,
     isnumber(cycle) ? cycle : cycledefault,
     itemname,
     code,
@@ -557,7 +557,7 @@ export function memoryrun(address: string) {
   const itemname = boardelementname(READ_CONTEXT.element)
   const itemcode = codepage?.code ?? ''
   // set arg to value on chip with id = id
-  os.once(id, DRIVER_TYPE.CODE_PAGE, itemname, itemcode)
+  os.once(id, DRIVER_TYPE.RUNTIME, itemname, itemcode)
 }
 
 export function memoryreadgadgetlayers(player: string): LAYER[] {

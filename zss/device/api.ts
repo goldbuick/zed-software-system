@@ -66,10 +66,6 @@ export function chat_disconnect(device: DEVICELIKE, player: string) {
   device.emit('chat:disconnect', undefined, player)
 }
 
-export function gadgetclient_restart(device: DEVICELIKE, player: string) {
-  device.emit('gadgetclient:restart', undefined, player)
-}
-
 export function gadgetclient_paint(
   device: DEVICELIKE,
   gadgetstate: GADGET_STATE,
@@ -92,10 +88,6 @@ export function gadgetserver_desync(device: DEVICELIKE, player: string) {
 
 export function gadgetserver_clearscroll(device: DEVICELIKE, player: string) {
   device.emit('gadgetserver:clearscroll', undefined, player)
-}
-
-export function gadgetserver_clearplayer(device: DEVICELIKE, player: string) {
-  device.emit('gadgetserver:clearplayer', undefined, player)
 }
 
 export function network_fetch(

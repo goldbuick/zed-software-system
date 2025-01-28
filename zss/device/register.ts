@@ -187,7 +187,6 @@ const register = createdevice(
         if (message.player === myplayerid) {
           doasync(register, async () => {
             if (ispresent(message.player)) {
-              await waitfor(128)
               gadgetserver_desync(register, message.player)
               await waitfor(512)
               tape_terminal_close(register, myplayerid)

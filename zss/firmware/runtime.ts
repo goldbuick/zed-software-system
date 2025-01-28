@@ -10,7 +10,7 @@ import {
   gadgetpanel,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { PANEL_TYPE, PANEL_TYPE_MAP } from 'zss/gadget/data/types'
+import { PANEL_TYPE } from 'zss/gadget/data/types'
 import { createsid } from 'zss/mapping/guid'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { listelementsbyattr } from 'zss/memory/atomics'
@@ -20,7 +20,7 @@ import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { statformat } from 'zss/words/stats'
 import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
 
-export const GADGET_FIRMWARE = createfirmware({
+export const RUNTIME_FIRMWARE = createfirmware({
   get() {
     return [false, undefined]
   },
@@ -135,24 +135,5 @@ export const GADGET_FIRMWARE = createfirmware({
     const label = maptostring(labelword)
     const input = maptostring(inputword)
     gadgethyperlink(READ_CONTEXT.elementid, chip, label, input, words)
-    return 0
-  })
-  // ---
-  .command('gadget', (_, words) => {
-    const [maybeedge] = readargs(words, 0, [ARG_TYPE.NAME])
-    const edge = PANEL_TYPE_MAP[NAME(maybeedge)]
-    if (edge === PANEL_TYPE.SCROLL) {
-      const [name, size] = readargs(words, 1, [
-        ARG_TYPE.MAYBE_NAME,
-        ARG_TYPE.MAYBE_NUMBER,
-      ])
-      gadgetpanel(READ_CONTEXT.elementid, edge, size, name)
-    } else if (ispresent(edge)) {
-      const [size, name] = readargs(words, 1, [
-        ARG_TYPE.MAYBE_NUMBER,
-        ARG_TYPE.MAYBE_NAME,
-      ])
-      gadgetpanel(READ_CONTEXT.elementid, edge, size, name)
-    }
     return 0
   })

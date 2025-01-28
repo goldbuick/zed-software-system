@@ -30,8 +30,6 @@ import { memoryloader } from 'zss/memory/loader'
 import { write } from 'zss/words/writeui'
 
 import {
-  gadgetclient_restart,
-  gadgetserver_clearplayer,
   platform_ready,
   register_restart,
   register_savemem,
@@ -124,11 +122,8 @@ const vm = createdevice(
               // stop tracking
               delete tracking[message.player]
               write(vm, `player ${message.player} logout`)
-              // clear ui
-              gadgetclient_restart(vm, message.player)
-              gadgetserver_clearplayer(vm, message.player)
+              // restart ui
               await waitfor(1000)
-              // tell register what happened
               register_restart(vm, message.player)
             }
           })
