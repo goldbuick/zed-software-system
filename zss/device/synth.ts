@@ -579,7 +579,7 @@ function createsynth() {
   function addplay(buffer: string, bgplay: boolean) {
     // parse ops
     const invokes = parseplay(buffer)
-    const seconds = getTransport().seconds
+    const seconds = getTransport().seconds + 0.01
 
     if (bgplay) {
       // handle sfx

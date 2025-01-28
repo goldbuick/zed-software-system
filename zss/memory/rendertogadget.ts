@@ -8,9 +8,15 @@ import {
   createtiles,
   LAYER,
   createmedia,
+  LAYER_TILES,
+  LAYER_SPRITES,
+  LAYER_DITHER,
+  LAYER_MEDIA,
+  LAYER_CONTROL,
+  SPRITE,
 } from 'zss/gadget/data/types'
 import { circlepoints, linepoints } from 'zss/mapping/2d'
-import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
@@ -53,6 +59,81 @@ function readdecotickercolor(): COLOR {
 
 const pt1 = new Vector2()
 
+const LAYER_CACHE: Record<string, LAYER> = {}
+const SPRITE_CACHE: Record<string, SPRITE> = {}
+
+function createcachedtiles(
+  player: string,
+  index: number,
+  width: number,
+  height: number,
+  bg = 0,
+): LAYER_TILES {
+  const id = `tiles:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createtiles(player, index, width, height, bg)
+  }
+  return LAYER_CACHE[id] as LAYER_TILES
+}
+
+export function createcachedsprite(
+  player: string,
+  index: number,
+  id: string,
+  spriteindex: number,
+): SPRITE {
+  const uid = `sprites:${player}:${index}:${id}`
+  const cid = `sprite:${player}:${index}:${spriteindex}`
+  if (!ispresent(SPRITE_CACHE[cid])) {
+    SPRITE_CACHE[cid] = createsprite(player, index, id)
+  }
+  SPRITE_CACHE[cid].id = uid
+  return SPRITE_CACHE[cid]
+}
+
+function createcachedsprites(player: string, index: number): LAYER_SPRITES {
+  const id = `sprites:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createsprites(player, index)
+  }
+  return LAYER_CACHE[id] as LAYER_SPRITES
+}
+
+function createcacheddither(
+  player: string,
+  index: number,
+  width: number,
+  height: number,
+  fill = 0,
+): LAYER_DITHER {
+  const id = `dither:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createdither(player, index, width, height, fill)
+  }
+  return LAYER_CACHE[id] as LAYER_DITHER
+}
+
+function createcachedmedia(
+  player: string,
+  index: number,
+  mime: string,
+  media: string | number[],
+): LAYER_MEDIA {
+  const id = `media:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createmedia(player, index, mime, media)
+  }
+  return LAYER_CACHE[id] as LAYER_MEDIA
+}
+
+function createcachedcontrol(player: string, index: number): LAYER_CONTROL {
+  const id = `control:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createcontrol(player, index)
+  }
+  return LAYER_CACHE[id] as LAYER_CONTROL
+}
+
 export function memoryconverttogadgetlayers(
   player: string,
   index: number,
@@ -68,7 +149,7 @@ export function memoryconverttogadgetlayers(
   const boardheight = BOARD_HEIGHT
   const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR
 
-  const tiles = createtiles(
+  const tiles = createcachedtiles(
     player,
     iiii++,
     boardwidth,
@@ -78,10 +159,11 @@ export function memoryconverttogadgetlayers(
   layers.push(tiles)
 
   const objectindex = iiii++
-  const objects = createsprites(player, objectindex)
+  const objects = createcachedsprites(player, objectindex)
+  objects.sprites = []
   layers.push(objects)
 
-  const lighting = createdither(
+  const lighting = createcacheddither(
     player,
     iiii++,
     boardwidth,
@@ -90,7 +172,7 @@ export function memoryconverttogadgetlayers(
   )
   layers.push(lighting)
 
-  const tickers = createtiles(
+  const tickers = createcachedtiles(
     player,
     iiii++,
     boardwidth,
@@ -109,7 +191,7 @@ export function memoryconverttogadgetlayers(
     ...tickers,
   }
 
-  const control = createcontrol(player, iiii++)
+  const control = createcachedcontrol(player, iiii++)
   // hack to keep only one control layer
   if (isprimary) {
     layers.push(control)
@@ -129,25 +211,13 @@ export function memoryconverttogadgetlayers(
     tiles.bg[i] = display.bg
   }
 
-  // smooth lighting
-  function aa(x: number, y: number) {
-    if (x < 0 || x >= boardwidth || y < 0 || y >= boardheight) {
-      return undefined
-    }
-    return lighting.alphas[x + y * boardwidth]
-  }
-
   const boardobjects = Object.values(board.objects ?? {})
-  // console.info(boardobjects.length)
   for (let i = 0; i < boardobjects.length; ++i) {
     const object = boardobjects[i]
-    // skip if marked for removal or headless
     if (ispresent(object.removed)) {
-      // console.info(object.removed)
       continue
     }
 
-    // should we have bg transparent or match the bg color of the terrain ?
     const id = object.id ?? ''
     const display = bookelementdisplayread(
       book,
@@ -156,7 +226,7 @@ export function memoryconverttogadgetlayers(
       COLOR.WHITE,
       COLOR.ONCLEAR,
     )
-    const sprite = createsprite(player, objectindex, id)
+    const sprite = createcachedsprite(player, objectindex, id, i)
 
     // setup sprite
     sprite.x = object.x ?? 0
@@ -217,41 +287,6 @@ export function memoryconverttogadgetlayers(
       }
     }
 
-    const weights = [
-      [0.01, 0.01, 0.01],
-      [0.01, 1.0, 0.01],
-      [0.01, 0.01, 0.01],
-    ].flat()
-
-    const alphas = deepcopy(lighting.alphas)
-    for (let i = 0; i < lighting.alphas.length; ++i) {
-      // coords
-      const cx = i % boardwidth
-      const cy = Math.floor(i / boardwidth)
-
-      // weighted average
-      const values = [
-        [aa(cx - 1, cy - 1), aa(cx, cy - 1), aa(cx + 1, cy - 1)],
-        [aa(cx - 1, cy), aa(cx, cy), aa(cx + 1, cy)],
-        [aa(cx - 1, cy + 1), aa(cx, cy + 1), aa(cx + 1, cy + 1)],
-      ]
-        .flat()
-        .map((value, i) =>
-          ispresent(value) ? [value * weights[i], weights[i]] : undefined,
-        )
-        .filter(ispresent)
-
-      const wtotal = values
-        .map(([, weight]) => weight)
-        .reduce((t, v) => t + v, 0)
-      const vtotal = values.map(([value]) => value).reduce((t, v) => t + v, 0)
-      // final shade
-      alphas[i] = vtotal / wtotal
-    }
-
-    // update lighting data
-    lighting.alphas = deepcopy(alphas)
-
     // write ticker messages
     if (
       isstring(object.tickertext) &&
@@ -303,7 +338,7 @@ export function memoryconverttogadgetlayers(
     )
     if (ispresent(codepage?.palette?.bits)) {
       layers.push(
-        createmedia(
+        createcachedmedia(
           player,
           iiii++,
           'image/palette',
@@ -322,7 +357,7 @@ export function memoryconverttogadgetlayers(
     )
     if (ispresent(codepage?.charset?.bits)) {
       layers.push(
-        createmedia(
+        createcachedmedia(
           player,
           iiii++,
           'image/charset',

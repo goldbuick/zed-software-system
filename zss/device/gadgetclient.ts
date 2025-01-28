@@ -13,7 +13,7 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
   }
   const { desync } = useGadgetClient.getState()
   switch (message.target) {
-    case 'reset':
+    case 'paint':
       if (message.player === registerreadplayer()) {
         useGadgetClient.setState({
           desync: false,

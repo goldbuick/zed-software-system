@@ -120,7 +120,7 @@ export function createsprite(
   id: string,
   char = 1,
   color = 15,
-) {
+): SPRITE {
   return {
     id: `sprites:${player}:${index}:${id}`,
     x: 0,

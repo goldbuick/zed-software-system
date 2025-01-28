@@ -164,7 +164,7 @@ export function peerstart(player: string) {
       case 'synth:ttsvolume':
       case 'synth:voice':
       case 'synth:voicefx':
-      case 'gadgetclient:reset':
+      case 'gadgetclient:paint':
       case 'gadgetclient:patch':
         peerpublishmessage(host, message)
         break

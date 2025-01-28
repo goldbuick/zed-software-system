@@ -31,6 +31,9 @@ export function ismessage(value: any): value is MESSAGE {
   )
 }
 
+// track which messages go from server -> client
+// track which messages go from client -> server
+
 export function api_error(
   device: DEVICELIKE,
   kind: string,
