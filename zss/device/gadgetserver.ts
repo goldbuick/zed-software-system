@@ -24,15 +24,15 @@ function clearplayer(player: string) {
   delete gadgetsync[player]
 }
 
-gadgetstateprovider((player) => {
+gadgetstateprovider((element) => {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   // cheating here as data is non-WORD compliant
   const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
-  // group by player
-  let value = gadgetstore[player]
+  // group by element
+  let value = gadgetstore[element]
   // make sure to init state
   if (!ispresent(value)) {
-    gadgetstore[player] = value = initstate()
+    gadgetstore[element] = value = initstate()
   }
   return value
 })

@@ -1,57 +1,56 @@
-import Case from 'case'
 import { maptostring } from 'zss/chip'
 import { tape_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
-  gadgetcheckscroll,
+  gadgetcheckqueue,
   gadgetcheckset,
   gadgethyperlink,
-  gadgetpanel,
+  gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { PANEL_TYPE } from 'zss/gadget/data/types'
 import { createsid } from 'zss/mapping/guid'
-import { isarray, ispresent } from 'zss/mapping/types'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import { listelementsbyattr } from 'zss/memory/atomics'
 import { bookelementdisplayread } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { statformat } from 'zss/words/stats'
-import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
+import { COLOR, NAME } from 'zss/words/types'
 
 export const RUNTIME_FIRMWARE = createfirmware({
-  get() {
-    return [false, undefined]
-  },
   set(chip, name, value) {
     // we monitor changes on shared values here
     gadgetcheckset(chip, name, value)
     // return has unhandled
     return [false, undefined]
   },
-  tick(chip) {
-    // if player, first tick we default to #gadget right
-    const edge = chip.isfirstpulse() ? PANEL_TYPE.RIGHT : PANEL_TYPE.SCROLL
-    // use name from element, fallback to edge name
-    const withname =
-      READ_CONTEXT.element?.name ?? Case.capital(PANEL_TYPE[edge])
-    gadgetpanel(READ_CONTEXT.elementid, edge, undefined, withname)
-  },
   everytick() {
-    const ticker = gadgetcheckscroll(READ_CONTEXT.elementid)
-    if (ticker && ispresent(READ_CONTEXT.element)) {
-      READ_CONTEXT.element.tickertext = ticker
-      READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-      // send message
-      const display = bookelementdisplayread(
-        READ_CONTEXT.book,
-        READ_CONTEXT.element,
-        1,
-        COLOR.WHITE,
-        COLOR.ONCLEAR,
-      )
-      tape_info(SOFTWARE, `$${COLOR[display.color]}$${display.char}`, ticker)
+    const queue = gadgetcheckqueue(READ_CONTEXT.elementid)
+    const [ticker] = queue
+    if (queue.length === 1 && isstring(ticker)) {
+      if (ispresent(READ_CONTEXT.element)) {
+        READ_CONTEXT.element.tickertext = ticker
+        READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+        // send message
+        const display = bookelementdisplayread(
+          READ_CONTEXT.book,
+          READ_CONTEXT.element,
+          1,
+          COLOR.WHITE,
+          COLOR.ONCLEAR,
+        )
+        tape_info(SOFTWARE, `$${COLOR[display.color]}$${display.char}`, ticker)
+      }
+    } else if (queue.length > 1) {
+      if (READ_CONTEXT.elementisplayer) {
+        // player updating sidebar
+        const shared = gadgetstate(READ_CONTEXT.elementid)
+        shared.sidebar = queue
+      } else {
+        // element sending a scroll to a player
+        const shared = gadgetstate(READ_CONTEXT.elementfocus)
+        shared.scroll = queue
+      }
     }
   },
 })
@@ -113,15 +112,8 @@ export const RUNTIME_FIRMWARE = createfirmware({
     }
     return 0
   })
-  .command('stat', (_, words) => {
-    const stat = statformat(words.map(maptostring))
-    switch (stat.type) {
-      case STAT_TYPE.OBJECT:
-        if (ispresent(READ_CONTEXT.element)) {
-          READ_CONTEXT.element.name = stat.values.join(' ')
-        }
-        break
-    }
+  .command('stat', () => {
+    //  no-op
     return 0
   })
   .command('text', (_, words) => {

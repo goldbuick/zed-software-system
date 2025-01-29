@@ -209,44 +209,7 @@ export function layersreadcontrol(layers: LAYER[]) {
   return { width, height, focusx, focusy, viewscale }
 }
 
-export enum PANEL_TYPE {
-  START,
-  LEFT,
-  RIGHT,
-  TOP,
-  BOTTOM,
-  SCROLL,
-}
-
-export const PANEL_TYPE_MAP: Record<string, PANEL_TYPE> = {
-  start: PANEL_TYPE.START,
-  left: PANEL_TYPE.LEFT,
-  right: PANEL_TYPE.RIGHT,
-  top: PANEL_TYPE.TOP,
-  bottom: PANEL_TYPE.BOTTOM,
-  scroll: PANEL_TYPE.SCROLL,
-}
-
-export const PANEL_TYPE_SIZES: Record<PANEL_TYPE, number> = {
-  [PANEL_TYPE.START]: 1,
-  [PANEL_TYPE.LEFT]: 20,
-  [PANEL_TYPE.RIGHT]: 20,
-  [PANEL_TYPE.TOP]: 1,
-  [PANEL_TYPE.BOTTOM]: 1,
-  [PANEL_TYPE.SCROLL]: 40,
-}
-
-// type WORD = string | number
-// type WORD = WORD | WORD[] | undefined
 export type PANEL_ITEM = WORD | WORD[]
-
-export type PANEL = {
-  id: string
-  name: string
-  edge: PANEL_TYPE
-  size: number
-  text: PANEL_ITEM[]
-}
 
 export type UNOBSERVE_FUNC = () => void
 export type PANEL_SHARED = Record<string, UNOBSERVE_FUNC>
@@ -256,11 +219,10 @@ export function paneladdress(chip: string, target: string) {
 }
 
 export type GADGET_STATE = {
-  // player: string
+  id: string
   layers: LAYER[]
-  panels: PANEL[]
-  reset: boolean
-  focus: string
+  scroll: PANEL_ITEM[]
+  sidebar: PANEL_ITEM[]
 }
 
 export const INPUT_ALT = 0x0001
