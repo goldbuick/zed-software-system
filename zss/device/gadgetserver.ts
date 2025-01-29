@@ -16,14 +16,6 @@ import { bookreadflags } from 'zss/memory/book'
 
 import { gadgetclient_paint, gadgetclient_patch } from './api'
 
-function clearplayer(player: string) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
-  delete gadgetstore[player]
-  const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
-  delete gadgetsync[player]
-}
-
 gadgetstateprovider((element) => {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   // cheating here as data is non-WORD compliant
@@ -82,7 +74,11 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
       break
     case 'clearplayer':
       if (message.player) {
-        clearplayer(message.player)
+        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE)
+        delete gadgetstore[message.player]
+        const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC)
+        delete gadgetsync[message.player]
       }
       break
   }

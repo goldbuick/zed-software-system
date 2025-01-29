@@ -177,7 +177,7 @@ export function createcontrol(player: string, index: number): LAYER_CONTROL {
     focusx: 0,
     focusy: 0,
     focusid: player,
-    viewscale: 2,
+    viewscale: 1.5,
   }
 }
 

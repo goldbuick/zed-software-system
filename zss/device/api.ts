@@ -93,6 +93,10 @@ export function gadgetserver_clearscroll(device: DEVICELIKE, player: string) {
   device.emit('gadgetserver:clearscroll', undefined, player)
 }
 
+export function gadgetserver_clearplayer(device: DEVICELIKE, player: string) {
+  device.emit('gadgetserver:clearplayer', undefined, player)
+}
+
 export function network_fetch(
   device: DEVICELIKE,
   arg: any,
