@@ -180,6 +180,7 @@ export function memoryconverttogadgetlayers(
     COLOR.ONCLEAR,
   )
   layers.push(tickers)
+  tickers.char.fill(0)
 
   const tickercontext = {
     ...createwritetextcontext(
