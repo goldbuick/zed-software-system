@@ -71,8 +71,9 @@ const SIDEBAR_SIZE = 20
 export function PanelLayout() {
   const screensize = useScreenSize()
 
-  const [hasscroll, sethasscroll] = useState(false)
   const scroll = useGadgetClient(useEqual((state) => state.gadget.scroll))
+  const isscrollempty = scroll.length === 0
+  const [hasscroll, sethasscroll] = useState(false)
   const sidebar = useGadgetClient(useEqual((state) => state.gadget.sidebar))
 
   // bail on odd states
@@ -120,10 +121,8 @@ export function PanelLayout() {
   scrollrect.x = frame.x + Math.floor((frame.width - scrollrect.width) * 0.5)
   scrollrect.y = frame.y + Math.floor((frame.height - scrollrect.height) * 0.5)
 
-  if (scroll.length) {
-    if (!hasscroll) {
-      sethasscroll(true)
-    }
+  if (!isscrollempty && !hasscroll) {
+    sethasscroll(true)
   }
 
   // add the frame to display the game
@@ -184,7 +183,7 @@ export function PanelLayout() {
                 900,
               ]}
             >
-              <LayoutRect rect={scrollrect} shouldclose={!hasscroll} />
+              <LayoutRect rect={scrollrect} shouldclose={isscrollempty} />
             </group>
           </React.Fragment>
         )}

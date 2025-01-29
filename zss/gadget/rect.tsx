@@ -1,5 +1,5 @@
 import React from 'react'
-import { Mesh as Mesh_ } from 'three'
+import { Mesh } from 'three'
 import { RUNTIME } from 'zss/config'
 
 import { useClipping } from './clipping'
@@ -15,9 +15,9 @@ type ShapeProps<T> = Omit<JSX.IntrinsicElements['mesh'], 'args'> & {
 
 const PlaneComponent = React.forwardRef(function Plane(
   { args, children, ...props }: ShapeProps<typeof Plane>,
-  fref: React.ForwardedRef<Mesh_>,
+  fref: React.ForwardedRef<Mesh>,
 ) {
-  const ref = React.useRef<Mesh_>(null!)
+  const ref = React.useRef<Mesh>(null!)
   React.useImperativeHandle(fref, () => ref.current)
   return (
     <mesh ref={ref} {...props}>
