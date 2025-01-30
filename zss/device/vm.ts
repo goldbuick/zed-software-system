@@ -30,6 +30,7 @@ import { write } from 'zss/words/writeui'
 
 import {
   platform_ready,
+  register_loginready,
   register_savemem,
   tape_debug,
   vm_codeaddress,
@@ -88,7 +89,7 @@ const vm = createdevice(
               memoryresetbooks(books, maybeselect)
               write(vm, `loading ${booknames.join(', ')}`)
               // ack
-              vm.replynext(message, 'ackbooks', true, message.player)
+              register_loginready(vm, message.player)
             }
           })
         break
@@ -97,18 +98,7 @@ const vm = createdevice(
           ispresent(message.player) &&
           !memoryreadplayeractive(message.player)
         ) {
-          // ack
-          vm.replynext(message, 'acklogin', true, message.player)
-        }
-        break
-      case 'login':
-        // attempt login
-        if (ispresent(message.player) && memoryplayerlogin(message.player)) {
-          // start tracking
-          tracking[message.player] = 0
-          write(vm, `login from ${message.player}`)
-          // ack
-          vm.replynext(message, 'acklogin', true, message.player)
+          register_loginready(vm, message.player)
         }
         break
       case 'logout':
@@ -119,7 +109,17 @@ const vm = createdevice(
           delete tracking[message.player]
           write(vm, `player ${message.player} logout`)
           // ack
-          vm.replynext(message, 'acklogout', true, message.player)
+          register_loginready(vm, message.player)
+        }
+        break
+      case 'login':
+        // attempt login
+        if (ispresent(message.player) && memoryplayerlogin(message.player)) {
+          // start tracking
+          tracking[message.player] = 0
+          write(vm, `login from ${message.player}`)
+          // ack
+          vm.replynext(message, 'acklogin', true, message.player)
         }
         break
       case 'doot':

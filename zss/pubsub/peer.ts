@@ -116,8 +116,8 @@ finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
   subscribelastseen.set(msg.topic, lastseen)
 })
 
-finder.on('trackerconnect', console.info)
-finder.on('trackerwarning', console.info)
+// finder.on('trackerconnect', console.info)
+// finder.on('trackerwarning', console.info)
 
 // topic related state
 let isstarted = false
@@ -154,7 +154,7 @@ export function peerstart(player: string) {
       case 'tape:terminal:toggle':
       case 'tape:terminal:inclayout':
       case 'tape:terminal:crash':
-      case 'register:restart':
+      case 'register:loginready':
       case 'synth:audioenabled':
       case 'synth:tts':
       case 'synth:play':
@@ -168,14 +168,25 @@ export function peerstart(player: string) {
       case 'gadgetclient:patch':
         peerpublishmessage(host, message)
         break
-      default:
-        if (
-          message.target.startsWith('error:') ||
-          message.target.endsWith(':acklogin')
-        ) {
-          peerpublishmessage(host, message)
+      default: {
+        const path = message.target.split(':')
+        const [first] = path
+        switch (first) {
+          case 'error':
+            console.info(message.target)
+            peerpublishmessage(host, message)
+            break
+        }
+        const [last] = path.slice(-1)
+        switch (last) {
+          case 'acklogin':
+          case 'acklogout':
+            console.info(message.target)
+            peerpublishmessage(host, message)
+            break
         }
         break
+      }
     }
   })
 }
@@ -216,6 +227,8 @@ export function peerjoin(host: string, player: string) {
       case 'vm:input':
       case 'vm:login':
       case 'vm:joinack':
+      case 'gadgetserver:desync':
+      case 'gadgetserver:clearscroll':
         peersubscribemessage(host, finder._peerId, message)
         break
       default:

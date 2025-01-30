@@ -164,7 +164,6 @@ const register = createdevice(
           doasync(register, async () => {
             const urlcontent = readurlhash()
             if (isjoin()) {
-              tape_terminal_open(register, myplayerid)
               network_join(register, urlcontent, myplayerid)
             } else {
               // pull data && init
@@ -174,8 +173,7 @@ const register = createdevice(
         }
         break
       }
-      case 'ackbooks':
-      case 'restart':
+      case 'loginready':
         if (message.player === myplayerid) {
           vm_login(register, myplayerid)
         }
@@ -184,11 +182,6 @@ const register = createdevice(
         if (message.player === myplayerid) {
           tape_terminal_close(register, myplayerid)
           gadgetserver_desync(register, myplayerid)
-        }
-        break
-      case 'acklogout':
-        if (message.player === myplayerid) {
-          vm_login(register, myplayerid)
         }
         break
       case 'dev':
