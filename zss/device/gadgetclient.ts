@@ -1,9 +1,7 @@
-import {
-  JsonPatchError as jsonpatcherror,
-  applyPatch as applypatch,
-} from 'fast-json-patch'
+import { applyPatch as applypatch, validate } from 'fast-json-patch'
 import { createdevice } from 'zss/device'
 import { useGadgetClient } from 'zss/gadget/data/state'
+import { deepcopy, ispresent } from 'zss/mapping/types'
 
 import { registerreadplayer } from './register'
 
@@ -12,9 +10,11 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
     return
   }
   const { desync } = useGadgetClient.getState()
+  console.info('message', message, deepcopy(useGadgetClient.getState()))
   switch (message.target) {
     case 'paint':
       if (message.player === registerreadplayer()) {
+        console.info('### paint', message.data)
         useGadgetClient.setState({
           desync: false,
           gadget: message.data,
@@ -23,32 +23,34 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
       break
     case 'patch':
       if (message.player === registerreadplayer() && !desync) {
-        useGadgetClient.setState((gadgetclient) => {
+        useGadgetClient.setState((state) => {
+          let didnotpass: any
           try {
-            const { newDocument } = applypatch(
-              gadgetclient.gadget,
-              message.data,
-              true,
-              false,
-            )
-            return {
-              ...gadgetclient,
-              gadget: newDocument,
-            }
+            const before = deepcopy(state.gadget)
+            didnotpass = validate(message.data, before)
           } catch (err) {
-            if (err instanceof jsonpatcherror) {
-              useGadgetClient.setState({ desync: true })
-              // we are out of sync and need to request a refresh
-              gadgetclientdevice.reply(
-                message,
-                'desync',
-                undefined,
-                message.player,
-              )
-            }
+            didnotpass = err
           }
 
-          return gadgetclient
+          if (ispresent(didnotpass)) {
+            console.info('### desync')
+            useGadgetClient.setState({ desync: true })
+            // we are out of sync and need to request a refresh
+            gadgetclientdevice.reply(
+              message,
+              'desync',
+              undefined,
+              message.player,
+            )
+            return state
+          }
+
+          const applied = applypatch(state.gadget, message.data, true, false)
+          console.info('### patch', applied.newDocument)
+          return {
+            ...state,
+            gadget: applied.newDocument,
+          }
         })
       }
       break

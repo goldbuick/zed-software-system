@@ -327,9 +327,11 @@ export function memoryplayerlogout(player: string) {
   )
   boarddeleteobject(board, player)
 
+  // halt chip
+  os.halt(player)
+
   // clear memory
   bookclearflags(mainbook, player)
-  bookclearflags(mainbook, createchipid(player))
 }
 
 export function memoryreadplayerboard(player: string) {

@@ -71,10 +71,12 @@ const SIDEBAR_SIZE = 20
 export function PanelLayout() {
   const screensize = useScreenSize()
 
-  const scroll = useGadgetClient(useEqual((state) => state.gadget.scroll))
+  const scroll = useGadgetClient(useEqual((state) => state.gadget.scroll ?? []))
   const isscrollempty = scroll.length === 0
   const [hasscroll, sethasscroll] = useState(false)
-  const sidebar = useGadgetClient(useEqual((state) => state.gadget.sidebar))
+  const sidebar = useGadgetClient(
+    useEqual((state) => state.gadget.sidebar ?? []),
+  )
 
   // bail on odd states
   if (screensize.cols < 10 || screensize.rows < 10) {

@@ -220,9 +220,9 @@ export function paneladdress(chip: string, target: string) {
 
 export type GADGET_STATE = {
   id: string
-  layers: LAYER[]
-  scroll: PANEL_ITEM[]
-  sidebar: PANEL_ITEM[]
+  layers?: LAYER[]
+  scroll?: PANEL_ITEM[]
+  sidebar?: PANEL_ITEM[]
 }
 
 export const INPUT_ALT = 0x0001

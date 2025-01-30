@@ -6,6 +6,7 @@ import {
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
+import { ispid } from 'zss/mapping/guid'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,
@@ -17,16 +18,19 @@ import { bookreadflags } from 'zss/memory/book'
 import { gadgetclient_paint, gadgetclient_patch } from './api'
 
 gadgetstateprovider((element) => {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  // cheating here as data is non-WORD compliant
-  const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
-  // group by element
-  let value = gadgetstore[element]
-  // make sure to init state
-  if (!ispresent(value)) {
-    gadgetstore[element] = value = initstate()
+  if (ispid(element)) {
+    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    // cheating here as data is non-WORD compliant
+    const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
+    // group by element
+    let value = gadgetstore[element]
+    // make sure to init state
+    if (!ispresent(value)) {
+      gadgetstore[element] = value = initstate()
+    }
+    return value
   }
-  return value
+  return initstate()
 })
 
 const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {

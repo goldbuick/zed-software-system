@@ -185,13 +185,7 @@ const register = createdevice(
         break
       case 'acklogin':
         if (message.player === myplayerid) {
-          doasync(register, async () => {
-            if (ispresent(message.player)) {
-              gadgetserver_desync(register, message.player)
-              await waitfor(512)
-              tape_terminal_close(register, myplayerid)
-            }
-          })
+          tape_terminal_close(register, myplayerid)
         }
         break
       case 'dev':

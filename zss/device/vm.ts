@@ -124,7 +124,6 @@ const vm = createdevice(
               delete tracking[message.player]
               write(vm, `player ${message.player} logout`)
               // clear ui
-              gadgetserver_clearplayer(vm, message.player)
               // restart ui
               await waitfor(1000)
               register_restart(vm, message.player)
