@@ -162,10 +162,6 @@ export function register_select(
   device.emit('register:select', book, player)
 }
 
-export function register_restart(device: DEVICELIKE, player: string) {
-  device.emit('register:restart', undefined, player)
-}
-
 export function register_nuke(device: DEVICELIKE, player: string) {
   device.emit('register:nuke', undefined, player)
 }

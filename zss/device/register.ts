@@ -177,15 +177,18 @@ const register = createdevice(
       case 'ackbooks':
       case 'restart':
         if (message.player === myplayerid) {
-          doasync(register, async () => {
-            await waitfor(1000)
-            vm_login(register, myplayerid)
-          })
+          vm_login(register, myplayerid)
         }
         break
       case 'acklogin':
         if (message.player === myplayerid) {
           tape_terminal_close(register, myplayerid)
+          gadgetserver_desync(register, myplayerid)
+        }
+        break
+      case 'acklogout':
+        if (message.player === myplayerid) {
+          vm_login(register, myplayerid)
         }
         break
       case 'dev':

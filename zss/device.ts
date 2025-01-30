@@ -23,6 +23,7 @@ export type DEVICE = {
   topics: () => string[]
   emit: (target: string, data?: any, player?: string) => void
   reply: (to: MESSAGE, target: string, data?: any, player?: string) => void
+  replynext: (to: MESSAGE, target: string, data?: any, player?: string) => void
   handle: MESSAGE_FUNC
 }
 
@@ -64,6 +65,9 @@ export function createdevice(
     },
     reply(to, target, data, player) {
       device.emit(`${to.sender}:${target}`, data, player)
+    },
+    replynext(to, target, data, player) {
+      setTimeout(() => device.emit(`${to.sender}:${target}`, data, player), 64)
     },
     handle(message) {
       const { target, path } = parsetarget(message.target)

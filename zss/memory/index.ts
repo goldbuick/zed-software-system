@@ -1,5 +1,4 @@
 import { objectKeys } from 'ts-extras'
-import { createchipid } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
 import { api_error, MESSAGE, tape_debug, tape_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'

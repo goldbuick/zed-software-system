@@ -2,7 +2,6 @@ import { createdevice } from 'zss/device'
 import { parsewebfile } from 'zss/firmware/loader/parsefile'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
-import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { isjoin } from 'zss/mapping/url'
 import {
@@ -30,9 +29,7 @@ import { memoryloader } from 'zss/memory/loader'
 import { write } from 'zss/words/writeui'
 
 import {
-  gadgetserver_clearplayer,
   platform_ready,
-  register_restart,
   register_savemem,
   tape_debug,
   vm_codeaddress,
@@ -77,7 +74,7 @@ const vm = createdevice(
           memorywriteoperator(message.player)
           write(vm, `operator set to ${message.player}`)
           // ack
-          vm.reply(message, 'ackoperator', true, message.player)
+          vm.replynext(message, 'ackoperator', true, message.player)
         }
         break
       case 'books':
@@ -91,7 +88,7 @@ const vm = createdevice(
               memoryresetbooks(books, maybeselect)
               write(vm, `loading ${booknames.join(', ')}`)
               // ack
-              vm.reply(message, 'ackbooks', true, message.player)
+              vm.replynext(message, 'ackbooks', true, message.player)
             }
           })
         break
@@ -100,8 +97,8 @@ const vm = createdevice(
           ispresent(message.player) &&
           !memoryreadplayeractive(message.player)
         ) {
-          // send register restart
-          register_restart(vm, message.player)
+          // ack
+          vm.replynext(message, 'acklogin', true, message.player)
         }
         break
       case 'login':
@@ -111,24 +108,18 @@ const vm = createdevice(
           tracking[message.player] = 0
           write(vm, `login from ${message.player}`)
           // ack
-          vm.reply(message, 'acklogin', true, message.player)
+          vm.replynext(message, 'acklogin', true, message.player)
         }
         break
       case 'logout':
         if (ispresent(message.player)) {
-          doasync(vm, async () => {
-            if (ispresent(message.player)) {
-              // logout player
-              memoryplayerlogout(message.player)
-              // stop tracking
-              delete tracking[message.player]
-              write(vm, `player ${message.player} logout`)
-              // clear ui
-              // restart ui
-              await waitfor(1000)
-              register_restart(vm, message.player)
-            }
-          })
+          // logout player
+          memoryplayerlogout(message.player)
+          // stop tracking
+          delete tracking[message.player]
+          write(vm, `player ${message.player} logout`)
+          // ack
+          vm.replynext(message, 'acklogout', true, message.player)
         }
         break
       case 'doot':
