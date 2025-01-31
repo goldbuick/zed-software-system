@@ -20,6 +20,7 @@ import {
   memoryreadsession,
   memorywriteoperator,
   memoryreadoperator,
+  memoryreadplayeractive,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -28,14 +29,13 @@ import { memoryloader } from 'zss/memory/loader'
 import { write } from 'zss/words/writeui'
 
 import {
-  gadgetserver_clearplayer,
   platform_ready,
-  register_relogin,
+  register_loginready,
   register_savemem,
   tape_debug,
-  tape_info,
   vm_codeaddress,
   vm_flush,
+  vm_logout,
 } from './api'
 import { modemobservevaluestring } from './modem'
 
@@ -75,44 +75,51 @@ const vm = createdevice(
           memorywriteoperator(message.player)
           write(vm, `operator set to ${message.player}`)
           // ack
-          vm.reply(message, 'ackoperator', true, message.player)
+          vm.replynext(message, 'ackoperator', true, message.player)
         }
         break
       case 'books':
-        doasync(vm, async () => {
-          if (message.player && isarray(message.data)) {
-            const [maybebooks, maybeselect] = message.data as [string, string]
-            // unpack books
-            const books = await decompressbooks(maybebooks)
-            const booknames = books.map((item) => item.name)
-            memoryresetbooks(books, maybeselect)
-            write(vm, `loading ${booknames.join(', ')}`)
-            // ack
-            vm.reply(message, 'ackbooks', true, message.player)
-          }
-        })
-
+        if (message.player === memoryreadoperator())
+          doasync(vm, async () => {
+            if (message.player && isarray(message.data)) {
+              const [maybebooks, maybeselect] = message.data as [string, string]
+              // unpack books
+              const books = await decompressbooks(maybebooks)
+              const booknames = books.map((item) => item.name)
+              memoryresetbooks(books, maybeselect)
+              write(vm, `loading ${booknames.join(', ')}`)
+              // ack
+              register_loginready(vm, message.player)
+            }
+          })
         break
-      case 'login':
-        if (ispresent(message.player)) {
-          // attempt login
-          if (memoryplayerlogin(message.player)) {
-            // start tracking
-            tracking[message.player] = 0
-            write(vm, `login from ${message.player}`)
-            // ack
-            vm.reply(message, 'acklogin', true, message.player)
-          }
+      case 'joinack':
+        if (
+          ispresent(message.player) &&
+          !memoryreadplayeractive(message.player)
+        ) {
+          register_loginready(vm, message.player)
         }
         break
-      case 'endgame':
+      case 'logout':
         if (ispresent(message.player)) {
           // logout player
           memoryplayerlogout(message.player)
-          // clear ui
-          gadgetserver_clearplayer(vm, message.player)
-          // tell register what happened
-          register_relogin(vm, message.player)
+          // stop tracking
+          delete tracking[message.player]
+          write(vm, `player ${message.player} logout`)
+          // ack
+          register_loginready(vm, message.player)
+        }
+        break
+      case 'login':
+        // attempt login
+        if (ispresent(message.player) && memoryplayerlogin(message.player)) {
+          // start tracking
+          tracking[message.player] = 0
+          write(vm, `login from ${message.player}`)
+          // ack
+          vm.replynext(message, 'acklogin', true, message.player)
         }
         break
       case 'doot':
@@ -197,12 +204,7 @@ const vm = createdevice(
         for (let i = 0; i < players.length; ++i) {
           const player = players[i]
           if (tracking[player] >= SECOND_TIMEOUT) {
-            // drop inactive players (logout)
-            delete tracking[player]
-            memoryplayerlogout(player)
-            // message outcome
-            tape_info(vm, 'player logout', player)
-            vm.emit('logout', undefined, player)
+            vm_logout(vm, player)
           }
         }
 

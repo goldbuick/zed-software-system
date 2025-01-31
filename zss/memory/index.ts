@@ -1,7 +1,6 @@
 import { objectKeys } from 'ts-extras'
-import { createchipid, MESSAGE } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
-import { api_error, tape_debug, tape_info } from 'zss/device/api'
+import { api_error, MESSAGE, tape_debug, tape_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
@@ -25,6 +24,7 @@ import {
   bookclearflags,
   bookelementkindread,
   bookensurecodepagewithtype,
+  bookplayerreadactive,
   bookplayerreadboard,
   bookplayerreadboards,
   bookplayersetboard,
@@ -326,9 +326,24 @@ export function memoryplayerlogout(player: string) {
   )
   boarddeleteobject(board, player)
 
+  // halt chip
+  os.halt(player)
+
   // clear memory
   bookclearflags(mainbook, player)
-  bookclearflags(mainbook, createchipid(player))
+}
+
+export function memoryreadplayerboard(player: string) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  return bookplayerreadboard(mainbook, player)
+}
+
+export function memoryreadplayeractive(player: string) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const isactive = bookplayerreadactive(mainbook, player)
+  const board = bookplayerreadboard(mainbook, player)
+  const playerelement = boardobjectread(board, player)
+  return isactive && ispresent(playerelement)
 }
 
 export function memoryplayerscan(players: Record<string, number>) {
@@ -388,7 +403,7 @@ export function memorytickobject(
   const itemname = boardelementname(object)
   os.tick(
     id,
-    DRIVER_TYPE.CODE_PAGE,
+    DRIVER_TYPE.RUNTIME,
     isnumber(cycle) ? cycle : cycledefault,
     itemname,
     code,
@@ -543,7 +558,7 @@ export function memoryrun(address: string) {
   const itemname = boardelementname(READ_CONTEXT.element)
   const itemcode = codepage?.code ?? ''
   // set arg to value on chip with id = id
-  os.once(id, DRIVER_TYPE.CODE_PAGE, itemname, itemcode)
+  os.once(id, DRIVER_TYPE.RUNTIME, itemname, itemcode)
 }
 
 export function memoryreadgadgetlayers(player: string): LAYER[] {

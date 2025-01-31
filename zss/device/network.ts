@@ -1,9 +1,11 @@
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import { doasync } from 'zss/mapping/func'
-import { isarray, MAYBE } from 'zss/mapping/types'
+import { isarray, isstring, MAYBE } from 'zss/mapping/types'
+import { shorturl } from 'zss/mapping/url'
+import { peerstart, peerjoin } from 'zss/pubsub/peer'
 import { NAME } from 'zss/words/types'
-import { write } from 'zss/words/writeui'
+import { write, writecopyit } from 'zss/words/writeui'
 
 import { vm_loader } from './api'
 import { registerreadplayer } from './register'
@@ -88,5 +90,25 @@ const network = createdevice('network', [], (message) => {
         })
       }
       break
+    case 'start':
+      if (message.player === registerreadplayer()) {
+        peerstart(message.player)
+      }
+      break
+    case 'join':
+      if (message.player === registerreadplayer() && isstring(message.data)) {
+        peerjoin(message.data, message.player)
+      }
+      break
+    case 'showjoincode': {
+      doasync(network, async () => {
+        if (message.player === registerreadplayer() && isstring(message.data)) {
+          const joinurl = `${location.origin}/join/#${message.data}`
+          const url = await shorturl(joinurl)
+          writecopyit(network, url, url)
+        }
+      })
+      break
+    }
   }
 })

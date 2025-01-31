@@ -10,7 +10,7 @@ import { convertpalettetocolors } from '../data/palette'
 import { cloneMaterial, interval, time } from './anim'
 import { createbitmaptexture } from './textures'
 
-const smoothrate = TICK_FPS * 2
+const smoothrate = TICK_FPS
 
 const palette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
 const charset = createbitmaptexture(loadcharsetfrombytes(CHARSET))

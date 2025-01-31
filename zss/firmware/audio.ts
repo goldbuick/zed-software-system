@@ -21,29 +21,31 @@ function handlesynthplay(words: WORD[], bgplay: boolean) {
 }
 
 function handlesynthvoice(idx: number, words: WORD[]) {
-  const [voiceorfx] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
+  const [voiceorfx, ii] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
   if (isnumber(voiceorfx)) {
     synth_voice(SOFTWARE, idx, 'volume', voiceorfx)
   } else if (isfx.includes(NAME(voiceorfx))) {
-    const [maybeconfig, maybevalue] = readargs(words, 1, [
+    const [maybeconfig, maybevalue] = readargs(words, ii, [
       ARG_TYPE.NUMBER_OR_STRING,
       ARG_TYPE.MAYBE_NUMBER_OR_STRING,
     ])
     synth_voicefx(SOFTWARE, idx, voiceorfx, maybeconfig, maybevalue)
   } else {
     // check for a list of numbers
-    const [configorpartials] = readargs(words, 1, [
+    const [configorpartials] = readargs(words, ii, [
       ARG_TYPE.MAYBE_NUMBER_OR_STRING,
     ])
     if (isnumber(configorpartials)) {
-      const count = words.length - 1
+      const count = words.length - ii
       const argtypes = new Array<ARG_TYPE>(count).fill(ARG_TYPE.NUMBER)
       // @ts-expect-error argtypes ?
-      const partials = readargs(words, 1, argtypes).slice(0, count)
+      const partials = readargs(words, ii, argtypes).slice(0, count)
       const maybevalue = partials.length === 1 ? partials[0] : partials
       synth_voice(SOFTWARE, idx, voiceorfx, maybevalue)
     } else {
-      const [maybevalue] = readargs(words, 1, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
+      const [maybevalue] = readargs(words, ii, [
+        ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+      ])
       synth_voice(SOFTWARE, idx, voiceorfx, maybevalue)
     }
   }

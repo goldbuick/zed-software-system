@@ -6,6 +6,7 @@ import {
   gadgetstateprovider,
   initstate,
 } from 'zss/gadget/data/api'
+import { ispid } from 'zss/mapping/guid'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 import {
   MEMORY_LABEL,
@@ -14,27 +15,22 @@ import {
 } from 'zss/memory'
 import { bookreadflags } from 'zss/memory/book'
 
-import { gadgetclient_patch, gadgetclient_reset } from './api'
+import { gadgetclient_paint, gadgetclient_patch } from './api'
 
-function clearplayer(player: string) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  // cheating here as data is non-WORD compliant
-  const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
-  // group by player
-  delete gadgetstore[player]
-}
-
-gadgetstateprovider((player) => {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  // cheating here as data is non-WORD compliant
-  const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
-  // group by player
-  let value = gadgetstore[player]
-  // make sure to init state
-  if (!ispresent(value)) {
-    gadgetstore[player] = value = initstate()
+gadgetstateprovider((element) => {
+  if (ispid(element)) {
+    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    // cheating here as data is non-WORD compliant
+    const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE) as any
+    // group by element
+    let value = gadgetstore[element]
+    // make sure to init state
+    if (!ispresent(value)) {
+      gadgetstore[element] = value = initstate()
+    }
+    return value
   }
-  return value
+  return initstate()
 })
 
 const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
@@ -44,7 +40,7 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
   // get list of active players
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const activelist = mainbook?.activelist ?? []
-  // cheating here as data is non-WORD compliant
+  // only send deltas
   const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
   switch (message.target) {
     case 'tock':
@@ -68,7 +64,7 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
       break
     case 'desync':
       if (message.player) {
-        gadgetclient_reset(
+        gadgetclient_paint(
           gadgetserver,
           gadgetstate(message.player),
           message.player,
@@ -82,7 +78,11 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
       break
     case 'clearplayer':
       if (message.player) {
-        clearplayer(message.player)
+        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE)
+        delete gadgetstore[message.player]
+        const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC)
+        delete gadgetsync[message.player]
       }
       break
   }

@@ -1,4 +1,3 @@
-import { MESSAGE } from 'zss/chip'
 import { createdevice } from 'zss/device'
 import {
   TAPE_DISPLAY,
@@ -10,6 +9,9 @@ import {
 import { pickwith } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { isarray, isboolean, ispresent } from 'zss/mapping/types'
+
+import { MESSAGE } from './api'
+import { registerreadplayer } from './register'
 
 const messagecrew: string[] = [
   '$brown$153',
@@ -28,6 +30,13 @@ const messagecrew: string[] = [
   '$cyan$227',
   '$dkpurple$227',
 ]
+
+function terminallog(message: MESSAGE): string {
+  if (isarray(message.data)) {
+    return [message.sender, ...message.data.map((v) => `${v}`)].join(' ')
+  }
+  return ''
+}
 
 function terminaladdmessage(message: MESSAGE) {
   const { terminal } = useTape.getState()
@@ -83,16 +92,20 @@ const tape = createdevice('tape', [], (message) => {
       if (terminal.level >= TAPE_LOG_LEVEL.INFO) {
         terminaladdmessage(message)
       }
+      // eslint-disable-next-line no-console
+      // console.log(terminallog(message))
       break
     case 'debug':
       if (terminal.level >= TAPE_LOG_LEVEL.DEBUG) {
         terminaladdmessage(message)
       }
+      // console.info(terminallog(message))
       break
     case 'error':
       if (terminal.level > TAPE_LOG_LEVEL.OFF) {
         terminaladdmessage(message)
       }
+      console.error(terminallog(message))
       break
     case 'crash':
       useTape.setState((state) => ({
@@ -104,31 +117,37 @@ const tape = createdevice('tape', [], (message) => {
       }))
       break
     case 'terminal:open':
-      useTape.setState((state) => ({
-        terminal: {
-          ...state.terminal,
-          open: true,
-        },
-      }))
+      if (message.player === registerreadplayer()) {
+        useTape.setState((state) => ({
+          terminal: {
+            ...state.terminal,
+            open: true,
+          },
+        }))
+      }
       break
     case 'terminal:close':
-      useTape.setState((state) => ({
-        terminal: {
-          ...state.terminal,
-          open: false,
-        },
-      }))
+      if (message.player === registerreadplayer()) {
+        useTape.setState((state) => ({
+          terminal: {
+            ...state.terminal,
+            open: false,
+          },
+        }))
+      }
       break
     case 'terminal:toggle':
-      useTape.setState((state) => ({
-        terminal: {
-          ...state.terminal,
-          open: !state.terminal.open,
-        },
-      }))
+      if (message.player === registerreadplayer()) {
+        useTape.setState((state) => ({
+          terminal: {
+            ...state.terminal,
+            open: !state.terminal.open,
+          },
+        }))
+      }
       break
     case 'terminal:inclayout':
-      if (isboolean(message.data)) {
+      if (message.player === registerreadplayer() && isboolean(message.data)) {
         terminalinclayout(message.data)
       }
       break

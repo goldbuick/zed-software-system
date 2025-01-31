@@ -1,4 +1,4 @@
-import { MESSAGE } from './chip'
+import { MESSAGE } from './device/api'
 import { hub } from './hub'
 import { createsid } from './mapping/guid'
 import { ispresent, noop } from './mapping/types'
@@ -23,6 +23,7 @@ export type DEVICE = {
   topics: () => string[]
   emit: (target: string, data?: any, player?: string) => void
   reply: (to: MESSAGE, target: string, data?: any, player?: string) => void
+  replynext: (to: MESSAGE, target: string, data?: any, player?: string) => void
   handle: MESSAGE_FUNC
 }
 
@@ -65,12 +66,20 @@ export function createdevice(
     reply(to, target, data, player) {
       device.emit(`${to.sender}:${target}`, data, player)
     },
+    replynext(to, target, data, player) {
+      setTimeout(() => device.emit(`${to.sender}:${target}`, data, player), 64)
+    },
     handle(message) {
       const { target, path } = parsetarget(message.target)
       const itarget = NAME(target)
 
       // we snag ready internally to save the session
       if (!session && itarget === 'ready') {
+        session = message.session
+      }
+
+      // we are bridging into a new session
+      if (itarget === 'bridge' && ispresent(message.session)) {
         session = message.session
       }
 

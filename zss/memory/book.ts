@@ -303,6 +303,10 @@ export function bookplayerreadboard(book: MAYBE<BOOK>, player: string) {
   return bookreadboard(book, isstring(value) ? value : '')
 }
 
+export function bookplayerreadactive(book: MAYBE<BOOK>, player: string) {
+  return book?.activelist.includes(player) ?? false
+}
+
 export function bookplayersetboard(
   book: MAYBE<BOOK>,
   player: string,

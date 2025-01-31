@@ -57,7 +57,9 @@ export function Framed({ width, height }: FramedProps) {
     }
 
     // camera focus logic
-    const control = layersreadcontrol(useGadgetClient.getState().gadget.layers)
+    const control = layersreadcontrol(
+      useGadgetClient.getState().gadget.layers ?? [],
+    )
 
     const drawwidth =
       control.width * RUNTIME.DRAW_CHAR_WIDTH() * control.viewscale
@@ -131,8 +133,8 @@ export function Framed({ width, height }: FramedProps) {
   const player = registerreadplayer()
 
   // re-render only when layer count changes
-  useGadgetClient((state) => state.gadget.layers.length)
-  const { layers } = useGadgetClient.getState().gadget
+  useGadgetClient((state) => state.gadget.layers?.length ?? 0)
+  const { layers = [] } = useGadgetClient.getState().gadget
 
   return (
     <>

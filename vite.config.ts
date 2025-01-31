@@ -6,6 +6,7 @@ import { defineConfig, loadEnv } from 'vite'
 import { analyzer } from 'vite-bundle-analyzer'
 import fullreload from 'vite-plugin-full-reload'
 import mkcert from 'vite-plugin-mkcert'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 import pkg from './package.json'
 
@@ -31,7 +32,7 @@ export default defineConfig(({ mode }) => {
 
   const hmronly = !!JSON.parse(process.env.ZSS_HMR_ONLY ?? '')
   const useanalyzer = !!JSON.parse(process.env.ZSS_ANALYZER ?? '')
-  console.info({ hmronly, analyzer })
+  // console.info({ hmronly, analyzer })
 
   return {
     root,
@@ -39,6 +40,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       mkcert(),
+      nodePolyfills(),
       ...(hmronly ? [] : [fullreload(['**/*.ts', '**/*.tsx'])]),
       ...(useanalyzer ? [analyzer()] : []),
     ],

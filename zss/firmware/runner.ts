@@ -9,10 +9,10 @@ import { CONST_FIRMWARE } from './const'
 import { DISPLAY_FIRMWARE } from './display'
 import { ELEMENT_FIRMWARE } from './element'
 import { FLAGS_FIRMWARE } from './flags'
-import { GADGET_FIRMWARE } from './gadget'
 import { LIFECYCLE_FIRMWARE } from './lifecycle'
 import { LOADER_FIRMWARE } from './loader'
 import { NETWORK_FIRMWARE } from './network'
+import { RUNTIME_FIRMWARE } from './runtime'
 
 export enum DRIVER_TYPE {
   ERROR,
@@ -20,7 +20,7 @@ export enum DRIVER_TYPE {
   CLI,
   LOADER,
   // content
-  CODE_PAGE,
+  RUNTIME,
 }
 
 const firmwares: Record<string, FIRMWARE> = {
@@ -31,7 +31,7 @@ const firmwares: Record<string, FIRMWARE> = {
   display: DISPLAY_FIRMWARE,
   element: ELEMENT_FIRMWARE,
   flags: FLAGS_FIRMWARE,
-  gadget: GADGET_FIRMWARE,
+  runtime: RUNTIME_FIRMWARE,
   lifecycle: LIFECYCLE_FIRMWARE,
   loader: LOADER_FIRMWARE,
   network: NETWORK_FIRMWARE,
@@ -55,7 +55,7 @@ const DRIVER_FIRMWARE = {
   // importing external content into books
   [DRIVER_TYPE.LOADER]: ['loader', ...standardlib],
   // codepages - software to drive engine and UI
-  [DRIVER_TYPE.CODE_PAGE]: ['gadget', ...standardlib],
+  [DRIVER_TYPE.RUNTIME]: ['runtime', ...standardlib],
 }
 
 const DRIVER_COMMANDS = {
@@ -64,7 +64,7 @@ const DRIVER_COMMANDS = {
   [DRIVER_TYPE.CLI]: new Map<string, MAYBE<FIRMWARE_COMMAND>>(),
   [DRIVER_TYPE.LOADER]: new Map<string, MAYBE<FIRMWARE_COMMAND>>(),
   // codepages
-  [DRIVER_TYPE.CODE_PAGE]: new Map<string, MAYBE<FIRMWARE_COMMAND>>(),
+  [DRIVER_TYPE.RUNTIME]: new Map<string, MAYBE<FIRMWARE_COMMAND>>(),
 }
 
 function getfimrwares(driver: DRIVER_TYPE) {

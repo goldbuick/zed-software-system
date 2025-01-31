@@ -1,0 +1,95 @@
+@notepad
+
+'river boat'n
+#synth amsine
+#synth3 amsawtooth
+#synth reverb on
+
+#play qcxcxcx
+
+#repeat 2 do
+
+#repeat 2 do
+#repeat 3 play gxxexxd;cxxcxx;dxxexxgxxgxx;9xx7xx7xxxxx9xx7xx
+#repeat 3 play -gxxexxd;cxxcxx;dxxexxgxxgxx;9xx7xx7xxpxx9xx7xx
+#done
+
+#repeat 2 do
+#repeat 3 play gxxexxd;cxxcxx;+dxxexxgxxgxx;9xx7xx7xxxxx9xx7xx;6xx6xx6xx6xx6xx6xx
+#repeat 3 play -gxxexxd;cxxcxx;+dxxexxgxxgxx;9xx7xx7xxpxx9xx7xx;6xx6xx6xx6xx6xx6xx
+#done
+
+#repeat 3 play 9xx7xx7xx1xx9xx7xx;pxpxpxpxpx
+#repeat 3 play 9xx7xx7xx1xx9xx7xx;pxxpxxpxxpxxpxx
+
+#done
+
+
+'ready to join for tunnel bastards
+#synth restart
+#synth amsine
+#synth reverb off
+
+#repeat 3 play cxcxcx;9xxxxx4x5x5x9xxxxx1xxxxx9xxxxx4xpxpx9xxxxx1xxxxx
+#play cxcxcxcxcxc;9xxxxx4x5x5x9xxxxx1xxxxx9xxxxx4xpxpx9xxxxx1xxxxx
+#play cxcxcxcxcxcxcxcxcx;9xxxxx4x5x5x9xxxxx1xxxxx9xxxxx4xpxpx9xxxxx1xxxxx
+#play cxcxcx+cxcxcx+cxcxcx+cxcxcx;9xxxxx4x5x5x9xxxxx1xxxxx9xxxxx4xpxpx9xxxxx1xxxxx
+
+#repeat 2 do
+#repeat 2 do
+#play cxcxcxdxdxdxcxcxcxcxcxcxcxcx;9xxxxx4x5x5x9xxxxx1xxxxx9xxxxx4xpxpx9xxxxx1xxxxx
+#play +cxcxcxcxcxcxcxcxcxcxcxcxcxcxcx;9xxxxx4x5x5x9xxxxx1xxxxx9xxxxx4xpxpx9xxxxx1xxxxx
+#done
+#repeat 4 play ++cxcxcx-cxcxcx-cxcxcx-cxcxcx-cxcxcx;9xxxxx4x5x5x9xxxxx1xxxxx9xxxxx4xpxpx9xxxxx1xxxxx
+#done
+
+
+'no idea
+#synth restart
+#synth fmcustom 1 0 0.1 0 0.1 0 1
+
+#repeat 2 do
+#repeat 5 play -cxaxdx;+cxaxde
+#repeat 5 play -cxaxdx;++cxaxde
+#repeat 5 play -cxaxdx;++cxaxde#
+#repeat 5 play -cxaxdx;++cxaxdg
+#done
+
+#repeat 2 do
+#repeat 5 play -cxaxdx;+cxaxde;9
+#repeat 5 play -cxaxdx;++cxaxde;9xxp
+#repeat 5 play -cxaxdx;++cxaxde#;9
+#repeat 5 play -cxaxdx;++cxaxdg;9xxp
+#done
+
+#repeat 2 do
+#repeat 5 play -cxaxdx;+cxaxde;9xx7
+#repeat 5 play -cxaxdx;++cxaxde;9xxp
+#repeat 5 play -cxaxdx;++cxaxde#;9xx7
+#repeat 5 play -cxaxdx;++cxaxdg;9xxp
+#done
+
+#repeat 2 do
+#repeat 5 play cxaxdx;+cxaxde;9xx7
+#repeat 5 play cxaxdx;++cxaxde;9xx7
+#repeat 5 play cxaxdx;++cxaxde#;9xx7
+#repeat 5 play cxaxdx;++cxaxdg;9xx7
+#done
+
+'too many notes
+
+#synth restart
+#synth custom 0 0.1 0.3 0.5 0.8 1
+#repeat 3 do
+#repeat 5 play cxaxfx;cxcxcx;axaxax;fxfxfx
+#repeat 5 play +cxaxfx;cxcxcx;axaxax;fxfxfx
+#repeat 5 play +gxcxax;cxcxcx;axaxax;fxfxfx
+#done
+#repeat 3 do
+#repeat 5 play cxaxfx;cxcxcx;+axaxax;fxfxfx;7xpx9x
+#repeat 5 play +cxaxfx;+cxcxcx;axaxax;fxfxfx;9x7xpx
+#repeat 5 play +gxcxax;cxcxcx;+axaxax;fxfxfx;px9x7x
+#done
+
+#play +axaxax;7x9x9x9x9x9xqp
+

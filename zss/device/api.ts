@@ -4,13 +4,35 @@ without having to include device code
 */
 
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
-import { MAYBE } from 'zss/mapping/types'
+import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
 // be careful to keep imports here minimal
 
 export type DEVICELIKE = {
   emit: (target: string, data?: any, player?: string) => void
 }
+
+export type MESSAGE = {
+  session: string
+  id: string
+  target: string
+  data?: any
+  sender: string
+  player?: string
+}
+
+export function ismessage(value: any): value is MESSAGE {
+  return (
+    ispresent(value) &&
+    typeof value === 'object' &&
+    isstring(value.id) &&
+    isstring(value.target) &&
+    isstring(value.sender)
+  )
+}
+
+// track which messages go from server -> client
+// track which messages go from client -> server
 
 export function api_error(
   device: DEVICELIKE,
@@ -47,12 +69,12 @@ export function chat_disconnect(device: DEVICELIKE, player: string) {
   device.emit('chat:disconnect', undefined, player)
 }
 
-export function gadgetclient_reset(
+export function gadgetclient_paint(
   device: DEVICELIKE,
   gadgetstate: GADGET_STATE,
   player: string,
 ) {
-  device.emit('gadgetclient:reset', gadgetstate, player)
+  device.emit('gadgetclient:paint', gadgetstate, player)
 }
 
 export function gadgetclient_patch(
@@ -87,36 +109,32 @@ export function network_fetch(
   device.emit('network:fetch', [arg, label, url, method, words], player)
 }
 
-export function peer_create(
+export function network_join(
   device: DEVICELIKE,
-  joinid: string,
+  topic: string,
   player: string,
 ) {
-  device.emit('peer:create', joinid, player)
+  device.emit('network:join', topic, player)
 }
 
-export function peer_joincode(device: DEVICELIKE, player: string) {
-  device.emit('peer:joincode', undefined, player)
+export function network_start(device: DEVICELIKE, player: string) {
+  device.emit('network:start', undefined, player)
 }
 
-export function peer_open(device: DEVICELIKE, player: string) {
-  device.emit('peer:open', undefined, player)
-}
-
-export function peer_close(device: DEVICELIKE, player: string) {
-  device.emit('peer:close', undefined, player)
-}
-
-export function peer_disconnected(device: DEVICELIKE, player: string) {
-  device.emit('peer:disconnected', undefined, player)
+export function network_showjoincode(
+  device: DEVICELIKE,
+  topic: string,
+  player: string,
+) {
+  device.emit('network:showjoincode', topic, player)
 }
 
 export function platform_ready(device: DEVICELIKE) {
   device.emit('ready')
 }
 
-export function register_ackbooks(device: DEVICELIKE) {
-  device.emit('register:ackbooks', true)
+export function register_loginready(device: DEVICELIKE, player: string) {
+  device.emit('register:loginready', true, player)
 }
 
 export function register_savemem(
@@ -142,10 +160,6 @@ export function register_select(
   player: string,
 ) {
   device.emit('register:select', book, player)
-}
-
-export function register_relogin(device: DEVICELIKE, player: string) {
-  device.emit('register:relogin', undefined, player)
 }
 
 export function register_nuke(device: DEVICELIKE, player: string) {
@@ -239,8 +253,8 @@ export function tape_terminal_inclayout(
   device.emit('tape:terminal:inclayout', inc, player)
 }
 
-export function tape_crash(device: DEVICELIKE) {
-  device.emit('tape:crash')
+export function tape_crash(device: DEVICELIKE, player: string) {
+  device.emit('tape:crash', undefined, player)
 }
 
 export function tape_editor_open(
@@ -287,8 +301,8 @@ export function vm_login(device: DEVICELIKE, player: string) {
   device.emit('vm:login', undefined, player)
 }
 
-export function vm_endgame(device: DEVICELIKE, player: string) {
-  device.emit('vm:endgame', undefined, player)
+export function vm_logout(device: DEVICELIKE, player: string) {
+  device.emit('vm:logout', undefined, player)
 }
 
 export function vm_doot(device: DEVICELIKE, player: string) {

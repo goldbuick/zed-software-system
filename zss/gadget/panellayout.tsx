@@ -1,11 +1,10 @@
-import { deepClone, _areEquals } from 'fast-json-patch'
 import React, { useState } from 'react'
 import { RUNTIME } from 'zss/config'
 import { gadgetserver_clearscroll } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useEqual, useGadgetClient } from 'zss/gadget/data/state'
-import { PANEL_TYPE, PANEL_ITEM } from 'zss/gadget/data/types'
+import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 
 import { Framed } from './framed'
@@ -67,12 +66,17 @@ function LayoutRect({ rect, shouldclose = false }: LayoutRectProps) {
   return null
 }
 
+const SIDEBAR_SIZE = 20
+
 export function PanelLayout() {
   const screensize = useScreenSize()
 
-  // cache scroll
-  const [scroll, setScroll] = useState<RECT>()
-  const panels = useGadgetClient(useEqual((state) => state.gadget.panels))
+  const scroll = useGadgetClient(useEqual((state) => state.gadget.scroll ?? []))
+  const isscrollempty = scroll.length === 0
+  const [hasscroll, sethasscroll] = useState(false)
+  const sidebar = useGadgetClient(
+    useEqual((state) => state.gadget.sidebar ?? []),
+  )
 
   // bail on odd states
   if (screensize.cols < 10 || screensize.rows < 10) {
@@ -90,92 +94,40 @@ export function PanelLayout() {
     height: screensize.rows,
   }
 
-  // iterate layout
+  // simple layout
   const rects: RECT[] = []
 
-  let noscroll = true
-  panels.forEach((panel) => {
-    let rect: RECT
-    switch (panel.edge) {
-      case PANEL_TYPE.LEFT:
-        rect = {
-          name: panel.name,
-          type: RECT_TYPE.PANEL,
-          x: frame.x,
-          y: frame.y,
-          width: panel.size,
-          height: frame.height,
-          text: panel.text,
-        }
-        frame.x += panel.size
-        frame.width -= panel.size
-        rects.push(rect)
-        break
-      default:
-      case PANEL_TYPE.RIGHT:
-        rect = {
-          name: panel.name,
-          type: RECT_TYPE.PANEL,
-          x: frame.x + frame.width - panel.size,
-          y: frame.y,
-          width: panel.size,
-          height: frame.height,
-          text: panel.text,
-        }
-        frame.width -= panel.size
-        rects.push(rect)
-        break
-      case PANEL_TYPE.TOP:
-        rect = {
-          name: panel.name,
-          type: RECT_TYPE.PANEL,
-          x: frame.x,
-          y: frame.y,
-          width: frame.width,
-          height: panel.size,
-          text: panel.text,
-        }
-        frame.y += panel.size
-        frame.height -= panel.size
-        rects.push(rect)
-        break
-      case PANEL_TYPE.BOTTOM:
-        rect = {
-          name: panel.name,
-          type: RECT_TYPE.PANEL,
-          x: frame.x,
-          y: frame.y + frame.height - panel.size,
-          width: frame.width,
-          height: panel.size,
-          text: panel.text,
-        }
-        frame.height -= panel.size
-        rects.push(rect)
-        break
-      case PANEL_TYPE.SCROLL: {
-        rect = {
-          name: panel.name,
-          type: RECT_TYPE.SCROLL,
-          x: 0,
-          y: 0,
-          width: clamp(panel.size || 50, 24, frame.width - 2),
-          height: clamp(18, 8, frame.height - 8),
-          text: panel.text,
-        }
-        rect.x = frame.x + Math.floor((frame.width - rect.width) * 0.5)
-        rect.y = frame.y + Math.floor((frame.height - rect.height) * 0.5)
-        // cache scroll
-        // don't add to render list
-        noscroll = false
-        if (!_areEquals(scroll, rect)) {
-          setScroll(deepClone(rect))
-        }
-      }
+  if (sidebar.length) {
+    const rect = {
+      name: 'sidebar',
+      type: RECT_TYPE.PANEL,
+      x: frame.x + frame.width - SIDEBAR_SIZE,
+      y: frame.y,
+      width: SIDEBAR_SIZE,
+      height: frame.height,
+      text: sidebar,
     }
-  })
+    frame.width -= SIDEBAR_SIZE
+    rects.push(rect)
+  }
 
-  // ending region is main
-  // but we start with main
+  const scrollrect: RECT = {
+    name: 'scroll',
+    type: RECT_TYPE.SCROLL,
+    x: 0,
+    y: 0,
+    width: clamp(50, 24, frame.width - 2),
+    height: clamp(18, 8, frame.height - 8),
+    text: scroll,
+  }
+  scrollrect.x = frame.x + Math.floor((frame.width - scrollrect.width) * 0.5)
+  scrollrect.y = frame.y + Math.floor((frame.height - scrollrect.height) * 0.5)
+
+  if (!isscrollempty && !hasscroll) {
+    sethasscroll(true)
+  }
+
+  // add the frame to display the game
   rects.unshift(frame)
 
   const player = registerreadplayer()
@@ -192,8 +144,7 @@ export function PanelLayout() {
           gadgetserver_clearscroll(SOFTWARE, player)
         },
         didclose() {
-          // clear scroll state
-          setScroll(undefined)
+          sethasscroll(false)
         },
       }}
     >
@@ -214,8 +165,8 @@ export function PanelLayout() {
             </group>
           )
         })}
-        {scroll && (
-          <React.Fragment key={scroll.name}>
+        {hasscroll && (
+          <React.Fragment key="scroll">
             <group
               // eslint-disable-next-line react/no-unknown-property
               position={[0, 0, 800]}
@@ -229,12 +180,12 @@ export function PanelLayout() {
             <group
               // eslint-disable-next-line react/no-unknown-property
               position={[
-                scroll.x * RUNTIME.DRAW_CHAR_WIDTH(),
-                scroll.y * RUNTIME.DRAW_CHAR_HEIGHT(),
+                scrollrect.x * RUNTIME.DRAW_CHAR_WIDTH(),
+                scrollrect.y * RUNTIME.DRAW_CHAR_HEIGHT(),
                 900,
               ]}
             >
-              <LayoutRect rect={scroll} shouldclose={noscroll} />
+              <LayoutRect rect={scrollrect} shouldclose={isscrollempty} />
             </group>
           </React.Fragment>
         )}

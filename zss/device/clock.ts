@@ -32,7 +32,7 @@ function wake() {
   }
 
   previous = now
-  setTimeout(wake, 1)
+  setTimeout(wake, 2)
 }
 
 // start clock

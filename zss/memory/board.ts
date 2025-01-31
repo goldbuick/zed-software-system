@@ -207,11 +207,7 @@ export function boardobjectcreatefromkind(
   kind: string,
   id?: string,
 ): MAYBE<BOARD_ELEMENT> {
-  const object = boardobjectcreate(board, { ...pt, kind })
-  if (ispresent(id) && ispresent(object)) {
-    object.id = id
-  }
-  return object
+  return boardobjectcreate(board, { ...pt, kind, id })
 }
 
 export function boardobjectread(

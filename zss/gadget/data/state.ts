@@ -24,11 +24,10 @@ export const useGadgetClient = create<{
 }>(() => ({
   desync: false,
   gadget: {
-    player: '',
+    id: '',
     layers: [],
-    panels: [],
-    reset: false,
-    focus: '',
+    scroll: [],
+    sidebar: [],
   },
 }))
 

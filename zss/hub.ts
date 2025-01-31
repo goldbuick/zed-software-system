@@ -1,5 +1,5 @@
-import { MESSAGE } from './chip'
 import { DEVICE, createmessage } from './device'
+import { MESSAGE } from './device/api'
 
 export type HUB_MESSAGE = {
   id: string

@@ -27,7 +27,7 @@ type FramedTilesProps = {
 export function FramedLayer({ id, z }: FramedTilesProps) {
   const media = useMedia()
   const layer = useGadgetClient(
-    useShallow((state) => state.gadget.layers.find((item) => item.id === id)),
+    useShallow((state) => state.gadget.layers?.find((item) => item.id === id)),
   )
 
   // special case for media elements
