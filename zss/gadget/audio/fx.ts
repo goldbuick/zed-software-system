@@ -68,6 +68,8 @@ export function createfx() {
     })
   }
 
+  applyreset()
+
   return {
     reverb,
     echo,
