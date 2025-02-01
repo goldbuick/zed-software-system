@@ -43,6 +43,7 @@ import {
   write,
   writebbar,
   writeheader,
+  writeopenit,
   writeoption,
   writesection,
   writetext,
@@ -60,6 +61,14 @@ export const CLI_FIRMWARE = createfirmware()
       // help messages
       case 'helpmenu':
         writeheader(SOFTWARE, `H E L P`)
+        // TODO: basically make this help content a table of contents
+        // entry points into the help wiki +1
+        writeopenit(
+          SOFTWARE,
+          `https://github.com/goldbuick/zed-software-system/wiki`,
+          `open help wiki`,
+        )
+        write(SOFTWARE, ``)
         writeoption(SOFTWARE, `#help controls`, `zss controls and inputs`)
         write(SOFTWARE, `!helpcontrols;read help controls`)
         write(SOFTWARE, ``)
@@ -151,6 +160,10 @@ export const CLI_FIRMWARE = createfirmware()
         writetext(
           SOFTWARE,
           `${fg('white', '"!copyit"')} flag;${fg('gray', 'Input Label')}`,
+        )
+        writetext(
+          SOFTWARE,
+          `${fg('white', '"!openit"')} flag;${fg('gray', 'Input Label')}`,
         )
         break
       case 'helpdeveloper':

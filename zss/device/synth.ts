@@ -95,7 +95,7 @@ function createsynth() {
   })
   maincompressor.connect(mainvolume)
 
-  const playvolume = new Volume(0)
+  const playvolume = new Volume(-2)
   playvolume.connect(maincompressor)
 
   const drumvolume = new Volume(1)

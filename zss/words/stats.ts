@@ -126,5 +126,7 @@ export function stattypestring(type: STAT_TYPE) {
       return 'scroll'
     case STAT_TYPE.COPYIT:
       return 'copyit'
+    case STAT_TYPE.OPENIT:
+      return 'openit'
   }
 }
