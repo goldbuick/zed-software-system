@@ -1,5 +1,5 @@
 import * as Tone from 'tone'
-import { isnumber, ispresent } from 'zss/mapping/types'
+import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 export const SYNTH_SFX_RESET = 4
 
@@ -79,7 +79,7 @@ export type SYNTH_NOTE_ENTRY = [number, SYNTH_NOTE_ON]
 export function invokeplay(
   synth: number,
   starttime: number,
-  play: SYNTH_OP[],
+  play: SYNTH_OP[] | string,
   withendofpattern = true,
 ) {
   // translate ops into time, note pairs
@@ -103,119 +103,126 @@ export function invokeplay(
     } else if (isnumber(note)) {
       pattern.push([time, [synth, duration, note]])
       resetnote()
+    } else if (note.startsWith('#')) {
+      pattern.push([time, [synth, duration, note]])
+      resetnote()
     } else if (note !== '') {
       pattern.push([time, [synth, duration, `${note}${accidental}${octave}`]])
       resetnote()
     }
   }
 
-  for (let i = 0; i < play.length; ++i) {
-    // write note
-    switch (play[i]) {
-      case SYNTH_OP.SHARP:
-      case SYNTH_OP.FLAT:
-        // skip
-        break
-      default:
-        writenote()
-        break
-    }
+  if (isstring(play)) {
+    note = play
+  } else {
+    for (let i = 0; i < play.length; ++i) {
+      // write note
+      switch (play[i]) {
+        case SYNTH_OP.SHARP:
+        case SYNTH_OP.FLAT:
+          // skip
+          break
+        default:
+          writenote()
+          break
+      }
 
-    // config note
-    switch (play[i]) {
-      case SYNTH_OP.NOTE_A:
-        note = 'A'
-        break
-      case SYNTH_OP.NOTE_B:
-        note = 'B'
-        break
-      case SYNTH_OP.NOTE_C:
-        note = 'C'
-        break
-      case SYNTH_OP.NOTE_D:
-        note = 'D'
-        break
-      case SYNTH_OP.NOTE_E:
-        note = 'E'
-        break
-      case SYNTH_OP.NOTE_F:
-        note = 'F'
-        break
-      case SYNTH_OP.NOTE_G:
-        note = 'G'
-        break
-      case SYNTH_OP.REST:
-        note = null
-        break
-      case SYNTH_OP.SHARP:
-        accidental += '#'
-        break
-      case SYNTH_OP.FLAT:
-        accidental += 'b'
-        break
-      case SYNTH_OP.OCTAVE_UP:
-        ++octave
-        break
-      case SYNTH_OP.OCTAVE_DOWN:
-        --octave
-        break
-      case SYNTH_OP.TIME_64:
-        duration = '64n'
-        break
-      case SYNTH_OP.TIME_32:
-        duration = '32n'
-        break
-      case SYNTH_OP.TIME_16:
-        duration = '16n'
-        break
-      case SYNTH_OP.TIME_8:
-        duration = '8n'
-        break
-      case SYNTH_OP.TIME_4:
-        duration = '4n'
-        break
-      case SYNTH_OP.TIME_2:
-        duration = '2n'
-        break
-      case SYNTH_OP.TIME_1:
-        duration = '1n'
-        break
-      case SYNTH_OP.TIME_TRIPLET:
-        duration = duration.replace('n', 't')
-        break
-      case SYNTH_OP.TIME_AND_A_HALF:
-        duration += '.'
-        break
-      case SYNTH_OP.DRUM_TICK:
-        note = 0
-        break
-      case SYNTH_OP.DRUM_TWEET:
-        note = 1
-        break
-      case SYNTH_OP.DRUM_COWBELL:
-        note = 2
-        break
-      case SYNTH_OP.DRUM_CLAP:
-        note = 3
-        break
-      case SYNTH_OP.DRUM_HI_SNARE:
-        note = 4
-        break
-      case SYNTH_OP.DRUM_HI_WOODBLOCK:
-        note = 5
-        break
-      case SYNTH_OP.DRUM_LOW_SNARE:
-        note = 6
-        break
-      case SYNTH_OP.DRUM_LOW_TOM:
-        note = 7
-        break
-      case SYNTH_OP.DRUM_LOW_WOODBLOCK:
-        note = 8
-        break
-      case SYNTH_OP.DRUM_BASS:
-        note = 9
-        break
+      // config note
+      switch (play[i]) {
+        case SYNTH_OP.NOTE_A:
+          note = 'A'
+          break
+        case SYNTH_OP.NOTE_B:
+          note = 'B'
+          break
+        case SYNTH_OP.NOTE_C:
+          note = 'C'
+          break
+        case SYNTH_OP.NOTE_D:
+          note = 'D'
+          break
+        case SYNTH_OP.NOTE_E:
+          note = 'E'
+          break
+        case SYNTH_OP.NOTE_F:
+          note = 'F'
+          break
+        case SYNTH_OP.NOTE_G:
+          note = 'G'
+          break
+        case SYNTH_OP.REST:
+          note = null
+          break
+        case SYNTH_OP.SHARP:
+          accidental += '#'
+          break
+        case SYNTH_OP.FLAT:
+          accidental += 'b'
+          break
+        case SYNTH_OP.OCTAVE_UP:
+          ++octave
+          break
+        case SYNTH_OP.OCTAVE_DOWN:
+          --octave
+          break
+        case SYNTH_OP.TIME_64:
+          duration = '64n'
+          break
+        case SYNTH_OP.TIME_32:
+          duration = '32n'
+          break
+        case SYNTH_OP.TIME_16:
+          duration = '16n'
+          break
+        case SYNTH_OP.TIME_8:
+          duration = '8n'
+          break
+        case SYNTH_OP.TIME_4:
+          duration = '4n'
+          break
+        case SYNTH_OP.TIME_2:
+          duration = '2n'
+          break
+        case SYNTH_OP.TIME_1:
+          duration = '1n'
+          break
+        case SYNTH_OP.TIME_TRIPLET:
+          duration = duration.replace('n', 't')
+          break
+        case SYNTH_OP.TIME_AND_A_HALF:
+          duration += '.'
+          break
+        case SYNTH_OP.DRUM_TICK:
+          note = 0
+          break
+        case SYNTH_OP.DRUM_TWEET:
+          note = 1
+          break
+        case SYNTH_OP.DRUM_COWBELL:
+          note = 2
+          break
+        case SYNTH_OP.DRUM_CLAP:
+          note = 3
+          break
+        case SYNTH_OP.DRUM_HI_SNARE:
+          note = 4
+          break
+        case SYNTH_OP.DRUM_HI_WOODBLOCK:
+          note = 5
+          break
+        case SYNTH_OP.DRUM_LOW_SNARE:
+          note = 6
+          break
+        case SYNTH_OP.DRUM_LOW_TOM:
+          note = 7
+          break
+        case SYNTH_OP.DRUM_LOW_WOODBLOCK:
+          note = 8
+          break
+        case SYNTH_OP.DRUM_BASS:
+          note = 9
+          break
+      }
     }
   }
 
@@ -229,7 +236,7 @@ export function invokeplay(
   return pattern
 }
 
-export type SYNTH_INVOKE = SYNTH_OP[]
+export type SYNTH_INVOKE = SYNTH_OP[] | string
 
 export function parseplay(play: string): SYNTH_INVOKE[] {
   const playops: SYNTH_INVOKE[] = []
@@ -238,15 +245,17 @@ export function parseplay(play: string): SYNTH_INVOKE[] {
   for (let p = 0; p < invokes.length; ++p) {
     const ops: SYNTH_OP[] = []
     const invoke = invokes[p]
-
-    for (let i = 0; i < invoke.length; ++i) {
-      const op = CHAR_OP_MAP[invoke[i] as keyof typeof CHAR_OP_MAP]
-      if (ispresent(op)) {
-        ops.push(op)
+    if (invoke.startsWith('#')) {
+      playops.push(invoke)
+    } else {
+      for (let i = 0; i < invoke.length; ++i) {
+        const op = CHAR_OP_MAP[invoke[i] as keyof typeof CHAR_OP_MAP]
+        if (ispresent(op)) {
+          ops.push(op)
+        }
       }
+      playops.push(ops)
     }
-
-    playops.push(ops)
   }
 
   return playops

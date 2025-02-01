@@ -106,6 +106,10 @@ export function createchipid(id: string) {
   return `${id}_chip`
 }
 
+export function senderid(maybeid = '') {
+  return `vm:${maybeid ?? ''}`
+}
+
 // lifecycle and control flow api
 export function createchip(
   id: string,
@@ -120,10 +124,13 @@ export function createchip(
   // eslint-disable-next-line prefer-const
   let logic: Generator<number> | undefined
 
+  // create labels
+  const labels = deepcopy(Object.entries(build.labels ?? {}))
+
   // init
-  if (!isarray(flags.lb)) {
+  if (!isarray(flags.lb) || flags.lb.length !== labels.length) {
     // entry point state
-    flags.lb = deepcopy(Object.entries(build.labels ?? {}))
+    flags.lb = labels
     // incoming message state
     flags.lk = ''
     // we leave message unset
@@ -150,10 +157,6 @@ export function createchip(
       return 0
     }
     return commandinvoke(chip, args)
-  }
-
-  function senderid(maybeid = id) {
-    return `vm:${maybeid ?? id}`
   }
 
   const chip: CHIP = {

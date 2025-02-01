@@ -9,19 +9,6 @@ export enum SOURCE_TYPE {
   METALLIC_NOISE,
 }
 
-/*
-            // "Cutter" drums from modbox!
-            var drumBuffer = 1;
-            for (var i = 0; i < Config.chipNoiseLength; i++) {
-                wave[i] = (drumBuffer & 1) * 4.0 * (Math.random() * 14 + 1) - 8.0;
-                var newBuffer = drumBuffer >> 1;
-                if (((drumBuffer + newBuffer) & 1) == 1) {
-                    newBuffer += 15 << 2;
-                }
-                drumBuffer = newBuffer;
-            }
-*/
-
 const RETRO_SAMPLE_COUNT = 32768
 function generatenoisesynth(source: SOURCE_TYPE) {
   const wave = getContext().createBuffer(

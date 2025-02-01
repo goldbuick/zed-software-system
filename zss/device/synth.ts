@@ -45,7 +45,7 @@ import {
 } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { api_error, synth_audioenabled, tape_info } from './api'
+import { api_error, synth_audioenabled, tape_info, vm_synthsend } from './api'
 import { registerreadplayer } from './register'
 
 // synth setup
@@ -117,12 +117,17 @@ function createsynth() {
   ]
 
   // config fx
-  // 0-3 FX 0 - play
-  // 4-7 FX 1 - bgplay
-  const FX = [createfx(), createfx()]
+  // 0-1 FX 0 - play
+  // 2-3 FX 1 - play
+  // 4-7 FX 2 - bgplay
+  const FX = [createfx(), createfx(), createfx()]
+
+  function mapindextofx(index: number) {
+    return index < 4 ? Math.floor(index / 2) : 2
+  }
 
   function connectsource(index: number) {
-    const f = Math.floor(index / 4)
+    const f = mapindextofx(index)
     SOURCE[index].source.synth.chain(
       FX[f].vibrato,
       FX[f].chorus,
@@ -532,7 +537,11 @@ function createsynth() {
     }
     const [chan, duration, note] = value
     if (isstring(note) && ispresent(SOURCE[chan])) {
-      SOURCE[chan].source.synth.triggerAttackRelease(note, duration, time)
+      if (note.startsWith('#')) {
+        vm_synthsend(synthdevice, note.slice(1))
+      } else {
+        SOURCE[chan].source.synth.triggerAttackRelease(note, duration, time)
+      }
     }
     if (isnumber(note)) {
       switch (note) {
@@ -677,6 +686,7 @@ function createsynth() {
     SOURCE,
     FX,
     changesource,
+    mapindextofx,
   }
 }
 
@@ -1081,7 +1091,7 @@ const synthdevice = createdevice('synth', [], (message) => {
           number | string,
           number | string,
         ]
-        const index = Math.floor(synthindex / 4)
+        const index = synth.mapindextofx(synthindex)
         // @ts-expect-error not feeling it
         const fx = synth.FX[index][fxname]
         if (ispresent(fx)) {
