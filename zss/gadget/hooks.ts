@@ -237,3 +237,23 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
     })
   },
 }))
+
+export type DEVICE_CONFIG = {
+  insetcols: number
+  insetrows: number
+  islowrez: boolean
+  islandscape: boolean
+  sidebaropen: boolean
+  showkeyboard: boolean
+  showtouchcontrols: boolean
+}
+
+export const useDeviceConfig = create<DEVICE_CONFIG>(() => ({
+  insetcols: 20,
+  insetrows: 20,
+  islowrez: false,
+  islandscape: true,
+  sidebaropen: true,
+  showkeyboard: false,
+  showtouchcontrols: false,
+}))

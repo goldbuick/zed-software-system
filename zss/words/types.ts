@@ -86,6 +86,7 @@ export enum STAT_TYPE {
   HOTKEY, // @hotkey gorp g - we can associate hotkeys with objects
   SCROLL, // @scroll, affords the user to write local code
   COPYIT, // only useful in hyperlinks, used to copy into the clipboard
+  OPENIT, // only useful in hyperlinks, used to open a url in a new tab
 }
 
 export type STAT = {

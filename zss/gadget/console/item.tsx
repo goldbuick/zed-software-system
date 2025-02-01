@@ -15,6 +15,7 @@ import {
 
 import { ConsoleCopyIt } from './copyit'
 import { ConsoleHyperlink } from './hyperlink'
+import { ConsoleOpenIt } from './openit'
 
 export function ConsoleItem({ blink, active, text, y }: ConsoleItemProps) {
   const context = useWriteText()
@@ -77,6 +78,8 @@ export function ConsoleItem({ blink, active, text, y }: ConsoleItemProps) {
         return null
       case 'copyit':
         return <ConsoleCopyIt {...props} words={words} />
+      case 'openit':
+        return <ConsoleOpenIt {...props} words={words} />
       default:
       case 'hyperlink':
         return <ConsoleHyperlink {...props} words={words} />

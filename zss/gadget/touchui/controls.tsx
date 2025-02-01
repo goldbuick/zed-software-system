@@ -7,13 +7,12 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { resetTiles } from '../hooks'
+import { resetTiles, useDeviceConfig } from '../hooks'
 
 type ControlsProps = {
   context: WRITE_TEXT_CONTEXT
   width: number
   height: number
-  islandscape: boolean
   drawstick: {
     startx: number
     starty: number
@@ -24,22 +23,21 @@ type ControlsProps = {
 
 const motion = new Vector2()
 
-const decochars = [2, 1, 176, 5, 153, 177, 254]
+const decochars = [
+  153, 5, 42, 94, 24, 25, 26, 27, 16, 17, 30, 31, 234, 227, 227,
+]
+  .map((item, i) => [item, i % 3 === 0 ? 176 : 177, i % 3 === 0 ? 178 : 176])
+  .flat()
 
-export function Controls({
-  context,
-  width,
-  height,
-  islandscape,
-  drawstick,
-}: ControlsProps) {
+export function Controls({ context, width, height, drawstick }: ControlsProps) {
+  const { islandscape, sidebaropen } = useDeviceConfig()
+
   resetTiles(context, 0, COLOR.WHITE, COLOR.ONCLEAR)
-  // islandscape ? COLOR.ONCLEAR : COLOR.PURPLE,
   if (!islandscape) {
     const size = width * height
     for (let i = 4 * width; i < size; ++i) {
-      context.char[i] = decochars[i % decochars.length]
-      context.color[i] = COLOR.DKPURPLE
+      context.char[i] = sidebaropen ? decochars[i % decochars.length] : 0
+      context.color[i] = sidebaropen ? COLOR.DKPURPLE : COLOR.ONCLEAR
     }
   }
 
@@ -58,6 +56,17 @@ export function Controls({
     context.x = context.active.leftedge = width - 7
     tokenizeandwritetextformat(`$RED$176$176$176$176$176\n`, context, false)
   }
+
+  // draw keyboard toggle
+  context.y = height - 5
+  context.active.leftedge = 1
+  context.active.bg = COLOR.ONCLEAR
+  context.x = Math.round((width - 4) * 0.5)
+  tokenizeandwritetextformat(`$GREY$221$32$222\n`, context, false)
+  context.x = Math.round((width - 6) * 0.5)
+  tokenizeandwritetextformat(`$GREY$221$32$32$32$222\n`, context, false)
+  context.x = Math.round((width - 8) * 0.5)
+  tokenizeandwritetextformat(`$GREY$221$32$32$32$32$32$222\n`, context, false)
 
   // draw active stick
   if (drawstick.startx !== -1) {

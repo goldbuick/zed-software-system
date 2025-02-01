@@ -88,3 +88,11 @@ export function writecopyit(
 
   write(device, `!copyit ${content};${label}`)
 }
+
+export function writeopenit(
+  device: DEVICELIKE,
+  content: string,
+  label: string,
+) {
+  write(device, `!openit ${content};${label}`)
+}

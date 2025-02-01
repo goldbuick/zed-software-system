@@ -21,3 +21,9 @@ canvas {
   touch-action: none;
   image-rendering: pixelated;
 }
+
+#touchtext {
+  position: absolute;
+  top: -1000px;
+  left: 0;
+}

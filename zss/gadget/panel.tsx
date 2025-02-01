@@ -9,7 +9,8 @@ import { PanelItem } from './panel/panelitem'
 import { TilesData, TilesRender } from './usetiles'
 
 type PanelProps = {
-  margin?: number
+  xmargin?: number
+  ymargin?: number
   selected?: number
   name: string
   width: number
@@ -20,7 +21,8 @@ type PanelProps = {
 }
 
 export function Panel({
-  margin = 1,
+  xmargin = 1,
+  ymargin = 1,
   selected = -1,
   width,
   height,
@@ -36,13 +38,14 @@ export function Panel({
       height,
       color,
       bg,
-      0,
-      margin,
-      width - margin,
-      height,
+      ymargin,
+      xmargin,
+      width - xmargin,
+      height - ymargin,
     ),
     ...store.getState(),
-    x: margin,
+    x: xmargin,
+    y: ymargin,
   }
 
   resetTiles(state, 0, color, bg)

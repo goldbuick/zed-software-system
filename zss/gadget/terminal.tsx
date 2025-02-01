@@ -25,6 +25,7 @@ import { UserScreen } from './userscreen'
 
 // include all front-end devices
 import 'zss/userspace'
+import { useDeviceConfig } from './hooks'
 
 extend({ OrthographicCamera })
 
@@ -83,13 +84,22 @@ export function Terminal() {
     gputier.tier > 2 &&
     !gputier.isMobile
 
+  // update device config
+  useEffect(() => {
+    useDeviceConfig.setState((state) => {
+      return {
+        ...state,
+        islowrez,
+        islandscape,
+        showtouchcontrols,
+      }
+    })
+  }, [islowrez, islandscape, showtouchcontrols])
+
   return (
     <>
       <UserFocus>
-        <UserScreen
-          islandscape={islandscape}
-          showtouchcontrols={showtouchcontrols}
-        >
+        <UserScreen>
           <PanelLayout />
           <Tape />
         </UserScreen>

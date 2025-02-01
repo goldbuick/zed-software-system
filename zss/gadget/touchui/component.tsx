@@ -18,10 +18,9 @@ import { Surface } from './surface'
 export type TouchUIProps = {
   width: number
   height: number
-  islandscape: boolean
 }
 
-export function TouchUI({ width, height, islandscape }: TouchUIProps) {
+export function TouchUI({ width, height }: TouchUIProps) {
   const screensize = useScreenSize()
   const player = registerreadplayer()
 
@@ -54,7 +53,6 @@ export function TouchUI({ width, height, islandscape }: TouchUIProps) {
           context={context}
           width={width}
           height={height}
-          islandscape={islandscape}
           drawstick={drawstick}
         />
         <Surface
@@ -68,18 +66,20 @@ export function TouchUI({ width, height, islandscape }: TouchUIProps) {
         <ShadeBoxDither
           width={width}
           height={height}
-          top={3}
+          top={5}
           left={0}
           right={5}
           bottom={height - 6}
+          alpha={0.47135}
         />
         <ShadeBoxDither
           width={width}
           height={height}
-          top={3}
+          top={5}
           left={width - 6}
           right={width - 1}
           bottom={height - 6}
+          alpha={0.47135}
         />
         <TilesRender width={width} height={height} />
       </group>
