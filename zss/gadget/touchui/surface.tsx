@@ -1,3 +1,4 @@
+import KioskBoard from 'kioskboard'
 import { radToDeg } from 'maath/misc'
 import { useState } from 'react'
 import { Vector2, Vector3 } from 'three'
@@ -11,11 +12,102 @@ import {
 import { SOFTWARE } from 'zss/device/session'
 import { ptwithin } from 'zss/mapping/2d'
 import { snap } from 'zss/mapping/number'
+import { ispresent } from 'zss/mapping/types'
 
 import { INPUT } from '../data/types'
+import { useDeviceConfig } from '../hooks'
 import { Rect } from '../rect'
 
 import { handlestickdir } from './inputs'
+
+const touchtextarea = document.getElementById('touchtext') as HTMLInputElement
+
+touchtextarea.addEventListener('change', (evt) => {
+  const target = evt.target as HTMLInputElement
+  if (!ispresent(target)) {
+    return
+  }
+  // console.info(target.value)
+})
+
+KioskBoard.run(touchtextarea, {
+  theme: 'dark',
+  autoScroll: false,
+  capsLockActive: false,
+  keysEnterCanClose: false,
+  keysArrayOfObjects: [
+    {
+      '0': 'Q',
+      '1': 'W',
+      '2': 'E',
+      '3': 'R',
+      '4': 'T',
+      '5': 'Y',
+      '6': 'U',
+      '7': 'I',
+      '8': 'O',
+      '9': 'P',
+    },
+    {
+      '0': 'A',
+      '1': 'S',
+      '2': 'D',
+      '3': 'F',
+      '4': 'G',
+      '5': 'H',
+      '6': 'J',
+      '7': 'K',
+      '8': 'L',
+    },
+    {
+      '0': 'Z',
+      '1': 'X',
+      '2': 'C',
+      '3': 'V',
+      '4': 'B',
+      '5': 'N',
+      '6': 'M',
+    },
+  ],
+  keysSpecialCharsArrayOfStrings: [
+    '!',
+    "'",
+    '^',
+    '#',
+    '+',
+    '$',
+    '%',
+    '½',
+    '&',
+    '/',
+    '{',
+    '}',
+    '(',
+    ')',
+    '[',
+    ']',
+    '=',
+    '*',
+    '?',
+    '\\',
+    '-',
+    '_',
+    '|',
+    '@',
+    '€',
+    '₺',
+    '~',
+    'æ',
+    'ß',
+    '<',
+    '>',
+    ',',
+    ';',
+    '.',
+    ':',
+    '`',
+  ],
+})
 
 type SurfaceProps = {
   width: number
@@ -44,6 +136,7 @@ function coords(width: number, height: number) {
 }
 
 export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
+  const { islandscape } = useDeviceConfig()
   const [movestick] = useState({
     startx: -1,
     starty: -1,
@@ -58,22 +151,29 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
       if (ptwithin(cx, cy, 3, 6, 6, 1)) {
         // top-left button
         tape_terminal_toggle(SOFTWARE, player)
-        console.info('top-left')
-      }
-      if (ptwithin(cx, cy, 3, width - 2, 6, width - 6)) {
+      } else if (ptwithin(cx, cy, 3, width - 2, 6, width - 6)) {
         // top-right button
         vm_input(SOFTWARE, INPUT.MENU_BUTTON, 0, player)
-        console.info('top-right')
-      }
-      if (ptwithin(cx, cy, height - 5, 6, height - 2, 1)) {
+      } else if (ptwithin(cx, cy, height - 5, 6, height - 2, 1)) {
         // bottom-left button
         vm_input(SOFTWARE, INPUT.OK_BUTTON, 0, player)
-        console.info('bottom-left')
-      }
-      if (ptwithin(cx, cy, height - 5, width - 2, height - 2, width - 6)) {
+      } else if (
+        ptwithin(cx, cy, height - 5, width - 2, height - 2, width - 6)
+      ) {
         // bottom-right button
         vm_input(SOFTWARE, INPUT.CANCEL_BUTTON, 0, player)
-        console.info('bottom-right')
+      } else if (
+        (islandscape && ptwithin(cx, cy, 6, width, height - 6, width - 5)) ||
+        (!islandscape && ptwithin(cx, cy, 0, width - 12, 3, 12))
+      ) {
+        // toggle sidebar
+        useDeviceConfig.setState((state) => ({
+          ...state,
+          sidebaropen: !state.sidebaropen,
+        }))
+      } else if (ptwithin(cx, cy, height - 4, width - 12, height - 2, 12)) {
+        // open keyboard
+        setTimeout(() => document.getElementById('touchtext')?.focus(), 64)
       }
     } else {
       // reset input

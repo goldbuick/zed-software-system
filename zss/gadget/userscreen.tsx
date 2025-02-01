@@ -5,6 +5,7 @@ import {
   createContext,
   PropsWithChildren,
   useContext,
+  useEffect,
   useLayoutEffect,
   useRef,
 } from 'react'
@@ -64,6 +65,14 @@ export function UserScreen({ children }: UserScreenProps) {
       insety = overlap * RUNTIME.DRAW_CHAR_HEIGHT()
     }
   }
+
+  useEffect(() => {
+    useDeviceConfig.setState((state) => ({
+      ...state,
+      insetcols,
+      insetrows,
+    }))
+  }, [insetcols, insetrows])
 
   return (
     <Screensize.Provider value={{ cols, rows }}>

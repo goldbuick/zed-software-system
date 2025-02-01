@@ -66,18 +66,20 @@ export function TouchUI({ width, height }: TouchUIProps) {
         <ShadeBoxDither
           width={width}
           height={height}
-          top={3}
+          top={5}
           left={0}
           right={5}
           bottom={height - 6}
+          alpha={0.47135}
         />
         <ShadeBoxDither
           width={width}
           height={height}
-          top={3}
+          top={5}
           left={width - 6}
           right={width - 1}
           bottom={height - 6}
+          alpha={0.47135}
         />
         <TilesRender width={width} height={height} />
       </group>

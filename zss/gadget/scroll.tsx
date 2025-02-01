@@ -207,7 +207,7 @@ export function Scroll({
                 name={name}
                 width={panelwidth}
                 height={panelheight}
-                margin={0}
+                xmargin={0}
                 color={color}
                 bg={COLOR.ONCLEAR}
                 text={visibletext}
