@@ -7,13 +7,12 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { resetTiles } from '../hooks'
+import { resetTiles, useDeviceConfig } from '../hooks'
 
 type ControlsProps = {
   context: WRITE_TEXT_CONTEXT
   width: number
   height: number
-  islandscape: boolean
   drawstick: {
     startx: number
     starty: number
@@ -24,17 +23,14 @@ type ControlsProps = {
 
 const motion = new Vector2()
 
-const decochars = [2, 1, 176, 5, 153, 177, 254]
+const decochars = [
+  153, 5, 42, 94, 24, 25, 26, 27, 16, 17, 30, 31, 234, 227, 227,
+]
 
-export function Controls({
-  context,
-  width,
-  height,
-  islandscape,
-  drawstick,
-}: ControlsProps) {
+export function Controls({ context, width, height, drawstick }: ControlsProps) {
+  const { islandscape } = useDeviceConfig()
+
   resetTiles(context, 0, COLOR.WHITE, COLOR.ONCLEAR)
-  // islandscape ? COLOR.ONCLEAR : COLOR.PURPLE,
   if (!islandscape) {
     const size = width * height
     for (let i = 4 * width; i < size; ++i) {

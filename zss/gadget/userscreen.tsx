@@ -11,6 +11,7 @@ import {
 import { OrthographicCamera } from 'three'
 import { RUNTIME } from 'zss/config'
 
+import { useDeviceConfig } from './hooks'
 import { TouchUI } from './touchui/component'
 
 // screensize in chars
@@ -20,19 +21,13 @@ export function useScreenSize() {
   return useContext(Screensize)
 }
 
-type UserScreenProps = PropsWithChildren<{
-  islandscape: boolean
-  showtouchcontrols: boolean
-}>
+type UserScreenProps = PropsWithChildren<any>
 
-export function UserScreen({
-  islandscape,
-  showtouchcontrols,
-  children,
-}: UserScreenProps) {
+export function UserScreen({ children }: UserScreenProps) {
   const { viewport, set, size, camera } = useThree()
   const cameraRef = useRef<OrthographicCamera>(null)
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
+  const { islandscape, showtouchcontrols } = useDeviceConfig()
 
   useLayoutEffect(() => {
     const oldCam = camera
@@ -98,7 +93,6 @@ export function UserScreen({
                   key={insetcols * insetrows}
                   width={insetcols}
                   height={insetrows}
-                  islandscape={islandscape}
                 />
               </group>
             )}

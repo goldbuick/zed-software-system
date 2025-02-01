@@ -18,10 +18,9 @@ import { Surface } from './surface'
 export type TouchUIProps = {
   width: number
   height: number
-  islandscape: boolean
 }
 
-export function TouchUI({ width, height, islandscape }: TouchUIProps) {
+export function TouchUI({ width, height }: TouchUIProps) {
   const screensize = useScreenSize()
   const player = registerreadplayer()
 
@@ -54,7 +53,6 @@ export function TouchUI({ width, height, islandscape }: TouchUIProps) {
           context={context}
           width={width}
           height={height}
-          islandscape={islandscape}
           drawstick={drawstick}
         />
         <Surface
