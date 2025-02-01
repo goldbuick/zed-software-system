@@ -1,4 +1,5 @@
 import { objectKeys } from 'ts-extras'
+import { senderid } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
 import { api_error, MESSAGE, tape_debug, tape_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -493,7 +494,8 @@ export function memorytick() {
 
   // update boards / build code / run chips
   const boards = bookplayerreadboards(mainbook)
-  boards.forEach((board) => {
+  for (let b = 0; b < boards.length; ++b) {
+    const board = boards[b]
     const run = bookboardtick(mainbook, board, timestamp)
     // iterate code needed to update given board
     for (let i = 0; i < run.length; ++i) {
@@ -506,7 +508,26 @@ export function memorytick() {
         memorytickobject(mainbook, board, object, code)
       }
     }
-  })
+  }
+}
+
+export function memorysynthsend(message: string) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+  // send to all objects on active boards -
+  // I guess this is an easy way for cross board coordination
+  const boards = bookplayerreadboards(mainbook)
+  for (let b = 0; b < boards.length; ++b) {
+    const board = boards[b]
+    const ids = Object.keys(board.objects)
+    for (let i = 0; i < ids.length; ++i) {
+      const element = board.objects[ids[i]]
+      const chipmessage = `${senderid(element.id)}:${message}`
+      SOFTWARE.emit(chipmessage)
+    }
+  }
 }
 
 export function memorycleanup() {

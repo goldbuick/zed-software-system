@@ -345,6 +345,10 @@ export function vm_cli(device: DEVICELIKE, input: string, player: string) {
   device.emit('vm:cli', input, player)
 }
 
+export function vm_synthsend(device: DEVICELIKE, message: string) {
+  device.emit('vm:synthsend', message)
+}
+
 export function vm_flush(device: DEVICELIKE, tag: string, player: string) {
   device.emit('vm:flush', tag, player)
 }

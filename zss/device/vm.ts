@@ -21,6 +21,7 @@ import {
   memorywriteoperator,
   memoryreadoperator,
   memoryreadplayeractive,
+  memorysynthsend,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
@@ -185,6 +186,11 @@ const vm = createdevice(
         // from clock
         if (message.player !== 'locked') {
           memorytick()
+        }
+        break
+      case 'synthsend':
+        if (isstring(message.data)) {
+          memorysynthsend(message.data)
         }
         break
       case 'second': {
