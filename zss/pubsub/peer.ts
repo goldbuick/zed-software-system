@@ -116,7 +116,12 @@ finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
   subscribelastseen.set(msg.topic, lastseen)
 })
 
-// finder.on('trackerconnect', console.info)
+finder.on('trackerconnect', (tracker, stats) => {
+  write(
+    SOFTWARE,
+    `looking for players ${tracker.announceUrl} [${stats.connected}]`,
+  )
+})
 // finder.on('trackerwarning', console.info)
 
 // topic related state

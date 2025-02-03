@@ -28,6 +28,7 @@ type SurfaceProps = {
     tipx: number,
     tipy: number,
   ) => void
+  onToggleKeyboard: () => void
 }
 
 const motion = new Vector2()
@@ -44,7 +45,13 @@ function coords(width: number, height: number) {
   }
 }
 
-export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
+export function Surface({
+  width,
+  height,
+  player,
+  onDrawStick,
+  onToggleKeyboard,
+}: SurfaceProps) {
   const { islandscape } = useDeviceConfig()
   const [movestick] = useState({
     startx: -1,
@@ -82,10 +89,7 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
         }))
       } else if (ptwithin(cx, cy, height - 4, width - 12, height - 2, 12)) {
         // open keyboard
-        // TODO: !!!
-        // create a keyboard panel in touchui
-        // tap outside keyboard to clear it
-        // then we hardcode text lines to fill the panel with
+        onToggleKeyboard()
       }
     } else {
       // reset input
