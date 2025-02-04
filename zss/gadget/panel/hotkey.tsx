@@ -43,7 +43,6 @@ export function PanelItemHotkey({
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    console.info('hk invoke !!!!!', chip, target)
     scroll.sendmessage(chiptarget(chip, target))
     scroll.sendclose()
   }, [chip, scroll, target])

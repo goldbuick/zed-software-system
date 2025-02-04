@@ -133,6 +133,14 @@ export function platform_ready(device: DEVICELIKE) {
   device.emit('ready')
 }
 
+export function register_touchkey(
+  device: DEVICELIKE,
+  key: string,
+  player: string,
+) {
+  device.emit('register:touchkey', key, player)
+}
+
 export function register_loginready(device: DEVICELIKE, player: string) {
   device.emit('register:loginready', true, player)
 }

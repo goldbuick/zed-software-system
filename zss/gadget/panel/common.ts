@@ -57,6 +57,10 @@ export function mapTo<T>(arg: any, defaultvalue: T): T {
 }
 
 export function chiptarget(chip: string, target: string) {
+  switch (chip) {
+    case 'touchkey':
+      return `register:${chip}:${target}`
+  }
   // always prefix with route back to this chip
   return `vm:${chip}:${target}`
 }

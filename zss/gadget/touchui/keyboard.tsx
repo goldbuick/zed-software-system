@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
 import { Group } from 'three'
 import { RUNTIME } from 'zss/config'
+import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
 import { clamp, snap } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
@@ -8,6 +10,7 @@ import { COLOR } from 'zss/words/types'
 import { ShadeBoxDither } from '../framed/dither'
 import { useDeviceConfig } from '../hooks'
 import { Panel } from '../panel'
+import { ScrollContext } from '../panel/common'
 import { Rect } from '../rect'
 
 const KEYBOARD_SCALE = 1.5
@@ -25,7 +28,7 @@ const LETTER_KEYS = [
 
 function hk(hotkey: string) {
   const hktext = ` ${hotkey === '$' ? '$$' : hotkey} `
-  return ['key', '', 'hk', `${hotkey}key`, hotkey, hktext]
+  return ['touchkey', '', 'hk', hotkey, hotkey, hktext.toLowerCase()]
 }
 
 type KeyboardProps = {
@@ -34,7 +37,9 @@ type KeyboardProps = {
 }
 
 export function Keyboard({ width, height }: KeyboardProps) {
+  const player = registerreadplayer()
   const { showkeyboard } = useDeviceConfig()
+
   const ref = useRef<Group>(null)
   const [pointers] = useState<Record<string, number>>({})
 
@@ -93,25 +98,40 @@ export function Keyboard({ width, height }: KeyboardProps) {
           />
         </group>
         <group ref={ref} scale={KEYBOARD_SCALE}>
-          <Panel
-            name="keyboard"
-            inline
-            color={COLOR.WHITE}
-            bg={COLOR.ONCLEAR}
-            width={KEYBOARD_WIDTH}
-            height={KEYBOARD_HEIGHT}
-            text={LETTER_KEYS.map((letter) => {
-              switch (letter) {
-                case '\n':
-                  return letter
-                default:
-                  if (letter.startsWith(' ')) {
+          <ScrollContext.Provider
+            value={{
+              sendmessage(target, data) {
+                // send a hyperlink message
+                SOFTWARE.emit(target, data, player)
+              },
+              sendclose() {
+                // no-op
+              },
+              didclose() {
+                // no-op
+              },
+            }}
+          >
+            <Panel
+              name="keyboard"
+              inline
+              color={COLOR.WHITE}
+              bg={COLOR.ONCLEAR}
+              width={KEYBOARD_WIDTH}
+              height={KEYBOARD_HEIGHT}
+              text={LETTER_KEYS.map((letter) => {
+                switch (letter) {
+                  case '\n':
                     return letter
-                  }
-              }
-              return hk(letter)
-            })}
-          />
+                  default:
+                    if (letter.startsWith(' ')) {
+                      return letter
+                    }
+                }
+                return hk(letter)
+              })}
+            />
+          </ScrollContext.Provider>
         </group>
       </>
     )

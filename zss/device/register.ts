@@ -1,5 +1,5 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
-import { createdevice } from 'zss/device'
+import { createdevice, parsetarget } from 'zss/device'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
@@ -253,6 +253,18 @@ const register = createdevice(
         if (keepalive >= signalrate) {
           keepalive -= signalrate
           vm_doot(register, registerreadplayer())
+        }
+        break
+      default:
+        if (message.player === myplayerid) {
+          const { target, path } = parsetarget(message.target)
+          switch (target) {
+            case 'touchkey':
+              // need to translate into a keyboard event
+              // for editor input
+              console.info(path)
+              break
+          }
         }
         break
     }
