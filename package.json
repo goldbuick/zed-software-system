@@ -26,6 +26,8 @@
     "@react-three/postprocessing": "^2.16.3",
     "@syncedstore/core": "^0.6.0",
     "@syncedstore/react": "^0.6.0",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/user-event": "^14.6.1",
     "@twurple/auth": "^7.2.1",
     "@twurple/chat": "^7.2.1",
     "@types/is-hotkey": "^0.1.10",

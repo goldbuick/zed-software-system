@@ -19,16 +19,140 @@ const KEYBOARD_HEIGHT = 16
 
 const LETTER_KEYS = [
   ['\n'],
-  ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\n', '\n'],
-  [' ', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '\n', '\n'],
-  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', '@', '\n', '\n'],
-  [' ', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '!', '$', '\n', '\n'],
-  ['Space', '#', '/', '?', ':', '"', `'`],
+  [
+    '[Escape]',
+    '$',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '0',
+    '&',
+    '\n',
+  ],
+  [
+    ' ',
+    'Q',
+    'W',
+    'E',
+    'R',
+    'T',
+    'Y',
+    'U',
+    'I',
+    'O',
+    'P',
+    '-',
+    '+',
+    '=',
+    '\n',
+    '\n',
+  ],
+  [
+    'A',
+    'S',
+    'D',
+    'F',
+    'G',
+    'H',
+    'J',
+    'K',
+    'L',
+    '@',
+    '[Backspace]',
+    '*',
+    '%',
+    '\n',
+  ],
+  [
+    ' ',
+    'Z',
+    'X',
+    'C',
+    'V',
+    'B',
+    'N',
+    'M',
+    '!',
+    '[Enter]',
+    '[ArrowUp]',
+    '(',
+    ')',
+    '\n',
+    '\n',
+  ],
+  [
+    '[Space]',
+    '#',
+    '/',
+    '?',
+    ':',
+    `'`,
+    ';',
+    '"',
+    ' ',
+    '[ArrowLeft]',
+    '[ArrowDown]',
+    '[ArrowRight]',
+    '\n',
+  ],
+  ['              ', '[Shift]', '[Ctrl]', '[Alt]', '\n'],
+  ['zsskeys '],
 ].flat()
 
+function stripmods(hotkey: string) {
+  return hotkey
+    .replaceAll('{', '')
+    .replaceAll('}', '')
+    .replaceAll('[', '')
+    .replaceAll(']', '')
+}
+
 function hk(hotkey: string) {
-  const hktext = ` ${hotkey === '$' ? '$$' : hotkey} `
-  return ['touchkey', '', 'hk', hotkey, hotkey, hktext.toLowerCase()]
+  let hktext = stripmods(hotkey)
+  switch (hotkey) {
+    case '$':
+      hktext = ' $$ '
+      break
+    case ';':
+      hktext = ' $59 '
+      break
+    case '[Escape]':
+      hktext = ` esc `
+      break
+    case '[ArrowUp]':
+      hktext = ` $30 `
+      break
+    case '[ArrowDown]':
+      hktext = ` $31 `
+      break
+    case '[ArrowRight]':
+      hktext = ` $16 `
+      break
+    case '[ArrowLeft]':
+      hktext = ` $17 `
+      break
+    case '[Backspace]':
+      hktext = ` del `
+      break
+    default:
+      hktext = ` ${hktext} `
+      break
+  }
+
+  return [
+    'touchkey',
+    '',
+    'hk',
+    hotkey.toLowerCase(),
+    stripmods(hotkey),
+    hktext.toLowerCase(),
+  ]
 }
 
 type KeyboardProps = {
@@ -83,7 +207,7 @@ export function Keyboard({ width, height }: KeyboardProps) {
           left={0}
           right={width - 1}
           bottom={height - 1}
-          alpha={0.53718}
+          alpha={0.753718}
         />
         <group position={[0, 0, 1]}>
           <Rect
@@ -115,20 +239,21 @@ export function Keyboard({ width, height }: KeyboardProps) {
             <Panel
               name="keyboard"
               inline
+              ymargin={1}
               color={COLOR.WHITE}
               bg={COLOR.ONCLEAR}
               width={KEYBOARD_WIDTH}
               height={KEYBOARD_HEIGHT}
-              text={LETTER_KEYS.map((letter) => {
-                switch (letter) {
+              text={LETTER_KEYS.map((txt) => {
+                switch (txt) {
                   case '\n':
-                    return letter
+                    return txt
                   default:
-                    if (letter.startsWith(' ')) {
-                      return letter
+                    if (txt.includes(' ')) {
+                      return txt
                     }
                 }
-                return hk(letter)
+                return hk(txt)
               })}
             />
           </ScrollContext.Provider>

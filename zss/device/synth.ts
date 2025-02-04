@@ -32,7 +32,6 @@ import {
   SYNTH_SFX_RESET,
 } from 'zss/gadget/audio/play'
 import { createsource, SOURCE_TYPE } from 'zss/gadget/audio/source'
-import { unmute } from 'zss/gadget/audio/unmute'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
 import { clamp } from 'zss/mapping/number'
@@ -50,6 +49,12 @@ import { registerreadplayer } from './register'
 
 // synth setup
 
+type CustomNavigator = {
+  audioSession?: {
+    type: string
+  }
+} & Navigator
+
 let enabled = false
 export function enableaudio() {
   if (enabled) {
@@ -64,8 +69,10 @@ export function enableaudio() {
         tape_info(synthdevice, 'audio is enabled!')
         setAltInterval(107)
         try {
-          const context: AudioContext = getContext() as unknown as AudioContext
-          unmute(context, true)
+          const customnavigator = navigator as CustomNavigator
+          if (ispresent(customnavigator.audioSession)) {
+            customnavigator.audioSession.type = 'play-and-record'
+          }
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
           //

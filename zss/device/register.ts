@@ -1,3 +1,4 @@
+import { userEvent } from '@testing-library/user-event'
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice, parsetarget } from 'zss/device'
 import { doasync } from 'zss/mapping/func'
@@ -16,12 +17,17 @@ import {
   tape_debug,
   tape_info,
   tape_terminal_close,
-  tape_terminal_open,
   vm_books,
   vm_doot,
   vm_login,
   vm_operator,
 } from './api'
+
+// trigger user events
+
+const user = userEvent.setup({
+  delay: null,
+})
 
 // read / write from indexdb
 
@@ -260,9 +266,9 @@ const register = createdevice(
           const { target, path } = parsetarget(message.target)
           switch (target) {
             case 'touchkey':
-              // need to translate into a keyboard event
-              // for editor input
-              console.info(path)
+              doasync(register, async () => {
+                await user.keyboard(path)
+              })
               break
           }
         }

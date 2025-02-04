@@ -22,10 +22,10 @@ import { PanelLayout } from './panellayout'
 import { Tape } from './tape'
 import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
+import { useDeviceConfig } from './hooks'
 
 // include all front-end devices
 import 'zss/userspace'
-import { useDeviceConfig } from './hooks'
 
 extend({ OrthographicCamera })
 
