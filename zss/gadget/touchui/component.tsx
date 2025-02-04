@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 import { useScreenSize } from '../userscreen'
 
 import { ControlSurface } from './controlsurface'
@@ -12,7 +10,6 @@ export type TouchUIProps = {
 
 export function TouchUI({ width, height }: TouchUIProps) {
   const screensize = useScreenSize()
-  const [showkeyboard, setshowkeyboard] = useState(false)
 
   // bail on odd states
   if (screensize.cols < 10 || screensize.rows < 10) {
@@ -22,19 +19,10 @@ export function TouchUI({ width, height }: TouchUIProps) {
   return (
     <>
       <group position={[0, 0, 800]}>
-        <ControlSurface
-          width={width}
-          height={height}
-          onToggleKeyboard={() => setshowkeyboard((state) => !state)}
-        />
+        <ControlSurface width={width} height={height} />
       </group>
-      <group position={[0, 0, 900]}>
-        <Keyboard
-          width={width}
-          height={height}
-          showkeyboard={showkeyboard}
-          onToggleKeyboard={() => setshowkeyboard((state) => !state)}
-        />
+      <group position={[0, 0, 850]}>
+        <Keyboard width={width} height={height} />
       </group>
     </>
   )

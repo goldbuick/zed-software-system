@@ -17,14 +17,9 @@ import { Surface } from './surface'
 type ControlSurfaceProps = {
   width: number
   height: number
-  onToggleKeyboard: () => void
 }
 
-export function ControlSurface({
-  width,
-  height,
-  onToggleKeyboard,
-}: ControlSurfaceProps) {
+export function ControlSurface({ width, height }: ControlSurfaceProps) {
   const player = registerreadplayer()
 
   const [drawstick, setdrawstick] = useState({
@@ -59,7 +54,6 @@ export function ControlSurface({
         onDrawStick={(startx, starty, tipx, tipy) =>
           setdrawstick({ startx, starty, tipx, tipy })
         }
-        onToggleKeyboard={onToggleKeyboard}
       />
       <ShadeBoxDither
         width={width}

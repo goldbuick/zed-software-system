@@ -5,6 +5,7 @@ import { WORD } from 'zss/words/types'
 export type PanelItemProps = {
   player: string
   chip: string
+  inline: boolean
   active: boolean
   label: string
   args: WORD[]

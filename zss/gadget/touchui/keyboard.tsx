@@ -1,73 +1,45 @@
+import { useRef, useState } from 'react'
+import { Group } from 'three'
+import { RUNTIME } from 'zss/config'
+import { clamp, snap } from 'zss/mapping/number'
+import { ispresent } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
 import { ShadeBoxDither } from '../framed/dither'
+import { useDeviceConfig } from '../hooks'
 import { Panel } from '../panel'
 import { Rect } from '../rect'
 
-const KEYBOARD_HEIGHT = 10
+const KEYBOARD_SCALE = 1.5
+const KEYBOARD_WIDTH = 56
+const KEYBOARD_HEIGHT = 16
 
 const LETTER_KEYS = [
-  ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '\n'],
-  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', '\n'],
-  ['Z', 'X', 'C', 'V', 'B', 'N', 'M', '\n'],
+  ['\n'],
+  ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\n', '\n'],
+  [' ', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '\n', '\n'],
+  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', '\n', '\n'],
+  [' ', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '@', '$', '\n', '\n'],
+  ['Space', '#', '/', '?', ':', `'`, '!'],
 ].flat()
 
-const SYMBOL_KEYS = [
-  '!',
-  "'",
-  '^',
-  '#',
-  '+',
-  '$',
-  '%',
-  '½',
-  '&',
-  '/',
-  '{',
-  '}',
-  '(',
-  ')',
-  '[',
-  ']',
-  '=',
-  '*',
-  '?',
-  '\\',
-  '-',
-  '_',
-  '|',
-  '@',
-  '€',
-  '₺',
-  '~',
-  'æ',
-  'ß',
-  '<',
-  '>',
-  ',',
-  ';',
-  '.',
-  ':',
-  '`',
-]
-
 function hk(hotkey: string) {
-  return ['key', hotkey, 'hk', `${hotkey}key`, hotkey]
+  const hktext = ` ${hotkey === '$' ? '$$' : hotkey} `
+  const row = ['key', '', 'hk', `${hotkey}key`, hotkey, hktext]
+  console.info(row)
+  return row
 }
 
 type KeyboardProps = {
   width: number
   height: number
-  showkeyboard: boolean
-  onToggleKeyboard: () => void
 }
 
-export function Keyboard({
-  width,
-  height,
-  showkeyboard,
-  onToggleKeyboard,
-}: KeyboardProps) {
+export function Keyboard({ width, height }: KeyboardProps) {
+  const { showkeyboard } = useDeviceConfig()
+  const ref = useRef<Group>(null)
+  const [pointers] = useState<Record<string, number>>({})
+
   return (
     showkeyboard && (
       <>
@@ -76,27 +48,60 @@ export function Keyboard({
           width={width}
           height={height}
           visible={false}
-          onClick={onToggleKeyboard}
+          onClick={() => {
+            // close keyboard
+            useDeviceConfig.setState({
+              showkeyboard: false,
+            })
+          }}
+          onPointerDown={(e) => {
+            pointers[e.pointerId] = e.clientX
+            if (ispresent(ref.current)) {
+              ref.current.userData.x = ref.current.position.x
+            }
+          }}
+          onPointerMove={(e) => {
+            const prev = pointers[e.pointerId]
+            const next = e.clientX
+            if (ispresent(prev) && ref.current) {
+              const drawwidth = RUNTIME.DRAW_CHAR_WIDTH() * KEYBOARD_SCALE
+              const delta = Math.round(snap(next - prev, drawwidth) / drawwidth)
+              ref.current.position.x = clamp(
+                ref.current.userData.x + delta * drawwidth,
+                KEYBOARD_WIDTH * -drawwidth + width * RUNTIME.DRAW_CHAR_WIDTH(),
+                0,
+              )
+            }
+          }}
+          onPointerUp={(e) => {
+            delete pointers[e.pointerId]
+          }}
         />
         <ShadeBoxDither
           width={width}
           height={height}
-          top={height - KEYBOARD_HEIGHT - 1}
+          top={5}
           left={0}
           right={width - 1}
           bottom={height - 1}
-          alpha={0.89}
+          alpha={0.53718}
         />
-        <group>
+        <group ref={ref} scale={KEYBOARD_SCALE}>
           <Panel
             name="keyboard"
+            inline
             color={COLOR.WHITE}
             bg={COLOR.ONCLEAR}
-            width={width}
+            width={KEYBOARD_WIDTH}
             height={KEYBOARD_HEIGHT}
             text={LETTER_KEYS.map((letter) => {
-              if (letter === '\n') {
-                return letter
+              switch (letter) {
+                case '\n':
+                  return letter
+                default:
+                  if (letter.startsWith(' ')) {
+                    return letter
+                  }
               }
               return hk(letter)
             })}

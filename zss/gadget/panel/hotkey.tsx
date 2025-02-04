@@ -15,6 +15,7 @@ import {
 
 export function PanelItemHotkey({
   chip,
+  inline,
   active,
   label,
   args,
@@ -35,28 +36,32 @@ export function PanelItemHotkey({
   tokenizeandwritetextformat(
     `${
       context.iseven ? '$black$onltgray' : '$black$ondkcyan'
-    }${text}${tcolor}$onclear ${label}\n`,
+    }${text}${tcolor}$onclear ${label}${inline ? `` : `\n`}`,
     context,
     true,
   )
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
+    console.info('hk invoke !!!!!', chip, target)
     scroll.sendmessage(chiptarget(chip, target))
     scroll.sendclose()
   }, [chip, scroll, target])
 
   return (
-    <group>
+    <group
+      position={[
+        cx * RUNTIME.DRAW_CHAR_WIDTH(),
+        cy * RUNTIME.DRAW_CHAR_HEIGHT(),
+        1,
+      ]}
+    >
       <Rect
-        position={[
-          cx * RUNTIME.DRAW_CHAR_WIDTH(),
-          cy * RUNTIME.DRAW_CHAR_HEIGHT(),
-          0,
-        ]}
-        width={1}
+        visible={false}
+        width={text.length}
         height={1}
-        visible
+        blocking
+        onClick={invoke}
       />
       {active && <UserInput OK_BUTTON={invoke} />}
       <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey>

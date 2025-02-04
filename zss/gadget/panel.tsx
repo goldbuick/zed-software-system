@@ -9,6 +9,7 @@ import { PanelItem } from './panel/panelitem'
 import { TilesData, TilesRender } from './usetiles'
 
 type PanelProps = {
+  inline?: boolean
   xmargin?: number
   ymargin?: number
   selected?: number
@@ -21,6 +22,7 @@ type PanelProps = {
 }
 
 export function Panel({
+  inline = false,
   xmargin = 1,
   ymargin = 1,
   selected = -1,
@@ -55,7 +57,12 @@ export function Panel({
     <TilesData store={store}>
       <WriteTextContext.Provider value={context}>
         {text.map((item, index) => (
-          <PanelItem key={index} item={item} active={index === selected} />
+          <PanelItem
+            key={index}
+            item={item}
+            inline={inline}
+            active={index === selected}
+          />
         ))}
       </WriteTextContext.Provider>
       <TilesRender width={width} height={height} />

@@ -28,7 +28,6 @@ type SurfaceProps = {
     tipx: number,
     tipy: number,
   ) => void
-  onToggleKeyboard: () => void
 }
 
 const motion = new Vector2()
@@ -45,13 +44,7 @@ function coords(width: number, height: number) {
   }
 }
 
-export function Surface({
-  width,
-  height,
-  player,
-  onDrawStick,
-  onToggleKeyboard,
-}: SurfaceProps) {
+export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
   const { islandscape } = useDeviceConfig()
   const [movestick] = useState({
     startx: -1,
@@ -89,7 +82,9 @@ export function Surface({
         }))
       } else if (ptwithin(cx, cy, height - 4, width - 12, height - 2, 12)) {
         // open keyboard
-        onToggleKeyboard()
+        useDeviceConfig.setState({
+          showkeyboard: true,
+        })
       }
     } else {
       // reset input
@@ -115,7 +110,7 @@ export function Surface({
 
   return (
     <Rect
-      blocking
+      // blocking
       width={width}
       height={height}
       visible={false}
