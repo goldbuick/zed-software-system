@@ -18,16 +18,14 @@ const LETTER_KEYS = [
   ['\n'],
   ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\n', '\n'],
   [' ', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '\n', '\n'],
-  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', '\n', '\n'],
-  [' ', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '@', '$', '\n', '\n'],
-  ['Space', '#', '/', '?', ':', `'`, '!'],
+  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', '@', '\n', '\n'],
+  [' ', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '!', '$', '\n', '\n'],
+  ['Space', '#', '/', '?', ':', '"', `'`],
 ].flat()
 
 function hk(hotkey: string) {
   const hktext = ` ${hotkey === '$' ? '$$' : hotkey} `
-  const row = ['key', '', 'hk', `${hotkey}key`, hotkey, hktext]
-  console.info(row)
-  return row
+  return ['key', '', 'hk', `${hotkey}key`, hotkey, hktext]
 }
 
 type KeyboardProps = {
@@ -40,6 +38,8 @@ export function Keyboard({ width, height }: KeyboardProps) {
   const ref = useRef<Group>(null)
   const [pointers] = useState<Record<string, number>>({})
 
+  const narrow = 16
+
   return (
     showkeyboard && (
       <>
@@ -48,21 +48,15 @@ export function Keyboard({ width, height }: KeyboardProps) {
           width={width}
           height={height}
           visible={false}
-          onClick={() => {
-            // close keyboard
-            useDeviceConfig.setState({
-              showkeyboard: false,
-            })
-          }}
           onPointerDown={(e) => {
-            pointers[e.pointerId] = e.clientX
+            pointers[e.pointerId] = e.point.x
             if (ispresent(ref.current)) {
               ref.current.userData.x = ref.current.position.x
             }
           }}
           onPointerMove={(e) => {
             const prev = pointers[e.pointerId]
-            const next = e.clientX
+            const next = e.point.x
             if (ispresent(prev) && ref.current) {
               const drawwidth = RUNTIME.DRAW_CHAR_WIDTH() * KEYBOARD_SCALE
               const delta = Math.round(snap(next - prev, drawwidth) / drawwidth)
@@ -86,6 +80,18 @@ export function Keyboard({ width, height }: KeyboardProps) {
           bottom={height - 1}
           alpha={0.53718}
         />
+        <group position={[0, 0, 1]}>
+          <Rect
+            visible={false}
+            x={width * 0.5 - narrow * 0.5}
+            y={height - 3.5}
+            width={narrow}
+            height={4}
+            onClick={() => {
+              useDeviceConfig.setState({ showkeyboard: false })
+            }}
+          />
+        </group>
         <group ref={ref} scale={KEYBOARD_SCALE}>
           <Panel
             name="keyboard"
