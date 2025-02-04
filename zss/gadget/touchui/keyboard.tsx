@@ -4,6 +4,57 @@ import { ShadeBoxDither } from '../framed/dither'
 import { Panel } from '../panel'
 import { Rect } from '../rect'
 
+const KEYBOARD_HEIGHT = 10
+
+const LETTER_KEYS = [
+  ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '\n'],
+  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', '\n'],
+  ['Z', 'X', 'C', 'V', 'B', 'N', 'M', '\n'],
+].flat()
+
+const SYMBOL_KEYS = [
+  '!',
+  "'",
+  '^',
+  '#',
+  '+',
+  '$',
+  '%',
+  '½',
+  '&',
+  '/',
+  '{',
+  '}',
+  '(',
+  ')',
+  '[',
+  ']',
+  '=',
+  '*',
+  '?',
+  '\\',
+  '-',
+  '_',
+  '|',
+  '@',
+  '€',
+  '₺',
+  '~',
+  'æ',
+  'ß',
+  '<',
+  '>',
+  ',',
+  ';',
+  '.',
+  ':',
+  '`',
+]
+
+function hk(hotkey: string) {
+  return ['key', hotkey, 'hk', `${hotkey}key`, hotkey]
+}
+
 type KeyboardProps = {
   width: number
   height: number
@@ -30,23 +81,27 @@ export function Keyboard({
         <ShadeBoxDither
           width={width}
           height={height}
-          top={10}
+          top={height - KEYBOARD_HEIGHT - 1}
           left={0}
           right={width - 1}
           bottom={height - 1}
-          alpha={0.7135}
+          alpha={0.89}
         />
-        <Panel
-          name="keyboard"
-          color={COLOR.WHITE}
-          bg={COLOR.ONCLEAR}
-          width={width}
-          height={height}
-          text={[
-            ['key', 'a', 'hk', 'akey', 'a'],
-            ['key', 'b', 'hk', 'bkey', 'b'],
-          ]}
-        />
+        <group>
+          <Panel
+            name="keyboard"
+            color={COLOR.WHITE}
+            bg={COLOR.ONCLEAR}
+            width={width}
+            height={KEYBOARD_HEIGHT}
+            text={LETTER_KEYS.map((letter) => {
+              if (letter === '\n') {
+                return letter
+              }
+              return hk(letter)
+            })}
+          />
+        </group>
       </>
     )
   )

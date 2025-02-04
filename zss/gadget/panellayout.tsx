@@ -137,7 +137,7 @@ export function PanelLayout() {
       frame.width -= inset
       rects.push(rect)
     } else {
-      const panelheight = sidebaropen ? insetrows - 4 : insetrows
+      const panelheight = sidebaropen ? insetrows - 7 : insetrows
       const inset = sidebaropen ? panelheight : 4
       const rect = {
         name: 'sidebar',
