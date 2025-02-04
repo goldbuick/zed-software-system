@@ -23,7 +23,7 @@ export function Tape() {
   const screensize = useScreenSize()
 
   let top = 0
-  let height = screensize.rows
+  let height = screensize.rows - 1
 
   const [layout, terminalopen] = useTape(
     useShallow((state) => [state.layout, state.terminal.open]),
@@ -58,36 +58,29 @@ export function Tape() {
 
   return (
     <TilesData store={store}>
-      <group
-        // eslint-disable-next-line react/no-unknown-property
-        position={[0, 0, 900]}
-      >
-        {terminalopen && (
-          <ShadeBoxDither
-            width={screensize.cols}
-            height={screensize.rows}
-            top={top}
-            left={0}
-            right={screensize.cols - 1}
-            bottom={top + height - 1}
-          />
-        )}
-        {terminalopen ? (
-          <UserFocus blockhotkeys>
-            <BackPlate context={context} />
-            <TapeLayout context={context} />
-            <group position={[0, top * RUNTIME.DRAW_CHAR_HEIGHT(), 0]}>
-              <TilesRender width={screensize.cols} height={height} />
-            </group>
-          </UserFocus>
-        ) : (
-          <UserHotkey hotkey="Shift+?">
-            {() => tape_terminal_open(SOFTWARE, player)}
-          </UserHotkey>
-        )}
-      </group>
+      {terminalopen && (
+        <ShadeBoxDither
+          width={screensize.cols}
+          height={screensize.rows}
+          top={top}
+          left={0}
+          right={screensize.cols - 1}
+          bottom={top + height - 1}
+        />
+      )}
+      {terminalopen ? (
+        <UserFocus blockhotkeys>
+          <BackPlate context={context} />
+          <TapeLayout context={context} />
+          <group position={[0, top * RUNTIME.DRAW_CHAR_HEIGHT(), 0]}>
+            <TilesRender width={screensize.cols} height={height} />
+          </group>
+        </UserFocus>
+      ) : (
+        <UserHotkey hotkey="Shift+?">
+          {() => tape_terminal_open(SOFTWARE, player)}
+        </UserHotkey>
+      )}
     </TilesData>
   )
 }
-
-// should we export some of these devices ??

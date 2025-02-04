@@ -1,6 +1,9 @@
 import { useCallback, useContext } from 'react'
+import { RUNTIME } from 'zss/config'
 import { UserHotkey, UserInput } from 'zss/gadget/userinput'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
+
+import { Rect } from '../rect'
 
 import {
   PanelItemProps,
@@ -12,6 +15,7 @@ import {
 
 export function PanelItemHotkey({
   chip,
+  inline,
   active,
   label,
   args,
@@ -26,10 +30,13 @@ export function PanelItemHotkey({
   const text = maybetext || ` ${shortcut.toUpperCase()} `
   const tcolor = inputcolor(active)
 
+  const cx = context.x
+  const cy = context.y
+
   tokenizeandwritetextformat(
     `${
       context.iseven ? '$black$onltgray' : '$black$ondkcyan'
-    }${text}${tcolor}$onclear ${label}\n`,
+    }${text}${tcolor}$onclear ${label}${inline ? `` : `\n`}`,
     context,
     true,
   )
@@ -41,9 +48,22 @@ export function PanelItemHotkey({
   }, [chip, scroll, target])
 
   return (
-    <>
+    <group
+      position={[
+        cx * RUNTIME.DRAW_CHAR_WIDTH(),
+        cy * RUNTIME.DRAW_CHAR_HEIGHT(),
+        1,
+      ]}
+    >
+      <Rect
+        visible={false}
+        width={text.length}
+        height={1}
+        blocking
+        onClick={invoke}
+      />
       {active && <UserInput OK_BUTTON={invoke} />}
       <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey>
-    </>
+    </group>
   )
 }

@@ -80,7 +80,8 @@ const SIDEBAR_SIZE = 20
 
 export function PanelLayout() {
   const screensize = useScreenSize()
-  const { islandscape, sidebaropen, insetrows } = useDeviceConfig()
+  const { islandscape, sidebaropen, insetrows, showtouchcontrols } =
+    useDeviceConfig()
 
   const scroll = useGadgetClient(useEqual((state) => state.gadget.scroll ?? []))
   const isscrollempty = scroll.length === 0
@@ -109,21 +110,34 @@ export function PanelLayout() {
   const rects: RECT[] = []
 
   if (sidebar.length) {
-    if (islandscape) {
+    if (!showtouchcontrols) {
+      const rect = {
+        name: 'sidebar',
+        type: RECT_TYPE.PANEL,
+        x: frame.x + frame.width - SIDEBAR_SIZE,
+        y: frame.y,
+        width: SIDEBAR_SIZE,
+        height: frame.height,
+        text: sidebar,
+      }
+      frame.width -= SIDEBAR_SIZE
+      rects.push(rect)
+    } else if (islandscape) {
+      const panelwidth = sidebaropen ? SIDEBAR_SIZE + 5 : SIDEBAR_SIZE
       const inset = sidebaropen ? SIDEBAR_SIZE : 4
       const rect = {
         name: 'sidebar',
         type: RECT_TYPE.PANEL,
         x: frame.x + frame.width - inset,
         y: frame.y,
-        width: SIDEBAR_SIZE,
+        width: panelwidth,
         height: frame.height,
         text: sidebar,
       }
       frame.width -= inset
       rects.push(rect)
     } else {
-      const panelheight = sidebaropen ? insetrows - 4 : insetrows
+      const panelheight = sidebaropen ? insetrows - 7 : insetrows
       const inset = sidebaropen ? panelheight : 4
       const rect = {
         name: 'sidebar',
@@ -190,8 +204,8 @@ export function PanelLayout() {
               ]}
             >
               <LayoutRect
-                islandscape={islandscape}
-                sidebaropen={sidebaropen}
+                islandscape={!showtouchcontrols || islandscape}
+                sidebaropen={!showtouchcontrols || sidebaropen}
                 rect={rect}
               />
             </group>

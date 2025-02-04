@@ -30,7 +30,7 @@ const decochars = [
   .flat()
 
 export function Controls({ context, width, height, drawstick }: ControlsProps) {
-  const { islandscape, sidebaropen } = useDeviceConfig()
+  const { islandscape, sidebaropen, showkeyboard } = useDeviceConfig()
 
   resetTiles(context, 0, COLOR.WHITE, COLOR.ONCLEAR)
   if (!islandscape) {
@@ -61,12 +61,44 @@ export function Controls({ context, width, height, drawstick }: ControlsProps) {
   context.y = height - 5
   context.active.leftedge = 1
   context.active.bg = COLOR.ONCLEAR
-  context.x = Math.round((width - 4) * 0.5)
-  tokenizeandwritetextformat(`$GREY$221$32$222\n`, context, false)
-  context.x = Math.round((width - 6) * 0.5)
-  tokenizeandwritetextformat(`$GREY$221$32$32$32$222\n`, context, false)
-  context.x = Math.round((width - 8) * 0.5)
-  tokenizeandwritetextformat(`$GREY$221$32$32$32$32$32$222\n`, context, false)
+  if (showkeyboard) {
+    // widest
+    ++context.y
+    context.x = Math.round((width - 8) * 0.5)
+    tokenizeandwritetextformat(`$GREY$221`, context, false)
+    context.x += 5
+    tokenizeandwritetextformat(`$GREY$222\n`, context, false)
+
+    // mid
+    context.x = Math.round((width - 6) * 0.5)
+    tokenizeandwritetextformat(`$GREY$221`, context, false)
+    context.x += 3
+    tokenizeandwritetextformat(`$GREY$222\n`, context, false)
+
+    // point
+    context.x = Math.round((width - 4) * 0.5)
+    tokenizeandwritetextformat(`$GREY$221`, context, false)
+    ++context.x
+    tokenizeandwritetextformat(`$GREY$222\n`, context, false)
+  } else {
+    // point
+    context.x = Math.round((width - 4) * 0.5)
+    tokenizeandwritetextformat(`$GREY$221`, context, false)
+    ++context.x
+
+    // mid
+    tokenizeandwritetextformat(`$GREY$222\n`, context, false)
+    context.x = Math.round((width - 6) * 0.5)
+    tokenizeandwritetextformat(`$GREY$221`, context, false)
+    context.x += 3
+    tokenizeandwritetextformat(`$GREY$222\n`, context, false)
+
+    // widest
+    context.x = Math.round((width - 8) * 0.5)
+    tokenizeandwritetextformat(`$GREY$221`, context, false)
+    context.x += 5
+    tokenizeandwritetextformat(`$GREY$222\n`, context, false)
+  }
 
   // draw active stick
   if (drawstick.startx !== -1) {

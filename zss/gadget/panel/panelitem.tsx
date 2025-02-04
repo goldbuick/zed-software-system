@@ -5,6 +5,7 @@ import { isarray } from 'zss/mapping/types'
 import { writetextreset } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
+import { PanelItemProps } from './common'
 import { PanelItemContent } from './content'
 import { PanelItemHotkey } from './hotkey'
 import { PanelItemHyperlink } from './hyperlink'
@@ -13,19 +14,27 @@ import { PanelItemRange } from './range'
 import { PanelItemSelect } from './select'
 import { PanelItemText } from './text'
 
-type PanelItemProps = {
+type PanelItemComponentProps = {
   item: PANEL_ITEM
+  inline: boolean
   active: boolean
 }
 
-export function PanelItem({ item, active }: PanelItemProps) {
+export function PanelItem({ item, inline, active }: PanelItemComponentProps) {
   const player = registerreadplayer()
   const context = useWriteText()
 
   context.iseven = context.y % 2 === 0
 
   if (typeof item === 'string') {
-    return <PanelItemContent player={player} item={item} context={context} />
+    return (
+      <PanelItemContent
+        player={player}
+        item={item}
+        inline={inline}
+        context={context}
+      />
+    )
   } else if (isarray(item)) {
     const [chip, label, input, ...args] = item
 
@@ -37,9 +46,10 @@ export function PanelItem({ item, active }: PanelItemProps) {
       return null
     }
 
-    const props = {
+    const props: PanelItemProps = {
       player,
       chip,
+      inline,
       active,
       label,
       args,

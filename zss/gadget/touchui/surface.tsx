@@ -1,4 +1,3 @@
-import KioskBoard from 'kioskboard'
 import { radToDeg } from 'maath/misc'
 import { useState } from 'react'
 import { Vector2, Vector3 } from 'three'
@@ -12,102 +11,12 @@ import {
 import { SOFTWARE } from 'zss/device/session'
 import { ptwithin } from 'zss/mapping/2d'
 import { snap } from 'zss/mapping/number'
-import { ispresent } from 'zss/mapping/types'
 
 import { INPUT } from '../data/types'
 import { useDeviceConfig } from '../hooks'
 import { Rect } from '../rect'
 
 import { handlestickdir } from './inputs'
-
-const touchtextarea = document.getElementById('touchtext') as HTMLInputElement
-
-touchtextarea.addEventListener('change', (evt) => {
-  const target = evt.target as HTMLInputElement
-  if (!ispresent(target)) {
-    return
-  }
-  // console.info(target.value)
-})
-
-KioskBoard.run(touchtextarea, {
-  theme: 'dark',
-  autoScroll: false,
-  capsLockActive: false,
-  keysEnterCanClose: false,
-  keysArrayOfObjects: [
-    {
-      '0': 'Q',
-      '1': 'W',
-      '2': 'E',
-      '3': 'R',
-      '4': 'T',
-      '5': 'Y',
-      '6': 'U',
-      '7': 'I',
-      '8': 'O',
-      '9': 'P',
-    },
-    {
-      '0': 'A',
-      '1': 'S',
-      '2': 'D',
-      '3': 'F',
-      '4': 'G',
-      '5': 'H',
-      '6': 'J',
-      '7': 'K',
-      '8': 'L',
-    },
-    {
-      '0': 'Z',
-      '1': 'X',
-      '2': 'C',
-      '3': 'V',
-      '4': 'B',
-      '5': 'N',
-      '6': 'M',
-    },
-  ],
-  keysSpecialCharsArrayOfStrings: [
-    '!',
-    "'",
-    '^',
-    '#',
-    '+',
-    '$',
-    '%',
-    '½',
-    '&',
-    '/',
-    '{',
-    '}',
-    '(',
-    ')',
-    '[',
-    ']',
-    '=',
-    '*',
-    '?',
-    '\\',
-    '-',
-    '_',
-    '|',
-    '@',
-    '€',
-    '₺',
-    '~',
-    'æ',
-    'ß',
-    '<',
-    '>',
-    ',',
-    ';',
-    '.',
-    ':',
-    '`',
-  ],
-})
 
 type SurfaceProps = {
   width: number
@@ -173,7 +82,9 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
         }))
       } else if (ptwithin(cx, cy, height - 4, width - 12, height - 2, 12)) {
         // open keyboard
-        setTimeout(() => document.getElementById('touchtext')?.focus(), 64)
+        useDeviceConfig.setState({
+          showkeyboard: true,
+        })
       }
     } else {
       // reset input
@@ -199,7 +110,7 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
 
   return (
     <Rect
-      blocking
+      // blocking
       width={width}
       height={height}
       visible={false}
