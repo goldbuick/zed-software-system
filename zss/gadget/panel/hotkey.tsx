@@ -30,8 +30,8 @@ export function PanelItemHotkey({
   const text = maybetext || ` ${shortcut.toUpperCase()} `
   const tcolor = inputcolor(active)
 
-  const cx = context.x
-  const cy = context.y
+  const cx = context.x - 0.25
+  const cy = context.y - 0.25
 
   tokenizeandwritetextformat(
     `${
@@ -57,8 +57,8 @@ export function PanelItemHotkey({
     >
       <Rect
         visible={false}
-        width={text.length}
-        height={1}
+        width={text.length + 0.5}
+        height={1.5}
         blocking
         onClick={invoke}
       />

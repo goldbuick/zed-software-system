@@ -1,72 +1,65 @@
-import { userinput_down, userinput_up } from 'zss/device/api'
-import { SOFTWARE } from 'zss/device/session'
+import userEvent from '@testing-library/user-event'
 
-import { INPUT } from '../data/types'
+// trigger user events
 
-export function handlestickdir(snapdir: number, player: string) {
+const user = userEvent.setup({
+  // delay: null,
+})
+
+export function handlestickdir(snapdir: number, shift: boolean) {
+  console.info({ snapdir, shift })
   switch (snapdir) {
     case 0:
       // left
-      userinput_down(SOFTWARE, INPUT.MOVE_LEFT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_RIGHT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_UP, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_DOWN, player)
+      user.keyboard(!shift ? '[ArrowLeft]' : '{Shift>}[ArrowLeft]{/Shift}')
       break
     case 45:
       // left up
-      userinput_down(SOFTWARE, INPUT.MOVE_UP, player)
-      userinput_down(SOFTWARE, INPUT.MOVE_LEFT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_RIGHT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_DOWN, player)
+      user.keyboard(
+        !shift
+          ? '[ArrowLeft][ArrowUp]'
+          : '{Shift>}[ArrowLeft][ArrowUp]{/Shift}',
+      )
       break
     case 90:
       // up
-      userinput_down(SOFTWARE, INPUT.MOVE_UP, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_DOWN, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_LEFT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_RIGHT, player)
+      user.keyboard(!shift ? '[ArrowUp]' : '{Shift>}[ArrowUp]{/Shift}')
       break
     case 135:
       // up right
-      userinput_down(SOFTWARE, INPUT.MOVE_UP, player)
-      userinput_down(SOFTWARE, INPUT.MOVE_RIGHT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_LEFT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_DOWN, player)
+      user.keyboard(
+        !shift
+          ? '[ArrowRight][ArrowUp]'
+          : '{Shift>}[ArrowRight][ArrowUp]{/Shift}',
+      )
       break
     case 180:
       // right
-      userinput_down(SOFTWARE, INPUT.MOVE_RIGHT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_LEFT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_UP, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_DOWN, player)
+      user.keyboard(!shift ? '[ArrowRight]' : '{Shift>}[ArrowRight]{/Shift}')
       break
     case 225:
       // right down
-      userinput_down(SOFTWARE, INPUT.MOVE_DOWN, player)
-      userinput_down(SOFTWARE, INPUT.MOVE_RIGHT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_LEFT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_DOWN, player)
+      user.keyboard(
+        !shift
+          ? '[ArrowRight][ArrowDown]'
+          : '{Shift>}[ArrowRight][ArrowDown]{/Shift}',
+      )
       break
     case 270:
       // down
-      userinput_down(SOFTWARE, INPUT.MOVE_DOWN, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_UP, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_LEFT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_RIGHT, player)
+      user.keyboard(!shift ? '[ArrowDown]' : '{Shift>}[ArrowDown]{/Shift}')
       break
     case 315:
       // down left
-      userinput_down(SOFTWARE, INPUT.MOVE_DOWN, player)
-      userinput_down(SOFTWARE, INPUT.MOVE_LEFT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_RIGHT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_UP, player)
+      user.keyboard(
+        !shift
+          ? '[ArrowLeft][ArrowDown]'
+          : '{Shift>}[ArrowLeft][ArrowDown]{/Shift}',
+      )
       break
     case 360:
       // left
-      userinput_down(SOFTWARE, INPUT.MOVE_LEFT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_RIGHT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_UP, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_DOWN, player)
+      user.keyboard(!shift ? '[ArrowLeft]' : '{Shift>}[ArrowLeft]{/Shift}')
       break
   }
 }

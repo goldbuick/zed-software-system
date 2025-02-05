@@ -1,22 +1,23 @@
+import { useFrame } from '@react-three/fiber'
+import { userEvent } from '@testing-library/user-event'
 import { radToDeg } from 'maath/misc'
 import { useState } from 'react'
 import { Vector2, Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
-import {
-  tape_terminal_toggle,
-  userinput_down,
-  userinput_up,
-  vm_input,
-} from 'zss/device/api'
+import { tape_terminal_toggle } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { ptwithin } from 'zss/mapping/2d'
 import { snap } from 'zss/mapping/number'
 
-import { INPUT } from '../data/types'
 import { useDeviceConfig } from '../hooks'
 import { Rect } from '../rect'
+import { INPUT_RATE } from '../userinput'
 
 import { handlestickdir } from './inputs'
+
+const INPUT_RATE_SECONDS = INPUT_RATE / 1000.0
+
+const user = userEvent.setup()
 
 type SurfaceProps = {
   width: number
@@ -51,7 +52,9 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
     starty: -1,
     tipx: -1,
     tipy: -1,
-    pointerId: -1 as any,
+    pointerid: -1 as any,
+    presscount: 0,
+    inputacc: INPUT_RATE,
   })
 
   function clearmovestick(cx: number, cy: number) {
@@ -62,15 +65,15 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
         tape_terminal_toggle(SOFTWARE, player)
       } else if (ptwithin(cx, cy, 3, width - 2, 6, width - 6)) {
         // top-right button
-        vm_input(SOFTWARE, INPUT.MENU_BUTTON, 0, player)
+        user.keyboard('[Tab]')
       } else if (ptwithin(cx, cy, height - 5, 6, height - 2, 1)) {
         // bottom-left button
-        vm_input(SOFTWARE, INPUT.OK_BUTTON, 0, player)
+        user.keyboard('[Enter]')
       } else if (
         ptwithin(cx, cy, height - 5, width - 2, height - 2, width - 6)
       ) {
         // bottom-right button
-        vm_input(SOFTWARE, INPUT.CANCEL_BUTTON, 0, player)
+        user.keyboard('[Escape]')
       } else if (
         (islandscape && ptwithin(cx, cy, 6, width, height - 6, width - 5)) ||
         (!islandscape && ptwithin(cx, cy, 0, width - 12, 3, 12))
@@ -88,17 +91,13 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
       }
     } else {
       // reset input
-      userinput_up(SOFTWARE, INPUT.MOVE_UP, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_DOWN, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_LEFT, player)
-      userinput_up(SOFTWARE, INPUT.MOVE_RIGHT, player)
     }
     // reset
     movestick.startx = -1
     movestick.starty = -1
     movestick.tipx = -1
     movestick.tipy = -1
-    movestick.pointerId = -1
+    movestick.pointerid = -1
     // update visuals
     onDrawStick(
       movestick.startx,
@@ -108,6 +107,19 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
     )
   }
 
+  useFrame((_, delta) => {
+    movestick.inputacc += delta
+    if (movestick.inputacc >= INPUT_RATE_SECONDS && movestick.presscount > 0) {
+      movestick.inputacc = 0
+      const { cx, cy } = coords(width, height)
+      motion.set(movestick.startx - cx, movestick.starty - cy)
+      if (movestick.tipx !== -1 || motion.length() > 3) {
+        const snapdir = snap(radToDeg(motion.angle()), 45)
+        handlestickdir(snapdir, movestick.presscount > 1)
+      }
+    }
+  })
+
   return (
     <Rect
       // blocking
@@ -115,6 +127,7 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
       height={height}
       visible={false}
       onPointerDown={(e) => {
+        ++movestick.presscount
         if (movestick.startx === -1) {
           e.intersections[0].object.worldToLocal(
             point.copy(e.intersections[0].point),
@@ -124,14 +137,12 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
           movestick.starty = cy
           movestick.tipx = -1
           movestick.tipy = -1
-          movestick.pointerId = e.pointerId
-        } else {
-          // flag as shooting now
-          userinput_down(SOFTWARE, INPUT.SHIFT, player)
+          movestick.pointerid = e.pointerId
+          movestick.inputacc = INPUT_RATE
         }
       }}
       onPointerMove={(e) => {
-        if (e.pointerId === movestick.pointerId) {
+        if (e.pointerId === movestick.pointerid) {
           e.intersections[0].object.worldToLocal(
             point.copy(e.intersections[0].point),
           )
@@ -139,12 +150,9 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
           // calc angle
           motion.set(movestick.startx - cx, movestick.starty - cy)
           if (movestick.tipx !== -1 || motion.length() > 3) {
-            const snapdir = snap(radToDeg(motion.angle()), 45)
             // track for visuals
             movestick.tipx = cx
             movestick.tipy = cy
-            // invoke input directions
-            handlestickdir(snapdir, player)
             // update visuals
             onDrawStick(
               movestick.startx,
@@ -155,16 +163,24 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
           }
         }
       }}
-      onPointerUp={(e) => {
-        if (e.pointerId === movestick.pointerId) {
+      onPointerCancel={(e) => {
+        --movestick.presscount
+        if (e.pointerId === movestick.pointerid) {
           e.intersections[0].object.worldToLocal(
             point.copy(e.intersections[0].point),
           )
           const { cx, cy } = coords(width, height)
           clearmovestick(cx, cy)
-        } else {
-          // flag off shift
-          userinput_up(SOFTWARE, INPUT.SHIFT, player)
+        }
+      }}
+      onPointerUp={(e) => {
+        --movestick.presscount
+        if (e.pointerId === movestick.pointerid) {
+          e.intersections[0].object.worldToLocal(
+            point.copy(e.intersections[0].point),
+          )
+          const { cx, cy } = coords(width, height)
+          clearmovestick(cx, cy)
         }
       }}
     />
