@@ -54,12 +54,42 @@ export function memoryloader(
     mainbook,
     CODE_PAGE_TYPE.LOADER,
   ).filter((codepage) => {
-    const stat = codepagereadstats(codepage)[format]
-    if (isstring(stat)) {
-      const regex = new RegExp(stat, 'i')
-      return regex.test(eventname)
+    const stats = codepagereadstats(codepage)
+
+    /*
+    we match against format & event stats
+    @format text
+    @event ^chat:message
+
+    'need only one to match
+    'but if both are provided, both must match
+    @event ^chat:action
+    */
+
+    const formatstat = stats.format
+    const formatstatmatch = isstring(formatstat)
+      ? new RegExp(formatstat).test(format)
+      : false
+
+    const eventstat = stats.event
+    const eventstatmatch = isstring(eventstat)
+      ? new RegExp(eventstat).test(eventname)
+      : false
+
+    // we have to
+    if (isstring(formatstat) && isstring(eventstat)) {
+      return formatstatmatch && eventstatmatch
     }
-    return ispresent(stat)
+
+    if (isstring(formatstat)) {
+      return formatstatmatch
+    }
+
+    if (isstring(eventstat)) {
+      return eventstatmatch
+    }
+
+    return false
   })
 
   // run matched loaders
