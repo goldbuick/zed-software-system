@@ -19,16 +19,147 @@ const KEYBOARD_HEIGHT = 16
 
 const LETTER_KEYS = [
   ['\n'],
-  ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\n', '\n'],
-  [' ', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '\n', '\n'],
-  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', '@', '\n', '\n'],
-  [' ', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '!', '$', '\n', '\n'],
-  ['Space', '#', '/', '?', ':', '"', `'`],
+  [
+    '[Escape]',
+    '$',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '0',
+    '&',
+    '\n',
+  ],
+  [
+    ' ',
+    'Q',
+    'W',
+    'E',
+    'R',
+    'T',
+    'Y',
+    'U',
+    'I',
+    'O',
+    'P',
+    '-',
+    '+',
+    '*',
+    '\n',
+    '\n',
+  ],
+  [
+    'A',
+    'S',
+    'D',
+    'F',
+    'G',
+    'H',
+    'J',
+    'K',
+    'L',
+    '[Backspace]',
+    '_',
+    '=',
+    '%',
+    '\n',
+  ],
+  [' ', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '!', '[Enter]', '(', ')', '|', '\n'],
+  ['                                          ', '<', '>', '`', '\n'],
+  ['[Space]', '#', '/', '?', ':', `'`, ';', '"', '  ', '[ArrowUp]', '\n'],
+  [
+    '         ',
+    '[Shift]',
+    '[Ctrl]',
+    '[Alt]',
+    '@',
+    '[ArrowLeft]',
+    '    ',
+    '[ArrowRight]',
+    '\n',
+  ],
+  ['                                      ', '[ArrowDown]', '\n'],
+  ['$greenz s s k e y s'],
 ].flat()
 
-function hk(hotkey: string) {
-  const hktext = ` ${hotkey === '$' ? '$$' : hotkey} `
-  return ['touchkey', '', 'hk', hotkey, hotkey, hktext.toLowerCase()]
+function stripmods(hotkey: string) {
+  return hotkey
+    .replaceAll('{', '')
+    .replaceAll('}', '')
+    .replaceAll('[', '')
+    .replaceAll(']', '')
+}
+
+function hk(hotkey: string, alt: boolean, ctrl: boolean, shift: boolean) {
+  let hotkeytext = hotkey
+  let hktext = stripmods(hotkey)
+  switch (hotkey) {
+    case '$':
+      hktext = ' $$ '
+      break
+    case ';':
+      hktext = ' $59 '
+      break
+    case '[Escape]':
+      hktext = ` esc `
+      break
+    case '[ArrowUp]':
+      hktext = ` $30 `
+      break
+    case '[ArrowDown]':
+      hktext = ` $31 `
+      break
+    case '[ArrowRight]':
+      hktext = ` $16 `
+      break
+    case '[ArrowLeft]':
+      hktext = ` $17 `
+      break
+    case '[Backspace]':
+      hktext = ` del `
+      break
+    case '[Shift]':
+      hktext = shift ? ` SHIFT ` : ` shift `
+      break
+    case '[Ctrl]':
+      hktext = ctrl ? ` CTRL ` : ` ctrl `
+      break
+    case '[Alt]':
+      hktext = alt ? ` ALT ` : ` alt `
+      break
+    default:
+      if (!shift) {
+        hotkeytext = hotkeytext.toLowerCase()
+        hktext = hktext.toLowerCase()
+      } else {
+        switch (hktext) {
+          case '(':
+            hktext = '['
+            break
+          case ')':
+            hktext = ']'
+            break
+          case '<':
+            hktext = '{'
+            break
+          case '>':
+            hktext = '}'
+            break
+          case '`':
+            hktext = '~'
+            break
+        }
+      }
+      hktext = ` ${hktext} `
+      break
+  }
+
+  return ['touchkey', '', 'hk', hotkeytext, '', hktext]
 }
 
 type KeyboardProps = {
@@ -38,7 +169,8 @@ type KeyboardProps = {
 
 export function Keyboard({ width, height }: KeyboardProps) {
   const player = registerreadplayer()
-  const { showkeyboard } = useDeviceConfig()
+  const { showkeyboard, keyboardalt, keyboardctrl, keyboardshift } =
+    useDeviceConfig()
 
   const ref = useRef<Group>(null)
   const [pointers] = useState<Record<string, number>>({})
@@ -83,7 +215,7 @@ export function Keyboard({ width, height }: KeyboardProps) {
           left={0}
           right={width - 1}
           bottom={height - 1}
-          alpha={0.53718}
+          alpha={0.753718}
         />
         <group position={[0, 0, 1]}>
           <Rect
@@ -115,20 +247,21 @@ export function Keyboard({ width, height }: KeyboardProps) {
             <Panel
               name="keyboard"
               inline
+              ymargin={1}
               color={COLOR.WHITE}
               bg={COLOR.ONCLEAR}
               width={KEYBOARD_WIDTH}
               height={KEYBOARD_HEIGHT}
-              text={LETTER_KEYS.map((letter) => {
-                switch (letter) {
+              text={LETTER_KEYS.map((txt) => {
+                switch (txt) {
                   case '\n':
-                    return letter
+                    return txt
                   default:
-                    if (letter.startsWith(' ')) {
-                      return letter
+                    if (txt.includes(' ')) {
+                      return txt
                     }
                 }
-                return hk(letter)
+                return hk(txt, keyboardalt, keyboardctrl, keyboardshift)
               })}
             />
           </ScrollContext.Provider>

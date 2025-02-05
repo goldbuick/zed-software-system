@@ -18,6 +18,7 @@ import decoimageurl from 'zss/gadget/fx/scratches.gif'
 import { useTexture } from 'zss/gadget/usetexture'
 import { doasync } from 'zss/mapping/func'
 
+import { useDeviceConfig } from './hooks'
 import { PanelLayout } from './panellayout'
 import { Tape } from './tape'
 import { UserFocus } from './userinput'
@@ -25,7 +26,6 @@ import { UserScreen } from './userscreen'
 
 // include all front-end devices
 import 'zss/userspace'
-import { useDeviceConfig } from './hooks'
 
 extend({ OrthographicCamera })
 

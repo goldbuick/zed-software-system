@@ -1,27 +1,36 @@
+import { userEvent } from '@testing-library/user-event'
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice, parsetarget } from 'zss/device'
+import { useDeviceConfig } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { isjoin, islocked, shorturl } from 'zss/mapping/url'
 import { createplatform } from 'zss/platform'
+import { ismac } from 'zss/words/system'
 import { write, writecopyit, writeheader, writeoption } from 'zss/words/writeui'
 
 import {
   api_error,
   gadgetserver_desync,
   network_join,
+  synth_play,
   tape_crash,
   tape_debug,
   tape_info,
   tape_terminal_close,
-  tape_terminal_open,
   vm_books,
   vm_doot,
   vm_login,
   vm_operator,
 } from './api'
+
+// trigger user events
+
+const user = userEvent.setup({
+  delay: null,
+})
 
 // read / write from indexdb
 
@@ -260,9 +269,66 @@ const register = createdevice(
           const { target, path } = parsetarget(message.target)
           switch (target) {
             case 'touchkey':
-              // need to translate into a keyboard event
-              // for editor input
-              console.info(path)
+              doasync(register, async () => {
+                switch (path) {
+                  case '[Alt]':
+                    synth_play(register, '-c', true)
+                    useDeviceConfig.setState((state) => ({
+                      ...state,
+                      keyboardalt: !state.keyboardalt,
+                      keyboardctrl: false,
+                      keyboardshift: false,
+                    }))
+                    break
+                  case '[Ctrl]':
+                    synth_play(register, '-e', true)
+                    useDeviceConfig.setState((state) => ({
+                      ...state,
+                      keyboardalt: false,
+                      keyboardctrl: !state.keyboardctrl,
+                      keyboardshift: false,
+                    }))
+                    break
+                  case '[Shift]':
+                    synth_play(register, '-g', true)
+                    useDeviceConfig.setState((state) => ({
+                      ...state,
+                      keyboardalt: false,
+                      keyboardctrl: false,
+                      keyboardshift: !state.keyboardshift,
+                    }))
+                    break
+                  default: {
+                    const isnumber = !isNaN(parseInt(path, 10))
+                    const deviceconfig = useDeviceConfig.getState()
+                    const invoke: string[] = []
+                    const metakey = ismac ? 'Meta' : 'Ctrl'
+                    if (deviceconfig.keyboardshift) {
+                      synth_play(register, isnumber ? '+c' : '+f', true)
+                      invoke.push('{Shift>}')
+                    } else if (deviceconfig.keyboardalt) {
+                      synth_play(register, isnumber ? '+c!' : '+f!', true)
+                      invoke.push('{Alt>}')
+                    } else if (deviceconfig.keyboardctrl) {
+                      synth_play(register, isnumber ? '+c#' : '+f#', true)
+                      invoke.push(`{${metakey}>}`)
+                    } else {
+                      synth_play(register, isnumber ? '-c' : '-f', true)
+                    }
+                    invoke.push(path)
+                    if (deviceconfig.keyboardshift) {
+                      invoke.push('{/Shift}')
+                    } else if (deviceconfig.keyboardalt) {
+                      invoke.push('{/Alt}')
+                    } else if (deviceconfig.keyboardctrl) {
+                      invoke.push(`{/${metakey}}`)
+                    }
+                    const keyboardinvoke = invoke.join('')
+                    await user.keyboard(keyboardinvoke)
+                    break
+                  }
+                }
+              })
               break
           }
         }

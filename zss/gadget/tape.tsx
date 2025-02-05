@@ -23,7 +23,7 @@ export function Tape() {
   const screensize = useScreenSize()
 
   let top = 0
-  let height = screensize.rows - 1
+  let height = screensize.rows - 2
 
   const [layout, terminalopen] = useTape(
     useShallow((state) => [state.layout, state.terminal.open]),
