@@ -63,7 +63,7 @@ export function PanelItemHotkey({
         onClick={invoke}
       />
       {active && <UserInput OK_BUTTON={invoke} />}
-      <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey>
+      {shortcut && <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey>}
     </group>
   )
 }

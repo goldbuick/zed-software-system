@@ -245,6 +245,9 @@ export type DEVICE_CONFIG = {
   islandscape: boolean
   sidebaropen: boolean
   showkeyboard: boolean
+  keyboardalt: boolean
+  keyboardctrl: boolean
+  keyboardshift: boolean
   showtouchcontrols: boolean
 }
 
@@ -255,5 +258,8 @@ export const useDeviceConfig = create<DEVICE_CONFIG>(() => ({
   islandscape: true,
   sidebaropen: true,
   showkeyboard: false,
+  keyboardalt: false,
+  keyboardctrl: false,
+  keyboardshift: false,
   showtouchcontrols: false,
 }))

@@ -71,7 +71,7 @@ export function enableaudio() {
         try {
           const customnavigator = navigator as CustomNavigator
           if (ispresent(customnavigator.audioSession)) {
-            customnavigator.audioSession.type = 'play-and-record'
+            customnavigator.audioSession.type = 'ambient'
           }
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {

@@ -49,7 +49,7 @@ const LETTER_KEYS = [
     'P',
     '-',
     '+',
-    '=',
+    '*',
     '\n',
     '\n',
   ],
@@ -63,46 +63,28 @@ const LETTER_KEYS = [
     'J',
     'K',
     'L',
-    '@',
     '[Backspace]',
-    '*',
+    '_',
+    '=',
     '%',
     '\n',
   ],
+  [' ', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '!', '[Enter]', '(', ')', '|', '\n'],
+  ['                                          ', '<', '>', '`', '\n'],
+  ['[Space]', '#', '/', '?', ':', `'`, ';', '"', '  ', '[ArrowUp]', '\n'],
   [
-    ' ',
-    'Z',
-    'X',
-    'C',
-    'V',
-    'B',
-    'N',
-    'M',
-    '!',
-    '[Enter]',
-    '[ArrowUp]',
-    '(',
-    ')',
-    '\n',
-    '\n',
-  ],
-  [
-    '[Space]',
-    '#',
-    '/',
-    '?',
-    ':',
-    `'`,
-    ';',
-    '"',
-    ' ',
+    '         ',
+    '[Shift]',
+    '[Ctrl]',
+    '[Alt]',
+    '@',
     '[ArrowLeft]',
-    '[ArrowDown]',
+    '    ',
     '[ArrowRight]',
     '\n',
   ],
-  ['              ', '[Shift]', '[Ctrl]', '[Alt]', '\n'],
-  ['zsskeys '],
+  ['                                      ', '[ArrowDown]', '\n'],
+  ['$greenz s s k e y s'],
 ].flat()
 
 function stripmods(hotkey: string) {
@@ -113,7 +95,8 @@ function stripmods(hotkey: string) {
     .replaceAll(']', '')
 }
 
-function hk(hotkey: string) {
+function hk(hotkey: string, alt: boolean, ctrl: boolean, shift: boolean) {
+  let hotkeytext = hotkey
   let hktext = stripmods(hotkey)
   switch (hotkey) {
     case '$':
@@ -140,19 +123,43 @@ function hk(hotkey: string) {
     case '[Backspace]':
       hktext = ` del `
       break
+    case '[Shift]':
+      hktext = shift ? ` SHIFT ` : ` shift `
+      break
+    case '[Ctrl]':
+      hktext = ctrl ? ` CTRL ` : ` ctrl `
+      break
+    case '[Alt]':
+      hktext = alt ? ` ALT ` : ` alt `
+      break
     default:
+      if (!shift) {
+        hotkeytext = hotkeytext.toLowerCase()
+        hktext = hktext.toLowerCase()
+      } else {
+        switch (hktext) {
+          case '(':
+            hktext = '['
+            break
+          case ')':
+            hktext = ']'
+            break
+          case '<':
+            hktext = '{'
+            break
+          case '>':
+            hktext = '}'
+            break
+          case '`':
+            hktext = '~'
+            break
+        }
+      }
       hktext = ` ${hktext} `
       break
   }
 
-  return [
-    'touchkey',
-    '',
-    'hk',
-    hotkey.toLowerCase(),
-    stripmods(hotkey),
-    hktext.toLowerCase(),
-  ]
+  return ['touchkey', '', 'hk', hotkeytext, '', hktext]
 }
 
 type KeyboardProps = {
@@ -162,7 +169,8 @@ type KeyboardProps = {
 
 export function Keyboard({ width, height }: KeyboardProps) {
   const player = registerreadplayer()
-  const { showkeyboard } = useDeviceConfig()
+  const { showkeyboard, keyboardalt, keyboardctrl, keyboardshift } =
+    useDeviceConfig()
 
   const ref = useRef<Group>(null)
   const [pointers] = useState<Record<string, number>>({})
@@ -253,7 +261,7 @@ export function Keyboard({ width, height }: KeyboardProps) {
                       return txt
                     }
                 }
-                return hk(txt)
+                return hk(txt, keyboardalt, keyboardctrl, keyboardshift)
               })}
             />
           </ScrollContext.Provider>
