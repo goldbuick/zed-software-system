@@ -240,11 +240,11 @@ const vm = createdevice(
         // user input from built-in console
         // or events from devices
         if (ispresent(message.player) && isarray(message.data)) {
-          const [arg, format, filename, content] = message.data
+          const [arg, format, eventname, content] = message.data
           if (format === 'file') {
             parsewebfile(message.player, content)
           } else {
-            memoryloader(arg, format, filename, content, message.player)
+            memoryloader(arg, format, eventname, content, message.player)
           }
         }
         break

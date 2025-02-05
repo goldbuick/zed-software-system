@@ -63,7 +63,7 @@ window.addEventListener('paste', (event) => {
       SOFTWARE,
       undefined,
       'file',
-      file.name,
+      `file:${file.name}`,
       file,
       registerreadplayer(),
     ),

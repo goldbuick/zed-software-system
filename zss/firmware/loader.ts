@@ -19,6 +19,9 @@ import { textloader } from './loader/textloader'
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
     const type = memoryloaderformat(chip.id())
+    if (name === 'format') {
+      return [true, type]
+    }
     switch (type) {
       case 'text': {
         const textreader: TEXT_READER = memoryloadercontent(chip.id())

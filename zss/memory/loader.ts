@@ -40,7 +40,7 @@ export function memoryloaderplayer(id: string): MAYBE<string> {
 export function memoryloader(
   arg: any,
   format: string,
-  filename: string,
+  eventname: string,
   content: any,
   player: string,
 ) {
@@ -57,7 +57,7 @@ export function memoryloader(
     const stat = codepagereadstats(codepage)[format]
     if (isstring(stat)) {
       const regex = new RegExp(stat, 'i')
-      return regex.test(filename)
+      return regex.test(eventname)
     }
     return ispresent(stat)
   })

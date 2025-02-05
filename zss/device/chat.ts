@@ -31,7 +31,17 @@ const chat = createdevice('chat', [], (message) => {
             chat,
             undefined,
             'text',
-            message.data,
+            `chat:message${message.data}`,
+            `${user}:${text}`,
+            registerreadplayer(),
+          )
+        })
+        twitchchatclient.onAction((_, user, text) => {
+          vm_loader(
+            chat,
+            undefined,
+            'text',
+            `chat:action:${message.data}`,
             `${user}:${text}`,
             registerreadplayer(),
           )
