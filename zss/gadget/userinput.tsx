@@ -43,7 +43,7 @@ const inputstate: Record<INPUT, boolean> = {
 // handle input repeat
 let acc = 0
 let previous = performance.now()
-const INPUT_RATE = 200
+export const INPUT_RATE = 200
 
 function pollinput() {
   const now = performance.now()
