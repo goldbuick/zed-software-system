@@ -40,19 +40,19 @@ async function runnetworkfetch(
   if (!response?.ok) {
     return
   }
-  const filename = `fetch:${label}`
+  const eventname = `fetch:${label}`
   const [contenttype] = (response.headers.get('content-type') ?? '').split(';')
   switch (contenttype) {
     case 'text/plain': {
       const content = await response.text()
       write(SOFTWARE, JSON.stringify(content))
-      vm_loader(SOFTWARE, arg, 'text', filename, content, registerreadplayer())
+      vm_loader(SOFTWARE, arg, 'text', eventname, content, registerreadplayer())
       break
     }
     case 'application/json': {
       const content = await response.json()
       write(SOFTWARE, JSON.stringify(content))
-      vm_loader(SOFTWARE, arg, 'json', filename, content, registerreadplayer())
+      vm_loader(SOFTWARE, arg, 'json', eventname, content, registerreadplayer())
       break
     }
     case 'application/octet-stream': {
@@ -61,7 +61,7 @@ async function runnetworkfetch(
         SOFTWARE,
         arg,
         'binary',
-        filename,
+        eventname,
         new Uint8Array(content),
         registerreadplayer(),
       )

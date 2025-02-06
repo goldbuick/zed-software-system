@@ -21,6 +21,7 @@ import {
   tape_info,
   tape_terminal_close,
   vm_books,
+  vm_cli,
   vm_doot,
   vm_login,
   vm_operator,
@@ -166,6 +167,7 @@ const register = createdevice(
       case 'error:login:player':
         if (message.player === myplayerid) {
           tape_crash(register, myplayerid)
+          vm_cli(register, '#pages', myplayerid)
         }
         break
       case 'ackoperator': {

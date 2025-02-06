@@ -410,7 +410,7 @@ export function vm_loader(
   device: DEVICELIKE,
   arg: any,
   format: 'file' | 'text' | 'json' | 'binary',
-  filename: string,
+  eventname: string,
   content: any,
   player: string,
 ) {
@@ -420,16 +420,16 @@ export function vm_loader(
       withcontent = content
       break
     case 'text':
-      withcontent = createtextreader(filename, content)
+      withcontent = createtextreader(eventname, content)
       break
     case 'json':
-      withcontent = createjsonreader(filename, content)
+      withcontent = createjsonreader(eventname, content)
       break
     case 'binary':
-      withcontent = createbinaryreader(filename, content)
+      withcontent = createbinaryreader(eventname, content)
       break
   }
   setTimeout(() => {
-    device.emit('vm:loader', [arg, format, filename, withcontent], player)
+    device.emit('vm:loader', [arg, format, eventname, withcontent], player)
   }, 1)
 }

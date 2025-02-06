@@ -59,13 +59,12 @@ export async function parsezipfile(
 
 export async function parsebinaryfile(
   file: File,
-  onbuffer: (fileext: string, buffer: Uint8Array) => void,
+  onbuffer: (buffer: Uint8Array) => void,
 ) {
   try {
     tape_info(SOFTWARE, file.name)
     const arraybuffer = await file.arrayBuffer()
-    const ext = file.name.split('.').slice(-1)[0] ?? ''
-    onbuffer(NAME(ext), new Uint8Array(arraybuffer))
+    onbuffer(new Uint8Array(arraybuffer))
   } catch (err: any) {
     api_error(SOFTWARE, 'crash', err.message)
   }
@@ -81,7 +80,14 @@ export function parsewebfile(player: string, file: File | undefined) {
         file
           .text()
           .then((content) =>
-            vm_loader(SOFTWARE, undefined, 'text', file.name, content, player),
+            vm_loader(
+              SOFTWARE,
+              undefined,
+              'text',
+              `file:${file.name}`,
+              content,
+              player,
+            ),
           )
           .catch((err) => api_error(SOFTWARE, 'crash', err.message))
         break
@@ -89,7 +95,14 @@ export function parsewebfile(player: string, file: File | undefined) {
         file
           .text()
           .then((content) =>
-            vm_loader(SOFTWARE, undefined, 'json', file.name, content, player),
+            vm_loader(
+              SOFTWARE,
+              undefined,
+              'json',
+              `file:${file.name}`,
+              content,
+              player,
+            ),
           )
           .catch((err) => api_error(SOFTWARE, 'crash', err.message))
         break
@@ -99,8 +112,15 @@ export function parsewebfile(player: string, file: File | undefined) {
         )
         break
       case 'application/octet-stream':
-        parsebinaryfile(file, (fileext, binaryfile) =>
-          vm_loader(SOFTWARE, undefined, 'binary', fileext, binaryfile, player),
+        parsebinaryfile(file, (binaryfile) =>
+          vm_loader(
+            SOFTWARE,
+            undefined,
+            'binary',
+            `file:${file.name}`,
+            binaryfile,
+            player,
+          ),
         ).catch((err) => api_error(SOFTWARE, 'crash', err.message))
         break
       default:

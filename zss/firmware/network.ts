@@ -68,8 +68,6 @@ export const NETWORK_FIRMWARE = createfirmware()
       ARG_TYPE.NAME,
       ARG_TYPE.MAYBE_STRING,
     ])
-
-    // return 1 while waiting on data
     fetchcommand(undefined, label, url, maybemethod, words, ii)
     return 0
   })
@@ -80,8 +78,6 @@ export const NETWORK_FIRMWARE = createfirmware()
       ARG_TYPE.NAME,
       ARG_TYPE.MAYBE_STRING,
     ])
-
-    // return 1 while waiting on data
     fetchcommand(arg, label, url, maybemethod, words, ii)
     return 1
   })
