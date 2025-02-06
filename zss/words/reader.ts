@@ -78,7 +78,13 @@ type ARG_TYPE_VALUES<T extends ARG_TYPES> = {
   [P in keyof T]: ARG_TYPE_MAP[T[P]]
 }
 
-function didexpect(msg: string, value: any) {
+function didexpect(msg: string, value: any, words: WORD[]) {
+  console.info(
+    words,
+    READ_CONTEXT.element,
+    READ_CONTEXT.elementid,
+    READ_CONTEXT.elementfocus,
+  )
   throw new Error(
     `Invalid arg, expected: ${msg} but got ${JSON.stringify(value)}`,
   )
@@ -100,7 +106,7 @@ export function readargs<T extends ARG_TYPES>(
       case ARG_TYPE.CATEGORY: {
         const [value, iii] = readcategory(ii)
         if (!isstrcategory(value)) {
-          didexpect('terrain or object', value)
+          didexpect('terrain or object', value, words)
         }
         ii = iii
         values.push(value)
@@ -109,7 +115,11 @@ export function readargs<T extends ARG_TYPES>(
       case ARG_TYPE.COLLISION: {
         const [value, iii] = readcollision(ii)
         if (!isstrcollision(value)) {
-          didexpect('solid, walk, swim, bullet, walkable or swimmable', value)
+          didexpect(
+            'solid, walk, swim, bullet, walkable or swimmable',
+            value,
+            words,
+          )
         }
         ii = iii
         values.push(value)
@@ -118,7 +128,7 @@ export function readargs<T extends ARG_TYPES>(
       case ARG_TYPE.COLOR: {
         const [value, iii] = readcolor(ii)
         if (!isstrcolor(value)) {
-          didexpect('color', value)
+          didexpect('color', value, words)
         }
         ii = iii
         values.push(value)
@@ -130,7 +140,7 @@ export function readargs<T extends ARG_TYPES>(
           ii = iii
           values.push(kind)
         } else {
-          didexpect('kind', kind)
+          didexpect('kind', kind, words)
         }
         break
       }
@@ -153,14 +163,14 @@ export function readargs<T extends ARG_TYPES>(
           ii = iii
           values.push(value)
         } else {
-          didexpect('direction', dir)
+          didexpect('direction', dir, words)
         }
         break
       }
       case ARG_TYPE.NAME: {
         const value = READ_CONTEXT.words[ii]
         if (!isstring(value)) {
-          didexpect('string', value)
+          didexpect('string', value, words)
         }
         ++ii
         values.push(value)
@@ -173,12 +183,12 @@ export function readargs<T extends ARG_TYPES>(
           if (isnumber(maybevalue)) {
             values.push(maybevalue)
           } else {
-            didexpect('number', value)
+            didexpect('number', value, words)
           }
         } else if (isnumber(value)) {
           values.push(value)
         } else {
-          didexpect('number', value)
+          didexpect('number', value, words)
         }
         ii = iii
         break
@@ -186,7 +196,7 @@ export function readargs<T extends ARG_TYPES>(
       case ARG_TYPE.STRING: {
         const [value, iii] = readexpr(ii)
         if (!isstring(value)) {
-          didexpect('string', value)
+          didexpect('string', value, words)
         }
         ii = iii
         values.push(value)
@@ -202,7 +212,7 @@ export function readargs<T extends ARG_TYPES>(
             maybevalue = maybernumber
           }
         } else if (!isnumber(maybevalue)) {
-          didexpect('number or string', maybevalue)
+          didexpect('number or string', maybevalue, words)
         }
         ii = iii
         values.push(maybevalue)
@@ -211,7 +221,7 @@ export function readargs<T extends ARG_TYPES>(
       case ARG_TYPE.MAYBE_CATEGORY: {
         const [value, iii] = readcategory(ii)
         if (value !== undefined && !isstrcategory(value)) {
-          didexpect('optional terrain or object', value)
+          didexpect('optional terrain or object', value, words)
         }
         ii = iii
         values.push(value)
@@ -223,6 +233,7 @@ export function readargs<T extends ARG_TYPES>(
           didexpect(
             'optional solid, walk, swim, bullet, walkable or swimmable',
             value,
+            words,
           )
         }
         ii = iii
@@ -232,7 +243,7 @@ export function readargs<T extends ARG_TYPES>(
       case ARG_TYPE.MAYBE_COLOR: {
         const [value, iii] = readcolor(ii)
         if (value !== undefined && !isstrcolor(value)) {
-          didexpect('optional color', value)
+          didexpect('optional color', value, words)
         }
         ii = iii
         values.push(value)
@@ -241,7 +252,7 @@ export function readargs<T extends ARG_TYPES>(
       case ARG_TYPE.MAYBE_KIND: {
         const [kind, iii] = readkind(ii)
         if (kind !== undefined && !isstrkind(kind)) {
-          didexpect('optional kind', kind)
+          didexpect('optional kind', kind, words)
         }
         ii = iii
         values.push(kind)
@@ -268,14 +279,14 @@ export function readargs<T extends ARG_TYPES>(
           ii = iii
           values.push(undefined)
         } else {
-          didexpect('optional direction', dir)
+          didexpect('optional direction', dir, words)
         }
         break
       }
       case ARG_TYPE.MAYBE_NAME: {
         const value = READ_CONTEXT.words[ii]
         if (value !== undefined && !isstring(value)) {
-          didexpect('optional string', value)
+          didexpect('optional string', value, words)
         }
         ++ii
         values.push(value)
@@ -288,12 +299,12 @@ export function readargs<T extends ARG_TYPES>(
           if (isnumber(maybevalue)) {
             values.push(maybevalue)
           } else {
-            didexpect('optional number', value)
+            didexpect('optional number', value, words)
           }
         } else if (isnumber(value) || value === undefined) {
           values.push(value)
         } else {
-          didexpect('optional number', value)
+          didexpect('optional number', value, words)
         }
         ii = iii
         break
@@ -301,7 +312,7 @@ export function readargs<T extends ARG_TYPES>(
       case ARG_TYPE.MAYBE_STRING: {
         const [value, iii] = readexpr(ii)
         if (value !== undefined && !isstring(value)) {
-          didexpect('optional string', value)
+          didexpect('optional string', value, words)
         }
         ii = iii
         values.push(value)
@@ -317,7 +328,7 @@ export function readargs<T extends ARG_TYPES>(
             maybevalue = maybernumber
           }
         } else if (maybevalue !== undefined && !isnumber(maybevalue)) {
-          didexpect('number or string', maybevalue)
+          didexpect('number or string', maybevalue, words)
         }
         ii = iii
         values.push(maybevalue)

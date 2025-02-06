@@ -422,7 +422,9 @@ export function memorytickobject(
   // clear used input
   if (READ_CONTEXT.elementisplayer) {
     const flags = memoryreadflags(READ_CONTEXT.elementid)
-    flags.inputcurrent = 0
+    if (isnumber(flags.inputcurrent)) {
+      flags.inputcurrent = 0
+    }
   }
 
   // restore context

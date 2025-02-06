@@ -216,6 +216,7 @@ export const BOARD_FIRMWARE = createfirmware()
       // write new element
       bookboardwrite(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
     }
+
     return 0
   })
   .command('shootwith', (chip, words) => {
@@ -223,7 +224,3 @@ export const BOARD_FIRMWARE = createfirmware()
     return commandshoot(chip, words.slice(ii), arg)
   })
   .command('shoot', commandshoot)
-  .command('throwstar', () => {
-    // TODO, may not be needed
-    return 0
-  })
