@@ -29,6 +29,8 @@ export const RUNTIME_FIRMWARE = createfirmware({
     const [ticker] = queue
     if (queue.length === 1 && isstring(ticker)) {
       if (ispresent(READ_CONTEXT.element)) {
+        // could we trigger sprite animations with ticker text ??
+        // $WOBBLE $BOUNCE $SPIN
         READ_CONTEXT.element.tickertext = ticker
         READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
         // send message

@@ -141,6 +141,25 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 }
 
 export const BOARD_FIRMWARE = createfirmware()
+  .command('board', (chip, words) => {
+    // #board <stat> [x] [y]
+  })
+  .command('edge', (chip, words) => {
+    // #edge <dir> <stat>
+  })
+  .command('shove', (chip, words) => {
+    // #shove <dir> <movedir>
+  })
+  .command('duplicate', (chip, words) => {
+    // #duplicate <dir> <duplicatedir>
+  })
+  .command('replace', (chip, words) => {
+    // #replace <dir> <kind>
+    // like #put, but makes the space empty first
+  })
+  .command('write', (chip, words) => {
+    // #write <dir> <color> <text>
+  })
   .command('change', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
