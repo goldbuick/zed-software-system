@@ -142,10 +142,18 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 
 export const BOARD_FIRMWARE = createfirmware()
   .command('board', (chip, words) => {
-    // #board <stat> [x] [y]
+    if (!ispresent(READ_CONTEXT.book)) {
+      return 0
+    }
+    // teleport player to a board with given stat
+    const [stat, x, y] = readargs(words, 0, [
+      ARG_TYPE.NAME,
+      ARG_TYPE.MAYBE_NUMBER,
+      ARG_TYPE.MAYBE_NUMBER,
+    ])
   })
   .command('edge', (chip, words) => {
-    // #edge <dir> <stat>
+    const [dir, name] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.NAME])
   })
   .command('shove', (chip, words) => {
     // #shove <dir> <movedir>
