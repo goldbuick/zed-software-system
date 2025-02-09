@@ -31,12 +31,12 @@ import {
   bookplayersetboard,
   bookreadboard,
   bookreadcodepagebyaddress,
-  bookreadcodepagesbytype,
+  bookreadcodepagesbytypeandstat,
   bookreadflags,
   bookreadobject,
   createbook,
 } from './book'
-import { codepagereaddata, codepagereadstats } from './codepage'
+import { codepagereaddata } from './codepage'
 import { memoryloaderarg } from './loader'
 import { memoryconverttogadgetlayers } from './rendertogadget'
 import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from './types'
@@ -260,13 +260,11 @@ export function memoryplayerlogin(player: string): boolean {
   }
 
   // place on a title board
-  const titleboards = bookreadcodepagesbytype(
+  const titleboards = bookreadcodepagesbytypeandstat(
     mainbook,
     CODE_PAGE_TYPE.BOARD,
-  ).filter((codepage) => {
-    const stats = codepagereadstats(codepage)
-    return ispresent(stats.title)
-  })
+    'title',
+  )
   if (titleboards.length === 0) {
     return api_error(
       SOFTWARE,
