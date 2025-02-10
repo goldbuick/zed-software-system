@@ -1,18 +1,13 @@
 import { CHIP } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
-import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
-import { MEMORY_LABEL, memorytickobject } from 'zss/memory'
+import { ispresent } from 'zss/mapping/types'
+import { memorymoveobject, memorytickobject } from 'zss/memory'
 import { listelementsbykind, listnamedelements } from 'zss/memory/atomics'
-import {
-  boardelementapplycolor,
-  boardelementread,
-  boardsetterrain,
-  boardterrainsetfromkind,
-} from 'zss/memory/board'
+import { boardelementread, boardsetterrain } from 'zss/memory/board'
+import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
 import {
   bookboardcheckblockedobject,
-  bookboardelementreadname,
   bookboardmoveobject,
   bookboardnamedwrite,
   bookboardsafedelete,
@@ -20,15 +15,10 @@ import {
   bookboardwrite,
   bookboardwritebulletobject,
   bookelementkindread,
+  bookplayermovetoboard,
   bookreadcodepagesbytypeandstat,
 } from 'zss/memory/book'
-import {
-  BOARD,
-  BOARD_ELEMENT,
-  BOARD_WIDTH,
-  BOOK,
-  CODE_PAGE_TYPE,
-} from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
@@ -42,66 +32,7 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { CATEGORY, COLLISION, COLOR, PT, WORD } from 'zss/words/types'
-
-function sendinteraction(
-  chip: CHIP,
-  maybefrom: BOARD_ELEMENT | string,
-  maybeto: BOARD_ELEMENT | string,
-  message: string,
-) {
-  const fromid = isstring(maybefrom) ? maybefrom : maybefrom.id
-  const frompt: PT | undefined = isstring(maybefrom)
-    ? undefined
-    : { x: maybefrom.x ?? 0, y: maybefrom.y ?? 0 }
-  const toid = isstring(maybeto) ? maybeto : maybeto.id
-
-  // object elements will have ids
-  const from = fromid ?? frompt
-
-  if (ispresent(toid) && ispresent(from)) {
-    chip.send(toid, message, from)
-  }
-}
-
-export function moveobject(
-  chip: CHIP,
-  book: MAYBE<BOOK>,
-  board: MAYBE<BOARD>,
-  target: BOARD_ELEMENT,
-  dest: PT,
-) {
-  const blocked = bookboardmoveobject(book, board, target, dest)
-  if (ispresent(blocked)) {
-    sendinteraction(chip, blocked, chip.id(), 'thud')
-    if (target.kind === MEMORY_LABEL.PLAYER) {
-      sendinteraction(chip, chip.id(), blocked, 'touch')
-    } else if (target.collision === COLLISION.ISBULLET) {
-      sendinteraction(chip, chip.id(), blocked, 'shot')
-    } else {
-      sendinteraction(chip, chip.id(), blocked, 'bump')
-    }
-    // delete destructible elements
-    const blockedkind = bookelementkindread(book, blocked)
-    if (blocked.destructible ?? blockedkind?.destructible) {
-      if (ispresent(blocked?.id)) {
-        // mark target for deletion
-        bookboardsafedelete(
-          READ_CONTEXT.book,
-          READ_CONTEXT.board,
-          blocked,
-          READ_CONTEXT.timestamp,
-        )
-      } else {
-        // overwrite terrain with empty
-        boardsetterrain(board, { x: dest.x, y: dest.y })
-      }
-      return true
-    }
-    return false
-  }
-  return true
-}
+import { CATEGORY, COLLISION, COLOR, DIR, WORD } from 'zss/words/types'
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data
@@ -161,7 +92,7 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 }
 
 export const BOARD_FIRMWARE = createfirmware()
-  .command('board', (chip, words) => {
+  .command('board', (_, words) => {
     if (!ispresent(READ_CONTEXT.book)) {
       return 0
     }
@@ -178,15 +109,28 @@ export const BOARD_FIRMWARE = createfirmware()
     )
     if (boards.length) {
       const target = pick(...boards)
-      //
+      if (ispresent(target)) {
+        bookplayermovetoboard(
+          READ_CONTEXT.book,
+          READ_CONTEXT.elementfocus,
+          target.id,
+          {
+            x: maybex ?? Math.round(BOARD_WIDTH * 0.5),
+            y: maybey ?? Math.round(BOARD_HEIGHT * 0.5),
+          },
+        )
+      }
     }
     return 0
   })
-  .command('edge', (chip, words) => {
-    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+  .command('edge', (_, words) => {
+    if (
+      !ispresent(READ_CONTEXT.book) ||
+      !ispresent(READ_CONTEXT.board) ||
+      !ispresent(READ_CONTEXT.element)
+    ) {
       return 0
     }
-    //
     const [dir, stat] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.NAME])
     const boards = bookreadcodepagesbytypeandstat(
       READ_CONTEXT.book,
@@ -194,7 +138,22 @@ export const BOARD_FIRMWARE = createfirmware()
       stat,
     )
     if (boards.length) {
+      const edgedir = dirfrompts(READ_CONTEXT.elementpt, dir)
       const target = pick(...boards)
+      switch (edgedir) {
+        case DIR.NORTH:
+          READ_CONTEXT.board.exitnorth = target.id
+          break
+        case DIR.SOUTH:
+          READ_CONTEXT.board.exitsouth = target.id
+          break
+        case DIR.WEST:
+          READ_CONTEXT.board.exitwest = target.id
+          break
+        case DIR.EAST:
+          READ_CONTEXT.board.exiteast = target.id
+          break
+      }
     }
     return 0
   })
@@ -204,8 +163,8 @@ export const BOARD_FIRMWARE = createfirmware()
     }
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
     const maybetarget = boardelementread(READ_CONTEXT.board, dir)
-    if (maybetarget?.category === CATEGORY.ISOBJECT) {
-      moveobject(
+    if (boardelementisobject(maybetarget)) {
+      memorymoveobject(
         chip,
         READ_CONTEXT.book,
         READ_CONTEXT.board,
@@ -215,25 +174,25 @@ export const BOARD_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('duplicate', (chip, words) => {
-    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
-      return 0
-    }
-    const [dir, duplicatedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-    const maybetarget = boardelementread(READ_CONTEXT.board, dir)
-    if (ispresent(maybetarget)) {
-      // update lookup (only objects)
-      // bookboardobjectlookupwrite(book, board, object)
-    }
-    return 0
-  })
-  .command('replace', (chip, words) => {
+  // .command('duplicate', (chip, words) => {
+  //   if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+  //     return 0
+  //   }
+  //   const [dir, duplicatedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
+  //   const maybetarget = boardelementread(READ_CONTEXT.board, dir)
+  //   if (ispresent(maybetarget)) {
+  //     // update lookup (only objects)
+  //     // bookboardobjectlookupwrite(book, board, object)
+  //   }
+  //   return 0
+  // })
+  .command('replace', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
     const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
     const maybetarget = boardelementread(READ_CONTEXT.board, dir)
-    if (maybetarget?.category === CATEGORY.ISOBJECT) {
+    if (boardelementisobject(maybetarget)) {
       bookboardsafedelete(
         READ_CONTEXT.book,
         READ_CONTEXT.board,
@@ -308,7 +267,7 @@ export const BOARD_FIRMWARE = createfirmware()
 
     // modify elements
     targetelements.forEach((element) => {
-      if (bookboardelementreadname(READ_CONTEXT.book, element) === intoname) {
+      if (boardelementname(element) === intoname) {
         if (ispresent(intocolor)) {
           element.color = intocolor
         }
@@ -355,11 +314,7 @@ export const BOARD_FIRMWARE = createfirmware()
     const target = boardelementread(READ_CONTEXT.board, dir)
     if (target?.category === CATEGORY.ISOBJECT && target?.pushable) {
       // attempt to shove it away
-      const from = {
-        x: READ_CONTEXT.element.x ?? 0,
-        y: READ_CONTEXT.element.y ?? 0,
-      }
-      const pt = ptapplydir(dir, dirfrompts(from, dir))
+      const pt = ptapplydir(dir, dirfrompts(READ_CONTEXT.elementpt, dir))
       bookboardmoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
     }
 

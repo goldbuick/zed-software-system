@@ -8,7 +8,7 @@ import {
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
-import { boardelementapplycolor } from 'zss/memory/board'
+import { boardelementapplycolor } from 'zss/memory/boardelement'
 import {
   bookboardwrite,
   bookboardsafedelete,
@@ -18,7 +18,6 @@ import {
 } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { PT } from 'zss/words/types'
 
 import { moveobject } from './board'
 
@@ -177,9 +176,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   everytick(chip) {
     // handle walk movement
     if (
-      ispresent(READ_CONTEXT.element?.x) &&
-      ispresent(READ_CONTEXT.element.y) &&
-      ispresent(READ_CONTEXT.element.stepx) &&
+      ispresent(READ_CONTEXT.element?.stepx) &&
       ispresent(READ_CONTEXT.element.stepy) &&
       moveobject(
         chip,
@@ -187,8 +184,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
         READ_CONTEXT.board,
         READ_CONTEXT.element,
         {
-          x: READ_CONTEXT.element.x + READ_CONTEXT.element.stepx,
-          y: READ_CONTEXT.element.y + READ_CONTEXT.element.stepy,
+          x: READ_CONTEXT.elementpt.x + READ_CONTEXT.element.stepx,
+          y: READ_CONTEXT.elementpt.y + READ_CONTEXT.element.stepy,
         },
       ) === false
     ) {
@@ -216,11 +213,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
   },
 })
   .command('become', (chip, words) => {
-    // track dest
-    const dest: PT = {
-      x: READ_CONTEXT.element?.x ?? 0,
-      y: READ_CONTEXT.element?.y ?? 0,
-    }
     // read
     const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
     // make sure lookup is created
@@ -241,7 +233,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
       )
     ) {
       // write new element
-      bookboardwrite(READ_CONTEXT.book, READ_CONTEXT.board, kind, dest)
+      bookboardwrite(
+        READ_CONTEXT.book,
+        READ_CONTEXT.board,
+        kind,
+        READ_CONTEXT.elementpt,
+      )
     }
     // halt execution
     chip.endofprogram()

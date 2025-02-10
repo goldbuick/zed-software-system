@@ -2,7 +2,6 @@ import { pick } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, deepcopy, isnumber, ispresent, noop } from 'zss/mapping/types'
-import { isstrcolor, mapstrcolortoattributes, STR_COLOR } from 'zss/words/color'
 import {
   dirfrompts,
   ispt,
@@ -10,7 +9,7 @@ import {
   ptapplydir,
   STR_DIR,
 } from 'zss/words/dir'
-import { COLOR, DIR, NAME, PT } from 'zss/words/types'
+import { DIR, PT } from 'zss/words/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
 import { exportboardelement, importboardelement } from './boardelement'
@@ -79,9 +78,14 @@ export function importboard(boardentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOARD> {
   })
 }
 
-export function boardelementindex(board: MAYBE<BOARD>, pt: PT): number {
+export function boardelementindex(
+  board: MAYBE<BOARD>,
+  pt: MAYBE<PT | BOARD_ELEMENT>,
+): number {
   if (
     !ispresent(board) ||
+    !ispresent(pt?.x) ||
+    !ispresent(pt?.y) ||
     pt.x < 0 ||
     pt.x >= BOARD_WIDTH ||
     pt.y < 0 ||

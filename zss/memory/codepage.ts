@@ -341,27 +341,33 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       }
       codepage.board.id = codepage.id
       const stats = codepagereadstatdefaults(codepage)
-      codepage.board.isdark = ispresent(stats.isdark) && stats.isdark ? 1 : 0
-      // @ts-expect-error ugh
+      //
+      codepage.board.isdark = (stats.isdark ?? codepage.board.isdark) ? 1 : 0
+      // @ts-expect-error ...
+      codepage.board.startx = stats.startx ?? codepage.board.startx
+      // @ts-expect-error ...
+      codepage.board.starty = stats.starty ?? codepage.board.starty
+      // @ts-expect-error ...
       codepage.board.over = stats.over ?? codepage.board.over
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.under = stats.under ?? codepage.board.under
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.exitnorth = stats.exitnorth ?? codepage.board.exitnorth
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.exitsouth = stats.exitsouth ?? codepage.board.exitsouth
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.exitwest = stats.exitwest ?? codepage.board.exitwest
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.exiteast = stats.exiteast ?? codepage.board.exiteast
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.timelimit = stats.timelimit ?? codepage.board.timelimit
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.restartonzap =
         stats.restartonzap ?? codepage.board.restartonzap
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.maxplayershots =
         stats.maxplayershots ?? codepage.board.maxplayershots
+      //
       return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {

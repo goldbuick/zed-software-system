@@ -19,6 +19,7 @@ export const READ_CONTEXT = {
   // current element info
   element: undefined as MAYBE<BOARD_ELEMENT>,
   elementid: '',
+  elementpt: { x: 0, y: 0 } as PT,
   elementisplayer: false,
   elementfocus: '',
   // for commands to use readargs
@@ -147,9 +148,10 @@ export function readargs<T extends ARG_TYPES>(
       case ARG_TYPE.DIR: {
         const [dir, iii] = readdir(ii)
         if (isstrdir(dir)) {
-          const x = READ_CONTEXT.element?.x ?? 0
-          const y = READ_CONTEXT.element?.y ?? 0
-          const pt = { x, y }
+          const pt = {
+            x: READ_CONTEXT.elementpt.x,
+            y: READ_CONTEXT.elementpt.y,
+          }
           const value =
             ispresent(READ_CONTEXT.board) && ispresent(READ_CONTEXT.element)
               ? boardevaldir(

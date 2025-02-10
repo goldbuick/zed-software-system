@@ -52,9 +52,14 @@ function handlesynthvoice(idx: number, words: WORD[]) {
 }
 
 export const AUDIO_FIRMWARE = createfirmware()
-  .command('synthbpm', (_, words) => {
+  .command('bpm', (_, words) => {
     const [bpm] = readargs(words, 0, [ARG_TYPE.NUMBER])
     synth_bpm(SOFTWARE, bpm)
+    return 0
+  })
+  .command('mainvol', (_, words) => {
+    const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
+    synth_mainvolume(SOFTWARE, volume)
     return 0
   })
   .command('mainvolume', (_, words) => {
@@ -62,9 +67,19 @@ export const AUDIO_FIRMWARE = createfirmware()
     synth_mainvolume(SOFTWARE, volume)
     return 0
   })
+  .command('drumvol', (_, words) => {
+    const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
+    synth_drumvolume(SOFTWARE, volume)
+    return 0
+  })
   .command('drumvolume', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
     synth_drumvolume(SOFTWARE, volume)
+    return 0
+  })
+  .command('ttsvol', (_, words) => {
+    const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
+    synth_ttsvolume(SOFTWARE, volume)
     return 0
   })
   .command('ttsvolume', (_, words) => {
@@ -74,6 +89,10 @@ export const AUDIO_FIRMWARE = createfirmware()
   })
   .command('play', (_, words) => {
     handlesynthplay(words, false)
+    return 0
+  })
+  .command('bgplay', (_, words) => {
+    handlesynthplay(words, true)
     return 0
   })
   .command('synth', (_, words) => {
@@ -112,9 +131,5 @@ export const AUDIO_FIRMWARE = createfirmware()
   })
   .command('synth8', (_, words) => {
     handlesynthvoice(7, words)
-    return 0
-  })
-  .command('bgplay', (_, words) => {
-    handlesynthplay(words, true)
     return 0
   })

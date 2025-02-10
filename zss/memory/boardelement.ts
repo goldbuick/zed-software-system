@@ -1,7 +1,7 @@
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 import { isstrcolor, mapstrcolortoattributes, STR_COLOR } from 'zss/words/color'
-import { COLOR, NAME } from 'zss/words/types'
+import { NAME } from 'zss/words/types'
 
 import {
   FORMAT_OBJECT,
@@ -85,4 +85,8 @@ export function boardelementapplycolor(
   if (ispresent(bg)) {
     element.bg = bg
   }
+}
+
+export function boardelementname(element: MAYBE<BOARD_ELEMENT>) {
+  return NAME(element?.name ?? element?.kinddata?.name ?? '')
 }

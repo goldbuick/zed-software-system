@@ -1,5 +1,5 @@
 import { objectKeys } from 'ts-extras'
-import { senderid } from 'zss/chip'
+import { CHIP, senderid } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
 import { api_error, MESSAGE, tape_debug, tape_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -11,15 +11,18 @@ import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { NAME } from 'zss/words/types'
+import { COLLISION, NAME, PT } from 'zss/words/types'
 
 import {
   boarddeleteobject,
   boardobjectcreatefromkind,
   boardobjectread,
+  boardsetterrain,
 } from './board'
 import {
+  bookboardmoveobject,
   bookboardobjectnamedlookupdelete,
+  bookboardsafedelete,
   bookboardtick,
   bookclearflags,
   bookelementkindread,
@@ -35,10 +38,17 @@ import {
   bookreadobject,
   createbook,
 } from './book'
-import { codepagereaddata } from './codepage'
+import { codepagereaddata, codepagereadstat } from './codepage'
 import { memoryloaderarg } from './loader'
 import { memoryconverttogadgetlayers } from './rendertogadget'
-import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from './types'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  BOOK,
+  CODE_PAGE_TYPE,
+} from './types'
 
 // manages chips
 const os = createos()
@@ -286,14 +296,21 @@ export function memoryplayerlogin(player: string): boolean {
   // TODO: what is a sensible way to place here ?
   // via player token I think ..
 
-  const titleboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(
-    pickwith(player, titleboards),
-  )
+  const title = pickwith(player, titleboards)
+  const titleboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(title)
+
   if (ispresent(titleboard)) {
+    const startx = codepagereadstat(title, 'startx')
+    const starty = codepagereadstat(title, 'starty')
+    const px = isnumber(startx) ? startx : Math.round(BOARD_WIDTH * 0.5)
+    const py = isnumber(starty) ? starty : Math.round(BOARD_HEIGHT * 0.5)
     const kindname = playerkind.name ?? MEMORY_LABEL.PLAYER
     const obj = boardobjectcreatefromkind(
       titleboard,
-      { x: 0, y: 0 },
+      {
+        x: px,
+        y: py,
+      },
       kindname,
       player,
     )
@@ -365,6 +382,72 @@ export function memorymessage(message: MESSAGE) {
   os.message(message)
 }
 
+function sendinteraction(
+  chip: CHIP,
+  maybefrom: BOARD_ELEMENT | string,
+  maybeto: BOARD_ELEMENT | string,
+  message: string,
+) {
+  const fromid = isstring(maybefrom) ? maybefrom : maybefrom.id
+  const frompt: PT | undefined = isstring(maybefrom)
+    ? undefined
+    : { x: maybefrom.x ?? 0, y: maybefrom.y ?? 0 }
+  const toid = isstring(maybeto) ? maybeto : maybeto.id
+
+  // object elements will have ids
+  const from = fromid ?? frompt
+
+  if (ispresent(toid) && ispresent(from)) {
+    chip.send(toid, message, from)
+  }
+}
+
+export function memorymoveobject(
+  chip: CHIP,
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  target: MAYBE<BOARD_ELEMENT>,
+  dest: PT,
+) {
+  if (!ispresent(target)) {
+    return false
+  }
+  const blocked = bookboardmoveobject(book, board, target, dest)
+  if (ispresent(blocked)) {
+    sendinteraction(chip, blocked, chip.id(), 'thud')
+    if (target.kind === MEMORY_LABEL.PLAYER) {
+      sendinteraction(chip, chip.id(), blocked, 'touch')
+    } else if (target.collision === COLLISION.ISBULLET) {
+      sendinteraction(chip, chip.id(), blocked, 'shot')
+    } else {
+      sendinteraction(chip, chip.id(), blocked, 'bump')
+    }
+
+    // delete destructible elements
+    const blockedkind = bookelementkindread(book, blocked)
+    if (blocked.destructible ?? blockedkind?.destructible) {
+      if (ispresent(blocked?.id)) {
+        // mark target for deletion
+        bookboardsafedelete(
+          READ_CONTEXT.book,
+          READ_CONTEXT.board,
+          blocked,
+          READ_CONTEXT.timestamp,
+        )
+      } else {
+        // overwrite terrain with empty
+        boardsetterrain(board, { x: dest.x, y: dest.y })
+      }
+      //
+      return true
+    }
+    //
+    return false
+  }
+  //
+  return true
+}
+
 export function memorytickobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
@@ -398,7 +481,7 @@ export function memorytickobject(
 
   // run chip code
   const id = object.id ?? ''
-  const itemname = boardelementname(object)
+  const itemname = NAME(object.name ?? object.kinddata?.name ?? '')
   os.tick(
     id,
     DRIVER_TYPE.RUNTIME,
@@ -458,6 +541,7 @@ export function memorytick() {
     READ_CONTEXT.book = mainbook
     READ_CONTEXT.board = undefined
     READ_CONTEXT.element = undefined
+    READ_CONTEXT.elementpt = { x: 0, y: 0 }
     READ_CONTEXT.elementid = ''
     READ_CONTEXT.elementisplayer = false
     READ_CONTEXT.elementfocus = MEMORY.operator
@@ -547,6 +631,10 @@ export function memorycli(player: string, cli = '') {
   READ_CONTEXT.book = mainbook
   READ_CONTEXT.board = bookplayerreadboard(mainbook, player)
   READ_CONTEXT.element = boardobjectread(READ_CONTEXT.board, player)
+  READ_CONTEXT.elementpt = {
+    x: READ_CONTEXT.element?.x ?? 0,
+    y: READ_CONTEXT.element?.y ?? 0,
+  }
   READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
   READ_CONTEXT.elementisplayer = true
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
@@ -575,7 +663,9 @@ export function memoryrun(address: string) {
   }
 
   const id = `${address}_run`
-  const itemname = boardelementname(READ_CONTEXT.element)
+  const itemname = NAME(
+    READ_CONTEXT.element.name ?? READ_CONTEXT.element.kinddata?.name ?? '',
+  )
   const itemcode = codepage?.code ?? ''
   // set arg to value on chip with id = id
   os.once(id, DRIVER_TYPE.RUNTIME, itemname, itemcode)

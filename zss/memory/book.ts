@@ -1,3 +1,4 @@
+import { CHIP } from 'zss/chip'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
@@ -9,11 +10,17 @@ import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
 import { checkcollision } from './atomics'
 import {
   boarddeleteobject,
+  boardelementindex,
   boardobjectcreate,
   boardobjectcreatefromkind,
   boardobjectread,
   boardsetterrain,
 } from './board'
+import {
+  boardelementapplycolor,
+  boardelementisobject,
+  boardelementname,
+} from './boardelement'
 import {
   codepagereaddata,
   codepagereadname,
@@ -367,12 +374,7 @@ export function bookplayermovetoboard(
 
   // player element
   const element = boardobjectread(currentboard, player)
-  if (
-    !ispresent(element?.x) ||
-    !ispresent(element?.y) ||
-    !ispresent(element?.id) ||
-    element?.category !== CATEGORY.ISOBJECT
-  ) {
+  if (!boardelementisobject(element) || !element?.id) {
     return
   }
 
@@ -389,7 +391,7 @@ export function bookplayermovetoboard(
 
   // remove from current board
   delete currentboard.objects[element.id]
-  const startidx = element.x + element.y * BOARD_WIDTH
+  const startidx = boardelementindex(currentboard, element)
   if (currentboard.lookup) {
     currentboard.lookup[startidx] = undefined
   }
@@ -398,7 +400,7 @@ export function bookplayermovetoboard(
   element.x = dest.x
   element.y = dest.y
   destboard.objects[element.id] = element
-  const destidx = element.x + element.y * BOARD_WIDTH
+  const destidx = boardelementindex(destboard, element)
   if (destboard.lookup) {
     destboard.lookup[destidx] = element.id
   }
@@ -550,17 +552,6 @@ export function bookboardmoveobject(
   return undefined
 }
 
-export function bookboardelementreadname(
-  book: MAYBE<BOOK>,
-  element: MAYBE<BOARD_ELEMENT>,
-) {
-  const kind = bookelementkindread(book, element)
-  if (ispresent(element?.id) && ispresent(element.x) && ispresent(element.y)) {
-    return NAME(element.name ?? kind?.name ?? 'object')
-  }
-  return NAME(element?.name ?? kind?.name ?? 'terrain')
-}
-
 export function bookboardnamedwrite(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
@@ -577,7 +568,7 @@ export function bookboardnamedwrite(
     return
   }
   // update named
-  const name = bookboardelementreadname(book, element)
+  const name = NAME(element.name ?? element.kinddata?.name ?? '')
   if (!board.named[name]) {
     board.named[name] = new Set<string>()
   }
@@ -639,7 +630,7 @@ export function bookboardsetlookup(book: MAYBE<BOOK>, board: MAYBE<BOARD>) {
       lookup[object.x + object.y * BOARD_WIDTH] = object.id
 
       // update named lookup
-      const name = bookboardelementreadname(book, object)
+      const name = NAME(object.name ?? object.kinddata?.name ?? '')
       if (!named[name]) {
         named[name] = new Set<string>()
       }
@@ -659,7 +650,7 @@ export function bookboardsetlookup(book: MAYBE<BOOK>, board: MAYBE<BOARD>) {
       terrain.category = CATEGORY.ISTERRAIN
 
       // update named lookup
-      const name = bookboardelementreadname(book, terrain)
+      const name = boardelementname(terrain)
       if (!named[name]) {
         named[name] = new Set<string>()
       }
@@ -682,10 +673,7 @@ export function bookboardsafedelete(
   element: MAYBE<BOARD_ELEMENT>,
   timestamp: number,
 ) {
-  if (
-    !ispresent(element) ||
-    NAME(bookboardelementreadname(book, element)) === 'player'
-  ) {
+  if (!ispresent(element) || boardelementname(element) === 'player') {
     return false
   }
 
@@ -719,7 +707,7 @@ export function bookboardobjectnamedlookupdelete(
       }
     }
     // remove from named
-    const name = bookboardelementreadname(book, object)
+    const name = boardelementname(object)
     if (ispresent(board.named?.[name]) && ispresent(object.id)) {
       board.named[name].delete(object.id)
     }
