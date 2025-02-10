@@ -112,34 +112,6 @@ export function boardelementread(
   return board.terrain[index]
 }
 
-export function boardelementname(element: MAYBE<BOARD_ELEMENT>) {
-  return NAME(element?.name ?? element?.kinddata?.name ?? 'object')
-}
-
-export function boardelementcolor(element: MAYBE<BOARD_ELEMENT>) {
-  return element?.color ?? element?.kinddata?.color ?? COLOR.BLACK
-}
-
-export function boardelementbg(element: MAYBE<BOARD_ELEMENT>) {
-  return element?.bg ?? element?.kinddata?.bg ?? COLOR.BLACK
-}
-
-export function boardelementapplycolor(
-  element: MAYBE<BOARD_ELEMENT>,
-  strcolor: STR_COLOR | undefined,
-) {
-  if (!ispresent(element) || !isstrcolor(strcolor)) {
-    return
-  }
-  const { color, bg } = mapstrcolortoattributes(strcolor)
-  if (ispresent(color)) {
-    element.color = color
-  }
-  if (ispresent(bg)) {
-    element.bg = bg
-  }
-}
-
 export function boardgetterrain(
   board: MAYBE<BOARD>,
   x: number,

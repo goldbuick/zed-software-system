@@ -15,7 +15,6 @@ import { NAME } from 'zss/words/types'
 
 import {
   boarddeleteobject,
-  boardelementname,
   boardobjectcreatefromkind,
   boardobjectread,
 } from './board'

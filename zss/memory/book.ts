@@ -9,13 +9,10 @@ import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
 import { checkcollision } from './atomics'
 import {
   boarddeleteobject,
-  boardelementapplycolor,
-  boardelementread,
   boardobjectcreate,
   boardobjectcreatefromkind,
   boardobjectread,
   boardsetterrain,
-  boardterrainsetfromkind,
 } from './board'
 import {
   codepagereaddata,
