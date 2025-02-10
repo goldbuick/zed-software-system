@@ -13,6 +13,7 @@ import {
   broadcast_stopstream,
   chat_connect,
   chat_disconnect,
+  register_gadget,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -476,6 +477,7 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('gadget', () => {
     // gadget will turn on / off the built-in inspector
+    register_gadget(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   // -- multiplayer related commands

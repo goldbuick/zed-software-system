@@ -1,28 +1,48 @@
 import { CHIP } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
+import { pick } from 'zss/mapping/array'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { MEMORY_LABEL, memorytickobject } from 'zss/memory'
 import { listelementsbykind, listnamedelements } from 'zss/memory/atomics'
-import { boardterrainsetfromkind } from 'zss/memory/board'
+import {
+  boardelementapplycolor,
+  boardelementread,
+  boardsetterrain,
+  boardterrainsetfromkind,
+} from 'zss/memory/board'
 import {
   bookboardcheckblockedobject,
   bookboardelementreadname,
   bookboardmoveobject,
+  bookboardnamedwrite,
   bookboardsafedelete,
   bookboardsetlookup,
   bookboardwrite,
   bookboardwritebulletobject,
   bookelementkindread,
+  bookreadcodepagesbytypeandstat,
 } from 'zss/memory/book'
-import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
-import { ispt } from 'zss/words/dir'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_WIDTH,
+  BOOK,
+  CODE_PAGE_TYPE,
+} from 'zss/memory/types'
+import { mapstrcolortoattributes } from 'zss/words/color'
+import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
   readstrkindbg,
   readstrkindcolor,
   readstrkindname,
 } from 'zss/words/kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { COLLISION, PT, WORD } from 'zss/words/types'
+import {
+  createwritetextcontext,
+  tokenizeandmeasuretextformat,
+  tokenizeandwritetextformat,
+} from 'zss/words/textformat'
+import { CATEGORY, COLLISION, COLOR, PT, WORD } from 'zss/words/types'
 
 function sendinteraction(
   chip: CHIP,
@@ -74,7 +94,7 @@ export function moveobject(
         )
       } else {
         // overwrite terrain with empty
-        boardterrainsetfromkind(board, dest, 'empty')
+        boardsetterrain(board, { x: dest.x, y: dest.y })
       }
       return true
     }
@@ -146,27 +166,124 @@ export const BOARD_FIRMWARE = createfirmware()
       return 0
     }
     // teleport player to a board with given stat
-    const [stat, x, y] = readargs(words, 0, [
+    const [stat, maybex, maybey] = readargs(words, 0, [
       ARG_TYPE.NAME,
       ARG_TYPE.MAYBE_NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
     ])
+    const boards = bookreadcodepagesbytypeandstat(
+      READ_CONTEXT.book,
+      CODE_PAGE_TYPE.BOARD,
+      stat,
+    )
+    if (boards.length) {
+      const target = pick(...boards)
+      //
+    }
+    return 0
   })
   .command('edge', (chip, words) => {
-    const [dir, name] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.NAME])
+    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      return 0
+    }
+    //
+    const [dir, stat] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.NAME])
+    const boards = bookreadcodepagesbytypeandstat(
+      READ_CONTEXT.book,
+      CODE_PAGE_TYPE.BOARD,
+      stat,
+    )
+    if (boards.length) {
+      const target = pick(...boards)
+    }
+    return 0
   })
   .command('shove', (chip, words) => {
-    // #shove <dir> <movedir>
+    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      return 0
+    }
+    const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
+    const maybetarget = boardelementread(READ_CONTEXT.board, dir)
+    if (maybetarget?.category === CATEGORY.ISOBJECT) {
+      moveobject(
+        chip,
+        READ_CONTEXT.book,
+        READ_CONTEXT.board,
+        maybetarget,
+        movedir,
+      )
+    }
+    return 0
   })
   .command('duplicate', (chip, words) => {
-    // #duplicate <dir> <duplicatedir>
+    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      return 0
+    }
+    const [dir, duplicatedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
+    const maybetarget = boardelementread(READ_CONTEXT.board, dir)
+    if (ispresent(maybetarget)) {
+      // update lookup (only objects)
+      // bookboardobjectlookupwrite(book, board, object)
+    }
+    return 0
   })
   .command('replace', (chip, words) => {
-    // #replace <dir> <kind>
-    // like #put, but makes the space empty first
+    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      return 0
+    }
+    const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
+    const maybetarget = boardelementread(READ_CONTEXT.board, dir)
+    if (maybetarget?.category === CATEGORY.ISOBJECT) {
+      bookboardsafedelete(
+        READ_CONTEXT.book,
+        READ_CONTEXT.board,
+        maybetarget,
+        READ_CONTEXT.timestamp,
+      )
+    }
+    bookboardwrite(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
+    return 0
   })
-  .command('write', (chip, words) => {
-    // #write <dir> <color> <text>
+  .command('write', (_, words) => {
+    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      return 0
+    }
+    const [dir, strcolor, text] = readargs(words, 0, [
+      ARG_TYPE.DIR,
+      ARG_TYPE.COLOR,
+      ARG_TYPE.STRING,
+    ])
+    const { color, bg } = mapstrcolortoattributes(strcolor)
+    const measuredwidth =
+      tokenizeandmeasuretextformat(text, 256, 1)?.measuredwidth ?? 1
+    const context = createwritetextcontext(
+      256,
+      1,
+      color ?? COLOR.WHITE,
+      bg ?? COLOR.ONCLEAR,
+    )
+    tokenizeandwritetextformat(text, context, false)
+    for (let i = 0; i < measuredwidth; ++i) {
+      // create new terrain element
+      const terrain = boardsetterrain(READ_CONTEXT.board, {
+        x: dir.x + i,
+        y: dir.y,
+        char: context.char[i],
+        color: context.color[i],
+        bg: context.bg[i],
+      })
+      // update named (terrain)
+      if (ispresent(terrain)) {
+        const index = (terrain.x ?? 0) + (terrain.y ?? 0) * BOARD_WIDTH
+        bookboardnamedwrite(
+          READ_CONTEXT.book,
+          READ_CONTEXT.board,
+          terrain,
+          index,
+        )
+      }
+    }
+    return 0
   })
   .command('change', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
@@ -223,14 +340,30 @@ export const BOARD_FIRMWARE = createfirmware()
     return 0
   })
   .command('put', (_, words) => {
-    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+    if (
+      !ispresent(READ_CONTEXT.book) ||
+      !ispresent(READ_CONTEXT.board) ||
+      !ispresent(READ_CONTEXT.element)
+    ) {
       return 0
     }
 
     // read
     const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
 
-    // check if we are blocked ?
+    // check if we are blocked by a pushable
+    const target = boardelementread(READ_CONTEXT.board, dir)
+    if (target?.category === CATEGORY.ISOBJECT && target?.pushable) {
+      // attempt to shove it away
+      const from = {
+        x: READ_CONTEXT.element.x ?? 0,
+        y: READ_CONTEXT.element.y ?? 0,
+      }
+      const pt = ptapplydir(dir, dirfrompts(from, dir))
+      bookboardmoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
+    }
+
+    // create element
     const blocked = bookboardcheckblockedobject(
       READ_CONTEXT.book,
       READ_CONTEXT.board,

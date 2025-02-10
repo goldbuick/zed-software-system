@@ -2,6 +2,7 @@ import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
+import { STR_COLOR } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
 import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
@@ -9,13 +10,17 @@ import { checkcollision } from './atomics'
 import {
   boarddeleteobject,
   boardelementapplycolor,
+  boardelementread,
+  boardobjectcreate,
   boardobjectcreatefromkind,
   boardobjectread,
+  boardsetterrain,
   boardterrainsetfromkind,
 } from './board'
 import {
   codepagereaddata,
   codepagereadname,
+  codepagereadstats,
   codepagereadtype,
   codepagetypetostring,
   createcodepage,
@@ -139,6 +144,22 @@ export function bookreadcodepagesbytype(
     return []
   }
   return book.pages.filter((item) => codepagereadtype(item) === type)
+}
+
+export function bookreadcodepagesbytypeandstat(
+  book: MAYBE<BOOK>,
+  type: CODE_PAGE_TYPE,
+  statname: string,
+): CODE_PAGE[] {
+  if (!ispresent(book)) {
+    return []
+  }
+  return book.pages
+    .filter((item) => codepagereadtype(item) === type)
+    .filter((codepage) => {
+      const stats = codepagereadstats(codepage)
+      return ispresent(stats[statname])
+    })
 }
 
 export function bookreadcodepagedatabytype(
@@ -329,6 +350,64 @@ export function bookplayersetboard(
     // ensure player is not listed as active
     book.activelist = book.activelist.filter((id) => id !== player)
   }
+}
+
+export function bookplayermovetoboard(
+  book: MAYBE<BOOK>,
+  player: string,
+  board: string,
+  dest: PT,
+) {
+  if (!ispresent(book)) {
+    return
+  }
+
+  // current board
+  const currentboard = bookplayerreadboard(book, player)
+  if (!ispresent(currentboard)) {
+    return
+  }
+
+  // player element
+  const element = boardobjectread(currentboard, player)
+  if (
+    !ispresent(element?.x) ||
+    !ispresent(element?.y) ||
+    !ispresent(element?.id) ||
+    element?.category !== CATEGORY.ISOBJECT
+  ) {
+    return
+  }
+
+  // dest board
+  const destboard = bookreadboard(book, board)
+  if (!ispresent(destboard)) {
+    return
+  }
+
+  // read target spot
+  if (bookboardcheckblockedobject(book, destboard, COLLISION.ISWALK, dest)) {
+    return
+  }
+
+  // remove from current board
+  delete currentboard.objects[element.id]
+  const startidx = element.x + element.y * BOARD_WIDTH
+  if (currentboard.lookup) {
+    currentboard.lookup[startidx] = undefined
+  }
+
+  // add to dest board
+  element.x = dest.x
+  element.y = dest.y
+  destboard.objects[element.id] = element
+  const destidx = element.x + element.y * BOARD_WIDTH
+  if (destboard.lookup) {
+    destboard.lookup[destidx] = element.id
+  }
+
+  // updating tracking
+  bookplayersetboard(book, player, destboard.id)
 }
 
 function bookplayerreadboardids(book: MAYBE<BOOK>) {
@@ -623,7 +702,7 @@ export function bookboardsafedelete(
     // drop from luts
     bookboardobjectnamedlookupdelete(book, board, element)
   } else {
-    boardterrainsetfromkind(board, { x, y }, 'empty')
+    boardsetterrain(board, { x, y })
   }
 
   return true
@@ -781,6 +860,43 @@ export function bookboardwritebulletobject(
   return undefined
 }
 
+export function bookboardwriteelement(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  element: MAYBE<BOARD_ELEMENT>,
+  dest: PT,
+  maybecolor: MAYBE<STR_COLOR>,
+): MAYBE<BOARD_ELEMENT> {
+  if (ispresent(book) && ispresent(board) && ispresent(element)) {
+    if (element.category === CATEGORY.ISTERRAIN) {
+      // create new terrain element
+      const terrain = boardsetterrain(board, element)
+      if (ispresent(maybecolor)) {
+        boardelementapplycolor(terrain, maybecolor)
+      }
+      // update named (terrain & objects)
+      const index = dest.x + dest.y * BOARD_WIDTH
+      bookboardnamedwrite(book, board, terrain, index)
+      // return result
+      return terrain
+    }
+    if (element.category === CATEGORY.ISOBJECT) {
+      // create new object element
+      const object = boardobjectcreate(board, element)
+      if (ispresent(maybecolor)) {
+        boardelementapplycolor(object, maybecolor)
+      }
+      // update lookup (only objects)
+      bookboardobjectlookupwrite(book, board, object)
+      // update named (terrain & objects)
+      bookboardnamedwrite(book, board, object)
+      // return result
+      return object
+    }
+  }
+  return undefined
+}
+
 export function bookboardwrite(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
@@ -792,29 +908,12 @@ export function bookboardwrite(
 
     const maybeterrain = bookreadterrain(book, name)
     if (ispresent(maybeterrain)) {
-      // create new terrain element
-      const terrain = boardterrainsetfromkind(board, dest, name)
-      // update color
-      boardelementapplycolor(terrain, maybecolor)
-      // update named (terrain & objects)
-      const index = dest.x + dest.y * BOARD_WIDTH
-      bookboardnamedwrite(book, board, terrain, index)
-      // return result
-      return terrain
+      return bookboardwriteelement(book, board, maybeterrain, dest, maybecolor)
     }
 
     const maybeobject = bookreadobject(book, name)
     if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
-      // create new object element
-      const object = boardobjectcreatefromkind(board, dest, name)
-      // update color
-      boardelementapplycolor(object, maybecolor)
-      // update lookup (only objects)
-      bookboardobjectlookupwrite(book, board, object)
-      // update named (terrain & objects)
-      bookboardnamedwrite(book, board, object)
-      // return result
-      return object
+      return bookboardwriteelement(book, board, maybeobject, dest, maybecolor)
     }
   }
 

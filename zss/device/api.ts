@@ -174,6 +174,10 @@ export function register_nuke(device: DEVICELIKE, player: string) {
   device.emit('register:nuke', undefined, player)
 }
 
+export function register_gadget(device: DEVICELIKE, player: string) {
+  device.emit('register:gadget', undefined, player)
+}
+
 export function synth_audioenabled(device: DEVICELIKE, player: string) {
   device.emit('synth:audioenabled', undefined, player)
 }
