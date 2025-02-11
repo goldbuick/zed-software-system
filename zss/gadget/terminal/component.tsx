@@ -13,7 +13,7 @@ import { useWriteText } from '../hooks'
 import { BackPlate } from '../tape/backplate'
 import { ConsoleContext } from '../tape/common'
 
-import { ConsoleInput } from './input'
+import { TapeTerminalInput } from './input'
 import { ConsoleItem } from './item'
 import { ConsoleItemActive } from './itemactive'
 
@@ -102,7 +102,7 @@ export function TapeTerminal() {
           )
         })}
         {!editoropen && (
-          <ConsoleInput
+          <TapeTerminalInput
             tapeycursor={tapeycursor}
             logrowtotalheight={logrowtotalheight}
           />

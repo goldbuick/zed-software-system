@@ -32,10 +32,12 @@ type Props = {
   cursor?: string
   x?: number
   y?: number
+  z?: number
   width?: number
   height?: number
   opacity?: number
   visible?: boolean
+  color?: string
 } & React.ComponentProps<typeof PlaneComponent>
 
 export const Rect = React.forwardRef<typeof PlaneComponent, Props>(
@@ -45,10 +47,12 @@ export const Rect = React.forwardRef<typeof PlaneComponent, Props>(
       cursor = 'default',
       x = 0,
       y = 0,
+      z = 0,
       width = 1,
       height = 1,
       opacity = 1,
       visible = true,
+      color = 'white',
       ...props
     }: Props,
     forwardedRef,
@@ -58,7 +62,7 @@ export const Rect = React.forwardRef<typeof PlaneComponent, Props>(
     const position: [number, number, number] = [
       (x + hw) * RUNTIME.DRAW_CHAR_WIDTH(),
       (y + hh) * RUNTIME.DRAW_CHAR_HEIGHT(),
-      0,
+      z,
     ]
     const clippingPlanes = useClipping()
     return (
@@ -75,7 +79,7 @@ export const Rect = React.forwardRef<typeof PlaneComponent, Props>(
         {...props}
       >
         <meshBasicMaterial
-          color="white"
+          color={color}
           opacity={opacity}
           visible={visible}
           transparent={opacity !== 1}

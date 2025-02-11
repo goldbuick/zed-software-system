@@ -2,7 +2,7 @@ import { useContext } from 'react'
 import { StoreApi, useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 
-import { Dither } from './framed/dither'
+import { Dither } from './framedlayer/dither'
 import { DITHER_DATA, DitherContext } from './hooks'
 
 type DitherDataProps = React.PropsWithChildren<{
