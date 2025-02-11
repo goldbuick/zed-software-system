@@ -6,17 +6,17 @@ import { writetext } from 'zss/words/writeui'
 
 import { useWriteText } from '../hooks'
 import { inputcolor } from '../panel/common'
-import { setuplogitem, ConsoleItemInputProps } from '../tape/common'
+import { setuplogitem, TapeTerminalItemInputProps } from '../tape/common'
 import { UserInput } from '../userinput'
 
-export function ConsoleCopyIt({
+export function TapeTerminalCopyIt({
   blink,
   active,
   prefix,
   label,
   words,
   y,
-}: ConsoleItemInputProps) {
+}: TapeTerminalItemInputProps) {
   const context = useWriteText()
 
   const invoke = useCallback(() => {

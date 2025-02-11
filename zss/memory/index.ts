@@ -702,38 +702,6 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
     }
     gadgettext(player, '$205$205$205$196')
 
-    // // this element is an instance of an element type
-    // kind?: string
-    // // objects only
-    // id?: string
-    // x?: number
-    // y?: number
-    // lx?: number
-    // ly?: number
-    // code?: string
-    // // this is a unique name for this instance
-    // name?: string
-    // // display
-    // char?: number
-    // color?: number
-    // bg?: number
-    // light?: number
-    // // interaction
-    // player?: string
-    // bucket?: (number | string)[]
-    // pushable?: number
-    // collision?: COLLISION
-    // destructible?: number
-    // tickertext?: string
-    // tickertime?: number
-    // // config
-    // p1?: number
-    // p2?: number
-    // p3?: number
-    // cycle?: number
-    // stepx?: number
-    // stepy?: number
-
     if (isobject) {
       gadgethyperlink(
         player,
@@ -742,12 +710,63 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
         get,
         set,
       )
-    } else {
-      //
     }
 
     gadgethyperlink(player, 'char', ['charedit', 'char'], get, set)
     gadgethyperlink(player, 'color', ['coloredit', 'color'], get, set)
+    gadgethyperlink(player, 'bg', ['coloredit', 'bg'], get, set)
+
+    if (isobject) {
+      gadgethyperlink(
+        player,
+        'collision',
+        [
+          'select',
+          'collision',
+          'iswalking',
+          `${COLLISION.ISWALK}`,
+          'isswimming',
+          `${COLLISION.ISSWIM}`,
+          'isbullet',
+          `${COLLISION.ISBULLET}`,
+        ],
+        get,
+        set,
+      )
+    } else {
+      gadgethyperlink(
+        player,
+        'collision',
+        [
+          'select',
+          'collision',
+          'iswalkable',
+          `${COLLISION.ISWALK}`,
+          'issolid',
+          `${COLLISION.ISSOLID}`,
+          'iswim',
+          `${COLLISION.ISSWIM}`,
+        ],
+        get,
+        set,
+      )
+    }
+    if (isobject) {
+      gadgethyperlink(
+        player,
+        'pushable',
+        ['select', 'pushable', 'no', '0', 'yes', '1'],
+        get,
+        set,
+      )
+    }
+    gadgethyperlink(
+      player,
+      'destructible',
+      ['select', 'destructible', 'no', '0', 'yes', '1'],
+      get,
+      set,
+    )
 
     const stats = codepagereadstatdefaults(codepage)
     const targets = objectKeys(stats)
@@ -757,6 +776,10 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
         case 'char':
         case 'cycle':
         case 'color':
+        case 'bg':
+        case 'collision':
+        case 'pushable':
+        case 'destructible':
           // skip in favor of built-in hyperlinks
           break
         default:
@@ -799,17 +822,19 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
       }
     }
   } else {
+    gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
+    gadgettext(player, '$205$205$205$196')
     gadgethyperlink(
       player,
       'copy elements',
-      [`inspect:copy:${p1.x},${p1.y},${p2.x},${p2.y}`, 'hk', 'c'],
+      ['hk', `inspect:copy:${p1.x},${p1.y},${p2.x},${p2.y}`, 'c'],
       get,
       set,
     )
     gadgethyperlink(
       player,
       'make empty',
-      [`inspect:empty:${p1.x},${p1.y},${p2.x},${p2.y}`, 'hk', 'e'],
+      ['hk', `inspect:empty:${p1.x},${p1.y},${p2.x},${p2.y}`, 'e'],
       get,
       set,
     )

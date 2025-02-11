@@ -16,14 +16,14 @@ export const BG = COLOR.DKBLUE
 export const BG_SELECTED = COLOR.DKGRAY
 export const BG_ACTIVE = COLOR.BLACK
 
-export type ConsoleItemProps = {
+export type TapeTerminalItemProps = {
   blink?: boolean
   active?: boolean
   text: string
   y: number
 }
 
-export type ConsoleItemInputProps = {
+export type TapeTerminalItemInputProps = {
   blink?: boolean
   active?: boolean
   prefix: string
@@ -32,11 +32,11 @@ export type ConsoleItemInputProps = {
   y: number
 }
 
-type ConsoleContextState = {
+type TapeTerminalContextState = {
   sendmessage: (target: string, data?: any) => void
 }
 
-export const ConsoleContext = createContext<ConsoleContextState>({
+export const TapeTerminalContext = createContext<TapeTerminalContextState>({
   sendmessage() {},
 })
 

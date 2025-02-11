@@ -4,17 +4,17 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { useWriteText } from '../hooks'
 import { inputcolor } from '../panel/common'
-import { setuplogitem, ConsoleItemInputProps } from '../tape/common'
+import { setuplogitem, TapeTerminalItemInputProps } from '../tape/common'
 import { UserInput } from '../userinput'
 
-export function ConsoleOpenIt({
+export function TapeTerminalOpenIt({
   blink,
   active,
   prefix,
   label,
   words,
   y,
-}: ConsoleItemInputProps) {
+}: TapeTerminalItemInputProps) {
   const context = useWriteText()
 
   const invoke = useCallback(() => {

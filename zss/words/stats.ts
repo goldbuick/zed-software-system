@@ -92,6 +92,11 @@ export function statformat(label: string, words: string[], first = true) {
           type: STAT_TYPE.COPYIT,
           values,
         }
+      case 'openit':
+        return {
+          type: STAT_TYPE.OPENIT,
+          values,
+        }
       case 'zssedit':
         return {
           type: STAT_TYPE.ZSSEDIT,

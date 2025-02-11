@@ -5,14 +5,19 @@ import { isarray } from 'zss/mapping/types'
 import { writetextreset } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
+import { PanelItemCharEdit } from './charedit'
+import { PanelItemColorEdit } from './coloredit'
 import { PanelItemProps } from './common'
 import { PanelItemContent } from './content'
+import { PanelItemCopyIt } from './copyit'
 import { PanelItemHotkey } from './hotkey'
 import { PanelItemHyperlink } from './hyperlink'
+import { PanelItemLinkIt } from './linkit'
 import { PanelItemNumber } from './number'
 import { PanelItemRange } from './range'
 import { PanelItemSelect } from './select'
 import { PanelItemText } from './text'
+import { PanelItemZSSEdit } from './zssedit'
 
 type PanelItemComponentProps = {
   item: PANEL_ITEM
@@ -74,6 +79,16 @@ export function PanelItem({ item, inline, active }: PanelItemComponentProps) {
       case 'tx':
       case 'text':
         return <PanelItemText {...props} />
+      case 'copyit':
+        return <PanelItemCopyIt {...props} />
+      case 'linkit':
+        return <PanelItemLinkIt {...props} />
+      case 'zssedit':
+        return <PanelItemZSSEdit {...props} />
+      case 'charedit':
+        return <PanelItemCharEdit {...props} />
+      case 'coloredit':
+        return <PanelItemColorEdit {...props} />
     }
 
     writetextreset(context)

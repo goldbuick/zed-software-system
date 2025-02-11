@@ -8,16 +8,21 @@ import {
 import { NAME } from 'zss/words/types'
 
 import {
-  ConsoleItemInputProps,
-  ConsoleItemProps,
+  TapeTerminalItemInputProps,
+  TapeTerminalItemProps as TapeTerminalItemProps,
   setuplogitem,
 } from '../tape/common'
 
-import { ConsoleCopyIt } from './copyit'
-import { ConsoleHyperlink } from './hyperlink'
-import { ConsoleOpenIt } from './openit'
+import { TapeTerminalCopyIt } from './copyit'
+import { TapeTerminalHyperlink } from './hyperlink'
+import { TapeTerminalOpenIt } from './openit'
 
-export function ConsoleItem({ blink, active, text, y }: ConsoleItemProps) {
+export function TapeTerminalItem({
+  blink,
+  active,
+  text,
+  y,
+}: TapeTerminalItemProps) {
   const context = useWriteText()
   const edge = textformatreadedges(context)
   const ishyperlink = text.startsWith('!')
@@ -50,7 +55,7 @@ export function ConsoleItem({ blink, active, text, y }: ConsoleItemProps) {
 
     // setup input props
     const [input, ...args] = words
-    const props: ConsoleItemInputProps = {
+    const props: TapeTerminalItemInputProps = {
       blink,
       active,
       prefix,
@@ -61,6 +66,13 @@ export function ConsoleItem({ blink, active, text, y }: ConsoleItemProps) {
 
     // render hyperlink
     switch (NAME(input)) {
+      case 'copyit':
+        return <TapeTerminalCopyIt {...props} words={words} />
+      case 'openit':
+        return <TapeTerminalOpenIt {...props} words={words} />
+      default:
+      case 'hyperlink':
+        return <TapeTerminalHyperlink {...props} words={words} />
       case 'hk':
       case 'hotkey':
         return null
@@ -76,13 +88,12 @@ export function ConsoleItem({ blink, active, text, y }: ConsoleItemProps) {
       case 'tx':
       case 'text':
         return null
-      case 'copyit':
-        return <ConsoleCopyIt {...props} words={words} />
-      case 'openit':
-        return <ConsoleOpenIt {...props} words={words} />
-      default:
-      case 'hyperlink':
-        return <ConsoleHyperlink {...props} words={words} />
+      case 'zssedit':
+        return null
+      case 'charedit':
+        return null
+      case 'coloredit':
+        return null
     }
   }
 
