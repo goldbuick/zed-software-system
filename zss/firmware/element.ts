@@ -6,7 +6,7 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
-import { memoryreadflags } from 'zss/memory'
+import { memorymoveobject, memoryreadflags } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
 import { boardelementapplycolor } from 'zss/memory/boardelement'
 import {
@@ -18,8 +18,6 @@ import {
 } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-
-import { moveobject } from './board'
 
 const INPUT_FLAG_NAMES = new Set([
   'inputmove',
@@ -178,7 +176,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     if (
       ispresent(READ_CONTEXT.element?.stepx) &&
       ispresent(READ_CONTEXT.element.stepy) &&
-      moveobject(
+      memorymoveobject(
         chip,
         READ_CONTEXT.book,
         READ_CONTEXT.board,
@@ -266,7 +264,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     if (ispresent(READ_CONTEXT.element)) {
       // attempt to move
       const [dest] = readargs(words, 0, [ARG_TYPE.DIR])
-      moveobject(
+      memorymoveobject(
         chip,
         READ_CONTEXT.book,
         READ_CONTEXT.board,

@@ -513,10 +513,10 @@ export function bookboardmoveobject(
   }
 
   // gather meta for move
-  const startidx = object.x + object.y * BOARD_WIDTH
-  const targetidx = dest.x + dest.y * BOARD_WIDTH
-  const targetkind = bookelementkindread(book, object)
-  const targetcollision = object.collision ?? targetkind?.collision
+  const startidx = boardelementindex(board, object)
+  const targetidx = boardelementindex(board, dest)
+  const targetcollision =
+    object.collision ?? object?.kinddata?.collision ?? COLLISION.ISWALK
 
   // blocked by an object
   const maybeobject = boardobjectread(board, board.lookup[targetidx] ?? '')
@@ -528,11 +528,13 @@ export function bookboardmoveobject(
   // blocked by terrain
   const mayberterrain = board.terrain[targetidx]
   if (ispresent(mayberterrain)) {
-    const terrainkind = bookelementkindread(book, mayberterrain)
-    const terraincollision = mayberterrain.collision ?? terrainkind?.collision
+    const terraincollision =
+      mayberterrain.collision ??
+      mayberterrain?.kinddata?.collision ??
+      COLLISION.ISWALK
     if (checkcollision(targetcollision, terraincollision)) {
       // for sending interaction messages
-      return { ...mayberterrain, x: dest.x, y: dest.y } as BOARD_ELEMENT
+      return { ...mayberterrain, x: dest.x, y: dest.y }
     }
   }
 
