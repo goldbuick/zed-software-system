@@ -4,7 +4,13 @@ import { PALETTE } from 'zss/file/palette'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { statformat, stattypestring } from 'zss/words/stats'
 import { COLLISION, NAME, STAT_TYPE } from 'zss/words/types'
 
@@ -158,8 +164,9 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
     const token = parse.tokens[i]
     if (token.tokenType === stat) {
       const source = token.image.slice(1)
-      const words = source.split(' ')
-      const stat = statformat(words, isfirst)
+      const [sourcewords, label] = source.split(';').map((str) => str.trim())
+      const words = sourcewords.split(' ')
+      const stat = statformat(isstring(label) ? label : '', words, isfirst)
       const maybename = NAME(stat.values.join(' '))
       isfirst = false
       switch (stat.type) {
@@ -211,11 +218,13 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
         case STAT_TYPE.TEXT:
         case STAT_TYPE.LINK:
         case STAT_TYPE.HOTKEY:
-        case STAT_TYPE.SCROLL: {
+        case STAT_TYPE.ZSSEDIT:
+        case STAT_TYPE.CHAREDIT:
+        case STAT_TYPE.COLOREDIT: {
           const [maybename, ...args] = stat.values
           if (isstring(maybename)) {
             const name = NAME(maybename)
-            codepage.stats[name] = args
+            codepage.stats[name] = [stattypestring(stat.type), ...args]
           }
           break
         }
@@ -276,6 +285,11 @@ function applyelementstats(codepage: CODE_PAGE, element: BOARD_ELEMENT) {
   const keys = Object.keys(stats)
   for (let i = 0; i < keys.length; ++i) {
     const key = keys[i]
+    const value = stats[key]
+    if (isarray(value)) {
+      // non-const stats here don't make sense
+      continue
+    }
     switch (key) {
       case 'char':
       case 'color':

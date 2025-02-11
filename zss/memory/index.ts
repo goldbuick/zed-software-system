@@ -14,10 +14,16 @@ import { LAYER } from 'zss/gadget/data/types'
 import { pickwith } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { createos } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { COLLISION, NAME, PT } from 'zss/words/types'
+import { COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
 import {
   boarddeleteobject,
@@ -50,7 +56,6 @@ import {
   codepagereaddata,
   codepagereadstat,
   codepagereadstatdefaults,
-  codepagereadstats,
 } from './codepage'
 import { memoryloaderarg } from './loader'
 import { memoryconverttogadgetlayers } from './rendertogadget'
@@ -60,6 +65,7 @@ import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
+  CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
 
@@ -674,6 +680,103 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
     return
   }
 
+  // value accessors
+  function get(name: string): WORD {
+    console.info('get', name)
+    return 0
+  }
+  function set(name: string, value: WORD) {
+    console.info(name, value)
+  }
+
+  // common hyperlinks
+  function elementinspect(
+    element: BOARD_ELEMENT,
+    codepage: CODE_PAGE,
+    isobject: boolean,
+  ) {
+    if (isobject) {
+      gadgettext(player, `object: ${element.name ?? element.kind ?? 'ERR'}`)
+    } else {
+      gadgettext(player, `terrain: ${element.kind ?? 'ERR'}`)
+    }
+    gadgettext(player, '$205$205$205$196')
+
+    // // this element is an instance of an element type
+    // kind?: string
+    // // objects only
+    // id?: string
+    // x?: number
+    // y?: number
+    // lx?: number
+    // ly?: number
+    // code?: string
+    // // this is a unique name for this instance
+    // name?: string
+    // // display
+    // char?: number
+    // color?: number
+    // bg?: number
+    // light?: number
+    // // interaction
+    // player?: string
+    // bucket?: (number | string)[]
+    // pushable?: number
+    // collision?: COLLISION
+    // destructible?: number
+    // tickertext?: string
+    // tickertime?: number
+    // // config
+    // p1?: number
+    // p2?: number
+    // p3?: number
+    // cycle?: number
+    // stepx?: number
+    // stepy?: number
+
+    if (isobject) {
+      gadgethyperlink(
+        player,
+        'cycle',
+        ['number', 'cycle', '1', '255'],
+        get,
+        set,
+      )
+    } else {
+      //
+    }
+
+    gadgethyperlink(player, 'char', ['charedit', 'char'], get, set)
+    gadgethyperlink(player, 'color', ['coloredit', 'color'], get, set)
+
+    const stats = codepagereadstatdefaults(codepage)
+    const targets = objectKeys(stats)
+    for (let i = 0; i < targets.length; ++i) {
+      const target = targets[i]
+      switch (target) {
+        case 'char':
+        case 'cycle':
+        case 'color':
+          // skip in favor of built-in hyperlinks
+          break
+        default:
+          if (isarray(stats[target])) {
+            const [type, label, ...args] = stats[target]
+            if (isstring(label)) {
+              gadgethyperlink(
+                player,
+                label || target,
+                [type, target, ...args],
+                get,
+                set,
+              )
+            }
+          }
+          break
+      }
+    }
+  }
+
   if (p1.x === p2.x && p1.y === p2.y) {
     const element = boardelementread(board, p1)
     if (ispresent(element)) {
@@ -684,8 +787,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
         element.kind ?? '',
       )
       if (ispresent(terrainpage)) {
-        const stats = codepagereadstatdefaults(terrainpage)
-        console.info(stats)
+        elementinspect(element, terrainpage, false)
       }
       const objectpage = bookreadcodepagewithtype(
         mainbook,
@@ -693,19 +795,24 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
         element.kind ?? '',
       )
       if (ispresent(objectpage)) {
-        const stats = codepagereadstatdefaults(objectpage)
-        console.info(stats)
+        elementinspect(element, objectpage, true)
       }
     }
-    // console.info(p1)
-    // gadgettext(player, 'hello?????')
-    // gadgettext(player, 'hello?????')
-    // gadgettext(player, 'hello?????')
-    // gadgethyperlink(player, )
-    // gadgethyperlink(player, os.has(player), 'hello', '')
-    // we need to send hyperlinks to player
   } else {
-    // multi
+    gadgethyperlink(
+      player,
+      'copy elements',
+      [`inspect:copy:${p1.x},${p1.y},${p2.x},${p2.y}`, 'hk', 'c'],
+      get,
+      set,
+    )
+    gadgethyperlink(
+      player,
+      'make empty',
+      [`inspect:empty:${p1.x},${p1.y},${p2.x},${p2.y}`, 'hk', 'e'],
+      get,
+      set,
+    )
   }
 
   // send to player as a scroll

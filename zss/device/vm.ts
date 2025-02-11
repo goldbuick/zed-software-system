@@ -1,4 +1,4 @@
-import { createdevice } from 'zss/device'
+import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/firmware/loader/parsefile'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
@@ -28,7 +28,7 @@ import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
 import { memoryloader } from 'zss/memory/loader'
-import { PT } from 'zss/words/types'
+import { NAME, PT } from 'zss/words/types'
 import { write } from 'zss/words/writeui'
 
 import {
@@ -256,10 +256,19 @@ const vm = createdevice(
           }
         }
         break
-      default:
-        // running software messages
-        memorymessage(message)
+      default: {
+        const { target, path } = parsetarget(message.target)
+        switch (NAME(target)) {
+          case 'inspect':
+            console.info('inspect!!!', path)
+            break
+          default:
+            // running software messages
+            memorymessage(message)
+            break
+        }
         break
+      }
     }
   },
   memoryreadsession(),

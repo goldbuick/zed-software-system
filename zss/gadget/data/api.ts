@@ -122,7 +122,6 @@ export function gadgettext(element: string, text: string) {
 export function gadgethyperlink(
   element: string,
   label: string,
-  input: string,
   words: WORD[],
   get: (name: string) => WORD,
   set: (name: string, value: WORD) => void,
@@ -130,34 +129,28 @@ export function gadgethyperlink(
   const shared = gadgetstate(element)
 
   // package into a panel item
-  const linput = NAME(input)
+  const hyperlink: WORD[] = [element, label, ...words]
 
-  const hyperlink: WORD[] = [
-    element,
-    label,
-    ...(HYPERLINK_TYPES.has(linput) ? [linput] : ['hyperlink', input]),
-    ...words,
-  ]
+  // what flag or message to change / send
+  const target = `${hyperlink[2] as string}`
 
   // type of target value to track
-  const type = hyperlink[2] as string
+  const type = NAME(`${(hyperlink[3] ?? 'hyperlink') as string}`)
 
   // do we care?
   if (HYPERLINK_WITH_SHARED.has(type)) {
     // track changes to flag
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    const name = `${hyperlink[3] ?? ''}`
     // value tracking grouped by shared id
     panelshared[shared.id] = panelshared[shared.id] ?? {}
     // get current flag value
     const current =
-      get(name) ??
+      get(target) ??
       HYPERLINK_WITH_SHARED_DEFAULTS[
         type as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
       ]
     // setup tracking if needed
-    if (panelshared[shared.id][name] === undefined) {
-      const address = paneladdress(element, name)
+    if (panelshared[shared.id][target] === undefined) {
+      const address = paneladdress(element, target)
       // this will init the value only if not already setup
       if (isnumber(current)) {
         modemwriteinitnumber(address, current)
@@ -167,20 +160,20 @@ export function gadgethyperlink(
       }
       // observe by hyperlink type
       if (HYPERLINK_WITH_SHARED_TEXT.has(type)) {
-        panelshared[shared.id][name] = modemobservevaluestring(
+        panelshared[shared.id][target] = modemobservevaluestring(
           address,
           (value) => {
-            if (ispresent(value) && value !== get(name)) {
-              set(name, value)
+            if (ispresent(value) && value !== get(target)) {
+              set(target, value)
             }
           },
         )
       } else {
-        panelshared[shared.id][name] = modemobservevaluenumber(
+        panelshared[shared.id][target] = modemobservevaluenumber(
           address,
           (value) => {
-            if (ispresent(value) && value !== get(name)) {
-              set(name, value)
+            if (ispresent(value) && value !== get(target)) {
+              set(target, value)
             }
           },
         )
