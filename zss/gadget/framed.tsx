@@ -5,7 +5,7 @@ import { RUNTIME } from 'zss/config'
 import { vm_input } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useGadgetClient, useTape } from 'zss/gadget/data/state'
+import { useGadgetClient } from 'zss/gadget/data/state'
 import {
   INPUT,
   INPUT_ALT,
@@ -16,10 +16,10 @@ import {
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
-import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 import Clipping from './clipping'
 import { FramedLayer } from './framedlayer/component'
+import { TapeTerminalInspector } from './inspector/component'
 import { Rect } from './rect'
 import { UserInput, UserInputMods } from './userinput'
 
@@ -51,7 +51,6 @@ export function Framed({ width, height }: FramedProps) {
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
   const ref = useRef<Group>(null)
-  const inspector = useTape((state) => state.inspector)
 
   useFrame((_state, delta) => {
     const { current } = ref
@@ -150,35 +149,12 @@ export function Framed({ width, height }: FramedProps) {
         CANCEL_BUTTON={(mods) => sendinput(player, INPUT.CANCEL_BUTTON, mods)}
         MENU_BUTTON={(mods) => sendinput(player, INPUT.MENU_BUTTON, mods)}
       />
-      <Rect visible color="grey" width={width} height={height} z={-2} />
+      {layers.length > 0 && (
+        <Rect visible color="aquamarine" width={width} height={height} z={-2} />
+      )}
       <Clipping width={viewwidth} height={viewheight}>
         <group ref={ref}>
-          <Rect
-            visible
-            blocking
-            x={0}
-            y={0}
-            z={-1}
-            width={BOARD_WIDTH}
-            height={BOARD_HEIGHT}
-            color="black"
-            cursor="pointer"
-            onPointerDown={(evt) => {
-              console.info(evt)
-            }}
-            onPointerMove={(evt) => {
-              console.info(evt)
-            }}
-            onPointerUp={(evt) => {
-              console.info(evt)
-            }}
-            onPointerOut={(evt) => {
-              console.info(evt)
-            }}
-            onPointerCancel={(evt) => {
-              console.info(evt)
-            }}
-          />
+          <TapeTerminalInspector />
           {layers.map((layer, i) => (
             <FramedLayer key={layer.id} id={layer.id} z={i * 2} />
           ))}

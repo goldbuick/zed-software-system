@@ -70,7 +70,7 @@ export const useTape = create<{
   }
 }>(() => ({
   layout: TAPE_DISPLAY.TOP,
-  inspector: false,
+  inspector: true,
   terminal: {
     open: true,
     level: TAPE_LOG_LEVEL.INFO,
@@ -121,5 +121,14 @@ export const useTapeEditor = create<{
   yscroll: 0,
   // cursor position & selection (text index)
   cursor: 0,
+  select: undefined,
+}))
+
+export const useTapeInspector = create<{
+  cursor: MAYBE<number>
+  select: MAYBE<number>
+}>(() => ({
+  // cursor position & selection board indexes
+  cursor: undefined,
   select: undefined,
 }))

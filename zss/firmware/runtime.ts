@@ -128,6 +128,13 @@ export const RUNTIME_FIRMWARE = createfirmware({
     const [labelword, inputword, ...words] = args
     const label = maptostring(labelword)
     const input = maptostring(inputword)
-    gadgethyperlink(READ_CONTEXT.elementid, chip, label, input, words)
+    gadgethyperlink(
+      READ_CONTEXT.elementid,
+      label,
+      input,
+      words,
+      chip.get,
+      chip.set,
+    )
     return 0
   })

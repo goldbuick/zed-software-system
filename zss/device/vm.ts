@@ -22,11 +22,13 @@ import {
   memoryreadoperator,
   memoryreadplayeractive,
   memorysynthsend,
+  memoryinspect,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
 import { memoryloader } from 'zss/memory/loader'
+import { PT } from 'zss/words/types'
 import { write } from 'zss/words/writeui'
 
 import {
@@ -234,6 +236,12 @@ const vm = createdevice(
         // user input from built-in console
         if (ispresent(message.player)) {
           memorycli(message.player, message.data)
+        }
+        break
+      case 'inspect':
+        if (ispresent(message.player) && isarray(message.data)) {
+          const [p1, p2] = message.data as [PT, PT]
+          memoryinspect(message.player, p1, p2)
         }
         break
       case 'loader':

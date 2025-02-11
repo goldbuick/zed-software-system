@@ -4,6 +4,12 @@ import { RUNTIME } from 'zss/config'
 import { api_error, MESSAGE, tape_debug, tape_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
+import {
+  gadgetcheckqueue,
+  gadgethyperlink,
+  gadgetstate,
+  gadgettext,
+} from 'zss/gadget/data/api'
 import { LAYER } from 'zss/gadget/data/types'
 import { pickwith } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
@@ -15,6 +21,7 @@ import { COLLISION, NAME, PT } from 'zss/words/types'
 
 import {
   boarddeleteobject,
+  boardelementread,
   boardobjectcreatefromkind,
   boardobjectread,
   boardsetterrain,
@@ -34,11 +41,17 @@ import {
   bookreadboard,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytypeandstat,
+  bookreadcodepagewithtype,
   bookreadflags,
   bookreadobject,
   createbook,
 } from './book'
-import { codepagereaddata, codepagereadstat } from './codepage'
+import {
+  codepagereaddata,
+  codepagereadstat,
+  codepagereadstatdefaults,
+  codepagereadstats,
+} from './codepage'
 import { memoryloaderarg } from './loader'
 import { memoryconverttogadgetlayers } from './rendertogadget'
 import {
@@ -648,6 +661,56 @@ export function memorycli(player: string, cli = '') {
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
 
   RUNTIME.HALT_AT_COUNT = resethalt
+}
+
+export function memoryinspect(player: string, p1: PT, p2: PT) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  if (p1.x === p2.x && p1.y === p2.y) {
+    const element = boardelementread(board, p1)
+    if (ispresent(element)) {
+      // figure out stats from kind codepage
+      const terrainpage = bookreadcodepagewithtype(
+        mainbook,
+        CODE_PAGE_TYPE.TERRAIN,
+        element.kind ?? '',
+      )
+      if (ispresent(terrainpage)) {
+        const stats = codepagereadstatdefaults(terrainpage)
+        console.info(stats)
+      }
+      const objectpage = bookreadcodepagewithtype(
+        mainbook,
+        CODE_PAGE_TYPE.OBJECT,
+        element.kind ?? '',
+      )
+      if (ispresent(objectpage)) {
+        const stats = codepagereadstatdefaults(objectpage)
+        console.info(stats)
+      }
+    }
+    // console.info(p1)
+    // gadgettext(player, 'hello?????')
+    // gadgettext(player, 'hello?????')
+    // gadgettext(player, 'hello?????')
+    // gadgethyperlink(player, )
+    // gadgethyperlink(player, os.has(player), 'hello', '')
+    // we need to send hyperlinks to player
+  } else {
+    // multi
+  }
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scroll = gadgetcheckqueue(player)
 }
 
 export function memoryrun(address: string) {

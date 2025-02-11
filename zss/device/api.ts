@@ -5,6 +5,7 @@ without having to include device code
 
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { PT } from 'zss/words/types'
 
 // be careful to keep imports here minimal
 
@@ -328,6 +329,10 @@ export function vm_input(
   player: string,
 ) {
   device.emit('vm:input', [input, mods], player)
+}
+
+export function vm_inspect(device: DEVICELIKE, p1: PT, p2: PT, player: string) {
+  device.emit('vm:inspect', [p1, p2], player)
 }
 
 // odd one out here as this is not a message

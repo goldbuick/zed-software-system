@@ -121,10 +121,11 @@ export function gadgettext(element: string, text: string) {
 
 export function gadgethyperlink(
   element: string,
-  chip: CHIP,
   label: string,
   input: string,
   words: WORD[],
+  get: (name: string) => WORD,
+  set: (name: string, value: WORD) => void,
 ) {
   const shared = gadgetstate(element)
 
@@ -132,7 +133,7 @@ export function gadgethyperlink(
   const linput = NAME(input)
 
   const hyperlink: WORD[] = [
-    chip.id(),
+    element,
     label,
     ...(HYPERLINK_TYPES.has(linput) ? [linput] : ['hyperlink', input]),
     ...words,
@@ -146,17 +147,17 @@ export function gadgethyperlink(
     // track changes to flag
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     const name = `${hyperlink[3] ?? ''}`
-    // value tracking grouped by panel id
-    // panelshared[panel.id] = panelshared[panel.id] ?? {}
+    // value tracking grouped by shared id
+    panelshared[shared.id] = panelshared[shared.id] ?? {}
     // get current flag value
     const current =
-      chip.get(name) ??
+      get(name) ??
       HYPERLINK_WITH_SHARED_DEFAULTS[
         type as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
       ]
     // setup tracking if needed
     if (panelshared[shared.id][name] === undefined) {
-      const address = paneladdress(chip.id(), name)
+      const address = paneladdress(element, name)
       // this will init the value only if not already setup
       if (isnumber(current)) {
         modemwriteinitnumber(address, current)
@@ -169,8 +170,8 @@ export function gadgethyperlink(
         panelshared[shared.id][name] = modemobservevaluestring(
           address,
           (value) => {
-            if (ispresent(value) && value !== chip.get(name)) {
-              chip.set(name, value)
+            if (ispresent(value) && value !== get(name)) {
+              set(name, value)
             }
           },
         )
@@ -178,8 +179,8 @@ export function gadgethyperlink(
         panelshared[shared.id][name] = modemobservevaluenumber(
           address,
           (value) => {
-            if (ispresent(value) && value !== chip.get(name)) {
-              chip.set(name, value)
+            if (ispresent(value) && value !== get(name)) {
+              set(name, value)
             }
           },
         )
