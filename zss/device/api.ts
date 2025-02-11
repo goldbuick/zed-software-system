@@ -174,10 +174,6 @@ export function register_nuke(device: DEVICELIKE, player: string) {
   device.emit('register:nuke', undefined, player)
 }
 
-export function register_gadget(device: DEVICELIKE, player: string) {
-  device.emit('register:gadget', undefined, player)
-}
-
 export function synth_audioenabled(device: DEVICELIKE, player: string) {
   device.emit('synth:audioenabled', undefined, player)
 }
@@ -237,6 +233,10 @@ export function tape_info(device: DEVICELIKE, ...message: any[]) {
 export function tape_debug(device: DEVICELIKE, ...message: any[]) {
   device.emit('tape:debug', message)
   return true
+}
+
+export function tape_inspector(device: DEVICELIKE, player: string) {
+  device.emit('tape:inspector', undefined, player)
 }
 
 // internal only, use api_error

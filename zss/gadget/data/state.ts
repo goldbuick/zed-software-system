@@ -54,6 +54,7 @@ export enum TAPE_DISPLAY {
 
 export const useTape = create<{
   layout: TAPE_DISPLAY
+  inspector: boolean
   terminal: {
     open: boolean
     level: TAPE_LOG_LEVEL
@@ -69,6 +70,7 @@ export const useTape = create<{
   }
 }>(() => ({
   layout: TAPE_DISPLAY.TOP,
+  inspector: false,
   terminal: {
     open: true,
     level: TAPE_LOG_LEVEL.INFO,
