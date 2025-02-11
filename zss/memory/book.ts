@@ -1,4 +1,3 @@
-import { CHIP } from 'zss/chip'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'

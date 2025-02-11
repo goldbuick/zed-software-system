@@ -17,7 +17,7 @@ import { ConsoleInput } from './input'
 import { ConsoleItem } from './item'
 import { ConsoleItemActive } from './itemactive'
 
-export function TapeConsole() {
+export function TapeTerminal() {
   const player = registerreadplayer()
   const [editoropen] = useTape(useShallow((state) => [state.editor.open]))
   const terminallogs = useTape(useShallow((state) => state.terminal.logs))
