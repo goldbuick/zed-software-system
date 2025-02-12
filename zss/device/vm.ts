@@ -1,6 +1,7 @@
 import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/firmware/loader/parsefile'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
+import { indextopt } from 'zss/mapping/2d'
 import { doasync } from 'zss/mapping/func'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { isjoin } from 'zss/mapping/url'
@@ -22,12 +23,23 @@ import {
   memoryreadoperator,
   memoryreadplayeractive,
   memorysynthsend,
+  memoryreadplayerboard,
 } from 'zss/memory'
+import {
+  boardelementreadbyidorindex,
+  boardgetterrain,
+  boardobjectread,
+} from 'zss/memory/board'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
-import { memoryinspect } from 'zss/memory/inspect'
+import {
+  memoryinspect,
+  memoryinspectchar,
+  memoryinspectcolor,
+} from 'zss/memory/inspect'
 import { memoryloader } from 'zss/memory/loader'
+import { BOARD_WIDTH } from 'zss/memory/types'
 import { NAME, PT } from 'zss/words/types'
 import { write } from 'zss/words/writeui'
 
@@ -260,7 +272,30 @@ const vm = createdevice(
         const { target, path } = parsetarget(message.target)
         switch (NAME(target)) {
           case 'inspect':
-            console.info('inspect!!!', path)
+            if (ispresent(message.player)) {
+              const board = memoryreadplayerboard(message.player)
+              if (!ispresent(board)) {
+                break
+              }
+              const inspect = parsetarget(path)
+              const element = boardelementreadbyidorindex(board, inspect.target)
+              if (!ispresent(element)) {
+                break
+              }
+              switch (inspect.path) {
+                case 'bg':
+                case 'color':
+                  memoryinspectcolor(message.player, element, inspect.path)
+                  break
+                case 'char':
+                  memoryinspectchar(message.player, element, inspect.path)
+                  break
+                default:
+                  console.info('inspect!!!', element, inspect.path)
+
+                  break
+              }
+            }
             break
           default:
             // running software messages

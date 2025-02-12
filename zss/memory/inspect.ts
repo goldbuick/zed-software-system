@@ -21,6 +21,42 @@ import {
 
 const DIVIDER = '$yellow$205$205$205$196'
 
+export function memoryinspectcolor(
+  player: string,
+  element: BOARD_ELEMENT,
+  name: string,
+) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  //
+}
+
+export function memoryinspectchar(
+  player: string,
+  element: BOARD_ELEMENT,
+  name: string,
+) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  //
+}
+
 export function memoryinspect(player: string, p1: PT, p2: PT) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {

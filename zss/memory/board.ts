@@ -1,3 +1,4 @@
+import { indextopt } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
@@ -114,6 +115,19 @@ export function boardelementread(
 
   // return terrain
   return board.terrain[index]
+}
+
+export function boardelementreadbyidorindex(
+  board: MAYBE<BOARD>,
+  idorindex: string,
+) {
+  const maybeobject = boardobjectread(board, idorindex)
+  if (ispresent(maybeobject)) {
+    return maybeobject
+  }
+  const maybeindex = parseFloat(idorindex)
+  const pt = indextopt(isNaN(maybeindex) ? -1 : maybeindex, BOARD_WIDTH)
+  return boardgetterrain(board, pt.x, pt.y)
 }
 
 export function boardgetterrain(
