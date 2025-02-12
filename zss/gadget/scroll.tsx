@@ -184,42 +184,42 @@ export function Scroll({
   )
 
   return (
-    <TilesData store={tilesstore}>
-      <DitherData store={ditherstore}>
-        <group ref={groupref} position-y={1000000}>
-          <UserFocus>
-            <UserInput
-              MOVE_UP={up}
-              MOVE_DOWN={down}
-              CANCEL_BUTTON={scroll.sendclose}
-            />
-            <TilesRender width={width} height={height} />
-            <group
-              // eslint-disable-next-line react/no-unknown-property
-              position={[
-                2 * RUNTIME.DRAW_CHAR_WIDTH(),
-                2 * RUNTIME.DRAW_CHAR_HEIGHT(),
-                0,
-              ]}
-            >
+    <group ref={groupref} position-y={1000000}>
+      <TilesData store={tilesstore}>
+        <UserFocus>
+          <UserInput
+            MOVE_UP={up}
+            MOVE_DOWN={down}
+            CANCEL_BUTTON={scroll.sendclose}
+          />
+          <TilesRender width={width} height={height} />
+          <group
+            // eslint-disable-next-line react/no-unknown-property
+            position={[
+              2 * RUNTIME.DRAW_CHAR_WIDTH(),
+              2 * RUNTIME.DRAW_CHAR_HEIGHT(),
+              0,
+            ]}
+          >
+            <DitherData store={ditherstore}>
               <DitherRender width={panelwidth} height={panelheight} />
-              <Panel
-                name={name}
-                width={panelwidth}
-                height={panelheight}
-                xmargin={0}
-                ymargin={0}
-                color={color}
-                bg={COLOR.ONCLEAR}
-                text={visibletext}
-                selected={row}
-              />
-              <Blinker x={1} y={1} />
-              <Blinker x={1} y={2 + row} on={26} alt={27} off={45} color={12} />
-            </group>
-          </UserFocus>
-        </group>
-      </DitherData>
-    </TilesData>
+            </DitherData>
+            <Panel
+              name={name}
+              width={panelwidth}
+              height={panelheight}
+              xmargin={0}
+              ymargin={0}
+              color={color}
+              bg={COLOR.ONCLEAR}
+              text={visibletext}
+              selected={row}
+            />
+            <Blinker x={1} y={1} />
+            <Blinker x={1} y={2 + row} on={26} alt={27} off={45} color={12} />
+          </group>
+        </UserFocus>
+      </TilesData>
+    </group>
   )
 }

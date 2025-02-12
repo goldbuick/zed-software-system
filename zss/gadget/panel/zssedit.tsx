@@ -1,4 +1,5 @@
 import { useCallback, useContext } from 'react'
+import { ispresent } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { Rect } from '../rect'
@@ -10,16 +11,19 @@ import {
   mapTo,
   chiptarget,
   inputcolor,
+  setuppanelitem,
 } from './common'
 
 export function PanelItemZSSEdit({
   chip,
-  inline,
+  row,
   active,
   label,
   args,
   context,
 }: PanelItemProps) {
+  setuppanelitem(row, context)
+
   const [target] = [mapTo(args[0], '')]
 
   const shortcut = 'z'
@@ -32,7 +36,7 @@ export function PanelItemZSSEdit({
   tokenizeandwritetextformat(
     `${
       context.iseven ? '$black$onltgray' : '$black$ondkcyan'
-    }${text}${tcolor}$onclear ${label}${inline ? `` : `\n`}`,
+    }${text}${tcolor}$onclear ${label}${ispresent(row) ? `\n` : ``}`,
     context,
     true,
   )

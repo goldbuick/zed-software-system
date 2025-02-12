@@ -1,11 +1,12 @@
 import { createContext } from 'react'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 import { WRITE_TEXT_CONTEXT } from 'zss/words/textformat'
 import { WORD } from 'zss/words/types'
 
 export type PanelItemProps = {
   player: string
   chip: string
-  inline: boolean
+  row?: number
   active: boolean
   label: string
   args: WORD[]
@@ -74,4 +75,11 @@ export function strsplice(
   return `${source.substring(0, index)}${insert}${source.substring(
     index + removecount,
   )}`
+}
+
+export function setuppanelitem(y: MAYBE<number>, context: WRITE_TEXT_CONTEXT) {
+  if (ispresent(y)) {
+    context.x = 0
+    context.y = y
+  }
 }

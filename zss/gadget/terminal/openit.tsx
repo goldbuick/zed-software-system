@@ -35,6 +35,5 @@ export function TapeTerminalOpenIt({
     true,
   )
 
-  context.changed()
   return active && <UserInput OK_BUTTON={invoke} />
 }

@@ -51,7 +51,6 @@ export function Panel({
   }
 
   resetTiles(state, 0, color, bg)
-  state.changed()
 
   return (
     <TilesData store={store}>
@@ -59,8 +58,8 @@ export function Panel({
         {text.map((item, index) => (
           <PanelItem
             key={index}
+            row={inline ? undefined : index}
             item={item}
-            inline={inline}
             active={index === selected}
           />
         ))}

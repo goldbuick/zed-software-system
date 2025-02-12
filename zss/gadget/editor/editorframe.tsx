@@ -60,6 +60,5 @@ export function EditorFrame() {
   setupeditoritem(false, false, titlex, 0, context, 0, 0, 0)
   tokenizeandwritetextformat(title, context, true)
 
-  context.changed()
   return null
 }

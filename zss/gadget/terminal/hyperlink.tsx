@@ -36,6 +36,5 @@ export function TapeTerminalHyperlink({
     true,
   )
 
-  context.changed()
   return active && <UserInput OK_BUTTON={invoke} />
 }

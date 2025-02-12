@@ -23,7 +23,7 @@ export function Blinker({ x, y, color, on = 232, off = 7, alt }: BlinkerProps) {
     char: blink ? withchar : off,
     color,
   })
-  tiles.changed()
+  // tiles.changed()
 
   if (blink) {
     ++state.current

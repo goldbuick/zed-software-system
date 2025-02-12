@@ -1,5 +1,6 @@
 import { useCallback, useContext } from 'react'
 import { RUNTIME } from 'zss/config'
+import { ispresent } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { Rect } from '../rect'
@@ -11,16 +12,19 @@ import {
   mapTo,
   chiptarget,
   inputcolor,
+  setuppanelitem,
 } from './common'
 
 export function PanelItemColorEdit({
   chip,
-  inline,
+  row,
   active,
   label,
   args,
   context,
 }: PanelItemProps) {
+  setuppanelitem(row, context)
+
   const [target, shortcut] = [mapTo(args[0], ''), mapTo(args[1], '')]
 
   const text = ` ${shortcut.toUpperCase()} `
@@ -32,7 +36,7 @@ export function PanelItemColorEdit({
   tokenizeandwritetextformat(
     `${
       context.iseven ? '$black$onltgray' : '$black$ondkcyan'
-    }${text}${tcolor}$onclear ${label}${inline ? `` : `\n`}`,
+    }${text}${tcolor}$onclear ${label}${ispresent(row) ? `\n` : ``}`,
     context,
     true,
   )

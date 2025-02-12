@@ -1,13 +1,13 @@
 import { registerreadplayer } from 'zss/device/register'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { useWriteText } from 'zss/gadget/hooks'
-import { isarray } from 'zss/mapping/types'
+import { deepcopy, isarray } from 'zss/mapping/types'
 import { writetextreset } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
 import { PanelItemCharEdit } from './charedit'
 import { PanelItemColorEdit } from './coloredit'
-import { PanelItemProps } from './common'
+import { PanelItemProps, setuppanelitem } from './common'
 import { PanelItemContent } from './content'
 import { PanelItemCopyIt } from './copyit'
 import { PanelItemHotkey } from './hotkey'
@@ -20,15 +20,16 @@ import { PanelItemText } from './text'
 import { PanelItemZSSEdit } from './zssedit'
 
 type PanelItemComponentProps = {
+  row?: number
   item: PANEL_ITEM
-  inline: boolean
   active: boolean
 }
 
-export function PanelItem({ item, inline, active }: PanelItemComponentProps) {
+export function PanelItem({ row, item, active }: PanelItemComponentProps) {
   const player = registerreadplayer()
   const context = useWriteText()
 
+  setuppanelitem(row, context)
   context.iseven = context.y % 2 === 0
 
   if (typeof item === 'string') {
@@ -36,7 +37,7 @@ export function PanelItem({ item, inline, active }: PanelItemComponentProps) {
       <PanelItemContent
         player={player}
         item={item}
-        inline={inline}
+        row={row}
         context={context}
       />
     )
@@ -54,7 +55,7 @@ export function PanelItem({ item, inline, active }: PanelItemComponentProps) {
     const props: PanelItemProps = {
       player,
       chip,
-      inline,
+      row,
       active,
       label,
       args,

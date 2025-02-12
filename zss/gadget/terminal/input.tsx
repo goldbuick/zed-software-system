@@ -189,7 +189,6 @@ export function TapeTerminalInput({
     })
   }, [tapeterminal.scroll, tapeycursor, logrowtotalheight, edge.bottom])
 
-  context.changed()
   return (
     <>
       <Scrollable

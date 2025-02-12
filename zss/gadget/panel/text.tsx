@@ -14,15 +14,18 @@ import { NAME } from 'zss/words/types'
 import { useBlink } from '../hooks'
 import { UserFocus, UserInput, UserInputMods } from '../userinput'
 
-import { PanelItemProps, inputcolor, mapTo } from './common'
+import { PanelItemProps, inputcolor, mapTo, setuppanelitem } from './common'
 
 export function PanelItemText({
   chip,
+  row,
   active,
   label,
   args,
   context,
 }: PanelItemProps) {
+  setuppanelitem(row, context)
+
   const target = mapTo(args[0], '')
 
   // state

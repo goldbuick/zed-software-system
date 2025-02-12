@@ -7,15 +7,18 @@ import { WORD } from 'zss/words/types'
 import { useBlink } from '../hooks'
 import { UserInput, UserInputHandler } from '../userinput'
 
-import { PanelItemProps, inputcolor, mapTo } from './common'
+import { PanelItemProps, inputcolor, mapTo, setuppanelitem } from './common'
 
 export function PanelItemSelect({
   chip,
+  row,
   active,
   label,
   args,
   context,
 }: PanelItemProps) {
+  setuppanelitem(row, context)
+
   const [target, ...pairs] = [mapTo(args[0], ''), ...args.slice(1)]
 
   const valuelabels: WORD[] = []

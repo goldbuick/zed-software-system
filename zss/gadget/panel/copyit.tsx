@@ -9,15 +9,19 @@ import {
   mapTo,
   chiptarget,
   inputcolor,
+  setuppanelitem,
 } from './common'
 
 export function PanelItemCopyIt({
   chip,
+  row,
   active,
   label,
   args,
   context,
 }: PanelItemProps) {
+  setuppanelitem(row, context)
+
   const [target, data] = [mapTo(args[0], ''), args[1]]
 
   const tcolor = inputcolor(active)

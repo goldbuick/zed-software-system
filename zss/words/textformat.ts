@@ -141,7 +141,7 @@ export type WRITE_TEXT_CONTEXT = {
   color: number[]
   bg: number[]
   // flag as changed
-  changed: () => void
+  // changed: () => void
 }
 
 export function createwritetextcontext(
@@ -183,7 +183,7 @@ export function createwritetextcontext(
     char: [],
     color: [],
     bg: [],
-    changed() {},
+    // changed() {},
   }
 }
 
@@ -342,6 +342,9 @@ export function tokenizeandwritetextformat(
   if (shouldreset) {
     writetextreset(context)
   }
+
+  // yolo
+  // context.changed()
 }
 
 export function tokenizeandmeasuretextformat(

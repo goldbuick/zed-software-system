@@ -1,6 +1,7 @@
 import { useCallback, useContext } from 'react'
 import { RUNTIME } from 'zss/config'
 import { UserHotkey, UserInput } from 'zss/gadget/userinput'
+import { ispresent } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { Rect } from '../rect'
@@ -11,16 +12,19 @@ import {
   mapTo,
   chiptarget,
   inputcolor,
+  setuppanelitem,
 } from './common'
 
 export function PanelItemHotkey({
   chip,
-  inline,
+  row,
   active,
   label,
   args,
   context,
 }: PanelItemProps) {
+  setuppanelitem(row, context)
+
   const [target, shortcut, maybetext] = [
     mapTo(args[0], ''),
     mapTo(args[1], args[1]?.toString() ?? ''),
@@ -36,7 +40,7 @@ export function PanelItemHotkey({
   tokenizeandwritetextformat(
     `${
       context.iseven ? '$black$onltgray' : '$black$ondkcyan'
-    }${text}${tcolor}$onclear ${label}${inline ? `` : `\n`}`,
+    }${text}${tcolor}$onclear ${label}${ispresent(row) ? `\n` : ``}`,
     context,
     true,
   )
