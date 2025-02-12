@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { paneladdress } from 'zss/gadget/data/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
+import { WORD } from 'zss/words/types'
 
 import { useBlink } from '../hooks'
 import { UserInput, UserInputHandler } from '../userinput'
@@ -15,7 +16,14 @@ export function PanelItemSelect({
   args,
   context,
 }: PanelItemProps) {
-  const [target, ...values] = [mapTo(args[0], ''), ...args.slice(1)]
+  const [target, ...pairs] = [mapTo(args[0], ''), ...args.slice(1)]
+
+  const valuelabels: WORD[] = []
+  const values: WORD[] = []
+  for (let i = 0; i < pairs.length; i += 2) {
+    valuelabels.push(pairs[i])
+    values.push(pairs[i + 1])
+  }
 
   const min = 0
   const max = values.length - 1
@@ -28,7 +36,7 @@ export function PanelItemSelect({
   const blink = useBlink()
 
   // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-  const tvalue = `${values[state]}`
+  const tvalue = `${valuelabels[state]}`
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 

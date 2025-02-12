@@ -27,6 +27,7 @@ import { COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
 import {
   boarddeleteobject,
+  boardelementindex,
   boardelementread,
   boardobjectcreatefromkind,
   boardobjectread,
@@ -709,10 +710,13 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
 
     gadgettext(player, '$yellow$205$205$205$196')
 
+    const id = isobject ? (element.id ?? '') : boardelementindex(board, p1)
+    const chip = `inspect:${id}`
+
     if (isobject) {
       gadgethyperlink(
         player,
-        'inspect',
+        chip,
         'cycle',
         ['number', 'cycle', '1', '255'],
         get,
@@ -720,7 +724,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
       )
       gadgethyperlink(
         player,
-        'inspect',
+        chip,
         'collision',
         [
           'select',
@@ -738,7 +742,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
     } else {
       gadgethyperlink(
         player,
-        'inspect',
+        chip,
         'collision',
         [
           'select',
@@ -757,7 +761,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
     if (isobject) {
       gadgethyperlink(
         player,
-        'inspect',
+        chip,
         'pushable',
         ['select', 'pushable', 'no', '0', 'yes', '1'],
         get,
@@ -766,7 +770,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
     }
     gadgethyperlink(
       player,
-      'inspect',
+      chip,
       'destructible',
       ['select', 'destructible', 'no', '0', 'yes', '1'],
       get,
@@ -793,7 +797,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
             if (isstring(label)) {
               gadgethyperlink(
                 player,
-                'inspect',
+                chip,
                 label || target,
                 [type, target, ...args],
                 get,
@@ -807,23 +811,16 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
 
     gadgettext(player, '$yellow$205$205$205$196')
 
+    gadgethyperlink(player, chip, 'char', ['charedit', 'char', 'a'], get, set)
     gadgethyperlink(
       player,
-      'inspect',
-      'char',
-      ['charedit', 'char', 'a'],
-      get,
-      set,
-    )
-    gadgethyperlink(
-      player,
-      'inspect',
+      chip,
       'color',
       ['coloredit', 'color', 'c'],
       get,
       set,
     )
-    gadgethyperlink(player, 'inspect', 'bg', ['coloredit', 'bg', 'b'], get, set)
+    gadgethyperlink(player, chip, 'bg', ['coloredit', 'bg', 'b'], get, set)
   }
 
   if (p1.x === p2.x && p1.y === p2.y) {

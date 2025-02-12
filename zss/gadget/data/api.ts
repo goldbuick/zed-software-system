@@ -50,6 +50,9 @@ const HYPERLINK_WITH_SHARED_DEFAULTS = {
   number: 0,
   tx: '',
   text: '',
+  zssedit: '',
+  charedit: '',
+  coloredit: '',
 }
 
 type GADGET_STATE_PROVIDER = (player: string) => GADGET_STATE
@@ -110,36 +113,40 @@ export function gadgettext(element: string, text: string) {
 }
 
 export function gadgethyperlink(
-  element: string,
+  player: string,
   chip: string,
   label: string,
   words: WORD[],
   get: (name: string) => WORD,
   set: (name: string, value: WORD) => void,
 ) {
-  const shared = gadgetstate(element)
-
   // package into a panel item
   const hyperlink: WORD[] = [chip, label, ...words]
+  console.info(hyperlink)
+
   // type of target value to track
-  const type = NAME(`${(hyperlink[2] ?? 'hyperlink') as string}`)
-  // what flag or message to change / send
-  const target = `${hyperlink[3] as string}`
+  const type = NAME(`${hyperlink[2] as string}`)
 
   // do we care?
   if (HYPERLINK_WITH_SHARED.has(type)) {
-    // track changes to flag
-    // value tracking grouped by shared id
-    panelshared[shared.id] = panelshared[shared.id] ?? {}
-    // get current flag value
+    // what flag or message to change / send
+    const target = `${hyperlink[3] as string}`
+
+    // track changes to value
+    // value tracking grouped by chip
+    panelshared[chip] = panelshared[chip] ?? {}
+
+    // get current value
     const current =
       get(target) ??
       HYPERLINK_WITH_SHARED_DEFAULTS[
         type as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
       ]
+
     // setup tracking if needed
-    if (panelshared[shared.id][target] === undefined) {
+    if (panelshared[chip][target] === undefined) {
       const address = paneladdress(chip, target)
+
       // this will init the value only if not already setup
       if (isnumber(current)) {
         modemwriteinitnumber(address, current)
@@ -147,9 +154,10 @@ export function gadgethyperlink(
       if (isstring(current)) {
         modemwriteinitstring(address, current)
       }
+
       // observe by hyperlink type
       if (HYPERLINK_WITH_SHARED_TEXT.has(type)) {
-        panelshared[shared.id][target] = modemobservevaluestring(
+        panelshared[chip][target] = modemobservevaluestring(
           address,
           (value) => {
             if (ispresent(value) && value !== get(target)) {
@@ -158,7 +166,7 @@ export function gadgethyperlink(
           },
         )
       } else {
-        panelshared[shared.id][target] = modemobservevaluenumber(
+        panelshared[chip][target] = modemobservevaluenumber(
           address,
           (value) => {
             if (ispresent(value) && value !== get(target)) {
@@ -171,5 +179,5 @@ export function gadgethyperlink(
   }
 
   // add content
-  gadgetreadqueue(element).push(hyperlink)
+  gadgetreadqueue(player).push(hyperlink)
 }
