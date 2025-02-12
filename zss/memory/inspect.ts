@@ -52,9 +52,12 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
     isobject: boolean,
   ) {
     if (isobject) {
-      gadgettext(player, `object: ${element.name ?? element.kind ?? 'ERR'}`)
+      gadgettext(
+        player,
+        `object: ${element.name ?? element.kind ?? 'ERR'} ${p1.x}, ${p1.y}`,
+      )
     } else {
-      gadgettext(player, `terrain: ${element.kind ?? 'ERR'}`)
+      gadgettext(player, `terrain: ${element.kind ?? 'ERR'} ${p1.x}, ${p1.y}`)
     }
 
     gadgettext(player, '$yellow$205$205$205$196')
@@ -160,16 +163,30 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
 
     gadgettext(player, '$yellow$205$205$205$196')
 
-    gadgethyperlink(player, chip, 'char', ['charedit', 'char', 'a'], get, set)
     gadgethyperlink(
       player,
       chip,
-      'color',
+      `char: ${element.char ?? element.kinddata?.char ?? 1}`,
+      ['charedit', 'char', 'a'],
+      get,
+      set,
+    )
+    gadgethyperlink(
+      player,
+      chip,
+      `color: ${element.color ?? element.kinddata?.color ?? 15}`,
       ['coloredit', 'color', 'c'],
       get,
       set,
     )
-    gadgethyperlink(player, chip, 'bg', ['coloredit', 'bg', 'b'], get, set)
+    gadgethyperlink(
+      player,
+      chip,
+      `bg: ${element.bg ?? element.kinddata?.bg ?? 0}`,
+      ['coloredit', 'bg', 'b'],
+      get,
+      set,
+    )
   }
 
   if (p1.x === p2.x && p1.y === p2.y) {
