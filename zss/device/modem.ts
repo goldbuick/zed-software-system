@@ -95,10 +95,12 @@ function modemwriteinit<T extends MODEM_SHARED_TYPE>(
 }
 
 export function modemwriteinitnumber(key: string, value: number) {
+  console.info('modemwriteinitnumber', key, value)
   modemwriteinit(key, MODEM_SHARED_TYPE.NUMBER, value)
 }
 
 export function modemwriteinitstring(key: string, value: string) {
+  console.info('modemwriteinitstring', key, value)
   const strvalue = new SyncedText(value)
   modemwriteinit(key, MODEM_SHARED_TYPE.STRING, strvalue)
 }

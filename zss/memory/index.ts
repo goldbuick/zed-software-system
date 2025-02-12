@@ -680,13 +680,19 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
     return
   }
 
-  // value accessors
+  // element stat accessors
+  let element: MAYBE<BOARD_ELEMENT>
   function get(name: string): WORD {
-    console.info('get', name)
-    return 0
+    const value =
+      element?.[name as keyof BOARD_ELEMENT] ??
+      element?.kinddata?.[name as keyof BOARD_ELEMENT] ??
+      0
+    return value
   }
   function set(name: string, value: WORD) {
-    console.info(name, value)
+    if (ispresent(element)) {
+      element[name as keyof BOARD_ELEMENT] = value
+    }
   }
 
   // common hyperlinks
@@ -700,25 +706,21 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
     } else {
       gadgettext(player, `terrain: ${element.kind ?? 'ERR'}`)
     }
-    gadgettext(player, '$205$205$205$196')
+
+    gadgettext(player, '$yellow$205$205$205$196')
 
     if (isobject) {
       gadgethyperlink(
         player,
+        'inspect',
         'cycle',
         ['number', 'cycle', '1', '255'],
         get,
         set,
       )
-    }
-
-    gadgethyperlink(player, 'char', ['charedit', 'char'], get, set)
-    gadgethyperlink(player, 'color', ['coloredit', 'color'], get, set)
-    gadgethyperlink(player, 'bg', ['coloredit', 'bg'], get, set)
-
-    if (isobject) {
       gadgethyperlink(
         player,
+        'inspect',
         'collision',
         [
           'select',
@@ -736,6 +738,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
     } else {
       gadgethyperlink(
         player,
+        'inspect',
         'collision',
         [
           'select',
@@ -754,6 +757,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
     if (isobject) {
       gadgethyperlink(
         player,
+        'inspect',
         'pushable',
         ['select', 'pushable', 'no', '0', 'yes', '1'],
         get,
@@ -762,6 +766,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
     }
     gadgethyperlink(
       player,
+      'inspect',
       'destructible',
       ['select', 'destructible', 'no', '0', 'yes', '1'],
       get,
@@ -788,6 +793,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
             if (isstring(label)) {
               gadgethyperlink(
                 player,
+                'inspect',
                 label || target,
                 [type, target, ...args],
                 get,
@@ -798,10 +804,30 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
           break
       }
     }
+
+    gadgettext(player, '$yellow$205$205$205$196')
+
+    gadgethyperlink(
+      player,
+      'inspect',
+      'char',
+      ['charedit', 'char', 'a'],
+      get,
+      set,
+    )
+    gadgethyperlink(
+      player,
+      'inspect',
+      'color',
+      ['coloredit', 'color', 'c'],
+      get,
+      set,
+    )
+    gadgethyperlink(player, 'inspect', 'bg', ['coloredit', 'bg', 'b'], get, set)
   }
 
   if (p1.x === p2.x && p1.y === p2.y) {
-    const element = boardelementread(board, p1)
+    element = boardelementread(board, p1)
     if (ispresent(element)) {
       // figure out stats from kind codepage
       const terrainpage = bookreadcodepagewithtype(
@@ -826,15 +852,17 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
     gadgettext(player, '$205$205$205$196')
     gadgethyperlink(
       player,
+      'inspect',
       'copy elements',
-      ['hk', `inspect:copy:${p1.x},${p1.y},${p2.x},${p2.y}`, 'c'],
+      ['hk', `copy:${p1.x},${p1.y},${p2.x},${p2.y}`, 'c'],
       get,
       set,
     )
     gadgethyperlink(
       player,
+      'inspect',
       'make empty',
-      ['hk', `inspect:empty:${p1.x},${p1.y},${p2.x},${p2.y}`, 'e'],
+      ['hk', `empty:${p1.x},${p1.y},${p2.x},${p2.y}`, 'e'],
       get,
       set,
     )

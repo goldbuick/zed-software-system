@@ -127,6 +127,13 @@ export const RUNTIME_FIRMWARE = createfirmware({
     // package into a panel item
     const [labelword, ...words] = args
     const label = maptostring(labelword)
-    gadgethyperlink(READ_CONTEXT.elementid, label, words, chip.get, chip.set)
+    gadgethyperlink(
+      READ_CONTEXT.elementid,
+      chip.id(),
+      label,
+      words,
+      chip.get,
+      chip.set,
+    )
     return 0
   })

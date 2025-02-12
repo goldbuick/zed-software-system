@@ -25,19 +25,6 @@ export function initstate(): GADGET_STATE {
   }
 }
 
-const HYPERLINK_TYPES = new Set([
-  'hk',
-  'hotkey',
-  'rn',
-  'range',
-  'sl',
-  'select',
-  'nm',
-  'number',
-  'tx',
-  'text',
-])
-
 const HYPERLINK_WITH_SHARED = new Set([
   'rn',
   'range',
@@ -47,6 +34,9 @@ const HYPERLINK_WITH_SHARED = new Set([
   'number',
   'tx',
   'text',
+  'zssedit',
+  'charedit',
+  'coloredit',
 ])
 
 const HYPERLINK_WITH_SHARED_TEXT = new Set(['tx', 'text'])
@@ -121,6 +111,7 @@ export function gadgettext(element: string, text: string) {
 
 export function gadgethyperlink(
   element: string,
+  chip: string,
   label: string,
   words: WORD[],
   get: (name: string) => WORD,
@@ -129,13 +120,11 @@ export function gadgethyperlink(
   const shared = gadgetstate(element)
 
   // package into a panel item
-  const hyperlink: WORD[] = [element, label, ...words]
-
-  // what flag or message to change / send
-  const target = `${hyperlink[2] as string}`
-
+  const hyperlink: WORD[] = [chip, label, ...words]
   // type of target value to track
-  const type = NAME(`${(hyperlink[3] ?? 'hyperlink') as string}`)
+  const type = NAME(`${(hyperlink[2] ?? 'hyperlink') as string}`)
+  // what flag or message to change / send
+  const target = `${hyperlink[3] as string}`
 
   // do we care?
   if (HYPERLINK_WITH_SHARED.has(type)) {
@@ -150,7 +139,7 @@ export function gadgethyperlink(
       ]
     // setup tracking if needed
     if (panelshared[shared.id][target] === undefined) {
-      const address = paneladdress(element, target)
+      const address = paneladdress(chip, target)
       // this will init the value only if not already setup
       if (isnumber(current)) {
         modemwriteinitnumber(address, current)

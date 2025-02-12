@@ -1,7 +1,9 @@
 import { useCallback, useContext } from 'react'
+import { RUNTIME } from 'zss/config'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { UserInput } from '../userinput'
+import { Rect } from '../rect'
+import { UserHotkey, UserInput } from '../userinput'
 
 import {
   PanelItemProps,
@@ -13,21 +15,51 @@ import {
 
 export function PanelItemColorEdit({
   chip,
+  inline,
   active,
   label,
   args,
   context,
 }: PanelItemProps) {
-  const [target, data] = [mapTo(args[0], ''), args[1]]
+  const [target, shortcut] = [mapTo(args[0], ''), mapTo(args[1], '')]
 
+  const text = ` ${shortcut.toUpperCase()} `
   const tcolor = inputcolor(active)
-  tokenizeandwritetextformat(`  $purple$16 ${tcolor}${label}\n`, context, true)
+
+  const cx = context.x - 0.25
+  const cy = context.y - 0.25
+
+  tokenizeandwritetextformat(
+    `${
+      context.iseven ? '$black$onltgray' : '$black$ondkcyan'
+    }${text}${tcolor}$onclear ${label}${inline ? `` : `\n`}`,
+    context,
+    true,
+  )
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    scroll.sendmessage(chiptarget(chip, target), data)
+    scroll.sendmessage(chiptarget(chip, target), undefined)
     scroll.sendclose()
-  }, [scroll, chip, target, data])
+  }, [scroll, chip, target])
 
-  return active && <UserInput OK_BUTTON={invoke} />
+  return (
+    <group
+      position={[
+        cx * RUNTIME.DRAW_CHAR_WIDTH(),
+        cy * RUNTIME.DRAW_CHAR_HEIGHT(),
+        1,
+      ]}
+    >
+      <Rect
+        visible={false}
+        width={text.length + 0.5}
+        height={1.5}
+        blocking
+        onClick={invoke}
+      />
+      {active && <UserInput OK_BUTTON={invoke} />}
+      {shortcut && <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey>}
+    </group>
+  )
 }
