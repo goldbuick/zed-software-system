@@ -1,5 +1,5 @@
 import React from 'react'
-import { Mesh } from 'three'
+import { Color, Mesh } from 'three'
 import { RUNTIME } from 'zss/config'
 
 import { useClipping } from './clipping'
@@ -37,7 +37,7 @@ type Props = {
   height?: number
   opacity?: number
   visible?: boolean
-  color?: string
+  color?: Color | string
 } & React.ComponentProps<typeof PlaneComponent>
 
 export const Rect = React.forwardRef<typeof PlaneComponent, Props>(

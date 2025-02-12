@@ -19,6 +19,8 @@ import {
   memoryreadplayerboard,
 } from '.'
 
+const DIVIDER = '$yellow$205$205$205$196'
+
 export function memoryinspect(player: string, p1: PT, p2: PT) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -60,7 +62,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
       gadgettext(player, `terrain: ${element.kind ?? 'ERR'} ${p1.x}, ${p1.y}`)
     }
 
-    gadgettext(player, '$yellow$205$205$205$196')
+    gadgettext(player, DIVIDER)
 
     const id = isobject ? (element.id ?? '') : boardelementindex(board, p1)
     const chip = `inspect:${id}`
@@ -161,7 +163,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
       }
     }
 
-    gadgettext(player, '$yellow$205$205$205$196')
+    gadgettext(player, DIVIDER)
 
     gadgethyperlink(
       player,
@@ -209,6 +211,9 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
       if (ispresent(objectpage)) {
         elementinspect(element, objectpage, true)
       }
+    } else {
+      gadgettext(player, `empty: ${p1.x}, ${p1.y}`)
+      gadgettext(player, DIVIDER)
     }
   } else {
     gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)

@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
-import { Group, Vector2 } from 'three'
+import { Color, Group, Vector2 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { vm_input } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
@@ -150,7 +150,13 @@ export function Framed({ width, height }: FramedProps) {
         MENU_BUTTON={(mods) => sendinput(player, INPUT.MENU_BUTTON, mods)}
       />
       {layers.length > 0 && (
-        <Rect visible color="aquamarine" width={width} height={height} z={-2} />
+        <Rect
+          visible
+          color={new Color(0.076, 0.076, 0)}
+          width={width}
+          height={height}
+          z={-2}
+        />
       )}
       <Clipping width={viewwidth} height={viewheight}>
         <group ref={ref}>
