@@ -1,4 +1,3 @@
-import debounce from 'debounce'
 import { createContext, useContext, useState } from 'react'
 import { CanvasTexture, Color } from 'three'
 import { objectKeys } from 'ts-extras'
@@ -36,17 +35,20 @@ export function useBlink() {
 export type DITHER_DATA = {
   dither: number[]
   render: number
-  // changed: () => void
+  changed: () => void
 }
 
 function createditherstore() {
   return createStore<DITHER_DATA>((set) => {
+    function changed() {
+      set((state) => ({ render: state.render + 1 }))
+    }
     return {
       dither: [],
       render: 0,
-      // changed() {
-      //   set({ render: Math.random() })
-      // },
+      changed() {
+        queueMicrotask(changed)
+      },
     }
   })
 }
@@ -101,6 +103,9 @@ export type TILE_DATA = {
 
 function createtilesstore() {
   return createStore<TILE_DATA>((set) => {
+    function changed() {
+      set((state) => ({ render: state.render + 1 }))
+    }
     return {
       width: 0,
       height: 0,
@@ -108,9 +113,9 @@ function createtilesstore() {
       color: [],
       bg: [],
       render: 0,
-      // changed() {
-      //   set({ render: Math.random() })
-      // },
+      changed() {
+        queueMicrotask(changed)
+      },
     }
   })
 }

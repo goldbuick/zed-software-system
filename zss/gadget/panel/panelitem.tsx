@@ -1,7 +1,7 @@
 import { registerreadplayer } from 'zss/device/register'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { useWriteText } from 'zss/gadget/hooks'
-import { deepcopy, isarray } from 'zss/mapping/types'
+import { isarray } from 'zss/mapping/types'
 import { writetextreset } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 

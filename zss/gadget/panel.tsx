@@ -54,6 +54,7 @@ export function Panel({
 
   return (
     <TilesData store={store}>
+      <TilesRender width={width} height={height} />
       <WriteTextContext.Provider value={context}>
         {text.map((item, index) => (
           <PanelItem
@@ -64,7 +65,6 @@ export function Panel({
           />
         ))}
       </WriteTextContext.Provider>
-      <TilesRender width={width} height={height} />
     </TilesData>
   )
 }

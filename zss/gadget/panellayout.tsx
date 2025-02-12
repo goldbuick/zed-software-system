@@ -12,7 +12,7 @@ import { StaticDither } from './framedlayer/dither'
 import { useDeviceConfig } from './hooks'
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'
-import { Scroll } from './scroll'
+import { Scroll } from './scroll/component'
 import { useScreenSize } from './userscreen'
 
 enum RECT_TYPE {

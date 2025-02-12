@@ -22,11 +22,11 @@ import {
   memoryreadoperator,
   memoryreadplayeractive,
   memorysynthsend,
-  memoryinspect,
 } from 'zss/memory'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
+import { memoryinspect } from 'zss/memory/inspect'
 import { memoryloader } from 'zss/memory/loader'
 import { NAME, PT } from 'zss/words/types'
 import { write } from 'zss/words/writeui'

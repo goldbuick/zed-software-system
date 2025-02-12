@@ -141,7 +141,7 @@ export type WRITE_TEXT_CONTEXT = {
   color: number[]
   bg: number[]
   // flag as changed
-  // changed: () => void
+  changed: () => void
 }
 
 export function createwritetextcontext(
@@ -183,7 +183,7 @@ export function createwritetextcontext(
     char: [],
     color: [],
     bg: [],
-    // changed() {},
+    changed() {},
   }
 }
 
@@ -344,7 +344,7 @@ export function tokenizeandwritetextformat(
   }
 
   // yolo
-  // context.changed()
+  context.changed()
 }
 
 export function tokenizeandmeasuretextformat(
@@ -384,6 +384,9 @@ export function applystrtoindex(
   for (let i = p1; i < p2; ++i) {
     context.char[i] = str.charCodeAt(t++)
   }
+
+  // yolo
+  context.changed()
 }
 
 export function applycolortoindexes(
@@ -399,6 +402,9 @@ export function applycolortoindexes(
     context.color[i] = color
     context.bg[i] = bg
   }
+
+  // yolo
+  context.changed()
 }
 
 export function writeplaintext(
@@ -413,6 +419,9 @@ export function writeplaintext(
   if (shouldreset) {
     writetextreset(context)
   }
+
+  // yolo
+  context.changed()
 }
 
 export function textformatedges(
