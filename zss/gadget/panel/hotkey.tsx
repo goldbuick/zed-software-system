@@ -25,10 +25,11 @@ export function PanelItemHotkey({
 }: PanelItemProps) {
   setuppanelitem(row, context)
 
-  const [target, shortcut, maybetext] = [
+  const [target, shortcut, maybetext, maybenoclose] = [
     mapTo(args[0], ''),
     mapTo(args[1], args[1]?.toString() ?? ''),
     mapTo(args[2], ''),
+    mapTo(args[3], ''),
   ]
 
   const text = maybetext || ` ${shortcut.toUpperCase()} `
@@ -48,7 +49,10 @@ export function PanelItemHotkey({
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
     scroll.sendmessage(chiptarget(chip, target))
-  }, [chip, scroll, target])
+    if (!maybenoclose) {
+      scroll.sendclose()
+    }
+  }, [chip, scroll, target, maybenoclose])
 
   return (
     <group
