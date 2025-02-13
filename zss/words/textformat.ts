@@ -251,6 +251,7 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
       case NumberLiteral:
         if (context.measureonly !== true && isVisible()) {
           const i = context.x + context.y * context.width
+
           context.char[i] = parseFloat(token.image.replace('$', ''))
           if (context.active.color !== undefined) {
             context.color[i] = context.active.color

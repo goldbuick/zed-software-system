@@ -16,11 +16,11 @@ const point = new Vector3()
 function coords() {
   const cw = RUNTIME.DRAW_CHAR_WIDTH()
   const ch = RUNTIME.DRAW_CHAR_HEIGHT()
-  const px = point.x - cw * 0.5
-  const py = point.y - ch * 0.5
+  const px = Math.floor(point.x / cw)
+  const py = Math.floor((point.y + ch * 0.5) / ch)
   return {
-    x: Math.round(BOARD_WIDTH * 0.5 + px / cw),
-    y: Math.round(BOARD_HEIGHT * 0.5 + py / ch),
+    x: px,
+    y: BOARD_HEIGHT * 0.5 + py,
   }
 }
 

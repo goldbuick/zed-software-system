@@ -6,12 +6,12 @@ import {
   gadgettext,
 } from 'zss/gadget/data/api'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
-import { COLLISION, PT, WORD } from 'zss/words/types'
+import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
 import { boardelementindex, boardelementread } from './board'
 import { bookreadcodepagewithtype } from './book'
 import { codepagereadstatdefaults } from './codepage'
-import { BOARD_ELEMENT, CODE_PAGE, CODE_PAGE_TYPE } from './types'
+import { BOARD, BOARD_ELEMENT, CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
 import {
   MEMORY_LABEL,
@@ -20,6 +20,11 @@ import {
 } from '.'
 
 const DIVIDER = '$yellow$205$205$205$196'
+
+function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
+  const id = element?.id ? element.id : boardelementindex(board, element)
+  return `inspect:${id}`
+}
 
 export function memoryinspectcolor(
   player: string,
@@ -36,7 +41,32 @@ export function memoryinspectcolor(
     return
   }
 
-  //
+  function get(name: string): WORD {
+    const value =
+      element?.[name as keyof BOARD_ELEMENT] ??
+      element?.kinddata?.[name as keyof BOARD_ELEMENT] ??
+      0
+    return value
+  }
+  function set(name: string, value: WORD) {
+    if (ispresent(element)) {
+      element[name as keyof BOARD_ELEMENT] = value
+    }
+  }
+
+  const strcategory =
+    element.category === CATEGORY.ISTERRAIN ? 'terrain' : 'object'
+  const strname = element.name ?? element.kind ?? 'ERR'
+  const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
+  const chip = chipfromelement(board, element)
+
+  gadgettext(player, `${strcategory}: ${strname} ${strpos}`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, chip, 'color picker', ['coloredit', name], get, set)
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scroll = gadgetcheckqueue(player)
 }
 
 export function memoryinspectchar(
@@ -54,7 +84,32 @@ export function memoryinspectchar(
     return
   }
 
-  //
+  function get(name: string): WORD {
+    const value =
+      element?.[name as keyof BOARD_ELEMENT] ??
+      element?.kinddata?.[name as keyof BOARD_ELEMENT] ??
+      0
+    return value
+  }
+  function set(name: string, value: WORD) {
+    if (ispresent(element)) {
+      element[name as keyof BOARD_ELEMENT] = value
+    }
+  }
+
+  const strcategory =
+    element.category === CATEGORY.ISTERRAIN ? 'terrain' : 'object'
+  const strname = element.name ?? element.kind ?? 'ERR'
+  const strpos = `${element.x ?? -1}, ${element.y ?? -1}`
+  const chip = chipfromelement(board, element)
+
+  gadgettext(player, `${strcategory}: ${strname} ${strpos}`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, chip, 'char picker', ['charedit', name], get, set)
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scroll = gadgetcheckqueue(player)
 }
 
 export function memoryinspect(player: string, p1: PT, p2: PT) {
@@ -97,12 +152,8 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
     } else {
       gadgettext(player, `terrain: ${element.kind ?? 'ERR'} ${p1.x}, ${p1.y}`)
     }
-
     gadgettext(player, DIVIDER)
-
-    const id = isobject ? (element.id ?? '') : boardelementindex(board, p1)
-    const chip = `inspect:${id}`
-
+    const chip = chipfromelement(board, element)
     if (isobject) {
       gadgethyperlink(
         player,
@@ -205,7 +256,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
       player,
       chip,
       `char: ${element.char ?? element.kinddata?.char ?? 1}`,
-      ['charedit', 'char', 'a'],
+      ['hk', 'char', 'a'],
       get,
       set,
     )
@@ -213,7 +264,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
       player,
       chip,
       `color: ${element.color ?? element.kinddata?.color ?? 15}`,
-      ['coloredit', 'color', 'c'],
+      ['hk', 'color', 'c'],
       get,
       set,
     )
@@ -221,7 +272,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
       player,
       chip,
       `bg: ${element.bg ?? element.kinddata?.bg ?? 0}`,
-      ['coloredit', 'bg', 'b'],
+      ['hk', 'bg', 'b'],
       get,
       set,
     )
