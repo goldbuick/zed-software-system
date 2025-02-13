@@ -52,13 +52,13 @@ export function PanelItemCharEdit({
     setfocus(true)
   }, [])
 
-  const tvalue = `${state}`
+  const tvalue = `${state}`.padStart(3, '0')
   const tlabel = label.trim()
 
   const cx = context.x
-  const cy = context.y + 1
+  const cy = context.y + 2
 
-  const chars: string[] = [`${tlabel} $32$32$32$green${tvalue}$white`]
+  const chars: string[] = [`$green${tlabel} ${tvalue}\n$white`]
   for (let i = 0; i < 256; ++i) {
     if (i % EDIT_WIDTH === 0) {
       chars.push(`\n`)

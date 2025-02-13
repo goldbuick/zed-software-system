@@ -55,13 +55,12 @@ export function PanelItemColorEdit({
 
   const tvalue = `${state}`.padStart(2, '0')
   const tlabel = label.trim()
+  const tcolor = COLOR[state].padEnd(12, ' ').toLowerCase()
 
   const cx = context.x
   const cy = context.y + 2
 
-  const chars: string[] = [
-    `${tlabel} $green${tvalue} ${COLOR[state].padEnd(12, ' ')}\n$white`,
-  ]
+  const chars: string[] = [`$green${tlabel} ${tvalue} ${tcolor}\n$white`]
   for (let i = 0; i < 16; ++i) {
     if (i % EDIT_WIDTH === 0) {
       chars.push(`\n`)

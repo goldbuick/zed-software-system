@@ -62,7 +62,7 @@ export function memoryinspectcolor(
 
   gadgettext(player, `${strcategory}: ${strname} ${strpos}`)
   gadgettext(player, DIVIDER)
-  gadgethyperlink(player, chip, 'color picker', ['coloredit', name], get, set)
+  gadgethyperlink(player, chip, 'color', ['coloredit', name], get, set)
 
   // send to player as a scroll
   const shared = gadgetstate(player)
@@ -105,7 +105,7 @@ export function memoryinspectchar(
 
   gadgettext(player, `${strcategory}: ${strname} ${strpos}`)
   gadgettext(player, DIVIDER)
-  gadgethyperlink(player, chip, 'char picker', ['charedit', name], get, set)
+  gadgethyperlink(player, chip, 'char', ['charedit', name], get, set)
 
   // send to player as a scroll
   const shared = gadgetstate(player)
