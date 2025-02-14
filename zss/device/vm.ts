@@ -1,7 +1,6 @@
 import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/firmware/loader/parsefile'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
-import { indextopt } from 'zss/mapping/2d'
 import { doasync } from 'zss/mapping/func'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { isjoin } from 'zss/mapping/url'
@@ -25,11 +24,7 @@ import {
   memorysynthsend,
   memoryreadplayerboard,
 } from 'zss/memory'
-import {
-  boardelementreadbyidorindex,
-  boardgetterrain,
-  boardobjectread,
-} from 'zss/memory/board'
+import { boardelementreadbyidorindex } from 'zss/memory/board'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
@@ -39,7 +34,6 @@ import {
   memoryinspectcolor,
 } from 'zss/memory/inspect'
 import { memoryloader } from 'zss/memory/loader'
-import { BOARD_WIDTH } from 'zss/memory/types'
 import { NAME, PT } from 'zss/words/types'
 import { write } from 'zss/words/writeui'
 
@@ -271,6 +265,30 @@ const vm = createdevice(
       default: {
         const { target, path } = parsetarget(message.target)
         switch (NAME(target)) {
+          case 'batch':
+            if (ispresent(message.player)) {
+              const board = memoryreadplayerboard(message.player)
+              if (!ispresent(board)) {
+                break
+              }
+              const batch = parsetarget(path)
+              switch (batch.target) {
+                case 'copy':
+                  break
+                case 'empty':
+                  break
+                case 'chars':
+                  break
+                case 'colors':
+                  break
+                case 'bgs':
+                  break
+                default:
+                  console.info('batch!!!', batch)
+                  break
+              }
+            }
+            break
           case 'inspect':
             if (ispresent(message.player)) {
               const board = memoryreadplayerboard(message.player)
@@ -292,7 +310,6 @@ const vm = createdevice(
                   break
                 default:
                   console.info('inspect!!!', element, inspect.path)
-
                   break
               }
             }

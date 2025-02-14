@@ -268,6 +268,20 @@ function memoryinspectelement(
   )
 }
 
+function ptstoarea(p1: PT, p2: PT) {
+  return `${p1.x},${p1.y},${p2.x},${p2.y}`
+}
+
+export function memoryinspectchararea(player: string, p1: PT, p2: PT) {
+  gadgettext(player, `batch chars: ${ptstoarea(p1, p2)}`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, chip, 'char', ['charedit', name], get, set)
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scroll = gadgetcheckqueue(player)
+}
+
 function memoryinspectarea(player: string, p1: PT, p2: PT) {
   function get() {
     return 0
@@ -283,7 +297,7 @@ function memoryinspectarea(player: string, p1: PT, p2: PT) {
 
   gadgethyperlink(
     player,
-    'inspect',
+    'batch',
     'copy elements',
     ['hk', `copy:${area}`, '1'],
     get,
@@ -291,7 +305,7 @@ function memoryinspectarea(player: string, p1: PT, p2: PT) {
   )
   gadgethyperlink(
     player,
-    'inspect',
+    'batch',
     'make empty',
     ['hk', `empty:${area}`, '2'],
     get,
@@ -302,7 +316,7 @@ function memoryinspectarea(player: string, p1: PT, p2: PT) {
 
   gadgethyperlink(
     player,
-    'inspect',
+    'batch',
     `set chars:`,
     ['hk', `chars:${area}`, 'a', ' A ', 'next'],
     get,
@@ -310,7 +324,7 @@ function memoryinspectarea(player: string, p1: PT, p2: PT) {
   )
   gadgethyperlink(
     player,
-    'inspect',
+    'batch',
     `set colors:`,
     ['hk', `colors:${area}`, 'c', ' C ', 'next'],
     get,
@@ -318,7 +332,7 @@ function memoryinspectarea(player: string, p1: PT, p2: PT) {
   )
   gadgethyperlink(
     player,
-    'inspect',
+    'batch',
     `set bgs:`,
     ['hk', `bgs:${area}`, 'b', ' B ', 'next'],
     get,
