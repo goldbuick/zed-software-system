@@ -39,7 +39,6 @@ const DIVIDER = '$yellow$205$205$205$196'
 
 type BOARD_ELEMENT_BUFFER = {
   board: string
-  anchor: PT
   width: number
   height: number
   terrain: MAYBE<BOARD_ELEMENT>[]
@@ -62,25 +61,34 @@ function createboardelementbuffer(
   const terrain: MAYBE<BOARD_ELEMENT>[] = []
   const objects: BOARD_ELEMENT[] = []
 
+  // corner coords on copy
   for (let y = y1; y <= y2; ++y) {
     for (let x = x1; x <= x2; ++x) {
+      const cx = x - x1
+      const cy = y - y1
       const maybeobject = boardelementread(board, { x, y })
       if (maybeobject?.category === CATEGORY.ISOBJECT) {
         terrain.push(deepcopy(boardgetterrain(board, x, y)))
-        objects.push(deepcopy(maybeobject))
+        if (ispresent(maybeobject.x) && ispresent(maybeobject.y)) {
+          objects.push({
+            ...deepcopy(maybeobject),
+            x: cx,
+            y: cy,
+          })
+        }
       } else {
         // maybe terrain
-        terrain.push(deepcopy(maybeobject))
+        terrain.push({
+          ...deepcopy(maybeobject),
+          x: cx,
+          y: cy,
+        })
       }
     }
   }
 
   return {
     board: board.id,
-    anchor: {
-      x: x1,
-      y: y1,
-    },
     width,
     height,
     terrain,
@@ -414,8 +422,8 @@ export function memoryinspectpaste(
           const idx = pttoindex({ x, y }, secretheap.width)
           boardsetterrain(board, {
             ...secretheap.terrain[idx],
-            x: x1 + (x - secretheap.anchor.x),
-            y: y1 + (y - secretheap.anchor.y),
+            x: x1 + x,
+            y: y1 + y,
           })
         }
       }
@@ -424,12 +432,12 @@ export function memoryinspectpaste(
         if (
           ispresent(obj.x) &&
           ispresent(obj.y) &&
-          ptwithin(obj.x ?? 0, obj.y ?? 0, p1.y, p2.x, p2.y, p1.x)
+          ptwithin(obj.x, obj.y, 0, width - 1, height - 1, 0)
         ) {
           boardobjectcreate(board, {
             ...obj,
-            x: x1 + (obj.x - secretheap.anchor.x),
-            y: y1 + (obj.y - secretheap.anchor.y),
+            x: x1 + obj.x,
+            y: y1 + obj.y,
           })
         }
       }
@@ -441,12 +449,12 @@ export function memoryinspectpaste(
         if (
           ispresent(obj.x) &&
           ispresent(obj.y) &&
-          ptwithin(obj.x ?? 0, obj.y ?? 0, p1.y, p2.x, p2.y, p1.x)
+          ptwithin(obj.x, obj.y, 0, width - 1, height - 1, 0)
         ) {
           boardobjectcreate(board, {
             ...obj,
-            x: x1 + (obj.x - secretheap.anchor.x),
-            y: y1 + (obj.y - secretheap.anchor.y),
+            x: x1 + obj.x,
+            y: y1 + obj.y,
           })
         }
       }
@@ -457,8 +465,8 @@ export function memoryinspectpaste(
           const idx = pttoindex({ x, y }, secretheap.width)
           boardsetterrain(board, {
             ...secretheap.terrain[idx],
-            x: x1 + (x - secretheap.anchor.x),
-            y: y1 + (y - secretheap.anchor.y),
+            x: x1 + x,
+            y: y1 + y,
           })
         }
       }
@@ -502,7 +510,7 @@ export function memoryinspectpastemenu(player: string, p1: PT, p2: PT) {
   gadgethyperlink(player, 'batch', 'paste terrain tiled', [
     'hk',
     `pasteterraintiled:${area}`,
-    '5',
+    '4',
   ])
 
   // send to player as a scroll
