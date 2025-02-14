@@ -5,8 +5,9 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { rectpoints } from 'zss/mapping/2d'
+import { pttoindex, ptwithin, rectpoints } from 'zss/mapping/2d'
 import {
+  deepcopy,
   isarray,
   isnumber,
   ispresent,
@@ -15,8 +16,14 @@ import {
 } from 'zss/mapping/types'
 import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
-import { boardelementindex, boardelementread, boardgetterrain } from './board'
-import { bookreadcodepagewithtype } from './book'
+import {
+  boardelementindex,
+  boardelementread,
+  boardgetterrain,
+  boardobjectcreate,
+  boardsetterrain,
+} from './board'
+import { bookboardsafedelete, bookreadcodepagewithtype } from './book'
 import { codepagereadstatdefaults } from './codepage'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
@@ -59,11 +66,11 @@ function createboardelementbuffer(
     for (let x = x1; x <= x2; ++x) {
       const maybeobject = boardelementread(board, { x, y })
       if (maybeobject?.category === CATEGORY.ISOBJECT) {
-        terrain.push(boardgetterrain(board, x, y))
-        objects.push(maybeobject)
+        terrain.push(deepcopy(boardgetterrain(board, x, y)))
+        objects.push(deepcopy(maybeobject))
       } else {
         // maybe terrain
-        terrain.push(maybeobject)
+        terrain.push(deepcopy(maybeobject))
       }
     }
   }
@@ -331,13 +338,26 @@ function ptstoarea(p1: PT, p2: PT) {
   return `${p1.x},${p1.y},${p2.x},${p2.y}`
 }
 
-export function memoryinspectcopyall(player: string, p1: PT, p2: PT) {
+export function memoryinspectcopy(
+  player: string,
+  p1: PT,
+  p2: PT,
+  mode: string,
+) {
   const board = memoryreadplayerboard(player)
   if (!ispresent(board)) {
     return
   }
 
   secretheap = createboardelementbuffer(board, p1, p2)
+  switch (mode) {
+    case 'copyobjects':
+      secretheap.terrain = []
+      break
+    case 'copyterrain':
+      secretheap.objects = []
+      break
+  }
 }
 
 export function memoryinspectcopymenu(player: string, p1: PT, p2: PT) {
@@ -366,6 +386,100 @@ export function memoryinspectcopymenu(player: string, p1: PT, p2: PT) {
   shared.scroll = gadgetcheckqueue(player)
 }
 
+export function memoryinspectpaste(
+  player: string,
+  p1: PT,
+  p2: PT,
+  mode: string,
+) {
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board) || !ispresent(secretheap)) {
+    return
+  }
+
+  const x1 = Math.min(p1.x, p2.x)
+  const y1 = Math.min(p1.y, p2.y)
+  const x2 = Math.max(p1.x, p2.x)
+  const y2 = Math.max(p1.y, p2.y)
+  const width = x2 - x1 + 1
+  const height = y2 - y1 + 1
+
+  const iwidth = Math.min(secretheap.width, width)
+  const iheight = Math.min(secretheap.height, height)
+
+  switch (mode) {
+    case 'pasteall': {
+      for (let y = 0; y < iheight; ++y) {
+        for (let x = 0; x < iwidth; ++x) {
+          const idx = pttoindex({ x, y }, secretheap.width)
+          boardsetterrain(board, {
+            ...secretheap.terrain[idx],
+            x: x1 + (x - secretheap.anchor.x),
+            y: y1 + (y - secretheap.anchor.y),
+          })
+        }
+      }
+      for (let i = 0; i < secretheap.objects.length; ++i) {
+        const obj = secretheap.objects[i]
+        if (
+          ispresent(obj.x) &&
+          ispresent(obj.y) &&
+          ptwithin(obj.x ?? 0, obj.y ?? 0, p1.y, p2.x, p2.y, p1.x)
+        ) {
+          boardobjectcreate(board, {
+            ...obj,
+            x: x1 + (obj.x - secretheap.anchor.x),
+            y: y1 + (obj.y - secretheap.anchor.y),
+          })
+        }
+      }
+      break
+    }
+    case 'pasteobjects':
+      for (let i = 0; i < secretheap.objects.length; ++i) {
+        const obj = secretheap.objects[i]
+        if (
+          ispresent(obj.x) &&
+          ispresent(obj.y) &&
+          ptwithin(obj.x ?? 0, obj.y ?? 0, p1.y, p2.x, p2.y, p1.x)
+        ) {
+          boardobjectcreate(board, {
+            ...obj,
+            x: x1 + (obj.x - secretheap.anchor.x),
+            y: y1 + (obj.y - secretheap.anchor.y),
+          })
+        }
+      }
+      break
+    case 'pasteterrain':
+      for (let y = 0; y < iheight; ++y) {
+        for (let x = 0; x < iwidth; ++x) {
+          const idx = pttoindex({ x, y }, secretheap.width)
+          boardsetterrain(board, {
+            ...secretheap.terrain[idx],
+            x: x1 + (x - secretheap.anchor.x),
+            y: y1 + (y - secretheap.anchor.y),
+          })
+        }
+      }
+      break
+    case 'pasteterraintiled':
+      for (let y = y1; y <= y2; ++y) {
+        for (let x = x1; x <= x2; ++x) {
+          const tx = (x - x1) % secretheap.width
+          const ty = (y - y1) % secretheap.height
+          const idx = pttoindex({ x: tx, y: ty }, secretheap.width)
+          boardsetterrain(board, {
+            ...secretheap.terrain[idx],
+            x,
+            y,
+          })
+        }
+      }
+      break
+  }
+}
+
 export function memoryinspectpastemenu(player: string, p1: PT, p2: PT) {
   const area = ptstoarea(p1, p2)
   gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
@@ -385,11 +499,6 @@ export function memoryinspectpastemenu(player: string, p1: PT, p2: PT) {
     `pasteterrain:${area}`,
     '3',
   ])
-  gadgethyperlink(player, 'batch', 'paste terrain centered', [
-    'hk',
-    `pasteterraincenter:${area}`,
-    '4',
-  ])
   gadgethyperlink(player, 'batch', 'paste terrain tiled', [
     'hk',
     `pasteterraintiled:${area}`,
@@ -401,23 +510,84 @@ export function memoryinspectpastemenu(player: string, p1: PT, p2: PT) {
   shared.scroll = gadgetcheckqueue(player)
 }
 
+export function memoryinspectempty(
+  player: string,
+  p1: PT,
+  p2: PT,
+  mode: string,
+) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  switch (mode) {
+    case 'emptyall': {
+      for (let y = p1.y; y <= p2.y; ++y) {
+        for (let x = p1.x; x <= p2.x; ++x) {
+          const maybeobject = boardelementread(board, { x, y })
+          if (maybeobject?.category === CATEGORY.ISOBJECT) {
+            bookboardsafedelete(
+              mainbook,
+              board,
+              maybeobject,
+              mainbook.timestamp,
+            )
+          }
+          boardsetterrain(board, { x, y })
+        }
+      }
+      break
+    }
+    case 'emptyobjects': {
+      for (let y = p1.y; y <= p2.y; ++y) {
+        for (let x = p1.x; x <= p2.x; ++x) {
+          const maybeobject = boardelementread(board, { x, y })
+          if (maybeobject?.category === CATEGORY.ISOBJECT) {
+            bookboardsafedelete(
+              mainbook,
+              board,
+              maybeobject,
+              mainbook.timestamp,
+            )
+          }
+        }
+      }
+      break
+    }
+    case 'emptyterrain': {
+      for (let y = p1.y; y <= p2.y; ++y) {
+        for (let x = p1.x; x <= p2.x; ++x) {
+          boardsetterrain(board, { x, y })
+        }
+      }
+      break
+    }
+  }
+}
+
 export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
   const area = ptstoarea(p1, p2)
   gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
   gadgettext(player, DIVIDER)
   gadgethyperlink(player, 'batch', 'clear terrain & objects', [
     'hk',
-    `copyall:${area}`,
+    `emptyall:${area}`,
     '1',
   ])
   gadgethyperlink(player, 'batch', 'clear objects', [
     'hk',
-    `copyobjects:${area}`,
+    `emptyobjects:${area}`,
     '2',
   ])
   gadgethyperlink(player, 'batch', 'clear terrain', [
     'hk',
-    `copyterrain:${area}`,
+    `emptyterrain:${area}`,
     '3',
   ])
 

@@ -35,8 +35,11 @@ import {
   memoryinspectchararea,
   memoryinspectcolor,
   memoryinspectcolorarea,
+  memoryinspectcopy,
   memoryinspectcopymenu,
+  memoryinspectempty,
   memoryinspectemptymenu,
+  memoryinspectpaste,
   memoryinspectpastemenu,
 } from 'zss/memory/inspect'
 import { memoryloader } from 'zss/memory/loader'
@@ -287,11 +290,27 @@ const vm = createdevice(
                 case 'copy':
                   memoryinspectcopymenu(message.player, p1, p2)
                   break
+                case 'copyall':
+                case 'copyobjects':
+                case 'copyterrain':
+                  memoryinspectcopy(message.player, p1, p2, batch.target)
+                  break
                 case 'paste':
                   memoryinspectpastemenu(message.player, p1, p2)
                   break
+                case 'pasteall':
+                case 'pasteobjects':
+                case 'pasteterrain':
+                case 'pasteterraintiled':
+                  memoryinspectpaste(message.player, p1, p2, batch.target)
+                  break
                 case 'empty':
                   memoryinspectemptymenu(message.player, p1, p2)
+                  break
+                case 'emptyall':
+                case 'emptyobjects':
+                case 'emptyterrain':
+                  memoryinspectempty(message.player, p1, p2, batch.target)
                   break
                 case 'chars':
                   memoryinspectchararea(message.player, p1, p2, 'char')
