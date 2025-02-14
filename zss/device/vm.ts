@@ -30,8 +30,11 @@ import { codepageresetstats } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
 import {
   memoryinspect,
+  memoryinspectbgarea,
   memoryinspectchar,
+  memoryinspectchararea,
   memoryinspectcolor,
+  memoryinspectcolorarea,
 } from 'zss/memory/inspect'
 import { memoryloader } from 'zss/memory/loader'
 import { NAME, PT } from 'zss/words/types'
@@ -272,19 +275,27 @@ const vm = createdevice(
                 break
               }
               const batch = parsetarget(path)
+              const [x1, y1, x2, y2] = batch.path
+                .split(',')
+                .map((v) => parseFloat(v))
+              const p1: PT = { x: x1, y: y1 }
+              const p2: PT = { x: x2, y: y2 }
               switch (batch.target) {
                 case 'copy':
                   break
                 case 'empty':
                   break
                 case 'chars':
+                  memoryinspectchararea(message.player, p1, p2, 'char')
                   break
                 case 'colors':
+                  memoryinspectcolorarea(message.player, p1, p2, 'color')
                   break
                 case 'bgs':
+                  memoryinspectbgarea(message.player, p1, p2, 'bg')
                   break
                 default:
-                  console.info('batch!!!', batch)
+                  console.info('unknown batch', batch)
                   break
               }
             }
@@ -309,7 +320,7 @@ const vm = createdevice(
                   memoryinspectchar(message.player, element, inspect.path)
                   break
                 default:
-                  console.info('inspect!!!', element, inspect.path)
+                  console.info('unknown inspect', inspect)
                   break
               }
             }

@@ -5,7 +5,14 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { rectpoints } from 'zss/mapping/2d'
+import {
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+  MAYBE,
+} from 'zss/mapping/types'
 import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
 import { boardelementindex, boardelementread } from './board'
@@ -272,10 +279,123 @@ function ptstoarea(p1: PT, p2: PT) {
   return `${p1.x},${p1.y},${p2.x},${p2.y}`
 }
 
-export function memoryinspectchararea(player: string, p1: PT, p2: PT) {
-  gadgettext(player, `batch chars: ${ptstoarea(p1, p2)}`)
+export function memoryinspectchararea(
+  player: string,
+  p1: PT,
+  p2: PT,
+  name: string,
+) {
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  function get() {
+    return 0
+  }
+  function set(name: string, value: WORD) {
+    if (isnumber(value)) {
+      rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
+        const el = boardelementread(board, pt)
+        if (ispresent(el)) {
+          el[name as keyof BOARD_ELEMENT] = value
+        }
+      })
+    }
+  }
+
+  gadgettext(player, `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
   gadgettext(player, DIVIDER)
-  gadgethyperlink(player, chip, 'char', ['charedit', name], get, set)
+  gadgethyperlink(
+    player,
+    `batch:${ptstoarea(p1, p2)}`,
+    'char',
+    ['charedit', name],
+    get,
+    set,
+  )
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scroll = gadgetcheckqueue(player)
+}
+
+export function memoryinspectcolorarea(
+  player: string,
+  p1: PT,
+  p2: PT,
+  name: string,
+) {
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  function get() {
+    return 0
+  }
+  function set(name: string, value: WORD) {
+    if (isnumber(value)) {
+      rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
+        const el = boardelementread(board, pt)
+        if (ispresent(el)) {
+          el[name as keyof BOARD_ELEMENT] = value
+        }
+      })
+    }
+  }
+
+  gadgettext(player, `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(
+    player,
+    `batch:${ptstoarea(p1, p2)}`,
+    'color',
+    ['coloredit', name],
+    get,
+    set,
+  )
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scroll = gadgetcheckqueue(player)
+}
+
+export function memoryinspectbgarea(
+  player: string,
+  p1: PT,
+  p2: PT,
+  name: string,
+) {
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  function get() {
+    return 0
+  }
+  function set(name: string, value: WORD) {
+    if (isnumber(value)) {
+      rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
+        const el = boardelementread(board, pt)
+        if (ispresent(el)) {
+          el[name as keyof BOARD_ELEMENT] = value
+        }
+      })
+    }
+  }
+
+  gadgettext(player, `batch chars: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(
+    player,
+    `batch:${ptstoarea(p1, p2)}`,
+    'color',
+    ['coloredit', name],
+    get,
+    set,
+  )
 
   // send to player as a scroll
   const shared = gadgetstate(player)
@@ -290,7 +410,7 @@ function memoryinspectarea(player: string, p1: PT, p2: PT) {
     //
   }
 
-  const area = `${p1.x},${p1.y},${p2.x},${p2.y}`
+  const area = ptstoarea(p1, p2)
 
   gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
   gadgettext(player, DIVIDER)
