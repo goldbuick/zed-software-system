@@ -8,7 +8,7 @@ import {
   modemwritevaluestring,
 } from 'zss/device/modem'
 import { createsid } from 'zss/mapping/guid'
-import { ispresent, isnumber, isstring } from 'zss/mapping/types'
+import { ispresent, isnumber, isstring, noop } from 'zss/mapping/types'
 import { NAME, WORD } from 'zss/words/types'
 
 import { GADGET_STATE, PANEL_ITEM, PANEL_SHARED, paneladdress } from './types'
@@ -117,8 +117,8 @@ export function gadgethyperlink(
   chip: string,
   label: string,
   words: WORD[],
-  get: (name: string) => WORD,
-  set: (name: string, value: WORD) => void,
+  get: (name: string) => WORD = () => 0,
+  set: (name: string, value: WORD) => void = noop,
 ) {
   // package into a panel item
   const hyperlink: WORD[] = [chip, label, ...words]

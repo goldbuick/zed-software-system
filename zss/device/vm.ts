@@ -35,6 +35,9 @@ import {
   memoryinspectchararea,
   memoryinspectcolor,
   memoryinspectcolorarea,
+  memoryinspectcopymenu,
+  memoryinspectemptymenu,
+  memoryinspectpastemenu,
 } from 'zss/memory/inspect'
 import { memoryloader } from 'zss/memory/loader'
 import { NAME, PT } from 'zss/words/types'
@@ -282,8 +285,13 @@ const vm = createdevice(
               const p2: PT = { x: x2, y: y2 }
               switch (batch.target) {
                 case 'copy':
+                  memoryinspectcopymenu(message.player, p1, p2)
+                  break
+                case 'paste':
+                  memoryinspectpastemenu(message.player, p1, p2)
                   break
                 case 'empty':
+                  memoryinspectemptymenu(message.player, p1, p2)
                   break
                 case 'chars':
                   memoryinspectchararea(message.player, p1, p2, 'char')

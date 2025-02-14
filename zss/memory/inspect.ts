@@ -15,7 +15,7 @@ import {
 } from 'zss/mapping/types'
 import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
-import { boardelementindex, boardelementread } from './board'
+import { boardelementindex, boardelementread, boardgetterrain } from './board'
 import { bookreadcodepagewithtype } from './book'
 import { codepagereadstatdefaults } from './codepage'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE, CODE_PAGE_TYPE } from './types'
@@ -27,6 +27,59 @@ import {
 } from '.'
 
 const DIVIDER = '$yellow$205$205$205$196'
+
+// COPY & PASTE buffers
+
+type BOARD_ELEMENT_BUFFER = {
+  board: string
+  anchor: PT
+  width: number
+  height: number
+  terrain: MAYBE<BOARD_ELEMENT>[]
+  objects: BOARD_ELEMENT[]
+}
+
+let secretheap: MAYBE<BOARD_ELEMENT_BUFFER>
+
+function createboardelementbuffer(
+  board: BOARD,
+  p1: PT,
+  p2: PT,
+): BOARD_ELEMENT_BUFFER {
+  const x1 = Math.min(p1.x, p2.x)
+  const y1 = Math.min(p1.y, p2.y)
+  const x2 = Math.max(p1.x, p2.x)
+  const y2 = Math.max(p1.y, p2.y)
+  const width = x2 - x1 + 1
+  const height = y2 - y1 + 1
+  const terrain: MAYBE<BOARD_ELEMENT>[] = []
+  const objects: BOARD_ELEMENT[] = []
+
+  for (let y = y1; y <= y2; ++y) {
+    for (let x = x1; x <= x2; ++x) {
+      const maybeobject = boardelementread(board, { x, y })
+      if (maybeobject?.category === CATEGORY.ISOBJECT) {
+        terrain.push(boardgetterrain(board, x, y))
+        objects.push(maybeobject)
+      } else {
+        // maybe terrain
+        terrain.push(maybeobject)
+      }
+    }
+  }
+
+  return {
+    board: board.id,
+    anchor: {
+      x: x1,
+      y: y1,
+    },
+    width,
+    height,
+    terrain,
+    objects,
+  }
+}
 
 function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
   const id = element?.id ? element.id : boardelementindex(board, element)
@@ -248,7 +301,6 @@ function memoryinspectelement(
   }
 
   gadgettext(player, DIVIDER)
-
   gadgethyperlink(
     player,
     chip,
@@ -277,6 +329,101 @@ function memoryinspectelement(
 
 function ptstoarea(p1: PT, p2: PT) {
   return `${p1.x},${p1.y},${p2.x},${p2.y}`
+}
+
+export function memoryinspectcopyall(player: string, p1: PT, p2: PT) {
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  secretheap = createboardelementbuffer(board, p1, p2)
+}
+
+export function memoryinspectcopymenu(player: string, p1: PT, p2: PT) {
+  const area = ptstoarea(p1, p2)
+  gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
+  gadgettext(player, DIVIDER)
+
+  gadgethyperlink(player, 'batch', 'copy terrain & objects', [
+    'hk',
+    `copyall:${area}`,
+    '1',
+  ])
+  gadgethyperlink(player, 'batch', 'copy terrain', [
+    'hk',
+    `copyterrain:${area}`,
+    '2',
+  ])
+  gadgethyperlink(player, 'batch', 'copy objects', [
+    'hk',
+    `copyobjects:${area}`,
+    '3',
+  ])
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scroll = gadgetcheckqueue(player)
+}
+
+export function memoryinspectpastemenu(player: string, p1: PT, p2: PT) {
+  const area = ptstoarea(p1, p2)
+  gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, 'batch', 'paste terrain & objects', [
+    'hk',
+    `pasteall:${area}`,
+    '1',
+  ])
+  gadgethyperlink(player, 'batch', 'paste objects', [
+    'hk',
+    `pasteobjects:${area}`,
+    '2',
+  ])
+  gadgethyperlink(player, 'batch', 'paste terrain', [
+    'hk',
+    `pasteterrain:${area}`,
+    '3',
+  ])
+  gadgethyperlink(player, 'batch', 'paste terrain centered', [
+    'hk',
+    `pasteterraincenter:${area}`,
+    '4',
+  ])
+  gadgethyperlink(player, 'batch', 'paste terrain tiled', [
+    'hk',
+    `pasteterraintiled:${area}`,
+    '5',
+  ])
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scroll = gadgetcheckqueue(player)
+}
+
+export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
+  const area = ptstoarea(p1, p2)
+  gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, 'batch', 'clear terrain & objects', [
+    'hk',
+    `copyall:${area}`,
+    '1',
+  ])
+  gadgethyperlink(player, 'batch', 'clear objects', [
+    'hk',
+    `copyobjects:${area}`,
+    '2',
+  ])
+  gadgethyperlink(player, 'batch', 'clear terrain', [
+    'hk',
+    `copyterrain:${area}`,
+    '3',
+  ])
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scroll = gadgetcheckqueue(player)
 }
 
 export function memoryinspectchararea(
@@ -403,61 +550,55 @@ export function memoryinspectbgarea(
 }
 
 function memoryinspectarea(player: string, p1: PT, p2: PT) {
-  function get() {
-    return 0
-  }
-  function set() {
-    //
-  }
-
   const area = ptstoarea(p1, p2)
-
   gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
   gadgettext(player, DIVIDER)
-
-  gadgethyperlink(
-    player,
-    'batch',
-    'copy elements',
-    ['hk', `copy:${area}`, '1'],
-    get,
-    set,
-  )
-  gadgethyperlink(
-    player,
-    'batch',
-    'make empty',
-    ['hk', `empty:${area}`, '2'],
-    get,
-    set,
-  )
+  gadgethyperlink(player, 'batch', 'copy elements', [
+    'hk',
+    `copy:${area}`,
+    '1',
+    ` 1 `,
+    'next',
+  ])
+  if (ispresent(secretheap)) {
+    gadgethyperlink(player, 'batch', 'paste elements', [
+      'hk',
+      `paste:${area}`,
+      '2',
+      ` 2 `,
+      'next',
+    ])
+  }
+  gadgethyperlink(player, 'batch', 'make empty', [
+    'hk',
+    `empty:${area}`,
+    '0',
+    ` 0 `,
+    'next',
+  ])
 
   gadgettext(player, DIVIDER)
-
-  gadgethyperlink(
-    player,
-    'batch',
-    `set chars:`,
-    ['hk', `chars:${area}`, 'a', ' A ', 'next'],
-    get,
-    set,
-  )
-  gadgethyperlink(
-    player,
-    'batch',
-    `set colors:`,
-    ['hk', `colors:${area}`, 'c', ' C ', 'next'],
-    get,
-    set,
-  )
-  gadgethyperlink(
-    player,
-    'batch',
-    `set bgs:`,
-    ['hk', `bgs:${area}`, 'b', ' B ', 'next'],
-    get,
-    set,
-  )
+  gadgethyperlink(player, 'batch', `set chars:`, [
+    'hk',
+    `chars:${area}`,
+    'a',
+    ' A ',
+    'next',
+  ])
+  gadgethyperlink(player, 'batch', `set colors:`, [
+    'hk',
+    `colors:${area}`,
+    'c',
+    ' C ',
+    'next',
+  ])
+  gadgethyperlink(player, 'batch', `set bgs:`, [
+    'hk',
+    `bgs:${area}`,
+    'b',
+    ' B ',
+    'next',
+  ])
 }
 
 export function memoryinspect(player: string, p1: PT, p2: PT) {
