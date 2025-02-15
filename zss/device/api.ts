@@ -236,8 +236,12 @@ export function tape_debug(device: DEVICELIKE, ...message: any[]) {
   return true
 }
 
-export function tape_inspector(device: DEVICELIKE, player: string) {
-  device.emit('tape:inspector', undefined, player)
+export function tape_inspector(
+  device: DEVICELIKE,
+  maybetoggle: MAYBE<boolean>,
+  player: string,
+) {
+  device.emit('tape:inspector', maybetoggle, player)
 }
 
 // internal only, use api_error
