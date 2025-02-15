@@ -477,7 +477,7 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('gadget', () => {
     // gadget will turn on / off the built-in inspector
-    tape_inspector(SOFTWARE, READ_CONTEXT.elementfocus)
+    tape_inspector(SOFTWARE, undefined, READ_CONTEXT.elementfocus)
     return 0
   })
   // -- multiplayer related commands

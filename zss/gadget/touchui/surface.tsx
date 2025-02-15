@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { userEvent } from '@testing-library/user-event'
+// import { userEvent } from '@testing-library/user-event'
 import { radToDeg } from 'maath/misc'
 import { useState } from 'react'
 import { Vector2, Vector3 } from 'three'
@@ -7,7 +7,9 @@ import { RUNTIME } from 'zss/config'
 import { tape_terminal_toggle } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { ptwithin } from 'zss/mapping/2d'
+import { user } from 'zss/mapping/keyboard'
 import { snap } from 'zss/mapping/number'
+import { noop } from 'zss/mapping/types'
 
 import { useDeviceConfig } from '../hooks'
 import { Rect } from '../rect'
@@ -17,7 +19,7 @@ import { handlestickdir } from './inputs'
 
 const INPUT_RATE_SECONDS = INPUT_RATE / 1000.0
 
-const user = userEvent.setup()
+// const user = userEvent.setup()
 
 type SurfaceProps = {
   width: number
@@ -65,15 +67,15 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
         tape_terminal_toggle(SOFTWARE, player)
       } else if (ptwithin(cx, cy, 3, width - 2, 6, width - 6)) {
         // top-right button
-        user.keyboard('[Tab]')
+        user.keyboard('[Tab]').catch(noop)
       } else if (ptwithin(cx, cy, height - 5, 6, height - 2, 1)) {
         // bottom-left button
-        user.keyboard('[Enter]')
+        user.keyboard('[Enter]').catch(noop)
       } else if (
         ptwithin(cx, cy, height - 5, width - 2, height - 2, width - 6)
       ) {
         // bottom-right button
-        user.keyboard('[Escape]')
+        user.keyboard('[Escape]').catch(noop)
       } else if (
         (islandscape && ptwithin(cx, cy, 6, width, height - 6, width - 5)) ||
         (!islandscape && ptwithin(cx, cy, 0, width - 12, 3, 12))

@@ -159,7 +159,7 @@ function hk(hotkey: string, alt: boolean, ctrl: boolean, shift: boolean) {
       break
   }
 
-  return ['touchkey', '', 'hk', hotkeytext, '', hktext]
+  return ['touchkey', '', hotkeytext, 'hk', '', hktext]
 }
 
 type KeyboardProps = {

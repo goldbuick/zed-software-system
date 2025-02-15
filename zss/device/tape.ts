@@ -92,7 +92,10 @@ const tape = createdevice('tape', [], (message) => {
     case 'inspector':
       if (message.player === registerreadplayer()) {
         useTape.setState((state) => {
-          const enabled = !state.inspector
+          const enabled = ispresent(message.data)
+            ? !!message.data
+            : !state.inspector
+
           write(tape, `gadget inspector ${enabled ? '$greenon' : '$redoff'}`)
           if (enabled) {
             write(tape, `mouse click or tap elements to inspect`)

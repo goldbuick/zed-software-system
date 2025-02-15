@@ -1,9 +1,9 @@
-import { userEvent } from '@testing-library/user-event'
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice, parsetarget } from 'zss/device'
 import { useDeviceConfig } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
+import { user } from 'zss/mapping/keyboard'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { isjoin, islocked, shorturl } from 'zss/mapping/url'
@@ -27,12 +27,6 @@ import {
   vm_login,
   vm_operator,
 } from './api'
-
-// trigger user events
-
-const user = userEvent.setup({
-  delay: null,
-})
 
 // read / write from indexdb
 
