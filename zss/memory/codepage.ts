@@ -12,7 +12,7 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { statformat, stattypestring } from 'zss/words/stats'
-import { COLLISION, NAME, STAT_TYPE } from 'zss/words/types'
+import { CATEGORY, COLLISION, NAME, STAT_TYPE } from 'zss/words/types'
 
 import { createboard, exportboard, importboard } from './board'
 import {
@@ -180,7 +180,7 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
           break
         case STAT_TYPE.OBJECT:
           codepage.stats.type = CODE_PAGE_TYPE.OBJECT
-          codepage.stats.name = maybename
+          codepage.stats.name = maybename || 'object'
           break
         case STAT_TYPE.TERRAIN:
           codepage.stats.type = CODE_PAGE_TYPE.TERRAIN
@@ -390,6 +390,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         codepage.object = createboardelement()
       }
       codepage.object.name = codepagereadname(codepage)
+      codepage.object.category = CATEGORY.ISOBJECT
       applyelementstats(codepage, codepage.object)
       return codepage.object as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
@@ -399,6 +400,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         codepage.terrain = createboardelement()
       }
       codepage.terrain.name = codepagereadname(codepage)
+      codepage.terrain.category = CATEGORY.ISTERRAIN
       applyelementstats(codepage, codepage.terrain)
       return codepage.terrain as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }

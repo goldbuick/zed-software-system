@@ -13,9 +13,9 @@ export async function shorturl(url: string) {
 
 // assess what mode we're running in
 export function isjoin() {
-  return location.href.includes(`/join/`)
+  return window.location.href.includes(`/join/`)
 }
 
 export function islocked() {
-  return location.href.includes(`/locked/`)
+  return window.location.href.includes(`/locked/`)
 }

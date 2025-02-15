@@ -63,6 +63,8 @@ export enum MEMORY_LABEL {
 }
 
 const MEMORY = {
+  // halting state
+  halt: false,
   // unique id for messages
   session: createsid(),
   // player id in charge of vm
@@ -88,6 +90,14 @@ export function memoryreadoperator() {
 
 export function memorywriteoperator(operator: string) {
   MEMORY.operator = operator
+}
+
+export function memorywritehalt(halt: boolean) {
+  MEMORY.halt = halt
+}
+
+export function memoryreadhalt() {
+  return MEMORY.halt
 }
 
 export function memoryreadbooklist(): BOOK[] {

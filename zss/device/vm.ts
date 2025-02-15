@@ -2,8 +2,13 @@ import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/firmware/loader/parsefile'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { isjoin } from 'zss/mapping/url'
+import {
+  MAYBE,
+  isarray,
+  isboolean,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import {
   memorycli,
   memoryplayerlogin,
@@ -23,6 +28,8 @@ import {
   memoryreadplayeractive,
   memorysynthsend,
   memoryreadplayerboard,
+  memorywritehalt,
+  memoryreadhalt,
 } from 'zss/memory'
 import { boardelementreadbyidorindex } from 'zss/memory/board'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
@@ -199,9 +206,16 @@ const vm = createdevice(
           }
         }
         break
+      case 'halt':
+        if (
+          message.player === memoryreadoperator() &&
+          isboolean(message.data)
+        ) {
+          memorywritehalt(message.data)
+        }
+        break
       case 'tick':
-        // from clock
-        if (message.player !== 'locked') {
+        if (!memoryreadhalt()) {
           memorytick()
         }
         break
@@ -232,7 +246,7 @@ const vm = createdevice(
         }
 
         // autosave to url
-        if (isjoin() === false && ++flushtick >= FLUSH_RATE) {
+        if (++flushtick >= FLUSH_RATE) {
           flushtick = 0
           vm_flush(vm, 'autosave', memoryreadoperator())
         }

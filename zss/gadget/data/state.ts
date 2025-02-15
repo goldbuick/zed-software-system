@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { isequal, MAYBE } from 'zss/mapping/types'
+import { islocked } from 'zss/mapping/url'
 import { create } from 'zustand'
 
 import { GADGET_STATE } from './types'
@@ -70,7 +71,7 @@ export const useTape = create<{
   }
 }>(() => ({
   layout: TAPE_DISPLAY.TOP,
-  inspector: true,
+  inspector: islocked(),
   terminal: {
     open: true,
     level: TAPE_LOG_LEVEL.INFO,

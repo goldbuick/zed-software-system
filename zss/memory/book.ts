@@ -1,3 +1,4 @@
+import { pttoindex } from 'zss/mapping/2d'
 import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
@@ -14,6 +15,7 @@ import {
   boardobjectcreatefromkind,
   boardobjectread,
   boardsetterrain,
+  boardterrainsetfromkind,
 } from './board'
 import {
   boardelementapplycolor,
@@ -846,44 +848,7 @@ export function bookboardwritebulletobject(
   return undefined
 }
 
-export function bookboardwriteelement(
-  book: MAYBE<BOOK>,
-  board: MAYBE<BOARD>,
-  element: MAYBE<BOARD_ELEMENT>,
-  dest: PT,
-  maybecolor: MAYBE<STR_COLOR>,
-): MAYBE<BOARD_ELEMENT> {
-  if (ispresent(book) && ispresent(board) && ispresent(element)) {
-    if (element.category === CATEGORY.ISTERRAIN) {
-      // create new terrain element
-      const terrain = boardsetterrain(board, element)
-      if (ispresent(maybecolor)) {
-        boardelementapplycolor(terrain, maybecolor)
-      }
-      // update named (terrain & objects)
-      const index = dest.x + dest.y * BOARD_WIDTH
-      bookboardnamedwrite(book, board, terrain, index)
-      // return result
-      return terrain
-    }
-    if (element.category === CATEGORY.ISOBJECT) {
-      // create new object element
-      const object = boardobjectcreate(board, element)
-      if (ispresent(maybecolor)) {
-        boardelementapplycolor(object, maybecolor)
-      }
-      // update lookup (only objects)
-      bookboardobjectlookupwrite(book, board, object)
-      // update named (terrain & objects)
-      bookboardnamedwrite(book, board, object)
-      // return result
-      return object
-    }
-  }
-  return undefined
-}
-
-export function bookboardwrite(
+export function bookboardwritefromkind(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
   kind: MAYBE<STR_KIND>,
@@ -894,12 +859,31 @@ export function bookboardwrite(
 
     const maybeterrain = bookreadterrain(book, name)
     if (ispresent(maybeterrain)) {
-      return bookboardwriteelement(book, board, maybeterrain, dest, maybecolor)
+      const terrain = boardterrainsetfromkind(board, dest, name)
+      if (ispresent(terrain)) {
+        if (ispresent(maybecolor)) {
+          boardelementapplycolor(terrain, maybecolor)
+        }
+        // update named (terrain & objects)
+        const idx = pttoindex(dest, BOARD_WIDTH)
+        bookboardnamedwrite(book, board, terrain, idx)
+        return terrain
+      }
     }
 
     const maybeobject = bookreadobject(book, name)
     if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
-      return bookboardwriteelement(book, board, maybeobject, dest, maybecolor)
+      const object = boardobjectcreatefromkind(board, dest, name)
+      if (ispresent(object)) {
+        if (ispresent(maybecolor)) {
+          boardelementapplycolor(object, maybecolor)
+        }
+        // update lookup (only objects)
+        bookboardobjectlookupwrite(book, board, object)
+        // update named (terrain & objects)
+        bookboardnamedwrite(book, board, object)
+        return object
+      }
     }
   }
 

@@ -137,7 +137,7 @@ export function memoryinspectcolor(
 
   gadgettext(player, `${strcategory}: ${strname} ${strpos}`)
   gadgettext(player, DIVIDER)
-  gadgethyperlink(player, chip, 'color', ['coloredit', name], get, set)
+  gadgethyperlink(player, chip, 'color', [name, 'coloredit'], get, set)
 
   // send to player as a scroll
   const shared = gadgetstate(player)
@@ -180,7 +180,7 @@ export function memoryinspectchar(
 
   gadgettext(player, `${strcategory}: ${strname} ${strpos}`)
   gadgettext(player, DIVIDER)
-  gadgethyperlink(player, chip, 'char', ['charedit', name], get, set)
+  gadgethyperlink(player, chip, 'char', [name, 'charedit'], get, set)
 
   // send to player as a scroll
   const shared = gadgetstate(player)
@@ -233,8 +233,8 @@ function memoryinspectelement(
       chip,
       'collision',
       [
-        'select',
         'collision',
+        'select',
         'iswalking',
         `${COLLISION.ISWALK}`,
         'isswimming',
@@ -251,8 +251,8 @@ function memoryinspectelement(
       chip,
       'collision',
       [
-        'select',
         'collision',
+        'select',
         'iswalkable',
         `${COLLISION.ISWALK}`,
         'issolid',
@@ -269,7 +269,7 @@ function memoryinspectelement(
       player,
       chip,
       'pushable',
-      ['select', 'pushable', 'no', '0', 'yes', '1'],
+      ['pushable', 'select', 'no', '0', 'yes', '1'],
       get,
       set,
     )
@@ -278,7 +278,7 @@ function memoryinspectelement(
     player,
     chip,
     'destructible',
-    ['select', 'destructible', 'no', '0', 'yes', '1'],
+    ['destructible', 'select', 'no', '0', 'yes', '1'],
     get,
     set,
   )
@@ -305,7 +305,7 @@ function memoryinspectelement(
               player,
               chip,
               label || target,
-              [type, target, ...args],
+              [target, type, ...args],
               get,
               set,
             )
@@ -320,7 +320,7 @@ function memoryinspectelement(
     player,
     chip,
     `char: ${element.char ?? element.kinddata?.char ?? 1}`,
-    ['hk', 'char', 'a', ' A ', 'next'],
+    ['char', 'hk', 'a', ' A ', 'next'],
     get,
     set,
   )
@@ -328,7 +328,7 @@ function memoryinspectelement(
     player,
     chip,
     `color: ${element.color ?? element.kinddata?.color ?? 15}`,
-    ['hk', 'color', 'c', ' C ', 'next'],
+    ['color', 'hk', 'c', ' C ', 'next'],
     get,
     set,
   )
@@ -336,7 +336,7 @@ function memoryinspectelement(
     player,
     chip,
     `bg: ${element.bg ?? element.kinddata?.bg ?? 0}`,
-    ['hk', 'bg', 'b', ' B ', 'next'],
+    ['bg', 'hk', 'b', ' B ', 'next'],
     get,
     set,
   )
@@ -374,18 +374,18 @@ export function memoryinspectcopymenu(player: string, p1: PT, p2: PT) {
   gadgettext(player, DIVIDER)
 
   gadgethyperlink(player, 'batch', 'copy terrain & objects', [
-    'hk',
     `copyall:${area}`,
+    'hk',
     '1',
   ])
-  gadgethyperlink(player, 'batch', 'copy terrain', [
+  gadgethyperlink(player, 'batch', 'copy objects', [
+    `copyobjects:${area}`,
     'hk',
-    `copyterrain:${area}`,
     '2',
   ])
-  gadgethyperlink(player, 'batch', 'copy objects', [
+  gadgethyperlink(player, 'batch', 'copy terrain', [
+    `copyterrain:${area}`,
     'hk',
-    `copyobjects:${area}`,
     '3',
   ])
 
@@ -493,23 +493,23 @@ export function memoryinspectpastemenu(player: string, p1: PT, p2: PT) {
   gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
   gadgettext(player, DIVIDER)
   gadgethyperlink(player, 'batch', 'paste terrain & objects', [
-    'hk',
     `pasteall:${area}`,
+    'hk',
     '1',
   ])
   gadgethyperlink(player, 'batch', 'paste objects', [
-    'hk',
     `pasteobjects:${area}`,
+    'hk',
     '2',
   ])
   gadgethyperlink(player, 'batch', 'paste terrain', [
-    'hk',
     `pasteterrain:${area}`,
+    'hk',
     '3',
   ])
   gadgethyperlink(player, 'batch', 'paste terrain tiled', [
-    'hk',
     `pasteterraintiled:${area}`,
+    'hk',
     '4',
   ])
 
@@ -584,18 +584,18 @@ export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
   gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
   gadgettext(player, DIVIDER)
   gadgethyperlink(player, 'batch', 'clear terrain & objects', [
-    'hk',
     `emptyall:${area}`,
+    'hk',
     '1',
   ])
   gadgethyperlink(player, 'batch', 'clear objects', [
-    'hk',
     `emptyobjects:${area}`,
+    'hk',
     '2',
   ])
   gadgethyperlink(player, 'batch', 'clear terrain', [
-    'hk',
     `emptyterrain:${area}`,
+    'hk',
     '3',
   ])
 
@@ -635,7 +635,7 @@ export function memoryinspectchararea(
     player,
     `batch:${ptstoarea(p1, p2)}`,
     'char',
-    ['charedit', name],
+    [name, 'charedit'],
     get,
     set,
   )
@@ -732,24 +732,24 @@ function memoryinspectarea(player: string, p1: PT, p2: PT) {
   gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
   gadgettext(player, DIVIDER)
   gadgethyperlink(player, 'batch', 'copy elements', [
-    'hk',
     `copy:${area}`,
+    'hk',
     '1',
     ` 1 `,
     'next',
   ])
   if (ispresent(secretheap)) {
     gadgethyperlink(player, 'batch', 'paste elements', [
-      'hk',
       `paste:${area}`,
+      'hk',
       '2',
       ` 2 `,
       'next',
     ])
   }
   gadgethyperlink(player, 'batch', 'make empty', [
-    'hk',
     `empty:${area}`,
+    'hk',
     '0',
     ` 0 `,
     'next',
@@ -757,22 +757,22 @@ function memoryinspectarea(player: string, p1: PT, p2: PT) {
 
   gadgettext(player, DIVIDER)
   gadgethyperlink(player, 'batch', `set chars:`, [
-    'hk',
     `chars:${area}`,
+    'hk',
     'a',
     ' A ',
     'next',
   ])
   gadgethyperlink(player, 'batch', `set colors:`, [
-    'hk',
     `colors:${area}`,
+    'hk',
     'c',
     ' C ',
     'next',
   ])
   gadgethyperlink(player, 'batch', `set bgs:`, [
-    'hk',
     `bgs:${area}`,
+    'hk',
     'b',
     ' B ',
     'next',

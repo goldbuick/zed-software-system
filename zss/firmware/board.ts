@@ -12,7 +12,7 @@ import {
   bookboardnamedwrite,
   bookboardsafedelete,
   bookboardsetlookup,
-  bookboardwrite,
+  bookboardwritefromkind,
   bookboardwritebulletobject,
   bookelementkindread,
   bookplayermovetoboard,
@@ -200,7 +200,7 @@ export const BOARD_FIRMWARE = createfirmware()
         READ_CONTEXT.timestamp,
       )
     }
-    bookboardwrite(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
+    bookboardwritefromkind(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
     return 0
   })
   .command('write', (_, words) => {
@@ -291,7 +291,12 @@ export const BOARD_FIRMWARE = createfirmware()
         }
         // create new element
         if (ispt(element)) {
-          bookboardwrite(READ_CONTEXT.book, READ_CONTEXT.board, into, element)
+          bookboardwritefromkind(
+            READ_CONTEXT.book,
+            READ_CONTEXT.board,
+            into,
+            element,
+          )
         }
       }
     })
@@ -329,7 +334,7 @@ export const BOARD_FIRMWARE = createfirmware()
       // make sure lookup is created
       bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
       // write new element
-      bookboardwrite(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
+      bookboardwritefromkind(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
     }
 
     return 0

@@ -1,7 +1,7 @@
 import { registerreadplayer } from 'zss/device/register'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { useWriteText } from 'zss/gadget/hooks'
-import { isarray } from 'zss/mapping/types'
+import { isarray, isstring } from 'zss/mapping/types'
 import { writetextreset } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
@@ -42,12 +42,12 @@ export function PanelItem({ row, item, active }: PanelItemComponentProps) {
       />
     )
   } else if (isarray(item)) {
-    const [chip, label, input, ...args] = item
+    const [chip, label, target, maybetype, ...args] = item
 
     if (
       typeof chip !== 'string' ||
       typeof label !== 'string' ||
-      typeof input !== 'string'
+      typeof target !== 'string'
     ) {
       return null
     }
@@ -58,16 +58,19 @@ export function PanelItem({ row, item, active }: PanelItemComponentProps) {
       row,
       active,
       label,
-      args,
+      // prefix args with target
+      args: [target, ...args],
       context,
     }
 
-    switch (NAME(input)) {
+    const type = isstring(maybetype) ? maybetype : ''
+    switch (NAME(type)) {
+      default:
+      case 'hyperlink':
+        return <PanelItemHyperlink {...props} />
       case 'hk':
       case 'hotkey':
         return <PanelItemHotkey {...props} />
-      case 'hyperlink':
-        return <PanelItemHyperlink {...props} />
       case 'rn':
       case 'range':
         return <PanelItemRange {...props} />

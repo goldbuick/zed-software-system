@@ -10,11 +10,11 @@ import { memorymoveobject, memoryreadflags } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
 import { boardelementapplycolor } from 'zss/memory/boardelement'
 import {
-  bookboardwrite,
   bookboardsafedelete,
   bookboardsetlookup,
   bookboardobjectnamedlookupdelete,
   bookelementstatread,
+  bookboardwritefromkind,
 } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
@@ -231,7 +231,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       )
     ) {
       // write new element
-      bookboardwrite(
+      bookboardwritefromkind(
         READ_CONTEXT.book,
         READ_CONTEXT.board,
         kind,

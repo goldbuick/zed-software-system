@@ -79,7 +79,7 @@ export function strsplice(
 
 export function setuppanelitem(y: MAYBE<number>, context: WRITE_TEXT_CONTEXT) {
   if (ispresent(y)) {
-    context.x = 0
+    context.x = 1
     context.y = y
   }
 }

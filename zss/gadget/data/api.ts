@@ -122,16 +122,17 @@ export function gadgethyperlink(
 ) {
   // package into a panel item
   const hyperlink: WORD[] = [chip, label, ...words]
+  // chip, label, target, [type], [...args]
 
   // type of target value to track
   const type = NAME(
-    `${hyperlink[2] as string}`,
+    `${hyperlink[3] as string}`,
   ) as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
 
   // do we care?
   if (HYPERLINK_WITH_SHARED.has(type)) {
     // what flag or message to change / send
-    const target = `${hyperlink[3] as string}`
+    const target = `${hyperlink[2] as string}`
 
     // track changes to value by chip
     panelshared[chip] = panelshared[chip] ?? {}
