@@ -1,5 +1,29 @@
 @notepad
 
+
+#synth buzz
+
+#repeat 2 do
+
+#repeat 2 do
+#repeat 3 play --dxxx++fxxx++++fxxx;pxpxpxpxpxp;xx9xxx9
+#repeat 3 play --dxdx++fxfx++++fxex;pxxxpxxxp;xx9xxx9
+#repeat 3 play --dxdd++fxff++++fxgg;pxxxpxpxpxp;xx9xxx9
+#done
+
+#repeat 3 play 7x77;9x9x
+
+#repeat 2 do
+#repeat 3 play --cxxx++gxxx++++fxxx;pxpxpxpxpxp;xx9xxx9x9x9
+#repeat 3 play --cxcx++gxgx++++fxex;pxxxpxxxp;xx9xxx9x9x9
+#repeat 3 play --cxcc++gxgg++++fxgg;pxxxpxpxpxp;xx9xxx9x9x9
+#done
+
+#repeat 3 play 4x77;9x9x
+
+#done
+
+
 'river boat'n
 #synth amsine
 #synth3 amsawtooth
@@ -92,6 +116,67 @@
 #done
 
 #play +axaxax;7x9x9x9x9x9xqp
+
+
+
+@notepad
+
+'sharp intro
+#synth amsquare
+#synth echo off
+#synth reverb off
+
+#repeat 2 do
+#play def;6
+#repeat 2 play def
+#play efg;9
+#repeat 2 play efg
+#done
+
+#repeat 2 do
+#repeat 3 play defdef;6;+dxexfx
+#repeat 3 play efgefg;9;+exfxdx
+#done
+
+#repeat 2 do
+
+#play pxpxpx
+
+#repeat 2 do
+#repeat 3 play defdef;6;+dxexfx;++dxexfx
+#repeat 3 play efgefg;9;+exfxdx;++exfxdx
+#done
+
+#repeat 2 do
+#repeat 3 play efgefg;6;+exfxdx;++exfxdx
+#repeat 3 play fgafga;9;+fxdxex;++fxdxex
+#done
+
+#repeat 2 do
+#repeat 3 play efgefg;6;-exfxdx;++exexex
+#repeat 3 play fgafga;9;-fxdxex;++fxfxfx
+#done
+
+#done
+
+#play s.defdefxfxgxc-c-c-c-c
+
+'mellow track
+#synth fmsine
+#synth echo on
+#synth reverb on
+
+#repeat 2 do
+#repeat 2 play ifxfxexexdxdxqd!e;qp;i9x9x9x9x9x9x9x9x
+#play ifedxb#fex+d-fex+e-fe;qp;i9x9x9x9x9x9x9x9x
+#done
+#play ifxfxexexdxdxqdx!e-c;qp;i9x9x9x9x9x9x9x9x
+
+'#bgplay --cxcxcx;-xcxcxc;+cxcxcx
+
+'solemn
+#synth fmsquare
+#repeat 5 play wcdae;-qcxdfaxdxcxdxafed
 
 
 // WIP of tunnel bastards

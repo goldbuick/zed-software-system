@@ -161,6 +161,10 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
+
+    // make sure lookup is created
+    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
     const maybetarget = boardelementread(READ_CONTEXT.board, dir)
     if (boardelementisobject(maybetarget)) {
@@ -190,6 +194,10 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
+
+    // make sure lookup is created
+    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+
     const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
     const maybetarget = boardelementread(READ_CONTEXT.board, dir)
     if (boardelementisobject(maybetarget)) {
@@ -207,6 +215,10 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
+
+    // make sure lookup is created
+    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+
     const [dir, strcolor, text] = readargs(words, 0, [
       ARG_TYPE.DIR,
       ARG_TYPE.COLOR,
@@ -248,6 +260,9 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
+
+    // make sure lookup is created
+    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
 
     // read
     const [target, into] = readargs(words, 0, [ARG_TYPE.KIND, ARG_TYPE.KIND])
@@ -312,6 +327,9 @@ export const BOARD_FIRMWARE = createfirmware()
       return 0
     }
 
+    // make sure lookup is created
+    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+
     // read
     const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
 
@@ -331,8 +349,6 @@ export const BOARD_FIRMWARE = createfirmware()
       dir,
     )
     if (!blocked) {
-      // make sure lookup is created
-      bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
       // write new element
       bookboardwritefromkind(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
     }
