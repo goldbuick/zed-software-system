@@ -37,7 +37,9 @@ import { boardelementreadbyidorindex, boardobjectread } from 'zss/memory/board'
 import { boardelementname } from 'zss/memory/boardelement'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import {
+  codepageapplyelementstats,
   codepagereaddata,
+  codepagereadstatsfromtext,
   codepagereadtype,
   codepageresetstats,
 } from 'zss/memory/codepage'
@@ -199,6 +201,10 @@ const vm = createdevice(
                   if (ispresent(object)) {
                     // TODO parse code for stats and update element name
                     object.code = value
+                    codepageapplyelementstats(
+                      codepagereadstatsfromtext(value),
+                      object,
+                    )
                   }
                 } else {
                   content.code = value

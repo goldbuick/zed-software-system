@@ -397,6 +397,7 @@ function sendinteraction(
   maybefrom: BOARD_ELEMENT | string,
   maybeto: BOARD_ELEMENT | string,
   message: string,
+  player: MAYBE<string>,
 ) {
   const fromid = isstring(maybefrom) ? maybefrom : maybefrom.id
   const frompt: PT | undefined = isstring(maybefrom)
@@ -408,7 +409,7 @@ function sendinteraction(
   const from = fromid ?? frompt
 
   if (ispresent(toid) && ispresent(from)) {
-    chip.send(toid, message, from)
+    chip.send(toid, message, from, player)
   }
 }
 
@@ -424,13 +425,15 @@ export function memorymoveobject(
   }
   const blocked = bookboardmoveobject(book, board, target, dest)
   if (ispresent(blocked)) {
-    sendinteraction(chip, blocked, chip.id(), 'thud')
+    sendinteraction(chip, blocked, chip.id(), 'thud', undefined)
     if (target.kind === MEMORY_LABEL.PLAYER) {
-      sendinteraction(chip, chip.id(), blocked, 'touch')
+      sendinteraction(chip, chip.id(), blocked, 'touch', target.id)
     } else if (target.collision === COLLISION.ISBULLET) {
-      sendinteraction(chip, chip.id(), blocked, 'shot')
+      // need from player stat here
+      // so we can properly track aggro from bullets
+      sendinteraction(chip, chip.id(), blocked, 'shot', undefined)
     } else {
-      sendinteraction(chip, chip.id(), blocked, 'bump')
+      sendinteraction(chip, chip.id(), blocked, 'bump', undefined)
     }
 
     // delete destructible elements

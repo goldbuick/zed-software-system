@@ -299,10 +299,8 @@ export function createchip(
       flags.mg = [
         incoming.target,
         incoming.data,
-        incoming.id,
         incoming.sender,
         incoming.player,
-        incoming.session,
       ]
     },
     zap(label) {
@@ -338,6 +336,10 @@ export function createchip(
       // check for pending messages
       const line = chip.hm()
       if (line && isarray(flags.mg)) {
+        // incoming.target,
+        // incoming.data,
+        // incoming.sender,
+        // incoming.player,
         const [, arg, sender, player] = flags.mg as [
           string,
           any,
