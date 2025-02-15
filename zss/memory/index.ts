@@ -528,6 +528,10 @@ export function memorystartloader(id: string, code: string) {
   MEMORY.loaders.set(id, code)
 }
 
+export function memoryresetchipafteredit(object: string) {
+  os.halt(object)
+}
+
 export function memorytick() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {

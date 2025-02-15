@@ -57,7 +57,7 @@ export function PanelItemColorEdit({
   const tlabel = label.trim()
   const tcolor = COLOR[state].padEnd(12, ' ').toLowerCase()
 
-  const cx = context.x
+  const cx = context.x - 1
   const cy = context.y + 2
 
   const chars: string[] = [`$green${tlabel} ${tvalue} ${tcolor}\n$white`]

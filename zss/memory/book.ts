@@ -3,7 +3,6 @@ import { unique } from 'zss/mapping/array'
 import { createsid, createnameid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
-import { STR_COLOR } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
 import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
@@ -11,7 +10,6 @@ import { checkcollision } from './atomics'
 import {
   boarddeleteobject,
   boardelementindex,
-  boardobjectcreate,
   boardobjectcreatefromkind,
   boardobjectread,
   boardsetterrain,
@@ -133,7 +131,9 @@ export function bookensurecodepagewithtype(
     // create new codepage
     const typestr = codepagetypetostring(type)
     codepage = createcodepage(
-      typestr === 'object' ? `@${address}\n` : `@${typestr} ${address}\n`,
+      typestr === 'object'
+        ? `@${address || 'object'}\n`
+        : `@${typestr} ${address}\n`,
       {},
     )
     bookwritecodepage(book, codepage)

@@ -273,12 +273,12 @@ export function tape_crash(device: DEVICELIKE, player: string) {
 export function tape_editor_open(
   device: DEVICELIKE,
   book: string,
-  page: string,
+  path: string[],
   type: string,
   title: string,
   player: string,
 ) {
-  device.emit('tape:editor:open', [book, page, type, title], player)
+  device.emit('tape:editor:open', [book, path, type, title], player)
 }
 
 export function tape_editor_close(device: DEVICELIKE, player: string) {
@@ -339,27 +339,26 @@ export function vm_inspect(device: DEVICELIKE, p1: PT, p2: PT, player: string) {
   device.emit('vm:inspect', [p1, p2], player)
 }
 
-// odd one out here as this is not a message
-export function vm_codeaddress(book: string, codepage: string) {
-  return `${book}${codepage}`
+export function vm_codeaddress(book: string, path: string[]) {
+  return `${book}:${path.join(':')}`
 }
 
 export function vm_codewatch(
   device: DEVICELIKE,
   book: string,
-  codepage: string,
+  path: string[],
   player: string,
 ) {
-  device.emit('vm:codewatch', [book, codepage], player)
+  device.emit('vm:codewatch', [book, path], player)
 }
 
 export function vm_coderelease(
   device: DEVICELIKE,
   book: string,
-  codepage: string,
+  path: string[],
   player: string,
 ) {
-  device.emit('vm:coderelease', [book, codepage], player)
+  device.emit('vm:coderelease', [book, path], player)
 }
 
 export function vm_cli(device: DEVICELIKE, input: string, player: string) {

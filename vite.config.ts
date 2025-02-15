@@ -32,7 +32,6 @@ export default defineConfig(({ mode }) => {
 
   const hmronly = !!JSON.parse(process.env.ZSS_HMR_ONLY ?? '')
   const useanalyzer = !!JSON.parse(process.env.ZSS_ANALYZER ?? '')
-  // console.info({ hmronly, analyzer })
 
   return {
     root,

@@ -166,7 +166,7 @@ const tape = createdevice('tape', [], (message) => {
     case 'editor:open':
       if (isarray(message.data) && ispresent(message.player)) {
         const { player } = message
-        const [book, page, type, title] = message.data ?? ['', '', '']
+        const [book, path, type, title] = message.data ?? ['', '', '']
         useTape.setState((state) => ({
           terminal: {
             ...state.terminal,
@@ -176,7 +176,7 @@ const tape = createdevice('tape', [], (message) => {
             open: true,
             player,
             book,
-            page,
+            path,
             type,
             title,
           },

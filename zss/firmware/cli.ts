@@ -332,7 +332,7 @@ export const CLI_FIRMWARE = createfirmware()
 
       // write to modem
       modemwriteinitstring(
-        vm_codeaddress(mainbook.id, codepage.id),
+        vm_codeaddress(mainbook.id, [codepage.id]),
         codepage.code,
       )
 
@@ -341,7 +341,7 @@ export const CLI_FIRMWARE = createfirmware()
       tape_editor_open(
         SOFTWARE,
         mainbook.id,
-        codepage.id,
+        [codepage.id],
         type,
         `${name} - ${mainbook.name}`,
         READ_CONTEXT.elementfocus,

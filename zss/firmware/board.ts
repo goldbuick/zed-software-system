@@ -174,18 +174,18 @@ export const BOARD_FIRMWARE = createfirmware()
     }
     return 0
   })
-  // .command('duplicate', (chip, words) => {
-  //   if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
-  //     return 0
-  //   }
-  //   const [dir, duplicatedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-  //   const maybetarget = boardelementread(READ_CONTEXT.board, dir)
-  //   if (ispresent(maybetarget)) {
-  //     // update lookup (only objects)
-  //     // bookboardobjectlookupwrite(book, board, object)
-  //   }
-  //   return 0
-  // })
+  .command('duplicate', () => {
+    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      return 0
+    }
+    // const [dir, duplicatedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
+    // const maybetarget = boardelementread(READ_CONTEXT.board, dir)
+    // if (ispresent(maybetarget)) {
+    //   // update lookup (only objects)
+    //   // bookboardobjectlookupwrite(book, board, object)
+    // }
+    return 0
+  })
   .command('replace', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0

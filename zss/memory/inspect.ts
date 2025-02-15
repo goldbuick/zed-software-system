@@ -23,7 +23,11 @@ import {
   boardobjectcreate,
   boardsetterrain,
 } from './board'
-import { bookboardsafedelete, bookreadcodepagewithtype } from './book'
+import {
+  bookboardsafedelete,
+  bookboardsetlookup,
+  bookreadcodepagewithtype,
+} from './book'
 import { codepagereadstatdefaults } from './codepage'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
@@ -64,24 +68,21 @@ function createboardelementbuffer(
   // corner coords on copy
   for (let y = y1; y <= y2; ++y) {
     for (let x = x1; x <= x2; ++x) {
-      const cx = x - x1
-      const cy = y - y1
+      const pt = { x: x - x1, y: y - y1 }
       const maybeobject = boardelementread(board, { x, y })
       if (maybeobject?.category === CATEGORY.ISOBJECT) {
         terrain.push(deepcopy(boardgetterrain(board, x, y)))
         if (ispresent(maybeobject.x) && ispresent(maybeobject.y)) {
           objects.push({
             ...deepcopy(maybeobject),
-            x: cx,
-            y: cy,
+            ...pt,
           })
         }
       } else {
         // maybe terrain
         terrain.push({
           ...deepcopy(maybeobject),
-          x: cx,
-          y: cy,
+          ...pt,
         })
       }
     }
@@ -124,6 +125,7 @@ export function memoryinspectcolor(
     return value
   }
   function set(name: string, value: WORD) {
+    console.info(name, value)
     if (ispresent(element)) {
       element[name as keyof BOARD_ELEMENT] = value
     }
@@ -224,7 +226,7 @@ function memoryinspectelement(
       player,
       chip,
       'cycle',
-      ['number', 'cycle', '1', '255'],
+      ['cycle', 'number', '1', '255'],
       get,
       set,
     )
@@ -676,7 +678,7 @@ export function memoryinspectcolorarea(
     player,
     `batch:${ptstoarea(p1, p2)}`,
     'color',
-    ['coloredit', name],
+    [name, 'coloredit'],
     get,
     set,
   )
@@ -717,7 +719,7 @@ export function memoryinspectbgarea(
     player,
     `batch:${ptstoarea(p1, p2)}`,
     'color',
-    ['coloredit', name],
+    [name, 'coloredit'],
     get,
     set,
   )
@@ -789,6 +791,9 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
   if (!ispresent(board)) {
     return
   }
+
+  // ensure lookup
+  bookboardsetlookup(mainbook, board)
 
   if (p1.x === p2.x && p1.y === p2.y) {
     const element = boardelementread(board, p1)

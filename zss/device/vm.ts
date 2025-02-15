@@ -2,6 +2,7 @@ import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/firmware/loader/parsefile'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
+import { waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,
   isarray,
@@ -30,10 +31,16 @@ import {
   memoryreadplayerboard,
   memorywritehalt,
   memoryreadhalt,
+  memoryresetchipafteredit,
 } from 'zss/memory'
-import { boardelementreadbyidorindex } from 'zss/memory/board'
+import { boardelementreadbyidorindex, boardobjectread } from 'zss/memory/board'
+import { boardelementname } from 'zss/memory/boardelement'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
-import { codepageresetstats } from 'zss/memory/codepage'
+import {
+  codepagereaddata,
+  codepagereadtype,
+  codepageresetstats,
+} from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
 import {
   memoryinspect,
@@ -50,19 +57,21 @@ import {
   memoryinspectpastemenu,
 } from 'zss/memory/inspect'
 import { memoryloader } from 'zss/memory/loader'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { NAME, PT } from 'zss/words/types'
-import { write } from 'zss/words/writeui'
+import { write, writetext } from 'zss/words/writeui'
 
 import {
   platform_ready,
   register_loginready,
   register_savemem,
   tape_debug,
+  tape_editor_open,
   vm_codeaddress,
   vm_flush,
   vm_logout,
 } from './api'
-import { modemobservevaluestring } from './modem'
+import { modemobservevaluestring, modemwriteinitstring } from './modem'
 
 // tracking active player ids
 const SECOND_TIMEOUT = 16
@@ -73,7 +82,7 @@ const FLUSH_RATE = 64
 let flushtick = 0
 
 // track watched memory
-const watching: Record<string, Record<string, Set<string>>> = {}
+const watching: Record<string, Set<string>> = {}
 const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
 // save state
@@ -170,37 +179,56 @@ const vm = createdevice(
         break
       case 'codewatch':
         if (ispresent(message.player) && isarray(message.data)) {
-          const [book, codepage] = message.data
+          const [book, path] = message.data
+          const address = vm_codeaddress(book, path)
           // start watching
-          if (!ispresent(observers[codepage])) {
-            const address = vm_codeaddress(book, codepage)
-            observers[codepage] = modemobservevaluestring(address, (value) => {
+          if (!ispresent(observers[address])) {
+            observers[address] = modemobservevaluestring(address, (value) => {
+              // parse path
+              const [codepage, maybeobject] = path
               // write to code
               const contentbook = memoryreadbookbyaddress(book)
               const content = bookreadcodepagebyaddress(contentbook, codepage)
               if (ispresent(content)) {
-                content.code = value
-                // re-parse code for @ attrs and expected data type
-                codepageresetstats(content)
+                if (
+                  codepagereadtype(content) === CODE_PAGE_TYPE.BOARD &&
+                  ispresent(maybeobject)
+                ) {
+                  const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(content)
+                  const object = boardobjectread(board, maybeobject)
+                  if (ispresent(object)) {
+                    // TODO parse code for stats and update element name
+                    object.code = value
+                  }
+                } else {
+                  content.code = value
+                  // re-parse code for @ attrs and expected data type
+                  codepageresetstats(content)
+                }
               }
             })
           }
           // track use
-          watching[book] = watching[book] ?? {}
-          watching[book][codepage] = watching[book][codepage] ?? new Set()
-          watching[book][codepage].add(message.player)
+          watching[address] = watching[address] ?? new Set()
+          watching[address].add(message.player)
         }
         break
       case 'coderelease':
         if (message.player && isarray(message.data)) {
-          const [book, page] = message.data
-          if (ispresent(watching[book])) {
-            if (ispresent(watching[book][page])) {
-              watching[book][page].delete(message.player)
-              // stop watching
-              if (watching[book][page].size === 0) {
-                observers[page]?.()
-                observers[page] = undefined
+          const [book, path] = message.data
+          // parse path
+          const [, maybeobject] = path
+          const address = vm_codeaddress(book, path)
+          // stop watching
+          if (ispresent(watching[address])) {
+            watching[address].delete(message.player)
+            // stop watching
+            if (watching[address].size === 0) {
+              observers[address]?.()
+              observers[address] = undefined
+              // nuke chip for object when we are no longer editing
+              if (isstring(maybeobject)) {
+                memoryresetchipafteredit(maybeobject)
               }
             }
           }
@@ -343,6 +371,10 @@ const vm = createdevice(
             break
           case 'inspect':
             if (ispresent(message.player)) {
+              const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+              if (!ispresent(mainbook)) {
+                break
+              }
               const board = memoryreadplayerboard(message.player)
               if (!ispresent(board)) {
                 break
@@ -360,6 +392,40 @@ const vm = createdevice(
                 case 'char':
                   memoryinspectchar(message.player, element, inspect.path)
                   break
+                case 'code':
+                  doasync(vm, async () => {
+                    if (!ispresent(message.player)) {
+                      return
+                    }
+
+                    const name = boardelementname(element)
+                    const pagetype = 'object'
+                    writetext(vm, `opened [${pagetype}] ${name}`)
+
+                    // edit path
+                    const path = [board.id, element.id ?? '']
+
+                    // write to modem
+                    modemwriteinitstring(
+                      vm_codeaddress(mainbook.id, path),
+                      element.code ?? '',
+                    )
+
+                    // wait for scroll to close
+                    await waitfor(1000)
+
+                    // open code editor
+                    tape_editor_open(
+                      vm,
+                      mainbook.id,
+                      [board.id, element.id ?? ''],
+                      pagetype,
+                      `${name} - ${mainbook.name}`,
+                      message.player,
+                    )
+                  })
+                  break
+
                 default:
                   console.info('unknown inspect', inspect)
                   break

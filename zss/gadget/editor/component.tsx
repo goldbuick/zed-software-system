@@ -27,16 +27,16 @@ export function TapeEditor() {
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
   const codepage = useWaitForValueString(
-    vm_codeaddress(editor.book, editor.page),
+    vm_codeaddress(editor.book, editor.path),
   )
   const edge = textformatreadedges(context)
 
   useEffect(() => {
-    vm_codewatch(SOFTWARE, editor.book, editor.page, editor.player)
+    vm_codewatch(SOFTWARE, editor.book, editor.path, editor.player)
     return () => {
-      vm_coderelease(SOFTWARE, editor.book, editor.page, editor.player)
+      vm_coderelease(SOFTWARE, editor.book, editor.path, editor.player)
     }
-  }, [editor.book, editor.page, editor.player])
+  }, [editor.book, editor.path, editor.player])
 
   // split by line
   const value = sharedtosynced(codepage)

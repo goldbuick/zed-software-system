@@ -29,19 +29,30 @@ export const RUNTIME_FIRMWARE = createfirmware({
     const [ticker] = queue
     if (queue.length === 1 && isstring(ticker)) {
       if (ispresent(READ_CONTEXT.element)) {
-        // could we trigger sprite animations with ticker text ??
-        // $WOBBLE $BOUNCE $SPIN
-        READ_CONTEXT.element.tickertext = ticker
-        READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-        // send message
-        const display = bookelementdisplayread(
-          READ_CONTEXT.book,
-          READ_CONTEXT.element,
-          1,
-          COLOR.WHITE,
-          COLOR.ONCLEAR,
-        )
-        tape_info(SOFTWARE, `$${COLOR[display.color]}$${display.char}`, ticker)
+        // empty ticker string clears sidebar
+        if (ticker.trim().length === 0) {
+          // player updating sidebar
+          const shared = gadgetstate(READ_CONTEXT.elementid)
+          shared.sidebar = []
+        } else {
+          // could we trigger sprite animations with ticker text ??
+          // $WOBBLE $BOUNCE $SPIN
+          READ_CONTEXT.element.tickertext = ticker
+          READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+          // send message
+          const display = bookelementdisplayread(
+            READ_CONTEXT.book,
+            READ_CONTEXT.element,
+            1,
+            COLOR.WHITE,
+            COLOR.ONCLEAR,
+          )
+          tape_info(
+            SOFTWARE,
+            `$${COLOR[display.color]}$${display.char}`,
+            ticker,
+          )
+        }
       }
     } else if (queue.length > 1) {
       if (READ_CONTEXT.elementisplayer) {

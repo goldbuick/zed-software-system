@@ -65,7 +65,7 @@ export const useTape = create<{
     open: boolean
     player: string
     book: string
-    page: string
+    path: string[]
     type: string
     title: string
   }
@@ -81,7 +81,7 @@ export const useTape = create<{
     open: false,
     player: '',
     book: '',
-    page: '',
+    path: [],
     type: '',
     title: '',
   },

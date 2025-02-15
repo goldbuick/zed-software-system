@@ -55,7 +55,7 @@ export function PanelItemCharEdit({
   const tvalue = `${state}`.padStart(3, '0')
   const tlabel = label.trim()
 
-  const cx = context.x
+  const cx = context.x - 1
   const cy = context.y + 2
 
   const chars: string[] = [`$green${tlabel} ${tvalue}\n$white`]
