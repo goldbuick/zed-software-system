@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { SOFTWARE } from 'zss/device/session'
+import { withclipboard } from 'zss/mapping/keyboard'
 import { ispresent } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { writetext } from 'zss/words/writeui'
@@ -20,10 +21,10 @@ export function TapeTerminalCopyIt({
   const context = useWriteText()
 
   const invoke = useCallback(() => {
-    if (ispresent(navigator.clipboard)) {
+    if (ispresent(withclipboard())) {
       const [, ...values] = words
       const content = values.join(' ')
-      navigator.clipboard
+      withclipboard()
         .writeText(content)
         .then(() => writetext(SOFTWARE, `copied!`))
         .catch((err) => console.error(err))

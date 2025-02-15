@@ -20,12 +20,4 @@ canvas {
   user-select: none;
   touch-action: none;
   image-rendering: pixelated;
-  -webkit-user-select: none; /* Safari */
-  user-select: none; /* Standard syntax */
-}
-
-#touchtext {
-  position: absolute;
-  top: -1000px;
-  left: 0;
 }

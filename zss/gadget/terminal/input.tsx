@@ -9,6 +9,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { useTapeTerminal } from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
+import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
 import { ispresent } from 'zss/mapping/types'
@@ -342,8 +343,8 @@ export function TapeTerminalInput({
                     break
                   case 'c':
                     // can support multiline ?
-                    if (inputstateactive && ispresent(navigator.clipboard)) {
-                      navigator.clipboard
+                    if (inputstateactive && ispresent(withclipboard())) {
+                      withclipboard()
                         .writeText(inputstateselected)
                         .catch((err) => console.error(err))
                     } else {
@@ -351,8 +352,8 @@ export function TapeTerminalInput({
                     }
                     break
                   case 'v':
-                    if (inputstateactive && ispresent(navigator.clipboard)) {
-                      navigator.clipboard
+                    if (inputstateactive && ispresent(withclipboard())) {
+                      withclipboard()
                         .readText()
                         .then((text) => {
                           const cleantext = text.replaceAll('\r', '')
@@ -372,8 +373,8 @@ export function TapeTerminalInput({
                     }
                     break
                   case 'x':
-                    if (inputstateactive && ispresent(navigator.clipboard)) {
-                      navigator.clipboard
+                    if (inputstateactive && ispresent(withclipboard())) {
+                      withclipboard()
                         .writeText(inputstateselected)
                         .then(() => deleteselection())
                         .catch((err) => console.error(err))

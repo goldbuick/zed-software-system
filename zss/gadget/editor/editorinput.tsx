@@ -9,6 +9,7 @@ import {
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
+import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { applystrtoindex, textformatreadedges } from 'zss/words/textformat'
@@ -245,8 +246,8 @@ export function EditorInput({
                     useTapeEditor.setState({ cursor: codeend, select: 0 })
                     break
                   case 'c':
-                    if (ispresent(navigator.clipboard)) {
-                      navigator.clipboard
+                    if (ispresent(withclipboard())) {
+                      withclipboard()
                         .writeText(strvalueselected)
                         .catch((err) => api_error(SOFTWARE, 'clipboard', err))
                     } else {
@@ -254,8 +255,8 @@ export function EditorInput({
                     }
                     break
                   case 'v':
-                    if (ispresent(navigator.clipboard)) {
-                      navigator.clipboard
+                    if (ispresent(withclipboard())) {
+                      withclipboard()
                         .readText()
                         .then((text) => {
                           const cleantext = text.replaceAll('\r', '')
@@ -271,8 +272,8 @@ export function EditorInput({
                     }
                     break
                   case 'x':
-                    if (ispresent(navigator.clipboard)) {
-                      navigator.clipboard
+                    if (ispresent(withclipboard())) {
+                      withclipboard()
                         .writeText(strvalueselected)
                         .then(() => deleteselection())
                         .catch((err) => api_error(SOFTWARE, 'clipboard', err))

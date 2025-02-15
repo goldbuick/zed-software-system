@@ -1,5 +1,4 @@
 import { useCallback } from 'react'
-import { ispresent } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { useWriteText } from '../hooks'
@@ -18,11 +17,9 @@ export function TapeTerminalOpenIt({
   const context = useWriteText()
 
   const invoke = useCallback(() => {
-    if (ispresent(navigator.clipboard)) {
-      const [, ...values] = words
-      const content = values.join(' ')
-      window.open(content, '_blank')
-    }
+    const [, ...values] = words
+    const content = values.join(' ')
+    window.open(content, '_blank')
   }, [words])
 
   const tcolor = inputcolor(!!active)

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useWaitForValueString } from 'zss/device/modem'
 import { paneladdress } from 'zss/gadget/data/types'
+import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { ismac } from 'zss/words/system'
@@ -162,15 +163,15 @@ export function PanelItemText({
                         setCursor(state.length)
                         break
                       case 'c':
-                        if (ispresent(navigator.clipboard)) {
-                          navigator.clipboard
+                        if (ispresent(withclipboard())) {
+                          withclipboard()
                             .writeText(value.toJSON())
                             .catch((err) => console.error(err))
                         }
                         break
                       case 'v':
-                        if (ispresent(navigator.clipboard)) {
-                          navigator.clipboard
+                        if (ispresent(withclipboard())) {
+                          withclipboard()
                             .readText()
                             .then((text) => {
                               if (hasselection) {
@@ -183,8 +184,8 @@ export function PanelItemText({
                         }
                         break
                       case 'x':
-                        if (ispresent(navigator.clipboard)) {
-                          navigator.clipboard
+                        if (ispresent(withclipboard())) {
+                          withclipboard()
                             .writeText(value.toJSON())
                             .then(() => deleteselection())
                             .catch((err) => console.error(err))
