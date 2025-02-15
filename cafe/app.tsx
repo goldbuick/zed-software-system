@@ -12,7 +12,7 @@ import { vm_loader } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
-import { Terminal } from 'zss/gadget/terminal'
+import { Engine } from 'zss/gadget/engine'
 import { ispresent } from 'zss/mapping/types'
 import 'zss/platform'
 
@@ -110,5 +110,5 @@ window.addEventListener('drop', (event) => {
 })
 
 export function App() {
-  return <Terminal />
+  return <Engine />
 }

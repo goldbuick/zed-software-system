@@ -1,8 +1,8 @@
+import { indextopt } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, deepcopy, isnumber, ispresent, noop } from 'zss/mapping/types'
-import { isstrcolor, mapstrcolortoattributes, STR_COLOR } from 'zss/words/color'
 import {
   dirfrompts,
   ispt,
@@ -10,7 +10,7 @@ import {
   ptapplydir,
   STR_DIR,
 } from 'zss/words/dir'
-import { COLOR, DIR, NAME, PT } from 'zss/words/types'
+import { DIR, PT } from 'zss/words/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
 import { exportboardelement, importboardelement } from './boardelement'
@@ -79,9 +79,14 @@ export function importboard(boardentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOARD> {
   })
 }
 
-export function boardelementindex(board: MAYBE<BOARD>, pt: PT): number {
+export function boardelementindex(
+  board: MAYBE<BOARD>,
+  pt: MAYBE<PT | BOARD_ELEMENT>,
+): number {
   if (
     !ispresent(board) ||
+    !ispresent(pt?.x) ||
+    !ispresent(pt?.y) ||
     pt.x < 0 ||
     pt.x >= BOARD_WIDTH ||
     pt.y < 0 ||
@@ -112,32 +117,17 @@ export function boardelementread(
   return board.terrain[index]
 }
 
-export function boardelementname(element: MAYBE<BOARD_ELEMENT>) {
-  return NAME(element?.name ?? element?.kinddata?.name ?? 'object')
-}
-
-export function boardelementcolor(element: MAYBE<BOARD_ELEMENT>) {
-  return element?.color ?? element?.kinddata?.color ?? COLOR.BLACK
-}
-
-export function boardelementbg(element: MAYBE<BOARD_ELEMENT>) {
-  return element?.bg ?? element?.kinddata?.bg ?? COLOR.BLACK
-}
-
-export function boardelementapplycolor(
-  element: MAYBE<BOARD_ELEMENT>,
-  strcolor: STR_COLOR | undefined,
+export function boardelementreadbyidorindex(
+  board: MAYBE<BOARD>,
+  idorindex: string,
 ) {
-  if (!ispresent(element) || !isstrcolor(strcolor)) {
-    return
+  const maybeobject = boardobjectread(board, idorindex)
+  if (ispresent(maybeobject)) {
+    return maybeobject
   }
-  const { color, bg } = mapstrcolortoattributes(strcolor)
-  if (ispresent(color)) {
-    element.color = color
-  }
-  if (ispresent(bg)) {
-    element.bg = bg
-  }
+  const maybeindex = parseFloat(idorindex)
+  const pt = indextopt(isNaN(maybeindex) ? -1 : maybeindex, BOARD_WIDTH)
+  return boardgetterrain(board, pt.x, pt.y)
 }
 
 export function boardgetterrain(

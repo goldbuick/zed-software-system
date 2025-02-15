@@ -30,6 +30,27 @@ export function ptwithin(
   return x >= left && x <= right && y >= top && y <= bottom
 }
 
+export function rectpoints(
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): PT[] {
+  const points: PT[] = []
+
+  const ix0 = Math.min(x0, x1)
+  const ix1 = Math.max(x0, x1)
+  const iy0 = Math.min(y0, y1)
+  const iy1 = Math.max(y0, y1)
+  for (let y = iy0; y <= iy1; ++y) {
+    for (let x = ix0; x <= ix1; ++x) {
+      points.push({ x, y })
+    }
+  }
+
+  return points
+}
+
 export function linepoints(
   x0: number,
   y0: number,

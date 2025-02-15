@@ -6,15 +6,24 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { useBlink } from '../hooks'
 import { UserInput, UserInputHandler } from '../userinput'
 
-import { PanelItemProps, inputcolor, mapTo, strsplice } from './common'
+import {
+  PanelItemProps,
+  inputcolor,
+  mapTo,
+  setuppanelitem,
+  strsplice,
+} from './common'
 
 export function PanelItemRange({
   chip,
+  row,
   active,
   label,
   args,
   context,
 }: PanelItemProps) {
+  setuppanelitem(row, context)
+
   const [target, maybelabelmin, maybelabelmax] = [
     mapTo(args[0], ''),
     mapTo(args[1], ''),

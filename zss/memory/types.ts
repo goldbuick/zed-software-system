@@ -57,6 +57,8 @@ export type BOARD = {
   objects: Record<string, BOARD_ELEMENT>
   // stats
   isdark?: number
+  startx?: number
+  starty?: number
   // board displayed over/under this one
   // uses content slot book
   over?: string

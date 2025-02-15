@@ -11,13 +11,13 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { useWriteText } from '../hooks'
 import { BackPlate } from '../tape/backplate'
-import { ConsoleContext } from '../tape/common'
+import { TapeTerminalContext } from '../tape/common'
 
-import { ConsoleInput } from './input'
-import { ConsoleItem } from './item'
-import { ConsoleItemActive } from './itemactive'
+import { TapeTerminalInput } from './input'
+import { TapeTerminalItem } from './item'
+import { TapeTerminalItemActive } from './itemactive'
 
-export function TapeConsole() {
+export function TapeTerminal() {
   const player = registerreadplayer()
   const [editoropen] = useTape(useShallow((state) => [state.editor.open]))
   const terminallogs = useTape(useShallow((state) => state.terminal.logs))
@@ -75,7 +75,7 @@ export function TapeConsole() {
   return (
     <>
       <BackPlate context={context} />
-      <ConsoleContext.Provider
+      <TapeTerminalContext.Provider
         value={{
           sendmessage(maybetarget, data) {
             const [target, message] = totarget(maybetarget)
@@ -96,18 +96,18 @@ export function TapeConsole() {
             return null
           }
           return !editoropen && tapeycursor >= y && tapeycursor < ybottom ? (
-            <ConsoleItemActive key={index} text={text} y={y} />
+            <TapeTerminalItemActive key={index} text={text} y={y} />
           ) : (
-            <ConsoleItem key={index} text={text} y={y} />
+            <TapeTerminalItem key={index} text={text} y={y} />
           )
         })}
         {!editoropen && (
-          <ConsoleInput
+          <TapeTerminalInput
             tapeycursor={tapeycursor}
             logrowtotalheight={logrowtotalheight}
           />
         )}
-      </ConsoleContext.Provider>
+      </TapeTerminalContext.Provider>
     </>
   )
 }

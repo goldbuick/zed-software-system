@@ -51,21 +51,20 @@ export function Panel({
   }
 
   resetTiles(state, 0, color, bg)
-  state.changed()
 
   return (
     <TilesData store={store}>
+      <TilesRender width={width} height={height} />
       <WriteTextContext.Provider value={context}>
         {text.map((item, index) => (
           <PanelItem
             key={index}
+            row={inline ? undefined : index}
             item={item}
-            inline={inline}
             active={index === selected}
           />
         ))}
       </WriteTextContext.Provider>
-      <TilesRender width={width} height={height} />
     </TilesData>
   )
 }

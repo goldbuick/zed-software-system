@@ -9,6 +9,7 @@ import {
 import { pickwith } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { isarray, isboolean, ispresent } from 'zss/mapping/types'
+import { write } from 'zss/words/writeui'
 
 import { MESSAGE } from './api'
 import { registerreadplayer } from './register'
@@ -88,18 +89,29 @@ const tape = createdevice('tape', [], (message) => {
   }
   const { terminal } = useTape.getState()
   switch (message.target) {
+    case 'inspector':
+      if (message.player === registerreadplayer()) {
+        useTape.setState((state) => {
+          const enabled = !state.inspector
+          write(tape, `gadget inspector ${enabled ? '$greenon' : '$redoff'}`)
+          if (enabled) {
+            write(tape, `mouse click or tap elements to inspect`)
+          }
+          return {
+            inspector: enabled,
+          }
+        })
+      }
+      break
     case 'info':
       if (terminal.level >= TAPE_LOG_LEVEL.INFO) {
         terminaladdmessage(message)
       }
-      // eslint-disable-next-line no-console
-      // console.log(terminallog(message))
       break
     case 'debug':
       if (terminal.level >= TAPE_LOG_LEVEL.DEBUG) {
         terminaladdmessage(message)
       }
-      // console.info(terminallog(message))
       break
     case 'error':
       if (terminal.level > TAPE_LOG_LEVEL.OFF) {
@@ -154,7 +166,7 @@ const tape = createdevice('tape', [], (message) => {
     case 'editor:open':
       if (isarray(message.data) && ispresent(message.player)) {
         const { player } = message
-        const [book, page, type, title] = message.data ?? ['', '', '']
+        const [book, path, type, title] = message.data ?? ['', '', '']
         useTape.setState((state) => ({
           terminal: {
             ...state.terminal,
@@ -164,7 +176,7 @@ const tape = createdevice('tape', [], (message) => {
             open: true,
             player,
             book,
-            page,
+            path,
             type,
             title,
           },

@@ -4,23 +4,23 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { useWriteText } from '../hooks'
 import { inputcolor } from '../panel/common'
 import {
-  ConsoleContext,
-  ConsoleItemInputProps,
+  TapeTerminalContext,
+  TapeTerminalItemInputProps,
   setuplogitem,
 } from '../tape/common'
 import { UserInput } from '../userinput'
 
-export function ConsoleHyperlink({
+export function TapeTerminalHyperlink({
   blink,
   active,
   prefix,
   label,
   words,
   y,
-}: ConsoleItemInputProps) {
+}: TapeTerminalItemInputProps) {
   const context = useWriteText()
 
-  const cc = useContext(ConsoleContext)
+  const cc = useContext(TapeTerminalContext)
   const invoke = useCallback(() => {
     const [target, data] = words
     cc.sendmessage(target, data)
@@ -36,6 +36,5 @@ export function ConsoleHyperlink({
     true,
   )
 
-  context.changed()
   return active && <UserInput OK_BUTTON={invoke} />
 }

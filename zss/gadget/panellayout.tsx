@@ -8,11 +8,11 @@ import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 
 import { Framed } from './framed'
-import { StaticDither } from './framed/dither'
+import { StaticDither } from './framedlayer/dither'
 import { useDeviceConfig } from './hooks'
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'
-import { Scroll } from './scroll'
+import { Scroll } from './scroll/component'
 import { useScreenSize } from './userscreen'
 
 enum RECT_TYPE {

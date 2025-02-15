@@ -27,7 +27,9 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
         clippingPlanes.some((plane) => {
           plane.projectPoint(item.point, target)
           facing.subVectors(item.point, target).normalize().round()
-          return plane.normal.equals(facing) === false
+          target.copy(plane.normal).round()
+          const isfacing = target.equals(facing)
+          return isfacing === false
         })
       ) {
         return false

@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { isequal, MAYBE } from 'zss/mapping/types'
+import { islocked } from 'zss/mapping/url'
 import { create } from 'zustand'
 
 import { GADGET_STATE } from './types'
@@ -54,6 +55,7 @@ export enum TAPE_DISPLAY {
 
 export const useTape = create<{
   layout: TAPE_DISPLAY
+  inspector: boolean
   terminal: {
     open: boolean
     level: TAPE_LOG_LEVEL
@@ -63,12 +65,13 @@ export const useTape = create<{
     open: boolean
     player: string
     book: string
-    page: string
+    path: string[]
     type: string
     title: string
   }
 }>(() => ({
   layout: TAPE_DISPLAY.TOP,
+  inspector: islocked(),
   terminal: {
     open: true,
     level: TAPE_LOG_LEVEL.INFO,
@@ -78,7 +81,7 @@ export const useTape = create<{
     open: false,
     player: '',
     book: '',
-    page: '',
+    path: [],
     type: '',
     title: '',
   },
@@ -119,5 +122,14 @@ export const useTapeEditor = create<{
   yscroll: 0,
   // cursor position & selection (text index)
   cursor: 0,
+  select: undefined,
+}))
+
+export const useTapeInspector = create<{
+  cursor: MAYBE<number>
+  select: MAYBE<number>
+}>(() => ({
+  // cursor position & selection board indexes
+  cursor: undefined,
   select: undefined,
 }))

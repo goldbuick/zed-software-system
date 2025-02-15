@@ -151,7 +151,6 @@ export function EditorInput({
     [codeend, rows, rowsend, xcursor, ycursor],
   )
 
-  context.changed()
   return (
     <>
       <Scrollable

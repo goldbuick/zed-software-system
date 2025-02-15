@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
-import { Group, Vector2 } from 'three'
+import { Color, Group, Vector2 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { vm_input } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
@@ -18,7 +18,9 @@ import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 
 import Clipping from './clipping'
-import { FramedLayer } from './framed/layer'
+import { FramedLayer } from './framedlayer/component'
+import { TapeTerminalInspector } from './inspector/component'
+import { Rect } from './rect'
 import { UserInput, UserInputMods } from './userinput'
 
 const focus = new Vector2(0, 0)
@@ -147,8 +149,18 @@ export function Framed({ width, height }: FramedProps) {
         CANCEL_BUTTON={(mods) => sendinput(player, INPUT.CANCEL_BUTTON, mods)}
         MENU_BUTTON={(mods) => sendinput(player, INPUT.MENU_BUTTON, mods)}
       />
+      {layers.length > 0 && (
+        <Rect
+          visible
+          color={new Color(0.076, 0.076, 0)}
+          width={width}
+          height={height}
+          z={-2}
+        />
+      )}
       <Clipping width={viewwidth} height={viewheight}>
         <group ref={ref}>
+          <TapeTerminalInspector />
           {layers.map((layer, i) => (
             <FramedLayer key={layer.id} id={layer.id} z={i * 2} />
           ))}

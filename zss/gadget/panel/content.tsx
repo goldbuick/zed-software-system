@@ -1,20 +1,29 @@
+import { ispresent } from 'zss/mapping/types'
 import {
   WRITE_TEXT_CONTEXT,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
 
+import { setuppanelitem } from './common'
+
 type PanelItemContentProps = {
   item: string
   player: string
-  inline: boolean
+  row?: number
   context: WRITE_TEXT_CONTEXT
 }
 
 export function PanelItemContent({
   item,
-  inline,
+  row,
   context,
 }: PanelItemContentProps) {
-  tokenizeandwritetextformat(`${item}${inline ? `` : `\n`}`, context, true)
+  setuppanelitem(row, context)
+
+  tokenizeandwritetextformat(
+    `${item}${ispresent(row) ? `\n` : ``}`,
+    context,
+    true,
+  )
   return null
 }

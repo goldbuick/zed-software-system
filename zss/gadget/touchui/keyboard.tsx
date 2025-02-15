@@ -7,7 +7,7 @@ import { clamp, snap } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
-import { ShadeBoxDither } from '../framed/dither'
+import { ShadeBoxDither } from '../framedlayer/dither'
 import { useDeviceConfig } from '../hooks'
 import { Panel } from '../panel'
 import { ScrollContext } from '../panel/common'

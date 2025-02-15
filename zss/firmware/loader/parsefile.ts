@@ -3,7 +3,6 @@ import mime from 'mime/lite'
 import { api_error, tape_info, vm_loader } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { ispresent } from 'zss/mapping/types'
-import { NAME } from 'zss/words/types'
 
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
   const bytes = [...filebytes.slice(0, 4)]

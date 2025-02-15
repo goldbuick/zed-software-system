@@ -24,15 +24,15 @@ import { NAME } from 'zss/words/types'
 import { useBlink, useWriteText } from '../hooks'
 import { setuplogitem } from '../tape/common'
 
-type ConsoleInputProps = {
+type TapeTerminalInputProps = {
   tapeycursor: number
   logrowtotalheight: number
 }
 
-export function ConsoleInput({
+export function TapeTerminalInput({
   tapeycursor,
   logrowtotalheight,
-}: ConsoleInputProps) {
+}: TapeTerminalInputProps) {
   const blink = useBlink()
   const context = useWriteText()
   const tapeterminal = useTapeTerminal()
@@ -189,7 +189,6 @@ export function ConsoleInput({
     })
   }, [tapeterminal.scroll, tapeycursor, logrowtotalheight, edge.bottom])
 
-  context.changed()
   return (
     <>
       <Scrollable

@@ -6,21 +6,18 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
-import { memoryreadflags } from 'zss/memory'
+import { memorymoveobject, memoryreadflags } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
-import { boardelementapplycolor } from 'zss/memory/board'
+import { boardelementapplycolor } from 'zss/memory/boardelement'
 import {
-  bookboardwrite,
   bookboardsafedelete,
   bookboardsetlookup,
   bookboardobjectnamedlookupdelete,
   bookelementstatread,
+  bookboardwritefromkind,
 } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { PT } from 'zss/words/types'
-
-import { moveobject } from './board'
 
 const INPUT_FLAG_NAMES = new Set([
   'inputmove',
@@ -177,18 +174,16 @@ export const ELEMENT_FIRMWARE = createfirmware({
   everytick(chip) {
     // handle walk movement
     if (
-      ispresent(READ_CONTEXT.element?.x) &&
-      ispresent(READ_CONTEXT.element.y) &&
-      ispresent(READ_CONTEXT.element.stepx) &&
+      ispresent(READ_CONTEXT.element?.stepx) &&
       ispresent(READ_CONTEXT.element.stepy) &&
-      moveobject(
+      memorymoveobject(
         chip,
         READ_CONTEXT.book,
         READ_CONTEXT.board,
         READ_CONTEXT.element,
         {
-          x: READ_CONTEXT.element.x + READ_CONTEXT.element.stepx,
-          y: READ_CONTEXT.element.y + READ_CONTEXT.element.stepy,
+          x: READ_CONTEXT.elementpt.x + READ_CONTEXT.element.stepx,
+          y: READ_CONTEXT.elementpt.y + READ_CONTEXT.element.stepy,
         },
       ) === false
     ) {
@@ -216,11 +211,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
   },
 })
   .command('become', (chip, words) => {
-    // track dest
-    const dest: PT = {
-      x: READ_CONTEXT.element?.x ?? 0,
-      y: READ_CONTEXT.element?.y ?? 0,
-    }
     // read
     const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
     // make sure lookup is created
@@ -241,7 +231,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
       )
     ) {
       // write new element
-      bookboardwrite(READ_CONTEXT.book, READ_CONTEXT.board, kind, dest)
+      bookboardwritefromkind(
+        READ_CONTEXT.book,
+        READ_CONTEXT.board,
+        kind,
+        READ_CONTEXT.elementpt,
+      )
     }
     // halt execution
     chip.endofprogram()
@@ -269,7 +264,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     if (ispresent(READ_CONTEXT.element)) {
       // attempt to move
       const [dest] = readargs(words, 0, [ARG_TYPE.DIR])
-      moveobject(
+      memorymoveobject(
         chip,
         READ_CONTEXT.book,
         READ_CONTEXT.board,

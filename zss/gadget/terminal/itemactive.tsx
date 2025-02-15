@@ -1,9 +1,9 @@
 import { useBlink } from '../hooks'
-import { ConsoleItemProps } from '../tape/common'
+import { TapeTerminalItemProps } from '../tape/common'
 
-import { ConsoleItem } from './item'
+import { TapeTerminalItem } from './item'
 
-export function ConsoleItemActive(props: ConsoleItemProps) {
+export function TapeTerminalItemActive(props: TapeTerminalItemProps) {
   const blink = useBlink()
-  return <ConsoleItem active blink={blink} {...props} />
+  return <TapeTerminalItem active blink={blink} {...props} />
 }

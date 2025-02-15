@@ -251,6 +251,7 @@ function writetextformat(tokens: IToken[], context: WRITE_TEXT_CONTEXT) {
       case NumberLiteral:
         if (context.measureonly !== true && isVisible()) {
           const i = context.x + context.y * context.width
+
           context.char[i] = parseFloat(token.image.replace('$', ''))
           if (context.active.color !== undefined) {
             context.color[i] = context.active.color
@@ -342,6 +343,9 @@ export function tokenizeandwritetextformat(
   if (shouldreset) {
     writetextreset(context)
   }
+
+  // yolo
+  context.changed()
 }
 
 export function tokenizeandmeasuretextformat(
@@ -381,6 +385,9 @@ export function applystrtoindex(
   for (let i = p1; i < p2; ++i) {
     context.char[i] = str.charCodeAt(t++)
   }
+
+  // yolo
+  context.changed()
 }
 
 export function applycolortoindexes(
@@ -396,6 +403,9 @@ export function applycolortoindexes(
     context.color[i] = color
     context.bg[i] = bg
   }
+
+  // yolo
+  context.changed()
 }
 
 export function writeplaintext(
@@ -410,6 +420,9 @@ export function writeplaintext(
   if (shouldreset) {
     writetextreset(context)
   }
+
+  // yolo
+  context.changed()
 }
 
 export function textformatedges(

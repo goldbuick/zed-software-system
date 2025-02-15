@@ -13,6 +13,7 @@ import {
   broadcast_stopstream,
   chat_connect,
   chat_disconnect,
+  tape_inspector,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -268,16 +269,6 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   // ---
-  .command('dev', () => {
-    vm_flush_op()
-    register_dev(SOFTWARE, READ_CONTEXT.elementfocus)
-    return 0
-  })
-  .command('share', () => {
-    vm_flush_op()
-    register_share(SOFTWARE, READ_CONTEXT.elementfocus)
-    return 0
-  })
   .command('bookcreate', (chip, words) => {
     const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
 
@@ -341,7 +332,7 @@ export const CLI_FIRMWARE = createfirmware()
 
       // write to modem
       modemwriteinitstring(
-        vm_codeaddress(mainbook.id, codepage.id),
+        vm_codeaddress(mainbook.id, [codepage.id]),
         codepage.code,
       )
 
@@ -350,7 +341,7 @@ export const CLI_FIRMWARE = createfirmware()
       tape_editor_open(
         SOFTWARE,
         mainbook.id,
-        codepage.id,
+        [codepage.id],
         type,
         `${name} - ${mainbook.name}`,
         READ_CONTEXT.elementfocus,
@@ -460,6 +451,17 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
+  // -- content related commands
+  .command('dev', () => {
+    vm_flush_op()
+    register_dev(SOFTWARE, READ_CONTEXT.elementfocus)
+    return 0
+  })
+  .command('share', () => {
+    vm_flush_op()
+    register_share(SOFTWARE, READ_CONTEXT.elementfocus)
+    return 0
+  })
   .command('save', () => {
     vm_flush_op()
     return 0
@@ -473,11 +475,17 @@ export const CLI_FIRMWARE = createfirmware()
     register_nuke(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
+  .command('gadget', () => {
+    // gadget will turn on / off the built-in inspector
+    tape_inspector(SOFTWARE, READ_CONTEXT.elementfocus)
+    return 0
+  })
+  // -- multiplayer related commands
   .command('joincode', () => {
     network_start(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
-  .command('chat', (_, words) => {
+  .command('twitchchat', (_, words) => {
     const [maybechannel] = readargs(words, 0, [ARG_TYPE.NAME])
     switch (NAME(maybechannel)) {
       default:
@@ -489,7 +497,7 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('broadcast', (_, words) => {
+  .command('twitchbroadcast', (_, words) => {
     const [maybestreamkey] = readargs(words, 0, [ARG_TYPE.NAME])
     switch (NAME(maybestreamkey)) {
       default:

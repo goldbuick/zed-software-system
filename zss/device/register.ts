@@ -23,6 +23,7 @@ import {
   vm_books,
   vm_cli,
   vm_doot,
+  vm_halt,
   vm_login,
   vm_operator,
 } from './api'
@@ -177,6 +178,8 @@ const register = createdevice(
             if (isjoin()) {
               network_join(register, urlcontent, myplayerid)
             } else {
+              // signal halting state
+              vm_halt(register, islocked(), myplayerid)
               // pull data && init
               await loadmem(urlcontent)
             }

@@ -4,9 +4,9 @@ import { deepcopy } from 'zss/mapping/types'
 import { textformatreadedges, WRITE_TEXT_CONTEXT } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { TapeConsole } from '../console/component'
 import { TapeEditor } from '../editor/component'
 import { WriteTextContext } from '../hooks'
+import { TapeTerminal } from '../terminal/component'
 
 type TapeLayoutProps = {
   context: WRITE_TEXT_CONTEXT
@@ -67,7 +67,7 @@ export function TapeLayout({ context }: TapeLayoutProps) {
         return (
           <>
             <WriteTextContext.Provider value={ytop}>
-              <TapeConsole />
+              <TapeTerminal />
             </WriteTextContext.Provider>
             <WriteTextContext.Provider value={ybottom}>
               <TapeEditor />
@@ -81,7 +81,7 @@ export function TapeLayout({ context }: TapeLayoutProps) {
               <TapeEditor />
             </WriteTextContext.Provider>
             <WriteTextContext.Provider value={ybottom}>
-              <TapeConsole />
+              <TapeTerminal />
             </WriteTextContext.Provider>
           </>
         )
@@ -96,7 +96,7 @@ export function TapeLayout({ context }: TapeLayoutProps) {
 
   return (
     <WriteTextContext.Provider key="single" value={context}>
-      <TapeConsole />
+      <TapeTerminal />
     </WriteTextContext.Provider>
   )
 }

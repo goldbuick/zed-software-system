@@ -1,10 +1,10 @@
 import { useCallback, useContext } from 'react'
 import { RUNTIME } from 'zss/config'
-import { UserHotkey, UserInput } from 'zss/gadget/userinput'
 import { ispresent } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { Rect } from '../rect'
+import { UserHotkey, UserInput } from '../userinput'
 
 import {
   PanelItemProps,
@@ -15,7 +15,7 @@ import {
   setuppanelitem,
 } from './common'
 
-export function PanelItemHotkey({
+export function PanelItemZSSEdit({
   chip,
   row,
   active,
@@ -25,14 +25,10 @@ export function PanelItemHotkey({
 }: PanelItemProps) {
   setuppanelitem(row, context)
 
-  const [target, shortcut, maybetext, maybenoclose] = [
-    mapTo(args[0], ''),
-    mapTo(args[1], args[1]?.toString() ?? ''),
-    mapTo(args[2], ''),
-    mapTo(args[3], ''),
-  ]
+  const [target] = [mapTo(args[0], '')]
 
-  const text = maybetext || ` ${shortcut.toUpperCase()} `
+  const shortcut = 'z'
+  const text = ` ${shortcut.toUpperCase()} `
   const tcolor = inputcolor(active)
 
   const cx = context.x - 0.25
@@ -48,11 +44,9 @@ export function PanelItemHotkey({
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    scroll.sendmessage(chiptarget(chip, target))
-    if (!maybenoclose) {
-      scroll.sendclose()
-    }
-  }, [chip, scroll, target, maybenoclose])
+    scroll.sendmessage(chiptarget(chip, target), undefined)
+    scroll.sendclose()
+  }, [scroll, chip, target])
 
   return (
     <group

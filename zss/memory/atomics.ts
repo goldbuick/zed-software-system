@@ -6,9 +6,8 @@ import {
   readstrkindname,
   STR_KIND,
 } from 'zss/words/kind'
-import { COLLISION, NAME, PT } from 'zss/words/types'
+import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
-import { boardelementbg, boardelementcolor, boardelementname } from './board'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 // what is atomics? a set of spatial and data related queries
@@ -79,19 +78,25 @@ export function listelementsbykind(
   const bg = readstrkindbg(kind)
   return elements
     .filter((element) => {
-      if (ispresent(name) && boardelementname(element) !== name) {
-        // console.info('no match on name', name)
-        return false
+      if (ispresent(name)) {
+        const elementname = NAME(element?.name ?? element?.kinddata?.name ?? '')
+        if (elementname !== name) {
+          return false
+        }
       }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-      if (ispresent(color) && boardelementcolor(element) !== color) {
-        // console.info('no match on color', color)
-        return false
+      if (ispresent(color)) {
+        const elementcolor: COLOR =
+          element?.color ?? element?.kinddata?.color ?? COLOR.WHITE
+        if (elementcolor !== color) {
+          return false
+        }
       }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-      if (ispresent(bg) && boardelementbg(element) !== bg) {
-        // console.info('no match on bg', bg)
-        return false
+      if (ispresent(bg)) {
+        const elementbg: COLOR =
+          element?.bg ?? element?.kinddata?.bg ?? COLOR.BLACK
+        if (elementbg !== bg) {
+          return false
+        }
       }
       return true
     })

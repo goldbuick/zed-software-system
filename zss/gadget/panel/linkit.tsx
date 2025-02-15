@@ -12,7 +12,7 @@ import {
   setuppanelitem,
 } from './common'
 
-export function PanelItemHyperlink({
+export function PanelItemLinkIt({
   chip,
   row,
   active,

@@ -40,14 +40,14 @@ export type DITHER_DATA = {
 
 function createditherstore() {
   return createStore<DITHER_DATA>((set) => {
-    function inc() {
-      set({ render: Math.random() })
+    function changed() {
+      set((state) => ({ render: state.render + 1 }))
     }
     return {
       dither: [],
       render: 0,
       changed() {
-        setTimeout(inc, 0)
+        queueMicrotask(changed)
       },
     }
   })
@@ -103,8 +103,8 @@ export type TILE_DATA = {
 
 function createtilesstore() {
   return createStore<TILE_DATA>((set) => {
-    function inc() {
-      set({ render: Math.random() })
+    function changed() {
+      set((state) => ({ render: state.render + 1 }))
     }
     return {
       width: 0,
@@ -114,7 +114,7 @@ function createtilesstore() {
       bg: [],
       render: 0,
       changed() {
-        setTimeout(inc, 0)
+        queueMicrotask(changed)
       },
     }
   })

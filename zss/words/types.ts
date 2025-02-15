@@ -76,17 +76,20 @@ export enum STAT_TYPE {
   TERRAIN,
   CHARSET,
   PALETTE,
-  CONST, //  @char 2 - @cycle 1 - the first @ is name,
-  //         all subsequent @ are key -> value paris
-  RANGE, //  @range gooble R HUH; help text for stat
-  SELECT, // @sl foup A B C
-  NUMBER, // @number foup 0 100
-  TEXT, //   @text gumple
-  LINK, //   @link north - use this for passages between boards
-  HOTKEY, // @hotkey gorp g - we can associate hotkeys with objects
-  SCROLL, // @scroll, affords the user to write local code
-  COPYIT, // only useful in hyperlinks, used to copy into the clipboard
-  OPENIT, // only useful in hyperlinks, used to open a url in a new tab
+  //            all subsequent @ are key -> value paris
+  CONST, //     @char 2 - @cycle 1 - the first @ is name,
+  RANGE, //     @gooble range R HUH; help text for stat
+  SELECT, //    @foup sl A B C
+  NUMBER, //    @foup number 0 100
+  TEXT, //      @gumple text
+  LINK, //      @north link - use this for passages between boards
+  HOTKEY, //    @gorp hotkey g - we can associate hotkeys with objects
+  COPYIT, //    only useful in hyperlinks, used to copy into the clipboard
+  OPENIT, //    only useful in hyperlinks, used to open a url in a new tab
+  //            used in inspector
+  ZSSEDIT, //   @code zssedit, affords the user to write local code
+  CHAREDIT, //  @char charedit, affords the user to pick char
+  COLOREDIT, // @color coloredit, affords the user to pick a color
 }
 
 export type STAT = {

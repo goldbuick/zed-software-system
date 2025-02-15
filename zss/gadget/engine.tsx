@@ -1,10 +1,10 @@
-import { addEffect, addAfterEffect, useThree, extend } from '@react-three/fiber'
+import { addEffect, addAfterEffect, useThree } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
 import { getGPUTier, TierResult } from 'detect-gpu'
 import { deviceType, primaryInput } from 'detect-it'
 import { useEffect, useState } from 'react'
 import Stats from 'stats.js'
-import { NearestFilter, OrthographicCamera } from 'three'
+import { NearestFilter } from 'three'
 import {
   FORCE_CRT_OFF,
   FORCE_LOW_REZ,
@@ -27,9 +27,7 @@ import { UserScreen } from './userscreen'
 // include all front-end devices
 import 'zss/userspace'
 
-extend({ OrthographicCamera })
-
-export function Terminal() {
+export function Engine() {
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
 

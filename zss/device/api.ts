@@ -5,6 +5,7 @@ without having to include device code
 
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { PT } from 'zss/words/types'
 
 // be careful to keep imports here minimal
 
@@ -235,6 +236,10 @@ export function tape_debug(device: DEVICELIKE, ...message: any[]) {
   return true
 }
 
+export function tape_inspector(device: DEVICELIKE, player: string) {
+  device.emit('tape:inspector', undefined, player)
+}
+
 // internal only, use api_error
 function tape_error(device: DEVICELIKE, ...message: any[]) {
   device.emit('tape:error', message)
@@ -268,12 +273,12 @@ export function tape_crash(device: DEVICELIKE, player: string) {
 export function tape_editor_open(
   device: DEVICELIKE,
   book: string,
-  page: string,
+  path: string[],
   type: string,
   title: string,
   player: string,
 ) {
-  device.emit('tape:editor:open', [book, page, type, title], player)
+  device.emit('tape:editor:open', [book, path, type, title], player)
 }
 
 export function tape_editor_close(device: DEVICELIKE, player: string) {
@@ -294,6 +299,10 @@ export function userinput_down(
 
 export function vm_operator(device: DEVICELIKE, player: string) {
   device.emit('vm:operator', undefined, player)
+}
+
+export function vm_halt(device: DEVICELIKE, halt: boolean, player: string) {
+  device.emit('vm:halt', halt, player)
 }
 
 export function vm_books(
@@ -326,27 +335,30 @@ export function vm_input(
   device.emit('vm:input', [input, mods], player)
 }
 
-// odd one out here as this is not a message
-export function vm_codeaddress(book: string, codepage: string) {
-  return `${book}${codepage}`
+export function vm_inspect(device: DEVICELIKE, p1: PT, p2: PT, player: string) {
+  device.emit('vm:inspect', [p1, p2], player)
+}
+
+export function vm_codeaddress(book: string, path: string[]) {
+  return `${book}:${path.join(':')}`
 }
 
 export function vm_codewatch(
   device: DEVICELIKE,
   book: string,
-  codepage: string,
+  path: string[],
   player: string,
 ) {
-  device.emit('vm:codewatch', [book, codepage], player)
+  device.emit('vm:codewatch', [book, path], player)
 }
 
 export function vm_coderelease(
   device: DEVICELIKE,
   book: string,
-  codepage: string,
+  path: string[],
   player: string,
 ) {
-  device.emit('vm:coderelease', [book, codepage], player)
+  device.emit('vm:coderelease', [book, path], player)
 }
 
 export function vm_cli(device: DEVICELIKE, input: string, player: string) {

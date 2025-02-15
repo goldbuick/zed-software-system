@@ -8,7 +8,6 @@ import { ispresent, isstring } from './mapping/types'
 
 export type OS = {
   ids: () => string[]
-  has: (id: string) => boolean
   isended: (id: string) => boolean
   halt: (id: string) => boolean
   gc: () => void
@@ -39,9 +38,6 @@ export function createos() {
   const os: OS = {
     ids() {
       return Object.keys(chips)
-    },
-    has(id) {
-      return ispresent(chips[id])
     },
     isended(id) {
       const chip = chips[id]

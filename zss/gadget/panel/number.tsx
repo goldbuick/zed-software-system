@@ -12,15 +12,24 @@ import {
   UserInputHandler,
 } from '../userinput'
 
-import { PanelItemProps, inputcolor, mapTo, strsplice } from './common'
+import {
+  PanelItemProps,
+  inputcolor,
+  mapTo,
+  setuppanelitem,
+  strsplice,
+} from './common'
 
 export function PanelItemNumber({
   chip,
+  row,
   active,
   label,
   args,
   context,
 }: PanelItemProps) {
+  setuppanelitem(row, context)
+
   const [target, maybemin, maybemax] = [
     mapTo(args[0], ''),
     mapTo(args[1], -1),
@@ -103,7 +112,7 @@ export function PanelItemNumber({
   return (
     value !== undefined && (
       <>
-        {active && (
+        {active && !focus && (
           <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} OK_BUTTON={ok} />
         )}
         {focus && (

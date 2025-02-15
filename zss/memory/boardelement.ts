@@ -1,5 +1,7 @@
 import { createsid } from 'zss/mapping/guid'
-import { MAYBE } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
+import { isstrcolor, mapstrcolortoattributes, STR_COLOR } from 'zss/words/color'
+import { NAME } from 'zss/words/types'
 
 import {
   FORMAT_OBJECT,
@@ -63,4 +65,28 @@ export function importboardelement(
   boardelemententry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<BOARD_ELEMENT> {
   return unformatobject(boardelemententry, BOARD_ELEMENT_KEYS)
+}
+
+export function boardelementisobject(element: MAYBE<BOARD_ELEMENT>) {
+  return element?.id?.length ?? 0 > 0
+}
+
+export function boardelementapplycolor(
+  element: MAYBE<BOARD_ELEMENT>,
+  strcolor: STR_COLOR | undefined,
+) {
+  if (!ispresent(element) || !isstrcolor(strcolor)) {
+    return
+  }
+  const { color, bg } = mapstrcolortoattributes(strcolor)
+  if (ispresent(color)) {
+    element.color = color
+  }
+  if (ispresent(bg)) {
+    element.bg = bg
+  }
+}
+
+export function boardelementname(element: MAYBE<BOARD_ELEMENT>) {
+  return NAME(element?.name ?? element?.kinddata?.name ?? '')
 }

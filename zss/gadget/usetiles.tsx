@@ -2,7 +2,7 @@ import { useContext } from 'react'
 import { StoreApi, useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 
-import { Tiles } from './framed/tiles'
+import { Tiles } from './framedlayer/tiles'
 import { TILE_DATA, TilesContext } from './hooks'
 
 type TilesDataProps = React.PropsWithChildren<{

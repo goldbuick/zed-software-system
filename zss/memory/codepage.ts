@@ -4,9 +4,15 @@ import { PALETTE } from 'zss/file/palette'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { statformat, stattypestring } from 'zss/words/stats'
-import { COLLISION, NAME, STAT_TYPE } from 'zss/words/types'
+import { CATEGORY, COLLISION, NAME, STAT_TYPE } from 'zss/words/types'
 
 import { createboard, exportboard, importboard } from './board'
 import {
@@ -158,8 +164,9 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
     const token = parse.tokens[i]
     if (token.tokenType === stat) {
       const source = token.image.slice(1)
-      const words = source.split(' ')
-      const stat = statformat(words, isfirst)
+      const [sourcewords, label] = source.split(';').map((str) => str.trim())
+      const words = sourcewords.split(' ')
+      const stat = statformat(isstring(label) ? label : '', words, isfirst)
       const maybename = NAME(stat.values.join(' '))
       isfirst = false
       switch (stat.type) {
@@ -173,7 +180,7 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
           break
         case STAT_TYPE.OBJECT:
           codepage.stats.type = CODE_PAGE_TYPE.OBJECT
-          codepage.stats.name = maybename
+          codepage.stats.name = maybename || 'object'
           break
         case STAT_TYPE.TERRAIN:
           codepage.stats.type = CODE_PAGE_TYPE.TERRAIN
@@ -211,11 +218,13 @@ export function codepagereadstats(codepage: MAYBE<CODE_PAGE>): CODE_PAGE_STATS {
         case STAT_TYPE.TEXT:
         case STAT_TYPE.LINK:
         case STAT_TYPE.HOTKEY:
-        case STAT_TYPE.SCROLL: {
+        case STAT_TYPE.ZSSEDIT:
+        case STAT_TYPE.CHAREDIT:
+        case STAT_TYPE.COLOREDIT: {
           const [maybename, ...args] = stat.values
           if (isstring(maybename)) {
             const name = NAME(maybename)
-            codepage.stats[name] = args
+            codepage.stats[name] = [stattypestring(stat.type), ...args]
           }
           break
         }
@@ -276,6 +285,11 @@ function applyelementstats(codepage: CODE_PAGE, element: BOARD_ELEMENT) {
   const keys = Object.keys(stats)
   for (let i = 0; i < keys.length; ++i) {
     const key = keys[i]
+    const value = stats[key]
+    if (isarray(value)) {
+      // non-const stats here don't make sense
+      continue
+    }
     switch (key) {
       case 'char':
       case 'color':
@@ -341,27 +355,33 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       }
       codepage.board.id = codepage.id
       const stats = codepagereadstatdefaults(codepage)
-      codepage.board.isdark = ispresent(stats.isdark) && stats.isdark ? 1 : 0
-      // @ts-expect-error ugh
+      //
+      codepage.board.isdark = (stats.isdark ?? codepage.board.isdark) ? 1 : 0
+      // @ts-expect-error ...
+      codepage.board.startx = stats.startx ?? codepage.board.startx
+      // @ts-expect-error ...
+      codepage.board.starty = stats.starty ?? codepage.board.starty
+      // @ts-expect-error ...
       codepage.board.over = stats.over ?? codepage.board.over
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.under = stats.under ?? codepage.board.under
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.exitnorth = stats.exitnorth ?? codepage.board.exitnorth
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.exitsouth = stats.exitsouth ?? codepage.board.exitsouth
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.exitwest = stats.exitwest ?? codepage.board.exitwest
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.exiteast = stats.exiteast ?? codepage.board.exiteast
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.timelimit = stats.timelimit ?? codepage.board.timelimit
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.restartonzap =
         stats.restartonzap ?? codepage.board.restartonzap
-      // @ts-expect-error ugh
+      // @ts-expect-error ...
       codepage.board.maxplayershots =
         stats.maxplayershots ?? codepage.board.maxplayershots
+      //
       return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {
@@ -370,6 +390,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         codepage.object = createboardelement()
       }
       codepage.object.name = codepagereadname(codepage)
+      codepage.object.category = CATEGORY.ISOBJECT
       applyelementstats(codepage, codepage.object)
       return codepage.object as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
@@ -379,6 +400,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         codepage.terrain = createboardelement()
       }
       codepage.terrain.name = codepagereadname(codepage)
+      codepage.terrain.category = CATEGORY.ISTERRAIN
       applyelementstats(codepage, codepage.terrain)
       return codepage.terrain as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
