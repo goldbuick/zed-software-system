@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <title>
-    ZSS - main:0.31.4:6c940c2c749b28b2360040439fbe75b336db1884
+    ZSS - main:0.31.6:159cdad66906e419a18e8e5ec680978dc9f06aba
   </title>
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -36,16 +36,19 @@
     }(window.location))
   </script>
   <!-- End Single Page Apps for GitHub Pages -->
-  <script type="module" crossorigin src="/assets/index-CFhr_JEl.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BFGGBYxq.css">
+  <script type="text/javascript">
+    // Hold a global ref to the clipboard API as @testing-library/user-event
+    // is going to eat it
+    window.sysclipboard = navigator.clipboard
+  </script>
+  <script type="module" crossorigin src="/assets/index-Bn5XGMe9.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BZRnpvrX.css">
 </head>
 
 <body>
   <div id="frame">
     <canvas id="engine"></canvas>
   </div>
-  <input type="text" id="touchtext" data-kioskboard-value="U" data-kioskboard-type="all"
-    data-kioskboard-specialcharacters="true" />
 </body>
 
 </html>
