@@ -78,11 +78,12 @@ export const RUNTIME_FIRMWARE = createfirmware({
     const label = maybelabel ?? maybetarget
 
     function sendtoelements(elements: BOARD_ELEMENT[]) {
-      elements.forEach((element) => {
+      for (let i = 0; i < elements.length; ++i) {
+        const element = elements[i]
         if (ispresent(element.id)) {
           chip.send(element.id, label, data)
         }
-      })
+      }
     }
 
     // the intent here is to gather a list of target chip ids

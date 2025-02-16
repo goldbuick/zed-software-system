@@ -125,7 +125,6 @@ export function memoryinspectcolor(
     return value
   }
   function set(name: string, value: WORD) {
-    console.info(name, value)
     if (ispresent(element)) {
       element[name as keyof BOARD_ELEMENT] = value
     }
@@ -617,11 +616,13 @@ export function memoryinspectchararea(
     return
   }
 
+  let all = 0
   function get() {
-    return 0
+    return all
   }
   function set(name: string, value: WORD) {
     if (isnumber(value)) {
+      all = value
       rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
         const el = boardelementread(board, pt)
         if (ispresent(el)) {
@@ -658,17 +659,22 @@ export function memoryinspectcolorarea(
     return
   }
 
+  let all = 0
   function get() {
-    return 0
+    return all
   }
   function set(name: string, value: WORD) {
+    console.info('memoryinspectcolorarea', name, value)
     if (isnumber(value)) {
-      rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
-        const el = boardelementread(board, pt)
-        if (ispresent(el)) {
-          el[name as keyof BOARD_ELEMENT] = value
+      all = value
+      for (let y = p1.y; y <= p2.y; ++y) {
+        for (let x = p1.x; x <= p2.x; ++x) {
+          const el = boardelementread(board, { x, y })
+          if (ispresent(el)) {
+            el[name as keyof BOARD_ELEMENT] = value
+          }
         }
-      })
+      }
     }
   }
 
@@ -699,11 +705,13 @@ export function memoryinspectbgarea(
     return
   }
 
+  let all = 0
   function get() {
-    return 0
+    return all
   }
   function set(name: string, value: WORD) {
     if (isnumber(value)) {
+      all = value
       rectpoints(p1.x, p1.y, p2.x, p2.y).forEach((pt) => {
         const el = boardelementread(board, pt)
         if (ispresent(el)) {

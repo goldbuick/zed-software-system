@@ -54,7 +54,20 @@ enum BOARD_ELEMENT_KEYS {
 export function exportboardelement(
   boardelement: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<FORMAT_OBJECT> {
+  if (ispresent(boardelement?.id)) {
+    return formatobject(boardelement, BOARD_ELEMENT_KEYS, {
+      category: FORMAT_SKIP,
+      kinddata: FORMAT_SKIP,
+    })
+  }
+  // terrain
   return formatobject(boardelement, BOARD_ELEMENT_KEYS, {
+    id: FORMAT_SKIP,
+    x: FORMAT_SKIP,
+    y: FORMAT_SKIP,
+    lx: FORMAT_SKIP,
+    ly: FORMAT_SKIP,
+    code: FORMAT_SKIP,
     category: FORMAT_SKIP,
     kinddata: FORMAT_SKIP,
   })

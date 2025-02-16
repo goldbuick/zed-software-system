@@ -25,8 +25,12 @@ export function Tape() {
   let top = 0
   let height = screensize.rows - 2
 
-  const [layout, terminalopen] = useTape(
-    useShallow((state) => [state.layout, state.terminal.open]),
+  const [layout, terminalopen, editoropen] = useTape(
+    useShallow((state) => [
+      state.layout,
+      state.terminal.open,
+      state.editor.open,
+    ]),
   )
 
   switch (layout) {
@@ -55,10 +59,11 @@ export function Tape() {
   }
 
   const player = registerreadplayer()
+  const showterminal = terminalopen || editoropen
 
   return (
     <TilesData store={store}>
-      {terminalopen && (
+      {showterminal && (
         <ShadeBoxDither
           width={screensize.cols}
           height={screensize.rows}
@@ -68,7 +73,7 @@ export function Tape() {
           bottom={top + height - 1}
         />
       )}
-      {terminalopen ? (
+      {showterminal ? (
         <UserFocus blockhotkeys>
           <BackPlate context={context} />
           <TapeLayout context={context} />

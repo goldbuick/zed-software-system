@@ -45,7 +45,6 @@ export function PanelItemZSSEdit({
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
     scroll.sendmessage(chiptarget(chip, target), undefined)
-    scroll.sendclose()
   }, [scroll, chip, target])
 
   return (
