@@ -55,7 +55,9 @@ export function PanelItemColorEdit({
 
   const tvalue = `${state}`.padStart(2, '0')
   const tlabel = label.trim()
-  const tcolor = COLOR[state].padEnd(12, ' ').toLowerCase()
+  const tcolor = (COLOR[state] || COLOR[COLOR.BLACK])
+    .padEnd(12, ' ')
+    .toLowerCase()
 
   const cx = context.x - 1
   const cy = context.y + 2

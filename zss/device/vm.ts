@@ -64,6 +64,7 @@ import { NAME, PT } from 'zss/words/types'
 import { write, writetext } from 'zss/words/writeui'
 
 import {
+  gadgetserver_clearscroll,
   platform_ready,
   register_loginready,
   register_savemem,
@@ -417,8 +418,11 @@ const vm = createdevice(
                       element.code ?? '',
                     )
 
-                    // wait for scroll to close
-                    await waitfor(1000)
+                    // close scroll
+                    gadgetserver_clearscroll(vm, message.player)
+
+                    // wait a little
+                    await waitfor(800)
 
                     // open code editor
                     tape_editor_open(
