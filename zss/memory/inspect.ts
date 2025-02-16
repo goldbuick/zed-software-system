@@ -125,7 +125,6 @@ export function memoryinspectcolor(
     return value
   }
   function set(name: string, value: WORD) {
-    console.info(name, value)
     if (ispresent(element)) {
       element[name as keyof BOARD_ELEMENT] = value
     }

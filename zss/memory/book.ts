@@ -38,6 +38,7 @@ import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
+  BOOK_FLAGS,
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
@@ -67,6 +68,17 @@ enum BOOK_KEYS {
 export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
   return formatobject(book, BOOK_KEYS, {
     pages: (pages) => pages.map(exportcodepage),
+    flags: (flags: Record<string, BOOK_FLAGS>) => {
+      const ids = Object.keys(flags)
+      for (let i = 0; i < ids.length; ++i) {
+        // drop empty flag entries
+        const id = ids[i]
+        if (Object.keys(flags[id]).length === 0) {
+          delete flags[id]
+        }
+      }
+      return flags
+    },
   })
 }
 
