@@ -5,7 +5,7 @@ import { api_error, MESSAGE, tape_debug, tape_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
-import { pickwith } from 'zss/mapping/array'
+import { pick, pickwith } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -27,6 +27,7 @@ import {
   bookclearflags,
   bookelementkindread,
   bookensurecodepagewithtype,
+  bookplayermovetoboard,
   bookplayerreadactive,
   bookplayerreadboard,
   bookplayerreadboards,
@@ -425,7 +426,68 @@ export function memorymoveobject(
   }
   const blocked = bookboardmoveobject(book, board, target, dest)
   if (ispresent(blocked)) {
-    sendinteraction(chip, blocked, chip.id(), 'thud', undefined)
+    if (target.kind === MEMORY_LABEL.PLAYER && blocked.kind === 'edge') {
+      // attempt to move player
+      if (dest.x < 0) {
+        // exit west
+        const boards = bookreadcodepagesbytypeandstat(
+          book,
+          CODE_PAGE_TYPE.BOARD,
+          board?.exitwest ?? '',
+        )
+        if (boards.length) {
+          const board = pick(boards)
+          bookplayermovetoboard(book, target.id ?? '', board.id, {
+            x: BOARD_WIDTH - 1,
+            y: dest.y,
+          })
+        }
+      } else if (dest.x >= BOARD_WIDTH) {
+        // exit east
+        const boards = bookreadcodepagesbytypeandstat(
+          book,
+          CODE_PAGE_TYPE.BOARD,
+          board?.exiteast ?? '',
+        )
+        if (boards.length) {
+          const board = pick(boards)
+          bookplayermovetoboard(book, target.id ?? '', board.id, {
+            x: 0,
+            y: dest.y,
+          })
+        }
+      } else if (dest.y < 0) {
+        // exit north
+        const boards = bookreadcodepagesbytypeandstat(
+          book,
+          CODE_PAGE_TYPE.BOARD,
+          board?.exitnorth ?? '',
+        )
+        if (boards.length) {
+          const board = pick(boards)
+          bookplayermovetoboard(book, target.id ?? '', board.id, {
+            x: dest.x,
+            y: BOARD_HEIGHT - 1,
+          })
+        }
+      } else if (dest.y >= BOARD_HEIGHT) {
+        // exit south
+        const boards = bookreadcodepagesbytypeandstat(
+          book,
+          CODE_PAGE_TYPE.BOARD,
+          board?.exitsouth ?? '',
+        )
+        if (boards.length) {
+          const board = pick(boards)
+          bookplayermovetoboard(book, target.id ?? '', board.id, {
+            x: dest.x,
+            y: 0,
+          })
+        }
+      }
+    } else {
+      sendinteraction(chip, blocked, chip.id(), 'thud', undefined)
+    }
     if (target.kind === MEMORY_LABEL.PLAYER) {
       sendinteraction(chip, chip.id(), blocked, 'touch', target.id)
     } else if (target.collision === COLLISION.ISBULLET) {
