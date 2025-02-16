@@ -390,6 +390,9 @@ export function memoryplayerscan(players: Record<string, number>) {
 }
 
 export function memorymessage(message: MESSAGE) {
+  // if (message.target === 'open') {
+  console.info('###', message)
+  // }
   os.message(message)
 }
 
