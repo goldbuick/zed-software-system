@@ -1,4 +1,9 @@
-import { network_fetch, synth_tts } from 'zss/device/api'
+import {
+  chat_connect,
+  chat_disconnect,
+  network_fetch,
+  synth_tts,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isarray } from 'zss/mapping/types'
@@ -80,4 +85,17 @@ export const NETWORK_FIRMWARE = createfirmware()
     ])
     fetchcommand(arg, label, url, maybemethod, words, ii)
     return 1
+  })
+  .command('twitchchat', (_, words) => {
+    const [maybechannel] = readargs(words, 0, [ARG_TYPE.NAME])
+    console.info('twitchchat', maybechannel)
+    switch (NAME(maybechannel)) {
+      default:
+        chat_connect(SOFTWARE, maybechannel, READ_CONTEXT.elementfocus)
+        break
+      case 'close':
+        chat_disconnect(SOFTWARE, READ_CONTEXT.elementfocus)
+        break
+    }
+    return 0
   })
