@@ -35,6 +35,7 @@ import { createsource, SOURCE_TYPE } from 'zss/gadget/audio/source'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
 import { clamp } from 'zss/mapping/number'
+import { waitfor } from 'zss/mapping/tick'
 import {
   isarray,
   isnumber,
@@ -760,14 +761,17 @@ const synthdevice = createdevice('synth', [], (message) => {
   }
   switch (message.target) {
     case 'audioenabled':
-      vm_loader(
-        synthdevice,
-        undefined,
-        'text',
-        'audioenabled',
-        '',
-        registerreadplayer(),
-      )
+      doasync(synthdevice, async () => {
+        await waitfor(1000)
+        vm_loader(
+          synthdevice,
+          undefined,
+          'text',
+          'audioenabled',
+          '',
+          registerreadplayer(),
+        )
+      })
       break
     case 'bpm':
       if (isnumber(message.data)) {
