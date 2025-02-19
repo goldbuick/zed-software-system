@@ -1,4 +1,5 @@
 import { maptostring } from 'zss/chip'
+import { parsetarget } from 'zss/device'
 import {
   api_error,
   tape_editor_open,
@@ -12,6 +13,7 @@ import {
   broadcast_startstream,
   broadcast_stopstream,
   tape_inspector,
+  vm_restart,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -27,6 +29,7 @@ import {
   memoryreadbookbysoftware,
   memoryreadbooklist,
   memoryreadoperator,
+  memorysendtoactiveboards,
   memorysetsoftwarebook,
 } from 'zss/memory'
 import { bookclearcodepage, bookreadcodepagebyaddress } from 'zss/memory/book'
@@ -55,8 +58,8 @@ function vm_flush_op(tag = '') {
 export const CLI_FIRMWARE = createfirmware()
   // primary firmware
   .command('send', (_, words) => {
-    const [msg, data] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
-    switch (msg) {
+    const [target, data] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
+    switch (NAME(target)) {
       // help messages
       case 'helpmenu':
         writeheader(SOFTWARE, `H E L P`)
@@ -185,9 +188,10 @@ export const CLI_FIRMWARE = createfirmware()
         writeheader(SOFTWARE, `player settings`)
         writetext(SOFTWARE, `todo`)
         break
-      default:
-        tape_info(SOFTWARE, `${msg} ${data ?? ''}`)
+      default: {
+        memorysendtoactiveboards(target, data)
         break
+      }
     }
 
     return 0
@@ -471,6 +475,10 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('nuke', () => {
     register_nuke(SOFTWARE, READ_CONTEXT.elementfocus)
+    return 0
+  })
+  .command('restart', () => {
+    vm_restart(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('gadget', () => {

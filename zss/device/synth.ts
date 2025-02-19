@@ -44,7 +44,13 @@ import {
 } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { api_error, synth_audioenabled, tape_info, vm_synthsend } from './api'
+import {
+  api_error,
+  synth_audioenabled,
+  tape_info,
+  vm_loader,
+  vm_synthsend,
+} from './api'
 import { registerreadplayer } from './register'
 
 // synth setup
@@ -754,7 +760,14 @@ const synthdevice = createdevice('synth', [], (message) => {
   }
   switch (message.target) {
     case 'audioenabled':
-      // no-op only thing needed is to create the synth
+      vm_loader(
+        synthdevice,
+        undefined,
+        'text',
+        'audioenabled',
+        '',
+        registerreadplayer(),
+      )
       break
     case 'bpm':
       if (isnumber(message.data)) {

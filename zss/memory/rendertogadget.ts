@@ -16,7 +16,7 @@ import {
   SPRITE,
 } from 'zss/gadget/data/types'
 import { circlepoints, linepoints } from 'zss/mapping/2d'
-import { isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
@@ -138,9 +138,17 @@ export function memoryconverttogadgetlayers(
   player: string,
   index: number,
   book: BOOK,
-  board: BOARD,
+  board: MAYBE<BOARD>,
   isprimary: boolean,
 ): LAYER[] {
+  if (
+    !ispresent(board) ||
+    !ispresent(board.terrain) ||
+    !ispresent(board.objects)
+  ) {
+    return []
+  }
+
   const layers: LAYER[] = []
 
   let iiii = index
