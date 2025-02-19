@@ -620,7 +620,6 @@ export function memorytick() {
     READ_CONTEXT.book = mainbook
     READ_CONTEXT.board = undefined
     READ_CONTEXT.element = undefined
-    READ_CONTEXT.elementpt = { x: 0, y: 0 }
     READ_CONTEXT.elementid = ''
     READ_CONTEXT.elementisplayer = false
     READ_CONTEXT.elementfocus = MEMORY.operator
@@ -710,10 +709,6 @@ export function memorycli(player: string, cli = '') {
   READ_CONTEXT.book = mainbook
   READ_CONTEXT.board = bookplayerreadboard(mainbook, player)
   READ_CONTEXT.element = boardobjectread(READ_CONTEXT.board, player)
-  READ_CONTEXT.elementpt = {
-    x: READ_CONTEXT.element?.x ?? 0,
-    y: READ_CONTEXT.element?.y ?? 0,
-  }
   READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
   READ_CONTEXT.elementisplayer = true
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player

@@ -22,7 +22,7 @@ import {
 } from './mapping/types'
 import { memoryclearflags, memoryreadflags } from './memory'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
-import { WORD, WORD_RESULT } from './words/types'
+import { NAME, WORD, WORD_RESULT } from './words/types'
 
 // may need to expand on this to encapsulate more complex values
 export type CHIP = {
@@ -414,7 +414,7 @@ export function createchip(
       }
       // invoke
       const [name, ...args] = words
-      return invokecommand(maptostring(name), args)
+      return invokecommand(NAME(maptostring(name)), args)
     },
     if(...words) {
       const [value, ii] = readargs(words, 0, [ARG_TYPE.ANY])

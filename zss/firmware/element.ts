@@ -18,6 +18,7 @@ import {
 } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { PT } from 'zss/words/types'
 
 const INPUT_FLAG_NAMES = new Set([
   'inputmove',
@@ -175,35 +176,41 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // handle walk movement
     if (
       ispresent(READ_CONTEXT.element?.stepx) &&
-      ispresent(READ_CONTEXT.element.stepy) &&
-      memorymoveobject(
+      ispresent(READ_CONTEXT.element.stepy)
+    ) {
+      const pt: PT = {
+        x: READ_CONTEXT.element?.x ?? 0,
+        y: READ_CONTEXT.element?.y ?? 0,
+      }
+      const didmove = memorymoveobject(
         chip,
         READ_CONTEXT.book,
         READ_CONTEXT.board,
         READ_CONTEXT.element,
         {
-          x: READ_CONTEXT.elementpt.x + READ_CONTEXT.element.stepx,
-          y: READ_CONTEXT.elementpt.y + READ_CONTEXT.element.stepy,
+          x: pt.x + READ_CONTEXT.element.stepx,
+          y: pt.y + READ_CONTEXT.element.stepy,
         },
-      ) === false
-    ) {
-      READ_CONTEXT.element.stepx = 0
-      READ_CONTEXT.element.stepy = 0
-      // walking destructibles get bonked
-      if (
-        bookelementstatread(
-          READ_CONTEXT.book,
-          READ_CONTEXT.element,
-          'destructible',
-        )
-      ) {
-        // mark target for deletion
-        bookboardsafedelete(
-          READ_CONTEXT.book,
-          READ_CONTEXT.board,
-          READ_CONTEXT.element,
-          READ_CONTEXT.timestamp,
-        )
+      )
+      if (didmove === false) {
+        READ_CONTEXT.element.stepx = 0
+        READ_CONTEXT.element.stepy = 0
+        // walking destructibles get bonked
+        if (
+          bookelementstatread(
+            READ_CONTEXT.book,
+            READ_CONTEXT.element,
+            'destructible',
+          )
+        ) {
+          // mark target for deletion
+          bookboardsafedelete(
+            READ_CONTEXT.book,
+            READ_CONTEXT.board,
+            READ_CONTEXT.element,
+            READ_CONTEXT.timestamp,
+          )
+        }
       }
     }
     // clear bucket if set
@@ -230,13 +237,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
         READ_CONTEXT.timestamp,
       )
     ) {
+      const pt: PT = {
+        x: READ_CONTEXT.element?.x ?? 0,
+        y: READ_CONTEXT.element?.y ?? 0,
+      }
       // write new element
-      bookboardwritefromkind(
-        READ_CONTEXT.book,
-        READ_CONTEXT.board,
-        kind,
-        READ_CONTEXT.elementpt,
-      )
+      bookboardwritefromkind(READ_CONTEXT.book, READ_CONTEXT.board, kind, pt)
     }
     // halt execution
     chip.endofprogram()

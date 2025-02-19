@@ -31,7 +31,7 @@ const chat = createdevice('chat', [], (message) => {
             chat,
             undefined,
             'text',
-            `chat:message${message.data}`,
+            `chat:message:${message.data}`,
             `${user}:${text}`,
             registerreadplayer(),
           )

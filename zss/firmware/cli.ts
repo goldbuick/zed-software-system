@@ -11,8 +11,6 @@ import {
   network_start,
   broadcast_startstream,
   broadcast_stopstream,
-  chat_connect,
-  chat_disconnect,
   tape_inspector,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
@@ -483,18 +481,6 @@ export const CLI_FIRMWARE = createfirmware()
   // -- multiplayer related commands
   .command('joincode', () => {
     network_start(SOFTWARE, READ_CONTEXT.elementfocus)
-    return 0
-  })
-  .command('twitchchat', (_, words) => {
-    const [maybechannel] = readargs(words, 0, [ARG_TYPE.NAME])
-    switch (NAME(maybechannel)) {
-      default:
-        chat_connect(SOFTWARE, maybechannel, READ_CONTEXT.elementfocus)
-        break
-      case 'close':
-        chat_disconnect(SOFTWARE, READ_CONTEXT.elementfocus)
-        break
-    }
     return 0
   })
   .command('twitchbroadcast', (_, words) => {
