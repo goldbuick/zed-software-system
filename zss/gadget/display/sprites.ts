@@ -65,13 +65,11 @@ const spritesMaterial = new ShaderMaterial({
       return palette[int(index)];
     }
 
-    vec4 empty;
-
     vec4 bgFromIndex(float index) {
-      if (int(index) >= ${COLOR.ONCLEAR}) {
-        return empty;
-      }
       vec4 bg;
+      if (int(index) >= 16) {
+        return vec4(0.0, 0.0, 0.0, 0.0);
+      }
       bg.rgb = colorFromIndex(index);
       bg.a = 1.0;
       return bg;
@@ -162,7 +160,11 @@ const spritesMaterial = new ShaderMaterial({
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
-        gl_FragColor = vBg;
+        if (vBg.a < 1.0) {
+          discard;
+        } else {
+          gl_FragColor = vBg;
+        }
       } else {
         gl_FragColor.rgb = vColor;
         gl_FragColor.a = 1.0;
