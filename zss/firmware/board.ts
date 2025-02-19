@@ -67,6 +67,8 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     // set walking direction
     bullet.stepx = dir.x - READ_CONTEXT.element.x
     bullet.stepy = dir.y - READ_CONTEXT.element.y
+    // things shot always have the clear bg
+    bullet.bg = COLOR.ONCLEAR
 
     // object code
     const kind = bookelementkindread(READ_CONTEXT.book, bullet)
@@ -235,7 +237,7 @@ export const BOARD_FIRMWARE = createfirmware()
       256,
       1,
       color ?? COLOR.WHITE,
-      bg ?? COLOR.ONCLEAR,
+      bg ?? COLOR.BLACK,
     )
     tokenizeandwritetextformat(text, context, false)
     for (let i = 0; i < measuredwidth; ++i) {
