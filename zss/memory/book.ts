@@ -855,7 +855,7 @@ export function bookboardwritebulletobject(
       boardelementapplycolor(object, maybecolor)
       // skip lookup for bullets, will get set after first tick
       // update named (terrain & objects)
-      bookboardnamedwrite(book, board, object)
+      // bookboardnamedwrite(book, board, object)
       // return result
       return object
     }
@@ -876,9 +876,7 @@ export function bookboardwritefromkind(
     if (ispresent(maybeterrain)) {
       const terrain = boardterrainsetfromkind(board, dest, name)
       if (ispresent(terrain)) {
-        if (ispresent(maybecolor)) {
-          boardelementapplycolor(terrain, maybecolor)
-        }
+        boardelementapplycolor(terrain, maybecolor)
         // update named (terrain & objects)
         const idx = pttoindex(dest, BOARD_WIDTH)
         bookboardnamedwrite(book, board, terrain, idx)
@@ -890,9 +888,7 @@ export function bookboardwritefromkind(
     if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
       const object = boardobjectcreatefromkind(board, dest, name)
       if (ispresent(object)) {
-        if (ispresent(maybecolor)) {
-          boardelementapplycolor(object, maybecolor)
-        }
+        boardelementapplycolor(object, maybecolor)
         // update lookup (only objects)
         bookboardobjectlookupwrite(book, board, object)
         // update named (terrain & objects)

@@ -32,7 +32,7 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { CATEGORY, COLLISION, COLOR, DIR, WORD } from 'zss/words/types'
+import { CATEGORY, COLLISION, COLOR, DIR, PT, WORD } from 'zss/words/types'
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data
@@ -138,7 +138,11 @@ export const BOARD_FIRMWARE = createfirmware()
       stat,
     )
     if (boards.length) {
-      const edgedir = dirfrompts(READ_CONTEXT.elementpt, dir)
+      const pt: PT = {
+        x: READ_CONTEXT.element?.x ?? 0,
+        y: READ_CONTEXT.element?.y ?? 0,
+      }
+      const edgedir = dirfrompts(pt, dir)
       const target = pick(...boards)
       switch (edgedir) {
         case DIR.NORTH:
@@ -336,8 +340,12 @@ export const BOARD_FIRMWARE = createfirmware()
     // check if we are blocked by a pushable
     const target = boardelementread(READ_CONTEXT.board, dir)
     if (target?.category === CATEGORY.ISOBJECT && target?.pushable) {
+      const from: PT = {
+        x: READ_CONTEXT.element?.x ?? 0,
+        y: READ_CONTEXT.element?.y ?? 0,
+      }
       // attempt to shove it away
-      const pt = ptapplydir(dir, dirfrompts(READ_CONTEXT.elementpt, dir))
+      const pt = ptapplydir(dir, dirfrompts(from, dir))
       bookboardmoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
     }
 
