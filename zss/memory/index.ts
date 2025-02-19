@@ -761,7 +761,7 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
   const under = bookreadboard(mainbook, playerboard.under ?? '')
 
   // compose layers
-  const boards = [over, playerboard, under].filter(ispresent)
+  const boards = [over, playerboard, under]
 
   let i = 0
   for (let b = 0; b < boards.length; ++b) {

@@ -13,7 +13,7 @@ export function statformat(label: string, words: string[], first = true) {
       case 'loader':
         return {
           type: STAT_TYPE.LOADER,
-          values: [],
+          values,
         }
       case 'board':
         return {
