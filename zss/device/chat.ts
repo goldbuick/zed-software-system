@@ -17,7 +17,7 @@ const chat = createdevice('chat', [], (message) => {
       if (ispresent(twitchchatclient)) {
         api_error(chat, 'connection', 'chat is already connected')
       } else if (isstring(message.data)) {
-        write(chat, 'connecting')
+        write(chat, `connecting to ${message.data}`)
         twitchchatclient = new ChatClient({ channels: [message.data] })
         twitchchatclient.connect()
         twitchchatclient.onConnect(() => {
