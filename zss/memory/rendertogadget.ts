@@ -233,7 +233,7 @@ export function memoryconverttogadgetlayers(
       object,
       1,
       COLOR.WHITE,
-      COLOR.ONCLEAR,
+      COLOR.BLACK,
     )
     const sprite = createcachedsprite(player, objectindex, id, i)
 
