@@ -111,16 +111,8 @@ export const RUNTIME_FIRMWARE = createfirmware({
         }
         break
       default: {
-        // check named elements first
+        // target named elements
         sendtoelements(listelementsbyattr(READ_CONTEXT.board, [target]))
-        // check to see if its a flag
-        const maybeattr = chip.get(ltarget)
-        // check to see if array
-        if (isarray(maybeattr)) {
-          sendtoelements(listelementsbyattr(READ_CONTEXT.board, maybeattr))
-        } else {
-          sendtoelements(listelementsbyattr(READ_CONTEXT.board, [maybeattr]))
-        }
         break
       }
     }

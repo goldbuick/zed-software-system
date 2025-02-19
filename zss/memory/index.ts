@@ -1,6 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { CHIP, senderid } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
+import { parsetarget } from 'zss/device'
 import { api_error, MESSAGE, tape_debug, tape_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
@@ -8,11 +9,18 @@ import { LAYER } from 'zss/gadget/data/types'
 import { pick, pickwith } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { createos } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, NAME, PT } from 'zss/words/types'
 
+import { listelementsbyattr } from './atomics'
 import {
   boarddeleteobject,
   boardobjectcreatefromkind,
@@ -597,6 +605,13 @@ export function memoryresetchipafteredit(object: string) {
   os.halt(object)
 }
 
+export function memoryrestartallchips() {
+  const ids = os.ids()
+  for (let i = 0; i < ids.length; ++i) {
+    os.halt(ids[i])
+  }
+}
+
 export function memorytick() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -672,21 +687,44 @@ export function memorytick() {
   }
 }
 
-export function memorysynthsend(message: string) {
+export function memorysendtoactiveboards(message: string, data: any) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }
+
+  function sendtoelements(elements: BOARD_ELEMENT[], labelstr: string) {
+    for (let i = 0; i < elements.length; ++i) {
+      const element = elements[i]
+      if (ispresent(element.id)) {
+        const chipmessage = `${senderid(element.id)}:${labelstr}`
+        SOFTWARE.emit(chipmessage, data)
+      }
+    }
+  }
+
+  const { target, path } = parsetarget(message)
+
   // send to all objects on active boards -
   // I guess this is an easy way for cross board coordination
   const boards = bookplayerreadboards(mainbook)
   for (let b = 0; b < boards.length; ++b) {
     const board = boards[b]
-    const ids = Object.keys(board.objects)
-    for (let i = 0; i < ids.length; ++i) {
-      const element = board.objects[ids[i]]
-      const chipmessage = `${senderid(element.id)}:${message}`
-      SOFTWARE.emit(chipmessage)
+
+    // the intent here is to gather a list of target chip ids
+    const ltarget = NAME(target)
+    switch (ltarget) {
+      case 'all':
+      case 'self':
+      case 'others': {
+        sendtoelements(Object.values(board.objects), path)
+        break
+      }
+      default: {
+        // check named elements first
+        sendtoelements(listelementsbyattr(board, [target]), path)
+        break
+      }
     }
   }
 }

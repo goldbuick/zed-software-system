@@ -27,11 +27,12 @@ import {
   memorywriteoperator,
   memoryreadoperator,
   memoryreadplayeractive,
-  memorysynthsend,
+  memorysendtoactiveboards,
   memoryreadplayerboard,
   memorywritehalt,
   memoryreadhalt,
   memoryresetchipafteredit,
+  memoryrestartallchips,
 } from 'zss/memory'
 import { boardelementreadbyidorindex, boardobjectread } from 'zss/memory/board'
 import { boardelementname } from 'zss/memory/boardelement'
@@ -256,7 +257,7 @@ const vm = createdevice(
         break
       case 'synthsend':
         if (isstring(message.data)) {
-          memorysynthsend(message.data)
+          memorysendtoactiveboards(message.data, undefined)
         }
         break
       case 'second': {
@@ -300,6 +301,12 @@ const vm = createdevice(
         // user input from built-in console
         if (ispresent(message.player)) {
           memorycli(message.player, message.data)
+        }
+        break
+      case 'restart':
+        if (message.player === memoryreadoperator()) {
+          memoryrestartallchips()
+          vm_flush(vm, '', message.player)
         }
         break
       case 'inspect':
@@ -435,7 +442,6 @@ const vm = createdevice(
                     )
                   })
                   break
-
                 default:
                   console.info('unknown inspect', inspect)
                   break
