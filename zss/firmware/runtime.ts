@@ -10,7 +10,7 @@ import {
   gadgettext,
 } from 'zss/gadget/data/api'
 import { createsid } from 'zss/mapping/guid'
-import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import { listelementsbyattr } from 'zss/memory/atomics'
 import { bookelementdisplayread } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'

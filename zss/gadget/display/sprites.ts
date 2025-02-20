@@ -3,7 +3,6 @@ import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/file/bytes'
 import { CHARSET } from 'zss/file/charset'
 import { PALETTE } from 'zss/file/palette'
 import { TICK_FPS } from 'zss/mapping/tick'
-import { COLOR } from 'zss/words/types'
 
 import { convertpalettetocolors } from '../data/palette'
 

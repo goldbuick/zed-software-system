@@ -213,8 +213,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
         }
       }
     }
-    // clear bucket if set
-    chip.bucketempty()
   },
 })
   .command('become', (chip, words) => {

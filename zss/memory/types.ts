@@ -23,7 +23,6 @@ export type BOARD_ELEMENT = {
   light?: number
   // interaction
   player?: string
-  bucket?: (number | string)[]
   pushable?: number
   collision?: COLLISION
   destructible?: number

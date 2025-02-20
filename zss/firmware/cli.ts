@@ -1,5 +1,4 @@
 import { maptostring } from 'zss/chip'
-import { parsetarget } from 'zss/device'
 import {
   api_error,
   tape_editor_open,

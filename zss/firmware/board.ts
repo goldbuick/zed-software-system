@@ -76,16 +76,6 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 
     // bullets get one immediate tick
     memorytickobject(READ_CONTEXT.book, READ_CONTEXT.board, bullet, code, 1)
-
-    // determine outcome
-    if (
-      bullet.x !== READ_CONTEXT.element.x ||
-      bullet.y !== READ_CONTEXT.element.y
-    ) {
-      // if we run into something skip
-      // otherwise add to bucket
-      chip.bucket(bullet.id)
-    }
   }
 
   // yield after shoot

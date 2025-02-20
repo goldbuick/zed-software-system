@@ -9,13 +9,7 @@ import { LAYER } from 'zss/gadget/data/types'
 import { pick, pickwith } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
-import {
-  MAYBE,
-  isarray,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, NAME, PT } from 'zss/words/types'
