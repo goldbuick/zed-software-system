@@ -296,9 +296,8 @@ export const BOARD_FIRMWARE = createfirmware()
             READ_CONTEXT.timestamp,
           )
         ) {
-          // bail and mark chip as ended
-          element.stopped = 1
-          return
+          // bail
+          return 0
         }
         // create new element
         if (ispt(element)) {

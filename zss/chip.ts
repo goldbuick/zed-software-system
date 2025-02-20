@@ -19,6 +19,7 @@ import {
   isequal,
   isnumber,
   ispresent,
+  isstring,
 } from './mapping/types'
 import { memoryclearflags, memoryreadflags } from './memory'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
@@ -233,7 +234,6 @@ export function createchip(
       return flags.ps === 1
     },
     shouldtick() {
-      // stopped
       return flags.es === 0 || chip.hm() !== 0
     },
     shouldhalt() {
@@ -338,8 +338,11 @@ export function createchip(
         }
 
         // this sets player focus
-        if (player) {
+        if (isstring(player)) {
+          // update player stat
           chip.set('player', player)
+          // update read context as well
+          READ_CONTEXT.elementfocus = player
         }
 
         // clear message
