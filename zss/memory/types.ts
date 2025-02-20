@@ -42,7 +42,6 @@ export type BOARD_ELEMENT = {
   category?: CATEGORY
   kinddata?: BOARD_ELEMENT
   // cleanup
-  stopped?: number
   removed?: number
 }
 

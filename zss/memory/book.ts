@@ -793,7 +793,7 @@ export function bookboardtick(
   for (let i = 0; i < objects.length; ++i) {
     const object = objects[i]
 
-    // check that we have an id and not stopped
+    // check that we have an id
     if (!ispresent(object.id)) {
       continue
     }
@@ -809,7 +809,7 @@ export function bookboardtick(
     const code = object.code ?? kind?.code ?? ''
 
     // check that we have code to execute
-    if (!code || object.stopped) {
+    if (!code) {
       continue
     }
 

@@ -55,7 +55,9 @@ export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
   return formatobject(board, BOARD_KEYS, {
     terrain: (terrain) => terrain.map(exportboardelement),
     objects: (objects) =>
-      Object.values<BOARD_ELEMENT>(objects).map(exportboardelement),
+      Object.values<BOARD_ELEMENT>(objects)
+        .filter((boardelement) => !boardelement.removed)
+        .map(exportboardelement),
     id: FORMAT_SKIP,
     named: FORMAT_SKIP,
     lookup: FORMAT_SKIP,
