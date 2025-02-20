@@ -32,7 +32,7 @@ import {
   memorywritehalt,
   memoryreadhalt,
   memoryresetchipafteredit,
-  memoryrestartallchips,
+  memoryrestartallchipsandflags,
 } from 'zss/memory'
 import { boardelementreadbyidorindex, boardobjectread } from 'zss/memory/board'
 import { boardelementname } from 'zss/memory/boardelement'
@@ -305,7 +305,7 @@ const vm = createdevice(
         break
       case 'restart':
         if (message.player === memoryreadoperator()) {
-          memoryrestartallchips()
+          memoryrestartallchipsandflags()
           vm_flush(vm, '', message.player)
         }
         break

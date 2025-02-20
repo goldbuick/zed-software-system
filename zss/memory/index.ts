@@ -599,11 +599,20 @@ export function memoryresetchipafteredit(object: string) {
   os.halt(object)
 }
 
-export function memoryrestartallchips() {
+export function memoryrestartallchipsandflags() {
+  // stop all chips
   const ids = os.ids()
   for (let i = 0; i < ids.length; ++i) {
     os.halt(ids[i])
   }
+
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  // drop all flags from mainbook
+  mainbook.flags = {}
 }
 
 export function memorytick() {
