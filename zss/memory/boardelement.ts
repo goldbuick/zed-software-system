@@ -57,6 +57,8 @@ export function exportboardelement(
     return formatobject(boardelement, BOARD_ELEMENT_KEYS, {
       category: FORMAT_SKIP,
       kinddata: FORMAT_SKIP,
+      stopped: FORMAT_SKIP,
+      removed: FORMAT_SKIP,
     })
   }
   // terrain
@@ -69,6 +71,8 @@ export function exportboardelement(
     code: FORMAT_SKIP,
     category: FORMAT_SKIP,
     kinddata: FORMAT_SKIP,
+    stopped: FORMAT_SKIP,
+    removed: FORMAT_SKIP,
   })
 }
 
