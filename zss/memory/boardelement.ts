@@ -32,6 +32,7 @@ enum BOARD_ELEMENT_KEYS {
   bg,
   light,
   player,
+  bucket,
   pushable,
   collision,
   destructible,
@@ -59,6 +60,7 @@ export function exportboardelement(
       kinddata: FORMAT_SKIP,
       stopped: FORMAT_SKIP,
       removed: FORMAT_SKIP,
+      bucket: FORMAT_SKIP,
     })
   }
   // terrain
@@ -73,6 +75,7 @@ export function exportboardelement(
     kinddata: FORMAT_SKIP,
     stopped: FORMAT_SKIP,
     removed: FORMAT_SKIP,
+    bucket: FORMAT_SKIP,
   })
 }
 

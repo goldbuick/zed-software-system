@@ -16,7 +16,7 @@ import { NAME, WORD } from 'zss/words/types'
 const isfx = ['echo', 'reverb', 'chorus', 'phaser', 'distortion', 'vibrato']
 
 function handlesynthplay(words: WORD[], bgplay: boolean) {
-  const [buffer] = readargs(words, 0, [ARG_TYPE.STRING])
+  const [buffer] = readargs(words, 0, [ARG_TYPE.NAME])
   synth_play(SOFTWARE, buffer, bgplay)
 }
 

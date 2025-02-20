@@ -200,8 +200,24 @@ function memoryinspectelement(
   function get(name: string): WORD {
     const value =
       element?.[name as keyof BOARD_ELEMENT] ??
-      element?.kinddata?.[name as keyof BOARD_ELEMENT] ??
-      0
+      element?.kinddata?.[name as keyof BOARD_ELEMENT]
+    // ensure proper defaults
+    if (!ispresent(value)) {
+      switch (name) {
+        case 'color':
+          return 15
+        case 'bg':
+          return 0
+        case 'cycle':
+          return 3
+        case 'collision':
+          return COLLISION.ISWALK
+        case 'pushable':
+          return 0
+        case 'destructible':
+          return 0
+      }
+    }
     return value
   }
   function set(name: string, value: WORD) {
