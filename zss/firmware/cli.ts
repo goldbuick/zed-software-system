@@ -32,7 +32,11 @@ import {
   memorysetsoftwarebook,
 } from 'zss/memory'
 import { bookclearcodepage, bookreadcodepagebyaddress } from 'zss/memory/book'
-import { codepagereadname, codepagereadtypetostring } from 'zss/memory/codepage'
+import {
+  codepagereadname,
+  codepagereadtype,
+  codepagereadtypetostring,
+} from 'zss/memory/codepage'
 import { CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { stattypestring } from 'zss/words/stats'
@@ -409,7 +413,15 @@ export const CLI_FIRMWARE = createfirmware()
     if (ispresent(mainbook)) {
       writeoption(SOFTWARE, 'main', `${mainbook.name} $GREEN${mainbook.id}`)
       if (mainbook.pages.length) {
-        mainbook.pages.forEach((page) => {
+        const sorted = [...mainbook.pages].sort((a, b) => {
+          const atype = codepagereadtype(a)
+          const btype = codepagereadtype(b)
+          if (atype === btype) {
+            return codepagereadname(a).localeCompare(codepagereadname(b))
+          }
+          return btype - atype
+        })
+        sorted.forEach((page) => {
           const name = codepagereadname(page)
           const type = codepagereadtypetostring(page)
           write(SOFTWARE, `!pageopen ${page.id};[${type}] ${name}`)
