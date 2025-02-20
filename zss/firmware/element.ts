@@ -140,9 +140,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // read value
     const value = memoryreadflags(player)[name]
-
-    console.info(player, name, value)
-
     return [ispresent(value), value]
   },
   set(_, name, value) {
