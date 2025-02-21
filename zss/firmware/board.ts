@@ -83,6 +83,58 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   return 0
 }
 
+function commandput(_: any, words: WORD[], arg?: WORD): 0 | 1 {
+  // invalid data
+  if (
+    !ispt(READ_CONTEXT.element) ||
+    !ispresent(READ_CONTEXT.book) ||
+    !ispresent(READ_CONTEXT.board) ||
+    !ispresent(READ_CONTEXT.element)
+  ) {
+    return 0
+  }
+
+  // make sure lookup is created
+  bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+
+  // read
+  const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
+
+  // check if we are blocked by a pushable
+  const target = boardelementread(READ_CONTEXT.board, dir)
+  if (target?.category === CATEGORY.ISOBJECT && target?.pushable) {
+    const from: PT = {
+      x: READ_CONTEXT.element?.x ?? 0,
+      y: READ_CONTEXT.element?.y ?? 0,
+    }
+    // attempt to shove it away
+    const pt = ptapplydir(dir, dirfrompts(from, dir))
+    bookboardmoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
+  }
+
+  // create element
+  const blocked = bookboardcheckblockedobject(
+    READ_CONTEXT.book,
+    READ_CONTEXT.board,
+    COLLISION.ISWALK, // this should be the collision of the thing being plotted
+    dir,
+  )
+  if (!blocked) {
+    // write new element
+    const element = bookboardwritefromkind(
+      READ_CONTEXT.book,
+      READ_CONTEXT.board,
+      kind,
+      dir,
+    )
+    if (ispresent(element)) {
+      element.arg = arg
+    }
+  }
+
+  return 0
+}
+
 export const BOARD_FIRMWARE = createfirmware()
   .command('board', (_, words) => {
     if (!ispresent(READ_CONTEXT.book)) {
@@ -313,47 +365,11 @@ export const BOARD_FIRMWARE = createfirmware()
 
     return 0
   })
-  .command('put', (_, words) => {
-    if (
-      !ispresent(READ_CONTEXT.book) ||
-      !ispresent(READ_CONTEXT.board) ||
-      !ispresent(READ_CONTEXT.element)
-    ) {
-      return 0
-    }
-
-    // make sure lookup is created
-    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
-
-    // read
-    const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
-
-    // check if we are blocked by a pushable
-    const target = boardelementread(READ_CONTEXT.board, dir)
-    if (target?.category === CATEGORY.ISOBJECT && target?.pushable) {
-      const from: PT = {
-        x: READ_CONTEXT.element?.x ?? 0,
-        y: READ_CONTEXT.element?.y ?? 0,
-      }
-      // attempt to shove it away
-      const pt = ptapplydir(dir, dirfrompts(from, dir))
-      bookboardmoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
-    }
-
-    // create element
-    const blocked = bookboardcheckblockedobject(
-      READ_CONTEXT.book,
-      READ_CONTEXT.board,
-      COLLISION.ISWALK, // this should be the collision of the thing being plotted
-      dir,
-    )
-    if (!blocked) {
-      // write new element
-      bookboardwritefromkind(READ_CONTEXT.book, READ_CONTEXT.board, kind, dir)
-    }
-
-    return 0
+  .command('putwith', (chip, words) => {
+    const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+    return commandput(chip, words.slice(ii), arg)
   })
+  .command('put', commandput)
   .command('shootwith', (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
     return commandshoot(chip, words.slice(ii), arg)
