@@ -1,10 +1,13 @@
 import { createRoot, events, Canvas } from '@react-three/fiber'
 import debounce from 'debounce'
 import { Intersection, Plane, Vector3 } from 'three'
+import unmuteAudio from 'unmute-ios-audio'
 import { makeeven } from 'zss/mapping/number'
 import { deepcopy, ispresent } from 'zss/mapping/types'
 
 import { App } from './app'
+
+unmuteAudio()
 
 const target = new Vector3()
 const facing = new Vector3()

@@ -7222,6 +7222,11 @@ universal-user-agent@^6.0.0:
   resolved "https://registry.npmjs.org/universal-user-agent/-/universal-user-agent-6.0.1.tgz#15f20f55da3c930c57bddbf1734c6654d5fd35aa"
   integrity sha512-yCzhz6FN2wU1NiiQRogkTQszlQSlpWaw8SvVegAc+bDxbzHgh1vX8uIe8OYyMH6DwH+sdTJsgMl36+mSMdRJIQ==
 
+unmute-ios-audio@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/unmute-ios-audio/-/unmute-ios-audio-3.3.0.tgz#94c0dd466175fa158defe11a36e9671a8735b9be"
+  integrity sha512-MmoCOrsS2gn3wLT2tT+hF56Q4V4kksIKn2LHrwAtX6umzQwQHDWSh1slMzH+0WuxTZ62s3w8/wsfIII1FQ7ACg==
+
 unordered-array-remove@^1.0.2:
   version "1.0.2"
   resolved "https://registry.npmjs.org/unordered-array-remove/-/unordered-array-remove-1.0.2.tgz#c546e8f88e317a0cf2644c97ecb57dba66d250ef"
