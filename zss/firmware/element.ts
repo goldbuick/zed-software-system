@@ -47,6 +47,8 @@ const STANDARD_STAT_NAMES = new Set([
   // messages & run
   'sender',
   'arg',
+  // object only
+  'id',
 ])
 
 const readinputmap = ['NORTH', 'SOUTH', 'WEST', 'EAST']

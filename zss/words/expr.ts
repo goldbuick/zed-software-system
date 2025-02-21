@@ -17,7 +17,7 @@ import { readstrkindname } from './kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
 import { NAME } from './types'
 
-export function readexpr(index: number, stringeval = true): [any, number] {
+export function readexpr(index: number): [any, number] {
   const maybevalue = READ_CONTEXT.words[index]
   const ii = index + 1
 
@@ -83,11 +83,9 @@ export function readexpr(index: number, stringeval = true): [any, number] {
     const maybeexpr = NAME(maybevalue)
 
     // check for flag
-    if (stringeval) {
-      const maybeflagfromvalue = READ_CONTEXT.get?.(maybevalue)
-      if (ispresent(maybeflagfromvalue)) {
-        return [maybeflagfromvalue, ii]
-      }
+    const maybeflagfromvalue = READ_CONTEXT.get?.(maybevalue)
+    if (ispresent(maybeflagfromvalue)) {
+      return [maybeflagfromvalue, ii]
     }
 
     // check for expressions
@@ -253,7 +251,9 @@ export function readexpr(index: number, stringeval = true): [any, number] {
       case 'pickwith': {
         // PICKWITH <seed> <a> [b] [c] [d]
         const values: any[] = []
-        const [seed, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.STRING])
+        const [seed, iii] = readargs(READ_CONTEXT.words, ii, [
+          ARG_TYPE.NUMBER_OR_STRING,
+        ])
         for (let iiii = iii; iiii < READ_CONTEXT.words.length; ) {
           const [value, iiiii] = readexpr(iiii)
           // if we're given array, we use values from it
@@ -269,7 +269,7 @@ export function readexpr(index: number, stringeval = true): [any, number] {
           iiii = iiiii
           values.push(value)
         }
-        return [pickwith(seed, values), READ_CONTEXT.words.length]
+        return [pickwith(`${seed}`, values), READ_CONTEXT.words.length]
       }
       case 'range': {
         // RANGE <a> [b] [step]
