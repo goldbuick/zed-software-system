@@ -448,6 +448,17 @@ const vm = createdevice(
               }
             }
             break
+          case 'touched':
+            if (isarray(message.data)) {
+              const [toid, from, target] = message.data
+              memorymessage({
+                ...message,
+                target: `${toid}:${target}`,
+                data: undefined,
+                sender: from,
+              })
+            }
+            break
           default:
             // running software messages
             memorymessage(message)

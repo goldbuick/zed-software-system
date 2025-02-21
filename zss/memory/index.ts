@@ -396,7 +396,6 @@ export function memorymessage(message: MESSAGE) {
 }
 
 function sendinteraction(
-  chip: CHIP,
   maybefrom: BOARD_ELEMENT | string,
   maybeto: BOARD_ELEMENT | string,
   message: string,
@@ -412,7 +411,7 @@ function sendinteraction(
   const from = fromid ?? frompt
 
   if (ispresent(toid) && ispresent(from)) {
-    chip.send(toid, message, from, player)
+    SOFTWARE.emit(`vm:touched`, [toid, from, message], player)
   }
 }
 
@@ -488,16 +487,16 @@ export function memorymoveobject(
         }
       }
     } else {
-      sendinteraction(chip, blocked, chip.id(), 'thud', undefined)
+      sendinteraction(blocked, chip.id(), 'thud', undefined)
     }
     if (target.kind === MEMORY_LABEL.PLAYER) {
-      sendinteraction(chip, chip.id(), blocked, 'touch', target.id)
+      sendinteraction(chip.id(), blocked, 'touch', target.id)
     } else if (target.collision === COLLISION.ISBULLET) {
       // need from player stat here
       // so we can properly track aggro from bullets
-      sendinteraction(chip, chip.id(), blocked, 'shot', undefined)
+      sendinteraction(chip.id(), blocked, 'shot', undefined)
     } else {
-      sendinteraction(chip, chip.id(), blocked, 'bump', undefined)
+      sendinteraction(chip.id(), blocked, 'bump', undefined)
     }
 
     // delete destructible elements
