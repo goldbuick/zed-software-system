@@ -204,7 +204,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.NUMBER_OR_STRING: {
-        const [value, iii] = readexpr(ii, false)
+        const [value, iii] = readexpr(ii)
         let maybevalue = value
         if (isstring(maybevalue)) {
           // can we convert to number ?
@@ -320,7 +320,7 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.MAYBE_NUMBER_OR_STRING: {
-        const [value, iii] = readexpr(ii, false)
+        const [value, iii] = readexpr(ii)
         let maybevalue = value
         if (isstring(maybevalue)) {
           // can we convert to number ?

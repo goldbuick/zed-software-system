@@ -12,10 +12,9 @@ import {
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { listelementsbyattr } from 'zss/memory/atomics'
-import { bookelementdisplayread } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { COLOR, NAME } from 'zss/words/types'
+import { NAME } from 'zss/words/types'
 
 export const RUNTIME_FIRMWARE = createfirmware({
   set(chip, name, value) {
@@ -39,19 +38,6 @@ export const RUNTIME_FIRMWARE = createfirmware({
           // $WOBBLE $BOUNCE $SPIN
           READ_CONTEXT.element.tickertext = ticker
           READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-          // send message
-          const display = bookelementdisplayread(
-            READ_CONTEXT.book,
-            READ_CONTEXT.element,
-            1,
-            COLOR.WHITE,
-            COLOR.ONCLEAR,
-          )
-          tape_info(
-            SOFTWARE,
-            `$${COLOR[display.color]}$${display.char}`,
-            ticker,
-          )
         }
       }
     } else if (queue.length > 1) {
