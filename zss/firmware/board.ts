@@ -4,7 +4,11 @@ import { pick } from 'zss/mapping/array'
 import { ispresent } from 'zss/mapping/types'
 import { memorymoveobject, memorytickobject } from 'zss/memory'
 import { listelementsbykind, listnamedelements } from 'zss/memory/atomics'
-import { boardelementread, boardsetterrain } from 'zss/memory/board'
+import {
+  boardelementread,
+  boardobjectread,
+  boardsetterrain,
+} from 'zss/memory/board'
 import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
 import {
   bookboardcheckblockedobject,
@@ -83,7 +87,7 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   return 0
 }
 
-function commandput(_: any, words: WORD[], arg?: WORD): 0 | 1 {
+function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   // invalid data
   if (
     !ispt(READ_CONTEXT.element) ||
@@ -128,7 +132,12 @@ function commandput(_: any, words: WORD[], arg?: WORD): 0 | 1 {
       dir,
     )
     if (ispresent(element)) {
-      element.arg = arg
+      if (ispresent(id)) {
+        element.id = id
+      }
+      if (ispresent(arg)) {
+        element.arg = arg
+      }
     }
   }
 
@@ -369,7 +378,35 @@ export const BOARD_FIRMWARE = createfirmware()
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
     return commandput(chip, words.slice(ii), arg)
   })
-  .command('put', commandput)
+  .command('put', (chip, words) => {
+    return commandput(chip, words)
+  })
+  .command('oneof', (chip, words) => {
+    const [mark, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+
+    // if there is already an object with mark id, bail
+    if (
+      ispresent(READ_CONTEXT.board) &&
+      boardobjectread(READ_CONTEXT.board, mark)
+    ) {
+      return 0
+    }
+
+    return commandput(chip, words.slice(ii), mark)
+  })
+  .command('oneofwith', (chip, words) => {
+    const [mark, arg, ii] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.ANY])
+
+    // if there is already an object with mark id, bail
+    if (
+      ispresent(READ_CONTEXT.board) &&
+      boardobjectread(READ_CONTEXT.board, mark)
+    ) {
+      return 0
+    }
+
+    return commandput(chip, words.slice(ii), mark, arg)
+  })
   .command('shootwith', (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
     return commandshoot(chip, words.slice(ii), arg)
