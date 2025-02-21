@@ -868,6 +868,7 @@ export function bookboardwritefromkind(
   board: MAYBE<BOARD>,
   kind: MAYBE<STR_KIND>,
   dest: PT,
+  id?: string,
 ): MAYBE<BOARD_ELEMENT> {
   if (ispresent(book) && ispresent(board) && ispresent(kind)) {
     const [name, maybecolor] = kind
@@ -886,7 +887,7 @@ export function bookboardwritefromkind(
 
     const maybeobject = bookreadobject(book, name)
     if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
-      const object = boardobjectcreatefromkind(board, dest, name)
+      const object = boardobjectcreatefromkind(board, dest, name, id)
       if (ispresent(object)) {
         boardelementapplycolor(object, maybecolor)
         // update lookup (only objects)

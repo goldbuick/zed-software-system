@@ -130,14 +130,10 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
       READ_CONTEXT.board,
       kind,
       dir,
+      id,
     )
-    if (ispresent(element)) {
-      if (ispresent(id)) {
-        element.id = id
-      }
-      if (ispresent(arg)) {
-        element.arg = arg
-      }
+    if (ispresent(element) && ispresent(arg)) {
+      element.arg = arg
     }
   }
 
