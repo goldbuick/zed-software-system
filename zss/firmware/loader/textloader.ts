@@ -37,10 +37,8 @@ export const textloader: FIRMWARE_COMMAND = (chip, words) => {
         for (let i = ii; i < words.length; ) {
           // read next name to set
           const [name, next] = readargs(words, i, [ARG_TYPE.NAME])
-          // set entry
-          if (ispresent(result[m])) {
-            chip.set(name, result[m])
-          }
+          // set entry, set to zero if we failed the regex match
+          chip.set(name, ispresent(result[m]) ? result[m] : 0)
           // next entry
           ++m
           i = next

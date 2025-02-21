@@ -84,11 +84,10 @@ export const NETWORK_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_STRING,
     ])
     fetchcommand(arg, label, url, maybemethod, words, ii)
-    return 1
+    return 0
   })
   .command('twitchchat', (_, words) => {
-    const [maybechannel] = readargs(words, 0, [ARG_TYPE.NAME])
-    console.info('twitchchat', maybechannel)
+    const [maybechannel] = readargs(words, 0, [ARG_TYPE.ANY])
     switch (NAME(maybechannel)) {
       default:
         chat_connect(SOFTWARE, maybechannel, READ_CONTEXT.elementfocus)

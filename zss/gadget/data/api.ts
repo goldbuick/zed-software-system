@@ -8,7 +8,15 @@ import {
   modemwritevaluestring,
 } from 'zss/device/modem'
 import { createsid } from 'zss/mapping/guid'
-import { ispresent, isnumber, isstring, noop } from 'zss/mapping/types'
+import {
+  ispresent,
+  isnumber,
+  isstring,
+  noop,
+  deepcopy,
+} from 'zss/mapping/types'
+import { BOARD } from 'zss/memory/types'
+import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
 import { GADGET_STATE, PANEL_ITEM, PANEL_SHARED, paneladdress } from './types'
@@ -129,6 +137,19 @@ export function gadgethyperlink(
     `${hyperlink[3] as string}`,
   ) as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
 
+  // cache READ_CONTEXT
+  const cache = { ...READ_CONTEXT }
+
+  // set value handler
+  function setvalue<T extends number | string>(target: string, value: T) {
+    if (ispresent(value) && value !== get(target)) {
+      READ_CONTEXT.board = cache.board
+      READ_CONTEXT.element = cache.element
+      READ_CONTEXT.elementfocus = cache.elementfocus
+      set(target, value)
+    }
+  }
+
   // do we care?
   if (HYPERLINK_WITH_SHARED.has(type)) {
     // what flag or message to change / send
@@ -157,18 +178,14 @@ export function gadgethyperlink(
         panelshared[chip][target] = modemobservevaluestring(
           address,
           (value) => {
-            if (ispresent(value) && value !== get(target)) {
-              set(target, value)
-            }
+            setvalue<string>(target, value)
           },
         )
       } else {
         panelshared[chip][target] = modemobservevaluenumber(
           address,
           (value) => {
-            if (ispresent(value) && value !== get(target)) {
-              set(target, value)
-            }
+            setvalue<number>(target, value)
           },
         )
       }

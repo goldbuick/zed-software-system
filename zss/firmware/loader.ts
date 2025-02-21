@@ -8,7 +8,7 @@ import {
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
-import { randominteger, randomnumber } from 'zss/mapping/number'
+import { randominteger } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { memorysendtoactiveboards } from 'zss/memory'
 import { bookreadcodepagesbytypeandstat } from 'zss/memory/book'
