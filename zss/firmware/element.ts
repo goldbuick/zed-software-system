@@ -174,7 +174,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // notfound
     return [false, value]
   },
-  everytick(chip) {
+  everytick() {
     // handle walk movement
     if (
       ispresent(READ_CONTEXT.element?.stepx) &&
@@ -185,7 +185,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
         y: READ_CONTEXT.element?.y ?? 0,
       }
       const didmove = memorymoveobject(
-        chip,
         READ_CONTEXT.book,
         READ_CONTEXT.board,
         READ_CONTEXT.element,
@@ -271,7 +270,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // attempt to move
       const [dest] = readargs(words, 0, [ARG_TYPE.DIR])
       memorymoveobject(
-        chip,
         READ_CONTEXT.book,
         READ_CONTEXT.board,
         READ_CONTEXT.element,

@@ -31,18 +31,16 @@ export const textloader: FIRMWARE_COMMAND = (chip, words) => {
       // we have pattern + names for captures
       const line = textreader.lines[textreader.cursor] ?? ''
       const regex = new RegExp(kind, 'i')
-      const result = regex.exec(line)
-      if (ispresent(result)) {
-        let m = 1
-        for (let i = ii; i < words.length; ) {
-          // read next name to set
-          const [name, next] = readargs(words, i, [ARG_TYPE.NAME])
-          // set entry, set to zero if we failed the regex match
-          chip.set(name, ispresent(result[m]) ? result[m] : 0)
-          // next entry
-          ++m
-          i = next
-        }
+      const result = regex.exec(line) ?? []
+      let m = 1
+      for (let i = ii; i < words.length; ) {
+        // read next name to set
+        const [name, next] = readargs(words, i, [ARG_TYPE.NAME])
+        // set entry, set to zero if we failed the regex match
+        chip.set(name, result[m] ?? 0)
+        // next entry
+        ++m
+        i = next
       }
       break
     }

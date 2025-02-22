@@ -519,7 +519,13 @@ export function bookboardmoveobject(
     dest.y >= BOARD_HEIGHT
   ) {
     // for sending interaction messages
-    return { kind: 'edge', collision: COLLISION.ISSOLID, x: dest.x, y: dest.y }
+    return {
+      name: 'edge',
+      kind: 'edge',
+      collision: COLLISION.ISSOLID,
+      x: dest.x,
+      y: dest.y,
+    }
   }
 
   // second pass, are we actually trying to move ?

@@ -21,6 +21,7 @@ import {
   boardobjectread,
   boardsetterrain,
 } from './board'
+import { boardelementname } from './boardelement'
 import {
   bookboardmoveobject,
   bookboardobjectnamedlookupdelete,
@@ -396,27 +397,18 @@ export function memorymessage(message: MESSAGE) {
 }
 
 function sendinteraction(
-  maybefrom: BOARD_ELEMENT | string,
-  maybeto: BOARD_ELEMENT | string,
+  fromelement: BOARD_ELEMENT,
+  toelement: BOARD_ELEMENT,
   message: string,
   player: MAYBE<string>,
 ) {
-  const fromid = isstring(maybefrom) ? maybefrom : maybefrom.id
-  const frompt: PT | undefined = isstring(maybefrom)
-    ? undefined
-    : { x: maybefrom.x ?? 0, y: maybefrom.y ?? 0 }
-  const toid = isstring(maybeto) ? maybeto : maybeto.id
-
-  // object elements will have ids
-  const from = fromid ?? frompt
-
-  if (ispresent(toid) && ispresent(from)) {
-    SOFTWARE.emit(`vm:touched`, [toid, from, message], player)
+  const fromname = boardelementname(fromelement)
+  if (isstring(toelement.id)) {
+    SOFTWARE.emit(`vm:touched`, [toelement.id, fromname, message], player)
   }
 }
 
 export function memorymoveobject(
-  chip: CHIP,
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
   target: MAYBE<BOARD_ELEMENT>,
@@ -487,16 +479,16 @@ export function memorymoveobject(
         }
       }
     } else {
-      sendinteraction(blocked, chip.id(), 'thud', undefined)
+      sendinteraction(blocked, target, 'thud', undefined)
     }
     if (target.kind === MEMORY_LABEL.PLAYER) {
-      sendinteraction(chip.id(), blocked, 'touch', target.id)
+      sendinteraction(target, blocked, 'touch', target.id)
     } else if (target.collision === COLLISION.ISBULLET) {
       // need from player stat here
       // so we can properly track aggro from bullets
-      sendinteraction(chip.id(), blocked, 'shot', undefined)
+      sendinteraction(target, blocked, 'shot', undefined)
     } else {
-      sendinteraction(chip.id(), blocked, 'bump', undefined)
+      sendinteraction(target, blocked, 'bump', undefined)
     }
 
     // delete destructible elements
