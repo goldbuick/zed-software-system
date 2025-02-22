@@ -210,7 +210,7 @@ export const BOARD_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('shove', (chip, words) => {
+  .command('shove', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
@@ -222,7 +222,6 @@ export const BOARD_FIRMWARE = createfirmware()
     const maybetarget = boardelementread(READ_CONTEXT.board, dir)
     if (boardelementisobject(maybetarget)) {
       memorymoveobject(
-        chip,
         READ_CONTEXT.book,
         READ_CONTEXT.board,
         maybetarget,
@@ -391,7 +390,7 @@ export const BOARD_FIRMWARE = createfirmware()
     return commandput(chip, words.slice(ii), mark)
   })
   .command('oneofwith', (chip, words) => {
-    const [mark, arg, ii] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.ANY])
+    const [arg, mark, ii] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.ANY])
 
     // if there is already an object with mark id, bail
     if (
