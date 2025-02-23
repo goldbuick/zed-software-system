@@ -17,6 +17,10 @@ import {
   bookboardwritefromkind,
 } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
+import { categoryconsts } from 'zss/words/category'
+import { collisionconsts } from 'zss/words/collision'
+import { colorconsts } from 'zss/words/color'
+import { dirconsts } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
 
@@ -47,8 +51,6 @@ const STANDARD_STAT_NAMES = new Set([
   // messages & run
   'sender',
   'arg',
-  // object only
-  'id',
 ])
 
 const readinputmap = ['NORTH', 'SOUTH', 'WEST', 'EAST']
@@ -113,8 +115,34 @@ function readinput(player: string) {
   return flags
 }
 
+function maptoconst(value: string) {
+  const maybecategory = (categoryconsts as any)[value]
+  if (ispresent(maybecategory)) {
+    return maybecategory
+  }
+  const maybecollision = (collisionconsts as any)[value]
+  if (ispresent(maybecollision)) {
+    return maybecollision
+  }
+  const maybecolor = (colorconsts as any)[value]
+  if (ispresent(maybecolor)) {
+    return maybecolor
+  }
+  const maybedir = (dirconsts as any)[value]
+  if (ispresent(maybedir)) {
+    return maybedir
+  }
+  return undefined
+}
+
 export const ELEMENT_FIRMWARE = createfirmware({
   get(_, name) {
+    // check consts first (data normalization)
+    const maybeconst = maptoconst(name)
+    if (ispresent(maybeconst)) {
+      return [true, maybeconst]
+    }
+
     // if we are reading from input AND are a player
     if (READ_CONTEXT.elementisplayer && INPUT_FLAG_NAMES.has(name)) {
       // pull the next input
@@ -122,17 +150,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       return [ispresent(value), value]
     }
 
-    // read stat
-    const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
-    const defined = ispresent(maybevalue)
-
-    // return result
-    if (defined || STANDARD_STAT_NAMES.has(name)) {
-      return [true, maybevalue]
-    }
-
-    // check player's flags
-    // >>> this <<< uses focus
+    // find focused on player
     const focus = findplayerforelement(
       READ_CONTEXT.board,
       READ_CONTEXT.element,
@@ -140,21 +158,71 @@ export const ELEMENT_FIRMWARE = createfirmware({
     )
     const player = focus?.id ?? READ_CONTEXT.elementfocus
 
+    // read stat
+    switch (name) {
+      // board stats
+      // writable
+      case 'isdark':
+        break
+      case 'startx':
+        break
+      case 'starty':
+        break
+      // board displayed over/under this one
+      // uses content slot book
+      case 'over':
+        break
+      case 'under':
+        break
+      // common stats
+      case 'exitnorth':
+        break
+      case 'exitsouth':
+        break
+      case 'exitwest':
+        break
+      case 'exiteast':
+        break
+      case 'timelimit':
+        break
+      case 'restartonzap':
+        break
+      case 'maxplayershots':
+        break
+      // todo: add torch stuff when ready
+      // read only
+      case 'boardid':
+        return [true, READ_CONTEXT.board?.id ?? 'ERR']
+      // env stats
+      case 'playerx':
+        return [true, focus?.x ?? -1]
+      case 'playery':
+        return [true, focus?.y ?? -1]
+      // object only
+      case 'thisid':
+        return [true, READ_CONTEXT.element?.id ?? '']
+      case 'thisx':
+        return [true, READ_CONTEXT.element?.x ?? -1]
+      case 'thisy':
+        return [true, READ_CONTEXT.element?.y ?? -1]
+      default: {
+        // check standard stat names
+        const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
+        const defined = ispresent(maybevalue)
+        // return result
+        if (defined || STANDARD_STAT_NAMES.has(name)) {
+          return [true, maybevalue]
+        }
+        break
+      }
+    }
+
+    // fallback to player flags
     // read value
     const value = memoryreadflags(player)[name]
     return [ispresent(value), value]
   },
   set(_, name, value) {
-    const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
-
-    // we have to check the object's stats first
-    if (ispresent(maybevalue) || STANDARD_STAT_NAMES.has(name)) {
-      if (ispresent(READ_CONTEXT.element)) {
-        READ_CONTEXT.element[name as keyof BOARD_ELEMENT] = value
-      }
-      return [true, value]
-    }
-
     // check player's flags
     // >>> this <<< uses focus
     const focus = findplayerforelement(
@@ -164,7 +232,68 @@ export const ELEMENT_FIRMWARE = createfirmware({
     )
     const player = focus?.id ?? READ_CONTEXT.elementfocus
 
-    // set player's flags
+    // write stat
+    switch (name) {
+      // board stats
+      // writable
+      case 'isdark':
+        break
+      case 'startx':
+        break
+      case 'starty':
+        break
+      // board displayed over/under this one
+      // uses content slot book
+      case 'over':
+        break
+      case 'under':
+        break
+      // common stats
+      case 'exitnorth':
+        break
+      case 'exitsouth':
+        break
+      case 'exitwest':
+        break
+      case 'exiteast':
+        break
+      case 'timelimit':
+        break
+      case 'restartonzap':
+        break
+      case 'maxplayershots':
+        break
+      // todo: add torch stuff when ready
+      // read only
+      case 'boardid':
+        return [false, value] // readonly
+      // env stats
+      case 'playerx':
+        return [false, value] // readonly
+      case 'playery':
+        return [false, value] // readonly
+      // object only
+      case 'thisid':
+        return [false, value] // readonly
+      case 'thisx':
+        return [false, value] // readonly
+      case 'thisy':
+        return [false, value] // readonly
+      default: {
+        const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
+
+        // we have to check the object's stats first
+        if (ispresent(maybevalue) || STANDARD_STAT_NAMES.has(name)) {
+          if (ispresent(READ_CONTEXT.element)) {
+            READ_CONTEXT.element[name as keyof BOARD_ELEMENT] = value
+          }
+          return [true, value]
+        }
+        break
+      }
+    }
+
+    // fallback to player flags
     const flags = memoryreadflags(player)
     if (ispresent(flags)) {
       flags[name] = value

@@ -5,7 +5,6 @@ import { ispresent, MAYBE } from 'zss/mapping/types'
 import { AUDIO_FIRMWARE } from './audio'
 import { BOARD_FIRMWARE } from './board'
 import { CLI_FIRMWARE } from './cli'
-import { CONST_FIRMWARE } from './const'
 import { DISPLAY_FIRMWARE } from './display'
 import { ELEMENT_FIRMWARE } from './element'
 import { FLAGS_FIRMWARE } from './flags'
@@ -27,7 +26,6 @@ const firmwares: Record<string, FIRMWARE> = {
   audio: AUDIO_FIRMWARE,
   board: BOARD_FIRMWARE,
   cli: CLI_FIRMWARE,
-  const: CONST_FIRMWARE,
   display: DISPLAY_FIRMWARE,
   element: ELEMENT_FIRMWARE,
   flags: FLAGS_FIRMWARE,
@@ -38,7 +36,6 @@ const firmwares: Record<string, FIRMWARE> = {
 }
 
 const standardlib = [
-  'const',
   'flags',
   'audio',
   'board',
