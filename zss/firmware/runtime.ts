@@ -1,5 +1,3 @@
-import { maptostring } from 'zss/chip'
-import { tape_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
@@ -11,6 +9,7 @@ import {
 } from 'zss/gadget/data/api'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, isstring } from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
 import { listelementsbyattr } from 'zss/memory/atomics'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'

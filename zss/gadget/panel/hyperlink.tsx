@@ -1,4 +1,5 @@
 import { useCallback, useContext } from 'react'
+import { maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { UserInput } from '../userinput'
@@ -6,7 +7,6 @@ import { UserInput } from '../userinput'
 import {
   PanelItemProps,
   ScrollContext,
-  mapTo,
   chiptarget,
   inputcolor,
   setuppanelitem,
@@ -22,7 +22,7 @@ export function PanelItemHyperlink({
 }: PanelItemProps) {
   setuppanelitem(row, context)
 
-  const [target, data] = [mapTo(args[0], ''), args[1]]
+  const [target, data] = [maptovalue(args[0], ''), args[1]]
 
   const tcolor = inputcolor(active)
   tokenizeandwritetextformat(`  $purple$16 ${tcolor}${label}\n`, context, true)

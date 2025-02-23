@@ -1,4 +1,3 @@
-import { maptostring } from 'zss/chip'
 import {
   BINARY_READER,
   JSON_READER,
@@ -10,6 +9,7 @@ import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
 import { randominteger } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
 import { memorysendtoactiveboards } from 'zss/memory'
 import { bookreadcodepagesbytypeandstat } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'

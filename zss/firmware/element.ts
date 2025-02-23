@@ -6,6 +6,7 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
+import { maptonumber, maptostring } from 'zss/mapping/value'
 import { memorymoveobject, memoryreadflags } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
 import { boardelementapplycolor } from 'zss/memory/boardelement'
@@ -237,10 +238,19 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // board stats
       // writable
       case 'isdark':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.isdark = value ? 1 : 0
+        }
         break
       case 'startx':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.startx = maptonumber(value, 0)
+        }
         break
       case 'starty':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.starty = maptonumber(value, 0)
+        }
         break
       // board displayed over/under this one
       // uses content slot book
@@ -250,6 +260,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
         break
       // common stats
       case 'exitnorth':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.exitnorth = maptostring(value)
+        }
         break
       case 'exitsouth':
         break

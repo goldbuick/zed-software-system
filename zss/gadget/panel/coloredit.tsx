@@ -3,6 +3,7 @@ import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { pttoindex } from 'zss/mapping/2d'
+import { maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
@@ -11,7 +12,7 @@ import { useBlink } from '../hooks'
 import { Rect } from '../rect'
 import { UserFocus, UserInput } from '../userinput'
 
-import { PanelItemProps, ScrollContext, mapTo, setuppanelitem } from './common'
+import { PanelItemProps, ScrollContext, setuppanelitem } from './common'
 
 const EDIT_WIDTH = 8
 const EDIT_HEIGHT = 2
@@ -38,7 +39,7 @@ export function PanelItemColorEdit({
 }: PanelItemProps) {
   setuppanelitem(row, context)
 
-  const [target] = [mapTo(args[0], '')]
+  const [target] = [maptovalue(args[0], '')]
 
   // state
   const address = paneladdress(chip, target)
