@@ -1,5 +1,5 @@
 import { pick, pickwith, range } from 'zss/mapping/array'
-import { clamp, randominteger } from 'zss/mapping/number'
+import { clamp, randominteger, randomintegerwith } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryrun } from 'zss/memory'
 import {
@@ -271,14 +271,22 @@ export function readexpr(index: number): [any, number] {
         }
         return [pickwith(`${seed}`, values), READ_CONTEXT.words.length]
       }
-      case 'range': {
-        // RANGE <a> [b] [step]
-        const [a, b, step, iii] = readargs(READ_CONTEXT.words, ii, [
+      case 'random': {
+        // RANDOM <a> [b]
+        const [a, b, iii] = readargs(READ_CONTEXT.words, ii, [
           ARG_TYPE.NUMBER,
           ARG_TYPE.MAYBE_NUMBER,
+        ])
+        return [randominteger(a, b ?? 0), iii]
+      }
+      case 'randomwith': {
+        // RANDOMWITH <seed> <a> [b]
+        const [seed, a, b, iii] = readargs(READ_CONTEXT.words, ii, [
+          ARG_TYPE.NUMBER_OR_STRING,
+          ARG_TYPE.NUMBER,
           ARG_TYPE.MAYBE_NUMBER,
         ])
-        return [range(a, b, step), iii]
+        return [randomintegerwith(`${seed}`, a, b ?? 0), iii]
       }
       // advanced
       case 'run': {
