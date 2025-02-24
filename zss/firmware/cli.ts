@@ -498,8 +498,9 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   // -- multiplayer related commands
-  .command('joincode', () => {
-    network_start(SOFTWARE, READ_CONTEXT.elementfocus)
+  .command('joincode', (_, words) => {
+    const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    network_start(SOFTWARE, !!maybehidden, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('twitchbroadcast', (_, words) => {

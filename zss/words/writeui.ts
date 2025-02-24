@@ -67,23 +67,26 @@ export function writecopyit(
   device: DEVICELIKE,
   content: string,
   label: string,
+  showqr = true,
 ) {
-  const ascii = renderUnicodeCompact(content).split('\n')
-  const rendermap: Record<number, number> = {
-    [32]: 32, // space
-    [9600]: 223, // top half
-    [9604]: 220, // bottom half
-    [9608]: 219, // full
-  }
+  if (showqr) {
+    const ascii = renderUnicodeCompact(content).split('\n')
+    const rendermap: Record<number, number> = {
+      [32]: 32, // space
+      [9600]: 223, // top half
+      [9604]: 220, // bottom half
+      [9608]: 219, // full
+    }
 
-  for (let i = 0; i < ascii.length; i++) {
-    const lineascii = [...ascii[i]]
-      .map((c) => {
-        const chr = rendermap[c.charCodeAt(0)]
-        return `$${chr}`
-      })
-      .join('')
-    write(device, lineascii)
+    for (let i = 0; i < ascii.length; i++) {
+      const lineascii = [...ascii[i]]
+        .map((c) => {
+          const chr = rendermap[c.charCodeAt(0)]
+          return `$${chr}`
+        })
+        .join('')
+      write(device, lineascii)
+    }
   }
 
   write(device, `!copyit ${content};${label}`)

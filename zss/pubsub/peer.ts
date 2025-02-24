@@ -144,10 +144,10 @@ function peerpublishmessage(topic: string, gme: MESSAGE) {
   }
 }
 
-export function peerstart(player: string) {
+export function peerstart(hidden: boolean, player: string) {
   const host = finder._peerId
   peerusehost(host)
-  network_showjoincode(SOFTWARE, host, player)
+  network_showjoincode(SOFTWARE, hidden, host, player)
   // open bridge between peers
   topicbridge = createforward((message) => {
     switch (message.target) {

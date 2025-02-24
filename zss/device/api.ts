@@ -118,16 +118,21 @@ export function network_join(
   device.emit('network:join', topic, player)
 }
 
-export function network_start(device: DEVICELIKE, player: string) {
-  device.emit('network:start', undefined, player)
+export function network_start(
+  device: DEVICELIKE,
+  hidden: boolean,
+  player: string,
+) {
+  device.emit('network:start', hidden, player)
 }
 
 export function network_showjoincode(
   device: DEVICELIKE,
+  hidden: boolean,
   topic: string,
   player: string,
 ) {
-  device.emit('network:showjoincode', topic, player)
+  device.emit('network:showjoincode', [hidden, topic], player)
 }
 
 export function platform_ready(device: DEVICELIKE) {
