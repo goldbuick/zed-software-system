@@ -313,10 +313,6 @@ export function memoryconverttogadgetlayers(
             }
           }
         }
-        if (falloff.size) {
-          // console.info(falloff)
-          // debugger
-        }
       } else if (ispid(id)) {
         // always show player
         const index = boardelementindex(board, sprite)
