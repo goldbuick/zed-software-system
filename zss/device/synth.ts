@@ -96,7 +96,7 @@ function createsynth() {
   const destination = getDestination()
   const broadcastdestination = getContext().createMediaStreamDestination()
 
-  const mainvolume = new Volume(-18)
+  const mainvolume = new Volume(-10)
   mainvolume.connect(destination)
   mainvolume.connect(broadcastdestination)
 
