@@ -4,6 +4,7 @@ import { paneladdress } from 'zss/gadget/data/types'
 import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { maptovalue } from 'zss/mapping/value'
 import { ismac } from 'zss/words/system'
 import {
   tokenizeandwritetextformat,
@@ -15,7 +16,7 @@ import { NAME } from 'zss/words/types'
 import { useBlink } from '../hooks'
 import { UserFocus, UserInput, UserInputMods } from '../userinput'
 
-import { PanelItemProps, inputcolor, mapTo, setuppanelitem } from './common'
+import { PanelItemProps, inputcolor, setuppanelitem } from './common'
 
 export function PanelItemText({
   chip,
@@ -27,7 +28,7 @@ export function PanelItemText({
 }: PanelItemProps) {
   setuppanelitem(row, context)
 
-  const target = mapTo(args[0], '')
+  const target = maptovalue(args[0], '')
 
   // state
   const address = paneladdress(chip, target)

@@ -21,6 +21,7 @@ import {
   ispresent,
   isstring,
 } from './mapping/types'
+import { maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
 import { NAME, WORD, WORD_RESULT } from './words/types'
@@ -95,10 +96,6 @@ function maptoresult(value: WORD): WORD {
     return value.length > 0 ? 1 : 0
   }
   return value ?? 0
-}
-
-export function maptostring(value: any) {
-  return `${value ?? ''}`
 }
 
 export function createchipid(id: string) {

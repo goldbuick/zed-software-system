@@ -36,27 +36,6 @@ export function inputcolor(active: boolean) {
   return active ? theme.input.active : theme.input.color
 }
 
-export function mapToString(arg: any, defaultvalue: string) {
-  if (typeof arg === 'string') {
-    return arg
-  }
-  return defaultvalue
-}
-
-export function mapToNumber(arg: any, defaultvalue: number) {
-  if (typeof arg === 'number') {
-    return arg
-  }
-  return defaultvalue
-}
-
-export function mapTo<T>(arg: any, defaultvalue: T): T {
-  if (typeof arg === typeof defaultvalue) {
-    return arg
-  }
-  return defaultvalue
-}
-
 export function chiptarget(chip: string, target: string) {
   switch (chip) {
     case 'touchkey':

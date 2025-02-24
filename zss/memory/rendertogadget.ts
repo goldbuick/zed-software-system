@@ -1,4 +1,4 @@
-import { clamp } from 'maath/misc'
+import { radToDeg } from 'maath/misc'
 import { Vector2 } from 'three'
 import {
   createdither,
@@ -15,7 +15,9 @@ import {
   LAYER_CONTROL,
   SPRITE,
 } from 'zss/gadget/data/types'
-import { circlepoints, linepoints } from 'zss/mapping/2d'
+import { ptdist } from 'zss/mapping/2d'
+import { ispid } from 'zss/mapping/guid'
+import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import {
   createwritetextcontext,
@@ -171,14 +173,17 @@ export function memoryconverttogadgetlayers(
   objects.sprites = []
   layers.push(objects)
 
+  const isdark = board.isdark ? 1 : 0
   const lighting = createcacheddither(
     player,
     iiii++,
     boardwidth,
     boardheight,
-    board.isdark ? 1 : 0,
+    isdark,
   )
   layers.push(lighting)
+  // reset
+  lighting.alphas.fill(isdark)
 
   const tickers = createcachedtiles(
     player,
@@ -246,53 +251,76 @@ export function memoryconverttogadgetlayers(
     objects.sprites.push(sprite)
 
     // write lighting if needed
-    if (board.isdark && isnumber(display.light)) {
-      const cpoints = circlepoints(sprite.x, sprite.y, display.light)
-      for (let c = 0; c < cpoints.length; ++c) {
-        let falloff = 0
-        const cp = cpoints[c]
-        const line = linepoints(sprite.x, sprite.y, cp.x, cp.y)
-        for (let i = 0; i < line.length; i++) {
-          const lp = line[i]
-          if (
-            lp.x < 0 ||
-            lp.x >= boardwidth ||
-            lp.y < 0 ||
-            lp.y >= boardheight
-          ) {
-            break
-          }
+    if (isdark) {
+      if (display.light > 0) {
+        const falloff = new Map<number, number>()
+        const radius = Math.round(display.light)
+        const center = boardelementindex(board, sprite)
+        lighting.alphas[center] = 0
+        if (radius > 1) {
+          for (let r = 1; r <= radius; ++r) {
+            const edge = r === radius
+            for (let y = sprite.y - r; y <= sprite.y + r; ++y) {
+              for (let x = sprite.x - r; x <= sprite.x + r; ++x) {
+                // skip self
+                if (x === sprite.x && y === sprite.y) {
+                  continue
+                }
 
-          // measure dist
-          const dist = pt1.subVectors(lp, sprite).length()
-          const ratio = dist / (display.light + 1)
-          const value = clamp(ratio + falloff, 0, 1)
-          const invert = 1 - value
-          const li = lp.x + lp.y * boardwidth
-          lighting.alphas[li] = clamp(lighting.alphas[li] - invert, 0, 1)
+                // check distance
+                pt1.x = x - sprite.x
+                pt1.y = y - sprite.y
+                if (pt1.length() > radius) {
+                  continue
+                }
 
-          // clipping
-          const index = boardelementindex(board, lp)
-          if (index < 0 || !ispresent(board?.lookup)) {
-            break
-          }
+                // check index
+                const idx = boardelementindex(board, { x, y })
+                if (idx === -1) {
+                  continue
+                }
 
-          // check lookup
-          if (lp.x !== sprite.x || lp.y !== sprite.y) {
-            const object = boardobjectread(board, board.lookup[index] ?? '')
-            if (ispresent(object)) {
-              falloff += 0.5
+                // check angle
+                const angle = Math.round(radToDeg(pt1.angle()) * 0.05)
+
+                // current falloff
+                let current = falloff.get(angle) ?? 0
+
+                // update shading
+                const invert = 1 - current
+                lighting.alphas[idx] = lighting.alphas[idx] - invert
+                lighting.alphas[idx] = clamp(lighting.alphas[idx], 0, 1)
+
+                // check lookup
+                const object = boardobjectread(board, board.lookup?.[idx] ?? '')
+                if (ispresent(object)) {
+                  // half blocked
+                  current += 0.5
+                }
+
+                const maybeterrain = board.terrain[idx]
+                const terrainkind = bookelementkindread(book, maybeterrain)
+                const terraincollision =
+                  maybeterrain?.collision ?? terrainkind?.collision
+                if (checkcollision(COLLISION.ISBULLET, terraincollision)) {
+                  // fully blocked
+                  current += 1
+                }
+
+                // update falloff
+                falloff.set(angle, clamp(current + 0.111111, 0, 1))
+              }
             }
           }
-
-          const maybeterrain = board.terrain[index]
-          const terrainkind = bookelementkindread(book, maybeterrain)
-          const terraincollision =
-            maybeterrain?.collision ?? terrainkind?.collision
-          if (checkcollision(COLLISION.ISWALK, terraincollision)) {
-            break
-          }
         }
+        if (falloff.size) {
+          // console.info(falloff)
+          // debugger
+        }
+      } else if (ispid(id)) {
+        // always show player
+        const index = boardelementindex(board, sprite)
+        lighting.alphas[index] = 0
       }
     }
 

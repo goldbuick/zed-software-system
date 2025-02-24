@@ -2,6 +2,7 @@ import { useCallback, useContext } from 'react'
 import { RUNTIME } from 'zss/config'
 import { UserHotkey, UserInput } from 'zss/gadget/userinput'
 import { ispresent } from 'zss/mapping/types'
+import { maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { Rect } from '../rect'
@@ -9,7 +10,6 @@ import { Rect } from '../rect'
 import {
   PanelItemProps,
   ScrollContext,
-  mapTo,
   chiptarget,
   inputcolor,
   setuppanelitem,
@@ -26,10 +26,10 @@ export function PanelItemHotkey({
   setuppanelitem(row, context)
 
   const [target, shortcut, maybetext, maybenoclose] = [
-    mapTo(args[0], ''),
-    mapTo(args[1], args[1]?.toString() ?? ''),
-    mapTo(args[2], ''),
-    mapTo(args[3], ''),
+    maptovalue(args[0], ''),
+    maptovalue(args[1], args[1]?.toString() ?? ''),
+    maptovalue(args[2], ''),
+    maptovalue(args[3], ''),
   ]
 
   const text = maybetext || ` ${shortcut.toUpperCase()} `

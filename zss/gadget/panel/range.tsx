@@ -1,18 +1,13 @@
 import { useCallback } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { paneladdress } from 'zss/gadget/data/types'
+import { maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { useBlink } from '../hooks'
 import { UserInput, UserInputHandler } from '../userinput'
 
-import {
-  PanelItemProps,
-  inputcolor,
-  mapTo,
-  setuppanelitem,
-  strsplice,
-} from './common'
+import { PanelItemProps, inputcolor, setuppanelitem, strsplice } from './common'
 
 export function PanelItemRange({
   chip,
@@ -25,9 +20,9 @@ export function PanelItemRange({
   setuppanelitem(row, context)
 
   const [target, maybelabelmin, maybelabelmax] = [
-    mapTo(args[0], ''),
-    mapTo(args[1], ''),
-    mapTo(args[2], ''),
+    maptovalue(args[0], ''),
+    maptovalue(args[1], ''),
+    maptovalue(args[2], ''),
   ]
 
   let labelmin: string

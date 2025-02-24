@@ -1,13 +1,14 @@
 import { useCallback } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { paneladdress } from 'zss/gadget/data/types'
+import { maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { WORD } from 'zss/words/types'
 
 import { useBlink } from '../hooks'
 import { UserInput, UserInputHandler } from '../userinput'
 
-import { PanelItemProps, inputcolor, mapTo, setuppanelitem } from './common'
+import { PanelItemProps, inputcolor, setuppanelitem } from './common'
 
 export function PanelItemSelect({
   chip,
@@ -19,7 +20,7 @@ export function PanelItemSelect({
 }: PanelItemProps) {
   setuppanelitem(row, context)
 
-  const [target, ...pairs] = [mapTo(args[0], ''), ...args.slice(1)]
+  const [target, ...pairs] = [maptovalue(args[0], ''), ...args.slice(1)]
 
   const valuelabels: WORD[] = []
   const values: WORD[] = []

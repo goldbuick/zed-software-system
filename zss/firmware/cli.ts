@@ -1,4 +1,3 @@
-import { maptostring } from 'zss/chip'
 import {
   api_error,
   tape_editor_open,
@@ -18,6 +17,7 @@ import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, MAYBE } from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
 import {
   MEMORY_LABEL,
   memoryclearbook,

@@ -1,6 +1,6 @@
-import { maptostring } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import { isnumber } from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
 
 export const FLAGS_FIRMWARE = createfirmware()

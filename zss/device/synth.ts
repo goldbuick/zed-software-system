@@ -96,8 +96,7 @@ function createsynth() {
   const destination = getDestination()
   const broadcastdestination = getContext().createMediaStreamDestination()
 
-  const mainvolume = new Volume(0)
-  mainvolume.volume.value = -18
+  const mainvolume = new Volume(-18)
   mainvolume.connect(destination)
   mainvolume.connect(broadcastdestination)
 
@@ -110,13 +109,16 @@ function createsynth() {
   })
   maincompressor.connect(mainvolume)
 
-  const playvolume = new Volume(-2)
+  const playvolume = new Volume(-5)
   playvolume.connect(maincompressor)
 
-  const drumvolume = new Volume(-2)
+  const bgplayvolume = new Volume(0)
+  bgplayvolume.connect(maincompressor)
+
+  const drumvolume = new Volume(-4)
   drumvolume.connect(maincompressor)
 
-  const ttsvolume = new Volume(3)
+  const ttsvolume = new Volume(0)
   ttsvolume.connect(maincompressor)
 
   // 8tracks

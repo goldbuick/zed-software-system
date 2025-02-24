@@ -1,6 +1,7 @@
 import { useCallback, useContext } from 'react'
 import { RUNTIME } from 'zss/config'
 import { ispresent } from 'zss/mapping/types'
+import { maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { Rect } from '../rect'
@@ -9,7 +10,6 @@ import { UserHotkey, UserInput } from '../userinput'
 import {
   PanelItemProps,
   ScrollContext,
-  mapTo,
   chiptarget,
   inputcolor,
   setuppanelitem,
@@ -25,7 +25,7 @@ export function PanelItemZSSEdit({
 }: PanelItemProps) {
   setuppanelitem(row, context)
 
-  const [target] = [mapTo(args[0], '')]
+  const [target] = [maptovalue(args[0], '')]
 
   const shortcut = 'z'
   const text = ` ${shortcut.toUpperCase()} `
