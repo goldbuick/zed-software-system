@@ -5,7 +5,7 @@ import { RUNTIME } from 'zss/config'
 import { vm_input } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useGadgetClient } from 'zss/gadget/data/state'
+import { useGadgetClient, useTape } from 'zss/gadget/data/state'
 import {
   INPUT,
   INPUT_ALT,
@@ -16,6 +16,7 @@ import {
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { NAME } from 'zss/words/types'
 
 import Clipping from './clipping'
 import { FramedLayer } from './framedlayer/component'
@@ -148,6 +149,16 @@ export function Framed({ width, height }: FramedProps) {
         OK_BUTTON={(mods) => sendinput(player, INPUT.OK_BUTTON, mods)}
         CANCEL_BUTTON={(mods) => sendinput(player, INPUT.CANCEL_BUTTON, mods)}
         MENU_BUTTON={(mods) => sendinput(player, INPUT.MENU_BUTTON, mods)}
+        keydown={(event) => {
+          const { key } = event
+          const lkey = NAME(key)
+          switch (lkey) {
+            case 't':
+              // open quick cli
+              useTape.setState({ quickterminal: true })
+              break
+          }
+        }}
       />
       {layers.length > 0 && (
         <Rect
