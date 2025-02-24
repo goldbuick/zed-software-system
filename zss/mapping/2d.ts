@@ -15,6 +15,12 @@ export function indextopt(index: number, width: number): PT {
   }
 }
 
+export function ptdist(pt1: PT, pt2: PT) {
+  const dx = pt1.x - pt2.x
+  const dy = pt1.y - pt2.y
+  return Math.sqrt(dx * dx + dy * dy)
+}
+
 export function pttoindex(pt: PT, width: number) {
   return pt.x + pt.y * width
 }

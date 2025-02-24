@@ -164,32 +164,32 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // board stats
       // writable
       case 'isdark':
-        break
+        return [true, READ_CONTEXT.board?.isdark ? 1 : 0]
       case 'startx':
-        break
+        return [true, READ_CONTEXT.board?.startx ?? 0]
       case 'starty':
-        break
+        return [true, READ_CONTEXT.board?.starty ?? 0]
       // board displayed over/under this one
       // uses content slot book
       case 'over':
-        break
+        return [true, READ_CONTEXT.board?.over ?? '']
       case 'under':
-        break
+        return [true, READ_CONTEXT.board?.under ?? '']
       // common stats
       case 'exitnorth':
-        break
+        return [true, READ_CONTEXT.board?.exitnorth ?? '']
       case 'exitsouth':
-        break
+        return [true, READ_CONTEXT.board?.exitsouth ?? '']
       case 'exitwest':
-        break
+        return [true, READ_CONTEXT.board?.exitwest ?? '']
       case 'exiteast':
-        break
+        return [true, READ_CONTEXT.board?.exiteast ?? '']
       case 'timelimit':
-        break
+        return [true, READ_CONTEXT.board?.timelimit ?? 0]
       case 'restartonzap':
-        break
+        return [true, READ_CONTEXT.board?.restartonzap ?? 0]
       case 'maxplayershots':
-        break
+        return [true, READ_CONTEXT.board?.maxplayershots ?? 0]
       // todo: add torch stuff when ready
       // read only
       case 'boardid':
@@ -255,8 +255,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // board displayed over/under this one
       // uses content slot book
       case 'over':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.over = maptostring(value)
+        }
         break
       case 'under':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.under = maptostring(value)
+        }
         break
       // common stats
       case 'exitnorth':
@@ -265,16 +271,34 @@ export const ELEMENT_FIRMWARE = createfirmware({
         }
         break
       case 'exitsouth':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.exitsouth = maptostring(value)
+        }
         break
       case 'exitwest':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.exitwest = maptostring(value)
+        }
         break
       case 'exiteast':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.exiteast = maptostring(value)
+        }
         break
       case 'timelimit':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.timelimit = maptonumber(value, 0)
+        }
         break
       case 'restartonzap':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.restartonzap = value ? 1 : 0
+        }
         break
       case 'maxplayershots':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.maxplayershots = maptonumber(value, 0)
+        }
         break
       // todo: add torch stuff when ready
       // read only
@@ -294,7 +318,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [false, value] // readonly
       default: {
         const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
-
         // we have to check the object's stats first
         if (ispresent(maybevalue) || STANDARD_STAT_NAMES.has(name)) {
           if (ispresent(READ_CONTEXT.element)) {
