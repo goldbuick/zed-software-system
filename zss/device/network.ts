@@ -92,7 +92,7 @@ const network = createdevice('network', [], (message) => {
       break
     case 'start':
       if (message.player === registerreadplayer()) {
-        peerstart(message.player)
+        peerstart(!!message.data, message.player)
       }
       break
     case 'join':
@@ -102,10 +102,15 @@ const network = createdevice('network', [], (message) => {
       break
     case 'showjoincode': {
       doasync(network, async () => {
-        if (message.player === registerreadplayer() && isstring(message.data)) {
-          const joinurl = `${location.origin}/join/#${message.data}`
+        if (message.player === registerreadplayer() && isarray(message.data)) {
+          const [hidden, topic] = message.data as [boolean, string]
+          const joinurl = `${location.origin}/join/#${topic}`
           const url = await shorturl(joinurl)
-          writecopyit(network, url, url)
+          if (hidden) {
+            writecopyit(network, url, `secret join url`, false)
+          } else {
+            writecopyit(network, url, url)
+          }
         }
       })
       break
