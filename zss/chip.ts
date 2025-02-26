@@ -21,7 +21,7 @@ import {
   ispresent,
   isstring,
 } from './mapping/types'
-import { maptostring } from './mapping/value'
+import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
 import { NAME, WORD, WORD_RESULT } from './words/types'
@@ -65,6 +65,9 @@ export type CHIP = {
   // logic api
   command: (...words: WORD[]) => WORD_RESULT
   if: (...words: WORD[]) => WORD_RESULT
+  try: (...words: WORD[]) => WORD_RESULT
+  take: (...words: WORD[]) => WORD_RESULT
+  give: (...words: WORD[]) => WORD_RESULT
   repeatstart: (index: number, ...words: WORD[]) => void
   repeat: (index: number) => WORD_RESULT
   foreachstart: (index: number, ...words: WORD[]) => WORD_RESULT
@@ -409,6 +412,82 @@ export function createchip(
       }
 
       return result ? 1 : 0
+    },
+    try(...words) {
+      const [, ii] = readargs(words, 0, [ARG_TYPE.DIR])
+
+      // try and move
+      const result = chip.command('go', ...words)
+      if (result && ii < words.length) {
+        chip.command(...words.slice(ii))
+      }
+
+      return result ? 1 : 0
+    },
+    take(...words) {
+      const [name, maybedec, ii] = readargs(words, 0, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.ANY,
+      ])
+
+      // given custom dec amount
+      const hasdec = isnumber(maybedec)
+
+      // fail branch logic
+      const iii = hasdec ? ii : 1
+
+      // default to #TAKE <name> 1
+      const current = chip.get(name)
+      const value = hasdec ? maybedec : 1
+
+      // taking from an unset flag, or non-numerical value
+      if (!isnumber(current)) {
+        if (iii < words.length) {
+          chip.command(...words.slice(iii))
+        }
+        return 1
+      }
+
+      // returns true when take fails
+      const newvalue = current - value
+      if (newvalue < 0) {
+        if (iii < words.length) {
+          chip.command(...words.slice(iii))
+        }
+        return 1
+      }
+
+      // update flag
+      chip.set(name, newvalue)
+      return 0
+    },
+    give(...words) {
+      const [name, maybeinc, ii] = readargs(words, 0, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.ANY,
+      ])
+
+      // given custom inc amount
+      const hasinc = isnumber(maybeinc)
+
+      // fail branch logic
+      const iii = hasinc ? ii : 1
+
+      // default to #GIVE <name> 1
+      const maybecurrent = chip.get(name)
+      const value = hasinc ? maybeinc : 1
+
+      // returns true when setting an unset flag
+      const result = maybecurrent === undefined ? 1 : 0
+      if (result) {
+        if (iii < words.length) {
+          chip.command(...words.slice(iii))
+        }
+      }
+
+      // update flag
+      chip.set(name, maptonumber(maybecurrent, 0) + value)
+      return result
     },
     repeatstart(index, ...words) {
       const [value, ii] = readargs(words, 0, [ARG_TYPE.NUMBER])

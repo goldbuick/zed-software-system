@@ -259,6 +259,10 @@ export function tape_terminal_open(device: DEVICELIKE, player: string) {
   device.emit('tape:terminal:open', undefined, player)
 }
 
+export function tape_terminal_quickopen(device: DEVICELIKE, player: string) {
+  device.emit('tape:terminal:quickopen', undefined, player)
+}
+
 export function tape_terminal_close(device: DEVICELIKE, player: string) {
   device.emit('tape:terminal:close', undefined, player)
 }

@@ -247,7 +247,11 @@ export const command_play = createSimpleToken({
 
 // core / structure commands
 
-export const command_if = createWordToken('if')
+export const command_if = createSimpleToken({
+  name: 'if',
+  pattern: /if|try|take|give/,
+  longer_alt: stringliteral,
+})
 export const command_do = createWordToken('do')
 export const command_to = createWordToken('to', true)
 export const command_done = createWordToken('done')

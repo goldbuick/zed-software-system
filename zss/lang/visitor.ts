@@ -694,7 +694,12 @@ class ScriptVisitor
   }
 
   command_if(ctx: Command_ifCstChildren) {
-    const [check] = this.createlogicnode(ctx, 'if', '', this.go(ctx.words))
+    const [check] = this.createlogicnode(
+      ctx,
+      tokenstring(ctx.token_if, 'if'),
+      '',
+      this.go(ctx.words),
+    )
     const [block] = this.go(ctx.command_if_block) ?? []
     return this.createcodenode(ctx, {
       type: NODE.IF,
@@ -739,7 +744,12 @@ class ScriptVisitor
       type: NODE.ELSE_IF,
       done,
       lines: [
-        this.createlogicnode(ctx, 'if', skip, this.go(ctx.words)),
+        this.createlogicnode(
+          ctx,
+          tokenstring(ctx.token_if, 'if'),
+          skip,
+          this.go(ctx.words),
+        ),
         this.go(ctx.command_fork),
         this.creategotonode(ctx, done, `end of if`),
         this.createmarknode(ctx, skip, `skip`),

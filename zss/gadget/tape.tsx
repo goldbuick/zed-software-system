@@ -8,12 +8,13 @@ import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
 } from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { ShadeBoxDither } from './framedlayer/dither'
 import { useTiles } from './hooks'
 import { BackPlate } from './tape/backplate'
-import { BG, FG } from './tape/common'
+import { bgcolor, FG } from './tape/common'
 import { TapeLayout } from './tape/layout'
 import { UserFocus, UserHotkey } from './userinput'
 import { useScreenSize } from './userscreen'
@@ -25,9 +26,10 @@ export function Tape() {
   let top = 0
   let height = screensize.rows - 2
 
-  const [layout, terminalopen, editoropen] = useTape(
+  const [layout, quickterminal, terminalopen, editoropen] = useTape(
     useShallow((state) => [
       state.layout,
+      state.quickterminal,
       state.terminal.open,
       state.editor.open,
     ]),
@@ -47,6 +49,7 @@ export function Tape() {
       break
   }
 
+  const BG = bgcolor(quickterminal)
   const store = useTiles(screensize.cols, height, 0, FG, BG)
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(screensize.cols, height, FG, BG),
@@ -59,7 +62,7 @@ export function Tape() {
   }
 
   const player = registerreadplayer()
-  const showterminal = terminalopen || editoropen
+  const showterminal = quickterminal || terminalopen || editoropen
 
   return (
     <TilesData store={store}>

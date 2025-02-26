@@ -7,7 +7,6 @@ import { BOARD_FIRMWARE } from './board'
 import { CLI_FIRMWARE } from './cli'
 import { DISPLAY_FIRMWARE } from './display'
 import { ELEMENT_FIRMWARE } from './element'
-import { FLAGS_FIRMWARE } from './flags'
 import { LIFECYCLE_FIRMWARE } from './lifecycle'
 import { LOADER_FIRMWARE } from './loader'
 import { NETWORK_FIRMWARE } from './network'
@@ -28,7 +27,6 @@ const firmwares: Record<string, FIRMWARE> = {
   cli: CLI_FIRMWARE,
   display: DISPLAY_FIRMWARE,
   element: ELEMENT_FIRMWARE,
-  flags: FLAGS_FIRMWARE,
   runtime: RUNTIME_FIRMWARE,
   lifecycle: LIFECYCLE_FIRMWARE,
   loader: LOADER_FIRMWARE,
@@ -36,7 +34,6 @@ const firmwares: Record<string, FIRMWARE> = {
 }
 
 const standardlib = [
-  'flags',
   'audio',
   'board',
   'display',

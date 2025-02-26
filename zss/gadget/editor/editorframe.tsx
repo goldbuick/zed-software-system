@@ -7,11 +7,20 @@ import {
 } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { BG, FG, setupeditoritem } from '../tape/common'
+import { bgcolor, FG, setupeditoritem } from '../tape/common'
 
 export function EditorFrame() {
   const context = useWriteText()
   const edge = textformatreadedges(context)
+
+  const [quickterminal, editortype, editortitle] = useTape(
+    useShallow((state) => [
+      state.quickterminal,
+      state.editor.type,
+      state.editor.title,
+    ]),
+  )
+  const BG = bgcolor(quickterminal)
 
   // left - right - bottom of frame
   for (let y = edge.top; y < edge.bottom; ++y) {
@@ -34,10 +43,6 @@ export function EditorFrame() {
   const bottomchrs = `$205`.repeat(edge.width - 2)
   setupeditoritem(false, false, 0, edge.height - 1, context, 0, 0, 0)
   tokenizeandwritetextformat(`$212${bottomchrs}$190`, context, true)
-
-  const [editortype, editortitle] = useTape(
-    useShallow((state) => [state.editor.type, state.editor.title]),
-  )
 
   const blink = useBlink()
 
