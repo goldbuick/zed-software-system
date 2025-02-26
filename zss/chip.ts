@@ -21,7 +21,7 @@ import {
   ispresent,
   isstring,
 } from './mapping/types'
-import { maptostring } from './mapping/value'
+import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
 import { NAME, WORD, WORD_RESULT } from './words/types'
@@ -425,26 +425,34 @@ export function createchip(
       return result ? 1 : 0
     },
     take(...words) {
-      const [name, maybevalue, ii] = readargs(words, 0, [
+      const [name, maybedec, ii] = readargs(words, 0, [
         ARG_TYPE.NAME,
-        ARG_TYPE.MAYBE_NUMBER,
+        ARG_TYPE.ANY,
       ])
+
+      // given custom dec amount
+      const hasdec = isnumber(maybedec)
+
+      // fail branch logic
+      const iii = hasdec ? ii : 1
 
       // default to #TAKE <name> 1
       const current = chip.get(name)
-      const value = maybevalue ?? 1
+      const value = hasdec ? maybedec : 1
 
       // taking from an unset flag, or non-numerical value
       if (!isnumber(current)) {
-        // todo: raise warning ?
+        if (iii < words.length) {
+          chip.command(...words.slice(iii))
+        }
         return 1
       }
 
       // returns true when take fails
       const newvalue = current - value
       if (newvalue < 0) {
-        if (ii < words.length) {
-          chip.command(...words.slice(ii))
+        if (iii < words.length) {
+          chip.command(...words.slice(iii))
         }
         return 1
       }
@@ -454,29 +462,31 @@ export function createchip(
       return 0
     },
     give(...words) {
-      const [name, maybevalue, ii] = readargs(words, 0, [
+      const [name, maybeinc, ii] = readargs(words, 0, [
         ARG_TYPE.NAME,
-        ARG_TYPE.MAYBE_NUMBER,
+        ARG_TYPE.ANY,
       ])
 
-      const maybecurrent = chip.get(name)
-      const current = isnumber(maybecurrent) ? maybecurrent : 0
-      const value = maybevalue ?? 1
+      // given custom inc amount
+      const hasinc = isnumber(maybeinc)
 
-      // giving a non-numerical value
-      if (!isnumber(value)) {
-        // todo: raise warning ?
-        return 1
-      }
+      // fail branch logic
+      const iii = hasinc ? ii : 1
+
+      // default to #GIVE <name> 1
+      const maybecurrent = chip.get(name)
+      const value = hasinc ? maybeinc : 1
 
       // returns true when setting an unset flag
       const result = maybecurrent === undefined ? 1 : 0
-      if (result && ii < words.length) {
-        chip.command(...words.slice(ii))
+      if (result) {
+        if (iii < words.length) {
+          chip.command(...words.slice(iii))
+        }
       }
 
       // update flag
-      chip.set(name, current + value)
+      chip.set(name, maptonumber(maybecurrent, 0) + value)
       return result
     },
     repeatstart(index, ...words) {
