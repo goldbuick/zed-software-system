@@ -12,9 +12,12 @@ export const BKG_PTRN_ALT = 249
 // colors
 export const FG = COLOR.BLUE
 export const FG_SELECTED = COLOR.WHITE
-export const BG = COLOR.DKBLUE
 export const BG_SELECTED = COLOR.DKGRAY
 export const BG_ACTIVE = COLOR.BLACK
+
+export function bgcolor(quickterminal: boolean) {
+  return quickterminal ? COLOR.ONCLEAR : COLOR.DKBLUE
+}
 
 export type TapeTerminalItemProps = {
   blink?: boolean
@@ -54,7 +57,7 @@ export function setuplogitem(
   const edge = textformatreadedges(context)
   // reset context
   context.iseven = context.y % 2 === 0
-  context.active.bg = active && !blink ? BG_ACTIVE : BG
+  context.active.bg = active && !blink ? BG_ACTIVE : context.reset.bg
   context.active.leftedge = edge.left
   context.active.rightedge = edge.right
   context.active.topedge = edge.top
@@ -76,7 +79,7 @@ export function setupeditoritem(
   const edge = textformatreadedges(context)
   // reset context
   context.iseven = context.y % 2 === 0
-  context.active.bg = active && !blink ? BG_ACTIVE : BG
+  context.active.bg = active && !blink ? BG_ACTIVE : context.reset.bg
   context.active.leftedge = edge.left + xmargin
   context.active.rightedge = edge.right - xmargin
   context.active.topedge = edge.top + topmargin

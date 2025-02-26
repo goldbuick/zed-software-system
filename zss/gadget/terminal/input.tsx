@@ -6,7 +6,7 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { useTapeTerminal } from 'zss/gadget/data/state'
+import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { withclipboard } from 'zss/mapping/keyboard'
@@ -23,7 +23,7 @@ import {
 import { NAME } from 'zss/words/types'
 
 import { useBlink, useWriteText } from '../hooks'
-import { setuplogitem } from '../tape/common'
+import { bgcolor, setuplogitem } from '../tape/common'
 
 type TapeTerminalInputProps = {
   tapeycursor: number
@@ -36,6 +36,7 @@ export function TapeTerminalInput({
 }: TapeTerminalInputProps) {
   const blink = useBlink()
   const context = useWriteText()
+  const { quickterminal } = useTape()
   const tapeterminal = useTapeTerminal()
   const player = registerreadplayer()
   const edge = textformatreadedges(context)
@@ -132,11 +133,16 @@ export function TapeTerminalInput({
     })
   }
 
-  // write hint
-  setuplogitem(false, false, 0, 0, context)
-  const hint = `${import.meta.env.ZSS_BRANCH_NAME}:${import.meta.env.ZSS_BRANCH_VERSION} - if lost try #help`
-  context.x = edge.right - hint.length
-  tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
+  // reset bg
+  context.reset.bg = bgcolor(quickterminal)
+
+  if (!quickterminal) {
+    // write hint
+    setuplogitem(false, false, 0, 0, context)
+    const hint = `${import.meta.env.ZSS_BRANCH_NAME}:${import.meta.env.ZSS_BRANCH_VERSION} - if lost try #help`
+    context.x = edge.right - hint.length
+    tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
+  }
 
   // draw divider
   const de = '$196'
@@ -291,6 +297,9 @@ export function TapeTerminalInput({
                     ],
                   })
                   vm_cli(SOFTWARE, invoke, player)
+                  if (quickterminal) {
+                    tape_terminal_close(SOFTWARE, player)
+                  }
                 } else {
                   resettoend()
                 }

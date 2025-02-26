@@ -1,5 +1,5 @@
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
-import { useTapeEditor } from 'zss/gadget/data/state'
+import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   applycolortoindexes,
@@ -10,9 +10,9 @@ import {
 
 import { useBlink, useWriteText } from '../hooks'
 import {
-  BG,
   BG_ACTIVE,
   BG_SELECTED,
+  bgcolor,
   EDITOR_CODE_ROW,
   FG_SELECTED,
   setupeditoritem,
@@ -36,6 +36,7 @@ export function EditorRows({
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
+  const { quickterminal } = useTape()
   const edge = textformatreadedges(context)
 
   if (!ispresent(codepage)) {
@@ -77,7 +78,7 @@ export function EditorRows({
     // render
     context.x = left - xoffset
     context.iseven = context.y % 2 === 0
-    context.active.bg = active ? BG_ACTIVE : BG
+    context.active.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
     context.disablewrap = true
     writeplaintext(`${text} `, context, false)
 

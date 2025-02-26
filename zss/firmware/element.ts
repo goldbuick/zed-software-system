@@ -381,6 +381,15 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
   },
 })
+  .command('clear', (chip, words) => {
+    words.forEach((word) => chip.set(maptostring(word), 0))
+    return 0
+  })
+  .command('set', (chip, words) => {
+    const [name, value] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
+    chip.set(name, value)
+    return 0
+  })
   .command('become', (chip, words) => {
     // read
     const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
@@ -455,17 +464,17 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // if blocked, return 1
     return 1
   })
-  .command('try', (chip, words) => {
-    const [, ii] = readargs(words, 0, [ARG_TYPE.DIR])
+  // .command('try', (chip, words) => {
+  //   const [, ii] = readargs(words, 0, [ARG_TYPE.DIR])
 
-    // try and move
-    const result = chip.command('go', ...words)
-    if (result && ii < words.length) {
-      chip.command(...words.slice(ii))
-    }
+  //   // try and move
+  //   const result = chip.command('go', ...words)
+  //   if (result && ii < words.length) {
+  //     chip.command(...words.slice(ii))
+  //   }
 
-    return 0
-  })
+  //   return 0
+  // })
   .command('walk', (_, words) => {
     if (!ispresent(READ_CONTEXT.element)) {
       return 0

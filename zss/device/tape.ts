@@ -141,9 +141,17 @@ const tape = createdevice('tape', [], (message) => {
         }))
       }
       break
+    case 'terminal:quickopen':
+      if (message.player === registerreadplayer()) {
+        useTape.setState({
+          quickterminal: true,
+        })
+      }
+      break
     case 'terminal:close':
       if (message.player === registerreadplayer()) {
         useTape.setState((state) => ({
+          quickterminal: false,
           terminal: {
             ...state.terminal,
             open: false,

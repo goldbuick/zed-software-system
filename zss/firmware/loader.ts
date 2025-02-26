@@ -16,7 +16,6 @@ import { codepagereaddata } from 'zss/memory/codepage'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { NAME } from 'zss/words/types'
 
 import { binaryloader } from './loader/binaryloader'
 import { jsonloader } from './loader/jsonloader'

@@ -14,7 +14,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { ShadeBoxDither } from './framedlayer/dither'
 import { useTiles } from './hooks'
 import { BackPlate } from './tape/backplate'
-import { BG, FG } from './tape/common'
+import { bgcolor, FG } from './tape/common'
 import { TapeLayout } from './tape/layout'
 import { UserFocus, UserHotkey } from './userinput'
 import { useScreenSize } from './userscreen'
@@ -49,10 +49,10 @@ export function Tape() {
       break
   }
 
-  const withbg = quickterminal ? COLOR.ONCLEAR : BG
-  const store = useTiles(screensize.cols, height, 0, FG, withbg)
+  const BG = bgcolor(quickterminal)
+  const store = useTiles(screensize.cols, height, 0, FG, BG)
   const context: WRITE_TEXT_CONTEXT = {
-    ...createwritetextcontext(screensize.cols, height, FG, withbg),
+    ...createwritetextcontext(screensize.cols, height, FG, BG),
     ...store.getState(),
   }
 

@@ -65,6 +65,9 @@ export type CHIP = {
   // logic api
   command: (...words: WORD[]) => WORD_RESULT
   if: (...words: WORD[]) => WORD_RESULT
+  try: (...words: WORD[]) => WORD_RESULT
+  take: (...words: WORD[]) => WORD_RESULT
+  give: (...words: WORD[]) => WORD_RESULT
   repeatstart: (index: number, ...words: WORD[]) => void
   repeat: (index: number) => WORD_RESULT
   foreachstart: (index: number, ...words: WORD[]) => WORD_RESULT
@@ -409,6 +412,72 @@ export function createchip(
       }
 
       return result ? 1 : 0
+    },
+    try(...words) {
+      const [, ii] = readargs(words, 0, [ARG_TYPE.DIR])
+
+      // try and move
+      const result = chip.command('go', ...words)
+      if (result && ii < words.length) {
+        chip.command(...words.slice(ii))
+      }
+
+      return result ? 1 : 0
+    },
+    take(...words) {
+      const [name, maybevalue, ii] = readargs(words, 0, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.MAYBE_NUMBER,
+      ])
+
+      // default to #TAKE <name> 1
+      const current = chip.get(name)
+      const value = maybevalue ?? 1
+
+      // taking from an unset flag, or non-numerical value
+      if (!isnumber(current)) {
+        // todo: raise warning ?
+        return 1
+      }
+
+      // returns true when take fails
+      const newvalue = current - value
+      if (newvalue < 0) {
+        if (ii < words.length) {
+          chip.command(...words.slice(ii))
+        }
+        return 1
+      }
+
+      // update flag
+      chip.set(name, newvalue)
+      return 0
+    },
+    give(...words) {
+      const [name, maybevalue, ii] = readargs(words, 0, [
+        ARG_TYPE.NAME,
+        ARG_TYPE.MAYBE_NUMBER,
+      ])
+
+      const maybecurrent = chip.get(name)
+      const current = isnumber(maybecurrent) ? maybecurrent : 0
+      const value = maybevalue ?? 1
+
+      // giving a non-numerical value
+      if (!isnumber(value)) {
+        // todo: raise warning ?
+        return 1
+      }
+
+      // returns true when setting an unset flag
+      const result = maybecurrent === undefined ? 1 : 0
+      if (result && ii < words.length) {
+        chip.command(...words.slice(ii))
+      }
+
+      // update flag
+      chip.set(name, current + value)
+      return result
     },
     repeatstart(index, ...words) {
       const [value, ii] = readargs(words, 0, [ARG_TYPE.NUMBER])

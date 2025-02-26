@@ -7,9 +7,12 @@ import {
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
+import { useTape } from '../data/state'
 import {
+  BG_ACTIVE,
   TapeTerminalItemInputProps,
   TapeTerminalItemProps as TapeTerminalItemProps,
+  bgcolor,
   setuplogitem,
 } from '../tape/common'
 
@@ -24,11 +27,13 @@ export function TapeTerminalItem({
   y,
 }: TapeTerminalItemProps) {
   const context = useWriteText()
+  const { quickterminal } = useTape()
   const edge = textformatreadedges(context)
   const ishyperlink = text.startsWith('!')
 
   // write text or clear line for ui
   setuplogitem(!!blink, !!active, 0, y, context)
+  context.reset.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
   context.active.bottomedge = edge.bottom
   tokenizeandwritetextformat(ishyperlink ? '' : text, context, true)
 

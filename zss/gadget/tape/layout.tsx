@@ -31,7 +31,7 @@ function forkonedge(
       bottomedge,
     },
     active: {
-      ...deepcopy(context.reset),
+      ...deepcopy(context.active),
       topedge,
       leftedge,
       rightedge,
