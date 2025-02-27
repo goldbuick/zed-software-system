@@ -517,7 +517,7 @@ export function createchip(
     },
     foreachstart(_, ...words) {
       const [name, maybemin, maybemax, maybestep] = readargs(words, 0, [
-        ARG_TYPE.STRING,
+        ARG_TYPE.NAME,
         ARG_TYPE.NUMBER,
         ARG_TYPE.NUMBER,
         ARG_TYPE.MAYBE_NUMBER,
@@ -540,7 +540,7 @@ export function createchip(
     },
     foreach(_, ...words) {
       const [name, maybemin, maybemax, maybestep, ii] = readargs(words, 0, [
-        ARG_TYPE.STRING,
+        ARG_TYPE.NAME,
         ARG_TYPE.NUMBER,
         ARG_TYPE.NUMBER,
         ARG_TYPE.MAYBE_NUMBER,

@@ -41,7 +41,7 @@ export function TapeTerminal() {
 
     const messagetext = message.map((v) => `${v}`).join(' ')
     const ishyperlink = messagetext.startsWith('!')
-    const prefix = `$onclear${level}${source}$white$180$white`
+    const prefix = `$onclear${level}${source}$white$180$blue`
     return `${ishyperlink ? '!' : ''}${prefix}${messagetext}`
   })
 

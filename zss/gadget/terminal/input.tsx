@@ -20,7 +20,7 @@ import {
   tokenizeandwritetextformat,
   writeplaintext,
 } from 'zss/words/textformat'
-import { NAME } from 'zss/words/types'
+import { COLOR, NAME } from 'zss/words/types'
 
 import { useBlink, useWriteText } from '../hooks'
 import { bgcolor, setuplogitem } from '../tape/common'
@@ -133,7 +133,7 @@ export function TapeTerminalInput({
     })
   }
 
-  // reset bg
+  // reset color & bg
   context.reset.bg = bgcolor(quickterminal)
 
   if (!quickterminal) {
@@ -149,11 +149,13 @@ export function TapeTerminalInput({
   const dc = '$205'
   const dm = dc.repeat(edge.width - 6)
   setuplogitem(false, false, 0, edge.height - 2, context)
+  context.active.color = COLOR.WHITE
   tokenizeandwritetextformat(`  ${de}${dm}${de}  `, context, true)
 
   // draw input line
   const inputline = inputstate.padEnd(edge.width, ' ')
   setuplogitem(false, false, 0, edge.height - 1, context)
+  context.active.color = COLOR.WHITE
   writeplaintext(inputline, context, true)
 
   // draw selection
@@ -180,7 +182,9 @@ export function TapeTerminalInput({
   if (blink) {
     const x = edge.left + tapeterminal.xcursor
     const y = edge.top + tapeycursor
-    applystrtoindex(x + y * context.width, String.fromCharCode(221), context)
+    const idx = x + y * context.width
+    applystrtoindex(idx, String.fromCharCode(221), context)
+    applycolortoindexes(idx, idx, 15, context.reset.bg, context)
   }
 
   useEffect(() => {

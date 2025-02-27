@@ -133,8 +133,10 @@ document.addEventListener(
 
     // block default browser behavior that messes with things
     switch (key) {
-      case 'p':
       case 's':
+      case 'o':
+      case 'p':
+      case 'f':
       case 'arrowleft':
       case 'arrowright':
       case 'arrowup':
@@ -191,6 +193,11 @@ document.addEventListener(
       case 's':
         if (mods.ctrl) {
           vm_cli(SOFTWARE, '#save', registerreadplayer())
+        }
+        break
+      case 'f':
+        if (mods.ctrl) {
+          vm_cli(SOFTWARE, '#fork', registerreadplayer())
         }
         break
     }
