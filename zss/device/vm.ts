@@ -67,6 +67,7 @@ import { write, writetext } from 'zss/words/writeui'
 import {
   gadgetserver_clearscroll,
   platform_ready,
+  register_forkmem,
   register_loginready,
   register_savemem,
   tape_debug,
@@ -90,13 +91,23 @@ const watching: Record<string, Set<string>> = {}
 const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
 // save state
-async function savestate(tag = ``) {
+async function savestate() {
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
-    const historylabel = `${tag}${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
+    const historylabel = `${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
     register_savemem(vm, historylabel, content, memoryreadoperator())
+  }
+}
+
+// fork state
+async function forkstate() {
+  const books = memoryreadbooklist()
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (books.length && ispresent(mainbook)) {
+    const content = await compressbooks(books)
+    register_forkmem(vm, content, memoryreadoperator())
   }
 }
 
@@ -284,17 +295,18 @@ const vm = createdevice(
         // autosave to url
         if (++flushtick >= FLUSH_RATE) {
           flushtick = 0
-          vm_flush(vm, 'autosave', memoryreadoperator())
+          vm_flush(vm, memoryreadoperator())
         }
         break
       }
+      case 'fork':
+        doasync(vm, async () => {
+          await forkstate()
+        })
+        break
       case 'flush':
         doasync(vm, async () => {
-          if (isstring(message.data)) {
-            await savestate(`${message.data} `)
-          } else {
-            await savestate()
-          }
+          await savestate()
         })
         break
       case 'cli':
@@ -306,7 +318,7 @@ const vm = createdevice(
       case 'restart':
         if (message.player === memoryreadoperator()) {
           memoryrestartallchipsandflags()
-          vm_flush(vm, '', message.player)
+          vm_flush(vm, message.player)
         }
         break
       case 'inspect':

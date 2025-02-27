@@ -12,6 +12,7 @@ import {
   broadcast_stopstream,
   tape_inspector,
   vm_restart,
+  vm_fork,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -54,8 +55,8 @@ import {
   writetext,
 } from 'zss/words/writeui'
 
-function vm_flush_op(tag = '') {
-  vm_flush(SOFTWARE, tag, memoryreadoperator())
+function vm_flush_op() {
+  vm_flush(SOFTWARE, memoryreadoperator())
 }
 
 export const CLI_FIRMWARE = createfirmware()
@@ -424,7 +425,7 @@ export const CLI_FIRMWARE = createfirmware()
         sorted.forEach((page) => {
           const name = codepagereadname(page)
           const type = codepagereadtypetostring(page)
-          write(SOFTWARE, `!pageopen ${page.id};[${type}] ${name}`)
+          write(SOFTWARE, `!pageopen ${page.id};$blue[${type}]$white ${name}`)
         })
       } else {
         write(SOFTWARE, ``)
@@ -479,9 +480,8 @@ export const CLI_FIRMWARE = createfirmware()
     vm_flush_op()
     return 0
   })
-  .command('savewith', (_, words) => {
-    const [tag] = readargs(words, 0, [ARG_TYPE.NAME])
-    vm_flush_op(tag)
+  .command('fork', () => {
+    vm_fork(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('nuke', () => {

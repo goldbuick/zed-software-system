@@ -160,6 +160,14 @@ export function register_savemem(
   device.emit('register:savemem', [historylabel, books], player)
 }
 
+export function register_forkmem(
+  device: DEVICELIKE,
+  books: string,
+  player: string,
+) {
+  device.emit('register:forkmem', [books], player)
+}
+
 export function register_dev(device: DEVICELIKE, player: string) {
   device.emit('register:dev', undefined, player)
 }
@@ -390,8 +398,12 @@ export function vm_synthsend(device: DEVICELIKE, message: string) {
   device.emit('vm:synthsend', message)
 }
 
-export function vm_flush(device: DEVICELIKE, tag: string, player: string) {
-  device.emit('vm:flush', tag, player)
+export function vm_flush(device: DEVICELIKE, player: string) {
+  device.emit('vm:flush', undefined, player)
+}
+
+export function vm_fork(device: DEVICELIKE, player: string) {
+  device.emit('vm:fork', undefined, player)
 }
 
 export type TEXT_READER = {

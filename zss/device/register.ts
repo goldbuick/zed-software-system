@@ -244,6 +244,18 @@ const register = createdevice(
           }
         }
         break
+      case 'forkmem':
+        if (message.player === myplayerid && isarray(message.data)) {
+          const [maybecontent] = message.data
+          if (isstring(maybecontent)) {
+            // launch fork url
+            window.open(
+              location.href.replace(/#.*/, `#${maybecontent}`),
+              '_blank',
+            )
+          }
+        }
+        break
       case 'select':
         if (message.player === myplayerid) {
           doasync(register, async () => {
