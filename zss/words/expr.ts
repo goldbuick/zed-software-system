@@ -1,4 +1,4 @@
-import { pick, pickwith, range } from 'zss/mapping/array'
+import { pick, pickwith } from 'zss/mapping/array'
 import { clamp, randominteger, randomintegerwith } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryrun } from 'zss/memory'

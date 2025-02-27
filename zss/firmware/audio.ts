@@ -3,6 +3,8 @@ import {
   synth_drumvolume,
   synth_mainvolume,
   synth_play,
+  synth_tta,
+  synth_tts,
   synth_ttsvolume,
   synth_voice,
   synth_voicefx,
@@ -10,6 +12,7 @@ import {
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isnumber } from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
@@ -52,6 +55,19 @@ function handlesynthvoice(idx: number, words: WORD[]) {
 }
 
 export const AUDIO_FIRMWARE = createfirmware()
+  .command('tts', (_, words) => {
+    const [voice, ii] = readargs(words, 0, [ARG_TYPE.STRING])
+    const phrase = words.slice(ii).map(maptostring).join('')
+    synth_tts(SOFTWARE, voice, phrase)
+    // https://github.com/lobehub/lobe-tts/blob/master/src/core/data/voiceList.ts
+    return 0
+  })
+  .command('tta', (_, words) => {
+    const phrase = words.map(maptostring).join('')
+    synth_tta(SOFTWARE, phrase)
+    // https://huggingface.co/spaces/fantaxy/Sound-AI-SFX
+    return 0
+  })
   .command('bpm', (_, words) => {
     const [bpm] = readargs(words, 0, [ARG_TYPE.NUMBER])
     synth_bpm(SOFTWARE, bpm)

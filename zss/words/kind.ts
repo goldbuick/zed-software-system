@@ -20,7 +20,7 @@ export function readkind(index: number): [STR_KIND | undefined, number] {
   }
 
   const [maybecolor, ii] = readcolor(index)
-  const [maybename, iii] = readexpr(ii, false)
+  const [maybename, iii] = readexpr(ii)
 
   // found a string, color is optional
   if (isstring(maybename)) {
