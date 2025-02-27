@@ -1292,18 +1292,28 @@ const synthdevice = createdevice('synth', [], (message) => {
       doasync(synthdevice, async () => {
         if (ispresent(synth) && isarray(message.data)) {
           const [phrase] = message.data as [string]
-          const app = await Client.connect('declare-lab/TangoFlux')
-          const result = await app.predict('/predict', [phrase, 25, 4.5, 3.7])
-          if (isarray(result.data) && isstring(result.data[0]?.url)) {
-            // fetch buffer
-            const maybebuffer = tta.get(phrase)
-            if (ispresent(maybebuffer)) {
-              // play the audio if
-              if (maybebuffer.loaded) {
-                synth.addttsaudiobuffer(maybebuffer)
-              }
-            } else {
-              tta.set(phrase, new ToneAudioBuffer(result.data[0].url))
+          // fetch buffer
+          const maybebuffer = tta.get(phrase)
+          if (ispresent(maybebuffer)) {
+            // play the audio if
+            if (maybebuffer.loaded) {
+              synth.addttsaudiobuffer(maybebuffer)
+            }
+          } else {
+            const app = await Client.connect('declare-lab/TangoFlux')
+            const result = await app.predict('/predict', [phrase, 25, 4.5, 3])
+            if (isarray(result.data) && isstring(result.data[0]?.url)) {
+              const loadurl: string = result.data[0]?.url
+              tta.set(
+                phrase,
+                new ToneAudioBuffer(loadurl, () => {
+                  tape_info(
+                    synthdevice,
+                    'loaded',
+                    `${loadurl.substring(0, 8)}...${loadurl.slice(-8)}`,
+                  )
+                }),
+              )
             }
           }
         }
