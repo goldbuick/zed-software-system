@@ -39,7 +39,14 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       mkcert(),
-      nodePolyfills(),
+      nodePolyfills({
+        include: ['buffer'],
+        globals: {
+          Buffer: true,
+          global: true,
+          process: true,
+        },
+      }),
       ...(hmronly ? [] : [fullreload(['**/*.ts', '**/*.tsx'])]),
       ...(useanalyzer ? [analyzer()] : []),
     ],

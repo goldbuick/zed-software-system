@@ -57,6 +57,7 @@ export function setuplogitem(
   const edge = textformatreadedges(context)
   // reset context
   context.iseven = context.y % 2 === 0
+  context.active.color = COLOR.WHITE
   context.active.bg = active && !blink ? BG_ACTIVE : context.reset.bg
   context.active.leftedge = edge.left
   context.active.rightedge = edge.right
@@ -79,6 +80,7 @@ export function setupeditoritem(
   const edge = textformatreadedges(context)
   // reset context
   context.iseven = context.y % 2 === 0
+  context.active.color = COLOR.WHITE
   context.active.bg = active && !blink ? BG_ACTIVE : context.reset.bg
   context.active.leftedge = edge.left + xmargin
   context.active.rightedge = edge.right - xmargin

@@ -188,6 +188,10 @@ export function synth_tts(device: DEVICELIKE, voice: string, phrase: string) {
   device.emit('synth:tts', [voice, phrase])
 }
 
+export function synth_tta(device: DEVICELIKE, phrase: string) {
+  device.emit('synth:tta', [phrase])
+}
+
 export function synth_play(
   device: DEVICELIKE,
   buffer: string,

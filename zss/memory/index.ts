@@ -1,5 +1,5 @@
 import { objectKeys } from 'ts-extras'
-import { CHIP, senderid } from 'zss/chip'
+import { senderid } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
 import { parsetarget } from 'zss/device'
 import { api_error, MESSAGE, tape_debug, tape_info } from 'zss/device/api'

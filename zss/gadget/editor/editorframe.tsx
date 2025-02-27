@@ -5,9 +5,10 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
-import { bgcolor, FG, setupeditoritem } from '../tape/common'
+import { bgcolor, setupeditoritem } from '../tape/common'
 
 export function EditorFrame() {
   const context = useWriteText()
@@ -20,6 +21,7 @@ export function EditorFrame() {
       state.editor.title,
     ]),
   )
+  const FG = COLOR.WHITE
   const BG = bgcolor(quickterminal)
 
   // left - right - bottom of frame

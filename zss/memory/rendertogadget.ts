@@ -15,7 +15,6 @@ import {
   LAYER_CONTROL,
   SPRITE,
 } from 'zss/gadget/data/types'
-import { ptdist } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
@@ -259,7 +258,6 @@ export function memoryconverttogadgetlayers(
         lighting.alphas[center] = 0
         if (radius > 1) {
           for (let r = 1; r <= radius; ++r) {
-            const edge = r === radius
             for (let y = sprite.y - r; y <= sprite.y + r; ++y) {
               for (let x = sprite.x - r; x <= sprite.x + r; ++x) {
                 // skip self

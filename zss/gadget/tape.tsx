@@ -8,7 +8,6 @@ import {
   WRITE_TEXT_CONTEXT,
   createwritetextcontext,
 } from 'zss/words/textformat'
-import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { ShadeBoxDither } from './framedlayer/dither'

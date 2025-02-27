@@ -1,3 +1,4 @@
+import { Client } from '@gradio/client'
 import { EdgeSpeechTTS } from '@lobehub/tts'
 import {
   Compressor,
@@ -21,6 +22,7 @@ import {
   getDestination,
   Player,
   getContext,
+  ToneAudioBuffer,
 } from 'tone'
 import { createdevice } from 'zss/device'
 import { ECHO_OFF, ECHO_ON, createfx } from 'zss/gadget/audio/fx'
@@ -683,7 +685,7 @@ function createsynth() {
   }
 
   // tts output
-  function addttsaudiobuffer(audiobuffer: AudioBuffer) {
+  function addttsaudiobuffer(audiobuffer: AudioBuffer | ToneAudioBuffer) {
     const player = new Player(audiobuffer).connect(ttsvolume)
     player.start(0)
   }
@@ -745,6 +747,9 @@ function validatesynthtype(
 
 // get MicrosoftSpeechTTS instance
 let tts: MAYBE<EdgeSpeechTTS>
+
+// cache for #tta command
+const tta = new Map<string, ToneAudioBuffer>()
 
 let synth: MAYBE<ReturnType<typeof createsynth>>
 
@@ -1280,6 +1285,37 @@ const synthdevice = createdevice('synth', [], (message) => {
           })
           // play the audio
           synth.addttsaudiobuffer(audiobuffer)
+        }
+      })
+      break
+    case 'tta':
+      doasync(synthdevice, async () => {
+        if (ispresent(synth) && isarray(message.data)) {
+          const [phrase] = message.data as [string]
+          // fetch buffer
+          const maybebuffer = tta.get(phrase)
+          if (ispresent(maybebuffer)) {
+            // play the audio if
+            if (maybebuffer.loaded) {
+              synth.addttsaudiobuffer(maybebuffer)
+            }
+          } else {
+            const app = await Client.connect('declare-lab/TangoFlux')
+            const result = await app.predict('/predict', [phrase, 25, 4.5, 3])
+            if (isarray(result.data) && isstring(result.data[0]?.url)) {
+              const loadurl: string = result.data[0]?.url
+              tta.set(
+                phrase,
+                new ToneAudioBuffer(loadurl, () => {
+                  tape_info(
+                    synthdevice,
+                    'loaded',
+                    `${loadurl.substring(0, 8)}...${loadurl.slice(-8)}`,
+                  )
+                }),
+              )
+            }
+          }
         }
       })
       break

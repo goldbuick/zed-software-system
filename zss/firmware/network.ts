@@ -1,9 +1,4 @@
-import {
-  chat_connect,
-  chat_disconnect,
-  network_fetch,
-  synth_tts,
-} from 'zss/device/api'
+import { chat_connect, chat_disconnect, network_fetch } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isarray } from 'zss/mapping/types'
@@ -58,15 +53,6 @@ function fetchcommand(
 }
 
 export const NETWORK_FIRMWARE = createfirmware()
-  .command('tts', (_, words) => {
-    const [phrase, voice] = readargs(words, 0, [
-      ARG_TYPE.STRING,
-      ARG_TYPE.MAYBE_STRING,
-    ])
-    synth_tts(SOFTWARE, voice ?? '', phrase)
-    // https://github.com/lobehub/lobe-tts/blob/master/src/core/data/voiceList.ts
-    return 0
-  })
   .command('fetch', (_, words) => {
     const [label, url, maybemethod = 'get', ii] = readargs(words, 0, [
       ARG_TYPE.NAME,
