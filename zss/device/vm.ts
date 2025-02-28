@@ -1,8 +1,7 @@
 import { createdevice, parsetarget } from 'zss/device'
-import { parsewebfile } from 'zss/firmware/loader/parsefile'
+import { parsewebfile } from 'zss/feature/parsefile'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
-import { waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,
   isarray,
@@ -28,14 +27,12 @@ import {
   memoryreadoperator,
   memoryreadplayeractive,
   memorysendtoactiveboards,
-  memoryreadplayerboard,
   memorywritehalt,
   memoryreadhalt,
   memoryresetchipafteredit,
   memoryrestartallchipsandflags,
 } from 'zss/memory'
-import { boardelementreadbyidorindex, boardobjectread } from 'zss/memory/board'
-import { boardelementname } from 'zss/memory/boardelement'
+import { boardobjectread } from 'zss/memory/board'
 import { bookreadcodepagebyaddress } from 'zss/memory/book'
 import {
   codepageapplyelementstats,
@@ -45,38 +42,24 @@ import {
   codepageresetstats,
 } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
-import {
-  memoryinspect,
-  memoryinspectbgarea,
-  memoryinspectchar,
-  memoryinspectchararea,
-  memoryinspectcolor,
-  memoryinspectcolorarea,
-  memoryinspectcopy,
-  memoryinspectcopymenu,
-  memoryinspectempty,
-  memoryinspectemptymenu,
-  memoryinspectpaste,
-  memoryinspectpastemenu,
-} from 'zss/memory/inspect'
+import { memoryinspect, memoryinspectcommand } from 'zss/memory/inspect'
+import { memoryinspectbatchcommand } from 'zss/memory/inspectbatch'
 import { memoryloader } from 'zss/memory/loader'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { NAME, PT } from 'zss/words/types'
-import { write, writetext } from 'zss/words/writeui'
+import { write } from 'zss/words/writeui'
 
 import {
-  gadgetserver_clearscroll,
   platform_ready,
   register_forkmem,
   register_loginready,
   register_savemem,
   tape_debug,
-  tape_editor_open,
   vm_codeaddress,
   vm_flush,
   vm_logout,
 } from './api'
-import { modemobservevaluestring, modemwriteinitstring } from './modem'
+import { modemobservevaluestring } from './modem'
 
 // tracking active player ids
 const SECOND_TIMEOUT = 16
@@ -344,120 +327,12 @@ const vm = createdevice(
         switch (NAME(target)) {
           case 'batch':
             if (ispresent(message.player)) {
-              const board = memoryreadplayerboard(message.player)
-              if (!ispresent(board)) {
-                break
-              }
-              const batch = parsetarget(path)
-              const [x1, y1, x2, y2] = batch.path
-                .split(',')
-                .map((v) => parseFloat(v))
-              const p1: PT = { x: x1, y: y1 }
-              const p2: PT = { x: x2, y: y2 }
-              switch (batch.target) {
-                case 'copy':
-                  memoryinspectcopymenu(message.player, p1, p2)
-                  break
-                case 'copyall':
-                case 'copyobjects':
-                case 'copyterrain':
-                  memoryinspectcopy(message.player, p1, p2, batch.target)
-                  break
-                case 'paste':
-                  memoryinspectpastemenu(message.player, p1, p2)
-                  break
-                case 'pasteall':
-                case 'pasteobjects':
-                case 'pasteterrain':
-                case 'pasteterraintiled':
-                  memoryinspectpaste(message.player, p1, p2, batch.target)
-                  break
-                case 'empty':
-                  memoryinspectemptymenu(message.player, p1, p2)
-                  break
-                case 'emptyall':
-                case 'emptyobjects':
-                case 'emptyterrain':
-                  memoryinspectempty(message.player, p1, p2, batch.target)
-                  break
-                case 'chars':
-                  memoryinspectchararea(message.player, p1, p2, 'char')
-                  break
-                case 'colors':
-                  memoryinspectcolorarea(message.player, p1, p2, 'color')
-                  break
-                case 'bgs':
-                  memoryinspectbgarea(message.player, p1, p2, 'bg')
-                  break
-                default:
-                  console.info('unknown batch', batch)
-                  break
-              }
+              memoryinspectbatchcommand(path, message.player)
             }
             break
           case 'inspect':
             if (ispresent(message.player)) {
-              const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-              if (!ispresent(mainbook)) {
-                break
-              }
-              const board = memoryreadplayerboard(message.player)
-              if (!ispresent(board)) {
-                break
-              }
-              const inspect = parsetarget(path)
-              const element = boardelementreadbyidorindex(board, inspect.target)
-              if (!ispresent(element)) {
-                break
-              }
-              switch (inspect.path) {
-                case 'bg':
-                case 'color':
-                  memoryinspectcolor(message.player, element, inspect.path)
-                  break
-                case 'char':
-                  memoryinspectchar(message.player, element, inspect.path)
-                  break
-                case 'code':
-                  doasync(vm, async () => {
-                    if (!ispresent(message.player)) {
-                      return
-                    }
-
-                    const name = boardelementname(element)
-                    const pagetype = 'object'
-                    writetext(vm, `opened [${pagetype}] ${name}`)
-
-                    // edit path
-                    const path = [board.id, element.id ?? '']
-
-                    // write to modem
-                    modemwriteinitstring(
-                      vm_codeaddress(mainbook.id, path),
-                      element.code ?? '',
-                    )
-
-                    // close scroll
-                    gadgetserver_clearscroll(vm, message.player)
-
-                    // wait a little
-                    await waitfor(800)
-
-                    // open code editor
-                    tape_editor_open(
-                      vm,
-                      mainbook.id,
-                      [board.id, element.id ?? ''],
-                      pagetype,
-                      `${name} - ${mainbook.name}`,
-                      message.player,
-                    )
-                  })
-                  break
-                default:
-                  console.info('unknown inspect', inspect)
-                  break
-              }
+              memoryinspectcommand(path, message.player)
             }
             break
           case 'touched':

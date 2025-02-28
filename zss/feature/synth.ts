@@ -11,6 +11,7 @@ import {
   getTransport,
   MembraneSynth,
   NoiseSynth,
+  Part,
   Phaser,
   Player,
   PolySynth,

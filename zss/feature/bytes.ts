@@ -1,14 +1,13 @@
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-
-import { BITMAP, createbitmap } from '../gadget/data/bitmap'
+import { BITMAP, createbitmap } from 'zss/gadget/data/bitmap'
 import {
   CHARS_PER_ROW,
   CHAR_HEIGHT,
   CHAR_WIDTH,
   FILE_BYTES_PER_CHAR,
   FILE_BYTES_PER_COLOR,
-} from '../gadget/data/types'
+} from 'zss/gadget/data/types'
 
 export function loadpalettefrombytes(bytes: Uint8Array): BITMAP | undefined {
   const count = Math.floor(bytes.length / FILE_BYTES_PER_COLOR)

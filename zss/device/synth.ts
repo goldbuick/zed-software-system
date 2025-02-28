@@ -5,8 +5,8 @@ import {
   createsynth,
   synthvoiceconfig,
   synthvoicefxconfig,
-} from 'zss/feature/audio/synth'
-import { playtta, playtts } from 'zss/feature/audio/tts'
+} from 'zss/feature/synth'
+import { playtta, playtts } from 'zss/feature/tts'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
