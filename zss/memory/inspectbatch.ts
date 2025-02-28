@@ -7,11 +7,13 @@ import {
   memoryinspectbgarea,
   memoryinspectchararea,
   memoryinspectcolorarea,
+} from './inspectarea'
+import {
   memoryinspectcopy,
   memoryinspectcopymenu,
   memoryinspectpaste,
   memoryinspectpastemenu,
-} from './inspectarea'
+} from './inspectcopypaste'
 
 import { memoryreadplayerboard } from '.'
 
