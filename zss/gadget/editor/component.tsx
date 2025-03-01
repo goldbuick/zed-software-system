@@ -5,6 +5,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { useGadgetClient, useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
 import { compileast } from 'zss/lang/ast'
+import * as lexer from 'zss/lang/lexer'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { textformatreadedges } from 'zss/words/textformat'
@@ -135,8 +136,14 @@ export function TapeEditor() {
 
   // fold tokens into lines
   if (ispresent(parsed.tokens)) {
+    let isfirst = true
     for (let i = 0; i < parsed.tokens.length; ++i) {
       const token = parsed.tokens[i]
+      if (token.tokenTypeIdx === lexer.stat.tokenTypeIdx) {
+        // payload marks which stat is first
+        token.payload = isfirst
+        isfirst = false
+      }
       const row = rows[(token.startLine ?? 1) - 1]
       if (ispresent(row)) {
         row.tokens = row.tokens ?? []

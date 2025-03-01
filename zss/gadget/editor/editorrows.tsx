@@ -22,8 +22,11 @@ import {
 
 import {
   ZSS_COLOR_MAP,
+  ZSS_TYPE_NUMBER,
   ZSS_TYPE_OBJNAME,
+  ZSS_TYPE_STATNAME,
   ZSS_TYPE_TEXT,
+  ZSS_WORD_FLAG,
   zsswordcolor,
 } from './colors'
 
@@ -97,7 +100,6 @@ export function EditorRows({
 
     // apply token colors
     if (ispresent(row.tokens)) {
-      let isfirst = true
       for (let t = 0; t < row.tokens.length; ++t) {
         const token = row.tokens[t]
         const left = (token.startColumn ?? 1) - 1
@@ -107,8 +109,7 @@ export function EditorRows({
           switch (maybecolor) {
             case ZSS_TYPE_OBJNAME: {
               const words = token.image.substring(1).split(' ')
-              const statinfo = statformat('', words, isfirst)
-              isfirst = false
+              const statinfo = statformat('', words, !!token.payload)
               switch (statinfo.type) {
                 case STAT_TYPE.LOADER:
                 case STAT_TYPE.BOARD:
@@ -135,9 +136,26 @@ export function EditorRows({
                   }
                   break
                 }
-                case STAT_TYPE.CONST:
-                  console.info(words)
+                case STAT_TYPE.CONST: {
+                  const [first] = words
+                  applycolortoindexes(
+                    index + left,
+                    index + left + first.length,
+                    ZSS_TYPE_STATNAME,
+                    context.active.bg,
+                    context,
+                  )
+                  if (words.length > 1) {
+                    applycolortoindexes(
+                      index + left + first.length + 1,
+                      index + right,
+                      ZSS_TYPE_NUMBER,
+                      context.active.bg,
+                      context,
+                    )
+                  }
                   break
+                }
                 case STAT_TYPE.RANGE:
                 case STAT_TYPE.SELECT:
                 case STAT_TYPE.NUMBER:
@@ -148,12 +166,17 @@ export function EditorRows({
                 case STAT_TYPE.OPENIT:
                 case STAT_TYPE.ZSSEDIT:
                 case STAT_TYPE.CHAREDIT:
-                case STAT_TYPE.COLOREDIT:
-                  // ZSSEDIT, //   @code zssedit, affords the user to write local code
-                  // CHAREDIT, //  @char charedit, affords the user to pick char
-                  // COLOREDIT, // @color coloredit, affords the user to pick a color
-                  console.info(words)
+                case STAT_TYPE.COLOREDIT: {
+                  const [first] = words
+                  applycolortoindexes(
+                    index + left,
+                    index + left + first.length,
+                    ZSS_TYPE_OBJNAME,
+                    context.active.bg,
+                    context,
+                  )
                   break
+                }
                 default:
                   applycolortoindexes(
                     index + left,
