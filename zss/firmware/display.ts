@@ -1,5 +1,6 @@
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { write } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
 import { FILE_BYTES_PER_COLOR } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
@@ -15,7 +16,6 @@ import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { mapstrcolor, readstrcolor } from 'zss/words/color'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
-import { write } from 'zss/words/writeui'
 
 export const DISPLAY_FIRMWARE = createfirmware()
   .command('palette', (_, words) => {

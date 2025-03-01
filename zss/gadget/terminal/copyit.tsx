@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
 import { SOFTWARE } from 'zss/device/session'
+import { writetext } from 'zss/feature/writeui'
 import { withclipboard } from 'zss/mapping/keyboard'
 import { ispresent } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
-import { writetext } from 'zss/words/writeui'
 
 import { useWriteText } from '../hooks'
 import { inputcolor } from '../panel/common'

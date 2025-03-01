@@ -55,14 +55,27 @@ export function TapeEditor() {
 
   // tokenize code
   const parsed = compileast(strvalue)
-  // fold into lines
+
+  // fold tokens into lines
   if (ispresent(parsed.tokens)) {
-    for (let i = 0; i < parsed.tokens?.length; ++i) {
+    for (let i = 0; i < parsed.tokens.length; ++i) {
       const token = parsed.tokens[i]
       const row = rows[(token.startLine ?? 1) - 1]
       if (ispresent(row)) {
         row.tokens = row.tokens ?? []
         row.tokens.push(token)
+      }
+    }
+  }
+
+  // fold errors into lines
+  if (ispresent(parsed.errors)) {
+    for (let i = 0; i < parsed.errors.length; ++i) {
+      const error = parsed.errors[i]
+      const row = rows[(error.line ?? 1) - 1]
+      if (ispresent(row)) {
+        row.errors = row.errors ?? []
+        row.errors.push(error)
       }
     }
   }

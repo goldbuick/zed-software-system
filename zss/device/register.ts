@@ -1,5 +1,11 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice, parsetarget } from 'zss/device'
+import {
+  write,
+  writecopyit,
+  writeheader,
+  writeoption,
+} from 'zss/feature/writeui'
 import { useDeviceConfig } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
@@ -9,7 +15,6 @@ import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { isjoin, islocked, shorturl } from 'zss/mapping/url'
 import { createplatform } from 'zss/platform'
 import { ismac } from 'zss/words/system'
-import { write, writecopyit, writeheader, writeoption } from 'zss/words/writeui'
 
 import {
   api_error,

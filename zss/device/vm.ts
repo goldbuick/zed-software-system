@@ -1,5 +1,6 @@
 import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/feature/parsefile'
+import { write } from 'zss/feature/writeui'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import {
@@ -47,7 +48,6 @@ import { memoryinspectbatchcommand } from 'zss/memory/inspectbatch'
 import { memoryloader } from 'zss/memory/loader'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { NAME, PT } from 'zss/words/types'
-import { write } from 'zss/words/writeui'
 
 import {
   platform_ready,

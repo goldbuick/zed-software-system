@@ -1,11 +1,11 @@
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import { peerstart, peerjoin } from 'zss/feature/peer'
+import { write, writecopyit } from 'zss/feature/writeui'
 import { doasync } from 'zss/mapping/func'
 import { isarray, isstring, MAYBE } from 'zss/mapping/types'
 import { shorturl } from 'zss/mapping/url'
 import { NAME } from 'zss/words/types'
-import { write, writecopyit } from 'zss/words/writeui'
 
 import { vm_loader } from './api'
 import { registerreadplayer } from './register'

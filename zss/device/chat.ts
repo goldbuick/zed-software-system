@@ -1,7 +1,7 @@
 import { ChatClient } from '@twurple/chat'
 import { createdevice } from 'zss/device'
+import { write } from 'zss/feature/writeui'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
-import { write } from 'zss/words/writeui'
 
 import { api_error, vm_loader } from './api'
 import { registerreadplayer } from './register'

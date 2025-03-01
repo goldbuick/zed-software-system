@@ -6,6 +6,7 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
+import { writetext } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,
   gadgethyperlink,
@@ -16,7 +17,6 @@ import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
 import { CATEGORY, PT } from 'zss/words/types'
-import { writetext } from 'zss/words/writeui'
 
 import {
   boardelementread,
