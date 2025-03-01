@@ -4,6 +4,7 @@ import { useWaitForValueString } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
+import { compileast } from 'zss/lang/ast'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { textformatreadedges } from 'zss/words/textformat'
@@ -18,8 +19,8 @@ import {
 } from '../tape/common'
 
 import { EditorFrame } from './editorframe'
-import { EditorInput } from './editorinput'
-import { EditorRows } from './editorrows'
+import { EditorInput, EditorInputProps } from './editorinput'
+import { EditorRows, EditorRowsProps } from './editorrows'
 
 export function TapeEditor() {
   const [editor] = useTape(useShallow((state) => [state.editor]))
@@ -38,17 +39,36 @@ export function TapeEditor() {
     }
   }, [editor.book, editor.path, editor.player])
 
-  // split by line
+  // get current string value of code
   const value = sharedtosynced(codepage)
   const strvalue = ispresent(value) ? value.toJSON() : ''
+
+  // split by line
   const rows = splitcoderows(strvalue)
+
+  // cursor placement
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
   const xcursor = tapeeditor.cursor - rows[ycursor].start
+
   // figure out longest line of code
   const maxwidth = findmaxwidthinrows(rows)
 
+  // tokenize code
+  const parsed = compileast(strvalue)
+  // fold into lines
+  if (ispresent(parsed.tokens)) {
+    for (let i = 0; i < parsed.tokens?.length; ++i) {
+      const token = parsed.tokens[i]
+      const row = rows[(token.startLine ?? 1) - 1]
+      if (ispresent(row)) {
+        row.tokens = row.tokens ?? []
+        row.tokens.push(token)
+      }
+    }
+  }
+
   // measure edges once
-  const props = {
+  const props: EditorRowsProps | EditorInputProps = {
     rows,
     xcursor,
     ycursor,

@@ -21,7 +21,7 @@ import { Scrollable } from '../scrollable'
 import { EDITOR_CODE_ROW, sharedtosynced } from '../tape/common'
 import { UserInput, modsfromevent } from '../userinput'
 
-type TextinputProps = {
+export type EditorInputProps = {
   xcursor: number
   ycursor: number
   xoffset: number
@@ -37,7 +37,7 @@ export function EditorInput({
   yoffset,
   rows,
   codepage,
-}: TextinputProps) {
+}: EditorInputProps) {
   const blink = useBlink()
   const context = useWriteText()
   const blinkdelta = useRef<PT>()

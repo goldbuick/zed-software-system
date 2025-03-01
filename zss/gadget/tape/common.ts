@@ -1,6 +1,9 @@
 import { SyncedText } from '@syncedstore/core'
+import { IToken } from 'chevrotain'
 import { createContext } from 'react'
 import { MODEM_SHARED_VALUE } from 'zss/device/modem'
+import { LANG_ERROR } from 'zss/lang/lexer'
+import { CodeNode } from 'zss/lang/visitor'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { WRITE_TEXT_CONTEXT, textformatreadedges } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
@@ -93,6 +96,9 @@ export type EDITOR_CODE_ROW = {
   start: number
   code: string
   end: number
+  errors?: LANG_ERROR[]
+  tokens?: IToken[]
+  ast?: CodeNode
 }
 
 export function splitcoderows(code: string): EDITOR_CODE_ROW[] {

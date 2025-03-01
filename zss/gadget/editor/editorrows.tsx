@@ -18,7 +18,10 @@ import {
   setupeditoritem,
 } from '../tape/common'
 
-type TextrowsProps = {
+import { ZSS_COLOR_MAP } from './colors'
+
+export type EditorRowsProps = {
+  xcursor: number
   ycursor: number
   xoffset: number
   yoffset: number
@@ -32,7 +35,7 @@ export function EditorRows({
   yoffset,
   rows,
   codepage,
-}: TextrowsProps) {
+}: EditorRowsProps) {
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
@@ -82,6 +85,28 @@ export function EditorRows({
     context.disablewrap = true
     writeplaintext(`${text} `, context, false)
 
+    // calc base index
+    const index = 1 + context.y * context.width
+
+    // apply token colors
+    if (ispresent(row.tokens)) {
+      for (let t = 0; t < row.tokens.length; ++t) {
+        const token = row.tokens[t]
+        const left = (token.startColumn ?? 1) - 1
+        const right = (token.endColumn ?? 1) - 1
+        const maybecolor = ZSS_COLOR_MAP[token.tokenTypeIdx]
+        if (ispresent(maybecolor)) {
+          applycolortoindexes(
+            index + left,
+            index + right,
+            maybecolor,
+            context.active.bg,
+            context,
+          )
+        }
+      }
+    }
+
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
       const maybestart = Math.max(row.start, ii1) - row.start - xoffset
@@ -89,7 +114,6 @@ export function EditorRows({
 
       // start of drawn line
       const right = edge.width - 3
-      const index = 1 + context.y * context.width
       const start = Math.max(0, maybestart)
       const end = Math.min(right, maybeend)
 
