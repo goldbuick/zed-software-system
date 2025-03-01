@@ -1,3 +1,4 @@
+import { objectKeys } from 'ts-extras'
 import { CHIP } from 'zss/chip'
 import { FIRMWARE, FIRMWARE_COMMAND } from 'zss/firmware'
 import { ispresent, MAYBE } from 'zss/mapping/types'
@@ -64,6 +65,17 @@ const DRIVER_COMMANDS = {
 function getfimrwares(driver: DRIVER_TYPE) {
   const lookup: string[] = DRIVER_FIRMWARE[driver] ?? []
   return lookup.map((i) => firmwares[i]).filter(ispresent)
+}
+
+export function firmwarelistcommands(driver: DRIVER_TYPE): string[] {
+  const commands: string[] = []
+  const wares = getfimrwares(driver)
+
+  for (let i = 0; i < wares.length; ++i) {
+    commands.push(...wares[i].listcommands())
+  }
+
+  return commands
 }
 
 export function firmwaregetcommand(

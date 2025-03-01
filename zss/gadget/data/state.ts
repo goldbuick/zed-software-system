@@ -22,8 +22,18 @@ export function useEqual<S, U>(selector: (state: S) => U): (state: S) => U {
 export const useGadgetClient = create<{
   desync: boolean
   gadget: GADGET_STATE
+  zsswords: {
+    cli: string[]
+    loader: string[]
+    runtime: string[]
+  }
 }>(() => ({
   desync: false,
+  zsswords: {
+    cli: [],
+    loader: [],
+    runtime: [],
+  },
   gadget: {
     id: '',
     layers: [],

@@ -1,6 +1,7 @@
 import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/feature/parsefile'
 import { write } from 'zss/feature/writeui'
+import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import {
@@ -110,8 +111,22 @@ const vm = createdevice(
           vm.replynext(message, 'ackoperator', true, message.player)
         }
         break
+      case 'zsswords':
+        if (message.player === memoryreadoperator()) {
+          vm.replynext(
+            message,
+            `ackzsswords`,
+            {
+              cli: firmwarelistcommands(DRIVER_TYPE.CLI),
+              loader: firmwarelistcommands(DRIVER_TYPE.LOADER),
+              runtime: firmwarelistcommands(DRIVER_TYPE.RUNTIME),
+            },
+            message.player,
+          )
+        }
+        break
       case 'books':
-        if (message.player === memoryreadoperator())
+        if (message.player === memoryreadoperator()) {
           doasync(vm, async () => {
             if (message.player && isarray(message.data)) {
               const [maybebooks, maybeselect] = message.data as [string, string]
@@ -124,6 +139,7 @@ const vm = createdevice(
               register_loginready(vm, message.player)
             }
           })
+        }
         break
       case 'joinack':
         if (

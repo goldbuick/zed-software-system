@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
-import { useTape, useTapeEditor } from 'zss/gadget/data/state'
+import { useGadgetClient, useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
 import { compileast } from 'zss/lang/ast'
 import { clamp } from 'zss/mapping/number'
@@ -18,12 +18,89 @@ import {
   splitcoderows,
 } from '../tape/common'
 
+import {
+  ZSS_MUSIC_DRUM,
+  ZSS_MUSIC_NOTE,
+  ZSS_MUSIC_OCTAVE,
+  ZSS_MUSIC_PITCH,
+  ZSS_MUSIC_REST,
+  ZSS_MUSIC_TIME,
+  ZSS_MUSIC_TIMEMOD,
+  ZSS_TYPE_COMMAND,
+  ZSS_TYPE_SYMBOL,
+  zssmusiccolorconfig,
+  zsswordcolorconfig,
+} from './colors'
 import { EditorFrame } from './editorframe'
 import { EditorInput, EditorInputProps } from './editorinput'
 import { EditorRows, EditorRowsProps } from './editorrows'
 
+function skipwords(word: string) {
+  switch (word) {
+    // skip non-typed keywords
+    case 'stat':
+    case 'text':
+    case 'hyperlink':
+      return false
+    default:
+      return true
+  }
+}
+
 export function TapeEditor() {
   const [editor] = useTape(useShallow((state) => [state.editor]))
+  const [wordscli, wordsloader, wordsruntime] = useGadgetClient(
+    useShallow((state) => [
+      state.zsswords.cli,
+      state.zsswords.loader,
+      state.zsswords.runtime,
+    ]),
+  )
+  useEffect(() => {
+    // set command keywords
+    wordscli
+      .filter(skipwords)
+      .forEach((word) => zsswordcolorconfig(word, ZSS_TYPE_COMMAND))
+    wordsloader
+      .filter(skipwords)
+      .forEach((word) => zsswordcolorconfig(word, ZSS_TYPE_COMMAND))
+    wordsruntime
+      .filter(skipwords)
+      .forEach((word) => zsswordcolorconfig(word, ZSS_TYPE_COMMAND))
+    // set #play note colors
+    zssmusiccolorconfig('a', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('b', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('c', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('d', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('e', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('f', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('g', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('x', ZSS_MUSIC_REST)
+    zssmusiccolorconfig('#', ZSS_MUSIC_PITCH)
+    zssmusiccolorconfig('!', ZSS_MUSIC_PITCH)
+    zssmusiccolorconfig('y', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('t', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('s', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('i', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('q', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('h', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('w', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('3', ZSS_MUSIC_TIMEMOD)
+    zssmusiccolorconfig('.', ZSS_MUSIC_TIMEMOD)
+    zssmusiccolorconfig('+', ZSS_MUSIC_OCTAVE)
+    zssmusiccolorconfig('-', ZSS_MUSIC_OCTAVE)
+    zssmusiccolorconfig('0', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('1', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('2', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('p', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('4', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('5', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('6', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('7', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('8', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('9', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig(';', ZSS_TYPE_SYMBOL)
+  }, [wordscli, wordsloader, wordsruntime])
 
   const context = useWriteText()
   const tapeeditor = useTapeEditor()

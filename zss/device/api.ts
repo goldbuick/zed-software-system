@@ -326,6 +326,10 @@ export function vm_operator(device: DEVICELIKE, player: string) {
   device.emit('vm:operator', undefined, player)
 }
 
+export function vm_zsswords(device: DEVICELIKE, player: string) {
+  device.emit('vm:zsswords', undefined, player)
+}
+
 export function vm_halt(device: DEVICELIKE, halt: boolean, player: string) {
   device.emit('vm:halt', halt, player)
 }
