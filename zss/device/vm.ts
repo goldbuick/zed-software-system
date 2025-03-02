@@ -1,3 +1,4 @@
+import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/feature/parsefile'
 import { write } from 'zss/feature/writeui'
@@ -35,10 +36,14 @@ import {
   memoryrestartallchipsandflags,
 } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
-import { bookreadcodepagebyaddress } from 'zss/memory/book'
+import {
+  bookreadcodepagebyaddress,
+  bookreadcodepagesbytype,
+} from 'zss/memory/book'
 import {
   codepageapplyelementstats,
   codepagereaddata,
+  codepagereadname,
   codepagereadstatsfromtext,
   codepagereadtype,
   codepageresetstats,
@@ -48,6 +53,10 @@ import { memoryinspect, memoryinspectcommand } from 'zss/memory/inspect'
 import { memoryinspectbatchcommand } from 'zss/memory/inspectbatch'
 import { memoryloader } from 'zss/memory/loader'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import { categoryconsts } from 'zss/words/category'
+import { collisionconsts } from 'zss/words/collision'
+import { colorconsts } from 'zss/words/color'
+import { dirconsts } from 'zss/words/dir'
 import { NAME, PT } from 'zss/words/types'
 
 import {
@@ -113,6 +122,7 @@ const vm = createdevice(
         break
       case 'zsswords':
         if (message.player === memoryreadoperator()) {
+          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
           vm.replynext(
             message,
             `ackzsswords`,
@@ -120,6 +130,66 @@ const vm = createdevice(
               cli: firmwarelistcommands(DRIVER_TYPE.CLI),
               loader: firmwarelistcommands(DRIVER_TYPE.LOADER),
               runtime: firmwarelistcommands(DRIVER_TYPE.RUNTIME),
+              flags: [
+                ...objectKeys(memoryreadflags(message.player)),
+                'inputmove',
+                'inputalt',
+                'inputctrl',
+                'inputshift',
+                'inputok',
+                'inputcancel',
+                'inputmenu',
+              ],
+              stats: [
+                // interaction
+                'player',
+                'pushable',
+                'collision',
+                'destructible',
+                // boolean stats
+                'ispushable',
+                'iswalk',
+                'iswalkable',
+                'iswalking',
+                'isswim',
+                'isswimable',
+                'isswiming',
+                'issolid',
+                'isbullet',
+                'isdestructible',
+                // config
+                'p1',
+                'p2',
+                'p3',
+                'cycle',
+                'stepx',
+                'stepy',
+                'light',
+                // messages & run
+                'sender',
+                'arg',
+              ],
+              // object codepage kinds
+              kinds: bookreadcodepagesbytype(
+                mainbook,
+                CODE_PAGE_TYPE.OBJECT,
+              ).map((codepage) => codepagereadname(codepage)),
+              // other codepage types
+              altkinds: [
+                ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
+                ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.BOARD),
+                ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.PALETTE),
+                ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.CHARSET),
+                ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.LOADER),
+              ].map((codepage) => codepagereadname(codepage)),
+              colors: [...objectKeys(colorconsts)],
+              dirs: [
+                ...objectKeys(dirconsts).filter(
+                  (item) =>
+                    ['cw', 'ccw', 'oop', 'rndp'].includes(item) === false,
+                ),
+              ],
+              dirmods: ['cw', 'ccw', 'oop', 'rndp'],
             },
             message.player,
           )

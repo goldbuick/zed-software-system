@@ -66,8 +66,10 @@ export const ZSS_COLOR_MAP: Record<number, COLOR> = {
 
 export const ZSS_WORD_MESSAGE = COLOR.DKPURPLE
 export const ZSS_WORD_FLAG = COLOR.DKYELLOW
+export const ZSS_WORD_STAT = ZSS_TYPE_STATNAME
 export const ZSS_WORD_KIND = COLOR.CYAN
-export const ZSS_WORD_COLOR = COLOR.BLACK
+export const ZSS_WORD_KIND_ALT = COLOR.DKCYAN
+export const ZSS_WORD_COLOR = COLOR.RED
 export const ZSS_WORD_DIR = COLOR.WHITE
 export const ZSS_WORD_DIRMOD = COLOR.LTGRAY
 
@@ -79,6 +81,17 @@ export function zsswordcolorconfig(word: string, color: COLOR) {
 
 export function zsswordcolor(word: string) {
   if (word.startsWith('play ')) {
+    const colors: COLOR[] = []
+    for (let i = 0; i < word.length; ++i) {
+      if (i < 5) {
+        colors.push(ZSS_TYPE_COMMAND)
+      } else {
+        colors.push(zssmusiccolor(word[i]))
+      }
+    }
+    colors.push(COLOR.BLUE)
+    return colors
+  } else if (word.startsWith('bgplay ')) {
     const colors: COLOR[] = []
     for (let i = 0; i < word.length; ++i) {
       if (i < 5) {

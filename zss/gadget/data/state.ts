@@ -26,6 +26,13 @@ export const useGadgetClient = create<{
     cli: string[]
     loader: string[]
     runtime: string[]
+    flags: string[]
+    stats: string[]
+    kinds: string[]
+    altkinds: string[]
+    colors: string[]
+    dirs: string[]
+    dirmods: string[]
   }
 }>(() => ({
   desync: false,
@@ -33,6 +40,13 @@ export const useGadgetClient = create<{
     cli: [],
     loader: [],
     runtime: [],
+    flags: [],
+    stats: [],
+    kinds: [],
+    altkinds: [],
+    colors: [],
+    dirs: [],
+    dirmods: [],
   },
   gadget: {
     id: '',

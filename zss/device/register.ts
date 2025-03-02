@@ -184,15 +184,6 @@ const register = createdevice(
               // pull data && init
               await loadmem(urlcontent)
             }
-            // get words meta
-            vm_zsswords(register, myplayerid)
-          })
-        }
-        break
-      case 'ackzsswords':
-        if (message.player === myplayerid) {
-          useGadgetClient.setState({
-            zsswords: message.data,
           })
         }
         break
@@ -205,6 +196,16 @@ const register = createdevice(
         if (message.player === myplayerid) {
           tape_terminal_close(register, myplayerid)
           gadgetserver_desync(register, myplayerid)
+          // get words meta
+          vm_zsswords(register, myplayerid)
+        }
+        break
+      case 'ackzsswords':
+        if (message.player === myplayerid) {
+          console.info(message.data)
+          useGadgetClient.setState({
+            zsswords: message.data,
+          })
         }
         break
       case 'dev':

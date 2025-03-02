@@ -81,8 +81,6 @@ export const dirconsts = {
   r: 'EAST',
   east: 'EAST',
   e: 'EAST',
-  // framing
-  edit: 'EDIT',
 } as const
 
 export type STR_DIR_TYPE = typeof dirconsts

@@ -29,6 +29,13 @@ import {
   ZSS_MUSIC_TIMEMOD,
   ZSS_TYPE_COMMAND,
   ZSS_TYPE_SYMBOL,
+  ZSS_WORD_COLOR,
+  ZSS_WORD_DIR,
+  ZSS_WORD_DIRMOD,
+  ZSS_WORD_FLAG,
+  ZSS_WORD_KIND,
+  ZSS_WORD_KIND_ALT,
+  ZSS_WORD_STAT,
   zssmusiccolorconfig,
   zsswordcolorconfig,
 } from './colors'
@@ -50,11 +57,29 @@ function skipwords(word: string) {
 
 export function TapeEditor() {
   const [editor] = useTape(useShallow((state) => [state.editor]))
-  const [wordscli, wordsloader, wordsruntime] = useGadgetClient(
+  const [
+    wordscli,
+    wordsloader,
+    wordsruntime,
+    wordsflags,
+    wordsstats,
+    wordskinds,
+    wordsaltkinds,
+    wordscolors,
+    wordsdirs,
+    wordsdirmods,
+  ] = useGadgetClient(
     useShallow((state) => [
       state.zsswords.cli,
       state.zsswords.loader,
       state.zsswords.runtime,
+      state.zsswords.flags,
+      state.zsswords.stats,
+      state.zsswords.kinds,
+      state.zsswords.altkinds,
+      state.zsswords.colors,
+      state.zsswords.dirs,
+      state.zsswords.dirmods,
     ]),
   )
   useEffect(() => {
@@ -68,6 +93,16 @@ export function TapeEditor() {
     wordsruntime
       .filter(skipwords)
       .forEach((word) => zsswordcolorconfig(word, ZSS_TYPE_COMMAND))
+
+    // enum const words
+    wordsflags.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_FLAG))
+    wordsstats.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_STAT))
+    wordskinds.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_KIND))
+    wordsaltkinds.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_KIND_ALT))
+    wordscolors.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_COLOR))
+    wordsdirs.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_DIR))
+    wordsdirmods.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_DIRMOD))
+
     // set #play note colors
     zssmusiccolorconfig('a', ZSS_MUSIC_NOTE)
     zssmusiccolorconfig('b', ZSS_MUSIC_NOTE)
@@ -101,7 +136,18 @@ export function TapeEditor() {
     zssmusiccolorconfig('8', ZSS_MUSIC_DRUM)
     zssmusiccolorconfig('9', ZSS_MUSIC_DRUM)
     zssmusiccolorconfig(';', ZSS_TYPE_SYMBOL)
-  }, [wordscli, wordsloader, wordsruntime])
+  }, [
+    wordscli,
+    wordsloader,
+    wordsruntime,
+    wordsflags,
+    wordsstats,
+    wordskinds,
+    wordsaltkinds,
+    wordscolors,
+    wordsdirs,
+    wordsdirmods,
+  ])
 
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
