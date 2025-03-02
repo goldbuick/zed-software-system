@@ -3,7 +3,7 @@ import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 import { statformat } from 'zss/words/stats'
 import {
-  applycolortoindexes,
+  clippedapplycolortoindexes,
   textformatreadedges,
   tokenizeandwritetextformat,
   writeplaintext,
@@ -26,7 +26,6 @@ import {
   ZSS_TYPE_OBJNAME,
   ZSS_TYPE_STATNAME,
   ZSS_TYPE_TEXT,
-  ZSS_WORD_FLAG,
   zsswordcolor,
 } from './colors'
 
@@ -102,8 +101,8 @@ export function EditorRows({
     if (ispresent(row.tokens)) {
       for (let t = 0; t < row.tokens.length; ++t) {
         const token = row.tokens[t]
-        const left = (token.startColumn ?? 1) - 1
-        const right = (token.endColumn ?? 1) - 1
+        const left = (token.startColumn ?? 1) - 1 - xoffset
+        const right = (token.endColumn ?? 1) - 1 - xoffset
         const maybecolor = ZSS_COLOR_MAP[token.tokenTypeIdx]
         if (ispresent(maybecolor)) {
           switch (maybecolor) {
@@ -118,17 +117,21 @@ export function EditorRows({
                 case STAT_TYPE.CHARSET:
                 case STAT_TYPE.PALETTE: {
                   const [first] = words
-                  applycolortoindexes(
-                    index + left,
-                    index + left + first.length,
+                  clippedapplycolortoindexes(
+                    index,
+                    edge.right,
+                    left,
+                    left + first.length,
                     ZSS_TYPE_OBJNAME,
                     context.active.bg,
                     context,
                   )
                   if (words.length > 1) {
-                    applycolortoindexes(
-                      index + left + first.length + 1,
-                      index + right,
+                    clippedapplycolortoindexes(
+                      index,
+                      edge.right,
+                      left + first.length + 1,
+                      right,
                       ZSS_TYPE_TEXT,
                       context.active.bg,
                       context,
@@ -138,17 +141,21 @@ export function EditorRows({
                 }
                 case STAT_TYPE.CONST: {
                   const [first] = words
-                  applycolortoindexes(
-                    index + left,
-                    index + left + first.length,
+                  clippedapplycolortoindexes(
+                    index,
+                    edge.right,
+                    left,
+                    left + first.length,
                     ZSS_TYPE_STATNAME,
                     context.active.bg,
                     context,
                   )
                   if (words.length > 1) {
-                    applycolortoindexes(
-                      index + left + first.length + 1,
-                      index + right,
+                    clippedapplycolortoindexes(
+                      index,
+                      edge.right,
+                      left + first.length + 1,
+                      right,
                       ZSS_TYPE_NUMBER,
                       context.active.bg,
                       context,
@@ -168,9 +175,11 @@ export function EditorRows({
                 case STAT_TYPE.CHAREDIT:
                 case STAT_TYPE.COLOREDIT: {
                   const [first] = words
-                  applycolortoindexes(
-                    index + left,
-                    index + left + first.length,
+                  clippedapplycolortoindexes(
+                    index,
+                    edge.right,
+                    left,
+                    left + first.length,
                     ZSS_TYPE_OBJNAME,
                     context.active.bg,
                     context,
@@ -178,9 +187,11 @@ export function EditorRows({
                   break
                 }
                 default:
-                  applycolortoindexes(
-                    index + left,
-                    index + right,
+                  clippedapplycolortoindexes(
+                    index,
+                    edge.right,
+                    left,
+                    right,
                     COLOR.DKRED,
                     context.active.bg,
                     context,
@@ -193,18 +204,22 @@ export function EditorRows({
               const wordcolor = zsswordcolor(token.image)
               if (isarray(wordcolor)) {
                 for (let c = 0; c < wordcolor.length; ++c) {
-                  applycolortoindexes(
-                    index + left + c,
-                    index + right + c,
+                  clippedapplycolortoindexes(
+                    index,
+                    edge.right,
+                    left + c,
+                    right + c,
                     wordcolor[c],
                     context.active.bg,
                     context,
                   )
                 }
               } else {
-                applycolortoindexes(
-                  index + left,
-                  index + right,
+                clippedapplycolortoindexes(
+                  index,
+                  edge.right,
+                  left,
+                  right,
                   wordcolor,
                   context.active.bg,
                   context,
@@ -213,9 +228,11 @@ export function EditorRows({
               break
             }
             default:
-              applycolortoindexes(
-                index + left,
-                index + right,
+              clippedapplycolortoindexes(
+                index,
+                edge.right,
+                left,
+                right,
                 maybecolor,
                 context.active.bg,
                 context,
@@ -237,9 +254,11 @@ export function EditorRows({
       const end = Math.min(right, maybeend)
 
       if (start <= right && end >= left) {
-        applycolortoindexes(
-          index + start,
-          index + end,
+        clippedapplycolortoindexes(
+          index,
+          edge.right,
+          start,
+          end,
           FG_SELECTED,
           BG_SELECTED,
           context,
