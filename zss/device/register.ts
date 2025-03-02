@@ -202,7 +202,6 @@ const register = createdevice(
         break
       case 'ackzsswords':
         if (message.player === myplayerid) {
-          console.info(message.data)
           useGadgetClient.setState({
             zsswords: message.data,
           })

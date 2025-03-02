@@ -94,7 +94,7 @@ export function zsswordcolor(word: string) {
   } else if (word.startsWith('bgplay ')) {
     const colors: COLOR[] = []
     for (let i = 0; i < word.length; ++i) {
-      if (i < 5) {
+      if (i < 7) {
         colors.push(ZSS_TYPE_COMMAND)
       } else {
         colors.push(zssmusiccolor(word[i]))

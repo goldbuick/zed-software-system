@@ -170,10 +170,12 @@ const vm = createdevice(
                 'arg',
               ],
               // object codepage kinds
-              kinds: bookreadcodepagesbytype(
-                mainbook,
-                CODE_PAGE_TYPE.OBJECT,
-              ).map((codepage) => codepagereadname(codepage)),
+              kinds: [
+                ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.OBJECT).map(
+                  (codepage) => codepagereadname(codepage),
+                ),
+                ...objectKeys(categoryconsts),
+              ],
               // other codepage types
               altkinds: [
                 ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
@@ -189,7 +191,13 @@ const vm = createdevice(
                     ['cw', 'ccw', 'oop', 'rndp'].includes(item) === false,
                 ),
               ],
-              dirmods: ['cw', 'ccw', 'oop', 'rndp'],
+              dirmods: [
+                'cw',
+                'ccw',
+                'oop',
+                'rndp',
+                ...objectKeys(collisionconsts),
+              ],
             },
             message.player,
           )
