@@ -1,7 +1,4 @@
-import {
-  loadcharsetfrombytes,
-  loadpalettefrombytes,
-} from 'zss/feature/bytes'
+import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
 import { BITMAP } from 'zss/gadget/data/bitmap'
@@ -317,10 +314,12 @@ export function codepageapplyelementstats(
         element.pushable = 1
         break
       case 'iswalk':
+      case 'iswalking':
       case 'iswalkable':
         element.collision = COLLISION.ISWALK
         break
       case 'isswim':
+      case 'isswimming':
       case 'isswimable':
         element.collision = COLLISION.ISSWIM
         break

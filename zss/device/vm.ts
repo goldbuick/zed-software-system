@@ -149,11 +149,11 @@ const vm = createdevice(
                 // boolean stats
                 'ispushable',
                 'iswalk',
-                'iswalkable',
                 'iswalking',
+                'iswalkable',
                 'isswim',
+                'isswimming',
                 'isswimable',
-                'isswiming',
                 'issolid',
                 'isbullet',
                 'isdestructible',
