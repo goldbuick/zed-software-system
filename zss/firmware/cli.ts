@@ -16,6 +16,17 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
+import {
+  bg,
+  fg,
+  write,
+  writebbar,
+  writeheader,
+  writeopenit,
+  writeoption,
+  writesection,
+  writetext,
+} from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
@@ -43,17 +54,6 @@ import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { stattypestring } from 'zss/words/stats'
 import { metakey } from 'zss/words/system'
 import { NAME, STAT_TYPE } from 'zss/words/types'
-import {
-  bg,
-  fg,
-  write,
-  writebbar,
-  writeheader,
-  writeopenit,
-  writeoption,
-  writesection,
-  writetext,
-} from 'zss/words/writeui'
 
 function vm_flush_op() {
   vm_flush(SOFTWARE, memoryreadoperator())

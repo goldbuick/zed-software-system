@@ -66,6 +66,17 @@ function getfimrwares(driver: DRIVER_TYPE) {
   return lookup.map((i) => firmwares[i]).filter(ispresent)
 }
 
+export function firmwarelistcommands(driver: DRIVER_TYPE): string[] {
+  const commands: string[] = []
+  const wares = getfimrwares(driver)
+
+  for (let i = 0; i < wares.length; ++i) {
+    commands.push(...wares[i].listcommands())
+  }
+
+  return commands
+}
+
 export function firmwaregetcommand(
   driver: DRIVER_TYPE,
   method: string,

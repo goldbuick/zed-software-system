@@ -1,7 +1,10 @@
 import { ShaderMaterial, Uniform, Vector2 } from 'three'
-import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/file/bytes'
-import { CHARSET } from 'zss/file/charset'
-import { PALETTE } from 'zss/file/palette'
+import {
+  loadcharsetfrombytes,
+  loadpalettefrombytes,
+} from 'zss/feature/bytes'
+import { CHARSET } from 'zss/feature/charset'
+import { PALETTE } from 'zss/feature/palette'
 import { TICK_FPS } from 'zss/mapping/tick'
 
 import { convertpalettetocolors } from '../data/palette'

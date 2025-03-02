@@ -1,5 +1,12 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice, parsetarget } from 'zss/device'
+import {
+  write,
+  writecopyit,
+  writeheader,
+  writeoption,
+} from 'zss/feature/writeui'
+import { useGadgetClient } from 'zss/gadget/data/state'
 import { useDeviceConfig } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
@@ -9,7 +16,6 @@ import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { isjoin, islocked, shorturl } from 'zss/mapping/url'
 import { createplatform } from 'zss/platform'
 import { ismac } from 'zss/words/system'
-import { write, writecopyit, writeheader, writeoption } from 'zss/words/writeui'
 
 import {
   api_error,
@@ -26,6 +32,7 @@ import {
   vm_halt,
   vm_login,
   vm_operator,
+  vm_zsswords,
 } from './api'
 
 // read / write from indexdb
@@ -165,7 +172,7 @@ const register = createdevice(
           vm_cli(register, '#pages', myplayerid)
         }
         break
-      case 'ackoperator': {
+      case 'ackoperator':
         if (message.player === myplayerid) {
           doasync(register, async () => {
             const urlcontent = readurlhash()
@@ -180,7 +187,6 @@ const register = createdevice(
           })
         }
         break
-      }
       case 'loginready':
         if (message.player === myplayerid) {
           vm_login(register, myplayerid)
@@ -190,6 +196,15 @@ const register = createdevice(
         if (message.player === myplayerid) {
           tape_terminal_close(register, myplayerid)
           gadgetserver_desync(register, myplayerid)
+          // get words meta
+          vm_zsswords(register, myplayerid)
+        }
+        break
+      case 'ackzsswords':
+        if (message.player === myplayerid) {
+          useGadgetClient.setState({
+            zsswords: message.data,
+          })
         }
         break
       case 'dev':

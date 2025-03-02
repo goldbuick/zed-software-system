@@ -6,7 +6,7 @@ import { memoryloadercontent } from 'zss/memory/loader'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
-export const textloader: FIRMWARE_COMMAND = (chip, words) => {
+export const loadertext: FIRMWARE_COMMAND = (chip, words) => {
   const textreader: TEXT_READER = memoryloadercontent(chip.id())
   if (!ispresent(textreader)) {
     return 0

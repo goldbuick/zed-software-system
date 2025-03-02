@@ -2,8 +2,10 @@ import { useEffect } from 'react'
 import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
-import { useTape, useTapeEditor } from 'zss/gadget/data/state'
+import { useGadgetClient, useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
+import { compileast } from 'zss/lang/ast'
+import * as lexer from 'zss/lang/lexer'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { textformatreadedges } from 'zss/words/textformat'
@@ -17,12 +19,135 @@ import {
   splitcoderows,
 } from '../tape/common'
 
+import {
+  ZSS_MUSIC_DRUM,
+  ZSS_MUSIC_NOTE,
+  ZSS_MUSIC_OCTAVE,
+  ZSS_MUSIC_PITCH,
+  ZSS_MUSIC_REST,
+  ZSS_MUSIC_TIME,
+  ZSS_MUSIC_TIMEMOD,
+  ZSS_TYPE_COMMAND,
+  ZSS_TYPE_SYMBOL,
+  ZSS_WORD_COLOR,
+  ZSS_WORD_DIR,
+  ZSS_WORD_DIRMOD,
+  ZSS_WORD_FLAG,
+  ZSS_WORD_KIND,
+  ZSS_WORD_KIND_ALT,
+  ZSS_WORD_STAT,
+  zssmusiccolorconfig,
+  zsswordcolorconfig,
+} from './colors'
 import { EditorFrame } from './editorframe'
-import { EditorInput } from './editorinput'
-import { EditorRows } from './editorrows'
+import { EditorInput, EditorInputProps } from './editorinput'
+import { EditorRows, EditorRowsProps } from './editorrows'
+
+function skipwords(word: string) {
+  switch (word) {
+    // skip non-typed keywords
+    case 'stat':
+    case 'text':
+    case 'hyperlink':
+      return false
+    default:
+      return true
+  }
+}
 
 export function TapeEditor() {
   const [editor] = useTape(useShallow((state) => [state.editor]))
+  const [
+    wordscli,
+    wordsloader,
+    wordsruntime,
+    wordsflags,
+    wordsstats,
+    wordskinds,
+    wordsaltkinds,
+    wordscolors,
+    wordsdirs,
+    wordsdirmods,
+  ] = useGadgetClient(
+    useShallow((state) => [
+      state.zsswords.cli,
+      state.zsswords.loader,
+      state.zsswords.runtime,
+      state.zsswords.flags,
+      state.zsswords.stats,
+      state.zsswords.kinds,
+      state.zsswords.altkinds,
+      state.zsswords.colors,
+      state.zsswords.dirs,
+      state.zsswords.dirmods,
+    ]),
+  )
+  useEffect(() => {
+    // set command keywords
+    wordscli
+      .filter(skipwords)
+      .forEach((word) => zsswordcolorconfig(word, ZSS_TYPE_COMMAND))
+    wordsloader
+      .filter(skipwords)
+      .forEach((word) => zsswordcolorconfig(word, ZSS_TYPE_COMMAND))
+    wordsruntime
+      .filter(skipwords)
+      .forEach((word) => zsswordcolorconfig(word, ZSS_TYPE_COMMAND))
+
+    // enum const words
+    wordsflags.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_FLAG))
+    wordsstats.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_STAT))
+    wordskinds.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_KIND))
+    wordsaltkinds.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_KIND_ALT))
+    wordscolors.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_COLOR))
+    wordsdirs.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_DIR))
+    wordsdirmods.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_DIRMOD))
+
+    // set #play note colors
+    zssmusiccolorconfig('a', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('b', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('c', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('d', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('e', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('f', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('g', ZSS_MUSIC_NOTE)
+    zssmusiccolorconfig('x', ZSS_MUSIC_REST)
+    zssmusiccolorconfig('#', ZSS_MUSIC_PITCH)
+    zssmusiccolorconfig('!', ZSS_MUSIC_PITCH)
+    zssmusiccolorconfig('y', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('t', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('s', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('i', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('q', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('h', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('w', ZSS_MUSIC_TIME)
+    zssmusiccolorconfig('3', ZSS_MUSIC_TIMEMOD)
+    zssmusiccolorconfig('.', ZSS_MUSIC_TIMEMOD)
+    zssmusiccolorconfig('+', ZSS_MUSIC_OCTAVE)
+    zssmusiccolorconfig('-', ZSS_MUSIC_OCTAVE)
+    zssmusiccolorconfig('0', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('1', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('2', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('p', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('4', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('5', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('6', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('7', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('8', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig('9', ZSS_MUSIC_DRUM)
+    zssmusiccolorconfig(';', ZSS_TYPE_SYMBOL)
+  }, [
+    wordscli,
+    wordsloader,
+    wordsruntime,
+    wordsflags,
+    wordsstats,
+    wordskinds,
+    wordsaltkinds,
+    wordscolors,
+    wordsdirs,
+    wordsdirmods,
+  ])
 
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
@@ -38,17 +163,55 @@ export function TapeEditor() {
     }
   }, [editor.book, editor.path, editor.player])
 
-  // split by line
+  // get current string value of code
   const value = sharedtosynced(codepage)
   const strvalue = ispresent(value) ? value.toJSON() : ''
+
+  // split by line
   const rows = splitcoderows(strvalue)
+
+  // cursor placement
   const ycursor = findcursorinrows(tapeeditor.cursor, rows)
   const xcursor = tapeeditor.cursor - rows[ycursor].start
+
   // figure out longest line of code
   const maxwidth = findmaxwidthinrows(rows)
 
+  // tokenize code
+  const parsed = compileast(strvalue)
+
+  // fold tokens into lines
+  if (ispresent(parsed.tokens)) {
+    let isfirst = true
+    for (let i = 0; i < parsed.tokens.length; ++i) {
+      const token = parsed.tokens[i]
+      if (token.tokenTypeIdx === lexer.stat.tokenTypeIdx) {
+        // payload marks which stat is first
+        token.payload = isfirst
+        isfirst = false
+      }
+      const row = rows[(token.startLine ?? 1) - 1]
+      if (ispresent(row)) {
+        row.tokens = row.tokens ?? []
+        row.tokens.push(token)
+      }
+    }
+  }
+
+  // fold errors into lines
+  if (ispresent(parsed.errors)) {
+    for (let i = 0; i < parsed.errors.length; ++i) {
+      const error = parsed.errors[i]
+      const row = rows[(error.line ?? 1) - 1]
+      if (ispresent(row)) {
+        row.errors = row.errors ?? []
+        row.errors.push(error)
+      }
+    }
+  }
+
   // measure edges once
-  const props = {
+  const props: EditorRowsProps | EditorInputProps = {
     rows,
     xcursor,
     ycursor,

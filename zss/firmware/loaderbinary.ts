@@ -1,5 +1,5 @@
 import { BINARY_READER } from 'zss/device/api'
-import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/file/bytes'
+import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { FIRMWARE_COMMAND } from 'zss/firmware'
 import {
   CHARS_PER_ROW,
@@ -88,7 +88,7 @@ function readbin(binaryreader: BINARY_READER, kind: string): MAYBE<number> {
   }
 }
 
-export const binaryloader: FIRMWARE_COMMAND = (chip, words) => {
+export const loaderbinary: FIRMWARE_COMMAND = (chip, words) => {
   const binaryreader: BINARY_READER = memoryloadercontent(chip.id())
   if (!ispresent(binaryreader)) {
     return 0

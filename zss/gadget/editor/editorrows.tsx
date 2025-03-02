@@ -1,12 +1,14 @@
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
+import { statformat } from 'zss/words/stats'
 import {
   applycolortoindexes,
   textformatreadedges,
   tokenizeandwritetextformat,
   writeplaintext,
 } from 'zss/words/textformat'
+import { COLOR, STAT_TYPE } from 'zss/words/types'
 
 import { useBlink, useWriteText } from '../hooks'
 import {
@@ -18,7 +20,18 @@ import {
   setupeditoritem,
 } from '../tape/common'
 
-type TextrowsProps = {
+import {
+  ZSS_COLOR_MAP,
+  ZSS_TYPE_NUMBER,
+  ZSS_TYPE_OBJNAME,
+  ZSS_TYPE_STATNAME,
+  ZSS_TYPE_TEXT,
+  ZSS_WORD_FLAG,
+  zsswordcolor,
+} from './colors'
+
+export type EditorRowsProps = {
+  xcursor: number
   ycursor: number
   xoffset: number
   yoffset: number
@@ -32,7 +45,7 @@ export function EditorRows({
   yoffset,
   rows,
   codepage,
-}: TextrowsProps) {
+}: EditorRowsProps) {
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
@@ -82,6 +95,137 @@ export function EditorRows({
     context.disablewrap = true
     writeplaintext(`${text} `, context, false)
 
+    // calc base index
+    const index = 1 + context.y * context.width
+
+    // apply token colors
+    if (ispresent(row.tokens)) {
+      for (let t = 0; t < row.tokens.length; ++t) {
+        const token = row.tokens[t]
+        const left = (token.startColumn ?? 1) - 1
+        const right = (token.endColumn ?? 1) - 1
+        const maybecolor = ZSS_COLOR_MAP[token.tokenTypeIdx]
+        if (ispresent(maybecolor)) {
+          switch (maybecolor) {
+            case ZSS_TYPE_OBJNAME: {
+              const words = token.image.substring(1).split(' ')
+              const statinfo = statformat('', words, !!token.payload)
+              switch (statinfo.type) {
+                case STAT_TYPE.LOADER:
+                case STAT_TYPE.BOARD:
+                case STAT_TYPE.OBJECT:
+                case STAT_TYPE.TERRAIN:
+                case STAT_TYPE.CHARSET:
+                case STAT_TYPE.PALETTE: {
+                  const [first] = words
+                  applycolortoindexes(
+                    index + left,
+                    index + left + first.length,
+                    ZSS_TYPE_OBJNAME,
+                    context.active.bg,
+                    context,
+                  )
+                  if (words.length > 1) {
+                    applycolortoindexes(
+                      index + left + first.length + 1,
+                      index + right,
+                      ZSS_TYPE_TEXT,
+                      context.active.bg,
+                      context,
+                    )
+                  }
+                  break
+                }
+                case STAT_TYPE.CONST: {
+                  const [first] = words
+                  applycolortoindexes(
+                    index + left,
+                    index + left + first.length,
+                    ZSS_TYPE_STATNAME,
+                    context.active.bg,
+                    context,
+                  )
+                  if (words.length > 1) {
+                    applycolortoindexes(
+                      index + left + first.length + 1,
+                      index + right,
+                      ZSS_TYPE_NUMBER,
+                      context.active.bg,
+                      context,
+                    )
+                  }
+                  break
+                }
+                case STAT_TYPE.RANGE:
+                case STAT_TYPE.SELECT:
+                case STAT_TYPE.NUMBER:
+                case STAT_TYPE.TEXT:
+                case STAT_TYPE.LINK:
+                case STAT_TYPE.HOTKEY:
+                case STAT_TYPE.COPYIT:
+                case STAT_TYPE.OPENIT:
+                case STAT_TYPE.ZSSEDIT:
+                case STAT_TYPE.CHAREDIT:
+                case STAT_TYPE.COLOREDIT: {
+                  const [first] = words
+                  applycolortoindexes(
+                    index + left,
+                    index + left + first.length,
+                    ZSS_TYPE_OBJNAME,
+                    context.active.bg,
+                    context,
+                  )
+                  break
+                }
+                default:
+                  applycolortoindexes(
+                    index + left,
+                    index + right,
+                    COLOR.DKRED,
+                    context.active.bg,
+                    context,
+                  )
+                  break
+              }
+              break
+            }
+            case ZSS_TYPE_TEXT: {
+              const wordcolor = zsswordcolor(token.image)
+              if (isarray(wordcolor)) {
+                for (let c = 0; c < wordcolor.length; ++c) {
+                  applycolortoindexes(
+                    index + left + c,
+                    index + right + c,
+                    wordcolor[c],
+                    context.active.bg,
+                    context,
+                  )
+                }
+              } else {
+                applycolortoindexes(
+                  index + left,
+                  index + right,
+                  wordcolor,
+                  context.active.bg,
+                  context,
+                )
+              }
+              break
+            }
+            default:
+              applycolortoindexes(
+                index + left,
+                index + right,
+                maybecolor,
+                context.active.bg,
+                context,
+              )
+              break
+          }
+        }
+      }
+    }
+
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
       const maybestart = Math.max(row.start, ii1) - row.start - xoffset
@@ -89,7 +233,6 @@ export function EditorRows({
 
       // start of drawn line
       const right = edge.width - 3
-      const index = 1 + context.y * context.width
       const start = Math.max(0, maybestart)
       const end = Math.min(right, maybeend)
 

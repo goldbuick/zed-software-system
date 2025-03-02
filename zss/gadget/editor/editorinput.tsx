@@ -8,20 +8,20 @@ import {
 } from 'zss/device/api'
 import { MODEM_SHARED_STRING } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
+import { writetext } from 'zss/feature/writeui'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { applystrtoindex, textformatreadedges } from 'zss/words/textformat'
 import { NAME, PT } from 'zss/words/types'
-import { writetext } from 'zss/words/writeui'
 
 import { useBlink, useWriteText } from '../hooks'
 import { Scrollable } from '../scrollable'
 import { EDITOR_CODE_ROW, sharedtosynced } from '../tape/common'
 import { UserInput, modsfromevent } from '../userinput'
 
-type TextinputProps = {
+export type EditorInputProps = {
   xcursor: number
   ycursor: number
   xoffset: number
@@ -37,7 +37,7 @@ export function EditorInput({
   yoffset,
   rows,
   codepage,
-}: TextinputProps) {
+}: EditorInputProps) {
   const blink = useBlink()
   const context = useWriteText()
   const blinkdelta = useRef<PT>()

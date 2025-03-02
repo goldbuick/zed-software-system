@@ -1,14 +1,16 @@
 import { createContext, useContext, useState } from 'react'
 import { CanvasTexture, Color } from 'three'
 import { objectKeys } from 'ts-extras'
-import { CHARSET } from 'zss/file/charset'
-import { PALETTE } from 'zss/file/palette'
+import {
+  loadcharsetfrombytes,
+  loadpalettefrombytes,
+} from 'zss/feature/bytes'
+import { CHARSET } from 'zss/feature/charset'
+import { PALETTE } from 'zss/feature/palette'
 import { TILES } from 'zss/gadget/data/types'
 import { isequal, ispresent, MAYBE } from 'zss/mapping/types'
 import { createwritetextcontext } from 'zss/words/textformat'
 import { create, createStore, StoreApi } from 'zustand'
-
-import { loadcharsetfrombytes, loadpalettefrombytes } from '../file/bytes'
 
 import { BITMAP } from './data/bitmap'
 import { convertpalettetocolors } from './data/palette'

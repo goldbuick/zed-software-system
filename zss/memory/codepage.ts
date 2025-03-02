@@ -1,6 +1,6 @@
-import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/file/bytes'
-import { CHARSET } from 'zss/file/charset'
-import { PALETTE } from 'zss/file/palette'
+import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
+import { CHARSET } from 'zss/feature/charset'
+import { PALETTE } from 'zss/feature/palette'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
@@ -314,10 +314,12 @@ export function codepageapplyelementstats(
         element.pushable = 1
         break
       case 'iswalk':
+      case 'iswalking':
       case 'iswalkable':
         element.collision = COLLISION.ISWALK
         break
       case 'isswim':
+      case 'isswimming':
       case 'isswimable':
         element.collision = COLLISION.ISSWIM
         break

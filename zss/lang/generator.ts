@@ -3,7 +3,7 @@ import { SourceMapGenerator } from 'source-map'
 import { CHIP } from 'zss/chip'
 import { SHOW_CODE } from 'zss/config'
 
-import { compileAST } from './ast'
+import { compileast } from './ast'
 import { LANG_ERROR } from './lexer'
 import { transformAst } from './transformer'
 import { CodeNode } from './visitor'
@@ -24,7 +24,7 @@ export type GeneratorBuild = {
 export function compile(name: string, text: string): GeneratorBuild {
   const label = `compile-${name}`
   console.time(label)
-  const astResult = compileAST(text)
+  const astResult = compileast(text)
   console.timeEnd(label)
 
   if (astResult.errors && astResult.errors.length > 0) {

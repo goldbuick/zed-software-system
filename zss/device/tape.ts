@@ -1,4 +1,5 @@
 import { createdevice } from 'zss/device'
+import { write } from 'zss/feature/writeui'
 import {
   TAPE_DISPLAY,
   TAPE_LOG_LEVEL,
@@ -9,7 +10,6 @@ import {
 import { pickwith } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { isarray, isboolean, ispresent } from 'zss/mapping/types'
-import { write } from 'zss/words/writeui'
 
 import { MESSAGE } from './api'
 import { registerreadplayer } from './register'

@@ -5,7 +5,7 @@ import { ispresent } from 'zss/mapping/types'
 import { memoryloadercontent } from 'zss/memory/loader'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
 
-export const jsonloader: FIRMWARE_COMMAND = (chip, words) => {
+export const loaderjson: FIRMWARE_COMMAND = (chip, words) => {
   const jsonreader: JSON_READER = memoryloadercontent(chip.id())
   if (!ispresent(jsonreader)) {
     return 0

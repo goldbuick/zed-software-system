@@ -44,7 +44,7 @@ function addRange(node: CodeNode | undefined): OffsetRange | undefined {
   return node.range
 }
 
-export function compileAST(text: string): {
+export function compileast(text: string): {
   errors?: LANG_ERROR[]
   tokens?: IToken[]
   cst?: CstNode

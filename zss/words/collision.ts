@@ -10,8 +10,10 @@ export const collisionconsts = {
   isswim: 'ISSWIM',
   isbullet: 'ISBULLET',
   // aliases
-  iswalkable: 'ISWALKABLE',
-  isswimmable: 'ISSWIMABLE',
+  iswalking: 'ISWALK',
+  iswalkable: 'ISWALK',
+  isswimming: 'ISSWIM',
+  isswimmable: 'ISSWIM',
 } as const
 
 export const collisionenums = {

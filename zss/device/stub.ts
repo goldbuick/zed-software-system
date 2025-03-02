@@ -1,7 +1,7 @@
 import { createdevice } from 'zss/device'
+import { write } from 'zss/feature/writeui'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
-import { write } from 'zss/words/writeui'
 
 import { platform_ready } from './api'
 

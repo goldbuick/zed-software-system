@@ -1,9 +1,9 @@
 import IVSBroadcastClient, { Callback } from 'amazon-ivs-web-broadcast'
 import { createdevice } from 'zss/device'
+import { write, writeheader, writeoption } from 'zss/feature/writeui'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
-import { write, writeheader, writeoption } from 'zss/words/writeui'
 
 import { api_error } from './api'
 import { synthbroadcastdestination } from './synth'

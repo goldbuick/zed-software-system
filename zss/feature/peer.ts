@@ -5,8 +5,8 @@ import { createmessage } from 'zss/device'
 import { MESSAGE, network_showjoincode } from 'zss/device/api'
 import { createforward } from 'zss/device/forward'
 import { SOFTWARE } from 'zss/device/session'
+import { write } from 'zss/feature/writeui'
 import { ispresent, MAYBE } from 'zss/mapping/types'
-import { write } from 'zss/words/writeui'
 
 const trackerlist = `
 wss://tracker.btorrent.xyz
