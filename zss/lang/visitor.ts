@@ -935,7 +935,7 @@ class ScriptVisitor
         method: COMPARE.IS_GREATER_THAN,
       })
     }
-    if (ctx.token_isgreaterthanorequal) {
+    if (ctx.token_islessthanorequal) {
       return this.createcodenode(ctx, {
         type: NODE.COMPARE_ITEM,
         method: COMPARE.IS_LESS_THAN_OR_EQ,
