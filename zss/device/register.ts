@@ -278,7 +278,6 @@ const register = createdevice(
             window.open(
               location.href.replace(/#.*/, `#${maybecontent}`),
               '_blank',
-              'popup',
             )
           }
         }
