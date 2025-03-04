@@ -168,6 +168,14 @@ export function register_forkmem(
   device.emit('register:forkmem', [books], player)
 }
 
+export function register_copy(
+  device: DEVICELIKE,
+  content: string,
+  player: string,
+) {
+  device.emit('register:copy', content, player)
+}
+
 export function register_dev(device: DEVICELIKE, player: string) {
   device.emit('register:dev', undefined, player)
 }
