@@ -62,8 +62,11 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // success ! get it moving
   if (ispresent(bullet)) {
     // write arg
-    bullet.arg = arg
-
+    if (ispresent(arg)) {
+      bullet.arg = arg
+    }
+    // write party info
+    bullet.party = READ_CONTEXT.elementid
     // ensure correct collection type
     bullet.collision = COLLISION.ISBULLET
     // ensure destructible
@@ -73,11 +76,9 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     bullet.stepy = dir.y - READ_CONTEXT.element.y
     // things shot always have the clear bg
     bullet.bg = COLOR.ONCLEAR
-
     // object code
     const kind = bookelementkindread(READ_CONTEXT.book, bullet)
     const code = bullet.code ?? kind?.code ?? ''
-
     // bullets get one immediate tick
     memorytickobject(READ_CONTEXT.book, READ_CONTEXT.board, bullet, code, 1)
   }

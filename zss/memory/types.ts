@@ -22,6 +22,7 @@ export type BOARD_ELEMENT = {
   bg?: number
   light?: number
   // interaction
+  party?: string
   player?: string
   pushable?: number
   collision?: COLLISION

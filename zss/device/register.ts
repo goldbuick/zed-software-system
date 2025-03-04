@@ -5,12 +5,13 @@ import {
   writecopyit,
   writeheader,
   writeoption,
+  writetext,
 } from 'zss/feature/writeui'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { useDeviceConfig } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
-import { user } from 'zss/mapping/keyboard'
+import { user, withclipboard } from 'zss/mapping/keyboard'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { isjoin, islocked, shorturl } from 'zss/mapping/url'
@@ -205,6 +206,16 @@ const register = createdevice(
           useGadgetClient.setState({
             zsswords: message.data,
           })
+        }
+        break
+      case 'copy':
+        if (isstring(message.data) && message.player === myplayerid) {
+          if (ispresent(withclipboard())) {
+            withclipboard()
+              .writeText(message.data)
+              .then(() => writetext(register, `copied!`))
+              .catch((err) => console.error(err))
+          }
         }
         break
       case 'dev':

@@ -172,6 +172,12 @@ export function memoryinspectarea(player: string, p1: PT, p2: PT) {
       'next',
     ])
   }
+  gadgethyperlink(player, 'batch', 'copy coords', [
+    `copycoords:${area}`,
+    'hk',
+    '5',
+    ` 5 `,
+  ])
   gadgethyperlink(player, 'batch', 'make empty', [
     `empty:${area}`,
     'hk',

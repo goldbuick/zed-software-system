@@ -1,4 +1,8 @@
 import { parsetarget } from 'zss/device'
+import { register_copy } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
+import { writetext } from 'zss/feature/writeui'
+import { withclipboard } from 'zss/mapping/keyboard'
 import { ispresent } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
@@ -15,7 +19,7 @@ import {
   memoryinspectpastemenu,
 } from './inspectcopypaste'
 
-import { memoryreadplayerboard } from '.'
+import { memoryreadoperator, memoryreadplayerboard } from '.'
 
 export function memoryinspectbatchcommand(path: string, player: string) {
   const board = memoryreadplayerboard(player)
@@ -61,6 +65,10 @@ export function memoryinspectbatchcommand(path: string, player: string) {
     case 'bgs':
       memoryinspectbgarea(player, p1, p2, 'bg')
       break
+    case 'copycoords': {
+      register_copy(SOFTWARE, batch.path, memoryreadoperator())
+      break
+    }
     default:
       console.info('unknown batch', batch)
       break
