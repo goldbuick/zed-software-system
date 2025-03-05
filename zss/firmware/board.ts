@@ -99,6 +99,8 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     return 0
   }
 
+  debugger
+
   // make sure lookup is created
   bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
 
@@ -117,15 +119,16 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     bookboardmoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
   }
 
-  // create element
+  // validate placement works
   const blocked = bookboardcheckblockedobject(
     READ_CONTEXT.book,
     READ_CONTEXT.board,
     COLLISION.ISWALK, // this should be the collision of the thing being plotted
     dir,
   )
+
+  // write new element
   if (!blocked) {
-    // write new element
     const element = bookboardwritefromkind(
       READ_CONTEXT.book,
       READ_CONTEXT.board,
@@ -372,7 +375,7 @@ export const BOARD_FIRMWARE = createfirmware()
   })
   .command('putwith', (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-    return commandput(chip, words.slice(ii), arg)
+    return commandput(chip, words.slice(ii), undefined, arg)
   })
   .command('put', (chip, words) => {
     return commandput(chip, words)
