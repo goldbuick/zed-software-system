@@ -490,6 +490,9 @@ export function memorymoveobject(
         // need from player stat here
         // so we can properly track aggro from bullets
         sendinteraction(element, blocked, 'shot', element.party)
+      } else {
+        // same party bullets thud
+        sendinteraction(blocked, element, 'thud', undefined)
       }
     } else {
       sendinteraction(element, blocked, 'bump', undefined)
