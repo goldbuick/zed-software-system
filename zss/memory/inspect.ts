@@ -205,6 +205,9 @@ export function memoryinspectcommand(path: string, player: string) {
     case 'char':
       memoryinspectchar(player, element, inspect.path)
       break
+    case 'empty':
+      bookboardsafedelete(mainbook, board, element, mainbook.timestamp)
+      break
     case 'code':
       doasync(SOFTWARE, async () => {
         if (!ispresent(player)) {

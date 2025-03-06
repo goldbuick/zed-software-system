@@ -701,20 +701,41 @@ export function bookboardsafedelete(
     return false
   }
 
-  const id = element.id ?? ''
-  const x = element.x ?? 0
-  const y = element.y ?? 0
-
-  if (id) {
+  if (element.id) {
     // mark for cleanup
     element.removed = timestamp
     // drop from luts
     bookboardobjectnamedlookupdelete(book, board, element)
   } else {
-    boardsetterrain(board, { x, y })
+    boardsetterrain(board, {
+      x: element?.x ?? 0,
+      y: element?.y ?? 0,
+    })
+    // drop from luts
+    bookboardterrainnameddelete(book, board, element)
   }
 
   return true
+}
+
+export function bookboardterrainnameddelete(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  terrain: MAYBE<BOARD_ELEMENT>,
+) {
+  if (
+    ispresent(book) &&
+    ispresent(board) &&
+    ispresent(terrain?.x) &&
+    ispresent(terrain.y)
+  ) {
+    // remove from named
+    const name = boardelementname(terrain)
+    const index = boardelementindex(board, terrain)
+    if (ispresent(board.named?.[name])) {
+      board.named[name].delete(index)
+    }
+  }
 }
 
 export function bookboardobjectnamedlookupdelete(
