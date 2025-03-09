@@ -355,7 +355,29 @@ export function memoryconverttogadgetlayers(
                     ...mixmaxrange(pt1.x, pt1.y),
                     1,
                   ]
-                  blocked.push(range)
+                  let b = 0
+                  for (b = 0; b < blocked.length; ++b) {
+                    const block = blocked[b]
+                    if (block[1] > block[0]) {
+                      if (
+                        range[1] >= block[0] &&
+                        range[0] <= block[1] &&
+                        range[2] >= 1 &&
+                        block[2] >= 1
+                      ) {
+                        // merged
+                        blocked[b] = [
+                          Math.min(range[0], block[0]),
+                          Math.max(range[1], block[1]),
+                          1,
+                        ]
+                        break
+                      }
+                    }
+                  }
+                  if (b === blocked.length) {
+                    blocked.push(range)
+                  }
                 }
               }
             }
