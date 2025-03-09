@@ -16,7 +16,7 @@ import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 // list returns a list, input can be anything
 // pick returns a single item FROM a list
 
-export function checkcollision(
+export function checkdoescollide(
   maybesource: MAYBE<COLLISION>,
   maybedest: MAYBE<COLLISION>,
 ) {

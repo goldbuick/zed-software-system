@@ -6,7 +6,7 @@ import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { STR_KIND } from 'zss/words/kind'
 import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
-import { checkcollision } from './atomics'
+import { checkdoescollide } from './atomics'
 import {
   boarddeleteobject,
   boardelementindex,
@@ -473,7 +473,7 @@ export function bookboardcheckblockedobject(
   if (ispresent(mayberterrain)) {
     const terrainkind = bookelementkindread(book, mayberterrain)
     const terraincollision = mayberterrain.collision ?? terrainkind?.collision
-    return checkcollision(collision, terraincollision)
+    return checkdoescollide(collision, terraincollision)
   }
 
   return false
@@ -554,7 +554,7 @@ export function bookboardmoveobject(
       mayberterrain.collision ??
       mayberterrain?.kinddata?.collision ??
       COLLISION.ISWALK
-    if (checkcollision(targetcollision, terraincollision)) {
+    if (checkdoescollide(targetcollision, terraincollision)) {
       // for sending interaction messages
       return { ...mayberterrain, x: dest.x, y: dest.y }
     }

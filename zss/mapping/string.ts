@@ -14,9 +14,10 @@ export function stringsplice(
 export function totarget(scope: string) {
   // determine target of send
   const [maybetarget, maybelabel] = scope.split(':')
+  const haslabel = ispresent(maybelabel)
 
-  const target = ispresent(maybelabel) ? maybetarget : 'self'
-  const label = ispresent(maybelabel) ? maybelabel : scope
+  const target = haslabel ? maybetarget : 'self'
+  const label = haslabel ? maybelabel : scope
 
   return [target, label]
 }
