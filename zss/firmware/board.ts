@@ -99,8 +99,6 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     return 0
   }
 
-  debugger
-
   // make sure lookup is created
   bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
 
