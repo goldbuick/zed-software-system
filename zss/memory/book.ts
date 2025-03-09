@@ -6,7 +6,7 @@ import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { STR_KIND } from 'zss/words/kind'
 import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
-import { checkcollision } from './atomics'
+import { checkdoescollide } from './atomics'
 import {
   boarddeleteobject,
   boardelementindex,
@@ -473,7 +473,7 @@ export function bookboardcheckblockedobject(
   if (ispresent(mayberterrain)) {
     const terrainkind = bookelementkindread(book, mayberterrain)
     const terraincollision = mayberterrain.collision ?? terrainkind?.collision
-    return checkcollision(collision, terraincollision)
+    return checkdoescollide(collision, terraincollision)
   }
 
   return false
@@ -554,7 +554,7 @@ export function bookboardmoveobject(
       mayberterrain.collision ??
       mayberterrain?.kinddata?.collision ??
       COLLISION.ISWALK
-    if (checkcollision(targetcollision, terraincollision)) {
+    if (checkdoescollide(targetcollision, terraincollision)) {
       // for sending interaction messages
       return { ...mayberterrain, x: dest.x, y: dest.y }
     }
@@ -701,20 +701,41 @@ export function bookboardsafedelete(
     return false
   }
 
-  const id = element.id ?? ''
-  const x = element.x ?? 0
-  const y = element.y ?? 0
-
-  if (id) {
+  if (element.id) {
     // mark for cleanup
     element.removed = timestamp
     // drop from luts
     bookboardobjectnamedlookupdelete(book, board, element)
   } else {
-    boardsetterrain(board, { x, y })
+    boardsetterrain(board, {
+      x: element?.x ?? 0,
+      y: element?.y ?? 0,
+    })
+    // drop from luts
+    bookboardterrainnameddelete(book, board, element)
   }
 
   return true
+}
+
+export function bookboardterrainnameddelete(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  terrain: MAYBE<BOARD_ELEMENT>,
+) {
+  if (
+    ispresent(book) &&
+    ispresent(board) &&
+    ispresent(terrain?.x) &&
+    ispresent(terrain.y)
+  ) {
+    // remove from named
+    const name = boardelementname(terrain)
+    const index = boardelementindex(board, terrain)
+    if (ispresent(board.named?.[name])) {
+      board.named[name].delete(index)
+    }
+  }
 }
 
 export function bookboardobjectnamedlookupdelete(

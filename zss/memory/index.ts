@@ -411,15 +411,15 @@ function sendinteraction(
 export function memorymoveobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
-  target: MAYBE<BOARD_ELEMENT>,
+  element: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ) {
-  if (!ispresent(target)) {
+  if (!ispresent(element)) {
     return false
   }
-  const blocked = bookboardmoveobject(book, board, target, dest)
+  const blocked = bookboardmoveobject(book, board, element, dest)
   if (ispresent(blocked)) {
-    if (target.kind === MEMORY_LABEL.PLAYER && blocked.kind === 'edge') {
+    if (element.kind === MEMORY_LABEL.PLAYER && blocked.kind === 'edge') {
       // attempt to move player
       if (dest.x < 0) {
         // exit west
@@ -430,7 +430,7 @@ export function memorymoveobject(
         )
         if (boards.length) {
           const board = pick(boards)
-          bookplayermovetoboard(book, target.id ?? '', board.id, {
+          bookplayermovetoboard(book, element.id ?? '', board.id, {
             x: BOARD_WIDTH - 1,
             y: dest.y,
           })
@@ -444,7 +444,7 @@ export function memorymoveobject(
         )
         if (boards.length) {
           const board = pick(boards)
-          bookplayermovetoboard(book, target.id ?? '', board.id, {
+          bookplayermovetoboard(book, element.id ?? '', board.id, {
             x: 0,
             y: dest.y,
           })
@@ -458,7 +458,7 @@ export function memorymoveobject(
         )
         if (boards.length) {
           const board = pick(boards)
-          bookplayermovetoboard(book, target.id ?? '', board.id, {
+          bookplayermovetoboard(book, element.id ?? '', board.id, {
             x: dest.x,
             y: BOARD_HEIGHT - 1,
           })
@@ -472,23 +472,30 @@ export function memorymoveobject(
         )
         if (boards.length) {
           const board = pick(boards)
-          bookplayermovetoboard(book, target.id ?? '', board.id, {
+          bookplayermovetoboard(book, element.id ?? '', board.id, {
             x: dest.x,
             y: 0,
           })
         }
       }
     } else {
-      sendinteraction(blocked, target, 'thud', undefined)
+      sendinteraction(blocked, element, 'thud', undefined)
     }
-    if (target.kind === MEMORY_LABEL.PLAYER) {
-      sendinteraction(target, blocked, 'touch', target.id)
-    } else if (target.collision === COLLISION.ISBULLET) {
-      // need from player stat here
-      // so we can properly track aggro from bullets
-      sendinteraction(target, blocked, 'shot', undefined)
+    if (element.kind === MEMORY_LABEL.PLAYER) {
+      sendinteraction(element, blocked, 'touch', element.id)
+    } else if (element.collision === COLLISION.ISBULLET) {
+      const fromplayer = ispid(element.party)
+      const blockedbyplayer = ispid(blocked.id)
+      if (fromplayer !== blockedbyplayer) {
+        // need from player stat here
+        // so we can properly track aggro from bullets
+        sendinteraction(element, blocked, 'shot', element.party)
+      } else {
+        // same party bullets thud
+        sendinteraction(blocked, element, 'thud', undefined)
+      }
     } else {
-      sendinteraction(target, blocked, 'bump', undefined)
+      sendinteraction(element, blocked, 'bump', undefined)
     }
 
     // delete destructible elements

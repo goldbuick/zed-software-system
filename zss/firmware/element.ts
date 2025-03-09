@@ -37,6 +37,7 @@ const INPUT_FLAG_NAMES = new Set([
 
 const STANDARD_STAT_NAMES = new Set([
   // interaction
+  'party',
   'player',
   'pushable',
   'collision',
@@ -190,7 +191,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.board?.restartonzap ?? 0]
       case 'maxplayershots':
         return [true, READ_CONTEXT.board?.maxplayershots ?? 0]
-      // todo: add torch stuff when ready
       // read only
       case 'boardid':
         return [true, READ_CONTEXT.board?.id ?? 'ERR']
@@ -209,9 +209,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
       default: {
         // check standard stat names
         const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
-        const defined = ispresent(maybevalue)
         // return result
-        if (defined || STANDARD_STAT_NAMES.has(name)) {
+        if (STANDARD_STAT_NAMES.has(name)) {
           return [true, maybevalue]
         }
         break
@@ -300,7 +299,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
           READ_CONTEXT.board.maxplayershots = maptonumber(value, 0)
         }
         break
-      // todo: add torch stuff when ready
       // read only
       case 'boardid':
         return [false, value] // readonly
@@ -317,9 +315,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'thisy':
         return [false, value] // readonly
       default: {
-        const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
         // we have to check the object's stats first
-        if (ispresent(maybevalue) || STANDARD_STAT_NAMES.has(name)) {
+        if (STANDARD_STAT_NAMES.has(name)) {
           if (ispresent(READ_CONTEXT.element)) {
             READ_CONTEXT.element[name as keyof BOARD_ELEMENT] = value
           }
@@ -464,17 +461,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // if blocked, return 1
     return 1
   })
-  // .command('try', (chip, words) => {
-  //   const [, ii] = readargs(words, 0, [ARG_TYPE.DIR])
-
-  //   // try and move
-  //   const result = chip.command('go', ...words)
-  //   if (result && ii < words.length) {
-  //     chip.command(...words.slice(ii))
-  //   }
-
-  //   return 0
-  // })
   .command('walk', (_, words) => {
     if (!ispresent(READ_CONTEXT.element)) {
       return 0

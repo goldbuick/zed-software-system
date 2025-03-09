@@ -278,4 +278,7 @@ export function memoryinspectelement(
     get,
     set,
   )
+
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, chip, `make empty`, ['empty', 'hk', '0'], get, set)
 }

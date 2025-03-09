@@ -178,13 +178,6 @@ export function memoryinspectarea(player: string, p1: PT, p2: PT) {
     '5',
     ` 5 `,
   ])
-  gadgethyperlink(player, 'batch', 'make empty', [
-    `empty:${area}`,
-    'hk',
-    '0',
-    ` 0 `,
-    'next',
-  ])
 
   gadgettext(player, DIVIDER)
   gadgethyperlink(player, 'batch', `set chars:`, [
@@ -206,6 +199,15 @@ export function memoryinspectarea(player: string, p1: PT, p2: PT) {
     'hk',
     'b',
     ' B ',
+    'next',
+  ])
+
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, 'batch', 'make empty', [
+    `empty:${area}`,
+    'hk',
+    '0',
+    ` 0 `,
     'next',
   ])
 }

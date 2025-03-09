@@ -25,7 +25,7 @@ import {
 } from 'zss/words/textformat'
 import { COLLISION, COLOR } from 'zss/words/types'
 
-import { checkcollision } from './atomics'
+import { checkdoescollide } from './atomics'
 import { boardelementindex, boardobjectread } from './board'
 import {
   bookelementdisplayread,
@@ -133,6 +133,31 @@ function createcachedcontrol(player: string, index: number): LAYER_CONTROL {
     LAYER_CACHE[id] = createcontrol(player, index)
   }
   return LAYER_CACHE[id] as LAYER_CONTROL
+}
+
+const cw = 0.4
+function mixmaxrange(cx: number, cy: number): [number, number] {
+  // we have to decide how thick the chars are ?
+  // calc corners
+  const angles: number[] = []
+  pt1.x = cx - cw
+  pt1.y = cy - cw
+  angles.push(pt1.angle())
+  pt1.x = cx + cw
+  pt1.y = cy - cw
+  angles.push(pt1.angle())
+  pt1.x = cx - cw
+  pt1.y = cy + cw
+  angles.push(pt1.angle())
+  pt1.x = cx + cw
+  pt1.y = cy + cw
+  angles.push(pt1.angle())
+  const minangle = Math.round(radToDeg(Math.min(...angles)))
+  const maxangle = Math.round(radToDeg(Math.max(...angles)))
+  if (Math.abs(minangle - maxangle) > 180) {
+    return [maxangle, minangle]
+  }
+  return [minangle, maxangle]
 }
 
 export function memoryconverttogadgetlayers(
@@ -252,9 +277,17 @@ export function memoryconverttogadgetlayers(
     // write lighting if needed
     if (isdark) {
       if (display.light > 0) {
-        const falloff = new Map<number, number>()
-        const radius = Math.round(display.light)
+        // min, max, value
+        const blocked: [number, number, number][] = []
+        /*
+        We need to track currently blocked ranges
+        not blocked angles, and we can create 
+        fade out based on distance, going through an object
+        */
+        const radius = clamp(Math.round(display.light), 1, 10)
+        const hradius = radius * 0.5
         const center = boardelementindex(board, sprite)
+        const step = 1 / hradius
         lighting.alphas[center] = 0
         if (radius > 1) {
           for (let r = 1; r <= radius; ++r) {
@@ -268,7 +301,8 @@ export function memoryconverttogadgetlayers(
                 // check distance
                 pt1.x = x - sprite.x
                 pt1.y = y - sprite.y
-                if (pt1.length() > radius) {
+                const raydist = pt1.length()
+                if (raydist > radius) {
                   continue
                 }
 
@@ -279,34 +313,50 @@ export function memoryconverttogadgetlayers(
                 }
 
                 // check angle
-                const angle = Math.round(radToDeg(pt1.angle()) * 0.05)
+                const angle = Math.round(radToDeg(pt1.angle()))
 
                 // current falloff
-                let current = falloff.get(angle) ?? 0
+                let current = 0
+                for (let b = 0; b < blocked.length; ++b) {
+                  const range = blocked[b]
+                  // between min & max
+                  if (angle >= range[0] && angle <= range[1]) {
+                    // take highest value
+                    current = Math.max(current, range[2])
+                  }
+                }
 
                 // update shading
-                const invert = 1 - current
-                lighting.alphas[idx] = lighting.alphas[idx] - invert
+                lighting.alphas[idx] = Math.min(
+                  lighting.alphas[idx],
+                  current +
+                    (raydist < hradius ? 0 : (raydist - hradius) * step),
+                )
                 lighting.alphas[idx] = clamp(lighting.alphas[idx], 0, 1)
 
                 // check lookup
                 const object = boardobjectread(board, board.lookup?.[idx] ?? '')
                 if (ispresent(object)) {
                   // half blocked
-                  current += 0.5
+                  const range: [number, number, number] = [
+                    ...mixmaxrange(pt1.x, pt1.y),
+                    0.25,
+                  ]
+                  blocked.push(range)
                 }
 
                 const maybeterrain = board.terrain[idx]
                 const terrainkind = bookelementkindread(book, maybeterrain)
                 const terraincollision =
                   maybeterrain?.collision ?? terrainkind?.collision
-                if (checkcollision(COLLISION.ISBULLET, terraincollision)) {
+                if (checkdoescollide(COLLISION.ISBULLET, terraincollision)) {
                   // fully blocked
-                  current += 1
+                  const range: [number, number, number] = [
+                    ...mixmaxrange(pt1.x, pt1.y),
+                    1,
+                  ]
+                  blocked.push(range)
                 }
-
-                // update falloff
-                falloff.set(angle, clamp(current + 0.111111, 0, 1))
               }
             }
           }

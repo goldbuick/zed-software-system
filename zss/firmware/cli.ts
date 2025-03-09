@@ -28,6 +28,7 @@ import {
   writetext,
 } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
+import { totarget } from 'zss/mapping/string'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
@@ -193,7 +194,13 @@ export const CLI_FIRMWARE = createfirmware()
         writetext(SOFTWARE, `todo`)
         break
       default: {
-        memorysendtoactiveboards(target, data)
+        const [msgtarget, msglabel] = totarget(target)
+        memorysendtoactiveboards(
+          msgtarget === 'self' && READ_CONTEXT.elementisplayer
+            ? `${READ_CONTEXT.elementfocus}:${msglabel}`
+            : target,
+          data,
+        )
         break
       }
     }

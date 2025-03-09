@@ -8,6 +8,7 @@ import {
   gadgettext,
 } from 'zss/gadget/data/api'
 import { createsid } from 'zss/mapping/guid'
+import { totarget } from 'zss/mapping/string'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { listelementsbyattr } from 'zss/memory/atomics'
@@ -57,10 +58,7 @@ export const RUNTIME_FIRMWARE = createfirmware({
     const [msg, data] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
 
     // determine target of send
-    const [maybetarget, maybelabel] = msg.split(':')
-
-    const target = ispresent(maybelabel) ? maybetarget : 'self'
-    const label = maybelabel ?? maybetarget
+    const [target, label] = totarget(msg)
 
     function sendtoelements(elements: BOARD_ELEMENT[]) {
       for (let i = 0; i < elements.length; ++i) {
@@ -98,6 +96,8 @@ export const RUNTIME_FIRMWARE = createfirmware({
       default: {
         // target named elements
         sendtoelements(listelementsbyattr(READ_CONTEXT.board, [target]))
+        // future enhancement here check if given target is a flag
+        // because we can have flags that are a list of elements
         break
       }
     }
