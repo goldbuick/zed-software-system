@@ -1,7 +1,7 @@
 import {
   synth_bpm,
-  synth_drumvolume,
-  synth_mainvolume,
+  synth_bgplayvolume,
+  synth_playvolume,
   synth_play,
   synth_tta,
   synth_tts,
@@ -73,32 +73,17 @@ export const AUDIO_FIRMWARE = createfirmware()
     synth_bpm(SOFTWARE, bpm)
     return 0
   })
-  .command('mainvol', (_, words) => {
+  .command('vol', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synth_mainvolume(SOFTWARE, volume)
+    synth_playvolume(SOFTWARE, volume)
     return 0
   })
-  .command('mainvolume', (_, words) => {
+  .command('bgvol', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synth_mainvolume(SOFTWARE, volume)
-    return 0
-  })
-  .command('drumvol', (_, words) => {
-    const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synth_drumvolume(SOFTWARE, volume)
-    return 0
-  })
-  .command('drumvolume', (_, words) => {
-    const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synth_drumvolume(SOFTWARE, volume)
+    synth_bgplayvolume(SOFTWARE, volume)
     return 0
   })
   .command('ttsvol', (_, words) => {
-    const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    synth_ttsvolume(SOFTWARE, volume)
-    return 0
-  })
-  .command('ttsvolume', (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
     synth_ttsvolume(SOFTWARE, volume)
     return 0

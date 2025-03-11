@@ -348,8 +348,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
         READ_CONTEXT.board,
         READ_CONTEXT.element,
         {
-          x: pt.x + READ_CONTEXT.element.stepx,
-          y: pt.y + READ_CONTEXT.element.stepy,
+          x: pt.x + (READ_CONTEXT.element.stepx ?? 0),
+          y: pt.y + (READ_CONTEXT.element.stepy ?? 0),
         },
       )
       if (didmove === false) {

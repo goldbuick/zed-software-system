@@ -88,14 +88,14 @@ const synthdevice = createdevice('synth', [], (message) => {
         setAltInterval(message.data)
       }
       break
-    case 'mainvolume':
+    case 'playvolume':
       if (isnumber(message.data)) {
-        synth.setmainvolume(message.data)
+        synth.setplayvolume(message.data)
       }
       break
-    case 'drumvolume':
+    case 'bgplayvolume':
       if (isnumber(message.data)) {
-        synth.setdrumvolume(message.data)
+        synth.setbgplayvolume(message.data)
       }
       break
     case 'ttsvolume':
