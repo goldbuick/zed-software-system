@@ -3,7 +3,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Group } from 'three'
 import { RUNTIME } from 'zss/config'
 import { animpositiontotarget } from 'zss/mapping/anim'
-import { ispresent } from 'zss/mapping/types'
+import { isarray, ispresent } from 'zss/mapping/types'
 import {
   createwritetextcontext,
   WRITE_TEXT_CONTEXT,
@@ -52,7 +52,11 @@ export function Scroll({
   }
 
   // input cursor
-  const [cursor, setCursor] = useState(0)
+  const [cursor, setCursor] = useState(() => {
+    // calc default
+    const startat = text.findIndex((item) => isarray(item))
+    return startat >= 0 && startat <= 8 ? startat : 0
+  })
 
   // display offset
   let offset = cursor - Math.floor(panelheight * 0.5)

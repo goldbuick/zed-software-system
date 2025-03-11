@@ -43,11 +43,16 @@ import {
 } from './play'
 import { createsource, SOURCE_TYPE } from './source'
 
+// 0 to 100
+function volumetodb(value: number) {
+  return 20 * Math.log10(value) - 35
+}
+
 export function createsynth() {
   const destination = getDestination()
   const broadcastdestination = getContext().createMediaStreamDestination()
 
-  const mainvolume = new Volume(-10)
+  const mainvolume = new Volume(-12)
   mainvolume.connect(destination)
   mainvolume.connect(broadcastdestination)
 
@@ -60,16 +65,13 @@ export function createsynth() {
   })
   maincompressor.connect(mainvolume)
 
-  const playvolume = new Volume(-5)
+  const playvolume = new Volume(volumetodb(50))
   playvolume.connect(maincompressor)
 
-  const bgplayvolume = new Volume(0)
+  const bgplayvolume = new Volume(volumetodb(50))
   bgplayvolume.connect(maincompressor)
 
-  const drumvolume = new Volume(-4)
-  drumvolume.connect(maincompressor)
-
-  const ttsvolume = new Volume(0)
+  const ttsvolume = new Volume(volumetodb(50))
   ttsvolume.connect(maincompressor)
 
   // 8tracks
@@ -103,7 +105,7 @@ export function createsynth() {
       FX[f].distortion,
       FX[f].echo,
       FX[f].reverb,
-      playvolume,
+      index < 4 ? playvolume : bgplayvolume,
     )
   }
 
@@ -124,7 +126,7 @@ export function createsynth() {
 
   // drumtick
 
-  const drumtick = new PolySynth().connect(drumvolume)
+  const drumtick = new PolySynth().connect(playvolume)
   drumtick.maxPolyphony = 8
   drumtick.set({
     envelope: {
@@ -144,7 +146,7 @@ export function createsynth() {
 
   // drumtweet
 
-  const drumtweet = new Synth().connect(drumvolume)
+  const drumtweet = new Synth().connect(playvolume)
   drumtick.set({
     envelope: {
       attack: 0.001,
@@ -165,7 +167,7 @@ export function createsynth() {
 
   // drumcowbell
 
-  const drumcowbellfilter = new Filter(350, 'bandpass').connect(drumvolume)
+  const drumcowbellfilter = new Filter(350, 'bandpass').connect(playvolume)
 
   const drumcowbellgain = new Gain().connect(drumcowbellfilter)
   drumcowbellgain.gain.value = 0
@@ -193,7 +195,7 @@ export function createsynth() {
 
   // drumclap
 
-  const drumclapeq = new EQ3(-10, 10, -1).connect(drumvolume)
+  const drumclapeq = new EQ3(-10, 10, -1).connect(playvolume)
 
   const drumclapfilter = new Filter(800, 'highpass', -12)
   drumclapfilter.connect(drumclapeq)
@@ -215,7 +217,7 @@ export function createsynth() {
 
   // drumhisnare
 
-  const drumhisnaredistortion = new Distortion().connect(drumvolume)
+  const drumhisnaredistortion = new Distortion().connect(playvolume)
   drumhisnaredistortion.set({
     distortion: 0.666,
   })
@@ -276,7 +278,7 @@ export function createsynth() {
     frequency: 256,
     Q: 0.17,
   })
-  drumhiwoodblockfilter.connect(drumvolume)
+  drumhiwoodblockfilter.connect(playvolume)
 
   const drumhiwoodblockclack = new Synth()
   drumhiwoodblockclack.set({
@@ -321,7 +323,7 @@ export function createsynth() {
 
   // drumlowsnare
 
-  const drumlowsnaredistortion = new Distortion().connect(drumvolume)
+  const drumlowsnaredistortion = new Distortion().connect(playvolume)
   drumlowsnaredistortion.set({
     distortion: 0.876,
   })
@@ -376,7 +378,7 @@ export function createsynth() {
 
   // drumlowtom
 
-  const drumlowtomosc = new Synth().connect(drumvolume)
+  const drumlowtomosc = new Synth().connect(playvolume)
   drumlowtomosc.set({
     envelope: {
       attack: 0.01,
@@ -389,7 +391,7 @@ export function createsynth() {
     },
   })
 
-  const drumlowtomosc2 = new Synth().connect(drumvolume)
+  const drumlowtomosc2 = new Synth().connect(playvolume)
   drumlowtomosc.set({
     envelope: {
       attack: 0.01,
@@ -402,7 +404,7 @@ export function createsynth() {
     },
   })
 
-  const drumlowtomnoise = new NoiseSynth().connect(drumvolume)
+  const drumlowtomnoise = new NoiseSynth().connect(playvolume)
   drumlowtomnoise.set({
     envelope: {
       attack: 0.01,
@@ -442,7 +444,7 @@ export function createsynth() {
     frequency: 256,
     Q: 0.17,
   })
-  drumlowwoodblockfilter.connect(drumvolume)
+  drumlowwoodblockfilter.connect(playvolume)
 
   const drumlowwoodblockclack = new Synth()
   drumlowwoodblockclack.set({
@@ -487,7 +489,7 @@ export function createsynth() {
 
   // drumbass
 
-  const drumbass = new MembraneSynth().connect(drumvolume)
+  const drumbass = new MembraneSynth().connect(playvolume)
   drumbass.set({
     octaves: 8,
   })
@@ -626,11 +628,11 @@ export function createsynth() {
   }
 
   // adjust main volumes
-  function setmainvolume(volume: number) {
-    mainvolume.volume.value = volume
+  function setplayvolume(volume: number) {
+    playvolume.volume.value = volumetodb(volume)
   }
-  function setdrumvolume(volume: number) {
-    drumvolume.volume.value = volume
+  function setbgplayvolume(volume: number) {
+    bgplayvolume.volume.value = volumetodb(volume)
   }
 
   // tts output
@@ -648,8 +650,8 @@ export function createsynth() {
     addplay,
     stopplay,
     addttsaudiobuffer,
-    setmainvolume,
-    setdrumvolume,
+    setplayvolume,
+    setbgplayvolume,
     setttsvolume,
     SOURCE,
     FX,

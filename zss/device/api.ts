@@ -220,12 +220,12 @@ export function synth_bpm(device: DEVICELIKE, bpm: number) {
   device.emit('synth:bpm', bpm)
 }
 
-export function synth_mainvolume(device: DEVICELIKE, volume: number) {
-  device.emit('synth:mainvolume', volume)
+export function synth_playvolume(device: DEVICELIKE, volume: number) {
+  device.emit('synth:playvolume', volume)
 }
 
-export function synth_drumvolume(device: DEVICELIKE, volume: number) {
-  device.emit('synth:drumvolume', volume)
+export function synth_bgplayvolume(device: DEVICELIKE, volume: number) {
+  device.emit('synth:bgplayvolume', volume)
 }
 
 export function synth_ttsvolume(device: DEVICELIKE, volume: number) {
