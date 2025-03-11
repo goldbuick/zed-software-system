@@ -21,6 +21,8 @@ import {
   bookelementkindread,
   bookplayermovetoboard,
   bookreadcodepagesbytypeandstat,
+  bookreadobject,
+  bookreadterrain,
 } from 'zss/memory/book'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { mapstrcolortoattributes } from 'zss/words/color'
@@ -105,7 +107,7 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   // read
   const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
 
-  // check if we are blocked by a pushable
+  // check if we are blocked by a pushable object element
   const target = boardelementread(READ_CONTEXT.board, dir)
   if (target?.category === CATEGORY.ISOBJECT && target?.pushable) {
     const from: PT = {
@@ -117,11 +119,18 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     bookboardmoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
   }
 
+  // get kind's collision type
+  const [kindname] = kind
+  const kinddata =
+    bookreadobject(READ_CONTEXT.book, kindname) ??
+    bookreadterrain(READ_CONTEXT.book, kindname)
+  const collision = kinddata?.collision ?? COLLISION.ISWALK
+
   // validate placement works
   const blocked = bookboardcheckblockedobject(
     READ_CONTEXT.book,
     READ_CONTEXT.board,
-    COLLISION.ISWALK, // this should be the collision of the thing being plotted
+    collision,
     dir,
   )
 
