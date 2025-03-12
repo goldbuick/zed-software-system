@@ -4,6 +4,7 @@ import {
   write,
   writecopyit,
   writeheader,
+  writeopenit,
   writeoption,
   writetext,
 } from 'zss/feature/writeui'
@@ -86,9 +87,18 @@ function readurlhash(): string {
   return ''
 }
 
+function writewikilink() {
+  writeopenit(
+    register,
+    `https://github.com/goldbuick/zed-software-system/wiki`,
+    `open help wiki`,
+  )
+}
+
 async function loadmem(books: string) {
   if (books.length === 0) {
     api_error(register, 'content', 'no content found')
+    writewikilink()
     tape_crash(register, myplayerid)
     return
   }
@@ -170,6 +180,7 @@ const register = createdevice(
       case 'error:login:player':
         if (message.player === myplayerid) {
           tape_crash(register, myplayerid)
+          writewikilink()
           vm_cli(register, '#pages', myplayerid)
         }
         break
