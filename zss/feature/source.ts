@@ -113,6 +113,7 @@ export function createsource(sourcetype: SOURCE_TYPE) {
       source = {
         type: sourcetype,
         synth: new Sampler({
+          volume: -12,
           attack: 0.001,
           release: 0.75,
           urls: {
