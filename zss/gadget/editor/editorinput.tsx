@@ -6,7 +6,7 @@ import {
   tape_terminal_inclayout,
   vm_cli,
 } from 'zss/device/api'
-import { MODEM_SHARED_STRING } from 'zss/device/modem'
+import { Y } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import { writetext } from 'zss/feature/writeui'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
@@ -18,7 +18,7 @@ import { NAME, PT } from 'zss/words/types'
 
 import { useBlink, useWriteText } from '../hooks'
 import { Scrollable } from '../scrollable'
-import { EDITOR_CODE_ROW, sharedtosynced } from '../tape/common'
+import { EDITOR_CODE_ROW } from '../tape/common'
 import { UserInput, modsfromevent } from '../userinput'
 
 export type EditorInputProps = {
@@ -27,7 +27,7 @@ export type EditorInputProps = {
   xoffset: number
   yoffset: number
   rows: EDITOR_CODE_ROW[]
-  codepage: MAYBE<MODEM_SHARED_STRING>
+  codepage: MAYBE<Y.Text>
 }
 
 export function EditorInput({
@@ -46,8 +46,7 @@ export function EditorInput({
   const player = useTape((state) => state.editor.player)
 
   // split by line
-  const value = sharedtosynced(codepage)
-  const strvalue = ispresent(value) ? value.toJSON() : ''
+  const strvalue = ispresent(codepage) ? codepage.toJSON() : ''
   const rowsend = rows.length - 1
 
   // draw cursor
@@ -113,10 +112,10 @@ export function EditorInput({
 
   function strvaluesplice(index: number, count: number, insert?: string) {
     if (count > 0) {
-      value?.delete(index, count)
+      codepage?.delete(index, count)
     }
     if (ispresent(insert)) {
-      value?.insert(index, insert)
+      codepage?.insert(index, insert)
     }
     useTapeEditor.setState({
       cursor: index + (insert ?? '').length,
@@ -164,7 +163,7 @@ export function EditorInput({
       />
       <UserInput
         keydown={(event) => {
-          if (!ispresent(value)) {
+          if (!ispresent(codepage)) {
             return
           }
 
@@ -208,9 +207,9 @@ export function EditorInput({
               }
               break
             case 'enter':
-              if (ispresent(value)) {
+              if (ispresent(codepage)) {
                 // insert newline !
-                value.insert(tapeeditor.cursor, `\n`)
+                codepage.insert(tapeeditor.cursor, `\n`)
                 useTapeEditor.setState({ cursor: tapeeditor.cursor + 1 })
               }
               break
@@ -297,7 +296,7 @@ export function EditorInput({
                   strvaluesplice(ii1, iic, key)
                 } else {
                   const cursor = tapeeditor.cursor + key.length
-                  value.insert(tapeeditor.cursor, key)
+                  codepage.insert(tapeeditor.cursor, key)
                   useTapeEditor.setState({
                     cursor,
                   })

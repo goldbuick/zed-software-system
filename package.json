@@ -25,8 +25,7 @@
     "@react-three/eslint-plugin": "^0.1.1",
     "@react-three/fiber": "^8.16.6",
     "@react-three/postprocessing": "^2.16.3",
-    "@syncedstore/core": "^0.6.0",
-    "@syncedstore/react": "^0.6.0",
+    "@streamerbot/client": "^1.9.5",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/user-event": "^14.6.1",
     "@twurple/auth": "^7.2.1",
@@ -66,7 +65,7 @@
     "jszip": "^3.10.1",
     "kademlia-table": "^2.0.4",
     "lethargy-ts": "^0.1.0",
-    "lib0": "^0.2.94",
+    "lib0": "^0.2.99",
     "maath": "^0.10.8",
     "mime": "^4.0.4",
     "mitt": "^3.0.1",
@@ -76,7 +75,6 @@
     "openai": "^4.79.1",
     "p2pt": "^1.5.1",
     "path-browserify": "^1.0.0",
-    "peerjs": "^1.5.4",
     "postprocessing": "^6.36.4",
     "prettier": "^3.0.1",
     "process": "^0.11.10",
@@ -99,7 +97,7 @@
     "vite-plugin-mkcert": "^1.17.5",
     "vite-plugin-node-polyfills": "^0.23.0",
     "y-protocols": "^1.0.6",
-    "yjs": "^13.6.15",
+    "yjs": "^13.6.24",
     "zustand": "^5.0.1"
   }
 }

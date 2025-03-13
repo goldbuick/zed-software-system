@@ -1,10 +1,7 @@
-import { SyncedText } from '@syncedstore/core'
 import { IToken } from 'chevrotain'
 import { createContext } from 'react'
-import { MODEM_SHARED_VALUE } from 'zss/device/modem'
 import { LANG_ERROR } from 'zss/lang/lexer'
 import { CodeNode } from 'zss/lang/visitor'
-import { MAYBE, ispresent } from 'zss/mapping/types'
 import { WRITE_TEXT_CONTEXT, textformatreadedges } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
@@ -130,15 +127,4 @@ export function findcursorinrows(cursor: number, rows: EDITOR_CODE_ROW[]) {
     }
   }
   return 0
-}
-
-export function sharedtosynced(
-  shared: MAYBE<MODEM_SHARED_VALUE>,
-): MAYBE<SyncedText> {
-  return ispresent(shared) ? (shared.value as SyncedText) : undefined
-}
-
-export function sharedtorows(shared: MAYBE<MODEM_SHARED_VALUE>) {
-  const value = sharedtosynced(shared)
-  return splitcoderows(ispresent(value) ? value.toJSON() : '')
 }

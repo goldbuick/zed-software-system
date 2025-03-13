@@ -1,8 +1,6 @@
 import { parsetarget } from 'zss/device'
 import { register_copy } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { writetext } from 'zss/feature/writeui'
-import { withclipboard } from 'zss/mapping/keyboard'
 import { ispresent } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
