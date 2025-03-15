@@ -15,7 +15,6 @@ import { BackPlate } from '../tape/backplate'
 import {
   findcursorinrows,
   findmaxwidthinrows,
-  sharedtosynced,
   splitcoderows,
 } from '../tape/common'
 
@@ -164,8 +163,7 @@ export function TapeEditor() {
   }, [editor.book, editor.path, editor.player])
 
   // get current string value of code
-  const value = sharedtosynced(codepage)
-  const strvalue = ispresent(value) ? value.toJSON() : ''
+  const strvalue = ispresent(codepage) ? codepage.toJSON() : ''
 
   // split by line
   const rows = splitcoderows(strvalue)

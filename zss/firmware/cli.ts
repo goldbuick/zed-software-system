@@ -22,7 +22,6 @@ import {
   write,
   writebbar,
   writeheader,
-  writeopenit,
   writeoption,
   writesection,
   writetext,
@@ -70,11 +69,6 @@ export const CLI_FIRMWARE = createfirmware()
         writeheader(SOFTWARE, `H E L P`)
         // TODO: basically make this help content a table of contents
         // entry points into the help wiki +1
-        writeopenit(
-          SOFTWARE,
-          `https://github.com/goldbuick/zed-software-system/wiki`,
-          `open help wiki`,
-        )
         write(SOFTWARE, ``)
         writeoption(SOFTWARE, `#help controls`, `zss controls and inputs`)
         write(SOFTWARE, `!helpcontrols;read help controls`)
