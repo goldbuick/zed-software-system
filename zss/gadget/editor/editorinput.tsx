@@ -1,4 +1,5 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { UndoManager } from 'yjs'
 import {
   api_error,
   tape_editor_close,
@@ -13,6 +14,7 @@ import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { ismac } from 'zss/words/system'
 import { applystrtoindex, textformatreadedges } from 'zss/words/textformat'
 import { NAME, PT } from 'zss/words/types'
 
@@ -151,6 +153,28 @@ export function EditorInput({
     [codeend, rows, rowsend, xcursor, ycursor],
   )
 
+  const undomanager = useMemo(() => {
+    return codepage ? new Y.UndoManager(codepage) : undefined
+  }, [codepage])
+
+  useEffect(() => {
+    function handleadded(arg0: any) {
+      arg0.stackItem.meta.set('cursor', tapeeditor.cursor)
+    }
+    function handlepopped(arg0: any) {
+      if (arg0.stackItem.meta.has('cursor')) {
+        const cursor = arg0.stackItem.meta.get('cursor')
+        useTapeEditor.setState({ cursor })
+      }
+    }
+    undomanager?.on('stack-item-added', handleadded)
+    undomanager?.on('stack-item-popped', handlepopped)
+    return () => {
+      undomanager?.off('stack-item-added', handleadded)
+      undomanager?.off('stack-item-popped', handlepopped)
+    }
+  }, [undomanager, tapeeditor.cursor])
+
   return (
     <>
       <Scrollable
@@ -241,6 +265,18 @@ export function EditorInput({
             default:
               if (mods.ctrl) {
                 switch (lkey) {
+                  case 'z':
+                    if (ismac && mods.shift) {
+                      undomanager?.redo()
+                    } else {
+                      undomanager?.undo()
+                    }
+                    break
+                  case 'y':
+                    if (!ismac) {
+                      undomanager?.redo()
+                    }
+                    break
                   case 'a':
                     useTapeEditor.setState({ cursor: codeend, select: 0 })
                     break

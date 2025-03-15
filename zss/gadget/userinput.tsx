@@ -137,6 +137,9 @@ document.addEventListener(
       case 'o':
       case 'p':
       case 'f':
+      case 't':
+      case 'z':
+      case 'y':
       case 'arrowleft':
       case 'arrowright':
       case 'arrowup':
