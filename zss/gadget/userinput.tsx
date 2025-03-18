@@ -136,11 +136,10 @@ document.addEventListener(
       case 's':
       case 't':
       case 'o':
-      case 'p':
       case 'f':
-      case 't':
       case 'z':
       case 'y':
+      case 'p':
       case 'arrowleft':
       case 'arrowright':
       case 'arrowup':
