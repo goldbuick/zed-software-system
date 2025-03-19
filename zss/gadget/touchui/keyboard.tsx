@@ -3,6 +3,7 @@ import { Group } from 'three'
 import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { enableaudio } from 'zss/device/synth'
 import { clamp, snap } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
@@ -186,6 +187,7 @@ export function Keyboard({ width, height }: KeyboardProps) {
           height={height}
           visible={false}
           onPointerDown={(e) => {
+            enableaudio()
             pointers[e.pointerId] = e.point.x
             if (ispresent(ref.current)) {
               ref.current.userData.x = ref.current.position.x
