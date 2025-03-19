@@ -127,19 +127,10 @@ function checkforcolorconst(value: MAYBE<WORD>): MAYBE<STR_COLOR> {
 function readcolorconst(index: number): [STR_COLOR | undefined, number] {
   const value: MAYBE<WORD> = READ_CONTEXT.words[index]
 
-  // pre-check
+  // check value
   const maybecolor = checkforcolorconst(value)
   if (isstrcolor(maybecolor)) {
     return [maybecolor, index + 1]
-  }
-
-  // read expression
-  const [exprvalue, iii] = readexpr(index)
-
-  // post-check
-  const maybecolor2 = checkforcolorconst(exprvalue)
-  if (isstrcolor(maybecolor2)) {
-    return [maybecolor2, iii]
   }
 
   // fail

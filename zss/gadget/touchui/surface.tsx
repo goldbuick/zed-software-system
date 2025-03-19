@@ -6,6 +6,7 @@ import { Vector2, Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { tape_terminal_toggle } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { enableaudio } from 'zss/device/synth'
 import { ptwithin } from 'zss/mapping/2d'
 import { user } from 'zss/mapping/keyboard'
 import { snap } from 'zss/mapping/number'
@@ -129,6 +130,7 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
       height={height}
       visible={false}
       onPointerDown={(e) => {
+        enableaudio()
         ++movestick.presscount
         if (movestick.startx === -1) {
           e.intersections[0].object.worldToLocal(

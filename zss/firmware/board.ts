@@ -330,9 +330,6 @@ export const BOARD_FIRMWARE = createfirmware()
     // read
     const [target, into] = readargs(words, 0, [ARG_TYPE.KIND, ARG_TYPE.KIND])
 
-    // make sure lookup is created
-    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
-
     // begin filtering
     const targetname = readstrkindname(target) ?? ''
     const boardelements = listnamedelements(READ_CONTEXT.board, targetname)

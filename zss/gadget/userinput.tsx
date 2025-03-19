@@ -134,12 +134,12 @@ document.addEventListener(
     // block default browser behavior that messes with things
     switch (key) {
       case 's':
-      case 'o':
-      case 'p':
-      case 'f':
       case 't':
+      case 'o':
+      case 'f':
       case 'z':
       case 'y':
+      case 'p':
       case 'arrowleft':
       case 'arrowright':
       case 'arrowup':
@@ -196,6 +196,16 @@ document.addEventListener(
       case 's':
         if (mods.ctrl) {
           vm_cli(SOFTWARE, '#save', registerreadplayer())
+        }
+        break
+      case 't':
+        if (mods.ctrl) {
+          // open a join url in a new tab with a new session
+        }
+        break
+      case 'o':
+        if (mods.ctrl) {
+          // open merge login request
         }
         break
       case 'f':

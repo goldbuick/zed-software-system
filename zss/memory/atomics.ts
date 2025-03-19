@@ -1,3 +1,4 @@
+import { indextopt } from 'zss/mapping/2d'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { ispt } from 'zss/words/dir'
 import {
@@ -58,8 +59,22 @@ export function listnamedelements(
   board: MAYBE<BOARD>,
   name: string,
 ): BOARD_ELEMENT[] {
-  const elements = [...(board?.named?.[name]?.values() ?? [])]
-  return elements
+  // handle empty special case
+  if (name === 'empty') {
+    const terrain = [...(board?.terrain ?? [])].map((el, idx) => {
+      if (!el?.name && !el?.kind) {
+        return {
+          ...indextopt(idx, BOARD_WIDTH),
+          name: 'empty',
+        }
+      }
+      return undefined
+    })
+    return terrain.filter(ispresent)
+  }
+
+  const named = [...(board?.named?.[name]?.values() ?? [])]
+  return named
     .map((idorindex) => {
       if (typeof idorindex === 'string') {
         return board?.objects[idorindex]
