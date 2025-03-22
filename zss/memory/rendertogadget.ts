@@ -33,6 +33,7 @@ import {
   bookreadcodepagewithtype,
   bookreadflags,
 } from './book'
+import { codepagereaddata } from './codepage'
 import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK, CODE_PAGE_TYPE } from './types'
 
 import { MEMORY_LABEL, memoryreadbookbysoftware } from '.'
@@ -124,7 +125,11 @@ function createcachedmedia(
   if (!ispresent(LAYER_CACHE[id])) {
     LAYER_CACHE[id] = createmedia(player, index, mime, media)
   }
-  return LAYER_CACHE[id] as LAYER_MEDIA
+  const layermedia = LAYER_CACHE[id] as LAYER_MEDIA
+  // handle copydata
+  layermedia.mime = mime
+  layermedia.media = media
+  return layermedia
 }
 
 function createcachedcontrol(player: string, index: number): LAYER_CONTROL {
@@ -439,13 +444,14 @@ export function memoryconverttogadgetlayers(
       CODE_PAGE_TYPE.PALETTE,
       bookflags.palette,
     )
-    if (ispresent(codepage?.palette?.bits)) {
+    const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
+    if (ispresent(palette?.bits)) {
       layers.push(
         createcachedmedia(
           player,
           iiii++,
           'image/palette',
-          Array.from(codepage.palette.bits),
+          Array.from(palette.bits),
         ),
       )
     }
@@ -458,13 +464,14 @@ export function memoryconverttogadgetlayers(
       CODE_PAGE_TYPE.CHARSET,
       bookflags.charset,
     )
-    if (ispresent(codepage?.charset?.bits)) {
+    const charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(codepage)
+    if (ispresent(charset?.bits)) {
       layers.push(
         createcachedmedia(
           player,
           iiii++,
           'image/charset',
-          Array.from(codepage.charset.bits),
+          Array.from(charset.bits),
         ),
       )
     }

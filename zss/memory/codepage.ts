@@ -1,9 +1,13 @@
+import { Color } from 'three'
+import { objectKeys } from 'ts-extras'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
 import { BITMAP } from 'zss/gadget/data/bitmap'
+import { FILE_BYTES_PER_COLOR } from 'zss/gadget/data/types'
 import { stat, tokenize } from 'zss/lang/lexer'
 import { createsid } from 'zss/mapping/guid'
+import { clamp } from 'zss/mapping/number'
 import {
   MAYBE,
   isarray,
@@ -283,6 +287,8 @@ export function codepagereadstat(codepage: MAYBE<CODE_PAGE>, stat: string) {
   return stats[stat]
 }
 
+const colorparse = new Color()
+
 export function codepageapplyelementstats(
   stats: CODE_PAGE_STATS,
   element: BOARD_ELEMENT,
@@ -423,6 +429,27 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       if (!ispresent(codepage.palette)) {
         // clone default
         codepage.palette = loadpalettefrombytes(PALETTE)
+      }
+      if (ispresent(codepage.palette?.bits)) {
+        const stats = codepagereadstatdefaults(codepage)
+        const statnames = objectKeys(stats)
+        for (let i = 0; i < statnames.length; ++i) {
+          const statname = statnames[i].toLowerCase()
+          const statvalue = stats[statname]
+          if (statname.startsWith('color') && isstring(statvalue)) {
+            const idx = parseFloat(statname.replace('color', ''))
+            if (idx >= 0 && idx <= 15) {
+              colorparse.set(statvalue)
+              const row = idx * FILE_BYTES_PER_COLOR
+              const cpr = colorparse.r * 63
+              const cpg = colorparse.g * 63
+              const cpb = colorparse.b * 63
+              codepage.palette.bits[row + 0] = clamp(cpr, 0, 63)
+              codepage.palette.bits[row + 1] = clamp(cpg, 0, 63)
+              codepage.palette.bits[row + 2] = clamp(cpb, 0, 63)
+            }
+          }
+        }
       }
       return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
