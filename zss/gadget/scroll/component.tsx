@@ -19,6 +19,7 @@ import { TilesData } from '../usetiles'
 
 import { ScrollBackPlate } from './backplate'
 import { ScrollControls } from './controls'
+import { Marquee } from './marquee'
 
 type ScrollProps = {
   name: string
@@ -134,6 +135,13 @@ export function Scroll({
             name={name}
             width={width}
             height={height}
+            context={context}
+          />
+          <Marquee
+            line={`
+up/down$white.SCROLL UP/DOWN   $blue
+esc/cancel$white.CLOSE SCROLL   $blue
+alt+up/down$white.JUMP 10 LINES   $blue`}
             context={context}
           />
           <ScrollControls

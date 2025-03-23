@@ -24,12 +24,12 @@ export function ScrollBackPlate({
 
   // edges
   for (let x = 1; x < width - 1; ++x) {
-    writeTile(tiles, width, height, x, 0, { char: 196, color: 15 })
     if (x > 2 && x < width - 1) {
       writeTile(tiles, width, height, x, 1, { char: 205, color: 15 })
     }
     writeTile(tiles, width, height, x, height - 1, { char: 205, color: 15 })
   }
+  writeTile(tiles, width, height, width - 2, 0, { char: 196, color: 15 })
   writeTile(tiles, width, height, 1, 0, { char: 205, color: 15 })
   writeTile(tiles, width, height, 2, 0, { char: 187, color: 15 })
   writeTile(tiles, width, height, 2, 1, { char: 200, color: 15 })
@@ -61,9 +61,11 @@ export function ScrollBackPlate({
   const measure = tokenizeandmeasuretextformat(title, width, height)
 
   // center title
-  const titleWidth = measure?.x ?? title.length
-
-  context.x = Math.round(width * 0.5) - Math.round(titleWidth * 0.5)
+  const titlewidth = measure?.x ?? title.length
+  const centerwidth = width - 2
+  context.x = 2 + Math.round(centerwidth * 0.5)
+  context.x -= Math.round(titlewidth * 0.5)
+  context.y++
   tokenizeandwritetextformat(title, context, true)
 
   return null

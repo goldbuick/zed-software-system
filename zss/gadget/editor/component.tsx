@@ -8,9 +8,11 @@ import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { ismac } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
+import { Marquee } from '../scroll/marquee'
 import { BackPlate } from '../tape/backplate'
 import {
   findcursorinrows,
@@ -280,6 +282,44 @@ export function TapeEditor() {
       <EditorFrame />
       <EditorRows {...props} />
       <EditorInput {...props} />
+      <Marquee
+        line={
+          ismac
+            ? `
+esc/cancel$white.CLOSE   $blue
+tab$white.CHANGE LAYOUT   $blue
+hold shift$white.SELECT TEXT   $blue
+alt+up/down$white.JUMP 10 LINES   $blue
+alt+left/right$white.JUMP 10 COLS   $blue
+cmd+up/down$white.JUMP TOP/BOTTOM   $blue
+cmd+left/right$white.JUMP TO START/END OF LINE   $blue
+cmd+a$white.SELECT ALL   $blue
+cmd+c$white.COPY   $blue
+cmd+x$white.CUT   $blue
+cmd+v$white.PASTE   $blue
+cmd+z$white.UNDO   $blue
+shift+cmd+z$white.REDO   $blue
+cmd+p$white.TEST SELECTED CODE   $blue
+`
+            : `
+esc/cancel$white.CLOSE   $blue
+tab$white.CHANGE LAYOUT   $blue
+hold shift$white.SELECT TEXT   $blue
+alt+up/down$white.JUMP 10 LINES   $blue
+alt+left/right$white.JUMP 10 COLS   $blue
+ctrl+up/down$white.JUMP TOP/BOTTOM   $blue
+ctrl+left/right$white.JUMP TO START/END OF LINE   $blue
+ctrl+a$white.SELECT ALL   $blue
+ctrl+c$white.COPY   $blue
+ctrl+x$white.CUT   $blue
+ctrl+v$white.PASTE   $blue
+ctrl+z$white.UNDO   $blue
+ctrl+y$white.REDO   $blue
+ctrl+p$white.TEST SELECTED CODE   $blue
+`
+        }
+        context={context}
+      />
     </>
   )
 }

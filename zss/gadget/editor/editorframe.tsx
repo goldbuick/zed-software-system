@@ -38,9 +38,9 @@ export function EditorFrame() {
     })
   }
 
-  const egtop = `$196`.repeat(edge.width - 4)
+  const egtop = `$32`.repeat(edge.width - 5)
   setupeditoritem(false, false, 0, 0, context, 0, 0, 0)
-  tokenizeandwritetextformat(`$213$205$187${egtop}$191`, context, true)
+  tokenizeandwritetextformat(`$213$205$187${egtop}$196$191`, context, true)
 
   const bottomchrs = `$205`.repeat(edge.width - 2)
   setupeditoritem(false, false, 0, edge.height - 1, context, 0, 0, 0)
@@ -57,14 +57,16 @@ export function EditorFrame() {
   )
 
   // make label
-  const label = `[${editortype}] `
+  const label = `$blue[${editortype}] `
 
   // write name
-  const title = ` ${label}${editortitle} `
+  const title = ` ${label}$green${editortitle}$white `
   const result = tokenizeandmeasuretextformat(title, edge.width, edge.height)
   const titlewidth = result?.measuredwidth ?? 1
-  const titlex = Math.round(edge.width * 0.5) - Math.round(titlewidth * 0.5)
-  setupeditoritem(false, false, titlex, 0, context, 0, 0, 0)
+  const centerwidth = edge.width - 2
+  const titlex =
+    2 + Math.round(centerwidth * 0.5) - Math.round(titlewidth * 0.5)
+  setupeditoritem(false, false, titlex, 1, context, 0, 0, 0)
   tokenizeandwritetextformat(title, context, true)
 
   return null
