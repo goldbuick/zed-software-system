@@ -6,15 +6,18 @@ import { writeTile } from '../hooks'
 import { bgcolor, BKG_PTRN, BKG_PTRN_ALT, FG } from './common'
 
 type BackPlateProps = {
+  bump?: boolean
   context: WRITE_TEXT_CONTEXT
 }
 
-export function BackPlate({ context }: BackPlateProps) {
+export function BackPlate({ bump, context }: BackPlateProps) {
   const edge = textformatreadedges(context)
   const { quickterminal } = useTape()
   const BG = bgcolor(quickterminal)
 
-  edge.top++
+  if (bump) {
+    edge.top++
+  }
 
   if (quickterminal) {
     for (let y = edge.top; y <= edge.bottom; ++y) {
