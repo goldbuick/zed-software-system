@@ -141,7 +141,8 @@ export function Scroll({
             line={`
 up/down$white.SCROLL UP/DOWN   $blue
 esc/cancel$white.CLOSE SCROLL   $blue
-alt+up/down$white.JUMP 10 LINES   $blue`}
+alt+up/down$white.JUMP 10 LINES   $blue
+`}
             context={context}
           />
           <ScrollControls

@@ -27,7 +27,12 @@ export function Marquee({ line, context }: MarqueeProps) {
   // moves offset along
   const [offset, setoffset] = useState(0)
   useEffect(() => {
-    setoffset((state) => (state - 1) % contentmax)
+    setoffset((state) => {
+      if (blink) {
+        return state
+      }
+      return (state - 1) % contentmax
+    })
   }, [blink, contentmax])
 
   // cycle line if too long
