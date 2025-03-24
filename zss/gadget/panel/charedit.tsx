@@ -42,8 +42,7 @@ export function PanelItemCharEdit({
 
   // state
   const address = paneladdress(chip, target)
-  const modem = useWaitForValueNumber(address)
-  const value = modem?.value
+  const value = useWaitForValueNumber(address)
   const state = value ?? 0
 
   const blink = useBlink()

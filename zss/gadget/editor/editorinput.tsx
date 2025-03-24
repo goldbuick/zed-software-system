@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { UndoManager } from 'yjs'
 import {
   api_error,
   tape_editor_close,

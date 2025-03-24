@@ -14,6 +14,8 @@ export function BackPlate({ context }: BackPlateProps) {
   const { quickterminal } = useTape()
   const BG = bgcolor(quickterminal)
 
+  edge.top++
+
   if (quickterminal) {
     for (let y = edge.top; y <= edge.bottom; ++y) {
       for (let x = edge.left; x <= edge.right; ++x) {
