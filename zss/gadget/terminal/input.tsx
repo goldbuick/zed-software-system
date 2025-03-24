@@ -344,6 +344,9 @@ export function TapeTerminalInput({
             default:
               if (mods.ctrl) {
                 switch (lkey) {
+                  case 'e':
+                    vm_cli(SOFTWARE, '#export', registerreadplayer())
+                    break
                   case 'a':
                     useTapeTerminal.setState({
                       // start

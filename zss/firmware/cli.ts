@@ -496,6 +496,61 @@ export const CLI_FIRMWARE = createfirmware()
     vm_restart(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
+  .command('export', () => {
+    writeheader(SOFTWARE, `E X P O R T`)
+    writesection(SOFTWARE, `books`)
+    const list = memoryreadbooklist()
+    if (list.length) {
+      list.forEach((book) => {
+        write(SOFTWARE, `!bookexport ${book.id};${book.name}`)
+      })
+    }
+    return 0
+  })
+  .command('bookexport', (_, words) => {
+    const [address] = readargs(words, 0, [ARG_TYPE.NAME])
+    const book = memoryreadbookbyaddress(address)
+    if (ispresent(book)) {
+      writeheader(SOFTWARE, `E X P O R T`)
+      writesection(SOFTWARE, `pages`)
+      if (book.pages.length) {
+        const sorted = [...book.pages].sort((a, b) => {
+          const atype = codepagereadtype(a)
+          const btype = codepagereadtype(b)
+          if (atype === btype) {
+            return codepagereadname(a).localeCompare(codepagereadname(b))
+          }
+          return btype - atype
+        })
+        write(
+          SOFTWARE,
+          `!bookexportall ${address};$blue[all]$white export book`,
+        )
+        sorted.forEach((page) => {
+          const name = codepagereadname(page)
+          const type = codepagereadtypetostring(page)
+          write(
+            SOFTWARE,
+            `!pageexport ${address} ${page.id};$blue[${type}]$white ${name}`,
+          )
+        })
+      }
+    }
+    return 0
+  })
+  .command('bookexportall', (_, words) => {
+    const [address] = readargs(words, 0, [ARG_TYPE.NAME])
+    //
+    return 0
+  })
+  .command('pageexport', (_, words) => {
+    const [bookaddress, pageaddress] = readargs(words, 0, [
+      ARG_TYPE.NAME,
+      ARG_TYPE.NAME,
+    ])
+    //
+    return 0
+  })
   .command('gadget', () => {
     // gadget will turn on / off the built-in inspector
     tape_inspector(SOFTWARE, undefined, READ_CONTEXT.elementfocus)
