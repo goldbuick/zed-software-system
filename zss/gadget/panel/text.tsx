@@ -32,8 +32,7 @@ export function PanelItemText({
 
   // state
   const address = paneladdress(chip, target)
-  const modem = useWaitForValueString(address)
-  const value = modem?.value
+  const value = useWaitForValueString(address)
   const state = value?.toJSON() ?? ''
 
   const blink = useBlink()

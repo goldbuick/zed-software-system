@@ -43,8 +43,8 @@ export function PanelItemRange({
 
   // state
   const address = paneladdress(chip, target)
-  const modem = useWaitForValueNumber(address)
-  const state = modem?.value ?? 0
+  const value = useWaitForValueNumber(address)
+  const state = value ?? 0
 
   const blink = useBlink()
   const tlabel = label.trim()

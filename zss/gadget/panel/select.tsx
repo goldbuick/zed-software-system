@@ -24,23 +24,26 @@ export function PanelItemSelect({
 
   const valuelabels: WORD[] = []
   const values: WORD[] = []
+
   for (let i = 0; i < pairs.length; i += 2) {
     valuelabels.push(pairs[i])
     values.push(pairs[i + 1])
   }
 
-  const min = 0
-  const max = values.length - 1
+  // const min = 0
+  // const max = values.length - 1
 
   // state
   const address = paneladdress(chip, target)
-  const modem = useWaitForValueNumber(address)
-  const state = modem?.value ?? 0
+  const value = useWaitForValueNumber(address)
+  const tvalue = `${value ?? 0}`
+  let stateindex = values.indexOf(tvalue)
+  if (stateindex < 0) {
+    stateindex = 0
+  }
 
   const blink = useBlink()
 
-  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-  const tvalue = `${valuelabels[state]}`
   const tlabel = label.trim()
   const tcolor = inputcolor(active)
 
@@ -49,32 +52,38 @@ export function PanelItemSelect({
   // write range viewer
   const knob = active ? (blink ? '$26' : '$27') : '/'
   tokenizeandwritetextformat(
-    `${state + 1}$green${knob}${tcolor}${max + 1}`,
+    `${stateindex + 1}$green${knob}${tcolor}${values.length}`,
     context,
     false,
   )
 
   // write value
   context.writefullwidth = 32
-  tokenizeandwritetextformat(` $green${tvalue}`, context, false)
+  tokenizeandwritetextformat(
+    ` $green${valuelabels[stateindex] as string}`,
+    context,
+    false,
+  )
   context.writefullwidth = undefined
   tokenizeandwritetextformat(`\n`, context, false)
 
-  const up = useCallback<UserInputHandler>(
-    (mods) => {
-      const step = mods.alt ? 10 : 1
-      modemwritevaluenumber(address, Math.min(max, state + step))
-    },
-    [max, state, address],
-  )
+  const up = useCallback<UserInputHandler>(() => {
+    const next = Math.min(0, stateindex - 1)
+    const nextvalue = parseFloat(values[next] as string)
+    if (Number.isInteger(nextvalue)) {
+      modemwritevaluenumber(address, nextvalue)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stateindex, address])
 
-  const down = useCallback<UserInputHandler>(
-    (mods) => {
-      const step = mods.alt ? 10 : 1
-      modemwritevaluenumber(address, Math.max(min, state - step))
-    },
-    [min, state, address],
-  )
+  const down = useCallback<UserInputHandler>(() => {
+    const next = Math.max(values.length - 1, stateindex + 1)
+    const nextvalue = parseFloat(values[next] as string)
+    if (Number.isInteger(nextvalue)) {
+      modemwritevaluenumber(address, nextvalue)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stateindex, address])
 
-  return <>{active && <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} />}</>
+  return <>{active && <UserInput MOVE_LEFT={up} MOVE_RIGHT={down} />}</>
 }
