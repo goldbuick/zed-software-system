@@ -278,7 +278,7 @@ export function TapeEditor() {
 
   return (
     <>
-      <BackPlate context={context} />
+      <BackPlate bump context={context} />
       <EditorFrame />
       <EditorRows {...props} />
       <EditorInput {...props} />

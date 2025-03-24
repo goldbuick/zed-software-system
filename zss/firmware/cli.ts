@@ -107,8 +107,6 @@ export const CLI_FIRMWARE = createfirmware()
         writeoption(SOFTWARE, `enter`, `ok / accept`)
         writeoption(SOFTWARE, `escape`, `cancel / close`)
         writeoption(SOFTWARE, `tab`, `menu / action`)
-        writesection(SOFTWARE, `mouse input`)
-        writetext(SOFTWARE, `todo ???`)
         writesection(SOFTWARE, `controller input`)
         writeoption(SOFTWARE, `left stick`, `move`)
         writeoption(SOFTWARE, `right stick`, `aim`)
@@ -182,6 +180,11 @@ export const CLI_FIRMWARE = createfirmware()
           `list books and pages from open book you can delete`,
         )
         writeoption(SOFTWARE, `#save`, `flush state to register`)
+        writeoption(
+          SOFTWARE,
+          `#share`,
+          `creates a click to copy share url and QR code`,
+        )
         break
       case 'helpplayer':
         writeheader(SOFTWARE, `player settings`)
