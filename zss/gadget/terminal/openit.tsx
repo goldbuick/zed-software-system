@@ -19,7 +19,9 @@ export function TapeTerminalOpenIt({
   const invoke = useCallback(() => {
     const [, ...values] = words
     const content = values.join(' ')
-    window.open(content, '_blank')
+    setTimeout(() => {
+      window.open(content, '_blank')
+    }, 100)
   }, [words])
 
   const tcolor = inputcolor(!!active)

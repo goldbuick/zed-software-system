@@ -21,14 +21,16 @@ export function TapeTerminalCopyIt({
   const context = useWriteText()
 
   const invoke = useCallback(() => {
-    if (ispresent(withclipboard())) {
-      const [, ...values] = words
-      const content = values.join(' ')
-      withclipboard()
-        .writeText(content)
-        .then(() => writetext(SOFTWARE, `copied!`))
-        .catch((err) => console.error(err))
-    }
+    setTimeout(() => {
+      if (ispresent(withclipboard())) {
+        const [, ...values] = words
+        const content = values.join(' ')
+        withclipboard()
+          .writeText(content)
+          .then(() => writetext(SOFTWARE, `copied!`))
+          .catch((err) => console.error(err))
+      }
+    }, 100)
   }, [words])
 
   const tcolor = inputcolor(!!active)
