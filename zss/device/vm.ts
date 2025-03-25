@@ -34,11 +34,13 @@ import {
   memoryreadhalt,
   memoryresetchipafteredit,
   memoryrestartallchipsandflags,
+  memorysetbook,
 } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
 import {
   bookreadcodepagebyaddress,
   bookreadcodepagesbytype,
+  bookwritecodepage,
 } from 'zss/memory/book'
 import {
   codepageapplyelementstats,
@@ -432,8 +434,37 @@ const vm = createdevice(
         if (ispresent(message.player) && isarray(message.data)) {
           const [arg, format, eventname, content] = message.data
           if (format === 'file') {
+            // handled web file pastes
             parsewebfile(message.player, content)
+          } else if (
+            format === 'json' &&
+            /file:.*\.book.json/.test(eventname)
+          ) {
+            write(vm, `loading ${eventname}`)
+            const json = JSON.parse(content.json)
+            const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+            if (
+              ispresent(mainbook) &&
+              ispresent(json.data) &&
+              isstring(json.exported)
+            ) {
+              memorysetbook(json.data)
+              write(vm, `loaded ${json.exported}`)
+            }
+          } else if (format === 'json' && /file:.*\..*\.json/.test(eventname)) {
+            write(vm, `loading ${eventname}`)
+            const json = JSON.parse(content.json)
+            const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+            if (
+              ispresent(mainbook) &&
+              ispresent(json.data) &&
+              isstring(json.exported)
+            ) {
+              bookwritecodepage(mainbook, json.data)
+              write(vm, `loaded ${json.exported}`)
+            }
           } else {
+            // everything else
             memoryloader(arg, format, eventname, content, message.player)
           }
         }
