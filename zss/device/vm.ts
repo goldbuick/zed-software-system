@@ -84,12 +84,14 @@ const watching: Record<string, Set<string>> = {}
 const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
 // save state
-async function savestate() {
+async function savestate(autosave?: boolean) {
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
-    const historylabel = `${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
+    const historylabel = autosave
+      ? `autosave`
+      : `${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
     register_savemem(vm, historylabel, content, memoryreadoperator())
   }
 }
@@ -372,7 +374,9 @@ const vm = createdevice(
         // autosave to url
         if (++flushtick >= FLUSH_RATE) {
           flushtick = 0
-          vm_flush(vm, memoryreadoperator())
+          doasync(vm, async () => {
+            await savestate(true)
+          })
         }
         break
       }

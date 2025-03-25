@@ -264,6 +264,11 @@ export function EditorInput({
             default:
               if (mods.ctrl) {
                 switch (lkey) {
+                  case 'e': {
+                    // vm_copyjsonfile
+                    //
+                    break
+                  }
                   case 'z':
                     if (ismac && mods.shift) {
                       undomanager?.redo()

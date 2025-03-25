@@ -1,3 +1,4 @@
+import { parsetarget } from 'zss/device'
 import {
   api_error,
   tape_editor_open,
@@ -13,6 +14,7 @@ import {
   tape_inspector,
   vm_restart,
   vm_fork,
+  register_downloadjsonfile,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -28,7 +30,7 @@ import {
 } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
 import { totarget } from 'zss/mapping/string'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
   MEMORY_LABEL,
@@ -501,9 +503,9 @@ export const CLI_FIRMWARE = createfirmware()
     writesection(SOFTWARE, `books`)
     const list = memoryreadbooklist()
     if (list.length) {
-      list.forEach((book) => {
-        write(SOFTWARE, `!bookexport ${book.id};${book.name}`)
-      })
+      list.forEach((book) =>
+        write(SOFTWARE, `!bookexport ${book.id};${book.name}`),
+      )
     }
     return 0
   })
@@ -513,42 +515,59 @@ export const CLI_FIRMWARE = createfirmware()
     if (ispresent(book)) {
       writeheader(SOFTWARE, `E X P O R T`)
       writesection(SOFTWARE, `pages`)
-      if (book.pages.length) {
-        const sorted = [...book.pages].sort((a, b) => {
-          const atype = codepagereadtype(a)
-          const btype = codepagereadtype(b)
-          if (atype === btype) {
-            return codepagereadname(a).localeCompare(codepagereadname(b))
-          }
-          return btype - atype
-        })
-        write(
-          SOFTWARE,
-          `!bookexportall ${address};$blue[all]$white export book`,
-        )
-        sorted.forEach((page) => {
-          const name = codepagereadname(page)
-          const type = codepagereadtypetostring(page)
+      setTimeout(() => {
+        if (book.pages.length) {
+          const sorted = deepcopy(book.pages).sort((a, b) => {
+            const atype = codepagereadtype(a)
+            const btype = codepagereadtype(b)
+            if (atype === btype) {
+              return codepagereadname(a).localeCompare(codepagereadname(b))
+            }
+            return btype - atype
+          })
           write(
             SOFTWARE,
-            `!pageexport ${address} ${page.id};$blue[${type}]$white ${name}`,
+            `!bookallexport ${address};$blue[all]$white export book`,
           )
-        })
-      }
+          sorted.forEach((page) => {
+            const name = codepagereadname(page)
+            const type = codepagereadtypetostring(page)
+            write(
+              SOFTWARE,
+              `!pageexport ${address}:${page.id};$blue[${type}]$white ${name}`,
+            )
+          })
+        }
+      }, 1000)
     }
     return 0
   })
-  .command('bookexportall', (_, words) => {
+  .command('bookallexport', (_, words) => {
     const [address] = readargs(words, 0, [ARG_TYPE.NAME])
-    //
+    const book = memoryreadbookbyaddress(address)
+    if (ispresent(book)) {
+      register_downloadjsonfile(
+        SOFTWARE,
+        deepcopy(book),
+        `${book.name}.book.json`,
+        READ_CONTEXT.elementfocus,
+      )
+    }
     return 0
   })
   .command('pageexport', (_, words) => {
-    const [bookaddress, pageaddress] = readargs(words, 0, [
-      ARG_TYPE.NAME,
-      ARG_TYPE.NAME,
-    ])
-    //
+    const [address] = readargs(words, 0, [ARG_TYPE.NAME])
+    const { target, path } = parsetarget(address)
+    const book = memoryreadbookbyaddress(target)
+    const codepage = bookreadcodepagebyaddress(book, path)
+    if (ispresent(codepage)) {
+      register_downloadjsonfile(
+        SOFTWARE,
+        deepcopy(codepage),
+        `${codepagereadname(codepage)}.${codepagereadtypetostring(codepage)}.json`,
+        READ_CONTEXT.elementfocus,
+      )
+    }
     return 0
   })
   .command('gadget', () => {

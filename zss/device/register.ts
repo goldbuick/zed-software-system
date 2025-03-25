@@ -1,5 +1,6 @@
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice, parsetarget } from 'zss/device'
+import { createjsonblob } from 'zss/feature/createfile'
 import {
   write,
   writecopyit,
@@ -36,6 +37,17 @@ import {
   vm_operator,
   vm_zsswords,
 } from './api'
+
+// helper func to create json blob clipboard item
+
+async function copyblobtoclipboard(blob: Blob): Promise<void> {
+  const items = { [blob.type]: blob } as unknown as Record<
+    string,
+    ClipboardItemData
+  >
+  const clipboardItem = new ClipboardItem(items)
+  await withclipboard().write([clipboardItem])
+}
 
 // read / write from indexdb
 
@@ -226,6 +238,45 @@ const register = createdevice(
               .writeText(message.data)
               .then(() => writetext(register, `copied!`))
               .catch((err) => console.error(err))
+          }
+        }
+        break
+      case 'copyjsonfile':
+        if (isarray(message.data) && message.player === myplayerid) {
+          if (ispresent(withclipboard())) {
+            const [data, filename] = message.data as [any, string]
+            const blob = createjsonblob({
+              exported: filename,
+              data,
+            })
+            debugger
+            withclipboard()
+              .write([new ClipboardItem({ [blob.type]: blob })])
+              .then(() => writetext(register, `copied!`))
+              .catch((err) => console.error(err))
+          }
+        }
+        break
+      case 'downloadjsonfile':
+        if (isarray(message.data) && message.player === myplayerid) {
+          const [data, filename] = message.data as [any, string]
+          try {
+            const datablob = new Blob([JSON.stringify(data, null, 2)], {
+              type: 'text/json;charset=utf-8',
+            })
+            const dataurl = URL.createObjectURL(datablob)
+            // trigger download of file
+            const anchor = document.createElement('a')
+            anchor.href = dataurl
+            anchor.download = filename
+            // Auto click on a element, trigger the file download
+            anchor.click()
+            // This is required
+            setTimeout(() => {
+              URL.revokeObjectURL(dataurl)
+            }, 100)
+          } catch (err) {
+            console.error(err)
           }
         }
         break

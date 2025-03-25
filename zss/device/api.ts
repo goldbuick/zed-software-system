@@ -176,6 +176,24 @@ export function register_copy(
   device.emit('register:copy', content, player)
 }
 
+export function register_copyjsonfile(
+  device: DEVICELIKE,
+  data: any,
+  filename: string,
+  player: string,
+) {
+  device.emit('register:copyjsonfile', [data, filename], player)
+}
+
+export function register_downloadjsonfile(
+  device: DEVICELIKE,
+  data: any,
+  filename: string,
+  player: string,
+) {
+  device.emit('register:downloadjsonfile', [data, filename], player)
+}
+
 export function register_dev(device: DEVICELIKE, player: string) {
   device.emit('register:dev', undefined, player)
 }
@@ -370,6 +388,15 @@ export function vm_input(
   player: string,
 ) {
   device.emit('vm:input', [input, mods], player)
+}
+
+export function vm_copyjsonfile(
+  device: DEVICELIKE,
+  data: any,
+  filename: string,
+  player: string,
+) {
+  device.emit('vm:copyjsonfile', [data, filename], player)
 }
 
 export function vm_inspect(device: DEVICELIKE, p1: PT, p2: PT, player: string) {
