@@ -392,11 +392,10 @@ export function vm_input(
 
 export function vm_copyjsonfile(
   device: DEVICELIKE,
-  data: any,
-  filename: string,
+  path: string[],
   player: string,
 ) {
-  device.emit('vm:copyjsonfile', [data, filename], player)
+  device.emit('vm:copyjsonfile', path, player)
 }
 
 export function vm_inspect(device: DEVICELIKE, p1: PT, p2: PT, player: string) {

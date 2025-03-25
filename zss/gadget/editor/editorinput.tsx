@@ -5,6 +5,7 @@ import {
   tape_terminal_close,
   tape_terminal_inclayout,
   vm_cli,
+  vm_copyjsonfile,
 } from 'zss/device/api'
 import { Y } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -45,6 +46,7 @@ export function EditorInput({
   const tapeeditor = useTapeEditor()
   const edge = textformatreadedges(context)
   const player = useTape((state) => state.editor.player)
+  const editorpath = useTape((state) => state.editor.path)
 
   // split by line
   const strvalue = ispresent(codepage) ? codepage.toJSON() : ''
@@ -265,8 +267,7 @@ export function EditorInput({
               if (mods.ctrl) {
                 switch (lkey) {
                   case 'e': {
-                    // vm_copyjsonfile
-                    //
+                    vm_copyjsonfile(SOFTWARE, editorpath, player)
                     break
                   }
                   case 'z':

@@ -46,6 +46,7 @@ import {
   codepagereadname,
   codepagereadstatsfromtext,
   codepagereadtype,
+  codepagereadtypetostring,
   codepageresetstats,
 } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
@@ -61,6 +62,7 @@ import { NAME, PT } from 'zss/words/types'
 
 import {
   platform_ready,
+  register_copyjsonfile,
   register_forkmem,
   register_loginready,
   register_savemem,
@@ -377,6 +379,22 @@ const vm = createdevice(
           doasync(vm, async () => {
             await savestate(true)
           })
+        }
+        break
+      }
+      case 'copyjsonfile': {
+        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        if (ispresent(mainbook) && isarray(message.data)) {
+          const [address] = message.data
+          const codepage = bookreadcodepagebyaddress(mainbook, address)
+          if (ispresent(codepage)) {
+            register_copyjsonfile(
+              vm,
+              codepage,
+              `${codepagereadname(codepage)}.${codepagereadtypetostring(codepage)}.json`,
+              memoryreadoperator(),
+            )
+          }
         }
         break
       }
