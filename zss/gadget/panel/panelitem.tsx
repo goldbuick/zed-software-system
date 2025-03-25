@@ -84,8 +84,10 @@ export function PanelItem({ row, item, active }: PanelItemComponentProps) {
       case 'text':
         return <PanelItemText {...props} />
       case 'copyit':
+        // TODO
         return <PanelItemCopyIt {...props} />
       case 'linkit':
+        // TODO
         return <PanelItemLinkIt {...props} />
       case 'zssedit':
         return <PanelItemZSSEdit {...props} />

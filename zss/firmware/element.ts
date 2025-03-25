@@ -338,7 +338,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
   },
   everytick() {
     // handle walk movement
-    if (READ_CONTEXT.element?.stepx || READ_CONTEXT.element?.stepy) {
+    if (
+      !READ_CONTEXT.element?.removed &&
+      (ispresent(READ_CONTEXT.element?.stepx) ||
+        ispresent(READ_CONTEXT.element?.stepy))
+    ) {
       const pt: PT = {
         x: READ_CONTEXT.element?.x ?? 0,
         y: READ_CONTEXT.element?.y ?? 0,

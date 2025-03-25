@@ -23,7 +23,9 @@ export function TapeTerminalHyperlink({
   const cc = useContext(TapeTerminalContext)
   const invoke = useCallback(() => {
     const [target, data] = words
-    cc.sendmessage(target, data)
+    setTimeout(() => {
+      cc.sendmessage(target, data)
+    }, 100)
   }, [words, cc])
 
   const tcolor = inputcolor(!!active)
