@@ -229,6 +229,65 @@ const register = createdevice(
           }
         }
         break
+      case 'copyjsonfile':
+        if (isarray(message.data) && message.player === myplayerid) {
+          if (ispresent(withclipboard())) {
+            const [data, filename] = message.data as [any, string]
+            const blob = new Blob(
+              [
+                JSON.stringify(
+                  {
+                    exported: filename,
+                    data,
+                  },
+                  null,
+                  2,
+                ),
+              ],
+              {
+                type: 'text/plain',
+              },
+            )
+            withclipboard()
+              .write([new ClipboardItem({ [blob.type]: blob })])
+              .then(() => writetext(register, `copied!`))
+              .catch((err) => console.error(err))
+          }
+        }
+        break
+      case 'downloadjsonfile':
+        if (isarray(message.data) && message.player === myplayerid) {
+          const [data, filename] = message.data as [any, string]
+          try {
+            const datablob = new Blob(
+              [
+                JSON.stringify(
+                  {
+                    exported: filename,
+                    data,
+                  },
+                  null,
+                  2,
+                ),
+              ],
+              {
+                type: 'application/json;charset=utf-8',
+              },
+            )
+            const dataurl = URL.createObjectURL(datablob)
+            // trigger download of file
+            const anchor = document.createElement('a')
+            anchor.href = dataurl
+            anchor.download = filename
+            // Auto click on a element, trigger the file download
+            anchor.click()
+            // This is required
+            URL.revokeObjectURL(dataurl)
+          } catch (err) {
+            console.error(err)
+          }
+        }
+        break
       case 'dev':
         if (message.player === myplayerid) {
           doasync(register, async function () {

@@ -3,6 +3,7 @@ import {
   tape_terminal_close,
   tape_terminal_inclayout,
   vm_cli,
+  vm_loader,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -12,7 +13,7 @@ import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
-import { ispresent } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import {
   applycolortoindexes,
   applystrtoindex,
@@ -344,6 +345,9 @@ export function TapeTerminalInput({
             default:
               if (mods.ctrl) {
                 switch (lkey) {
+                  case 'e':
+                    vm_cli(SOFTWARE, '#export', registerreadplayer())
+                    break
                   case 'a':
                     useTapeTerminal.setState({
                       // start
@@ -369,6 +373,26 @@ export function TapeTerminalInput({
                       withclipboard()
                         .readText()
                         .then((text) => {
+                          // did we paste json ??
+                          try {
+                            const json = JSON.parse(text)
+                            if (
+                              isstring(json.exported) &&
+                              ispresent(json.data)
+                            ) {
+                              vm_loader(
+                                SOFTWARE,
+                                undefined,
+                                'json',
+                                `file:${json.exported}`,
+                                JSON.stringify(json),
+                                registerreadplayer(),
+                              )
+                              return
+                            }
+                          } catch (err) {
+                            console.error(err)
+                          }
                           const cleantext = text.replaceAll('\r', '')
                           if (hasselection) {
                             inputstatesetsplice(ii1, iic, cleantext)

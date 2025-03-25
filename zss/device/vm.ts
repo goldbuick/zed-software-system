@@ -34,11 +34,13 @@ import {
   memoryreadhalt,
   memoryresetchipafteredit,
   memoryrestartallchipsandflags,
+  memorysetbook,
 } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
 import {
   bookreadcodepagebyaddress,
   bookreadcodepagesbytype,
+  bookwritecodepage,
 } from 'zss/memory/book'
 import {
   codepageapplyelementstats,
@@ -46,6 +48,7 @@ import {
   codepagereadname,
   codepagereadstatsfromtext,
   codepagereadtype,
+  codepagereadtypetostring,
   codepageresetstats,
 } from 'zss/memory/codepage'
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
@@ -61,6 +64,7 @@ import { NAME, PT } from 'zss/words/types'
 
 import {
   platform_ready,
+  register_copyjsonfile,
   register_forkmem,
   register_loginready,
   register_savemem,
@@ -84,12 +88,14 @@ const watching: Record<string, Set<string>> = {}
 const observers: Record<string, MAYBE<UNOBSERVE_FUNC>> = {}
 
 // save state
-async function savestate() {
+async function savestate(autosave?: boolean) {
   const books = memoryreadbooklist()
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
-    const historylabel = `${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
+    const historylabel = autosave
+      ? `autosave`
+      : `${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
     register_savemem(vm, historylabel, content, memoryreadoperator())
   }
 }
@@ -372,7 +378,25 @@ const vm = createdevice(
         // autosave to url
         if (++flushtick >= FLUSH_RATE) {
           flushtick = 0
-          vm_flush(vm, memoryreadoperator())
+          doasync(vm, async () => {
+            await savestate(true)
+          })
+        }
+        break
+      }
+      case 'copyjsonfile': {
+        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        if (ispresent(mainbook) && isarray(message.data)) {
+          const [address] = message.data
+          const codepage = bookreadcodepagebyaddress(mainbook, address)
+          if (ispresent(codepage)) {
+            register_copyjsonfile(
+              vm,
+              codepage,
+              `${codepagereadname(codepage)}.${codepagereadtypetostring(codepage)}.json`,
+              memoryreadoperator(),
+            )
+          }
         }
         break
       }
@@ -410,8 +434,37 @@ const vm = createdevice(
         if (ispresent(message.player) && isarray(message.data)) {
           const [arg, format, eventname, content] = message.data
           if (format === 'file') {
+            // handled web file pastes
             parsewebfile(message.player, content)
+          } else if (
+            format === 'json' &&
+            /file:.*\.book.json/.test(eventname)
+          ) {
+            write(vm, `loading ${eventname}`)
+            const json = JSON.parse(content.json)
+            const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+            if (
+              ispresent(mainbook) &&
+              ispresent(json.data) &&
+              isstring(json.exported)
+            ) {
+              memorysetbook(json.data)
+              write(vm, `loaded ${json.exported}`)
+            }
+          } else if (format === 'json' && /file:.*\..*\.json/.test(eventname)) {
+            write(vm, `loading ${eventname}`)
+            const json = JSON.parse(content.json)
+            const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+            if (
+              ispresent(mainbook) &&
+              ispresent(json.data) &&
+              isstring(json.exported)
+            ) {
+              bookwritecodepage(mainbook, json.data)
+              write(vm, `loaded ${json.exported}`)
+            }
           } else {
+            // everything else
             memoryloader(arg, format, eventname, content, message.player)
           }
         }

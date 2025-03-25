@@ -133,13 +133,14 @@ document.addEventListener(
 
     // block default browser behavior that messes with things
     switch (key) {
-      case 's':
+      case 's': // override default behavior
       case 't':
       case 'o':
       case 'f':
       case 'z':
       case 'y':
-      case 'p':
+      case 'e':
+      case 'p': // prevent default behavior
       case 'arrowleft':
       case 'arrowright':
       case 'arrowup':
