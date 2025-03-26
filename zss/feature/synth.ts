@@ -33,7 +33,6 @@ import {
 } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { createfx, ECHO_OFF, ECHO_ON } from './fx'
 import {
   invokeplay,
   parseplay,
@@ -41,7 +40,8 @@ import {
   SYNTH_NOTE_ON,
   SYNTH_SFX_RESET,
 } from './play'
-import { createsource, SOURCE_TYPE } from './source'
+import { createfx, ECHO_OFF, ECHO_ON } from './synthfx'
+import { createsource, SOURCE_TYPE } from './synthsource'
 
 // 0 to 100
 function volumetodb(value: number) {
@@ -99,10 +99,11 @@ export function createsynth() {
   function connectsource(index: number) {
     const f = mapindextofx(index)
     SOURCE[index].source.synth.chain(
+      FX[f].distortion,
+      FX[f].fc,
       FX[f].vibrato,
       FX[f].chorus,
       FX[f].phaser,
-      FX[f].distortion,
       FX[f].echo,
       FX[f].reverb,
       index < 4 ? playvolume : bgplayvolume,
