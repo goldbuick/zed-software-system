@@ -16,7 +16,15 @@ import { maptostring } from 'zss/mapping/value'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
-const isfx = ['echo', 'reverb', 'chorus', 'phaser', 'distortion', 'vibrato']
+const isfx = [
+  'echo',
+  'reverb',
+  'chorus',
+  'phaser',
+  'distortion',
+  'vibrato',
+  'fc',
+]
 
 function handlesynthplay(words: WORD[], bgplay: boolean) {
   const [buffer] = readargs(words, 0, [ARG_TYPE.NAME])

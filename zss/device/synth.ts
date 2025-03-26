@@ -6,6 +6,7 @@ import {
   synthvoiceconfig,
   synthvoicefxconfig,
 } from 'zss/feature/synth'
+import { createsynthworkletnode } from 'zss/feature/synthworkletnodes'
 import { playtta, playtts } from 'zss/feature/tts'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
@@ -16,6 +17,11 @@ import { api_error, synth_audioenabled, tape_info, vm_loader } from './api'
 import { registerreadplayer } from './register'
 
 // synth setup
+
+// TODO, wait for this before creating worklet nodes
+createsynthworkletnode().catch((err) => {
+  api_error(synthdevice, 'audio', err.message)
+})
 
 type CustomNavigator = {
   audioSession?: {

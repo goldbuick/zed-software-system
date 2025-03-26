@@ -42,9 +42,7 @@ export default defineConfig(({ mode }) => {
       nodePolyfills({
         include: ['buffer'],
         globals: {
-          Buffer: true,
           global: true,
-          process: true,
         },
       }),
       ...(hmronly ? [] : [fullreload(['**/*.ts', '**/*.tsx'])]),
