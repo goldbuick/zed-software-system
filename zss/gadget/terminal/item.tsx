@@ -47,7 +47,8 @@ export function TapeTerminalItem({
     const words: string[] = []
 
     const result = tokenize(hyperlink, true)
-    result.tokens.forEach((token) => {
+    for (let i = 0; i < result.tokens.length; i++) {
+      const token = result.tokens[i]
       switch (token.tokenType) {
         case HyperLinkText:
           label = token.image.slice(1)
@@ -56,7 +57,7 @@ export function TapeTerminalItem({
           words.push(token.image)
           break
       }
-    })
+    }
 
     // setup input props
     const [input, ...args] = words
