@@ -92,7 +92,21 @@ const network = createdevice('network', [], (message) => {
       break
     case 'start':
       if (message.player === registerreadplayer()) {
-        peerstart(!!message.data, message.player)
+        peerstart(!!message.data, message.player, false)
+      }
+      break
+    case 'tab':
+      if (message.player === registerreadplayer()) {
+        peerstart(!!message.data, message.player, true)
+      }
+      break
+    case 'tabopen':
+      if (isstring(message.data) && message.player === registerreadplayer()) {
+        window.open(
+          `${location.origin}/join/#${message.data}`,
+          '_blank',
+          'noopener,noreferrer',
+        )
       }
       break
     case 'join':

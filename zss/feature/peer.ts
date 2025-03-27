@@ -2,10 +2,11 @@ import { KademliaTable } from 'kademlia-table'
 import P2PT, { Peer } from 'p2pt'
 import { hex2arr } from 'uint8-util'
 import { createmessage } from 'zss/device'
-import { MESSAGE, network_showjoincode } from 'zss/device/api'
+import { MESSAGE, network_showjoincode, network_tabopen } from 'zss/device/api'
 import { createforward } from 'zss/device/forward'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
+import { createinfohash } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
 const trackerlist = `
@@ -119,7 +120,7 @@ finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
 finder.on('trackerconnect', (tracker, stats) => {
   write(
     SOFTWARE,
-    `looking for players ${tracker.announceUrl} [${stats.connected}]`,
+    `looking for players ${createinfohash(tracker.announceUrl)} [${stats.connected}]`,
   )
 })
 // finder.on('trackerwarning', console.info)
@@ -144,10 +145,17 @@ function peerpublishmessage(topic: string, gme: MESSAGE) {
   }
 }
 
-export function peerstart(hidden: boolean, player: string) {
+export function peerstart(hidden: boolean, player: string, tabopen: boolean) {
+  // get topic
   const host = finder._peerId
+
+  // setup host
   peerusehost(host)
   network_showjoincode(SOFTWARE, hidden, host, player)
+  if (tabopen) {
+    network_tabopen(SOFTWARE, host, player)
+  }
+
   // open bridge between peers
   topicbridge = createforward((message) => {
     switch (message.target) {
