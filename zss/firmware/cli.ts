@@ -15,6 +15,7 @@ import {
   vm_restart,
   vm_fork,
   register_downloadjsonfile,
+  network_tab,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -579,6 +580,11 @@ export const CLI_FIRMWARE = createfirmware()
   .command('joincode', (_, words) => {
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     network_start(SOFTWARE, !!maybehidden, READ_CONTEXT.elementfocus)
+    return 0
+  })
+  .command('jointab', (_, words) => {
+    const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    network_tab(SOFTWARE, !!maybehidden, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('twitchbroadcast', (_, words) => {

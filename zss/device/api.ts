@@ -126,6 +126,22 @@ export function network_start(
   device.emit('network:start', hidden, player)
 }
 
+export function network_tab(
+  device: DEVICELIKE,
+  hidden: boolean,
+  player: string,
+) {
+  device.emit('network:tab', hidden, player)
+}
+
+export function network_tabopen(
+  device: DEVICELIKE,
+  topic: string,
+  player: string,
+) {
+  device.emit('network:tabopen', topic, player)
+}
+
 export function network_showjoincode(
   device: DEVICELIKE,
   hidden: boolean,

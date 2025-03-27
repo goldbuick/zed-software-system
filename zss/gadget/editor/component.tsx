@@ -8,7 +8,7 @@ import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
-import { ismac } from 'zss/words/system'
+import { ismac, metakey } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -276,6 +276,7 @@ export function TapeEditor() {
     edge.height,
   ])
 
+  const metaundo = ismac ? `shift+${metakey}+z` : `${metakey}+y`
   return (
     <>
       <BackPlate bump context={context} />
@@ -283,41 +284,23 @@ export function TapeEditor() {
       <EditorRows {...props} />
       <EditorInput {...props} />
       <Marquee
-        line={
-          ismac
-            ? `
+        line={`
 esc/cancel$white.CLOSE   $blue
 tab$white.CHANGE LAYOUT   $blue
 hold shift$white.SELECT TEXT   $blue
 alt+up/down$white.JUMP 10 LINES   $blue
 alt+left/right$white.JUMP 10 COLS   $blue
-cmd+up/down$white.JUMP TOP/BOTTOM   $blue
-cmd+left/right$white.JUMP TO START/END OF LINE   $blue
-cmd+a$white.SELECT ALL   $blue
-cmd+c$white.COPY   $blue
-cmd+x$white.CUT   $blue
-cmd+v$white.PASTE   $blue
-cmd+z$white.UNDO   $blue
-shift+cmd+z$white.REDO   $blue
-cmd+p$white.TEST SELECTED CODE   $blue
-`
-            : `
-esc/cancel$white.CLOSE   $blue
-tab$white.CHANGE LAYOUT   $blue
-hold shift$white.SELECT TEXT   $blue
-alt+up/down$white.JUMP 10 LINES   $blue
-alt+left/right$white.JUMP 10 COLS   $blue
-ctrl+up/down$white.JUMP TOP/BOTTOM   $blue
-ctrl+left/right$white.JUMP TO START/END OF LINE   $blue
-ctrl+a$white.SELECT ALL   $blue
-ctrl+c$white.COPY   $blue
-ctrl+x$white.CUT   $blue
-ctrl+v$white.PASTE   $blue
-ctrl+z$white.UNDO   $blue
-ctrl+y$white.REDO   $blue
-ctrl+p$white.TEST SELECTED CODE   $blue
-`
-        }
+${metakey}+up/down$white.JUMP TOP/BOTTOM   $blue
+${metakey}+left/right$white.JUMP TO START/END OF LINE   $blue
+${metakey}+a$white.SELECT ALL   $blue
+${metakey}+c$white.COPY   $blue
+${metakey}+x$white.CUT   $blue
+${metakey}+v$white.PASTE   $blue
+${metakey}+z$white.UNDO   $blue
+${metaundo}$white.REDO   $blue
+${metakey}+p$white.TEST SELECTED CODE   $blue
+${metakey}+e$white.COPY CODEPAGE TO CLIPBOARD AS JSON   $blue
+`}
         context={context}
       />
     </>

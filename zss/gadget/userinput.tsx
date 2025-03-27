@@ -134,7 +134,7 @@ document.addEventListener(
     // block default browser behavior that messes with things
     switch (key) {
       case 's': // override default behavior
-      case 't':
+      case 'j':
       case 'o':
       case 'f':
       case 'z':
@@ -199,12 +199,25 @@ document.addEventListener(
           vm_cli(SOFTWARE, '#save', registerreadplayer())
         }
         break
-      case 't':
+      case 'j':
         if (mods.ctrl) {
-          // open a join url in a new tab with a new session
+          vm_cli(
+            SOFTWARE,
+            mods.shift ? '#jointab hush' : '#jointab',
+            registerreadplayer(),
+          )
         }
         break
       case 'o':
+        if (mods.ctrl) {
+          vm_cli(
+            SOFTWARE,
+            mods.shift ? '#joincode hush' : '#joincode',
+            registerreadplayer(),
+          )
+        }
+        break
+      case 'l':
         if (mods.ctrl) {
           // open merge login request
         }
