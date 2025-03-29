@@ -1,11 +1,8 @@
 import { getTransport, start } from 'tone'
 import { createdevice } from 'zss/device'
-import {
-  AUDIO_SYNTH,
-  createsynth,
-  synthvoiceconfig,
-  synthvoicefxconfig,
-} from 'zss/feature/synth'
+import { AUDIO_SYNTH, createsynth } from 'zss/feature/synth'
+import { synthvoiceconfig } from 'zss/feature/synthvoiceconfig'
+import { synthvoicefxconfig } from 'zss/feature/synthvoicefxconfig'
 import { createsynthworkletnode } from 'zss/feature/synthworkletnodes'
 import { playtta, playtts } from 'zss/feature/tts'
 import { setAltInterval } from 'zss/gadget/display/anim'
