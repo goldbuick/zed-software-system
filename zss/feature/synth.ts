@@ -88,10 +88,9 @@ export function createsynth() {
   function connectsource(index: number) {
     const f = mapindextofx(index)
     SOURCE[index].source.synth.chain(
-      FX[f].distortion,
       FX[f].fc,
+      FX[f].distortion,
       FX[f].vibrato,
-      FX[f].chorus,
       FX[f].phaser,
       FX[f].echo,
       FX[f].reverb,

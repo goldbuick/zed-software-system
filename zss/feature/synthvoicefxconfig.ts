@@ -6,7 +6,6 @@ import { isnumber, ispresent, MAYBE } from 'zss/mapping/types'
 
 import { AUDIO_SYNTH } from './synth'
 import { ECHO_OFF, ECHO_ON } from './synthfx'
-import { synthvoicefxchorusconfig } from './synthvoicefxchorusconfig'
 import { synthvoicefxdistortionconfig } from './synthvoicefxdistortconfig'
 import { synthvoicefxechoconfig } from './synthvoicefxechoconfig'
 import { synthvoicefxfcrushconfig } from './synthvoicefxfcrushconfig'
@@ -54,9 +53,6 @@ export function synthvoicefxconfig(
               break
             case 'echo':
               synthvoicefxechoconfig(synth, index, config, value)
-              break
-            case 'chorus':
-              synthvoicefxchorusconfig(synth, index, config, value)
               break
             case 'phaser':
               synthvoicefxphaserconfig(synth, index, config, value)

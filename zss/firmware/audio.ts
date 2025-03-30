@@ -29,15 +29,7 @@ function handlesynthvoicefx(idx: number, fx: string, words: WORD[]) {
   synth_voicefx(SOFTWARE, idx, fx, maybeconfig, maybevalue)
 }
 
-const isfx = [
-  'echo',
-  'reverb',
-  'chorus',
-  'phaser',
-  'distortion',
-  'vibrato',
-  'fc',
-]
+const isfx = ['echo', 'reverb', 'phaser', 'distortion', 'vibrato', 'fc']
 
 function handlesynthvoice(idx: number, words: WORD[]) {
   const [voiceorfx, ii] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
@@ -130,12 +122,6 @@ export const AUDIO_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('chorus', (_, words) => {
-    for (let i = 0; i < 3; ++i) {
-      handlesynthvoicefx(i, 'chorus', words)
-    }
-    return 0
-  })
   .command('phaser', (_, words) => {
     for (let i = 0; i < 3; ++i) {
       handlesynthvoicefx(i, 'phaser', words)
@@ -177,10 +163,6 @@ for (let i = 0; i < 3; ++i) {
   })
     .command(`fcrush${idx}`, (_, words) => {
       handlesynthvoicefx(i, 'fcrush', words)
-      return 0
-    })
-    .command(`chorus${idx}`, (_, words) => {
-      handlesynthvoicefx(i, 'chorus', words)
       return 0
     })
     .command(`phaser${idx}`, (_, words) => {
