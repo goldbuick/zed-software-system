@@ -1,12 +1,4 @@
-import {
-  Chorus,
-  Distortion,
-  FeedbackDelay,
-  Phaser,
-  Reverb,
-  Time,
-  Vibrato,
-} from 'tone'
+import { Distortion, FeedbackDelay, Phaser, Reverb, Time, Vibrato } from 'tone'
 import { deepcopy } from 'zss/mapping/types'
 
 import { FrequencyCrusher } from './synthworkletnodes'
@@ -20,9 +12,6 @@ export function createfx() {
 
   const echo = new FeedbackDelay()
   const resetecho = deepcopy(echo.get())
-
-  const chorus = new Chorus()
-  const resetchorus = deepcopy(chorus.get())
 
   const phaser = new Phaser()
   const resetphaser = deepcopy(phaser.get())
@@ -47,12 +36,6 @@ export function createfx() {
       delayTime: ECHO_OFF,
       maxDelay: '8n',
       feedback: 0.666,
-    })
-    chorus.set({
-      ...resetchorus,
-      wet: 0,
-      frequency: 4,
-      delayTime: 10,
     })
     phaser.set({
       ...resetphaser,
@@ -81,13 +64,15 @@ export function createfx() {
   applyreset()
 
   return {
-    reverb,
-    echo,
-    chorus,
-    phaser,
-    distortion,
-    vibrato,
     fc,
+    echo,
+    reverb,
+    phaser,
+    vibrato,
+    distortion,
     applyreset,
+    // aliases for fx
+    fcrush: fc,
+    distort: distortion,
   }
 }

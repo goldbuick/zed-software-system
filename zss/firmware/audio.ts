@@ -16,20 +16,20 @@ import { maptostring } from 'zss/mapping/value'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
-const isfx = [
-  'echo',
-  'reverb',
-  'chorus',
-  'phaser',
-  'distortion',
-  'vibrato',
-  'fc',
-]
-
 function handlesynthplay(words: WORD[], bgplay: boolean) {
   const [buffer] = readargs(words, 0, [ARG_TYPE.NAME])
   synth_play(SOFTWARE, buffer, bgplay)
 }
+
+function handlesynthvoicefx(idx: number, fx: string, words: WORD[]) {
+  const [maybeconfig, maybevalue] = readargs(words, 0, [
+    ARG_TYPE.NUMBER_OR_STRING,
+    ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+  ])
+  synth_voicefx(SOFTWARE, idx, fx, maybeconfig, maybevalue)
+}
+
+const isfx = ['echo', 'reverb', 'phaser', 'distortion', 'vibrato', 'fc']
 
 function handlesynthvoice(idx: number, words: WORD[]) {
   const [voiceorfx, ii] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
@@ -110,35 +110,75 @@ export const AUDIO_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('synth1', (_, words) => {
-    handlesynthvoice(0, words)
+  .command('echo', (_, words) => {
+    for (let i = 0; i < 3; ++i) {
+      handlesynthvoicefx(i, 'echo', words)
+    }
     return 0
   })
-  .command('synth2', (_, words) => {
-    handlesynthvoice(1, words)
+  .command('fcrush', (_, words) => {
+    for (let i = 0; i < 3; ++i) {
+      handlesynthvoicefx(i, 'fc', words)
+    }
     return 0
   })
-  .command('synth3', (_, words) => {
-    handlesynthvoice(2, words)
+  .command('phaser', (_, words) => {
+    for (let i = 0; i < 3; ++i) {
+      handlesynthvoicefx(i, 'phaser', words)
+    }
     return 0
   })
-  .command('synth4', (_, words) => {
-    handlesynthvoice(3, words)
+  .command('reverb', (_, words) => {
+    for (let i = 0; i < 3; ++i) {
+      handlesynthvoicefx(i, 'reverb', words)
+    }
     return 0
   })
-  .command('synth5', (_, words) => {
-    handlesynthvoice(4, words)
+  .command('distort', (_, words) => {
+    for (let i = 0; i < 3; ++i) {
+      handlesynthvoicefx(i, 'distort', words)
+    }
     return 0
   })
-  .command('synth6', (_, words) => {
-    handlesynthvoice(5, words)
+  .command('vibrato', (_, words) => {
+    for (let i = 0; i < 3; ++i) {
+      handlesynthvoicefx(i, 'vibrato', words)
+    }
     return 0
   })
-  .command('synth7', (_, words) => {
-    handlesynthvoice(6, words)
+
+// handle synth voices
+for (let i = 0; i < 8; ++i) {
+  AUDIO_FIRMWARE.command(`synth${i + 1}`, (_, words) => {
+    handlesynthvoice(i, words)
     return 0
   })
-  .command('synth8', (_, words) => {
-    handlesynthvoice(7, words)
+}
+// handle synth fx configurations
+for (let i = 0; i < 3; ++i) {
+  const idx = i + 1
+  AUDIO_FIRMWARE.command(`echo${idx}`, (_, words) => {
+    handlesynthvoicefx(i, 'echo', words)
     return 0
   })
+    .command(`fcrush${idx}`, (_, words) => {
+      handlesynthvoicefx(i, 'fcrush', words)
+      return 0
+    })
+    .command(`phaser${idx}`, (_, words) => {
+      handlesynthvoicefx(i, 'phaser', words)
+      return 0
+    })
+    .command(`reverb${idx}`, (_, words) => {
+      handlesynthvoicefx(i, 'reverb', words)
+      return 0
+    })
+    .command(`distort${idx}`, (_, words) => {
+      handlesynthvoicefx(i, 'distort', words)
+      return 0
+    })
+    .command(`vibrato${idx}`, (_, words) => {
+      handlesynthvoicefx(i, 'vibrato', words)
+      return 0
+    })
+}

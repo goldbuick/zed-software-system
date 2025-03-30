@@ -80,7 +80,8 @@ const SECOND_TIMEOUT = 16
 const tracking: Record<string, number> = {}
 
 // control how fast we persist to the register
-const FLUSH_RATE = 64
+// this __should__ autosave every 5 minutes
+const FLUSH_RATE = 15 * 60 * 5
 let flushtick = 0
 
 // track watched memory
