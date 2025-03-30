@@ -1,11 +1,13 @@
 import { parsetarget } from 'zss/device'
 import { register_copy } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { boardremix } from 'zss/feature/boardremix'
 import { ispresent } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
 import { memoryinspectempty, memoryinspectemptymenu } from './inspect'
 import {
+  memoryinspect,
   memoryinspectbgarea,
   memoryinspectchararea,
   memoryinspectcolorarea,
@@ -63,10 +65,12 @@ export function memoryinspectbatchcommand(path: string, player: string) {
     case 'bgs':
       memoryinspectbgarea(player, p1, p2, 'bg')
       break
-    case 'copycoords': {
-      register_copy(SOFTWARE, batch.path, memoryreadoperator())
+    case 'copycoords':
+      register_copy(SOFTWARE, [x1, y1, x2, y2].join(' '), memoryreadoperator())
       break
-    }
+    case 'remixrun':
+      boardremix(board.id, memoryinspect.stat, 2, 1, p1, p2)
+      break
     default:
       console.info('unknown batch', batch)
       break

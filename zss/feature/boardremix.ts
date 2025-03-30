@@ -3,9 +3,8 @@ import { objectKeys } from 'ts-extras'
 import wfc from 'wavefunctioncollapse'
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { pttoindex } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
-import { deepcopy, isnumber, ispresent, MAYBE } from 'zss/mapping/types'
+import { deepcopy, isnumber, ispresent } from 'zss/mapping/types'
 import { MEMORY_LABEL, memoryensuresoftwarecodepage } from 'zss/memory'
 import { listnamedelements } from 'zss/memory/atomics'
 import {
@@ -31,7 +30,7 @@ import {
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { NAME, PT } from 'zss/words/types'
+import { NAME } from 'zss/words/types'
 
 import { write } from './writeui'
 

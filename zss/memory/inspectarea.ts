@@ -5,7 +5,7 @@ import {
   gadgettext,
 } from 'zss/gadget/data/api'
 import { rectpoints } from 'zss/mapping/2d'
-import { isnumber, ispresent } from 'zss/mapping/types'
+import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT, WORD } from 'zss/words/types'
 
 import { boardelementread } from './board'
@@ -152,6 +152,10 @@ export function memoryinspectbgarea(
   shared.scroll = gadgetcheckqueue(player)
 }
 
+export const memoryinspect = {
+  stat: '',
+}
+
 export function memoryinspectarea(player: string, p1: PT, p2: PT) {
   const area = ptstoarea(p1, p2)
   gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
@@ -179,9 +183,25 @@ export function memoryinspectarea(player: string, p1: PT, p2: PT) {
     ` 5 `,
   ])
 
-  gadgethyperlink(player, 'batch', '', [`remix:stat:${area}`, 'text'])
-  gadgethyperlink(player, 'batch', 'remix elements', [
-    `remix:run:${area}`,
+  function get() {
+    return memoryinspect.stat
+  }
+  function set(_: string, value: WORD) {
+    if (isstring(value)) {
+      memoryinspect.stat = value
+    }
+  }
+
+  gadgethyperlink(
+    player,
+    'batch',
+    'remix:',
+    [`remixstat:${area}`, 'text'],
+    get,
+    set,
+  )
+  gadgethyperlink(player, 'batch', 'run', [
+    `remixrun:${area}`,
     'hk',
     'r',
     ` R `,

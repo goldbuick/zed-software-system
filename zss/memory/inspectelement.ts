@@ -221,6 +221,15 @@ export function memoryinspectelement(
     set,
   )
 
+  // case 'copycoords': {
+  //   register_copy(
+  //     SOFTWARE,
+  //     batch.path.split(',').join(' '),
+  //     memoryreadoperator(),
+  //   )
+  //   break
+  // }
+
   const stats = codepagereadstatdefaults(codepage)
   const targets = objectKeys(stats)
   for (let i = 0; i < targets.length; ++i) {
