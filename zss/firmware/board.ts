@@ -170,13 +170,48 @@ export const BOARD_FIRMWARE = createfirmware()
       return 0
     }
     // remix current board with a board that matches given given stat
-    const [stat, ax, ay, aw, ah] = readargs(words, 0, [
+    const [stat, pattersize, mirror, maxattempt] = readargs(words, 0, [
       ARG_TYPE.NAME,
       ARG_TYPE.MAYBE_NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
-      ARG_TYPE.MAYBE_NUMBER,
     ])
+    const boards = bookreadcodepagesbytypeandstat(
+      READ_CONTEXT.book,
+      CODE_PAGE_TYPE.BOARD,
+      stat,
+    )
+    const sourceboard = pick(...boards)
+    if (ispresent(sourceboard)) {
+      boardremix(
+        READ_CONTEXT.board.id,
+        sourceboard.id,
+        pattersize,
+        mirror,
+        maxattempt,
+      )
+    }
+    return 0
+  })
+  .command('remixonly', (_, words) => {
+    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      return 0
+    }
+    // remix current board with a board that matches given given stat
+    const [stat, ax, ay, aw, ah, pattersize, mirror, maxattempt] = readargs(
+      words,
+      0,
+      [
+        ARG_TYPE.NAME,
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.MAYBE_NUMBER,
+        ARG_TYPE.MAYBE_NUMBER,
+        ARG_TYPE.MAYBE_NUMBER,
+      ],
+    )
     const boards = bookreadcodepagesbytypeandstat(
       READ_CONTEXT.book,
       CODE_PAGE_TYPE.BOARD,

@@ -3,10 +3,17 @@ import { objectKeys } from 'ts-extras'
 import wfc from 'wavefunctioncollapse'
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { pttoindex } from 'zss/mapping/2d'
+import { pick } from 'zss/mapping/array'
 import { deepcopy, isnumber, ispresent } from 'zss/mapping/types'
 import { MEMORY_LABEL, memoryensuresoftwarecodepage } from 'zss/memory'
-import { boardelementread, boardsetterrain } from 'zss/memory/board'
-import { boardelementname } from 'zss/memory/boardelement'
+import { listnamedelements } from 'zss/memory/atomics'
+import {
+  boardelementread,
+  boardgetterrain,
+  boardsetterrain,
+} from 'zss/memory/board'
+import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
 import {
   bookboardsafedelete,
   bookboardsetlookup,
@@ -24,7 +31,7 @@ import {
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { NAME } from 'zss/words/types'
+import { NAME, PT } from 'zss/words/types'
 
 import { write } from './writeui'
 
@@ -134,7 +141,13 @@ export function boardremixrestart(target: string) {
 
 // need to add vars to tweak the gen
 // we can give it an alea rngwith seed
-export function boardremix(target: string, source: string) {
+export function boardremix(
+  target: string,
+  source: string,
+  pattersize = 3,
+  mirror = 1,
+  maxattempt = 64,
+) {
   const targetcodepage = bookreadcodepagewithtype(
     READ_CONTEXT.book,
     CODE_PAGE_TYPE.BOARD,
@@ -162,7 +175,7 @@ export function boardremix(target: string, source: string) {
 
   // scan board into image
   let p = 0
-  const NO_COLOR = 16
+  const NO_COLOR = 32
   const data = new Uint8Array(BOARD_SIZE * 4)
   for (let y = 0; y < BOARD_HEIGHT; ++y) {
     for (let x = 0; x < BOARD_WIDTH; ++x) {
@@ -195,16 +208,27 @@ export function boardremix(target: string, source: string) {
     data,
     BOARD_WIDTH,
     BOARD_HEIGHT,
-    4,
+    pattersize, // pattern size
     BOARD_WIDTH,
     BOARD_HEIGHT,
-    false,
-    false,
-    1,
+    false, // is the input wrapping ?
+    false, // is the output wrapping ?
+    mirror, // can we mirror the output 1 - 8
     0,
   )
-  if (!model.generate()) {
-    api_error(SOFTWARE, 'boardremix', 'failed to generate after 24 tries')
+
+  let attempt = 0
+  for (; attempt < maxattempt; ++attempt) {
+    if (model.generate()) {
+      break
+    }
+  }
+  if (attempt === maxattempt) {
+    api_error(
+      SOFTWARE,
+      'boardremix',
+      `failed to generate after ${maxattempt} tries`,
+    )
     return
   }
 
@@ -237,21 +261,52 @@ export function boardremix(target: string, source: string) {
         { x, y },
       )
 
+      // skip if we didn't create
+      if (!ispresent(maybenew)) {
+        continue
+      }
+
       // apply display
-      if (ispresent(maybenew)) {
-        if (dchar > 0) {
-          maybenew.char = dchar
-        }
-        if (dcolor < NO_COLOR) {
-          maybenew.color = dcolor
-        }
-        if (dbg < NO_COLOR) {
-          maybenew.bg = dbg
+      if (dchar > 0) {
+        maybenew.char = dchar
+      }
+      if (dcolor < NO_COLOR) {
+        maybenew.color = dcolor
+      }
+      if (dbg < NO_COLOR) {
+        maybenew.bg = dbg
+      }
+
+      // sample if element category is object
+      if (boardelementisobject(maybenew)) {
+        // sample t board example of 'kind'
+        const sample = pick(listnamedelements(sourceboard, maybekind))
+        if (ispresent(sample)) {
+          // copy terrain element from under sample
+          const cover = boardgetterrain(
+            sourceboard,
+            sample.x ?? 0,
+            sample.y ?? 0,
+          )
+          boardsetterrain(targetboard, {
+            ...cover,
+            x,
+            y,
+          })
+          // copy __some__ of the stats
+          maybenew.p1 = sample.p1
+          maybenew.p2 = sample.p2
+          maybenew.p3 = sample.p3
+          maybenew.code = sample.code
+          maybenew.cycle = sample.cycle
+          maybenew.light = sample.light
+          maybenew.stepx = sample.stepx
+          maybenew.stepy = sample.stepy
+          maybenew.pushable = sample.pushable
+          maybenew.collision = sample.collision
+          maybenew.destructible = sample.destructible
         }
       }
-      // sample source board example of 'kind'
-      // to figure out what to put under an object element
-      // and randomly select an element to copy the code from
     }
   }
 }
