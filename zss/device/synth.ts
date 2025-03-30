@@ -132,11 +132,11 @@ const synthdevice = createdevice('synth', [], (message) => {
       if (isarray(message.data)) {
         const [synthindex, fxname, config, value] = message.data as [
           number,
-          string,
+          FXNAME,
           number | string,
           number | string,
         ]
-        synthvoicefxconfig(synth, synthindex, fxname as FXNAME, config, value)
+        synthvoicefxconfig(synth, synthindex, fxname, config, value)
       }
       break
     case 'tts':
