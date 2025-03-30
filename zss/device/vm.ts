@@ -64,6 +64,7 @@ import { NAME, PT } from 'zss/words/types'
 
 import {
   platform_ready,
+  register_copy,
   register_copyjsonfile,
   register_forkmem,
   register_loginready,
@@ -476,6 +477,20 @@ const vm = createdevice(
           case 'batch':
             if (ispresent(message.player)) {
               memoryinspectbatchcommand(path, message.player)
+            }
+            break
+          case 'empty':
+            if (ispresent(message.player)) {
+              const empty = parsetarget(path)
+              switch (empty.target) {
+                case 'copycoords':
+                  register_copy(
+                    vm,
+                    empty.path.split(',').join(' '),
+                    memoryreadoperator(),
+                  )
+                  break
+              }
             }
             break
           case 'inspect':

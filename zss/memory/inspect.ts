@@ -1,6 +1,7 @@
 import { parsetarget } from 'zss/device'
 import {
   gadgetserver_clearscroll,
+  register_copy,
   tape_editor_open,
   vm_codeaddress,
 } from 'zss/device/api'
@@ -41,6 +42,7 @@ import {
   MEMORY_LABEL,
   memoryensuresoftwarebook,
   memoryreadbookbysoftware,
+  memoryreadoperator,
   memoryreadplayerboard,
 } from '.'
 
@@ -150,10 +152,11 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
   // ensure lookup
   bookboardsetlookup(mainbook, board)
 
+  // one element, or many ?
   if (p1.x === p2.x && p1.y === p2.y) {
     const element = boardelementread(board, p1)
+    // figure out stats from kind codepage
     if (ispresent(element)) {
-      // figure out stats from kind codepage
       const terrainpage = bookreadcodepagewithtype(
         mainbook,
         CODE_PAGE_TYPE.TERRAIN,
@@ -170,9 +173,17 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
       if (ispresent(objectpage)) {
         memoryinspectelement(player, board, objectpage, element, p1, true)
       }
-    } else {
+    }
+    // most likely empty
+    if (!element?.kind) {
       gadgettext(player, `empty: ${p1.x}, ${p1.y}`)
       gadgettext(player, DIVIDER)
+      gadgethyperlink(player, 'empty', 'copy coords', [
+        `copycoords:${p1.x},${p1.y}`,
+        'hk',
+        '5',
+        ` 5 `,
+      ])
     }
   } else {
     memoryinspectarea(player, p1, p2)
@@ -198,6 +209,13 @@ export function memoryinspectcommand(path: string, player: string) {
     return
   }
   switch (inspect.path) {
+    case 'copycoords':
+      register_copy(
+        SOFTWARE,
+        [element.x ?? 0, element.y ?? 0].join(' '),
+        memoryreadoperator(),
+      )
+      break
     case 'bg':
     case 'color':
       memoryinspectcolor(player, element, inspect.path)
