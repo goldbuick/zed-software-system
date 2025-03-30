@@ -144,9 +144,9 @@ export function boardremixrestart(target: string) {
 export function boardremix(
   target: string,
   source: string,
-  pattersize = 3,
+  pattersize = 2,
   mirror = 1,
-  maxattempt = 64,
+  maxattempt = 5,
 ) {
   const targetcodepage = bookreadcodepagewithtype(
     READ_CONTEXT.book,
