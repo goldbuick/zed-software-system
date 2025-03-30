@@ -1,47 +1,115 @@
+import { objectKeys } from 'ts-extras'
 import wfc from 'wavefunctioncollapse'
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { isnumber, ispresent } from 'zss/mapping/types'
+import { deepcopy, isnumber, ispresent, MAYBE } from 'zss/mapping/types'
+import { MEMORY_LABEL, memoryensuresoftwarecodepage } from 'zss/memory'
 import { boardelementread } from 'zss/memory/board'
+import { boardelementname } from 'zss/memory/boardelement'
 import {
   bookboardsafedelete,
   bookboardsetlookup,
   bookboardwritefromkind,
+  bookclearcodepage,
   bookelementkindread,
+  bookreadboard,
   bookreadcodepagewithtype,
 } from 'zss/memory/book'
-import { codepagereaddata } from 'zss/memory/codepage'
+import { codepagereaddata, codepagereadname } from 'zss/memory/codepage'
 import {
+  BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_SIZE,
   BOARD_WIDTH,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { COLOR, NAME } from 'zss/words/types'
+import { NAME } from 'zss/words/types'
 
-export function boardremixsnapshot(board: string) {
-  const boardcodepage = bookreadcodepagewithtype(
-    READ_CONTEXT.book,
-    CODE_PAGE_TYPE.BOARD,
-    board,
-  )
-  if (!ispresent(boardcodepage)) {
-    return
-  }
-  //
+import { write } from './writeui'
+
+function snapshotname(target: string) {
+  return `zss_snapshot_${target}`
 }
 
-export function boardremixrestart(board: string) {
-  const boardcodepage = bookreadcodepagewithtype(
+function noplayer(
+  objects: Record<string, BOARD_ELEMENT>,
+): Record<string, BOARD_ELEMENT> {
+  const ids = objectKeys(objects)
+  for (let i = 0; i < ids.length; ++i) {
+    const element = objects[ids[i]]
+    if (boardelementname(element) !== 'player') {
+      delete objects[ids[i]]
+    }
+  }
+  return objects
+}
+
+export function boardremixsnapshot(target: string) {
+  const targetcodepage = bookreadcodepagewithtype(
     READ_CONTEXT.book,
     CODE_PAGE_TYPE.BOARD,
-    board,
+    target,
   )
-  if (!ispresent(boardcodepage)) {
+  const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
+  if (!ispresent(targetboard)) {
     return
   }
-  //
+  const name = snapshotname(targetboard.id)
+
+  // remove existing snapshot
+  bookclearcodepage(READ_CONTEXT.book, name)
+
+  // create snapshot board codepage
+  const snapshotcodepage = memoryensuresoftwarecodepage(
+    MEMORY_LABEL.CONTENT,
+    name,
+    CODE_PAGE_TYPE.BOARD,
+  )
+
+  // create stub board data
+  const snapshotboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(snapshotcodepage)
+  if (!ispresent(snapshotboard)) {
+    return
+  }
+
+  // copy over terrain & objects
+  snapshotboard.terrain = deepcopy(targetboard.terrain)
+  snapshotboard.objects = noplayer(deepcopy(targetboard.objects))
+
+  // todo outcome
+  write(
+    SOFTWARE,
+    `snapshot of ${codepagereadname(targetcodepage)} created as ${codepagereadname(snapshotcodepage)}`,
+  )
+}
+
+export function boardremixrestart(target: string) {
+  const targetcodepage = bookreadcodepagewithtype(
+    READ_CONTEXT.book,
+    CODE_PAGE_TYPE.BOARD,
+    target,
+  )
+  const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
+  if (!ispresent(targetboard)) {
+    return
+  }
+  const name = snapshotname(targetboard.id)
+
+  // read snapshot
+  const snapshotcodepage = bookreadcodepagewithtype(
+    READ_CONTEXT.book,
+    CODE_PAGE_TYPE.BOARD,
+    name,
+  )
+  const snapshotboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(snapshotcodepage)
+  if (!ispresent(snapshotboard)) {
+    return
+  }
+
+  // copy over terrain & objects
+  targetboard.terrain = deepcopy(snapshotboard.terrain)
+  targetboard.objects = noplayer(deepcopy(snapshotboard.objects))
 }
 
 // need to add vars to tweak the gen
@@ -63,8 +131,6 @@ export function boardremix(target: string, source: string) {
     return
   }
 
-  debugger
-
   // make sure lookup is created
   bookboardsetlookup(READ_CONTEXT.book, targetboard)
   bookboardsetlookup(READ_CONTEXT.book, sourceboard)
@@ -76,14 +142,15 @@ export function boardremix(target: string, source: string) {
 
   // scan board into image
   let p = 0
+  const NO_COLOR = 16
   const data = new Uint8Array(BOARD_SIZE * 4)
   for (let y = 0; y < BOARD_HEIGHT; ++y) {
     for (let x = 0; x < BOARD_WIDTH; ++x) {
       const el = boardelementread(sourceboard, { x, y })
       // r, g, b - char, color, bg
       data[p++] = el?.char ?? 0 // in this case we have to ignore 0
-      data[p++] = el?.color ?? COLOR.ONCLEAR // onclear here means unset
-      data[p++] = el?.bg ?? COLOR.ONCLEAR // onclear here means unset
+      data[p++] = el?.color ?? NO_COLOR // onclear here means unset
+      data[p++] = el?.bg ?? NO_COLOR // onclear here means unset
       // alpha
       const kind = bookelementkindread(READ_CONTEXT.book, el)
       const kindname = NAME(kind?.name ?? 'empty')
@@ -104,10 +171,10 @@ export function boardremix(target: string, source: string) {
     data,
     BOARD_WIDTH,
     BOARD_HEIGHT,
-    2,
+    3,
     BOARD_WIDTH,
     BOARD_HEIGHT,
-    true,
+    false,
     false,
     2,
     0,
@@ -147,10 +214,10 @@ export function boardremix(target: string, source: string) {
         if (dchar > 0) {
           maybenew.char = dchar
         }
-        if (dcolor < 16) {
+        if (dcolor < NO_COLOR) {
           maybenew.color = dcolor
         }
-        if (dbg < 16) {
+        if (dbg < NO_COLOR) {
           maybenew.bg = dbg
         }
       }
