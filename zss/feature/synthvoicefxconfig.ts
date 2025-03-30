@@ -16,11 +16,12 @@ import { synthvoicefxvibratoconfig } from './synthvoicefxvibratoconfig'
 
 type FXSET = AUDIO_SYNTH['FX'][number]
 type JUSTFXSET = Omit<FXSET, 'applyreset'>
+export type FXNAME = keyof JUSTFXSET
 
 export function synthvoicefxconfig(
   synth: MAYBE<AUDIO_SYNTH>,
   index: number,
-  fxname: keyof JUSTFXSET,
+  fxname: FXNAME,
   config: number | string,
   value: number | string,
 ) {

@@ -2,7 +2,7 @@ import { getTransport, start } from 'tone'
 import { createdevice } from 'zss/device'
 import { AUDIO_SYNTH, createsynth } from 'zss/feature/synth'
 import { synthvoiceconfig } from 'zss/feature/synthvoiceconfig'
-import { synthvoicefxconfig } from 'zss/feature/synthvoicefxconfig'
+import { FXNAME, synthvoicefxconfig } from 'zss/feature/synthvoicefxconfig'
 import { createsynthworkletnode } from 'zss/feature/synthworkletnodes'
 import { playtta, playtts } from 'zss/feature/tts'
 import { setAltInterval } from 'zss/gadget/display/anim'
@@ -129,7 +129,6 @@ const synthdevice = createdevice('synth', [], (message) => {
       }
       break
     case 'voicefx':
-      // note: we do Math.floor(i / 4) here to get the correct fx chain
       if (isarray(message.data)) {
         const [synthindex, fxname, config, value] = message.data as [
           number,
@@ -137,7 +136,7 @@ const synthdevice = createdevice('synth', [], (message) => {
           number | string,
           number | string,
         ]
-        synthvoicefxconfig(synth, synthindex, fxname, config, value)
+        synthvoicefxconfig(synth, synthindex, fxname as FXNAME, config, value)
       }
       break
     case 'tts':
