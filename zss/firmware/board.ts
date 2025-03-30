@@ -1,4 +1,9 @@
 import { CHIP } from 'zss/chip'
+import {
+  boardremix,
+  boardremixrestart,
+  boardremixsnapshot,
+} from 'zss/feature/boardremix'
 import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
 import { ispresent } from 'zss/mapping/types'
@@ -38,7 +43,15 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { CATEGORY, COLLISION, COLOR, DIR, PT, WORD } from 'zss/words/types'
+import {
+  CATEGORY,
+  COLLISION,
+  COLOR,
+  DIR,
+  NAME,
+  PT,
+  WORD,
+} from 'zss/words/types'
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data
@@ -152,13 +165,15 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
 }
 
 export const BOARD_FIRMWARE = createfirmware()
-  .command('board', (_, words) => {
-    if (!ispresent(READ_CONTEXT.book)) {
+  .command('remix', (_, words) => {
+    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-    // teleport player to a board with given stat
-    const [stat, maybex, maybey] = readargs(words, 0, [
+    // remix current board with a board that matches given given stat
+    const [stat, ax, ay, aw, ah] = readargs(words, 0, [
       ARG_TYPE.NAME,
+      ARG_TYPE.MAYBE_NUMBER,
+      ARG_TYPE.MAYBE_NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
     ])
@@ -167,18 +182,52 @@ export const BOARD_FIRMWARE = createfirmware()
       CODE_PAGE_TYPE.BOARD,
       stat,
     )
-    if (boards.length) {
-      const target = pick(...boards)
-      if (ispresent(target)) {
-        bookplayermovetoboard(
+    const sourceboard = pick(...boards)
+    if (ispresent(sourceboard)) {
+      // todo, give <x> <y> <w> <h> to specify a region to remix
+      boardremix(READ_CONTEXT.board.id, sourceboard.id)
+    }
+    return 0
+  })
+  .command('board', (_, words) => {
+    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      return 0
+    }
+    // check for subcommand
+    const [maybestat, ii] = readargs(words, 0, [ARG_TYPE.NAME])
+    switch (NAME(maybestat)) {
+      case 'snapshot':
+        boardremixsnapshot(READ_CONTEXT.board.id)
+        break
+      case 'restart':
+        boardremixrestart(READ_CONTEXT.board.id)
+        break
+      default: {
+        // teleport player to a board with given stat
+        const [maybex, maybey] = readargs(words, ii, [
+          ARG_TYPE.MAYBE_NUMBER,
+          ARG_TYPE.MAYBE_NUMBER,
+        ])
+        const boards = bookreadcodepagesbytypeandstat(
           READ_CONTEXT.book,
-          READ_CONTEXT.elementfocus,
-          target.id,
-          {
-            x: maybex ?? Math.round(BOARD_WIDTH * 0.5),
-            y: maybey ?? Math.round(BOARD_HEIGHT * 0.5),
-          },
+          CODE_PAGE_TYPE.BOARD,
+          maybestat,
         )
+        if (boards.length) {
+          const target = pick(...boards)
+          if (ispresent(target)) {
+            bookplayermovetoboard(
+              READ_CONTEXT.book,
+              READ_CONTEXT.elementfocus,
+              target.id,
+              {
+                x: maybex ?? Math.round(BOARD_WIDTH * 0.5),
+                y: maybey ?? Math.round(BOARD_HEIGHT * 0.5),
+              },
+            )
+          }
+        }
+        break
       }
     }
     return 0
@@ -229,6 +278,9 @@ export const BOARD_FIRMWARE = createfirmware()
     // make sure lookup is created
     bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
 
+    // shove target at dir, in the direction of the given dir
+    // todo FIXME, the movedir is wrong
+    // should we delay when we evaluate the dir ?
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
     const maybetarget = boardelementread(READ_CONTEXT.board, dir)
     if (boardelementisobject(maybetarget)) {
