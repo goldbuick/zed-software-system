@@ -1,3 +1,4 @@
+import { parsetarget } from 'zss/device'
 import {
   gadgetcheckqueue,
   gadgethyperlink,
@@ -152,9 +153,12 @@ export function memoryinspectbgarea(
   shared.scroll = gadgetcheckqueue(player)
 }
 
-export const memoryinspect = {
+export const memoryinspectremix = {
   stat: '',
+  patternsize: 2,
+  mirror: 1,
 }
+type INSPECTVAR = keyof typeof memoryinspectremix
 
 export function memoryinspectarea(player: string, p1: PT, p2: PT) {
   const area = ptstoarea(p1, p2)
@@ -183,20 +187,34 @@ export function memoryinspectarea(player: string, p1: PT, p2: PT) {
     ` 5 `,
   ])
 
-  function get() {
-    return memoryinspect.stat
+  function get(name: string) {
+    const { target } = parsetarget(name)
+    // console.info('#### get', target)
+    return memoryinspectremix[target as INSPECTVAR]
   }
-  function set(_: string, value: WORD) {
-    if (isstring(value)) {
-      memoryinspect.stat = value
+  function set(name: string, value: WORD) {
+    if (isnumber(value) || isstring(value)) {
+      const { target } = parsetarget(name)
+      // console.info('#### set', target, value)
+      // @ts-expect-error bah
+      memoryinspectremix[target as INSPECTVAR] = value
     }
   }
 
+  gadgethyperlink(player, 'batch', 'remix', [`stat:${area}`, 'text'], get, set)
   gadgethyperlink(
     player,
     'batch',
-    'remix:',
-    [`remixstat:${area}`, 'text'],
+    'patternsize',
+    [`patternsize:${area}`, 'number', '1', '5'],
+    get,
+    set,
+  )
+  gadgethyperlink(
+    player,
+    'batch',
+    'mirror',
+    [`mirror:${area}`, 'number', '1', '8'],
     get,
     set,
   )

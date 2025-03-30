@@ -7,7 +7,7 @@ import { PT } from 'zss/words/types'
 
 import { memoryinspectempty, memoryinspectemptymenu } from './inspect'
 import {
-  memoryinspect,
+  memoryinspectremix,
   memoryinspectbgarea,
   memoryinspectchararea,
   memoryinspectcolorarea,
@@ -69,7 +69,14 @@ export function memoryinspectbatchcommand(path: string, player: string) {
       register_copy(SOFTWARE, [x1, y1, x2, y2].join(' '), memoryreadoperator())
       break
     case 'remixrun':
-      boardremix(board.id, memoryinspect.stat, 2, 1, p1, p2)
+      boardremix(
+        board.id,
+        memoryinspectremix.stat,
+        memoryinspectremix.patternsize,
+        memoryinspectremix.mirror,
+        p1,
+        p2,
+      )
       break
     default:
       console.info('unknown batch', batch)

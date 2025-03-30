@@ -142,7 +142,7 @@ const MAX_ATTEMPT = 5
 export function boardremix(
   target: string,
   source: string,
-  pattersize = 2,
+  patternsize = 2,
   mirror = 1,
   p1 = { x: 0, y: 0 },
   p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 },
@@ -208,14 +208,18 @@ export function boardremix(
   const y2 = Math.max(p1.y, p2.y)
   const genwidth = x2 - x1 + 1
   const genheight = y2 - y1 + 1
-  //
+
+  write(
+    SOFTWARE,
+    `remixing ${x1},${y1} - ${x2},${y2} on ${target} with ${source} <${patternsize},${mirror}>`,
+  )
 
   // generate new image
   const model = new wfc.OverlappingModel(
     data,
     BOARD_WIDTH,
     BOARD_HEIGHT,
-    pattersize, // pattern size
+    patternsize, // pattern size
     genwidth,
     genheight,
     false, // is the input wrapping ?
@@ -290,13 +294,8 @@ export function boardremix(
         const sample = pick(listnamedelements(sourceboard, maybekind))
         if (ispresent(sample)) {
           // copy terrain element from under sample
-          const cover = boardgetterrain(
-            sourceboard,
-            sample.x ?? 0,
-            sample.y ?? 0,
-          )
           boardsetterrain(targetboard, {
-            ...cover,
+            ...boardgetterrain(sourceboard, sample.x ?? 0, sample.y ?? 0),
             x,
             y,
           })
