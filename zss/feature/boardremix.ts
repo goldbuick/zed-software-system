@@ -1,10 +1,11 @@
 import { objectKeys } from 'ts-extras'
+// @ts-expect-error wow amazing
 import wfc from 'wavefunctioncollapse'
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { deepcopy, isnumber, ispresent, MAYBE } from 'zss/mapping/types'
+import { deepcopy, isnumber, ispresent } from 'zss/mapping/types'
 import { MEMORY_LABEL, memoryensuresoftwarecodepage } from 'zss/memory'
-import { boardelementread } from 'zss/memory/board'
+import { boardelementread, boardsetterrain } from 'zss/memory/board'
 import { boardelementname } from 'zss/memory/boardelement'
 import {
   bookboardsafedelete,
@@ -12,7 +13,6 @@ import {
   bookboardwritefromkind,
   bookclearcodepage,
   bookelementkindread,
-  bookreadboard,
   bookreadcodepagewithtype,
 } from 'zss/memory/book'
 import { codepagereaddata, codepagereadname } from 'zss/memory/codepage'
@@ -33,6 +33,19 @@ function snapshotname(target: string) {
 }
 
 function noplayer(
+  objects: Record<string, BOARD_ELEMENT>,
+): Record<string, BOARD_ELEMENT> {
+  const ids = objectKeys(objects)
+  for (let i = 0; i < ids.length; ++i) {
+    const element = objects[ids[i]]
+    if (boardelementname(element) === 'player') {
+      delete objects[ids[i]]
+    }
+  }
+  return objects
+}
+
+function onlyplayers(
   objects: Record<string, BOARD_ELEMENT>,
 ): Record<string, BOARD_ELEMENT> {
   const ids = objectKeys(objects)
@@ -109,7 +122,14 @@ export function boardremixrestart(target: string) {
 
   // copy over terrain & objects
   targetboard.terrain = deepcopy(snapshotboard.terrain)
-  targetboard.objects = noplayer(deepcopy(snapshotboard.objects))
+
+  // create merged list
+  targetboard.objects = {
+    // snapshot'd objects
+    ...noplayer(deepcopy(snapshotboard.objects)),
+    // players don't get messed with
+    ...onlyplayers(deepcopy(targetboard.objects)),
+  }
 }
 
 // need to add vars to tweak the gen
@@ -147,10 +167,14 @@ export function boardremix(target: string, source: string) {
   for (let y = 0; y < BOARD_HEIGHT; ++y) {
     for (let x = 0; x < BOARD_WIDTH; ++x) {
       const el = boardelementread(sourceboard, { x, y })
+      const r = el?.char ?? 0 // in this case we have to ignore 0
+      const g = el?.color ?? NO_COLOR // onclear here means unset
+      const b = el?.bg ?? NO_COLOR // onclear here means unset
       // r, g, b - char, color, bg
-      data[p++] = el?.char ?? 0 // in this case we have to ignore 0
-      data[p++] = el?.color ?? NO_COLOR // onclear here means unset
-      data[p++] = el?.bg ?? NO_COLOR // onclear here means unset
+      data[p++] = r
+      data[p++] = g
+      data[p++] = b
+
       // alpha
       const kind = bookelementkindread(READ_CONTEXT.book, el)
       const kindname = NAME(kind?.name ?? 'empty')
@@ -171,15 +195,15 @@ export function boardremix(target: string, source: string) {
     data,
     BOARD_WIDTH,
     BOARD_HEIGHT,
-    3,
+    4,
     BOARD_WIDTH,
     BOARD_HEIGHT,
     false,
     false,
-    2,
+    1,
     0,
   )
-  if (!model.iterate(24)) {
+  if (!model.generate()) {
     api_error(SOFTWARE, 'boardremix', 'failed to generate after 24 tries')
     return
   }
@@ -193,6 +217,7 @@ export function boardremix(target: string, source: string) {
       const dcolor = remixdata[p++]
       const dbg = remixdata[p++]
       akind = remixdata[p++]
+
       // make empty
       const old = boardelementread(targetboard, { x, y })
       bookboardsafedelete(
@@ -201,6 +226,8 @@ export function boardremix(target: string, source: string) {
         old,
         READ_CONTEXT.timestamp,
       )
+      boardsetterrain(targetboard, { x, y })
+
       // create new element
       const maybekind = elementalphatokindmap.get(akind) ?? ''
       const maybenew = bookboardwritefromkind(
@@ -209,6 +236,7 @@ export function boardremix(target: string, source: string) {
         [maybekind],
         { x, y },
       )
+
       // apply display
       if (ispresent(maybenew)) {
         if (dchar > 0) {
