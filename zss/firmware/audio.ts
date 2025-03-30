@@ -14,7 +14,7 @@ import { createfirmware } from 'zss/firmware'
 import { isnumber } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { ARG_TYPE, readargs } from 'zss/words/reader'
-import { WORD } from 'zss/words/types'
+import { NAME, WORD } from 'zss/words/types'
 
 function handlesynthplay(words: WORD[], bgplay: boolean) {
   const [buffer] = readargs(words, 0, [ARG_TYPE.NAME])
@@ -29,10 +29,26 @@ function handlesynthvoicefx(idx: number, fx: string, words: WORD[]) {
   synth_voicefx(SOFTWARE, idx, fx, maybeconfig, maybevalue)
 }
 
+const isfx = [
+  'echo',
+  'reverb',
+  'chorus',
+  'phaser',
+  'distortion',
+  'vibrato',
+  'fc',
+]
+
 function handlesynthvoice(idx: number, words: WORD[]) {
-  const [voice, ii] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
-  if (isnumber(voice)) {
-    synth_voice(SOFTWARE, idx, 'volume', voice)
+  const [voiceorfx, ii] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
+  if (isnumber(voiceorfx)) {
+    synth_voice(SOFTWARE, idx, 'volume', voiceorfx)
+  } else if (isfx.includes(NAME(voiceorfx))) {
+    const [maybeconfig, maybevalue] = readargs(words, ii, [
+      ARG_TYPE.NUMBER_OR_STRING,
+      ARG_TYPE.MAYBE_NUMBER_OR_STRING,
+    ])
+    synth_voicefx(SOFTWARE, idx, voiceorfx, maybeconfig, maybevalue)
   } else {
     // check for a list of numbers
     const [configorpartials] = readargs(words, ii, [
@@ -44,12 +60,12 @@ function handlesynthvoice(idx: number, words: WORD[]) {
       // @ts-expect-error argtypes ?
       const partials = readargs(words, ii, argtypes).slice(0, count)
       const maybevalue = partials.length === 1 ? partials[0] : partials
-      synth_voice(SOFTWARE, idx, voice, maybevalue)
+      synth_voice(SOFTWARE, idx, voiceorfx, maybevalue)
     } else {
       const [maybevalue] = readargs(words, ii, [
         ARG_TYPE.MAYBE_NUMBER_OR_STRING,
       ])
-      synth_voice(SOFTWARE, idx, voice, maybevalue)
+      synth_voice(SOFTWARE, idx, voiceorfx, maybevalue)
     }
   }
 }

@@ -81,13 +81,16 @@ export function createfx() {
   applyreset()
 
   return {
-    reverb,
+    fc,
     echo,
     chorus,
+    reverb,
     phaser,
-    distortion,
     vibrato,
-    fc,
+    distortion,
     applyreset,
+    // aliases for fx
+    fcrush: fc,
+    distort: distortion,
   }
 }

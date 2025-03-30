@@ -76,9 +76,9 @@ export function createsynth() {
   ]
 
   // config fx
-  // 0-1 FX 0 - play
-  // 2-3 FX 1 - play
-  // 4-7 FX 2 - bgplay
+  // 0 FX - play
+  // 1 FX - play
+  // 2 FX - bgplay
   const FX = [createfx(), createfx(), createfx()]
 
   function mapindextofx(index: number) {
@@ -646,7 +646,6 @@ export function createsynth() {
     SOURCE,
     FX,
     changesource,
-    mapindextofx,
   }
 }
 

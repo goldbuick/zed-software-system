@@ -1,4 +1,4 @@
-import { Distortion, FeedbackDelay, Phaser, Reverb } from 'tone'
+import { FeedbackDelay } from 'tone'
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { clamp } from 'zss/mapping/number'
@@ -6,20 +6,31 @@ import { isnumber, ispresent, MAYBE } from 'zss/mapping/types'
 
 import { AUDIO_SYNTH } from './synth'
 import { ECHO_OFF, ECHO_ON } from './synthfx'
+import { synthvoicefxchorusconfig } from './synthvoicefxchorusconfig'
+import { synthvoicefxdistortionconfig } from './synthvoicefxdistortconfig'
+import { synthvoicefxechoconfig } from './synthvoicefxechoconfig'
+import { synthvoicefxfcrushconfig } from './synthvoicefxfcrushconfig'
+import { synthvoicefxphaserconfig } from './synthvoicefxphaserconfig'
+import { synthvoicefxreverbconfig } from './synthvoicefxreverbconfig'
+import { synthvoicefxvibratoconfig } from './synthvoicefxvibratoconfig'
+
+type FXSET = AUDIO_SYNTH['FX'][number]
+type JUSTFXSET = Omit<FXSET, 'applyreset'>
 
 export function synthvoicefxconfig(
   synth: MAYBE<AUDIO_SYNTH>,
-  synthindex: number,
-  fxname: string,
+  index: number,
+  fxname: keyof JUSTFXSET,
   config: number | string,
   value: number | string,
 ) {
   if (!ispresent(synth)) {
     return
   }
-
-  const index = synth.mapindextofx(synthindex)
-  // @ts-expect-error bah
+  if (index < 0 || index >= synth.FX.length) {
+    api_error(SOFTWARE, `synth`, `index ${index} out of bounds`)
+    return
+  }
   const fx = synth.FX[index][fxname]
   if (ispresent(fx)) {
     switch (config) {
@@ -36,120 +47,29 @@ export function synthvoicefxconfig(
           fx.wet.value = clamp(0.01 * config, 0, 1)
         } else {
           switch (fxname) {
-            case 'vibrato': {
-              switch (config) {
-                default:
-                  api_error(
-                    SOFTWARE,
-                    `synth`,
-                    `unknown ${fxname} config ${config}`,
-                  )
-                  break
-              }
+            case 'fc':
+            case 'fcrush':
+              synthvoicefxfcrushconfig(synth, index, config, value)
               break
-            }
-            case 'chorus': {
-              switch (config) {
-                default:
-                  api_error(
-                    SOFTWARE,
-                    `synth`,
-                    `unknown ${fxname} config ${config}`,
-                  )
-                  break
-              }
+            case 'echo':
+              synthvoicefxechoconfig(synth, index, config, value)
               break
-            }
-            case 'phaser': {
-              const phaser = fx as Phaser
-              switch (config) {
-                case 'q':
-                  if (isnumber(value)) {
-                    phaser.Q.value = value
-                  }
-                  break
-                case 'octaves':
-                  if (isnumber(value)) {
-                    phaser.octaves = value
-                  }
-                  break
-                case 'basefrequency':
-                  if (isnumber(value)) {
-                    phaser.baseFrequency = value
-                  }
-                  break
-                default:
-                  api_error(
-                    SOFTWARE,
-                    `synth`,
-                    `unknown ${fxname} config ${config}`,
-                  )
-                  break
-              }
+            case 'chorus':
+              synthvoicefxchorusconfig(synth, index, config, value)
               break
-            }
-            case 'distortion': {
-              const distortion = fx as Distortion
-              switch (config) {
-                case 'distortion':
-                  if (isnumber(value)) {
-                    distortion.distortion = value
-                  }
-                  break
-                case 'oversample':
-                  switch (value) {
-                    case '2x':
-                    case '4x':
-                    case 'none':
-                      distortion.oversample = value
-                      break
-                  }
-                  break
-                default:
-                  api_error(
-                    SOFTWARE,
-                    `kind`,
-                    `unknown ${fxname} config ${config}`,
-                  )
-                  break
-              }
+            case 'phaser':
+              synthvoicefxphaserconfig(synth, index, config, value)
               break
-            }
-            case 'echo': {
-              const echo = fx as FeedbackDelay
-              switch (config) {
-                case 'delaytime':
-                  echo.delayTime.value = value
-                  break
-                default:
-                  api_error(
-                    SOFTWARE,
-                    `kind`,
-                    `unknown ${fxname} config ${config}`,
-                  )
-                  break
-              }
+            case 'reverb':
+              synthvoicefxreverbconfig(synth, index, config, value)
               break
-            }
-            case 'reverb': {
-              const reverb = fx as Reverb
-              switch (config) {
-                case 'decay':
-                  reverb.decay = value
-                  break
-                case 'predelay':
-                  reverb.preDelay = value
-                  break
-                default:
-                  api_error(
-                    SOFTWARE,
-                    `kind`,
-                    `unknown ${fxname} config ${config}`,
-                  )
-                  break
-              }
+            case 'distort':
+            case 'distortion':
+              synthvoicefxdistortionconfig(synth, index, config, value)
               break
-            }
+            case 'vibrato':
+              synthvoicefxvibratoconfig(synth, index, config, value)
+              break
           }
         }
         break
