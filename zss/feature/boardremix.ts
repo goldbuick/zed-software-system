@@ -5,7 +5,7 @@ import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { pttoindex } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
-import { deepcopy, isnumber, ispresent } from 'zss/mapping/types'
+import { deepcopy, isnumber, ispresent, MAYBE } from 'zss/mapping/types'
 import { MEMORY_LABEL, memoryensuresoftwarecodepage } from 'zss/memory'
 import { listnamedelements } from 'zss/memory/atomics'
 import {
@@ -139,14 +139,14 @@ export function boardremixrestart(target: string) {
   }
 }
 
-// need to add vars to tweak the gen
-// we can give it an alea rngwith seed
+const MAX_ATTEMPT = 5
 export function boardremix(
   target: string,
   source: string,
   pattersize = 2,
   mirror = 1,
-  maxattempt = 5,
+  p1 = { x: 0, y: 0 },
+  p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 },
 ) {
   const targetcodepage = bookreadcodepagewithtype(
     READ_CONTEXT.book,
@@ -203,14 +203,22 @@ export function boardremix(
     }
   }
 
+  const x1 = Math.min(p1.x, p2.x)
+  const y1 = Math.min(p1.y, p2.y)
+  const x2 = Math.max(p1.x, p2.x)
+  const y2 = Math.max(p1.y, p2.y)
+  const genwidth = x2 - x1 + 1
+  const genheight = y2 - y1 + 1
+  //
+
   // generate new image
   const model = new wfc.OverlappingModel(
     data,
     BOARD_WIDTH,
     BOARD_HEIGHT,
     pattersize, // pattern size
-    BOARD_WIDTH,
-    BOARD_HEIGHT,
+    genwidth,
+    genheight,
     false, // is the input wrapping ?
     false, // is the output wrapping ?
     mirror, // can we mirror the output 1 - 8
@@ -218,16 +226,16 @@ export function boardremix(
   )
 
   let attempt = 0
-  for (; attempt < maxattempt; ++attempt) {
+  for (; attempt < MAX_ATTEMPT; ++attempt) {
     if (model.generate()) {
       break
     }
   }
-  if (attempt === maxattempt) {
+  if (attempt === MAX_ATTEMPT) {
     api_error(
       SOFTWARE,
       'boardremix',
-      `failed to generate after ${maxattempt} tries`,
+      `failed to generate after ${MAX_ATTEMPT} tries`,
     )
     return
   }
@@ -235,8 +243,8 @@ export function boardremix(
   // unpack bytes onto targetboard
   p = 0
   const remixdata: Uint8Array = model.graphics()
-  for (let y = 0; y < BOARD_HEIGHT; ++y) {
-    for (let x = 0; x < BOARD_WIDTH; ++x) {
+  for (let y = y1; y <= y2; ++y) {
+    for (let x = x1; x <= x2; ++x) {
       const dchar = remixdata[p++]
       const dcolor = remixdata[p++]
       const dbg = remixdata[p++]

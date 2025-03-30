@@ -179,6 +179,14 @@ export function memoryinspectarea(player: string, p1: PT, p2: PT) {
     ` 5 `,
   ])
 
+  gadgethyperlink(player, 'batch', '', [`remix:stat:${area}`, 'text'])
+  gadgethyperlink(player, 'batch', 'remix elements', [
+    `remix:run:${area}`,
+    'hk',
+    'r',
+    ` R `,
+  ])
+
   gadgettext(player, DIVIDER)
   gadgethyperlink(player, 'batch', `set chars:`, [
     `chars:${area}`,
