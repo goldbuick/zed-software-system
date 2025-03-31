@@ -140,6 +140,7 @@ document.addEventListener(
       case 'z':
       case 'y':
       case 'e':
+      case 'k':
       case 'p': // prevent default behavior
       case 'arrowleft':
       case 'arrowright':

@@ -270,6 +270,14 @@ export function EditorInput({
                     vm_copyjsonfile(SOFTWARE, editorpath, player)
                     break
                   }
+                  case 'k': {
+                    /* 
+                    TODO
+                    this will close the code editor and print out a list of codepages.
+                    clicking these links will load the given codepage as a ref sheet.
+                     */
+                    break
+                  }
                   case 'z':
                     if (ismac && mods.shift) {
                       undomanager?.redo()
