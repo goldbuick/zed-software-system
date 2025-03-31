@@ -10,6 +10,7 @@ import { checkdoescollide } from './atomics'
 import {
   boarddeleteobject,
   boardelementindex,
+  boardelementread,
   boardobjectcreatefromkind,
   boardobjectread,
   boardsetterrain,
@@ -193,6 +194,34 @@ export function bookreadcodepagedatabytype(
     .filter((item) => codepagereadtype(item) === type)
     .map((page) => codepagereaddata(page))
     .filter(ispresent)
+}
+
+export function bookboardelementreadcodepage(
+  book: MAYBE<BOOK>,
+  element: MAYBE<BOARD_ELEMENT>,
+): MAYBE<CODE_PAGE> {
+  // figure out stats from kind codepage
+  if (ispresent(element)) {
+    // check for terrain element
+    const terrainpage = bookreadcodepagewithtype(
+      book,
+      CODE_PAGE_TYPE.TERRAIN,
+      element.kind ?? '',
+    )
+    if (ispresent(terrainpage)) {
+      return terrainpage
+    }
+    // check for object element
+    const objectpage = bookreadcodepagewithtype(
+      book,
+      CODE_PAGE_TYPE.OBJECT,
+      element.kind ?? '',
+    )
+    if (ispresent(objectpage)) {
+      return objectpage
+    }
+  }
+  return undefined
 }
 
 export function bookwritecodepage(

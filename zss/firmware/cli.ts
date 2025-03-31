@@ -271,7 +271,11 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('text', (_, words) => {
     const text = words.map(maptostring).join(' ')
-    tape_info(SOFTWARE, text)
+    if (ispresent(READ_CONTEXT.element)) {
+      // $WOBBLE $BOUNCE $SPIN
+      READ_CONTEXT.element.tickertext = text
+      READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+    }
     return 0
   })
   .command('hyperlink', (_, args) => {

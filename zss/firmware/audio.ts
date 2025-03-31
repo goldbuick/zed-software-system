@@ -17,8 +17,8 @@ import { ARG_TYPE, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
 function handlesynthplay(words: WORD[], bgplay: boolean) {
-  const [buffer] = readargs(words, 0, [ARG_TYPE.NAME])
-  synth_play(SOFTWARE, buffer, bgplay)
+  const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+  synth_play(SOFTWARE, buffer ?? '', bgplay)
 }
 
 function handlesynthvoicefx(idx: number, fx: string, words: WORD[]) {

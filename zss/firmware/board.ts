@@ -170,9 +170,33 @@ export const BOARD_FIRMWARE = createfirmware()
       return 0
     }
     // remix current board with a board that matches given given stat
-    const [stat, pattersize, mirror, maxattempt] = readargs(words, 0, [
+    const [stat, pattersize, mirror] = readargs(words, 0, [
       ARG_TYPE.NAME,
       ARG_TYPE.MAYBE_NUMBER,
+      ARG_TYPE.MAYBE_NUMBER,
+    ])
+    const boards = bookreadcodepagesbytypeandstat(
+      READ_CONTEXT.book,
+      CODE_PAGE_TYPE.BOARD,
+      stat,
+    )
+    const sourceboard = pick(...boards)
+    if (ispresent(sourceboard)) {
+      boardremix(READ_CONTEXT.board.id, sourceboard.id, pattersize, mirror)
+    }
+    return 0
+  })
+  .command('remixonly', (_, words) => {
+    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+      return 0
+    }
+    // remix current board with a board that matches given given stat
+    const [stat, x1, y1, x2, y2, pattersize, mirror] = readargs(words, 0, [
+      ARG_TYPE.NAME,
+      ARG_TYPE.NUMBER,
+      ARG_TYPE.NUMBER,
+      ARG_TYPE.NUMBER,
+      ARG_TYPE.NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
     ])
@@ -188,39 +212,15 @@ export const BOARD_FIRMWARE = createfirmware()
         sourceboard.id,
         pattersize,
         mirror,
-        maxattempt,
+        {
+          x: x1,
+          y: y1,
+        },
+        {
+          x: x2,
+          y: y2,
+        },
       )
-    }
-    return 0
-  })
-  .command('remixonly', (_, words) => {
-    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
-      return 0
-    }
-    // remix current board with a board that matches given given stat
-    const [stat, ax, ay, aw, ah, pattersize, mirror, maxattempt] = readargs(
-      words,
-      0,
-      [
-        ARG_TYPE.NAME,
-        ARG_TYPE.NUMBER,
-        ARG_TYPE.NUMBER,
-        ARG_TYPE.NUMBER,
-        ARG_TYPE.NUMBER,
-        ARG_TYPE.MAYBE_NUMBER,
-        ARG_TYPE.MAYBE_NUMBER,
-        ARG_TYPE.MAYBE_NUMBER,
-      ],
-    )
-    const boards = bookreadcodepagesbytypeandstat(
-      READ_CONTEXT.book,
-      CODE_PAGE_TYPE.BOARD,
-      stat,
-    )
-    const sourceboard = pick(...boards)
-    if (ispresent(sourceboard)) {
-      // todo, give <x> <y> <w> <h> to specify a region to remix
-      boardremix(READ_CONTEXT.board.id, sourceboard.id)
     }
     return 0
   })

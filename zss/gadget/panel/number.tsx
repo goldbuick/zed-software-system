@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { modemwritevaluenumber, useWaitForValueNumber } from 'zss/device/modem'
 import { paneladdress } from 'zss/gadget/data/types'
-import { maptovalue } from 'zss/mapping/value'
+import { maptonumber, maptovalue } from 'zss/mapping/value'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
@@ -27,8 +27,8 @@ export function PanelItemNumber({
 
   const [target, maybemin, maybemax] = [
     maptovalue(args[0], ''),
-    maptovalue(args[1], -1),
-    maptovalue(args[2], -1),
+    maptonumber(args[1], -1),
+    maptonumber(args[2], -1),
   ]
 
   let min: number
