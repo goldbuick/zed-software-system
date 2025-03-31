@@ -87,8 +87,8 @@ export function importboardelement(
   return unformatobject(boardelemententry, BOARD_ELEMENT_KEYS)
 }
 
-export function boardelementisobject(element: MAYBE<BOARD_ELEMENT>) {
-  return element?.id?.length ?? 0 > 0
+export function boardelementisobject(element: MAYBE<BOARD_ELEMENT>): boolean {
+  return (element?.id?.length ?? 0) > 0
 }
 
 export function boardelementapplycolor(

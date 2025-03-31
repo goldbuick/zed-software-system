@@ -24,11 +24,11 @@ import {
   boardelementreadbyidorindex,
   boardsetterrain,
 } from './board'
-import { boardelementname } from './boardelement'
+import { boardelementisobject, boardelementname } from './boardelement'
 import {
+  bookboardelementreadcodepage,
   bookboardsafedelete,
   bookboardsetlookup,
-  bookreadcodepagewithtype,
 } from './book'
 import { memoryinspectarea } from './inspectarea'
 import {
@@ -36,7 +36,6 @@ import {
   memoryinspectcolor,
   memoryinspectelement,
 } from './inspectelement'
-import { CODE_PAGE_TYPE } from './types'
 
 import {
   MEMORY_LABEL,
@@ -155,24 +154,17 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
   // one element, or many ?
   if (p1.x === p2.x && p1.y === p2.y) {
     const element = boardelementread(board, p1)
-    // figure out stats from kind codepage
-    if (ispresent(element)) {
-      const terrainpage = bookreadcodepagewithtype(
-        mainbook,
-        CODE_PAGE_TYPE.TERRAIN,
-        element.kind ?? '',
+    const codepage = bookboardelementreadcodepage(mainbook, element)
+    // found element def
+    if (ispresent(element) && ispresent(codepage)) {
+      memoryinspectelement(
+        player,
+        board,
+        codepage,
+        element,
+        p1,
+        boardelementisobject(element),
       )
-      if (ispresent(terrainpage)) {
-        memoryinspectelement(player, board, terrainpage, element, p1, false)
-      }
-      const objectpage = bookreadcodepagewithtype(
-        mainbook,
-        CODE_PAGE_TYPE.OBJECT,
-        element.kind ?? '',
-      )
-      if (ispresent(objectpage)) {
-        memoryinspectelement(player, board, objectpage, element, p1, true)
-      }
     }
     // most likely empty
     if (!element?.kind) {

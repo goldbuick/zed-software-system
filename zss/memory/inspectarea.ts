@@ -10,10 +10,16 @@ import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT, WORD } from 'zss/words/types'
 
 import { boardelementread } from './board'
+import { bookboardelementreadcodepage } from './book'
+import { codepagereadname } from './codepage'
 import { hassecretheap } from './inspectcopypaste'
 import { BOARD_ELEMENT } from './types'
 
-import { memoryreadplayerboard } from '.'
+import {
+  MEMORY_LABEL,
+  memoryensuresoftwarebook,
+  memoryreadplayerboard,
+} from '.'
 
 const DIVIDER = '$yellow$205$205$205$196'
 
@@ -161,6 +167,16 @@ export const memoryinspectremix = {
 type INSPECTVAR = keyof typeof memoryinspectremix
 
 export function memoryinspectarea(player: string, p1: PT, p2: PT) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
   const area = ptstoarea(p1, p2)
   gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
   gadgettext(player, DIVIDER)
@@ -256,4 +272,30 @@ export function memoryinspectarea(player: string, p1: PT, p2: PT) {
     ` 0 `,
     'next',
   ])
+
+  // codepage links
+  gadgettext(player, DIVIDER)
+  gadgettext(player, `codepages:`)
+
+  // scan board for codepages
+  const x1 = Math.min(p1.x, p2.x)
+  const y1 = Math.min(p1.y, p2.y)
+  const x2 = Math.max(p1.x, p2.x)
+  const y2 = Math.max(p1.y, p2.y)
+  const ids = new Set<string>()
+  for (let y = y1; y <= y2; ++y) {
+    for (let x = x1; x <= x2; ++x) {
+      const element = boardelementread(board, { x, y })
+      const codepage = bookboardelementreadcodepage(mainbook, element)
+      if (ispresent(codepage) && !ids.has(codepage.id)) {
+        ids.add(codepage.id)
+        gadgethyperlink(
+          player,
+          'batch',
+          `edit @${codepagereadname(codepage)}`,
+          [`pageopen:${codepage.id}`],
+        )
+      }
+    }
+  }
 }

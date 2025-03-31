@@ -9,7 +9,7 @@ import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
 import { boardelementindex } from './board'
-import { codepagereadstatdefaults } from './codepage'
+import { codepagereadname, codepagereadstatdefaults } from './codepage'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE } from './types'
 
 import {
@@ -283,4 +283,10 @@ export function memoryinspectelement(
 
   gadgettext(player, DIVIDER)
   gadgethyperlink(player, chip, `make empty`, ['empty', 'hk', '0'], get, set)
+
+  // codepage links
+  gadgettext(player, DIVIDER)
+  gadgethyperlink(player, 'batch', `edit @${codepagereadname(codepage)}`, [
+    `pageopen:${codepage.id}`,
+  ])
 }

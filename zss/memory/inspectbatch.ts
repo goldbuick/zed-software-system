@@ -1,7 +1,9 @@
 import { parsetarget } from 'zss/device'
-import { register_copy } from 'zss/device/api'
+import { register_copy, vm_cli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { boardremix } from 'zss/feature/boardremix'
+import { doasync } from 'zss/mapping/func'
+import { waitfor } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
@@ -77,6 +79,15 @@ export function memoryinspectbatchcommand(path: string, player: string) {
         p1,
         p2,
       )
+      break
+    case 'pageopen':
+      doasync(SOFTWARE, async () => {
+        // wait a little
+        await waitfor(800)
+
+        // open codepage
+        vm_cli(SOFTWARE, `#pageopen ${batch.path}`, memoryreadoperator())
+      })
       break
     default:
       console.info('unknown batch', batch)
