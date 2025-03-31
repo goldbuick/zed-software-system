@@ -25,6 +25,7 @@ import {
   Command_ifCstChildren,
   Command_playCstChildren,
   Command_repeatCstChildren,
+  Command_toastCstChildren,
   Command_waitforCstChildren,
   Command_whileCstChildren,
   CommandsCstChildren,
@@ -858,6 +859,21 @@ class ScriptVisitor
         words: [
           this.createstringnode(ctx, isbg ? 'bgplay' : 'play'),
           this.createstringnode(ctx, playcontent),
+        ].flat(),
+      }),
+    )
+  }
+
+  command_toast(ctx: Command_toastCstChildren) {
+    const toaststr = tokenstring(ctx.token_command_toast, '')
+    const toastcontent = toaststr.replace('toast', '').trim()
+    return this.createlinenode(
+      ctx,
+      this.createcodenode(ctx, {
+        type: NODE.COMMAND,
+        words: [
+          this.createstringnode(ctx, 'toast'),
+          this.createstringnode(ctx, toastcontent),
         ].flat(),
       }),
     )

@@ -6,6 +6,7 @@ import {
   tape_terminal_inclayout,
   vm_cli,
   vm_copyjsonfile,
+  vm_refsheet,
 } from 'zss/device/api'
 import { Y } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -266,18 +267,12 @@ export function EditorInput({
             default:
               if (mods.ctrl) {
                 switch (lkey) {
-                  case 'e': {
+                  case 'e':
                     vm_copyjsonfile(SOFTWARE, editorpath, player)
                     break
-                  }
-                  case 'k': {
-                    /* 
-                    TODO
-                    this will close the code editor and print out a list of codepages.
-                    clicking these links will load the given codepage as a ref sheet.
-                     */
+                  case 'k':
+                    vm_refsheet(SOFTWARE, editorpath, player)
                     break
-                  }
                   case 'z':
                     if (ismac && mods.shift) {
                       undomanager?.redo()

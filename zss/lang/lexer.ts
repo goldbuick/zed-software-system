@@ -236,11 +236,18 @@ export const rparen = createSimpleToken({
   pop_mode: true,
 })
 
-// media command
+// media commands
 
 export const command_play = createSimpleToken({
   name: 'command_play',
   pattern: /(play|bgplay) .*/,
+  start_chars_hint: all_chars,
+  longer_alt: stringliteral,
+})
+
+export const command_toast = createSimpleToken({
+  name: 'command_toast',
+  pattern: /toast .*/,
   start_chars_hint: all_chars,
   longer_alt: stringliteral,
 })
@@ -317,6 +324,7 @@ export const allTokens = createTokenSet([
   // commands
   stat,
   command_play,
+  command_toast,
   command,
   // flow
   comment,

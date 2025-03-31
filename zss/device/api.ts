@@ -340,7 +340,7 @@ export function tape_crash(device: DEVICELIKE, player: string) {
 export function tape_editor_open(
   device: DEVICELIKE,
   book: string,
-  path: string[],
+  path: [string, MAYBE<string>, MAYBE<string>],
   type: string,
   title: string,
   player: string,
@@ -412,6 +412,23 @@ export function vm_copyjsonfile(
   player: string,
 ) {
   device.emit('vm:copyjsonfile', path, player)
+}
+
+export function vm_codepage(
+  device: DEVICELIKE,
+  path: string[],
+  refsheet: string,
+  player: string,
+) {
+  device.emit('vm:codepage', [path, refsheet], player)
+}
+
+export function vm_refsheet(
+  device: DEVICELIKE,
+  path: string[],
+  player: string,
+) {
+  device.emit('vm:refsheet', path, player)
 }
 
 export function vm_inspect(device: DEVICELIKE, p1: PT, p2: PT, player: string) {

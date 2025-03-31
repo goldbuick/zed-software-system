@@ -46,7 +46,11 @@ import {
   memorysendtoactiveboards,
   memorysetsoftwarebook,
 } from 'zss/memory'
-import { bookclearcodepage, bookreadcodepagebyaddress } from 'zss/memory/book'
+import {
+  bookclearcodepage,
+  bookreadcodepagebyaddress,
+  bookreadsortedcodepages,
+} from 'zss/memory/book'
 import {
   codepagereadname,
   codepagereadtype,
@@ -333,7 +337,11 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('pageopen', (_, words) => {
-    const [page] = readargs(words, 0, [ARG_TYPE.NAME])
+    const [page, maybeobject, mayberefsheet] = readargs(words, 0, [
+      ARG_TYPE.NAME,
+      ARG_TYPE.MAYBE_NAME,
+      ARG_TYPE.MAYBE_NAME,
+    ])
 
     // create book if needed
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
@@ -358,7 +366,7 @@ export const CLI_FIRMWARE = createfirmware()
       tape_editor_open(
         SOFTWARE,
         mainbook.id,
-        [codepage.id],
+        [codepage.id, maybeobject, mayberefsheet],
         type,
         `${name} - ${mainbook.name}`,
         READ_CONTEXT.elementfocus,
@@ -371,6 +379,7 @@ export const CLI_FIRMWARE = createfirmware()
         READ_CONTEXT.elementfocus,
       )
     }
+
     return 0
   })
   .command('pagetrash', (chip, words) => {
@@ -425,14 +434,7 @@ export const CLI_FIRMWARE = createfirmware()
     if (ispresent(mainbook)) {
       writeoption(SOFTWARE, 'main', `${mainbook.name} $GREEN${mainbook.id}`)
       if (mainbook.pages.length) {
-        const sorted = [...mainbook.pages].sort((a, b) => {
-          const atype = codepagereadtype(a)
-          const btype = codepagereadtype(b)
-          if (atype === btype) {
-            return codepagereadname(a).localeCompare(codepagereadname(b))
-          }
-          return btype - atype
-        })
+        const sorted = bookreadsortedcodepages(mainbook)
         sorted.forEach((page) => {
           const name = codepagereadname(page)
           const type = codepagereadtypetostring(page)
@@ -440,17 +442,17 @@ export const CLI_FIRMWARE = createfirmware()
         })
       } else {
         write(SOFTWARE, ``)
-        writetext(SOFTWARE, `no pages found`)
-        writetext(SOFTWARE, `use @ to create a page`)
-        writetext(SOFTWARE, `@board name of board`)
-        writetext(SOFTWARE, `@object name of object`)
-        writetext(SOFTWARE, `@terrain name of terrain`)
+        writetext(SOFTWARE, `$white no pages found`)
+        writetext(SOFTWARE, `$white use @ to create a page`)
+        writetext(SOFTWARE, `$white @board name of board`)
+        writetext(SOFTWARE, `$white @object name of object`)
+        writetext(SOFTWARE, `$white @terrain name of terrain`)
         writetext(
           SOFTWARE,
-          `You can omit the type and it will default to object`,
+          `$white You can omit the type and it will default to object`,
         )
-        writetext(SOFTWARE, `@object name of object`)
-        writetext(SOFTWARE, `@name of object`)
+        writetext(SOFTWARE, `$white @object name of object`)
+        writetext(SOFTWARE, `$white @name of object`)
       }
     }
     return 0
@@ -522,14 +524,7 @@ export const CLI_FIRMWARE = createfirmware()
       writesection(SOFTWARE, `pages`)
       setTimeout(() => {
         if (book.pages.length) {
-          const sorted = deepcopy(book.pages).sort((a, b) => {
-            const atype = codepagereadtype(a)
-            const btype = codepagereadtype(b)
-            if (atype === btype) {
-              return codepagereadname(a).localeCompare(codepagereadname(b))
-            }
-            return btype - atype
-          })
+          const sorted = bookreadsortedcodepages(book)
           write(
             SOFTWARE,
             `!bookallexport ${address};$blue[all]$white export book`,

@@ -10,7 +10,6 @@ import { checkdoescollide } from './atomics'
 import {
   boarddeleteobject,
   boardelementindex,
-  boardelementread,
   boardobjectcreatefromkind,
   boardobjectread,
   boardsetterrain,
@@ -194,6 +193,21 @@ export function bookreadcodepagedatabytype(
     .filter((item) => codepagereadtype(item) === type)
     .map((page) => codepagereaddata(page))
     .filter(ispresent)
+}
+
+export function bookreadsortedcodepages(book: MAYBE<BOOK>) {
+  if (!ispresent(book)) {
+    return []
+  }
+  const sorted = deepcopy(book.pages).sort((a, b) => {
+    const atype = codepagereadtype(a)
+    const btype = codepagereadtype(b)
+    if (atype === btype) {
+      return codepagereadname(a).localeCompare(codepagereadname(b))
+    }
+    return btype - atype
+  })
+  return sorted
 }
 
 export function bookboardelementreadcodepage(

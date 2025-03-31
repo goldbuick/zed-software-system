@@ -319,6 +319,15 @@ export type Command_playCstChildren = {
   token_command_play: IToken[]
 }
 
+export type Command_toastCstNode = {
+  name: 'command_toast'
+  children: Command_toastCstChildren
+} & CstNode
+
+export type Command_toastCstChildren = {
+  token_command_toast: IToken[]
+}
+
 export type ExprCstNode = {
   name: 'expr'
   children: ExprCstChildren

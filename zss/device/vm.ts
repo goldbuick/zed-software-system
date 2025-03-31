@@ -1,7 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/feature/parsefile'
-import { write } from 'zss/feature/writeui'
+import { write, writeheader, writeoption } from 'zss/feature/writeui'
 import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
@@ -40,6 +40,7 @@ import { boardobjectread } from 'zss/memory/board'
 import {
   bookreadcodepagebyaddress,
   bookreadcodepagesbytype,
+  bookreadsortedcodepages,
   bookwritecodepage,
 } from 'zss/memory/book'
 import {
@@ -399,6 +400,22 @@ const vm = createdevice(
               memoryreadoperator(),
             )
           }
+        }
+        break
+      }
+      case 'refsheet': {
+        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        const sorted = bookreadsortedcodepages(mainbook)
+        if (ispresent(mainbook) && isarray(message.data)) {
+          writeheader(vm, `use as refsheet`)
+          sorted.forEach((page) => {
+            const name = codepagereadname(page)
+            const type = codepagereadtypetostring(page)
+            write(
+              vm,
+              `!pageopen ${message.data.join(' ')} ${page.id};$blue[${type}]$white ${name}`,
+            )
+          })
         }
         break
       }
