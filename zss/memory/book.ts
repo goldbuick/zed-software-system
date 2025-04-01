@@ -177,7 +177,11 @@ export function bookreadcodepagesbytypeandstat(
     .filter((codepage) => {
       const stats = codepagereadstats(codepage)
       const codepagename = NAME(codepagereadname(codepage))
-      return maybename === codepagename || ispresent(stats[statname])
+      return (
+        codepage.id === statname ||
+        maybename === codepagename ||
+        ispresent(stats[statname])
+      )
     })
   return result
 }

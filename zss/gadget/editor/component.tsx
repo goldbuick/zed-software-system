@@ -8,11 +8,9 @@ import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
-import { ismac, metakey } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { Marquee } from '../scroll/marquee'
 import { BackPlate } from '../tape/backplate'
 import {
   findcursorinrows,
@@ -150,8 +148,6 @@ export function TapeEditor() {
     wordsdirmods,
   ])
 
-  const hasrefsheet = true
-
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
   const codepage = useWaitForValueString(
@@ -278,34 +274,12 @@ export function TapeEditor() {
     edge.height,
   ])
 
-  const metaundo = ismac ? `shift+${metakey}+z` : `${metakey}+y`
   return (
     <>
       <BackPlate bump context={context} />
       <EditorFrame />
       <EditorRows {...props} />
       <EditorInput {...props} />
-      <Marquee
-        line={`
-esc/cancel$white.CLOSE   $blue
-tab$white.CHANGE LAYOUT   $blue
-hold shift$white.SELECT TEXT   $blue
-alt+up/down$white.JUMP 10 LINES   $blue
-alt+left/right$white.JUMP 10 COLS   $blue
-${metakey}+up/down$white.JUMP TOP/BOTTOM   $blue
-${metakey}+left/right$white.JUMP TO START/END OF LINE   $blue
-${metakey}+a$white.SELECT ALL   $blue
-${metakey}+c$white.COPY   $blue
-${metakey}+x$white.CUT   $blue
-${metakey}+v$white.PASTE   $blue
-${metakey}+z$white.UNDO   $blue
-${metaundo}$white.REDO   $blue
-${metakey}+p$white.TEST SELECTED CODE   $blue
-${metakey}+k$white.PICK REFSHEET   $blue
-${metakey}+e$white.COPY CODEPAGE TO CLIPBOARD AS JSON   $blue
-`}
-        context={context}
-      />
     </>
   )
 }

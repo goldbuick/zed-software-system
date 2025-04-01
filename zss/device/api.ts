@@ -210,6 +210,10 @@ export function register_downloadjsonfile(
   device.emit('register:downloadjsonfile', [data, filename], player)
 }
 
+export function tape_toast(device: DEVICELIKE, toast: string) {
+  device.emit('tape:toast', toast)
+}
+
 export function register_dev(device: DEVICELIKE, player: string) {
   device.emit('register:dev', undefined, player)
 }

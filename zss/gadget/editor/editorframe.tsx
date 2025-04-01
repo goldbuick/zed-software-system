@@ -1,5 +1,6 @@
 import { useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText, writeTile } from 'zss/gadget/hooks'
+import { ismac, metakey } from 'zss/words/system'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
@@ -8,6 +9,7 @@ import {
 import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
+import { Marquee } from '../scroll/marquee'
 import { bgcolor, setupeditoritem } from '../tape/common'
 
 export function EditorFrame() {
@@ -41,8 +43,8 @@ export function EditorFrame() {
   setupeditoritem(false, false, 0, 0, context, 0, 0, 0)
   tokenizeandwritetextformat(`$213$205$187`, context, true)
 
-  setupeditoritem(false, false, context.width - 2, 0, context, 0, 0, 0)
-  tokenizeandwritetextformat(`$196$191`, context, true)
+  setupeditoritem(false, false, context.width - 3, 0, context, 0, 0, 0)
+  tokenizeandwritetextformat(`$196$196$191`, context, true)
 
   const bottomchrs = `$205`.repeat(edge.width - 2)
   setupeditoritem(false, false, 0, edge.height - 1, context, 0, 0, 0)
@@ -71,5 +73,33 @@ export function EditorFrame() {
   setupeditoritem(false, false, titlex, 1, context, 0, 0, 0)
   tokenizeandwritetextformat(title, context, true)
 
-  return null
+  const metaundo = ismac ? `shift+${metakey}+z` : `${metakey}+y`
+  return (
+    <Marquee
+      margin={3}
+      color={COLOR.BLUE}
+      y={0}
+      leftedge={0}
+      rightedge={edge.width - 1}
+      line={`
+    esc/cancel$white.CLOSE   $blue
+    tab$white.CHANGE LAYOUT   $blue
+    hold shift$white.SELECT TEXT   $blue
+    alt+up/down$white.JUMP 10 LINES   $blue
+    alt+left/right$white.JUMP 10 COLS   $blue
+    ${metakey}+up/down$white.JUMP TOP/BOTTOM   $blue
+    ${metakey}+left/right$white.JUMP TO START/END OF LINE   $blue
+    ${metakey}+a$white.SELECT ALL   $blue
+    ${metakey}+c$white.COPY   $blue
+    ${metakey}+x$white.CUT   $blue
+    ${metakey}+v$white.PASTE   $blue
+    ${metakey}+z$white.UNDO   $blue
+    ${metaundo}$white.REDO   $blue
+    ${metakey}+p$white.TEST SELECTED CODE   $blue
+    ${metakey}+k$white.PICK REFSHEET   $blue
+    ${metakey}+e$white.COPY CODEPAGE TO CLIPBOARD AS JSON   $blue
+    `}
+      context={context}
+    />
+  )
 }
