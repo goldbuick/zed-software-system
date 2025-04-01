@@ -305,7 +305,7 @@ export function EditorRows({
 
   // reset edge
   context.disablewrap = false
-  context.active.rightedge = context.width - 3
+  context.active.rightedge = context.width
 
   return null
 }
