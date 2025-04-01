@@ -372,7 +372,9 @@ export const CLI_FIRMWARE = createfirmware()
         for (let i = 0; i < parse.tokens.length; ++i) {
           const token = parse.tokens[i]
           if (token.tokenType === text) {
-            refsheetlines.push(token.image)
+            refsheetlines.push(
+              token.image.startsWith('"') ? token.image.slice(1) : token.image,
+            )
           }
         }
       }
