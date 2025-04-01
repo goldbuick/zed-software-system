@@ -43,6 +43,7 @@ export function TapeToast() {
     return null
   }
 
+  const rightedge = screensize.cols - 1
   return (
     <TilesData store={store}>
       {toast && (
@@ -50,6 +51,9 @@ export function TapeToast() {
           <Marquee
             margin={1}
             color={COLOR.YELLOW}
+            y={0}
+            leftedge={0}
+            rightedge={rightedge}
             line={toast}
             context={context}
           />
@@ -60,7 +64,7 @@ export function TapeToast() {
               height={10}
               top={0}
               left={0}
-              right={screensize.cols - 1}
+              right={rightedge}
               bottom={0}
             />
           </group>

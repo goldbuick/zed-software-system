@@ -140,8 +140,11 @@ export function Scroll({
           <Marquee
             margin={3}
             color={COLOR.BLUE}
+            y={0}
+            leftedge={0}
+            rightedge={width - 1}
             line={`
-up/down$white.SCROLL UP/DOWN   $blue
+   up/down$white.SCROLL UP/DOWN   $blue
 esc/cancel$white.CLOSE SCROLL   $blue
 alt+up/down$white.JUMP 10 LINES   $blue
 `}
