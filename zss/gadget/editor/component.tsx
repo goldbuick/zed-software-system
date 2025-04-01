@@ -10,6 +10,7 @@ import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { ismac, metakey } from 'zss/words/system'
 import { textformatreadedges } from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { Marquee } from '../scroll/marquee'
@@ -286,6 +287,8 @@ export function TapeEditor() {
       <EditorRows {...props} />
       <EditorInput {...props} />
       <Marquee
+        margin={3}
+        color={COLOR.BLUE}
         line={`
 esc/cancel$white.CLOSE   $blue
 tab$white.CHANGE LAYOUT   $blue

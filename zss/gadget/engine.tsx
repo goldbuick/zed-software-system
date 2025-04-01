@@ -26,6 +26,7 @@ import { UserScreen } from './userscreen'
 
 // include all front-end devices
 import 'zss/userspace'
+import { TapeToast } from './toast'
 
 export function Engine() {
   const { viewport } = useThree()
@@ -100,6 +101,7 @@ export function Engine() {
         <UserScreen>
           <PanelLayout />
           <Tape />
+          <TapeToast />
         </UserScreen>
       </UserFocus>
       {shouldcrt && (

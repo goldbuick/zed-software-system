@@ -81,6 +81,7 @@ export const useTape = create<{
   layout: TAPE_DISPLAY
   inspector: boolean
   quickterminal: boolean
+  toast: string
   terminal: {
     open: boolean
     level: TAPE_LOG_LEVEL
@@ -99,6 +100,7 @@ export const useTape = create<{
   layout: TAPE_DISPLAY.TOP,
   inspector: islocked(),
   quickterminal: false,
+  toast: '',
   terminal: {
     open: true,
     level: TAPE_LOG_LEVEL.INFO,

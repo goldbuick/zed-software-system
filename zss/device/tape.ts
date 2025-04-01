@@ -8,7 +8,9 @@ import {
   useTape,
 } from 'zss/gadget/data/state'
 import { pickwith } from 'zss/mapping/array'
+import { doasync } from 'zss/mapping/func'
 import { createsid } from 'zss/mapping/guid'
+import { waitfor } from 'zss/mapping/tick'
 import { isarray, isboolean, ispresent } from 'zss/mapping/types'
 
 import { MESSAGE } from './api'
@@ -122,6 +124,19 @@ const tape = createdevice('tape', [], (message) => {
       }
       console.error(terminallog(message))
       break
+    case 'toast':
+      doasync(tape, async () => {
+        if (ispresent(message.data)) {
+          const hold = Math.min(
+            Math.max(message.data.length * 150, 3000),
+            14000,
+          )
+          useTape.setState({ toast: message.data })
+          await waitfor(hold)
+          useTape.setState({ toast: '' })
+        }
+      })
+      break
     case 'crash':
       useTape.setState((state) => ({
         layout: TAPE_DISPLAY.FULL,
@@ -177,7 +192,7 @@ const tape = createdevice('tape', [], (message) => {
     case 'editor:open':
       if (isarray(message.data) && ispresent(message.player)) {
         const { player } = message
-        const [book, path, type, title, mayberefsheet] = message.data
+        const [book, path, type, title, refsheet] = message.data
         useTape.setState((state) => ({
           editor: {
             open: true,
@@ -186,7 +201,7 @@ const tape = createdevice('tape', [], (message) => {
             path,
             type,
             title,
-            refsheet: mayberefsheet ?? state.editor.refsheet,
+            refsheet: refsheet.length ? refsheet : state.editor.refsheet,
           },
         }))
       }

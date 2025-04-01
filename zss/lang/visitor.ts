@@ -635,6 +635,9 @@ class ScriptVisitor
     if (ctx.command_play) {
       return this.go(ctx.command_play)
     }
+    if (ctx.command_toast) {
+      return this.go(ctx.command_toast)
+    }
     if (ctx.structured_cmd) {
       return this.go(ctx.structured_cmd)
     }

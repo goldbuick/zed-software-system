@@ -4,20 +4,24 @@ import {
   tokenizeandwritetextformat,
   WRITE_TEXT_CONTEXT,
 } from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 
 import { useBlink } from '../hooks'
 
 type MarqueeProps = {
   line: string
+  color: COLOR
+  margin: number
   context: WRITE_TEXT_CONTEXT
 }
 
-export function Marquee({ line, context }: MarqueeProps) {
+export function Marquee({ line, color, margin, context }: MarqueeProps) {
   // we assume context is setup
   const blink = useBlink()
 
   // measure line
-  const content = `$blue ${line.replaceAll('\n', '').trim()}`
+  const strcolor = COLOR[color] ?? ''
+  const content = `$${strcolor.toLowerCase()} ${line.replaceAll('\n', '').trim()} --=--`
   const measure = tokenizeandmeasuretextformat(content, 10000, 1)
   const contentmax = measure?.measuredwidth ?? 1
 
@@ -37,16 +41,15 @@ export function Marquee({ line, context }: MarqueeProps) {
 
   // cycle line if too long
   context.disablewrap = true
-  context.active.leftedge = 3
-  context.active.rightedge = rightedge - 3
+  context.active.leftedge = margin
+  context.active.rightedge = rightedge - margin
 
-  context.x = 3 + offset
-  context.y = 0
-  tokenizeandwritetextformat(content, context, false)
-
-  context.x = 3 + offset + contentmax
-  context.y = 0
-  tokenizeandwritetextformat(content, context, true)
+  // render to fill it out
+  for (let start = margin + offset; start < rightedge; start += contentmax) {
+    context.x = start
+    context.y = 0
+    tokenizeandwritetextformat(content, context, false)
+  }
 
   // reset values
   context.active.leftedge = 0

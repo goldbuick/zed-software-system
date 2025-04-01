@@ -138,6 +138,8 @@ export function Scroll({
             context={context}
           />
           <Marquee
+            margin={3}
+            color={COLOR.BLUE}
             line={`
 up/down$white.SCROLL UP/DOWN   $blue
 esc/cancel$white.CLOSE SCROLL   $blue

@@ -136,6 +136,7 @@ export type CommandsCstChildren = {
   short_go?: Short_goCstNode[]
   short_try?: Short_tryCstNode[]
   command_play?: Command_playCstNode[]
+  command_toast?: Command_toastCstNode[]
   structured_cmd?: Structured_cmdCstNode[]
 }
 
