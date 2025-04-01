@@ -31,6 +31,8 @@ import {
 } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
 import { text, tokenize } from 'zss/lang/lexer'
+import { pick } from 'zss/mapping/array'
+import { randominteger, randomnumber } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
 import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
@@ -49,7 +51,9 @@ import {
 } from 'zss/memory'
 import {
   bookclearcodepage,
+  bookplayermovetoboard,
   bookreadcodepagebyaddress,
+  bookreadcodepagesbytypeandstat,
   bookreadsortedcodepages,
 } from 'zss/memory/book'
 import {
@@ -57,7 +61,12 @@ import {
   codepagereadtype,
   codepagereadtypetostring,
 } from 'zss/memory/codepage'
-import { CODE_PAGE, CODE_PAGE_TYPE } from 'zss/memory/types'
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+} from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { stattypestring } from 'zss/words/stats'
 import { metakey } from 'zss/words/system'
@@ -337,6 +346,29 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
+  .command('boardopen', (_, words) => {
+    const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
+    const boards = bookreadcodepagesbytypeandstat(
+      READ_CONTEXT.book,
+      CODE_PAGE_TYPE.BOARD,
+      stat,
+    )
+    if (boards.length) {
+      const target = pick(...boards)
+      if (ispresent(target)) {
+        bookplayermovetoboard(
+          READ_CONTEXT.book,
+          READ_CONTEXT.elementfocus,
+          target.id,
+          {
+            x: randominteger(0, BOARD_WIDTH - 1),
+            y: randominteger(0, BOARD_HEIGHT - 1),
+          },
+        )
+      }
+    }
+    return 0
+  })
   .command('pageopenwith', (chip, words) => {
     const [refsheet, page, maybeobject] = readargs(words, 0, [
       ARG_TYPE.NAME,
@@ -478,6 +510,28 @@ export const CLI_FIRMWARE = createfirmware()
         )
         writetext(SOFTWARE, `$white @object name of object`)
         writetext(SOFTWARE, `$white @name of object`)
+      }
+    }
+    return 0
+  })
+  .command('boards', () => {
+    writesection(SOFTWARE, `boards`)
+    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+    if (ispresent(mainbook)) {
+      writeoption(SOFTWARE, 'main', `${mainbook.name} $GREEN${mainbook.id}`)
+      const sorted = bookreadsortedcodepages(mainbook)
+      sorted
+        .filter((page) => codepagereadtype(page) === CODE_PAGE_TYPE.BOARD)
+        .forEach((page) => {
+          const name = codepagereadname(page)
+          const type = codepagereadtypetostring(page)
+          write(SOFTWARE, `!boardopen ${page.id};$blue[${type}]$white ${name}`)
+        })
+      if (sorted.length === 0) {
+        write(SOFTWARE, ``)
+        writetext(SOFTWARE, `$white no boards found`)
+        writetext(SOFTWARE, `$white use @ to create a board`)
+        writetext(SOFTWARE, `$white @board name of board`)
       }
     }
     return 0
