@@ -30,6 +30,7 @@ import {
   writetext,
 } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
+import { text, tokenize } from 'zss/lang/lexer'
 import { totarget } from 'zss/mapping/string'
 import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
@@ -336,6 +337,14 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
+  .command('pageopenwith', (chip, words) => {
+    const [refsheet, page, maybeobject] = readargs(words, 0, [
+      ARG_TYPE.NAME,
+      ARG_TYPE.MAYBE_NAME,
+      ARG_TYPE.MAYBE_NAME,
+    ])
+    return chip.command('pageopen', page, maybeobject, refsheet)
+  })
   .command('pageopen', (_, words) => {
     const [page, maybeobject, mayberefsheet] = readargs(words, 0, [
       ARG_TYPE.NAME,
@@ -355,20 +364,34 @@ export const CLI_FIRMWARE = createfirmware()
       const pagetype = codepagereadtypetostring(codepage)
       writetext(SOFTWARE, `opened [${pagetype}] ${name}`)
 
+      // parse and pull lines of text
+      const refsheetlines: string[] = []
+      const refsheet = bookreadcodepagebyaddress(mainbook, mayberefsheet ?? '')
+      const parse = ispresent(refsheet) ? tokenize(refsheet.code) : undefined
+      if (ispresent(parse)) {
+        for (let i = 0; i < parse.tokens.length; ++i) {
+          const token = parse.tokens[i]
+          if (token.tokenType === text) {
+            refsheetlines.push(token.image)
+          }
+        }
+      }
+
+      // path
+      const path = [codepage.id, maybeobject]
+
       // write to modem
-      modemwriteinitstring(
-        vm_codeaddress(mainbook.id, [codepage.id]),
-        codepage.code,
-      )
+      modemwriteinitstring(vm_codeaddress(mainbook.id, path), codepage.code)
 
       // tell tape to open a code editor for given page
       const type = codepagereadtypetostring(codepage)
       tape_editor_open(
         SOFTWARE,
         mainbook.id,
-        [codepage.id, maybeobject, mayberefsheet],
+        path,
         type,
         `${name} - ${mainbook.name}`,
+        refsheetlines,
         READ_CONTEXT.elementfocus,
       )
     } else {

@@ -340,12 +340,13 @@ export function tape_crash(device: DEVICELIKE, player: string) {
 export function tape_editor_open(
   device: DEVICELIKE,
   book: string,
-  path: [string, MAYBE<string>, MAYBE<string>],
+  path: MAYBE<string>[],
   type: string,
   title: string,
+  refsheet: string[],
   player: string,
 ) {
-  device.emit('tape:editor:open', [book, path, type, title], player)
+  device.emit('tape:editor:open', [book, path, type, title, refsheet], player)
 }
 
 export function tape_editor_close(device: DEVICELIKE, player: string) {
@@ -435,8 +436,9 @@ export function vm_inspect(device: DEVICELIKE, p1: PT, p2: PT, player: string) {
   device.emit('vm:inspect', [p1, p2], player)
 }
 
-export function vm_codeaddress(book: string, path: string[]) {
-  return `${book}:${path.join(':')}`
+export function vm_codeaddress(book: string, path: MAYBE<string>[]) {
+  const [main, element] = path
+  return `${book}:${[main, element].filter(ispresent).join(':')}`
 }
 
 export function vm_codewatch(

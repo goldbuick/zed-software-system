@@ -93,6 +93,7 @@ export const useTape = create<{
     path: string[]
     type: string
     title: string
+    refsheet: string[]
   }
 }>(() => ({
   layout: TAPE_DISPLAY.TOP,
@@ -110,6 +111,7 @@ export const useTape = create<{
     path: [],
     type: '',
     title: '',
+    refsheet: [],
   },
 }))
 

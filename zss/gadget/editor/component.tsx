@@ -150,6 +150,8 @@ export function TapeEditor() {
     wordsdirmods,
   ])
 
+  const hasrefsheet = true
+
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
   const codepage = useWaitForValueString(

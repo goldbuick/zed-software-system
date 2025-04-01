@@ -71,6 +71,7 @@ import {
   register_loginready,
   register_savemem,
   tape_debug,
+  tape_editor_close,
   vm_codeaddress,
   vm_flush,
   vm_logout,
@@ -406,14 +407,19 @@ const vm = createdevice(
       case 'refsheet': {
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
         const sorted = bookreadsortedcodepages(mainbook)
-        if (ispresent(mainbook) && isarray(message.data)) {
+        if (
+          ispresent(mainbook) &&
+          isarray(message.data) &&
+          ispresent(message.player)
+        ) {
+          tape_editor_close(vm, message.player)
           writeheader(vm, `use as refsheet`)
           sorted.forEach((page) => {
             const name = codepagereadname(page)
             const type = codepagereadtypetostring(page)
             write(
               vm,
-              `!pageopen ${message.data.join(' ')} ${page.id};$blue[${type}]$white ${name}`,
+              `!pageopenwith ${page.id} ${message.data.join(' ')};$blue[${type}]$white ${name}`,
             )
           })
         }
