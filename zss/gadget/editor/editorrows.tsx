@@ -1,4 +1,4 @@
-import { MODEM_SHARED_STRING } from 'zss/device/modem'
+import { Y } from 'zss/device/modem'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 import { statformat } from 'zss/words/stats'
@@ -10,12 +10,13 @@ import {
 } from 'zss/words/textformat'
 import { COLOR, STAT_TYPE } from 'zss/words/types'
 
-import { useBlink, useWriteText } from '../hooks'
+import { useBlink, useWriteText, writeTile } from '../hooks'
 import {
   BG_ACTIVE,
   BG_SELECTED,
   bgcolor,
   EDITOR_CODE_ROW,
+  FG,
   FG_SELECTED,
   setupeditoritem,
 } from '../tape/common'
@@ -35,7 +36,7 @@ export type EditorRowsProps = {
   xoffset: number
   yoffset: number
   rows: EDITOR_CODE_ROW[]
-  codepage: MAYBE<MODEM_SHARED_STRING>
+  codepage: MAYBE<Y.Text>
 }
 
 export function EditorRows({
@@ -48,8 +49,7 @@ export function EditorRows({
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
-  const { quickterminal } = useTape()
-  const edge = textformatreadedges(context)
+  const { editor, quickterminal } = useTape()
 
   if (!ispresent(codepage)) {
     const fibble = (blink ? '|' : '-').repeat(3)
@@ -57,6 +57,11 @@ export function EditorRows({
     tokenizeandwritetextformat(` ${fibble} LOADING ${fibble}`, context, true)
     return null
   }
+
+  const hasrefsheet = editor.refsheet.length > 0
+  const rightedge = context.width - (hasrefsheet ? 28 : 3)
+  const edge = textformatreadedges(context)
+  edge.right = rightedge
 
   let ii1 = tapeeditor.cursor
   let ii2 = tapeeditor.cursor
@@ -92,6 +97,7 @@ export function EditorRows({
     context.iseven = context.y % 2 === 0
     context.active.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
     context.disablewrap = true
+    context.active.rightedge = rightedge
     writeplaintext(`${text} `, context, false)
 
     // calc base index
@@ -272,7 +278,34 @@ export function EditorRows({
       break
     }
   }
+
+  // render ref page
+  if (hasrefsheet) {
+    let i = 0
+    for (let y = edge.top + 2; y < edge.bottom; ++y) {
+      context.active.rightedge = context.width - 2
+      context.active.leftedge = edge.right + 2
+      writeTile(context, context.width, context.height, edge.right + 1, y, {
+        char: 179,
+        color: FG,
+        bg: COLOR.DKBLUE,
+      })
+      const refsheetrow = editor.refsheet[i++]
+      if (ispresent(refsheetrow)) {
+        context.x = context.active.leftedge - 1
+        context.y = y
+        tokenizeandwritetextformat(
+          `$white$ondkblue ${refsheetrow}`,
+          context,
+          true,
+        )
+      }
+    }
+  }
+
+  // reset edge
   context.disablewrap = false
+  context.active.rightedge = context.width - 3
 
   return null
 }

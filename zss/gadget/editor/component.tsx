@@ -150,6 +150,8 @@ export function TapeEditor() {
     wordsdirmods,
   ])
 
+  const hasrefsheet = true
+
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
   const codepage = useWaitForValueString(
@@ -299,6 +301,7 @@ ${metakey}+v$white.PASTE   $blue
 ${metakey}+z$white.UNDO   $blue
 ${metaundo}$white.REDO   $blue
 ${metakey}+p$white.TEST SELECTED CODE   $blue
+${metakey}+k$white.PICK REFSHEET   $blue
 ${metakey}+e$white.COPY CODEPAGE TO CLIPBOARD AS JSON   $blue
 `}
         context={context}

@@ -16,7 +16,7 @@ import {
 } from 'zss/gadget/data/api'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
-import { ispresent } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 import { CATEGORY, PT } from 'zss/words/types'
 
 import {
@@ -229,7 +229,7 @@ export function memoryinspectcommand(path: string, player: string) {
         writetext(SOFTWARE, `opened [${pagetype}] ${name}`)
 
         // edit path
-        const path = [board.id, element.id ?? '']
+        const path = [board.id, element.id]
 
         // write to modem
         modemwriteinitstring(
@@ -247,9 +247,10 @@ export function memoryinspectcommand(path: string, player: string) {
         tape_editor_open(
           SOFTWARE,
           mainbook.id,
-          [board.id, element.id ?? ''],
+          path,
           pagetype,
           `${name} - ${mainbook.name}`,
+          [],
           player,
         )
       })

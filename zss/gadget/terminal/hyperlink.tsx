@@ -22,7 +22,7 @@ export function TapeTerminalHyperlink({
 
   const cc = useContext(TapeTerminalContext)
   const invoke = useCallback(() => {
-    const [target, data] = words
+    const [target, ...data] = words
     setTimeout(() => {
       cc.sendmessage(target, data)
     }, 100)

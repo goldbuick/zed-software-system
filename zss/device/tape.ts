@@ -177,8 +177,8 @@ const tape = createdevice('tape', [], (message) => {
     case 'editor:open':
       if (isarray(message.data) && ispresent(message.player)) {
         const { player } = message
-        const [book, path, type, title] = message.data ?? ['', '', '']
-        useTape.setState(() => ({
+        const [book, path, type, title, mayberefsheet] = message.data
+        useTape.setState((state) => ({
           editor: {
             open: true,
             player,
@@ -186,6 +186,7 @@ const tape = createdevice('tape', [], (message) => {
             path,
             type,
             title,
+            refsheet: mayberefsheet ?? state.editor.refsheet,
           },
         }))
       }

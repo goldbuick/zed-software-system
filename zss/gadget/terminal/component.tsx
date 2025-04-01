@@ -80,7 +80,7 @@ export function TapeTerminal() {
           sendmessage(maybetarget, data) {
             const [target, message] = totarget(maybetarget)
             if (target === 'self') {
-              const input = `#${message} ${data ?? ''}`
+              const input = `#${message} ${data.join(' ')}`
               vm_cli(SOFTWARE, input, player)
             } else {
               SOFTWARE.emit(`${target}:${message}`, data, player)
