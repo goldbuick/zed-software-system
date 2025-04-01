@@ -47,7 +47,7 @@ export function TapeLayout({ context }: TapeLayoutProps) {
 
   const top = 0
   const left = 0
-  const right = context.width - 1 - 20
+  const right = context.width - 1
   const bottom = context.height - 1
   const edge = textformatreadedges(context)
   const ystep = Math.floor(edge.height * 0.5)

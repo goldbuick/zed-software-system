@@ -41,8 +41,8 @@ export function EditorFrame() {
   setupeditoritem(false, false, 0, 0, context, 0, 0, 0)
   tokenizeandwritetextformat(`$213$205$187`, context, true)
 
-  setupeditoritem(false, false, context.width - 4, 0, context, 0, 0, 0)
-  tokenizeandwritetextformat(`$196$196$196$191`, context, true)
+  setupeditoritem(false, false, context.width - 2, 0, context, 0, 0, 0)
+  tokenizeandwritetextformat(`$196$191`, context, true)
 
   const bottomchrs = `$205`.repeat(edge.width - 2)
   setupeditoritem(false, false, 0, edge.height - 1, context, 0, 0, 0)
