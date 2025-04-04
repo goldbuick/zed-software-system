@@ -78,7 +78,7 @@ export function EditorFrame() {
     <Marquee
       margin={3}
       color={COLOR.BLUE}
-      y={0}
+      y={edge.top}
       leftedge={0}
       rightedge={edge.width - 1}
       line={`
