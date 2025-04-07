@@ -24,7 +24,7 @@ import {
   gadgetserver_desync,
   network_join,
   synth_play,
-  tape_crash,
+  tape_terminal_full,
   tape_debug,
   tape_info,
   tape_terminal_close,
@@ -99,7 +99,7 @@ async function loadmem(books: string) {
   if (books.length === 0) {
     api_error(register, 'content', 'no content found')
     writewikilink()
-    tape_crash(register, myplayerid)
+    tape_terminal_full(register, myplayerid)
     return
   }
   // init vm with content
@@ -179,9 +179,9 @@ const register = createdevice(
       case 'error:login:title':
       case 'error:login:player':
         if (message.player === myplayerid) {
-          tape_crash(register, myplayerid)
-          writewikilink()
           vm_cli(register, '#pages', myplayerid)
+          writewikilink()
+          tape_terminal_full(register, myplayerid)
         }
         break
       case 'ackoperator':
@@ -293,7 +293,7 @@ const register = createdevice(
           doasync(register, async function () {
             if (islocked()) {
               const url = await shorturl(location.href)
-              writecopyit(register, url, url)
+              writecopyit(register, url, url, myplayerid)
             } else {
               writeheader(register, `creating locked terminal`)
               await waitfor(100)
@@ -309,7 +309,7 @@ const register = createdevice(
               // drop /locked from shared short url if found
               location.href.replace(/cafe.*locked/, `cafe`),
             )
-            writecopyit(register, url, url)
+            writecopyit(register, url, url, myplayerid)
           })
         }
         break

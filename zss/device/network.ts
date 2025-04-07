@@ -121,9 +121,9 @@ const network = createdevice('network', [], (message) => {
           const joinurl = `${location.origin}/join/#${topic}`
           const url = await shorturl(joinurl)
           if (hidden) {
-            writecopyit(network, url, `secret join url`, false)
+            writecopyit(network, url, `secret join url`, message.player, false)
           } else {
-            writecopyit(network, url, url)
+            writecopyit(network, url, url, message.player)
           }
         }
       })
