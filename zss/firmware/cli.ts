@@ -665,19 +665,3 @@ export const CLI_FIRMWARE = createfirmware()
     network_tab(SOFTWARE, !!maybehidden, READ_CONTEXT.elementfocus)
     return 0
   })
-  .command('twitchbroadcast', (_, words) => {
-    const [maybestreamkey] = readargs(words, 0, [ARG_TYPE.NAME])
-    switch (NAME(maybestreamkey)) {
-      default:
-        broadcast_startstream(
-          SOFTWARE,
-          maybestreamkey,
-          READ_CONTEXT.elementfocus,
-        )
-        break
-      case 'stop':
-        broadcast_stopstream(SOFTWARE, READ_CONTEXT.elementfocus)
-        break
-    }
-    return 0
-  })

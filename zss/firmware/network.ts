@@ -1,4 +1,10 @@
-import { chat_connect, chat_disconnect, network_fetch } from 'zss/device/api'
+import {
+  broadcast_startstream,
+  broadcast_stopstream,
+  chat_connect,
+  chat_disconnect,
+  network_fetch,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isarray } from 'zss/mapping/types'
@@ -80,6 +86,22 @@ export const NETWORK_FIRMWARE = createfirmware()
         break
       case 'close':
         chat_disconnect(SOFTWARE, READ_CONTEXT.elementfocus)
+        break
+    }
+    return 0
+  })
+  .command('twitchbroadcast', (_, words) => {
+    const [maybestreamkey] = readargs(words, 0, [ARG_TYPE.NAME])
+    switch (NAME(maybestreamkey)) {
+      default:
+        broadcast_startstream(
+          SOFTWARE,
+          maybestreamkey,
+          READ_CONTEXT.elementfocus,
+        )
+        break
+      case 'stop':
+        broadcast_stopstream(SOFTWARE, READ_CONTEXT.elementfocus)
         break
     }
     return 0
