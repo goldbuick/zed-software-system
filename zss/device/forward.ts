@@ -31,3 +31,13 @@ export function createforward(handler: (message: MESSAGE) => void) {
 
   return { forward, disconnect }
 }
+
+// create server -> client forward
+export function forwardservertoclient(message: MESSAGE) {
+  //
+}
+
+// create server -> client forward
+export function forwardclienttoserver(message: MESSAGE) {
+  //
+}
