@@ -137,7 +137,7 @@ const tape = createdevice('tape', [], (message) => {
         }
       })
       break
-    case 'crash':
+    case 'terminal:full':
       useTape.setState((state) => ({
         layout: TAPE_DISPLAY.FULL,
         terminal: {
