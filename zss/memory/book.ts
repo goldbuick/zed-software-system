@@ -82,8 +82,11 @@ export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
   })
 }
 
-export function importbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
-  return unformatobject(bookentry, BOOK_KEYS, {
+export function importbook(
+  player: string,
+  bookentry: MAYBE<FORMAT_OBJECT>,
+): MAYBE<BOOK> {
+  return unformatobject(player, bookentry, BOOK_KEYS, {
     pages: (pages) => pages.map(importcodepage),
   })
 }

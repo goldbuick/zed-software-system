@@ -50,23 +50,23 @@ export function synthvoicefxconfig(
           switch (fxname) {
             case 'fc':
             case 'fcrush':
-              synthvoicefxfcrushconfig(synth, index, config, value)
+              synthvoicefxfcrushconfig(synth, player, index, config, value)
               break
             case 'echo':
-              synthvoicefxechoconfig(synth, index, config, value)
+              synthvoicefxechoconfig(synth, player, index, config, value)
               break
             case 'phaser':
-              synthvoicefxphaserconfig(synth, index, config, value)
+              synthvoicefxphaserconfig(synth, player, index, config, value)
               break
             case 'reverb':
-              synthvoicefxreverbconfig(synth, index, config, value)
+              synthvoicefxreverbconfig(synth, player, index, config, value)
               break
             case 'distort':
             case 'distortion':
-              synthvoicefxdistortionconfig(synth, index, config, value)
+              synthvoicefxdistortionconfig(synth, player, index, config, value)
               break
             case 'vibrato':
-              synthvoicefxvibratoconfig(synth, index, config, value)
+              synthvoicefxvibratoconfig(synth, player, index, config, value)
               break
           }
         }

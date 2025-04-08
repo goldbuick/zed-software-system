@@ -12,7 +12,7 @@ import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 export const DISPLAY_FIRMWARE = createfirmware()
   .command('toast', (_, words) => {
     const text = words.map(maptostring).join('')
-    tape_toast(SOFTWARE, text)
+    tape_toast(SOFTWARE, READ_CONTEXT.elementfocus, text)
     return 0
   })
   .command('palette', (_, words) => {

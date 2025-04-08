@@ -6,8 +6,8 @@ import { AUDIO_SYNTH } from './synth'
 
 export function synthvoicefxvibratoconfig(
   synth: MAYBE<AUDIO_SYNTH>,
-  index: number,
   player: string,
+  index: number,
   config: number | string,
   value: number | string,
 ) {

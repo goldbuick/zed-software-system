@@ -776,9 +776,9 @@ export function memorycli(player: string, cli = '') {
   RUNTIME.HALT_AT_COUNT = resethalt
 }
 
-export function memoryrun(player: string, address: string) {
+export function memoryrun(address: string) {
   // we assume READ_CONTEXT is setup correctly when this is run
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN, player)
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   const codepage = bookreadcodepagebyaddress(mainbook, address)
   if (
     !ispresent(mainbook) ||

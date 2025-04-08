@@ -166,8 +166,8 @@ export function network_showjoincode(
   device.emit(player, 'network:showjoincode', [hidden, topic])
 }
 
-export function platform_ready(device: DEVICELIKE, player: string) {
-  device.emit(player, 'ready')
+export function platform_ready(device: DEVICELIKE) {
+  device.emit('', 'ready')
 }
 
 export function register_touchkey(
@@ -324,12 +324,8 @@ export function synth_voicefx(
   device.emit(player, 'synth:voicefx', [idx, fx, config, value])
 }
 
-export function tape_inspector(
-  device: DEVICELIKE,
-  player: string,
-  maybetoggle: MAYBE<boolean>,
-) {
-  device.emit(player, 'tape:inspector', maybetoggle)
+export function tape_inspector(device: DEVICELIKE, player: string) {
+  device.emit(player, 'tape:inspector')
 }
 
 export function tape_terminal_open(device: DEVICELIKE, player: string) {

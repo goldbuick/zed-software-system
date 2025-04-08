@@ -497,7 +497,7 @@ export function createsynth() {
     const [chan, duration, note] = value
     if (isstring(note) && ispresent(SOURCE[chan])) {
       if (note.startsWith('#')) {
-        vm_synthsend(SOFTWARE, note.slice(1))
+        vm_synthsend(SOFTWARE, '', note.slice(1))
       } else {
         SOURCE[chan].source.synth.triggerAttackRelease(note, duration, time)
       }

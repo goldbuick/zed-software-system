@@ -12,6 +12,7 @@ import { registerreadplayer } from './register'
 import { SOFTWARE } from './session'
 
 async function runnetworkfetch(
+  player: string,
   arg: any,
   label: string,
   url: string,
@@ -45,13 +46,13 @@ async function runnetworkfetch(
   switch (contenttype) {
     case 'text/plain': {
       const content = await response.text()
-      write(SOFTWARE, JSON.stringify(content))
+      write(SOFTWARE, player, JSON.stringify(content))
       vm_loader(SOFTWARE, arg, 'text', eventname, content, registerreadplayer())
       break
     }
     case 'application/json': {
       const content = await response.json()
-      write(SOFTWARE, JSON.stringify(content))
+      write(SOFTWARE, player, JSON.stringify(content))
       vm_loader(SOFTWARE, arg, 'json', eventname, content, registerreadplayer())
       break
     }
@@ -85,8 +86,15 @@ const network = createdevice('network', [], (message) => {
           string,
           any[],
         ]
-        doasync(SOFTWARE, async () => {
-          await runnetworkfetch(maybearg, label, url, method, words)
+        doasync(SOFTWARE, message.player, async () => {
+          await runnetworkfetch(
+            message.player,
+            maybearg,
+            label,
+            url,
+            method,
+            words,
+          )
         })
       }
       break
@@ -115,7 +123,7 @@ const network = createdevice('network', [], (message) => {
       }
       break
     case 'showjoincode': {
-      doasync(network, async () => {
+      doasync(network, message.player, async () => {
         if (message.player === registerreadplayer() && isarray(message.data)) {
           const [hidden, topic] = message.data as [boolean, string]
           const joinurl = `${location.origin}/join/#${topic}`

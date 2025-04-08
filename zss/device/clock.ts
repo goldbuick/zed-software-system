@@ -19,13 +19,13 @@ function wake() {
   acc += delta
   if (acc >= TICK_RATE) {
     acc %= TICK_RATE
-    clockdevice.emit('tick', timestamp)
-    clockdevice.emit('tock', timestamp)
+    clockdevice.emit('', 'tick', timestamp)
+    clockdevice.emit('', 'tock', timestamp)
     ++clock
     ++timestamp
     if (clock >= TICK_FPS) {
       clock %= TICK_FPS
-      clockdevice.emit('second', timestamp)
+      clockdevice.emit('', 'second', timestamp)
     }
   }
 

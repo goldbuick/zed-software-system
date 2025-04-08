@@ -98,9 +98,17 @@ const tape = createdevice('tape', [], (message) => {
             ? !!message.data
             : !state.inspector
 
-          write(tape, `gadget inspector ${enabled ? '$greenon' : '$redoff'}`)
+          write(
+            tape,
+            message.player,
+            `gadget inspector ${enabled ? '$greenon' : '$redoff'}`,
+          )
           if (enabled) {
-            write(tape, `mouse click or tap elements to inspect`)
+            write(
+              tape,
+              message.player,
+              `mouse click or tap elements to inspect`,
+            )
           }
           return {
             inspector: enabled,
@@ -125,7 +133,7 @@ const tape = createdevice('tape', [], (message) => {
       console.error(terminallog(message))
       break
     case 'toast':
-      doasync(tape, async () => {
+      doasync(tape, message.player, async () => {
         if (ispresent(message.data)) {
           const hold = Math.min(
             Math.max(message.data.length * 150, 3000),
@@ -190,7 +198,7 @@ const tape = createdevice('tape', [], (message) => {
       }
       break
     case 'editor:open':
-      if (isarray(message.data) && ispresent(message.player)) {
+      if (isarray(message.data)) {
         const { player } = message
         const [book, path, type, title, refsheet] = message.data
         useTape.setState((state) => ({

@@ -81,7 +81,7 @@ export function memoryinspectbatchcommand(path: string, player: string) {
       )
       break
     case 'pageopen':
-      doasync(SOFTWARE, async () => {
+      doasync(SOFTWARE, player, async () => {
         // wait a little
         await waitfor(800)
 

@@ -516,12 +516,12 @@ export const CLI_FIRMWARE = createfirmware()
       const type = codepagereadtypetostring(codepage)
       tape_editor_open(
         SOFTWARE,
+        READ_CONTEXT.elementfocus,
         mainbook.id,
         path,
         type,
         `${name} - ${mainbook.name}`,
         refsheetlines,
-        READ_CONTEXT.elementfocus,
       )
     } else {
       api_error(
@@ -821,26 +821,26 @@ export const CLI_FIRMWARE = createfirmware()
     if (ispresent(codepage)) {
       register_downloadjsonfile(
         SOFTWARE,
+        READ_CONTEXT.elementfocus,
         deepcopy(codepage),
         `${codepagereadname(codepage)}.${codepagereadtypetostring(codepage)}.json`,
-        READ_CONTEXT.elementfocus,
       )
     }
     return 0
   })
   .command('gadget', () => {
     // gadget will turn on / off the built-in inspector
-    tape_inspector(SOFTWARE, undefined, READ_CONTEXT.elementfocus)
+    tape_inspector(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   // -- multiplayer related commands
   .command('joincode', (_, words) => {
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    network_start(SOFTWARE, !!maybehidden, READ_CONTEXT.elementfocus)
+    network_start(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
     return 0
   })
   .command('jointab', (_, words) => {
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    network_tab(SOFTWARE, !!maybehidden, READ_CONTEXT.elementfocus)
+    network_tab(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
     return 0
   })

@@ -1,7 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/feature/parsefile'
-import { write, writeheader, writeoption } from 'zss/feature/writeui'
+import { write, writeheader } from 'zss/feature/writeui'
 import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
@@ -395,18 +395,15 @@ const vm = createdevice(
       case 'refsheet': {
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
         const sorted = bookreadsortedcodepages(mainbook)
-        if (
-          ispresent(mainbook) &&
-          isarray(message.data) &&
-          ispresent(message.player)
-        ) {
+        if (ispresent(mainbook) && isarray(message.data)) {
           tape_editor_close(vm, message.player)
-          writeheader(vm, `use as refsheet`)
+          writeheader(vm, message.player, `use as refsheet`)
           sorted.forEach((page) => {
             const name = codepagereadname(page)
             const type = codepagereadtypetostring(page)
             write(
               vm,
+              message.player,
               `!pageopenwith ${page.id} ${message.data.join(' ')};$blue[${type}]$white ${name}`,
             )
           })
@@ -414,20 +411,18 @@ const vm = createdevice(
         break
       }
       case 'fork':
-        doasync(vm, async () => {
+        doasync(vm, message.player, async () => {
           await forkstate()
         })
         break
       case 'flush':
-        doasync(vm, async () => {
+        doasync(vm, message.player, async () => {
           await savestate()
         })
         break
       case 'cli':
         // user input from built-in console
-        if (ispresent(message.player)) {
-          memorycli(message.player, message.data)
-        }
+        memorycli(message.player, message.data)
         break
       case 'restart':
         if (message.player === memoryreadoperator()) {
@@ -453,7 +448,7 @@ const vm = createdevice(
             format === 'json' &&
             /file:.*\.book.json/.test(eventname)
           ) {
-            write(vm, `loading ${eventname}`)
+            write(vm, message.player, `loading ${eventname}`)
             const json = JSON.parse(content.json)
             const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
             if (
@@ -462,10 +457,10 @@ const vm = createdevice(
               isstring(json.exported)
             ) {
               memorysetbook(json.data)
-              write(vm, `loaded ${json.exported}`)
+              write(vm, message.player, `loaded ${json.exported}`)
             }
           } else if (format === 'json' && /file:.*\..*\.json/.test(eventname)) {
-            write(vm, `loading ${eventname}`)
+            write(vm, message.player, `loading ${eventname}`)
             const json = JSON.parse(content.json)
             const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
             if (
@@ -474,7 +469,7 @@ const vm = createdevice(
               isstring(json.exported)
             ) {
               bookwritecodepage(mainbook, json.data)
-              write(vm, `loaded ${json.exported}`)
+              write(vm, message.player, `loaded ${json.exported}`)
             }
           } else {
             // everything else

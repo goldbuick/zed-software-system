@@ -8,13 +8,7 @@ import { playtta, playtts } from 'zss/feature/tts'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
-import {
-  isarray,
-  isnumber,
-  ispresent,
-  isstring,
-  MAYBE,
-} from 'zss/mapping/types'
+import { isarray, isnumber, ispresent, MAYBE } from 'zss/mapping/types'
 
 import { api_error, synth_audioenabled, api_info, vm_loader } from './api'
 import { registerreadplayer } from './register'
@@ -161,7 +155,7 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'tta':
       doasync(synthdevice, message.player, async () => {
-        if (isstring(message.player) && isarray(message.data)) {
+        if (isarray(message.data)) {
           await playtta(synth, message.player, message.data)
         }
       })

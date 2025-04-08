@@ -56,7 +56,7 @@ function readsession(key: string): MAYBE<string> {
   try {
     return sessionStorage.getItem(key) ?? undefined
   } catch (err: any) {
-    api_error(register, `readsession ${key}`, err.message)
+    api_error(register, myplayerid, `readsession ${key}`, err.message)
   }
   return undefined
 }
@@ -69,7 +69,12 @@ function writesession(key: string, value: MAYBE<string>) {
       sessionStorage.removeItem(key)
     }
   } catch (err: any) {
-    api_error(register, `writesession ${key} <- ${value}`, err.message)
+    api_error(
+      register,
+      myplayerid,
+      `writesession ${key} <- ${value}`,
+      err.message,
+    )
   }
 }
 
@@ -82,7 +87,7 @@ function readurlhash(): string {
       return hash
     }
   } catch (err: any) {
-    api_error(register, 'crash', err.message)
+    api_error(register, myplayerid, 'crash', err.message)
   }
   return ''
 }
@@ -90,6 +95,7 @@ function readurlhash(): string {
 function writewikilink() {
   writeopenit(
     register,
+    myplayerid,
     `https://github.com/goldbuick/zed-software-system/wiki`,
     `open help wiki`,
   )
@@ -97,7 +103,7 @@ function writewikilink() {
 
 async function loadmem(books: string) {
   if (books.length === 0) {
-    api_error(register, 'content', 'no content found')
+    api_error(register, myplayerid, 'content', 'no content found')
     writewikilink()
     tape_terminal_full(register, myplayerid)
     return
@@ -109,7 +115,7 @@ async function loadmem(books: string) {
 
 let currenthash = ''
 window.addEventListener('hashchange', () => {
-  doasync(register, async () => {
+  doasync(register, myplayerid, async () => {
     const books = readurlhash()
     if (currenthash !== books) {
       currenthash = books
@@ -167,10 +173,10 @@ const register = createdevice(
     }
     switch (message.target) {
       case 'ready': {
-        doasync(register, async () => {
+        doasync(register, message.player, async () => {
           // signal init
           await waitfor(256)
-          write(register, `myplayerid ${myplayerid}`)
+          write(register, myplayerid, `myplayerid ${myplayerid}`)
           vm_operator(register, myplayerid)
         })
         break
@@ -186,13 +192,13 @@ const register = createdevice(
         break
       case 'ackoperator':
         if (message.player === myplayerid) {
-          doasync(register, async () => {
+          doasync(register, message.player, async () => {
             const urlcontent = readurlhash()
             if (isjoin()) {
-              network_join(register, urlcontent, myplayerid)
+              network_join(register, myplayerid, urlcontent)
             } else {
               // signal halting state
-              vm_halt(register, islocked(), myplayerid)
+              vm_halt(register, myplayerid, islocked())
               // pull data && init
               await loadmem(urlcontent)
             }
@@ -224,7 +230,7 @@ const register = createdevice(
           if (ispresent(withclipboard())) {
             withclipboard()
               .writeText(message.data)
-              .then(() => writetext(register, `copied!`))
+              .then(() => writetext(register, message.player, `copied!`))
               .catch((err) => console.error(err))
           }
         }
@@ -250,7 +256,7 @@ const register = createdevice(
             )
             withclipboard()
               .write([new ClipboardItem({ [blob.type]: blob })])
-              .then(() => writetext(register, `copied!`))
+              .then(() => writetext(register, message.player, `copied!`))
               .catch((err) => console.error(err))
           }
         }
@@ -290,12 +296,12 @@ const register = createdevice(
         break
       case 'dev':
         if (message.player === myplayerid) {
-          doasync(register, async function () {
+          doasync(register, message.player, async function () {
             if (islocked()) {
               const url = await shorturl(location.href)
-              writecopyit(register, url, url, myplayerid)
+              writecopyit(register, message.player, url, url)
             } else {
-              writeheader(register, `creating locked terminal`)
+              writeheader(register, message.player, `creating locked terminal`)
               await waitfor(100)
               location.href = location.href.replace(`/#`, `/locked/#`)
             }
@@ -304,26 +310,26 @@ const register = createdevice(
         break
       case 'share':
         if (message.player === myplayerid) {
-          doasync(register, async function () {
+          doasync(register, message.player, async function () {
             const url = await shorturl(
               // drop /locked from shared short url if found
               location.href.replace(/cafe.*locked/, `cafe`),
             )
-            writecopyit(register, url, url, myplayerid)
+            writecopyit(register, message.player, url, url)
           })
         }
         break
       case 'nuke':
         if (message.player === myplayerid) {
-          doasync(register, async function () {
-            writeheader(register, 'nuke in')
-            writeoption(register, '3', '...')
+          doasync(register, message.player, async function () {
+            writeheader(register, message.player, 'nuke in')
+            writeoption(register, message.player, '3', '...')
             await waitfor(1000)
-            writeoption(register, '2', '...')
+            writeoption(register, message.player, '2', '...')
             await waitfor(1000)
-            writeoption(register, '1', '...')
+            writeoption(register, message.player, '1', '...')
             await waitfor(1000)
-            writeheader(register, 'BYE')
+            writeheader(register, message.player, 'BYE')
             await waitfor(100)
             // nuke is the only valid case for reload
             location.hash = ''
@@ -354,8 +360,8 @@ const register = createdevice(
         break
       case 'select':
         if (message.player === myplayerid) {
-          doasync(register, async () => {
-            if (isstring(message.player) && isstring(message.data)) {
+          doasync(register, message.player, async () => {
+            if (isstring(message.data)) {
               await writeselected(message.data)
               // use same solution as a hash change here ...
               await loadmem(readurlhash())
@@ -368,7 +374,7 @@ const register = createdevice(
         ++keepalive
         if (keepalive >= signalrate) {
           keepalive -= signalrate
-          vm_doot(register, registerreadplayer())
+          vm_doot(register, myplayerid)
         }
         break
       default:
@@ -376,10 +382,10 @@ const register = createdevice(
           const { target, path } = parsetarget(message.target)
           switch (target) {
             case 'touchkey':
-              doasync(register, async () => {
+              doasync(register, message.player, async () => {
                 switch (path) {
                   case '[Alt]':
-                    synth_play(register, '-c', true)
+                    synth_play(register, message.player, '-c', true)
                     useDeviceConfig.setState((state) => ({
                       ...state,
                       keyboardalt: !state.keyboardalt,
@@ -388,7 +394,7 @@ const register = createdevice(
                     }))
                     break
                   case '[Ctrl]':
-                    synth_play(register, '-e', true)
+                    synth_play(register, message.player, '-e', true)
                     useDeviceConfig.setState((state) => ({
                       ...state,
                       keyboardalt: false,
@@ -397,7 +403,7 @@ const register = createdevice(
                     }))
                     break
                   case '[Shift]':
-                    synth_play(register, '-g', true)
+                    synth_play(register, message.player, '-g', true)
                     useDeviceConfig.setState((state) => ({
                       ...state,
                       keyboardalt: false,
@@ -411,16 +417,36 @@ const register = createdevice(
                     const invoke: string[] = []
                     const metakey = ismac ? 'Meta' : 'Ctrl'
                     if (deviceconfig.keyboardshift) {
-                      synth_play(register, isnumber ? '+c' : '+f', true)
+                      synth_play(
+                        register,
+                        message.player,
+                        isnumber ? '+c' : '+f',
+                        true,
+                      )
                       invoke.push('{Shift>}')
                     } else if (deviceconfig.keyboardalt) {
-                      synth_play(register, isnumber ? '+c!' : '+f!', true)
+                      synth_play(
+                        register,
+                        message.player,
+                        isnumber ? '+c!' : '+f!',
+                        true,
+                      )
                       invoke.push('{Alt>}')
                     } else if (deviceconfig.keyboardctrl) {
-                      synth_play(register, isnumber ? '+c#' : '+f#', true)
+                      synth_play(
+                        register,
+                        message.player,
+                        isnumber ? '+c#' : '+f#',
+                        true,
+                      )
                       invoke.push(`{${metakey}>}`)
                     } else {
-                      synth_play(register, isnumber ? '-c' : '-f', true)
+                      synth_play(
+                        register,
+                        message.player,
+                        isnumber ? '-c' : '-f',
+                        true,
+                      )
                     }
                     invoke.push(path)
                     if (deviceconfig.keyboardshift) {

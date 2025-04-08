@@ -46,12 +46,12 @@ function fetchcommand(
     case 'post:json':
       network_fetch(
         SOFTWARE,
+        READ_CONTEXT.elementfocus,
         arg,
         label,
         url,
         method,
         values,
-        READ_CONTEXT.elementfocus,
       )
       break
   }
