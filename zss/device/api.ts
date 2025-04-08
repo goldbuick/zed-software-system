@@ -87,16 +87,16 @@ export function chat_disconnect(device: DEVICELIKE, player: string) {
 
 export function gadgetclient_paint(
   device: DEVICELIKE,
-  gadgetstate: GADGET_STATE,
   player: string,
+  gadgetstate: GADGET_STATE,
 ) {
   device.emit(player, 'gadgetclient:paint', gadgetstate)
 }
 
 export function gadgetclient_patch(
   device: DEVICELIKE,
-  json: any,
   player: string,
+  json: any,
 ) {
   device.emit(player, 'gadgetclient:patch', json)
 }

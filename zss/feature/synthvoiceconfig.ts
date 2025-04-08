@@ -49,8 +49,8 @@ function validatesynthtype(
 }
 
 export function synthvoiceconfig(
-  synth: MAYBE<AUDIO_SYNTH>,
   player: string,
+  synth: MAYBE<AUDIO_SYNTH>,
   index: number,
   config: number | string,
   value: number | string | number[],

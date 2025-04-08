@@ -125,7 +125,7 @@ const synthdevice = createdevice('synth', [], (message) => {
           number | string,
           number | string | number[],
         ]
-        synthvoiceconfig(synth, message.player, index, config, value)
+        synthvoiceconfig(message.player, synth, index, config, value)
       }
       break
     case 'voicefx':

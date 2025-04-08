@@ -5,6 +5,7 @@ import { SOFTWARE } from './device/session'
 import { DRIVER_TYPE } from './firmware/runner'
 import { GeneratorBuild, compile } from './lang/generator'
 import { ispresent, isstring } from './mapping/types'
+import { memoryreadoperator } from './memory'
 
 export type OS = {
   ids: () => string[]
@@ -87,7 +88,12 @@ export function createos() {
             .map((line, index) => [line, index])
 
           codelines.slice(errorline - 5, errorline).forEach(([line, index]) => {
-            api_error(SOFTWARE, 'build', `$grey${index + 1} $grey${line}`)
+            api_error(
+              SOFTWARE,
+              memoryreadoperator(),
+              'build',
+              `$grey${index + 1} $grey${line}`,
+            )
           })
 
           const [hline, hindex] = codelines[errorline] ?? []
@@ -100,13 +106,14 @@ export function createos() {
             const c = hlinepadded.substring(end)
             api_error(
               SOFTWARE,
+              memoryreadoperator(),
               'build',
               `$red${hindex + 1} $grey${a}$red${b}$grey${c}`,
             )
           }
 
           primary.message.split('\n').forEach((message) => {
-            api_error(SOFTWARE, 'build', message)
+            api_error(SOFTWARE, memoryreadoperator(), 'build', message)
           })
 
           return false

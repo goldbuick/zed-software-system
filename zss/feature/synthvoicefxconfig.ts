@@ -18,8 +18,8 @@ type JUSTFXSET = Omit<FXSET, 'applyreset'>
 export type FXNAME = keyof JUSTFXSET
 
 export function synthvoicefxconfig(
-  synth: MAYBE<AUDIO_SYNTH>,
   player: string,
+  synth: MAYBE<AUDIO_SYNTH>,
   index: number,
   fxname: FXNAME,
   config: number | string,

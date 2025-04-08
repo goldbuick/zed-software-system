@@ -19,7 +19,6 @@ import {
   isequal,
   isnumber,
   ispresent,
-  isstring,
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory'
