@@ -2,7 +2,7 @@ import { objectKeys } from 'ts-extras'
 import { senderid } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
 import { parsetarget } from 'zss/device'
-import { api_error, MESSAGE, tape_debug, tape_info } from 'zss/device/api'
+import { api_error, MESSAGE, api_debug, api_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
@@ -143,7 +143,7 @@ export function memorycreatesoftwarebook(maybename?: string) {
     book.name = maybename
   }
   memorysetbook(book)
-  tape_info(SOFTWARE, `created [book] ${book.name}`)
+  api_info(SOFTWARE, `created [book] ${book.name}`)
   return book
 }
 
@@ -154,7 +154,7 @@ export function memoryensurebookbyname(name: string) {
     book.name = name
   }
   memorysetbook(book)
-  tape_info(SOFTWARE, `created [book] ${book.name}`)
+  api_info(SOFTWARE, `created [book] ${book.name}`)
   return book
 }
 
@@ -180,7 +180,11 @@ export function memoryensuresoftwarebook(
 
     // success
     if (ispresent(book)) {
-      tape_info(SOFTWARE, `opened [book] ${book.name} for ${slot}`)
+      api_info(
+        SOFTWARE,
+        MEMORY.operator,
+        `opened [book] ${book.name} for ${slot}`,
+      )
     }
   }
 
@@ -397,14 +401,14 @@ export function memorymessage(message: MESSAGE) {
 }
 
 function sendinteraction(
+  player: string,
   fromelement: BOARD_ELEMENT,
   toelement: BOARD_ELEMENT,
   message: string,
-  player: MAYBE<string>,
 ) {
   const fromname = boardelementname(fromelement)
   if (isstring(toelement.id)) {
-    SOFTWARE.emit(`vm:touched`, [toelement.id, fromname, message], player)
+    SOFTWARE.emit(player, `vm:touched`, [toelement.id, fromname, message])
   }
 }
 
@@ -479,23 +483,32 @@ export function memorymoveobject(
         }
       }
     } else {
-      sendinteraction(blocked, element, 'thud', undefined)
+      sendinteraction('', blocked, element, 'thud')
     }
     if (element.kind === MEMORY_LABEL.PLAYER) {
-      sendinteraction(element, blocked, 'touch', element.id)
+      // blocked is touched by player
+      const player = element.id ?? ''
+      const blockedbyplayer = ispid(blocked.id)
+      sendinteraction(
+        player,
+        element,
+        blocked,
+        blockedbyplayer ? 'bump' : 'touch',
+      )
     } else if (element.collision === COLLISION.ISBULLET) {
+      // blocked is touched by bullet
       const fromplayer = ispid(element.party)
       const blockedbyplayer = ispid(blocked.id)
       if (fromplayer !== blockedbyplayer) {
         // need from player stat here
         // so we can properly track aggro from bullets
-        sendinteraction(element, blocked, 'shot', element.party)
+        sendinteraction(element.party ?? '', element, blocked, 'shot')
       } else {
         // same party bullets thud
-        sendinteraction(blocked, element, 'thud', undefined)
+        sendinteraction('', element, blocked, 'thud')
       }
     } else {
-      sendinteraction(element, blocked, 'bump', undefined)
+      sendinteraction('', element, blocked, 'bump')
     }
 
     // delete destructible elements
@@ -735,7 +748,7 @@ export function memorycleanup() {
 }
 
 export function memorycli(player: string, cli = '') {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN, player)
   if (!ispresent(mainbook)) {
     return
   }
@@ -757,15 +770,15 @@ export function memorycli(player: string, cli = '') {
   RUNTIME.HALT_AT_COUNT = resethalt * 8
 
   // invoke once
-  tape_debug(SOFTWARE, 'running', mainbook.timestamp, id, cli)
+  api_debug(SOFTWARE, player, 'running', mainbook.timestamp, id, cli)
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
 
   RUNTIME.HALT_AT_COUNT = resethalt
 }
 
-export function memoryrun(address: string) {
+export function memoryrun(player: string, address: string) {
   // we assume READ_CONTEXT is setup correctly when this is run
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN, player)
   const codepage = bookreadcodepagebyaddress(mainbook, address)
   if (
     !ispresent(mainbook) ||

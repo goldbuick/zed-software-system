@@ -25,9 +25,14 @@ export const DISPLAY_FIRMWARE = createfirmware()
     )
     if (ispresent(palette)) {
       bookflags.palette = palette.id
-      write(SOFTWARE, `loaded palette ${target}`)
+      write(SOFTWARE, READ_CONTEXT.elementfocus, `loaded palette ${target}`)
     } else {
-      api_error(SOFTWARE, 'not-found', `unabled to find palette ${target}`)
+      api_error(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        'not-found',
+        `unabled to find palette ${target}`,
+      )
     }
     return 0
   })
@@ -41,9 +46,14 @@ export const DISPLAY_FIRMWARE = createfirmware()
     )
     if (ispresent(charset)) {
       bookflags.charset = charset.id
-      write(SOFTWARE, `loaded charset ${target}`)
+      write(SOFTWARE, READ_CONTEXT.elementfocus, `loaded charset ${target}`)
     } else {
-      api_error(SOFTWARE, 'not-found', `unabled to find charset ${target}`)
+      api_error(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        'not-found',
+        `unabled to find charset ${target}`,
+      )
     }
     return 0
   })

@@ -7,6 +7,7 @@ import { AUDIO_SYNTH } from './synth'
 export function synthvoicefxvibratoconfig(
   synth: MAYBE<AUDIO_SYNTH>,
   index: number,
+  player: string,
   config: number | string,
   value: number | string,
 ) {
@@ -14,7 +15,7 @@ export function synthvoicefxvibratoconfig(
     return
   }
   if (index < 0 || index >= synth.FX.length) {
-    api_error(SOFTWARE, `synth`, `index ${index} out of bounds`)
+    api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
   const vibrato = synth.FX[index].vibrato
@@ -36,5 +37,10 @@ export function synthvoicefxvibratoconfig(
       }
       break
   }
-  api_error(SOFTWARE, `synth`, `unknown vibrato config ${config} with ${value}`)
+  api_error(
+    SOFTWARE,
+    player,
+    `synth`,
+    `unknown vibrato config ${config} with ${value}`,
+  )
 }

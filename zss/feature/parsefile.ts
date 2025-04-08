@@ -1,6 +1,6 @@
 import JSZip from 'jszip'
 import mime from 'mime/lite'
-import { api_error, tape_info, vm_loader } from 'zss/device/api'
+import { api_error, api_info, vm_loader } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { ispresent } from 'zss/mapping/types'
 
@@ -29,11 +29,12 @@ export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
 
 // various handlers
 export async function parsezipfile(
+  player: string,
   file: File,
   onreadfile: (zipfile: File) => void,
 ) {
   try {
-    tape_info(SOFTWARE, file.name)
+    api_info(SOFTWARE, player, file.name)
     const arraybuffer = await file.arrayBuffer()
     const ziplib = new JSZip()
     const zip = await ziplib.loadAsync(arraybuffer)
@@ -48,24 +49,25 @@ export async function parsezipfile(
           onreadfile(zipfile)
         })
         .catch((err) => {
-          api_error(SOFTWARE, 'crash', err.message)
+          api_error(SOFTWARE, player, 'crash', err.message)
         })
     })
   } catch (err: any) {
-    api_error(SOFTWARE, 'crash', err.message)
+    api_error(SOFTWARE, player, 'crash', err.message)
   }
 }
 
 export async function parsebinaryfile(
   file: File,
+  player: string,
   onbuffer: (buffer: Uint8Array) => void,
 ) {
   try {
-    tape_info(SOFTWARE, file.name)
+    api_info(SOFTWARE, player, file.name)
     const arraybuffer = await file.arrayBuffer()
     onbuffer(new Uint8Array(arraybuffer))
   } catch (err: any) {
-    api_error(SOFTWARE, 'crash', err.message)
+    api_error(SOFTWARE, player, 'crash', err.message)
   }
 }
 
@@ -88,7 +90,7 @@ export function parsewebfile(player: string, file: File | undefined) {
               player,
             ),
           )
-          .catch((err) => api_error(SOFTWARE, 'crash', err.message))
+          .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
         break
       case 'application/json':
         file
@@ -103,15 +105,15 @@ export function parsewebfile(player: string, file: File | undefined) {
               player,
             ),
           )
-          .catch((err) => api_error(SOFTWARE, 'crash', err.message))
+          .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
         break
       case 'application/zip':
-        parsezipfile(file, (ifile) => parsewebfile(player, ifile)).catch(
-          (err) => api_error(SOFTWARE, 'crash', err.message),
-        )
+        parsezipfile(player, file, (ifile) =>
+          parsewebfile(player, ifile),
+        ).catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
         break
       case 'application/octet-stream':
-        parsebinaryfile(file, (binaryfile) =>
+        parsebinaryfile(file, player, (binaryfile) =>
           vm_loader(
             SOFTWARE,
             undefined,
@@ -120,7 +122,7 @@ export function parsewebfile(player: string, file: File | undefined) {
             binaryfile,
             player,
           ),
-        ).catch((err) => api_error(SOFTWARE, 'crash', err.message))
+        ).catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
         break
       default:
         file
@@ -135,12 +137,13 @@ export function parsewebfile(player: string, file: File | undefined) {
             } else {
               return api_error(
                 SOFTWARE,
+                player,
                 'parsewebfile',
                 `unsupported file ${file.name}`,
               )
             }
           })
-          .catch((err) => api_error(SOFTWARE, 'crash', err.message))
+          .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
         return
     }
   }

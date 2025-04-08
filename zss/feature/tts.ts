@@ -1,7 +1,7 @@
 import { Client } from '@gradio/client'
 import { EdgeSpeechTTS } from '@lobehub/tts'
 import { ToneAudioBuffer } from 'tone'
-import { tape_info } from 'zss/device/api'
+import { api_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
@@ -29,7 +29,11 @@ export async function playtts(synth: MAYBE<AUDIO_SYNTH>, data: string[]) {
 // cache for #tta command
 const tta = new Map<string, ToneAudioBuffer>()
 
-export async function playtta(synth: MAYBE<AUDIO_SYNTH>, data: string[]) {
+export async function playtta(
+  synth: MAYBE<AUDIO_SYNTH>,
+  player: string,
+  data: string[],
+) {
   if (!ispresent(synth)) {
     return
   }
@@ -49,8 +53,9 @@ export async function playtta(synth: MAYBE<AUDIO_SYNTH>, data: string[]) {
       tta.set(
         phrase,
         new ToneAudioBuffer(loadurl, () => {
-          tape_info(
+          api_info(
             SOFTWARE,
+            player,
             'loaded',
             `${loadurl.substring(0, 8)}...${loadurl.slice(-8)}`,
           )

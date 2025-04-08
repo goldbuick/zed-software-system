@@ -1,10 +1,5 @@
 import { renderUnicodeCompact } from 'uqr'
-import {
-  DEVICELIKE,
-  tape_info,
-  tape_terminal_full,
-  tape_terminal_open,
-} from 'zss/device/api'
+import { DEVICELIKE, api_info, tape_terminal_full } from 'zss/device/api'
 
 /**
  * what is writeui ?
@@ -17,62 +12,68 @@ const COLOR_EDGE = '$dkpurple'
 const CHR_TM = '$196'
 const CHR_BM = '$205'
 
-export function fg(color: string, text: string) {
-  return `$${color}${text}$blue`
+export function write(device: DEVICELIKE, player: string, text: string) {
+  api_info(device, player, text)
 }
 
-export function bg(color: string, text: string) {
-  return `$${color}${text}$ondkblue`
-}
-
-export function write(device: DEVICELIKE, text: string) {
-  tape_info(device, text)
-}
-
-export function writetbar(device: DEVICELIKE, width: number) {
+export function writetbar(device: DEVICELIKE, player: string, width: number) {
   const CHR_TBAR = CHR_TM.repeat(width)
-  write(device, `${COLOR_EDGE}${CHR_TBAR}`)
+  write(device, player, `${COLOR_EDGE}${CHR_TBAR}`)
 }
 
-export function writebbar(device: DEVICELIKE, width: number) {
+export function writebbar(device: DEVICELIKE, player: string, width: number) {
   const CHR_BBAR = CHR_BM.repeat(width)
-  write(device, `${COLOR_EDGE}${CHR_BBAR}`)
+  write(device, player, `${COLOR_EDGE}${CHR_BBAR}`)
 }
 
-export function writeheader(device: DEVICELIKE, header: string) {
-  write(device, `${COLOR_EDGE} ${' '.repeat(header.length)} `)
-  writetbar(device, header.length + 2)
-  write(device, `${COLOR_EDGE} $white${header} `)
-  writebbar(device, header.length + 2)
+export function writeheader(
+  device: DEVICELIKE,
+  player: string,
+  header: string,
+) {
+  write(device, player, `${COLOR_EDGE} ${' '.repeat(header.length)} `)
+  writetbar(device, player, header.length + 2)
+  write(device, player, `${COLOR_EDGE} $white${header} `)
+  writebbar(device, player, header.length + 2)
 }
 
-export function writesection(device: DEVICELIKE, section: string) {
-  write(device, `${COLOR_EDGE} ${' '.repeat(section.length)} `)
-  write(device, `${COLOR_EDGE} $gray${section} `)
-  writebbar(device, section.length + 2)
+export function writesection(
+  device: DEVICELIKE,
+  player: string,
+  section: string,
+) {
+  write(device, player, `${COLOR_EDGE} ${' '.repeat(section.length)} `)
+  write(device, player, `${COLOR_EDGE} $gray${section} `)
+  writebbar(device, player, section.length + 2)
 }
 
-export function writeoption(device: DEVICELIKE, option: string, label: string) {
-  write(device, `${COLOR_EDGE} $white${option} $blue${label}`)
+export function writeoption(
+  device: DEVICELIKE,
+  player: string,
+  option: string,
+  label: string,
+) {
+  write(device, player, `${COLOR_EDGE} $white${option} $blue${label}`)
 }
 
-export function writetext(device: DEVICELIKE, text: string) {
-  write(device, `${COLOR_EDGE}$blue${text}`)
+export function writetext(device: DEVICELIKE, player: string, text: string) {
+  write(device, player, `${COLOR_EDGE}$blue${text}`)
 }
 
 export function writehyperlink(
   device: DEVICELIKE,
+  player: string,
   hyperlink: string,
   label: string,
 ) {
-  write(device, `!${hyperlink};${label}`)
+  write(device, player, `!${hyperlink};${label}`)
 }
 
 export function writecopyit(
   device: DEVICELIKE,
+  player: string,
   content: string,
   label: string,
-  player: string,
   showqr = true,
 ) {
   if (showqr) {
@@ -91,18 +92,19 @@ export function writecopyit(
           return `$${chr}`
         })
         .join('')
-      write(device, lineascii)
+      write(device, player, lineascii)
     }
   }
 
-  write(device, `!copyit ${content};${label}`)
+  write(device, player, `!copyit ${content};${label}`)
   tape_terminal_full(device, player)
 }
 
 export function writeopenit(
   device: DEVICELIKE,
+  player: string,
   content: string,
   label: string,
 ) {
-  write(device, `!openit ${content};${label}`)
+  write(device, player, `!openit ${content};${label}`)
 }

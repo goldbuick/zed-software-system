@@ -292,7 +292,9 @@ export function EditorInput({
                     if (ispresent(withclipboard())) {
                       withclipboard()
                         .writeText(strvalueselected)
-                        .catch((err) => api_error(SOFTWARE, 'clipboard', err))
+                        .catch((err) =>
+                          api_error(SOFTWARE, player, 'clipboard', err),
+                        )
                     } else {
                       resettoend()
                     }
@@ -309,7 +311,9 @@ export function EditorInput({
                             strvaluesplice(tapeeditor.cursor, 0, cleantext)
                           }
                         })
-                        .catch((err) => api_error(SOFTWARE, 'clipboard', err))
+                        .catch((err) =>
+                          api_error(SOFTWARE, player, 'clipboard', err),
+                        )
                     } else {
                       resettoend()
                     }
@@ -319,7 +323,9 @@ export function EditorInput({
                       withclipboard()
                         .writeText(strvalueselected)
                         .then(() => deleteselection())
-                        .catch((err) => api_error(SOFTWARE, 'clipboard', err))
+                        .catch((err) =>
+                          api_error(SOFTWARE, player, 'clipboard', err),
+                        )
                     } else {
                       resettoend()
                     }
@@ -328,6 +334,7 @@ export function EditorInput({
                     vm_cli(SOFTWARE, strvalueselected, player)
                     writetext(
                       SOFTWARE,
+                      player,
                       `running: ${strvalueselected.substring(0, 18)}`,
                     )
                     break

@@ -6,12 +6,13 @@ import { AUDIO_SYNTH } from './synth'
 
 export function synthvoicefxphaserconfig(
   synth: MAYBE<AUDIO_SYNTH>,
+  player: string,
   index: number,
   config: number | string,
   value: number | string,
 ) {
   if (!ispresent(synth) || index < 0 || index >= synth.FX.length) {
-    api_error(SOFTWARE, `synth`, `index ${index} out of bounds`)
+    api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
   const phaser = synth.FX[index].phaser
@@ -38,5 +39,5 @@ export function synthvoicefxphaserconfig(
       })
       return
   }
-  api_error(SOFTWARE, `kind`, `unknown phaser ${config} or ${value}`)
+  api_error(SOFTWARE, player, `kind`, `unknown phaser ${config} or ${value}`)
 }

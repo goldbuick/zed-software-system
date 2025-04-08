@@ -19,6 +19,7 @@ export type FXNAME = keyof JUSTFXSET
 
 export function synthvoicefxconfig(
   synth: MAYBE<AUDIO_SYNTH>,
+  player: string,
   index: number,
   fxname: FXNAME,
   config: number | string,
@@ -28,7 +29,7 @@ export function synthvoicefxconfig(
     return
   }
   if (index < 0 || index >= synth.FX.length) {
-    api_error(SOFTWARE, `synth`, `index ${index} out of bounds`)
+    api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
   const fx = synth.FX[index][fxname]
@@ -81,5 +82,5 @@ export function synthvoicefxconfig(
     }
     return
   }
-  api_error(SOFTWARE, `synth`, `unknown fx ${fxname}`)
+  api_error(SOFTWARE, player, `synth`, `unknown fx ${fxname}`)
 }

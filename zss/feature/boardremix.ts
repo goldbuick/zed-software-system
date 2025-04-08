@@ -64,7 +64,7 @@ function onlyplayers(
   return objects
 }
 
-export function boardremixsnapshot(target: string) {
+export function boardremixsnapshot(player: string, target: string) {
   const targetcodepage = bookreadcodepagewithtype(
     READ_CONTEXT.book,
     CODE_PAGE_TYPE.BOARD,
@@ -82,6 +82,7 @@ export function boardremixsnapshot(target: string) {
   // create snapshot board codepage
   const snapshotcodepage = memoryensuresoftwarecodepage(
     MEMORY_LABEL.CONTENT,
+    player,
     name,
     CODE_PAGE_TYPE.BOARD,
   )
@@ -99,6 +100,7 @@ export function boardremixsnapshot(target: string) {
   // todo outcome
   write(
     SOFTWARE,
+    player,
     `snapshot of ${codepagereadname(targetcodepage)} created as ${codepagereadname(snapshotcodepage)}`,
   )
 }
@@ -140,6 +142,7 @@ export function boardremixrestart(target: string) {
 
 const MAX_ATTEMPT = 5
 export function boardremix(
+  player: string,
   target: string,
   source: string,
   patternsize = 2,
@@ -211,6 +214,7 @@ export function boardremix(
 
   write(
     SOFTWARE,
+    player,
     `remixing ${x1},${y1} - ${x2},${y2} on ${target} with ${source} <${patternsize},${mirror}>`,
   )
 
@@ -237,6 +241,7 @@ export function boardremix(
   if (attempt === MAX_ATTEMPT) {
     api_error(
       SOFTWARE,
+      player,
       'boardremix',
       `failed to generate after ${MAX_ATTEMPT} tries`,
     )

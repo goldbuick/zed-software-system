@@ -6,12 +6,12 @@ import { NAME } from './words/types'
 
 export function createmessage(
   session: string,
-  target: string,
+  player: string,
   sender: string,
+  target: string,
   data?: any,
-  player?: string,
 ): MESSAGE {
-  return { session, id: createsid(), target, sender, data, player }
+  return { session, player, id: createsid(), sender, target, data }
 }
 
 export type MESSAGE_FUNC = (message: MESSAGE) => void
@@ -21,9 +21,9 @@ export type DEVICE = {
   name: () => string
   session: (check?: MESSAGE) => string
   topics: () => string[]
-  emit: (target: string, data?: any, player?: string) => void
-  reply: (to: MESSAGE, target: string, data?: any, player?: string) => void
-  replynext: (to: MESSAGE, target: string, data?: any, player?: string) => void
+  emit: (player: string, target: string, data?: any) => void
+  reply: (to: MESSAGE, target: string, data?: any) => void
+  replynext: (to: MESSAGE, target: string, data?: any) => void
   handle: MESSAGE_FUNC
 }
 
@@ -60,14 +60,17 @@ export function createdevice(
     topics() {
       return topics
     },
-    emit(target, data, player) {
-      hub.emit(session, target, id, data, player)
+    emit(player, target, data) {
+      hub.emit(session, player, id, target, data)
     },
-    reply(to, target, data, player) {
-      device.emit(`${to.sender}:${target}`, data, player)
+    reply(to, target, data) {
+      device.emit(to.player, `${to.sender}:${target}`, data)
     },
-    replynext(to, target, data, player) {
-      setTimeout(() => device.emit(`${to.sender}:${target}`, data, player), 64)
+    replynext(to, target, data) {
+      setTimeout(
+        () => device.emit(to.player, `${to.sender}:${target}`, data),
+        64,
+      )
     },
     handle(message) {
       const { target, path } = parsetarget(message.target)

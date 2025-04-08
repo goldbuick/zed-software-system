@@ -16,9 +16,14 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
   }
   switch (message.target) {
     case 'startstream':
-      doasync(broadcast, async () => {
+      doasync(broadcast, message.player, async () => {
         if (ispresent(broadcastclient)) {
-          api_error(broadcast, 'session', 'session is already open')
+          api_error(
+            broadcast,
+            message.player,
+            'session',
+            'session is already open',
+          )
         } else {
           const isportrait = window.innerHeight > window.innerWidth
           broadcastclient = IVSBroadcastClient.create({
@@ -40,14 +45,14 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
           broadcastclient.on(
             IVSBroadcastClient.BroadcastClientEvents.CONNECTION_STATE_CHANGE,
             function (state: string) {
-              write(broadcast, state)
+              write(broadcast, message.player, state)
             } as Callback,
           )
 
           broadcastclient.on(
             IVSBroadcastClient.BroadcastClientEvents.ERROR,
             function (error: string) {
-              api_error(broadcast, 'connection', error)
+              api_error(broadcast, message.player, 'connection', error)
               broadcastclient = undefined
             } as Callback,
           )
@@ -57,7 +62,12 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
           if (ispresent(video)) {
             await broadcastclient.addImageSource(video, 'video', { index: 1 })
           } else {
-            api_error(broadcast, 'video', 'unabled to find canvas element')
+            api_error(
+              broadcast,
+              message.player,
+              'video',
+              'unabled to find canvas element',
+            )
             broadcastclient = undefined
             return
           }
@@ -69,6 +79,7 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
           } else {
             api_error(
               broadcast,
+              message.player,
               'video',
               'unable create media audio node destination',
             )
@@ -77,17 +88,17 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
           }
 
           // signal success
-          write(broadcast, `created client`)
+          write(broadcast, message.player, `created client`)
         }
         if (isstring(message.data) && ispresent(broadcastclient)) {
-          writeheader(broadcast, 'broadcasting in')
-          writeoption(broadcast, '3', '...')
+          writeheader(broadcast, message.player, 'broadcasting in')
+          writeoption(broadcast, message.player, '3', '...')
           await waitfor(1000)
-          writeoption(broadcast, '2', '...')
+          writeoption(broadcast, message.player, '2', '...')
           await waitfor(1000)
-          writeoption(broadcast, '1', '...')
+          writeoption(broadcast, message.player, '1', '...')
           await waitfor(1000)
-          writeheader(broadcast, 'GOING LIVE')
+          writeheader(broadcast, message.player, 'GOING LIVE')
           await broadcastclient.startBroadcast(
             message.data,
             'https://g.webrtc.live-video.net:4443',
@@ -100,9 +111,14 @@ const broadcast = createdevice('broadcast', ['second'], (message) => {
         broadcastclient.stopBroadcast()
         broadcastclient.delete()
         broadcastclient = undefined
-        write(broadcast, `closed client`)
+        write(broadcast, message.player, `closed client`)
       } else {
-        api_error(broadcast, 'session', 'need an active session to stop stream')
+        api_error(
+          broadcast,
+          message.player,
+          'session',
+          'need an active session to stop stream',
+        )
       }
       break
   }

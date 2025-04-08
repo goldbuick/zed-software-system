@@ -4,7 +4,6 @@ import { write } from 'zss/feature/writeui'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
 import { api_error, vm_loader } from './api'
-import { registerreadplayer } from './register'
 
 let twitchchatclient: MAYBE<ChatClient>
 
@@ -15,16 +14,22 @@ const chat = createdevice('chat', [], (message) => {
   switch (message.target) {
     case 'connect':
       if (ispresent(twitchchatclient)) {
-        api_error(chat, 'connection', 'chat is already connected')
+        api_error(
+          chat,
+          message.player,
+          'connection',
+          'chat is already connected',
+        )
       } else if (isstring(message.data)) {
-        write(chat, `connecting to ${message.data}`)
+        const player = message.player
+        write(chat, player, `connecting to ${message.data}`)
         twitchchatclient = new ChatClient({ channels: [message.data] })
         twitchchatclient.connect()
         twitchchatclient.onConnect(() => {
-          write(chat, 'connected')
+          write(chat, player, 'connected')
         })
         twitchchatclient.onDisconnect(() => {
-          write(chat, 'disconnected')
+          write(chat, player, 'disconnected')
         })
         twitchchatclient.onMessage((_, user, text) => {
           vm_loader(
@@ -33,7 +38,7 @@ const chat = createdevice('chat', [], (message) => {
             'text',
             `chat:message:${message.data}`,
             `${user}:${text}`,
-            registerreadplayer(),
+            player,
           )
         })
         twitchchatclient.onAction((_, user, text) => {
@@ -43,7 +48,7 @@ const chat = createdevice('chat', [], (message) => {
             'text',
             `chat:action:${message.data}`,
             `${user}:${text}`,
-            registerreadplayer(),
+            player,
           )
         })
       }
@@ -52,9 +57,14 @@ const chat = createdevice('chat', [], (message) => {
       if (ispresent(twitchchatclient)) {
         twitchchatclient.quit()
         twitchchatclient = undefined
-        write(chat, 'client quit')
+        write(chat, message.player, 'client quit')
       } else {
-        api_error(chat, 'connection', 'chat is already disconnected')
+        api_error(
+          chat,
+          message.player,
+          'connection',
+          'chat is already disconnected',
+        )
       }
       break
     default:

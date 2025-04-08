@@ -17,12 +17,10 @@ const stub = createdevice(
     }
     switch (message.target) {
       case 'operator':
-        if (ispresent(message.player)) {
-          stuboperator = message.player
-          write(stub, `operator set to ${stuboperator}`)
-          // ack
-          stub.reply(message, 'ackoperator', true, message.player)
-        }
+        stuboperator = message.player
+        write(stub, message.player, `operator set to ${stuboperator}`)
+        // ack
+        stub.reply(message, 'ackoperator', true, message.player)
         break
     }
   },

@@ -25,8 +25,8 @@ import {
   network_join,
   synth_play,
   tape_terminal_full,
-  tape_debug,
-  tape_info,
+  api_debug,
+  api_info,
   tape_terminal_close,
   vm_books,
   vm_cli,
@@ -126,12 +126,12 @@ function writeurlhash(exportedbooks: string, label: string) {
     location.hash = out
     const msg = `wrote ${exportedbooks?.length ?? 0} chars [${exportedbooks.slice(0, 8)}...${exportedbooks.slice(-8)}]`
     if (label.includes('autosave')) {
-      tape_debug(register, msg)
+      api_debug(register, myplayerid, msg)
     } else {
       if (label.length) {
         document.title = label
       }
-      tape_info(register, msg)
+      api_info(register, myplayerid, msg)
     }
   }
 }
