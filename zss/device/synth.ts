@@ -137,8 +137,8 @@ const synthdevice = createdevice('synth', [], (message) => {
           number | string,
         ]
         synthvoicefxconfig(
-          synth,
           message.player,
+          synth,
           synthindex,
           fxname,
           config,

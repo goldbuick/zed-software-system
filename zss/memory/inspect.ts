@@ -16,7 +16,7 @@ import {
 } from 'zss/gadget/data/api'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import { CATEGORY, PT } from 'zss/words/types'
 
 import {
@@ -219,14 +219,10 @@ export function memoryinspectcommand(path: string, player: string) {
       bookboardsafedelete(mainbook, board, element, mainbook.timestamp)
       break
     case 'code':
-      doasync(SOFTWARE, async () => {
-        if (!ispresent(player)) {
-          return
-        }
-
+      doasync(SOFTWARE, player, async () => {
         const name = boardelementname(element)
         const pagetype = 'object'
-        writetext(SOFTWARE, `opened [${pagetype}] ${name}`)
+        writetext(SOFTWARE, player, `opened [${pagetype}] ${name}`)
 
         // edit path
         const path = [board.id, element.id]
@@ -246,12 +242,12 @@ export function memoryinspectcommand(path: string, player: string) {
         // open code editor
         tape_editor_open(
           SOFTWARE,
+          player,
           mainbook.id,
           path,
           pagetype,
           `${name} - ${mainbook.name}`,
           [],
-          player,
         )
       })
       break

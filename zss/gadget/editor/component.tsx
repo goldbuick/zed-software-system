@@ -156,9 +156,9 @@ export function TapeEditor() {
   const edge = textformatreadedges(context)
 
   useEffect(() => {
-    vm_codewatch(SOFTWARE, editor.book, editor.path, editor.player)
+    vm_codewatch(SOFTWARE, editor.player, editor.book, editor.path)
     return () => {
-      vm_coderelease(SOFTWARE, editor.book, editor.path, editor.player)
+      vm_coderelease(SOFTWARE, editor.player, editor.book, editor.path)
     }
   }, [editor.book, editor.path, editor.player])
 

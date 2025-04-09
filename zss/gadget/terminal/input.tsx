@@ -316,7 +316,7 @@ export function TapeTerminalInput({
               tape_terminal_close(SOFTWARE, player)
               break
             case 'tab':
-              tape_terminal_inclayout(SOFTWARE, !mods.shift, player)
+              tape_terminal_inclayout(SOFTWARE, player, !mods.shift)
               break
             case 'delete':
               // single line only

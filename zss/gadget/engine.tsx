@@ -12,6 +12,7 @@ import {
   RUNTIME,
   STATS_DEV,
 } from 'zss/config'
+import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import decoimageurl from 'zss/gadget/fx/scratches.gif'
@@ -21,12 +22,12 @@ import { doasync } from 'zss/mapping/func'
 import { useDeviceConfig } from './hooks'
 import { PanelLayout } from './panellayout'
 import { Tape } from './tape'
+import { TapeToast } from './toast'
 import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
 
 // include all front-end devices
 import 'zss/userspace'
-import { TapeToast } from './toast'
 
 export function Engine() {
   const { viewport } = useThree()
@@ -53,7 +54,7 @@ export function Engine() {
   // detect gpu info
   const [gputier, setgputier] = useState<TierResult>()
   useEffect(() => {
-    doasync(SOFTWARE, async () => {
+    doasync(SOFTWARE, registerreadplayer(), async () => {
       const result = await getGPUTier()
       setgputier(result)
     })

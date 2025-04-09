@@ -58,15 +58,15 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
         const patch = compare(previous, gadget)
         if (patch.length) {
           gadgetsync[player] = deepcopy(gadget)
-          gadgetclient_patch(gadgetserver, patch, player)
+          gadgetclient_patch(gadgetserver, player, patch)
         }
       }
       break
     case 'desync':
       gadgetclient_paint(
         gadgetserver,
-        gadgetstate(message.player),
         message.player,
+        gadgetstate(message.player),
       )
       break
     case 'clearscroll':

@@ -47,7 +47,6 @@ export function formatobject(
 }
 
 export function unformatobject<T>(
-  player: string,
   formatted: MAYBE<FORMAT_OBJECT>,
   keymap: any,
   formatmap: Record<string, FORMAT_METHOD> = {},
@@ -81,7 +80,7 @@ export function unformatobject<T>(
 
     return obj as T
   } catch (err: any) {
-    api_error(SOFTWARE, player, 'binary', err.message)
+    api_error(SOFTWARE, '', 'binary', err.message)
   }
 }
 
@@ -99,27 +98,21 @@ so part of the pack process is de-duping strings
 
 */
 
-export function packbinary(
-  player: string,
-  entry: FORMAT_OBJECT,
-): MAYBE<Uint8Array> {
+export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
   try {
     const data = deepcopy(entry)
     return pack(data)
   } catch (err: any) {
-    api_error(SOFTWARE, player, 'binary', err.message)
+    api_error(SOFTWARE, '', 'binary', err.message)
   }
 }
 
-export function unpackbinary(
-  player: string,
-  binary: Uint8Array,
-): MAYBE<FORMAT_OBJECT> {
+export function unpackbinary(binary: Uint8Array): MAYBE<FORMAT_OBJECT> {
   try {
     const data = unpack(binary)
     // console.info('read', deepcopy(data))
     return data
   } catch (err: any) {
-    api_error(SOFTWARE, player, 'binary', err.message)
+    api_error(SOFTWARE, '', 'binary', err.message)
   }
 }

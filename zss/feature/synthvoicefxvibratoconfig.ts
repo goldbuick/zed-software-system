@@ -5,8 +5,8 @@ import { isnumber, ispresent, MAYBE } from 'zss/mapping/types'
 import { AUDIO_SYNTH } from './synth'
 
 export function synthvoicefxvibratoconfig(
-  synth: MAYBE<AUDIO_SYNTH>,
   player: string,
+  synth: MAYBE<AUDIO_SYNTH>,
   index: number,
   config: number | string,
   value: number | string,

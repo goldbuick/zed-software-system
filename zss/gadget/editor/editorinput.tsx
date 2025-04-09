@@ -248,7 +248,7 @@ export function EditorInput({
               }
               break
             case 'tab':
-              tape_terminal_inclayout(SOFTWARE, !mods.shift, player)
+              tape_terminal_inclayout(SOFTWARE, player, !mods.shift)
               break
             case 'delete':
               if (hasselection) {
@@ -268,10 +268,10 @@ export function EditorInput({
               if (mods.ctrl) {
                 switch (lkey) {
                   case 'e':
-                    vm_copyjsonfile(SOFTWARE, editorpath, player)
+                    vm_copyjsonfile(SOFTWARE, player, editorpath)
                     break
                   case 'k':
-                    vm_refsheet(SOFTWARE, editorpath, player)
+                    vm_refsheet(SOFTWARE, player, editorpath)
                     break
                   case 'z':
                     if (ismac && mods.shift) {

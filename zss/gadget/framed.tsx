@@ -38,7 +38,7 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
     bits |= INPUT_SHIFT
   }
   if (ispid(player)) {
-    vm_input(SOFTWARE, input, bits, player)
+    vm_input(SOFTWARE, player, input, bits)
   }
 }
 

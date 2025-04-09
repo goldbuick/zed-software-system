@@ -806,9 +806,9 @@ export const CLI_FIRMWARE = createfirmware()
     if (ispresent(book)) {
       register_downloadjsonfile(
         SOFTWARE,
+        READ_CONTEXT.elementfocus,
         deepcopy(book),
         `${book.name}.book.json`,
-        READ_CONTEXT.elementfocus,
       )
     }
     return 0

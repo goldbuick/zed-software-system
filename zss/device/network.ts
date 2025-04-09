@@ -100,12 +100,12 @@ const network = createdevice('network', [], (message) => {
       break
     case 'start':
       if (message.player === registerreadplayer()) {
-        peerstart(!!message.data, message.player, false)
+        peerstart(!!message.data, false)
       }
       break
     case 'tab':
       if (message.player === registerreadplayer()) {
-        peerstart(!!message.data, message.player, true)
+        peerstart(!!message.data, true)
       }
       break
     case 'tabopen':

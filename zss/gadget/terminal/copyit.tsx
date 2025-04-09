@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { writetext } from 'zss/feature/writeui'
 import { withclipboard } from 'zss/mapping/keyboard'
@@ -27,7 +28,7 @@ export function TapeTerminalCopyIt({
         const content = values.join(' ')
         withclipboard()
           .writeText(content)
-          .then(() => writetext(SOFTWARE, `copied!`))
+          .then(() => writetext(SOFTWARE, registerreadplayer(), `copied!`))
           .catch((err) => console.error(err))
       }
     }, 100)

@@ -1,3 +1,0 @@
-@terrain surface 
-@char 176
-@bg 3

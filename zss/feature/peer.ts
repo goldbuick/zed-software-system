@@ -4,6 +4,7 @@ import { hex2arr } from 'uint8-util'
 import { createmessage } from 'zss/device'
 import { MESSAGE, network_showjoincode, network_tabopen } from 'zss/device/api'
 import { createforward } from 'zss/device/forward'
+import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
 import { createinfohash } from 'zss/mapping/guid'
@@ -53,12 +54,12 @@ const routingtable = new KademliaTable<ROUTING_NODE>(
 )
 
 finder.on('peerconnect', (peer) => {
-  write(SOFTWARE, `remote connected ${peer.id}`)
+  write(SOFTWARE, registerreadplayer(), `remote connected ${peer.id}`)
   routingtable.add({ id: peerstringtobytes(peer.id), peer })
 })
 
 finder.on('peerclose', (peer) => {
-  write(SOFTWARE, `remote closed ${peer.id}`)
+  write(SOFTWARE, registerreadplayer(), `remote closed ${peer.id}`)
   routingtable.remove(peerstringtobytes(peer.id))
 })
 
@@ -120,6 +121,7 @@ finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
 finder.on('trackerconnect', (tracker, stats) => {
   write(
     SOFTWARE,
+    registerreadplayer(),
     `looking for players ${createinfohash(tracker.announceUrl)} [${stats.connected}]`,
   )
 })
@@ -133,7 +135,7 @@ function peerusehost(host: string) {
     isstarted = true
     subscribetopic = host
     finder.start()
-    write(SOFTWARE, `connecting to hubworld for ${host}`)
+    write(SOFTWARE, registerreadplayer(), `connecting to hubworld for ${host}`)
   }
 }
 
@@ -145,15 +147,15 @@ function peerpublishmessage(topic: string, gme: MESSAGE) {
   }
 }
 
-export function peerstart(hidden: boolean, player: string, tabopen: boolean) {
+export function peerstart(hidden: boolean, tabopen: boolean) {
   // get topic
   const host = finder._peerId
 
   // setup host
   peerusehost(host)
-  network_showjoincode(SOFTWARE, hidden, host, player)
+  network_showjoincode(SOFTWARE, registerreadplayer(), hidden, host)
   if (tabopen) {
-    network_tabopen(SOFTWARE, host, player)
+    network_tabopen(SOFTWARE, registerreadplayer(), host)
   }
 
   // open bridge between peers

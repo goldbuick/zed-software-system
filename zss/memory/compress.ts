@@ -22,7 +22,7 @@ function base64tobase64url(base64String: string) {
 
 const FIXED_DATE = new Date('1980/09/02')
 
-export async function compressbooks(player: string, books: BOOK[]) {
+export async function compressbooks(books: BOOK[]) {
   console.info('saved', books)
   return new Promise<string>((resolve, reject) => {
     const zip = new JSZip()
@@ -31,7 +31,7 @@ export async function compressbooks(player: string, books: BOOK[]) {
       const exportedbook = exportbook(book)
       if (exportedbook) {
         // convert to binary & compress book
-        const bin = packbinary(player, exportedbook)
+        const bin = packbinary(exportedbook)
         if (ispresent(bin)) {
           zip.file(book.id, bin, { date: FIXED_DATE })
         }

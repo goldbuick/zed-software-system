@@ -50,11 +50,8 @@ export function exportbitmap(bitmap: MAYBE<BITMAP>): MAYBE<FORMAT_OBJECT> {
   })
 }
 
-export function importbitmap(
-  player: string,
-  bitmapentry: MAYBE<FORMAT_OBJECT>,
-): MAYBE<BITMAP> {
-  return unformatobject(player, bitmapentry, BITMAP_KEYS, {
+export function importbitmap(bitmapentry: MAYBE<FORMAT_OBJECT>): MAYBE<BITMAP> {
+  return unformatobject(bitmapentry, BITMAP_KEYS, {
     bits: (bits: number[]) => new Uint8Array(bits),
   })
 }
@@ -97,10 +94,9 @@ export function exportcodepage(
 
 // safe to serialize copy of codepage
 export function importcodepage(
-  player: string,
   codepageentry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<CODE_PAGE> {
-  return unformatobject<CODE_PAGE>(player, codepageentry, CODE_PAGE_KEYS, {
+  return unformatobject<CODE_PAGE>(codepageentry, CODE_PAGE_KEYS, {
     board: importboard,
     object: importboardelement,
     terrain: importboardelement,

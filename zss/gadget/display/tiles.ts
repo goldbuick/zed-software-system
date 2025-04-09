@@ -9,10 +9,7 @@ import {
   Vector2,
 } from 'three'
 import { RUNTIME } from 'zss/config'
-import {
-  loadcharsetfrombytes,
-  loadpalettefrombytes,
-} from 'zss/feature/bytes'
+import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
 import { MAYBE } from 'zss/mapping/types'

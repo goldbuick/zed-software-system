@@ -83,7 +83,7 @@ export function TapeTerminal() {
               const input = `#${message} ${data.join(' ')}`
               vm_cli(SOFTWARE, input, player)
             } else {
-              SOFTWARE.emit(`${target}:${message}`, data, player)
+              SOFTWARE.emit(player, `${target}:${message}`, data)
             }
           },
         }}
