@@ -263,9 +263,9 @@ export function memoryplayerlogin(player: string): boolean {
   if (!isstring(player) || !player) {
     return api_error(
       SOFTWARE,
+      player,
       'login',
       `failed for playerid ==>${player}<==`,
-      player,
     )
   }
 
@@ -273,9 +273,9 @@ export function memoryplayerlogin(player: string): boolean {
   if (!ispresent(mainbook)) {
     return api_error(
       SOFTWARE,
+      player,
       'login:main',
       `login failed to find book 'main'`,
-      player,
     )
   }
 
@@ -295,9 +295,9 @@ export function memoryplayerlogin(player: string): boolean {
   if (titleboards.length === 0) {
     return api_error(
       SOFTWARE,
+      player,
       'login:title',
       `login failed to find board with '${MEMORY_LABEL.TITLE}' stat`,
-      player,
     )
   }
 
@@ -305,9 +305,9 @@ export function memoryplayerlogin(player: string): boolean {
   if (!ispresent(playerkind)) {
     return api_error(
       SOFTWARE,
+      player,
       'login:player',
       `login failed to find object type '${MEMORY_LABEL.PLAYER}'`,
-      player,
     )
   }
 

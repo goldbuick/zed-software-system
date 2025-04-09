@@ -171,7 +171,6 @@ const register = createdevice(
     if (!register.session(message)) {
       return
     }
-    console.info(message)
     switch (message.target) {
       case 'ready': {
         doasync(register, message.player, async () => {
