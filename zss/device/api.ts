@@ -37,9 +37,9 @@ export function api_error(
   device: DEVICELIKE,
   player: string,
   kind: string,
-  message: string,
+  ...message: any[]
 ) {
-  device.emit(player, `error:${kind}`, message)
+  device.emit(player, 'error', [`$red${kind}$blue>>`, ...message])
   return false
 }
 
@@ -59,6 +59,10 @@ export function api_debug(
 ) {
   device.emit(player, 'debug', message)
   return true
+}
+
+export function api_toast(device: DEVICELIKE, player: string, toast: string) {
+  device.emit(player, 'tape:toast', toast)
 }
 
 export function broadcast_startstream(
@@ -170,13 +174,13 @@ export function platform_ready(device: DEVICELIKE) {
   device.emit('', 'ready')
 }
 
-export function register_touchkey(
-  device: DEVICELIKE,
-  player: string,
-  key: string,
-) {
-  device.emit(player, 'register:touchkey', key)
-}
+// export function register_touchkey(
+//   device: DEVICELIKE,
+//   player: string,
+//   key: string,
+// ) {
+//   device.emit(player, 'register:touchkey', key)
+// }
 
 export function register_loginready(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:loginready', true)
@@ -225,10 +229,6 @@ export function register_downloadjsonfile(
   device.emit(player, 'register:downloadjsonfile', [data, filename])
 }
 
-export function tape_toast(device: DEVICELIKE, player: string, toast: string) {
-  device.emit(player, 'tape:toast', toast)
-}
-
 export function register_dev(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:dev', undefined)
 }
@@ -237,13 +237,13 @@ export function register_share(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:share', undefined)
 }
 
-export function register_select(
-  device: DEVICELIKE,
-  player: string,
-  book: string,
-) {
-  device.emit(player, 'register:select', book)
-}
+// export function register_select(
+//   device: DEVICELIKE,
+//   player: string,
+//   book: string,
+// ) {
+//   device.emit(player, 'register:select', book)
+// }
 
 export function register_nuke(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:nuke', undefined)
@@ -549,11 +549,11 @@ export function createbinaryreader(
 
 export function vm_loader(
   device: DEVICELIKE,
+  player: string,
   arg: any,
   format: 'file' | 'text' | 'json' | 'binary',
   eventname: string,
   content: any,
-  player: string,
 ) {
   let withcontent: any
   switch (format) {

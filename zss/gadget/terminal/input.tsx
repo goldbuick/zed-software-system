@@ -301,7 +301,7 @@ export function TapeTerminalInput({
                         .filter((item) => item !== invoke),
                     ],
                   })
-                  vm_cli(SOFTWARE, invoke, player)
+                  vm_cli(SOFTWARE, player, invoke)
                   if (quickterminal) {
                     tape_terminal_close(SOFTWARE, player)
                   }
@@ -346,7 +346,7 @@ export function TapeTerminalInput({
               if (mods.ctrl) {
                 switch (lkey) {
                   case 'e':
-                    vm_cli(SOFTWARE, '#export', registerreadplayer())
+                    vm_cli(SOFTWARE, registerreadplayer(), '#export')
                     break
                   case 'a':
                     useTapeTerminal.setState({
@@ -382,11 +382,11 @@ export function TapeTerminalInput({
                             ) {
                               vm_loader(
                                 SOFTWARE,
+                                registerreadplayer(),
                                 undefined,
                                 'json',
                                 `file:${json.exported}`,
                                 JSON.stringify(json),
-                                registerreadplayer(),
                               )
                               return
                             }

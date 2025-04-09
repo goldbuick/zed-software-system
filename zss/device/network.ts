@@ -47,24 +47,24 @@ async function runnetworkfetch(
     case 'text/plain': {
       const content = await response.text()
       write(SOFTWARE, player, JSON.stringify(content))
-      vm_loader(SOFTWARE, arg, 'text', eventname, content, registerreadplayer())
+      vm_loader(SOFTWARE, registerreadplayer(), arg, 'text', eventname, content)
       break
     }
     case 'application/json': {
       const content = await response.json()
       write(SOFTWARE, player, JSON.stringify(content))
-      vm_loader(SOFTWARE, arg, 'json', eventname, content, registerreadplayer())
+      vm_loader(SOFTWARE, registerreadplayer(), arg, 'json', eventname, content)
       break
     }
     case 'application/octet-stream': {
       const content = await response.arrayBuffer()
       vm_loader(
         SOFTWARE,
+        registerreadplayer(),
         arg,
         'binary',
         eventname,
         new Uint8Array(content),
-        registerreadplayer(),
       )
       break
     }
@@ -129,9 +129,9 @@ const network = createdevice('network', [], (message) => {
           const joinurl = `${location.origin}/join/#${topic}`
           const url = await shorturl(joinurl)
           if (hidden) {
-            writecopyit(network, url, `secret join url`, message.player, false)
+            writecopyit(network, message.player, url, `secret join url`, false)
           } else {
-            writecopyit(network, url, url, message.player)
+            writecopyit(network, message.player, url, url)
           }
         }
       })

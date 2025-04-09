@@ -78,11 +78,11 @@ const synthdevice = createdevice('synth', [], (message) => {
         await waitfor(1000)
         vm_loader(
           synthdevice,
+          registerreadplayer(),
           undefined,
           'text',
           'audioenabled',
           '',
-          registerreadplayer(),
         )
       })
       break
@@ -156,7 +156,7 @@ const synthdevice = createdevice('synth', [], (message) => {
     case 'tta':
       doasync(synthdevice, message.player, async () => {
         if (isarray(message.data)) {
-          await playtta(synth, message.player, message.data)
+          await playtta(message.player, synth, message.data)
         }
       })
       break

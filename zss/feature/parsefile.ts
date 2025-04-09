@@ -83,11 +83,11 @@ export function parsewebfile(player: string, file: File | undefined) {
           .then((content) =>
             vm_loader(
               SOFTWARE,
+              player,
               undefined,
               'text',
               `file:${file.name}`,
               content,
-              player,
             ),
           )
           .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
@@ -98,11 +98,11 @@ export function parsewebfile(player: string, file: File | undefined) {
           .then((content) =>
             vm_loader(
               SOFTWARE,
+              player,
               undefined,
               'json',
               `file:${file.name}`,
               content,
-              player,
             ),
           )
           .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
@@ -116,11 +116,11 @@ export function parsewebfile(player: string, file: File | undefined) {
         parsebinaryfile(file, player, (binaryfile) =>
           vm_loader(
             SOFTWARE,
+            player,
             undefined,
             'binary',
             `file:${file.name}`,
             binaryfile,
-            player,
           ),
         ).catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
         break

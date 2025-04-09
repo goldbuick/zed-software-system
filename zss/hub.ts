@@ -35,6 +35,7 @@ export const hub: HUB = {
       case 'tape:debug':
         break
       default:
+        // console.info(message)
         // console.info(message.player, message.target, message.data)
         break
     }

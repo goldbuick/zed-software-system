@@ -156,6 +156,7 @@ export function TapeEditor() {
   const edge = textformatreadedges(context)
 
   useEffect(() => {
+    // TODO: editor.player should just be registerreadplayer()
     vm_codewatch(SOFTWARE, editor.player, editor.book, editor.path)
     return () => {
       vm_coderelease(SOFTWARE, editor.player, editor.book, editor.path)

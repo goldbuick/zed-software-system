@@ -34,21 +34,21 @@ const chat = createdevice('chat', [], (message) => {
         twitchchatclient.onMessage((_, user, text) => {
           vm_loader(
             chat,
+            player,
             undefined,
             'text',
             `chat:message:${message.data}`,
             `${user}:${text}`,
-            player,
           )
         })
         twitchchatclient.onAction((_, user, text) => {
           vm_loader(
             chat,
+            player,
             undefined,
             'text',
             `chat:action:${message.data}`,
             `${user}:${text}`,
-            player,
           )
         })
       }

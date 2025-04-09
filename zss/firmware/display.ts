@@ -1,4 +1,4 @@
-import { api_error, tape_toast } from 'zss/device/api'
+import { api_error, api_toast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
@@ -12,7 +12,7 @@ import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 export const DISPLAY_FIRMWARE = createfirmware()
   .command('toast', (_, words) => {
     const text = words.map(maptostring).join('')
-    tape_toast(SOFTWARE, READ_CONTEXT.elementfocus, text)
+    api_toast(SOFTWARE, READ_CONTEXT.elementfocus, text)
     return 0
   })
   .command('palette', (_, words) => {

@@ -143,7 +143,7 @@ export function memorycreatesoftwarebook(maybename?: string) {
     book.name = maybename
   }
   memorysetbook(book)
-  api_info(SOFTWARE, `created [book] ${book.name}`)
+  api_info(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
   return book
 }
 
@@ -154,7 +154,7 @@ export function memoryensurebookbyname(name: string) {
     book.name = name
   }
   memorysetbook(book)
-  api_info(SOFTWARE, `created [book] ${book.name}`)
+  api_info(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
   return book
 }
 

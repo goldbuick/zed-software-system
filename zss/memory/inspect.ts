@@ -204,8 +204,8 @@ export function memoryinspectcommand(path: string, player: string) {
     case 'copycoords':
       register_copy(
         SOFTWARE,
-        [element.x ?? 0, element.y ?? 0].join(' '),
         memoryreadoperator(),
+        [element.x ?? 0, element.y ?? 0].join(' '),
       )
       break
     case 'bg':

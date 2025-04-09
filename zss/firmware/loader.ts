@@ -76,14 +76,19 @@ export const LOADER_FIRMWARE = createfirmware({
   })
   .command('text', (_, words) => {
     const text = words.map(maptostring).join(' ')
-    api_info(SOFTWARE, '$175', text)
+    api_info(SOFTWARE, READ_CONTEXT.elementfocus, '$175', text)
     return 0
   })
   .command('hyperlink', (_, args) => {
     const [labelword, ...words] = args
     const label = maptostring(labelword)
     const hyperlink = words.map(maptostring).join(' ')
-    api_info(SOFTWARE, '$175', `!${hyperlink};${label}`)
+    api_info(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      '$175',
+      `!${hyperlink};${label}`,
+    )
     return 0
   })
   .command('txt', loadertext)

@@ -331,7 +331,7 @@ export function EditorInput({
                     }
                     break
                   case 'p':
-                    vm_cli(SOFTWARE, strvalueselected, player)
+                    vm_cli(SOFTWARE, player, strvalueselected)
                     writetext(
                       SOFTWARE,
                       player,

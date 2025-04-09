@@ -110,7 +110,7 @@ async function loadmem(books: string) {
   }
   // init vm with content
   const selectedid = (await readselected()) ?? ''
-  vm_books(register, books, selectedid, myplayerid)
+  vm_books(register, myplayerid, books, selectedid)
 }
 
 let currenthash = ''
@@ -171,6 +171,7 @@ const register = createdevice(
     if (!register.session(message)) {
       return
     }
+    console.info(message)
     switch (message.target) {
       case 'ready': {
         doasync(register, message.player, async () => {
@@ -185,7 +186,7 @@ const register = createdevice(
       case 'error:login:title':
       case 'error:login:player':
         if (message.player === myplayerid) {
-          vm_cli(register, '#pages', myplayerid)
+          vm_cli(register, myplayerid, '#pages')
           writewikilink()
           tape_terminal_full(register, myplayerid)
         }

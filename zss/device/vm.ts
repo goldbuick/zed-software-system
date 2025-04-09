@@ -100,7 +100,7 @@ async function savestate(autosave?: boolean) {
     const historylabel = autosave
       ? `autosave`
       : `${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
-    register_savemem(vm, historylabel, content, memoryreadoperator())
+    register_savemem(vm, memoryreadoperator(), historylabel, content)
   }
 }
 
@@ -110,7 +110,7 @@ async function forkstate() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
-    register_forkmem(vm, content, memoryreadoperator())
+    register_forkmem(vm, memoryreadoperator(), content)
   }
 }
 
@@ -431,7 +431,7 @@ const vm = createdevice(
         }
         break
       case 'inspect':
-        if (ispresent(message.player) && isarray(message.data)) {
+        if (isarray(message.data)) {
           const [p1, p2] = message.data as [PT, PT]
           memoryinspect(message.player, p1, p2)
         }
@@ -439,7 +439,7 @@ const vm = createdevice(
       case 'loader':
         // user input from built-in console
         // or events from devices
-        if (ispresent(message.player) && isarray(message.data)) {
+        if (isarray(message.data)) {
           const [arg, format, eventname, content] = message.data
           if (format === 'file') {
             // handled web file pastes
@@ -481,28 +481,23 @@ const vm = createdevice(
         const { target, path } = parsetarget(message.target)
         switch (NAME(target)) {
           case 'batch':
-            if (ispresent(message.player)) {
-              memoryinspectbatchcommand(path, message.player)
+            memoryinspectbatchcommand(path, message.player)
+            break
+          case 'empty': {
+            const empty = parsetarget(path)
+            switch (empty.target) {
+              case 'copycoords':
+                register_copy(
+                  vm,
+                  memoryreadoperator(),
+                  empty.path.split(',').join(' '),
+                )
+                break
             }
             break
-          case 'empty':
-            if (ispresent(message.player)) {
-              const empty = parsetarget(path)
-              switch (empty.target) {
-                case 'copycoords':
-                  register_copy(
-                    vm,
-                    empty.path.split(',').join(' '),
-                    memoryreadoperator(),
-                  )
-                  break
-              }
-            }
-            break
+          }
           case 'inspect':
-            if (ispresent(message.player)) {
-              memoryinspectcommand(path, message.player)
-            }
+            memoryinspectcommand(path, message.player)
             break
           case 'touched':
             if (isarray(message.data)) {

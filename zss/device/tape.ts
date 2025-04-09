@@ -43,15 +43,17 @@ function terminallog(message: MESSAGE): string {
 
 function terminaladdmessage(message: MESSAGE) {
   const { terminal } = useTape.getState()
-  let logs: TAPE_ROW[] = [
-    [
-      createsid(),
-      message.target,
-      pickwith(message.sender, messagecrew),
-      ...message.data,
-    ],
-    ...terminal.logs,
+  const row: TAPE_ROW = [
+    createsid(),
+    message.target,
+    pickwith(message.sender, messagecrew),
+    ...message.data,
   ]
+  if (isarray(message.data) && message.data.length === 0) {
+    debugger
+  }
+
+  let logs: TAPE_ROW[] = [row, ...terminal.logs]
   if (logs.length > TAPE_MAX_LINES) {
     logs = logs.slice(0, TAPE_MAX_LINES)
   }
@@ -85,7 +87,7 @@ function terminalinclayout(inc: boolean) {
   useTape.setState({ layout: nextlayout })
 }
 
-const tape = createdevice('tape', [], (message) => {
+const tape = createdevice('tape', ['info', 'debug', 'error'], (message) => {
   if (!tape.session(message)) {
     return
   }
@@ -124,6 +126,8 @@ const tape = createdevice('tape', [], (message) => {
     case 'debug':
       if (terminal.level >= TAPE_LOG_LEVEL.DEBUG) {
         terminaladdmessage(message)
+        // eslint-disable-next-line no-console
+        console.debug(terminallog(message))
       }
       break
     case 'error':

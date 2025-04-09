@@ -376,7 +376,7 @@ export const CLI_FIRMWARE = createfirmware()
     const [labelword, ...words] = args
     const label = maptostring(labelword)
     const hyperlink = words.map(maptostring).join(' ')
-    api_info(SOFTWARE, `!${hyperlink};${label}`)
+    api_info(SOFTWARE, READ_CONTEXT.elementfocus, `!${hyperlink};${label}`)
     return 0
   })
   // ---

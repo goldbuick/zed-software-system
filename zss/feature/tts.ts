@@ -30,8 +30,8 @@ export async function playtts(synth: MAYBE<AUDIO_SYNTH>, data: string[]) {
 const tta = new Map<string, ToneAudioBuffer>()
 
 export async function playtta(
-  synth: MAYBE<AUDIO_SYNTH>,
   player: string,
+  synth: MAYBE<AUDIO_SYNTH>,
   data: string[],
 ) {
   if (!ispresent(synth)) {

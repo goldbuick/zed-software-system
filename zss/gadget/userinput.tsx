@@ -197,15 +197,15 @@ document.addEventListener(
         break
       case 's':
         if (mods.ctrl) {
-          vm_cli(SOFTWARE, '#save', registerreadplayer())
+          vm_cli(SOFTWARE, registerreadplayer(), '#save')
         }
         break
       case 'j':
         if (mods.ctrl) {
           vm_cli(
             SOFTWARE,
-            mods.shift ? '#jointab hush' : '#jointab',
             registerreadplayer(),
+            mods.shift ? '#jointab hush' : '#jointab',
           )
         }
         break
@@ -213,8 +213,8 @@ document.addEventListener(
         if (mods.ctrl) {
           vm_cli(
             SOFTWARE,
-            mods.shift ? '#joincode hush' : '#joincode',
             registerreadplayer(),
+            mods.shift ? '#joincode hush' : '#joincode',
           )
         }
         break
@@ -225,7 +225,7 @@ document.addEventListener(
         break
       case 'f':
         if (mods.ctrl) {
-          vm_cli(SOFTWARE, '#fork', registerreadplayer())
+          vm_cli(SOFTWARE, registerreadplayer(), '#fork')
         }
         break
     }

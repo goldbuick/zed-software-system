@@ -82,7 +82,7 @@ export const NETWORK_FIRMWARE = createfirmware()
     const [maybechannel] = readargs(words, 0, [ARG_TYPE.ANY])
     switch (NAME(maybechannel)) {
       default:
-        chat_connect(SOFTWARE, maybechannel, READ_CONTEXT.elementfocus)
+        chat_connect(SOFTWARE, READ_CONTEXT.elementfocus, maybechannel)
         break
       case 'close':
         chat_disconnect(SOFTWARE, READ_CONTEXT.elementfocus)
