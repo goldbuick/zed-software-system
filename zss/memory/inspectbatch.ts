@@ -21,7 +21,7 @@ import {
   memoryinspectpastemenu,
 } from './inspectcopypaste'
 
-import { memoryreadoperator, memoryreadplayerboard } from '.'
+import { memoryreadplayerboard } from '.'
 
 export function memoryinspectbatchcommand(path: string, player: string) {
   const board = memoryreadplayerboard(player)
@@ -68,7 +68,7 @@ export function memoryinspectbatchcommand(path: string, player: string) {
       memoryinspectbgarea(player, p1, p2, 'bg')
       break
     case 'copycoords':
-      register_copy(SOFTWARE, memoryreadoperator(), [x1, y1, x2, y2].join(' '))
+      register_copy(SOFTWARE, player, [x1, y1, x2, y2].join(' '))
       break
     case 'remixrun':
       boardremix(
@@ -85,7 +85,7 @@ export function memoryinspectbatchcommand(path: string, player: string) {
         // wait a little
         await waitfor(800)
         // open codepage
-        vm_cli(SOFTWARE, memoryreadoperator(), `#pageopen ${batch.path}`)
+        vm_cli(SOFTWARE, player, `#pageopen ${batch.path}`)
       })
       break
     default:

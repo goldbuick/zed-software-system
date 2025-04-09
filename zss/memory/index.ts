@@ -418,7 +418,7 @@ export function memorymoveobject(
   element: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ) {
-  if (!ispresent(element)) {
+  if (!ispresent(element?.id)) {
     return false
   }
   const blocked = bookboardmoveobject(book, board, element, dest)
@@ -434,7 +434,7 @@ export function memorymoveobject(
         )
         if (boards.length) {
           const board = pick(boards)
-          bookplayermovetoboard(book, element.id ?? '', board.id, {
+          bookplayermovetoboard(book, element.id, board.id, {
             x: BOARD_WIDTH - 1,
             y: dest.y,
           })
@@ -448,7 +448,7 @@ export function memorymoveobject(
         )
         if (boards.length) {
           const board = pick(boards)
-          bookplayermovetoboard(book, element.id ?? '', board.id, {
+          bookplayermovetoboard(book, element.id, board.id, {
             x: 0,
             y: dest.y,
           })
@@ -462,7 +462,7 @@ export function memorymoveobject(
         )
         if (boards.length) {
           const board = pick(boards)
-          bookplayermovetoboard(book, element.id ?? '', board.id, {
+          bookplayermovetoboard(book, element.id, board.id, {
             x: dest.x,
             y: BOARD_HEIGHT - 1,
           })
@@ -476,7 +476,7 @@ export function memorymoveobject(
         )
         if (boards.length) {
           const board = pick(boards)
-          bookplayermovetoboard(book, element.id ?? '', board.id, {
+          bookplayermovetoboard(book, element.id, board.id, {
             x: dest.x,
             y: 0,
           })
@@ -486,13 +486,12 @@ export function memorymoveobject(
       sendinteraction('', blocked, element, 'thud')
     }
     if (element.kind === MEMORY_LABEL.PLAYER) {
-      // blocked is touched by player
-      const player = element.id ?? ''
       const blockedbyplayer = ispid(blocked.id)
       sendinteraction(
-        player,
+        element.id,
         element,
         blocked,
+        // blocked is bumped or touched by player
         blockedbyplayer ? 'bump' : 'touch',
       )
     } else if (element.collision === COLLISION.ISBULLET) {
@@ -748,7 +747,7 @@ export function memorycleanup() {
 }
 
 export function memorycli(player: string, cli = '') {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN, player)
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
   }

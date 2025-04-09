@@ -75,6 +75,7 @@ import {
   vm_codeaddress,
   vm_flush,
   vm_logout,
+  register_loginfail,
 } from './api'
 import { modemobservevaluestring } from './modem'
 
@@ -244,6 +245,9 @@ const vm = createdevice(
           write(vm, memoryreadoperator(), `login from ${message.player}`)
           // ack
           vm.replynext(message, 'acklogin', true)
+        } else {
+          // signal failure
+          register_loginfail(vm, message.player)
         }
         break
       case 'doot':

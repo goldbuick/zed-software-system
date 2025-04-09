@@ -181,9 +181,7 @@ const register = createdevice(
         })
         break
       }
-      case 'error:login:main':
-      case 'error:login:title':
-      case 'error:login:player':
+      case 'loginfail':
         if (message.player === myplayerid) {
           vm_cli(register, myplayerid, '#pages')
           writewikilink()

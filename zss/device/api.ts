@@ -174,13 +174,9 @@ export function platform_ready(device: DEVICELIKE) {
   device.emit('', 'ready')
 }
 
-// export function register_touchkey(
-//   device: DEVICELIKE,
-//   player: string,
-//   key: string,
-// ) {
-//   device.emit(player, 'register:touchkey', key)
-// }
+export function register_loginfail(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:loginfail')
+}
 
 export function register_loginready(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:loginready', true)
@@ -236,14 +232,6 @@ export function register_dev(device: DEVICELIKE, player: string) {
 export function register_share(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:share', undefined)
 }
-
-// export function register_select(
-//   device: DEVICELIKE,
-//   player: string,
-//   book: string,
-// ) {
-//   device.emit(player, 'register:select', book)
-// }
 
 export function register_nuke(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:nuke', undefined)

@@ -49,14 +49,12 @@ function terminaladdmessage(message: MESSAGE) {
     pickwith(message.sender, messagecrew),
     ...message.data,
   ]
-  if (isarray(message.data) && message.data.length === 0) {
-    debugger
-  }
 
   let logs: TAPE_ROW[] = [row, ...terminal.logs]
   if (logs.length > TAPE_MAX_LINES) {
     logs = logs.slice(0, TAPE_MAX_LINES)
   }
+
   useTape.setState((state) => ({
     terminal: {
       ...state.terminal,
@@ -99,7 +97,6 @@ const tape = createdevice('tape', ['info', 'debug', 'error'], (message) => {
           const enabled = ispresent(message.data)
             ? !!message.data
             : !state.inspector
-
           write(
             tape,
             message.player,
@@ -203,12 +200,11 @@ const tape = createdevice('tape', ['info', 'debug', 'error'], (message) => {
       break
     case 'editor:open':
       if (isarray(message.data)) {
-        const { player } = message
         const [book, path, type, title, refsheet] = message.data
         useTape.setState((state) => ({
           editor: {
             open: true,
-            player,
+            player: message.player,
             book,
             path,
             type,

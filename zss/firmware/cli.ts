@@ -473,10 +473,7 @@ export const CLI_FIRMWARE = createfirmware()
     ])
 
     // create book if needed
-    const mainbook = memoryensuresoftwarebook(
-      MEMORY_LABEL.MAIN,
-      READ_CONTEXT.elementfocus,
-    )
+    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
     if (!ispresent(mainbook)) {
       return 0
     }
@@ -537,10 +534,7 @@ export const CLI_FIRMWARE = createfirmware()
   .command('pagetrash', (chip, words) => {
     const [page] = readargs(words, 0, [ARG_TYPE.NAME])
 
-    const mainbook = memoryensuresoftwarebook(
-      MEMORY_LABEL.MAIN,
-      READ_CONTEXT.elementfocus,
-    )
+    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
     const codepage = bookclearcodepage(mainbook, page)
     if (ispresent(page)) {
       const name = codepagereadname(codepage)
@@ -595,10 +589,7 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('pages', () => {
     writesection(SOFTWARE, READ_CONTEXT.elementfocus, `pages`)
-    const mainbook = memoryensuresoftwarebook(
-      MEMORY_LABEL.MAIN,
-      READ_CONTEXT.elementfocus,
-    )
+    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
     if (ispresent(mainbook)) {
       writeoption(
         SOFTWARE,
@@ -657,10 +648,7 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('boards', () => {
     writesection(SOFTWARE, READ_CONTEXT.elementfocus, `boards`)
-    const mainbook = memoryensuresoftwarebook(
-      MEMORY_LABEL.MAIN,
-      READ_CONTEXT.elementfocus,
-    )
+    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
     if (ispresent(mainbook)) {
       writeoption(
         SOFTWARE,
