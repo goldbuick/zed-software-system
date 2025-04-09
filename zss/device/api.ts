@@ -113,9 +113,6 @@ export function gadgetserver_clearscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'gadgetserver:clearscroll')
 }
 
-export function gadgetserver_clearplayer(device: DEVICELIKE, player: string) {
-  device.emit(player, 'gadgetserver:clearplayer')
-}
 
 export function network_fetch(
   device: DEVICELIKE,
@@ -360,18 +357,6 @@ export function tape_editor_close(device: DEVICELIKE, player: string) {
   device.emit(player, 'tape:editor:close')
 }
 
-export function userinput_up(device: DEVICELIKE, player: string, input: INPUT) {
-  device.emit(player, 'userinput:up', input)
-}
-
-export function userinput_down(
-  device: DEVICELIKE,
-  player: string,
-  input: INPUT,
-) {
-  device.emit(player, 'userinput:down', input)
-}
-
 export function vm_operator(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:operator')
 }
@@ -422,14 +407,6 @@ export function vm_copyjsonfile(
   device.emit(player, 'vm:copyjsonfile', path)
 }
 
-export function vm_codepage(
-  device: DEVICELIKE,
-  player: string,
-  path: string[],
-  refsheet: string,
-) {
-  device.emit(player, 'vm:codepage', [path, refsheet])
-}
 
 export function vm_refsheet(
   device: DEVICELIKE,

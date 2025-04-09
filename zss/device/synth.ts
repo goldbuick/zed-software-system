@@ -78,7 +78,7 @@ const synthdevice = createdevice('synth', [], (message) => {
         await waitfor(1000)
         vm_loader(
           synthdevice,
-          registerreadplayer(),
+          message.player,
           undefined,
           'text',
           'audioenabled',

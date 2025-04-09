@@ -47,20 +47,20 @@ async function runnetworkfetch(
     case 'text/plain': {
       const content = await response.text()
       write(SOFTWARE, player, JSON.stringify(content))
-      vm_loader(SOFTWARE, registerreadplayer(), arg, 'text', eventname, content)
+      vm_loader(SOFTWARE, player, arg, 'text', eventname, content)
       break
     }
     case 'application/json': {
       const content = await response.json()
       write(SOFTWARE, player, JSON.stringify(content))
-      vm_loader(SOFTWARE, registerreadplayer(), arg, 'json', eventname, content)
+      vm_loader(SOFTWARE, player, arg, 'json', eventname, content)
       break
     }
     case 'application/octet-stream': {
       const content = await response.arrayBuffer()
       vm_loader(
         SOFTWARE,
-        registerreadplayer(),
+        player,
         arg,
         'binary',
         eventname,

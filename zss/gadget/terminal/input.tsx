@@ -382,7 +382,7 @@ export function TapeTerminalInput({
                             ) {
                               vm_loader(
                                 SOFTWARE,
-                                registerreadplayer(),
+                                player,
                                 undefined,
                                 'json',
                                 `file:${json.exported}`,

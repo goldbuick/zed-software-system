@@ -96,8 +96,8 @@ export const NETWORK_FIRMWARE = createfirmware()
       default:
         broadcast_startstream(
           SOFTWARE,
-          maybestreamkey,
           READ_CONTEXT.elementfocus,
+          maybestreamkey,
         )
         break
       case 'stop':
