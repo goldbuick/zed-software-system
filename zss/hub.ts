@@ -26,19 +26,6 @@ export const hub: HUB = {
     hub.invoke(createmessage(session, player, sender, target, data))
   },
   invoke(message) {
-    switch (message.target) {
-      case 'tick':
-      case 'tock':
-      case 'vm:doot':
-      case 'second':
-      case 'tape:info':
-      case 'tape:debug':
-        break
-      default:
-        // console.info(message)
-        // console.info(message.player, message.target, message.data)
-        break
-    }
     devices.forEach((device) => device.handle(message))
   },
   connect(device) {

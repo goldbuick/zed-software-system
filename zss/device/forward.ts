@@ -57,40 +57,33 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       switch (route.path) {
         case 'sync':
         case 'joinack':
+        case 'acklogin':
         case 'ackoperator':
+        case 'ackzsswords':
         case 'gadgetclient':
           return true
       }
       break
     }
   }
-  // console.info('serv', message.target)
+  console.info('serv', message.target)
   return false
 }
 
 // create server -> client forward
 export function shouldforwardclienttoserver(message: MESSAGE): boolean {
-  switch (message.target) {
-    case 'info':
-    case 'debug':
-    case 'error':
+  const route = parsetarget(message.target)
+  switch (route.target) {
+    case 'vm':
+    case 'modem':
+    case 'gadgetserver':
       return true
-    default: {
-      const route = parsetarget(message.target)
-      switch (route.target) {
-        case 'vm':
-        case 'modem':
-        case 'gadgetserver':
-          return true
-      }
-      switch (route.path) {
-        case 'sync':
-        case 'joinack':
-          return true
-      }
-      break
-    }
   }
-  // console.info('client', message.target)
+  switch (route.path) {
+    case 'sync':
+    case 'joinack':
+      return true
+  }
+  console.info('client', message.target)
   return false
 }
