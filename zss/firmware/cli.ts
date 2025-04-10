@@ -588,61 +588,62 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('pages', () => {
-    writesection(SOFTWARE, READ_CONTEXT.elementfocus, `pages`)
     const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-    if (ispresent(mainbook)) {
-      writeoption(
+    if (!ispresent(mainbook)) {
+      return 0
+    }
+    writesection(SOFTWARE, READ_CONTEXT.elementfocus, `pages`)
+    writeoption(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      'main',
+      `${mainbook.name} $GREEN${mainbook.id}`,
+    )
+    if (mainbook.pages.length) {
+      const sorted = bookreadsortedcodepages(mainbook)
+      sorted.forEach((page) => {
+        const name = codepagereadname(page)
+        const type = codepagereadtypetostring(page)
+        write(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          `!pageopen ${page.id};$blue[${type}]$white ${name}`,
+        )
+      })
+    } else {
+      write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
+      writetext(SOFTWARE, READ_CONTEXT.elementfocus, `$white no pages found`)
+      writetext(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
-        'main',
-        `${mainbook.name} $GREEN${mainbook.id}`,
+        `$white use @ to create a page`,
       )
-      if (mainbook.pages.length) {
-        const sorted = bookreadsortedcodepages(mainbook)
-        sorted.forEach((page) => {
-          const name = codepagereadname(page)
-          const type = codepagereadtypetostring(page)
-          write(
-            SOFTWARE,
-            READ_CONTEXT.elementfocus,
-            `!pageopen ${page.id};$blue[${type}]$white ${name}`,
-          )
-        })
-      } else {
-        write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
-        writetext(SOFTWARE, READ_CONTEXT.elementfocus, `$white no pages found`)
-        writetext(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `$white use @ to create a page`,
-        )
-        writetext(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `$white @board name of board`,
-        )
-        writetext(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `$white @object name of object`,
-        )
-        writetext(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `$white @terrain name of terrain`,
-        )
-        writetext(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `$white You can omit the type and it will default to object`,
-        )
-        writetext(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `$white @object name of object`,
-        )
-        writetext(SOFTWARE, READ_CONTEXT.elementfocus, `$white @name of object`)
-      }
+      writetext(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        `$white @board name of board`,
+      )
+      writetext(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        `$white @object name of object`,
+      )
+      writetext(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        `$white @terrain name of terrain`,
+      )
+      writetext(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        `$white You can omit the type and it will default to object`,
+      )
+      writetext(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        `$white @object name of object`,
+      )
+      writetext(SOFTWARE, READ_CONTEXT.elementfocus, `$white @name of object`)
     }
     return 0
   })

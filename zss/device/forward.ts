@@ -32,6 +32,19 @@ export function createforward(handler: (message: MESSAGE) => void) {
   return { forward, disconnect }
 }
 
+// outbound message
+export function shouldnotforwardonpeerserver(message: MESSAGE): boolean {
+  switch (message.target) {
+    case 'tick':
+    case 'tock':
+    case 'ready':
+    case 'second':
+      return true
+  }
+  // console.info('peer', message.target)
+  return false
+}
+
 // create server -> client forward
 export function shouldforwardservertoclient(message: MESSAGE): boolean {
   switch (message.target) {
@@ -66,7 +79,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       break
     }
   }
-  console.info('serv', message.target)
+  // console.info('serv', message.target)
   return false
 }
 

@@ -164,7 +164,7 @@ const modem = createdevice('modem', ['second'], (message) => {
     case 'second':
       // send join message
       if (!joined && message.data % 2 === 0) {
-        modem.emit('', 'modem:join')
+        modem.emit(message.player, 'modem:join')
       }
       break
     case 'join':
@@ -200,7 +200,7 @@ const modem = createdevice('modem', ['second'], (message) => {
             modem,
           )
           if (syncMessageType === syncprotocol.messageYjsSyncStep1) {
-            modem.emit('', 'modem:sync', modemmessage(syncEncoder))
+            modem.emit(message.player, 'modem:sync', modemmessage(syncEncoder))
           }
         } catch (err: any) {
           api_error(modem, message.player, 'sync', err.message)

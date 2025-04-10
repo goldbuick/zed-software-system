@@ -149,7 +149,7 @@ const bridge = createdevice('bridge', [], (message) => {
       })
       break
     }
-    case 'connect':
+    case 'chatconnect':
       if (ispresent(twitchchatclient)) {
         api_error(
           bridge,
@@ -189,7 +189,7 @@ const bridge = createdevice('bridge', [], (message) => {
         })
       }
       break
-    case 'disconnect':
+    case 'chatdisconnect':
       if (ispresent(twitchchatclient)) {
         twitchchatclient.quit()
         twitchchatclient = undefined

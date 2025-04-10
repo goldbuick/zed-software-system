@@ -62,7 +62,7 @@ export function api_debug(
 }
 
 export function api_toast(device: DEVICELIKE, player: string, toast: string) {
-  device.emit(player, 'register:toast', toast)
+  device.emit(player, 'toast', toast)
 }
 
 export function bridge_startstream(
@@ -87,30 +87,6 @@ export function bridge_chatconnect(
 
 export function bridge_chatdisconnect(device: DEVICELIKE, player: string) {
   device.emit(player, 'bridge:chatdisconnect')
-}
-
-export function gadgetclient_paint(
-  device: DEVICELIKE,
-  player: string,
-  gadgetstate: GADGET_STATE,
-) {
-  device.emit(player, 'gadgetclient:paint', gadgetstate)
-}
-
-export function gadgetclient_patch(
-  device: DEVICELIKE,
-  player: string,
-  json: any,
-) {
-  device.emit(player, 'gadgetclient:patch', json)
-}
-
-export function gadgetserver_desync(device: DEVICELIKE, player: string) {
-  device.emit(player, 'gadgetserver:desync')
-}
-
-export function gadgetserver_clearscroll(device: DEVICELIKE, player: string) {
-  device.emit(player, 'gadgetserver:clearscroll')
 }
 
 export function bridge_fetch(
@@ -160,6 +136,30 @@ export function bridge_showjoincode(
   topic: string,
 ) {
   device.emit(player, 'bridge:showjoincode', [hidden, topic])
+}
+
+export function gadgetclient_paint(
+  device: DEVICELIKE,
+  player: string,
+  gadgetstate: GADGET_STATE,
+) {
+  device.emit(player, 'gadgetclient:paint', gadgetstate)
+}
+
+export function gadgetclient_patch(
+  device: DEVICELIKE,
+  player: string,
+  json: any,
+) {
+  device.emit(player, 'gadgetclient:patch', json)
+}
+
+export function gadgetserver_desync(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetserver:desync')
+}
+
+export function gadgetserver_clearscroll(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetserver:clearscroll')
 }
 
 export function platform_ready(device: DEVICELIKE) {

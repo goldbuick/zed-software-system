@@ -63,7 +63,10 @@ export function synthbroadcastdestination(): MAYBE<MediaStreamAudioDestinationNo
 }
 
 const synthdevice = createdevice('synth', [], (message) => {
-  if (!synthdevice.session(message)) {
+  if (
+    !synthdevice.session(message) ||
+    message.player !== registerreadplayer()
+  ) {
     return
   }
   if (enabled && !ispresent(synth)) {

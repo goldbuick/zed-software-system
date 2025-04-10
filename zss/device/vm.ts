@@ -251,28 +251,25 @@ const vm = createdevice(
         }
         break
       case 'doot':
-        if (ispresent(message.player)) {
-          // player keepalive
-          tracking[message.player] = 0
-          api_debug(vm, message.player, 'active')
+        // player keepalive
+        tracking[message.player] = 0
+        api_debug(vm, message.player, 'active')
+        break
+      case 'input': {
+        // player input
+        const flags = memoryreadflags(message.player)
+        const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
+        // add to input queue
+        if (!isarray(flags.inputqueue)) {
+          flags.inputqueue = []
+        }
+        if (input !== INPUT.NONE) {
+          flags.inputqueue.push([input, mods])
         }
         break
-      case 'input':
-        if (ispresent(message.player)) {
-          // player input
-          const flags = memoryreadflags(message.player)
-          const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
-          // add to input queue
-          if (!isarray(flags.inputqueue)) {
-            flags.inputqueue = []
-          }
-          if (input !== INPUT.NONE) {
-            flags.inputqueue.push([input, mods])
-          }
-        }
-        break
+      }
       case 'codewatch':
-        if (ispresent(message.player) && isarray(message.data)) {
+        if (isarray(message.data)) {
           const [book, path] = message.data
           const address = vm_codeaddress(book, path)
           // start watching
@@ -312,7 +309,7 @@ const vm = createdevice(
         }
         break
       case 'coderelease':
-        if (message.player && isarray(message.data)) {
+        if (isarray(message.data)) {
           const [book, path] = message.data
           // parse path
           const [, maybeobject] = path
@@ -333,10 +330,7 @@ const vm = createdevice(
         }
         break
       case 'halt':
-        if (
-          message.player === memoryreadoperator() &&
-          isboolean(message.data)
-        ) {
+        if (message.player === operator && isboolean(message.data)) {
           memorywritehalt(message.data)
         }
         break
@@ -380,56 +374,63 @@ const vm = createdevice(
         }
         break
       }
-      case 'copyjsonfile': {
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        if (ispresent(mainbook) && isarray(message.data)) {
-          const [address] = message.data
-          const codepage = bookreadcodepagebyaddress(mainbook, address)
-          if (ispresent(codepage)) {
-            register_copyjsonfile(
-              vm,
-              operator,
-              codepage,
-              `${codepagereadname(codepage)}.${codepagereadtypetostring(codepage)}.json`,
-            )
+      case 'copyjsonfile':
+        if (message.player === operator) {
+          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+          if (ispresent(mainbook) && isarray(message.data)) {
+            const [address] = message.data
+            const codepage = bookreadcodepagebyaddress(mainbook, address)
+            if (ispresent(codepage)) {
+              register_copyjsonfile(
+                vm,
+                operator,
+                codepage,
+                `${codepagereadname(codepage)}.${codepagereadtypetostring(codepage)}.json`,
+              )
+            }
+          }
+        }
+        break
+      case 'refsheet': {
+        if (message.player === operator) {
+          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+          const sorted = bookreadsortedcodepages(mainbook)
+          if (ispresent(mainbook) && isarray(message.data)) {
+            register_editor_close(vm, message.player)
+            writeheader(vm, message.player, `use as refsheet`)
+            sorted.forEach((page) => {
+              const name = codepagereadname(page)
+              const type = codepagereadtypetostring(page)
+              write(
+                vm,
+                message.player,
+                `!pageopenwith ${page.id} ${message.data.join(' ')};$blue[${type}]$white ${name}`,
+              )
+            })
           }
         }
         break
       }
-      case 'refsheet': {
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        const sorted = bookreadsortedcodepages(mainbook)
-        if (ispresent(mainbook) && isarray(message.data)) {
-          register_editor_close(vm, message.player)
-          writeheader(vm, message.player, `use as refsheet`)
-          sorted.forEach((page) => {
-            const name = codepagereadname(page)
-            const type = codepagereadtypetostring(page)
-            write(
-              vm,
-              message.player,
-              `!pageopenwith ${page.id} ${message.data.join(' ')};$blue[${type}]$white ${name}`,
-            )
+      case 'fork':
+        if (message.player === operator) {
+          doasync(vm, message.player, async () => {
+            await forkstate()
           })
         }
         break
-      }
-      case 'fork':
-        doasync(vm, message.player, async () => {
-          await forkstate()
-        })
-        break
       case 'flush':
-        doasync(vm, message.player, async () => {
-          await savestate()
-        })
+        if (message.player === operator) {
+          doasync(vm, message.player, async () => {
+            await savestate()
+          })
+        }
         break
       case 'cli':
         // user input from built-in console
         memorycli(message.player, message.data)
         break
       case 'restart':
-        if (message.player === memoryreadoperator()) {
+        if (message.player === operator) {
           memoryrestartallchipsandflags()
           vm_flush(vm, message.player)
         }

@@ -7,6 +7,7 @@ import {
   createforward,
   shouldforwardclienttoserver,
   shouldforwardservertoclient,
+  shouldnotforwardonpeerserver,
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -80,6 +81,7 @@ finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
   if ('pub' in msg) {
     // are we subscribed to this topic ?
     if (msg.topic === subscribetopic) {
+      // console.info('pub', msg.gme)
       topicbridge?.forward({
         ...msg.gme,
         // translate to software session
@@ -108,6 +110,7 @@ finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
     lastseen.set(msg.sub, current)
     // are we the host of this topic ?
     if (msg.topic === subscribetopic && finder._peerId === subscribetopic) {
+      // console.info('sub', msg.gme)
       topicbridge?.forward({
         ...msg.gme,
         // translate to software session
@@ -164,7 +167,10 @@ export function peerserver(hidden: boolean, tabopen: boolean) {
 
   // open bridge between peers
   topicbridge = createforward((message) => {
-    if (shouldforwardservertoclient(message)) {
+    if (
+      shouldforwardservertoclient(message) &&
+      shouldnotforwardonpeerserver(message) === false
+    ) {
       peerpublishmessage(host, message)
     }
   })
@@ -185,10 +191,10 @@ function peersubscribe(topic: string, player: string) {
     finder._peerId,
     createmessage(
       SOFTWARE.session(),
-      `vm:joinack`,
-      SOFTWARE.id(),
-      topic,
       player,
+      SOFTWARE.id(),
+      `vm:joinack`,
+      topic,
     ),
   )
   // not sure how slow of a poll this should be
@@ -198,6 +204,7 @@ function peersubscribe(topic: string, player: string) {
 export function peerclient(host: string, player: string) {
   peerusehost(host)
   peersubscribe(host, player)
+
   // open bridge between peers
   topicbridge = createforward((message) => {
     if (shouldforwardclienttoserver(message)) {

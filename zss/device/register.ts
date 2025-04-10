@@ -250,9 +250,12 @@ export function registerreadplayer() {
 
 const register = createdevice(
   'register',
-  ['ready', 'second', 'info', 'error', 'debug'],
+  ['ready', 'second', 'info', 'error', 'debug', 'toast'],
   function (message) {
     if (!register.session(message)) {
+      return
+    }
+    if (message.target !== 'ready' && message.player !== myplayerid) {
       return
     }
 
@@ -268,49 +271,39 @@ const register = createdevice(
         break
       }
       case 'loginfail':
-        if (message.player === myplayerid) {
-          vm_cli(register, myplayerid, '#pages')
-          writewikilink()
-          register_terminal_full(register, myplayerid)
-        }
+        vm_cli(register, myplayerid, '#pages')
+        writewikilink()
+        register_terminal_full(register, myplayerid)
         break
       case 'ackoperator':
-        if (message.player === myplayerid) {
-          doasync(register, message.player, async () => {
-            const urlcontent = readurlhash()
-            if (isjoin()) {
-              bridge_join(register, myplayerid, urlcontent)
-            } else {
-              // signal halting state
-              vm_halt(register, myplayerid, islocked())
-              // pull data && init
-              await loadmem(urlcontent)
-            }
-          })
-        }
+        doasync(register, message.player, async () => {
+          const urlcontent = readurlhash()
+          if (isjoin()) {
+            bridge_join(register, myplayerid, urlcontent)
+          } else {
+            // signal halting state
+            vm_halt(register, myplayerid, islocked())
+            // pull data && init
+            await loadmem(urlcontent)
+          }
+        })
         break
       case 'loginready':
-        if (message.player === myplayerid) {
-          vm_login(register, myplayerid)
-        }
+        vm_login(register, myplayerid)
         break
       case 'acklogin':
-        if (message.player === myplayerid) {
-          register_terminal_close(register, myplayerid)
-          gadgetserver_desync(register, myplayerid)
-          // get words meta
-          vm_zsswords(register, myplayerid)
-        }
+        register_terminal_close(register, myplayerid)
+        gadgetserver_desync(register, myplayerid)
+        // get words meta
+        vm_zsswords(register, myplayerid)
         break
       case 'ackzsswords':
-        if (message.player === myplayerid) {
-          useGadgetClient.setState({
-            zsswords: message.data,
-          })
-        }
+        useGadgetClient.setState({
+          zsswords: message.data,
+        })
         break
       case 'copy':
-        if (isstring(message.data) && message.player === myplayerid) {
+        if (isstring(message.data)) {
           if (ispresent(withclipboard())) {
             withclipboard()
               .writeText(message.data)
@@ -320,7 +313,7 @@ const register = createdevice(
         }
         break
       case 'copyjsonfile':
-        if (isarray(message.data) && message.player === myplayerid) {
+        if (isarray(message.data)) {
           if (ispresent(withclipboard())) {
             const [data, filename] = message.data as [any, string]
             const blob = new Blob(
@@ -346,7 +339,7 @@ const register = createdevice(
         }
         break
       case 'downloadjsonfile':
-        if (isarray(message.data) && message.player === myplayerid) {
+        if (isarray(message.data)) {
           const [data, filename] = message.data as [any, string]
           try {
             const datablob = new Blob(
@@ -379,51 +372,45 @@ const register = createdevice(
         }
         break
       case 'dev':
-        if (message.player === myplayerid) {
-          doasync(register, message.player, async function () {
-            if (islocked()) {
-              const url = await shorturl(location.href)
-              writecopyit(register, message.player, url, url)
-            } else {
-              writeheader(register, message.player, `creating locked terminal`)
-              await waitfor(100)
-              location.href = location.href.replace(`/#`, `/locked/#`)
-            }
-          })
-        }
+        doasync(register, message.player, async function () {
+          if (islocked()) {
+            const url = await shorturl(location.href)
+            writecopyit(register, message.player, url, url)
+          } else {
+            writeheader(register, message.player, `creating locked terminal`)
+            await waitfor(100)
+            location.href = location.href.replace(`/#`, `/locked/#`)
+          }
+        })
         break
       case 'share':
-        if (message.player === myplayerid) {
-          doasync(register, message.player, async function () {
-            const url = await shorturl(
-              // drop /locked from shared short url if found
-              location.href.replace(/cafe.*locked/, `cafe`),
-            )
-            writecopyit(register, message.player, url, url)
-          })
-        }
+        doasync(register, message.player, async function () {
+          const url = await shorturl(
+            // drop /locked from shared short url if found
+            location.href.replace(/cafe.*locked/, `cafe`),
+          )
+          writecopyit(register, message.player, url, url)
+        })
         break
       case 'nuke':
-        if (message.player === myplayerid) {
-          doasync(register, message.player, async function () {
-            writeheader(register, message.player, 'nuke in')
-            writeoption(register, message.player, '3', '...')
-            await waitfor(1000)
-            writeoption(register, message.player, '2', '...')
-            await waitfor(1000)
-            writeoption(register, message.player, '1', '...')
-            await waitfor(1000)
-            writeheader(register, message.player, 'BYE')
-            await waitfor(100)
-            // nuke is the only valid case for reload
-            location.hash = ''
-            currenthash = location.hash
-            location.reload()
-          })
-        }
+        doasync(register, message.player, async function () {
+          writeheader(register, message.player, 'nuke in')
+          writeoption(register, message.player, '3', '...')
+          await waitfor(1000)
+          writeoption(register, message.player, '2', '...')
+          await waitfor(1000)
+          writeoption(register, message.player, '1', '...')
+          await waitfor(1000)
+          writeheader(register, message.player, 'BYE')
+          await waitfor(100)
+          // nuke is the only valid case for reload
+          location.hash = ''
+          currenthash = location.hash
+          location.reload()
+        })
         break
       case 'savemem':
-        if (message.player === myplayerid && isarray(message.data)) {
+        if (isarray(message.data)) {
           const [maybehistorylabel, maybecontent] = message.data
           if (isstring(maybehistorylabel) && isstring(maybecontent)) {
             writeurlhash(maybecontent, maybehistorylabel)
@@ -431,7 +418,7 @@ const register = createdevice(
         }
         break
       case 'forkmem':
-        if (message.player === myplayerid && isarray(message.data)) {
+        if (isarray(message.data)) {
           const [maybecontent] = message.data
           if (isstring(maybecontent)) {
             // launch fork url
@@ -443,16 +430,14 @@ const register = createdevice(
         }
         break
       case 'select':
-        if (message.player === myplayerid) {
-          doasync(register, message.player, async () => {
-            if (isstring(message.data)) {
-              await writeselected(message.data)
-              // use same solution as a hash change here ...
-              await loadmem(readurlhash())
-              // re-run the vm_init flow
-            }
-          })
-        }
+        doasync(register, message.player, async () => {
+          if (isstring(message.data)) {
+            await writeselected(message.data)
+            // use same solution as a hash change here ...
+            await loadmem(readurlhash())
+            // re-run the vm_init flow
+          }
+        })
         break
       case 'second':
         ++keepalive
@@ -462,28 +447,26 @@ const register = createdevice(
         }
         break
       case 'inspector':
-        if (message.player === registerreadplayer()) {
-          useTape.setState((state) => {
-            const enabled = ispresent(message.data)
-              ? !!message.data
-              : !state.inspector
+        useTape.setState((state) => {
+          const enabled = ispresent(message.data)
+            ? !!message.data
+            : !state.inspector
+          write(
+            register,
+            message.player,
+            `gadget inspector ${enabled ? '$greenon' : '$redoff'}`,
+          )
+          if (enabled) {
             write(
               register,
               message.player,
-              `gadget inspector ${enabled ? '$greenon' : '$redoff'}`,
+              `mouse click or tap elements to inspect`,
             )
-            if (enabled) {
-              write(
-                register,
-                message.player,
-                `mouse click or tap elements to inspect`,
-              )
-            }
-            return {
-              inspector: enabled,
-            }
-          })
-        }
+          }
+          return {
+            inspector: enabled,
+          }
+        })
         break
       case 'info':
         if (terminal.level >= TAPE_LOG_LEVEL.INFO) {
@@ -526,48 +509,37 @@ const register = createdevice(
         }))
         break
       case 'terminal:open':
-        if (message.player === registerreadplayer()) {
-          useTape.setState((state) => ({
-            terminal: {
-              ...state.terminal,
-              open: true,
-            },
-          }))
-        }
+        useTape.setState((state) => ({
+          terminal: {
+            ...state.terminal,
+            open: true,
+          },
+        }))
         break
       case 'terminal:quickopen':
-        if (message.player === registerreadplayer()) {
-          useTape.setState({
-            quickterminal: true,
-          })
-        }
+        useTape.setState({
+          quickterminal: true,
+        })
         break
       case 'terminal:close':
-        if (message.player === registerreadplayer()) {
-          useTape.setState((state) => ({
-            quickterminal: false,
-            terminal: {
-              ...state.terminal,
-              open: false,
-            },
-          }))
-        }
+        useTape.setState((state) => ({
+          quickterminal: false,
+          terminal: {
+            ...state.terminal,
+            open: false,
+          },
+        }))
         break
       case 'terminal:toggle':
-        if (message.player === registerreadplayer()) {
-          useTape.setState((state) => ({
-            terminal: {
-              ...state.terminal,
-              open: !state.terminal.open,
-            },
-          }))
-        }
+        useTape.setState((state) => ({
+          terminal: {
+            ...state.terminal,
+            open: !state.terminal.open,
+          },
+        }))
         break
       case 'terminal:inclayout':
-        if (
-          message.player === registerreadplayer() &&
-          isboolean(message.data)
-        ) {
+        if (isboolean(message.data)) {
           terminalinclayout(message.data)
         }
         break
@@ -595,96 +567,94 @@ const register = createdevice(
           },
         }))
         break
-
-      default:
-        if (message.player === myplayerid) {
-          const { target, path } = parsetarget(message.target)
-          switch (target) {
-            case 'touchkey':
-              doasync(register, message.player, async () => {
-                switch (path) {
-                  case '[Alt]':
-                    synth_play(register, message.player, '-c', true)
-                    useDeviceConfig.setState((state) => ({
-                      ...state,
-                      keyboardalt: !state.keyboardalt,
-                      keyboardctrl: false,
-                      keyboardshift: false,
-                    }))
-                    break
-                  case '[Ctrl]':
-                    synth_play(register, message.player, '-e', true)
-                    useDeviceConfig.setState((state) => ({
-                      ...state,
-                      keyboardalt: false,
-                      keyboardctrl: !state.keyboardctrl,
-                      keyboardshift: false,
-                    }))
-                    break
-                  case '[Shift]':
-                    synth_play(register, message.player, '-g', true)
-                    useDeviceConfig.setState((state) => ({
-                      ...state,
-                      keyboardalt: false,
-                      keyboardctrl: false,
-                      keyboardshift: !state.keyboardshift,
-                    }))
-                    break
-                  default: {
-                    const isnumber = !isNaN(parseInt(path, 10))
-                    const deviceconfig = useDeviceConfig.getState()
-                    const invoke: string[] = []
-                    const metakey = ismac ? 'Meta' : 'Ctrl'
-                    if (deviceconfig.keyboardshift) {
-                      synth_play(
-                        register,
-                        message.player,
-                        isnumber ? '+c' : '+f',
-                        true,
-                      )
-                      invoke.push('{Shift>}')
-                    } else if (deviceconfig.keyboardalt) {
-                      synth_play(
-                        register,
-                        message.player,
-                        isnumber ? '+c!' : '+f!',
-                        true,
-                      )
-                      invoke.push('{Alt>}')
-                    } else if (deviceconfig.keyboardctrl) {
-                      synth_play(
-                        register,
-                        message.player,
-                        isnumber ? '+c#' : '+f#',
-                        true,
-                      )
-                      invoke.push(`{${metakey}>}`)
-                    } else {
-                      synth_play(
-                        register,
-                        message.player,
-                        isnumber ? '-c' : '-f',
-                        true,
-                      )
-                    }
-                    invoke.push(path)
-                    if (deviceconfig.keyboardshift) {
-                      invoke.push('{/Shift}')
-                    } else if (deviceconfig.keyboardalt) {
-                      invoke.push('{/Alt}')
-                    } else if (deviceconfig.keyboardctrl) {
-                      invoke.push(`{/${metakey}}`)
-                    }
-                    const keyboardinvoke = invoke.join('')
-                    await user.keyboard(keyboardinvoke)
-                    break
+      default: {
+        const { target, path } = parsetarget(message.target)
+        switch (target) {
+          case 'touchkey':
+            doasync(register, message.player, async () => {
+              switch (path) {
+                case '[Alt]':
+                  synth_play(register, message.player, '-c', true)
+                  useDeviceConfig.setState((state) => ({
+                    ...state,
+                    keyboardalt: !state.keyboardalt,
+                    keyboardctrl: false,
+                    keyboardshift: false,
+                  }))
+                  break
+                case '[Ctrl]':
+                  synth_play(register, message.player, '-e', true)
+                  useDeviceConfig.setState((state) => ({
+                    ...state,
+                    keyboardalt: false,
+                    keyboardctrl: !state.keyboardctrl,
+                    keyboardshift: false,
+                  }))
+                  break
+                case '[Shift]':
+                  synth_play(register, message.player, '-g', true)
+                  useDeviceConfig.setState((state) => ({
+                    ...state,
+                    keyboardalt: false,
+                    keyboardctrl: false,
+                    keyboardshift: !state.keyboardshift,
+                  }))
+                  break
+                default: {
+                  const isnumber = !isNaN(parseInt(path, 10))
+                  const deviceconfig = useDeviceConfig.getState()
+                  const invoke: string[] = []
+                  const metakey = ismac ? 'Meta' : 'Ctrl'
+                  if (deviceconfig.keyboardshift) {
+                    synth_play(
+                      register,
+                      message.player,
+                      isnumber ? '+c' : '+f',
+                      true,
+                    )
+                    invoke.push('{Shift>}')
+                  } else if (deviceconfig.keyboardalt) {
+                    synth_play(
+                      register,
+                      message.player,
+                      isnumber ? '+c!' : '+f!',
+                      true,
+                    )
+                    invoke.push('{Alt>}')
+                  } else if (deviceconfig.keyboardctrl) {
+                    synth_play(
+                      register,
+                      message.player,
+                      isnumber ? '+c#' : '+f#',
+                      true,
+                    )
+                    invoke.push(`{${metakey}>}`)
+                  } else {
+                    synth_play(
+                      register,
+                      message.player,
+                      isnumber ? '-c' : '-f',
+                      true,
+                    )
                   }
+                  invoke.push(path)
+                  if (deviceconfig.keyboardshift) {
+                    invoke.push('{/Shift}')
+                  } else if (deviceconfig.keyboardalt) {
+                    invoke.push('{/Alt}')
+                  } else if (deviceconfig.keyboardctrl) {
+                    invoke.push(`{/${metakey}}`)
+                  }
+                  const keyboardinvoke = invoke.join('')
+                  await user.keyboard(keyboardinvoke)
+                  break
                 }
-              })
-              break
-          }
+              }
+            })
+            break
         }
         break
+      }
     }
   },
 )
