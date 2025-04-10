@@ -2,7 +2,7 @@ import { parsetarget } from 'zss/device'
 import {
   gadgetserver_clearscroll,
   register_copy,
-  tape_editor_open,
+  register_editor_open,
   vm_codeaddress,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
@@ -240,7 +240,7 @@ export function memoryinspectcommand(path: string, player: string) {
         await waitfor(800)
 
         // open code editor
-        tape_editor_open(
+        register_editor_open(
           SOFTWARE,
           player,
           mainbook.id,

@@ -1,19 +1,19 @@
 import { parsetarget } from 'zss/device'
 import {
   api_error,
-  tape_editor_open,
+  register_editor_open,
   api_info,
   vm_codeaddress,
   vm_flush,
   register_nuke,
   register_share,
   register_dev,
-  network_start,
-  tape_inspector,
+  bridge_start,
+  register_inspector,
   vm_restart,
   vm_fork,
   register_downloadjsonfile,
-  network_tab,
+  bridge_tab,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -511,7 +511,7 @@ export const CLI_FIRMWARE = createfirmware()
 
       // tell tape to open a code editor for given page
       const type = codepagereadtypetostring(codepage)
-      tape_editor_open(
+      register_editor_open(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         mainbook.id,
@@ -818,17 +818,17 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('gadget', () => {
     // gadget will turn on / off the built-in inspector
-    tape_inspector(SOFTWARE, READ_CONTEXT.elementfocus)
+    register_inspector(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   // -- multiplayer related commands
   .command('joincode', (_, words) => {
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    network_start(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
+    bridge_start(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
     return 0
   })
   .command('jointab', (_, words) => {
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    network_tab(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
+    bridge_tab(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
     return 0
   })

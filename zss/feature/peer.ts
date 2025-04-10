@@ -2,7 +2,7 @@ import { KademliaTable } from 'kademlia-table'
 import P2PT, { Peer } from 'p2pt'
 import { hex2arr } from 'uint8-util'
 import { createmessage } from 'zss/device'
-import { MESSAGE, network_showjoincode, network_tabopen } from 'zss/device/api'
+import { MESSAGE, bridge_showjoincode, bridge_tabopen } from 'zss/device/api'
 import { createforward } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -153,9 +153,9 @@ export function peerstart(hidden: boolean, tabopen: boolean) {
 
   // setup host
   peerusehost(host)
-  network_showjoincode(SOFTWARE, registerreadplayer(), hidden, host)
+  bridge_showjoincode(SOFTWARE, registerreadplayer(), hidden, host)
   if (tabopen) {
-    network_tabopen(SOFTWARE, registerreadplayer(), host)
+    bridge_tabopen(SOFTWARE, registerreadplayer(), host)
   }
 
   // open bridge between peers

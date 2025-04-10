@@ -2,7 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { Color, Group, Vector2 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { tape_terminal_quickopen, vm_input } from 'zss/device/api'
+import { register_terminal_quickopen, vm_input } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -154,7 +154,7 @@ export function Framed({ width, height }: FramedProps) {
           const lkey = NAME(key)
           switch (lkey) {
             case 't':
-              tape_terminal_quickopen(SOFTWARE, registerreadplayer())
+              register_terminal_quickopen(SOFTWARE, registerreadplayer())
               break
           }
         }}

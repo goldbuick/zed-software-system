@@ -1,9 +1,9 @@
 import {
-  broadcast_startstream,
-  broadcast_stopstream,
-  chat_connect,
-  chat_disconnect,
-  network_fetch,
+  bridge_startstream,
+  bridge_stopstream,
+  bridge_chatconnect,
+  bridge_chatdisconnect,
+  bridge_fetch,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
@@ -44,7 +44,7 @@ function fetchcommand(
   switch (NAME(method)) {
     case 'get':
     case 'post:json':
-      network_fetch(
+      bridge_fetch(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         arg,
@@ -82,10 +82,10 @@ export const NETWORK_FIRMWARE = createfirmware()
     const [maybechannel] = readargs(words, 0, [ARG_TYPE.ANY])
     switch (NAME(maybechannel)) {
       default:
-        chat_connect(SOFTWARE, READ_CONTEXT.elementfocus, maybechannel)
+        bridge_chatconnect(SOFTWARE, READ_CONTEXT.elementfocus, maybechannel)
         break
       case 'close':
-        chat_disconnect(SOFTWARE, READ_CONTEXT.elementfocus)
+        bridge_chatdisconnect(SOFTWARE, READ_CONTEXT.elementfocus)
         break
     }
     return 0
@@ -94,14 +94,14 @@ export const NETWORK_FIRMWARE = createfirmware()
     const [maybestreamkey] = readargs(words, 0, [ARG_TYPE.NAME])
     switch (NAME(maybestreamkey)) {
       default:
-        broadcast_startstream(
+        bridge_startstream(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
           maybestreamkey,
         )
         break
       case 'stop':
-        broadcast_stopstream(SOFTWARE, READ_CONTEXT.elementfocus)
+        bridge_stopstream(SOFTWARE, READ_CONTEXT.elementfocus)
         break
     }
     return 0

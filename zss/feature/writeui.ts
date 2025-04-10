@@ -1,5 +1,5 @@
 import { renderUnicodeCompact } from 'uqr'
-import { DEVICELIKE, api_info, tape_terminal_full } from 'zss/device/api'
+import { DEVICELIKE, api_info, register_terminal_full } from 'zss/device/api'
 
 /**
  * what is writeui ?
@@ -97,7 +97,7 @@ export function writecopyit(
   }
 
   write(device, player, `!copyit ${content};${label}`)
-  tape_terminal_full(device, player)
+  register_terminal_full(device, player)
 }
 
 export function writeopenit(

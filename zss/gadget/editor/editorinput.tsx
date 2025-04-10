@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   api_error,
-  tape_editor_close,
-  tape_terminal_close,
-  tape_terminal_inclayout,
+  register_editor_close,
+  register_terminal_close,
+  register_terminal_inclayout,
   vm_cli,
   vm_copyjsonfile,
   vm_refsheet,
@@ -242,13 +242,13 @@ export function EditorInput({
             case 'esc':
             case 'escape':
               if (mods.shift || mods.alt || mods.ctrl) {
-                tape_terminal_close(SOFTWARE, player)
+                register_terminal_close(SOFTWARE, player)
               } else {
-                tape_editor_close(SOFTWARE, player)
+                register_editor_close(SOFTWARE, player)
               }
               break
             case 'tab':
-              tape_terminal_inclayout(SOFTWARE, player, !mods.shift)
+              register_terminal_inclayout(SOFTWARE, player, !mods.shift)
               break
             case 'delete':
               if (hasselection) {

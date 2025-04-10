@@ -62,31 +62,31 @@ export function api_debug(
 }
 
 export function api_toast(device: DEVICELIKE, player: string, toast: string) {
-  device.emit(player, 'tape:toast', toast)
+  device.emit(player, 'register:toast', toast)
 }
 
-export function broadcast_startstream(
+export function bridge_startstream(
   device: DEVICELIKE,
   player: string,
   streamkey: string,
 ) {
-  device.emit(player, 'broadcast:startstream', streamkey)
+  device.emit(player, 'bridge:startstream', streamkey)
 }
 
-export function broadcast_stopstream(device: DEVICELIKE, player: string) {
-  device.emit(player, 'broadcast:stopstream', undefined)
+export function bridge_stopstream(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:stopstream', undefined)
 }
 
-export function chat_connect(
+export function bridge_chatconnect(
   device: DEVICELIKE,
   player: string,
   channel: string,
 ) {
-  device.emit(player, 'chat:connect', channel)
+  device.emit(player, 'bridge:chatconnect', channel)
 }
 
-export function chat_disconnect(device: DEVICELIKE, player: string) {
-  device.emit(player, 'chat:disconnect')
+export function bridge_chatdisconnect(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:chatdisconnect')
 }
 
 export function gadgetclient_paint(
@@ -113,8 +113,7 @@ export function gadgetserver_clearscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'gadgetserver:clearscroll')
 }
 
-
-export function network_fetch(
+export function bridge_fetch(
   device: DEVICELIKE,
   player: string,
   arg: any,
@@ -123,48 +122,44 @@ export function network_fetch(
   method: string,
   words: any[],
 ) {
-  device.emit(player, 'network:fetch', [arg, label, url, method, words])
+  device.emit(player, 'bridge:fetch', [arg, label, url, method, words])
 }
 
-export function network_join(
-  device: DEVICELIKE,
-  player: string,
-  topic: string,
-) {
-  device.emit(player, 'network:join', topic)
+export function bridge_join(device: DEVICELIKE, player: string, topic: string) {
+  device.emit(player, 'bridge:join', topic)
 }
 
-export function network_start(
+export function bridge_start(
   device: DEVICELIKE,
   player: string,
   hidden: boolean,
 ) {
-  device.emit(player, 'network:start', hidden)
+  device.emit(player, 'bridge:start', hidden)
 }
 
-export function network_tab(
+export function bridge_tab(
   device: DEVICELIKE,
   player: string,
   hidden: boolean,
 ) {
-  device.emit(player, 'network:tab', hidden)
+  device.emit(player, 'bridge:tab', hidden)
 }
 
-export function network_tabopen(
+export function bridge_tabopen(
   device: DEVICELIKE,
   player: string,
   topic: string,
 ) {
-  device.emit(player, 'network:tabopen', topic)
+  device.emit(player, 'bridge:tabopen', topic)
 }
 
-export function network_showjoincode(
+export function bridge_showjoincode(
   device: DEVICELIKE,
   player: string,
   hidden: boolean,
   topic: string,
 ) {
-  device.emit(player, 'network:showjoincode', [hidden, topic])
+  device.emit(player, 'bridge:showjoincode', [hidden, topic])
 }
 
 export function platform_ready(device: DEVICELIKE) {
@@ -309,39 +304,42 @@ export function synth_voicefx(
   device.emit(player, 'synth:voicefx', [idx, fx, config, value])
 }
 
-export function tape_inspector(device: DEVICELIKE, player: string) {
-  device.emit(player, 'tape:inspector')
+export function register_inspector(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:inspector')
 }
 
-export function tape_terminal_open(device: DEVICELIKE, player: string) {
-  device.emit(player, 'tape:terminal:open')
+export function register_terminal_open(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:terminal:open')
 }
 
-export function tape_terminal_quickopen(device: DEVICELIKE, player: string) {
-  device.emit(player, 'tape:terminal:quickopen')
+export function register_terminal_quickopen(
+  device: DEVICELIKE,
+  player: string,
+) {
+  device.emit(player, 'register:terminal:quickopen')
 }
 
-export function tape_terminal_close(device: DEVICELIKE, player: string) {
-  device.emit(player, 'tape:terminal:close')
+export function register_terminal_close(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:terminal:close')
 }
 
-export function tape_terminal_toggle(device: DEVICELIKE, player: string) {
-  device.emit(player, 'tape:terminal:toggle')
+export function register_terminal_toggle(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:terminal:toggle')
 }
 
-export function tape_terminal_inclayout(
+export function register_terminal_inclayout(
   device: DEVICELIKE,
   player: string,
   inc: boolean,
 ) {
-  device.emit(player, 'tape:terminal:inclayout', inc)
+  device.emit(player, 'register:terminal:inclayout', inc)
 }
 
-export function tape_terminal_full(device: DEVICELIKE, player: string) {
-  device.emit(player, 'tape:terminal:full')
+export function register_terminal_full(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:terminal:full')
 }
 
-export function tape_editor_open(
+export function register_editor_open(
   device: DEVICELIKE,
   player: string,
   book: string,
@@ -350,11 +348,17 @@ export function tape_editor_open(
   title: string,
   refsheet: string[],
 ) {
-  device.emit(player, 'tape:editor:open', [book, path, type, title, refsheet])
+  device.emit(player, 'register:editor:open', [
+    book,
+    path,
+    type,
+    title,
+    refsheet,
+  ])
 }
 
-export function tape_editor_close(device: DEVICELIKE, player: string) {
-  device.emit(player, 'tape:editor:close')
+export function register_editor_close(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:editor:close')
 }
 
 export function vm_operator(device: DEVICELIKE, player: string) {
@@ -406,7 +410,6 @@ export function vm_copyjsonfile(
 ) {
   device.emit(player, 'vm:copyjsonfile', path)
 }
-
 
 export function vm_refsheet(
   device: DEVICELIKE,

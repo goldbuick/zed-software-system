@@ -71,7 +71,7 @@ import {
   register_loginready,
   register_savemem,
   api_debug,
-  tape_editor_close,
+  register_editor_close,
   vm_codeaddress,
   vm_flush,
   vm_logout,
@@ -400,7 +400,7 @@ const vm = createdevice(
         const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
         const sorted = bookreadsortedcodepages(mainbook)
         if (ispresent(mainbook) && isarray(message.data)) {
-          tape_editor_close(vm, message.player)
+          register_editor_close(vm, message.player)
           writeheader(vm, message.player, `use as refsheet`)
           sorted.forEach((page) => {
             const name = codepagereadname(page)
