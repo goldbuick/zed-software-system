@@ -1,4 +1,4 @@
-import { createforward } from './device/forward'
+import { createforward, shouldforwardclienttoserver } from './device/forward'
 import { ispresent } from './mapping/types'
 import simspace from './simspace??worker'
 import stubspace from './stubspace??worker'
@@ -10,9 +10,11 @@ export function createplatform(isstub = false) {
     // create backend
     platform = isstub ? new stubspace() : new simspace()
     // create bridge
-    const { forward } = createforward((message) =>
-      platform.postMessage(message),
-    )
+    const { forward } = createforward((message) => {
+      if (shouldforwardclienttoserver(message)) {
+        platform.postMessage(message)
+      }
+    })
     platform.addEventListener('message', (event) => forward(event.data))
   }
 }

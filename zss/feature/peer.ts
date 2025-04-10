@@ -3,7 +3,11 @@ import P2PT, { Peer } from 'p2pt'
 import { hex2arr } from 'uint8-util'
 import { createmessage } from 'zss/device'
 import { MESSAGE, bridge_showjoincode, bridge_tabopen } from 'zss/device/api'
-import { createforward } from 'zss/device/forward'
+import {
+  createforward,
+  shouldforwardclienttoserver,
+  shouldforwardservertoclient,
+} from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
@@ -147,7 +151,7 @@ function peerpublishmessage(topic: string, gme: MESSAGE) {
   }
 }
 
-export function peerstart(hidden: boolean, tabopen: boolean) {
+export function peerserver(hidden: boolean, tabopen: boolean) {
   // get topic
   const host = finder._peerId
 
@@ -160,48 +164,8 @@ export function peerstart(hidden: boolean, tabopen: boolean) {
 
   // open bridge between peers
   topicbridge = createforward((message) => {
-    switch (message.target) {
-      case 'tape:info':
-      case 'tape:error':
-      case 'tape:debug':
-      case 'tape:terminal:open':
-      case 'tape:terminal:close':
-      case 'tape:terminal:toggle':
-      case 'tape:terminal:inclayout':
-      case 'tape:terminal:crash':
-      case 'register:loginready':
-      case 'synth:audioenabled':
-      case 'synth:tts':
-      case 'synth:play':
-      case 'synth:bpm':
-      case 'synth:mainvolume':
-      case 'synth:drumvolume':
-      case 'synth:ttsvolume':
-      case 'synth:voice':
-      case 'synth:voicefx':
-      case 'gadgetclient:paint':
-      case 'gadgetclient:patch':
-        peerpublishmessage(host, message)
-        break
-      default: {
-        const path = message.target.split(':')
-        const [first] = path
-        switch (first) {
-          case 'error':
-            console.info(message.target)
-            peerpublishmessage(host, message)
-            break
-        }
-        const [last] = path.slice(-1)
-        switch (last) {
-          case 'acklogin':
-          case 'acklogout':
-            console.info(message.target)
-            peerpublishmessage(host, message)
-            break
-        }
-        break
-      }
+    if (shouldforwardservertoclient(message)) {
+      peerpublishmessage(host, message)
     }
   })
 }
@@ -231,23 +195,13 @@ function peersubscribe(topic: string, player: string) {
   setTimeout(() => peersubscribe(topic, player), 1000 * 3)
 }
 
-export function peerjoin(host: string, player: string) {
+export function peerclient(host: string, player: string) {
   peerusehost(host)
   peersubscribe(host, player)
   // open bridge between peers
   topicbridge = createforward((message) => {
-    switch (message.target) {
-      case 'vm:cli':
-      case 'vm:doot':
-      case 'vm:input':
-      case 'vm:login':
-      case 'vm:joinack':
-      case 'gadgetserver:desync':
-      case 'gadgetserver:clearscroll':
-        peersubscribemessage(host, finder._peerId, message)
-        break
-      default:
-        break
+    if (shouldforwardclienttoserver(message)) {
+      peersubscribemessage(host, finder._peerId, message)
     }
   })
 }

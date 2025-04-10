@@ -2,7 +2,7 @@ import { ChatClient } from '@twurple/chat'
 import IVSBroadcastClient, { Callback } from 'amazon-ivs-web-broadcast'
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
-import { peerstart, peerjoin } from 'zss/feature/peer'
+import { peerserver, peerclient } from 'zss/feature/peer'
 import {
   write,
   writecopyit,
@@ -112,12 +112,12 @@ const bridge = createdevice('bridge', [], (message) => {
       break
     case 'start':
       if (message.player === registerreadplayer()) {
-        peerstart(!!message.data, false)
+        peerserver(!!message.data, false)
       }
       break
     case 'tab':
       if (message.player === registerreadplayer()) {
-        peerstart(!!message.data, true)
+        peerserver(!!message.data, true)
       }
       break
     case 'tabopen':
@@ -131,7 +131,7 @@ const bridge = createdevice('bridge', [], (message) => {
       break
     case 'join':
       if (message.player === registerreadplayer() && isstring(message.data)) {
-        peerjoin(message.data, message.player)
+        peerclient(message.data, message.player)
       }
       break
     case 'showjoincode': {

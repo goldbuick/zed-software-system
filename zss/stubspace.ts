@@ -1,9 +1,13 @@
-import { createforward } from './device/forward'
+import { createforward, shouldforwardservertoclient } from './device/forward'
 // these are all back-end devices that operate within the web worker
 import { started } from './device/stub'
 import './device/clock'
 
-const { forward } = createforward((message) => postMessage(message))
+const { forward } = createforward((message) => {
+  if (shouldforwardservertoclient(message)) {
+    postMessage(message)
+  }
+})
 
 onmessage = function handleMessage(event) {
   forward(event.data)
