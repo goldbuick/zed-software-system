@@ -1,4 +1,5 @@
 import {
+  Chorus,
   Compressor,
   Distortion,
   EQ3,
@@ -54,14 +55,22 @@ export function createsynth() {
   })
   maincompressor.connect(mainvolume)
 
+  const razzledazzle = new Chorus()
+  razzledazzle.set({
+    wet: 0.22,
+    depth: 0.777,
+    delayTime: 16,
+  })
+  razzledazzle.connect(maincompressor)
+
   const playvolume = new Volume()
-  playvolume.connect(maincompressor)
+  playvolume.connect(razzledazzle)
 
   const bgplayvolume = new Volume()
-  bgplayvolume.connect(maincompressor)
+  bgplayvolume.connect(razzledazzle)
 
   const ttsvolume = new Volume()
-  ttsvolume.connect(maincompressor)
+  ttsvolume.connect(razzledazzle)
 
   // 8tracks
   const SOURCE = [
