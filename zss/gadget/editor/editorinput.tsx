@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   api_error,
-  tape_editor_close,
-  tape_terminal_close,
-  tape_terminal_inclayout,
+  register_editor_close,
+  register_terminal_close,
+  register_terminal_inclayout,
   vm_cli,
   vm_copyjsonfile,
   vm_refsheet,
@@ -242,13 +242,13 @@ export function EditorInput({
             case 'esc':
             case 'escape':
               if (mods.shift || mods.alt || mods.ctrl) {
-                tape_terminal_close(SOFTWARE, player)
+                register_terminal_close(SOFTWARE, player)
               } else {
-                tape_editor_close(SOFTWARE, player)
+                register_editor_close(SOFTWARE, player)
               }
               break
             case 'tab':
-              tape_terminal_inclayout(SOFTWARE, !mods.shift, player)
+              register_terminal_inclayout(SOFTWARE, player, !mods.shift)
               break
             case 'delete':
               if (hasselection) {
@@ -268,10 +268,10 @@ export function EditorInput({
               if (mods.ctrl) {
                 switch (lkey) {
                   case 'e':
-                    vm_copyjsonfile(SOFTWARE, editorpath, player)
+                    vm_copyjsonfile(SOFTWARE, player, editorpath)
                     break
                   case 'k':
-                    vm_refsheet(SOFTWARE, editorpath, player)
+                    vm_refsheet(SOFTWARE, player, editorpath)
                     break
                   case 'z':
                     if (ismac && mods.shift) {
@@ -292,7 +292,9 @@ export function EditorInput({
                     if (ispresent(withclipboard())) {
                       withclipboard()
                         .writeText(strvalueselected)
-                        .catch((err) => api_error(SOFTWARE, 'clipboard', err))
+                        .catch((err) =>
+                          api_error(SOFTWARE, player, 'clipboard', err),
+                        )
                     } else {
                       resettoend()
                     }
@@ -309,7 +311,9 @@ export function EditorInput({
                             strvaluesplice(tapeeditor.cursor, 0, cleantext)
                           }
                         })
-                        .catch((err) => api_error(SOFTWARE, 'clipboard', err))
+                        .catch((err) =>
+                          api_error(SOFTWARE, player, 'clipboard', err),
+                        )
                     } else {
                       resettoend()
                     }
@@ -319,15 +323,18 @@ export function EditorInput({
                       withclipboard()
                         .writeText(strvalueselected)
                         .then(() => deleteselection())
-                        .catch((err) => api_error(SOFTWARE, 'clipboard', err))
+                        .catch((err) =>
+                          api_error(SOFTWARE, player, 'clipboard', err),
+                        )
                     } else {
                       resettoend()
                     }
                     break
                   case 'p':
-                    vm_cli(SOFTWARE, strvalueselected, player)
+                    vm_cli(SOFTWARE, player, strvalueselected)
                     writetext(
                       SOFTWARE,
+                      player,
                       `running: ${strvalueselected.substring(0, 18)}`,
                     )
                     break

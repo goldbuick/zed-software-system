@@ -59,9 +59,7 @@ export const LIFECYCLE_FIRMWARE = createfirmware()
     return 0
   })
   .command('endgame', () => {
-    if (READ_CONTEXT.elementisplayer) {
-      vm_logout(SOFTWARE, READ_CONTEXT.elementid)
-    }
+    vm_logout(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('run', (_, words) => {

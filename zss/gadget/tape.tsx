@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unknown-property */
 import { RUNTIME } from 'zss/config'
-import { tape_terminal_open } from 'zss/device/api'
+import { register_terminal_open } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
@@ -85,7 +85,7 @@ export function Tape() {
         </UserFocus>
       ) : (
         <UserHotkey hotkey="Shift+?">
-          {() => tape_terminal_open(SOFTWARE, player)}
+          {() => register_terminal_open(SOFTWARE, player)}
         </UserHotkey>
       )}
     </TilesData>

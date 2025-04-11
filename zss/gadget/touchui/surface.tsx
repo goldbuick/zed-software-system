@@ -4,7 +4,7 @@ import { radToDeg } from 'maath/misc'
 import { useState } from 'react'
 import { Vector2, Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { tape_terminal_toggle } from 'zss/device/api'
+import { register_terminal_toggle } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
 import { ptwithin } from 'zss/mapping/2d'
@@ -65,7 +65,7 @@ export function Surface({ width, height, player, onDrawStick }: SurfaceProps) {
       // check touch targets
       if (ptwithin(cx, cy, 3, 6, 6, 1)) {
         // top-left button
-        tape_terminal_toggle(SOFTWARE, player)
+        register_terminal_toggle(SOFTWARE, player)
       } else if (ptwithin(cx, cy, 3, width - 2, 6, width - 6)) {
         // top-right button
         user.keyboard('[Tab]').catch(noop)

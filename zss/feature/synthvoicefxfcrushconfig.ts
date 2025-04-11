@@ -5,13 +5,14 @@ import { isnumber, ispresent, MAYBE } from 'zss/mapping/types'
 import { AUDIO_SYNTH } from './synth'
 
 export function synthvoicefxfcrushconfig(
+  player: string,
   synth: MAYBE<AUDIO_SYNTH>,
   index: number,
   config: number | string,
   value: number | string,
 ) {
   if (!ispresent(synth) || index < 0 || index >= synth.FX.length) {
-    api_error(SOFTWARE, `synth`, `index ${index} out of bounds`)
+    api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
   const fcrush = synth.FX[index].fcrush
@@ -25,5 +26,5 @@ export function synthvoicefxfcrushconfig(
       }
       break
   }
-  api_error(SOFTWARE, `kind`, `unknown fcrush ${config} or ${value}`)
+  api_error(SOFTWARE, player, `kind`, `unknown fcrush ${config} or ${value}`)
 }

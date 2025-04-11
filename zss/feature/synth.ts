@@ -54,13 +54,13 @@ export function createsynth() {
   })
   maincompressor.connect(mainvolume)
 
-  const playvolume = new Volume(volumetodb(50))
+  const playvolume = new Volume()
   playvolume.connect(maincompressor)
 
-  const bgplayvolume = new Volume(volumetodb(50))
+  const bgplayvolume = new Volume()
   bgplayvolume.connect(maincompressor)
 
-  const ttsvolume = new Volume(volumetodb(50))
+  const ttsvolume = new Volume()
   ttsvolume.connect(maincompressor)
 
   // 8tracks
@@ -497,7 +497,7 @@ export function createsynth() {
     const [chan, duration, note] = value
     if (isstring(note) && ispresent(SOURCE[chan])) {
       if (note.startsWith('#')) {
-        vm_synthsend(SOFTWARE, note.slice(1))
+        vm_synthsend(SOFTWARE, '', note.slice(1))
       } else {
         SOURCE[chan].source.synth.triggerAttackRelease(note, duration, time)
       }
@@ -633,6 +633,11 @@ export function createsynth() {
   function setttsvolume(volume: number) {
     ttsvolume.volume.value = volume
   }
+
+  // set default volumes
+  setttsvolume(100)
+  setplayvolume(45)
+  setbgplayvolume(80)
 
   return {
     broadcastdestination,

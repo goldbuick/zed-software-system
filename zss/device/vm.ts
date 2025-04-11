@@ -1,7 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/feature/parsefile'
-import { write, writeheader, writeoption } from 'zss/feature/writeui'
+import { write, writeheader } from 'zss/feature/writeui'
 import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
@@ -70,11 +70,12 @@ import {
   register_forkmem,
   register_loginready,
   register_savemem,
-  tape_debug,
-  tape_editor_close,
+  api_debug,
+  register_editor_close,
   vm_codeaddress,
   vm_flush,
   vm_logout,
+  register_loginfail,
 } from './api'
 import { modemobservevaluestring } from './modem'
 
@@ -100,7 +101,7 @@ async function savestate(autosave?: boolean) {
     const historylabel = autosave
       ? `autosave`
       : `${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
-    register_savemem(vm, historylabel, content, memoryreadoperator())
+    register_savemem(vm, memoryreadoperator(), historylabel, content)
   }
 }
 
@@ -110,7 +111,7 @@ async function forkstate() {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
-    register_forkmem(vm, content, memoryreadoperator())
+    register_forkmem(vm, memoryreadoperator(), content)
   }
 }
 
@@ -121,166 +122,154 @@ const vm = createdevice(
     if (!vm.session(message)) {
       return
     }
+    const operator = memoryreadoperator()
     switch (message.target) {
       case 'operator':
-        if (ispresent(message.player)) {
-          memorywriteoperator(message.player)
-          write(vm, `operator set to ${message.player}`)
-          // ack
-          vm.replynext(message, 'ackoperator', true, message.player)
-        }
+        memorywriteoperator(message.player)
+        write(vm, message.player, `operator set to ${message.player}`)
+        // ack
+        vm.replynext(message, 'ackoperator', true)
         break
       case 'zsswords':
-        if (message.player === memoryreadoperator()) {
+        if (message.player === operator) {
           const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-          vm.replynext(
-            message,
-            `ackzsswords`,
-            {
-              cli: firmwarelistcommands(DRIVER_TYPE.CLI),
-              loader: firmwarelistcommands(DRIVER_TYPE.LOADER),
-              runtime: firmwarelistcommands(DRIVER_TYPE.RUNTIME),
-              flags: [
-                ...objectKeys(memoryreadflags(message.player)),
-                'inputmove',
-                'inputalt',
-                'inputctrl',
-                'inputshift',
-                'inputok',
-                'inputcancel',
-                'inputmenu',
-              ],
-              stats: [
-                // interaction
-                'player',
-                'pushable',
-                'collision',
-                'destructible',
-                // boolean stats
-                'ispushable',
-                'iswalk',
-                'iswalking',
-                'iswalkable',
-                'isswim',
-                'isswimming',
-                'isswimable',
-                'issolid',
-                'isbullet',
-                'isdestructible',
-                // config
-                'p1',
-                'p2',
-                'p3',
-                'cycle',
-                'stepx',
-                'stepy',
-                'light',
-                // messages & run
-                'sender',
-                'arg',
-              ],
-              // object codepage kinds
-              kinds: [
-                ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.OBJECT).map(
-                  (codepage) => codepagereadname(codepage),
-                ),
-                ...objectKeys(categoryconsts),
-              ],
-              // other codepage types
-              altkinds: [
-                ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
-                ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.BOARD),
-                ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.PALETTE),
-                ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.CHARSET),
-                ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.LOADER),
-              ].map((codepage) => codepagereadname(codepage)),
-              colors: [...objectKeys(colorconsts)],
-              dirs: [
-                ...objectKeys(dirconsts).filter(
-                  (item) =>
-                    ['cw', 'ccw', 'oop', 'rndp'].includes(item) === false,
-                ),
-              ],
-              dirmods: [
-                'cw',
-                'ccw',
-                'oop',
-                'rndp',
-                ...objectKeys(collisionconsts),
-              ],
-            },
-            message.player,
-          )
+          vm.replynext(message, `ackzsswords`, {
+            cli: firmwarelistcommands(DRIVER_TYPE.CLI),
+            loader: firmwarelistcommands(DRIVER_TYPE.LOADER),
+            runtime: firmwarelistcommands(DRIVER_TYPE.RUNTIME),
+            flags: [
+              ...objectKeys(memoryreadflags(message.player)),
+              'inputmove',
+              'inputalt',
+              'inputctrl',
+              'inputshift',
+              'inputok',
+              'inputcancel',
+              'inputmenu',
+            ],
+            stats: [
+              // interaction
+              'player',
+              'pushable',
+              'collision',
+              'destructible',
+              // boolean stats
+              'ispushable',
+              'iswalk',
+              'iswalking',
+              'iswalkable',
+              'isswim',
+              'isswimming',
+              'isswimable',
+              'issolid',
+              'isbullet',
+              'isdestructible',
+              // config
+              'p1',
+              'p2',
+              'p3',
+              'cycle',
+              'stepx',
+              'stepy',
+              'light',
+              // messages & run
+              'sender',
+              'arg',
+            ],
+            // object codepage kinds
+            kinds: [
+              ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.OBJECT).map(
+                (codepage) => codepagereadname(codepage),
+              ),
+              ...objectKeys(categoryconsts),
+            ],
+            // other codepage types
+            altkinds: [
+              ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
+              ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.BOARD),
+              ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.PALETTE),
+              ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.CHARSET),
+              ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.LOADER),
+            ].map((codepage) => codepagereadname(codepage)),
+            colors: [...objectKeys(colorconsts)],
+            dirs: [
+              ...objectKeys(dirconsts).filter(
+                (item) => ['cw', 'ccw', 'oop', 'rndp'].includes(item) === false,
+              ),
+            ],
+            dirmods: [
+              'cw',
+              'ccw',
+              'oop',
+              'rndp',
+              ...objectKeys(collisionconsts),
+            ],
+          })
         }
         break
       case 'books':
-        if (message.player === memoryreadoperator()) {
-          doasync(vm, async () => {
-            if (message.player && isarray(message.data)) {
+        if (message.player === operator) {
+          doasync(vm, message.player, async () => {
+            if (isarray(message.data)) {
               const [maybebooks, maybeselect] = message.data as [string, string]
               // unpack books
               const books = await decompressbooks(maybebooks)
               const booknames = books.map((item) => item.name)
               memoryresetbooks(books, maybeselect)
-              write(vm, `loading ${booknames.join(', ')}`)
+              write(vm, message.player, `loading ${booknames.join(', ')}`)
               // ack
               register_loginready(vm, message.player)
             }
           })
         }
         break
-      case 'joinack':
-        if (
-          ispresent(message.player) &&
-          !memoryreadplayeractive(message.player)
-        ) {
+      case 'search':
+        if (!memoryreadplayeractive(message.player)) {
           register_loginready(vm, message.player)
         }
         break
       case 'logout':
-        if (ispresent(message.player)) {
-          // logout player
-          memoryplayerlogout(message.player)
-          // stop tracking
-          delete tracking[message.player]
-          write(vm, `player ${message.player} logout`)
-          // ack
-          register_loginready(vm, message.player)
-        }
+        // logout player
+        memoryplayerlogout(message.player)
+        // stop tracking
+        delete tracking[message.player]
+        write(vm, operator, `player ${message.player} logout`)
+        // ack
+        register_loginready(vm, message.player)
         break
       case 'login':
         // attempt login
-        if (ispresent(message.player) && memoryplayerlogin(message.player)) {
+        if (memoryplayerlogin(message.player)) {
           // start tracking
           tracking[message.player] = 0
-          write(vm, `login from ${message.player}`)
+          write(vm, memoryreadoperator(), `login from ${message.player}`)
           // ack
-          vm.replynext(message, 'acklogin', true, message.player)
+          vm.replynext(message, 'acklogin', true)
+        } else {
+          // signal failure
+          register_loginfail(vm, message.player)
         }
         break
       case 'doot':
-        if (ispresent(message.player)) {
-          // player keepalive
-          tracking[message.player] = 0
-          tape_debug(vm, 'active', message.player)
+        // player keepalive
+        tracking[message.player] = 0
+        api_debug(vm, message.player, 'active')
+        break
+      case 'input': {
+        // player input
+        const flags = memoryreadflags(message.player)
+        const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
+        // add to input queue
+        if (!isarray(flags.inputqueue)) {
+          flags.inputqueue = []
+        }
+        if (input !== INPUT.NONE) {
+          flags.inputqueue.push([input, mods])
         }
         break
-      case 'input':
-        if (ispresent(message.player)) {
-          // player input
-          const flags = memoryreadflags(message.player)
-          const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
-          // add to input queue
-          if (!isarray(flags.inputqueue)) {
-            flags.inputqueue = []
-          }
-          if (input !== INPUT.NONE) {
-            flags.inputqueue.push([input, mods])
-          }
-        }
-        break
+      }
       case 'codewatch':
-        if (ispresent(message.player) && isarray(message.data)) {
+        if (isarray(message.data)) {
           const [book, path] = message.data
           const address = vm_codeaddress(book, path)
           // start watching
@@ -320,7 +309,7 @@ const vm = createdevice(
         }
         break
       case 'coderelease':
-        if (message.player && isarray(message.data)) {
+        if (isarray(message.data)) {
           const [book, path] = message.data
           // parse path
           const [, maybeobject] = path
@@ -341,10 +330,7 @@ const vm = createdevice(
         }
         break
       case 'halt':
-        if (
-          message.player === memoryreadoperator() &&
-          isboolean(message.data)
-        ) {
+        if (message.player === operator && isboolean(message.data)) {
           memorywritehalt(message.data)
         }
         break
@@ -382,73 +368,75 @@ const vm = createdevice(
         // autosave to url
         if (++flushtick >= FLUSH_RATE) {
           flushtick = 0
-          doasync(vm, async () => {
+          doasync(vm, message.player, async () => {
             await savestate(true)
           })
         }
         break
       }
-      case 'copyjsonfile': {
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        if (ispresent(mainbook) && isarray(message.data)) {
-          const [address] = message.data
-          const codepage = bookreadcodepagebyaddress(mainbook, address)
-          if (ispresent(codepage)) {
-            register_copyjsonfile(
-              vm,
-              codepage,
-              `${codepagereadname(codepage)}.${codepagereadtypetostring(codepage)}.json`,
-              memoryreadoperator(),
-            )
+      case 'copyjsonfile':
+        if (message.player === operator) {
+          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+          if (ispresent(mainbook) && isarray(message.data)) {
+            const [address] = message.data
+            const codepage = bookreadcodepagebyaddress(mainbook, address)
+            if (ispresent(codepage)) {
+              register_copyjsonfile(
+                vm,
+                operator,
+                codepage,
+                `${codepagereadname(codepage)}.${codepagereadtypetostring(codepage)}.json`,
+              )
+            }
+          }
+        }
+        break
+      case 'refsheet': {
+        if (message.player === operator) {
+          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+          const sorted = bookreadsortedcodepages(mainbook)
+          if (ispresent(mainbook) && isarray(message.data)) {
+            register_editor_close(vm, message.player)
+            writeheader(vm, message.player, `use as refsheet`)
+            sorted.forEach((page) => {
+              const name = codepagereadname(page)
+              const type = codepagereadtypetostring(page)
+              write(
+                vm,
+                message.player,
+                `!pageopenwith ${page.id} ${message.data.join(' ')};$blue[${type}]$white ${name}`,
+              )
+            })
           }
         }
         break
       }
-      case 'refsheet': {
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        const sorted = bookreadsortedcodepages(mainbook)
-        if (
-          ispresent(mainbook) &&
-          isarray(message.data) &&
-          ispresent(message.player)
-        ) {
-          tape_editor_close(vm, message.player)
-          writeheader(vm, `use as refsheet`)
-          sorted.forEach((page) => {
-            const name = codepagereadname(page)
-            const type = codepagereadtypetostring(page)
-            write(
-              vm,
-              `!pageopenwith ${page.id} ${message.data.join(' ')};$blue[${type}]$white ${name}`,
-            )
+      case 'fork':
+        if (message.player === operator) {
+          doasync(vm, message.player, async () => {
+            await forkstate()
           })
         }
         break
-      }
-      case 'fork':
-        doasync(vm, async () => {
-          await forkstate()
-        })
-        break
       case 'flush':
-        doasync(vm, async () => {
-          await savestate()
-        })
+        if (message.player === operator) {
+          doasync(vm, message.player, async () => {
+            await savestate()
+          })
+        }
         break
       case 'cli':
         // user input from built-in console
-        if (ispresent(message.player)) {
-          memorycli(message.player, message.data)
-        }
+        memorycli(message.player, message.data)
         break
       case 'restart':
-        if (message.player === memoryreadoperator()) {
+        if (message.player === operator) {
           memoryrestartallchipsandflags()
           vm_flush(vm, message.player)
         }
         break
       case 'inspect':
-        if (ispresent(message.player) && isarray(message.data)) {
+        if (isarray(message.data)) {
           const [p1, p2] = message.data as [PT, PT]
           memoryinspect(message.player, p1, p2)
         }
@@ -456,7 +444,7 @@ const vm = createdevice(
       case 'loader':
         // user input from built-in console
         // or events from devices
-        if (ispresent(message.player) && isarray(message.data)) {
+        if (isarray(message.data)) {
           const [arg, format, eventname, content] = message.data
           if (format === 'file') {
             // handled web file pastes
@@ -465,7 +453,7 @@ const vm = createdevice(
             format === 'json' &&
             /file:.*\.book.json/.test(eventname)
           ) {
-            write(vm, `loading ${eventname}`)
+            write(vm, message.player, `loading ${eventname}`)
             const json = JSON.parse(content.json)
             const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
             if (
@@ -474,10 +462,10 @@ const vm = createdevice(
               isstring(json.exported)
             ) {
               memorysetbook(json.data)
-              write(vm, `loaded ${json.exported}`)
+              write(vm, message.player, `loaded ${json.exported}`)
             }
           } else if (format === 'json' && /file:.*\..*\.json/.test(eventname)) {
-            write(vm, `loading ${eventname}`)
+            write(vm, message.player, `loading ${eventname}`)
             const json = JSON.parse(content.json)
             const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
             if (
@@ -486,7 +474,7 @@ const vm = createdevice(
               isstring(json.exported)
             ) {
               bookwritecodepage(mainbook, json.data)
-              write(vm, `loaded ${json.exported}`)
+              write(vm, message.player, `loaded ${json.exported}`)
             }
           } else {
             // everything else
@@ -498,28 +486,23 @@ const vm = createdevice(
         const { target, path } = parsetarget(message.target)
         switch (NAME(target)) {
           case 'batch':
-            if (ispresent(message.player)) {
-              memoryinspectbatchcommand(path, message.player)
+            memoryinspectbatchcommand(path, message.player)
+            break
+          case 'empty': {
+            const empty = parsetarget(path)
+            switch (empty.target) {
+              case 'copycoords':
+                register_copy(
+                  vm,
+                  memoryreadoperator(),
+                  empty.path.split(',').join(' '),
+                )
+                break
             }
             break
-          case 'empty':
-            if (ispresent(message.player)) {
-              const empty = parsetarget(path)
-              switch (empty.target) {
-                case 'copycoords':
-                  register_copy(
-                    vm,
-                    empty.path.split(',').join(' '),
-                    memoryreadoperator(),
-                  )
-                  break
-              }
-            }
-            break
+          }
           case 'inspect':
-            if (ispresent(message.player)) {
-              memoryinspectcommand(path, message.player)
-            }
+            memoryinspectcommand(path, message.player)
             break
           case 'touched':
             if (isarray(message.data)) {

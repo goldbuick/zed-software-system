@@ -1,4 +1,3 @@
-import { tape_toast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
@@ -81,6 +80,7 @@ export const RUNTIME_FIRMWARE = createfirmware({
       case 'self':
         chip.message({
           session: SOFTWARE.session(),
+          player: READ_CONTEXT.elementfocus,
           id: createsid(),
           sender: chip.id(),
           target: label,

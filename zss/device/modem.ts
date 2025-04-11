@@ -164,7 +164,7 @@ const modem = createdevice('modem', ['second'], (message) => {
     case 'second':
       // send join message
       if (!joined && message.data % 2 === 0) {
-        modem.emit('modem:join')
+        modem.emit(message.player, 'modem:join')
       }
       break
     case 'join':
@@ -192,18 +192,18 @@ const modem = createdevice('modem', ['second'], (message) => {
       if (message.sender !== modem.id() && ispresent(message.data)) {
         try {
           const decoder = decoding.createDecoder(message.data)
-          const syncEncoder = encoding.createEncoder()
-          const syncMessageType = syncprotocol.readSyncMessage(
+          const syncencoder = encoding.createEncoder()
+          const syncmessagetype = syncprotocol.readSyncMessage(
             decoder,
-            syncEncoder,
+            syncencoder,
             SYNC_DOC,
             modem,
           )
-          if (syncMessageType === syncprotocol.messageYjsSyncStep1) {
-            modem.emit('modem:sync', modemmessage(syncEncoder))
+          if (syncmessagetype === syncprotocol.messageYjsSyncStep1) {
+            modem.emit('', 'modem:sync', modemmessage(syncencoder))
           }
         } catch (err: any) {
-          api_error(modem, 'sync', err.message)
+          api_error(modem, message.player, 'sync', err.message)
         }
       }
       break
@@ -214,7 +214,7 @@ const modem = createdevice('modem', ['second'], (message) => {
 function handleupdates(update: Uint8Array) {
   const updateencoder = encoding.createEncoder()
   syncprotocol.writeUpdate(updateencoder, update)
-  modem.emit('modem:sync', modemmessage(updateencoder))
+  modem.emit('', 'modem:sync', modemmessage(updateencoder))
 }
 
 // encode updates to send to other shared docs

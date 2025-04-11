@@ -10,434 +10,421 @@ import { PT } from 'zss/words/types'
 // be careful to keep imports here minimal
 
 export type DEVICELIKE = {
-  emit: (target: string, data?: any, player?: string) => void
+  emit: (player: string, target: string, data?: any) => void
 }
 
 export type MESSAGE = {
   session: string
+  player: string
   id: string
+  sender: string
   target: string
   data?: any
-  sender: string
-  player?: string
 }
 
 export function ismessage(value: any): value is MESSAGE {
   return (
-    ispresent(value) &&
     typeof value === 'object' &&
+    isstring(value.session) &&
+    isstring(value.player) &&
     isstring(value.id) &&
-    isstring(value.target) &&
-    isstring(value.sender)
+    isstring(value.sender) &&
+    isstring(value.target)
   )
 }
 
-// track which messages go from server -> client
-// track which messages go from client -> server
-
 export function api_error(
   device: DEVICELIKE,
+  player: string,
   kind: string,
-  message: string,
-  maybeplayer?: string,
+  ...message: any[]
 ) {
-  const player = maybeplayer ?? ''
-  device.emit(`error:${kind}`, message, player)
-  return tape_error(device, message, player)
+  device.emit(player, 'error', [`$red${kind}$blue>>`, ...message])
+  return false
 }
 
-export function broadcast_startstream(
+export function api_info(
   device: DEVICELIKE,
+  player: string,
+  ...message: any[]
+) {
+  device.emit(player, 'info', message)
+  return true
+}
+
+export function api_debug(
+  device: DEVICELIKE,
+  player: string,
+  ...message: any[]
+) {
+  device.emit(player, 'debug', message)
+  return true
+}
+
+export function api_toast(device: DEVICELIKE, player: string, toast: string) {
+  device.emit(player, 'toast', toast)
+}
+
+export function bridge_startstream(
+  device: DEVICELIKE,
+  player: string,
   streamkey: string,
-  player: string,
 ) {
-  device.emit('broadcast:startstream', streamkey, player)
+  device.emit(player, 'bridge:startstream', streamkey)
 }
 
-export function broadcast_stopstream(device: DEVICELIKE, player: string) {
-  device.emit('broadcast:stopstream', undefined, player)
+export function bridge_stopstream(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:stopstream', undefined)
 }
 
-export function chat_connect(
+export function bridge_chatconnect(
   device: DEVICELIKE,
+  player: string,
   channel: string,
-  player: string,
 ) {
-  device.emit('chat:connect', channel, player)
+  device.emit(player, 'bridge:chatconnect', channel)
 }
 
-export function chat_disconnect(device: DEVICELIKE, player: string) {
-  device.emit('chat:disconnect', undefined, player)
+export function bridge_chatdisconnect(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:chatdisconnect')
 }
 
-export function gadgetclient_paint(
+export function bridge_fetch(
   device: DEVICELIKE,
-  gadgetstate: GADGET_STATE,
   player: string,
-) {
-  device.emit('gadgetclient:paint', gadgetstate, player)
-}
-
-export function gadgetclient_patch(
-  device: DEVICELIKE,
-  json: any,
-  player: string,
-) {
-  device.emit('gadgetclient:patch', json, player)
-}
-
-export function gadgetserver_desync(device: DEVICELIKE, player: string) {
-  device.emit('gadgetserver:desync', undefined, player)
-}
-
-export function gadgetserver_clearscroll(device: DEVICELIKE, player: string) {
-  device.emit('gadgetserver:clearscroll', undefined, player)
-}
-
-export function gadgetserver_clearplayer(device: DEVICELIKE, player: string) {
-  device.emit('gadgetserver:clearplayer', undefined, player)
-}
-
-export function network_fetch(
-  device: DEVICELIKE,
   arg: any,
   label: string,
   url: string,
   method: string,
   words: any[],
-  player: string,
 ) {
-  device.emit('network:fetch', [arg, label, url, method, words], player)
+  device.emit(player, 'bridge:fetch', [arg, label, url, method, words])
 }
 
-export function network_join(
-  device: DEVICELIKE,
-  topic: string,
-  player: string,
-) {
-  device.emit('network:join', topic, player)
+export function bridge_join(device: DEVICELIKE, player: string, topic: string) {
+  device.emit(player, 'bridge:join', topic)
 }
 
-export function network_start(
+export function bridge_start(
   device: DEVICELIKE,
+  player: string,
   hidden: boolean,
-  player: string,
 ) {
-  device.emit('network:start', hidden, player)
+  device.emit(player, 'bridge:start', hidden)
 }
 
-export function network_tab(
+export function bridge_tab(
   device: DEVICELIKE,
+  player: string,
   hidden: boolean,
-  player: string,
 ) {
-  device.emit('network:tab', hidden, player)
+  device.emit(player, 'bridge:tab', hidden)
 }
 
-export function network_tabopen(
+export function bridge_tabopen(
   device: DEVICELIKE,
+  player: string,
   topic: string,
-  player: string,
 ) {
-  device.emit('network:tabopen', topic, player)
+  device.emit(player, 'bridge:tabopen', topic)
 }
 
-export function network_showjoincode(
+export function bridge_showjoincode(
   device: DEVICELIKE,
+  player: string,
   hidden: boolean,
   topic: string,
-  player: string,
 ) {
-  device.emit('network:showjoincode', [hidden, topic], player)
+  device.emit(player, 'bridge:showjoincode', [hidden, topic])
+}
+
+export function gadgetclient_paint(
+  device: DEVICELIKE,
+  player: string,
+  gadgetstate: GADGET_STATE,
+) {
+  device.emit(player, 'gadgetclient:paint', gadgetstate)
+}
+
+export function gadgetclient_patch(
+  device: DEVICELIKE,
+  player: string,
+  json: any,
+) {
+  device.emit(player, 'gadgetclient:patch', json)
+}
+
+export function gadgetserver_desync(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetserver:desync')
+}
+
+export function gadgetserver_clearscroll(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetserver:clearscroll')
 }
 
 export function platform_ready(device: DEVICELIKE) {
-  device.emit('ready')
+  device.emit('', 'ready')
 }
 
-export function register_touchkey(
-  device: DEVICELIKE,
-  key: string,
-  player: string,
-) {
-  device.emit('register:touchkey', key, player)
+export function register_loginfail(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:loginfail')
 }
 
 export function register_loginready(device: DEVICELIKE, player: string) {
-  device.emit('register:loginready', true, player)
+  device.emit(player, 'register:loginready', true)
 }
 
 export function register_savemem(
   device: DEVICELIKE,
+  player: string,
   historylabel: string,
   books: string,
-  player: string,
 ) {
-  device.emit('register:savemem', [historylabel, books], player)
+  device.emit(player, 'register:savemem', [historylabel, books])
 }
 
 export function register_forkmem(
   device: DEVICELIKE,
-  books: string,
   player: string,
+  books: string,
 ) {
-  device.emit('register:forkmem', [books], player)
+  device.emit(player, 'register:forkmem', [books])
 }
 
 export function register_copy(
   device: DEVICELIKE,
-  content: string,
   player: string,
+  content: string,
 ) {
-  device.emit('register:copy', content, player)
+  device.emit(player, 'register:copy', content)
 }
 
 export function register_copyjsonfile(
   device: DEVICELIKE,
+  player: string,
   data: any,
   filename: string,
-  player: string,
 ) {
-  device.emit('register:copyjsonfile', [data, filename], player)
+  device.emit(player, 'register:copyjsonfile', [data, filename])
 }
 
 export function register_downloadjsonfile(
   device: DEVICELIKE,
+  player: string,
   data: any,
   filename: string,
-  player: string,
 ) {
-  device.emit('register:downloadjsonfile', [data, filename], player)
-}
-
-export function tape_toast(device: DEVICELIKE, toast: string) {
-  device.emit('tape:toast', toast)
+  device.emit(player, 'register:downloadjsonfile', [data, filename])
 }
 
 export function register_dev(device: DEVICELIKE, player: string) {
-  device.emit('register:dev', undefined, player)
+  device.emit(player, 'register:dev', undefined)
 }
 
 export function register_share(device: DEVICELIKE, player: string) {
-  device.emit('register:share', undefined, player)
-}
-
-export function register_select(
-  device: DEVICELIKE,
-  book: string,
-  player: string,
-) {
-  device.emit('register:select', book, player)
+  device.emit(player, 'register:share', undefined)
 }
 
 export function register_nuke(device: DEVICELIKE, player: string) {
-  device.emit('register:nuke', undefined, player)
+  device.emit(player, 'register:nuke', undefined)
 }
 
 export function synth_audioenabled(device: DEVICELIKE, player: string) {
-  device.emit('synth:audioenabled', undefined, player)
+  device.emit(player, 'synth:audioenabled', undefined)
 }
 
-export function synth_tts(device: DEVICELIKE, voice: string, phrase: string) {
-  device.emit('synth:tts', [voice, phrase])
+export function synth_tts(
+  device: DEVICELIKE,
+  player: string,
+  voice: string,
+  phrase: string,
+) {
+  device.emit(player, 'synth:tts', [voice, phrase])
 }
 
-export function synth_tta(device: DEVICELIKE, phrase: string) {
-  device.emit('synth:tta', [phrase])
+export function synth_tta(device: DEVICELIKE, player: string, phrase: string) {
+  device.emit(player, 'synth:tta', [phrase])
 }
 
 export function synth_play(
   device: DEVICELIKE,
+  player: string,
   buffer: string,
   bgplay: boolean,
 ) {
-  device.emit('synth:play', [buffer, bgplay])
+  device.emit(player, 'synth:play', [buffer, bgplay])
 }
 
-export function synth_bpm(device: DEVICELIKE, bpm: number) {
-  device.emit('synth:bpm', bpm)
+export function synth_bpm(device: DEVICELIKE, player: string, bpm: number) {
+  device.emit(player, 'synth:bpm', bpm)
 }
 
-export function synth_playvolume(device: DEVICELIKE, volume: number) {
-  device.emit('synth:playvolume', volume)
+export function synth_playvolume(
+  device: DEVICELIKE,
+  player: string,
+  volume: number,
+) {
+  device.emit(player, 'synth:playvolume', volume)
 }
 
-export function synth_bgplayvolume(device: DEVICELIKE, volume: number) {
-  device.emit('synth:bgplayvolume', volume)
+export function synth_bgplayvolume(
+  device: DEVICELIKE,
+  player: string,
+  volume: number,
+) {
+  device.emit(player, 'synth:bgplayvolume', volume)
 }
 
-export function synth_ttsvolume(device: DEVICELIKE, volume: number) {
-  device.emit('synth:ttsvolume', volume)
+export function synth_ttsvolume(
+  device: DEVICELIKE,
+  player: string,
+  volume: number,
+) {
+  device.emit(player, 'synth:ttsvolume', volume)
 }
 
 export function synth_voice(
   device: DEVICELIKE,
+  player: string,
   idx: number,
   config: number | string,
   value: MAYBE<number | string | number[]>,
 ) {
-  device.emit('synth:voice', [idx, config, value])
+  device.emit(player, 'synth:voice', [idx, config, value])
 }
 
 export function synth_voicefx(
   device: DEVICELIKE,
+  player: string,
   idx: number,
   fx: string,
   config: number | string,
   value: MAYBE<number | string>,
 ) {
-  device.emit('synth:voicefx', [idx, fx, config, value])
+  device.emit(player, 'synth:voicefx', [idx, fx, config, value])
 }
 
-export function tape_info(device: DEVICELIKE, ...message: any[]) {
-  device.emit('tape:info', message)
-  return true
+export function register_inspector(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:inspector')
 }
 
-export function tape_debug(device: DEVICELIKE, ...message: any[]) {
-  device.emit('tape:debug', message)
-  return true
+export function register_terminal_open(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:terminal:open')
 }
 
-export function tape_inspector(
+export function register_terminal_quickopen(
   device: DEVICELIKE,
-  maybetoggle: MAYBE<boolean>,
   player: string,
 ) {
-  device.emit('tape:inspector', maybetoggle, player)
+  device.emit(player, 'register:terminal:quickopen')
 }
 
-// internal only, use api_error
-function tape_error(device: DEVICELIKE, ...message: any[]) {
-  device.emit('tape:error', message)
-  return false
+export function register_terminal_close(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:terminal:close')
 }
 
-export function tape_terminal_open(device: DEVICELIKE, player: string) {
-  device.emit('tape:terminal:open', undefined, player)
+export function register_terminal_toggle(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:terminal:toggle')
 }
 
-export function tape_terminal_quickopen(device: DEVICELIKE, player: string) {
-  device.emit('tape:terminal:quickopen', undefined, player)
-}
-
-export function tape_terminal_close(device: DEVICELIKE, player: string) {
-  device.emit('tape:terminal:close', undefined, player)
-}
-
-export function tape_terminal_toggle(device: DEVICELIKE, player: string) {
-  device.emit('tape:terminal:toggle', undefined, player)
-}
-
-export function tape_terminal_inclayout(
+export function register_terminal_inclayout(
   device: DEVICELIKE,
+  player: string,
   inc: boolean,
-  player: string,
 ) {
-  device.emit('tape:terminal:inclayout', inc, player)
+  device.emit(player, 'register:terminal:inclayout', inc)
 }
 
-export function tape_terminal_full(device: DEVICELIKE, player: string) {
-  device.emit('tape:terminal:full', undefined, player)
+export function register_terminal_full(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:terminal:full')
 }
 
-export function tape_editor_open(
+export function register_editor_open(
   device: DEVICELIKE,
+  player: string,
   book: string,
   path: MAYBE<string>[],
   type: string,
   title: string,
   refsheet: string[],
-  player: string,
 ) {
-  device.emit('tape:editor:open', [book, path, type, title, refsheet], player)
+  device.emit(player, 'register:editor:open', [
+    book,
+    path,
+    type,
+    title,
+    refsheet,
+  ])
 }
 
-export function tape_editor_close(device: DEVICELIKE, player: string) {
-  device.emit('tape:editor:close', undefined, player)
-}
-
-export function userinput_up(device: DEVICELIKE, input: INPUT, player: string) {
-  device.emit('userinput:up', input, player)
-}
-
-export function userinput_down(
-  device: DEVICELIKE,
-  input: INPUT,
-  player: string,
-) {
-  device.emit('userinput:down', input, player)
+export function register_editor_close(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:editor:close')
 }
 
 export function vm_operator(device: DEVICELIKE, player: string) {
-  device.emit('vm:operator', undefined, player)
+  device.emit(player, 'vm:operator')
 }
 
 export function vm_zsswords(device: DEVICELIKE, player: string) {
-  device.emit('vm:zsswords', undefined, player)
+  device.emit(player, 'vm:zsswords')
 }
 
-export function vm_halt(device: DEVICELIKE, halt: boolean, player: string) {
-  device.emit('vm:halt', halt, player)
+export function vm_halt(device: DEVICELIKE, player: string, halt: boolean) {
+  device.emit(player, 'vm:halt', halt)
 }
 
 export function vm_books(
   device: DEVICELIKE,
+  player: string,
   books: string,
   select: string,
-  player: string,
 ) {
-  device.emit('vm:books', [books, select], player)
+  device.emit(player, 'vm:books', [books, select])
+}
+
+export function vm_search(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:search')
 }
 
 export function vm_login(device: DEVICELIKE, player: string) {
-  device.emit('vm:login', undefined, player)
+  device.emit(player, 'vm:login')
 }
 
 export function vm_logout(device: DEVICELIKE, player: string) {
-  device.emit('vm:logout', undefined, player)
+  device.emit(player, 'vm:logout')
 }
 
 export function vm_doot(device: DEVICELIKE, player: string) {
-  device.emit('vm:doot', undefined, player)
+  device.emit(player, 'vm:doot')
 }
 
 export function vm_input(
   device: DEVICELIKE,
+  player: string,
   input: INPUT,
   mods: number,
-  player: string,
 ) {
-  device.emit('vm:input', [input, mods], player)
+  device.emit(player, 'vm:input', [input, mods])
 }
 
 export function vm_copyjsonfile(
   device: DEVICELIKE,
-  path: string[],
   player: string,
-) {
-  device.emit('vm:copyjsonfile', path, player)
-}
-
-export function vm_codepage(
-  device: DEVICELIKE,
   path: string[],
-  refsheet: string,
-  player: string,
 ) {
-  device.emit('vm:codepage', [path, refsheet], player)
+  device.emit(player, 'vm:copyjsonfile', path)
 }
 
 export function vm_refsheet(
   device: DEVICELIKE,
-  path: string[],
   player: string,
+  path: string[],
 ) {
-  device.emit('vm:refsheet', path, player)
+  device.emit(player, 'vm:refsheet', path)
 }
 
-export function vm_inspect(device: DEVICELIKE, p1: PT, p2: PT, player: string) {
-  device.emit('vm:inspect', [p1, p2], player)
+export function vm_inspect(device: DEVICELIKE, player: string, p1: PT, p2: PT) {
+  device.emit(player, 'vm:inspect', [p1, p2])
 }
 
 export function vm_codeaddress(book: string, path: MAYBE<string>[]) {
@@ -447,40 +434,44 @@ export function vm_codeaddress(book: string, path: MAYBE<string>[]) {
 
 export function vm_codewatch(
   device: DEVICELIKE,
+  player: string,
   book: string,
   path: string[],
-  player: string,
 ) {
-  device.emit('vm:codewatch', [book, path], player)
+  device.emit(player, 'vm:codewatch', [book, path])
 }
 
 export function vm_coderelease(
   device: DEVICELIKE,
+  player: string,
   book: string,
   path: string[],
-  player: string,
 ) {
-  device.emit('vm:coderelease', [book, path], player)
+  device.emit(player, 'vm:coderelease', [book, path])
 }
 
-export function vm_cli(device: DEVICELIKE, input: string, player: string) {
-  device.emit('vm:cli', input, player)
+export function vm_cli(device: DEVICELIKE, player: string, input: string) {
+  device.emit(player, 'vm:cli', input)
 }
 
 export function vm_restart(device: DEVICELIKE, player: string) {
-  device.emit('vm:restart', undefined, player)
+  device.emit(player, 'vm:restart')
 }
 
-export function vm_synthsend(device: DEVICELIKE, message: string) {
-  device.emit('vm:synthsend', message)
+export function vm_synthsend(
+  device: DEVICELIKE,
+  player: string,
+  message: string,
+) {
+  device.emit(player, 'vm:synthsend', message)
 }
 
 export function vm_flush(device: DEVICELIKE, player: string) {
-  device.emit('vm:flush', undefined, player)
+  device.emit(player, 'vm:flush')
 }
 
 export function vm_fork(device: DEVICELIKE, player: string) {
-  device.emit('vm:fork', undefined, player)
+  device.emit(player, 'vm:fork')
 }
 
 export type TEXT_READER = {
@@ -530,11 +521,11 @@ export function createbinaryreader(
 
 export function vm_loader(
   device: DEVICELIKE,
+  player: string,
   arg: any,
   format: 'file' | 'text' | 'json' | 'binary',
   eventname: string,
   content: any,
-  player: string,
 ) {
   let withcontent: any
   switch (format) {
@@ -552,6 +543,6 @@ export function vm_loader(
       break
   }
   setTimeout(() => {
-    device.emit('vm:loader', [arg, format, eventname, withcontent], player)
+    device.emit(player, 'vm:loader', [arg, format, eventname, withcontent])
   }, 1)
 }

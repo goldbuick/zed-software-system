@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import {
-  tape_terminal_close,
-  tape_terminal_inclayout,
+  register_terminal_close,
+  register_terminal_inclayout,
   vm_cli,
   vm_loader,
 } from 'zss/device/api'
@@ -301,9 +301,9 @@ export function TapeTerminalInput({
                         .filter((item) => item !== invoke),
                     ],
                   })
-                  vm_cli(SOFTWARE, invoke, player)
+                  vm_cli(SOFTWARE, player, invoke)
                   if (quickterminal) {
-                    tape_terminal_close(SOFTWARE, player)
+                    register_terminal_close(SOFTWARE, player)
                   }
                 } else {
                   resettoend()
@@ -313,10 +313,10 @@ export function TapeTerminalInput({
             }
             case 'esc':
             case 'escape':
-              tape_terminal_close(SOFTWARE, player)
+              register_terminal_close(SOFTWARE, player)
               break
             case 'tab':
-              tape_terminal_inclayout(SOFTWARE, !mods.shift, player)
+              register_terminal_inclayout(SOFTWARE, player, !mods.shift)
               break
             case 'delete':
               // single line only
@@ -346,7 +346,7 @@ export function TapeTerminalInput({
               if (mods.ctrl) {
                 switch (lkey) {
                   case 'e':
-                    vm_cli(SOFTWARE, '#export', registerreadplayer())
+                    vm_cli(SOFTWARE, player, '#export')
                     break
                   case 'a':
                     useTapeTerminal.setState({
@@ -382,11 +382,11 @@ export function TapeTerminalInput({
                             ) {
                               vm_loader(
                                 SOFTWARE,
+                                player,
                                 undefined,
                                 'json',
                                 `file:${json.exported}`,
                                 JSON.stringify(json),
-                                registerreadplayer(),
                               )
                               return
                             }

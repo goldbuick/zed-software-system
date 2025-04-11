@@ -1,4 +1,10 @@
-import { chat_connect, chat_disconnect, network_fetch } from 'zss/device/api'
+import {
+  bridge_startstream,
+  bridge_stopstream,
+  bridge_chatconnect,
+  bridge_chatdisconnect,
+  bridge_fetch,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isarray } from 'zss/mapping/types'
@@ -38,14 +44,14 @@ function fetchcommand(
   switch (NAME(method)) {
     case 'get':
     case 'post:json':
-      network_fetch(
+      bridge_fetch(
         SOFTWARE,
+        READ_CONTEXT.elementfocus,
         arg,
         label,
         url,
         method,
         values,
-        READ_CONTEXT.elementfocus,
       )
       break
   }
@@ -76,10 +82,26 @@ export const NETWORK_FIRMWARE = createfirmware()
     const [maybechannel] = readargs(words, 0, [ARG_TYPE.ANY])
     switch (NAME(maybechannel)) {
       default:
-        chat_connect(SOFTWARE, maybechannel, READ_CONTEXT.elementfocus)
+        bridge_chatconnect(SOFTWARE, READ_CONTEXT.elementfocus, maybechannel)
         break
       case 'close':
-        chat_disconnect(SOFTWARE, READ_CONTEXT.elementfocus)
+        bridge_chatdisconnect(SOFTWARE, READ_CONTEXT.elementfocus)
+        break
+    }
+    return 0
+  })
+  .command('twitchbroadcast', (_, words) => {
+    const [maybestreamkey] = readargs(words, 0, [ARG_TYPE.NAME])
+    switch (NAME(maybestreamkey)) {
+      default:
+        bridge_startstream(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          maybestreamkey,
+        )
+        break
+      case 'stop':
+        bridge_stopstream(SOFTWARE, READ_CONTEXT.elementfocus)
         break
     }
     return 0

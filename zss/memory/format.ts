@@ -80,7 +80,7 @@ export function unformatobject<T>(
 
     return obj as T
   } catch (err: any) {
-    api_error(SOFTWARE, 'binary', err.message)
+    api_error(SOFTWARE, '', 'binary', err.message)
   }
 }
 
@@ -103,7 +103,7 @@ export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
     const data = deepcopy(entry)
     return pack(data)
   } catch (err: any) {
-    api_error(SOFTWARE, 'binary', err.message)
+    api_error(SOFTWARE, '', 'binary', err.message)
   }
 }
 
@@ -113,6 +113,6 @@ export function unpackbinary(binary: Uint8Array): MAYBE<FORMAT_OBJECT> {
     // console.info('read', deepcopy(data))
     return data
   } catch (err: any) {
-    api_error(SOFTWARE, 'binary', err.message)
+    api_error(SOFTWARE, '', 'binary', err.message)
   }
 }

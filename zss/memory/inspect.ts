@@ -2,7 +2,7 @@ import { parsetarget } from 'zss/device'
 import {
   gadgetserver_clearscroll,
   register_copy,
-  tape_editor_open,
+  register_editor_open,
   vm_codeaddress,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
@@ -16,7 +16,7 @@ import {
 } from 'zss/gadget/data/api'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import { CATEGORY, PT } from 'zss/words/types'
 
 import {
@@ -204,8 +204,8 @@ export function memoryinspectcommand(path: string, player: string) {
     case 'copycoords':
       register_copy(
         SOFTWARE,
-        [element.x ?? 0, element.y ?? 0].join(' '),
         memoryreadoperator(),
+        [element.x ?? 0, element.y ?? 0].join(' '),
       )
       break
     case 'bg':
@@ -219,14 +219,10 @@ export function memoryinspectcommand(path: string, player: string) {
       bookboardsafedelete(mainbook, board, element, mainbook.timestamp)
       break
     case 'code':
-      doasync(SOFTWARE, async () => {
-        if (!ispresent(player)) {
-          return
-        }
-
+      doasync(SOFTWARE, player, async () => {
         const name = boardelementname(element)
         const pagetype = 'object'
-        writetext(SOFTWARE, `opened [${pagetype}] ${name}`)
+        writetext(SOFTWARE, player, `opened [${pagetype}] ${name}`)
 
         // edit path
         const path = [board.id, element.id]
@@ -244,14 +240,14 @@ export function memoryinspectcommand(path: string, player: string) {
         await waitfor(800)
 
         // open code editor
-        tape_editor_open(
+        register_editor_open(
           SOFTWARE,
+          player,
           mainbook.id,
           path,
           pagetype,
           `${name} - ${mainbook.name}`,
           [],
-          player,
         )
       })
       break

@@ -1,8 +1,6 @@
 import { objectKeys } from 'ts-extras'
 // @ts-expect-error wow amazing
 import wfc from 'wavefunctioncollapse'
-import { api_error } from 'zss/device/api'
-import { SOFTWARE } from 'zss/device/session'
 import { pick } from 'zss/mapping/array'
 import { deepcopy, isnumber, ispresent } from 'zss/mapping/types'
 import { MEMORY_LABEL, memoryensuresoftwarecodepage } from 'zss/memory'
@@ -21,7 +19,7 @@ import {
   bookelementkindread,
   bookreadcodepagewithtype,
 } from 'zss/memory/book'
-import { codepagereaddata, codepagereadname } from 'zss/memory/codepage'
+import { codepagereaddata } from 'zss/memory/codepage'
 import {
   BOARD_ELEMENT,
   BOARD_HEIGHT,
@@ -31,8 +29,6 @@ import {
 } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
-
-import { write } from './writeui'
 
 function snapshotname(target: string) {
   return `zss_snapshot_${target}`
@@ -95,12 +91,7 @@ export function boardremixsnapshot(target: string) {
   // copy over terrain & objects
   snapshotboard.terrain = deepcopy(targetboard.terrain)
   snapshotboard.objects = noplayer(deepcopy(targetboard.objects))
-
-  // todo outcome
-  write(
-    SOFTWARE,
-    `snapshot of ${codepagereadname(targetcodepage)} created as ${codepagereadname(snapshotcodepage)}`,
-  )
+  return snapshotboard
 }
 
 export function boardremixrestart(target: string) {
@@ -146,7 +137,7 @@ export function boardremix(
   mirror = 1,
   p1 = { x: 0, y: 0 },
   p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 },
-) {
+): boolean {
   const targetcodepage = bookreadcodepagewithtype(
     READ_CONTEXT.book,
     CODE_PAGE_TYPE.BOARD,
@@ -160,7 +151,7 @@ export function boardremix(
   const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
   const sourceboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(sourcecodepage)
   if (!ispresent(targetboard) || !ispresent(sourceboard)) {
-    return
+    return false
   }
 
   // make sure lookup is created
@@ -209,11 +200,6 @@ export function boardremix(
   const genwidth = x2 - x1 + 1
   const genheight = y2 - y1 + 1
 
-  write(
-    SOFTWARE,
-    `remixing ${x1},${y1} - ${x2},${y2} on ${target} with ${source} <${patternsize},${mirror}>`,
-  )
-
   // generate new image
   const model = new wfc.OverlappingModel(
     data,
@@ -235,12 +221,7 @@ export function boardremix(
     }
   }
   if (attempt === MAX_ATTEMPT) {
-    api_error(
-      SOFTWARE,
-      'boardremix',
-      `failed to generate after ${MAX_ATTEMPT} tries`,
-    )
-    return
+    return false
   }
 
   // unpack bytes onto targetboard
@@ -315,4 +296,6 @@ export function boardremix(
       }
     }
   }
+
+  return true
 }

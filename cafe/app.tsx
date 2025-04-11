@@ -61,11 +61,11 @@ window.addEventListener('paste', (event) => {
   files.forEach((file) =>
     vm_loader(
       SOFTWARE,
+      registerreadplayer(),
       undefined,
       'file',
       `file:${file.name}`,
       file,
-      registerreadplayer(),
     ),
   )
 })
@@ -84,11 +84,11 @@ window.addEventListener('drop', (event) => {
         if (ispresent(file)) {
           vm_loader(
             SOFTWARE,
+            registerreadplayer(),
             undefined,
             'file',
             file.name,
             file,
-            registerreadplayer(),
           )
         }
       }
@@ -99,11 +99,11 @@ window.addEventListener('drop', (event) => {
     files.forEach((file) =>
       vm_loader(
         SOFTWARE,
+        registerreadplayer(),
         undefined,
         'file',
         file.name,
         file,
-        registerreadplayer(),
       ),
     )
   }

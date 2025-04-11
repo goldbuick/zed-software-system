@@ -1,7 +1,6 @@
 import { createdevice } from 'zss/device'
 import { write } from 'zss/feature/writeui'
 import { createsid } from 'zss/mapping/guid'
-import { ispresent } from 'zss/mapping/types'
 
 import { platform_ready } from './api'
 
@@ -17,12 +16,10 @@ const stub = createdevice(
     }
     switch (message.target) {
       case 'operator':
-        if (ispresent(message.player)) {
-          stuboperator = message.player
-          write(stub, `operator set to ${stuboperator}`)
-          // ack
-          stub.reply(message, 'ackoperator', true, message.player)
-        }
+        stuboperator = message.player
+        write(stub, message.player, `operator set to ${stuboperator}`)
+        // ack
+        stub.reply(message, 'ackoperator', true)
         break
     }
   },

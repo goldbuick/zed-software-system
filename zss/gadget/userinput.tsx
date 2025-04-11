@@ -130,6 +130,7 @@ document.addEventListener(
   (event) => {
     const key = NAME(event.key)
     const mods = modsfromevent(event)
+    const player = registerreadplayer()
 
     // block default browser behavior that messes with things
     switch (key) {
@@ -197,25 +198,17 @@ document.addEventListener(
         break
       case 's':
         if (mods.ctrl) {
-          vm_cli(SOFTWARE, '#save', registerreadplayer())
+          vm_cli(SOFTWARE, player, '#save')
         }
         break
       case 'j':
         if (mods.ctrl) {
-          vm_cli(
-            SOFTWARE,
-            mods.shift ? '#jointab hush' : '#jointab',
-            registerreadplayer(),
-          )
+          vm_cli(SOFTWARE, player, mods.shift ? '#jointab hush' : '#jointab')
         }
         break
       case 'o':
         if (mods.ctrl) {
-          vm_cli(
-            SOFTWARE,
-            mods.shift ? '#joincode hush' : '#joincode',
-            registerreadplayer(),
-          )
+          vm_cli(SOFTWARE, player, mods.shift ? '#joincode hush' : '#joincode')
         }
         break
       case 'l':
@@ -225,7 +218,7 @@ document.addEventListener(
         break
       case 'f':
         if (mods.ctrl) {
-          vm_cli(SOFTWARE, '#fork', registerreadplayer())
+          vm_cli(SOFTWARE, player, '#fork')
         }
         break
     }

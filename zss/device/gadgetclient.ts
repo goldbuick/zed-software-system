@@ -9,18 +9,22 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
   if (!gadgetclientdevice.session(message)) {
     return
   }
+
+  // player filter
+  if (message.player !== registerreadplayer()) {
+    return
+  }
+
   const { desync } = useGadgetClient.getState()
   switch (message.target) {
     case 'paint':
-      if (message.player === registerreadplayer()) {
-        useGadgetClient.setState({
-          desync: false,
-          gadget: message.data,
-        })
-      }
+      useGadgetClient.setState({
+        desync: false,
+        gadget: message.data,
+      })
       break
     case 'patch':
-      if (message.player === registerreadplayer() && !desync) {
+      if (!desync) {
         useGadgetClient.setState((state) => {
           let didnotpass: any
           try {
@@ -31,13 +35,7 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
 
           if (ispresent(didnotpass)) {
             // we are out of sync and need to request a refresh
-            gadgetclientdevice.replynext(
-              message,
-              'desync',
-              undefined,
-              message.player,
-            )
-
+            gadgetclientdevice.replynext(message, 'desync')
             return {
               ...state,
               desync: true,

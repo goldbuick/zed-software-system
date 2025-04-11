@@ -19,7 +19,6 @@ import {
   isequal,
   isnumber,
   ispresent,
-  isstring,
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory'
@@ -46,7 +45,7 @@ export type CHIP = {
   yield: () => void
   jump: (line: number) => void
   sy: () => boolean
-  send: (chipid: string, message: string, data?: any, player?: string) => void
+  send: (player: string, chipid: string, message: string, data?: any) => void
   lock: (allowed: string) => void
   unlock: () => void
   message: (incoming: MESSAGE) => void
@@ -219,7 +218,7 @@ export function createchip(
           flags.es = 1
         }
       } catch (err: any) {
-        api_error(SOFTWARE, 'crash', err.message)
+        api_error(SOFTWARE, READ_CONTEXT.elementfocus, 'crash', err.message)
         flags.es = 1
       }
 
@@ -266,8 +265,8 @@ export function createchip(
     sy() {
       return !!flags.ys || chip.shouldhalt()
     },
-    send(chipid, message, data, player) {
-      SOFTWARE.emit(`${senderid(chipid)}:${message}`, data, player)
+    send(player, chipid, message, data) {
+      SOFTWARE.emit(player, `${senderid(chipid)}:${message}`, data)
     },
     lock(allowed) {
       flags.lk = allowed
@@ -338,7 +337,7 @@ export function createchip(
         }
 
         // this sets player focus
-        if (isstring(player)) {
+        if (player) {
           // update player stat
           chip.set('player', player)
           // update read context as well

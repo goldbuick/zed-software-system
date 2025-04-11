@@ -81,9 +81,9 @@ export function TapeTerminal() {
             const [target, message] = totarget(maybetarget)
             if (target === 'self') {
               const input = `#${message} ${data.join(' ')}`
-              vm_cli(SOFTWARE, input, player)
+              vm_cli(SOFTWARE, player, input)
             } else {
-              SOFTWARE.emit(`${target}:${message}`, data, player)
+              SOFTWARE.emit(player, `${target}:${message}`, data)
             }
           },
         }}

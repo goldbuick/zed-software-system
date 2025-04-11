@@ -46,7 +46,7 @@ export function TapeTerminalInspector() {
   // track selection state
   function completeselection() {
     if (useTapeInspector.getState().cursor) {
-      vm_inspect(SOFTWARE, selectstart, selectend, registerreadplayer())
+      vm_inspect(SOFTWARE, registerreadplayer(), selectstart, selectend)
     }
     useTapeInspector.setState(() => ({
       cursor: undefined,

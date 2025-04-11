@@ -9,10 +9,10 @@ export type HUB_MESSAGE = {
 export type HUB = {
   emit: (
     session: string,
-    target: string,
+    player: string,
     sender: string,
+    target: string,
     data?: any,
-    player?: string,
   ) => void
   invoke: (message: MESSAGE) => void
   connect: (device: DEVICE) => void
@@ -22,22 +22,10 @@ export type HUB = {
 const devices = new Set<DEVICE>()
 
 export const hub: HUB = {
-  emit(session, target, sender, data, player) {
-    hub.invoke(createmessage(session, target, sender, data, player))
+  emit(session, player, sender, target, data) {
+    hub.invoke(createmessage(session, player, sender, target, data))
   },
   invoke(message) {
-    switch (message.target) {
-      case 'tick':
-      case 'tock':
-      case 'vm:doot':
-      case 'second':
-      case 'tape:info':
-      case 'tape:debug':
-        break
-      default:
-        // console.info(message.player, message.target, message.data)
-        break
-    }
     devices.forEach((device) => device.handle(message))
   },
   connect(device) {

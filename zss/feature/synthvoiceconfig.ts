@@ -49,6 +49,7 @@ function validatesynthtype(
 }
 
 export function synthvoiceconfig(
+  player: string,
   synth: MAYBE<AUDIO_SYNTH>,
   index: number,
   config: number | string,
@@ -61,7 +62,7 @@ export function synthvoiceconfig(
   // validate index
   const voice = synth.SOURCE[index]
   if (!ispresent(voice)) {
-    api_error(SOFTWARE, `synth`, `unknown voice ${index}`)
+    api_error(SOFTWARE, player, `synth`, `unknown voice ${index}`)
     return
   }
 
@@ -86,6 +87,7 @@ export function synthvoiceconfig(
           case SOURCE_TYPE.RETRO_NOISE:
             api_error(
               SOFTWARE,
+              player,
               `synth`,
               `portamento for retro synth not supported`,
             )
@@ -345,7 +347,7 @@ export function synthvoiceconfig(
           }
         }
 
-        api_error(SOFTWARE, `synth`, `unknown config ${config}`)
+        api_error(SOFTWARE, player, `synth`, `unknown config ${config}`)
       }
       break
   }

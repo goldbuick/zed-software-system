@@ -10,14 +10,14 @@ import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, isnumber, ispresent, MAYBE } from 'zss/mapping/types'
 
-import { api_error, synth_audioenabled, tape_info, vm_loader } from './api'
+import { api_error, synth_audioenabled, api_info, vm_loader } from './api'
 import { registerreadplayer } from './register'
 
 // synth setup
 
 // TODO, wait for this before creating worklet nodes
 createsynthworkletnode().catch((err) => {
-  api_error(synthdevice, 'audio', err.message)
+  api_error(synthdevice, registerreadplayer(), 'audio', err.message)
 })
 
 type CustomNavigator = {
@@ -37,7 +37,7 @@ export function enableaudio() {
         const transport = getTransport()
         enabled = true
         transport.start()
-        tape_info(synthdevice, 'audio is enabled!')
+        api_info(synthdevice, registerreadplayer(), 'audio is enabled!')
         setAltInterval(107)
         try {
           const customnavigator = navigator as CustomNavigator
@@ -52,7 +52,7 @@ export function enableaudio() {
       }
     })
     .catch((err: any) => {
-      api_error(synthdevice, 'audio', err.message)
+      api_error(synthdevice, registerreadplayer(), 'audio', err.message)
     })
 }
 
@@ -66,23 +66,32 @@ const synthdevice = createdevice('synth', [], (message) => {
   if (!synthdevice.session(message)) {
     return
   }
+
+  // player filter
+  // we have to filter this to your board
+  // if (message.player !== registerreadplayer()) {
+  //   return
+  // }
+
+  // validate synth state
   if (enabled && !ispresent(synth)) {
     synth = createsynth()
   }
   if (!ispresent(synth)) {
     return
   }
+
   switch (message.target) {
     case 'audioenabled':
-      doasync(synthdevice, async () => {
+      doasync(synthdevice, message.player, async () => {
         await waitfor(1000)
         vm_loader(
           synthdevice,
+          message.player,
           undefined,
           'text',
           'audioenabled',
           '',
-          registerreadplayer(),
         )
       })
       break
@@ -125,7 +134,7 @@ const synthdevice = createdevice('synth', [], (message) => {
           number | string,
           number | string | number[],
         ]
-        synthvoiceconfig(synth, index, config, value)
+        synthvoiceconfig(message.player, synth, index, config, value)
       }
       break
     case 'voicefx':
@@ -136,20 +145,27 @@ const synthdevice = createdevice('synth', [], (message) => {
           number | string,
           number | string,
         ]
-        synthvoicefxconfig(synth, synthindex, fxname, config, value)
+        synthvoicefxconfig(
+          message.player,
+          synth,
+          synthindex,
+          fxname,
+          config,
+          value,
+        )
       }
       break
     case 'tts':
-      doasync(synthdevice, async () => {
+      doasync(synthdevice, message.player, async () => {
         if (isarray(message.data)) {
           await playtts(synth, message.data)
         }
       })
       break
     case 'tta':
-      doasync(synthdevice, async () => {
+      doasync(synthdevice, message.player, async () => {
         if (isarray(message.data)) {
-          await playtta(synth, message.data)
+          await playtta(message.player, synth, message.data)
         }
       })
       break

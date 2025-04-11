@@ -2,7 +2,7 @@ import { objectKeys } from 'ts-extras'
 import { senderid } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
 import { parsetarget } from 'zss/device'
-import { api_error, MESSAGE, tape_debug, tape_info } from 'zss/device/api'
+import { api_error, MESSAGE, api_debug, api_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
@@ -143,7 +143,7 @@ export function memorycreatesoftwarebook(maybename?: string) {
     book.name = maybename
   }
   memorysetbook(book)
-  tape_info(SOFTWARE, `created [book] ${book.name}`)
+  api_info(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
   return book
 }
 
@@ -154,7 +154,7 @@ export function memoryensurebookbyname(name: string) {
     book.name = name
   }
   memorysetbook(book)
-  tape_info(SOFTWARE, `created [book] ${book.name}`)
+  api_info(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
   return book
 }
 
@@ -180,7 +180,11 @@ export function memoryensuresoftwarebook(
 
     // success
     if (ispresent(book)) {
-      tape_info(SOFTWARE, `opened [book] ${book.name} for ${slot}`)
+      api_info(
+        SOFTWARE,
+        MEMORY.operator,
+        `opened [book] ${book.name} for ${slot}`,
+      )
     }
   }
 
@@ -259,9 +263,9 @@ export function memoryplayerlogin(player: string): boolean {
   if (!isstring(player) || !player) {
     return api_error(
       SOFTWARE,
+      player,
       'login',
       `failed for playerid ==>${player}<==`,
-      player,
     )
   }
 
@@ -269,9 +273,9 @@ export function memoryplayerlogin(player: string): boolean {
   if (!ispresent(mainbook)) {
     return api_error(
       SOFTWARE,
+      player,
       'login:main',
       `login failed to find book 'main'`,
-      player,
     )
   }
 
@@ -291,9 +295,9 @@ export function memoryplayerlogin(player: string): boolean {
   if (titleboards.length === 0) {
     return api_error(
       SOFTWARE,
+      player,
       'login:title',
       `login failed to find board with '${MEMORY_LABEL.TITLE}' stat`,
-      player,
     )
   }
 
@@ -301,9 +305,9 @@ export function memoryplayerlogin(player: string): boolean {
   if (!ispresent(playerkind)) {
     return api_error(
       SOFTWARE,
+      player,
       'login:player',
       `login failed to find object type '${MEMORY_LABEL.PLAYER}'`,
-      player,
     )
   }
 
@@ -397,14 +401,14 @@ export function memorymessage(message: MESSAGE) {
 }
 
 function sendinteraction(
+  player: string,
   fromelement: BOARD_ELEMENT,
   toelement: BOARD_ELEMENT,
   message: string,
-  player: MAYBE<string>,
 ) {
   const fromname = boardelementname(fromelement)
   if (isstring(toelement.id)) {
-    SOFTWARE.emit(`vm:touched`, [toelement.id, fromname, message], player)
+    SOFTWARE.emit(player, `vm:touched`, [toelement.id, fromname, message])
   }
 }
 
@@ -414,7 +418,7 @@ export function memorymoveobject(
   element: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ) {
-  if (!ispresent(element)) {
+  if (!ispresent(element?.id)) {
     return false
   }
   const blocked = bookboardmoveobject(book, board, element, dest)
@@ -430,7 +434,7 @@ export function memorymoveobject(
         )
         if (boards.length) {
           const board = pick(boards)
-          bookplayermovetoboard(book, element.id ?? '', board.id, {
+          bookplayermovetoboard(book, element.id, board.id, {
             x: BOARD_WIDTH - 1,
             y: dest.y,
           })
@@ -444,7 +448,7 @@ export function memorymoveobject(
         )
         if (boards.length) {
           const board = pick(boards)
-          bookplayermovetoboard(book, element.id ?? '', board.id, {
+          bookplayermovetoboard(book, element.id, board.id, {
             x: 0,
             y: dest.y,
           })
@@ -458,7 +462,7 @@ export function memorymoveobject(
         )
         if (boards.length) {
           const board = pick(boards)
-          bookplayermovetoboard(book, element.id ?? '', board.id, {
+          bookplayermovetoboard(book, element.id, board.id, {
             x: dest.x,
             y: BOARD_HEIGHT - 1,
           })
@@ -472,30 +476,38 @@ export function memorymoveobject(
         )
         if (boards.length) {
           const board = pick(boards)
-          bookplayermovetoboard(book, element.id ?? '', board.id, {
+          bookplayermovetoboard(book, element.id, board.id, {
             x: dest.x,
             y: 0,
           })
         }
       }
     } else {
-      sendinteraction(blocked, element, 'thud', undefined)
+      sendinteraction('', blocked, element, 'thud')
     }
     if (element.kind === MEMORY_LABEL.PLAYER) {
-      sendinteraction(element, blocked, 'touch', element.id)
+      const blockedbyplayer = ispid(blocked.id)
+      sendinteraction(
+        element.id,
+        element,
+        blocked,
+        // blocked is bumped or touched by player
+        blockedbyplayer ? 'bump' : 'touch',
+      )
     } else if (element.collision === COLLISION.ISBULLET) {
+      // blocked is touched by bullet
       const fromplayer = ispid(element.party)
       const blockedbyplayer = ispid(blocked.id)
       if (fromplayer !== blockedbyplayer) {
         // need from player stat here
         // so we can properly track aggro from bullets
-        sendinteraction(element, blocked, 'shot', element.party)
+        sendinteraction(element.party ?? '', element, blocked, 'shot')
       } else {
         // same party bullets thud
-        sendinteraction(blocked, element, 'thud', undefined)
+        sendinteraction('', element, blocked, 'thud')
       }
     } else {
-      sendinteraction(element, blocked, 'bump', undefined)
+      sendinteraction('', element, blocked, 'bump')
     }
 
     // delete destructible elements
@@ -757,7 +769,7 @@ export function memorycli(player: string, cli = '') {
   RUNTIME.HALT_AT_COUNT = resethalt * 8
 
   // invoke once
-  tape_debug(SOFTWARE, 'running', mainbook.timestamp, id, cli)
+  api_debug(SOFTWARE, player, 'running', mainbook.timestamp, id, cli)
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
 
   RUNTIME.HALT_AT_COUNT = resethalt

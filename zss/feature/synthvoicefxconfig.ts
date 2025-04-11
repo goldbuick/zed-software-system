@@ -18,6 +18,7 @@ type JUSTFXSET = Omit<FXSET, 'applyreset'>
 export type FXNAME = keyof JUSTFXSET
 
 export function synthvoicefxconfig(
+  player: string,
   synth: MAYBE<AUDIO_SYNTH>,
   index: number,
   fxname: FXNAME,
@@ -28,7 +29,7 @@ export function synthvoicefxconfig(
     return
   }
   if (index < 0 || index >= synth.FX.length) {
-    api_error(SOFTWARE, `synth`, `index ${index} out of bounds`)
+    api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
   const fx = synth.FX[index][fxname]
@@ -49,23 +50,23 @@ export function synthvoicefxconfig(
           switch (fxname) {
             case 'fc':
             case 'fcrush':
-              synthvoicefxfcrushconfig(synth, index, config, value)
+              synthvoicefxfcrushconfig(player, synth, index, config, value)
               break
             case 'echo':
-              synthvoicefxechoconfig(synth, index, config, value)
+              synthvoicefxechoconfig(player, synth, index, config, value)
               break
             case 'phaser':
-              synthvoicefxphaserconfig(synth, index, config, value)
+              synthvoicefxphaserconfig(player, synth, index, config, value)
               break
             case 'reverb':
-              synthvoicefxreverbconfig(synth, index, config, value)
+              synthvoicefxreverbconfig(player, synth, index, config, value)
               break
             case 'distort':
             case 'distortion':
-              synthvoicefxdistortionconfig(synth, index, config, value)
+              synthvoicefxdistortionconfig(player, synth, index, config, value)
               break
             case 'vibrato':
-              synthvoicefxvibratoconfig(synth, index, config, value)
+              synthvoicefxvibratoconfig(player, synth, index, config, value)
               break
           }
         }
@@ -81,5 +82,5 @@ export function synthvoicefxconfig(
     }
     return
   }
-  api_error(SOFTWARE, `synth`, `unknown fx ${fxname}`)
+  api_error(SOFTWARE, player, `synth`, `unknown fx ${fxname}`)
 }
