@@ -382,6 +382,10 @@ export function vm_books(
   device.emit(player, 'vm:books', [books, select])
 }
 
+export function vm_search(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:search')
+}
+
 export function vm_login(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:login')
 }

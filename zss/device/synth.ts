@@ -63,18 +63,24 @@ export function synthbroadcastdestination(): MAYBE<MediaStreamAudioDestinationNo
 }
 
 const synthdevice = createdevice('synth', [], (message) => {
-  if (
-    !synthdevice.session(message) ||
-    message.player !== registerreadplayer()
-  ) {
+  if (!synthdevice.session(message)) {
     return
   }
+
+  // player filter
+  // we have to filter this to your board
+  // if (message.player !== registerreadplayer()) {
+  //   return
+  // }
+
+  // validate synth state
   if (enabled && !ispresent(synth)) {
     synth = createsynth()
   }
   if (!ispresent(synth)) {
     return
   }
+
   switch (message.target) {
     case 'audioenabled':
       doasync(synthdevice, message.player, async () => {

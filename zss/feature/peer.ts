@@ -1,12 +1,17 @@
 import { KademliaTable } from 'kademlia-table'
 import P2PT, { Peer } from 'p2pt'
 import { hex2arr } from 'uint8-util'
-import { createmessage } from 'zss/device'
-import { MESSAGE, bridge_showjoincode, bridge_tabopen } from 'zss/device/api'
+import {
+  MESSAGE,
+  bridge_showjoincode,
+  bridge_tabopen,
+  vm_search,
+} from 'zss/device/api'
 import {
   createforward,
   shouldforwardclienttoserver,
   shouldforwardservertoclient,
+  shouldnotforwardonpeerclient,
   shouldnotforwardonpeerserver,
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
@@ -137,6 +142,24 @@ finder.on('trackerconnect', (tracker, stats) => {
 // topic related state
 let isstarted = false
 let topicbridge: MAYBE<ReturnType<typeof createforward>>
+let searchping: any
+
+function peersearchstart(player: string) {
+  function searchpingmsg() {
+    vm_search(SOFTWARE, player)
+  }
+
+  // ping the network
+  searchpingmsg()
+
+  // create search pulse
+  searchping = setInterval(searchpingmsg, 5 * 1000)
+}
+
+function peersearchstop() {
+  clearInterval(searchping)
+}
+
 function peerusehost(host: string) {
   if (!isstarted) {
     isstarted = true
@@ -150,7 +173,9 @@ function peerpublishmessage(topic: string, gme: MESSAGE) {
   // forwards towards topic host peer
   const [node] = routingtable.listClosestToId(peerstringtobytes(topic), 1)
   if (ispresent(node)) {
-    finder.send(node.peer, { topic, pub: true, gme }).catch(console.error)
+    finder.send(node.peer, { topic, pub: true, gme }).catch(() => {
+      // console.error
+    })
   }
 }
 
@@ -160,6 +185,8 @@ export function peerserver(hidden: boolean, tabopen: boolean) {
 
   // setup host
   peerusehost(host)
+
+  // show join code
   bridge_showjoincode(SOFTWARE, registerreadplayer(), hidden, host)
   if (tabopen) {
     bridge_tabopen(SOFTWARE, registerreadplayer(), host)
@@ -184,36 +211,25 @@ function peersubscribemessage(topic: string, sub: string, gme: MESSAGE) {
   }
 }
 
-function peersubscribe(topic: string, player: string) {
-  // forwards towards topic host peer
-  peersubscribemessage(
-    topic,
-    finder._peerId,
-    createmessage(
-      SOFTWARE.session(),
-      player,
-      SOFTWARE.id(),
-      `vm:joinack`,
-      topic,
-    ),
-  )
-  // not sure how slow of a poll this should be
-  setTimeout(() => peersubscribe(topic, player), 1000 * 3)
-}
-
 export function peerclient(host: string, player: string) {
+  // setup host
   peerusehost(host)
-  peersubscribe(host, player)
 
   // open bridge between peers
   topicbridge = createforward((message) => {
-    if (shouldforwardclienttoserver(message)) {
+    if (
+      shouldforwardclienttoserver(message) &&
+      shouldnotforwardonpeerclient(message) === false
+    ) {
       peersubscribemessage(host, finder._peerId, message)
     }
   })
+
+  setTimeout(() => peersearchstart(player), 1000)
 }
 
 export function peerleave() {
+  peersearchstop()
   // close bridge between peers
   topicbridge?.disconnect()
   topicbridge = undefined

@@ -6,12 +6,15 @@ import { ispresent } from 'zss/mapping/types'
 import { registerreadplayer } from './register'
 
 const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
-  if (
-    !gadgetclientdevice.session(message) ||
-    message.player !== registerreadplayer()
-  ) {
+  if (!gadgetclientdevice.session(message)) {
     return
   }
+
+  // player filter
+  if (message.player !== registerreadplayer()) {
+    return
+  }
+
   const { desync } = useGadgetClient.getState()
   switch (message.target) {
     case 'paint':

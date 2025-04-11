@@ -192,15 +192,15 @@ const modem = createdevice('modem', ['second'], (message) => {
       if (message.sender !== modem.id() && ispresent(message.data)) {
         try {
           const decoder = decoding.createDecoder(message.data)
-          const syncEncoder = encoding.createEncoder()
-          const syncMessageType = syncprotocol.readSyncMessage(
+          const syncencoder = encoding.createEncoder()
+          const syncmessagetype = syncprotocol.readSyncMessage(
             decoder,
-            syncEncoder,
+            syncencoder,
             SYNC_DOC,
             modem,
           )
-          if (syncMessageType === syncprotocol.messageYjsSyncStep1) {
-            modem.emit(message.player, 'modem:sync', modemmessage(syncEncoder))
+          if (syncmessagetype === syncprotocol.messageYjsSyncStep1) {
+            modem.emit('', 'modem:sync', modemmessage(syncencoder))
           }
         } catch (err: any) {
           api_error(modem, message.player, 'sync', err.message)

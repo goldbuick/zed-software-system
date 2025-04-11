@@ -37,11 +37,14 @@ const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
   if (!gadgetserver.session(message)) {
     return
   }
+
   // get list of active players
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const activelist = mainbook?.activelist ?? []
+
   // only send deltas
   const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
+
   switch (message.target) {
     case 'tock':
       for (let i = 0; i < activelist.length; ++i) {

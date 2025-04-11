@@ -223,7 +223,7 @@ const vm = createdevice(
           })
         }
         break
-      case 'joinack':
+      case 'search':
         if (!memoryreadplayeractive(message.player)) {
           register_loginready(vm, message.player)
         }

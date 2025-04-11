@@ -87,6 +87,17 @@ const bridge = createdevice('bridge', [], (message) => {
   if (!bridge.session(message)) {
     return
   }
+
+  // player filter
+  const player = registerreadplayer()
+  switch (message.target) {
+    default:
+      if (message.player !== player) {
+        return
+      }
+      break
+  }
+
   switch (message.target) {
     case 'fetch':
       if (isarray(message.data)) {
@@ -111,17 +122,13 @@ const bridge = createdevice('bridge', [], (message) => {
       }
       break
     case 'start':
-      if (message.player === registerreadplayer()) {
-        peerserver(!!message.data, false)
-      }
+      peerserver(!!message.data, false)
       break
     case 'tab':
-      if (message.player === registerreadplayer()) {
-        peerserver(!!message.data, true)
-      }
+      peerserver(!!message.data, true)
       break
     case 'tabopen':
-      if (isstring(message.data) && message.player === registerreadplayer()) {
+      if (isstring(message.data)) {
         window.open(
           `${location.origin}/join/#${message.data}`,
           '_blank',
@@ -130,13 +137,13 @@ const bridge = createdevice('bridge', [], (message) => {
       }
       break
     case 'join':
-      if (message.player === registerreadplayer() && isstring(message.data)) {
+      if (isstring(message.data)) {
         peerclient(message.data, message.player)
       }
       break
-    case 'showjoincode': {
+    case 'showjoincode':
       doasync(bridge, message.player, async () => {
-        if (message.player === registerreadplayer() && isarray(message.data)) {
+        if (isarray(message.data)) {
           const [hidden, topic] = message.data as [boolean, string]
           const joinurl = `${location.origin}/join/#${topic}`
           const url = await shorturl(joinurl)
@@ -148,7 +155,6 @@ const bridge = createdevice('bridge', [], (message) => {
         }
       })
       break
-    }
     case 'chatconnect':
       if (ispresent(twitchchatclient)) {
         api_error(

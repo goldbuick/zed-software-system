@@ -255,8 +255,17 @@ const register = createdevice(
     if (!register.session(message)) {
       return
     }
-    if (message.target !== 'ready' && message.player !== myplayerid) {
-      return
+
+    // player filter
+    switch (message.target) {
+      case 'ready':
+      case 'second':
+        break
+      default:
+        if (message.player !== myplayerid) {
+          return
+        }
+        break
     }
 
     const { terminal } = useTape.getState()
