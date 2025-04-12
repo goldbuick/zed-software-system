@@ -130,83 +130,76 @@ const vm = createdevice(
         // ack
         vm.replynext(message, 'ackoperator', true)
         break
-      case 'zsswords':
-        if (message.player === operator) {
-          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-          vm.replynext(message, `ackzsswords`, {
-            cli: firmwarelistcommands(DRIVER_TYPE.CLI),
-            loader: firmwarelistcommands(DRIVER_TYPE.LOADER),
-            runtime: firmwarelistcommands(DRIVER_TYPE.RUNTIME),
-            flags: [
-              ...objectKeys(memoryreadflags(message.player)),
-              'inputmove',
-              'inputalt',
-              'inputctrl',
-              'inputshift',
-              'inputok',
-              'inputcancel',
-              'inputmenu',
-            ],
-            stats: [
-              // interaction
-              'player',
-              'pushable',
-              'collision',
-              'destructible',
-              // boolean stats
-              'ispushable',
-              'iswalk',
-              'iswalking',
-              'iswalkable',
-              'isswim',
-              'isswimming',
-              'isswimable',
-              'issolid',
-              'isbullet',
-              'isdestructible',
-              // config
-              'p1',
-              'p2',
-              'p3',
-              'cycle',
-              'stepx',
-              'stepy',
-              'light',
-              // messages & run
-              'sender',
-              'arg',
-            ],
-            // object codepage kinds
-            kinds: [
-              ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.OBJECT).map(
-                (codepage) => codepagereadname(codepage),
-              ),
-              ...objectKeys(categoryconsts),
-            ],
-            // other codepage types
-            altkinds: [
-              ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
-              ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.BOARD),
-              ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.PALETTE),
-              ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.CHARSET),
-              ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.LOADER),
-            ].map((codepage) => codepagereadname(codepage)),
-            colors: [...objectKeys(colorconsts)],
-            dirs: [
-              ...objectKeys(dirconsts).filter(
-                (item) => ['cw', 'ccw', 'oop', 'rndp'].includes(item) === false,
-              ),
-            ],
-            dirmods: [
-              'cw',
-              'ccw',
-              'oop',
-              'rndp',
-              ...objectKeys(collisionconsts),
-            ],
-          })
-        }
+      case 'zsswords': {
+        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        vm.replynext(message, `ackzsswords`, {
+          cli: firmwarelistcommands(DRIVER_TYPE.CLI),
+          loader: firmwarelistcommands(DRIVER_TYPE.LOADER),
+          runtime: firmwarelistcommands(DRIVER_TYPE.RUNTIME),
+          flags: [
+            ...objectKeys(memoryreadflags(message.player)),
+            'inputmove',
+            'inputalt',
+            'inputctrl',
+            'inputshift',
+            'inputok',
+            'inputcancel',
+            'inputmenu',
+          ],
+          stats: [
+            // interaction
+            'player',
+            'pushable',
+            'collision',
+            'destructible',
+            // boolean stats
+            'ispushable',
+            'iswalk',
+            'iswalking',
+            'iswalkable',
+            'isswim',
+            'isswimming',
+            'isswimable',
+            'issolid',
+            'isbullet',
+            'isdestructible',
+            // config
+            'p1',
+            'p2',
+            'p3',
+            'cycle',
+            'stepx',
+            'stepy',
+            'light',
+            // messages & run
+            'sender',
+            'arg',
+          ],
+          // object codepage kinds
+          kinds: [
+            ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.OBJECT).map(
+              (codepage) => codepagereadname(codepage),
+            ),
+            ...objectKeys(categoryconsts),
+          ],
+          // other codepage types
+          altkinds: [
+            ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.TERRAIN),
+            ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.BOARD),
+            ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.PALETTE),
+            ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.CHARSET),
+            ...bookreadcodepagesbytype(mainbook, CODE_PAGE_TYPE.LOADER),
+          ].map((codepage) => codepagereadname(codepage)),
+          colors: [...objectKeys(colorconsts)],
+          dirs: [
+            ...objectKeys(dirconsts).filter(
+              (item) => ['cw', 'ccw', 'oop', 'rndp'].includes(item) === false,
+            ),
+          ],
+          dirmods: ['cw', 'ccw', 'oop', 'rndp', ...objectKeys(collisionconsts)],
+        })
         break
+      }
       case 'books':
         if (message.player === operator) {
           doasync(vm, message.player, async () => {
@@ -392,22 +385,20 @@ const vm = createdevice(
         }
         break
       case 'refsheet': {
-        if (message.player === operator) {
-          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-          const sorted = bookreadsortedcodepages(mainbook)
-          if (ispresent(mainbook) && isarray(message.data)) {
-            register_editor_close(vm, message.player)
-            writeheader(vm, message.player, `use as refsheet`)
-            sorted.forEach((page) => {
-              const name = codepagereadname(page)
-              const type = codepagereadtypetostring(page)
-              write(
-                vm,
-                message.player,
-                `!pageopenwith ${page.id} ${message.data.join(' ')};$blue[${type}]$white ${name}`,
-              )
-            })
-          }
+        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        const sorted = bookreadsortedcodepages(mainbook)
+        if (ispresent(mainbook) && isarray(message.data)) {
+          register_editor_close(vm, message.player)
+          writeheader(vm, message.player, `use as refsheet`)
+          sorted.forEach((page) => {
+            const name = codepagereadname(page)
+            const type = codepagereadtypetostring(page)
+            write(
+              vm,
+              message.player,
+              `!pageopenwith ${page.id} ${message.data.join(' ')};$blue[${type}]$white ${name}`,
+            )
+          })
         }
         break
       }

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
+import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useGadgetClient, useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
@@ -55,6 +56,7 @@ function skipwords(word: string) {
 }
 
 export function TapeEditor() {
+  const player = registerreadplayer()
   const [editor] = useTape(useShallow((state) => [state.editor]))
   const [
     wordscli,
@@ -156,12 +158,11 @@ export function TapeEditor() {
   const edge = textformatreadedges(context)
 
   useEffect(() => {
-    // TODO: editor.player should just be registerreadplayer()
-    vm_codewatch(SOFTWARE, editor.player, editor.book, editor.path)
+    vm_codewatch(SOFTWARE, player, editor.book, editor.path)
     return () => {
-      vm_coderelease(SOFTWARE, editor.player, editor.book, editor.path)
+      vm_coderelease(SOFTWARE, player, editor.book, editor.path)
     }
-  }, [editor.book, editor.path, editor.player])
+  }, [editor.book, editor.path, player])
 
   // get current string value of code
   const strvalue = ispresent(codepage) ? codepage.toJSON() : ''

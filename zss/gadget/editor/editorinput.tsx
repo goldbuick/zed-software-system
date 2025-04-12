@@ -9,6 +9,7 @@ import {
   vm_refsheet,
 } from 'zss/device/api'
 import { Y } from 'zss/device/modem'
+import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { writetext } from 'zss/feature/writeui'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
@@ -46,8 +47,8 @@ export function EditorInput({
   const blinkdelta = useRef<PT>()
   const tapeeditor = useTapeEditor()
   const edge = textformatreadedges(context)
-  const player = useTape((state) => state.editor.player)
   const editorpath = useTape((state) => state.editor.path)
+  const player = registerreadplayer()
 
   // split by line
   const strvalue = ispresent(codepage) ? codepage.toJSON() : ''

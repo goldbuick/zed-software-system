@@ -86,7 +86,6 @@ export function memoryinspectcolorarea(
     return all
   }
   function set(name: string, value: WORD) {
-    console.info('memoryinspectcolorarea', name, value)
     if (isnumber(value)) {
       all = value
       for (let y = p1.y; y <= p2.y; ++y) {
@@ -205,13 +204,11 @@ export function memoryinspectarea(player: string, p1: PT, p2: PT) {
 
   function get(name: string) {
     const { target } = parsetarget(name)
-    // console.info('#### get', target)
     return memoryinspectremix[target as INSPECTVAR]
   }
   function set(name: string, value: WORD) {
     if (isnumber(value) || isstring(value)) {
       const { target } = parsetarget(name)
-      // console.info('#### set', target, value)
       // @ts-expect-error bah
       memoryinspectremix[target as INSPECTVAR] = value
     }

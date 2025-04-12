@@ -121,6 +121,8 @@ finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
         // translate to software session
         session: SOFTWARE.session(),
       })
+      // clear search once we start getting messages we care about
+      peersearchstop()
     } else if (ispresent(msg.gme)) {
       // forwards towards host peer
       peersubscribemessage(msg.topic, msg.sub, msg.gme)
