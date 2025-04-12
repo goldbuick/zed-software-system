@@ -89,7 +89,6 @@ export const useTape = create<{
   }
   editor: {
     open: boolean
-    player: string
     book: string
     path: string[]
     type: string
@@ -108,7 +107,6 @@ export const useTape = create<{
   },
   editor: {
     open: false,
-    player: '',
     book: '',
     path: [],
     type: '',

@@ -1,13 +1,9 @@
-import * as decoding from 'lib0/decoding'
-import * as encoding from 'lib0/encoding'
 import { useEffect, useState } from 'react'
-import * as syncprotocol from 'y-protocols/sync'
+import { arr2hex, hex2arr } from 'uint8-util'
 import * as Y from 'yjs'
 import { createdevice } from 'zss/device'
 import { UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
-
-import { api_error } from './api'
 
 export { Y }
 
@@ -152,10 +148,6 @@ export function modemobservevaluestring(
   })
 }
 
-function modemmessage(encoder: encoding.Encoder) {
-  return encoding.toUint8Array(encoder)
-}
-
 const modem = createdevice('modem', ['second'], (message) => {
   if (!modem.session(message)) {
     return
@@ -170,51 +162,33 @@ const modem = createdevice('modem', ['second'], (message) => {
     case 'join':
       if (message.sender !== modem.id()) {
         // signal to stop join message
-        modem.reply(message, 'joinack')
-
-        // send sync step 1
-        const syncEncoder1 = encoding.createEncoder()
-        syncprotocol.writeSyncStep1(syncEncoder1, SYNC_DOC)
-        modem.reply(message, 'sync', modemmessage(syncEncoder1))
-
-        // send sync step 2
-        const syncEncoder2 = encoding.createEncoder()
-        syncprotocol.writeSyncStep2(syncEncoder2, SYNC_DOC)
-        modem.reply(message, 'sync', modemmessage(syncEncoder2))
+        modem.reply(
+          message,
+          'joinack',
+          arr2hex(Y.encodeStateAsUpdate(SYNC_DOC)),
+        )
       }
       break
     case 'joinack':
       if (message.sender !== modem.id()) {
         joined = true
+        Y.applyUpdate(SYNC_DOC, hex2arr(message.data), SYNC_DOC)
       }
       break
     case 'sync': {
       if (message.sender !== modem.id() && ispresent(message.data)) {
-        try {
-          const decoder = decoding.createDecoder(message.data)
-          const syncencoder = encoding.createEncoder()
-          const syncmessagetype = syncprotocol.readSyncMessage(
-            decoder,
-            syncencoder,
-            SYNC_DOC,
-            modem,
-          )
-          if (syncmessagetype === syncprotocol.messageYjsSyncStep1) {
-            modem.emit('', 'modem:sync', modemmessage(syncencoder))
-          }
-        } catch (err: any) {
-          api_error(modem, message.player, 'sync', err.message)
-        }
+        Y.applyUpdate(SYNC_DOC, hex2arr(message.data), SYNC_DOC)
       }
       break
     }
   }
 })
 
-function handleupdates(update: Uint8Array) {
-  const updateencoder = encoding.createEncoder()
-  syncprotocol.writeUpdate(updateencoder, update)
-  modem.emit('', 'modem:sync', modemmessage(updateencoder))
+function handleupdates(update: Uint8Array, origin: any) {
+  // we made a change
+  if (origin !== SYNC_DOC) {
+    modem.emit('', 'modem:sync', arr2hex(update))
+  }
 }
 
 // encode updates to send to other shared docs

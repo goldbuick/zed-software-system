@@ -105,6 +105,6 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'joinack':
       return true
   }
-  // console.info('cli', message.target)
+  // console.info('cli', message.target, message.data)
   return false
 }
