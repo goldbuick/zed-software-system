@@ -422,14 +422,16 @@ export const BOARD_FIRMWARE = createfirmware()
     const boardelements = listnamedelements(READ_CONTEXT.board, targetname)
     const targetelements = listelementsbykind(boardelements, target)
 
+    // how do we easily handle the EMPTY special case ?
+
     // modify attrs
     const intoname = readstrkindname(into)
     const intocolor = readstrkindcolor(into)
     const intobg = readstrkindbg(into)
 
-    // modify elements
     targetelements.forEach((element) => {
       if (boardelementname(element) === intoname) {
+        // modify existing elements
         if (ispresent(intocolor)) {
           element.color = intocolor
         }
@@ -437,9 +439,9 @@ export const BOARD_FIRMWARE = createfirmware()
           element.bg = intobg
         }
       } else {
-        // delete object
+        // erase element
         if (
-          ispresent(element.id) &&
+          !ispresent(element) ||
           bookboardsafedelete(
             READ_CONTEXT.book,
             READ_CONTEXT.board,
@@ -447,17 +449,18 @@ export const BOARD_FIRMWARE = createfirmware()
             READ_CONTEXT.timestamp,
           )
         ) {
-          // bail
-          return 0
-        }
-        // create new element
-        if (ispt(element)) {
-          bookboardwritefromkind(
-            READ_CONTEXT.book,
-            READ_CONTEXT.board,
-            into,
-            element,
-          )
+          // create new element
+          if (intoname !== 'empty') {
+            bookboardwritefromkind(
+              READ_CONTEXT.book,
+              READ_CONTEXT.board,
+              into,
+              {
+                x: element.x ?? 0,
+                y: element.y ?? 0,
+              },
+            )
+          }
         }
       }
     })
