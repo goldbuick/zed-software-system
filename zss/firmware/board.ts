@@ -8,7 +8,11 @@ import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
 import { ispresent } from 'zss/mapping/types'
 import { memorymoveobject, memorytickobject } from 'zss/memory'
-import { listelementsbykind, listnamedelements } from 'zss/memory/atomics'
+import {
+  listelementsbykind,
+  listnamedelements,
+  listptsbyempty,
+} from 'zss/memory/atomics'
 import {
   boardelementread,
   boardobjectread,
@@ -419,17 +423,18 @@ export const BOARD_FIRMWARE = createfirmware()
 
     // begin filtering
     const targetname = readstrkindname(target) ?? ''
-    const boardelements = listnamedelements(READ_CONTEXT.board, targetname)
-    const targetelements = listelementsbykind(boardelements, target)
-
-    // how do we easily handle the EMPTY special case ?
+    if (targetname === 'empty') {
+      // empty into something becomes a put
+      listptsbyempty(READ_CONTEXT.board).forEach((pt) => {
+        bookboardwritefromkind(READ_CONTEXT.book, READ_CONTEXT.board, into, pt)
+      })
+    }
 
     // modify attrs
     const intoname = readstrkindname(into)
     const intocolor = readstrkindcolor(into)
     const intobg = readstrkindbg(into)
-
-    targetelements.forEach((element) => {
+    listelementsbykind(READ_CONTEXT.board, target).forEach((element) => {
       if (boardelementname(element) === intoname) {
         // modify existing elements
         if (ispresent(intocolor)) {
@@ -441,7 +446,6 @@ export const BOARD_FIRMWARE = createfirmware()
       } else {
         // erase element
         if (
-          !ispresent(element) ||
           bookboardsafedelete(
             READ_CONTEXT.book,
             READ_CONTEXT.board,

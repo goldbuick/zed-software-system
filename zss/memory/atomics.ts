@@ -1,3 +1,4 @@
+import { indextopt } from 'zss/mapping/2d'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { ispt } from 'zss/words/dir'
 import {
@@ -8,9 +9,16 @@ import {
 } from 'zss/words/kind'
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
-import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
+import { boardelementread } from './board'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_SIZE,
+  BOARD_WIDTH,
+} from './types'
 
-// what is atomics? a set of spatial and data related queries
+// what is atomics? a set of spatial, data related queries, and mods
 // naming convention
 // check does one to many comparisons, input can be anything
 // list returns a list, input can be anything
@@ -54,6 +62,18 @@ export function findplayerforelement(
   return undefined
 }
 
+export function listelementsbyempty(board: MAYBE<BOARD>): PT[] {
+  const pts: PT[] = []
+  // returns a list of points where empties are
+  for (let i = 0; i < BOARD_SIZE; ++i) {
+    const el = boardelementread(board, indextopt(i, BOARD_WIDTH))
+    if (!el?.kind && !el?.name) {
+      pts.push({ x: el?.x ?? 0, y: el?.y ?? 0 })
+    }
+  }
+  return pts
+}
+
 export function listnamedelements(
   board: MAYBE<BOARD>,
   name: string,
@@ -69,14 +89,28 @@ export function listnamedelements(
     .filter(ispresent)
 }
 
+export function listptsbyempty(board: MAYBE<BOARD>): PT[] {
+  const pts: PT[] = []
+  for (let y = 0; y < BOARD_HEIGHT; ++y) {
+    for (let x = 0; x < BOARD_WIDTH; ++x) {
+      const pt = { x, y }
+      const el = boardelementread(board, pt)
+      if (!el?.name && !el?.kind) {
+        pts.push(pt)
+      }
+    }
+  }
+  return pts
+}
+
 export function listelementsbykind(
-  elements: MAYBE<BOARD_ELEMENT>[],
+  board: MAYBE<BOARD>,
   kind: STR_KIND,
 ): BOARD_ELEMENT[] {
   const name = readstrkindname(kind)
   const color = readstrkindcolor(kind)
   const bg = readstrkindbg(kind)
-  return elements
+  return listnamedelements(board, name ?? '')
     .filter((element) => {
       if (ispresent(name)) {
         const elementname = NAME(element?.name ?? element?.kinddata?.name ?? '')
