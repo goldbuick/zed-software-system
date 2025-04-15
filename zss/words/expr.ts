@@ -2,18 +2,13 @@ import { pick, pickwith } from 'zss/mapping/array'
 import { clamp, randominteger, randomintegerwith } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryrun } from 'zss/memory'
-import {
-  findplayerforelement,
-  listelementsbykind,
-  listnamedelements,
-} from 'zss/memory/atomics'
+import { findplayerforelement, listelementsbykind } from 'zss/memory/atomics'
 import { bookboardcheckmoveobject } from 'zss/memory/book'
 
 import { isstrcategory, mapstrcategory, readcategory } from './category'
 import { isstrcollision, mapstrcollision, readcollision } from './collision'
 import { isstrcolor, mapstrcolor, readcolor } from './color'
 import { isstrdir, mapstrdir, readdir } from './dir'
-import { readstrkindname } from './kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
 import { NAME } from './types'
 
@@ -147,10 +142,7 @@ export function readexpr(index: number): [any, number] {
         // ANY <color> <item>
         // This flag is SET whenever the given kind is visible on the board
         const [target, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.KIND])
-        // begin filtering
-        const targetname = readstrkindname(target) ?? ''
-        const boardelements = listnamedelements(READ_CONTEXT.board, targetname)
-        const targetelements = listelementsbykind(boardelements, target)
+        const targetelements = listelementsbykind(READ_CONTEXT.board, target)
         return [targetelements.length ? 1 : 0, iii]
       }
       // zss
