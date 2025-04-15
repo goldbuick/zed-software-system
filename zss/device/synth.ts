@@ -8,7 +8,13 @@ import { playtta, playtts } from 'zss/feature/tts'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
-import { isarray, isnumber, ispresent, MAYBE } from 'zss/mapping/types'
+import {
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+  MAYBE,
+} from 'zss/mapping/types'
 
 import { api_error, synth_audioenabled, api_info, vm_loader } from './api'
 import { registerreadplayer } from './register'
@@ -57,6 +63,7 @@ export function enableaudio() {
 }
 
 let synth: MAYBE<AUDIO_SYNTH>
+let synthfocus = ''
 
 export function synthbroadcastdestination(): MAYBE<MediaStreamAudioDestinationNode> {
   return synth?.broadcastdestination
@@ -66,12 +73,6 @@ const synthdevice = createdevice('synth', [], (message) => {
   if (!synthdevice.session(message)) {
     return
   }
-
-  // player filter
-  // we have to filter this to your board
-  // if (message.player !== registerreadplayer()) {
-  //   return
-  // }
 
   // validate synth state
   if (enabled && !ispresent(synth)) {
@@ -115,10 +116,23 @@ const synthdevice = createdevice('synth', [], (message) => {
         synth.setttsvolume(message.data)
       }
       break
+    case 'focus':
+      if (isstring(message.data)) {
+        synthfocus = message.data
+      }
+      break
     case 'play':
       if (isarray(message.data)) {
-        const [buffer, bgplay] = message.data as [string, boolean]
-        if (buffer === '') {
+        const [board, buffer, bgplay] = message.data as [
+          string,
+          string,
+          boolean,
+        ]
+        // board audio filter
+        if (board && board !== synthfocus) {
+          return
+        }
+        if (buffer.trim() === '') {
           // stop playback
           synth.stopplay()
         } else {

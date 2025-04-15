@@ -882,8 +882,8 @@ export function bookboardtick(
     // lookup kind
     const kind = bookelementkindread(book, object)
 
-    // object code
-    const code = object.code ?? kind?.code ?? ''
+    // object code is composed of kind code + object code
+    const code = `${kind?.code ?? ''}\n${object.code ?? ''}`
 
     // check that we have code to execute
     if (!code) {
