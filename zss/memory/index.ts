@@ -711,7 +711,7 @@ export function memorysendtoactiveboards(message: string, data: any) {
       const element = elements[i]
       if (ispresent(element.id)) {
         const chipmessage = `${senderid(element.id)}:${labelstr}`
-        SOFTWARE.emit(chipmessage, data)
+        SOFTWARE.emit('', chipmessage, data)
       }
     }
   }

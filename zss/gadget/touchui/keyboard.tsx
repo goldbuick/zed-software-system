@@ -236,7 +236,7 @@ export function Keyboard({ width, height }: KeyboardProps) {
             value={{
               sendmessage(target, data) {
                 // send a hyperlink message
-                SOFTWARE.emit(target, data, player)
+                SOFTWARE.emit(player, target, data)
               },
               sendclose() {
                 // no-op

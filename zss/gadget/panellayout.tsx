@@ -179,7 +179,7 @@ export function PanelLayout() {
       value={{
         sendmessage(target, data) {
           // send a hyperlink message
-          SOFTWARE.emit(target, data, player)
+          SOFTWARE.emit(player, target, data)
         },
         sendclose() {
           // send a message to trigger the close
