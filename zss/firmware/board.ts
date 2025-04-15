@@ -8,11 +8,7 @@ import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
 import { ispresent } from 'zss/mapping/types'
 import { memorymoveobject, memorytickobject } from 'zss/memory'
-import {
-  listelementsbykind,
-  listnamedelements,
-  listptsbyempty,
-} from 'zss/memory/atomics'
+import { listelementsbykind, listptsbyempty } from 'zss/memory/atomics'
 import {
   boardelementread,
   boardobjectread,
@@ -22,7 +18,6 @@ import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
 import {
   bookboardcheckblockedobject,
   bookboardmoveobject,
-  bookboardnamedwrite,
   bookboardsafedelete,
   bookboardsetlookup,
   bookboardwritefromkind,
@@ -336,12 +331,6 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-    // const [dir, duplicatedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-    // const maybetarget = boardelementread(READ_CONTEXT.board, dir)
-    // if (ispresent(maybetarget)) {
-    //   // update lookup (only objects)
-    //   // bookboardobjectlookupwrite(book, board, object)
-    // }
     return 0
   })
   .command('replace', (_, words) => {
@@ -390,23 +379,14 @@ export const BOARD_FIRMWARE = createfirmware()
     tokenizeandwritetextformat(text, context, false)
     for (let i = 0; i < measuredwidth; ++i) {
       // create new terrain element
-      const terrain = boardsetterrain(READ_CONTEXT.board, {
+      boardsetterrain(READ_CONTEXT.board, {
         x: dir.x + i,
         y: dir.y,
+        name: 'text',
         char: context.char[i],
         color: context.color[i],
         bg: context.bg[i],
       })
-      // update named (terrain)
-      if (ispresent(terrain)) {
-        const index = (terrain.x ?? 0) + (terrain.y ?? 0) * BOARD_WIDTH
-        bookboardnamedwrite(
-          READ_CONTEXT.book,
-          READ_CONTEXT.board,
-          terrain,
-          index,
-        )
-      }
     }
     return 0
   })
@@ -445,26 +425,21 @@ export const BOARD_FIRMWARE = createfirmware()
         }
       } else {
         // erase element
-        if (
-          bookboardsafedelete(
+        bookboardsafedelete(
+          READ_CONTEXT.book,
+          READ_CONTEXT.board,
+          element,
+          READ_CONTEXT.timestamp,
+        )
+        // create new element
+        if (intoname !== 'empty') {
+          const pt = { x: element.x ?? 0, y: element.y ?? 0 }
+          bookboardwritefromkind(
             READ_CONTEXT.book,
             READ_CONTEXT.board,
-            element,
-            READ_CONTEXT.timestamp,
+            into,
+            pt,
           )
-        ) {
-          // create new element
-          if (intoname !== 'empty') {
-            bookboardwritefromkind(
-              READ_CONTEXT.book,
-              READ_CONTEXT.board,
-              into,
-              {
-                x: element.x ?? 0,
-                y: element.y ?? 0,
-              },
-            )
-          }
         }
       }
     })
