@@ -583,7 +583,7 @@ const register = createdevice(
             doasync(register, message.player, async () => {
               switch (path) {
                 case '[Alt]':
-                  synth_play(register, message.player, '-c', true)
+                  synth_play(register, message.player, '', '-c', true)
                   useDeviceConfig.setState((state) => ({
                     ...state,
                     keyboardalt: !state.keyboardalt,
@@ -592,7 +592,7 @@ const register = createdevice(
                   }))
                   break
                 case '[Ctrl]':
-                  synth_play(register, message.player, '-e', true)
+                  synth_play(register, message.player, '', '-e', true)
                   useDeviceConfig.setState((state) => ({
                     ...state,
                     keyboardalt: false,
@@ -601,7 +601,7 @@ const register = createdevice(
                   }))
                   break
                 case '[Shift]':
-                  synth_play(register, message.player, '-g', true)
+                  synth_play(register, message.player, '', '-g', true)
                   useDeviceConfig.setState((state) => ({
                     ...state,
                     keyboardalt: false,
@@ -618,6 +618,7 @@ const register = createdevice(
                     synth_play(
                       register,
                       message.player,
+                      '',
                       isnumber ? '+c' : '+f',
                       true,
                     )
@@ -626,6 +627,7 @@ const register = createdevice(
                     synth_play(
                       register,
                       message.player,
+                      '',
                       isnumber ? '+c!' : '+f!',
                       true,
                     )
@@ -634,6 +636,7 @@ const register = createdevice(
                     synth_play(
                       register,
                       message.player,
+                      '',
                       isnumber ? '+c#' : '+f#',
                       true,
                     )
@@ -642,6 +645,7 @@ const register = createdevice(
                     synth_play(
                       register,
                       message.player,
+                      '',
                       isnumber ? '-c' : '-f',
                       true,
                     )

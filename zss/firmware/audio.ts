@@ -18,7 +18,13 @@ import { NAME, WORD } from 'zss/words/types'
 
 function handlesynthplay(player: string, words: WORD[], bgplay: boolean) {
   const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-  synth_play(SOFTWARE, player, buffer ?? '', bgplay)
+  synth_play(
+    SOFTWARE,
+    player,
+    READ_CONTEXT.board?.id ?? '',
+    buffer ?? '',
+    bgplay,
+  )
 }
 
 function handlesynthvoicefx(

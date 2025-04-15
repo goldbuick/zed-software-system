@@ -249,10 +249,15 @@ export function synth_tta(device: DEVICELIKE, player: string, phrase: string) {
 export function synth_play(
   device: DEVICELIKE,
   player: string,
+  board: string,
   buffer: string,
   bgplay: boolean,
 ) {
-  device.emit(player, 'synth:play', [buffer, bgplay])
+  device.emit(player, 'synth:play', [board, buffer, bgplay])
+}
+
+export function synth_focus(device: DEVICELIKE, player: string, board: string) {
+  device.emit(player, 'synth:focus', board)
 }
 
 export function synth_bpm(device: DEVICELIKE, player: string, bpm: number) {
