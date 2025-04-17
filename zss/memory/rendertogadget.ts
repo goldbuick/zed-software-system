@@ -477,6 +477,10 @@ export function memoryconverttogadgetlayers(
     }
   }
 
+  // add media layer to list peer ids
+  const pids = Object.keys(board.objects).filter(ispid)
+  layers.push(createcachedmedia(player, iiii++, 'text/players', pids.join(',')))
+
   // return result
   return layers
 }

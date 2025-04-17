@@ -199,6 +199,7 @@ export type MEDIA_DATA = {
   setcharset: (charset: MAYBE<BITMAP>) => void
   setaltcharset: (altcharset: MAYBE<BITMAP>) => void
 }
+
 const palette = loadpalettefrombytes(PALETTE)
 const charset = loadcharsetfrombytes(CHARSET)
 
