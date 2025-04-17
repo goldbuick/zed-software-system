@@ -171,6 +171,7 @@ export function createsynth() {
   drumcowbellgain.gain.value = 0
 
   const drumcowbell = new PolySynth().connect(drumcowbellgain)
+  drumcowbell.volume.value = 16.0
   drumcowbell.maxPolyphony = 8
   drumcowbell.set({
     envelope: {

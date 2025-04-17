@@ -1,8 +1,11 @@
 import Peer, { MediaConnection } from 'peerjs'
+import { getContext, connect, Mono } from 'tone'
 import { api_error } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { ispresent, MAYBE } from 'zss/mapping/types'
+
+import { getvocoder } from './synthvocoder'
 
 // track our peer
 let peer: MAYBE<Peer>
@@ -16,13 +19,21 @@ const activepeers: Record<string, MediaConnection> = {}
 
 const activepeervoice: Record<string, MediaStream> = {}
 
+function setupuservoice(mediastream: MediaStream, addfx = false) {
+  // pipe media to speakers
+  const node = getContext().createMediaStreamSource(mediastream)
+  const uservoiceinput = new Mono()
+  connect(node, uservoiceinput)
+  return addfx ? getvocoder(uservoiceinput) : uservoiceinput
+}
+
 export function usermediastart() {
   if (!ispresent(peer)) {
     peer = new Peer(registerreadplayer())
     peer.on('call', (mediaconnection) => {
       mediaconnection.on('stream', (mediastream) => {
         activepeervoice[mediaconnection.peer] = mediastream
-        // connect to synth
+        // add to media texture ->
       })
       mediaconnection.on('close', () => {
         delete activepeervoice[mediaconnection.peer]
@@ -60,6 +71,7 @@ export function uservoicestart() {
       if (ispresent(mediastream)) {
         activemedia[mediastream.id] = mediastream
         // todo see if we have to call existing peers with this media stream
+        setupuservoice(mediastream, true)
       }
     })
     .catch((err) => {
@@ -91,6 +103,7 @@ export function userscreenstart() {
       if (ispresent(mediastream)) {
         activemedia[mediastream.id] = mediastream
         // todo see if we have to call existing peers with this media stream
+        setupuservoice(mediastream)
       }
     })
     .catch((err) => {

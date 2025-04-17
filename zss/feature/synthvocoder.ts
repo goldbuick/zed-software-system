@@ -2,7 +2,9 @@ import {
   BiquadFilter,
   Gain,
   getContext,
+  InputNode,
   Oscillator,
+  Player,
   ToneAudioNode,
   WaveShaper,
 } from 'tone'
@@ -22,7 +24,7 @@ const carrierBands: BiquadFilter[] = []
 const carrierBandGains: Gain[] = []
 const carrierFilterPostGains: Gain[] = []
 
-export function loadNoiseBuffer() {
+function loadNoiseBuffer() {
   // create a 5-second buffer of noise
   const lengthInSamples = 5 * getContext().sampleRate
   const noiseBuffer = getContext().createBuffer(
@@ -37,12 +39,10 @@ export function loadNoiseBuffer() {
   return noiseBuffer
 }
 
-export function initBandpassFilters(sourceInput: ToneAudioNode): Gain {
-  const carrierInput = new Oscillator()
-  carrierInput.type = 'sawtooth'
-  carrierInput.frequency.value = 110
-  carrierInput.detune.value = 0
-
+function initBandpassFilters(
+  modulatorInput: ToneAudioNode,
+  carrierInput: ToneAudioNode,
+): Gain {
   const startFreq = 1
   const endFreq = 1
   const numBands = 14
@@ -79,7 +79,7 @@ export function initBandpassFilters(sourceInput: ToneAudioNode): Gain {
     frequency: 8000,
     Q: 1,
   })
-  sourceInput.connect(hpFilter)
+  modulatorInput.connect(hpFilter)
 
   hpFilterGain = new Gain(0)
   hpFilter.connect(hpFilterGain)
@@ -91,7 +91,7 @@ export function initBandpassFilters(sourceInput: ToneAudioNode): Gain {
     modulatorFilter.type = 'bandpass' // Bandpass filter
     modulatorFilter.frequency.value = frequencybands[i]
     modulatorFilter.Q.value = 6 // 	initial quality
-    sourceInput.connect(modulatorFilter)
+    modulatorInput.connect(modulatorFilter)
     modFilterBands.push(modulatorFilter)
 
     const secondModulatorFilter = new BiquadFilter()
@@ -178,8 +178,82 @@ export function initBandpassFilters(sourceInput: ToneAudioNode): Gain {
     // connect the lp controller
     waveshaper.connect(bandGain.gain)
 
+    // up
     bandGain.connect(outputGain)
   }
 
   return outputGain
+}
+
+function createLPInputFilter(output: ToneAudioNode) {
+  const lpInputFilter = new BiquadFilter()
+  lpInputFilter.connect(output)
+  lpInputFilter.frequency.value = 2048
+  return lpInputFilter
+}
+
+function generateNoiseFloorCurve(floor: number) {
+  // "floor" is 0...1
+  const curve = new Float32Array(65536)
+  const mappedFloor = floor * 32768
+
+  for (let i = 0; i < 32768; i++) {
+    const value = i < mappedFloor ? 0 : 1
+    curve[32768 - i] = -value
+    curve[32768 + i] = value
+  }
+  curve[0] = curve[1] // fixing up the end.
+
+  return curve
+}
+
+function createNoiseGate(connectTo: ToneAudioNode) {
+  const inputNode = new Gain()
+  const rectifier = new WaveShaper()
+  const ngFollower = new BiquadFilter()
+  ngFollower.type = 'lowpass'
+  ngFollower.frequency.value = 10.0
+
+  const curve = new Float32Array(65536)
+  for (let i = -32768; i < 32768; i++)
+    curve[i + 32768] = (i > 0 ? i : -i) / 32768
+  rectifier.curve = curve
+  rectifier.connect(ngFollower)
+
+  const ngGate = new WaveShaper()
+  ngGate.curve = generateNoiseFloorCurve(0.01)
+
+  ngFollower.connect(ngGate)
+
+  const gateGain = new Gain()
+  gateGain.gain.value = 0.0
+  ngGate.connect(gateGain.gain)
+
+  gateGain.connect(connectTo)
+
+  inputNode.connect(rectifier)
+  inputNode.connect(gateGain)
+  return inputNode
+}
+
+export function getvocoder(carrierInput: ToneAudioNode) {
+  // const modulatorGain = new Gain(1.0)
+  // modulatorGain.connect(carrierInput)
+  // // create a noise gate
+  // carrierInput.connect(createLPInputFilter(createNoiseGate(modulatorGain)))
+  // // attach filter
+  // initBandpassFilters(modulatorGain, carrierInput)
+  // // setup noise
+  // const noise = new Player(loadNoiseBuffer())
+  // noise.loop = true
+  // const noiseGain = new Gain(0.4)
+  // noise.chain(noiseGain, carrierInput)
+  // const oscillator = new Oscillator()
+  // oscillator.type = 'sawtooth'
+  // oscillator.frequency.value = 110
+  // oscillator.detune.value = 0
+  // const oscillatorGain = new Gain(1.0)
+  // oscillator.chain(oscillatorGain, carrierInput)
+  // noise.start()
+  // oscillator.start()
 }
