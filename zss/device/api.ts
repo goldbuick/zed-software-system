@@ -65,28 +65,28 @@ export function api_toast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
 }
 
-export function bridge_startstream(
+export function bridge_streamstart(
   device: DEVICELIKE,
   player: string,
   streamkey: string,
 ) {
-  device.emit(player, 'bridge:startstream', streamkey)
+  device.emit(player, 'bridge:streamstart', streamkey)
 }
 
-export function bridge_stopstream(device: DEVICELIKE, player: string) {
-  device.emit(player, 'bridge:stopstream', undefined)
+export function bridge_streamstop(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:streamstop', undefined)
 }
 
-export function bridge_chatconnect(
+export function bridge_chatstart(
   device: DEVICELIKE,
   player: string,
   channel: string,
 ) {
-  device.emit(player, 'bridge:chatconnect', channel)
+  device.emit(player, 'bridge:chatstart', channel)
 }
 
-export function bridge_chatdisconnect(device: DEVICELIKE, player: string) {
-  device.emit(player, 'bridge:chatdisconnect')
+export function bridge_chatstop(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:chatstop')
 }
 
 export function bridge_fetch(
@@ -99,6 +99,22 @@ export function bridge_fetch(
   words: any[],
 ) {
   device.emit(player, 'bridge:fetch', [arg, label, url, method, words])
+}
+
+export function bridge_talkstart(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:talkstart', player)
+}
+
+export function bridge_talkstop(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:talkstop', player)
+}
+
+export function bridge_mediastart(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:mediastart', player)
+}
+
+export function bridge_mediastop(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:mediastop', player)
 }
 
 export function bridge_join(device: DEVICELIKE, player: string, topic: string) {

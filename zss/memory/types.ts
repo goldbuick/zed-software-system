@@ -137,4 +137,6 @@ export type BOOK = {
   pages: CODE_PAGE[]
   // global flags by id
   flags: Record<string, BOOK_FLAGS>
+  // unique token
+  token?: string
 }

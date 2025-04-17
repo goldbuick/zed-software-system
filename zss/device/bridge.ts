@@ -155,14 +155,13 @@ const bridge = createdevice('bridge', [], (message) => {
         }
       })
       break
-    case 'chatconnect':
+    case 'talkstart':
+      break
+    case 'talkstop':
+      break
+    case 'chatstart':
       if (ispresent(twitchchatclient)) {
-        api_error(
-          bridge,
-          message.player,
-          'connection',
-          'chat is already connected',
-        )
+        api_error(bridge, message.player, 'start', 'chat is already started')
       } else if (isstring(message.data)) {
         write(bridge, message.player, `connecting to ${message.data}`)
         twitchchatclient = new ChatClient({ channels: [message.data] })
@@ -195,7 +194,7 @@ const bridge = createdevice('bridge', [], (message) => {
         })
       }
       break
-    case 'chatdisconnect':
+    case 'chatstop':
       if (ispresent(twitchchatclient)) {
         twitchchatclient.quit()
         twitchchatclient = undefined
@@ -205,11 +204,11 @@ const bridge = createdevice('bridge', [], (message) => {
           bridge,
           message.player,
           'connection',
-          'chat is already disconnected',
+          'chat is already stoped',
         )
       }
       break
-    case 'startstream':
+    case 'streamstart':
       doasync(bridge, message.player, async () => {
         if (ispresent(broadcastclient)) {
           api_error(
@@ -300,7 +299,7 @@ const bridge = createdevice('bridge', [], (message) => {
         }
       })
       break
-    case 'stopstream':
+    case 'streamstop':
       if (ispresent(broadcastclient)) {
         broadcastclient.stopBroadcast()
         broadcastclient.delete()

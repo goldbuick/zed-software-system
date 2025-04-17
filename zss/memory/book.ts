@@ -1,6 +1,7 @@
 import { pttoindex } from 'zss/mapping/2d'
 import { unique } from 'zss/mapping/array'
-import { createsid, createnameid } from 'zss/mapping/guid'
+import { createsid, createnameid, createshortnameid } from 'zss/mapping/guid'
+import { randominteger } from 'zss/mapping/number'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { STR_KIND } from 'zss/words/kind'
@@ -63,6 +64,7 @@ enum BOOK_KEYS {
   activelist,
   pages,
   flags,
+  token,
 }
 
 export function exportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
@@ -86,6 +88,12 @@ export function importbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
   return unformatobject(bookentry, BOOK_KEYS, {
     pages: (pages) => pages.map(importcodepage),
   })
+}
+
+export function bookupdatetoken(book: MAYBE<BOOK>) {
+  if (ispresent(book)) {
+    book.token = `${createshortnameid()}${randominteger(1111, 9999)}`
+  }
 }
 
 export function bookhasmatch(book: MAYBE<BOOK>, ids: string[]): boolean {
@@ -256,6 +264,7 @@ export function bookwritecodepage(
   }
 
   book.pages.push(codepage)
+  bookupdatetoken(book)
 
   return true
 }
@@ -267,6 +276,7 @@ export function bookclearcodepage(book: MAYBE<BOOK>, address: string) {
     book.pages = book.pages.filter(
       (item) => item.id !== address && laddress !== codepagereadname(item),
     )
+    bookupdatetoken(book)
     return codepage
   }
 }

@@ -1,8 +1,8 @@
 import {
-  bridge_startstream,
-  bridge_stopstream,
-  bridge_chatconnect,
-  bridge_chatdisconnect,
+  bridge_streamstart,
+  bridge_streamstop,
+  bridge_chatstart,
+  bridge_chatstop,
   bridge_fetch,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -82,10 +82,10 @@ export const NETWORK_FIRMWARE = createfirmware()
     const [maybechannel] = readargs(words, 0, [ARG_TYPE.ANY])
     switch (NAME(maybechannel)) {
       default:
-        bridge_chatconnect(SOFTWARE, READ_CONTEXT.elementfocus, maybechannel)
+        bridge_chatstart(SOFTWARE, READ_CONTEXT.elementfocus, maybechannel)
         break
-      case 'close':
-        bridge_chatdisconnect(SOFTWARE, READ_CONTEXT.elementfocus)
+      case 'stop':
+        bridge_chatstop(SOFTWARE, READ_CONTEXT.elementfocus)
         break
     }
     return 0
@@ -94,14 +94,10 @@ export const NETWORK_FIRMWARE = createfirmware()
     const [maybestreamkey] = readargs(words, 0, [ARG_TYPE.NAME])
     switch (NAME(maybestreamkey)) {
       default:
-        bridge_startstream(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          maybestreamkey,
-        )
+        bridge_streamstart(SOFTWARE, READ_CONTEXT.elementfocus, maybestreamkey)
         break
       case 'stop':
-        bridge_stopstream(SOFTWARE, READ_CONTEXT.elementfocus)
+        bridge_streamstop(SOFTWARE, READ_CONTEXT.elementfocus)
         break
     }
     return 0

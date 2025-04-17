@@ -8,6 +8,8 @@ import {
   synth_ttsvolume,
   synth_voice,
   synth_voicefx,
+  bridge_talkstart,
+  bridge_talkstop,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
@@ -74,6 +76,18 @@ function handlesynthvoice(player: string, idx: number, words: WORD[]) {
 }
 
 export const AUDIO_FIRMWARE = createfirmware()
+  .command('talk', (_, words) => {
+    const [arg] = readargs(words, 0, [ARG_TYPE.ANY])
+    switch (NAME(arg)) {
+      default:
+        bridge_talkstart(SOFTWARE, READ_CONTEXT.elementfocus)
+        break
+      case 'stop':
+        bridge_talkstop(SOFTWARE, READ_CONTEXT.elementfocus)
+        break
+    }
+    return 0
+  })
   .command('tts', (_, words) => {
     const [voice, ii] = readargs(words, 0, [ARG_TYPE.STRING])
     const phrase = words.slice(ii).map(maptostring).join('')
