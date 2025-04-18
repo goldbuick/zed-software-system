@@ -91,9 +91,9 @@ export const LOADER_FIRMWARE = createfirmware({
     )
     return 0
   })
-  .command('txt', loadertext)
-  .command('json', loaderjson)
-  .command('bin', loaderbinary)
+  .command('readline', loadertext)
+  .command('readjson', loaderjson)
+  .command('readbin', loaderbinary)
   .command('with', (_, words) => {
     const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
     // this will update the READ_CONTEXT so element centric
