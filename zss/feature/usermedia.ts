@@ -71,7 +71,7 @@ export function uservoicestart() {
       if (ispresent(mediastream)) {
         activemedia[mediastream.id] = mediastream
         // todo see if we have to call existing peers with this media stream
-        setupuservoice(mediastream, true)
+        setupuservoice(mediastream, true).toDestination()
       }
     })
     .catch((err) => {
@@ -103,7 +103,6 @@ export function userscreenstart() {
       if (ispresent(mediastream)) {
         activemedia[mediastream.id] = mediastream
         // todo see if we have to call existing peers with this media stream
-        setupuservoice(mediastream)
       }
     })
     .catch((err) => {
