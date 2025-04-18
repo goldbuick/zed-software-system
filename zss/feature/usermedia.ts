@@ -1,5 +1,5 @@
 import Peer, { MediaConnection } from 'peerjs'
-import { getContext, connect, Mono } from 'tone'
+import { getContext, connect, Volume } from 'tone'
 import { api_error } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -12,19 +12,27 @@ let peer: MAYBE<Peer>
 
 // track our active media streams
 // media id + MediaStream
-const activemedia: Record<string, MediaStream> = {}
+let activeusermedia: MAYBE<MediaStream>
+let activeuservoice: MAYBE<MediaStream>
 
-// track our active peers - peerid + their media connections
-const activepeers: Record<string, MediaConnection> = {}
+const activepeers: Record<string, boolean> = {}
+const activepeervoice: Record<string, Volume> = {}
+const activepeervoicecom: Record<string, MediaConnection> = {}
 
-const activepeervoice: Record<string, MediaStream> = {}
-
-function setupuservoice(mediastream: MediaStream, addfx = false) {
+function setupuservoice(mediastream: MediaStream, addfx = false): MediaStream {
   // pipe media to speakers
   const node = getContext().createMediaStreamSource(mediastream)
-  const uservoiceinput = new Mono()
+  const uservoiceinput = new Volume()
   connect(node, uservoiceinput)
-  return addfx ? getvocoder(uservoiceinput) : uservoiceinput
+
+  const dest = getContext().createMediaStreamDestination()
+  if (addfx) {
+    getvocoder(uservoiceinput, 110, 'sine', 'brown').connect(dest)
+  } else {
+    uservoiceinput.connect(dest)
+  }
+
+  return dest.stream
 }
 
 export function usermediastart() {
@@ -32,10 +40,18 @@ export function usermediastart() {
     peer = new Peer(registerreadplayer())
     peer.on('call', (mediaconnection) => {
       mediaconnection.on('stream', (mediastream) => {
-        activepeervoice[mediaconnection.peer] = mediastream
-        // add to media texture ->
+        // TODO, add metadata to save audio vs video
+
+        // pipe media to speakers
+        const node = getContext().createMediaStreamSource(mediastream)
+        const uservoiceinput = new Volume()
+        connect(node, uservoiceinput)
+
+        // track
+        activepeervoice[mediaconnection.peer] = uservoiceinput
       })
       mediaconnection.on('close', () => {
+        activepeervoice[mediaconnection.peer].dispose()
         delete activepeervoice[mediaconnection.peer]
       })
     })
@@ -64,14 +80,13 @@ async function getuservoice(): Promise<MAYBE<MediaStream>> {
   return undefined
 }
 
-export function uservoicestart() {
+export function uservoicestart(player: string) {
   usermediastart()
   getuservoice()
     .then((mediastream) => {
       if (ispresent(mediastream)) {
-        activemedia[mediastream.id] = mediastream
-        // todo see if we have to call existing peers with this media stream
-        setupuservoice(mediastream, true).toDestination()
+        activeuservoice = setupuservoice(mediastream, true)
+        peerupdate(player)
       }
     })
     .catch((err) => {
@@ -96,13 +111,13 @@ async function getuserscreenshare(): Promise<MAYBE<MediaStream>> {
   return undefined
 }
 
-export function userscreenstart() {
+export function userscreenstart(player: string) {
   usermediastart()
   getuserscreenshare()
     .then((mediastream) => {
       if (ispresent(mediastream)) {
-        activemedia[mediastream.id] = mediastream
-        // todo see if we have to call existing peers with this media stream
+        activeusermedia = mediastream
+        peerupdate(player)
       }
     })
     .catch((err) => {
@@ -114,21 +129,37 @@ export function userscreenstop() {
   //
 }
 
-function peerstart(player: string) {
+function peerstart(remote: string) {
   usermediastart()
   if (!ispresent(peer)) {
     return
   }
-  const mediastreams = Object.values(activemedia)
-  for (let i = 0; i < mediastreams.length; ++i) {
-    peer.call(player, mediastreams[i], {})
-  }
+  activepeers[remote] = true
 }
 
-function peerstop(player: string) {
-  const mediaconnection = activepeers[player]
-  if (ispresent(mediaconnection)) {
-    mediaconnection.close()
+function peerstop(remote: string) {
+  if (!ispresent(peer)) {
+    return
+  }
+  delete activepeers[remote]
+}
+
+function peerupdate(player: string) {
+  if (!ispresent(peer)) {
+    return
+  }
+  const ids = Object.keys(activepeers)
+
+  // process voice
+  if (ispresent(activeuservoice)) {
+    // validate peer state
+    for (let i = 0; i < ids.length; ++i) {
+      // are we connected ?
+      const id = ids[i]
+      if (id !== player && !ispresent(activepeervoicecom[id])) {
+        activepeervoicecom[id] = peer.call(id, activeuservoice)
+      }
+    }
   }
 }
 
@@ -138,10 +169,8 @@ export function usermediawritepeers(peers: string[]) {
   // check to see if we've added an id
   for (let i = 0; i < peers.length; ++i) {
     const id = peers[i]
-    // skip us
-    if (id !== registerreadplayer() && !ispresent(activepeers[id])) {
+    if (!ispresent(activepeers[id])) {
       newids[id] = true
-      // start peer
       peerstart(id)
     }
   }
@@ -155,4 +184,6 @@ export function usermediawritepeers(peers: string[]) {
       peerstop(id)
     }
   }
+
+  peerupdate(registerreadplayer())
 }

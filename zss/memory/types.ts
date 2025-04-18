@@ -62,6 +62,8 @@ export type BOARD = {
   // uses content slot book
   over?: string
   under?: string
+  // control camera zoom
+  camera?: string
   // common stats
   exitnorth?: string
   exitsouth?: string

@@ -23,7 +23,7 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { COLLISION, COLOR } from 'zss/words/types'
+import { COLLISION, COLOR, NAME } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
 import { boardelementindex, boardobjectread } from './board'
@@ -238,6 +238,19 @@ export function memoryconverttogadgetlayers(
   // hack to keep only one control layer
   if (isprimary) {
     layers.push(control)
+    if (isstring(board.camera)) {
+      switch (NAME(board.camera)) {
+        default:
+          control.viewscale = 1.5
+          break
+        case 'near':
+          control.viewscale = 3
+          break
+        case 'far':
+          control.viewscale = 1
+          break
+      }
+    }
   }
 
   for (let i = 0; i < board.terrain.length; ++i) {
