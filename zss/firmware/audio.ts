@@ -10,6 +10,8 @@ import {
   synth_voicefx,
   bridge_talkstart,
   bridge_talkstop,
+  bridge_mediastart,
+  bridge_mediastop,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
@@ -84,6 +86,18 @@ export const AUDIO_FIRMWARE = createfirmware()
         break
       case 'stop':
         bridge_talkstop(SOFTWARE, READ_CONTEXT.elementfocus)
+        break
+    }
+    return 0
+  })
+  .command('media', (_, words) => {
+    const [arg] = readargs(words, 0, [ARG_TYPE.ANY])
+    switch (NAME(arg)) {
+      default:
+        bridge_mediastart(SOFTWARE, READ_CONTEXT.elementfocus)
+        break
+      case 'stop':
+        bridge_mediastop(SOFTWARE, READ_CONTEXT.elementfocus)
         break
     }
     return 0

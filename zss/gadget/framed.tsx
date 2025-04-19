@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
-import { useRef } from 'react'
-import { Color, Group, Vector2 } from 'three'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Color, DoubleSide, Group, Vector2 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { register_terminal_quickopen, vm_input } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
@@ -20,6 +20,7 @@ import { NAME } from 'zss/words/types'
 
 import Clipping from './clipping'
 import { FramedLayer } from './framedlayer/component'
+import { useMedia } from './hooks'
 import { TapeTerminalInspector } from './inspector/component'
 import { Rect } from './rect'
 import { UserInput, UserInputMods } from './userinput'
@@ -48,6 +49,7 @@ type FramedProps = {
 }
 
 export function Framed({ width, height }: FramedProps) {
+  const { screen } = useMedia()
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
@@ -139,6 +141,23 @@ export function Framed({ width, height }: FramedProps) {
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
   const { layers = [] } = useGadgetClient.getState().gadget
 
+  // handle screenshare texture
+  const [video, setVideo] = useState<HTMLVideoElement>()
+  useEffect(() => {
+    const [first] = Object.values(screen)
+    if (ispresent(first)) {
+      setVideo(first)
+    }
+  }, [screen])
+
+  const ratio = 16 / 9
+  // const r = useMemo(
+  //   () => (video ? video.videoWidth / video.videoHeight : ratio),
+  //   [video, ratio],
+  // )
+  const mediawidth = 30 * RUNTIME.DRAW_CHAR_WIDTH()
+  console.info(mediawidth)
+
   return (
     <>
       <UserInput
@@ -174,6 +193,22 @@ export function Framed({ width, height }: FramedProps) {
           {layers.map((layer, i) => (
             <FramedLayer key={layer.id} id={layer.id} z={i * 2} />
           ))}
+          {video && (
+            <group
+              position={[
+                29.5 * RUNTIME.DRAW_CHAR_WIDTH(),
+                12.5 * RUNTIME.DRAW_CHAR_HEIGHT(),
+                layers.length * 2 + 1,
+              ]}
+            >
+              <mesh>
+                <planeGeometry args={[mediawidth, mediawidth / ratio]} />
+                <meshBasicMaterial side={DoubleSide}>
+                  <videoTexture attach="map" args={[video]} />
+                </meshBasicMaterial>
+              </mesh>
+            </group>
+          )}
         </group>
       </Clipping>
     </>

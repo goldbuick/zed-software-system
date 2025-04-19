@@ -4,9 +4,11 @@ import {
   Group,
   Mesh,
   MeshBasicMaterial,
+  MeshStandardMaterial,
   OrthographicCamera,
   PlaneGeometry,
   Points,
+  VideoTexture,
 } from 'three'
 import { vm_loader } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
@@ -21,9 +23,11 @@ extend({
   Group,
   Mesh,
   MeshBasicMaterial,
+  MeshStandardMaterial,
   OrthographicCamera,
   PlaneGeometry,
   Points,
+  VideoTexture,
 })
 
 document.addEventListener('keydown', () => {
