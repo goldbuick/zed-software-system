@@ -1,4 +1,5 @@
 import { useFrame } from '@react-three/fiber'
+import { damp, damp3, sine } from 'maath/easing'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Color, DoubleSide, Group, Vector2 } from 'three'
 import { RUNTIME } from 'zss/config'
@@ -53,11 +54,11 @@ export function Framed({ width, height }: FramedProps) {
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
-  const ref = useRef<Group>(null)
+  const focusref = useRef<Group>(null)
+  const scaleref = useRef<Group>(null)
 
   useFrame((_state, delta) => {
-    const { current } = ref
-    if (!current) {
+    if (!focusref.current || !scaleref.current) {
       return
     }
 
@@ -66,73 +67,85 @@ export function Framed({ width, height }: FramedProps) {
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
-    const drawwidth =
-      control.width * RUNTIME.DRAW_CHAR_WIDTH() * control.viewscale
-    const marginx = drawwidth - viewwidth
+    // smooth viewscale
+    const currentviewscale = scaleref.current.scale.x
+    // const drawwidth =
+    //   control.width * RUNTIME.DRAW_CHAR_WIDTH() * currentviewscale
+    // const drawheight =
+    //   control.height * RUNTIME.DRAW_CHAR_HEIGHT() * currentviewscale
 
-    const drawheight =
-      control.height * RUNTIME.DRAW_CHAR_HEIGHT() * control.viewscale
-    const marginy = drawheight - viewheight
+    // const marginx = drawwidth - viewwidth
 
-    const zone = Math.round(Math.min(viewwidth, viewheight) * 0.3333)
+    // const marginy = drawheight - viewheight
 
-    const offsetx =
-      -control.focusx * RUNTIME.DRAW_CHAR_WIDTH() * control.viewscale
-    const centerx = viewwidth * 0.5 + offsetx
+    // const zone = Math.round(Math.min(viewwidth, viewheight) * 0.3333)
 
-    const offsety =
-      -control.focusy * RUNTIME.DRAW_CHAR_HEIGHT() * control.viewscale
-    const centery = viewheight * 0.5 + offsety
+    // const offsetx = -control.focusx * RUNTIME.DRAW_CHAR_WIDTH() * viewscale
+    // const centerx = viewwidth * 0.5 + offsetx
 
-    const left = drawwidth < viewwidth ? marginx * -0.5 : centerx
-    const top = drawheight < viewheight ? marginy * -0.5 : centery
+    // const offsety = -control.focusy * RUNTIME.DRAW_CHAR_HEIGHT() * viewscale
+    // const centery = viewheight * 0.5 + offsety
 
-    // setup
-    if (!ispresent(current.userData.focus)) {
-      current.position.x = left
-      current.position.y = top
-      current.userData.focus = focus
-      current.userData.focus.x = left
-      current.userData.focus.y = top
+    // const left = drawwidth < viewwidth ? marginx * -0.5 : centerx
+    // const top = drawheight < viewheight ? marginy * -0.5 : centery
+
+    // if (!ispresent(current.userData.focus)) {
+    //   current.position.x = left
+    //   current.position.y = top
+    //   current.userData.focus = focus
+    //   current.userData.focus.x = left
+    //   current.userData.focus.y = top
+    // }
+
+    // smoothed/centered scale
+    damp3(scaleref.current.scale, control.viewscale, 0.4, delta)
+    if (Math.abs(currentviewscale - control.viewscale) < 0.01) {
+      damp3(
+        focusref.current.position,
+        [
+          control.focusx * -RUNTIME.DRAW_CHAR_WIDTH() + viewwidth * 0.5,
+          control.focusy * -RUNTIME.DRAW_CHAR_HEIGHT() + viewheight * 0.5,
+          0,
+        ],
+        0.3,
+        delta,
+      )
     }
-
-    // scale
-    current.scale.setScalar(control.viewscale)
 
     // focus
-    if (marginx < 0) {
-      current.userData.focus.x = left
-    } else {
-      const dx = current.position.x - left
-      if (Math.abs(dx) >= zone) {
-        const step = dx < 0 ? -zone : zone
-        current.userData.focus.x = Math.round(left - step)
-      }
-    }
-    if (marginy < 0) {
-      current.userData.focus.y = top
-    } else {
-      const dy = current.position.y - top
-      if (Math.abs(dy) >= zone) {
-        const step = dy < 0 ? -zone : zone
-        current.userData.focus.y = Math.round(top - step * 0.5)
-      }
-    }
+    // if (marginx < 0) {
+    //   current.userData.focus.x = left
+    // } else {
+    //   const dx = current.position.x - left
+    //   if (Math.abs(dx) >= zone) {
+    //     const step = dx < 0 ? -zone : zone
+    //     current.userData.focus.x = Math.round(left - step)
+    //   }
+    // }
+    // if (marginy < 0) {
+    //   current.userData.focus.y = top
+    // } else {
+    //   const dy = current.position.y - top
+    //   if (Math.abs(dy) >= zone) {
+    //     const step = dy < 0 ? -zone : zone
+    //     current.userData.focus.y = Math.round(top - step * 0.5)
+    //   }
+    // }
 
-    // smoooothed
-    const slide = 6
-    current.position.x +=
-      (current.userData.focus.x - current.position.x) * delta * slide
-    current.position.y +=
-      (current.userData.focus.y - current.position.y) * delta * slide
+    // // smoooothed
+    // const slide = 6
+    // current.position.x +=
+    //   (current.userData.focus.x - current.position.x) * delta * slide
+    // current.position.y +=
+    //   (current.userData.focus.y - current.position.y) * delta * slide
 
-    // clamp to edges
-    if (marginx >= 0) {
-      current.position.x = clamp(current.position.x, -marginx, 0)
-    }
-    if (marginy >= 0) {
-      current.position.y = clamp(current.position.y, -marginy, 0)
-    }
+    // // clamp to edges
+    // if (marginx >= 0) {
+    //   current.position.x = clamp(current.position.x, -marginx, 0)
+    // }
+    // if (marginy >= 0) {
+    //   current.position.y = clamp(current.position.y, -marginy, 0)
+    // }
   })
 
   const player = registerreadplayer()
@@ -150,13 +163,12 @@ export function Framed({ width, height }: FramedProps) {
     }
   }, [screen])
 
-  const ratio = 16 / 9
+  // const ratio = 16 / 9
   // const r = useMemo(
   //   () => (video ? video.videoWidth / video.videoHeight : ratio),
   //   [video, ratio],
   // )
-  const mediawidth = 30 * RUNTIME.DRAW_CHAR_WIDTH()
-  console.info(mediawidth)
+  // const mediawidth = 30 * RUNTIME.DRAW_CHAR_WIDTH()
 
   return (
     <>
@@ -188,12 +200,13 @@ export function Framed({ width, height }: FramedProps) {
         />
       )}
       <Clipping width={viewwidth} height={viewheight}>
-        <group ref={ref}>
-          <TapeTerminalInspector />
-          {layers.map((layer, i) => (
-            <FramedLayer key={layer.id} id={layer.id} z={i * 2} />
-          ))}
-          {video && (
+        <group ref={focusref}>
+          <group ref={scaleref}>
+            <TapeTerminalInspector />
+            {layers.map((layer, i) => (
+              <FramedLayer key={layer.id} id={layer.id} z={i * 2} />
+            ))}
+            {/* {video && (
             <group
               position={[
                 29.5 * RUNTIME.DRAW_CHAR_WIDTH(),
@@ -202,13 +215,14 @@ export function Framed({ width, height }: FramedProps) {
               ]}
             >
               <mesh>
-                <planeGeometry args={[mediawidth, mediawidth / ratio]} />
+                <planeGeometry args={[mediawidth, mediawidth / r]} />
                 <meshBasicMaterial side={DoubleSide}>
                   <videoTexture attach="map" args={[video]} />
                 </meshBasicMaterial>
               </mesh>
             </group>
-          )}
+          )} */}
+          </group>
         </group>
       </Clipping>
     </>

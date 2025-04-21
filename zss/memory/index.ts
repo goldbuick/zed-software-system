@@ -49,6 +49,7 @@ import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
+  BOARD_RUNTIME,
   BOARD_WIDTH,
   BOOK,
   CODE_PAGE_TYPE,
@@ -82,6 +83,8 @@ const MEMORY = {
   // running code
   chips: new Map<string, string>(),
   loaders: new Map<string, string>(),
+  // board runtime data
+  boardruntime: new Map<string, BOARD_RUNTIME>(),
 }
 
 export function memoryreadsession() {

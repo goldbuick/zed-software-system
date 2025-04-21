@@ -1,3 +1,4 @@
+import { AStarFinder, Grid } from 'pathfinding'
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { MAYBE } from 'zss/mapping/types'
 import { CATEGORY, COLLISION, WORD } from 'zss/words/types'
@@ -76,6 +77,13 @@ export type BOARD = {
   id: string
   lookup?: MAYBE<string>[]
   named?: Record<string, Set<string | number>>
+}
+
+export type BOARD_RUNTIME = {
+  named?: Record<string, Set<string | number>>
+  lookup?: MAYBE<string>[]
+  pathinggrid?: Grid
+  pathingfinder?: AStarFinder
 }
 
 export const BOARD_WIDTH = 60

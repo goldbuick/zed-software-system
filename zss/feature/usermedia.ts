@@ -41,9 +41,9 @@ function setupuservoice(peer: string, mediastream: MediaStream, addfx = false) {
     // activeuservoice = dest.stream
   } else {
     console.info('setup remote voice', peer)
-    voicenode.toDestination()
   }
 
+  voicenode.toDestination()
   activepeervoicenode[peer] = voicenode
 }
 
