@@ -171,6 +171,7 @@ export function createsynth() {
   drumcowbellgain.gain.value = 0
 
   const drumcowbell = new PolySynth().connect(drumcowbellgain)
+  drumcowbell.volume.value = 16.0
   drumcowbell.maxPolyphony = 8
   drumcowbell.set({
     envelope: {
@@ -587,7 +588,7 @@ export function createsynth() {
   function addplay(buffer: string, bgplay: boolean) {
     // parse ops
     const invokes = parseplay(buffer)
-    const seconds = getTransport().seconds + 0.01
+    const seconds = getTransport().seconds + 0.1
 
     if (bgplay) {
       // handle sfx

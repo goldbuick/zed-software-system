@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber'
-import { useRef } from 'react'
-import { Color, Group, Vector2 } from 'three'
+import { damp3 } from 'maath/easing'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Color, DoubleSide, Group } from 'three'
 import { RUNTIME } from 'zss/config'
 import { register_terminal_quickopen, vm_input } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
@@ -14,17 +15,15 @@ import {
   layersreadcontrol,
 } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
-import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
 import Clipping from './clipping'
 import { FramedLayer } from './framedlayer/component'
+import { useMedia } from './hooks'
 import { TapeTerminalInspector } from './inspector/component'
 import { Rect } from './rect'
 import { UserInput, UserInputMods } from './userinput'
-
-const focus = new Vector2(0, 0)
 
 function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   let bits = 0
@@ -48,14 +47,16 @@ type FramedProps = {
 }
 
 export function Framed({ width, height }: FramedProps) {
+  const { screen } = useMedia()
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
-  const ref = useRef<Group>(null)
+  const centerref = useRef<Group>(null)
+  const focusref = useRef<Group>(null)
+  const scaleref = useRef<Group>(null)
 
   useFrame((_state, delta) => {
-    const { current } = ref
-    if (!current) {
+    if (!centerref.current || !focusref.current || !scaleref.current) {
       return
     }
 
@@ -64,72 +65,83 @@ export function Framed({ width, height }: FramedProps) {
       useGadgetClient.getState().gadget.layers ?? [],
     )
 
-    const drawwidth =
-      control.width * RUNTIME.DRAW_CHAR_WIDTH() * control.viewscale
-    const marginx = drawwidth - viewwidth
-
-    const drawheight =
-      control.height * RUNTIME.DRAW_CHAR_HEIGHT() * control.viewscale
-    const marginy = drawheight - viewheight
-
-    const zone = Math.round(Math.min(viewwidth, viewheight) * 0.3333)
-
-    const offsetx =
-      -control.focusx * RUNTIME.DRAW_CHAR_WIDTH() * control.viewscale
-    const centerx = viewwidth * 0.5 + offsetx
-
-    const offsety =
-      -control.focusy * RUNTIME.DRAW_CHAR_HEIGHT() * control.viewscale
-    const centery = viewheight * 0.5 + offsety
-
-    const left = drawwidth < viewwidth ? marginx * -0.5 : centerx
-    const top = drawheight < viewheight ? marginy * -0.5 : centery
-
-    // setup
-    if (!ispresent(current.userData.focus)) {
-      current.position.x = left
-      current.position.y = top
-      current.userData.focus = focus
-      current.userData.focus.x = left
-      current.userData.focus.y = top
+    // setup tracking state
+    if (!ispresent(focusref.current.userData.focus)) {
+      focusref.current.userData.focus = {
+        x: control.focusx,
+        y: control.focusy,
+      }
+      scaleref.current.scale.setScalar(control.viewscale)
     }
 
-    // scale
-    current.scale.setScalar(control.viewscale)
+    // smooth viewscale
+    const currentviewscale = scaleref.current.scale.x
+    const drawwidth = RUNTIME.DRAW_CHAR_WIDTH() * currentviewscale
+    const drawheight = RUNTIME.DRAW_CHAR_HEIGHT() * currentviewscale
+    const cols = viewwidth / drawwidth
+    const rows = viewheight / drawheight
+    const left = Math.round(cols * 0.5)
+    const top = Math.round(rows * 0.5)
+    const right = control.width - cols * 0.5
+    const bottom = control.height - rows * 0.5
+    const marginx =
+      cols > control.width ? -Math.round((cols - control.width) * 0.5) : 0
+    const marginy =
+      rows > control.height ? -Math.round((rows - control.height) * 0.5) : 0
 
-    // focus
-    if (marginx < 0) {
-      current.userData.focus.x = left
+    // smoothed/centered scale
+    centerref.current.position.x = viewwidth * 0.5
+    centerref.current.position.y = viewheight * 0.5
+    damp3(scaleref.current.scale, control.viewscale, 0.3, delta)
+
+    // smoothed focus
+    const fx = focusref.current.userData.focus.x + marginx
+    const fy = focusref.current.userData.focus.y + marginy
+    const tx = fx * -RUNTIME.DRAW_CHAR_WIDTH()
+    const ty = fy * -RUNTIME.DRAW_CHAR_HEIGHT()
+    damp3(focusref.current.position, [tx, ty, 0], 0.3, delta)
+
+    if (currentviewscale > 1.5) {
+      // near is always centered
+      focusref.current.userData.focus.x = control.focusx
+      focusref.current.userData.focus.y = control.focusy
     } else {
-      const dx = current.position.x - left
+      // mid pans
+      const zone = Math.round(Math.min(cols, rows) * 0.333)
+      const dx = Math.round(focusref.current.userData.focus.x - control.focusx)
+      const dy = Math.round(focusref.current.userData.focus.y - control.focusy)
+
       if (Math.abs(dx) >= zone) {
-        const step = dx < 0 ? -zone : zone
-        current.userData.focus.x = Math.round(left - step)
+        const step = dx < 0 ? zone : -zone
+        focusref.current.userData.focus.x += step
       }
-    }
-    if (marginy < 0) {
-      current.userData.focus.y = top
-    } else {
-      const dy = current.position.y - top
+
       if (Math.abs(dy) >= zone) {
-        const step = dy < 0 ? -zone : zone
-        current.userData.focus.y = Math.round(top - step * 0.5)
+        const step = dy < 0 ? zone : -zone
+        focusref.current.userData.focus.y += step
       }
     }
 
-    // smoooothed
-    const slide = 6
-    current.position.x +=
-      (current.userData.focus.x - current.position.x) * delta * slide
-    current.position.y +=
-      (current.userData.focus.y - current.position.y) * delta * slide
-
-    // clamp to edges
-    if (marginx >= 0) {
-      current.position.x = clamp(current.position.x, -marginx, 0)
+    // edge clamp
+    if (marginx === 0) {
+      if (focusref.current.userData.focus.x < left) {
+        focusref.current.userData.focus.x = left
+      }
+      if (focusref.current.userData.focus.x > right) {
+        focusref.current.userData.focus.x = right
+      }
+    } else {
+      focusref.current.userData.focus.x = left
     }
-    if (marginy >= 0) {
-      current.position.y = clamp(current.position.y, -marginy, 0)
+    if (marginy === 0) {
+      if (focusref.current.userData.focus.y < top) {
+        focusref.current.userData.focus.y = top
+      }
+      if (focusref.current.userData.focus.y > bottom) {
+        focusref.current.userData.focus.y = bottom
+      }
+    } else {
+      focusref.current.userData.focus.y = top
     }
   })
 
@@ -138,6 +150,22 @@ export function Framed({ width, height }: FramedProps) {
   // re-render only when layer count changes
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
   const { layers = [] } = useGadgetClient.getState().gadget
+
+  // handle screenshare texture
+  const [video, setVideo] = useState<HTMLVideoElement>()
+  useEffect(() => {
+    const [first] = Object.values(screen)
+    if (ispresent(first)) {
+      setVideo(first)
+    }
+  }, [screen])
+
+  const ratio = 16 / 9
+  const r = useMemo(
+    () => (video ? video.videoWidth / video.videoHeight : ratio),
+    [video, ratio],
+  )
+  const mediawidth = 30 * RUNTIME.DRAW_CHAR_WIDTH()
 
   return (
     <>
@@ -169,11 +197,31 @@ export function Framed({ width, height }: FramedProps) {
         />
       )}
       <Clipping width={viewwidth} height={viewheight}>
-        <group ref={ref}>
-          <TapeTerminalInspector />
-          {layers.map((layer, i) => (
-            <FramedLayer key={layer.id} id={layer.id} z={i * 2} />
-          ))}
+        <group ref={centerref}>
+          <group ref={scaleref}>
+            <group ref={focusref}>
+              <TapeTerminalInspector />
+              {layers.map((layer, i) => (
+                <FramedLayer key={layer.id} id={layer.id} z={i * 2} />
+              ))}
+              {video && (
+                <group
+                  position={[
+                    29.5 * RUNTIME.DRAW_CHAR_WIDTH(),
+                    12.5 * RUNTIME.DRAW_CHAR_HEIGHT(),
+                    layers.length * 2 + 1,
+                  ]}
+                >
+                  <mesh>
+                    <planeGeometry args={[mediawidth, mediawidth / r]} />
+                    <meshBasicMaterial side={DoubleSide}>
+                      <videoTexture attach="map" args={[video]} />
+                    </meshBasicMaterial>
+                  </mesh>
+                </group>
+              )}
+            </group>
+          </group>
         </group>
       </Clipping>
     </>

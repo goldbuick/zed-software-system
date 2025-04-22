@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { usermediawritepeers } from 'zss/feature/usermedia'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import {
   CHAR_HEIGHT,
@@ -9,7 +10,7 @@ import {
   LAYER_TYPE,
   PALETTE_COLORS,
 } from 'zss/gadget/data/types'
-import { isarray } from 'zss/mapping/types'
+import { isarray, isstring } from 'zss/mapping/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import { createbitmapfromarray } from '../data/bitmap'
@@ -65,6 +66,11 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
               medialayer.media,
             ),
           )
+        }
+        break
+      case 'text/players':
+        if (isstring(medialayer.media)) {
+          usermediawritepeers(medialayer.media.split(','))
         }
         break
     }

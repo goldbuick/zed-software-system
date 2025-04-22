@@ -1,4 +1,4 @@
-import { getTransport, start } from 'tone'
+import { Context, getTransport, setContext, start } from 'tone'
 import { createdevice } from 'zss/device'
 import { AUDIO_SYNTH, createsynth } from 'zss/feature/synth'
 import { synthvoiceconfig } from 'zss/feature/synthvoiceconfig'
@@ -20,6 +20,7 @@ import { api_error, synth_audioenabled, api_info, vm_loader } from './api'
 import { registerreadplayer } from './register'
 
 // synth setup
+setContext(new Context({ latencyHint: 'playback' }))
 
 // TODO, wait for this before creating worklet nodes
 createsynthworkletnode().catch((err) => {

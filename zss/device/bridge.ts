@@ -4,6 +4,12 @@ import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import { peerserver, peerclient } from 'zss/feature/peer'
 import {
+  userscreenstart,
+  userscreenstop,
+  uservoicestart,
+  uservoicestop,
+} from 'zss/feature/usermedia'
+import {
   write,
   writecopyit,
   writeheader,
@@ -155,14 +161,21 @@ const bridge = createdevice('bridge', [], (message) => {
         }
       })
       break
-    case 'chatconnect':
+    case 'talkstart':
+      uservoicestart()
+      break
+    case 'talkstop':
+      uservoicestop()
+      break
+    case 'mediastart':
+      userscreenstart()
+      break
+    case 'mediastop':
+      userscreenstop()
+      break
+    case 'chatstart':
       if (ispresent(twitchchatclient)) {
-        api_error(
-          bridge,
-          message.player,
-          'connection',
-          'chat is already connected',
-        )
+        api_error(bridge, message.player, 'bridge', 'chat is already started')
       } else if (isstring(message.data)) {
         write(bridge, message.player, `connecting to ${message.data}`)
         twitchchatclient = new ChatClient({ channels: [message.data] })
@@ -195,29 +208,19 @@ const bridge = createdevice('bridge', [], (message) => {
         })
       }
       break
-    case 'chatdisconnect':
+    case 'chatstop':
       if (ispresent(twitchchatclient)) {
         twitchchatclient.quit()
         twitchchatclient = undefined
-        write(bridge, message.player, 'client quit')
+        write(bridge, message.player, 'chat stopped')
       } else {
-        api_error(
-          bridge,
-          message.player,
-          'connection',
-          'chat is already disconnected',
-        )
+        api_error(bridge, message.player, 'bridge', 'chat is already stoped')
       }
       break
-    case 'startstream':
+    case 'streamstart':
       doasync(bridge, message.player, async () => {
         if (ispresent(broadcastclient)) {
-          api_error(
-            bridge,
-            message.player,
-            'session',
-            'session is already open',
-          )
+          api_error(bridge, message.player, 'bridge', 'stream is already open')
         } else {
           const isportrait = window.innerHeight > window.innerWidth
           broadcastclient = IVSBroadcastClient.create({
@@ -246,7 +249,7 @@ const bridge = createdevice('bridge', [], (message) => {
           broadcastclient.on(
             IVSBroadcastClient.BroadcastClientEvents.ERROR,
             function (error: string) {
-              api_error(bridge, message.player, 'connection', error)
+              api_error(bridge, message.player, 'bridge', error)
               broadcastclient = undefined
             } as Callback,
           )
@@ -300,19 +303,14 @@ const bridge = createdevice('bridge', [], (message) => {
         }
       })
       break
-    case 'stopstream':
+    case 'streamstop':
       if (ispresent(broadcastclient)) {
         broadcastclient.stopBroadcast()
         broadcastclient.delete()
         broadcastclient = undefined
-        write(bridge, message.player, `closed client`)
+        write(bridge, message.player, `stream stopped`)
       } else {
-        api_error(
-          bridge,
-          message.player,
-          'session',
-          'need an active session to stop stream',
-        )
+        api_error(bridge, message.player, 'bridge', 'stream already stopped')
       }
       break
   }

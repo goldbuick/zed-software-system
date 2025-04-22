@@ -176,6 +176,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.board?.over ?? '']
       case 'under':
         return [true, READ_CONTEXT.board?.under ?? '']
+      case 'camera':
+        return [true, READ_CONTEXT.board?.camera ?? '']
       // common stats
       case 'exitnorth':
         return [true, READ_CONTEXT.board?.exitnorth ?? '']
@@ -261,6 +263,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'under':
         if (ispresent(READ_CONTEXT.board)) {
           READ_CONTEXT.board.under = maptostring(value)
+        }
+        break
+      case 'camera':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.camera = maptostring(value)
         }
         break
       // common stats
