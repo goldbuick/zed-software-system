@@ -79,8 +79,6 @@ export function Framed({ width, height }: FramedProps) {
         focusy: control.focusy,
         tfocusx: control.focusx,
         tfocusy: control.focusy,
-        lfocusx: control.focusx,
-        lfocusy: control.focusy,
       }
       panref.current.position.set(
         -control.focusx * RUNTIME.DRAW_CHAR_WIDTH(),
@@ -111,6 +109,8 @@ export function Framed({ width, height }: FramedProps) {
     const viewscale = zoomref.current.scale.x
     const invviewscale = 1 / viewscale
     const scaledelta = Math.abs(viewscale - control.viewscale)
+    const isscaling = scaledelta > 0.01
+    const isnear = viewscale > 1.5
 
     const sfx = viewscale * RUNTIME.DRAW_CHAR_WIDTH()
     const dfx = sfx - RUNTIME.DRAW_CHAR_WIDTH()
@@ -131,7 +131,7 @@ export function Framed({ width, height }: FramedProps) {
     const cols = viewwidth / drawwidth
     const rows = viewheight / drawheight
 
-    if (scaledelta > 0.1) {
+    if (isscaling) {
       // snap to player when zooming
       panref.current.userData.tfocusx = control.focusx + 0.5
       panref.current.userData.tfocusy = control.focusy + 0.5
@@ -140,22 +140,26 @@ export function Framed({ width, height }: FramedProps) {
     // framing
     cornerref.current.position.set(viewwidth * 0.5, viewheight * 0.5, 0)
 
-    if (scaledelta < 0.1) {
-      if (viewscale > 1.5) {
+    if (!isscaling) {
+      if (isnear) {
+        // centered
         panref.current.userData.tfocusx = control.focusx + 0.5
         panref.current.userData.tfocusy = control.focusy + 0.5
       } else {
         // panning
-        const zone = Math.round(Math.min(cols, rows) * 0.333)
+        const zonex = Math.round(cols * 0.25)
+        const zoney = Math.round(rows * 0.25)
+
         const dx = Math.round(panref.current.userData.tfocusx - control.focusx)
-        if (Math.abs(dx) >= zone) {
-          const step = dx < 0 ? zone : -zone
-          panref.current.userData.tfocusx += step
+        if (Math.abs(dx) >= zonex) {
+          const step = dx < 0 ? zonex : -zonex
+          panref.current.userData.tfocusx += step * 2
         }
+
         const dy = Math.round(panref.current.userData.tfocusy - control.focusy)
-        if (Math.abs(dy) >= zone) {
-          const step = dy < 0 ? zone : -zone
-          panref.current.userData.tfocusy += step
+        if (Math.abs(dy) >= zoney) {
+          const step = dy < 0 ? zoney : -zoney
+          panref.current.userData.tfocusy += step * 2
         }
       }
     }
@@ -170,11 +174,15 @@ export function Framed({ width, height }: FramedProps) {
 
     if (marginx >= 0) {
       if (panref.current.userData.tfocusx < left) {
-        panref.current.userData.focusx = left
+        if (isscaling) {
+          panref.current.userData.focusx = left
+        }
         panref.current.userData.tfocusx = left
       }
       if (panref.current.userData.tfocusx > right) {
-        panref.current.userData.focusx = right
+        if (isscaling) {
+          panref.current.userData.focusx = right
+        }
         panref.current.userData.tfocusx = right
       }
     } else {
@@ -183,11 +191,15 @@ export function Framed({ width, height }: FramedProps) {
 
     if (marginy >= 0) {
       if (panref.current.userData.tfocusy < top) {
-        panref.current.userData.focusy = top
+        if (isscaling) {
+          panref.current.userData.focusy = top
+        }
         panref.current.userData.tfocusy = top
       }
       if (panref.current.userData.tfocusy > bottom) {
-        panref.current.userData.focusy = bottom
+        if (isscaling) {
+          panref.current.userData.focusy = bottom
+        }
         panref.current.userData.tfocusy = bottom
       }
     } else {
