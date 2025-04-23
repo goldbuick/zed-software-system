@@ -15,7 +15,6 @@ import {
   layersreadcontrol,
 } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
-import { TICK_FPS } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
@@ -48,6 +47,7 @@ type FramedProps = {
 }
 
 export function Framed({ width, height }: FramedProps) {
+  const { screen } = useMedia()
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
@@ -79,6 +79,8 @@ export function Framed({ width, height }: FramedProps) {
         focusy: control.focusy,
         tfocusx: control.focusx,
         tfocusy: control.focusy,
+        lfocusx: control.focusx,
+        lfocusy: control.focusy,
       }
       panref.current.position.set(
         -control.focusx * RUNTIME.DRAW_CHAR_WIDTH(),
@@ -87,20 +89,28 @@ export function Framed({ width, height }: FramedProps) {
       )
     }
 
+    const animrate = 0.25
     const focusx = panref.current.userData.focusx
     const focusy = panref.current.userData.focusy
     const fx = focusx * RUNTIME.DRAW_CHAR_WIDTH()
     const fy = focusy * RUNTIME.DRAW_CHAR_HEIGHT()
 
-    const animrate = 1 / TICK_FPS
-
     // pan
     damp3(panref.current.position, [-fx, -fy, 0], animrate, delta)
 
     // scale
-    damp3(zoomref.current.scale, control.viewscale, animrate, delta)
+    const dfocusx = Math.abs(
+      panref.current.userData.focusx - panref.current.userData.tfocusx,
+    )
+    const dfocusy = Math.abs(
+      panref.current.userData.focusy - panref.current.userData.tfocusy,
+    )
+    if (dfocusx < 1 && dfocusy < 1) {
+      damp3(zoomref.current.scale, control.viewscale, animrate, delta)
+    }
     const viewscale = zoomref.current.scale.x
     const invviewscale = 1 / viewscale
+    const scaledelta = Math.abs(viewscale - control.viewscale)
 
     const sfx = viewscale * RUNTIME.DRAW_CHAR_WIDTH()
     const dfx = sfx - RUNTIME.DRAW_CHAR_WIDTH()
@@ -120,38 +130,63 @@ export function Framed({ width, height }: FramedProps) {
     const drawheight = RUNTIME.DRAW_CHAR_HEIGHT() * viewscale
     const cols = viewwidth / drawwidth
     const rows = viewheight / drawheight
-    const left = Math.round(cols * 0.5)
-    const top = Math.round(rows * 0.5)
-    const right = control.width - cols * 0.5
-    const bottom = control.height - rows * 0.5
-    const marginx =
-      cols > control.width ? -Math.round((cols - control.width) * 0.5) : 0
-    const marginy =
-      rows > control.height ? -Math.round((rows - control.height) * 0.5) : 0
 
-    if (viewscale > 1.5) {
-      // near is always centered
+    if (scaledelta > 0.1) {
+      // snap to player when zooming
       panref.current.userData.tfocusx = control.focusx
       panref.current.userData.tfocusy = control.focusy
-    } else if (viewscale === 1) {
-      // far pans back to zero / zero
-      panref.current.userData.tfocusx = 0
-      panref.current.userData.tfocusy = 0
-    } else {
-      // mid pans
+    }
+
+    // framing
+    cornerref.current.position.set(viewwidth * 0.5, viewheight * 0.5, 0)
+
+    if (scaledelta < 0.1) {
+      // panning
       const zone = Math.round(Math.min(cols, rows) * 0.333)
       const dx = Math.round(panref.current.userData.tfocusx - control.focusx)
-      const dy = Math.round(panref.current.userData.tfocusy - control.focusy)
-
       if (Math.abs(dx) >= zone) {
         const step = dx < 0 ? zone : -zone
         panref.current.userData.tfocusx += step
       }
-
+      const dy = Math.round(panref.current.userData.tfocusy - control.focusy)
       if (Math.abs(dy) >= zone) {
         const step = dy < 0 ? zone : -zone
         panref.current.userData.tfocusy += step
       }
+    }
+
+    // edge clamp
+    const left = Math.round(cols * 0.5)
+    const top = Math.round(rows * 0.5)
+    const right = control.width - cols * 0.5
+    const bottom = control.height - rows * 0.5
+    const marginx = -Math.round((cols - control.width) * 0.5)
+    const marginy = -Math.round((rows - control.height) * 0.5)
+
+    if (marginx >= 0) {
+      if (panref.current.userData.tfocusx < left) {
+        panref.current.userData.focusx = left
+        panref.current.userData.tfocusx = left
+      }
+      if (panref.current.userData.tfocusx > right) {
+        panref.current.userData.focusx = right
+        panref.current.userData.tfocusx = right
+      }
+    } else {
+      panref.current.userData.tfocusx = left + marginx
+    }
+
+    if (marginy >= 0) {
+      if (panref.current.userData.tfocusy < top) {
+        panref.current.userData.focusy = top
+        panref.current.userData.tfocusy = top
+      }
+      if (panref.current.userData.tfocusy > bottom) {
+        panref.current.userData.focusy = bottom
+        panref.current.userData.tfocusy = bottom
+      }
+    } else {
+      panref.current.userData.tfocusy = top + marginy
     }
 
     // smoothed change in focus
@@ -167,37 +202,6 @@ export function Framed({ width, height }: FramedProps) {
       panref.current.userData.tfocusy,
       animrate,
     )
-
-    // framing
-    cornerref.current.position.set(
-      viewwidth * 0.5 -
-        drawwidth * 0.5 -
-        (left + marginx) * RUNTIME.DRAW_CHAR_WIDTH(),
-      viewheight * 0.5 -
-        drawheight * 0.5 -
-        (top + marginy) * RUNTIME.DRAW_CHAR_HEIGHT(),
-      0,
-    )
-    // cornerref.current.position.x += marginx * RUNTIME.DRAW_CHAR_WIDTH()
-    // cornerref.current.position.y += marginy * RUNTIME.DRAW_CHAR_HEIGHT()
-
-    // edge clamp
-    if (marginx === 0) {
-      // if (panref.current.userData.focusx < left) {
-      //   panref.current.userData.focusx = left
-      // }
-      // if (panref.current.userData.focusx > right) {
-      //   panref.current.userData.focusx = right
-      // }
-    }
-    if (marginy === 0) {
-      // if (panref.current.userData.focusy < top) {
-      //   panref.current.userData.focusy = top
-      // }
-      // if (panref.current.userData.focusy > bottom) {
-      //   panref.current.userData.focusy = bottom
-      // }
-    }
   })
 
   const player = registerreadplayer()
@@ -207,20 +211,20 @@ export function Framed({ width, height }: FramedProps) {
   const { layers = [] } = useGadgetClient.getState().gadget
 
   // handle screenshare texture
-  // const [video, setVideo] = useState<HTMLVideoElement>()
-  // useEffect(() => {
-  //   const [first] = Object.values(screen)
-  //   if (ispresent(first)) {
-  //     setVideo(first)
-  //   }
-  // }, [screen])
+  const [video, setVideo] = useState<HTMLVideoElement>()
+  useEffect(() => {
+    const [first] = Object.values(screen)
+    if (ispresent(first)) {
+      setVideo(first)
+    }
+  }, [screen])
 
-  // const ratio = 16 / 9
-  // const r = useMemo(
-  //   () => (video ? video.videoWidth / video.videoHeight : ratio),
-  //   [video, ratio],
-  // )
-  // const mediawidth = 30 * RUNTIME.DRAW_CHAR_WIDTH()
+  const ratio = 16 / 9
+  const r = useMemo(
+    () => (video ? video.videoWidth / video.videoHeight : ratio),
+    [video, ratio],
+  )
+  const mediawidth = 30 * RUNTIME.DRAW_CHAR_WIDTH()
 
   return (
     <>
@@ -258,7 +262,7 @@ export function Framed({ width, height }: FramedProps) {
                 {layers.map((layer, i) => (
                   <FramedLayer key={layer.id} id={layer.id} z={i * 2} />
                 ))}
-                {/* {video && (
+                {video && (
                   <group
                     position={[
                       29.5 * RUNTIME.DRAW_CHAR_WIDTH(),
@@ -273,7 +277,7 @@ export function Framed({ width, height }: FramedProps) {
                       </meshBasicMaterial>
                     </mesh>
                   </group>
-                )} */}
+                )}
               </group>
             </group>
           </group>
