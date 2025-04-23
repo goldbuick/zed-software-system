@@ -62,11 +62,17 @@ export const dirconsts = {
   rndns: 'RNDNS',
   rndne: 'RNDNE',
   rnd: 'RND',
+  // pathfinding
+  toward: 'TOWARD',
+  player: 'player',
+  find: 'find',
   // modifiers
   cw: 'CW',
   ccw: 'CCW',
   opp: 'OPP',
   rndp: 'RNDP',
+  // combinations
+  to: 'TO',
   // aliases
   i: 'IDLE',
   u: 'NORTH',
