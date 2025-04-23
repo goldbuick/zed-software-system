@@ -133,25 +133,30 @@ export function Framed({ width, height }: FramedProps) {
 
     if (scaledelta > 0.1) {
       // snap to player when zooming
-      panref.current.userData.tfocusx = control.focusx
-      panref.current.userData.tfocusy = control.focusy
+      panref.current.userData.tfocusx = control.focusx + 0.5
+      panref.current.userData.tfocusy = control.focusy + 0.5
     }
 
     // framing
     cornerref.current.position.set(viewwidth * 0.5, viewheight * 0.5, 0)
 
     if (scaledelta < 0.1) {
-      // panning
-      const zone = Math.round(Math.min(cols, rows) * 0.333)
-      const dx = Math.round(panref.current.userData.tfocusx - control.focusx)
-      if (Math.abs(dx) >= zone) {
-        const step = dx < 0 ? zone : -zone
-        panref.current.userData.tfocusx += step
-      }
-      const dy = Math.round(panref.current.userData.tfocusy - control.focusy)
-      if (Math.abs(dy) >= zone) {
-        const step = dy < 0 ? zone : -zone
-        panref.current.userData.tfocusy += step
+      if (viewscale > 1.5) {
+        panref.current.userData.tfocusx = control.focusx + 0.5
+        panref.current.userData.tfocusy = control.focusy + 0.5
+      } else {
+        // panning
+        const zone = Math.round(Math.min(cols, rows) * 0.333)
+        const dx = Math.round(panref.current.userData.tfocusx - control.focusx)
+        if (Math.abs(dx) >= zone) {
+          const step = dx < 0 ? zone : -zone
+          panref.current.userData.tfocusx += step
+        }
+        const dy = Math.round(panref.current.userData.tfocusy - control.focusy)
+        if (Math.abs(dy) >= zone) {
+          const step = dy < 0 ? zone : -zone
+          panref.current.userData.tfocusy += step
+        }
       }
     }
 
