@@ -3,7 +3,7 @@ import { clamp, randominteger, randomintegerwith } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryrun } from 'zss/memory'
 import { findplayerforelement, listelementsbykind } from 'zss/memory/atomics'
-import { bookboardcheckmoveobject } from 'zss/memory/book'
+import { bookboardcheckmoveobject } from 'zss/memory/bookboard'
 
 import { isstrcategory, mapstrcategory, readcategory } from './category'
 import { isstrcollision, mapstrcollision, readcollision } from './collision'

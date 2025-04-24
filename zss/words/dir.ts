@@ -186,10 +186,28 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
           ARG_TYPE.DIR,
           ARG_TYPE.DIR,
         ])
-        strdir.push(dir1.x + dir2.x, dir1.y + dir2.y)
+        const sx = READ_CONTEXT.element?.x ?? 0
+        const sy = READ_CONTEXT.element?.y ?? 0
+        dir1.x -= sx
+        dir1.y -= sy
+        dir2.x -= sx
+        dir2.y -= sy
+        strdir.push(sx + dir1.x + dir2.x, sy + dir1.y + dir2.y)
         ii = iii
         break
       }
+    }
+
+    // if we consume a modifier we need to read more dir consts
+    // if so, stop reading the direction
+    switch (maybedir[0]) {
+      case 'CW':
+      case 'CCW':
+      case 'OPP':
+      case 'RNDP':
+        break
+      default:
+        return [strdir, ii]
     }
 
     // get next item in list

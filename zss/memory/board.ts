@@ -1,16 +1,8 @@
 import { indextopt } from 'zss/mapping/2d'
-import { pick } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
-import { clamp } from 'zss/mapping/number'
-import { MAYBE, deepcopy, isnumber, ispresent, noop } from 'zss/mapping/types'
-import {
-  dirfrompts,
-  ispt,
-  mapstrdirtoconst,
-  ptapplydir,
-  STR_DIR,
-} from 'zss/words/dir'
-import { DIR, PT } from 'zss/words/types'
+import { MAYBE, deepcopy, ispresent, noop } from 'zss/mapping/types'
+import { ispt } from 'zss/words/dir'
+import { PT } from 'zss/words/types'
 
 import { listnamedelements, picknearestpt } from './atomics'
 import { exportboardelement, importboardelement } from './boardelement'
@@ -63,6 +55,7 @@ export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
     named: FORMAT_SKIP,
     lookup: FORMAT_SKIP,
     codepage: FORMAT_SKIP,
+    distmaps: FORMAT_SKIP,
   })
 }
 
@@ -165,6 +158,9 @@ export function boardsetterrain(
   const index = from.x + from.y * BOARD_WIDTH
   board.terrain[index] = terrain
 
+  // clear pathing cache
+  delete board.distmaps
+
   // return created element
   return board.terrain[index]
 }
@@ -213,185 +209,23 @@ export function boardobjectread(
   return board.objects[id]
 }
 
-export function boardevaldir(
+export function boardobjectreadbypt(
   board: MAYBE<BOARD>,
-  target: MAYBE<BOARD_ELEMENT>,
-  player: string,
-  dir: STR_DIR,
-  startpt: PT,
-): PT {
-  if (!ispresent(board) || !ispresent(target)) {
-    return { x: 0, y: 0 }
+  pt: PT,
+): MAYBE<BOARD_ELEMENT> {
+  // clipping
+  const index = boardelementindex(board, pt)
+  if (index < 0 || !ispresent(board?.lookup)) {
+    return undefined
   }
 
-  const pt: PT = {
-    x: target.x ?? 0,
-    y: target.y ?? 0,
-  }
-  const lpt: PT = {
-    x: target.lx ?? pt.x,
-    y: target.ly ?? pt.y,
+  // check lookup
+  const object = boardobjectread(board, board.lookup[index] ?? '')
+  if (ispresent(object)) {
+    return object
   }
 
-  // we need to know current flow etc..
-  const flow = dirfrompts(lpt, pt)
-  const xmax = BOARD_WIDTH - 1
-  const ymax = BOARD_HEIGHT - 1
-  for (let i = 0; i < dir.length; ++i) {
-    const dirconst = mapstrdirtoconst(dir[i])
-    switch (dirconst) {
-      case DIR.IDLE:
-        // no-op
-        break
-      case DIR.NORTH:
-      case DIR.SOUTH:
-      case DIR.WEST:
-      case DIR.EAST:
-        ptapplydir(pt, dirconst)
-        break
-      case DIR.BY: {
-        // BY <x> <y>
-        const [x, y] = dir.slice(i + 1)
-        if (isnumber(x) && isnumber(y)) {
-          pt.x = clamp(pt.x + x, 0, xmax)
-          pt.y = clamp(pt.y + y, 0, ymax)
-        }
-        // need to skip x & y
-        i += 2
-        break
-      }
-      case DIR.AT: {
-        // BY <x> <y>
-        const [x, y] = dir.slice(i + 1)
-        if (isnumber(x) && isnumber(y)) {
-          pt.x = clamp(x, 0, xmax)
-          pt.y = clamp(y, 0, ymax)
-        }
-        // need to skip x & y
-        i += 2
-        break
-      }
-      case DIR.FLOW:
-        ptapplydir(pt, flow)
-        break
-      case DIR.SEEK: {
-        const playerobject = boardfindplayer(board, target, player)
-        if (ispt(playerobject)) {
-          ptapplydir(pt, dirfrompts(startpt, playerobject))
-        }
-        break
-      }
-      case DIR.RNDNS:
-        ptapplydir(pt, pick(DIR.NORTH, DIR.SOUTH))
-        break
-      case DIR.RNDNE:
-        ptapplydir(pt, pick(DIR.NORTH, DIR.EAST))
-        break
-      case DIR.RND:
-        ptapplydir(pt, pick(DIR.NORTH, DIR.SOUTH, DIR.WEST, DIR.EAST))
-        break
-      // modifiers
-      case DIR.CW:
-      case DIR.CCW:
-      case DIR.OPP:
-      case DIR.RNDP: {
-        const modpt = boardevaldir(
-          board,
-          target,
-          player,
-          dir.slice(i + 1),
-          startpt,
-        )
-        // reset to startpt
-        pt.x = startpt.x
-        pt.y = startpt.y
-        switch (dirconst) {
-          case DIR.CW:
-            switch (dirfrompts(startpt, modpt)) {
-              case DIR.NORTH:
-                ptapplydir(pt, DIR.EAST)
-                break
-              case DIR.SOUTH:
-                ptapplydir(pt, DIR.WEST)
-                break
-              case DIR.EAST:
-                ptapplydir(pt, DIR.SOUTH)
-                break
-              case DIR.WEST:
-                ptapplydir(pt, DIR.NORTH)
-                break
-            }
-            break
-          case DIR.CCW:
-            switch (dirfrompts(startpt, modpt)) {
-              case DIR.NORTH:
-                ptapplydir(pt, DIR.WEST)
-                break
-              case DIR.SOUTH:
-                ptapplydir(pt, DIR.EAST)
-                break
-              case DIR.EAST:
-                ptapplydir(pt, DIR.NORTH)
-                break
-              case DIR.WEST:
-                ptapplydir(pt, DIR.SOUTH)
-                break
-            }
-            break
-          case DIR.OPP:
-            switch (dirfrompts(startpt, modpt)) {
-              case DIR.NORTH:
-                ptapplydir(pt, DIR.SOUTH)
-                break
-              case DIR.SOUTH:
-                ptapplydir(pt, DIR.NORTH)
-                break
-              case DIR.EAST:
-                ptapplydir(pt, DIR.WEST)
-                break
-              case DIR.WEST:
-                ptapplydir(pt, DIR.EAST)
-                break
-            }
-            break
-          case DIR.RNDP:
-            switch (dirfrompts(startpt, modpt)) {
-              case DIR.NORTH:
-              case DIR.SOUTH:
-                pt.x += pick(-1, 1)
-                break
-              case DIR.WEST:
-              case DIR.EAST:
-                pt.y += pick(-1, 1)
-                break
-            }
-            break
-        }
-        break
-      }
-      // pathfinding
-      case DIR.AWAY: {
-        break
-      }
-      case DIR.TOWARD: {
-        break
-      }
-      case DIR.PLAYER: {
-        break
-      }
-      case DIR.FIND: {
-        break
-      }
-      case DIR.FLEE: {
-        break
-      }
-      case DIR.TO: {
-        break
-      }
-    }
-  }
-
-  return pt
+  return undefined
 }
 
 export function boarddeleteobject(board: MAYBE<BOARD>, id: string) {

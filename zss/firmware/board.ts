@@ -16,18 +16,20 @@ import {
 } from 'zss/memory/board'
 import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
 import {
-  bookboardcheckblockedobject,
-  bookboardmoveobject,
-  bookboardsafedelete,
-  bookboardsetlookup,
-  bookboardwritefromkind,
-  bookboardwritebulletobject,
   bookelementkindread,
   bookplayermovetoboard,
   bookreadcodepagesbytypeandstat,
   bookreadobject,
   bookreadterrain,
 } from 'zss/memory/book'
+import {
+  bookboardcheckblockedobject,
+  bookboardmoveobject,
+  bookboardsafedelete,
+  bookboardsetlookup,
+  bookboardwritefromkind,
+  bookboardwritebulletobject,
+} from 'zss/memory/bookboard'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'

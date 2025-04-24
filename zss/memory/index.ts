@@ -23,10 +23,6 @@ import {
 } from './board'
 import { boardelementname } from './boardelement'
 import {
-  bookboardmoveobject,
-  bookboardobjectnamedlookupdelete,
-  bookboardsafedelete,
-  bookboardtick,
   bookclearflags,
   bookelementkindread,
   bookensurecodepagewithtype,
@@ -42,6 +38,12 @@ import {
   bookreadobject,
   createbook,
 } from './book'
+import {
+  bookboardmoveobject,
+  bookboardobjectnamedlookupdelete,
+  bookboardsafedelete,
+  bookboardtick,
+} from './bookboard'
 import { codepagereaddata, codepagereadstat } from './codepage'
 import { memoryloaderarg } from './loader'
 import { memoryconverttogadgetlayers } from './rendertogadget'
@@ -49,7 +51,6 @@ import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
-  BOARD_RUNTIME,
   BOARD_WIDTH,
   BOOK,
   CODE_PAGE_TYPE,
@@ -83,8 +84,6 @@ const MEMORY = {
   // running code
   chips: new Map<string, string>(),
   loaders: new Map<string, string>(),
-  // board runtime data
-  boardruntime: new Map<string, BOARD_RUNTIME>(),
 }
 
 export function memoryreadsession() {

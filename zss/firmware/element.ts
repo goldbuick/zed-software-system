@@ -10,13 +10,13 @@ import { maptonumber, maptostring } from 'zss/mapping/value'
 import { memorymoveobject, memoryreadflags } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
 import { boardelementapplycolor } from 'zss/memory/boardelement'
+import { bookelementstatread } from 'zss/memory/book'
 import {
   bookboardsafedelete,
   bookboardsetlookup,
   bookboardobjectnamedlookupdelete,
-  bookelementstatread,
   bookboardwritefromkind,
-} from 'zss/memory/book'
+} from 'zss/memory/bookboard'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'

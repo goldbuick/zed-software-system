@@ -1,11 +1,11 @@
 import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
-import { boardevaldir } from 'zss/memory/board'
+import { boardevaldir } from 'zss/memory/bookboard'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 
 import { isstrcategory, readcategory } from './category'
 import { isstrcollision, readcollision } from './collision'
 import { isstrcolor, readcolor, STR_COLOR } from './color'
-import { isstrdir, readdir, STR_DIR } from './dir'
+import { isstrdir, mapstrdir, readdir, STR_DIR } from './dir'
 import { readexpr } from './expr'
 import { isstrkind, readkind, STR_KIND } from './kind'
 import { CATEGORY, COLLISION, PT, WORD } from './types'
@@ -98,6 +98,7 @@ function readdestfromdir(dir: STR_DIR) {
   const value =
     ispresent(READ_CONTEXT.board) && ispresent(READ_CONTEXT.element)
       ? boardevaldir(
+          READ_CONTEXT.book,
           READ_CONTEXT.board,
           READ_CONTEXT.element,
           READ_CONTEXT.elementfocus,
@@ -164,8 +165,10 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.DIR: {
         // check if we've been given a flag
-        const [maybedir, iii] = readexpr(ii)
-        if (isstrdir(maybedir)) {
+        const checkdir = mapstrdir(words[0])
+        if (checkdir === undefined) {
+          // flag
+          const [maybedir, iii] = readexpr(ii)
           ii = iii
           values.push(readdestfromdir(maybedir))
         } else {
@@ -278,6 +281,7 @@ export function readargs<T extends ARG_TYPES>(
           const pt = { x, y }
           const value = READ_CONTEXT.board
             ? boardevaldir(
+                READ_CONTEXT.book,
                 READ_CONTEXT.board,
                 READ_CONTEXT.element,
                 READ_CONTEXT.elementfocus,

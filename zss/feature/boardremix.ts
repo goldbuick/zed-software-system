@@ -12,13 +12,15 @@ import {
 } from 'zss/memory/board'
 import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
 import {
-  bookboardsafedelete,
-  bookboardsetlookup,
-  bookboardwritefromkind,
   bookclearcodepage,
   bookelementkindread,
   bookreadcodepagewithtype,
 } from 'zss/memory/book'
+import {
+  bookboardsafedelete,
+  bookboardsetlookup,
+  bookboardwritefromkind,
+} from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
 import {
   BOARD_ELEMENT,
