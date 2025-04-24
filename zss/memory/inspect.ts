@@ -25,11 +25,8 @@ import {
   boardsetterrain,
 } from './board'
 import { boardelementisobject, boardelementname } from './boardelement'
-import {
-  bookboardelementreadcodepage,
-  bookboardsafedelete,
-  bookboardsetlookup,
-} from './book'
+import { bookboardelementreadcodepage } from './book'
+import { bookboardsafedelete, bookboardsetlookup } from './bookboard'
 import { memoryinspectarea } from './inspectarea'
 import {
   memoryinspectchar,

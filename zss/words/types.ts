@@ -67,6 +67,14 @@ export enum DIR {
   CCW,
   OPP,
   RNDP,
+  // pathfinding
+  AWAY,
+  TOWARD,
+  PLAYER,
+  FIND,
+  FLEE,
+  // combinations
+  TO,
 }
 
 export enum STAT_TYPE {

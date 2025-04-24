@@ -5,7 +5,7 @@ import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memoryrun } from 'zss/memory'
-import { bookboardsafedelete } from 'zss/memory/book'
+import { bookboardsafedelete } from 'zss/memory/bookboard'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 
 export const LIFECYCLE_FIRMWARE = createfirmware()

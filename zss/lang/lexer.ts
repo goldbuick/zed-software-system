@@ -260,9 +260,7 @@ export const command_if = createSimpleToken({
   longer_alt: stringliteral,
 })
 export const command_do = createWordToken('do')
-export const command_to = createWordToken('to', true)
 export const command_done = createWordToken('done')
-export const command_then = createWordToken('then', true)
 export const command_else = createWordToken('else')
 export const command_while = createWordToken('while')
 export const command_repeat = createWordToken('repeat')
@@ -342,8 +340,6 @@ export const allTokens = createTokenSet([
   command_foreach,
   command_if,
   command_repeat,
-  command_then,
-  command_to,
   command_waitfor,
   command_while,
 ])
