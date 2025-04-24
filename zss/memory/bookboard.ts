@@ -406,25 +406,25 @@ export function boardevaldir(
             )
             if (ispresent(maybept)) {
               // check dest spot for blocked
-              if (
-                maybept.x !== x &&
-                maybept.y !== y &&
-                boardobjectreadbypt(board, maybept)
-              ) {
-                switch (dirfrompts(startpt, maybept)) {
-                  case DIR.EAST:
-                  case DIR.WEST:
-                    pt.y += pick(-1, 1)
-                    break
-                  case DIR.NORTH:
-                  case DIR.SOUTH:
-                    pt.x += pick(-1, 1)
-                    break
-                }
-              } else {
-                pt.x = maybept.x
-                pt.y = maybept.y
-              }
+              // if (
+              //   maybept.x !== x &&
+              //   maybept.y !== y &&
+              //   boardobjectreadbypt(board, maybept)
+              // ) {
+              //   switch (dirfrompts(startpt, maybept)) {
+              //     case DIR.EAST:
+              //     case DIR.WEST:
+              //       pt.y += pick(-1, 1)
+              //       break
+              //     case DIR.NORTH:
+              //     case DIR.SOUTH:
+              //       pt.x += pick(-1, 1)
+              //       break
+              //   }
+              // } else {
+              pt.x = maybept.x
+              pt.y = maybept.y
+              // }
             }
           }
         }
