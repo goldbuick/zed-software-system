@@ -369,6 +369,25 @@ export function boardevaldir(
         }
         break
       }
+      // pathfinding
+      case DIR.AWAY: {
+        break
+      }
+      case DIR.TOWARD: {
+        break
+      }
+      case DIR.PLAYER: {
+        break
+      }
+      case DIR.FIND: {
+        break
+      }
+      case DIR.FLEE: {
+        break
+      }
+      case DIR.TO: {
+        break
+      }
     }
   }
 

@@ -12,6 +12,42 @@ import { isstrdir, mapstrdir, readdir } from './dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
 import { NAME } from './types'
 
+// consider signaling the end as a pipe | ??
+function readvargs(index: number, maxcount = 0): [any[], number] {
+  const values: any[] = []
+
+  let i = index
+  for (; i < READ_CONTEXT.words.length; ) {
+    const [value, ii] = readexpr(i)
+    // if we're given array, we use values from it
+    if (
+      isarray(value) &&
+      !isstrdir(value) &&
+      !isstrcategory(value) &&
+      !isstrcollision(value) &&
+      !isstrcolor(value)
+    ) {
+      values.push(...value)
+    }
+
+    // if we're given a pipe also bail
+    if (value === '|') {
+      return [values, ii]
+    }
+
+    // next word
+    i = ii
+    values.push(value)
+
+    // limit capture count
+    if (maxcount > 0 && values.length >= maxcount) {
+      return [values, i]
+    }
+  }
+
+  return [values, i]
+}
+
 export function readexpr(index: number): [any, number] {
   const maybevalue = READ_CONTEXT.words[index]
   const ii = index + 1
@@ -182,103 +218,41 @@ export function readexpr(index: number): [any, number] {
       // array
       case 'min': {
         // MIN <a> [b] [c] [d]
-        const values: any[] = []
-        for (let iii = ii; iii < READ_CONTEXT.words.length; ) {
-          const [value, iiii] = readexpr(iii)
-          // if we're given array, we use values from it
-          if (
-            isarray(value) &&
-            !isstrdir(value) &&
-            !isstrcategory(value) &&
-            !isstrcollision(value) &&
-            !isstrcolor(value)
-          ) {
-            values.push(...value)
-          }
-          iii = iiii
-          values.push(value)
-        }
-        return [Math.min(...values), READ_CONTEXT.words.length]
+        const [values, iii] = readvargs(ii)
+        return [Math.min(...values), iii]
       }
       case 'max': {
         // MAX <a> [b] [c] [d]
-        const values: any[] = []
-        for (let iii = ii; iii < READ_CONTEXT.words.length; ) {
-          const [value, iiii] = readexpr(iii)
-          // if we're given array, we use values from it
-          if (
-            isarray(value) &&
-            !isstrdir(value) &&
-            !isstrcategory(value) &&
-            !isstrcollision(value) &&
-            !isstrcolor(value)
-          ) {
-            values.push(...value)
-          }
-          iii = iiii
-          values.push(value)
-        }
-        return [Math.max(...values), READ_CONTEXT.words.length]
+        const [values, iii] = readvargs(ii)
+        return [Math.max(...values), iii]
       }
       case 'pick': {
         // PICK <a> [b] [c] [d]
-        const values: any[] = []
-        for (let iii = ii; iii < READ_CONTEXT.words.length; ) {
-          const [value, iiii] = readexpr(iii)
-          // if we're given array, we use values from it
-          if (
-            isarray(value) &&
-            !isstrdir(value) &&
-            !isstrcategory(value) &&
-            !isstrcollision(value) &&
-            !isstrcolor(value)
-          ) {
-            values.push(...value)
-          }
-          iii = iiii
-          values.push(value)
-        }
-        return [pick(values), READ_CONTEXT.words.length]
+        const [values, iii] = readvargs(ii)
+        return [pick(values), iii]
       }
       case 'pickwith': {
         // PICKWITH <seed> <a> [b] [c] [d]
-        const values: any[] = []
         const [seed, iii] = readargs(READ_CONTEXT.words, ii, [
           ARG_TYPE.NUMBER_OR_STRING,
         ])
-        for (let iiii = iii; iiii < READ_CONTEXT.words.length; ) {
-          const [value, iiiii] = readexpr(iiii)
-          // if we're given array, we use values from it
-          if (
-            isarray(value) &&
-            !isstrdir(value) &&
-            !isstrcategory(value) &&
-            !isstrcollision(value) &&
-            !isstrcolor(value)
-          ) {
-            values.push(...value)
-          }
-          iiii = iiiii
-          values.push(value)
-        }
-        return [pickwith(`${seed}`, values), READ_CONTEXT.words.length]
+        const [values, iiii] = readvargs(iii)
+        return [pickwith(`${seed}`, values), iiii]
       }
       case 'random': {
         // RANDOM <a> [b]
-        const [a, b, iii] = readargs(READ_CONTEXT.words, ii, [
-          ARG_TYPE.NUMBER,
-          ARG_TYPE.MAYBE_NUMBER,
-        ])
+        const [values, iii] = readvargs(ii, 2)
+        const [a, b] = values
         return [randominteger(a, b ?? 0), iii]
       }
       case 'randomwith': {
         // RANDOMWITH <seed> <a> [b]
-        const [seed, a, b, iii] = readargs(READ_CONTEXT.words, ii, [
+        const [seed, iii] = readargs(READ_CONTEXT.words, ii, [
           ARG_TYPE.NUMBER_OR_STRING,
-          ARG_TYPE.NUMBER,
-          ARG_TYPE.MAYBE_NUMBER,
         ])
-        return [randomintegerwith(`${seed}`, a, b ?? 0), iii]
+        const [values, iiii] = readvargs(iii, 2)
+        const [a, b] = values
+        return [randomintegerwith(`${seed}`, a, b ?? 0), iiii]
       }
       // advanced
       case 'run': {

@@ -62,15 +62,17 @@ export enum DIR {
   RNDNS,
   RNDNE,
   RND,
-  // pathfinding
-  TOWARD,
-  PLAYER,
-  FIND,
   // modifiers
   CW,
   CCW,
   OPP,
   RNDP,
+  // pathfinding
+  AWAY,
+  TOWARD,
+  PLAYER,
+  FIND,
+  FLEE,
   // combinations
   TO,
 }

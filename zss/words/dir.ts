@@ -1,6 +1,5 @@
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
-import { readexpr } from './expr'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
 import { DIR, NAME, PT, WORD } from './types'
 
@@ -62,15 +61,17 @@ export const dirconsts = {
   rndns: 'RNDNS',
   rndne: 'RNDNE',
   rnd: 'RND',
-  // pathfinding
-  toward: 'TOWARD',
-  player: 'player',
-  find: 'find',
   // modifiers
   cw: 'CW',
   ccw: 'CCW',
   opp: 'OPP',
   rndp: 'RNDP',
+  // pathfinding
+  away: 'AWAY',
+  toward: 'TOWARD',
+  player: 'PLAYER',
+  find: 'FIND',
+  flee: 'FLEE',
   // combinations
   to: 'TO',
   // aliases
@@ -141,19 +142,10 @@ function checkfordirconst(value: MAYBE<WORD>): MAYBE<STR_DIR> {
 function readdirconst(index: number): [STR_DIR | undefined, number] {
   const value: MAYBE<WORD> = READ_CONTEXT.words[index]
 
-  // pre-check
+  // check value
   const maybedir = checkfordirconst(value)
   if (isstrdir(maybedir)) {
     return [maybedir, index + 1]
-  }
-
-  // read expression
-  const [exprvalue, iii] = readexpr(index)
-
-  // post-check
-  const maybedir2 = checkfordirconst(exprvalue)
-  if (isstrdir(maybedir2)) {
-    return [maybedir2, iii]
   }
 
   // fail
@@ -168,15 +160,36 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
     // make a list !
     strdir.push(...maybedir)
 
-    // read coords for at & by
-    if ((maybedir[0] === 'AT' || maybedir[0] === 'BY') && maybedir.length < 2) {
-      // read args
-      const [xvalue, yvalue, iii] = readargs(READ_CONTEXT.words, ii, [
-        ARG_TYPE.NUMBER,
-        ARG_TYPE.NUMBER,
-      ])
-      strdir.push(xvalue, yvalue)
-      ii = iii
+    // some directions have args
+    switch (maybedir[0]) {
+      case 'AT':
+      case 'BY':
+      case 'AWAY':
+      case 'TOWARD': {
+        const [xvalue, yvalue, iii] = readargs(READ_CONTEXT.words, ii, [
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.NUMBER,
+        ])
+        strdir.push(xvalue, yvalue)
+        ii = iii
+        break
+      }
+      case 'FLEE':
+      case 'FIND': {
+        const [dir, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.DIR])
+        strdir.push(dir.x, dir.y)
+        ii = iii
+        break
+      }
+      case 'TO': {
+        const [dir1, dir2, iii] = readargs(READ_CONTEXT.words, ii, [
+          ARG_TYPE.DIR,
+          ARG_TYPE.DIR,
+        ])
+        strdir.push(dir1.x + dir2.x, dir1.y + dir2.y)
+        ii = iii
+        break
+      }
     }
 
     // get next item in list

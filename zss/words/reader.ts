@@ -5,7 +5,7 @@ import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 import { isstrcategory, readcategory } from './category'
 import { isstrcollision, readcollision } from './collision'
 import { isstrcolor, readcolor, STR_COLOR } from './color'
-import { isstrdir, readdir } from './dir'
+import { isstrdir, readdir, STR_DIR } from './dir'
 import { readexpr } from './expr'
 import { isstrkind, readkind, STR_KIND } from './kind'
 import { CATEGORY, COLLISION, PT, WORD } from './types'
@@ -90,6 +90,24 @@ function didexpect(msg: string, value: any, words: WORD[]) {
   )
 }
 
+function readdestfromdir(dir: STR_DIR) {
+  const pt = {
+    x: READ_CONTEXT.element?.x ?? 0,
+    y: READ_CONTEXT.element?.y ?? 0,
+  }
+  const value =
+    ispresent(READ_CONTEXT.board) && ispresent(READ_CONTEXT.element)
+      ? boardevaldir(
+          READ_CONTEXT.board,
+          READ_CONTEXT.element,
+          READ_CONTEXT.elementfocus,
+          dir,
+          pt,
+        )
+      : pt
+  return value
+}
+
 export function readargs<T extends ARG_TYPES>(
   words: WORD[],
   index: number,
@@ -145,26 +163,19 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.DIR: {
-        const [dir, iii] = readdir(ii)
-        if (isstrdir(dir)) {
-          const pt = {
-            x: READ_CONTEXT.element?.x ?? 0,
-            y: READ_CONTEXT.element?.y ?? 0,
-          }
-          const value =
-            ispresent(READ_CONTEXT.board) && ispresent(READ_CONTEXT.element)
-              ? boardevaldir(
-                  READ_CONTEXT.board,
-                  READ_CONTEXT.element,
-                  READ_CONTEXT.elementfocus,
-                  dir,
-                  pt,
-                )
-              : pt
+        // check if we've been given a flag
+        const [maybedir, iii] = readexpr(ii)
+        if (isstrdir(maybedir)) {
           ii = iii
-          values.push(value)
+          values.push(readdestfromdir(maybedir))
         } else {
-          didexpect('direction', dir, words)
+          const [dir, iiii] = readdir(ii)
+          if (isstrdir(dir)) {
+            ii = iiii
+            values.push(readdestfromdir(dir))
+          } else {
+            didexpect('direction', dir, words)
+          }
         }
         break
       }
