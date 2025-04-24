@@ -17,7 +17,6 @@ import { checkdoescollide, findplayerforelement } from './atomics'
 import {
   boarddeleteobject,
   boardelementindex,
-  boardelementread,
   boardfindplayer,
   boardobjectcreatefromkind,
   boardobjectread,
