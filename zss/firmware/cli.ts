@@ -744,6 +744,7 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('restart', () => {
     vm_restart(SOFTWARE, READ_CONTEXT.elementfocus)
+    vm_flush_op()
     return 0
   })
   .command('export', () => {
