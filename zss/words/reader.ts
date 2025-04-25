@@ -2,13 +2,11 @@ import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { boardevaldir } from 'zss/memory/bookboard'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 
-import { isstrcategory, readcategory } from './category'
-import { isstrcollision, readcollision } from './collision'
-import { isstrcolor, readcolor, STR_COLOR } from './color'
+import { isstrcolor, mapstrcolor, readcolor, STR_COLOR } from './color'
 import { isstrdir, mapstrdir, readdir, STR_DIR } from './dir'
 import { readexpr } from './expr'
 import { isstrkind, readkind, STR_KIND } from './kind'
-import { CATEGORY, COLLISION, PT, WORD } from './types'
+import { PT, WORD } from './types'
 
 export const READ_CONTEXT = {
   // useful state
@@ -30,8 +28,6 @@ export const READ_CONTEXT = {
 // a simple DSL to say string [number] [number] args
 
 export enum ARG_TYPE {
-  CATEGORY,
-  COLLISION,
   COLOR,
   KIND,
   DIR,
@@ -39,11 +35,7 @@ export enum ARG_TYPE {
   NUMBER,
   STRING,
   NUMBER_OR_STRING,
-  MAYBE_CATEGORY,
-  MAYBE_COLLISION,
-  MAYBE_COLOR,
   MAYBE_KIND,
-  MAYBE_DIR,
   MAYBE_NAME,
   MAYBE_NUMBER,
   MAYBE_STRING,
@@ -52,8 +44,6 @@ export enum ARG_TYPE {
 }
 
 export type ARG_TYPE_MAP = {
-  [ARG_TYPE.CATEGORY]: CATEGORY
-  [ARG_TYPE.COLLISION]: COLLISION
   [ARG_TYPE.COLOR]: STR_COLOR
   [ARG_TYPE.KIND]: STR_KIND
   [ARG_TYPE.DIR]: PT
@@ -61,11 +51,7 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.NUMBER]: number
   [ARG_TYPE.STRING]: string
   [ARG_TYPE.NUMBER_OR_STRING]: number | string
-  [ARG_TYPE.MAYBE_CATEGORY]: MAYBE<CATEGORY>
-  [ARG_TYPE.MAYBE_COLLISION]: MAYBE<COLLISION>
-  [ARG_TYPE.MAYBE_COLOR]: MAYBE<STR_COLOR>
   [ARG_TYPE.MAYBE_KIND]: MAYBE<STR_KIND>
-  [ARG_TYPE.MAYBE_DIR]: MAYBE<PT>
   [ARG_TYPE.MAYBE_NAME]: MAYBE<string>
   [ARG_TYPE.MAYBE_NUMBER]: MAYBE<number>
   [ARG_TYPE.MAYBE_STRING]: MAYBE<string>
@@ -122,37 +108,6 @@ export function readargs<T extends ARG_TYPES>(
   let ii = index
   for (let i = 0; i < args.length; ++i) {
     switch (args[i]) {
-      case ARG_TYPE.CATEGORY: {
-        const [value, iii] = readcategory(ii)
-        if (!isstrcategory(value)) {
-          didexpect('terrain or object', value, words)
-        }
-        ii = iii
-        values.push(value)
-        break
-      }
-      case ARG_TYPE.COLLISION: {
-        const [value, iii] = readcollision(ii)
-        if (!isstrcollision(value)) {
-          didexpect(
-            'solid, walk, swim, bullet, walkable or swimmable',
-            value,
-            words,
-          )
-        }
-        ii = iii
-        values.push(value)
-        break
-      }
-      case ARG_TYPE.COLOR: {
-        const [value, iii] = readcolor(ii)
-        if (!isstrcolor(value)) {
-          didexpect('color', value, words)
-        }
-        ii = iii
-        values.push(value)
-        break
-      }
       case ARG_TYPE.KIND: {
         const [kind, iii] = readkind(ii)
         if (isstrkind(kind)) {
@@ -163,21 +118,44 @@ export function readargs<T extends ARG_TYPES>(
         }
         break
       }
-      case ARG_TYPE.DIR: {
-        // check if we've been given a flag
-        const checkdir = mapstrdir(words[0])
-        if (checkdir === undefined) {
-          // flag
-          const [maybedir, iii] = readexpr(ii)
-          ii = iii
-          values.push(readdestfromdir(maybedir))
-        } else {
-          const [dir, iiii] = readdir(ii)
-          if (isstrdir(dir)) {
-            ii = iiii
-            values.push(readdestfromdir(dir))
+      case ARG_TYPE.COLOR: {
+        // no color const, assume expr
+        if (mapstrcolor(words[0]) === undefined) {
+          const [value, iii] = readexpr(ii)
+          if (isstrcolor(value)) {
+            ii = iii
+            values.push(value)
           } else {
-            didexpect('direction', dir, words)
+            didexpect('color', value, words)
+          }
+        } else {
+          const [value, iii] = readcolor(ii)
+          if (isstrcolor(value)) {
+            ii = iii
+            values.push(value)
+          } else {
+            didexpect('color', value, words)
+          }
+        }
+        break
+      }
+      case ARG_TYPE.DIR: {
+        // no dir const, assume expr
+        if (mapstrdir(words[0]) === undefined) {
+          const [value, iii] = readexpr(ii)
+          if (isstrdir(value)) {
+            ii = iii
+            values.push(readdestfromdir(value))
+          } else {
+            didexpect('direction', value, words)
+          }
+        } else {
+          const [value, iii] = readdir(ii)
+          if (isstrdir(value)) {
+            ii = iii
+            values.push(readdestfromdir(value))
+          } else {
+            didexpect('direction', value, words)
           }
         }
         break
@@ -233,37 +211,6 @@ export function readargs<T extends ARG_TYPES>(
         values.push(maybevalue)
         break
       }
-      case ARG_TYPE.MAYBE_CATEGORY: {
-        const [value, iii] = readcategory(ii)
-        if (value !== undefined && !isstrcategory(value)) {
-          didexpect('optional terrain or object', value, words)
-        }
-        ii = iii
-        values.push(value)
-        break
-      }
-      case ARG_TYPE.MAYBE_COLLISION: {
-        const [value, iii] = readcategory(ii)
-        if (value !== undefined && !isstrcollision(value)) {
-          didexpect(
-            'optional solid, walk, swim, bullet, walkable or swimmable',
-            value,
-            words,
-          )
-        }
-        ii = iii
-        values.push(value)
-        break
-      }
-      case ARG_TYPE.MAYBE_COLOR: {
-        const [value, iii] = readcolor(ii)
-        if (value !== undefined && !isstrcolor(value)) {
-          didexpect('optional color', value, words)
-        }
-        ii = iii
-        values.push(value)
-        break
-      }
       case ARG_TYPE.MAYBE_KIND: {
         const [kind, iii] = readkind(ii)
         if (kind !== undefined && !isstrkind(kind)) {
@@ -271,32 +218,6 @@ export function readargs<T extends ARG_TYPES>(
         }
         ii = iii
         values.push(kind)
-        break
-      }
-      case ARG_TYPE.MAYBE_DIR: {
-        const [dir, iii] = readdir(ii)
-        if (isstrdir(dir)) {
-          const x = READ_CONTEXT.element?.x ?? 0
-          const y = READ_CONTEXT.element?.y ?? 0
-          const pt = { x, y }
-          const value = READ_CONTEXT.board
-            ? boardevaldir(
-                READ_CONTEXT.book,
-                READ_CONTEXT.board,
-                READ_CONTEXT.element,
-                READ_CONTEXT.elementfocus,
-                dir,
-                pt,
-              )
-            : pt
-          ii = iii
-          values.push(value)
-        } else if (dir === undefined) {
-          ii = iii
-          values.push(undefined)
-        } else {
-          didexpect('optional direction', dir, words)
-        }
         break
       }
       case ARG_TYPE.MAYBE_NAME: {
