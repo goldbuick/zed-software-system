@@ -1,5 +1,6 @@
 import { pttoindex } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
+import { ispid } from 'zss/mapping/guid'
 import { clamp, randominteger } from 'zss/mapping/number'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
@@ -597,18 +598,18 @@ export function bookboardcheckmoveobject(
 export function bookboardmoveobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
-  target: MAYBE<BOARD_ELEMENT>,
+  targetelement: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ): MAYBE<BOARD_ELEMENT> {
-  const object = boardobjectread(board, target?.id ?? '')
+  const target = boardobjectread(board, targetelement?.id ?? '')
 
   // first pass clipping
   if (
     !ispresent(book) ||
     !ispresent(board) ||
-    !ispresent(object) ||
-    !ispresent(object.x) ||
-    !ispresent(object.y) ||
+    !ispresent(target) ||
+    !ispresent(target.x) ||
+    !ispresent(target.y) ||
     !ispresent(board.lookup) ||
     dest.x < 0 ||
     dest.x >= BOARD_WIDTH ||
@@ -626,20 +627,23 @@ export function bookboardmoveobject(
   }
 
   // second pass, are we actually trying to move ?
-  if (object.x - dest.x === 0 && object.y - dest.y === 0) {
+  if (target.x - dest.x === 0 && target.y - dest.y === 0) {
     // no interaction due to no movement
     return undefined
   }
 
   // gather meta for move
-  const startidx = boardelementindex(board, object)
+  const startidx = boardelementindex(board, target)
   const targetidx = boardelementindex(board, dest)
   const targetcollision =
-    object.collision ?? object?.kinddata?.collision ?? COLLISION.ISWALK
+    bookelementstatread(book, target, 'collision') ?? COLLISION.ISWALK
+  const targetisplayer = ispid(target?.id)
 
   // blocked by an object
   const maybeobject = boardobjectread(board, board.lookup[targetidx] ?? '')
-  if (ispresent(maybeobject)) {
+  const maybeobjectisplayer = ispid(maybeobject?.id ?? '')
+  // we are blocked by an object, and we are both NOT players
+  if (ispresent(maybeobject) && (!targetisplayer || !maybeobjectisplayer)) {
     // for sending interaction messages
     return { ...maybeobject }
   }
@@ -658,15 +662,15 @@ export function bookboardmoveobject(
   }
 
   // update object location
-  object.x = dest.x
-  object.y = dest.y
+  target.x = dest.x
+  target.y = dest.y
 
   // if not removed, update lookup
-  if (!ispresent(object.removed)) {
+  if (!ispresent(target.removed)) {
     // blank current lookup
     board.lookup[startidx] = undefined
     // update lookup at dest
-    board.lookup[targetidx] = object.id ?? ''
+    board.lookup[targetidx] = target.id ?? ''
   }
 
   // no interaction
