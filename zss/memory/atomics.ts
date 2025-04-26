@@ -1,4 +1,5 @@
 import { indextopt } from 'zss/mapping/2d'
+import { pick } from 'zss/mapping/array'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { ispt } from 'zss/words/dir'
 import {
@@ -52,14 +53,16 @@ export function findplayerforelement(
   if (ispresent(maybelplayer)) {
     return maybelplayer
   }
+
+  const players = listnamedelements(board, 'player')
   // find nearest player to element
   if (ispresent(element)) {
-    const players = listnamedelements(board, 'player')
     const pt = { x: element.x ?? 0, y: element.y ?? 0 }
-    picknearestpt(pt, players)
+    return picknearestpt(pt, players)
   }
-  // not found
-  return undefined
+
+  // return rand
+  return pick(...players)
 }
 
 export function listelementsbyempty(board: MAYBE<BOARD>): PT[] {
