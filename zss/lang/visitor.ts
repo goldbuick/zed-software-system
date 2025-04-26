@@ -1139,7 +1139,7 @@ class ScriptVisitor
     if (ctx.token_lparen) {
       return this.createcodenode(ctx, {
         type: NODE.EXPR,
-        words: this.go(ctx.expr),
+        words: this.go(ctx.words),
       })
     }
     return []
