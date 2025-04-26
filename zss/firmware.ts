@@ -19,8 +19,8 @@ export type FIRMWARE_EVENTS = {
 }
 
 export type FIRMWARE = {
-  get: FIRMWARE_GET
-  set: FIRMWARE_SET
+  get?: FIRMWARE_GET
+  set?: FIRMWARE_SET
   tick: FIRMWARE_CYCLE
   everytick: FIRMWARE_CYCLE
   getcommand: (name: string) => FIRMWARE_COMMAND | undefined
@@ -32,12 +32,6 @@ export function createfirmware(events?: FIRMWARE_EVENTS): FIRMWARE {
   const commands: Record<string, FIRMWARE_COMMAND> = {}
 
   const firmware: FIRMWARE = {
-    get() {
-      return [false, undefined]
-    },
-    set() {
-      return [false, undefined]
-    },
     tick() {},
     everytick() {},
     listcommands() {
