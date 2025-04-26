@@ -107,9 +107,10 @@ export const LOADER_FIRMWARE = createfirmware({
       const target = pick(...boards)
       if (ispresent(target)) {
         READ_CONTEXT.board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(target)
+        // -1, -1 means RANDOM
         READ_CONTEXT.element = {
-          x: randominteger(0, BOARD_WIDTH - 1),
-          y: randominteger(0, BOARD_HEIGHT - 1),
+          x: -1,
+          y: -1,
         }
       }
     }

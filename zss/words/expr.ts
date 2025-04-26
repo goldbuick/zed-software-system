@@ -128,7 +128,10 @@ export function readexpr(index: number): [any, number] {
         // This flag is SET whenever the object is aligned with the player either horizontally or vertically.
         const maybeplayer = findplayerforelement(
           READ_CONTEXT.board,
-          READ_CONTEXT.element,
+          {
+            x: READ_CONTEXT.element?.x ?? -1,
+            y: READ_CONTEXT.element?.y ?? -1,
+          },
           READ_CONTEXT.elementfocus,
         )
         if (!ispresent(READ_CONTEXT.element) || !ispresent(maybeplayer)) {
@@ -147,7 +150,10 @@ export function readexpr(index: number): [any, number] {
         // This flag is SET whenever the object is adjacent to (touching) the player.
         const maybeplayer = findplayerforelement(
           READ_CONTEXT.board,
-          READ_CONTEXT.element,
+          {
+            x: READ_CONTEXT.element?.x ?? -1,
+            y: READ_CONTEXT.element?.y ?? -1,
+          },
           READ_CONTEXT.elementfocus,
         )
         if (!ispresent(READ_CONTEXT.element) || !ispresent(maybeplayer)) {

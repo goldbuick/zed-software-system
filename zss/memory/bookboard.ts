@@ -433,7 +433,7 @@ export function boardevaldir(
         break
       }
       case DIR.PLAYER: {
-        const maybeplayer = findplayerforelement(board, target, player)
+        const maybeplayer = findplayerforelement(board, startpt, player)
         if (ispt(maybeplayer)) {
           pt.x = maybeplayer.x
           pt.y = maybeplayer.y

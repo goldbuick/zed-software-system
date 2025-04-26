@@ -1,4 +1,4 @@
-import { unique } from 'zss/mapping/array'
+import { pick, unique } from 'zss/mapping/array'
 import { createsid, createnameid, createshortnameid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
@@ -480,5 +480,64 @@ function bookplayerreadboardids(book: MAYBE<BOOK>) {
 
 export function bookplayerreadboards(book: MAYBE<BOOK>) {
   const ids = bookplayerreadboardids(book)
-  return ids.map((address) => bookreadboard(book, address)).filter(ispresent)
+  const addedids = new Set<string>()
+  const mainboards: BOARD[] = []
+  for (let i = 0; i < ids.length; ++i) {
+    const board = bookreadboard(book, ids[i])
+    // only process once
+    if (ispresent(board) && !addedids.has(board.id)) {
+      // see if we have an over board
+      // it runs first
+      if (isstring(board.overboard)) {
+        const over = bookreadboard(book, board.overboard)
+        if (ispresent(over)) {
+          // only add once
+          if (!addedids.has(over.id)) {
+            mainboards.push(over)
+          }
+        } else {
+          delete board.overboard
+        }
+      } else if (isstring(board.over)) {
+        // check to see if board.over is a stat
+        const boards = bookreadcodepagesbytypeandstat(
+          book,
+          CODE_PAGE_TYPE.BOARD,
+          board.over,
+        )
+        if (boards.length) {
+          const codepage = pick(boards)
+          const maybeboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+          if (ispresent(maybeboard) && !addedids.has(maybeboard.id)) {
+            // update stat, will kick in next cycle
+            board.overboard = maybeboard.id
+          }
+        }
+      }
+      // followed by the mainboard
+      mainboards.push(board)
+      // setup under stat too
+      if (isstring(board.underboard)) {
+        const under = bookreadboard(book, board.underboard)
+        if (!ispresent(under)) {
+          delete board.underboard
+        }
+      } else if (isstring(board.under)) {
+        // check to see if board.under is a stat
+        const boards = bookreadcodepagesbytypeandstat(
+          book,
+          CODE_PAGE_TYPE.BOARD,
+          board.under,
+        )
+        if (boards.length) {
+          const codepage = pick(boards)
+          const maybeboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+          if (ispresent(maybeboard)) {
+            board.underboard = maybeboard.id
+          }
+        }
+      }
+    }
+  }
+  return mainboards
 }

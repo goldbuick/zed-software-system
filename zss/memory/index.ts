@@ -808,13 +808,13 @@ export function memoryreadgadgetlayers(player: string): LAYER[] {
   }
 
   // read over board
-  const over = bookreadboard(mainbook, playerboard.over ?? '')
+  const overboard = bookreadboard(mainbook, playerboard.overboard ?? '')
 
   // read under board
-  const under = bookreadboard(mainbook, playerboard.under ?? '')
+  const underboard = bookreadboard(mainbook, playerboard.underboard ?? '')
 
   // compose layers
-  const boards = [over, playerboard, under]
+  const boards = [underboard, playerboard, overboard]
 
   let i = 0
   for (let b = 0; b < boards.length; ++b) {

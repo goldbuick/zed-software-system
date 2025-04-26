@@ -1,5 +1,6 @@
 import { indextopt } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
+import { randominteger } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { ispt } from 'zss/words/dir'
 import {
@@ -45,7 +46,7 @@ export function checkdoescollide(
 
 export function findplayerforelement(
   board: MAYBE<BOARD>,
-  element: MAYBE<BOARD_ELEMENT>,
+  elementpt: MAYBE<PT>,
   player: string,
 ): MAYBE<BOARD_ELEMENT> {
   // check aggro
@@ -56,9 +57,14 @@ export function findplayerforelement(
 
   const players = listnamedelements(board, 'player')
   // find nearest player to element
-  if (ispresent(element)) {
-    const pt = { x: element.x ?? 0, y: element.y ?? 0 }
-    return picknearestpt(pt, players)
+  if (ispresent(elementpt)) {
+    if (elementpt.x < 0) {
+      elementpt.x = randominteger(0, BOARD_WIDTH - 1)
+    }
+    if (elementpt.y < 0) {
+      elementpt.y = randominteger(0, BOARD_HEIGHT - 1)
+    }
+    return picknearestpt(elementpt, players)
   }
 
   // return rand
