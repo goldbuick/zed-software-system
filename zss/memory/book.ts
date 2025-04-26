@@ -488,54 +488,66 @@ export function bookplayerreadboards(book: MAYBE<BOOK>) {
     if (ispresent(board) && !addedids.has(board.id)) {
       // see if we have an over board
       // it runs first
-      if (isstring(board.overboard)) {
-        const over = bookreadboard(book, board.overboard)
-        if (ispresent(over)) {
-          // only add once
-          if (!addedids.has(over.id)) {
-            mainboards.push(over)
+      if (isstring(board.over)) {
+        if (isstring(board.overboard)) {
+          const over = bookreadboard(book, board.overboard)
+          if (ispresent(over)) {
+            // only add once
+            if (!addedids.has(over.id)) {
+              mainboards.push(over)
+            }
+          } else {
+            delete board.overboard
           }
         } else {
-          delete board.overboard
-        }
-      } else if (isstring(board.over)) {
-        // check to see if board.over is a stat
-        const boards = bookreadcodepagesbytypeandstat(
-          book,
-          CODE_PAGE_TYPE.BOARD,
-          board.over,
-        )
-        if (boards.length) {
-          const codepage = pick(boards)
-          const maybeboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
-          if (ispresent(maybeboard) && !addedids.has(maybeboard.id)) {
-            // update stat, will kick in next cycle
-            board.overboard = maybeboard.id
+          // check to see if board.over is a stat
+          const boards = bookreadcodepagesbytypeandstat(
+            book,
+            CODE_PAGE_TYPE.BOARD,
+            board.over,
+          )
+          if (boards.length) {
+            const codepage = pick(boards)
+            const maybeboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+            if (ispresent(maybeboard)) {
+              // update stat, will kick in next cycle
+              board.overboard = maybeboard.id
+            }
           }
         }
+      } else if (isstring(board.overboard)) {
+        delete board.overboard
       }
+
       // followed by the mainboard
       mainboards.push(board)
-      // setup under stat too
-      if (isstring(board.underboard)) {
-        const under = bookreadboard(book, board.underboard)
-        if (!ispresent(under)) {
-          delete board.underboard
-        }
-      } else if (isstring(board.under)) {
-        // check to see if board.under is a stat
-        const boards = bookreadcodepagesbytypeandstat(
-          book,
-          CODE_PAGE_TYPE.BOARD,
-          board.under,
-        )
-        if (boards.length) {
-          const codepage = pick(boards)
-          const maybeboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
-          if (ispresent(maybeboard)) {
-            board.underboard = maybeboard.id
+
+      // see if we have an under board
+      // it is not run
+      if (isstring(board.under)) {
+        if (isstring(board.underboard)) {
+          const under = bookreadboard(book, board.underboard)
+          if (!ispresent(under)) {
+            delete board.underboard
+          }
+        } else {
+          // check to see if board.under is a stat
+          const boards = bookreadcodepagesbytypeandstat(
+            book,
+            CODE_PAGE_TYPE.BOARD,
+            board.under,
+          )
+          if (boards.length) {
+            const codepage = pick(boards)
+            const maybeboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
+            if (ispresent(maybeboard)) {
+              // update stat, will kick in next cycle
+              board.underboard = maybeboard.id
+            }
           }
         }
+      } else if (isstring(board.underboard)) {
+        delete board.underboard
       }
     }
   }

@@ -262,12 +262,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // uses content slot book
       case 'over':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.over = maptostring(value)
+          READ_CONTEXT.board.over = isnumber(value) ? value : maptostring(value)
         }
         break
       case 'under':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.under = maptostring(value)
+          READ_CONTEXT.board.under = isnumber(value)
+            ? value
+            : maptostring(value)
         }
         break
       case 'camera':
