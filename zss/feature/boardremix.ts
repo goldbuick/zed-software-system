@@ -30,7 +30,7 @@ import {
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { NAME } from 'zss/words/types'
+import { CATEGORY, NAME, PT } from 'zss/words/types'
 
 function snapshotname(target: string) {
   return `zss_snapshot_${target}`
@@ -231,19 +231,22 @@ export function boardremix(
   const remixdata: Uint8Array = model.graphics()
   for (let y = y1; y <= y2; ++y) {
     for (let x = x1; x <= x2; ++x) {
+      const dpt: PT = { x, y }
       const dchar = remixdata[p++]
       const dcolor = remixdata[p++]
       const dbg = remixdata[p++]
       akind = remixdata[p++]
 
       // make empty
-      const old = boardelementread(targetboard, { x, y })
-      bookboardsafedelete(
-        READ_CONTEXT.book,
-        targetboard,
-        old,
-        READ_CONTEXT.timestamp,
-      )
+      const maybeobject = boardelementread(targetboard, dpt)
+      if (maybeobject?.category === CATEGORY.ISOBJECT) {
+        bookboardsafedelete(
+          READ_CONTEXT.book,
+          targetboard,
+          maybeobject,
+          READ_CONTEXT.timestamp,
+        )
+      }
       boardsetterrain(targetboard, { x, y })
 
       // create new element
@@ -252,7 +255,7 @@ export function boardremix(
         READ_CONTEXT.book,
         targetboard,
         [maybekind],
-        { x, y },
+        dpt,
       )
 
       // skip if we didn't create

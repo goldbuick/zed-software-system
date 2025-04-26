@@ -60,8 +60,8 @@ export type BOARD = {
   starty?: number
   // board displayed over/under this one
   // uses content slot book
-  over?: string
-  under?: string
+  over?: string | number
+  under?: string | number
   // control camera zoom
   camera?: string
   // common stats

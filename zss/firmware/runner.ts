@@ -106,9 +106,12 @@ export function firmwareget(
 ): [boolean, any] {
   const wares = getfimrwares(driver)
   for (let i = 0; i < wares.length; ++i) {
-    const [result, value] = wares[i].get(chip, name)
-    if (result) {
-      return [result, value]
+    const ware = wares[i]
+    if (ware.get !== undefined) {
+      const [result, value] = ware.get(chip, name)
+      if (result) {
+        return [result, value]
+      }
     }
   }
   return [false, undefined]
@@ -122,9 +125,12 @@ export function firmwareset(
 ): [boolean, any] {
   const wares = getfimrwares(driver)
   for (let i = 0; i < wares.length; ++i) {
-    const [result] = wares[i].set(chip, name, value)
-    if (result) {
-      return [result, value]
+    const ware = wares[i]
+    if (ware.set !== undefined) {
+      const [result] = ware.set(chip, name, value)
+      if (result) {
+        return [result, value]
+      }
     }
   }
   return [false, undefined]
