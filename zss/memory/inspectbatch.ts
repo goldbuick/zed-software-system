@@ -2,11 +2,14 @@ import { parsetarget } from 'zss/device'
 import { register_copy, vm_cli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { boardremix } from 'zss/feature/boardremix'
+import { pick } from 'zss/mapping/array'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
+import { READ_CONTEXT } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
 
+import { bookreadcodepagesbytypeandstat } from './book'
 import { memoryinspectempty, memoryinspectemptymenu } from './inspect'
 import {
   memoryinspectremix,
@@ -20,6 +23,7 @@ import {
   memoryinspectpaste,
   memoryinspectpastemenu,
 } from './inspectcopypaste'
+import { CODE_PAGE_TYPE } from './types'
 
 import { memoryreadplayerboard } from '.'
 
@@ -70,16 +74,25 @@ export function memoryinspectbatchcommand(path: string, player: string) {
     case 'copycoords':
       register_copy(SOFTWARE, player, [x1, y1, x2, y2].join(' '))
       break
-    case 'remixrun':
-      boardremix(
-        board.id,
+    case 'remixrun': {
+      const boards = bookreadcodepagesbytypeandstat(
+        READ_CONTEXT.book,
+        CODE_PAGE_TYPE.BOARD,
         memoryinspectremix.stat,
-        memoryinspectremix.patternsize,
-        memoryinspectremix.mirror,
-        p1,
-        p2,
       )
+      const sourceboard = pick(...boards)
+      if (ispresent(sourceboard)) {
+        boardremix(
+          board.id,
+          sourceboard.id,
+          memoryinspectremix.patternsize,
+          memoryinspectremix.mirror,
+          p1,
+          p2,
+        )
+      }
       break
+    }
     case 'pageopen':
       doasync(SOFTWARE, player, async () => {
         // wait a little
