@@ -501,7 +501,7 @@ export type TokenCstChildren = {
   token_stringliteral?: IToken[]
   token_numberliteral?: IToken[]
   token_lparen?: IToken[]
-  expr?: ExprCstNode[]
+  words?: WordsCstNode[]
   token_rparen?: IToken[]
 }
 

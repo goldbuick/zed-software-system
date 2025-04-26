@@ -438,7 +438,7 @@ class ScriptParser extends CstParser {
       {
         ALT: () => {
           this.CONSUME(lexer.lparen)
-          this.SUBRULE(this.expr)
+          this.SUBRULE(this.words)
           this.CONSUME(lexer.rparen)
         },
       },
