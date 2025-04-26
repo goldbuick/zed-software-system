@@ -56,6 +56,8 @@ export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {
     lookup: FORMAT_SKIP,
     codepage: FORMAT_SKIP,
     distmaps: FORMAT_SKIP,
+    overboard: FORMAT_SKIP,
+    underboard: FORMAT_SKIP,
   })
 }
 

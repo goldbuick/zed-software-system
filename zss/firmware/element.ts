@@ -7,7 +7,11 @@ import {
 } from 'zss/gadget/data/types'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
-import { memorymoveobject, memoryreadflags } from 'zss/memory'
+import {
+  memorymoveobject,
+  memoryreadflags,
+  memoryreadoperator,
+} from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
 import { boardelementapplycolor } from 'zss/memory/boardelement'
 import { bookelementstatread } from 'zss/memory/book'
@@ -155,10 +159,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // find focused on player
     const focus = findplayerforelement(
       READ_CONTEXT.board,
-      READ_CONTEXT.element,
+      { x: READ_CONTEXT.element?.x ?? -1, y: READ_CONTEXT.element?.y ?? -1 },
       READ_CONTEXT.elementfocus,
     )
-    const player = focus?.id ?? READ_CONTEXT.elementfocus
+    const player =
+      focus?.id ?? READ_CONTEXT.elementfocus ?? memoryreadoperator()
 
     // read stat
     switch (name) {
@@ -229,7 +234,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // >>> this <<< uses focus
     const focus = findplayerforelement(
       READ_CONTEXT.board,
-      READ_CONTEXT.element,
+      { x: READ_CONTEXT.element?.x ?? -1, y: READ_CONTEXT.element?.y ?? -1 },
       READ_CONTEXT.elementfocus,
     )
     const player = focus?.id ?? READ_CONTEXT.elementfocus

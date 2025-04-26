@@ -77,6 +77,8 @@ export type BOARD = {
   named?: Record<string, Set<string | number>>
   lookup?: MAYBE<string>[]
   distmaps?: Record<string, number[]>
+  overboard?: string
+  underboard?: string
 }
 
 export const BOARD_WIDTH = 60

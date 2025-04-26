@@ -259,8 +259,8 @@ export function memoryconverttogadgetlayers(
       book,
       tile,
       0,
-      COLOR.BLACK,
-      COLOR.ONCLEAR,
+      COLOR.WHITE,
+      isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR,
     )
     tiles.char[i] = display.char
     tiles.color[i] = display.color
@@ -280,7 +280,7 @@ export function memoryconverttogadgetlayers(
       object,
       1,
       COLOR.WHITE,
-      COLOR.BLACK,
+      isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR,
     )
     const sprite = createcachedsprite(player, objectindex, id, i)
 
