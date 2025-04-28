@@ -15,7 +15,6 @@ import {
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { CRTShape } from 'zss/gadget/fx/crt'
-import decoimageurl from 'zss/gadget/fx/scratches.gif'
 import { useTexture } from 'zss/gadget/usetexture'
 import { doasync } from 'zss/mapping/func'
 
@@ -70,11 +69,6 @@ export function Engine() {
   const showtouchcontrols =
     FORCE_TOUCH_UI || deviceType === 'touchOnly' || primaryInput === 'touch'
 
-  // grit texture
-  const splat = useTexture(decoimageurl)
-  splat.minFilter = NearestFilter
-  splat.magFilter = NearestFilter
-
   // config FX
   const shouldcrt =
     !FORCE_CRT_OFF &&
@@ -107,7 +101,7 @@ export function Engine() {
       </UserFocus>
       {shouldcrt && (
         <EffectComposer>
-          <CRTShape splat={splat} viewheight={viewheight} />
+          <CRTShape viewheight={viewheight} />
         </EffectComposer>
       )}
     </>
