@@ -1,15 +1,10 @@
 import { linepoints } from 'zss/mapping/2d'
-import { ispresent, MAYBE } from 'zss/mapping/types'
-import { boardobjectread, createboard } from 'zss/memory/board'
+import { ispresent } from 'zss/mapping/types'
+import { createboard } from 'zss/memory/board'
 import { bookreadcodepagewithtype } from 'zss/memory/book'
 import { bookboardsetlookup } from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
-import {
-  BOARD,
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  CODE_PAGE_TYPE,
-} from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 
 export function boardpivot(
@@ -41,7 +36,8 @@ export function boardpivot(
   // x shear
   const xshear = Math.round(BOARD_WIDTH * alpha)
   const xedge = new Array(BOARD_HEIGHT).fill(0)
-  linepoints(xshear, 0, -xshear, BOARD_HEIGHT - 1).forEach((pt) => {
+  const xline = linepoints(xshear, 0, -xshear, BOARD_HEIGHT - 1)
+  xline.forEach((pt) => {
     if (pt.x < 0) {
       xedge[pt.y] = Math.min(xedge[pt.y], pt.x)
     } else {
@@ -52,7 +48,8 @@ export function boardpivot(
   // y shear
   const yshear = Math.round(BOARD_HEIGHT * beta)
   const yedge = new Array(BOARD_WIDTH).fill(0)
-  linepoints(0, yshear, BOARD_WIDTH - 1, -yshear).forEach((pt) => {
+  const yline = linepoints(0, yshear, BOARD_WIDTH - 1, -yshear)
+  yline.forEach((pt) => {
     if (pt.y < 0) {
       yedge[pt.x] = Math.min(yedge[pt.x], pt.y)
     } else {
@@ -62,7 +59,6 @@ export function boardpivot(
 
   // apply shears
   const transformset = [xedge, yedge, xedge]
-
   for (let i = 0; i < transformset.length; ++i) {
     const edge = transformset[i]
 
@@ -120,16 +116,15 @@ export function boardpivot(
     if (pivotterrain) {
       targetboard.terrain = [...tmpboard.terrain]
     }
+
     // reset all lookups
     delete tmpboard.named
     delete tmpboard.lookup
     delete targetboard.named
     delete targetboard.lookup
+
     // make sure lookup is created
     bookboardsetlookup(READ_CONTEXT.book, tmpboard)
     bookboardsetlookup(READ_CONTEXT.book, targetboard)
   }
-
-  // rebuild lookups
-  bookboardsetlookup(READ_CONTEXT.book, targetboard)
 }
