@@ -33,8 +33,11 @@ export function boardpivot(
   const alpha = -Math.tan(theta * 0.5)
   const beta = Math.sin(theta)
 
+  // calc shear amount
+  const xshear = Math.round(12.5 * alpha)
+  const yshear = Math.round(12.5 * beta)
+
   // x shear
-  const xshear = Math.round(BOARD_WIDTH * alpha)
   const xedge = new Array(BOARD_HEIGHT).fill(0)
   const xline = linepoints(xshear, 0, -xshear, BOARD_HEIGHT - 1)
   xline.forEach((pt) => {
@@ -46,7 +49,6 @@ export function boardpivot(
   })
 
   // y shear
-  const yshear = Math.round(BOARD_HEIGHT * beta)
   const yedge = new Array(BOARD_WIDTH).fill(0)
   const yline = linepoints(0, yshear, BOARD_WIDTH - 1, -yshear)
   yline.forEach((pt) => {
