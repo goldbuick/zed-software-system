@@ -1,10 +1,9 @@
+import { useDetectGPU } from '@react-three/drei'
 import { addEffect, addAfterEffect, useThree } from '@react-three/fiber'
 import { EffectComposer } from '@react-three/postprocessing'
-import { getGPUTier, TierResult } from 'detect-gpu'
 import { deviceType, primaryInput } from 'detect-it'
 import { useEffect, useState } from 'react'
 import Stats from 'stats.js'
-import { NearestFilter } from 'three'
 import {
   FORCE_CRT_OFF,
   FORCE_LOW_REZ,
@@ -12,11 +11,7 @@ import {
   RUNTIME,
   STATS_DEV,
 } from 'zss/config'
-import { registerreadplayer } from 'zss/device/register'
-import { SOFTWARE } from 'zss/device/session'
 import { CRTShape } from 'zss/gadget/fx/crt'
-import { useTexture } from 'zss/gadget/usetexture'
-import { doasync } from 'zss/mapping/func'
 
 import { useDeviceConfig } from './hooks'
 import { PanelLayout } from './panellayout'
@@ -51,13 +46,7 @@ export function Engine() {
   }, [stats])
 
   // detect gpu info
-  const [gputier, setgputier] = useState<TierResult>()
-  useEffect(() => {
-    doasync(SOFTWARE, registerreadplayer(), async () => {
-      const result = await getGPUTier()
-      setgputier(result)
-    })
-  }, [])
+  const gputier = useDetectGPU()
 
   // config DRAW_CHAR_SCALE
   const minrez = Math.min(viewwidth, viewheight)

@@ -235,6 +235,7 @@ export function memoryconverttogadgetlayers(
   }
 
   const control = createcachedcontrol(player, iiii++)
+
   // hack to keep only one control layer
   if (isprimary) {
     layers.push(control)
