@@ -49,6 +49,7 @@ enum BOARD_ELEMENT_KEYS {
   stopped,
   removed,
   party,
+  group,
 }
 
 // safe to serialize copy of boardelement

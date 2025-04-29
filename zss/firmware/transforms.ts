@@ -20,6 +20,7 @@ function readfilter(words: WORD[], index: number) {
     const [checkarg, ii] = readargs(words, i, [ARG_TYPE.MAYBE_NUMBER_OR_STRING])
     if (isstring(checkarg)) {
       targetset = NAME(checkarg)
+      // parse next set
       i = ii
     } else if (isnumber(checkarg)) {
       const [y1, x2, y2, iii] = readargs(words, ii, [
@@ -31,6 +32,7 @@ function readfilter(words: WORD[], index: number) {
       pt1.y = y1
       pt2.x = x2
       pt2.y = y2
+      // parse next set
       i = iii
     } else {
       break

@@ -1,8 +1,10 @@
 import { ispresent } from 'zss/mapping/types'
-import { createboard } from 'zss/memory/board'
+import { boardelementread, createboard } from 'zss/memory/board'
+import { boardelementisobject } from 'zss/memory/boardelement'
 import { bookreadcodepagewithtype } from 'zss/memory/book'
+import { bookboardsetlookup } from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import { BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
 
@@ -13,8 +15,13 @@ export function boardweave(
   p2: PT,
   targetset: string,
 ) {
+  if (!ispresent(READ_CONTEXT.book)) {
+    return
+  }
+  const book = READ_CONTEXT.book
+
   const targetcodepage = bookreadcodepagewithtype(
-    READ_CONTEXT.book,
+    book,
     CODE_PAGE_TYPE.BOARD,
     target,
   )
@@ -25,4 +32,61 @@ export function boardweave(
 
   // create tmp board for terrain
   const tmpboard = createboard()
+
+  // make sure lookup is created
+  bookboardsetlookup(book, targetboard)
+
+  // apply weave
+  for (let y = p1.y; y <= p2.y; ++y) {
+    for (let x = p1.x; x <= p2.x; ++x) {
+      let weaveobject = false
+      let weaveterrain = false
+      switch (targetset) {
+        case 'all':
+          weaveobject = true
+          weaveterrain = true
+          break
+        case 'object':
+          weaveobject = true
+          break
+        case 'terrain':
+          weaveterrain = true
+          break
+        default:
+          // todo: handle groups
+          break
+      }
+      const ox = x + dir.x
+      const oy = y + dir.y
+      if (weaveobject) {
+        const maybeobject = boardelementread(targetboard, { x, y })
+        if (
+          boardelementisobject(maybeobject) &&
+          ispresent(maybeobject?.x) &&
+          ispresent(maybeobject?.y)
+        ) {
+          maybeobject.x += dir.x
+          maybeobject.lx = maybeobject.x
+          maybeobject.y += dir.y
+          maybeobject.ly = maybeobject.y
+        }
+      }
+      if (weaveterrain) {
+        tmpboard.terrain[ox + oy * BOARD_WIDTH] =
+          targetboard.terrain[x + y * BOARD_WIDTH]
+      }
+    }
+  }
+
+  // replace terrain array
+  if (targetset === 'all' || targetset === 'terrain') {
+    targetboard.terrain = [...tmpboard.terrain]
+  }
+
+  // reset all lookups
+  delete targetboard.named
+  delete targetboard.lookup
+
+  // make sure lookup is created
+  bookboardsetlookup(book, targetboard)
 }

@@ -6,6 +6,7 @@ import { bookboardsetlookup } from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
+import { PT } from 'zss/words/types'
 
 export function boardpivot(
   target: string,
@@ -14,8 +15,13 @@ export function boardpivot(
   p2: PT,
   targetset: string,
 ) {
+  if (!ispresent(READ_CONTEXT.book)) {
+    return
+  }
+  const book = READ_CONTEXT.book
+
   const targetcodepage = bookreadcodepagewithtype(
-    READ_CONTEXT.book,
+    book,
     CODE_PAGE_TYPE.BOARD,
     target,
   )
@@ -30,8 +36,8 @@ export function boardpivot(
   const pivotterrain = targetset === 'all' || targetset === 'terrain'
 
   // make sure lookup is created
-  bookboardsetlookup(READ_CONTEXT.book, targetboard)
-  bookboardsetlookup(READ_CONTEXT.book, tmpboard)
+  bookboardsetlookup(book, targetboard)
+  bookboardsetlookup(book, tmpboard)
 
   const alpha = -Math.tan(theta * 0.5)
   const beta = Math.sin(theta)
@@ -87,6 +93,7 @@ export function boardpivot(
           if (ispresent(x) && ispresent(y)) {
             const skew = edge[y]
             targetboard.objects[id].x = (x + skew + BOARD_WIDTH) % BOARD_WIDTH
+            targetboard.objects[id].lx = targetboard.objects[id].x
           }
         }
       }
@@ -112,6 +119,7 @@ export function boardpivot(
           if (ispresent(x) && ispresent(y)) {
             const skew = edge[x]
             targetboard.objects[id].y = (y + skew + BOARD_HEIGHT) % BOARD_HEIGHT
+            targetboard.objects[id].ly = targetboard.objects[id].y
           }
         }
       }
@@ -129,7 +137,7 @@ export function boardpivot(
     delete targetboard.lookup
 
     // make sure lookup is created
-    bookboardsetlookup(READ_CONTEXT.book, tmpboard)
-    bookboardsetlookup(READ_CONTEXT.book, targetboard)
+    bookboardsetlookup(book, tmpboard)
+    bookboardsetlookup(book, targetboard)
   }
 }

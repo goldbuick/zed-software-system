@@ -1,41 +1,15 @@
-import { objectKeys } from 'ts-extras'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 import { MEMORY_LABEL, memoryensuresoftwarecodepage } from 'zss/memory'
-import { boardelementname } from 'zss/memory/boardelement'
 import { bookclearcodepage, bookreadcodepagewithtype } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
-import { BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
 
+import { boardcopy } from './boardcopy'
+
 function snapshotname(target: string) {
   return `zss_snapshot_${target}`
-}
-
-function noplayer(
-  objects: Record<string, BOARD_ELEMENT>,
-): Record<string, BOARD_ELEMENT> {
-  const ids = objectKeys(objects)
-  for (let i = 0; i < ids.length; ++i) {
-    const element = objects[ids[i]]
-    if (boardelementname(element) === 'player') {
-      delete objects[ids[i]]
-    }
-  }
-  return objects
-}
-
-function onlyplayers(
-  objects: Record<string, BOARD_ELEMENT>,
-): Record<string, BOARD_ELEMENT> {
-  const ids = objectKeys(objects)
-  for (let i = 0; i < ids.length; ++i) {
-    const element = objects[ids[i]]
-    if (boardelementname(element) !== 'player') {
-      delete objects[ids[i]]
-    }
-  }
-  return objects
 }
 
 export function boardsnapshot(
@@ -71,9 +45,10 @@ export function boardsnapshot(
     return
   }
 
-  // copy over terrain & objects
-  snapshotboard.terrain = deepcopy(targetboard.terrain)
-  snapshotboard.objects = noplayer(deepcopy(targetboard.objects))
+  // invoke copy
+  boardcopy(target, snapshotboard.id, p1, p2, targetset)
+
+  // return board
   return snapshotboard
 }
 
@@ -100,14 +75,9 @@ export function boardrevert(target: string, p1: PT, p2: PT, targetset: string) {
     return
   }
 
-  // copy over terrain & objects
-  targetboard.terrain = deepcopy(snapshotboard.terrain)
+  // invoke copy
+  boardcopy(snapshotboard.id, target, p1, p2, targetset)
 
-  // create merged list
-  targetboard.objects = {
-    // snapshot'd objects
-    ...noplayer(deepcopy(snapshotboard.objects)),
-    // players don't get messed with
-    ...onlyplayers(deepcopy(targetboard.objects)),
-  }
+  // return board
+  return snapshotboard
 }

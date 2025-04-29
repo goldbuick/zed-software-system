@@ -1,4 +1,5 @@
-import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { ispid } from 'zss/mapping/guid'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 import {
   boardelementread,
   boardgetterrain,
@@ -14,7 +15,7 @@ import {
 import { codepagereaddata } from 'zss/memory/codepage'
 import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { NAME, PT } from 'zss/words/types'
+import { PT } from 'zss/words/types'
 
 function emptyarea(book: BOOK, board: BOARD, p1: PT, p2: PT) {
   for (let y = p1.y; y <= p2.y; ++y) {
@@ -48,11 +49,15 @@ function emptyareaobject(book: BOOK, board: BOARD, p1: PT, p2: PT) {
   }
 }
 
-function mapelementcopy(maybenew: MAYBE<BOARD_ELEMENT>, from: BOARD_ELEMENT) {
+export function mapelementcopy(
+  maybenew: MAYBE<BOARD_ELEMENT>,
+  from: BOARD_ELEMENT,
+) {
   if (!ispresent(maybenew)) {
     return
   }
   // copy __some__ of the stats
+  maybenew.name = from.name
   maybenew.char = from.char
   maybenew.color = from.color
   maybenew.bg = from.bg
@@ -60,6 +65,8 @@ function mapelementcopy(maybenew: MAYBE<BOARD_ELEMENT>, from: BOARD_ELEMENT) {
   maybenew.p2 = from.p2
   maybenew.p3 = from.p3
   maybenew.code = from.code
+  maybenew.group = from.group
+  maybenew.party = from.party
   maybenew.cycle = from.cycle
   maybenew.light = from.light
   maybenew.stepx = from.stepx
@@ -67,24 +74,13 @@ function mapelementcopy(maybenew: MAYBE<BOARD_ELEMENT>, from: BOARD_ELEMENT) {
   maybenew.pushable = from.pushable
   maybenew.collision = from.collision
   maybenew.destructible = from.destructible
-}
-
-function maptargetset(word: any) {
-  if (isstring(word)) {
-    const maybetarget = NAME(word)
-    switch (maybetarget) {
-      case 'all':
-      case 'object':
-      case 'terrain':
-        return maybetarget
-    }
-  }
-  return undefined
+  maybenew.tickertext = from.tickertext
+  maybenew.tickertime = from.tickertime
 }
 
 export function boardcopy(
-  target: string,
   source: string,
+  target: string,
   p1: PT,
   p2: PT,
   targetset: string,
@@ -92,17 +88,10 @@ export function boardcopy(
   if (!ispresent(READ_CONTEXT.book)) {
     return
   }
-  const targetcodepage = bookreadcodepagewithtype(
-    READ_CONTEXT.book,
-    CODE_PAGE_TYPE.BOARD,
-    target,
-  )
-  const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
-  if (!ispresent(targetboard)) {
-    return
-  }
+  const book = READ_CONTEXT.book
+
   const sourcecodepage = bookreadcodepagewithtype(
-    READ_CONTEXT.book,
+    book,
     CODE_PAGE_TYPE.BOARD,
     source,
   )
@@ -111,30 +100,43 @@ export function boardcopy(
     return
   }
 
-  // make sure lookup is created
-  bookboardsetlookup(READ_CONTEXT.book, targetboard)
-  bookboardsetlookup(READ_CONTEXT.book, sourceboard)
+  const targetcodepage = bookreadcodepagewithtype(
+    book,
+    CODE_PAGE_TYPE.BOARD,
+    target,
+  )
+  const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
+  if (!ispresent(targetboard)) {
+    return
+  }
 
-  if (ispresent(sourceboard)) {
+  // make sure lookup is created
+  bookboardsetlookup(book, sourceboard)
+  bookboardsetlookup(book, targetboard)
+
+  if (ispresent(sourceboard && ispresent(targetboard))) {
+    // blank target region
     switch (targetset) {
-      default:
       case 'all':
-        emptyarea(READ_CONTEXT.book, targetboard, p1, p2)
+        emptyarea(book, targetboard, p1, p2)
         break
       case 'object':
-        emptyareaobject(READ_CONTEXT.book, targetboard, p1, p2)
+        emptyareaobject(book, targetboard, p1, p2)
         break
       case 'terrain':
-        emptyareaterrain(READ_CONTEXT.book, targetboard, p1, p2)
+        emptyareaterrain(book, targetboard, p1, p2)
+        break
+      default:
+        // todo: handle groups
         break
     }
+
     // copy new elements
     for (let y = p1.y; y <= p2.y; ++y) {
       for (let x = p1.x; x <= p2.x; ++x) {
         let copyobject = false
         let copyterrain = false
         switch (targetset) {
-          default:
           case 'all':
             copyobject = true
             copyterrain = true
@@ -145,28 +147,38 @@ export function boardcopy(
           case 'terrain':
             copyterrain = true
             break
+          default:
+            // todo: handle groups
+            break
         }
+
+        // read source element
         let terrain: MAYBE<BOARD_ELEMENT>
         let object = boardelementread(sourceboard, { x, y })
         if (boardelementisobject(object)) {
           terrain = boardgetterrain(sourceboard, x, y)
+          if (ispid(object?.id)) {
+            object = undefined
+          }
         } else {
           terrain = object
           object = undefined
         }
+
         if (ispresent(terrain) && copyterrain) {
           const el = bookboardwritefromkind(
-            READ_CONTEXT.book,
-            READ_CONTEXT.board,
+            book,
+            targetboard,
             [terrain.kind ?? ''],
             { x, y },
           )
           mapelementcopy(el, terrain)
         }
+
         if (ispresent(object) && copyobject) {
           const el = bookboardwritefromkind(
-            READ_CONTEXT.book,
-            READ_CONTEXT.board,
+            book,
+            targetboard,
             [object.kind ?? ''],
             { x, y },
           )
@@ -174,5 +186,10 @@ export function boardcopy(
         }
       }
     }
+
+    // rebuild lookups
+    delete targetboard.named
+    delete targetboard.lookup
+    bookboardsetlookup(book, targetboard)
   }
 }
