@@ -16,6 +16,7 @@ import {
 } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
 
 import Clipping from './clipping'

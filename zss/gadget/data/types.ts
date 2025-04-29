@@ -1,3 +1,4 @@
+import { BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR, WORD } from 'zss/words/types'
 
 export const FILE_BYTES_PER_CHAR = 14
@@ -184,8 +185,8 @@ export function createcontrol(player: string, index: number): LAYER_CONTROL {
 export function layersreadcontrol(layers: LAYER[]) {
   let width = 0
   let height = 0
-  let focusx = 0
-  let focusy = 0
+  let focusx = 727
+  let focusy = -1000
   let viewscale = 1
 
   layers.forEach((layer) => {
