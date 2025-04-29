@@ -11,6 +11,7 @@ import { LIFECYCLE_FIRMWARE } from './lifecycle'
 import { LOADER_FIRMWARE } from './loader'
 import { NETWORK_FIRMWARE } from './network'
 import { RUNTIME_FIRMWARE } from './runtime'
+import { TRANSFORM_FIRMWARE } from './transforms'
 
 export enum DRIVER_TYPE {
   ERROR,
@@ -31,6 +32,7 @@ const firmwares: Record<string, FIRMWARE> = {
   lifecycle: LIFECYCLE_FIRMWARE,
   loader: LOADER_FIRMWARE,
   network: NETWORK_FIRMWARE,
+  transform: TRANSFORM_FIRMWARE,
 }
 
 const standardlib = [
@@ -38,6 +40,7 @@ const standardlib = [
   'board',
   'display',
   'network',
+  'transform',
   'lifecycle',
   'element',
 ]

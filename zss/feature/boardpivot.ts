@@ -10,8 +10,9 @@ import { READ_CONTEXT } from 'zss/words/reader'
 export function boardpivot(
   target: string,
   theta: number,
-  pivotterrain: boolean,
-  pivotobject: boolean,
+  p1: PT,
+  p2: PT,
+  targetset: string,
 ) {
   const targetcodepage = bookreadcodepagewithtype(
     READ_CONTEXT.book,
@@ -25,6 +26,8 @@ export function boardpivot(
 
   // create tmp board for terrain
   const tmpboard = createboard()
+  const pivotobject = targetset === 'all' || targetset === 'object'
+  const pivotterrain = targetset === 'all' || targetset === 'terrain'
 
   // make sure lookup is created
   bookboardsetlookup(READ_CONTEXT.book, targetboard)
