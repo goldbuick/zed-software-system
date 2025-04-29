@@ -20,15 +20,16 @@ import { Dither } from './dither'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
 
-type FramedTilesProps = {
+type FramedLayerProps = {
   id: string
   z: number
+  from: 'under' | 'over' | 'layers'
 }
 
-export function FramedLayer({ id, z }: FramedTilesProps) {
+export function FramedLayer({ id, z, from }: FramedLayerProps) {
   const media = useMedia()
   const layer = useGadgetClient(
-    useShallow((state) => state.gadget.layers?.find((item) => item.id === id)),
+    useShallow((state) => state.gadget[from]?.find((item) => item.id === id)),
   )
 
   // special case for media elements

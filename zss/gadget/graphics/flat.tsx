@@ -1,3 +1,4 @@
+import { OrthographicCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
 import { useRef } from 'react'
@@ -201,9 +202,7 @@ export function FlatGraphics({ width, height }: FramedProps) {
     layers = [],
   } = useGadgetClient.getState().gadget
 
-  // handle graphics modes
-  const control = layersreadcontrol(layers)
-  console.info(control, over, under)
+  const flat = [...under, ...layers, ...over]
 
   return (
     <Clipping width={viewwidth} height={viewheight}>
@@ -212,8 +211,13 @@ export function FlatGraphics({ width, height }: FramedProps) {
           <group ref={zoomref}>
             <group ref={recenterref}>
               <TapeTerminalInspector />
-              {layers.map((layer, i) => (
-                <FramedLayer key={layer.id} id={layer.id} z={i * 2} />
+              {flat.map((layer, i) => (
+                <FramedLayer
+                  key={layer.id}
+                  from="layers"
+                  id={layer.id}
+                  z={i * 2}
+                />
               ))}
             </group>
           </group>

@@ -14,6 +14,7 @@ import { ispid } from 'zss/mapping/guid'
 import { NAME } from 'zss/words/types'
 
 import { FlatGraphics } from './graphics/flat'
+import { Mode7Graphics } from './graphics/mode7'
 import { Rect } from './rect'
 import { UserInput, UserInputMods } from './userinput'
 
@@ -41,19 +42,15 @@ type FramedProps = {
 export function Framed({ width, height }: FramedProps) {
   const player = registerreadplayer()
 
-  // re-render only when layer count changes
-  useGadgetClient((state) => state.gadget.over?.length ?? 0)
-  useGadgetClient((state) => state.gadget.under?.length ?? 0)
+  // re-render only when layer count changes or graphics
   useGadgetClient((state) => state.gadget.layers?.length ?? 0)
-  const {
-    over = [],
-    under = [],
-    layers = [],
-  } = useGadgetClient.getState().gadget
+  useGadgetClient(
+    (state) => layersreadcontrol(state.gadget.layers ?? []).graphics,
+  )
+  const { layers = [] } = useGadgetClient.getState().gadget
 
   // handle graphics modes
   const control = layersreadcontrol(layers)
-  console.info(control)
 
   return (
     <>
@@ -84,6 +81,9 @@ export function Framed({ width, height }: FramedProps) {
       />
       {control.graphics === 'flat' && (
         <FlatGraphics width={width} height={height} />
+      )}
+      {control.graphics === 'mode7' && (
+        <Mode7Graphics width={width} height={height} />
       )}
     </>
   )

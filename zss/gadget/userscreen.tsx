@@ -2,14 +2,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { OrthographicCamera } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
-import {
-  createContext,
-  PropsWithChildren,
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-} from 'react'
+import { createContext, PropsWithChildren, useContext, useEffect } from 'react'
 import { RUNTIME } from 'zss/config'
 
 import { useDeviceConfig } from './hooks'

@@ -816,14 +816,26 @@ export function memoryreadgadgetlayers(
   const underboard = bookreadboard(mainbook, playerboard.underboard ?? '')
 
   // compose layers
-  over.push(
-    ...memoryconverttogadgetlayers(player, 0, mainbook, overboard, false),
-  )
   under.push(
     ...memoryconverttogadgetlayers(player, 0, mainbook, underboard, false),
   )
   layers.push(
-    ...memoryconverttogadgetlayers(player, 0, mainbook, playerboard, true),
+    ...memoryconverttogadgetlayers(
+      player,
+      under.length,
+      mainbook,
+      playerboard,
+      true,
+    ),
+  )
+  over.push(
+    ...memoryconverttogadgetlayers(
+      player,
+      under.length + layers.length,
+      mainbook,
+      overboard,
+      false,
+    ),
   )
 
   return [over, under, layers]
