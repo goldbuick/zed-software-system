@@ -200,6 +200,9 @@ export function boardremix(
         continue
       }
 
+      // map useful stats
+      mapelementcopy(maybenew, sourceelement)
+
       // apply display
       if (dchar > 0) {
         maybenew.char = dchar
@@ -210,7 +213,6 @@ export function boardremix(
       if (dbg < NO_COLOR) {
         maybenew.bg = dbg
       }
-      mapelementcopy(maybenew, sourceelement)
 
       // sample if element category is object
       if (boardelementisobject(maybenew)) {
