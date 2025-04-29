@@ -28,10 +28,10 @@ function readfilter(words: WORD[], index: number) {
         ARG_TYPE.NUMBER,
         ARG_TYPE.NUMBER,
       ])
-      pt1.x = checkarg
-      pt1.y = y1
-      pt2.x = x2
-      pt2.y = y2
+      pt1.x = Math.min(checkarg, x2)
+      pt1.y = Math.min(y1, y2)
+      pt2.x = Math.max(checkarg, x2)
+      pt2.y = Math.max(y1, y2)
       // parse next set
       i = iii
     } else {

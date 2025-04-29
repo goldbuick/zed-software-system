@@ -34,8 +34,8 @@ export function memoryinspectbatchcommand(path: string, player: string) {
   }
   const batch = parsetarget(path)
   const [x1, y1, x2, y2] = batch.path.split(',').map((v) => parseFloat(v))
-  const p1: PT = { x: x1, y: y1 }
-  const p2: PT = { x: x2, y: y2 }
+  const p1: PT = { x: Math.min(x1, x2), y: Math.min(y1, y2) }
+  const p2: PT = { x: Math.max(x1, x2), y: Math.max(y1, y2) }
   switch (batch.target) {
     case 'copy':
       memoryinspectcopymenu(player, p1, p2)
@@ -89,6 +89,7 @@ export function memoryinspectbatchcommand(path: string, player: string) {
           memoryinspectremix.mirror,
           p1,
           p2,
+          'all',
         )
       }
       break
