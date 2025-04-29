@@ -1,20 +1,19 @@
-import { objectKeys } from 'ts-extras'
 // @ts-expect-error wow amazing
 import wfc from 'wavefunctioncollapse'
 import { pick } from 'zss/mapping/array'
-import { deepcopy, isnumber, ispresent } from 'zss/mapping/types'
-import { MEMORY_LABEL, memoryensuresoftwarecodepage } from 'zss/memory'
+import { isnumber, ispresent } from 'zss/mapping/types'
 import { listnamedelements } from 'zss/memory/atomics'
 import {
   boardelementread,
   boardgetterrain,
   boardsetterrain,
 } from 'zss/memory/board'
-import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
+import { boardelementisobject } from 'zss/memory/boardelement'
 import {
-  bookclearcodepage,
   bookelementkindread,
   bookreadcodepagewithtype,
+  bookreadobject,
+  bookreadterrain,
 } from 'zss/memory/book'
 import {
   bookboardsafedelete,
@@ -23,130 +22,38 @@ import {
 } from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
 import {
-  BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_SIZE,
   BOARD_WIDTH,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { CATEGORY, NAME, PT } from 'zss/words/types'
+import { NAME, PT } from 'zss/words/types'
 
-function snapshotname(target: string) {
-  return `zss_snapshot_${target}`
-}
-
-function noplayer(
-  objects: Record<string, BOARD_ELEMENT>,
-): Record<string, BOARD_ELEMENT> {
-  const ids = objectKeys(objects)
-  for (let i = 0; i < ids.length; ++i) {
-    const element = objects[ids[i]]
-    if (boardelementname(element) === 'player') {
-      delete objects[ids[i]]
-    }
-  }
-  return objects
-}
-
-function onlyplayers(
-  objects: Record<string, BOARD_ELEMENT>,
-): Record<string, BOARD_ELEMENT> {
-  const ids = objectKeys(objects)
-  for (let i = 0; i < ids.length; ++i) {
-    const element = objects[ids[i]]
-    if (boardelementname(element) !== 'player') {
-      delete objects[ids[i]]
-    }
-  }
-  return objects
-}
-
-export function boardremixsnapshot(target: string) {
-  const targetcodepage = bookreadcodepagewithtype(
-    READ_CONTEXT.book,
-    CODE_PAGE_TYPE.BOARD,
-    target,
-  )
-  const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
-  if (!ispresent(targetboard)) {
-    return
-  }
-  const name = snapshotname(targetboard.id)
-
-  // remove existing snapshot
-  bookclearcodepage(READ_CONTEXT.book, name)
-
-  // create snapshot board codepage
-  const snapshotcodepage = memoryensuresoftwarecodepage(
-    MEMORY_LABEL.CONTENT,
-    name,
-    CODE_PAGE_TYPE.BOARD,
-  )
-
-  // create stub board data
-  const snapshotboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(snapshotcodepage)
-  if (!ispresent(snapshotboard)) {
-    return
-  }
-
-  // copy over terrain & objects
-  snapshotboard.terrain = deepcopy(targetboard.terrain)
-  snapshotboard.objects = noplayer(deepcopy(targetboard.objects))
-  return snapshotboard
-}
-
-export function boardremixrestart(target: string) {
-  const targetcodepage = bookreadcodepagewithtype(
-    READ_CONTEXT.book,
-    CODE_PAGE_TYPE.BOARD,
-    target,
-  )
-  const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
-  if (!ispresent(targetboard)) {
-    return
-  }
-  const name = snapshotname(targetboard.id)
-
-  // read snapshot
-  const snapshotcodepage = bookreadcodepagewithtype(
-    READ_CONTEXT.book,
-    CODE_PAGE_TYPE.BOARD,
-    name,
-  )
-  const snapshotboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(snapshotcodepage)
-  if (!ispresent(snapshotboard)) {
-    return
-  }
-
-  // copy over terrain & objects
-  targetboard.terrain = deepcopy(snapshotboard.terrain)
-
-  // create merged list
-  targetboard.objects = {
-    // snapshot'd objects
-    ...noplayer(deepcopy(snapshotboard.objects)),
-    // players don't get messed with
-    ...onlyplayers(deepcopy(targetboard.objects)),
-  }
-}
+import { mapelementcopy } from './boardcopy'
 
 const MAX_ATTEMPT = 5
 export function boardremix(
   target: string,
   source: string,
-  patternsize = 2,
-  mirror = 1,
-  p1 = { x: 0, y: 0 },
-  p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 },
+  patternsize: number,
+  mirror: number,
+  p1: PT,
+  p2: PT,
+  targetset: string,
 ): boolean {
+  if (!ispresent(READ_CONTEXT.book)) {
+    return false
+  }
+  const book = READ_CONTEXT.book
+
   const targetcodepage = bookreadcodepagewithtype(
-    READ_CONTEXT.book,
+    book,
     CODE_PAGE_TYPE.BOARD,
     target,
   )
   const sourcecodepage = bookreadcodepagewithtype(
-    READ_CONTEXT.book,
+    book,
     CODE_PAGE_TYPE.BOARD,
     source,
   )
@@ -157,8 +64,8 @@ export function boardremix(
   }
 
   // make sure lookup is created
-  bookboardsetlookup(READ_CONTEXT.book, targetboard)
-  bookboardsetlookup(READ_CONTEXT.book, sourceboard)
+  bookboardsetlookup(book, targetboard)
+  bookboardsetlookup(book, sourceboard)
 
   // element map
   let akind = 0 // kind
@@ -181,7 +88,7 @@ export function boardremix(
       data[p++] = b
 
       // alpha
-      const kind = bookelementkindread(READ_CONTEXT.book, el)
+      const kind = bookelementkindread(book, el)
       const kindname = NAME(kind?.name ?? 'empty')
       const maybealpha = elementkindtoalphamap.get(kindname)
       if (isnumber(maybealpha)) {
@@ -195,12 +102,8 @@ export function boardremix(
     }
   }
 
-  const x1 = Math.min(p1.x, p2.x)
-  const y1 = Math.min(p1.y, p2.y)
-  const x2 = Math.max(p1.x, p2.x)
-  const y2 = Math.max(p1.y, p2.y)
-  const genwidth = x2 - x1 + 1
-  const genheight = y2 - y1 + 1
+  const genwidth = p2.x - p1.x + 1
+  const genheight = p2.y - p1.y + 1
 
   // generate new image
   const model = new wfc.OverlappingModel(
@@ -229,37 +132,71 @@ export function boardremix(
   // unpack bytes onto targetboard
   p = 0
   const remixdata: Uint8Array = model.graphics()
-  for (let y = y1; y <= y2; ++y) {
-    for (let x = x1; x <= x2; ++x) {
+  for (let y = p1.y; y <= p2.y; ++y) {
+    for (let x = p1.x; x <= p2.x; ++x) {
       const dpt: PT = { x, y }
       const dchar = remixdata[p++]
       const dcolor = remixdata[p++]
       const dbg = remixdata[p++]
       akind = remixdata[p++]
 
-      // make empty
-      const maybeobject = boardelementread(targetboard, dpt)
-      if (maybeobject?.category === CATEGORY.ISOBJECT) {
-        bookboardsafedelete(
-          READ_CONTEXT.book,
-          targetboard,
-          maybeobject,
-          READ_CONTEXT.timestamp,
-        )
+      // blank target region
+      switch (targetset) {
+        case 'all': {
+          const maybeobject = boardelementread(targetboard, { x, y })
+          if (boardelementisobject(maybeobject)) {
+            bookboardsafedelete(book, targetboard, maybeobject, book.timestamp)
+          }
+          boardsetterrain(targetboard, { x, y })
+          break
+        }
+        case 'object': {
+          const maybeobject = boardelementread(targetboard, { x, y })
+          if (boardelementisobject(maybeobject)) {
+            bookboardsafedelete(book, targetboard, maybeobject, book.timestamp)
+          }
+          break
+        }
+        case 'terrain':
+          boardsetterrain(targetboard, { x, y })
+          break
+        default:
+          // todo: handle groups
+          break
       }
-      boardsetterrain(targetboard, { x, y })
 
       // create new element
-      const maybekind = elementalphatokindmap.get(akind) ?? ''
+      let maybekind = elementalphatokindmap.get(akind) ?? ''
+      const maybeobject = bookreadobject(book, maybekind)
+      const maybeterrain = bookreadterrain(book, maybekind)
+      const sourceelement = maybeobject ?? maybeterrain
+      switch (targetset) {
+        case 'all':
+          break
+        case 'object':
+          if (ispresent(maybeterrain)) {
+            maybekind = ''
+          }
+          break
+        case 'terrain':
+          if (ispresent(maybeobject)) {
+            maybekind = ''
+          }
+          break
+        default:
+          // todo: support groups
+          break
+      }
+
       const maybenew = bookboardwritefromkind(
-        READ_CONTEXT.book,
+        book,
         targetboard,
         [maybekind],
         dpt,
       )
 
       // skip if we didn't create
-      if (!ispresent(maybenew)) {
+      if (!ispresent(maybenew) || !ispresent(sourceelement)) {
         continue
       }
 
@@ -273,6 +210,7 @@ export function boardremix(
       if (dbg < NO_COLOR) {
         maybenew.bg = dbg
       }
+      mapelementcopy(maybenew, sourceelement)
 
       // sample if element category is object
       if (boardelementisobject(maybenew)) {
@@ -286,17 +224,7 @@ export function boardremix(
             y,
           })
           // copy __some__ of the stats
-          maybenew.p1 = sample.p1
-          maybenew.p2 = sample.p2
-          maybenew.p3 = sample.p3
-          maybenew.code = sample.code
-          maybenew.cycle = sample.cycle
-          maybenew.light = sample.light
-          maybenew.stepx = sample.stepx
-          maybenew.stepy = sample.stepy
-          maybenew.pushable = sample.pushable
-          maybenew.collision = sample.collision
-          maybenew.destructible = sample.destructible
+          mapelementcopy(maybenew, sample)
         }
       }
     }
