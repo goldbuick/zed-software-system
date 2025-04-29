@@ -120,10 +120,15 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       return 0
     }
     const [dir, ii] = readargs(words, 0, [ARG_TYPE.DIR])
+    const delta = {
+      x: dir.x - (READ_CONTEXT.element?.x ?? 0),
+      y: dir.y - (READ_CONTEXT.element?.y ?? 0),
+    }
+
     const filter = readfilter(words, ii)
     boardweave(
       READ_CONTEXT.board.id,
-      dir,
+      delta,
       filter.pt1,
       filter.pt2,
       filter.targetset,

@@ -4,13 +4,13 @@ import { boardelementisobject } from 'zss/memory/boardelement'
 import { bookreadcodepagewithtype } from 'zss/memory/book'
 import { bookboardsetlookup } from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
-import { BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
 
 export function boardweave(
   target: string,
-  dir: PT,
+  delta: PT,
   p1: PT,
   p2: PT,
   targetset: string,
@@ -56,8 +56,8 @@ export function boardweave(
           // todo: handle groups
           break
       }
-      const ox = x + dir.x
-      const oy = y + dir.y
+      const tx = (x + delta.x + BOARD_WIDTH) % BOARD_WIDTH
+      const ty = (y + delta.y + BOARD_HEIGHT) % BOARD_HEIGHT
       if (weaveobject) {
         const maybeobject = boardelementread(targetboard, { x, y })
         if (
@@ -65,14 +65,14 @@ export function boardweave(
           ispresent(maybeobject?.x) &&
           ispresent(maybeobject?.y)
         ) {
-          maybeobject.x += dir.x
-          maybeobject.lx = maybeobject.x
-          maybeobject.y += dir.y
-          maybeobject.ly = maybeobject.y
+          maybeobject.x = tx
+          maybeobject.lx = tx
+          maybeobject.y = ty
+          maybeobject.ly = ty
         }
       }
       if (weaveterrain) {
-        tmpboard.terrain[ox + oy * BOARD_WIDTH] =
+        tmpboard.terrain[tx + ty * BOARD_WIDTH] =
           targetboard.terrain[x + y * BOARD_WIDTH]
       }
     }
