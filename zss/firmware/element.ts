@@ -284,6 +284,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
           READ_CONTEXT.board.graphics = maptostring(value)
         }
         break
+      case 'facing':
+        if (ispresent(READ_CONTEXT.board)) {
+          READ_CONTEXT.board.facing = maptonumber(value, 0)
+        }
+        break
       // common stats
       case 'exitnorth':
         if (ispresent(READ_CONTEXT.board)) {

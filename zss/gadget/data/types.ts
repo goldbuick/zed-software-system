@@ -1,4 +1,3 @@
-import { BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR, WORD } from 'zss/words/types'
 
 export const FILE_BYTES_PER_CHAR = 14
@@ -82,6 +81,8 @@ export type LAYER_CONTROL = {
   focusy: number
   focusid: string
   viewscale: number
+  graphics: string
+  facing: number
 }
 
 export type LAYER =
@@ -179,6 +180,8 @@ export function createcontrol(player: string, index: number): LAYER_CONTROL {
     focusy: 0,
     focusid: player,
     viewscale: 1.5,
+    graphics: 'flat',
+    facing: 0,
   }
 }
 
@@ -188,6 +191,8 @@ export function layersreadcontrol(layers: LAYER[]) {
   let focusx = 727
   let focusy = -1000
   let viewscale = 1
+  let graphics = 'flat'
+  let facing = 0
 
   layers.forEach((layer) => {
     switch (layer.type) {
@@ -203,11 +208,13 @@ export function layersreadcontrol(layers: LAYER[]) {
         focusx = layer.focusx
         focusy = layer.focusy
         viewscale = layer.viewscale
+        graphics = layer.graphics
+        facing = layer.facing
         break
     }
   })
 
-  return { width, height, focusx, focusy, viewscale }
+  return { width, height, focusx, focusy, viewscale, graphics, facing }
 }
 
 export type PANEL_ITEM = WORD | WORD[]
@@ -221,6 +228,8 @@ export function paneladdress(chip: string, target: string) {
 
 export type GADGET_STATE = {
   id: string
+  over?: LAYER[]
+  under?: LAYER[]
   layers?: LAYER[]
   scroll?: PANEL_ITEM[]
   sidebar?: PANEL_ITEM[]

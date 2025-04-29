@@ -252,6 +252,19 @@ export function memoryconverttogadgetlayers(
           break
       }
     }
+    if (isstring(board.graphics)) {
+      const graphics = NAME(board.graphics)
+      switch (graphics) {
+        case 'mode7':
+        case 'firstperson':
+          control.graphics = graphics
+          break
+        default:
+        case 'flat':
+          control.graphics = 'flat'
+          break
+      }
+    }
   }
 
   for (let i = 0; i < board.terrain.length; ++i) {

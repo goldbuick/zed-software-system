@@ -67,6 +67,7 @@ export type BOARD = {
   camera?: string
   // control graphics mode
   graphics?: string
+  facing?: number
   // common stats
   exitnorth?: string
   exitsouth?: string

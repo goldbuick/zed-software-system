@@ -58,7 +58,10 @@ const gadgetserver = createdevice(
           const gadget = gadgetstate(player)
 
           // update gadget layers from player's current board
-          gadget.layers = memoryreadgadgetlayers(player)
+          const [over, under, layers] = memoryreadgadgetlayers(player)
+          gadget.over = over
+          gadget.under = under
+          gadget.layers = layers
 
           // write patch
           const previous = gadgetsync[player] ?? {}

@@ -798,37 +798,33 @@ export function memoryrun(address: string) {
   os.once(id, DRIVER_TYPE.RUNTIME, itemname, itemcode)
 }
 
-export function memoryreadgadgetlayers(player: string): LAYER[] {
+export function memoryreadgadgetlayers(
+  player: string,
+): [LAYER[], LAYER[], LAYER[]] {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const playerboard = bookplayerreadboard(mainbook, player)
 
+  const over: LAYER[] = []
+  const under: LAYER[] = []
   const layers: LAYER[] = []
   if (!ispresent(mainbook) || !ispresent(playerboard)) {
-    return layers
+    return [over, under, layers]
   }
 
-  // read over board
+  // read over / under
   const overboard = bookreadboard(mainbook, playerboard.overboard ?? '')
-
-  // read under board
   const underboard = bookreadboard(mainbook, playerboard.underboard ?? '')
 
   // compose layers
-  const boards = [underboard, playerboard, overboard]
+  over.push(
+    ...memoryconverttogadgetlayers(player, 0, mainbook, overboard, false),
+  )
+  under.push(
+    ...memoryconverttogadgetlayers(player, 0, mainbook, underboard, false),
+  )
+  layers.push(
+    ...memoryconverttogadgetlayers(player, 0, mainbook, playerboard, true),
+  )
 
-  let i = 0
-  for (let b = 0; b < boards.length; ++b) {
-    const board = boards[b]
-    const view = memoryconverttogadgetlayers(
-      player,
-      i,
-      mainbook,
-      board,
-      board === playerboard,
-    )
-    i += view.length
-    layers.push(...view)
-  }
-
-  return layers
+  return [over, under, layers]
 }
