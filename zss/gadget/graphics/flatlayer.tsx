@@ -24,10 +24,9 @@ type FlatLayerProps = {
   id: string
   z: number
   from: 'under' | 'over' | 'layers'
-  fliptexture?: boolean
 }
 
-export function FlatLayer({ id, z, from, fliptexture = true }: FlatLayerProps) {
+export function FlatLayer({ id, z, from }: FlatLayerProps) {
   const media = useMedia()
   const layer = useGadgetClient(
     useShallow((state) => state.gadget[from]?.find((item) => item.id === id)),

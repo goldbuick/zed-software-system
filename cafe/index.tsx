@@ -1,8 +1,10 @@
 import { events, Canvas } from '@react-three/fiber'
-import { createRoot } from 'react-dom/client'
+import debounce from 'debounce'
+import { createRoot, Root } from 'react-dom/client'
 import { Intersection, Plane, Vector3 } from 'three'
 import unmuteAudio from 'unmute-ios-audio'
-import { ispresent } from 'zss/mapping/types'
+import { makeeven } from 'zss/mapping/number'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { App } from './app'
 
@@ -64,25 +66,44 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   },
 })
 
-const frame = document.getElementById('frame')
-if (ispresent(frame)) {
-  createRoot(frame).render(
-    <Canvas
-      flat
-      linear
-      shadows={false}
-      events={eventManagerFactory}
-      gl={{
-        alpha: true,
-        stencil: false,
-        antialias: false,
-        preserveDrawingBuffer: true,
-      }}
-      onCreated={({ gl }) => {
-        gl.localClippingEnabled = true
-      }}
-    >
-      <App />
-    </Canvas>,
-  )
+let root: MAYBE<Root>
+
+function applyconfig(innerwidth: number, innerheight: number) {
+  const frame = document.getElementById('frame')
+  if (!ispresent(frame)) {
+    return
+  }
+  const canvaswidth = makeeven(innerwidth)
+  const canvasheight = makeeven(innerheight)
+  frame.style.width = `${canvaswidth}px`
+  frame.style.height = `${canvasheight}px`
+  if (!ispresent(root)) {
+    root = createRoot(frame)
+    root.render(
+      <Canvas
+        flat
+        linear
+        shadows={false}
+        events={eventManagerFactory}
+        gl={{
+          alpha: true,
+          stencil: false,
+          antialias: false,
+          preserveDrawingBuffer: true,
+        }}
+        onCreated={({ gl }) => {
+          gl.localClippingEnabled = true
+        }}
+      >
+        <App />
+      </Canvas>,
+    )
+  }
 }
+
+const handleresize = debounce(applyconfig, 256)
+window.addEventListener('resize', () =>
+  handleresize(window.innerWidth, window.innerHeight),
+)
+
+handleresize(window.innerWidth, window.innerHeight)

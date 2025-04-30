@@ -100,7 +100,11 @@ export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Sprites sprites={[...layer.sprites]} />
+          <Sprites
+            sprites={[...layer.sprites]}
+            withbillboards={true}
+            fliptexture={false}
+          />
         </group>
       )
     }

@@ -811,6 +811,9 @@ export function memoryreadgadgetlayers(
     return [over, under, layers]
   }
 
+  // read graphics mode
+  const graphics = playerboard.graphics ?? 'flat'
+
   // read over / under
   const overboard = bookreadboard(mainbook, playerboard.overboard ?? '')
   const underboard = bookreadboard(mainbook, playerboard.underboard ?? '')
@@ -822,7 +825,7 @@ export function memoryreadgadgetlayers(
   layers.push(
     ...memoryconverttogadgetlayers(
       player,
-      under.length,
+      graphics === 'flat' ? under.length : 0,
       mainbook,
       playerboard,
       true,

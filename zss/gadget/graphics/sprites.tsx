@@ -12,6 +12,7 @@ import {
   SPRITE,
 } from 'zss/gadget/data/types'
 import { time } from 'zss/gadget/display/anim'
+import { createBillboardsMaterial } from 'zss/gadget/display/billboards'
 import { createSpritesMaterial } from 'zss/gadget/display/sprites'
 import { ispresent } from 'zss/mapping/types'
 
@@ -23,19 +24,26 @@ type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 type SpritesProps = {
   sprites: SPRITE[]
   fliptexture?: boolean
+  withbillboards?: boolean
 }
 
 const SPRITE_COUNT = 2048
 
-export function Sprites({ sprites, fliptexture = true }: SpritesProps) {
+export function Sprites({
+  sprites,
+  fliptexture = true,
+  withbillboards = false,
+}: SpritesProps) {
   const palette = useMedia((state) => state.palettedata)
   const charset = useMedia((state) => state.charsetdata)
   const altcharset = useMedia((state) => state.altcharsetdata)
+  const material = useMemo(() => {
+    return withbillboards ? createBillboardsMaterial() : createSpritesMaterial()
+  }, [withbillboards])
 
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
   const spritepool = useRef<SPRITE[]>([])
-  const [material] = useState(() => createSpritesMaterial())
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charset?.image ?? {}
 
@@ -246,6 +254,7 @@ export function Sprites({ sprites, fliptexture = true }: SpritesProps) {
     imageHeight,
     fliptexture,
     clippingPlanes,
+    withbillboards,
   ])
 
   return (

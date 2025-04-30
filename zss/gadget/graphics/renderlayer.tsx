@@ -1,13 +1,21 @@
+import { RenderTexture } from '@react-three/drei'
+import { ReactNode } from 'react'
+
 type RenderLayerProps = {
   viewwidth: number
-  viewhight: number
+  viewheight: number
+  children?: ReactNode
 }
 
-export function RenderLayer({ viewwidth, viewheight }: RenderLayerProps) {
+export function RenderLayer({
+  viewwidth,
+  viewheight,
+  children,
+}: RenderLayerProps) {
   return (
-    <mesh position={[viewwidth, 0, 0]}>
+    <mesh position={[viewwidth * 0.5, viewheight * 0.5, 0]}>
       <planeGeometry args={[viewwidth, viewheight]} />
-      <meshBasicMaterial>
+      <meshBasicMaterial transparent>
         <RenderTexture
           attach="map"
           width={viewwidth}
@@ -16,22 +24,7 @@ export function RenderLayer({ viewwidth, viewheight }: RenderLayerProps) {
           stencilBuffer={false}
           generateMipmaps={false}
         >
-          <PerspectiveCamera
-            makeDefault
-            near={1}
-            far={2000}
-            position={[0, 0, 1000]}
-          />
-          <group position={[viewwidth * -0.5, viewheight * -0.5, 0]}>
-            {layers.map((layer, i) => (
-              <FlatLayer
-                key={layer.id}
-                id={layer.id}
-                from="layers"
-                z={1 + i * 2}
-              />
-            ))}
-          </group>
+          {children}
         </RenderTexture>
       </meshBasicMaterial>
     </mesh>

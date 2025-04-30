@@ -316,7 +316,7 @@ export function memoryconverttogadgetlayers(
         not blocked angles, and we can create 
         fade out based on distance, going through an object
         */
-        const radius = clamp(Math.round(display.light), 1, 10)
+        const radius = clamp(Math.round(display.light), 1, BOARD_WIDTH)
         const hradius = radius * 0.5
         const center = boardelementindex(board, sprite)
         const step = 1 / hradius
