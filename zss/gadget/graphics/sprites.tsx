@@ -22,11 +22,12 @@ type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
 type SpritesProps = {
   sprites: SPRITE[]
+  fliptexture?: boolean
 }
 
 const SPRITE_COUNT = 2048
 
-export function Sprites({ sprites }: SpritesProps) {
+export function Sprites({ sprites, fliptexture = true }: SpritesProps) {
   const palette = useMedia((state) => state.palettedata)
   const charset = useMedia((state) => state.charsetdata)
   const altcharset = useMedia((state) => state.altcharsetdata)
@@ -232,6 +233,7 @@ export function Sprites({ sprites }: SpritesProps) {
     material.uniforms.rows.value = imageRows - 1
     material.uniforms.step.value.x = 1 / imageCols
     material.uniforms.step.value.y = 1 / imageRows
+    material.uniforms.flip.value = fliptexture
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
@@ -242,6 +244,7 @@ export function Sprites({ sprites }: SpritesProps) {
     material,
     imageWidth,
     imageHeight,
+    fliptexture,
     clippingPlanes,
   ])
 

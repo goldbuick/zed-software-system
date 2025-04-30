@@ -41,8 +41,10 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     // framing
     const cx = viewwidth * 0.5 - drawwidth * 0.5
     const cy = viewheight * 0.5 - drawheight * 0.5
-    overref.current.position.set(cx, cy, 0)
-    underref.current.position.set(cx, cy, 0)
+    overref.current.position.x = cx
+    overref.current.position.y = cy
+    underref.current.position.x = cx
+    underref.current.position.y = cy
   })
 
   // re-render only when layer count changes
@@ -55,8 +57,8 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     layers = [],
   } = useGadgetClient.getState().gadget
 
-  const layersindex = under.length * 2 + 1
-  const overindex = layersindex + 1
+  const layersindex = under.length * 2 + 2
+  const overindex = layersindex + 2
   console.info({ layersindex, overindex })
 
   // handle graphics modes
@@ -70,7 +72,7 @@ export function Mode7Graphics({ width, height }: FramedProps) {
             <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
           ))}
         </group>
-        <mesh position={[viewwidth * 0.5, viewheight * 0.5, layersindex]}>
+        <mesh position={[viewwidth, 0, 0]}>
           <planeGeometry args={[viewwidth, viewheight]} />
           <meshBasicMaterial>
             <RenderTexture
@@ -93,7 +95,7 @@ export function Mode7Graphics({ width, height }: FramedProps) {
                     key={layer.id}
                     id={layer.id}
                     from="layers"
-                    z={1 + i * 3}
+                    z={1 + i * 2}
                   />
                 ))}
               </group>

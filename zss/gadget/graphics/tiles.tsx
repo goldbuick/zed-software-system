@@ -17,9 +17,17 @@ type TilesProps = {
   char: number[]
   color: number[]
   bg: number[]
+  fliptexture?: boolean
 }
 
-export function Tiles({ width, height, char, color, bg }: TilesProps) {
+export function Tiles({
+  width,
+  height,
+  char,
+  color,
+  bg,
+  fliptexture = true,
+}: TilesProps) {
   const palette = useMedia((state) => state.palettedata)
   const charset = useMedia((state) => state.charsetdata)
   const altcharset = useMedia((state) => state.altcharsetdata)
@@ -66,6 +74,7 @@ export function Tiles({ width, height, char, color, bg }: TilesProps) {
     material.uniforms.size.value.y = 1 / height
     material.uniforms.step.value.x = 1 / Math.round(imageWidth / CHAR_WIDTH)
     material.uniforms.step.value.y = 1 / Math.round(imageHeight / CHAR_HEIGHT)
+    material.uniforms.flip.value = fliptexture
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
@@ -78,6 +87,7 @@ export function Tiles({ width, height, char, color, bg }: TilesProps) {
     height,
     imageWidth,
     imageHeight,
+    fliptexture,
     clippingPlanes,
   ])
 
