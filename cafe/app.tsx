@@ -1,15 +1,3 @@
-import { extend } from '@react-three/fiber'
-import {
-  BufferGeometry,
-  Group,
-  Mesh,
-  MeshBasicMaterial,
-  MeshStandardMaterial,
-  OrthographicCamera,
-  PlaneGeometry,
-  Points,
-  VideoTexture,
-} from 'three'
 import { vm_loader } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
@@ -17,18 +5,6 @@ import { enableaudio } from 'zss/device/synth'
 import { Engine } from 'zss/gadget/engine'
 import { ispresent } from 'zss/mapping/types'
 import 'zss/platform'
-
-extend({
-  BufferGeometry,
-  Group,
-  Mesh,
-  MeshBasicMaterial,
-  MeshStandardMaterial,
-  OrthographicCamera,
-  PlaneGeometry,
-  Points,
-  VideoTexture,
-})
 
 document.addEventListener('keydown', () => {
   enableaudio()

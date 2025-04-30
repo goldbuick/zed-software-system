@@ -20,13 +20,13 @@ import { Dither } from './dither'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
 
-type FramedLayerProps = {
+type FlatLayerProps = {
   id: string
   z: number
   from: 'under' | 'over' | 'layers'
 }
 
-export function FramedLayer({ id, z, from }: FramedLayerProps) {
+export function FlatLayer({ id, z, from }: FlatLayerProps) {
   const media = useMedia()
   const layer = useGadgetClient(
     useShallow((state) => state.gadget[from]?.find((item) => item.id === id)),

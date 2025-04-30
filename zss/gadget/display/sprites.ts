@@ -1,4 +1,4 @@
-import { ShaderMaterial, Uniform, Vector2 } from 'three'
+import { DoubleSide, ShaderMaterial, Uniform, Vector2 } from 'three'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
@@ -17,6 +17,7 @@ const charset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
 const spritesMaterial = new ShaderMaterial({
   // settings
   transparent: false,
+  side: DoubleSide,
   uniforms: {
     time,
     interval,
@@ -30,6 +31,7 @@ const spritesMaterial = new ShaderMaterial({
     },
     rows: new Uniform(1),
     step: new Uniform(new Vector2()),
+    flip: new Uniform(true),
   },
   // vertex shader
   vertexShader: `
@@ -133,6 +135,7 @@ const spritesMaterial = new ShaderMaterial({
     uniform float rows;
     uniform vec2 step;
     uniform vec2 pointSize;
+    uniform bool flip;
 
     varying float vVisible;
     varying vec2 vCharData;
@@ -151,7 +154,11 @@ const spritesMaterial = new ShaderMaterial({
 
       vec2 lookup = vec2(vCharData.x, vCharData.y);
 
-      vec2 idx = vec2(px, 1.0 - gl_PointCoord.y);
+      float py = gl_PointCoord.y;
+      if (flip) {
+        py = 1.0 - py;
+      }
+      vec2 idx = vec2(px, py);
       vec2 char = vec2(lookup.x * step.x, (rows - lookup.y) * step.y);
       vec2 uv = idx * step + char;
 

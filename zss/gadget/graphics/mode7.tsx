@@ -14,8 +14,8 @@ import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 import Clipping from '../clipping'
-import { FramedLayer } from '../framedlayer/component'
-import { TapeTerminalInspector } from '../inspector/component'
+
+import { FlatLayer } from './flatlayer'
 
 type FramedProps = {
   width: number
@@ -67,7 +67,7 @@ export function Mode7Graphics({ width, height }: FramedProps) {
       <Clipping width={viewwidth} height={viewheight}>
         <group ref={underref}>
           {under.map((layer, i) => (
-            <FramedLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
+            <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
           ))}
         </group>
         <mesh position={[viewwidth * 0.5, viewheight * 0.5, layersindex]}>
@@ -85,12 +85,11 @@ export function Mode7Graphics({ width, height }: FramedProps) {
                 makeDefault
                 near={1}
                 far={2000}
-                rotation={[-Math.PI * 0.3, 0, 0]}
-                position={[0, 400, 300]}
+                position={[0, 0, 1000]}
               />
               <group position={[viewwidth * -0.5, viewheight * -0.5, 0]}>
                 {layers.map((layer, i) => (
-                  <FramedLayer
+                  <FlatLayer
                     key={layer.id}
                     id={layer.id}
                     from="layers"
@@ -103,7 +102,7 @@ export function Mode7Graphics({ width, height }: FramedProps) {
         </mesh>
         <group ref={overref} position-z={overindex}>
           {over.map((layer, i) => (
-            <FramedLayer key={layer.id} from="over" id={layer.id} z={i * 2} />
+            <FlatLayer key={layer.id} from="over" id={layer.id} z={i * 2} />
           ))}
         </group>
       </Clipping>

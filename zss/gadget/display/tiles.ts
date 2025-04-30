@@ -2,6 +2,7 @@ import {
   BufferAttribute,
   BufferGeometry,
   DataTexture,
+  DoubleSide,
   RGBAIntegerFormat,
   ShaderMaterial,
   Uniform,
@@ -113,6 +114,7 @@ const charset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
 const tilemapMaterial = new ShaderMaterial({
   // settings
   transparent: false,
+  side: DoubleSide,
   uniforms: {
     time,
     interval,
@@ -122,6 +124,7 @@ const tilemapMaterial = new ShaderMaterial({
     data: new Uniform(null),
     size: { value: new Vector2() },
     step: { value: new Vector2() },
+    flip: new Uniform(true),
   },
   // vertex shader
   vertexShader: `
@@ -146,6 +149,7 @@ const tilemapMaterial = new ShaderMaterial({
     uniform vec3 palette[16];
     uniform vec2 size;
     uniform vec2 step;
+    uniform bool flip;
     varying vec2 vUv;
 
     void main() {
@@ -161,7 +165,9 @@ const tilemapMaterial = new ShaderMaterial({
 
       uv.x += step.x * float(tiledata.x);
       uv.y += step.y * float(tiledata.y);
-      uv.y = 1.0 - uv.y;
+      if (flip) {
+        uv.y = 1.0 - uv.y;
+      }
 
       bool useAlt = mod(time, interval * 2.0) > interval;
       vec3 blip = useAlt ? texture(alt, uv).rgb : texture(map, uv).rgb;

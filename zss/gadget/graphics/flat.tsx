@@ -1,4 +1,3 @@
-import { OrthographicCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
 import { useRef } from 'react'
@@ -9,8 +8,9 @@ import { layersreadcontrol } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
 
 import Clipping from '../clipping'
-import { FramedLayer } from '../framedlayer/component'
 import { TapeTerminalInspector } from '../inspector/component'
+
+import { FlatLayer } from './flatlayer'
 
 type FramedProps = {
   width: number
@@ -210,7 +210,7 @@ export function FlatGraphics({ width, height }: FramedProps) {
             <group ref={recenterref}>
               <TapeTerminalInspector />
               {under.map((layer, i) => (
-                <FramedLayer
+                <FlatLayer
                   key={layer.id}
                   from="under"
                   id={layer.id}
@@ -218,7 +218,7 @@ export function FlatGraphics({ width, height }: FramedProps) {
                 />
               ))}
               {layers.map((layer, i) => (
-                <FramedLayer
+                <FlatLayer
                   key={layer.id}
                   from="layers"
                   id={layer.id}
@@ -226,7 +226,7 @@ export function FlatGraphics({ width, height }: FramedProps) {
                 />
               ))}
               {over.map((layer, i) => (
-                <FramedLayer
+                <FlatLayer
                   key={layer.id}
                   from="over"
                   id={layer.id}

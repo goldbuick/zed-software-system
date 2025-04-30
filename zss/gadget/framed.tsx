@@ -15,6 +15,7 @@ import { NAME } from 'zss/words/types'
 
 import { FlatGraphics } from './graphics/flat'
 import { Mode7Graphics } from './graphics/mode7'
+// TODO: isometric, firstperson, xr/vr/lookingglass
 import { Rect } from './rect'
 import { UserInput, UserInputMods } from './userinput'
 
