@@ -202,8 +202,6 @@ export function FlatGraphics({ width, height }: FramedProps) {
     layers = [],
   } = useGadgetClient.getState().gadget
 
-  const flat = [...under, ...layers, ...over]
-
   return (
     <Clipping width={viewwidth} height={viewheight}>
       <group ref={cornerref}>
@@ -211,12 +209,28 @@ export function FlatGraphics({ width, height }: FramedProps) {
           <group ref={zoomref}>
             <group ref={recenterref}>
               <TapeTerminalInspector />
-              {flat.map((layer, i) => (
+              {under.map((layer, i) => (
+                <FramedLayer
+                  key={layer.id}
+                  from="under"
+                  id={layer.id}
+                  z={i * 2}
+                />
+              ))}
+              {layers.map((layer, i) => (
                 <FramedLayer
                   key={layer.id}
                   from="layers"
                   id={layer.id}
-                  z={i * 2}
+                  z={under.length + i * 2}
+                />
+              ))}
+              {over.map((layer, i) => (
+                <FramedLayer
+                  key={layer.id}
+                  from="over"
+                  id={layer.id}
+                  z={under.length + layers.length + i * 2}
                 />
               ))}
             </group>

@@ -1,10 +1,8 @@
 import { events, Canvas } from '@react-three/fiber'
-import debounce from 'debounce'
 import { createRoot } from 'react-dom/client'
 import { Intersection, Plane, Vector3 } from 'three'
 import unmuteAudio from 'unmute-ios-audio'
-import { makeeven } from 'zss/mapping/number'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { ispresent } from 'zss/mapping/types'
 
 import { App } from './app'
 
@@ -66,49 +64,6 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   },
 })
 
-// // Create a react root
-// const engine = document.querySelector('canvas')
-// if (ispresent(engine)) {
-//   const root = createRoot(engine)
-
-//   // Configure the root, inject events optionally, set camera, etc
-//   const applyconfig = (maybewidth: number, maybeheight: number) => {
-//     const width = makeeven(maybewidth)
-//     const height = makeeven(maybeheight)
-//     root.configure({
-//       ...deepcopy({
-//         flat: true,
-//         linear: true,
-//         shadows: false,
-//         gl: {
-//           alpha: false,
-//           stencil: false,
-//           antialias: false,
-//           powerPreference: 'low-power',
-//           preserveDrawingBuffer: true,
-//         },
-//       }),
-//       events: eventManagerFactory,
-//       size: { width, height, top: 0, left: 0 },
-//       onCreated({ gl }) {
-//         gl.localClippingEnabled = true
-//       },
-//     })
-//   }
-
-//   const handleresize = debounce(applyconfig, 256)
-
-//   window.addEventListener('resize', () => {
-//     handleresize(window.innerWidth, window.innerHeight)
-//   })
-
-//   // init
-//   applyconfig(window.innerWidth, window.innerHeight)
-
-//   // Render entry point
-//   root.render(<App />)
-// }
-
 const frame = document.getElementById('frame')
 if (ispresent(frame)) {
   createRoot(frame).render(
@@ -118,10 +73,9 @@ if (ispresent(frame)) {
       shadows={false}
       events={eventManagerFactory}
       gl={{
-        alpha: false,
+        alpha: true,
         stencil: false,
         antialias: false,
-        powerPreference: 'low-power',
         preserveDrawingBuffer: true,
       }}
       onCreated={({ gl }) => {

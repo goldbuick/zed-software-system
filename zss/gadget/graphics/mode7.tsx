@@ -1,4 +1,8 @@
-import { Hud, OrthographicCamera } from '@react-three/drei'
+import {
+  OrthographicCamera,
+  PerspectiveCamera,
+  RenderTexture,
+} from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { damp, damp3 } from 'maath/easing'
 import { useRef } from 'react'
@@ -51,19 +55,12 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     layers = [],
   } = useGadgetClient.getState().gadget
 
+  const layersindex = under.length * 2 + 1
+  const overindex = layersindex + 1
+  console.info({ layersindex, overindex })
+
   // handle graphics modes
   const control = layersreadcontrol(layers)
-
-  // TODO, scale to fill for over / under boards
-
-  /*
-                    <mesh>
-                      <planeGeometry args={[mediawidth, mediawidth / r]} />
-                      <meshBasicMaterial side={DoubleSide}>
-                        <videoTexture attach="map" args={[video]} />
-                      </meshBasicMaterial>
-                    </mesh>
-  */
 
   return (
     <>
@@ -73,21 +70,40 @@ export function Mode7Graphics({ width, height }: FramedProps) {
             <FramedLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
           ))}
         </group>
-      </Clipping>
-      {/* <Clipping width={viewwidth} height={viewheight}>
-        {layers.map((layer, i) => (
-          <FramedLayer key={layer.id} id={layer.id} z={under.length + i * 2} />
-        ))}
-      </Clipping> */}
-      <Clipping width={viewwidth} height={viewheight}>
-        <group ref={overref}>
+        <mesh position={[viewwidth * 0.5, viewheight * 0.5, layersindex]}>
+          <planeGeometry args={[viewwidth, viewheight]} />
+          <meshBasicMaterial>
+            <RenderTexture
+              attach="map"
+              width={viewwidth}
+              height={viewheight}
+              depthBuffer={false}
+              stencilBuffer={false}
+              generateMipmaps={false}
+            >
+              <PerspectiveCamera
+                makeDefault
+                near={1}
+                far={2000}
+                rotation={[-Math.PI * 0.3, 0, 0]}
+                position={[0, 400, 300]}
+              />
+              <group position={[viewwidth * -0.5, viewheight * -0.5, 0]}>
+                {layers.map((layer, i) => (
+                  <FramedLayer
+                    key={layer.id}
+                    id={layer.id}
+                    from="layers"
+                    z={1 + i * 3}
+                  />
+                ))}
+              </group>
+            </RenderTexture>
+          </meshBasicMaterial>
+        </mesh>
+        <group ref={overref} position-z={overindex}>
           {over.map((layer, i) => (
-            <FramedLayer
-              key={layer.id}
-              from="over"
-              id={layer.id}
-              z={under.length + layers.length + i * 2}
-            />
+            <FramedLayer key={layer.id} from="over" id={layer.id} z={i * 2} />
           ))}
         </group>
       </Clipping>
