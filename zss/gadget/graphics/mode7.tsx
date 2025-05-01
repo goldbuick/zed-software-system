@@ -1,12 +1,12 @@
 import { PerspectiveCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { damp, damp3 } from 'maath/easing'
+import { damp, damp3, dampE } from 'maath/easing'
 import { useRef } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { layersreadcontrol } from 'zss/gadget/data/types'
-import { ispresent } from 'zss/mapping/types'
+import { layersreadcontrol, VIEWSCALE } from 'zss/gadget/data/types'
+import { deepcopy, ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 import Clipping from '../clipping'
@@ -20,10 +20,47 @@ type FramedProps = {
   height: number
 }
 
+function mapviewtoz(viewscale: number) {
+  switch (viewscale as VIEWSCALE) {
+    case VIEWSCALE.NEAR:
+      return 128
+    default:
+    case VIEWSCALE.MID:
+      return 256
+    case VIEWSCALE.FAR:
+      return 550
+  }
+}
+
+function mapviewtopadd(viewscale: number) {
+  switch (viewscale as VIEWSCALE) {
+    case VIEWSCALE.NEAR:
+      return 0
+    default:
+    case VIEWSCALE.MID:
+      return 1
+    case VIEWSCALE.FAR:
+      return -1
+  }
+}
+
+function mapviewtotilt(viewscale: number) {
+  switch (viewscale as VIEWSCALE) {
+    case VIEWSCALE.NEAR:
+      return 0.777
+    default:
+    case VIEWSCALE.MID:
+      return 1.11
+    case VIEWSCALE.FAR:
+      return 0.666
+  }
+}
+
 export function Mode7Graphics({ width, height }: FramedProps) {
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
+  const tiltref = useRef<Group>(null)
   const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const focusref = useRef<Group>(null)
@@ -31,6 +68,7 @@ export function Mode7Graphics({ width, height }: FramedProps) {
 
   useFrame((_, delta) => {
     if (
+      !tiltref.current ||
       !overref.current ||
       !underref.current ||
       !focusref.current ||
@@ -57,25 +95,12 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     const cy = viewheight * 0.5 - drawheight * 0.5
 
     // setup tracking state
-    if (!ispresent(cameraref.current.userData.focusx)) {
-      switch (control.viewscale) {
-        case 3:
-          cameraref.current.position.z = 128
-          break
-        case 1.5:
-          cameraref.current.position.z = 256
-          break
-        case 1:
-          cameraref.current.position.z = 1024
-          break
-      }
-
-      // zoomref.current.scale.setScalar(control.viewscale)
-      cameraref.current.userData = {
+    if (!ispresent(focusref.current.userData.focusx)) {
+      focusref.current.userData = {
         focusx: control.focusx,
         focusy: control.focusy,
         facing: control.facing,
-        viewscale: control.viewscale,
+        focusz: mapviewtoz(control.viewscale),
       }
     }
 
@@ -84,13 +109,35 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     underref.current.position.x = cx
     underref.current.position.y = cy
 
+    const animrate = 0.125
+    const padding = mapviewtopadd(control.viewscale)
+    const focusx = focusref.current.userData.focusx
+    const focusy = focusref.current.userData.focusy
+    const fx = (focusx - 0.5) * -RUNTIME.DRAW_CHAR_WIDTH()
+    const fy = (focusy + padding) * -RUNTIME.DRAW_CHAR_HEIGHT()
+
     // zoom
-    //
+    damp3(
+      cameraref.current.position,
+      [0, 0, mapviewtoz(control.viewscale)],
+      animrate,
+      delta,
+    )
+
+    // tilt
+    dampE(
+      tiltref.current.rotation,
+      [mapviewtotilt(control.viewscale), 0, 0],
+      animrate,
+      delta,
+    )
 
     // focus
-    focusref.current.position.x =
-      (control.focusx + 0.5) * -RUNTIME.DRAW_CHAR_WIDTH()
-    focusref.current.position.y = control.focusy * -RUNTIME.DRAW_CHAR_HEIGHT()
+    damp3(focusref.current.position, [fx, fy, 0], animrate, delta)
+
+    // smoothed change in focus
+    damp(focusref.current.userData, 'focusx', control.focusx, animrate)
+    damp(focusref.current.userData, 'focusy', control.focusy, animrate)
   })
 
   // re-render only when layer count changes
@@ -106,35 +153,28 @@ export function Mode7Graphics({ width, height }: FramedProps) {
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
 
-  // handle graphics modes
-  const control = layersreadcontrol(layers)
-  const drawwidth = BOARD_WIDTH * RUNTIME.DRAW_CHAR_WIDTH()
-  const drawheight = BOARD_HEIGHT * RUNTIME.DRAW_CHAR_HEIGHT()
+  console.info(deepcopy(layers))
 
   return (
     <Clipping width={viewwidth} height={viewheight}>
-      <group ref={underref} scale={[2, 2, 2]}>
+      <group ref={underref} scale={[1.5, 1.5, 1.5]}>
         {under.map((layer, i) => (
           <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
         ))}
       </group>
-      <RenderLayer viewwidth={viewwidth} viewheight={viewheight}>
-        <PerspectiveCamera
-          ref={cameraref}
-          makeDefault
-          near={1}
-          far={2000}
-          position={[0, 0, 0]}
-        />
-        <group rotation={[Math.PI * 0.37, 0, 0]}>
-          <group ref={focusref}>
-            {layers.map((layer, i) => (
-              <Mode7Layer key={layer.id} id={layer.id} from="layers" z={0} />
-            ))}
+      <group position-z={layersindex}>
+        <RenderLayer viewwidth={viewwidth} viewheight={viewheight}>
+          <PerspectiveCamera ref={cameraref} makeDefault near={1} far={2000} />
+          <group ref={tiltref}>
+            <group ref={focusref}>
+              {layers.map((layer) => (
+                <Mode7Layer key={layer.id} id={layer.id} from="layers" z={0} />
+              ))}
+            </group>
           </group>
-        </group>
-      </RenderLayer>
-      <group ref={overref} position-z={overindex}>
+        </RenderLayer>
+      </group>
+      <group ref={overref} position-z={overindex} scale={[1.5, 1.5, 1.5]}>
         {over.map((layer, i) => (
           <FlatLayer key={layer.id} from="over" id={layer.id} z={i * 2} />
         ))}
@@ -142,3 +182,9 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     </Clipping>
   )
 }
+
+/*
+
+
+
+*/

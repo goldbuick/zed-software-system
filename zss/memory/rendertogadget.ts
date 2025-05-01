@@ -14,6 +14,7 @@ import {
   LAYER_MEDIA,
   LAYER_CONTROL,
   SPRITE,
+  VIEWSCALE,
 } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
@@ -242,13 +243,14 @@ export function memoryconverttogadgetlayers(
     if (isstring(board.camera)) {
       switch (NAME(board.camera)) {
         default:
-          control.viewscale = 1.5
+        case 'mid':
+          control.viewscale = VIEWSCALE.MID
           break
         case 'near':
-          control.viewscale = 3
+          control.viewscale = VIEWSCALE.NEAR
           break
         case 'far':
-          control.viewscale = 1
+          control.viewscale = VIEWSCALE.FAR
           break
       }
     }

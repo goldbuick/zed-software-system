@@ -26,7 +26,8 @@ const billboardsMaterial = new ShaderMaterial({
     map: new Uniform(charset),
     alt: new Uniform(charset),
     dpr: new Uniform(1),
-    far: new Uniform(2000),
+    screenwidth: new Uniform(1),
+    screenheight: new Uniform(1),
     pointSize: {
       value: new Vector2(1, 1),
     },
@@ -52,7 +53,8 @@ const billboardsMaterial = new ShaderMaterial({
     uniform vec2 pointSize;
     uniform vec3 palette[16];
     uniform float dpr;
-    uniform float far;
+    uniform float screenwidth;
+    uniform float screenheight;
     uniform float tindex;
 
     varying float vVisible;
@@ -113,16 +115,23 @@ const billboardsMaterial = new ShaderMaterial({
 
       vCharData.xy = charData.xy;
 
-      animPosition = animPosition * pointSize;
+      // draw space
+      animPosition *= pointSize;
       animPosition.x += pointSize.x * 0.5;
-      animPosition.y -= pointSize.y * 0.125;
-      animPosition.x += (pointSize.y - pointSize.x) * 0.5;
+      animPosition.x -= (pointSize.y - pointSize.x) - dpr;
+      animPosition.y += pointSize.y * 0.5;
 
+      // model space
       vec4 mvPosition = modelViewMatrix * vec4(animPosition, 0.0, 1.0);
+
+      // transform to screenspace 
       gl_Position = projectionMatrix * mvPosition;
 
       // this handles things being scaled
-      gl_PointSize = pointSize.y * (far / gl_Position.z) * 0.5;
+      float ptsize = (pointSize.y * dpr) + (screenwidth / screenheight) * dpr;
+      
+      gl_PointSize = (screenheight * ptsize) / gl_Position.w;
+      gl_Position.y -= pointSize.y;
       
       #include <clipping_planes_vertex>
     }

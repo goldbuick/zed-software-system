@@ -74,13 +74,19 @@ export type LAYER_MEDIA = {
   media: string | number[]
 }
 
+export enum VIEWSCALE {
+  NEAR = 1,
+  MID = 1.5,
+  FAR = 3,
+}
+
 export type LAYER_CONTROL = {
   id: string
   type: LAYER_TYPE.CONTROL
   focusx: number
   focusy: number
   focusid: string
-  viewscale: number
+  viewscale: VIEWSCALE
   graphics: string
   facing: number
 }
@@ -179,7 +185,7 @@ export function createcontrol(player: string, index: number): LAYER_CONTROL {
     focusx: 0,
     focusy: 0,
     focusid: player,
-    viewscale: 1.5,
+    viewscale: VIEWSCALE.MID,
     graphics: 'flat',
     facing: 0,
   }
@@ -190,7 +196,7 @@ export function layersreadcontrol(layers: LAYER[]) {
   let height = 0
   let focusx = 727
   let focusy = -1000
-  let viewscale = 1
+  let viewscale = VIEWSCALE.MID
   let graphics = 'flat'
   let facing = 0
 

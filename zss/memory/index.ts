@@ -798,9 +798,11 @@ export function memoryrun(address: string) {
   os.once(id, DRIVER_TYPE.RUNTIME, itemname, itemcode)
 }
 
-export function memoryreadgadgetlayers(
-  player: string,
-): [LAYER[], LAYER[], LAYER[]] {
+export function memoryreadgadgetlayers(player: string): {
+  over: LAYER[]
+  under: LAYER[]
+  layers: LAYER[]
+} {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const playerboard = bookplayerreadboard(mainbook, player)
 
@@ -808,7 +810,7 @@ export function memoryreadgadgetlayers(
   const under: LAYER[] = []
   const layers: LAYER[] = []
   if (!ispresent(mainbook) || !ispresent(playerboard)) {
-    return [over, under, layers]
+    return { over, under, layers }
   }
 
   // read graphics mode
@@ -841,5 +843,5 @@ export function memoryreadgadgetlayers(
     ),
   )
 
-  return [over, under, layers]
+  return { over, under, layers }
 }

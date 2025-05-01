@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useThree } from '@react-three/fiber'
+import { useEffect, useMemo, useRef } from 'react'
 import {
   BufferAttribute,
   BufferGeometry,
@@ -34,6 +35,7 @@ export function Sprites({
   fliptexture = true,
   withbillboards = false,
 }: SpritesProps) {
+  const { viewport } = useThree()
   const palette = useMedia((state) => state.palettedata)
   const charset = useMedia((state) => state.charsetdata)
   const altcharset = useMedia((state) => state.altcharsetdata)
@@ -236,6 +238,8 @@ export function Sprites({
     material.uniforms.map.value = charset
     material.uniforms.alt.value = altcharset ?? charset
     material.uniforms.dpr.value = window.devicePixelRatio
+    material.uniforms.screenwidth.value = viewport.width
+    material.uniforms.screenheight.value = viewport.height
     material.uniforms.pointSize.value.x = RUNTIME.DRAW_CHAR_WIDTH()
     material.uniforms.pointSize.value.y = RUNTIME.DRAW_CHAR_HEIGHT()
     material.uniforms.rows.value = imageRows - 1
@@ -255,6 +259,8 @@ export function Sprites({
     fliptexture,
     clippingPlanes,
     withbillboards,
+    viewport.width,
+    viewport.height,
   ])
 
   return (

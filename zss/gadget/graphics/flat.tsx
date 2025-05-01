@@ -4,7 +4,7 @@ import { useRef } from 'react'
 import { Group } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { layersreadcontrol } from 'zss/gadget/data/types'
+import { layersreadcontrol, VIEWSCALE } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
 
 import Clipping from '../clipping'
@@ -81,7 +81,7 @@ export function FlatGraphics({ width, height }: FramedProps) {
     const invviewscale = 1 / viewscale
     const scaledelta = Math.abs(viewscale - control.viewscale)
     const isscaling = scaledelta > 0.01
-    const isnear = viewscale > 1.5
+    const isnear = viewscale === (VIEWSCALE.NEAR as number)
 
     const sfx = viewscale * RUNTIME.DRAW_CHAR_WIDTH()
     const dfx = sfx - RUNTIME.DRAW_CHAR_WIDTH()
