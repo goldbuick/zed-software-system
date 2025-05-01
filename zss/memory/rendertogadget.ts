@@ -296,7 +296,7 @@ export function memoryconverttogadgetlayers(
       object,
       1,
       COLOR.WHITE,
-      isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR,
+      COLOR.ONCLEAR,
     )
     const sprite = createcachedsprite(player, objectindex, id, i)
 

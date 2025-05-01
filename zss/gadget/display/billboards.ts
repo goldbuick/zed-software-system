@@ -116,10 +116,11 @@ const billboardsMaterial = new ShaderMaterial({
       vCharData.xy = charData.xy;
 
       // draw space
+      float xpadding = (pointSize.y - pointSize.x);
       animPosition *= pointSize;
-      // animPosition.x -= pointSize.x * 0.5;
-      // animPosition.x -= (pointSize.y - pointSize.x);
-      animPosition.y += pointSize.y * 0.5;
+      animPosition.x += pointSize.x * 0.5;
+      animPosition.y += pointSize.y;
+      animPosition.x += xpadding * 0.5;
 
       // model space
       vec4 mvPosition = modelViewMatrix * vec4(animPosition, 0.0, 1.0);
@@ -128,10 +129,10 @@ const billboardsMaterial = new ShaderMaterial({
       gl_Position = projectionMatrix * mvPosition;
 
       // this handles things being scaled
-      float ptsize = (pointSize.y);// + (screenwidth / screenheight);
+      float ptsize = pointSize.y - 4.0;
       
       gl_PointSize = (screenheight * ptsize) / gl_Position.w;
-      gl_Position.y -= pointSize.y;
+      gl_Position.y -= ptsize;
       
       #include <clipping_planes_vertex>
     }
@@ -178,7 +179,7 @@ const billboardsMaterial = new ShaderMaterial({
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
-        if (vBg.a < 1.0) {
+        if (vBg.a < 0.001) {
           discard;
         } else {
           gl_FragColor = vBg;

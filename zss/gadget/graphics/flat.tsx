@@ -78,10 +78,12 @@ export function FlatGraphics({ width, height }: FramedProps) {
       damp3(zoomref.current.scale, control.viewscale, animrate, delta)
     }
     const viewscale = zoomref.current.scale.x
+    console.info({ viewscale })
+
     const invviewscale = 1 / viewscale
     const scaledelta = Math.abs(viewscale - control.viewscale)
     const isscaling = scaledelta > 0.01
-    const isnear = viewscale === (VIEWSCALE.NEAR as number)
+    const isnear = viewscale < (VIEWSCALE.MID as number)
 
     const sfx = viewscale * RUNTIME.DRAW_CHAR_WIDTH()
     const dfx = sfx - RUNTIME.DRAW_CHAR_WIDTH()

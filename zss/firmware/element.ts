@@ -185,6 +185,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.board?.camera ?? '']
       case 'graphics':
         return [true, READ_CONTEXT.board?.graphics ?? '']
+      case 'facing':
+        // pass-through to player flag
+        break
       // common stats
       case 'exitnorth':
         return [true, READ_CONTEXT.board?.exitnorth ?? '']
@@ -248,16 +251,19 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'isdark':
         if (ispresent(READ_CONTEXT.board)) {
           READ_CONTEXT.board.isdark = value ? 1 : 0
+          return [true, READ_CONTEXT.board.isdark]
         }
         break
       case 'startx':
         if (ispresent(READ_CONTEXT.board)) {
           READ_CONTEXT.board.startx = maptonumber(value, 0)
+          return [true, READ_CONTEXT.board.startx]
         }
         break
       case 'starty':
         if (ispresent(READ_CONTEXT.board)) {
           READ_CONTEXT.board.starty = maptonumber(value, 0)
+          return [true, READ_CONTEXT.board.starty]
         }
         break
       // board displayed over/under this one
@@ -265,6 +271,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'over':
         if (ispresent(READ_CONTEXT.board)) {
           READ_CONTEXT.board.over = isnumber(value) ? value : maptostring(value)
+          return [true, READ_CONTEXT.board.over]
         }
         break
       case 'under':
@@ -272,57 +279,63 @@ export const ELEMENT_FIRMWARE = createfirmware({
           READ_CONTEXT.board.under = isnumber(value)
             ? value
             : maptostring(value)
+          return [true, READ_CONTEXT.board.under]
         }
         break
       case 'camera':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.camera = maptostring(value)
+          return [true, (READ_CONTEXT.board.camera = maptostring(value))]
         }
         break
       case 'graphics':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.graphics = maptostring(value)
+          return [true, (READ_CONTEXT.board.graphics = maptostring(value))]
         }
         break
       case 'facing':
-        if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.facing = maptonumber(value, 0)
-        }
+        // pass-through to player flag
         break
       // common stats
       case 'exitnorth':
         if (ispresent(READ_CONTEXT.board)) {
           READ_CONTEXT.board.exitnorth = maptostring(value)
+          return [true, READ_CONTEXT.board.exitnorth]
         }
         break
       case 'exitsouth':
         if (ispresent(READ_CONTEXT.board)) {
           READ_CONTEXT.board.exitsouth = maptostring(value)
+          return [true, READ_CONTEXT.board.exitsouth]
         }
         break
       case 'exitwest':
         if (ispresent(READ_CONTEXT.board)) {
           READ_CONTEXT.board.exitwest = maptostring(value)
+          return [true, READ_CONTEXT.board.exitwest]
         }
         break
       case 'exiteast':
         if (ispresent(READ_CONTEXT.board)) {
           READ_CONTEXT.board.exiteast = maptostring(value)
+          return [true, READ_CONTEXT.board.exiteast]
         }
         break
       case 'timelimit':
         if (ispresent(READ_CONTEXT.board)) {
           READ_CONTEXT.board.timelimit = maptonumber(value, 0)
+          return [true, READ_CONTEXT.board.timelimit]
         }
         break
       case 'restartonzap':
         if (ispresent(READ_CONTEXT.board)) {
           READ_CONTEXT.board.restartonzap = value ? 1 : 0
+          return [true, READ_CONTEXT.board.restartonzap]
         }
         break
       case 'maxplayershots':
         if (ispresent(READ_CONTEXT.board)) {
           READ_CONTEXT.board.maxplayershots = maptonumber(value, 0)
+          return [true, READ_CONTEXT.board.maxplayershots]
         }
         break
       // read only

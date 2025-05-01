@@ -113,7 +113,8 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     const padding = mapviewtopadd(control.viewscale)
     const focusx = focusref.current.userData.focusx
     const focusy = focusref.current.userData.focusy
-    const fx = (focusx - 0.5) * -RUNTIME.DRAW_CHAR_WIDTH()
+    const rx = RUNTIME.DRAW_CHAR_WIDTH() / RUNTIME.DRAW_CHAR_HEIGHT()
+    const fx = (focusx + rx) * -RUNTIME.DRAW_CHAR_WIDTH()
     const fy = (focusy + padding) * -RUNTIME.DRAW_CHAR_HEIGHT()
 
     // zoom
@@ -149,15 +150,11 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     under = [],
     layers = [],
   } = useGadgetClient.getState().gadget
-
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
-
-  console.info(deepcopy(layers))
-
   return (
     <Clipping width={viewwidth} height={viewheight}>
-      <group ref={underref} scale={[1.5, 1.5, 1.5]}>
+      <group ref={underref}>
         {under.map((layer, i) => (
           <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
         ))}
@@ -174,7 +171,7 @@ export function Mode7Graphics({ width, height }: FramedProps) {
           </group>
         </RenderLayer>
       </group>
-      <group ref={overref} position-z={overindex} scale={[1.5, 1.5, 1.5]}>
+      <group ref={overref} position-z={overindex}>
         {over.map((layer, i) => (
           <FlatLayer key={layer.id} from="over" id={layer.id} z={i * 2} />
         ))}
