@@ -117,8 +117,8 @@ const billboardsMaterial = new ShaderMaterial({
 
       // draw space
       animPosition *= pointSize;
-      animPosition.x += pointSize.x * 0.5;
-      animPosition.x -= (pointSize.y - pointSize.x) - dpr;
+      // animPosition.x -= pointSize.x * 0.5;
+      // animPosition.x -= (pointSize.y - pointSize.x);
       animPosition.y += pointSize.y * 0.5;
 
       // model space
@@ -128,7 +128,7 @@ const billboardsMaterial = new ShaderMaterial({
       gl_Position = projectionMatrix * mvPosition;
 
       // this handles things being scaled
-      float ptsize = (pointSize.y * dpr) + (screenwidth / screenheight) * dpr;
+      float ptsize = (pointSize.y);// + (screenwidth / screenheight);
       
       gl_PointSize = (screenheight * ptsize) / gl_Position.w;
       gl_Position.y -= pointSize.y;

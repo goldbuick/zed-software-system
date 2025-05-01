@@ -172,6 +172,7 @@ export function memoryconverttogadgetlayers(
   book: BOOK,
   board: MAYBE<BOARD>,
   isprimary: boolean,
+  isbaseboard: boolean,
 ): LAYER[] {
   if (
     !ispresent(board) ||
@@ -184,7 +185,6 @@ export function memoryconverttogadgetlayers(
   const layers: LAYER[] = []
 
   let iiii = index
-  const isbaseboard = iiii === 0
   const boardwidth = BOARD_WIDTH
   const boardheight = BOARD_HEIGHT
   const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR

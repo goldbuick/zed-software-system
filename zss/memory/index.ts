@@ -822,15 +822,23 @@ export function memoryreadgadgetlayers(player: string): {
 
   // compose layers
   under.push(
-    ...memoryconverttogadgetlayers(player, 0, mainbook, underboard, false),
+    ...memoryconverttogadgetlayers(
+      player,
+      0,
+      mainbook,
+      underboard,
+      false,
+      true,
+    ),
   )
   layers.push(
     ...memoryconverttogadgetlayers(
       player,
-      graphics === 'flat' ? under.length : 0,
+      under.length,
       mainbook,
       playerboard,
       true,
+      graphics === 'flat' ? false : true,
     ),
   )
   over.push(
@@ -839,6 +847,7 @@ export function memoryreadgadgetlayers(player: string): {
       under.length + layers.length,
       mainbook,
       overboard,
+      false,
       false,
     ),
   )
