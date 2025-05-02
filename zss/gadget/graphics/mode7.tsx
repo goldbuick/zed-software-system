@@ -139,6 +139,10 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     // smoothed change in focus
     damp(focusref.current.userData, 'focusx', control.focusx, animrate)
     damp(focusref.current.userData, 'focusy', control.focusy, animrate)
+
+    // facing
+    tiltref.current.position.y = padding
+    tiltref.current.rotation.z = control.facing
   })
 
   // re-render only when layer count changes
