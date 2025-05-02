@@ -24,19 +24,19 @@ type FramedProps = {
 function mapviewtoz(viewscale: number) {
   switch (viewscale as VIEWSCALE) {
     case VIEWSCALE.NEAR:
-      return 128
+      return 128 + 32
     default:
     case VIEWSCALE.MID:
-      return 256
+      return 256 + 64
     case VIEWSCALE.FAR:
-      return 550
+      return 512 + 256
   }
 }
 
 function mapviewtopadd(viewscale: number) {
   switch (viewscale as VIEWSCALE) {
     case VIEWSCALE.NEAR:
-      return 0
+      return 1
     default:
     case VIEWSCALE.MID:
       return 1
@@ -48,12 +48,12 @@ function mapviewtopadd(viewscale: number) {
 function mapviewtotilt(viewscale: number) {
   switch (viewscale as VIEWSCALE) {
     case VIEWSCALE.NEAR:
-      return 0.777
+      return 0.888
     default:
     case VIEWSCALE.MID:
-      return 1.11
+      return 0.777
     case VIEWSCALE.FAR:
-      return 0.666
+      return 0.444
   }
 }
 
@@ -139,6 +139,10 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     // smoothed change in focus
     damp(focusref.current.userData, 'focusx', control.focusx, animrate)
     damp(focusref.current.userData, 'focusy', control.focusy, animrate)
+
+    // facing
+    tiltref.current.position.y = padding
+    tiltref.current.rotation.z = control.facing
   })
 
   // re-render only when layer count changes
@@ -153,12 +157,7 @@ export function Mode7Graphics({ width, height }: FramedProps) {
   const layersindex = under.length * 2 + 2
   const overindex = layersindex + 2
   return (
-    <Clipping width={viewwidth} height={viewheight}>
-      <group ref={underref}>
-        {under.map((layer, i) => (
-          <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
-        ))}
-      </group>
+    <>
       <group position-z={layersindex}>
         <RenderLayer viewwidth={viewwidth} viewheight={viewheight}>
           <PerspectiveCamera
@@ -178,12 +177,19 @@ export function Mode7Graphics({ width, height }: FramedProps) {
           </group>
         </RenderLayer>
       </group>
-      <group ref={overref} position-z={overindex}>
-        {over.map((layer, i) => (
-          <FlatLayer key={layer.id} from="over" id={layer.id} z={i * 2} />
-        ))}
-      </group>
-    </Clipping>
+      <Clipping width={viewwidth} height={viewheight}>
+        <group ref={underref}>
+          {under.map((layer, i) => (
+            <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
+          ))}
+        </group>
+        <group ref={overref} position-z={overindex}>
+          {over.map((layer, i) => (
+            <FlatLayer key={layer.id} from="over" id={layer.id} z={i * 2} />
+          ))}
+        </group>
+      </Clipping>
+    </>
   )
 }
 

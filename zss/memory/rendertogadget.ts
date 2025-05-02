@@ -1,4 +1,4 @@
-import { radToDeg } from 'maath/misc'
+import { degToRad, radToDeg } from 'maath/misc'
 import { Vector2 } from 'three'
 import {
   createdither,
@@ -37,7 +37,7 @@ import {
 import { codepagereaddata } from './codepage'
 import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK, CODE_PAGE_TYPE } from './types'
 
-import { MEMORY_LABEL, memoryreadbookbysoftware } from '.'
+import { MEMORY_LABEL, memoryreadbookbysoftware, memoryreadflags } from '.'
 
 let decoticker = 0
 function readdecotickercolor(): COLOR {
@@ -266,6 +266,10 @@ export function memoryconverttogadgetlayers(
           control.graphics = 'flat'
           break
       }
+    }
+    const { facing } = memoryreadflags(player)
+    if (isnumber(facing)) {
+      control.facing = degToRad(facing % 360)
     }
   }
 
