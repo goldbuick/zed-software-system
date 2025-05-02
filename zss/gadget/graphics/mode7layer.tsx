@@ -20,15 +20,16 @@ import { Dither } from './dither'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
 
-type FramedTilesProps = {
+type Mode7LayerProps = {
   id: string
   z: number
+  from: 'under' | 'over' | 'layers'
 }
 
-export function FramedLayer({ id, z }: FramedTilesProps) {
+export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
   const media = useMedia()
   const layer = useGadgetClient(
-    useShallow((state) => state.gadget.layers?.find((item) => item.id === id)),
+    useShallow((state) => state.gadget[from]?.find((item) => item.id === id)),
   )
 
   // special case for media elements
@@ -99,7 +100,11 @@ export function FramedLayer({ id, z }: FramedTilesProps) {
       return (
         // eslint-disable-next-line react/no-unknown-property
         <group key={layer.id} position={[0, 0, z]}>
-          <Sprites sprites={[...layer.sprites]} />
+          <Sprites
+            sprites={[...layer.sprites]}
+            withbillboards={true}
+            fliptexture={false}
+          />
         </group>
       )
     }

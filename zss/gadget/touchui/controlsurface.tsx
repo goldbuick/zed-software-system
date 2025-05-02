@@ -7,7 +7,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { ShadeBoxDither } from '../framedlayer/dither'
+import { ShadeBoxDither } from '../graphics/dither'
 import { useTiles } from '../hooks'
 import { TilesData, TilesRender } from '../usetiles'
 

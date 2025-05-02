@@ -14,6 +14,7 @@ import {
   LAYER_MEDIA,
   LAYER_CONTROL,
   SPRITE,
+  VIEWSCALE,
 } from 'zss/gadget/data/types'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
@@ -171,6 +172,7 @@ export function memoryconverttogadgetlayers(
   book: BOOK,
   board: MAYBE<BOARD>,
   isprimary: boolean,
+  isbaseboard: boolean,
 ): LAYER[] {
   if (
     !ispresent(board) ||
@@ -183,7 +185,6 @@ export function memoryconverttogadgetlayers(
   const layers: LAYER[] = []
 
   let iiii = index
-  const isbaseboard = iiii === 0
   const boardwidth = BOARD_WIDTH
   const boardheight = BOARD_HEIGHT
   const defaultcolor = isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR
@@ -235,19 +236,34 @@ export function memoryconverttogadgetlayers(
   }
 
   const control = createcachedcontrol(player, iiii++)
+
   // hack to keep only one control layer
   if (isprimary) {
     layers.push(control)
     if (isstring(board.camera)) {
       switch (NAME(board.camera)) {
         default:
-          control.viewscale = 1.5
+        case 'mid':
+          control.viewscale = VIEWSCALE.MID
           break
         case 'near':
-          control.viewscale = 3
+          control.viewscale = VIEWSCALE.NEAR
           break
         case 'far':
-          control.viewscale = 1
+          control.viewscale = VIEWSCALE.FAR
+          break
+      }
+    }
+    if (isstring(board.graphics)) {
+      const graphics = NAME(board.graphics)
+      switch (graphics) {
+        case 'mode7':
+        case 'firstperson':
+          control.graphics = graphics
+          break
+        default:
+        case 'flat':
+          control.graphics = 'flat'
           break
       }
     }
@@ -280,7 +296,7 @@ export function memoryconverttogadgetlayers(
       object,
       1,
       COLOR.WHITE,
-      isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR,
+      COLOR.ONCLEAR,
     )
     const sprite = createcachedsprite(player, objectindex, id, i)
 
@@ -302,7 +318,7 @@ export function memoryconverttogadgetlayers(
         not blocked angles, and we can create 
         fade out based on distance, going through an object
         */
-        const radius = clamp(Math.round(display.light), 1, 10)
+        const radius = clamp(Math.round(display.light), 1, BOARD_WIDTH)
         const hradius = radius * 0.5
         const center = boardelementindex(board, sprite)
         const step = 1 / hradius

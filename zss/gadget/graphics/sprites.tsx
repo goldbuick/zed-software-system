@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useThree } from '@react-three/fiber'
+import { useEffect, useMemo, useRef } from 'react'
 import {
   BufferAttribute,
   BufferGeometry,
@@ -12,6 +13,7 @@ import {
   SPRITE,
 } from 'zss/gadget/data/types'
 import { time } from 'zss/gadget/display/anim'
+import { createBillboardsMaterial } from 'zss/gadget/display/billboards'
 import { createSpritesMaterial } from 'zss/gadget/display/sprites'
 import { ispresent } from 'zss/mapping/types'
 
@@ -22,19 +24,28 @@ type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
 
 type SpritesProps = {
   sprites: SPRITE[]
+  fliptexture?: boolean
+  withbillboards?: boolean
 }
 
 const SPRITE_COUNT = 2048
 
-export function Sprites({ sprites }: SpritesProps) {
+export function Sprites({
+  sprites,
+  fliptexture = true,
+  withbillboards = false,
+}: SpritesProps) {
+  const { viewport } = useThree()
   const palette = useMedia((state) => state.palettedata)
   const charset = useMedia((state) => state.charsetdata)
   const altcharset = useMedia((state) => state.altcharsetdata)
+  const material = useMemo(() => {
+    return withbillboards ? createBillboardsMaterial() : createSpritesMaterial()
+  }, [withbillboards])
 
   const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
   const spritepool = useRef<SPRITE[]>([])
-  const [material] = useState(() => createSpritesMaterial())
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charset?.image ?? {}
 
@@ -227,11 +238,14 @@ export function Sprites({ sprites }: SpritesProps) {
     material.uniforms.map.value = charset
     material.uniforms.alt.value = altcharset ?? charset
     material.uniforms.dpr.value = window.devicePixelRatio
+    material.uniforms.screenwidth.value = viewport.width
+    material.uniforms.screenheight.value = viewport.height
     material.uniforms.pointSize.value.x = RUNTIME.DRAW_CHAR_WIDTH()
     material.uniforms.pointSize.value.y = RUNTIME.DRAW_CHAR_HEIGHT()
     material.uniforms.rows.value = imageRows - 1
     material.uniforms.step.value.x = 1 / imageCols
     material.uniforms.step.value.y = 1 / imageRows
+    material.uniforms.flip.value = fliptexture
     material.clipping = clippingPlanes.length > 0
     material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
@@ -242,7 +256,11 @@ export function Sprites({ sprites }: SpritesProps) {
     material,
     imageWidth,
     imageHeight,
+    fliptexture,
     clippingPlanes,
+    withbillboards,
+    viewport.width,
+    viewport.height,
   ])
 
   return (

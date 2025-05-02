@@ -798,37 +798,59 @@ export function memoryrun(address: string) {
   os.once(id, DRIVER_TYPE.RUNTIME, itemname, itemcode)
 }
 
-export function memoryreadgadgetlayers(player: string): LAYER[] {
+export function memoryreadgadgetlayers(player: string): {
+  over: LAYER[]
+  under: LAYER[]
+  layers: LAYER[]
+} {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const playerboard = bookplayerreadboard(mainbook, player)
 
+  const over: LAYER[] = []
+  const under: LAYER[] = []
   const layers: LAYER[] = []
   if (!ispresent(mainbook) || !ispresent(playerboard)) {
-    return layers
+    return { over, under, layers }
   }
 
-  // read over board
-  const overboard = bookreadboard(mainbook, playerboard.overboard ?? '')
+  // read graphics mode
+  const graphics = playerboard.graphics ?? 'flat'
 
-  // read under board
+  // read over / under
+  const overboard = bookreadboard(mainbook, playerboard.overboard ?? '')
   const underboard = bookreadboard(mainbook, playerboard.underboard ?? '')
 
   // compose layers
-  const boards = [underboard, playerboard, overboard]
-
-  let i = 0
-  for (let b = 0; b < boards.length; ++b) {
-    const board = boards[b]
-    const view = memoryconverttogadgetlayers(
+  under.push(
+    ...memoryconverttogadgetlayers(
       player,
-      i,
+      0,
       mainbook,
-      board,
-      board === playerboard,
-    )
-    i += view.length
-    layers.push(...view)
-  }
+      underboard,
+      false,
+      true,
+    ),
+  )
+  layers.push(
+    ...memoryconverttogadgetlayers(
+      player,
+      under.length,
+      mainbook,
+      playerboard,
+      true,
+      graphics === 'flat' ? false : true,
+    ),
+  )
+  over.push(
+    ...memoryconverttogadgetlayers(
+      player,
+      under.length + layers.length,
+      mainbook,
+      overboard,
+      false,
+      false,
+    ),
+  )
 
-  return layers
+  return { over, under, layers }
 }

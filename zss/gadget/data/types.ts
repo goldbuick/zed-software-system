@@ -74,13 +74,21 @@ export type LAYER_MEDIA = {
   media: string | number[]
 }
 
+export enum VIEWSCALE {
+  FAR = 1,
+  MID = 1.5,
+  NEAR = 3,
+}
+
 export type LAYER_CONTROL = {
   id: string
   type: LAYER_TYPE.CONTROL
   focusx: number
   focusy: number
   focusid: string
-  viewscale: number
+  viewscale: VIEWSCALE
+  graphics: string
+  facing: number
 }
 
 export type LAYER =
@@ -177,16 +185,20 @@ export function createcontrol(player: string, index: number): LAYER_CONTROL {
     focusx: 0,
     focusy: 0,
     focusid: player,
-    viewscale: 1.5,
+    viewscale: VIEWSCALE.MID,
+    graphics: 'flat',
+    facing: 0,
   }
 }
 
 export function layersreadcontrol(layers: LAYER[]) {
   let width = 0
   let height = 0
-  let focusx = 0
-  let focusy = 0
-  let viewscale = 1
+  let focusx = 727
+  let focusy = -1000
+  let viewscale = VIEWSCALE.MID
+  let graphics = 'flat'
+  let facing = 0
 
   layers.forEach((layer) => {
     switch (layer.type) {
@@ -202,11 +214,13 @@ export function layersreadcontrol(layers: LAYER[]) {
         focusx = layer.focusx
         focusy = layer.focusy
         viewscale = layer.viewscale
+        graphics = layer.graphics
+        facing = layer.facing
         break
     }
   })
 
-  return { width, height, focusx, focusy, viewscale }
+  return { width, height, focusx, focusy, viewscale, graphics, facing }
 }
 
 export type PANEL_ITEM = WORD | WORD[]
@@ -220,6 +234,8 @@ export function paneladdress(chip: string, target: string) {
 
 export type GADGET_STATE = {
   id: string
+  over?: LAYER[]
+  under?: LAYER[]
   layers?: LAYER[]
   scroll?: PANEL_ITEM[]
   sidebar?: PANEL_ITEM[]

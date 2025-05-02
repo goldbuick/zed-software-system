@@ -10,7 +10,7 @@ import {
 } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { ShadeBoxDither } from './framedlayer/dither'
+import { ShadeBoxDither } from './graphics/dither'
 import { useTiles } from './hooks'
 import { BackPlate } from './tape/backplate'
 import { bgcolor, FG } from './tape/common'

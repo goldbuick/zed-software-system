@@ -1,9 +1,10 @@
-import { createRoot, events, Canvas } from '@react-three/fiber'
+import { events, Canvas } from '@react-three/fiber'
 import debounce from 'debounce'
+import { createRoot, Root } from 'react-dom/client'
 import { Intersection, Plane, Vector3 } from 'three'
 import unmuteAudio from 'unmute-ios-audio'
 import { makeeven } from 'zss/mapping/number'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { App } from './app'
 
@@ -65,45 +66,44 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   },
 })
 
-// Create a react root
-const engine = document.querySelector('canvas')
-if (ispresent(engine)) {
-  const root = createRoot(engine)
+let root: MAYBE<Root>
 
-  // Configure the root, inject events optionally, set camera, etc
-  const applyconfig = (maybewidth: number, maybeheight: number) => {
-    const width = makeeven(maybewidth)
-    const height = makeeven(maybeheight)
-    root.configure({
-      ...deepcopy({
-        flat: true,
-        linear: true,
-        shadows: false,
-        gl: {
-          alpha: false,
+function applyconfig(innerwidth: number, innerheight: number) {
+  const frame = document.getElementById('frame')
+  if (!ispresent(frame)) {
+    return
+  }
+  const canvaswidth = makeeven(innerwidth)
+  const canvasheight = makeeven(innerheight)
+  frame.style.width = `${canvaswidth}px`
+  frame.style.height = `${canvasheight}px`
+  if (!ispresent(root)) {
+    root = createRoot(frame)
+    root.render(
+      <Canvas
+        flat
+        linear
+        shadows={false}
+        events={eventManagerFactory}
+        gl={{
+          alpha: true,
           stencil: false,
           antialias: false,
-          powerPreference: 'low-power',
           preserveDrawingBuffer: true,
-        },
-      }),
-      events: eventManagerFactory,
-      size: { width, height, top: 0, left: 0 },
-      onCreated({ gl }) {
-        gl.localClippingEnabled = true
-      },
-    })
+        }}
+        onCreated={({ gl }) => {
+          gl.localClippingEnabled = true
+        }}
+      >
+        <App />
+      </Canvas>,
+    )
   }
-
-  const handleresize = debounce(applyconfig, 256)
-
-  window.addEventListener('resize', () => {
-    handleresize(window.innerWidth, window.innerHeight)
-  })
-
-  // init
-  applyconfig(window.innerWidth, window.innerHeight)
-
-  // Render entry point
-  root.render(<App />)
 }
+
+const handleresize = debounce(applyconfig, 256)
+window.addEventListener('resize', () =>
+  handleresize(window.innerWidth, window.innerHeight),
+)
+
+handleresize(window.innerWidth, window.innerHeight)

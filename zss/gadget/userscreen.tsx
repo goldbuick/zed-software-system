@@ -1,15 +1,8 @@
 /* eslint-disable react/no-unknown-property */
 /* eslint-disable react-refresh/only-export-components */
+import { OrthographicCamera } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
-import {
-  createContext,
-  PropsWithChildren,
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-} from 'react'
-import { OrthographicCamera } from 'three'
+import { createContext, PropsWithChildren, useContext, useEffect } from 'react'
 import { RUNTIME } from 'zss/config'
 
 import { useDeviceConfig } from './hooks'
@@ -25,17 +18,9 @@ export function useScreenSize() {
 type UserScreenProps = PropsWithChildren<any>
 
 export function UserScreen({ children }: UserScreenProps) {
-  const { viewport, set, size, camera } = useThree()
-  const cameraRef = useRef<OrthographicCamera>(null)
+  const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
   const { islandscape, showtouchcontrols } = useDeviceConfig()
-
-  useLayoutEffect(() => {
-    const oldCam = camera
-    camera.updateProjectionMatrix()
-    set(() => ({ camera: cameraRef.current! }))
-    return () => set(() => ({ camera: oldCam }))
-  }, [set, camera, cameraRef])
 
   // cols
   const rcols = viewwidth / RUNTIME.DRAW_CHAR_WIDTH()
@@ -76,12 +61,8 @@ export function UserScreen({ children }: UserScreenProps) {
 
   return (
     <Screensize.Provider value={{ cols, rows }}>
-      <orthographicCamera
-        ref={cameraRef}
-        left={size.width / -2}
-        right={size.width / 2}
-        top={size.height / 2}
-        bottom={size.height / -2}
+      <OrthographicCamera
+        makeDefault
         near={1}
         far={2000}
         position={[0, 0, 1000]}

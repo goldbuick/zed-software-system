@@ -14,7 +14,7 @@ const smoothrate = TICK_FPS
 const palette = convertpalettetocolors(loadpalettefrombytes(PALETTE))
 const charset = createbitmaptexture(loadcharsetfrombytes(CHARSET))
 
-const spritesMaterial = new ShaderMaterial({
+const billboardsMaterial = new ShaderMaterial({
   // settings
   transparent: false,
   side: DoubleSide,
@@ -53,6 +53,8 @@ const spritesMaterial = new ShaderMaterial({
     uniform vec2 pointSize;
     uniform vec3 palette[16];
     uniform float dpr;
+    uniform float screenwidth;
+    uniform float screenheight;
     uniform float tindex;
 
     varying float vVisible;
@@ -113,15 +115,26 @@ const spritesMaterial = new ShaderMaterial({
 
       vCharData.xy = charData.xy;
 
-      animPosition = animPosition * pointSize;
-      animPosition += pointSize * 0.5;
-      animPosition.x += (pointSize.y - pointSize.x) * 0.5;
+      // draw space
+      float xpadding = (pointSize.y - pointSize.x);
+      animPosition *= pointSize;
+      animPosition.x += pointSize.x * 0.5;
+      animPosition.x += xpadding * 0.5;
+      animPosition.y += pointSize.y;
 
+      // model space
       vec4 mvPosition = modelViewMatrix * vec4(animPosition, 0.0, 1.0);
-      gl_Position = projectionMatrix * mvPosition;      
+
+      // transform to screenspace 
+      gl_Position = projectionMatrix * mvPosition;
 
       // this handles things being scaled
-      gl_PointSize = pointSize.y * modelViewMatrix[0][0] * dpr;
+      float ptaspect = (screenwidth / screenheight);
+      float ptsize = pointSize.y + ptaspect;
+      
+      gl_PointSize = (screenheight * (ptsize + 0.5)) / gl_Position.w;
+      gl_PointSize *= dpr;
+      gl_Position.y -= ptsize - ptaspect;
       
       #include <clipping_planes_vertex>
     }
@@ -168,7 +181,7 @@ const spritesMaterial = new ShaderMaterial({
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
-        if (vBg.a < 1.0) {
+        if (vBg.a < 0.001) {
           discard;
         } else {
           gl_FragColor = vBg;
@@ -181,6 +194,6 @@ const spritesMaterial = new ShaderMaterial({
   `,
 })
 
-export function createSpritesMaterial() {
-  return cloneMaterial(spritesMaterial)
+export function createBillboardsMaterial() {
+  return cloneMaterial(billboardsMaterial)
 }

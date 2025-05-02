@@ -42,6 +42,7 @@ enum BOARD_KEYS {
   restartonzap,
   maxplayershots,
   camera,
+  graphics,
 }
 
 export function exportboard(board: MAYBE<BOARD>): MAYBE<FORMAT_OBJECT> {

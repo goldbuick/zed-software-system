@@ -1,4 +1,4 @@
-import { Color, DataTexture, ShaderMaterial } from 'three'
+import { Color, DataTexture, DoubleSide, ShaderMaterial } from 'three'
 
 import { cloneMaterial } from './anim'
 
@@ -26,6 +26,7 @@ export function createDitherDataTexture(width: number, height: number) {
 const ditherMaterial = new ShaderMaterial({
   // settings
   transparent: false,
+  side: DoubleSide,
   uniforms: {
     color: { value: new Color(0, 0, 0) },
     data: { value: null },
