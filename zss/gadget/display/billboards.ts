@@ -132,9 +132,9 @@ const billboardsMaterial = new ShaderMaterial({
       float ptaspect = (screenwidth / screenheight);
       float ptsize = pointSize.y + ptaspect;
       
-      gl_PointSize = (screenheight * ptsize) / gl_Position.w;
+      gl_PointSize = (screenheight * (ptsize + 0.5)) / gl_Position.w;
       gl_PointSize *= dpr;
-      gl_Position.y -= ptsize;
+      gl_Position.y -= ptsize - ptaspect;
       
       #include <clipping_planes_vertex>
     }
