@@ -20,7 +20,7 @@ export function RenderLayer({
           attach="map"
           width={viewwidth}
           height={viewheight}
-          depthBuffer={false}
+          depthBuffer
           stencilBuffer={false}
           generateMipmaps={false}
         >

@@ -6,7 +6,8 @@ import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol, VIEWSCALE } from 'zss/gadget/data/types'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { clamp } from 'zss/mapping/number'
+import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 import Clipping from '../clipping'
@@ -90,10 +91,6 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     const drawwidth = BOARD_WIDTH * RUNTIME.DRAW_CHAR_WIDTH()
     const drawheight = BOARD_HEIGHT * RUNTIME.DRAW_CHAR_HEIGHT()
 
-    // framing
-    const cx = viewwidth * 0.5 - drawwidth * 0.5
-    const cy = viewheight * 0.5 - drawheight * 0.5
-
     // setup tracking state
     if (!ispresent(focusref.current.userData.focusx)) {
       focusref.current.userData = {
@@ -104,17 +101,20 @@ export function Mode7Graphics({ width, height }: FramedProps) {
       }
     }
 
-    overref.current.position.x = cx
-    overref.current.position.y = cy
-    underref.current.position.x = cx
-    underref.current.position.y = cy
+    // framing
+    overref.current.position.x = 0
+    overref.current.position.y = viewheight - drawheight
+
+    const rscale = clamp(viewwidth / drawwidth, 1.0, 10.0)
+    underref.current.position.x = viewwidth - drawwidth * rscale
+    underref.current.position.y = 0
+    underref.current.scale.setScalar(rscale)
 
     const animrate = 0.125
     const padding = mapviewtopadd(control.viewscale)
     const focusx = focusref.current.userData.focusx
     const focusy = focusref.current.userData.focusy
-    const rx = RUNTIME.DRAW_CHAR_WIDTH() / RUNTIME.DRAW_CHAR_HEIGHT()
-    const fx = (focusx + rx) * -RUNTIME.DRAW_CHAR_WIDTH()
+    const fx = (focusx + 0.5) * -RUNTIME.DRAW_CHAR_WIDTH()
     const fy = (focusy + padding) * -RUNTIME.DRAW_CHAR_HEIGHT()
 
     // zoom
@@ -161,7 +161,14 @@ export function Mode7Graphics({ width, height }: FramedProps) {
       </group>
       <group position-z={layersindex}>
         <RenderLayer viewwidth={viewwidth} viewheight={viewheight}>
-          <PerspectiveCamera ref={cameraref} makeDefault near={1} far={2000} />
+          <PerspectiveCamera
+            ref={cameraref}
+            makeDefault
+            manual
+            near={1}
+            far={2000}
+            aspect={viewwidth / viewheight}
+          />
           <group ref={tiltref}>
             <group ref={focusref}>
               {layers.map((layer) => (

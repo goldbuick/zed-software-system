@@ -119,8 +119,8 @@ const billboardsMaterial = new ShaderMaterial({
       float xpadding = (pointSize.y - pointSize.x);
       animPosition *= pointSize;
       animPosition.x += pointSize.x * 0.5;
-      animPosition.y += pointSize.y;
       animPosition.x += xpadding * 0.5;
+      animPosition.y += pointSize.y;
 
       // model space
       vec4 mvPosition = modelViewMatrix * vec4(animPosition, 0.0, 1.0);
@@ -129,9 +129,11 @@ const billboardsMaterial = new ShaderMaterial({
       gl_Position = projectionMatrix * mvPosition;
 
       // this handles things being scaled
-      float ptsize = pointSize.y - 4.0;
+      float ptaspect = (screenwidth / screenheight);
+      float ptsize = pointSize.y + ptaspect;
       
       gl_PointSize = (screenheight * ptsize) / gl_Position.w;
+      gl_PointSize *= dpr;
       gl_Position.y -= ptsize;
       
       #include <clipping_planes_vertex>

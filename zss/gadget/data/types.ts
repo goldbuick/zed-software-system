@@ -75,9 +75,9 @@ export type LAYER_MEDIA = {
 }
 
 export enum VIEWSCALE {
-  NEAR = 1,
+  FAR = 1,
   MID = 1.5,
-  FAR = 3,
+  NEAR = 3,
 }
 
 export type LAYER_CONTROL = {
