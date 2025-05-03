@@ -27,6 +27,7 @@ import {
 } from './board'
 import { boardelementapplycolor, boardelementname } from './boardelement'
 import {
+  bookelementgroupread,
   bookelementkindread,
   bookelementstatread,
   bookreadobject,
@@ -37,6 +38,7 @@ import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
+  BOARD_SIZE,
   BOARD_WIDTH,
   BOOK,
   CODE_PAGE_TYPE,
@@ -111,6 +113,19 @@ export function bookboardsetlookup(book: MAYBE<BOOK>, board: MAYBE<BOARD>) {
 
   board.lookup = lookup
   board.named = named
+}
+
+export function bookboardresetlookups(book: MAYBE<BOOK>, board: MAYBE<BOARD>) {
+  if (!ispresent(board)) {
+    return
+  }
+
+  // reset all lookups
+  delete board.named
+  delete board.lookup
+
+  // make sure lookup is created
+  bookboardsetlookup(book, board)
 }
 
 export function bookboardnamedwrite(
@@ -598,10 +613,10 @@ export function bookboardcheckmoveobject(
 export function bookboardmoveobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
-  targetelement: MAYBE<BOARD_ELEMENT>,
+  movingelement: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ): MAYBE<BOARD_ELEMENT> {
-  const target = boardobjectread(board, targetelement?.id ?? '')
+  const target = boardobjectread(board, movingelement?.id ?? '')
 
   // first pass clipping
   if (
@@ -611,6 +626,7 @@ export function bookboardmoveobject(
     !ispresent(target.x) ||
     !ispresent(target.y) ||
     !ispresent(board.lookup) ||
+    !ispresent(movingelement) ||
     dest.x < 0 ||
     dest.x >= BOARD_WIDTH ||
     dest.y < 0 ||
@@ -642,8 +658,26 @@ export function bookboardmoveobject(
   // blocked by an object
   const maybeobject = boardobjectread(board, board.lookup[targetidx] ?? '')
   const maybeobjectisplayer = ispid(maybeobject?.id ?? '')
-  // we are blocked by an object, and we are both NOT players
-  if (ispresent(maybeobject) && (!targetisplayer || !maybeobjectisplayer)) {
+  if (
+    // we are blocked by an object
+    ispresent(maybeobject) &&
+    // and we are both NOT players
+    (!targetisplayer || !maybeobjectisplayer) &&
+    // AND have different groups
+    bookelementgroupread(book, movingelement) !==
+      bookelementgroupread(book, maybeobject)
+  ) {
+    // is element pushable ?
+    const ispushable = !!bookelementstatread(book, maybeobject, 'pushable')
+    if (ispushable) {
+      // is recursive move a good idae ??
+      const bump: PT = {
+        x: dest.x - (movingelement.x ?? 0),
+        y: dest.y - (movingelement.y ?? 0),
+      }
+      bookboardmoveobject(book, board, maybeobject, bump)
+    }
+
     // for sending interaction messages
     return { ...maybeobject }
   }
@@ -784,4 +818,39 @@ export function bookboardtick(
 
   // return code that needs to be run
   return args
+}
+
+// working with groups
+
+export function bookboardreadgroup(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  targetgroup: string,
+) {
+  const objectelements: BOARD_ELEMENT[] = []
+  const terrainelements: BOARD_ELEMENT[] = []
+  if (!ispresent(book) || !ispresent(board)) {
+    return { objectelements, terrainelements }
+  }
+
+  // read target group
+  const allobjectelements = Object.values(board.objects)
+  for (let i = 0; i < allobjectelements.length; ++i) {
+    const el = allobjectelements[i]
+    const group = bookelementgroupread(book, el)
+    if (group === targetgroup) {
+      objectelements.push(el)
+    }
+  }
+  for (let i = 0; i < BOARD_SIZE; ++i) {
+    const el = board.terrain[i]
+    if (ispresent(el)) {
+      const group = bookelementgroupread(book, el)
+      if (group === targetgroup) {
+        terrainelements.push(el)
+      }
+    }
+  }
+
+  return { objectelements, terrainelements }
 }

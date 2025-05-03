@@ -41,6 +41,7 @@ const INPUT_FLAG_NAMES = new Set([
 
 const STANDARD_STAT_NAMES = new Set([
   // interaction
+  'group',
   'party',
   'player',
   'pushable',
