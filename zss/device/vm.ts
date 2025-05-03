@@ -35,6 +35,7 @@ import {
   memoryresetchipafteredit,
   memoryrestartallchipsandflags,
   memorysetbook,
+  memoryclirepeatlast,
 } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
 import {
@@ -419,6 +420,10 @@ const vm = createdevice(
       case 'cli':
         // user input from built-in console
         memorycli(message.player, message.data)
+        break
+      case 'clirepeatlast':
+        // repeat user input from built-in console
+        memoryclirepeatlast(message.player)
         break
       case 'restart':
         if (message.player === operator) {

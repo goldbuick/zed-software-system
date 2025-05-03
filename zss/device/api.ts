@@ -475,6 +475,10 @@ export function vm_cli(device: DEVICELIKE, player: string, input: string) {
   device.emit(player, 'vm:cli', input)
 }
 
+export function vm_clirepeatlast(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:clirepeatlast')
+}
+
 export function vm_restart(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:restart')
 }
