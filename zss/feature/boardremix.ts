@@ -10,6 +10,7 @@ import {
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
 import {
+  bookelementgroupread,
   bookelementkindread,
   bookreadcodepagewithtype,
   bookreadobject,
@@ -161,7 +162,6 @@ export function boardremix(
           boardsetterrain(targetboard, { x, y })
           break
         default:
-          // todo: handle groups
           break
       }
 
@@ -184,16 +184,28 @@ export function boardremix(
           }
           break
         default:
-          // todo: support groups
+          if (bookelementgroupread(book, sourceelement) !== targetset) {
+            maybekind = ''
+          }
+          if (maybekind) {
+            // blank target region
+            const maybeobject = boardelementread(targetboard, { x, y })
+            if (boardelementisobject(maybeobject)) {
+              bookboardsafedelete(
+                book,
+                targetboard,
+                maybeobject,
+                book.timestamp,
+              )
+            }
+            boardsetterrain(targetboard, { x, y })
+          }
           break
       }
 
-      const maybenew = bookboardwritefromkind(
-        book,
-        targetboard,
-        [maybekind],
-        dpt,
-      )
+      const maybenew = maybekind
+        ? bookboardwritefromkind(book, targetboard, [maybekind], dpt)
+        : undefined
 
       // skip if we didn't create
       if (!ispresent(maybenew) || !ispresent(sourceelement)) {
