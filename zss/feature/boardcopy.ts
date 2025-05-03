@@ -6,8 +6,9 @@ import {
   boardsetterrain,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import { bookreadcodepagewithtype } from 'zss/memory/book'
+import { bookelementgroupread, bookreadcodepagewithtype } from 'zss/memory/book'
 import {
+  bookboardresetlookups,
   bookboardsafedelete,
   bookboardsetlookup,
   bookboardwritefromkind,
@@ -29,7 +30,7 @@ function emptyarea(book: BOOK, board: BOARD, p1: PT, p2: PT) {
   }
 }
 
-function emptyareaterrain(book: BOOK, board: BOARD, p1: PT, p2: PT) {
+function emptyareaterrain(board: BOARD, p1: PT, p2: PT) {
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
       boardsetterrain(board, { x, y })
@@ -114,7 +115,8 @@ export function boardcopy(
   bookboardsetlookup(book, sourceboard)
   bookboardsetlookup(book, targetboard)
 
-  if (ispresent(sourceboard && ispresent(targetboard))) {
+  let isgroup = false
+  if (ispresent(sourceboard) && ispresent(targetboard)) {
     // blank target region
     switch (targetset) {
       case 'all':
@@ -124,10 +126,10 @@ export function boardcopy(
         emptyareaobject(book, targetboard, p1, p2)
         break
       case 'terrain':
-        emptyareaterrain(book, targetboard, p1, p2)
+        emptyareaterrain(targetboard, p1, p2)
         break
       default:
-        // todo: handle groups
+        isgroup = true
         break
     }
 
@@ -147,14 +149,12 @@ export function boardcopy(
           case 'terrain':
             copyterrain = true
             break
-          default:
-            // todo: handle groups
-            break
         }
 
         // read source element
+        const pt: PT = { x, y }
         let terrain: MAYBE<BOARD_ELEMENT>
-        let object = boardelementread(sourceboard, { x, y })
+        let object = boardelementread(sourceboard, pt)
         if (boardelementisobject(object)) {
           terrain = boardgetterrain(sourceboard, x, y)
           if (ispid(object?.id)) {
@@ -165,22 +165,36 @@ export function boardcopy(
           object = undefined
         }
 
-        if (ispresent(terrain) && copyterrain) {
+        if (
+          ispresent(terrain) &&
+          (copyterrain ||
+            (isgroup && bookelementgroupread(book, terrain) === targetset))
+        ) {
+          if (isgroup) {
+            emptyarea(book, targetboard, pt, pt)
+          }
           const el = bookboardwritefromkind(
             book,
             targetboard,
             [terrain.kind ?? ''],
-            { x, y },
+            pt,
           )
           mapelementcopy(el, terrain)
         }
 
-        if (ispresent(object) && copyobject) {
+        if (
+          ispresent(object) &&
+          (copyobject ||
+            (isgroup && bookelementgroupread(book, object) === targetset))
+        ) {
+          if (isgroup) {
+            emptyareaobject(book, targetboard, p1, p2)
+          }
           const el = bookboardwritefromkind(
             book,
             targetboard,
             [object.kind ?? ''],
-            { x, y },
+            pt,
           )
           mapelementcopy(el, object)
         }
@@ -188,8 +202,6 @@ export function boardcopy(
     }
 
     // rebuild lookups
-    delete targetboard.named
-    delete targetboard.lookup
-    bookboardsetlookup(book, targetboard)
+    bookboardresetlookups(book, targetboard)
   }
 }

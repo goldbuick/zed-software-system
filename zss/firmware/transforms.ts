@@ -77,8 +77,8 @@ export const TRANSFORM_FIRMWARE = createfirmware()
     if (ispresent(sourceboard)) {
       const filter = readfilter(words, ii)
       boardcopy(
-        READ_CONTEXT.board.id,
         sourceboard.id,
+        READ_CONTEXT.board.id,
         filter.pt1,
         filter.pt2,
         filter.targetset,
