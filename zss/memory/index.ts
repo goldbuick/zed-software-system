@@ -748,6 +748,13 @@ export function memorycleanup() {
   os.gc()
 }
 
+export function memoryclirepeatlast(player: string) {
+  const maybecli = memoryreadflags(player).playbuffer
+  if (isstring(maybecli) && maybecli) {
+    memorycli(player, maybecli)
+  }
+}
+
 export function memorycli(player: string, cli = '') {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -773,6 +780,9 @@ export function memorycli(player: string, cli = '') {
   // invoke once
   api_debug(SOFTWARE, player, 'running', mainbook.timestamp, id, cli)
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
+
+  // track invoke
+  memoryreadflags(player).playbuffer = cli
 
   RUNTIME.HALT_AT_COUNT = resethalt
 }

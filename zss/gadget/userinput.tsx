@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react'
 import { createdevice } from 'zss/device'
-import { vm_cli } from 'zss/device/api'
+import { vm_cli, vm_clirepeatlast } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
@@ -209,6 +209,11 @@ document.addEventListener(
       case 'o':
         if (mods.ctrl) {
           vm_cli(SOFTWARE, player, mods.shift ? '#joincode hush' : '#joincode')
+        }
+        break
+      case 'p':
+        if (mods.ctrl) {
+          vm_clirepeatlast(SOFTWARE, player)
         }
         break
       case 'l':

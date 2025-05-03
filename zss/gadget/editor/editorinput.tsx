@@ -333,11 +333,6 @@ export function EditorInput({
                     break
                   case 'p':
                     vm_cli(SOFTWARE, player, strvalueselected)
-                    writetext(
-                      SOFTWARE,
-                      player,
-                      `running: ${strvalueselected.substring(0, 18)}`,
-                    )
                     break
                 }
               } else if (mods.alt) {
