@@ -2,6 +2,7 @@ import { pick, unique } from 'zss/mapping/array'
 import { createsid, createnameid, createshortnameid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
 import { COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
 import { boardelementindex, boardobjectread } from './board'
@@ -287,6 +288,13 @@ export function bookelementstatread(
 ) {
   const kind = bookelementkindread(book, element)
   return element?.[stat] ?? kind?.[stat]
+}
+
+export function bookelementgroupread(
+  book: MAYBE<BOOK>,
+  element: MAYBE<BOARD_ELEMENT>,
+) {
+  return maptostring(bookelementstatread(book, element, 'group'))
 }
 
 export function bookelementdisplayread(

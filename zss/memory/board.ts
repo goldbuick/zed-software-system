@@ -1,4 +1,4 @@
-import { indextopt } from 'zss/mapping/2d'
+import { indextopt, ptwithin } from 'zss/mapping/2d'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, deepcopy, ispresent, noop } from 'zss/mapping/types'
 import { ispt } from 'zss/words/dir'
@@ -76,6 +76,10 @@ export function importboard(boardentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOARD> {
       return objects
     },
   })
+}
+
+export function ptwithinboard(pt: PT) {
+  return ptwithin(pt.x, pt.y, 0, BOARD_WIDTH - 1, BOARD_HEIGHT - 1, 0)
 }
 
 export function boardelementindex(

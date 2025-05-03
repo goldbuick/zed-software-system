@@ -1,15 +1,11 @@
-import { pttoindex, ptwithin } from 'zss/mapping/2d'
+import { pttoindex } from 'zss/mapping/2d'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 import { COLLISION, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
-import { boardgetterrain } from './board'
+import { boardgetterrain, ptwithinboard } from './board'
 import { bookelementstatread } from './book'
-import { BOARD, BOARD_HEIGHT, BOARD_SIZE, BOARD_WIDTH, BOOK } from './types'
-
-function ptwithinboard(pt: PT) {
-  return ptwithin(pt.x, pt.y, 0, BOARD_WIDTH - 1, BOARD_HEIGHT - 1, 0)
-}
+import { BOARD, BOARD_SIZE, BOARD_WIDTH, BOOK } from './types'
 
 function boardreaddistmap(
   book: MAYBE<BOOK>,
