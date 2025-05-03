@@ -188,7 +188,7 @@ export function boardcopy(
             (isgroup && bookelementgroupread(book, object) === targetset))
         ) {
           if (isgroup) {
-            emptyareaobject(book, targetboard, p1, p2)
+            emptyareaobject(book, targetboard, pt, pt)
           }
           const el = bookboardwritefromkind(
             book,
