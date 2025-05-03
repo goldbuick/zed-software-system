@@ -84,7 +84,7 @@ export function Tape() {
           </group>
         </UserFocus>
       ) : (
-        <UserHotkey hotkey="Shift+?">
+        <UserHotkey hotkey="/">
           {() => register_terminal_open(SOFTWARE, player)}
         </UserHotkey>
       )}
