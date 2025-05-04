@@ -83,6 +83,7 @@ function applyconfig(innerwidth: number, innerheight: number) {
       <Canvas
         flat
         linear
+        dpr={1}
         shadows={false}
         events={eventManagerFactory}
         gl={{
