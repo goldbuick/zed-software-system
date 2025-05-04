@@ -37,6 +37,7 @@ import { bookboardreadpath } from './bookboardpathing'
 import {
   BOARD,
   BOARD_ELEMENT,
+  BOARD_ELEMENT_STAT,
   BOARD_HEIGHT,
   BOARD_SIZE,
   BOARD_WIDTH,
@@ -837,16 +838,26 @@ export function bookboardreadgroup(
   const allobjectelements = Object.values(board.objects)
   for (let i = 0; i < allobjectelements.length; ++i) {
     const el = allobjectelements[i]
+    const stat = bookelementstatread(
+      book,
+      el,
+      targetgroup as BOARD_ELEMENT_STAT,
+    )
     const group = bookelementgroupread(book, el)
-    if (group === targetgroup) {
+    if (ispresent(stat) || group === targetgroup) {
       objectelements.push(el)
     }
   }
   for (let i = 0; i < BOARD_SIZE; ++i) {
     const el = board.terrain[i]
     if (ispresent(el)) {
+      const stat = bookelementstatread(
+        book,
+        el,
+        targetgroup as BOARD_ELEMENT_STAT,
+      )
       const group = bookelementgroupread(book, el)
-      if (group === targetgroup) {
+      if (ispresent(stat) || group === targetgroup) {
         terrainelements.push(el)
       }
     }
