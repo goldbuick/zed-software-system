@@ -15,6 +15,7 @@ import {
   TAPE_ROW,
   useGadgetClient,
   useTape,
+  useTapeTerminal,
 } from 'zss/gadget/data/state'
 import { useDeviceConfig } from 'zss/gadget/hooks'
 import { pickwith } from 'zss/mapping/array'
@@ -234,6 +235,16 @@ async function writeselected(selected: string) {
   return writeidb('SELECTED', () => selected)
 }
 
+export async function readhistorybuffer() {
+  console.info('readhistorybuffer')
+  return readidb<string[]>('HISTORYBUFFER')
+}
+
+export async function writehistorybuffer(historybuffer: string[]) {
+  console.info('writehistorybuffer', historybuffer)
+  return writeidb('HISTORYBUFFER', () => historybuffer)
+}
+
 // simple bootstrap manager
 let keepalive = 0
 
@@ -272,6 +283,11 @@ const register = createdevice(
     switch (message.target) {
       case 'ready': {
         doasync(register, message.player, async () => {
+          // setup history buffer
+          const historybuffer = await readhistorybuffer()
+          if (ispresent(historybuffer)) {
+            useTapeTerminal.setState({ buffer: historybuffer })
+          }
           // signal init
           await waitfor(256)
           write(register, myplayerid, `myplayerid ${myplayerid}`)
