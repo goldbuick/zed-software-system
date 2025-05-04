@@ -14,7 +14,7 @@ import { vm_cli, vm_clirepeatlast } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
-import { isnumber } from 'zss/mapping/types'
+import { isnumber, ispresent } from 'zss/mapping/types'
 import { ismac } from 'zss/words/system'
 import { NAME } from 'zss/words/types'
 
@@ -361,20 +361,27 @@ const HOTKEY_EVENT = 'keyup'
 
 type UserHotkeyProps = {
   hotkey: string
+  althotkey?: string
   children: () => void
 }
 
-export function UserHotkey({ hotkey, children }: UserHotkeyProps) {
+export function UserHotkey({ hotkey, althotkey, children }: UserHotkeyProps) {
   useEffect(() => {
     const invokecheck = isHotKey(hotkey, { byKey: true })
+    const altinvokecheck = ispresent(althotkey)
+      ? isHotKey(althotkey, { byKey: true })
+      : undefined
     function hotkeycheck(event: KeyboardEvent) {
-      if (user.ignorehotkeys === false && invokecheck(event)) {
+      if (
+        user.ignorehotkeys === false &&
+        (invokecheck(event) || altinvokecheck?.(event))
+      ) {
         children()
       }
     }
     document.addEventListener(HOTKEY_EVENT, hotkeycheck, false)
     return () => document.removeEventListener(HOTKEY_EVENT, hotkeycheck, false)
-  }, [hotkey, children])
+  }, [hotkey, althotkey, children])
 
   return null
 }
