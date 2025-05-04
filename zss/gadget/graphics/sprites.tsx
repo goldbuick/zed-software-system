@@ -237,7 +237,7 @@ export function Sprites({
     material.uniforms.palette.value = palette
     material.uniforms.map.value = charset
     material.uniforms.alt.value = altcharset ?? charset
-    material.uniforms.dpr.value = window.devicePixelRatio
+    material.uniforms.dpr.value = 1
     material.uniforms.screenwidth.value = viewport.width
     material.uniforms.screenheight.value = viewport.height
     material.uniforms.pointSize.value.x = RUNTIME.DRAW_CHAR_WIDTH()

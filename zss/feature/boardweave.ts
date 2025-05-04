@@ -139,14 +139,20 @@ export function boardweavegroup(
 
   // collision detection pass
   let didcollide = false
+  const safeobjectids: Record<string, boolean> = {}
   for (let i = 0; i < terrainelements.length; ++i) {
     const fromelement = terrainelements[i]
-    const fromollision: COLLISION = bookelementstatread(
+    const fromcollision: COLLISION = bookelementstatread(
       book,
       fromelement,
       'collision',
     )
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
+    const maybefromobject = boardelementread(targetboard, from)
+    if (boardelementisobject(maybefromobject) && ispresent(maybefromobject)) {
+      // track carried objects
+      safeobjectids[maybefromobject.id ?? ''] = true
+    }
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
     if (ptwithinboard(dest)) {
       const destelement = boardelementread(targetboard, dest)
@@ -157,14 +163,17 @@ export function boardweavegroup(
         'collision',
       )
       if (boardelementisobject(destelement) && targetgroup !== destgroup) {
-        if (bookelementstatread(book, destelement, 'pushable')) {
+        // would the terrain & object collide ?
+        if (checkdoescollide(fromcollision, destcollision)) {
+          didcollide = true
+        } else if (bookelementstatread(book, destelement, 'pushable')) {
           didcollide =
             memorymoveobject(book, targetboard, destelement, dest) !== true
         } else {
-          didcollide = true
+          didcollide = false
         }
       } else if (
-        checkdoescollide(fromollision, destcollision) &&
+        destcollision === COLLISION.ISSOLID &&
         targetgroup !== destgroup
       ) {
         didcollide = true
@@ -196,7 +205,12 @@ export function boardweavegroup(
         destelement,
         'collision',
       )
-      if (boardelementisobject(destelement) && targetgroup !== destgroup) {
+      if (
+        boardelementisobject(destelement) &&
+        ispresent(destelement) &&
+        targetgroup !== destgroup &&
+        !safeobjectids[destelement.id ?? '']
+      ) {
         if (bookelementstatread(book, destelement, 'pushable')) {
           didcollide =
             memorymoveobject(book, targetboard, destelement, dest) !== true
@@ -243,6 +257,14 @@ export function boardweavegroup(
         x: from.x,
         y: from.y,
       })
+      // check to see if we have to carry an object
+      const maybefromobject = boardelementread(targetboard, from)
+      if (boardelementisobject(maybefromobject) && ispresent(maybefromobject)) {
+        maybefromobject.x = (maybefromobject.x ?? 0) + delta.x
+        maybefromobject.y = (maybefromobject.y ?? 0) + delta.y
+        maybefromobject.lx = (maybefromobject.lx ?? 0) + delta.x
+        maybefromobject.ly = (maybefromobject.ly ?? 0) + delta.y
+      }
     }
   }
 
