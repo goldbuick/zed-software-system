@@ -1,3 +1,4 @@
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { COLOR, WORD } from 'zss/words/types'
 
 export const FILE_BYTES_PER_CHAR = 14
@@ -194,8 +195,8 @@ export function createcontrol(player: string, index: number): LAYER_CONTROL {
 export function layersreadcontrol(layers: LAYER[]) {
   let width = 0
   let height = 0
-  let focusx = 727
-  let focusy = -1000
+  let focusx = BOARD_WIDTH * 0.5
+  let focusy = BOARD_HEIGHT * 0.5
   let viewscale = VIEWSCALE.MID
   let graphics = 'flat'
   let facing = 0
