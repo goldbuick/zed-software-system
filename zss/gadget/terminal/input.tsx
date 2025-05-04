@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
 import {
+  api_error,
   register_terminal_close,
   register_terminal_inclayout,
   vm_cli,
   vm_loader,
 } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
+import { registerreadplayer, writehistorybuffer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
@@ -209,7 +210,7 @@ export function TapeTerminalInput({
         y={edge.top}
         width={edge.width}
         height={edge.height}
-        onScroll={(deltay) => {
+        onScroll={(deltay: number) => {
           trackselection(false)
           useTapeTerminal.setState({
             ycursor: clamp(
@@ -288,18 +289,23 @@ export function TapeTerminalInput({
               const invoke = hasselection ? inputstateselected : inputstate
               if (invoke.length) {
                 if (inputstateactive) {
+                  const historybuffer: string[] = [
+                    '',
+                    invoke,
+                    ...tapeterminal.buffer
+                      .slice(1)
+                      .filter((item) => item !== invoke),
+                  ]
+                  // cache history
+                  writehistorybuffer(historybuffer).catch((err) =>
+                    api_error(SOFTWARE, player, 'input?', err.message),
+                  )
                   useTapeTerminal.setState({
                     xcursor: 0,
                     bufferindex: 0,
                     xselect: undefined,
                     yselect: undefined,
-                    buffer: [
-                      '',
-                      invoke,
-                      ...tapeterminal.buffer
-                        .slice(1)
-                        .filter((item) => item !== invoke),
-                    ],
+                    buffer: historybuffer,
                   })
                   vm_cli(SOFTWARE, player, invoke)
                   if (quickterminal) {
