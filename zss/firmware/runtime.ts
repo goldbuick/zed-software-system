@@ -60,21 +60,12 @@ export const RUNTIME_FIRMWARE = createfirmware({
     // determine target of send
     const [target, label] = totarget(msg)
 
-    function sendtoelements(elements: BOARD_ELEMENT[]) {
-      for (let i = 0; i < elements.length; ++i) {
-        const element = elements[i]
-        if (ispresent(element.id)) {
-          chip.send(element.id, label, data)
-        }
-      }
-    }
-
     // the intent here is to gather a list of target chip ids
     const ltarget = NAME(target)
     switch (ltarget) {
       case 'all':
         for (const id of Object.keys(READ_CONTEXT.board?.objects ?? {})) {
-          chip.send(id, label, data)
+          chip.send(READ_CONTEXT.elementfocus, id, label, data)
         }
         break
       case 'self':
@@ -90,15 +81,19 @@ export const RUNTIME_FIRMWARE = createfirmware({
       case 'others':
         for (const id of Object.keys(READ_CONTEXT.board?.objects ?? {})) {
           if (id !== chip.id()) {
-            chip.send(id, label, data)
+            chip.send(READ_CONTEXT.elementfocus, id, label, data)
           }
         }
         break
       default: {
         // target named elements
-        sendtoelements(listelementsbyattr(READ_CONTEXT.board, [target]))
-        // future enhancement here check if given target is a flag
-        // because we can have flags that are a list of elements
+        const elements = listelementsbyattr(READ_CONTEXT.board, [target])
+        for (let i = 0; i < elements.length; ++i) {
+          const element = elements[i]
+          if (ispresent(element.id)) {
+            chip.send(READ_CONTEXT.elementfocus, element.id, label, data)
+          }
+        }
         break
       }
     }
