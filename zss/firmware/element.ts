@@ -41,6 +41,10 @@ const INPUT_FLAG_NAMES = new Set([
 ])
 
 const STANDARD_STAT_NAMES = new Set([
+  // display
+  'char',
+  'color',
+  'bg',
   // interaction
   'group',
   'party',

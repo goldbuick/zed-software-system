@@ -63,9 +63,6 @@ export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
             pttoindex({ x: 1 + x, y: BOARD_HEIGHT - 1 }, BOARD_WIDTH)
           ]
         border[pttoindex({ x: 1 + x, y: 0 }, BOARD_WIDTH + 2)] = x1
-        // border[pttoindex({ x: 1 + x, y: 1 }, BOARD_WIDTH + 2)] = x1
-        // border[pttoindex({ x: 1 + x, y: BOARD_HEIGHT - 1 }, BOARD_WIDTH + 2)] =
-        //   x2
         border[pttoindex({ x: 1 + x, y: BOARD_HEIGHT }, BOARD_WIDTH + 2)] = x2
       }
       for (let y = 1; y < BOARD_HEIGHT - 1; ++y) {
@@ -73,24 +70,28 @@ export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
         const y2 =
           layer.alphas[pttoindex({ x: BOARD_WIDTH - 1, y: 1 + y }, BOARD_WIDTH)]
         border[pttoindex({ x: 0, y: 1 + y }, BOARD_WIDTH + 2)] = y1
-        // border[pttoindex({ x: 1, y: 1 + y }, BOARD_WIDTH + 2)] = y1
         border[pttoindex({ x: BOARD_WIDTH, y: 1 + y }, BOARD_WIDTH + 2)] = y2
-        // border[pttoindex({ x: BOARD_WIDTH - 1, y: 1 + y }, BOARD_WIDTH + 2)] =
-        //   y2
       }
       // border[0] =
       const gap = RUNTIME.DRAW_CHAR_HEIGHT()
       return (
         // eslint-disable-next-line react/no-unknown-property
         <>
-          <group key={layer.id} position={[0, 0, z + gap]}>
+          <group key={`under${layer.id}`} position={[0, 0, z]}>
             <Dither
               width={layer.width}
               height={layer.height}
               alphas={[...layer.alphas]}
             />
           </group>
-          <group key={`border${layer.id}`} position={[0, 0, z + gap]}>
+          <group key={`mid${layer.id}`} position={[0, 0, z + gap]}>
+            <Dither
+              width={layer.width}
+              height={layer.height}
+              alphas={[...layer.alphas]}
+            />
+          </group>
+          <group key={`over${layer.id}`} position={[0, 0, z + gap]}>
             <Dither
               width={layer.width + 2}
               height={layer.height + 2}

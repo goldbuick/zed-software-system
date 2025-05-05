@@ -114,7 +114,7 @@ export function Engine() {
                 />
                 <Noise
                   premultiply // enables or disables noise premultiplication
-                  blendFunction={BlendFunction.ADD} // blend mode
+                  blendFunction={BlendFunction.AVERAGE} // blend mode
                 />
               </Fragment>
             )}
