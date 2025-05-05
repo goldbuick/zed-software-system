@@ -23,6 +23,12 @@ export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
       return 'image/jpeg'
     case '504B0304':
       return 'application/zip'
+    default:
+      // we are going to assume .xp binary is rexpaint
+      if (filename.endsWith('.xp')) {
+        return 'application/rexpaint'
+      }
+      break
   }
   return mime.getType(filename) ?? 'application/octet-stream'
 }
@@ -111,6 +117,18 @@ export function parsewebfile(player: string, file: File | undefined) {
         parsezipfile(player, file, (ifile) =>
           parsewebfile(player, ifile),
         ).catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+        break
+      case 'application/rexpaint':
+        // parsebinaryfile(file, player, (binaryfile) =>
+        //   vm_loader(
+        //     SOFTWARE,
+        //     player,
+        //     undefined,
+        //     'binary',
+        //     `file:${file.name}`,
+        //     binaryfile,
+        //   ),
+        // ).catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
         break
       case 'application/octet-stream':
         parsebinaryfile(file, player, (binaryfile) =>

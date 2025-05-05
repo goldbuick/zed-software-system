@@ -3,6 +3,7 @@ import {
   JSON_READER,
   api_info,
   TEXT_READER,
+  REXPAINT_READER,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
@@ -56,6 +57,14 @@ export const LOADER_FIRMWARE = createfirmware({
             return [true, binaryreader.cursor]
           case 'bytes':
             return [true, binaryreader.bytes.length]
+        }
+        break
+      }
+      case 'rexpaint': {
+        const rexpaintreader: REXPAINT_READER = memoryloadercontent(chip.id())
+        switch (name) {
+          case 'filename':
+            return [true, rexpaintreader.filename]
         }
         break
       }

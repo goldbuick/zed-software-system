@@ -7,7 +7,6 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol, VIEWSCALE } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
 
-import Clipping from '../clipping'
 import { TapeTerminalInspector } from '../inspector/component'
 
 import { FlatLayer } from './flatlayer'
@@ -203,40 +202,33 @@ export function FlatGraphics({ width, height }: FramedProps) {
   } = useGadgetClient.getState().gadget
 
   return (
-    <Clipping width={viewwidth} height={viewheight}>
-      <group ref={cornerref}>
-        <group ref={panref}>
-          <group ref={zoomref}>
-            <group ref={recenterref}>
-              <TapeTerminalInspector />
-              {under.map((layer, i) => (
-                <FlatLayer
-                  key={layer.id}
-                  from="under"
-                  id={layer.id}
-                  z={i * 2}
-                />
-              ))}
-              {layers.map((layer, i) => (
-                <FlatLayer
-                  key={layer.id}
-                  from="layers"
-                  id={layer.id}
-                  z={under.length + i * 2}
-                />
-              ))}
-              {over.map((layer, i) => (
-                <FlatLayer
-                  key={layer.id}
-                  from="over"
-                  id={layer.id}
-                  z={under.length + layers.length + i * 2}
-                />
-              ))}
-            </group>
+    <group ref={cornerref}>
+      <group ref={panref}>
+        <group ref={zoomref}>
+          <group ref={recenterref}>
+            <TapeTerminalInspector />
+            {under.map((layer, i) => (
+              <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
+            ))}
+            {layers.map((layer, i) => (
+              <FlatLayer
+                key={layer.id}
+                from="layers"
+                id={layer.id}
+                z={under.length + i * 2}
+              />
+            ))}
+            {over.map((layer, i) => (
+              <FlatLayer
+                key={layer.id}
+                from="over"
+                id={layer.id}
+                z={under.length + layers.length + i * 2}
+              />
+            ))}
           </group>
         </group>
       </group>
-    </Clipping>
+    </group>
   )
 }
