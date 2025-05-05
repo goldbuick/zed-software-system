@@ -47,16 +47,18 @@ function LayoutRect({
   switch (rect.type) {
     case RECT_TYPE.PANEL:
       return (
-        <Panel
-          name={rect.name}
-          width={rect.width}
-          height={rect.height}
-          color={14}
-          bg={1}
-          text={rect.text}
-          xmargin={islandscape ? 1 : sidebaropen ? 3 : 10}
-          ymargin={islandscape && !sidebaropen ? 6 : 0}
-        />
+        <group position-z={512}>
+          <Panel
+            name={rect.name}
+            width={rect.width}
+            height={rect.height}
+            color={14}
+            bg={1}
+            text={rect.text}
+            xmargin={islandscape ? 1 : sidebaropen ? 3 : 10}
+            ymargin={islandscape && !sidebaropen ? 6 : 0}
+          />
+        </group>
       )
     case RECT_TYPE.SCROLL:
       return (
@@ -211,31 +213,31 @@ export function PanelLayout() {
             </group>
           )
         })}
-        {hasscroll && (
-          <React.Fragment key="scroll">
-            <group
-              // eslint-disable-next-line react/no-unknown-property
-              position={[0, 0, 800]}
-            >
-              <StaticDither
-                width={screensize.cols}
-                height={screensize.rows}
-                alpha={0.14}
-              />
-            </group>
-            <group
-              // eslint-disable-next-line react/no-unknown-property
-              position={[
-                scrollrect.x * RUNTIME.DRAW_CHAR_WIDTH(),
-                scrollrect.y * RUNTIME.DRAW_CHAR_HEIGHT(),
-                900,
-              ]}
-            >
-              <LayoutRect rect={scrollrect} shouldclose={isscrollempty} />
-            </group>
-          </React.Fragment>
-        )}
       </group>
+      {hasscroll && (
+        <React.Fragment key="scroll">
+          <group
+            // eslint-disable-next-line react/no-unknown-property
+            position={[0, 0, 800]}
+          >
+            <StaticDither
+              width={screensize.cols}
+              height={screensize.rows}
+              alpha={0.14}
+            />
+          </group>
+          <group
+            // eslint-disable-next-line react/no-unknown-property
+            position={[
+              scrollrect.x * RUNTIME.DRAW_CHAR_WIDTH(),
+              scrollrect.y * RUNTIME.DRAW_CHAR_HEIGHT(),
+              900,
+            ]}
+          >
+            <LayoutRect rect={scrollrect} shouldclose={isscrollempty} />
+          </group>
+        </React.Fragment>
+      )}
     </ScrollContext.Provider>
   )
 }

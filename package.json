@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.48.8",
+  "version": "0.48.11",
   "type": "module",
   "scripts": {
     "sloc": "npx sloc zss",
@@ -36,6 +36,7 @@
     "@types/lodash": "^4.17.13",
     "@types/nanoid-dictionary": "^4.2.0",
     "@types/node": "^22.9.0",
+    "@types/pako": "^2.0.3",
     "@types/pathfinding": "^0.0.9",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
@@ -74,6 +75,7 @@
     "nanoid": "^5.0.3",
     "nanoid-dictionary": "^4.3.0",
     "p2pt": "^1.5.1",
+    "pako": "^2.1.0",
     "path-browserify": "^1.0.0",
     "peerjs": "^1.5.4",
     "postprocessing": "^6.37.3",

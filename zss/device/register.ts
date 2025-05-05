@@ -1,3 +1,4 @@
+import humanid from 'human-id'
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice, parsetarget } from 'zss/device'
 import {
@@ -96,7 +97,7 @@ function writesession(key: string, value: MAYBE<string>) {
 
 // read / write from window url #hash
 
-function readurlhash(): string {
+function readurlhash() {
   try {
     const hash = location.hash.slice(1)
     if (hash.length) {
@@ -104,6 +105,22 @@ function readurlhash(): string {
     }
   } catch (err: any) {
     api_error(register, myplayerid, 'crash', err.message)
+  }
+  return ''
+}
+
+async function readurlcontent(): Promise<string> {
+  const urlcontent = readurlhash()
+  if (urlcontent.length) {
+    // see if its a shorturlhash
+    const maybefullurlcontent = await readlocalurl(urlcontent)
+    if (
+      ispresent(maybefullurlcontent) &&
+      maybefullurlcontent.length > urlcontent.length
+    ) {
+      return maybefullurlcontent
+    }
+    return urlcontent
   }
   return ''
 }
@@ -198,23 +215,28 @@ async function loadmem(books: string) {
   vm_books(register, myplayerid, books, selectedid)
 }
 
-let currenthash = ''
+let currenturlhash = ''
 window.addEventListener('hashchange', () => {
   doasync(register, myplayerid, async () => {
-    const books = readurlhash()
-    if (currenthash !== books) {
-      currenthash = books
-      await loadmem(books)
+    const urlhash = readurlhash()
+    if (currenturlhash !== urlhash) {
+      currenturlhash = urlhash
+      const urlcontent = await readurlcontent()
+      await loadmem(urlcontent)
     }
   })
 })
 
-function writeurlhash(exportedbooks: string, label: string) {
-  const out = `#${exportedbooks}`
-  if (location.hash !== out) {
+async function writeurlcontent(exportedbooks: string, label: string) {
+  if (exportedbooks.length > 1024) {
+    const shorturl = await writelocalurl(exportedbooks)
+    return writeurlcontent(shorturl, label)
+  }
+  const newurlhash = `#${exportedbooks}`
+  if (location.hash !== newurlhash) {
     // saving current state, don't interrupt the user
-    currenthash = exportedbooks
-    location.hash = out
+    currenturlhash = exportedbooks
+    location.hash = newurlhash
     const msg = `wrote ${exportedbooks?.length ?? 0} chars [${exportedbooks.slice(0, 8)}...${exportedbooks.slice(-8)}]`
     if (label.includes('autosave')) {
       api_debug(register, myplayerid, msg)
@@ -236,13 +258,37 @@ async function writeselected(selected: string) {
 }
 
 export async function readhistorybuffer() {
-  console.info('readhistorybuffer')
   return readidb<string[]>('HISTORYBUFFER')
 }
 
 export async function writehistorybuffer(historybuffer: string[]) {
-  console.info('writehistorybuffer', historybuffer)
   return writeidb('HISTORYBUFFER', () => historybuffer)
+}
+
+export async function writelocalurl(fullurl: string) {
+  let shorturl = await readidb<string>(fullurl)
+  if (shorturl === undefined) {
+    // build short url
+    while (shorturl === undefined) {
+      const maybeurl = humanid({
+        addAdverb: true,
+        capitalize: false,
+        adjectiveCount: 2,
+      })
+      const hasvalue = await readidb<string>(maybeurl)
+      if (hasvalue === undefined) {
+        shorturl = maybeurl
+      }
+    }
+    // write lookups
+    await writeidb(fullurl, () => shorturl)
+    await writeidb(shorturl, () => fullurl)
+  }
+  return shorturl
+}
+
+export async function readlocalurl(shorturl: string) {
+  return await readidb<string>(shorturl)
 }
 
 // simple bootstrap manager
@@ -302,7 +348,7 @@ const register = createdevice(
         break
       case 'ackoperator':
         doasync(register, message.player, async () => {
-          const urlcontent = readurlhash()
+          const urlcontent = await readurlcontent()
           if (isjoin()) {
             bridge_join(register, myplayerid, urlcontent)
           } else {
@@ -399,8 +445,9 @@ const register = createdevice(
       case 'dev':
         doasync(register, message.player, async function () {
           if (islocked()) {
-            const url = await shorturl(location.href)
-            writecopyit(register, message.player, url, url)
+            writeheader(register, message.player, `unlocking terminal`)
+            await waitfor(100)
+            location.href = location.href.replace(`/locked/#`, `/#`)
           } else {
             writeheader(register, message.player, `creating locked terminal`)
             await waitfor(100)
@@ -410,11 +457,18 @@ const register = createdevice(
         break
       case 'share':
         doasync(register, message.player, async function () {
-          const url = await shorturl(
-            // drop /locked from shared short url if found
-            location.href.replace(/cafe.*locked/, `cafe`),
-          )
+          // unpack short url before sharing
+          const urlhash = readurlhash()
+          const urlcontent = await readurlcontent()
+          // share full content
+          const out = `#${urlcontent}`
+          currenturlhash = urlcontent
+          location.hash = out
+          // gen global shorturl
+          const url = await shorturl(location.href)
           writecopyit(register, message.player, url, url)
+          // reset hash
+          location.hash = `#${urlhash}`
         })
         break
       case 'nuke':
@@ -430,17 +484,19 @@ const register = createdevice(
           await waitfor(100)
           // nuke is the only valid case for reload
           location.hash = ''
-          currenthash = location.hash
+          currenturlhash = location.hash
           location.reload()
         })
         break
       case 'savemem':
-        if (isarray(message.data)) {
-          const [maybehistorylabel, maybecontent] = message.data
-          if (isstring(maybehistorylabel) && isstring(maybecontent)) {
-            writeurlhash(maybecontent, maybehistorylabel)
+        doasync(register, message.player, async function () {
+          if (isarray(message.data)) {
+            const [maybehistorylabel, maybecontent] = message.data
+            if (isstring(maybehistorylabel) && isstring(maybecontent)) {
+              await writeurlcontent(maybecontent, maybehistorylabel)
+            }
           }
-        }
+        })
         break
       case 'forkmem':
         if (isarray(message.data)) {
@@ -459,7 +515,8 @@ const register = createdevice(
           if (isstring(message.data)) {
             await writeselected(message.data)
             // use same solution as a hash change here ...
-            await loadmem(readurlhash())
+            const urlcontent = await readurlcontent()
+            await loadmem(urlcontent)
             // re-run the vm_init flow
           }
         })

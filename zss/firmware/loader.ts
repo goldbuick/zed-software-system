@@ -3,6 +3,7 @@ import {
   JSON_READER,
   api_info,
   TEXT_READER,
+  REXPAINT_READER,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
@@ -18,6 +19,7 @@ import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 
 import { loaderbinary } from './loaderbinary'
 import { loaderjson } from './loaderjson'
+import { loaderrexpaint } from './loaderrexpaint'
 import { loadertext } from './loadertext'
 
 export const LOADER_FIRMWARE = createfirmware({
@@ -59,6 +61,28 @@ export const LOADER_FIRMWARE = createfirmware({
         }
         break
       }
+      case 'rexpaint': {
+        const rexpaintreader: REXPAINT_READER = memoryloadercontent(chip.id())
+        switch (name) {
+          case 'filename':
+            return [true, rexpaintreader.filename]
+          case 'layers':
+            return [true, rexpaintreader.content?.layers.length ?? 0]
+          case 'width':
+            return [
+              true,
+              rexpaintreader.content?.layers[rexpaintreader.cursor].width ?? 0,
+            ]
+          case 'height':
+            return [
+              true,
+              rexpaintreader.content?.layers[rexpaintreader.cursor].height ?? 0,
+            ]
+          case 'cursor':
+            return [true, rexpaintreader.cursor]
+        }
+        break
+      }
     }
     return [false, undefined]
   },
@@ -93,6 +117,7 @@ export const LOADER_FIRMWARE = createfirmware({
   .command('readline', loadertext)
   .command('readjson', loaderjson)
   .command('readbin', loaderbinary)
+  .command('readrexpaint', loaderrexpaint)
   .command('with', (_, words) => {
     const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
     // this will update the READ_CONTEXT so element centric

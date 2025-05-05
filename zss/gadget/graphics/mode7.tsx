@@ -10,8 +10,6 @@ import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
-import Clipping from '../clipping'
-
 import { FlatLayer } from './flatlayer'
 import { Mode7Layer } from './mode7layer'
 import { RenderLayer } from './renderlayer'
@@ -177,18 +175,16 @@ export function Mode7Graphics({ width, height }: FramedProps) {
           </group>
         </RenderLayer>
       </group>
-      <Clipping width={viewwidth} height={viewheight}>
-        <group ref={underref}>
-          {under.map((layer, i) => (
-            <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
-          ))}
-        </group>
-        <group ref={overref} position-z={overindex}>
-          {over.map((layer, i) => (
-            <FlatLayer key={layer.id} from="over" id={layer.id} z={i * 2} />
-          ))}
-        </group>
-      </Clipping>
+      <group ref={underref}>
+        {under.map((layer, i) => (
+          <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
+        ))}
+      </group>
+      <group ref={overref} position-z={overindex}>
+        {over.map((layer, i) => (
+          <FlatLayer key={layer.id} from="over" id={layer.id} z={i * 2} />
+        ))}
+      </group>
     </>
   )
 }

@@ -13,6 +13,7 @@ import {
   memoryreadoperator,
 } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
+import { boardelementread } from 'zss/memory/board'
 import { boardelementapplycolor } from 'zss/memory/boardelement'
 import { bookelementstatread } from 'zss/memory/book'
 import {
@@ -25,7 +26,7 @@ import { BOARD_ELEMENT } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
 import { colorconsts } from 'zss/words/color'
-import { dirconsts } from 'zss/words/dir'
+import { dirconsts, isstrdir } from 'zss/words/dir'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
 
@@ -464,17 +465,39 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('char', (_, words) => {
-    const [value] = readargs(words, 0, [ARG_TYPE.NUMBER])
-    if (ispresent(READ_CONTEXT.element)) {
+    const [value] = readargs(words, 0, [ARG_TYPE.ANY])
+    if (isstrdir(value)) {
+      const [dest, charvalue] = readargs(words, 0, [
+        ARG_TYPE.DIR,
+        ARG_TYPE.NUMBER,
+      ])
+      const element = boardelementread(READ_CONTEXT.board, dest)
+      if (ispresent(element)) {
+        element.char = charvalue
+      }
+    } else if (ispresent(READ_CONTEXT.element) && isnumber(value)) {
       READ_CONTEXT.element.char = value
     }
     return 0
   })
   .command('color', (_, words) => {
-    const [value] = readargs(words, 0, [ARG_TYPE.COLOR])
-    if (ispresent(READ_CONTEXT.element) && ispresent(value)) {
-      boardelementapplycolor(READ_CONTEXT.element, value)
+    const [value] = readargs(words, 0, [ARG_TYPE.ANY])
+    if (isstrdir(value)) {
+      const [dest, colorvalue] = readargs(words, 0, [
+        ARG_TYPE.DIR,
+        ARG_TYPE.COLOR,
+      ])
+      const element = boardelementread(READ_CONTEXT.board, dest)
+      if (ispresent(element)) {
+        boardelementapplycolor(READ_CONTEXT.element, colorvalue)
+      }
+    } else {
+      const [value] = readargs(words, 0, [ARG_TYPE.COLOR])
+      if (ispresent(READ_CONTEXT.element) && ispresent(value)) {
+        boardelementapplycolor(READ_CONTEXT.element, value)
+      }
     }
+
     return 0
   })
   .command('go', (chip, words) => {
