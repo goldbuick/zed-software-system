@@ -1,8 +1,18 @@
 import { useDetectGPU } from '@react-three/drei'
 import { addEffect, addAfterEffect, useThree } from '@react-three/fiber'
-import { EffectComposer } from '@react-three/postprocessing'
+import {
+  Bloom,
+  ChromaticAberration,
+  DepthOfField,
+  EffectComposer,
+  Glitch,
+  Noise,
+  Scanline,
+  Vignette,
+} from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
-import { useEffect, useState } from 'react'
+import { BlendFunction, GlitchMode } from 'postprocessing'
+import { Fragment, useEffect, useState } from 'react'
 import Stats from 'stats.js'
 import {
   FORCE_CRT_OFF,
@@ -13,7 +23,7 @@ import {
 } from 'zss/config'
 import { CRTShape } from 'zss/gadget/fx/crt'
 
-import { useDeviceConfig } from './hooks'
+import { useDeviceConfig, useMedia } from './hooks'
 import { PanelLayout } from './panellayout'
 import { Tape } from './tape'
 import { TapeToast } from './toast'
@@ -79,6 +89,7 @@ export function Engine() {
     })
   }, [islowrez, islandscape, showtouchcontrols])
 
+  const { mood } = useMedia()
   return (
     <>
       <UserFocus>
@@ -90,6 +101,35 @@ export function Engine() {
       </UserFocus>
       {shouldcrt && (
         <EffectComposer>
+          <Glitch
+            delay={[10, 60 * 2]} // min and max glitch delay
+            duration={[0.1, 3.0]} // min and max glitch duration
+            strength={[0, 1]} // min and max glitch strength
+            mode={GlitchMode.SPORADIC} // glitch mode
+            active // turn on/off the effect (switches between "mode" prop and GlitchMode.DISABLED)
+            ratio={0.5} // Threshold for strong glitches, 0 - no weak glitches, 1 - no strong glitches.
+          />
+          <>
+            {mood.includes('dark') && (
+              <Fragment key="mood">
+                <Noise
+                  premultiply // enables or disables noise premultiplication
+                  blendFunction={BlendFunction.ADD} // blend mode
+                />
+                <Bloom
+                  luminanceThreshold={0.1}
+                  luminanceSmoothing={0.01}
+                  height={viewheight * 0.125}
+                  opacity={1.125}
+                />
+                <ChromaticAberration
+                  blendFunction={BlendFunction.NORMAL} // blend mode
+                  offset={[0.0003, 0]} // color offset
+                />
+              </Fragment>
+            )}
+          </>
+          <Vignette eskil offset={0.89} darkness={1.4} />
           <CRTShape viewheight={viewheight} />
         </EffectComposer>
       )}

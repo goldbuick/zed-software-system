@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { RUNTIME } from 'zss/config'
 import { usermediawritepeers } from 'zss/feature/usermedia'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import {
@@ -111,7 +112,7 @@ export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
     case LAYER_TYPE.DITHER: {
       return (
         // eslint-disable-next-line react/no-unknown-property
-        <group key={layer.id} position={[0, 0, z]}>
+        <group key={layer.id} position={[0, 0, z + RUNTIME.DRAW_CHAR_HEIGHT()]}>
           <Dither
             width={layer.width}
             height={layer.height}

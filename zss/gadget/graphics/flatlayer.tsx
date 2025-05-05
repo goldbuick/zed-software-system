@@ -69,6 +69,11 @@ export function FlatLayer({ id, z, from }: FlatLayerProps) {
           )
         }
         break
+      case 'text/mood':
+        if (isstring(medialayer.media)) {
+          media.setmood(medialayer.media)
+        }
+        break
       case 'text/players':
         if (isstring(medialayer.media)) {
           usermediawritepeers(medialayer.media.split(','))

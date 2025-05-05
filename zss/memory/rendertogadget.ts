@@ -466,6 +466,11 @@ export function memoryconverttogadgetlayers(
     }
   }
 
+  // set mood
+  layers.push(
+    createcachedmedia(player, iiii++, 'text/mood', isdark ? 'dark' : 'bright'),
+  )
+
   // check for display media
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const bookflags = bookreadflags(mainbook, MEMORY_LABEL.MAIN)
