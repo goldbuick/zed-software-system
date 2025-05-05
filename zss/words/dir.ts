@@ -88,6 +88,9 @@ export const dirconsts = {
   r: 'EAST',
   east: 'EAST',
   e: 'EAST',
+  // layer specifier
+  over: 'OVER',
+  under: 'UNDER',
 } as const
 
 export type STR_DIR_TYPE = typeof dirconsts

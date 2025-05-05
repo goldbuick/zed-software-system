@@ -75,6 +75,9 @@ export enum DIR {
   FLEE,
   // combinations
   TO,
+  // layer specifiers
+  OVER,
+  UNDER,
 }
 
 export enum STAT_TYPE {
