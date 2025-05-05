@@ -78,6 +78,8 @@ export const LOADER_FIRMWARE = createfirmware({
               true,
               rexpaintreader.content?.layers[rexpaintreader.cursor].height ?? 0,
             ]
+          case 'cursor':
+            return [true, rexpaintreader.cursor]
         }
         break
       }
