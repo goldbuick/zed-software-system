@@ -10,6 +10,7 @@ import { ispresent } from 'zss/mapping/types'
 import { TapeTerminalInspector } from '../inspector/component'
 
 import { FlatLayer } from './flatlayer'
+import { MediaLayer } from './medialayer'
 
 type FramedProps = {
   width: number
@@ -209,6 +210,13 @@ export function FlatGraphics({ width, height }: FramedProps) {
             <TapeTerminalInspector />
             {under.map((layer, i) => (
               <FlatLayer key={layer.id} from="under" id={layer.id} z={i * 2} />
+            ))}
+            {layers.map((layer) => (
+              <MediaLayer
+                key={`media${layer.id}`}
+                id={layer.id}
+                from="layers"
+              />
             ))}
             {layers.map((layer, i) => (
               <FlatLayer

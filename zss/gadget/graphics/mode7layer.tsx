@@ -1,20 +1,9 @@
-import { useEffect } from 'react'
-import { usermediawritepeers } from 'zss/feature/usermedia'
+import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import {
-  CHAR_HEIGHT,
-  CHAR_WIDTH,
-  CHARS_PER_ROW,
-  CHARS_TOTAL_ROWS,
-  FILE_BYTES_PER_COLOR,
-  LAYER_TYPE,
-  PALETTE_COLORS,
-} from 'zss/gadget/data/types'
-import { isarray, isstring } from 'zss/mapping/types'
+import { LAYER_TYPE } from 'zss/gadget/data/types'
+import { pttoindex } from 'zss/mapping/2d'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
-
-import { createbitmapfromarray } from '../data/bitmap'
-import { useMedia } from '../hooks'
 
 import { Dither } from './dither'
 import { Sprites } from './sprites'
@@ -27,55 +16,9 @@ type Mode7LayerProps = {
 }
 
 export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
-  const media = useMedia()
   const layer = useGadgetClient(
     useShallow((state) => state.gadget[from]?.find((item) => item.id === id)),
   )
-
-  // special case for media elements
-  const medialayer = layer?.type === LAYER_TYPE.MEDIA ? layer : undefined
-  useEffect(() => {
-    switch (medialayer?.mime) {
-      case 'image/palette':
-        if (isarray(medialayer.media)) {
-          media.setpalette(
-            createbitmapfromarray(
-              FILE_BYTES_PER_COLOR,
-              PALETTE_COLORS,
-              medialayer.media,
-            ),
-          )
-        }
-        break
-      case 'image/charset':
-        if (isarray(medialayer.media)) {
-          media.setcharset(
-            createbitmapfromarray(
-              CHARS_PER_ROW * CHAR_WIDTH,
-              CHARS_TOTAL_ROWS * CHAR_HEIGHT,
-              medialayer.media,
-            ),
-          )
-        }
-        break
-      case 'image/altcharset':
-        if (isarray(medialayer.media)) {
-          media.setaltcharset(
-            createbitmapfromarray(
-              CHARS_PER_ROW * CHAR_WIDTH,
-              CHARS_TOTAL_ROWS * CHAR_HEIGHT,
-              medialayer.media,
-            ),
-          )
-        }
-        break
-      case 'text/players':
-        if (isstring(medialayer.media)) {
-          usermediawritepeers(medialayer.media.split(','))
-        }
-        break
-    }
-  }, [media, medialayer])
 
   switch (layer?.type) {
     default:
@@ -109,15 +52,53 @@ export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
       )
     }
     case LAYER_TYPE.DITHER: {
+      // generate border
+      const border: number[] = new Array(
+        (layer.width + 2) * (layer.height + 2),
+      ).fill(0)
+      for (let x = 1; x < BOARD_WIDTH - 1; ++x) {
+        const x1 = layer.alphas[pttoindex({ x: 1 + x, y: 0 }, BOARD_WIDTH)]
+        const x2 =
+          layer.alphas[
+            pttoindex({ x: 1 + x, y: BOARD_HEIGHT - 1 }, BOARD_WIDTH)
+          ]
+        border[pttoindex({ x: 1 + x, y: 0 }, BOARD_WIDTH + 2)] = x1
+        border[pttoindex({ x: 1 + x, y: BOARD_HEIGHT }, BOARD_WIDTH + 2)] = x2
+      }
+      for (let y = 1; y < BOARD_HEIGHT - 1; ++y) {
+        const y1 = layer.alphas[pttoindex({ x: 0, y: 1 + y }, BOARD_WIDTH)]
+        const y2 =
+          layer.alphas[pttoindex({ x: BOARD_WIDTH - 1, y: 1 + y }, BOARD_WIDTH)]
+        border[pttoindex({ x: 0, y: 1 + y }, BOARD_WIDTH + 2)] = y1
+        border[pttoindex({ x: BOARD_WIDTH, y: 1 + y }, BOARD_WIDTH + 2)] = y2
+      }
+      // border[0] =
+      const gap = RUNTIME.DRAW_CHAR_HEIGHT()
       return (
         // eslint-disable-next-line react/no-unknown-property
-        <group key={layer.id} position={[0, 0, z]}>
-          <Dither
-            width={layer.width}
-            height={layer.height}
-            alphas={[...layer.alphas]}
-          />
-        </group>
+        <>
+          <group key={`under${layer.id}`} position={[0, 0, z]}>
+            <Dither
+              width={layer.width}
+              height={layer.height}
+              alphas={[...layer.alphas]}
+            />
+          </group>
+          <group key={`mid${layer.id}`} position={[0, 0, z + gap]}>
+            <Dither
+              width={layer.width}
+              height={layer.height}
+              alphas={[...layer.alphas]}
+            />
+          </group>
+          <group key={`over${layer.id}`} position={[0, 0, z + gap]}>
+            <Dither
+              width={layer.width + 2}
+              height={layer.height + 2}
+              alphas={border}
+            />
+          </group>
+        </>
       )
     }
   }

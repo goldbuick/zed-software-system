@@ -191,11 +191,13 @@ export function useTilesData() {
 export type MEDIA_DATA = {
   palette?: BITMAP
   charset?: BITMAP
+  mood: string
   screen: Record<string, HTMLVideoElement>
   altcharset?: BITMAP
   palettedata?: Color[]
   charsetdata?: CanvasTexture
   altcharsetdata?: CanvasTexture
+  setmood: (mood: string) => void
   setpalette: (palette: MAYBE<BITMAP>) => void
   setcharset: (charset: MAYBE<BITMAP>) => void
   setaltcharset: (altcharset: MAYBE<BITMAP>) => void
@@ -208,9 +210,18 @@ const charset = loadcharsetfrombytes(CHARSET)
 export const useMedia = create<MEDIA_DATA>((set) => ({
   palette,
   charset,
+  mood: '',
   screen: {},
   palettedata: convertpalettetocolors(palette),
   charsetdata: createbitmaptexture(charset),
+  setmood(mood) {
+    set((state) => {
+      if (isequal(state.mood, mood)) {
+        return state
+      }
+      return { ...state, mood }
+    })
+  },
   setpalette(palette) {
     set((state) => {
       if (isequal(state.palette, palette)) {

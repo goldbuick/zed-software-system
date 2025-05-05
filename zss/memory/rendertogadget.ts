@@ -300,7 +300,7 @@ export function memoryconverttogadgetlayers(
       object,
       1,
       COLOR.WHITE,
-      COLOR.ONCLEAR,
+      COLOR.BLACK,
     )
     const sprite = createcachedsprite(player, objectindex, id, i)
 
@@ -465,6 +465,11 @@ export function memoryconverttogadgetlayers(
       control.focusid = id
     }
   }
+
+  // set mood
+  layers.push(
+    createcachedmedia(player, iiii++, 'text/mood', isdark ? 'dark' : 'bright'),
+  )
 
   // check for display media
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
