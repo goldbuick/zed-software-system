@@ -19,6 +19,7 @@ import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 
 import { loaderbinary } from './loaderbinary'
 import { loaderjson } from './loaderjson'
+import { loaderrexpaint } from './loaderrexpaint'
 import { loadertext } from './loadertext'
 
 export const LOADER_FIRMWARE = createfirmware({
@@ -114,6 +115,7 @@ export const LOADER_FIRMWARE = createfirmware({
   .command('readline', loadertext)
   .command('readjson', loaderjson)
   .command('readbin', loaderbinary)
+  .command('readrexpaint', loaderrexpaint)
   .command('with', (_, words) => {
     const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
     // this will update the READ_CONTEXT so element centric
