@@ -116,14 +116,10 @@ export function Engine() {
                   premultiply // enables or disables noise premultiplication
                   blendFunction={BlendFunction.ADD} // blend mode
                 />
-                <ChromaticAberration
-                  blendFunction={BlendFunction.NORMAL} // blend mode
-                  offset={[0.0005, 0]} // color offset
-                />
               </Fragment>
             )}
           </>
-          <Vignette eskil offset={0.89} darkness={1.4} />
+          <Vignette eskil offset={0.89} darkness={1.1} />
           <CRTShape viewheight={viewheight} />
         </EffectComposer>
       )}

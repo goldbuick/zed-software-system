@@ -294,7 +294,7 @@ export function bookelementgroupread(
   book: MAYBE<BOOK>,
   element: MAYBE<BOARD_ELEMENT>,
 ) {
-  return maptostring(bookelementstatread(book, element, 'group'))
+  return maptostring(bookelementstatread(book, element, 'group') ?? createsid())
 }
 
 export function bookelementdisplayread(
