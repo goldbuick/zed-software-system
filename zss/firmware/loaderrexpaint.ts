@@ -1,200 +1,123 @@
-import { BINARY_READER } from 'zss/device/api'
-import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
-import { FIRMWARE_COMMAND } from 'zss/firmware'
 import {
-  CHARS_PER_ROW,
-  CHARS_TOTAL_ROWS,
-  FILE_BYTES_PER_CHAR,
-  FILE_BYTES_PER_COLOR,
-  PALETTE_COLORS,
-} from 'zss/gadget/data/types'
-import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
-import { bookensurecodepagewithtype } from 'zss/memory/book'
-import { codepagereaddata } from 'zss/memory/codepage'
+  REXPAINT_READER,
+  REXPAINT_READER_COLOR,
+  REXPAINT_READER_LAYER,
+} from 'zss/device/api'
+import { loadpalettefrombytes } from 'zss/feature/bytes'
+import { PALETTE } from 'zss/feature/palette'
+import { FIRMWARE_COMMAND } from 'zss/firmware'
+import { FILE_BYTES_PER_COLOR } from 'zss/gadget/data/types'
+import { ptwithin } from 'zss/mapping/2d'
+import { clamp } from 'zss/mapping/number'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 import { memoryloadercontent } from 'zss/memory/loader'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { NAME } from 'zss/words/types'
+import { ARG_TYPE, readargs } from 'zss/words/reader'
+import { COLOR, NAME } from 'zss/words/types'
 
-function readbin(binaryreader: BINARY_READER, kind: string): MAYBE<number> {
-  if (!ispresent(binaryreader)) {
-    return undefined
+function distance(a: REXPAINT_READER_COLOR, b: REXPAINT_READER_COLOR) {
+  return Math.sqrt(
+    Math.pow(a.r - b.r, 2) + Math.pow(a.g - b.g, 2) + Math.pow(a.b - b.b, 2),
+  )
+}
+
+const palette = loadpalettefrombytes(PALETTE)
+function closestcolor(rexcolor: REXPAINT_READER_COLOR) {
+  let color: MAYBE<COLOR>
+  if (!ispresent(palette)) {
+    return color
   }
-
-  const lkind = NAME(kind)
-  const le = lkind.endsWith('le')
-  switch (lkind) {
-    case 'float32':
-    case 'float32le': {
-      const value = binaryreader.dataview.getFloat32(binaryreader.cursor, le)
-      binaryreader.cursor += 4
-      return value
-    }
-    case 'float64':
-    case 'float64le': {
-      const value = binaryreader.dataview.getFloat64(binaryreader.cursor, le)
-      binaryreader.cursor += 8
-      return value
-    }
-    case 'int8':
-    case 'int8le': {
-      const value = binaryreader.dataview.getInt8(binaryreader.cursor)
-      binaryreader.cursor += 1
-      return value
-    }
-    case 'int16':
-    case 'int16le': {
-      const value = binaryreader.dataview.getInt16(binaryreader.cursor, le)
-      binaryreader.cursor += 2
-      return value
-    }
-    case 'int32':
-    case 'int32le': {
-      const value = binaryreader.dataview.getInt32(binaryreader.cursor, le)
-      binaryreader.cursor += 4
-      return value
-    }
-    case 'int64':
-    case 'int64le': {
-      const value = binaryreader.dataview.getBigInt64(binaryreader.cursor, le)
-      binaryreader.cursor += 8
-      return value as any
-    }
-    case 'uint8':
-    case 'uint8le': {
-      const value = binaryreader.dataview.getUint8(binaryreader.cursor)
-      binaryreader.cursor += 1
-      return value
-      break
-    }
-    case 'uint16':
-    case 'uint16le': {
-      const value = binaryreader.dataview.getUint16(binaryreader.cursor, le)
-      binaryreader.cursor += 2
-      return value
-    }
-    case 'uint32':
-    case 'uint32le': {
-      const value = binaryreader.dataview.getUint32(binaryreader.cursor, le)
-      binaryreader.cursor += 4
-      return value
-    }
-    case 'uint64':
-    case 'uint64le': {
-      const value = binaryreader.dataview.getBigUint64(binaryreader.cursor, le)
-      binaryreader.cursor += 8
-      return value as any
+  let colordist = 1000000000
+  for (let i = 0; i <= (COLOR.BLACK as number); ++i) {
+    const idx = i * FILE_BYTES_PER_COLOR
+    const r = palette.bits[idx]
+    const g = palette.bits[idx + 1]
+    const b = palette.bits[idx + 2]
+    const dist = distance(rexcolor, {
+      r,
+      g,
+      b,
+      hex: '',
+    })
+    if (dist < colordist) {
+      color = i as COLOR
+      colordist = dist
     }
   }
+  return color
 }
 
 export const loaderrexpaint: FIRMWARE_COMMAND = (chip, words) => {
-  const binaryreader: BINARY_READER = memoryloadercontent(chip.id())
-  if (!ispresent(binaryreader)) {
+  const rexpaintreader: REXPAINT_READER = memoryloadercontent(chip.id())
+  if (!ispresent(rexpaintreader)) {
     return 0
   }
 
   const [kind, ii] = readargs(words, 0, [ARG_TYPE.NAME])
   const lkind = NAME(kind)
+
+  const layers = rexpaintreader.content?.layers ?? []
   switch (lkind) {
     case 'seek': {
       const [cursor] = readargs(words, ii, [ARG_TYPE.NUMBER])
-      binaryreader.cursor = cursor
+      rexpaintreader.cursor = clamp(cursor, 0, layers.length - 1)
       break
     }
-    case 'float32':
-    case 'float32le':
-    case 'float64':
-    case 'float64le':
-    case 'int8':
-    case 'int8le':
-    case 'int16':
-    case 'int16le':
-    case 'int32':
-    case 'int32le':
-    case 'int64':
-    case 'int64le':
-    case 'uint8':
-    case 'uint8le':
-    case 'uint16':
-    case 'uint16le':
-    case 'uint32':
-    case 'uint32le':
-    case 'uint64':
-    case 'uint64le': {
-      const [target] = readargs(words, ii, [ARG_TYPE.NAME])
-      chip.set(target, readbin(binaryreader, lkind))
+    case 'layer': {
+      const cursor = rexpaintreader.cursor + 1
+      rexpaintreader.cursor = clamp(cursor, 0, layers.length - 1)
       break
     }
-    case 'text': {
-      const [lengthkind, target] = readargs(words, ii, [
-        ARG_TYPE.NAME,
+    case 'char': {
+      const [x, y, name] = readargs(words, ii, [
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.NUMBER,
         ARG_TYPE.NAME,
       ])
-      const length = readbin(binaryreader, lengthkind)
-      if (isnumber(length) && isstring(target)) {
-        const bytes = new Uint8Array(
-          binaryreader.bytes.buffer,
-          binaryreader.cursor,
-          length,
-        )
-        // Using decode method to get string output
-        const decoder = new TextDecoder('utf-8')
-        const value = decoder.decode(bytes)
-        chip.set(target, value)
-        binaryreader.cursor += length
+      const layer: MAYBE<REXPAINT_READER_LAYER> =
+        rexpaintreader.content?.layers[rexpaintreader.cursor]
+      if (
+        ispresent(layer) &&
+        ptwithin(x, y, 0, layer.width - 1, layer.height - 1, 0)
+      ) {
+        chip.set(name, layer.raster[x + y * layer.width].asciiCode)
       }
       break
     }
-    case 'palette': {
-      const [target] = readargs(words, ii, [ARG_TYPE.NAME])
-      const codepage = bookensurecodepagewithtype(
-        READ_CONTEXT.book,
-        CODE_PAGE_TYPE.PALETTE,
-        target,
-      )
-      const palette = codepagereaddata<CODE_PAGE_TYPE.PALETTE>(codepage)
-      if (ispresent(palette)) {
-        const numberofbytes = PALETTE_COLORS * FILE_BYTES_PER_COLOR
-        const bitmap = loadpalettefrombytes(
-          new Uint8Array(
-            binaryreader.bytes.buffer,
-            binaryreader.cursor,
-            numberofbytes,
-          ),
-        )
-        if (ispresent(bitmap)) {
-          palette.bits = bitmap.bits
-        }
-        binaryreader.cursor += numberofbytes
+    case 'color': {
+      const [x, y, name] = readargs(words, ii, [
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.NAME,
+      ])
+      const layer: MAYBE<REXPAINT_READER_LAYER> =
+        rexpaintreader.content?.layers[rexpaintreader.cursor]
+      if (
+        ispresent(layer) &&
+        ptwithin(x, y, 0, layer.width - 1, layer.height - 1, 0)
+      ) {
+        // find closest match
+        chip.set(name, closestcolor(layer.raster[x + y * layer.width].color))
       }
       break
     }
-    case 'charset': {
-      const [target] = readargs(words, ii, [ARG_TYPE.NAME])
-      const codepage = bookensurecodepagewithtype(
-        READ_CONTEXT.book,
-        CODE_PAGE_TYPE.CHARSET,
-        target,
-      )
-      const charset = codepagereaddata<CODE_PAGE_TYPE.CHARSET>(codepage)
-      if (ispresent(charset)) {
-        const numberofbytes =
-          CHARS_PER_ROW * CHARS_TOTAL_ROWS * FILE_BYTES_PER_CHAR
-        const bitmap = loadcharsetfrombytes(
-          new Uint8Array(
-            binaryreader.bytes.buffer,
-            binaryreader.cursor,
-            numberofbytes,
-          ),
-        )
-        if (ispresent(bitmap)) {
-          charset.bits = bitmap.bits
-        }
-        binaryreader.cursor += numberofbytes
+    case 'bg': {
+      const [x, y, name] = readargs(words, ii, [
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.NUMBER,
+        ARG_TYPE.NAME,
+      ])
+      const layer: MAYBE<REXPAINT_READER_LAYER> =
+        rexpaintreader.content?.layers[rexpaintreader.cursor]
+      if (
+        ispresent(layer) &&
+        ptwithin(x, y, 0, layer.width - 1, layer.height - 1, 0)
+      ) {
+        // find closest match
+        chip.set(name, closestcolor(layer.raster[x + y * layer.width].bg))
       }
       break
     }
   }
+
   return 0
 }

@@ -119,16 +119,16 @@ export function parsewebfile(player: string, file: File | undefined) {
         ).catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
         break
       case 'application/rexpaint':
-        // parsebinaryfile(file, player, (binaryfile) =>
-        //   vm_loader(
-        //     SOFTWARE,
-        //     player,
-        //     undefined,
-        //     'binary',
-        //     `file:${file.name}`,
-        //     binaryfile,
-        //   ),
-        // ).catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+        parsebinaryfile(file, player, (binaryfile) =>
+          vm_loader(
+            SOFTWARE,
+            player,
+            undefined,
+            'rexpaint',
+            `file:${file.name}`,
+            binaryfile,
+          ),
+        ).catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
         break
       case 'application/octet-stream':
         parsebinaryfile(file, player, (binaryfile) =>

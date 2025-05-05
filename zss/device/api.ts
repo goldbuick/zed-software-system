@@ -2,7 +2,7 @@
 what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
-import rexpaintjs from 'rexpaintjs'
+import { fromBuffer } from 'zss/feature/parserexpaint'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
@@ -554,7 +554,7 @@ export type REXPAINT_READER_COLOR = {
 export type REXPAINT_READER_PIXEL = {
   asciiCode: number
   transparent: boolean
-  fg: REXPAINT_READER_COLOR
+  color: REXPAINT_READER_COLOR
   bg: REXPAINT_READER_COLOR
 }
 
@@ -571,7 +571,7 @@ export type REXPAINT_READER_OBJECT = {
 
 export type REXPAINT_READER = {
   filename: string
-  layercursor: number
+  cursor: number
   content: MAYBE<REXPAINT_READER_OBJECT>
 }
 
@@ -581,13 +581,16 @@ export function createrexpaintreader(
 ): REXPAINT_READER {
   const reader: REXPAINT_READER = {
     filename,
-    layercursor: 0,
+    cursor: 0,
     content: undefined,
   }
-  rexpaintjs.fromBuffer(content).then((content: REXPAINT_READER_OBJECT) => {
-    reader.content = content
-    debugger
-  })
+  fromBuffer(content)
+    .then((content: REXPAINT_READER_OBJECT) => {
+      reader.content = content
+    })
+    .catch(() => {
+      //
+    })
   return reader
 }
 

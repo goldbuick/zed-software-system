@@ -65,6 +65,18 @@ export const LOADER_FIRMWARE = createfirmware({
         switch (name) {
           case 'filename':
             return [true, rexpaintreader.filename]
+          case 'layers':
+            return [true, rexpaintreader.content?.layers.length ?? 0]
+          case 'width':
+            return [
+              true,
+              rexpaintreader.content?.layers[rexpaintreader.cursor].width ?? 0,
+            ]
+          case 'height':
+            return [
+              true,
+              rexpaintreader.content?.layers[rexpaintreader.cursor].height ?? 0,
+            ]
         }
         break
       }
