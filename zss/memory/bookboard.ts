@@ -226,7 +226,7 @@ export function boardevaldir(
   dir: STR_DIR,
   startpt: PT,
 ): EVAL_DIR {
-  let layer: DIR = DIR.MID
+  const layer: DIR = DIR.MID
   if (!ispresent(book) || !ispresent(board) || !ispresent(target)) {
     return { dir, startpt, destpt: startpt, layer }
   }
@@ -459,9 +459,19 @@ export function boardevaldir(
       }
       // layers
       case DIR.OVER:
-      case DIR.UNDER:
-        layer = dirconst
-        break
+      case DIR.UNDER: {
+        const modeval = boardevaldir(
+          book,
+          board,
+          target,
+          player,
+          dir.slice(i + 1),
+          startpt,
+        )
+        // set layer to correct const
+        modeval.layer = dirconst
+        return modeval
+      }
     }
   }
 

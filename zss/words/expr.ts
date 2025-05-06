@@ -197,17 +197,17 @@ export function readexpr(index: number): [any, number] {
         const [a, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
         return [Math.abs(a), iii]
       }
-      case 'ceil': {
+      case 'intceil': {
         // CEIL <a>
         const [a, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
         return [Math.ceil(a), iii]
       }
-      case 'floor': {
+      case 'intfloor': {
         // FLOOR <a>
         const [a, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
         return [Math.floor(a), iii]
       }
-      case 'round': {
+      case 'intround': {
         // ROUND <a>
         const [a, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
         return [Math.round(a), iii]

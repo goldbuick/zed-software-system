@@ -218,6 +218,8 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
       case 'CCW':
       case 'OPP':
       case 'RNDP':
+      case 'OVER':
+      case 'UNDER':
         break
       default:
         return [strdir, ii]
