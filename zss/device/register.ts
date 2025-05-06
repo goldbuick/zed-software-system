@@ -206,6 +206,7 @@ function terminalinclayout(inc: boolean) {
 async function loadmem(books: string) {
   if (books.length === 0) {
     api_error(register, myplayerid, 'content', 'no content found')
+    vm_cli(register, myplayerid, '#pages')
     writewikilink()
     register_terminal_full(register, myplayerid)
     return
@@ -341,11 +342,6 @@ const register = createdevice(
         })
         break
       }
-      case 'loginfail':
-        vm_cli(register, myplayerid, '#pages')
-        writewikilink()
-        register_terminal_full(register, myplayerid)
-        break
       case 'ackoperator':
         doasync(register, message.player, async () => {
           const urlcontent = await readurlcontent()
@@ -361,6 +357,8 @@ const register = createdevice(
         break
       case 'loginready':
         vm_login(register, myplayerid)
+        vm_cli(register, myplayerid, '#pages')
+        writewikilink()
         break
       case 'acklogin':
         register_terminal_close(register, myplayerid)
