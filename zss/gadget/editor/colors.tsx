@@ -77,28 +77,38 @@ export function zsswordcolorconfig(word: string, color: COLOR) {
   ZSS_WORD_MAP.set(word, color)
 }
 
+function zssnoteswordcolor(word: string) {
+  const colors: COLOR[] = []
+  for (let i = 0; i < word.length; ++i) {
+    colors.push(zssmusiccolor(word[i]))
+  }
+  return colors
+}
+
+function zssplaywordcolor(word: string) {
+  const colors: COLOR[] = []
+  const measures = word.split(';')
+  for (let i = 0; i < measures.length; ++i) {
+    const part = measures[i]
+    if (part.trim().startsWith('#')) {
+      colors.push(COLOR.WHITE)
+      colors.push(...new Array<COLOR>(part.length).fill(COLOR.PURPLE))
+    } else {
+      colors.push(...zssnoteswordcolor(part))
+    }
+  }
+  colors.push(COLOR.BLUE)
+  return colors
+}
+
 export function zsswordcolor(word: string) {
   if (word.startsWith('play ')) {
-    const colors: COLOR[] = []
-    for (let i = 0; i < word.length; ++i) {
-      if (i < 5) {
-        colors.push(ZSS_TYPE_COMMAND)
-      } else {
-        colors.push(zssmusiccolor(word[i]))
-      }
-    }
-    colors.push(COLOR.BLUE)
+    const colors: COLOR[] = new Array<COLOR>(5).fill(ZSS_TYPE_COMMAND)
+    colors.push(...zssplaywordcolor(word.slice(5)))
     return colors
   } else if (word.startsWith('bgplay ')) {
-    const colors: COLOR[] = []
-    for (let i = 0; i < word.length; ++i) {
-      if (i < 7) {
-        colors.push(ZSS_TYPE_COMMAND)
-      } else {
-        colors.push(zssmusiccolor(word[i]))
-      }
-    }
-    colors.push(COLOR.BLUE)
+    const colors: COLOR[] = new Array<COLOR>(7).fill(ZSS_TYPE_COMMAND)
+    colors.push(...zssplaywordcolor(word.slice(7)))
     return colors
   }
   return ZSS_WORD_MAP.get(word) ?? COLOR.GREEN
