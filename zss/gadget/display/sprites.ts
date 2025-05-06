@@ -118,10 +118,10 @@ const spritesMaterial = new ShaderMaterial({
       animPosition.x += (pointSize.y - pointSize.x) * 0.5;
 
       vec4 mvPosition = modelViewMatrix * vec4(animPosition, 0.0, 1.0);
-      gl_Position = projectionMatrix * mvPosition;      
+      gl_Position = projectionMatrix * mvPosition;
 
       // this handles things being scaled
-      gl_PointSize = pointSize.y * modelViewMatrix[0][0] * dpr;
+      gl_PointSize = pointSize.y * modelViewMatrix[0][0] * dpr + 1.0;
       
       #include <clipping_planes_vertex>
     }
