@@ -477,7 +477,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         ARG_TYPE.DIR,
         ARG_TYPE.NUMBER,
       ])
-      const element = boardelementread(READ_CONTEXT.board, dest)
+      const element = boardelementread(READ_CONTEXT.board, dest.destpt)
       if (ispresent(element)) {
         element.char = charvalue
       }
@@ -493,7 +493,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         ARG_TYPE.DIR,
         ARG_TYPE.COLOR,
       ])
-      const element = boardelementread(READ_CONTEXT.board, dest)
+      const element = boardelementread(READ_CONTEXT.board, dest.destpt)
       if (ispresent(element)) {
         boardelementapplycolor(READ_CONTEXT.element, colorvalue)
       }
@@ -514,7 +514,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         READ_CONTEXT.book,
         READ_CONTEXT.board,
         READ_CONTEXT.element,
-        dest,
+        dest.destpt,
       )
 
       // always yield
@@ -522,8 +522,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
       // if we moved return 0
       if (
-        READ_CONTEXT.element.x === dest.x &&
-        READ_CONTEXT.element.y === dest.y
+        READ_CONTEXT.element.x === dest.destpt.x &&
+        READ_CONTEXT.element.y === dest.destpt.y
       ) {
         return 0
       }
@@ -542,7 +542,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const y = READ_CONTEXT.element.y ?? 0
 
     // create delta from dir
-    READ_CONTEXT.element.stepx = dest.x - x
-    READ_CONTEXT.element.stepy = dest.y - y
+    READ_CONTEXT.element.stepx = dest.destpt.x - x
+    READ_CONTEXT.element.stepy = dest.destpt.y - y
     return 0
   })

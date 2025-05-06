@@ -121,8 +121,8 @@ export const TRANSFORM_FIRMWARE = createfirmware()
     }
     const [dir, ii] = readargs(words, 0, [ARG_TYPE.DIR])
     const delta = {
-      x: dir.x - (READ_CONTEXT.element?.x ?? 0),
-      y: dir.y - (READ_CONTEXT.element?.y ?? 0),
+      x: dir.destpt.x - (READ_CONTEXT.element?.x ?? 0),
+      y: dir.destpt.y - (READ_CONTEXT.element?.y ?? 0),
     }
 
     const filter = readfilter(words, ii)

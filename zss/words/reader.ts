@@ -1,4 +1,4 @@
-import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { isnumber, isstring, MAYBE } from 'zss/mapping/types'
 import { boardevaldir } from 'zss/memory/bookboard'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 
@@ -77,16 +77,17 @@ function didexpect(msg: string, value: any, words: WORD[]) {
 }
 
 function readdestfromdir(dir: STR_DIR) {
+  const startpt: PT = {
+    x: READ_CONTEXT.element?.x ?? 0,
+    y: READ_CONTEXT.element?.y ?? 0,
+  }
   return boardevaldir(
     READ_CONTEXT.book,
     READ_CONTEXT.board,
     READ_CONTEXT.element,
     READ_CONTEXT.elementfocus,
     dir,
-    {
-      x: READ_CONTEXT.element?.x ?? 0,
-      y: READ_CONTEXT.element?.y ?? 0,
-    },
+    startpt,
   )
 }
 

@@ -466,7 +466,7 @@ export function boardevaldir(
   }
 
   // result
-  return { dir, startpt, destpt: startpt, layer }
+  return { dir, startpt, destpt: pt, layer }
 }
 
 // object / terrain utils

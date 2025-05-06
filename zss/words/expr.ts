@@ -176,7 +176,7 @@ export function readexpr(index: number): [any, number] {
           READ_CONTEXT.book,
           READ_CONTEXT.board,
           READ_CONTEXT.element,
-          dir,
+          dir.destpt,
         )
         return [isblocked ? 1 : 0, iii]
       }
