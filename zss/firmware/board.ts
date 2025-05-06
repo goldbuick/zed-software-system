@@ -75,8 +75,8 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     // ensure destructible
     bullet.destructible = 1
     // set walking direction
-    bullet.stepx = dir.x - READ_CONTEXT.element.x
-    bullet.stepy = dir.y - READ_CONTEXT.element.y
+    bullet.stepx = dir.destpt.x - READ_CONTEXT.element.x
+    bullet.stepy = dir.destpt.y - READ_CONTEXT.element.y
     // things shot always have the clear bg
     bullet.bg = COLOR.ONCLEAR
     // object code
@@ -109,14 +109,14 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
 
   // check if we are blocked by a pushable object element
-  const target = boardelementread(READ_CONTEXT.board, dir)
+  const target = boardelementread(READ_CONTEXT.board, dir.destpt)
   if (target?.category === CATEGORY.ISOBJECT && target?.pushable) {
     const from: PT = {
       x: READ_CONTEXT.element?.x ?? 0,
       y: READ_CONTEXT.element?.y ?? 0,
     }
     // attempt to shove it away
-    const pt = ptapplydir(dir, dirfrompts(from, dir))
+    const pt = ptapplydir(dir.destpt, dirfrompts(from, dir.destpt))
     bookboardmoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
   }
 
@@ -132,7 +132,7 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     READ_CONTEXT.book,
     READ_CONTEXT.board,
     collision,
-    dir,
+    dir.destpt,
   )
 
   // write new element
@@ -141,7 +141,7 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
       READ_CONTEXT.book,
       READ_CONTEXT.board,
       kind,
-      dir,
+      dir.destpt,
       id,
     )
     if (ispresent(element) && ispresent(arg)) {
@@ -203,7 +203,7 @@ export const BOARD_FIRMWARE = createfirmware()
         x: READ_CONTEXT.element?.x ?? 0,
         y: READ_CONTEXT.element?.y ?? 0,
       }
-      const edgedir = dirfrompts(pt, dir)
+      const edgedir = dirfrompts(pt, dir.destpt)
       const target = pick(...boards)
       switch (edgedir) {
         case DIR.NORTH:
@@ -232,7 +232,7 @@ export const BOARD_FIRMWARE = createfirmware()
 
     // shove target at dir, in the direction of the given dir
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-    const maybetarget = boardelementread(READ_CONTEXT.board, dir)
+    const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
     if (boardelementisobject(maybetarget)) {
       // should we delay when we evaluate the dir ?
       // movedir should be a delta between .element & movedir
@@ -241,7 +241,7 @@ export const BOARD_FIRMWARE = createfirmware()
         READ_CONTEXT.book,
         READ_CONTEXT.board,
         maybetarget,
-        movedir,
+        movedir.destpt,
       )
     }
     return 0
@@ -256,7 +256,7 @@ export const BOARD_FIRMWARE = createfirmware()
 
     // duplicate target at dir, in the direction of the given dir
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-    const maybetarget = boardelementread(READ_CONTEXT.board, dir)
+    const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
 
     if (boardelementisobject(maybetarget)) {
       // object
@@ -291,8 +291,8 @@ export const BOARD_FIRMWARE = createfirmware()
     for (let i = 0; i < measuredwidth; ++i) {
       // create new terrain element
       boardsetterrain(READ_CONTEXT.board, {
-        x: dir.x + i,
-        y: dir.y,
+        x: dir.destpt.x + i,
+        y: dir.destpt.y,
         name: 'text',
         char: context.char[i],
         color: context.color[i],

@@ -1,9 +1,9 @@
-import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { isnumber, isstring, MAYBE } from 'zss/mapping/types'
 import { boardevaldir } from 'zss/memory/bookboard'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 
 import { isstrcolor, mapstrcolor, readcolor, STR_COLOR } from './color'
-import { isstrdir, mapstrdir, readdir, STR_DIR } from './dir'
+import { EVAL_DIR, isstrdir, mapstrdir, readdir, STR_DIR } from './dir'
 import { readexpr } from './expr'
 import { isstrkind, readkind, STR_KIND } from './kind'
 import { PT, WORD } from './types'
@@ -46,7 +46,7 @@ export enum ARG_TYPE {
 export type ARG_TYPE_MAP = {
   [ARG_TYPE.COLOR]: STR_COLOR
   [ARG_TYPE.KIND]: STR_KIND
-  [ARG_TYPE.DIR]: PT
+  [ARG_TYPE.DIR]: EVAL_DIR
   [ARG_TYPE.NAME]: string
   [ARG_TYPE.NUMBER]: number
   [ARG_TYPE.STRING]: string
@@ -77,22 +77,18 @@ function didexpect(msg: string, value: any, words: WORD[]) {
 }
 
 function readdestfromdir(dir: STR_DIR) {
-  const pt = {
+  const startpt: PT = {
     x: READ_CONTEXT.element?.x ?? 0,
     y: READ_CONTEXT.element?.y ?? 0,
   }
-  const value =
-    ispresent(READ_CONTEXT.board) && ispresent(READ_CONTEXT.element)
-      ? boardevaldir(
-          READ_CONTEXT.book,
-          READ_CONTEXT.board,
-          READ_CONTEXT.element,
-          READ_CONTEXT.elementfocus,
-          dir,
-          pt,
-        )
-      : pt
-  return value
+  return boardevaldir(
+    READ_CONTEXT.book,
+    READ_CONTEXT.board,
+    READ_CONTEXT.element,
+    READ_CONTEXT.elementfocus,
+    dir,
+    startpt,
+  )
 }
 
 export function readargs<T extends ARG_TYPES>(

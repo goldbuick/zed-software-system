@@ -76,6 +76,7 @@ export enum DIR {
   // combinations
   TO,
   // layer specifiers
+  MID,
   OVER,
   UNDER,
 }

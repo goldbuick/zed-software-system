@@ -98,6 +98,13 @@ export type STR_DIR_KEYS = keyof STR_DIR_TYPE
 export type STR_DIR_CONST = STR_DIR_TYPE[STR_DIR_KEYS]
 export type STR_DIR = (STR_DIR_CONST | number)[]
 
+export type EVAL_DIR = {
+  dir: STR_DIR
+  startpt: PT
+  destpt: PT
+  layer: DIR
+}
+
 export function isstrdir(value: any): value is STR_DIR {
   return isarray(value) && isstrdirconst(value[0])
 }
@@ -180,7 +187,7 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
       case 'FLEE':
       case 'FIND': {
         const [dir, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.DIR])
-        strdir.push(dir.x, dir.y)
+        strdir.push(dir.destpt.x, dir.destpt.y)
         ii = iii
         break
       }
@@ -191,11 +198,14 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
         ])
         const sx = READ_CONTEXT.element?.x ?? 0
         const sy = READ_CONTEXT.element?.y ?? 0
-        dir1.x -= sx
-        dir1.y -= sy
-        dir2.x -= sx
-        dir2.y -= sy
-        strdir.push(sx + dir1.x + dir2.x, sy + dir1.y + dir2.y)
+        dir1.destpt.x -= sx
+        dir1.destpt.y -= sy
+        dir2.destpt.x -= sx
+        dir2.destpt.y -= sy
+        strdir.push(
+          sx + dir1.destpt.x + dir2.destpt.x,
+          sy + dir1.destpt.y + dir2.destpt.y,
+        )
         ii = iii
         break
       }
@@ -208,6 +218,8 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
       case 'CCW':
       case 'OPP':
       case 'RNDP':
+      case 'OVER':
+      case 'UNDER':
         break
       default:
         return [strdir, ii]

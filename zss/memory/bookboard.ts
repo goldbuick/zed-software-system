@@ -6,6 +6,7 @@ import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import {
   dirfrompts,
+  EVAL_DIR,
   ispt,
   mapstrdirtoconst,
   ptapplydir,
@@ -217,7 +218,6 @@ export function bookboardobjectnamedlookupdelete(
 }
 
 // evals directions into a PT
-
 export function boardevaldir(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
@@ -225,9 +225,10 @@ export function boardevaldir(
   player: string,
   dir: STR_DIR,
   startpt: PT,
-): PT {
+): EVAL_DIR {
+  const layer: DIR = DIR.MID
   if (!ispresent(book) || !ispresent(board) || !ispresent(target)) {
-    return { x: 0, y: 0 }
+    return { dir, startpt, destpt: startpt, layer }
   }
 
   const pt: PT = {
@@ -302,7 +303,7 @@ export function boardevaldir(
       case DIR.CCW:
       case DIR.OPP:
       case DIR.RNDP: {
-        const modpt = boardevaldir(
+        const modeval = boardevaldir(
           book,
           board,
           target,
@@ -315,7 +316,7 @@ export function boardevaldir(
         pt.y = startpt.y
         switch (dirconst) {
           case DIR.CW:
-            switch (dirfrompts(startpt, modpt)) {
+            switch (dirfrompts(startpt, modeval.destpt)) {
               case DIR.NORTH:
                 ptapplydir(pt, DIR.EAST)
                 break
@@ -331,7 +332,7 @@ export function boardevaldir(
             }
             break
           case DIR.CCW:
-            switch (dirfrompts(startpt, modpt)) {
+            switch (dirfrompts(startpt, modeval.destpt)) {
               case DIR.NORTH:
                 ptapplydir(pt, DIR.WEST)
                 break
@@ -347,7 +348,7 @@ export function boardevaldir(
             }
             break
           case DIR.OPP:
-            switch (dirfrompts(startpt, modpt)) {
+            switch (dirfrompts(startpt, modeval.destpt)) {
               case DIR.NORTH:
                 ptapplydir(pt, DIR.SOUTH)
                 break
@@ -363,7 +364,7 @@ export function boardevaldir(
             }
             break
           case DIR.RNDP:
-            switch (dirfrompts(startpt, modpt)) {
+            switch (dirfrompts(startpt, modeval.destpt)) {
               case DIR.NORTH:
               case DIR.SOUTH:
                 pt.x += pick(-1, 1)
@@ -456,10 +457,26 @@ export function boardevaldir(
         }
         break
       }
+      // layers
+      case DIR.OVER:
+      case DIR.UNDER: {
+        const modeval = boardevaldir(
+          book,
+          board,
+          target,
+          player,
+          dir.slice(i + 1),
+          startpt,
+        )
+        // set layer to correct const
+        modeval.layer = dirconst
+        return modeval
+      }
     }
   }
 
-  return pt
+  // result
+  return { dir, startpt, destpt: pt, layer }
 }
 
 // object / terrain utils

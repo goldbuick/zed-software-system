@@ -425,12 +425,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
   },
 })
   .command('clear', (chip, words) => {
-    words.forEach((word) => chip.set(maptostring(word), 0))
+    for (let i = 0; i < words.length; ++i) {
+      chip.set(maptostring(words[i]), 0)
+    }
     return 0
   })
   .command('set', (chip, words) => {
     const [name, value] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
-    chip.set(name, value)
+    chip.set(name, value ?? 1)
     return 0
   })
   .command('become', (chip, words) => {
@@ -475,7 +477,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         ARG_TYPE.DIR,
         ARG_TYPE.NUMBER,
       ])
-      const element = boardelementread(READ_CONTEXT.board, dest)
+      const element = boardelementread(READ_CONTEXT.board, dest.destpt)
       if (ispresent(element)) {
         element.char = charvalue
       }
@@ -491,7 +493,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         ARG_TYPE.DIR,
         ARG_TYPE.COLOR,
       ])
-      const element = boardelementread(READ_CONTEXT.board, dest)
+      const element = boardelementread(READ_CONTEXT.board, dest.destpt)
       if (ispresent(element)) {
         boardelementapplycolor(READ_CONTEXT.element, colorvalue)
       }
@@ -512,7 +514,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         READ_CONTEXT.book,
         READ_CONTEXT.board,
         READ_CONTEXT.element,
-        dest,
+        dest.destpt,
       )
 
       // always yield
@@ -520,8 +522,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
       // if we moved return 0
       if (
-        READ_CONTEXT.element.x === dest.x &&
-        READ_CONTEXT.element.y === dest.y
+        READ_CONTEXT.element.x === dest.destpt.x &&
+        READ_CONTEXT.element.y === dest.destpt.y
       ) {
         return 0
       }
@@ -540,7 +542,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const y = READ_CONTEXT.element.y ?? 0
 
     // create delta from dir
-    READ_CONTEXT.element.stepx = dest.x - x
-    READ_CONTEXT.element.stepy = dest.y - y
+    READ_CONTEXT.element.stepx = dest.destpt.x - x
+    READ_CONTEXT.element.stepy = dest.destpt.y - y
     return 0
   })
