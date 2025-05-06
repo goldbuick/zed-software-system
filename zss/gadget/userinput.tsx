@@ -211,11 +211,6 @@ document.addEventListener(
           vm_cli(SOFTWARE, player, mods.shift ? '#joincode hush' : '#joincode')
         }
         break
-      case 'p':
-        if (mods.ctrl) {
-          vm_clirepeatlast(SOFTWARE, player)
-        }
-        break
       case 'l':
         if (mods.ctrl) {
           // open merge login request

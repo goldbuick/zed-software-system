@@ -77,24 +77,44 @@ export function zsswordcolorconfig(word: string, color: COLOR) {
   ZSS_WORD_MAP.set(word, color)
 }
 
-function zssnoteswordcolor(word: string) {
-  const colors: COLOR[] = []
-  for (let i = 0; i < word.length; ++i) {
-    colors.push(zssmusiccolor(word[i]))
-  }
-  return colors
+enum COLOR_MODE {
+  NEEDS_SETUP,
+  NOTES,
+  MESSAGE,
 }
 
 function zssplaywordcolor(word: string) {
   const colors: COLOR[] = []
-  const measures = word.split(';')
-  for (let i = 0; i < measures.length; ++i) {
-    const part = measures[i]
-    if (part.trim().startsWith('#')) {
-      colors.push(COLOR.WHITE)
-      colors.push(...new Array<COLOR>(part.length).fill(COLOR.PURPLE))
-    } else {
-      colors.push(...zssnoteswordcolor(part))
+  let isnotes = COLOR_MODE.NEEDS_SETUP
+  for (let i = 0; i < word.length; ++i) {
+    switch (word[i]) {
+      case ';':
+        isnotes = COLOR_MODE.NEEDS_SETUP
+        break
+      case ' ':
+        // skip changing COLOR_MODE
+        break
+      default:
+        if (isnotes === COLOR_MODE.NEEDS_SETUP) {
+          isnotes = COLOR_MODE.NOTES
+        }
+        break
+      case '#':
+        if (isnotes === COLOR_MODE.NEEDS_SETUP) {
+          isnotes = COLOR_MODE.MESSAGE
+        }
+        break
+    }
+    switch (isnotes) {
+      case COLOR_MODE.NEEDS_SETUP:
+        colors.push(COLOR.LTGRAY)
+        break
+      case COLOR_MODE.NOTES:
+        colors.push(zssmusiccolor(word[i]))
+        break
+      case COLOR_MODE.MESSAGE:
+        colors.push(COLOR.CYAN)
+        break
     }
   }
   colors.push(COLOR.BLUE)

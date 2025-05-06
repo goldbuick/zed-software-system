@@ -1,5 +1,9 @@
 import { Color } from 'three'
-import { register_terminal_quickopen, vm_input } from 'zss/device/api'
+import {
+  register_terminal_quickopen,
+  vm_clirepeatlast,
+  vm_input,
+} from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useGadgetClient } from 'zss/gadget/data/state'
@@ -17,7 +21,7 @@ import { FlatGraphics } from './graphics/flat'
 import { Mode7Graphics } from './graphics/mode7'
 // TODO: isometric, firstperson, xr/vr/lookingglass
 import { Rect } from './rect'
-import { UserInput, UserInputMods } from './userinput'
+import { modsfromevent, UserInput, UserInputMods } from './userinput'
 
 function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   let bits = 0
@@ -64,11 +68,17 @@ export function Framed({ width, height }: FramedProps) {
         CANCEL_BUTTON={(mods) => sendinput(player, INPUT.CANCEL_BUTTON, mods)}
         MENU_BUTTON={(mods) => sendinput(player, INPUT.MENU_BUTTON, mods)}
         keydown={(event) => {
-          const { key } = event
-          const lkey = NAME(key)
-          switch (lkey) {
+          const key = NAME(event.key)
+          const mods = modsfromevent(event)
+          const player = registerreadplayer()
+          switch (key) {
             case 't':
-              register_terminal_quickopen(SOFTWARE, registerreadplayer())
+              register_terminal_quickopen(SOFTWARE, player)
+              break
+            case 'p':
+              if (mods.ctrl) {
+                vm_clirepeatlast(SOFTWARE, player)
+              }
               break
           }
         }}

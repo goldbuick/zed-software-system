@@ -134,6 +134,10 @@ function writewikilink() {
   )
 }
 
+function writepages() {
+  vm_cli(register, myplayerid, '#pages')
+}
+
 const messagecrew: string[] = [
   '$brown$153',
   '$purple$5',
@@ -207,7 +211,6 @@ async function loadmem(books: string) {
   if (books.length === 0) {
     api_error(register, myplayerid, 'content', 'no content found')
     writewikilink()
-    register_terminal_full(register, myplayerid)
     return
   }
   // init vm with content
@@ -341,11 +344,6 @@ const register = createdevice(
         })
         break
       }
-      case 'loginfail':
-        vm_cli(register, myplayerid, '#pages')
-        writewikilink()
-        register_terminal_full(register, myplayerid)
-        break
       case 'ackoperator':
         doasync(register, message.player, async () => {
           const urlcontent = await readurlcontent()
@@ -362,7 +360,16 @@ const register = createdevice(
       case 'loginready':
         vm_login(register, myplayerid)
         break
+      case 'loginfail':
+        writepages()
+        writewikilink()
+        register_terminal_full(register, myplayerid)
+        break
       case 'acklogin':
+        // info dump
+        writepages()
+        writewikilink()
+        // hide terminal
         register_terminal_close(register, myplayerid)
         gadgetserver_desync(register, myplayerid)
         // get words meta
