@@ -425,12 +425,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
   },
 })
   .command('clear', (chip, words) => {
-    words.forEach((word) => chip.set(maptostring(word), 0))
+    for (let i = 0; i < words.length; ++i) {
+      chip.set(maptostring(words[i]), 0)
+    }
     return 0
   })
   .command('set', (chip, words) => {
     const [name, value] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
-    chip.set(name, value)
+    chip.set(name, value ?? 1)
     return 0
   })
   .command('become', (chip, words) => {

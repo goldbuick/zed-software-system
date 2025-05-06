@@ -98,6 +98,13 @@ export type STR_DIR_KEYS = keyof STR_DIR_TYPE
 export type STR_DIR_CONST = STR_DIR_TYPE[STR_DIR_KEYS]
 export type STR_DIR = (STR_DIR_CONST | number)[]
 
+export type EVAL_DIR = {
+  dir: STR_DIR
+  startpt: PT
+  destpt: PT
+  layer: DIR
+}
+
 export function isstrdir(value: any): value is STR_DIR {
   return isarray(value) && isstrdirconst(value[0])
 }
