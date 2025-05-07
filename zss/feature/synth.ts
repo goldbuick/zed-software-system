@@ -645,9 +645,9 @@ export function createsynth() {
   }
 
   // set default volumes
-  setttsvolume(100)
-  setplayvolume(45)
-  setbgplayvolume(80)
+  setttsvolume(15)
+  setplayvolume(75)
+  setbgplayvolume(100)
 
   return {
     broadcastdestination,
