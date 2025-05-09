@@ -1401,6 +1401,244 @@
   resolved "https://registry.yarnpkg.com/@testing-library/user-event/-/user-event-14.6.1.tgz#13e09a32d7a8b7060fe38304788ebf4197cd2149"
   integrity sha512-vq7fv0rnt+QTXgPxr5Hjc210p6YKq2kmdziLgnsZGgLJ9e6VAShx1pACLuRjd/AS/sr7phAR58OIIpf0LlmQNw==
 
+"@tonaljs/abc-notation@4.9.1":
+  version "4.9.1"
+  resolved "https://registry.npmjs.org/@tonaljs/abc-notation/-/abc-notation-4.9.1.tgz#392a770b19b703a82c9f403605e3925f17149f04"
+  integrity sha512-2fDUdPsFDdgZgyIiZCTYGKy30QiwIQxSXCSN2thGrSMXbQKCp8iTC8haStYcrA+25MPWhWlmvC/pz3tGcTNAqQ==
+  dependencies:
+    "@tonaljs/pitch-distance" "5.0.5"
+    "@tonaljs/pitch-note" "6.1.0"
+
+"@tonaljs/array@4.8.4":
+  version "4.8.4"
+  resolved "https://registry.npmjs.org/@tonaljs/array/-/array-4.8.4.tgz#493e4b3e6a52c1003d024f3b82bf66dbe5610591"
+  integrity sha512-97HVdpZy82PqNBDMM9PRSbO2DUrnxNg3++N4xqLpfby70fKHAHhTWrMXWZK+Dzs76HDPQLd+qhd4cq28eBZzjw==
+  dependencies:
+    "@tonaljs/pitch-note" "6.1.0"
+
+"@tonaljs/chord-detect@4.9.1":
+  version "4.9.1"
+  resolved "https://registry.npmjs.org/@tonaljs/chord-detect/-/chord-detect-4.9.1.tgz#e9a00f06743a00a36eaf3daeda7bf3462513dcce"
+  integrity sha512-rV/9+R7aZ9cQorQ3jdNMMMh63onosglYZM71Q0n7KKcWMAGrxF66MzxBG82xy+w1QDMJQslB3iHfDHUiS6wRjA==
+  dependencies:
+    "@tonaljs/chord-type" "5.1.1"
+    "@tonaljs/pcset" "4.10.1"
+    "@tonaljs/pitch-note" "6.1.0"
+
+"@tonaljs/chord-type@5.1.1":
+  version "5.1.1"
+  resolved "https://registry.npmjs.org/@tonaljs/chord-type/-/chord-type-5.1.1.tgz#9e992f58ea343baef9780e3537c83c2efc7c75d0"
+  integrity sha512-ti4WzRYvvjH7to0G3zlJFq7WsjHqmcqbk8Jv98aZSR5YumLdY/ua2yOPPyoPq82n6vfgjZsacnAZ3v8/SodOcw==
+  dependencies:
+    "@tonaljs/pcset" "4.10.1"
+
+"@tonaljs/chord@6.1.1":
+  version "6.1.1"
+  resolved "https://registry.npmjs.org/@tonaljs/chord/-/chord-6.1.1.tgz#d14c19782e3e5bb8892861a5582d0f6d016b8c4f"
+  integrity sha512-gsLyGGkOt0g5L/uF4ICpYQengahW3WAMjckyvyzvqMYpvH7fokmtcymOfbltDQzaVuYuL0TsVmbfjbah2rKEww==
+  dependencies:
+    "@tonaljs/chord-detect" "4.9.1"
+    "@tonaljs/chord-type" "5.1.1"
+    "@tonaljs/collection" "4.9.0"
+    "@tonaljs/interval" "^5.1.0"
+    "@tonaljs/pcset" "4.10.1"
+    "@tonaljs/pitch-distance" "5.0.5"
+    "@tonaljs/pitch-note" "6.1.0"
+    "@tonaljs/scale-type" "4.9.1"
+
+"@tonaljs/collection@4.9.0":
+  version "4.9.0"
+  resolved "https://registry.npmjs.org/@tonaljs/collection/-/collection-4.9.0.tgz#149d4847dd8667c62d4f9c1fa1b6cbe59a24948d"
+  integrity sha512-Mk0h7O54nT6PgNVcUYauzxa5KOB23+0AOKudWzRH7JhJIN9vhVIC7PtwZXE+/G051UTbHSFIcN/afkgF4nB/8A==
+
+"@tonaljs/core@5.0.2":
+  version "5.0.2"
+  resolved "https://registry.npmjs.org/@tonaljs/core/-/core-5.0.2.tgz#bc8d5ad5af8f863d3ece4d9c1efc9b7fd501246b"
+  integrity sha512-v/fIRsB+lz93/yJnDEWvjDX6nDJ/Pz3cb0znm/UD8qKpN9BhN+v93iIaZG5LX0J2JNS35TtgIhwKFO10j6zieQ==
+  dependencies:
+    "@tonaljs/pitch" "5.0.2"
+    "@tonaljs/pitch-distance" "5.0.5"
+    "@tonaljs/pitch-interval" "6.1.0"
+    "@tonaljs/pitch-note" "6.1.0"
+
+"@tonaljs/duration-value@4.9.0":
+  version "4.9.0"
+  resolved "https://registry.npmjs.org/@tonaljs/duration-value/-/duration-value-4.9.0.tgz#47a015932bf679adbb053099206a0b410b46a07f"
+  integrity sha512-Muz54HyIe0nMYKWx6wyTa4y17ma29DtpJF4/oqJphy6A124rAVDe/SKit8JGOvDYAQj71FUXqs17sXBxO/ExVw==
+
+"@tonaljs/interval@5.1.0", "@tonaljs/interval@^5.1.0":
+  version "5.1.0"
+  resolved "https://registry.npmjs.org/@tonaljs/interval/-/interval-5.1.0.tgz#3f70222f02a7ddfa31db6a133f616a2defb82680"
+  integrity sha512-GR9dUjn0j7yhjwjRh8HQxZYXOiVl05WfY3AFyMB9rfg807K4dSJmWfPTULPQXyHJ6NiZOPXcwRs8MxMLDxgdbg==
+  dependencies:
+    "@tonaljs/pitch" "^5.0.2"
+    "@tonaljs/pitch-distance" "^5.0.4"
+    "@tonaljs/pitch-interval" "^6.0.0"
+
+"@tonaljs/key@4.11.1":
+  version "4.11.1"
+  resolved "https://registry.npmjs.org/@tonaljs/key/-/key-4.11.1.tgz#92f09031d0d3449aee19b8f938f40c6598540d0f"
+  integrity sha512-bZGKhSR+ThYS4CHVR3gS4aVkAM9PYqQPjNvsqwSRDzpuPynuGqIJbEXxx2sTmoendSOQYQXh5OaiDCQZAbk66w==
+  dependencies:
+    "@tonaljs/note" "4.12.0"
+    "@tonaljs/pitch-note" "6.1.0"
+    "@tonaljs/roman-numeral" "4.9.1"
+
+"@tonaljs/midi@4.10.1":
+  version "4.10.1"
+  resolved "https://registry.npmjs.org/@tonaljs/midi/-/midi-4.10.1.tgz#575c0d84c9631873810a04240ec8b7ce8210be9c"
+  integrity sha512-8epOg4fFArpoR94fkWiPf60kPwFnTi2ZSxYTfueTVOI9l/TIaMk9oEBfw8ZKuuJygGU2LMk27/hKW2rQI5zFNg==
+  dependencies:
+    "@tonaljs/pitch-note" "6.1.0"
+
+"@tonaljs/mode@4.9.1":
+  version "4.9.1"
+  resolved "https://registry.npmjs.org/@tonaljs/mode/-/mode-4.9.1.tgz#d701baf37c2ba9a8f198a36b9d4b1d46270250a4"
+  integrity sha512-h+K7eOUKpyX7kMRCwCew6cV1oN0sZYD5LLeKD7zEERNd/6wvGBfGCdMZECGqzpFUmjUyCY87IOntem6EPbKVCg==
+  dependencies:
+    "@tonaljs/collection" "4.9.0"
+    "@tonaljs/interval" "5.1.0"
+    "@tonaljs/pcset" "4.10.1"
+    "@tonaljs/pitch-distance" "5.0.5"
+    "@tonaljs/pitch-note" "6.1.0"
+    "@tonaljs/scale-type" "4.9.1"
+
+"@tonaljs/note@4.12.0":
+  version "4.12.0"
+  resolved "https://registry.npmjs.org/@tonaljs/note/-/note-4.12.0.tgz#7887d08c42f9a3e1c740793af2a03a6b1e391fba"
+  integrity sha512-MgHeSTRldgPteucHI+gKzFkqJ8eVPHelxCNeAFr+hTryLoottr/rfqI93GeJkriH3r8jG81LQBxKRbzN4m3Qeg==
+  dependencies:
+    "@tonaljs/midi" "4.10.1"
+    "@tonaljs/pitch" "5.0.2"
+    "@tonaljs/pitch-distance" "5.0.5"
+    "@tonaljs/pitch-interval" "6.1.0"
+    "@tonaljs/pitch-note" "6.1.0"
+
+"@tonaljs/pcset@4.10.1":
+  version "4.10.1"
+  resolved "https://registry.npmjs.org/@tonaljs/pcset/-/pcset-4.10.1.tgz#432ff9cb34f1a66926db062f8f2b94ddefc3f65f"
+  integrity sha512-CZG1rpKc38yMfpEJsbDTvsTmQqsek9xxcuMgK64Tr6sP1lEiDuZJbQeKVWWRnreBF2FQ1cEGLmfOpvSO+40csA==
+  dependencies:
+    "@tonaljs/collection" "4.9.0"
+    "@tonaljs/pitch" "5.0.2"
+    "@tonaljs/pitch-distance" "5.0.5"
+    "@tonaljs/pitch-interval" "6.1.0"
+    "@tonaljs/pitch-note" "6.1.0"
+
+"@tonaljs/pitch-distance@5.0.5", "@tonaljs/pitch-distance@^5.0.4":
+  version "5.0.5"
+  resolved "https://registry.npmjs.org/@tonaljs/pitch-distance/-/pitch-distance-5.0.5.tgz#2d2bf7bbd28752d41c0d52aa7e4f5742caf37b85"
+  integrity sha512-dTfjsU0zyrj5YmiFio5prPaD5w7sBmHp4nnmlEg70nHY+SerAH0KiO9HM9usttVgRFUaXl0Gc7OI8YMGfSFmug==
+  dependencies:
+    "@tonaljs/pitch" "5.0.2"
+    "@tonaljs/pitch-interval" "6.1.0"
+    "@tonaljs/pitch-note" "6.1.0"
+
+"@tonaljs/pitch-interval@6.1.0", "@tonaljs/pitch-interval@^6.0.0":
+  version "6.1.0"
+  resolved "https://registry.npmjs.org/@tonaljs/pitch-interval/-/pitch-interval-6.1.0.tgz#1b8308023143879bf105023951d57e9bd22d02d4"
+  integrity sha512-9ZMxA7V4UgySnOKPIG6HECzhDb8mbiTCIdNNIzCIfz5XpjUmohku2YZpVVWMacLHgyeQicJzNoRiPel5oSAn4A==
+  dependencies:
+    "@tonaljs/pitch" "5.0.2"
+
+"@tonaljs/pitch-note@6.1.0":
+  version "6.1.0"
+  resolved "https://registry.npmjs.org/@tonaljs/pitch-note/-/pitch-note-6.1.0.tgz#bbe08228ef99a560fb23c2c804ff046a5e08a4c4"
+  integrity sha512-A4OSLo8DjM38u73862LnDmL4YInDDRBmg0fojXcvu4cyU3oOlqndyeHOra1OVoH/WW46uNIxNs1wJDZNPWL5KQ==
+  dependencies:
+    "@tonaljs/pitch" "5.0.2"
+
+"@tonaljs/pitch@5.0.2", "@tonaljs/pitch@^5.0.2":
+  version "5.0.2"
+  resolved "https://registry.npmjs.org/@tonaljs/pitch/-/pitch-5.0.2.tgz#ca2dcd60b99e90536f52293d2491187edfbc9967"
+  integrity sha512-mxaXJPPe+LIJdjzpZEl8I8Wx3dEvlzkBbsr2Ltwc2dTAdnErAZ5R0TxVq2egF27lMvQN2QPQPWI9iDPPdVUmrg==
+
+"@tonaljs/progression@4.9.1":
+  version "4.9.1"
+  resolved "https://registry.npmjs.org/@tonaljs/progression/-/progression-4.9.1.tgz#15ac67cf6c69f99575b11290a448cc84e94ddca9"
+  integrity sha512-jHdZUNlXRmjrvbZrvjoW6syW7dO9ilhgvyouB6YuVM5lGShwTN9dsSuQYsugso9jYHkwQBgYj5SaXTTY0/0nHw==
+  dependencies:
+    "@tonaljs/chord" "6.1.1"
+    "@tonaljs/pitch-distance" "5.0.5"
+    "@tonaljs/pitch-interval" "6.1.0"
+    "@tonaljs/pitch-note" "6.1.0"
+    "@tonaljs/roman-numeral" "4.9.1"
+
+"@tonaljs/range@4.9.1":
+  version "4.9.1"
+  resolved "https://registry.npmjs.org/@tonaljs/range/-/range-4.9.1.tgz#1291ee59ec44636f66ef3e7d27a3dd1630972562"
+  integrity sha512-7afFvdcdseqiG/kkCL3LuOc9rTNBR4+3H5lKx9MttAHVJq8uRJMooO1GdEziQ5f7UYZPmXd17e6ZXd0AdnkXrA==
+  dependencies:
+    "@tonaljs/collection" "4.9.0"
+    "@tonaljs/midi" "4.10.1"
+
+"@tonaljs/rhythm-pattern@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/@tonaljs/rhythm-pattern/-/rhythm-pattern-1.0.0.tgz#75aa2a20b4b09459abae2a41ade39905fb43534f"
+  integrity sha512-3hp4Yw49e6BTWApRNb7arJ6HiICsHRFZYijuPE+vR93lIo9+lxcOMh0OPc4DyupTN7cvFTSB70Z7B/IeEJxhCQ==
+
+"@tonaljs/roman-numeral@4.9.1":
+  version "4.9.1"
+  resolved "https://registry.npmjs.org/@tonaljs/roman-numeral/-/roman-numeral-4.9.1.tgz#4b72d9d31ed0090c174a1149d2fde54f6a0b6f02"
+  integrity sha512-dJGKBNHdPrNTE97ZDk4t6wpNmgYcpHyLkAvWkRP9I/HsDkeTFFQqNXosYIvspPWrFySlRpeqqFwcqV74MYoOag==
+  dependencies:
+    "@tonaljs/pitch" "5.0.2"
+    "@tonaljs/pitch-interval" "6.1.0"
+    "@tonaljs/pitch-note" "6.1.0"
+
+"@tonaljs/scale-type@4.9.1":
+  version "4.9.1"
+  resolved "https://registry.npmjs.org/@tonaljs/scale-type/-/scale-type-4.9.1.tgz#1e677e651a20d56374632ad0eb3d83e7acd08603"
+  integrity sha512-Nz2wThzz5NmWNx0vazX7MqNbF8kT1g5BEcbZcWjgkc67zhwosfZE0LEn7W9XcVDEws71b8CqQqDPKUEEybC9Rw==
+  dependencies:
+    "@tonaljs/pcset" "4.10.1"
+
+"@tonaljs/scale@4.13.2":
+  version "4.13.2"
+  resolved "https://registry.npmjs.org/@tonaljs/scale/-/scale-4.13.2.tgz#1851382e9058c3aed4dfcdb919d14b0bf28236cd"
+  integrity sha512-fL9ydv2gxqipjKI2tEo5OHHyKp/kz0d2kcDHLH8zRR5eyeiYcxL05g34fo4jKydQGWsNSrD0n/DoMTIp4yMIhQ==
+  dependencies:
+    "@tonaljs/chord-type" "5.1.1"
+    "@tonaljs/collection" "4.9.0"
+    "@tonaljs/note" "4.12.0"
+    "@tonaljs/pcset" "4.10.1"
+    "@tonaljs/pitch-distance" "5.0.5"
+    "@tonaljs/pitch-note" "6.1.0"
+    "@tonaljs/scale-type" "4.9.1"
+
+"@tonaljs/time-signature@4.9.0":
+  version "4.9.0"
+  resolved "https://registry.npmjs.org/@tonaljs/time-signature/-/time-signature-4.9.0.tgz#15a898daa682353bb28e1dfc58a97844e7f50e00"
+  integrity sha512-zRo8CBqg/2guzTlF2vxyVIuB5gmwWQaxlknJPUSDII8CTdQ/x3a1LlNoMKkvTUnqwCihe3WrNPZ5XUfOOTthYA==
+
+"@tonaljs/voice-leading@5.1.1":
+  version "5.1.1"
+  resolved "https://registry.npmjs.org/@tonaljs/voice-leading/-/voice-leading-5.1.1.tgz#e0651130915ff773cfac56cb969b8dec8238a572"
+  integrity sha512-zxjd0lL94I8R7i45zD/NIbUIAXMh+CJzQhpWLfAY47WVZFkrKZH+t+CYGjynYj1kKBlBir9y4RfnxEssAL6PPg==
+  dependencies:
+    "@tonaljs/note" "4.12.0"
+
+"@tonaljs/voicing-dictionary@5.1.1":
+  version "5.1.1"
+  resolved "https://registry.npmjs.org/@tonaljs/voicing-dictionary/-/voicing-dictionary-5.1.1.tgz#85ba221abecf01c3e80a39a3d158bd4bb298011b"
+  integrity sha512-Wqne6+62TCJR8G8SD9KecUhvjF7QxYk+0BseJpZbdC4qHnrrcrKtW1dxov8aTs8+R6TchA8uHRd1G2umCKp+Ug==
+  dependencies:
+    "@tonaljs/chord" "6.1.1"
+    "@tonaljs/note" "4.12.0"
+    "@tonaljs/voice-leading" "5.1.1"
+
+"@tonaljs/voicing@5.1.1":
+  version "5.1.1"
+  resolved "https://registry.npmjs.org/@tonaljs/voicing/-/voicing-5.1.1.tgz#c5beb133e0ba1ac23cab811a95cea17d32761611"
+  integrity sha512-kxXPtjD1YM9WiMZja7hSgaaYfDNPuRoOYH5yVjeTViFnUSOuHQVLdMLxKdFmj0lcCxEJVV/Ca1Dz2oko/G1A9A==
+  dependencies:
+    "@tonaljs/chord" "6.1.1"
+    "@tonaljs/interval" "5.1.0"
+    "@tonaljs/note" "4.12.0"
+    "@tonaljs/range" "4.9.1"
+    "@tonaljs/voice-leading" "5.1.1"
+    "@tonaljs/voicing-dictionary" "5.1.1"
+
 "@tweenjs/tween.js@~23.1.3":
   version "23.1.3"
   resolved "https://registry.npmjs.org/@tweenjs/tween.js/-/tween.js-23.1.3.tgz#eff0245735c04a928bb19c026b58c2a56460539d"
@@ -7199,6 +7437,35 @@ to-regex-range@^5.0.1:
   integrity sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==
   dependencies:
     is-number "^7.0.0"
+
+tonal@^6.4.1:
+  version "6.4.1"
+  resolved "https://registry.npmjs.org/tonal/-/tonal-6.4.1.tgz#1054cec7133a283e7793bd1678affe49afedf99b"
+  integrity sha512-zt4xhtKE75ks2OyKP6O1cr69uzj8kRPBrN+cdKwA9cQfk2y2znzur1O3MDxPPLBvoJogma99vGI3SNQHF1y5Gw==
+  dependencies:
+    "@tonaljs/abc-notation" "4.9.1"
+    "@tonaljs/array" "4.8.4"
+    "@tonaljs/chord" "6.1.1"
+    "@tonaljs/chord-type" "5.1.1"
+    "@tonaljs/collection" "4.9.0"
+    "@tonaljs/core" "5.0.2"
+    "@tonaljs/duration-value" "4.9.0"
+    "@tonaljs/interval" "5.1.0"
+    "@tonaljs/key" "4.11.1"
+    "@tonaljs/midi" "4.10.1"
+    "@tonaljs/mode" "4.9.1"
+    "@tonaljs/note" "4.12.0"
+    "@tonaljs/pcset" "4.10.1"
+    "@tonaljs/progression" "4.9.1"
+    "@tonaljs/range" "4.9.1"
+    "@tonaljs/rhythm-pattern" "1.0.0"
+    "@tonaljs/roman-numeral" "4.9.1"
+    "@tonaljs/scale" "4.13.2"
+    "@tonaljs/scale-type" "4.9.1"
+    "@tonaljs/time-signature" "4.9.0"
+    "@tonaljs/voice-leading" "5.1.1"
+    "@tonaljs/voicing" "5.1.1"
+    "@tonaljs/voicing-dictionary" "5.1.1"
 
 tone@^15.1.22:
   version "15.1.22"

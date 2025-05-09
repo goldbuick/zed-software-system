@@ -38,6 +38,7 @@ function validatesynthtype(
       case 'buzz':
       case 'clang':
       case 'metallic':
+      case 'bells':
         return true
       default:
         return SYNTH_VARIANTS.test(type)
@@ -125,6 +126,9 @@ export function synthvoiceconfig(
               break
             case 'metallic':
               synth.changesource(index, SOURCE_TYPE.METALLIC_NOISE)
+              break
+            case 'bells':
+              synth.changesource(index, SOURCE_TYPE.BELLS)
               break
             default:
               synth.changesource(index, SOURCE_TYPE.SYNTH)
@@ -344,6 +348,14 @@ export function synthvoiceconfig(
                 break
             }
             return
+          }
+          case SOURCE_TYPE.BELLS: {
+            switch (config) {
+              default:
+                // todo add config settings
+                return
+            }
+            break
           }
         }
 

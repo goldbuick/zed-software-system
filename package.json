@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.48.21",
+  "version": "0.48.22",
   "type": "module",
   "scripts": {
     "sloc": "npx sloc zss",
@@ -88,6 +88,7 @@
     "source-map": "^0.7.4",
     "stats.js": "^0.17.0",
     "three": "^0.176.0",
+    "tonal": "^6.4.1",
     "tone": "^15.1.22",
     "ts-extras": "^0.13.0",
     "ts-jest": "^29.1.3",

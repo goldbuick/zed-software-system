@@ -1,4 +1,4 @@
-import { Synth, Sampler, getContext } from 'tone'
+import { Synth, Sampler, getContext, FMSynth, MetalSynth } from 'tone'
 import { deepcopy, MAYBE } from 'zss/mapping/types'
 
 export enum SOURCE_TYPE {
@@ -7,6 +7,7 @@ export enum SOURCE_TYPE {
   BUZZ_NOISE,
   CLANG_NOISE,
   METALLIC_NOISE,
+  BELLS,
 }
 
 const RETRO_SAMPLE_COUNT = 32768
@@ -60,6 +61,11 @@ export type SOURCE =
         | SOURCE_TYPE.METALLIC_NOISE
       synth: Sampler
     }
+  | {
+      type: SOURCE_TYPE.BELLS
+      synth: FMSynth
+      sparkle: MetalSynth
+    }
 
 export function createsource(sourcetype: SOURCE_TYPE) {
   let source: MAYBE<SOURCE>
@@ -87,8 +93,37 @@ export function createsource(sourcetype: SOURCE_TYPE) {
       case SOURCE_TYPE.RETRO_NOISE: {
         source.synth.set({
           ...resetvalues,
-          release: '8n',
+          volume: -12,
+          attack: 0.001,
+          release: 0.75,
         })
+        break
+      }
+      case SOURCE_TYPE.BELLS: {
+        source.synth.set({
+          ...resetvalues,
+          harmonicity: 1.5,
+          modulationIndex: 30,
+          oscillator: {
+            type: 'sine',
+          },
+          modulation: {
+            type: 'square',
+          },
+          envelope: {
+            attack: 0.01,
+            decay: 3,
+            sustain: 0.3,
+            release: 6,
+          },
+          modulationEnvelope: {
+            attack: 0.5,
+            decay: 1,
+            sustain: 0.2,
+            release: 4,
+          },
+        })
+        break
       }
     }
   }
@@ -113,12 +148,29 @@ export function createsource(sourcetype: SOURCE_TYPE) {
       source = {
         type: sourcetype,
         synth: new Sampler({
-          volume: -12,
-          attack: 0.001,
-          release: 0.75,
           urls: {
             C4: generatenoisesynth(sourcetype),
           },
+        }),
+      }
+      resetvalues = deepcopy(source.synth.get())
+      applyreset()
+      return {
+        source,
+        applyreset,
+      }
+    }
+    case SOURCE_TYPE.BELLS: {
+      source = {
+        type: SOURCE_TYPE.BELLS,
+        synth: new FMSynth(),
+        sparkle: new MetalSynth({
+          volume: -20,
+          envelope: { attack: 0.001, decay: 1.4, release: 0.2 },
+          harmonicity: 5.1,
+          modulationIndex: 32,
+          resonance: 4000,
+          octaves: 1.5,
         }),
       }
       resetvalues = deepcopy(source.synth.get())
