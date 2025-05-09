@@ -1,3 +1,4 @@
+import { Note } from 'tonal'
 import {
   Chorus,
   Compressor,
@@ -96,7 +97,7 @@ export function createsynth() {
 
   function connectsource(index: number) {
     const f = mapindextofx(index)
-    SOURCE[index].source.synth.chain(
+    SOURCE[index]?.source.synth.chain(
       FX[f].fc,
       FX[f].distortion,
       FX[f].vibrato,
@@ -105,6 +106,17 @@ export function createsynth() {
       FX[f].reverb,
       index < 4 ? playvolume : bgplayvolume,
     )
+    if (SOURCE[index]?.source.type === SOURCE_TYPE.BELLS) {
+      SOURCE[index]?.source.sparkle.chain(
+        FX[f].fc,
+        FX[f].distortion,
+        FX[f].vibrato,
+        FX[f].phaser,
+        FX[f].echo,
+        FX[f].reverb,
+        index < 4 ? playvolume : bgplayvolume,
+      )
+    }
   }
 
   for (let i = 0; i < SOURCE.length; ++i) {
@@ -112,10 +124,10 @@ export function createsynth() {
   }
 
   function changesource(index: number, type: SOURCE_TYPE) {
-    if (SOURCE[index].source.type === type) {
+    if (SOURCE[index]?.source.type === type) {
       return
     }
-    SOURCE[index].source.synth.dispose()
+    SOURCE[index]?.source.synth.dispose()
     SOURCE[index] = createsource(type)
     connectsource(index)
   }
@@ -509,6 +521,19 @@ export function createsynth() {
       if (note.startsWith('#')) {
         vm_synthsend(SOFTWARE, '', note.slice(1))
       } else {
+        // razzle dazzle code
+        switch (SOURCE[chan].source.type) {
+          case SOURCE_TYPE.BELLS:
+            SOURCE[chan].source.synth.detune.value = Math.random() * 10 - 5
+            SOURCE[chan].source.sparkle.triggerAttackRelease(
+              Note.transposeOctaves(note, 2),
+              duration,
+              time,
+            )
+            break
+          default:
+            break
+        }
         SOURCE[chan].source.synth.triggerAttackRelease(note, duration, time)
       }
     }
