@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Color } from 'three'
 import { RUNTIME } from 'zss/config'
 import { gadgetserver_clearscroll } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
@@ -12,6 +13,7 @@ import { StaticDither } from './graphics/dither'
 import { useDeviceConfig } from './hooks'
 import { Panel } from './panel'
 import { ScrollContext } from './panel/common'
+import { Rect } from './rect'
 import { Scroll } from './scroll/component'
 import { useScreenSize } from './userscreen'
 
@@ -192,6 +194,20 @@ export function PanelLayout() {
         },
       }}
     >
+      <group
+        position={[
+          -RUNTIME.DRAW_CHAR_WIDTH(),
+          -RUNTIME.DRAW_CHAR_HEIGHT(),
+          -524,
+        ]}
+      >
+        <Rect
+          visible
+          color={new Color(0.076, 0.076, 0)}
+          width={screensize.cols + 2}
+          height={screensize.rows + 2}
+        />
+      </group>
       {/* eslint-disable-next-line react/no-unknown-property */}
       <group position={[0, 0, -512]}>
         {rects.map((rect) => {

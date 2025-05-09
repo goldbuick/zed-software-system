@@ -1,4 +1,3 @@
-import { Color } from 'three'
 import {
   register_terminal_quickopen,
   vm_clirepeatlast,
@@ -20,7 +19,6 @@ import { NAME } from 'zss/words/types'
 import { FlatGraphics } from './graphics/flat'
 import { Mode7Graphics } from './graphics/mode7'
 // TODO: isometric, firstperson, xr/vr/lookingglass
-import { Rect } from './rect'
 import { modsfromevent, UserInput, UserInputMods } from './userinput'
 
 function sendinput(player: string, input: INPUT, mods: UserInputMods) {
@@ -82,13 +80,6 @@ export function Framed({ width, height }: FramedProps) {
               break
           }
         }}
-      />
-      <Rect
-        visible
-        color={new Color(0.076, 0.076, 0)}
-        width={width}
-        height={height}
-        z={-3}
       />
       {control.graphics === 'flat' && (
         <FlatGraphics width={width} height={height} />
