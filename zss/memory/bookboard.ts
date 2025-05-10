@@ -851,32 +851,28 @@ export function bookboardreadgroup(
     return { objectelements, terrainelements }
   }
 
-  // read target group
-  const allobjectelements = Object.values(board.objects)
-  for (let i = 0; i < allobjectelements.length; ++i) {
-    const el = allobjectelements[i]
+  function checkelement(el: BOARD_ELEMENT) {
     const stat = bookelementstatread(
       book,
       el,
       targetgroup as BOARD_ELEMENT_STAT,
     )
     const group = bookelementgroupread(book, el)
-    if (ispresent(stat) || group === targetgroup) {
+    return ispresent(stat) || group === targetgroup
+  }
+
+  // read target group
+  const allobjectelements = Object.values(board.objects)
+  for (let i = 0; i < allobjectelements.length; ++i) {
+    const el = allobjectelements[i]
+    if (checkelement(el)) {
       objectelements.push(el)
     }
   }
   for (let i = 0; i < BOARD_SIZE; ++i) {
     const el = board.terrain[i]
-    if (ispresent(el)) {
-      const stat = bookelementstatread(
-        book,
-        el,
-        targetgroup as BOARD_ELEMENT_STAT,
-      )
-      const group = bookelementgroupread(book, el)
-      if (ispresent(stat) || group === targetgroup) {
-        terrainelements.push(el)
-      }
+    if (ispresent(el) && checkelement(el)) {
+      terrainelements.push(el)
     }
   }
 

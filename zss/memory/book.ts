@@ -294,7 +294,16 @@ export function bookelementgroupread(
   book: MAYBE<BOOK>,
   element: MAYBE<BOARD_ELEMENT>,
 ) {
-  return maptostring(bookelementstatread(book, element, 'group') ?? createsid())
+  let groupid = createsid()
+  const groupstat = bookelementstatread(book, element, 'group')
+  if (isstring(groupstat)) {
+    groupid = groupstat
+  }
+  const kindgroupstat = bookelementstatread(book, element?.kinddata, 'group')
+  if (isstring(kindgroupstat)) {
+    groupid = kindgroupstat
+  }
+  return groupid
 }
 
 export function bookelementdisplayread(
