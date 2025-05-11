@@ -97,25 +97,57 @@ export function createsynth() {
 
   function connectsource(index: number) {
     const f = mapindextofx(index)
-    SOURCE[index]?.source.synth.chain(
-      FX[f].fc,
-      FX[f].distortion,
-      FX[f].vibrato,
-      FX[f].phaser,
-      FX[f].echo,
-      FX[f].reverb,
-      index < 4 ? playvolume : bgplayvolume,
-    )
-    if (SOURCE[index]?.source.type === SOURCE_TYPE.BELLS) {
-      SOURCE[index]?.source.sparkle.chain(
-        FX[f].fc,
-        FX[f].distortion,
-        FX[f].vibrato,
-        FX[f].phaser,
-        FX[f].echo,
-        FX[f].reverb,
-        index < 4 ? playvolume : bgplayvolume,
-      )
+    switch (SOURCE[index]?.source.type) {
+      case SOURCE_TYPE.RETRO_NOISE:
+      case SOURCE_TYPE.BUZZ_NOISE:
+      case SOURCE_TYPE.CLANG_NOISE:
+      case SOURCE_TYPE.METALLIC_NOISE:
+        // skip
+        break
+      default:
+        // connect synth
+        SOURCE[index]?.source.synth.chain(
+          FX[f].fc,
+          FX[f].distortion,
+          FX[f].vibrato,
+          FX[f].phaser,
+          FX[f].echo,
+          FX[f].reverb,
+          index < 4 ? playvolume : bgplayvolume,
+        )
+        break
+    }
+    switch (SOURCE[index]?.source.type) {
+      case SOURCE_TYPE.RETRO_NOISE:
+      case SOURCE_TYPE.BUZZ_NOISE:
+      case SOURCE_TYPE.CLANG_NOISE:
+      case SOURCE_TYPE.METALLIC_NOISE:
+        // filtered synth
+        SOURCE[index]?.source.synth.chain(
+          SOURCE[index]?.source.filter1,
+          SOURCE[index]?.source.filter2,
+          FX[f].fc,
+          FX[f].distortion,
+          FX[f].vibrato,
+          FX[f].phaser,
+          FX[f].echo,
+          FX[f].reverb,
+          index < 4 ? playvolume : bgplayvolume,
+        )
+        break
+      case SOURCE_TYPE.BELLS: {
+        // second synth
+        SOURCE[index]?.source.sparkle.chain(
+          FX[f].fc,
+          FX[f].distortion,
+          FX[f].vibrato,
+          FX[f].phaser,
+          FX[f].echo,
+          FX[f].reverb,
+          index < 4 ? playvolume : bgplayvolume,
+        )
+        break
+      }
     }
   }
 
