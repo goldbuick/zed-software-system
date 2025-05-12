@@ -102,9 +102,10 @@ export function createsource(sourcetype: SOURCE_TYPE) {
       case SOURCE_TYPE.RETRO_NOISE: {
         source.synth.set({
           ...resetvalues,
-          volume: -12,
-          attack: 0.001,
-          release: 0.75,
+          attack: 0.01,
+          decay: 0.01,
+          sustain: 0.5,
+          release: 0.01,
         })
         break
       }
@@ -157,6 +158,7 @@ export function createsource(sourcetype: SOURCE_TYPE) {
       source = {
         type: sourcetype,
         synth: new Sampler({
+          volume: -30,
           urls: {
             C4: generatenoisesynth(sourcetype),
           },
