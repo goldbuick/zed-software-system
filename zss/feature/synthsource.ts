@@ -1,4 +1,11 @@
-import { Synth, Sampler, getContext, FMSynth, MetalSynth } from 'tone'
+import {
+  Synth,
+  Sampler,
+  getContext,
+  FMSynth,
+  MetalSynth,
+  BiquadFilter,
+} from 'tone'
 import { deepcopy, MAYBE } from 'zss/mapping/types'
 
 export enum SOURCE_TYPE {
@@ -10,7 +17,7 @@ export enum SOURCE_TYPE {
   BELLS,
 }
 
-const RETRO_SAMPLE_COUNT = 32768
+const RETRO_SAMPLE_COUNT = 131072
 function generatenoisesynth(source: SOURCE_TYPE) {
   const wave = getContext().createBuffer(
     1,
@@ -60,6 +67,8 @@ export type SOURCE =
         | SOURCE_TYPE.CLANG_NOISE
         | SOURCE_TYPE.METALLIC_NOISE
       synth: Sampler
+      filter1: BiquadFilter
+      filter2: BiquadFilter
     }
   | {
       type: SOURCE_TYPE.BELLS
@@ -151,6 +160,16 @@ export function createsource(sourcetype: SOURCE_TYPE) {
           urls: {
             C4: generatenoisesynth(sourcetype),
           },
+        }),
+        filter1: new BiquadFilter({
+          type: 'lowshelf',
+          gain: -32,
+          frequency: 440,
+        }),
+        filter2: new BiquadFilter({
+          type: 'highshelf',
+          gain: 32,
+          frequency: 440,
         }),
       }
       resetvalues = deepcopy(source.synth.get())
