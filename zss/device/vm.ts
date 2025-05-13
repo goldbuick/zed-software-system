@@ -85,8 +85,8 @@ const SECOND_TIMEOUT = 16
 const tracking: Record<string, number> = {}
 
 // control how fast we persist to the register
-// this __should__ autosave every 5 minutes
-const FLUSH_RATE = 15 * 60 * 5
+// this __should__ autosave every minute
+const FLUSH_RATE = 60
 let flushtick = 0
 
 // track watched memory
@@ -99,9 +99,7 @@ async function savestate(autosave?: boolean) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (books.length && ispresent(mainbook)) {
     const content = await compressbooks(books)
-    const historylabel = autosave
-      ? `autosave`
-      : `${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
+    const historylabel = `${autosave ? 'autosave ' : ''}${new Date().toISOString()} ${mainbook.name} ${content.length} chars`
     register_savemem(vm, memoryreadoperator(), historylabel, content)
   }
 }
