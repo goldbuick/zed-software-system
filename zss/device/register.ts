@@ -231,7 +231,7 @@ window.addEventListener('hashchange', () => {
 })
 
 async function writeurlcontent(exportedbooks: string, label: string) {
-  if (exportedbooks.length > 1024) {
+  if (exportedbooks.length > 2048) {
     const shorturl = await writelocalurl(exportedbooks)
     return writeurlcontent(shorturl, label)
   }
@@ -242,13 +242,11 @@ async function writeurlcontent(exportedbooks: string, label: string) {
     location.hash = newurlhash
     const msg = `wrote ${exportedbooks?.length ?? 0} chars [${exportedbooks.slice(0, 8)}...${exportedbooks.slice(-8)}]`
     if (label.includes('autosave')) {
-      api_debug(register, myplayerid, msg)
+      console.info(msg)
     } else {
-      if (label.length) {
-        document.title = label
-      }
       api_info(register, myplayerid, msg)
     }
+    document.title = label
   }
 }
 
