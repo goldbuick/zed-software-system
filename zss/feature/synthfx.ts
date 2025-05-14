@@ -54,7 +54,7 @@ export function createfx() {
       ...resetvibrato,
       wet: 0,
       depth: 0,
-      type: 'sine',
+      maxDelay: 0.5,
     })
     fc.set({
       ...resetfc,

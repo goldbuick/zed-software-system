@@ -551,7 +551,8 @@ export function createsynth() {
       return
     }
     const [chan, duration, note] = value
-    if (isstring(note) && ispresent(SOURCE[chan])) {
+    const f = mapindextofx(chan)
+    if (isstring(note) && ispresent(SOURCE[chan]) && ispresent(FX[f])) {
       if (note.startsWith('#')) {
         vm_synthsend(SOFTWARE, '', note.slice(1))
       } else {
@@ -569,6 +570,13 @@ export function createsynth() {
             break
         }
         SOURCE[chan].source.synth.triggerAttackRelease(note, duration, time)
+        const sduration = SOURCE[chan].source.synth.toSeconds(duration)
+        const reset = '128n'
+        const rampreset = SOURCE[chan].source.synth.toSeconds(reset)
+        FX[f].vibrato.depth.rampTo(1, '2n', time)
+        FX[f].vibrato.depth.rampTo(0, reset, time + sduration - rampreset)
+        FX[f].vibrato.frequency.rampTo(5, '4n', time)
+        FX[f].vibrato.frequency.rampTo(1, reset, time + sduration - rampreset)
       }
     }
     if (isnumber(note)) {
