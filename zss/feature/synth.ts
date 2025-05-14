@@ -535,6 +535,8 @@ export function createsynth() {
   const drumbass = new MembraneSynth().connect(playvolume)
   drumbass.set({
     octaves: 8,
+    volume: 8.0,
+    pitchDecay: 0.125,
   })
 
   function drumbasstrigger(time: number) {
