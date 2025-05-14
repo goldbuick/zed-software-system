@@ -62,9 +62,9 @@ export function createsynth() {
 
   const razzledazzle = new Chorus()
   razzledazzle.set({
-    wet: 0.5555,
+    wet: 0.5,
     depth: 0.89,
-    delayTime: 8,
+    delayTime: 16,
   })
   razzledazzle.connect(maincompressor)
 
