@@ -53,7 +53,8 @@ export function createfx() {
     vibrato.set({
       ...resetvibrato,
       wet: 0,
-      depth: 0.2,
+      depth: 0,
+      maxDelay: 0.5,
     })
     fc.set({
       ...resetfc,

@@ -36,8 +36,15 @@ export function synthvoicefxconfig(
   if (ispresent(fx)) {
     switch (config) {
       case 'on':
-        // default on value
-        fx.wet.value = 0.2
+        // default on value(s)
+        switch (fxname) {
+          case 'vibrato':
+            fx.wet.value = 0.8
+            break
+          default:
+            fx.wet.value = 0.2
+            break
+        }
         break
       case 'off':
         fx.wet.value = 0.0

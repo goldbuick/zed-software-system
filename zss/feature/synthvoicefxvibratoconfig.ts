@@ -28,14 +28,6 @@ export function synthvoicefxvibratoconfig(
         return
       }
       break
-    case 'depth':
-      if (isnumber(value)) {
-        vibrato.set({
-          depth: value,
-        })
-        return
-      }
-      break
   }
   api_error(
     SOFTWARE,
