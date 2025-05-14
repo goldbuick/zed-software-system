@@ -47,8 +47,7 @@ export function createfx() {
     distortion.set({
       ...resetdistortion,
       wet: 0,
-      distortion: 0.9,
-      oversample: '2x',
+      oversample: '4x',
     })
     vibrato.set({
       ...resetvibrato,

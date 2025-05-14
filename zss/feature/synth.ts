@@ -1,5 +1,6 @@
 import { Note } from 'tonal'
 import {
+  AudioToGain,
   Chorus,
   Compressor,
   Distortion,
@@ -11,10 +12,13 @@ import {
   getDestination,
   getTransport,
   MembraneSynth,
+  Noise,
   NoiseSynth,
+  Oscillator,
   Part,
   Player,
   PolySynth,
+  Scale,
   Synth,
   Time,
   ToneAudioBuffer,
@@ -58,11 +62,25 @@ export function createsynth() {
 
   const razzledazzle = new Chorus()
   razzledazzle.set({
-    wet: 0.22,
-    depth: 0.777,
+    wet: 0.5,
+    depth: 0.89,
     delayTime: 16,
   })
   razzledazzle.connect(maincompressor)
+
+  const fuzzysource = new Noise({ type: 'pink' })
+  const fsmap = new AudioToGain()
+
+  const fstexture = new Scale(0, 0.02)
+  fuzzysource.chain(fsmap, fstexture, razzledazzle)
+  fuzzysource.start(0)
+
+  const cyclesource = new Oscillator(0.125, 'sine')
+  const fsfeedback = new Scale(0, 0.333)
+  const fsfrequency = new Scale(0.0001, 5)
+  cyclesource.chain(fsmap, fsfeedback, razzledazzle.feedback)
+  cyclesource.chain(fsmap, fsfrequency, razzledazzle.frequency)
+  cyclesource.start()
 
   const playvolume = new Volume()
   playvolume.connect(razzledazzle)

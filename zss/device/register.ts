@@ -41,7 +41,6 @@ import {
   bridge_join,
   synth_play,
   register_terminal_full,
-  api_debug,
   api_info,
   register_terminal_close,
   vm_books,
