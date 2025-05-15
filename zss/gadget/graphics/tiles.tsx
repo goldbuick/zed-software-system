@@ -8,7 +8,6 @@ import {
   updateTilemapDataTexture,
 } from 'zss/gadget/display/tiles'
 
-import { useClipping } from '../clipping'
 import { useMedia } from '../hooks'
 
 type TilesProps = {
@@ -32,7 +31,6 @@ export function Tiles({
   const charset = useMedia((state) => state.charsetdata)
   const altcharset = useMedia((state) => state.altcharsetdata)
 
-  const clippingPlanes = useClipping()
   const [material] = useState(() => createTilemapMaterial())
   const bgRef = useRef<BufferGeometry>(null)
   const { width: imageWidth = 0, height: imageHeight = 0 } =
@@ -75,8 +73,6 @@ export function Tiles({
     material.uniforms.step.value.x = 1 / Math.round(imageWidth / CHAR_WIDTH)
     material.uniforms.step.value.y = 1 / Math.round(imageHeight / CHAR_HEIGHT)
     material.uniforms.flip.value = fliptexture
-    material.clipping = clippingPlanes.length > 0
-    material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
   }, [
     palette,
@@ -88,7 +84,6 @@ export function Tiles({
     imageWidth,
     imageHeight,
     fliptexture,
-    clippingPlanes,
   ])
 
   return (

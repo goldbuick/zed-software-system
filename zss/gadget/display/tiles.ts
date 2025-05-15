@@ -128,19 +128,15 @@ const tilemapMaterial = new ShaderMaterial({
   },
   // vertex shader
   vertexShader: `
-    #include <clipping_planes_pars_vertex>
     varying vec2 vUv;
     void main() {
       vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
       gl_Position = projectionMatrix * mvPosition;
       vUv = uv;
-      #include <clipping_planes_vertex>
     }
   `,
   // fragment shader
   fragmentShader: `
-    #include <clipping_planes_pars_fragment>
-
     uniform float time;
     uniform float interval;
     uniform sampler2D map;
@@ -153,8 +149,6 @@ const tilemapMaterial = new ShaderMaterial({
     varying vec2 vUv;
 
     void main() {
-      #include <clipping_planes_fragment>
-
       uvec4 tiledata = texture(data, vUv);
       int colori = int(tiledata.z);
       int bgi = int(tiledata.w);

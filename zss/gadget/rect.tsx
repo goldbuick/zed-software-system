@@ -2,8 +2,6 @@ import React from 'react'
 import { Color, Mesh } from 'three'
 import { RUNTIME } from 'zss/config'
 
-import { useClipping } from './clipping'
-
 function noop() {}
 
 type Args<T> = T extends new (...args: any) => any
@@ -64,7 +62,6 @@ export const Rect = React.forwardRef<typeof PlaneComponent, Props>(
       (y + hh) * RUNTIME.DRAW_CHAR_HEIGHT(),
       z,
     ]
-    const clippingPlanes = useClipping()
     return (
       <PlaneComponent
         ref={forwardedRef}
@@ -72,7 +69,7 @@ export const Rect = React.forwardRef<typeof PlaneComponent, Props>(
           width * RUNTIME.DRAW_CHAR_WIDTH(),
           height * RUNTIME.DRAW_CHAR_HEIGHT(),
         ]}
-        userData={{ blocking, cursor, clippingPlanes }}
+        userData={{ blocking, cursor }}
         onClick={blocking ? noop : undefined}
         onPointerMove={blocking ? noop : undefined}
         position={position}
@@ -83,7 +80,6 @@ export const Rect = React.forwardRef<typeof PlaneComponent, Props>(
           opacity={opacity}
           visible={visible}
           transparent={opacity !== 1}
-          clippingPlanes={clippingPlanes}
         />
       </PlaneComponent>
     )

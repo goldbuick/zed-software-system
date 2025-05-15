@@ -1,7 +1,7 @@
 import { events, Canvas } from '@react-three/fiber'
 import debounce from 'debounce'
 import { createRoot, Root } from 'react-dom/client'
-import { Intersection, Plane, Vector3 } from 'three'
+import { Intersection } from 'three'
 import unmuteAudio from 'unmute-ios-audio'
 import { makeeven } from 'zss/mapping/number'
 import { ispresent, MAYBE } from 'zss/mapping/types'
@@ -9,9 +9,6 @@ import { ispresent, MAYBE } from 'zss/mapping/types'
 import { App } from './app'
 
 unmuteAudio()
-
-const target = new Vector3()
-const facing = new Vector3()
 
 const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   state,
@@ -25,20 +22,6 @@ const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
       if (!item.object.visible) {
         return false
       }
-
-      const clippingPlanes: Plane[] = item.object.userData.clippingPlanes ?? []
-      if (
-        clippingPlanes.some((plane) => {
-          plane.projectPoint(item.point, target)
-          facing.subVectors(item.point, target).normalize().round()
-          target.copy(plane.normal).round()
-          const isfacing = target.equals(facing)
-          return isfacing === false
-        })
-      ) {
-        return false
-      }
-
       return true
     })
 
@@ -91,9 +74,6 @@ function applyconfig(innerwidth: number, innerheight: number) {
           stencil: false,
           antialias: false,
           preserveDrawingBuffer: true,
-        }}
-        onCreated={({ gl }) => {
-          gl.localClippingEnabled = true
         }}
       >
         <App />

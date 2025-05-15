@@ -17,7 +17,6 @@ import { createBillboardsMaterial } from 'zss/gadget/display/billboards'
 import { createSpritesMaterial } from 'zss/gadget/display/sprites'
 import { ispresent } from 'zss/mapping/types'
 
-import { useClipping } from '../clipping'
 import { useMedia } from '../hooks'
 
 type MaybeBufferAttr = BufferAttribute | InterleavedBufferAttribute | undefined
@@ -43,7 +42,6 @@ export function Sprites({
     return withbillboards ? createBillboardsMaterial() : createSpritesMaterial()
   }, [withbillboards])
 
-  const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
   const spritepool = useRef<SPRITE[]>([])
   const { width: imageWidth = 0, height: imageHeight = 0 } =
@@ -246,8 +244,6 @@ export function Sprites({
     material.uniforms.step.value.x = 1 / imageCols
     material.uniforms.step.value.y = 1 / imageRows
     material.uniforms.flip.value = fliptexture
-    material.clipping = clippingPlanes.length > 0
-    material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
   }, [
     palette,
@@ -257,7 +253,6 @@ export function Sprites({
     imageWidth,
     imageHeight,
     fliptexture,
-    clippingPlanes,
     withbillboards,
     viewport.width,
     viewport.height,

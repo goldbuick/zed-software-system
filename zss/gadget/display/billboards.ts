@@ -37,8 +37,6 @@ const billboardsMaterial = new ShaderMaterial({
   },
   // vertex shader
   vertexShader: `
-    #include <clipping_planes_pars_vertex>
-
     attribute float visible;
     attribute vec4 charData;
     attribute vec3 lastPosition;
@@ -135,14 +133,10 @@ const billboardsMaterial = new ShaderMaterial({
       gl_PointSize = (screenheight * (ptsize + 0.5)) / gl_Position.w;
       gl_PointSize *= dpr;
       gl_Position.y -= ptsize - ptaspect;
-      
-      #include <clipping_planes_vertex>
     }
   `,
   // fragment shader
   fragmentShader: `
-    #include <clipping_planes_pars_fragment>
-
     uniform float time;
     uniform float interval;
     uniform sampler2D map;
@@ -158,8 +152,6 @@ const billboardsMaterial = new ShaderMaterial({
     varying vec4 vBg;
 
     void main() {
-      #include <clipping_planes_fragment>
-
       float xscale = pointSize.y / pointSize.x;
       float px = gl_PointCoord.x * xscale;
       
