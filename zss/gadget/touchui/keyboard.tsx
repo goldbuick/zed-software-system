@@ -10,8 +10,8 @@ import { COLOR } from 'zss/words/types'
 
 import { ShadeBoxDither } from '../graphics/dither'
 import { useDeviceConfig } from '../hooks'
-import { Panel } from '../panel'
 import { ScrollContext } from '../panel/common'
+import { Panel } from '../panel/component'
 import { Rect } from '../rect'
 
 const KEYBOARD_SCALE = 1.5

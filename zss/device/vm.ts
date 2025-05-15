@@ -71,7 +71,7 @@ import {
   register_forkmem,
   register_loginready,
   register_savemem,
-  api_debug,
+  api_log,
   register_editor_close,
   vm_codeaddress,
   vm_flush,
@@ -81,7 +81,7 @@ import {
 import { modemobservevaluestring } from './modem'
 
 // tracking active player ids
-const SECOND_TIMEOUT = 16
+const SECOND_TIMEOUT = 16 // timeout after 16 seconds
 const tracking: Record<string, number> = {}
 
 // control how fast we persist to the register
@@ -245,7 +245,7 @@ const vm = createdevice(
       case 'doot':
         // player keepalive
         tracking[message.player] = 0
-        api_debug(vm, message.player, 'active')
+        api_log(vm, message.player, '.')
         break
       case 'input': {
         // player input

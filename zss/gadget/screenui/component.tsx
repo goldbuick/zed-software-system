@@ -8,14 +8,15 @@ import { useEqual, useGadgetClient } from 'zss/gadget/data/state'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 
+import { StaticDither } from '../graphics/dither'
+import { useDeviceConfig } from '../hooks'
+import { ScrollContext } from '../panel/common'
+import { Panel } from '../panel/component'
+import { Rect } from '../rect'
+import { Scroll } from '../scroll/component'
+import { useScreenSize } from '../userscreen'
+
 import { Framed } from './framed'
-import { StaticDither } from './graphics/dither'
-import { useDeviceConfig } from './hooks'
-import { Panel } from './panel'
-import { ScrollContext } from './panel/common'
-import { Rect } from './rect'
-import { Scroll } from './scroll/component'
-import { useScreenSize } from './userscreen'
 
 enum RECT_TYPE {
   PANEL,
@@ -82,7 +83,7 @@ function LayoutRect({
 
 const SIDEBAR_SIZE = 20
 
-export function PanelLayout() {
+export function ScreenUI() {
   const screensize = useScreenSize()
   const { islandscape, sidebaropen, insetrows, showtouchcontrols } =
     useDeviceConfig()

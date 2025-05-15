@@ -12,8 +12,8 @@ import { COLOR } from 'zss/words/types'
 
 import { PANEL_ITEM } from '../data/types'
 import { useTiles } from '../hooks'
-import { Panel } from '../panel'
 import { ScrollContext } from '../panel/common'
+import { Panel } from '../panel/component'
 import { UserFocus, UserInput, UserInputHandler } from '../userinput'
 import { TilesData } from '../usetiles'
 

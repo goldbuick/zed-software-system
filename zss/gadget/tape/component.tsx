@@ -10,14 +10,15 @@ import {
 } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { ShadeBoxDither } from './graphics/dither'
-import { useTiles } from './hooks'
-import { BackPlate } from './tape/backplate'
-import { bgcolor, FG } from './tape/common'
-import { TapeLayout } from './tape/layout'
-import { UserFocus, UserHotkey } from './userinput'
-import { useScreenSize } from './userscreen'
-import { TilesData, TilesRender } from './usetiles'
+import { ShadeBoxDither } from '../graphics/dither'
+import { useTiles } from '../hooks'
+import { UserFocus, UserHotkey } from '../userinput'
+import { useScreenSize } from '../userscreen'
+import { TilesData, TilesRender } from '../usetiles'
+
+import { BackPlate } from './backplate'
+import { bgcolor, FG } from './common'
+import { TapeLayout } from './layout'
 
 export function Tape() {
   const screensize = useScreenSize()

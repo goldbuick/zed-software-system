@@ -14,7 +14,7 @@ export function useEqual<S, U>(selector: (state: S) => U): (state: S) => U {
         ? prev.current === next
         : isequal(prev.current, next)
     )
-      ? (prev.current as U)
+      ? prev.current
       : (prev.current = next)
   }
 }
@@ -56,12 +56,6 @@ export const useGadgetClient = create<{
   },
 }))
 
-export enum TAPE_LOG_LEVEL {
-  OFF,
-  INFO,
-  DEBUG,
-}
-
 export type TAPE_ROW = [string, string, string, ...any[]]
 
 export const TAPE_MAX_LINES = 128
@@ -84,7 +78,7 @@ export const useTape = create<{
   toast: string
   terminal: {
     open: boolean
-    level: TAPE_LOG_LEVEL
+    info: TAPE_ROW[]
     logs: TAPE_ROW[]
   }
   editor: {
@@ -102,7 +96,7 @@ export const useTape = create<{
   toast: '',
   terminal: {
     open: true,
-    level: TAPE_LOG_LEVEL.INFO,
+    info: [],
     logs: [],
   },
   editor: {

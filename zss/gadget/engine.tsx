@@ -2,12 +2,9 @@ import { useDetectGPU } from '@react-three/drei'
 import { addEffect, addAfterEffect, useThree } from '@react-three/fiber'
 import {
   Bloom,
-  ChromaticAberration,
-  DepthOfField,
   EffectComposer,
   Glitch,
   Noise,
-  Scanline,
   Vignette,
 } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
@@ -24,8 +21,8 @@ import {
 import { CRTShape } from 'zss/gadget/fx/crt'
 
 import { useDeviceConfig, useMedia } from './hooks'
-import { PanelLayout } from './panellayout'
-import { Tape } from './tape'
+import { ScreenUI } from './screenui/component'
+import { Tape } from './tape/component'
 import { TapeToast } from './toast'
 import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
@@ -94,7 +91,7 @@ export function Engine() {
     <>
       <UserFocus>
         <UserScreen>
-          <PanelLayout />
+          <ScreenUI />
           <Tape />
           <TapeToast />
         </UserScreen>
@@ -115,6 +112,19 @@ export function Engine() {
                 <Noise
                   premultiply // enables or disables noise premultiplication
                   blendFunction={BlendFunction.AVERAGE} // blend mode
+                />
+              </Fragment>
+            )}
+            {mood.includes('bright') && (
+              <Fragment key="mood">
+                <Bloom
+                  mipmapBlur
+                  levels={4}
+                  intensity={3}
+                  radius={0.111}
+                  luminanceThreshold={0.666}
+                  luminanceSmoothing={0.666}
+                  blendFunction={BlendFunction.ADD}
                 />
               </Fragment>
             )}

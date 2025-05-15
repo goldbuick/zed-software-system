@@ -3,10 +3,11 @@ import {
   createwritetextcontext,
 } from 'zss/words/textformat'
 
-import { PANEL_ITEM } from './data/types'
-import { resetTiles, useTiles, WriteTextContext } from './hooks'
-import { PanelItem } from './panel/panelitem'
-import { TilesData, TilesRender } from './usetiles'
+import { PANEL_ITEM } from '../data/types'
+import { resetTiles, useTiles, WriteTextContext } from '../hooks'
+import { TilesData, TilesRender } from '../usetiles'
+
+import { PanelItem } from './panelitem'
 
 type PanelProps = {
   inline?: boolean

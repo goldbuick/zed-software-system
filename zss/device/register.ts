@@ -11,7 +11,6 @@ import {
 } from 'zss/feature/writeui'
 import {
   TAPE_DISPLAY,
-  TAPE_LOG_LEVEL,
   TAPE_MAX_LINES,
   TAPE_ROW,
   useGadgetClient,
@@ -155,14 +154,29 @@ const messagecrew: string[] = [
   '$dkpurple$227',
 ]
 
-function terminallog(message: MESSAGE): string {
-  if (isarray(message.data)) {
-    return [message.sender, ...message.data.map((v) => `${v}`)].join(' ')
+function terminaladdinfo(message: MESSAGE) {
+  const { terminal } = useTape.getState()
+  const row: TAPE_ROW = [
+    createsid(),
+    message.target,
+    pickwith(message.sender, messagecrew),
+    ...message.data,
+  ]
+
+  let info: TAPE_ROW[] = [row, ...terminal.info]
+  if (info.length > TAPE_MAX_LINES) {
+    info = info.slice(0, TAPE_MAX_LINES)
   }
-  return ''
+
+  useTape.setState((state) => ({
+    terminal: {
+      ...state.terminal,
+      info,
+    },
+  }))
 }
 
-function terminaladdmessage(message: MESSAGE) {
+function terminaladdlog(message: MESSAGE) {
   const { terminal } = useTape.getState()
   const row: TAPE_ROW = [
     createsid(),
@@ -294,8 +308,8 @@ export async function readlocalurl(shorturl: string) {
 // simple bootstrap manager
 let keepalive = 0
 
-// send keepalive message every 24 seconds
-const signalrate = 1
+// send keepalive message every 10 seconds
+const signalrate = 10
 
 // stable unique id
 const myplayerid = readsession('PLAYER') ?? createpid()
@@ -307,7 +321,7 @@ export function registerreadplayer() {
 
 const register = createdevice(
   'register',
-  ['ready', 'second', 'info', 'error', 'debug', 'toast'],
+  ['ready', 'second', 'info', 'error', 'log', 'toast'],
   function (message) {
     if (!register.session(message)) {
       return
@@ -325,7 +339,6 @@ const register = createdevice(
         break
     }
 
-    const { terminal } = useTape.getState()
     switch (message.target) {
       case 'ready': {
         doasync(register, message.player, async () => {
@@ -554,23 +567,14 @@ const register = createdevice(
           }
         })
         break
-      case 'info':
-        if (terminal.level >= TAPE_LOG_LEVEL.INFO) {
-          terminaladdmessage(message)
-        }
-        break
-      case 'debug':
-        if (terminal.level >= TAPE_LOG_LEVEL.DEBUG) {
-          terminaladdmessage(message)
-          // eslint-disable-next-line no-console
-          console.debug(terminallog(message))
-        }
-        break
       case 'error':
-        if (terminal.level > TAPE_LOG_LEVEL.OFF) {
-          terminaladdmessage(message)
-        }
-        console.error(terminallog(message))
+        terminaladdinfo(message)
+        break
+      case 'info':
+        terminaladdinfo(message)
+        break
+      case 'log':
+        terminaladdlog(message)
         break
       case 'toast':
         doasync(register, message.player, async () => {

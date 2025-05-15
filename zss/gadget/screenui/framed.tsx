@@ -16,10 +16,10 @@ import {
 import { ispid } from 'zss/mapping/guid'
 import { NAME } from 'zss/words/types'
 
-import { FlatGraphics } from './graphics/flat'
-import { Mode7Graphics } from './graphics/mode7'
+import { FlatGraphics } from '../graphics/flat'
+import { Mode7Graphics } from '../graphics/mode7'
 // TODO: isometric, firstperson, xr/vr/lookingglass
-import { modsfromevent, UserInput, UserInputMods } from './userinput'
+import { modsfromevent, UserInput, UserInputMods } from '../userinput'
 
 function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   let bits = 0
