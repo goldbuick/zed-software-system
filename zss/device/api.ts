@@ -52,12 +52,8 @@ export function api_info(
   return true
 }
 
-export function api_debug(
-  device: DEVICELIKE,
-  player: string,
-  ...message: any[]
-) {
-  device.emit(player, 'debug', message)
+export function api_log(device: DEVICELIKE, player: string, ...message: any[]) {
+  device.emit(player, 'log', message)
   return true
 }
 

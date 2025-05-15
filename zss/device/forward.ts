@@ -48,7 +48,7 @@ export function shouldnotforwardonpeerserver(message: MESSAGE): boolean {
 export function shouldforwardservertoclient(message: MESSAGE): boolean {
   switch (message.target) {
     case 'info':
-    case 'debug':
+    case 'log':
     case 'error':
     case 'tick':
     case 'tock':

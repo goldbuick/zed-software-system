@@ -2,7 +2,7 @@ import { objectKeys } from 'ts-extras'
 import { senderid } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
 import { parsetarget } from 'zss/device'
-import { api_error, MESSAGE, api_debug, api_info } from 'zss/device/api'
+import { api_error, MESSAGE, api_log, api_info } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
@@ -778,7 +778,7 @@ export function memorycli(player: string, cli = '') {
   RUNTIME.HALT_AT_COUNT = resethalt * 8
 
   // invoke once
-  api_debug(SOFTWARE, player, 'running', mainbook.timestamp, id, cli)
+  api_log(SOFTWARE, player, 'running', mainbook.timestamp, id, cli)
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
 
   // track invoke
