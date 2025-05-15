@@ -21,20 +21,11 @@ import { TapeTerminalItem } from './item'
 import { TapeTerminalItemActive } from './itemactive'
 
 function renderrow(item: TAPE_ROW) {
-  const [, maybelevel, source, ...message] = item
-  let level = '$white'
-  switch (maybelevel) {
-    case 'debug':
-      level = '$yellow'
-      break
-    case 'error':
-      level = '$red'
-      break
-  }
-
+  const [, maybelevel, ...message] = item
+  const level = maybelevel === 'error' ? '$red' : '$blue'
   const messagetext = message.map((v) => `${v}`).join(' ')
   const ishyperlink = messagetext.startsWith('!')
-  const prefix = `$onclear${level}${source}$white$180$blue`
+  const prefix = `$onclear${level}`
   return `${ishyperlink ? '!' : ''}${prefix}${messagetext}`
 }
 
@@ -52,7 +43,7 @@ function forkonedge(
   rightedge: number,
   bottomedge: number,
   context: WRITE_TEXT_CONTEXT,
-) {
+): WRITE_TEXT_CONTEXT {
   return {
     ...context,
     x: leftedge,
@@ -105,11 +96,13 @@ export function TapeTerminal() {
   const logsrows: string[] = terminallogs.map(renderrow)
 
   // measure rows
+  const infosize = xstep - 1
   const inforowheights: number[] = inforows.map((item) => {
-    return measurerow(item, edge.width, edge.height)
+    return measurerow(item, infosize, edge.height)
   })
+  const logssize = context.width - xstep
   const logsrowheights: number[] = logsrows.map((item) => {
-    return measurerow(item, edge.width, edge.height)
+    return measurerow(item, logssize, edge.height)
   })
 
   // baseline

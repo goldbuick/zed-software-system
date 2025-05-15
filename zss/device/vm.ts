@@ -83,6 +83,7 @@ import { modemobservevaluestring } from './modem'
 // tracking active player ids
 const SECOND_TIMEOUT = 16 // timeout after 16 seconds
 const tracking: Record<string, number> = {}
+const trackinglastlog: Record<string, number> = {}
 
 // control how fast we persist to the register
 // this __should__ autosave every minute
@@ -125,7 +126,7 @@ const vm = createdevice(
     switch (message.target) {
       case 'operator':
         memorywriteoperator(message.player)
-        write(vm, message.player, `operator set to ${message.player}`)
+        api_log(vm, message.player, `operator set to ${message.player}`)
         // ack
         vm.replynext(message, 'ackoperator', true)
         break
@@ -208,7 +209,7 @@ const vm = createdevice(
               const books = await decompressbooks(maybebooks)
               const booknames = books.map((item) => item.name)
               memoryresetbooks(books, maybeselect)
-              write(vm, message.player, `loading ${booknames.join(', ')}`)
+              api_log(vm, message.player, `loading ${booknames.join(', ')}`)
               // ack
               register_loginready(vm, message.player)
             }
@@ -225,7 +226,7 @@ const vm = createdevice(
         memoryplayerlogout(message.player)
         // stop tracking
         delete tracking[message.player]
-        write(vm, operator, `player ${message.player} logout`)
+        api_log(vm, operator, `player ${message.player} logout`)
         // ack
         register_loginready(vm, message.player)
         break
@@ -234,7 +235,7 @@ const vm = createdevice(
         if (memoryplayerlogin(message.player)) {
           // start tracking
           tracking[message.player] = 0
-          write(vm, memoryreadoperator(), `login from ${message.player}`)
+          api_log(vm, memoryreadoperator(), `login from ${message.player}`)
           // ack
           vm.replynext(message, 'acklogin', true)
         } else {
@@ -245,7 +246,11 @@ const vm = createdevice(
       case 'doot':
         // player keepalive
         tracking[message.player] = 0
-        api_log(vm, message.player, '.')
+        trackinglastlog[message.player] =
+          (trackinglastlog[message.player] ?? 0) + 1
+        if (trackinglastlog[message.player] % 7 === 0) {
+          api_log(vm, message.player, `$whiteactive $blue${message.player}`)
+        }
         break
       case 'input': {
         // player input
