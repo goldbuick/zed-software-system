@@ -1,16 +1,16 @@
-import { textformatreadedges, WRITE_TEXT_CONTEXT } from 'zss/words/textformat'
+import { textformatreadedges } from 'zss/words/textformat'
 
 import { useTape } from '../data/state'
-import { writeTile } from '../hooks'
+import { useWriteText, writeTile } from '../hooks'
 
 import { bgcolor, BKG_PTRN, BKG_PTRN_ALT, FG } from './common'
 
 type BackPlateProps = {
   bump?: boolean
-  context: WRITE_TEXT_CONTEXT
 }
 
-export function BackPlate({ bump, context }: BackPlateProps) {
+export function BackPlate({ bump }: BackPlateProps) {
+  const context = useWriteText()
   const edge = textformatreadedges(context)
   const { quickterminal } = useTape()
   const BG = bgcolor(quickterminal)

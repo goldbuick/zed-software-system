@@ -136,7 +136,7 @@ export function TapeTerminal() {
 
   return (
     <>
-      <BackPlate context={context} />
+      <BackPlate />
       <TapeTerminalContext.Provider
         value={{
           sendmessage(maybetarget, data) {

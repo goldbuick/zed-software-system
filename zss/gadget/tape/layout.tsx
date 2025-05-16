@@ -1,16 +1,21 @@
-import { useMemo } from 'react'
+/* eslint-disable react/no-unknown-property */
+import { Fragment, ReactNode, useMemo } from 'react'
+import { RUNTIME } from 'zss/config'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
 import { deepcopy } from 'zss/mapping/types'
-import { textformatreadedges, WRITE_TEXT_CONTEXT } from 'zss/words/textformat'
+import {
+  createwritetextcontext,
+  WRITE_TEXT_CONTEXT,
+} from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
 import { TapeEditor } from '../editor/component'
-import { WriteTextContext } from '../hooks'
+import { useTiles, WriteTextContext } from '../hooks'
 import { TapeTerminal } from '../terminal/component'
+import { TilesData, TilesRender } from '../usetiles'
 
-type TapeLayoutProps = {
-  context: WRITE_TEXT_CONTEXT
-}
+import { BackPlate } from './backplate'
+import { bgcolor, FG } from './common'
 
 function forkonedge(
   leftedge: number,
@@ -40,63 +45,130 @@ function forkonedge(
   }
 }
 
-export function TapeLayout({ context }: TapeLayoutProps) {
+type TapeLayoutTilesProps = {
+  quickterminal: boolean
+  top: number
+  width: number
+  height: number
+  children: ReactNode
+}
+
+function TapeLayoutTiles({
+  quickterminal,
+  top,
+  width,
+  height,
+  children,
+}: TapeLayoutTilesProps) {
+  const BG = bgcolor(quickterminal)
+  const store = useTiles(width, height, 0, FG, BG)
+  const context: WRITE_TEXT_CONTEXT = useMemo(() => {
+    return forkonedge(0, 0, width - 1, height - 1, {
+      ...createwritetextcontext(width, height, FG, BG),
+      ...store.getState(),
+    })
+  }, [BG, width, height, store])
+  return (
+    <TilesData store={store}>
+      <WriteTextContext.Provider value={context}>
+        <BackPlate />
+        {children}
+      </WriteTextContext.Provider>
+      <group position={[0, top * RUNTIME.DRAW_CHAR_HEIGHT(), 0]}>
+        <TilesRender width={width} height={height} />
+      </group>
+    </TilesData>
+  )
+}
+
+type TapeLayoutProps = {
+  quickterminal: boolean
+  top: number
+  width: number
+  height: number
+}
+
+export function TapeLayout({
+  quickterminal,
+  top,
+  width,
+  height,
+}: TapeLayoutProps) {
   const [layout, editoropen] = useTape(
     useShallow((state) => [state.layout, state.editor.open]),
   )
-
-  const top = 0
-  const left = 0
-  const right = context.width - 1
-  const bottom = context.height - 1
-  const edge = textformatreadedges(context)
-  const ystep = Math.floor(edge.height * 0.5)
-
-  const ytop = useMemo(
-    () => forkonedge(left, top, right, ystep - 1, context),
-    [ystep, right, context],
-  )
-  const ybottom = useMemo(
-    () => forkonedge(left, ystep, right, bottom, context),
-    [ystep, right, bottom, context],
-  )
+  const y2 = Math.floor(height * 0.5)
+  const top2 = top + y2
+  const height2 = height - y2
 
   if (editoropen) {
     switch (layout) {
       case TAPE_DISPLAY.SPLIT_Y:
         return (
-          <>
-            <WriteTextContext.Provider value={ytop}>
+          <Fragment key="layout">
+            <TapeLayoutTiles
+              quickterminal={quickterminal}
+              top={top}
+              width={width}
+              height={y2}
+            >
               <TapeTerminal />
-            </WriteTextContext.Provider>
-            <WriteTextContext.Provider value={ybottom}>
+            </TapeLayoutTiles>
+            <TapeLayoutTiles
+              quickterminal={quickterminal}
+              top={top2}
+              width={width}
+              height={height2}
+            >
               <TapeEditor />
-            </WriteTextContext.Provider>
-          </>
+            </TapeLayoutTiles>
+          </Fragment>
         )
       case TAPE_DISPLAY.SPLIT_Y_ALT:
         return (
-          <>
-            <WriteTextContext.Provider value={ytop}>
+          <Fragment key="layout">
+            <TapeLayoutTiles
+              quickterminal={quickterminal}
+              top={top}
+              width={width}
+              height={y2}
+            >
               <TapeEditor />
-            </WriteTextContext.Provider>
-            <WriteTextContext.Provider value={ybottom}>
+            </TapeLayoutTiles>
+            <TapeLayoutTiles
+              quickterminal={quickterminal}
+              top={top2}
+              width={width}
+              height={height2}
+            >
               <TapeTerminal />
-            </WriteTextContext.Provider>
-          </>
+            </TapeLayoutTiles>
+          </Fragment>
         )
       default:
         return (
-          <WriteTextContext.Provider value={context}>
+          <TapeLayoutTiles
+            key="layout"
+            quickterminal={quickterminal}
+            top={top}
+            width={width}
+            height={height}
+          >
             <TapeEditor />
-          </WriteTextContext.Provider>
+          </TapeLayoutTiles>
         )
     }
   }
 
   return (
-    <WriteTextContext.Provider key="single" value={context}>
+    <TapeLayoutTiles
+      key="layout"
+      quickterminal={quickterminal}
+      top={top}
+      width={width}
+      height={height}
+    >
       <TapeTerminal />
-    </WriteTextContext.Provider>
+    </TapeLayoutTiles>
   )
 }
