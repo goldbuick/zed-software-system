@@ -246,11 +246,11 @@ const vm = createdevice(
       case 'doot':
         // player keepalive
         tracking[message.player] = 0
-        trackinglastlog[message.player] =
-          (trackinglastlog[message.player] ?? 0) + 1
-        if (trackinglastlog[message.player] % 7 === 0) {
+        trackinglastlog[message.player] = trackinglastlog[message.player] ?? 0
+        if (trackinglastlog[message.player] % 32 === 0) {
           api_log(vm, message.player, `$whiteactive $blue${message.player}`)
         }
+        ++trackinglastlog[message.player]
         break
       case 'input': {
         // player input

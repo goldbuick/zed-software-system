@@ -182,7 +182,7 @@ export function memoryensuresoftwarebook(
 
     // success
     if (ispresent(book)) {
-      api_info(
+      api_log(
         SOFTWARE,
         MEMORY.operator,
         `opened [book] ${book.name} for ${slot}`,
@@ -778,7 +778,6 @@ export function memorycli(player: string, cli = '') {
   RUNTIME.HALT_AT_COUNT = resethalt * 8
 
   // invoke once
-  api_log(SOFTWARE, player, 'running', mainbook.timestamp, id, cli)
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
 
   // track invoke

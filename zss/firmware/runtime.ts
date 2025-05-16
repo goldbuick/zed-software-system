@@ -12,7 +12,6 @@ import { totarget } from 'zss/mapping/string'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { listelementsbyattr } from 'zss/memory/atomics'
-import { BOARD_ELEMENT } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 

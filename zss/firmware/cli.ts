@@ -14,6 +14,7 @@ import {
   vm_fork,
   register_downloadjsonfile,
   bridge_tab,
+  api_log,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -47,6 +48,7 @@ import {
 } from 'zss/memory'
 import {
   bookclearcodepage,
+  bookelementdisplayread,
   bookplayermovetoboard,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytypeandstat,
@@ -66,7 +68,7 @@ import {
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { stattypestring } from 'zss/words/stats'
 import { metakey } from 'zss/words/system'
-import { NAME, STAT_TYPE } from 'zss/words/types'
+import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
 
 function vm_flush_op() {
   vm_flush(SOFTWARE, memoryreadoperator())
@@ -369,6 +371,18 @@ export const CLI_FIRMWARE = createfirmware()
       // $WOBBLE $BOUNCE $SPIN
       READ_CONTEXT.element.tickertext = text
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+      const icon = bookelementdisplayread(
+        READ_CONTEXT.book,
+        READ_CONTEXT.element,
+        1,
+        COLOR.WHITE,
+        COLOR.BLACK,
+      )
+      api_log(
+        SOFTWARE,
+        READ_CONTEXT.elementid,
+        `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR ${text}`,
+      )
     }
     return 0
   })
@@ -394,11 +408,7 @@ export const CLI_FIRMWARE = createfirmware()
 
     const book = memoryreadbookbyaddress(name)
     if (ispresent(book)) {
-      writetext(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `opened [book] ${book.name}`,
-      )
+      api_log(SOFTWARE, READ_CONTEXT.elementfocus, `opened [book] ${book.name}`)
       memorysetsoftwarebook(MEMORY_LABEL.MAIN, book.id)
       chip.command('pages')
     } else {
@@ -423,7 +433,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       // clear book
       memoryclearbook(address)
-      writetext(
+      api_log(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         `trashed [book] ${book.name}`,
@@ -482,7 +492,7 @@ export const CLI_FIRMWARE = createfirmware()
     if (ispresent(codepage)) {
       const name = codepagereadname(codepage)
       const pagetype = codepagereadtypetostring(codepage)
-      writetext(
+      api_log(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         `opened [${pagetype}] ${name}`,
@@ -539,7 +549,7 @@ export const CLI_FIRMWARE = createfirmware()
     if (ispresent(page)) {
       const name = codepagereadname(codepage)
       const pagetype = codepagereadtypetostring(codepage)
-      writetext(
+      api_log(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         `trashed [${pagetype}] ${name}`,

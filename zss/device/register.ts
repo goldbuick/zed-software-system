@@ -39,7 +39,6 @@ import {
   bridge_join,
   synth_play,
   register_terminal_full,
-  api_info,
   register_terminal_close,
   vm_books,
   vm_cli,
@@ -49,6 +48,7 @@ import {
   vm_operator,
   vm_zsswords,
   MESSAGE,
+  api_log,
 } from './api'
 
 // read / write from indexdb
@@ -228,7 +228,7 @@ async function writeurlcontent(exportedbooks: string, label: string) {
     if (label.includes('autosave')) {
       console.info(msg)
     } else {
-      api_info(register, myplayerid, msg)
+      api_log(register, myplayerid, msg)
     }
     document.title = label
   }

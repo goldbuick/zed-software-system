@@ -87,7 +87,7 @@ export function TapeTerminal() {
     [xstep, top, left, bottom, context],
   )
   const xright = useMemo(
-    () => forkonedge(xstep, top, right, bottom, context),
+    () => forkonedge(xstep + 1, top, right, bottom, context),
     [xstep, top, right, bottom, context],
   )
 
@@ -100,7 +100,7 @@ export function TapeTerminal() {
   const inforowheights: number[] = inforows.map((item) => {
     return measurerow(item, infosize, edge.height)
   })
-  const logssize = context.width - xstep
+  const logssize = context.width - xstep - 1
   const logsrowheights: number[] = logsrows.map((item) => {
     return measurerow(item, logssize, edge.height)
   })
@@ -158,7 +158,10 @@ export function TapeTerminal() {
             if (ybottom < 0 || y > baseline) {
               return null
             }
-            return !editoropen && tapeycursor >= y && tapeycursor < ybottom ? (
+            return !editoropen &&
+              tapeinput.xcursor < xstep &&
+              tapeycursor >= y &&
+              tapeycursor < ybottom ? (
               <TapeTerminalItemActive key={index} text={text} y={y} />
             ) : (
               <TapeTerminalItem key={index} text={text} y={y} />
@@ -173,7 +176,10 @@ export function TapeTerminal() {
             if (ybottom < 0 || y > baseline) {
               return null
             }
-            return !editoropen && tapeycursor >= y && tapeycursor < ybottom ? (
+            return !editoropen &&
+              tapeinput.xcursor >= xstep &&
+              tapeycursor >= y &&
+              tapeycursor < ybottom ? (
               <TapeTerminalItemActive key={index} text={text} y={y} />
             ) : (
               <TapeTerminalItem key={index} text={text} y={y} />
@@ -183,7 +189,7 @@ export function TapeTerminal() {
         {!editoropen && (
           <TapeTerminalInput
             tapeycursor={tapeycursor}
-            logrowtotalheight={inforowtotalheight}
+            logrowtotalheight={Math.max(inforowtotalheight, logsrowtotalheight)}
           />
         )}
       </TapeTerminalContext.Provider>
