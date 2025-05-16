@@ -68,11 +68,16 @@ import {
 import { romparse, romprint, romread } from 'zss/rom'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { stattypestring } from 'zss/words/stats'
-import { metakey } from 'zss/words/system'
 import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
 
 function vm_flush_op() {
   vm_flush(SOFTWARE, memoryreadoperator())
+}
+
+function helpprint(address: string) {
+  romparse(romread(`help:${address}`), (line) =>
+    romprint(READ_CONTEXT.elementfocus, line),
+  )
 }
 
 export const CLI_FIRMWARE = createfirmware()
@@ -82,166 +87,19 @@ export const CLI_FIRMWARE = createfirmware()
     switch (NAME(target)) {
       // help messages
       case 'helpmenu':
-        writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `H E L P`)
-        // TODO: basically make this help content a table of contents
-        // entry points into the help wiki +1
-        write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `#help controls`,
-          `zss controls and inputs`,
-        )
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `!helpcontrols;read help controls`,
-        )
-        write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `#help text`,
-          `text formatting`,
-        )
-        write(SOFTWARE, READ_CONTEXT.elementfocus, `!helptext;read help text`)
-        write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `#help developer`,
-          `developer commands`,
-        )
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `!helpdeveloper;read help developer`,
-        )
-        write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `#help player`,
-          `player settings`,
-        )
-        write(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `!helpplayer;read help player`,
-        )
-        writesection(SOFTWARE, READ_CONTEXT.elementfocus, `keyboard input`)
-        writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `?`, `open console`)
-        writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `esc`, `close console`)
-        writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `tab`, `move console`)
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `up / down arrow keys`,
-          `navigate console items`,
-        )
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `left / right arrow keys`,
-          `change console items`,
-        )
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `enter`,
-          `interact with console items`,
-        )
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `alt + arrow keys`,
-          `skip words and console lines`,
-        )
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `${metakey} + up / down arrow keys`,
-          `input history`,
-        )
+        helpprint('menu')
         break
       case 'helpcontrols':
-        writeheader(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `zss controls and inputs`,
-        )
-        writesection(SOFTWARE, READ_CONTEXT.elementfocus, `keyboard input`)
-        writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `arrow keys`, `move`)
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `shift + arrow keys`,
-          `shoot`,
-        )
-        writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `enter`, `ok / accept`)
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `escape`,
-          `cancel / close`,
-        )
-        writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `tab`, `menu / action`)
-        writesection(SOFTWARE, READ_CONTEXT.elementfocus, `controller input`)
-        writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `left stick`, `move`)
-        writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `right stick`, `aim`)
-        writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `a`, `ok / accept`)
-        writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `b`, `cancel / close`)
-        writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `y`, `menu / action`)
-        writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `x`, `shoot`)
-        writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `triggers`, `shoot`)
+        helpprint('controls')
         break
       case 'helptext':
-        romparse(romread('help:text'), (line) =>
-          romprint(READ_CONTEXT.elementfocus, line),
-        )
+        helpprint('text')
         break
       case 'helpdeveloper':
-        writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `developer commands`)
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `#books`,
-          `list books in memory`,
-        )
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `#pages`,
-          `list pages in opened book`,
-        )
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `@[pagetype:]page name`,
-          `create & edit a new codepage in the currently opened book`,
-        )
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `#trash`,
-          `list books and pages from open book you can delete`,
-        )
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `#save`,
-          `flush state to register`,
-        )
-        writeoption(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `#share`,
-          `creates a click to copy share url and QR code`,
-        )
+        helpprint('developer')
         break
       case 'helpplayer':
-        writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `player settings`)
-        writetext(SOFTWARE, READ_CONTEXT.elementfocus, `todo`)
+        helpprint('player')
         break
       default: {
         const [msgtarget, msglabel] = totarget(target)
