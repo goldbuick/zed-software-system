@@ -45,18 +45,32 @@ function readdecotickercolor(): COLOR {
     case 0:
       return COLOR.BLUE
     case 1:
-      return COLOR.GREEN
+      return COLOR.BLACK
     case 2:
-      return COLOR.CYAN
+      return COLOR.GREEN
     case 3:
-      return COLOR.RED
+      return COLOR.BLACK
     case 4:
-      return COLOR.PURPLE
+      return COLOR.CYAN
     case 5:
+      return COLOR.BLACK
+    case 6:
+      return COLOR.RED
+    case 7:
+      return COLOR.BLACK
+    case 8:
+      return COLOR.PURPLE
+    case 9:
+      return COLOR.BLACK
+    case 10:
       return COLOR.YELLOW
+    case 11:
+      return COLOR.BLACK
+    case 12:
+      return COLOR.WHITE
     default:
       decoticker = 0
-      return COLOR.WHITE
+      return COLOR.BLACK
   }
 }
 

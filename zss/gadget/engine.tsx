@@ -122,8 +122,8 @@ export function Engine() {
                   intensity={2.22}
                   radius={0.666}
                   luminanceThreshold={0.666}
-                  luminanceSmoothing={0.111}
-                  blendFunction={BlendFunction.LIGHTEN}
+                  luminanceSmoothing={0.0111}
+                  blendFunction={BlendFunction.ADD}
                 />
               </Fragment>
             )}
