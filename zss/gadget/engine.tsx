@@ -119,17 +119,16 @@ export function Engine() {
               <Fragment key="mood">
                 <Bloom
                   mipmapBlur
-                  levels={4}
-                  intensity={3}
-                  radius={0.111}
+                  intensity={2.22}
+                  radius={0.666}
                   luminanceThreshold={0.666}
-                  luminanceSmoothing={0.666}
+                  luminanceSmoothing={0.0111}
                   blendFunction={BlendFunction.ADD}
                 />
               </Fragment>
             )}
           </>
-          <Vignette eskil offset={0.89} darkness={1.1} />
+          <Vignette eskil offset={0.89} darkness={0.9} />
           <CRTShape viewheight={viewheight} />
         </EffectComposer>
       )}

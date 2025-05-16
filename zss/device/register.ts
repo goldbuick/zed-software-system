@@ -18,7 +18,6 @@ import {
   useTapeTerminal,
 } from 'zss/gadget/data/state'
 import { useDeviceConfig } from 'zss/gadget/hooks'
-import { pickwith } from 'zss/mapping/array'
 import { doasync } from 'zss/mapping/func'
 import { createpid, createsid } from 'zss/mapping/guid'
 import { user, withclipboard } from 'zss/mapping/keyboard'
@@ -40,7 +39,6 @@ import {
   bridge_join,
   synth_play,
   register_terminal_full,
-  api_info,
   register_terminal_close,
   vm_books,
   vm_cli,
@@ -50,6 +48,7 @@ import {
   vm_operator,
   vm_zsswords,
   MESSAGE,
+  api_log,
 } from './api'
 
 // read / write from indexdb
@@ -136,32 +135,9 @@ function writepages() {
   vm_cli(register, myplayerid, '#pages')
 }
 
-const messagecrew: string[] = [
-  '$brown$153',
-  '$purple$5',
-  '$green$42',
-  '$ltgray$94',
-  '$white$24',
-  '$white$25',
-  '$white$26',
-  '$white$27',
-  '$white$16',
-  '$white$17',
-  '$white$30',
-  '$white$31',
-  '$red$234',
-  '$cyan$227',
-  '$dkpurple$227',
-]
-
 function terminaladdinfo(message: MESSAGE) {
   const { terminal } = useTape.getState()
-  const row: TAPE_ROW = [
-    createsid(),
-    message.target,
-    pickwith(message.sender, messagecrew),
-    ...message.data,
-  ]
+  const row: TAPE_ROW = [createsid(), message.target, ...message.data]
 
   let info: TAPE_ROW[] = [row, ...terminal.info]
   if (info.length > TAPE_MAX_LINES) {
@@ -178,12 +154,7 @@ function terminaladdinfo(message: MESSAGE) {
 
 function terminaladdlog(message: MESSAGE) {
   const { terminal } = useTape.getState()
-  const row: TAPE_ROW = [
-    createsid(),
-    message.target,
-    pickwith(message.sender, messagecrew),
-    ...message.data,
-  ]
+  const row: TAPE_ROW = [createsid(), message.target, ...message.data]
 
   let logs: TAPE_ROW[] = [row, ...terminal.logs]
   if (logs.length > TAPE_MAX_LINES) {
@@ -257,7 +228,7 @@ async function writeurlcontent(exportedbooks: string, label: string) {
     if (label.includes('autosave')) {
       console.info(msg)
     } else {
-      api_info(register, myplayerid, msg)
+      api_log(register, myplayerid, msg)
     }
     document.title = label
   }
@@ -330,7 +301,9 @@ const register = createdevice(
     // player filter
     switch (message.target) {
       case 'ready':
+      case 'toast':
       case 'second':
+        console.info(message)
         break
       default:
         if (message.player !== myplayerid) {
@@ -567,14 +540,14 @@ const register = createdevice(
           }
         })
         break
-      case 'error':
-        terminaladdinfo(message)
+      case 'log':
+        terminaladdlog(message)
         break
       case 'info':
         terminaladdinfo(message)
         break
-      case 'log':
-        terminaladdlog(message)
+      case 'error':
+        terminaladdinfo(message)
         break
       case 'toast':
         doasync(register, message.player, async () => {

@@ -1,5 +1,6 @@
 import { parsetarget } from 'zss/device'
 import {
+  api_log,
   gadgetserver_clearscroll,
   register_copy,
   register_editor_open,
@@ -219,7 +220,7 @@ export function memoryinspectcommand(path: string, player: string) {
       doasync(SOFTWARE, player, async () => {
         const name = boardelementname(element)
         const pagetype = 'object'
-        writetext(SOFTWARE, player, `opened [${pagetype}] ${name}`)
+        api_log(SOFTWARE, player, `opened [${pagetype}] ${name}`)
 
         // edit path
         const path = [board.id, element.id]

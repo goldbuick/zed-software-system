@@ -16,7 +16,7 @@ import {
   MAYBE,
 } from 'zss/mapping/types'
 
-import { api_error, synth_audioenabled, api_info, vm_loader } from './api'
+import { api_error, synth_audioenabled, vm_loader, api_log } from './api'
 import { registerreadplayer } from './register'
 
 // synth setup
@@ -44,7 +44,7 @@ export function enableaudio() {
         const transport = getTransport()
         enabled = true
         transport.start()
-        api_info(synthdevice, registerreadplayer(), 'audio is enabled!')
+        api_log(synthdevice, registerreadplayer(), 'audio is enabled!')
         setAltInterval(107)
         try {
           const customnavigator = navigator as CustomNavigator

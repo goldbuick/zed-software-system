@@ -37,8 +37,6 @@ const spritesMaterial = new ShaderMaterial({
   },
   // vertex shader
   vertexShader: `
-    #include <clipping_planes_pars_vertex>
-
     attribute float visible;
     attribute vec4 charData;
     attribute vec3 lastPosition;
@@ -122,14 +120,10 @@ const spritesMaterial = new ShaderMaterial({
 
       // this handles things being scaled
       gl_PointSize = pointSize.y * modelViewMatrix[0][0] * dpr + 1.0;
-      
-      #include <clipping_planes_vertex>
     }
   `,
   // fragment shader
   fragmentShader: `
-    #include <clipping_planes_pars_fragment>
-
     uniform float time;
     uniform float interval;
     uniform sampler2D map;
@@ -145,8 +139,6 @@ const spritesMaterial = new ShaderMaterial({
     varying vec4 vBg;
 
     void main() {
-      #include <clipping_planes_fragment>
-
       float xscale = pointSize.y / pointSize.x;
       float px = gl_PointCoord.x * xscale;
       

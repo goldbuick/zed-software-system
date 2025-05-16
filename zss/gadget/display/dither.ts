@@ -33,8 +33,6 @@ const ditherMaterial = new ShaderMaterial({
   },
   // vertex shader
   vertexShader: `
-      #include <clipping_planes_pars_vertex>
-  
       varying vec2 vUv;
     
       void main() {
@@ -42,14 +40,10 @@ const ditherMaterial = new ShaderMaterial({
         gl_Position = projectionMatrix * mvPosition;
         
         vUv = uv;
-        
-        #include <clipping_planes_vertex>
       }
     `,
   // fragment shader
   fragmentShader: `
-      #include <clipping_planes_pars_fragment>
-  
       uniform vec3 color;
       uniform sampler2D data;
   
@@ -67,8 +61,6 @@ const ditherMaterial = new ShaderMaterial({
       }
 
       void main() {
-        #include <clipping_planes_fragment>
-  
         float alpha = texture2D(data, vUv).r;
         if (alpha < 1.0) {
           vec2 ditherCoord = floor( mod( gl_FragCoord.xy, 4.0 ) );

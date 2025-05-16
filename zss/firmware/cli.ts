@@ -2,7 +2,6 @@ import { parsetarget } from 'zss/device'
 import {
   api_error,
   register_editor_open,
-  api_info,
   vm_codeaddress,
   vm_flush,
   register_nuke,
@@ -14,6 +13,7 @@ import {
   vm_fork,
   register_downloadjsonfile,
   bridge_tab,
+  api_log,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -30,7 +30,7 @@ import { text, tokenize } from 'zss/lang/lexer'
 import { pick } from 'zss/mapping/array'
 import { randominteger } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
-import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
+import { deepcopy, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
   MEMORY_LABEL,
@@ -41,12 +41,14 @@ import {
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
+  memoryreadflags,
   memoryreadoperator,
   memorysendtoactiveboards,
   memorysetsoftwarebook,
 } from 'zss/memory'
 import {
   bookclearcodepage,
+  bookelementdisplayread,
   bookplayermovetoboard,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytypeandstat,
@@ -66,7 +68,7 @@ import {
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { stattypestring } from 'zss/words/stats'
 import { metakey } from 'zss/words/system'
-import { NAME, STAT_TYPE } from 'zss/words/types'
+import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
 
 function vm_flush_op() {
   vm_flush(SOFTWARE, memoryreadoperator())
@@ -365,10 +367,24 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('text', (_, words) => {
     const text = words.map(maptostring).join(' ')
-    if (ispresent(READ_CONTEXT.element)) {
+    if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
+      const { user } = memoryreadflags(READ_CONTEXT.elementid)
+      const withuser = isstring(user) ? user : 'player'
       // $WOBBLE $BOUNCE $SPIN
-      READ_CONTEXT.element.tickertext = text
+      READ_CONTEXT.element.tickertext = `${withuser}: ${text}`
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+      const icon = bookelementdisplayread(
+        READ_CONTEXT.book,
+        READ_CONTEXT.element,
+        1,
+        COLOR.WHITE,
+        COLOR.BLACK,
+      )
+      api_log(
+        SOFTWARE,
+        READ_CONTEXT.elementid,
+        `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE ${text}`,
+      )
     }
     return 0
   })
@@ -376,7 +392,7 @@ export const CLI_FIRMWARE = createfirmware()
     const [labelword, ...words] = args
     const label = maptostring(labelword)
     const hyperlink = words.map(maptostring).join(' ')
-    api_info(SOFTWARE, READ_CONTEXT.elementfocus, `!${hyperlink};${label}`)
+    write(SOFTWARE, READ_CONTEXT.elementfocus, `!${hyperlink};${label}`)
     return 0
   })
   // ---
@@ -394,11 +410,7 @@ export const CLI_FIRMWARE = createfirmware()
 
     const book = memoryreadbookbyaddress(name)
     if (ispresent(book)) {
-      writetext(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `opened [book] ${book.name}`,
-      )
+      api_log(SOFTWARE, READ_CONTEXT.elementfocus, `opened [book] ${book.name}`)
       memorysetsoftwarebook(MEMORY_LABEL.MAIN, book.id)
       chip.command('pages')
     } else {
@@ -423,7 +435,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       // clear book
       memoryclearbook(address)
-      writetext(
+      api_log(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         `trashed [book] ${book.name}`,
@@ -482,7 +494,7 @@ export const CLI_FIRMWARE = createfirmware()
     if (ispresent(codepage)) {
       const name = codepagereadname(codepage)
       const pagetype = codepagereadtypetostring(codepage)
-      writetext(
+      api_log(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         `opened [${pagetype}] ${name}`,
@@ -539,7 +551,7 @@ export const CLI_FIRMWARE = createfirmware()
     if (ispresent(page)) {
       const name = codepagereadname(codepage)
       const pagetype = codepagereadtypetostring(codepage)
-      writetext(
+      api_log(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         `trashed [${pagetype}] ${name}`,

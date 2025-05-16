@@ -147,7 +147,7 @@ document.addEventListener(
       case 'arrowright':
       case 'arrowup':
       case 'arrowdown':
-        if (mods.ctrl) {
+        if (mods.alt || mods.ctrl || mods.shift) {
           event.preventDefault()
         }
         break

@@ -7,8 +7,6 @@ import {
 } from 'zss/gadget/display/dither'
 import { createTilemapBufferGeometry } from 'zss/gadget/display/tiles'
 
-import { useClipping } from '../clipping'
-
 type DitherProps = {
   width: number
   height: number
@@ -16,7 +14,6 @@ type DitherProps = {
 }
 
 export function Dither({ width, height, alphas }: DitherProps) {
-  const clippingPlanes = useClipping()
   const bgRef = useRef<BufferGeometry>(null)
   const [material] = useState(() => createDitherMaterial())
 
@@ -38,10 +35,8 @@ export function Dither({ width, height, alphas }: DitherProps) {
 
     createTilemapBufferGeometry(bgRef.current, width, height)
 
-    material.clipping = clippingPlanes.length > 0
-    material.clippingPlanes = clippingPlanes
     material.needsUpdate = true
-  }, [material, clippingPlanes, width, height])
+  }, [material, width, height])
 
   return (
     <mesh material={material}>
