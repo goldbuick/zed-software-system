@@ -1,23 +1,13 @@
-/* eslint-disable react/no-unknown-property */
-import { RUNTIME } from 'zss/config'
 import { register_terminal_open } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
-import {
-  WRITE_TEXT_CONTEXT,
-  createwritetextcontext,
-} from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
 import { ShadeBoxDither } from '../graphics/dither'
-import { useTiles } from '../hooks'
 import { UserFocus, UserHotkey } from '../userinput'
 import { useScreenSize } from '../userscreen'
-import { TilesData, TilesRender } from '../usetiles'
 
-import { BackPlate } from './backplate'
-import { bgcolor, FG } from './common'
 import { TapeLayout } from './layout'
 
 export function Tape() {
@@ -49,13 +39,6 @@ export function Tape() {
       break
   }
 
-  const BG = bgcolor(quickterminal)
-  const store = useTiles(screensize.cols, height, 0, FG, BG)
-  const context: WRITE_TEXT_CONTEXT = {
-    ...createwritetextcontext(screensize.cols, height, FG, BG),
-    ...store.getState(),
-  }
-
   // bail on odd states
   if (screensize.cols < 10 || screensize.rows < 10) {
     return null
@@ -65,7 +48,7 @@ export function Tape() {
   const showterminal = quickterminal || terminalopen || editoropen
 
   return (
-    <TilesData store={store}>
+    <>
       {showterminal && (
         <ShadeBoxDither
           width={screensize.cols}
@@ -78,17 +61,18 @@ export function Tape() {
       )}
       {showterminal ? (
         <UserFocus blockhotkeys>
-          <BackPlate context={context} />
-          <TapeLayout context={context} />
-          <group position={[0, top * RUNTIME.DRAW_CHAR_HEIGHT(), 0]}>
-            <TilesRender width={screensize.cols} height={height} />
-          </group>
+          <TapeLayout
+            quickterminal={quickterminal}
+            top={top}
+            width={screensize.cols}
+            height={height}
+          />
         </UserFocus>
       ) : (
         <UserHotkey hotkey="Shift+?" althotkey="/">
           {() => register_terminal_open(SOFTWARE, player)}
         </UserHotkey>
       )}
-    </TilesData>
+    </>
   )
 }
