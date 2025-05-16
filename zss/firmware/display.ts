@@ -1,6 +1,5 @@
-import { api_error, api_toast } from 'zss/device/api'
+import { api_error, api_log, api_toast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { write } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
@@ -25,7 +24,7 @@ export const DISPLAY_FIRMWARE = createfirmware()
     )
     if (ispresent(palette)) {
       bookflags.palette = palette.id
-      write(SOFTWARE, READ_CONTEXT.elementfocus, `loaded palette ${target}`)
+      api_log(SOFTWARE, READ_CONTEXT.elementfocus, `loaded palette ${target}`)
     } else {
       api_error(
         SOFTWARE,
@@ -46,7 +45,7 @@ export const DISPLAY_FIRMWARE = createfirmware()
     )
     if (ispresent(charset)) {
       bookflags.charset = charset.id
-      write(SOFTWARE, READ_CONTEXT.elementfocus, `loaded charset ${target}`)
+      api_log(SOFTWARE, READ_CONTEXT.elementfocus, `loaded charset ${target}`)
     } else {
       api_error(
         SOFTWARE,
