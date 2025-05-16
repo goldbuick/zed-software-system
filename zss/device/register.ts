@@ -2,7 +2,6 @@ import humanid from 'human-id'
 import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { createdevice, parsetarget } from 'zss/device'
 import {
-  write,
   writecopyit,
   writeheader,
   writeopenit,
@@ -322,7 +321,7 @@ const register = createdevice(
           }
           // signal init
           await waitfor(256)
-          write(register, myplayerid, `myplayerid ${myplayerid}`)
+          api_log(register, myplayerid, `myplayerid ${myplayerid}`)
           vm_operator(register, myplayerid)
         })
         break
@@ -523,13 +522,13 @@ const register = createdevice(
           const enabled = ispresent(message.data)
             ? !!message.data
             : !state.inspector
-          write(
+          api_log(
             register,
             message.player,
             `gadget inspector ${enabled ? '$greenon' : '$redoff'}`,
           )
           if (enabled) {
-            write(
+            api_log(
               register,
               message.player,
               `mouse click or tap elements to inspect`,
