@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   api_error,
+  api_log,
   register_editor_close,
   register_terminal_close,
   register_terminal_inclayout,
@@ -11,7 +12,6 @@ import {
 import { Y } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { writetext } from 'zss/feature/writeui'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
@@ -44,7 +44,7 @@ export function EditorInput({
 }: EditorInputProps) {
   const blink = useBlink()
   const context = useWriteText()
-  const blinkdelta = useRef<PT>()
+  const blinkdelta = useRef<PT>(undefined)
   const tapeeditor = useTapeEditor()
   const edge = textformatreadedges(context)
   const editorpath = useTape((state) => state.editor.path)
@@ -186,7 +186,7 @@ export function EditorInput({
         y={edge.top}
         width={edge.width}
         height={edge.height}
-        onScroll={(ydelta) => movecursor(ydelta * 0.75)}
+        onScroll={(ydelta: number) => movecursor(ydelta * 0.75)}
       />
       <UserInput
         keydown={(event) => {
@@ -333,6 +333,11 @@ export function EditorInput({
                     break
                   case 'p':
                     vm_cli(SOFTWARE, player, strvalueselected)
+                    api_log(
+                      SOFTWARE,
+                      player,
+                      `running $WHITE${strvalueselected.substring(0, 16)}...$BLUE`,
+                    )
                     break
                 }
               } else if (mods.alt) {

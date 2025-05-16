@@ -97,54 +97,31 @@ export function TapeLayout({
   const [layout, editoropen] = useTape(
     useShallow((state) => [state.layout, state.editor.open]),
   )
-  const y2 = Math.floor(height * 0.5)
-  const top2 = top + y2
-  const height2 = height - y2
-
   if (editoropen) {
     switch (layout) {
-      case TAPE_DISPLAY.SPLIT_Y:
+      case TAPE_DISPLAY.SPLIT_X: {
+        const editwidth = Math.floor(width * 0.587)
         return (
           <Fragment key="layout">
             <TapeLayoutTiles
               quickterminal={quickterminal}
               top={top}
               width={width}
-              height={y2}
+              height={height}
             >
               <TapeTerminal />
             </TapeLayoutTiles>
-            <TapeLayoutTiles
-              quickterminal={quickterminal}
-              top={top2}
-              width={width}
-              height={height2}
-            >
-              <TapeEditor />
-            </TapeLayoutTiles>
-          </Fragment>
-        )
-      case TAPE_DISPLAY.SPLIT_Y_ALT:
-        return (
-          <Fragment key="layout">
             <TapeLayoutTiles
               quickterminal={quickterminal}
               top={top}
-              width={width}
-              height={y2}
+              width={editwidth}
+              height={height}
             >
               <TapeEditor />
             </TapeLayoutTiles>
-            <TapeLayoutTiles
-              quickterminal={quickterminal}
-              top={top2}
-              width={width}
-              height={height2}
-            >
-              <TapeTerminal />
-            </TapeLayoutTiles>
           </Fragment>
         )
+      }
       default:
         return (
           <TapeLayoutTiles
