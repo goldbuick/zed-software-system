@@ -1,7 +1,7 @@
 import { Client } from '@gradio/client'
 import { EdgeSpeechTTS } from '@lobehub/tts'
 import { ToneAudioBuffer } from 'tone'
-import { api_info } from 'zss/device/api'
+import { api_log } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 
@@ -53,7 +53,7 @@ export async function playtta(
       tta.set(
         phrase,
         new ToneAudioBuffer(loadurl, () => {
-          api_info(
+          api_log(
             SOFTWARE,
             player,
             'loaded',

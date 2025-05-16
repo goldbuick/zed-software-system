@@ -2,7 +2,7 @@ import { objectKeys } from 'ts-extras'
 import { senderid } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
 import { parsetarget } from 'zss/device'
-import { api_error, MESSAGE, api_log, api_info } from 'zss/device/api'
+import { api_error, MESSAGE, api_log } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
@@ -145,7 +145,7 @@ export function memorycreatesoftwarebook(maybename?: string) {
     book.name = maybename
   }
   memorysetbook(book)
-  api_info(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
+  api_log(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
   return book
 }
 
@@ -156,7 +156,7 @@ export function memoryensurebookbyname(name: string) {
     book.name = name
   }
   memorysetbook(book)
-  api_info(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
+  api_log(SOFTWARE, MEMORY.operator, `created [book] ${book.name}`)
   return book
 }
 

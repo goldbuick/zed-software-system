@@ -1,6 +1,6 @@
 import JSZip from 'jszip'
 import mime from 'mime/lite'
-import { api_error, api_info, vm_loader } from 'zss/device/api'
+import { api_error, api_log, vm_loader } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { ispresent } from 'zss/mapping/types'
 
@@ -40,7 +40,7 @@ export async function parsezipfile(
   onreadfile: (zipfile: File) => void,
 ) {
   try {
-    api_info(SOFTWARE, player, file.name)
+    api_log(SOFTWARE, player, 'parsezipfile', file.name)
     const arraybuffer = await file.arrayBuffer()
     const ziplib = new JSZip()
     const zip = await ziplib.loadAsync(arraybuffer)
@@ -69,7 +69,7 @@ export async function parsebinaryfile(
   onbuffer: (buffer: Uint8Array) => void,
 ) {
   try {
-    api_info(SOFTWARE, player, file.name)
+    api_log(SOFTWARE, player, 'parsebinaryfile', file.name)
     const arraybuffer = await file.arrayBuffer()
     onbuffer(new Uint8Array(arraybuffer))
   } catch (err: any) {

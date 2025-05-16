@@ -16,13 +16,7 @@ import {
   MAYBE,
 } from 'zss/mapping/types'
 
-import {
-  api_error,
-  synth_audioenabled,
-  api_info,
-  vm_loader,
-  api_log,
-} from './api'
+import { api_error, synth_audioenabled, vm_loader, api_log } from './api'
 import { registerreadplayer } from './register'
 
 // synth setup

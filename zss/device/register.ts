@@ -301,7 +301,9 @@ const register = createdevice(
     // player filter
     switch (message.target) {
       case 'ready':
+      case 'toast':
       case 'second':
+        console.info(message)
         break
       default:
         if (message.player !== myplayerid) {
@@ -538,14 +540,14 @@ const register = createdevice(
           }
         })
         break
-      case 'error':
-        terminaladdinfo(message)
+      case 'log':
+        terminaladdlog(message)
         break
       case 'info':
         terminaladdinfo(message)
         break
-      case 'log':
-        terminaladdlog(message)
+      case 'error':
+        terminaladdinfo(message)
         break
       case 'toast':
         doasync(register, message.player, async () => {

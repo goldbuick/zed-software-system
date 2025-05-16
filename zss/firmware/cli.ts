@@ -2,7 +2,6 @@ import { parsetarget } from 'zss/device'
 import {
   api_error,
   register_editor_open,
-  api_info,
   vm_codeaddress,
   vm_flush,
   register_nuke,
@@ -31,7 +30,7 @@ import { text, tokenize } from 'zss/lang/lexer'
 import { pick } from 'zss/mapping/array'
 import { randominteger } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
-import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
+import { deepcopy, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
   MEMORY_LABEL,
@@ -42,6 +41,7 @@ import {
   memoryreadbookbyaddress,
   memoryreadbookbysoftware,
   memoryreadbooklist,
+  memoryreadflags,
   memoryreadoperator,
   memorysendtoactiveboards,
   memorysetsoftwarebook,
@@ -367,9 +367,11 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('text', (_, words) => {
     const text = words.map(maptostring).join(' ')
-    if (ispresent(READ_CONTEXT.element)) {
+    if (ispresent(READ_CONTEXT.element) && READ_CONTEXT.elementisplayer) {
+      const { user } = memoryreadflags(READ_CONTEXT.elementid)
+      const withuser = isstring(user) ? user : 'player'
       // $WOBBLE $BOUNCE $SPIN
-      READ_CONTEXT.element.tickertext = text
+      READ_CONTEXT.element.tickertext = `${withuser}: ${text}`
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
       const icon = bookelementdisplayread(
         READ_CONTEXT.book,
@@ -381,7 +383,7 @@ export const CLI_FIRMWARE = createfirmware()
       api_log(
         SOFTWARE,
         READ_CONTEXT.elementid,
-        `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR ${text}`,
+        `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE ${text}`,
       )
     }
     return 0
@@ -390,7 +392,7 @@ export const CLI_FIRMWARE = createfirmware()
     const [labelword, ...words] = args
     const label = maptostring(labelword)
     const hyperlink = words.map(maptostring).join(' ')
-    api_info(SOFTWARE, READ_CONTEXT.elementfocus, `!${hyperlink};${label}`)
+    write(SOFTWARE, READ_CONTEXT.elementfocus, `!${hyperlink};${label}`)
     return 0
   })
   // ---

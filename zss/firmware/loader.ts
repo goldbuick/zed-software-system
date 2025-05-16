@@ -1,7 +1,6 @@
 import {
   BINARY_READER,
   JSON_READER,
-  api_info,
   TEXT_READER,
   REXPAINT_READER,
   api_log,
