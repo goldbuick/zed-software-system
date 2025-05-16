@@ -12,7 +12,6 @@ import { PanelItemContent } from './content'
 import { PanelItemCopyIt } from './copyit'
 import { PanelItemHotkey } from './hotkey'
 import { PanelItemHyperlink } from './hyperlink'
-import { PanelItemLinkIt } from './linkit'
 import { PanelItemNumber } from './number'
 import { PanelItemRange } from './range'
 import { PanelItemSelect } from './select'
@@ -86,9 +85,6 @@ export function PanelItem({ row, item, active }: PanelItemComponentProps) {
       case 'copyit':
         // TODO
         return <PanelItemCopyIt {...props} />
-      case 'linkit':
-        // TODO
-        return <PanelItemLinkIt {...props} />
       case 'zssedit':
         return <PanelItemZSSEdit {...props} />
       case 'charedit':

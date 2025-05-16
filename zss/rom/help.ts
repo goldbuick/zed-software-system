@@ -14,43 +14,13 @@ use color names like $RED$$red$BLUE to change foreground color
 use color names like $ONGREEN$$ongreen$ONCLEAR to change background color
 use onclear $WHITE$$onclear$BLUE to change background to transparent
 section;hyperlinks
-option;!hotkey;label
-option;!range statorflag [label min] [label max];input label
-option;!select statorflag ...list of <label> <value> pairs;input label
+option;!hotkey label <shortcut> [shortcutword];
+!openit https://github.com/ianstormtaylor/is-hotkey;uses is-hotkey
+option;!range flag [minword] [maxword];
+option;!select flag ...list of <word> <value> pairs;
+option;!text flag [minvalue] [maxvalue];
       `.trim()
     default:
       return 'test'
   }
 }
-
-// writetext(
-//   SOFTWARE,
-//   `${fg('white', '"!hotkey"')} message shortcut;${fg('gray', 'Label')}`,
-// )
-// writetext(
-//   SOFTWARE,
-//   `${fg('white', '"!range"')} flag [labelmin] [labelmax];${fg('gray', 'Input Label')}`,
-// )
-// writetext(
-//   SOFTWARE,
-//   `${fg('white', '"!select"')} flag ...list of values;${fg('gray', 'Input Label')}`,
-// )
-// writetext(
-//   SOFTWARE,
-//   `${fg('white', '"!number"')} flag [minvalue] [maxvalue];${fg('gray', 'Input Label')}`,
-// )
-// writetext(
-//   SOFTWARE,
-//   READ_CONTEXT.elementfocus,
-//   `${fg('white', '"!text"')} flag;${fg('gray', 'Input Label')}`,
-// )
-// writetext(
-//   SOFTWARE,
-//   READ_CONTEXT.elementfocus,
-//   `${fg('white', '"!copyit"')} flag;${fg('gray', 'Input Label')}`,
-// )
-// writetext(
-//   SOFTWARE,
-//   READ_CONTEXT.elementfocus,
-//   `${fg('white', '"!openit"')} flag;${fg('gray', 'Input Label')}`,
-// )

@@ -75,12 +75,6 @@ export function statformat(label: string, words: string[], first = true) {
           type: STAT_TYPE.TEXT,
           values,
         }
-      case 'ln':
-      case 'link':
-        return {
-          type: STAT_TYPE.LINK,
-          values,
-        }
       case 'hk':
       case 'hotkey':
         return {
@@ -140,8 +134,6 @@ export function stattypestring(type: STAT_TYPE) {
       return 'number'
     case STAT_TYPE.TEXT:
       return 'text'
-    case STAT_TYPE.LINK:
-      return 'link'
     case STAT_TYPE.HOTKEY:
       return 'hotkey'
     case STAT_TYPE.COPYIT:

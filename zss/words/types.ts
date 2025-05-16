@@ -94,7 +94,6 @@ export enum STAT_TYPE {
   SELECT, //    @foup sl A B C
   NUMBER, //    @foup number 0 100
   TEXT, //      @gumple text
-  LINK, //      @north link - use this for passages between boards
   HOTKEY, //    @gorp hotkey g - we can associate hotkeys with objects
   COPYIT, //    only useful in hyperlinks, used to copy into the clipboard
   OPENIT, //    only useful in hyperlinks, used to open a url in a new tab
