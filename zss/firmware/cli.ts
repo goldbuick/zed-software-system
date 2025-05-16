@@ -65,6 +65,7 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
+import { romparse, romprint, romread } from 'zss/rom'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { stattypestring } from 'zss/words/stats'
 import { metakey } from 'zss/words/system'
@@ -195,56 +196,9 @@ export const CLI_FIRMWARE = createfirmware()
         writeoption(SOFTWARE, READ_CONTEXT.elementfocus, `triggers`, `shoot`)
         break
       case 'helptext':
-        // writeheader(SOFTWARE, `text formatting`)
-        // writesection(SOFTWARE, `typography`)
-        // writetext(SOFTWARE, `plain text`)
-        // writetext(SOFTWARE, `$centering text`)
-        // writetext(SOFTWARE, `"\\"@quoted strings for special chars\\""`)
-        // writetext(SOFTWARE, `$$0-255 for ascii chars $159$176$240`)
-        // writetext(
-        //   SOFTWARE,
-        //   `use color names like ${fg('red', '$$red')} to change foreground color`,
-        // )
-        // writetext(
-        //   SOFTWARE,
-        //   `use color names like ${bg('ongreen', '$$ongreen')} to change background color`,
-        // )
-        // writetext(
-        //   SOFTWARE,
-        //   `use clear ${bg('onclear', 'to change background to')} transparent`,
-        // )
-        // writesection(SOFTWARE, `hyperlinks`)
-        // writetext(
-        //   SOFTWARE,
-        //   `${fg('white', '"!hotkey"')} message shortcut;${fg('gray', 'Label')}`,
-        // )
-        // writetext(
-        //   SOFTWARE,
-        //   `${fg('white', '"!range"')} flag [labelmin] [labelmax];${fg('gray', 'Input Label')}`,
-        // )
-        // writetext(
-        //   SOFTWARE,
-        //   `${fg('white', '"!select"')} flag ...list of values;${fg('gray', 'Input Label')}`,
-        // )
-        // writetext(
-        //   SOFTWARE,
-        //   `${fg('white', '"!number"')} flag [minvalue] [maxvalue];${fg('gray', 'Input Label')}`,
-        // )
-        // writetext(
-        //   SOFTWARE,
-        //   READ_CONTEXT.elementfocus,
-        //   `${fg('white', '"!text"')} flag;${fg('gray', 'Input Label')}`,
-        // )
-        // writetext(
-        //   SOFTWARE,
-        //   READ_CONTEXT.elementfocus,
-        //   `${fg('white', '"!copyit"')} flag;${fg('gray', 'Input Label')}`,
-        // )
-        // writetext(
-        //   SOFTWARE,
-        //   READ_CONTEXT.elementfocus,
-        //   `${fg('white', '"!openit"')} flag;${fg('gray', 'Input Label')}`,
-        // )
+        romparse(romread('help:text'), (line) =>
+          romprint(READ_CONTEXT.elementfocus, line),
+        )
         break
       case 'helpdeveloper':
         writeheader(SOFTWARE, READ_CONTEXT.elementfocus, `developer commands`)

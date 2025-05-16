@@ -79,8 +79,7 @@ export function TapeTerminal() {
   const right = context.width - 1
   const bottom = context.height - 1
   const edge = textformatreadedges(context)
-  const xstep = Math.floor(edge.width * 0.5)
-  // const ystep = Math.floor(edge.height * 0.5)
+  const xstep = Math.floor(edge.width * 0.587)
 
   const xleft = useMemo(
     () => forkonedge(left, top, xstep - 1, bottom, context),
