@@ -1,8 +1,7 @@
 import { createdevice } from 'zss/device'
-import { write } from 'zss/feature/writeui'
 import { createsid } from 'zss/mapping/guid'
 
-import { platform_ready } from './api'
+import { api_log, platform_ready } from './api'
 
 let stuboperator = ''
 const stubsession = createsid()
@@ -17,7 +16,7 @@ const stub = createdevice(
     switch (message.target) {
       case 'operator':
         stuboperator = message.player
-        write(stub, message.player, `operator set to ${stuboperator}`)
+        api_log(stub, message.player, `operator set to ${stuboperator}`)
         // ack
         stub.reply(message, 'ackoperator', true)
         break

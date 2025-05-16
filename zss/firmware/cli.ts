@@ -112,7 +112,6 @@ export const CLI_FIRMWARE = createfirmware()
         break
       }
     }
-
     return 0
   })
   .command('stat', (chip, words) => {
@@ -185,6 +184,7 @@ export const CLI_FIRMWARE = createfirmware()
       // $WOBBLE $BOUNCE $SPIN
       READ_CONTEXT.element.tickertext = `${withuser}: ${text}`
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+      // log text
       const icon = bookelementdisplayread(
         READ_CONTEXT.book,
         READ_CONTEXT.element,
@@ -204,7 +204,21 @@ export const CLI_FIRMWARE = createfirmware()
     const [labelword, ...words] = args
     const label = maptostring(labelword)
     const hyperlink = words.map(maptostring).join(' ')
-    write(SOFTWARE, READ_CONTEXT.elementfocus, `!${hyperlink};${label}`)
+    // log hyperlink
+    const { user } = memoryreadflags(READ_CONTEXT.elementid)
+    const withuser = isstring(user) ? user : 'player'
+    const icon = bookelementdisplayread(
+      READ_CONTEXT.book,
+      READ_CONTEXT.element,
+      1,
+      COLOR.WHITE,
+      COLOR.BLACK,
+    )
+    api_log(
+      SOFTWARE,
+      READ_CONTEXT.elementid,
+      `!${hyperlink};$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE ${label}`,
+    )
     return 0
   })
   // ---

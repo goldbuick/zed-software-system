@@ -3,6 +3,7 @@ import P2PT, { Peer } from 'p2pt'
 import { hex2arr } from 'uint8-util'
 import {
   MESSAGE,
+  api_log,
   bridge_showjoincode,
   bridge_tabopen,
   vm_search,
@@ -16,7 +17,6 @@ import {
 } from 'zss/device/forward'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { write } from 'zss/feature/writeui'
 import { createinfohash } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
@@ -64,12 +64,12 @@ const routingtable = new KademliaTable<ROUTING_NODE>(
 )
 
 finder.on('peerconnect', (peer) => {
-  write(SOFTWARE, registerreadplayer(), `remote connected ${peer.id}`)
+  api_log(SOFTWARE, registerreadplayer(), `remote connected ${peer.id}`)
   routingtable.add({ id: peerstringtobytes(peer.id), peer })
 })
 
 finder.on('peerclose', (peer) => {
-  write(SOFTWARE, registerreadplayer(), `remote closed ${peer.id}`)
+  api_log(SOFTWARE, registerreadplayer(), `remote closed ${peer.id}`)
   routingtable.remove(peerstringtobytes(peer.id))
 })
 
@@ -133,7 +133,7 @@ finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
 })
 
 finder.on('trackerconnect', (tracker, stats) => {
-  write(
+  api_log(
     SOFTWARE,
     registerreadplayer(),
     `looking for players ${createinfohash(tracker.announceUrl)} [${stats.connected}]`,
@@ -167,7 +167,11 @@ function peerusehost(host: string) {
     isstarted = true
     subscribetopic = host
     finder.start()
-    write(SOFTWARE, registerreadplayer(), `connecting to hubworld for ${host}`)
+    api_log(
+      SOFTWARE,
+      registerreadplayer(),
+      `connecting to hubworld for ${host}`,
+    )
   }
 }
 
