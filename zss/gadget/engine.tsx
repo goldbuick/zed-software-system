@@ -110,8 +110,9 @@ export function Engine() {
                   ratio={0.5} // Threshold for strong glitches, 0 - no weak glitches, 1 - no strong glitches.
                 />
                 <Noise
+                  opacity={0.5}
                   premultiply // enables or disables noise premultiplication
-                  blendFunction={BlendFunction.AVERAGE} // blend mode
+                  blendFunction={BlendFunction.DARKEN} // blend mode
                 />
               </Fragment>
             )}
@@ -119,9 +120,9 @@ export function Engine() {
               <Fragment key="mood">
                 <Bloom
                   mipmapBlur
-                  intensity={2.22}
-                  radius={0.666}
-                  luminanceThreshold={0.666}
+                  intensity={1.23}
+                  radius={0.555}
+                  luminanceThreshold={0.777}
                   luminanceSmoothing={0.0111}
                   blendFunction={BlendFunction.ADD}
                 />

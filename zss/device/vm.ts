@@ -452,7 +452,7 @@ const vm = createdevice(
             format === 'json' &&
             /file:.*\.book.json/.test(eventname)
           ) {
-            write(vm, message.player, `loading ${eventname}`)
+            api_log(vm, message.player, `loading ${eventname}`)
             const json = JSON.parse(content.json)
             const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
             if (
@@ -461,10 +461,10 @@ const vm = createdevice(
               isstring(json.exported)
             ) {
               memorysetbook(json.data)
-              write(vm, message.player, `loaded ${json.exported}`)
+              api_log(vm, message.player, `loaded ${json.exported}`)
             }
           } else if (format === 'json' && /file:.*\..*\.json/.test(eventname)) {
-            write(vm, message.player, `loading ${eventname}`)
+            api_log(vm, message.player, `loading ${eventname}`)
             const json = JSON.parse(content.json)
             const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
             if (
@@ -473,7 +473,7 @@ const vm = createdevice(
               isstring(json.exported)
             ) {
               bookwritecodepage(mainbook, json.data)
-              write(vm, message.player, `loaded ${json.exported}`)
+              api_log(vm, message.player, `loaded ${json.exported}`)
             }
           } else {
             // everything else

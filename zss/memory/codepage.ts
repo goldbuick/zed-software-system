@@ -209,7 +209,6 @@ export function codepagereadstatsfromtext(content: string): CODE_PAGE_STATS {
         case STAT_TYPE.SELECT:
         case STAT_TYPE.NUMBER:
         case STAT_TYPE.TEXT:
-        case STAT_TYPE.LINK:
         case STAT_TYPE.HOTKEY:
         case STAT_TYPE.ZSSEDIT:
         case STAT_TYPE.CHAREDIT:

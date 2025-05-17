@@ -21,7 +21,7 @@ import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { shorturl } from 'zss/mapping/url'
 import { NAME } from 'zss/words/types'
 
-import { api_error, vm_loader } from './api'
+import { api_error, api_log, vm_loader } from './api'
 import { registerreadplayer } from './register'
 import { SOFTWARE } from './session'
 import { synthbroadcastdestination } from './synth'
@@ -64,13 +64,13 @@ async function runnetworkfetch(
   switch (contenttype) {
     case 'text/plain': {
       const content = await response.text()
-      write(SOFTWARE, player, JSON.stringify(content))
+      api_log(SOFTWARE, player, JSON.stringify(content))
       vm_loader(SOFTWARE, player, arg, 'text', eventname, content)
       break
     }
     case 'application/json': {
       const content = await response.json()
-      write(SOFTWARE, player, JSON.stringify(content))
+      api_log(SOFTWARE, player, JSON.stringify(content))
       vm_loader(SOFTWARE, player, arg, 'json', eventname, content)
       break
     }
@@ -177,14 +177,14 @@ const bridge = createdevice('bridge', [], (message) => {
       if (ispresent(twitchchatclient)) {
         api_error(bridge, message.player, 'bridge', 'chat is already started')
       } else if (isstring(message.data)) {
-        write(bridge, message.player, `connecting to ${message.data}`)
+        api_log(bridge, message.player, `connecting to ${message.data}`)
         twitchchatclient = new ChatClient({ channels: [message.data] })
         twitchchatclient.connect()
         twitchchatclient.onConnect(() => {
-          write(bridge, message.player, 'connected')
+          api_log(bridge, message.player, 'connected')
         })
         twitchchatclient.onDisconnect(() => {
-          write(bridge, message.player, 'disconnected')
+          api_log(bridge, message.player, 'disconnected')
         })
         twitchchatclient.onMessage((_, user, text) => {
           vm_loader(
@@ -212,7 +212,7 @@ const bridge = createdevice('bridge', [], (message) => {
       if (ispresent(twitchchatclient)) {
         twitchchatclient.quit()
         twitchchatclient = undefined
-        write(bridge, message.player, 'chat stopped')
+        api_log(bridge, message.player, 'chat stopped')
       } else {
         api_error(bridge, message.player, 'bridge', 'chat is already stoped')
       }
@@ -242,7 +242,7 @@ const bridge = createdevice('bridge', [], (message) => {
           broadcastclient.on(
             IVSBroadcastClient.BroadcastClientEvents.CONNECTION_STATE_CHANGE,
             function (state: string) {
-              write(bridge, message.player, state)
+              api_log(bridge, message.player, state)
             } as Callback,
           )
 
@@ -285,7 +285,7 @@ const bridge = createdevice('bridge', [], (message) => {
           }
 
           // signal success
-          write(bridge, message.player, `created client`)
+          api_log(bridge, message.player, `created client`)
         }
         if (isstring(message.data) && ispresent(broadcastclient)) {
           writeheader(bridge, message.player, 'broadcasting in')
@@ -308,7 +308,7 @@ const bridge = createdevice('bridge', [], (message) => {
         broadcastclient.stopBroadcast()
         broadcastclient.delete()
         broadcastclient = undefined
-        write(bridge, message.player, `stream stopped`)
+        api_log(bridge, message.player, `stream stopped`)
       } else {
         api_error(bridge, message.player, 'bridge', 'stream already stopped')
       }

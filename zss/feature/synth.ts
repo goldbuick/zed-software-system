@@ -63,7 +63,7 @@ export function createsynth() {
   const razzledazzle = new Chorus()
   razzledazzle.set({
     wet: 0.5,
-    depth: 0.333,
+    depth: 0.111,
     spread: 8,
     delayTime: 16,
   })
@@ -72,11 +72,11 @@ export function createsynth() {
   const fuzzysource = new Noise({ type: 'pink' })
   const fsmap = new AudioToGain()
 
-  const fstexture = new Scale(0, 0.02)
+  const fstexture = new Scale(0, 0.015)
   fuzzysource.chain(fsmap, fstexture, razzledazzle)
   fuzzysource.start(0)
 
-  const cyclesource = new Oscillator(0.125, 'sine')
+  const cyclesource = new Oscillator(Math.PI * 0.25, 'sine')
   const fsfeedback = new Scale(0, 0.333)
   const fsfrequency = new Scale(0.0001, 5)
   cyclesource.chain(fsmap, fsfeedback, razzledazzle.feedback)
