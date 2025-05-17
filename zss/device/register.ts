@@ -223,9 +223,7 @@ async function writeurlcontent(exportedbooks: string, label: string) {
     currenturlhash = exportedbooks
     location.hash = newurlhash
     const msg = `wrote ${exportedbooks?.length ?? 0} chars [${exportedbooks.slice(0, 8)}...${exportedbooks.slice(-8)}]`
-    if (label.includes('autosave')) {
-      console.info(msg)
-    } else {
+    if (!label.includes('autosave')) {
       api_log(register, myplayerid, msg)
     }
     document.title = label
@@ -301,7 +299,7 @@ const register = createdevice(
       case 'ready':
       case 'toast':
       case 'second':
-        console.info(message)
+        // console.info(message)
         break
       default:
         if (message.player !== myplayerid) {

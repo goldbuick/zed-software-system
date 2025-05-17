@@ -58,6 +58,7 @@ function skipwords(word: string) {
 export function TapeEditor() {
   const player = registerreadplayer()
   const [editor] = useTape(useShallow((state) => [state.editor]))
+
   const [
     wordscli,
     wordsloader,
@@ -83,6 +84,7 @@ export function TapeEditor() {
       state.zsswords.dirmods,
     ]),
   )
+
   useEffect(() => {
     // set command keywords
     wordscli
@@ -216,7 +218,7 @@ export function TapeEditor() {
     xcursor,
     ycursor,
     codepage,
-    xoffset: tapeeditor.xscroll,
+    xoffset: -4 + tapeeditor.xscroll,
     yoffset: tapeeditor.yscroll,
   }
 
