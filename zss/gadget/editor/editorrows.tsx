@@ -59,9 +59,9 @@ export function EditorRows({
   }
 
   const hasrefsheet = editor.refsheet.length > 0
-  const rightedge = context.width - (hasrefsheet ? 28 : 3)
+  const rightedge = context.width - (hasrefsheet ? 28 : 2)
   const edge = textformatreadedges(context)
-  edge.right = rightedge
+  edge.right = rightedge - 1
 
   let ii1 = tapeeditor.cursor
   let ii2 = tapeeditor.cursor
@@ -79,7 +79,7 @@ export function EditorRows({
   }
 
   // render lines
-  const left = edge.left + 1
+  const baseleft = edge.left + 1 - 4
   setupeditoritem(false, false, -xoffset, -yoffset, context, 1, 2, 1)
   for (let i = 0; i < rows.length; ++i) {
     if (context.y <= edge.top + 1) {
@@ -93,15 +93,25 @@ export function EditorRows({
     const text = row.code.replaceAll('\n', '')
 
     // render
-    context.x = left - xoffset
+    context.x = baseleft - xoffset
     context.iseven = context.y % 2 === 0
     context.active.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
     context.disablewrap = true
     context.active.rightedge = rightedge
-    writeplaintext(`${text} `, context, false)
+    const linenumber = `${i + 1}`.padStart(3, ' ')
+    writeplaintext(`${linenumber} ${text} `, context, false)
 
     // calc base index
     const index = 1 + context.y * context.width
+    clippedapplycolortoindexes(
+      index,
+      edge.right,
+      -xoffset - 3,
+      -xoffset,
+      COLOR.LTGRAY,
+      context.active.bg,
+      context,
+    )
 
     // apply token colors
     if (ispresent(row.tokens)) {
@@ -258,7 +268,7 @@ export function EditorRows({
       const start = Math.max(0, maybestart)
       const end = Math.min(right, maybeend)
 
-      if (start <= right && end >= left) {
+      if (start <= right && end >= baseleft) {
         clippedapplycolortoindexes(
           index,
           edge.right,
