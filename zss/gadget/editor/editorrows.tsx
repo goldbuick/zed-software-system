@@ -98,8 +98,13 @@ export function EditorRows({
     context.active.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
     context.disablewrap = true
     context.active.rightedge = rightedge
+    const [mayberror] = row.errors ?? []
     const linenumber = `${i + 1}`.padStart(3, ' ')
-    writeplaintext(`${linenumber} ${text} `, context, false)
+    writeplaintext(
+      `${linenumber} ${text} ${mayberror?.message ?? ''}`,
+      context,
+      false,
+    )
 
     // calc base index
     const index = 1 + context.y * context.width
@@ -256,6 +261,19 @@ export function EditorRows({
           }
         }
       }
+    }
+
+    // apply error colors
+    if (ispresent(mayberror)) {
+      clippedapplycolortoindexes(
+        index,
+        edge.right,
+        4 + text.length,
+        4 + text.length + mayberror.message.length,
+        COLOR.RED,
+        context.active.bg,
+        context,
+      )
     }
 
     // render selection
