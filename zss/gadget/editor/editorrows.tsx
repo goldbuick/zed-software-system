@@ -3,6 +3,7 @@ import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 import { statformat } from 'zss/words/stats'
 import {
+  clippedapplybgtoindexes,
   clippedapplycolortoindexes,
   textformatreadedges,
   tokenizeandwritetextformat,
@@ -100,11 +101,7 @@ export function EditorRows({
     context.active.rightedge = rightedge
     const [mayberror] = row.errors ?? []
     const linenumber = `${i + 1}`.padStart(3, ' ')
-    writeplaintext(
-      `${linenumber} ${text} ${mayberror?.message ?? ''}`,
-      context,
-      false,
-    )
+    writeplaintext(`${linenumber} ${text} `, context, false)
 
     // calc base index
     const index = 1 + context.y * context.width
@@ -263,19 +260,6 @@ export function EditorRows({
       }
     }
 
-    // apply error colors
-    if (ispresent(mayberror)) {
-      clippedapplycolortoindexes(
-        index,
-        edge.right,
-        4 + text.length,
-        4 + text.length + mayberror.message.length,
-        COLOR.RED,
-        context.active.bg,
-        context,
-      )
-    }
-
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
       const maybestart = Math.max(row.start, ii1) - row.start - xoffset
@@ -297,6 +281,20 @@ export function EditorRows({
           context,
         )
       }
+    }
+
+    // apply error colors
+    if (ispresent(mayberror)) {
+      const column = 3 + (mayberror.column ?? 1)
+      const length = mayberror.length ?? 1
+      clippedapplybgtoindexes(
+        index,
+        edge.right,
+        column,
+        column + length,
+        COLOR.RED,
+        context,
+      )
     }
 
     // next line

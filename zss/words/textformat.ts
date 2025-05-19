@@ -408,6 +408,22 @@ export function applycolortoindexes(
   context.changed()
 }
 
+export function applybgtoindexes(
+  p1: number,
+  p2: number,
+  bg: number,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  const left = Math.min(p1, p2)
+  const right = Math.max(p1, p2)
+  for (let i = left; i <= right; ++i) {
+    context.bg[i] = bg
+  }
+
+  // yolo
+  context.changed()
+}
+
 export function clippedapplycolortoindexes(
   index: number,
   rightedge: number,
@@ -428,6 +444,27 @@ export function clippedapplycolortoindexes(
   const clippedp2 = Math.min(rightedge, right)
   // apply it
   applycolortoindexes(index + clippedp1, index + clippedp2, color, bg, context)
+}
+
+export function clippedapplybgtoindexes(
+  index: number,
+  rightedge: number,
+  p1: number, // relative to index
+  p2: number, // relative to index
+  color: number,
+  context: WRITE_TEXT_CONTEXT,
+) {
+  const left = Math.min(p1, p2)
+  const right = Math.max(p1, p2)
+  // out of bounds clipping
+  if (left > rightedge || right < 0) {
+    return
+  }
+  // clip left / right
+  const clippedp1 = Math.max(0, left)
+  const clippedp2 = Math.min(rightedge, right)
+  // apply it
+  applybgtoindexes(index + clippedp1, index + clippedp2, color, context)
 }
 
 export function writeplaintext(

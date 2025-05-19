@@ -53,3 +53,17 @@ export function romprint(player: string, line: string[]) {
       break
   }
 }
+
+/*
+Need a function that returns instructions, and describes args
+*/
+
+export function romintolookup(content: MAYBE<string>) {
+  const lookup: Record<string, string> = {}
+  romparse(content, (line: string[]) => {
+    const [key, ...values] = line
+    const value = values[0] ?? ''
+    lookup[key] = value
+  })
+  return lookup
+}
