@@ -24,6 +24,9 @@ import {
 
 import {
   ZSS_COLOR_MAP,
+  ZSS_TYPE_ERROR,
+  ZSS_TYPE_ERROR_LINE,
+  ZSS_TYPE_LINE,
   ZSS_TYPE_NUMBER,
   ZSS_TYPE_OBJNAME,
   ZSS_TYPE_STATNAME,
@@ -90,16 +93,19 @@ export function EditorRows({
 
     // setup
     const row = rows[i]
+    const prow = rows[i - 1]
     const active = i === cursor
+    const pactive = i - 1 === cursor
     const text = row.code.replaceAll('\n', '')
 
     // render
-    context.x = baseleft - xoffset
+    const leftedge = baseleft - xoffset
+    context.x = leftedge
     context.iseven = context.y % 2 === 0
     context.active.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
     context.disablewrap = true
     context.active.rightedge = rightedge
-    const [mayberror] = row.errors ?? []
+    const [maybeerror] = row.errors ?? []
     const linenumber = `${i + 1}`.padStart(3, ' ')
     writeplaintext(`${linenumber} ${text} `, context, false)
 
@@ -110,7 +116,7 @@ export function EditorRows({
       edge.right,
       -xoffset - 3,
       -xoffset,
-      COLOR.LTGRAY,
+      ZSS_TYPE_LINE,
       context.active.bg,
       context,
     )
@@ -283,16 +289,37 @@ export function EditorRows({
       }
     }
 
-    // apply error colors
-    if (ispresent(mayberror)) {
-      const column = 3 + (mayberror.column ?? 1)
-      const length = mayberror.length ?? 1
+    // apply error and info meta
+    if (pactive && ispresent(prow.errors)) {
+      context.x = leftedge
+      const [maybeperror] = prow.errors
+      const msg = `${maybeperror.message}`.replaceAll('\n', ' ')
+      writeplaintext(msg, context, false)
+      clippedapplybgtoindexes(
+        index,
+        edge.right,
+        0,
+        msg.length - 1,
+        ZSS_TYPE_ERROR_LINE,
+        context,
+      )
+    } else if (ispresent(maybeerror)) {
+      const column = 3 + (maybeerror.column ?? 1)
+      const length = maybeerror.length ?? 1
+      clippedapplybgtoindexes(
+        index,
+        edge.right,
+        0,
+        2,
+        ZSS_TYPE_ERROR_LINE,
+        context,
+      )
       clippedapplybgtoindexes(
         index,
         edge.right,
         column,
-        column + length,
-        COLOR.RED,
+        column + length - 1,
+        ZSS_TYPE_ERROR,
         context,
       )
     }
