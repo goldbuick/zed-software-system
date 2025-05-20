@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Y } from 'zss/device/modem'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import * as lexer from 'zss/lang/lexer'
@@ -57,32 +58,13 @@ export function EditorRows({
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
   const { editor, quickterminal } = useTape()
-
-  // const [
-  //   wordscli,
-  //   wordsloader,
-  //   wordsruntime,
-  //   wordsflags,
-  //   wordsstats,
-  //   wordskinds,
-  //   wordsaltkinds,
-  //   wordscolors,
-  //   wordsdirs,
-  //   wordsdirmods,
-  // ] = useGadgetClient(
-  //   useShallow((state) => [
-  //     state.zsswords.cli,
-  //     state.zsswords.loader,
-  //     state.zsswords.runtime,
-  //     state.zsswords.flags,
-  //     state.zsswords.stats,
-  //     state.zsswords.kinds,
-  //     state.zsswords.altkinds,
-  //     state.zsswords.colors,
-  //     state.zsswords.dirs,
-  //     state.zsswords.dirmods,
-  //   ]),
-  // )
+  const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
+    if (rows.length) {
+      const last = rows[rows.length - 1]
+      return [...rows, { code: '', start: last.end + 1, end: last.end + 1 }]
+    }
+    return []
+  }, [rows])
 
   if (!ispresent(codepage)) {
     const fibble = (blink ? '|' : '-').repeat(3)
@@ -114,15 +96,15 @@ export function EditorRows({
   // render lines
   const baseleft = edge.left + 1 - 4
   setupeditoritem(false, false, -xoffset, -yoffset, context, 1, 2, 1)
-  for (let i = 0; i < rows.length; ++i) {
+  for (let i = 0; i < withrows.length; ++i) {
     if (context.y <= edge.top + 1) {
       ++context.y
       continue
     }
 
     // setup
-    const row = rows[i]
-    const prow = rows[i - 1]
+    const row = withrows[i]
+    const prow = withrows[i - 1]
     const active = i === cursor
     const pactive = i - 1 === cursor
     const text = row.code.replaceAll('\n', '')
@@ -136,7 +118,11 @@ export function EditorRows({
     context.active.rightedge = rightedge
     const [maybeerror] = row.errors ?? []
     const linenumber = `${i + 1}`.padStart(3, ' ')
-    writeplaintext(`${linenumber} ${text} `, context, false)
+    writeplaintext(
+      `${i < rows.length ? linenumber : '   '} ${text} `,
+      context,
+      false,
+    )
 
     // calc base index
     const index = 1 + context.y * context.width

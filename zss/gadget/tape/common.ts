@@ -100,7 +100,7 @@ export type EDITOR_CODE_ROW = {
 
 export function splitcoderows(code: string): EDITOR_CODE_ROW[] {
   let cursor = 0
-  const rows = `${code}\n`.split(/\r?\n/)
+  const rows = code.split(/\r?\n/)
   return rows.map((code) => {
     const start = cursor
     const fullcode = `${code}\n`

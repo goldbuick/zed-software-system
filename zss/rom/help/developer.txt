@@ -1,0 +1,7 @@
+header;developer commands
+option;#books;list books in memory
+option;#pages;list pages in opened book
+option;@[pagetype:]page name;create & edit a new codepage in the currently opened book
+option;#trash;list books and pages from open book you can delete
+option;#save;flush state to register
+option;#share;creates a click to copy share url and QR code

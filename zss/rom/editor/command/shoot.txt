@@ -1,0 +1,3 @@
+desc;$DKGRAYlaunches a bullet
+words;dir
+words2;dir,kind

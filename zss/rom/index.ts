@@ -1,4 +1,4 @@
-import { parsetarget } from 'zss/device'
+import { objectKeys } from 'ts-extras'
 import { SOFTWARE } from 'zss/device/session'
 import {
   write,
@@ -10,17 +10,16 @@ import {
 import { MAYBE } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { editorread } from './editor'
-import { helpread } from './help'
+const romfiles = import.meta.glob('./**/*.txt', { eager: true, query: 'raw' })
+const romcontent: Record<string, string> = {}
+objectKeys(romfiles).forEach((name) => {
+  const path = name.replace('.txt', '').replace('./', '').replaceAll('/', ':')
+  // @ts-expect-error yes
+  romcontent[path] = romfiles[name].default
+})
 
-export function romread(address: string) {
-  const { target, path } = parsetarget(address)
-  switch (target) {
-    case 'help':
-      return helpread(path)
-    case 'editor':
-      return editorread(path)
-  }
+export function romread(address: string): MAYBE<string> {
+  return romcontent[address]
 }
 
 export function romparse(
