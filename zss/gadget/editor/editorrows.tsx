@@ -1,6 +1,9 @@
 import { Y } from 'zss/device/modem'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
-import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
+import * as lexer from 'zss/lang/lexer'
+import { clamp } from 'zss/mapping/number'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { ROM_LOOKUP, romintolookup, romread } from 'zss/rom'
 import { statformat } from 'zss/words/stats'
 import {
   clippedapplybgtoindexes,
@@ -54,6 +57,32 @@ export function EditorRows({
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
   const { editor, quickterminal } = useTape()
+
+  // const [
+  //   wordscli,
+  //   wordsloader,
+  //   wordsruntime,
+  //   wordsflags,
+  //   wordsstats,
+  //   wordskinds,
+  //   wordsaltkinds,
+  //   wordscolors,
+  //   wordsdirs,
+  //   wordsdirmods,
+  // ] = useGadgetClient(
+  //   useShallow((state) => [
+  //     state.zsswords.cli,
+  //     state.zsswords.loader,
+  //     state.zsswords.runtime,
+  //     state.zsswords.flags,
+  //     state.zsswords.stats,
+  //     state.zsswords.kinds,
+  //     state.zsswords.altkinds,
+  //     state.zsswords.colors,
+  //     state.zsswords.dirs,
+  //     state.zsswords.dirmods,
+  //   ]),
+  // )
 
   if (!ispresent(codepage)) {
     const fibble = (blink ? '|' : '-').repeat(3)
@@ -122,9 +151,22 @@ export function EditorRows({
     )
 
     // apply token colors
+    let activetokenidx = -1
+    const cursorcolumn = clamp(
+      tapeeditor.cursor - row.start,
+      1,
+      row.end - row.start,
+    )
     if (ispresent(row.tokens)) {
       for (let t = 0; t < row.tokens.length; ++t) {
         const token = row.tokens[t]
+        if (
+          active &&
+          cursorcolumn >= (token.startColumn ?? 1) &&
+          cursorcolumn <= (token.endColumn ?? 1)
+        ) {
+          activetokenidx = t
+        }
         const left = (token.startColumn ?? 1) - 1 - xoffset
         const right = (token.endColumn ?? 1) - 1 - xoffset
         const maybecolor = ZSS_COLOR_MAP[token.tokenTypeIdx]
@@ -286,6 +328,90 @@ export function EditorRows({
           BG_SELECTED,
           context,
         )
+      }
+    }
+
+    // render hints
+    if (active && ispresent(row.tokens)) {
+      let lookup: MAYBE<ROM_LOOKUP>
+
+      // scan for hint category indicator
+      for (let c = activetokenidx; c >= 0; --c) {
+        const token = row.tokens[c]
+        switch (token.tokenTypeIdx) {
+          case lexer.command.tokenTypeIdx:
+          case lexer.stat.tokenTypeIdx:
+          case lexer.label.tokenTypeIdx:
+          case lexer.comment.tokenTypeIdx:
+          case lexer.hyperlink.tokenTypeIdx:
+          case lexer.query.tokenTypeIdx:
+          case lexer.divide.tokenTypeIdx:
+          case lexer.text.tokenTypeIdx:
+            break
+          default:
+            continue
+        }
+        switch (token.tokenTypeIdx) {
+          case lexer.command.tokenTypeIdx: {
+            const rom = romread(`editor:command:${row.tokens[c + 1].image}`)
+            if (ispresent(rom)) {
+              lookup = romintolookup(rom)
+            }
+            break
+          }
+          case lexer.stat.tokenTypeIdx:
+            console.info(token.image)
+            break
+          case lexer.label.tokenTypeIdx: {
+            const rom = romread(`editor:label`)
+            if (ispresent(rom)) {
+              lookup = romintolookup(rom)
+            }
+            break
+          }
+          case lexer.comment.tokenTypeIdx: {
+            const rom = romread(`editor:comment`)
+            if (ispresent(rom)) {
+              lookup = romintolookup(rom)
+            }
+            break
+          }
+          case lexer.hyperlink.tokenTypeIdx: {
+            // const rom = romread(`editor:label`)
+            // if (ispresent(rom)) {
+            //   lookup = romintolookup(rom)
+            // }
+            break
+          }
+          case lexer.query.tokenTypeIdx: {
+            // const rom = romread(`editor:label`)
+            // if (ispresent(rom)) {
+            //   lookup = romintolookup(rom)
+            // }
+            break
+          }
+          case lexer.divide.tokenTypeIdx: {
+            // const rom = romread(`editor:label`)
+            // if (ispresent(rom)) {
+            //   lookup = romintolookup(rom)
+            // }
+            break
+          }
+          case lexer.text.tokenTypeIdx: {
+            // const rom = romread(`editor:label`)
+            // if (ispresent(rom)) {
+            //   lookup = romintolookup(rom)
+            // }
+            break
+          }
+        }
+        break
+      }
+
+      if (ispresent(lookup)) {
+        if (isstring(lookup.desc)) {
+          tokenizeandwritetextformat(lookup.desc, context, false)
+        }
       }
     }
 

@@ -72,7 +72,7 @@ export function createsynth() {
   const fuzzysource = new Noise({ type: 'pink' })
   const fsmap = new AudioToGain()
 
-  const fstexture = new Scale(0, 0.015)
+  const fstexture = new Scale(0, 0.008)
   fuzzysource.chain(fsmap, fstexture, razzledazzle)
   fuzzysource.start(0)
 

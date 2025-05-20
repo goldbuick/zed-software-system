@@ -10,6 +10,7 @@ import {
 import { MAYBE } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
+import { editorread } from './editor'
 import { helpread } from './help'
 
 export function romread(address: string) {
@@ -17,6 +18,8 @@ export function romread(address: string) {
   switch (target) {
     case 'help':
       return helpread(path)
+    case 'editor':
+      return editorread(path)
   }
 }
 
@@ -58,8 +61,10 @@ export function romprint(player: string, line: string[]) {
 Need a function that returns instructions, and describes args
 */
 
-export function romintolookup(content: MAYBE<string>) {
-  const lookup: Record<string, string> = {}
+export type ROM_LOOKUP = Record<string, string>
+
+export function romintolookup(content: MAYBE<string>): ROM_LOOKUP {
+  const lookup: ROM_LOOKUP = {}
   romparse(content, (line: string[]) => {
     const [key, ...values] = line
     const value = values[0] ?? ''
