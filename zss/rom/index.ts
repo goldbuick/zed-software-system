@@ -35,7 +35,9 @@ export function romread(address: string): MAYBE<string> {
       const miss = parsetarget(path)
       switch (miss.target) {
         case 'command':
-          return `desc;$DKGRAYsends the message ${miss.path}`.trim()
+          if (miss.path.length) {
+            return `desc;$DKGRAYsends the message ${miss.path}`
+          }
       }
       break
     }

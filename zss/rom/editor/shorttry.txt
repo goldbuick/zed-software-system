@@ -1,0 +1,1 @@
+desc;$DKGRAYwill move the object in the given direction

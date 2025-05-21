@@ -1,0 +1,1 @@
+desc;$DKGRAYread number input into given stat/flag

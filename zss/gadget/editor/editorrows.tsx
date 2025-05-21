@@ -13,7 +13,7 @@ import {
   tokenizeandwritetextformat,
   writeplaintext,
 } from 'zss/words/textformat'
-import { COLOR, STAT_TYPE } from 'zss/words/types'
+import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
 
 import { useBlink, useWriteText, writeTile } from '../hooks'
 import {
@@ -32,12 +32,16 @@ import {
   ZSS_TYPE_ERROR_LINE,
   ZSS_TYPE_LINE,
   ZSS_TYPE_NUMBER,
-  ZSS_TYPE_OBJNAME,
   ZSS_TYPE_STATNAME,
   ZSS_TYPE_SYMBOL,
   ZSS_TYPE_TEXT,
   zsswordcolor,
 } from './colors'
+
+function parsestatformat(image: string) {
+  const [first] = image.substring(1).split(';')
+  return first.split(' ')
+}
 
 export type EditorRowsProps = {
   xcursor: number
@@ -159,40 +163,38 @@ export function EditorRows({
         const maybecolor = ZSS_COLOR_MAP[token.tokenTypeIdx]
         if (ispresent(maybecolor)) {
           switch (maybecolor) {
-            case ZSS_TYPE_OBJNAME: {
-              const words = token.image.substring(1).split(' ')
+            case ZSS_TYPE_STATNAME: {
+              const words = parsestatformat(token.image)
               const statinfo = statformat('', words, !!token.payload)
               switch (statinfo.type) {
-                case STAT_TYPE.LOADER:
                 case STAT_TYPE.BOARD:
+                case STAT_TYPE.LOADER:
                 case STAT_TYPE.OBJECT:
                 case STAT_TYPE.TERRAIN:
                 case STAT_TYPE.CHARSET:
                 case STAT_TYPE.PALETTE: {
-                  const [first] = words
                   clippedapplycolortoindexes(
                     index,
                     edge.right,
                     left,
-                    left + first.length,
-                    ZSS_TYPE_OBJNAME,
+                    right,
+                    ZSS_TYPE_STATNAME,
                     context.active.bg,
                     context,
                   )
-                  if (words.length > 1) {
-                    clippedapplycolortoindexes(
-                      index,
-                      edge.right,
-                      left + first.length + 1,
-                      right,
-                      ZSS_TYPE_TEXT,
-                      context.active.bg,
-                      context,
-                    )
-                  }
                   break
                 }
-                case STAT_TYPE.CONST: {
+                case STAT_TYPE.CONST:
+                case STAT_TYPE.RANGE:
+                case STAT_TYPE.SELECT:
+                case STAT_TYPE.NUMBER:
+                case STAT_TYPE.TEXT:
+                case STAT_TYPE.HOTKEY:
+                case STAT_TYPE.COPYIT:
+                case STAT_TYPE.OPENIT:
+                case STAT_TYPE.ZSSEDIT:
+                case STAT_TYPE.CHAREDIT:
+                case STAT_TYPE.COLOREDIT: {
                   const [first] = words
                   clippedapplycolortoindexes(
                     index,
@@ -214,28 +216,6 @@ export function EditorRows({
                       context,
                     )
                   }
-                  break
-                }
-                case STAT_TYPE.RANGE:
-                case STAT_TYPE.SELECT:
-                case STAT_TYPE.NUMBER:
-                case STAT_TYPE.TEXT:
-                case STAT_TYPE.HOTKEY:
-                case STAT_TYPE.COPYIT:
-                case STAT_TYPE.OPENIT:
-                case STAT_TYPE.ZSSEDIT:
-                case STAT_TYPE.CHAREDIT:
-                case STAT_TYPE.COLOREDIT: {
-                  const [first] = words
-                  clippedapplycolortoindexes(
-                    index,
-                    edge.right,
-                    left,
-                    left + first.length,
-                    ZSS_TYPE_OBJNAME,
-                    context.active.bg,
-                    context,
-                  )
                   break
                 }
                 default:
@@ -403,9 +383,23 @@ export function EditorRows({
             }
             break
           }
-          case lexer.stat.tokenTypeIdx:
-            console.info(token.image)
+          case lexer.stat.tokenTypeIdx: {
+            const words = parsestatformat(token.image)
+            if (token.payload) {
+              const rom = romread(`editor:codepagename`)
+              if (ispresent(rom)) {
+                lookup = romintolookup(rom)
+              }
+            } else if (words.length) {
+              const [, maybetype] = words
+              const target = `editor:hyperlink:${NAME(maybetype) || 'hyperlink'}`
+              const rom = romread(target)
+              if (ispresent(rom)) {
+                lookup = romintolookup(rom)
+              }
+            }
             break
+          }
           case lexer.label.tokenTypeIdx: {
             const rom = romread(`editor:label`)
             if (ispresent(rom)) {
@@ -428,14 +422,14 @@ export function EditorRows({
             break
           }
           case lexer.query.tokenTypeIdx: {
-            const rom = romread(`editor:shortmove`)
+            const rom = romread(`editor:shorttry`)
             if (ispresent(rom)) {
               lookup = romintolookup(rom)
             }
             break
           }
           case lexer.divide.tokenTypeIdx: {
-            const rom = romread(`editor:shortmove`)
+            const rom = romread(`editor:shortgo`)
             if (ispresent(rom)) {
               lookup = romintolookup(rom)
             }
