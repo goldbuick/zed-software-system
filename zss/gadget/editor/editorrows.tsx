@@ -5,7 +5,7 @@ import * as lexer from 'zss/lang/lexer'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { ROM_LOOKUP, romintolookup, romread } from 'zss/rom'
-import { statformat } from 'zss/words/stats'
+import { statformat, stattypestring } from 'zss/words/stats'
 import {
   clippedapplybgtoindexes,
   clippedapplycolortoindexes,
@@ -41,6 +41,15 @@ import {
 function parsestatformat(image: string) {
   const [first] = image.substring(1).split(';')
   return first.split(' ')
+}
+
+let lookup: MAYBE<ROM_LOOKUP>
+function setlookup(address: string) {
+  console.info(address)
+  const maybelookup = romintolookup(romread(address))
+  if (Object.keys(maybelookup).length) {
+    lookup = maybelookup
+  }
 }
 
 export type EditorRowsProps = {
@@ -323,8 +332,7 @@ export function EditorRows({
 
     // render hints
     if (active && ispresent(row.tokens)) {
-      let lookup: MAYBE<ROM_LOOKUP>
-
+      lookup = undefined as MAYBE<ROM_LOOKUP>
       // scan for hint category indicator
       for (let c = activetokenidx; c >= 0; --c) {
         const prevtoken = row.tokens[c - 1]
@@ -348,108 +356,66 @@ export function EditorRows({
         }
         switch (token.tokenTypeIdx) {
           case lexer.command.tokenTypeIdx: {
-            const rom = romread(`editor:command:${nexttoken.image}`)
-            if (ispresent(rom)) {
-              lookup = romintolookup(rom)
-            }
+            setlookup(`editor:command:${nexttoken.image}`)
             break
           }
           case lexer.command_do.tokenTypeIdx: {
-            const rom = romread(`editor:command:do`)
-            if (ispresent(rom)) {
-              lookup = romintolookup(rom)
-            }
+            setlookup(`editor:command:do`)
             break
           }
           case lexer.command_if.tokenTypeIdx: {
-            const rom = romread(
+            setlookup(
               prevtoken.tokenTypeIdx === lexer.command_else.tokenTypeIdx
                 ? `editor:command:elseif`
                 : `editor:command:if`,
             )
-            if (ispresent(rom)) {
-              lookup = romintolookup(rom)
-            }
             break
           }
           case lexer.command_else.tokenTypeIdx: {
-            const rom = romread(
+            setlookup(
               nexttoken.tokenTypeIdx === lexer.command_if.tokenTypeIdx
                 ? `editor:command:elseif`
                 : `editor:command:else`,
             )
-            if (ispresent(rom)) {
-              lookup = romintolookup(rom)
-            }
             break
           }
           case lexer.stat.tokenTypeIdx: {
             const words = parsestatformat(token.image)
-            if (token.payload) {
-              const rom = romread(`editor:codepagename`)
-              if (ispresent(rom)) {
-                lookup = romintolookup(rom)
-              }
-            } else if (words.length) {
-              const [, maybetype] = words
-              const target = `editor:hyperlink:${NAME(maybetype) || 'hyperlink'}`
-              const rom = romread(target)
-              if (ispresent(rom)) {
-                lookup = romintolookup(rom)
-              }
-            }
+            const statinfo = statformat('', words, !!token.payload)
+            setlookup(`editor:stat:${stattypestring(statinfo.type)}`)
             break
           }
           case lexer.label.tokenTypeIdx: {
-            const rom = romread(`editor:label`)
-            if (ispresent(rom)) {
-              lookup = romintolookup(rom)
-            }
+            setlookup(`editor:label`)
             break
           }
           case lexer.comment.tokenTypeIdx: {
-            const rom = romread(`editor:comment`)
-            if (ispresent(rom)) {
-              lookup = romintolookup(rom)
-            }
+            setlookup(`editor:comment`)
             break
           }
           case lexer.hyperlink.tokenTypeIdx: {
-            const rom = romread(`editor:hyperlink`)
-            if (ispresent(rom)) {
-              lookup = romintolookup(rom)
-            }
+            // scan tokens until hyperlink text
+            setlookup(`editor:hyperlink`)
             break
           }
           case lexer.query.tokenTypeIdx: {
-            const rom = romread(`editor:shorttry`)
-            if (ispresent(rom)) {
-              lookup = romintolookup(rom)
-            }
+            setlookup(`editor:shorttry`)
             break
           }
           case lexer.divide.tokenTypeIdx: {
-            const rom = romread(`editor:shortgo`)
-            if (ispresent(rom)) {
-              lookup = romintolookup(rom)
-            }
+            setlookup(`editor:shortgo`)
             break
           }
           case lexer.text.tokenTypeIdx: {
-            const rom = romread(`editor:text`)
-            if (ispresent(rom)) {
-              lookup = romintolookup(rom)
-            }
+            setlookup(`editor:text`)
             break
           }
         }
         break
       }
 
-      if (ispresent(lookup)) {
-        if (isstring(lookup.desc)) {
-          tokenizeandwritetextformat(lookup.desc, context, false)
-        }
+      if (isstring(lookup?.desc)) {
+        tokenizeandwritetextformat(lookup.desc, context, false)
       }
     }
 
