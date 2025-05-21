@@ -6,7 +6,6 @@ export const ZSS_TYPE_TEXT = COLOR.GREEN
 export const ZSS_TYPE_SYMBOL = COLOR.YELLOW
 export const ZSS_TYPE_COMMENT = COLOR.CYAN
 export const ZSS_TYPE_COMMAND = COLOR.DKGREEN
-export const ZSS_TYPE_KEYWORD = COLOR.DKGREEN
 export const ZSS_TYPE_BLOCK = COLOR.DKCYAN
 export const ZSS_TYPE_MUSIC = COLOR.GREEN
 export const ZSS_TYPE_OBJNAME = COLOR.BLUE
@@ -29,7 +28,7 @@ export const ZSS_COLOR_MAP: Record<number, COLOR> = {
   [lexer.comment.tokenTypeIdx ?? 0]: ZSS_TYPE_COMMENT,
   [lexer.label.tokenTypeIdx ?? 0]: ZSS_TYPE_LABEL,
   [lexer.hyperlink.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
-  [lexer.hyperlinktext.tokenTypeIdx ?? 0]: ZSS_TYPE_TEXT,
+  [lexer.hyperlinktext.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   [lexer.stringliteral.tokenTypeIdx ?? 0]: ZSS_TYPE_TEXT,
   [lexer.stringliteraldouble.tokenTypeIdx ?? 0]: ZSS_TYPE_TEXT,
   [lexer.numberliteral.tokenTypeIdx ?? 0]: ZSS_TYPE_NUMBER,

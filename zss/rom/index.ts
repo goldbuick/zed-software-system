@@ -1,4 +1,5 @@
 import { objectKeys } from 'ts-extras'
+import { parsetarget } from 'zss/device'
 import { SOFTWARE } from 'zss/device/session'
 import {
   write,
@@ -7,7 +8,7 @@ import {
   writeoption,
   writesection,
 } from 'zss/feature/writeui'
-import { MAYBE } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
 const romfiles = import.meta.glob('./**/*.txt', { eager: true, query: 'raw' })
@@ -19,7 +20,27 @@ objectKeys(romfiles).forEach((name) => {
 })
 
 export function romread(address: string): MAYBE<string> {
-  return romcontent[address]
+  const withaddress = NAME(
+    address.trim().replaceAll('\n', '').replace(/:+$/, ''),
+  )
+  // console.info(withaddress)
+  const maybecontent = romcontent[withaddress]
+  if (ispresent(maybecontent)) {
+    return maybecontent
+  }
+  // dynamic context help
+  const { target, path } = parsetarget(withaddress)
+  switch (target) {
+    case 'editor': {
+      const miss = parsetarget(path)
+      switch (miss.target) {
+        case 'command':
+          return `desc;$DKGRAYsends the message ${miss.path}`.trim()
+      }
+      break
+    }
+  }
+  return undefined
 }
 
 export function romparse(
