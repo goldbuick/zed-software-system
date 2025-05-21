@@ -6,12 +6,13 @@ export const ZSS_TYPE_TEXT = COLOR.GREEN
 export const ZSS_TYPE_SYMBOL = COLOR.YELLOW
 export const ZSS_TYPE_COMMENT = COLOR.CYAN
 export const ZSS_TYPE_COMMAND = COLOR.DKGREEN
-export const ZSS_TYPE_KEYWORD = COLOR.DKGREEN
 export const ZSS_TYPE_BLOCK = COLOR.DKCYAN
 export const ZSS_TYPE_MUSIC = COLOR.GREEN
-export const ZSS_TYPE_OBJNAME = COLOR.BLUE
 export const ZSS_TYPE_STATNAME = COLOR.DKPURPLE
 export const ZSS_TYPE_NUMBER = COLOR.WHITE
+export const ZSS_TYPE_LINE = COLOR.LTGRAY
+export const ZSS_TYPE_ERROR = COLOR.DKGRAY
+export const ZSS_TYPE_ERROR_LINE = COLOR.DKRED
 
 export const ZSS_TYPE_LABEL = COLOR.DKRED
 export const ZSS_TYPE_FLAGMOD = COLOR.DKYELLOW
@@ -20,13 +21,13 @@ export const ZSS_COLOR_MAP: Record<number, COLOR> = {
   [lexer.newline.tokenTypeIdx ?? 0]: ZSS_TYPE_NONE,
   [lexer.whitespace.tokenTypeIdx ?? 0]: ZSS_TYPE_NONE,
   [lexer.whitespaceandnewline.tokenTypeIdx ?? 0]: ZSS_TYPE_NONE,
-  [lexer.stat.tokenTypeIdx ?? 0]: ZSS_TYPE_OBJNAME,
+  [lexer.stat.tokenTypeIdx ?? 0]: ZSS_TYPE_STATNAME,
   [lexer.command.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   [lexer.text.tokenTypeIdx ?? 0]: ZSS_TYPE_TEXT,
   [lexer.comment.tokenTypeIdx ?? 0]: ZSS_TYPE_COMMENT,
   [lexer.label.tokenTypeIdx ?? 0]: ZSS_TYPE_LABEL,
   [lexer.hyperlink.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
-  [lexer.hyperlinktext.tokenTypeIdx ?? 0]: ZSS_TYPE_TEXT,
+  [lexer.hyperlinktext.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   [lexer.stringliteral.tokenTypeIdx ?? 0]: ZSS_TYPE_TEXT,
   [lexer.stringliteraldouble.tokenTypeIdx ?? 0]: ZSS_TYPE_TEXT,
   [lexer.numberliteral.tokenTypeIdx ?? 0]: ZSS_TYPE_NUMBER,
@@ -64,7 +65,7 @@ export const ZSS_COLOR_MAP: Record<number, COLOR> = {
 
 export const ZSS_WORD_MESSAGE = COLOR.DKPURPLE
 export const ZSS_WORD_FLAG = COLOR.DKYELLOW
-export const ZSS_WORD_STAT = ZSS_TYPE_STATNAME
+export const ZSS_WORD_STAT = COLOR.DKPURPLE
 export const ZSS_WORD_KIND = COLOR.CYAN
 export const ZSS_WORD_KIND_ALT = COLOR.DKCYAN
 export const ZSS_WORD_COLOR = COLOR.RED

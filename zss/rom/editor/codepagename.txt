@@ -1,0 +1,1 @@
+desc;$DKGRAYname and type of codepage

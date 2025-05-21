@@ -1,3 +1,4 @@
+import { objectKeys } from 'ts-extras'
 import { parsetarget } from 'zss/device'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -7,17 +8,41 @@ import {
   writeoption,
   writesection,
 } from 'zss/feature/writeui'
-import { MAYBE } from 'zss/mapping/types'
+import { ispresent, MAYBE } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { helpread } from './help'
+const romfiles = import.meta.glob('./**/*.txt', { eager: true, query: 'raw' })
+const romcontent: Record<string, string> = {}
+objectKeys(romfiles).forEach((name) => {
+  const path = name.replace('.txt', '').replace('./', '').replaceAll('/', ':')
+  // @ts-expect-error yes
+  romcontent[path] = romfiles[name].default
+})
 
-export function romread(address: string) {
-  const { target, path } = parsetarget(address)
-  switch (target) {
-    case 'help':
-      return helpread(path)
+export function romread(address: string): MAYBE<string> {
+  const withaddress = NAME(
+    address.trim().replaceAll('\n', '').replace(/:+$/, ''),
+  )
+  // console.info(withaddress)
+  const maybecontent = romcontent[withaddress]
+  if (ispresent(maybecontent)) {
+    return maybecontent
   }
+  // dynamic context help
+  const { target, path } = parsetarget(withaddress)
+  switch (target) {
+    case 'editor': {
+      const miss = parsetarget(path)
+      switch (miss.target) {
+        case 'command':
+          if (miss.path.length) {
+            return `desc;$DKGRAYsends the message ${miss.path}`
+          }
+      }
+      break
+    }
+  }
+  return undefined
 }
 
 export function romparse(
@@ -52,4 +77,20 @@ export function romprint(player: string, line: string[]) {
       }
       break
   }
+}
+
+/*
+Need a function that returns instructions, and describes args
+*/
+
+export type ROM_LOOKUP = Record<string, string>
+
+export function romintolookup(content: MAYBE<string>): ROM_LOOKUP {
+  const lookup: ROM_LOOKUP = {}
+  romparse(content, (line: string[]) => {
+    const [key, ...values] = line
+    const value = values[0] ?? ''
+    lookup[key] = value
+  })
+  return lookup
 }

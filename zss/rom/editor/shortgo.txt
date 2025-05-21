@@ -1,0 +1,1 @@
+desc;$DKGRAYwaits until the object can move in the given direction and moves

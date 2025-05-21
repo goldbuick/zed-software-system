@@ -1,14 +1,19 @@
+import { useMemo } from 'react'
 import { Y } from 'zss/device/modem'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
-import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
+import * as lexer from 'zss/lang/lexer'
+import { clamp } from 'zss/mapping/number'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { ROM_LOOKUP, romintolookup, romread } from 'zss/rom'
 import { statformat } from 'zss/words/stats'
 import {
+  clippedapplybgtoindexes,
   clippedapplycolortoindexes,
   textformatreadedges,
   tokenizeandwritetextformat,
   writeplaintext,
 } from 'zss/words/textformat'
-import { COLOR, STAT_TYPE } from 'zss/words/types'
+import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
 
 import { useBlink, useWriteText, writeTile } from '../hooks'
 import {
@@ -23,12 +28,20 @@ import {
 
 import {
   ZSS_COLOR_MAP,
+  ZSS_TYPE_ERROR,
+  ZSS_TYPE_ERROR_LINE,
+  ZSS_TYPE_LINE,
   ZSS_TYPE_NUMBER,
-  ZSS_TYPE_OBJNAME,
   ZSS_TYPE_STATNAME,
+  ZSS_TYPE_SYMBOL,
   ZSS_TYPE_TEXT,
   zsswordcolor,
 } from './colors'
+
+function parsestatformat(image: string) {
+  const [first] = image.substring(1).split(';')
+  return first.split(' ')
+}
 
 export type EditorRowsProps = {
   xcursor: number
@@ -50,6 +63,13 @@ export function EditorRows({
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
   const { editor, quickterminal } = useTape()
+  const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
+    if (rows.length) {
+      const last = rows[rows.length - 1]
+      return [...rows, { code: '', start: last.end + 1, end: last.end + 1 }]
+    }
+    return []
+  }, [rows])
 
   if (!ispresent(codepage)) {
     const fibble = (blink ? '|' : '-').repeat(3)
@@ -81,27 +101,30 @@ export function EditorRows({
   // render lines
   const baseleft = edge.left + 1 - 4
   setupeditoritem(false, false, -xoffset, -yoffset, context, 1, 2, 1)
-  for (let i = 0; i < rows.length; ++i) {
+  for (let i = 0; i < withrows.length; ++i) {
     if (context.y <= edge.top + 1) {
       ++context.y
       continue
     }
 
     // setup
-    const row = rows[i]
+    const row = withrows[i]
+    const prow = withrows[i - 1]
     const active = i === cursor
+    const pactive = i - 1 === cursor
     const text = row.code.replaceAll('\n', '')
 
     // render
-    context.x = baseleft - xoffset
+    const leftedge = baseleft - xoffset
+    context.x = leftedge
     context.iseven = context.y % 2 === 0
     context.active.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
     context.disablewrap = true
     context.active.rightedge = rightedge
-    const [mayberror] = row.errors ?? []
+    const [maybeerror] = row.errors ?? []
     const linenumber = `${i + 1}`.padStart(3, ' ')
     writeplaintext(
-      `${linenumber} ${text} ${mayberror?.message ?? ''}`,
+      `${i < rows.length ? linenumber : '   '} ${text} `,
       context,
       false,
     )
@@ -113,54 +136,65 @@ export function EditorRows({
       edge.right,
       -xoffset - 3,
       -xoffset,
-      COLOR.LTGRAY,
+      ZSS_TYPE_LINE,
       context.active.bg,
       context,
     )
 
     // apply token colors
+    let activetokenidx = -1
+    const cursorcolumn = clamp(
+      tapeeditor.cursor - row.start,
+      1,
+      row.end - row.start,
+    )
     if (ispresent(row.tokens)) {
       for (let t = 0; t < row.tokens.length; ++t) {
         const token = row.tokens[t]
+        if (
+          active &&
+          cursorcolumn >= (token.startColumn ?? 1) &&
+          cursorcolumn <= (token.endColumn ?? 1)
+        ) {
+          activetokenidx = t
+        }
         const left = (token.startColumn ?? 1) - 1 - xoffset
         const right = (token.endColumn ?? 1) - 1 - xoffset
         const maybecolor = ZSS_COLOR_MAP[token.tokenTypeIdx]
         if (ispresent(maybecolor)) {
           switch (maybecolor) {
-            case ZSS_TYPE_OBJNAME: {
-              const words = token.image.substring(1).split(' ')
+            case ZSS_TYPE_STATNAME: {
+              const words = parsestatformat(token.image)
               const statinfo = statformat('', words, !!token.payload)
               switch (statinfo.type) {
-                case STAT_TYPE.LOADER:
                 case STAT_TYPE.BOARD:
+                case STAT_TYPE.LOADER:
                 case STAT_TYPE.OBJECT:
                 case STAT_TYPE.TERRAIN:
                 case STAT_TYPE.CHARSET:
                 case STAT_TYPE.PALETTE: {
-                  const [first] = words
                   clippedapplycolortoindexes(
                     index,
                     edge.right,
                     left,
-                    left + first.length,
-                    ZSS_TYPE_OBJNAME,
+                    right,
+                    ZSS_TYPE_STATNAME,
                     context.active.bg,
                     context,
                   )
-                  if (words.length > 1) {
-                    clippedapplycolortoindexes(
-                      index,
-                      edge.right,
-                      left + first.length + 1,
-                      right,
-                      ZSS_TYPE_TEXT,
-                      context.active.bg,
-                      context,
-                    )
-                  }
                   break
                 }
-                case STAT_TYPE.CONST: {
+                case STAT_TYPE.CONST:
+                case STAT_TYPE.RANGE:
+                case STAT_TYPE.SELECT:
+                case STAT_TYPE.NUMBER:
+                case STAT_TYPE.TEXT:
+                case STAT_TYPE.HOTKEY:
+                case STAT_TYPE.COPYIT:
+                case STAT_TYPE.OPENIT:
+                case STAT_TYPE.ZSSEDIT:
+                case STAT_TYPE.CHAREDIT:
+                case STAT_TYPE.COLOREDIT: {
                   const [first] = words
                   clippedapplycolortoindexes(
                     index,
@@ -184,28 +218,6 @@ export function EditorRows({
                   }
                   break
                 }
-                case STAT_TYPE.RANGE:
-                case STAT_TYPE.SELECT:
-                case STAT_TYPE.NUMBER:
-                case STAT_TYPE.TEXT:
-                case STAT_TYPE.HOTKEY:
-                case STAT_TYPE.COPYIT:
-                case STAT_TYPE.OPENIT:
-                case STAT_TYPE.ZSSEDIT:
-                case STAT_TYPE.CHAREDIT:
-                case STAT_TYPE.COLOREDIT: {
-                  const [first] = words
-                  clippedapplycolortoindexes(
-                    index,
-                    edge.right,
-                    left,
-                    left + first.length,
-                    ZSS_TYPE_OBJNAME,
-                    context.active.bg,
-                    context,
-                  )
-                  break
-                }
                 default:
                   clippedapplycolortoindexes(
                     index,
@@ -217,6 +229,29 @@ export function EditorRows({
                     context,
                   )
                   break
+              }
+              break
+            }
+            case ZSS_TYPE_SYMBOL: {
+              clippedapplycolortoindexes(
+                index,
+                edge.right,
+                left,
+                left,
+                maybecolor,
+                context.active.bg,
+                context,
+              )
+              if (left !== right) {
+                clippedapplycolortoindexes(
+                  index,
+                  edge.right,
+                  left + 1,
+                  right,
+                  ZSS_TYPE_TEXT,
+                  context.active.bg,
+                  context,
+                )
               }
               break
             }
@@ -263,19 +298,6 @@ export function EditorRows({
       }
     }
 
-    // apply error colors
-    if (ispresent(mayberror)) {
-      clippedapplycolortoindexes(
-        index,
-        edge.right,
-        4 + text.length,
-        4 + text.length + mayberror.message.length,
-        COLOR.RED,
-        context.active.bg,
-        context,
-      )
-    }
-
     // render selection
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
       const maybestart = Math.max(row.start, ii1) - row.start - xoffset
@@ -297,6 +319,174 @@ export function EditorRows({
           context,
         )
       }
+    }
+
+    // render hints
+    if (active && ispresent(row.tokens)) {
+      let lookup: MAYBE<ROM_LOOKUP>
+
+      // scan for hint category indicator
+      for (let c = activetokenidx; c >= 0; --c) {
+        const prevtoken = row.tokens[c - 1]
+        const token = row.tokens[c]
+        const nexttoken = row.tokens[c + 1]
+        switch (token.tokenTypeIdx) {
+          case lexer.command.tokenTypeIdx:
+          case lexer.command_do.tokenTypeIdx:
+          case lexer.command_if.tokenTypeIdx:
+          case lexer.command_else.tokenTypeIdx:
+          case lexer.stat.tokenTypeIdx:
+          case lexer.label.tokenTypeIdx:
+          case lexer.comment.tokenTypeIdx:
+          case lexer.hyperlink.tokenTypeIdx:
+          case lexer.query.tokenTypeIdx:
+          case lexer.divide.tokenTypeIdx:
+          case lexer.text.tokenTypeIdx:
+            break
+          default:
+            continue
+        }
+        switch (token.tokenTypeIdx) {
+          case lexer.command.tokenTypeIdx: {
+            const rom = romread(`editor:command:${nexttoken.image}`)
+            if (ispresent(rom)) {
+              lookup = romintolookup(rom)
+            }
+            break
+          }
+          case lexer.command_do.tokenTypeIdx: {
+            const rom = romread(`editor:command:do`)
+            if (ispresent(rom)) {
+              lookup = romintolookup(rom)
+            }
+            break
+          }
+          case lexer.command_if.tokenTypeIdx: {
+            const rom = romread(
+              prevtoken.tokenTypeIdx === lexer.command_else.tokenTypeIdx
+                ? `editor:command:elseif`
+                : `editor:command:if`,
+            )
+            if (ispresent(rom)) {
+              lookup = romintolookup(rom)
+            }
+            break
+          }
+          case lexer.command_else.tokenTypeIdx: {
+            const rom = romread(
+              nexttoken.tokenTypeIdx === lexer.command_if.tokenTypeIdx
+                ? `editor:command:elseif`
+                : `editor:command:else`,
+            )
+            if (ispresent(rom)) {
+              lookup = romintolookup(rom)
+            }
+            break
+          }
+          case lexer.stat.tokenTypeIdx: {
+            const words = parsestatformat(token.image)
+            if (token.payload) {
+              const rom = romread(`editor:codepagename`)
+              if (ispresent(rom)) {
+                lookup = romintolookup(rom)
+              }
+            } else if (words.length) {
+              const [, maybetype] = words
+              const target = `editor:hyperlink:${NAME(maybetype) || 'hyperlink'}`
+              const rom = romread(target)
+              if (ispresent(rom)) {
+                lookup = romintolookup(rom)
+              }
+            }
+            break
+          }
+          case lexer.label.tokenTypeIdx: {
+            const rom = romread(`editor:label`)
+            if (ispresent(rom)) {
+              lookup = romintolookup(rom)
+            }
+            break
+          }
+          case lexer.comment.tokenTypeIdx: {
+            const rom = romread(`editor:comment`)
+            if (ispresent(rom)) {
+              lookup = romintolookup(rom)
+            }
+            break
+          }
+          case lexer.hyperlink.tokenTypeIdx: {
+            const rom = romread(`editor:hyperlink`)
+            if (ispresent(rom)) {
+              lookup = romintolookup(rom)
+            }
+            break
+          }
+          case lexer.query.tokenTypeIdx: {
+            const rom = romread(`editor:shorttry`)
+            if (ispresent(rom)) {
+              lookup = romintolookup(rom)
+            }
+            break
+          }
+          case lexer.divide.tokenTypeIdx: {
+            const rom = romread(`editor:shortgo`)
+            if (ispresent(rom)) {
+              lookup = romintolookup(rom)
+            }
+            break
+          }
+          case lexer.text.tokenTypeIdx: {
+            const rom = romread(`editor:text`)
+            if (ispresent(rom)) {
+              lookup = romintolookup(rom)
+            }
+            break
+          }
+        }
+        break
+      }
+
+      if (ispresent(lookup)) {
+        if (isstring(lookup.desc)) {
+          tokenizeandwritetextformat(lookup.desc, context, false)
+        }
+      }
+    }
+
+    // apply error and info meta
+    if (pactive && ispresent(prow.errors)) {
+      context.x = leftedge
+      const [maybeperror] = prow.errors
+      const msg = `${maybeperror.message}`.replaceAll('\n', ' ')
+      writeplaintext(msg, context, false)
+      clippedapplycolortoindexes(
+        index,
+        edge.right,
+        0,
+        msg.length - 1,
+        COLOR.WHITE,
+        ZSS_TYPE_ERROR_LINE,
+        context,
+      )
+    } else if (ispresent(maybeerror)) {
+      const column = 3 + (maybeerror.column ?? 1)
+      const length = maybeerror.length ?? 1
+      clippedapplybgtoindexes(
+        index,
+        edge.right,
+        0,
+        2,
+        ZSS_TYPE_ERROR_LINE,
+        context,
+      )
+      clippedapplybgtoindexes(
+        index,
+        edge.right,
+        column,
+        column + length - 1,
+        ZSS_TYPE_ERROR,
+        context,
+      )
     }
 
     // next line

@@ -1,11 +1,12 @@
 {
+  "name": "zed software system",
   "short_name": "zed.cafe",
-  "name": "zed.cafe fullscreen",
-  "description": "pin app for fullscreen",
   "scope": "/",
-  "background_color": "#003",
-  "theme_color": "#00A",
   "start_url": "/",
+  "theme_color": "#00A",
   "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#003",
+  "description": "pin app for fullscreen",
   "icons": []
 }

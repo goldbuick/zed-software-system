@@ -1,19 +1,22 @@
-html,
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overscroll-behavior: touch;
+  background: rgb(0, 0, 0);
+}
+
 body {
   margin: 0;
   padding: 0;
   height: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
-  background: rgb(0, 0, 0);
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 #frame {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  /* padding-top: 128px; */
+  height: 100%;
 }
 
 canvas {

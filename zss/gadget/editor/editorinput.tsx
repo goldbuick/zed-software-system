@@ -17,8 +17,12 @@ import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { ismac } from 'zss/words/system'
-import { applystrtoindex, textformatreadedges } from 'zss/words/textformat'
-import { NAME, PT } from 'zss/words/types'
+import {
+  applycolortoindexes,
+  applystrtoindex,
+  textformatreadedges,
+} from 'zss/words/textformat'
+import { COLOR, NAME, PT } from 'zss/words/types'
 
 import { useBlink, useWriteText } from '../hooks'
 import { Scrollable } from '../scrollable'
@@ -70,11 +74,9 @@ export function EditorInput({
         x > edge.left &&
         x < edge.right
       ) {
-        applystrtoindex(
-          x + y * context.width,
-          String.fromCharCode(221),
-          context,
-        )
+        const atchar = x + y * context.width
+        applystrtoindex(atchar, String.fromCharCode(221), context)
+        applycolortoindexes(atchar, atchar, COLOR.WHITE, COLOR.DKBLUE, context)
       }
     }
   }

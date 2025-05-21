@@ -1,0 +1,1 @@
+desc;$DKGRAYdesignates an inactive label or comment

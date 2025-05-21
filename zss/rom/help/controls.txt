@@ -1,0 +1,15 @@
+header;zss controls and inputs
+section;keyboard input
+option;arrow keys;move
+option;shift + arrow keys;shoot
+option;enter;ok / accept
+option;escape;cancel / close
+option;tab;menu / action
+section;controller input
+option;left stick;move
+option;right stick;aim
+option;a;ok / accept
+option;b;cancel / close
+option;y;menu / action
+option;x;shoot
+option;triggers;shoot
