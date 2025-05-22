@@ -331,6 +331,10 @@ export function EditorRows({
     }
 
     // render hints
+    if (active && ispresent(row.asts)) {
+      console.info(row.asts)
+    }
+
     // if (active && ispresent(row.tokens)) {
     //   lookup = undefined as MAYBE<ROM_LOOKUP>
     //   // scan for hint category indicator

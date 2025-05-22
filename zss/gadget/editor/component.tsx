@@ -8,9 +8,9 @@ import { useGadgetClient, useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
 import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'
-import { CodeNode } from 'zss/lang/visitor'
+import { CodeNode, NODE } from 'zss/lang/visitor'
 import { clamp } from 'zss/mapping/number'
-import { ispresent } from 'zss/mapping/types'
+import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -203,15 +203,32 @@ export function TapeEditor() {
   }
 
   // fold ast into lines
-  if (ispresent(parsed.ast)) {
-    const isfirst = true
-    const queue: CodeNode[] = [parsed.ast]
+  if (parsed?.ast?.type === NODE.PROGRAM) {
+    const queue: CodeNode[] = []
+    for (let i = 1; i < parsed.ast.lines.length; ++i) {
+      queue.push(parsed.ast.lines[i])
+    }
     while (queue.length) {
       const node = queue.pop()
-      if (ispresent(node)) {
-        objectKeys(node).forEach((prop) => {
-          // iterate through node props, looking for an array of elements with { type }
-        })
+      if (isnumber(node?.type)) {
+        if (isnumber(node.startLine)) {
+          // what if we only push LINE CodeNode[]s ??
+          const row = rows[node.startLine - 1]
+          row.asts = row.asts ?? []
+          row.asts.push(node)
+        }
+        // iterate through node props, looking for an array of elements
+        const propnames = objectKeys(node)
+        for (let i = 0; i < propnames.length; ++i) {
+          const prop = propnames[i]
+          const value = node[prop]
+          if (isarray(value)) {
+            queue.push(...value)
+          } else if (typeof value === 'object') {
+            // @ts-expect-error its okay
+            queue.push(value)
+          }
+        }
       }
     }
   }
