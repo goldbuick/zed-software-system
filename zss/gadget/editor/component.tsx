@@ -8,6 +8,7 @@ import { useGadgetClient, useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
 import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'
+import { createlineindexes } from 'zss/lang/transformer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
 import { clamp } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
@@ -204,6 +205,7 @@ export function TapeEditor() {
 
   // fold ast into lines
   if (parsed?.ast?.type === NODE.PROGRAM) {
+    createlineindexes(parsed.ast)
     const queue: CodeNode[] = []
     for (let i = 1; i < parsed.ast.lines.length; ++i) {
       queue.push(parsed.ast.lines[i])
@@ -211,11 +213,16 @@ export function TapeEditor() {
     while (queue.length) {
       const node = queue.pop()
       if (isnumber(node?.type)) {
-        if (isnumber(node.startLine)) {
-          // what if we only push LINE CodeNode[]s ??
-          const row = rows[node.startLine - 1]
-          row.asts = row.asts ?? []
-          row.asts.push(node)
+        switch (node.type) {
+          case NODE.LINE:
+          case NODE.IF:
+            if (isnumber(node.startLine)) {
+              // what if we only push LINE CodeNode[]s ??
+              const row = rows[node.startLine - 1]
+              row.asts = row.asts ?? []
+              row.asts.push(node)
+            }
+            break
         }
         // iterate through node props, looking for an array of elements
         const propnames = objectKeys(node)

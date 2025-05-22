@@ -355,6 +355,7 @@ const scriptLexer = new Lexer(
   {
     skipValidations: !LANG_DEV,
     ensureOptimizations: LANG_DEV,
+    positionTracking: 'full',
   },
 )
 

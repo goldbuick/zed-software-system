@@ -548,27 +548,30 @@ function indexnode(ast: CodeNode) {
   }
 }
 
-export type GenContextAndCode = {
-  ast?: CodeNode
-} & GenContext &
-  CodeWithSourceMap
-
-export function transformAst(ast: CodeNode): GenContextAndCode {
+export function createlineindexes(ast: CodeNode) {
   // setup context
   context.labels = {}
   context.internal = 1
   context.lineindex = 0
   context.isfirststat = true
 
-  // translate into js
+  // index nodes
   indexnode(ast)
-  const source = transformNode(ast)
+}
 
+export type GenContextAndCode = {
+  ast?: CodeNode
+} & GenContext &
+  CodeWithSourceMap
+
+export function transformast(ast: CodeNode): GenContextAndCode {
+  createlineindexes(ast)
+  // translate into js
+  const source = transformNode(ast)
   // get source js and source map
   const output = source.toStringWithSourceMap({
     file: `${GENERATED_FILENAME}.map`,
   })
-
   return {
     ...output,
     ...context,

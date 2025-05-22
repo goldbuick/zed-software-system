@@ -6,7 +6,7 @@ import {
 } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 import { createsid } from 'zss/mapping/guid'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { isarray, ispresent, MAYBE } from 'zss/mapping/types'
 
 import { parser } from './parser'
 import {
@@ -326,61 +326,38 @@ class ScriptVisitor
     }
   }
 
-  getnodelocation(obj: CstChildrenDictionary): CstNodeLocation {
-    const locations = Object.values(obj)
-      .flat()
-      .filter((item) => !!item)
-      .map((item) => {
-        if (item && isToken(item)) {
-          return {
-            startLine: item.startLine,
-            startColumn: item.startColumn,
-            startOffset: item.startOffset,
-            endLine: item.endLine,
-            endColumn: item.endColumn,
-            endOffset: item.endOffset,
-          }
-        }
-        if (item?.location) {
-          return {
-            ...item.location,
-          }
-        }
-        // broken?
-        return {
-          startLine: 0,
-          startColumn: 0,
-          startOffset: 0,
-          endLine: 0,
-          endColumn: 0,
-          endOffset: 0,
-        }
-      })
-      .filter((item) => {
-        return item.startLine !== 0 && item.endLine !== 0
-      })
-
-    return {
-      startLine: Math.min(...locations.map((item) => item.startLine ?? 1)),
-      startColumn: Math.min(...locations.map((item) => item.startColumn ?? 1)),
-      startOffset: Math.min(...locations.map((item) => item.startOffset ?? 1)),
-      endLine: Math.max(...locations.map((item) => item.endLine ?? 1)),
-      endColumn: Math.max(...locations.map((item) => item.endColumn ?? 1)),
-      endOffset: Math.max(...locations.map((item) => item.endOffset ?? 1)),
+  visit(cstNode: CstNode | CstNode[]) {
+    // enables writing more concise visitor methods when CstNode has only a single child
+    if (isarray(cstNode)) {
+      // A CST Node's children dictionary can never have empty arrays as values
+      // If a key is defined there will be at least one element in the corresponding value array.
+      cstNode = cstNode[0]
     }
+
+    // enables passing optional CstNodes concisely.
+    if (!ispresent(cstNode)) {
+      return undefined
+    }
+
+    // @ts-expect-error yes
+    return this[cstNode.name](cstNode.children, cstNode.location)
   }
 
-  createcodenode(ctx: CstChildrenDictionary, node: CodeNodeData): CodeNode[] {
+  createcodenode(location: CstNodeLocation, node: CodeNodeData): CodeNode[] {
     return [
       {
         ...node,
-        ...this.getnodelocation(ctx),
+        ...location,
         lineindex: 0,
       },
     ]
   }
 
-  createstringnode(ctx: CstChildrenDictionary, value: string): CodeNode[] {
+  createstringnode(
+    ctx: CstChildrenDictionary,
+    value: string,
+    location: CstNodeLocation,
+  ): CodeNode[] {
     return this.createcodenode(ctx, {
       type: NODE.LITERAL,
       literal: LITERAL.STRING,
