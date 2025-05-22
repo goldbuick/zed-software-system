@@ -1,9 +1,4 @@
-import {
-  CstChildrenDictionary,
-  CstNode,
-  CstNodeLocation,
-  IToken,
-} from 'chevrotain'
+import { CstNode, CstNodeLocation, IToken } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 import { createsid } from 'zss/mapping/guid'
 import { isarray, ispresent, MAYBE } from 'zss/mapping/types'
@@ -303,10 +298,6 @@ export type CodeNode = CodeNodeData &
     }
   }
 
-function isToken(obj: CstNode | IToken): obj is IToken {
-  return (obj as IToken)?.tokenType ? true : false
-}
-
 function tokenstring(token: IToken[] | undefined, defaultstr: string) {
   const [first] = token ?? []
   const tokenstr = (first?.image ?? defaultstr).trimStart()
@@ -315,7 +306,7 @@ function tokenstring(token: IToken[] | undefined, defaultstr: string) {
 
 class ScriptVisitor
   extends CstVisitor
-  implements ICstNodeVisitor<any, CodeNode[]>
+  implements ICstNodeVisitor<CstNodeLocation, CodeNode[]>
 {
   unique = 0
 
@@ -353,12 +344,8 @@ class ScriptVisitor
     ]
   }
 
-  createstringnode(
-    ctx: CstChildrenDictionary,
-    value: string,
-    location: CstNodeLocation,
-  ): CodeNode[] {
-    return this.createcodenode(ctx, {
+  createstringnode(location: CstNodeLocation, value: string): CodeNode[] {
+    return this.createcodenode(location, {
       type: NODE.LITERAL,
       literal: LITERAL.STRING,
       value,
@@ -366,13 +353,13 @@ class ScriptVisitor
   }
 
   createmarknode(
-    ctx: CstChildrenDictionary,
+    location: CstNodeLocation,
     id: string,
     comment: string,
   ): CodeNode[] {
     return this.createlinenode(
-      ctx,
-      this.createcodenode(ctx, {
+      location,
+      this.createcodenode(location, {
         type: NODE.MARK,
         id,
         comment,
@@ -381,13 +368,13 @@ class ScriptVisitor
   }
 
   creategotonode(
-    ctx: CstChildrenDictionary,
+    location: CstNodeLocation,
     id: string,
     comment: string,
   ): CodeNode[] {
     return this.createlinenode(
-      ctx,
-      this.createcodenode(ctx, {
+      location,
+      this.createcodenode(location, {
         type: NODE.GOTO,
         id,
         comment,
@@ -395,17 +382,17 @@ class ScriptVisitor
     )
   }
 
-  createlinenode(ctx: CstChildrenDictionary, node: CodeNode[]): CodeNode[] {
-    return this.createcodenode(ctx, {
+  createlinenode(location: CstNodeLocation, node: CodeNode[]): CodeNode[] {
+    return this.createcodenode(location, {
       type: NODE.LINE,
       stmts: node,
     })
   }
 
-  createapinode(ctx: CstChildrenDictionary, method: string, words: CodeNode[]) {
+  createapinode(location: CstNodeLocation, method: string, words: CodeNode[]) {
     return this.createlinenode(
-      ctx,
-      this.createcodenode(ctx, {
+      location,
+      this.createcodenode(location, {
         type: NODE.API,
         words,
         method,
@@ -414,14 +401,14 @@ class ScriptVisitor
   }
 
   createlogicnode(
-    ctx: CstChildrenDictionary,
+    location: CstNodeLocation,
     method: string,
     skip: string,
     words: CodeNode[],
   ) {
     return this.createlinenode(
-      ctx,
-      this.createcodenode(ctx, {
+      location,
+      this.createcodenode(location, {
         type: NODE.IF_CHECK,
         skip,
         words,
@@ -430,8 +417,8 @@ class ScriptVisitor
     )
   }
 
-  createcountnode(ctx: CstChildrenDictionary): CodeNode[] {
-    return this.createcodenode(ctx, {
+  createcountnode(location: CstNodeLocation): CodeNode[] {
+    return this.createcodenode(location, {
       type: NODE.COUNT,
       index: this.unique++,
     })
@@ -447,14 +434,14 @@ class ScriptVisitor
     return []
   }
 
-  program(ctx: ProgramCstChildren) {
+  program(ctx: ProgramCstChildren, location: CstNodeLocation) {
     this.unique = 0
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.PROGRAM,
       lines: [
         this.createlinenode(
-          ctx,
-          this.createcodenode(ctx, {
+          location,
+          this.createcodenode(location, {
             type: NODE.LABEL,
             active: true,
             name: 'restart',
@@ -523,10 +510,10 @@ class ScriptVisitor
     return []
   }
 
-  stmt_label(ctx: Stmt_labelCstChildren) {
+  stmt_label(ctx: Stmt_labelCstChildren, location: CstNodeLocation) {
     return this.createlinenode(
-      ctx,
-      this.createcodenode(ctx, {
+      location,
+      this.createcodenode(location, {
         type: NODE.LABEL,
         active: true,
         name: tokenstring(ctx.token_label, ':').slice(1).trim(),
@@ -534,30 +521,30 @@ class ScriptVisitor
     )
   }
 
-  stmt_stat(ctx: Stmt_statCstChildren) {
+  stmt_stat(ctx: Stmt_statCstChildren, location: CstNodeLocation) {
     return this.createlinenode(
-      ctx,
-      this.createcodenode(ctx, {
+      location,
+      this.createcodenode(location, {
         type: NODE.STAT,
         value: tokenstring(ctx.token_stat, '@').slice(1),
       }),
     )
   }
 
-  stmt_text(ctx: Stmt_textCstChildren) {
+  stmt_text(ctx: Stmt_textCstChildren, location: CstNodeLocation) {
     return this.createlinenode(
-      ctx,
-      this.createcodenode(ctx, {
+      location,
+      this.createcodenode(location, {
         type: NODE.TEXT,
         value: tokenstring(ctx.token_text, ''),
       }),
     )
   }
 
-  stmt_comment(ctx: Stmt_commentCstChildren) {
+  stmt_comment(ctx: Stmt_commentCstChildren, location: CstNodeLocation) {
     return this.createlinenode(
-      ctx,
-      this.createcodenode(ctx, {
+      location,
+      this.createcodenode(location, {
         type: NODE.LABEL,
         active: false,
         name: tokenstring(ctx.token_comment, `'`).slice(1).trim(),
@@ -565,10 +552,10 @@ class ScriptVisitor
     )
   }
 
-  stmt_hyperlink(ctx: Stmt_hyperlinkCstChildren) {
+  stmt_hyperlink(ctx: Stmt_hyperlinkCstChildren, location: CstNodeLocation) {
     return this.createlinenode(
-      ctx,
-      this.createcodenode(ctx, {
+      location,
+      this.createcodenode(location, {
         type: NODE.HYPERLINK,
         link: this.go(ctx.words),
         text: tokenstring(ctx.token_hyperlinktext, ';').slice(1),
@@ -593,11 +580,11 @@ class ScriptVisitor
     return []
   }
 
-  commands(ctx: CommandsCstChildren) {
+  commands(ctx: CommandsCstChildren, location: CstNodeLocation) {
     if (ctx.words) {
       return this.createlinenode(
-        ctx,
-        this.createcodenode(ctx, {
+        location,
+        this.createcodenode(location, {
           type: NODE.COMMAND,
           words: this.go(ctx.words),
         }),
@@ -646,11 +633,11 @@ class ScriptVisitor
     return []
   }
 
-  short_go(ctx: Short_goCstChildren) {
+  short_go(ctx: Short_goCstChildren, location: CstNodeLocation) {
     if (ctx.token_divide) {
       return this.createlinenode(
-        ctx,
-        this.createcodenode(ctx, {
+        location,
+        this.createcodenode(location, {
           type: NODE.MOVE,
           wait: true,
           words: this.go(ctx.words),
@@ -660,11 +647,11 @@ class ScriptVisitor
     return []
   }
 
-  short_try(ctx: Short_tryCstChildren) {
+  short_try(ctx: Short_tryCstChildren, location: CstNodeLocation) {
     if (ctx.token_query) {
       return this.createlinenode(
-        ctx,
-        this.createcodenode(ctx, {
+        location,
+        this.createcodenode(location, {
           type: NODE.MOVE,
           wait: false,
           words: this.go(ctx.words),
@@ -674,38 +661,41 @@ class ScriptVisitor
     return []
   }
 
-  command_if(ctx: Command_ifCstChildren) {
+  command_if(ctx: Command_ifCstChildren, location: CstNodeLocation) {
     const [check] = this.createlogicnode(
-      ctx,
+      location,
       tokenstring(ctx.token_if, 'if'),
       '',
       this.go(ctx.words),
     )
     const [block] = this.go(ctx.command_if_block) ?? []
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.IF,
       check,
       block,
     })
   }
 
-  command_if_block(ctx: Command_if_blockCstChildren) {
+  command_if_block(
+    ctx: Command_if_blockCstChildren,
+    location: CstNodeLocation,
+  ) {
     const skip = createsid()
     const done = createsid()
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.IF_BLOCK,
       skip,
       done,
       lines: [
         this.go(ctx.inline),
         this.go(ctx.line),
-        this.creategotonode(ctx, done, `end of if`),
-        this.createmarknode(ctx, skip, `alt logic`),
+        this.creategotonode(location, done, `end of if`),
+        this.createmarknode(location, skip, `alt logic`),
       ].flat(),
       altlines: [
         this.go(ctx.command_else_if),
         this.go(ctx.command_else),
-        this.createmarknode(ctx, done, `end of if`),
+        this.createmarknode(location, done, `end of if`),
       ].flat(),
     })
   }
@@ -718,173 +708,176 @@ class ScriptVisitor
     return [this.go(ctx.inline), this.go(ctx.line)].flat()
   }
 
-  command_else_if(ctx: Command_else_ifCstChildren) {
+  command_else_if(ctx: Command_else_ifCstChildren, location: CstNodeLocation) {
     const skip = createsid()
     const done = createsid()
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.ELSE_IF,
       done,
       lines: [
         this.createlogicnode(
-          ctx,
+          location,
           tokenstring(ctx.token_if, 'if'),
           skip,
           this.go(ctx.words),
         ),
         this.go(ctx.command_fork),
-        this.creategotonode(ctx, done, `end of if`),
-        this.createmarknode(ctx, skip, `skip`),
+        this.creategotonode(location, done, `end of if`),
+        this.createmarknode(location, skip, `skip`),
       ].flat(),
     })
   }
 
-  command_else(ctx: Command_elseCstChildren) {
-    return this.createcodenode(ctx, {
+  command_else(ctx: Command_elseCstChildren, location: CstNodeLocation) {
+    return this.createcodenode(location, {
       type: NODE.ELSE,
       lines: this.go(ctx.command_fork),
     })
   }
 
-  command_while(ctx: Command_whileCstChildren) {
+  command_while(ctx: Command_whileCstChildren, location: CstNodeLocation) {
     const loop = createsid()
     const done = createsid()
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.WHILE,
       loop,
       done,
       lines: [
-        this.createmarknode(ctx, loop, `start of while`),
-        this.createlogicnode(ctx, 'if', done, this.go(ctx.words)),
+        this.createmarknode(location, loop, `start of while`),
+        this.createlogicnode(location, 'if', done, this.go(ctx.words)),
         this.go(ctx.command_block),
-        this.creategotonode(ctx, loop, `loop of while`),
-        this.createmarknode(ctx, done, `end of while`),
+        this.creategotonode(location, loop, `loop of while`),
+        this.createmarknode(location, done, `end of while`),
       ].flat(),
     })
   }
 
-  command_repeat(ctx: Command_repeatCstChildren) {
+  command_repeat(ctx: Command_repeatCstChildren, location: CstNodeLocation) {
     const loop = createsid()
     const done = createsid()
-    const index = this.createcountnode(ctx)
+    const index = this.createcountnode(location)
     const args = [index, this.go(ctx.words)].flat()
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.REPEAT,
       loop,
       done,
       lines: [
-        this.createapinode(ctx, 'repeatstart', args),
-        this.createmarknode(ctx, loop, `start of repeat`),
-        this.createlogicnode(ctx, 'repeat', done, args),
+        this.createapinode(location, 'repeatstart', args),
+        this.createmarknode(location, loop, `start of repeat`),
+        this.createlogicnode(location, 'repeat', done, args),
         this.go(ctx.command_block),
-        this.creategotonode(ctx, loop, `loop of repeat`),
-        this.createmarknode(ctx, done, `end of repeat`),
+        this.creategotonode(location, loop, `loop of repeat`),
+        this.createmarknode(location, done, `end of repeat`),
       ].flat(),
     })
   }
 
-  command_foreach(ctx: Command_foreachCstChildren) {
+  command_foreach(ctx: Command_foreachCstChildren, location: CstNodeLocation) {
     const loop = createsid()
     const done = createsid()
-    const index = this.createcountnode(ctx)
+    const index = this.createcountnode(location)
     const args = [index, this.go(ctx.words)].flat()
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.FOREACH,
       loop,
       done,
       lines: [
-        this.createapinode(ctx, 'foreachstart', args),
-        this.createmarknode(ctx, loop, `start of foreach`),
-        this.createlogicnode(ctx, 'foreach', done, args),
+        this.createapinode(location, 'foreachstart', args),
+        this.createmarknode(location, loop, `start of foreach`),
+        this.createlogicnode(location, 'foreach', done, args),
         this.go(ctx.command_block),
-        this.creategotonode(ctx, loop, `loop of foreach`),
-        this.createmarknode(ctx, done, `end of foreach`),
+        this.creategotonode(location, loop, `loop of foreach`),
+        this.createmarknode(location, done, `end of foreach`),
       ].flat(),
     })
   }
 
-  command_waitfor(ctx: Command_waitforCstChildren) {
+  command_waitfor(ctx: Command_waitforCstChildren, location: CstNodeLocation) {
     const loop = createsid()
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.WAITFOR,
       loop,
       lines: [
-        this.createmarknode(ctx, loop, `start of waitfor`),
-        this.createlogicnode(ctx, 'waitfor', loop, this.go(ctx.words)),
+        this.createmarknode(location, loop, `start of waitfor`),
+        this.createlogicnode(location, 'waitfor', loop, this.go(ctx.words)),
       ].flat(),
     })
   }
 
-  command_break(ctx: Command_breakCstChildren) {
-    return this.createcodenode(ctx, {
+  command_break(ctx: Command_breakCstChildren, location: CstNodeLocation) {
+    return this.createcodenode(location, {
       type: NODE.BREAK,
       goto: 0,
     })
   }
 
-  command_continue(ctx: Command_continueCstChildren) {
-    return this.createcodenode(ctx, {
+  command_continue(
+    ctx: Command_continueCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return this.createcodenode(location, {
       type: NODE.CONTINUE,
       goto: 0,
     })
   }
 
-  command_play(ctx: Command_playCstChildren) {
+  command_play(ctx: Command_playCstChildren, location: CstNodeLocation) {
     const playstr = tokenstring(ctx.token_command_play, '')
     const playcontent = playstr.replace('bgplay', '').replace('play', '').trim()
     const isbg = playstr.includes('bgplay')
     return this.createlinenode(
-      ctx,
-      this.createcodenode(ctx, {
+      location,
+      this.createcodenode(location, {
         type: NODE.COMMAND,
         words: [
-          this.createstringnode(ctx, isbg ? 'bgplay' : 'play'),
-          this.createstringnode(ctx, playcontent),
+          this.createstringnode(location, isbg ? 'bgplay' : 'play'),
+          this.createstringnode(location, playcontent),
         ].flat(),
       }),
     )
   }
 
-  command_toast(ctx: Command_toastCstChildren) {
+  command_toast(ctx: Command_toastCstChildren, location: CstNodeLocation) {
     const toaststr = tokenstring(ctx.token_command_toast, '')
     const toastcontent = toaststr.replace('toast', '').trim()
     return this.createlinenode(
-      ctx,
-      this.createcodenode(ctx, {
+      location,
+      this.createcodenode(location, {
         type: NODE.COMMAND,
         words: [
-          this.createstringnode(ctx, 'toast'),
-          this.createstringnode(ctx, toastcontent),
+          this.createstringnode(location, 'toast'),
+          this.createstringnode(location, toastcontent),
         ].flat(),
       }),
     )
   }
 
-  expr(ctx: ExprCstChildren) {
+  expr(ctx: ExprCstChildren, location: CstNodeLocation) {
     if (ctx.and_test.length === 1) {
       return this.go(ctx.and_test)
     }
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.OR,
       items: this.go(ctx.and_test),
     })
   }
 
-  and_test(ctx: And_testCstChildren) {
+  and_test(ctx: And_testCstChildren, location: CstNodeLocation) {
     if (ctx.not_test.length === 1) {
       return this.go(ctx.not_test)
     }
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.AND,
       items: this.go(ctx.not_test),
     })
   }
 
-  not_test(ctx: Not_testCstChildren) {
+  not_test(ctx: Not_testCstChildren, location: CstNodeLocation) {
     if (ctx.comparison) {
       return this.go(ctx.comparison)
     }
     if (ctx.not_test) {
-      return this.createcodenode(ctx, {
+      return this.createcodenode(location, {
         type: NODE.NOT,
         items: this.go(ctx.not_test),
       })
@@ -892,13 +885,13 @@ class ScriptVisitor
     return []
   }
 
-  comparison(ctx: ComparisonCstChildren) {
+  comparison(ctx: ComparisonCstChildren, location: CstNodeLocation) {
     if (ctx.arith_expr.length === 1) {
       return this.go(ctx.arith_expr)
     }
     const [lhs, rhs] = this.go(ctx.arith_expr)
     const [compare] = this.go(ctx.comp_op)
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.COMPARE,
       lhs,
       compare,
@@ -906,39 +899,39 @@ class ScriptVisitor
     })
   }
 
-  comp_op(ctx: Comp_opCstChildren) {
+  comp_op(ctx: Comp_opCstChildren, location: CstNodeLocation) {
     if (ctx.token_iseq) {
-      return this.createcodenode(ctx, {
+      return this.createcodenode(location, {
         type: NODE.COMPARE_ITEM,
         method: COMPARE.IS_EQ,
       })
     }
     if (ctx.token_isnoteq) {
-      return this.createcodenode(ctx, {
+      return this.createcodenode(location, {
         type: NODE.COMPARE_ITEM,
         method: COMPARE.IS_NOT_EQ,
       })
     }
     if (ctx.token_islessthan) {
-      return this.createcodenode(ctx, {
+      return this.createcodenode(location, {
         type: NODE.COMPARE_ITEM,
         method: COMPARE.IS_LESS_THAN,
       })
     }
     if (ctx.token_isgreaterthan) {
-      return this.createcodenode(ctx, {
+      return this.createcodenode(location, {
         type: NODE.COMPARE_ITEM,
         method: COMPARE.IS_GREATER_THAN,
       })
     }
     if (ctx.token_islessthanorequal) {
-      return this.createcodenode(ctx, {
+      return this.createcodenode(location, {
         type: NODE.COMPARE_ITEM,
         method: COMPARE.IS_LESS_THAN_OR_EQ,
       })
     }
     if (ctx.token_isgreaterthanorequal) {
-      return this.createcodenode(ctx, {
+      return this.createcodenode(location, {
         type: NODE.COMPARE_ITEM,
         method: COMPARE.IS_GREATER_THAN_OR_EQ,
       })
@@ -946,32 +939,32 @@ class ScriptVisitor
     return []
   }
 
-  expr_value(ctx: Expr_valueCstChildren) {
+  expr_value(ctx: Expr_valueCstChildren, location: CstNodeLocation) {
     if (ctx.and_test_value.length === 1) {
       return this.go(ctx.and_test_value)
     }
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.OR,
       items: this.go(ctx.and_test_value),
     })
   }
 
-  and_test_value(ctx: And_test_valueCstChildren) {
+  and_test_value(ctx: And_test_valueCstChildren, location: CstNodeLocation) {
     if (ctx.not_test_value.length === 1) {
       return this.go(ctx.not_test_value)
     }
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.AND,
       items: this.go(ctx.not_test_value),
     })
   }
 
-  not_test_value(ctx: Not_test_valueCstChildren) {
+  not_test_value(ctx: Not_test_valueCstChildren, location: CstNodeLocation) {
     if (ctx.arith_expr) {
       return this.go(ctx.arith_expr)
     }
     if (ctx.not_test_value) {
-      return this.createcodenode(ctx, {
+      return this.createcodenode(location, {
         type: NODE.NOT,
         items: this.go(ctx.not_test_value),
       })
@@ -979,38 +972,38 @@ class ScriptVisitor
     return []
   }
 
-  arith_expr(ctx: Arith_exprCstChildren) {
+  arith_expr(ctx: Arith_exprCstChildren, location: CstNodeLocation) {
     const term = this.go(ctx.term)
     if (!ctx.arith_expr_item) {
       return term
     }
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.OPERATOR,
       lhs: term[0],
       items: this.go(ctx.arith_expr_item),
     })
   }
 
-  arith_expr_item(ctx: Arith_expr_itemCstChildren) {
-    return this.createcodenode(ctx, {
+  arith_expr_item(ctx: Arith_expr_itemCstChildren, location: CstNodeLocation) {
+    return this.createcodenode(location, {
       type: NODE.OPERATOR_ITEM,
       operator: ctx.token_plus ? OPERATOR.PLUS : OPERATOR.MINUS,
       rhs: this.go(ctx.term)[0],
     })
   }
 
-  term(ctx: TermCstChildren) {
+  term(ctx: TermCstChildren, location: CstNodeLocation) {
     if (!ctx.term_item) {
       return this.go(ctx.factor)
     }
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.OPERATOR,
       lhs: this.go(ctx.factor)[0],
       items: this.go(ctx.term_item),
     })
   }
 
-  term_item(ctx: Term_itemCstChildren) {
+  term_item(ctx: Term_itemCstChildren, location: CstNodeLocation) {
     let operator = OPERATOR.EMPTY
 
     if (ctx.token_multiply) {
@@ -1026,14 +1019,14 @@ class ScriptVisitor
       operator = OPERATOR.FLOOR_DIVIDE
     }
 
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.OPERATOR_ITEM,
       operator,
       rhs: this.go(ctx.factor)[0],
     })
   }
 
-  factor(ctx: FactorCstChildren) {
+  factor(ctx: FactorCstChildren, location: CstNodeLocation) {
     if (ctx.power) {
       return this.go(ctx.power)
     }
@@ -1046,10 +1039,10 @@ class ScriptVisitor
       operator = OPERATOR.UNI_MINUS
     }
 
-    return this.createcodenode(ctx, {
+    return this.createcodenode(location, {
       type: NODE.OPERATOR,
       lhs: undefined,
-      items: this.createcodenode(ctx, {
+      items: this.createcodenode(location, {
         type: NODE.OPERATOR_ITEM,
         operator,
         rhs: this.go(ctx.factor)[0],
@@ -1057,14 +1050,14 @@ class ScriptVisitor
     })
   }
 
-  power(ctx: PowerCstChildren) {
+  power(ctx: PowerCstChildren, location: CstNodeLocation) {
     const token = this.go(ctx.token)
 
     if (ctx.factor) {
-      return this.createcodenode(ctx, {
+      return this.createcodenode(location, {
         type: NODE.OPERATOR,
         lhs: token[0],
-        items: this.createcodenode(ctx, {
+        items: this.createcodenode(location, {
           type: NODE.OPERATOR_ITEM,
           operator: OPERATOR.POWER,
           rhs: this.go(ctx.factor)[0],
@@ -1079,13 +1072,13 @@ class ScriptVisitor
     return this.go(ctx.expr)
   }
 
-  token(ctx: TokenCstChildren) {
+  token(ctx: TokenCstChildren, location: CstNodeLocation) {
     if (ctx.token_stringliteraldouble) {
       const value = tokenstring(ctx.token_stringliteraldouble, '').replaceAll(
         /(^"|"$)/g,
         '',
       )
-      return this.createcodenode(ctx, {
+      return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.TEMPLATE,
         value,
@@ -1097,7 +1090,7 @@ class ScriptVisitor
         /(^"|"$)/g,
         '',
       )
-      return this.createcodenode(ctx, {
+      return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
         value,
@@ -1106,7 +1099,7 @@ class ScriptVisitor
 
     if (ctx.token_numberliteral) {
       const value = parseFloat(tokenstring(ctx.token_numberliteral, '0'))
-      return this.createcodenode(ctx, {
+      return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.NUMBER,
         value,
@@ -1114,7 +1107,7 @@ class ScriptVisitor
     }
 
     if (ctx.token_lparen) {
-      return this.createcodenode(ctx, {
+      return this.createcodenode(location, {
         type: NODE.EXPR,
         words: this.go(ctx.words),
       })
