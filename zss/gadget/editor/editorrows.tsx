@@ -331,93 +331,93 @@ export function EditorRows({
     }
 
     // render hints
-    if (active && ispresent(row.tokens)) {
-      lookup = undefined as MAYBE<ROM_LOOKUP>
-      // scan for hint category indicator
-      for (let c = activetokenidx; c >= 0; --c) {
-        const prevtoken = row.tokens[c - 1]
-        const token = row.tokens[c]
-        const nexttoken = row.tokens[c + 1]
-        switch (token.tokenTypeIdx) {
-          case lexer.command.tokenTypeIdx:
-          case lexer.command_do.tokenTypeIdx:
-          case lexer.command_if.tokenTypeIdx:
-          case lexer.command_else.tokenTypeIdx:
-          case lexer.stat.tokenTypeIdx:
-          case lexer.label.tokenTypeIdx:
-          case lexer.comment.tokenTypeIdx:
-          case lexer.hyperlink.tokenTypeIdx:
-          case lexer.query.tokenTypeIdx:
-          case lexer.divide.tokenTypeIdx:
-          case lexer.text.tokenTypeIdx:
-            break
-          default:
-            continue
-        }
-        switch (token.tokenTypeIdx) {
-          case lexer.command.tokenTypeIdx: {
-            setlookup(`editor:command:${nexttoken.image}`)
-            break
-          }
-          case lexer.command_do.tokenTypeIdx: {
-            setlookup(`editor:command:do`)
-            break
-          }
-          case lexer.command_if.tokenTypeIdx: {
-            setlookup(
-              prevtoken.tokenTypeIdx === lexer.command_else.tokenTypeIdx
-                ? `editor:command:elseif`
-                : `editor:command:if`,
-            )
-            break
-          }
-          case lexer.command_else.tokenTypeIdx: {
-            setlookup(
-              nexttoken.tokenTypeIdx === lexer.command_if.tokenTypeIdx
-                ? `editor:command:elseif`
-                : `editor:command:else`,
-            )
-            break
-          }
-          case lexer.stat.tokenTypeIdx: {
-            const words = parsestatformat(token.image)
-            const statinfo = statformat('', words, !!token.payload)
-            setlookup(`editor:stat:${stattypestring(statinfo.type)}`)
-            break
-          }
-          case lexer.label.tokenTypeIdx: {
-            setlookup(`editor:label`)
-            break
-          }
-          case lexer.comment.tokenTypeIdx: {
-            setlookup(`editor:comment`)
-            break
-          }
-          case lexer.hyperlink.tokenTypeIdx: {
-            // scan tokens until hyperlink text
-            setlookup(`editor:hyperlink`)
-            break
-          }
-          case lexer.query.tokenTypeIdx: {
-            setlookup(`editor:shorttry`)
-            break
-          }
-          case lexer.divide.tokenTypeIdx: {
-            setlookup(`editor:shortgo`)
-            break
-          }
-          case lexer.text.tokenTypeIdx: {
-            setlookup(`editor:text`)
-            break
-          }
-        }
-        break
-      }
+    // if (active && ispresent(row.tokens)) {
+    //   lookup = undefined as MAYBE<ROM_LOOKUP>
+    //   // scan for hint category indicator
+    //   for (let c = activetokenidx; c >= 0; --c) {
+    //     const prevtoken = row.tokens[c - 1]
+    //     const token = row.tokens[c]
+    //     const nexttoken = row.tokens[c + 1]
+    //     switch (token.tokenTypeIdx) {
+    //       case lexer.command.tokenTypeIdx:
+    //       case lexer.command_do.tokenTypeIdx:
+    //       case lexer.command_if.tokenTypeIdx:
+    //       case lexer.command_else.tokenTypeIdx:
+    //       case lexer.stat.tokenTypeIdx:
+    //       case lexer.label.tokenTypeIdx:
+    //       case lexer.comment.tokenTypeIdx:
+    //       case lexer.hyperlink.tokenTypeIdx:
+    //       case lexer.query.tokenTypeIdx:
+    //       case lexer.divide.tokenTypeIdx:
+    //       case lexer.text.tokenTypeIdx:
+    //         break
+    //       default:
+    //         continue
+    //     }
+    //     switch (token.tokenTypeIdx) {
+    //       case lexer.command.tokenTypeIdx: {
+    //         setlookup(`editor:command:${nexttoken.image}`)
+    //         break
+    //       }
+    //       case lexer.command_do.tokenTypeIdx: {
+    //         setlookup(`editor:command:do`)
+    //         break
+    //       }
+    //       case lexer.command_if.tokenTypeIdx: {
+    //         setlookup(
+    //           prevtoken.tokenTypeIdx === lexer.command_else.tokenTypeIdx
+    //             ? `editor:command:elseif`
+    //             : `editor:command:if`,
+    //         )
+    //         break
+    //       }
+    //       case lexer.command_else.tokenTypeIdx: {
+    //         setlookup(
+    //           nexttoken.tokenTypeIdx === lexer.command_if.tokenTypeIdx
+    //             ? `editor:command:elseif`
+    //             : `editor:command:else`,
+    //         )
+    //         break
+    //       }
+    //       case lexer.stat.tokenTypeIdx: {
+    //         const words = parsestatformat(token.image)
+    //         const statinfo = statformat('', words, !!token.payload)
+    //         setlookup(`editor:stat:${stattypestring(statinfo.type)}`)
+    //         break
+    //       }
+    //       case lexer.label.tokenTypeIdx: {
+    //         setlookup(`editor:label`)
+    //         break
+    //       }
+    //       case lexer.comment.tokenTypeIdx: {
+    //         setlookup(`editor:comment`)
+    //         break
+    //       }
+    //       case lexer.hyperlink.tokenTypeIdx: {
+    //         // scan tokens until hyperlink text
+    //         setlookup(`editor:hyperlink`)
+    //         break
+    //       }
+    //       case lexer.query.tokenTypeIdx: {
+    //         setlookup(`editor:shorttry`)
+    //         break
+    //       }
+    //       case lexer.divide.tokenTypeIdx: {
+    //         setlookup(`editor:shortgo`)
+    //         break
+    //       }
+    //       case lexer.text.tokenTypeIdx: {
+    //         setlookup(`editor:text`)
+    //         break
+    //       }
+    //     }
+    //     break
+    //   }
 
-      if (isstring(lookup?.desc)) {
-        tokenizeandwritetextformat(lookup.desc, context, false)
-      }
-    }
+    //   if (isstring(lookup?.desc)) {
+    //     tokenizeandwritetextformat(lookup.desc, context, false)
+    //   }
+    // }
 
     // apply error and info meta
     if (pactive && ispresent(prow.errors)) {

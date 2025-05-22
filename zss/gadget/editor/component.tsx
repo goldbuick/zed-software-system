@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { objectKeys } from 'ts-extras'
 import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
@@ -7,6 +8,7 @@ import { useGadgetClient, useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
 import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'
+import { CodeNode } from 'zss/lang/visitor'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { textformatreadedges } from 'zss/words/textformat'
@@ -196,6 +198,20 @@ export function TapeEditor() {
       if (ispresent(row)) {
         row.tokens = row.tokens ?? []
         row.tokens.push(token)
+      }
+    }
+  }
+
+  // fold ast into lines
+  if (ispresent(parsed.ast)) {
+    const isfirst = true
+    const queue: CodeNode[] = [parsed.ast]
+    while (queue.length) {
+      const node = queue.pop()
+      if (ispresent(node)) {
+        objectKeys(node).forEach((prop) => {
+          // iterate through node props, looking for an array of elements with { type }
+        })
       }
     }
   }
