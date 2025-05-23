@@ -158,7 +158,7 @@ export function createsource(sourcetype: SOURCE_TYPE) {
       source = {
         type: sourcetype,
         synth: new Sampler({
-          volume: -30,
+          volume: -44,
           urls: {
             C4: generatenoisesynth(sourcetype),
           },
@@ -186,8 +186,8 @@ export function createsource(sourcetype: SOURCE_TYPE) {
         type: SOURCE_TYPE.BELLS,
         synth: new FMSynth(),
         sparkle: new MetalSynth({
-          volume: -20,
-          envelope: { attack: 0.001, decay: 1.4, release: 0.2 },
+          volume: -12,
+          envelope: { attack: 0.001, decay: 1.4, release: 0.321 },
           harmonicity: 5.1,
           modulationIndex: 32,
           resonance: 4000,

@@ -27,6 +27,7 @@ import {
 } from 'tone'
 import { vm_synthsend } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { randominteger } from 'zss/mapping/number'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 import {
@@ -581,7 +582,7 @@ export function createsynth() {
         // razzle dazzle code
         switch (SOURCE[chan].source.type) {
           case SOURCE_TYPE.BELLS:
-            SOURCE[chan].source.synth.detune.value = Math.random() * 10 - 5
+            SOURCE[chan].source.synth.detune.value = randominteger(-3, 3)
             SOURCE[chan].source.sparkle.triggerAttackRelease(
               Note.transposeOctaves(note, 2),
               duration,
