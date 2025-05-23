@@ -217,10 +217,9 @@ export function TapeEditor() {
           case NODE.LINE:
           case NODE.IF:
             if (isnumber(node.startLine)) {
-              // what if we only push LINE CodeNode[]s ??
               const row = rows[node.startLine - 1]
               row.asts = row.asts ?? []
-              row.asts.push(node)
+              row.asts.unshift(node)
             }
             break
         }
