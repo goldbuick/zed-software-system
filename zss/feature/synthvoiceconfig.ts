@@ -39,6 +39,7 @@ function validatesynthtype(
       case 'clang':
       case 'metallic':
       case 'bells':
+      case 'doot':
         return true
       default:
         return SYNTH_VARIANTS.test(type)
@@ -129,6 +130,9 @@ export function synthvoiceconfig(
               break
             case 'bells':
               synth.changesource(index, SOURCE_TYPE.BELLS)
+              break
+            case 'doot':
+              synth.changesource(index, SOURCE_TYPE.DOOT)
               break
             default:
               synth.changesource(index, SOURCE_TYPE.SYNTH)
@@ -350,6 +354,14 @@ export function synthvoiceconfig(
             return
           }
           case SOURCE_TYPE.BELLS: {
+            switch (config) {
+              default:
+                // todo add config settings
+                return
+            }
+            break
+          }
+          case SOURCE_TYPE.DOOT: {
             switch (config) {
               default:
                 // todo add config settings

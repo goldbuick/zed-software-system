@@ -5,6 +5,7 @@ import {
   FMSynth,
   MetalSynth,
   BiquadFilter,
+  MembraneSynth,
 } from 'tone'
 import { deepcopy, MAYBE } from 'zss/mapping/types'
 
@@ -15,6 +16,7 @@ export enum SOURCE_TYPE {
   CLANG_NOISE,
   METALLIC_NOISE,
   BELLS,
+  DOOT,
 }
 
 const RETRO_SAMPLE_COUNT = 131072
@@ -74,6 +76,10 @@ export type SOURCE =
       type: SOURCE_TYPE.BELLS
       synth: FMSynth
       sparkle: MetalSynth
+    }
+  | {
+      type: SOURCE_TYPE.DOOT
+      synth: MembraneSynth
     }
 
 export function createsource(sourcetype: SOURCE_TYPE) {
@@ -135,6 +141,12 @@ export function createsource(sourcetype: SOURCE_TYPE) {
         })
         break
       }
+      case SOURCE_TYPE.DOOT: {
+        source.synth.set({
+          ...resetvalues,
+        })
+        break
+      }
     }
   }
 
@@ -193,6 +205,18 @@ export function createsource(sourcetype: SOURCE_TYPE) {
           resonance: 4000,
           octaves: 1.5,
         }),
+      }
+      resetvalues = deepcopy(source.synth.get())
+      applyreset()
+      return {
+        source,
+        applyreset,
+      }
+    }
+    case SOURCE_TYPE.DOOT: {
+      source = {
+        type: sourcetype,
+        synth: new MembraneSynth(),
       }
       resetvalues = deepcopy(source.synth.get())
       applyreset()
