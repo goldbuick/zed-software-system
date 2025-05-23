@@ -158,7 +158,7 @@ export function createsource(sourcetype: SOURCE_TYPE) {
       source = {
         type: sourcetype,
         synth: new Sampler({
-          volume: -30,
+          volume: -44,
           urls: {
             C4: generatenoisesynth(sourcetype),
           },
