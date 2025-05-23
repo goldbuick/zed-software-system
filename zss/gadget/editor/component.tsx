@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { objectKeys } from 'ts-extras'
 import { vm_codeaddress, vm_coderelease, vm_codewatch } from 'zss/device/api'
 import { useWaitForValueString } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
@@ -7,8 +8,10 @@ import { useGadgetClient, useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { useWriteText } from 'zss/gadget/hooks'
 import { compileast } from 'zss/lang/ast'
 import * as lexer from 'zss/lang/lexer'
+import { createlineindexes } from 'zss/lang/transformer'
+import { CodeNode, NODE } from 'zss/lang/visitor'
 import { clamp } from 'zss/mapping/number'
-import { ispresent } from 'zss/mapping/types'
+import { isarray, isnumber, ispresent } from 'zss/mapping/types'
 import { textformatreadedges } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -196,6 +199,42 @@ export function TapeEditor() {
       if (ispresent(row)) {
         row.tokens = row.tokens ?? []
         row.tokens.push(token)
+      }
+    }
+  }
+
+  // fold ast into lines
+  if (parsed?.ast?.type === NODE.PROGRAM) {
+    createlineindexes(parsed.ast)
+    const queue: CodeNode[] = []
+    for (let i = 1; i < parsed.ast.lines.length; ++i) {
+      queue.push(parsed.ast.lines[i])
+    }
+    while (queue.length) {
+      const node = queue.pop()
+      if (isnumber(node?.type)) {
+        switch (node.type) {
+          case NODE.LINE:
+          case NODE.IF:
+            if (isnumber(node.startLine)) {
+              const row = rows[node.startLine - 1]
+              row.asts = row.asts ?? []
+              row.asts.unshift(node)
+            }
+            break
+        }
+        // iterate through node props, looking for an array of elements
+        const propnames = objectKeys(node)
+        for (let i = 0; i < propnames.length; ++i) {
+          const prop = propnames[i]
+          const value = node[prop]
+          if (isarray(value)) {
+            queue.push(...value)
+          } else if (typeof value === 'object') {
+            // @ts-expect-error its okay
+            queue.push(value)
+          }
+        }
       }
     }
   }

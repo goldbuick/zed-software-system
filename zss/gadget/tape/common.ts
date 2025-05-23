@@ -95,7 +95,7 @@ export type EDITOR_CODE_ROW = {
   end: number
   errors?: LANG_ERROR[]
   tokens?: IToken[]
-  ast?: CodeNode
+  asts?: CodeNode[]
 }
 
 export function splitcoderows(code: string): EDITOR_CODE_ROW[] {

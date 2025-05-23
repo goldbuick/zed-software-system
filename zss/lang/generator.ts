@@ -5,7 +5,7 @@ import { SHOW_CODE } from 'zss/config'
 
 import { compileast } from './ast'
 import { LANG_ERROR } from './lexer'
-import { transformAst } from './transformer'
+import { transformast } from './transformer'
 import { CodeNode } from './visitor'
 
 const GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor
@@ -40,7 +40,7 @@ export function compile(name: string, text: string): GeneratorBuild {
     }
   }
 
-  const transformResult = transformAst(astResult.ast)
+  const transformResult = transformast(astResult.ast)
 
   if (transformResult.code) {
     if (SHOW_CODE) {

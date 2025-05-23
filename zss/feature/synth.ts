@@ -10,6 +10,7 @@ import {
   Gain,
   getContext,
   getDestination,
+  getDraw,
   getTransport,
   MembraneSynth,
   Noise,
@@ -573,7 +574,9 @@ export function createsynth() {
     const f = mapindextofx(chan)
     if (isstring(note) && ispresent(SOURCE[chan]) && ispresent(FX[f])) {
       if (note.startsWith('#')) {
-        vm_synthsend(SOFTWARE, '', note.slice(1))
+        getDraw().schedule(() => {
+          vm_synthsend(SOFTWARE, '', note.slice(1))
+        }, time)
       } else {
         // razzle dazzle code
         switch (SOURCE[chan].source.type) {
@@ -674,7 +677,7 @@ export function createsynth() {
   function addplay(buffer: string, bgplay: boolean) {
     // parse ops
     const invokes = parseplay(buffer)
-    const seconds = getTransport().seconds + 0.1
+    const seconds = getTransport().context.lookAhead
 
     if (bgplay) {
       // handle sfx
