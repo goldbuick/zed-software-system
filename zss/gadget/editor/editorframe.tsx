@@ -96,7 +96,7 @@ export function EditorFrame() {
     ${metakey}+z$white.UNDO   $blue
     ${metaundo}$white.REDO   $blue
     ${metakey}+p$white.TEST SELECTED CODE   $blue
-    ${metakey}+k$white.PICK REFSHEET   $blue
+    ${metakey}+k$white.OPEN REFSCROLL   $blue
     ${metakey}+e$white.COPY CODEPAGE TO CLIPBOARD AS JSON   $blue
     `}
       context={context}
