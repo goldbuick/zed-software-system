@@ -8,7 +8,7 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
-import { writetext } from 'zss/feature/writeui'
+import { DIVIDER, writetext } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,
   gadgethyperlink,
@@ -42,8 +42,6 @@ import {
   memoryreadoperator,
   memoryreadplayerboard,
 } from '.'
-
-const DIVIDER = '$yellow$205$205$205$196'
 
 function ptstoarea(p1: PT, p2: PT) {
   return `${p1.x},${p1.y},${p2.x},${p2.y}`
@@ -245,7 +243,6 @@ export function memoryinspectcommand(path: string, player: string) {
           path,
           pagetype,
           `${name} - ${mainbook.name}`,
-          [],
         )
       })
       break

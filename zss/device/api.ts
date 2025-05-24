@@ -363,15 +363,8 @@ export function register_editor_open(
   path: MAYBE<string>[],
   type: string,
   title: string,
-  refsheet: string[],
 ) {
-  device.emit(player, 'register:editor:open', [
-    book,
-    path,
-    type,
-    title,
-    refsheet,
-  ])
+  device.emit(player, 'register:editor:open', [book, path, type, title])
 }
 
 export function register_editor_close(device: DEVICELIKE, player: string) {
@@ -436,12 +429,8 @@ export function vm_copyjsonfile(
   device.emit(player, 'vm:copyjsonfile', path)
 }
 
-export function vm_refsheet(
-  device: DEVICELIKE,
-  player: string,
-  path: string[],
-) {
-  device.emit(player, 'vm:refsheet', path)
+export function vm_refscroll(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:refscroll')
 }
 
 export function vm_inspect(device: DEVICELIKE, player: string, p1: PT, p2: PT) {

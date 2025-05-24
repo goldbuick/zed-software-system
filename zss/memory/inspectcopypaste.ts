@@ -1,3 +1,4 @@
+import { DIVIDER } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,
   gadgethyperlink,
@@ -18,8 +19,6 @@ import { boardelementname } from './boardelement'
 import { BOARD, BOARD_ELEMENT } from './types'
 
 import { memoryreadplayerboard } from '.'
-
-const DIVIDER = '$yellow$205$205$205$196'
 
 function ptstoarea(p1: PT, p2: PT) {
   return `${p1.x},${p1.y},${p2.x},${p2.y}`

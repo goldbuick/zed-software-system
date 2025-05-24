@@ -604,7 +604,7 @@ const register = createdevice(
         break
       case 'editor:open':
         if (isarray(message.data)) {
-          const [book, path, type, title, refsheet] = message.data
+          const [book, path, type, title] = message.data
           useTape.setState((state) => ({
             editor: {
               open: true,
@@ -613,7 +613,6 @@ const register = createdevice(
               path,
               type,
               title,
-              refsheet: refsheet.length ? refsheet : state.editor.refsheet,
             },
           }))
         }

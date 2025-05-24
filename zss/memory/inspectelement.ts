@@ -1,4 +1,5 @@
 import { objectKeys } from 'ts-extras'
+import { DIVIDER } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,
   gadgethyperlink,
@@ -17,8 +18,6 @@ import {
   memoryensuresoftwarebook,
   memoryreadplayerboard,
 } from '.'
-
-const DIVIDER = '$yellow$205$205$205$196'
 
 function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
   const id = element?.id ? element.id : boardelementindex(board, element)

@@ -356,23 +356,37 @@ export function memoryplayerlogin(player: string): boolean {
 export function memoryplayerlogout(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const board = bookplayerreadboard(mainbook, player)
+  if (!ispresent(mainbook)) {
+    return
+  }
 
-  // clear from active list
-  bookplayersetboard(mainbook, player, '')
+  const removelist: string[] = [player]
+  for (let i = 0; i < mainbook.activelist.length; ++i) {
+    const mayberemove = mainbook.activelist[i]
+    if (mayberemove.startsWith(player)) {
+      removelist.push(mayberemove)
+    }
+  }
 
-  // clear element
-  bookboardobjectnamedlookupdelete(
-    mainbook,
-    board,
-    boardobjectread(board, player),
-  )
-  boarddeleteobject(board, player)
+  for (let i = 0; i < removelist.length; ++i) {
+    const remove = removelist[i]
+    // clear from active list
+    bookplayersetboard(mainbook, remove, '')
 
-  // halt chip
-  os.halt(player)
+    // clear element
+    bookboardobjectnamedlookupdelete(
+      mainbook,
+      board,
+      boardobjectread(board, remove),
+    )
+    boarddeleteobject(board, remove)
 
-  // clear memory
-  bookclearflags(mainbook, player)
+    // halt chip
+    os.halt(remove)
+
+    // clear memory
+    bookclearflags(mainbook, remove)
+  }
 }
 
 export function memoryreadplayerboard(player: string) {

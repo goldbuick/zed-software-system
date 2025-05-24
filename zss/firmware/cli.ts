@@ -295,18 +295,9 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('pageopenwith', (chip, words) => {
-    const [refsheet, page, maybeobject] = readargs(words, 0, [
-      ARG_TYPE.NAME,
-      ARG_TYPE.MAYBE_NAME,
-      ARG_TYPE.MAYBE_NAME,
-    ])
-    return chip.command('pageopen', page, maybeobject, refsheet)
-  })
   .command('pageopen', (_, words) => {
-    const [page, maybeobject, mayberefsheet] = readargs(words, 0, [
+    const [page, maybeobject] = readargs(words, 0, [
       ARG_TYPE.NAME,
-      ARG_TYPE.MAYBE_NAME,
       ARG_TYPE.MAYBE_NAME,
     ])
 
@@ -326,21 +317,6 @@ export const CLI_FIRMWARE = createfirmware()
         `opened [${pagetype}] ${name}`,
       )
 
-      // parse and pull lines of text
-      const refsheetlines: string[] = []
-      const refsheet = bookreadcodepagebyaddress(mainbook, mayberefsheet ?? '')
-      const parse = ispresent(refsheet) ? tokenize(refsheet.code) : undefined
-      if (ispresent(parse)) {
-        for (let i = 0; i < parse.tokens.length; ++i) {
-          const token = parse.tokens[i]
-          if (token.tokenType === text) {
-            refsheetlines.push(
-              token.image.startsWith('"') ? token.image.slice(1) : token.image,
-            )
-          }
-        }
-      }
-
       // path
       const path = [codepage.id, maybeobject]
 
@@ -356,7 +332,6 @@ export const CLI_FIRMWARE = createfirmware()
         path,
         type,
         `${name} - ${mainbook.name}`,
-        refsheetlines,
       )
     } else {
       api_error(

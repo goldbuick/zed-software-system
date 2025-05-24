@@ -12,6 +12,8 @@ const COLOR_EDGE = '$dkpurple'
 const CHR_TM = '$196'
 const CHR_BM = '$205'
 
+export const DIVIDER = '$yellow$205$205$205$196'
+
 export function write(device: DEVICELIKE, player: string, text: string) {
   api_info(device, player, text)
 }

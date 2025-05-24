@@ -7,7 +7,7 @@ import {
   register_terminal_inclayout,
   vm_cli,
   vm_copyjsonfile,
-  vm_refsheet,
+  vm_refscroll,
 } from 'zss/device/api'
 import { Y } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
@@ -274,7 +274,8 @@ export function EditorInput({
                     vm_copyjsonfile(SOFTWARE, player, editorpath)
                     break
                   case 'k':
-                    vm_refsheet(SOFTWARE, player, editorpath)
+                    // open ref scroll instead
+                    vm_refscroll(SOFTWARE, player)
                     break
                   case 'z':
                     if (ismac && mods.shift) {

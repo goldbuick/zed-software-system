@@ -1,8 +1,14 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/feature/parsefile'
-import { write, writeheader } from 'zss/feature/writeui'
+import { DIVIDER, write, writeheader } from 'zss/feature/writeui'
 import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
+import {
+  gadgetcheckqueue,
+  gadgethyperlink,
+  gadgetstate,
+  gadgettext,
+} from 'zss/gadget/data/api'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import {
@@ -78,6 +84,7 @@ import {
   vm_flush,
   vm_logout,
   register_loginfail,
+  vm_local,
 } from './api'
 import { modemobservevaluestring } from './modem'
 
@@ -266,6 +273,12 @@ const vm = createdevice(
         break
       case 'input': {
         if (
+          message.player.includes('local') &&
+          !memoryhasflags(message.player)
+        ) {
+          vm_local(vm, message.player)
+        }
+        if (
           !message.player.includes('local') ||
           memoryhasflags(message.player)
         ) {
@@ -405,22 +418,25 @@ const vm = createdevice(
           }
         }
         break
-      case 'refsheet': {
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-        const sorted = bookreadsortedcodepages(mainbook)
-        if (ispresent(mainbook) && isarray(message.data)) {
-          register_editor_close(vm, message.player)
-          writeheader(vm, message.player, `use as refsheet`)
-          sorted.forEach((page) => {
-            const name = codepagereadname(page)
-            const type = codepagereadtypetostring(page)
-            write(
-              vm,
-              message.player,
-              `!pageopenwith ${page.id} ${message.data.join(' ')};$blue[${type}]$white ${name}`,
-            )
-          })
-        }
+      case 'refscroll': {
+        gadgettext(message.player, `stat refs`)
+        gadgettext(message.player, DIVIDER)
+        gadgethyperlink(message.player, 'refscroll', `char:`, [
+          'charscroll',
+          'hk',
+          'a',
+          ' A ',
+          'next',
+        ])
+        gadgethyperlink(message.player, 'refscroll', `color:`, [
+          'colorscroll',
+          'hk',
+          'c',
+          ' C ',
+          'next',
+        ])
+        const shared = gadgetstate(message.player)
+        shared.scroll = gadgetcheckqueue(message.player)
         break
       }
       case 'fork':
@@ -501,6 +517,28 @@ const vm = createdevice(
       default: {
         const { target, path } = parsetarget(message.target)
         switch (NAME(target)) {
+          case 'refscroll':
+            switch (path) {
+              case 'charscroll': {
+                gadgethyperlink(message.player, 'refscroll', 'char', [
+                  'char',
+                  'charedit',
+                ])
+                const shared = gadgetstate(message.player)
+                shared.scroll = gadgetcheckqueue(message.player)
+                break
+              }
+              case 'colorscroll': {
+                gadgethyperlink(message.player, 'refscroll', 'color', [
+                  'color',
+                  'coloredit',
+                ])
+                const shared = gadgetstate(message.player)
+                shared.scroll = gadgetcheckqueue(message.player)
+                break
+              }
+            }
+            break
           case 'batch':
             memoryinspectbatchcommand(path, message.player)
             break

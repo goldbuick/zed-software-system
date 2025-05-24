@@ -14,15 +14,14 @@ import {
   tokenizeandwritetextformat,
   writeplaintext,
 } from 'zss/words/textformat'
-import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
+import { COLOR, STAT_TYPE } from 'zss/words/types'
 
-import { useBlink, useWriteText, writeTile } from '../hooks'
+import { useBlink, useWriteText } from '../hooks'
 import {
   BG_ACTIVE,
   BG_SELECTED,
   bgcolor,
   EDITOR_CODE_ROW,
-  FG,
   FG_SELECTED,
   setupeditoritem,
 } from '../tape/common'
@@ -46,7 +45,6 @@ function parsestatformat(image: string) {
 
 let lookup: MAYBE<ROM_LOOKUP>
 function setlookup(address: string) {
-  console.info(address)
   const maybelookup = romintolookup(romread(address))
   if (Object.keys(maybelookup).length) {
     lookup = maybelookup
@@ -72,7 +70,7 @@ export function EditorRows({
   const blink = useBlink()
   const context = useWriteText()
   const tapeeditor = useTapeEditor()
-  const { editor, quickterminal } = useTape()
+  const { quickterminal } = useTape()
   const withrows: EDITOR_CODE_ROW[] = useMemo(() => {
     if (rows.length) {
       const last = rows[rows.length - 1]
@@ -88,8 +86,7 @@ export function EditorRows({
     return null
   }
 
-  const hasrefsheet = editor.refsheet.length > 0
-  const rightedge = context.width - (hasrefsheet ? 28 : 2)
+  const rightedge = context.width - 2
   const edge = textformatreadedges(context)
   edge.right = rightedge - 1
 
@@ -478,30 +475,6 @@ export function EditorRows({
     ++context.y
     if (context.y >= edge.bottom) {
       break
-    }
-  }
-
-  // render ref page
-  if (hasrefsheet) {
-    let i = 0
-    for (let y = edge.top + 2; y < edge.bottom; ++y) {
-      context.active.rightedge = context.width - 2
-      context.active.leftedge = edge.right + 2
-      writeTile(context, context.width, context.height, edge.right + 1, y, {
-        char: 179,
-        color: FG,
-        bg: COLOR.DKBLUE,
-      })
-      const refsheetrow = editor.refsheet[i++]
-      if (ispresent(refsheetrow)) {
-        context.x = context.active.leftedge - 1
-        context.y = y
-        tokenizeandwritetextformat(
-          `$white$ondkblue ${refsheetrow}`,
-          context,
-          true,
-        )
-      }
     }
   }
 
