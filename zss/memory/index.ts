@@ -25,6 +25,7 @@ import { boardelementname } from './boardelement'
 import {
   bookclearflags,
   bookelementkindread,
+  bookelementstatread,
   bookensurecodepagewithtype,
   bookhasflags,
   bookplayermovetoboard,
@@ -420,6 +421,73 @@ function sendinteraction(
   }
 }
 
+function playerblockedbyedge(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  element: BOARD_ELEMENT,
+  dest: PT,
+) {
+  const elementid = element.id ?? ''
+  // attempt to move player
+  if (dest.x < 0) {
+    // exit west
+    const boards = bookreadcodepagesbytypeandstat(
+      book,
+      CODE_PAGE_TYPE.BOARD,
+      board?.exitwest ?? '',
+    )
+    if (boards.length) {
+      const board = pick(boards)
+      bookplayermovetoboard(book, elementid, board.id, {
+        x: BOARD_WIDTH - 1,
+        y: dest.y,
+      })
+    }
+  } else if (dest.x >= BOARD_WIDTH) {
+    // exit east
+    const boards = bookreadcodepagesbytypeandstat(
+      book,
+      CODE_PAGE_TYPE.BOARD,
+      board?.exiteast ?? '',
+    )
+    if (boards.length) {
+      const board = pick(boards)
+      bookplayermovetoboard(book, elementid, board.id, {
+        x: 0,
+        y: dest.y,
+      })
+    }
+  } else if (dest.y < 0) {
+    // exit north
+    const boards = bookreadcodepagesbytypeandstat(
+      book,
+      CODE_PAGE_TYPE.BOARD,
+      board?.exitnorth ?? '',
+    )
+    if (boards.length) {
+      const board = pick(boards)
+      bookplayermovetoboard(book, elementid, board.id, {
+        x: dest.x,
+        y: BOARD_HEIGHT - 1,
+      })
+    }
+  } else if (dest.y >= BOARD_HEIGHT) {
+    // exit south
+    const boards = bookreadcodepagesbytypeandstat(
+      book,
+      CODE_PAGE_TYPE.BOARD,
+      board?.exitsouth ?? '',
+    )
+    if (boards.length) {
+      const board = pick(boards)
+      bookplayermovetoboard(book, elementid, board.id, {
+        x: dest.x,
+        y: 0,
+      })
+    }
+  }
+}
+
 export function memorymoveobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
@@ -431,70 +499,13 @@ export function memorymoveobject(
   }
   const blocked = bookboardmoveobject(book, board, element, dest)
   if (ispresent(blocked)) {
+    const blockedbyplayer = ispid(blocked.id)
     if (element.kind === MEMORY_LABEL.PLAYER && blocked.kind === 'edge') {
-      // attempt to move player
-      if (dest.x < 0) {
-        // exit west
-        const boards = bookreadcodepagesbytypeandstat(
-          book,
-          CODE_PAGE_TYPE.BOARD,
-          board?.exitwest ?? '',
-        )
-        if (boards.length) {
-          const board = pick(boards)
-          bookplayermovetoboard(book, element.id, board.id, {
-            x: BOARD_WIDTH - 1,
-            y: dest.y,
-          })
-        }
-      } else if (dest.x >= BOARD_WIDTH) {
-        // exit east
-        const boards = bookreadcodepagesbytypeandstat(
-          book,
-          CODE_PAGE_TYPE.BOARD,
-          board?.exiteast ?? '',
-        )
-        if (boards.length) {
-          const board = pick(boards)
-          bookplayermovetoboard(book, element.id, board.id, {
-            x: 0,
-            y: dest.y,
-          })
-        }
-      } else if (dest.y < 0) {
-        // exit north
-        const boards = bookreadcodepagesbytypeandstat(
-          book,
-          CODE_PAGE_TYPE.BOARD,
-          board?.exitnorth ?? '',
-        )
-        if (boards.length) {
-          const board = pick(boards)
-          bookplayermovetoboard(book, element.id, board.id, {
-            x: dest.x,
-            y: BOARD_HEIGHT - 1,
-          })
-        }
-      } else if (dest.y >= BOARD_HEIGHT) {
-        // exit south
-        const boards = bookreadcodepagesbytypeandstat(
-          book,
-          CODE_PAGE_TYPE.BOARD,
-          board?.exitsouth ?? '',
-        )
-        if (boards.length) {
-          const board = pick(boards)
-          bookplayermovetoboard(book, element.id, board.id, {
-            x: dest.x,
-            y: 0,
-          })
-        }
-      }
+      playerblockedbyedge(book, board, element, dest)
     } else {
       sendinteraction('', blocked, element, 'thud')
     }
     if (element.kind === MEMORY_LABEL.PLAYER) {
-      const blockedbyplayer = ispid(blocked.id)
       sendinteraction(
         element.id,
         element,
@@ -505,22 +516,27 @@ export function memorymoveobject(
     } else if (element.collision === COLLISION.ISBULLET) {
       // blocked is touched by bullet
       const fromplayer = ispid(element.party)
-      const blockedbyplayer = ispid(blocked.id)
-      if (fromplayer !== blockedbyplayer) {
-        // need from player stat here
-        // so we can properly track aggro from bullets
-        sendinteraction(element.party ?? '', element, blocked, 'shot')
+      if (fromplayer) {
+        sendinteraction(
+          element.id,
+          element,
+          blocked,
+          blockedbyplayer ? 'partyshot' : 'shot',
+        )
       } else {
-        // same party bullets thud
-        sendinteraction('', element, blocked, 'thud')
+        sendinteraction(
+          element.id,
+          element,
+          blocked,
+          blockedbyplayer ? 'shot' : 'partyshot',
+        )
       }
     } else {
       sendinteraction('', element, blocked, 'bump')
     }
 
     // delete destructible elements
-    const blockedkind = bookelementkindread(book, blocked)
-    if (blocked.destructible ?? blockedkind?.destructible) {
+    if (bookelementstatread(book, blocked, 'destructible')) {
       if (ispresent(blocked?.id)) {
         // mark target for deletion
         bookboardsafedelete(
