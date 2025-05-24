@@ -60,7 +60,7 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.7",
     "fast-json-patch": "^3.1.1",
-    "gamepad-helper": "^1.2.3",
+    "gamepad.js": "^2.1.0",
     "human-id": "^4.1.1",
     "idb-keyval": "^6.2.1",
     "is-hotkey": "^0.2.0",

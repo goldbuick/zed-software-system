@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { GamepadHelper, IGamepadButtonEventDetail } from 'gamepad-helper'
+import { GamepadListener } from 'gamepad.js'
 import isHotKey from 'is-hotkey'
 import mitt from 'mitt'
 import {
@@ -10,13 +10,14 @@ import {
   useState,
 } from 'react'
 import { createdevice } from 'zss/device'
-import { vm_cli, vm_clirepeatlast } from 'zss/device/api'
+import { vm_cli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
 import { isnumber, ispresent } from 'zss/mapping/types'
+import { dirfromdelta } from 'zss/words/dir'
 import { ismac } from 'zss/words/system'
-import { NAME } from 'zss/words/types'
+import { DIR, NAME } from 'zss/words/types'
 
 // user input
 
@@ -75,7 +76,6 @@ function pollinput() {
   }
 
   previous = now
-  GamepadHelper.update()
   setTimeout(pollinput, 100)
 }
 pollinput()
@@ -336,17 +336,114 @@ const buttonlookup: Record<number, INPUT> = {
   [BUTTON_RIGHT]: INPUT.MOVE_RIGHT,
 }
 
-type GamepadEvent = CustomEvent<IGamepadButtonEventDetail>
+const axisstate: Record<number, Record<number, number>> = {}
+function readaxis(index: number) {
+  axisstate[index] = axisstate[index] ?? {}
+  return axisstate[index]
+}
+function writeaxis(index: number, axis: number, value: number) {
+  const axisstate = readaxis(index)
+  const prevleft = dirfromdelta(axisstate[0] ?? 0, axisstate[1] ?? 0)
+  const prevright = dirfromdelta(axisstate[2] ?? 0, axisstate[3] ?? 0)
+  axisstate[axis] = value
+  const nextleft = dirfromdelta(axisstate[0] ?? 0, axisstate[1] ?? 0)
+  const nextright = dirfromdelta(axisstate[2] ?? 0, axisstate[3] ?? 0)
+  if (prevleft !== nextleft) {
+    switch (nextleft) {
+      case DIR.IDLE:
+        inputup(INPUT.MOVE_LEFT)
+        inputup(INPUT.MOVE_RIGHT)
+        inputup(INPUT.MOVE_UP)
+        inputup(INPUT.MOVE_DOWN)
+        break
+      case DIR.NORTH:
+        inputdown(INPUT.MOVE_UP)
+        inputup(INPUT.MOVE_LEFT)
+        inputup(INPUT.MOVE_RIGHT)
+        inputup(INPUT.MOVE_DOWN)
+        break
+      case DIR.SOUTH:
+        inputdown(INPUT.MOVE_DOWN)
+        inputup(INPUT.MOVE_LEFT)
+        inputup(INPUT.MOVE_RIGHT)
+        inputup(INPUT.MOVE_UP)
+        break
+      case DIR.WEST:
+        inputdown(INPUT.MOVE_LEFT)
+        inputup(INPUT.MOVE_UP)
+        inputup(INPUT.MOVE_RIGHT)
+        inputup(INPUT.MOVE_DOWN)
+        break
+      case DIR.EAST:
+        inputdown(INPUT.MOVE_RIGHT)
+        inputup(INPUT.MOVE_LEFT)
+        inputup(INPUT.MOVE_UP)
+        inputup(INPUT.MOVE_DOWN)
+        break
+    }
+  }
+  if (prevright !== nextright) {
+    switch (nextright) {
+      case DIR.IDLE:
+        inputup(INPUT.SHIFT)
+        inputup(INPUT.MOVE_LEFT)
+        inputup(INPUT.MOVE_RIGHT)
+        inputup(INPUT.MOVE_UP)
+        inputup(INPUT.MOVE_DOWN)
+        break
+      case DIR.NORTH:
+        inputdown(INPUT.SHIFT)
+        inputdown(INPUT.MOVE_UP)
+        inputup(INPUT.MOVE_LEFT)
+        inputup(INPUT.MOVE_RIGHT)
+        inputup(INPUT.MOVE_DOWN)
+        break
+      case DIR.SOUTH:
+        inputdown(INPUT.SHIFT)
+        inputdown(INPUT.MOVE_DOWN)
+        inputup(INPUT.MOVE_LEFT)
+        inputup(INPUT.MOVE_RIGHT)
+        inputup(INPUT.MOVE_UP)
+        break
+      case DIR.WEST:
+        inputdown(INPUT.SHIFT)
+        inputdown(INPUT.MOVE_LEFT)
+        inputup(INPUT.MOVE_UP)
+        inputup(INPUT.MOVE_RIGHT)
+        inputup(INPUT.MOVE_DOWN)
+        break
+      case DIR.EAST:
+        inputdown(INPUT.SHIFT)
+        inputdown(INPUT.MOVE_RIGHT)
+        inputup(INPUT.MOVE_LEFT)
+        inputup(INPUT.MOVE_UP)
+        inputup(INPUT.MOVE_DOWN)
+        break
+    }
+  }
+}
 
-// @ts-expect-error added by gamepad helper
-document.addEventListener('gamepadbuttondown', (event: GamepadEvent) => {
-  inputdown(buttonlookup[event.detail.button])
+const gamepads = new GamepadListener({
+  analog: false,
+  deadZone: 0.3,
 })
-
-// @ts-expect-error added by gamepad helper
-document.addEventListener('gamepadbuttonup', (event: GamepadEvent) => {
-  inputup(buttonlookup[event.detail.button])
+gamepads.on('gamepad:connected', (event: any) => {
+  console.info(event)
 })
+gamepads.on('gamepad:disconnected', (event: any) => {
+  console.info(event)
+})
+gamepads.on('gamepad:axis', (event: any) => {
+  writeaxis(event.detail.index, event.detail.axis, event.detail.value)
+})
+gamepads.on('gamepad:button', (event: any) => {
+  if (event.detail.value) {
+    inputdown(buttonlookup[event.detail.button])
+  } else {
+    inputup(buttonlookup[event.detail.button])
+  }
+})
+gamepads.start()
 
 // mouse && touch input - used to activate :tap labels
 
