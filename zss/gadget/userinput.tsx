@@ -9,11 +9,17 @@ import {
   useEffect,
   useState,
 } from 'react'
+import { objectKeys } from 'ts-extras'
 import { createdevice } from 'zss/device'
-import { vm_cli } from 'zss/device/api'
+import { api_log, vm_cli, vm_doot, vm_input, vm_local } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { INPUT } from 'zss/gadget/data/types'
+import {
+  INPUT,
+  INPUT_ALT,
+  INPUT_CTRL,
+  INPUT_SHIFT,
+} from 'zss/gadget/data/types'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { dirfromdelta } from 'zss/words/dir'
 import { ismac } from 'zss/words/system'
@@ -21,30 +27,34 @@ import { DIR, NAME } from 'zss/words/types'
 
 // user input
 
+type INPUT_STATE = Record<INPUT, boolean>
+
 export type UserInputMods = {
   alt: boolean
   ctrl: boolean
   shift: boolean
 }
 
-const inputstate: Record<INPUT, boolean> = {
-  [INPUT.NONE]: false,
-  [INPUT.ALT]: false,
-  [INPUT.CTRL]: false,
-  [INPUT.SHIFT]: false,
-  [INPUT.MOVE_UP]: false,
-  [INPUT.MOVE_DOWN]: false,
-  [INPUT.MOVE_LEFT]: false,
-  [INPUT.MOVE_RIGHT]: false,
-  [INPUT.OK_BUTTON]: false,
-  [INPUT.CANCEL_BUTTON]: false,
-  [INPUT.MENU_BUTTON]: false,
+const inputstates: Record<number, INPUT_STATE> = {}
+function playerlocal(index: number) {
+  return `${registerreadplayer()}local${index}`
 }
 
 // handle input repeat
 let acc = 0
+let localtick = 0
 let previous = performance.now()
 export const INPUT_RATE = 200
+
+const INPUT_OPS = [
+  INPUT.MOVE_UP,
+  INPUT.MOVE_DOWN,
+  INPUT.MOVE_LEFT,
+  INPUT.MOVE_RIGHT,
+  INPUT.OK_BUTTON,
+  INPUT.CANCEL_BUTTON,
+  INPUT.MENU_BUTTON,
+]
 
 function pollinput() {
   const now = performance.now()
@@ -53,41 +63,66 @@ function pollinput() {
   acc += delta
   if (acc >= INPUT_RATE) {
     acc %= INPUT_RATE
-    // signal input state
-    const mods: UserInputMods = {
-      alt: !!inputstate[INPUT.ALT],
-      ctrl: !!inputstate[INPUT.CTRL],
-      shift: !!inputstate[INPUT.SHIFT],
-    }
-    const inputs = [
-      INPUT.MOVE_UP,
-      INPUT.MOVE_DOWN,
-      INPUT.MOVE_LEFT,
-      INPUT.MOVE_RIGHT,
-      INPUT.OK_BUTTON,
-      INPUT.CANCEL_BUTTON,
-      INPUT.MENU_BUTTON,
-    ]
-    inputs.forEach((input) => {
-      if (inputstate[input]) {
-        userinputinvoke(input, mods)
+    const idx = objectKeys(inputstates)
+    for (let i = 0; i < idx.length; ++i) {
+      const index = parseFloat(idx[i])
+      const inputstate = inputstates[index]
+      // signal input state
+      const mods: UserInputMods = {
+        alt: !!inputstate[INPUT.ALT],
+        ctrl: !!inputstate[INPUT.CTRL],
+        shift: !!inputstate[INPUT.SHIFT],
       }
-    })
+      for (let ii = 0; ii < INPUT_OPS.length; ++ii) {
+        const input = INPUT_OPS[ii]
+        if (inputstate[input]) {
+          userinputinvoke(index, input, mods)
+        }
+      }
+    }
   }
 
+  ++localtick
   previous = now
   setTimeout(pollinput, 100)
+
+  if (localtick > 32) {
+    localtick = 0
+    const idx = objectKeys(inputstates)
+    for (let i = 0; i < idx.length; ++i) {
+      const index = parseFloat(idx[i])
+      vm_doot(SOFTWARE, playerlocal(index))
+    }
+  }
 }
 pollinput()
 
-function inputdown(input: INPUT) {
+function readinput(index: number): INPUT_STATE {
+  inputstates[index] = inputstates[index] ?? {
+    [INPUT.NONE]: false,
+    [INPUT.ALT]: false,
+    [INPUT.CTRL]: false,
+    [INPUT.SHIFT]: false,
+    [INPUT.MOVE_UP]: false,
+    [INPUT.MOVE_DOWN]: false,
+    [INPUT.MOVE_LEFT]: false,
+    [INPUT.MOVE_RIGHT]: false,
+    [INPUT.OK_BUTTON]: false,
+    [INPUT.CANCEL_BUTTON]: false,
+    [INPUT.MENU_BUTTON]: false,
+  }
+  return inputstates[index]
+}
+
+function inputdown(index: number, input: INPUT) {
+  const inputstate = readinput(index)
   // make sure to trigger input event
   // when we change from false to true state
   if (!inputstate[input]) {
     // reset input repeat
     acc = 0
     // emit input event
-    userinputinvoke(input, {
+    userinputinvoke(index, input, {
       alt: inputstate[INPUT.ALT],
       ctrl: inputstate[INPUT.CTRL],
       shift: inputstate[INPUT.SHIFT],
@@ -97,7 +132,8 @@ function inputdown(input: INPUT) {
   inputstate[input] = true
 }
 
-function inputup(input: INPUT) {
+function inputup(index: number, input: INPUT) {
+  const inputstate = readinput(index)
   inputstate[input] = false
 }
 
@@ -120,9 +156,25 @@ export function modsfromevent(event: KeyboardEvent): UserInputMods {
   }
 }
 
-function userinputinvoke(input: INPUT, mods: UserInputMods) {
-  // console.info('userinputinvoke', INPUT[input], mods)
-  user.root.emit(INPUT[input], mods)
+function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
+  if (index === 0) {
+    // primary input
+    user.root.emit(INPUT[input], mods)
+  } else {
+    // local multiplayer input
+    let bits = 0
+    const player = playerlocal(index)
+    if (mods.alt) {
+      bits |= INPUT_ALT
+    }
+    if (mods.ctrl) {
+      bits |= INPUT_CTRL
+    }
+    if (mods.shift) {
+      bits |= INPUT_SHIFT
+    }
+    vm_input(SOFTWARE, player, input, bits)
+  }
 }
 
 document.addEventListener(
@@ -157,44 +209,44 @@ document.addEventListener(
     }
 
     if (mods.alt) {
-      inputdown(INPUT.ALT)
+      inputdown(0, INPUT.ALT)
     } else {
-      inputup(INPUT.ALT)
+      inputup(0, INPUT.ALT)
     }
     if (mods.ctrl) {
-      inputdown(INPUT.CTRL)
+      inputdown(0, INPUT.CTRL)
     } else {
-      inputup(INPUT.CTRL)
+      inputup(0, INPUT.CTRL)
     }
     if (mods.shift) {
-      inputdown(INPUT.SHIFT)
+      inputdown(0, INPUT.SHIFT)
     } else {
-      inputup(INPUT.SHIFT)
+      inputup(0, INPUT.SHIFT)
     }
 
     // keyboard built-in player inputs
     switch (key) {
       case 'arrowleft':
-        inputdown(INPUT.MOVE_LEFT)
+        inputdown(0, INPUT.MOVE_LEFT)
         break
       case 'arrowright':
-        inputdown(INPUT.MOVE_RIGHT)
+        inputdown(0, INPUT.MOVE_RIGHT)
         break
       case 'arrowup':
-        inputdown(INPUT.MOVE_UP)
+        inputdown(0, INPUT.MOVE_UP)
         break
       case 'arrowdown':
-        inputdown(INPUT.MOVE_DOWN)
+        inputdown(0, INPUT.MOVE_DOWN)
         break
       case 'enter':
-        inputdown(INPUT.OK_BUTTON)
+        inputdown(0, INPUT.OK_BUTTON)
         break
       case 'esc':
       case 'escape':
-        inputdown(INPUT.CANCEL_BUTTON)
+        inputdown(0, INPUT.CANCEL_BUTTON)
         break
       case 'tab':
-        inputdown(INPUT.MENU_BUTTON)
+        inputdown(0, INPUT.MENU_BUTTON)
         break
       case 's':
         if (mods.ctrl) {
@@ -234,51 +286,51 @@ document.addEventListener(
     const mods = modsfromevent(event)
 
     if (mods.alt) {
-      inputdown(INPUT.ALT)
+      inputdown(0, INPUT.ALT)
     } else {
-      inputup(INPUT.ALT)
+      inputup(0, INPUT.ALT)
     }
     if (mods.ctrl) {
-      inputdown(INPUT.CTRL)
+      inputdown(0, INPUT.CTRL)
     } else {
-      inputup(INPUT.CTRL)
+      inputup(0, INPUT.CTRL)
     }
     if (mods.shift) {
-      inputdown(INPUT.SHIFT)
+      inputdown(0, INPUT.SHIFT)
     } else {
-      inputup(INPUT.SHIFT)
+      inputup(0, INPUT.SHIFT)
     }
 
     // keyboard built-in player inputs
     switch (key) {
       case 'meta':
         // special case for macos cmd + arrow keys
-        inputup(INPUT.MOVE_LEFT)
-        inputup(INPUT.MOVE_RIGHT)
-        inputup(INPUT.MOVE_UP)
-        inputup(INPUT.MOVE_DOWN)
+        inputup(0, INPUT.MOVE_LEFT)
+        inputup(0, INPUT.MOVE_RIGHT)
+        inputup(0, INPUT.MOVE_UP)
+        inputup(0, INPUT.MOVE_DOWN)
         break
       case 'arrowleft':
-        inputup(INPUT.MOVE_LEFT)
+        inputup(0, INPUT.MOVE_LEFT)
         break
       case 'arrowright':
-        inputup(INPUT.MOVE_RIGHT)
+        inputup(0, INPUT.MOVE_RIGHT)
         break
       case 'arrowup':
-        inputup(INPUT.MOVE_UP)
+        inputup(0, INPUT.MOVE_UP)
         break
       case 'arrowdown':
-        inputup(INPUT.MOVE_DOWN)
+        inputup(0, INPUT.MOVE_DOWN)
         break
       case 'enter':
-        inputup(INPUT.OK_BUTTON)
+        inputup(0, INPUT.OK_BUTTON)
         break
       case 'esc':
       case 'escape':
-        inputup(INPUT.CANCEL_BUTTON)
+        inputup(0, INPUT.CANCEL_BUTTON)
         break
       case 'tab':
-        inputup(INPUT.MENU_BUTTON)
+        inputup(0, INPUT.MENU_BUTTON)
         break
     }
   },
@@ -289,12 +341,12 @@ createdevice('userinput', ['tock'], (message) => {
   switch (message.target) {
     case 'up':
       if (isnumber(message.data)) {
-        inputup(message.data)
+        inputup(0, message.data)
       }
       break
     case 'down':
       if (isnumber(message.data)) {
-        inputdown(message.data)
+        inputdown(0, message.data)
       }
       break
   }
@@ -349,75 +401,47 @@ function writeaxis(index: number, axis: number, value: number) {
   const nextleft = dirfromdelta(axisstate[0] ?? 0, axisstate[1] ?? 0)
   const nextright = dirfromdelta(axisstate[2] ?? 0, axisstate[3] ?? 0)
   if (prevleft !== nextleft) {
+    inputup(index, INPUT.MOVE_LEFT)
+    inputup(index, INPUT.MOVE_RIGHT)
+    inputup(index, INPUT.MOVE_UP)
+    inputup(index, INPUT.MOVE_DOWN)
     switch (nextleft) {
-      case DIR.IDLE:
-        inputup(INPUT.MOVE_LEFT)
-        inputup(INPUT.MOVE_RIGHT)
-        inputup(INPUT.MOVE_UP)
-        inputup(INPUT.MOVE_DOWN)
-        break
       case DIR.NORTH:
-        inputdown(INPUT.MOVE_UP)
-        inputup(INPUT.MOVE_LEFT)
-        inputup(INPUT.MOVE_RIGHT)
-        inputup(INPUT.MOVE_DOWN)
+        inputdown(index, INPUT.MOVE_UP)
         break
       case DIR.SOUTH:
-        inputdown(INPUT.MOVE_DOWN)
-        inputup(INPUT.MOVE_LEFT)
-        inputup(INPUT.MOVE_RIGHT)
-        inputup(INPUT.MOVE_UP)
+        inputdown(index, INPUT.MOVE_DOWN)
         break
       case DIR.WEST:
-        inputdown(INPUT.MOVE_LEFT)
-        inputup(INPUT.MOVE_UP)
-        inputup(INPUT.MOVE_RIGHT)
-        inputup(INPUT.MOVE_DOWN)
+        inputdown(index, INPUT.MOVE_LEFT)
         break
       case DIR.EAST:
-        inputdown(INPUT.MOVE_RIGHT)
-        inputup(INPUT.MOVE_LEFT)
-        inputup(INPUT.MOVE_UP)
-        inputup(INPUT.MOVE_DOWN)
+        inputdown(index, INPUT.MOVE_RIGHT)
         break
     }
   }
   if (prevright !== nextright) {
+    if (nextright === DIR.IDLE) {
+      inputup(index, INPUT.SHIFT)
+    } else {
+      inputdown(index, INPUT.SHIFT)
+    }
+    inputup(index, INPUT.MOVE_LEFT)
+    inputup(index, INPUT.MOVE_RIGHT)
+    inputup(index, INPUT.MOVE_UP)
+    inputup(index, INPUT.MOVE_DOWN)
     switch (nextright) {
-      case DIR.IDLE:
-        inputup(INPUT.SHIFT)
-        inputup(INPUT.MOVE_LEFT)
-        inputup(INPUT.MOVE_RIGHT)
-        inputup(INPUT.MOVE_UP)
-        inputup(INPUT.MOVE_DOWN)
-        break
       case DIR.NORTH:
-        inputdown(INPUT.SHIFT)
-        inputdown(INPUT.MOVE_UP)
-        inputup(INPUT.MOVE_LEFT)
-        inputup(INPUT.MOVE_RIGHT)
-        inputup(INPUT.MOVE_DOWN)
+        inputdown(index, INPUT.MOVE_UP)
         break
       case DIR.SOUTH:
-        inputdown(INPUT.SHIFT)
-        inputdown(INPUT.MOVE_DOWN)
-        inputup(INPUT.MOVE_LEFT)
-        inputup(INPUT.MOVE_RIGHT)
-        inputup(INPUT.MOVE_UP)
+        inputdown(index, INPUT.MOVE_DOWN)
         break
       case DIR.WEST:
-        inputdown(INPUT.SHIFT)
-        inputdown(INPUT.MOVE_LEFT)
-        inputup(INPUT.MOVE_UP)
-        inputup(INPUT.MOVE_RIGHT)
-        inputup(INPUT.MOVE_DOWN)
+        inputdown(index, INPUT.MOVE_LEFT)
         break
       case DIR.EAST:
-        inputdown(INPUT.SHIFT)
-        inputdown(INPUT.MOVE_RIGHT)
-        inputup(INPUT.MOVE_LEFT)
-        inputup(INPUT.MOVE_UP)
-        inputup(INPUT.MOVE_DOWN)
+        inputdown(index, INPUT.MOVE_RIGHT)
         break
     }
   }
@@ -428,19 +452,26 @@ const gamepads = new GamepadListener({
   deadZone: 0.3,
 })
 gamepads.on('gamepad:connected', (event: any) => {
-  console.info(event)
+  const player = registerreadplayer()
+  api_log(SOFTWARE, player, `connected ${event.detail.gamepad.id}`)
+  readinput(event.detail.index)
+  if (event.detail.index > 0) {
+    vm_local(SOFTWARE, playerlocal(event.detail.index))
+  }
 })
 gamepads.on('gamepad:disconnected', (event: any) => {
-  console.info(event)
+  const player = registerreadplayer()
+  api_log(SOFTWARE, player, `disconnected gamepad ${event.detail.index}`)
+  delete inputstates[event.detail.index]
 })
 gamepads.on('gamepad:axis', (event: any) => {
   writeaxis(event.detail.index, event.detail.axis, event.detail.value)
 })
 gamepads.on('gamepad:button', (event: any) => {
   if (event.detail.value) {
-    inputdown(buttonlookup[event.detail.button])
+    inputdown(event.detail.index, buttonlookup[event.detail.button])
   } else {
-    inputup(buttonlookup[event.detail.button])
+    inputup(event.detail.index, buttonlookup[event.detail.button])
   }
 })
 gamepads.start()

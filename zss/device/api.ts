@@ -407,6 +407,10 @@ export function vm_login(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:login')
 }
 
+export function vm_local(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:local')
+}
+
 export function vm_logout(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:logout')
 }

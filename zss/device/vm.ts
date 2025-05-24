@@ -36,6 +36,7 @@ import {
   memoryrestartallchipsandflags,
   memorysetbook,
   memoryclirepeatlast,
+  memoryhasflags,
 } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
 import {
@@ -243,6 +244,17 @@ const vm = createdevice(
           register_loginfail(vm, message.player)
         }
         break
+      case 'local':
+        // attempt login
+        if (memoryplayerlogin(message.player)) {
+          // start tracking
+          tracking[message.player] = 0
+          api_log(vm, memoryreadoperator(), `login from ${message.player}`)
+        } else {
+          // signal failure
+          register_loginfail(vm, message.player)
+        }
+        break
       case 'doot':
         // player keepalive
         tracking[message.player] = 0
@@ -253,15 +265,20 @@ const vm = createdevice(
         ++trackinglastlog[message.player]
         break
       case 'input': {
-        // player input
-        const flags = memoryreadflags(message.player)
-        const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
-        // add to input queue
-        if (!isarray(flags.inputqueue)) {
-          flags.inputqueue = []
-        }
-        if (input !== INPUT.NONE) {
-          flags.inputqueue.push([input, mods])
+        if (
+          !message.player.includes('local') ||
+          memoryhasflags(message.player)
+        ) {
+          // player input
+          const flags = memoryreadflags(message.player)
+          const [input = INPUT.NONE, mods = 0] = message.data ?? [INPUT.NONE, 0]
+          // add to input queue
+          if (!isarray(flags.inputqueue)) {
+            flags.inputqueue = []
+          }
+          if (input !== INPUT.NONE) {
+            flags.inputqueue.push([input, mods])
+          }
         }
         break
       }
