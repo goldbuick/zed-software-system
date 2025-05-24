@@ -364,6 +364,10 @@ export function bookreadboard(
   return codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
 }
 
+export function bookhasflags(book: MAYBE<BOOK>, id: string) {
+  return !!book?.flags[id]
+}
+
 export function bookreadflags(book: MAYBE<BOOK>, id: string) {
   if (!book) {
     return {}

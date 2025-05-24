@@ -26,6 +26,7 @@ import {
   bookclearflags,
   bookelementkindread,
   bookensurecodepagewithtype,
+  bookhasflags,
   bookplayermovetoboard,
   bookplayerreadactive,
   bookplayerreadboard,
@@ -213,6 +214,11 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
 export function memoryreadflags(id: string) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   return bookreadflags(mainbook, id)
+}
+
+export function memoryhasflags(id: string) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  return bookhasflags(mainbook, id)
 }
 
 export function memoryreadbookflags() {

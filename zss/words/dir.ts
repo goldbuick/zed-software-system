@@ -31,9 +31,7 @@ export function ptapplydir(
   return pt
 }
 
-export function dirfrompts(last: PT, current: PT) {
-  const dx = current.x - last.x
-  const dy = current.y - last.y
+export function dirfromdelta(dx: number, dy: number) {
   if (dx < 0) {
     return DIR.WEST
   }
@@ -46,6 +44,11 @@ export function dirfrompts(last: PT, current: PT) {
   if (dy > 0) {
     return DIR.SOUTH
   }
+  return DIR.IDLE
+}
+
+export function dirfrompts(last: PT, current: PT) {
+  return dirfromdelta(current.x - last.x, current.y - last.y)
 }
 
 export const dirconsts = {
