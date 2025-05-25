@@ -198,7 +198,7 @@ export function createsource(sourcetype: SOURCE_TYPE) {
         type: SOURCE_TYPE.BELLS,
         synth: new FMSynth(),
         sparkle: new MetalSynth({
-          volume: -12,
+          volume: -16,
           envelope: { attack: 0.001, decay: 1.4, release: 0.321 },
           harmonicity: 5.1,
           modulationIndex: 32,

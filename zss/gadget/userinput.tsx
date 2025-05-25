@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
+// @ts-expect-error yes
 import { GamepadListener } from 'gamepad.js'
 import isHotKey from 'is-hotkey'
 import mitt from 'mitt'
@@ -373,12 +374,12 @@ const BUTTON_LEFT = 14
 const BUTTON_RIGHT = 15
 
 const buttonlookup: Record<number, INPUT> = {
-  [BUTTON_A]: INPUT.OK_BUTTON,
-  [BUTTON_B]: INPUT.CANCEL_BUTTON,
-  [BUTTON_X]: INPUT.OK_BUTTON,
-  [BUTTON_Y]: INPUT.CANCEL_BUTTON,
-  [BUTTON_LEFT_SHOULDER]: INPUT.ALT,
-  [BUTTON_RIGHT_SHOULDER]: INPUT.CTRL,
+  [BUTTON_Y]: INPUT.MOVE_UP,
+  [BUTTON_A]: INPUT.MOVE_DOWN,
+  [BUTTON_X]: INPUT.MOVE_LEFT,
+  [BUTTON_B]: INPUT.MOVE_RIGHT,
+  [BUTTON_LEFT_SHOULDER]: INPUT.OK_BUTTON,
+  [BUTTON_RIGHT_SHOULDER]: INPUT.CANCEL_BUTTON,
   [BUTTON_LEFT_TRIGGER]: INPUT.SHIFT,
   [BUTTON_RIGHT_TRIGGER]: INPUT.SHIFT,
   [BUTTON_MENU]: INPUT.MENU_BUTTON,
@@ -468,10 +469,30 @@ gamepads.on('gamepad:axis', (event: any) => {
   writeaxis(event.detail.index, event.detail.axis, event.detail.value)
 })
 gamepads.on('gamepad:button', (event: any) => {
-  if (event.detail.value) {
-    inputdown(event.detail.index, buttonlookup[event.detail.button])
-  } else {
-    inputup(event.detail.index, buttonlookup[event.detail.button])
+  const index = event.detail.index
+  switch (event.detail.button) {
+    case BUTTON_X:
+    case BUTTON_B:
+    case BUTTON_Y:
+    case BUTTON_A:
+      inputup(index, INPUT.MOVE_UP)
+      inputup(index, INPUT.MOVE_DOWN)
+      inputup(index, INPUT.MOVE_LEFT)
+      inputup(index, INPUT.MOVE_RIGHT)
+      if (event.detail.value) {
+        inputdown(event.detail.index, INPUT.SHIFT)
+        inputdown(event.detail.index, buttonlookup[event.detail.button])
+      } else {
+        inputup(event.detail.index, INPUT.SHIFT)
+      }
+      break
+    default:
+      if (event.detail.value) {
+        inputdown(event.detail.index, buttonlookup[event.detail.button])
+      } else {
+        inputup(event.detail.index, buttonlookup[event.detail.button])
+      }
+      break
   }
 })
 gamepads.start()
