@@ -444,7 +444,6 @@ const register = createdevice(
       case 'share':
         doasync(register, message.player, async function () {
           // unpack short url before sharing
-          const urlhash = readurlhash()
           const urlcontent = await readurlcontent()
           // share full content
           const out = `#${urlcontent}`
@@ -453,8 +452,6 @@ const register = createdevice(
           // gen global shorturl
           const url = await shorturl(location.href)
           writecopyit(register, message.player, url, url)
-          // reset hash
-          location.hash = `#${urlhash}`
         })
         break
       case 'nuke':
