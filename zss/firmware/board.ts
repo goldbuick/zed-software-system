@@ -12,6 +12,7 @@ import {
 import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
 import {
   bookelementkindread,
+  bookelementstatread,
   bookplayermovetoboard,
   bookreadcodepagesbytypeandstat,
   bookreadobject,
@@ -119,33 +120,50 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     const pt = ptapplydir(dir.destpt, dirfrompts(from, dir.destpt))
     bookboardmoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
   }
-
   // get kind's collision type
   const [kindname] = kind
-  const kinddata =
-    bookreadobject(READ_CONTEXT.book, kindname) ??
-    bookreadterrain(READ_CONTEXT.book, kindname)
-  const collision = kinddata?.collision ?? COLLISION.ISWALK
 
-  // validate placement works
-  const blocked = bookboardcheckblockedobject(
-    READ_CONTEXT.book,
-    READ_CONTEXT.board,
-    collision,
-    dir.destpt,
-  )
-
-  // write new element
-  if (!blocked) {
-    const element = bookboardwritefromkind(
+  // handle terrain put
+  const terrainkinddata = bookreadterrain(READ_CONTEXT.book, kindname)
+  if (ispresent(terrainkinddata)) {
+    bookboardwritefromkind(
       READ_CONTEXT.book,
       READ_CONTEXT.board,
       kind,
       dir.destpt,
       id,
     )
-    if (ispresent(element) && ispresent(arg)) {
-      element.arg = arg
+  }
+
+  // handle object put
+  const objectkinddata = bookreadobject(READ_CONTEXT.book, kindname)
+  if (ispresent(objectkinddata)) {
+    const kinddata =
+      bookreadobject(READ_CONTEXT.book, kindname) ??
+      bookreadterrain(READ_CONTEXT.book, kindname)
+    const collision =
+      bookelementstatread(READ_CONTEXT.book, kinddata, 'collision') ??
+      COLLISION.ISWALK
+    // validate placement works
+    const blocked = bookboardcheckblockedobject(
+      READ_CONTEXT.book,
+      READ_CONTEXT.board,
+      collision,
+      dir.destpt,
+    )
+
+    // write new element
+    if (!blocked) {
+      const element = bookboardwritefromkind(
+        READ_CONTEXT.book,
+        READ_CONTEXT.board,
+        kind,
+        dir.destpt,
+        id,
+      )
+      if (ispresent(element) && ispresent(arg)) {
+        element.arg = arg
+      }
     }
   }
 
