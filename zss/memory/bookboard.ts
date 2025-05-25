@@ -852,13 +852,14 @@ export function bookboardreadgroup(
   }
 
   function checkelement(el: BOARD_ELEMENT) {
-    const stat = bookelementstatread(
+    const statnamed = bookelementstatread(
       book,
       el,
       targetgroup as BOARD_ELEMENT_STAT,
     )
-    const group = bookelementgroupread(book, el)
-    return ispresent(stat) || group === targetgroup
+    return (
+      ispresent(statnamed) || bookelementgroupread(book, el) === targetgroup
+    )
   }
 
   // read target group
