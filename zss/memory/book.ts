@@ -10,6 +10,7 @@ import { bookboardcheckblockedobject, bookboardsetlookup } from './bookboard'
 import {
   codepagereaddata,
   codepagereadname,
+  codepagereadstat,
   codepagereadstats,
   codepagereadtype,
   codepagetypetostring,
@@ -286,23 +287,27 @@ export function bookelementstatread(
   stat: BOARD_ELEMENT_STAT,
 ) {
   const kind = bookelementkindread(book, element)
-  return element?.[stat] ?? kind?.[stat]
+  return (
+    element?.[stat] ??
+    kind?.[stat] ??
+    codepagereadstat(bookreadcodepagebyaddress(book, kind?.id ?? ''), stat)
+  )
 }
 
+let ugroup = 0
 export function bookelementgroupread(
   book: MAYBE<BOOK>,
   element: MAYBE<BOARD_ELEMENT>,
 ) {
-  let groupid = createsid()
   const groupstat = bookelementstatread(book, element, 'group')
   if (isstring(groupstat)) {
-    groupid = groupstat
+    return groupstat
   }
   const kindgroupstat = bookelementstatread(book, element?.kinddata, 'group')
   if (isstring(kindgroupstat)) {
-    groupid = kindgroupstat
+    return kindgroupstat
   }
-  return groupid
+  return `group${ugroup++}`
 }
 
 export function bookelementdisplayread(

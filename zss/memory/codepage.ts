@@ -409,6 +409,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       if (!ispresent(codepage.object)) {
         codepage.object = createboardelement()
       }
+      codepage.object.id = codepage.id
       codepage.object.name = codepagereadname(codepage)
       codepage.object.category = CATEGORY.ISOBJECT
       codepageapplyelementstats(
@@ -422,6 +423,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       if (!ispresent(codepage.terrain)) {
         codepage.terrain = createboardelement()
       }
+      codepage.terrain.id = codepage.id
       codepage.terrain.name = codepagereadname(codepage)
       codepage.terrain.category = CATEGORY.ISTERRAIN
       codepageapplyelementstats(
