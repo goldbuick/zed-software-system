@@ -834,6 +834,9 @@ export function memoryrun(address: string) {
     return
   }
 
+  // cache context
+  const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
+
   const id = `${address}_run`
   const itemname = NAME(
     READ_CONTEXT.element.name ?? READ_CONTEXT.element.kinddata?.name ?? '',
@@ -841,6 +844,12 @@ export function memoryrun(address: string) {
   const itemcode = codepage?.code ?? ''
   // set arg to value on chip with id = id
   os.once(id, DRIVER_TYPE.RUNTIME, itemname, itemcode)
+
+  // restore context
+  objectKeys(OLD_CONTEXT).forEach((key) => {
+    // @ts-expect-error dont bother me
+    READ_CONTEXT[key] = OLD_CONTEXT[key]
+  })
 }
 
 export function memoryreadgadgetlayers(player: string): {
