@@ -42,10 +42,10 @@ function playerlocal(index: number) {
 }
 
 // handle input repeat
-let acc = 0
+const acc: Record<number, number> = {}
 let localtick = 0
 let previous = performance.now()
-export const INPUT_RATE = 200
+export const INPUT_RATE = 100
 
 const INPUT_OPS = [
   INPUT.MOVE_UP,
@@ -61,12 +61,13 @@ function pollinput() {
   const now = performance.now()
   const delta = now - previous
 
-  acc += delta
-  if (acc >= INPUT_RATE) {
-    acc %= INPUT_RATE
-    const idx = objectKeys(inputstates)
-    for (let i = 0; i < idx.length; ++i) {
-      const index = parseFloat(idx[i])
+  const idx = objectKeys(inputstates)
+  for (let i = 0; i < idx.length; ++i) {
+    const index = parseFloat(idx[i])
+    acc[index] = acc[index] ?? 0
+    acc[index] += delta
+    if (acc[index] >= INPUT_RATE) {
+      acc[index] %= INPUT_RATE
       const inputstate = inputstates[index]
       // signal input state
       const mods: UserInputMods = {
@@ -121,7 +122,7 @@ function inputdown(index: number, input: INPUT) {
   // when we change from false to true state
   if (!inputstate[input]) {
     // reset input repeat
-    acc = 0
+    acc[input] = -INPUT_RATE
     // emit input event
     userinputinvoke(index, input, {
       alt: inputstate[INPUT.ALT],
