@@ -9,7 +9,7 @@ export function ispt(value: any): value is PT {
 
 export function ptapplydir(
   pt: PT,
-  dir: DIR.NORTH | DIR.SOUTH | DIR.WEST | DIR.EAST | undefined,
+  dir: DIR.NORTH | DIR.SOUTH | DIR.WEST | DIR.EAST | DIR.IDLE | undefined,
 ): PT {
   switch (dir) {
     case DIR.NORTH:

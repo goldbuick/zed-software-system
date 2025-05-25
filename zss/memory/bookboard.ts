@@ -602,9 +602,10 @@ export function bookboardcheckblockedobject(
   // blocked by terrain
   const mayberterrain = board.terrain[targetidx]
   if (ispresent(mayberterrain)) {
-    const terrainkind = bookelementkindread(book, mayberterrain)
-    const terraincollision = mayberterrain.collision ?? terrainkind?.collision
-    return checkdoescollide(collision, terraincollision)
+    return checkdoescollide(
+      collision,
+      bookelementstatread(book, mayberterrain, 'collision') ?? COLLISION.ISWALK,
+    )
   }
 
   return false
