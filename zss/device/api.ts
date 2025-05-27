@@ -321,6 +321,19 @@ export function synth_voicefx(
   device.emit(player, 'synth:voicefx', [idx, fx, config, value])
 }
 
+export function register_config(
+  device: DEVICELIKE,
+  player: string,
+  name: string,
+  value: string,
+) {
+  device.emit(player, 'register:config', [name, value])
+}
+
+export function register_configshow(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:configshow')
+}
+
 export function register_inspector(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:inspector')
 }
