@@ -67,7 +67,7 @@ function pollinput() {
     acc[index] = acc[index] ?? 0
     acc[index] += delta
     if (acc[index] >= INPUT_RATE) {
-      acc[index] %= INPUT_RATE
+      acc[index] -= INPUT_RATE
       const inputstate = inputstates[index]
       // signal input state
       const mods: UserInputMods = {
@@ -86,7 +86,7 @@ function pollinput() {
 
   ++localtick
   previous = now
-  setTimeout(pollinput, 100)
+  setTimeout(pollinput, 10)
 
   if (localtick > 32) {
     localtick = 0
@@ -122,7 +122,7 @@ function inputdown(index: number, input: INPUT) {
   // when we change from false to true state
   if (!inputstate[input]) {
     // reset input repeat
-    acc[input] = -INPUT_RATE
+    acc[index] = INPUT_RATE * -2
     // emit input event
     userinputinvoke(index, input, {
       alt: inputstate[INPUT.ALT],
