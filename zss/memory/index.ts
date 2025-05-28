@@ -529,8 +529,11 @@ export function memorymoveobject(
       )
     } else if (element.collision === COLLISION.ISBULLET) {
       // blocked is touched by bullet
-      const fromplayer = ispid(element.party)
-      if (fromplayer) {
+      if (
+        bookelementstatread(book, blocked, 'collision') === COLLISION.ISBULLET
+      ) {
+        sendinteraction('', element, blocked, 'thud')
+      } else if (ispid(element.party)) {
         sendinteraction(
           element.id,
           element,
@@ -539,7 +542,7 @@ export function memorymoveobject(
         )
       } else {
         sendinteraction(
-          element.id,
+          '',
           element,
           blocked,
           blockedbyplayer ? 'shot' : 'partyshot',
@@ -550,6 +553,7 @@ export function memorymoveobject(
     }
 
     // delete destructible elements
+
     if (bookelementstatread(book, blocked, 'destructible')) {
       if (ispresent(blocked?.id)) {
         // mark target for deletion
@@ -563,9 +567,11 @@ export function memorymoveobject(
         // overwrite terrain with empty
         boardsetterrain(board, { x: dest.x, y: dest.y })
       }
+
       //
       return true
     }
+
     //
     return false
   }

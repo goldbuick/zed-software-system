@@ -1,4 +1,12 @@
-import { Distortion, FeedbackDelay, Phaser, Reverb, Time, Vibrato } from 'tone'
+import {
+  AutoWah,
+  Distortion,
+  FeedbackDelay,
+  Phaser,
+  Reverb,
+  Time,
+  Vibrato,
+} from 'tone'
 import { deepcopy } from 'zss/mapping/types'
 
 import { FrequencyCrusher } from './synthworkletnodes'
@@ -24,6 +32,9 @@ export function createfx() {
 
   const fc = new FrequencyCrusher()
   const resetfc = deepcopy(fc.get())
+
+  const autowah = new AutoWah()
+  const resetautowah = deepcopy(autowah.get())
 
   function applyreset() {
     reverb.set({
@@ -60,6 +71,10 @@ export function createfx() {
       wet: 0,
       rate: 32,
     })
+    autowah.set({
+      ...resetautowah,
+      wet: 0,
+    })
   }
 
   applyreset()
@@ -72,6 +87,7 @@ export function createfx() {
     vibrato,
     distortion,
     applyreset,
+    autowah,
     // aliases for fx
     fcrush: fc,
     distort: distortion,
