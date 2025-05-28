@@ -6,6 +6,7 @@ import { isnumber, ispresent, MAYBE } from 'zss/mapping/types'
 
 import { AUDIO_SYNTH } from './synth'
 import { ECHO_OFF, ECHO_ON } from './synthfx'
+import { synthvoicefxautowahconfig } from './synthvoicefxautowah'
 import { synthvoicefxdistortionconfig } from './synthvoicefxdistortconfig'
 import { synthvoicefxechoconfig } from './synthvoicefxechoconfig'
 import { synthvoicefxfcrushconfig } from './synthvoicefxfcrushconfig'
@@ -74,6 +75,9 @@ export function synthvoicefxconfig(
               break
             case 'vibrato':
               synthvoicefxvibratoconfig(player, synth, index, config, value)
+              break
+            case 'autowah':
+              synthvoicefxautowahconfig(player, synth, index, config, value)
               break
           }
         }

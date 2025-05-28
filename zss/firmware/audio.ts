@@ -44,7 +44,16 @@ function handlesynthvoicefx(
   synth_voicefx(SOFTWARE, player, idx, fx, maybeconfig, maybevalue)
 }
 
-const isfx = ['echo', 'reverb', 'phaser', 'distortion', 'vibrato', 'fc']
+const isfx = [
+  'echo',
+  'reverb',
+  'phaser',
+  'distortion',
+  'vibrato',
+  'fc',
+  'fcrush',
+  'autowah',
+]
 
 function handlesynthvoice(player: string, idx: number, words: WORD[]) {
   const [voiceorfx, ii] = readargs(words, 0, [ARG_TYPE.NUMBER_OR_STRING])
@@ -185,6 +194,12 @@ export const AUDIO_FIRMWARE = createfirmware()
     }
     return 0
   })
+  .command('autowah', (_, words) => {
+    for (let i = 0; i < 3; ++i) {
+      handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'autowah', words)
+    }
+    return 0
+  })
 
 // handle synth voices
 for (let i = 0; i < 8; ++i) {
@@ -218,6 +233,10 @@ for (let i = 0; i < 3; ++i) {
     })
     .command(`vibrato${idx}`, (_, words) => {
       handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'vibrato', words)
+      return 0
+    })
+    .command(`autowah${idx}`, (_, words) => {
+      handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'autowah', words)
       return 0
     })
 }
