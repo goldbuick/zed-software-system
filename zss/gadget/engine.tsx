@@ -9,15 +9,11 @@ import {
 } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
 import { BlendFunction, GlitchMode } from 'postprocessing'
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useState } from 'react'
 import Stats from 'stats.js'
-import {
-  FORCE_CRT_OFF,
-  FORCE_LOW_REZ,
-  FORCE_TOUCH_UI,
-  RUNTIME,
-  STATS_DEV,
-} from 'zss/config'
+import { RUNTIME, STATS_DEV } from 'zss/config'
+import { readconfig, registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
 import { CRTShape } from 'zss/gadget/fx/crt'
 
 import { useDeviceConfig, useMedia } from './hooks'
@@ -29,6 +25,9 @@ import { UserScreen } from './userscreen'
 
 // include all front-end devices
 import 'zss/userspace'
+import { doasync } from 'zss/mapping/func'
+import { ispresent } from 'zss/mapping/types'
+import { NAME } from 'zss/words/types'
 
 export function Engine() {
   const { viewport } = useThree()
@@ -55,21 +54,37 @@ export function Engine() {
   // detect gpu info
   const gputier = useDetectGPU()
 
+  // read config
+  const [forcelowrez, setforcelowrez] = useState(false)
+  const [crt, setcrt] = useState(false)
+  useLayoutEffect(() => {
+    doasync(SOFTWARE, registerreadplayer(), async () => {
+      const lowrez = await readconfig('lowrez')
+      if (NAME(lowrez) === 'on') {
+        setforcelowrez(true)
+      }
+      const crt = await readconfig('crt')
+      if (NAME(crt) !== 'off') {
+        setcrt(true)
+      }
+    })
+  }, [])
+
   // config DRAW_CHAR_SCALE
   const minrez = Math.min(viewwidth, viewheight)
-  const islowrez = minrez < 600 || FORCE_LOW_REZ
+  const islowrez = forcelowrez || minrez < 600
   RUNTIME.DRAW_CHAR_SCALE = islowrez ? 1 : 2
 
   // config LAYOUT
   const islandscape = viewwidth > viewheight
   const showtouchcontrols =
-    FORCE_TOUCH_UI || deviceType === 'touchOnly' || primaryInput === 'touch'
+    deviceType === 'touchOnly' || primaryInput === 'touch'
 
   // config FX
   const shouldcrt =
-    !FORCE_CRT_OFF &&
     !islowrez &&
     !showtouchcontrols &&
+    crt === true &&
     gputier &&
     gputier.tier > 2 &&
     !gputier.isMobile

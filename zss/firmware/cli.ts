@@ -14,6 +14,8 @@ import {
   register_downloadjsonfile,
   bridge_tab,
   api_log,
+  register_config,
+  register_configshow,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -26,7 +28,6 @@ import {
   writetext,
 } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
-import { text, tokenize } from 'zss/lang/lexer'
 import { pick } from 'zss/mapping/array'
 import { randominteger } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
@@ -222,6 +223,18 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   // ---
+  .command('config', (_, words) => {
+    const [name, value] = readargs(words, 0, [
+      ARG_TYPE.MAYBE_NAME,
+      ARG_TYPE.MAYBE_STRING,
+    ])
+    if (isstring(name) && isstring(value)) {
+      register_config(SOFTWARE, READ_CONTEXT.elementfocus, name, value)
+    } else {
+      register_configshow(SOFTWARE, READ_CONTEXT.elementfocus)
+    }
+    return 0
+  })
   .command('bookcreate', (chip, words) => {
     const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
 

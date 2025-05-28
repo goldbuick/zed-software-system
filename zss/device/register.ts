@@ -1,5 +1,9 @@
 import humanid from 'human-id'
-import { get as idbget, update as idbupdate } from 'idb-keyval'
+import {
+  get as idbget,
+  update as idbupdate,
+  entries as idbentries,
+} from 'idb-keyval'
 import { createdevice, parsetarget } from 'zss/device'
 import {
   writecopyit,
@@ -196,7 +200,7 @@ async function loadmem(books: string) {
     return
   }
   // init vm with content
-  const selectedid = (await readselected()) ?? ''
+  const selectedid = (await readconfig(CONFIG_VALUE.SELECTED)) ?? ''
   vm_books(register, myplayerid, books, selectedid)
 }
 
@@ -230,12 +234,27 @@ async function writeurlcontent(exportedbooks: string, label: string) {
   }
 }
 
-async function readselected() {
-  return readidb<string>('SELECTED')
+export enum CONFIG_VALUE {
+  SELECTED = 'SELECTED',
 }
 
-async function writeselected(selected: string) {
-  return writeidb('SELECTED', () => selected)
+export async function readconfig(name: string) {
+  api_log(register, myplayerid, `reading config ${name}`)
+  return readidb<string>(`config_${name}`)
+}
+
+export async function writeconfig(name: string, value: string) {
+  api_log(register, myplayerid, `writing config ${name}`)
+  return writeidb(`config_${name}`, () => value)
+}
+
+async function readconfigall() {
+  const all = await idbentries<string, string>()
+  return all
+    .filter(([key]) => key.startsWith('config_'))
+    .map(([key, value]) => {
+      return [key.replace('config_', ''), value]
+    })
 }
 
 export async function readhistorybuffer() {
@@ -493,14 +512,25 @@ const register = createdevice(
           }
         }
         break
-      case 'select':
+      case 'config':
         doasync(register, message.player, async () => {
-          if (isstring(message.data)) {
-            await writeselected(message.data)
-            // use same solution as a hash change here ...
-            const urlcontent = await readurlcontent()
-            await loadmem(urlcontent)
-            // re-run the vm_init flow
+          if (isarray(message.data)) {
+            const [name, value] = message.data as [string, string]
+            await writeconfig(name, value)
+            api_log(
+              register,
+              message.player,
+              `updated config ${name} to ${value}`,
+            )
+          }
+        })
+        break
+      case 'configshow':
+        doasync(register, message.player, async () => {
+          const all = await readconfigall()
+          writeheader(register, message.player, 'config')
+          for (let i = 0; i < all.length; ++i) {
+            writeoption(register, message.player, all[i][0], all[i][1])
           }
         })
         break

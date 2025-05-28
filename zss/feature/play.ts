@@ -84,7 +84,7 @@ export function invokeplay(
 ) {
   // translate ops into time, note pairs
   let time = starttime
-  let octave = 3
+  let octave = 4
   let duration = '32n'
   let accidental = ''
   let note: SYNTH_NOTE = ''
