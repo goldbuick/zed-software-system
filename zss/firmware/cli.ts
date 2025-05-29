@@ -16,6 +16,7 @@ import {
   api_log,
   register_config,
   register_configshow,
+  vm_loader,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -197,6 +198,15 @@ export const CLI_FIRMWARE = createfirmware()
         SOFTWARE,
         READ_CONTEXT.elementid,
         `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE ${text}`,
+      )
+      // raise event
+      vm_loader(
+        SOFTWARE,
+        READ_CONTEXT.elementid,
+        undefined,
+        'text',
+        `chat:message:game`,
+        `${withuser}:${text}`,
       )
     }
     return 0
