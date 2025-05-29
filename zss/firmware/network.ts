@@ -79,8 +79,7 @@ export const NETWORK_FIRMWARE = createfirmware()
     return 0
   })
   .command('chat', (_, words) => {
-    const [maybechannel] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    const channel = NAME(maybechannel)
+    const [channel] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     if (channel) {
       bridge_chatstart(SOFTWARE, READ_CONTEXT.elementfocus, channel)
     } else {
@@ -89,8 +88,7 @@ export const NETWORK_FIRMWARE = createfirmware()
     return 0
   })
   .command('broadcast', (_, words) => {
-    const [maybestreamkey] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    const streamkey = NAME(maybestreamkey)
+    const [streamkey] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     if (streamkey) {
       bridge_streamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
     } else {
