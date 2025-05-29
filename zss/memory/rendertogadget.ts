@@ -39,41 +39,6 @@ import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK, CODE_PAGE_TYPE } from './types'
 
 import { MEMORY_LABEL, memoryreadbookbysoftware, memoryreadflags } from '.'
 
-let decoticker = 0
-function readdecotickercolor(): COLOR {
-  switch (decoticker++) {
-    case 0:
-      return COLOR.BLUE
-    case 1:
-      return COLOR.BLACK
-    case 2:
-      return COLOR.GREEN
-    case 3:
-      return COLOR.BLACK
-    case 4:
-      return COLOR.CYAN
-    case 5:
-      return COLOR.BLACK
-    case 6:
-      return COLOR.RED
-    case 7:
-      return COLOR.BLACK
-    case 8:
-      return COLOR.PURPLE
-    case 9:
-      return COLOR.BLACK
-    case 10:
-      return COLOR.YELLOW
-    case 11:
-      return COLOR.BLACK
-    case 12:
-      return COLOR.WHITE
-    default:
-      decoticker = 0
-      return COLOR.BLACK
-  }
-}
-
 const pt1 = new Vector2()
 
 const LAYER_CACHE: Record<string, LAYER> = {}
@@ -185,6 +150,7 @@ export function memoryconverttogadgetlayers(
   index: number,
   book: BOOK,
   board: MAYBE<BOARD>,
+  tickercolor: COLOR,
   isprimary: boolean,
   isbaseboard: boolean,
 ): LAYER[] {
@@ -243,7 +209,7 @@ export function memoryconverttogadgetlayers(
     ...createwritetextcontext(
       BOARD_WIDTH,
       BOARD_HEIGHT,
-      readdecotickercolor(),
+      tickercolor,
       COLOR.ONCLEAR,
     ),
     ...tickers,
