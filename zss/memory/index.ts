@@ -12,7 +12,7 @@ import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { COLLISION, NAME, PT } from 'zss/words/types'
+import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
 import { listelementsbyattr } from './atomics'
 import {
@@ -858,7 +858,10 @@ export function memoryrun(address: string) {
   })
 }
 
-export function memoryreadgadgetlayers(player: string): {
+export function memoryreadgadgetlayers(
+  player: string,
+  tickercolor: COLOR,
+): {
   over: LAYER[]
   under: LAYER[]
   layers: LAYER[]
@@ -887,6 +890,7 @@ export function memoryreadgadgetlayers(player: string): {
       0,
       mainbook,
       underboard,
+      tickercolor,
       false,
       true,
     ),
@@ -897,6 +901,7 @@ export function memoryreadgadgetlayers(player: string): {
       under.length,
       mainbook,
       playerboard,
+      tickercolor,
       true,
       graphics === 'flat' ? false : true,
     ),
@@ -907,6 +912,7 @@ export function memoryreadgadgetlayers(player: string): {
       under.length + layers.length,
       mainbook,
       overboard,
+      tickercolor,
       false,
       false,
     ),

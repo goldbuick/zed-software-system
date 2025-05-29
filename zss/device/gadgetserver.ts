@@ -15,6 +15,7 @@ import {
   memoryreadplayerboard,
 } from 'zss/memory'
 import { bookreadflags } from 'zss/memory/book'
+import { COLOR } from 'zss/words/types'
 
 import { gadgetclient_paint, gadgetclient_patch, synth_focus } from './api'
 
@@ -34,6 +35,41 @@ gadgetstateprovider((element) => {
   return initstate()
 })
 
+let decoticker = 0
+function readdecotickercolor(): COLOR {
+  switch (decoticker++) {
+    case 0:
+      return COLOR.BLUE
+    case 1:
+      return COLOR.BLACK
+    case 2:
+      return COLOR.GREEN
+    case 3:
+      return COLOR.BLACK
+    case 4:
+      return COLOR.CYAN
+    case 5:
+      return COLOR.BLACK
+    case 6:
+      return COLOR.RED
+    case 7:
+      return COLOR.BLACK
+    case 8:
+      return COLOR.PURPLE
+    case 9:
+      return COLOR.BLACK
+    case 10:
+      return COLOR.YELLOW
+    case 11:
+      return COLOR.BLACK
+    case 12:
+      return COLOR.WHITE
+    default:
+      decoticker = 0
+      return COLOR.BLACK
+  }
+}
+
 const gadgetserver = createdevice(
   'gadgetserver',
   ['tock', 'second'],
@@ -50,15 +86,19 @@ const gadgetserver = createdevice(
     const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
 
     switch (message.target) {
-      case 'tock':
+      case 'tock': {
+        const tickercolor = readdecotickercolor()
         for (let i = 0; i < activelist.length; ++i) {
           const player = activelist[i]
 
+          // update gadget layers from player's current board
+          const { over, under, layers } = memoryreadgadgetlayers(
+            player,
+            tickercolor,
+          )
+
           // get current state
           const gadget = gadgetstate(player)
-
-          // update gadget layers from player's current board
-          const { over, under, layers } = memoryreadgadgetlayers(player)
           gadget.over = over
           gadget.under = under
           gadget.layers = layers
@@ -72,7 +112,8 @@ const gadgetserver = createdevice(
           }
         }
         break
-      case 'second': {
+      }
+      case 'second':
         for (let i = 0; i < activelist.length; ++i) {
           const player = activelist[i]
           const board = memoryreadplayerboard(player)
@@ -81,7 +122,6 @@ const gadgetserver = createdevice(
           }
         }
         break
-      }
       case 'desync':
         gadgetclient_paint(
           gadgetserver,
