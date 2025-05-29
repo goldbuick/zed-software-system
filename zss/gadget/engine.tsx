@@ -15,6 +15,8 @@ import { RUNTIME, STATS_DEV } from 'zss/config'
 import { readconfig, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { CRTShape } from 'zss/gadget/fx/crt'
+import { doasync } from 'zss/mapping/func'
+import { NAME } from 'zss/words/types'
 
 import { useDeviceConfig, useMedia } from './hooks'
 import { ScreenUI } from './screenui/component'
@@ -25,9 +27,6 @@ import { UserScreen } from './userscreen'
 
 // include all front-end devices
 import 'zss/userspace'
-import { doasync } from 'zss/mapping/func'
-import { ispresent } from 'zss/mapping/types'
-import { NAME } from 'zss/words/types'
 
 export function Engine() {
   const { viewport } = useThree()

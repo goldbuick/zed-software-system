@@ -78,27 +78,23 @@ export const NETWORK_FIRMWARE = createfirmware()
     fetchcommand(arg, label, url, maybemethod, words, ii)
     return 0
   })
-  .command('twitchchat', (_, words) => {
-    const [maybechannel] = readargs(words, 0, [ARG_TYPE.ANY])
-    switch (NAME(maybechannel)) {
-      default:
-        bridge_chatstart(SOFTWARE, READ_CONTEXT.elementfocus, maybechannel)
-        break
-      case 'stop':
-        bridge_chatstop(SOFTWARE, READ_CONTEXT.elementfocus)
-        break
+  .command('chat', (_, words) => {
+    const [maybechannel] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    const channel = NAME(maybechannel)
+    if (channel) {
+      bridge_chatstart(SOFTWARE, READ_CONTEXT.elementfocus, channel)
+    } else {
+      bridge_chatstop(SOFTWARE, READ_CONTEXT.elementfocus)
     }
     return 0
   })
-  .command('twitchbroadcast', (_, words) => {
-    const [maybestreamkey] = readargs(words, 0, [ARG_TYPE.NAME])
-    switch (NAME(maybestreamkey)) {
-      default:
-        bridge_streamstart(SOFTWARE, READ_CONTEXT.elementfocus, maybestreamkey)
-        break
-      case 'stop':
-        bridge_streamstop(SOFTWARE, READ_CONTEXT.elementfocus)
-        break
+  .command('broadcast', (_, words) => {
+    const [maybestreamkey] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    const streamkey = NAME(maybestreamkey)
+    if (streamkey) {
+      bridge_streamstart(SOFTWARE, READ_CONTEXT.elementfocus, streamkey)
+    } else {
+      bridge_streamstop(SOFTWARE, READ_CONTEXT.elementfocus)
     }
     return 0
   })
