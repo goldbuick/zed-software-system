@@ -15,7 +15,10 @@ import {
   LAYER_CONTROL,
   SPRITE,
   VIEWSCALE,
+  CHAR_WIDTH,
+  CHAR_HEIGHT,
 } from 'zss/gadget/data/types'
+import { circlepoints } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
@@ -24,7 +27,7 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { COLLISION, COLOR, NAME } from 'zss/words/types'
+import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
 import { boardelementindex, boardobjectread } from './board'
@@ -120,22 +123,24 @@ function createcachedcontrol(player: string, index: number): LAYER_CONTROL {
   return LAYER_CACHE[id] as LAYER_CONTROL
 }
 
-const cw = 0.4
-function mixmaxrange(cx: number, cy: number): [number, number] {
-  // we have to decide how thick the chars are ?
+const hcw = CHAR_WIDTH * 0.75
+const hch = CHAR_HEIGHT * 0.75
+function mixmaxrange(from: PT, dest: PT): [number, number] {
   // calc corners
   const angles: number[] = []
-  pt1.x = cx - cw
-  pt1.y = cy - cw
+  const dx = (dest.x - from.x) * CHAR_WIDTH
+  const dy = (dest.y - from.y) * CHAR_HEIGHT
+  pt1.x = dx - hcw
+  pt1.y = dy - hch
   angles.push(pt1.angle())
-  pt1.x = cx + cw
-  pt1.y = cy - cw
+  pt1.x = dx + hcw
+  pt1.y = dy - hch
   angles.push(pt1.angle())
-  pt1.x = cx - cw
-  pt1.y = cy + cw
+  pt1.x = dx - hcw
+  pt1.y = dy + hch
   angles.push(pt1.angle())
-  pt1.x = cx + cw
-  pt1.y = cy + cw
+  pt1.x = dx + hcw
+  pt1.y = dy + hch
   angles.push(pt1.angle())
   const minangle = Math.round(radToDeg(Math.min(...angles)))
   const maxangle = Math.round(radToDeg(Math.max(...angles)))
@@ -143,6 +148,73 @@ function mixmaxrange(cx: number, cy: number): [number, number] {
     return [maxangle, minangle]
   }
   return [minangle, maxangle]
+}
+
+function raycheck(
+  book: BOOK,
+  board: BOARD,
+  alphas: number[],
+  blocked: [number, number, number][],
+  nextblocked: [number, number, number][],
+  sprite: SPRITE,
+  radius: number,
+  falloff: number,
+  x: number,
+  y: number,
+) {
+  // check distance
+  pt1.x = x - sprite.x
+  pt1.y = y - sprite.y
+  const raydist = pt1.length()
+  if (raydist > radius) {
+    return
+  }
+
+  // check index
+  const pt = { x, y }
+  const idx = boardelementindex(board, pt)
+  if (idx === -1) {
+    return
+  }
+
+  // check angle
+  const angle = Math.round(radToDeg(pt1.angle()))
+
+  // current falloff
+  let current = 0
+  for (let b = 0; b < blocked.length; ++b) {
+    const range = blocked[b]
+    // between min & max
+    if (angle >= range[0] && angle <= range[1]) {
+      // take highest value
+      current = Math.max(current, range[2])
+    }
+  }
+
+  // update shading
+  const hradius = radius * 0.5
+  alphas[idx] = Math.min(
+    alphas[idx],
+    current + (raydist < hradius ? 0 : (raydist - hradius) * falloff),
+  )
+  alphas[idx] = clamp(alphas[idx], 0, 1)
+
+  // check lookup
+  const object = boardobjectread(board, board.lookup?.[idx] ?? '')
+  if (ispresent(object)) {
+    // half blocked
+    const range: [number, number, number] = [...mixmaxrange(sprite, pt), 0.25]
+    nextblocked.push(range)
+  }
+
+  const maybeterrain = board.terrain[idx]
+  const terrainkind = bookelementkindread(book, maybeterrain)
+  const terraincollision = maybeterrain?.collision ?? terrainkind?.collision
+  if (checkdoescollide(COLLISION.ISBULLET, terraincollision)) {
+    // fully blocked
+    const range: [number, number, number] = [...mixmaxrange(sprite, pt), 1]
+    nextblocked.push(range)
+  }
 }
 
 export function memoryconverttogadgetlayers(
@@ -297,108 +369,68 @@ export function memoryconverttogadgetlayers(
       if (display.light > 0) {
         // min, max, value
         const blocked: [number, number, number][] = []
-        /*
-        We need to track currently blocked ranges
-        not blocked angles, and we can create 
-        fade out based on distance, going through an object
-        */
-        const radius = clamp(Math.round(display.light), 1, BOARD_WIDTH)
-        const hradius = radius * 0.5
         const center = boardelementindex(board, sprite)
-        const step = 1 / hradius
+        const radius = clamp(Math.round(display.light), 1, BOARD_HEIGHT)
+        const step = 1 / (radius * 0.5)
+
         lighting.alphas[center] = 0
         if (radius > 1) {
           for (let r = 1; r <= radius; ++r) {
+            const nextblocked: [number, number, number][] = []
             for (let y = sprite.y - r; y <= sprite.y + r; ++y) {
-              for (let x = sprite.x - r; x <= sprite.x + r; ++x) {
-                // skip self
-                if (x === sprite.x && y === sprite.y) {
-                  continue
-                }
-
-                // check distance
-                pt1.x = x - sprite.x
-                pt1.y = y - sprite.y
-                const raydist = pt1.length()
-                if (raydist > radius) {
-                  continue
-                }
-
-                // check index
-                const idx = boardelementindex(board, { x, y })
-                if (idx === -1) {
-                  continue
-                }
-
-                // check angle
-                const angle = Math.round(radToDeg(pt1.angle()))
-
-                // current falloff
-                let current = 0
-                for (let b = 0; b < blocked.length; ++b) {
-                  const range = blocked[b]
-                  // between min & max
-                  if (angle >= range[0] && angle <= range[1]) {
-                    // take highest value
-                    current = Math.max(current, range[2])
-                  }
-                }
-
-                // update shading
-                lighting.alphas[idx] = Math.min(
-                  lighting.alphas[idx],
-                  current +
-                    (raydist < hradius ? 0 : (raydist - hradius) * step),
-                )
-                lighting.alphas[idx] = clamp(lighting.alphas[idx], 0, 1)
-
-                // check lookup
-                const object = boardobjectread(board, board.lookup?.[idx] ?? '')
-                if (ispresent(object)) {
-                  // half blocked
-                  const range: [number, number, number] = [
-                    ...mixmaxrange(pt1.x, pt1.y),
-                    0.25,
-                  ]
-                  blocked.push(range)
-                }
-
-                const maybeterrain = board.terrain[idx]
-                const terrainkind = bookelementkindread(book, maybeterrain)
-                const terraincollision =
-                  maybeterrain?.collision ?? terrainkind?.collision
-                if (checkdoescollide(COLLISION.ISBULLET, terraincollision)) {
-                  // fully blocked
-                  const range: [number, number, number] = [
-                    ...mixmaxrange(pt1.x, pt1.y),
-                    1,
-                  ]
-                  let b = 0
-                  for (b = 0; b < blocked.length; ++b) {
-                    const block = blocked[b]
-                    if (block[1] > block[0]) {
-                      if (
-                        range[1] >= block[0] &&
-                        range[0] <= block[1] &&
-                        range[2] >= 1 &&
-                        block[2] >= 1
-                      ) {
-                        // merged
-                        blocked[b] = [
-                          Math.min(range[0], block[0]),
-                          Math.max(range[1], block[1]),
-                          1,
-                        ]
-                        break
-                      }
-                    }
-                  }
-                  if (b === blocked.length) {
-                    blocked.push(range)
-                  }
-                }
-              }
+              raycheck(
+                book,
+                board,
+                lighting.alphas,
+                blocked,
+                nextblocked,
+                sprite,
+                radius,
+                step,
+                sprite.x - r,
+                y,
+              )
+              raycheck(
+                book,
+                board,
+                lighting.alphas,
+                blocked,
+                nextblocked,
+                sprite,
+                radius,
+                step,
+                sprite.x + r,
+                y,
+              )
             }
+            const inset = r - 1
+            for (let x = sprite.x - inset; x <= sprite.x + inset; ++x) {
+              raycheck(
+                book,
+                board,
+                lighting.alphas,
+                blocked,
+                nextblocked,
+                sprite,
+                radius,
+                step,
+                x,
+                sprite.y - r,
+              )
+              raycheck(
+                book,
+                board,
+                lighting.alphas,
+                blocked,
+                nextblocked,
+                sprite,
+                radius,
+                step,
+                x,
+                sprite.y + r,
+              )
+            }
+            blocked.push(...nextblocked)
           }
         }
       } else if (ispid(id)) {
