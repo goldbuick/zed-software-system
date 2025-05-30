@@ -145,6 +145,44 @@ function mixmaxrange(cx: number, cy: number): [number, number] {
   return [minangle, maxangle]
 }
 
+function calcraystep(sidelen: number, coord: number, dir: number) {
+  const tile = Math.floor(coord / sidelen) + 1
+  if (dir > 0) {
+    const step = 1
+    return {
+      tile,
+      step,
+      dtile: (tile * sidelen - coord) / step,
+      dstep: (sidelen * step) / dir,
+    }
+  }
+  if (dir < 0) {
+    const step = -1
+    return {
+      tile,
+      step,
+      dtile: ((tile - 1) * sidelen - coord) / step,
+      dstep: (sidelen * step) / dir,
+    }
+  }
+  return {
+    tile,
+    step: 0,
+    dtile: (tile + 0.5) * sidelen - coord,
+    dstep: 0,
+  }
+}
+
+function walkray(
+  board: BOARD,
+  fromx: number,
+  fromy: number,
+  destx: number,
+  desty: number,
+) {
+  //
+}
+
 export function memoryconverttogadgetlayers(
   player: string,
   index: number,
