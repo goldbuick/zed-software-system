@@ -32,18 +32,6 @@ function mapviewtoz(viewscale: number) {
   }
 }
 
-function mapviewtopadd(viewscale: number) {
-  switch (viewscale as VIEWSCALE) {
-    case VIEWSCALE.NEAR:
-      return 1
-    default:
-    case VIEWSCALE.MID:
-      return 1
-    case VIEWSCALE.FAR:
-      return -1
-  }
-}
-
 function mapviewtotilt(viewscale: number) {
   switch (viewscale as VIEWSCALE) {
     case VIEWSCALE.NEAR:
