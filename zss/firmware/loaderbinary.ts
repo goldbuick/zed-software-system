@@ -148,7 +148,7 @@ export const loaderbinary: FIRMWARE_COMMAND = (chip, words) => {
     }
     case 'palette': {
       const [target] = readargs(words, ii, [ARG_TYPE.NAME])
-      const codepage = bookensurecodepagewithtype(
+      const [codepage] = bookensurecodepagewithtype(
         READ_CONTEXT.book,
         CODE_PAGE_TYPE.PALETTE,
         target,
@@ -172,7 +172,7 @@ export const loaderbinary: FIRMWARE_COMMAND = (chip, words) => {
     }
     case 'charset': {
       const [target] = readargs(words, ii, [ARG_TYPE.NAME])
-      const codepage = bookensurecodepagewithtype(
+      const [codepage] = bookensurecodepagewithtype(
         READ_CONTEXT.book,
         CODE_PAGE_TYPE.CHARSET,
         target,

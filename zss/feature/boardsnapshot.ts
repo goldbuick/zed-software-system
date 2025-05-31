@@ -33,7 +33,7 @@ export function boardsnapshot(
   bookclearcodepage(READ_CONTEXT.book, name)
 
   // create snapshot board codepage
-  const snapshotcodepage = memoryensuresoftwarecodepage(
+  const [snapshotcodepage] = memoryensuresoftwarecodepage(
     MEMORY_LABEL.CONTENT,
     name,
     CODE_PAGE_TYPE.BOARD,
