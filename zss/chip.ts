@@ -75,7 +75,7 @@ export type CHIP = {
   or: (...words: WORD[]) => WORD
   and: (...words: WORD[]) => WORD
   not: (...words: WORD[]) => WORD
-  expr: (...words: WORD[]) => WORD[]
+  expr: (value: WORD) => WORD
   isEq: (lhs: WORD, rhs: WORD) => WORD
   isNotEq: (lhs: WORD, rhs: WORD) => WORD
   isLessThan: (lhs: WORD, rhs: WORD) => WORD
@@ -616,9 +616,8 @@ export function createchip(
       const [value] = readargs(words, 0, [ARG_TYPE.ANY])
       return value ? 0 : 1
     },
-    expr(...words) {
-      // eval a group of words as an expression
-      const [value] = readargs(words, 0, [ARG_TYPE.ANY])
+    expr(value) {
+      // this now acts as a pass-through
       return value
     },
     isEq(lhs, rhs) {
