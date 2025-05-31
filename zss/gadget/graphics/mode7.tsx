@@ -110,11 +110,10 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     underref.current.scale.setScalar(rscale)
 
     const animrate = 0.125
-    const padding = mapviewtopadd(control.viewscale)
     const focusx = focusref.current.userData.focusx
     const focusy = focusref.current.userData.focusy
-    const fx = (focusx + 0.5) * -RUNTIME.DRAW_CHAR_WIDTH()
-    const fy = (focusy + padding) * -RUNTIME.DRAW_CHAR_HEIGHT()
+    const fx = (focusx + 1) * -RUNTIME.DRAW_CHAR_WIDTH()
+    const fy = (focusy + 1) * -RUNTIME.DRAW_CHAR_HEIGHT()
 
     // zoom
     damp3(
@@ -140,7 +139,6 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     damp(focusref.current.userData, 'focusy', control.focusy, animrate)
 
     // facing
-    tiltref.current.position.y = padding
     tiltref.current.rotation.z = control.facing
   })
 
