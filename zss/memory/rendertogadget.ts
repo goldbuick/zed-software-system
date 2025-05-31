@@ -18,25 +18,27 @@ import {
   CHAR_WIDTH,
   CHAR_HEIGHT,
 } from 'zss/gadget/data/types'
-import { circlepoints } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { dirfrompts, isstrdir } from 'zss/words/dir'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
+import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
 import { boardelementindex, boardobjectread } from './board'
 import {
   bookelementdisplayread,
   bookelementkindread,
+  bookelementstatread,
   bookreadcodepagewithtype,
   bookreadflags,
 } from './book'
+import { boardevaldir } from './bookboard'
 import { codepagereaddata } from './codepage'
 import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK, CODE_PAGE_TYPE } from './types'
 
@@ -398,6 +400,34 @@ export function memoryconverttogadgetlayers(
           // min, max, value
           const blocked: [number, number, number][] = []
           for (let r = 1; r <= radius; ++r) {
+            // light dir for a cone of light
+            if (r === 2) {
+              const maybedir = bookelementstatread(book, object, 'lightdir')
+              if (isstrdir(maybedir)) {
+                const lightdir = boardevaldir(
+                  book,
+                  board,
+                  object,
+                  '',
+                  maybedir,
+                  sprite,
+                )
+                switch (dirfrompts(sprite, lightdir.destpt)) {
+                  case DIR.EAST:
+                    blocked.push([45, 315, 1])
+                    break
+                  case DIR.WEST:
+                    blocked.push([225, 135, 1])
+                    break
+                  case DIR.NORTH:
+                    blocked.push([315, 225, 1])
+                    break
+                  case DIR.SOUTH:
+                    blocked.push([135, 45, 1])
+                    break
+                }
+              }
+            }
             const nextblocked: [number, number, number][] = []
             for (let y = sprite.y - r; y <= sprite.y + r; ++y) {
               raycheck(
