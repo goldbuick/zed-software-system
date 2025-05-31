@@ -179,6 +179,7 @@ const vm = createdevice(
             'stepx',
             'stepy',
             'light',
+            'lightdir',
             // messages & run
             'sender',
             'arg',

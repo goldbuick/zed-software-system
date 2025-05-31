@@ -64,6 +64,7 @@ const STANDARD_STAT_NAMES = new Set([
   'stepx',
   'stepy',
   'light',
+  'lightdir',
   // messages & run
   'sender',
   'arg',

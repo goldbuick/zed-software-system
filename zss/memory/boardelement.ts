@@ -50,6 +50,7 @@ enum BOARD_ELEMENT_KEYS {
   removed,
   party,
   group,
+  lightdir,
 }
 
 // safe to serialize copy of boardelement

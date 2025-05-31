@@ -1,5 +1,6 @@
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { MAYBE } from 'zss/mapping/types'
+import { STR_DIR } from 'zss/words/dir'
 import { CATEGORY, COLLISION, WORD } from 'zss/words/types'
 
 // board elements
@@ -21,6 +22,7 @@ export type BOARD_ELEMENT = {
   color?: number
   bg?: number
   light?: number
+  lightdir?: STR_DIR
   // interaction
   group?: string
   party?: string

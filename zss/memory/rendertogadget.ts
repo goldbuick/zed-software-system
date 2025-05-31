@@ -18,25 +18,27 @@ import {
   CHAR_WIDTH,
   CHAR_HEIGHT,
 } from 'zss/gadget/data/types'
-import { circlepoints } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { dirfrompts, isstrdir } from 'zss/words/dir'
 import {
   createwritetextcontext,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
+import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
 import { boardelementindex, boardobjectread } from './board'
 import {
   bookelementdisplayread,
   bookelementkindread,
+  bookelementstatread,
   bookreadcodepagewithtype,
   bookreadflags,
 } from './book'
+import { boardevaldir } from './bookboard'
 import { codepagereaddata } from './codepage'
 import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK, CODE_PAGE_TYPE } from './types'
 
@@ -123,29 +125,47 @@ function createcachedcontrol(player: string, index: number): LAYER_CONTROL {
   return LAYER_CACHE[id] as LAYER_CONTROL
 }
 
-const hcw = CHAR_WIDTH * 0.75
-const hch = CHAR_HEIGHT * 0.75
+const CHAR_MARGIN = 3
 function mixmaxrange(from: PT, dest: PT): [number, number] {
   // calc corners
   const angles: number[] = []
-  const dx = (dest.x - from.x) * CHAR_WIDTH
-  const dy = (dest.y - from.y) * CHAR_HEIGHT
-  pt1.x = dx - hcw
-  pt1.y = dy - hch
+
+  const fromx = (from.x + 0.5) * CHAR_WIDTH
+  const fromy = (from.y + 0.5) * CHAR_HEIGHT
+  const destx = dest.x * CHAR_WIDTH
+  const desty = dest.y * CHAR_HEIGHT
+  const dx = destx - fromx
+  const dy = desty - fromy
+
+  pt1.x = dx - CHAR_MARGIN
+  pt1.y = dy - CHAR_MARGIN
   angles.push(pt1.angle())
-  pt1.x = dx + hcw
-  pt1.y = dy - hch
+  pt1.x = dx + CHAR_WIDTH + CHAR_MARGIN
+  pt1.y = dy - CHAR_MARGIN
   angles.push(pt1.angle())
-  pt1.x = dx - hcw
-  pt1.y = dy + hch
+  pt1.x = dx - CHAR_MARGIN
+  pt1.y = dy + CHAR_HEIGHT + CHAR_MARGIN
   angles.push(pt1.angle())
-  pt1.x = dx + hcw
-  pt1.y = dy + hch
+  pt1.x = dx + CHAR_WIDTH + CHAR_MARGIN
+  pt1.y = dy + CHAR_HEIGHT + CHAR_MARGIN
   angles.push(pt1.angle())
-  const minangle = Math.round(radToDeg(Math.min(...angles)))
-  const maxangle = Math.round(radToDeg(Math.max(...angles)))
-  if (Math.abs(minangle - maxangle) > 180) {
-    return [maxangle, minangle]
+
+  const degs = angles.map((v) => Math.round(radToDeg(v)))
+  const minangle = Math.min(...degs)
+  const maxangle = Math.max(...degs)
+  const diff = maxangle - minangle
+
+  // handle inverted case
+  if (diff > 180) {
+    // acute angles
+    const a1 = degs.filter((angle) => angle < 180)
+    // obtuse angles
+    const a2 = degs.filter((angle) => angle > 180)
+    // we go from the largest acute angle
+    const newminangle = Math.max(...a1)
+    // to the smallest obtuse angle
+    const newmaxangle = Math.min(...a2)
+    return [newmaxangle, newminangle]
   }
   return [minangle, maxangle]
 }
@@ -162,18 +182,18 @@ function raycheck(
   x: number,
   y: number,
 ) {
+  // check index
+  const pt = { x, y }
+  const idx = boardelementindex(board, pt)
+  if (idx === -1) {
+    return
+  }
+
   // check distance
   pt1.x = x - sprite.x
   pt1.y = y - sprite.y
   const raydist = pt1.length()
   if (raydist > radius) {
-    return
-  }
-
-  // check index
-  const pt = { x, y }
-  const idx = boardelementindex(board, pt)
-  if (idx === -1) {
     return
   }
 
@@ -183,11 +203,15 @@ function raycheck(
   // current falloff
   let current = 0
   for (let b = 0; b < blocked.length; ++b) {
-    const range = blocked[b]
-    // between min & max
-    if (angle >= range[0] && angle <= range[1]) {
+    const [minangle, maxangle, value] = blocked[b]
+    // inverted edge case
+    if (minangle > maxangle) {
+      if (angle >= minangle || angle <= maxangle) {
+        current = Math.max(current, value)
+      }
+    } else if (angle >= minangle && angle <= maxangle) {
       // take highest value
-      current = Math.max(current, range[2])
+      current = Math.max(current, value)
     }
   }
 
@@ -367,15 +391,43 @@ export function memoryconverttogadgetlayers(
     // write lighting if needed
     if (isdark) {
       if (display.light > 0) {
-        // min, max, value
-        const blocked: [number, number, number][] = []
         const center = boardelementindex(board, sprite)
         const radius = clamp(Math.round(display.light), 1, BOARD_HEIGHT)
         const step = 1 / (radius * 0.5)
 
         lighting.alphas[center] = 0
         if (radius > 1) {
+          // min, max, value
+          const blocked: [number, number, number][] = []
           for (let r = 1; r <= radius; ++r) {
+            // light dir for a cone of light
+            if (r === 2) {
+              const maybedir = bookelementstatread(book, object, 'lightdir')
+              if (isstrdir(maybedir)) {
+                const lightdir = boardevaldir(
+                  book,
+                  board,
+                  object,
+                  '',
+                  maybedir,
+                  sprite,
+                )
+                switch (dirfrompts(sprite, lightdir.destpt)) {
+                  case DIR.EAST:
+                    blocked.push([45, 315, 1])
+                    break
+                  case DIR.WEST:
+                    blocked.push([225, 135, 1])
+                    break
+                  case DIR.NORTH:
+                    blocked.push([315, 225, 1])
+                    break
+                  case DIR.SOUTH:
+                    blocked.push([135, 45, 1])
+                    break
+                }
+              }
+            }
             const nextblocked: [number, number, number][] = []
             for (let y = sprite.y - r; y <= sprite.y + r; ++y) {
               raycheck(
@@ -430,7 +482,33 @@ export function memoryconverttogadgetlayers(
                 sprite.y + r,
               )
             }
-            blocked.push(...nextblocked)
+            // process newly blocked angles
+            for (let nb = 0; nb < nextblocked.length; ++nb) {
+              const range = nextblocked[nb]
+              let b = 0
+              for (b = 0; b < blocked.length; ++b) {
+                const block = blocked[b]
+                if (block[1] > block[0]) {
+                  if (
+                    range[1] >= block[0] &&
+                    range[0] <= block[1] &&
+                    range[2] >= 1 &&
+                    block[2] >= 1
+                  ) {
+                    // merged
+                    blocked[b] = [
+                      Math.min(range[0], block[0]),
+                      Math.max(range[1], block[1]),
+                      1,
+                    ]
+                    break
+                  }
+                }
+              }
+              if (b === blocked.length) {
+                blocked.push(range)
+              }
+            }
           }
         }
       } else if (ispid(id)) {

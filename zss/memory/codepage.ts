@@ -306,6 +306,7 @@ export function codepageapplyelementstats(
       case 'color':
       case 'bg':
       case 'light':
+      case 'lightdir':
       case 'group':
       case 'p1':
       case 'p2':
