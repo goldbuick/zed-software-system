@@ -117,64 +117,89 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('stat', (chip, words) => {
-    // create / open content
-    let codepage: MAYBE<CODE_PAGE>
     const [maybetype, ...args] = words.map(maptostring)
     const maybename = args.join(' ')
+
+    function openeditor(codepage: MAYBE<CODE_PAGE>, didcreate: boolean) {
+      if (ispresent(codepage)) {
+        chip.command('pageopen', codepage.id)
+        if (didcreate) {
+          const name = codepagereadname(codepage)
+          const type = codepagereadtypetostring(codepage)
+          write(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `!pageopen ${codepage.id};$blue[${type}]$white ${name}`,
+          )
+        }
+      }
+    }
+
     // attempt to check first word as codepage type to create
     switch (NAME(maybetype)) {
-      case stattypestring(STAT_TYPE.LOADER):
-        codepage = memoryensuresoftwarecodepage(
+      case stattypestring(STAT_TYPE.LOADER): {
+        const [codepage, didcreate] = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           maybename,
           CODE_PAGE_TYPE.LOADER,
         )
+        openeditor(codepage, didcreate)
         break
-      default:
-        codepage = memoryensuresoftwarecodepage(
+      }
+      default: {
+        const [codepage, didcreate] = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           [maybetype, ...args].join(' '),
           CODE_PAGE_TYPE.OBJECT,
         )
+        openeditor(codepage, didcreate)
         break
-      case stattypestring(STAT_TYPE.BOARD):
-        codepage = memoryensuresoftwarecodepage(
+      }
+      case stattypestring(STAT_TYPE.BOARD): {
+        const [codepage, didcreate] = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           maybename,
           CODE_PAGE_TYPE.BOARD,
         )
+        openeditor(codepage, didcreate)
         break
-      case stattypestring(STAT_TYPE.OBJECT):
-        codepage = memoryensuresoftwarecodepage(
+      }
+      case stattypestring(STAT_TYPE.OBJECT): {
+        const [codepage, didcreate] = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           maybename,
           CODE_PAGE_TYPE.OBJECT,
         )
+        openeditor(codepage, didcreate)
         break
-      case stattypestring(STAT_TYPE.TERRAIN):
-        codepage = memoryensuresoftwarecodepage(
+      }
+      case stattypestring(STAT_TYPE.TERRAIN): {
+        const [codepage, didcreate] = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           maybename,
           CODE_PAGE_TYPE.TERRAIN,
         )
+        openeditor(codepage, didcreate)
         break
-      case stattypestring(STAT_TYPE.CHARSET):
-        codepage = memoryensuresoftwarecodepage(
+      }
+      case stattypestring(STAT_TYPE.CHARSET): {
+        const [codepage, didcreate] = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           maybename,
           CODE_PAGE_TYPE.CHARSET,
         )
+        openeditor(codepage, didcreate)
         break
-      case stattypestring(STAT_TYPE.PALETTE):
-        codepage = memoryensuresoftwarecodepage(
+      }
+      case stattypestring(STAT_TYPE.PALETTE): {
+        const [codepage, didcreate] = memoryensuresoftwarecodepage(
           MEMORY_LABEL.CONTENT,
           maybename,
           CODE_PAGE_TYPE.PALETTE,
         )
+        openeditor(codepage, didcreate)
         break
-    }
-    if (ispresent(codepage)) {
-      chip.command('pageopen', codepage.id)
+      }
     }
     return 0
   })

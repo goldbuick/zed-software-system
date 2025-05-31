@@ -208,14 +208,11 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
   address: string,
   createtype: T,
 ) {
-  const codepage = bookensurecodepagewithtype(
+  return bookensurecodepagewithtype(
     memoryensuresoftwarebook(slot),
     createtype,
     address,
   )
-
-  // result codepage
-  return codepage
 }
 
 export function memoryreadflags(id: string) {

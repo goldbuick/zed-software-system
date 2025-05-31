@@ -130,7 +130,7 @@ export function bookensurecodepagewithtype(
   book: MAYBE<BOOK>,
   type: CODE_PAGE_TYPE,
   address: string,
-): MAYBE<CODE_PAGE> {
+): [MAYBE<CODE_PAGE>, boolean] {
   let codepage = bookreadcodepagewithtype(book, type, address)
   if (!ispresent(codepage)) {
     // create new codepage
@@ -142,8 +142,9 @@ export function bookensurecodepagewithtype(
       {},
     )
     bookwritecodepage(book, codepage)
+    return [codepage, true]
   }
-  return codepage
+  return [codepage, false]
 }
 
 export function bookreadcodepagesbytype(
