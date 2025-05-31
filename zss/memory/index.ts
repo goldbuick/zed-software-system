@@ -2,14 +2,20 @@ import { objectKeys } from 'ts-extras'
 import { senderid } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
 import { parsetarget } from 'zss/device'
-import { api_error, MESSAGE, api_log } from 'zss/device/api'
+import { api_error, MESSAGE, api_log, api_toast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
 import { pick, pickwith } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { createos } from 'zss/os'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
@@ -791,13 +797,38 @@ export function memorycleanup() {
 }
 
 export function memoryclirepeatlast(player: string) {
-  const maybecli = memoryreadflags(player).playbuffer
+  const flags = memoryreadflags(player)
+  // track active invoke
+  flags.playslot = isnumber(flags.playslot) ? flags.playslot : 0
+  // setup as array of invokes
+  flags.playbuffer = isarray(flags.playbuffer) ? flags.playbuffer : []
+  // read value of invoke
+  const maybecli = flags.playbuffer[flags.playslot]
+  // run it
   if (isstring(maybecli) && maybecli) {
-    memorycli(player, maybecli)
+    memorycli(player, maybecli, false)
   }
 }
 
-export function memorycli(player: string, cli = '') {
+export function memoryclirepeatslot(player: string, slot: number) {
+  const flags = memoryreadflags(player)
+  // track active invoke
+  flags.playslot = isnumber(flags.playslot) ? flags.playslot : 0
+  // setup as array of invokes
+  flags.playbuffer = isarray(flags.playbuffer) ? flags.playbuffer : []
+  // update invoke slot
+  flags.playslot = slot
+  // read value of invoke
+  const maybecli = flags.playbuffer[flags.playslot]
+  // signal the value of the invoke to the user
+  if (isstring(maybecli) && maybecli) {
+    api_toast(SOFTWARE, player, `playbuffer ${slot}: ${maybecli}`)
+  } else {
+    api_toast(SOFTWARE, player, `playbuffer ${slot}: *EMPTY*`)
+  }
+}
+
+export function memorycli(player: string, cli: string, tracking = true) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -823,8 +854,17 @@ export function memorycli(player: string, cli = '') {
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli)
 
   // track invoke
-  memoryreadflags(player).playbuffer = cli
+  if (tracking) {
+    const flags = memoryreadflags(player)
+    // track active invoke
+    flags.playslot = isnumber(flags.playslot) ? flags.playslot : 0
+    // setup as array of invokes
+    flags.playbuffer = isarray(flags.playbuffer) ? flags.playbuffer : []
+    // track value of invoke
+    flags.playbuffer[flags.playslot] = cli
+  }
 
+  // reset to normal halt rate
   RUNTIME.HALT_AT_COUNT = resethalt
 }
 

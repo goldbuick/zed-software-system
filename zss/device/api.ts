@@ -481,6 +481,14 @@ export function vm_clirepeatlast(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:clirepeatlast')
 }
 
+export function vm_clirepeatslot(
+  device: DEVICELIKE,
+  player: string,
+  slot: number,
+) {
+  device.emit(player, 'vm:clirepeatslot', slot)
+}
+
 export function vm_restart(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:restart')
 }
