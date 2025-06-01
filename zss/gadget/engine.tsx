@@ -111,7 +111,7 @@ export function Engine() {
         </UserScreen>
       </UserFocus>
       {shouldcrt && (
-        <EffectComposer multisampling={0}>
+        <EffectComposer multisampling={8}>
           <>
             {mood.includes('dark') && (
               <Fragment key="mood">
