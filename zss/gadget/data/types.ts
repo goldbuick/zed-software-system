@@ -47,6 +47,7 @@ export type LAYER_BLANK = {
 export type LAYER_TILES = {
   id: string
   type: LAYER_TYPE.TILES
+  tag: string
   width: number
   height: number
   char: number[]
@@ -107,6 +108,7 @@ function arrayof(size: number, fill: number): number[] {
 export function createtiles(
   player: string,
   index: number,
+  tag: string,
   width: number,
   height: number,
   bg = 0,
@@ -115,6 +117,7 @@ export function createtiles(
   return {
     id: `tiles:${player}:${index}`,
     type: LAYER_TYPE.TILES,
+    tag,
     width,
     height,
     char: arrayof(size, 0),

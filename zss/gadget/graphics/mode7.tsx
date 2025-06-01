@@ -5,7 +5,7 @@ import { useRef } from 'react'
 import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { layersreadcontrol, VIEWSCALE } from 'zss/gadget/data/types'
+import { LAYER_TYPE, layersreadcontrol, VIEWSCALE } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -83,6 +83,10 @@ export function Mode7Graphics({ width, height }: FramedProps) {
       focusref.current.userData = {
         focusx: control.focusx,
         focusy: control.focusy,
+        focuslx: control.focusx,
+        focusly: control.focusy,
+        focusvx: 0,
+        focusvy: 0,
         facing: control.facing,
         focusz: mapviewtoz(control.viewscale),
       }
@@ -100,8 +104,31 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     const animrate = 0.125
     const focusx = focusref.current.userData.focusx
     const focusy = focusref.current.userData.focusy
-    const fx = (focusx + 1) * -RUNTIME.DRAW_CHAR_WIDTH()
-    const fy = (focusy + 1) * -RUNTIME.DRAW_CHAR_HEIGHT()
+    const focuslx = focusref.current.userData.focuslx
+    const focusly = focusref.current.userData.focusly
+    // bump focus by velocity
+    const deltax = focusx - focuslx
+    const deltay = focusy - focusly
+    // inc velocity
+    const pivotrate = 4.666
+    focusref.current.userData.focusvx += deltax * pivotrate
+    focusref.current.userData.focusvy += deltay * pivotrate
+    // calc focus
+    const fx =
+      Math.round(focusx + focusref.current.userData.focusvx + 1) *
+      -RUNTIME.DRAW_CHAR_WIDTH()
+    const fy =
+      Math.round(focusy + focusref.current.userData.focusvy + 1) *
+      -RUNTIME.DRAW_CHAR_HEIGHT()
+    // damp velocity
+    const damprate = 8
+    focusref.current.userData.focusvx -=
+      focusref.current.userData.focusvx * delta * damprate
+    focusref.current.userData.focusvy -=
+      focusref.current.userData.focusvy * delta * damprate
+    // update tracking
+    focusref.current.userData.focuslx = focusref.current.userData.focusx
+    focusref.current.userData.focusly = focusref.current.userData.focusy
 
     // zoom
     damp3(
@@ -120,7 +147,7 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     )
 
     // focus
-    damp3(focusref.current.position, [fx, fy, 0], animrate, delta)
+    damp3(focusref.current.position, [fx, fy, 0], animrate * 2, delta)
 
     // smoothed change in focus
     damp(focusref.current.userData, 'focusx', control.focusx, animrate)
@@ -159,7 +186,16 @@ export function Mode7Graphics({ width, height }: FramedProps) {
           <group ref={tiltref}>
             <group ref={focusref}>
               {layers.map((layer) => (
-                <Mode7Layer key={layer.id} id={layer.id} from="layers" z={0} />
+                <Mode7Layer
+                  key={layer.id}
+                  id={layer.id}
+                  from="layers"
+                  z={
+                    layer.type === LAYER_TYPE.TILES && layer.tag === 'tickers'
+                      ? RUNTIME.DRAW_CHAR_HEIGHT()
+                      : 0
+                  }
+                />
               ))}
             </group>
           </group>

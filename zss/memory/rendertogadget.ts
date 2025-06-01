@@ -52,13 +52,14 @@ const SPRITE_CACHE: Record<string, SPRITE> = {}
 function createcachedtiles(
   player: string,
   index: number,
+  tag: string,
   width: number,
   height: number,
   bg = 0,
 ): LAYER_TILES {
   const id = `tiles:${player}:${index}`
   if (!ispresent(LAYER_CACHE[id])) {
-    LAYER_CACHE[id] = createtiles(player, index, width, height, bg)
+    LAYER_CACHE[id] = createtiles(player, index, tag, width, height, bg)
   }
   return LAYER_CACHE[id] as LAYER_TILES
 }
@@ -268,6 +269,7 @@ export function memoryconverttogadgetlayers(
   const tiles = createcachedtiles(
     player,
     iiii++,
+    'terrain',
     boardwidth,
     boardheight,
     defaultcolor,
@@ -294,6 +296,7 @@ export function memoryconverttogadgetlayers(
   const tickers = createcachedtiles(
     player,
     iiii++,
+    'tickers',
     boardwidth,
     boardheight,
     COLOR.ONCLEAR,
