@@ -5,6 +5,7 @@ import {
   EffectComposer,
   Glitch,
   Noise,
+  Scanline,
   Vignette,
 } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
@@ -56,6 +57,7 @@ export function Engine() {
   // read config
   const [forcelowrez, setforcelowrez] = useState(false)
   const [crt, setcrt] = useState(false)
+  const [scanlines, setscanlines] = useState(false)
   useLayoutEffect(() => {
     doasync(SOFTWARE, registerreadplayer(), async () => {
       const lowrez = await readconfig('lowrez')
@@ -65,6 +67,10 @@ export function Engine() {
       const crt = await readconfig('crt')
       if (NAME(crt) !== 'off') {
         setcrt(true)
+      }
+      const scanlines = await readconfig('scanlines')
+      if (NAME(scanlines) === 'on') {
+        setscanlines(true)
       }
     })
   }, [])
@@ -141,6 +147,9 @@ export function Engine() {
                   blendFunction={BlendFunction.ADD}
                 />
               </Fragment>
+            )}
+            {scanlines && (
+              <Scanline blendFunction={BlendFunction.OVERLAY} density={1.28} />
             )}
           </>
           <Vignette eskil offset={0.89} darkness={0.9} />
