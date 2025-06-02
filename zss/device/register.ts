@@ -200,7 +200,7 @@ async function loadmem(books: string) {
     return
   }
   // init vm with content
-  const selectedid = (await readconfig(CONFIG_VALUE.SELECTED)) ?? ''
+  const selectedid = (await readconfig('selected')) ?? ''
   vm_books(register, myplayerid, books, selectedid)
 }
 
@@ -232,10 +232,6 @@ async function writeurlcontent(exportedbooks: string, label: string) {
     }
     document.title = label
   }
-}
-
-export enum CONFIG_VALUE {
-  SELECTED = 'SELECTED',
 }
 
 export async function readconfig(name: string) {

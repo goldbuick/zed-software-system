@@ -44,6 +44,42 @@ function mapviewtotilt(viewscale: number) {
   }
 }
 
+function mapviewtolead(viewscale: number) {
+  switch (viewscale as VIEWSCALE) {
+    case VIEWSCALE.NEAR:
+      return 4
+    default:
+    case VIEWSCALE.MID:
+      return 6
+    case VIEWSCALE.FAR:
+      return 5
+  }
+}
+
+function mapviewtouplead(viewscale: number) {
+  switch (viewscale as VIEWSCALE) {
+    case VIEWSCALE.NEAR:
+      return 4.6
+    default:
+    case VIEWSCALE.MID:
+      return 6.5
+    case VIEWSCALE.FAR:
+      return 8
+  }
+}
+
+function mapviewtodownlead(viewscale: number) {
+  switch (viewscale as VIEWSCALE) {
+    case VIEWSCALE.NEAR:
+      return 5.5
+    default:
+    case VIEWSCALE.MID:
+      return 4.5
+    case VIEWSCALE.FAR:
+      return 6
+  }
+}
+
 export function Mode7Graphics({ width, height }: FramedProps) {
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
@@ -102,33 +138,42 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     underref.current.scale.setScalar(rscale)
 
     const animrate = 0.125
-    const focusx = focusref.current.userData.focusx
-    const focusy = focusref.current.userData.focusy
-    const focuslx = focusref.current.userData.focuslx
-    const focusly = focusref.current.userData.focusly
+    const { focusx, focusy, focuslx, focusly } = focusref.current.userData
+
     // bump focus by velocity
-    const deltax = focusx - focuslx
-    const deltay = focusy - focusly
-    // inc velocity
-    const pivotrate = 4.666
-    focusref.current.userData.focusvx += deltax * pivotrate
-    focusref.current.userData.focusvy += deltay * pivotrate
+    const deltax = control.focusx - focuslx
+    const deltay = control.focusy - focusly
+
+    // pivot focus
+    const slead = 0.1
+    const xlead = mapviewtolead(control.viewscale) * slead
+    const uplead = mapviewtouplead(control.viewscale) * slead
+    const downlead = mapviewtodownlead(control.viewscale) * slead
+    if (deltay < 0) {
+      focusref.current.userData.focusvx = 0
+      focusref.current.userData.focusvy -= uplead
+    } else if (deltay > 0) {
+      focusref.current.userData.focusvx = 0
+      focusref.current.userData.focusvy += downlead
+    } else if (deltax < 0) {
+      focusref.current.userData.focusvx -= xlead
+      focusref.current.userData.focusvy = 0
+    } else if (deltax > 0) {
+      focusref.current.userData.focusvx += xlead
+      focusref.current.userData.focusvy = 0
+    }
+
     // calc focus
-    const fx =
-      Math.round(focusx + focusref.current.userData.focusvx + 1) *
-      -RUNTIME.DRAW_CHAR_WIDTH()
-    const fy =
-      Math.round(focusy + focusref.current.userData.focusvy + 1) *
-      -RUNTIME.DRAW_CHAR_HEIGHT()
-    // damp velocity
-    const damprate = 8
-    focusref.current.userData.focusvx -=
-      focusref.current.userData.focusvx * delta * damprate
-    focusref.current.userData.focusvy -=
-      focusref.current.userData.focusvy * delta * damprate
+    let fx = focusx + 1
+    let fy = focusy + 1
+    fx += focusref.current.userData.focusvx
+    fy += focusref.current.userData.focusvy
+    fx *= -RUNTIME.DRAW_CHAR_WIDTH()
+    fy *= -RUNTIME.DRAW_CHAR_HEIGHT()
+
     // update tracking
-    focusref.current.userData.focuslx = focusref.current.userData.focusx
-    focusref.current.userData.focusly = focusref.current.userData.focusy
+    focusref.current.userData.focuslx = control.focusx
+    focusref.current.userData.focusly = control.focusy
 
     // zoom
     damp3(
@@ -147,11 +192,13 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     )
 
     // focus
-    damp3(focusref.current.position, [fx, fy, 0], animrate * 2, delta)
+    damp3(focusref.current.position, [fx, fy, 0], animrate, delta)
 
     // smoothed change in focus
     damp(focusref.current.userData, 'focusx', control.focusx, animrate)
     damp(focusref.current.userData, 'focusy', control.focusy, animrate)
+    damp(focusref.current.userData, 'focusvx', 0, animrate * 5)
+    damp(focusref.current.userData, 'focusvy', 0, animrate * 5)
 
     // facing
     tiltref.current.rotation.z = control.facing
@@ -214,9 +261,3 @@ export function Mode7Graphics({ width, height }: FramedProps) {
     </>
   )
 }
-
-/*
-
-
-
-*/
