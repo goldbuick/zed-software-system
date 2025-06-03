@@ -53,6 +53,7 @@ export type LAYER_TILES = {
   char: number[]
   color: number[]
   bg: number[]
+  wall: number[]
 }
 
 export type LAYER_SPRITES = {
@@ -123,6 +124,7 @@ export function createtiles(
     char: arrayof(size, 0),
     color: arrayof(size, 0),
     bg: arrayof(size, bg),
+    wall: arrayof(size, 0),
   }
 }
 

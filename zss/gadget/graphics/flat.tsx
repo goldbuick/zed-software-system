@@ -12,12 +12,12 @@ import { TapeTerminalInspector } from '../inspector/component'
 import { FlatLayer } from './flatlayer'
 import { MediaLayer } from './medialayer'
 
-type FramedProps = {
+type GraphicsProps = {
   width: number
   height: number
 }
 
-export function FlatGraphics({ width, height }: FramedProps) {
+export function FlatGraphics({ width, height }: GraphicsProps) {
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 

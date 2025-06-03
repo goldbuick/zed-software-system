@@ -336,6 +336,7 @@ export function memoryconverttogadgetlayers(
     if (isstring(board.graphics)) {
       const graphics = NAME(board.graphics)
       switch (graphics) {
+        case 'iso':
         case 'mode7':
         case 'firstperson':
           control.graphics = graphics
@@ -361,9 +362,11 @@ export function memoryconverttogadgetlayers(
       COLOR.WHITE,
       isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR,
     )
+    const collision = bookelementstatread(book, tile, 'collision')
     tiles.char[i] = display.char
     tiles.color[i] = display.color
     tiles.bg[i] = display.bg
+    tiles.wall[i] = collision === COLLISION.ISSOLID ? 1 : 0
   }
 
   const boardobjects = Object.values(board.objects ?? {})
