@@ -6,6 +6,7 @@ import { indextopt } from 'zss/mapping/2d'
 import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
 
+import { BlockMesh } from './blocks'
 import { Dither } from './dither'
 import { Sprites } from './sprites'
 import { Tiles } from './tiles'
@@ -42,8 +43,7 @@ export function IsoLayer({ id, z, from }: GraphicsLayerProps) {
               bg={[...layer.bg]}
             />
             <Instances limit={BOARD_SIZE}>
-              <boxGeometry args={[drawwidth, drawheight, drawheight]} />
-              <meshBasicMaterial />
+              <BlockMesh />
               {layer.wall
                 .map((iswall, idx) => {
                   const pt = indextopt(idx, BOARD_WIDTH)
