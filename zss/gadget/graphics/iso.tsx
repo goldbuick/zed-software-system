@@ -29,13 +29,27 @@ function maptolayerz(layer: LAYER): number {
   switch (layer.type) {
     case LAYER_TYPE.TILES:
       if (layer.tag === 'tickers') {
-        return RUNTIME.DRAW_CHAR_HEIGHT()
+        return RUNTIME.DRAW_CHAR_HEIGHT() + 1
       }
       break
+    case LAYER_TYPE.DITHER:
+      return RUNTIME.DRAW_CHAR_HEIGHT() + 1
     case LAYER_TYPE.SPRITES:
-      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.5
+      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.25
   }
   return 0
+}
+
+function maptoscale(viewscale: VIEWSCALE): number {
+  switch (viewscale) {
+    case VIEWSCALE.NEAR:
+      return 10
+    default:
+    case VIEWSCALE.MID:
+      return 4
+    case VIEWSCALE.FAR:
+      return 1.5
+  }
 }
 
 export function IsoGraphics({ width, height }: GraphicsProps) {
@@ -137,7 +151,7 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     focusref.current.userData.focusly = control.focusy
 
     // zoom
-    damp3(zoomref.current.scale, control.viewscale, animrate, delta)
+    damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
 
     // tilt
     dampE(tiltref.current.rotation, [0, 0, 0], animrate, delta)
