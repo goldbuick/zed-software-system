@@ -18,6 +18,7 @@ import { ispid } from 'zss/mapping/guid'
 import { NAME } from 'zss/words/types'
 
 import { FlatGraphics } from '../graphics/flat'
+import { FPVGraphics } from '../graphics/fpv'
 import { IsoGraphics } from '../graphics/iso'
 import { Mode7Graphics } from '../graphics/mode7'
 import { modsfromevent, UserInput, UserInputMods } from '../userinput'
@@ -104,6 +105,9 @@ export function Framed({ width, height }: FramedProps) {
       )}
       {control.graphics === 'iso' && (
         <IsoGraphics width={width} height={height} />
+      )}
+      {control.graphics === 'fpv' && (
+        <FPVGraphics width={width} height={height} />
       )}
     </>
   )
