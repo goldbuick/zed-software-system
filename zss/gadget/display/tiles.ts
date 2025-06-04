@@ -122,8 +122,8 @@ const tilemapMaterial = new ShaderMaterial({
     map: new Uniform(charset),
     alt: new Uniform(charset),
     data: new Uniform(null),
-    size: { value: new Vector2() },
-    step: { value: new Vector2() },
+    size: new Uniform(new Vector2()),
+    step: new Uniform(new Vector2()),
     flip: new Uniform(true),
   },
   // vertex shader

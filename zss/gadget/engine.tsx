@@ -9,7 +9,7 @@ import {
   Vignette,
 } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
-import { BlendFunction, GlitchMode } from 'postprocessing'
+import { BlendFunction, GlitchMode, KernelSize } from 'postprocessing'
 import { Fragment, useEffect, useLayoutEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { RUNTIME, STATS_DEV } from 'zss/config'
@@ -139,12 +139,9 @@ export function Engine() {
             {mood.includes('bright') && (
               <Fragment key="mood">
                 <Bloom
-                  mipmapBlur
-                  intensity={1.23}
-                  radius={0.555}
-                  luminanceThreshold={0.777}
-                  luminanceSmoothing={0.0111}
-                  blendFunction={BlendFunction.ADD}
+                  intensity={0.03}
+                  luminanceThreshold={0}
+                  kernelSize={KernelSize.SMALL}
                 />
               </Fragment>
             )}

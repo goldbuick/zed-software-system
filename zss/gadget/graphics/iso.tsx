@@ -1,18 +1,23 @@
-import { PerspectiveCamera } from '@react-three/drei'
+import { OrthographicCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { damp, damp3, dampE } from 'maath/easing'
 import { useRef } from 'react'
-import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
+import { Group } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
-import { LAYER_TYPE, layersreadcontrol, VIEWSCALE } from 'zss/gadget/data/types'
+import {
+  LAYER,
+  LAYER_TYPE,
+  layersreadcontrol,
+  VIEWSCALE,
+} from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 import { FlatLayer } from './flatlayer'
+import { IsoLayer } from './isolayer'
 import { MediaLayer } from './medialayer'
-import { Mode7Layer } from './mode7layer'
 import { RenderLayer } from './renderlayer'
 
 type GraphicsProps = {
@@ -20,83 +25,50 @@ type GraphicsProps = {
   height: number
 }
 
-function mapviewtoz(viewscale: number) {
-  switch (viewscale as VIEWSCALE) {
-    case VIEWSCALE.NEAR:
-      return 128 + 32
-    default:
-    case VIEWSCALE.MID:
-      return 256 + 64
-    case VIEWSCALE.FAR:
-      return 512 + 256
+function maptolayerz(layer: LAYER): number {
+  switch (layer.type) {
+    case LAYER_TYPE.TILES:
+      if (layer.tag === 'tickers') {
+        return RUNTIME.DRAW_CHAR_HEIGHT() + 1
+      }
+      break
+    case LAYER_TYPE.DITHER:
+      return RUNTIME.DRAW_CHAR_HEIGHT() + 1
+    case LAYER_TYPE.SPRITES:
+      return RUNTIME.DRAW_CHAR_HEIGHT() * 0.25
   }
+  return 0
 }
 
-function mapviewtotilt(viewscale: number) {
-  switch (viewscale as VIEWSCALE) {
+function maptoscale(viewscale: VIEWSCALE): number {
+  switch (viewscale) {
     case VIEWSCALE.NEAR:
-      return 0.888
+      return 10
     default:
     case VIEWSCALE.MID:
-      return 0.777
-    case VIEWSCALE.FAR:
-      return 0.444
-  }
-}
-
-function mapviewtolead(viewscale: number) {
-  switch (viewscale as VIEWSCALE) {
-    case VIEWSCALE.NEAR:
       return 4
-    default:
-    case VIEWSCALE.MID:
-      return 6
     case VIEWSCALE.FAR:
-      return 5
+      return 1.5
   }
 }
 
-function mapviewtouplead(viewscale: number) {
-  switch (viewscale as VIEWSCALE) {
-    case VIEWSCALE.NEAR:
-      return 4.6
-    default:
-    case VIEWSCALE.MID:
-      return 6.5
-    case VIEWSCALE.FAR:
-      return 8
-  }
-}
-
-function mapviewtodownlead(viewscale: number) {
-  switch (viewscale as VIEWSCALE) {
-    case VIEWSCALE.NEAR:
-      return 5.5
-    default:
-    case VIEWSCALE.MID:
-      return 4.5
-    case VIEWSCALE.FAR:
-      return 6
-  }
-}
-
-export function Mode7Graphics({ width, height }: GraphicsProps) {
+export function IsoGraphics({ width, height }: GraphicsProps) {
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
+  const zoomref = useRef<Group>(null)
   const tiltref = useRef<Group>(null)
   const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
   const focusref = useRef<Group>(null)
-  const cameraref = useRef<PerspectiveCameraImpl>(null)
 
   useFrame((_, delta) => {
     if (
+      !zoomref.current ||
       !tiltref.current ||
       !overref.current ||
       !underref.current ||
-      !focusref.current ||
-      !cameraref.current
+      !focusref.current
     ) {
       return
     }
@@ -116,6 +88,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
 
     // setup tracking state
     if (!ispresent(focusref.current.userData.focusx)) {
+      zoomref.current.scale.setScalar(control.viewscale)
       focusref.current.userData = {
         focusx: control.focusx,
         focusy: control.focusy,
@@ -124,6 +97,7 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
         focusvx: 0,
         focusvy: 0,
         facing: control.facing,
+        focusz: 0,
       }
     }
 
@@ -139,28 +113,30 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     const animrate = 0.125
     const { focusx, focusy, focuslx, focusly } = focusref.current.userData
 
+    // --
+
     // bump focus by velocity
-    const deltax = control.focusx - focuslx
-    const deltay = control.focusy - focusly
+    // const deltax = control.focusx - focuslx
+    // const deltay = control.focusy - focusly
 
     // pivot focus
-    const slead = 0.1
-    const xlead = mapviewtolead(control.viewscale) * slead
-    const uplead = mapviewtouplead(control.viewscale) * slead
-    const downlead = mapviewtodownlead(control.viewscale) * slead
-    if (deltay < 0) {
-      focusref.current.userData.focusvx = 0
-      focusref.current.userData.focusvy -= uplead
-    } else if (deltay > 0) {
-      focusref.current.userData.focusvx = 0
-      focusref.current.userData.focusvy += downlead
-    } else if (deltax < 0) {
-      focusref.current.userData.focusvx -= xlead
-      focusref.current.userData.focusvy = 0
-    } else if (deltax > 0) {
-      focusref.current.userData.focusvx += xlead
-      focusref.current.userData.focusvy = 0
-    }
+    // const slead = 0.1
+    // const xlead = mapviewtolead(control.viewscale) * slead
+    // const uplead = mapviewtouplead(control.viewscale) * slead
+    // const downlead = mapviewtodownlead(control.viewscale) * slead
+    // if (deltay < 0) {
+    //   focusref.current.userData.focusvx = 0
+    //   focusref.current.userData.focusvy -= uplead
+    // } else if (deltay > 0) {
+    //   focusref.current.userData.focusvx = 0
+    //   focusref.current.userData.focusvy += downlead
+    // } else if (deltax < 0) {
+    //   focusref.current.userData.focusvx -= xlead
+    //   focusref.current.userData.focusvy = 0
+    // } else if (deltax > 0) {
+    //   focusref.current.userData.focusvx += xlead
+    //   focusref.current.userData.focusvy = 0
+    // }
 
     // calc focus
     let fx = focusx + 1
@@ -175,20 +151,10 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
     focusref.current.userData.focusly = control.focusy
 
     // zoom
-    damp3(
-      cameraref.current.position,
-      [0, 0, mapviewtoz(control.viewscale)],
-      animrate,
-      delta,
-    )
+    damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
 
     // tilt
-    dampE(
-      tiltref.current.rotation,
-      [mapviewtotilt(control.viewscale), 0, 0],
-      animrate,
-      delta,
-    )
+    dampE(tiltref.current.rotation, [0, 0, 0], animrate, delta)
 
     // focus
     damp3(focusref.current.position, [fx, fy, 0], animrate, delta)
@@ -221,28 +187,27 @@ export function Mode7Graphics({ width, height }: GraphicsProps) {
           <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
         ))}
         <RenderLayer viewwidth={viewwidth} viewheight={viewheight}>
-          <PerspectiveCamera
-            ref={cameraref}
+          <OrthographicCamera
             makeDefault
             manual
             near={1}
             far={2000}
-            aspect={viewwidth / viewheight}
+            position={[0, 0, 1000]}
           />
-          <group ref={tiltref}>
-            <group ref={focusref}>
-              {layers.map((layer) => (
-                <Mode7Layer
-                  key={layer.id}
-                  id={layer.id}
-                  from="layers"
-                  z={
-                    layer.type === LAYER_TYPE.TILES && layer.tag === 'tickers'
-                      ? RUNTIME.DRAW_CHAR_HEIGHT()
-                      : 0
-                  }
-                />
-              ))}
+          <group rotation={[Math.PI * 0.25, 0, Math.PI * -0.25]}>
+            <group ref={zoomref}>
+              <group ref={tiltref}>
+                <group ref={focusref}>
+                  {layers.map((layer) => (
+                    <IsoLayer
+                      key={layer.id}
+                      id={layer.id}
+                      from="layers"
+                      z={maptolayerz(layer)}
+                    />
+                  ))}
+                </group>
+              </group>
             </group>
           </group>
         </RenderLayer>
