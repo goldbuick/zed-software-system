@@ -111,9 +111,12 @@ const spritesMaterial = new ShaderMaterial({
 
       vCharData.xy = charData.xy;
 
-      animPosition = animPosition * pointSize;
+      animPosition *= pointSize;
       animPosition += pointSize * 0.5;
-      animPosition.x += (pointSize.y - pointSize.x) * 0.5;
+
+      // animPosition = animPosition * pointSize;
+      // animPosition += pointSize * 0.5;
+      // animPosition.x += (pointSize.y - pointSize.x) * 0.5;
 
       vec4 mvPosition = modelViewMatrix * vec4(animPosition, 0.0, 1.0);
       gl_Position = projectionMatrix * mvPosition;
@@ -140,9 +143,9 @@ const spritesMaterial = new ShaderMaterial({
 
     void main() {
       float xscale = pointSize.y / pointSize.x;
-      float px = gl_PointCoord.x * xscale;
-      
-      if (vVisible == 0.0 || px >= 1.0) {
+      float xpadding = (pointSize.y - pointSize.x) / pointSize.y;
+      float px = gl_PointCoord.x * xscale - xpadding;      
+      if (vVisible == 0.0 || px < 0.0 || px > 1.0) {
         discard;
       }
 

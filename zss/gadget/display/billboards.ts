@@ -113,12 +113,8 @@ const billboardsMaterial = new ShaderMaterial({
 
       vCharData.xy = charData.xy;
 
-      // draw space
-      float xpadding = (pointSize.y - pointSize.x);
       animPosition *= pointSize;
-      animPosition.x += pointSize.x * 0.5;
-      animPosition.x += xpadding * 0.5;
-      animPosition.y += pointSize.y;
+      animPosition += pointSize * 0.5;
 
       // model space
       vec4 mvPosition = modelViewMatrix * vec4(animPosition, 0.0, 1.0);
@@ -130,7 +126,7 @@ const billboardsMaterial = new ShaderMaterial({
       float ptaspect = (screenwidth / screenheight);
       float ptsize = pointSize.y + ptaspect;
       
-      gl_PointSize = (screenheight * (ptsize + 0.5)) / gl_Position.w;
+      gl_PointSize = (screenheight * ptsize) / gl_Position.w;
       gl_PointSize *= dpr;
       gl_Position.y -= ptsize - ptaspect;
     }
@@ -153,9 +149,9 @@ const billboardsMaterial = new ShaderMaterial({
 
     void main() {
       float xscale = pointSize.y / pointSize.x;
-      float px = gl_PointCoord.x * xscale;
-      
-      if (vVisible == 0.0 || px >= 1.0) {
+      float xpadding = (pointSize.y - pointSize.x) / pointSize.y;
+      float px = gl_PointCoord.x * xscale - xpadding;      
+      if (vVisible == 0.0 || px < 0.0 || px > 1.0) {
         discard;
       }
 
