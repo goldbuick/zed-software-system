@@ -1098,14 +1098,6 @@
   resolved "https://registry.npmjs.org/@pkgr/core/-/core-0.1.1.tgz#1ec17e2edbec25c8306d424ecfbf13c7de1aaa31"
   integrity sha512-cq8o4cWH0ibXh9VGi5P20Tu9XF/0fFXl9EUinr9QfTM7a7p0oTA4iJRCQWppXR1Pg8dSM0UCItCkPwsk9qWWYA==
 
-"@react-three/csg@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.npmjs.org/@react-three/csg/-/csg-4.0.0.tgz#0bd180a0ea8d1eabbdf04b542532f3a3542e7f74"
-  integrity sha512-IMLKGINdyQEUfyg3CE1gYoH9lK5RDR90vhXG21vHyo2kVAuslTnsH9GTVat69YglvNqHoEIMExTGLdhzm5/ygQ==
-  dependencies:
-    three-bvh-csg "^0.0.16"
-    three-mesh-bvh "^0.6.8"
-
 "@react-three/drei@^10.0.7":
   version "10.0.7"
   resolved "https://registry.yarnpkg.com/@react-three/drei/-/drei-10.0.7.tgz#6114f9d1387ebf8268c237246615d69ec59d0b90"
@@ -7407,16 +7399,6 @@ textlinestream@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/textlinestream/-/textlinestream-1.1.1.tgz#00677266d1dc70b28544adca8806134a3457f0bd"
   integrity sha512-iBHbi7BQxrFmwZUQJsT0SjNzlLLsXhvW/kg7EyOMVMBIrlnj/qYofwo1LVLZi+3GbUEo96Iu2eqToI2+lZoAEQ==
-
-three-bvh-csg@^0.0.16:
-  version "0.0.16"
-  resolved "https://registry.npmjs.org/three-bvh-csg/-/three-bvh-csg-0.0.16.tgz#b5fa39072acebfb1080249a05aeec8bd494b7780"
-  integrity sha512-RgC5dY0hAKdfd1bmD3o2CDfmK9GTkvsA1ECzoqTMhSkjSc2zp1z4Wpa5+emLi/EosF5P6+aK2veTxTLZA9+Mhw==
-
-three-mesh-bvh@^0.6.8:
-  version "0.6.8"
-  resolved "https://registry.npmjs.org/three-mesh-bvh/-/three-mesh-bvh-0.6.8.tgz#f27d18ca75bdc59316dff0f561af8fb316621a54"
-  integrity sha512-EGebF9DZx1S8+7OZYNNTT80GXJZVf+UYXD/HyTg/e2kR/ApofIFfUS4ZzIHNnUVIadpnLSzM4n96wX+l7GMbnQ==
 
 three-mesh-bvh@^0.8.3:
   version "0.8.3"

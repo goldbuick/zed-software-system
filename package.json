@@ -21,7 +21,6 @@
     "@jest/globals": "^29.7.0",
     "@lobehub/tts": "^1.25.8",
     "@metrichor/jmespath": "^0.3.1",
-    "@react-three/csg": "^4.0.0",
     "@react-three/drei": "^10.0.7",
     "@react-three/eslint-plugin": "^0.1.2",
     "@react-three/fiber": "^9.1.2",
