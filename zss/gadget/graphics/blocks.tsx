@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-import { BufferGeometry } from 'three'
+import { useEffect, useState } from 'react'
 import { RUNTIME } from 'zss/config'
 import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 
@@ -14,7 +13,22 @@ export function BlockMesh() {
 
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
-  console.info(material)
+  const { width: imageWidth = 0, height: imageHeight = 0 } =
+    charset?.image ?? {}
+
+  // create / config material
+  useEffect(() => {
+    material.uniforms.map.value = charset
+    material.uniforms.alt.value = altcharset ?? charset
+    material.uniforms.palette.value = palette
+    const imageCols = Math.round(imageWidth / CHAR_WIDTH)
+    const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
+    material.uniforms.cols.value = imageCols
+    material.uniforms.rows.value = imageRows - 1
+    material.uniforms.step.value.x = 1 / imageCols
+    material.uniforms.step.value.y = 1 / imageRows
+    material.needsUpdate = true
+  }, [palette, charset, altcharset, material, imageWidth, imageHeight])
 
   return (
     <>
