@@ -1,8 +1,9 @@
-import { OrthographicCamera } from '@react-three/drei'
+import { PerspectiveCamera } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { damp, damp3, dampE } from 'maath/easing'
+import { degToRad } from 'maath/misc'
 import { useRef } from 'react'
-import { Group } from 'three'
+import { Group, PerspectiveCamera as PerspectiveCameraImpl } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import {
@@ -16,7 +17,7 @@ import { ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 
 import { FlatLayer } from './flatlayer'
-import { IsoLayer } from './isolayer'
+import { FPVLayer } from './fpvlayer'
 import { MediaLayer } from './medialayer'
 import { RenderLayer } from './renderlayer'
 
@@ -52,24 +53,16 @@ function maptoscale(viewscale: VIEWSCALE): number {
   }
 }
 
-export function IsoGraphics({ width, height }: GraphicsProps) {
+export function FPVGraphics({ width, height }: GraphicsProps) {
   const viewwidth = width * RUNTIME.DRAW_CHAR_WIDTH()
   const viewheight = height * RUNTIME.DRAW_CHAR_HEIGHT()
 
-  const zoomref = useRef<Group>(null)
-  const tiltref = useRef<Group>(null)
   const overref = useRef<Group>(null)
   const underref = useRef<Group>(null)
-  const focusref = useRef<Group>(null)
+  const cameraref = useRef<PerspectiveCameraImpl>(null)
 
   useFrame((_, delta) => {
-    if (
-      !zoomref.current ||
-      !tiltref.current ||
-      !overref.current ||
-      !underref.current ||
-      !focusref.current
-    ) {
+    if (!overref.current || !underref.current || !cameraref.current) {
       return
     }
 
@@ -87,19 +80,18 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     const drawheight = BOARD_HEIGHT * RUNTIME.DRAW_CHAR_HEIGHT()
 
     // setup tracking state
-    if (!ispresent(focusref.current.userData.focusx)) {
-      zoomref.current.scale.setScalar(control.viewscale)
-      focusref.current.userData = {
-        focusx: control.focusx,
-        focusy: control.focusy,
-        focuslx: control.focusx,
-        focusly: control.focusy,
-        focusvx: 0,
-        focusvy: 0,
-        facing: control.facing,
-        focusz: 0,
-      }
-    }
+    // if (!ispresent(cameraref.current.userData.focusx)) {
+    //   cameraref.current.userData = {
+    //     focusx: control.focusx,
+    //     focusy: control.focusy,
+    //     focuslx: control.focusx,
+    //     focusly: control.focusy,
+    //     focusvx: 0,
+    //     focusvy: 0,
+    //     facing: control.facing,
+    //     focusz: 0,
+    //   }
+    // }
 
     // framing
     overref.current.position.x = 0
@@ -111,7 +103,7 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     underref.current.scale.setScalar(rscale)
 
     const animrate = 0.125
-    const { focusx, focusy, focuslx, focusly } = focusref.current.userData
+    // const { focusx, focusy, focuslx, focusly } = focusref.current.userData
 
     // --
 
@@ -138,35 +130,21 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     //   focusref.current.userData.focusvy = 0
     // }
 
-    // calc focus
-    let fx = focusx + 0.25
-    let fy = focusy + 0.5
-    fx += focusref.current.userData.focusvx
-    fy += focusref.current.userData.focusvy
-    fx *= -RUNTIME.DRAW_CHAR_WIDTH()
-    fy *= -RUNTIME.DRAW_CHAR_HEIGHT()
+    const drawcharwidth = RUNTIME.DRAW_CHAR_WIDTH()
+    const drawcharheight = RUNTIME.DRAW_CHAR_HEIGHT()
 
-    // update tracking
-    focusref.current.userData.focuslx = control.focusx
-    focusref.current.userData.focusly = control.focusy
+    // smooth this
+    dampE(
+      cameraref.current.rotation,
+      [Math.PI * -0.5, control.facing, 0],
+      animrate,
+      delta,
+    )
 
-    // zoom
-    damp3(zoomref.current.scale, maptoscale(control.viewscale), animrate, delta)
-
-    // tilt
-    dampE(tiltref.current.rotation, [0, 0, 0], animrate, delta)
-
-    // focus
-    damp3(focusref.current.position, [fx, fy, 0], animrate, delta)
-
-    // smoothed change in focus
-    damp(focusref.current.userData, 'focusx', control.focusx, animrate)
-    damp(focusref.current.userData, 'focusy', control.focusy, animrate)
-    damp(focusref.current.userData, 'focusvx', 0, animrate * 5)
-    damp(focusref.current.userData, 'focusvy', 0, animrate * 5)
-
-    // facing
-    tiltref.current.rotation.z = control.facing
+    // snap this
+    cameraref.current.position.x = (control.focusx + 0.5) * drawcharwidth
+    cameraref.current.position.y = (control.focusy + 0.5) * drawcharheight
+    cameraref.current.position.z = RUNTIME.DRAW_CHAR_HEIGHT() * 0.75
   })
 
   // re-render only when layer count changes
@@ -187,29 +165,22 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
           <MediaLayer key={`media${layer.id}`} id={layer.id} from="layers" />
         ))}
         <RenderLayer viewwidth={viewwidth} viewheight={viewheight}>
-          <OrthographicCamera
+          <PerspectiveCamera
+            ref={cameraref}
             makeDefault
-            manual
             near={1}
             far={2000}
-            position={[0, 0, 1000]}
+            rotation={[Math.PI * -0.5, 0, 0]}
+            position={[0, 0, 200]}
           />
-          <group rotation={[Math.PI * 0.25, 0, Math.PI * -0.25]}>
-            <group ref={zoomref}>
-              <group ref={tiltref}>
-                <group ref={focusref}>
-                  {layers.map((layer) => (
-                    <IsoLayer
-                      key={layer.id}
-                      id={layer.id}
-                      from="layers"
-                      z={maptolayerz(layer)}
-                    />
-                  ))}
-                </group>
-              </group>
-            </group>
-          </group>
+          {layers.map((layer) => (
+            <FPVLayer
+              key={layer.id}
+              id={layer.id}
+              from="layers"
+              z={maptolayerz(layer)}
+            />
+          ))}
         </RenderLayer>
       </group>
       <group ref={underref}>

@@ -336,9 +336,9 @@ export function memoryconverttogadgetlayers(
     if (isstring(board.graphics)) {
       const graphics = NAME(board.graphics)
       switch (graphics) {
+        case 'fpv':
         case 'iso':
         case 'mode7':
-        case 'firstperson':
           control.graphics = graphics
           break
         default:
