@@ -139,8 +139,8 @@ export function IsoGraphics({ width, height }: GraphicsProps) {
     // }
 
     // calc focus
-    let fx = focusx + 1
-    let fy = focusy + 1
+    let fx = focusx + 0.25
+    let fy = focusy + 0.5
     fx += focusref.current.userData.focusvx
     fy += focusref.current.userData.focusvy
     fx *= -RUNTIME.DRAW_CHAR_WIDTH()

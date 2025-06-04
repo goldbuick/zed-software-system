@@ -6,6 +6,7 @@ import {
   Glitch,
   Noise,
   Scanline,
+  TiltShift,
   Vignette,
 } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
@@ -139,9 +140,9 @@ export function Engine() {
             {mood.includes('bright') && (
               <Fragment key="mood">
                 <Bloom
-                  intensity={0.03}
-                  luminanceThreshold={0}
-                  kernelSize={KernelSize.SMALL}
+                  intensity={0.5}
+                  luminanceThreshold={0.5}
+                  kernelSize={KernelSize.VERY_LARGE}
                 />
               </Fragment>
             )}
