@@ -314,11 +314,15 @@ export function codepageapplyelementstats(
       case 'cycle':
       case 'stepx':
       case 'stepy':
+        // should we accept any kind of const here??
         // @ts-expect-error - we are doing this on purpose
         element[key] = stats[key]
         break
       case 'ispushable':
         element.pushable = 1
+        break
+      case 'notpushable':
+        element.pushable = 0
         break
       case 'iswalk':
       case 'iswalking':
@@ -338,6 +342,9 @@ export function codepageapplyelementstats(
         break
       case 'isdestructible':
         element.destructible = 1
+        break
+      case 'notdestructible':
+        element.destructible = 0
         break
       default:
         // TODO: raise error for unknown stat
