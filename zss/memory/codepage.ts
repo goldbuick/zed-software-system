@@ -15,8 +15,17 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
+import { mapstrcolor } from 'zss/words/color'
+import { mapstrdirtoconst } from 'zss/words/dir'
 import { statformat, stattypestring } from 'zss/words/stats'
-import { CATEGORY, COLLISION, NAME, STAT_TYPE } from 'zss/words/types'
+import {
+  CATEGORY,
+  COLLISION,
+  COLOR,
+  DIR,
+  NAME,
+  STAT_TYPE,
+} from 'zss/words/types'
 
 import { createboard, exportboard, importboard } from './board'
 import {
@@ -288,6 +297,23 @@ export function codepagereadstat(codepage: MAYBE<CODE_PAGE>, stat: string) {
 
 const colorparse = new Color()
 
+function mapstrtoconsts(value: any): MAYBE<COLOR | DIR> {
+  if (!isstring(value)) {
+    return undefined
+  }
+  const maybestrcolor = mapstrcolor(value)
+  if (ispresent(maybestrcolor) && ispresent(COLOR[maybestrcolor])) {
+    return COLOR[maybestrcolor]
+  }
+  const strdir = NAME(value)
+  // @ts-expect-error yes
+  const maybedir = DIR[strdir]
+  if (ispresent(maybedir)) {
+    return maybedir
+  }
+  return undefined
+}
+
 export function codepageapplyelementstats(
   stats: CODE_PAGE_STATS,
   element: BOARD_ELEMENT,
@@ -303,10 +329,7 @@ export function codepageapplyelementstats(
     switch (key) {
       case 'name':
       case 'char':
-      case 'color':
-      case 'bg':
       case 'light':
-      case 'lightdir':
       case 'group':
       case 'p1':
       case 'p2':
@@ -314,9 +337,14 @@ export function codepageapplyelementstats(
       case 'cycle':
       case 'stepx':
       case 'stepy':
-        // should we accept any kind of const here??
         // @ts-expect-error - we are doing this on purpose
         element[key] = stats[key]
+        break
+      case 'color':
+      case 'bg':
+      case 'lightdir':
+        // @ts-expect-error - we are doing this on purpose
+        element[key] = mapstrtoconsts(stats[key]) ?? stats[key]
         break
       case 'ispushable':
         element.pushable = 1
