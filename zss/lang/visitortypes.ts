@@ -50,7 +50,6 @@ export type InstmtCstNode = {
 } & CstNode
 
 export type InstmtCstChildren = {
-  stmt_label?: Stmt_labelCstNode[]
   stmt_stat?: Stmt_statCstNode[]
   stmt_text?: Stmt_textCstNode[]
   stmt_comment?: Stmt_commentCstNode[]
@@ -497,6 +496,7 @@ export type TokenCstNode = {
 } & CstNode
 
 export type TokenCstChildren = {
+  token_label?: IToken[]
   token_stringliteraldouble?: IToken[]
   token_stringliteral?: IToken[]
   token_numberliteral?: IToken[]
@@ -535,6 +535,7 @@ export type ICstNodeVisitor<IN, OUT> = {
   command_break(children: Command_breakCstChildren, param?: IN): OUT
   command_continue(children: Command_continueCstChildren, param?: IN): OUT
   command_play(children: Command_playCstChildren, param?: IN): OUT
+  command_toast(children: Command_toastCstChildren, param?: IN): OUT
   expr(children: ExprCstChildren, param?: IN): OUT
   and_test(children: And_testCstChildren, param?: IN): OUT
   not_test(children: Not_testCstChildren, param?: IN): OUT

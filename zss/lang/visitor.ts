@@ -1073,6 +1073,15 @@ class ScriptVisitor
   }
 
   token(ctx: TokenCstChildren, location: CstNodeLocation) {
+    if (ctx.token_label) {
+      const value = tokenstring(ctx.token_label, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+
     if (ctx.token_stringliteraldouble) {
       const value = tokenstring(ctx.token_stringliteraldouble, '').replaceAll(
         /(^"|"$)/g,
