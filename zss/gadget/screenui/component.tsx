@@ -94,6 +94,7 @@ export function ScreenUI() {
   const sidebar = useGadgetClient(
     useEqual((state) => state.gadget.sidebar ?? []),
   )
+  const { layers = [] } = useGadgetClient.getState().gadget
 
   // bail on odd states
   if (screensize.cols < 10 || screensize.rows < 10) {
@@ -195,20 +196,22 @@ export function ScreenUI() {
         },
       }}
     >
-      <group
-        position={[
-          -RUNTIME.DRAW_CHAR_WIDTH(),
-          -RUNTIME.DRAW_CHAR_HEIGHT(),
-          -524,
-        ]}
-      >
-        <Rect
-          visible
-          color={new Color(0.076, 0.076, 0)}
-          width={screensize.cols + 2}
-          height={screensize.rows + 2}
-        />
-      </group>
+      {layers.length > 0 && (
+        <group
+          position={[
+            -RUNTIME.DRAW_CHAR_WIDTH(),
+            -RUNTIME.DRAW_CHAR_HEIGHT(),
+            -524,
+          ]}
+        >
+          <Rect
+            visible
+            color={new Color(0.076, 0.076, 0)}
+            width={screensize.cols + 2}
+            height={screensize.rows + 2}
+          />
+        </group>
+      )}
       {/* eslint-disable-next-line react/no-unknown-property */}
       <group position={[0, 0, -512]}>
         {rects.map((rect) => {
