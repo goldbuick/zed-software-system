@@ -98,7 +98,7 @@ class ScriptParser extends CstParser {
 
   instmt = this.RULED('instmt', () => {
     this.OR([
-      { ALT: () => this.SUBRULE(this.stmt_label) },
+      // { ALT: () => this.SUBRULE(this.stmt_label) },
       { ALT: () => this.SUBRULE(this.stmt_stat) },
       { ALT: () => this.SUBRULE(this.stmt_text) },
       { ALT: () => this.SUBRULE(this.stmt_comment) },
@@ -432,6 +432,7 @@ class ScriptParser extends CstParser {
 
   token = this.RULED('token', () => {
     this.OR([
+      { ALT: () => this.CONSUME(lexer.label) },
       { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
       { ALT: () => this.CONSUME(lexer.stringliteral) },
       { ALT: () => this.CONSUME(lexer.numberliteral) },

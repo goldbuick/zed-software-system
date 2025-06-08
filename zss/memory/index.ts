@@ -17,12 +17,14 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { createos } from 'zss/os'
+import { ispt } from 'zss/words/dir'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
 import { listelementsbyattr } from './atomics'
 import {
   boarddeleteobject,
+  boardelementread,
   boardobjectcreatefromkind,
   boardobjectread,
   boardsetterrain,
@@ -747,7 +749,11 @@ export function memorytick() {
   }
 }
 
-export function memorysendtoactiveboards(message: string, data: any) {
+export function memorysendtoactiveboards(
+  message: string | PT,
+  label: string,
+  data: any,
+) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -761,6 +767,20 @@ export function memorysendtoactiveboards(message: string, data: any) {
         SOFTWARE.emit('', chipmessage, data)
       }
     }
+  }
+
+  if (ispt(message)) {
+    // send to all objects on active boards -
+    // I guess this is an easy way for cross board coordination
+    const boards = bookplayerreadboards(mainbook)
+    for (let b = 0; b < boards.length; ++b) {
+      const board = boards[b]
+      const element = boardelementread(board, message)
+      if (ispresent(element)) {
+        sendtoelements([element], label)
+      }
+    }
+    return
   }
 
   const { target, path } = parsetarget(message)

@@ -144,7 +144,7 @@ export const hyperlinktext = createSimpleToken({
 
 export const stringliteral = createSimpleToken({
   name: 'stringliteral',
-  pattern: /[^-0-9"!;@#/?()\s]+[^-"!;@#/?()\s]*/,
+  pattern: /[^-0-9"!:;@#/?()\s]+[^-"!:;@#/?()\s]*/,
   start_chars_hint: all_chars,
 })
 

@@ -8,12 +8,12 @@ import {
   gadgettext,
 } from 'zss/gadget/data/api'
 import { createsid } from 'zss/mapping/guid'
-import { totarget } from 'zss/mapping/string'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { listelementsbyattr } from 'zss/memory/atomics'
-import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { NAME } from 'zss/words/types'
+import { boardelementread } from 'zss/memory/board'
+import { READ_CONTEXT } from 'zss/words/reader'
+import { parsesend } from 'zss/words/send'
 
 export const RUNTIME_FIRMWARE = createfirmware({
   set(chip, name, value) {
@@ -52,48 +52,58 @@ export const RUNTIME_FIRMWARE = createfirmware({
     }
   },
 })
-  // primary firmware
   .command('send', (chip, words) => {
-    const [msg, data] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
-
-    // determine target of send
-    const [target, label] = totarget(msg)
-
-    // the intent here is to gather a list of target chip ids
-    const ltarget = NAME(target)
-    switch (ltarget) {
-      case 'all':
-        for (const id of Object.keys(READ_CONTEXT.board?.objects ?? {})) {
-          chip.send(READ_CONTEXT.elementfocus, id, label, data)
-        }
-        break
-      case 'self':
-        chip.message({
-          session: SOFTWARE.session(),
-          player: READ_CONTEXT.elementfocus,
-          id: createsid(),
-          sender: chip.id(),
-          target: label,
-          data,
-        })
-        break
-      case 'others':
-        for (const id of Object.keys(READ_CONTEXT.board?.objects ?? {})) {
-          if (id !== chip.id()) {
-            chip.send(READ_CONTEXT.elementfocus, id, label, data)
+    const send = parsesend(words)
+    if (ispresent(send.targetname)) {
+      switch (send.targetname) {
+        case 'all':
+          for (const id of Object.keys(READ_CONTEXT.board?.objects ?? {})) {
+            chip.send(READ_CONTEXT.elementfocus, id, send.label, send.data)
           }
-        }
-        break
-      default: {
-        // target named elements
-        const elements = listelementsbyattr(READ_CONTEXT.board, [target])
-        for (let i = 0; i < elements.length; ++i) {
-          const element = elements[i]
-          if (ispresent(element.id)) {
-            chip.send(READ_CONTEXT.elementfocus, element.id, label, data)
+          break
+        case 'self':
+          chip.message({
+            session: SOFTWARE.session(),
+            player: READ_CONTEXT.elementfocus,
+            id: createsid(),
+            sender: chip.id(),
+            target: send.label,
+            data: send.data,
+          })
+          break
+        case 'others':
+          for (const id of Object.keys(READ_CONTEXT.board?.objects ?? {})) {
+            if (id !== chip.id()) {
+              chip.send(READ_CONTEXT.elementfocus, id, send.label, send.data)
+            }
           }
+          break
+        default: {
+          // target named elements
+          const elements = listelementsbyattr(READ_CONTEXT.board, [
+            send.targetname,
+          ])
+          for (let i = 0; i < elements.length; ++i) {
+            const element = elements[i]
+            if (ispresent(element.id)) {
+              chip.send(
+                READ_CONTEXT.elementfocus,
+                element.id,
+                send.label,
+                send.data,
+              )
+            }
+          }
+          break
         }
-        break
+      }
+    } else if (ispresent(send.targetdir)) {
+      const element = boardelementread(
+        READ_CONTEXT.board,
+        send.targetdir.destpt,
+      )
+      if (ispresent(element?.id)) {
+        chip.send(READ_CONTEXT.elementfocus, element.id, send.label, send.data)
       }
     }
     return 0
