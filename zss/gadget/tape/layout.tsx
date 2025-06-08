@@ -100,13 +100,12 @@ export function TapeLayout({
   if (editoropen) {
     switch (layout) {
       case TAPE_DISPLAY.SPLIT_X: {
-        const editwidth = Math.floor(width * 0.587)
         return (
           <Fragment key="layout">
             <TapeLayoutTiles
               quickterminal={quickterminal}
               top={top}
-              width={width}
+              width={Math.round(width * 1.5)}
               height={height}
             >
               <TapeTerminal />
@@ -114,7 +113,7 @@ export function TapeLayout({
             <TapeLayoutTiles
               quickterminal={quickterminal}
               top={top}
-              width={editwidth}
+              width={Math.floor(width * 0.75)}
               height={height}
             >
               <TapeEditor />
@@ -142,7 +141,7 @@ export function TapeLayout({
       key="layout"
       quickterminal={quickterminal}
       top={top}
-      width={width}
+      width={Math.round(width * 1.5)}
       height={height}
     >
       <TapeTerminal />

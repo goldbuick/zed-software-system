@@ -74,12 +74,14 @@ export function TapeTerminal() {
   const context = useWriteText()
   const tapeinput = useTapeTerminal()
 
+  // wide terminal
+  const xstep = Math.floor(context.width * 0.5)
+
   const top = 0
   const left = 0
   const right = context.width - 1
   const bottom = context.height - 1
   const edge = textformatreadedges(context)
-  const xstep = Math.floor(edge.width * 0.587)
 
   const xleft = useMemo(
     () => forkonedge(left, top, xstep - 1, bottom, context),
