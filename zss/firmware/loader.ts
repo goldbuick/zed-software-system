@@ -16,6 +16,7 @@ import { codepagereaddata } from 'zss/memory/codepage'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { parsesend } from 'zss/words/send'
 
 import { loaderbinary } from './loaderbinary'
 import { loaderjson } from './loaderjson'
@@ -87,10 +88,13 @@ export const LOADER_FIRMWARE = createfirmware({
     return [false, undefined]
   },
 })
-  // primary firmware
   .command('send', (_, words) => {
-    const [target, data] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
-    memorysendtoactiveboards(target, data)
+    const send = parsesend(words)
+    if (ispresent(send.targetdir)) {
+      memorysendtoactiveboards(send.targetdir.destpt, send.data)
+    } else if (ispresent(send.targetname)) {
+      memorysendtoactiveboards(send.targetname, send.data)
+    }
     return 0
   })
   .command('stat', () => {

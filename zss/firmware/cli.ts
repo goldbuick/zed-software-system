@@ -48,6 +48,8 @@ import {
   memorysendtoactiveboards,
   memorysetsoftwarebook,
 } from 'zss/memory'
+import { boardelementread } from 'zss/memory/board'
+import { boardelementisobject } from 'zss/memory/boardelement'
 import {
   bookclearcodepage,
   bookelementdisplayread,
@@ -69,6 +71,7 @@ import {
 } from 'zss/memory/types'
 import { romparse, romprint, romread } from 'zss/rom'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
+import { parsesend } from 'zss/words/send'
 import { stattypestring } from 'zss/words/stats'
 import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
 
@@ -83,10 +86,9 @@ function helpprint(address: string) {
 }
 
 export const CLI_FIRMWARE = createfirmware()
-  // primary firmware
   .command('send', (_, words) => {
-    const [target, data] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
-    switch (NAME(target)) {
+    const send = parsesend(words)
+    switch (send.label) {
       // help messages
       case 'helpmenu':
         helpprint('menu')
@@ -104,13 +106,16 @@ export const CLI_FIRMWARE = createfirmware()
         helpprint('player')
         break
       default: {
-        const [msgtarget, msglabel] = totarget(target)
-        memorysendtoactiveboards(
-          msgtarget === 'self' && READ_CONTEXT.elementisplayer
-            ? `${READ_CONTEXT.elementfocus}:${msglabel}`
-            : target,
-          data,
-        )
+        if (ispresent(send.targetname)) {
+          memorysendtoactiveboards(
+            send.targetname === 'self' && READ_CONTEXT.elementisplayer
+              ? `${READ_CONTEXT.elementfocus}:${send.label}`
+              : send.label,
+            send.data,
+          )
+        } else if (ispresent(send.targetdir)) {
+          memorysendtoactiveboards(send.targetdir.destpt, send.data)
+        }
         break
       }
     }
