@@ -1,7 +1,13 @@
+import { useFrame } from '@react-three/fiber'
+import { damp3 } from 'maath/easing'
+import { useRef } from 'react'
+import { Group as GroupImpl } from 'three'
+import { RUNTIME } from 'zss/config'
 import { register_terminal_open } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
+import { TAPE_DISPLAY, useTape, useTapeTerminal } from 'zss/gadget/data/state'
+import { clamp } from 'zss/mapping/number'
 import { useShallow } from 'zustand/react/shallow'
 
 import { ShadeBoxDither } from '../graphics/dither'
@@ -12,6 +18,7 @@ import { TapeLayout } from './layout'
 
 export function Tape() {
   const screensize = useScreenSize()
+  const panref = useRef<GroupImpl>(null)
 
   let top = 0
   let height = screensize.rows - 2
@@ -39,6 +46,26 @@ export function Tape() {
       break
   }
 
+  useFrame((_, delta) => {
+    if (!panref.current) {
+      return
+    }
+
+    const width = Math.round(screensize.cols * 1.5)
+    const leading = Math.round(width * 0.25)
+    const { xcursor, xselect } = useTapeTerminal.getState()
+    const right = Math.max(xcursor, xselect ?? xcursor)
+    const range = width - screensize.cols
+    const ratio = clamp((right - leading) / (width - leading * 2), 0, 1)
+
+    damp3(
+      panref.current.position,
+      [range * RUNTIME.DRAW_CHAR_WIDTH() * -ratio, 0, 0],
+      0.111,
+      delta,
+    )
+  })
+
   // bail on odd states
   if (screensize.cols < 10 || screensize.rows < 10) {
     return null
@@ -61,12 +88,14 @@ export function Tape() {
       )}
       {showterminal ? (
         <UserFocus blockhotkeys>
-          <TapeLayout
-            quickterminal={quickterminal}
-            top={top}
-            width={screensize.cols}
-            height={height}
-          />
+          <group ref={panref}>
+            <TapeLayout
+              quickterminal={quickterminal}
+              top={top}
+              width={screensize.cols}
+              height={height}
+            />
+          </group>
         </UserFocus>
       ) : (
         <UserHotkey hotkey="Shift+?" althotkey="/">
