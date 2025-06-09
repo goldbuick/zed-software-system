@@ -30,9 +30,9 @@ export function ControlSurface({ width, height }: ControlSurfaceProps) {
   })
 
   // setup text writing
-  const store = useTiles(width, height, 0, COLOR.WHITE, COLOR.ONCLEAR)
+  const store = useTiles(width, height, 219, COLOR.WHITE, COLOR.BLACK)
   const context: WRITE_TEXT_CONTEXT = {
-    ...createwritetextcontext(width, height, COLOR.WHITE, COLOR.ONCLEAR),
+    ...createwritetextcontext(width, height, COLOR.WHITE, COLOR.BLACK),
     ...store.getState(),
   }
 
@@ -41,7 +41,7 @@ export function ControlSurface({ width, height }: ControlSurfaceProps) {
 
   return (
     <TilesData store={store}>
-      <Controls
+      {/* <Controls
         context={context}
         width={width}
         height={height}
@@ -54,7 +54,7 @@ export function ControlSurface({ width, height }: ControlSurfaceProps) {
         onDrawStick={(startx, starty, tipx, tipy) =>
           setdrawstick({ startx, starty, tipx, tipy })
         }
-      />
+      /> */}
       <ShadeBoxDither
         width={width}
         height={height}

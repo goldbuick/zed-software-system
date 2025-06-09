@@ -1,7 +1,15 @@
-import { useScreenSize } from '../userscreen'
+import { predict } from 'zss/feature/t9'
+import {
+  createwritetextcontext,
+  WRITE_TEXT_CONTEXT,
+} from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 
-import { ControlSurface } from './controlsurface'
-import { Keyboard } from './keyboard'
+import { useTiles, WriteTextContext } from '../hooks'
+import { useScreenSize } from '../userscreen'
+import { TilesData, TilesRender } from '../usetiles'
+
+import { TouchPlane } from './touchplane'
 
 export type TouchUIProps = {
   width: number
@@ -10,6 +18,11 @@ export type TouchUIProps = {
 
 export function TouchUI({ width, height }: TouchUIProps) {
   const screensize = useScreenSize()
+  const store = useTiles(width, height, 177, COLOR.WHITE, COLOR.BLACK)
+  const context: WRITE_TEXT_CONTEXT = {
+    ...createwritetextcontext(width, height, COLOR.WHITE, COLOR.BLACK),
+    ...store.getState(),
+  }
 
   // bail on odd states
   if (screensize.cols < 10 || screensize.rows < 10) {
@@ -17,13 +30,17 @@ export function TouchUI({ width, height }: TouchUIProps) {
   }
 
   return (
-    <>
-      <group position={[0, 0, 800]}>
-        <ControlSurface width={width} height={height} />
-      </group>
-      <group position={[0, 0, 850]}>
-        <Keyboard width={width} height={height} />
-      </group>
-    </>
+    <TilesData store={store}>
+      <TilesRender width={width} height={height} />
+      <WriteTextContext.Provider value={context}>
+        <TouchPlane
+          width={width}
+          height={height}
+          onClick={() => {
+            console.info(predict('6666'))
+          }}
+        />
+      </WriteTextContext.Provider>
+    </TilesData>
   )
 }

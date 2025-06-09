@@ -44,10 +44,8 @@ export function UserScreen({ children }: UserScreenProps) {
       cols -= inset * 2
     } else {
       rows = Math.round(rows * 0.666)
-      // adjust overlap
-      const overlap = rows - 4
-      insetrows -= overlap
-      insety = overlap * RUNTIME.DRAW_CHAR_HEIGHT()
+      insetrows -= rows
+      insety = rows * RUNTIME.DRAW_CHAR_HEIGHT()
     }
   }
 

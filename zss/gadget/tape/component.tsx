@@ -19,10 +19,6 @@ import { TapeLayout } from './layout'
 export function Tape() {
   const screensize = useScreenSize()
   const panref = useRef<GroupImpl>(null)
-
-  let top = 0
-  let height = screensize.rows - 2
-
   const [layout, quickterminal, terminalopen, editoropen] = useTape(
     useShallow((state) => [
       state.layout,
@@ -32,6 +28,8 @@ export function Tape() {
     ]),
   )
 
+  let top = 0
+  let height = screensize.rows
   switch (layout) {
     case TAPE_DISPLAY.TOP:
       height = Math.floor(screensize.rows * 0.5)
@@ -56,7 +54,7 @@ export function Tape() {
     const { xcursor, xselect } = useTapeTerminal.getState()
     const right = Math.max(xcursor, xselect ?? xcursor)
     const range = width - screensize.cols
-    const ratio = clamp((right - leading) / (width - leading * 2), 0, 1)
+    const ratio = clamp((right - leading) / (width - leading * 2.5), 0, 1)
 
     damp3(
       panref.current.position,
