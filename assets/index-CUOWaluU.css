@@ -1,0 +1,1 @@
+html{margin:0;padding:0;height:100%;overscroll-behavior:none;background:#000}body{margin:0;padding:0}#frame{top:0;left:0;right:0;bottom:0;position:fixed}#scrump{color:#fff;font-family:monospace;height:4096px}canvas{-webkit-user-select:none;user-select:none;touch-action:none;image-rendering:pixelated}.notready{display:none}
