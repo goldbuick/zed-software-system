@@ -102,9 +102,7 @@ export function EditorInput({
   }
 
   const iic = ii2 - ii1 + 1
-  const strvalueselected = hasselection
-    ? strvalue.substring(ii1, ii2 + 1)
-    : strvalue
+  const strvalueselected = hasselection ? strvalue.substring(ii1, ii2 + 1) : ''
 
   function trackselection(active: boolean) {
     if (active) {
@@ -130,8 +128,26 @@ export function EditorInput({
     })
   }
 
+  function strtogglecomments() {
+    if (hasselection) {
+      const lines = strvalueselected.split('\n')
+      for (let l = 0; l < lines.length; ++l) {
+        const line = lines[l]
+        const tline = line.trim()
+        if (tline.startsWith(`'`)) {
+          lines[l] = line.replace(/' ?/, '')
+        } else if (tline) {
+          lines[l] = `' ${line}`
+        }
+      }
+      strvaluesplice(ii1, iic, lines.join('\n'))
+    } else {
+      // toggle single line
+    }
+  }
+
   function deleteselection() {
-    if (ispresent(tapeeditor.select)) {
+    if (hasselection) {
       useTapeEditor.setState({ cursor: ii1 })
       strvaluesplice(ii1, iic)
     }
@@ -342,13 +358,20 @@ export function EditorInput({
                       `running $WHITE${strvalueselected.substring(0, 16)}...$BLUE`,
                     )
                     break
+                  case `'`:
+                    strtogglecomments()
+                    break
                 }
               } else if (mods.alt) {
                 // no-op ?? - could this shove text around when you have selection ??
                 // or jump by 10 or by word ??
               } else if (key.length === 1) {
                 if (hasselection) {
-                  strvaluesplice(ii1, iic, key)
+                  if (key === `'`) {
+                    strtogglecomments()
+                  } else {
+                    strvaluesplice(ii1, iic, key)
+                  }
                 } else {
                   const cursor = tapeeditor.cursor + key.length
                   codepage.insert(tapeeditor.cursor, key)

@@ -142,7 +142,7 @@ export function TapeTerminalInput({
     // write hint
     setuplogitem(false, false, 0, 0, context)
     const hint = `${import.meta.env.ZSS_BRANCH_NAME}:${import.meta.env.ZSS_BRANCH_VERSION} - if lost try #help`
-    context.x = edge.right - hint.length
+    context.x = 1
     tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
   }
 
