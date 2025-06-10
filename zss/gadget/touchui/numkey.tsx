@@ -19,16 +19,17 @@ export function NumKey({ x, y, letters, digit }: NumKeyProps) {
 
   context.x = x
   context.y = y
-  tokenizeandwritetextformat(`$176$176$176$176$176`, context, false)
+  tokenizeandwritetextformat(`$178$178$178$178$178`, context, false)
   context.x = x
   context.y = y + 1
-  tokenizeandwritetextformat(`$176$176$176$176$176`, context, false)
+  tokenizeandwritetextformat(`$178$178$178$178$178`, context, false)
   context.x = x
   context.y = y + 2
-  tokenizeandwritetextformat(`$176$176$176$176$176`, context, false)
+  tokenizeandwritetextformat(`$178$178$178$178$178`, context, false)
 
   if (letters) {
-    context.x = x + Math.round(2.5 - letters.length * 0.5)
+    context.x =
+      x + (letters.startsWith('$') ? 2 : Math.round(2.5 - letters.length * 0.5))
     context.y = y
     tokenizeandwritetextformat(
       keyboardshift ? letters.toUpperCase() : letters.toLowerCase(),

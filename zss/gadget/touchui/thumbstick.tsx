@@ -1,4 +1,4 @@
-import { useFrame } from '@react-three/fiber'
+import { ThreeEvent, useFrame } from '@react-three/fiber'
 import { radToDeg } from 'maath/misc'
 import { useState } from 'react'
 import { Vector2, Vector3 } from 'three'
@@ -9,7 +9,7 @@ import { snap } from 'zss/mapping/number'
 import { useDeviceConfig } from '../hooks'
 import { INPUT_RATE } from '../userinput'
 
-import { handlestickdir } from './inputs'
+import { handlestickdir } from './stickinputs'
 import { TouchPlane } from './touchplane'
 
 const INPUT_RATE_SECONDS = INPUT_RATE / 1000.0
@@ -56,32 +56,39 @@ export function ThumbStick({
     inputacc: INPUT_RATE,
   })
 
-  function clearmovestick(cx: number, cy: number) {
-    if (movestick.tipx === -1) {
-      // check touch targets
-      if (ptwithin(cx, cy, 0, width - 12, 3, 12)) {
-        // toggle sidebar
-        useDeviceConfig.setState((state) => ({
-          ...state,
-          sidebaropen: !state.sidebaropen,
-        }))
-      } else if (ptwithin(cx, cy, height - 4, width - 12, height - 2, 12)) {
-        // open keyboard
-        useDeviceConfig.setState({
-          showkeyboard: true,
-        })
+  function clearmovestick(e: ThreeEvent<PointerEvent>) {
+    --movestick.presscount
+    if (e.pointerId === movestick.pointerid && e.intersections[0]) {
+      e.intersections[0].object.worldToLocal(
+        point.copy(e.intersections[0].point),
+      )
+      const { cx, cy } = coords(width, height)
+      if (movestick.tipx === -1) {
+        // check touch targets
+        if (ptwithin(cx, cy, 0, width - 12, 3, 12)) {
+          // toggle sidebar
+          useDeviceConfig.setState((state) => ({
+            ...state,
+            sidebaropen: !state.sidebaropen,
+          }))
+        } else if (ptwithin(cx, cy, height - 4, width - 12, height - 2, 12)) {
+          // open keyboard
+          useDeviceConfig.setState({
+            showkeyboard: true,
+          })
+        }
       }
+
+      // reset
+      movestick.startx = -1
+      movestick.starty = -1
+      movestick.tipx = -1
+      movestick.tipy = -1
+      movestick.pointerid = -1
+
+      // update visuals
+      onUp()
     }
-
-    // reset
-    movestick.startx = -1
-    movestick.starty = -1
-    movestick.tipx = -1
-    movestick.tipy = -1
-    movestick.pointerid = -1
-
-    // update visuals
-    onUp()
   }
 
   useFrame((_, delta) => {
@@ -92,7 +99,7 @@ export function ThumbStick({
       motion.set(movestick.startx - cx, movestick.starty - cy)
       if (movestick.tipx !== -1 || motion.length() > 3) {
         const snapdir = snap(radToDeg(motion.angle()), 45)
-        handlestickdir(snapdir, movestick.presscount > 1)
+        handlestickdir(snapdir)
       }
     }
   })
@@ -139,26 +146,8 @@ export function ThumbStick({
           }
         }
       }}
-      onPointerUp={(e) => {
-        --movestick.presscount
-        if (e.pointerId === movestick.pointerid && e.intersections[0]) {
-          e.intersections[0].object.worldToLocal(
-            point.copy(e.intersections[0].point),
-          )
-          const { cx, cy } = coords(width, height)
-          clearmovestick(cx, cy)
-        }
-      }}
-      onPointerOut={(e) => {
-        --movestick.presscount
-        if (e.pointerId === movestick.pointerid && e.intersections[0]) {
-          e.intersections[0].object.worldToLocal(
-            point.copy(e.intersections[0].point),
-          )
-          const { cx, cy } = coords(width, height)
-          clearmovestick(cx, cy)
-        }
-      }}
+      onPointerUp={clearmovestick}
+      onPointerOut={clearmovestick}
     />
   )
 }
