@@ -285,7 +285,7 @@ export const useDeviceConfig = create<DEVICE_CONFIG>(() => ({
   islowrez: false,
   islandscape: true,
   sidebaropen: true,
-  showkeyboard: false,
+  showkeyboard: true,
   keyboardalt: false,
   keyboardctrl: false,
   keyboardshift: false,

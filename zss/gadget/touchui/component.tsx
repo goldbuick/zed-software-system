@@ -1,4 +1,3 @@
-import { predict } from 'zss/feature/t9'
 import {
   createwritetextcontext,
   WRITE_TEXT_CONTEXT,
@@ -9,7 +8,7 @@ import { useTiles, WriteTextContext } from '../hooks'
 import { useScreenSize } from '../userscreen'
 import { TilesData, TilesRender } from '../usetiles'
 
-import { TouchPlane } from './touchplane'
+import { Elements } from './elements'
 
 export type TouchUIProps = {
   width: number
@@ -31,16 +30,10 @@ export function TouchUI({ width, height }: TouchUIProps) {
 
   return (
     <TilesData store={store}>
-      <TilesRender width={width} height={height} />
       <WriteTextContext.Provider value={context}>
-        <TouchPlane
-          width={width}
-          height={height}
-          onClick={() => {
-            console.info(predict('6666'))
-          }}
-        />
+        <Elements width={width} height={height} />
       </WriteTextContext.Provider>
+      <TilesRender width={width} height={height} />
     </TilesData>
   )
 }

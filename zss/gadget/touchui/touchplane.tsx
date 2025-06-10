@@ -5,24 +5,37 @@ import { RUNTIME } from 'zss/config'
 type ButtonProps = {
   x?: number
   y?: number
+  z?: number
   width: number
   height: number
+  debug?: boolean
+  blocking?: boolean
 } & EventHandlers
 
-export function TouchPlane({ x, y, width, height, ...props }: ButtonProps) {
+export function TouchPlane({
+  x,
+  y,
+  z,
+  width,
+  height,
+  debug,
+  blocking,
+  ...props
+}: ButtonProps) {
   const drawcharwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawcharheight = RUNTIME.DRAW_CHAR_HEIGHT()
   return (
     <Plane
       {...props}
       args={[width * drawcharwidth, height * drawcharheight]}
+      userData={{ blocking }}
       position={[
         (x ?? 0) * drawcharwidth + width * drawcharwidth * 0.5,
         (y ?? 0) * drawcharheight + height * drawcharheight * 0.5,
-        0,
+        z ?? 0,
       ]}
     >
-      <meshBasicMaterial transparent opacity={0} />
+      <meshBasicMaterial transparent opacity={debug ? 0.7 : 0} color={'red'} />
     </Plane>
   )
 }
