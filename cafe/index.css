@@ -19,5 +19,7 @@ body {
 }
 
 canvas {
+  user-select: none;
+  touch-action: none;
   image-rendering: pixelated;
 }

@@ -31,7 +31,6 @@ function coords(width: number, height: number) {
 type ThumbStickProps = {
   width: number
   height: number
-  onDown: () => void
   onUp: () => void
   onDrawStick: (
     startx: number,
@@ -44,7 +43,6 @@ type ThumbStickProps = {
 export function ThumbStick({
   width,
   height,
-  onDown,
   onUp,
   onDrawStick,
 }: ThumbStickProps) {
@@ -84,13 +82,6 @@ export function ThumbStick({
 
     // update visuals
     onUp()
-
-    // onDrawStick(
-    //   movestick.startx,
-    //   movestick.starty,
-    //   movestick.tipx,
-    //   movestick.tipy,
-    // )
   }
 
   useFrame((_, delta) => {
@@ -111,6 +102,7 @@ export function ThumbStick({
       width={width}
       height={height}
       onPointerDown={(e) => {
+        // e.stopPropagation()
         ++movestick.presscount
         if (movestick.startx === -1) {
           e.intersections[0].object.worldToLocal(
@@ -124,7 +116,6 @@ export function ThumbStick({
           movestick.pointerid = e.pointerId
           movestick.inputacc = INPUT_RATE
         }
-        onDown()
       }}
       onPointerMove={(e) => {
         if (e.pointerId === movestick.pointerid && e.intersections[0]) {

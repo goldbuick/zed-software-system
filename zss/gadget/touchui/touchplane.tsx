@@ -9,7 +9,6 @@ type ButtonProps = {
   width: number
   height: number
   debug?: boolean
-  blocking?: boolean
 } & EventHandlers
 
 export function TouchPlane({
@@ -19,7 +18,6 @@ export function TouchPlane({
   width,
   height,
   debug,
-  blocking,
   ...props
 }: ButtonProps) {
   const drawcharwidth = RUNTIME.DRAW_CHAR_WIDTH()
@@ -28,7 +26,6 @@ export function TouchPlane({
     <Plane
       {...props}
       args={[width * drawcharwidth, height * drawcharheight]}
-      userData={{ blocking }}
       position={[
         (x ?? 0) * drawcharwidth + width * drawcharwidth * 0.5,
         (y ?? 0) * drawcharheight + height * drawcharheight * 0.5,

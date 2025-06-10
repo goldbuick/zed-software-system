@@ -1,4 +1,7 @@
-import { useDeviceConfig } from '../hooks'
+import { Vector2 } from 'three'
+import { tokenizeandwritetextformat } from 'zss/words/textformat'
+
+import { useDeviceConfig, useWriteText } from '../hooks'
 
 import { NumKey } from './numkey'
 import { Numpad } from './numpad'
@@ -8,9 +11,13 @@ import { ToggleKey } from './togglekey'
 type ElementsProps = {
   width: number
   height: number
+  onReset: () => void
 }
 
-export function Elements({ width, height }: ElementsProps) {
+const motion = new Vector2()
+
+export function Elements({ width, height, onReset }: ElementsProps) {
+  const context = useWriteText()
   const { keyboardshift, keyboardctrl, keyboardalt } = useDeviceConfig()
   return (
     <>
@@ -62,23 +69,26 @@ export function Elements({ width, height }: ElementsProps) {
       <ThumbStick
         width={width}
         height={height}
-        onDown={() => {
-          useDeviceConfig.setState((state) => ({
-            ...state,
-            showkeyboard: false,
-          }))
-        }}
-        onUp={() => {
-          useDeviceConfig.setState((state) => ({
-            ...state,
-            showkeyboard: true,
-          }))
-        }}
+        onUp={onReset}
         onDrawStick={(startx, starty, tipx, tipy) => {
-          console.info(startx, starty, tipx, tipy)
-          // context.x = startx
-          // context.y = starty
-          // tokenizeandwritetextformat(`$176$176$176$176$176`, context, false)
+          for (let i = 0; i < 5; ++i) {
+            context.x = startx - 3
+            context.y = starty - 2 + i
+            tokenizeandwritetextformat(
+              `$dkblue$176$176$176$176$176$176$176`,
+              context,
+              false,
+            )
+          }
+          // limit knob range
+          motion.x = tipx - startx
+          motion.y = tipy - starty
+          motion.normalize().multiplyScalar(4)
+          for (let i = 0; i < 3; ++i) {
+            context.x = startx + Math.round(motion.x) - 1
+            context.y = starty + Math.round(motion.y) - 1 + i
+            tokenizeandwritetextformat(`$blue$219$219$219`, context, false)
+          }
         }}
       />
     </>

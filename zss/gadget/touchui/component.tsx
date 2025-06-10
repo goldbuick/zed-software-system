@@ -1,10 +1,11 @@
+import { useState } from 'react'
 import {
   createwritetextcontext,
   WRITE_TEXT_CONTEXT,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { useTiles, WriteTextContext } from '../hooks'
+import { resetTiles, useTiles, WriteTextContext } from '../hooks'
 import { useScreenSize } from '../userscreen'
 import { TilesData, TilesRender } from '../usetiles'
 
@@ -16,6 +17,7 @@ export type TouchUIProps = {
 }
 
 export function TouchUI({ width, height }: TouchUIProps) {
+  const [reset, setreset] = useState(0)
   const screensize = useScreenSize()
   const store = useTiles(width, height, 177, COLOR.WHITE, COLOR.BLACK)
   const context: WRITE_TEXT_CONTEXT = {
@@ -31,7 +33,15 @@ export function TouchUI({ width, height }: TouchUIProps) {
   return (
     <TilesData store={store}>
       <WriteTextContext.Provider value={context}>
-        <Elements width={width} height={height} />
+        <Elements
+          key={reset}
+          width={width}
+          height={height}
+          onReset={() => {
+            resetTiles(context, 177, COLOR.WHITE, COLOR.BLACK)
+            setreset(Math.random())
+          }}
+        />
       </WriteTextContext.Provider>
       <TilesRender width={width} height={height} />
     </TilesData>
