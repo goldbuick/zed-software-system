@@ -4,7 +4,6 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { useDeviceConfig, useWriteText } from '../hooks'
 
 import { NumKey } from './numkey'
-import { Numpad } from './numpad'
 import { ThumbStick } from './thumbstick'
 import { ToggleKey } from './togglekey'
 
@@ -17,15 +16,35 @@ type ElementsProps = {
 const motion = new Vector2()
 
 export function Elements({ width, height, onReset }: ElementsProps) {
+  const left = width - 19
+  const mid = width - 13
+  const right = width - 7
   const context = useWriteText()
   const { keyboardshift, keyboardctrl, keyboardalt } = useDeviceConfig()
+
   return (
     <>
-      <Numpad width={width} />
+      <NumKey x={left} y={1} letters="" digit="1" />
+      <NumKey x={mid} y={1} letters="ABC" digit="2" />
+      <NumKey x={right} y={1} letters="DEF" digit="3" />
+
+      <NumKey x={left} y={5} letters="GHI" digit="4" />
+      <NumKey x={mid} y={5} letters="JKL" digit="5" />
+      <NumKey x={right} y={5} letters="MNO" digit="6" />
+
+      <NumKey x={left} y={9} letters="PQRS" digit="7" />
+      <NumKey x={mid} y={9} letters="TUV" digit="8" />
+      <NumKey x={right} y={9} letters="WXYZ" digit="9" />
+
+      <NumKey x={left} y={13} letters="" digit="#" />
+      <NumKey x={mid} y={13} letters="" digit="0" />
+      <NumKey x={right} y={13} letters="ENTER" digit="[Enter]" />
+
       <NumKey x={1} y={1} letters="+" digit="-" />
       <NumKey x={7} y={1} letters="%" digit="*" />
       <NumKey x={13} y={1} letters="<" digit="(" />
       <NumKey x={19} y={1} letters=">" digit=")" />
+
       <NumKey x={1} y={5} letters="ESC" digit="[Escape]" />
       <ToggleKey
         x={7}
@@ -49,6 +68,8 @@ export function Elements({ width, height, onReset }: ElementsProps) {
           }))
         }}
       />
+      <NumKey x={19} y={5} letters="$26" digit="[ArrowRight]" />
+
       <NumKey x={1} y={9} letters="SPACE" digit="[Space]" />
       <ToggleKey
         x={7}
@@ -62,10 +83,13 @@ export function Elements({ width, height, onReset }: ElementsProps) {
         }}
       />
       <NumKey x={13} y={9} letters="BKSPC" digit="[Backspace]" />
+      <NumKey x={19} y={9} letters="$27" digit="[ArrowLeft]" />
+
       <NumKey x={1} y={13} letters="/" digit="?" />
       <NumKey x={7} y={13} letters=";" digit="!" />
       <NumKey x={13} y={13} letters=":" digit="'" />
       <NumKey x={19} y={13} letters={`"`} digit="@" />
+
       <ThumbStick
         width={width}
         height={height}
