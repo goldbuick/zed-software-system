@@ -628,7 +628,7 @@ const register = createdevice(
       case 'editor:open':
         if (isarray(message.data)) {
           const [book, path, type, title] = message.data
-          useTape.setState((state) => ({
+          useTape.setState(() => ({
             editor: {
               open: true,
               player: message.player,
@@ -648,98 +648,19 @@ const register = createdevice(
           },
         }))
         break
-      default: {
-        const { target, path } = parsetarget(message.target)
-        switch (target) {
-          case 'touchkey':
-            doasync(register, message.player, async () => {
-              switch (path) {
-                case '[Alt]':
-                  synth_play(register, message.player, '', '-c', true)
-                  useDeviceConfig.setState((state) => ({
-                    ...state,
-                    keyboardalt: !state.keyboardalt,
-                    keyboardctrl: false,
-                    keyboardshift: false,
-                  }))
-                  break
-                case '[Ctrl]':
-                  synth_play(register, message.player, '', '-e', true)
-                  useDeviceConfig.setState((state) => ({
-                    ...state,
-                    keyboardalt: false,
-                    keyboardctrl: !state.keyboardctrl,
-                    keyboardshift: false,
-                  }))
-                  break
-                case '[Shift]':
-                  synth_play(register, message.player, '', '-g', true)
-                  useDeviceConfig.setState((state) => ({
-                    ...state,
-                    keyboardalt: false,
-                    keyboardctrl: false,
-                    keyboardshift: !state.keyboardshift,
-                  }))
-                  break
-                default: {
-                  const isnumber = !isNaN(parseInt(path, 10))
-                  const deviceconfig = useDeviceConfig.getState()
-                  const invoke: string[] = []
-                  const metakey = ismac ? 'Meta' : 'Ctrl'
-                  if (deviceconfig.keyboardshift) {
-                    synth_play(
-                      register,
-                      message.player,
-                      '',
-                      isnumber ? '+c' : '+f',
-                      true,
-                    )
-                    invoke.push('{Shift>}')
-                  } else if (deviceconfig.keyboardalt) {
-                    synth_play(
-                      register,
-                      message.player,
-                      '',
-                      isnumber ? '+c!' : '+f!',
-                      true,
-                    )
-                    invoke.push('{Alt>}')
-                  } else if (deviceconfig.keyboardctrl) {
-                    synth_play(
-                      register,
-                      message.player,
-                      '',
-                      isnumber ? '+c#' : '+f#',
-                      true,
-                    )
-                    invoke.push(`{${metakey}>}`)
-                  } else {
-                    synth_play(
-                      register,
-                      message.player,
-                      '',
-                      isnumber ? '-c' : '-f',
-                      true,
-                    )
-                  }
-                  invoke.push(path)
-                  if (deviceconfig.keyboardshift) {
-                    invoke.push('{/Shift}')
-                  } else if (deviceconfig.keyboardalt) {
-                    invoke.push('{/Alt}')
-                  } else if (deviceconfig.keyboardctrl) {
-                    invoke.push(`{/${metakey}}`)
-                  }
-                  const keyboardinvoke = invoke.join('')
-                  await user.keyboard(keyboardinvoke)
-                  break
-                }
-              }
-            })
-            break
+      case 't9words':
+        if (isarray(message.data)) {
+          if (
+            message.data.length ||
+            (message.data.length === 0 &&
+              useDeviceConfig.getState().wordlist.length !== 0)
+          ) {
+            useDeviceConfig.setState(() => ({
+              wordlist: message.data,
+            }))
+          }
         }
         break
-      }
     }
   },
 )

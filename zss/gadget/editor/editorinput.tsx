@@ -3,6 +3,7 @@ import {
   api_error,
   api_log,
   register_editor_close,
+  register_t9words,
   register_terminal_close,
   register_terminal_inclayout,
   vm_cli,
@@ -12,10 +13,11 @@ import {
 import { Y } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { checkforword } from 'zss/feature/t9'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { ismac } from 'zss/words/system'
 import {
   applycolortoindexes,
@@ -158,7 +160,13 @@ export function EditorInput({
   }
 
   // eval for t9 / alt keys
-  console.info(tapeeditor.cursor)
+  const maybechar = checkforword(strvalue, tapeeditor.cursor)
+  if (isstring(maybechar)) {
+    strvaluesplice(tapeeditor.cursor - 2, 2, maybechar)
+  }
+  if (isarray(maybechar)) {
+    register_t9words(SOFTWARE, player, maybechar)
+  }
 
   const movecursor = useCallback(
     function movecursor(inc: number) {

@@ -6,6 +6,7 @@
   "scripts": {
     "sloc": "npx sloc zss",
     "test": "yarn jest",
+    "words": "node ./words",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "clear": "rimraf dist && rimraf dist-ssr && rimraf node_modules/.vite",
     "dev": "yarn && yarn clear && vite --host 0.0.0.0 --port 7777",
@@ -21,7 +22,6 @@
     "@jest/globals": "^29.7.0",
     "@lobehub/tts": "^1.25.8",
     "@metrichor/jmespath": "^0.3.1",
-    "@nkzw/safe-word-list": "^2.1.0",
     "@react-three/drei": "^10.0.7",
     "@react-three/eslint-plugin": "^0.1.2",
     "@react-three/fiber": "^9.1.2",
@@ -96,6 +96,7 @@
     "ts-jest": "^29.1.3",
     "typescript": "^5.2.2",
     "uint8-util": "^2.2.5",
+    "unigram": "^1.1.1",
     "unmute-ios-audio": "^3.3.0",
     "uqr": "^0.1.2",
     "vite": "^5.4.11",

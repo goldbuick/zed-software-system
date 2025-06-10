@@ -959,11 +959,6 @@
     outvariant "^1.4.3"
     strict-event-emitter "^0.5.1"
 
-"@nkzw/safe-word-list@^2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@nkzw/safe-word-list/-/safe-word-list-2.1.0.tgz#29cb992c5db1981a71304d4f8d7d10f96dbcbaf8"
-  integrity sha512-P1sP0XzX51piUkiJTkDtpPBnRvuRr1NQ5lyH+Yarr6kZvgyjj2nOgTSf+8xGgVx3g4qeyGYDXWeHJcmd9PGUaA==
-
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -7768,6 +7763,11 @@ unified@^11.0.5:
     is-plain-obj "^4.0.0"
     trough "^2.0.0"
     vfile "^6.0.0"
+
+unigram@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/unigram/-/unigram-1.1.1.tgz#c1b1834db142d7bd1af4bcf4622315833d85cd44"
+  integrity sha512-Xtd37xlypxK6/aScXxDS/HbDa8SqAXjkdW6bp7jc05qyYjf+b13qPWmzTWbixCELt1FDC5oBl0A4IUMOkTCsmw==
 
 unist-util-is@^5.0.0:
   version "5.2.1"

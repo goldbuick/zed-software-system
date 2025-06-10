@@ -384,6 +384,14 @@ export function register_editor_close(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:editor:close')
 }
 
+export function register_t9words(
+  device: DEVICELIKE,
+  player: string,
+  words: string[],
+) {
+  device.emit(player, 'register:t9words', words)
+}
+
 export function vm_operator(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:operator')
 }

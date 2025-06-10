@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import {
   api_error,
+  register_t9words,
   register_terminal_close,
   register_terminal_inclayout,
   vm_cli,
@@ -8,13 +9,14 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer, writehistorybuffer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { checkforword } from 'zss/feature/t9'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   applycolortoindexes,
   applystrtoindex,
@@ -136,7 +138,13 @@ export function TapeTerminalInput({
   }
 
   // eval for t9 / alt keys
-  console.info(tapeterminal.xcursor)
+  const maybechar = checkforword(inputstate, tapeterminal.xcursor)
+  if (isstring(maybechar)) {
+    inputstatesetsplice(tapeterminal.xcursor - 2, 2, maybechar)
+  }
+  if (isarray(maybechar)) {
+    register_t9words(SOFTWARE, player, maybechar)
+  }
 
   // reset color & bg
   context.reset.bg = bgcolor(quickterminal)

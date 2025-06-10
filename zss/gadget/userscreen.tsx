@@ -43,7 +43,7 @@ export function UserScreen({ children }: UserScreenProps) {
       insetx = inset * RUNTIME.DRAW_CHAR_WIDTH()
       cols -= inset * 2
     } else {
-      rows = Math.floor(rrows) - 17
+      rows = Math.floor(rrows) - 16
       insetrows -= rows
       insety = rows * RUNTIME.DRAW_CHAR_HEIGHT()
     }
