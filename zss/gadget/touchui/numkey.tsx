@@ -22,7 +22,7 @@ export function NumKey({ x, y, letters, digit }: NumKeyProps) {
   tokenizeandwritetextformat(`$219$219$219$219$219`, context, false)
   context.x = x
   context.y = y + 1
-  tokenizeandwritetextformat(`$219$219$219$219$219`, context, false)
+  tokenizeandwritetextformat(`$219$178$178$178$219`, context, false)
   context.x = x
   context.y = y + 2
   tokenizeandwritetextformat(`$219$219$219$219$219`, context, false)

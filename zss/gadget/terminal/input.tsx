@@ -135,6 +135,9 @@ export function TapeTerminalInput({
     })
   }
 
+  // eval for t9 / alt keys
+  console.info(tapeterminal.xcursor)
+
   // reset color & bg
   context.reset.bg = bgcolor(quickterminal)
 

@@ -6,6 +6,7 @@ import { useDeviceConfig, useWriteText } from '../hooks'
 import { NumKey } from './numkey'
 import { ThumbStick } from './thumbstick'
 import { ToggleKey } from './togglekey'
+import { TouchPlane } from './touchplane'
 
 type ElementsProps = {
   width: number
@@ -24,6 +25,20 @@ export function Elements({ width, height, onReset }: ElementsProps) {
 
   return (
     <>
+      <TouchPlane
+        x={0}
+        y={-3}
+        width={width}
+        height={3}
+        onPointerDown={() => {
+          // toggle sidebar
+          useDeviceConfig.setState((state) => ({
+            ...state,
+            sidebaropen: !state.sidebaropen,
+          }))
+        }}
+      />
+
       <NumKey x={left} y={1} letters="=" digit="1" />
       <NumKey x={mid} y={2} letters="ABC" digit="2" />
       <NumKey x={right} y={1} letters="DEF" digit="3" />
@@ -36,11 +51,11 @@ export function Elements({ width, height, onReset }: ElementsProps) {
       <NumKey x={mid} y={10} letters="TUV" digit="8" />
       <NumKey x={right} y={9} letters="WXYZ" digit="9" />
 
-      <NumKey x={left} y={13} letters="" digit="#" />
+      <NumKey x={left} y={13} letters="@" digit="#" />
       <NumKey x={mid} y={14} letters="" digit="0" />
       <NumKey x={right} y={13} letters="ENTER" digit="[Enter]" />
 
-      <NumKey x={1} y={1} letters="+" digit="-" />
+      <NumKey x={1} y={1} letters="-" digit="+" />
       <NumKey x={7} y={2} letters="%" digit="*" />
       <NumKey x={13} y={1} letters="<" digit="(" />
       <NumKey x={19} y={2} letters=">" digit=")" />
@@ -88,7 +103,7 @@ export function Elements({ width, height, onReset }: ElementsProps) {
       <NumKey x={1} y={13} letters="/" digit="?" />
       <NumKey x={7} y={14} letters=";" digit="!" />
       <NumKey x={13} y={13} letters=":" digit="'" />
-      <NumKey x={19} y={14} letters={`"`} digit="@" />
+      <NumKey x={19} y={14} letters={`"`} digit="$" />
 
       <ThumbStick
         width={width}

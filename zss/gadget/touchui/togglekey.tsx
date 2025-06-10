@@ -19,7 +19,7 @@ export function ToggleKey({ x, y, letters, onToggle }: ToggleKeyProps) {
   tokenizeandwritetextformat(`$178$178$178$178$178`, context, false)
   context.x = x
   context.y = y + 1
-  tokenizeandwritetextformat(`$178$178$178$178$178`, context, false)
+  tokenizeandwritetextformat(`$178$177$177$177$178`, context, false)
   context.x = x
   context.y = y + 2
   tokenizeandwritetextformat(`$178$178$178$178$178`, context, false)

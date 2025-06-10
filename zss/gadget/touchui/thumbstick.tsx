@@ -56,34 +56,18 @@ export function ThumbStick({
     inputacc: INPUT_RATE,
   })
 
-  function clearmovestick(e: ThreeEvent<PointerEvent>) {
+  function clearmovestick() {
     --movestick.presscount
-    if (e.pointerId === movestick.pointerid && e.intersections[0]) {
-      e.intersections[0].object.worldToLocal(
-        point.copy(e.intersections[0].point),
-      )
-      const { cx, cy } = coords(width, height)
-      if (movestick.tipx === -1) {
-        // check touch targets
-        if (ptwithin(cx, cy, 0, width - 12, 3, 12)) {
-          // toggle sidebar
-          useDeviceConfig.setState((state) => ({
-            ...state,
-            sidebaropen: !state.sidebaropen,
-          }))
-        }
-      }
 
-      // reset
-      movestick.startx = -1
-      movestick.starty = -1
-      movestick.tipx = -1
-      movestick.tipy = -1
-      movestick.pointerid = -1
+    // reset
+    movestick.startx = -1
+    movestick.starty = -1
+    movestick.tipx = -1
+    movestick.tipy = -1
+    movestick.pointerid = -1
 
-      // update visuals
-      onUp()
-    }
+    // update visuals
+    onUp()
   }
 
   useFrame((_, delta) => {
@@ -142,7 +126,26 @@ export function ThumbStick({
         }
       }}
       onPointerUp={clearmovestick}
-      onPointerOut={clearmovestick}
+      onPointerLeave={clearmovestick}
+      onPointerCancel={clearmovestick}
     />
   )
 }
+
+/*
+      e.intersections[0].object.worldToLocal(
+        point.copy(e.intersections[0].point),
+      )
+      const { cx, cy } = coords(width, height)
+      if (movestick.tipx === -1) {
+        // check touch targets
+        if (ptwithin(cx, cy, 0, width - 12, 3, 12)) {
+          // toggle sidebar
+          useDeviceConfig.setState((state) => ({
+            ...state,
+            sidebaropen: !state.sidebaropen,
+          }))
+        }
+      }
+
+*/

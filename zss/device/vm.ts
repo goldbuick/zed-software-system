@@ -422,6 +422,7 @@ const vm = createdevice(
         }
         break
       case 'refscroll': {
+        debugger
         gadgettext(message.player, `stat refs`)
         gadgettext(message.player, DIVIDER)
         gadgethyperlink(message.player, 'refscroll', `char:`, [

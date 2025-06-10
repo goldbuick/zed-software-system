@@ -48,11 +48,11 @@ export function EditorInput({
 }: EditorInputProps) {
   const blink = useBlink()
   const context = useWriteText()
-  const blinkdelta = useRef<PT>(undefined)
   const tapeeditor = useTapeEditor()
+  const player = registerreadplayer()
+  const blinkdelta = useRef<PT>(undefined)
   const edge = textformatreadedges(context)
   const editorpath = useTape((state) => state.editor.path)
-  const player = registerreadplayer()
 
   // split by line
   const strvalue = ispresent(codepage) ? codepage.toJSON() : ''
@@ -156,6 +156,9 @@ export function EditorInput({
   function resettoend() {
     useTapeEditor.setState({ cursor: codeend, select: undefined })
   }
+
+  // eval for t9 / alt keys
+  console.info(tapeeditor.cursor)
 
   const movecursor = useCallback(
     function movecursor(inc: number) {
