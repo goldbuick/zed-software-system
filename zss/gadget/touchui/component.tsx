@@ -5,7 +5,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { resetTiles, useTiles, WriteTextContext } from '../hooks'
+import { resetTiles, useTiles, WriteTextContext, writeTile } from '../hooks'
 import { useScreenSize } from '../userscreen'
 import { TilesData, TilesRender } from '../usetiles'
 
@@ -19,9 +19,9 @@ export type TouchUIProps = {
 export function TouchUI({ width, height }: TouchUIProps) {
   const [reset, setreset] = useState(0)
   const screensize = useScreenSize()
-  const DECO = 176
-  const FG = COLOR.PURPLE
-  const BG = COLOR.DKBLUE
+  const DECO = 177
+  const FG = COLOR.WHITE
+  const BG = COLOR.DKPURPLE
   const store = useTiles(width, height, DECO, FG, BG)
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, FG, BG),
@@ -31,6 +31,14 @@ export function TouchUI({ width, height }: TouchUIProps) {
   // bail on odd states
   if (screensize.cols < 10 || screensize.rows < 10) {
     return null
+  }
+
+  const left = Math.round(width * 0.333)
+  const right = Math.round(width * 0.666)
+  for (let y = 0; y < height; ++y) {
+    for (let x = left; x <= right; ++x) {
+      writeTile(context, width, height, x, y, { char: 176 })
+    }
   }
 
   return (

@@ -71,11 +71,6 @@ export function ThumbStick({
             ...state,
             sidebaropen: !state.sidebaropen,
           }))
-        } else if (ptwithin(cx, cy, height - 4, width - 12, height - 2, 12)) {
-          // open keyboard
-          useDeviceConfig.setState({
-            showkeyboard: true,
-          })
         }
       }
 

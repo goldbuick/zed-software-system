@@ -19,13 +19,13 @@ export function NumKey({ x, y, letters, digit }: NumKeyProps) {
 
   context.x = x
   context.y = y
-  tokenizeandwritetextformat(`$178$178$178$178$178`, context, false)
+  tokenizeandwritetextformat(`$219$219$219$219$219`, context, false)
   context.x = x
   context.y = y + 1
-  tokenizeandwritetextformat(`$178$178$178$178$178`, context, false)
+  tokenizeandwritetextformat(`$219$219$219$219$219`, context, false)
   context.x = x
   context.y = y + 2
-  tokenizeandwritetextformat(`$178$178$178$178$178`, context, false)
+  tokenizeandwritetextformat(`$219$219$219$219$219`, context, false)
 
   if (letters) {
     context.x =

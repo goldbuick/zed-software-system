@@ -272,7 +272,6 @@ export type DEVICE_CONFIG = {
   islowrez: boolean
   islandscape: boolean
   sidebaropen: boolean
-  showkeyboard: boolean
   keyboardalt: boolean
   keyboardctrl: boolean
   keyboardshift: boolean
@@ -285,7 +284,6 @@ export const useDeviceConfig = create<DEVICE_CONFIG>(() => ({
   islowrez: false,
   islandscape: true,
   sidebaropen: true,
-  showkeyboard: true,
   keyboardalt: false,
   keyboardctrl: false,
   keyboardshift: false,
