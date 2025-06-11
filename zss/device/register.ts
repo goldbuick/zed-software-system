@@ -4,7 +4,8 @@ import {
   update as idbupdate,
   entries as idbentries,
 } from 'idb-keyval'
-import { createdevice, parsetarget } from 'zss/device'
+import { createdevice } from 'zss/device'
+import { withclipboard } from 'zss/feature/keyboard'
 import {
   writecopyit,
   writeheader,
@@ -23,7 +24,6 @@ import {
 import { useDeviceConfig } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { createpid, createsid } from 'zss/mapping/guid'
-import { user, withclipboard } from 'zss/mapping/keyboard'
 import { waitfor } from 'zss/mapping/tick'
 import {
   isarray,
@@ -35,13 +35,11 @@ import {
 } from 'zss/mapping/types'
 import { isjoin, islocked, shorturl } from 'zss/mapping/url'
 import { createplatform } from 'zss/platform'
-import { ismac } from 'zss/words/system'
 
 import {
   api_error,
   gadgetserver_desync,
   bridge_join,
-  synth_play,
   register_terminal_full,
   register_terminal_close,
   vm_books,

@@ -1,15 +1,12 @@
-// import userEvent from '@testing-library/user-event'
-
-import { user } from 'zss/mapping/keyboard'
+import { user } from 'zss/feature/keyboard'
 import { noop } from 'zss/mapping/types'
 
 import { useDeviceConfig } from '../hooks'
 
-// trigger user events
-
 export function handlestickdir(snapdir: number) {
   const { keyboardshift, keyboardctrl, keyboardalt } =
     useDeviceConfig.getState()
+
   let keypress = ''
   if (keyboardalt) {
     keypress += `{Alt>}`
@@ -67,5 +64,6 @@ export function handlestickdir(snapdir: number) {
   if (keyboardshift) {
     keypress += `{/Shift}`
   }
+
   user.keyboard(keypress).catch(noop)
 }

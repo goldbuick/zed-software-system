@@ -1,4 +1,4 @@
-import { user } from 'zss/mapping/keyboard'
+import { user } from 'zss/feature/keyboard'
 import { noop } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
