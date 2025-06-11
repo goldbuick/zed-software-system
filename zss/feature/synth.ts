@@ -71,27 +71,21 @@ export function createsynth() {
     wet: 0.6, // mix level
   })
 
-  const saturation = new Distortion({
-    distortion: 0.15, // mild saturation
-    wet: 0.7, // mix level
-  })
-
   const tapeEQ = new EQ3({
-    low: -3, // slight low reduction
+    low: -1, // slight low reduction
     mid: 1, // slight mid boost
-    high: -7, // reduced highs (tape rolloff)
+    high: -5, // reduced highs (tape rolloff)
     lowFrequency: 200,
     highFrequency: 4500,
   })
 
   // tape hiss
-  const hiss = new Noise({ type: 'pink', volume: -43 })
+  const hiss = new Noise({ type: 'pink', volume: -55 })
   const hissvolume = new Volume()
 
   // setup
-  tapeEQ.connect(maincompressor)
   hiss.chain(hissvolume, maincompressor)
-  razzledazzle.chain(saturation, tapeEQ)
+  razzledazzle.chain(tapeEQ, maincompressor)
 
   const fsmap = new AudioToGain()
   const cyclesource = new Oscillator(Math.PI * 0.25, 'sine')
