@@ -42,6 +42,18 @@ export function checkforword(
       return '"'
     case '##':
       return '@'
+    case ',,':
+      return '^'
+    case '..':
+      return '&'
+    case '[[':
+      return '{'
+    case ']]':
+      return '}'
+    case '||':
+      return '\\'
+    case '==':
+      return '~'
   }
 
   const lastone = input[index - 1]

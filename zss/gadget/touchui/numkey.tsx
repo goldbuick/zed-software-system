@@ -1,5 +1,6 @@
 import { user } from 'zss/feature/keyboard'
 import { noop } from 'zss/mapping/types'
+import { ismac } from 'zss/words/system'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { useDeviceConfig, useWriteText } from '../hooks'
@@ -11,9 +12,12 @@ type NumKeyProps = {
   y: number
   letters: string
   digit: string
+  skipalt?: boolean
 }
 
-export function NumKey({ x, y, letters, digit }: NumKeyProps) {
+const CtrlKey = ismac ? 'Meta' : 'Ctrl'
+
+export function NumKey({ x, y, letters, digit, skipalt }: NumKeyProps) {
   const context = useWriteText()
   const { keyboardshift, keyboardctrl, keyboardalt } = useDeviceConfig()
 
@@ -57,21 +61,24 @@ export function NumKey({ x, y, letters, digit }: NumKeyProps) {
       height={3}
       onPointerDown={() => {
         let keypress = ''
-        if (keyboardalt) {
+        if (keyboardalt && !skipalt) {
           keypress += `{Alt>}`
         }
         if (keyboardctrl) {
-          keypress += `{Ctrl>}`
+          keypress += `{${CtrlKey}>}`
         }
         if (keyboardshift) {
           keypress += `{Shift>}`
         }
-        keypress += digit
-        if (keyboardalt) {
+        keypress +=
+          digit.length === 1
+            ? digit.replace('[', '[[').replace('{', '{{').toUpperCase()
+            : digit
+        if (keyboardalt && !skipalt) {
           keypress += `{/Alt}`
         }
         if (keyboardctrl) {
-          keypress += `{/Ctrl}`
+          keypress += `{/${CtrlKey}}`
         }
         if (keyboardshift) {
           keypress += `{/Shift}`
