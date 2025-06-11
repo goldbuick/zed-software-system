@@ -43,11 +43,9 @@ export function UserScreen({ children }: UserScreenProps) {
       insetx = inset * RUNTIME.DRAW_CHAR_WIDTH()
       cols -= inset * 2
     } else {
-      rows = Math.round(rows * 0.666)
-      // adjust overlap
-      const overlap = rows - 4
-      insetrows -= overlap
-      insety = overlap * RUNTIME.DRAW_CHAR_HEIGHT()
+      rows = Math.floor(rrows) - 16
+      insetrows -= rows
+      insety = rows * RUNTIME.DRAW_CHAR_HEIGHT()
     }
   }
 
@@ -78,7 +76,7 @@ export function UserScreen({ children }: UserScreenProps) {
           >
             <group position={[insetx, 0, 0]}>{children}</group>
             {showtouchcontrols && (
-              <group position={[0, insety, 0]}>
+              <group position={[0, insety, 1]}>
                 <TouchUI
                   key={insetcols * insetrows}
                   width={insetcols}

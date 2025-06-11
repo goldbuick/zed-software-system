@@ -6,7 +6,6 @@ import {
   Glitch,
   Noise,
   Scanline,
-  TiltShift,
   Vignette,
 } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'

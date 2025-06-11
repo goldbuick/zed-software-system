@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useWaitForValueString } from 'zss/device/modem'
+import { withclipboard } from 'zss/feature/keyboard'
 import { paneladdress } from 'zss/gadget/data/types'
-import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { maptovalue } from 'zss/mapping/value'

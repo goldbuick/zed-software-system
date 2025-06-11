@@ -1,7 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/feature/parsefile'
-import { DIVIDER, write, writeheader } from 'zss/feature/writeui'
+import { DIVIDER } from 'zss/feature/writeui'
 import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
 import {
   gadgetcheckqueue,
@@ -50,7 +50,6 @@ import { boardobjectread } from 'zss/memory/board'
 import {
   bookreadcodepagebyaddress,
   bookreadcodepagesbytype,
-  bookreadsortedcodepages,
   bookwritecodepage,
 } from 'zss/memory/book'
 import {
@@ -81,7 +80,6 @@ import {
   register_loginready,
   register_savemem,
   api_log,
-  register_editor_close,
   vm_codeaddress,
   vm_flush,
   vm_logout,
@@ -371,7 +369,7 @@ const vm = createdevice(
         break
       case 'synthsend':
         if (isstring(message.data)) {
-          memorysendtoactiveboards(message.data, undefined)
+          memorysendtoactiveboards('all', message.data, undefined)
         }
         break
       case 'second': {

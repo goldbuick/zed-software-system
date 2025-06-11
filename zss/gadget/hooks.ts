@@ -272,11 +272,13 @@ export type DEVICE_CONFIG = {
   islowrez: boolean
   islandscape: boolean
   sidebaropen: boolean
-  showkeyboard: boolean
   keyboardalt: boolean
   keyboardctrl: boolean
   keyboardshift: boolean
   showtouchcontrols: boolean
+  checknumbers: string
+  wordlist: string[]
+  wordlistflag: string
 }
 
 export const useDeviceConfig = create<DEVICE_CONFIG>(() => ({
@@ -285,9 +287,11 @@ export const useDeviceConfig = create<DEVICE_CONFIG>(() => ({
   islowrez: false,
   islandscape: true,
   sidebaropen: true,
-  showkeyboard: false,
   keyboardalt: false,
   keyboardctrl: false,
   keyboardshift: false,
   showtouchcontrols: false,
+  checknumbers: '',
+  wordlist: [],
+  wordlistflag: '',
 }))

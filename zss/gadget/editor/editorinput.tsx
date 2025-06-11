@@ -12,10 +12,11 @@ import {
 import { Y } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { withclipboard } from 'zss/feature/keyboard'
+import { checkforword } from 'zss/feature/t9'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
-import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { ismac } from 'zss/words/system'
 import {
   applycolortoindexes,
@@ -24,7 +25,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR, NAME, PT } from 'zss/words/types'
 
-import { useBlink, useWriteText } from '../hooks'
+import { useBlink, useDeviceConfig, useWriteText } from '../hooks'
 import { Scrollable } from '../scrollable'
 import { EDITOR_CODE_ROW } from '../tape/common'
 import { UserInput, modsfromevent } from '../userinput'
@@ -48,11 +49,11 @@ export function EditorInput({
 }: EditorInputProps) {
   const blink = useBlink()
   const context = useWriteText()
-  const blinkdelta = useRef<PT>(undefined)
   const tapeeditor = useTapeEditor()
+  const player = registerreadplayer()
+  const blinkdelta = useRef<PT>(undefined)
   const edge = textformatreadedges(context)
   const editorpath = useTape((state) => state.editor.path)
-  const player = registerreadplayer()
 
   // split by line
   const strvalue = ispresent(codepage) ? codepage.toJSON() : ''
@@ -155,6 +156,14 @@ export function EditorInput({
 
   function resettoend() {
     useTapeEditor.setState({ cursor: codeend, select: undefined })
+  }
+
+  // eval for t9 / alt keys
+  if (useDeviceConfig.getState().wordlistflag !== 'typing') {
+    const maybechar = checkforword(strvalue, tapeeditor.cursor, player)
+    if (isstring(maybechar) && maybechar) {
+      strvaluesplice(tapeeditor.cursor - 2, 2, maybechar)
+    }
   }
 
   const movecursor = useCallback(

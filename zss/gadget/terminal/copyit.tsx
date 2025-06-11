@@ -1,8 +1,8 @@
 import { useCallback } from 'react'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { withclipboard } from 'zss/feature/keyboard'
 import { writetext } from 'zss/feature/writeui'
-import { withclipboard } from 'zss/mapping/keyboard'
 import { ispresent } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 

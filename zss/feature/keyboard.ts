@@ -1,7 +1,7 @@
 import { userEvent } from '@testing-library/user-event'
 
 export const user = userEvent.setup({
-  delay: null,
+  delay: 30,
 })
 
 export function withclipboard(): Clipboard {

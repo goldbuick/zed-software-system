@@ -4,7 +4,8 @@ import {
   update as idbupdate,
   entries as idbentries,
 } from 'idb-keyval'
-import { createdevice, parsetarget } from 'zss/device'
+import { createdevice } from 'zss/device'
+import { withclipboard } from 'zss/feature/keyboard'
 import {
   writecopyit,
   writeheader,
@@ -23,24 +24,22 @@ import {
 import { useDeviceConfig } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { createpid, createsid } from 'zss/mapping/guid'
-import { user, withclipboard } from 'zss/mapping/keyboard'
 import { waitfor } from 'zss/mapping/tick'
 import {
   isarray,
   isboolean,
+  isequal,
   ispresent,
   isstring,
   MAYBE,
 } from 'zss/mapping/types'
 import { isjoin, islocked, shorturl } from 'zss/mapping/url'
 import { createplatform } from 'zss/platform'
-import { ismac } from 'zss/words/system'
 
 import {
   api_error,
   gadgetserver_desync,
   bridge_join,
-  synth_play,
   register_terminal_full,
   register_terminal_close,
   vm_books,
@@ -53,6 +52,7 @@ import {
   MESSAGE,
   api_log,
 } from './api'
+import { SOFTWARE } from './session'
 
 // read / write from indexdb
 
@@ -628,7 +628,7 @@ const register = createdevice(
       case 'editor:open':
         if (isarray(message.data)) {
           const [book, path, type, title] = message.data
-          useTape.setState((state) => ({
+          useTape.setState(() => ({
             editor: {
               open: true,
               player: message.player,
@@ -648,98 +648,35 @@ const register = createdevice(
           },
         }))
         break
-      default: {
-        const { target, path } = parsetarget(message.target)
-        switch (target) {
-          case 'touchkey':
-            doasync(register, message.player, async () => {
-              switch (path) {
-                case '[Alt]':
-                  synth_play(register, message.player, '', '-c', true)
-                  useDeviceConfig.setState((state) => ({
-                    ...state,
-                    keyboardalt: !state.keyboardalt,
-                    keyboardctrl: false,
-                    keyboardshift: false,
-                  }))
-                  break
-                case '[Ctrl]':
-                  synth_play(register, message.player, '', '-e', true)
-                  useDeviceConfig.setState((state) => ({
-                    ...state,
-                    keyboardalt: false,
-                    keyboardctrl: !state.keyboardctrl,
-                    keyboardshift: false,
-                  }))
-                  break
-                case '[Shift]':
-                  synth_play(register, message.player, '', '-g', true)
-                  useDeviceConfig.setState((state) => ({
-                    ...state,
-                    keyboardalt: false,
-                    keyboardctrl: false,
-                    keyboardshift: !state.keyboardshift,
-                  }))
-                  break
-                default: {
-                  const isnumber = !isNaN(parseInt(path, 10))
-                  const deviceconfig = useDeviceConfig.getState()
-                  const invoke: string[] = []
-                  const metakey = ismac ? 'Meta' : 'Ctrl'
-                  if (deviceconfig.keyboardshift) {
-                    synth_play(
-                      register,
-                      message.player,
-                      '',
-                      isnumber ? '+c' : '+f',
-                      true,
-                    )
-                    invoke.push('{Shift>}')
-                  } else if (deviceconfig.keyboardalt) {
-                    synth_play(
-                      register,
-                      message.player,
-                      '',
-                      isnumber ? '+c!' : '+f!',
-                      true,
-                    )
-                    invoke.push('{Alt>}')
-                  } else if (deviceconfig.keyboardctrl) {
-                    synth_play(
-                      register,
-                      message.player,
-                      '',
-                      isnumber ? '+c#' : '+f#',
-                      true,
-                    )
-                    invoke.push(`{${metakey}>}`)
-                  } else {
-                    synth_play(
-                      register,
-                      message.player,
-                      '',
-                      isnumber ? '-c' : '-f',
-                      true,
-                    )
-                  }
-                  invoke.push(path)
-                  if (deviceconfig.keyboardshift) {
-                    invoke.push('{/Shift}')
-                  } else if (deviceconfig.keyboardalt) {
-                    invoke.push('{/Alt}')
-                  } else if (deviceconfig.keyboardctrl) {
-                    invoke.push(`{/${metakey}}`)
-                  }
-                  const keyboardinvoke = invoke.join('')
-                  await user.keyboard(keyboardinvoke)
-                  break
-                }
-              }
-            })
-            break
-        }
+      case 't9words':
+        doasync(SOFTWARE, message.player, async () => {
+          await waitfor(1)
+          if (isarray(message.data)) {
+            const [checknumbers, wordlist] = message.data as [string, string[]]
+            if (
+              checknumbers != useDeviceConfig.getState().checknumbers ||
+              isequal(wordlist, useDeviceConfig.getState().wordlist) === false
+            ) {
+              useDeviceConfig.setState(() => ({
+                checknumbers,
+                wordlist,
+              }))
+            }
+          }
+        })
         break
-      }
+      case 't9wordsflag':
+        doasync(SOFTWARE, message.player, async () => {
+          await waitfor(1)
+          if (isstring(message.data)) {
+            if (message.data != useDeviceConfig.getState().wordlistflag) {
+              useDeviceConfig.setState(() => ({
+                wordlistflag: message.data,
+              }))
+            }
+          }
+        })
+        break
     }
   },
 )

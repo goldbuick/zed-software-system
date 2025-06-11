@@ -107,14 +107,9 @@ export const CLI_FIRMWARE = createfirmware()
         break
       default: {
         if (ispresent(send.targetname)) {
-          memorysendtoactiveboards(
-            send.targetname === 'self' && READ_CONTEXT.elementisplayer
-              ? `${READ_CONTEXT.elementfocus}:${send.label}`
-              : send.label,
-            send.data,
-          )
+          memorysendtoactiveboards(send.targetname, send.label, send.data)
         } else if (ispresent(send.targetdir)) {
-          memorysendtoactiveboards(send.targetdir.destpt, send.data)
+          memorysendtoactiveboards(send.targetdir.destpt, send.label, send.data)
         }
         break
       }

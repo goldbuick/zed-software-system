@@ -8,10 +8,11 @@ import {
 } from 'zss/device/api'
 import { registerreadplayer, writehistorybuffer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { withclipboard } from 'zss/feature/keyboard'
+import { checkforword } from 'zss/feature/t9'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
-import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -24,7 +25,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR, NAME } from 'zss/words/types'
 
-import { useBlink, useWriteText } from '../hooks'
+import { useBlink, useDeviceConfig, useWriteText } from '../hooks'
 import { bgcolor, setuplogitem } from '../tape/common'
 
 type TapeTerminalInputProps = {
@@ -133,6 +134,14 @@ export function TapeTerminalInput({
       xselect: undefined,
       yselect: undefined,
     })
+  }
+
+  // eval for t9 / alt keys
+  if (useDeviceConfig.getState().wordlistflag !== 'typing') {
+    const maybechar = checkforword(inputstate, tapeterminal.xcursor, player)
+    if (isstring(maybechar) && maybechar) {
+      inputstatesetsplice(tapeterminal.xcursor - 2, 2, maybechar)
+    }
   }
 
   // reset color & bg

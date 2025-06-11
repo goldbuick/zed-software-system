@@ -2,8 +2,8 @@ html {
   margin: 0;
   padding: 0;
   height: 100%;
+  background-color: #00A;
   overscroll-behavior: none;
-  background: rgb(0, 0, 0);
 }
 
 body {
@@ -15,22 +15,11 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
   position: fixed;
-}
-
-#scrump {
-  color: white;
-  font-family: monospace;
-  height: 4096px;
 }
 
 canvas {
   user-select: none;
   touch-action: none;
   image-rendering: pixelated;
-}
-
-.notready {
-  display: none;
 }

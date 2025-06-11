@@ -91,9 +91,9 @@ export const LOADER_FIRMWARE = createfirmware({
   .command('send', (_, words) => {
     const send = parsesend(words)
     if (ispresent(send.targetdir)) {
-      memorysendtoactiveboards(send.targetdir.destpt, send.data)
+      memorysendtoactiveboards(send.targetdir.destpt, send.label, send.data)
     } else if (ispresent(send.targetname)) {
-      memorysendtoactiveboards(send.targetname, send.data)
+      memorysendtoactiveboards(send.targetname, send.label, send.data)
     }
     return 0
   })
