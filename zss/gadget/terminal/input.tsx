@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import {
   api_error,
-  register_t9words,
   register_terminal_close,
   register_terminal_inclayout,
   vm_cli,
@@ -16,7 +15,7 @@ import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
-import { isarray, ispresent, isstring } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import {
   applycolortoindexes,
   applystrtoindex,
@@ -26,7 +25,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR, NAME } from 'zss/words/types'
 
-import { useBlink, useWriteText } from '../hooks'
+import { useBlink, useDeviceConfig, useWriteText } from '../hooks'
 import { bgcolor, setuplogitem } from '../tape/common'
 
 type TapeTerminalInputProps = {
@@ -138,12 +137,11 @@ export function TapeTerminalInput({
   }
 
   // eval for t9 / alt keys
-  const maybechar = checkforword(inputstate, tapeterminal.xcursor)
-  if (isstring(maybechar)) {
-    inputstatesetsplice(tapeterminal.xcursor - 2, 2, maybechar)
-  }
-  if (isarray(maybechar)) {
-    register_t9words(SOFTWARE, player, maybechar)
+  if (useDeviceConfig.getState().wordlistflag !== 'typing') {
+    const maybechar = checkforword(inputstate, tapeterminal.xcursor, player)
+    if (isstring(maybechar) && maybechar) {
+      inputstatesetsplice(tapeterminal.xcursor - 2, 2, maybechar)
+    }
   }
 
   // reset color & bg

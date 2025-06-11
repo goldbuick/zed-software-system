@@ -276,7 +276,9 @@ export type DEVICE_CONFIG = {
   keyboardctrl: boolean
   keyboardshift: boolean
   showtouchcontrols: boolean
+  checknumbers: string
   wordlist: string[]
+  wordlistflag: string
 }
 
 export const useDeviceConfig = create<DEVICE_CONFIG>(() => ({
@@ -289,5 +291,7 @@ export const useDeviceConfig = create<DEVICE_CONFIG>(() => ({
   keyboardctrl: false,
   keyboardshift: false,
   showtouchcontrols: false,
+  checknumbers: '',
   wordlist: [],
+  wordlistflag: '',
 }))

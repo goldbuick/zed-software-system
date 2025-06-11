@@ -28,6 +28,7 @@ import { waitfor } from 'zss/mapping/tick'
 import {
   isarray,
   isboolean,
+  isequal,
   ispresent,
   isstring,
   MAYBE,
@@ -53,6 +54,7 @@ import {
   MESSAGE,
   api_log,
 } from './api'
+import { SOFTWARE } from './session'
 
 // read / write from indexdb
 
@@ -649,17 +651,33 @@ const register = createdevice(
         }))
         break
       case 't9words':
-        if (isarray(message.data)) {
-          if (
-            message.data.length ||
-            (message.data.length === 0 &&
-              useDeviceConfig.getState().wordlist.length !== 0)
-          ) {
-            useDeviceConfig.setState(() => ({
-              wordlist: message.data,
-            }))
+        doasync(SOFTWARE, message.player, async () => {
+          await waitfor(1)
+          if (isarray(message.data)) {
+            const [checknumbers, wordlist] = message.data as [string, string[]]
+            if (
+              checknumbers != useDeviceConfig.getState().checknumbers ||
+              isequal(wordlist, useDeviceConfig.getState().wordlist) === false
+            ) {
+              useDeviceConfig.setState(() => ({
+                checknumbers,
+                wordlist,
+              }))
+            }
           }
-        }
+        })
+        break
+      case 't9wordsflag':
+        doasync(SOFTWARE, message.player, async () => {
+          await waitfor(1)
+          if (isstring(message.data)) {
+            if (message.data != useDeviceConfig.getState().wordlistflag) {
+              useDeviceConfig.setState(() => ({
+                wordlistflag: message.data,
+              }))
+            }
+          }
+        })
         break
     }
   },

@@ -1,12 +1,10 @@
-import { ThreeEvent, useFrame } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { radToDeg } from 'maath/misc'
 import { useState } from 'react'
 import { Vector2, Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { ptwithin } from 'zss/mapping/2d'
 import { snap } from 'zss/mapping/number'
 
-import { useDeviceConfig } from '../hooks'
 import { INPUT_RATE } from '../userinput'
 
 import { handlestickdir } from './stickinputs'
@@ -39,6 +37,8 @@ type ThumbStickProps = {
     tipy: number,
   ) => void
 }
+
+const DEAD_ZONE = 4
 
 export function ThumbStick({
   width,
@@ -76,7 +76,7 @@ export function ThumbStick({
       movestick.inputacc = 0
       const { cx, cy } = coords(width, height)
       motion.set(movestick.startx - cx, movestick.starty - cy)
-      if (movestick.tipx !== -1 || motion.length() > 3) {
+      if (movestick.tipx !== -1 || motion.length() > DEAD_ZONE) {
         const snapdir = snap(radToDeg(motion.angle()), 45)
         handlestickdir(snapdir)
       }
@@ -111,7 +111,7 @@ export function ThumbStick({
           const { cx, cy } = coords(width, height)
           // calc angle
           motion.set(movestick.startx - cx, movestick.starty - cy)
-          if (movestick.tipx !== -1 || motion.length() > 3) {
+          if (motion.length() > DEAD_ZONE * 0.25) {
             // track for visuals
             movestick.tipx = cx
             movestick.tipy = cy
@@ -131,21 +131,3 @@ export function ThumbStick({
     />
   )
 }
-
-/*
-      e.intersections[0].object.worldToLocal(
-        point.copy(e.intersections[0].point),
-      )
-      const { cx, cy } = coords(width, height)
-      if (movestick.tipx === -1) {
-        // check touch targets
-        if (ptwithin(cx, cy, 0, width - 12, 3, 12)) {
-          // toggle sidebar
-          useDeviceConfig.setState((state) => ({
-            ...state,
-            sidebaropen: !state.sidebaropen,
-          }))
-        }
-      }
-
-*/

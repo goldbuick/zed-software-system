@@ -33,14 +33,6 @@ export function TouchUI({ width, height }: TouchUIProps) {
     return null
   }
 
-  const left = Math.round(width * 0.333)
-  const right = Math.round(width * 0.666)
-  for (let y = 0; y < height; ++y) {
-    for (let x = left; x <= right; ++x) {
-      writeTile(context, width, height, x, y, { char: 176 })
-    }
-  }
-
   return (
     <TilesData store={store}>
       <WriteTextContext.Provider value={context}>

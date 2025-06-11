@@ -3,7 +3,6 @@ import {
   api_error,
   api_log,
   register_editor_close,
-  register_t9words,
   register_terminal_close,
   register_terminal_inclayout,
   vm_cli,
@@ -17,7 +16,7 @@ import { checkforword } from 'zss/feature/t9'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { withclipboard } from 'zss/mapping/keyboard'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { ismac } from 'zss/words/system'
 import {
   applycolortoindexes,
@@ -26,7 +25,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR, NAME, PT } from 'zss/words/types'
 
-import { useBlink, useWriteText } from '../hooks'
+import { useBlink, useDeviceConfig, useWriteText } from '../hooks'
 import { Scrollable } from '../scrollable'
 import { EDITOR_CODE_ROW } from '../tape/common'
 import { UserInput, modsfromevent } from '../userinput'
@@ -160,12 +159,11 @@ export function EditorInput({
   }
 
   // eval for t9 / alt keys
-  const maybechar = checkforword(strvalue, tapeeditor.cursor)
-  if (isstring(maybechar)) {
-    strvaluesplice(tapeeditor.cursor - 2, 2, maybechar)
-  }
-  if (isarray(maybechar)) {
-    register_t9words(SOFTWARE, player, maybechar)
+  if (useDeviceConfig.getState().wordlistflag !== 'typing') {
+    const maybechar = checkforword(strvalue, tapeeditor.cursor, player)
+    if (isstring(maybechar) && maybechar) {
+      strvaluesplice(tapeeditor.cursor - 2, 2, maybechar)
+    }
   }
 
   const movecursor = useCallback(

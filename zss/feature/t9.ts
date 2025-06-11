@@ -1,4 +1,6 @@
 import { T9Search } from 't9-plus'
+import { register_t9words } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 
 import words from './t9words.json'
 
@@ -13,7 +15,11 @@ export function predict(input: string) {
   return t9.predict(input)
 }
 
-export function checkforword(input: string, index: number): string | string[] {
+export function checkforword(
+  input: string,
+  index: number,
+  player: string,
+): string {
   const lasttwo = input.substring(index - 2, index)
   switch (lasttwo) {
     case '++':
@@ -38,23 +44,23 @@ export function checkforword(input: string, index: number): string | string[] {
       return '@'
   }
 
-  let start = index - 1
-  while (start >= 0) {
-    if (/[^\d]/.test(input[start])) {
-      break
-    }
-    --start
+  const lastone = input[index - 1]
+  if (/\d/.test(lastone) === false) {
+    return ''
   }
 
-  let end = index
-  while (end < input.length) {
-    if (/[^\d]/.test(input[end])) {
+  let i = index - 1
+  // walk back until we find a non-digit
+  for (; i >= 0; --i) {
+    if (/\d/.test(input[i]) === false) {
+      i++
       break
-    } else {
-      end++
     }
   }
 
-  const word = input.substring(start, end)
-  return predict(word)
+  const checknumbers = input.substring(i, index)
+  const results = predict(checknumbers).slice(0, 32)
+  register_t9words(SOFTWARE, player, checknumbers, results)
+
+  return ''
 }

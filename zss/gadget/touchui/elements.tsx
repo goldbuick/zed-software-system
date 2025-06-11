@@ -1,12 +1,21 @@
 import { Vector2 } from 'three'
+import { register_t9words, register_t9wordsflag } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/register'
+import { SOFTWARE } from 'zss/device/session'
+import { doasync } from 'zss/mapping/func'
+import { user } from 'zss/mapping/keyboard'
+import { waitfor } from 'zss/mapping/tick'
+import { deepcopy, noop } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
+import { COLOR, PT } from 'zss/words/types'
 
-import { useDeviceConfig, useWriteText } from '../hooks'
+import { resetTiles, useDeviceConfig, useWriteText, writeTile } from '../hooks'
 
 import { NumKey } from './numkey'
 import { ThumbStick } from './thumbstick'
 import { ToggleKey } from './togglekey'
 import { TouchPlane } from './touchplane'
+import { WordPlane } from './wordplane'
 
 type ElementsProps = {
   width: number
@@ -15,16 +24,31 @@ type ElementsProps = {
 }
 
 const motion = new Vector2()
+const DECO = 177
+const FG = COLOR.WHITE
+const BG = COLOR.DKPURPLE
+const LIST_LEFT = 8
 
 export function Elements({ width, height, onReset }: ElementsProps) {
+  const player = registerreadplayer()
   const left = width - 19
   const mid = width - 13
   const right = width - 7
   const context = useWriteText()
-  const { keyboardshift, keyboardctrl, keyboardalt, wordlist } =
+  const { keyboardshift, keyboardctrl, keyboardalt, checknumbers, wordlist } =
     useDeviceConfig()
-  // console.info(wordlist)
 
+  resetTiles(context, DECO, FG, BG)
+
+  const leftedge = Math.round(width * 0.333)
+  const rightedge = Math.round(width * 0.666)
+  for (let y = 0; y < rightedge; ++y) {
+    for (let x = leftedge; x <= right; ++x) {
+      writeTile(context, width, height, x, y, { char: 176 })
+    }
+  }
+
+  const corner: PT = { x: LIST_LEFT, y: 0 }
   return (
     <>
       <TouchPlane
@@ -57,55 +81,97 @@ export function Elements({ width, height, onReset }: ElementsProps) {
       <NumKey x={mid} y={13} letters="" digit="0" />
       <NumKey x={right} y={12} letters="ENTER" digit="[Enter]" />
 
-      <NumKey x={1} y={0} letters="-" digit="+" />
-      <NumKey x={7} y={1} letters="%" digit="*" />
-      <NumKey x={13} y={0} letters="<" digit="(" />
-      <NumKey x={19} y={1} letters=">" digit=")" />
+      {wordlist.length ? (
+        <>
+          <NumKey x={1} y={0} letters="$26" digit="[ArrowRight]" />
+          <NumKey x={1} y={4} letters="BKSPC" digit="[Backspace]" />
+          <NumKey x={1} y={8} letters="SPACE" digit="[Space]" />
+          <NumKey x={1} y={12} letters="$27" digit="[ArrowLeft]" />
+          {wordlist.map((word) => {
+            const at = deepcopy(corner)
+            const wordwidth = word.length + 3
+            corner.x += wordwidth
+            if (corner.x > left - 4) {
+              corner.x = LIST_LEFT
+              corner.y += 3
+            }
+            return (
+              <WordPlane
+                key={word}
+                x={at.x}
+                y={at.y}
+                letters={word}
+                onClick={() => {
+                  doasync(SOFTWARE, player, async () => {
+                    register_t9wordsflag(SOFTWARE, player, 'typing')
+                    register_t9words(SOFTWARE, player, '', [])
+                    const remove = '{Backspace}'.repeat(checknumbers.length)
+                    const typing = word
+                      .split('')
+                      .map((w) => `{${w}}`)
+                      .join('')
+                    await user.keyboard(`${remove}${typing}`)
+                    await waitfor((checknumbers.length + word.length + 1) * 50)
+                    register_t9wordsflag(SOFTWARE, player, '')
+                  })
+                }}
+              />
+            )
+          })}
+        </>
+      ) : (
+        <>
+          <NumKey x={1} y={0} letters="-" digit="+" />
+          <NumKey x={7} y={1} letters="%" digit="*" />
+          <NumKey x={13} y={0} letters="<" digit="(" />
+          <NumKey x={19} y={1} letters=">" digit=")" />
 
-      <NumKey x={1} y={4} letters="ESC" digit="[Escape]" />
-      <ToggleKey
-        x={7}
-        y={5}
-        letters={keyboardctrl ? 'CTRL' : 'ctrl'}
-        onToggle={() => {
-          useDeviceConfig.setState((state) => ({
-            ...state,
-            keyboardctrl: !state.keyboardctrl,
-          }))
-        }}
-      />
-      <ToggleKey
-        x={13}
-        y={4}
-        letters={keyboardalt ? 'ALT' : 'alt'}
-        onToggle={() => {
-          useDeviceConfig.setState((state) => ({
-            ...state,
-            keyboardalt: !state.keyboardalt,
-          }))
-        }}
-      />
-      <NumKey x={19} y={5} letters="$26" digit="[ArrowRight]" />
+          <NumKey x={1} y={4} letters="ESC" digit="[Escape]" />
+          <ToggleKey
+            x={7}
+            y={5}
+            letters={keyboardctrl ? 'CTRL' : 'ctrl'}
+            onToggle={() => {
+              useDeviceConfig.setState((state) => ({
+                ...state,
+                keyboardctrl: !state.keyboardctrl,
+              }))
+            }}
+          />
+          <ToggleKey
+            x={13}
+            y={4}
+            letters={keyboardalt ? 'ALT' : 'alt'}
+            onToggle={() => {
+              useDeviceConfig.setState((state) => ({
+                ...state,
+                keyboardalt: !state.keyboardalt,
+              }))
+            }}
+          />
+          <NumKey x={19} y={5} letters="$26" digit="[ArrowRight]" />
 
-      <NumKey x={1} y={8} letters="SPACE" digit="[Space]" />
-      <ToggleKey
-        x={7}
-        y={9}
-        letters={keyboardshift ? 'SHIFT' : 'shift'}
-        onToggle={() => {
-          useDeviceConfig.setState((state) => ({
-            ...state,
-            keyboardshift: !state.keyboardshift,
-          }))
-        }}
-      />
-      <NumKey x={13} y={8} letters="BKSPC" digit="[Backspace]" />
-      <NumKey x={19} y={9} letters="$27" digit="[ArrowLeft]" />
+          <NumKey x={1} y={8} letters="SPACE" digit="[Space]" />
+          <ToggleKey
+            x={7}
+            y={9}
+            letters={keyboardshift ? 'SHIFT' : 'shift'}
+            onToggle={() => {
+              useDeviceConfig.setState((state) => ({
+                ...state,
+                keyboardshift: !state.keyboardshift,
+              }))
+            }}
+          />
+          <NumKey x={13} y={8} letters="BKSPC" digit="[Backspace]" />
+          <NumKey x={19} y={9} letters="$27" digit="[ArrowLeft]" />
 
-      <NumKey x={1} y={12} letters="/" digit="?" />
-      <NumKey x={7} y={13} letters=";" digit="!" />
-      <NumKey x={13} y={12} letters=":" digit="'" />
-      <NumKey x={19} y={13} letters={`"`} digit="$" />
+          <NumKey x={1} y={12} letters="/" digit="?" />
+          <NumKey x={7} y={13} letters=";" digit="!" />
+          <NumKey x={13} y={12} letters=":" digit="'" />
+          <NumKey x={19} y={13} letters={`"`} digit="$" />
+        </>
+      )}
 
       <ThumbStick
         width={width}

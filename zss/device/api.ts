@@ -387,9 +387,18 @@ export function register_editor_close(device: DEVICELIKE, player: string) {
 export function register_t9words(
   device: DEVICELIKE,
   player: string,
+  checknumbers: string,
   words: string[],
 ) {
-  device.emit(player, 'register:t9words', words)
+  device.emit(player, 'register:t9words', [checknumbers, words])
+}
+
+export function register_t9wordsflag(
+  device: DEVICELIKE,
+  player: string,
+  flag: string,
+) {
+  device.emit(player, 'register:t9wordsflag', flag)
 }
 
 export function vm_operator(device: DEVICELIKE, player: string) {
