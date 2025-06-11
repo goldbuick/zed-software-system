@@ -57,7 +57,6 @@ export function Elements({ width, height, onReset }: ElementsProps) {
           }))
         }}
       />
-
       {keyboardctrl ? (
         <>
           <NumKey x={right} y={0} letters="CTRL" digit="k" usectrl />
@@ -193,7 +192,6 @@ export function Elements({ width, height, onReset }: ElementsProps) {
           )}
         </>
       )}
-
       <ThumbStick
         width={width}
         height={height}
