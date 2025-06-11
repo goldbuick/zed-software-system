@@ -241,33 +241,3 @@ export function Elements({ width, height, onReset }: ElementsProps) {
     </>
   )
 }
-
-/*
-    '&',
-    '_',
-    '=',
-    '|',   '`'
-    '[ArrowUp]',
-    '[ArrowLeft]',
-    '[ArrowRight]',
-    '[ArrowDown]',
-*/
-
-/*
-  NONE,
-  ALT,
-  CTRL,
-  SHIFT,
-  MOVE_UP,
-  MOVE_DOWN,
-  MOVE_LEFT,
-  MOVE_RIGHT,
-  OK_BUTTON,
-  CANCEL_BUTTON,
-  MENU_BUTTON,
-
-      <group>
-        
-      </group>
-
-  */
