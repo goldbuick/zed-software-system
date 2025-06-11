@@ -6,6 +6,7 @@ import {
 } from 'idb-keyval'
 import { createdevice } from 'zss/device'
 import { withclipboard } from 'zss/feature/keyboard'
+import { setup } from 'zss/feature/t9'
 import {
   writecopyit,
   writeheader,
@@ -358,6 +359,8 @@ const register = createdevice(
         writepages()
         writewikilink()
         register_terminal_full(register, myplayerid)
+        // get words meta
+        vm_zsswords(register, myplayerid)
         break
       case 'acklogin':
         // info dump
@@ -369,11 +372,18 @@ const register = createdevice(
         // get words meta
         vm_zsswords(register, myplayerid)
         break
-      case 'ackzsswords':
+      case 'ackzsswords': {
         useGadgetClient.setState({
           zsswords: message.data,
         })
+        const dynamicwords: string[] = []
+        const words = Object.values(message.data as Record<string, string[]>)
+        for (let i = 0; i < words.length; ++i) {
+          dynamicwords.push(...words[i])
+        }
+        setup(dynamicwords)
         break
+      }
       case 'copy':
         if (isstring(message.data)) {
           if (ispresent(withclipboard())) {

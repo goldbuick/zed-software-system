@@ -67,27 +67,23 @@ export function Elements({ width, height, onReset }: ElementsProps) {
 
       {keyboardctrl ? (
         <>
-          <NumKey x={left} y={0} letters="" digit="k" />
-          <NumKey x={mid} y={1} letters="" digit="y" />
-          <NumKey x={right} y={0} letters="" digit="z" />
+          <NumKey x={right} y={0} letters="CTRL" digit="k" />
 
-          <NumKey x={left} y={4} letters="" digit="a" />
-          <NumKey x={mid} y={5} letters="" digit="c" />
-          <NumKey x={right} y={4} letters="" digit="v" />
+          <NumKey x={left} y={4} letters="CTRL" digit="r" />
+          <NumKey x={mid} y={5} letters="CTRL" digit="s" />
+          <NumKey x={right} y={4} letters="CTRL" digit="x" />
 
-          <NumKey x={left} y={8} letters="" digit="'" />
-          <NumKey x={mid} y={9} letters="" digit="x" />
-          <NumKey x={right} y={8} letters="" digit="p" />
+          <NumKey x={left} y={8} letters="CTRL" digit="p" />
+          <NumKey x={mid} y={9} letters="CTRL" digit="a" />
+          <NumKey x={right} y={8} letters="CTRL" digit="c" />
+
+          <NumKey x={left} y={12} letters="CTRL" digit="y" />
+          <NumKey x={mid} y={13} letters="CTRL" digit="z" />
+          <NumKey x={right} y={12} letters="CTRL" digit="v" />
         </>
       ) : (
         <>
-          <NumKey
-            x={left}
-            y={0}
-            letters={keyboardalt ? '~' : ''}
-            digit={keyboardalt ? '=' : '1'}
-            skipalt={keyboardalt}
-          />
+          <NumKey x={left} y={0} letters="" digit="1" />
           <NumKey x={mid} y={1} letters="ABC" digit="2" />
           <NumKey x={right} y={0} letters="DEF" digit="3" />
 
@@ -99,14 +95,16 @@ export function Elements({ width, height, onReset }: ElementsProps) {
           <NumKey x={mid} y={9} letters="TUV" digit="8" />
           <NumKey x={right} y={8} letters="WXYZ" digit="9" />
 
-          <NumKey x={left} y={12} letters="@" digit="#" skipalt />
-          <NumKey
-            x={mid}
-            y={13}
-            letters={keyboardalt ? '\\' : ''}
-            digit={keyboardalt ? '|' : '0'}
-            skipalt={keyboardalt}
-          />
+          {keyboardalt ? (
+            <>
+              <NumKey x={left} y={12} letters="#" digit="x" skipalt />
+            </>
+          ) : (
+            <>
+              <NumKey x={left} y={12} letters="@" digit="#" />
+            </>
+          )}
+          <NumKey x={mid} y={13} letters="" digit="0" />
           <NumKey x={right} y={12} letters="ENTER" digit="[Enter]" />
         </>
       )}
@@ -206,10 +204,21 @@ export function Elements({ width, height, onReset }: ElementsProps) {
           <NumKey x={13} y={8} letters="BKSPC" digit="[Backspace]" />
           <NumKey x={19} y={9} letters="$27" digit="[ArrowLeft]" />
 
-          <NumKey x={1} y={12} letters="/" digit="?" skipalt />
-          <NumKey x={7} y={13} letters=";" digit="!" skipalt />
-          <NumKey x={13} y={12} letters=":" digit="'" skipalt />
-          <NumKey x={19} y={13} letters={`"`} digit="$" skipalt />
+          {keyboardalt ? (
+            <>
+              <NumKey x={1} y={12} letters="<" digit=">" skipalt />
+              <NumKey x={7} y={13} letters=";" digit="!" skipalt />
+              <NumKey x={13} y={12} letters="\" digit="|" skipalt />
+              <NumKey x={19} y={13} letters="_" digit="=" skipalt />
+            </>
+          ) : (
+            <>
+              <NumKey x={1} y={12} letters="/" digit="?" skipalt />
+              <NumKey x={7} y={13} letters=";" digit="!" skipalt />
+              <NumKey x={13} y={12} letters=":" digit="'" skipalt />
+              <NumKey x={19} y={13} letters={`"`} digit="$" skipalt />
+            </>
+          )}
         </>
       )}
 
