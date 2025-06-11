@@ -12,12 +12,13 @@ type NumKeyProps = {
   y: number
   letters: string
   digit: string
-  skipalt?: boolean
+  usealt?: boolean
+  usectrl?: boolean
 }
 
 const CtrlKey = ismac ? 'Meta' : 'Ctrl'
 
-export function NumKey({ x, y, letters, digit, skipalt }: NumKeyProps) {
+export function NumKey({ x, y, letters, digit, usealt, usectrl }: NumKeyProps) {
   const context = useWriteText()
   const { keyboardshift, keyboardctrl, keyboardalt } = useDeviceConfig()
 
@@ -61,10 +62,10 @@ export function NumKey({ x, y, letters, digit, skipalt }: NumKeyProps) {
       height={3}
       onPointerDown={() => {
         let keypress = ''
-        if (keyboardalt && !skipalt) {
+        if (keyboardalt && usealt) {
           keypress += `{Alt>}`
         }
-        if (keyboardctrl) {
+        if (keyboardctrl && usectrl) {
           keypress += `{${CtrlKey}>}`
         }
         if (keyboardshift) {
@@ -74,10 +75,10 @@ export function NumKey({ x, y, letters, digit, skipalt }: NumKeyProps) {
           digit.length === 1
             ? digit.replace('[', '[[').replace('{', '{{')
             : digit
-        if (keyboardalt && !skipalt) {
+        if (keyboardalt && usealt) {
           keypress += `{/Alt}`
         }
-        if (keyboardctrl) {
+        if (keyboardctrl && usectrl) {
           keypress += `{/${CtrlKey}}`
         }
         if (keyboardshift) {

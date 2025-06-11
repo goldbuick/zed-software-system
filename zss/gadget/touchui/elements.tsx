@@ -1,10 +1,4 @@
 import { Vector2 } from 'three'
-import { register_t9words, register_t9wordsflag } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
-import { SOFTWARE } from 'zss/device/session'
-import { user } from 'zss/feature/keyboard'
-import { doasync } from 'zss/mapping/func'
-import { waitfor } from 'zss/mapping/tick'
 import { deepcopy } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { COLOR, PT } from 'zss/words/types'
@@ -30,12 +24,11 @@ const BG = COLOR.DKPURPLE
 const LIST_LEFT = 8
 
 export function Elements({ width, height, onReset }: ElementsProps) {
-  const player = registerreadplayer()
   const left = width - 19
   const mid = width - 13
   const right = width - 7
   const context = useWriteText()
-  const { keyboardshift, keyboardctrl, keyboardalt, checknumbers, wordlist } =
+  const { keyboardshift, keyboardctrl, keyboardalt, wordlist } =
     useDeviceConfig()
 
   resetTiles(context, DECO, FG, BG)
@@ -67,19 +60,19 @@ export function Elements({ width, height, onReset }: ElementsProps) {
 
       {keyboardctrl ? (
         <>
-          <NumKey x={right} y={0} letters="CTRL" digit="k" />
+          <NumKey x={right} y={0} letters="CTRL" digit="k" usectrl />
 
-          <NumKey x={left} y={4} letters="CTRL" digit="r" />
-          <NumKey x={mid} y={5} letters="CTRL" digit="s" />
-          <NumKey x={right} y={4} letters="CTRL" digit="x" />
+          <NumKey x={left} y={4} letters="CTRL" digit="r" usectrl />
+          <NumKey x={mid} y={5} letters="CTRL" digit="s" usectrl />
+          <NumKey x={right} y={4} letters="CTRL" digit="x" usectrl />
 
-          <NumKey x={left} y={8} letters="CTRL" digit="p" />
-          <NumKey x={mid} y={9} letters="CTRL" digit="a" />
-          <NumKey x={right} y={8} letters="CTRL" digit="c" />
+          <NumKey x={left} y={8} letters="CTRL" digit="p" usectrl />
+          <NumKey x={mid} y={9} letters="CTRL" digit="a" usectrl />
+          <NumKey x={right} y={8} letters="CTRL" digit="c" usectrl />
 
-          <NumKey x={left} y={12} letters="CTRL" digit="y" />
-          <NumKey x={mid} y={13} letters="CTRL" digit="z" />
-          <NumKey x={right} y={12} letters="CTRL" digit="v" />
+          <NumKey x={left} y={12} letters="CTRL" digit="y" usectrl />
+          <NumKey x={mid} y={13} letters="CTRL" digit="z" usectrl />
+          <NumKey x={right} y={12} letters="CTRL" digit="v" usectrl />
         </>
       ) : (
         <>
@@ -97,7 +90,7 @@ export function Elements({ width, height, onReset }: ElementsProps) {
 
           {keyboardalt ? (
             <>
-              <NumKey x={left} y={12} letters="#" digit="x" skipalt />
+              <NumKey x={left} y={12} letters="=" digit="#" />
             </>
           ) : (
             <>
@@ -110,10 +103,10 @@ export function Elements({ width, height, onReset }: ElementsProps) {
       )}
       {wordlist.length ? (
         <>
-          <NumKey x={1} y={0} letters="$26" digit="[ArrowRight]" />
+          <NumKey x={1} y={0} letters="$26" digit="[ArrowRight]" usealt />
           <NumKey x={1} y={4} letters="BKSPC" digit="[Backspace]" />
           <NumKey x={1} y={8} letters="SPACE" digit="[Space]" />
-          <NumKey x={1} y={12} letters="$27" digit="[ArrowLeft]" />
+          <NumKey x={1} y={12} letters="$27" digit="[ArrowLeft]" usealt />
           {wordlist.map((word) => {
             const at = deepcopy(corner)
             const wordwidth = word.length + 3
@@ -122,38 +115,17 @@ export function Elements({ width, height, onReset }: ElementsProps) {
               corner.x = LIST_LEFT
               corner.y += 3
             }
-            return (
-              <WordPlane
-                key={word}
-                x={at.x}
-                y={at.y}
-                letters={word}
-                onClick={() => {
-                  doasync(SOFTWARE, player, async () => {
-                    register_t9wordsflag(SOFTWARE, player, 'typing')
-                    register_t9words(SOFTWARE, player, '', [])
-                    const remove = '{Backspace}'.repeat(checknumbers.length)
-                    const typing = word
-                      .split('')
-                      .map((w) => `{${w}}`)
-                      .join('')
-                    await user.keyboard(`${remove}${typing}`)
-                    await waitfor((checknumbers.length + word.length + 1) * 50)
-                    register_t9wordsflag(SOFTWARE, player, '')
-                  })
-                }}
-              />
-            )
+            return <WordPlane key={word} x={at.x} y={at.y} letters={word} />
           })}
         </>
       ) : (
         <>
           {keyboardalt ? (
             <>
-              <NumKey x={1} y={0} letters="^" digit="," skipalt />
-              <NumKey x={7} y={1} letters="&" digit="." skipalt />
-              <NumKey x={13} y={0} letters="{" digit="[" skipalt />
-              <NumKey x={19} y={1} letters="}" digit="]" skipalt />
+              <NumKey x={1} y={0} letters="^" digit="," />
+              <NumKey x={7} y={1} letters="&" digit="." />
+              <NumKey x={13} y={0} letters="{" digit="[" />
+              <NumKey x={19} y={1} letters="}" digit="]" />
             </>
           ) : (
             <>
@@ -187,7 +159,7 @@ export function Elements({ width, height, onReset }: ElementsProps) {
               }))
             }}
           />
-          <NumKey x={19} y={5} letters="$26" digit="[ArrowRight]" />
+          <NumKey x={19} y={5} letters="$26" digit="[ArrowRight]" usealt />
 
           <NumKey x={1} y={8} letters="SPACE" digit="[Space]" />
           <ToggleKey
@@ -202,21 +174,21 @@ export function Elements({ width, height, onReset }: ElementsProps) {
             }}
           />
           <NumKey x={13} y={8} letters="BKSPC" digit="[Backspace]" />
-          <NumKey x={19} y={9} letters="$27" digit="[ArrowLeft]" />
+          <NumKey x={19} y={9} letters="$27" digit="[ArrowLeft]" usealt />
 
           {keyboardalt ? (
             <>
-              <NumKey x={1} y={12} letters="<" digit=">" skipalt />
-              <NumKey x={7} y={13} letters=";" digit="!" skipalt />
-              <NumKey x={13} y={12} letters="\" digit="|" skipalt />
-              <NumKey x={19} y={13} letters="_" digit="=" skipalt />
+              <NumKey x={1} y={12} letters="<" digit=">" />
+              <NumKey x={7} y={13} letters=";" digit="!" />
+              <NumKey x={13} y={12} letters="\" digit="|" />
+              <NumKey x={19} y={13} letters="" digit="x" />
             </>
           ) : (
             <>
-              <NumKey x={1} y={12} letters="/" digit="?" skipalt />
-              <NumKey x={7} y={13} letters=";" digit="!" skipalt />
-              <NumKey x={13} y={12} letters=":" digit="'" skipalt />
-              <NumKey x={19} y={13} letters={`"`} digit="$" skipalt />
+              <NumKey x={1} y={12} letters="/" digit="?" />
+              <NumKey x={7} y={13} letters=";" digit="!" />
+              <NumKey x={13} y={12} letters=":" digit="'" />
+              <NumKey x={19} y={13} letters={`"`} digit="$" />
             </>
           )}
         </>
