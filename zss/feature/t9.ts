@@ -5,11 +5,19 @@ import { SOFTWARE } from 'zss/device/session'
 import words from './t9words.json'
 
 const t9 = new T9Search()
-const wordmap = new Map<string, string>()
-for (let i = 0; i < words.length; ++i) {
-  wordmap.set(words[i].word, words[i].freq)
+const DYNAMIC_RANK = '23135852999'
+
+export function setup(dynamicwords: string[]) {
+  const withlist = words as { word: string; freq: string }[]
+  const wordmap = new Map<string, string>()
+  for (let i = 0; i < withlist.length; ++i) {
+    wordmap.set(withlist[i].word, withlist[i].freq)
+  }
+  for (let i = 0; i < dynamicwords.length; ++i) {
+    wordmap.set(dynamicwords[i], DYNAMIC_RANK)
+  }
+  t9.setDictWithWeight(wordmap)
 }
-t9.setDictWithWeight(wordmap)
 
 export function predict(input: string) {
   return t9.predict(input)
@@ -22,6 +30,7 @@ export function checkforword(
 ): string {
   const lasttwo = input.substring(index - 2, index)
   switch (lasttwo) {
+    // main
     case '++':
       return '-'
     case '**':
@@ -30,18 +39,17 @@ export function checkforword(
       return '<'
     case '))':
       return '>'
-    case '11':
-      return '='
     case '??':
       return '/'
     case '!!':
       return ';'
-    case '::':
-      return `'`
+    case `''`:
+      return ':'
     case '$$':
       return '"'
     case '##':
       return '@'
+    // alt
     case ',,':
       return '^'
     case '..':
@@ -50,10 +58,14 @@ export function checkforword(
       return '{'
     case ']]':
       return '}'
+    case '>>':
+      return '<'
     case '||':
       return '\\'
     case '==':
-      return '~'
+      return '_'
+    case 'xx':
+      return '#'
   }
 
   const lastone = input[index - 1]

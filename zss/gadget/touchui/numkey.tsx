@@ -72,7 +72,7 @@ export function NumKey({ x, y, letters, digit, skipalt }: NumKeyProps) {
         }
         keypress +=
           digit.length === 1
-            ? digit.replace('[', '[[').replace('{', '{{').toUpperCase()
+            ? digit.replace('[', '[[').replace('{', '{{')
             : digit
         if (keyboardalt && !skipalt) {
           keypress += `{/Alt}`
