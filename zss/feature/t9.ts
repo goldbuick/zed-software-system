@@ -1,6 +1,7 @@
 import { T9Search } from 't9-plus'
 import { register_t9words } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { useDeviceConfig } from 'zss/gadget/hooks'
 
 import words from './t9words.json'
 
@@ -28,48 +29,55 @@ export function checkforword(
   index: number,
   player: string,
 ): string {
+  const { wordlistflag, keyboardalt } = useDeviceConfig.getState()
+  if (wordlistflag === 'typing') {
+    return ''
+  }
+
   const lasttwo = input.substring(index - 2, index)
-  switch (lasttwo) {
-    // main
-    case '++':
-      return '-'
-    case '**':
-      return '%'
-    case '((':
-      return '<'
-    case '))':
-      return '>'
-    case '??':
-      return '/'
-    case '!!':
-      return ';'
-    case `''`:
-      return ':'
-    case '$$':
-      return '"'
-    case '##':
-      return '@'
-    // alt
-    case ',,':
-      return '^'
-    case '..':
-      return '&'
-    case '[[':
-      return '{'
-    case ']]':
-      return '}'
-    case '>>':
-      return '<'
-    case '||':
-      return '\\'
-    case '==':
-      return '_'
-    case 'xx':
-      return '#'
+  if (keyboardalt) {
+    switch (lasttwo) {
+      case ',,':
+        return '^'
+      case '..':
+        return '&'
+      case '[[':
+        return '{'
+      case ']]':
+        return '}'
+      case '>>':
+        return '<'
+      case '||':
+        return '\\'
+      case '##':
+        return '='
+    }
+  } else {
+    switch (lasttwo) {
+      case '++':
+        return '-'
+      case '**':
+        return '%'
+      case '((':
+        return '<'
+      case '))':
+        return '>'
+      case '??':
+        return '/'
+      case '!!':
+        return ';'
+      case `''`:
+        return ':'
+      case '$$':
+        return '"'
+      case '##':
+        return '@'
+    }
   }
 
   const lastone = input[index - 1]
   if (/\d/.test(lastone) === false) {
+    register_t9words(SOFTWARE, player, '', [])
     return ''
   }
 

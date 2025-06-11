@@ -23,6 +23,7 @@ import {
   Synth,
   Time,
   ToneAudioBuffer,
+  Vibrato,
   Volume,
 } from 'tone'
 import { vm_synthsend } from 'zss/device/api'
@@ -62,28 +63,41 @@ export function createsynth() {
   })
   maincompressor.connect(mainvolume)
 
-  const razzledazzle = new Chorus()
-  razzledazzle.set({
-    wet: 0.999,
-    depth: 0.111,
-    spread: 8,
-    delayTime: 8,
+  const razzledazzle = new Vibrato({
+    maxDelay: 0.005, // subtle pitch modulation
+    frequency: 1.5, // speed of the warble
+    depth: 0.2, // amount of pitch variation
+    type: 'sine', // waveform type
+    wet: 0.6, // mix level
   })
-  razzledazzle.connect(maincompressor)
 
-  const fuzzysource = new Noise({ type: 'pink' })
+  const saturation = new Distortion({
+    distortion: 0.15, // mild saturation
+    wet: 0.7, // mix level
+  })
+
+  const tapeEQ = new EQ3({
+    low: -3, // slight low reduction
+    mid: 1, // slight mid boost
+    high: -7, // reduced highs (tape rolloff)
+    lowFrequency: 200,
+    highFrequency: 4500,
+  })
+
+  // tape hiss
+  const hiss = new Noise({ type: 'pink', volume: -43 })
+  const hissvolume = new Volume()
+
+  // setup
+  tapeEQ.connect(maincompressor)
+  hiss.chain(hissvolume, maincompressor)
+  razzledazzle.chain(saturation, tapeEQ)
+
   const fsmap = new AudioToGain()
-
-  const fstexture = new Scale(0, 0.0042)
-  fuzzysource.chain(fsmap, fstexture, razzledazzle)
-  fuzzysource.start(0)
-
   const cyclesource = new Oscillator(Math.PI * 0.25, 'sine')
-  const fsfeedback = new Scale(0, 0.333)
-  const fsfrequency = new Scale(0.0001, 5)
-  cyclesource.chain(fsmap, fsfeedback, razzledazzle.feedback)
-  cyclesource.chain(fsmap, fsfrequency, razzledazzle.frequency)
+  cyclesource.chain(fsmap, hissvolume.volume)
   cyclesource.start()
+  hiss.start()
 
   const playvolume = new Volume()
   playvolume.connect(razzledazzle)
