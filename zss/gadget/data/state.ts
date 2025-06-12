@@ -77,8 +77,8 @@ export const useTape = create<{
   toast: string
   terminal: {
     open: boolean
-    info: TAPE_ROW[]
-    logs: TAPE_ROW[]
+    info: string[]
+    logs: string[]
   }
   editor: {
     open: boolean
