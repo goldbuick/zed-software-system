@@ -139,11 +139,19 @@ function writepages() {
   vm_cli(register, myplayerid, '#pages')
 }
 
+function renderrow(maybelevel: string, content: string[]) {
+  const level = maybelevel === 'error' ? '$red' : '$blue'
+  const messagetext = content.map((v) => `${v}`).join(' ')
+  const ishyperlink = messagetext.startsWith('!')
+  const prefix = `$onclear${level}`
+  return `${ishyperlink ? '!' : ''}${prefix}${messagetext}`
+}
+
 function terminaladdinfo(message: MESSAGE) {
   const { terminal } = useTape.getState()
-  const row: TAPE_ROW = [createsid(), message.target, ...message.data]
+  const row = renderrow(message.target, message.data)
 
-  let info: TAPE_ROW[] = [row, ...terminal.info]
+  let info = [row, ...terminal.info]
   if (info.length > TAPE_MAX_LINES) {
     info = info.slice(0, TAPE_MAX_LINES)
   }
@@ -156,13 +164,30 @@ function terminaladdinfo(message: MESSAGE) {
   }))
 }
 
+const countregex = /\((\d+)\)/
+
 function terminaladdlog(message: MESSAGE) {
   const { terminal } = useTape.getState()
-  const row: TAPE_ROW = [createsid(), message.target, ...message.data]
+  const row = renderrow(message.target, message.data)
+  const [firstrow = ''] = terminal.logs
+  const logs = [...terminal.logs]
 
-  let logs: TAPE_ROW[] = [row, ...terminal.logs]
-  if (logs.length > TAPE_MAX_LINES) {
-    logs = logs.slice(0, TAPE_MAX_LINES)
+  // flatten dupes
+  const dupecheck = firstrow.indexOf(row)
+  if (dupecheck === 0) {
+    logs.shift()
+    logs.unshift(`(2)${firstrow}`)
+  } else if (dupecheck !== -1) {
+    const countcheck = countregex.exec(firstrow)
+    if (ispresent(countcheck)) {
+      const newcount = parseFloat(countcheck[1]) + 1
+      logs.shift()
+      logs.unshift(`(${newcount})${row}`)
+    } else {
+      logs.unshift(row)
+    }
+  } else {
+    logs.unshift(row)
   }
 
   useTape.setState((state) => ({

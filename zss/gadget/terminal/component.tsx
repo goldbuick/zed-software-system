@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { vm_cli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { TAPE_ROW, useTape, useTapeTerminal } from 'zss/gadget/data/state'
+import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import { totarget } from 'zss/mapping/string'
 import { deepcopy } from 'zss/mapping/types'
 import {
@@ -19,15 +19,6 @@ import { TapeTerminalContext } from '../tape/common'
 import { TapeTerminalInput } from './input'
 import { TapeTerminalItem } from './item'
 import { TapeTerminalItemActive } from './itemactive'
-
-function renderrow(item: TAPE_ROW) {
-  const [, maybelevel, ...message] = item
-  const level = maybelevel === 'error' ? '$red' : '$blue'
-  const messagetext = message.map((v) => `${v}`).join(' ')
-  const ishyperlink = messagetext.startsWith('!')
-  const prefix = `$onclear${level}`
-  return `${ishyperlink ? '!' : ''}${prefix}${messagetext}`
-}
 
 function measurerow(item: string, width: number, height: number) {
   if (item.startsWith('!')) {
@@ -92,17 +83,13 @@ export function TapeTerminal() {
     [xstep, top, right, bottom, context],
   )
 
-  // render to strings
-  const inforows: string[] = terminalinfo.map(renderrow)
-  const logsrows: string[] = terminallogs.map(renderrow)
-
   // measure rows
   const infosize = xstep - 1
-  const inforowheights: number[] = inforows.map((item) => {
+  const inforowheights: number[] = terminalinfo.map((item) => {
     return measurerow(item, infosize, edge.height)
   })
   const logssize = context.width - xstep - 1
-  const logsrowheights: number[] = logsrows.map((item) => {
+  const logsrowheights: number[] = terminallogs.map((item) => {
     return measurerow(item, logssize, edge.height)
   })
 
@@ -152,7 +139,7 @@ export function TapeTerminal() {
         }}
       >
         <WriteTextContext.Provider value={xleft}>
-          {inforows.map((text, index) => {
+          {terminalinfo.map((text, index) => {
             const y = inforowycoords[index] + tapeinput.scroll
             const yheight = inforowheights[index]
             const ybottom = y + yheight
@@ -170,7 +157,7 @@ export function TapeTerminal() {
           })}
         </WriteTextContext.Provider>
         <WriteTextContext.Provider value={xright}>
-          {logsrows.map((text, index) => {
+          {terminallogs.map((text, index) => {
             const y = logsrowycoords[index] + tapeinput.scroll
             const yheight = logsrowheights[index]
             const ybottom = y + yheight
