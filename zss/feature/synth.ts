@@ -19,7 +19,6 @@ import {
   Part,
   Player,
   PolySynth,
-  Scale,
   Synth,
   Time,
   ToneAudioBuffer,
@@ -71,12 +70,13 @@ export function createsynth() {
     wet: 0.6, // mix level
   })
 
-  const tapeEQ = new EQ3({
-    low: -1, // slight low reduction
-    mid: 1, // slight mid boost
-    high: -4, // reduced highs (tape rolloff)
-    lowFrequency: 200,
-    highFrequency: 4500,
+  const razzlechorus = new Chorus({
+    frequency: 0.6,
+    delayTime: 7,
+    depth: 0.7,
+    type: 'triangle',
+    spread: 60,
+    wet: 0.25,
   })
 
   // tape hiss
@@ -85,7 +85,7 @@ export function createsynth() {
 
   // setup
   hiss.chain(hissvolume, maincompressor)
-  razzledazzle.chain(tapeEQ, maincompressor)
+  razzledazzle.chain(razzlechorus, maincompressor)
 
   const fsmap = new AudioToGain()
   const cyclesource = new Oscillator(Math.PI * 0.25, 'sine')
