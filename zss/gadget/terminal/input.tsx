@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import {
   api_error,
+  register_t9wordsflag,
   register_terminal_close,
   register_terminal_inclayout,
   vm_cli,
@@ -197,6 +198,16 @@ export function TapeTerminalInput({
     applystrtoindex(idx, String.fromCharCode(221), context)
     applycolortoindexes(idx, idx, 15, context.reset.bg, context)
   }
+
+  useEffect(() => {
+    if (useDeviceConfig.getState().wordlistflag !== 'typing') {
+      register_t9wordsflag(
+        SOFTWARE,
+        player,
+        `${tapeterminal.xcursor}${tapeterminal.ycursor}`,
+      )
+    }
+  }, [player, tapeterminal.xcursor, tapeterminal.ycursor])
 
   useEffect(() => {
     let scroll = tapeterminal.scroll

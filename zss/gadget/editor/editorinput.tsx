@@ -3,6 +3,7 @@ import {
   api_error,
   api_log,
   register_editor_close,
+  register_t9wordsflag,
   register_terminal_close,
   register_terminal_inclayout,
   vm_cli,
@@ -182,6 +183,12 @@ export function EditorInput({
     },
     [codeend, rows, rowsend, xcursor, ycursor],
   )
+
+  useEffect(() => {
+    if (useDeviceConfig.getState().wordlistflag !== 'typing') {
+      register_t9wordsflag(SOFTWARE, player, `${xcursor}${ycursor}`)
+    }
+  }, [player, xcursor, ycursor])
 
   const undomanager = useMemo(() => {
     return codepage ? new Y.UndoManager(codepage) : undefined
