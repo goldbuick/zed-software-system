@@ -74,7 +74,7 @@ export function createsynth() {
   const tapeEQ = new EQ3({
     low: -1, // slight low reduction
     mid: 1, // slight mid boost
-    high: -5, // reduced highs (tape rolloff)
+    high: -4, // reduced highs (tape rolloff)
     lowFrequency: 200,
     highFrequency: 4500,
   })
