@@ -10,7 +10,7 @@ import {
 import { registerreadplayer, writehistorybuffer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
-import { checkforword } from 'zss/feature/t9'
+import { checkforword, updateindex } from 'zss/feature/t9'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
@@ -138,11 +138,9 @@ export function TapeTerminalInput({
   }
 
   // eval for t9 / alt keys
-  if (useDeviceConfig.getState().wordlistflag !== 'typing') {
-    const maybechar = checkforword(inputstate, tapeterminal.xcursor, player)
-    if (isstring(maybechar) && maybechar) {
-      inputstatesetsplice(tapeterminal.xcursor - 2, 2, maybechar)
-    }
+  const maybechar = checkforword(inputstate, tapeterminal.xcursor, player)
+  if (isstring(maybechar) && maybechar) {
+    inputstatesetsplice(tapeterminal.xcursor - 2, 2, maybechar)
   }
 
   // reset color & bg
@@ -200,13 +198,7 @@ export function TapeTerminalInput({
   }
 
   useEffect(() => {
-    if (useDeviceConfig.getState().wordlistflag !== 'typing') {
-      register_t9wordsflag(
-        SOFTWARE,
-        player,
-        `${tapeterminal.xcursor}${tapeterminal.ycursor}`,
-      )
-    }
+    updateindex(`${tapeterminal.xcursor}${tapeterminal.ycursor}`, player)
   }, [player, tapeterminal.xcursor, tapeterminal.ycursor])
 
   useEffect(() => {

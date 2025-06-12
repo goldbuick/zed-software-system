@@ -3,7 +3,6 @@ import {
   api_error,
   api_log,
   register_editor_close,
-  register_t9wordsflag,
   register_terminal_close,
   register_terminal_inclayout,
   vm_cli,
@@ -14,7 +13,7 @@ import { Y } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
-import { checkforword } from 'zss/feature/t9'
+import { checkforword, updateindex } from 'zss/feature/t9'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
@@ -26,7 +25,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR, NAME, PT } from 'zss/words/types'
 
-import { useBlink, useDeviceConfig, useWriteText } from '../hooks'
+import { useBlink, useWriteText } from '../hooks'
 import { Scrollable } from '../scrollable'
 import { EDITOR_CODE_ROW } from '../tape/common'
 import { UserInput, modsfromevent } from '../userinput'
@@ -160,11 +159,9 @@ export function EditorInput({
   }
 
   // eval for t9 / alt keys
-  if (useDeviceConfig.getState().wordlistflag !== 'typing') {
-    const maybechar = checkforword(strvalue, tapeeditor.cursor, player)
-    if (isstring(maybechar) && maybechar) {
-      strvaluesplice(tapeeditor.cursor - 2, 2, maybechar)
-    }
+  const maybechar = checkforword(strvalue, tapeeditor.cursor, player)
+  if (isstring(maybechar) && maybechar) {
+    strvaluesplice(tapeeditor.cursor - 2, 2, maybechar)
   }
 
   const movecursor = useCallback(
@@ -185,9 +182,7 @@ export function EditorInput({
   )
 
   useEffect(() => {
-    if (useDeviceConfig.getState().wordlistflag !== 'typing') {
-      register_t9wordsflag(SOFTWARE, player, `${xcursor}${ycursor}`)
-    }
+    updateindex(`${xcursor}${ycursor}`, player)
   }, [player, xcursor, ycursor])
 
   const undomanager = useMemo(() => {
