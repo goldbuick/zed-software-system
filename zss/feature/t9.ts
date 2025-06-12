@@ -18,10 +18,7 @@ export function setup(dynamicwords: string[]) {
     wordmap.set(dynamicwords[i], DYNAMIC_RANK)
   }
   t9.setDictWithWeight(wordmap)
-}
-
-export function predict(input: string) {
-  return t9.predict(input)
+  console.info('t9 setup', wordmap)
 }
 
 export function checkforword(
@@ -47,6 +44,8 @@ export function checkforword(
         return '}'
       case '>>':
         return '<'
+      case '!!':
+        return ';'
       case '||':
         return '\\'
       case '##':
@@ -77,7 +76,6 @@ export function checkforword(
 
   const lastone = input[index - 1]
   if (/\d/.test(lastone) === false) {
-    register_t9words(SOFTWARE, player, '', [])
     return ''
   }
 
@@ -91,7 +89,7 @@ export function checkforword(
   }
 
   const checknumbers = input.substring(i, index)
-  const results = predict(checknumbers).slice(0, 32)
+  const results = t9.predict(checknumbers).slice(0, 32)
   register_t9words(SOFTWARE, player, checknumbers, results)
 
   return ''
