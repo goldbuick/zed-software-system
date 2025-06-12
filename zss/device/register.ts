@@ -350,8 +350,6 @@ const register = createdevice(
             // pull data && init
             await loadmem(urlcontent)
           }
-          // get words meta
-          vm_zsswords(register, myplayerid)
         })
         break
       case 'loginready':
@@ -361,6 +359,8 @@ const register = createdevice(
         writepages()
         writewikilink()
         register_terminal_full(register, myplayerid)
+        // get words meta
+        vm_zsswords(register, myplayerid)
         break
       case 'acklogin':
         // info dump
@@ -369,6 +369,8 @@ const register = createdevice(
         // hide terminal
         register_terminal_close(register, myplayerid)
         gadgetserver_desync(register, myplayerid)
+        // get words meta
+        vm_zsswords(register, myplayerid)
         break
       case 'ackzsswords': {
         useGadgetClient.setState({
