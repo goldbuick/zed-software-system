@@ -17,14 +17,13 @@ import {
 import {
   TAPE_DISPLAY,
   TAPE_MAX_LINES,
-  TAPE_ROW,
   useGadgetClient,
   useTape,
   useTapeTerminal,
 } from 'zss/gadget/data/state'
 import { useDeviceConfig } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
-import { createpid, createsid } from 'zss/mapping/guid'
+import { createpid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
 import {
   isarray,
@@ -223,6 +222,8 @@ async function loadmem(books: string) {
   if (books.length === 0) {
     api_error(register, myplayerid, 'content', 'no content found')
     writewikilink()
+    vm_zsswords(register, myplayerid)
+    register_terminal_full(register, myplayerid)
     return
   }
   // init vm with content
@@ -379,13 +380,12 @@ const register = createdevice(
         break
       case 'loginready':
         vm_login(register, myplayerid)
+        vm_zsswords(register, myplayerid)
         break
       case 'loginfail':
         writepages()
         writewikilink()
         register_terminal_full(register, myplayerid)
-        // get words meta
-        vm_zsswords(register, myplayerid)
         break
       case 'acklogin':
         // info dump
@@ -394,8 +394,6 @@ const register = createdevice(
         // hide terminal
         register_terminal_close(register, myplayerid)
         gadgetserver_desync(register, myplayerid)
-        // get words meta
-        vm_zsswords(register, myplayerid)
         break
       case 'ackzsswords': {
         useGadgetClient.setState({
@@ -707,8 +705,6 @@ const register = createdevice(
             if (message.data != useDeviceConfig.getState().wordlistflag) {
               useDeviceConfig.setState(() => ({
                 wordlistflag: message.data,
-                checknumbers: '',
-                wordlist: [],
               }))
             }
           }

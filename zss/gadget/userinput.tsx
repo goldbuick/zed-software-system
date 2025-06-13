@@ -189,6 +189,7 @@ document.addEventListener(
     // block default browser behavior that messes with things
     switch (key) {
       case 's': // override default behavior
+      case 'r':
       case 'j':
       case 'o':
       case 'f':
@@ -259,6 +260,11 @@ document.addEventListener(
         break
       case 'tab':
         inputdown(0, INPUT.MENU_BUTTON)
+        break
+      case 'r':
+        if (mods.ctrl) {
+          window.location.reload()
+        }
         break
       case 's':
         if (mods.ctrl) {

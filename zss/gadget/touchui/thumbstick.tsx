@@ -1,4 +1,4 @@
-import { useFrame } from '@react-three/fiber'
+import { ThreeEvent, useFrame } from '@react-three/fiber'
 import { radToDeg } from 'maath/misc'
 import { useState } from 'react'
 import { Vector2, Vector3 } from 'three'
@@ -56,18 +56,20 @@ export function ThumbStick({
     inputacc: INPUT_RATE,
   })
 
-  function clearmovestick() {
-    --movestick.presscount
+  function clearmovestick(e: ThreeEvent<PointerEvent>) {
+    if (movestick.pointerid === e.pointerId) {
+      --movestick.presscount
 
-    // reset
-    movestick.startx = -1
-    movestick.starty = -1
-    movestick.tipx = -1
-    movestick.tipy = -1
-    movestick.pointerid = -1
+      // reset
+      movestick.startx = -1
+      movestick.starty = -1
+      movestick.tipx = -1
+      movestick.tipy = -1
+      movestick.pointerid = -1
 
-    // update visuals
-    onUp()
+      // update visuals
+      onUp()
+    }
   }
 
   useFrame((_, delta) => {
