@@ -11,6 +11,7 @@ import {
 } from 'zss/gadget/data/api'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
+import { totarget } from 'zss/mapping/string'
 import {
   MAYBE,
   isarray,
@@ -369,7 +370,8 @@ const vm = createdevice(
         break
       case 'synthsend':
         if (isstring(message.data)) {
-          memorysendtoactiveboards('all', message.data, undefined)
+          const [target, label] = totarget(message.data)
+          memorysendtoactiveboards(target, label, undefined)
         }
         break
       case 'second': {

@@ -750,8 +750,8 @@ export function memorytick() {
 }
 
 export function memorysendtoactiveboards(
-  message: string | PT,
-  label: string,
+  target: string | PT,
+  message: string,
   data: any,
 ) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
@@ -759,31 +759,29 @@ export function memorysendtoactiveboards(
     return
   }
 
-  function sendtoelements(elements: BOARD_ELEMENT[], labelstr: string) {
+  function sendtoelements(elements: BOARD_ELEMENT[]) {
     for (let i = 0; i < elements.length; ++i) {
       const element = elements[i]
       if (ispresent(element.id)) {
-        const chipmessage = `${senderid(element.id)}:${labelstr}`
+        const chipmessage = `${senderid(element.id)}:${message}`
         SOFTWARE.emit('', chipmessage, data)
       }
     }
   }
 
-  if (ispt(message)) {
+  if (ispt(target)) {
     // send to all objects on active boards -
     // I guess this is an easy way for cross board coordination
     const boards = bookplayerreadboards(mainbook)
     for (let b = 0; b < boards.length; ++b) {
       const board = boards[b]
-      const element = boardelementread(board, message)
+      const element = boardelementread(board, target)
       if (ispresent(element)) {
-        sendtoelements([element], label)
+        sendtoelements([element])
       }
     }
     return
   }
-
-  const { target, path } = parsetarget(message)
 
   // send to all objects on active boards -
   // I guess this is an easy way for cross board coordination
@@ -797,12 +795,12 @@ export function memorysendtoactiveboards(
       case 'all':
       case 'self':
       case 'others': {
-        sendtoelements(Object.values(board.objects), path)
+        sendtoelements(Object.values(board.objects))
         break
       }
       default: {
         // check named elements first
-        sendtoelements(listelementsbyattr(board, [target]), path)
+        sendtoelements(listelementsbyattr(board, [target]))
         break
       }
     }
