@@ -14,9 +14,9 @@ type KeyboardGameProps = {
 export function KeyboardGame({ width }: KeyboardGameProps) {
   const context = useWriteText()
   const { keyboardalt, keyboardctrl, keyboardshift } = useDeviceConfig()
-  const left = width - 19
-  const mid = width - 13
-  const right = width - 7
+  const left = width - 18
+  const mid = width - 12
+  const right = width - 6
 
   const x = right
   const y = 12

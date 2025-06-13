@@ -14,9 +14,9 @@ type KeyboardAltProps = {
 
 export function KeyboardAlt({ width }: KeyboardAltProps) {
   const { keyboardshift, wordlist } = useDeviceConfig()
-  const left = width - 19
-  const mid = width - 13
-  const right = width - 7
+  const left = width - 18
+  const mid = width - 12
+  const right = width - 6
   const corner: PT = { x: LIST_LEFT, y: 0 }
   return (
     <>

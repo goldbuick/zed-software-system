@@ -175,7 +175,7 @@ function terminaladdlog(message: MESSAGE) {
   const dupecheck = firstrow.indexOf(row)
   if (dupecheck === 0) {
     logs.shift()
-    logs.unshift(`(2)${firstrow as string}`)
+    logs.unshift(`(2)${firstrow}`)
   } else if (dupecheck !== -1) {
     const countcheck = countregex.exec(firstrow)
     if (ispresent(countcheck)) {
@@ -705,8 +705,6 @@ const register = createdevice(
             if (message.data != useDeviceConfig.getState().wordlistflag) {
               useDeviceConfig.setState(() => ({
                 wordlistflag: message.data,
-                checknumbers: '',
-                wordlist: [],
               }))
             }
           }
