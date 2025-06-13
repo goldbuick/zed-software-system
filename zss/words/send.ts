@@ -19,7 +19,7 @@ function maplabel(maybelabel: any) {
 
 export function parsesend(words: WORD[]): SEND_META {
   const [value] = readargs(words, 0, [ARG_TYPE.ANY])
-  if (isstrdir(value)) {
+  if (isstrdir(value) && NAME(value[0] as string) !== 'player') {
     const [targetdir, maybelabel, data] = readargs(words, 0, [
       ARG_TYPE.DIR,
       ARG_TYPE.NAME,
