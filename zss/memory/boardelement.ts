@@ -35,7 +35,7 @@ enum BOARD_ELEMENT_KEYS {
   bucket,
   pushable,
   collision,
-  destructible,
+  breakable,
   tickertext,
   tickertime,
   p1,

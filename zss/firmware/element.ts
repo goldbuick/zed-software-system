@@ -55,7 +55,7 @@ const STANDARD_STAT_NAMES = new Set([
   'player',
   'pushable',
   'collision',
-  'destructible',
+  'breakable',
   // config
   'p1',
   'p2',
@@ -409,12 +409,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
       if (didmove === false) {
         READ_CONTEXT.element.stepx = 0
         READ_CONTEXT.element.stepy = 0
-        // walking destructibles get bonked
+        // walking breakables get bonked
         if (
           bookelementstatread(
             READ_CONTEXT.book,
             READ_CONTEXT.element,
-            'destructible',
+            'breakable',
           )
         ) {
           // mark target for deletion

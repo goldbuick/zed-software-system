@@ -557,9 +557,9 @@ export function memorymoveobject(
       sendinteraction('', element, blocked, 'bump')
     }
 
-    // delete destructible elements
+    // delete breakable elements
 
-    if (bookelementstatread(book, blocked, 'destructible')) {
+    if (bookelementstatread(book, blocked, 'breakable')) {
       if (ispresent(blocked?.id)) {
         // mark target for deletion
         bookboardsafedelete(

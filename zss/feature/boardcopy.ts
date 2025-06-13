@@ -74,7 +74,7 @@ export function mapelementcopy(
   maybenew.stepy = from.stepy
   maybenew.pushable = from.pushable
   maybenew.collision = from.collision
-  maybenew.destructible = from.destructible
+  maybenew.breakable = from.breakable
   maybenew.tickertext = from.tickertext
   maybenew.tickertime = from.tickertime
 }

@@ -368,11 +368,11 @@ export function codepageapplyelementstats(
       case 'isbullet':
         element.collision = COLLISION.ISBULLET
         break
-      case 'isdestructible':
-        element.destructible = 1
+      case 'isbreakable':
+        element.breakable = 1
         break
-      case 'notdestructible':
-        element.destructible = 0
+      case 'notbreakable':
+        element.breakable = 0
         break
       default:
         // TODO: raise error for unknown stat
@@ -405,39 +405,66 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       }
       codepage.board.id = codepage.id
       const stats = codepagereadstatdefaults(codepage)
-      //
-      codepage.board.isdark = (stats.isdark ?? codepage.board.isdark) ? 1 : 0
-      // @ts-expect-error ...
-      codepage.board.startx = stats.startx ?? codepage.board.startx
-      // @ts-expect-error ...
-      codepage.board.starty = stats.starty ?? codepage.board.starty
-      // @ts-expect-error ...
-      codepage.board.over = stats.over ?? codepage.board.over
-      // @ts-expect-error ...
-      codepage.board.under = stats.under ?? codepage.board.under
-      // @ts-expect-error ...
-      codepage.board.camera = stats.camera ?? codepage.board.camera
-      // @ts-expect-error ...
-      codepage.board.graphics = stats.graphics ?? codepage.board.graphics
-      // @ts-expect-error ...
-      codepage.board.facing = stats.facing ?? codepage.board.facing
-      // @ts-expect-error ...
-      codepage.board.exitnorth = stats.exitnorth ?? codepage.board.exitnorth
-      // @ts-expect-error ...
-      codepage.board.exitsouth = stats.exitsouth ?? codepage.board.exitsouth
-      // @ts-expect-error ...
-      codepage.board.exitwest = stats.exitwest ?? codepage.board.exitwest
-      // @ts-expect-error ...
-      codepage.board.exiteast = stats.exiteast ?? codepage.board.exiteast
-      // @ts-expect-error ...
-      codepage.board.timelimit = stats.timelimit ?? codepage.board.timelimit
-      // @ts-expect-error ...
-      codepage.board.restartonzap =
-        stats.restartonzap ?? codepage.board.restartonzap
-      // @ts-expect-error ...
-      codepage.board.maxplayershots =
-        stats.maxplayershots ?? codepage.board.maxplayershots
-      //
+
+      if (stats.isdark) {
+        codepage.board.isdark = 1
+      }
+      if (stats.notdark) {
+        codepage.board.isdark = 0
+      }
+
+      if (isnumber(stats.startx)) {
+        codepage.board.startx = stats.startx
+      }
+      if (isnumber(stats.starty)) {
+        codepage.board.starty = stats.starty
+      }
+
+      if (isstring(stats.over)) {
+        codepage.board.over = stats.over
+      }
+      if (isstring(stats.under)) {
+        codepage.board.under = stats.under
+      }
+
+      if (isstring(stats.camera)) {
+        codepage.board.camera = stats.camera
+      }
+      if (isstring(stats.graphics)) {
+        codepage.board.graphics = stats.graphics
+      }
+      if (isnumber(stats.facing)) {
+        codepage.board.facing = stats.facing
+      }
+
+      if (isstring(stats.exitnorth)) {
+        codepage.board.exitnorth = stats.exitnorth
+      }
+      if (isstring(stats.exitsouth)) {
+        codepage.board.exitsouth = stats.exitsouth
+      }
+      if (isstring(stats.exitwest)) {
+        codepage.board.exitwest = stats.exitwest
+      }
+      if (isstring(stats.exiteast)) {
+        codepage.board.exiteast = stats.exiteast
+      }
+
+      if (isnumber(stats.timelimit)) {
+        codepage.board.timelimit = stats.timelimit
+      }
+
+      if (stats.restartonzap) {
+        codepage.board.restartonzap = 1
+      }
+      if (stats.norestartonzap) {
+        codepage.board.restartonzap = 0
+      }
+
+      if (isnumber(stats.maxplayershots)) {
+        codepage.board.maxplayershots = stats.maxplayershots
+      }
+
       return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {
