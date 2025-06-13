@@ -1,7 +1,6 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import {
   api_error,
-  register_t9wordsflag,
   register_terminal_close,
   register_terminal_inclayout,
   vm_cli,
@@ -26,7 +25,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR, NAME } from 'zss/words/types'
 
-import { useBlink, useDeviceConfig, useWriteText } from '../hooks'
+import { useBlink, useWriteText } from '../hooks'
 import { bgcolor, setuplogitem } from '../tape/common'
 
 type TapeTerminalInputProps = {
@@ -71,21 +70,28 @@ export function TapeTerminalInput({
     : inputstate
 
   // update state
-  function inputstatesetsplice(index: number, count: number, insert?: string) {
-    // we are trying to modify historical entries
-    if (tapeterminal.bufferindex > 0) {
-      // blank inputslot and snap index to 0
-      useTapeTerminal.setState({ bufferindex: 0 })
-    }
-    // write state
-    tapeterminal.buffer[0] = stringsplice(inputstate, index, count, insert)
-    useTapeTerminal.setState({
-      buffer: tapeterminal.buffer,
-      // clear selection
-      xselect: undefined,
-      xcursor: index + (insert ?? '').length,
-    })
-  }
+  const inputstatesetsplice = useCallback(
+    function inputstatesetsplice(
+      index: number,
+      count: number,
+      insert?: string,
+    ) {
+      // we are trying to modify historical entries
+      if (tapeterminal.bufferindex > 0) {
+        // blank inputslot and snap index to 0
+        useTapeTerminal.setState({ bufferindex: 0 })
+      }
+      // write state
+      tapeterminal.buffer[0] = stringsplice(inputstate, index, count, insert)
+      useTapeTerminal.setState({
+        buffer: tapeterminal.buffer,
+        // clear selection
+        xselect: undefined,
+        xcursor: index + (insert ?? '').length,
+      })
+    },
+    [inputstate, tapeterminal.buffer, tapeterminal.bufferindex],
+  )
 
   // navigate input history
   function inputstateswitch(switchto: number) {
@@ -135,12 +141,6 @@ export function TapeTerminalInput({
       xselect: undefined,
       yselect: undefined,
     })
-  }
-
-  // eval for t9 / alt keys
-  const maybechar = checkforword(inputstate, tapeterminal.xcursor, player)
-  if (isstring(maybechar) && maybechar) {
-    inputstatesetsplice(tapeterminal.xcursor - 2, 2, maybechar)
   }
 
   // reset color & bg
@@ -198,8 +198,22 @@ export function TapeTerminalInput({
   }
 
   useEffect(() => {
-    updateindex(`${tapeterminal.xcursor}${tapeterminal.ycursor}`, player)
-  }, [player, tapeterminal.xcursor, tapeterminal.ycursor])
+    if (tapeterminal.ycursor === 0) {
+      // eval for t9 / alt keys
+      const maybechar = checkforword(inputstate, tapeterminal.xcursor, player)
+      if (isstring(maybechar) && maybechar) {
+        inputstatesetsplice(tapeterminal.xcursor - 2, 2, maybechar)
+      }
+    } else {
+      updateindex(`${tapeterminal.ycursor}`, player)
+    }
+  }, [
+    inputstate,
+    tapeterminal.xcursor,
+    player,
+    tapeterminal.ycursor,
+    inputstatesetsplice,
+  ])
 
   useEffect(() => {
     let scroll = tapeterminal.scroll

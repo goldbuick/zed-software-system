@@ -116,18 +116,21 @@ export function EditorInput({
     }
   }
 
-  function strvaluesplice(index: number, count: number, insert?: string) {
-    if (count > 0) {
-      codepage?.delete(index, count)
-    }
-    if (ispresent(insert)) {
-      codepage?.insert(index, insert)
-    }
-    useTapeEditor.setState({
-      cursor: index + (insert ?? '').length,
-      select: undefined,
-    })
-  }
+  const strvaluesplice = useCallback(
+    function strvaluesplice(index: number, count: number, insert?: string) {
+      if (count > 0) {
+        codepage?.delete(index, count)
+      }
+      if (ispresent(insert)) {
+        codepage?.insert(index, insert)
+      }
+      useTapeEditor.setState({
+        cursor: index + (insert ?? '').length,
+        select: undefined,
+      })
+    },
+    [codepage],
+  )
 
   function strtogglecomments() {
     if (hasselection) {
@@ -158,12 +161,6 @@ export function EditorInput({
     useTapeEditor.setState({ cursor: codeend, select: undefined })
   }
 
-  // eval for t9 / alt keys
-  const maybechar = checkforword(strvalue, tapeeditor.cursor, player)
-  if (isstring(maybechar) && maybechar) {
-    strvaluesplice(tapeeditor.cursor - 2, 2, maybechar)
-  }
-
   const movecursor = useCallback(
     function movecursor(inc: number) {
       const ycheck = Math.round(ycursor + inc)
@@ -182,8 +179,12 @@ export function EditorInput({
   )
 
   useEffect(() => {
-    updateindex(`${xcursor}${ycursor}`, player)
-  }, [player, xcursor, ycursor])
+    // eval for t9 / alt keys
+    const maybechar = checkforword(strvalue, tapeeditor.cursor, player)
+    if (isstring(maybechar) && maybechar) {
+      strvaluesplice(tapeeditor.cursor - 2, 2, maybechar)
+    }
+  }, [strvalue, tapeeditor.cursor, player, strvaluesplice])
 
   const undomanager = useMemo(() => {
     return codepage ? new Y.UndoManager(codepage) : undefined
