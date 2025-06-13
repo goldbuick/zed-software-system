@@ -17,14 +17,13 @@ import {
 import {
   TAPE_DISPLAY,
   TAPE_MAX_LINES,
-  TAPE_ROW,
   useGadgetClient,
   useTape,
   useTapeTerminal,
 } from 'zss/gadget/data/state'
 import { useDeviceConfig } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
-import { createpid, createsid } from 'zss/mapping/guid'
+import { createpid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
 import {
   isarray,
@@ -176,7 +175,7 @@ function terminaladdlog(message: MESSAGE) {
   const dupecheck = firstrow.indexOf(row)
   if (dupecheck === 0) {
     logs.shift()
-    logs.unshift(`(2)${firstrow}`)
+    logs.unshift(`(2)${firstrow as string}`)
   } else if (dupecheck !== -1) {
     const countcheck = countregex.exec(firstrow)
     if (ispresent(countcheck)) {
