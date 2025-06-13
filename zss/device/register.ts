@@ -222,8 +222,8 @@ async function loadmem(books: string) {
   if (books.length === 0) {
     api_error(register, myplayerid, 'content', 'no content found')
     writewikilink()
-    // get words meta
     vm_zsswords(register, myplayerid)
+    register_terminal_full(register, myplayerid)
     return
   }
   // init vm with content
@@ -379,9 +379,7 @@ const register = createdevice(
         })
         break
       case 'loginready':
-        // request login
         vm_login(register, myplayerid)
-        // get words meta
         vm_zsswords(register, myplayerid)
         break
       case 'loginfail':
