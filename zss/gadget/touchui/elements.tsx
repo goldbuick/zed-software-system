@@ -30,11 +30,10 @@ export function Elements({ width, height, onReset }: ElementsProps) {
 
   resetTiles(context, DECO, FG, BG)
 
-  const right = width - 7
-  const leftedge = Math.round(width * 0.333)
+  const leftedge = Math.floor(width * 0.333)
   const rightedge = Math.round(width * 0.666)
-  for (let y = 0; y < rightedge; ++y) {
-    for (let x = leftedge; x <= right; ++x) {
+  for (let y = 0; y < height; ++y) {
+    for (let x = leftedge; x <= rightedge; ++x) {
       writeTile(context, width, height, x, y, { char: 176 })
     }
   }

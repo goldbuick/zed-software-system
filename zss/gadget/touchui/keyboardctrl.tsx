@@ -20,19 +20,19 @@ export function KeyboardCtrl({ width }: KeyboardCtrlProps) {
   const corner: PT = { x: LIST_LEFT, y: 0 }
   return (
     <>
-      <NumKey x={right} y={0} letters="CTRL" digit="k" usectrl />
+      <NumKey x={right} y={0} letters="" digit="k" usectrl />
 
-      <NumKey x={left} y={4} letters="CTRL" digit="r" usectrl />
-      <NumKey x={mid} y={5} letters="CTRL" digit="s" usectrl />
-      <NumKey x={right} y={4} letters="CTRL" digit="x" usectrl />
+      <NumKey x={left} y={4} letters="" digit="r" usectrl />
+      <NumKey x={mid} y={5} letters="" digit="s" usectrl />
+      <NumKey x={right} y={4} letters="" digit="x" usectrl />
 
-      <NumKey x={left} y={8} letters="CTRL" digit="p" usectrl />
-      <NumKey x={mid} y={9} letters="CTRL" digit="a" usectrl />
-      <NumKey x={right} y={8} letters="CTRL" digit="c" usectrl />
+      <NumKey x={left} y={8} letters="" digit="p" usectrl />
+      <NumKey x={mid} y={9} letters="" digit="a" usectrl />
+      <NumKey x={right} y={8} letters="" digit="c" usectrl />
 
-      <NumKey x={left} y={12} letters="CTRL" digit="y" usectrl />
-      <NumKey x={mid} y={13} letters="CTRL" digit="z" usectrl />
-      <NumKey x={right} y={12} letters="CTRL" digit="v" usectrl />
+      <NumKey x={left} y={12} letters="" digit="y" usectrl />
+      <NumKey x={mid} y={13} letters="" digit="z" usectrl />
+      <NumKey x={right} y={12} letters="" digit="v" usectrl />
       {wordlist.length ? (
         <>
           <NumKey x={1} y={0} letters="$26" digit="[ArrowRight]" usealt />
