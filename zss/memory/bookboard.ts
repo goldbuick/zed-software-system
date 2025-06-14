@@ -816,6 +816,8 @@ export function bookboardtick(
 
     // only run if not removed
     // edge case is removed with a pending thud
+    // essentially this affords objects that were forcibly removed
+    // a single tick before execution ends
     if (object.removed) {
       const delta = timestamp - object.removed
       const cycle = bookelementstatread(book, object, 'cycle') ?? cycledefault
