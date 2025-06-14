@@ -466,6 +466,13 @@ const vm = createdevice(
           ' C ',
           'next',
         ])
+        gadgethyperlink(message.player, 'refscroll', `notes:`, [
+          'notesscroll',
+          'hk',
+          'n',
+          ' N ',
+          'next',
+        ])
         const shared = gadgetstate(message.player)
         shared.scroll = gadgetcheckqueue(message.player)
         break
@@ -569,6 +576,37 @@ const vm = createdevice(
                   'color',
                   'coloredit',
                 ])
+                const shared = gadgetstate(message.player)
+                shared.scroll = gadgetcheckqueue(message.player)
+                break
+              }
+              case 'notesscroll': {
+                gadgettext(
+                  message.player,
+                  'duration             cdefgab - notes ',
+                )
+                gadgettext(message.player, 'y - 64nd note        x - rest')
+                gadgettext(message.player, 't - 32nd note        ')
+                gadgettext(message.player, 's - 16th note.       drums')
+                gadgettext(message.player, 'i - eight note.      0 - tick')
+                gadgettext(message.player, 'q - quarter note     1 - tweet')
+                gadgettext(message.player, 'h - half note        2 - cowbell')
+                gadgettext(message.player, 'w - whole note       p - clap')
+                gadgettext(
+                  message.player,
+                  '                     4 - high snare',
+                )
+                gadgettext(
+                  message.player,
+                  'mods                 5 - high woodblock',
+                )
+                gadgettext(message.player, '3 - triplet          6 - low snare')
+                gadgettext(message.player, '. - time and a half  7 - low tom')
+                gadgettext(
+                  message.player,
+                  '# - sharp            8 - low woodblock',
+                )
+                gadgettext(message.player, '! - flat             9 - bass drum')
                 const shared = gadgetstate(message.player)
                 shared.scroll = gadgetcheckqueue(message.player)
                 break
