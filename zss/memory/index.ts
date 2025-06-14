@@ -743,10 +743,11 @@ export function memorytick() {
   }
 }
 
-export function memorysendtoactiveboards(
+export function memorysendtoboards(
   target: string | PT,
   message: string,
   data: any,
+  boards: BOARD[],
 ) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
@@ -764,9 +765,6 @@ export function memorysendtoactiveboards(
   }
 
   if (ispt(target)) {
-    // send to all objects on active boards -
-    // I guess this is an easy way for cross board coordination
-    const boards = bookplayerreadboards(mainbook)
     for (let b = 0; b < boards.length; ++b) {
       const board = boards[b]
       const element = boardelementread(board, target)
@@ -777,9 +775,6 @@ export function memorysendtoactiveboards(
     return
   }
 
-  // send to all objects on active boards -
-  // I guess this is an easy way for cross board coordination
-  const boards = bookplayerreadboards(mainbook)
   for (let b = 0; b < boards.length; ++b) {
     const board = boards[b]
 

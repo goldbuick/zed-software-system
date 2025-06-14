@@ -150,7 +150,7 @@ export function createchip(
     const commandinvoke = firmwaregetcommand(driver, command)
     if (!ispresent(commandinvoke)) {
       if (command !== 'send') {
-        return invokecommand('send', [command, ...args])
+        return invokecommand('shortsend', [command, ...args])
       }
       return 0
     }

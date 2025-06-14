@@ -4,7 +4,7 @@ import { EVAL_DIR, isstrdir } from './dir'
 import { ARG_TYPE, readargs } from './reader'
 import { NAME, WORD } from './types'
 
-type SEND_META = {
+export type SEND_META = {
   targetdir?: EVAL_DIR
   targetname?: string
   label: string
@@ -18,18 +18,19 @@ function maplabel(maybelabel: any) {
 }
 
 export function parsesend(words: WORD[]): SEND_META {
-  const [value] = readargs(words, 0, [ARG_TYPE.ANY])
-  if (isstrdir(value) && NAME(value[0] as string) !== 'player') {
-    const [targetdir, maybelabel, data] = readargs(words, 0, [
+  const [first, second] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.ANY])
+  if (first === 'send' && isstrdir(second)) {
+    const [, targetdir, maybelabel, data] = readargs(words, 0, [
+      ARG_TYPE.NAME, // #send
       ARG_TYPE.DIR,
       ARG_TYPE.NAME,
       ARG_TYPE.ANY,
     ])
-    const islabel = maplabel(maybelabel)
+    const label = maplabel(maybelabel)
     return {
       targetdir,
-      label: islabel ? islabel : 'bump',
-      data: islabel ? data : maybelabel,
+      label,
+      data,
     }
   } else {
     const [targetname, maybelabel, data] = readargs(words, 0, [
@@ -37,11 +38,18 @@ export function parsesend(words: WORD[]): SEND_META {
       ARG_TYPE.ANY,
       ARG_TYPE.ANY,
     ])
-    const islabel = maplabel(maybelabel)
+    const label = maplabel(maybelabel)
+    if (label) {
+      return {
+        targetname,
+        label,
+        data,
+      }
+    }
     return {
-      targetname: islabel ? targetname : 'self',
-      label: islabel ? islabel : targetname,
-      data: islabel ? data : maybelabel,
+      targetname: 'self',
+      label: targetname,
+      data,
     }
   }
 }

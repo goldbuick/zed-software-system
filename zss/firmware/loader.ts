@@ -10,18 +10,35 @@ import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memorysendtoactiveboards } from 'zss/memory'
-import { bookreadcodepagesbytypeandstat } from 'zss/memory/book'
+import {
+  MEMORY_LABEL,
+  memoryreadbookbysoftware,
+  memorysendtoboards,
+} from 'zss/memory'
+import {
+  bookplayerreadboards,
+  bookreadcodepagesbytypeandstat,
+} from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { parsesend } from 'zss/words/send'
+import { parsesend, SEND_META } from 'zss/words/send'
 
 import { loaderbinary } from './loaderbinary'
 import { loaderjson } from './loaderjson'
 import { loaderrexpaint } from './loaderrexpaint'
 import { loadertext } from './loadertext'
+
+function handlesend(send: SEND_META) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const boards = bookplayerreadboards(mainbook)
+  if (ispresent(send.targetdir)) {
+    memorysendtoboards(send.targetdir.destpt, send.label, send.data, boards)
+  } else if (ispresent(send.targetname)) {
+    memorysendtoboards(send.targetname, send.label, send.data, boards)
+  }
+}
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
@@ -88,13 +105,14 @@ export const LOADER_FIRMWARE = createfirmware({
     return [false, undefined]
   },
 })
-  .command('send', (_, words) => {
+  .command('shortsend', (_, words) => {
     const send = parsesend(words)
-    if (ispresent(send.targetdir)) {
-      memorysendtoactiveboards(send.targetdir.destpt, send.label, send.data)
-    } else if (ispresent(send.targetname)) {
-      memorysendtoactiveboards(send.targetname, send.label, send.data)
-    }
+    handlesend(send)
+    return 0
+  })
+  .command('send', (_, words) => {
+    const send = parsesend(['send', ...words])
+    handlesend(send)
     return 0
   })
   .command('stat', () => {
@@ -107,15 +125,17 @@ export const LOADER_FIRMWARE = createfirmware({
     return 0
   })
   .command('hyperlink', (_, args) => {
-    const [labelword, ...words] = args
-    const label = maptostring(labelword)
-    const hyperlink = words.map(maptostring).join(' ')
-    api_log(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      '$175',
-      `!${hyperlink};${label}`,
-    )
+    const [linkword, ...words] = args
+    const linktext = maptostring(linkword)
+    const send = parsesend(words)
+    if (ispresent(send.targetname)) {
+      api_log(
+        SOFTWARE,
+        READ_CONTEXT.elementfocus,
+        '$175',
+        `!${send.targetname}${send.label};${linktext}`,
+      )
+    }
     return 0
   })
   .command('readline', loadertext)

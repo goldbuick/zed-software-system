@@ -45,7 +45,7 @@ import {
   memoryreadbooklist,
   memoryreadflags,
   memoryreadoperator,
-  memorysendtoactiveboards,
+  memorysendtoboards,
   memorysetsoftwarebook,
 } from 'zss/memory'
 import { boardelementread } from 'zss/memory/board'
@@ -54,6 +54,7 @@ import {
   bookclearcodepage,
   bookelementdisplayread,
   bookplayermovetoboard,
+  bookplayerreadboards,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytypeandstat,
   bookreadsortedcodepages,
@@ -71,7 +72,7 @@ import {
 } from 'zss/memory/types'
 import { romparse, romprint, romread } from 'zss/rom'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { parsesend } from 'zss/words/send'
+import { parsesend, SEND_META } from 'zss/words/send'
 import { stattypestring } from 'zss/words/stats'
 import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
 
@@ -85,35 +86,46 @@ function helpprint(address: string) {
   )
 }
 
-export const CLI_FIRMWARE = createfirmware()
-  .command('send', (_, words) => {
-    const send = parsesend(words)
-    switch (send.label) {
-      // help messages
-      case 'helpmenu':
-        helpprint('menu')
-        break
-      case 'helpcontrols':
-        helpprint('controls')
-        break
-      case 'helptext':
-        helpprint('text')
-        break
-      case 'helpdeveloper':
-        helpprint('developer')
-        break
-      case 'helpplayer':
-        helpprint('player')
-        break
-      default: {
-        if (ispresent(send.targetname)) {
-          memorysendtoactiveboards(send.targetname, send.label, send.data)
-        } else if (ispresent(send.targetdir)) {
-          memorysendtoactiveboards(send.targetdir.destpt, send.label, send.data)
-        }
-        break
+function handlesend(send: SEND_META) {
+  switch (send.label) {
+    // help messages
+    case 'helpmenu':
+      helpprint('menu')
+      break
+    case 'helpcontrols':
+      helpprint('controls')
+      break
+    case 'helptext':
+      helpprint('text')
+      break
+    case 'helpdeveloper':
+      helpprint('developer')
+      break
+    case 'helpplayer':
+      helpprint('player')
+      break
+    default: {
+      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      const boards = bookplayerreadboards(mainbook)
+      if (ispresent(send.targetname)) {
+        memorysendtoboards(send.targetname, send.label, send.data, boards)
+      } else if (ispresent(send.targetdir)) {
+        memorysendtoboards(send.targetdir.destpt, send.label, send.data, boards)
       }
+      break
     }
+  }
+}
+
+export const CLI_FIRMWARE = createfirmware()
+  .command('shortsend', (_, words) => {
+    const send = parsesend(words)
+    handlesend(send)
+    return 0
+  })
+  .command('send', (_, words) => {
+    const send = parsesend(['send', ...words])
+    handlesend(send)
     return 0
   })
   .command('stat', (chip, words) => {
@@ -237,24 +249,26 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('hyperlink', (_, args) => {
-    const [labelword, ...words] = args
-    const label = maptostring(labelword)
-    const hyperlink = words.map(maptostring).join(' ')
-    // log hyperlink
-    const { user } = memoryreadflags(READ_CONTEXT.elementid)
-    const withuser = isstring(user) ? user : 'player'
-    const icon = bookelementdisplayread(
-      READ_CONTEXT.book,
-      READ_CONTEXT.element,
-      1,
-      COLOR.WHITE,
-      COLOR.BLACK,
-    )
-    api_log(
-      SOFTWARE,
-      READ_CONTEXT.elementid,
-      `!${hyperlink};$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE ${label}`,
-    )
+    const [linkword, ...words] = args
+    const linktext = maptostring(linkword)
+    const send = parsesend(words)
+    if (ispresent(send.targetname)) {
+      const { user } = memoryreadflags(READ_CONTEXT.elementid)
+      const withuser = isstring(user) ? user : 'player'
+      const icon = bookelementdisplayread(
+        READ_CONTEXT.book,
+        READ_CONTEXT.element,
+        1,
+        COLOR.WHITE,
+        COLOR.BLACK,
+      )
+      const line = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE ${linktext}`
+      api_log(
+        SOFTWARE,
+        READ_CONTEXT.elementid,
+        `!${send.targetname}:${send.label};${line}`,
+      )
+    }
     return 0
   })
   // ---
