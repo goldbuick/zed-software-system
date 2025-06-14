@@ -14,7 +14,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { useWriteText, WriteTextContext } from '../hooks'
 import { BackPlate } from '../tape/backplate'
-import { TapeTerminalContext } from '../tape/common'
+import { TapeTerminalContext, terminalsplit } from '../tape/common'
 
 import { TapeTerminalInput } from './input'
 import { TapeTerminalItem } from './item'
@@ -66,7 +66,7 @@ export function TapeTerminal() {
   const tapeinput = useTapeTerminal()
 
   // wide terminal
-  const xstep = Math.floor(context.width * 0.5)
+  const xstep = terminalsplit(context.width)
 
   const top = 0
   const left = 0

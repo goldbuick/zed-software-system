@@ -15,7 +15,7 @@ import { TapeTerminal } from '../terminal/component'
 import { TilesData, TilesRender } from '../usetiles'
 
 import { BackPlate } from './backplate'
-import { bgcolor, FG } from './common'
+import { bgcolor, editorsplit, FG } from './common'
 
 function forkonedge(
   leftedge: number,
@@ -113,7 +113,7 @@ export function TapeLayout({
             <TapeLayoutTiles
               quickterminal={quickterminal}
               top={top}
-              width={Math.floor(width * 0.75)}
+              width={editorsplit(width)}
               height={height}
             >
               <TapeEditor />
