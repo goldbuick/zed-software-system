@@ -135,19 +135,27 @@ export function boardweavegroup(
   )
   // define included ids and indexes
   const groupids = objectelements.map((el) => el.id ?? '')
-  const indexes = terrainelements.map((el) =>
+  const groupindexes = terrainelements.map((el) =>
     pttoindex({ x: el.x ?? 0, y: el.y ?? 0 }, BOARD_WIDTH),
   )
 
   // collect carried object ids
-  const carriedobjectids: string[] = []
+  const carriedids: string[] = []
+  const carriedindexes: number[] = []
   for (let i = 0; i < terrainelements.length; ++i) {
     const fromelement = terrainelements[i]
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
     // detect and track carried objects
     const maybefromobject = boardelementread(targetboard, from)
     if (ispresent(maybefromobject) && boardelementisobject(maybefromobject)) {
-      carriedobjectids.push(maybefromobject.id ?? '')
+      carriedids.push(maybefromobject.id ?? '')
+      carriedids.push(maybefromobject.id ?? '')
+      carriedindexes.push(
+        pttoindex(
+          { x: maybefromobject.x ?? 0, y: maybefromobject.y ?? 0 },
+          BOARD_WIDTH,
+        ),
+      )
     }
   }
 
@@ -158,28 +166,37 @@ export function boardweavegroup(
     const fromcollision: COLLISION =
       bookelementstatread(book, fromelement, 'collision') ?? COLLISION.ISWALK
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
+    const fromindex = pttoindex(from, BOARD_WIDTH)
 
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
-    const destindex = pttoindex(dest, BOARD_WIDTH)
     if (ptwithinboard(dest)) {
       const destelement = boardelementread(targetboard, dest)
       const destid = destelement?.id ?? ''
+      const destindex = pttoindex(
+        { x: destelement?.x ?? 0, y: destelement?.y ?? 0 },
+        BOARD_WIDTH,
+      )
       const destcollision: COLLISION =
         bookelementstatread(book, destelement, 'collision') ?? COLLISION.ISWALK
 
       if (
         ispresent(destelement) &&
         boardelementisobject(destelement) &&
-        carriedobjectids.includes(destid) !== true &&
+        carriedids.includes(destid) !== true &&
         groupids.includes(destid) !== true
       ) {
         // would the terrain & object collide ?
         if (bookelementstatread(book, destelement, 'pushable')) {
-          didcollide =
-            memorymoveobject(book, targetboard, destelement, {
-              x: (destelement.x ?? 0) + delta.x,
-              y: (destelement.y ?? 0) + delta.y,
-            }) !== true
+          if (
+            fromcollision !== COLLISION.ISWALK ||
+            carriedindexes.includes(fromindex)
+          ) {
+            didcollide =
+              memorymoveobject(book, targetboard, destelement, {
+                x: (destelement.x ?? 0) + delta.x,
+                y: (destelement.y ?? 0) + delta.y,
+              }) !== true
+          }
         } else if (checkdoescollide(fromcollision, destcollision)) {
           didcollide = true
         } else {
@@ -187,7 +204,7 @@ export function boardweavegroup(
         }
       } else if (
         destcollision === COLLISION.ISSOLID &&
-        indexes.includes(destindex) === false
+        groupindexes.includes(destindex) === false
       ) {
         didcollide = true
       }
@@ -222,7 +239,7 @@ export function boardweavegroup(
       if (
         ispresent(destelement) &&
         boardelementisobject(destelement) &&
-        carriedobjectids.includes(destid) &&
+        carriedids.includes(destid) &&
         groupids.includes(destid) !== true
       ) {
         if (bookelementstatread(book, destelement, 'pushable')) {
