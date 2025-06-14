@@ -25,7 +25,3 @@ canvas {
   -webkit-touch-callout: none;
   image-rendering: pixelated;
 }
-
-#VRButton {
-  display: none;  
-}
