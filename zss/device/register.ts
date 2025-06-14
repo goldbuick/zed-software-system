@@ -709,11 +709,6 @@ const register = createdevice(
           }
         })
         break
-      case 'enterar':
-        doasync(register, message.player, async () => {
-          // await xrstore.enterAR()
-        })
-        break
     }
   },
 )
