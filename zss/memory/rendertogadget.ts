@@ -372,6 +372,37 @@ export function memoryconverttogadgetlayers(
   const boardobjects = Object.values(board.objects ?? {})
   for (let i = 0; i < boardobjects.length; ++i) {
     const object = boardobjects[i]
+
+    // write ticker messages
+    if (
+      isstring(object.tickertext) &&
+      isnumber(object.tickertime) &&
+      object.tickertext.length
+    ) {
+      // calc placement
+      const TICKER_WIDTH = BOARD_WIDTH
+      const measure = tokenizeandmeasuretextformat(
+        object.tickertext,
+        TICKER_WIDTH,
+        BOARD_HEIGHT - 1,
+      )
+      const width = measure?.measuredwidth ?? 1
+      const x = object.x ?? 0
+      const y = object.y ?? 0
+      const upper = y < BOARD_HEIGHT * 0.5
+      tickercontext.x = x - Math.floor(width * 0.5)
+      tickercontext.y = y + (upper ? 1 : -1)
+      // clip placement
+      if (tickercontext.x + width > BOARD_WIDTH) {
+        tickercontext.x = BOARD_WIDTH - width
+      }
+      if (tickercontext.x < 0) {
+        tickercontext.x = 0
+      }
+      // render text
+      tokenizeandwritetextformat(object.tickertext, tickercontext, true)
+    }
+
     if (ispresent(object.removed)) {
       continue
     }
@@ -522,36 +553,6 @@ export function memoryconverttogadgetlayers(
         const index = boardelementindex(board, sprite)
         lighting.alphas[index] = 0
       }
-    }
-
-    // write ticker messages
-    if (
-      isstring(object.tickertext) &&
-      isnumber(object.tickertime) &&
-      object.tickertext.length
-    ) {
-      // calc placement
-      const TICKER_WIDTH = BOARD_WIDTH
-      const measure = tokenizeandmeasuretextformat(
-        object.tickertext,
-        TICKER_WIDTH,
-        BOARD_HEIGHT - 1,
-      )
-      const width = measure?.measuredwidth ?? 1
-      const x = object.x ?? 0
-      const y = object.y ?? 0
-      const upper = y < BOARD_HEIGHT * 0.5
-      tickercontext.x = x - Math.floor(width * 0.5)
-      tickercontext.y = y + (upper ? 1 : -1)
-      // clip placement
-      if (tickercontext.x + width > BOARD_WIDTH) {
-        tickercontext.x = BOARD_WIDTH - width
-      }
-      if (tickercontext.x < 0) {
-        tickercontext.x = 0
-      }
-      // render text
-      tokenizeandwritetextformat(object.tickertext, tickercontext, true)
     }
 
     // inform control layer where to focus
