@@ -7,6 +7,14 @@ import { makeeven } from 'zss/mapping/number'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { App } from './app'
+// new LookingGlassWebXRPolyfill({
+//   tileHeight: 512,
+//   numViews: 45,
+//   targetY: 0,
+//   targetZ: 0,
+//   targetDiam: 3,
+//   fovy: (40 * Math.PI) / 180,
+// })
 
 unmuteAudio()
 

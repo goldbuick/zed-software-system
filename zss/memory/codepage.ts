@@ -16,7 +16,6 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { mapstrcolor } from 'zss/words/color'
-import { mapstrdirtoconst } from 'zss/words/dir'
 import { statformat, stattypestring } from 'zss/words/stats'
 import {
   CATEGORY,

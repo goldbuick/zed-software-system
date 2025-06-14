@@ -319,22 +319,14 @@ export function memoryconverttogadgetlayers(
   // hack to keep only one control layer
   if (isprimary) {
     layers.push(control)
-    if (isstring(board.camera)) {
-      switch (NAME(board.camera)) {
-        default:
-        case 'mid':
-          control.viewscale = VIEWSCALE.MID
-          break
-        case 'near':
-          control.viewscale = VIEWSCALE.NEAR
-          break
-        case 'far':
-          control.viewscale = VIEWSCALE.FAR
-          break
-      }
-    }
-    if (isstring(board.graphics)) {
-      const graphics = NAME(board.graphics)
+    const { graphics, camera, facing } = memoryreadflags(player)
+
+    const withgraphics = graphics ?? board.graphics ?? ''
+    const withcamera = camera ?? board.camera ?? ''
+    const withfacing = facing ?? board.facing ?? ''
+
+    if (isstring(withgraphics)) {
+      const graphics = NAME(withgraphics)
       switch (graphics) {
         case 'fpv':
         case 'iso':
@@ -347,9 +339,24 @@ export function memoryconverttogadgetlayers(
           break
       }
     }
-    const { facing } = memoryreadflags(player)
-    if (isnumber(facing)) {
-      control.facing = degToRad(facing % 360)
+
+    if (isstring(withcamera)) {
+      switch (NAME(withcamera)) {
+        default:
+        case 'mid':
+          control.viewscale = VIEWSCALE.MID
+          break
+        case 'near':
+          control.viewscale = VIEWSCALE.NEAR
+          break
+        case 'far':
+          control.viewscale = VIEWSCALE.FAR
+          break
+      }
+    }
+
+    if (isnumber(withfacing)) {
+      control.facing = degToRad(withfacing % 360)
     }
   }
 

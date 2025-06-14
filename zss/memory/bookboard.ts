@@ -28,7 +28,6 @@ import {
 } from './board'
 import { boardelementapplycolor, boardelementname } from './boardelement'
 import {
-  bookelementgroupread,
   bookelementkindread,
   bookelementstatread,
   bookreadobject,
@@ -681,24 +680,37 @@ export function bookboardmoveobject(
     // we are blocked by an object
     ispresent(maybeobject) &&
     // and we are both NOT players
-    (!targetisplayer || !maybeobjectisplayer) &&
-    // AND have different groups
-    bookelementgroupread(book, movingelement) !==
-      bookelementgroupread(book, maybeobject)
+    (!targetisplayer || !maybeobjectisplayer)
   ) {
+    // check groups
+    const groupa = bookelementstatread(book, movingelement, 'group') ?? ''
+    const groupb = bookelementstatread(book, maybeobject, 'group') ?? ''
+    if ((groupa || groupb) && groupa != groupb) {
+      // for sending interaction messages
+      return { ...maybeobject }
+    }
+
+    // bullets can't PUSH
+    if (targetcollision === COLLISION.ISBULLET) {
+      // for sending interaction messages
+      return { ...maybeobject }
+    }
     // is element pushable ?
     const ispushable = !!bookelementstatread(book, maybeobject, 'pushable')
     if (ispushable) {
-      // is recursive move a good idae ??
-      const bump: PT = {
-        x: dest.x - (movingelement.x ?? 0),
-        y: dest.y - (movingelement.y ?? 0),
+      const bumpdir = dirfrompts({ x: target.x, y: target.y }, dest)
+      const bump = ptapplydir(
+        { x: maybeobject.x ?? 0, y: maybeobject.y ?? 0 },
+        bumpdir,
+      )
+      // is recursive move a good idea ??
+      const bonk = bookboardmoveobject(book, board, maybeobject, bump)
+      // only bail if the thing we are shoving ran into something
+      if (ispresent(bonk)) {
+        // for sending interaction messages
+        return { ...maybeobject }
       }
-      bookboardmoveobject(book, board, maybeobject, bump)
     }
-
-    // for sending interaction messages
-    return { ...maybeobject }
   }
 
   // blocked by terrain
@@ -872,7 +884,8 @@ export function bookboardreadgroup(
       targetgroup as BOARD_ELEMENT_STAT,
     )
     return (
-      ispresent(statnamed) || bookelementgroupread(book, el) === targetgroup
+      ispresent(statnamed) ||
+      bookelementstatread(book, el, 'group') === targetgroup
     )
   }
 

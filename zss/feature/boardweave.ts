@@ -1,3 +1,4 @@
+import { pttoindex } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import { memorymoveobject } from 'zss/memory'
 import { checkdoescollide } from 'zss/memory/atomics'
@@ -9,11 +10,7 @@ import {
   ptwithinboard,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import {
-  bookelementgroupread,
-  bookelementstatread,
-  bookreadcodepagewithtype,
-} from 'zss/memory/book'
+import { bookelementstatread, bookreadcodepagewithtype } from 'zss/memory/book'
 import {
   bookboardreadgroup,
   bookboardresetlookups,
@@ -136,48 +133,65 @@ export function boardweavegroup(
     targetboard,
     targetgroup,
   )
+  // define included ids and indexes
+  const groupids = objectelements.map((el) => el.id ?? '')
+  const indexes = terrainelements.map((el) =>
+    pttoindex({ x: el.x ?? 0, y: el.y ?? 0 }, BOARD_WIDTH),
+  )
+
+  // collect carried object ids
+  const carriedobjectids: string[] = []
+  for (let i = 0; i < terrainelements.length; ++i) {
+    const fromelement = terrainelements[i]
+    const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
+    // detect and track carried objects
+    const maybefromobject = boardelementread(targetboard, from)
+    if (ispresent(maybefromobject) && boardelementisobject(maybefromobject)) {
+      carriedobjectids.push(maybefromobject.id ?? '')
+    }
+  }
 
   // collision detection pass
   let didcollide = false
-  const safeobjectids: Record<string, boolean> = {}
   for (let i = 0; i < terrainelements.length; ++i) {
     const fromelement = terrainelements[i]
-    const fromcollision: COLLISION = bookelementstatread(
-      book,
-      fromelement,
-      'collision',
-    )
+    const fromcollision: COLLISION =
+      bookelementstatread(book, fromelement, 'collision') ?? COLLISION.ISWALK
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-    const maybefromobject = boardelementread(targetboard, from)
-    if (boardelementisobject(maybefromobject) && ispresent(maybefromobject)) {
-      // track carried objects
-      safeobjectids[maybefromobject.id ?? ''] = true
-    }
+
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
+    const destindex = pttoindex(dest, BOARD_WIDTH)
     if (ptwithinboard(dest)) {
       const destelement = boardelementread(targetboard, dest)
-      const destgroup: string = bookelementgroupread(book, destelement)
-      const destcollision: COLLISION = bookelementstatread(
-        book,
-        destelement,
-        'collision',
-      )
-      if (boardelementisobject(destelement) && targetgroup !== destgroup) {
+      const destid = destelement?.id ?? ''
+      const destcollision: COLLISION =
+        bookelementstatread(book, destelement, 'collision') ?? COLLISION.ISWALK
+
+      if (
+        ispresent(destelement) &&
+        boardelementisobject(destelement) &&
+        carriedobjectids.includes(destid) !== true &&
+        groupids.includes(destid) !== true
+      ) {
         // would the terrain & object collide ?
-        if (checkdoescollide(fromcollision, destcollision)) {
-          didcollide = true
-        } else if (bookelementstatread(book, destelement, 'pushable')) {
+        if (bookelementstatread(book, destelement, 'pushable')) {
           didcollide =
-            memorymoveobject(book, targetboard, destelement, dest) !== true
+            memorymoveobject(book, targetboard, destelement, {
+              x: (destelement.x ?? 0) + delta.x,
+              y: (destelement.y ?? 0) + delta.y,
+            }) !== true
+        } else if (checkdoescollide(fromcollision, destcollision)) {
+          didcollide = true
         } else {
           didcollide = false
         }
       } else if (
         destcollision === COLLISION.ISSOLID &&
-        targetgroup !== destgroup
+        indexes.includes(destindex) === false
       ) {
         didcollide = true
       }
+      // workable
     } else {
       didcollide = true
     }
@@ -199,17 +213,17 @@ export function boardweavegroup(
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
     if (ptwithinboard(dest)) {
       const destelement = boardelementread(targetboard, dest)
-      const destgroup: string = bookelementgroupread(book, destelement)
-      const destcollision: COLLISION = bookelementstatread(
-        book,
-        destelement,
-        'collision',
-      )
+      const destid = destelement?.id ?? ''
+      const destcollision: COLLISION =
+        bookelementstatread(book, destelement, 'collision') ?? COLLISION.ISWALK
+      const destgroup: string =
+        bookelementstatread(book, destelement, 'group') ?? ''
+
       if (
-        boardelementisobject(destelement) &&
         ispresent(destelement) &&
-        targetgroup !== destgroup &&
-        !safeobjectids[destelement.id ?? '']
+        boardelementisobject(destelement) &&
+        carriedobjectids.includes(destid) &&
+        groupids.includes(destid) !== true
       ) {
         if (bookelementstatread(book, destelement, 'pushable')) {
           didcollide =

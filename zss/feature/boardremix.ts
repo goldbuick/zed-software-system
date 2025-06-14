@@ -10,8 +10,8 @@ import {
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
 import {
-  bookelementgroupread,
   bookelementkindread,
+  bookelementstatread,
   bookreadcodepagewithtype,
   bookreadobject,
   bookreadterrain,
@@ -184,7 +184,7 @@ export function boardremix(
           }
           break
         default:
-          if (bookelementgroupread(book, sourceelement) !== targetset) {
+          if (bookelementstatread(book, maybeterrain, 'group') !== targetset) {
             maybekind = ''
           }
           if (maybekind) {
