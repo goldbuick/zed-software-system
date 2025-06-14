@@ -1,12 +1,24 @@
+// @ts-expect-error wow
+import { LookingGlassWebXRPolyfill } from '@lookingglass/webxr'
 import { events, Canvas } from '@react-three/fiber'
+import { XR } from '@react-three/xr'
 import debounce from 'debounce'
 import { createRoot, Root } from 'react-dom/client'
 import { Intersection } from 'three'
 import unmuteAudio from 'unmute-ios-audio'
+import { xrstore } from 'zss/gadget/hooks'
 import { makeeven } from 'zss/mapping/number'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
 import { App } from './app'
+// new LookingGlassWebXRPolyfill({
+//   tileHeight: 512,
+//   numViews: 45,
+//   targetY: 0,
+//   targetZ: 0,
+//   targetDiam: 3,
+//   fovy: (40 * Math.PI) / 180,
+// })
 
 unmuteAudio()
 
@@ -76,7 +88,9 @@ function applyconfig(innerwidth: number, innerheight: number) {
           preserveDrawingBuffer: true,
         }}
       >
-        <App />
+        <XR store={xrstore}>
+          <App />
+        </XR>
       </Canvas>,
     )
   }

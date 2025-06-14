@@ -17,6 +17,7 @@ import {
   register_config,
   register_configshow,
   vm_loader,
+  register_enterar,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -31,7 +32,6 @@ import {
 import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
 import { randominteger } from 'zss/mapping/number'
-import { totarget } from 'zss/mapping/string'
 import { deepcopy, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
@@ -48,8 +48,6 @@ import {
   memorysendtoboards,
   memorysetsoftwarebook,
 } from 'zss/memory'
-import { boardelementread } from 'zss/memory/board'
-import { boardelementisobject } from 'zss/memory/boardelement'
 import {
   bookclearcodepage,
   bookelementdisplayread,
@@ -707,5 +705,10 @@ export const CLI_FIRMWARE = createfirmware()
   .command('jointab', (_, words) => {
     const [maybehidden] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
     bridge_tab(SOFTWARE, READ_CONTEXT.elementfocus, !!maybehidden)
+    return 0
+  })
+  // -- display related commands
+  .command('startlookingglass', () => {
+    register_enterar(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })

@@ -5,8 +5,8 @@ export function doasync(
   player: string,
   asyncfunc: () => Promise<void>,
 ) {
-  function logerror(error: Error) {
-    api_error(device, player, 'crash', error.message)
-  }
-  asyncfunc().catch(logerror)
+  asyncfunc().catch((error) => {
+    console.error(error)
+    api_error(device, player, 'crash', error?.message)
+  })
 }

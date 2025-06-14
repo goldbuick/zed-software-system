@@ -21,7 +21,7 @@ import {
   useTape,
   useTapeTerminal,
 } from 'zss/gadget/data/state'
-import { useDeviceConfig } from 'zss/gadget/hooks'
+import { useDeviceConfig, xrstore } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
@@ -52,7 +52,6 @@ import {
   MESSAGE,
   api_log,
 } from './api'
-import { SOFTWARE } from './session'
 
 // read / write from indexdb
 
@@ -682,7 +681,7 @@ const register = createdevice(
         }))
         break
       case 't9words':
-        doasync(SOFTWARE, message.player, async () => {
+        doasync(register, message.player, async () => {
           await waitfor(1)
           if (isarray(message.data)) {
             const [checknumbers, wordlist] = message.data as [string, string[]]
@@ -699,7 +698,7 @@ const register = createdevice(
         })
         break
       case 't9wordsflag':
-        doasync(SOFTWARE, message.player, async () => {
+        doasync(register, message.player, async () => {
           await waitfor(1)
           if (isstring(message.data)) {
             if (message.data != useDeviceConfig.getState().wordlistflag) {
@@ -708,6 +707,11 @@ const register = createdevice(
               }))
             }
           }
+        })
+        break
+      case 'enterar':
+        doasync(register, message.player, async () => {
+          await xrstore.enterAR()
         })
         break
     }
