@@ -45,7 +45,7 @@ import {
   memoryreadbooklist,
   memoryreadflags,
   memoryreadoperator,
-  memorysendtoactiveboards,
+  memorysendtoboards,
   memorysetsoftwarebook,
 } from 'zss/memory'
 import { boardelementread } from 'zss/memory/board'
@@ -54,6 +54,7 @@ import {
   bookclearcodepage,
   bookelementdisplayread,
   bookplayermovetoboard,
+  bookplayerreadboards,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytypeandstat,
   bookreadsortedcodepages,
@@ -104,10 +105,12 @@ function handlesend(send: SEND_META) {
       helpprint('player')
       break
     default: {
+      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      const boards = bookplayerreadboards(mainbook)
       if (ispresent(send.targetname)) {
-        memorysendtoactiveboards(send.targetname, send.label, send.data)
+        memorysendtoboards(send.targetname, send.label, send.data, boards)
       } else if (ispresent(send.targetdir)) {
-        memorysendtoactiveboards(send.targetdir.destpt, send.label, send.data)
+        memorysendtoboards(send.targetdir.destpt, send.label, send.data, boards)
       }
       break
     }

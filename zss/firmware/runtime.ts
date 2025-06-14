@@ -128,7 +128,6 @@ export const RUNTIME_FIRMWARE = createfirmware({
     const [linkword, ...words] = args
     const linktext = maptostring(linkword)
     const send = parsesend(words)
-    console.info(send)
     if (ispresent(send.targetname)) {
       gadgethyperlink(
         READ_CONTEXT.elementid,

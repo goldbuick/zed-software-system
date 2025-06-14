@@ -37,7 +37,7 @@ import {
   memorywriteoperator,
   memoryreadoperator,
   memoryreadplayeractive,
-  memorysendtoactiveboards,
+  memorysendtoboards,
   memorywritehalt,
   memoryreadhalt,
   memoryresetchipafteredit,
@@ -49,6 +49,7 @@ import {
 } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
 import {
+  bookplayerreadboards,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytype,
   bookwritecodepage,
@@ -392,7 +393,13 @@ const vm = createdevice(
       case 'synthsend':
         if (isstring(message.data)) {
           const [target, label] = totarget(message.data)
-          memorysendtoactiveboards(target, label, undefined)
+          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+          memorysendtoboards(
+            target,
+            label,
+            undefined,
+            bookplayerreadboards(mainbook),
+          )
         }
         break
       case 'second': {
@@ -598,10 +605,24 @@ const vm = createdevice(
               })
             }
             break
-          default:
+          default: {
+            const invoke = parsetarget(path)
             // running software messages
-            memorymessage(message)
+            if (NAME(invoke.target) === 'self' || !invoke.path) {
+              // chop off self:
+              message.target = message.target.replace('self:', '')
+              memorymessage(message)
+            } else {
+              const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+              memorysendtoboards(
+                invoke.target,
+                invoke.path,
+                undefined,
+                bookplayerreadboards(mainbook),
+              )
+            }
             break
+          }
         }
         break
       }

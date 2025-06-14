@@ -10,8 +10,15 @@ import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memorysendtoactiveboards } from 'zss/memory'
-import { bookreadcodepagesbytypeandstat } from 'zss/memory/book'
+import {
+  MEMORY_LABEL,
+  memoryreadbookbysoftware,
+  memorysendtoboards,
+} from 'zss/memory'
+import {
+  bookplayerreadboards,
+  bookreadcodepagesbytypeandstat,
+} from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
@@ -24,10 +31,12 @@ import { loaderrexpaint } from './loaderrexpaint'
 import { loadertext } from './loadertext'
 
 function handlesend(send: SEND_META) {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const boards = bookplayerreadboards(mainbook)
   if (ispresent(send.targetdir)) {
-    memorysendtoactiveboards(send.targetdir.destpt, send.label, send.data)
+    memorysendtoboards(send.targetdir.destpt, send.label, send.data, boards)
   } else if (ispresent(send.targetname)) {
-    memorysendtoactiveboards(send.targetname, send.label, send.data)
+    memorysendtoboards(send.targetname, send.label, send.data, boards)
   }
 }
 
