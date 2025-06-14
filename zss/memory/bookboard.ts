@@ -2,7 +2,7 @@ import { pttoindex } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
 import { clamp, randominteger } from 'zss/mapping/number'
-import { TICK_FPS } from 'zss/mapping/tick'
+import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import {
   dirfrompts,
@@ -777,6 +777,7 @@ export function bookboardtick(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
   timestamp: number,
+  cycledefault = CYCLE_DEFAULT,
 ) {
   const args: BOOK_RUN_ARGS[] = []
 
@@ -811,6 +812,16 @@ export function bookboardtick(
     // check that we have code to execute
     if (!code) {
       continue
+    }
+
+    // only run if not removed
+    // edge case is removed with a pending thud
+    if (object.removed) {
+      const delta = timestamp - object.removed
+      const cycle = bookelementstatread(book, object, 'cycle') ?? cycledefault
+      if (delta > cycle) {
+        continue
+      }
     }
 
     // signal id & code

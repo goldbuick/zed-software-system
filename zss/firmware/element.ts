@@ -281,16 +281,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // uses content slot book
       case 'over':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.over = isnumber(value) ? value : maptostring(value)
+          READ_CONTEXT.board.over = maptostring(value)
           return [true, READ_CONTEXT.board.over]
         }
         break
       case 'under':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.under = isnumber(value)
-            ? value
-            : maptostring(value)
-          return [true, READ_CONTEXT.board.under]
+          return [true, (READ_CONTEXT.board.under = maptostring(value))]
         }
         break
       case 'camera':
@@ -309,44 +306,40 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // common stats
       case 'exitnorth':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.exitnorth = maptostring(value)
-          return [true, READ_CONTEXT.board.exitnorth]
+          return [true, (READ_CONTEXT.board.exitnorth = maptostring(value))]
         }
         break
       case 'exitsouth':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.exitsouth = maptostring(value)
-          return [true, READ_CONTEXT.board.exitsouth]
+          return [true, (READ_CONTEXT.board.exitsouth = maptostring(value))]
         }
         break
       case 'exitwest':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.exitwest = maptostring(value)
-          return [true, READ_CONTEXT.board.exitwest]
+          return [true, (READ_CONTEXT.board.exitwest = maptostring(value))]
         }
         break
       case 'exiteast':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.exiteast = maptostring(value)
-          return [true, READ_CONTEXT.board.exiteast]
+          return [true, (READ_CONTEXT.board.exiteast = maptostring(value))]
         }
         break
       case 'timelimit':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.timelimit = maptonumber(value, 0)
-          return [true, READ_CONTEXT.board.timelimit]
+          return [true, (READ_CONTEXT.board.timelimit = maptonumber(value, 0))]
         }
         break
       case 'restartonzap':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.restartonzap = value ? 1 : 0
-          return [true, READ_CONTEXT.board.restartonzap]
+          return [true, (READ_CONTEXT.board.restartonzap = value ? 1 : 0)]
         }
         break
       case 'maxplayershots':
         if (ispresent(READ_CONTEXT.board)) {
-          READ_CONTEXT.board.maxplayershots = maptonumber(value, 0)
-          return [true, READ_CONTEXT.board.maxplayershots]
+          return [
+            true,
+            (READ_CONTEXT.board.maxplayershots = maptonumber(value, 0)),
+          ]
         }
         break
       // read only
