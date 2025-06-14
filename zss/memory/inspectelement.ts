@@ -136,7 +136,7 @@ export function memoryinspectelement(
           return COLLISION.ISWALK
         case 'pushable':
           return 0
-        case 'destructible':
+        case 'breakable':
           return 0
       }
     }
@@ -214,8 +214,8 @@ export function memoryinspectelement(
   gadgethyperlink(
     player,
     chip,
-    'destructible',
-    ['destructible', 'select', 'no', '0', 'yes', '1'],
+    'breakable',
+    ['breakable', 'select', 'no', '0', 'yes', '1'],
     get,
     set,
   )
@@ -231,7 +231,7 @@ export function memoryinspectelement(
       case 'bg':
       case 'collision':
       case 'pushable':
-      case 'destructible':
+      case 'breakable':
         // skip in favor of built-in hyperlinks
         break
       default:

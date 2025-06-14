@@ -524,6 +524,7 @@ export function memorymoveobject(
     } else {
       sendinteraction('', blocked, element, 'thud')
     }
+
     if (element.kind === MEMORY_LABEL.PLAYER) {
       sendinteraction(
         element.id,
@@ -557,9 +558,9 @@ export function memorymoveobject(
       sendinteraction('', element, blocked, 'bump')
     }
 
-    // delete destructible elements
+    // delete breakable elements
 
-    if (bookelementstatread(book, blocked, 'destructible')) {
+    if (bookelementstatread(book, blocked, 'breakable')) {
       if (ispresent(blocked?.id)) {
         // mark target for deletion
         bookboardsafedelete(
@@ -612,19 +613,12 @@ export function memorytickobject(
     : playerfromelement
 
   // read cycle
-  const kinddata = bookelementkindread(book, object)
-  const cycle = object.cycle ?? kinddata?.cycle ?? cycledefault
+  const cycle = bookelementstatread(book, object, 'cycle') ?? cycledefault
 
   // run chip code
   const id = object.id ?? ''
   const itemname = NAME(object.name ?? object.kinddata?.name ?? '')
-  os.tick(
-    id,
-    DRIVER_TYPE.RUNTIME,
-    isnumber(cycle) ? cycle : cycledefault,
-    itemname,
-    code,
-  )
+  os.tick(id, DRIVER_TYPE.RUNTIME, cycle, itemname, code)
 
   // clear ticker
   if (isnumber(object?.tickertime)) {

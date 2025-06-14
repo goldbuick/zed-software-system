@@ -29,7 +29,7 @@ export type BOARD_ELEMENT = {
   player?: string
   pushable?: number
   collision?: COLLISION
-  destructible?: number
+  breakable?: number
   tickertext?: string
   tickertime?: number
   // config
@@ -63,8 +63,8 @@ export type BOARD = {
   starty?: number
   // board displayed over/under this one
   // uses content slot book
-  over?: string | number
-  under?: string | number
+  over?: string
+  under?: string
   // control camera zoom
   camera?: string
   // control graphics mode
