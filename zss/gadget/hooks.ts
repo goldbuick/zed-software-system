@@ -1,4 +1,3 @@
-import { createXRStore } from '@react-three/xr'
 import { createContext, useContext, useState } from 'react'
 import { CanvasTexture, Color } from 'three'
 import { objectKeys } from 'ts-extras'
@@ -13,8 +12,6 @@ import { create, createStore, StoreApi } from 'zustand'
 import { BITMAP } from './data/bitmap'
 import { convertpalettetocolors } from './data/palette'
 import { createbitmaptexture } from './display/textures'
-
-export const xrstore = createXRStore()
 
 export const WriteTextContext = createContext(
   createwritetextcontext(1, 1, 15, 1),

@@ -1,12 +1,8 @@
-// @ts-expect-error wow
-import { LookingGlassWebXRPolyfill } from '@lookingglass/webxr'
 import { events, Canvas } from '@react-three/fiber'
-import { XR } from '@react-three/xr'
 import debounce from 'debounce'
 import { createRoot, Root } from 'react-dom/client'
 import { Intersection } from 'three'
 import unmuteAudio from 'unmute-ios-audio'
-import { xrstore } from 'zss/gadget/hooks'
 import { makeeven } from 'zss/mapping/number'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
@@ -88,9 +84,7 @@ function applyconfig(innerwidth: number, innerheight: number) {
           preserveDrawingBuffer: true,
         }}
       >
-        <XR store={xrstore}>
-          <App />
-        </XR>
+        <App />
       </Canvas>,
     )
   }

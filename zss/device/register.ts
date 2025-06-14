@@ -21,7 +21,7 @@ import {
   useTape,
   useTapeTerminal,
 } from 'zss/gadget/data/state'
-import { useDeviceConfig, xrstore } from 'zss/gadget/hooks'
+import { useDeviceConfig } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
@@ -711,7 +711,7 @@ const register = createdevice(
         break
       case 'enterar':
         doasync(register, message.player, async () => {
-          await xrstore.enterAR()
+          // await xrstore.enterAR()
         })
         break
     }
