@@ -133,11 +133,23 @@ export function boardweavegroup(
     targetboard,
     targetgroup,
   )
+  // define included ids and indexes
   const groupids = objectelements.map((el) => el.id ?? '')
   const indexes = terrainelements.map((el) =>
     pttoindex({ x: el.x ?? 0, y: el.y ?? 0 }, BOARD_WIDTH),
   )
-  const carriedobjectids: Record<string, boolean> = {}
+
+  // collect carried object ids
+  const carriedobjectids: string[] = []
+  for (let i = 0; i < terrainelements.length; ++i) {
+    const fromelement = terrainelements[i]
+    const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
+    // detect and track carried objects
+    const maybefromobject = boardelementread(targetboard, from)
+    if (ispresent(maybefromobject) && boardelementisobject(maybefromobject)) {
+      carriedobjectids.push(maybefromobject.id ?? '')
+    }
+  }
 
   // collision detection pass
   let didcollide = false
@@ -146,13 +158,6 @@ export function boardweavegroup(
     const fromcollision: COLLISION =
       bookelementstatread(book, fromelement, 'collision') ?? COLLISION.ISWALK
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-
-    // detect and track carried objects
-    const maybefromobject = boardelementread(targetboard, from)
-    if (ispresent(maybefromobject) && boardelementisobject(maybefromobject)) {
-      debugger
-      carriedobjectids[maybefromobject.id ?? ''] = true
-    }
 
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
     const destindex = pttoindex(dest, BOARD_WIDTH)
@@ -165,18 +170,16 @@ export function boardweavegroup(
       if (
         ispresent(destelement) &&
         boardelementisobject(destelement) &&
-        carriedobjectids[destid] !== true &&
+        carriedobjectids.includes(destid) !== true &&
         groupids.includes(destid) !== true
       ) {
         // would the terrain & object collide ?
         if (bookelementstatread(book, destelement, 'pushable')) {
-          debugger
-          const pp = {
-            x: (destelement.x ?? 0) + delta.x,
-            y: (destelement.y ?? 0) + delta.y,
-          }
           didcollide =
-            memorymoveobject(book, targetboard, destelement, pp) !== true
+            memorymoveobject(book, targetboard, destelement, {
+              x: (destelement.x ?? 0) + delta.x,
+              y: (destelement.y ?? 0) + delta.y,
+            }) !== true
         } else if (checkdoescollide(fromcollision, destcollision)) {
           didcollide = true
         } else {
@@ -210,18 +213,17 @@ export function boardweavegroup(
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
     if (ptwithinboard(dest)) {
       const destelement = boardelementread(targetboard, dest)
+      const destid = destelement?.id ?? ''
+      const destcollision: COLLISION =
+        bookelementstatread(book, destelement, 'collision') ?? COLLISION.ISWALK
       const destgroup: string =
         bookelementstatread(book, destelement, 'group') ?? ''
-      const destcollision: COLLISION = bookelementstatread(
-        book,
-        destelement,
-        'collision',
-      )
+
       if (
-        boardelementisobject(destelement) &&
         ispresent(destelement) &&
-        targetgroup !== destgroup &&
-        !carriedobjectids[destelement.id ?? '']
+        boardelementisobject(destelement) &&
+        carriedobjectids.includes(destid) &&
+        groupids.includes(destid) !== true
       ) {
         if (bookelementstatread(book, destelement, 'pushable')) {
           didcollide =
@@ -283,14 +285,14 @@ export function boardweavegroup(
   bookboardresetlookups(book, targetboard)
 
   // apply transform to objects
-  // for (let i = 0; i < objectelements.length; ++i) {
-  //   const fromelement = objectelements[i]
-  //   const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-  //   const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
-  //   if (!memorymoveobject(book, targetboard, fromelement, dest)) {
-  //     break
-  //   }
-  // }
+  for (let i = 0; i < objectelements.length; ++i) {
+    const fromelement = objectelements[i]
+    const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
+    const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
+    if (!memorymoveobject(book, targetboard, fromelement, dest)) {
+      break
+    }
+  }
 
   bookboardresetlookups(book, targetboard)
 }
