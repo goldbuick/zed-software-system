@@ -680,11 +680,16 @@ export function bookboardmoveobject(
     // we are blocked by an object
     ispresent(maybeobject) &&
     // and we are both NOT players
-    (!targetisplayer || !maybeobjectisplayer) &&
-    // AND have different groups
-    bookelementstatread(book, movingelement, 'group') !==
-      bookelementstatread(book, maybeobject, 'group')
+    (!targetisplayer || !maybeobjectisplayer)
   ) {
+    // check groups
+    const groupa = bookelementstatread(book, movingelement, 'group') ?? ''
+    const groupb = bookelementstatread(book, maybeobject, 'group') ?? ''
+    if ((groupa || groupb) && groupa != groupb) {
+      // for sending interaction messages
+      return { ...maybeobject }
+    }
+
     // bullets can't PUSH
     if (targetcollision === COLLISION.ISBULLET) {
       // for sending interaction messages
