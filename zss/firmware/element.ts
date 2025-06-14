@@ -179,6 +179,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // read stat
     switch (name) {
       // board stats
+      case 'camera':
+      case 'graphics':
+      case 'facing':
+        // pass-through to player flag if not defined
+        if (ispresent(READ_CONTEXT.board?.[name])) {
+          return [true, READ_CONTEXT.board?.[name]]
+        }
+        break
       // writable
       case 'isdark':
         return [true, READ_CONTEXT.board?.isdark ? 1 : 0]
@@ -192,13 +200,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.board?.over ?? '']
       case 'under':
         return [true, READ_CONTEXT.board?.under ?? '']
-      case 'camera':
-        return [true, READ_CONTEXT.board?.camera ?? '']
-      case 'graphics':
-        return [true, READ_CONTEXT.board?.graphics ?? '']
-      case 'facing':
-        // pass-through to player flag
-        break
       // common stats
       case 'exitnorth':
         return [true, READ_CONTEXT.board?.exitnorth ?? '']
@@ -258,6 +259,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // write stat
     switch (name) {
       // board stats
+      // pass-through to player flag
+      case 'camera':
+      case 'graphics':
+      case 'facing':
+        break
       // writable
       case 'isdark':
         if (ispresent(READ_CONTEXT.board)) {
@@ -289,19 +295,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
         if (ispresent(READ_CONTEXT.board)) {
           return [true, (READ_CONTEXT.board.under = maptostring(value))]
         }
-        break
-      case 'camera':
-        if (ispresent(READ_CONTEXT.board)) {
-          return [true, (READ_CONTEXT.board.camera = maptostring(value))]
-        }
-        break
-      case 'graphics':
-        if (ispresent(READ_CONTEXT.board)) {
-          return [true, (READ_CONTEXT.board.graphics = maptostring(value))]
-        }
-        break
-      case 'facing':
-        // pass-through to player flag
         break
       // common stats
       case 'exitnorth':
