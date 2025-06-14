@@ -28,7 +28,6 @@ import {
 } from './board'
 import { boardelementapplycolor, boardelementname } from './boardelement'
 import {
-  bookelementgroupread,
   bookelementkindread,
   bookelementstatread,
   bookreadobject,
@@ -683,8 +682,8 @@ export function bookboardmoveobject(
     // and we are both NOT players
     (!targetisplayer || !maybeobjectisplayer) &&
     // AND have different groups
-    bookelementgroupread(book, movingelement) !==
-      bookelementgroupread(book, maybeobject)
+    bookelementstatread(book, movingelement, 'group') !==
+      bookelementstatread(book, maybeobject, 'group')
   ) {
     // bullets can't PUSH
     if (targetcollision === COLLISION.ISBULLET) {
@@ -880,7 +879,8 @@ export function bookboardreadgroup(
       targetgroup as BOARD_ELEMENT_STAT,
     )
     return (
-      ispresent(statnamed) || bookelementgroupread(book, el) === targetgroup
+      ispresent(statnamed) ||
+      bookelementstatread(book, el, 'group') === targetgroup
     )
   }
 

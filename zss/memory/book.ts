@@ -295,22 +295,6 @@ export function bookelementstatread(
   )
 }
 
-let ugroup = 0
-export function bookelementgroupread(
-  book: MAYBE<BOOK>,
-  element: MAYBE<BOARD_ELEMENT>,
-) {
-  const groupstat = bookelementstatread(book, element, 'group')
-  if (isstring(groupstat)) {
-    return groupstat
-  }
-  const kindgroupstat = bookelementstatread(book, element?.kinddata, 'group')
-  if (isstring(kindgroupstat)) {
-    return kindgroupstat
-  }
-  return `group${ugroup++}`
-}
-
 export function bookelementdisplayread(
   book: MAYBE<BOOK>,
   element: MAYBE<BOARD_ELEMENT>,

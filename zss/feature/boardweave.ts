@@ -1,3 +1,4 @@
+import { pttoindex } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import { memorymoveobject } from 'zss/memory'
 import { checkdoescollide } from 'zss/memory/atomics'
@@ -9,11 +10,7 @@ import {
   ptwithinboard,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import {
-  bookelementgroupread,
-  bookelementstatread,
-  bookreadcodepagewithtype,
-} from 'zss/memory/book'
+import { bookelementstatread, bookreadcodepagewithtype } from 'zss/memory/book'
 import {
   bookboardreadgroup,
   bookboardresetlookups,
@@ -136,17 +133,18 @@ export function boardweavegroup(
     targetboard,
     targetgroup,
   )
+  const groupids = objectelements.map((el) => el.id ?? '')
+  const indexes = terrainelements.map((el) =>
+    pttoindex({ x: el.x ?? 0, y: el.y ?? 0 }, BOARD_WIDTH),
+  )
 
   // collision detection pass
   let didcollide = false
   const safeobjectids: Record<string, boolean> = {}
   for (let i = 0; i < terrainelements.length; ++i) {
     const fromelement = terrainelements[i]
-    const fromcollision: COLLISION = bookelementstatread(
-      book,
-      fromelement,
-      'collision',
-    )
+    const fromcollision: COLLISION =
+      bookelementstatread(book, fromelement, 'collision') ?? COLLISION.ISWALK
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
     const maybefromobject = boardelementread(targetboard, from)
     if (boardelementisobject(maybefromobject) && ispresent(maybefromobject)) {
@@ -154,15 +152,15 @@ export function boardweavegroup(
       safeobjectids[maybefromobject.id ?? ''] = true
     }
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
+    const destindex = pttoindex(dest, BOARD_WIDTH)
     if (ptwithinboard(dest)) {
       const destelement = boardelementread(targetboard, dest)
-      const destgroup: string = bookelementgroupread(book, destelement)
-      const destcollision: COLLISION = bookelementstatread(
-        book,
-        destelement,
-        'collision',
-      )
-      if (boardelementisobject(destelement) && targetgroup !== destgroup) {
+      const destcollision: COLLISION =
+        bookelementstatread(book, destelement, 'collision') ?? COLLISION.ISWALK
+      if (
+        boardelementisobject(destelement) &&
+        groupids.includes(destelement?.id ?? '') === false
+      ) {
         // would the terrain & object collide ?
         if (checkdoescollide(fromcollision, destcollision)) {
           didcollide = true
@@ -174,10 +172,11 @@ export function boardweavegroup(
         }
       } else if (
         destcollision === COLLISION.ISSOLID &&
-        targetgroup !== destgroup
+        indexes.includes(destindex) === false
       ) {
         didcollide = true
       }
+      // workable
     } else {
       didcollide = true
     }
@@ -199,7 +198,7 @@ export function boardweavegroup(
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
     if (ptwithinboard(dest)) {
       const destelement = boardelementread(targetboard, dest)
-      const destgroup: string = bookelementgroupread(book, destelement)
+      const destgroup: string = bookelementstatread(book, destelement, 'group')
       const destcollision: COLLISION = bookelementstatread(
         book,
         destelement,

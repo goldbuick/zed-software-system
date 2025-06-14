@@ -6,7 +6,7 @@ import {
   boardsetterrain,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import { bookelementgroupread, bookreadcodepagewithtype } from 'zss/memory/book'
+import { bookelementstatread, bookreadcodepagewithtype } from 'zss/memory/book'
 import {
   bookboardresetlookups,
   bookboardsafedelete,
@@ -168,7 +168,8 @@ export function boardcopy(
         if (
           ispresent(terrain) &&
           (copyterrain ||
-            (isgroup && bookelementgroupread(book, terrain) === targetset))
+            (isgroup &&
+              bookelementstatread(book, terrain, 'group') === targetset))
         ) {
           if (isgroup) {
             emptyarea(book, targetboard, pt, pt)
@@ -185,7 +186,8 @@ export function boardcopy(
         if (
           ispresent(object) &&
           (copyobject ||
-            (isgroup && bookelementgroupread(book, object) === targetset))
+            (isgroup &&
+              bookelementstatread(book, object, 'group') === targetset))
         ) {
           if (isgroup) {
             emptyareaobject(book, targetboard, pt, pt)
