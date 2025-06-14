@@ -250,7 +250,6 @@ export const CLI_FIRMWARE = createfirmware()
     const linktext = maptostring(linkword)
     const send = parsesend(words)
     if (ispresent(send.targetname)) {
-      // log hyperlink
       const { user } = memoryreadflags(READ_CONTEXT.elementid)
       const withuser = isstring(user) ? user : 'player'
       const icon = bookelementdisplayread(
@@ -260,10 +259,11 @@ export const CLI_FIRMWARE = createfirmware()
         COLOR.WHITE,
         COLOR.BLACK,
       )
+      const line = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE ${linktext}`
       api_log(
         SOFTWARE,
         READ_CONTEXT.elementid,
-        `!${send.targetname}:${send.label};$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE ${linktext}`,
+        `!${send.targetname}:${send.label};${line}`,
       )
     }
     return 0
