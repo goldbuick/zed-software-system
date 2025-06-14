@@ -19,6 +19,15 @@ export function bgcolor(quickterminal: boolean) {
   return quickterminal ? COLOR.ONCLEAR : COLOR.DKBLUE
 }
 
+// calc the terminal split
+export function terminalsplit(width: number) {
+  return Math.round(width * 0.333)
+}
+
+export function editorsplit(width: number) {
+  return Math.round(width * 0.5)
+}
+
 export type TapeTerminalItemProps = {
   blink?: boolean
   active?: boolean
