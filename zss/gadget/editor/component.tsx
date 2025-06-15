@@ -35,6 +35,7 @@ import {
   ZSS_WORD_COLOR,
   ZSS_WORD_DIR,
   ZSS_WORD_DIRMOD,
+  ZSS_WORD_EXPRS,
   ZSS_WORD_FLAG,
   ZSS_WORD_KIND,
   ZSS_WORD_KIND_ALT,
@@ -107,6 +108,7 @@ export function TapeEditor() {
     wordscolors,
     wordsdirs,
     wordsdirmods,
+    wordsexprs,
   ] = useGadgetClient(
     useShallow((state) => [
       state.zsswords.cli,
@@ -119,6 +121,7 @@ export function TapeEditor() {
       state.zsswords.colors,
       state.zsswords.dirs,
       state.zsswords.dirmods,
+      state.zsswords.exprs,
     ]),
   )
 
@@ -142,6 +145,7 @@ export function TapeEditor() {
     wordscolors.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_COLOR))
     wordsdirs.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_DIR))
     wordsdirmods.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_DIRMOD))
+    wordsexprs.forEach((word) => zsswordcolorconfig(word, ZSS_WORD_EXPRS))
   }, [
     wordscli,
     wordsloader,
@@ -153,6 +157,7 @@ export function TapeEditor() {
     wordscolors,
     wordsdirs,
     wordsdirmods,
+    wordsexprs,
   ])
 
   const context = useWriteText()

@@ -71,6 +71,7 @@ export const ZSS_WORD_KIND_ALT = COLOR.DKCYAN
 export const ZSS_WORD_COLOR = COLOR.RED
 export const ZSS_WORD_DIR = COLOR.WHITE
 export const ZSS_WORD_DIRMOD = COLOR.LTGRAY
+export const ZSS_WORD_EXPRS = COLOR.YELLOW
 
 const ZSS_WORD_MAP = new Map<string, COLOR>()
 
