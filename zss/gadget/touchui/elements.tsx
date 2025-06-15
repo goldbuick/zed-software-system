@@ -25,7 +25,9 @@ const BG = COLOR.DKPURPLE
 
 export function Elements({ width, height, onReset }: ElementsProps) {
   const context = useWriteText()
-  const isopen = useTape((state) => state.terminal.open || state.editor.open)
+  const isopen = useTape(
+    (state) => state.editor.open || state.terminal.open || state.quickterminal,
+  )
   const { keyboardalt, keyboardctrl } = useDeviceConfig()
 
   resetTiles(context, DECO, FG, BG)

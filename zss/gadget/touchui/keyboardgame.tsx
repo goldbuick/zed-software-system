@@ -98,6 +98,22 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
           user.keyboard('{Shift>}?{/Shift}').catch(noop)
         }}
       />
+      <ToggleKey
+        x={7}
+        y={13}
+        letters="#"
+        onToggle={() => {
+          user.keyboard('3').catch(noop)
+        }}
+      />
+      <ToggleKey
+        x={13}
+        y={12}
+        letters="t"
+        onToggle={() => {
+          user.keyboard('t').catch(noop)
+        }}
+      />
       <TouchPlane
         x={right}
         y={12}
