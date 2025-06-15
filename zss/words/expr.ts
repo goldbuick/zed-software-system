@@ -197,6 +197,13 @@ export function readexpr(index: number): [any, number] {
         const targetelements = listelementsbykind(READ_CONTEXT.board, target)
         return [targetelements.length ? 1 : 0, iii]
       }
+      case 'count': {
+        // COUNT <color> <item>
+        // This flag is SET whenever the given kind is visible on the board
+        const [target, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.KIND])
+        const targetelements = listelementsbykind(READ_CONTEXT.board, target)
+        return [targetelements.length, iii]
+      }
       case 'color': {
         // COLOR <dir> <color>
         // True if the given direction is the specified colors.
@@ -269,12 +276,12 @@ export function readexpr(index: number): [any, number] {
         return [Math.abs(a), iii]
       }
       case 'intceil': {
-        // CEIL <a>
+        // INTCEIL <a>
         const [a, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
         return [Math.ceil(a), iii]
       }
       case 'intfloor': {
-        // FLOOR <a>
+        // INTFLOOR <a>
         const [a, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
         return [Math.floor(a), iii]
       }

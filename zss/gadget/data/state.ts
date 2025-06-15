@@ -33,6 +33,7 @@ export const useGadgetClient = create<{
     colors: string[]
     dirs: string[]
     dirmods: string[]
+    exprs: string[]
   }
 }>(() => ({
   desync: false,
@@ -47,6 +48,7 @@ export const useGadgetClient = create<{
     colors: [],
     dirs: [],
     dirmods: [],
+    exprs: [],
   },
   gadget: {
     id: '',
