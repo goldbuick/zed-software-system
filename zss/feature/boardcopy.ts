@@ -129,6 +129,7 @@ export function boardcopy(
         emptyareaterrain(targetboard, p1, p2)
         break
       default:
+        // todo: split this off into it's own function, just like weave
         isgroup = true
         break
     }
