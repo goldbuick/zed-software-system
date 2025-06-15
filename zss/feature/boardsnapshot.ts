@@ -2,9 +2,8 @@ import { ispresent } from 'zss/mapping/types'
 import { MEMORY_LABEL, memoryensuresoftwarecodepage } from 'zss/memory'
 import { bookclearcodepage, bookreadcodepagewithtype } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { PT } from 'zss/words/types'
 
 import { boardcopy } from './boardcopy'
 
@@ -12,12 +11,11 @@ function snapshotname(target: string) {
   return `zss_snapshot_${target}`
 }
 
-export function boardsnapshot(
-  target: string,
-  p1: PT,
-  p2: PT,
-  targetset: string,
-) {
+const p1 = { x: 0, y: 0 }
+const p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
+const targetset = 'all'
+
+export function boardsnapshot(target: string) {
   const targetcodepage = bookreadcodepagewithtype(
     READ_CONTEXT.book,
     CODE_PAGE_TYPE.BOARD,
@@ -52,7 +50,7 @@ export function boardsnapshot(
   return snapshotboard
 }
 
-export function boardrevert(target: string, p1: PT, p2: PT, targetset: string) {
+export function boardrevert(target: string) {
   const targetcodepage = bookreadcodepagewithtype(
     READ_CONTEXT.book,
     CODE_PAGE_TYPE.BOARD,
