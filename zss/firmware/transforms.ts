@@ -42,25 +42,18 @@ function readfilter(words: WORD[], index: number) {
 }
 
 export const TRANSFORM_FIRMWARE = createfirmware()
-  .command('snapshot', (_, words) => {
+  .command('snapshot', () => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-    const filter = readfilter(words, 0)
-    boardsnapshot(
-      READ_CONTEXT.board.id,
-      filter.pt1,
-      filter.pt2,
-      filter.targetset,
-    )
+    boardsnapshot(READ_CONTEXT.board.id)
     return 0
   })
-  .command('revert', (_, words) => {
+  .command('revert', () => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-    const filter = readfilter(words, 0)
-    boardrevert(READ_CONTEXT.board.id, filter.pt1, filter.pt2, filter.targetset)
+    boardrevert(READ_CONTEXT.board.id)
     return 0
   })
   .command('copy', (_, words) => {
