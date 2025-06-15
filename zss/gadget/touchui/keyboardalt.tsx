@@ -37,10 +37,10 @@ export function KeyboardAlt({ width }: KeyboardAltProps) {
       <NumKey x={right} y={12} letters="ENTER" digit="[Enter]" />
       {wordlist.length ? (
         <>
-          <NumKey x={1} y={0} letters="$26" digit="[ArrowRight]" usealt />
+          <NumKey x={1} y={0} letters="$27" digit="[ArrowLeft]" usealt />
           <NumKey x={1} y={4} letters="BKSPC" digit="[Backspace]" />
           <NumKey x={1} y={8} letters="SPACE" digit="[Space]" />
-          <NumKey x={1} y={12} letters="$27" digit="[ArrowLeft]" usealt />
+          <NumKey x={1} y={12} letters="$26" digit="[ArrowRight]" usealt />
           {wordlist.map((word) => {
             const at = deepcopy(corner)
             const wordwidth = word.length + 3
@@ -81,7 +81,7 @@ export function KeyboardAlt({ width }: KeyboardAltProps) {
               })
             }
           />
-          <NumKey x={19} y={5} letters="$26" digit="[ArrowRight]" usealt />
+          <NumKey x={19} y={5} letters="$27" digit="[ArrowLeft]" usealt />
 
           <NumKey x={1} y={8} letters="SPACE" digit="[Space]" />
           <ToggleKey
@@ -95,7 +95,7 @@ export function KeyboardAlt({ width }: KeyboardAltProps) {
             }}
           />
           <NumKey x={13} y={8} letters="BKSPC" digit="[Backspace]" />
-          <NumKey x={19} y={9} letters="$27" digit="[ArrowLeft]" usealt />
+          <NumKey x={19} y={9} letters="$26" digit="[ArrowRight]" usealt />
 
           <NumKey x={1} y={12} letters="<" digit=">" />
           <NumKey x={7} y={13} letters=";" digit="!" />
