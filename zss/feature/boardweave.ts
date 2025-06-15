@@ -128,11 +128,16 @@ export function boardweavegroup(
   bookboardsetlookup(book, targetboard)
 
   // read target group
-  const { objectelements, terrainelements } = bookboardreadgroup(
+  const { terrainelements, objectelements } = bookboardreadgroup(
     book,
     targetboard,
     targetgroup,
   )
+  // if we get __nothing__ we should bail
+  if (terrainelements.length === 0 && objectelements.length === 0) {
+    return
+  }
+
   // define included ids and indexes
   const groupids = objectelements.map((el) => el.id ?? '')
   const groupindexes = terrainelements.map((el) =>
