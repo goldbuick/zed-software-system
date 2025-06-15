@@ -695,6 +695,7 @@ export function bookboardmoveobject(
       // for sending interaction messages
       return { ...maybeobject }
     }
+
     // is element pushable ?
     const ispushable = !!bookelementstatread(book, maybeobject, 'pushable')
     if (ispushable) {
@@ -710,6 +711,9 @@ export function bookboardmoveobject(
         // for sending interaction messages
         return { ...maybeobject }
       }
+    } else {
+      // for sending interaction messages
+      return { ...maybeobject }
     }
   }
 
