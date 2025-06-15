@@ -25,13 +25,13 @@ function readfilter(words: WORD[], index: number) {
     } else if (isnumber(checkarg)) {
       const [y1, x2, y2, iii] = readargs(words, ii, [
         ARG_TYPE.NUMBER,
-        ARG_TYPE.NUMBER,
-        ARG_TYPE.NUMBER,
+        ARG_TYPE.MAYBE_NUMBER,
+        ARG_TYPE.MAYBE_NUMBER,
       ])
-      pt1.x = Math.min(checkarg, x2)
-      pt1.y = Math.min(y1, y2)
-      pt2.x = Math.max(checkarg, x2)
-      pt2.y = Math.max(y1, y2)
+      pt1.x = Math.min(checkarg, x2 ?? checkarg)
+      pt1.y = Math.min(y1, y2 ?? y1)
+      pt2.x = Math.max(checkarg, x2 ?? checkarg)
+      pt2.y = Math.max(y1, y2 ?? y1)
       // parse next set
       i = iii
     } else {

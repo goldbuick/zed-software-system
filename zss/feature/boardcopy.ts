@@ -1,5 +1,5 @@
 import { ispid } from 'zss/mapping/guid'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { isnumber, ispresent, MAYBE } from 'zss/mapping/types'
 import {
   boardelementread,
   boardgetterrain,
@@ -8,13 +8,21 @@ import {
 import { boardelementisobject } from 'zss/memory/boardelement'
 import { bookelementstatread, bookreadcodepagewithtype } from 'zss/memory/book'
 import {
+  bookboardreadgroup,
   bookboardresetlookups,
   bookboardsafedelete,
   bookboardsetlookup,
   bookboardwritefromkind,
 } from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
-import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from 'zss/memory/types'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  BOOK,
+  CODE_PAGE_TYPE,
+} from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
 
@@ -86,6 +94,14 @@ export function boardcopy(
   p2: PT,
   targetset: string,
 ) {
+  switch (targetset) {
+    case 'all':
+    case 'object':
+    case 'terrain':
+      break
+    default:
+      return boardcopygroup(source, target, p1, targetset)
+  }
   if (!ispresent(READ_CONTEXT.book)) {
     return
   }
@@ -129,6 +145,7 @@ export function boardcopy(
         emptyareaterrain(targetboard, p1, p2)
         break
       default:
+        // todo: split this off into it's own function, just like weave
         isgroup = true
         break
     }
@@ -201,6 +218,119 @@ export function boardcopy(
           mapelementcopy(el, object)
         }
       }
+    }
+
+    // rebuild lookups
+    bookboardresetlookups(book, targetboard)
+  }
+}
+
+export function boardcopygroup(
+  source: string,
+  target: string,
+  p1: PT,
+  targetgroup: string,
+) {
+  if (!ispresent(READ_CONTEXT.book)) {
+    return
+  }
+  const book = READ_CONTEXT.book
+
+  const sourcecodepage = bookreadcodepagewithtype(
+    book,
+    CODE_PAGE_TYPE.BOARD,
+    source,
+  )
+  const sourceboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(sourcecodepage)
+  if (!ispresent(sourceboard)) {
+    return
+  }
+
+  const targetcodepage = bookreadcodepagewithtype(
+    book,
+    CODE_PAGE_TYPE.BOARD,
+    target,
+  )
+  const targetboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(targetcodepage)
+  if (!ispresent(targetboard)) {
+    return
+  }
+
+  // make sure lookup is created
+  bookboardsetlookup(book, sourceboard)
+  bookboardsetlookup(book, targetboard)
+
+  if (ispresent(sourceboard) && ispresent(targetboard)) {
+    // read target group
+    const { terrainelements, objectelements } = bookboardreadgroup(
+      book,
+      sourceboard,
+      targetgroup,
+    )
+    // if we get __nothing__ we should bail
+    if (terrainelements.length === 0 && objectelements.length === 0) {
+      return
+    }
+
+    // get top left corner
+    const corner: PT = { x: BOARD_WIDTH, y: BOARD_HEIGHT }
+    for (let i = 0; i < terrainelements.length; ++i) {
+      const el = terrainelements[i]
+      if (isnumber(el.x)) {
+        corner.x = Math.min(corner.x, el.x)
+      }
+      if (isnumber(el.y)) {
+        corner.y = Math.min(corner.y, el.y)
+      }
+    }
+    for (let i = 0; i < objectelements.length; ++i) {
+      const el = objectelements[i]
+      if (isnumber(el.x)) {
+        corner.x = Math.min(corner.x, el.x)
+      }
+      if (isnumber(el.y)) {
+        corner.y = Math.min(corner.y, el.y)
+      }
+    }
+
+    // copy new elements
+    for (let i = 0; i < terrainelements.length; ++i) {
+      const el = terrainelements[i]
+      const pt: PT = {
+        x: p1.x + (el.x ?? 0) - corner.x,
+        y: p1.y + (el.y ?? 0) - corner.y,
+      }
+
+      const destelement = boardelementread(targetboard, pt)
+      if (ispresent(destelement)) {
+        if (boardelementisobject(destelement)) {
+          bookboardsafedelete(book, targetboard, destelement, book.timestamp)
+        }
+        boardsetterrain(targetboard, pt)
+      }
+
+      const copyel = bookboardwritefromkind(
+        book,
+        targetboard,
+        [el.kind ?? ''],
+        pt,
+      )
+      mapelementcopy(copyel, el)
+    }
+    for (let i = 0; i < objectelements.length; ++i) {
+      const el = objectelements[i]
+      const pt: PT = {
+        x: p1.x + (el.x ?? 0) - corner.x,
+        y: p1.y + (el.y ?? 0) - corner.y,
+      }
+
+      const copyel = bookboardwritefromkind(
+        book,
+        targetboard,
+        [el.kind ?? ''],
+        pt,
+      )
+      mapelementcopy(copyel, el)
     }
 
     // rebuild lookups
