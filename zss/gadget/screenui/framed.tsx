@@ -1,7 +1,6 @@
 import {
   register_terminal_quickopen,
   vm_clirepeatlast,
-  vm_clirepeatslot,
   vm_input,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
@@ -73,25 +72,15 @@ export function Framed({ width, height }: FramedProps) {
           const player = registerreadplayer()
           switch (key) {
             case 't':
-              register_terminal_quickopen(SOFTWARE, player)
+              register_terminal_quickopen(SOFTWARE, player, '')
+              break
+            case '#':
+            case '3':
+              register_terminal_quickopen(SOFTWARE, player, '#')
               break
             case 'p':
               if (mods.ctrl) {
                 vm_clirepeatlast(SOFTWARE, player)
-              }
-              break
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-              if (mods.ctrl) {
-                vm_clirepeatslot(SOFTWARE, player, parseFloat(key))
               }
               break
           }

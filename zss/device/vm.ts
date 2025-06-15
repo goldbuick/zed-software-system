@@ -45,7 +45,6 @@ import {
   memorysetbook,
   memoryclirepeatlast,
   memoryhasflags,
-  memoryclirepeatslot,
 } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
 import {
@@ -522,11 +521,6 @@ const vm = createdevice(
       case 'clirepeatlast':
         // repeat user input from built-in console
         memoryclirepeatlast(message.player)
-        break
-      case 'clirepeatslot':
-        if (isnumber(message.data)) {
-          memoryclirepeatslot(message.player, message.data)
-        }
         break
       case 'restart':
         if (message.player === operator) {

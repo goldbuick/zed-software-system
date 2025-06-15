@@ -349,8 +349,9 @@ export function register_terminal_open(device: DEVICELIKE, player: string) {
 export function register_terminal_quickopen(
   device: DEVICELIKE,
   player: string,
+  openwith: string,
 ) {
-  device.emit(player, 'register:terminal:quickopen')
+  device.emit(player, 'register:terminal:quickopen', openwith)
 }
 
 export function register_terminal_close(device: DEVICELIKE, player: string) {
@@ -500,14 +501,6 @@ export function vm_cli(device: DEVICELIKE, player: string, input: string) {
 
 export function vm_clirepeatlast(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:clirepeatlast')
-}
-
-export function vm_clirepeatslot(
-  device: DEVICELIKE,
-  player: string,
-  slot: number,
-) {
-  device.emit(player, 'vm:clirepeatslot', slot)
 }
 
 export function vm_restart(device: DEVICELIKE, player: string) {
