@@ -4,6 +4,7 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { useDeviceConfig, useWriteText } from '../hooks'
 
+import { NumKey } from './numkey'
 import { ToggleKey } from './togglekey'
 import { TouchPlane } from './touchplane'
 
@@ -18,6 +19,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
   const mid = width - 12
   const right = width - 6
 
+  const center = Math.round(width * 0.5) - 3
   const x = right
   const y = 12
 
@@ -98,6 +100,35 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
           user.keyboard('{Shift>}?{/Shift}').catch(noop)
         }}
       />
+      <ToggleKey
+        x={7}
+        y={13}
+        letters="#"
+        onToggle={() => {
+          user.keyboard('3').catch(noop)
+        }}
+      />
+      <ToggleKey
+        x={13}
+        y={12}
+        letters="t"
+        onToggle={() => {
+          user.keyboard('t').catch(noop)
+        }}
+      />
+
+      <NumKey x={center} y={0} letters="$24" digit="[ArrowUp]" usealt />
+      <NumKey x={center} y={13} letters="$25" digit="[ArrowDown]" usealt />
+      <NumKey
+        x={width - 6}
+        y={6}
+        letters="$26"
+        digit="[ArrowRight]"
+        usealt
+        usectrl
+      />
+      <NumKey x={0} y={6} letters="$27" digit="[ArrowLeft]" usealt usectrl />
+
       <TouchPlane
         x={right}
         y={12}

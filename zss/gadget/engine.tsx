@@ -9,7 +9,12 @@ import {
   Vignette,
 } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
-import { BlendFunction, GlitchMode, KernelSize } from 'postprocessing'
+import {
+  BlendFunction,
+  GlitchMode,
+  KernelSize,
+  VignetteTechnique,
+} from 'postprocessing'
 import { Fragment, useEffect, useLayoutEffect, useState } from 'react'
 import Stats from 'stats.js'
 import { RUNTIME, STATS_DEV } from 'zss/config'
@@ -149,7 +154,11 @@ export function Engine() {
               <Scanline blendFunction={BlendFunction.OVERLAY} density={1.28} />
             )}
           </>
-          <Vignette eskil offset={0.89} darkness={0.9} />
+          <Vignette
+            technique={VignetteTechnique.ESKIL}
+            offset={0.89}
+            darkness={0.911}
+          />
           <CRTShape viewheight={viewheight} />
         </EffectComposer>
       )}

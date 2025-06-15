@@ -802,33 +802,13 @@ export function memorycleanup() {
 
 export function memoryclirepeatlast(player: string) {
   const flags = memoryreadflags(player)
-  // track active invoke
-  flags.playslot = isnumber(flags.playslot) ? flags.playslot : 0
   // setup as array of invokes
-  flags.playbuffer = isarray(flags.playbuffer) ? flags.playbuffer : []
-  // read value of invoke
-  const maybecli = flags.playbuffer[flags.playslot]
+  const maybecli = (flags.playbuffer = isstring(flags.playbuffer)
+    ? flags.playbuffer
+    : '')
   // run it
-  if (isstring(maybecli) && maybecli) {
+  if (maybecli) {
     memorycli(player, maybecli, false)
-  }
-}
-
-export function memoryclirepeatslot(player: string, slot: number) {
-  const flags = memoryreadflags(player)
-  // track active invoke
-  flags.playslot = isnumber(flags.playslot) ? flags.playslot : 0
-  // setup as array of invokes
-  flags.playbuffer = isarray(flags.playbuffer) ? flags.playbuffer : []
-  // update invoke slot
-  flags.playslot = slot
-  // read value of invoke
-  const maybecli = flags.playbuffer[flags.playslot]
-  // signal the value of the invoke to the user
-  if (isstring(maybecli) && maybecli) {
-    api_toast(SOFTWARE, player, `playbuffer ${slot}: ${maybecli}`)
-  } else {
-    api_toast(SOFTWARE, player, `playbuffer ${slot}: *EMPTY*`)
   }
 }
 
@@ -860,12 +840,8 @@ export function memorycli(player: string, cli: string, tracking = true) {
   // track invoke
   if (tracking) {
     const flags = memoryreadflags(player)
-    // track active invoke
-    flags.playslot = isnumber(flags.playslot) ? flags.playslot : 0
-    // setup as array of invokes
-    flags.playbuffer = isarray(flags.playbuffer) ? flags.playbuffer : []
     // track value of invoke
-    flags.playbuffer[flags.playslot] = cli
+    flags.playbuffer = cli
   }
 
   // reset to normal halt rate
