@@ -185,22 +185,64 @@ export function boardweavegroup(
         carriedids.includes(destid) !== true &&
         groupids.includes(destid) !== true
       ) {
-        // would the terrain & object collide ?
-        if (bookelementstatread(book, destelement, 'pushable')) {
-          if (
-            fromcollision !== COLLISION.ISWALK ||
-            carriedindexes.includes(fromindex)
-          ) {
+        let pushfromelement = false
+        const hasfromelement = carriedindexes.includes(fromindex)
+        const carriedelement = hasfromelement
+          ? boardelementread(targetboard, from)
+          : undefined
+        const carriedispushable = hasfromelement
+          ? bookelementstatread(book, carriedelement, 'pushable')
+          : false
+        const shouldpushfromelement = hasfromelement && carriedispushable
+
+        // detect we can make room
+        if (
+          bookelementstatread(book, destelement, 'pushable') &&
+          (fromcollision !== COLLISION.ISWALK || hasfromelement)
+        ) {
+          // if we are doing a carry, we should push
+          let shouldpush = hasfromelement
+
+          // if from element is pushable try that first
+          if (ispresent(carriedelement) && carriedispushable) {
+            didcollide =
+              memorymoveobject(book, targetboard, carriedelement, {
+                x: (carriedelement.x ?? 0) - delta.x,
+                y: (carriedelement.y ?? 0) - delta.y,
+              }) !== true
+            if (!didcollide) {
+              shouldpush = false
+            }
+          }
+
+          // would the terrain & destelement collide ?
+          if (shouldpush || fromcollision !== COLLISION.ISWALK) {
             didcollide =
               memorymoveobject(book, targetboard, destelement, {
                 x: (destelement.x ?? 0) + delta.x,
                 y: (destelement.y ?? 0) + delta.y,
               }) !== true
+            if (didcollide) {
+              pushfromelement = shouldpushfromelement
+            }
           }
-        } else if (checkdoescollide(fromcollision, destcollision)) {
+        } else if (
+          fromcollision !== COLLISION.ISWALK ||
+          shouldpushfromelement
+        ) {
           didcollide = true
-        } else {
-          didcollide = false
+          pushfromelement = shouldpushfromelement
+        }
+
+        // back pressure
+        if (pushfromelement) {
+          if (ispresent(carriedelement)) {
+            didcollide =
+              memorymoveobject(book, targetboard, carriedelement, {
+                x: (carriedelement.x ?? 0) - delta.x,
+                y: (carriedelement.y ?? 0) - delta.y,
+              }) !== true
+          }
         }
       } else if (
         destcollision === COLLISION.ISSOLID &&
