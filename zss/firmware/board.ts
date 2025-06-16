@@ -1,13 +1,14 @@
 import { CHIP } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
-import { ispresent } from 'zss/mapping/types'
+import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { memorymoveobject, memorytickobject } from 'zss/memory'
 import { listelementsbykind, listptsbyempty } from 'zss/memory/atomics'
 import {
   boardelementread,
   boardobjectread,
   boardsetterrain,
+  createboard,
 } from 'zss/memory/board'
 import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
 import {
@@ -26,7 +27,13 @@ import {
   bookboardwritefromkind,
   bookboardwritebulletobject,
 } from 'zss/memory/bookboard'
-import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import {
+  BOARD,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+} from 'zss/memory/types'
 import { mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
@@ -40,7 +47,7 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { CATEGORY, COLLISION, COLOR, DIR, PT, WORD } from 'zss/words/types'
+import { CATEGORY, COLLISION, COLOR, PT, WORD } from 'zss/words/types'
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data
@@ -202,7 +209,7 @@ export const BOARD_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('edge', (_, words) => {
+  .command('build', (chip, words) => {
     if (
       !ispresent(READ_CONTEXT.book) ||
       !ispresent(READ_CONTEXT.board) ||
@@ -210,34 +217,30 @@ export const BOARD_FIRMWARE = createfirmware()
     ) {
       return 0
     }
-    const [dir, stat] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.NAME])
-    const boards = bookreadcodepagesbytypeandstat(
-      READ_CONTEXT.book,
-      CODE_PAGE_TYPE.BOARD,
-      stat,
-    )
-    if (boards.length) {
-      const pt: PT = {
-        x: READ_CONTEXT.element?.x ?? 0,
-        y: READ_CONTEXT.element?.y ?? 0,
-      }
-      const edgedir = dirfrompts(pt, dir.destpt)
-      const target = pick(...boards)
-      switch (edgedir) {
-        case DIR.NORTH:
-          READ_CONTEXT.board.exitnorth = target.id
-          break
-        case DIR.SOUTH:
-          READ_CONTEXT.board.exitsouth = target.id
-          break
-        case DIR.WEST:
-          READ_CONTEXT.board.exitwest = target.id
-          break
-        case DIR.EAST:
-          READ_CONTEXT.board.exiteast = target.id
-          break
+
+    // creates a new board from an existing one or blank, and writes the id to the given stat
+    const [stat, maybesource] = readargs(words, 0, [
+      ARG_TYPE.NAME,
+      ARG_TYPE.MAYBE_NAME,
+    ])
+
+    if (isstring(maybesource)) {
+      const boards = bookreadcodepagesbytypeandstat(
+        READ_CONTEXT.book,
+        CODE_PAGE_TYPE.BOARD,
+        maybesource,
+      )
+      const createdboard = pick(...boards)
+      if (ispresent(createdboard)) {
+        chip.set(stat, createdboard.id)
       }
     }
+
+    const createdboard = createboard()
+    if (ispresent(createdboard)) {
+      chip.set(stat, createdboard.id)
+    }
+
     return 0
   })
   .command('shove', (_, words) => {
@@ -252,9 +255,6 @@ export const BOARD_FIRMWARE = createfirmware()
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
     const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
     if (boardelementisobject(maybetarget)) {
-      // should we delay when we evaluate the dir ?
-      // movedir should be a delta between .element & movedir
-      // then add the delta to maybetarget
       memorymoveobject(
         READ_CONTEXT.book,
         READ_CONTEXT.board,
@@ -273,7 +273,7 @@ export const BOARD_FIRMWARE = createfirmware()
     bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
 
     // duplicate target at dir, in the direction of the given dir
-    const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
+    const [dir, dupedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
     const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
 
     if (boardelementisobject(maybetarget)) {
