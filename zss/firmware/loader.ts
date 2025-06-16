@@ -34,9 +34,9 @@ function handlesend(send: SEND_META) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const boards = bookplayerreadboards(mainbook)
   if (ispresent(send.targetdir)) {
-    memorysendtoboards(send.targetdir.destpt, send.label, send.data, boards)
+    memorysendtoboards(send.targetdir.destpt, send.label, undefined, boards)
   } else if (ispresent(send.targetname)) {
-    memorysendtoboards(send.targetname, send.label, send.data, boards)
+    memorysendtoboards(send.targetname, send.label, undefined, boards)
   }
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.56.11",
+  "version": "0.57.1",
   "type": "module",
   "scripts": {
     "sloc": "npx sloc zss",
@@ -75,6 +75,7 @@
     "msgpackr": "^1.11.2",
     "nanoid": "^5.0.3",
     "nanoid-dictionary": "^4.3.0",
+    "onnxruntime-web": "^1.22.0",
     "p2pt": "^1.5.1",
     "pako": "^2.1.0",
     "path-browserify": "^1.0.0",

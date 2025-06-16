@@ -4,7 +4,7 @@ import { AUDIO_SYNTH, createsynth } from 'zss/feature/synth'
 import { synthvoiceconfig } from 'zss/feature/synthvoiceconfig'
 import { FXNAME, synthvoicefxconfig } from 'zss/feature/synthvoicefxconfig'
 import { createsynthworkletnode } from 'zss/feature/synthworkletnodes'
-import { playtta, playtts } from 'zss/feature/tts'
+import { playtts } from 'zss/feature/tts'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
@@ -174,13 +174,6 @@ const synthdevice = createdevice('synth', [], (message) => {
       doasync(synthdevice, message.player, async () => {
         if (isarray(message.data)) {
           await playtts(synth, message.data)
-        }
-      })
-      break
-    case 'tta':
-      doasync(synthdevice, message.player, async () => {
-        if (isarray(message.data)) {
-          await playtta(message.player, synth, message.data)
         }
       })
       break

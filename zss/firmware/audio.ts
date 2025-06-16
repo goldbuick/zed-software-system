@@ -118,12 +118,6 @@ export const AUDIO_FIRMWARE = createfirmware()
     // https://github.com/lobehub/lobe-tts/blob/master/src/core/data/voiceList.ts
     return 0
   })
-  .command('tta', (_, words) => {
-    const phrase = words.map(maptostring).join('')
-    synth_tta(SOFTWARE, READ_CONTEXT.elementfocus, phrase)
-    // https://huggingface.co/spaces/fantaxy/Sound-AI-SFX
-    return 0
-  })
   .command('bpm', (_, words) => {
     const [bpm] = readargs(words, 0, [ARG_TYPE.NUMBER])
     synth_bpm(SOFTWARE, READ_CONTEXT.elementfocus, bpm)
