@@ -377,16 +377,16 @@ export function EditorInput({
               } else if (mods.alt) {
                 // no-op ?? - could this shove text around when you have selection ??
                 // or jump by 10 or by word ??
-              } else if (key.length === 1) {
+              } else if (event.key.length === 1) {
                 if (hasselection) {
-                  if (key === `'`) {
+                  if (event.key === `'`) {
                     strtogglecomments()
                   } else {
-                    strvaluesplice(ii1, iic, key)
+                    strvaluesplice(ii1, iic, event.key)
                   }
                 } else {
-                  const cursor = tapeeditor.cursor + key.length
-                  codepage.insert(tapeeditor.cursor, key)
+                  const cursor = tapeeditor.cursor + event.key.length
+                  codepage.insert(tapeeditor.cursor, event.key)
                   useTapeEditor.setState({
                     cursor,
                   })
