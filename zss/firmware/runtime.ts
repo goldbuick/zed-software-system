@@ -21,7 +21,7 @@ function handlesend(chip: CHIP, send: SEND_META) {
     switch (send.targetname) {
       case 'all':
         for (const id of Object.keys(READ_CONTEXT.board?.objects ?? {})) {
-          chip.send(READ_CONTEXT.elementfocus, id, send.label, send.data)
+          chip.send(READ_CONTEXT.elementfocus, id, send.label)
         }
         break
       case 'self':
@@ -31,13 +31,12 @@ function handlesend(chip: CHIP, send: SEND_META) {
           id: createsid(),
           sender: chip.id(),
           target: send.label,
-          data: send.data,
         })
         break
       case 'others':
         for (const id of Object.keys(READ_CONTEXT.board?.objects ?? {})) {
           if (id !== chip.id()) {
-            chip.send(READ_CONTEXT.elementfocus, id, send.label, send.data)
+            chip.send(READ_CONTEXT.elementfocus, id, send.label)
           }
         }
         break
@@ -49,12 +48,7 @@ function handlesend(chip: CHIP, send: SEND_META) {
         for (let i = 0; i < elements.length; ++i) {
           const element = elements[i]
           if (ispresent(element.id)) {
-            chip.send(
-              READ_CONTEXT.elementfocus,
-              element.id,
-              send.label,
-              send.data,
-            )
+            chip.send(READ_CONTEXT.elementfocus, element.id, send.label)
           }
         }
         break
@@ -63,7 +57,7 @@ function handlesend(chip: CHIP, send: SEND_META) {
   } else if (ispresent(send.targetdir)) {
     const element = boardelementread(READ_CONTEXT.board, send.targetdir.destpt)
     if (ispresent(element?.id)) {
-      chip.send(READ_CONTEXT.elementfocus, element.id, send.label, send.data)
+      chip.send(READ_CONTEXT.elementfocus, element.id, send.label)
     }
   }
 }
