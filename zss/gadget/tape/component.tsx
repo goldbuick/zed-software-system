@@ -50,11 +50,11 @@ export function Tape() {
     }
 
     const width = Math.round(screensize.cols * 1.5)
-    const leading = Math.round(width * 0.25)
+    const start = Math.round(width * 0.33333)
     const { xcursor, xselect } = useTapeTerminal.getState()
     const right = Math.max(xcursor, xselect ?? xcursor)
     const range = width - screensize.cols
-    const ratio = clamp((right - leading) / (width - leading * 2.5), 0, 1)
+    const ratio = clamp((right - start) / 3, 0, 1)
 
     damp3(
       panref.current.position,
