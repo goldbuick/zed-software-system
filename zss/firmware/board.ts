@@ -47,7 +47,7 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { CATEGORY, COLLISION, COLOR, PT, WORD } from 'zss/words/types'
+import { CATEGORY, COLLISION, COLOR, DIR, PT, WORD } from 'zss/words/types'
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data
@@ -306,16 +306,62 @@ export const BOARD_FIRMWARE = createfirmware()
       bg ?? COLOR.BLACK,
     )
     tokenizeandwritetextformat(text, context, false)
-    for (let i = 0; i < measuredwidth; ++i) {
-      // create new terrain element
-      boardsetterrain(READ_CONTEXT.board, {
-        x: dir.destpt.x + i,
-        y: dir.destpt.y,
-        name: 'text',
-        char: context.char[i],
-        color: context.color[i],
-        bg: context.bg[i],
-      })
+    const last = measuredwidth - 1
+
+    const heading = dirfrompts(dir.startpt, dir.destpt)
+    switch (heading) {
+      case DIR.EAST:
+        for (let i = 0; i < measuredwidth; ++i) {
+          // create new terrain element
+          boardsetterrain(READ_CONTEXT.board, {
+            x: dir.destpt.x + i,
+            y: dir.destpt.y,
+            name: 'text',
+            char: context.char[i],
+            color: context.color[i],
+            bg: context.bg[i],
+          })
+        }
+        break
+      case DIR.WEST:
+        for (let i = 0; i < measuredwidth; ++i) {
+          // create new terrain element
+          boardsetterrain(READ_CONTEXT.board, {
+            x: dir.destpt.x + i - last,
+            y: dir.destpt.y,
+            name: 'text',
+            char: context.char[i],
+            color: context.color[i],
+            bg: context.bg[i],
+          })
+        }
+        break
+      case DIR.NORTH:
+        for (let i = 0; i < measuredwidth; ++i) {
+          // create new terrain element
+          boardsetterrain(READ_CONTEXT.board, {
+            x: dir.destpt.x,
+            y: dir.destpt.y + i - last,
+            name: 'text',
+            char: context.char[i],
+            color: context.color[i],
+            bg: context.bg[i],
+          })
+        }
+        break
+      case DIR.SOUTH:
+        for (let i = 0; i < measuredwidth; ++i) {
+          // create new terrain element
+          boardsetterrain(READ_CONTEXT.board, {
+            x: dir.destpt.x,
+            y: dir.destpt.y + i,
+            name: 'text',
+            char: context.char[i],
+            color: context.color[i],
+            bg: context.bg[i],
+          })
+        }
+        break
     }
     return 0
   })
