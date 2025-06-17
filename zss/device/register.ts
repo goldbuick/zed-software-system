@@ -242,17 +242,21 @@ window.addEventListener('hashchange', () => {
   })
 })
 
-async function writeurlcontent(exportedbooks: string, label: string) {
+async function writeurlcontent(
+  exportedbooks: string,
+  label: string,
+  fullcontent: string,
+) {
   if (exportedbooks.length > 2048) {
     const shorturl = await writelocalurl(exportedbooks)
-    return writeurlcontent(shorturl, label)
+    return writeurlcontent(shorturl, label, fullcontent)
   }
   const newurlhash = `#${exportedbooks}`
   if (location.hash !== newurlhash) {
     // saving current state, don't interrupt the user
     currenturlhash = exportedbooks
     location.hash = newurlhash
-    const msg = `wrote ${exportedbooks?.length ?? 0} chars [${exportedbooks.slice(0, 8)}...${exportedbooks.slice(-8)}]`
+    const msg = `wrote ${fullcontent.length} chars [${fullcontent.slice(0, 8)}...${fullcontent.slice(-8)}]`
     if (!label.includes('autosave')) {
       api_log(register, myplayerid, msg)
     }
@@ -523,7 +527,11 @@ const register = createdevice(
           if (isarray(message.data)) {
             const [maybehistorylabel, maybecontent] = message.data
             if (isstring(maybehistorylabel) && isstring(maybecontent)) {
-              await writeurlcontent(maybecontent, maybehistorylabel)
+              await writeurlcontent(
+                maybecontent,
+                maybehistorylabel,
+                maybecontent,
+              )
             }
           }
         })
