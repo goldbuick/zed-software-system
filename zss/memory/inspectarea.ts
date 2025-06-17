@@ -185,12 +185,19 @@ export function memoryinspectarea(player: string, p1: PT, p2: PT) {
     ` 1 `,
     'next',
   ])
+  gadgethyperlink(player, 'batch', 'cut elements', [
+    `cut:${area}`,
+    'hk',
+    '2',
+    ` 2 `,
+    'next',
+  ])
   if (hassecretheap()) {
     gadgethyperlink(player, 'batch', 'paste elements', [
       `paste:${area}`,
       'hk',
-      '2',
-      ` 2 `,
+      '3',
+      ` 3 `,
       'next',
     ])
   }

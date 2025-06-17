@@ -142,8 +142,8 @@ export const LOADER_FIRMWARE = createfirmware({
   .command('readjson', loaderjson)
   .command('readbin', loaderbinary)
   .command('readrexpaint', loaderrexpaint)
-  .command('with', (_, words) => {
-    const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
+  .command('withboard', (_, words) => {
+    const [stat] = readargs(words, 0, [ARG_TYPE.STRING])
     // this will update the READ_CONTEXT so element centric
     // commands will work
     const boards = bookreadcodepagesbytypeandstat(

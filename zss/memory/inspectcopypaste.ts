@@ -16,9 +16,14 @@ import {
   boardsetterrain,
 } from './board'
 import { boardelementname } from './boardelement'
+import { bookboardsafedelete } from './bookboard'
 import { BOARD, BOARD_ELEMENT } from './types'
 
-import { memoryreadplayerboard } from '.'
+import {
+  MEMORY_LABEL,
+  memoryensuresoftwarebook,
+  memoryreadplayerboard,
+} from '.'
 
 function ptstoarea(p1: PT, p2: PT) {
   return `${p1.x},${p1.y},${p2.x},${p2.y}`
@@ -126,6 +131,98 @@ export function memoryinspectcopymenu(player: string, p1: PT, p2: PT) {
   ])
   gadgethyperlink(player, 'batch', 'copy terrain', [
     `copyterrain:${area}`,
+    'hk',
+    '3',
+  ])
+
+  // send to player as a scroll
+  const shared = gadgetstate(player)
+  shared.scroll = gadgetcheckqueue(player)
+}
+
+export function memoryinspectcut(player: string, p1: PT, p2: PT, mode: string) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
+  secretheap = createboardelementbuffer(board, p1, p2)
+  switch (mode) {
+    case 'cutobjects':
+      secretheap.terrain = []
+      break
+    case 'cutterrain':
+      secretheap.objects = []
+      break
+  }
+
+  switch (mode) {
+    case 'cutall': {
+      for (let y = p1.y; y <= p2.y; ++y) {
+        for (let x = p1.x; x <= p2.x; ++x) {
+          const maybeobject = boardelementread(board, { x, y })
+          if (maybeobject?.category === CATEGORY.ISOBJECT) {
+            bookboardsafedelete(
+              mainbook,
+              board,
+              maybeobject,
+              mainbook.timestamp,
+            )
+          }
+          boardsetterrain(board, { x, y })
+        }
+      }
+      break
+    }
+    case 'cutobjects': {
+      for (let y = p1.y; y <= p2.y; ++y) {
+        for (let x = p1.x; x <= p2.x; ++x) {
+          const maybeobject = boardelementread(board, { x, y })
+          if (maybeobject?.category === CATEGORY.ISOBJECT) {
+            bookboardsafedelete(
+              mainbook,
+              board,
+              maybeobject,
+              mainbook.timestamp,
+            )
+          }
+        }
+      }
+      break
+    }
+    case 'cutterrain': {
+      for (let y = p1.y; y <= p2.y; ++y) {
+        for (let x = p1.x; x <= p2.x; ++x) {
+          boardsetterrain(board, { x, y })
+        }
+      }
+      break
+    }
+  }
+}
+
+export function memoryinspectcutmenu(player: string, p1: PT, p2: PT) {
+  const area = ptstoarea(p1, p2)
+  gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
+  gadgettext(player, DIVIDER)
+
+  gadgethyperlink(player, 'batch', 'cut terrain & objects', [
+    `cutall:${area}`,
+    'hk',
+    '1',
+  ])
+  gadgethyperlink(player, 'batch', 'cut objects', [
+    `cutobjects:${area}`,
+    'hk',
+    '2',
+  ])
+  gadgethyperlink(player, 'batch', 'cut terrain', [
+    `cutterrain:${area}`,
     'hk',
     '3',
   ])

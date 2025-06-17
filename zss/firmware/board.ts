@@ -182,7 +182,7 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-    const [stat, ii] = readargs(words, 0, [ARG_TYPE.NAME])
+    const [stat, ii] = readargs(words, 0, [ARG_TYPE.STRING])
     // teleport player to a board with given stat
     const [maybex, maybey] = readargs(words, ii, [
       ARG_TYPE.MAYBE_NUMBER,

@@ -455,16 +455,16 @@ export function TapeTerminalInput({
               } else if (mods.alt) {
                 // no-op ?? - could this shove text around when you have selection ??
                 // or jump by 10 or by word ??
-              } else if (key.length === 1) {
+              } else if (event.key.length === 1) {
                 if (
                   inputstateactive &&
                   tapeterminal.xcursor <= inputstate.length
                 ) {
                   if (hasselection) {
-                    inputstatesetsplice(ii1, iic, key)
+                    inputstatesetsplice(ii1, iic, event.key)
                     useTapeTerminal.setState({ xselect: undefined })
                   } else {
-                    inputstatesetsplice(tapeterminal.xcursor, 0, key)
+                    inputstatesetsplice(tapeterminal.xcursor, 0, event.key)
                   }
                 } else {
                   resettoend()

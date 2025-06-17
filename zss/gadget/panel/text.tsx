@@ -194,8 +194,11 @@ export function PanelItemText({
                     }
                   } else if (mods.alt) {
                     // no-op ?? - could this shove text around ??
-                  } else if (key.length === 1 && state.length < visiblerange) {
-                    value.insert(cursor, key)
+                  } else if (
+                    event.key.length === 1 &&
+                    state.length < visiblerange
+                  ) {
+                    value.insert(cursor, event.key)
                     setCursor((state) => state + 1)
                   }
                   break
