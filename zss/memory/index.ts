@@ -1,21 +1,14 @@
 import { objectKeys } from 'ts-extras'
 import { senderid } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
-import { parsetarget } from 'zss/device'
-import { api_error, MESSAGE, api_log, api_toast } from 'zss/device/api'
+import { api_error, MESSAGE, api_log } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
 import { pick, pickwith } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
-import {
-  MAYBE,
-  isarray,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
 import { ispt } from 'zss/words/dir'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -32,7 +25,6 @@ import {
 import { boardelementname } from './boardelement'
 import {
   bookclearflags,
-  bookelementkindread,
   bookelementstatread,
   bookensurecodepagewithtype,
   bookhasflags,
