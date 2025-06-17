@@ -20,6 +20,8 @@ import {
 import {
   memoryinspectcopy,
   memoryinspectcopymenu,
+  memoryinspectcut,
+  memoryinspectcutmenu,
   memoryinspectpaste,
   memoryinspectpastemenu,
 } from './inspectcopypaste'
@@ -44,6 +46,14 @@ export function memoryinspectbatchcommand(path: string, player: string) {
     case 'copyobjects':
     case 'copyterrain':
       memoryinspectcopy(player, p1, p2, batch.target)
+      break
+    case 'cut':
+      memoryinspectcutmenu(player, p1, p2)
+      break
+    case 'cutall':
+    case 'cutobjects':
+    case 'cutterrain':
+      memoryinspectcut(player, p1, p2, batch.target)
       break
     case 'paste':
       memoryinspectpastemenu(player, p1, p2)

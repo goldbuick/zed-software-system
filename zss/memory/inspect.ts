@@ -8,7 +8,7 @@ import {
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
-import { DIVIDER, writetext } from 'zss/feature/writeui'
+import { DIVIDER } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,
   gadgethyperlink,

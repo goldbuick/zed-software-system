@@ -60,7 +60,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-    const [stat, ii] = readargs(words, 0, [ARG_TYPE.NAME])
+    const [stat, ii] = readargs(words, 0, [ARG_TYPE.STRING])
     const boards = bookreadcodepagesbytypeandstat(
       READ_CONTEXT.book,
       CODE_PAGE_TYPE.BOARD,
@@ -84,7 +84,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       return 0
     }
     const [stat, pattersize, mirror, ii] = readargs(words, 0, [
-      ARG_TYPE.NAME,
+      ARG_TYPE.STRING,
       ARG_TYPE.NUMBER,
       ARG_TYPE.NUMBER,
     ])
