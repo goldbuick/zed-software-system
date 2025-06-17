@@ -221,7 +221,7 @@ export const BOARD_FIRMWARE = createfirmware()
     // creates a new board from an existing one or blank, and writes the id to the given stat
     const [stat, maybesource] = readargs(words, 0, [
       ARG_TYPE.NAME,
-      ARG_TYPE.MAYBE_NAME,
+      ARG_TYPE.MAYBE_STRING,
     ])
 
     if (isstring(maybesource)) {
@@ -230,10 +230,13 @@ export const BOARD_FIRMWARE = createfirmware()
         CODE_PAGE_TYPE.BOARD,
         maybesource,
       )
+
       const createdboard = pick(...boards)
       if (ispresent(createdboard)) {
         chip.set(stat, createdboard.id)
       }
+
+      return 0
     }
 
     const createdboard = createboard()
