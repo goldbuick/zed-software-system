@@ -2,6 +2,7 @@ import { CHIP } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { maptostring } from 'zss/mapping/value'
 import { memorymoveobject, memorytickobject } from 'zss/memory'
 import { listelementsbykind, listptsbyempty } from 'zss/memory/atomics'
 import {
@@ -294,11 +295,11 @@ export const BOARD_FIRMWARE = createfirmware()
     // make sure lookup is created
     bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
 
-    const [dir, strcolor, text] = readargs(words, 0, [
+    const [dir, strcolor, ii] = readargs(words, 0, [
       ARG_TYPE.DIR,
       ARG_TYPE.COLOR,
-      ARG_TYPE.STRING,
     ])
+    const text = words.slice(ii).map(maptostring).join(' ')
     const { color, bg } = mapstrcolortoattributes(strcolor)
     const measuredwidth =
       tokenizeandmeasuretextformat(text, 256, 1)?.measuredwidth ?? 1

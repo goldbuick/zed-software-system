@@ -6,7 +6,7 @@ import { create } from 'zustand'
 import { GADGET_STATE } from './types'
 
 export function useEqual<S, U>(selector: (state: S) => U): (state: S) => U {
-  const prev = useRef<U>()
+  const prev = useRef<U>(null as U)
   return (state) => {
     const next = selector(state)
     return (

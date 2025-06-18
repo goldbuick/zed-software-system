@@ -13,7 +13,6 @@ import { PT, WORD } from 'zss/words/types'
 import { boardelementread } from './board'
 import { bookboardelementreadcodepage } from './book'
 import { codepagereadname } from './codepage'
-import { hassecretheap } from './inspectcopypaste'
 import { BOARD_ELEMENT } from './types'
 
 import {
@@ -164,7 +163,12 @@ export const memoryinspectremix = {
 }
 type INSPECTVAR = keyof typeof memoryinspectremix
 
-export function memoryinspectarea(player: string, p1: PT, p2: PT) {
+export function memoryinspectarea(
+  player: string,
+  p1: PT,
+  p2: PT,
+  hassecretheap: boolean,
+) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -192,7 +196,7 @@ export function memoryinspectarea(player: string, p1: PT, p2: PT) {
     ` 2 `,
     'next',
   ])
-  if (hassecretheap()) {
+  if (hassecretheap) {
     gadgethyperlink(player, 'batch', 'paste elements', [
       `paste:${area}`,
       'hk',
