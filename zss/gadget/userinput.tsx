@@ -198,6 +198,9 @@ document.addEventListener(
       case 'e':
       case 'k':
       case 'p': // prevent default behavior
+      case 'h':
+      case '[':
+      case ']':
       case '0':
       case '1':
       case '2':
@@ -212,6 +215,8 @@ document.addEventListener(
       case 'arrowright':
       case 'arrowup':
       case 'arrowdown':
+      case 'delete':
+      case 'backspace':
         if (mods.alt || mods.ctrl || mods.shift) {
           event.preventDefault()
         }
