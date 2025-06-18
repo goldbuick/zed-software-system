@@ -285,9 +285,10 @@ export function memoryinspectelement(
 
   // codepage links
   gadgettext(player, DIVIDER)
+  gadgethyperlink(player, 'batch', `edit @board codepage`, [
+    `pageopen:${board.id}`,
+  ])
   gadgethyperlink(player, 'batch', `edit @${codepagereadname(codepage)}`, [
     `pageopen:${codepage.id}`,
-    'hk',
-    'z',
   ])
 }
