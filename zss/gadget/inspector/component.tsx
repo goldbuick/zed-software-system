@@ -1,10 +1,11 @@
+import { ThreeEvent } from '@react-three/fiber'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { vm_inspect } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { indextopt, pttoindex } from 'zss/mapping/2d'
-import { ispresent } from 'zss/mapping/types'
+import { isnumber, ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -45,7 +46,7 @@ export function TapeTerminalInspector() {
 
   // track selection state
   function completeselection() {
-    if (useTapeInspector.getState().cursor) {
+    if (isnumber(useTapeInspector.getState().cursor)) {
       vm_inspect(SOFTWARE, registerreadplayer(), selectstart, selectend)
     }
     useTapeInspector.setState(() => ({
@@ -66,7 +67,7 @@ export function TapeTerminalInspector() {
           height={BOARD_HEIGHT}
           color="black"
           cursor="pointer"
-          onPointerDown={(e) => {
+          onPointerDown={(e: ThreeEvent<PointerEvent>) => {
             e.intersections[0].object.worldToLocal(
               point.copy(e.intersections[0].point),
             )
@@ -75,7 +76,7 @@ export function TapeTerminalInspector() {
               cursor: pttoindex(pt, BOARD_WIDTH),
             }))
           }}
-          onPointerMove={(e) => {
+          onPointerMove={(e: ThreeEvent<PointerEvent>) => {
             if (ispresent(useTapeInspector.getState().cursor)) {
               e.intersections[0].object.worldToLocal(
                 point.copy(e.intersections[0].point),
