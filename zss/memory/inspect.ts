@@ -110,6 +110,16 @@ export function memoryinspectempty(
 }
 
 export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board)) {
+    return
+  }
+
   const area = ptstoarea(p1, p2)
   gadgettext(player, `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`)
   gadgettext(player, DIVIDER)
@@ -127,6 +137,9 @@ export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
     `emptyterrain:${area}`,
     'hk',
     '3',
+  ])
+  gadgethyperlink(player, 'batch', `edit @board codepage}`, [
+    `pageopen:${board.id}`,
   ])
 
   // send to player as a scroll
