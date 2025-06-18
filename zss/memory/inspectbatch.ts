@@ -29,7 +29,7 @@ import { CODE_PAGE_TYPE } from './types'
 
 import { memoryreadplayerboard } from '.'
 
-export function memoryinspectbatchcommand(path: string, player: string) {
+export async function memoryinspectbatchcommand(path: string, player: string) {
   const board = memoryreadplayerboard(player)
   if (!ispresent(board)) {
     return
@@ -45,7 +45,7 @@ export function memoryinspectbatchcommand(path: string, player: string) {
     case 'copyall':
     case 'copyobjects':
     case 'copyterrain':
-      memoryinspectcopy(player, p1, p2, batch.target)
+      await memoryinspectcopy(player, p1, p2, batch.target)
       break
     case 'cut':
       memoryinspectcutmenu(player, p1, p2)
@@ -53,7 +53,7 @@ export function memoryinspectbatchcommand(path: string, player: string) {
     case 'cutall':
     case 'cutobjects':
     case 'cutterrain':
-      memoryinspectcut(player, p1, p2, batch.target)
+      await memoryinspectcut(player, p1, p2, batch.target)
       break
     case 'paste':
       memoryinspectpastemenu(player, p1, p2)
@@ -62,7 +62,7 @@ export function memoryinspectbatchcommand(path: string, player: string) {
     case 'pasteobjects':
     case 'pasteterrain':
     case 'pasteterraintiled':
-      memoryinspectpaste(player, p1, p2, batch.target)
+      await memoryinspectpaste(player, p1, p2, batch.target)
       break
     case 'empty':
       memoryinspectemptymenu(player, p1, p2)

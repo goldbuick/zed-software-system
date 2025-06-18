@@ -16,7 +16,6 @@ import {
   MAYBE,
   isarray,
   isboolean,
-  isnumber,
   ispresent,
   isstring,
 } from 'zss/mapping/types'
@@ -529,10 +528,12 @@ const vm = createdevice(
         }
         break
       case 'inspect':
-        if (isarray(message.data)) {
-          const [p1, p2] = message.data as [PT, PT]
-          memoryinspect(message.player, p1, p2)
-        }
+        doasync(vm, message.player, async () => {
+          if (isarray(message.data)) {
+            const [p1, p2] = message.data as [PT, PT]
+            await memoryinspect(message.player, p1, p2)
+          }
+        })
         break
       case 'loader':
         // user input from built-in console
@@ -632,7 +633,9 @@ const vm = createdevice(
             }
             break
           case 'batch':
-            memoryinspectbatchcommand(path, message.player)
+            doasync(vm, message.player, async () => {
+              await memoryinspectbatchcommand(path, message.player)
+            })
             break
           case 'empty': {
             const empty = parsetarget(path)

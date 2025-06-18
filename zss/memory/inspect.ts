@@ -29,6 +29,7 @@ import { boardelementisobject, boardelementname } from './boardelement'
 import { bookboardelementreadcodepage } from './book'
 import { bookboardsafedelete, bookboardsetlookup } from './bookboard'
 import { memoryinspectarea } from './inspectarea'
+import { hassecretheap } from './inspectcopypaste'
 import {
   memoryinspectchar,
   memoryinspectcolor,
@@ -133,8 +134,9 @@ export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
   shared.scroll = gadgetcheckqueue(player)
 }
 
-export function memoryinspect(player: string, p1: PT, p2: PT) {
+export async function memoryinspect(player: string, p1: PT, p2: PT) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const showpaste = await hassecretheap()
   if (!ispresent(mainbook)) {
     return
   }
@@ -174,7 +176,7 @@ export function memoryinspect(player: string, p1: PT, p2: PT) {
       ])
     }
   } else {
-    memoryinspectarea(player, p1, p2)
+    memoryinspectarea(player, p1, p2, showpaste)
   }
 
   // send to player as a scroll

@@ -1,3 +1,4 @@
+import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { DIVIDER } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,
@@ -39,10 +40,20 @@ type BOARD_ELEMENT_BUFFER = {
   objects: BOARD_ELEMENT[]
 }
 
-let secretheap: MAYBE<BOARD_ELEMENT_BUFFER>
+// read / write from indexdb
 
-export function hassecretheap() {
-  return !!secretheap
+async function readsecretheap(): Promise<BOARD_ELEMENT_BUFFER | undefined> {
+  return idbget('secretheap')
+}
+
+async function writesecretheap(
+  updater: (oldValue: BOARD_ELEMENT_BUFFER | undefined) => BOARD_ELEMENT_BUFFER,
+): Promise<void> {
+  return idbupdate('secretheap', updater)
+}
+
+export async function hassecretheap() {
+  return !!(await readsecretheap())
 }
 
 function createboardelementbuffer(
@@ -92,7 +103,7 @@ function createboardelementbuffer(
   }
 }
 
-export function memoryinspectcopy(
+export async function memoryinspectcopy(
   player: string,
   p1: PT,
   p2: PT,
@@ -103,7 +114,7 @@ export function memoryinspectcopy(
     return
   }
 
-  secretheap = createboardelementbuffer(board, p1, p2)
+  const secretheap = createboardelementbuffer(board, p1, p2)
   switch (mode) {
     case 'copyobjects':
       secretheap.terrain = []
@@ -112,6 +123,8 @@ export function memoryinspectcopy(
       secretheap.objects = []
       break
   }
+
+  await writesecretheap(() => secretheap)
 }
 
 export function memoryinspectcopymenu(player: string, p1: PT, p2: PT) {
@@ -140,7 +153,12 @@ export function memoryinspectcopymenu(player: string, p1: PT, p2: PT) {
   shared.scroll = gadgetcheckqueue(player)
 }
 
-export function memoryinspectcut(player: string, p1: PT, p2: PT, mode: string) {
+export async function memoryinspectcut(
+  player: string,
+  p1: PT,
+  p2: PT,
+  mode: string,
+) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     return
@@ -151,7 +169,7 @@ export function memoryinspectcut(player: string, p1: PT, p2: PT, mode: string) {
     return
   }
 
-  secretheap = createboardelementbuffer(board, p1, p2)
+  const secretheap = createboardelementbuffer(board, p1, p2)
   switch (mode) {
     case 'cutobjects':
       secretheap.terrain = []
@@ -204,6 +222,8 @@ export function memoryinspectcut(player: string, p1: PT, p2: PT, mode: string) {
       break
     }
   }
+
+  await writesecretheap(() => secretheap)
 }
 
 export function memoryinspectcutmenu(player: string, p1: PT, p2: PT) {
@@ -232,13 +252,14 @@ export function memoryinspectcutmenu(player: string, p1: PT, p2: PT) {
   shared.scroll = gadgetcheckqueue(player)
 }
 
-export function memoryinspectpaste(
+export async function memoryinspectpaste(
   player: string,
   p1: PT,
   p2: PT,
   mode: string,
 ) {
   const board = memoryreadplayerboard(player)
+  const secretheap = await readsecretheap()
   if (!ispresent(board) || !ispresent(secretheap)) {
     return
   }
