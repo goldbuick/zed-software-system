@@ -138,9 +138,6 @@ export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
     'hk',
     '3',
   ])
-  gadgethyperlink(player, 'batch', `edit @board codepage}`, [
-    `pageopen:${board.id}`,
-  ])
 
   // send to player as a scroll
   const shared = gadgetstate(player)
@@ -186,6 +183,9 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
         'hk',
         '5',
         ` 5 `,
+      ])
+      gadgethyperlink(player, 'batch', `edit @board codepage`, [
+        `pageopen:${board.id}`,
       ])
     }
   } else {
