@@ -12,6 +12,7 @@ import {
   bridge_talkstop,
   bridge_mediastart,
   bridge_mediastop,
+  synth_ttsvoice,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
@@ -86,6 +87,8 @@ function handlesynthvoice(player: string, idx: number, words: WORD[]) {
   }
 }
 
+let withvoice = 'en-US-GuyNeural'
+
 export const AUDIO_FIRMWARE = createfirmware()
   .command('talk', (_, words) => {
     const [arg] = readargs(words, 0, [ARG_TYPE.ANY])
@@ -112,10 +115,13 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('tts', (_, words) => {
-    const [voice, ii] = readargs(words, 0, [ARG_TYPE.STRING])
-    const phrase = words.slice(ii).map(maptostring).join('')
-    synth_tts(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
+    const phrase = words.map(maptostring).join('')
+    synth_tts(SOFTWARE, READ_CONTEXT.elementfocus, withvoice, phrase)
+    return 0
+  })
+  .command('ttsvoice', (_, words) => {
     // https://github.com/lobehub/lobe-tts/blob/master/src/core/data/voiceList.ts
+    withvoice = words.map(maptostring).join('')
     return 0
   })
   .command('bpm', (_, words) => {

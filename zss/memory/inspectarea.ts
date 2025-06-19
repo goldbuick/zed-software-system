@@ -285,7 +285,7 @@ export function memoryinspectarea(
   gadgettext(player, `codepages:`)
 
   // scan board for codepages
-  gadgethyperlink(player, 'batch', `edit @board codepage}`, [
+  gadgethyperlink(player, 'batch', `edit @board codepage`, [
     `pageopen:${board.id}`,
   ])
   const x1 = Math.min(p1.x, p2.x)

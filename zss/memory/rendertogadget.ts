@@ -321,9 +321,10 @@ export function memoryconverttogadgetlayers(
     layers.push(control)
     const { graphics, camera, facing } = memoryreadflags(player)
 
-    const withgraphics = graphics ?? board.graphics ?? ''
-    const withcamera = camera ?? board.camera ?? ''
-    const withfacing = facing ?? board.facing ?? ''
+    // board stats take preference over play flags
+    const withgraphics = board.graphics ?? graphics ?? ''
+    const withcamera = board.camera ?? camera ?? ''
+    const withfacing = board.facing ?? facing ?? ''
 
     if (isstring(withgraphics)) {
       const graphics = NAME(withgraphics)
