@@ -1,7 +1,7 @@
 import { CHIP } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
-import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memorymoveobject, memorytickobject } from 'zss/memory'
 import { listelementsbykind, listptsbyempty } from 'zss/memory/atomics'
@@ -28,13 +28,7 @@ import {
   bookboardwritefromkind,
   bookboardwritebulletobject,
 } from 'zss/memory/bookboard'
-import {
-  BOARD,
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  CODE_PAGE,
-  CODE_PAGE_TYPE,
-} from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
@@ -178,6 +172,37 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   return 0
 }
 
+function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
+  if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
+    return 0
+  }
+
+  // make sure lookup is created
+  bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+
+  // duplicate target at dir, in the direction of the given dir
+  const [dir, dupedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
+  const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
+
+  // const element = bookboardwritefromkind(
+  //   READ_CONTEXT.book,
+  //   READ_CONTEXT.board,
+  //   kind,
+  //   dir.destpt,
+  //   id,
+  // )
+  // if (ispresent(element) && ispresent(arg)) {
+  //   element.arg = arg
+  // }
+
+  if (boardelementisobject(maybetarget)) {
+    // object
+  } else if (ispresent(maybetarget)) {
+    // terrain
+  }
+  return 0
+}
+
 export const BOARD_FIRMWARE = createfirmware()
   .command('board', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
@@ -268,25 +293,8 @@ export const BOARD_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('duplicate', (_, words) => {
-    if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
-      return 0
-    }
-
-    // make sure lookup is created
-    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
-
-    // duplicate target at dir, in the direction of the given dir
-    const [dir, dupedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
-    const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
-
-    if (boardelementisobject(maybetarget)) {
-      // object
-    } else if (ispresent(maybetarget)) {
-      // terrain
-    }
-    return 0
-  })
+  .command('dupe', commanddupe)
+  .command('duplicate', commanddupe)
   .command('write', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
