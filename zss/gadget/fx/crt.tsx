@@ -76,9 +76,15 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   float fz = 0.005;
   vec2 edge = bendy(xn, fz * n, -fz * n);
   vec2 bent = edge.xy * 0.5 + 0.5;
+  vec2 edgeshine = vec2(edge.x * 5.0 + 3.5, edge.y - 0.3);
+  vec2 edgeshine2 = vec2(edge.x, edge.y * 2.0 - 0.5);
+  vec2 edgeshine3 = vec2(edge.x * 3.0 - 2.1, edge.y + 0.3);
   
   float dx = rectdistance(xn);
   float bx = rectdistance(edge);
+  float ex = rectdistance(edgeshine);
+  float ex2 = rectdistance(edgeshine2);
+  float ex3 = rectdistance(edgeshine3);
 
   // apply shape
   float doot = max(abs(edge.x), abs(edge.y));
@@ -104,6 +110,29 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   } else {
     // border
     outputColor = vec4(mix(vec3(0.0), outputColor.rgb, 0.5), inputColor.a);
+  }
+
+  // apply inner shine
+  if (doot < 0.98) {
+    float vvv = 0.34;
+    if (edge.x > -0.9 && edge.x < -0.5) {
+      float sh = clamp(0.0, vvv, ex + n * 0.333);
+      float ratio = pow(sh, 5.0) * 6.0 * abs(cos(bx * 3.0)) * 6.0;
+      vec3 shade = mix(outputColor.rgb, vec3(1.0), ratio);
+      outputColor = vec4(shade, inputColor.a);
+    }
+    if (edge.y > -0.3 && edge.y < 0.7) {
+      float sh = clamp(0.0, vvv, ex2 + n * 0.15);
+      float ratio = pow(sh, 5.0) * 6.0 * abs(cos(dx * 3.0)) * 4.0;
+      vec3 shade = mix(outputColor.rgb, vec3(1.0), ratio);
+      outputColor = vec4(shade, inputColor.a);
+    }
+    if (edge.x > 0.4) {
+      float sh = clamp(0.0, vvv, ex3 + n * 0.25);
+      float ratio = pow(sh, 5.0) * 6.0 * abs(cos(bx * 2.0)) * 3.0;
+      vec3 shade = mix(outputColor.rgb, vec3(1.0), ratio);
+      outputColor = vec4(shade, inputColor.a);
+    }
   }
 
   // apply inner shade
