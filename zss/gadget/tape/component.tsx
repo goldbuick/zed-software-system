@@ -82,6 +82,7 @@ export function Tape() {
           left={0}
           right={screensize.cols - 1}
           bottom={top + height - 1}
+          alpha={quickterminal ? 0.777 : 0.333}
         />
       )}
       {showterminal ? (
