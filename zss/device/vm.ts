@@ -604,7 +604,7 @@ const vm = createdevice(
                   message.player,
                   'duration             cdefgab - notes ',
                 )
-                gadgettext(message.player, 'y - 64nd note        x - rest')
+                gadgettext(message.player, 'y - 64th note        x - rest')
                 gadgettext(message.player, 't - 32nd note        ')
                 gadgettext(message.player, 's - 16th note.       drums')
                 gadgettext(message.player, 'i - eight note.      0 - tick')
