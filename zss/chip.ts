@@ -295,6 +295,7 @@ export function createchip(
             const index = lines.findIndex((item) => item > 0)
             if (index >= 0) {
               lines[index] *= -1
+              break
             }
           }
         }
