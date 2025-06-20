@@ -26,7 +26,7 @@ export function parsesend(words: WORD[]): SEND_META {
     }
     return {
       targetdir,
-      label: words.slice(ii).join(' '),
+      label: words.slice(ii - 1).join(' '),
     }
   } else if (isstring(first)) {
     const [targetname, maybelabel, ii] = readargs(words, 0, [
