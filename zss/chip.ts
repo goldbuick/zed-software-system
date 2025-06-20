@@ -289,28 +289,31 @@ export function createchip(
     zap(label) {
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
-          const [name, lines] = flags.lb[i] as [string, number[]]
-          if (name === label) {
+          const entry = flags.lb[i] as [string, number[]]
+          if (entry[0] === label) {
             // zap first active label
-            const index = lines.findIndex((item) => item > 0)
-            if (index >= 0) {
-              lines[index] *= -1
+            const index = entry[1].findIndex((item) => item > 0)
+            if (index >= 0 && ispresent(entry[1])) {
+              entry[1][index] *= -1
               break
             }
           }
         }
+        // console.info('zap', deepcopy(flags.lb))
       }
     },
     restore(label) {
       if (isarray(flags.lb)) {
         for (let i = 0; i < flags.lb.length; ++i) {
-          const [name, lines] = flags.lb[i] as [string, number[]]
-          if (name === label) {
-            for (let l = 0; l < lines.length; l++) {
-              lines[i] = Math.abs(lines[i])
+          const entry = flags.lb[i] as [string, number[]]
+          if (entry[0] === label) {
+            // restore all labels
+            for (let l = 0; l < entry[1].length; l++) {
+              entry[1][l] = Math.abs(entry[1][l])
             }
           }
         }
+        // console.info('restore', deepcopy(flags.lb))
       }
     },
     getcase() {
