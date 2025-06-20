@@ -11,15 +11,22 @@ export type SEND_META = {
 }
 
 export function parsesend(words: WORD[]): SEND_META {
-  const [first, second] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.ANY])
+  const [first, second] = readargs(words, 0, [ARG_TYPE.NAME, ARG_TYPE.ANY])
   if (NAME(first) === 'send' && isstrdir(second)) {
-    const [, targetdir, ii] = readargs(words, 0, [
+    const [, targetdir, maybelabel, ii] = readargs(words, 0, [
       ARG_TYPE.NAME, // #send
       ARG_TYPE.DIR, // target
+      ARG_TYPE.MAYBE_NAME, // label
     ])
+    if (isstring(maybelabel) && maybelabel.startsWith(':')) {
+      return {
+        targetdir,
+        label: [maybelabel.substring(1).trim(), ...words.slice(ii)].join(' '),
+      }
+    }
     return {
       targetdir,
-      label: words.slice(ii).join(' '),
+      label: words.slice(ii - 1).join(' '),
     }
   } else if (isstring(first)) {
     const [targetname, maybelabel, ii] = readargs(words, 0, [
