@@ -408,9 +408,7 @@ const vm = createdevice(
         }
         break
       case 'tick':
-        if (!memoryreadhalt()) {
-          memorytick()
-        }
+        memorytick(memoryreadhalt())
         break
       case 'synthsend':
         if (isstring(message.data)) {
