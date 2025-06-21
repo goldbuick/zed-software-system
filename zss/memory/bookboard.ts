@@ -690,6 +690,16 @@ export function bookboardmoveobject(
       return { ...maybeobject }
     }
 
+    // is element breakable ?
+    const breakable = !!bookelementstatread(book, maybeobject, 'breakable')
+    if (breakable) {
+      // update object location
+      target.x = dest.x
+      target.y = dest.y
+      // for sending interaction messages
+      return { ...maybeobject }
+    }
+
     // bullets can't PUSH
     if (targetcollision === COLLISION.ISBULLET) {
       // for sending interaction messages
