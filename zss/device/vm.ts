@@ -85,6 +85,7 @@ import {
   vm_logout,
   register_loginfail,
   vm_local,
+  register_itchiopublishmem,
 } from './api'
 import { modemobservevaluestring } from './modem'
 
@@ -121,6 +122,16 @@ async function forkstate() {
     const content = await compressbooks(books)
     register_forkmem(vm, memoryreadoperator(), content)
   }
+}
+
+// fork state
+async function compressedbookstate() {
+  const books = memoryreadbooklist()
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (books.length && ispresent(mainbook)) {
+    return compressbooks(books)
+  }
+  return ''
 }
 
 const vm = createdevice(
@@ -503,6 +514,22 @@ const vm = createdevice(
             await forkstate()
           })
         }
+        break
+      case 'itchiopublish':
+        doasync(vm, message.player, async () => {
+          if (message.player === operator) {
+            const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+            if (ispresent(mainbook)) {
+              const content = await compressedbookstate()
+              register_itchiopublishmem(
+                vm,
+                message.player,
+                mainbook.name,
+                content,
+              )
+            }
+          }
+        })
         break
       case 'flush':
         if (message.player === operator) {

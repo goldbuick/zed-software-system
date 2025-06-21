@@ -18,6 +18,7 @@ import {
   register_configshow,
   vm_loader,
   register_enterar,
+  vm_itchiopublish,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -609,6 +610,10 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('fork', () => {
     vm_fork(SOFTWARE, READ_CONTEXT.elementfocus)
+    return 0
+  })
+  .command('itchiopublish', () => {
+    vm_itchiopublish(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('nuke', () => {
