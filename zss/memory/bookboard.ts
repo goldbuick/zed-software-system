@@ -574,6 +574,7 @@ export function bookboardcheckblockedobject(
   board: MAYBE<BOARD>,
   collision: MAYBE<COLLISION>,
   dest: PT,
+  isplayer = false,
 ): boolean {
   // first pass clipping
   if (
@@ -594,6 +595,9 @@ export function bookboardcheckblockedobject(
   // blocked by an object
   const maybeobject = boardobjectread(board, board.lookup[targetidx] ?? '404')
   if (ispresent(maybeobject)) {
+    if (isplayer && ispid(maybeobject.id)) {
+      return false
+    }
     // for sending interaction messages
     return true
   }
