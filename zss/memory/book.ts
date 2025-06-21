@@ -455,7 +455,9 @@ export function bookplayermovetoboard(
   bookboardsetlookup(book, destboard)
 
   // read target spot
-  if (bookboardcheckblockedobject(book, destboard, COLLISION.ISWALK, dest)) {
+  if (
+    bookboardcheckblockedobject(book, destboard, COLLISION.ISWALK, dest, true)
+  ) {
     return
   }
 
