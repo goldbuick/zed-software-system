@@ -5,6 +5,7 @@ import {
   entries as idbentries,
 } from 'idb-keyval'
 import { createdevice } from 'zss/device'
+import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { setup } from 'zss/feature/t9'
 import {
@@ -547,6 +548,17 @@ const register = createdevice(
             )
           }
         }
+        break
+      case 'itchiopublishmem':
+        doasync(register, message.player, async () => {
+          if (isarray(message.data)) {
+            const [maybename, maybecontent] = message.data
+            if (isstring(maybename) && isstring(maybecontent)) {
+              // save zipfile
+              await itchiopublish(maybename, maybecontent)
+            }
+          }
+        })
         break
       case 'config':
         doasync(register, message.player, async () => {
