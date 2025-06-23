@@ -117,25 +117,25 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     outputColor = vec4(mix(vec3(0.0), outputColor.rgb, 0.5), inputColor.a);
   }
 
-  // apply inner shine
+  // apply reflection shine
   if (doot < 0.98) {
     float vvv = 0.34;
     if (edge.x > -0.9 && edge.x < -0.5 && edge.y > -0.5) {
       float sh = clamp(0.0, vvv, ex + n * 0.333);
       float ratio = pow(sh, 5.0) * 6.0 * abs(cos(bx * 3.0)) * (6.0 + sin(edgetime));
-      vec3 shade = mix(outputColor.rgb, vec3(1.0), ratio);
+      vec3 shade = mix(outputColor.rgb, vec3(1.0), ratio * 0.333);
       outputColor = vec4(shade, inputColor.a);
     }
     if (edge.y > -0.3 && edge.y < 0.7) {
       float sh = clamp(0.0, vvv, ex2 + n * 0.15);
       float ratio = pow(sh, 5.0) * 6.0 * abs(cos(dx * 3.0)) * (4.0 + cos(edgetime * 1.5));
-      vec3 shade = mix(outputColor.rgb, vec3(1.0), ratio);
+      vec3 shade = mix(outputColor.rgb, vec3(1.0), ratio * 0.333);
       outputColor = vec4(shade, inputColor.a);
     }
     if (edge.x > 0.4 && edge.y < 0.8) {
       float sh = clamp(0.0, vvv, ex3 + n * 0.25);
       float ratio = pow(sh, 5.0) * 6.0 * abs(cos(bx * 2.0)) * (3.0 + sin(-edgetime));
-      vec3 shade = mix(outputColor.rgb, vec3(1.0), ratio);
+      vec3 shade = mix(outputColor.rgb, vec3(1.0), ratio * 0.333);
       outputColor = vec4(shade, inputColor.a);
     }
   }
