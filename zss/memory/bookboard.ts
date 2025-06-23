@@ -903,6 +903,7 @@ export function bookboardreadgroup(
     )
     return (
       ispresent(statnamed) ||
+      boardelementname(el) === targetgroup ||
       bookelementstatread(book, el, 'group') === targetgroup
     )
   }

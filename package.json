@@ -108,6 +108,8 @@
     "vite-plugin-mkcert": "^1.17.5",
     "vite-plugin-node-polyfills": "^0.23.0",
     "wavefunctioncollapse": "^2.1.0",
+    "weighted": "^1.0.0",
+    "weighted-shuffle": "^1.0.0",
     "yjs": "^13.6.24",
     "zustand": "^5.0.1"
   }
