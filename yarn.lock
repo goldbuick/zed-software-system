@@ -8211,6 +8211,16 @@ webrtc-adapter@^9.0.0:
   dependencies:
     sdp "^3.2.0"
 
+weighted-shuffle@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/weighted-shuffle/-/weighted-shuffle-1.0.0.tgz#cc0e9b01a212a0f0ad60c9d8511611df2eda6154"
+  integrity sha512-3dfOrEyJaMZPzqD0X+S6K+xG/6GdTu0upRUQOh6W8ecx0OK0sH2YMRV0BOD6e+d3Cih22yGQkp+P9t0T6fvArg==
+
+weighted@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/weighted/-/weighted-1.0.0.tgz#37c72fc2fa4dd39d85abfbbcc30ed6a61781b74d"
+  integrity sha512-d0actwV3zgtH73koFWida36KVz+hM1XaumMBTQI6ozr9zUgHiB4dWM+2wWcXe6cniyLW0iMBthuPN6XtSpPMVw==
+
 whatwg-url@^5.0.0:
   version "5.0.0"
   resolved "https://registry.npmjs.org/whatwg-url/-/whatwg-url-5.0.0.tgz#966454e8765462e37644d3626f6742ce8b70965d"
