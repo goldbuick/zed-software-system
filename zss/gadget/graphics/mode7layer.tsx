@@ -75,7 +75,6 @@ export function Mode7Layer({ id, z, from }: Mode7LayerProps) {
       // border[0] =
       const gap = RUNTIME.DRAW_CHAR_HEIGHT()
       return (
-        // eslint-disable-next-line react/no-unknown-property
         <>
           <group key={`under${layer.id}`} position={[0, 0, z]}>
             <Dither

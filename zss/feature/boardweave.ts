@@ -26,6 +26,7 @@ export function boardweave(
   delta: PT,
   p1: PT,
   p2: PT,
+  self: string,
   targetset: string,
 ) {
   switch (targetset) {
@@ -34,7 +35,7 @@ export function boardweave(
     case 'terrain':
       break
     default:
-      return boardweavegroup(target, delta, targetset)
+      return boardweavegroup(target, delta, self, targetset)
   }
   if (!ispresent(READ_CONTEXT.book)) {
     return
@@ -108,6 +109,7 @@ export function boardweave(
 export function boardweavegroup(
   target: string,
   delta: PT,
+  self: string,
   targetgroup: string,
 ) {
   if (!ispresent(READ_CONTEXT.book)) {
@@ -131,6 +133,7 @@ export function boardweavegroup(
   const { terrainelements, objectelements } = bookboardreadgroup(
     book,
     targetboard,
+    self,
     targetgroup,
   )
   // if we get __nothing__ we should bail

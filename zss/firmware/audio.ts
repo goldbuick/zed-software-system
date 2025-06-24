@@ -3,7 +3,6 @@ import {
   synth_bgplayvolume,
   synth_playvolume,
   synth_play,
-  synth_tta,
   synth_tts,
   synth_ttsvolume,
   synth_voice,
@@ -12,7 +11,6 @@ import {
   bridge_talkstop,
   bridge_mediastart,
   bridge_mediastop,
-  synth_ttsvoice,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
