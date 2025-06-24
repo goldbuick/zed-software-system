@@ -543,7 +543,9 @@ const register = createdevice(
           if (isstring(maybecontent)) {
             // launch fork url
             window.open(
-              location.href.replace(/#.*/, `#${maybecontent}`),
+              location.href
+                .replace(`/locked/#`, `/#`)
+                .replace(/#.*/, `#${maybecontent}`),
               '_blank',
             )
           }

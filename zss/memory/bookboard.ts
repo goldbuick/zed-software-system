@@ -887,6 +887,7 @@ export function bookboardtick(
 export function bookboardreadgroup(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
+  self: string,
   targetgroup: string,
 ) {
   const objectelements: BOARD_ELEMENT[] = []
@@ -895,12 +896,28 @@ export function bookboardreadgroup(
     return { objectelements, terrainelements }
   }
 
-  function checkelement(el: BOARD_ELEMENT) {
+  function checkelement(el: BOARD_ELEMENT, isterrain: boolean) {
+    // special groups
+    switch (targetgroup) {
+      case 'all':
+        return true
+      case 'self':
+        return el?.id === self
+      case 'others':
+        return el?.id !== self
+      case 'terrain':
+        return isterrain === true
+      case 'object':
+        return isterrain === false
+    }
+
+    // stat & name groups
     const statnamed = bookelementstatread(
       book,
       el,
       targetgroup as BOARD_ELEMENT_STAT,
     )
+
     return (
       ispresent(statnamed) ||
       boardelementname(el) === targetgroup ||
@@ -912,13 +929,13 @@ export function bookboardreadgroup(
   const allobjectelements = Object.values(board.objects)
   for (let i = 0; i < allobjectelements.length; ++i) {
     const el = allobjectelements[i]
-    if (checkelement(el)) {
+    if (checkelement(el, false)) {
       objectelements.push(el)
     }
   }
   for (let i = 0; i < BOARD_SIZE; ++i) {
     const el = board.terrain[i]
-    if (ispresent(el) && checkelement(el)) {
+    if (ispresent(el) && checkelement(el, true)) {
       terrainelements.push(el)
     }
   }

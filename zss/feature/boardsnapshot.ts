@@ -44,7 +44,7 @@ export function boardsnapshot(target: string) {
   }
 
   // invoke copy
-  boardcopy(target, snapshotboard.id, p1, p2, targetset)
+  boardcopy(target, snapshotboard.id, p1, p2, '', targetset)
 
   // return board
   return snapshotboard

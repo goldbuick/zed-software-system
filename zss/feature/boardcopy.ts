@@ -100,7 +100,7 @@ export function boardcopy(
     case 'terrain':
       break
     default:
-      return boardcopygroup(source, target, p1, targetset)
+      return boardcopygroup(source, target, p1, '', targetset)
   }
   if (!ispresent(READ_CONTEXT.book)) {
     return
@@ -229,6 +229,7 @@ export function boardcopygroup(
   source: string,
   target: string,
   p1: PT,
+  self: string,
   targetgroup: string,
 ) {
   if (!ispresent(READ_CONTEXT.book)) {
@@ -265,6 +266,7 @@ export function boardcopygroup(
     const { terrainelements, objectelements } = bookboardreadgroup(
       book,
       sourceboard,
+      self,
       targetgroup,
     )
     // if we get __nothing__ we should bail
