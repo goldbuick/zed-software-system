@@ -427,10 +427,18 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       }
 
       if (isstring(stats.camera)) {
-        codepage.board.camera = stats.camera
+        if (NAME(stats.camera) === 'empty') {
+          codepage.board.camera = undefined
+        } else {
+          codepage.board.camera = stats.camera
+        }
       }
       if (isstring(stats.graphics)) {
-        codepage.board.graphics = stats.graphics
+        if (NAME(stats.graphics) === 'empty') {
+          codepage.board.graphics = undefined
+        } else {
+          codepage.board.graphics = stats.graphics
+        }
       }
       if (isnumber(stats.facing)) {
         codepage.board.facing = stats.facing
