@@ -22,6 +22,7 @@ import {
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory'
+import { readexpr } from './words/expr'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
 import { NAME, WORD, WORD_RESULT } from './words/types'
 
@@ -620,8 +621,9 @@ export function createchip(
       const [value] = readargs(words, 0, [ARG_TYPE.ANY])
       return value ? 0 : 1
     },
-    expr(value) {
-      // this now acts as a pass-through
+    expr(...words) {
+      // parse expressions
+      const [value] = readargs(words, 0, [ARG_TYPE.ANY])
       return value
     },
     isEq(lhs, rhs) {
