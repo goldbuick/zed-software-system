@@ -1,9 +1,10 @@
-import { Context, getTransport, setContext, start } from 'tone'
+import { Context, getContext, getTransport, setContext, start } from 'tone'
 import { createdevice } from 'zss/device'
 import { AUDIO_SYNTH, createsynth } from 'zss/feature/synth'
+import { addfcrushmodule } from 'zss/feature/synthfcrushworkletnode'
+import { addsidechainmodule } from 'zss/feature/synthsidechainworkletnode'
 import { synthvoiceconfig } from 'zss/feature/synthvoiceconfig'
 import { FXNAME, synthvoicefxconfig } from 'zss/feature/synthvoicefxconfig'
-import { createsynthworkletnode } from 'zss/feature/synthworkletnodes'
 import { ttsplay } from 'zss/feature/tts'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
@@ -21,11 +22,6 @@ import { registerreadplayer } from './register'
 
 // synth setup
 setContext(new Context({ latencyHint: 'playback' }))
-
-// TODO, wait for this before creating worklet nodes
-createsynthworkletnode().catch((err) => {
-  api_error(synthdevice, registerreadplayer(), 'audio', err.message)
-})
 
 type CustomNavigator = {
   audioSession?: {
@@ -59,7 +55,7 @@ export function enableaudio() {
       }
     })
     .catch((err: any) => {
-      api_error(synthdevice, registerreadplayer(), 'audio', err.message)
+      api_error(synthdevice, registerreadplayer(), 'audio', err.toString())
     })
 }
 
@@ -77,7 +73,11 @@ const synthdevice = createdevice('synth', [], (message) => {
 
   // validate synth state
   if (enabled && !ispresent(synth)) {
-    synth = createsynth()
+    doasync(synthdevice, message.player, async () => {
+      await addfcrushmodule(getContext())
+      await addsidechainmodule(getContext())
+      synth = createsynth()
+    })
   }
   if (!ispresent(synth)) {
     return

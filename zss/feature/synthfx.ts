@@ -9,7 +9,7 @@ import {
 } from 'tone'
 import { deepcopy } from 'zss/mapping/types'
 
-import { FrequencyCrusher } from './synthworkletnodes'
+import { FrequencyCrusher } from './synthfcrushworkletnode'
 
 export const ECHO_OFF = Time('256n').toSeconds()
 export const ECHO_ON = Time('8n').toSeconds()

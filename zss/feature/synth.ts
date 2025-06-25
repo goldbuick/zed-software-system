@@ -38,6 +38,8 @@ import {
   SYNTH_SFX_RESET,
 } from './play'
 import { createfx } from './synthfx'
+// import { SidechainCompressor } from './synthsidechainworkletnode'
+import { SidechainCompressor } from './synthsidechainworkletnode'
 import { createsource, SOURCE_TYPE } from './synthsource'
 
 // 0 to 100
@@ -62,6 +64,14 @@ export function createsynth() {
   })
   maincompressor.connect(mainvolume)
 
+  // const sidechaincompressor = new SidechainCompressor({
+  //   threshold: -24,
+  //   ratio: 4,
+  //   attack: 0.003,
+  //   release: 0.25,
+  // })
+  // sidechaincompressor.connect(maincompressor, 0, 0)
+
   const razzledazzle = new Vibrato({
     maxDelay: 0.005, // subtle pitch modulation
     frequency: 1.5, // speed of the warble
@@ -84,6 +94,8 @@ export function createsynth() {
   const hissvolume = new Volume()
 
   // setup
+  // hiss.chain(hissvolume, sidechaincompressor)
+  // razzledazzle.chain(razzlechorus, sidechaincompressor)
   hiss.chain(hissvolume, maincompressor)
   razzledazzle.chain(razzlechorus, maincompressor)
 
@@ -101,6 +113,13 @@ export function createsynth() {
 
   const ttsvolume = new Volume()
   ttsvolume.connect(razzledazzle)
+
+  const drumvolume = new Volume()
+  drumvolume.connect(razzledazzle)
+
+  // side-chain input
+  // drumvolume.connect(sidechaincompressor, 0, 1)
+  // bgplayvolume.connect(sidechaincompressor, 0, 1)
 
   // 8tracks
   const SOURCE = [
@@ -200,7 +219,7 @@ export function createsynth() {
 
   // drumtick
 
-  const drumtick = new PolySynth().connect(playvolume)
+  const drumtick = new PolySynth().connect(drumvolume)
   drumtick.maxPolyphony = 8
   drumtick.set({
     envelope: {
@@ -220,7 +239,7 @@ export function createsynth() {
 
   // drumtweet
 
-  const drumtweet = new Synth().connect(playvolume)
+  const drumtweet = new Synth().connect(drumvolume)
   drumtick.set({
     envelope: {
       attack: 0.001,
@@ -241,7 +260,7 @@ export function createsynth() {
 
   // drumcowbell
 
-  const drumcowbellfilter = new Filter(350, 'bandpass').connect(playvolume)
+  const drumcowbellfilter = new Filter(350, 'bandpass').connect(drumvolume)
 
   const drumcowbellgain = new Gain().connect(drumcowbellfilter)
   drumcowbellgain.gain.value = 0
@@ -270,7 +289,7 @@ export function createsynth() {
 
   // drumclap
 
-  const drumclapeq = new EQ3(-10, 10, -1).connect(playvolume)
+  const drumclapeq = new EQ3(-10, 10, -1).connect(drumvolume)
 
   const drumclapfilter = new Filter(800, 'highpass', -12)
   drumclapfilter.connect(drumclapeq)
@@ -292,7 +311,7 @@ export function createsynth() {
 
   // drumhisnare
 
-  const drumhisnaredistortion = new Distortion().connect(playvolume)
+  const drumhisnaredistortion = new Distortion().connect(drumvolume)
   drumhisnaredistortion.set({
     distortion: 0.666,
   })
@@ -398,7 +417,7 @@ export function createsynth() {
 
   // drumlowsnare
 
-  const drumlowsnaredistortion = new Distortion().connect(playvolume)
+  const drumlowsnaredistortion = new Distortion().connect(drumvolume)
   drumlowsnaredistortion.set({
     distortion: 0.876,
   })
@@ -453,7 +472,7 @@ export function createsynth() {
 
   // drumlowtom
 
-  const drumlowtomosc = new Synth().connect(playvolume)
+  const drumlowtomosc = new Synth().connect(drumvolume)
   drumlowtomosc.set({
     envelope: {
       attack: 0.01,
@@ -466,7 +485,7 @@ export function createsynth() {
     },
   })
 
-  const drumlowtomosc2 = new Synth().connect(playvolume)
+  const drumlowtomosc2 = new Synth().connect(drumvolume)
   drumlowtomosc.set({
     envelope: {
       attack: 0.01,
@@ -479,7 +498,7 @@ export function createsynth() {
     },
   })
 
-  const drumlowtomnoise = new NoiseSynth().connect(playvolume)
+  const drumlowtomnoise = new NoiseSynth().connect(drumvolume)
   drumlowtomnoise.set({
     envelope: {
       attack: 0.01,
@@ -564,7 +583,7 @@ export function createsynth() {
 
   // drumbass
 
-  const drumbass = new MembraneSynth().connect(playvolume)
+  const drumbass = new MembraneSynth().connect(drumvolume)
   drumbass.set({
     octaves: 8,
     volume: 8.0,
