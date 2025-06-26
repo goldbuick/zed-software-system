@@ -90,8 +90,8 @@ const synthdevice = createdevice('synth', [], (message) => {
 
   switch (message.target) {
     case 'audioenabled':
+      api_log(synthdevice, message.player, 'audio is enabled!')
       doasync(synthdevice, message.player, async () => {
-        api_log(synthdevice, message.player, 'audio is enabled!')
         await waitfor(2000)
         vm_loader(
           synthdevice,
