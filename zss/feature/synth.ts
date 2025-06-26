@@ -114,7 +114,8 @@ export function createsynth() {
   drumvolume.connect(razzledazzle)
 
   // side-chain input
-  drumvolume.connect(sidechaincompressor.sidechain)
+  const drumgain = new Gain(-15)
+  drumvolume.chain(drumgain, sidechaincompressor.sidechain)
   bgplayvolume.connect(sidechaincompressor.sidechain)
 
   // 8tracks
@@ -762,7 +763,7 @@ export function createsynth() {
 
   // set default volumes
   setttsvolume(15)
-  setplayvolume(25)
+  setplayvolume(75)
   setbgplayvolume(100)
 
   return {
