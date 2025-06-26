@@ -64,7 +64,7 @@ export function createsynth() {
   maincompressor.connect(mainvolume)
 
   const sidechaincompressor = new SidechainCompressor({
-    ratio: 3,
+    mix: 0.75,
   })
   sidechaincompressor.connect(maincompressor)
 
