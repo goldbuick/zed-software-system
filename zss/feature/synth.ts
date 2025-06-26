@@ -38,7 +38,6 @@ import {
   SYNTH_SFX_RESET,
 } from './play'
 import { createfx } from './synthfx'
-// import { SidechainCompressor } from './synthsidechainworkletnode'
 import { SidechainCompressor } from './synthsidechainworkletnode'
 import { createsource, SOURCE_TYPE } from './synthsource'
 
@@ -64,13 +63,10 @@ export function createsynth() {
   })
   maincompressor.connect(mainvolume)
 
-  // const sidechaincompressor = new SidechainCompressor({
-  //   threshold: -24,
-  //   ratio: 4,
-  //   attack: 0.003,
-  //   release: 0.25,
-  // })
-  // sidechaincompressor.connect(maincompressor, 0, 0)
+  const sidechaincompressor = new SidechainCompressor({
+    ratio: 3,
+  })
+  sidechaincompressor.connect(maincompressor)
 
   const razzledazzle = new Vibrato({
     maxDelay: 0.005, // subtle pitch modulation
@@ -94,10 +90,10 @@ export function createsynth() {
   const hissvolume = new Volume()
 
   // setup
-  // hiss.chain(hissvolume, sidechaincompressor)
-  // razzledazzle.chain(razzlechorus, sidechaincompressor)
-  hiss.chain(hissvolume, maincompressor)
-  razzledazzle.chain(razzlechorus, maincompressor)
+  hiss.chain(hissvolume, sidechaincompressor)
+  razzledazzle.chain(razzlechorus, sidechaincompressor)
+  // hiss.chain(hissvolume, maincompressor)
+  // razzledazzle.chain(razzlechorus, maincompressor)
 
   const fsmap = new AudioToGain()
   const cyclesource = new Oscillator(Math.PI * 0.25, 'sine')
@@ -118,8 +114,8 @@ export function createsynth() {
   drumvolume.connect(razzledazzle)
 
   // side-chain input
-  // drumvolume.connect(sidechaincompressor, 0, 1)
-  // bgplayvolume.connect(sidechaincompressor, 0, 1)
+  drumvolume.connect(sidechaincompressor.sidechain)
+  bgplayvolume.connect(sidechaincompressor.sidechain)
 
   // 8tracks
   const SOURCE = [
@@ -372,7 +368,7 @@ export function createsynth() {
     frequency: 256,
     Q: 0.17,
   })
-  drumhiwoodblockfilter.connect(playvolume)
+  drumhiwoodblockfilter.connect(drumvolume)
 
   const drumhiwoodblockclack = new Synth()
   drumhiwoodblockclack.set({
@@ -538,7 +534,7 @@ export function createsynth() {
     frequency: 256,
     Q: 0.17,
   })
-  drumlowwoodblockfilter.connect(playvolume)
+  drumlowwoodblockfilter.connect(drumvolume)
 
   const drumlowwoodblockclack = new Synth()
   drumlowwoodblockclack.set({
@@ -766,7 +762,7 @@ export function createsynth() {
 
   // set default volumes
   setttsvolume(15)
-  setplayvolume(75)
+  setplayvolume(25)
   setbgplayvolume(100)
 
   return {

@@ -1,4 +1,4 @@
-import { Context, getContext, getTransport, setContext, start } from 'tone'
+import { Context, getTransport, setContext, start } from 'tone'
 import { createdevice } from 'zss/device'
 import { AUDIO_SYNTH, createsynth } from 'zss/feature/synth'
 import { addfcrushmodule } from 'zss/feature/synthfcrushworkletnode'
@@ -21,7 +21,7 @@ import { api_error, synth_audioenabled, vm_loader, api_log } from './api'
 import { registerreadplayer } from './register'
 
 // synth setup
-setContext(new Context({ latencyHint: 'playback' }))
+setContext(new Context({ latencyHint: 'playback', lookAhead: 0.1 }))
 
 type CustomNavigator = {
   audioSession?: {
@@ -38,10 +38,11 @@ export function enableaudio() {
     .then(() => {
       if (!enabled) {
         const transport = getTransport()
-        enabled = true
         transport.start()
-        api_log(synthdevice, registerreadplayer(), 'audio is enabled!')
+
         setAltInterval(107)
+
+        // better audio playback for mobile safari
         try {
           const customnavigator = navigator as CustomNavigator
           if (ispresent(customnavigator.audioSession)) {
@@ -51,7 +52,15 @@ export function enableaudio() {
         } catch (err) {
           //
         }
-        synth_audioenabled(synthdevice, registerreadplayer())
+
+        return addfcrushmodule()
+          .then(() => {
+            return addsidechainmodule()
+          })
+          .then(() => {
+            enabled = true
+            synth_audioenabled(synthdevice, registerreadplayer())
+          })
       }
     })
     .catch((err: any) => {
@@ -73,11 +82,7 @@ const synthdevice = createdevice('synth', [], (message) => {
 
   // validate synth state
   if (enabled && !ispresent(synth)) {
-    doasync(synthdevice, message.player, async () => {
-      await addfcrushmodule(getContext())
-      await addsidechainmodule(getContext())
-      synth = createsynth()
-    })
+    synth = createsynth()
   }
   if (!ispresent(synth)) {
     return
@@ -86,6 +91,7 @@ const synthdevice = createdevice('synth', [], (message) => {
   switch (message.target) {
     case 'audioenabled':
       doasync(synthdevice, message.player, async () => {
+        api_log(synthdevice, message.player, 'audio is enabled!')
         await waitfor(2000)
         vm_loader(
           synthdevice,

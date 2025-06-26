@@ -1,9 +1,4 @@
 // https://github.com/jadujoel/sidechain-compressor-audio-worklet/tree/main
-
-/**
- * @class SidechainCompressorProcessor
- * @extends AudioWorkletProcessor
- */
 class SidechainCompressorProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
@@ -46,17 +41,12 @@ class SidechainCompressorProcessor extends AudioWorkletProcessor {
     ]
   }
 
-  /**
-   * @constructor
-   * AudioWorkletNode constructor.
-   */
   constructor() {
     super()
 
     this.firstTime = true
     this.useLogging = true
-    this.sampleRate = 44100
-    this.isBypassed = false
+    this.sampleRate = 48000
     this.useSidechain = true
 
     this.ratio = 12.0
@@ -93,57 +83,21 @@ class SidechainCompressorProcessor extends AudioWorkletProcessor {
     this.c2 = 0
   }
 
-  /**
-   * System-invoked process callback function.
-   * @param  {Array} inputs Incoming audio stream.
-   * @param  {Array} outputs Outgoing audio stream.
-   * @param  {Record<string, Float32Array>} parameters data.
-   * @return {Boolean} Active source flag.
-   */
   process(inputs, outputs, parameters) {
-    try {
-      if (this.firstTime) {
-        console.info(
-          '[processor]',
-          'inputs',
-          inputs.length,
-          'outputs',
-          outputs.length,
-          'input',
-          inputs[0].length,
-          'output',
-          outputs[0].length,
-        )
-      }
-      if (this.isBypassed) {
-        for (const [ib, inBus] of inputs.entries()) {
-          const outbus = outputs[ib]
-          for (const [ic, inChannel] of inBus.entries()) {
-            const outChannel = outbus[ic]
-            for (let sample = 0; sample < inChannel.length; ++sample) {
-              outChannel[sample] = inChannel[sample]
-            }
-          }
-        }
-        return true
-      }
-      this.threshold = parameters.threshold[0]
-      this.ratio = parameters.ratio[0]
-      this.release_time = parameters.release[0]
-      this.attack_time = parameters.attack[0]
-      this.makeupGain = parameters.makeupGain[0]
-      const mix = parameters.mix[0]
+    this.threshold = parameters.threshold[0]
+    this.ratio = parameters.ratio[0]
+    this.release_time = parameters.release[0]
+    this.attack_time = parameters.attack[0]
+    this.makeupGain = parameters.makeupGain[0]
+    const mix = parameters.mix[0]
 
-      const input = inputs[0]
-      const output = outputs[0]
+    const input = inputs[0]
+    const output = outputs[0]
+    const sidechain = inputs[1]
 
-      const isSidechainConnected = inputs[1].length === inputs[0].length
-      const useSidechain = isSidechainConnected && this.useSidechain
-      const sidechainInput = useSidechain ? 1 : 0
-
+    if (input[0] && sidechain?.[0]) {
       for (let i = 0; i < input[0].length; ++i) {
-        const sidechainMono =
-          0.5 * (inputs[sidechainInput][0][i] + inputs[sidechainInput][1][i])
+        const sidechainMono = 0.5 * (sidechain[0][i] + sidechain[1][i])
         this.update(sidechainMono)
         const inputL = input[0][i]
         const inputR = input[1][i]
@@ -152,14 +106,6 @@ class SidechainCompressorProcessor extends AudioWorkletProcessor {
         output[0][i] = inputL * (1 - mix) + compressedL * mix
         output[1][i] = inputR * (1 - mix) + compressedR * mix
       }
-    } catch (e) {
-      if (this.useLogging) {
-        console.info(e)
-      }
-    }
-    if (this.firstTime) {
-      console.info('[processor]', 'inputs', inputs, 'outputs', outputs)
-      this.firstTime = false
     }
     return true
   }

@@ -1,4 +1,4 @@
-import { BaseContext, optionsFromArguments, Param } from 'tone'
+import { Gain, getContext, optionsFromArguments, Param } from 'tone'
 import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect'
 
 import synthsidechainworkleturl from './synthsidechainworklet.js?url'
@@ -22,8 +22,13 @@ export class SidechainCompressor extends Effect<SidechainCompressorOptions> {
   readonly mix: Param<'number'>
   readonly makeupGain: Param<'number'>
 
+  readonly sidechain: Gain = new Gain()
+
   private _audioworkletnode: AudioWorkletNode =
-    this.context.createAudioWorkletNode('sidechaincompressorprocessor')
+    this.context.createAudioWorkletNode('sidechaincompressorprocessor', {
+      numberOfInputs: 2,
+      outputChannelCount: [2],
+    })
 
   constructor(
     threshold?: number,
@@ -87,6 +92,7 @@ export class SidechainCompressor extends Effect<SidechainCompressorOptions> {
     })
 
     this.connectEffect(this._audioworkletnode)
+    this.sidechain.connect(this._audioworkletnode, 0, 1)
   }
 
   static getDefaults(): SidechainCompressorOptions {
@@ -110,6 +116,8 @@ export class SidechainCompressor extends Effect<SidechainCompressorOptions> {
   }
 }
 
-export async function addsidechainmodule(context: BaseContext) {
-  await context.addAudioWorkletModule(synthsidechainworkleturl)
+export function addsidechainmodule() {
+  return getContext().rawContext.audioWorklet.addModule(
+    synthsidechainworkleturl,
+  )
 }

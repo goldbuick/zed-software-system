@@ -2,6 +2,7 @@
 // Sample and holds the signal based on an incrementing counter
 // written by Timo Hoogland, (c) 2023, www.timohoogland.com
 //
+
 class SynthFCrushWorkletProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
@@ -43,6 +44,7 @@ class SynthFCrushWorkletProcessor extends AudioWorkletProcessor {
         this.count++
       }
     }
+
     return true
   }
 }

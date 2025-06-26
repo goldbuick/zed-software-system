@@ -1,4 +1,4 @@
-import { BaseContext, optionsFromArguments, Param } from 'tone'
+import { getContext, optionsFromArguments, Param } from 'tone'
 import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect'
 
 import synthfcrushworkleturl from './synthfcrushworklet.js?url'
@@ -53,6 +53,6 @@ export class FrequencyCrusher extends Effect<FrequencyCrusherOptions> {
   }
 }
 
-export async function addfcrushmodule(context: BaseContext) {
-  await context.addAudioWorkletModule(synthfcrushworkleturl)
+export function addfcrushmodule() {
+  return getContext().rawContext.audioWorklet.addModule(synthfcrushworkleturl)
 }
