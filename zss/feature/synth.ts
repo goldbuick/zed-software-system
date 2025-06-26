@@ -64,12 +64,12 @@ export function createsynth() {
   maincompressor.connect(mainvolume)
 
   const sidechaincompressor = new SidechainCompressor({
-    threshold: -48,
-    ratio: 5,
-    attack: 0.05,
-    release: 0.05,
-    mix: 0.75,
-    makeupGain: 10,
+    threshold: -42,
+    ratio: 4,
+    attack: 0.005,
+    release: 0.005,
+    mix: 0.777,
+    makeupGain: 24,
   })
   sidechaincompressor.connect(maincompressor)
 
@@ -118,9 +118,10 @@ export function createsynth() {
   const drumvolume = new Volume()
   drumvolume.connect(razzledazzle)
 
+  const drumaction = new Volume()
+
   // side-chain input
-  const drumgain = new Gain(-15)
-  drumvolume.chain(drumgain, sidechaincompressor.sidechain)
+  drumaction.connect(sidechaincompressor.sidechain)
   bgplayvolume.connect(sidechaincompressor.sidechain)
 
   // 8tracks
@@ -292,6 +293,7 @@ export function createsynth() {
   // drumclap
 
   const drumclapeq = new EQ3(-10, 10, -1).connect(drumvolume)
+  drumclapeq.connect(drumaction)
 
   const drumclapfilter = new Filter(800, 'highpass', -12)
   drumclapfilter.connect(drumclapeq)
@@ -591,6 +593,7 @@ export function createsynth() {
     volume: 8.0,
     pitchDecay: 0.125,
   })
+  drumbass.connect(drumaction)
 
   function drumbasstrigger(time: number) {
     drumbass.triggerAttackRelease('C1', '8n', time)
