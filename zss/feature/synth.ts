@@ -50,9 +50,42 @@ export function createsynth() {
   const destination = getDestination()
   const broadcastdestination = getContext().createMediaStreamDestination()
 
+  const razzledazzle = new Vibrato({
+    maxDelay: 0.005, // subtle pitch modulation
+    frequency: 1.5, // speed of the warble
+    depth: 0.2, // amount of pitch variation
+    type: 'sine', // waveform type
+    wet: 0.6, // mix level
+  })
+
+  const razzlechorus = new Chorus({
+    frequency: 0.6,
+    delayTime: 7,
+    depth: 0.7,
+    type: 'triangle',
+    spread: 128,
+    wet: 0.5,
+  })
+
+  // tape hiss
+  const hiss = new Noise({ type: 'pink', volume: -50 })
+  const hissvolume = new Volume()
+
+  // hiss mod
+  const fsmap = new AudioToGain()
+  const cyclesource = new Oscillator(Math.PI * 0.25, 'sine')
+  cyclesource.chain(fsmap, hissvolume.volume)
+  cyclesource.start()
+  hiss.start()
+
+  // setup
+  hiss.chain(hissvolume, razzlechorus)
+  razzledazzle.connect(razzlechorus)
+  razzlechorus.connect(destination)
+  razzlechorus.connect(broadcastdestination)
+
   const mainvolume = new Volume(-4)
-  mainvolume.connect(destination)
-  mainvolume.connect(broadcastdestination)
+  mainvolume.connect(razzledazzle)
 
   const maincompressor = new Compressor({
     threshold: -24,
@@ -73,50 +106,17 @@ export function createsynth() {
   })
   sidechaincompressor.connect(maincompressor)
 
-  const razzledazzle = new Vibrato({
-    maxDelay: 0.005, // subtle pitch modulation
-    frequency: 1.5, // speed of the warble
-    depth: 0.2, // amount of pitch variation
-    type: 'sine', // waveform type
-    wet: 0.6, // mix level
-  })
-
-  const razzlechorus = new Chorus({
-    frequency: 0.6,
-    delayTime: 7,
-    depth: 0.7,
-    type: 'triangle',
-    spread: 60,
-    wet: 0.25,
-  })
-
-  // tape hiss
-  const hiss = new Noise({ type: 'pink', volume: -55 })
-  const hissvolume = new Volume()
-
-  // setup
-  hiss.chain(hissvolume, sidechaincompressor)
-  razzledazzle.chain(razzlechorus, sidechaincompressor)
-  // hiss.chain(hissvolume, maincompressor)
-  // razzledazzle.chain(razzlechorus, maincompressor)
-
-  const fsmap = new AudioToGain()
-  const cyclesource = new Oscillator(Math.PI * 0.25, 'sine')
-  cyclesource.chain(fsmap, hissvolume.volume)
-  cyclesource.start()
-  hiss.start()
-
   const playvolume = new Volume()
-  playvolume.connect(razzledazzle)
+  playvolume.connect(sidechaincompressor)
 
   const bgplayvolume = new Volume()
-  bgplayvolume.connect(razzledazzle)
+  bgplayvolume.connect(sidechaincompressor)
 
   const ttsvolume = new Volume()
-  ttsvolume.connect(razzledazzle)
+  ttsvolume.connect(sidechaincompressor)
 
   const drumvolume = new Volume()
-  drumvolume.connect(razzledazzle)
+  drumvolume.connect(sidechaincompressor)
 
   const drumaction = new Volume()
 
