@@ -1,7 +1,7 @@
 import { getContext, optionsFromArguments, Param } from 'tone'
 import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect'
 
-import synthworkleturl from './synthworklet.js?url'
+import synthfcrushworkleturl from './synthfcrushworklet.js?url'
 
 type FrequencyCrusherOptions = {
   rate: number
@@ -13,7 +13,7 @@ export class FrequencyCrusher extends Effect<FrequencyCrusherOptions> {
   readonly rate: Param<'number'>
 
   private _audioworkletnode: AudioWorkletNode =
-    this.context.createAudioWorkletNode('synthworkletprocessor')
+    this.context.createAudioWorkletNode('fcrushprocessor')
 
   constructor(rate?: number)
   constructor(options?: Partial<FrequencyCrusherOptions>)
@@ -28,7 +28,7 @@ export class FrequencyCrusher extends Effect<FrequencyCrusherOptions> {
 
     this.rate = new Param({
       context: this.context,
-      param: this._audioworkletnode.parameters.get('down'),
+      param: this._audioworkletnode.parameters.get('rate'),
       value: options.rate,
       minValue: 1,
       maxValue: 512,
@@ -53,6 +53,6 @@ export class FrequencyCrusher extends Effect<FrequencyCrusherOptions> {
   }
 }
 
-export async function createsynthworkletnode() {
-  await getContext().addAudioWorkletModule(synthworkleturl)
+export function addfcrushmodule() {
+  return getContext().rawContext.audioWorklet.addModule(synthfcrushworkleturl)
 }

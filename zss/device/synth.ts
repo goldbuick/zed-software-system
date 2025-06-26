@@ -1,9 +1,10 @@
 import { Context, getTransport, setContext, start } from 'tone'
 import { createdevice } from 'zss/device'
 import { AUDIO_SYNTH, createsynth } from 'zss/feature/synth'
+import { addfcrushmodule } from 'zss/feature/synthfcrushworkletnode'
+import { addsidechainmodule } from 'zss/feature/synthsidechainworkletnode'
 import { synthvoiceconfig } from 'zss/feature/synthvoiceconfig'
 import { FXNAME, synthvoicefxconfig } from 'zss/feature/synthvoicefxconfig'
-import { createsynthworkletnode } from 'zss/feature/synthworkletnodes'
 import { ttsplay } from 'zss/feature/tts'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
@@ -20,12 +21,7 @@ import { api_error, synth_audioenabled, vm_loader, api_log } from './api'
 import { registerreadplayer } from './register'
 
 // synth setup
-setContext(new Context({ latencyHint: 'playback' }))
-
-// TODO, wait for this before creating worklet nodes
-createsynthworkletnode().catch((err) => {
-  api_error(synthdevice, registerreadplayer(), 'audio', err.message)
-})
+setContext(new Context({ latencyHint: 'playback', lookAhead: 0.1 }))
 
 type CustomNavigator = {
   audioSession?: {
@@ -42,10 +38,11 @@ export function enableaudio() {
     .then(() => {
       if (!enabled) {
         const transport = getTransport()
-        enabled = true
         transport.start()
-        api_log(synthdevice, registerreadplayer(), 'audio is enabled!')
+
         setAltInterval(107)
+
+        // better audio playback for mobile safari
         try {
           const customnavigator = navigator as CustomNavigator
           if (ispresent(customnavigator.audioSession)) {
@@ -55,11 +52,19 @@ export function enableaudio() {
         } catch (err) {
           //
         }
-        synth_audioenabled(synthdevice, registerreadplayer())
+
+        return addfcrushmodule()
+          .then(() => {
+            return addsidechainmodule()
+          })
+          .then(() => {
+            enabled = true
+            synth_audioenabled(synthdevice, registerreadplayer())
+          })
       }
     })
     .catch((err: any) => {
-      api_error(synthdevice, registerreadplayer(), 'audio', err.message)
+      api_error(synthdevice, registerreadplayer(), 'audio', err.toString())
     })
 }
 
@@ -86,6 +91,7 @@ const synthdevice = createdevice('synth', [], (message) => {
   switch (message.target) {
     case 'audioenabled':
       doasync(synthdevice, message.player, async () => {
+        api_log(synthdevice, message.player, 'audio is enabled!')
         await waitfor(2000)
         vm_loader(
           synthdevice,

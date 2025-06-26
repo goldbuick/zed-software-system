@@ -2,11 +2,12 @@
 // Sample and holds the signal based on an incrementing counter
 // written by Timo Hoogland, (c) 2023, www.timohoogland.com
 //
-class SynthWorkletProcessor extends AudioWorkletProcessor {
+
+class SynthFCrushWorkletProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
       {
-        name: 'down',
+        name: 'rate',
         defaultValue: 1,
         minValue: 1,
         maxValue: 512,
@@ -33,7 +34,7 @@ class SynthWorkletProcessor extends AudioWorkletProcessor {
         // for every channel
         for (let channel = 0; channel < input.length; ++channel) {
           // if counter equals 0, sample and hold
-          if (this.count % parameters.down === 0) {
+          if (this.count % parameters.rate === 0) {
             this.sah[channel] = input[channel][i]
           }
           // output the currently held sample
@@ -43,8 +44,9 @@ class SynthWorkletProcessor extends AudioWorkletProcessor {
         this.count++
       }
     }
+
     return true
   }
 }
 
-registerProcessor('synthworkletprocessor', SynthWorkletProcessor)
+registerProcessor('fcrushprocessor', SynthFCrushWorkletProcessor)
