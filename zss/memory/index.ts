@@ -624,7 +624,6 @@ export function memorytickobject(
   board: MAYBE<BOARD>,
   object: MAYBE<BOARD_ELEMENT>,
   code: string,
-  cycledefault = CYCLE_DEFAULT,
 ) {
   if (!ispresent(book) || !ispresent(board) || !ispresent(object)) {
     return
@@ -647,7 +646,7 @@ export function memorytickobject(
     : playerfromelement
 
   // read cycle
-  const cycle = bookelementstatread(book, object, 'cycle') ?? cycledefault
+  const cycle = bookelementstatread(book, object, 'cycle')
 
   // run chip code
   const id = object.id ?? ''

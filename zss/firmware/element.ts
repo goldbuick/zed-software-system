@@ -50,6 +50,7 @@ const STANDARD_STAT_NAMES = new Set([
   'color',
   'bg',
   // interaction
+  'item',
   'group',
   'party',
   'player',

@@ -607,7 +607,7 @@ export function bookboardcheckblockedobject(
   if (ispresent(mayberterrain)) {
     return checkdoescollide(
       collision,
-      bookelementstatread(book, mayberterrain, 'collision') ?? COLLISION.ISWALK,
+      bookelementstatread(book, mayberterrain, 'collision'),
     )
   }
 
@@ -673,8 +673,7 @@ export function bookboardmoveobject(
   // gather meta for move
   const startidx = boardelementindex(board, target)
   const targetidx = boardelementindex(board, dest)
-  const targetcollision =
-    bookelementstatread(book, target, 'collision') ?? COLLISION.ISWALK
+  const targetcollision = bookelementstatread(book, target, 'collision')
   const targetisplayer = ispid(target?.id)
 
   // blocked by an object
@@ -687,8 +686,8 @@ export function bookboardmoveobject(
     (!targetisplayer || !maybeobjectisplayer)
   ) {
     // check groups
-    const groupa = bookelementstatread(book, movingelement, 'group') ?? ''
-    const groupb = bookelementstatread(book, maybeobject, 'group') ?? ''
+    const groupa = bookelementstatread(book, movingelement, 'group')
+    const groupb = bookelementstatread(book, maybeobject, 'group')
     if ((groupa || groupb) && groupa != groupb) {
       // for sending interaction messages
       return { ...maybeobject }
@@ -807,7 +806,6 @@ export function bookboardtick(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
   timestamp: number,
-  cycledefault = CYCLE_DEFAULT,
 ) {
   const args: BOOK_RUN_ARGS[] = []
 
@@ -850,7 +848,7 @@ export function bookboardtick(
     // a single tick before execution ends
     if (object.removed) {
       const delta = timestamp - object.removed
-      const cycle = bookelementstatread(book, object, 'cycle') ?? cycledefault
+      const cycle = bookelementstatread(book, object, 'cycle')
       if (delta > cycle) {
         continue
       }

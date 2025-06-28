@@ -167,6 +167,7 @@ const vm = createdevice(
           ],
           stats: [
             // board stats
+            'boardid',
             'isdark',
             'notdark',
             'startx',
@@ -186,6 +187,9 @@ const vm = createdevice(
             'maxplayershots',
             // element stats
             // interaction
+            'item',
+            'group',
+            'party',
             'player',
             'pushable',
             'collision',

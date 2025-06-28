@@ -46,8 +46,7 @@ function boardreaddistmap(
           if (
             !checkdoescollide(
               forcollision,
-              bookelementstatread(book, terrain, 'collision') ??
-                COLLISION.ISWALK,
+              bookelementstatread(book, terrain, 'collision'),
             )
           ) {
             // write dist

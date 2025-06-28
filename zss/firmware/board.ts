@@ -143,9 +143,11 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     const kinddata =
       bookreadobject(READ_CONTEXT.book, kindname) ??
       bookreadterrain(READ_CONTEXT.book, kindname)
-    const collision =
-      bookelementstatread(READ_CONTEXT.book, kinddata, 'collision') ??
-      COLLISION.ISWALK
+    const collision = bookelementstatread(
+      READ_CONTEXT.book,
+      kinddata,
+      'collision',
+    )
     // validate placement works
     const blocked = bookboardcheckblockedobject(
       READ_CONTEXT.book,

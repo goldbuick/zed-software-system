@@ -171,8 +171,11 @@ export function boardweavegroup(
   let didcollide = false
   for (let i = 0; i < terrainelements.length; ++i) {
     const fromelement = terrainelements[i]
-    const fromcollision: COLLISION =
-      bookelementstatread(book, fromelement, 'collision') ?? COLLISION.ISWALK
+    const fromcollision: COLLISION = bookelementstatread(
+      book,
+      fromelement,
+      'collision',
+    )
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
     const fromindex = pttoindex(from, BOARD_WIDTH)
 
@@ -184,8 +187,11 @@ export function boardweavegroup(
         { x: destelement?.x ?? 0, y: destelement?.y ?? 0 },
         BOARD_WIDTH,
       )
-      const destcollision: COLLISION =
-        bookelementstatread(book, destelement, 'collision') ?? COLLISION.ISWALK
+      const destcollision: COLLISION = bookelementstatread(
+        book,
+        destelement,
+        'collision',
+      )
 
       if (
         ispresent(destelement) &&
@@ -281,10 +287,12 @@ export function boardweavegroup(
     if (ptwithinboard(dest)) {
       const destelement = boardelementread(targetboard, dest)
       const destid = destelement?.id ?? ''
-      const destcollision: COLLISION =
-        bookelementstatread(book, destelement, 'collision') ?? COLLISION.ISWALK
-      const destgroup: string =
-        bookelementstatread(book, destelement, 'group') ?? ''
+      const destcollision: COLLISION = bookelementstatread(
+        book,
+        destelement,
+        'collision',
+      )
+      const destgroup: string = bookelementstatread(book, destelement, 'group')
 
       if (
         ispresent(destelement) &&

@@ -6,10 +6,17 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import {
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+  MAYBE,
+} from 'zss/mapping/types'
 import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
 import { boardelementindex } from './board'
+import { bookelementstatread } from './book'
 import { codepagereadname, codepagereadstatdefaults } from './codepage'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE } from './types'
 
@@ -118,6 +125,11 @@ export function memoryinspectelement(
   p1: PT,
   isobject: boolean,
 ) {
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return
+  }
+
   // element stat accessors
   function get(name: string): WORD {
     const value =
@@ -156,51 +168,33 @@ export function memoryinspectelement(
   } else {
     gadgettext(player, `terrain: ${element.kind ?? 'ERR'} ${p1.x}, ${p1.y}`)
   }
-  gadgettext(player, DIVIDER)
+
   const chip = chipfromelement(board, element)
   if (isobject) {
-    gadgethyperlink(
+    gadgettext(
       player,
-      chip,
-      'cycle',
-      ['cycle', 'number', '1', '255'],
-      get,
-      set,
-    )
-    gadgethyperlink(
-      player,
-      chip,
-      'collision',
-      [
-        'collision',
-        'select',
-        'iswalking',
-        `${COLLISION.ISWALK}`,
-        'isswimming',
-        `${COLLISION.ISSWIM}`,
-      ],
-      get,
-      set,
-    )
-  } else {
-    gadgethyperlink(
-      player,
-      chip,
-      'collision',
-      [
-        'collision',
-        'select',
-        'iswalkable',
-        `${COLLISION.ISWALK}`,
-        'isswimable',
-        `${COLLISION.ISSWIM}`,
-        'issolid',
-        `${COLLISION.ISSOLID}`,
-      ],
-      get,
-      set,
+      `cycle: ${bookelementstatread(mainbook, element, 'cycle')}`,
     )
   }
+
+  const collision = bookelementstatread(mainbook, element, 'collision')
+  switch (collision as COLLISION) {
+    case COLLISION.ISWALK:
+      gadgettext(player, `iswalk`)
+      break
+    case COLLISION.ISSWIM:
+      gadgettext(player, `isswim`)
+      break
+    case COLLISION.ISSOLID:
+      gadgettext(player, `issolid`)
+      break
+    case COLLISION.ISBULLET:
+      gadgettext(player, `isbullet`)
+      break
+  }
+
+  gadgettext(player, DIVIDER)
+
   if (isobject) {
     gadgethyperlink(
       player,

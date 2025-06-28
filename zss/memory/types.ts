@@ -24,6 +24,7 @@ export type BOARD_ELEMENT = {
   light?: number
   lightdir?: STR_DIR
   // interaction
+  item?: number
   group?: string
   party?: string
   player?: string
