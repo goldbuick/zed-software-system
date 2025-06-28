@@ -635,20 +635,19 @@ export function bookboardcheckmoveobject(
 export function bookboardmoveobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
-  movingelement: MAYBE<BOARD_ELEMENT>,
+  elementtomove: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ): MAYBE<BOARD_ELEMENT> {
-  const target = boardobjectread(board, movingelement?.id ?? '')
+  const movingelement = boardobjectread(board, elementtomove?.id ?? '')
 
   // first pass clipping
   if (
     !ispresent(book) ||
     !ispresent(board) ||
-    !ispresent(target) ||
-    !ispresent(target.x) ||
-    !ispresent(target.y) ||
-    !ispresent(board.lookup) ||
     !ispresent(movingelement) ||
+    !ispresent(movingelement.x) ||
+    !ispresent(movingelement.y) ||
+    !ispresent(board.lookup) ||
     dest.x < 0 ||
     dest.x >= BOARD_WIDTH ||
     dest.y < 0 ||
@@ -665,25 +664,31 @@ export function bookboardmoveobject(
   }
 
   // second pass, are we actually trying to move ?
-  if (target.x - dest.x === 0 && target.y - dest.y === 0) {
+  if (movingelement.x - dest.x === 0 && movingelement.y - dest.y === 0) {
     // no interaction due to no movement
     return undefined
   }
 
   // gather meta for move
-  const startidx = boardelementindex(board, target)
-  const targetidx = boardelementindex(board, dest)
-  const targetcollision = bookelementstatread(book, target, 'collision')
-  const targetisplayer = ispid(target?.id)
+  const startidx = boardelementindex(board, movingelement)
+  const destidx = boardelementindex(board, dest)
+  const movingelementcollision = bookelementstatread(
+    book,
+    movingelement,
+    'collision',
+  )
+  const movingelementisplayer = ispid(movingelement?.id)
+  const movingelementisbullet =
+    bookelementstatread(book, movingelement, 'collision') === COLLISION.ISBULLET
 
   // blocked by an object
-  const maybeobject = boardobjectread(board, board.lookup[targetidx] ?? '')
+  const maybeobject = boardobjectread(board, board.lookup[destidx] ?? '')
   const maybeobjectisplayer = ispid(maybeobject?.id ?? '')
   if (
     // we are blocked by an object
     ispresent(maybeobject) &&
     // and we are both NOT players
-    (!targetisplayer || !maybeobjectisplayer)
+    (!movingelementisplayer || !maybeobjectisplayer)
   ) {
     // check groups
     const groupa = bookelementstatread(book, movingelement, 'group')
@@ -693,18 +698,30 @@ export function bookboardmoveobject(
       return { ...maybeobject }
     }
 
-    // is element breakable ?
-    const breakable = !!bookelementstatread(book, maybeobject, 'breakable')
-    if (breakable) {
+    // has a player touched an item element?
+    const item = !!bookelementstatread(book, maybeobject, 'item')
+    if (movingelementisplayer && item) {
       // update object location
-      target.x = dest.x
-      target.y = dest.y
+      movingelement.x = dest.x
+      movingelement.y = dest.y
+
+      // for sending interaction messages
+      return { ...maybeobject }
+    }
+
+    // has a bullet hit a breakable element?
+    const breakable = !!bookelementstatread(book, maybeobject, 'breakable')
+    if (movingelementisbullet && breakable) {
+      // update object location
+      movingelement.x = dest.x
+      movingelement.y = dest.y
+
       // for sending interaction messages
       return { ...maybeobject }
     }
 
     // bullets can't PUSH
-    if (targetcollision === COLLISION.ISBULLET) {
+    if (movingelementcollision === COLLISION.ISBULLET) {
       // for sending interaction messages
       return { ...maybeobject }
     }
@@ -712,7 +729,10 @@ export function bookboardmoveobject(
     // is element pushable ?
     const ispushable = !!bookelementstatread(book, maybeobject, 'pushable')
     if (ispushable) {
-      const bumpdir = dirfrompts({ x: target.x, y: target.y }, dest)
+      const bumpdir = dirfrompts(
+        { x: movingelement.x, y: movingelement.y },
+        dest,
+      )
       const bump = ptapplydir(
         { x: maybeobject.x ?? 0, y: maybeobject.y ?? 0 },
         bumpdir,
@@ -731,28 +751,28 @@ export function bookboardmoveobject(
   }
 
   // blocked by terrain
-  const mayberterrain = board.terrain[targetidx]
+  const mayberterrain = board.terrain[destidx]
   if (ispresent(mayberterrain)) {
     const terraincollision =
       mayberterrain.collision ??
       mayberterrain?.kinddata?.collision ??
       COLLISION.ISWALK
-    if (checkdoescollide(targetcollision, terraincollision)) {
+    if (checkdoescollide(movingelementcollision, terraincollision)) {
       // for sending interaction messages
       return { ...mayberterrain, x: dest.x, y: dest.y }
     }
   }
 
   // update object location
-  target.x = dest.x
-  target.y = dest.y
+  movingelement.x = dest.x
+  movingelement.y = dest.y
 
   // if not removed, update lookup
-  if (!ispresent(target.removed)) {
+  if (!ispresent(movingelement.removed)) {
     // blank current lookup
     board.lookup[startidx] = undefined
     // update lookup at dest
-    board.lookup[targetidx] = target.id ?? ''
+    board.lookup[destidx] = movingelement.id ?? ''
   }
 
   // no interaction

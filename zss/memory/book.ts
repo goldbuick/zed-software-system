@@ -303,6 +303,8 @@ export function bookelementstatread(
       return ''
     case 'cycle':
       return CYCLE_DEFAULT
+    case 'item':
+      return 0
     case 'pushable':
       return 0
     case 'breakable':
