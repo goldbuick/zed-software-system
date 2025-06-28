@@ -288,7 +288,6 @@ export function bookelementstatread(
   element: MAYBE<BOARD_ELEMENT>,
   stat: BOARD_ELEMENT_STAT,
 ) {
-  // COLLISION.ISWALK
   const kind = bookelementkindread(book, element)
   const statvalue =
     element?.[stat] ??

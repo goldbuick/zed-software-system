@@ -180,39 +180,35 @@ export function memoryinspectelement(
   const collision = bookelementstatread(mainbook, element, 'collision')
   switch (collision as COLLISION) {
     case COLLISION.ISWALK:
-      gadgettext(player, `iswalk`)
+      gadgettext(player, `collision: iswalk`)
       break
     case COLLISION.ISSWIM:
-      gadgettext(player, `isswim`)
+      gadgettext(player, `collision: isswim`)
       break
     case COLLISION.ISSOLID:
-      gadgettext(player, `issolid`)
+      gadgettext(player, `collision: issolid`)
       break
     case COLLISION.ISBULLET:
-      gadgettext(player, `isbullet`)
+      gadgettext(player, `collision: isbullet`)
       break
   }
 
-  gadgettext(player, DIVIDER)
-
   if (isobject) {
-    gadgethyperlink(
+    gadgettext(
       player,
-      chip,
-      'pushable',
-      ['pushable', 'select', 'no', '0', 'yes', '1'],
-      get,
-      set,
+      `ispushable: ${
+        bookelementstatread(mainbook, element, 'pushable') ? `yes` : `no`
+      }`,
     )
   }
-  gadgethyperlink(
+  gadgettext(
     player,
-    chip,
-    'breakable',
-    ['breakable', 'select', 'no', '0', 'yes', '1'],
-    get,
-    set,
+    `isbreakable: ${
+      bookelementstatread(mainbook, element, 'breakable') ? `yes` : `no`
+    }`,
   )
+
+  gadgettext(player, DIVIDER)
 
   const stats = codepagereadstatdefaults(codepage)
   const targets = objectKeys(stats)
