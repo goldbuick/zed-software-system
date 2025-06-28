@@ -345,6 +345,12 @@ export function codepageapplyelementstats(
         // @ts-expect-error - we are doing this on purpose
         element[key] = mapstrtoconsts(stats[key]) ?? stats[key]
         break
+      case 'isitem':
+        element.item = 1
+        break
+      case 'notitem':
+        element.item = 0
+        break
       case 'ispushable':
         element.pushable = 1
         break
@@ -420,10 +426,22 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       }
 
       if (isstring(stats.over)) {
-        codepage.board.over = stats.over
+        if (NAME(stats.over) === 'empty') {
+          codepage.board.over = undefined
+        } else {
+          codepage.board.over = stats.over
+        }
+        // reset lookup
+        codepage.board.overboard = undefined
       }
       if (isstring(stats.under)) {
-        codepage.board.under = stats.under
+        if (NAME(stats.under) === 'empty') {
+          codepage.board.under = undefined
+        } else {
+          codepage.board.under = stats.under
+        }
+        // reset lookup
+        codepage.board.underboard = undefined
       }
 
       if (isstring(stats.camera)) {
@@ -442,6 +460,9 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
       }
       if (isnumber(stats.facing)) {
         codepage.board.facing = stats.facing
+      }
+      if (isstring(stats.facing) && NAME(stats.facing) === 'empty') {
+        codepage.board.facing = undefined
       }
 
       if (isstring(stats.exitnorth)) {

@@ -1,6 +1,7 @@
 import { pick, unique } from 'zss/mapping/array'
 import { createsid, createnameid, createshortnameid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
+import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
@@ -287,12 +288,32 @@ export function bookelementstatread(
   element: MAYBE<BOARD_ELEMENT>,
   stat: BOARD_ELEMENT_STAT,
 ) {
+  // COLLISION.ISWALK
   const kind = bookelementkindread(book, element)
-  return (
+  const statvalue =
     element?.[stat] ??
     kind?.[stat] ??
     codepagereadstat(bookreadcodepagebyaddress(book, kind?.id ?? ''), stat)
-  )
+  if (ispresent(statvalue)) {
+    return statvalue
+  }
+  // we define all stat defaults here
+  switch (stat) {
+    case 'group':
+      return ''
+    case 'cycle':
+      return CYCLE_DEFAULT
+    case 'item':
+      return 0
+    case 'pushable':
+      return 0
+    case 'breakable':
+      return 0
+    case 'collision':
+      return COLLISION.ISWALK
+    default:
+      return undefined
+  }
 }
 
 export function bookelementdisplayread(

@@ -586,8 +586,11 @@ export function memorymoveobject(
       }
     }
 
-    // delete breakable elements
-    if (bookelementstatread(book, blocked, 'breakable')) {
+    // delete item and breakable elements
+    if (
+      bookelementstatread(book, blocked, 'item') ||
+      bookelementstatread(book, blocked, 'breakable')
+    ) {
       if (ispresent(blocked?.id)) {
         const maybeobject = boardelementread(board, {
           x: blocked.x ?? -1,
@@ -624,7 +627,6 @@ export function memorytickobject(
   board: MAYBE<BOARD>,
   object: MAYBE<BOARD_ELEMENT>,
   code: string,
-  cycledefault = CYCLE_DEFAULT,
 ) {
   if (!ispresent(book) || !ispresent(board) || !ispresent(object)) {
     return
@@ -647,7 +649,7 @@ export function memorytickobject(
     : playerfromelement
 
   // read cycle
-  const cycle = bookelementstatread(book, object, 'cycle') ?? cycledefault
+  const cycle = bookelementstatread(book, object, 'cycle')
 
   // run chip code
   const id = object.id ?? ''
