@@ -252,6 +252,13 @@ export const command_toast = createSimpleToken({
   longer_alt: stringliteral,
 })
 
+export const command_ticker = createSimpleToken({
+  name: 'command_ticker',
+  pattern: /ticker .*/,
+  start_chars_hint: all_chars,
+  longer_alt: stringliteral,
+})
+
 // core / structure commands
 
 export const command_if = createSimpleToken({
@@ -323,6 +330,7 @@ export const allTokens = createTokenSet([
   stat,
   command_play,
   command_toast,
+  command_ticker,
   command,
   // flow
   comment,

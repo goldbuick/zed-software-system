@@ -71,6 +71,8 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     if (ispresent(arg)) {
       bullet.arg = arg
     }
+    // always cycle 1
+    bullet.cycle = 1
     // write party info
     bullet.party = READ_CONTEXT.elementid
     // ensure correct collection type
@@ -86,7 +88,7 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     const kind = bookelementkindread(READ_CONTEXT.book, bullet)
     const code = bullet.code ?? kind?.code ?? ''
     // bullets get one immediate tick
-    memorytickobject(READ_CONTEXT.book, READ_CONTEXT.board, bullet, code, 1)
+    memorytickobject(READ_CONTEXT.book, READ_CONTEXT.board, bullet, code)
   }
 
   // yield after shoot
@@ -472,4 +474,11 @@ export const BOARD_FIRMWARE = createfirmware()
   .command('shootwith', (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
     return commandshoot(chip, words.slice(ii), arg)
+  })
+  .command('throwstar', (chip, words) => {
+    return commandshoot(chip, [...words, 'star'])
+  })
+  .command('throwstarwith', (chip, words) => {
+    const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+    return commandshoot(chip, [...words.slice(ii), 'star'], arg)
   })

@@ -14,6 +14,14 @@ export const DISPLAY_FIRMWARE = createfirmware()
     api_toast(SOFTWARE, READ_CONTEXT.elementfocus, text)
     return 0
   })
+  .command('ticker', (_, words) => {
+    const text = words.map(maptostring).join('')
+    if (ispresent(READ_CONTEXT.element)) {
+      READ_CONTEXT.element.tickertext = text
+      READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
+    }
+    return 0
+  })
   .command('palette', (_, words) => {
     const [target] = readargs(words, 0, [ARG_TYPE.NAME])
     const bookflags = memoryreadbookflags()

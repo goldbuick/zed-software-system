@@ -61,6 +61,9 @@ const STANDARD_STAT_NAMES = new Set([
   'p1',
   'p2',
   'p3',
+  'p4',
+  'p5',
+  'p6',
   'cycle',
   'stepx',
   'stepy',
@@ -217,6 +220,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'maxplayershots':
         return [true, READ_CONTEXT.board?.maxplayershots ?? 0]
       // read only
+      case 'currenttick':
+        return [true, READ_CONTEXT.timestamp]
       case 'boardid':
         return [true, READ_CONTEXT.board?.id ?? 'ERR']
       // env stats
@@ -337,6 +342,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
         }
         break
       // read only
+      case 'currenttick':
+        return [false, value] // readonly
       case 'boardid':
         return [false, value] // readonly
       // env stats

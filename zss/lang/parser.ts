@@ -149,6 +149,7 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.short_try) },
       { ALT: () => this.SUBRULE(this.command_play) },
       { ALT: () => this.SUBRULE(this.command_toast) },
+      { ALT: () => this.SUBRULE(this.command_ticker) },
       { ALT: () => this.SUBRULE(this.structured_cmd) },
     ])
   })
@@ -293,6 +294,10 @@ class ScriptParser extends CstParser {
 
   command_toast = this.RULED('command_toast', () => {
     this.CONSUME(lexer.command_toast)
+  })
+
+  command_ticker = this.RULED('command_ticker', () => {
+    this.CONSUME(lexer.command_ticker)
   })
 
   // expressions

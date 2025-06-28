@@ -20,6 +20,7 @@ import {
   Command_ifCstChildren,
   Command_playCstChildren,
   Command_repeatCstChildren,
+  Command_tickerCstChildren,
   Command_toastCstChildren,
   Command_waitforCstChildren,
   Command_whileCstChildren,
@@ -486,9 +487,6 @@ class ScriptVisitor
   }
 
   instmt(ctx: InstmtCstChildren) {
-    if (ctx.stmt_label) {
-      return this.go(ctx.stmt_label)
-    }
     if (ctx.stmt_stat) {
       return this.go(ctx.stmt_stat)
     }
@@ -601,6 +599,9 @@ class ScriptVisitor
     }
     if (ctx.command_toast) {
       return this.go(ctx.command_toast)
+    }
+    if (ctx.command_ticker) {
+      return this.go(ctx.command_ticker)
     }
     if (ctx.structured_cmd) {
       return this.go(ctx.structured_cmd)
@@ -804,17 +805,14 @@ class ScriptVisitor
     })
   }
 
-  command_break(ctx: Command_breakCstChildren, location: CstNodeLocation) {
+  command_break(_: Command_breakCstChildren, location: CstNodeLocation) {
     return this.createcodenode(location, {
       type: NODE.BREAK,
       goto: 0,
     })
   }
 
-  command_continue(
-    ctx: Command_continueCstChildren,
-    location: CstNodeLocation,
-  ) {
+  command_continue(_: Command_continueCstChildren, location: CstNodeLocation) {
     return this.createcodenode(location, {
       type: NODE.CONTINUE,
       goto: 0,
@@ -847,6 +845,21 @@ class ScriptVisitor
         words: [
           this.createstringnode(location, 'toast'),
           this.createstringnode(location, toastcontent),
+        ].flat(),
+      }),
+    )
+  }
+
+  command_ticker(ctx: Command_tickerCstChildren, location: CstNodeLocation) {
+    const tickerstr = tokenstring(ctx.token_command_ticker, '')
+    const tickercontent = tickerstr.replace('ticker', '').trim()
+    return this.createlinenode(
+      location,
+      this.createcodenode(location, {
+        type: NODE.COMMAND,
+        words: [
+          this.createstringnode(location, 'ticker'),
+          this.createstringnode(location, tickercontent),
         ].flat(),
       }),
     )

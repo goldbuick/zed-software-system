@@ -167,6 +167,7 @@ const vm = createdevice(
           ],
           stats: [
             // board stats
+            'currenttick',
             'boardid',
             'isdark',
             'notdark',
@@ -211,6 +212,9 @@ const vm = createdevice(
             'p1',
             'p2',
             'p3',
+            'p4',
+            'p5',
+            'p6',
             'cycle',
             'stepx',
             'stepy',
