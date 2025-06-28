@@ -529,6 +529,8 @@ export function memorymoveobject(
     const blockedisbullet =
       bookelementstatread(book, blocked, 'collision') === COLLISION.ISBULLET
 
+    const samemparty = elementpartyisplayer === blockedpartyisplayer
+
     let blockedplayer = ''
     if (blocked.party && blockedpartyisplayer) {
       blockedplayer = blocked.party
@@ -541,18 +543,14 @@ export function memorymoveobject(
       playerblockedbyedge(book, board, element, dest)
     } else if (elementisplayer) {
       if (blockedbyplayer) {
+        // same party touch
         sendinteraction('', blocked, element, 'bump')
         sendinteraction('', element, blocked, 'bump')
       } else if (blockedisbullet) {
-        if (elementpartyisplayer === blockedpartyisplayer) {
-          sendinteraction('', blocked, element, 'thud')
-          sendinteraction('', element, blocked, 'partyshot')
-        } else {
-          sendinteraction(blockedplayer, blocked, element, 'thud')
-          sendinteraction(elementplayer, element, blocked, 'shot')
-        }
+        sendinteraction('', blocked, element, samemparty ? 'partyshot' : 'shot')
+        sendinteraction(elementplayer, element, blocked, 'touch')
       } else {
-        sendinteraction(blockedplayer, blocked, element, 'thud')
+        sendinteraction('', blocked, element, 'thud')
         sendinteraction(elementplayer, element, blocked, 'touch')
       }
     } else if (elementisbullet) {
@@ -560,28 +558,33 @@ export function memorymoveobject(
         sendinteraction('', blocked, element, 'thud')
         sendinteraction('', element, blocked, 'thud')
       } else {
-        if (elementpartyisplayer === blockedpartyisplayer) {
-          sendinteraction('', blocked, element, 'thud')
-          sendinteraction('', element, blocked, 'partyshot')
-        } else {
-          sendinteraction(blockedplayer, blocked, element, 'thud')
-          sendinteraction(elementplayer, element, blocked, 'shot')
-        }
+        sendinteraction(
+          '',
+          blocked,
+          element,
+          blockedbyplayer ? 'touch' : 'thud',
+        )
+        sendinteraction(
+          samemparty ? '' : elementplayer,
+          element,
+          blocked,
+          samemparty ? 'partyshot' : 'shot',
+        )
       }
     } else {
       if (blockedbyplayer) {
-        sendinteraction(blockedplayer, blocked, element, 'bump')
-        sendinteraction(elementplayer, element, blocked, 'touch')
+        sendinteraction(blockedplayer, blocked, element, 'touch')
       } else if (blockedisbullet) {
-        if (elementpartyisplayer === blockedpartyisplayer) {
-          sendinteraction('', blocked, element, 'partyshot')
-          sendinteraction('', element, blocked, 'thud')
-        } else {
-          sendinteraction(blockedplayer, blocked, element, 'shot')
-          sendinteraction(elementplayer, element, blocked, 'thud')
-        }
+        sendinteraction(
+          samemparty ? '' : blockedplayer,
+          blocked,
+          element,
+          samemparty ? 'partyshot' : 'shot',
+        )
+        sendinteraction('', element, blocked, samemparty ? 'thud' : 'touch')
       } else {
         sendinteraction('', blocked, element, 'thud')
+        // same party touch
         sendinteraction('', element, blocked, 'bump')
       }
     }
