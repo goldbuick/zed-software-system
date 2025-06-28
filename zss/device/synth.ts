@@ -29,18 +29,21 @@ type CustomNavigator = {
   }
 } & Navigator
 
+let locked = false
 let enabled = false
 export function enableaudio() {
-  if (enabled) {
+  if (enabled || locked) {
     return
   }
+  locked = true
   start()
     .then(() => {
       if (!enabled) {
         const transport = getTransport()
         transport.start()
 
-        setAltInterval(107)
+        // set default  BPM
+        setAltInterval(128)
 
         // better audio playback for mobile safari
         try {
@@ -58,12 +61,14 @@ export function enableaudio() {
             return addsidechainmodule()
           })
           .then(() => {
+            locked = false
             enabled = true
             synth_audioenabled(synthdevice, registerreadplayer())
           })
       }
     })
     .catch((err: any) => {
+      locked = false
       api_error(synthdevice, registerreadplayer(), 'audio', err.toString())
     })
 }
