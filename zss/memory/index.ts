@@ -588,8 +588,8 @@ export function memorymoveobject(
 
     // delete item and breakable elements
     if (
-      bookelementstatread(book, blocked, 'item') ||
-      bookelementstatread(book, blocked, 'breakable')
+      (elementisplayer && bookelementstatread(book, blocked, 'item')) ||
+      (elementisbullet && bookelementstatread(book, blocked, 'breakable'))
     ) {
       if (ispresent(blocked?.id)) {
         const maybeobject = boardelementread(board, {
