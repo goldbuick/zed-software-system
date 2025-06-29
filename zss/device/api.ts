@@ -2,7 +2,6 @@
 what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
-import { fromBuffer } from 'zss/feature/parserexpaint'
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
 import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
@@ -577,61 +576,11 @@ export function createbinaryreader(
   }
 }
 
-export type REXPAINT_READER_COLOR = {
-  r: number
-  g: number
-  b: number
-  hex: string // Plain hex, if you want to use it for css or html prepend the #
-}
-
-export type REXPAINT_READER_PIXEL = {
-  asciiCode: number
-  transparent: boolean
-  color: REXPAINT_READER_COLOR
-  bg: REXPAINT_READER_COLOR
-}
-
-export type REXPAINT_READER_LAYER = {
-  width: number
-  height: number
-  raster: REXPAINT_READER_PIXEL[]
-}
-
-export type REXPAINT_READER_OBJECT = {
-  version: number // Usually -1
-  layers: REXPAINT_READER_LAYER[]
-}
-
-export type REXPAINT_READER = {
-  filename: string
-  cursor: number
-  content: MAYBE<REXPAINT_READER_OBJECT>
-}
-
-export function createrexpaintreader(
-  filename: string,
-  content: Uint8Array,
-): REXPAINT_READER {
-  const reader: REXPAINT_READER = {
-    filename,
-    cursor: 0,
-    content: undefined,
-  }
-  fromBuffer(content)
-    .then((content: REXPAINT_READER_OBJECT) => {
-      reader.content = content
-    })
-    .catch(() => {
-      //
-    })
-  return reader
-}
-
 export function vm_loader(
   device: DEVICELIKE,
   player: string,
   arg: any,
-  format: 'file' | 'text' | 'json' | 'binary' | 'rexpaint',
+  format: 'file' | 'text' | 'json' | 'binary', // maybe add xml ?
   eventname: string,
   content: any,
 ) {
@@ -648,9 +597,6 @@ export function vm_loader(
       break
     case 'binary':
       withcontent = createbinaryreader(eventname, content)
-      break
-    case 'rexpaint':
-      withcontent = createrexpaintreader(eventname, content)
       break
   }
   setTimeout(() => {
