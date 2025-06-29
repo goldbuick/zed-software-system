@@ -150,7 +150,7 @@ export const CLI_FIRMWARE = createfirmware()
     switch (NAME(maybetype)) {
       case stattypestring(STAT_TYPE.LOADER): {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           maybename,
           CODE_PAGE_TYPE.LOADER,
         )
@@ -159,7 +159,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       default: {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           [maybetype, ...args].join(' '),
           CODE_PAGE_TYPE.OBJECT,
         )
@@ -168,7 +168,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       case stattypestring(STAT_TYPE.BOARD): {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           maybename,
           CODE_PAGE_TYPE.BOARD,
         )
@@ -177,7 +177,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       case stattypestring(STAT_TYPE.OBJECT): {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           maybename,
           CODE_PAGE_TYPE.OBJECT,
         )
@@ -186,7 +186,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       case stattypestring(STAT_TYPE.TERRAIN): {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           maybename,
           CODE_PAGE_TYPE.TERRAIN,
         )
@@ -195,7 +195,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       case stattypestring(STAT_TYPE.CHARSET): {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           maybename,
           CODE_PAGE_TYPE.CHARSET,
         )
@@ -204,7 +204,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       case stattypestring(STAT_TYPE.PALETTE): {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           maybename,
           CODE_PAGE_TYPE.PALETTE,
         )
@@ -438,7 +438,7 @@ export const CLI_FIRMWARE = createfirmware()
       'main',
       `${main?.name ?? 'empty'} $GREEN${main?.id ?? ''}`,
     )
-    const content = memoryreadbookbysoftware(MEMORY_LABEL.CONTENT)
+    const content = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     writeoption(
       SOFTWARE,
       READ_CONTEXT.elementfocus,

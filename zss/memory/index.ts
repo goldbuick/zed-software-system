@@ -7,7 +7,7 @@ import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
 import { pick, pickwith } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
-import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
+import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
 import { ispt } from 'zss/words/dir'
@@ -65,7 +65,6 @@ export enum MEMORY_LABEL {
   MAIN = 'main',
   TITLE = 'title',
   PLAYER = 'player',
-  CONTENT = 'content',
   GADGETSTORE = 'gadgetstore',
   GADGETSYNC = 'gadgetsync',
 }
@@ -232,6 +231,8 @@ export function memoryclearflags(id: string) {
 export function memoryresetbooks(books: BOOK[], select: string) {
   // clear all books
   MEMORY.books.clear()
+
+  // add new books
   books.forEach((book) => {
     MEMORY.books.set(book.id, book)
     // attempt default for main
@@ -239,12 +240,14 @@ export function memoryresetbooks(books: BOOK[], select: string) {
       MEMORY.software.main = book.id
     }
   })
+
   // try select
   const book = memoryreadbookbyaddress(select)
   if (ispresent(book)) {
-    memorysetsoftwarebook(MEMORY_LABEL.MAIN, book.id)
+    MEMORY.software.main = book.id
   }
 
+  // select first book as main
   if (!MEMORY.software.main) {
     const first = MEMORY.books.values().next()
     if (first.value) {
