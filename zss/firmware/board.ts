@@ -1,9 +1,9 @@
 import { CHIP } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
-import { pick } from 'zss/mapping/array'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
+  memoryboardread,
   memoryelementkindread,
   memoryelementstatread,
   memorymoveobject,
@@ -22,11 +22,8 @@ import {
 import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
 import { boardsetlookup } from 'zss/memory/boardlookup'
 import { boardcheckblockedobject, boardmoveobject } from 'zss/memory/boardops'
-import {
-  bookplayermovetoboard,
-  bookreadcodepagesbytypeandstat,
-} from 'zss/memory/book'
-import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { bookplayermovetoboard } from 'zss/memory/book'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
@@ -197,24 +194,17 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
     ])
-    const boards = bookreadcodepagesbytypeandstat(
-      READ_CONTEXT.book,
-      CODE_PAGE_TYPE.BOARD,
-      stat,
-    )
-    if (boards.length) {
-      const target = pick(...boards)
-      if (ispresent(target)) {
-        bookplayermovetoboard(
-          READ_CONTEXT.book,
-          READ_CONTEXT.elementfocus,
-          target.id,
-          {
-            x: maybex ?? Math.round(BOARD_WIDTH * 0.5),
-            y: maybey ?? Math.round(BOARD_HEIGHT * 0.5),
-          },
-        )
-      }
+    const target = memoryboardread(stat)
+    if (ispresent(target)) {
+      bookplayermovetoboard(
+        READ_CONTEXT.book,
+        READ_CONTEXT.elementfocus,
+        target.id,
+        {
+          x: maybex ?? Math.round(BOARD_WIDTH * 0.5),
+          y: maybey ?? Math.round(BOARD_HEIGHT * 0.5),
+        },
+      )
     }
     return 0
   })
@@ -234,17 +224,10 @@ export const BOARD_FIRMWARE = createfirmware()
     ])
 
     if (isstring(maybesource)) {
-      const boards = bookreadcodepagesbytypeandstat(
-        READ_CONTEXT.book,
-        CODE_PAGE_TYPE.BOARD,
-        maybesource,
-      )
-
-      const createdboard = pick(...boards)
+      const createdboard = memoryboardread(maybesource)
       if (ispresent(createdboard)) {
         chip.set(stat, createdboard.id)
       }
-
       return 0
     }
 

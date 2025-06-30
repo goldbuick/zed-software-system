@@ -37,6 +37,7 @@ import { deepcopy, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
   MEMORY_LABEL,
+  memoryboardread,
   memoryclearbook,
   memorycreatesoftwarebook,
   memoryensuresoftwarebook,
@@ -55,7 +56,6 @@ import {
   bookplayermovetoboard,
   bookplayerreadboards,
   bookreadcodepagebyaddress,
-  bookreadcodepagesbytypeandstat,
   bookreadsortedcodepages,
 } from 'zss/memory/book'
 import {
@@ -333,25 +333,19 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('boardopen', (_, words) => {
     const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
-    const boards = bookreadcodepagesbytypeandstat(
-      READ_CONTEXT.book,
-      CODE_PAGE_TYPE.BOARD,
-      stat,
-    )
-    if (boards.length) {
-      const target = pick(...boards)
-      if (ispresent(target)) {
-        bookplayermovetoboard(
-          READ_CONTEXT.book,
-          READ_CONTEXT.elementfocus,
-          target.id,
-          {
-            x: randominteger(0, BOARD_WIDTH - 1),
-            y: randominteger(0, BOARD_HEIGHT - 1),
-          },
-        )
-      }
+    const target = memoryboardread(stat)
+    if (ispresent(target)) {
+      bookplayermovetoboard(
+        READ_CONTEXT.book,
+        READ_CONTEXT.elementfocus,
+        target.id,
+        {
+          x: randominteger(0, BOARD_WIDTH - 1),
+          y: randominteger(0, BOARD_HEIGHT - 1),
+        },
+      )
     }
+
     return 0
   })
   .command('pageopen', (_, words) => {

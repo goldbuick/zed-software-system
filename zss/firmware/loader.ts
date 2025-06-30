@@ -14,10 +14,7 @@ import {
   memoryreadbookbysoftware,
   memorysendtoboards,
 } from 'zss/memory'
-import {
-  bookplayerreadboards,
-  bookreadcodepagesbytypeandstat,
-} from 'zss/memory/book'
+import { bookplayerreadboards } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
