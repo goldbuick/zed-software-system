@@ -216,13 +216,7 @@ export function readexpr(index: number): [any, number] {
             ? boardelementread(READ_CONTEXT.board, dir.destpt)
             : boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
         if (ispresent(maybelement)) {
-          const display = bookelementdisplayread(
-            READ_CONTEXT.book,
-            maybelement,
-            -1,
-            -1,
-            -1,
-          )
+          const display = bookelementdisplayread(maybelement, -1, -1, -1)
           return [
             (readstrcolor(color) as number) === display.color ||
             (readstrbg(color) as number) === display.bg
@@ -246,13 +240,7 @@ export function readexpr(index: number): [any, number] {
         if (ispresent(maybelement)) {
           const maybename = NAME(readstrkindname(kind))
           const maybecolor = readstrkindcolor(kind)
-          const display = bookelementdisplayread(
-            READ_CONTEXT.book,
-            maybelement,
-            -1,
-            -1,
-            -1,
-          )
+          const display = bookelementdisplayread(maybelement, -1, -1, -1)
           if (maybename && maybename === NAME(boardelementname(maybelement))) {
             return [1, iii]
           }

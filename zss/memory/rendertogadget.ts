@@ -364,7 +364,6 @@ export function memoryconverttogadgetlayers(
   for (let i = 0; i < board.terrain.length; ++i) {
     const tile = board.terrain[i]
     const display = bookelementdisplayread(
-      book,
       tile,
       0,
       COLOR.WHITE,
@@ -416,13 +415,7 @@ export function memoryconverttogadgetlayers(
     }
 
     const id = object.id ?? ''
-    const display = bookelementdisplayread(
-      book,
-      object,
-      1,
-      COLOR.WHITE,
-      COLOR.BLACK,
-    )
+    const display = bookelementdisplayread(object, 1, COLOR.WHITE, COLOR.BLACK)
     const sprite = createcachedsprite(player, objectindex, id, i)
 
     // setup sprite

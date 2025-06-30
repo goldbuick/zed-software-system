@@ -150,6 +150,7 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
       kinddata,
       'collision',
     )
+
     // validate placement works
     const blocked = bookboardcheckblockedobject(
       READ_CONTEXT.book,

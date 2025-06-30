@@ -7,7 +7,7 @@ import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
 import { pick, pickwith } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
-import { TICK_FPS } from 'zss/mapping/tick'
+import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
 import { ispt } from 'zss/words/dir'
@@ -36,6 +36,7 @@ import {
   bookreadboard,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytypeandstat,
+  bookreadcodepagewithtype,
   bookreadflags,
   bookreadobject,
   createbook,
@@ -52,9 +53,11 @@ import { memoryconverttogadgetlayers } from './rendertogadget'
 import {
   BOARD,
   BOARD_ELEMENT,
+  BOARD_ELEMENT_STAT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
+  CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
 
@@ -206,6 +209,115 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
     createtype,
     address,
   )
+}
+
+/*
+when we list pages,
+ we list all pages, from all books
+when we list boards, do the same
+will have to add in the pickstats support here as well
+
+*/
+
+export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
+  type: T,
+  address: string,
+): MAYBE<CODE_PAGE> {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const codepage = pick(bookreadcodepagesbytypeandstat(mainbook, type, address))
+  if (ispresent(codepage)) {
+    return codepage
+  }
+  const books = memoryreadbooklist()
+  for (let i = 0; i < books.length; ++i) {
+    const book = books[i]
+    if (book.id !== mainbook?.id) {
+      const fallbackcodepage = pick(
+        bookreadcodepagesbytypeandstat(book, type, address),
+      )
+      if (ispresent(fallbackcodepage)) {
+        return fallbackcodepage
+      }
+    }
+  }
+  return undefined
+}
+
+export function memoryelementkindread(
+  element: MAYBE<BOARD_ELEMENT>,
+): MAYBE<BOARD_ELEMENT> {
+  if (!isstring(element?.kind) || !element.kind) {
+    return undefined
+  }
+
+  const maybeobject = memorypickcodepagewithtype(
+    CODE_PAGE_TYPE.OBJECT,
+    element.kind,
+  )
+  if (ispresent(maybeobject)) {
+    element.kinddata = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(maybeobject)
+    return element.kinddata
+  }
+
+  const maybeterrain = memorypickcodepagewithtype(
+    CODE_PAGE_TYPE.TERRAIN,
+    element.kind,
+  )
+  if (ispresent(maybeterrain)) {
+    element.kinddata = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(maybeterrain)
+    return element.kinddata
+  }
+
+  return undefined
+}
+
+export function memoryelementstatread(
+  element: MAYBE<BOARD_ELEMENT>,
+  stat: BOARD_ELEMENT_STAT,
+) {
+  const kind = element?.kinddata
+  const kindid = kind?.id ?? ''
+
+  const elementstat = element?.[stat]
+  if (ispresent(elementstat)) {
+    return elementstat
+  }
+
+  const kindstat = kind?.[stat]
+  if (ispresent(kindstat)) {
+    return kindstat
+  }
+
+  const codepage =
+    memorypickcodepagewithtype(CODE_PAGE_TYPE.OBJECT, kindid) ??
+    memorypickcodepagewithtype(CODE_PAGE_TYPE.TERRAIN, kindid)
+  const codepagestat = codepagereadstat(codepage, stat)
+  if (ispresent(codepagestat)) {
+    return codepagestat
+  }
+
+  // we define all stat defaults here
+  switch (stat) {
+    case 'group':
+      return ''
+    case 'cycle':
+      return CYCLE_DEFAULT
+    case 'item':
+      return 0
+    case 'pushable':
+      return 0
+    case 'breakable':
+      return 0
+    case 'collision':
+      return COLLISION.ISWALK
+    default:
+      return undefined
+  }
+}
+
+export function memoryboardread(address: string): MAYBE<BOARD> {
+  const maybeboard = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, address)
+  return codepagereaddata<CODE_PAGE_TYPE.BOARD>(maybeboard)
 }
 
 export function memoryreadflags(id: string) {

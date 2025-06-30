@@ -21,7 +21,6 @@ import { createinfohash } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
 const trackerlist = `
-wss://tracker.btorrent.xyz
 wss://tracker.webtorrent.dev
 wss://tracker.openwebtorrent.com
 `

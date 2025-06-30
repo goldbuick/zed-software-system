@@ -224,7 +224,6 @@ export const CLI_FIRMWARE = createfirmware()
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
       // log text
       const icon = bookelementdisplayread(
-        READ_CONTEXT.book,
         READ_CONTEXT.element,
         1,
         COLOR.WHITE,
@@ -255,7 +254,6 @@ export const CLI_FIRMWARE = createfirmware()
       const { user } = memoryreadflags(READ_CONTEXT.elementid)
       const withuser = isstring(user) ? user : 'player'
       const icon = bookelementdisplayread(
-        READ_CONTEXT.book,
         READ_CONTEXT.element,
         1,
         COLOR.WHITE,

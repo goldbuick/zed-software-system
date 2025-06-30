@@ -268,61 +268,60 @@ export function bookclearcodepage(book: MAYBE<BOOK>, address: string) {
   }
 }
 
-export function bookelementkindread(
-  book: MAYBE<BOOK>,
-  element: MAYBE<BOARD_ELEMENT>,
-) {
-  if (ispresent(element) && ispresent(element.kind)) {
-    if (!ispresent(element.kinddata)) {
-      element.kinddata = ispresent(element.id)
-        ? bookreadobject(book, element.kind)
-        : bookreadterrain(book, element.kind)
-    }
-    return element.kinddata
-  }
-  return undefined
-}
+// export function bookelementkindread(
+//   book: MAYBE<BOOK>,
+//   element: MAYBE<BOARD_ELEMENT>,
+// ) {
+//   if (ispresent(element) && ispresent(element.kind)) {
+//     if (!ispresent(element.kinddata)) {
+//       element.kinddata = ispresent(element.id)
+//         ? bookreadobject(book, element.kind)
+//         : bookreadterrain(book, element.kind)
+//     }
+//     return element.kinddata
+//   }
+//   return undefined
+// }
 
-export function bookelementstatread(
-  book: MAYBE<BOOK>,
-  element: MAYBE<BOARD_ELEMENT>,
-  stat: BOARD_ELEMENT_STAT,
-) {
-  const kind = bookelementkindread(book, element)
-  const statvalue =
-    element?.[stat] ??
-    kind?.[stat] ??
-    codepagereadstat(bookreadcodepagebyaddress(book, kind?.id ?? ''), stat)
-  if (ispresent(statvalue)) {
-    return statvalue
-  }
-  // we define all stat defaults here
-  switch (stat) {
-    case 'group':
-      return ''
-    case 'cycle':
-      return CYCLE_DEFAULT
-    case 'item':
-      return 0
-    case 'pushable':
-      return 0
-    case 'breakable':
-      return 0
-    case 'collision':
-      return COLLISION.ISWALK
-    default:
-      return undefined
-  }
-}
+// export function bookelementstatread(
+//   book: MAYBE<BOOK>,
+//   element: MAYBE<BOARD_ELEMENT>,
+//   stat: BOARD_ELEMENT_STAT,
+// ) {
+//   const kind = bookelementkindread(book, element)
+//   const statvalue =
+//     element?.[stat] ??
+//     kind?.[stat] ??
+//     codepagereadstat(bookreadcodepagebyaddress(book, kind?.id ?? ''), stat)
+//   if (ispresent(statvalue)) {
+//     return statvalue
+//   }
+//   // we define all stat defaults here
+//   switch (stat) {
+//     case 'group':
+//       return ''
+//     case 'cycle':
+//       return CYCLE_DEFAULT
+//     case 'item':
+//       return 0
+//     case 'pushable':
+//       return 0
+//     case 'breakable':
+//       return 0
+//     case 'collision':
+//       return COLLISION.ISWALK
+//     default:
+//       return undefined
+//   }
+// }
 
 export function bookelementdisplayread(
-  book: MAYBE<BOOK>,
   element: MAYBE<BOARD_ELEMENT>,
   defaultchar: number,
   defaultcolor: number,
   defaultbg: number,
 ) {
-  const kind = bookelementkindread(book, element)
+  const kind = element?.kinddata
   return {
     char: element?.char ?? kind?.char ?? defaultchar,
     color: element?.color ?? kind?.color ?? defaultcolor,
