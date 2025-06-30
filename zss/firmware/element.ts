@@ -15,11 +15,11 @@ import {
   memorymoveobject,
   memoryreadflags,
   memoryreadoperator,
+  memoryelementstatread,
 } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
 import { boardelementread } from 'zss/memory/board'
 import { boardelementapplycolor } from 'zss/memory/boardelement'
-import { bookelementstatread } from 'zss/memory/book'
 import {
   bookboardsafedelete,
   bookboardsetlookup,
@@ -404,13 +404,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         READ_CONTEXT.element.stepx = 0
         READ_CONTEXT.element.stepy = 0
         // walking breakables get bonked
-        if (
-          bookelementstatread(
-            READ_CONTEXT.book,
-            READ_CONTEXT.element,
-            'breakable',
-          )
-        ) {
+        if (memoryelementstatread(READ_CONTEXT.element, 'breakable')) {
           // mark target for deletion
           bookboardsafedelete(
             READ_CONTEXT.book,

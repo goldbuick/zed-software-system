@@ -1,18 +1,18 @@
 import { ispid } from 'zss/mapping/guid'
 import { isnumber, ispresent, MAYBE } from 'zss/mapping/types'
+import { memoryelementstatread } from 'zss/memory'
 import {
   boardelementread,
   boardgetterrain,
   boardsetterrain,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import { bookelementstatread, bookreadcodepagewithtype } from 'zss/memory/book'
+import { bookreadcodepagewithtype } from 'zss/memory/book'
 import {
   bookboardreadgroup,
   bookboardresetlookups,
   bookboardsafedelete,
   bookboardsetlookup,
-  bookboardwritefromkind,
 } from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
 import {
@@ -185,8 +185,7 @@ export function boardcopy(
         if (
           ispresent(terrain) &&
           (copyterrain ||
-            (isgroup &&
-              bookelementstatread(book, terrain, 'group') === targetset))
+            (isgroup && memoryelementstatread(terrain, 'group') === targetset))
         ) {
           if (isgroup) {
             emptyarea(book, targetboard, pt, pt)
@@ -203,8 +202,7 @@ export function boardcopy(
         if (
           ispresent(object) &&
           (copyobject ||
-            (isgroup &&
-              bookelementstatread(book, object, 'group') === targetset))
+            (isgroup && memoryelementstatread(object, 'group') === targetset))
         ) {
           if (isgroup) {
             emptyareaobject(book, targetboard, pt, pt)

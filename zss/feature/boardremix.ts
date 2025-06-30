@@ -2,6 +2,7 @@
 import wfc from 'wavefunctioncollapse'
 import { pick } from 'zss/mapping/array'
 import { isnumber, ispresent } from 'zss/mapping/types'
+import { memoryelementkindread, memoryelementstatread } from 'zss/memory'
 import { listnamedelements } from 'zss/memory/atomics'
 import {
   boardelementread,
@@ -10,17 +11,11 @@ import {
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
 import {
-  bookelementkindread,
-  bookelementstatread,
   bookreadcodepagewithtype,
   bookreadobject,
   bookreadterrain,
 } from 'zss/memory/book'
-import {
-  bookboardsafedelete,
-  bookboardsetlookup,
-  bookboardwritefromkind,
-} from 'zss/memory/bookboard'
+import { bookboardsafedelete, bookboardsetlookup } from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
 import {
   BOARD_HEIGHT,
@@ -89,7 +84,7 @@ export function boardremix(
       data[p++] = b
 
       // alpha
-      const kind = bookelementkindread(book, el)
+      const kind = memoryelementkindread(el)
       const kindname = NAME(kind?.name ?? 'empty')
       const maybealpha = elementkindtoalphamap.get(kindname)
       if (isnumber(maybealpha)) {
@@ -184,7 +179,7 @@ export function boardremix(
           }
           break
         default:
-          if (bookelementstatread(book, maybeterrain, 'group') !== targetset) {
+          if (memoryelementstatread(maybeterrain, 'group') !== targetset) {
             maybekind = ''
           }
           if (maybekind) {

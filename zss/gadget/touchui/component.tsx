@@ -5,7 +5,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { resetTiles, useTiles, WriteTextContext, writeTile } from '../hooks'
+import { resetTiles, useTiles, WriteTextContext } from '../hooks'
 import { useScreenSize } from '../userscreen'
 import { TilesData, TilesRender } from '../usetiles'
 

@@ -1,7 +1,6 @@
 import { pick, unique } from 'zss/mapping/array'
 import { createsid, createnameid, createshortnameid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
-import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
@@ -11,7 +10,6 @@ import { bookboardcheckblockedobject, bookboardsetlookup } from './bookboard'
 import {
   codepagereaddata,
   codepagereadname,
-  codepagereadstat,
   codepagereadstats,
   codepagereadtype,
   codepagetypetostring,
@@ -23,7 +21,6 @@ import { FORMAT_OBJECT, formatobject, unformatobject } from './format'
 import {
   BOARD,
   BOARD_ELEMENT,
-  BOARD_ELEMENT_STAT,
   BOOK,
   BOOK_FLAGS,
   CODE_PAGE,
@@ -267,53 +264,6 @@ export function bookclearcodepage(book: MAYBE<BOOK>, address: string) {
     return codepage
   }
 }
-
-// export function bookelementkindread(
-//   book: MAYBE<BOOK>,
-//   element: MAYBE<BOARD_ELEMENT>,
-// ) {
-//   if (ispresent(element) && ispresent(element.kind)) {
-//     if (!ispresent(element.kinddata)) {
-//       element.kinddata = ispresent(element.id)
-//         ? bookreadobject(book, element.kind)
-//         : bookreadterrain(book, element.kind)
-//     }
-//     return element.kinddata
-//   }
-//   return undefined
-// }
-
-// export function bookelementstatread(
-//   book: MAYBE<BOOK>,
-//   element: MAYBE<BOARD_ELEMENT>,
-//   stat: BOARD_ELEMENT_STAT,
-// ) {
-//   const kind = bookelementkindread(book, element)
-//   const statvalue =
-//     element?.[stat] ??
-//     kind?.[stat] ??
-//     codepagereadstat(bookreadcodepagebyaddress(book, kind?.id ?? ''), stat)
-//   if (ispresent(statvalue)) {
-//     return statvalue
-//   }
-//   // we define all stat defaults here
-//   switch (stat) {
-//     case 'group':
-//       return ''
-//     case 'cycle':
-//       return CYCLE_DEFAULT
-//     case 'item':
-//       return 0
-//     case 'pushable':
-//       return 0
-//     case 'breakable':
-//       return 0
-//     case 'collision':
-//       return COLLISION.ISWALK
-//     default:
-//       return undefined
-//   }
-// }
 
 export function bookelementdisplayread(
   element: MAYBE<BOARD_ELEMENT>,

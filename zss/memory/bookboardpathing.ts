@@ -4,8 +4,9 @@ import { COLLISION, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
 import { boardgetterrain, ptwithinboard } from './board'
-import { bookelementstatread } from './book'
 import { BOARD, BOARD_SIZE, BOARD_WIDTH, BOOK } from './types'
+
+import { memoryelementstatread } from '.'
 
 function boardreaddistmap(
   book: MAYBE<BOOK>,
@@ -46,7 +47,7 @@ function boardreaddistmap(
           if (
             !checkdoescollide(
               forcollision,
-              bookelementstatread(book, terrain, 'collision'),
+              memoryelementstatread(terrain, 'collision'),
             )
           ) {
             // write dist

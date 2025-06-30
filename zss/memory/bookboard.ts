@@ -1,8 +1,7 @@
-import { pttoindex } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { ispid } from 'zss/mapping/guid'
 import { clamp, randominteger } from 'zss/mapping/number'
-import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
+import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import {
   dirfrompts,
@@ -24,15 +23,8 @@ import {
   boardobjectread,
   boardobjectreadbypt,
   boardsetterrain,
-  boardterrainsetfromkind,
 } from './board'
 import { boardelementapplycolor, boardelementname } from './boardelement'
-import {
-  bookelementkindread,
-  bookelementstatread,
-  bookreadobject,
-  bookreadterrain,
-} from './book'
 import { bookboardreadpath } from './bookboardpathing'
 import {
   BOARD,
@@ -44,6 +36,8 @@ import {
   BOOK,
   CODE_PAGE_TYPE,
 } from './types'
+
+import { memoryelementkindread, memoryelementstatread } from '.'
 
 // quick lookup utils
 
@@ -384,7 +378,7 @@ export function boardevaldir(
         const [x, y] = dir.slice(i + 1)
         if (isnumber(x) && isnumber(y)) {
           const dest = { x: clamp(x, 0, xmax), y: clamp(y, 0, ymax) }
-          const collision = bookelementstatread(book, target, 'collision')
+          const collision = memoryelementstatread(target, 'collision')
           const maybept = bookboardreadpath(
             book,
             board,
@@ -411,7 +405,7 @@ export function boardevaldir(
           if (randominteger(1, 100) < 5) {
             ptapplydir(pt, pick(DIR.NORTH, DIR.SOUTH, DIR.WEST, DIR.EAST))
           } else {
-            const collision = bookelementstatread(book, target, 'collision')
+            const collision = memoryelementstatread(target, 'collision')
             const maybept = bookboardreadpath(
               book,
               board,
@@ -480,68 +474,6 @@ export function boardevaldir(
 
 // object / terrain utils
 
-export function bookboardwritebulletobject(
-  book: MAYBE<BOOK>,
-  board: MAYBE<BOARD>,
-  kind: MAYBE<STR_KIND>,
-  dest: PT,
-) {
-  if (ispresent(book) && ispresent(board) && ispresent(kind)) {
-    const [name, maybecolor] = kind
-    const maybeobject = bookreadobject(book, name)
-    if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
-      // create new object element
-      const object = boardobjectcreatefromkind(board, dest, name)
-      // update color
-      boardelementapplycolor(object, maybecolor)
-      return object
-    }
-  }
-  return undefined
-}
-
-export function bookboardwritefromkind(
-  book: MAYBE<BOOK>,
-  board: MAYBE<BOARD>,
-  kind: MAYBE<STR_KIND>,
-  dest: PT,
-  id?: string,
-): MAYBE<BOARD_ELEMENT> {
-  if (ispresent(book) && ispresent(board) && ispresent(kind)) {
-    const [name, maybecolor] = kind
-
-    const maybeterrain = bookreadterrain(book, name)
-    if (ispresent(maybeterrain)) {
-      const terrain = boardterrainsetfromkind(board, dest, name)
-      if (ispresent(terrain)) {
-        boardelementapplycolor(terrain, maybecolor)
-        // calc index
-        const idx = pttoindex(dest, BOARD_WIDTH)
-        // update named (terrain & objects)
-        bookelementkindread(book, terrain)
-        bookboardnamedwrite(book, board, terrain, idx)
-        return terrain
-      }
-    }
-
-    const maybeobject = bookreadobject(book, name)
-    if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
-      const object = boardobjectcreatefromkind(board, dest, name, id)
-      if (ispresent(object)) {
-        boardelementapplycolor(object, maybecolor)
-        // update lookup (only objects)
-        bookboardobjectlookupwrite(book, board, object)
-        // update named (terrain & objects)
-        bookelementkindread(book, object)
-        bookboardnamedwrite(book, board, object)
-        return object
-      }
-    }
-  }
-
-  return undefined
-}
-
 export function bookboardsafedelete(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
@@ -607,7 +539,7 @@ export function bookboardcheckblockedobject(
   if (ispresent(mayberterrain)) {
     return checkdoescollide(
       collision,
-      bookelementstatread(book, mayberterrain, 'collision'),
+      memoryelementstatread(mayberterrain, 'collision'),
     )
   }
 
@@ -628,7 +560,7 @@ export function bookboardcheckmoveobject(
     // no interaction due to no movement
     return true
   }
-  const collsion = bookelementstatread(book, object, 'collision')
+  const collsion = memoryelementstatread(object, 'collision')
   return bookboardcheckblockedobject(book, board, collsion, dest)
 }
 
@@ -672,14 +604,13 @@ export function bookboardmoveobject(
   // gather meta for move
   const startidx = boardelementindex(board, movingelement)
   const destidx = boardelementindex(board, dest)
-  const movingelementcollision = bookelementstatread(
-    book,
+  const movingelementcollision = memoryelementstatread(
     movingelement,
     'collision',
   )
   const movingelementisplayer = ispid(movingelement?.id)
   const movingelementisbullet =
-    bookelementstatread(book, movingelement, 'collision') === COLLISION.ISBULLET
+    memoryelementstatread(movingelement, 'collision') === COLLISION.ISBULLET
 
   // blocked by an object
   const maybeobject = boardobjectread(board, board.lookup[destidx] ?? '')
@@ -691,15 +622,15 @@ export function bookboardmoveobject(
     (!movingelementisplayer || !maybeobjectisplayer)
   ) {
     // check groups
-    const groupa = bookelementstatread(book, movingelement, 'group')
-    const groupb = bookelementstatread(book, maybeobject, 'group')
+    const groupa = memoryelementstatread(movingelement, 'group')
+    const groupb = memoryelementstatread(maybeobject, 'group')
     if ((groupa || groupb) && groupa != groupb) {
       // for sending interaction messages
       return { ...maybeobject }
     }
 
     // has a player touched an item element?
-    const item = !!bookelementstatread(book, maybeobject, 'item')
+    const item = !!memoryelementstatread(maybeobject, 'item')
     if (movingelementisplayer && item) {
       // update object location
       movingelement.x = dest.x
@@ -710,7 +641,7 @@ export function bookboardmoveobject(
     }
 
     // has a bullet hit a breakable element?
-    const breakable = !!bookelementstatread(book, maybeobject, 'breakable')
+    const breakable = !!memoryelementstatread(maybeobject, 'breakable')
     if (movingelementisbullet && breakable) {
       // update object location
       movingelement.x = dest.x
@@ -727,7 +658,7 @@ export function bookboardmoveobject(
     }
 
     // is element pushable ?
-    const ispushable = !!bookelementstatread(book, maybeobject, 'pushable')
+    const ispushable = !!memoryelementstatread(maybeobject, 'pushable')
     if (ispushable) {
       const bumpdir = dirfrompts(
         { x: movingelement.x, y: movingelement.y },
@@ -852,7 +783,7 @@ export function bookboardtick(
     object.ly = object.y
 
     // lookup kind
-    const kind = bookelementkindread(book, object)
+    const kind = memoryelementkindread(object)
 
     // object code is composed of kind code + object code
     const code = `${kind?.code ?? ''}\n${object.code ?? ''}`
@@ -868,7 +799,7 @@ export function bookboardtick(
     // a single tick before execution ends
     if (object.removed) {
       const delta = timestamp - object.removed
-      const cycle = bookelementstatread(book, object, 'cycle')
+      const cycle = memoryelementstatread(object, 'cycle')
       if (delta > cycle) {
         continue
       }
@@ -930,8 +861,7 @@ export function bookboardreadgroup(
     }
 
     // stat & name groups
-    const statnamed = bookelementstatread(
-      book,
+    const statnamed = memoryelementstatread(
       el,
       targetgroup as BOARD_ELEMENT_STAT,
     )
@@ -939,7 +869,7 @@ export function bookboardreadgroup(
     return (
       ispresent(statnamed) ||
       boardelementname(el) === targetgroup ||
-      bookelementstatread(book, el, 'group') === targetgroup
+      memoryelementstatread(el, 'group') === targetgroup
     )
   }
 

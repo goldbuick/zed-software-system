@@ -3,7 +3,12 @@ import { createfirmware } from 'zss/firmware'
 import { pick } from 'zss/mapping/array'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memorymoveobject, memorytickobject } from 'zss/memory'
+import {
+  memoryelementkindread,
+  memoryelementstatread,
+  memorymoveobject,
+  memorytickobject,
+} from 'zss/memory'
 import { listelementsbykind, listptsbyempty } from 'zss/memory/atomics'
 import {
   boardelementread,
@@ -13,8 +18,6 @@ import {
 } from 'zss/memory/board'
 import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
 import {
-  bookelementkindread,
-  bookelementstatread,
   bookplayermovetoboard,
   bookreadcodepagesbytypeandstat,
   bookreadobject,
@@ -25,7 +28,6 @@ import {
   bookboardmoveobject,
   bookboardsafedelete,
   bookboardsetlookup,
-  bookboardwritefromkind,
   bookboardwritebulletobject,
 } from 'zss/memory/bookboard'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
@@ -85,7 +87,7 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     // things shot always have the clear bg
     bullet.bg = COLOR.ONCLEAR
     // object code
-    const kind = bookelementkindread(READ_CONTEXT.book, bullet)
+    const kind = memoryelementkindread(bullet)
     const code = bullet.code ?? kind?.code ?? ''
     // bullets get one immediate tick
     memorytickobject(READ_CONTEXT.book, READ_CONTEXT.board, bullet, code)
@@ -145,11 +147,7 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     const kinddata =
       bookreadobject(READ_CONTEXT.book, kindname) ??
       bookreadterrain(READ_CONTEXT.book, kindname)
-    const collision = bookelementstatread(
-      READ_CONTEXT.book,
-      kinddata,
-      'collision',
-    )
+    const collision = memoryelementstatread(kinddata, 'collision')
 
     // validate placement works
     const blocked = bookboardcheckblockedobject(

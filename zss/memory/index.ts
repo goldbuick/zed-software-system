@@ -11,6 +11,7 @@ import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
 import { ispt } from 'zss/words/dir'
+import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
@@ -21,11 +22,11 @@ import {
   boardobjectcreatefromkind,
   boardobjectread,
   boardsetterrain,
+  boardterrainsetfromkind,
 } from './board'
 import { boardelementname } from './boardelement'
 import {
   bookclearflags,
-  bookelementstatread,
   bookensurecodepagewithtype,
   bookhasflags,
   bookplayermovetoboard,
@@ -36,7 +37,6 @@ import {
   bookreadboard,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytypeandstat,
-  bookreadcodepagewithtype,
   bookreadflags,
   bookreadobject,
   createbook,
@@ -313,6 +313,48 @@ export function memoryelementstatread(
     default:
       return undefined
   }
+}
+
+export function memorywritefromkind(
+  board: MAYBE<BOARD>,
+  kind: MAYBE<STR_KIND>,
+  dest: PT,
+  id?: string,
+): MAYBE<BOARD_ELEMENT> {
+  if (!ispresent(board) || !ispresent(kind)) {
+    return undefined
+  }
+  const [name, maybecolor] = kind
+
+  const maybeobject = memorypickcodepagewithtype(CODE_PAGE_TYPE.OBJECT, name)
+  if (ispresent(maybeobject)) {
+    const object = boardobjectcreatefromkind(board, dest, name, id)
+    if (ispresent(object)) {
+      // boardelementapplycolor(object, maybecolor)
+      // // update lookup (only objects)
+      // bookboardobjectlookupwrite(book, board, object)
+      // // update named (terrain & objects)
+      // bookelementkindread(book, object)
+      // bookboardnamedwrite(book, board, object)
+      return object
+    }
+  }
+
+  const maybeterrain = memorypickcodepagewithtype(CODE_PAGE_TYPE.TERRAIN, name)
+  if (ispresent(maybeterrain)) {
+    const terrain = boardterrainsetfromkind(board, dest, name)
+    if (ispresent(terrain)) {
+      //     boardelementapplycolor(terrain, maybecolor)
+      //     // calc index
+      //     const idx = pttoindex(dest, BOARD_WIDTH)
+      //     // update named (terrain & objects)
+      //     bookelementkindread(book, terrain)
+      //     bookboardnamedwrite(book, board, terrain, idx)
+      return terrain
+    }
+  }
+
+  return undefined
 }
 
 export function memoryboardread(address: string): MAYBE<BOARD> {
@@ -629,7 +671,7 @@ export function memorymoveobject(
     const elementisplayer = ispid(element.id)
     const elementpartyisplayer = ispid(element.party ?? element.id)
     const elementisbullet =
-      bookelementstatread(book, element, 'collision') === COLLISION.ISBULLET
+      memoryelementstatread(element, 'collision') === COLLISION.ISBULLET
 
     let elementplayer = ''
     if (element.party && elementpartyisplayer) {
@@ -642,7 +684,7 @@ export function memorymoveobject(
     const blockedbyplayer = ispid(blocked.id)
     const blockedpartyisplayer = ispid(blocked.party ?? blocked.id)
     const blockedisbullet =
-      bookelementstatread(book, blocked, 'collision') === COLLISION.ISBULLET
+      memoryelementstatread(blocked, 'collision') === COLLISION.ISBULLET
 
     const samemparty = elementpartyisplayer === blockedpartyisplayer
 
@@ -706,8 +748,8 @@ export function memorymoveobject(
 
     // delete item and breakable elements
     if (
-      (elementisplayer && bookelementstatread(book, blocked, 'item')) ||
-      (elementisbullet && bookelementstatread(book, blocked, 'breakable'))
+      (elementisplayer && memoryelementstatread(blocked, 'item')) ||
+      (elementisbullet && memoryelementstatread(blocked, 'breakable'))
     ) {
       if (ispresent(blocked?.id)) {
         const maybeobject = boardelementread(board, {
@@ -767,7 +809,7 @@ export function memorytickobject(
     : playerfromelement
 
   // read cycle
-  const cycle = bookelementstatread(book, object, 'cycle')
+  const cycle = memoryelementstatread(object, 'cycle')
 
   // run chip code
   const id = object.id ?? ''

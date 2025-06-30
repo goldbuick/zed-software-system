@@ -5,9 +5,9 @@ import {
   MEMORY_LABEL,
   memoryreadbookbysoftware,
   memorysetbook,
+  memorywritefromkind,
 } from 'zss/memory'
 import { bookwritecodepage, createbook } from 'zss/memory/book'
-import { bookboardwritefromkind } from 'zss/memory/bookboard'
 import { codepagereaddata, createcodepage } from 'zss/memory/codepage'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { STR_COLOR_CONST } from 'zss/words/color'
@@ -56,8 +56,6 @@ type ZZT_BOARD = {
 }
 
 export function parsezzt(player: string, content: Uint8Array) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-
   let cursor = 0
   const reader = new DataView(content.buffer)
 
@@ -245,8 +243,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 5:
           // ammo
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['ammo', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -254,8 +251,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 6:
           // torch
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['torch', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -263,8 +259,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 7:
           // gem
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['gem', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -272,8 +267,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 8:
           // key
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['key', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -281,8 +275,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 9:
           // door
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['door', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -290,8 +283,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 10:
           // scroll
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['scroll', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -299,8 +291,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 11:
           // passage
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['passage', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -308,8 +299,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 12:
           // duplicator
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['duplicator', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -317,8 +307,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 13:
           // bomb
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['bomb', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -326,8 +315,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 14:
           // energize
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['energize', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -335,8 +323,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 15:
           // star
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['star', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -344,8 +331,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 16:
           // clockwise
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['clockwise', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -353,8 +339,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 17:
           // counter
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['counter', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -362,8 +347,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 18:
           // bullet
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['bullet', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -371,8 +355,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 19:
           // water
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['water', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -380,8 +363,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 20:
           // forest
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['forest', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -389,8 +371,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 21:
           // solid
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['solid', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -398,8 +379,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 22:
           // normal
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['normal', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -407,8 +387,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 23:
           // breakable
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['breakable', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -416,8 +395,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 24:
           // boulder
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['boulder', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -425,8 +403,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 25:
           // sliderns
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['sliderns', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -434,8 +411,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 26:
           // sliderew
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['sliderew', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -443,8 +419,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 27:
           // fake
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['fake', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -452,8 +427,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 28:
           // invisible
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['invisible', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -461,8 +435,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 29:
           // blinkwall
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['blinkwall', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -470,8 +443,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 30:
           // transporter
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['transporter', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -479,8 +451,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 31:
           // line
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['line', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -488,8 +459,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 32:
           // ricochet
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['ricochet', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -497,8 +467,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 33:
           // blinkns
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['blinkns', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -506,8 +475,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 34:
           // bear
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['bear', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -515,8 +483,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 35:
           // ruffian
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['ruffian', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -524,8 +491,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 36:
           // object
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['object', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -533,8 +499,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 37:
           // slime
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['slime', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -542,8 +507,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 38:
           // shark
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['shark', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -551,8 +515,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 39:
           // spinninggun
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['spinninggun', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -560,8 +523,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 40:
           // pusher
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['pusher', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -569,8 +531,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 41:
           // lion
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['lion', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -578,8 +539,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 42:
           // tiger
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['tiger', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -587,8 +547,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 43:
           // blinkns
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['blinkns', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -596,8 +555,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 44:
           // head
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['head', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -605,8 +563,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           break
         case 45:
           // segment
-          bookboardwritefromkind(
-            mainbook,
+          memorywritefromkind(
             board,
             ['segment', [COLOR[element.color] as STR_COLOR_CONST]],
             { x, y },
@@ -616,31 +573,31 @@ export function parsezzt(player: string, content: Uint8Array) {
           // empty ???
           break
         case 47:
-          bookboardwritefromkind(mainbook, board, ['ammo', ['BLUE']], { x, y })
+          memorywritefromkind(board, ['ammo', ['BLUE']], { x, y })
           break
         case 48:
-          bookboardwritefromkind(mainbook, board, ['ammo', ['GREEN']], { x, y })
+          memorywritefromkind(board, ['ammo', ['GREEN']], { x, y })
           break
         case 49:
-          bookboardwritefromkind(mainbook, board, ['ammo', ['CYAN']], { x, y })
+          memorywritefromkind(board, ['ammo', ['CYAN']], { x, y })
           break
         case 50:
-          bookboardwritefromkind(mainbook, board, ['ammo', ['RED']], { x, y })
+          memorywritefromkind(board, ['ammo', ['RED']], { x, y })
           break
         case 51:
-          bookboardwritefromkind(mainbook, board, ['ammo', ['PURPLE']], {
+          memorywritefromkind(board, ['ammo', ['PURPLE']], {
             x,
             y,
           })
           break
         case 52:
-          bookboardwritefromkind(mainbook, board, ['ammo', ['DKYELLOW']], {
+          memorywritefromkind(board, ['ammo', ['DKYELLOW']], {
             x,
             y,
           })
           break
         case 53:
-          bookboardwritefromkind(mainbook, board, ['ammo', ['BLACK']], { x, y })
+          memorywritefromkind(board, ['ammo', ['BLACK']], { x, y })
           break
       }
       ++x
