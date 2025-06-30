@@ -2,20 +2,25 @@
 import wfc from 'wavefunctioncollapse'
 import { pick } from 'zss/mapping/array'
 import { isnumber, ispresent } from 'zss/mapping/types'
-import { memoryelementkindread, memoryelementstatread } from 'zss/memory'
+import {
+  memoryelementkindread,
+  memoryelementstatread,
+  memorywritefromkind,
+} from 'zss/memory'
 import { listnamedelements } from 'zss/memory/atomics'
 import {
   boardelementread,
   boardgetterrain,
+  boardsafedelete,
   boardsetterrain,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
+import { boardsetlookup } from 'zss/memory/boardlookup'
 import {
   bookreadcodepagewithtype,
   bookreadobject,
   bookreadterrain,
 } from 'zss/memory/book'
-import { boardsafedelete, bookboardsetlookup } from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
 import {
   BOARD_HEIGHT,
@@ -60,8 +65,8 @@ export function boardremix(
   }
 
   // make sure lookup is created
-  bookboardsetlookup(book, targetboard)
-  bookboardsetlookup(book, sourceboard)
+  boardsetlookup(targetboard)
+  boardsetlookup(sourceboard)
 
   // element map
   let akind = 0 // kind
@@ -141,7 +146,7 @@ export function boardremix(
         case 'all': {
           const maybeobject = boardelementread(targetboard, { x, y })
           if (boardelementisobject(maybeobject)) {
-            boardsafedelete(book, targetboard, maybeobject, book.timestamp)
+            boardsafedelete(targetboard, maybeobject, book.timestamp)
           }
           boardsetterrain(targetboard, { x, y })
           break
@@ -149,7 +154,7 @@ export function boardremix(
         case 'object': {
           const maybeobject = boardelementread(targetboard, { x, y })
           if (boardelementisobject(maybeobject)) {
-            boardsafedelete(book, targetboard, maybeobject, book.timestamp)
+            boardsafedelete(targetboard, maybeobject, book.timestamp)
           }
           break
         }
@@ -186,7 +191,7 @@ export function boardremix(
             // blank target region
             const maybeobject = boardelementread(targetboard, { x, y })
             if (boardelementisobject(maybeobject)) {
-              boardsafedelete(book, targetboard, maybeobject, book.timestamp)
+              boardsafedelete(targetboard, maybeobject, book.timestamp)
             }
             boardsetterrain(targetboard, { x, y })
           }
@@ -194,7 +199,7 @@ export function boardremix(
       }
 
       const maybenew = maybekind
-        ? bookboardwritefromkind(book, targetboard, [maybekind], dpt)
+        ? memorywritefromkind(targetboard, [maybekind], dpt)
         : undefined
 
       // skip if we didn't create

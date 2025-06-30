@@ -5,8 +5,8 @@ import { memoryrun } from 'zss/memory'
 import { findplayerforelement, listelementsbykind } from 'zss/memory/atomics'
 import { boardelementread, boardgetterrain } from 'zss/memory/board'
 import { boardelementname } from 'zss/memory/boardelement'
+import { boardcheckmoveobject } from 'zss/memory/boardops'
 import { bookelementdisplayread } from 'zss/memory/book'
-import { boardcheckmoveobject } from 'zss/memory/bookboard'
 
 import { isstrcategory, mapstrcategory, readcategory } from './category'
 import { isstrcollision, mapstrcollision, readcollision } from './collision'
@@ -183,7 +183,6 @@ export function readexpr(index: number): [any, number] {
         // CLEAR when the object is free to move in the direction.
         const [dir, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.DIR])
         const isblocked = boardcheckmoveobject(
-          READ_CONTEXT.book,
           READ_CONTEXT.board,
           READ_CONTEXT.element,
           dir.destpt,

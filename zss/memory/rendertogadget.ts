@@ -30,15 +30,14 @@ import {
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
-import { boardelementindex, boardobjectread } from './board'
+import { boardelementindex, boardevaldir, boardobjectread } from './board'
 import {
   bookelementdisplayread,
   bookreadcodepagewithtype,
   bookreadflags,
 } from './book'
-import { boardevaldir } from './bookboard'
 import { codepagereaddata } from './codepage'
-import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK, CODE_PAGE_TYPE } from './types'
+import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from './types'
 
 import {
   MEMORY_LABEL,
@@ -248,7 +247,6 @@ function raycheck(
 export function memoryconverttogadgetlayers(
   player: string,
   index: number,
-  book: BOOK,
   board: MAYBE<BOARD>,
   tickercolor: COLOR,
   isprimary: boolean,
@@ -446,7 +444,6 @@ export function memoryconverttogadgetlayers(
               const maybedir = memoryelementstatread(object, 'lightdir')
               if (isstrdir(maybedir)) {
                 const lightdir = boardevaldir(
-                  book,
                   board,
                   object,
                   '',

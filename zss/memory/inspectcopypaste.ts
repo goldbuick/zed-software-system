@@ -14,10 +14,10 @@ import {
   boardelementread,
   boardgetterrain,
   boardobjectcreate,
+  boardsafedelete,
   boardsetterrain,
 } from './board'
 import { boardelementname } from './boardelement'
-import { boardsafedelete } from './bookboard'
 import { BOARD, BOARD_ELEMENT } from './types'
 
 import {
@@ -185,7 +185,7 @@ export async function memoryinspectcut(
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = boardelementread(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
-            boardsafedelete(mainbook, board, maybeobject, mainbook.timestamp)
+            boardsafedelete(board, maybeobject, mainbook.timestamp)
           }
           boardsetterrain(board, { x, y })
         }
@@ -197,7 +197,7 @@ export async function memoryinspectcut(
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = boardelementread(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
-            boardsafedelete(mainbook, board, maybeobject, mainbook.timestamp)
+            boardsafedelete(board, maybeobject, mainbook.timestamp)
           }
         }
       }

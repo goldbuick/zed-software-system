@@ -23,11 +23,12 @@ import { CATEGORY, PT } from 'zss/words/types'
 import {
   boardelementread,
   boardelementreadbyidorindex,
+  boardsafedelete,
   boardsetterrain,
 } from './board'
 import { boardelementisobject, boardelementname } from './boardelement'
+import { boardsetlookup } from './boardlookup'
 import { bookboardelementreadcodepage } from './book'
-import { boardsafedelete, bookboardsetlookup } from './bookboard'
 import { memoryinspectarea } from './inspectarea'
 import { hassecretheap } from './inspectcopypaste'
 import {
@@ -70,7 +71,7 @@ export function memoryinspectempty(
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = boardelementread(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
-            boardsafedelete(mainbook, board, maybeobject, mainbook.timestamp)
+            boardsafedelete(board, maybeobject, mainbook.timestamp)
           }
           boardsetterrain(board, { x, y })
         }
@@ -82,7 +83,7 @@ export function memoryinspectempty(
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = boardelementread(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
-            boardsafedelete(mainbook, board, maybeobject, mainbook.timestamp)
+            boardsafedelete(board, maybeobject, mainbook.timestamp)
           }
         }
       }
@@ -147,7 +148,7 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
   }
 
   // ensure lookup
-  bookboardsetlookup(mainbook, board)
+  boardsetlookup(board)
 
   // one element, or many ?
   if (p1.x === p2.x && p1.y === p2.y) {
@@ -217,7 +218,7 @@ export function memoryinspectcommand(path: string, player: string) {
       memoryinspectchar(player, element, inspect.path)
       break
     case 'empty':
-      boardsafedelete(mainbook, board, element, mainbook.timestamp)
+      boardsafedelete(board, element, mainbook.timestamp)
       break
     case 'code':
       doasync(SOFTWARE, player, async () => {

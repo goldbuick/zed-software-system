@@ -21,10 +21,12 @@ import {
   boardelementread,
   boardobjectcreatefromkind,
   boardobjectread,
+  boardsafedelete,
   boardsetterrain,
   boardterrainsetfromkind,
 } from './board'
 import { boardelementapplycolor, boardelementname } from './boardelement'
+import { boardobjectnamedlookupdelete } from './boardlookup'
 import { boardmoveobject, boardtick } from './boardops'
 import {
   bookclearflags,
@@ -543,11 +545,7 @@ export function memoryplayerlogout(player: string) {
     bookplayersetboard(mainbook, remove, '')
 
     // clear element
-    boardobjectnamedlookupdelete(
-      mainbook,
-      board,
-      boardobjectread(board, remove),
-    )
+    boardobjectnamedlookupdelete(board, boardobjectread(board, remove))
     boarddeleteobject(board, remove)
 
     // halt chip
@@ -681,7 +679,7 @@ export function memorymoveobject(
     return false
   }
 
-  const blocked = boardmoveobject(book, board, element, dest)
+  const blocked = boardmoveobject(board, element, dest)
   if (ispresent(blocked)) {
     const elementisplayer = ispid(element.id)
     const elementpartyisplayer = ispid(element.party ?? element.id)
@@ -774,7 +772,6 @@ export function memorymoveobject(
         if (ispresent(maybeobject)) {
           // mark target for deletion
           boardsafedelete(
-            READ_CONTEXT.book,
             READ_CONTEXT.board,
             maybeobject,
             READ_CONTEXT.timestamp,
@@ -939,7 +936,7 @@ export function memorytick(playeronly = false) {
   const boards = bookplayerreadboards(mainbook)
   for (let b = 0; b < boards.length; ++b) {
     const board = boards[b]
-    const run = boardtick(mainbook, board, timestamp)
+    const run = boardtick(board, timestamp)
     // iterate code needed to update given board
     for (let i = 0; i < run.length; ++i) {
       const { id, type, code, object } = run[i]
@@ -1120,7 +1117,6 @@ export function memoryreadgadgetlayers(
     ...memoryconverttogadgetlayers(
       player,
       0,
-      mainbook,
       underboard,
       tickercolor,
       false,
@@ -1131,7 +1127,6 @@ export function memoryreadgadgetlayers(
     ...memoryconverttogadgetlayers(
       player,
       under.length,
-      mainbook,
       playerboard,
       tickercolor,
       true,
@@ -1142,7 +1137,6 @@ export function memoryreadgadgetlayers(
     ...memoryconverttogadgetlayers(
       player,
       under.length + layers.length,
-      mainbook,
       overboard,
       tickercolor,
       false,

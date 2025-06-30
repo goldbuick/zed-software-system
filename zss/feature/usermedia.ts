@@ -6,8 +6,6 @@ import { SOFTWARE } from 'zss/device/session'
 import { useMedia } from 'zss/gadget/hooks'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
-import { getvocoder } from './synthvocoder'
-
 // track our peer
 let peer: MAYBE<Peer>
 

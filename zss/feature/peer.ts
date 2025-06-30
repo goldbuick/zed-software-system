@@ -21,12 +21,13 @@ import { createinfohash } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
 const trackerlist = `
-wss://tracker.webtorrent.dev
-wss://tracker.openwebtorrent.com
+webtorrent.dev
+openwebtorrent.com
 `
   .split('\n')
   .map((item) => item.trim())
   .filter((item) => item)
+  .map((item) => `wss://tracker.${item}`)
 
 function peerstringtobytes(peer: string) {
   return hex2arr(peer)

@@ -341,7 +341,7 @@ export function boardtick(board: MAYBE<BOARD>, timestamp: number) {
 
 // working with groups
 
-export function bookboardreadgroup(
+export function boardreadgroup(
   board: MAYBE<BOARD>,
   self: string,
   targetgroup: string,

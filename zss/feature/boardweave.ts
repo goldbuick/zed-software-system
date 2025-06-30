@@ -10,12 +10,9 @@ import {
   ptwithinboard,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
+import { boardresetlookups, boardsetlookup } from 'zss/memory/boardlookup'
+import { boardreadgroup } from 'zss/memory/boardops'
 import { bookreadcodepagewithtype } from 'zss/memory/book'
-import {
-  bookboardreadgroup,
-  bookboardresetlookups,
-  bookboardsetlookup,
-} from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -56,7 +53,7 @@ export function boardweave(
   const tmpboard = createboard()
 
   // make sure lookup is created
-  bookboardsetlookup(book, targetboard)
+  boardsetlookup(targetboard)
 
   // apply weave
   for (let y = p1.y; y <= p2.y; ++y) {
@@ -103,7 +100,7 @@ export function boardweave(
   }
 
   // reset all lookups
-  bookboardresetlookups(book, targetboard)
+  boardresetlookups(targetboard)
 }
 
 export function boardweavegroup(
@@ -127,11 +124,10 @@ export function boardweavegroup(
   }
 
   // make sure lookup is created
-  bookboardsetlookup(book, targetboard)
+  boardsetlookup(targetboard)
 
   // read target group
-  const { terrainelements, objectelements } = bookboardreadgroup(
-    book,
+  const { terrainelements, objectelements } = boardreadgroup(
     targetboard,
     self,
     targetgroup,
@@ -353,7 +349,7 @@ export function boardweavegroup(
     }
   }
 
-  bookboardresetlookups(book, targetboard)
+  boardresetlookups(targetboard)
 
   // apply transform to objects
   for (let i = 0; i < objectelements.length; ++i) {
@@ -365,5 +361,5 @@ export function boardweavegroup(
     }
   }
 
-  bookboardresetlookups(book, targetboard)
+  boardresetlookups(targetboard)
 }

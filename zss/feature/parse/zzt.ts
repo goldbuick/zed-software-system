@@ -1,12 +1,7 @@
 import { api_toast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { ispresent } from 'zss/mapping/types'
-import {
-  MEMORY_LABEL,
-  memoryreadbookbysoftware,
-  memorysetbook,
-  memorywritefromkind,
-} from 'zss/memory'
+import { memorysetbook, memorywritefromkind } from 'zss/memory'
 import { bookwritecodepage, createbook } from 'zss/memory/book'
 import { codepagereaddata, createcodepage } from 'zss/memory/codepage'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'

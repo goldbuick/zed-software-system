@@ -19,13 +19,12 @@ import {
   memorywritefromkind,
 } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
-import { boardelementread } from 'zss/memory/board'
+import { boardelementread, boardsafedelete } from 'zss/memory/board'
 import { boardelementapplycolor } from 'zss/memory/boardelement'
 import {
-  boardsafedelete,
-  bookboardsetlookup,
-  bookboardobjectnamedlookupdelete,
-} from 'zss/memory/bookboard'
+  boardobjectnamedlookupdelete,
+  boardsetlookup,
+} from 'zss/memory/boardlookup'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
@@ -407,7 +406,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
         if (memoryelementstatread(READ_CONTEXT.element, 'breakable')) {
           // mark target for deletion
           boardsafedelete(
-            READ_CONTEXT.book,
             READ_CONTEXT.board,
             READ_CONTEXT.element,
             READ_CONTEXT.timestamp,
@@ -432,17 +430,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // read
     const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
     // make sure lookup is created
-    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+    boardsetlookup(READ_CONTEXT.board)
     // make invisible
-    bookboardobjectnamedlookupdelete(
-      READ_CONTEXT.book,
-      READ_CONTEXT.board,
-      READ_CONTEXT.element,
-    )
+    boardobjectnamedlookupdelete(READ_CONTEXT.board, READ_CONTEXT.element)
     // nuke self
     if (
       boardsafedelete(
-        READ_CONTEXT.book,
         READ_CONTEXT.board,
         READ_CONTEXT.element,
         READ_CONTEXT.timestamp,
@@ -579,7 +572,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command('die', (chip) => {
     boardsafedelete(
-      READ_CONTEXT.book,
       READ_CONTEXT.board,
       READ_CONTEXT.element,
       READ_CONTEXT.timestamp,

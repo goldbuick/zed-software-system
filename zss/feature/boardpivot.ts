@@ -1,8 +1,8 @@
 import { linepoints } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import { createboard } from 'zss/memory/board'
+import { boardsetlookup } from 'zss/memory/boardlookup'
 import { bookreadcodepagewithtype } from 'zss/memory/book'
-import { bookboardsetlookup } from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -36,8 +36,8 @@ export function boardpivot(
   const pivotterrain = targetset === 'all' || targetset === 'terrain'
 
   // make sure lookup is created
-  bookboardsetlookup(book, targetboard)
-  bookboardsetlookup(book, tmpboard)
+  boardsetlookup(targetboard)
+  boardsetlookup(tmpboard)
 
   const alpha = -Math.tan(theta * 0.5)
   const beta = Math.sin(theta)
@@ -137,7 +137,7 @@ export function boardpivot(
     delete targetboard.lookup
 
     // make sure lookup is created
-    bookboardsetlookup(book, tmpboard)
-    bookboardsetlookup(book, targetboard)
+    boardsetlookup(tmpboard)
+    boardsetlookup(targetboard)
   }
 }
