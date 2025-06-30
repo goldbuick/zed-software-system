@@ -85,11 +85,10 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
 
 // outbound message
 export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
-  // switch (message.target) {
-  //     // case 'second':
-  //     // return true
-  // }
-  return false
+  switch (message.target) {
+    default:
+      return false
+  }
 }
 
 // create server -> client forward

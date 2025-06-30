@@ -5,6 +5,7 @@ import { api_error, MESSAGE, api_log } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
+import { pttoindex } from 'zss/mapping/2d'
 import { pick, pickwith } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
@@ -26,7 +27,11 @@ import {
   boardterrainsetfromkind,
 } from './board'
 import { boardelementapplycolor, boardelementname } from './boardelement'
-import { boardobjectnamedlookupdelete } from './boardlookup'
+import {
+  boardnamedwrite,
+  boardobjectlookupwrite,
+  boardobjectnamedlookupdelete,
+} from './boardlookup'
 import { boardmoveobject, boardtick } from './boardops'
 import {
   bookclearflags,
@@ -41,7 +46,6 @@ import {
   bookreadcodepagebyaddress,
   bookreadcodepagesbytypeandstat,
   bookreadflags,
-  bookreadobject,
   createbook,
 } from './book'
 import { codepagereaddata, codepagereadstat } from './codepage'
@@ -328,11 +332,11 @@ export function memorywritefromkind(
     const object = boardobjectcreatefromkind(board, dest, name, id)
     if (ispresent(object)) {
       boardelementapplycolor(object, maybecolor)
-      // // update lookup (only objects)
-      // bookboardobjectlookupwrite(book, board, object)
-      // // update named (terrain & objects)
-      // bookelementkindread(book, object)
-      // bookboardnamedwrite(book, board, object)
+      // update lookup (only objects)
+      boardobjectlookupwrite(board, object)
+      // update named (terrain & objects)
+      memoryelementkindread(object)
+      boardnamedwrite(board, object)
       return object
     }
   }
@@ -342,11 +346,11 @@ export function memorywritefromkind(
     const terrain = boardterrainsetfromkind(board, dest, name)
     if (ispresent(terrain)) {
       boardelementapplycolor(terrain, maybecolor)
-      //     // calc index
-      //     const idx = pttoindex(dest, BOARD_WIDTH)
-      //     // update named (terrain & objects)
-      //     bookelementkindread(book, terrain)
-      //     bookboardnamedwrite(book, board, terrain, idx)
+      // calc index
+      const idx = pttoindex(dest, BOARD_WIDTH)
+      // update named (terrain & objects)
+      memoryelementkindread(terrain)
+      boardnamedwrite(board, terrain, idx)
       return terrain
     }
   }
@@ -355,22 +359,24 @@ export function memorywritefromkind(
 }
 
 export function memorywritebullet(
-  book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
   kind: MAYBE<STR_KIND>,
   dest: PT,
 ) {
-  if (ispresent(book) && ispresent(board) && ispresent(kind)) {
-    const [name, maybecolor] = kind
-    const maybeobject = memoryelementkindread({ name })
-    if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
-      // create new object element
-      const object = boardobjectcreatefromkind(board, dest, name)
-      // update color
-      boardelementapplycolor(object, maybecolor)
-      return object
-    }
+  if (!ispresent(board) || !ispresent(kind)) {
+    return undefined
   }
+  const [name, maybecolor] = kind
+
+  const maybeobject = memorypickcodepagewithtype(CODE_PAGE_TYPE.OBJECT, name)
+  if (ispresent(maybeobject)) {
+    // create new object element
+    const object = boardobjectcreatefromkind(board, dest, name)
+    // update color
+    boardelementapplycolor(object, maybecolor)
+    return object
+  }
+
   return undefined
 }
 
@@ -481,7 +487,10 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
-  const playerkind = bookreadobject(mainbook, MEMORY_LABEL.PLAYER)
+  const playerkind = memorypickcodepagewithtype(
+    CODE_PAGE_TYPE.OBJECT,
+    MEMORY_LABEL.PLAYER,
+  )
   if (!ispresent(playerkind)) {
     return api_error(
       SOFTWARE,
@@ -502,14 +511,13 @@ export function memoryplayerlogin(player: string): boolean {
     const starty = codepagereadstat(title, 'starty')
     const px = isnumber(startx) ? startx : Math.round(BOARD_WIDTH * 0.5)
     const py = isnumber(starty) ? starty : Math.round(BOARD_HEIGHT * 0.5)
-    const kindname = playerkind.name ?? MEMORY_LABEL.PLAYER
     const obj = boardobjectcreatefromkind(
       titleboard,
       {
         x: px,
         y: py,
       },
-      kindname,
+      MEMORY_LABEL.PLAYER,
       player,
     )
     if (ispresent(obj?.id)) {
@@ -936,8 +944,21 @@ export function memorytick(playeronly = false) {
   const boards = bookplayerreadboards(mainbook)
   for (let b = 0; b < boards.length; ++b) {
     const board = boards[b]
-    const run = boardtick(board, timestamp)
+
+    // terrain setup
+    for (let i = 0; i < board.terrain.length; ++i) {
+      memoryelementkindread(board.terrain[i])
+    }
+
+    // object setup
+    const oids = Object.keys(board.objects)
+    for (let i = 0; i < oids.length; ++i) {
+      const id = oids[i]
+      memoryelementkindread(board.objects[id])
+    }
+
     // iterate code needed to update given board
+    const run = boardtick(board, timestamp)
     for (let i = 0; i < run.length; ++i) {
       const { id, type, code, object } = run[i]
       if (type === CODE_PAGE_TYPE.ERROR) {

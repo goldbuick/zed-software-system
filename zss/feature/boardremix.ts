@@ -16,11 +16,7 @@ import {
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
 import { boardsetlookup } from 'zss/memory/boardlookup'
-import {
-  bookreadcodepagewithtype,
-  bookreadobject,
-  bookreadterrain,
-} from 'zss/memory/book'
+import { bookreadcodepagewithtype } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
 import {
   BOARD_HEIGHT,
@@ -167,24 +163,22 @@ export function boardremix(
 
       // create new element
       let maybekind = elementalphatokindmap.get(akind) ?? ''
-      const maybeobject = bookreadobject(book, maybekind)
-      const maybeterrain = bookreadterrain(book, maybekind)
-      const sourceelement = maybeobject ?? maybeterrain
+      const sourceelement = memoryelementkindread({ kind: maybekind })
       switch (targetset) {
         case 'all':
           break
         case 'object':
-          if (ispresent(maybeterrain)) {
+          if (!boardelementisobject(sourceelement)) {
             maybekind = ''
           }
           break
         case 'terrain':
-          if (ispresent(maybeobject)) {
+          if (boardelementisobject(sourceelement)) {
             maybekind = ''
           }
           break
         default:
-          if (memoryelementstatread(maybeterrain, 'group') !== targetset) {
+          if (memoryelementstatread(sourceelement, 'group') !== targetset) {
             maybekind = ''
           }
           if (maybekind) {

@@ -281,40 +281,6 @@ export function bookelementdisplayread(
   }
 }
 
-export function bookreadobject(
-  book: MAYBE<BOOK>,
-  maybeobject: MAYBE<string>,
-): MAYBE<BOARD_ELEMENT> {
-  const object = maybeobject ?? ''
-  const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.OBJECT, object)
-  if (ispresent(page)) {
-    const data = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(page)
-    return {
-      ...deepcopy(data),
-      name: object,
-      code: page.code,
-    } as BOARD_ELEMENT
-  }
-  return undefined
-}
-
-export function bookreadterrain(
-  book: MAYBE<BOOK>,
-  maybeterrain: MAYBE<string>,
-): MAYBE<BOARD_ELEMENT> {
-  const terrain = maybeterrain ?? ''
-  const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.TERRAIN, terrain)
-  if (ispresent(page)) {
-    const data = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(page)
-    return {
-      ...deepcopy(data),
-      name: terrain,
-      code: page.code,
-    } as BOARD_ELEMENT
-  }
-  return undefined
-}
-
 export function bookreadboard(
   book: MAYBE<BOOK>,
   address: string,

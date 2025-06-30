@@ -504,6 +504,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         codepage.object = createboardelement()
       }
       codepage.object.id = codepage.id
+      codepage.object.code = codepage.code
       codepage.object.name = codepagereadname(codepage)
       codepage.object.category = CATEGORY.ISOBJECT
       codepageapplyelementstats(

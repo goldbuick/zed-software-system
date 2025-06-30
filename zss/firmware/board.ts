@@ -25,8 +25,6 @@ import { boardcheckblockedobject, boardmoveobject } from 'zss/memory/boardops'
 import {
   bookplayermovetoboard,
   bookreadcodepagesbytypeandstat,
-  bookreadobject,
-  bookreadterrain,
 } from 'zss/memory/book'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { mapstrcolortoattributes } from 'zss/words/color'
@@ -55,15 +53,10 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 
   // write new element
   const bulletkind = kind ?? ['bullet']
-  const bullet = memorywritebullet(
-    READ_CONTEXT.book,
-    READ_CONTEXT.board,
-    bulletkind,
-    {
-      x: READ_CONTEXT.element.x,
-      y: READ_CONTEXT.element.y,
-    },
-  )
+  const bullet = memorywritebullet(READ_CONTEXT.board, bulletkind, {
+    x: READ_CONTEXT.element.x,
+    y: READ_CONTEXT.element.y,
+  })
 
   // success ! get it moving
   if (ispresent(bullet)) {
@@ -124,22 +117,19 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     const pt = ptapplydir(dir.destpt, dirfrompts(from, dir.destpt))
     boardmoveobject(READ_CONTEXT.board, target, pt)
   }
+
   // get kind's collision type
   const [kindname] = kind
+  const kindelement = memoryelementkindread({ kind: kindname })
 
   // handle terrain put
-  const terrainkinddata = bookreadterrain(READ_CONTEXT.book, kindname)
-  if (ispresent(terrainkinddata)) {
+  if (!boardelementisobject(kindelement)) {
     memorywritefromkind(READ_CONTEXT.board, kind, dir.destpt, id)
   }
 
   // handle object put
-  const objectkinddata = bookreadobject(READ_CONTEXT.book, kindname)
-  if (ispresent(objectkinddata)) {
-    const kinddata =
-      bookreadobject(READ_CONTEXT.book, kindname) ??
-      bookreadterrain(READ_CONTEXT.book, kindname)
-    const collision = memoryelementstatread(kinddata, 'collision')
+  if (boardelementisobject(kindelement)) {
+    const collision = memoryelementstatread(kindelement, 'collision')
 
     // validate placement works
     const blocked = boardcheckblockedobject(
