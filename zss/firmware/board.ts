@@ -24,9 +24,9 @@ import {
   bookreadterrain,
 } from 'zss/memory/book'
 import {
-  bookboardcheckblockedobject,
+  boardcheckblockedobject,
   bookboardmoveobject,
-  bookboardsafedelete,
+  boardsafedelete,
   bookboardsetlookup,
   bookboardwritebulletobject,
 } from 'zss/memory/bookboard'
@@ -150,7 +150,7 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     const collision = memoryelementstatread(kinddata, 'collision')
 
     // validate placement works
-    const blocked = bookboardcheckblockedobject(
+    const blocked = boardcheckblockedobject(
       READ_CONTEXT.book,
       READ_CONTEXT.board,
       collision,
@@ -415,7 +415,7 @@ export const BOARD_FIRMWARE = createfirmware()
         }
       } else {
         // erase element
-        bookboardsafedelete(
+        boardsafedelete(
           READ_CONTEXT.book,
           READ_CONTEXT.board,
           element,

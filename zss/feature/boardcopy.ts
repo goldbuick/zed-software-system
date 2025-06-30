@@ -11,7 +11,7 @@ import { bookreadcodepagewithtype } from 'zss/memory/book'
 import {
   bookboardreadgroup,
   bookboardresetlookups,
-  bookboardsafedelete,
+  boardsafedelete,
   bookboardsetlookup,
 } from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
@@ -31,7 +31,7 @@ function emptyarea(book: BOOK, board: BOARD, p1: PT, p2: PT) {
     for (let x = p1.x; x <= p2.x; ++x) {
       const maybeobject = boardelementread(board, { x, y })
       if (boardelementisobject(maybeobject)) {
-        bookboardsafedelete(book, board, maybeobject, book.timestamp)
+        boardsafedelete(book, board, maybeobject, book.timestamp)
       }
       boardsetterrain(board, { x, y })
     }
@@ -51,7 +51,7 @@ function emptyareaobject(book: BOOK, board: BOARD, p1: PT, p2: PT) {
     for (let x = p1.x; x <= p2.x; ++x) {
       const maybeobject = boardelementread(board, { x, y })
       if (boardelementisobject(maybeobject)) {
-        bookboardsafedelete(book, board, maybeobject, book.timestamp)
+        boardsafedelete(book, board, maybeobject, book.timestamp)
       }
       boardsetterrain(board, { x, y })
     }
@@ -304,7 +304,7 @@ export function boardcopygroup(
       const destelement = boardelementread(targetboard, pt)
       if (ispresent(destelement)) {
         if (boardelementisobject(destelement)) {
-          bookboardsafedelete(book, targetboard, destelement, book.timestamp)
+          boardsafedelete(book, targetboard, destelement, book.timestamp)
         }
         boardsetterrain(targetboard, pt)
       }

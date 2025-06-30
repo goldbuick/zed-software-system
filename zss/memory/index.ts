@@ -24,7 +24,8 @@ import {
   boardsetterrain,
   boardterrainsetfromkind,
 } from './board'
-import { boardelementname } from './boardelement'
+import { boardelementapplycolor, boardelementname } from './boardelement'
+import { boardmoveobject, boardtick } from './boardops'
 import {
   bookclearflags,
   bookensurecodepagewithtype,
@@ -41,12 +42,6 @@ import {
   bookreadobject,
   createbook,
 } from './book'
-import {
-  bookboardmoveobject,
-  bookboardobjectnamedlookupdelete,
-  bookboardsafedelete,
-  bookboardtick,
-} from './bookboard'
 import { codepagereaddata, codepagereadstat } from './codepage'
 import { memoryloaderarg } from './loader'
 import { memoryconverttogadgetlayers } from './rendertogadget'
@@ -330,7 +325,7 @@ export function memorywritefromkind(
   if (ispresent(maybeobject)) {
     const object = boardobjectcreatefromkind(board, dest, name, id)
     if (ispresent(object)) {
-      // boardelementapplycolor(object, maybecolor)
+      boardelementapplycolor(object, maybecolor)
       // // update lookup (only objects)
       // bookboardobjectlookupwrite(book, board, object)
       // // update named (terrain & objects)
@@ -344,7 +339,7 @@ export function memorywritefromkind(
   if (ispresent(maybeterrain)) {
     const terrain = boardterrainsetfromkind(board, dest, name)
     if (ispresent(terrain)) {
-      //     boardelementapplycolor(terrain, maybecolor)
+      boardelementapplycolor(terrain, maybecolor)
       //     // calc index
       //     const idx = pttoindex(dest, BOARD_WIDTH)
       //     // update named (terrain & objects)
@@ -354,6 +349,26 @@ export function memorywritefromkind(
     }
   }
 
+  return undefined
+}
+
+export function memorywritebullet(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+  kind: MAYBE<STR_KIND>,
+  dest: PT,
+) {
+  if (ispresent(book) && ispresent(board) && ispresent(kind)) {
+    const [name, maybecolor] = kind
+    const maybeobject = memoryelementkindread({ name })
+    if (ispresent(maybeobject) && ispresent(maybeobject.name)) {
+      // create new object element
+      const object = boardobjectcreatefromkind(board, dest, name)
+      // update color
+      boardelementapplycolor(object, maybecolor)
+      return object
+    }
+  }
   return undefined
 }
 
@@ -528,7 +543,7 @@ export function memoryplayerlogout(player: string) {
     bookplayersetboard(mainbook, remove, '')
 
     // clear element
-    bookboardobjectnamedlookupdelete(
+    boardobjectnamedlookupdelete(
       mainbook,
       board,
       boardobjectread(board, remove),
@@ -666,7 +681,7 @@ export function memorymoveobject(
     return false
   }
 
-  const blocked = bookboardmoveobject(book, board, element, dest)
+  const blocked = boardmoveobject(book, board, element, dest)
   if (ispresent(blocked)) {
     const elementisplayer = ispid(element.id)
     const elementpartyisplayer = ispid(element.party ?? element.id)
@@ -758,7 +773,7 @@ export function memorymoveobject(
         })
         if (ispresent(maybeobject)) {
           // mark target for deletion
-          bookboardsafedelete(
+          boardsafedelete(
             READ_CONTEXT.book,
             READ_CONTEXT.board,
             maybeobject,
@@ -924,7 +939,7 @@ export function memorytick(playeronly = false) {
   const boards = bookplayerreadboards(mainbook)
   for (let b = 0; b < boards.length; ++b) {
     const board = boards[b]
-    const run = bookboardtick(mainbook, board, timestamp)
+    const run = boardtick(mainbook, board, timestamp)
     // iterate code needed to update given board
     for (let i = 0; i < run.length; ++i) {
       const { id, type, code, object } = run[i]

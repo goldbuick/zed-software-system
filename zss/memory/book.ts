@@ -6,7 +6,7 @@ import { COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
 import { boardelementindex, boardobjectread } from './board'
 import { boardelementisobject } from './boardelement'
-import { bookboardcheckblockedobject, bookboardsetlookup } from './bookboard'
+import { boardcheckblockedobject, bookboardsetlookup } from './bookboard'
 import {
   codepagereaddata,
   codepagereadname,
@@ -425,7 +425,7 @@ export function bookplayermovetoboard(
 
   // read target spot
   if (
-    bookboardcheckblockedobject(book, destboard, COLLISION.ISWALK, dest, true)
+    boardcheckblockedobject(book, destboard, COLLISION.ISWALK, dest, true)
   ) {
     return
   }

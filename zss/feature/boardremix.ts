@@ -15,7 +15,7 @@ import {
   bookreadobject,
   bookreadterrain,
 } from 'zss/memory/book'
-import { bookboardsafedelete, bookboardsetlookup } from 'zss/memory/bookboard'
+import { boardsafedelete, bookboardsetlookup } from 'zss/memory/bookboard'
 import { codepagereaddata } from 'zss/memory/codepage'
 import {
   BOARD_HEIGHT,
@@ -141,7 +141,7 @@ export function boardremix(
         case 'all': {
           const maybeobject = boardelementread(targetboard, { x, y })
           if (boardelementisobject(maybeobject)) {
-            bookboardsafedelete(book, targetboard, maybeobject, book.timestamp)
+            boardsafedelete(book, targetboard, maybeobject, book.timestamp)
           }
           boardsetterrain(targetboard, { x, y })
           break
@@ -149,7 +149,7 @@ export function boardremix(
         case 'object': {
           const maybeobject = boardelementread(targetboard, { x, y })
           if (boardelementisobject(maybeobject)) {
-            bookboardsafedelete(book, targetboard, maybeobject, book.timestamp)
+            boardsafedelete(book, targetboard, maybeobject, book.timestamp)
           }
           break
         }
@@ -186,12 +186,7 @@ export function boardremix(
             // blank target region
             const maybeobject = boardelementread(targetboard, { x, y })
             if (boardelementisobject(maybeobject)) {
-              bookboardsafedelete(
-                book,
-                targetboard,
-                maybeobject,
-                book.timestamp,
-              )
+              boardsafedelete(book, targetboard, maybeobject, book.timestamp)
             }
             boardsetterrain(targetboard, { x, y })
           }

@@ -16,15 +16,15 @@ import {
   memoryreadflags,
   memoryreadoperator,
   memoryelementstatread,
+  memorywritefromkind,
 } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
 import { boardelementread } from 'zss/memory/board'
 import { boardelementapplycolor } from 'zss/memory/boardelement'
 import {
-  bookboardsafedelete,
+  boardsafedelete,
   bookboardsetlookup,
   bookboardobjectnamedlookupdelete,
-  bookboardwritefromkind,
 } from 'zss/memory/bookboard'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
@@ -406,7 +406,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         // walking breakables get bonked
         if (memoryelementstatread(READ_CONTEXT.element, 'breakable')) {
           // mark target for deletion
-          bookboardsafedelete(
+          boardsafedelete(
             READ_CONTEXT.book,
             READ_CONTEXT.board,
             READ_CONTEXT.element,
@@ -441,7 +441,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     )
     // nuke self
     if (
-      bookboardsafedelete(
+      boardsafedelete(
         READ_CONTEXT.book,
         READ_CONTEXT.board,
         READ_CONTEXT.element,
@@ -453,7 +453,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         y: READ_CONTEXT.element?.y ?? 0,
       }
       // write new element
-      bookboardwritefromkind(READ_CONTEXT.book, READ_CONTEXT.board, kind, pt)
+      memorywritefromkind(READ_CONTEXT.board, kind, pt)
     }
     // halt execution
     chip.endofprogram()
@@ -578,7 +578,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('die', (chip) => {
-    bookboardsafedelete(
+    boardsafedelete(
       READ_CONTEXT.book,
       READ_CONTEXT.board,
       READ_CONTEXT.element,

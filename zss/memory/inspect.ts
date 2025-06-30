@@ -27,7 +27,7 @@ import {
 } from './board'
 import { boardelementisobject, boardelementname } from './boardelement'
 import { bookboardelementreadcodepage } from './book'
-import { bookboardsafedelete, bookboardsetlookup } from './bookboard'
+import { boardsafedelete, bookboardsetlookup } from './bookboard'
 import { memoryinspectarea } from './inspectarea'
 import { hassecretheap } from './inspectcopypaste'
 import {
@@ -70,12 +70,7 @@ export function memoryinspectempty(
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = boardelementread(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
-            bookboardsafedelete(
-              mainbook,
-              board,
-              maybeobject,
-              mainbook.timestamp,
-            )
+            boardsafedelete(mainbook, board, maybeobject, mainbook.timestamp)
           }
           boardsetterrain(board, { x, y })
         }
@@ -87,12 +82,7 @@ export function memoryinspectempty(
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = boardelementread(board, { x, y })
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
-            bookboardsafedelete(
-              mainbook,
-              board,
-              maybeobject,
-              mainbook.timestamp,
-            )
+            boardsafedelete(mainbook, board, maybeobject, mainbook.timestamp)
           }
         }
       }
@@ -227,7 +217,7 @@ export function memoryinspectcommand(path: string, player: string) {
       memoryinspectchar(player, element, inspect.path)
       break
     case 'empty':
-      bookboardsafedelete(mainbook, board, element, mainbook.timestamp)
+      boardsafedelete(mainbook, board, element, mainbook.timestamp)
       break
     case 'code':
       doasync(SOFTWARE, player, async () => {
