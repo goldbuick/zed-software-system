@@ -1,6 +1,6 @@
 import { pttoindex } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
-import { memorymoveobject } from 'zss/memory'
+import { memoryelementstatread, memorymoveobject } from 'zss/memory'
 import { checkdoescollide } from 'zss/memory/atomics'
 import {
   boardelementread,
@@ -10,12 +10,9 @@ import {
   ptwithinboard,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import { bookelementstatread, bookreadcodepagewithtype } from 'zss/memory/book'
-import {
-  bookboardreadgroup,
-  bookboardresetlookups,
-  bookboardsetlookup,
-} from 'zss/memory/bookboard'
+import { boardresetlookups, boardsetlookup } from 'zss/memory/boardlookup'
+import { boardreadgroup } from 'zss/memory/boardops'
+import { bookreadcodepagewithtype } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -56,7 +53,7 @@ export function boardweave(
   const tmpboard = createboard()
 
   // make sure lookup is created
-  bookboardsetlookup(book, targetboard)
+  boardsetlookup(targetboard)
 
   // apply weave
   for (let y = p1.y; y <= p2.y; ++y) {
@@ -103,7 +100,7 @@ export function boardweave(
   }
 
   // reset all lookups
-  bookboardresetlookups(book, targetboard)
+  boardresetlookups(targetboard)
 }
 
 export function boardweavegroup(
@@ -127,11 +124,10 @@ export function boardweavegroup(
   }
 
   // make sure lookup is created
-  bookboardsetlookup(book, targetboard)
+  boardsetlookup(targetboard)
 
   // read target group
-  const { terrainelements, objectelements } = bookboardreadgroup(
-    book,
+  const { terrainelements, objectelements } = boardreadgroup(
     targetboard,
     self,
     targetgroup,
@@ -171,8 +167,7 @@ export function boardweavegroup(
   let didcollide = false
   for (let i = 0; i < terrainelements.length; ++i) {
     const fromelement = terrainelements[i]
-    const fromcollision: COLLISION = bookelementstatread(
-      book,
+    const fromcollision: COLLISION = memoryelementstatread(
       fromelement,
       'collision',
     )
@@ -187,8 +182,7 @@ export function boardweavegroup(
         { x: destelement?.x ?? 0, y: destelement?.y ?? 0 },
         BOARD_WIDTH,
       )
-      const destcollision: COLLISION = bookelementstatread(
-        book,
+      const destcollision: COLLISION = memoryelementstatread(
         destelement,
         'collision',
       )
@@ -205,13 +199,13 @@ export function boardweavegroup(
           ? boardelementread(targetboard, from)
           : undefined
         const carriedispushable = hasfromelement
-          ? bookelementstatread(book, carriedelement, 'pushable')
+          ? memoryelementstatread(carriedelement, 'pushable')
           : false
         const shouldpushfromelement = hasfromelement && carriedispushable
 
         // detect we can make room
         if (
-          bookelementstatread(book, destelement, 'pushable') &&
+          memoryelementstatread(destelement, 'pushable') &&
           (fromcollision !== COLLISION.ISWALK || hasfromelement)
         ) {
           // if we are doing a carry, we should push
@@ -277,8 +271,7 @@ export function boardweavegroup(
 
   for (let i = 0; i < objectelements.length; ++i) {
     const fromelement = objectelements[i]
-    const fromollision: COLLISION = bookelementstatread(
-      book,
+    const fromollision: COLLISION = memoryelementstatread(
       fromelement,
       'collision',
     )
@@ -287,12 +280,11 @@ export function boardweavegroup(
     if (ptwithinboard(dest)) {
       const destelement = boardelementread(targetboard, dest)
       const destid = destelement?.id ?? ''
-      const destcollision: COLLISION = bookelementstatread(
-        book,
+      const destcollision: COLLISION = memoryelementstatread(
         destelement,
         'collision',
       )
-      const destgroup: string = bookelementstatread(book, destelement, 'group')
+      const destgroup: string = memoryelementstatread(destelement, 'group')
 
       if (
         ispresent(destelement) &&
@@ -300,7 +292,7 @@ export function boardweavegroup(
         carriedids.includes(destid) &&
         groupids.includes(destid) !== true
       ) {
-        if (bookelementstatread(book, destelement, 'pushable')) {
+        if (memoryelementstatread(destelement, 'pushable')) {
           didcollide =
             memorymoveobject(book, targetboard, destelement, dest) !== true
         } else {
@@ -357,7 +349,7 @@ export function boardweavegroup(
     }
   }
 
-  bookboardresetlookups(book, targetboard)
+  boardresetlookups(targetboard)
 
   // apply transform to objects
   for (let i = 0; i < objectelements.length; ++i) {
@@ -369,5 +361,5 @@ export function boardweavegroup(
     }
   }
 
-  bookboardresetlookups(book, targetboard)
+  boardresetlookups(targetboard)
 }

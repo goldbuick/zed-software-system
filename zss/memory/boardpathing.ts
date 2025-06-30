@@ -4,11 +4,11 @@ import { COLLISION, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
 import { boardgetterrain, ptwithinboard } from './board'
-import { bookelementstatread } from './book'
-import { BOARD, BOARD_SIZE, BOARD_WIDTH, BOOK } from './types'
+import { BOARD, BOARD_SIZE, BOARD_WIDTH } from './types'
+
+import { memoryelementstatread } from '.'
 
 function boardreaddistmap(
-  book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
   forcollision: COLLISION,
   frompt: PT,
@@ -46,7 +46,7 @@ function boardreaddistmap(
           if (
             !checkdoescollide(
               forcollision,
-              bookelementstatread(book, terrain, 'collision'),
+              memoryelementstatread(terrain, 'collision'),
             )
           ) {
             // write dist
@@ -80,20 +80,19 @@ function boardreaddistmapvalue(pt: PT, values: number[]): number {
 }
 
 // pathing utils
-export function bookboardreadpath(
-  book: MAYBE<BOOK>,
+export function boardreadpath(
   board: MAYBE<BOARD>,
   forcollision: COLLISION,
   frompt: PT,
   topt: PT,
   flee: boolean,
 ): MAYBE<PT> {
-  if (!ispresent(book) || !ispresent(board)) {
+  if (!ispresent(board)) {
     return undefined
   }
 
   // get distmap
-  const distmap = boardreaddistmap(book, board, forcollision, frompt, topt)
+  const distmap = boardreaddistmap(board, forcollision, frompt, topt)
   if (!ispresent(distmap)) {
     return
   }

@@ -6,22 +6,16 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import {
-  isarray,
-  isnumber,
-  ispresent,
-  isstring,
-  MAYBE,
-} from 'zss/mapping/types'
+import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
 import { boardelementindex } from './board'
-import { bookelementstatread } from './book'
 import { codepagereadname, codepagereadstatdefaults } from './codepage'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE } from './types'
 
 import {
   MEMORY_LABEL,
+  memoryelementstatread,
   memoryensuresoftwarebook,
   memoryreadplayerboard,
 } from '.'
@@ -171,13 +165,10 @@ export function memoryinspectelement(
 
   const chip = chipfromelement(board, element)
   if (isobject) {
-    gadgettext(
-      player,
-      `cycle: ${bookelementstatread(mainbook, element, 'cycle')}`,
-    )
+    gadgettext(player, `cycle: ${memoryelementstatread(element, 'cycle')}`)
   }
 
-  const collision = bookelementstatread(mainbook, element, 'collision')
+  const collision = memoryelementstatread(element, 'collision')
   switch (collision as COLLISION) {
     case COLLISION.ISWALK:
       gadgettext(player, `collision: iswalk`)
@@ -197,14 +188,14 @@ export function memoryinspectelement(
     gadgettext(
       player,
       `ispushable: ${
-        bookelementstatread(mainbook, element, 'pushable') ? `yes` : `no`
+        memoryelementstatread(element, 'pushable') ? `yes` : `no`
       }`,
     )
   }
   gadgettext(
     player,
     `isbreakable: ${
-      bookelementstatread(mainbook, element, 'breakable') ? `yes` : `no`
+      memoryelementstatread(element, 'breakable') ? `yes` : `no`
     }`,
   )
 

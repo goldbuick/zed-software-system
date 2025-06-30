@@ -52,6 +52,9 @@ enum BOARD_ELEMENT_KEYS {
   group,
   lightdir,
   item,
+  p4,
+  p5,
+  p6,
 }
 
 // safe to serialize copy of boardelement

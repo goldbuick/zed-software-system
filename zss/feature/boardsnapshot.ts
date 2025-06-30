@@ -32,7 +32,7 @@ export function boardsnapshot(target: string) {
 
   // create snapshot board codepage
   const [snapshotcodepage] = memoryensuresoftwarecodepage(
-    MEMORY_LABEL.CONTENT,
+    MEMORY_LABEL.MAIN,
     name,
     CODE_PAGE_TYPE.BOARD,
   )
@@ -44,7 +44,7 @@ export function boardsnapshot(target: string) {
   }
 
   // invoke copy
-  boardcopy(target, snapshotboard.id, p1, p2, '', targetset)
+  boardcopy(target, snapshotboard.id, p1, p2, targetset)
 
   // return board
   return snapshotboard

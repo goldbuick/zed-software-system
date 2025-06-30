@@ -5,8 +5,8 @@ import { memoryrun } from 'zss/memory'
 import { findplayerforelement, listelementsbykind } from 'zss/memory/atomics'
 import { boardelementread, boardgetterrain } from 'zss/memory/board'
 import { boardelementname } from 'zss/memory/boardelement'
+import { boardcheckmoveobject } from 'zss/memory/boardops'
 import { bookelementdisplayread } from 'zss/memory/book'
-import { bookboardcheckmoveobject } from 'zss/memory/bookboard'
 
 import { isstrcategory, mapstrcategory, readcategory } from './category'
 import { isstrcollision, mapstrcollision, readcollision } from './collision'
@@ -182,8 +182,7 @@ export function readexpr(index: number): [any, number] {
         // This flag is SET when the object is not free to move in the given direction, and
         // CLEAR when the object is free to move in the direction.
         const [dir, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.DIR])
-        const isblocked = bookboardcheckmoveobject(
-          READ_CONTEXT.book,
+        const isblocked = boardcheckmoveobject(
           READ_CONTEXT.board,
           READ_CONTEXT.element,
           dir.destpt,
@@ -216,13 +215,7 @@ export function readexpr(index: number): [any, number] {
             ? boardelementread(READ_CONTEXT.board, dir.destpt)
             : boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
         if (ispresent(maybelement)) {
-          const display = bookelementdisplayread(
-            READ_CONTEXT.book,
-            maybelement,
-            -1,
-            -1,
-            -1,
-          )
+          const display = bookelementdisplayread(maybelement, -1, -1, -1)
           return [
             (readstrcolor(color) as number) === display.color ||
             (readstrbg(color) as number) === display.bg
@@ -246,13 +239,7 @@ export function readexpr(index: number): [any, number] {
         if (ispresent(maybelement)) {
           const maybename = NAME(readstrkindname(kind))
           const maybecolor = readstrkindcolor(kind)
-          const display = bookelementdisplayread(
-            READ_CONTEXT.book,
-            maybelement,
-            -1,
-            -1,
-            -1,
-          )
+          const display = bookelementdisplayread(maybelement, -1, -1, -1)
           if (maybename && maybename === NAME(boardelementname(maybelement))) {
             return [1, iii]
           }

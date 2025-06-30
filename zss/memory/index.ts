@@ -5,12 +5,14 @@ import { api_error, MESSAGE, api_log } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
+import { pttoindex } from 'zss/mapping/2d'
 import { pick, pickwith } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
 import { ispt } from 'zss/words/dir'
+import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
@@ -20,12 +22,19 @@ import {
   boardelementread,
   boardobjectcreatefromkind,
   boardobjectread,
+  boardsafedelete,
   boardsetterrain,
+  boardterrainsetfromkind,
 } from './board'
-import { boardelementname } from './boardelement'
+import { boardelementapplycolor, boardelementname } from './boardelement'
+import {
+  boardnamedwrite,
+  boardobjectlookupwrite,
+  boardobjectnamedlookupdelete,
+} from './boardlookup'
+import { boardmoveobject, boardtick } from './boardops'
 import {
   bookclearflags,
-  bookelementstatread,
   bookensurecodepagewithtype,
   bookhasflags,
   bookplayermovetoboard,
@@ -37,24 +46,19 @@ import {
   bookreadcodepagebyaddress,
   bookreadcodepagesbytypeandstat,
   bookreadflags,
-  bookreadobject,
   createbook,
 } from './book'
-import {
-  bookboardmoveobject,
-  bookboardobjectnamedlookupdelete,
-  bookboardsafedelete,
-  bookboardtick,
-} from './bookboard'
 import { codepagereaddata, codepagereadstat } from './codepage'
 import { memoryloaderarg } from './loader'
 import { memoryconverttogadgetlayers } from './rendertogadget'
 import {
   BOARD,
   BOARD_ELEMENT,
+  BOARD_ELEMENT_STAT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOOK,
+  CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
 
@@ -65,7 +69,6 @@ export enum MEMORY_LABEL {
   MAIN = 'main',
   TITLE = 'title',
   PLAYER = 'player',
-  CONTENT = 'content',
   GADGETSTORE = 'gadgetstore',
   GADGETSYNC = 'gadgetsync',
 }
@@ -209,6 +212,179 @@ export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
   )
 }
 
+/*
+when we list pages,
+ we list all pages, from all books
+when we list boards, do the same
+will have to add in the pickstats support here as well
+
+*/
+
+export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
+  type: T,
+  address: string,
+): MAYBE<CODE_PAGE> {
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const codepage = pick(bookreadcodepagesbytypeandstat(mainbook, type, address))
+  if (ispresent(codepage)) {
+    return codepage
+  }
+  const books = memoryreadbooklist()
+  for (let i = 0; i < books.length; ++i) {
+    const book = books[i]
+    if (book.id !== mainbook?.id) {
+      const fallbackcodepage = pick(
+        bookreadcodepagesbytypeandstat(book, type, address),
+      )
+      if (ispresent(fallbackcodepage)) {
+        return fallbackcodepage
+      }
+    }
+  }
+  return undefined
+}
+
+export function memoryelementkindread(
+  element: MAYBE<BOARD_ELEMENT>,
+): MAYBE<BOARD_ELEMENT> {
+  if (!isstring(element?.kind) || !element.kind) {
+    return undefined
+  }
+
+  const maybeobject = memorypickcodepagewithtype(
+    CODE_PAGE_TYPE.OBJECT,
+    element.kind,
+  )
+  if (ispresent(maybeobject)) {
+    element.kinddata = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(maybeobject)
+    return element.kinddata
+  }
+
+  const maybeterrain = memorypickcodepagewithtype(
+    CODE_PAGE_TYPE.TERRAIN,
+    element.kind,
+  )
+  if (ispresent(maybeterrain)) {
+    element.kinddata = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(maybeterrain)
+    return element.kinddata
+  }
+
+  return undefined
+}
+
+export function memoryelementstatread(
+  element: MAYBE<BOARD_ELEMENT>,
+  stat: BOARD_ELEMENT_STAT,
+) {
+  const kind = element?.kinddata
+  const kindid = kind?.id ?? ''
+
+  const elementstat = element?.[stat]
+  if (ispresent(elementstat)) {
+    return elementstat
+  }
+
+  const kindstat = kind?.[stat]
+  if (ispresent(kindstat)) {
+    return kindstat
+  }
+
+  const codepage =
+    memorypickcodepagewithtype(CODE_PAGE_TYPE.OBJECT, kindid) ??
+    memorypickcodepagewithtype(CODE_PAGE_TYPE.TERRAIN, kindid)
+  const codepagestat = codepagereadstat(codepage, stat)
+  if (ispresent(codepagestat)) {
+    return codepagestat
+  }
+
+  // we define all stat defaults here
+  switch (stat) {
+    case 'group':
+      return ''
+    case 'cycle':
+      return CYCLE_DEFAULT
+    case 'item':
+      return 0
+    case 'pushable':
+      return 0
+    case 'breakable':
+      return 0
+    case 'collision':
+      return COLLISION.ISWALK
+    default:
+      return undefined
+  }
+}
+
+export function memorywritefromkind(
+  board: MAYBE<BOARD>,
+  kind: MAYBE<STR_KIND>,
+  dest: PT,
+  id?: string,
+): MAYBE<BOARD_ELEMENT> {
+  if (!ispresent(board) || !ispresent(kind)) {
+    return undefined
+  }
+  const [name, maybecolor] = kind
+
+  const maybeobject = memorypickcodepagewithtype(CODE_PAGE_TYPE.OBJECT, name)
+  if (ispresent(maybeobject)) {
+    const object = boardobjectcreatefromkind(board, dest, name, id)
+    if (ispresent(object)) {
+      boardelementapplycolor(object, maybecolor)
+      // update lookup (only objects)
+      boardobjectlookupwrite(board, object)
+      // update named (terrain & objects)
+      memoryelementkindread(object)
+      boardnamedwrite(board, object)
+      return object
+    }
+  }
+
+  const maybeterrain = memorypickcodepagewithtype(CODE_PAGE_TYPE.TERRAIN, name)
+  if (ispresent(maybeterrain)) {
+    const terrain = boardterrainsetfromkind(board, dest, name)
+    if (ispresent(terrain)) {
+      boardelementapplycolor(terrain, maybecolor)
+      // calc index
+      const idx = pttoindex(dest, BOARD_WIDTH)
+      // update named (terrain & objects)
+      memoryelementkindread(terrain)
+      boardnamedwrite(board, terrain, idx)
+      return terrain
+    }
+  }
+
+  return undefined
+}
+
+export function memorywritebullet(
+  board: MAYBE<BOARD>,
+  kind: MAYBE<STR_KIND>,
+  dest: PT,
+) {
+  if (!ispresent(board) || !ispresent(kind)) {
+    return undefined
+  }
+  const [name, maybecolor] = kind
+
+  const maybeobject = memorypickcodepagewithtype(CODE_PAGE_TYPE.OBJECT, name)
+  if (ispresent(maybeobject)) {
+    // create new object element
+    const object = boardobjectcreatefromkind(board, dest, name)
+    // update color
+    boardelementapplycolor(object, maybecolor)
+    return object
+  }
+
+  return undefined
+}
+
+export function memoryboardread(address: string): MAYBE<BOARD> {
+  const maybeboard = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, address)
+  return codepagereaddata<CODE_PAGE_TYPE.BOARD>(maybeboard)
+}
+
 export function memoryreadflags(id: string) {
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   return bookreadflags(mainbook, id)
@@ -232,6 +408,8 @@ export function memoryclearflags(id: string) {
 export function memoryresetbooks(books: BOOK[], select: string) {
   // clear all books
   MEMORY.books.clear()
+
+  // add new books
   books.forEach((book) => {
     MEMORY.books.set(book.id, book)
     // attempt default for main
@@ -239,12 +417,14 @@ export function memoryresetbooks(books: BOOK[], select: string) {
       MEMORY.software.main = book.id
     }
   })
+
   // try select
   const book = memoryreadbookbyaddress(select)
   if (ispresent(book)) {
-    memorysetsoftwarebook(MEMORY_LABEL.MAIN, book.id)
+    MEMORY.software.main = book.id
   }
 
+  // select first book as main
   if (!MEMORY.software.main) {
     const first = MEMORY.books.values().next()
     if (first.value) {
@@ -307,7 +487,10 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
-  const playerkind = bookreadobject(mainbook, MEMORY_LABEL.PLAYER)
+  const playerkind = memorypickcodepagewithtype(
+    CODE_PAGE_TYPE.OBJECT,
+    MEMORY_LABEL.PLAYER,
+  )
   if (!ispresent(playerkind)) {
     return api_error(
       SOFTWARE,
@@ -328,14 +511,13 @@ export function memoryplayerlogin(player: string): boolean {
     const starty = codepagereadstat(title, 'starty')
     const px = isnumber(startx) ? startx : Math.round(BOARD_WIDTH * 0.5)
     const py = isnumber(starty) ? starty : Math.round(BOARD_HEIGHT * 0.5)
-    const kindname = playerkind.name ?? MEMORY_LABEL.PLAYER
     const obj = boardobjectcreatefromkind(
       titleboard,
       {
         x: px,
         y: py,
       },
-      kindname,
+      MEMORY_LABEL.PLAYER,
       player,
     )
     if (ispresent(obj?.id)) {
@@ -371,11 +553,7 @@ export function memoryplayerlogout(player: string) {
     bookplayersetboard(mainbook, remove, '')
 
     // clear element
-    bookboardobjectnamedlookupdelete(
-      mainbook,
-      board,
-      boardobjectread(board, remove),
-    )
+    boardobjectnamedlookupdelete(board, boardobjectread(board, remove))
     boarddeleteobject(board, remove)
 
     // halt chip
@@ -509,12 +687,12 @@ export function memorymoveobject(
     return false
   }
 
-  const blocked = bookboardmoveobject(book, board, element, dest)
+  const blocked = boardmoveobject(board, element, dest)
   if (ispresent(blocked)) {
     const elementisplayer = ispid(element.id)
     const elementpartyisplayer = ispid(element.party ?? element.id)
     const elementisbullet =
-      bookelementstatread(book, element, 'collision') === COLLISION.ISBULLET
+      memoryelementstatread(element, 'collision') === COLLISION.ISBULLET
 
     let elementplayer = ''
     if (element.party && elementpartyisplayer) {
@@ -527,7 +705,9 @@ export function memorymoveobject(
     const blockedbyplayer = ispid(blocked.id)
     const blockedpartyisplayer = ispid(blocked.party ?? blocked.id)
     const blockedisbullet =
-      bookelementstatread(book, blocked, 'collision') === COLLISION.ISBULLET
+      memoryelementstatread(blocked, 'collision') === COLLISION.ISBULLET
+
+    const samemparty = elementpartyisplayer === blockedpartyisplayer
 
     let blockedplayer = ''
     if (blocked.party && blockedpartyisplayer) {
@@ -541,18 +721,14 @@ export function memorymoveobject(
       playerblockedbyedge(book, board, element, dest)
     } else if (elementisplayer) {
       if (blockedbyplayer) {
+        // same party touch
         sendinteraction('', blocked, element, 'bump')
         sendinteraction('', element, blocked, 'bump')
       } else if (blockedisbullet) {
-        if (elementpartyisplayer === blockedpartyisplayer) {
-          sendinteraction('', blocked, element, 'thud')
-          sendinteraction('', element, blocked, 'partyshot')
-        } else {
-          sendinteraction(blockedplayer, blocked, element, 'thud')
-          sendinteraction(elementplayer, element, blocked, 'shot')
-        }
+        sendinteraction('', blocked, element, samemparty ? 'partyshot' : 'shot')
+        sendinteraction(elementplayer, element, blocked, 'touch')
       } else {
-        sendinteraction(blockedplayer, blocked, element, 'thud')
+        sendinteraction('', blocked, element, 'thud')
         sendinteraction(elementplayer, element, blocked, 'touch')
       }
     } else if (elementisbullet) {
@@ -560,36 +736,41 @@ export function memorymoveobject(
         sendinteraction('', blocked, element, 'thud')
         sendinteraction('', element, blocked, 'thud')
       } else {
-        if (elementpartyisplayer === blockedpartyisplayer) {
-          sendinteraction('', blocked, element, 'thud')
-          sendinteraction('', element, blocked, 'partyshot')
-        } else {
-          sendinteraction(blockedplayer, blocked, element, 'thud')
-          sendinteraction(elementplayer, element, blocked, 'shot')
-        }
+        sendinteraction(
+          '',
+          blocked,
+          element,
+          blockedbyplayer ? 'touch' : 'thud',
+        )
+        sendinteraction(
+          samemparty ? '' : elementplayer,
+          element,
+          blocked,
+          samemparty ? 'partyshot' : 'shot',
+        )
       }
     } else {
       if (blockedbyplayer) {
-        sendinteraction(blockedplayer, blocked, element, 'bump')
-        sendinteraction(elementplayer, element, blocked, 'touch')
+        sendinteraction(blockedplayer, blocked, element, 'touch')
       } else if (blockedisbullet) {
-        if (elementpartyisplayer === blockedpartyisplayer) {
-          sendinteraction('', blocked, element, 'partyshot')
-          sendinteraction('', element, blocked, 'thud')
-        } else {
-          sendinteraction(blockedplayer, blocked, element, 'shot')
-          sendinteraction(elementplayer, element, blocked, 'thud')
-        }
+        sendinteraction(
+          samemparty ? '' : blockedplayer,
+          blocked,
+          element,
+          samemparty ? 'partyshot' : 'shot',
+        )
+        sendinteraction('', element, blocked, samemparty ? 'thud' : 'touch')
       } else {
         sendinteraction('', blocked, element, 'thud')
+        // same party touch
         sendinteraction('', element, blocked, 'bump')
       }
     }
 
     // delete item and breakable elements
     if (
-      (elementisplayer && bookelementstatread(book, blocked, 'item')) ||
-      (elementisbullet && bookelementstatread(book, blocked, 'breakable'))
+      (elementisplayer && memoryelementstatread(blocked, 'item')) ||
+      (elementisbullet && memoryelementstatread(blocked, 'breakable'))
     ) {
       if (ispresent(blocked?.id)) {
         const maybeobject = boardelementread(board, {
@@ -598,8 +779,7 @@ export function memorymoveobject(
         })
         if (ispresent(maybeobject)) {
           // mark target for deletion
-          bookboardsafedelete(
-            READ_CONTEXT.book,
+          boardsafedelete(
             READ_CONTEXT.board,
             maybeobject,
             READ_CONTEXT.timestamp,
@@ -649,7 +829,7 @@ export function memorytickobject(
     : playerfromelement
 
   // read cycle
-  const cycle = bookelementstatread(book, object, 'cycle')
+  const cycle = memoryelementstatread(object, 'cycle')
 
   // run chip code
   const id = object.id ?? ''
@@ -764,8 +944,21 @@ export function memorytick(playeronly = false) {
   const boards = bookplayerreadboards(mainbook)
   for (let b = 0; b < boards.length; ++b) {
     const board = boards[b]
-    const run = bookboardtick(mainbook, board, timestamp)
+
+    // terrain setup
+    for (let i = 0; i < board.terrain.length; ++i) {
+      memoryelementkindread(board.terrain[i])
+    }
+
+    // object setup
+    const oids = Object.keys(board.objects)
+    for (let i = 0; i < oids.length; ++i) {
+      const id = oids[i]
+      memoryelementkindread(board.objects[id])
+    }
+
     // iterate code needed to update given board
+    const run = boardtick(board, timestamp)
     for (let i = 0; i < run.length; ++i) {
       const { id, type, code, object } = run[i]
       if (type === CODE_PAGE_TYPE.ERROR) {
@@ -945,7 +1138,6 @@ export function memoryreadgadgetlayers(
     ...memoryconverttogadgetlayers(
       player,
       0,
-      mainbook,
       underboard,
       tickercolor,
       false,
@@ -956,7 +1148,6 @@ export function memoryreadgadgetlayers(
     ...memoryconverttogadgetlayers(
       player,
       under.length,
-      mainbook,
       playerboard,
       tickercolor,
       true,
@@ -967,7 +1158,6 @@ export function memoryreadgadgetlayers(
     ...memoryconverttogadgetlayers(
       player,
       under.length + layers.length,
-      mainbook,
       overboard,
       tickercolor,
       false,

@@ -1,17 +1,16 @@
 import { pick, unique } from 'zss/mapping/array'
 import { createsid, createnameid, createshortnameid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
-import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
 import { boardelementindex, boardobjectread } from './board'
 import { boardelementisobject } from './boardelement'
-import { bookboardcheckblockedobject, bookboardsetlookup } from './bookboard'
+import { boardsetlookup } from './boardlookup'
+import { boardcheckblockedobject } from './boardops'
 import {
   codepagereaddata,
   codepagereadname,
-  codepagereadstat,
   codepagereadstats,
   codepagereadtype,
   codepagetypetostring,
@@ -23,7 +22,6 @@ import { FORMAT_OBJECT, formatobject, unformatobject } from './format'
 import {
   BOARD,
   BOARD_ELEMENT,
-  BOARD_ELEMENT_STAT,
   BOOK,
   BOOK_FLAGS,
   CODE_PAGE,
@@ -268,101 +266,19 @@ export function bookclearcodepage(book: MAYBE<BOOK>, address: string) {
   }
 }
 
-export function bookelementkindread(
-  book: MAYBE<BOOK>,
-  element: MAYBE<BOARD_ELEMENT>,
-) {
-  if (ispresent(element) && ispresent(element.kind)) {
-    if (!ispresent(element.kinddata)) {
-      element.kinddata = ispresent(element.id)
-        ? bookreadobject(book, element.kind)
-        : bookreadterrain(book, element.kind)
-    }
-    return element.kinddata
-  }
-  return undefined
-}
-
-export function bookelementstatread(
-  book: MAYBE<BOOK>,
-  element: MAYBE<BOARD_ELEMENT>,
-  stat: BOARD_ELEMENT_STAT,
-) {
-  const kind = bookelementkindread(book, element)
-  const statvalue =
-    element?.[stat] ??
-    kind?.[stat] ??
-    codepagereadstat(bookreadcodepagebyaddress(book, kind?.id ?? ''), stat)
-  if (ispresent(statvalue)) {
-    return statvalue
-  }
-  // we define all stat defaults here
-  switch (stat) {
-    case 'group':
-      return ''
-    case 'cycle':
-      return CYCLE_DEFAULT
-    case 'item':
-      return 0
-    case 'pushable':
-      return 0
-    case 'breakable':
-      return 0
-    case 'collision':
-      return COLLISION.ISWALK
-    default:
-      return undefined
-  }
-}
-
 export function bookelementdisplayread(
-  book: MAYBE<BOOK>,
   element: MAYBE<BOARD_ELEMENT>,
   defaultchar: number,
   defaultcolor: number,
   defaultbg: number,
 ) {
-  const kind = bookelementkindread(book, element)
+  const kind = element?.kinddata
   return {
     char: element?.char ?? kind?.char ?? defaultchar,
     color: element?.color ?? kind?.color ?? defaultcolor,
     bg: element?.bg ?? kind?.bg ?? defaultbg,
     light: element?.light ?? kind?.light ?? 0,
   }
-}
-
-export function bookreadobject(
-  book: MAYBE<BOOK>,
-  maybeobject: MAYBE<string>,
-): MAYBE<BOARD_ELEMENT> {
-  const object = maybeobject ?? ''
-  const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.OBJECT, object)
-  if (ispresent(page)) {
-    const data = codepagereaddata<CODE_PAGE_TYPE.OBJECT>(page)
-    return {
-      ...deepcopy(data),
-      name: object,
-      code: page.code,
-    } as BOARD_ELEMENT
-  }
-  return undefined
-}
-
-export function bookreadterrain(
-  book: MAYBE<BOOK>,
-  maybeterrain: MAYBE<string>,
-): MAYBE<BOARD_ELEMENT> {
-  const terrain = maybeterrain ?? ''
-  const page = bookreadcodepagewithtype(book, CODE_PAGE_TYPE.TERRAIN, terrain)
-  if (ispresent(page)) {
-    const data = codepagereaddata<CODE_PAGE_TYPE.TERRAIN>(page)
-    return {
-      ...deepcopy(data),
-      name: terrain,
-      code: page.code,
-    } as BOARD_ELEMENT
-  }
-  return undefined
 }
 
 export function bookreadboard(
@@ -472,12 +388,10 @@ export function bookplayermovetoboard(
   }
 
   // make sure lookup is created
-  bookboardsetlookup(book, destboard)
+  boardsetlookup(destboard)
 
   // read target spot
-  if (
-    bookboardcheckblockedobject(book, destboard, COLLISION.ISWALK, dest, true)
-  ) {
+  if (boardcheckblockedobject(destboard, COLLISION.ISWALK, dest, true)) {
     return
   }
 

@@ -1,34 +1,29 @@
 import { CHIP } from 'zss/chip'
 import { createfirmware } from 'zss/firmware'
-import { pick } from 'zss/mapping/array'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memorymoveobject, memorytickobject } from 'zss/memory'
+import {
+  memoryboardread,
+  memoryelementkindread,
+  memoryelementstatread,
+  memorymoveobject,
+  memorytickobject,
+  memorywritebullet,
+  memorywritefromkind,
+} from 'zss/memory'
 import { listelementsbykind, listptsbyempty } from 'zss/memory/atomics'
 import {
   boardelementread,
   boardobjectread,
+  boardsafedelete,
   boardsetterrain,
   createboard,
 } from 'zss/memory/board'
 import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
-import {
-  bookelementkindread,
-  bookelementstatread,
-  bookplayermovetoboard,
-  bookreadcodepagesbytypeandstat,
-  bookreadobject,
-  bookreadterrain,
-} from 'zss/memory/book'
-import {
-  bookboardcheckblockedobject,
-  bookboardmoveobject,
-  bookboardsafedelete,
-  bookboardsetlookup,
-  bookboardwritefromkind,
-  bookboardwritebulletobject,
-} from 'zss/memory/bookboard'
-import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { boardsetlookup } from 'zss/memory/boardlookup'
+import { boardcheckblockedobject, boardmoveobject } from 'zss/memory/boardops'
+import { bookplayermovetoboard } from 'zss/memory/book'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
@@ -55,15 +50,10 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 
   // write new element
   const bulletkind = kind ?? ['bullet']
-  const bullet = bookboardwritebulletobject(
-    READ_CONTEXT.book,
-    READ_CONTEXT.board,
-    bulletkind,
-    {
-      x: READ_CONTEXT.element.x,
-      y: READ_CONTEXT.element.y,
-    },
-  )
+  const bullet = memorywritebullet(READ_CONTEXT.board, bulletkind, {
+    x: READ_CONTEXT.element.x,
+    y: READ_CONTEXT.element.y,
+  })
 
   // success ! get it moving
   if (ispresent(bullet)) {
@@ -71,6 +61,8 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     if (ispresent(arg)) {
       bullet.arg = arg
     }
+    // always cycle 1
+    bullet.cycle = 1
     // write party info
     bullet.party = READ_CONTEXT.elementid
     // ensure correct collection type
@@ -83,10 +75,10 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     // things shot always have the clear bg
     bullet.bg = COLOR.ONCLEAR
     // object code
-    const kind = bookelementkindread(READ_CONTEXT.book, bullet)
+    const kind = memoryelementkindread(bullet)
     const code = bullet.code ?? kind?.code ?? ''
     // bullets get one immediate tick
-    memorytickobject(READ_CONTEXT.book, READ_CONTEXT.board, bullet, code, 1)
+    memorytickobject(READ_CONTEXT.book, READ_CONTEXT.board, bullet, code)
   }
 
   // yield after shoot
@@ -106,7 +98,7 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   }
 
   // make sure lookup is created
-  bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+  boardsetlookup(READ_CONTEXT.board)
 
   // read
   const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
@@ -120,37 +112,24 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     }
     // attempt to shove it away
     const pt = ptapplydir(dir.destpt, dirfrompts(from, dir.destpt))
-    bookboardmoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
+    boardmoveobject(READ_CONTEXT.board, target, pt)
   }
+
   // get kind's collision type
   const [kindname] = kind
+  const kindelement = memoryelementkindread({ kind: kindname })
 
   // handle terrain put
-  const terrainkinddata = bookreadterrain(READ_CONTEXT.book, kindname)
-  if (ispresent(terrainkinddata)) {
-    bookboardwritefromkind(
-      READ_CONTEXT.book,
-      READ_CONTEXT.board,
-      kind,
-      dir.destpt,
-      id,
-    )
+  if (!boardelementisobject(kindelement)) {
+    memorywritefromkind(READ_CONTEXT.board, kind, dir.destpt, id)
   }
 
   // handle object put
-  const objectkinddata = bookreadobject(READ_CONTEXT.book, kindname)
-  if (ispresent(objectkinddata)) {
-    const kinddata =
-      bookreadobject(READ_CONTEXT.book, kindname) ??
-      bookreadterrain(READ_CONTEXT.book, kindname)
-    const collision = bookelementstatread(
-      READ_CONTEXT.book,
-      kinddata,
-      'collision',
-    )
+  if (boardelementisobject(kindelement)) {
+    const collision = memoryelementstatread(kindelement, 'collision')
+
     // validate placement works
-    const blocked = bookboardcheckblockedobject(
-      READ_CONTEXT.book,
+    const blocked = boardcheckblockedobject(
       READ_CONTEXT.board,
       collision,
       dir.destpt,
@@ -158,8 +137,7 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
 
     // write new element
     if (!blocked) {
-      const element = bookboardwritefromkind(
-        READ_CONTEXT.book,
+      const element = memorywritefromkind(
         READ_CONTEXT.board,
         kind,
         dir.destpt,
@@ -180,7 +158,7 @@ function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
   }
 
   // make sure lookup is created
-  bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+  boardsetlookup(READ_CONTEXT.board)
 
   // duplicate target at dir, in the direction of the given dir
   const [dir, dupedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
@@ -216,24 +194,17 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
     ])
-    const boards = bookreadcodepagesbytypeandstat(
-      READ_CONTEXT.book,
-      CODE_PAGE_TYPE.BOARD,
-      stat,
-    )
-    if (boards.length) {
-      const target = pick(...boards)
-      if (ispresent(target)) {
-        bookplayermovetoboard(
-          READ_CONTEXT.book,
-          READ_CONTEXT.elementfocus,
-          target.id,
-          {
-            x: maybex ?? Math.round(BOARD_WIDTH * 0.5),
-            y: maybey ?? Math.round(BOARD_HEIGHT * 0.5),
-          },
-        )
-      }
+    const target = memoryboardread(stat)
+    if (ispresent(target)) {
+      bookplayermovetoboard(
+        READ_CONTEXT.book,
+        READ_CONTEXT.elementfocus,
+        target.id,
+        {
+          x: maybex ?? Math.round(BOARD_WIDTH * 0.5),
+          y: maybey ?? Math.round(BOARD_HEIGHT * 0.5),
+        },
+      )
     }
     return 0
   })
@@ -253,17 +224,10 @@ export const BOARD_FIRMWARE = createfirmware()
     ])
 
     if (isstring(maybesource)) {
-      const boards = bookreadcodepagesbytypeandstat(
-        READ_CONTEXT.book,
-        CODE_PAGE_TYPE.BOARD,
-        maybesource,
-      )
-
-      const createdboard = pick(...boards)
+      const createdboard = memoryboardread(maybesource)
       if (ispresent(createdboard)) {
         chip.set(stat, createdboard.id)
       }
-
       return 0
     }
 
@@ -280,7 +244,7 @@ export const BOARD_FIRMWARE = createfirmware()
     }
 
     // make sure lookup is created
-    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+    boardsetlookup(READ_CONTEXT.board)
 
     // shove target at dir, in the direction of the given dir
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
@@ -303,7 +267,7 @@ export const BOARD_FIRMWARE = createfirmware()
     }
 
     // make sure lookup is created
-    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+    boardsetlookup(READ_CONTEXT.board)
 
     const [dir, strcolor, ii] = readargs(words, 0, [
       ARG_TYPE.DIR,
@@ -385,7 +349,7 @@ export const BOARD_FIRMWARE = createfirmware()
     }
 
     // make sure lookup is created
-    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+    boardsetlookup(READ_CONTEXT.board)
 
     // read
     const [target, into] = readargs(words, 0, [ARG_TYPE.KIND, ARG_TYPE.KIND])
@@ -395,7 +359,7 @@ export const BOARD_FIRMWARE = createfirmware()
     if (targetname === 'empty') {
       // empty into something becomes a put
       listptsbyempty(READ_CONTEXT.board).forEach((pt) => {
-        bookboardwritefromkind(READ_CONTEXT.book, READ_CONTEXT.board, into, pt)
+        memorywritefromkind(READ_CONTEXT.board, into, pt)
       })
     }
 
@@ -414,21 +378,11 @@ export const BOARD_FIRMWARE = createfirmware()
         }
       } else {
         // erase element
-        bookboardsafedelete(
-          READ_CONTEXT.book,
-          READ_CONTEXT.board,
-          element,
-          READ_CONTEXT.timestamp,
-        )
+        boardsafedelete(READ_CONTEXT.board, element, READ_CONTEXT.timestamp)
         // create new element
         if (intoname !== 'empty') {
           const pt = { x: element.x ?? 0, y: element.y ?? 0 }
-          bookboardwritefromkind(
-            READ_CONTEXT.book,
-            READ_CONTEXT.board,
-            into,
-            pt,
-          )
+          memorywritefromkind(READ_CONTEXT.board, into, pt)
         }
       }
     })
@@ -472,4 +426,11 @@ export const BOARD_FIRMWARE = createfirmware()
   .command('shootwith', (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
     return commandshoot(chip, words.slice(ii), arg)
+  })
+  .command('throwstar', (chip, words) => {
+    return commandshoot(chip, [...words, 'star'])
+  })
+  .command('throwstarwith', (chip, words) => {
+    const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+    return commandshoot(chip, [...words.slice(ii), 'star'], arg)
   })

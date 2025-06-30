@@ -37,6 +37,7 @@ import { deepcopy, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
   MEMORY_LABEL,
+  memoryboardread,
   memoryclearbook,
   memorycreatesoftwarebook,
   memoryensuresoftwarebook,
@@ -55,7 +56,6 @@ import {
   bookplayermovetoboard,
   bookplayerreadboards,
   bookreadcodepagebyaddress,
-  bookreadcodepagesbytypeandstat,
   bookreadsortedcodepages,
 } from 'zss/memory/book'
 import {
@@ -150,7 +150,7 @@ export const CLI_FIRMWARE = createfirmware()
     switch (NAME(maybetype)) {
       case stattypestring(STAT_TYPE.LOADER): {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           maybename,
           CODE_PAGE_TYPE.LOADER,
         )
@@ -159,7 +159,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       default: {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           [maybetype, ...args].join(' '),
           CODE_PAGE_TYPE.OBJECT,
         )
@@ -168,7 +168,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       case stattypestring(STAT_TYPE.BOARD): {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           maybename,
           CODE_PAGE_TYPE.BOARD,
         )
@@ -177,7 +177,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       case stattypestring(STAT_TYPE.OBJECT): {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           maybename,
           CODE_PAGE_TYPE.OBJECT,
         )
@@ -186,7 +186,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       case stattypestring(STAT_TYPE.TERRAIN): {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           maybename,
           CODE_PAGE_TYPE.TERRAIN,
         )
@@ -195,7 +195,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       case stattypestring(STAT_TYPE.CHARSET): {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           maybename,
           CODE_PAGE_TYPE.CHARSET,
         )
@@ -204,7 +204,7 @@ export const CLI_FIRMWARE = createfirmware()
       }
       case stattypestring(STAT_TYPE.PALETTE): {
         const [codepage, didcreate] = memoryensuresoftwarecodepage(
-          MEMORY_LABEL.CONTENT,
+          MEMORY_LABEL.MAIN,
           maybename,
           CODE_PAGE_TYPE.PALETTE,
         )
@@ -224,7 +224,6 @@ export const CLI_FIRMWARE = createfirmware()
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
       // log text
       const icon = bookelementdisplayread(
-        READ_CONTEXT.book,
         READ_CONTEXT.element,
         1,
         COLOR.WHITE,
@@ -255,7 +254,6 @@ export const CLI_FIRMWARE = createfirmware()
       const { user } = memoryreadflags(READ_CONTEXT.elementid)
       const withuser = isstring(user) ? user : 'player'
       const icon = bookelementdisplayread(
-        READ_CONTEXT.book,
         READ_CONTEXT.element,
         1,
         COLOR.WHITE,
@@ -335,25 +333,19 @@ export const CLI_FIRMWARE = createfirmware()
   })
   .command('boardopen', (_, words) => {
     const [stat] = readargs(words, 0, [ARG_TYPE.NAME])
-    const boards = bookreadcodepagesbytypeandstat(
-      READ_CONTEXT.book,
-      CODE_PAGE_TYPE.BOARD,
-      stat,
-    )
-    if (boards.length) {
-      const target = pick(...boards)
-      if (ispresent(target)) {
-        bookplayermovetoboard(
-          READ_CONTEXT.book,
-          READ_CONTEXT.elementfocus,
-          target.id,
-          {
-            x: randominteger(0, BOARD_WIDTH - 1),
-            y: randominteger(0, BOARD_HEIGHT - 1),
-          },
-        )
-      }
+    const target = memoryboardread(stat)
+    if (ispresent(target)) {
+      bookplayermovetoboard(
+        READ_CONTEXT.book,
+        READ_CONTEXT.elementfocus,
+        target.id,
+        {
+          x: randominteger(0, BOARD_WIDTH - 1),
+          y: randominteger(0, BOARD_HEIGHT - 1),
+        },
+      )
     }
+
     return 0
   })
   .command('pageopen', (_, words) => {
@@ -438,7 +430,7 @@ export const CLI_FIRMWARE = createfirmware()
       'main',
       `${main?.name ?? 'empty'} $GREEN${main?.id ?? ''}`,
     )
-    const content = memoryreadbookbysoftware(MEMORY_LABEL.CONTENT)
+    const content = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     writeoption(
       SOFTWARE,
       READ_CONTEXT.elementfocus,
@@ -519,6 +511,30 @@ export const CLI_FIRMWARE = createfirmware()
       )
       writetext(SOFTWARE, READ_CONTEXT.elementfocus, `$white @name of object`)
     }
+
+    const booklist = memoryreadbooklist()
+    for (let i = 0; i < booklist.length; ++i) {
+      const book = booklist[i]
+      if (book.id !== mainbook.id) {
+        writeoption(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'content',
+          `${book.name} $GREEN${book.id}`,
+        )
+        const sorted = bookreadsortedcodepages(book)
+        sorted.forEach((page) => {
+          const name = codepagereadname(page)
+          const type = codepagereadtypetostring(page)
+          write(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `!pageopen ${page.id};$blue[${type}]$white ${name}`,
+          )
+        })
+      }
+    }
+
     return 0
   })
   .command('boards', () => {
@@ -556,6 +572,31 @@ export const CLI_FIRMWARE = createfirmware()
           READ_CONTEXT.elementfocus,
           `$white @board name of board`,
         )
+      }
+    }
+
+    const booklist = memoryreadbooklist()
+    for (let i = 0; i < booklist.length; ++i) {
+      const book = booklist[i]
+      if (book.id !== mainbook.id) {
+        writeoption(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'content',
+          `${book.name} $GREEN${book.id}`,
+        )
+        const sorted = bookreadsortedcodepages(book)
+        sorted
+          .filter((page) => codepagereadtype(page) === CODE_PAGE_TYPE.BOARD)
+          .forEach((page) => {
+            const name = codepagereadname(page)
+            const type = codepagereadtypetostring(page)
+            write(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              `!boardopen ${page.id};$blue[${type}]$white ${name}`,
+            )
+          })
       }
     }
     return 0

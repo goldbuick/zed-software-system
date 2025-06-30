@@ -2,7 +2,6 @@ import {
   BINARY_READER,
   JSON_READER,
   TEXT_READER,
-  REXPAINT_READER,
   api_log,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -15,10 +14,7 @@ import {
   memoryreadbookbysoftware,
   memorysendtoboards,
 } from 'zss/memory'
-import {
-  bookplayerreadboards,
-  bookreadcodepagesbytypeandstat,
-} from 'zss/memory/book'
+import { bookplayerreadboards } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
@@ -27,7 +23,6 @@ import { parsesend, SEND_META } from 'zss/words/send'
 
 import { loaderbinary } from './loaderbinary'
 import { loaderjson } from './loaderjson'
-import { loaderrexpaint } from './loaderrexpaint'
 import { loadertext } from './loadertext'
 
 function handlesend(send: SEND_META) {
@@ -79,28 +74,6 @@ export const LOADER_FIRMWARE = createfirmware({
         }
         break
       }
-      case 'rexpaint': {
-        const rexpaintreader: REXPAINT_READER = memoryloadercontent(chip.id())
-        switch (name) {
-          case 'filename':
-            return [true, rexpaintreader.filename]
-          case 'layers':
-            return [true, rexpaintreader.content?.layers.length ?? 0]
-          case 'width':
-            return [
-              true,
-              rexpaintreader.content?.layers[rexpaintreader.cursor].width ?? 0,
-            ]
-          case 'height':
-            return [
-              true,
-              rexpaintreader.content?.layers[rexpaintreader.cursor].height ?? 0,
-            ]
-          case 'cursor':
-            return [true, rexpaintreader.cursor]
-        }
-        break
-      }
     }
     return [false, undefined]
   },
@@ -141,7 +114,6 @@ export const LOADER_FIRMWARE = createfirmware({
   .command('readline', loadertext)
   .command('readjson', loaderjson)
   .command('readbin', loaderbinary)
-  .command('readrexpaint', loaderrexpaint)
   .command('withboard', (_, words) => {
     const [stat] = readargs(words, 0, [ARG_TYPE.STRING])
     // this will update the READ_CONTEXT so element centric

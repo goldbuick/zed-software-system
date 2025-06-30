@@ -62,7 +62,7 @@ export function createsynth() {
     frequency: 0.6,
     delayTime: 7,
     depth: 0.7,
-    type: 'triangle',
+    type: 'sine',
     spread: 128,
     wet: 0.5,
   })

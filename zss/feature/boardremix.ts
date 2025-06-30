@@ -2,25 +2,21 @@
 import wfc from 'wavefunctioncollapse'
 import { pick } from 'zss/mapping/array'
 import { isnumber, ispresent } from 'zss/mapping/types'
+import {
+  memoryelementkindread,
+  memoryelementstatread,
+  memorywritefromkind,
+} from 'zss/memory'
 import { listnamedelements } from 'zss/memory/atomics'
 import {
   boardelementread,
   boardgetterrain,
+  boardsafedelete,
   boardsetterrain,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import {
-  bookelementkindread,
-  bookelementstatread,
-  bookreadcodepagewithtype,
-  bookreadobject,
-  bookreadterrain,
-} from 'zss/memory/book'
-import {
-  bookboardsafedelete,
-  bookboardsetlookup,
-  bookboardwritefromkind,
-} from 'zss/memory/bookboard'
+import { boardsetlookup } from 'zss/memory/boardlookup'
+import { bookreadcodepagewithtype } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
 import {
   BOARD_HEIGHT,
@@ -65,8 +61,8 @@ export function boardremix(
   }
 
   // make sure lookup is created
-  bookboardsetlookup(book, targetboard)
-  bookboardsetlookup(book, sourceboard)
+  boardsetlookup(targetboard)
+  boardsetlookup(sourceboard)
 
   // element map
   let akind = 0 // kind
@@ -89,7 +85,7 @@ export function boardremix(
       data[p++] = b
 
       // alpha
-      const kind = bookelementkindread(book, el)
+      const kind = memoryelementkindread(el)
       const kindname = NAME(kind?.name ?? 'empty')
       const maybealpha = elementkindtoalphamap.get(kindname)
       if (isnumber(maybealpha)) {
@@ -146,7 +142,7 @@ export function boardremix(
         case 'all': {
           const maybeobject = boardelementread(targetboard, { x, y })
           if (boardelementisobject(maybeobject)) {
-            bookboardsafedelete(book, targetboard, maybeobject, book.timestamp)
+            boardsafedelete(targetboard, maybeobject, book.timestamp)
           }
           boardsetterrain(targetboard, { x, y })
           break
@@ -154,7 +150,7 @@ export function boardremix(
         case 'object': {
           const maybeobject = boardelementread(targetboard, { x, y })
           if (boardelementisobject(maybeobject)) {
-            bookboardsafedelete(book, targetboard, maybeobject, book.timestamp)
+            boardsafedelete(targetboard, maybeobject, book.timestamp)
           }
           break
         }
@@ -167,36 +163,29 @@ export function boardremix(
 
       // create new element
       let maybekind = elementalphatokindmap.get(akind) ?? ''
-      const maybeobject = bookreadobject(book, maybekind)
-      const maybeterrain = bookreadterrain(book, maybekind)
-      const sourceelement = maybeobject ?? maybeterrain
+      const sourceelement = memoryelementkindread({ kind: maybekind })
       switch (targetset) {
         case 'all':
           break
         case 'object':
-          if (ispresent(maybeterrain)) {
+          if (!boardelementisobject(sourceelement)) {
             maybekind = ''
           }
           break
         case 'terrain':
-          if (ispresent(maybeobject)) {
+          if (boardelementisobject(sourceelement)) {
             maybekind = ''
           }
           break
         default:
-          if (bookelementstatread(book, maybeterrain, 'group') !== targetset) {
+          if (memoryelementstatread(sourceelement, 'group') !== targetset) {
             maybekind = ''
           }
           if (maybekind) {
             // blank target region
             const maybeobject = boardelementread(targetboard, { x, y })
             if (boardelementisobject(maybeobject)) {
-              bookboardsafedelete(
-                book,
-                targetboard,
-                maybeobject,
-                book.timestamp,
-              )
+              boardsafedelete(targetboard, maybeobject, book.timestamp)
             }
             boardsetterrain(targetboard, { x, y })
           }
@@ -204,7 +193,7 @@ export function boardremix(
       }
 
       const maybenew = maybekind
-        ? bookboardwritefromkind(book, targetboard, [maybekind], dpt)
+        ? memorywritefromkind(targetboard, [maybekind], dpt)
         : undefined
 
       // skip if we didn't create

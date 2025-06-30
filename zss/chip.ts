@@ -22,7 +22,6 @@ import {
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory'
-import { readexpr } from './words/expr'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './words/reader'
 import { NAME, WORD, WORD_RESULT } from './words/types'
 

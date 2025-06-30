@@ -333,6 +333,9 @@ export function codepageapplyelementstats(
       case 'p1':
       case 'p2':
       case 'p3':
+      case 'p4':
+      case 'p5':
+      case 'p6':
       case 'cycle':
       case 'stepx':
       case 'stepy':
@@ -501,6 +504,7 @@ export function codepagereaddata<T extends CODE_PAGE_TYPE>(
         codepage.object = createboardelement()
       }
       codepage.object.id = codepage.id
+      codepage.object.code = codepage.code
       codepage.object.name = codepagereadname(codepage)
       codepage.object.category = CATEGORY.ISOBJECT
       codepageapplyelementstats(

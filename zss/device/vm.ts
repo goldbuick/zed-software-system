@@ -1,6 +1,6 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
-import { parsewebfile } from 'zss/feature/parsefile'
+import { parsewebfile } from 'zss/feature/parse/file'
 import { DIVIDER } from 'zss/feature/writeui'
 import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
 import {
@@ -167,6 +167,7 @@ const vm = createdevice(
           ],
           stats: [
             // board stats
+            'currenttick',
             'boardid',
             'isdark',
             'notdark',
@@ -211,6 +212,9 @@ const vm = createdevice(
             'p1',
             'p2',
             'p3',
+            'p4',
+            'p5',
+            'p6',
             'cycle',
             'stepx',
             'stepy',
@@ -569,39 +573,46 @@ const vm = createdevice(
         // or events from devices
         if (isarray(message.data)) {
           const [arg, format, eventname, content] = message.data
-          if (format === 'file') {
-            // handled web file pastes
-            parsewebfile(message.player, content)
-          } else if (
-            format === 'json' &&
-            /file:.*\.book.json/.test(eventname)
-          ) {
-            api_log(vm, message.player, `loading ${eventname}`)
-            const json = JSON.parse(content.json)
-            const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-            if (
-              ispresent(mainbook) &&
-              ispresent(json.data) &&
-              isstring(json.exported)
-            ) {
-              memorysetbook(json.data)
-              api_log(vm, message.player, `loaded ${json.exported}`)
-            }
-          } else if (format === 'json' && /file:.*\..*\.json/.test(eventname)) {
-            api_log(vm, message.player, `loading ${eventname}`)
-            const json = JSON.parse(content.json)
-            const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-            if (
-              ispresent(mainbook) &&
-              ispresent(json.data) &&
-              isstring(json.exported)
-            ) {
-              bookwritecodepage(mainbook, json.data)
-              api_log(vm, message.player, `loaded ${json.exported}`)
-            }
-          } else {
-            // everything else
-            memoryloader(arg, format, eventname, content, message.player)
+          switch (format) {
+            case 'file':
+              parsewebfile(message.player, content)
+              break
+            case 'json':
+              if (/file:.*\.book.json/.test(eventname)) {
+                // import exported book
+                api_log(vm, message.player, `loading ${eventname}`)
+                const json = JSON.parse(content.json)
+                // const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+                if (
+                  // ispresent(mainbook) &&
+                  ispresent(json.data) &&
+                  isstring(json.exported)
+                ) {
+                  memorysetbook(json.data)
+                  api_log(vm, message.player, `loaded ${json.exported}`)
+                }
+              } else if (/file:.*\..*\.codepage.json/.test(eventname)) {
+                // import exported codepage
+                api_log(vm, message.player, `loading ${eventname}`)
+                const json = JSON.parse(content.json)
+                const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+                if (
+                  ispresent(mainbook) &&
+                  ispresent(json.data) &&
+                  isstring(json.exported)
+                ) {
+                  bookwritecodepage(mainbook, json.data)
+                  api_log(vm, message.player, `loaded ${json.exported}`)
+                }
+              } else {
+                // everything else
+                memoryloader(arg, format, eventname, content, message.player)
+              }
+              break
+            default:
+              // everything else
+              memoryloader(arg, format, eventname, content, message.player)
+              break
           }
         }
         break

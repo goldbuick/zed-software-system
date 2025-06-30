@@ -1,5 +1,5 @@
 import { isnumber, isstring, MAYBE } from 'zss/mapping/types'
-import { boardevaldir } from 'zss/memory/bookboard'
+import { boardevaldir } from 'zss/memory/board'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 
 import { isstrcolor, mapstrcolor, readcolor, STR_COLOR } from './color'
@@ -82,7 +82,6 @@ function readdestfromdir(dir: STR_DIR) {
     y: READ_CONTEXT.element?.y ?? 0,
   }
   return boardevaldir(
-    READ_CONTEXT.book,
     READ_CONTEXT.board,
     READ_CONTEXT.element,
     READ_CONTEXT.elementfocus,

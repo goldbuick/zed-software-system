@@ -15,17 +15,16 @@ import {
   memorymoveobject,
   memoryreadflags,
   memoryreadoperator,
+  memoryelementstatread,
+  memorywritefromkind,
 } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
-import { boardelementread } from 'zss/memory/board'
+import { boardelementread, boardsafedelete } from 'zss/memory/board'
 import { boardelementapplycolor } from 'zss/memory/boardelement'
-import { bookelementstatread } from 'zss/memory/book'
 import {
-  bookboardsafedelete,
-  bookboardsetlookup,
-  bookboardobjectnamedlookupdelete,
-  bookboardwritefromkind,
-} from 'zss/memory/bookboard'
+  boardobjectnamedlookupdelete,
+  boardsetlookup,
+} from 'zss/memory/boardlookup'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
@@ -61,6 +60,9 @@ const STANDARD_STAT_NAMES = new Set([
   'p1',
   'p2',
   'p3',
+  'p4',
+  'p5',
+  'p6',
   'cycle',
   'stepx',
   'stepy',
@@ -217,6 +219,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'maxplayershots':
         return [true, READ_CONTEXT.board?.maxplayershots ?? 0]
       // read only
+      case 'currenttick':
+        return [true, READ_CONTEXT.timestamp]
       case 'boardid':
         return [true, READ_CONTEXT.board?.id ?? 'ERR']
       // env stats
@@ -337,6 +341,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
         }
         break
       // read only
+      case 'currenttick':
+        return [false, value] // readonly
       case 'boardid':
         return [false, value] // readonly
       // env stats
@@ -397,16 +403,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
         READ_CONTEXT.element.stepx = 0
         READ_CONTEXT.element.stepy = 0
         // walking breakables get bonked
-        if (
-          bookelementstatread(
-            READ_CONTEXT.book,
-            READ_CONTEXT.element,
-            'breakable',
-          )
-        ) {
+        if (memoryelementstatread(READ_CONTEXT.element, 'breakable')) {
           // mark target for deletion
-          bookboardsafedelete(
-            READ_CONTEXT.book,
+          boardsafedelete(
             READ_CONTEXT.board,
             READ_CONTEXT.element,
             READ_CONTEXT.timestamp,
@@ -431,17 +430,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // read
     const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
     // make sure lookup is created
-    bookboardsetlookup(READ_CONTEXT.book, READ_CONTEXT.board)
+    boardsetlookup(READ_CONTEXT.board)
     // make invisible
-    bookboardobjectnamedlookupdelete(
-      READ_CONTEXT.book,
-      READ_CONTEXT.board,
-      READ_CONTEXT.element,
-    )
+    boardobjectnamedlookupdelete(READ_CONTEXT.board, READ_CONTEXT.element)
     // nuke self
     if (
-      bookboardsafedelete(
-        READ_CONTEXT.book,
+      boardsafedelete(
         READ_CONTEXT.board,
         READ_CONTEXT.element,
         READ_CONTEXT.timestamp,
@@ -452,7 +446,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         y: READ_CONTEXT.element?.y ?? 0,
       }
       // write new element
-      bookboardwritefromkind(READ_CONTEXT.book, READ_CONTEXT.board, kind, pt)
+      memorywritefromkind(READ_CONTEXT.board, kind, pt)
     }
     // halt execution
     chip.endofprogram()
@@ -577,8 +571,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('die', (chip) => {
-    bookboardsafedelete(
-      READ_CONTEXT.book,
+    boardsafedelete(
       READ_CONTEXT.board,
       READ_CONTEXT.element,
       READ_CONTEXT.timestamp,

@@ -1,19 +1,16 @@
 import { ispid } from 'zss/mapping/guid'
 import { isnumber, ispresent, MAYBE } from 'zss/mapping/types'
+import { memoryelementstatread, memorywritefromkind } from 'zss/memory'
 import {
   boardelementread,
   boardgetterrain,
+  boardsafedelete,
   boardsetterrain,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import { bookelementstatread, bookreadcodepagewithtype } from 'zss/memory/book'
-import {
-  bookboardreadgroup,
-  bookboardresetlookups,
-  bookboardsafedelete,
-  bookboardsetlookup,
-  bookboardwritefromkind,
-} from 'zss/memory/bookboard'
+import { boardresetlookups, boardsetlookup } from 'zss/memory/boardlookup'
+import { boardreadgroup } from 'zss/memory/boardops'
+import { bookreadcodepagewithtype } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
 import {
   BOARD,
@@ -31,7 +28,7 @@ function emptyarea(book: BOOK, board: BOARD, p1: PT, p2: PT) {
     for (let x = p1.x; x <= p2.x; ++x) {
       const maybeobject = boardelementread(board, { x, y })
       if (boardelementisobject(maybeobject)) {
-        bookboardsafedelete(book, board, maybeobject, book.timestamp)
+        boardsafedelete(board, maybeobject, book.timestamp)
       }
       boardsetterrain(board, { x, y })
     }
@@ -51,7 +48,7 @@ function emptyareaobject(book: BOOK, board: BOARD, p1: PT, p2: PT) {
     for (let x = p1.x; x <= p2.x; ++x) {
       const maybeobject = boardelementread(board, { x, y })
       if (boardelementisobject(maybeobject)) {
-        bookboardsafedelete(book, board, maybeobject, book.timestamp)
+        boardsafedelete(board, maybeobject, book.timestamp)
       }
       boardsetterrain(board, { x, y })
     }
@@ -128,8 +125,8 @@ export function boardcopy(
   }
 
   // make sure lookup is created
-  bookboardsetlookup(book, sourceboard)
-  bookboardsetlookup(book, targetboard)
+  boardsetlookup(sourceboard)
+  boardsetlookup(targetboard)
 
   let isgroup = false
   if (ispresent(sourceboard) && ispresent(targetboard)) {
@@ -185,43 +182,31 @@ export function boardcopy(
         if (
           ispresent(terrain) &&
           (copyterrain ||
-            (isgroup &&
-              bookelementstatread(book, terrain, 'group') === targetset))
+            (isgroup && memoryelementstatread(terrain, 'group') === targetset))
         ) {
           if (isgroup) {
             emptyarea(book, targetboard, pt, pt)
           }
-          const el = bookboardwritefromkind(
-            book,
-            targetboard,
-            [terrain.kind ?? ''],
-            pt,
-          )
+          const el = memorywritefromkind(targetboard, [terrain.kind ?? ''], pt)
           mapelementcopy(el, terrain)
         }
 
         if (
           ispresent(object) &&
           (copyobject ||
-            (isgroup &&
-              bookelementstatread(book, object, 'group') === targetset))
+            (isgroup && memoryelementstatread(object, 'group') === targetset))
         ) {
           if (isgroup) {
             emptyareaobject(book, targetboard, pt, pt)
           }
-          const el = bookboardwritefromkind(
-            book,
-            targetboard,
-            [object.kind ?? ''],
-            pt,
-          )
+          const el = memorywritefromkind(targetboard, [object.kind ?? ''], pt)
           mapelementcopy(el, object)
         }
       }
     }
 
     // rebuild lookups
-    bookboardresetlookups(book, targetboard)
+    boardresetlookups(targetboard)
   }
 }
 
@@ -258,13 +243,12 @@ export function boardcopygroup(
   }
 
   // make sure lookup is created
-  bookboardsetlookup(book, sourceboard)
-  bookboardsetlookup(book, targetboard)
+  boardsetlookup(sourceboard)
+  boardsetlookup(targetboard)
 
   if (ispresent(sourceboard) && ispresent(targetboard)) {
     // read target group
-    const { terrainelements, objectelements } = bookboardreadgroup(
-      book,
+    const { terrainelements, objectelements } = boardreadgroup(
       sourceboard,
       self,
       targetgroup,
@@ -306,17 +290,12 @@ export function boardcopygroup(
       const destelement = boardelementread(targetboard, pt)
       if (ispresent(destelement)) {
         if (boardelementisobject(destelement)) {
-          bookboardsafedelete(book, targetboard, destelement, book.timestamp)
+          boardsafedelete(targetboard, destelement, book.timestamp)
         }
         boardsetterrain(targetboard, pt)
       }
 
-      const copyel = bookboardwritefromkind(
-        book,
-        targetboard,
-        [el.kind ?? ''],
-        pt,
-      )
+      const copyel = memorywritefromkind(targetboard, [el.kind ?? ''], pt)
       mapelementcopy(copyel, el)
     }
     for (let i = 0; i < objectelements.length; ++i) {
@@ -326,16 +305,11 @@ export function boardcopygroup(
         y: p1.y + (el.y ?? 0) - corner.y,
       }
 
-      const copyel = bookboardwritefromkind(
-        book,
-        targetboard,
-        [el.kind ?? ''],
-        pt,
-      )
+      const copyel = memorywritefromkind(targetboard, [el.kind ?? ''], pt)
       mapelementcopy(copyel, el)
     }
 
     // rebuild lookups
-    bookboardresetlookups(book, targetboard)
+    boardresetlookups(targetboard)
   }
 }

@@ -30,19 +30,22 @@ import {
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
-import { boardelementindex, boardobjectread } from './board'
+import { boardelementindex, boardevaldir, boardobjectread } from './board'
 import {
   bookelementdisplayread,
-  bookelementkindread,
-  bookelementstatread,
   bookreadcodepagewithtype,
   bookreadflags,
 } from './book'
-import { boardevaldir } from './bookboard'
 import { codepagereaddata } from './codepage'
-import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, BOOK, CODE_PAGE_TYPE } from './types'
+import { BOARD, BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from './types'
 
-import { MEMORY_LABEL, memoryreadbookbysoftware, memoryreadflags } from '.'
+import {
+  MEMORY_LABEL,
+  memoryelementkindread,
+  memoryelementstatread,
+  memoryreadbookbysoftware,
+  memoryreadflags,
+} from '.'
 
 const pt1 = new Vector2()
 
@@ -172,7 +175,6 @@ function mixmaxrange(from: PT, dest: PT): [number, number] {
 }
 
 function raycheck(
-  book: BOOK,
   board: BOARD,
   alphas: number[],
   blocked: [number, number, number][],
@@ -233,7 +235,7 @@ function raycheck(
   }
 
   const maybeterrain = board.terrain[idx]
-  const terrainkind = bookelementkindread(book, maybeterrain)
+  const terrainkind = memoryelementkindread(maybeterrain)
   const terraincollision = maybeterrain?.collision ?? terrainkind?.collision
   if (checkdoescollide(COLLISION.ISBULLET, terraincollision)) {
     // fully blocked
@@ -245,7 +247,6 @@ function raycheck(
 export function memoryconverttogadgetlayers(
   player: string,
   index: number,
-  book: BOOK,
   board: MAYBE<BOARD>,
   tickercolor: COLOR,
   isprimary: boolean,
@@ -364,13 +365,12 @@ export function memoryconverttogadgetlayers(
   for (let i = 0; i < board.terrain.length; ++i) {
     const tile = board.terrain[i]
     const display = bookelementdisplayread(
-      book,
       tile,
       0,
       COLOR.WHITE,
       isbaseboard ? COLOR.BLACK : COLOR.ONCLEAR,
     )
-    const collision = bookelementstatread(book, tile, 'collision')
+    const collision = memoryelementstatread(tile, 'collision')
     tiles.char[i] = display.char
     tiles.color[i] = display.color
     tiles.bg[i] = display.bg
@@ -416,13 +416,7 @@ export function memoryconverttogadgetlayers(
     }
 
     const id = object.id ?? ''
-    const display = bookelementdisplayread(
-      book,
-      object,
-      1,
-      COLOR.WHITE,
-      COLOR.BLACK,
-    )
+    const display = bookelementdisplayread(object, 1, COLOR.WHITE, COLOR.BLACK)
     const sprite = createcachedsprite(player, objectindex, id, i)
 
     // setup sprite
@@ -447,10 +441,9 @@ export function memoryconverttogadgetlayers(
           for (let r = 1; r <= radius; ++r) {
             // light dir for a cone of light
             if (r === 2) {
-              const maybedir = bookelementstatread(book, object, 'lightdir')
+              const maybedir = memoryelementstatread(object, 'lightdir')
               if (isstrdir(maybedir)) {
                 const lightdir = boardevaldir(
-                  book,
                   board,
                   object,
                   '',
@@ -476,7 +469,6 @@ export function memoryconverttogadgetlayers(
             const nextblocked: [number, number, number][] = []
             for (let y = sprite.y - r; y <= sprite.y + r; ++y) {
               raycheck(
-                book,
                 board,
                 lighting.alphas,
                 blocked,
@@ -488,7 +480,6 @@ export function memoryconverttogadgetlayers(
                 y,
               )
               raycheck(
-                book,
                 board,
                 lighting.alphas,
                 blocked,
@@ -503,7 +494,6 @@ export function memoryconverttogadgetlayers(
             const inset = r - 1
             for (let x = sprite.x - inset; x <= sprite.x + inset; ++x) {
               raycheck(
-                book,
                 board,
                 lighting.alphas,
                 blocked,
@@ -515,7 +505,6 @@ export function memoryconverttogadgetlayers(
                 sprite.y - r,
               )
               raycheck(
-                book,
                 board,
                 lighting.alphas,
                 blocked,
