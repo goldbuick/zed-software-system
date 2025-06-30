@@ -517,6 +517,30 @@ export const CLI_FIRMWARE = createfirmware()
       )
       writetext(SOFTWARE, READ_CONTEXT.elementfocus, `$white @name of object`)
     }
+
+    const booklist = memoryreadbooklist()
+    for (let i = 0; i < booklist.length; ++i) {
+      const book = booklist[i]
+      if (book.id !== mainbook.id) {
+        writeoption(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'content',
+          `${book.name} $GREEN${book.id}`,
+        )
+        const sorted = bookreadsortedcodepages(book)
+        sorted.forEach((page) => {
+          const name = codepagereadname(page)
+          const type = codepagereadtypetostring(page)
+          write(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `!pageopen ${page.id};$blue[${type}]$white ${name}`,
+          )
+        })
+      }
+    }
+
     return 0
   })
   .command('boards', () => {
@@ -554,6 +578,31 @@ export const CLI_FIRMWARE = createfirmware()
           READ_CONTEXT.elementfocus,
           `$white @board name of board`,
         )
+      }
+    }
+
+    const booklist = memoryreadbooklist()
+    for (let i = 0; i < booklist.length; ++i) {
+      const book = booklist[i]
+      if (book.id !== mainbook.id) {
+        writeoption(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          'content',
+          `${book.name} $GREEN${book.id}`,
+        )
+        const sorted = bookreadsortedcodepages(book)
+        sorted
+          .filter((page) => codepagereadtype(page) === CODE_PAGE_TYPE.BOARD)
+          .forEach((page) => {
+            const name = codepagereadname(page)
+            const type = codepagereadtypetostring(page)
+            write(
+              SOFTWARE,
+              READ_CONTEXT.elementfocus,
+              `!boardopen ${page.id};$blue[${type}]$white ${name}`,
+            )
+          })
       }
     }
     return 0
