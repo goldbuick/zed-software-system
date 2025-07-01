@@ -218,7 +218,10 @@ export function parsezzt(player: string, content: Uint8Array) {
   // process boards
   for (let i = 0; i < zztboards.length; ++i) {
     const zztboard = zztboards[i]
-    const codepage = createcodepage(`@board ${zztboard.boardname}`, {})
+    const codepage = createcodepage(
+      `@board ${i === playerboard ? 'title' : zztboard.boardname}`,
+      {},
+    )
     bookwritecodepage(book, codepage)
     const board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
     if (!ispresent(board)) {
