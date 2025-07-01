@@ -614,56 +614,36 @@ function playerblockedbyedge(
   // attempt to move player
   if (dest.x < 0) {
     // exit west
-    const boards = bookreadcodepagesbytypeandstat(
-      book,
-      CODE_PAGE_TYPE.BOARD,
-      board?.exitwest ?? '',
-    )
-    if (boards.length) {
-      const board = pick(boards)
-      bookplayermovetoboard(book, elementid, board.id, {
+    const destboard = memoryboardread(board?.exitwest ?? '')
+    if (ispresent(destboard)) {
+      bookplayermovetoboard(book, elementid, destboard.id, {
         x: BOARD_WIDTH - 1,
         y: dest.y,
       })
     }
   } else if (dest.x >= BOARD_WIDTH) {
     // exit east
-    const boards = bookreadcodepagesbytypeandstat(
-      book,
-      CODE_PAGE_TYPE.BOARD,
-      board?.exiteast ?? '',
-    )
-    if (boards.length) {
-      const board = pick(boards)
-      bookplayermovetoboard(book, elementid, board.id, {
+    const destboard = memoryboardread(board?.exiteast ?? '')
+    if (ispresent(destboard)) {
+      bookplayermovetoboard(book, elementid, destboard.id, {
         x: 0,
         y: dest.y,
       })
     }
   } else if (dest.y < 0) {
     // exit north
-    const boards = bookreadcodepagesbytypeandstat(
-      book,
-      CODE_PAGE_TYPE.BOARD,
-      board?.exitnorth ?? '',
-    )
-    if (boards.length) {
-      const board = pick(boards)
-      bookplayermovetoboard(book, elementid, board.id, {
+    const destboard = memoryboardread(board?.exitnorth ?? '')
+    if (ispresent(destboard)) {
+      bookplayermovetoboard(book, elementid, destboard.id, {
         x: dest.x,
         y: BOARD_HEIGHT - 1,
       })
     }
   } else if (dest.y >= BOARD_HEIGHT) {
     // exit south
-    const boards = bookreadcodepagesbytypeandstat(
-      book,
-      CODE_PAGE_TYPE.BOARD,
-      board?.exitsouth ?? '',
-    )
-    if (boards.length) {
-      const board = pick(boards)
-      bookplayermovetoboard(book, elementid, board.id, {
+    const destboard = memoryboardread(board?.exitsouth ?? '')
+    if (ispresent(destboard)) {
+      bookplayermovetoboard(book, elementid, destboard.id, {
         x: dest.x,
         y: 0,
       })
@@ -712,6 +692,7 @@ export function memorymoveobject(
     }
 
     if (elementisplayer && blocked.kind === 'edge') {
+      debugger
       playerblockedbyedge(book, board, element, dest)
     } else if (elementisplayer) {
       if (blockedbyplayer) {

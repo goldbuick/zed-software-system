@@ -1,10 +1,8 @@
 import { objectKeys } from 'ts-extras'
 import { api_toast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { isnumber, ispresent, MAYBE } from 'zss/mapping/types'
+import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { memorysetbook, memorywritefromkind } from 'zss/memory'
-import { boardelementread } from 'zss/memory/board'
-import { boardelementisobject } from 'zss/memory/boardelement'
 import { boardsetlookup } from 'zss/memory/boardlookup'
 import { bookwritecodepage, createbook } from 'zss/memory/book'
 import { codepagereaddata, createcodepage } from 'zss/memory/codepage'
@@ -140,7 +138,7 @@ export function parsezzt(player: string, content: Uint8Array) {
     const addstats: BOARD_ELEMENT = {}
     const elementstat = stats.find((stat) => stat.x === x && stat.y === y)
     if (ispresent(elementstat)) {
-      if (ispresent(elementstat.cycle)) {
+      if (isnumber(elementstat.cycle) && elementstat.cycle > 0) {
         addstats.cycle = elementstat.cycle
       }
       if (ispresent(elementstat.p1)) {
@@ -197,7 +195,16 @@ export function parsezzt(player: string, content: Uint8Array) {
         break
       case 11:
         // passage
-        writefromkind(board, ['passage', colorconst], { x, y }, addstats)
+        writefromkind(
+          board,
+          ['passage', colorconst],
+          { x, y },
+          {
+            ...addstats,
+            p1: formatexitstat(elementstat?.p3) ?? '',
+            p3: undefined,
+          },
+        )
         break
       case 12:
         // duplicator
@@ -411,6 +418,13 @@ export function parsezzt(player: string, content: Uint8Array) {
     }
   }
 
+  function formatexitstat(exitstat: any): MAYBE<string> {
+    if (isnumber(exitstat) && exitstat > 0) {
+      return `zztboard${exitstat}`
+    }
+    return undefined
+  }
+
   // read world
 
   const worldfileid = readint16()
@@ -548,8 +562,42 @@ export function parsezzt(player: string, content: Uint8Array) {
   for (let i = 0; i < zztboards.length; ++i) {
     const zztboard = zztboards[i]
 
+    // build codepage @ stats
+    const codepagestats: string[] = [`@zztboard${i}`, ``]
+    if (i === playerboard) {
+      codepagestats.push(`@title`)
+    }
+    if (isnumber(zztboard.maxplayershots)) {
+      codepagestats.push(`@maxplayershots ${zztboard.maxplayershots}`)
+    }
+    if (zztboard.isdark) {
+      codepagestats.push(`@isdark`)
+    }
+    if (zztboard.restartonzap) {
+      codepagestats.push(`@restartonzap`)
+    }
+    if (isnumber(zztboard.timelimit)) {
+      codepagestats.push(`@timelimit ${zztboard.timelimit}`)
+    }
+    const exitnorth = formatexitstat(zztboard.exitnorth)
+    if (isstring(exitnorth)) {
+      codepagestats.push(`@exitnorth ${exitnorth}`)
+    }
+    const exitsouth = formatexitstat(zztboard.exitsouth)
+    if (isstring(exitsouth)) {
+      codepagestats.push(`@exitsouth ${exitsouth}`)
+    }
+    const exitwest = formatexitstat(zztboard.exitwest)
+    if (isstring(exitwest)) {
+      codepagestats.push(`@exitwest ${exitwest}`)
+    }
+    const exiteast = formatexitstat(zztboard.exiteast)
+    if (isstring(exiteast)) {
+      codepagestats.push(`@exiteast ${exiteast}`)
+    }
+
     // create a new board codepage
-    const code = `@board ${zztboard.boardname}${i === playerboard ? '\n@title\n' : ''}`
+    const code = `@board ${String(i).padStart(3, '0')}. ${zztboard.boardname}\n${codepagestats.join('\n')}`
     const codepage = createcodepage(code, {})
     bookwritecodepage(book, codepage)
 

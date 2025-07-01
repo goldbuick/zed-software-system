@@ -34,12 +34,12 @@ export type BOARD_ELEMENT = {
   tickertext?: string
   tickertime?: number
   // config
-  p1?: number
-  p2?: number
-  p3?: number
-  p4?: number
-  p5?: number
-  p6?: number
+  p1?: number | string
+  p2?: number | string
+  p3?: number | string
+  p4?: number | string
+  p5?: number | string
+  p6?: number | string
   cycle?: number
   stepx?: number
   stepy?: number
