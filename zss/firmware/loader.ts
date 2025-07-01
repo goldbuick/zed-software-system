@@ -6,18 +6,16 @@ import {
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
-import { pick } from 'zss/mapping/array'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
   MEMORY_LABEL,
+  memoryboardread,
   memoryreadbookbysoftware,
   memorysendtoboards,
 } from 'zss/memory'
-import { bookplayerreadboards } from 'zss/memory/book'
-import { codepagereaddata } from 'zss/memory/codepage'
+import { bookplayerreadboards } from 'zss/memory/bookplayer'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { parsesend, SEND_META } from 'zss/words/send'
 
@@ -118,20 +116,13 @@ export const LOADER_FIRMWARE = createfirmware({
     const [stat] = readargs(words, 0, [ARG_TYPE.STRING])
     // this will update the READ_CONTEXT so element centric
     // commands will work
-    const boards = bookreadcodepagesbytypeandstat(
-      READ_CONTEXT.book,
-      CODE_PAGE_TYPE.BOARD,
-      stat,
-    )
-    if (boards.length) {
-      const target = pick(...boards)
-      if (ispresent(target)) {
-        READ_CONTEXT.board = codepagereaddata<CODE_PAGE_TYPE.BOARD>(target)
-        // -1, -1 means RANDOM
-        READ_CONTEXT.element = {
-          x: -1,
-          y: -1,
-        }
+    const target = memoryboardread(stat)
+    if (ispresent(target)) {
+      READ_CONTEXT.board = target
+      // -1, -1 means RANDOM
+      READ_CONTEXT.element = {
+        x: -1,
+        y: -1,
       }
     }
     return 0

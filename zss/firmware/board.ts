@@ -22,7 +22,7 @@ import {
 import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
 import { boardsetlookup } from 'zss/memory/boardlookup'
 import { boardcheckblockedobject, boardmoveobject } from 'zss/memory/boardops'
-import { bookplayermovetoboard } from 'zss/memory/book'
+import { bookplayermovetoboard } from 'zss/memory/bookplayer'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'

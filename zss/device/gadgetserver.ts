@@ -133,7 +133,6 @@ const gadgetserver = createdevice(
         gadgetclearscroll(message.player)
         break
       case 'clearplayer': {
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
         const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE)
         delete gadgetstore[message.player]
         const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC)

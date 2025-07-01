@@ -37,17 +37,18 @@ import {
   bookclearflags,
   bookensurecodepagewithtype,
   bookhasflags,
-  bookplayermovetoboard,
-  bookplayerreadactive,
-  bookplayerreadboard,
-  bookplayerreadboards,
-  bookplayersetboard,
-  bookreadboard,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytypeandstat,
   bookreadflags,
   createbook,
 } from './book'
+import {
+  bookplayermovetoboard,
+  bookplayerreadactive,
+  bookplayerreadboard,
+  bookplayerreadboards,
+  bookplayersetboard,
+} from './bookplayer'
 import { codepagereaddata, codepagereadstat } from './codepage'
 import { memoryloaderarg } from './loader'
 import { memoryconverttogadgetlayers } from './rendertogadget'
@@ -462,23 +463,21 @@ export function memoryplayerlogin(player: string): boolean {
       player,
       'login:main',
       `login failed to find book 'main'`,
+      'login',
+      `failed for playerid ==>${player}<==`,
     )
   }
 
   // try to find existing element
-  const currentboard = bookplayerreadboard(mainbook, player)
-  if (ispresent(currentboard)) {
-    // should signal to reset gadget json ??
-    return true
-  }
+  const currentboard = memoryreadplayerboard(player)
 
   // place on a title board
-  const titleboards = bookreadcodepagesbytypeandstat(
-    mainbook,
+  const titleboardpage = memorypickcodepagewithtype(
     CODE_PAGE_TYPE.BOARD,
-    'title',
+    MEMORY_LABEL.TITLE,
   )
-  if (titleboards.length === 0) {
+
+  if (!ispresent(currentboard) && !ispresent(titleboardpage)) {
     return api_error(
       SOFTWARE,
       player,
@@ -500,15 +499,10 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
-  // TODO: what is a sensible way to place here ?
-  // via player token I think ..
-
-  const title = pickwith(player, titleboards)
-  const titleboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(title)
-
+  const titleboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(titleboardpage)
   if (ispresent(titleboard)) {
-    const startx = codepagereadstat(title, 'startx')
-    const starty = codepagereadstat(title, 'starty')
+    const startx = codepagereadstat(titleboardpage, 'startx')
+    const starty = codepagereadstat(titleboardpage, 'starty')
     const px = isnumber(startx) ? startx : Math.round(BOARD_WIDTH * 0.5)
     const py = isnumber(starty) ? starty : Math.round(BOARD_HEIGHT * 0.5)
     const obj = boardobjectcreatefromkind(
@@ -1130,8 +1124,8 @@ export function memoryreadgadgetlayers(
   const graphics = playerboard.graphics ?? 'flat'
 
   // read over / under
-  const overboard = bookreadboard(mainbook, playerboard.overboard ?? '')
-  const underboard = bookreadboard(mainbook, playerboard.underboard ?? '')
+  const overboard = memoryboardread(playerboard.overboard ?? '')
+  const underboard = memoryboardread(playerboard.underboard ?? '')
 
   // compose layers
   under.push(

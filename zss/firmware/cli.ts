@@ -53,11 +53,13 @@ import {
 import {
   bookclearcodepage,
   bookelementdisplayread,
-  bookplayermovetoboard,
-  bookplayerreadboards,
   bookreadcodepagebyaddress,
   bookreadsortedcodepages,
 } from 'zss/memory/book'
+import {
+  bookplayermovetoboard,
+  bookplayerreadboards,
+} from 'zss/memory/bookplayer'
 import {
   codepagereadname,
   codepagereadtype,
@@ -66,6 +68,7 @@ import {
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
+  BOOK,
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
@@ -290,14 +293,13 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('bookopen', (chip, words) => {
+  .command('bookopen', (_, words) => {
     const [name] = readargs(words, 0, [ARG_TYPE.NAME])
 
     const book = memoryreadbookbyaddress(name)
     if (ispresent(book)) {
-      api_log(SOFTWARE, READ_CONTEXT.elementfocus, `opened [book] ${book.name}`)
-      memorysetsoftwarebook(MEMORY_LABEL.MAIN, book.id)
-      chip.command('pages')
+      register_config(SOFTWARE, READ_CONTEXT.elementfocus, 'selected', book.id)
+      vm_flush_op()
     } else {
       api_error(
         SOFTWARE,
@@ -306,6 +308,7 @@ export const CLI_FIRMWARE = createfirmware()
         `book ${name} not found`,
       )
     }
+
     return 0
   })
   .command('booktrash', (chip, words) => {
@@ -354,14 +357,19 @@ export const CLI_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_NAME,
     ])
 
-    // create book if needed
-    const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
-    if (!ispresent(mainbook)) {
-      return 0
+    // search through all books
+    let codepage: MAYBE<CODE_PAGE> = undefined
+    let codepagebook: MAYBE<BOOK> = undefined
+    const booklist = memoryreadbooklist()
+    for (let i = 0; i < booklist.length; ++i) {
+      codepagebook = booklist[i]
+      codepage = bookreadcodepagebyaddress(codepagebook, page)
+      if (ispresent(codepage)) {
+        break
+      }
     }
 
-    const codepage = bookreadcodepagebyaddress(mainbook, page)
-    if (ispresent(codepage)) {
+    if (ispresent(codepage) && ispresent(codepagebook)) {
       const name = codepagereadname(codepage)
       const pagetype = codepagereadtypetostring(codepage)
       api_log(
@@ -374,17 +382,17 @@ export const CLI_FIRMWARE = createfirmware()
       const path = [codepage.id, maybeobject]
 
       // write to modem
-      modemwriteinitstring(vm_codeaddress(mainbook.id, path), codepage.code)
+      modemwriteinitstring(vm_codeaddress(codepagebook.id, path), codepage.code)
 
       // tell tape to open a code editor for given page
       const type = codepagereadtypetostring(codepage)
       register_editor_open(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
-        mainbook.id,
+        codepagebook.id,
         path,
         type,
-        `${name} - ${mainbook.name}`,
+        `${name} - ${codepagebook.name}`,
       )
     } else {
       api_error(

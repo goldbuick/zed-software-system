@@ -215,19 +215,6 @@ export function TapeTerminalInput({
     inputstatesetsplice,
   ])
 
-  useEffect(() => {
-    let scroll = tapeterminal.scroll
-    if (tapeycursor < 4) {
-      scroll++
-    }
-    if (tapeycursor > edge.bottom - 4) {
-      scroll--
-    }
-    useTapeTerminal.setState({
-      scroll: Math.round(clamp(scroll, 0, logrowtotalheight)),
-    })
-  }, [tapeterminal.scroll, tapeycursor, logrowtotalheight, edge.bottom])
-
   return (
     <>
       <Scrollable
