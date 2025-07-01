@@ -27,6 +27,10 @@ export function compile(name: string, text: string): GeneratorBuild {
   const astResult = compileast(text)
   console.timeEnd(label)
 
+  if (SHOW_CODE) {
+    console.info(text, astResult.errors)
+  }
+
   if (astResult.errors && astResult.errors.length > 0) {
     return astResult
   }

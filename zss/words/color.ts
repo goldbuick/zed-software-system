@@ -158,13 +158,14 @@ export function readcolor(index: number): [STR_COLOR | undefined, number] {
   return strcolor.length ? [strcolor, next] : [undefined, index]
 }
 
-export function mapstrcolortoattributes(color: STR_COLOR) {
+export function mapstrcolortoattributes(strcolor: STR_COLOR) {
   const attributes = {} as Partial<{
     color: COLOR
     bg: COLOR
   }>
 
-  color.every((attr) => {
+  for (let i = 0; i < strcolor.length; ++i) {
+    const attr = strcolor[i]
     const value = COLOR[attr]
     if (ispresent(value)) {
       if (value < COLOR.ONBLACK) {
@@ -173,7 +174,7 @@ export function mapstrcolortoattributes(color: STR_COLOR) {
         attributes.bg = value - COLOR.ONBLACK
       }
     }
-  })
+  }
 
   return attributes
 }
