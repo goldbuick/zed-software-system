@@ -20,9 +20,6 @@ import {
 import { api_error, synth_audioenabled, vm_loader, api_log } from './api'
 import { registerreadplayer } from './register'
 
-// synth setup
-setContext(new Context({ latencyHint: 'playback', lookAhead: 0.1 }))
-
 type CustomNavigator = {
   audioSession?: {
     type: string
@@ -35,7 +32,11 @@ export function enableaudio() {
   if (enabled || locked) {
     return
   }
+
+  // synth setup
   locked = true
+  setContext(new Context({ latencyHint: 'playback', lookAhead: 0.1 }))
+
   start()
     .then(() => {
       if (!enabled) {

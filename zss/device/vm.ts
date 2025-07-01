@@ -47,11 +47,11 @@ import {
 } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
 import {
-  bookplayerreadboards,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytype,
   bookwritecodepage,
 } from 'zss/memory/book'
+import { bookplayerreadboards } from 'zss/memory/bookplayer'
 import {
   codepageapplyelementstats,
   codepagereaddata,

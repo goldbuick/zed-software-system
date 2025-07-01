@@ -53,11 +53,13 @@ import {
 import {
   bookclearcodepage,
   bookelementdisplayread,
-  bookplayermovetoboard,
-  bookplayerreadboards,
   bookreadcodepagebyaddress,
   bookreadsortedcodepages,
 } from 'zss/memory/book'
+import {
+  bookplayermovetoboard,
+  bookplayerreadboards,
+} from 'zss/memory/bookplayer'
 import {
   codepagereadname,
   codepagereadtype,
@@ -291,14 +293,13 @@ export const CLI_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('bookopen', (chip, words) => {
+  .command('bookopen', (_, words) => {
     const [name] = readargs(words, 0, [ARG_TYPE.NAME])
 
     const book = memoryreadbookbyaddress(name)
     if (ispresent(book)) {
-      api_log(SOFTWARE, READ_CONTEXT.elementfocus, `opened [book] ${book.name}`)
-      memorysetsoftwarebook(MEMORY_LABEL.MAIN, book.id)
-      chip.command('pages')
+      register_config(SOFTWARE, READ_CONTEXT.elementfocus, 'selected', book.id)
+      vm_flush_op()
     } else {
       api_error(
         SOFTWARE,
@@ -307,6 +308,7 @@ export const CLI_FIRMWARE = createfirmware()
         `book ${name} not found`,
       )
     }
+
     return 0
   })
   .command('booktrash', (chip, words) => {
