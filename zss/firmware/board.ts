@@ -239,6 +239,7 @@ export const BOARD_FIRMWARE = createfirmware()
         READ_CONTEXT.elementfocus,
         targetboard.id,
         destpt,
+        true,
       )
     }
     return 0

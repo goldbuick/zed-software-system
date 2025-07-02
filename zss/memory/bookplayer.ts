@@ -55,6 +55,7 @@ export function bookplayermovetoboard(
   player: string,
   board: string,
   dest: PT,
+  skipblockedchecked = false,
 ) {
   if (!ispresent(book)) {
     return
@@ -82,7 +83,10 @@ export function bookplayermovetoboard(
   boardsetlookup(destboard)
 
   // read target spot
-  if (boardcheckblockedobject(destboard, COLLISION.ISWALK, dest, true)) {
+  if (
+    skipblockedchecked === false &&
+    boardcheckblockedobject(destboard, COLLISION.ISWALK, dest, true)
+  ) {
     return
   }
 

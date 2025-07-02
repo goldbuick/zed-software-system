@@ -18,6 +18,7 @@ import {
   CHAR_WIDTH,
   CHAR_HEIGHT,
 } from 'zss/gadget/data/types'
+import { pttoindex } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
@@ -378,6 +379,17 @@ export function memoryconverttogadgetlayers(
   }
 
   const boardobjects = Object.values(board.objects ?? {})
+
+  // create always show player spots
+  const playerspots = new Set<number>()
+  for (let i = 0; i < boardobjects.length; ++i) {
+    const object = boardobjects[i]
+    if (ispid(object.id) && isnumber(object.x) && isnumber(object.y)) {
+      playerspots.add(pttoindex(object as PT, BOARD_WIDTH))
+    }
+  }
+
+  // process objects
   for (let i = 0; i < boardobjects.length; ++i) {
     const object = boardobjects[i]
 
@@ -416,6 +428,15 @@ export function memoryconverttogadgetlayers(
     }
 
     const id = object.id ?? ''
+    if (
+      ispid(id) === false &&
+      isnumber(object.x) &&
+      isnumber(object.y) &&
+      playerspots.has(pttoindex(object as PT, BOARD_WIDTH)) === true
+    ) {
+      continue
+    }
+
     const display = bookelementdisplayread(object, 1, COLOR.WHITE, COLOR.BLACK)
     const sprite = createcachedsprite(player, objectindex, id, i)
 
