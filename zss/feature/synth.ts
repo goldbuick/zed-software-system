@@ -84,7 +84,7 @@ export function createsynth() {
   razzlechorus.connect(destination)
   razzlechorus.connect(broadcastdestination)
 
-  const mainvolume = new Volume(-4)
+  const mainvolume = new Volume()
   mainvolume.connect(razzledazzle)
 
   const maincompressor = new Compressor({
@@ -753,7 +753,7 @@ export function createsynth() {
 
   // adjust main volumes
   function setplayvolume(volume: number) {
-    playvolume.volume.value = volumetodb(volume)
+    mainvolume.volume.value = volumetodb(volume)
   }
   function setbgplayvolume(volume: number) {
     bgplayvolume.volume.value = volumetodb(volume)
@@ -771,7 +771,7 @@ export function createsynth() {
 
   // set default volumes
   setttsvolume(15)
-  setplayvolume(75)
+  setplayvolume(100)
   setbgplayvolume(100)
 
   return {

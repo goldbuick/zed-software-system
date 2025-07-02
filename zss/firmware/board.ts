@@ -1,4 +1,5 @@
 import { CHIP } from 'zss/chip'
+import { boardcopy } from 'zss/feature/boardcopy'
 import { createfirmware } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
@@ -183,8 +184,12 @@ function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
   return 0
 }
 
+const p1 = { x: 0, y: 0 }
+const p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
+const targetset = 'all'
+
 export const BOARD_FIRMWARE = createfirmware()
-  .command('board', (_, words) => {
+  .command('goto', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
@@ -223,16 +228,18 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_STRING,
     ])
 
-    if (isstring(maybesource)) {
-      const createdboard = memoryboardread(maybesource)
-      if (ispresent(createdboard)) {
-        chip.set(stat, createdboard.id)
-      }
-      return 0
-    }
-
     const createdboard = createboard()
     if (ispresent(createdboard)) {
+      // attempt to clone existing board
+      if (isstring(maybesource)) {
+        const sourceboard = memoryboardread(maybesource)
+        if (ispresent(sourceboard)) {
+          boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
+        }
+      }
+
+      // update stat with created board id
+      // todo, how do we write to board exit stats ??
       chip.set(stat, createdboard.id)
     }
 

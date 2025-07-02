@@ -162,32 +162,32 @@ export const numberliteral = createSimpleToken({
 
 export const iseq = createSimpleToken({
   name: 'iseq',
-  pattern: /=|is|eq|equal/,
+  pattern: /=|is|eq|equal/i,
   longer_alt: stringliteral,
 })
 export const isnoteq = createSimpleToken({
   name: 'isnoteq',
-  pattern: /!=|not ?eq|not ?equal/,
+  pattern: /!=|not ?eq|not ?equal/i,
   longer_alt: stringliteral,
 })
 export const islessthan = createSimpleToken({
   name: 'islessthan',
-  pattern: /<|below/,
+  pattern: /<|below/i,
   longer_alt: stringliteral,
 })
 export const isgreaterthan = createSimpleToken({
   name: 'isgreaterthan',
-  pattern: />|above/,
+  pattern: />|above/i,
   longer_alt: stringliteral,
 })
 export const islessthanorequal = createSimpleToken({
   name: 'islessthanorequal',
-  pattern: /<=|below ?or ?eq|below ?or ?equal/,
+  pattern: /<=|below ?or ?eq|below ?or ?equal/i,
   longer_alt: stringliteral,
 })
 export const isgreaterthanorequal = createSimpleToken({
   name: 'isgreaterthanorequal',
-  pattern: />=|above ?or ?eq|above ?or ?equal/,
+  pattern: />=|above ?or ?eq|above ?or ?equal/i,
   longer_alt: stringliteral,
 })
 
@@ -240,21 +240,21 @@ export const rparen = createSimpleToken({
 
 export const command_play = createSimpleToken({
   name: 'command_play',
-  pattern: /(play|bgplay) .*/,
+  pattern: /(play|bgplay) .*/i,
   start_chars_hint: all_chars,
   longer_alt: stringliteral,
 })
 
 export const command_toast = createSimpleToken({
   name: 'command_toast',
-  pattern: /toast .*/,
+  pattern: /toast .*/i,
   start_chars_hint: all_chars,
   longer_alt: stringliteral,
 })
 
 export const command_ticker = createSimpleToken({
   name: 'command_ticker',
-  pattern: /ticker .*/,
+  pattern: /ticker .*/i,
   start_chars_hint: all_chars,
   longer_alt: stringliteral,
 })
@@ -263,7 +263,7 @@ export const command_ticker = createSimpleToken({
 
 export const command_if = createSimpleToken({
   name: 'if',
-  pattern: /if|try|take|give/,
+  pattern: /if|try|take|give/i,
   longer_alt: stringliteral,
 })
 export const command_do = createWordToken('do')
@@ -274,7 +274,7 @@ export const command_repeat = createWordToken('repeat')
 export const command_waitfor = createWordToken('waitfor')
 export const command_foreach = createSimpleToken({
   name: 'foreach',
-  pattern: /foreach|for/,
+  pattern: /foreach|for/i,
   longer_alt: stringliteral,
 })
 export const command_break = createWordToken('break')

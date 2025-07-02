@@ -44,10 +44,6 @@ function writestring(value: string): string {
 }
 
 function writeTemplateString(value: string): string {
-  if (value.startsWith('"')) {
-    return writeTemplateString(value.replaceAll(/(^"|"$)/g, ''))
-  }
-
   const result = tokenize(value)
   if (result.errors.length) {
     return value
