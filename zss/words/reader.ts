@@ -115,7 +115,7 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.COLOR: {
         // no color const, assume expr
-        if (mapstrcolor(words[0]) === undefined) {
+        if (mapstrcolor(words[ii]) === undefined) {
           const [value, iii] = readexpr(ii)
           if (isstrcolor(value)) {
             ii = iii
@@ -136,7 +136,7 @@ export function readargs<T extends ARG_TYPES>(
       }
       case ARG_TYPE.DIR: {
         // no dir const, assume expr
-        if (mapstrdir(words[0]) === undefined) {
+        if (mapstrdir(words[ii]) === undefined) {
           const [value, iii] = readexpr(ii)
           if (isstrdir(value)) {
             ii = iii

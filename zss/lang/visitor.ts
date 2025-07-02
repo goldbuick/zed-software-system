@@ -38,7 +38,6 @@ import {
   Not_testCstChildren,
   PowerCstChildren,
   ProgramCstChildren,
-  Short_commandsCstChildren,
   Short_goCstChildren,
   Short_tryCstChildren,
   Stmt_commandCstChildren,
@@ -484,8 +483,11 @@ class ScriptVisitor
     if (ctx.stmt_hyperlink) {
       return this.go(ctx.stmt_hyperlink)
     }
-    if (ctx.short_commands) {
-      return [this.go(ctx.short_commands), this.go(ctx.commands)].flat()
+    if (ctx.short_go) {
+      return this.go(ctx.short_go)
+    }
+    if (ctx.short_try) {
+      return this.go(ctx.short_try)
     }
     return []
   }
@@ -577,16 +579,6 @@ class ScriptVisitor
     return []
   }
 
-  short_commands(ctx: Short_commandsCstChildren) {
-    if (ctx.short_go) {
-      return this.go(ctx.short_go)
-    }
-    if (ctx.short_try) {
-      return this.go(ctx.short_try)
-    }
-    return []
-  }
-
   commands(ctx: CommandsCstChildren, location: CstNodeLocation) {
     if (ctx.words) {
       return this.createlinenode(
@@ -596,12 +588,6 @@ class ScriptVisitor
           words: this.go(ctx.words),
         }),
       )
-    }
-    if (ctx.short_go) {
-      return this.go(ctx.short_go)
-    }
-    if (ctx.short_try) {
-      return this.go(ctx.short_try)
     }
     if (ctx.command_play) {
       return this.go(ctx.command_play)

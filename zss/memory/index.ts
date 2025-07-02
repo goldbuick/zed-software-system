@@ -692,7 +692,6 @@ export function memorymoveobject(
     }
 
     if (elementisplayer && blocked.kind === 'edge') {
-      debugger
       playerblockedbyedge(book, board, element, dest)
     } else if (elementisplayer) {
       if (blockedbyplayer) {
