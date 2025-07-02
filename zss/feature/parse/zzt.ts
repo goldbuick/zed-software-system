@@ -148,7 +148,7 @@ export function parsezzt(player: string, content: Uint8Array) {
     stats: ZZT_STAT[],
   ) {
     // zztboard.stats
-    const colorname = COLOR[element.color] as STR_COLOR_CONST
+    const colorname = COLOR[element.color % 16] as STR_COLOR_CONST
     const colorconst = [colorname] as STR_COLOR
 
     const addstats: BOARD_ELEMENT = {}
@@ -218,8 +218,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           { x, y },
           {
             ...addstats,
-            p1: formatexitstat(elementstat?.p3) ?? '',
-            p3: undefined,
+            p3: formatexitstat(elementstat?.p3) ?? '',
           },
         )
         break

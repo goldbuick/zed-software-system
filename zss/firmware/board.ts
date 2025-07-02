@@ -1,7 +1,8 @@
 import { CHIP } from 'zss/chip'
 import { boardcopy } from 'zss/feature/boardcopy'
 import { createfirmware } from 'zss/firmware'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { pick } from 'zss/mapping/array'
+import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
   memoryboardread,
@@ -23,9 +24,10 @@ import {
 import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
 import { boardsetlookup } from 'zss/memory/boardlookup'
 import { boardcheckblockedobject, boardmoveobject } from 'zss/memory/boardops'
+import { bookelementdisplayread } from 'zss/memory/book'
 import { bookplayermovetoboard } from 'zss/memory/bookplayer'
-import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
-import { mapstrcolortoattributes } from 'zss/words/color'
+import { BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { mapstrcolortoattributes, STR_COLOR_CONST } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
   readstrkindbg,
@@ -199,16 +201,44 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
     ])
-    const target = memoryboardread(stat)
-    if (ispresent(target)) {
+    const targetboard = memoryboardread(stat)
+    if (ispresent(targetboard)) {
+      // ensure we can do named lookups
+      boardsetlookup(targetboard)
+
+      const destpt: PT = {
+        x: READ_CONTEXT.element?.x ?? maybex ?? Math.round(BOARD_WIDTH * 0.5),
+        y: READ_CONTEXT.element?.y ?? maybey ?? Math.round(BOARD_HEIGHT * 0.5),
+      }
+
+      const kindname = boardelementname(READ_CONTEXT.element)
+      const { color } = bookelementdisplayread(READ_CONTEXT.element, -1, -1, -1)
+      const gotoelements: BOARD_ELEMENT[] = []
+      if (color > -1) {
+        // look up matching elements on target board
+        gotoelements.push(
+          ...listelementsbykind(targetboard, [
+            kindname,
+            [COLOR[color] as STR_COLOR_CONST],
+          ]),
+        )
+      }
+
+      const gotoelement = pick(gotoelements)
+      if (
+        ispresent(gotoelement) &&
+        isnumber(gotoelement.x) &&
+        isnumber(gotoelement.y)
+      ) {
+        destpt.x = gotoelement.x
+        destpt.y = gotoelement.y
+      }
+
       bookplayermovetoboard(
         READ_CONTEXT.book,
         READ_CONTEXT.elementfocus,
-        target.id,
-        {
-          x: maybex ?? Math.round(BOARD_WIDTH * 0.5),
-          y: maybey ?? Math.round(BOARD_HEIGHT * 0.5),
-        },
+        targetboard.id,
+        destpt,
       )
     }
     return 0
