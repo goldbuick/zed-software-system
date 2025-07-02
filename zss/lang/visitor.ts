@@ -38,7 +38,6 @@ import {
   Not_testCstChildren,
   PowerCstChildren,
   ProgramCstChildren,
-  Short_commandsCstChildren,
   Short_goCstChildren,
   Short_tryCstChildren,
   Stmt_commandCstChildren,
@@ -353,6 +352,14 @@ class ScriptVisitor
     })
   }
 
+  createtemplatenode(location: CstNodeLocation, value: string): CodeNode[] {
+    return this.createcodenode(location, {
+      type: NODE.LITERAL,
+      literal: LITERAL.TEMPLATE,
+      value,
+    })
+  }
+
   createmarknode(
     location: CstNodeLocation,
     id: string,
@@ -476,8 +483,11 @@ class ScriptVisitor
     if (ctx.stmt_hyperlink) {
       return this.go(ctx.stmt_hyperlink)
     }
-    if (ctx.short_commands) {
-      return [this.go(ctx.short_commands), this.go(ctx.commands)].flat()
+    if (ctx.short_go) {
+      return this.go(ctx.short_go)
+    }
+    if (ctx.short_try) {
+      return this.go(ctx.short_try)
     }
     return []
   }
@@ -530,11 +540,12 @@ class ScriptVisitor
   }
 
   stmt_text(ctx: Stmt_textCstChildren, location: CstNodeLocation) {
+    const content = tokenstring(ctx.token_text, '')
     return this.createlinenode(
       location,
       this.createcodenode(location, {
         type: NODE.TEXT,
-        value: tokenstring(ctx.token_text, ''),
+        value: content,
       }),
     )
   }
@@ -568,16 +579,6 @@ class ScriptVisitor
     return []
   }
 
-  short_commands(ctx: Short_commandsCstChildren) {
-    if (ctx.short_go) {
-      return this.go(ctx.short_go)
-    }
-    if (ctx.short_try) {
-      return this.go(ctx.short_try)
-    }
-    return []
-  }
-
   commands(ctx: CommandsCstChildren, location: CstNodeLocation) {
     if (ctx.words) {
       return this.createlinenode(
@@ -587,12 +588,6 @@ class ScriptVisitor
           words: this.go(ctx.words),
         }),
       )
-    }
-    if (ctx.short_go) {
-      return this.go(ctx.short_go)
-    }
-    if (ctx.short_try) {
-      return this.go(ctx.short_try)
     }
     if (ctx.command_play) {
       return this.go(ctx.command_play)
@@ -667,7 +662,7 @@ class ScriptVisitor
       location,
       tokenstring(ctx.token_if, 'if'),
       '',
-      this.go(ctx.words),
+      this.go(ctx.expr),
     )
     const [block] = this.go(ctx.command_if_block) ?? []
     return this.createcodenode(location, {
@@ -720,7 +715,7 @@ class ScriptVisitor
           location,
           tokenstring(ctx.token_if, 'if'),
           skip,
-          this.go(ctx.words),
+          this.go(ctx.expr),
         ),
         this.go(ctx.command_fork),
         this.creategotonode(location, done, `end of if`),
@@ -745,7 +740,7 @@ class ScriptVisitor
       done,
       lines: [
         this.createmarknode(location, loop, `start of while`),
-        this.createlogicnode(location, 'if', done, this.go(ctx.words)),
+        this.createlogicnode(location, 'if', done, this.go(ctx.expr)),
         this.go(ctx.command_block),
         this.creategotonode(location, loop, `loop of while`),
         this.createmarknode(location, done, `end of while`),
@@ -757,7 +752,7 @@ class ScriptVisitor
     const loop = createsid()
     const done = createsid()
     const index = this.createcountnode(location)
-    const args = [index, this.go(ctx.words)].flat()
+    const args = [index, this.go(ctx.expr)].flat()
     return this.createcodenode(location, {
       type: NODE.REPEAT,
       loop,
@@ -777,7 +772,7 @@ class ScriptVisitor
     const loop = createsid()
     const done = createsid()
     const index = this.createcountnode(location)
-    const args = [index, this.go(ctx.words)].flat()
+    const args = [index, this.go(ctx.expr)].flat()
     return this.createcodenode(location, {
       type: NODE.FOREACH,
       loop,
@@ -800,7 +795,7 @@ class ScriptVisitor
       loop,
       lines: [
         this.createmarknode(location, loop, `start of waitfor`),
-        this.createlogicnode(location, 'waitfor', loop, this.go(ctx.words)),
+        this.createlogicnode(location, 'waitfor', loop, this.go(ctx.expr)),
       ].flat(),
     })
   }
@@ -844,7 +839,7 @@ class ScriptVisitor
         type: NODE.COMMAND,
         words: [
           this.createstringnode(location, 'toast'),
-          this.createstringnode(location, toastcontent),
+          this.createtemplatenode(location, toastcontent),
         ].flat(),
       }),
     )
@@ -859,7 +854,7 @@ class ScriptVisitor
         type: NODE.COMMAND,
         words: [
           this.createstringnode(location, 'ticker'),
-          this.createstringnode(location, tickercontent),
+          this.createtemplatenode(location, tickercontent),
         ].flat(),
       }),
     )
@@ -1064,12 +1059,12 @@ class ScriptVisitor
   }
 
   power(ctx: PowerCstChildren, location: CstNodeLocation) {
-    const token = this.go(ctx.token)
+    const words = this.go(ctx.words)
 
     if (ctx.factor) {
       return this.createcodenode(location, {
         type: NODE.OPERATOR,
-        lhs: token[0],
+        lhs: words[0],
         items: this.createcodenode(location, {
           type: NODE.OPERATOR_ITEM,
           operator: OPERATOR.POWER,
@@ -1078,11 +1073,11 @@ class ScriptVisitor
       })
     }
 
-    return token
+    return words
   }
 
   words(ctx: WordsCstChildren) {
-    return this.go(ctx.expr)
+    return this.go(ctx.token)
   }
 
   token(ctx: TokenCstChildren, location: CstNodeLocation) {
@@ -1096,10 +1091,7 @@ class ScriptVisitor
     }
 
     if (ctx.token_stringliteraldouble) {
-      const value = tokenstring(ctx.token_stringliteraldouble, '').replaceAll(
-        /(^"|"$)/g,
-        '',
-      )
+      const value = tokenstring(ctx.token_stringliteraldouble, '')
       return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.TEMPLATE,
@@ -1108,10 +1100,7 @@ class ScriptVisitor
     }
 
     if (ctx.token_stringliteral) {
-      const value = tokenstring(ctx.token_stringliteral, '').replaceAll(
-        /(^"|"$)/g,
-        '',
-      )
+      const value = tokenstring(ctx.token_stringliteral, '')
       return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
@@ -1131,7 +1120,7 @@ class ScriptVisitor
     if (ctx.token_lparen) {
       return this.createcodenode(location, {
         type: NODE.EXPR,
-        words: this.go(ctx.words),
+        words: this.go(ctx.expr),
       })
     }
     return []

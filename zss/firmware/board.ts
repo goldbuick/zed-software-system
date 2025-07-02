@@ -1,6 +1,8 @@
 import { CHIP } from 'zss/chip'
+import { boardcopy } from 'zss/feature/boardcopy'
 import { createfirmware } from 'zss/firmware'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { pick } from 'zss/mapping/array'
+import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
   memoryboardread,
@@ -22,9 +24,10 @@ import {
 import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
 import { boardsetlookup } from 'zss/memory/boardlookup'
 import { boardcheckblockedobject, boardmoveobject } from 'zss/memory/boardops'
+import { bookelementdisplayread } from 'zss/memory/book'
 import { bookplayermovetoboard } from 'zss/memory/bookplayer'
-import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
-import { mapstrcolortoattributes } from 'zss/words/color'
+import { BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { mapstrcolortoattributes, STR_COLOR_CONST } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
   readstrkindbg,
@@ -183,8 +186,12 @@ function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
   return 0
 }
 
+const p1 = { x: 0, y: 0 }
+const p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
+const targetset = 'all'
+
 export const BOARD_FIRMWARE = createfirmware()
-  .command('board', (_, words) => {
+  .command('goto', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
@@ -194,16 +201,45 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
     ])
-    const target = memoryboardread(stat)
-    if (ispresent(target)) {
+    const targetboard = memoryboardread(stat)
+    if (ispresent(targetboard)) {
+      // ensure we can do named lookups
+      boardsetlookup(targetboard)
+
+      const destpt: PT = {
+        x: READ_CONTEXT.element?.x ?? maybex ?? Math.round(BOARD_WIDTH * 0.5),
+        y: READ_CONTEXT.element?.y ?? maybey ?? Math.round(BOARD_HEIGHT * 0.5),
+      }
+
+      const kindname = boardelementname(READ_CONTEXT.element)
+      const { color } = bookelementdisplayread(READ_CONTEXT.element, -1, -1, -1)
+      const gotoelements: BOARD_ELEMENT[] = []
+      if (color > -1) {
+        // look up matching elements on target board
+        gotoelements.push(
+          ...listelementsbykind(targetboard, [
+            kindname,
+            [COLOR[color] as STR_COLOR_CONST],
+          ]),
+        )
+      }
+
+      const gotoelement = pick(gotoelements)
+      if (
+        ispresent(gotoelement) &&
+        isnumber(gotoelement.x) &&
+        isnumber(gotoelement.y)
+      ) {
+        destpt.x = gotoelement.x
+        destpt.y = gotoelement.y
+      }
+
       bookplayermovetoboard(
         READ_CONTEXT.book,
         READ_CONTEXT.elementfocus,
-        target.id,
-        {
-          x: maybex ?? Math.round(BOARD_WIDTH * 0.5),
-          y: maybey ?? Math.round(BOARD_HEIGHT * 0.5),
-        },
+        targetboard.id,
+        destpt,
+        true,
       )
     }
     return 0
@@ -223,16 +259,18 @@ export const BOARD_FIRMWARE = createfirmware()
       ARG_TYPE.MAYBE_STRING,
     ])
 
-    if (isstring(maybesource)) {
-      const createdboard = memoryboardread(maybesource)
-      if (ispresent(createdboard)) {
-        chip.set(stat, createdboard.id)
-      }
-      return 0
-    }
-
     const createdboard = createboard()
     if (ispresent(createdboard)) {
+      // attempt to clone existing board
+      if (isstring(maybesource)) {
+        const sourceboard = memoryboardread(maybesource)
+        if (ispresent(sourceboard)) {
+          boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
+        }
+      }
+
+      // update stat with created board id
+      // todo, how do we write to board exit stats ??
       chip.set(stat, createdboard.id)
     }
 

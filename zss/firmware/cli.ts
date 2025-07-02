@@ -346,6 +346,7 @@ export const CLI_FIRMWARE = createfirmware()
           x: randominteger(0, BOARD_WIDTH - 1),
           y: randominteger(0, BOARD_HEIGHT - 1),
         },
+        true,
       )
     }
 
@@ -560,11 +561,10 @@ export const CLI_FIRMWARE = createfirmware()
         .filter((page) => codepagereadtype(page) === CODE_PAGE_TYPE.BOARD)
         .forEach((page) => {
           const name = codepagereadname(page)
-          const type = codepagereadtypetostring(page)
           write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            `!boardopen ${page.id};$blue[${type}]$white ${name}`,
+            `!boardopen ${page.id};$blue#goto $white $34 ${name} $34`,
           )
         })
       if (sorted.length === 0) {
@@ -598,11 +598,10 @@ export const CLI_FIRMWARE = createfirmware()
           .filter((page) => codepagereadtype(page) === CODE_PAGE_TYPE.BOARD)
           .forEach((page) => {
             const name = codepagereadname(page)
-            const type = codepagereadtypetostring(page)
             write(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
-              `!boardopen ${page.id};$blue[${type}]$white ${name}`,
+              `!boardopen ${page.id};$blue#goto $white$34 ${name} $34`,
             )
           })
       }

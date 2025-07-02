@@ -31,8 +31,8 @@ export type StmtCstChildren = {
   stmt_comment?: Stmt_commentCstNode[]
   stmt_hyperlink?: Stmt_hyperlinkCstNode[]
   stmt_command?: Stmt_commandCstNode[]
-  short_commands?: Short_commandsCstNode[]
-  commands?: CommandsCstNode[]
+  short_go?: Short_goCstNode[]
+  short_try?: Short_tryCstNode[]
 }
 
 export type InlineCstNode = {
@@ -55,6 +55,8 @@ export type InstmtCstChildren = {
   stmt_comment?: Stmt_commentCstNode[]
   stmt_hyperlink?: Stmt_hyperlinkCstNode[]
   stmt_command?: Stmt_commandCstNode[]
+  short_go?: Short_goCstNode[]
+  short_try?: Short_tryCstNode[]
   commands?: CommandsCstNode[]
 }
 
@@ -101,7 +103,7 @@ export type Stmt_hyperlinkCstNode = {
 
 export type Stmt_hyperlinkCstChildren = {
   token_hyperlink: IToken[]
-  words: WordsCstNode[]
+  words?: WordsCstNode[]
   token_hyperlinktext: IToken[]
 }
 
@@ -115,16 +117,6 @@ export type Stmt_commandCstChildren = {
   commands: CommandsCstNode[]
 }
 
-export type Short_commandsCstNode = {
-  name: 'short_commands'
-  children: Short_commandsCstChildren
-} & CstNode
-
-export type Short_commandsCstChildren = {
-  short_go?: Short_goCstNode[]
-  short_try?: Short_tryCstNode[]
-}
-
 export type CommandsCstNode = {
   name: 'commands'
   children: CommandsCstChildren
@@ -132,8 +124,6 @@ export type CommandsCstNode = {
 
 export type CommandsCstChildren = {
   words?: WordsCstNode[]
-  short_go?: Short_goCstNode[]
-  short_try?: Short_tryCstNode[]
   command_play?: Command_playCstNode[]
   command_toast?: Command_toastCstNode[]
   command_ticker?: Command_tickerCstNode[]
@@ -182,7 +172,7 @@ export type Command_ifCstNode = {
 
 export type Command_ifCstChildren = {
   token_if: IToken[]
-  words: WordsCstNode[]
+  expr: ExprCstNode[]
   command_if_block?: Command_if_blockCstNode[]
 }
 
@@ -235,7 +225,7 @@ export type Command_else_ifCstChildren = {
   token_command: IToken[]
   token_else: IToken[]
   token_if: IToken[]
-  words: WordsCstNode[]
+  expr: ExprCstNode[]
   command_fork?: Command_forkCstNode[]
 }
 
@@ -257,7 +247,7 @@ export type Command_whileCstNode = {
 
 export type Command_whileCstChildren = {
   token_while: IToken[]
-  words: WordsCstNode[]
+  expr: ExprCstNode[]
   command_block?: Command_blockCstNode[]
 }
 
@@ -268,7 +258,7 @@ export type Command_repeatCstNode = {
 
 export type Command_repeatCstChildren = {
   token_repeat: IToken[]
-  words: WordsCstNode[]
+  expr: ExprCstNode[]
   command_block?: Command_blockCstNode[]
 }
 
@@ -279,7 +269,7 @@ export type Command_waitforCstNode = {
 
 export type Command_waitforCstChildren = {
   token_waitfor: IToken[]
-  words: WordsCstNode[]
+  expr: ExprCstNode[]
 }
 
 export type Command_foreachCstNode = {
@@ -289,7 +279,7 @@ export type Command_foreachCstNode = {
 
 export type Command_foreachCstChildren = {
   token_foreach: IToken[]
-  words: WordsCstNode[]
+  expr: ExprCstNode[]
   command_block?: Command_blockCstNode[]
 }
 
@@ -486,7 +476,7 @@ export type PowerCstNode = {
 } & CstNode
 
 export type PowerCstChildren = {
-  token: TokenCstNode[]
+  words: WordsCstNode[]
   token_power?: IToken[]
   factor?: FactorCstNode[]
 }
@@ -497,7 +487,7 @@ export type WordsCstNode = {
 } & CstNode
 
 export type WordsCstChildren = {
-  expr: ExprCstNode[]
+  token: TokenCstNode[]
 }
 
 export type TokenCstNode = {
@@ -511,7 +501,7 @@ export type TokenCstChildren = {
   token_stringliteral?: IToken[]
   token_numberliteral?: IToken[]
   token_lparen?: IToken[]
-  words?: WordsCstNode[]
+  expr?: ExprCstNode[]
   token_rparen?: IToken[]
 }
 
@@ -527,7 +517,6 @@ export type ICstNodeVisitor<IN, OUT> = {
   stmt_comment(children: Stmt_commentCstChildren, param?: IN): OUT
   stmt_hyperlink(children: Stmt_hyperlinkCstChildren, param?: IN): OUT
   stmt_command(children: Stmt_commandCstChildren, param?: IN): OUT
-  short_commands(children: Short_commandsCstChildren, param?: IN): OUT
   commands(children: CommandsCstChildren, param?: IN): OUT
   structured_cmd(children: Structured_cmdCstChildren, param?: IN): OUT
   short_go(children: Short_goCstChildren, param?: IN): OUT

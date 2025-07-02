@@ -666,7 +666,7 @@ const register = createdevice(
             yselect: undefined,
           })
         }
-        useTape.setState({ quickterminal: true })
+        useTape.setState({ quickterminal: true, layout: TAPE_DISPLAY.TOP })
         break
       case 'terminal:close':
         useTape.setState((state) => ({

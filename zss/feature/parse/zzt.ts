@@ -111,15 +111,31 @@ export function parsezzt(player: string, content: Uint8Array) {
     }
   }
 
+  function scrubinlinechars(str: string) {
+    let scrubbed = ''
+    for (let i = 0; i < str.length; ++i) {
+      const code = str.charCodeAt(i)
+      if (code < 32 || code > 127) {
+        scrubbed += `$${code}`
+      } else {
+        scrubbed += str[i]
+      }
+    }
+    return scrubbed
+  }
+
   function normalizedlines(str: string) {
+    // check for inline $ text rows (thanks WiL)
+    // also check for inlined ascii chars UGHH
     return str
       .replaceAll(/\r?\n|\r/g, '\n')
       .split('\n')
       .map((line) => {
-        if (line.startsWith('$')) {
-          return `"\n$WHITE     ${line.substring(1)}\n"\n`
+        if (line.includes('$')) {
+          const [begin, ...inlinetext] = line.split('$')
+          return `${begin ?? ''}"$CENTER ${scrubinlinechars(inlinetext.join('$'))}"`
         }
-        return line
+        return scrubinlinechars(line)
       })
       .join('\n')
   }
@@ -132,7 +148,7 @@ export function parsezzt(player: string, content: Uint8Array) {
     stats: ZZT_STAT[],
   ) {
     // zztboard.stats
-    const colorname = COLOR[element.color] as STR_COLOR_CONST
+    const colorname = COLOR[element.color % 16] as STR_COLOR_CONST
     const colorconst = [colorname] as STR_COLOR
 
     const addstats: BOARD_ELEMENT = {}
@@ -152,6 +168,7 @@ export function parsezzt(player: string, content: Uint8Array) {
       }
       if (ispresent(elementstat.code) && elementstat.code) {
         addstats.code = normalizedlines(elementstat.code)
+        // console.info(addstats.code)
       }
       // stepx?: number
       // stepy?: number
@@ -201,8 +218,7 @@ export function parsezzt(player: string, content: Uint8Array) {
           { x, y },
           {
             ...addstats,
-            p1: formatexitstat(elementstat?.p3) ?? '',
-            p3: undefined,
+            p3: formatexitstat(elementstat?.p3) ?? '',
           },
         )
         break
