@@ -133,9 +133,15 @@ export function TapeTerminal() {
       scroll--
     }
     useTapeTerminal.setState({
-      scroll: Math.round(clamp(scroll, 0, logrowtotalheight)),
+      scroll: Math.round(clamp(scroll, 0, logrowtotalheight - baseline - 5)),
     })
-  }, [tapeterminal.scroll, tapeycursor, logrowtotalheight, edge.bottom])
+  }, [
+    tapeterminal.scroll,
+    tapeycursor,
+    logrowtotalheight,
+    baseline,
+    edge.bottom,
+  ])
 
   return (
     <>
