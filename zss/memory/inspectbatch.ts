@@ -78,21 +78,6 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
     case 'copycoords':
       register_copy(SOFTWARE, player, [x1, y1, x2, y2].join(' '))
       break
-    case 'remixrun': {
-      // const sourceboard = memoryboardread(memoryinspectremix.stat)
-      // if (ispresent(sourceboard)) {
-      //   boardremix(
-      //     board.id,
-      //     sourceboard.id,
-      //     memoryinspectremix.patternsize,
-      //     memoryinspectremix.mirror,
-      //     p1,
-      //     p2,
-      //     'all',
-      //   )
-      // }
-      break
-    }
     case 'pageopen':
       doasync(SOFTWARE, player, async () => {
         // wait a little

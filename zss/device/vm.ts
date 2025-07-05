@@ -64,6 +64,7 @@ import {
 import { compressbooks, decompressbooks } from 'zss/memory/compress'
 import { memoryinspect, memoryinspectcommand } from 'zss/memory/inspect'
 import { memoryinspectbatchcommand } from 'zss/memory/inspectbatch'
+import { memoryinspectremixcommand } from 'zss/memory/inspectremix'
 import { memoryloader } from 'zss/memory/loader'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
@@ -675,6 +676,11 @@ const vm = createdevice(
           case 'batch':
             doasync(vm, message.player, async () => {
               await memoryinspectbatchcommand(path, message.player)
+            })
+            break
+          case 'remix':
+            doasync(vm, message.player, async () => {
+              await memoryinspectremixcommand(path, message.player)
             })
             break
           case 'empty': {

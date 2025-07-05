@@ -25,6 +25,10 @@ export function pttoindex(pt: PT, width: number) {
   return pt.x + pt.y * width
 }
 
+export function ptstoarea(p1: PT, p2: PT) {
+  return `${p1.x},${p1.y},${p2.x},${p2.y}`
+}
+
 export function ptwithin(
   x: number,
   y: number,
