@@ -351,7 +351,7 @@ export function EditorInput({
                     }
                     break
                   case 'x':
-                    if (ispresent(withclipboard())) {
+                    if (ispresent(withclipboard()) && hasselection) {
                       withclipboard()
                         .writeText(strvalueselected)
                         .then(() => deleteselection())
@@ -363,12 +363,22 @@ export function EditorInput({
                     }
                     break
                   case 'p':
-                    vm_cli(SOFTWARE, player, strvalueselected)
-                    api_log(
-                      SOFTWARE,
-                      player,
-                      `running $WHITE${strvalueselected.substring(0, 16)}...$BLUE`,
-                    )
+                    if (hasselection) {
+                      vm_cli(SOFTWARE, player, strvalueselected)
+                      api_log(
+                        SOFTWARE,
+                        player,
+                        `running $WHITE${strvalueselected.substring(0, 16)}...$BLUE`,
+                      )
+                    } else {
+                      // run current line
+                      vm_cli(SOFTWARE, player, coderow.code)
+                      api_log(
+                        SOFTWARE,
+                        player,
+                        `running $WHITE${coderow.code.substring(0, 16)}...$BLUE`,
+                      )
+                    }
                     break
                   case `'`:
                     strtogglecomments()
