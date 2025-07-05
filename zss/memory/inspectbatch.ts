@@ -9,7 +9,6 @@ import { PT } from 'zss/words/types'
 
 import { memoryinspectempty, memoryinspectemptymenu } from './inspect'
 import {
-  memoryinspectremix,
   memoryinspectbgarea,
   memoryinspectchararea,
   memoryinspectcolorarea,
@@ -23,7 +22,7 @@ import {
   memoryinspectpastemenu,
 } from './inspectcopypaste'
 
-import { memoryboardread, memoryreadplayerboard } from '.'
+import { memoryreadplayerboard } from '.'
 
 export async function memoryinspectbatchcommand(path: string, player: string) {
   const board = memoryreadplayerboard(player)
@@ -81,18 +80,18 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
       register_copy(SOFTWARE, player, [x1, y1, x2, y2].join(' '))
       break
     case 'remixrun': {
-      const sourceboard = memoryboardread(memoryinspectremix.stat)
-      if (ispresent(sourceboard)) {
-        boardremix(
-          board.id,
-          sourceboard.id,
-          memoryinspectremix.patternsize,
-          memoryinspectremix.mirror,
-          p1,
-          p2,
-          'all',
-        )
-      }
+      // const sourceboard = memoryboardread(memoryinspectremix.stat)
+      // if (ispresent(sourceboard)) {
+      //   boardremix(
+      //     board.id,
+      //     sourceboard.id,
+      //     memoryinspectremix.patternsize,
+      //     memoryinspectremix.mirror,
+      //     p1,
+      //     p2,
+      //     'all',
+      //   )
+      // }
       break
     }
     case 'pageopen':
