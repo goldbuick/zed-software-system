@@ -178,6 +178,13 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
       gadgethyperlink(player, 'batch', `edit @board codepage`, [
         `pageopen:${board.id}`,
       ])
+
+      // easy to copy board id
+      gadgethyperlink(player, 'batch', `board id ${board.id}`, [
+        '',
+        'copyit',
+        board.id,
+      ])
     }
   } else {
     memoryinspectarea(player, p1, p2, showpaste)

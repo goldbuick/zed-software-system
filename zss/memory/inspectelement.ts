@@ -272,4 +272,11 @@ export function memoryinspectelement(
   gadgethyperlink(player, 'batch', `edit @${codepagereadname(codepage)}`, [
     `pageopen:${codepage.id}`,
   ])
+
+  // easy to copy board id
+  gadgethyperlink(player, 'batch', `board id ${board.id}`, [
+    '',
+    'copyit',
+    board.id,
+  ])
 }

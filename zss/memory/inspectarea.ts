@@ -1,3 +1,4 @@
+import { get as idbget, update as idbupdate } from 'idb-keyval'
 import { DIVIDER } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,
@@ -155,12 +156,23 @@ export function memoryinspectbgarea(
   shared.scroll = gadgetcheckqueue(player)
 }
 
-// export const memoryinspectremix = {
-//   stat: '',
-//   patternsize: 2,
-//   mirror: 1,
-// }
-// type INSPECTVAR = keyof typeof memoryinspectremix
+type REMIX_CONFIG = {
+  stat: string
+  patternsize: number
+  mirror: number
+}
+
+// read / write from indexdb
+
+export async function readremixconfig(): Promise<REMIX_CONFIG | undefined> {
+  return idbget('remixconfig')
+}
+
+export async function writesecretheap(
+  updater: (oldValue: REMIX_CONFIG | undefined) => REMIX_CONFIG,
+): Promise<void> {
+  return idbupdate('remixconfig', updater)
+}
 
 export function memoryinspectarea(
   player: string,
@@ -210,6 +222,7 @@ export function memoryinspectarea(
     '5',
     ` 5 `,
   ])
+  gadgethyperlink(player, 'batch', 'remix coords', [`remix:${area}`, 'hk', 'r'])
 
   // function get(name: string) {
   //   const { target } = parsetarget(name)
@@ -307,4 +320,11 @@ export function memoryinspectarea(
       }
     }
   }
+
+  // easy to copy board id
+  gadgethyperlink(player, 'batch', `board id ${board.id}`, [
+    '',
+    'copyit',
+    board.id,
+  ])
 }

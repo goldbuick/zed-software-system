@@ -1,7 +1,6 @@
 import { parsetarget } from 'zss/device'
 import { register_copy, vm_cli } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { boardremix } from 'zss/feature/boardremix'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
