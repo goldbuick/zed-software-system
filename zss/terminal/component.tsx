@@ -1,25 +1,22 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { vm_cli } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import { clamp } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
-import { deepcopy } from 'zss/mapping/types'
 import {
   textformatreadedges,
   tokenizeandmeasuretextformat,
-  WRITE_TEXT_CONTEXT,
 } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { useWriteText, WriteTextContext } from '../gadget/hooks'
+import { useWriteText } from '../gadget/hooks'
 import { BackPlate } from '../tape/backplate'
 import { TapeTerminalContext, terminalsplit } from '../tape/common'
 
 import { TapeTerminalInput } from './input'
-import { TapeTerminalItem } from './item'
-import { TapeTerminalItemActive } from './itemactive'
+import { TerminalRows } from './terminalrows'
 
 function measurerow(item: string, width: number, height: number) {
   if (item.startsWith('!')) {
@@ -27,34 +24,6 @@ function measurerow(item: string, width: number, height: number) {
   }
   const measure = tokenizeandmeasuretextformat(item, width, height)
   return measure?.y ?? 1
-}
-
-function forkonedge(
-  leftedge: number,
-  topedge: number,
-  rightedge: number,
-  bottomedge: number,
-  context: WRITE_TEXT_CONTEXT,
-): WRITE_TEXT_CONTEXT {
-  return {
-    ...context,
-    x: leftedge,
-    y: topedge,
-    reset: {
-      ...deepcopy(context.reset),
-      topedge,
-      leftedge,
-      rightedge,
-      bottomedge,
-    },
-    active: {
-      ...deepcopy(context.active),
-      topedge,
-      leftedge,
-      rightedge,
-      bottomedge,
-    },
-  }
 }
 
 export function TapeTerminal() {
@@ -67,22 +36,8 @@ export function TapeTerminal() {
   const tapeterminal = useTapeTerminal()
 
   // wide terminal
-  const xstep = terminalsplit(context.width)
-
-  const top = 0
-  const left = 0
-  const right = context.width - 1
-  const bottom = context.height - 1
   const edge = textformatreadedges(context)
-
-  const xleft = useMemo(
-    () => forkonedge(left, top, xstep - 1, bottom, context),
-    [xstep, top, left, bottom, context],
-  )
-  const xright = useMemo(
-    () => forkonedge(xstep + 1, top, right, bottom, context),
-    [xstep, top, right, bottom, context],
-  )
+  const xstep = terminalsplit(context.width)
 
   // measure rows
   const infosize = xstep - 1
@@ -97,26 +52,17 @@ export function TapeTerminal() {
   // baseline
   const baseline = edge.bottom - edge.top - (editoropen ? 0 : 2)
 
-  // upper bound on ycursor
-  let inforowtotalheight = 0
-  let inforowycoord = baseline + 1
-
   // ycoords for rows
-  const inforowycoords: number[] = inforowheights.map((rowheight) => {
-    inforowycoord -= rowheight
+  let inforowtotalheight = 0
+  inforowheights.forEach((rowheight) => {
     inforowtotalheight += rowheight
-    return inforowycoord
   })
   ++inforowtotalheight
 
-  let logsrowtotalheight = 0
-  let logsrowycoord = baseline + 1
-
   // ycoords for rows
-  const logsrowycoords: number[] = logsrowheights.map((rowheight) => {
-    logsrowycoord -= rowheight
+  let logsrowtotalheight = 0
+  logsrowheights.forEach((rowheight) => {
     logsrowtotalheight += rowheight
-    return logsrowycoord
   })
   ++logsrowtotalheight
 
@@ -124,23 +70,28 @@ export function TapeTerminal() {
   const tapeycursor = edge.bottom - tapeterminal.ycursor + tapeterminal.scroll
   const logrowtotalheight = Math.max(inforowtotalheight, logsrowtotalheight)
 
+  // iterative scroll
   useEffect(() => {
-    let scroll = tapeterminal.scroll
-    if (tapeycursor < 5) {
-      scroll++
-    }
-    if (tapeycursor > edge.bottom - 10) {
-      scroll--
-    }
-    useTapeTerminal.setState({
-      scroll: Math.round(clamp(scroll, 0, logrowtotalheight - baseline - 5)),
-    })
+    setTimeout(() => {
+      useTapeTerminal.setState((state) => {
+        const ycursor = edge.bottom - tapeterminal.ycursor + tapeterminal.scroll
+        let scroll = state.scroll
+        if (ycursor < 5) {
+          scroll++
+        }
+        if (ycursor > edge.bottom - 10) {
+          scroll--
+        }
+        scroll = Math.round(clamp(scroll, 0, logrowtotalheight - baseline))
+        return { scroll }
+      })
+    }, 16)
   }, [
-    tapeterminal.scroll,
-    tapeycursor,
-    logrowtotalheight,
     baseline,
     edge.bottom,
+    logrowtotalheight,
+    tapeterminal.scroll,
+    tapeterminal.ycursor,
   ])
 
   return (
@@ -159,42 +110,7 @@ export function TapeTerminal() {
           },
         }}
       >
-        <WriteTextContext.Provider value={xleft}>
-          {terminalinfo.map((text, index) => {
-            const y = inforowycoords[index] + tapeterminal.scroll
-            const yheight = inforowheights[index]
-            const ybottom = y + yheight
-            if (ybottom < 0 || y < 0 || y > baseline) {
-              return null
-            }
-            return !editoropen &&
-              tapeterminal.xcursor < xstep &&
-              tapeycursor >= y &&
-              tapeycursor < ybottom ? (
-              <TapeTerminalItemActive key={index} text={text} y={y} />
-            ) : (
-              <TapeTerminalItem key={index} text={text} y={y} />
-            )
-          })}
-        </WriteTextContext.Provider>
-        <WriteTextContext.Provider value={xright}>
-          {terminallogs.map((text, index) => {
-            const y = logsrowycoords[index] + tapeterminal.scroll
-            const yheight = logsrowheights[index]
-            const ybottom = y + yheight
-            if (ybottom < 0 || y < 0 || y > baseline) {
-              return null
-            }
-            return !editoropen &&
-              tapeterminal.xcursor >= xstep &&
-              tapeycursor >= y &&
-              tapeycursor < ybottom ? (
-              <TapeTerminalItemActive key={index} text={text} y={y} />
-            ) : (
-              <TapeTerminalItem key={index} text={text} y={y} />
-            )
-          })}
-        </WriteTextContext.Provider>
+        <TerminalRows />
         {!editoropen && (
           <TapeTerminalInput
             tapeycursor={tapeycursor}

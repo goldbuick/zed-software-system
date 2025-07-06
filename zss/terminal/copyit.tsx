@@ -12,7 +12,6 @@ import { UserInput } from '../gadget/userinput'
 import { setuplogitem, TapeTerminalItemInputProps } from '../tape/common'
 
 export function TapeTerminalCopyIt({
-  blink,
   active,
   prefix,
   label,
@@ -37,7 +36,7 @@ export function TapeTerminalCopyIt({
   const tcolor = inputcolor(!!active)
 
   // render output
-  setuplogitem(!!blink, !!active, 0, y, context)
+  setuplogitem(!!active, 0, y, context)
   tokenizeandwritetextformat(
     `${prefix} $purple$16 $yellowCOPYIT ${tcolor}${label}`,
     context,

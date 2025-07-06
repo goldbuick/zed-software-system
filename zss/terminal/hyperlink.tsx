@@ -11,7 +11,6 @@ import {
 } from '../tape/common'
 
 export function TapeTerminalHyperlink({
-  blink,
   active,
   prefix,
   label,
@@ -31,7 +30,7 @@ export function TapeTerminalHyperlink({
   const tcolor = inputcolor(!!active)
 
   // render output
-  setuplogitem(!!blink, !!active, 0, y, context)
+  setuplogitem(!!active, 0, y, context)
   tokenizeandwritetextformat(
     `${prefix} $purple$16 ${tcolor}${label}`,
     context,

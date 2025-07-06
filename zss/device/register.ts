@@ -142,8 +142,10 @@ function renderrow(maybelevel: string, content: string[]) {
   const level = maybelevel === 'error' ? '$red' : '$blue'
   const messagetext = content.map((v) => `${v}`).join(' ')
   const ishyperlink = messagetext.startsWith('!')
-  const prefix = `$onclear${level}`
-  return `${ishyperlink ? '!' : ''}${prefix}${messagetext}`
+  if (ishyperlink) {
+    return `!${messagetext}`
+  }
+  return `$onclear${level}${messagetext}`
 }
 
 function terminaladdinfo(message: MESSAGE) {
