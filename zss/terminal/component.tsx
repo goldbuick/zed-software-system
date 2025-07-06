@@ -13,7 +13,7 @@ import {
 } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { useWriteText, WriteTextContext } from '../hooks'
+import { useWriteText, WriteTextContext } from '../gadget/hooks'
 import { BackPlate } from '../tape/backplate'
 import { TapeTerminalContext, terminalsplit } from '../tape/common'
 

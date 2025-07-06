@@ -1,4 +1,4 @@
-import { useBlink } from '../hooks'
+import { useBlink } from '../gadget/hooks'
 import { TapeTerminalItemProps } from '../tape/common'
 
 import { TapeTerminalItem } from './item'

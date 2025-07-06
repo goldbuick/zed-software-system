@@ -12,15 +12,14 @@ import { createlineindexes } from 'zss/lang/transformer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
 import { clamp } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
-import { textformatreadedges } from 'zss/words/textformat'
-import { useShallow } from 'zustand/react/shallow'
-
-import { BackPlate } from '../tape/backplate'
+import { BackPlate } from 'zss/tape/backplate'
 import {
   findcursorinrows,
   findmaxwidthinrows,
   splitcoderows,
-} from '../tape/common'
+} from 'zss/tape/common'
+import { textformatreadedges } from 'zss/words/textformat'
+import { useShallow } from 'zustand/react/shallow'
 
 import {
   ZSS_MUSIC_DRUM,

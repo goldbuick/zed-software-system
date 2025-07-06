@@ -1,5 +1,7 @@
 import { useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText, writeTile } from 'zss/gadget/hooks'
+import { Marquee } from 'zss/gadget/scroll/marquee'
+import { bgcolor, setupeditoritem } from 'zss/tape/common'
 import { ismac, metakey } from 'zss/words/system'
 import {
   textformatreadedges,
@@ -8,9 +10,6 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
-
-import { Marquee } from '../scroll/marquee'
-import { bgcolor, setupeditoritem } from '../tape/common'
 
 export function EditorFrame() {
   const context = useWriteText()

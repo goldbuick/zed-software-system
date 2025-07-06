@@ -1,7 +1,6 @@
 import { useRef } from 'react'
+import { useBlink, useTilesData, writeTile } from 'zss/gadget/hooks'
 import { ispresent } from 'zss/mapping/types'
-
-import { useBlink, useTilesData, writeTile } from '../hooks'
 
 type BlinkerProps = {
   x: number

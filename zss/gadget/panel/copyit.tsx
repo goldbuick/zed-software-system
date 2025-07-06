@@ -17,7 +17,6 @@ import {
 } from './common'
 
 export function PanelItemCopyIt({
-  chip,
   row,
   active,
   label,

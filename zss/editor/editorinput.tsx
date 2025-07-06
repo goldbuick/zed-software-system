@@ -15,8 +15,12 @@ import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { checkforword } from 'zss/feature/t9'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
+import { useBlink, useWriteText } from 'zss/gadget/hooks'
+import { Scrollable } from 'zss/gadget/scrollable'
+import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import { EDITOR_CODE_ROW } from 'zss/tape/common'
 import { ismac } from 'zss/words/system'
 import {
   applycolortoindexes,
@@ -24,11 +28,6 @@ import {
   textformatreadedges,
 } from 'zss/words/textformat'
 import { COLOR, NAME, PT } from 'zss/words/types'
-
-import { useBlink, useWriteText } from '../hooks'
-import { Scrollable } from '../scrollable'
-import { EDITOR_CODE_ROW } from '../tape/common'
-import { UserInput, modsfromevent } from '../userinput'
 
 export type EditorInputProps = {
   xcursor: number

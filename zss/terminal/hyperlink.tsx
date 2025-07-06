@@ -1,14 +1,14 @@
 import { useCallback, useContext } from 'react'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { useWriteText } from '../hooks'
-import { inputcolor } from '../panel/common'
+import { useWriteText } from '../gadget/hooks'
+import { inputcolor } from '../gadget/panel/common'
+import { UserInput } from '../gadget/userinput'
 import {
   TapeTerminalContext,
   TapeTerminalItemInputProps,
   setuplogitem,
 } from '../tape/common'
-import { UserInput } from '../userinput'
 
 export function TapeTerminalHyperlink({
   blink,

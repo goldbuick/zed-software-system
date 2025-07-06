@@ -1,11 +1,20 @@
 import { useMemo } from 'react'
 import { Y } from 'zss/device/modem'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
+import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import * as lexer from 'zss/lang/lexer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { ROM_LOOKUP, romintolookup, romread } from 'zss/rom'
+import {
+  BG_ACTIVE,
+  BG_SELECTED,
+  bgcolor,
+  EDITOR_CODE_ROW,
+  FG_SELECTED,
+  setupeditoritem,
+} from 'zss/tape/common'
 import { statformat, stattypestring } from 'zss/words/stats'
 import {
   clippedapplybgtoindexes,
@@ -15,16 +24,6 @@ import {
   writeplaintext,
 } from 'zss/words/textformat'
 import { COLOR, STAT_TYPE } from 'zss/words/types'
-
-import { useBlink, useWriteText } from '../hooks'
-import {
-  BG_ACTIVE,
-  BG_SELECTED,
-  bgcolor,
-  EDITOR_CODE_ROW,
-  FG_SELECTED,
-  setupeditoritem,
-} from '../tape/common'
 
 import {
   ZSS_COLOR_MAP,

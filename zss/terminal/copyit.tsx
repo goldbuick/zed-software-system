@@ -6,10 +6,10 @@ import { writetext } from 'zss/feature/writeui'
 import { ispresent } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { useWriteText } from '../hooks'
-import { inputcolor } from '../panel/common'
+import { useWriteText } from '../gadget/hooks'
+import { inputcolor } from '../gadget/panel/common'
+import { UserInput } from '../gadget/userinput'
 import { setuplogitem, TapeTerminalItemInputProps } from '../tape/common'
-import { UserInput } from '../userinput'
 
 export function TapeTerminalCopyIt({
   blink,

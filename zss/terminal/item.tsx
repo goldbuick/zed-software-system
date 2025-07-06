@@ -7,7 +7,7 @@ import {
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
-import { useTape } from '../data/state'
+import { useTape } from '../gadget/data/state'
 import {
   BG_ACTIVE,
   TapeTerminalItemInputProps,

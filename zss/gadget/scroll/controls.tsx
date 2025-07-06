@@ -1,7 +1,7 @@
 import { RUNTIME } from 'zss/config'
+import { Blinker } from 'zss/tape/blinker'
 
 import { resetDither, useDither, writeDither } from '../hooks'
-import { Blinker } from '../tape/blinker'
 import { DitherData, DitherRender } from '../usedither'
 import { TilesRender } from '../usetiles'
 
