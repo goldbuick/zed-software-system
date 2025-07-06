@@ -106,7 +106,7 @@ export function createsynth() {
   })
   sidechaincompressor.connect(maincompressor)
 
-  const playvolume = new Volume()
+  const playvolume = new Volume(volumetodb(80))
   playvolume.connect(sidechaincompressor)
 
   const bgplayvolume = new Volume()
@@ -771,7 +771,7 @@ export function createsynth() {
 
   // set default volumes
   setttsvolume(15)
-  setplayvolume(100)
+  setplayvolume(80)
   setbgplayvolume(100)
 
   return {

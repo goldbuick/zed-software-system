@@ -269,10 +269,24 @@ export function bookelementdisplayread(
 ) {
   const kind = element?.kinddata
   return {
-    char: element?.displaychar ?? element?.char ?? kind?.char ?? defaultchar,
+    char:
+      element?.displaychar ??
+      kind?.displaychar ??
+      element?.char ??
+      kind?.char ??
+      defaultchar,
     color:
-      element?.displaycolor ?? element?.color ?? kind?.color ?? defaultcolor,
-    bg: element?.displaybg ?? kind?.bg ?? defaultbg,
+      element?.displaycolor ??
+      kind?.displaycolor ??
+      element?.color ??
+      kind?.color ??
+      defaultcolor,
+    bg:
+      element?.displaybg ??
+      kind?.displaybg ??
+      element?.bg ??
+      kind?.bg ??
+      defaultbg,
     light: element?.light ?? kind?.light ?? 0,
   }
 }

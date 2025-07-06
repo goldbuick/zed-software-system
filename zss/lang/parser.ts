@@ -244,19 +244,19 @@ class ScriptParser extends CstParser {
   command_else = this.RULED('command_else', () => {
     this.CONSUME(lexer.command)
     this.CONSUME(lexer.command_else)
-    this.OPTION(() => this.SUBRULE(this.command_fork))
+    this.SUBRULE(this.command_fork)
   })
 
   command_while = this.RULED('command_while', () => {
     this.CONSUME(lexer.command_while)
     this.SUBRULE(this.expr)
-    this.OPTION(() => this.SUBRULE(this.command_block))
+    this.SUBRULE(this.command_block)
   })
 
   command_repeat = this.RULED('command_repeat', () => {
     this.CONSUME(lexer.command_repeat)
     this.SUBRULE(this.expr)
-    this.OPTION(() => this.SUBRULE(this.command_block))
+    this.SUBRULE(this.command_block)
   })
 
   command_waitfor = this.RULED('command_waitfor', () => {

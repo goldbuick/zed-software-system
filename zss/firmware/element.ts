@@ -48,6 +48,9 @@ const STANDARD_STAT_NAMES = new Set([
   'char',
   'color',
   'bg',
+  'displaychar',
+  'displaycolor',
+  'displaybg',
   // interaction
   'item',
   'group',
@@ -236,10 +239,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'thisy':
         return [true, READ_CONTEXT.element?.y ?? -1]
       default: {
-        // check standard stat names
-        const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
         // return result
         if (STANDARD_STAT_NAMES.has(name)) {
+          // check standard stat names
+          const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
+          if (name === 'color') {
+            console.info('reading color', maybevalue)
+          }
           return [true, maybevalue]
         }
         break

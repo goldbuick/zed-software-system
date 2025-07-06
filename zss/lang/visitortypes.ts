@@ -237,7 +237,7 @@ export type Command_elseCstNode = {
 export type Command_elseCstChildren = {
   token_command: IToken[]
   token_else: IToken[]
-  command_fork?: Command_forkCstNode[]
+  command_fork: Command_forkCstNode[]
 }
 
 export type Command_whileCstNode = {
@@ -248,7 +248,7 @@ export type Command_whileCstNode = {
 export type Command_whileCstChildren = {
   token_while: IToken[]
   expr: ExprCstNode[]
-  command_block?: Command_blockCstNode[]
+  command_block: Command_blockCstNode[]
 }
 
 export type Command_repeatCstNode = {
@@ -259,7 +259,7 @@ export type Command_repeatCstNode = {
 export type Command_repeatCstChildren = {
   token_repeat: IToken[]
   expr: ExprCstNode[]
-  command_block?: Command_blockCstNode[]
+  command_block: Command_blockCstNode[]
 }
 
 export type Command_waitforCstNode = {
