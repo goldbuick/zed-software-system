@@ -21,6 +21,9 @@ export type BOARD_ELEMENT = {
   char?: number
   color?: number
   bg?: number
+  displaychar?: number
+  displaycolor?: number
+  displaybg?: number
   light?: number
   lightdir?: STR_DIR
   // interaction

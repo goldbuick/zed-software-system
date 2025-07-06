@@ -1,17 +1,16 @@
 import { useCallback, useContext } from 'react'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { useWriteText } from '../hooks'
-import { inputcolor } from '../panel/common'
+import { useWriteText } from '../gadget/hooks'
+import { inputcolor } from '../gadget/panel/common'
+import { UserInput } from '../gadget/userinput'
 import {
   TapeTerminalContext,
   TapeTerminalItemInputProps,
   setuplogitem,
 } from '../tape/common'
-import { UserInput } from '../userinput'
 
 export function TapeTerminalHyperlink({
-  blink,
   active,
   prefix,
   label,
@@ -31,7 +30,7 @@ export function TapeTerminalHyperlink({
   const tcolor = inputcolor(!!active)
 
   // render output
-  setuplogitem(!!blink, !!active, 0, y, context)
+  setuplogitem(!!active, 0, y, context)
   tokenizeandwritetextformat(
     `${prefix} $purple$16 ${tcolor}${label}`,
     context,

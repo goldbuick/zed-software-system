@@ -55,6 +55,9 @@ enum BOARD_ELEMENT_KEYS {
   p4,
   p5,
   p6,
+  displaychar,
+  displaycolor,
+  displaybg,
 }
 
 // safe to serialize copy of boardelement

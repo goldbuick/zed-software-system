@@ -3,6 +3,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Group } from 'three'
 import { RUNTIME } from 'zss/config'
 import { animpositiontotarget } from 'zss/mapping/anim'
+import { clamp } from 'zss/mapping/number'
 import { isarray, ispresent } from 'zss/mapping/types'
 import {
   createwritetextcontext,
@@ -14,6 +15,7 @@ import { PANEL_ITEM } from '../data/types'
 import { useTiles } from '../hooks'
 import { ScrollContext } from '../panel/common'
 import { Panel } from '../panel/component'
+import { Scrollable } from '../scrollable'
 import { UserFocus, UserInput, UserInputHandler } from '../userinput'
 import { TilesData } from '../usetiles'
 
@@ -46,6 +48,7 @@ export function Scroll({
   const panelheight = height - 3
   const tilesstore = useTiles(width, height, 0, color, bg)
   const scroll = useContext(ScrollContext)
+  const totalrows = text.length - 1
 
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, color, bg, 0, 0, width, height),
@@ -88,9 +91,16 @@ export function Scroll({
   const down = useCallback<UserInputHandler>(
     (mods) => {
       const step = mods.alt ? 10 : 1
-      setCursor((state) => Math.min(text.length, state + step))
+      setCursor((state) => Math.min(totalrows, state + step))
     },
-    [setCursor, text.length],
+    [setCursor, totalrows],
+  )
+
+  const movecursor = useCallback(
+    (value: number) => {
+      setCursor((state) => clamp(Math.round(state + value), 0, totalrows))
+    },
+    [setCursor, totalrows],
   )
 
   // start position
@@ -124,6 +134,14 @@ export function Scroll({
 
   return (
     <group ref={groupref} position-y={1000000}>
+      <Scrollable
+        blocking
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        onScroll={(ydelta: number) => movecursor(ydelta * 0.5)}
+      />
       <UserFocus>
         <UserInput
           MOVE_UP={up}

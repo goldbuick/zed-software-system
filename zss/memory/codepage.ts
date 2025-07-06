@@ -328,6 +328,7 @@ export function codepageapplyelementstats(
     switch (key) {
       case 'name':
       case 'char':
+      case 'displaychar':
       case 'light':
       case 'group':
       case 'p1':
@@ -344,6 +345,8 @@ export function codepageapplyelementstats(
         break
       case 'color':
       case 'bg':
+      case 'displaycolor':
+      case 'displaybg':
       case 'lightdir':
         // @ts-expect-error - we are doing this on purpose
         element[key] = mapstrtoconsts(stats[key]) ?? stats[key]

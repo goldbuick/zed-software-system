@@ -1,4 +1,3 @@
-import { parsetarget } from 'zss/device'
 import { DIVIDER } from 'zss/feature/writeui'
 import {
   gadgetcheckqueue,
@@ -6,8 +5,8 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
-import { rectpoints } from 'zss/mapping/2d'
-import { isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { ptstoarea, rectpoints } from 'zss/mapping/2d'
+import { isnumber, ispresent } from 'zss/mapping/types'
 import { PT, WORD } from 'zss/words/types'
 
 import { boardelementread } from './board'
@@ -20,10 +19,6 @@ import {
   memoryensuresoftwarebook,
   memoryreadplayerboard,
 } from '.'
-
-function ptstoarea(p1: PT, p2: PT) {
-  return `${p1.x},${p1.y},${p2.x},${p2.y}`
-}
 
 export function memoryinspectchararea(
   player: string,
@@ -156,13 +151,6 @@ export function memoryinspectbgarea(
   shared.scroll = gadgetcheckqueue(player)
 }
 
-export const memoryinspectremix = {
-  stat: '',
-  patternsize: 2,
-  mirror: 1,
-}
-type INSPECTVAR = keyof typeof memoryinspectremix
-
 export function memoryinspectarea(
   player: string,
   p1: PT,
@@ -211,41 +199,12 @@ export function memoryinspectarea(
     '5',
     ` 5 `,
   ])
-
-  function get(name: string) {
-    const { target } = parsetarget(name)
-    return memoryinspectremix[target as INSPECTVAR]
-  }
-  function set(name: string, value: WORD) {
-    if (isnumber(value) || isstring(value)) {
-      const { target } = parsetarget(name)
-      // @ts-expect-error bah
-      memoryinspectremix[target as INSPECTVAR] = value
-    }
-  }
-
-  gadgethyperlink(player, 'batch', 'remix', [`stat:${area}`, 'text'], get, set)
-  gadgethyperlink(
-    player,
-    'batch',
-    'patternsize',
-    [`patternsize:${area}`, 'number', '1', '5'],
-    get,
-    set,
-  )
-  gadgethyperlink(
-    player,
-    'batch',
-    'mirror',
-    [`mirror:${area}`, 'number', '1', '8'],
-    get,
-    set,
-  )
-  gadgethyperlink(player, 'batch', 'run', [
-    `remixrun:${area}`,
+  gadgethyperlink(player, 'remix', 'remix coords', [
+    `remix:${area}`,
     'hk',
     'r',
     ` R `,
+    'next',
   ])
 
   gadgettext(player, DIVIDER)
@@ -308,4 +267,11 @@ export function memoryinspectarea(
       }
     }
   }
+
+  // easy to copy board id
+  gadgethyperlink(player, 'batch', `board id ${board.id}`, [
+    '',
+    'copyit',
+    board.id,
+  ])
 }

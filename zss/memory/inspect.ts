@@ -15,6 +15,7 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
+import { ptstoarea } from 'zss/mapping/2d'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
@@ -44,10 +45,6 @@ import {
   memoryreadoperator,
   memoryreadplayerboard,
 } from '.'
-
-function ptstoarea(p1: PT, p2: PT) {
-  return `${p1.x},${p1.y},${p2.x},${p2.y}`
-}
 
 export function memoryinspectempty(
   player: string,
@@ -177,6 +174,13 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
       ])
       gadgethyperlink(player, 'batch', `edit @board codepage`, [
         `pageopen:${board.id}`,
+      ])
+
+      // easy to copy board id
+      gadgethyperlink(player, 'batch', `board id ${board.id}`, [
+        '',
+        'copyit',
+        board.id,
       ])
     }
   } else {

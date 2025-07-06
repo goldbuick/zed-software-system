@@ -12,15 +12,14 @@ import { createlineindexes } from 'zss/lang/transformer'
 import { CodeNode, NODE } from 'zss/lang/visitor'
 import { clamp } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent } from 'zss/mapping/types'
-import { textformatreadedges } from 'zss/words/textformat'
-import { useShallow } from 'zustand/react/shallow'
-
-import { BackPlate } from '../tape/backplate'
+import { BackPlate } from 'zss/tape/backplate'
 import {
   findcursorinrows,
   findmaxwidthinrows,
   splitcoderows,
-} from '../tape/common'
+} from 'zss/tape/common'
+import { textformatreadedges } from 'zss/words/textformat'
+import { useShallow } from 'zustand/react/shallow'
 
 import {
   ZSS_MUSIC_DRUM,
@@ -271,46 +270,45 @@ export function TapeEditor() {
   const ymaxscroll = rows.length
 
   useEffect(() => {
-    let xscroll = tapeeditor.xscroll
-    const xdelta = xcursor - xscroll
-    const xwidth = edge.width - 3
+    setTimeout(() => {
+      useTapeEditor.setState((state) => {
+        let xscroll = state.xscroll
+        const xdelta = xcursor - xscroll
+        const xwidth = edge.width - 3
 
-    let xstep = Math.round(clamp(Math.abs(xdelta) * 0.5, 1, chunkstep))
-    if (xstep < 8) {
-      xstep = 1
-    }
-    if (xdelta > xwidth - 8) {
-      xscroll += xstep
-    }
-    if (xdelta < 8) {
-      xscroll -= xstep
-    }
+        let xstep = Math.round(clamp(Math.abs(xdelta) * 0.5, 1, chunkstep))
+        if (xstep < 8) {
+          xstep = 1
+        }
+        if (xdelta > xwidth - 8) {
+          xscroll += xstep
+        }
+        if (xdelta < 8) {
+          xscroll -= xstep
+        }
 
-    let yscroll = tapeeditor.yscroll
-    const ydelta = ycursor - yscroll
-    const yheight = edge.height - 4
-    const ymaxstep = Math.round(yheight * 0.5)
+        let yscroll = state.yscroll
+        const ydelta = ycursor - yscroll
+        const yheight = edge.height - 4
+        const ymaxstep = Math.round(yheight * 0.5)
 
-    let ystep = Math.round(clamp(Math.abs(ydelta) * 0.25, 1, ymaxstep))
-    if (ystep < 8) {
-      ystep = 1
-    }
-    if (ydelta > yheight - 4) {
-      yscroll += ystep
-    }
-    if (ydelta < 4) {
-      yscroll -= ystep
-    }
+        let ystep = Math.round(clamp(Math.abs(ydelta) * 0.25, 1, ymaxstep))
+        if (ystep < 8) {
+          ystep = 1
+        }
+        if (ydelta > yheight - 4) {
+          yscroll += ystep
+        }
+        if (ydelta < 4) {
+          yscroll -= ystep
+        }
 
-    // update
-    setTimeout(
-      () =>
-        useTapeEditor.setState({
+        return {
           xscroll: Math.round(clamp(xscroll, 0, xmaxscroll)),
           yscroll: Math.round(clamp(yscroll, 0, ymaxscroll)),
-        }),
-      16,
-    )
+        }
+      })
+    }, 16)
   }, [
     xcursor,
     xmaxscroll,

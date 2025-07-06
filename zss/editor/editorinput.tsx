@@ -15,8 +15,12 @@ import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
 import { checkforword } from 'zss/feature/t9'
 import { useTape, useTapeEditor } from 'zss/gadget/data/state'
+import { useBlink, useWriteText } from 'zss/gadget/hooks'
+import { Scrollable } from 'zss/gadget/scrollable'
+import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import { EDITOR_CODE_ROW } from 'zss/tape/common'
 import { ismac } from 'zss/words/system'
 import {
   applycolortoindexes,
@@ -24,11 +28,6 @@ import {
   textformatreadedges,
 } from 'zss/words/textformat'
 import { COLOR, NAME, PT } from 'zss/words/types'
-
-import { useBlink, useWriteText } from '../hooks'
-import { Scrollable } from '../scrollable'
-import { EDITOR_CODE_ROW } from '../tape/common'
-import { UserInput, modsfromevent } from '../userinput'
 
 export type EditorInputProps = {
   xcursor: number
@@ -351,7 +350,7 @@ export function EditorInput({
                     }
                     break
                   case 'x':
-                    if (ispresent(withclipboard())) {
+                    if (ispresent(withclipboard()) && hasselection) {
                       withclipboard()
                         .writeText(strvalueselected)
                         .then(() => deleteselection())
@@ -363,12 +362,22 @@ export function EditorInput({
                     }
                     break
                   case 'p':
-                    vm_cli(SOFTWARE, player, strvalueselected)
-                    api_log(
-                      SOFTWARE,
-                      player,
-                      `running $WHITE${strvalueselected.substring(0, 16)}...$BLUE`,
-                    )
+                    if (hasselection) {
+                      vm_cli(SOFTWARE, player, strvalueselected)
+                      api_log(
+                        SOFTWARE,
+                        player,
+                        `running $WHITE${strvalueselected.substring(0, 16)}...$BLUE`,
+                      )
+                    } else {
+                      // run current line
+                      vm_cli(SOFTWARE, player, coderow.code)
+                      api_log(
+                        SOFTWARE,
+                        player,
+                        `running $WHITE${coderow.code.substring(0, 16)}...$BLUE`,
+                      )
+                    }
                     break
                   case `'`:
                     strtogglecomments()

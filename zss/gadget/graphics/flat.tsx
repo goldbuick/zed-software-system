@@ -5,9 +5,8 @@ import { Group } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { layersreadcontrol, VIEWSCALE } from 'zss/gadget/data/types'
+import { TapeTerminalInspector } from 'zss/inspector/component'
 import { ispresent } from 'zss/mapping/types'
-
-import { TapeTerminalInspector } from '../inspector/component'
 
 import { FlatLayer } from './flatlayer'
 import { MediaLayer } from './medialayer'

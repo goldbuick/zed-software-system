@@ -7,12 +7,11 @@ import { register_terminal_open } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { TAPE_DISPLAY, useTape, useTapeTerminal } from 'zss/gadget/data/state'
+import { ShadeBoxDither } from 'zss/gadget/graphics/dither'
+import { UserFocus, UserHotkey } from 'zss/gadget/userinput'
+import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import { useShallow } from 'zustand/react/shallow'
-
-import { ShadeBoxDither } from '../graphics/dither'
-import { UserFocus, UserHotkey } from '../userinput'
-import { useScreenSize } from '../userscreen'
 
 import { TapeLayout } from './layout'
 

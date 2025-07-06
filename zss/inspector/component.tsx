@@ -4,13 +4,12 @@ import { RUNTIME } from 'zss/config'
 import { vm_inspect } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { useTape, useTapeInspector } from 'zss/gadget/data/state'
+import { Rect } from 'zss/gadget/rect'
 import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { useShallow } from 'zustand/react/shallow'
-
-import { useTape, useTapeInspector } from '../data/state'
-import { Rect } from '../rect'
 
 const point = new Vector3()
 

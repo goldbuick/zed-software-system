@@ -1,18 +1,17 @@
 /* eslint-disable react/no-unknown-property */
 import { Fragment, ReactNode, useMemo } from 'react'
 import { RUNTIME } from 'zss/config'
+import { TapeEditor } from 'zss/editor/component'
 import { TAPE_DISPLAY, useTape } from 'zss/gadget/data/state'
+import { useTiles, WriteTextContext } from 'zss/gadget/hooks'
+import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import { deepcopy } from 'zss/mapping/types'
+import { TapeTerminal } from 'zss/terminal/component'
 import {
   createwritetextcontext,
   WRITE_TEXT_CONTEXT,
 } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
-
-import { TapeEditor } from '../editor/component'
-import { useTiles, WriteTextContext } from '../hooks'
-import { TapeTerminal } from '../terminal/component'
-import { TilesData, TilesRender } from '../usetiles'
 
 import { BackPlate } from './backplate'
 import { bgcolor, editorsplit, FG } from './common'

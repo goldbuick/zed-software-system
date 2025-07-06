@@ -25,7 +25,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR, NAME } from 'zss/words/types'
 
-import { useBlink, useWriteText } from '../hooks'
+import { useBlink, useWriteText } from '../gadget/hooks'
 import { bgcolor, setuplogitem } from '../tape/common'
 
 type TapeTerminalInputProps = {
@@ -136,6 +136,7 @@ export function TapeTerminalInput({
 
   function resettoend() {
     useTapeTerminal.setState({
+      scroll: 0,
       xcursor: inputstate.length,
       ycursor: 0,
       xselect: undefined,
@@ -148,7 +149,7 @@ export function TapeTerminalInput({
 
   if (!quickterminal) {
     // write hint
-    setuplogitem(false, false, 0, 0, context)
+    setuplogitem(false, 0, 0, context)
     const hint = `${import.meta.env.ZSS_BRANCH_NAME}:${import.meta.env.ZSS_BRANCH_VERSION} - if lost try #help`
     context.x = 1
     tokenizeandwritetextformat(`$dkcyan${hint}`, context, true)
@@ -158,13 +159,13 @@ export function TapeTerminalInput({
   const de = '$196'
   const dc = '$205'
   const dm = dc.repeat(edge.width - 6)
-  setuplogitem(false, false, 0, edge.height - 2, context)
+  setuplogitem(false, 0, edge.height - 2, context)
   context.active.color = COLOR.WHITE
   tokenizeandwritetextformat(`  ${de}${dm}${de}  `, context, true)
 
   // draw input line
   const inputline = inputstate.padEnd(edge.width, ' ')
-  setuplogitem(false, false, 0, edge.height - 1, context)
+  setuplogitem(false, 0, edge.height - 1, context)
   context.active.color = COLOR.WHITE
   writeplaintext(inputline, context, true)
 
@@ -192,9 +193,23 @@ export function TapeTerminalInput({
   if (blink) {
     const x = edge.left + tapeterminal.xcursor
     const y = edge.top + tapeycursor
-    const idx = x + y * context.width
-    applystrtoindex(idx, String.fromCharCode(221), context)
-    applycolortoindexes(idx, idx, 15, context.reset.bg, context)
+    // visibility clip
+    if (
+      y >= edge.top &&
+      y <= edge.bottom &&
+      x >= edge.left &&
+      x <= edge.right
+    ) {
+      const atchar = x + y * context.width
+      applystrtoindex(atchar, String.fromCharCode(221), context)
+      applycolortoindexes(
+        atchar,
+        atchar,
+        COLOR.WHITE,
+        context.reset.bg,
+        context,
+      )
+    }
   }
 
   useEffect(() => {
@@ -311,7 +326,7 @@ export function TapeTerminalInput({
                   ]
                   // cache history
                   writehistorybuffer(historybuffer).catch((err) =>
-                    api_error(SOFTWARE, player, 'input?', err.message),
+                    api_error(SOFTWARE, player, 'terminalinput', err.message),
                   )
                   useTapeTerminal.setState({
                     xcursor: 0,

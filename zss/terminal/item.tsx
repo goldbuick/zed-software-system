@@ -1,4 +1,4 @@
-import { useWriteText } from 'zss/gadget/hooks'
+import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import {
   HyperLinkText,
   textformatreadedges,
@@ -7,7 +7,7 @@ import {
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
-import { useTape } from '../data/state'
+import { useTape } from '../gadget/data/state'
 import {
   BG_ACTIVE,
   TapeTerminalItemInputProps,
@@ -20,19 +20,14 @@ import { TapeTerminalCopyIt } from './copyit'
 import { TapeTerminalHyperlink } from './hyperlink'
 import { TapeTerminalOpenIt } from './openit'
 
-export function TapeTerminalItem({
-  blink,
-  active,
-  text,
-  y,
-}: TapeTerminalItemProps) {
+export function TapeTerminalItem({ active, text, y }: TapeTerminalItemProps) {
   const context = useWriteText()
   const { quickterminal } = useTape()
   const edge = textformatreadedges(context)
   const ishyperlink = text.startsWith('!')
 
   // write text or clear line for ui
-  setuplogitem(!!blink, !!active, 0, y, context)
+  setuplogitem(!!active, 0, y, context)
   context.reset.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
   context.active.bottomedge = edge.bottom
   tokenizeandwritetextformat(ishyperlink ? '' : text, context, true)
@@ -62,7 +57,6 @@ export function TapeTerminalItem({
     // setup input props
     const [input, ...args] = words
     const props: TapeTerminalItemInputProps = {
-      blink,
       active,
       prefix,
       label,
@@ -104,4 +98,13 @@ export function TapeTerminalItem({
   }
 
   return null
+}
+
+export function TapeTerminalActiveItem({
+  active,
+  text,
+  y,
+}: TapeTerminalItemProps) {
+  useBlink()
+  return <TapeTerminalItem active={active} text={text} y={y} />
 }
