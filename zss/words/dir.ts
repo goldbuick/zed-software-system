@@ -189,8 +189,9 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
       }
       case 'FLEE':
       case 'FIND': {
-        const [dir, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.DIR])
-        strdir.push(dir.destpt.x, dir.destpt.y)
+        const [kind, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.KIND])
+        // strdir.push(dir.destpt.x, dir.destpt.y)
+        console.info('kind', kind)
         ii = iii
         break
       }

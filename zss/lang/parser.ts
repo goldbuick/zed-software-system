@@ -94,6 +94,7 @@ class ScriptParser extends CstParser {
 
   instmt = this.RULED('instmt', () => {
     this.OR([
+      { ALT: () => this.SUBRULE(this.commands) },
       { ALT: () => this.SUBRULE(this.stmt_stat) },
       { ALT: () => this.SUBRULE(this.stmt_text) },
       { ALT: () => this.SUBRULE(this.stmt_comment) },
@@ -101,7 +102,6 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.stmt_command) },
       { ALT: () => this.SUBRULE(this.short_go) },
       { ALT: () => this.SUBRULE(this.short_try) },
-      { ALT: () => this.SUBRULE(this.commands) },
     ])
   })
 
@@ -168,7 +168,7 @@ class ScriptParser extends CstParser {
 
   command_if = this.RULED('command_if', () => {
     this.CONSUME(lexer.command_if)
-    this.SUBRULE(this.expr)
+    this.SUBRULE(this.words)
     this.OPTION(() => this.SUBRULE(this.command_if_block))
   })
 
@@ -237,7 +237,7 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.command)
     this.CONSUME(lexer.command_else)
     this.CONSUME(lexer.command_if)
-    this.SUBRULE(this.expr)
+    this.SUBRULE(this.words)
     this.OPTION(() => this.SUBRULE(this.command_fork))
   })
 
@@ -412,7 +412,7 @@ class ScriptParser extends CstParser {
   })
 
   power = this.RULED('power', () => {
-    this.SUBRULE(this.words)
+    this.SUBRULE(this.token)
     this.OPTION(() => {
       this.CONSUME(lexer.power)
       this.SUBRULE(this.factor)
@@ -425,8 +425,218 @@ class ScriptParser extends CstParser {
     this.AT_LEAST_ONE(() => this.SUBRULE(this.token))
   })
 
+  kind = this.RULED('kind', () => {
+    this.OPTION(() => this.SUBRULE(this.color))
+    this.SUBRULE(this.string_token)
+  })
+
+  category = this.RULED('category', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.category_isterrain) },
+      { ALT: () => this.CONSUME(lexer.category_isobject) },
+    ])
+  })
+
+  collision = this.RULED('collision', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.collision_issolid) },
+      { ALT: () => this.CONSUME(lexer.collision_iswalk) },
+      { ALT: () => this.CONSUME(lexer.collision_isswim) },
+      { ALT: () => this.CONSUME(lexer.collision_isbullet) },
+      { ALT: () => this.CONSUME(lexer.collision_iswalking) },
+      { ALT: () => this.CONSUME(lexer.collision_iswalkable) },
+      { ALT: () => this.CONSUME(lexer.collision_isswimming) },
+      { ALT: () => this.CONSUME(lexer.collision_isswimmable) },
+    ])
+  })
+
+  color = this.RULED('color', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.color_black) },
+      { ALT: () => this.CONSUME(lexer.color_dkblue) },
+      { ALT: () => this.CONSUME(lexer.color_dkgreen) },
+      { ALT: () => this.CONSUME(lexer.color_dkcyan) },
+      { ALT: () => this.CONSUME(lexer.color_dkred) },
+      { ALT: () => this.CONSUME(lexer.color_dkpurple) },
+      { ALT: () => this.CONSUME(lexer.color_dkyellow) },
+      { ALT: () => this.CONSUME(lexer.color_ltgray) },
+      { ALT: () => this.CONSUME(lexer.color_dkgray) },
+      { ALT: () => this.CONSUME(lexer.color_blue) },
+      { ALT: () => this.CONSUME(lexer.color_green) },
+      { ALT: () => this.CONSUME(lexer.color_cyan) },
+      { ALT: () => this.CONSUME(lexer.color_red) },
+      { ALT: () => this.CONSUME(lexer.color_purple) },
+      { ALT: () => this.CONSUME(lexer.color_yellow) },
+      { ALT: () => this.CONSUME(lexer.color_white) },
+      { ALT: () => this.CONSUME(lexer.color_brown) },
+      { ALT: () => this.CONSUME(lexer.color_dkwhite) },
+      { ALT: () => this.CONSUME(lexer.color_ltgrey) },
+      { ALT: () => this.CONSUME(lexer.color_gray) },
+      { ALT: () => this.CONSUME(lexer.color_grey) },
+      { ALT: () => this.CONSUME(lexer.color_dkgrey) },
+      { ALT: () => this.CONSUME(lexer.color_ltblack) },
+      { ALT: () => this.CONSUME(lexer.color_onblack) },
+      { ALT: () => this.CONSUME(lexer.color_ondkblue) },
+      { ALT: () => this.CONSUME(lexer.color_ondkgreen) },
+      { ALT: () => this.CONSUME(lexer.color_ondkcyan) },
+      { ALT: () => this.CONSUME(lexer.color_ondkred) },
+      { ALT: () => this.CONSUME(lexer.color_ondkpurple) },
+      { ALT: () => this.CONSUME(lexer.color_ondkyellow) },
+      { ALT: () => this.CONSUME(lexer.color_onltgray) },
+      { ALT: () => this.CONSUME(lexer.color_ondkgray) },
+      { ALT: () => this.CONSUME(lexer.color_onblue) },
+      { ALT: () => this.CONSUME(lexer.color_ongreen) },
+      { ALT: () => this.CONSUME(lexer.color_oncyan) },
+      { ALT: () => this.CONSUME(lexer.color_onred) },
+      { ALT: () => this.CONSUME(lexer.color_onpurple) },
+      { ALT: () => this.CONSUME(lexer.color_onyellow) },
+      { ALT: () => this.CONSUME(lexer.color_onwhite) },
+      { ALT: () => this.CONSUME(lexer.color_onbrown) },
+      { ALT: () => this.CONSUME(lexer.color_ondkwhite) },
+      { ALT: () => this.CONSUME(lexer.color_onltgrey) },
+      { ALT: () => this.CONSUME(lexer.color_ongray) },
+      { ALT: () => this.CONSUME(lexer.color_ongrey) },
+      { ALT: () => this.CONSUME(lexer.color_ondkgrey) },
+      { ALT: () => this.CONSUME(lexer.color_onltblack) },
+      { ALT: () => this.CONSUME(lexer.color_onclear) },
+    ])
+  })
+
+  dir_mod = this.RULED('dir_mod', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.dir_cw) },
+      { ALT: () => this.CONSUME(lexer.dir_ccw) },
+      { ALT: () => this.CONSUME(lexer.dir_opp) },
+      { ALT: () => this.CONSUME(lexer.dir_rndp) },
+      { ALT: () => this.CONSUME(lexer.dir_over) },
+      { ALT: () => this.CONSUME(lexer.dir_under) },
+    ])
+  })
+
+  dir = this.RULED('dir', () => {
+    this.MANY(() => this.SUBRULE(this.dir_mod))
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.dir_idle) },
+      { ALT: () => this.CONSUME(lexer.dir_up) },
+      { ALT: () => this.CONSUME(lexer.dir_down) },
+      { ALT: () => this.CONSUME(lexer.dir_left) },
+      { ALT: () => this.CONSUME(lexer.dir_right) },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.dir_by)
+          this.SUBRULE1(this.simple_token)
+          this.SUBRULE2(this.simple_token)
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.dir_at)
+          this.SUBRULE3(this.simple_token)
+          this.SUBRULE4(this.simple_token)
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.dir_away)
+          this.SUBRULE5(this.simple_token)
+          this.SUBRULE6(this.simple_token)
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.dir_toward)
+          this.SUBRULE7(this.simple_token)
+          this.SUBRULE8(this.simple_token)
+        },
+      },
+      { ALT: () => this.CONSUME(lexer.dir_flow) },
+      { ALT: () => this.CONSUME(lexer.dir_seek) },
+      { ALT: () => this.CONSUME(lexer.dir_rndns) },
+      { ALT: () => this.CONSUME(lexer.dir_rndne) },
+      { ALT: () => this.CONSUME(lexer.dir_rnd) },
+      { ALT: () => this.CONSUME(lexer.dir_player) },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.dir_find)
+          this.SUBRULE1(this.kind)
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.dir_flee)
+          this.SUBRULE2(this.kind)
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(lexer.dir_to)
+          this.SUBRULE1(this.dir)
+          this.SUBRULE2(this.dir)
+        },
+      },
+      { ALT: () => this.CONSUME(lexer.dir_i) },
+      { ALT: () => this.CONSUME(lexer.dir_u) },
+      { ALT: () => this.CONSUME(lexer.dir_north) },
+      { ALT: () => this.CONSUME(lexer.dir_n) },
+      { ALT: () => this.CONSUME(lexer.dir_d) },
+      { ALT: () => this.CONSUME(lexer.dir_south) },
+      { ALT: () => this.CONSUME(lexer.dir_s) },
+      { ALT: () => this.CONSUME(lexer.dir_l) },
+      { ALT: () => this.CONSUME(lexer.dir_west) },
+      { ALT: () => this.CONSUME(lexer.dir_w) },
+      { ALT: () => this.CONSUME(lexer.dir_r) },
+      { ALT: () => this.CONSUME(lexer.dir_east) },
+      { ALT: () => this.CONSUME(lexer.dir_e) },
+    ])
+  })
+
+  token_expr = this.RULED('token_expr', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.expr_aligned) },
+      { ALT: () => this.CONSUME(lexer.expr_contact) },
+      { ALT: () => this.CONSUME(lexer.expr_blocked) },
+      { ALT: () => this.CONSUME(lexer.expr_any) },
+      { ALT: () => this.CONSUME(lexer.expr_count) },
+      { ALT: () => this.CONSUME(lexer.expr_color) },
+      { ALT: () => this.CONSUME(lexer.expr_detect) },
+      { ALT: () => this.CONSUME(lexer.expr_abs) },
+      { ALT: () => this.CONSUME(lexer.expr_intceil) },
+      { ALT: () => this.CONSUME(lexer.expr_intfloor) },
+      { ALT: () => this.CONSUME(lexer.expr_intround) },
+      { ALT: () => this.CONSUME(lexer.expr_clamp) },
+      { ALT: () => this.CONSUME(lexer.expr_min) },
+      { ALT: () => this.CONSUME(lexer.expr_max) },
+      { ALT: () => this.CONSUME(lexer.expr_pick) },
+      { ALT: () => this.CONSUME(lexer.expr_pickwith) },
+      { ALT: () => this.CONSUME(lexer.expr_random) },
+      { ALT: () => this.CONSUME(lexer.expr_randomwith) },
+      { ALT: () => this.CONSUME(lexer.expr_run) },
+      { ALT: () => this.CONSUME(lexer.expr_runwith) },
+    ])
+  })
+
+  string_token = this.RULED('string_token', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
+      { ALT: () => this.CONSUME(lexer.stringliteral) },
+    ])
+  })
+
+  simple_token = this.RULED('simple_token', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
+      { ALT: () => this.CONSUME(lexer.stringliteral) },
+      { ALT: () => this.CONSUME(lexer.numberliteral) },
+    ])
+  })
+
   token = this.RULED('token', () => {
     this.OR([
+      { ALT: () => this.SUBRULE(this.category) },
+      { ALT: () => this.SUBRULE(this.collision) },
+      { ALT: () => this.SUBRULE(this.color) },
+      { ALT: () => this.SUBRULE(this.dir) },
+      { ALT: () => this.SUBRULE(this.token_expr) },
       { ALT: () => this.CONSUME(lexer.label) },
       { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
       { ALT: () => this.CONSUME(lexer.stringliteral) },
