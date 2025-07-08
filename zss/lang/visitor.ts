@@ -9,6 +9,9 @@ import {
   And_testCstChildren,
   Arith_expr_itemCstChildren,
   Arith_exprCstChildren,
+  CategoryCstChildren,
+  CollisionCstChildren,
+  ColorCstChildren,
   Command_blockCstChildren,
   Command_breakCstChildren,
   Command_continueCstChildren,
@@ -27,12 +30,15 @@ import {
   CommandsCstChildren,
   Comp_opCstChildren,
   ComparisonCstChildren,
+  Dir_modCstChildren,
+  DirCstChildren,
   Expr_valueCstChildren,
   ExprCstChildren,
   FactorCstChildren,
   ICstNodeVisitor,
   InlineCstChildren,
   InstmtCstChildren,
+  KindCstChildren,
   LineCstChildren,
   Not_test_valueCstChildren,
   Not_testCstChildren,
@@ -40,6 +46,8 @@ import {
   ProgramCstChildren,
   Short_goCstChildren,
   Short_tryCstChildren,
+  Simple_tokenCstChildren,
+  Simple_tokensCstChildren,
   Stmt_commandCstChildren,
   Stmt_commentCstChildren,
   Stmt_hyperlinkCstChildren,
@@ -47,9 +55,28 @@ import {
   Stmt_statCstChildren,
   Stmt_textCstChildren,
   StmtCstChildren,
+  String_tokenCstChildren,
   Structured_cmdCstChildren,
   Term_itemCstChildren,
   TermCstChildren,
+  Token_expr_absCstChildren,
+  Token_expr_anyCstChildren,
+  Token_expr_clampCstChildren,
+  Token_expr_colorCstChildren,
+  Token_expr_countCstChildren,
+  Token_expr_detectCstChildren,
+  Token_expr_intceilCstChildren,
+  Token_expr_intfloorCstChildren,
+  Token_expr_introundCstChildren,
+  Token_expr_maxCstChildren,
+  Token_expr_minCstChildren,
+  Token_expr_pickCstChildren,
+  Token_expr_pickwithCstChildren,
+  Token_expr_randomCstChildren,
+  Token_expr_randomwithCstChildren,
+  Token_expr_runCstChildren,
+  Token_expr_runwithCstChildren,
+  Token_exprCstChildren,
   TokenCstChildren,
   WordsCstChildren,
 } from './visitortypes'
@@ -1059,12 +1086,12 @@ class ScriptVisitor
   }
 
   power(ctx: PowerCstChildren, location: CstNodeLocation) {
-    const words = this.go(ctx.words)
+    const lhs = this.go(ctx.token)
 
     if (ctx.factor) {
       return this.createcodenode(location, {
         type: NODE.OPERATOR,
-        lhs: words[0],
+        lhs: lhs[0],
         items: this.createcodenode(location, {
           type: NODE.OPERATOR_ITEM,
           operator: OPERATOR.POWER,
@@ -1073,11 +1100,1086 @@ class ScriptVisitor
       })
     }
 
-    return words
+    return lhs
   }
 
   words(ctx: WordsCstChildren) {
     return this.go(ctx.token)
+  }
+
+  kind(ctx: KindCstChildren) {
+    return [this.go(ctx.color), this.go(ctx.string_token)].flat()
+  }
+
+  category(ctx: CategoryCstChildren, location: CstNodeLocation) {
+    if (ctx.token_isterrain) {
+      const value = tokenstring(ctx.token_isterrain, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_isobject) {
+      const value = tokenstring(ctx.token_isobject, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    return []
+  }
+
+  collision(ctx: CollisionCstChildren, location: CstNodeLocation) {
+    if (ctx.token_iswalkable) {
+      const value = tokenstring(ctx.token_iswalkable, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_iswalking) {
+      const value = tokenstring(ctx.token_iswalking, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_iswalk) {
+      const value = tokenstring(ctx.token_iswalk, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_isswimmable) {
+      const value = tokenstring(ctx.token_isswimmable, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_isswimming) {
+      const value = tokenstring(ctx.token_isswimming, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_isswim) {
+      const value = tokenstring(ctx.token_isswim, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_issolid) {
+      const value = tokenstring(ctx.token_issolid, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_isbullet) {
+      const value = tokenstring(ctx.token_isbullet, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    return []
+  }
+
+  color(ctx: ColorCstChildren, location: CstNodeLocation) {
+    if (ctx.token_black) {
+      const value = tokenstring(ctx.token_black, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_dkblue) {
+      const value = tokenstring(ctx.token_dkblue, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_dkcyan) {
+      const value = tokenstring(ctx.token_dkcyan, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_dkgray) {
+      const value = tokenstring(ctx.token_dkgray, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_dkgreen) {
+      const value = tokenstring(ctx.token_dkgreen, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_dkgrey) {
+      const value = tokenstring(ctx.token_dkgrey, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_dkpurple) {
+      const value = tokenstring(ctx.token_dkpurple, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_dkred) {
+      const value = tokenstring(ctx.token_dkred, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_dkwhite) {
+      const value = tokenstring(ctx.token_dkwhite, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_dkyellow) {
+      const value = tokenstring(ctx.token_dkyellow, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+
+    if (ctx.token_blue) {
+      const value = tokenstring(ctx.token_blue, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_cyan) {
+      const value = tokenstring(ctx.token_cyan, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_gray) {
+      const value = tokenstring(ctx.token_gray, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_green) {
+      const value = tokenstring(ctx.token_green, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_grey) {
+      const value = tokenstring(ctx.token_grey, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_purple) {
+      const value = tokenstring(ctx.token_purple, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_red) {
+      const value = tokenstring(ctx.token_red, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_white) {
+      const value = tokenstring(ctx.token_white, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_yellow) {
+      const value = tokenstring(ctx.token_yellow, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ltblack) {
+      const value = tokenstring(ctx.token_ltblack, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ltgray) {
+      const value = tokenstring(ctx.token_ltgray, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ltgrey) {
+      const value = tokenstring(ctx.token_ltgrey, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+
+    if (ctx.token_onclear) {
+      const value = tokenstring(ctx.token_onclear, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+
+    if (ctx.token_onblack) {
+      const value = tokenstring(ctx.token_onblack, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ondkblue) {
+      const value = tokenstring(ctx.token_ondkblue, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ondkcyan) {
+      const value = tokenstring(ctx.token_ondkcyan, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ondkgray) {
+      const value = tokenstring(ctx.token_ondkgray, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ondkgreen) {
+      const value = tokenstring(ctx.token_ondkgreen, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ondkgrey) {
+      const value = tokenstring(ctx.token_ondkgrey, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ondkpurple) {
+      const value = tokenstring(ctx.token_ondkpurple, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ondkred) {
+      const value = tokenstring(ctx.token_ondkred, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ondkwhite) {
+      const value = tokenstring(ctx.token_ondkwhite, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ondkyellow) {
+      const value = tokenstring(ctx.token_ondkyellow, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+
+    if (ctx.token_onblue) {
+      const value = tokenstring(ctx.token_onblue, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_oncyan) {
+      const value = tokenstring(ctx.token_oncyan, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ongray) {
+      const value = tokenstring(ctx.token_ongray, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ongreen) {
+      const value = tokenstring(ctx.token_ongreen, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ongrey) {
+      const value = tokenstring(ctx.token_ongrey, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_onpurple) {
+      const value = tokenstring(ctx.token_onpurple, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_onred) {
+      const value = tokenstring(ctx.token_onred, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_onwhite) {
+      const value = tokenstring(ctx.token_onwhite, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_onyellow) {
+      const value = tokenstring(ctx.token_onyellow, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_onltblack) {
+      const value = tokenstring(ctx.token_onltblack, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_onltgray) {
+      const value = tokenstring(ctx.token_onltgray, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_onltgrey) {
+      const value = tokenstring(ctx.token_onltgrey, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    return []
+  }
+
+  dir_mod(ctx: Dir_modCstChildren, location: CstNodeLocation) {
+    if (ctx.token_cw) {
+      const value = tokenstring(ctx.token_cw, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_ccw) {
+      const value = tokenstring(ctx.token_ccw, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_opp) {
+      const value = tokenstring(ctx.token_opp, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_rndp) {
+      const value = tokenstring(ctx.token_rndp, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_over) {
+      const value = tokenstring(ctx.token_over, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_under) {
+      const value = tokenstring(ctx.token_under, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    return []
+  }
+
+  dir(ctx: DirCstChildren, location: CstNodeLocation) {
+    const values: CodeNode[] = this.go(ctx.dir_mod) ?? []
+    if (ctx.token_i) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_i, ''),
+        }),
+      )
+    }
+    if (ctx.token_idle) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_idle, ''),
+        }),
+      )
+    }
+    if (ctx.token_n) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_n, ''),
+        }),
+      )
+    }
+    if (ctx.token_u) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_u, ''),
+        }),
+      )
+    }
+    if (ctx.token_north) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_north, ''),
+        }),
+      )
+    }
+    if (ctx.token_up) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_up, ''),
+        }),
+      )
+    }
+    if (ctx.token_s) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_s, ''),
+        }),
+      )
+    }
+    if (ctx.token_d) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_d, ''),
+        }),
+      )
+    }
+    if (ctx.token_south) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_south, ''),
+        }),
+      )
+    }
+    if (ctx.token_down) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_down, ''),
+        }),
+      )
+    }
+    if (ctx.token_w) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_w, ''),
+        }),
+      )
+    }
+    if (ctx.token_l) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_l, ''),
+        }),
+      )
+    }
+    if (ctx.token_west) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_west, ''),
+        }),
+      )
+    }
+    if (ctx.token_e) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_e, ''),
+        }),
+      )
+    }
+    if (ctx.token_r) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_r, ''),
+        }),
+      )
+    }
+    if (ctx.token_east) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_east, ''),
+        }),
+      )
+    }
+    if (ctx.token_right) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_right, ''),
+        }),
+      )
+    }
+
+    if (ctx.token_by) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_by, ''),
+        }),
+        ...this.go(ctx.simple_token),
+      )
+    }
+    if (ctx.token_at) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_at, ''),
+        }),
+        ...this.go(ctx.simple_token),
+      )
+    }
+    if (ctx.token_away) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_away, ''),
+        }),
+        ...this.go(ctx.simple_token),
+      )
+    }
+    if (ctx.token_toward) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_toward, ''),
+        }),
+        ...this.go(ctx.simple_token),
+      )
+    }
+
+    if (ctx.token_find) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_find, ''),
+        }),
+        ...this.go(ctx.kind),
+      )
+    }
+
+    if (ctx.token_flee) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_flee, ''),
+        }),
+        ...this.go(ctx.kind),
+      )
+    }
+
+    if (ctx.token_to) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_to, ''),
+        }),
+        ...this.go(ctx.dir),
+      )
+    }
+
+    return values.flat()
+  }
+
+  token_expr_any(ctx: Token_expr_anyCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'any',
+      }),
+      ...this.go(ctx.kind),
+    ]
+  }
+
+  token_expr_count(
+    ctx: Token_expr_countCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'count',
+      }),
+      ...this.go(ctx.kind),
+    ]
+  }
+
+  token_expr_color(
+    ctx: Token_expr_colorCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'color',
+      }),
+      ...this.go(ctx.dir),
+      ...this.go(ctx.color),
+    ]
+  }
+
+  token_expr_detect(
+    ctx: Token_expr_detectCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'detect',
+      }),
+      ...this.go(ctx.dir),
+      ...this.go(ctx.kind),
+    ]
+  }
+
+  token_expr_abs(ctx: Token_expr_absCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'abs',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_intceil(
+    ctx: Token_expr_intceilCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'intceil',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_intfloor(
+    ctx: Token_expr_intfloorCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'intfloor',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_intround(
+    ctx: Token_expr_introundCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'intround',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_clamp(
+    ctx: Token_expr_clampCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'clamp',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_min(ctx: Token_expr_minCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'min',
+      }),
+      ...this.go(ctx.simple_tokens),
+    ]
+  }
+
+  token_expr_max(ctx: Token_expr_maxCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'max',
+      }),
+      ...this.go(ctx.simple_tokens),
+    ]
+  }
+
+  token_expr_pick(ctx: Token_expr_pickCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'pick',
+      }),
+      ...this.go(ctx.simple_tokens),
+    ]
+  }
+
+  token_expr_pickwith(
+    ctx: Token_expr_pickwithCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'pickwith',
+      }),
+      ...this.go(ctx.simple_tokens),
+    ]
+  }
+
+  token_expr_random(
+    ctx: Token_expr_randomCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'random',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_randomwith(
+    ctx: Token_expr_randomwithCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'randomwith',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_run(ctx: Token_expr_runCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'run',
+      }),
+      ...this.go(ctx.string_token),
+    ]
+  }
+
+  token_expr_runwith(
+    ctx: Token_expr_runwithCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'runwith',
+      }),
+      ...this.go(ctx.simple_token),
+      ...this.go(ctx.string_token),
+    ]
+  }
+
+  token_expr(ctx: Token_exprCstChildren, location: CstNodeLocation) {
+    const values: CodeNode[] = []
+
+    if (ctx.token_expr_aligned) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: 'aligned',
+        }),
+      )
+    }
+    if (ctx.token_contact) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: 'contact',
+        }),
+      )
+    }
+    if (ctx.token_blocked) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: 'blocked',
+        }),
+      )
+    }
+    if (ctx.token_expr_any) {
+      return this.go(ctx.token_expr_any)
+    }
+    if (ctx.token_expr_count) {
+      return this.go(ctx.token_expr_count)
+    }
+    if (ctx.token_expr_color) {
+      return this.go(ctx.token_expr_color)
+    }
+    if (ctx.token_expr_detect) {
+      return this.go(ctx.token_expr_detect)
+    }
+    if (ctx.token_expr_abs) {
+      return this.go(ctx.token_expr_abs)
+    }
+    if (ctx.token_expr_intceil) {
+      return this.go(ctx.token_expr_intceil)
+    }
+    if (ctx.token_expr_intfloor) {
+      return this.go(ctx.token_expr_intfloor)
+    }
+    if (ctx.token_expr_intround) {
+      return this.go(ctx.token_expr_intround)
+    }
+    if (ctx.token_expr_clamp) {
+      return this.go(ctx.token_expr_clamp)
+    }
+    if (ctx.token_expr_min) {
+      return this.go(ctx.token_expr_min)
+    }
+    if (ctx.token_expr_max) {
+      return this.go(ctx.token_expr_max)
+    }
+    if (ctx.token_expr_pick) {
+      return this.go(ctx.token_expr_pick)
+    }
+    if (ctx.token_expr_pickwith) {
+      return this.go(ctx.token_expr_pickwith)
+    }
+    if (ctx.token_expr_random) {
+      return this.go(ctx.token_expr_random)
+    }
+    if (ctx.token_expr_randomwith) {
+      return this.go(ctx.token_expr_randomwith)
+    }
+    if (ctx.token_expr_run) {
+      return this.go(ctx.token_expr_run)
+    }
+    if (ctx.token_expr_runwith) {
+      return this.go(ctx.token_expr_runwith)
+    }
+    return values
+  }
+
+  string_token(ctx: String_tokenCstChildren) {
+    return [
+      this.go(ctx.token_stringliteral),
+      this.go(ctx.token_stringliteraldouble),
+    ].flat()
+  }
+
+  simple_token(ctx: Simple_tokenCstChildren) {
+    return [
+      this.go(ctx.token_numberliteral),
+      this.go(ctx.token_stringliteral),
+      this.go(ctx.token_stringliteraldouble),
+    ].flat()
+  }
+
+  simple_tokens(ctx: Simple_tokensCstChildren) {
+    return [
+      this.go(ctx.token_numberliteral),
+      this.go(ctx.token_stringliteral),
+      this.go(ctx.token_stringliteraldouble),
+    ].flat()
   }
 
   token(ctx: TokenCstChildren, location: CstNodeLocation) {

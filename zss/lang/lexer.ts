@@ -245,7 +245,6 @@ export const dir_rndp = createWordToken('rndp')
 
 export const dir_away = createWordToken('away')
 export const dir_toward = createWordToken('toward')
-export const dir_player = createWordToken('player')
 export const dir_find = createWordToken('find')
 export const dir_flee = createWordToken('flee')
 
@@ -293,6 +292,11 @@ export const expr_random = createWordToken('random')
 export const expr_randomwith = createWordToken('randomwith')
 export const expr_run = createWordToken('run')
 export const expr_runwith = createWordToken('runwith')
+export const expr_stop = createSimpleToken({
+  name: 'stop',
+  pattern: /\|/,
+  start_chars_hint: ['|'],
+})
 
 // comparision
 
@@ -507,7 +511,6 @@ function createTokenSet(primary: TokenType[]) {
     dir_opp,
     dir_away,
     dir_toward,
-    dir_player,
     dir_find,
     dir_flee,
     dir_to,
@@ -537,6 +540,7 @@ function createTokenSet(primary: TokenType[]) {
     expr_random,
     expr_runwith,
     expr_run,
+    expr_stop,
     // comparisons
     iseq,
     isnoteq,

@@ -168,7 +168,7 @@ class ScriptParser extends CstParser {
 
   command_if = this.RULED('command_if', () => {
     this.CONSUME(lexer.command_if)
-    this.SUBRULE(this.words)
+    this.SUBRULE(this.expr)
     this.OPTION(() => this.SUBRULE(this.command_if_block))
   })
 
@@ -237,7 +237,7 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.command)
     this.CONSUME(lexer.command_else)
     this.CONSUME(lexer.command_if)
-    this.SUBRULE(this.words)
+    this.SUBRULE(this.expr)
     this.OPTION(() => this.SUBRULE(this.command_fork))
   })
 
@@ -554,7 +554,6 @@ class ScriptParser extends CstParser {
       { ALT: () => this.CONSUME(lexer.dir_rndns) },
       { ALT: () => this.CONSUME(lexer.dir_rndne) },
       { ALT: () => this.CONSUME(lexer.dir_rnd) },
-      { ALT: () => this.CONSUME(lexer.dir_player) },
       {
         ALT: () => {
           this.CONSUME(lexer.dir_find)
@@ -590,44 +589,144 @@ class ScriptParser extends CstParser {
     ])
   })
 
+  token_expr_any = this.RULED('token_expr_any', () => {
+    this.CONSUME(lexer.expr_any)
+    this.SUBRULE(this.kind)
+  })
+
+  token_expr_count = this.RULED('token_expr_count', () => {
+    this.CONSUME(lexer.expr_count)
+    this.SUBRULE(this.kind)
+  })
+
+  token_expr_color = this.RULED('token_expr_color', () => {
+    this.CONSUME(lexer.expr_color)
+    this.SUBRULE(this.dir)
+    this.SUBRULE(this.color)
+  })
+
+  token_expr_detect = this.RULED('token_expr_detect', () => {
+    this.CONSUME(lexer.expr_detect)
+    this.SUBRULE(this.dir)
+    this.SUBRULE(this.kind)
+  })
+
+  token_expr_abs = this.RULED('token_expr_abs', () => {
+    this.CONSUME(lexer.expr_abs)
+    this.SUBRULE(this.simple_token)
+  })
+
+  token_expr_intceil = this.RULED('token_expr_intceil', () => {
+    this.CONSUME(lexer.expr_intceil)
+    this.SUBRULE(this.simple_token)
+  })
+
+  token_expr_intfloor = this.RULED('token_expr_intfloor', () => {
+    this.CONSUME(lexer.expr_intfloor)
+    this.SUBRULE(this.simple_token)
+  })
+
+  token_expr_intround = this.RULED('token_expr_intround', () => {
+    this.CONSUME(lexer.expr_intround)
+    this.SUBRULE(this.simple_token)
+  })
+
+  token_expr_clamp = this.RULED('token_expr_clamp', () => {
+    this.CONSUME(lexer.expr_clamp)
+    this.SUBRULE1(this.simple_token)
+    this.SUBRULE2(this.simple_token)
+    this.SUBRULE3(this.simple_token)
+  })
+
+  token_expr_min = this.RULED('token_expr_min', () => {
+    this.CONSUME(lexer.expr_min)
+    this.SUBRULE(this.simple_tokens)
+  })
+
+  token_expr_max = this.RULED('token_expr_max', () => {
+    this.CONSUME(lexer.expr_max)
+    this.SUBRULE(this.simple_tokens)
+  })
+
+  token_expr_pick = this.RULED('token_expr_pick', () => {
+    this.CONSUME(lexer.expr_pick)
+    this.SUBRULE(this.simple_tokens)
+  })
+
+  token_expr_pickwith = this.RULED('token_expr_pickwith', () => {
+    this.CONSUME(lexer.expr_pickwith)
+    this.SUBRULE(this.simple_token)
+    this.SUBRULE(this.simple_tokens)
+  })
+
+  token_expr_random = this.RULED('token_expr_random', () => {
+    this.CONSUME(lexer.expr_random)
+    this.SUBRULE1(this.simple_token)
+    this.OPTION(() => this.SUBRULE2(this.simple_token))
+  })
+
+  token_expr_randomwith = this.RULED('token_expr_randomwith', () => {
+    this.CONSUME(lexer.expr_randomwith)
+    this.SUBRULE1(this.simple_token)
+    this.SUBRULE2(this.simple_token)
+    this.OPTION(() => this.SUBRULE3(this.simple_token))
+  })
+
+  token_expr_run = this.RULED('token_expr_run', () => {
+    this.CONSUME(lexer.expr_run)
+    this.SUBRULE(this.string_token)
+  })
+
+  token_expr_runwith = this.RULED('token_expr_runwith', () => {
+    this.CONSUME(lexer.expr_runwith)
+    this.SUBRULE(this.simple_token)
+    this.SUBRULE(this.string_token)
+  })
+
   token_expr = this.RULED('token_expr', () => {
-    this.OR([
-      { ALT: () => this.CONSUME(lexer.expr_aligned) },
-      { ALT: () => this.CONSUME(lexer.expr_contact) },
-      { ALT: () => this.CONSUME(lexer.expr_blocked) },
-      { ALT: () => this.CONSUME(lexer.expr_any) },
-      { ALT: () => this.CONSUME(lexer.expr_count) },
-      { ALT: () => this.CONSUME(lexer.expr_color) },
-      { ALT: () => this.CONSUME(lexer.expr_detect) },
-      { ALT: () => this.CONSUME(lexer.expr_abs) },
-      { ALT: () => this.CONSUME(lexer.expr_intceil) },
-      { ALT: () => this.CONSUME(lexer.expr_intfloor) },
-      { ALT: () => this.CONSUME(lexer.expr_intround) },
-      { ALT: () => this.CONSUME(lexer.expr_clamp) },
-      { ALT: () => this.CONSUME(lexer.expr_min) },
-      { ALT: () => this.CONSUME(lexer.expr_max) },
-      { ALT: () => this.CONSUME(lexer.expr_pick) },
-      { ALT: () => this.CONSUME(lexer.expr_pickwith) },
-      { ALT: () => this.CONSUME(lexer.expr_random) },
-      { ALT: () => this.CONSUME(lexer.expr_randomwith) },
-      { ALT: () => this.CONSUME(lexer.expr_run) },
-      { ALT: () => this.CONSUME(lexer.expr_runwith) },
-    ])
+    this.AT_LEAST_ONE(() => {
+      this.OR([
+        { ALT: () => this.CONSUME(lexer.expr_aligned) },
+        { ALT: () => this.CONSUME(lexer.expr_contact) },
+        { ALT: () => this.CONSUME(lexer.expr_blocked) },
+        { ALT: () => this.SUBRULE(this.token_expr_any) },
+        { ALT: () => this.SUBRULE(this.token_expr_count) },
+        { ALT: () => this.SUBRULE(this.token_expr_color) },
+        { ALT: () => this.SUBRULE(this.token_expr_detect) },
+        { ALT: () => this.SUBRULE(this.token_expr_abs) },
+        { ALT: () => this.SUBRULE(this.token_expr_intceil) },
+        { ALT: () => this.SUBRULE(this.token_expr_intfloor) },
+        { ALT: () => this.SUBRULE(this.token_expr_intround) },
+        { ALT: () => this.SUBRULE(this.token_expr_clamp) },
+        { ALT: () => this.SUBRULE(this.token_expr_min) },
+        { ALT: () => this.SUBRULE(this.token_expr_max) },
+        { ALT: () => this.SUBRULE(this.token_expr_pick) },
+        { ALT: () => this.SUBRULE(this.token_expr_pickwith) },
+        { ALT: () => this.SUBRULE(this.token_expr_random) },
+        { ALT: () => this.SUBRULE(this.token_expr_randomwith) },
+        { ALT: () => this.SUBRULE(this.token_expr_run) },
+        { ALT: () => this.SUBRULE(this.token_expr_runwith) },
+      ])
+    })
   })
 
   string_token = this.RULED('string_token', () => {
     this.OR([
-      { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
       { ALT: () => this.CONSUME(lexer.stringliteral) },
+      { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
     ])
   })
 
   simple_token = this.RULED('simple_token', () => {
     this.OR([
-      { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
-      { ALT: () => this.CONSUME(lexer.stringliteral) },
       { ALT: () => this.CONSUME(lexer.numberliteral) },
+      { ALT: () => this.CONSUME(lexer.stringliteral) },
+      { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
     ])
+  })
+
+  simple_tokens = this.RULED('simple_tokens', () => {
+    this.AT_LEAST_ONE(this.simple_token)
   })
 
   token = this.RULED('token', () => {
@@ -637,6 +736,7 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.color) },
       { ALT: () => this.SUBRULE(this.dir) },
       { ALT: () => this.SUBRULE(this.token_expr) },
+      { ALT: () => this.CONSUME(lexer.expr_stop) },
       { ALT: () => this.CONSUME(lexer.label) },
       { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
       { ALT: () => this.CONSUME(lexer.stringliteral) },
