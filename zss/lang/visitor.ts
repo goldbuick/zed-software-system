@@ -599,22 +599,19 @@ class ScriptVisitor
     )
   }
 
-  stmt_command(ctx: Stmt_commandCstChildren) {
-    if (ctx.commands) {
-      return this.go(ctx.commands)
-    }
-    return []
+  stmt_command(ctx: Stmt_commandCstChildren, location: CstNodeLocation) {
+    return this.createlinenode(
+      location,
+      this.createcodenode(location, {
+        type: NODE.COMMAND,
+        words: this.go(ctx.commands),
+      }),
+    )
   }
 
-  commands(ctx: CommandsCstChildren, location: CstNodeLocation) {
+  commands(ctx: CommandsCstChildren) {
     if (ctx.words) {
-      return this.createlinenode(
-        location,
-        this.createcodenode(location, {
-          type: NODE.COMMAND,
-          words: this.go(ctx.words),
-        }),
-      )
+      return this.go(ctx.words)
     }
     if (ctx.command_play) {
       return this.go(ctx.command_play)
@@ -845,46 +842,28 @@ class ScriptVisitor
     const playstr = tokenstring(ctx.token_command_play, '')
     const playcontent = playstr.replace('bgplay', '').replace('play', '').trim()
     const isbg = playstr.includes('bgplay')
-    return this.createlinenode(
-      location,
-      this.createcodenode(location, {
-        type: NODE.COMMAND,
-        words: [
-          this.createstringnode(location, isbg ? 'bgplay' : 'play'),
-          this.createstringnode(location, playcontent),
-        ].flat(),
-      }),
-    )
+    return [
+      this.createstringnode(location, isbg ? 'bgplay' : 'play'),
+      this.createstringnode(location, playcontent),
+    ].flat()
   }
 
   command_toast(ctx: Command_toastCstChildren, location: CstNodeLocation) {
     const toaststr = tokenstring(ctx.token_command_toast, '')
     const toastcontent = toaststr.replace('toast', '').trim()
-    return this.createlinenode(
-      location,
-      this.createcodenode(location, {
-        type: NODE.COMMAND,
-        words: [
-          this.createstringnode(location, 'toast'),
-          this.createtemplatenode(location, toastcontent),
-        ].flat(),
-      }),
-    )
+    return [
+      this.createstringnode(location, 'toast'),
+      this.createtemplatenode(location, toastcontent),
+    ].flat()
   }
 
   command_ticker(ctx: Command_tickerCstChildren, location: CstNodeLocation) {
     const tickerstr = tokenstring(ctx.token_command_ticker, '')
     const tickercontent = tickerstr.replace('ticker', '').trim()
-    return this.createlinenode(
-      location,
-      this.createcodenode(location, {
-        type: NODE.COMMAND,
-        words: [
-          this.createstringnode(location, 'ticker'),
-          this.createtemplatenode(location, tickercontent),
-        ].flat(),
-      }),
-    )
+    return [
+      this.createstringnode(location, 'ticker'),
+      this.createtemplatenode(location, tickercontent),
+    ].flat()
   }
 
   expr(ctx: ExprCstChildren, location: CstNodeLocation) {
