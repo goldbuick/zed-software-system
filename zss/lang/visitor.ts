@@ -37,7 +37,6 @@ import {
   FactorCstChildren,
   ICstNodeVisitor,
   InlineCstChildren,
-  InstmtCstChildren,
   KindCstChildren,
   LineCstChildren,
   Not_test_valueCstChildren,
@@ -519,11 +518,7 @@ class ScriptVisitor
     return []
   }
 
-  inline(ctx: InlineCstChildren) {
-    return this.go(ctx.instmt)
-  }
-
-  instmt(ctx: InstmtCstChildren) {
+  inline(ctx: InlineCstChildren, location: CstNodeLocation) {
     if (ctx.stmt_stat) {
       return this.go(ctx.stmt_stat)
     }
@@ -540,7 +535,16 @@ class ScriptVisitor
       return this.go(ctx.stmt_hyperlink)
     }
     if (ctx.commands) {
-      return this.go(ctx.commands)
+      return this.createlinenode(
+        location,
+        this.createcodenode(location, {
+          type: NODE.COMMAND,
+          words: this.go(ctx.commands),
+        }),
+      )
+    }
+    if (ctx.structured_cmd) {
+      return this.go(ctx.structured_cmd)
     }
     return []
   }
@@ -600,6 +604,9 @@ class ScriptVisitor
   }
 
   stmt_command(ctx: Stmt_commandCstChildren, location: CstNodeLocation) {
+    if (ctx.structured_cmd) {
+      return this.go(ctx.structured_cmd)
+    }
     return this.createlinenode(
       location,
       this.createcodenode(location, {
@@ -621,9 +628,6 @@ class ScriptVisitor
     }
     if (ctx.command_ticker) {
       return this.go(ctx.command_ticker)
-    }
-    if (ctx.structured_cmd) {
-      return this.go(ctx.structured_cmd)
     }
     return []
   }
@@ -725,6 +729,7 @@ class ScriptVisitor
   }
 
   command_fork(ctx: Command_forkCstChildren) {
+    console.info('fork', ctx)
     return [this.go(ctx.inline), this.go(ctx.line)].flat()
   }
 
@@ -2162,6 +2167,31 @@ class ScriptVisitor
   }
 
   token(ctx: TokenCstChildren, location: CstNodeLocation) {
+    if (ctx.category) {
+      return this.go(ctx.category)
+    }
+    if (ctx.collision) {
+      return this.go(ctx.collision)
+    }
+    if (ctx.color) {
+      return this.go(ctx.color)
+    }
+    if (ctx.dir) {
+      return this.go(ctx.dir)
+    }
+    if (ctx.token_expr) {
+      return this.go(ctx.token_expr)
+    }
+
+    if (ctx.token_stop) {
+      const value = tokenstring(ctx.token_stop, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+
     if (ctx.token_label) {
       const value = tokenstring(ctx.token_label, '')
       return this.createcodenode(location, {

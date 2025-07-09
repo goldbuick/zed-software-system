@@ -41,16 +41,6 @@ export type InlineCstNode = {
 } & CstNode
 
 export type InlineCstChildren = {
-  instmt: InstmtCstNode[]
-}
-
-export type InstmtCstNode = {
-  name: 'instmt'
-  children: InstmtCstChildren
-} & CstNode
-
-export type InstmtCstChildren = {
-  commands?: CommandsCstNode[]
   stmt_stat?: Stmt_statCstNode[]
   stmt_text?: Stmt_textCstNode[]
   stmt_comment?: Stmt_commentCstNode[]
@@ -58,6 +48,8 @@ export type InstmtCstChildren = {
   stmt_command?: Stmt_commandCstNode[]
   short_go?: Short_goCstNode[]
   short_try?: Short_tryCstNode[]
+  commands?: CommandsCstNode[]
+  structured_cmd?: Structured_cmdCstNode[]
 }
 
 export type Stmt_labelCstNode = {
@@ -114,7 +106,8 @@ export type Stmt_commandCstNode = {
 
 export type Stmt_commandCstChildren = {
   token_command: IToken[]
-  commands: CommandsCstNode[]
+  commands?: CommandsCstNode[]
+  structured_cmd?: Structured_cmdCstNode[]
 }
 
 export type CommandsCstNode = {
@@ -127,7 +120,6 @@ export type CommandsCstChildren = {
   command_play?: Command_playCstNode[]
   command_toast?: Command_toastCstNode[]
   command_ticker?: Command_tickerCstNode[]
-  structured_cmd?: Structured_cmdCstNode[]
 }
 
 export type Structured_cmdCstNode = {
@@ -897,7 +889,6 @@ export type ICstNodeVisitor<IN, OUT> = {
   line(children: LineCstChildren, param?: IN): OUT
   stmt(children: StmtCstChildren, param?: IN): OUT
   inline(children: InlineCstChildren, param?: IN): OUT
-  instmt(children: InstmtCstChildren, param?: IN): OUT
   stmt_label(children: Stmt_labelCstChildren, param?: IN): OUT
   stmt_stat(children: Stmt_statCstChildren, param?: IN): OUT
   stmt_text(children: Stmt_textCstChildren, param?: IN): OUT

@@ -89,12 +89,7 @@ class ScriptParser extends CstParser {
   })
 
   inline = this.RULED('inline', () => {
-    this.SUBRULE(this.instmt)
-  })
-
-  instmt = this.RULED('instmt', () => {
     this.OR([
-      { ALT: () => this.SUBRULE(this.commands) },
       { ALT: () => this.SUBRULE(this.stmt_stat) },
       { ALT: () => this.SUBRULE(this.stmt_text) },
       { ALT: () => this.SUBRULE(this.stmt_comment) },
@@ -102,6 +97,8 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.stmt_command) },
       { ALT: () => this.SUBRULE(this.short_go) },
       { ALT: () => this.SUBRULE(this.short_try) },
+      { ALT: () => this.SUBRULE(this.commands) },
+      { ALT: () => this.SUBRULE(this.structured_cmd) },
     ])
   })
 
@@ -131,7 +128,10 @@ class ScriptParser extends CstParser {
 
   stmt_command = this.RULED('stmt_command', () => {
     this.CONSUME(lexer.command)
-    this.SUBRULE(this.commands)
+    this.OR([
+      { ALT: () => this.SUBRULE(this.commands) },
+      { ALT: () => this.SUBRULE(this.structured_cmd) },
+    ])
   })
 
   commands = this.RULED('commands', () => {
@@ -140,7 +140,6 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.command_play) },
       { ALT: () => this.SUBRULE(this.command_toast) },
       { ALT: () => this.SUBRULE(this.command_ticker) },
-      { ALT: () => this.SUBRULE(this.structured_cmd) },
     ])
   })
 
