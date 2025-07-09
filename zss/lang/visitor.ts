@@ -1200,371 +1200,153 @@ class ScriptVisitor
   }
 
   color(ctx: ColorCstChildren, location: CstNodeLocation) {
+    let value = ''
     if (ctx.token_black) {
-      const value = tokenstring(ctx.token_black, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'black'
     }
     if (ctx.token_dkblue) {
-      const value = tokenstring(ctx.token_dkblue, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_dkcyan) {
-      const value = tokenstring(ctx.token_dkcyan, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_dkgray) {
-      const value = tokenstring(ctx.token_dkgray, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'dkblue'
     }
     if (ctx.token_dkgreen) {
-      const value = tokenstring(ctx.token_dkgreen, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'dkgreen'
     }
-    if (ctx.token_dkgrey) {
-      const value = tokenstring(ctx.token_dkgrey, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_dkpurple) {
-      const value = tokenstring(ctx.token_dkpurple, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+    if (ctx.token_dkcyan) {
+      value = 'dkcyan'
     }
     if (ctx.token_dkred) {
-      const value = tokenstring(ctx.token_dkred, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'dkred'
     }
-    if (ctx.token_dkwhite) {
-      const value = tokenstring(ctx.token_dkwhite, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+    if (ctx.token_dkpurple) {
+      value = 'dkpurple'
     }
     if (ctx.token_dkyellow) {
-      const value = tokenstring(ctx.token_dkyellow, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-
-    if (ctx.token_blue) {
-      const value = tokenstring(ctx.token_blue, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_cyan) {
-      const value = tokenstring(ctx.token_cyan, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_gray) {
-      const value = tokenstring(ctx.token_gray, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_green) {
-      const value = tokenstring(ctx.token_green, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_grey) {
-      const value = tokenstring(ctx.token_grey, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_purple) {
-      const value = tokenstring(ctx.token_purple, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_red) {
-      const value = tokenstring(ctx.token_red, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_white) {
-      const value = tokenstring(ctx.token_white, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_yellow) {
-      const value = tokenstring(ctx.token_yellow, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_ltblack) {
-      const value = tokenstring(ctx.token_ltblack, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'dkyellow'
     }
     if (ctx.token_ltgray) {
-      const value = tokenstring(ctx.token_ltgray, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'ltgray'
+    }
+    if (ctx.token_dkgray) {
+      value = 'dkgray'
+    }
+    if (ctx.token_blue) {
+      value = 'blue'
+    }
+    if (ctx.token_green) {
+      value = 'green'
+    }
+    if (ctx.token_cyan) {
+      value = 'cyan'
+    }
+    if (ctx.token_red) {
+      value = 'red'
+    }
+    if (ctx.token_purple) {
+      value = 'purple'
+    }
+    if (ctx.token_yellow) {
+      value = 'yellow'
+    }
+    if (ctx.token_white) {
+      value = 'white'
+    }
+    if (ctx.token_brown) {
+      value = 'brown'
+    }
+    if (ctx.token_dkwhite) {
+      value = 'dkwhite'
     }
     if (ctx.token_ltgrey) {
-      const value = tokenstring(ctx.token_ltgrey, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'ltgrey'
     }
-
-    if (ctx.token_onclear) {
-      const value = tokenstring(ctx.token_onclear, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+    if (ctx.token_gray) {
+      value = 'gray'
     }
-
+    if (ctx.token_grey) {
+      value = 'grey'
+    }
+    if (ctx.token_dkgrey) {
+      value = 'dkgrey'
+    }
+    if (ctx.token_ltblack) {
+      value = 'ltblack'
+    }
     if (ctx.token_onblack) {
-      const value = tokenstring(ctx.token_onblack, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'onblack'
     }
     if (ctx.token_ondkblue) {
-      const value = tokenstring(ctx.token_ondkblue, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_ondkcyan) {
-      const value = tokenstring(ctx.token_ondkcyan, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_ondkgray) {
-      const value = tokenstring(ctx.token_ondkgray, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'ondkblue'
     }
     if (ctx.token_ondkgreen) {
-      const value = tokenstring(ctx.token_ondkgreen, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'ondkgreen'
     }
-    if (ctx.token_ondkgrey) {
-      const value = tokenstring(ctx.token_ondkgrey, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_ondkpurple) {
-      const value = tokenstring(ctx.token_ondkpurple, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+    if (ctx.token_ondkcyan) {
+      value = 'ondkcyan'
     }
     if (ctx.token_ondkred) {
-      const value = tokenstring(ctx.token_ondkred, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'ondkred'
     }
-    if (ctx.token_ondkwhite) {
-      const value = tokenstring(ctx.token_ondkwhite, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+    if (ctx.token_ondkpurple) {
+      value = 'ondkpurple'
     }
     if (ctx.token_ondkyellow) {
-      const value = tokenstring(ctx.token_ondkyellow, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-
-    if (ctx.token_onblue) {
-      const value = tokenstring(ctx.token_onblue, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_oncyan) {
-      const value = tokenstring(ctx.token_oncyan, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_ongray) {
-      const value = tokenstring(ctx.token_ongray, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_ongreen) {
-      const value = tokenstring(ctx.token_ongreen, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_ongrey) {
-      const value = tokenstring(ctx.token_ongrey, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_onpurple) {
-      const value = tokenstring(ctx.token_onpurple, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_onred) {
-      const value = tokenstring(ctx.token_onred, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_onwhite) {
-      const value = tokenstring(ctx.token_onwhite, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_onyellow) {
-      const value = tokenstring(ctx.token_onyellow, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-    if (ctx.token_onltblack) {
-      const value = tokenstring(ctx.token_onltblack, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'ondkyellow'
     }
     if (ctx.token_onltgray) {
-      const value = tokenstring(ctx.token_onltgray, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'onltgray'
+    }
+    if (ctx.token_ondkgray) {
+      value = 'ondkgray'
+    }
+    if (ctx.token_onblue) {
+      value = 'onblue'
+    }
+    if (ctx.token_ongreen) {
+      value = 'ongreen'
+    }
+    if (ctx.token_oncyan) {
+      value = 'oncyan'
+    }
+    if (ctx.token_onred) {
+      value = 'onred'
+    }
+    if (ctx.token_onpurple) {
+      value = 'onpurple'
+    }
+    if (ctx.token_onyellow) {
+      value = 'onyellow'
+    }
+    if (ctx.token_onwhite) {
+      value = 'onwhite'
+    }
+    if (ctx.token_onbrown) {
+      value = 'onbrown'
+    }
+    if (ctx.token_ondkwhite) {
+      value = 'ondkwhite'
     }
     if (ctx.token_onltgrey) {
-      const value = tokenstring(ctx.token_onltgrey, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'onltgrey'
     }
-    return []
+    if (ctx.token_ongray) {
+      value = 'ongray'
+    }
+    if (ctx.token_ongrey) {
+      value = 'ongrey'
+    }
+    if (ctx.token_ondkgrey) {
+      value = 'ondkgrey'
+    }
+    if (ctx.token_onltblack) {
+      value = 'onltblack'
+    }
+    if (ctx.token_onclear) {
+      value = 'onclear'
+    }
+    return this.createcodenode(location, {
+      type: NODE.LITERAL,
+      literal: LITERAL.STRING,
+      value,
+    })
   }
 
   dir_mod(ctx: Dir_modCstChildren, location: CstNodeLocation) {
