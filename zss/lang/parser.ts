@@ -97,7 +97,6 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.stmt_command) },
       { ALT: () => this.SUBRULE(this.short_go) },
       { ALT: () => this.SUBRULE(this.short_try) },
-      { ALT: () => this.SUBRULE(this.commands) },
       { ALT: () => this.SUBRULE(this.structured_cmd) },
     ])
   })
@@ -168,7 +167,8 @@ class ScriptParser extends CstParser {
   command_if = this.RULED('command_if', () => {
     this.CONSUME(lexer.command_if)
     this.SUBRULE(this.expr)
-    this.OPTION(() => this.SUBRULE(this.command_if_block))
+    this.OPTION1(() => this.SUBRULE(this.words))
+    this.OPTION2(() => this.SUBRULE(this.command_if_block))
   })
 
   command_if_block = this.RULED('command_if_block', () => {
@@ -237,36 +237,43 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.command_else)
     this.CONSUME(lexer.command_if)
     this.SUBRULE(this.expr)
-    this.OPTION(() => this.SUBRULE(this.command_fork))
+    this.OPTION1(() => this.SUBRULE(this.words))
+    this.OPTION2(() => this.SUBRULE(this.command_fork))
   })
 
   command_else = this.RULED('command_else', () => {
     this.CONSUME(lexer.command)
     this.CONSUME(lexer.command_else)
-    this.SUBRULE(this.command_fork)
+    this.OPTION1(() => this.SUBRULE(this.words))
+    this.OPTION2(() => this.SUBRULE(this.command_fork))
   })
 
   command_while = this.RULED('command_while', () => {
     this.CONSUME(lexer.command_while)
     this.SUBRULE(this.expr)
+    this.OPTION1(() => this.SUBRULE(this.words))
     this.SUBRULE(this.command_block)
   })
 
   command_repeat = this.RULED('command_repeat', () => {
     this.CONSUME(lexer.command_repeat)
     this.SUBRULE(this.expr)
-    this.SUBRULE(this.command_block)
+    this.OPTION1(() => this.SUBRULE(this.words))
+    this.OPTION2(() => this.SUBRULE(this.command_block))
   })
 
   command_waitfor = this.RULED('command_waitfor', () => {
     this.CONSUME(lexer.command_waitfor)
     this.SUBRULE(this.expr)
+    this.OPTION1(() => this.SUBRULE(this.words))
+    this.OPTION2(() => this.SUBRULE(this.command_block))
   })
 
   command_foreach = this.RULED('command_foreach', () => {
     this.CONSUME(lexer.command_foreach)
     this.SUBRULE(this.expr)
-    this.OPTION(() => this.SUBRULE(this.command_block))
+    this.OPTION1(() => this.SUBRULE(this.words))
+    this.OPTION2(() => this.SUBRULE(this.command_block))
   })
 
   command_break = this.RULED('command_break', () => {

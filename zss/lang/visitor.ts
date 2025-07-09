@@ -518,7 +518,7 @@ class ScriptVisitor
     return []
   }
 
-  inline(ctx: InlineCstChildren, location: CstNodeLocation) {
+  inline(ctx: InlineCstChildren) {
     if (ctx.stmt_stat) {
       return this.go(ctx.stmt_stat)
     }
@@ -533,15 +533,6 @@ class ScriptVisitor
     }
     if (ctx.stmt_hyperlink) {
       return this.go(ctx.stmt_hyperlink)
-    }
-    if (ctx.commands) {
-      return this.createlinenode(
-        location,
-        this.createcodenode(location, {
-          type: NODE.COMMAND,
-          words: this.go(ctx.commands),
-        }),
-      )
     }
     if (ctx.structured_cmd) {
       return this.go(ctx.structured_cmd)
@@ -690,7 +681,7 @@ class ScriptVisitor
       location,
       tokenstring(ctx.token_if, 'if'),
       '',
-      this.go(ctx.expr),
+      [this.go(ctx.expr), this.go(ctx.words)].flat(),
     )
     const [block] = this.go(ctx.command_if_block) ?? []
     return this.createcodenode(location, {
@@ -744,7 +735,7 @@ class ScriptVisitor
           location,
           tokenstring(ctx.token_if, 'if'),
           skip,
-          this.go(ctx.expr),
+          [this.go(ctx.expr), this.go(ctx.words)].flat(),
         ),
         this.go(ctx.command_fork),
         this.creategotonode(location, done, `end of if`),
@@ -754,9 +745,24 @@ class ScriptVisitor
   }
 
   command_else(ctx: Command_elseCstChildren, location: CstNodeLocation) {
+    const lines: CodeNode[] = []
+    if (ctx.words) {
+      lines.push(
+        ...this.createlinenode(
+          location,
+          this.createcodenode(location, {
+            type: NODE.COMMAND,
+            words: this.go(ctx.words),
+          }),
+        ),
+      )
+    }
+    if (ctx.command_fork) {
+      lines.push(...this.go(ctx.command_fork))
+    }
     return this.createcodenode(location, {
       type: NODE.ELSE,
-      lines: this.go(ctx.command_fork),
+      lines,
     })
   }
 
@@ -769,7 +775,12 @@ class ScriptVisitor
       done,
       lines: [
         this.createmarknode(location, loop, `start of while`),
-        this.createlogicnode(location, 'if', done, this.go(ctx.expr)),
+        this.createlogicnode(
+          location,
+          'if',
+          done,
+          [this.go(ctx.expr), this.go(ctx.words)].flat(),
+        ),
         this.go(ctx.command_block),
         this.creategotonode(location, loop, `loop of while`),
         this.createmarknode(location, done, `end of while`),
@@ -781,7 +792,7 @@ class ScriptVisitor
     const loop = createsid()
     const done = createsid()
     const index = this.createcountnode(location)
-    const args = [index, this.go(ctx.expr)].flat()
+    const args = [index, this.go(ctx.expr), this.go(ctx.words)].flat()
     return this.createcodenode(location, {
       type: NODE.REPEAT,
       loop,
@@ -801,7 +812,7 @@ class ScriptVisitor
     const loop = createsid()
     const done = createsid()
     const index = this.createcountnode(location)
-    const args = [index, this.go(ctx.expr)].flat()
+    const args = [index, this.go(ctx.expr), this.go(ctx.words)].flat()
     return this.createcodenode(location, {
       type: NODE.FOREACH,
       loop,
@@ -824,7 +835,12 @@ class ScriptVisitor
       loop,
       lines: [
         this.createmarknode(location, loop, `start of waitfor`),
-        this.createlogicnode(location, 'waitfor', loop, this.go(ctx.expr)),
+        this.createlogicnode(
+          location,
+          'waitfor',
+          loop,
+          [this.go(ctx.expr), this.go(ctx.words)].flat(),
+        ),
       ].flat(),
     })
   }
