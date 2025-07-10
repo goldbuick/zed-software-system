@@ -2,6 +2,7 @@ import { indextopt } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { readstrbg, readstrcolor, STR_COLOR } from 'zss/words/color'
 import { ispt } from 'zss/words/dir'
 import {
   readstrkindbg,
@@ -144,6 +145,16 @@ export function listelementsbykind(
       return true
     })
     .filter(ispresent)
+}
+
+export function listelementsbycolor(
+  board: MAYBE<BOARD>,
+  strcolor: STR_COLOR,
+): BOARD_ELEMENT[] {
+  const color = ispresent(strcolor) ? readstrcolor(strcolor) : undefined
+  const bg = ispresent(strcolor) ? readstrbg(strcolor) : undefined
+  const elements: BOARD_ELEMENT[] = []
+  return elements
 }
 
 export function listelementsbyidnameorpts(
