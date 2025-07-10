@@ -195,7 +195,7 @@ function raycheck(
 
   // check distance
   pt1.x = x - sprite.x
-  pt1.y = y - sprite.y
+  pt1.y = Math.round((y - sprite.y) * 1.333)
   const raydist = pt1.length()
   if (raydist > radius) {
     return
