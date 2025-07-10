@@ -643,7 +643,7 @@ class ScriptVisitor
         this.createcodenode(location, {
           type: NODE.MOVE,
           wait: true,
-          words: this.go(ctx.words),
+          words: [this.go(ctx.string_token), this.go(ctx.dir)].flat(),
         }),
       )
     }
@@ -657,7 +657,7 @@ class ScriptVisitor
         this.createcodenode(location, {
           type: NODE.MOVE,
           wait: false,
-          words: this.go(ctx.words),
+          words: [this.go(ctx.string_token), this.go(ctx.dir)].flat(),
         }),
       )
     }

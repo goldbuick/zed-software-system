@@ -520,6 +520,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return 0
       }
     }
+
     // if blocked, return 1
     return 1
   })

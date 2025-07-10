@@ -147,12 +147,18 @@ class ScriptParser extends CstParser {
 
   short_go = this.RULED('short_go', () => {
     this.CONSUME(lexer.divide)
-    this.SUBRULE(this.words)
+    this.OR([
+      { ALT: () => this.SUBRULE(this.string_token) },
+      { ALT: () => this.SUBRULE(this.dir) },
+    ])
   })
 
   short_try = this.RULED('short_try', () => {
     this.CONSUME(lexer.query)
-    this.SUBRULE(this.words)
+    this.OR([
+      { ALT: () => this.SUBRULE(this.string_token) },
+      { ALT: () => this.SUBRULE(this.dir) },
+    ])
   })
 
   command_if = this.RULED('command_if', () => {
