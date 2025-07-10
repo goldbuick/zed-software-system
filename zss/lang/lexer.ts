@@ -19,15 +19,15 @@ function createSimpleToken(config: ITokenConfig) {
   })
 }
 
-function createWordToken(word: string, skipped = false) {
-  if (skipped) {
-    return createSimpleToken({
-      name: word,
-      pattern: new RegExp(word.toLowerCase(), 'i'),
-      longer_alt: stringliteral,
-      group: Lexer.SKIPPED,
-    })
-  }
+function createWordToken(word: string) {
+  // if (skipped) {
+  //   return createSimpleToken({
+  //     name: word,
+  //     pattern: new RegExp(word.toLowerCase(), 'i'),
+  //     longer_alt: stringliteral,
+  //     group: Lexer.SKIPPED,
+  //   })
+  // }
   return createSimpleToken({
     name: word,
     pattern: new RegExp(word.toLowerCase(), 'i'),
@@ -156,6 +156,146 @@ export const stringliteraldouble = createSimpleToken({
 export const numberliteral = createSimpleToken({
   name: 'numberliteral',
   pattern: /-?(\d*\.)?\d+([eE][+-]?\d+)?[jJ]?[lL]?/,
+})
+
+// constants and expressions
+
+export const category_isterrain = createWordToken('isterrain')
+export const category_isobject = createWordToken('isobject')
+
+export const collision_issolid = createWordToken('issolid')
+export const collision_iswalk = createWordToken('iswalk')
+export const collision_isswim = createWordToken('isswim')
+export const collision_isbullet = createWordToken('isbullet')
+
+export const collision_iswalking = createWordToken('iswalking')
+export const collision_iswalkable = createWordToken('iswalkable')
+export const collision_isswimming = createWordToken('isswimming')
+export const collision_isswimmable = createWordToken('isswimmable')
+
+export const color_black = createWordToken('black')
+export const color_dkblue = createWordToken('dkblue')
+export const color_dkgreen = createWordToken('dkgreen')
+export const color_dkcyan = createWordToken('dkcyan')
+export const color_dkred = createWordToken('dkred')
+export const color_dkpurple = createWordToken('dkpurple')
+export const color_dkyellow = createWordToken('dkyellow')
+export const color_ltgray = createWordToken('ltgray')
+export const color_dkgray = createWordToken('dkgray')
+export const color_blue = createWordToken('blue')
+export const color_green = createWordToken('green')
+export const color_cyan = createWordToken('cyan')
+export const color_red = createWordToken('red')
+export const color_purple = createWordToken('purple')
+export const color_yellow = createWordToken('yellow')
+export const color_white = createWordToken('white')
+
+export const color_brown = createWordToken('brown')
+export const color_dkwhite = createWordToken('dkwhite')
+export const color_ltgrey = createWordToken('ltgrey')
+export const color_gray = createWordToken('gray')
+export const color_grey = createWordToken('grey')
+export const color_dkgrey = createWordToken('dkgrey')
+export const color_ltblack = createWordToken('ltblack')
+
+export const color_onblack = createWordToken('onblack')
+export const color_ondkblue = createWordToken('ondkblue')
+export const color_ondkgreen = createWordToken('ondkgreen')
+export const color_ondkcyan = createWordToken('ondkcyan')
+export const color_ondkred = createWordToken('ondkred')
+export const color_ondkpurple = createWordToken('ondkpurple')
+export const color_ondkyellow = createWordToken('ondkyellow')
+export const color_onltgray = createWordToken('onltgray')
+export const color_ondkgray = createWordToken('ondkgray')
+export const color_onblue = createWordToken('onblue')
+export const color_ongreen = createWordToken('ongreen')
+export const color_oncyan = createWordToken('oncyan')
+export const color_onred = createWordToken('onred')
+export const color_onpurple = createWordToken('onpurple')
+export const color_onyellow = createWordToken('onyellow')
+export const color_onwhite = createWordToken('onwhite')
+
+export const color_onbrown = createWordToken('onbrown')
+export const color_ondkwhite = createWordToken('ondkwhite')
+export const color_onltgrey = createWordToken('onltgrey')
+export const color_ongray = createWordToken('ongray')
+export const color_ongrey = createWordToken('ongrey')
+export const color_ondkgrey = createWordToken('ondkgrey')
+export const color_onltblack = createWordToken('onltblack')
+
+export const color_onclear = createWordToken('onclear')
+
+export const dir_idle = createWordToken('idle')
+export const dir_up = createWordToken('up')
+export const dir_down = createWordToken('down')
+export const dir_left = createWordToken('left')
+export const dir_right = createWordToken('right')
+export const dir_by = createWordToken('by')
+export const dir_at = createWordToken('at')
+export const dir_flow = createWordToken('flow')
+export const dir_seek = createWordToken('seek')
+export const dir_rndns = createWordToken('rndns')
+export const dir_rndne = createWordToken('rndne')
+export const dir_rnd = createWordToken('rnd')
+
+export const dir_cw = createWordToken('cw')
+export const dir_ccw = createWordToken('ccw')
+export const dir_opp = createWordToken('opp')
+export const dir_rndp = createWordToken('rndp')
+
+export const dir_away = createWordToken('away')
+export const dir_toward = createWordToken('toward')
+export const dir_find = createWordToken('find')
+export const dir_flee = createWordToken('flee')
+
+export const dir_to = createWordToken('to')
+
+export const dir_i = createWordToken('i')
+export const dir_u = createWordToken('u')
+export const dir_north = createWordToken('north')
+export const dir_n = createWordToken('n')
+export const dir_d = createWordToken('d')
+export const dir_south = createWordToken('south')
+export const dir_s = createWordToken('s')
+export const dir_l = createWordToken('l')
+export const dir_west = createWordToken('west')
+export const dir_w = createWordToken('w')
+export const dir_r = createWordToken('r')
+export const dir_east = createWordToken('east')
+export const dir_e = createWordToken('e')
+
+export const dir_over = createWordToken('over')
+export const dir_under = createWordToken('under')
+
+export const expr_aligned = createSimpleToken({
+  name: 'expr_aligned',
+  pattern: /aligned|alligned/i,
+  longer_alt: stringliteral,
+})
+
+export const expr_contact = createWordToken('contact')
+export const expr_blocked = createWordToken('blocked')
+export const expr_any = createWordToken('any')
+export const expr_count = createWordToken('count')
+export const expr_color = createWordToken('color')
+export const expr_detect = createWordToken('detect')
+export const expr_abs = createWordToken('abs')
+export const expr_intceil = createWordToken('intceil')
+export const expr_intfloor = createWordToken('intfloor')
+export const expr_intround = createWordToken('intround')
+export const expr_clamp = createWordToken('clamp')
+export const expr_min = createWordToken('min')
+export const expr_max = createWordToken('max')
+export const expr_pick = createWordToken('pick')
+export const expr_pickwith = createWordToken('pickwith')
+export const expr_random = createWordToken('random')
+export const expr_randomwith = createWordToken('randomwith')
+export const expr_run = createWordToken('run')
+export const expr_runwith = createWordToken('runwith')
+export const expr_stop = createSimpleToken({
+  name: 'stop',
+  pattern: /\|/,
+  start_chars_hint: ['|'],
 })
 
 // comparision
@@ -291,10 +431,117 @@ export type LANG_ERROR = {
 
 function createTokenSet(primary: TokenType[]) {
   return [
+    // const and exprs
+    dir_down,
     // primary tokens
     ...primary,
     numberliteral,
-    // expressions
+    // consts and exprs
+    category_isterrain,
+    category_isobject,
+    collision_issolid,
+    collision_iswalkable,
+    collision_iswalking,
+    collision_iswalk,
+    collision_isswimmable,
+    collision_isswimming,
+    collision_isswim,
+    collision_isbullet,
+    color_black,
+    color_dkblue,
+    color_dkgreen,
+    color_dkcyan,
+    color_dkred,
+    color_dkpurple,
+    color_dkyellow,
+    color_ltgray,
+    color_dkgray,
+    color_blue,
+    color_green,
+    color_cyan,
+    color_red,
+    color_purple,
+    color_yellow,
+    color_white,
+    color_brown,
+    color_dkwhite,
+    color_ltgrey,
+    color_gray,
+    color_grey,
+    color_dkgrey,
+    color_ltblack,
+    color_onblack,
+    color_ondkblue,
+    color_ondkgreen,
+    color_ondkcyan,
+    color_ondkred,
+    color_ondkpurple,
+    color_ondkyellow,
+    color_onltgray,
+    color_ondkgray,
+    color_onblue,
+    color_ongreen,
+    color_oncyan,
+    color_onred,
+    color_onpurple,
+    color_onyellow,
+    color_onwhite,
+    color_onbrown,
+    color_ondkwhite,
+    color_onltgrey,
+    color_ongray,
+    color_ongrey,
+    color_ondkgrey,
+    color_onltblack,
+    color_onclear,
+    dir_idle,
+    dir_up,
+    dir_left,
+    dir_right,
+    dir_by,
+    dir_at,
+    dir_flow,
+    dir_seek,
+    dir_rndp,
+    dir_rndns,
+    dir_rndne,
+    dir_rnd,
+    dir_cw,
+    dir_ccw,
+    dir_opp,
+    dir_away,
+    dir_toward,
+    dir_find,
+    dir_flee,
+    dir_to,
+    dir_north,
+    dir_south,
+    dir_west,
+    dir_east,
+    dir_over,
+    dir_under,
+    expr_aligned,
+    expr_contact,
+    expr_blocked,
+    expr_any,
+    expr_count,
+    expr_color,
+    expr_detect,
+    expr_abs,
+    expr_intceil,
+    expr_intfloor,
+    expr_intround,
+    expr_clamp,
+    expr_min,
+    expr_max,
+    expr_pickwith,
+    expr_pick,
+    expr_randomwith,
+    expr_random,
+    expr_runwith,
+    expr_run,
+    expr_stop,
+    // comparisons
     iseq,
     isnoteq,
     islessthanorequal,
@@ -317,6 +564,16 @@ function createTokenSet(primary: TokenType[]) {
     // grouping
     lparen,
     rparen,
+    // consts and exprs
+    dir_i,
+    dir_u,
+    dir_n,
+    dir_d,
+    dir_s,
+    dir_l,
+    dir_w,
+    dir_r,
+    dir_e,
     // content
     stringliteraldouble,
     stringliteral,

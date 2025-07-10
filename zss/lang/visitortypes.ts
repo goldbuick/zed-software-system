@@ -41,15 +41,6 @@ export type InlineCstNode = {
 } & CstNode
 
 export type InlineCstChildren = {
-  instmt: InstmtCstNode[]
-}
-
-export type InstmtCstNode = {
-  name: 'instmt'
-  children: InstmtCstChildren
-} & CstNode
-
-export type InstmtCstChildren = {
   stmt_stat?: Stmt_statCstNode[]
   stmt_text?: Stmt_textCstNode[]
   stmt_comment?: Stmt_commentCstNode[]
@@ -57,7 +48,7 @@ export type InstmtCstChildren = {
   stmt_command?: Stmt_commandCstNode[]
   short_go?: Short_goCstNode[]
   short_try?: Short_tryCstNode[]
-  commands?: CommandsCstNode[]
+  structured_cmd?: Structured_cmdCstNode[]
 }
 
 export type Stmt_labelCstNode = {
@@ -114,19 +105,7 @@ export type Stmt_commandCstNode = {
 
 export type Stmt_commandCstChildren = {
   token_command: IToken[]
-  commands: CommandsCstNode[]
-}
-
-export type CommandsCstNode = {
-  name: 'commands'
-  children: CommandsCstChildren
-} & CstNode
-
-export type CommandsCstChildren = {
   words?: WordsCstNode[]
-  command_play?: Command_playCstNode[]
-  command_toast?: Command_toastCstNode[]
-  command_ticker?: Command_tickerCstNode[]
   structured_cmd?: Structured_cmdCstNode[]
 }
 
@@ -172,7 +151,7 @@ export type Command_ifCstNode = {
 
 export type Command_ifCstChildren = {
   token_if: IToken[]
-  expr: ExprCstNode[]
+  words: WordsCstNode[]
   command_if_block?: Command_if_blockCstNode[]
 }
 
@@ -225,7 +204,7 @@ export type Command_else_ifCstChildren = {
   token_command: IToken[]
   token_else: IToken[]
   token_if: IToken[]
-  expr: ExprCstNode[]
+  words: WordsCstNode[]
   command_fork?: Command_forkCstNode[]
 }
 
@@ -237,6 +216,7 @@ export type Command_elseCstNode = {
 export type Command_elseCstChildren = {
   token_command: IToken[]
   token_else: IToken[]
+  words?: WordsCstNode[]
   command_fork?: Command_forkCstNode[]
 }
 
@@ -247,7 +227,7 @@ export type Command_whileCstNode = {
 
 export type Command_whileCstChildren = {
   token_while: IToken[]
-  expr: ExprCstNode[]
+  words: WordsCstNode[]
   command_block?: Command_blockCstNode[]
 }
 
@@ -258,7 +238,7 @@ export type Command_repeatCstNode = {
 
 export type Command_repeatCstChildren = {
   token_repeat: IToken[]
-  expr: ExprCstNode[]
+  words: WordsCstNode[]
   command_block?: Command_blockCstNode[]
 }
 
@@ -269,7 +249,8 @@ export type Command_waitforCstNode = {
 
 export type Command_waitforCstChildren = {
   token_waitfor: IToken[]
-  expr: ExprCstNode[]
+  words: WordsCstNode[]
+  command_block?: Command_blockCstNode[]
 }
 
 export type Command_foreachCstNode = {
@@ -279,7 +260,7 @@ export type Command_foreachCstNode = {
 
 export type Command_foreachCstChildren = {
   token_foreach: IToken[]
-  expr: ExprCstNode[]
+  words: WordsCstNode[]
   command_block?: Command_blockCstNode[]
 }
 
@@ -476,7 +457,7 @@ export type PowerCstNode = {
 } & CstNode
 
 export type PowerCstChildren = {
-  words: WordsCstNode[]
+  token: TokenCstNode[]
   token_power?: IToken[]
   factor?: FactorCstNode[]
 }
@@ -487,7 +468,388 @@ export type WordsCstNode = {
 } & CstNode
 
 export type WordsCstChildren = {
-  token: TokenCstNode[]
+  expr: ExprCstNode[]
+}
+
+export type KindCstNode = {
+  name: 'kind'
+  children: KindCstChildren
+} & CstNode
+
+export type KindCstChildren = {
+  color?: ColorCstNode[]
+  string_token: String_tokenCstNode[]
+}
+
+export type CategoryCstNode = {
+  name: 'category'
+  children: CategoryCstChildren
+} & CstNode
+
+export type CategoryCstChildren = {
+  token_isterrain?: IToken[]
+  token_isobject?: IToken[]
+}
+
+export type CollisionCstNode = {
+  name: 'collision'
+  children: CollisionCstChildren
+} & CstNode
+
+export type CollisionCstChildren = {
+  token_issolid?: IToken[]
+  token_iswalk?: IToken[]
+  token_isswim?: IToken[]
+  token_isbullet?: IToken[]
+  token_iswalking?: IToken[]
+  token_iswalkable?: IToken[]
+  token_isswimming?: IToken[]
+  token_isswimmable?: IToken[]
+}
+
+export type ColorCstNode = {
+  name: 'color'
+  children: ColorCstChildren
+} & CstNode
+
+export type ColorCstChildren = {
+  token_black?: IToken[]
+  token_dkblue?: IToken[]
+  token_dkgreen?: IToken[]
+  token_dkcyan?: IToken[]
+  token_dkred?: IToken[]
+  token_dkpurple?: IToken[]
+  token_dkyellow?: IToken[]
+  token_ltgray?: IToken[]
+  token_dkgray?: IToken[]
+  token_blue?: IToken[]
+  token_green?: IToken[]
+  token_cyan?: IToken[]
+  token_red?: IToken[]
+  token_purple?: IToken[]
+  token_yellow?: IToken[]
+  token_white?: IToken[]
+  token_brown?: IToken[]
+  token_dkwhite?: IToken[]
+  token_ltgrey?: IToken[]
+  token_gray?: IToken[]
+  token_grey?: IToken[]
+  token_dkgrey?: IToken[]
+  token_ltblack?: IToken[]
+  token_onblack?: IToken[]
+  token_ondkblue?: IToken[]
+  token_ondkgreen?: IToken[]
+  token_ondkcyan?: IToken[]
+  token_ondkred?: IToken[]
+  token_ondkpurple?: IToken[]
+  token_ondkyellow?: IToken[]
+  token_onltgray?: IToken[]
+  token_ondkgray?: IToken[]
+  token_onblue?: IToken[]
+  token_ongreen?: IToken[]
+  token_oncyan?: IToken[]
+  token_onred?: IToken[]
+  token_onpurple?: IToken[]
+  token_onyellow?: IToken[]
+  token_onwhite?: IToken[]
+  token_onbrown?: IToken[]
+  token_ondkwhite?: IToken[]
+  token_onltgrey?: IToken[]
+  token_ongray?: IToken[]
+  token_ongrey?: IToken[]
+  token_ondkgrey?: IToken[]
+  token_onltblack?: IToken[]
+  token_onclear?: IToken[]
+}
+
+export type Dir_modCstNode = {
+  name: 'dir_mod'
+  children: Dir_modCstChildren
+} & CstNode
+
+export type Dir_modCstChildren = {
+  token_cw?: IToken[]
+  token_ccw?: IToken[]
+  token_opp?: IToken[]
+  token_rndp?: IToken[]
+  token_over?: IToken[]
+  token_under?: IToken[]
+}
+
+export type DirCstNode = {
+  name: 'dir'
+  children: DirCstChildren
+} & CstNode
+
+export type DirCstChildren = {
+  dir_mod?: Dir_modCstNode[]
+  token_idle?: IToken[]
+  token_up?: IToken[]
+  token_down?: IToken[]
+  token_left?: IToken[]
+  token_right?: IToken[]
+  token_by?: IToken[]
+  simple_token?: Simple_tokenCstNode[]
+  token_at?: IToken[]
+  token_away?: IToken[]
+  token_toward?: IToken[]
+  token_flow?: IToken[]
+  token_seek?: IToken[]
+  token_rndns?: IToken[]
+  token_rndne?: IToken[]
+  token_rnd?: IToken[]
+  token_find?: IToken[]
+  kind?: KindCstNode[]
+  token_flee?: IToken[]
+  token_to?: IToken[]
+  dir?: DirCstNode[]
+  token_i?: IToken[]
+  token_u?: IToken[]
+  token_north?: IToken[]
+  token_n?: IToken[]
+  token_d?: IToken[]
+  token_south?: IToken[]
+  token_s?: IToken[]
+  token_l?: IToken[]
+  token_west?: IToken[]
+  token_w?: IToken[]
+  token_r?: IToken[]
+  token_east?: IToken[]
+  token_e?: IToken[]
+}
+
+export type Token_expr_anyCstNode = {
+  name: 'token_expr_any'
+  children: Token_expr_anyCstChildren
+} & CstNode
+
+export type Token_expr_anyCstChildren = {
+  token_any: IToken[]
+  kind: KindCstNode[]
+}
+
+export type Token_expr_countCstNode = {
+  name: 'token_expr_count'
+  children: Token_expr_countCstChildren
+} & CstNode
+
+export type Token_expr_countCstChildren = {
+  token_count: IToken[]
+  kind: KindCstNode[]
+}
+
+export type Token_expr_colorCstNode = {
+  name: 'token_expr_color'
+  children: Token_expr_colorCstChildren
+} & CstNode
+
+export type Token_expr_colorCstChildren = {
+  token_color: IToken[]
+  dir: DirCstNode[]
+  color: ColorCstNode[]
+}
+
+export type Token_expr_detectCstNode = {
+  name: 'token_expr_detect'
+  children: Token_expr_detectCstChildren
+} & CstNode
+
+export type Token_expr_detectCstChildren = {
+  token_detect: IToken[]
+  dir: DirCstNode[]
+  kind: KindCstNode[]
+}
+
+export type Token_expr_absCstNode = {
+  name: 'token_expr_abs'
+  children: Token_expr_absCstChildren
+} & CstNode
+
+export type Token_expr_absCstChildren = {
+  token_abs: IToken[]
+  simple_token: Simple_tokenCstNode[]
+}
+
+export type Token_expr_intceilCstNode = {
+  name: 'token_expr_intceil'
+  children: Token_expr_intceilCstChildren
+} & CstNode
+
+export type Token_expr_intceilCstChildren = {
+  token_intceil: IToken[]
+  simple_token: Simple_tokenCstNode[]
+}
+
+export type Token_expr_intfloorCstNode = {
+  name: 'token_expr_intfloor'
+  children: Token_expr_intfloorCstChildren
+} & CstNode
+
+export type Token_expr_intfloorCstChildren = {
+  token_intfloor: IToken[]
+  simple_token: Simple_tokenCstNode[]
+}
+
+export type Token_expr_introundCstNode = {
+  name: 'token_expr_intround'
+  children: Token_expr_introundCstChildren
+} & CstNode
+
+export type Token_expr_introundCstChildren = {
+  token_intround: IToken[]
+  simple_token: Simple_tokenCstNode[]
+}
+
+export type Token_expr_clampCstNode = {
+  name: 'token_expr_clamp'
+  children: Token_expr_clampCstChildren
+} & CstNode
+
+export type Token_expr_clampCstChildren = {
+  token_clamp: IToken[]
+  simple_token: Simple_tokenCstNode[]
+}
+
+export type Token_expr_minCstNode = {
+  name: 'token_expr_min'
+  children: Token_expr_minCstChildren
+} & CstNode
+
+export type Token_expr_minCstChildren = {
+  token_min: IToken[]
+  simple_tokens: Simple_tokensCstNode[]
+}
+
+export type Token_expr_maxCstNode = {
+  name: 'token_expr_max'
+  children: Token_expr_maxCstChildren
+} & CstNode
+
+export type Token_expr_maxCstChildren = {
+  token_max: IToken[]
+  simple_tokens: Simple_tokensCstNode[]
+}
+
+export type Token_expr_pickCstNode = {
+  name: 'token_expr_pick'
+  children: Token_expr_pickCstChildren
+} & CstNode
+
+export type Token_expr_pickCstChildren = {
+  token_pick: IToken[]
+  simple_tokens: Simple_tokensCstNode[]
+}
+
+export type Token_expr_pickwithCstNode = {
+  name: 'token_expr_pickwith'
+  children: Token_expr_pickwithCstChildren
+} & CstNode
+
+export type Token_expr_pickwithCstChildren = {
+  token_pickwith: IToken[]
+  simple_token: Simple_tokenCstNode[]
+  simple_tokens: Simple_tokensCstNode[]
+}
+
+export type Token_expr_randomCstNode = {
+  name: 'token_expr_random'
+  children: Token_expr_randomCstChildren
+} & CstNode
+
+export type Token_expr_randomCstChildren = {
+  token_random: IToken[]
+  simple_token: Simple_tokenCstNode[]
+}
+
+export type Token_expr_randomwithCstNode = {
+  name: 'token_expr_randomwith'
+  children: Token_expr_randomwithCstChildren
+} & CstNode
+
+export type Token_expr_randomwithCstChildren = {
+  token_randomwith: IToken[]
+  simple_token: Simple_tokenCstNode[]
+}
+
+export type Token_expr_runCstNode = {
+  name: 'token_expr_run'
+  children: Token_expr_runCstChildren
+} & CstNode
+
+export type Token_expr_runCstChildren = {
+  token_run: IToken[]
+  string_token: String_tokenCstNode[]
+}
+
+export type Token_expr_runwithCstNode = {
+  name: 'token_expr_runwith'
+  children: Token_expr_runwithCstChildren
+} & CstNode
+
+export type Token_expr_runwithCstChildren = {
+  token_runwith: IToken[]
+  simple_token: Simple_tokenCstNode[]
+  string_token: String_tokenCstNode[]
+}
+
+export type Token_exprCstNode = {
+  name: 'token_expr'
+  children: Token_exprCstChildren
+} & CstNode
+
+export type Token_exprCstChildren = {
+  token_expr_aligned?: IToken[]
+  token_contact?: IToken[]
+  token_blocked?: IToken[]
+  token_expr_any?: Token_expr_anyCstNode[]
+  token_expr_count?: Token_expr_countCstNode[]
+  token_expr_color?: Token_expr_colorCstNode[]
+  token_expr_detect?: Token_expr_detectCstNode[]
+  token_expr_abs?: Token_expr_absCstNode[]
+  token_expr_intceil?: Token_expr_intceilCstNode[]
+  token_expr_intfloor?: Token_expr_intfloorCstNode[]
+  token_expr_intround?: Token_expr_introundCstNode[]
+  token_expr_clamp?: Token_expr_clampCstNode[]
+  token_expr_min?: Token_expr_minCstNode[]
+  token_expr_max?: Token_expr_maxCstNode[]
+  token_expr_pick?: Token_expr_pickCstNode[]
+  token_expr_pickwith?: Token_expr_pickwithCstNode[]
+  token_expr_random?: Token_expr_randomCstNode[]
+  token_expr_randomwith?: Token_expr_randomwithCstNode[]
+  token_expr_run?: Token_expr_runCstNode[]
+  token_expr_runwith?: Token_expr_runwithCstNode[]
+}
+
+export type String_tokenCstNode = {
+  name: 'string_token'
+  children: String_tokenCstChildren
+} & CstNode
+
+export type String_tokenCstChildren = {
+  token_stringliteral?: IToken[]
+  token_stringliteraldouble?: IToken[]
+}
+
+export type Simple_tokenCstNode = {
+  name: 'simple_token'
+  children: Simple_tokenCstChildren
+} & CstNode
+
+export type Simple_tokenCstChildren = {
+  token_numberliteral?: IToken[]
+  token_stringliteral?: IToken[]
+  token_stringliteraldouble?: IToken[]
+}
+
+export type Simple_tokensCstNode = {
+  name: 'simple_tokens'
+  children: Simple_tokensCstChildren
+} & CstNode
+
+export type Simple_tokensCstChildren = {
+  token_numberliteral?: IToken[]
+  token_stringliteral?: IToken[]
+  token_stringliteraldouble?: IToken[]
 }
 
 export type TokenCstNode = {
@@ -496,10 +858,19 @@ export type TokenCstNode = {
 } & CstNode
 
 export type TokenCstChildren = {
+  category?: CategoryCstNode[]
+  collision?: CollisionCstNode[]
+  color?: ColorCstNode[]
+  dir?: DirCstNode[]
+  token_expr?: Token_exprCstNode[]
+  command_play?: Command_playCstNode[]
+  command_toast?: Command_toastCstNode[]
+  command_ticker?: Command_tickerCstNode[]
   token_label?: IToken[]
   token_stringliteraldouble?: IToken[]
   token_stringliteral?: IToken[]
   token_numberliteral?: IToken[]
+  token_stop?: IToken[]
   token_lparen?: IToken[]
   expr?: ExprCstNode[]
   token_rparen?: IToken[]
@@ -510,14 +881,12 @@ export type ICstNodeVisitor<IN, OUT> = {
   line(children: LineCstChildren, param?: IN): OUT
   stmt(children: StmtCstChildren, param?: IN): OUT
   inline(children: InlineCstChildren, param?: IN): OUT
-  instmt(children: InstmtCstChildren, param?: IN): OUT
   stmt_label(children: Stmt_labelCstChildren, param?: IN): OUT
   stmt_stat(children: Stmt_statCstChildren, param?: IN): OUT
   stmt_text(children: Stmt_textCstChildren, param?: IN): OUT
   stmt_comment(children: Stmt_commentCstChildren, param?: IN): OUT
   stmt_hyperlink(children: Stmt_hyperlinkCstChildren, param?: IN): OUT
   stmt_command(children: Stmt_commandCstChildren, param?: IN): OUT
-  commands(children: CommandsCstChildren, param?: IN): OUT
   structured_cmd(children: Structured_cmdCstChildren, param?: IN): OUT
   short_go(children: Short_goCstChildren, param?: IN): OUT
   short_try(children: Short_tryCstChildren, param?: IN): OUT
@@ -551,5 +920,35 @@ export type ICstNodeVisitor<IN, OUT> = {
   factor(children: FactorCstChildren, param?: IN): OUT
   power(children: PowerCstChildren, param?: IN): OUT
   words(children: WordsCstChildren, param?: IN): OUT
+  kind(children: KindCstChildren, param?: IN): OUT
+  category(children: CategoryCstChildren, param?: IN): OUT
+  collision(children: CollisionCstChildren, param?: IN): OUT
+  color(children: ColorCstChildren, param?: IN): OUT
+  dir_mod(children: Dir_modCstChildren, param?: IN): OUT
+  dir(children: DirCstChildren, param?: IN): OUT
+  token_expr_any(children: Token_expr_anyCstChildren, param?: IN): OUT
+  token_expr_count(children: Token_expr_countCstChildren, param?: IN): OUT
+  token_expr_color(children: Token_expr_colorCstChildren, param?: IN): OUT
+  token_expr_detect(children: Token_expr_detectCstChildren, param?: IN): OUT
+  token_expr_abs(children: Token_expr_absCstChildren, param?: IN): OUT
+  token_expr_intceil(children: Token_expr_intceilCstChildren, param?: IN): OUT
+  token_expr_intfloor(children: Token_expr_intfloorCstChildren, param?: IN): OUT
+  token_expr_intround(children: Token_expr_introundCstChildren, param?: IN): OUT
+  token_expr_clamp(children: Token_expr_clampCstChildren, param?: IN): OUT
+  token_expr_min(children: Token_expr_minCstChildren, param?: IN): OUT
+  token_expr_max(children: Token_expr_maxCstChildren, param?: IN): OUT
+  token_expr_pick(children: Token_expr_pickCstChildren, param?: IN): OUT
+  token_expr_pickwith(children: Token_expr_pickwithCstChildren, param?: IN): OUT
+  token_expr_random(children: Token_expr_randomCstChildren, param?: IN): OUT
+  token_expr_randomwith(
+    children: Token_expr_randomwithCstChildren,
+    param?: IN,
+  ): OUT
+  token_expr_run(children: Token_expr_runCstChildren, param?: IN): OUT
+  token_expr_runwith(children: Token_expr_runwithCstChildren, param?: IN): OUT
+  token_expr(children: Token_exprCstChildren, param?: IN): OUT
+  string_token(children: String_tokenCstChildren, param?: IN): OUT
+  simple_token(children: Simple_tokenCstChildren, param?: IN): OUT
+  simple_tokens(children: Simple_tokensCstChildren, param?: IN): OUT
   token(children: TokenCstChildren, param?: IN): OUT
 } & ICstVisitor<IN, OUT>

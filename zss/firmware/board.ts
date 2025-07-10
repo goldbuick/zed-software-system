@@ -406,21 +406,28 @@ export const BOARD_FIRMWARE = createfirmware()
     const intocolor = readstrkindcolor(into)
     const intobg = readstrkindbg(into)
     listelementsbykind(READ_CONTEXT.board, target).forEach((element) => {
-      if (boardelementname(element) === intoname) {
-        // modify existing elements
-        if (ispresent(intocolor)) {
-          element.color = intocolor
-        }
-        if (ispresent(intobg)) {
-          element.bg = intobg
-        }
-      } else {
+      // modify existing elements
+      if (ispresent(intocolor)) {
+        element.color = intocolor
+      }
+      if (ispresent(intobg)) {
+        element.bg = intobg
+      }
+      if (boardelementname(element) !== intoname) {
+        const newcolor = memoryelementstatread(element, 'color')
+        const newbg = memoryelementstatread(element, 'bg')
         // erase element
         boardsafedelete(READ_CONTEXT.board, element, READ_CONTEXT.timestamp)
         // create new element
         if (intoname !== 'empty') {
           const pt = { x: element.x ?? 0, y: element.y ?? 0 }
-          memorywritefromkind(READ_CONTEXT.board, into, pt)
+          const newelement = memorywritefromkind(READ_CONTEXT.board, into, pt)
+          if (ispresent(newelement)) {
+            newelement.color = newcolor
+            newelement.bg = newbg
+          } else {
+            // throw error
+          }
         }
       }
     })

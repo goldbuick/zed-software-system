@@ -9,6 +9,9 @@ import {
   And_testCstChildren,
   Arith_expr_itemCstChildren,
   Arith_exprCstChildren,
+  CategoryCstChildren,
+  CollisionCstChildren,
+  ColorCstChildren,
   Command_blockCstChildren,
   Command_breakCstChildren,
   Command_continueCstChildren,
@@ -24,15 +27,16 @@ import {
   Command_toastCstChildren,
   Command_waitforCstChildren,
   Command_whileCstChildren,
-  CommandsCstChildren,
   Comp_opCstChildren,
   ComparisonCstChildren,
+  Dir_modCstChildren,
+  DirCstChildren,
   Expr_valueCstChildren,
   ExprCstChildren,
   FactorCstChildren,
   ICstNodeVisitor,
   InlineCstChildren,
-  InstmtCstChildren,
+  KindCstChildren,
   LineCstChildren,
   Not_test_valueCstChildren,
   Not_testCstChildren,
@@ -40,6 +44,8 @@ import {
   ProgramCstChildren,
   Short_goCstChildren,
   Short_tryCstChildren,
+  Simple_tokenCstChildren,
+  Simple_tokensCstChildren,
   Stmt_commandCstChildren,
   Stmt_commentCstChildren,
   Stmt_hyperlinkCstChildren,
@@ -47,9 +53,28 @@ import {
   Stmt_statCstChildren,
   Stmt_textCstChildren,
   StmtCstChildren,
+  String_tokenCstChildren,
   Structured_cmdCstChildren,
   Term_itemCstChildren,
   TermCstChildren,
+  Token_expr_absCstChildren,
+  Token_expr_anyCstChildren,
+  Token_expr_clampCstChildren,
+  Token_expr_colorCstChildren,
+  Token_expr_countCstChildren,
+  Token_expr_detectCstChildren,
+  Token_expr_intceilCstChildren,
+  Token_expr_intfloorCstChildren,
+  Token_expr_introundCstChildren,
+  Token_expr_maxCstChildren,
+  Token_expr_minCstChildren,
+  Token_expr_pickCstChildren,
+  Token_expr_pickwithCstChildren,
+  Token_expr_randomCstChildren,
+  Token_expr_randomwithCstChildren,
+  Token_expr_runCstChildren,
+  Token_expr_runwithCstChildren,
+  Token_exprCstChildren,
   TokenCstChildren,
   WordsCstChildren,
 } from './visitortypes'
@@ -493,10 +518,6 @@ class ScriptVisitor
   }
 
   inline(ctx: InlineCstChildren) {
-    return this.go(ctx.instmt)
-  }
-
-  instmt(ctx: InstmtCstChildren) {
     if (ctx.stmt_stat) {
       return this.go(ctx.stmt_stat)
     }
@@ -512,8 +533,8 @@ class ScriptVisitor
     if (ctx.stmt_hyperlink) {
       return this.go(ctx.stmt_hyperlink)
     }
-    if (ctx.commands) {
-      return this.go(ctx.commands)
+    if (ctx.structured_cmd) {
+      return this.go(ctx.structured_cmd)
     }
     return []
   }
@@ -572,36 +593,17 @@ class ScriptVisitor
     )
   }
 
-  stmt_command(ctx: Stmt_commandCstChildren) {
-    if (ctx.commands) {
-      return this.go(ctx.commands)
-    }
-    return []
-  }
-
-  commands(ctx: CommandsCstChildren, location: CstNodeLocation) {
-    if (ctx.words) {
-      return this.createlinenode(
-        location,
-        this.createcodenode(location, {
-          type: NODE.COMMAND,
-          words: this.go(ctx.words),
-        }),
-      )
-    }
-    if (ctx.command_play) {
-      return this.go(ctx.command_play)
-    }
-    if (ctx.command_toast) {
-      return this.go(ctx.command_toast)
-    }
-    if (ctx.command_ticker) {
-      return this.go(ctx.command_ticker)
-    }
+  stmt_command(ctx: Stmt_commandCstChildren, location: CstNodeLocation) {
     if (ctx.structured_cmd) {
       return this.go(ctx.structured_cmd)
     }
-    return []
+    return this.createlinenode(
+      location,
+      this.createcodenode(location, {
+        type: NODE.COMMAND,
+        words: this.go(ctx.words),
+      }),
+    )
   }
 
   structured_cmd(ctx: Structured_cmdCstChildren) {
@@ -662,7 +664,7 @@ class ScriptVisitor
       location,
       tokenstring(ctx.token_if, 'if'),
       '',
-      this.go(ctx.expr),
+      this.go(ctx.words),
     )
     const [block] = this.go(ctx.command_if_block) ?? []
     return this.createcodenode(location, {
@@ -715,7 +717,7 @@ class ScriptVisitor
           location,
           tokenstring(ctx.token_if, 'if'),
           skip,
-          this.go(ctx.expr),
+          this.go(ctx.words),
         ),
         this.go(ctx.command_fork),
         this.creategotonode(location, done, `end of if`),
@@ -725,9 +727,24 @@ class ScriptVisitor
   }
 
   command_else(ctx: Command_elseCstChildren, location: CstNodeLocation) {
+    const lines: CodeNode[] = []
+    if (ctx.words) {
+      lines.push(
+        ...this.createlinenode(
+          location,
+          this.createcodenode(location, {
+            type: NODE.COMMAND,
+            words: this.go(ctx.words),
+          }),
+        ),
+      )
+    }
+    if (ctx.command_fork) {
+      lines.push(...this.go(ctx.command_fork))
+    }
     return this.createcodenode(location, {
       type: NODE.ELSE,
-      lines: this.go(ctx.command_fork),
+      lines,
     })
   }
 
@@ -740,7 +757,7 @@ class ScriptVisitor
       done,
       lines: [
         this.createmarknode(location, loop, `start of while`),
-        this.createlogicnode(location, 'if', done, this.go(ctx.expr)),
+        this.createlogicnode(location, 'if', done, this.go(ctx.words)),
         this.go(ctx.command_block),
         this.creategotonode(location, loop, `loop of while`),
         this.createmarknode(location, done, `end of while`),
@@ -752,7 +769,7 @@ class ScriptVisitor
     const loop = createsid()
     const done = createsid()
     const index = this.createcountnode(location)
-    const args = [index, this.go(ctx.expr)].flat()
+    const args = [index, this.go(ctx.words)].flat()
     return this.createcodenode(location, {
       type: NODE.REPEAT,
       loop,
@@ -772,7 +789,7 @@ class ScriptVisitor
     const loop = createsid()
     const done = createsid()
     const index = this.createcountnode(location)
-    const args = [index, this.go(ctx.expr)].flat()
+    const args = [index, this.go(ctx.words)].flat()
     return this.createcodenode(location, {
       type: NODE.FOREACH,
       loop,
@@ -795,7 +812,7 @@ class ScriptVisitor
       loop,
       lines: [
         this.createmarknode(location, loop, `start of waitfor`),
-        this.createlogicnode(location, 'waitfor', loop, this.go(ctx.expr)),
+        this.createlogicnode(location, 'waitfor', loop, this.go(ctx.words)),
       ].flat(),
     })
   }
@@ -818,46 +835,28 @@ class ScriptVisitor
     const playstr = tokenstring(ctx.token_command_play, '')
     const playcontent = playstr.replace('bgplay', '').replace('play', '').trim()
     const isbg = playstr.includes('bgplay')
-    return this.createlinenode(
-      location,
-      this.createcodenode(location, {
-        type: NODE.COMMAND,
-        words: [
-          this.createstringnode(location, isbg ? 'bgplay' : 'play'),
-          this.createstringnode(location, playcontent),
-        ].flat(),
-      }),
-    )
+    return [
+      this.createstringnode(location, isbg ? 'bgplay' : 'play'),
+      this.createstringnode(location, playcontent),
+    ].flat()
   }
 
   command_toast(ctx: Command_toastCstChildren, location: CstNodeLocation) {
     const toaststr = tokenstring(ctx.token_command_toast, '')
     const toastcontent = toaststr.replace('toast', '').trim()
-    return this.createlinenode(
-      location,
-      this.createcodenode(location, {
-        type: NODE.COMMAND,
-        words: [
-          this.createstringnode(location, 'toast'),
-          this.createtemplatenode(location, toastcontent),
-        ].flat(),
-      }),
-    )
+    return [
+      this.createstringnode(location, 'toast'),
+      this.createtemplatenode(location, toastcontent),
+    ].flat()
   }
 
   command_ticker(ctx: Command_tickerCstChildren, location: CstNodeLocation) {
     const tickerstr = tokenstring(ctx.token_command_ticker, '')
     const tickercontent = tickerstr.replace('ticker', '').trim()
-    return this.createlinenode(
-      location,
-      this.createcodenode(location, {
-        type: NODE.COMMAND,
-        words: [
-          this.createstringnode(location, 'ticker'),
-          this.createtemplatenode(location, tickercontent),
-        ].flat(),
-      }),
-    )
+    return [
+      this.createstringnode(location, 'ticker'),
+      this.createtemplatenode(location, tickercontent),
+    ].flat()
   }
 
   expr(ctx: ExprCstChildren, location: CstNodeLocation) {
@@ -1059,12 +1058,12 @@ class ScriptVisitor
   }
 
   power(ctx: PowerCstChildren, location: CstNodeLocation) {
-    const words = this.go(ctx.words)
+    const lhs = this.go(ctx.token)
 
     if (ctx.factor) {
       return this.createcodenode(location, {
         type: NODE.OPERATOR,
-        lhs: words[0],
+        lhs: lhs[0],
         items: this.createcodenode(location, {
           type: NODE.OPERATOR_ITEM,
           operator: OPERATOR.POWER,
@@ -1073,14 +1072,871 @@ class ScriptVisitor
       })
     }
 
-    return words
+    return lhs
   }
 
   words(ctx: WordsCstChildren) {
-    return this.go(ctx.token)
+    return this.go(ctx.expr)
+  }
+
+  kind(ctx: KindCstChildren) {
+    return [this.go(ctx.color), this.go(ctx.string_token)].flat()
+  }
+
+  category(ctx: CategoryCstChildren, location: CstNodeLocation) {
+    if (ctx.token_isterrain) {
+      const value = tokenstring(ctx.token_isterrain, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_isobject) {
+      const value = tokenstring(ctx.token_isobject, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    return []
+  }
+
+  collision(ctx: CollisionCstChildren, location: CstNodeLocation) {
+    if (ctx.token_iswalkable) {
+      const value = tokenstring(ctx.token_iswalkable, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_iswalking) {
+      const value = tokenstring(ctx.token_iswalking, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_iswalk) {
+      const value = tokenstring(ctx.token_iswalk, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_isswimmable) {
+      const value = tokenstring(ctx.token_isswimmable, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_isswimming) {
+      const value = tokenstring(ctx.token_isswimming, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_isswim) {
+      const value = tokenstring(ctx.token_isswim, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_issolid) {
+      const value = tokenstring(ctx.token_issolid, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    if (ctx.token_isbullet) {
+      const value = tokenstring(ctx.token_isbullet, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+    return []
+  }
+
+  color(ctx: ColorCstChildren, location: CstNodeLocation) {
+    let value = 'ERROR'
+    if (ctx.token_black) {
+      value = 'black'
+    }
+    if (ctx.token_dkblue) {
+      value = 'dkblue'
+    }
+    if (ctx.token_dkgreen) {
+      value = 'dkgreen'
+    }
+    if (ctx.token_dkcyan) {
+      value = 'dkcyan'
+    }
+    if (ctx.token_dkred) {
+      value = 'dkred'
+    }
+    if (ctx.token_dkpurple) {
+      value = 'dkpurple'
+    }
+    if (ctx.token_dkyellow) {
+      value = 'dkyellow'
+    }
+    if (ctx.token_ltgray) {
+      value = 'ltgray'
+    }
+    if (ctx.token_dkgray) {
+      value = 'dkgray'
+    }
+    if (ctx.token_blue) {
+      value = 'blue'
+    }
+    if (ctx.token_green) {
+      value = 'green'
+    }
+    if (ctx.token_cyan) {
+      value = 'cyan'
+    }
+    if (ctx.token_red) {
+      value = 'red'
+    }
+    if (ctx.token_purple) {
+      value = 'purple'
+    }
+    if (ctx.token_yellow) {
+      value = 'yellow'
+    }
+    if (ctx.token_white) {
+      value = 'white'
+    }
+    if (ctx.token_brown) {
+      value = 'brown'
+    }
+    if (ctx.token_dkwhite) {
+      value = 'dkwhite'
+    }
+    if (ctx.token_ltgrey) {
+      value = 'ltgrey'
+    }
+    if (ctx.token_gray) {
+      value = 'gray'
+    }
+    if (ctx.token_grey) {
+      value = 'grey'
+    }
+    if (ctx.token_dkgrey) {
+      value = 'dkgrey'
+    }
+    if (ctx.token_ltblack) {
+      value = 'ltblack'
+    }
+    if (ctx.token_onblack) {
+      value = 'onblack'
+    }
+    if (ctx.token_ondkblue) {
+      value = 'ondkblue'
+    }
+    if (ctx.token_ondkgreen) {
+      value = 'ondkgreen'
+    }
+    if (ctx.token_ondkcyan) {
+      value = 'ondkcyan'
+    }
+    if (ctx.token_ondkred) {
+      value = 'ondkred'
+    }
+    if (ctx.token_ondkpurple) {
+      value = 'ondkpurple'
+    }
+    if (ctx.token_ondkyellow) {
+      value = 'ondkyellow'
+    }
+    if (ctx.token_onltgray) {
+      value = 'onltgray'
+    }
+    if (ctx.token_ondkgray) {
+      value = 'ondkgray'
+    }
+    if (ctx.token_onblue) {
+      value = 'onblue'
+    }
+    if (ctx.token_ongreen) {
+      value = 'ongreen'
+    }
+    if (ctx.token_oncyan) {
+      value = 'oncyan'
+    }
+    if (ctx.token_onred) {
+      value = 'onred'
+    }
+    if (ctx.token_onpurple) {
+      value = 'onpurple'
+    }
+    if (ctx.token_onyellow) {
+      value = 'onyellow'
+    }
+    if (ctx.token_onwhite) {
+      value = 'onwhite'
+    }
+    if (ctx.token_onbrown) {
+      value = 'onbrown'
+    }
+    if (ctx.token_ondkwhite) {
+      value = 'ondkwhite'
+    }
+    if (ctx.token_onltgrey) {
+      value = 'onltgrey'
+    }
+    if (ctx.token_ongray) {
+      value = 'ongray'
+    }
+    if (ctx.token_ongrey) {
+      value = 'ongrey'
+    }
+    if (ctx.token_ondkgrey) {
+      value = 'ondkgrey'
+    }
+    if (ctx.token_onltblack) {
+      value = 'onltblack'
+    }
+    if (ctx.token_onclear) {
+      value = 'onclear'
+    }
+    return this.createcodenode(location, {
+      type: NODE.LITERAL,
+      literal: LITERAL.STRING,
+      value,
+    })
+  }
+
+  dir_mod(ctx: Dir_modCstChildren, location: CstNodeLocation) {
+    let value = 'ERROR'
+    if (ctx.token_cw) {
+      value = 'cw'
+    }
+    if (ctx.token_ccw) {
+      value = 'ccw'
+    }
+    if (ctx.token_opp) {
+      value = 'opp'
+    }
+    if (ctx.token_rndp) {
+      value = 'rndp'
+    }
+    if (ctx.token_over) {
+      value = 'over'
+    }
+    if (ctx.token_under) {
+      value = 'under'
+    }
+    return this.createcodenode(location, {
+      type: NODE.LITERAL,
+      literal: LITERAL.STRING,
+      value,
+    })
+  }
+
+  dir(ctx: DirCstChildren, location: CstNodeLocation) {
+    const values: CodeNode[] = this.go(ctx.dir_mod) ?? []
+    if (ctx.token_i) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_i, ''),
+        }),
+      )
+    }
+    if (ctx.token_idle) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_idle, ''),
+        }),
+      )
+    }
+    if (ctx.token_n) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_n, ''),
+        }),
+      )
+    }
+    if (ctx.token_u) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_u, ''),
+        }),
+      )
+    }
+    if (ctx.token_north) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_north, ''),
+        }),
+      )
+    }
+    if (ctx.token_up) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_up, ''),
+        }),
+      )
+    }
+    if (ctx.token_s) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_s, ''),
+        }),
+      )
+    }
+    if (ctx.token_d) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_d, ''),
+        }),
+      )
+    }
+    if (ctx.token_south) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_south, ''),
+        }),
+      )
+    }
+    if (ctx.token_down) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_down, ''),
+        }),
+      )
+    }
+    if (ctx.token_w) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_w, ''),
+        }),
+      )
+    }
+    if (ctx.token_l) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_l, ''),
+        }),
+      )
+    }
+    if (ctx.token_west) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_west, ''),
+        }),
+      )
+    }
+    if (ctx.token_e) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_e, ''),
+        }),
+      )
+    }
+    if (ctx.token_r) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_r, ''),
+        }),
+      )
+    }
+    if (ctx.token_east) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_east, ''),
+        }),
+      )
+    }
+    if (ctx.token_right) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_right, ''),
+        }),
+      )
+    }
+
+    if (ctx.token_by) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_by, ''),
+        }),
+        ...this.go(ctx.simple_token),
+      )
+    }
+    if (ctx.token_at) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_at, ''),
+        }),
+        ...this.go(ctx.simple_token),
+      )
+    }
+    if (ctx.token_away) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_away, ''),
+        }),
+        ...this.go(ctx.simple_token),
+      )
+    }
+    if (ctx.token_toward) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_toward, ''),
+        }),
+        ...this.go(ctx.simple_token),
+      )
+    }
+
+    if (ctx.token_find) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_find, ''),
+        }),
+        ...this.go(ctx.kind),
+      )
+    }
+
+    if (ctx.token_flee) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_flee, ''),
+        }),
+        ...this.go(ctx.kind),
+      )
+    }
+
+    if (ctx.token_to) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: tokenstring(ctx.token_to, ''),
+        }),
+        ...this.go(ctx.dir),
+      )
+    }
+
+    return values.flat()
+  }
+
+  token_expr_any(ctx: Token_expr_anyCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'any',
+      }),
+      ...this.go(ctx.kind),
+    ]
+  }
+
+  token_expr_count(
+    ctx: Token_expr_countCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'count',
+      }),
+      ...this.go(ctx.kind),
+    ]
+  }
+
+  token_expr_color(
+    ctx: Token_expr_colorCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'color',
+      }),
+      ...this.go(ctx.dir),
+      ...this.go(ctx.color),
+    ]
+  }
+
+  token_expr_detect(
+    ctx: Token_expr_detectCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'detect',
+      }),
+      ...this.go(ctx.dir),
+      ...this.go(ctx.kind),
+    ]
+  }
+
+  token_expr_abs(ctx: Token_expr_absCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'abs',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_intceil(
+    ctx: Token_expr_intceilCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'intceil',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_intfloor(
+    ctx: Token_expr_intfloorCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'intfloor',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_intround(
+    ctx: Token_expr_introundCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'intround',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_clamp(
+    ctx: Token_expr_clampCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'clamp',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_min(ctx: Token_expr_minCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'min',
+      }),
+      ...this.go(ctx.simple_tokens),
+    ]
+  }
+
+  token_expr_max(ctx: Token_expr_maxCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'max',
+      }),
+      ...this.go(ctx.simple_tokens),
+    ]
+  }
+
+  token_expr_pick(ctx: Token_expr_pickCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'pick',
+      }),
+      ...this.go(ctx.simple_tokens),
+    ]
+  }
+
+  token_expr_pickwith(
+    ctx: Token_expr_pickwithCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'pickwith',
+      }),
+      ...this.go(ctx.simple_tokens),
+    ]
+  }
+
+  token_expr_random(
+    ctx: Token_expr_randomCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'random',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_randomwith(
+    ctx: Token_expr_randomwithCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'randomwith',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  token_expr_run(ctx: Token_expr_runCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'run',
+      }),
+      ...this.go(ctx.string_token),
+    ]
+  }
+
+  token_expr_runwith(
+    ctx: Token_expr_runwithCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'runwith',
+      }),
+      ...this.go(ctx.simple_token),
+      ...this.go(ctx.string_token),
+    ]
+  }
+
+  token_expr(ctx: Token_exprCstChildren, location: CstNodeLocation) {
+    const values: CodeNode[] = []
+
+    if (ctx.token_expr_aligned) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: 'aligned',
+        }),
+      )
+    }
+    if (ctx.token_contact) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: 'contact',
+        }),
+      )
+    }
+    if (ctx.token_blocked) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: 'blocked',
+        }),
+      )
+    }
+    if (ctx.token_expr_any) {
+      return this.go(ctx.token_expr_any)
+    }
+    if (ctx.token_expr_count) {
+      return this.go(ctx.token_expr_count)
+    }
+    if (ctx.token_expr_color) {
+      return this.go(ctx.token_expr_color)
+    }
+    if (ctx.token_expr_detect) {
+      return this.go(ctx.token_expr_detect)
+    }
+    if (ctx.token_expr_abs) {
+      return this.go(ctx.token_expr_abs)
+    }
+    if (ctx.token_expr_intceil) {
+      return this.go(ctx.token_expr_intceil)
+    }
+    if (ctx.token_expr_intfloor) {
+      return this.go(ctx.token_expr_intfloor)
+    }
+    if (ctx.token_expr_intround) {
+      return this.go(ctx.token_expr_intround)
+    }
+    if (ctx.token_expr_clamp) {
+      return this.go(ctx.token_expr_clamp)
+    }
+    if (ctx.token_expr_min) {
+      return this.go(ctx.token_expr_min)
+    }
+    if (ctx.token_expr_max) {
+      return this.go(ctx.token_expr_max)
+    }
+    if (ctx.token_expr_pick) {
+      return this.go(ctx.token_expr_pick)
+    }
+    if (ctx.token_expr_pickwith) {
+      return this.go(ctx.token_expr_pickwith)
+    }
+    if (ctx.token_expr_random) {
+      return this.go(ctx.token_expr_random)
+    }
+    if (ctx.token_expr_randomwith) {
+      return this.go(ctx.token_expr_randomwith)
+    }
+    if (ctx.token_expr_run) {
+      return this.go(ctx.token_expr_run)
+    }
+    if (ctx.token_expr_runwith) {
+      return this.go(ctx.token_expr_runwith)
+    }
+    return values
+  }
+
+  string_token(ctx: String_tokenCstChildren) {
+    return [
+      this.go(ctx.token_stringliteral),
+      this.go(ctx.token_stringliteraldouble),
+    ].flat()
+  }
+
+  simple_token(ctx: Simple_tokenCstChildren) {
+    return [
+      this.go(ctx.token_numberliteral),
+      this.go(ctx.token_stringliteral),
+      this.go(ctx.token_stringliteraldouble),
+    ].flat()
+  }
+
+  simple_tokens(ctx: Simple_tokensCstChildren) {
+    return [
+      this.go(ctx.token_numberliteral),
+      this.go(ctx.token_stringliteral),
+      this.go(ctx.token_stringliteraldouble),
+    ].flat()
   }
 
   token(ctx: TokenCstChildren, location: CstNodeLocation) {
+    if (ctx.category) {
+      return this.go(ctx.category)
+    }
+    if (ctx.collision) {
+      return this.go(ctx.collision)
+    }
+    if (ctx.color) {
+      return this.go(ctx.color)
+    }
+    if (ctx.dir) {
+      return this.go(ctx.dir)
+    }
+    if (ctx.token_expr) {
+      return this.go(ctx.token_expr)
+    }
+    if (ctx.command_play) {
+      return this.go(ctx.command_play)
+    }
+    if (ctx.command_toast) {
+      return this.go(ctx.command_toast)
+    }
+    if (ctx.command_ticker) {
+      return this.go(ctx.command_ticker)
+    }
+
     if (ctx.token_label) {
       const value = tokenstring(ctx.token_label, '')
       return this.createcodenode(location, {
@@ -1123,6 +1979,16 @@ class ScriptVisitor
         words: this.go(ctx.expr),
       })
     }
+
+    if (ctx.token_stop) {
+      const value = tokenstring(ctx.token_stop, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+
     return []
   }
 }

@@ -6,7 +6,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
-import { pick, pickwith } from 'zss/mapping/array'
+import { pick } from 'zss/mapping/array'
 import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -248,6 +248,10 @@ export function memorypickcodepagewithtype<T extends CODE_PAGE_TYPE>(
 export function memoryelementkindread(
   element: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<BOARD_ELEMENT> {
+  if (ispresent(element?.kinddata)) {
+    return element.kinddata
+  }
+
   if (!isstring(element?.kind) || !element.kind) {
     return undefined
   }
