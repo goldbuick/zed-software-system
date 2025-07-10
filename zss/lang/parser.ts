@@ -580,26 +580,30 @@ class ScriptParser extends CstParser {
     ])
   })
 
+  expr_any = this.RULED('expr_any', () => {
+    this.OR1([
+      { ALT: () => this.SUBRULE1(this.kind) },
+      { ALT: () => this.SUBRULE1(this.color) },
+      {
+        ALT: () => {
+          this.SUBRULE(this.dir)
+          this.OR2([
+            { ALT: () => this.SUBRULE2(this.kind) },
+            { ALT: () => this.SUBRULE2(this.color) },
+          ])
+        },
+      },
+    ])
+  })
+
   token_expr_any = this.RULED('token_expr_any', () => {
     this.CONSUME(lexer.expr_any)
-    this.SUBRULE(this.kind)
+    this.SUBRULE(this.expr_any)
   })
 
   token_expr_count = this.RULED('token_expr_count', () => {
     this.CONSUME(lexer.expr_count)
-    this.SUBRULE(this.kind)
-  })
-
-  token_expr_color = this.RULED('token_expr_color', () => {
-    this.CONSUME(lexer.expr_color)
-    this.SUBRULE(this.dir)
-    this.SUBRULE(this.color)
-  })
-
-  token_expr_detect = this.RULED('token_expr_detect', () => {
-    this.CONSUME(lexer.expr_detect)
-    this.SUBRULE(this.dir)
-    this.SUBRULE(this.kind)
+    this.SUBRULE(this.expr_any)
   })
 
   token_expr_abs = this.RULED('token_expr_abs', () => {
@@ -682,8 +686,6 @@ class ScriptParser extends CstParser {
         { ALT: () => this.CONSUME(lexer.expr_blocked) },
         { ALT: () => this.SUBRULE(this.token_expr_any) },
         { ALT: () => this.SUBRULE(this.token_expr_count) },
-        { ALT: () => this.SUBRULE(this.token_expr_color) },
-        { ALT: () => this.SUBRULE(this.token_expr_detect) },
         { ALT: () => this.SUBRULE(this.token_expr_abs) },
         { ALT: () => this.SUBRULE(this.token_expr_intceil) },
         { ALT: () => this.SUBRULE(this.token_expr_intfloor) },

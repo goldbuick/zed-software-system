@@ -190,68 +190,74 @@ export function readexpr(index: number): [any, number] {
         return [isblocked ? 1 : 0, iii]
       }
       case 'any': {
-        // ANY <color> <item>
+        // ANY <kind>
+        // ANY <color>
+        // ANY <dir> <kind>
+        // ANY <dir> <color>
         // This flag is SET whenever the given kind is visible on the board
         const [target, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.KIND])
         const targetelements = listelementsbykind(READ_CONTEXT.board, target)
-        return [targetelements.length ? 1 : 0, iii]
+        return [targetelements, iii]
       }
       case 'count': {
-        // COUNT <color> <item>
+        // COUNT <kind>
+        // COUNT <color>
+        // COUNT <dir> <kind>
+        // COUNT <color> <kind>
         // This flag is SET whenever the given kind is visible on the board
         const [target, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.KIND])
         const targetelements = listelementsbykind(READ_CONTEXT.board, target)
         return [targetelements.length, iii]
       }
-      case 'color': {
-        // COLOR <dir> <color>
-        // True if the given direction is the specified colors.
-        const [dir, color, iii] = readargs(READ_CONTEXT.words, ii, [
-          ARG_TYPE.DIR,
-          ARG_TYPE.COLOR,
-        ])
-        const maybelement =
-          dir.layer === DIR.MID
-            ? boardelementread(READ_CONTEXT.board, dir.destpt)
-            : boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
-        if (ispresent(maybelement)) {
-          const display = bookelementdisplayread(maybelement, -1, -1, -1)
-          return [
-            (readstrcolor(color) as number) === display.color ||
-            (readstrbg(color) as number) === display.bg
-              ? 1
-              : 0,
-            iii,
-          ]
-        }
-        return [0, iii]
-      }
-      case 'detect': {
-        // DETECT <dir> <kind>
-        const [dir, kind, iii] = readargs(READ_CONTEXT.words, ii, [
-          ARG_TYPE.DIR,
-          ARG_TYPE.KIND,
-        ])
-        const maybelement =
-          dir.layer === DIR.MID
-            ? boardelementread(READ_CONTEXT.board, dir.destpt)
-            : boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
-        if (ispresent(maybelement)) {
-          const maybename = NAME(readstrkindname(kind))
-          const maybecolor = readstrkindcolor(kind)
-          const display = bookelementdisplayread(maybelement, -1, -1, -1)
-          if (maybename && maybename === NAME(boardelementname(maybelement))) {
-            return [1, iii]
-          }
-          if (
-            ispresent(maybecolor) &&
-            (maybecolor as number) === display.color
-          ) {
-            return [1, iii]
-          }
-        }
-        return [0, iii]
-      }
+      // case 'color': {
+      //   // COLOR <dir> <color>
+      //   // True if the given direction is the specified colors.
+      //   const [dir, color, iii] = readargs(READ_CONTEXT.words, ii, [
+      //     ARG_TYPE.DIR,
+      //     ARG_TYPE.COLOR,
+      //   ])
+      //   const maybelement =
+      //     dir.layer === DIR.MID
+      //       ? boardelementread(READ_CONTEXT.board, dir.destpt)
+      //       : boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
+      //   if (ispresent(maybelement)) {
+      //     const display = bookelementdisplayread(maybelement, -1, -1, -1)
+      //     return [
+      //       (readstrcolor(color) as number) === display.color ||
+      //       (readstrbg(color) as number) === display.bg
+      //         ? 1
+      //         : 0,
+      //       iii,
+      //     ]
+      //   }
+      //   return [0, iii]
+      // }
+      // case 'detect': {
+      //   // DETECT <dir> <kind>
+      //   const [dir, kind, iii] = readargs(READ_CONTEXT.words, ii, [
+      //     ARG_TYPE.DIR,
+      //     ARG_TYPE.KIND,
+      //   ])
+      //   const maybelement =
+      //     dir.layer === DIR.MID
+      //       ? boardelementread(READ_CONTEXT.board, dir.destpt)
+      //       : boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
+      //   if (ispresent(maybelement)) {
+      //     const maybename = NAME(readstrkindname(kind))
+      //     const maybecolor = readstrkindcolor(kind)
+      //     const display = bookelementdisplayread(maybelement, -1, -1, -1)
+      //     if (maybename && maybename === NAME(boardelementname(maybelement))) {
+      //       return [1, iii]
+      //     }
+      //     if (
+      //       ispresent(maybecolor) &&
+      //       (maybecolor as number) === display.color
+      //     ) {
+      //       return [1, iii]
+      //     }
+      //   }
+      //   return [0, iii]
+      // }
       // zss
       // numbers
       case 'rnd': {

@@ -31,6 +31,7 @@ import {
   ComparisonCstChildren,
   Dir_modCstChildren,
   DirCstChildren,
+  Expr_anyCstChildren,
   Expr_valueCstChildren,
   ExprCstChildren,
   FactorCstChildren,
@@ -60,9 +61,7 @@ import {
   Token_expr_absCstChildren,
   Token_expr_anyCstChildren,
   Token_expr_clampCstChildren,
-  Token_expr_colorCstChildren,
   Token_expr_countCstChildren,
-  Token_expr_detectCstChildren,
   Token_expr_intceilCstChildren,
   Token_expr_intfloorCstChildren,
   Token_expr_introundCstChildren,
@@ -1581,15 +1580,19 @@ class ScriptVisitor
     return values.flat()
   }
 
+  expr_any(ctx: Expr_anyCstChildren) {
+    return [this.go(ctx.dir), this.go(ctx.kind), this.go(ctx.color)].flat()
+  }
+
   token_expr_any(ctx: Token_expr_anyCstChildren, location: CstNodeLocation) {
     return [
-      ...this.createcodenode(location, {
+      this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
         value: 'any',
       }),
-      ...this.go(ctx.kind),
-    ]
+      this.go(ctx.expr_any),
+    ].flat()
   }
 
   token_expr_count(
@@ -1597,43 +1600,13 @@ class ScriptVisitor
     location: CstNodeLocation,
   ) {
     return [
-      ...this.createcodenode(location, {
+      this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
         value: 'count',
       }),
-      ...this.go(ctx.kind),
-    ]
-  }
-
-  token_expr_color(
-    ctx: Token_expr_colorCstChildren,
-    location: CstNodeLocation,
-  ) {
-    return [
-      ...this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value: 'color',
-      }),
-      ...this.go(ctx.dir),
-      ...this.go(ctx.color),
-    ]
-  }
-
-  token_expr_detect(
-    ctx: Token_expr_detectCstChildren,
-    location: CstNodeLocation,
-  ) {
-    return [
-      ...this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value: 'detect',
-      }),
-      ...this.go(ctx.dir),
-      ...this.go(ctx.kind),
-    ]
+      this.go(ctx.expr_any),
+    ].flat()
   }
 
   token_expr_abs(ctx: Token_expr_absCstChildren, location: CstNodeLocation) {
@@ -1840,12 +1813,6 @@ class ScriptVisitor
     if (ctx.token_expr_count) {
       return this.go(ctx.token_expr_count)
     }
-    if (ctx.token_expr_color) {
-      return this.go(ctx.token_expr_color)
-    }
-    if (ctx.token_expr_detect) {
-      return this.go(ctx.token_expr_detect)
-    }
     if (ctx.token_expr_abs) {
       return this.go(ctx.token_expr_abs)
     }
@@ -1888,27 +1855,86 @@ class ScriptVisitor
     return values
   }
 
-  string_token(ctx: String_tokenCstChildren) {
-    return [
-      this.go(ctx.token_stringliteral),
-      this.go(ctx.token_stringliteraldouble),
-    ].flat()
+  string_token(ctx: String_tokenCstChildren, location: CstNodeLocation) {
+    if (ctx.token_stringliteraldouble) {
+      const value = tokenstring(ctx.token_stringliteraldouble, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.TEMPLATE,
+        value,
+      })
+    }
+
+    if (ctx.token_stringliteral) {
+      const value = tokenstring(ctx.token_stringliteral, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+
+    return []
   }
 
-  simple_token(ctx: Simple_tokenCstChildren) {
-    return [
-      this.go(ctx.token_numberliteral),
-      this.go(ctx.token_stringliteral),
-      this.go(ctx.token_stringliteraldouble),
-    ].flat()
+  simple_token(ctx: Simple_tokenCstChildren, location: CstNodeLocation) {
+    if (ctx.token_stringliteraldouble) {
+      const value = tokenstring(ctx.token_stringliteraldouble, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.TEMPLATE,
+        value,
+      })
+    }
+
+    if (ctx.token_stringliteral) {
+      const value = tokenstring(ctx.token_stringliteral, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+
+    if (ctx.token_numberliteral) {
+      const value = parseFloat(tokenstring(ctx.token_numberliteral, '0'))
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.NUMBER,
+        value,
+      })
+    }
+    return []
   }
 
-  simple_tokens(ctx: Simple_tokensCstChildren) {
-    return [
-      this.go(ctx.token_numberliteral),
-      this.go(ctx.token_stringliteral),
-      this.go(ctx.token_stringliteraldouble),
-    ].flat()
+  simple_tokens(ctx: Simple_tokensCstChildren, location: CstNodeLocation) {
+    if (ctx.token_stringliteraldouble) {
+      const value = tokenstring(ctx.token_stringliteraldouble, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.TEMPLATE,
+        value,
+      })
+    }
+
+    if (ctx.token_stringliteral) {
+      const value = tokenstring(ctx.token_stringliteral, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+
+    if (ctx.token_numberliteral) {
+      const value = parseFloat(tokenstring(ctx.token_numberliteral, '0'))
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.NUMBER,
+        value,
+      })
+    }
+    return []
   }
 
   token(ctx: TokenCstChildren, location: CstNodeLocation) {
