@@ -146,7 +146,7 @@ export function listelementsbykind(
     .filter(ispresent)
 }
 
-export function listelementsbyattr(
+export function listelementsbyidnameorpts(
   board: MAYBE<BOARD>,
   idnameorpts: any[],
 ): BOARD_ELEMENT[] {

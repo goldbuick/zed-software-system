@@ -18,7 +18,7 @@ import {
   readstrcolor,
 } from './color'
 import { isstrdir, mapstrdir, readdir } from './dir'
-import { readstrkindcolor, readstrkindname } from './kind'
+import { isstrkind, readstrkindcolor, readstrkindname } from './kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
 import { DIR, NAME } from './types'
 
@@ -204,10 +204,52 @@ export function readexpr(index: number): [any, number] {
         // COUNT <color>
         // COUNT <dir> <kind>
         // COUNT <color> <kind>
-        // This flag is SET whenever the given kind is visible on the board
-        const [target, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.KIND])
-        const targetelements = listelementsbykind(READ_CONTEXT.board, target)
-        return [targetelements.length, iii]
+        const [value] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.ANY])
+        if (isstrdir(value)) {
+          const [dir, match, iii] = readargs(READ_CONTEXT.words, ii, [
+            ARG_TYPE.DIR,
+            ARG_TYPE.COLOR_OR_KIND,
+          ])
+          const maybelement =
+            dir.layer === DIR.MID
+              ? boardelementread(READ_CONTEXT.board, dir.destpt)
+              : boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
+          if (ispresent(maybelement)) {
+            const display = bookelementdisplayread(maybelement, -1, -1, -1)
+            // color only match
+            if (isstrcolor(match)) {
+              return [
+                (readstrcolor(match) as number) === display.color ||
+                (readstrbg(match) as number) === display.bg
+                  ? 1
+                  : 0,
+                iii,
+              ]
+            }
+            // kind match
+            const maybename = NAME(readstrkindname(match))
+            const maybecolor = readstrkindcolor(match)
+            const didnotmatch =
+              (maybename &&
+                maybename !== NAME(boardelementname(maybelement))) ||
+              (ispresent(maybecolor) &&
+                (maybecolor as number) !== display.color)
+            if (didnotmatch === false) {
+              return [1, iii]
+            }
+          }
+          return [0, iii]
+        }
+
+        // without dir
+        const [match, iii] = readargs(READ_CONTEXT.words, ii, [
+          ARG_TYPE.COLOR_OR_KIND,
+        ])
+        if (isstrcolor(match)) {
+          return [0, iii]
+        }
+        const matchedelements = listelementsbykind(READ_CONTEXT.board, match)
+        return [matchedelements.length, iii]
       }
       // case 'color': {
       //   // COLOR <dir> <color>

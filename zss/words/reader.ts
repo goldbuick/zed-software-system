@@ -35,6 +35,7 @@ export enum ARG_TYPE {
   NUMBER,
   STRING,
   NUMBER_OR_STRING,
+  COLOR_OR_KIND,
   MAYBE_KIND,
   MAYBE_NAME,
   MAYBE_NUMBER,
@@ -51,6 +52,7 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.NUMBER]: number
   [ARG_TYPE.STRING]: string
   [ARG_TYPE.NUMBER_OR_STRING]: number | string
+  [ARG_TYPE.COLOR_OR_KIND]: STR_COLOR | STR_KIND
   [ARG_TYPE.MAYBE_KIND]: MAYBE<STR_KIND>
   [ARG_TYPE.MAYBE_NAME]: MAYBE<string>
   [ARG_TYPE.MAYBE_NUMBER]: MAYBE<number>
@@ -204,6 +206,31 @@ export function readargs<T extends ARG_TYPES>(
         }
         ii = iii
         values.push(maybevalue)
+        break
+      }
+      case ARG_TYPE.COLOR_OR_KIND: {
+        const [kind, iii] = readkind(ii)
+        if (isstrkind(kind)) {
+          ii = iii
+          values.push(kind)
+        } else if (mapstrcolor(words[ii]) === undefined) {
+          // no color const, assume expr
+          const [value, iii] = readexpr(ii)
+          if (isstrcolor(value)) {
+            ii = iii
+            values.push(value)
+          } else {
+            didexpect('color', value, words)
+          }
+        } else {
+          const [value, iii] = readcolor(ii)
+          if (isstrcolor(value)) {
+            ii = iii
+            values.push(value)
+          } else {
+            didexpect('color or kind', value, words)
+          }
+        }
         break
       }
       case ARG_TYPE.MAYBE_KIND: {

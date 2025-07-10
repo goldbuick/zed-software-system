@@ -16,7 +16,7 @@ import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
-import { listelementsbyattr } from './atomics'
+import { listelementsbyidnameorpts } from './atomics'
 import {
   boarddeleteobject,
   boardelementread,
@@ -997,7 +997,7 @@ export function memorysendtoboards(
       }
       default: {
         // check named elements first
-        sendtoelements(listelementsbyattr(board, [target]))
+        sendtoelements(listelementsbyidnameorpts(board, [target]))
         break
       }
     }
