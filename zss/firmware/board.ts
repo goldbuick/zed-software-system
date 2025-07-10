@@ -212,9 +212,9 @@ export const BOARD_FIRMWARE = createfirmware()
       }
 
       const kindname = boardelementname(READ_CONTEXT.element)
-      const { color } = bookelementdisplayread(READ_CONTEXT.element, -1, -1, -1)
+      const { color } = bookelementdisplayread(READ_CONTEXT.element)
       const gotoelements: BOARD_ELEMENT[] = []
-      if (color > -1) {
+      if (color > COLOR.NON) {
         // look up matching elements on target board
         gotoelements.push(
           ...listelementsbykind(targetboard, [
@@ -224,7 +224,20 @@ export const BOARD_FIRMWARE = createfirmware()
         )
       }
 
-      const gotoelement = pick(gotoelements)
+      // pick the first
+      const [gotoelement] = gotoelements.sort((a, b) => {
+        const ay = a.y ?? 10000
+        const by = b.y ?? 10000
+        const ydelta = by - ay
+        if (ydelta !== 0) {
+          return ydelta
+        }
+        const ax = a.x ?? 10000
+        const bx = b.x ?? 10000
+        return bx - ax
+      })
+
+      // got a match
       if (
         ispresent(gotoelement) &&
         isnumber(gotoelement.x) &&
@@ -234,6 +247,7 @@ export const BOARD_FIRMWARE = createfirmware()
         destpt.y = gotoelement.y
       }
 
+      // yolo
       bookplayermovetoboard(
         READ_CONTEXT.book,
         READ_CONTEXT.elementfocus,
@@ -297,7 +311,6 @@ export const BOARD_FIRMWARE = createfirmware()
     }
     return 0
   })
-  .command('dupe', commanddupe)
   .command('duplicate', commanddupe)
   .command('write', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {

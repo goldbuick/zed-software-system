@@ -1,7 +1,7 @@
 import { createsid, createnameid, createshortnameid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
-import { NAME, WORD } from 'zss/words/types'
+import { COLOR, NAME, WORD } from 'zss/words/types'
 
 import {
   codepagereaddata,
@@ -263,12 +263,13 @@ export function bookclearcodepage(book: MAYBE<BOOK>, address: string) {
 
 export function bookelementdisplayread(
   element: MAYBE<BOARD_ELEMENT>,
-  defaultchar: number,
-  defaultcolor: number,
-  defaultbg: number,
-) {
+  defaultchar = 1,
+  defaultcolor = COLOR.WHITE,
+  defaultbg = COLOR.BLACK,
+): { name: string; char: number; color: COLOR; bg: COLOR; light: number } {
   const kind = element?.kinddata
   return {
+    name: NAME(element?.name ?? kind?.name),
     char:
       element?.displaychar ??
       kind?.displaychar ??

@@ -226,12 +226,7 @@ export const CLI_FIRMWARE = createfirmware()
       READ_CONTEXT.element.tickertext = `${withuser}: ${text}`
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
       // log text
-      const icon = bookelementdisplayread(
-        READ_CONTEXT.element,
-        1,
-        COLOR.WHITE,
-        COLOR.BLACK,
-      )
+      const icon = bookelementdisplayread(READ_CONTEXT.element)
       api_log(
         SOFTWARE,
         READ_CONTEXT.elementid,
@@ -256,12 +251,7 @@ export const CLI_FIRMWARE = createfirmware()
     if (ispresent(send.targetname)) {
       const { user } = memoryreadflags(READ_CONTEXT.elementid)
       const withuser = isstring(user) ? user : 'player'
-      const icon = bookelementdisplayread(
-        READ_CONTEXT.element,
-        1,
-        COLOR.WHITE,
-        COLOR.BLACK,
-      )
+      const icon = bookelementdisplayread(READ_CONTEXT.element)
       const line = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE ${linktext}`
       api_log(
         SOFTWARE,

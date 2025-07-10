@@ -12,7 +12,8 @@ import {
 } from 'zss/words/kind'
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
-import { boardelementread } from './board'
+import { boardelementread, boardgetterrain, boardobjectread } from './board'
+import { bookelementdisplayread } from './book'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -113,6 +114,25 @@ export function listptsbyempty(board: MAYBE<BOARD>): PT[] {
   return pts
 }
 
+function filterelement(
+  element: MAYBE<BOARD_ELEMENT>,
+  name: MAYBE<string>,
+  color: MAYBE<COLOR>,
+  bg: MAYBE<COLOR>,
+) {
+  const display = bookelementdisplayread(element)
+  if (ispresent(name) && name !== display.name) {
+    return false
+  }
+  if (ispresent(color) && color !== display.color) {
+    return false
+  }
+  if (ispresent(bg) && bg !== display.bg) {
+    return false
+  }
+  return true
+}
+
 export function listelementsbykind(
   board: MAYBE<BOARD>,
   kind: STR_KIND,
@@ -121,29 +141,7 @@ export function listelementsbykind(
   const color = readstrkindcolor(kind)
   const bg = readstrkindbg(kind)
   return listnamedelements(board, name ?? '')
-    .filter((element) => {
-      if (ispresent(name)) {
-        const elementname = NAME(element?.name ?? element?.kinddata?.name ?? '')
-        if (elementname !== name) {
-          return false
-        }
-      }
-      if (ispresent(color)) {
-        const elementcolor: COLOR =
-          element?.color ?? element?.kinddata?.color ?? COLOR.WHITE
-        if (elementcolor !== color) {
-          return false
-        }
-      }
-      if (ispresent(bg)) {
-        const elementbg: COLOR =
-          element?.bg ?? element?.kinddata?.bg ?? COLOR.BLACK
-        if (elementbg !== bg) {
-          return false
-        }
-      }
-      return true
-    })
+    .filter((element) => filterelement(element, name, color, bg))
     .filter(ispresent)
 }
 
@@ -154,6 +152,24 @@ export function listelementsbycolor(
   const color = ispresent(strcolor) ? readstrcolor(strcolor) : undefined
   const bg = ispresent(strcolor) ? readstrbg(strcolor) : undefined
   const elements: BOARD_ELEMENT[] = []
+  if (ispresent(board)) {
+    for (let i = 0; i < board.terrain.length; ++i) {
+      const element = board.terrain[i]
+      if (
+        ispresent(element) &&
+        filterelement(board.terrain[i], undefined, color, bg)
+      ) {
+        elements.push(element)
+      }
+    }
+    const objects = Object.values(board.objects)
+    for (let i = 0; i < objects.length; ++i) {
+      const object = objects[i]
+      if (filterelement(object, undefined, color, bg)) {
+        elements.push(object)
+      }
+    }
+  }
   return elements
 }
 

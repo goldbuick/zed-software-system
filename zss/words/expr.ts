@@ -2,9 +2,12 @@ import { pick, pickwith } from 'zss/mapping/array'
 import { clamp, randominteger, randomintegerwith } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryrun } from 'zss/memory'
-import { findplayerforelement, listelementsbykind } from 'zss/memory/atomics'
+import {
+  findplayerforelement,
+  listelementsbycolor,
+  listelementsbykind,
+} from 'zss/memory/atomics'
 import { boardelementread, boardgetterrain } from 'zss/memory/board'
-import { boardelementname } from 'zss/memory/boardelement'
 import { boardcheckmoveobject } from 'zss/memory/boardops'
 import { bookelementdisplayread } from 'zss/memory/book'
 
@@ -18,7 +21,7 @@ import {
   readstrcolor,
 } from './color'
 import { isstrdir, mapstrdir, readdir } from './dir'
-import { isstrkind, readstrkindcolor, readstrkindname } from './kind'
+import { readstrkindcolor, readstrkindname } from './kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
 import { DIR, NAME } from './types'
 
@@ -210,30 +213,33 @@ export function readexpr(index: number): [any, number] {
             ARG_TYPE.DIR,
             ARG_TYPE.COLOR_OR_KIND,
           ])
+
+          // grab dest element from DIR
           const maybelement =
             dir.layer === DIR.MID
               ? boardelementread(READ_CONTEXT.board, dir.destpt)
               : boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
+
           if (ispresent(maybelement)) {
-            const display = bookelementdisplayread(maybelement, -1, -1, -1)
+            const display = bookelementdisplayread(maybelement)
+
             // color only match
             if (isstrcolor(match)) {
               return [
-                (readstrcolor(match) as number) === display.color ||
-                (readstrbg(match) as number) === display.bg
+                readstrcolor(match) === display.color ||
+                readstrbg(match) === display.bg
                   ? 1
                   : 0,
                 iii,
               ]
             }
+
             // kind match
             const maybename = NAME(readstrkindname(match))
             const maybecolor = readstrkindcolor(match)
             const didnotmatch =
-              (maybename &&
-                maybename !== NAME(boardelementname(maybelement))) ||
-              (ispresent(maybecolor) &&
-                (maybecolor as number) !== display.color)
+              (maybename.length && maybename !== display.name) ||
+              (ispresent(maybecolor) && maybecolor !== display.color)
             if (didnotmatch === false) {
               return [1, iii]
             }
@@ -245,61 +251,17 @@ export function readexpr(index: number): [any, number] {
         const [match, iii] = readargs(READ_CONTEXT.words, ii, [
           ARG_TYPE.COLOR_OR_KIND,
         ])
+
+        // color check
         if (isstrcolor(match)) {
-          return [0, iii]
+          const matchedelements = listelementsbycolor(READ_CONTEXT.board, match)
+          return [matchedelements.length, iii]
         }
+
+        // kind check
         const matchedelements = listelementsbykind(READ_CONTEXT.board, match)
         return [matchedelements.length, iii]
       }
-      // case 'color': {
-      //   // COLOR <dir> <color>
-      //   // True if the given direction is the specified colors.
-      //   const [dir, color, iii] = readargs(READ_CONTEXT.words, ii, [
-      //     ARG_TYPE.DIR,
-      //     ARG_TYPE.COLOR,
-      //   ])
-      //   const maybelement =
-      //     dir.layer === DIR.MID
-      //       ? boardelementread(READ_CONTEXT.board, dir.destpt)
-      //       : boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
-      //   if (ispresent(maybelement)) {
-      //     const display = bookelementdisplayread(maybelement, -1, -1, -1)
-      //     return [
-      //       (readstrcolor(color) as number) === display.color ||
-      //       (readstrbg(color) as number) === display.bg
-      //         ? 1
-      //         : 0,
-      //       iii,
-      //     ]
-      //   }
-      //   return [0, iii]
-      // }
-      // case 'detect': {
-      //   // DETECT <dir> <kind>
-      //   const [dir, kind, iii] = readargs(READ_CONTEXT.words, ii, [
-      //     ARG_TYPE.DIR,
-      //     ARG_TYPE.KIND,
-      //   ])
-      //   const maybelement =
-      //     dir.layer === DIR.MID
-      //       ? boardelementread(READ_CONTEXT.board, dir.destpt)
-      //       : boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
-      //   if (ispresent(maybelement)) {
-      //     const maybename = NAME(readstrkindname(kind))
-      //     const maybecolor = readstrkindcolor(kind)
-      //     const display = bookelementdisplayread(maybelement, -1, -1, -1)
-      //     if (maybename && maybename === NAME(boardelementname(maybelement))) {
-      //       return [1, iii]
-      //     }
-      //     if (
-      //       ispresent(maybecolor) &&
-      //       (maybecolor as number) === display.color
-      //     ) {
-      //       return [1, iii]
-      //     }
-      //   }
-      //   return [0, iii]
-      // }
       // zss
       // numbers
       case 'rnd': {
