@@ -33,7 +33,8 @@ export function readkind(index: number): [STR_KIND | undefined, number] {
   // found a string, color is optional
   if (isstring(maybename)) {
     // validate the name
-    const iskind = memoryelementkindread({ kind: maybename })
+    const iskind =
+      maybename === 'empty' || memoryelementkindread({ kind: maybename })
     if (iskind) {
       return [[maybename, maybecolor], iii]
     }
