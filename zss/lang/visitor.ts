@@ -501,11 +501,11 @@ class ScriptVisitor
     if (ctx.stmt_comment) {
       return this.go(ctx.stmt_comment)
     }
-    if (ctx.stmt_command) {
-      return this.go(ctx.stmt_command)
-    }
     if (ctx.stmt_hyperlink) {
       return this.go(ctx.stmt_hyperlink)
+    }
+    if (ctx.stmt_command) {
+      return this.go(ctx.stmt_command)
     }
     if (ctx.short_go) {
       return this.go(ctx.short_go)
@@ -526,11 +526,17 @@ class ScriptVisitor
     if (ctx.stmt_comment) {
       return this.go(ctx.stmt_comment)
     }
+    if (ctx.stmt_hyperlink) {
+      return this.go(ctx.stmt_hyperlink)
+    }
     if (ctx.stmt_command) {
       return this.go(ctx.stmt_command)
     }
-    if (ctx.stmt_hyperlink) {
-      return this.go(ctx.stmt_hyperlink)
+    if (ctx.short_go) {
+      return this.go(ctx.short_go)
+    }
+    if (ctx.short_try) {
+      return this.go(ctx.short_try)
     }
     if (ctx.structured_cmd) {
       return this.go(ctx.structured_cmd)
@@ -1499,6 +1505,33 @@ class ScriptVisitor
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
           value: tokenstring(ctx.token_right, ''),
+        }),
+      )
+    }
+    if (ctx.token_rnd) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: 'rnd',
+        }),
+      )
+    }
+    if (ctx.token_rndne) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: 'rndne',
+        }),
+      )
+    }
+    if (ctx.token_rndns) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: 'rndtoken_rndns',
         }),
       )
     }
