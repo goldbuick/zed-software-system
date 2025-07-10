@@ -147,9 +147,13 @@ export function parsezzt(player: string, content: Uint8Array) {
     element: ZZT_ELEMENT,
     stats: ZZT_STAT[],
   ) {
-    // zztboard.stats
-    const colorname = COLOR[element.color % 16] as STR_COLOR_CONST
-    const colorconst = [colorname] as STR_COLOR
+    const color = element.color % 16
+    const bg = Math.floor(element.color / 16) % 8
+
+    const strcolor: STR_COLOR = [
+      COLOR[color] as STR_COLOR_CONST,
+      `ON${COLOR[bg]}` as STR_COLOR_CONST,
+    ]
 
     const addstats: BOARD_ELEMENT = {}
     const elementstat = stats.find((stat) => stat.x === x && stat.y === y)
@@ -188,33 +192,33 @@ export function parsezzt(player: string, content: Uint8Array) {
         break
       case 5:
         // ammo
-        writefromkind(board, ['ammo', colorconst], { x, y }, addstats)
+        writefromkind(board, ['ammo', strcolor], { x, y }, addstats)
         break
       case 6:
         // torch
-        writefromkind(board, ['torch', colorconst], { x, y }, addstats)
+        writefromkind(board, ['torch', strcolor], { x, y }, addstats)
         break
       case 7:
         // gem
-        writefromkind(board, ['gem', colorconst], { x, y }, addstats)
+        writefromkind(board, ['gem', strcolor], { x, y }, addstats)
         break
       case 8:
         // key
-        writefromkind(board, ['key', colorconst], { x, y }, addstats)
+        writefromkind(board, ['key', strcolor], { x, y }, addstats)
         break
       case 9:
         // door
-        writefromkind(board, ['door', colorconst], { x, y }, addstats)
+        writefromkind(board, ['door', strcolor], { x, y }, addstats)
         break
       case 10:
         // scroll
-        writefromkind(board, ['scroll', colorconst], { x, y }, addstats)
+        writefromkind(board, ['scroll', strcolor], { x, y }, addstats)
         break
       case 11:
         // passage
         writefromkind(
           board,
-          ['passage', colorconst],
+          ['passage', strcolor],
           { x, y },
           {
             ...addstats,
@@ -224,105 +228,105 @@ export function parsezzt(player: string, content: Uint8Array) {
         break
       case 12:
         // duplicator
-        writefromkind(board, ['duplicator', colorconst], { x, y }, addstats)
+        writefromkind(board, ['duplicator', strcolor], { x, y }, addstats)
         break
       case 13:
         // bomb
-        writefromkind(board, ['bomb', colorconst], { x, y }, addstats)
+        writefromkind(board, ['bomb', strcolor], { x, y }, addstats)
         break
       case 14:
         // energize
-        writefromkind(board, ['energize', colorconst], { x, y }, addstats)
+        writefromkind(board, ['energize', strcolor], { x, y }, addstats)
         break
       case 15:
         // star
-        writefromkind(board, ['star', colorconst], { x, y }, addstats)
+        writefromkind(board, ['star', strcolor], { x, y }, addstats)
         break
       case 16:
         // clockwise
-        writefromkind(board, ['clockwise', colorconst], { x, y }, addstats)
+        writefromkind(board, ['clockwise', strcolor], { x, y }, addstats)
         break
       case 17:
         // counter
-        writefromkind(board, ['counter', colorconst], { x, y }, addstats)
+        writefromkind(board, ['counter', strcolor], { x, y }, addstats)
         break
       case 18:
         // bullet
-        writefromkind(board, ['bullet', colorconst], { x, y }, addstats)
+        writefromkind(board, ['bullet', strcolor], { x, y }, addstats)
         break
       case 19:
         // water
-        writefromkind(board, ['water', colorconst], { x, y }, addstats)
+        writefromkind(board, ['water', strcolor], { x, y }, addstats)
         break
       case 20:
         // forest
-        writefromkind(board, ['forest', colorconst], { x, y }, addstats)
+        writefromkind(board, ['forest', strcolor], { x, y }, addstats)
         break
       case 21:
         // solid
-        writefromkind(board, ['solid', colorconst], { x, y }, addstats)
+        writefromkind(board, ['solid', strcolor], { x, y }, addstats)
         break
       case 22:
         // normal
-        writefromkind(board, ['normal', colorconst], { x, y }, addstats)
+        writefromkind(board, ['normal', strcolor], { x, y }, addstats)
         break
       case 23:
         // breakable
-        writefromkind(board, ['breakable', colorconst], { x, y }, addstats)
+        writefromkind(board, ['breakable', strcolor], { x, y }, addstats)
         break
       case 24:
         // boulder
-        writefromkind(board, ['boulder', colorconst], { x, y }, addstats)
+        writefromkind(board, ['boulder', strcolor], { x, y }, addstats)
         break
       case 25:
         // sliderns
-        writefromkind(board, ['sliderns', colorconst], { x, y }, addstats)
+        writefromkind(board, ['sliderns', strcolor], { x, y }, addstats)
         break
       case 26:
         // sliderew
-        writefromkind(board, ['sliderew', colorconst], { x, y }, addstats)
+        writefromkind(board, ['sliderew', strcolor], { x, y }, addstats)
         break
       case 27:
         // fake
-        writefromkind(board, ['fake', colorconst], { x, y }, addstats)
+        writefromkind(board, ['fake', strcolor], { x, y }, addstats)
         break
       case 28:
         // invisible
-        writefromkind(board, ['invisible', colorconst], { x, y }, addstats)
+        writefromkind(board, ['invisible', strcolor], { x, y }, addstats)
         break
       case 29:
         // blinkwall
-        writefromkind(board, ['blinkwall', colorconst], { x, y }, addstats)
+        writefromkind(board, ['blinkwall', strcolor], { x, y }, addstats)
         break
       case 30:
         // transporter
-        writefromkind(board, ['transporter', colorconst], { x, y }, addstats)
+        writefromkind(board, ['transporter', strcolor], { x, y }, addstats)
         break
       case 31:
         // line
-        writefromkind(board, ['line', colorconst], { x, y }, addstats)
+        writefromkind(board, ['line', strcolor], { x, y }, addstats)
         break
       case 32:
         // ricochet
-        writefromkind(board, ['ricochet', colorconst], { x, y }, addstats)
+        writefromkind(board, ['ricochet', strcolor], { x, y }, addstats)
         break
       case 33:
         // blinkns
-        writefromkind(board, ['blinkns', colorconst], { x, y }, addstats)
+        writefromkind(board, ['blinkns', strcolor], { x, y }, addstats)
         break
       case 34:
         // bear
-        writefromkind(board, ['bear', colorconst], { x, y }, addstats)
+        writefromkind(board, ['bear', strcolor], { x, y }, addstats)
         break
       case 35:
         // ruffian
-        writefromkind(board, ['ruffian', colorconst], { x, y }, addstats)
+        writefromkind(board, ['ruffian', strcolor], { x, y }, addstats)
         break
       case 36:
         // object
         writefromkind(
           board,
-          ['object', colorconst],
+          ['object', strcolor],
           { x, y },
           {
             ...addstats,
@@ -332,39 +336,39 @@ export function parsezzt(player: string, content: Uint8Array) {
         break
       case 37:
         // slime
-        writefromkind(board, ['slime', colorconst], { x, y }, addstats)
+        writefromkind(board, ['slime', strcolor], { x, y }, addstats)
         break
       case 38:
         // shark
-        writefromkind(board, ['shark', colorconst], { x, y }, addstats)
+        writefromkind(board, ['shark', strcolor], { x, y }, addstats)
         break
       case 39:
         // spinninggun
-        writefromkind(board, ['spinninggun', colorconst], { x, y }, addstats)
+        writefromkind(board, ['spinninggun', strcolor], { x, y }, addstats)
         break
       case 40:
         // pusher
-        writefromkind(board, ['pusher', colorconst], { x, y }, addstats)
+        writefromkind(board, ['pusher', strcolor], { x, y }, addstats)
         break
       case 41:
         // lion
-        writefromkind(board, ['lion', colorconst], { x, y }, addstats)
+        writefromkind(board, ['lion', strcolor], { x, y }, addstats)
         break
       case 42:
         // tiger
-        writefromkind(board, ['tiger', colorconst], { x, y }, addstats)
+        writefromkind(board, ['tiger', strcolor], { x, y }, addstats)
         break
       case 43:
         // blinkns
-        writefromkind(board, ['blinkns', colorconst], { x, y }, addstats)
+        writefromkind(board, ['blinkns', strcolor], { x, y }, addstats)
         break
       case 44:
         // head
-        writefromkind(board, ['head', colorconst], { x, y }, addstats)
+        writefromkind(board, ['head', strcolor], { x, y }, addstats)
         break
       case 45:
         // segment
-        writefromkind(board, ['segment', colorconst], { x, y }, addstats)
+        writefromkind(board, ['segment', strcolor], { x, y }, addstats)
         break
       case 46:
         // empty ???
@@ -513,6 +517,9 @@ export function parsezzt(player: string, content: Uint8Array) {
       const color = readuint8()
       for (let r = 0; r < count; ++r) {
         board.elements.push({ element, color })
+        if (element === 9) {
+          console.info('door', { element, color })
+        }
       }
     }
 

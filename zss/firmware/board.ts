@@ -211,18 +211,11 @@ export const BOARD_FIRMWARE = createfirmware()
         y: READ_CONTEXT.element?.y ?? maybey ?? Math.round(BOARD_HEIGHT * 0.5),
       }
 
-      const kindname = boardelementname(READ_CONTEXT.element)
       const { color } = bookelementdisplayread(READ_CONTEXT.element)
-      const gotoelements: BOARD_ELEMENT[] = []
-      if (color > COLOR.NON) {
-        // look up matching elements on target board
-        gotoelements.push(
-          ...listelementsbykind(targetboard, [
-            kindname,
-            [COLOR[color] as STR_COLOR_CONST],
-          ]),
-        )
-      }
+      const gotoelements = listelementsbykind(targetboard, [
+        boardelementname(READ_CONTEXT.element),
+        [COLOR[color] as STR_COLOR_CONST],
+      ])
 
       // pick the first
       const [gotoelement] = gotoelements.sort((a, b) => {
