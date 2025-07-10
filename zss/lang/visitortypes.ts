@@ -131,7 +131,8 @@ export type Short_goCstNode = {
 
 export type Short_goCstChildren = {
   token_divide: IToken[]
-  words: WordsCstNode[]
+  string_token?: String_tokenCstNode[]
+  dir?: DirCstNode[]
 }
 
 export type Short_tryCstNode = {
@@ -141,7 +142,8 @@ export type Short_tryCstNode = {
 
 export type Short_tryCstChildren = {
   token_query: IToken[]
-  words: WordsCstNode[]
+  string_token?: String_tokenCstNode[]
+  dir?: DirCstNode[]
 }
 
 export type Command_ifCstNode = {
