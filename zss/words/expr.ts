@@ -197,16 +197,63 @@ export function readexpr(index: number): [any, number] {
         // ANY <color>
         // ANY <dir> <kind>
         // ANY <dir> <color>
-        // This flag is SET whenever the given kind is visible on the board
-        const [target, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.KIND])
-        const targetelements = listelementsbykind(READ_CONTEXT.board, target)
-        return [targetelements, iii]
+        const [value] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.ANY])
+        if (isstrdir(value)) {
+          const [dir, match, iii] = readargs(READ_CONTEXT.words, ii, [
+            ARG_TYPE.DIR,
+            ARG_TYPE.COLOR_OR_KIND,
+          ])
+
+          // grab dest element from DIR
+          const maybelement =
+            dir.layer === DIR.MID
+              ? boardelementread(READ_CONTEXT.board, dir.destpt)
+              : boardgetterrain(READ_CONTEXT.board, dir.destpt.x, dir.destpt.y)
+
+          if (ispresent(maybelement)) {
+            const display = bookelementdisplayread(maybelement)
+
+            // color only match
+            if (isstrcolor(match)) {
+              const didmatch =
+                readstrcolor(match) === display.color ||
+                readstrbg(match) === display.bg
+              return [didmatch ? [maybelement] : [], iii]
+            }
+
+            // kind match
+            const maybename = NAME(readstrkindname(match))
+            const maybecolor = readstrkindcolor(match)
+            const didnotmatch =
+              (maybename.length && maybename !== display.name) ||
+              (ispresent(maybecolor) && maybecolor !== display.color)
+            if (didnotmatch === false) {
+              return [[maybelement], iii]
+            }
+          }
+          return [[], iii]
+        }
+
+        // without dir
+        const [match, iii] = readargs(READ_CONTEXT.words, ii, [
+          ARG_TYPE.COLOR_OR_KIND,
+        ])
+
+        // color check
+        if (isstrcolor(match)) {
+          const matchedelements = listelementsbycolor(READ_CONTEXT.board, match)
+          return [matchedelements, iii]
+        }
+
+        // kind check
+        const matchedelements = listelementsbykind(READ_CONTEXT.board, match)
+        return [matchedelements, iii]
       }
       case 'count': {
         // COUNT <kind>
         // COUNT <color>
         // COUNT <dir> <kind>
-        // COUNT <color> <kind>
+        // COUNT <dir> <color>
         const [value] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.ANY])
         if (isstrdir(value)) {
           const [dir, match, iii] = readargs(READ_CONTEXT.words, ii, [
@@ -237,10 +284,13 @@ export function readexpr(index: number): [any, number] {
             // kind match
             const maybename = NAME(readstrkindname(match))
             const maybecolor = readstrkindcolor(match)
-            const didnotmatch =
-              (maybename.length && maybename !== display.name) ||
-              (ispresent(maybecolor) && maybecolor !== display.color)
-            if (didnotmatch === false) {
+            const namedoesmatch = maybename.length
+              ? maybename === display.name
+              : true
+            const colordoesmatch = ispresent(maybecolor)
+              ? maybecolor === display.color
+              : true
+            if (namedoesmatch && colordoesmatch) {
               return [1, iii]
             }
           }
