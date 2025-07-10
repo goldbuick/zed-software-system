@@ -163,8 +163,7 @@ export type Command_ifCstNode = {
 
 export type Command_ifCstChildren = {
   token_if: IToken[]
-  expr: ExprCstNode[]
-  words?: WordsCstNode[]
+  words: WordsCstNode[]
   command_if_block?: Command_if_blockCstNode[]
 }
 
@@ -217,8 +216,7 @@ export type Command_else_ifCstChildren = {
   token_command: IToken[]
   token_else: IToken[]
   token_if: IToken[]
-  expr: ExprCstNode[]
-  words?: WordsCstNode[]
+  words: WordsCstNode[]
   command_fork?: Command_forkCstNode[]
 }
 
@@ -241,9 +239,8 @@ export type Command_whileCstNode = {
 
 export type Command_whileCstChildren = {
   token_while: IToken[]
-  expr: ExprCstNode[]
-  words?: WordsCstNode[]
-  command_block: Command_blockCstNode[]
+  words: WordsCstNode[]
+  command_block?: Command_blockCstNode[]
 }
 
 export type Command_repeatCstNode = {
@@ -253,8 +250,7 @@ export type Command_repeatCstNode = {
 
 export type Command_repeatCstChildren = {
   token_repeat: IToken[]
-  expr: ExprCstNode[]
-  words?: WordsCstNode[]
+  words: WordsCstNode[]
   command_block?: Command_blockCstNode[]
 }
 
@@ -265,8 +261,7 @@ export type Command_waitforCstNode = {
 
 export type Command_waitforCstChildren = {
   token_waitfor: IToken[]
-  expr: ExprCstNode[]
-  words?: WordsCstNode[]
+  words: WordsCstNode[]
   command_block?: Command_blockCstNode[]
 }
 
@@ -277,8 +272,7 @@ export type Command_foreachCstNode = {
 
 export type Command_foreachCstChildren = {
   token_foreach: IToken[]
-  expr: ExprCstNode[]
-  words?: WordsCstNode[]
+  words: WordsCstNode[]
   command_block?: Command_blockCstNode[]
 }
 
@@ -486,7 +480,7 @@ export type WordsCstNode = {
 } & CstNode
 
 export type WordsCstChildren = {
-  token: TokenCstNode[]
+  expr: ExprCstNode[]
 }
 
 export type KindCstNode = {

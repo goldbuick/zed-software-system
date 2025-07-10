@@ -681,7 +681,7 @@ class ScriptVisitor
       location,
       tokenstring(ctx.token_if, 'if'),
       '',
-      [this.go(ctx.expr), this.go(ctx.words)].flat(),
+      this.go(ctx.words),
     )
     const [block] = this.go(ctx.command_if_block) ?? []
     return this.createcodenode(location, {
@@ -720,7 +720,6 @@ class ScriptVisitor
   }
 
   command_fork(ctx: Command_forkCstChildren) {
-    console.info('fork', ctx)
     return [this.go(ctx.inline), this.go(ctx.line)].flat()
   }
 
@@ -735,7 +734,7 @@ class ScriptVisitor
           location,
           tokenstring(ctx.token_if, 'if'),
           skip,
-          [this.go(ctx.expr), this.go(ctx.words)].flat(),
+          this.go(ctx.words),
         ),
         this.go(ctx.command_fork),
         this.creategotonode(location, done, `end of if`),
@@ -775,12 +774,7 @@ class ScriptVisitor
       done,
       lines: [
         this.createmarknode(location, loop, `start of while`),
-        this.createlogicnode(
-          location,
-          'if',
-          done,
-          [this.go(ctx.expr), this.go(ctx.words)].flat(),
-        ),
+        this.createlogicnode(location, 'if', done, this.go(ctx.words)),
         this.go(ctx.command_block),
         this.creategotonode(location, loop, `loop of while`),
         this.createmarknode(location, done, `end of while`),
@@ -792,7 +786,7 @@ class ScriptVisitor
     const loop = createsid()
     const done = createsid()
     const index = this.createcountnode(location)
-    const args = [index, this.go(ctx.expr), this.go(ctx.words)].flat()
+    const args = [index, this.go(ctx.words)].flat()
     return this.createcodenode(location, {
       type: NODE.REPEAT,
       loop,
@@ -812,7 +806,7 @@ class ScriptVisitor
     const loop = createsid()
     const done = createsid()
     const index = this.createcountnode(location)
-    const args = [index, this.go(ctx.expr), this.go(ctx.words)].flat()
+    const args = [index, this.go(ctx.words)].flat()
     return this.createcodenode(location, {
       type: NODE.FOREACH,
       loop,
@@ -835,12 +829,7 @@ class ScriptVisitor
       loop,
       lines: [
         this.createmarknode(location, loop, `start of waitfor`),
-        this.createlogicnode(
-          location,
-          'waitfor',
-          loop,
-          [this.go(ctx.expr), this.go(ctx.words)].flat(),
-        ),
+        this.createlogicnode(location, 'waitfor', loop, this.go(ctx.words)),
       ].flat(),
     })
   }
@@ -1104,7 +1093,7 @@ class ScriptVisitor
   }
 
   words(ctx: WordsCstChildren) {
-    return this.go(ctx.token)
+    return this.go(ctx.expr)
   }
 
   kind(ctx: KindCstChildren) {
@@ -1200,7 +1189,7 @@ class ScriptVisitor
   }
 
   color(ctx: ColorCstChildren, location: CstNodeLocation) {
-    let value = ''
+    let value = 'ERROR'
     if (ctx.token_black) {
       value = 'black'
     }
@@ -1350,55 +1339,30 @@ class ScriptVisitor
   }
 
   dir_mod(ctx: Dir_modCstChildren, location: CstNodeLocation) {
+    let value = 'ERROR'
     if (ctx.token_cw) {
-      const value = tokenstring(ctx.token_cw, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'cw'
     }
     if (ctx.token_ccw) {
-      const value = tokenstring(ctx.token_ccw, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'ccw'
     }
     if (ctx.token_opp) {
-      const value = tokenstring(ctx.token_opp, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'opp'
     }
     if (ctx.token_rndp) {
-      const value = tokenstring(ctx.token_rndp, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'rndp'
     }
     if (ctx.token_over) {
-      const value = tokenstring(ctx.token_over, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'over'
     }
     if (ctx.token_under) {
-      const value = tokenstring(ctx.token_under, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+      value = 'under'
     }
-    return []
+    return this.createcodenode(location, {
+      type: NODE.LITERAL,
+      literal: LITERAL.STRING,
+      value,
+    })
   }
 
   dir(ctx: DirCstChildren, location: CstNodeLocation) {
