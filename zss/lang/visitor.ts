@@ -27,7 +27,6 @@ import {
   Command_toastCstChildren,
   Command_waitforCstChildren,
   Command_whileCstChildren,
-  CommandsCstChildren,
   Comp_opCstChildren,
   ComparisonCstChildren,
   Dir_modCstChildren,
@@ -602,25 +601,9 @@ class ScriptVisitor
       location,
       this.createcodenode(location, {
         type: NODE.COMMAND,
-        words: this.go(ctx.commands),
+        words: this.go(ctx.words),
       }),
     )
-  }
-
-  commands(ctx: CommandsCstChildren) {
-    if (ctx.words) {
-      return this.go(ctx.words)
-    }
-    if (ctx.command_play) {
-      return this.go(ctx.command_play)
-    }
-    if (ctx.command_toast) {
-      return this.go(ctx.command_toast)
-    }
-    if (ctx.command_ticker) {
-      return this.go(ctx.command_ticker)
-    }
-    return []
   }
 
   structured_cmd(ctx: Structured_cmdCstChildren) {
@@ -1944,14 +1927,14 @@ class ScriptVisitor
     if (ctx.token_expr) {
       return this.go(ctx.token_expr)
     }
-
-    if (ctx.token_stop) {
-      const value = tokenstring(ctx.token_stop, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
+    if (ctx.command_play) {
+      return this.go(ctx.command_play)
+    }
+    if (ctx.command_toast) {
+      return this.go(ctx.command_toast)
+    }
+    if (ctx.command_ticker) {
+      return this.go(ctx.command_ticker)
     }
 
     if (ctx.token_label) {
@@ -1996,6 +1979,16 @@ class ScriptVisitor
         words: this.go(ctx.expr),
       })
     }
+
+    if (ctx.token_stop) {
+      const value = tokenstring(ctx.token_stop, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
+
     return []
   }
 }

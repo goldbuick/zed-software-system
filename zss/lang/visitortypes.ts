@@ -105,20 +105,8 @@ export type Stmt_commandCstNode = {
 
 export type Stmt_commandCstChildren = {
   token_command: IToken[]
-  commands?: CommandsCstNode[]
-  structured_cmd?: Structured_cmdCstNode[]
-}
-
-export type CommandsCstNode = {
-  name: 'commands'
-  children: CommandsCstChildren
-} & CstNode
-
-export type CommandsCstChildren = {
   words?: WordsCstNode[]
-  command_play?: Command_playCstNode[]
-  command_toast?: Command_toastCstNode[]
-  command_ticker?: Command_tickerCstNode[]
+  structured_cmd?: Structured_cmdCstNode[]
 }
 
 export type Structured_cmdCstNode = {
@@ -875,11 +863,14 @@ export type TokenCstChildren = {
   color?: ColorCstNode[]
   dir?: DirCstNode[]
   token_expr?: Token_exprCstNode[]
-  token_stop?: IToken[]
+  command_play?: Command_playCstNode[]
+  command_toast?: Command_toastCstNode[]
+  command_ticker?: Command_tickerCstNode[]
   token_label?: IToken[]
   token_stringliteraldouble?: IToken[]
   token_stringliteral?: IToken[]
   token_numberliteral?: IToken[]
+  token_stop?: IToken[]
   token_lparen?: IToken[]
   expr?: ExprCstNode[]
   token_rparen?: IToken[]
@@ -896,7 +887,6 @@ export type ICstNodeVisitor<IN, OUT> = {
   stmt_comment(children: Stmt_commentCstChildren, param?: IN): OUT
   stmt_hyperlink(children: Stmt_hyperlinkCstChildren, param?: IN): OUT
   stmt_command(children: Stmt_commandCstChildren, param?: IN): OUT
-  commands(children: CommandsCstChildren, param?: IN): OUT
   structured_cmd(children: Structured_cmdCstChildren, param?: IN): OUT
   short_go(children: Short_goCstChildren, param?: IN): OUT
   short_try(children: Short_tryCstChildren, param?: IN): OUT

@@ -128,17 +128,8 @@ class ScriptParser extends CstParser {
   stmt_command = this.RULED('stmt_command', () => {
     this.CONSUME(lexer.command)
     this.OR([
-      { ALT: () => this.SUBRULE(this.commands) },
-      { ALT: () => this.SUBRULE(this.structured_cmd) },
-    ])
-  })
-
-  commands = this.RULED('commands', () => {
-    this.OR([
       { ALT: () => this.SUBRULE(this.words) },
-      { ALT: () => this.SUBRULE(this.command_play) },
-      { ALT: () => this.SUBRULE(this.command_toast) },
-      { ALT: () => this.SUBRULE(this.command_ticker) },
+      { ALT: () => this.SUBRULE(this.structured_cmd) },
     ])
   })
 
@@ -736,11 +727,14 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.color) },
       { ALT: () => this.SUBRULE(this.dir) },
       { ALT: () => this.SUBRULE(this.token_expr) },
-      { ALT: () => this.CONSUME(lexer.expr_stop) },
+      { ALT: () => this.SUBRULE(this.command_play) },
+      { ALT: () => this.SUBRULE(this.command_toast) },
+      { ALT: () => this.SUBRULE(this.command_ticker) },
       { ALT: () => this.CONSUME(lexer.label) },
       { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
       { ALT: () => this.CONSUME(lexer.stringliteral) },
       { ALT: () => this.CONSUME(lexer.numberliteral) },
+      { ALT: () => this.CONSUME(lexer.expr_stop) },
       {
         ALT: () => {
           this.CONSUME(lexer.lparen)
