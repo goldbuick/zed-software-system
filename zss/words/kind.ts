@@ -1,4 +1,5 @@
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { memoryelementkindread } from 'zss/memory'
 
 import { readcolor, readstrbg, readstrcolor, STR_COLOR } from './color'
 import { READ_CONTEXT } from './reader'
@@ -31,7 +32,12 @@ export function readkind(index: number): [STR_KIND | undefined, number] {
 
   // found a string, color is optional
   if (isstring(maybename)) {
-    return [[maybename, maybecolor], iii]
+    // validate the name
+    const iskind =
+      maybename === 'empty' || memoryelementkindread({ kind: maybename })
+    if (iskind) {
+      return [[maybename, maybecolor], iii]
+    }
   }
 
   // fail

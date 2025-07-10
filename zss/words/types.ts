@@ -35,6 +35,8 @@ export enum COLOR {
   ONWHITE,
   // special bg colors
   ONCLEAR,
+  // -1
+  NON = 1,
 }
 
 export enum COLLISION {

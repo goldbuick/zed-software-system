@@ -618,6 +618,17 @@ export type DirCstChildren = {
   token_e?: IToken[]
 }
 
+export type Expr_anyCstNode = {
+  name: 'expr_any'
+  children: Expr_anyCstChildren
+} & CstNode
+
+export type Expr_anyCstChildren = {
+  kind?: KindCstNode[]
+  color?: ColorCstNode[]
+  dir?: DirCstNode[]
+}
+
 export type Token_expr_anyCstNode = {
   name: 'token_expr_any'
   children: Token_expr_anyCstChildren
@@ -625,7 +636,7 @@ export type Token_expr_anyCstNode = {
 
 export type Token_expr_anyCstChildren = {
   token_any: IToken[]
-  kind: KindCstNode[]
+  expr_any: Expr_anyCstNode[]
 }
 
 export type Token_expr_countCstNode = {
@@ -635,29 +646,7 @@ export type Token_expr_countCstNode = {
 
 export type Token_expr_countCstChildren = {
   token_count: IToken[]
-  kind: KindCstNode[]
-}
-
-export type Token_expr_colorCstNode = {
-  name: 'token_expr_color'
-  children: Token_expr_colorCstChildren
-} & CstNode
-
-export type Token_expr_colorCstChildren = {
-  token_color: IToken[]
-  dir: DirCstNode[]
-  color: ColorCstNode[]
-}
-
-export type Token_expr_detectCstNode = {
-  name: 'token_expr_detect'
-  children: Token_expr_detectCstChildren
-} & CstNode
-
-export type Token_expr_detectCstChildren = {
-  token_detect: IToken[]
-  dir: DirCstNode[]
-  kind: KindCstNode[]
+  expr_any: Expr_anyCstNode[]
 }
 
 export type Token_expr_absCstNode = {
@@ -803,8 +792,6 @@ export type Token_exprCstChildren = {
   token_blocked?: IToken[]
   token_expr_any?: Token_expr_anyCstNode[]
   token_expr_count?: Token_expr_countCstNode[]
-  token_expr_color?: Token_expr_colorCstNode[]
-  token_expr_detect?: Token_expr_detectCstNode[]
   token_expr_abs?: Token_expr_absCstNode[]
   token_expr_intceil?: Token_expr_intceilCstNode[]
   token_expr_intfloor?: Token_expr_intfloorCstNode[]
@@ -926,10 +913,9 @@ export type ICstNodeVisitor<IN, OUT> = {
   color(children: ColorCstChildren, param?: IN): OUT
   dir_mod(children: Dir_modCstChildren, param?: IN): OUT
   dir(children: DirCstChildren, param?: IN): OUT
+  expr_any(children: Expr_anyCstChildren, param?: IN): OUT
   token_expr_any(children: Token_expr_anyCstChildren, param?: IN): OUT
   token_expr_count(children: Token_expr_countCstChildren, param?: IN): OUT
-  token_expr_color(children: Token_expr_colorCstChildren, param?: IN): OUT
-  token_expr_detect(children: Token_expr_detectCstChildren, param?: IN): OUT
   token_expr_abs(children: Token_expr_absCstChildren, param?: IN): OUT
   token_expr_intceil(children: Token_expr_intceilCstChildren, param?: IN): OUT
   token_expr_intfloor(children: Token_expr_intfloorCstChildren, param?: IN): OUT

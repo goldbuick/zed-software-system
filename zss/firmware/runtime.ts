@@ -11,7 +11,7 @@ import {
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { listelementsbyattr } from 'zss/memory/atomics'
+import { listelementsbyidnameorpts } from 'zss/memory/atomics'
 import { boardelementread } from 'zss/memory/board'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { parsesend, SEND_META } from 'zss/words/send'
@@ -42,7 +42,7 @@ function handlesend(chip: CHIP, send: SEND_META) {
         break
       default: {
         // target named elements
-        const elements = listelementsbyattr(READ_CONTEXT.board, [
+        const elements = listelementsbyidnameorpts(READ_CONTEXT.board, [
           send.targetname,
         ])
         for (let i = 0; i < elements.length; ++i) {

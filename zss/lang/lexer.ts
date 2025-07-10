@@ -277,8 +277,6 @@ export const expr_contact = createWordToken('contact')
 export const expr_blocked = createWordToken('blocked')
 export const expr_any = createWordToken('any')
 export const expr_count = createWordToken('count')
-export const expr_color = createWordToken('color')
-export const expr_detect = createWordToken('detect')
 export const expr_abs = createWordToken('abs')
 export const expr_intceil = createWordToken('intceil')
 export const expr_intfloor = createWordToken('intfloor')
@@ -525,8 +523,6 @@ function createTokenSet(primary: TokenType[]) {
     expr_blocked,
     expr_any,
     expr_count,
-    expr_color,
-    expr_detect,
     expr_abs,
     expr_intceil,
     expr_intfloor,

@@ -437,7 +437,7 @@ export function memoryconverttogadgetlayers(
       continue
     }
 
-    const display = bookelementdisplayread(object, 1, COLOR.WHITE, COLOR.BLACK)
+    const display = bookelementdisplayread(object)
     const sprite = createcachedsprite(player, objectindex, id, i)
 
     // setup sprite
