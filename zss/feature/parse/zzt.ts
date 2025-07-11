@@ -103,12 +103,6 @@ export function parsezzt(player: string, content: Uint8Array) {
         element[stat] = addstats[stat]
       }
     }
-    if (ispresent(kind)) {
-      const [name] = kind
-      if (name === 'scroll') {
-        console.info('writefromkind', name, '-', element, '-')
-      }
-    }
   }
 
   function scrubinlinechars(str: string) {
@@ -153,6 +147,11 @@ export function parsezzt(player: string, content: Uint8Array) {
     const strcolor: STR_COLOR = [
       COLOR[color] as STR_COLOR_CONST,
       `ON${COLOR[bg]}` as STR_COLOR_CONST,
+    ]
+
+    const strcolorflipped: STR_COLOR = [
+      COLOR[bg] as STR_COLOR_CONST,
+      `ON${COLOR[color]}` as STR_COLOR_CONST,
     ]
 
     const addstats: BOARD_ELEMENT = {}
@@ -208,7 +207,7 @@ export function parsezzt(player: string, content: Uint8Array) {
         break
       case 9:
         // door
-        writefromkind(board, ['door', strcolor], { x, y }, addstats)
+        writefromkind(board, ['door', strcolorflipped], { x, y }, addstats)
         break
       case 10:
         // scroll
@@ -593,15 +592,16 @@ export function parsezzt(player: string, content: Uint8Array) {
     if (isnumber(zztboard.maxplayershots)) {
       codepagestats.push(`@maxplayershots ${zztboard.maxplayershots}`)
     }
-    if (zztboard.isdark) {
-      codepagestats.push(`@isdark`)
+    if (isnumber(zztboard.isdark)) {
+      codepagestats.push(`@isdark ${zztboard.isdark}`)
     }
-    if (zztboard.restartonzap) {
-      codepagestats.push(`@restartonzap`)
+    if (isnumber(zztboard.restartonzap)) {
+      codepagestats.push(`@restartonzap ${zztboard.restartonzap}`)
     }
     if (isnumber(zztboard.timelimit)) {
       codepagestats.push(`@timelimit ${zztboard.timelimit}`)
     }
+
     const exitnorth = formatexitstat(zztboard.exitnorth)
     if (isstring(exitnorth)) {
       codepagestats.push(`@exitnorth ${exitnorth}`)
