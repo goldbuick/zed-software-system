@@ -6,8 +6,8 @@ import { COLLISION, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
 import { boarddeleteobject, boardelementindex, boardobjectread } from './board'
-import { boardelementname } from './boardelement'
 import { boardsetlookup } from './boardlookup'
+import { bookelementdisplayread } from './book'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -375,7 +375,7 @@ export function boardreadgroup(
 
     return (
       ispresent(statnamed) ||
-      boardelementname(el) === targetgroup ||
+      bookelementdisplayread(el).name === targetgroup ||
       memoryelementstatread(el, 'group') === targetgroup
     )
   }

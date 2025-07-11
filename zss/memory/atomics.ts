@@ -120,6 +120,9 @@ function filterelement(
   color: MAYBE<COLOR>,
   bg: MAYBE<COLOR>,
 ) {
+  if (!ispresent(element)) {
+    return false
+  }
   const display = bookelementdisplayread(element)
   if (ispresent(name) && name !== display.name) {
     return false
@@ -140,9 +143,9 @@ export function listelementsbykind(
   const name = readstrkindname(kind)
   const color = readstrkindcolor(kind)
   const bg = readstrkindbg(kind)
-  return listnamedelements(board, name ?? '')
-    .filter((element) => filterelement(element, name, color, bg))
-    .filter(ispresent)
+  return listnamedelements(board, name ?? '').filter((element) =>
+    filterelement(element, name, color, bg),
+  )
 }
 
 export function listelementsbycolor(
@@ -154,12 +157,9 @@ export function listelementsbycolor(
   const elements: BOARD_ELEMENT[] = []
   if (ispresent(board)) {
     for (let i = 0; i < board.terrain.length; ++i) {
-      const element = board.terrain[i]
-      if (
-        ispresent(element) &&
-        filterelement(board.terrain[i], undefined, color, bg)
-      ) {
-        elements.push(element)
+      const terrain = board.terrain[i]
+      if (ispresent(terrain) && filterelement(terrain, undefined, color, bg)) {
+        elements.push(terrain)
       }
     }
     const objects = Object.values(board.objects)

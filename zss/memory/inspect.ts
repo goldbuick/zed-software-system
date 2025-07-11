@@ -27,9 +27,9 @@ import {
   boardsafedelete,
   boardsetterrain,
 } from './board'
-import { boardelementisobject, boardelementname } from './boardelement'
+import { boardelementisobject } from './boardelement'
 import { boardsetlookup } from './boardlookup'
-import { bookboardelementreadcodepage } from './book'
+import { bookboardelementreadcodepage, bookelementdisplayread } from './book'
 import { memoryinspectarea } from './inspectarea'
 import { hassecretheap } from './inspectcopypaste'
 import {
@@ -226,9 +226,9 @@ export function memoryinspectcommand(path: string, player: string) {
       break
     case 'code':
       doasync(SOFTWARE, player, async () => {
-        const name = boardelementname(element)
+        const display = bookelementdisplayread(element)
         const pagetype = 'object'
-        api_log(SOFTWARE, player, `opened [${pagetype}] ${name}`)
+        api_log(SOFTWARE, player, `opened [${pagetype}] ${display.name}`)
 
         // edit path
         const path = [board.id, element.id]

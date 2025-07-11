@@ -2,8 +2,10 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { CATEGORY, NAME } from 'zss/words/types'
 
 import { boardelementindex } from './board'
-import { boardelementname } from './boardelement'
+import { bookelementdisplayread } from './book'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
+
+import { memoryelementkindread } from '.'
 
 // quick lookup utils
 
@@ -39,11 +41,11 @@ export function boardsetlookup(board: MAYBE<BOARD>) {
       lookup[object.x + object.y * BOARD_WIDTH] = object.id
 
       // update named lookup
-      const name = NAME(object.name ?? object.kinddata?.name ?? '')
-      if (!named[name]) {
-        named[name] = new Set<string>()
+      const display = bookelementdisplayread(memoryelementkindread(object))
+      if (!named[display.name]) {
+        named[display.name] = new Set<string>()
       }
-      named[name].add(object.id)
+      named[display.name].add(object.id)
     }
   }
 
@@ -59,11 +61,11 @@ export function boardsetlookup(board: MAYBE<BOARD>) {
       terrain.category = CATEGORY.ISTERRAIN
 
       // update named lookup
-      const name = boardelementname(terrain)
-      if (!named[name]) {
-        named[name] = new Set<string>()
+      const display = bookelementdisplayread(memoryelementkindread(terrain))
+      if (!named[display.name]) {
+        named[display.name] = new Set<string>()
       }
-      named[name].add(i)
+      named[display.name].add(i)
     }
     ++x
     if (x >= BOARD_WIDTH) {
@@ -129,10 +131,10 @@ export function boardterrainnameddelete(
 ) {
   if (ispresent(board) && ispresent(terrain?.x) && ispresent(terrain.y)) {
     // remove from named
-    const name = boardelementname(terrain)
+    const display = bookelementdisplayread(terrain)
     const index = boardelementindex(board, terrain)
-    if (ispresent(board.named?.[name])) {
-      board.named[name].delete(index)
+    if (ispresent(board.named?.[display.name])) {
+      board.named[display.name].delete(index)
     }
   }
 }
@@ -150,9 +152,9 @@ export function boardobjectnamedlookupdelete(
       }
     }
     // remove from named
-    const name = boardelementname(object)
-    if (ispresent(board.named?.[name]) && ispresent(object.id)) {
-      board.named[name].delete(object.id)
+    const display = bookelementdisplayread(object)
+    if (ispresent(board.named?.[display.name]) && ispresent(object.id)) {
+      board.named[display.name].delete(object.id)
     }
   }
 }

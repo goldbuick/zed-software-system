@@ -26,7 +26,7 @@ import {
   boardsetterrain,
   boardterrainsetfromkind,
 } from './board'
-import { boardelementapplycolor, boardelementname } from './boardelement'
+import { boardelementapplycolor } from './boardelement'
 import {
   boardnamedwrite,
   boardobjectlookupwrite,
@@ -35,6 +35,7 @@ import {
 import { boardmoveobject, boardtick } from './boardops'
 import {
   bookclearflags,
+  bookelementdisplayread,
   bookensurecodepagewithtype,
   bookhasflags,
   bookreadcodepagebyaddress,
@@ -602,9 +603,9 @@ function sendinteraction(
   toelement: BOARD_ELEMENT,
   message: string,
 ) {
-  const fromname = boardelementname(fromelement)
+  const display = bookelementdisplayread(fromelement)
   if (isstring(toelement.id)) {
-    SOFTWARE.emit(player, `vm:touched`, [toelement.id, fromname, message])
+    SOFTWARE.emit(player, `vm:touched`, [toelement.id, display.name, message])
   }
 }
 

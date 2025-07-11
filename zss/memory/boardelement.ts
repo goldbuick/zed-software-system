@@ -115,7 +115,3 @@ export function boardelementapplycolor(
     element.bg = bg
   }
 }
-
-export function boardelementname(element: MAYBE<BOARD_ELEMENT>) {
-  return NAME(element?.name ?? element?.kinddata?.name ?? '')
-}
