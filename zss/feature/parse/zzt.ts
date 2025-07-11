@@ -7,7 +7,7 @@ import { boardsetlookup } from 'zss/memory/boardlookup'
 import { bookwritecodepage, createbook } from 'zss/memory/book'
 import { codepagereaddata, createcodepage } from 'zss/memory/codepage'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
-import { STR_COLOR, STR_COLOR_CONST } from 'zss/words/color'
+import { mapcolortostrcolor, STR_COLOR, STR_COLOR_CONST } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
 import { COLOR, PT } from 'zss/words/types'
 
@@ -144,15 +144,8 @@ export function parsezzt(player: string, content: Uint8Array) {
     const color = element.color % 16
     const bg = Math.floor(element.color / 16) % 8
 
-    const strcolor: STR_COLOR = [
-      COLOR[color] as STR_COLOR_CONST,
-      `ON${COLOR[bg]}` as STR_COLOR_CONST,
-    ]
-
-    const strcolorflipped: STR_COLOR = [
-      COLOR[bg + 8] as STR_COLOR_CONST,
-      `ON${COLOR[color]}` as STR_COLOR_CONST,
-    ]
+    const strcolor: STR_COLOR = mapcolortostrcolor(color, bg)
+    const strcolorflipped: STR_COLOR = mapcolortostrcolor(bg, color)
 
     const addstats: BOARD_ELEMENT = {}
     const elementstat = stats.find((stat) => stat.x === x && stat.y === y)
@@ -171,14 +164,15 @@ export function parsezzt(player: string, content: Uint8Array) {
       }
       if (ispresent(elementstat.code) && elementstat.code) {
         addstats.code = normalizedlines(elementstat.code)
-        // console.info(addstats.code)
       }
-      // stepx?: number
-      // stepy?: number
+      if (ispresent(elementstat.stepx)) {
+        addstats.stepx = elementstat.stepx
+      }
+      if (ispresent(elementstat.stepy)) {
+        addstats.stepy = elementstat.stepy
+      }
       // follower?: number
       // leader?: number
-      // pointer?: number
-      // currentinstruction?: number
       // bind?: number
     }
     switch (element.element) {
@@ -186,6 +180,8 @@ export function parsezzt(player: string, content: Uint8Array) {
       case 1:
       case 2:
       case 3:
+        // skip empty, board edge, messenger, and monitor
+        break
       case 4:
         // empty
         break
@@ -213,18 +209,12 @@ export function parsezzt(player: string, content: Uint8Array) {
         // scroll
         writefromkind(board, ['scroll', strcolor], { x, y }, addstats)
         break
-      case 11:
+      case 11: {
         // passage
-        writefromkind(
-          board,
-          ['passage', strcolor],
-          { x, y },
-          {
-            ...addstats,
-            p3: formatexitstat(elementstat?.p3) ?? '',
-          },
-        )
+        addstats.p3 = formatexitstat(elementstat?.p3) ?? ''
+        writefromkind(board, ['passage', strcolor], { x, y }, addstats)
         break
+      }
       case 12:
         // duplicator
         writefromkind(board, ['duplicator', strcolor], { x, y }, addstats)

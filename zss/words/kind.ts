@@ -67,5 +67,5 @@ export function readstrkindbg(kind: MAYBE<STR_KIND>): MAYBE<COLOR> {
   }
   const [, strcolor] = kind
   const bg = ispresent(strcolor) ? readstrbg(strcolor) : undefined
-  return ispresent(bg) ? bg : undefined
+  return ispresent(bg) ? bg - COLOR.ONBLACK : undefined
 }
