@@ -17,7 +17,7 @@ import {
   boardsafedelete,
   boardsetterrain,
 } from './board'
-import { boardelementname } from './boardelement'
+import { bookelementdisplayread } from './book'
 import { BOARD, BOARD_ELEMENT } from './types'
 
 import {
@@ -77,7 +77,7 @@ function createboardelementbuffer(
       const maybeobject = boardelementread(board, { x, y })
       if (maybeobject?.category === CATEGORY.ISOBJECT) {
         terrain.push(deepcopy(boardgetterrain(board, x, y)))
-        if (boardelementname(maybeobject) !== 'player') {
+        if (bookelementdisplayread(maybeobject).name !== 'player') {
           objects.push({
             ...deepcopy(maybeobject),
             ...pt,

@@ -1,7 +1,6 @@
 import { CHIP } from 'zss/chip'
 import { boardcopy } from 'zss/feature/boardcopy'
 import { createfirmware } from 'zss/firmware'
-import { pick } from 'zss/mapping/array'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
@@ -21,12 +20,12 @@ import {
   boardsetterrain,
   createboard,
 } from 'zss/memory/board'
-import { boardelementisobject, boardelementname } from 'zss/memory/boardelement'
+import { boardelementisobject } from 'zss/memory/boardelement'
 import { boardsetlookup } from 'zss/memory/boardlookup'
 import { boardcheckblockedobject, boardmoveobject } from 'zss/memory/boardops'
 import { bookelementdisplayread } from 'zss/memory/book'
 import { bookplayermovetoboard } from 'zss/memory/bookplayer'
-import { BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { mapstrcolortoattributes, STR_COLOR_CONST } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
@@ -211,10 +210,10 @@ export const BOARD_FIRMWARE = createfirmware()
         y: READ_CONTEXT.element?.y ?? maybey ?? Math.round(BOARD_HEIGHT * 0.5),
       }
 
-      const { color } = bookelementdisplayread(READ_CONTEXT.element)
+      const display = bookelementdisplayread(READ_CONTEXT.element)
       const gotoelements = listelementsbykind(targetboard, [
-        boardelementname(READ_CONTEXT.element),
-        [COLOR[color] as STR_COLOR_CONST],
+        display.name,
+        [COLOR[display.color] as STR_COLOR_CONST],
       ])
 
       // pick the first
@@ -419,7 +418,8 @@ export const BOARD_FIRMWARE = createfirmware()
       if (ispresent(intobg)) {
         element.bg = intobg
       }
-      if (boardelementname(element) !== intoname) {
+      const display = bookelementdisplayread(element)
+      if (display.name !== intoname) {
         const newcolor = memoryelementstatread(element, 'color')
         const newbg = memoryelementstatread(element, 'bg')
         // erase element

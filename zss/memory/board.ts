@@ -18,16 +18,13 @@ import {
   listnamedelements,
   picknearestpt,
 } from './atomics'
-import {
-  boardelementname,
-  exportboardelement,
-  importboardelement,
-} from './boardelement'
+import { exportboardelement, importboardelement } from './boardelement'
 import {
   boardobjectnamedlookupdelete,
   boardterrainnameddelete,
 } from './boardlookup'
 import { boardreadpath } from './boardpathing'
+import { bookelementdisplayread } from './book'
 import {
   FORMAT_OBJECT,
   FORMAT_SKIP,
@@ -264,7 +261,10 @@ export function boardsafedelete(
   element: MAYBE<BOARD_ELEMENT>,
   timestamp: number,
 ) {
-  if (!ispresent(element) || boardelementname(element) === 'player') {
+  if (
+    !ispresent(element) ||
+    bookelementdisplayread(element).name === 'player'
+  ) {
     return false
   }
 
