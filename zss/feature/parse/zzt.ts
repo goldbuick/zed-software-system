@@ -150,7 +150,7 @@ export function parsezzt(player: string, content: Uint8Array) {
     ]
 
     const strcolorflipped: STR_COLOR = [
-      COLOR[bg] as STR_COLOR_CONST,
+      COLOR[bg + 8] as STR_COLOR_CONST,
       `ON${COLOR[color]}` as STR_COLOR_CONST,
     ]
 
@@ -516,9 +516,6 @@ export function parsezzt(player: string, content: Uint8Array) {
       const color = readuint8()
       for (let r = 0; r < count; ++r) {
         board.elements.push({ element, color })
-        if (element === 9) {
-          console.info('door', { element, color })
-        }
       }
     }
 
