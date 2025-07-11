@@ -215,8 +215,9 @@ export const BOARD_FIRMWARE = createfirmware()
       }
 
       const display = bookelementdisplayread(READ_CONTEXT.element)
-      const findcolor = mapcolortostrcolor(display.color, display.bg)
-      debugger
+      const color = memoryelementstatread(READ_CONTEXT.element, 'color')
+      const bg = memoryelementstatread(READ_CONTEXT.element, 'bg')
+      const findcolor = mapcolortostrcolor(color, bg)
       const gotoelements = listelementsbykind(targetboard, [
         display.name,
         findcolor,
