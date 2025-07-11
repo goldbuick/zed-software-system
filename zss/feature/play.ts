@@ -1,4 +1,4 @@
-import * as Tone from 'tone'
+import { Time } from 'tone'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 export const SYNTH_SFX_RESET = 4
@@ -108,7 +108,7 @@ export function invokeplay(
   function resetnote() {
     note = ''
     accidental = ''
-    time += Tone.Time(duration).toSeconds()
+    time += Time(duration).toSeconds()
   }
 
   function writenote() {

@@ -610,9 +610,10 @@ export function createsynth() {
     const f = mapindextofx(chan)
     if (isstring(note) && ispresent(SOURCE[chan]) && ispresent(FX[f])) {
       if (note.startsWith('#')) {
-        getDraw().schedule(() => {
-          vm_synthsend(SOFTWARE, '', note.slice(1))
-        }, time)
+        getDraw().schedule(
+          () => vm_synthsend(SOFTWARE, '', note.slice(1)),
+          time,
+        )
       } else {
         // razzle dazzle code
         switch (SOURCE[chan].source.type) {
@@ -713,7 +714,7 @@ export function createsynth() {
   function addplay(buffer: string, bgplay: boolean) {
     // parse ops
     const invokes = parseplay(buffer)
-    const seconds = getTransport().seconds
+    const seconds = getTransport().seconds + 0.05
 
     if (bgplay) {
       // handle sfx

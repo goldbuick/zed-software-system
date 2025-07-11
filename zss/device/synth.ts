@@ -1,4 +1,4 @@
-import { Context, getTransport, setContext, start } from 'tone'
+import { getTransport, start } from 'tone'
 import { createdevice } from 'zss/device'
 import { AUDIO_SYNTH, createsynth } from 'zss/feature/synth'
 import { addfcrushmodule } from 'zss/feature/synthfcrushworkletnode'
@@ -26,6 +26,8 @@ type CustomNavigator = {
   }
 } & Navigator
 
+getTransport().start()
+
 let locked = false
 let enabled = false
 export function enableaudio() {
@@ -35,17 +37,11 @@ export function enableaudio() {
 
   // synth setup
   locked = true
-  setContext(new Context({ latencyHint: 'playback', lookAhead: 0.1 }))
 
+  // resume audio context
   start()
     .then(() => {
       if (!enabled) {
-        const transport = getTransport()
-        transport.start()
-
-        // set default  BPM
-        setAltInterval(128)
-
         // better audio playback for mobile safari
         try {
           const customnavigator = navigator as CustomNavigator
@@ -56,7 +52,7 @@ export function enableaudio() {
         } catch (err) {
           //
         }
-
+        // add custom audio worklet modules
         return addfcrushmodule()
           .then(() => {
             return addsidechainmodule()
@@ -64,6 +60,8 @@ export function enableaudio() {
           .then(() => {
             locked = false
             enabled = true
+            // set default  BPM
+            setAltInterval(128)
             synth_audioenabled(synthdevice, registerreadplayer())
           })
       }
