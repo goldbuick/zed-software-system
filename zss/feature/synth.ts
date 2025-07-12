@@ -50,6 +50,10 @@ export function createsynth() {
   const destination = getDestination()
   const broadcastdestination = getContext().createMediaStreamDestination()
 
+  const mainvolume = new Volume()
+  mainvolume.connect(destination)
+  mainvolume.connect(broadcastdestination)
+
   const razzledazzle = new Vibrato({
     maxDelay: 0.005, // subtle pitch modulation
     frequency: 1.5, // speed of the warble
@@ -68,7 +72,7 @@ export function createsynth() {
   })
 
   // tape hiss
-  const hiss = new Noise({ type: 'pink', volume: -72 })
+  const hiss = new Noise({ type: 'pink', volume: -50 })
   const hissvolume = new Volume()
 
   // hiss mod
@@ -81,11 +85,7 @@ export function createsynth() {
   // setup
   hiss.chain(hissvolume, razzlechorus)
   razzledazzle.connect(razzlechorus)
-  razzlechorus.connect(destination)
-  razzlechorus.connect(broadcastdestination)
-
-  const mainvolume = new Volume()
-  mainvolume.connect(razzledazzle)
+  razzlechorus.connect(mainvolume)
 
   const maincompressor = new Compressor({
     threshold: -24,
@@ -94,7 +94,7 @@ export function createsynth() {
     release: 0.25,
     knee: 30,
   })
-  maincompressor.connect(mainvolume)
+  maincompressor.connect(razzledazzle)
 
   const sidechaincompressor = new SidechainCompressor({
     threshold: -42,
@@ -121,6 +121,7 @@ export function createsynth() {
   const drumaction = new Volume()
 
   // side-chain input
+  ttsvolume.connect(sidechaincompressor.sidechain)
   drumaction.connect(sidechaincompressor.sidechain)
   bgplayvolume.connect(sidechaincompressor.sidechain)
 
@@ -754,7 +755,7 @@ export function createsynth() {
 
   // adjust main volumes
   function setplayvolume(volume: number) {
-    mainvolume.volume.value = volumetodb(volume)
+    mainvolume.volume.value = volumetodb(volume * 0.25)
   }
   function setbgplayvolume(volume: number) {
     bgplayvolume.volume.value = volumetodb(volume)
@@ -771,7 +772,7 @@ export function createsynth() {
   }
 
   // set default volumes
-  setttsvolume(15)
+  setttsvolume(25)
   setplayvolume(80)
   setbgplayvolume(100)
 
