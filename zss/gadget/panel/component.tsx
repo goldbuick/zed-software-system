@@ -14,7 +14,6 @@ type PanelProps = {
   xmargin?: number
   ymargin?: number
   selected?: number
-  name: string
   width: number
   height: number
   color: number

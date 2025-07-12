@@ -85,6 +85,7 @@ function gadgetreadqueue(element: string) {
 
 export function gadgetclearscroll(element: string) {
   const shared = gadgetstate(element)
+  shared.scrollname = ''
   shared.scroll = []
 }
 

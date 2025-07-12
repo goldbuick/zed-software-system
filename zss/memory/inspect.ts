@@ -129,6 +129,7 @@ export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
 
   // send to player as a scroll
   const shared = gadgetstate(player)
+  shared.scrollname = 'empty'
   shared.scroll = gadgetcheckqueue(player)
 }
 
@@ -189,6 +190,7 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
 
   // send to player as a scroll
   const shared = gadgetstate(player)
+  shared.scrollname = 'inspect'
   shared.scroll = gadgetcheckqueue(player)
 }
 

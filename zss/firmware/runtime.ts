@@ -14,6 +14,7 @@ import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { listelementsbyidnameorpts } from 'zss/memory/atomics'
 import { boardelementread } from 'zss/memory/board'
+import { bookelementdisplayread } from 'zss/memory/book'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { parsesend, SEND_META } from 'zss/words/send'
 
@@ -95,6 +96,7 @@ export const RUNTIME_FIRMWARE = createfirmware({
       } else {
         // element sending a scroll to a player
         const shared = gadgetstate(READ_CONTEXT.elementfocus)
+        shared.scrollname = bookelementdisplayread(READ_CONTEXT.element).name
         shared.scroll = gadgetaddcenterpadding(queue)
       }
     }

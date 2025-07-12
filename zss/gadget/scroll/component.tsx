@@ -11,6 +11,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
+import { useGadgetClient } from '../data/state'
 import { PANEL_ITEM } from '../data/types'
 import { useTiles } from '../hooks'
 import { ScrollContext } from '../panel/common'
@@ -24,7 +25,6 @@ import { ScrollControls } from './controls'
 import { Marquee } from './marquee'
 
 type ScrollProps = {
-  name: string
   width: number
   height: number
   color: number
@@ -35,7 +35,6 @@ type ScrollProps = {
 }
 
 export function Scroll({
-  name,
   width,
   height,
   color,
@@ -49,6 +48,9 @@ export function Scroll({
   const tilesstore = useTiles(width, height, 0, color, bg)
   const scroll = useContext(ScrollContext)
   const totalrows = text.length - 1
+
+  // get name
+  const scrollname = useGadgetClient((state) => state.gadget.scrollname ?? '')
 
   const context: WRITE_TEXT_CONTEXT = {
     ...createwritetextcontext(width, height, color, bg, 0, 0, width, height),
@@ -150,7 +152,7 @@ export function Scroll({
         />
         <TilesData store={tilesstore}>
           <ScrollBackPlate
-            name={name}
+            name={scrollname}
             width={width}
             height={height}
             context={context}
@@ -176,7 +178,6 @@ alt+up/down$white.JUMP 10 LINES   $blue
             panelheight={panelheight}
           >
             <Panel
-              name={name}
               width={panelwidth}
               height={panelheight}
               xmargin={0}

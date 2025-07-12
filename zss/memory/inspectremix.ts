@@ -132,5 +132,6 @@ export async function memoryinspectremixmenu(player: string, p1: PT, p2: PT) {
 
   // send to player as a scroll
   const shared = gadgetstate(player)
+  shared.scrollname = 'remix'
   shared.scroll = gadgetcheckqueue(player)
 }
