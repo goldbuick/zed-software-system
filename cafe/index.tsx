@@ -2,7 +2,6 @@ import { events, Canvas } from '@react-three/fiber'
 import debounce from 'debounce'
 import { createRoot, Root } from 'react-dom/client'
 import { Intersection } from 'three'
-import unmuteAudio from 'unmute-ios-audio'
 import { makeeven } from 'zss/mapping/number'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
@@ -15,8 +14,6 @@ import { App } from './app'
 //   targetDiam: 3,
 //   fovy: (40 * Math.PI) / 180,
 // })
-
-unmuteAudio()
 
 const eventManagerFactory: Parameters<typeof Canvas>[0]['events'] = (
   state,

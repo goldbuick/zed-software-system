@@ -10,10 +10,6 @@ document.addEventListener('keydown', () => {
   enableaudio()
 })
 
-window.addEventListener('touchstart', () => {
-  enableaudio()
-})
-
 window.addEventListener('click', () => {
   enableaudio()
 })
