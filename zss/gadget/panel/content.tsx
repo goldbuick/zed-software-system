@@ -1,6 +1,10 @@
+import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import {
   WRITE_TEXT_CONTEXT,
+  hascenter,
+  textformatreadedges,
+  tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
 
@@ -19,11 +23,34 @@ export function PanelItemContent({
   context,
 }: PanelItemContentProps) {
   setuppanelitem(row, context)
+  const edge = textformatreadedges(context)
 
-  tokenizeandwritetextformat(
-    `${item}${ispresent(row) ? `\n` : ``}`,
-    context,
-    true,
-  )
+  // detect $CENTER
+  const centertext = hascenter(item)
+  if (ispresent(centertext)) {
+    const measure = tokenizeandmeasuretextformat(
+      centertext,
+      edge.width,
+      edge.height,
+    )
+    const contentmax = measure?.measuredwidth ?? 1
+    const padding = clamp(
+      Math.round((edge.width - contentmax - 3) * 0.5),
+      0,
+      edge.width,
+    )
+    tokenizeandwritetextformat(
+      `${' '.repeat(padding)}$WHITE${centertext}${ispresent(row) ? `\n` : ``}`,
+      context,
+      true,
+    )
+  } else {
+    tokenizeandwritetextformat(
+      `${item}${ispresent(row) ? `\n` : ``}`,
+      context,
+      true,
+    )
+  }
+
   return null
 }
