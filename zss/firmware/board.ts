@@ -26,7 +26,11 @@ import { boardcheckblockedobject, boardmoveobject } from 'zss/memory/boardops'
 import { bookelementdisplayread } from 'zss/memory/book'
 import { bookplayermovetoboard } from 'zss/memory/bookplayer'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
-import { mapstrcolortoattributes, STR_COLOR_CONST } from 'zss/words/color'
+import {
+  mapcolortostrcolor,
+  mapstrcolortoattributes,
+  STR_COLOR_CONST,
+} from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
   readstrkindbg,
@@ -211,22 +215,25 @@ export const BOARD_FIRMWARE = createfirmware()
       }
 
       const display = bookelementdisplayread(READ_CONTEXT.element)
+      const color = memoryelementstatread(READ_CONTEXT.element, 'color')
+      const bg = memoryelementstatread(READ_CONTEXT.element, 'bg')
+      const findcolor = mapcolortostrcolor(color, bg)
       const gotoelements = listelementsbykind(targetboard, [
         display.name,
-        [COLOR[display.color] as STR_COLOR_CONST],
+        findcolor,
       ])
 
       // pick the first
       const [gotoelement] = gotoelements.sort((a, b) => {
         const ay = a.y ?? 10000
         const by = b.y ?? 10000
-        const ydelta = by - ay
+        const ydelta = ay - by
         if (ydelta !== 0) {
           return ydelta
         }
         const ax = a.x ?? 10000
         const bx = b.x ?? 10000
-        return bx - ax
+        return ax - bx
       })
 
       // got a match

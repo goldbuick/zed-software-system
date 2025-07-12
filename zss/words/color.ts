@@ -91,6 +91,13 @@ export function mapstrcolor(value: any): MAYBE<STR_COLOR_CONST> {
   return undefined
 }
 
+export function mapcolortostrcolor(color: MAYBE<COLOR>, bg: MAYBE<COLOR>) {
+  return [
+    ispresent(color) ? (`${COLOR[color]}` as STR_COLOR_CONST) : undefined,
+    ispresent(bg) ? (`ON${COLOR[bg]}` as STR_COLOR_CONST) : undefined,
+  ].filter(ispresent)
+}
+
 export function readstrcolor(value: STR_COLOR): MAYBE<COLOR> {
   return value
     .map((name) => COLOR[name])

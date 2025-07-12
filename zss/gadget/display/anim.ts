@@ -17,6 +17,9 @@ export function setAltInterval(bpm: number) {
   getTransport().bpm.value = bpm
 }
 
+const DEFAULT_BPM = 136
+setAltInterval(DEFAULT_BPM)
+
 export const interval = {
   get value() {
     return intervalValue

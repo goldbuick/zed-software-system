@@ -1,13 +1,14 @@
 import { objectKeys } from 'ts-extras'
 import { api_toast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { indextox, indextoy } from 'zss/mapping/2d'
 import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { memorysetbook, memorywritefromkind } from 'zss/memory'
 import { boardsetlookup } from 'zss/memory/boardlookup'
 import { bookwritecodepage, createbook } from 'zss/memory/book'
 import { codepagereaddata, createcodepage } from 'zss/memory/codepage'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
-import { STR_COLOR, STR_COLOR_CONST } from 'zss/words/color'
+import { mapcolortostrcolor, STR_COLOR, STR_COLOR_CONST } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
 import { COLOR, PT } from 'zss/words/types'
 
@@ -144,15 +145,8 @@ export function parsezzt(player: string, content: Uint8Array) {
     const color = element.color % 16
     const bg = Math.floor(element.color / 16) % 8
 
-    const strcolor: STR_COLOR = [
-      COLOR[color] as STR_COLOR_CONST,
-      `ON${COLOR[bg]}` as STR_COLOR_CONST,
-    ]
-
-    const strcolorflipped: STR_COLOR = [
-      COLOR[bg + 8] as STR_COLOR_CONST,
-      `ON${COLOR[color]}` as STR_COLOR_CONST,
-    ]
+    const strcolor: STR_COLOR = mapcolortostrcolor(color, bg)
+    const strcolorflipped: STR_COLOR = mapcolortostrcolor(bg, color)
 
     const addstats: BOARD_ELEMENT = {}
     const elementstat = stats.find((stat) => stat.x === x && stat.y === y)
@@ -171,14 +165,15 @@ export function parsezzt(player: string, content: Uint8Array) {
       }
       if (ispresent(elementstat.code) && elementstat.code) {
         addstats.code = normalizedlines(elementstat.code)
-        // console.info(addstats.code)
       }
-      // stepx?: number
-      // stepy?: number
+      if (ispresent(elementstat.stepx)) {
+        addstats.stepx = elementstat.stepx
+      }
+      if (ispresent(elementstat.stepy)) {
+        addstats.stepy = elementstat.stepy
+      }
       // follower?: number
       // leader?: number
-      // pointer?: number
-      // currentinstruction?: number
       // bind?: number
     }
     switch (element.element) {
@@ -186,8 +181,10 @@ export function parsezzt(player: string, content: Uint8Array) {
       case 1:
       case 2:
       case 3:
+        // skip empty, board edge, messenger, and monitor
+        break
       case 4:
-        // empty
+        // player
         break
       case 5:
         // ammo
@@ -213,18 +210,12 @@ export function parsezzt(player: string, content: Uint8Array) {
         // scroll
         writefromkind(board, ['scroll', strcolor], { x, y }, addstats)
         break
-      case 11:
+      case 11: {
         // passage
-        writefromkind(
-          board,
-          ['passage', strcolor],
-          { x, y },
-          {
-            ...addstats,
-            p3: formatexitstat(elementstat?.p3) ?? '',
-          },
-        )
+        addstats.p3 = formatexitstat(elementstat?.p3) ?? ''
+        writefromkind(board, ['passage', strcolor], { x, y }, addstats)
         break
+      }
       case 12:
         // duplicator
         writefromkind(board, ['duplicator', strcolor], { x, y }, addstats)
@@ -586,6 +577,14 @@ export function parsezzt(player: string, content: Uint8Array) {
     if (i === playerboard) {
       codepagestats.push(`@title`)
     }
+
+    for (let e = 0; e < zztboard.elements.length; ++e) {
+      if (zztboard.elements[e].element === 4) {
+        codepagestats.push(`@startx ${indextox(e, ZZT_BOARD_WIDTH)}`)
+        codepagestats.push(`@starty ${indextoy(e, ZZT_BOARD_WIDTH)}`)
+      }
+    }
+
     if (isnumber(zztboard.maxplayershots)) {
       codepagestats.push(`@maxplayershots ${zztboard.maxplayershots}`)
     }
