@@ -150,6 +150,7 @@ export function memoryinspectcopymenu(player: string, p1: PT, p2: PT) {
 
   // send to player as a scroll
   const shared = gadgetstate(player)
+  shared.scrollname = 'copy'
   shared.scroll = gadgetcheckqueue(player)
 }
 
@@ -239,6 +240,7 @@ export function memoryinspectcutmenu(player: string, p1: PT, p2: PT) {
 
   // send to player as a scroll
   const shared = gadgetstate(player)
+  shared.scrollname = 'cut'
   shared.scroll = gadgetcheckqueue(player)
 }
 
@@ -366,5 +368,6 @@ export function memoryinspectpastemenu(player: string, p1: PT, p2: PT) {
 
   // send to player as a scroll
   const shared = gadgetstate(player)
+  shared.scrollname = 'paste'
   shared.scroll = gadgetcheckqueue(player)
 }

@@ -514,6 +514,7 @@ const vm = createdevice(
           'next',
         ])
         const shared = gadgetstate(message.player)
+        shared.scrollname = 'refscroll'
         shared.scroll = gadgetcheckqueue(message.player)
         break
       }
@@ -628,6 +629,7 @@ const vm = createdevice(
                   'charedit',
                 ])
                 const shared = gadgetstate(message.player)
+                shared.scrollname = 'chars'
                 shared.scroll = gadgetcheckqueue(message.player)
                 break
               }
@@ -637,6 +639,7 @@ const vm = createdevice(
                   'coloredit',
                 ])
                 const shared = gadgetstate(message.player)
+                shared.scrollname = 'colors'
                 shared.scroll = gadgetcheckqueue(message.player)
                 break
               }
@@ -668,6 +671,7 @@ const vm = createdevice(
                 )
                 gadgettext(message.player, '! - flat             9 - bass drum')
                 const shared = gadgetstate(message.player)
+                shared.scrollname = 'music notation'
                 shared.scroll = gadgetcheckqueue(message.player)
                 break
               }

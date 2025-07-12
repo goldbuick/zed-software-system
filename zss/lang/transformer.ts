@@ -52,6 +52,9 @@ function writeTemplateString(value: string): string {
   const template = result.tokens.map((token) => {
     if (token.tokenType === MaybeFlag) {
       const name = escapestring(token.image.substring(1))
+      if (NAME(name) === 'center') {
+        return `$CENTER`
+      }
       return `', api.get('${name}'), '`
     }
     return escapestring(token.image)

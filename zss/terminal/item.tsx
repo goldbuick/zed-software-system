@@ -1,8 +1,12 @@
 import { useBlink, useWriteText } from 'zss/gadget/hooks'
+import { clamp } from 'zss/mapping/number'
+import { ispresent } from 'zss/mapping/types'
 import {
+  hascenter,
   HyperLinkText,
   textformatreadedges,
   tokenize,
+  tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
@@ -30,7 +34,26 @@ export function TapeTerminalItem({ active, text, y }: TapeTerminalItemProps) {
   setuplogitem(!!active, 0, y, context)
   context.reset.bg = active ? BG_ACTIVE : bgcolor(quickterminal)
   context.active.bottomedge = edge.bottom
-  tokenizeandwritetextformat(ishyperlink ? '' : text, context, true)
+
+  // detect $CENTER
+  const centertext = hascenter(text)
+  if (ispresent(centertext)) {
+    const widthmax = edge.width - 3
+    const measure = tokenizeandmeasuretextformat(centertext, widthmax, 3)
+    const contentmax = measure?.measuredwidth ?? 1
+    const padding = clamp(
+      Math.floor(widthmax * 0.5 - contentmax * 0.5),
+      0,
+      widthmax,
+    )
+    tokenizeandwritetextformat(
+      `${' '.repeat(padding)}$WHITE${centertext}`,
+      context,
+      true,
+    )
+  } else {
+    tokenizeandwritetextformat(ishyperlink ? '' : text, context, true)
+  }
 
   // hyperlinks
   if (ishyperlink) {

@@ -65,6 +65,7 @@ export function memoryinspectcolor(
 
   // send to player as a scroll
   const shared = gadgetstate(player)
+  shared.scrollname = 'color'
   shared.scroll = gadgetcheckqueue(player)
 }
 
@@ -108,6 +109,7 @@ export function memoryinspectchar(
 
   // send to player as a scroll
   const shared = gadgetstate(player)
+  shared.scrollname = 'char'
   shared.scroll = gadgetcheckqueue(player)
 }
 

@@ -92,8 +92,6 @@ export function PanelItem({ row, item, active }: PanelItemComponentProps) {
       case 'coloredit':
         return <PanelItemColorEdit {...props} />
     }
-
-    writetextreset(context)
   }
   return null
 }

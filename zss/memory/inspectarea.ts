@@ -60,6 +60,7 @@ export function memoryinspectchararea(
 
   // send to player as a scroll
   const shared = gadgetstate(player)
+  shared.scrollname = 'bulk set char'
   shared.scroll = gadgetcheckqueue(player)
 }
 
@@ -105,6 +106,7 @@ export function memoryinspectcolorarea(
 
   // send to player as a scroll
   const shared = gadgetstate(player)
+  shared.scrollname = 'bulk set color'
   shared.scroll = gadgetcheckqueue(player)
 }
 
@@ -148,6 +150,7 @@ export function memoryinspectbgarea(
 
   // send to player as a scroll
   const shared = gadgetstate(player)
+  shared.scrollname = 'bulk set bg'
   shared.scroll = gadgetcheckqueue(player)
 }
 

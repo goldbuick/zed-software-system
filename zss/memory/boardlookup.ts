@@ -1,8 +1,12 @@
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { CATEGORY, NAME } from 'zss/words/types'
 
 import { boardelementindex } from './board'
 import { bookelementdisplayread } from './book'
+import {
+  codepageapplyelementstats,
+  codepagereadstatsfromtext,
+} from './codepage'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 import { memoryelementkindread } from '.'
@@ -39,6 +43,14 @@ export function boardsetlookup(board: MAYBE<BOARD>) {
 
       // update lookup
       lookup[object.x + object.y * BOARD_WIDTH] = object.id
+
+      // read code to get name
+      if (isstring(object.code) && !ispresent(object.name)) {
+        codepageapplyelementstats(
+          codepagereadstatsfromtext(object.code),
+          object,
+        )
+      }
 
       // update named lookup
       const display = bookelementdisplayread(memoryelementkindread(object))

@@ -103,6 +103,15 @@ const scriptLexerNoWhitespace = new Lexer(
   },
 )
 
+const CENTER_LINE = /\$CENTER/i
+
+export function hascenter(text: string): MAYBE<string> {
+  if (CENTER_LINE.test(text)) {
+    return text.replace(CENTER_LINE, '')
+  }
+  return undefined
+}
+
 export function tokenize(text: string, noWhitespace = false) {
   if (noWhitespace) {
     return scriptLexerNoWhitespace.tokenize(text)

@@ -243,6 +243,7 @@ export type GADGET_STATE = {
   over?: LAYER[]
   under?: LAYER[]
   layers?: LAYER[]
+  scrollname?: string
   scroll?: PANEL_ITEM[]
   sidebar?: PANEL_ITEM[]
 }
