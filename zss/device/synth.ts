@@ -60,8 +60,6 @@ export function enableaudio() {
           .then(() => {
             locked = false
             enabled = true
-            // set default  BPM
-            setAltInterval(128)
             synth_audioenabled(synthdevice, registerreadplayer())
           })
       }

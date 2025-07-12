@@ -11,13 +11,14 @@ export const time = {
 // flip ever _other_ beat
 const INTERVAL_RATE = 120
 
-const DEFAULT_BPM = 128
-
-let intervalValue = INTERVAL_RATE / DEFAULT_BPM
+let intervalValue = 0
 export function setAltInterval(bpm: number) {
   intervalValue = INTERVAL_RATE / bpm
   getTransport().bpm.value = bpm
 }
+
+const DEFAULT_BPM = 136
+setAltInterval(DEFAULT_BPM)
 
 export const interval = {
   get value() {

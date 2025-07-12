@@ -1,6 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { api_toast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { indextox, indextoy } from 'zss/mapping/2d'
 import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { memorysetbook, memorywritefromkind } from 'zss/memory'
 import { boardsetlookup } from 'zss/memory/boardlookup'
@@ -183,7 +184,7 @@ export function parsezzt(player: string, content: Uint8Array) {
         // skip empty, board edge, messenger, and monitor
         break
       case 4:
-        // empty
+        // player
         break
       case 5:
         // ammo
@@ -576,6 +577,14 @@ export function parsezzt(player: string, content: Uint8Array) {
     if (i === playerboard) {
       codepagestats.push(`@title`)
     }
+
+    for (let e = 0; e < zztboard.elements.length; ++e) {
+      if (zztboard.elements[e].element === 4) {
+        codepagestats.push(`@startx ${indextox(e, ZZT_BOARD_WIDTH)}`)
+        codepagestats.push(`@starty ${indextoy(e, ZZT_BOARD_WIDTH)}`)
+      }
+    }
+
     if (isnumber(zztboard.maxplayershots)) {
       codepagestats.push(`@maxplayershots ${zztboard.maxplayershots}`)
     }
