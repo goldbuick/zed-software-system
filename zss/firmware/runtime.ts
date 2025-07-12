@@ -2,6 +2,7 @@ import { CHIP } from 'zss/chip'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
+  gadgetaddcenterpadding,
   gadgetcheckqueue,
   gadgetcheckset,
   gadgethyperlink,
@@ -90,11 +91,11 @@ export const RUNTIME_FIRMWARE = createfirmware({
       if (READ_CONTEXT.elementisplayer) {
         // player updating sidebar
         const shared = gadgetstate(READ_CONTEXT.elementid)
-        shared.sidebar = queue
+        shared.sidebar = gadgetaddcenterpadding(queue)
       } else {
         // element sending a scroll to a player
         const shared = gadgetstate(READ_CONTEXT.elementfocus)
-        shared.scroll = queue
+        shared.scroll = gadgetaddcenterpadding(queue)
       }
     }
   },

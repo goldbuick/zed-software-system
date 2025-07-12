@@ -28,16 +28,13 @@ export function PanelItemContent({
   // detect $CENTER
   const centertext = hascenter(item)
   if (ispresent(centertext)) {
-    const measure = tokenizeandmeasuretextformat(
-      centertext,
-      edge.width,
-      edge.height,
-    )
+    const widthmax = edge.width - 3
+    const measure = tokenizeandmeasuretextformat(centertext, widthmax, 3)
     const contentmax = measure?.measuredwidth ?? 1
     const padding = clamp(
-      Math.round((edge.width - contentmax - 3) * 0.5),
+      Math.floor(widthmax * 0.5 - contentmax * 0.5),
       0,
-      edge.width,
+      widthmax,
     )
     tokenizeandwritetextformat(
       `${' '.repeat(padding)}$WHITE${centertext}${ispresent(row) ? `\n` : ``}`,

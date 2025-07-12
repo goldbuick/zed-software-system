@@ -10,6 +10,7 @@ import {
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, isnumber, isstring, noop } from 'zss/mapping/types'
 import { READ_CONTEXT } from 'zss/words/reader'
+import { hascenter } from 'zss/words/textformat'
 import { NAME, WORD } from 'zss/words/types'
 
 import { GADGET_STATE, PANEL_ITEM, PANEL_SHARED, paneladdress } from './types'
@@ -107,6 +108,20 @@ export function gadgetcheckqueue(element: string) {
   const queue = gadgetreadqueue(element)
   panelqueue[element] = []
   return queue
+}
+
+export function gadgetaddcenterpadding(queue: PANEL_ITEM[]) {
+  const items: PANEL_ITEM[] = []
+  for (let i = 0; i < queue.length; ++i) {
+    const item = queue[i]
+    // detect $CENTER and add spacing
+    if (isstring(item) && ispresent(hascenter(item))) {
+      items.push(' ', item, ' ')
+    } else {
+      items.push(item)
+    }
+  }
+  return items
 }
 
 export function gadgettext(element: string, text: string) {
