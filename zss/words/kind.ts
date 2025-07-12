@@ -1,7 +1,13 @@
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { memoryelementkindread } from 'zss/memory'
 
-import { readcolor, readstrbg, readstrcolor, STR_COLOR } from './color'
+import {
+  colortobg,
+  readcolor,
+  readstrbg,
+  readstrcolor,
+  STR_COLOR,
+} from './color'
 import { READ_CONTEXT } from './reader'
 import { COLOR, WORD } from './types'
 
@@ -67,5 +73,5 @@ export function readstrkindbg(kind: MAYBE<STR_KIND>): MAYBE<COLOR> {
   }
   const [, strcolor] = kind
   const bg = ispresent(strcolor) ? readstrbg(strcolor) : undefined
-  return ispresent(bg) ? bg - COLOR.ONBLACK : undefined
+  return ispresent(bg) ? colortobg(bg) : undefined
 }
