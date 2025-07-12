@@ -101,7 +101,6 @@
     "typescript": "^5.2.2",
     "uint8-util": "^2.2.5",
     "unigram": "^1.1.1",
-    "unmute-ios-audio": "^3.3.0",
     "uqr": "^0.1.2",
     "vite": "^5.4.11",
     "vite-bundle-analyzer": "^0.13.1",
