@@ -406,8 +406,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
         },
       )
       if (didmove === false) {
-        READ_CONTEXT.element.stepx = 0
-        READ_CONTEXT.element.stepy = 0
         // walking breakables get bonked
         if (memoryelementstatread(READ_CONTEXT.element, 'breakable')) {
           // mark target for deletion

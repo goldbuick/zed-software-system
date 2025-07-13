@@ -320,27 +320,27 @@ export function boardfindplayer(
 // evals directions into a PT
 export function boardevaldir(
   board: MAYBE<BOARD>,
-  target: MAYBE<BOARD_ELEMENT>,
+  element: MAYBE<BOARD_ELEMENT>,
   player: string,
   dir: STR_DIR,
   startpt: PT,
 ): EVAL_DIR {
   const layer: DIR = DIR.MID
-  if (!ispresent(board) || !ispresent(target)) {
+  if (!ispresent(board) || !ispresent(element)) {
     return { dir, startpt, destpt: startpt, layer }
   }
 
   const pt: PT = {
-    x: target.x ?? 0,
-    y: target.y ?? 0,
+    x: element.x ?? 0,
+    y: element.y ?? 0,
   }
-  const lpt: PT = {
-    x: target.lx ?? pt.x,
-    y: target.ly ?? pt.y,
+  const step: PT = {
+    x: pt.x + (element.stepx ?? 0),
+    y: pt.y + (element.stepy ?? 0),
   }
 
   // we need to know current flow etc..
-  const flow = dirfrompts(lpt, pt)
+  const flow = dirfrompts(pt, step)
   const xmax = BOARD_WIDTH - 1
   const ymax = BOARD_HEIGHT - 1
   for (let i = 0; i < dir.length; ++i) {
@@ -382,7 +382,7 @@ export function boardevaldir(
         ptapplydir(pt, flow)
         break
       case DIR.SEEK: {
-        const playerobject = boardfindplayer(board, target, player)
+        const playerobject = boardfindplayer(board, element, player)
         if (ispt(playerobject)) {
           ptapplydir(pt, dirfrompts(startpt, playerobject))
         }
@@ -404,7 +404,7 @@ export function boardevaldir(
       case DIR.RNDP: {
         const modeval = boardevaldir(
           board,
-          target,
+          element,
           player,
           dir.slice(i + 1),
           startpt,
@@ -446,6 +446,7 @@ export function boardevaldir(
             }
             break
           case DIR.OPP:
+            debugger
             switch (dirfrompts(startpt, modeval.destpt)) {
               case DIR.NORTH:
                 ptapplydir(pt, DIR.SOUTH)
@@ -474,7 +475,8 @@ export function boardevaldir(
             }
             break
         }
-        break
+        // result
+        return { dir, startpt, destpt: pt, layer }
       }
       // pathfinding
       case DIR.FLEE:
@@ -483,7 +485,7 @@ export function boardevaldir(
         const [x, y] = dir.slice(i + 1)
         if (isnumber(x) && isnumber(y)) {
           const dest = { x: clamp(x, 0, xmax), y: clamp(y, 0, ymax) }
-          const collision = memoryelementstatread(target, 'collision')
+          const collision = memoryelementstatread(element, 'collision')
           const maybept = boardreadpath(board, collision, pt, dest, true)
           if (ispresent(maybept)) {
             pt.x = maybept.x
@@ -503,7 +505,7 @@ export function boardevaldir(
           if (randominteger(1, 100) < 5) {
             ptapplydir(pt, pick(DIR.NORTH, DIR.SOUTH, DIR.WEST, DIR.EAST))
           } else {
-            const collision = memoryelementstatread(target, 'collision')
+            const collision = memoryelementstatread(element, 'collision')
             const maybept = boardreadpath(board, collision, pt, dest, false)
             if (ispresent(maybept)) {
               // check dest spot for blocked
@@ -546,7 +548,7 @@ export function boardevaldir(
       case DIR.UNDER: {
         const modeval = boardevaldir(
           board,
-          target,
+          element,
           player,
           dir.slice(i + 1),
           startpt,
