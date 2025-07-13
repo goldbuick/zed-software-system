@@ -91,6 +91,17 @@ const synthdevice = createdevice('synth', [], (message) => {
     return
   }
 
+  // player filter
+  const player = registerreadplayer()
+  switch (message.target) {
+    case 'focus':
+    case 'audioenabled':
+      if (message.player !== player) {
+        return
+      }
+      break
+  }
+
   switch (message.target) {
     case 'audioenabled':
       api_log(synthdevice, message.player, 'audio is enabled!')
