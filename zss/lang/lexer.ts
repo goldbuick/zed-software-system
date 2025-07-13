@@ -20,14 +20,6 @@ function createSimpleToken(config: ITokenConfig) {
 }
 
 function createWordToken(word: string) {
-  // if (skipped) {
-  //   return createSimpleToken({
-  //     name: word,
-  //     pattern: new RegExp(word.toLowerCase(), 'i'),
-  //     longer_alt: stringliteral,
-  //     group: Lexer.SKIPPED,
-  //   })
-  // }
   return createSimpleToken({
     name: word,
     pattern: new RegExp(word.toLowerCase(), 'i'),
@@ -70,32 +62,50 @@ export const command = createSimpleToken({
 })
 
 let matchTextEnabled = false
-
-function matchBasicText(text: string, startOffset: number, matched: IToken[]) {
+const probablynottext = `@#/?':!`
+function matchBasicText(text: string, startOffset: number) {
   if (!matchTextEnabled) {
     return null
   }
 
-  const [lastMatched] = matched.slice(-1)
+  // scan for possible text start
+  let cursor = startOffset
 
-  // check for newline
-  if (lastMatched && lastMatched.tokenType !== newline) {
+  // check leading char
+  if (probablynottext.includes(text[cursor - 1])) {
     return null
   }
 
-  // scan beginning of line whitespace
-  let cursor = startOffset
+  // scan forwards to determine if this is just whitespace
   while (text[cursor] === ' ') {
     cursor++
   }
-
-  // detect beginning of text
-  if (`@#/?':!`.includes(text[cursor])) {
+  if (probablynottext.includes(text[cursor])) {
     return null
   }
 
+  // scan backwards to check what kind of spot we're in
+  while (cursor > 0 && `@#':!/?\n`.includes(text[cursor]) === false) {
+    cursor--
+  }
+
+  switch (text[cursor]) {
+    case '?':
+    case '/':
+    case '\n':
+      // okay
+      break
+    case '@':
+    case '#':
+    case `'`:
+    case ':':
+    case '!':
+      // not-okay
+      return null
+  }
+
   // scan until EOL
-  let i = startOffset + 1
+  let i = startOffset
   while (i < text.length && text[i] !== '\n') {
     i++
   }
