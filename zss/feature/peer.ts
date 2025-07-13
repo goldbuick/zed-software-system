@@ -1,6 +1,6 @@
 import { KademliaTable } from 'kademlia-table'
-import P2PT, { Peer } from 'p2pt'
-import { hex2arr } from 'uint8-util'
+import Peer from 'peerjs'
+import { arr2hex, hex2arr, randomBytes } from 'uint8-util'
 import {
   MESSAGE,
   api_log,
@@ -20,22 +20,9 @@ import { SOFTWARE } from 'zss/device/session'
 import { createinfohash } from 'zss/mapping/guid'
 import { ispresent, MAYBE } from 'zss/mapping/types'
 
-const trackerlist = `
-webtorrent.dev
-openwebtorrent.com
-`
-  .split('\n')
-  .map((item) => item.trim())
-  .filter((item) => item)
-  .map((item) => `wss://tracker.${item}`)
-
-function peerstringtobytes(peer: string) {
-  return hex2arr(peer)
-}
-
 type ROUTING_NODE = {
-  id: Uint8Array
   peer: Peer
+  node: Uint8Array
 }
 
 type ROUTING_MESSAGE =
@@ -52,93 +39,37 @@ type ROUTING_MESSAGE =
       gme?: MESSAGE
     }
 
-const hubworld = `hubworld_${import.meta.env.ZSS_COMMIT_HASH}`
-const finder = new P2PT<ROUTING_MESSAGE>(trackerlist, hubworld)
-const routingtable = new KademliaTable<ROUTING_NODE>(
-  peerstringtobytes(finder._peerId),
-  {
-    getId(node) {
-      return node.id
-    },
+const selfnode = createinfohash(registerreadplayer())
+const routingtable = new KademliaTable<ROUTING_NODE>(hex2arr(selfnode), {
+  getId(entry) {
+    return entry.node
   },
-)
-
-finder.on('peerconnect', (peer) => {
-  api_log(SOFTWARE, registerreadplayer(), `remote connected ${peer.id}`)
-  routingtable.add({ id: peerstringtobytes(peer.id), peer })
 })
 
-finder.on('peerclose', (peer) => {
-  api_log(SOFTWARE, registerreadplayer(), `remote closed ${peer.id}`)
-  routingtable.remove(peerstringtobytes(peer.id))
-})
+// finder.on('peerconnect', (peer) => {
+//   api_log(SOFTWARE, registerreadplayer(), `remote connected ${peer.id}`)
+//   routingtable.add({ id: peerstringtobytes(peer.id), peer })
+// })
+
+// finder.on('peerclose', (peer) => {
+//   api_log(SOFTWARE, registerreadplayer(), `remote closed ${peer.id}`)
+//   routingtable.remove(peerstringtobytes(peer.id))
+// })
 
 // general routing info
 let subscribetopic = ''
 const subscribelastseen = new Map<string, Map<string, number>>()
-finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
-  // grab timestamp
-  const current = Date.now()
-  // ensure we have a list of last seen peer for given topic
-  const lastseen = subscribelastseen.get(msg.topic) ?? new Map<string, number>()
+// finder.on('msg', (_, msg: ROUTING_MESSAGE) => {
 
-  // handle message
-  if ('pub' in msg) {
-    // are we subscribed to this topic ?
-    if (msg.topic === subscribetopic) {
-      // console.info('pub', msg.gme)
-      topicbridge?.forward({
-        ...msg.gme,
-        // translate to software session
-        session: SOFTWARE.session(),
-      })
-    }
-    // peers that care about this topic
-    for (const [peerid, delay] of lastseen) {
-      const delta = current - delay
-      // filter out peers that no longer care about given topic
-      if (delta > 1000 * 60) {
-        lastseen.delete(peerid)
-      } else {
-        // forward message to peer
-        const [node] = routingtable.listClosestToId(
-          peerstringtobytes(peerid),
-          1,
-        )
-        if (ispresent(node)) {
-          finder.send(node.peer, msg).catch(console.error)
-        }
-      }
-    }
-  } else if ('sub' in msg) {
-    // track that this peer cares about this topic
-    lastseen.set(msg.sub, current)
-    // are we the host of this topic ?
-    if (msg.topic === subscribetopic && finder._peerId === subscribetopic) {
-      // console.info('sub', msg.gme)
-      topicbridge?.forward({
-        ...msg.gme,
-        // translate to software session
-        session: SOFTWARE.session(),
-      })
-      // clear search once we start getting messages we care about
-      peersearchstop()
-    } else if (ispresent(msg.gme)) {
-      // forwards towards host peer
-      peersubscribemessage(msg.topic, msg.sub, msg.gme)
-    }
-  }
-  // update last seen for given topic
-  subscribelastseen.set(msg.topic, lastseen)
-})
+// })
 
-finder.on('trackerconnect', (tracker, stats) => {
-  api_log(
-    SOFTWARE,
-    registerreadplayer(),
-    `looking for players ${createinfohash(tracker.announceUrl)} [${stats.connected}]`,
-  )
-})
+// finder.on('trackerconnect', (tracker, stats) => {
+//   api_log(
+//     SOFTWARE,
+//     registerreadplayer(),
+//     `looking for players ${createinfohash(tracker.announceUrl)} [${stats.connected}]`,
+//   )
+// })
 // finder.on('trackerwarning', console.info)
 
 // topic related state
@@ -166,7 +97,7 @@ function peerusehost(host: string) {
   if (!isstarted) {
     isstarted = true
     subscribetopic = host
-    finder.start()
+    // finder.start()
     api_log(
       SOFTWARE,
       registerreadplayer(),
@@ -176,21 +107,21 @@ function peerusehost(host: string) {
 }
 
 function peerpublishmessage(topic: string, gme: MESSAGE) {
+  const target = createinfohash(topic)
   // forwards towards topic host peer
-  const [node] = routingtable.listClosestToId(peerstringtobytes(topic), 1)
+  const [node] = routingtable.listClosestToId(hex2arr(target), 1)
   if (ispresent(node)) {
-    finder.send(node.peer, { topic, pub: true, gme }).catch(() => {
-      // console.error
-    })
+    // finder.send(node.peer, { topic, pub: true, gme }).catch(() => {
+    //   // console.error
+    // })
   }
 }
 
 export function peerserver(hidden: boolean, tabopen: boolean) {
-  // get topic
-  const host = finder._peerId
-
   // setup host
-  peerusehost(host)
+  peerusehost(selfnode)
+
+  // bytestocontentstring
 
   // show join code
   bridge_showjoincode(SOFTWARE, registerreadplayer(), hidden, host)

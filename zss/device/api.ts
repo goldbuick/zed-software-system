@@ -144,9 +144,8 @@ export function bridge_showjoincode(
   device: DEVICELIKE,
   player: string,
   hidden: boolean,
-  topic: string,
 ) {
-  device.emit(player, 'bridge:showjoincode', [hidden, topic])
+  device.emit(player, 'bridge:showjoincode', hidden)
 }
 
 export function gadgetclient_paint(

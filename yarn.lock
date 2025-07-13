@@ -5188,10 +5188,10 @@ jszip@^3.10.1:
     readable-stream "~2.3.6"
     setimmediate "^1.0.5"
 
-kademlia-table@^2.0.4:
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/kademlia-table/-/kademlia-table-2.0.4.tgz#f72ad5dfc6dfe8eb7f8f36e750e5347c4a354032"
-  integrity sha512-iZbQLBjaPkF/ncOdMcHrG9DKx4mqLOahRfLwsiZRoND041c6L/ezAnfz2z6bg9yW504KCYcIvdT6jr5DRT3cdA==
+kademlia-table@^2.0.5:
+  version "2.0.5"
+  resolved "https://registry.npmjs.org/kademlia-table/-/kademlia-table-2.0.5.tgz#33a76ea1354c3f4db95c89b616cf83e3c533577d"
+  integrity sha512-Kqch6oJ4h1jyuoC0qLvMa3CxEJo3ZJxGWrkniQ33L38Poy3hv94ddnbnx0fHXbEvR7HcbLe9KTQRejyGtPItNw==
   dependencies:
     uint8array-tools "^0.0.9"
 
