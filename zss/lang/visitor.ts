@@ -1360,7 +1360,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_i, ''),
+          value: 'i',
         }),
       )
     }
@@ -1369,7 +1369,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_idle, ''),
+          value: 'idle',
         }),
       )
     }
@@ -1378,7 +1378,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_n, ''),
+          value: 'n',
         }),
       )
     }
@@ -1387,7 +1387,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_u, ''),
+          value: 'u',
         }),
       )
     }
@@ -1396,7 +1396,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_north, ''),
+          value: 'north',
         }),
       )
     }
@@ -1405,7 +1405,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_up, ''),
+          value: 'up',
         }),
       )
     }
@@ -1414,7 +1414,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_s, ''),
+          value: 's',
         }),
       )
     }
@@ -1423,7 +1423,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_d, ''),
+          value: 'd',
         }),
       )
     }
@@ -1432,7 +1432,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_south, ''),
+          value: 'south',
         }),
       )
     }
@@ -1441,7 +1441,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_down, ''),
+          value: 'down',
         }),
       )
     }
@@ -1450,7 +1450,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_w, ''),
+          value: 'w',
         }),
       )
     }
@@ -1459,7 +1459,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_l, ''),
+          value: 'l',
         }),
       )
     }
@@ -1468,7 +1468,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_west, ''),
+          value: 'west',
         }),
       )
     }
@@ -1477,7 +1477,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_e, ''),
+          value: 'e',
         }),
       )
     }
@@ -1486,7 +1486,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_r, ''),
+          value: 'r',
         }),
       )
     }
@@ -1495,7 +1495,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_east, ''),
+          value: 'east',
         }),
       )
     }
@@ -1504,7 +1504,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_right, ''),
+          value: 'right',
         }),
       )
     }
@@ -1531,7 +1531,16 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: 'rndtoken_rndns',
+          value: 'rndns',
+        }),
+      )
+    }
+    if (ctx.token_flow) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: 'flow',
         }),
       )
     }
@@ -1541,7 +1550,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_by, ''),
+          value: 'by',
         }),
         ...this.go(ctx.simple_token),
       )
@@ -1551,7 +1560,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_at, ''),
+          value: 'at',
         }),
         ...this.go(ctx.simple_token),
       )
@@ -1561,7 +1570,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_away, ''),
+          value: 'away',
         }),
         ...this.go(ctx.simple_token),
       )
@@ -1571,7 +1580,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_toward, ''),
+          value: 'toward',
         }),
         ...this.go(ctx.simple_token),
       )
@@ -1582,7 +1591,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_find, ''),
+          value: 'find',
         }),
         ...this.go(ctx.kind),
       )
@@ -1593,7 +1602,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_flee, ''),
+          value: 'flee',
         }),
         ...this.go(ctx.kind),
       )
@@ -1604,7 +1613,7 @@ class ScriptVisitor
         ...this.createcodenode(location, {
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
-          value: tokenstring(ctx.token_to, ''),
+          value: 'to',
         }),
         ...this.go(ctx.dir),
       )
