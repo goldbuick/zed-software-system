@@ -44,6 +44,10 @@ const connectiontabletimers: Record<string, any> = {}
 const connectiontableblocklist = new Map<string, boolean>()
 const subscribelastseen = new Map<string, Map<string, number>>()
 
+export function netterminaltopic() {
+  return subscribetopic
+}
+
 let searchping: any
 function uplinkstart() {
   function searchpingmsg() {
@@ -187,6 +191,11 @@ function netterminalcreate(topic: string) {
   const player = registerreadplayer()
   subscribetopic = createinfohash(topic)
   networkpeer = new Peer(createinfohash(player), { debug: 2 })
+  window.addEventListener('unload', () => {
+    networkpeer?.destroy()
+    networkpeer = undefined
+  })
+
   api_log(SOFTWARE, player, `starting netterminal for ${subscribetopic}`)
 
   // track possible peerids
@@ -245,7 +254,8 @@ function netterminalcreate(topic: string) {
 export function netterminalhost(topic: string) {
   // restart if needed
   if (ispresent(networkpeer)) {
-    netterminalhalt()
+    api_log(SOFTWARE, registerreadplayer(), `netterminal already active`)
+    return
   }
 
   // startup peerjs

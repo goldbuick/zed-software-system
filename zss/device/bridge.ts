@@ -2,7 +2,11 @@ import { ChatClient } from '@twurple/chat'
 import IVSBroadcastClient, { Callback } from 'amazon-ivs-web-broadcast'
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
-import { netterminalhost, netterminaljoin } from 'zss/feature/netterminal'
+import {
+  netterminalhost,
+  netterminaljoin,
+  netterminaltopic,
+} from 'zss/feature/netterminal'
 import {
   userscreenstart,
   userscreenstop,
@@ -137,18 +141,13 @@ const bridge = createdevice('bridge', [], (message) => {
     case 'tab':
       netterminalhost(message.player)
       // open a join tab
-      bridge_tabopen(SOFTWARE, message.player, message.player)
+      bridge_tabopen(SOFTWARE, message.player)
       break
     case 'tabopen':
       doasync(bridge, message.player, async () => {
         await waitfor(1000)
-        if (isstring(message.data)) {
-          window.open(
-            `${location.origin}/join/#${message.data}`,
-            '_blank',
-            'noopener,noreferrer',
-          )
-        }
+        const joinurl = `${location.origin}/join/#${netterminaltopic()}`
+        window.open(joinurl, '_blank', 'noopener,noreferrer')
       })
       break
     case 'join':
@@ -158,7 +157,7 @@ const bridge = createdevice('bridge', [], (message) => {
       break
     case 'showjoincode':
       doasync(bridge, message.player, async () => {
-        const joinurl = `${location.origin}/join/#${createinfohash(message.player)}`
+        const joinurl = `${location.origin}/join/#${netterminaltopic()}`
         const url = await shorturl(joinurl)
         if (message.data) {
           writecopyit(bridge, message.player, url, `secret join url`, false)

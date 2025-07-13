@@ -132,12 +132,8 @@ export function bridge_tab(
   device.emit(player, 'bridge:tab', hidden)
 }
 
-export function bridge_tabopen(
-  device: DEVICELIKE,
-  player: string,
-  topic: string,
-) {
-  device.emit(player, 'bridge:tabopen', topic)
+export function bridge_tabopen(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:tabopen')
 }
 
 export function bridge_showjoincode(
