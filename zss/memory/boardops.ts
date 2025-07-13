@@ -18,7 +18,11 @@ import {
   CODE_PAGE_TYPE,
 } from './types'
 
-import { memoryelementkindread, memoryelementstatread } from '.'
+import {
+  memoryelementcheckpushable,
+  memoryelementkindread,
+  memoryelementstatread,
+} from '.'
 
 // object / terrain utils
 
@@ -164,7 +168,7 @@ export function boardmoveobject(
 
     // is element pushable ?
     const isitem = !!memoryelementstatread(maybeobject, 'item')
-    const ispushable = !!memoryelementstatread(maybeobject, 'pushable')
+    const ispushable = memoryelementcheckpushable(movingelement, maybeobject)
     // player cannot push items
     if (ispushable && (!movingelementisplayer || !isitem)) {
       const bumpdir = dirfrompts(

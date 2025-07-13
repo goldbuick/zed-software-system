@@ -198,15 +198,13 @@ export function codepagereadstatsfromtext(content: string): CODE_PAGE_STATS {
           stats.name = maybename
           break
         case STAT_TYPE.CONST: {
-          const [maybename, maybevalue] = stat.values
+          const [maybename, ...maybevalues] = stat.values
           if (isstring(maybename)) {
             const name = NAME(maybename)
+            const maybevalue = maybevalues.join(' ')
             if (isstring(maybevalue)) {
-              // can we parse consts here ???? too ????
               const numbervalue = parseFloat(maybevalue)
               stats[name] = isnumber(numbervalue) ? numbervalue : maybevalue
-            } else if (isnumber(maybevalue)) {
-              stats[name] = maybevalue
             } else {
               stats[name] = 1
             }
@@ -328,7 +326,6 @@ export function codepageapplyelementstats(
     switch (key) {
       case 'name':
       case 'char':
-      case 'displaychar':
       case 'light':
       case 'group':
       case 'p1':
@@ -340,14 +337,15 @@ export function codepageapplyelementstats(
       case 'cycle':
       case 'stepx':
       case 'stepy':
+      case 'displaychar':
         // @ts-expect-error - we are doing this on purpose
         element[key] = stats[key]
         break
       case 'color':
       case 'bg':
+      case 'lightdir':
       case 'displaycolor':
       case 'displaybg':
-      case 'lightdir':
         // @ts-expect-error - we are doing this on purpose
         element[key] = mapstrtoconsts(stats[key]) ?? stats[key]
         break
@@ -358,7 +356,8 @@ export function codepageapplyelementstats(
         element.item = 0
         break
       case 'ispushable':
-        element.pushable = 1
+        // @ts-expect-error - we are doing this on purpose
+        element.pushable = stats[key]
         break
       case 'notpushable':
         element.pushable = 0

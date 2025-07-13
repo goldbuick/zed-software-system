@@ -1,6 +1,10 @@
 import { pttoindex } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
-import { memoryelementstatread, memorymoveobject } from 'zss/memory'
+import {
+  memoryelementcheckpushable,
+  memoryelementstatread,
+  memorymoveobject,
+} from 'zss/memory'
 import { checkdoescollide } from 'zss/memory/atomics'
 import {
   boardelementread,
@@ -205,7 +209,7 @@ export function boardweavegroup(
 
         // detect we can make room
         if (
-          memoryelementstatread(destelement, 'pushable') &&
+          memoryelementcheckpushable(fromelement, destelement) &&
           (fromcollision !== COLLISION.ISWALK || hasfromelement)
         ) {
           // if we are doing a carry, we should push
@@ -292,7 +296,7 @@ export function boardweavegroup(
         carriedids.includes(destid) &&
         groupids.includes(destid) !== true
       ) {
-        if (memoryelementstatread(destelement, 'pushable')) {
+        if (memoryelementcheckpushable(fromelement, destelement)) {
           didcollide =
             memorymoveobject(book, targetboard, destelement, dest) !== true
         } else {

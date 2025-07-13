@@ -11,7 +11,7 @@ import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
-import { ispt } from 'zss/words/dir'
+import { ispt, mapstrdir, dirfrompts, mapstrdirtoconst } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
@@ -320,6 +320,27 @@ export function memoryelementstatread(
     default:
       return undefined
   }
+}
+
+export function memoryelementcheckpushable(
+  pusher: MAYBE<BOARD_ELEMENT>,
+  target: MAYBE<BOARD_ELEMENT>,
+) {
+  const pusherpt: PT = { x: pusher?.x ?? -1, y: pusher?.y ?? -1 }
+  const targetpt: PT = { x: target?.x ?? -1, y: target?.y ?? -1 }
+  const pushdir = dirfrompts(pusherpt, targetpt)
+  const pushable = memoryelementstatread(target, 'pushable')
+  if (isnumber(pushable)) {
+    return pushable !== 0
+  }
+  if (isstring(pushable)) {
+    return pushable
+      .trim()
+      .split(' ')
+      .map((str) => mapstrdirtoconst(mapstrdir(str)))
+      .some((dir) => dir === pushdir)
+  }
+  return false
 }
 
 export function memorywritefromkind(
