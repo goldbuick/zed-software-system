@@ -106,11 +106,14 @@ export function createsynth() {
   })
   sidechaincompressor.connect(maincompressor)
 
-  const altaction = new Volume(-24)
+  const altaction = new Volume(-12)
   const drumaction = new Volume(-32)
 
-  const playvolume = new Volume(volumetodb(80))
+  const playvolume = new Volume(volumetodb(20))
   playvolume.connect(sidechaincompressor)
+
+  const drumvolume = new Volume(volumetodb(100))
+  drumvolume.connect(maincompressor)
 
   const bgplayvolume = new Volume()
   bgplayvolume.connect(maincompressor)
@@ -119,9 +122,6 @@ export function createsynth() {
   const ttsvolume = new Volume()
   ttsvolume.connect(maincompressor)
   ttsvolume.connect(altaction)
-
-  const drumvolume = new Volume(volumetodb(80))
-  drumvolume.connect(maincompressor)
 
   // side-chain input
   altaction.connect(sidechaincompressor.sidechain)
@@ -776,7 +776,7 @@ export function createsynth() {
   // set default volumes
   setttsvolume(25)
   setplayvolume(80)
-  setbgplayvolume(128)
+  setbgplayvolume(100)
 
   return {
     broadcastdestination,
