@@ -106,24 +106,26 @@ export function createsynth() {
   })
   sidechaincompressor.connect(maincompressor)
 
+  const altaction = new Volume(-24)
+  const drumaction = new Volume(-32)
+
   const playvolume = new Volume(volumetodb(80))
   playvolume.connect(sidechaincompressor)
 
   const bgplayvolume = new Volume()
-  bgplayvolume.connect(sidechaincompressor)
+  bgplayvolume.connect(maincompressor)
+  bgplayvolume.connect(altaction)
 
   const ttsvolume = new Volume()
-  ttsvolume.connect(sidechaincompressor)
+  ttsvolume.connect(maincompressor)
+  ttsvolume.connect(altaction)
 
-  const drumvolume = new Volume()
-  drumvolume.connect(sidechaincompressor)
-
-  const drumaction = new Volume()
+  const drumvolume = new Volume(volumetodb(80))
+  drumvolume.connect(maincompressor)
 
   // side-chain input
-  ttsvolume.connect(sidechaincompressor.sidechain)
+  altaction.connect(sidechaincompressor.sidechain)
   drumaction.connect(sidechaincompressor.sidechain)
-  bgplayvolume.connect(sidechaincompressor.sidechain)
 
   // 8tracks
   const SOURCE = [
@@ -774,7 +776,7 @@ export function createsynth() {
   // set default volumes
   setttsvolume(25)
   setplayvolume(80)
-  setbgplayvolume(100)
+  setbgplayvolume(128)
 
   return {
     broadcastdestination,
