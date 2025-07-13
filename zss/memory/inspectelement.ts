@@ -6,6 +6,7 @@ import {
   gadgetstate,
   gadgettext,
 } from 'zss/gadget/data/api'
+import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
@@ -139,7 +140,7 @@ export function memoryinspectelement(
         case 'bg':
           return 0
         case 'cycle':
-          return 3
+          return CYCLE_DEFAULT
         case 'collision':
           return COLLISION.ISWALK
         case 'pushable':
