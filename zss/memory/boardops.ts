@@ -145,17 +145,6 @@ export function boardmoveobject(
       return { ...maybeobject }
     }
 
-    // has a player touched an item element?
-    const item = !!memoryelementstatread(maybeobject, 'item')
-    if (movingelementisplayer && item) {
-      // update object location
-      movingelement.x = dest.x
-      movingelement.y = dest.y
-
-      // for sending interaction messages
-      return { ...maybeobject }
-    }
-
     // has a bullet hit a breakable element?
     const breakable = !!memoryelementstatread(maybeobject, 'breakable')
     if (movingelementisbullet && breakable) {
@@ -174,8 +163,10 @@ export function boardmoveobject(
     }
 
     // is element pushable ?
+    const isitem = !!memoryelementstatread(maybeobject, 'item')
     const ispushable = !!memoryelementstatread(maybeobject, 'pushable')
-    if (ispushable) {
+    // player cannot push items
+    if (ispushable && (!movingelementisplayer || !isitem)) {
       const bumpdir = dirfrompts(
         { x: movingelement.x, y: movingelement.y },
         dest,

@@ -746,11 +746,8 @@ export function memorymoveobject(
       }
     }
 
-    // delete item and breakable elements
-    if (
-      (elementisplayer && memoryelementstatread(blocked, 'item')) ||
-      (elementisbullet && memoryelementstatread(blocked, 'breakable'))
-    ) {
+    // delete breakable elements
+    if (elementisbullet && memoryelementstatread(blocked, 'breakable')) {
       if (ispresent(blocked?.id)) {
         const maybeobject = boardelementread(board, {
           x: blocked.x ?? -1,
