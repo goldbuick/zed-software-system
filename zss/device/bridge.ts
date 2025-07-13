@@ -140,13 +140,16 @@ const bridge = createdevice('bridge', [], (message) => {
       bridge_tabopen(SOFTWARE, message.player, message.player)
       break
     case 'tabopen':
-      if (isstring(message.data)) {
-        window.open(
-          `${location.origin}/join/#${message.data}`,
-          '_blank',
-          'noopener,noreferrer',
-        )
-      }
+      doasync(bridge, message.player, async () => {
+        await waitfor(1000)
+        if (isstring(message.data)) {
+          window.open(
+            `${location.origin}/join/#${message.data}`,
+            '_blank',
+            'noopener,noreferrer',
+          )
+        }
+      })
       break
     case 'join':
       if (isstring(message.data)) {
