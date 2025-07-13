@@ -8,9 +8,9 @@ import { boardsetlookup } from 'zss/memory/boardlookup'
 import { bookwritecodepage, createbook } from 'zss/memory/book'
 import { codepagereaddata, createcodepage } from 'zss/memory/codepage'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE_TYPE } from 'zss/memory/types'
-import { mapcolortostrcolor, STR_COLOR, STR_COLOR_CONST } from 'zss/words/color'
+import { mapcolortostrcolor, STR_COLOR } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
-import { COLOR, PT } from 'zss/words/types'
+import { PT } from 'zss/words/types'
 
 type ZZT_ELEMENT = {
   element: number
