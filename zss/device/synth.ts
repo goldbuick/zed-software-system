@@ -1,4 +1,4 @@
-import { getTransport, start } from 'tone'
+import { start, Context, setContext, getTransport } from 'tone'
 import { createdevice } from 'zss/device'
 import { AUDIO_SYNTH, createsynth } from 'zss/feature/synth'
 import { addfcrushmodule } from 'zss/feature/synthfcrushworkletnode'
@@ -36,13 +36,19 @@ export function enableaudio() {
   // synth setup
   locked = true
 
+  // create new context
+  setContext(
+    new Context({
+      lookAhead: 0.25,
+      latencyHint: 'playback',
+    }),
+    true,
+  )
+
   // resume audio context
   start()
     .then(() => {
       if (!enabled) {
-        // lets rolling
-        getTransport().start()
-
         // better audio playback for mobile safari
         try {
           const customnavigator = navigator as CustomNavigator
@@ -59,6 +65,7 @@ export function enableaudio() {
             return addsidechainmodule()
           })
           .then(() => {
+            // lets rolling
             locked = false
             enabled = true
             synth_audioenabled(synthdevice, registerreadplayer())
@@ -86,6 +93,7 @@ const synthdevice = createdevice('synth', [], (message) => {
   // validate synth state
   if (enabled && !ispresent(synth)) {
     synth = createsynth()
+    getTransport().start()
   }
   if (!ispresent(synth)) {
     return
