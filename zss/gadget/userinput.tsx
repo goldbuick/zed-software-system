@@ -41,6 +41,9 @@ function playerlocal(index: number) {
   return `${registerreadplayer()}local${index}`
 }
 
+// keep alive ping every 10 seconds
+const DOOT_RATE = 10 * 100
+
 // handle input repeat
 const acc: Record<number, number> = {}
 let localtick = 0
@@ -88,10 +91,12 @@ function pollinput() {
   previous = now
   setTimeout(pollinput, 10)
 
-  if (localtick > 32) {
+  // this is the doot source
+  if (localtick > DOOT_RATE) {
     localtick = 0
     const idx = objectKeys(inputstates)
-    for (let i = 0; i < idx.length; ++i) {
+    // skip main player
+    for (let i = 1; i < idx.length; ++i) {
       const index = parseFloat(idx[i])
       vm_doot(SOFTWARE, playerlocal(index))
     }

@@ -134,19 +134,19 @@ const bridge = createdevice('bridge', [], (message) => {
       }
       break
     case 'start':
-      netterminalhost(message.player)
+      netterminalhost()
       // show join code
       bridge_showjoincode(SOFTWARE, message.player, !!message.data)
       break
     case 'tab':
-      netterminalhost(message.player)
+      netterminalhost()
       // open a join tab
       bridge_tabopen(SOFTWARE, message.player)
       break
     case 'tabopen':
       doasync(bridge, message.player, async () => {
         await waitfor(1000)
-        const joinurl = `${location.origin}/join/#${netterminaltopic()}`
+        const joinurl = `${location.origin}/join/#${netterminaltopic(message.player)}`
         window.open(joinurl, '_blank', 'noopener,noreferrer')
       })
       break
@@ -157,7 +157,7 @@ const bridge = createdevice('bridge', [], (message) => {
       break
     case 'showjoincode':
       doasync(bridge, message.player, async () => {
-        const joinurl = `${location.origin}/join/#${netterminaltopic()}`
+        const joinurl = `${location.origin}/join/#${netterminaltopic(message.player)}`
         const url = await shorturl(joinurl)
         if (message.data) {
           writecopyit(bridge, message.player, url, `secret join url`, false)

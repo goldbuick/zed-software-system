@@ -44,8 +44,8 @@ const connectiontabletimers: Record<string, any> = {}
 const connectiontableblocklist = new Map<string, boolean>()
 const subscribelastseen = new Map<string, Map<string, number>>()
 
-export function netterminaltopic() {
-  return subscribetopic
+export function netterminaltopic(player: string) {
+  return createinfohash(player)
 }
 
 let searchping: any
@@ -60,11 +60,22 @@ function uplinkstart() {
   searchpingmsg()
 
   // create search pulse
-  searchping = setInterval(searchpingmsg, 5 * 1000)
+  searchping = setInterval(searchpingmsg, 2 * 1000)
 }
 
 function uplinkstop() {
   clearInterval(searchping)
+}
+
+function topicbridgeforward(message: MESSAGE) {
+  topicbridge?.forward({
+    ...message,
+    // translate to software session
+    session: SOFTWARE.session(),
+  })
+  if (message.target.includes('acklogin')) {
+    uplinkstop()
+  }
 }
 
 const CONNECTION_TIMEOUT = 5000
@@ -84,13 +95,15 @@ function handledataconnection(dataconnection: DataConnection) {
     if (dataconnection.open) {
       clearTimeout(connectiontabletimers[dataconnection.peer])
       if (ispresent(connectiontable) && ispresent(networkpeer)) {
-        api_log(SOFTWARE, player, `connection from ${dataconnection.peer}`)
+        api_log(SOFTWARE, player, `connected to ${dataconnection.peer}`)
         connectiontable.add({
           peer: dataconnection.peer,
           node: hex2arr(dataconnection.peer),
           dataconnection,
         })
       }
+      // lower seek rate after first connection
+      seekrate = 128
     }
   }
 
@@ -122,13 +135,9 @@ function handledataconnection(dataconnection: DataConnection) {
     // handle message
     if ('pub' in msg) {
       // are we subscribed to this topic ?
-      if (msg.topic === subscribetopic) {
+      if (msg.topic === subscribetopic && ispresent(msg.gme)) {
         // console.info('pub', msg.gme)
-        topicbridge?.forward({
-          ...msg.gme,
-          // translate to software session
-          session: SOFTWARE.session(),
-        })
+        topicbridgeforward(msg.gme)
       }
 
       // peers that care about this topic
@@ -150,20 +159,24 @@ function handledataconnection(dataconnection: DataConnection) {
     } else if ('sub' in msg) {
       // track that this peer cares about this topic
       lastseen.set(msg.sub, current)
-      // are we the host of this topic ?
-      if (msg.topic === subscribetopic && networkpeer.id === subscribetopic) {
-        // console.info('sub', msg.gme)
-        topicbridge?.forward({
-          ...msg.gme,
-          // translate to software session
-          session: SOFTWARE.session(),
+
+      // add seen peer to routingtable
+      const node = hex2arr(msg.sub)
+      if (!routingtable.has(node)) {
+        routingtable.add({
+          peer: msg.sub,
+          node,
+          dataconnection: undefined,
         })
-        // clear search once we start getting messages we care about
-        uplinkstop()
-      } else if (ispresent(msg.gme)) {
-        const topicid = hex2arr(msg.topic)
-        const [node] = connectiontable.listClosestToId(topicid, 1)
+      }
+
+      // are we the host to this topic ?
+      if (msg.topic === networkpeer.id && ispresent(msg.gme)) {
+        // console.info('sub', msg.gme)
+        topicbridgeforward(msg.gme)
+      } else {
         // forwards towards host peer
+        const [node] = connectiontable.listClosestToId(hex2arr(msg.topic), 1)
         if (ispresent(node?.dataconnection)) {
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
           node.dataconnection.send(msg)
@@ -188,15 +201,23 @@ function handledataconnection(dataconnection: DataConnection) {
 }
 
 function netterminalcreate(topic: string) {
+  // setup topic
+  subscribetopic = topic
+
+  // create peer
   const player = registerreadplayer()
-  subscribetopic = createinfohash(topic)
-  networkpeer = new Peer(createinfohash(player), { debug: 2 })
+  networkpeer = new Peer(netterminaltopic(player), { debug: 2 })
+
+  // attempt disconnect on page close
   window.addEventListener('unload', () => {
-    networkpeer?.destroy()
+    networkpeer?.disconnect()
     networkpeer = undefined
   })
 
   api_log(SOFTWARE, player, `starting netterminal for ${subscribetopic}`)
+
+  // start gathering peers
+  netterminalseek()
 
   // track possible peerids
   const playernode = hex2arr(networkpeer.id)
@@ -215,8 +236,6 @@ function netterminalcreate(topic: string) {
 
   networkpeer.on('open', () => {
     api_log(SOFTWARE, registerreadplayer(), `connected to netterminal`)
-    // start gathering peers
-    netterminalseek()
   })
 
   networkpeer.on('connection', handledataconnection)
@@ -251,15 +270,15 @@ function netterminalcreate(topic: string) {
   })
 }
 
-export function netterminalhost(topic: string) {
-  // restart if needed
+export function netterminalhost() {
+  const player = registerreadplayer()
   if (ispresent(networkpeer)) {
-    api_log(SOFTWARE, registerreadplayer(), `netterminal already active`)
+    api_log(SOFTWARE, player, `netterminal already active`)
     return
   }
 
   // startup peerjs
-  netterminalcreate(topic)
+  netterminalcreate(netterminaltopic(player))
 
   // open bridge between peers
   topicbridge = createforward((message) => {
@@ -269,11 +288,10 @@ export function netterminalhost(topic: string) {
       shouldforwardservertoclient(message) &&
       shouldnotforwardonpeerserver(message) === false
     ) {
-      const topicid = hex2arr(subscribetopic)
-      const [node] = connectiontable.listClosestToId(topicid, 1)
-      if (ispresent(node?.dataconnection)) {
+      const [node] = connectiontable.listClosestToId(hex2arr(subscribetopic), 1)
+      if (ispresent(node?.dataconnection) && node.dataconnection.open) {
         const netmsg = {
-          topic,
+          topic: subscribetopic,
           pub: true,
           gme: message,
         }
@@ -285,10 +303,12 @@ export function netterminalhost(topic: string) {
 }
 
 export function netterminaljoin(topic: string) {
-  // restart if needed
   if (ispresent(networkpeer)) {
-    netterminalhalt()
+    api_log(SOFTWARE, registerreadplayer(), `netterminal already active`)
+    return
   }
+  // clear search once we start getting messages we care about
+  // uplinkstop() - like acklogin
 
   // startup peerjs
   netterminalcreate(topic)
@@ -301,11 +321,10 @@ export function netterminaljoin(topic: string) {
       shouldforwardclienttoserver(message) &&
       shouldnotforwardonpeerclient(message) === false
     ) {
-      const topicid = hex2arr(subscribetopic)
-      const [node] = connectiontable.listClosestToId(topicid, 1)
-      if (ispresent(node?.dataconnection)) {
+      const [node] = connectiontable.listClosestToId(hex2arr(subscribetopic), 1)
+      if (ispresent(node?.dataconnection) && node.dataconnection.open) {
         const netmsg = {
-          topic,
+          topic: subscribetopic,
           sub: networkpeer.id,
           gme: message,
         }
@@ -320,6 +339,7 @@ export function netterminaljoin(topic: string) {
 }
 
 let seektimer: any
+let seekrate = 10
 function netterminalseek() {
   doasync(SOFTWARE, registerreadplayer(), async () => {
     if (
@@ -405,13 +425,17 @@ function netterminalseek() {
       }
     }
   })
-  seektimer = setTimeout(netterminalseek, 1000 * 128)
+  seektimer = setTimeout(netterminalseek, seekrate * 1000)
 }
 
 export function netterminalhalt() {
   if (!ispresent(networkpeer)) {
     return
   }
+  // clear topic info
+  subscribetopic = ''
+  subscribelastseen.clear()
+  connectiontableblocklist.clear()
   // clear seek
   clearTimeout(seektimer)
   networkpeer.destroy()

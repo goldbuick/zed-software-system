@@ -324,7 +324,7 @@ export async function readlocalurl(shorturl: string) {
 let keepalive = 0
 
 // send keepalive message every 10 seconds
-const signalrate = 10
+const DOOT_RATE = 10
 
 // stable unique id
 const myplayerid = readsession('PLAYER') ?? createpid()
@@ -588,8 +588,8 @@ const register = createdevice(
         break
       case 'second':
         ++keepalive
-        if (keepalive >= signalrate) {
-          keepalive -= signalrate
+        if (keepalive >= DOOT_RATE) {
+          keepalive -= DOOT_RATE
           vm_doot(register, myplayerid)
         }
         break
