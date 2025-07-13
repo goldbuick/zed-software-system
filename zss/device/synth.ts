@@ -26,8 +26,6 @@ type CustomNavigator = {
   }
 } & Navigator
 
-getTransport().start()
-
 let locked = false
 let enabled = false
 export function enableaudio() {
@@ -42,6 +40,9 @@ export function enableaudio() {
   start()
     .then(() => {
       if (!enabled) {
+        // lets rolling
+        getTransport().start()
+
         // better audio playback for mobile safari
         try {
           const customnavigator = navigator as CustomNavigator
@@ -107,7 +108,9 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'bpm':
       if (isnumber(message.data)) {
-        setAltInterval(message.data)
+        const bpm = message.data
+        setAltInterval(bpm)
+        getTransport().bpm.value = bpm
       }
       break
     case 'playvolume':

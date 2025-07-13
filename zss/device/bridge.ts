@@ -2,7 +2,11 @@ import { ChatClient } from '@twurple/chat'
 import IVSBroadcastClient, { Callback } from 'amazon-ivs-web-broadcast'
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
-import { peerserver, peerclient } from 'zss/feature/peer'
+import {
+  netterminalhost,
+  netterminaljoin,
+  netterminaltopic,
+} from 'zss/feature/netterminal'
 import {
   userscreenstart,
   userscreenstop,
@@ -11,12 +15,19 @@ import {
 } from 'zss/feature/usermedia'
 import { writecopyit, writeheader, writeoption } from 'zss/feature/writeui'
 import { doasync } from 'zss/mapping/func'
+import { createinfohash } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
 import { shorturl } from 'zss/mapping/url'
 import { NAME } from 'zss/words/types'
 
-import { api_error, api_log, vm_loader } from './api'
+import {
+  api_error,
+  api_log,
+  bridge_showjoincode,
+  bridge_tabopen,
+  vm_loader,
+} from './api'
 import { registerreadplayer } from './register'
 import { SOFTWARE } from './session'
 import { synthbroadcastdestination } from './synth'
@@ -123,36 +134,35 @@ const bridge = createdevice('bridge', [], (message) => {
       }
       break
     case 'start':
-      peerserver(!!message.data, false)
+      netterminalhost()
+      // show join code
+      bridge_showjoincode(SOFTWARE, message.player, !!message.data)
       break
     case 'tab':
-      peerserver(!!message.data, true)
+      netterminalhost()
+      // open a join tab
+      bridge_tabopen(SOFTWARE, message.player)
       break
     case 'tabopen':
-      if (isstring(message.data)) {
-        window.open(
-          `${location.origin}/join/#${message.data}`,
-          '_blank',
-          'noopener,noreferrer',
-        )
-      }
+      doasync(bridge, message.player, async () => {
+        await waitfor(1000)
+        const joinurl = `${location.origin}/join/#${netterminaltopic(message.player)}`
+        window.open(joinurl, '_blank', 'noopener,noreferrer')
+      })
       break
     case 'join':
       if (isstring(message.data)) {
-        peerclient(message.data, message.player)
+        netterminaljoin(message.data)
       }
       break
     case 'showjoincode':
       doasync(bridge, message.player, async () => {
-        if (isarray(message.data)) {
-          const [hidden, topic] = message.data as [boolean, string]
-          const joinurl = `${location.origin}/join/#${topic}`
-          const url = await shorturl(joinurl)
-          if (hidden) {
-            writecopyit(bridge, message.player, url, `secret join url`, false)
-          } else {
-            writecopyit(bridge, message.player, url, url)
-          }
+        const joinurl = `${location.origin}/join/#${netterminaltopic(message.player)}`
+        const url = await shorturl(joinurl)
+        if (message.data) {
+          writecopyit(bridge, message.player, url, `secret join url`, false)
+        } else {
+          writecopyit(bridge, message.player, url, url)
         }
       })
       break

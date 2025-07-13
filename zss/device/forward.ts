@@ -91,7 +91,7 @@ export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
   }
 }
 
-// create server -> client forward
+// create client -> server forward
 export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   const route = parsetarget(message.target)
   switch (route.target) {

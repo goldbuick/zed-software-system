@@ -132,21 +132,16 @@ export function bridge_tab(
   device.emit(player, 'bridge:tab', hidden)
 }
 
-export function bridge_tabopen(
-  device: DEVICELIKE,
-  player: string,
-  topic: string,
-) {
-  device.emit(player, 'bridge:tabopen', topic)
+export function bridge_tabopen(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:tabopen')
 }
 
 export function bridge_showjoincode(
   device: DEVICELIKE,
   player: string,
   hidden: boolean,
-  topic: string,
 ) {
-  device.emit(player, 'bridge:showjoincode', [hidden, topic])
+  device.emit(player, 'bridge:showjoincode', hidden)
 }
 
 export function gadgetclient_paint(
