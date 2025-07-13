@@ -188,12 +188,8 @@ export function memoryinspectelement(
   }
 
   if (isobject) {
-    gadgettext(
-      player,
-      `ispushable: ${
-        memoryelementstatread(element, 'pushable') ? `yes` : `no`
-      }`,
-    )
+    const pushable = memoryelementstatread(element, 'pushable')
+    gadgettext(player, `ispushable: ${pushable ? pushable : `no`}`)
   }
   gadgettext(
     player,
