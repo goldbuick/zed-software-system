@@ -146,7 +146,7 @@ export function parsezzt(player: string, content: Uint8Array) {
     const bg = Math.floor(element.color / 16) % 8
 
     const strcolor: STR_COLOR = mapcolortostrcolor(color, bg)
-    const strcolorflipped: STR_COLOR = mapcolortostrcolor(bg, color)
+    const strcolorflipped: STR_COLOR = mapcolortostrcolor((bg + 8) % 16, color)
 
     const addstats: BOARD_ELEMENT = {}
     const elementstat = stats.find((stat) => stat.x === x && stat.y === y)
