@@ -1373,6 +1373,7 @@ class ScriptVisitor
         }),
       )
     }
+
     if (ctx.token_n) {
       values.push(
         ...this.createcodenode(location, {
@@ -1391,6 +1392,7 @@ class ScriptVisitor
         }),
       )
     }
+
     if (ctx.token_north) {
       values.push(
         ...this.createcodenode(location, {
@@ -1409,6 +1411,7 @@ class ScriptVisitor
         }),
       )
     }
+
     if (ctx.token_s) {
       values.push(
         ...this.createcodenode(location, {
@@ -1427,6 +1430,7 @@ class ScriptVisitor
         }),
       )
     }
+
     if (ctx.token_south) {
       values.push(
         ...this.createcodenode(location, {
@@ -1445,6 +1449,7 @@ class ScriptVisitor
         }),
       )
     }
+
     if (ctx.token_w) {
       values.push(
         ...this.createcodenode(location, {
@@ -1463,6 +1468,7 @@ class ScriptVisitor
         }),
       )
     }
+
     if (ctx.token_west) {
       values.push(
         ...this.createcodenode(location, {
@@ -1472,6 +1478,16 @@ class ScriptVisitor
         }),
       )
     }
+    if (ctx.token_left) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: 'left',
+        }),
+      )
+    }
+
     if (ctx.token_e) {
       values.push(
         ...this.createcodenode(location, {
@@ -1490,6 +1506,7 @@ class ScriptVisitor
         }),
       )
     }
+
     if (ctx.token_east) {
       values.push(
         ...this.createcodenode(location, {
@@ -1508,6 +1525,7 @@ class ScriptVisitor
         }),
       )
     }
+
     if (ctx.token_rnd) {
       values.push(
         ...this.createcodenode(location, {
