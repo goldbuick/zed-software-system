@@ -266,9 +266,18 @@ export function synth_play(
   player: string,
   board: string,
   buffer: string,
-  bgplay: boolean,
 ) {
-  device.emit(player, 'synth:play', [board, buffer, bgplay])
+  device.emit(player, 'synth:play', [board, buffer])
+}
+
+export function synth_bgplay(
+  device: DEVICELIKE,
+  player: string,
+  board: string,
+  buffer: string,
+  quantize: string,
+) {
+  device.emit(player, 'synth:bgplay', [board, buffer, quantize])
 }
 
 export function synth_focus(device: DEVICELIKE, player: string, board: string) {

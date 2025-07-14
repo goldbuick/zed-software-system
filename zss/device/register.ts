@@ -125,7 +125,28 @@ async function readurlcontent(): Promise<string> {
   return ''
 }
 
-function writewikilink() {
+async function writewikilink() {
+  // write stk list
+  const result = await fetch(
+    `https://raw.githubusercontent.com/wiki/goldbuick/zed-software-system/stklist.md`,
+  )
+  const markdowntext = await result.text()
+  const lines = markdowntext.split('\n')
+  for (let i = 0; i < lines.length; ++i) {
+    const line = lines[i].trim()
+    if (line.startsWith('#')) {
+      writeheader(register, myplayerid, line.substring(1))
+    } else if (line.includes(',')) {
+      const [label, url] = line.split(',')
+      writeopenit(register, myplayerid, `inline ${url.trim()}`, label.trim())
+    } else {
+      writetext(register, myplayerid, line)
+    }
+  }
+
+  writetext(register, myplayerid, ' ')
+
+  // write help link
   writeopenit(
     register,
     myplayerid,
@@ -223,7 +244,7 @@ function terminalinclayout(inc: boolean) {
 async function loadmem(books: string) {
   if (books.length === 0) {
     api_error(register, myplayerid, 'content', 'no content found')
-    writewikilink()
+    await writewikilink()
     vm_zsswords(register, myplayerid)
     register_terminal_full(register, myplayerid)
     return
@@ -389,17 +410,22 @@ const register = createdevice(
         vm_zsswords(register, myplayerid)
         break
       case 'loginfail':
-        writepages()
-        writewikilink()
-        register_terminal_full(register, myplayerid)
+        doasync(register, message.player, async () => {
+          await writewikilink()
+          writepages()
+          // full open on login fail
+          register_terminal_full(register, myplayerid)
+        })
         break
       case 'acklogin':
-        // info dump
-        writepages()
-        writewikilink()
-        // hide terminal
-        register_terminal_close(register, myplayerid)
-        gadgetserver_desync(register, myplayerid)
+        doasync(register, message.player, async () => {
+          await writewikilink()
+          writepages()
+          // reset display
+          gadgetserver_desync(register, myplayerid)
+          // hide terminal
+          register_terminal_close(register, myplayerid)
+        })
         break
       case 'ackzsswords': {
         useGadgetClient.setState({

@@ -3,6 +3,7 @@ import {
   synth_bgplayvolume,
   synth_playvolume,
   synth_play,
+  synth_bgplay,
   synth_tts,
   synth_ttsvolume,
   synth_voice,
@@ -18,17 +19,6 @@ import { isnumber } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
-
-function handlesynthplay(player: string, words: WORD[], bgplay: boolean) {
-  const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-  synth_play(
-    SOFTWARE,
-    player,
-    READ_CONTEXT.board?.id ?? '',
-    buffer ?? '',
-    bgplay,
-  )
-}
 
 function handlesynthvoicefx(
   player: string,
@@ -143,11 +133,24 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('play', (_, words) => {
-    handlesynthplay(READ_CONTEXT.elementfocus, words, false)
+    const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    synth_play(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      READ_CONTEXT.board?.id ?? '',
+      buffer ?? '',
+    )
     return 0
   })
   .command('bgplay', (_, words) => {
-    handlesynthplay(READ_CONTEXT.elementfocus, words, true)
+    const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    synth_bgplay(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      READ_CONTEXT.board?.id ?? '',
+      buffer ?? '',
+      '',
+    )
     return 0
   })
   .command('synth', (_, words) => {
