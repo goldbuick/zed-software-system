@@ -186,10 +186,14 @@ export function invokeplay(
           accidental += 'b'
           break
         case SYNTH_OP.OCTAVE_UP:
-          ++octave
+          if (octave < 8) {
+            ++octave
+          }
           break
         case SYNTH_OP.OCTAVE_DOWN:
-          --octave
+          if (octave > 0) {
+            --octave
+          }
           break
         case SYNTH_OP.TIME_64:
           duration = 1
