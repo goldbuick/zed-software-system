@@ -91,6 +91,16 @@ export type SYNTH_NOTE = null | string | number
 export type SYNTH_NOTE_ON = [number, string, SYNTH_NOTE]
 export type SYNTH_NOTE_ENTRY = [number, SYNTH_NOTE_ON]
 
+const BASE_NOTE = '64n'
+
+function durationnotation(duration: number) {
+  return Time({ [BASE_NOTE]: duration }).toNotation()
+}
+
+function durationseconds(duration: number) {
+  return Time({ [BASE_NOTE]: duration }).toSeconds()
+}
+
 export function invokeplay(
   synth: number,
   starttime: number,
@@ -100,7 +110,7 @@ export function invokeplay(
   // translate ops into time, note pairs
   let time = starttime
   let octave = 4
-  let duration = '32n'
+  let duration = 2
   let accidental = ''
   let note: SYNTH_NOTE = ''
   const pattern: SYNTH_NOTE_ENTRY[] = []
@@ -108,21 +118,22 @@ export function invokeplay(
   function resetnote() {
     note = ''
     accidental = ''
-    time += Time(duration).toSeconds()
+    time += durationseconds(duration)
   }
 
   function writenote() {
+    const notation = durationnotation(duration)
     if (note === null) {
-      pattern.push([time, [synth, duration, note]])
+      pattern.push([time, [synth, notation, note]])
       resetnote()
     } else if (isnumber(note)) {
-      pattern.push([time, [synth, duration, note]])
+      pattern.push([time, [synth, notation, note]])
       resetnote()
     } else if (note.startsWith('#')) {
-      pattern.push([time, [synth, duration, note]])
+      pattern.push([time, [synth, notation, note]])
       resetnote()
     } else if (note !== '') {
-      pattern.push([time, [synth, duration, `${note}${accidental}${octave}`]])
+      pattern.push([time, [synth, notation, `${note}${accidental}${octave}`]])
       resetnote()
     }
   }
@@ -181,31 +192,31 @@ export function invokeplay(
           --octave
           break
         case SYNTH_OP.TIME_64:
-          duration = '64n'
+          duration = 1
           break
         case SYNTH_OP.TIME_32:
-          duration = '32n'
+          duration = 2
           break
         case SYNTH_OP.TIME_16:
-          duration = '16n'
+          duration = 4
           break
         case SYNTH_OP.TIME_8:
-          duration = '8n'
+          duration = 8
           break
         case SYNTH_OP.TIME_4:
-          duration = '4n'
+          duration = 16
           break
         case SYNTH_OP.TIME_2:
-          duration = '2n'
+          duration = 32
           break
         case SYNTH_OP.TIME_1:
-          duration = '1n'
+          duration = 64
           break
         case SYNTH_OP.TIME_TRIPLET:
-          duration = duration.replace('n', 't')
+          duration = Math.round((duration * 3) / 2)
           break
         case SYNTH_OP.TIME_AND_A_HALF:
-          duration += '.'
+          duration = Math.round(duration / 3)
           break
         case SYNTH_OP.DRUM_TICK:
           note = 0
