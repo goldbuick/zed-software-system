@@ -36,7 +36,7 @@ import {
   SYNTH_INVOKE,
   SYNTH_NOTE_ON,
   SYNTH_SFX_RESET,
-} from './play'
+} from './playnotation'
 import { createfx } from './synthfx'
 import { SidechainCompressor } from './synthsidechainworkletnode'
 import { createsource, SOURCE_TYPE } from './synthsource'
