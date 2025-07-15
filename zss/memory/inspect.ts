@@ -30,6 +30,7 @@ import {
 import { boardelementisobject } from './boardelement'
 import { boardsetlookup } from './boardlookup'
 import { bookboardelementreadcodepage, bookelementdisplayread } from './book'
+import { codepagereadname } from './codepage'
 import { memoryinspectarea } from './inspectarea'
 import { hassecretheap } from './inspectcopypaste'
 import {
@@ -37,10 +38,12 @@ import {
   memoryinspectcolor,
   memoryinspectelement,
 } from './inspectelement'
+import { CODE_PAGE_TYPE } from './types'
 
 import {
   MEMORY_LABEL,
   memoryensuresoftwarebook,
+  memorypickcodepagewithtype,
   memoryreadbookbysoftware,
   memoryreadoperator,
   memoryreadplayerboard,
@@ -173,15 +176,20 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
         '5',
         ` 5 `,
       ])
-      gadgethyperlink(player, 'batch', `edit @board codepage`, [
-        `pageopen:${board.id}`,
-      ])
 
-      // easy to copy board id
-      gadgethyperlink(player, 'batch', `board id ${board.id}`, [
+      // board info
+      const boardcodepage = memorypickcodepagewithtype(
+        CODE_PAGE_TYPE.BOARD,
+        board.id,
+      )
+      gadgettext(player, `board ${codepagereadname(boardcodepage)}`)
+      gadgethyperlink(player, 'batch', `id ${board.id}`, [
         '',
         'copyit',
         board.id,
+      ])
+      gadgethyperlink(player, 'batch', `edit @board codepage`, [
+        `pageopen:${board.id}`,
       ])
     }
   } else {

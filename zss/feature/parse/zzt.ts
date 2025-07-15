@@ -294,6 +294,7 @@ export function parsezzt(player: string, content: Uint8Array) {
         break
       case 31:
         // line
+        // todo: re-write stepx & stepy into a dir
         writefromkind(board, ['line', strcolor], { x, y }, addstats)
         break
       case 32:
