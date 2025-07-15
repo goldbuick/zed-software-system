@@ -12,12 +12,13 @@ import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
 import { boardelementindex } from './board'
 import { codepagereadname, codepagereadstatdefaults } from './codepage'
-import { BOARD, BOARD_ELEMENT, CODE_PAGE } from './types'
+import { BOARD, BOARD_ELEMENT, CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
 import {
   MEMORY_LABEL,
   memoryelementstatread,
   memoryensuresoftwarebook,
+  memorypickcodepagewithtype,
   memoryreadplayerboard,
 } from '.'
 
@@ -272,10 +273,14 @@ export function memoryinspectelement(
     `pageopen:${codepage.id}`,
   ])
 
-  // easy to copy board id
-  gadgethyperlink(player, 'batch', `board id ${board.id}`, [
-    '',
-    'copyit',
+  // board info
+  const boardcodepage = memorypickcodepagewithtype(
+    CODE_PAGE_TYPE.BOARD,
     board.id,
+  )
+  gadgettext(player, `board ${codepagereadname(boardcodepage)}`)
+  gadgethyperlink(player, 'batch', `id ${board.id}`, ['', 'copyit', board.id])
+  gadgethyperlink(player, 'batch', `edit @board codepage`, [
+    `pageopen:${board.id}`,
   ])
 }

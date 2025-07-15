@@ -12,11 +12,13 @@ import { PT, WORD } from 'zss/words/types'
 import { boardelementread } from './board'
 import { bookboardelementreadcodepage } from './book'
 import { codepagereadname } from './codepage'
-import { BOARD_ELEMENT } from './types'
+import { BOARD_ELEMENT, CODE_PAGE_TYPE } from './types'
 
 import {
   MEMORY_LABEL,
   memoryensuresoftwarebook,
+  memorypickcodepagewithtype,
+  memoryreadbookbyaddress,
   memoryreadplayerboard,
 } from '.'
 
@@ -271,10 +273,14 @@ export function memoryinspectarea(
     }
   }
 
-  // easy to copy board id
-  gadgethyperlink(player, 'batch', `board id ${board.id}`, [
-    '',
-    'copyit',
+  // board info
+  const boardcodepage = memorypickcodepagewithtype(
+    CODE_PAGE_TYPE.BOARD,
     board.id,
+  )
+  gadgettext(player, `board ${codepagereadname(boardcodepage)}`)
+  gadgethyperlink(player, 'batch', `id ${board.id}`, ['', 'copyit', board.id])
+  gadgethyperlink(player, 'batch', `edit @board codepage`, [
+    `pageopen:${board.id}`,
   ])
 }
