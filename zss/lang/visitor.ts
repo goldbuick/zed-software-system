@@ -837,12 +837,11 @@ class ScriptVisitor
   }
 
   command_play(ctx: Command_playCstChildren, location: CstNodeLocation) {
-    const playstr = tokenstring(ctx.token_command_play, '')
-    const playcontent = playstr.replace('bgplay', '').replace('play', '').trim()
-    const isbg = playstr.includes('bgplay')
+    const playstr = tokenstring(ctx.token_command_play, '').trim()
+    const [cmd, ...words] = playstr.split(' ')
     return [
-      this.createstringnode(location, isbg ? 'bgplay' : 'play'),
-      this.createstringnode(location, playcontent),
+      this.createstringnode(location, cmd),
+      this.createstringnode(location, words.join(' ')),
     ].flat()
   }
 
