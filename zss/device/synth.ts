@@ -37,13 +37,7 @@ export function enableaudio() {
   locked = true
 
   // create new context
-  setContext(
-    new Context({
-      lookAhead: 0.25,
-      latencyHint: 'playback',
-    }),
-    true,
-  )
+  setContext(new Context({ latencyHint: 'playback' }), true)
 
   // resume audio context
   start()
@@ -154,11 +148,7 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
     case 'play':
       if (isarray(message.data)) {
-        const [board, buffer, bgplay] = message.data as [
-          string,
-          string,
-          boolean,
-        ]
+        const [board, buffer] = message.data as [string, string]
         // board audio filter
         if (board && board !== synthfocus) {
           return
@@ -168,8 +158,23 @@ const synthdevice = createdevice('synth', [], (message) => {
           synth.stopplay()
         } else {
           // add to playback
-          synth.addplay(buffer, bgplay)
+          synth.addplay(buffer)
         }
+      }
+      break
+    case 'bgplay':
+      if (isarray(message.data)) {
+        const [board, buffer, quantize] = message.data as [
+          string,
+          string,
+          string,
+        ]
+        // board audio filter
+        if (board && board !== synthfocus) {
+          return
+        }
+        // add to playback
+        synth.addbgplay(buffer, quantize)
       }
       break
     case 'voice':

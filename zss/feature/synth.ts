@@ -714,33 +714,38 @@ export function createsynth() {
   let pacertime = -1
   let pacercount = 0
   let bgplayindex = SYNTH_SFX_RESET
-  function addplay(buffer: string, bgplay: boolean) {
+
+  // handle music
+  function addplay(buffer: string) {
     // parse ops
     const invokes = parseplay(buffer)
-    const seconds = getTransport().seconds + 0.05
+    const seconds = Time('+0').toSeconds()
 
-    if (bgplay) {
-      // handle sfx
-      for (let i = 0; i < invokes.length; ++i) {
-        synthplaystart(bgplayindex++, seconds, invokes[i], false)
-        if (bgplayindex >= SOURCE.length) {
-          bgplayindex = SYNTH_SFX_RESET
-        }
-      }
-    } else {
-      // handle music
+    // reset note offset
+    if (pacertime === -1) {
+      pacertime = seconds
+    }
 
-      // reset note offset
-      if (pacertime === -1) {
-        pacertime = seconds
-      }
+    // update count
+    pacercount += invokes.length
+    const starttime = pacertime
+    for (let i = 0; i < invokes.length && i < SOURCE.length; ++i) {
+      const endtime = synthplaystart(i, starttime, invokes[i])
+      pacertime = Math.max(pacertime, endtime)
+    }
+  }
 
-      // update count
-      pacercount += invokes.length
-      const starttime = pacertime
-      for (let i = 0; i < invokes.length && i < SOURCE.length; ++i) {
-        const endtime = synthplaystart(i, starttime, invokes[i])
-        pacertime = Math.max(pacertime, endtime)
+  // handle sfx
+  function addbgplay(buffer: string, quantize: string) {
+    // parse ops
+    const invokes = parseplay(buffer)
+    const seconds = Time(quantize ? quantize : '+0.05').toSeconds()
+
+    // handle sfx
+    for (let i = 0; i < invokes.length; ++i) {
+      synthplaystart(bgplayindex++, seconds, invokes[i], false)
+      if (bgplayindex >= SOURCE.length) {
+        bgplayindex = SYNTH_SFX_RESET
       }
     }
   }
@@ -781,6 +786,7 @@ export function createsynth() {
   return {
     broadcastdestination,
     addplay,
+    addbgplay,
     stopplay,
     addttsaudiobuffer,
     setplayvolume,

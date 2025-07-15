@@ -77,6 +77,17 @@ function handlesynthvoice(player: string, idx: number, words: WORD[]) {
 
 let withvoice = 'en-US-GuyNeural'
 
+function handlebgplay(words: WORD[], quantize: string) {
+  const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+  synth_bgplay(
+    SOFTWARE,
+    READ_CONTEXT.elementfocus,
+    READ_CONTEXT.board?.id ?? '',
+    buffer ?? '',
+    quantize,
+  )
+}
+
 export const AUDIO_FIRMWARE = createfirmware()
   .command('talk', (_, words) => {
     const [arg] = readargs(words, 0, [ARG_TYPE.ANY])
@@ -143,14 +154,35 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('bgplay', (_, words) => {
-    const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    synth_bgplay(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      READ_CONTEXT.board?.id ?? '',
-      buffer ?? '',
-      '',
-    )
+    handlebgplay(words, '')
+    return 0
+  })
+  .command('bgplayon64n', (_, words) => {
+    handlebgplay(words, '@64n')
+    return 0
+  })
+  .command('bgplayon32n', (_, words) => {
+    handlebgplay(words, '@32n')
+    return 0
+  })
+  .command('bgplayon16n', (_, words) => {
+    handlebgplay(words, '@16n')
+    return 0
+  })
+  .command('bgplayon8n', (_, words) => {
+    handlebgplay(words, '@8n')
+    return 0
+  })
+  .command('bgplayon4n', (_, words) => {
+    handlebgplay(words, '@4n')
+    return 0
+  })
+  .command('bgplayon2n', (_, words) => {
+    handlebgplay(words, '@2n')
+    return 0
+  })
+  .command('bgplayon1n', (_, words) => {
+    handlebgplay(words, '@1m')
     return 0
   })
   .command('synth', (_, words) => {
