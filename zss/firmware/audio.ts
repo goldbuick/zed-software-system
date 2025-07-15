@@ -3,6 +3,7 @@ import {
   synth_bgplayvolume,
   synth_playvolume,
   synth_play,
+  synth_bgplay,
   synth_tts,
   synth_ttsvolume,
   synth_voice,
@@ -18,17 +19,6 @@ import { isnumber } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
-
-function handlesynthplay(player: string, words: WORD[], bgplay: boolean) {
-  const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-  synth_play(
-    SOFTWARE,
-    player,
-    READ_CONTEXT.board?.id ?? '',
-    buffer ?? '',
-    bgplay,
-  )
-}
 
 function handlesynthvoicefx(
   player: string,
@@ -87,6 +77,17 @@ function handlesynthvoice(player: string, idx: number, words: WORD[]) {
 
 let withvoice = 'en-US-GuyNeural'
 
+function handlebgplay(words: WORD[], quantize: string) {
+  const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+  synth_bgplay(
+    SOFTWARE,
+    READ_CONTEXT.elementfocus,
+    READ_CONTEXT.board?.id ?? '',
+    buffer ?? '',
+    quantize,
+  )
+}
+
 export const AUDIO_FIRMWARE = createfirmware()
   .command('talk', (_, words) => {
     const [arg] = readargs(words, 0, [ARG_TYPE.ANY])
@@ -143,11 +144,45 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('play', (_, words) => {
-    handlesynthplay(READ_CONTEXT.elementfocus, words, false)
+    const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    synth_play(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      READ_CONTEXT.board?.id ?? '',
+      buffer ?? '',
+    )
     return 0
   })
   .command('bgplay', (_, words) => {
-    handlesynthplay(READ_CONTEXT.elementfocus, words, true)
+    handlebgplay(words, '')
+    return 0
+  })
+  .command('bgplayon64n', (_, words) => {
+    handlebgplay(words, '@64n')
+    return 0
+  })
+  .command('bgplayon32n', (_, words) => {
+    handlebgplay(words, '@32n')
+    return 0
+  })
+  .command('bgplayon16n', (_, words) => {
+    handlebgplay(words, '@16n')
+    return 0
+  })
+  .command('bgplayon8n', (_, words) => {
+    handlebgplay(words, '@8n')
+    return 0
+  })
+  .command('bgplayon4n', (_, words) => {
+    handlebgplay(words, '@4n')
+    return 0
+  })
+  .command('bgplayon2n', (_, words) => {
+    handlebgplay(words, '@2n')
+    return 0
+  })
+  .command('bgplayon1n', (_, words) => {
+    handlebgplay(words, '@1m')
     return 0
   })
   .command('synth', (_, words) => {

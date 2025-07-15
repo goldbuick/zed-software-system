@@ -16,10 +16,14 @@ export function TapeTerminalOpenIt({
   const context = useWriteText()
 
   const invoke = useCallback(() => {
-    const [, ...values] = words
+    const [, openmethod, ...values] = words
     const content = values.join(' ')
     setTimeout(() => {
-      window.open(content, '_blank')
+      if (openmethod === 'inline') {
+        window.location.href = content
+      } else {
+        window.open(`${openmethod} ${content}`.trim(), '_blank')
+      }
     }, 100)
   }, [words])
 
