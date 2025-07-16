@@ -320,6 +320,7 @@ export function memoryconverttogadgetlayers(
 
   // hack to keep only one control layer
   if (isprimary) {
+    // todo, add control layers for the local1, ...local3 players
     layers.push(control)
     const { graphics, camera, facing } = memoryreadflags(player)
 
@@ -333,11 +334,11 @@ export function memoryconverttogadgetlayers(
       switch (graphics) {
         case 'fpv':
         case 'iso':
+        case 'flat':
         case 'mode7':
           control.graphics = graphics
           break
         default:
-        case 'flat':
           control.graphics = 'flat'
           break
       }
@@ -392,37 +393,6 @@ export function memoryconverttogadgetlayers(
   // process objects
   for (let i = 0; i < boardobjects.length; ++i) {
     const object = boardobjects[i]
-
-    // write ticker messages
-    if (
-      isstring(object.tickertext) &&
-      isnumber(object.tickertime) &&
-      object.tickertext.length
-    ) {
-      // calc placement
-      const TICKER_WIDTH = BOARD_WIDTH
-      const measure = tokenizeandmeasuretextformat(
-        object.tickertext,
-        TICKER_WIDTH,
-        BOARD_HEIGHT - 1,
-      )
-      const width = measure?.measuredwidth ?? 1
-      const x = object.x ?? 0
-      const y = object.y ?? 0
-      const upper = y < BOARD_HEIGHT * 0.5
-      tickercontext.x = x - Math.floor(width * 0.5)
-      tickercontext.y = y + (upper ? 1 : -1)
-      // clip placement
-      if (tickercontext.x + width > BOARD_WIDTH) {
-        tickercontext.x = BOARD_WIDTH - width
-      }
-      if (tickercontext.x < 0) {
-        tickercontext.x = 0
-      }
-      // render text
-      tokenizeandwritetextformat(object.tickertext, tickercontext, true)
-    }
-
     if (ispresent(object.removed)) {
       continue
     }
@@ -578,6 +548,48 @@ export function memoryconverttogadgetlayers(
       control.focusx = sprite.x
       control.focusy = sprite.y
       control.focusid = id
+    }
+  }
+
+  // process ticker messages
+  for (let i = 0; i < boardobjects.length; ++i) {
+    const object = boardobjects[i]
+
+    // write ticker messages
+    if (
+      isstring(object.tickertext) &&
+      isnumber(object.tickertime) &&
+      object.tickertext.length
+    ) {
+      // calc placement
+      const TICKER_WIDTH = BOARD_WIDTH
+      const measure = tokenizeandmeasuretextformat(
+        object.tickertext,
+        TICKER_WIDTH,
+        BOARD_HEIGHT - 1,
+      )
+      const width = measure?.measuredwidth ?? 1
+      const x = object.x ?? 0
+      const y = object.y ?? 0
+      const upper = y < BOARD_HEIGHT * 0.5
+      tickercontext.x = x - Math.floor(width * 0.5)
+      tickercontext.y = y + (upper ? 1 : -1)
+      // clip placement
+      if (tickercontext.x + width > BOARD_WIDTH) {
+        tickercontext.x = BOARD_WIDTH - width
+      }
+      if (tickercontext.x < 0) {
+        tickercontext.x = 0
+      }
+      // track start
+      const start: PT = { x: tickercontext.x, y: tickercontext.y }
+      // render text
+      tokenizeandwritetextformat(object.tickertext, tickercontext, true)
+      // render backdrop
+      for (let s = 0; s < width; ++s) {
+        const idx = pttoindex({ x: start.x + s, y: start.y }, BOARD_WIDTH)
+        lighting.alphas[idx] = Math.max(lighting.alphas[idx], 0.222)
+      }
     }
   }
 
