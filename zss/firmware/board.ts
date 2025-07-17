@@ -142,7 +142,7 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     )
 
     // write new element
-    if (!blocked) {
+    if (!ispresent(blocked)) {
       const element = memorywritefromkind(
         READ_CONTEXT.board,
         kind,

@@ -618,7 +618,7 @@ export function memorymessage(message: MESSAGE) {
   os.message(message)
 }
 
-function sendinteraction(
+export function memorysendinteraction(
   player: string,
   fromelement: BOARD_ELEMENT,
   toelement: BOARD_ELEMENT,
@@ -722,27 +722,32 @@ export function memorymoveobject(
     } else if (elementisplayer) {
       if (blockedbyplayer) {
         // same party touch
-        sendinteraction('', blocked, element, 'bump')
-        sendinteraction('', element, blocked, 'bump')
+        memorysendinteraction('', blocked, element, 'bump')
+        memorysendinteraction('', element, blocked, 'bump')
       } else if (blockedisbullet) {
-        sendinteraction('', blocked, element, samemparty ? 'partyshot' : 'shot')
-        sendinteraction(elementplayer, element, blocked, 'touch')
+        memorysendinteraction(
+          '',
+          blocked,
+          element,
+          samemparty ? 'partyshot' : 'shot',
+        )
+        memorysendinteraction(elementplayer, element, blocked, 'touch')
       } else {
-        sendinteraction('', blocked, element, 'thud')
-        sendinteraction(elementplayer, element, blocked, 'touch')
+        memorysendinteraction('', blocked, element, 'thud')
+        memorysendinteraction(elementplayer, element, blocked, 'touch')
       }
     } else if (elementisbullet) {
       if (blockedisbullet) {
-        sendinteraction('', blocked, element, 'thud')
-        sendinteraction('', element, blocked, 'thud')
+        memorysendinteraction('', blocked, element, 'thud')
+        memorysendinteraction('', element, blocked, 'thud')
       } else {
-        sendinteraction(
+        memorysendinteraction(
           '',
           blocked,
           element,
           blockedbyplayer ? 'touch' : 'thud',
         )
-        sendinteraction(
+        memorysendinteraction(
           samemparty ? '' : elementplayer,
           element,
           blocked,
@@ -751,19 +756,24 @@ export function memorymoveobject(
       }
     } else {
       if (blockedbyplayer) {
-        sendinteraction(blockedplayer, blocked, element, 'touch')
+        memorysendinteraction(blockedplayer, blocked, element, 'touch')
       } else if (blockedisbullet) {
-        sendinteraction(
+        memorysendinteraction(
           samemparty ? '' : blockedplayer,
           blocked,
           element,
           samemparty ? 'partyshot' : 'shot',
         )
-        sendinteraction('', element, blocked, samemparty ? 'thud' : 'touch')
+        memorysendinteraction(
+          '',
+          element,
+          blocked,
+          samemparty ? 'thud' : 'touch',
+        )
       } else {
-        sendinteraction('', blocked, element, 'thud')
+        memorysendinteraction('', blocked, element, 'thud')
         // same party touch
-        sendinteraction('', element, blocked, 'bump')
+        memorysendinteraction('', element, blocked, 'bump')
       }
     }
 
