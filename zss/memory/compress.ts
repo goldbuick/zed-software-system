@@ -54,8 +54,9 @@ export async function compressbooks(books: BOOK[]) {
 export async function decompressbooks(base64bytes: string) {
   return new Promise<BOOK[]>((resolve, reject) => {
     const zip = new JSZip()
+    const content = base64urltobase64(base64bytes)
     zip
-      .loadAsync(base64urltobase64(base64bytes), { base64: true })
+      .loadAsync(content, { base64: true })
       .then(async () => {
         const books: BOOK[] = []
         // extract a normal list
