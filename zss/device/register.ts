@@ -25,6 +25,7 @@ import {
 import { useDeviceConfig } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
+import { randominteger } from 'zss/mapping/number'
 import { waitfor } from 'zss/mapping/tick'
 import {
   isarray,
@@ -128,7 +129,7 @@ async function readurlcontent(): Promise<string> {
 async function writewikilink() {
   // write stk list
   const result = await fetch(
-    `https://raw.githubusercontent.com/wiki/goldbuick/zed-software-system/stklist.md`,
+    `https://raw.githubusercontent.com/wiki/goldbuick/zed-software-system/stklist.md?${randominteger(1111111, 9999999)}`,
   )
   const markdowntext = await result.text()
   const lines = markdowntext.split('\n')
