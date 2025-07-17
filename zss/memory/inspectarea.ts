@@ -278,7 +278,7 @@ export function memoryinspectarea(
     CODE_PAGE_TYPE.BOARD,
     board.id,
   )
-  gadgettext(player, `board ${codepagereadname(boardcodepage)}`)
+  gadgettext(player, codepagereadname(boardcodepage))
   gadgethyperlink(player, 'batch', `id ${board.id}`, ['', 'copyit', board.id])
   gadgethyperlink(player, 'batch', `edit @board codepage`, [
     `pageopen:${board.id}`,

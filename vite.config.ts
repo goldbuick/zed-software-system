@@ -54,5 +54,17 @@ export default defineConfig(({ mode }) => {
         cafe: path.resolve(__dirname, './cafe'),
       },
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id: string) {
+            if (id.includes(`/three`)) {
+              return 'three'
+            }
+            return null
+          },
+        },
+      },
+    },
   }
 })

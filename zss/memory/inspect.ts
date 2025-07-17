@@ -182,7 +182,7 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
         CODE_PAGE_TYPE.BOARD,
         board.id,
       )
-      gadgettext(player, `board ${codepagereadname(boardcodepage)}`)
+      gadgettext(player, codepagereadname(boardcodepage))
       gadgethyperlink(player, 'batch', `id ${board.id}`, [
         '',
         'copyit',

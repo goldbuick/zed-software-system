@@ -2,7 +2,6 @@ import {
   createToken,
   createTokenInstance,
   Lexer,
-  IToken,
   TokenType,
   ITokenConfig,
 } from 'chevrotain'
@@ -63,6 +62,7 @@ export const command = createSimpleToken({
 
 let matchTextEnabled = false
 const probablynottext = `@#/?':!`
+const matchcomplexdir = /^(by|at|away|toward|find|flee|to)/i
 function matchBasicText(text: string, startOffset: number) {
   if (!matchTextEnabled) {
     return null
@@ -91,7 +91,15 @@ function matchBasicText(text: string, startOffset: number) {
 
   switch (text[cursor]) {
     case '?':
-    case '/':
+    case '/': {
+      const maybecomplex = text.substring(cursor + 1, cursor + 4).toLowerCase()
+      // not-okay
+      if (matchcomplexdir.test(maybecomplex)) {
+        return null
+      }
+      // okay
+      break
+    }
     case '\n':
       // okay
       break
