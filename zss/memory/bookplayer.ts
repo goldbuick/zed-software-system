@@ -12,8 +12,10 @@ import { BOARD, BOOK, CODE_PAGE_TYPE } from './types'
 
 import {
   memoryboardread,
+  memoryelementstatread,
   memorypickcodepagewithtype,
   memoryreadplayerboard,
+  memorysendinteraction,
 } from '.'
 
 export function bookplayerreadboard(book: MAYBE<BOOK>, player: string) {
@@ -57,13 +59,9 @@ export function bookplayermovetoboard(
   dest: PT,
   skipblockedchecked = false,
 ) {
-  if (!ispresent(book)) {
-    return
-  }
-
   // current board
   const currentboard = memoryreadplayerboard(player)
-  if (!ispresent(currentboard)) {
+  if (!ispresent(book) || !ispresent(currentboard)) {
     return
   }
 
@@ -83,11 +81,19 @@ export function bookplayermovetoboard(
   boardsetlookup(destboard)
 
   // read target spot
-  if (
-    skipblockedchecked === false &&
-    boardcheckblockedobject(destboard, COLLISION.ISWALK, dest, true)
-  ) {
-    return
+  const maybeobject = boardcheckblockedobject(
+    destboard,
+    COLLISION.ISWALK,
+    dest,
+    true,
+  )
+  if (skipblockedchecked === false && ispresent(maybeobject)) {
+    if (memoryelementstatread(maybeobject, 'item')) {
+      memorysendinteraction(player, element, maybeobject, 'touch')
+    } else {
+      // blocked by non-item
+      return
+    }
   }
 
   // remove from current board

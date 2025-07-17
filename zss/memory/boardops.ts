@@ -31,7 +31,7 @@ export function boardcheckblockedobject(
   collision: MAYBE<COLLISION>,
   dest: PT,
   isplayer = false,
-): boolean {
+): MAYBE<BOARD_ELEMENT> {
   // first pass clipping
   if (
     !ispresent(board) ||
@@ -41,7 +41,7 @@ export function boardcheckblockedobject(
     dest.y < 0 ||
     dest.y >= BOARD_HEIGHT
   ) {
-    return true
+    return undefined
   }
 
   // gather meta for move
@@ -50,23 +50,29 @@ export function boardcheckblockedobject(
   // blocked by an object
   const maybeobject = boardobjectread(board, board.lookup[targetidx] ?? '404')
   if (ispresent(maybeobject)) {
-    if (isplayer && ispid(maybeobject.id)) {
-      return false
+    if (isplayer) {
+      // players do not block layers
+      if (ispid(maybeobject.id)) {
+        return undefined
+      }
     }
     // for sending interaction messages
-    return true
+    return maybeobject
   }
 
   // blocked by terrain
-  const mayberterrain = board.terrain[targetidx]
-  if (ispresent(mayberterrain)) {
-    return checkdoescollide(
+  const maybeterrain = board.terrain[targetidx]
+  if (
+    ispresent(maybeterrain) &&
+    checkdoescollide(
       collision,
-      memoryelementstatread(mayberterrain, 'collision'),
+      memoryelementstatread(maybeterrain, 'collision'),
     )
+  ) {
+    return maybeterrain
   }
 
-  return false
+  return undefined
 }
 
 export function boardcheckmoveobject(
@@ -83,7 +89,7 @@ export function boardcheckmoveobject(
     return true
   }
   const collsion = memoryelementstatread(object, 'collision')
-  return boardcheckblockedobject(board, collsion, dest)
+  return ispresent(boardcheckblockedobject(board, collsion, dest))
 }
 
 export function boardmoveobject(
