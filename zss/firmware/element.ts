@@ -603,6 +603,17 @@ export const ELEMENT_FIRMWARE = createfirmware({
     chip.endofprogram()
     return 0
   })
+  .command('dieonend', () => {
+    // delete element
+    boardsafedelete(
+      READ_CONTEXT.board,
+      READ_CONTEXT.element,
+      READ_CONTEXT.timestamp,
+    )
+    // skip halt execution
+    // chip.endofprogram()
+    return 0
+  })
   .command('endgame', () => {
     vm_logout(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
