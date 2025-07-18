@@ -355,10 +355,12 @@ export function codepageapplyelementstats(
       case 'notitem':
         element.item = 0
         break
-      case 'ispushable':
+      case 'ispushable': {
+        const value = stats[key]
         // @ts-expect-error - we are doing this on purpose
-        element.pushable = stats[key]
+        element.pushable = value === '' ? 1 : value
         break
+      }
       case 'notpushable':
         element.pushable = 0
         break

@@ -158,6 +158,33 @@ function maptoconst(value: string) {
   return undefined
 }
 
+function handledie() {
+  boardsafedelete(
+    READ_CONTEXT.board,
+    READ_CONTEXT.element,
+    READ_CONTEXT.timestamp,
+  )
+
+  // yoink player if item
+  const isitem = !!memoryelementstatread(READ_CONTEXT.element, 'item')
+  if (isitem) {
+    // find focused on player
+    const from: PT = {
+      x: READ_CONTEXT.element?.x ?? -1,
+      y: READ_CONTEXT.element?.y ?? -1,
+    }
+    const focus = findplayerforelement(
+      READ_CONTEXT.board,
+      from,
+      READ_CONTEXT.elementfocus,
+    )
+    if (ispresent(focus)) {
+      focus.x = from.x
+      focus.y = from.y
+    }
+  }
+}
+
 export const ELEMENT_FIRMWARE = createfirmware({
   get(_, name) {
     // check consts first (data normalization)
@@ -576,42 +603,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('die', (chip) => {
-    boardsafedelete(
-      READ_CONTEXT.board,
-      READ_CONTEXT.element,
-      READ_CONTEXT.timestamp,
-    )
-    // yoink player if item
-    const isitem = !!memoryelementstatread(READ_CONTEXT.element, 'item')
-    if (isitem) {
-      // find focused on player
-      const from: PT = {
-        x: READ_CONTEXT.element?.x ?? -1,
-        y: READ_CONTEXT.element?.y ?? -1,
-      }
-      const focus = findplayerforelement(
-        READ_CONTEXT.board,
-        from,
-        READ_CONTEXT.elementfocus,
-      )
-      if (ispresent(focus)) {
-        focus.x = from.x
-        focus.y = from.y
-      }
-    }
+    handledie()
     // halt execution
     chip.endofprogram()
     return 0
   })
   .command('dieonend', () => {
-    // delete element
-    boardsafedelete(
-      READ_CONTEXT.board,
-      READ_CONTEXT.element,
-      READ_CONTEXT.timestamp,
-    )
+    handledie()
     // skip halt execution
-    // chip.endofprogram()
     return 0
   })
   .command('endgame', () => {
