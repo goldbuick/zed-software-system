@@ -43,6 +43,8 @@ export function checkdoescollide(
       return true // solid runs into everything
     case COLLISION.ISBULLET:
       return dest !== COLLISION.ISWALK && dest !== COLLISION.ISSWIM
+    case COLLISION.ISGHOST:
+      return false // ghost runs into nothing
   }
 }
 

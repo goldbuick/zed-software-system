@@ -217,6 +217,7 @@ const vm = createdevice(
             'isswimable',
             'issolid',
             'isbullet',
+            'isghost',
             'isbreakable',
             'notbreakable',
             // config

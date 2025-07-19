@@ -186,6 +186,9 @@ export function memoryinspectelement(
     case COLLISION.ISBULLET:
       gadgettext(player, `collision: isbullet`)
       break
+    case COLLISION.ISGHOST:
+      gadgettext(player, `collision: isghost`)
+      break
   }
 
   if (isobject) {

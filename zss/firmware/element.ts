@@ -29,7 +29,6 @@ import {
   boardobjectnamedlookupdelete,
   boardsetlookup,
 } from 'zss/memory/boardlookup'
-import { bookelementdisplayread } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'

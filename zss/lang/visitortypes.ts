@@ -503,6 +503,7 @@ export type CollisionCstChildren = {
   token_iswalk?: IToken[]
   token_isswim?: IToken[]
   token_isbullet?: IToken[]
+  token_isghost?: IToken[]
   token_iswalking?: IToken[]
   token_iswalkable?: IToken[]
   token_isswimming?: IToken[]

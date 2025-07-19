@@ -185,6 +185,7 @@ export const collision_issolid = createWordToken('issolid')
 export const collision_iswalk = createWordToken('iswalk')
 export const collision_isswim = createWordToken('isswim')
 export const collision_isbullet = createWordToken('isbullet')
+export const collision_isghost = createWordToken('isghost')
 
 export const collision_iswalking = createWordToken('iswalking')
 export const collision_iswalkable = createWordToken('iswalkable')
@@ -464,6 +465,7 @@ function createTokenSet(primary: TokenType[]) {
     collision_isswimming,
     collision_isswim,
     collision_isbullet,
+    collision_isghost,
     color_black,
     color_dkblue,
     color_dkgreen,

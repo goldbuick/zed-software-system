@@ -42,6 +42,7 @@ export enum COLLISION {
   ISSOLID,
   ISSWIM,
   ISBULLET,
+  ISGHOST,
 }
 
 export enum CATEGORY {

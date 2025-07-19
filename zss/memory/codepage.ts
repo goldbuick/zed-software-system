@@ -382,6 +382,9 @@ export function codepageapplyelementstats(
       case 'isbullet':
         element.collision = COLLISION.ISBULLET
         break
+      case 'isghost':
+        element.collision = COLLISION.ISGHOST
+        break
       case 'isbreakable':
         element.breakable = 1
         break

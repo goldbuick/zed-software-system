@@ -1172,6 +1172,14 @@ class ScriptVisitor
         value,
       })
     }
+    if (ctx.token_isghost) {
+      const value = tokenstring(ctx.token_isghost, '')
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value,
+      })
+    }
     return []
   }
 

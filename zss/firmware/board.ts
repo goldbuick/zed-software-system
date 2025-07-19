@@ -26,11 +26,7 @@ import { boardcheckblockedobject, boardmoveobject } from 'zss/memory/boardops'
 import { bookelementdisplayread } from 'zss/memory/book'
 import { bookplayermovetoboard } from 'zss/memory/bookplayer'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
-import {
-  mapcolortostrcolor,
-  mapstrcolortoattributes,
-  STR_COLOR_CONST,
-} from 'zss/words/color'
+import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
   readstrkindbg,
