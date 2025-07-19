@@ -563,14 +563,6 @@ export function boardevaldir(
         i += 2
         break
       }
-      case DIR.PLAYER: {
-        const maybeplayer = findplayerforelement(board, startpt, player)
-        if (ispt(maybeplayer)) {
-          pt.x = maybeplayer.x
-          pt.y = maybeplayer.y
-        }
-        break
-      }
       // layers
       case DIR.OVER:
       case DIR.UNDER: {

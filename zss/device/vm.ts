@@ -194,7 +194,7 @@ const vm = createdevice(
             'thisid',
             'thisx',
             'thisy',
-            'sender',
+            'senderid',
             'senderx',
             'sendery',
             // element stats

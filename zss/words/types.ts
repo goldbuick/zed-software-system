@@ -70,7 +70,6 @@ export enum DIR {
   // pathfinding
   AWAY,
   TOWARD,
-  PLAYER,
   FIND,
   FLEE,
   // combinations

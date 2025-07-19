@@ -211,8 +211,18 @@ export const ELEMENT_FIRMWARE = createfirmware({
       { x: READ_CONTEXT.element?.x ?? -1, y: READ_CONTEXT.element?.y ?? -1 },
       READ_CONTEXT.elementfocus,
     )
-    const player =
+
+    // player id
+    const playerid =
       focus?.id ?? READ_CONTEXT.elementfocus ?? memoryreadoperator()
+
+    // sender info
+    const maybesender = READ_CONTEXT.element?.sender
+    const sender = boardelementreadbyidorindex(
+      READ_CONTEXT.board,
+      isstring(maybesender) ? maybesender : '',
+    )
+    const senderid = sender?.id ?? ''
 
     // read stat
     switch (name) {
@@ -260,7 +270,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.board?.id ?? '']
       // env stats
       case 'playerid':
-        return [true, focus?.id ?? '']
+        return [true, playerid]
       case 'playerx':
         return [true, focus?.x ?? -1]
       case 'playery':
@@ -272,34 +282,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.element?.x ?? -1]
       case 'thisy':
         return [true, READ_CONTEXT.element?.y ?? -1]
-      case 'sender': {
-        const maybesender = READ_CONTEXT.element?.sender
-        if (isstring(maybesender)) {
-          const element = boardelementreadbyidorindex(
-            READ_CONTEXT.board,
-            maybesender,
-          )
-          const display = bookelementdisplayread(element)
-          return [true, display.name]
-        }
-        return [true, '']
-      }
-      case 'senderx': {
-        const maybesender = READ_CONTEXT.element?.sender
-        const element = boardelementreadbyidorindex(
-          READ_CONTEXT.board,
-          isstring(maybesender) ? maybesender : '',
-        )
-        return [true, element?.x ?? -1]
-      }
-      case 'sendery': {
-        const maybesender = READ_CONTEXT.element?.sender
-        const element = boardelementreadbyidorindex(
-          READ_CONTEXT.board,
-          isstring(maybesender) ? maybesender : '',
-        )
-        return [true, element?.y ?? -1]
-      }
+      case 'senderid':
+        return [true, senderid]
+      case 'senderx':
+        return [true, sender?.x ?? -1]
+      case 'sendery':
+        return [true, sender?.y ?? -1]
       default: {
         // return result
         if (STANDARD_STAT_NAMES.has(name)) {
@@ -313,7 +301,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // fallback to player flags
     // read value
-    const value = memoryreadflags(player)[name]
+    const value = memoryreadflags(playerid)[name]
     return [ispresent(value), value]
   },
   set(_, name, value) {
@@ -424,6 +412,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [false, value] // readonly
       case 'thisy':
         return [false, value] // readonly
+      case 'senderid':
+        return [false, value] // readonly
       case 'senderx':
         return [false, value] // readonly
       case 'sendery':
@@ -431,8 +421,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
       default: {
         // we have to check the object's stats first
         if (STANDARD_STAT_NAMES.has(name)) {
-          // chip.set('sender', sender)
-          // is handled here
           if (ispresent(READ_CONTEXT.element)) {
             READ_CONTEXT.element[name as keyof BOARD_ELEMENT] = value
           }

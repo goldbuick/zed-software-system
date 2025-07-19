@@ -749,7 +749,7 @@ export function memorymoveobject(
           element,
           samemparty ? 'partyshot' : 'shot',
         )
-        memorysendinteraction(elementplayer, element, blocked, 'touch')
+        memorysendinteraction(elementplayer, element, blocked, 'thud')
       } else {
         memorysendinteraction(
           samemparty ? '' : blockedplayer,
@@ -811,7 +811,7 @@ export function memorymoveobject(
           samemparty ? '' : blockedplayer,
           blocked,
           element,
-          'touch',
+          'thud',
         )
         memorysendinteraction(
           samemparty ? '' : elementplayer,
@@ -830,7 +830,7 @@ export function memorymoveobject(
           samemparty ? '' : elementplayer,
           element,
           blocked,
-          'bump',
+          'thud',
         )
       } else {
         memorysendinteraction(

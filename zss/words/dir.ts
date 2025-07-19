@@ -72,7 +72,6 @@ export const dirconsts = {
   // pathfinding
   away: 'AWAY',
   toward: 'TOWARD',
-  player: 'PLAYER',
   find: 'FIND',
   flee: 'FLEE',
   // combinations

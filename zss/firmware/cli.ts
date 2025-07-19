@@ -554,7 +554,7 @@ export const CLI_FIRMWARE = createfirmware()
           write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            `!boardopen ${page.id};$blue#goto $white $34 ${name} $34`,
+            `!boardopen ${page.id};$blue[#goto]$white ${name}`,
           )
         })
       if (sorted.length === 0) {
@@ -591,7 +591,7 @@ export const CLI_FIRMWARE = createfirmware()
             write(
               SOFTWARE,
               READ_CONTEXT.elementfocus,
-              `!boardopen ${page.id};$blue#goto $white$34 ${name} $34`,
+              `!boardopen ${page.id};$blue[#goto]$white ${name}`,
             )
           })
       }

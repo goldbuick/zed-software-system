@@ -41,6 +41,7 @@ export type CHIP = {
   isfirstpulse: () => boolean
   shouldtick: () => boolean
   shouldhalt: () => boolean
+  haslabel: (label: string) => boolean
   hm: () => number
   yield: () => void
   jump: (line: number) => void
@@ -241,6 +242,20 @@ export function createchip(
       }
       return true
     },
+    haslabel(label) {
+      if (isarray(flags.lb)) {
+        for (let i = 0; i < flags.lb.length; ++i) {
+          const [name, labels] = flags.lb[i] as [string, number[]]
+          if (name === label) {
+            // pick first unzapped label to determine active
+            const active =
+              labels.find((item) => isnumber(item) && item > 0) ?? 0
+            return active > 0
+          }
+        }
+      }
+      return false
+    },
     hm() {
       if (isarray(flags.mg) && isarray(flags.lb)) {
         const [target] = flags.mg as [string] // unpack message
@@ -279,12 +294,17 @@ export function createchip(
       if (flags.lk && incoming.sender !== flags.lk) {
         return
       }
-      flags.mg = [
-        incoming.target,
-        incoming.data,
-        incoming.sender,
-        incoming.player,
-      ]
+      // validate we have given label
+      if (chip.haslabel(incoming.target)) {
+        flags.mg = [
+          incoming.target,
+          incoming.data,
+          incoming.sender,
+          incoming.player,
+        ]
+      } else {
+        // should we raise an error ?
+      }
     },
     zap(label) {
       if (isarray(flags.lb)) {
