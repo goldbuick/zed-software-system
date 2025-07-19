@@ -337,6 +337,8 @@ export function codepageapplyelementstats(
       case 'cycle':
       case 'stepx':
       case 'stepy':
+      case 'shootx':
+      case 'shooty':
       case 'displaychar':
         // todo, set good defaults
         // based on stat type @p1 range, default is 5 ??

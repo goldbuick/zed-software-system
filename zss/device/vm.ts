@@ -230,6 +230,8 @@ const vm = createdevice(
             'cycle',
             'stepx',
             'stepy',
+            'shootx',
+            'shooty',
             'light',
             'lightdir',
             // messages & run

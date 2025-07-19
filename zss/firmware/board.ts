@@ -1,6 +1,7 @@
 import { CHIP } from 'zss/chip'
 import { boardcopy } from 'zss/feature/boardcopy'
 import { createfirmware } from 'zss/firmware'
+import { clamp } from 'zss/mapping/number'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
@@ -43,12 +44,19 @@ import { CATEGORY, COLLISION, COLOR, DIR, PT, WORD } from 'zss/words/types'
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data
-  if (!ispt(READ_CONTEXT.element)) {
+  if (
+    !ispresent(READ_CONTEXT.element?.x) ||
+    !ispresent(READ_CONTEXT.element.y)
+  ) {
     return 0
   }
 
   // read direction + what to shoot
   const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.MAYBE_KIND])
+
+  // track shoot direction
+  READ_CONTEXT.element.shootx = clamp(dir.destpt.x - dir.startpt.x, -1, 1)
+  READ_CONTEXT.element.shooty = clamp(dir.destpt.y - dir.startpt.y, -1, 1)
 
   // write new element
   const bulletkind = kind ?? ['bullet']

@@ -73,6 +73,8 @@ const STANDARD_STAT_NAMES = new Set([
   'cycle',
   'stepx',
   'stepy',
+  'shootx',
+  'shooty',
   'light',
   'lightdir',
   // messages & run

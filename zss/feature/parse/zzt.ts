@@ -286,7 +286,6 @@ export function parsezzt(player: string, content: Uint8Array) {
         break
       case 29:
         // blinkwall
-        console.info('elementstat =>', elementstat)
         writefromkind(
           board,
           ['blinkwall', strcolor],
@@ -295,8 +294,8 @@ export function parsezzt(player: string, content: Uint8Array) {
             ...addstats,
             stepx: 0,
             stepy: 0,
-            p4: addstats.stepx ?? 0,
-            p5: addstats.stepx ?? 0,
+            shootx: addstats.stepx ?? 0,
+            shooty: addstats.stepx ?? 0,
           },
         )
         break
