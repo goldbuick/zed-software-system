@@ -266,7 +266,7 @@ const vm = createdevice(
             'contact',
             'blocked',
             'any',
-            'count',
+            'countof',
             'color',
             'detect',
             'rnd',

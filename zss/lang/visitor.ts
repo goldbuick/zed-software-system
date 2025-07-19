@@ -1670,7 +1670,7 @@ class ScriptVisitor
       this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value: 'count',
+        value: 'countof',
       }),
       this.go(ctx.expr_any),
     ].flat()
