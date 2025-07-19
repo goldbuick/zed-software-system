@@ -338,6 +338,8 @@ export function codepageapplyelementstats(
       case 'stepx':
       case 'stepy':
       case 'displaychar':
+        // todo, set good defaults
+        // based on stat type @p1 range, default is 5 ??
         // @ts-expect-error - we are doing this on purpose
         element[key] = stats[key]
         break

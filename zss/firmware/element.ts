@@ -8,7 +8,7 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
-import { ispresent, isarray, isnumber } from 'zss/mapping/types'
+import { ispresent, isarray, isnumber, isstring } from 'zss/mapping/types'
 import { maptostring, maptonumber } from 'zss/mapping/value'
 import {
   memoryrun,
@@ -19,12 +19,17 @@ import {
   memorywritefromkind,
 } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
-import { boardelementread, boardsafedelete } from 'zss/memory/board'
+import {
+  boardelementread,
+  boardelementreadbyidorindex,
+  boardsafedelete,
+} from 'zss/memory/board'
 import { boardelementapplycolor } from 'zss/memory/boardelement'
 import {
   boardobjectnamedlookupdelete,
   boardsetlookup,
 } from 'zss/memory/boardlookup'
+import { bookelementdisplayread } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
@@ -252,8 +257,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'currenttick':
         return [true, READ_CONTEXT.timestamp]
       case 'boardid':
-        return [true, READ_CONTEXT.board?.id ?? 'ERR']
+        return [true, READ_CONTEXT.board?.id ?? '']
       // env stats
+      case 'playerid':
+        return [true, focus?.id ?? '']
       case 'playerx':
         return [true, focus?.x ?? -1]
       case 'playery':
@@ -265,14 +272,39 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.element?.x ?? -1]
       case 'thisy':
         return [true, READ_CONTEXT.element?.y ?? -1]
+      case 'sender': {
+        const maybesender = READ_CONTEXT.element?.sender
+        if (isstring(maybesender)) {
+          const element = boardelementreadbyidorindex(
+            READ_CONTEXT.board,
+            maybesender,
+          )
+          const display = bookelementdisplayread(element)
+          return [true, display.name]
+        }
+        return [true, '']
+      }
+      case 'senderx': {
+        const maybesender = READ_CONTEXT.element?.sender
+        const element = boardelementreadbyidorindex(
+          READ_CONTEXT.board,
+          isstring(maybesender) ? maybesender : '',
+        )
+        return [true, element?.x ?? -1]
+      }
+      case 'sendery': {
+        const maybesender = READ_CONTEXT.element?.sender
+        const element = boardelementreadbyidorindex(
+          READ_CONTEXT.board,
+          isstring(maybesender) ? maybesender : '',
+        )
+        return [true, element?.y ?? -1]
+      }
       default: {
         // return result
         if (STANDARD_STAT_NAMES.has(name)) {
           // check standard stat names
           const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
-          if (name === 'color') {
-            console.info('reading color', maybevalue)
-          }
           return [true, maybevalue]
         }
         break
@@ -379,6 +411,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'boardid':
         return [false, value] // readonly
       // env stats
+      case 'playerid':
+        return [false, value] // readonly
       case 'playerx':
         return [false, value] // readonly
       case 'playery':
@@ -390,9 +424,15 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [false, value] // readonly
       case 'thisy':
         return [false, value] // readonly
+      case 'senderx':
+        return [false, value] // readonly
+      case 'sendery':
+        return [false, value] // readonly
       default: {
         // we have to check the object's stats first
         if (STANDARD_STAT_NAMES.has(name)) {
+          // chip.set('sender', sender)
+          // is handled here
           if (ispresent(READ_CONTEXT.element)) {
             READ_CONTEXT.element[name as keyof BOARD_ELEMENT] = value
           }
