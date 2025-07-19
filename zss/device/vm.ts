@@ -187,6 +187,16 @@ const vm = createdevice(
             'restartonzap',
             'norestartonzap',
             'maxplayershots',
+            // helper stats
+            'playerid',
+            'playerx',
+            'playery',
+            'thisid',
+            'thisx',
+            'thisy',
+            'senderid',
+            'senderx',
+            'sendery',
             // element stats
             // interaction
             'item',
@@ -705,12 +715,16 @@ const vm = createdevice(
             break
           case 'touched':
             if (isarray(message.data)) {
-              const [toid, from, target] = message.data
+              const [senderidorindex, toelementid, target] = message.data as [
+                string,
+                string,
+                string,
+              ]
               memorymessage({
                 ...message,
-                target: `${toid}:${target}`,
+                target: `${toelementid}:${target}`,
                 data: undefined,
-                sender: from,
+                sender: senderidorindex,
               })
             }
             break

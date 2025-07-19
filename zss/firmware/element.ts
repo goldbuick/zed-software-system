@@ -8,7 +8,7 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
-import { ispresent, isarray, isnumber } from 'zss/mapping/types'
+import { ispresent, isarray, isnumber, isstring } from 'zss/mapping/types'
 import { maptostring, maptonumber } from 'zss/mapping/value'
 import {
   memoryrun,
@@ -19,12 +19,17 @@ import {
   memorywritefromkind,
 } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'
-import { boardelementread, boardsafedelete } from 'zss/memory/board'
+import {
+  boardelementread,
+  boardelementreadbyidorindex,
+  boardsafedelete,
+} from 'zss/memory/board'
 import { boardelementapplycolor } from 'zss/memory/boardelement'
 import {
   boardobjectnamedlookupdelete,
   boardsetlookup,
 } from 'zss/memory/boardlookup'
+import { bookelementdisplayread } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
@@ -158,6 +163,33 @@ function maptoconst(value: string) {
   return undefined
 }
 
+function handledie() {
+  boardsafedelete(
+    READ_CONTEXT.board,
+    READ_CONTEXT.element,
+    READ_CONTEXT.timestamp,
+  )
+
+  // yoink player if item
+  const isitem = !!memoryelementstatread(READ_CONTEXT.element, 'item')
+  if (isitem) {
+    // find focused on player
+    const from: PT = {
+      x: READ_CONTEXT.element?.x ?? -1,
+      y: READ_CONTEXT.element?.y ?? -1,
+    }
+    const focus = findplayerforelement(
+      READ_CONTEXT.board,
+      from,
+      READ_CONTEXT.elementfocus,
+    )
+    if (ispresent(focus)) {
+      focus.x = from.x
+      focus.y = from.y
+    }
+  }
+}
+
 export const ELEMENT_FIRMWARE = createfirmware({
   get(_, name) {
     // check consts first (data normalization)
@@ -179,8 +211,18 @@ export const ELEMENT_FIRMWARE = createfirmware({
       { x: READ_CONTEXT.element?.x ?? -1, y: READ_CONTEXT.element?.y ?? -1 },
       READ_CONTEXT.elementfocus,
     )
-    const player =
+
+    // player id
+    const playerid =
       focus?.id ?? READ_CONTEXT.elementfocus ?? memoryreadoperator()
+
+    // sender info
+    const maybesender = READ_CONTEXT.element?.sender
+    const sender = boardelementreadbyidorindex(
+      READ_CONTEXT.board,
+      isstring(maybesender) ? maybesender : '',
+    )
+    const senderid = sender?.id ?? ''
 
     // read stat
     switch (name) {
@@ -225,8 +267,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'currenttick':
         return [true, READ_CONTEXT.timestamp]
       case 'boardid':
-        return [true, READ_CONTEXT.board?.id ?? 'ERR']
+        return [true, READ_CONTEXT.board?.id ?? '']
       // env stats
+      case 'playerid':
+        return [true, playerid]
       case 'playerx':
         return [true, focus?.x ?? -1]
       case 'playery':
@@ -238,14 +282,17 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.element?.x ?? -1]
       case 'thisy':
         return [true, READ_CONTEXT.element?.y ?? -1]
+      case 'senderid':
+        return [true, senderid]
+      case 'senderx':
+        return [true, sender?.x ?? -1]
+      case 'sendery':
+        return [true, sender?.y ?? -1]
       default: {
         // return result
         if (STANDARD_STAT_NAMES.has(name)) {
           // check standard stat names
           const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
-          if (name === 'color') {
-            console.info('reading color', maybevalue)
-          }
           return [true, maybevalue]
         }
         break
@@ -254,7 +301,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // fallback to player flags
     // read value
-    const value = memoryreadflags(player)[name]
+    const value = memoryreadflags(playerid)[name]
     return [ispresent(value), value]
   },
   set(_, name, value) {
@@ -352,6 +399,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'boardid':
         return [false, value] // readonly
       // env stats
+      case 'playerid':
+        return [false, value] // readonly
       case 'playerx':
         return [false, value] // readonly
       case 'playery':
@@ -362,6 +411,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'thisx':
         return [false, value] // readonly
       case 'thisy':
+        return [false, value] // readonly
+      case 'senderid':
+        return [false, value] // readonly
+      case 'senderx':
+        return [false, value] // readonly
+      case 'sendery':
         return [false, value] // readonly
       default: {
         // we have to check the object's stats first
@@ -576,31 +631,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
     return 0
   })
   .command('die', (chip) => {
-    boardsafedelete(
-      READ_CONTEXT.board,
-      READ_CONTEXT.element,
-      READ_CONTEXT.timestamp,
-    )
-    // yoink player if item
-    const isitem = !!memoryelementstatread(READ_CONTEXT.element, 'item')
-    if (isitem) {
-      // find focused on player
-      const from: PT = {
-        x: READ_CONTEXT.element?.x ?? -1,
-        y: READ_CONTEXT.element?.y ?? -1,
-      }
-      const focus = findplayerforelement(
-        READ_CONTEXT.board,
-        from,
-        READ_CONTEXT.elementfocus,
-      )
-      if (ispresent(focus)) {
-        focus.x = from.x
-        focus.y = from.y
-      }
-    }
+    handledie()
     // halt execution
     chip.endofprogram()
+    return 0
+  })
+  .command('dieonend', () => {
+    handledie()
+    // skip halt execution
     return 0
   })
   .command('endgame', () => {

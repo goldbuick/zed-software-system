@@ -4,6 +4,7 @@ import { createsid } from 'zss/mapping/guid'
 import { clamp, randominteger } from 'zss/mapping/number'
 import { MAYBE, deepcopy, isnumber, ispresent, noop } from 'zss/mapping/types'
 import {
+  dirfromdelta,
   dirfrompts,
   EVAL_DIR,
   ispt,
@@ -341,8 +342,8 @@ export function boardevaldir(
 
   // we need to know current flow etc..
   const flow = dirfrompts(pt, step)
-  const xmax = BOARD_WIDTH - 1
-  const ymax = BOARD_HEIGHT - 1
+  const BOARD_MAX_X = BOARD_WIDTH - 1
+  const BOARD_MAX_Y = BOARD_HEIGHT - 1
   for (let i = 0; i < dir.length; ++i) {
     const dirconst = mapstrdirtoconst(dir[i])
     switch (dirconst) {
@@ -359,20 +360,30 @@ export function boardevaldir(
         // BY <x> <y>
         const [x, y] = dir.slice(i + 1)
         if (isnumber(x) && isnumber(y)) {
-          pt.x = clamp(pt.x + x, 0, xmax)
-          pt.y = clamp(pt.y + y, 0, ymax)
+          pt.x = clamp(pt.x + x, 0, BOARD_MAX_X)
+          pt.y = clamp(pt.y + y, 0, BOARD_MAX_Y)
         }
         // need to skip args
         i += 2
         break
       }
-      case DIR.TO:
-      case DIR.AT: {
-        // BY <x> <y>
+      case DIR.TO: {
+        // TO <x> <y>
         const [x, y] = dir.slice(i + 1)
         if (isnumber(x) && isnumber(y)) {
-          pt.x = clamp(x, 0, xmax)
-          pt.y = clamp(y, 0, ymax)
+          pt.x = clamp(x, 0, BOARD_MAX_X)
+          pt.y = clamp(y, 0, BOARD_MAX_Y)
+        }
+        // need to skip args
+        i += 2
+        break
+      }
+      case DIR.AT: {
+        // AT <dir> + <dir>
+        const [x, y] = dir.slice(i + 1)
+        if (isnumber(x) && isnumber(y)) {
+          pt.x = clamp(x, 0, BOARD_MAX_X)
+          pt.y = clamp(y, 0, BOARD_MAX_Y)
         }
         // need to skip args
         i += 2
@@ -446,7 +457,6 @@ export function boardevaldir(
             }
             break
           case DIR.OPP:
-            debugger
             switch (dirfrompts(startpt, modeval.destpt)) {
               case DIR.NORTH:
                 ptapplydir(pt, DIR.SOUTH)
@@ -479,68 +489,78 @@ export function boardevaldir(
         return { dir, startpt, destpt: pt, layer }
       }
       // pathfinding
-      case DIR.FLEE:
+      case DIR.FLEE: {
+        // run away from nearest kind
+        break
+      }
       case DIR.AWAY: {
         // AWAY <x> <y>
         const [x, y] = dir.slice(i + 1)
         if (isnumber(x) && isnumber(y)) {
-          const dest = { x: clamp(x, 0, xmax), y: clamp(y, 0, ymax) }
-          const collision = memoryelementstatread(element, 'collision')
-          const maybept = boardreadpath(board, collision, pt, dest, true)
-          if (ispresent(maybept)) {
-            pt.x = maybept.x
-            pt.y = maybept.y
+          const dest = {
+            x: clamp(x, 0, BOARD_MAX_X),
+            y: clamp(y, 0, BOARD_MAX_Y),
+          }
+          const dx = dest.x - pt.x
+          const dy = dest.y - pt.y
+          if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+            const collision = memoryelementstatread(element, 'collision')
+            const maybept = boardreadpath(board, collision, pt, dest, true)
+            // check dest spot for blocked
+            if (
+              ispresent(maybept) &&
+              maybept.x !== x &&
+              maybept.y !== y &&
+              !boardobjectreadbypt(board, maybept)
+            ) {
+              pt.x = maybept.x
+              pt.y = maybept.y
+            }
+          } else {
+            // no pathing needed
+            const dir = dirfromdelta(-dx, -dy)
+            ptapplydir(pt, dir)
           }
         }
         // need to skip args
         i += 2
         break
       }
-      case DIR.FIND:
+      case DIR.FIND: {
+        // seek nearest kind
+        break
+      }
       case DIR.TOWARD: {
         // TOWARD <x> <y>
         const [x, y] = dir.slice(i + 1)
         if (isnumber(x) && isnumber(y)) {
-          const dest = { x: clamp(x, 0, xmax), y: clamp(y, 0, ymax) }
-          if (randominteger(1, 100) < 5) {
-            ptapplydir(pt, pick(DIR.NORTH, DIR.SOUTH, DIR.WEST, DIR.EAST))
-          } else {
+          const dest = {
+            x: clamp(x, 0, BOARD_MAX_X),
+            y: clamp(y, 0, BOARD_MAX_Y),
+          }
+          const dx = dest.x - pt.x
+          const dy = dest.y - pt.y
+          if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
             const collision = memoryelementstatread(element, 'collision')
             const maybept = boardreadpath(board, collision, pt, dest, false)
-            if (ispresent(maybept)) {
-              // check dest spot for blocked
-              if (
-                maybept.x !== x &&
-                maybept.y !== y &&
-                boardobjectreadbypt(board, maybept)
-              ) {
-                switch (dirfrompts(startpt, maybept)) {
-                  case DIR.EAST:
-                  case DIR.WEST:
-                    pt.y += pick(-1, 1)
-                    break
-                  case DIR.NORTH:
-                  case DIR.SOUTH:
-                    pt.x += pick(-1, 1)
-                    break
-                }
-              } else {
-                pt.x = maybept.x
-                pt.y = maybept.y
-              }
+            // check dest spot for blocked
+            if (
+              ispresent(maybept) &&
+              maybept.x !== x &&
+              maybept.y !== y &&
+              !boardobjectreadbypt(board, maybept)
+            ) {
+              pt.x = maybept.x
+              pt.y = maybept.y
             }
+          } else {
+            // no pathing needed
+            const dir = dirfromdelta(dx, dy)
+            ptapplydir(pt, dir)
           }
         }
         // need to skip args
         i += 2
-        break
-      }
-      case DIR.PLAYER: {
-        const maybeplayer = findplayerforelement(board, startpt, player)
-        if (ispt(maybeplayer)) {
-          pt.x = maybeplayer.x
-          pt.y = maybeplayer.y
-        }
         break
       }
       // layers

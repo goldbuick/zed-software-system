@@ -1,7 +1,7 @@
 import { objectKeys } from 'ts-extras'
 import { senderid } from 'zss/chip'
 import { RUNTIME } from 'zss/config'
-import { api_error, MESSAGE, api_log } from 'zss/device/api'
+import { api_error, MESSAGE, api_log, vm_touched } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { LAYER } from 'zss/gadget/data/types'
@@ -624,9 +624,17 @@ export function memorysendinteraction(
   toelement: BOARD_ELEMENT,
   message: string,
 ) {
-  const display = bookelementdisplayread(fromelement)
-  if (isstring(toelement.id)) {
-    SOFTWARE.emit(player, `vm:touched`, [toelement.id, display.name, message])
+  if (!isstring(toelement.id)) {
+    return
+  }
+  if (isstring(fromelement.id)) {
+    vm_touched(SOFTWARE, player, fromelement.id, toelement.id, message)
+  } else {
+    const idx = `${pttoindex(
+      { x: fromelement.x ?? 0, y: fromelement.y ?? 0 },
+      BOARD_WIDTH,
+    )}`
+    vm_touched(SOFTWARE, player, idx, toelement.id, message)
   }
 }
 
@@ -722,30 +730,73 @@ export function memorymoveobject(
     } else if (elementisplayer) {
       if (blockedbyplayer) {
         // same party touch
-        memorysendinteraction('', blocked, element, 'bump')
-        memorysendinteraction('', element, blocked, 'bump')
+        memorysendinteraction(
+          samemparty ? '' : blockedplayer,
+          blocked,
+          element,
+          'thud',
+        )
+        memorysendinteraction(
+          samemparty ? '' : elementplayer,
+          element,
+          blocked,
+          'bump',
+        )
       } else if (blockedisbullet) {
         memorysendinteraction(
-          '',
+          samemparty ? '' : blockedplayer,
           blocked,
           element,
           samemparty ? 'partyshot' : 'shot',
         )
-        memorysendinteraction(elementplayer, element, blocked, 'touch')
-      } else {
-        memorysendinteraction('', blocked, element, 'thud')
-        memorysendinteraction(elementplayer, element, blocked, 'touch')
-      }
-    } else if (elementisbullet) {
-      if (blockedisbullet) {
-        memorysendinteraction('', blocked, element, 'thud')
-        memorysendinteraction('', element, blocked, 'thud')
+        memorysendinteraction(elementplayer, element, blocked, 'thud')
       } else {
         memorysendinteraction(
-          '',
+          samemparty ? '' : blockedplayer,
           blocked,
           element,
-          blockedbyplayer ? 'touch' : 'thud',
+          'thud',
+        )
+        memorysendinteraction(
+          samemparty ? '' : elementplayer,
+          element,
+          blocked,
+          'touch',
+        )
+      }
+    } else if (elementisbullet) {
+      if (blockedbyplayer) {
+        memorysendinteraction(
+          samemparty ? '' : blockedplayer,
+          blocked,
+          element,
+          'thud',
+        )
+        memorysendinteraction(
+          samemparty ? '' : elementplayer,
+          element,
+          blocked,
+          samemparty ? 'partyshot' : 'shot',
+        )
+      } else if (blockedisbullet) {
+        memorysendinteraction(
+          samemparty ? '' : blockedplayer,
+          blocked,
+          element,
+          'thud',
+        )
+        memorysendinteraction(
+          samemparty ? '' : elementplayer,
+          element,
+          blocked,
+          'thud',
+        )
+      } else {
+        memorysendinteraction(
+          samemparty ? '' : blockedplayer,
+          blocked,
+          element,
+          'thud',
         )
         memorysendinteraction(
           samemparty ? '' : elementplayer,
@@ -756,7 +807,18 @@ export function memorymoveobject(
       }
     } else {
       if (blockedbyplayer) {
-        memorysendinteraction(blockedplayer, blocked, element, 'touch')
+        memorysendinteraction(
+          samemparty ? '' : blockedplayer,
+          blocked,
+          element,
+          'thud',
+        )
+        memorysendinteraction(
+          samemparty ? '' : elementplayer,
+          element,
+          blocked,
+          'bump',
+        )
       } else if (blockedisbullet) {
         memorysendinteraction(
           samemparty ? '' : blockedplayer,
@@ -765,15 +827,24 @@ export function memorymoveobject(
           samemparty ? 'partyshot' : 'shot',
         )
         memorysendinteraction(
-          '',
+          samemparty ? '' : elementplayer,
           element,
           blocked,
-          samemparty ? 'thud' : 'touch',
+          'thud',
         )
       } else {
-        memorysendinteraction('', blocked, element, 'thud')
-        // same party touch
-        memorysendinteraction('', element, blocked, 'bump')
+        memorysendinteraction(
+          samemparty ? '' : blockedplayer,
+          blocked,
+          element,
+          'thud',
+        )
+        memorysendinteraction(
+          samemparty ? '' : elementplayer,
+          element,
+          blocked,
+          'bump',
+        )
       }
     }
 

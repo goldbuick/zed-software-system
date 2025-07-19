@@ -217,10 +217,10 @@ export function invokeplay(
           duration = 64
           break
         case SYNTH_OP.TIME_TRIPLET:
-          duration = Math.round((duration * 3) / 2)
+          duration = Math.round(duration / 3)
           break
         case SYNTH_OP.TIME_AND_A_HALF:
-          duration = Math.round(duration / 3)
+          duration = Math.round((duration * 3) / 2)
           break
         case SYNTH_OP.DRUM_TICK:
           note = 0
