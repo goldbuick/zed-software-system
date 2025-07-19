@@ -27,7 +27,7 @@ import { bookelementdisplayread } from 'zss/memory/book'
 import { bookplayermovetoboard } from 'zss/memory/bookplayer'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
-import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
+import { dirfrompts, ispt, isstrdir, ptapplydir } from 'zss/words/dir'
 import {
   readstrkindbg,
   readstrkindcolor,
@@ -102,55 +102,61 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   // make sure lookup is created
   boardsetlookup(READ_CONTEXT.board)
 
+  // check kind of value given
+  const [value] = readargs(READ_CONTEXT.words, 0, [ARG_TYPE.ANY])
+
   // read
-  const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
+  if (isstrdir(value)) {
+    const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
 
-  // check if we are blocked by a pushable object element
-  const target = boardelementread(READ_CONTEXT.board, dir.destpt)
-  if (target?.category === CATEGORY.ISOBJECT && target?.pushable) {
-    const from: PT = {
-      x: READ_CONTEXT.element?.x ?? 0,
-      y: READ_CONTEXT.element?.y ?? 0,
-    }
-    // attempt to shove it away
-    const pt = ptapplydir(dir.destpt, dirfrompts(from, dir.destpt))
-    boardmoveobject(READ_CONTEXT.board, target, pt)
-  }
-
-  // get kind's collision type
-  const [kindname] = kind
-  const kindelement = memoryelementkindread({ kind: kindname })
-
-  // handle terrain put
-  if (!boardelementisobject(kindelement)) {
-    memorywritefromkind(READ_CONTEXT.board, kind, dir.destpt, id)
-  }
-
-  // handle object put
-  if (boardelementisobject(kindelement)) {
-    const collision = memoryelementstatread(kindelement, 'collision')
-
-    // validate placement works
-    const blocked = boardcheckblockedobject(
-      READ_CONTEXT.board,
-      collision,
-      dir.destpt,
-    )
-
-    // write new element
-    if (!ispresent(blocked)) {
-      const element = memorywritefromkind(
-        READ_CONTEXT.board,
-        kind,
-        dir.destpt,
-        id,
-      )
-      if (ispresent(element) && ispresent(arg)) {
-        element.arg = arg
+    // check if we are blocked by a pushable object element
+    const target = boardelementread(READ_CONTEXT.board, dir.destpt)
+    if (target?.category === CATEGORY.ISOBJECT && target?.pushable) {
+      const from: PT = {
+        x: READ_CONTEXT.element?.x ?? 0,
+        y: READ_CONTEXT.element?.y ?? 0,
       }
+      // attempt to shove it away
+      const pt = ptapplydir(dir.destpt, dirfrompts(from, dir.destpt))
+      boardmoveobject(READ_CONTEXT.board, target, pt)
+    }
+
+    // get kind's collision type
+    const [kindname] = kind
+    const kindelement = memoryelementkindread({ kind: kindname })
+
+    // handle terrain put
+    if (!boardelementisobject(kindelement)) {
+      memorywritefromkind(READ_CONTEXT.board, kind, dir.destpt, id)
+    }
+
+    // handle object put
+    if (boardelementisobject(kindelement)) {
+      const collision = memoryelementstatread(kindelement, 'collision')
+
+      // validate placement works
+      const blocked = boardcheckblockedobject(
+        READ_CONTEXT.board,
+        collision,
+        dir.destpt,
+      )
+
+      // write new element
+      if (!ispresent(blocked)) {
+        const element = memorywritefromkind(
+          READ_CONTEXT.board,
+          kind,
+          dir.destpt,
+          id,
+        )
+        if (ispresent(element) && ispresent(arg)) {
+          element.arg = arg
+        }
+      }
+    } else {
+      // use value as a list
     }
   }
-
   return 0
 }
 
