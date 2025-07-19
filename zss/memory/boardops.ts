@@ -134,12 +134,22 @@ export function boardmoveobject(
     movingelement,
     'collision',
   )
+
+  if (movingelementcollision === COLLISION.ISGHOST) {
+    // skip ghost
+    return undefined
+  }
+
   const movingelementisplayer = ispid(movingelement?.id)
-  const movingelementisbullet =
-    memoryelementstatread(movingelement, 'collision') === COLLISION.ISBULLET
+  const movingelementisbullet = movingelementcollision === COLLISION.ISBULLET
 
   // blocked by an object
   const maybeobject = boardobjectread(board, board.lookup[destidx] ?? '')
+  if (memoryelementstatread(maybeobject, 'collision') === COLLISION.ISGHOST) {
+    // skip ghost
+    return undefined
+  }
+
   const maybeobjectisplayer = ispid(maybeobject?.id ?? '')
   if (
     // we are blocked by an object

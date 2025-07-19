@@ -440,6 +440,7 @@ class ScriptParser extends CstParser {
       { ALT: () => this.CONSUME(lexer.collision_iswalk) },
       { ALT: () => this.CONSUME(lexer.collision_isswim) },
       { ALT: () => this.CONSUME(lexer.collision_isbullet) },
+      { ALT: () => this.CONSUME(lexer.collision_isghost) },
       { ALT: () => this.CONSUME(lexer.collision_iswalking) },
       { ALT: () => this.CONSUME(lexer.collision_iswalkable) },
       { ALT: () => this.CONSUME(lexer.collision_isswimming) },

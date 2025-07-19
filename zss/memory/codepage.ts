@@ -337,6 +337,8 @@ export function codepageapplyelementstats(
       case 'cycle':
       case 'stepx':
       case 'stepy':
+      case 'shootx':
+      case 'shooty':
       case 'displaychar':
         // todo, set good defaults
         // based on stat type @p1 range, default is 5 ??
@@ -381,6 +383,9 @@ export function codepageapplyelementstats(
         break
       case 'isbullet':
         element.collision = COLLISION.ISBULLET
+        break
+      case 'isghost':
+        element.collision = COLLISION.ISGHOST
         break
       case 'isbreakable':
         element.breakable = 1

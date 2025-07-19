@@ -185,6 +185,7 @@ export const collision_issolid = createWordToken('issolid')
 export const collision_iswalk = createWordToken('iswalk')
 export const collision_isswim = createWordToken('isswim')
 export const collision_isbullet = createWordToken('isbullet')
+export const collision_isghost = createWordToken('isghost')
 
 export const collision_iswalking = createWordToken('iswalking')
 export const collision_iswalkable = createWordToken('iswalkable')
@@ -294,7 +295,7 @@ export const expr_aligned = createSimpleToken({
 export const expr_contact = createWordToken('contact')
 export const expr_blocked = createWordToken('blocked')
 export const expr_any = createWordToken('any')
-export const expr_count = createWordToken('count')
+export const expr_count = createWordToken('countof')
 export const expr_abs = createWordToken('abs')
 export const expr_intceil = createWordToken('intceil')
 export const expr_intfloor = createWordToken('intfloor')
@@ -464,6 +465,7 @@ function createTokenSet(primary: TokenType[]) {
     collision_isswimming,
     collision_isswim,
     collision_isbullet,
+    collision_isghost,
     color_black,
     color_dkblue,
     color_dkgreen,

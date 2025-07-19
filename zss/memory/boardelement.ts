@@ -58,6 +58,8 @@ enum BOARD_ELEMENT_KEYS {
   displaychar,
   displaycolor,
   displaybg,
+  shootx,
+  shooty,
 }
 
 // safe to serialize copy of boardelement

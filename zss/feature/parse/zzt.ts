@@ -286,7 +286,18 @@ export function parsezzt(player: string, content: Uint8Array) {
         break
       case 29:
         // blinkwall
-        writefromkind(board, ['blinkwall', strcolor], { x, y }, addstats)
+        writefromkind(
+          board,
+          ['blinkwall', strcolor],
+          { x, y },
+          {
+            ...addstats,
+            stepx: 0,
+            stepy: 0,
+            shootx: addstats.stepx ?? 0,
+            shooty: addstats.stepx ?? 0,
+          },
+        )
         break
       case 30:
         // transporter

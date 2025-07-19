@@ -249,11 +249,11 @@ export function readexpr(index: number): [any, number] {
         const matchedelements = listelementsbykind(READ_CONTEXT.board, match)
         return [matchedelements, iii]
       }
-      case 'count': {
-        // COUNT <kind>
-        // COUNT <color>
-        // COUNT <dir> <kind>
-        // COUNT <dir> <color>
+      case 'countof': {
+        // COUNTOF <kind>
+        // COUNTOF <color>
+        // COUNTOF <dir> <kind>
+        // COUNTOF <dir> <color>
         const [value] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.ANY])
         if (isstrdir(value)) {
           const [dir, match, iii] = readargs(READ_CONTEXT.words, ii, [

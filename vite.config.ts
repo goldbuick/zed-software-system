@@ -58,8 +58,8 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id: string) {
-            if (id.includes(`/three`)) {
-              return 'three'
+            if (id.includes(`node_modules`)) {
+              return 'foundation'
             }
             return null
           },

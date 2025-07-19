@@ -1,7 +1,7 @@
 import { indextopt, ptwithin } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
-import { clamp, randominteger } from 'zss/mapping/number'
+import { clamp } from 'zss/mapping/number'
 import { MAYBE, deepcopy, isnumber, ispresent, noop } from 'zss/mapping/types'
 import {
   dirfromdelta,
@@ -14,11 +14,7 @@ import {
 } from 'zss/words/dir'
 import { DIR, PT } from 'zss/words/types'
 
-import {
-  findplayerforelement,
-  listnamedelements,
-  picknearestpt,
-} from './atomics'
+import { listnamedelements, picknearestpt } from './atomics'
 import { exportboardelement, importboardelement } from './boardelement'
 import {
   boardobjectnamedlookupdelete,

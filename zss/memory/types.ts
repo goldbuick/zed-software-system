@@ -46,6 +46,8 @@ export type BOARD_ELEMENT = {
   cycle?: number
   stepx?: number
   stepy?: number
+  shootx?: number
+  shooty?: number
   // messages
   sender?: string
   arg?: any

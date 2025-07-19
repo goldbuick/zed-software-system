@@ -217,6 +217,7 @@ const vm = createdevice(
             'isswimable',
             'issolid',
             'isbullet',
+            'isghost',
             'isbreakable',
             'notbreakable',
             // config
@@ -229,6 +230,8 @@ const vm = createdevice(
             'cycle',
             'stepx',
             'stepy',
+            'shootx',
+            'shooty',
             'light',
             'lightdir',
             // messages & run
@@ -263,7 +266,7 @@ const vm = createdevice(
             'contact',
             'blocked',
             'any',
-            'count',
+            'countof',
             'color',
             'detect',
             'rnd',
