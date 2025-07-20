@@ -60,6 +60,7 @@ import {
   TermCstChildren,
   Token_expr_absCstChildren,
   Token_expr_anyCstChildren,
+  Token_expr_blockedCstChildren,
   Token_expr_clampCstChildren,
   Token_expr_countCstChildren,
   Token_expr_intceilCstChildren,
@@ -1676,6 +1677,20 @@ class ScriptVisitor
     ].flat()
   }
 
+  token_expr_blocked(
+    ctx: Token_expr_blockedCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'blocked',
+      }),
+      this.go(ctx.dir),
+    ].flat()
+  }
+
   token_expr_abs(ctx: Token_expr_absCstChildren, location: CstNodeLocation) {
     return [
       ...this.createcodenode(location, {
@@ -1862,15 +1877,6 @@ class ScriptVisitor
           type: NODE.LITERAL,
           literal: LITERAL.STRING,
           value: 'contact',
-        }),
-      )
-    }
-    if (ctx.token_blocked) {
-      values.push(
-        ...this.createcodenode(location, {
-          type: NODE.LITERAL,
-          literal: LITERAL.STRING,
-          value: 'blocked',
         }),
       )
     }
