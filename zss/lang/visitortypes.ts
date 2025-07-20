@@ -648,8 +648,18 @@ export type Token_expr_countCstNode = {
 } & CstNode
 
 export type Token_expr_countCstChildren = {
-  token_count: IToken[]
+  token_countof: IToken[]
   expr_any: Expr_anyCstNode[]
+}
+
+export type Token_expr_blockedCstNode = {
+  name: 'token_expr_blocked'
+  children: Token_expr_blockedCstChildren
+} & CstNode
+
+export type Token_expr_blockedCstChildren = {
+  token_blocked: IToken[]
+  dir: DirCstNode[]
 }
 
 export type Token_expr_absCstNode = {
@@ -792,9 +802,9 @@ export type Token_exprCstNode = {
 export type Token_exprCstChildren = {
   token_expr_aligned?: IToken[]
   token_contact?: IToken[]
-  token_blocked?: IToken[]
   token_expr_any?: Token_expr_anyCstNode[]
   token_expr_count?: Token_expr_countCstNode[]
+  token_expr_blocked?: Token_expr_blockedCstNode[]
   token_expr_abs?: Token_expr_absCstNode[]
   token_expr_intceil?: Token_expr_intceilCstNode[]
   token_expr_intfloor?: Token_expr_intfloorCstNode[]
@@ -919,6 +929,7 @@ export type ICstNodeVisitor<IN, OUT> = {
   expr_any(children: Expr_anyCstChildren, param?: IN): OUT
   token_expr_any(children: Token_expr_anyCstChildren, param?: IN): OUT
   token_expr_count(children: Token_expr_countCstChildren, param?: IN): OUT
+  token_expr_blocked(children: Token_expr_blockedCstChildren, param?: IN): OUT
   token_expr_abs(children: Token_expr_absCstChildren, param?: IN): OUT
   token_expr_intceil(children: Token_expr_intceilCstChildren, param?: IN): OUT
   token_expr_intfloor(children: Token_expr_intfloorCstChildren, param?: IN): OUT

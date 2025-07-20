@@ -29,11 +29,13 @@ import {
   boardobjectnamedlookupdelete,
   boardsetlookup,
 } from 'zss/memory/boardlookup'
+import { bookelementdisplayread } from 'zss/memory/book'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
-import { colorconsts } from 'zss/words/color'
+import { colorconsts, mapcolortostrcolor } from 'zss/words/color'
 import { dirconsts, isstrdir } from 'zss/words/dir'
+import { STR_KIND } from 'zss/words/kind'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
 
@@ -294,7 +296,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         if (STANDARD_STAT_NAMES.has(name)) {
           // check standard stat names
           const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
-          return [true, maybevalue]
+          return [true, maybevalue ?? 0] // fallback to zero as default value from a stat
         }
         break
       }
@@ -491,6 +493,17 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
     // make sure lookup is created
     boardsetlookup(READ_CONTEXT.board)
+
+    // read current display
+    const display = bookelementdisplayread(READ_CONTEXT.element)
+    const [kindname, maybecolor] = kind
+
+    const mergedstrcolor = [
+      ...mapcolortostrcolor(display.color, display.bg),
+      ...(maybecolor ?? []),
+    ]
+    const kindcolorcopy: STR_KIND = [kindname, mergedstrcolor]
+
     // make invisible
     boardobjectnamedlookupdelete(READ_CONTEXT.board, READ_CONTEXT.element)
     // nuke self
@@ -506,7 +519,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         y: READ_CONTEXT.element?.y ?? 0,
       }
       // write new element
-      memorywritefromkind(READ_CONTEXT.board, kind, pt)
+      memorywritefromkind(READ_CONTEXT.board, kindcolorcopy, pt)
     }
     // halt execution
     chip.endofprogram()

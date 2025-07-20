@@ -91,7 +91,10 @@ export function mapstrcolor(value: any): MAYBE<STR_COLOR_CONST> {
   return undefined
 }
 
-export function mapcolortostrcolor(color: MAYBE<COLOR>, bg: MAYBE<COLOR>) {
+export function mapcolortostrcolor(
+  color: MAYBE<COLOR>,
+  bg: MAYBE<COLOR>,
+): STR_COLOR_CONST[] {
   return [
     ispresent(color) ? (`${COLOR[color]}` as STR_COLOR_CONST) : undefined,
     ispresent(bg) ? (`ON${COLOR[bg]}` as STR_COLOR_CONST) : undefined,
@@ -148,18 +151,26 @@ export function readcolor(index: number): [STR_COLOR | undefined, number] {
 
   let next = index
 
+  // check for color copy
+  const colorcopy: MAYBE<WORD> = READ_CONTEXT.words[index]
+  if (isstring(colorcopy) && NAME(colorcopy) === 'color') {
+    return [
+      mapcolortostrcolor(READ_CONTEXT.element?.color ?? COLOR.WHITE, undefined),
+      index + 1,
+    ]
+  }
+
+  // read a color
   const [maybecolor, ii] = readcolorconst(index)
   if (isstrcolor(maybecolor)) {
     strcolor.push(...maybecolor)
     next = ii
   }
 
-  if (isstrcolor(strcolor) && !isbgstrcolor(strcolor)) {
-    const [maybebg, iii] = readcolorconst(ii)
-    if (isbgstrcolor(maybebg)) {
-      // strcolor.push(...maybebg)
-      next = iii
-    }
+  const [maybebg, iii] = readcolorconst(ii)
+  if (isbgstrcolor(maybebg)) {
+    strcolor.push(...maybebg)
+    next = iii
   }
 
   return strcolor.length ? [strcolor, next] : [undefined, index]

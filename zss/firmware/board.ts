@@ -96,7 +96,7 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   return 0
 }
 
-function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
+function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   // invalid data
   if (
     !ispt(READ_CONTEXT.element) ||
@@ -116,6 +116,17 @@ function commandput(_: any, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   // read
   if (isstrdir(value)) {
     const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
+
+    // check clipping
+    const { destpt } = dir
+    if (
+      destpt.x < 0 ||
+      destpt.x >= BOARD_WIDTH ||
+      destpt.y < 0 ||
+      destpt.y >= BOARD_HEIGHT
+    ) {
+      return 0
+    }
 
     // check if we are blocked by a pushable object element
     const target = boardelementread(READ_CONTEXT.board, dir.destpt)
@@ -458,11 +469,11 @@ export const BOARD_FIRMWARE = createfirmware()
     return 0
   })
   .command('put', (chip, words) => {
-    return commandput(chip, words)
+    return commandput(words)
   })
   .command('putwith', (chip, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-    return commandput(chip, words.slice(ii), undefined, arg)
+    return commandput(words.slice(ii), undefined, arg)
   })
   .command('oneof', (chip, words) => {
     const [mark, ii] = readargs(words, 0, [ARG_TYPE.ANY])
@@ -475,7 +486,7 @@ export const BOARD_FIRMWARE = createfirmware()
       return 0
     }
 
-    return commandput(chip, words.slice(ii), mark)
+    return commandput(words.slice(ii), mark)
   })
   .command('oneofwith', (chip, words) => {
     const [arg, mark, ii] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.ANY])
@@ -488,7 +499,7 @@ export const BOARD_FIRMWARE = createfirmware()
       return 0
     }
 
-    return commandput(chip, words.slice(ii), mark, arg)
+    return commandput(words.slice(ii), mark, arg)
   })
   .command('shoot', commandshoot)
   .command('shootwith', (chip, words) => {

@@ -613,6 +613,11 @@ class ScriptParser extends CstParser {
     this.SUBRULE(this.expr_any)
   })
 
+  token_expr_blocked = this.RULED('token_expr_blocked', () => {
+    this.CONSUME(lexer.expr_blocked)
+    this.SUBRULE(this.dir)
+  })
+
   token_expr_abs = this.RULED('token_expr_abs', () => {
     this.CONSUME(lexer.expr_abs)
     this.SUBRULE(this.simple_token)
@@ -690,9 +695,9 @@ class ScriptParser extends CstParser {
       this.OR([
         { ALT: () => this.CONSUME(lexer.expr_aligned) },
         { ALT: () => this.CONSUME(lexer.expr_contact) },
-        { ALT: () => this.CONSUME(lexer.expr_blocked) },
         { ALT: () => this.SUBRULE(this.token_expr_any) },
         { ALT: () => this.SUBRULE(this.token_expr_count) },
+        { ALT: () => this.SUBRULE(this.token_expr_blocked) },
         { ALT: () => this.SUBRULE(this.token_expr_abs) },
         { ALT: () => this.SUBRULE(this.token_expr_intceil) },
         { ALT: () => this.SUBRULE(this.token_expr_intfloor) },
