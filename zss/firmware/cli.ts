@@ -1,24 +1,26 @@
 import { parsetarget } from 'zss/device'
 import {
   api_error,
-  register_editor_open,
-  vm_codeaddress,
-  vm_flush,
-  register_nuke,
-  register_share,
-  register_dev,
-  bridge_start,
-  register_inspector,
-  vm_restart,
-  vm_fork,
-  register_downloadjsonfile,
-  bridge_tab,
   api_log,
+  bridge_start,
+  bridge_tab,
   register_config,
   register_configshow,
-  vm_loader,
+  register_dev,
+  register_downloadjsonfile,
+  register_editor_open,
   register_enterar,
+  register_inspector,
+  register_nuke,
+  register_share,
+  register_zztrandom,
+  register_zztsearch,
+  vm_codeaddress,
+  vm_flush,
+  vm_fork,
   vm_itchiopublish,
+  vm_loader,
+  vm_restart,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -31,9 +33,8 @@ import {
   writetext,
 } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
-import { pick } from 'zss/mapping/array'
 import { randominteger } from 'zss/mapping/number'
-import { deepcopy, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
   MEMORY_LABEL,
@@ -74,7 +75,7 @@ import {
 } from 'zss/memory/types'
 import { romparse, romprint, romread } from 'zss/rom'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { parsesend, SEND_META } from 'zss/words/send'
+import { SEND_META, parsesend } from 'zss/words/send'
 import { stattypestring } from 'zss/words/stats'
 import { COLOR, NAME, STAT_TYPE } from 'zss/words/types'
 
@@ -737,6 +738,17 @@ export const CLI_FIRMWARE = createfirmware()
   .command('gadget', () => {
     // gadget will turn on / off the built-in inspector
     register_inspector(SOFTWARE, READ_CONTEXT.elementfocus)
+    return 0
+  })
+  .command('zztsearch', (_, words) => {
+    const [text] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+    if (isstring(text)) {
+      register_zztsearch(SOFTWARE, READ_CONTEXT.elementfocus, text)
+    }
+    return 0
+  })
+  .command('zztrandom', () => {
+    register_zztrandom(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   // -- multiplayer related commands

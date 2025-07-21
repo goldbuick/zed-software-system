@@ -22,7 +22,7 @@ export function islocked() {
 
 export async function museumofzztsearch(text: string) {
   const request = new Request(
-    `https://museumofzzt.com/api/v2/zfile/search/?q=${text}`,
+    `https://bridge.zed.cafe/api/v2/zfile/search/?q=${text}`,
   )
   const response = await fetch(request)
   const data = await response.json()
@@ -30,9 +30,8 @@ export async function museumofzztsearch(text: string) {
 }
 
 export async function museumofzztrandom() {
-  const request = new Request(`https://museumofzzt.com/api/v1/get/random-file/`)
+  const request = new Request(`https://bridge.zed.cafe/api/v1/get/random-file/`)
   const response = await fetch(request)
   const data = await response.json()
   console.info(data)
 }
-

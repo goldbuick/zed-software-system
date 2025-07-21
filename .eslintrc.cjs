@@ -2,7 +2,7 @@ const fs = require('fs')
 
 const prefixes = ['zss', 'cafe']
 
-const alias = { 'chevrotain': '.' }
+const alias = { chevrotain: '.' }
 prefixes.forEach((item) => {
   alias[`/${item}`] = `./${item}`
 })
@@ -92,6 +92,12 @@ module.exports = {
       { namedComponents: 'function-declaration' },
     ],
     'import/no-unresolved': 'off',
+    'sort-imports': [
+      'error',
+      {
+        ignoreDeclarationSort: true,
+      },
+    ],
     'import/order': [
       'error',
       {

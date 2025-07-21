@@ -586,8 +586,10 @@ export function parsezzt(player: string, content: Uint8Array) {
 
     // build codepage @ stats
     const codepagestats: string[] = [`@zztboard${i}`, ``]
-    if (i === playerboard) {
+    if (i === 0) {
       codepagestats.push(`@title`)
+    } else if (i === playerboard) {
+      codepagestats.push(`@zztstartboard`)
     }
 
     for (let e = 0; e < zztboard.elements.length; ++e) {
