@@ -468,14 +468,14 @@ export const BOARD_FIRMWARE = createfirmware()
 
     return 0
   })
-  .command('put', (chip, words) => {
+  .command('put', (_, words) => {
     return commandput(words)
   })
-  .command('putwith', (chip, words) => {
+  .command('putwith', (_, words) => {
     const [arg, ii] = readargs(words, 0, [ARG_TYPE.ANY])
     return commandput(words.slice(ii), undefined, arg)
   })
-  .command('oneof', (chip, words) => {
+  .command('oneof', (_, words) => {
     const [mark, ii] = readargs(words, 0, [ARG_TYPE.ANY])
 
     // if there is already an object with mark id, bail
@@ -488,7 +488,7 @@ export const BOARD_FIRMWARE = createfirmware()
 
     return commandput(words.slice(ii), mark)
   })
-  .command('oneofwith', (chip, words) => {
+  .command('oneofwith', (_, words) => {
     const [arg, mark, ii] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.ANY])
 
     // if there is already an object with mark id, bail

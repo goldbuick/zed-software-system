@@ -7,6 +7,7 @@ import {
   netterminaljoin,
   netterminaltopic,
 } from 'zss/feature/netterminal'
+import { shorturl } from 'zss/feature/url'
 import {
   userscreenstart,
   userscreenstop,
@@ -15,10 +16,8 @@ import {
 } from 'zss/feature/usermedia'
 import { writecopyit, writeheader, writeoption } from 'zss/feature/writeui'
 import { doasync } from 'zss/mapping/func'
-import { createinfohash } from 'zss/mapping/guid'
 import { waitfor } from 'zss/mapping/tick'
 import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
-import { shorturl } from 'zss/mapping/url'
 import { NAME } from 'zss/words/types'
 
 import {

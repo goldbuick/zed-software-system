@@ -19,3 +19,20 @@ export function isjoin() {
 export function islocked() {
   return window.location.href.includes(`/locked/`)
 }
+
+export async function museumofzztsearch(text: string) {
+  const request = new Request(
+    `https://museumofzzt.com/api/v2/zfile/search/?q=${text}`,
+  )
+  const response = await fetch(request)
+  const data = await response.json()
+  console.info(data)
+}
+
+export async function museumofzztrandom() {
+  const request = new Request(`https://museumofzzt.com/api/v1/get/random-file/`)
+  const response = await fetch(request)
+  const data = await response.json()
+  console.info(data)
+}
+

@@ -8,6 +8,7 @@ import { createdevice } from 'zss/device'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { setup } from 'zss/feature/t9'
+import { isjoin, islocked, shorturl } from 'zss/feature/url'
 import {
   writecopyit,
   writeheader,
@@ -35,7 +36,6 @@ import {
   isstring,
   MAYBE,
 } from 'zss/mapping/types'
-import { isjoin, islocked, shorturl } from 'zss/mapping/url'
 import { createplatform } from 'zss/platform'
 
 import {
