@@ -7,7 +7,7 @@ import { COLOR } from 'zss/words/types'
 import { useTape } from './data/state'
 import { ShadeBoxDither } from './graphics/dither'
 import { useTiles } from './hooks'
-import { Marquee } from './scroll/marquee'
+import { Marquee } from '../scroll/marquee'
 import { useScreenSize } from './userscreen'
 import { TilesData, TilesRender } from './usetiles'
 

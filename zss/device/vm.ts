@@ -145,7 +145,7 @@ async function compressedbookstate() {
 const ZZT_BRIDGE = `$176$176$177$177$178 ZZT BRIDGE $178$177$177$176$176`
 
 function writezztcontentwait(player: string) {
-  gadgettext(player, `Searching ${'.'.repeat(randominteger(1, 6))}`)
+  gadgettext(player, `Searching ${'$6'.repeat(randominteger(1, 6))}`)
   const shared = gadgetstate(player)
   shared.scrollname = ZZT_BRIDGE
   shared.scroll = gadgetcheckqueue(player)

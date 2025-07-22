@@ -6,7 +6,7 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { useBlink } from '../hooks'
+import { useBlink } from '../gadget/hooks'
 
 type MarqueeProps = {
   line: string

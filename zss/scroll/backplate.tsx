@@ -4,7 +4,7 @@ import {
   WRITE_TEXT_CONTEXT,
 } from 'zss/words/textformat'
 
-import { useTilesData, writeTile } from '../hooks'
+import { useTilesData, writeTile } from '../gadget/hooks'
 
 type ScrollBackPlateProps = {
   name: string

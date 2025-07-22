@@ -1,9 +1,9 @@
 import { RUNTIME } from 'zss/config'
 import { Blinker } from 'zss/tape/blinker'
 
-import { resetDither, useDither, writeDither } from '../hooks'
-import { DitherData, DitherRender } from '../usedither'
-import { TilesRender } from '../usetiles'
+import { resetDither, useDither, writeDither } from '../gadget/hooks'
+import { DitherData, DitherRender } from '../gadget/usedither'
+import { TilesRender } from '../gadget/usetiles'
 
 type ScrollControlsProps = {
   row: number

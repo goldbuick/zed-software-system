@@ -1,6 +1,6 @@
 import { useTape } from 'zss/gadget/data/state'
 import { useBlink, useWriteText, writeTile } from 'zss/gadget/hooks'
-import { Marquee } from 'zss/gadget/scroll/marquee'
+import { Marquee } from 'zss/scroll/marquee'
 import { bgcolor, setupeditoritem } from 'zss/tape/common'
 import { ismac, metakey } from 'zss/words/system'
 import {
