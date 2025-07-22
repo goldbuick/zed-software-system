@@ -168,6 +168,10 @@ export function gadgetserver_clearscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'gadgetserver:clearscroll')
 }
 
+export function gadgetserver_clearplayer(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetserver:clearplayer')
+}
+
 export function platform_ready(device: DEVICELIKE) {
   device.emit('', 'ready')
 }

@@ -35,7 +35,7 @@ const gadgetclientdevice = createdevice('gadgetclient', [], (message) => {
 
           if (ispresent(didnotpass)) {
             // we are out of sync and need to request a refresh
-            gadgetclientdevice.replynext(message, 'desync')
+            gadgetclientdevice.reply(message, 'desync')
             return {
               ...state,
               desync: true,

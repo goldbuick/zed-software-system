@@ -16,6 +16,7 @@ import {
 } from 'zss/gadget/data/api'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
+import { randominteger } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
 import {
   MAYBE,
@@ -80,6 +81,7 @@ import { NAME, PT } from 'zss/words/types'
 
 import {
   api_log,
+  gadgetserver_clearplayer,
   platform_ready,
   register_copy,
   register_copyjsonfile,
@@ -140,10 +142,10 @@ async function compressedbookstate() {
   return ''
 }
 
-const ZZT_BRIDGE = `$176$176$177$177`
+const ZZT_BRIDGE = `$176$176$177$177$178 ZZT BRIDGE $178$177$177$176$176`
 
 function writezztcontentwait(player: string) {
-  gadgettext(player, `Searching ...`)
+  gadgettext(player, `Searching ${'.'.repeat(randominteger(1, 6))}`)
   const shared = gadgetstate(player)
   shared.scrollname = ZZT_BRIDGE
   shared.scroll = gadgetcheckqueue(player)
@@ -352,6 +354,8 @@ const vm = createdevice(
       case 'login':
         // attempt login
         if (memoryplayerlogin(message.player)) {
+          // clear terminal
+          gadgetserver_clearplayer(vm, message.player)
           // start tracking
           tracking[message.player] = 0
           api_log(vm, memoryreadoperator(), `login from ${message.player}`)
@@ -574,10 +578,10 @@ const vm = createdevice(
         doasync(vm, message.player, async () => {
           if (isarray(message.data)) {
             const [field, text] = message.data as [string, string]
-            writezztcontentwait(message.player)
             let offset = 0
             const result: MOSTLY_ZZT_META[] = []
             while (result.length < 256) {
+              writezztcontentwait(message.player)
               const list = await museumofzztsearch(field, text, offset)
               offset += list.length
               result.push(...list)
