@@ -32,6 +32,7 @@ export function compile(name: string, text: string): GeneratorBuild {
   }
 
   if (astResult.errors && astResult.errors.length > 0) {
+    console.info(text, astResult.errors)
     return astResult
   }
 
