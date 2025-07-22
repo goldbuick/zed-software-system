@@ -1,10 +1,9 @@
+import { useTilesData, writeTile } from 'zss/gadget/hooks'
 import {
   WRITE_TEXT_CONTEXT,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-
-import { useTilesData, writeTile } from '../gadget/hooks'
 
 type ScrollBackPlateProps = {
   name: string
@@ -62,8 +61,7 @@ export function ScrollBackPlate({
 
   // center title
   const titlewidth = measure?.x ?? title.length
-  const centerwidth = width - 2
-  context.x = 2 + Math.round(centerwidth * 0.5)
+  context.x = Math.round(width * 0.5)
   context.x -= Math.round(titlewidth * 0.5)
   context.y++
   tokenizeandwritetextformat(title, context, true)
