@@ -13,6 +13,7 @@ import { PanelItemCopyIt } from './copyit'
 import { PanelItemHotkey } from './hotkey'
 import { PanelItemHyperlink } from './hyperlink'
 import { PanelItemNumber } from './number'
+import { PanelItemOpenIt } from './openit'
 import { PanelItemRange } from './range'
 import { PanelItemSelect } from './select'
 import { PanelItemText } from './text'
@@ -83,8 +84,9 @@ export function PanelItem({ row, item, active }: PanelItemComponentProps) {
       case 'text':
         return <PanelItemText {...props} />
       case 'copyit':
-        // TODO
         return <PanelItemCopyIt {...props} />
+      case 'openit':
+        return <PanelItemOpenIt {...props} />
       case 'zssedit':
         return <PanelItemZSSEdit {...props} />
       case 'charedit':

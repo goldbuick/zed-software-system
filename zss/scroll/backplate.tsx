@@ -60,7 +60,7 @@ export function ScrollBackPlate({
   const measure = tokenizeandmeasuretextformat(title, width, height)
 
   // center title
-  const titlewidth = measure?.x ?? title.length
+  const titlewidth = (measure?.x ?? title.length) - 1
   context.x = Math.round(width * 0.5)
   context.x -= Math.round(titlewidth * 0.5)
   context.y++

@@ -3,6 +3,7 @@ import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/feature/parse/file'
 import {
   MOSTLY_ZZT_META,
+  museumofzztdownload,
   museumofzztrandom,
   museumofzztsearch,
 } from 'zss/feature/url'
@@ -18,6 +19,7 @@ import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { randominteger } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
+import { waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,
   isarray,
@@ -155,12 +157,21 @@ function writezztcontentlinks(list: MOSTLY_ZZT_META[], player: string) {
   for (let i = 0; i < list.length; ++i) {
     const entry = list[i]
     const pubtag = `pub: ${new Date(entry.publish_date).toLocaleDateString()}`
-    const changedtag = `changed: ${new Date(entry.last_modified).toLocaleDateString()}`
     gadgettext(player, `$white${entry.title}`)
-    gadgettext(player, `$purple${pubtag} $yellow${changedtag}`)
+    gadgettext(player, `$yellow  ${entry.author.join(', ')}`)
+    gadgettext(player, `$dkgreen  ${entry.genres.join(', ')}`)
+    gadgettext(player, `$purple  ${pubtag}`)
+    if (entry.screenshot) {
+      gadgethyperlink(player, 'zztbridge', entry.screenshot, [
+        'screenshot',
+        'openit',
+        `https://museumofzzt.com/static/${entry.screenshot}`,
+      ])
+    }
     gadgethyperlink(player, 'zztbridge', entry.filename, [
       'zztimport',
-      `"${entry.letter}/${entry.filename}"`,
+      'hyperlink',
+      `${entry.letter}/${entry.filename}`,
     ])
     gadgettext(player, ' ')
   }
@@ -792,6 +803,15 @@ const vm = createdevice(
                 sender: senderidorindex,
               })
             }
+            break
+          case 'zztbridge':
+            doasync(vm, message.player, async () => {
+              if (isstring(message.data)) {
+                await museumofzztdownload(message.player, message.data)
+                await waitfor(3000)
+                vm_logout(vm, message.player)
+              }
+            })
             break
           default: {
             const invoke = parsetarget(path)

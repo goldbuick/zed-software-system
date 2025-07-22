@@ -1,3 +1,5 @@
+import { parsewebfile } from './parse/file'
+
 export async function shorturl(url: string) {
   const formData = new FormData()
   formData.append('url', url)
@@ -24,10 +26,13 @@ export type MOSTLY_ZZT_META = {
   title: string
   letter: string
   author: string[]
+  genres: string[]
   filename: string
+  screenshot: string
   publish_date: string
-  last_modified: string
 }
+
+const BRIDGE_URL = `https://bridge.zed.cafe`
 
 export async function museumofzztsearch(
   field: string,
@@ -36,7 +41,7 @@ export async function museumofzztsearch(
 ): Promise<MOSTLY_ZZT_META[]> {
   const searchargs = `offset=${offset}&${field}=${text}`
   const request = new Request(
-    `https://bridge.zed.cafe/api/v1/search/files/?${searchargs}`,
+    `${BRIDGE_URL}/api/v1/search/files/?${searchargs}`,
   )
   const response = await fetch(request)
   const contentjson = await response.json()
@@ -45,9 +50,19 @@ export async function museumofzztsearch(
 }
 
 export async function museumofzztrandom(): Promise<MOSTLY_ZZT_META[]> {
-  const request = new Request(`https://bridge.zed.cafe/api/v1/get/random-file/`)
+  const request = new Request(`${BRIDGE_URL}/api/v1/get/random-file/`)
   const response = await fetch(request)
   const contentjson = await response.json()
   const contentdata = contentjson.data
   return [contentdata] as MOSTLY_ZZT_META[]
+}
+
+export async function museumofzztdownload(
+  player: string,
+  content: string,
+): Promise<void> {
+  const response = await fetch(`${BRIDGE_URL}/zgames/${content}`)
+  const zipdata = await response.arrayBuffer()
+  const file = new File([zipdata], content)
+  parsewebfile(player, file)
 }

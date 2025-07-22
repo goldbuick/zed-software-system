@@ -162,7 +162,7 @@ export function Scroll({
             color={COLOR.BLUE}
             y={0}
             leftedge={0}
-            rightedge={width - 1}
+            rightedge={width}
             line={`
    up/down$white.SCROLL UP/DOWN   $blue
 esc/cancel$white.CLOSE SCROLL   $blue
