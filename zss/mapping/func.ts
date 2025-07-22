@@ -1,4 +1,4 @@
-import { api_error, DEVICELIKE } from 'zss/device/api'
+import { DEVICELIKE, api_error } from 'zss/device/api'
 
 export function doasync(
   device: DEVICELIKE,

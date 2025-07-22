@@ -1,4 +1,4 @@
-import { start, Context, setContext, getTransport } from 'tone'
+import { Context, getTransport, setContext, start } from 'tone'
 import { createdevice } from 'zss/device'
 import { AUDIO_SYNTH, createsynth } from 'zss/feature/synth'
 import { addfcrushmodule } from 'zss/feature/synthfcrushworkletnode'
@@ -10,14 +10,14 @@ import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import {
+  MAYBE,
   isarray,
   isnumber,
   ispresent,
   isstring,
-  MAYBE,
 } from 'zss/mapping/types'
 
-import { api_error, synth_audioenabled, vm_loader, api_log } from './api'
+import { api_error, api_log, synth_audioenabled, vm_loader } from './api'
 import { registerreadplayer } from './register'
 
 type CustomNavigator = {

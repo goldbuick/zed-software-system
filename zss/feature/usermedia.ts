@@ -1,10 +1,10 @@
 import Peer, { MediaConnection } from 'peerjs'
-import { getContext, connect, Gain } from 'tone'
+import { Gain, connect, getContext } from 'tone'
 import { api_error } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useMedia } from 'zss/gadget/hooks'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 // track our peer
 let peer: MAYBE<Peer>

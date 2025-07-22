@@ -16,7 +16,7 @@ import { listelementsbyidnameorpts } from 'zss/memory/atomics'
 import { boardelementread } from 'zss/memory/board'
 import { bookelementdisplayread } from 'zss/memory/book'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { parsesend, SEND_META } from 'zss/words/send'
+import { SEND_META, parsesend } from 'zss/words/send'
 
 function handlesend(chip: CHIP, send: SEND_META) {
   if (ispresent(send.targetname)) {

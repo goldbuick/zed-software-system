@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
+  WRITE_TEXT_CONTEXT,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
-  WRITE_TEXT_CONTEXT,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { useBlink } from '../hooks'
+import { useBlink } from '../gadget/hooks'
 
 type MarqueeProps = {
   line: string

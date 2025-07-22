@@ -2,7 +2,7 @@ import { useTape } from 'zss/gadget/data/state'
 import { useWriteText, writeTile } from 'zss/gadget/hooks'
 import { textformatreadedges } from 'zss/words/textformat'
 
-import { bgcolor, BKG_PTRN, BKG_PTRN_ALT, FG } from './common'
+import { BKG_PTRN, BKG_PTRN_ALT, FG, bgcolor } from './common'
 
 type BackPlateProps = {
   bump?: boolean

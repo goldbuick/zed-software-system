@@ -1,7 +1,7 @@
 import { createdevice, parsetarget } from 'zss/device'
 import { hub } from 'zss/hub'
 
-import { ismessage, MESSAGE } from './api'
+import { MESSAGE, ismessage } from './api'
 
 export function createforward(handler: (message: MESSAGE) => void) {
   const syncids = new Set<string>()
@@ -102,6 +102,7 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   }
   switch (route.path) {
     case 'sync':
+    case 'desync':
     case 'joinack':
       return true
   }

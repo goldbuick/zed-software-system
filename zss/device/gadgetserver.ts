@@ -12,6 +12,7 @@ import {
   MEMORY_LABEL,
   memoryreadbookbysoftware,
   memoryreadgadgetlayers,
+  memoryreadoperator,
   memoryreadplayerboard,
 } from 'zss/memory'
 import { bookreadflags } from 'zss/memory/book'
@@ -80,16 +81,16 @@ const gadgetserver = createdevice(
 
     // get list of active players
     const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    const activelist = mainbook?.activelist ?? []
+    const activelist = [...(mainbook?.activelist ?? []), memoryreadoperator()]
+    const activelistvalues = [...new Set(activelist.values())]
 
     // only send deltas
     const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
-
     switch (message.target) {
       case 'tock': {
         const tickercolor = readdecotickercolor()
-        for (let i = 0; i < activelist.length; ++i) {
-          const player = activelist[i]
+        for (let i = 0; i < activelistvalues.length; ++i) {
+          const player = activelistvalues[i]
 
           // update gadget layers from player's current board
           const { over, under, layers } = memoryreadgadgetlayers(
@@ -114,8 +115,8 @@ const gadgetserver = createdevice(
         break
       }
       case 'second':
-        for (let i = 0; i < activelist.length; ++i) {
-          const player = activelist[i]
+        for (let i = 0; i < activelistvalues.length; ++i) {
+          const player = activelistvalues[i]
           const board = memoryreadplayerboard(player)
           if (ispresent(board)) {
             synth_focus(gadgetserver, player, board.id)

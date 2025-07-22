@@ -1,12 +1,12 @@
 import { createsid } from 'zss/mapping/guid'
-import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { WORD } from 'zss/words/types'
 
 import { bookreadcodepagesbytype } from './book'
 import { codepagereadstats } from './codepage'
 import { CODE_PAGE_TYPE } from './types'
 
-import { MEMORY_LABEL, memorystartloader, memoryreadbookbysoftware } from '.'
+import { MEMORY_LABEL, memoryreadbookbysoftware, memorystartloader } from '.'
 
 type LOADER_ENTRY = {
   arg: any

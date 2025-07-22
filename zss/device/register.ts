@@ -1,13 +1,14 @@
 import humanid from 'human-id'
 import {
+  entries as idbentries,
   get as idbget,
   update as idbupdate,
-  entries as idbentries,
 } from 'idb-keyval'
 import { createdevice } from 'zss/device'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { setup } from 'zss/feature/t9'
+import { isjoin, islocked, shorturl } from 'zss/feature/url'
 import {
   writecopyit,
   writeheader,
@@ -28,22 +29,23 @@ import { createpid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { waitfor } from 'zss/mapping/tick'
 import {
+  MAYBE,
   isarray,
   isboolean,
   isequal,
   ispresent,
   isstring,
-  MAYBE,
 } from 'zss/mapping/types'
-import { isjoin, islocked, shorturl } from 'zss/mapping/url'
 import { createplatform } from 'zss/platform'
 
 import {
+  MESSAGE,
   api_error,
-  gadgetserver_desync,
+  api_log,
   bridge_join,
-  register_terminal_full,
+  gadgetserver_desync,
   register_terminal_close,
+  register_terminal_full,
   vm_books,
   vm_cli,
   vm_doot,
@@ -51,8 +53,6 @@ import {
   vm_login,
   vm_operator,
   vm_zsswords,
-  MESSAGE,
-  api_log,
 } from './api'
 
 // read / write from indexdb

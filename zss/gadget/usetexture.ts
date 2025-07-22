@@ -1,6 +1,6 @@
 import { useLoader, useThree } from '@react-three/fiber'
-import { useLayoutEffect, useEffect, useMemo } from 'react'
-import { Texture as _Texture, TextureLoader } from 'three'
+import { useEffect, useLayoutEffect, useMemo } from 'react'
+import { TextureLoader, Texture as _Texture } from 'three'
 
 export const IsObject = (url: unknown): url is Record<string, string> =>
   url === Object(url) && !Array.isArray(url) && typeof url !== 'function'

@@ -1,11 +1,11 @@
-import { isnumber, isstring, MAYBE } from 'zss/mapping/types'
+import { MAYBE, isnumber, isstring } from 'zss/mapping/types'
 import { boardevaldir } from 'zss/memory/board'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 
-import { isstrcolor, mapstrcolor, readcolor, STR_COLOR } from './color'
-import { EVAL_DIR, isstrdir, mapstrdir, readdir, STR_DIR } from './dir'
+import { STR_COLOR, isstrcolor, mapstrcolor, readcolor } from './color'
+import { EVAL_DIR, STR_DIR, isstrdir, mapstrdir, readdir } from './dir'
 import { readexpr } from './expr'
-import { isstrkind, readkind, STR_KIND } from './kind'
+import { STR_KIND, isstrkind, readkind } from './kind'
 import { PT, WORD } from './types'
 
 export const READ_CONTEXT = {

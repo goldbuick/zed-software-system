@@ -6,19 +6,19 @@ import { animpositiontotarget } from 'zss/mapping/anim'
 import { clamp } from 'zss/mapping/number'
 import { isarray, ispresent } from 'zss/mapping/types'
 import {
-  createwritetextcontext,
   WRITE_TEXT_CONTEXT,
+  createwritetextcontext,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { useGadgetClient } from '../data/state'
-import { PANEL_ITEM } from '../data/types'
-import { useTiles } from '../hooks'
-import { ScrollContext } from '../panel/common'
-import { Panel } from '../panel/component'
-import { Scrollable } from '../scrollable'
-import { UserFocus, UserInput, UserInputHandler } from '../userinput'
-import { TilesData } from '../usetiles'
+import { useGadgetClient } from '../gadget/data/state'
+import { PANEL_ITEM } from '../gadget/data/types'
+import { useTiles } from '../gadget/hooks'
+import { ScrollContext } from '../gadget/panel/common'
+import { Panel } from '../gadget/panel/component'
+import { Scrollable } from '../gadget/scrollable'
+import { UserFocus, UserInput, UserInputHandler } from '../gadget/userinput'
+import { TilesData } from '../gadget/usetiles'
 
 import { ScrollBackPlate } from './backplate'
 import { ScrollControls } from './controls'
@@ -162,7 +162,7 @@ export function Scroll({
             color={COLOR.BLUE}
             y={0}
             leftedge={0}
-            rightedge={width - 1}
+            rightedge={width}
             line={`
    up/down$white.SCROLL UP/DOWN   $blue
 esc/cancel$white.CLOSE SCROLL   $blue

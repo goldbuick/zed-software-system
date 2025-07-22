@@ -1,4 +1,4 @@
-import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
 import { DIR, NAME, PT, WORD } from './types'

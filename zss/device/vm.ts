@@ -1,6 +1,12 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/feature/parse/file'
+import {
+  MOSTLY_ZZT_META,
+  museumofzztdownload,
+  museumofzztrandom,
+  museumofzztsearch,
+} from 'zss/feature/url'
 import { DIVIDER } from 'zss/feature/writeui'
 import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
 import {
@@ -11,7 +17,9 @@ import {
 } from 'zss/gadget/data/api'
 import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
+import { randominteger } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
+import { waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,
   isarray,
@@ -20,30 +28,30 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import {
-  memorycli,
-  memoryplayerlogin,
-  memoryreadbookbyaddress,
-  memoryreadbooklist,
-  memoryresetbooks,
-  memorytick,
-  memoryplayerscan,
-  memoryplayerlogout,
-  memoryreadflags,
-  memorymessage,
-  memoryreadbookbysoftware,
   MEMORY_LABEL,
-  memoryreadsession,
-  memorywriteoperator,
-  memoryreadoperator,
-  memoryreadplayeractive,
-  memorysendtoboards,
-  memorywritehalt,
-  memoryreadhalt,
-  memoryresetchipafteredit,
-  memoryrestartallchipsandflags,
-  memorysetbook,
+  memorycli,
   memoryclirepeatlast,
   memoryhasflags,
+  memorymessage,
+  memoryplayerlogin,
+  memoryplayerlogout,
+  memoryplayerscan,
+  memoryreadbookbyaddress,
+  memoryreadbookbysoftware,
+  memoryreadbooklist,
+  memoryreadflags,
+  memoryreadhalt,
+  memoryreadoperator,
+  memoryreadplayeractive,
+  memoryreadsession,
+  memoryresetbooks,
+  memoryresetchipafteredit,
+  memoryrestartallchipsandflags,
+  memorysendtoboards,
+  memorysetbook,
+  memorytick,
+  memorywritehalt,
+  memorywriteoperator,
 } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
 import {
@@ -74,19 +82,20 @@ import { dirconsts } from 'zss/words/dir'
 import { NAME, PT } from 'zss/words/types'
 
 import {
+  api_log,
+  gadgetserver_clearplayer,
   platform_ready,
   register_copy,
   register_copyjsonfile,
   register_forkmem,
+  register_itchiopublishmem,
+  register_loginfail,
   register_loginready,
   register_savemem,
-  api_log,
   vm_codeaddress,
   vm_flush,
-  vm_logout,
-  register_loginfail,
   vm_local,
-  register_itchiopublishmem,
+  vm_logout,
 } from './api'
 import { modemobservevaluestring } from './modem'
 
@@ -133,6 +142,42 @@ async function compressedbookstate() {
     return compressbooks(books)
   }
   return ''
+}
+
+const ZZT_BRIDGE = `$176$176$177$177$178 ZZT BRIDGE $178$177$177$176$176`
+
+function writezztcontentwait(player: string) {
+  gadgettext(player, `Searching ${'$6'.repeat(randominteger(1, 6))}`)
+  const shared = gadgetstate(player)
+  shared.scrollname = ZZT_BRIDGE
+  shared.scroll = gadgetcheckqueue(player)
+}
+
+function writezztcontentlinks(list: MOSTLY_ZZT_META[], player: string) {
+  for (let i = 0; i < list.length; ++i) {
+    const entry = list[i]
+    const pubtag = `pub: ${new Date(entry.publish_date).toLocaleDateString()}`
+    gadgettext(player, `$white${entry.title}`)
+    gadgettext(player, `$yellow  ${entry.author.join(', ')}`)
+    gadgettext(player, `$dkgreen  ${entry.genres.join(', ')}`)
+    gadgettext(player, `$purple  ${pubtag}`)
+    if (entry.screenshot) {
+      gadgethyperlink(player, 'zztbridge', entry.screenshot, [
+        'screenshot',
+        'openit',
+        `https://museumofzzt.com/static/${entry.screenshot}`,
+      ])
+    }
+    gadgethyperlink(player, 'zztbridge', entry.filename, [
+      'zztimport',
+      'hyperlink',
+      `${entry.letter}/${entry.filename}`,
+    ])
+    gadgettext(player, ' ')
+  }
+  const shared = gadgetstate(player)
+  shared.scrollname = ZZT_BRIDGE
+  shared.scroll = gadgetcheckqueue(player)
 }
 
 const vm = createdevice(
@@ -320,6 +365,8 @@ const vm = createdevice(
       case 'login':
         // attempt login
         if (memoryplayerlogin(message.player)) {
+          // clear terminal
+          gadgetserver_clearplayer(vm, message.player)
           // start tracking
           tracking[message.player] = 0
           api_log(vm, memoryreadoperator(), `login from ${message.player}`)
@@ -538,6 +585,32 @@ const vm = createdevice(
           })
         }
         break
+      case 'zztsearch':
+        doasync(vm, message.player, async () => {
+          if (isarray(message.data)) {
+            const [field, text] = message.data as [string, string]
+            let offset = 0
+            const result: MOSTLY_ZZT_META[] = []
+            while (result.length < 256) {
+              writezztcontentwait(message.player)
+              const list = await museumofzztsearch(field, text, offset)
+              offset += list.length
+              result.push(...list)
+              if (list.length < 25) {
+                break
+              }
+            }
+            writezztcontentlinks(result, message.player)
+          }
+        })
+        break
+      case 'zztrandom':
+        doasync(vm, message.player, async () => {
+          writezztcontentwait(message.player)
+          const list = await museumofzztrandom()
+          writezztcontentlinks(list, message.player)
+        })
+        break
       case 'itchiopublish':
         doasync(vm, message.player, async () => {
           if (message.player === operator) {
@@ -730,6 +803,15 @@ const vm = createdevice(
                 sender: senderidorindex,
               })
             }
+            break
+          case 'zztbridge':
+            doasync(vm, message.player, async () => {
+              if (isstring(message.data)) {
+                await museumofzztdownload(message.player, message.data)
+                await waitfor(3000)
+                vm_logout(vm, message.player)
+              }
+            })
             break
           default: {
             const invoke = parsetarget(path)

@@ -1,6 +1,6 @@
 import { useRef } from 'react'
-import { isequal, MAYBE } from 'zss/mapping/types'
-import { islocked } from 'zss/mapping/url'
+import { islocked } from 'zss/feature/url'
+import { MAYBE, isequal } from 'zss/mapping/types'
 import { create } from 'zustand'
 
 import { GADGET_STATE } from './types'

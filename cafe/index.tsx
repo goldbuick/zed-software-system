@@ -1,9 +1,9 @@
-import { events, Canvas } from '@react-three/fiber'
+import { Canvas, events } from '@react-three/fiber'
 import debounce from 'debounce'
-import { createRoot, Root } from 'react-dom/client'
+import { Root, createRoot } from 'react-dom/client'
 import { Intersection } from 'three'
 import { makeeven } from 'zss/mapping/number'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { App } from './app'
 // new LookingGlassWebXRPolyfill({

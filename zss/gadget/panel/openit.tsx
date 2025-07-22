@@ -1,38 +1,36 @@
 import { useCallback } from 'react'
+import { isstring } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { useWriteText } from '../gadget/hooks'
-import { inputcolor } from '../gadget/panel/common'
-import { UserInput } from '../gadget/userinput'
-import { TapeTerminalItemInputProps, setuplogitem } from '../tape/common'
+import { UserInput } from '../userinput'
 
-export function TapeTerminalOpenIt({
+import { PanelItemProps, inputcolor, setuppanelitem } from './common'
+
+export function PanelItemOpenIt({
+  row,
   active,
-  prefix,
   label,
-  words,
-  y,
-}: TapeTerminalItemInputProps) {
-  const context = useWriteText()
-
+  args,
+  context,
+}: PanelItemProps) {
   const invoke = useCallback(() => {
-    const [, openmethod, ...values] = words
+    const [, openmethod, ...values] = args
     const content = values.join(' ')
     setTimeout(() => {
       if (openmethod === 'inline') {
         window.location.href = content
-      } else {
+      } else if (isstring(openmethod)) {
         window.open(`${openmethod} ${content}`.trim(), '_blank')
       }
     }, 100)
-  }, [words])
+  }, [args])
 
   const tcolor = inputcolor(!!active)
 
   // render output
-  setuplogitem(!!active, 0, y, context)
+  setuppanelitem(row, context)
   tokenizeandwritetextformat(
-    `${prefix} $purple$16 $yellowOPENIT ${tcolor}${label}`,
+    `  $purple$16 $yellowOPENIT ${tcolor}${label}`,
     context,
     true,
   )

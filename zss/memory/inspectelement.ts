@@ -7,7 +7,7 @@ import {
   gadgettext,
 } from 'zss/gadget/data/api'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
-import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { CATEGORY, COLLISION, PT, WORD } from 'zss/words/types'
 
 import { boardelementindex } from './board'

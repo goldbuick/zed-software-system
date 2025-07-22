@@ -1,9 +1,9 @@
 import {
-  createToken,
-  createTokenInstance,
+  ITokenConfig,
   Lexer,
   TokenType,
-  ITokenConfig,
+  createToken,
+  createTokenInstance,
 } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'

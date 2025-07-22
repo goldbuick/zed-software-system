@@ -1,4 +1,4 @@
-import { Gain, getContext, optionsFromArguments, Param } from 'tone'
+import { Gain, Param, getContext, optionsFromArguments } from 'tone'
 import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect'
 
 import synthsidechainworkleturl from './synthsidechainworklet.js?url'

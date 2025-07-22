@@ -1,7 +1,7 @@
-import { createToken, createTokenInstance, IToken, Lexer } from 'chevrotain'
+import { IToken, Lexer, createToken, createTokenInstance } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import { colorconsts, colortobg, colortofg } from 'zss/words/color'
 import { COLOR } from 'zss/words/types'
 

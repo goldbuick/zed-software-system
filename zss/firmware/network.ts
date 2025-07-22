@@ -1,9 +1,9 @@
 import {
-  bridge_streamstart,
-  bridge_streamstop,
   bridge_chatstart,
   bridge_chatstop,
   bridge_fetch,
+  bridge_streamstart,
+  bridge_streamstop,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'

@@ -1,4 +1,4 @@
-import { createsid, createnameid, createshortnameid } from 'zss/mapping/guid'
+import { createnameid, createshortnameid, createsid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { COLOR, NAME, WORD } from 'zss/words/types'

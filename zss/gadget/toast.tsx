@@ -1,13 +1,14 @@
 import {
-  createwritetextcontext,
   WRITE_TEXT_CONTEXT,
+  createwritetextcontext,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
+
+import { Marquee } from '../scroll/marquee'
 
 import { useTape } from './data/state'
 import { ShadeBoxDither } from './graphics/dither'
 import { useTiles } from './hooks'
-import { Marquee } from './scroll/marquee'
 import { useScreenSize } from './userscreen'
 import { TilesData, TilesRender } from './usetiles'
 

@@ -17,7 +17,7 @@ import {
 import { bookplayerreadboards } from 'zss/memory/bookplayer'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
-import { parsesend, SEND_META } from 'zss/words/send'
+import { SEND_META, parsesend } from 'zss/words/send'
 
 import { loaderbinary } from './loaderbinary'
 import { loaderjson } from './loaderjson'

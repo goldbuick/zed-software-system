@@ -4,13 +4,13 @@ import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, deepcopy, isnumber, ispresent, noop } from 'zss/mapping/types'
 import {
+  EVAL_DIR,
+  STR_DIR,
   dirfromdelta,
   dirfrompts,
-  EVAL_DIR,
   ispt,
   mapstrdirtoconst,
   ptapplydir,
-  STR_DIR,
 } from 'zss/words/dir'
 import { DIR, PT } from 'zss/words/types'
 

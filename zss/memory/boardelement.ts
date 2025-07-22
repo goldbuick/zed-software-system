@@ -1,6 +1,6 @@
 import { createsid } from 'zss/mapping/guid'
-import { ispresent, MAYBE } from 'zss/mapping/types'
-import { isstrcolor, mapstrcolortoattributes, STR_COLOR } from 'zss/words/color'
+import { MAYBE, ispresent } from 'zss/mapping/types'
+import { STR_COLOR, isstrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { NAME } from 'zss/words/types'
 
 import {

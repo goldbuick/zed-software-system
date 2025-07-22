@@ -3,7 +3,7 @@ what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
 import { GADGET_STATE, INPUT } from 'zss/gadget/data/types'
-import { ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
 // be careful to keep imports here minimal
@@ -166,6 +166,10 @@ export function gadgetserver_desync(device: DEVICELIKE, player: string) {
 
 export function gadgetserver_clearscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'gadgetserver:clearscroll')
+}
+
+export function gadgetserver_clearplayer(device: DEVICELIKE, player: string) {
+  device.emit(player, 'gadgetserver:clearplayer')
 }
 
 export function platform_ready(device: DEVICELIKE) {
@@ -416,6 +420,19 @@ export function register_t9wordsflag(
 
 export function vm_operator(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:operator')
+}
+
+export function vm_zztsearch(
+  device: DEVICELIKE,
+  player: string,
+  field: string,
+  text: string,
+) {
+  device.emit(player, 'vm:zztsearch', [field, text])
+}
+
+export function vm_zztrandom(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:zztrandom')
 }
 
 export function vm_zsswords(device: DEVICELIKE, player: string) {

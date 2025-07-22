@@ -1,7 +1,7 @@
 import ErrorStackParser from 'error-stack-parser'
 
 import { RUNTIME } from './config'
-import { api_error, MESSAGE } from './device/api'
+import { MESSAGE, api_error } from './device/api'
 import { SOFTWARE } from './device/session'
 import {
   DRIVER_TYPE,

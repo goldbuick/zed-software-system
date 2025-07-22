@@ -1,5 +1,5 @@
 import { randominteger, randomintegerwith } from './number'
-import { ispresent, MAYBE } from './types'
+import { MAYBE, ispresent } from './types'
 
 export function range(a: number, b?: number, step?: number) {
   if (typeof a !== 'number') {

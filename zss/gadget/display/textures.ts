@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { CanvasTexture, NearestFilter, Texture } from 'three'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { BITMAP, bitmapToCanvas } from '../data/bitmap'
 

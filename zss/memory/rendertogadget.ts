@@ -1,27 +1,27 @@
 import { degToRad, radToDeg } from 'maath/misc'
 import { Vector2 } from 'three'
 import {
-  createdither,
+  CHAR_HEIGHT,
+  CHAR_WIDTH,
+  LAYER,
+  LAYER_CONTROL,
+  LAYER_DITHER,
+  LAYER_MEDIA,
+  LAYER_SPRITES,
+  LAYER_TILES,
+  SPRITE,
+  VIEWSCALE,
   createcontrol,
+  createdither,
+  createmedia,
   createsprite,
   createsprites,
   createtiles,
-  LAYER,
-  createmedia,
-  LAYER_TILES,
-  LAYER_SPRITES,
-  LAYER_DITHER,
-  LAYER_MEDIA,
-  LAYER_CONTROL,
-  SPRITE,
-  VIEWSCALE,
-  CHAR_WIDTH,
-  CHAR_HEIGHT,
 } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { dirfrompts, isstrdir } from 'zss/words/dir'
 import {
   createwritetextcontext,

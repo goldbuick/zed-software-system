@@ -8,14 +8,14 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
-import { ispresent, isarray, isnumber, isstring } from 'zss/mapping/types'
-import { maptostring, maptonumber } from 'zss/mapping/value'
+import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { maptonumber, maptostring } from 'zss/mapping/value'
 import {
-  memoryrun,
+  memoryelementstatread,
   memorymoveobject,
   memoryreadflags,
   memoryreadoperator,
-  memoryelementstatread,
+  memoryrun,
   memorywritefromkind,
 } from 'zss/memory'
 import { findplayerforelement } from 'zss/memory/atomics'

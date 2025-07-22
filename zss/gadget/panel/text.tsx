@@ -7,9 +7,9 @@ import { ispresent } from 'zss/mapping/types'
 import { maptovalue } from 'zss/mapping/value'
 import { ismac } from 'zss/words/system'
 import {
-  tokenizeandwritetextformat,
   applycolortoindexes,
   applystrtoindex,
+  tokenizeandwritetextformat,
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 

@@ -1,9 +1,9 @@
 import { EffectProps, wrapEffect } from '@react-three/postprocessing'
 import {
   BlendFunction,
+  ColorChannel,
   Effect,
   EffectAttribute,
-  ColorChannel,
 } from 'postprocessing'
 import { Texture, Uniform, UnsignedByteType } from 'three'
 import { MAYBE, ispresent } from 'zss/mapping/types'
