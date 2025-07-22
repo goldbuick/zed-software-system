@@ -10,6 +10,7 @@ import { UserInput, UserInputHandler } from '../userinput'
 import { PanelItemProps, inputcolor, setuppanelitem, strsplice } from './common'
 
 export function PanelItemRange({
+  sidebar,
   chip,
   row,
   active,
@@ -17,7 +18,7 @@ export function PanelItemRange({
   args,
   context,
 }: PanelItemProps) {
-  setuppanelitem(row, context)
+  setuppanelitem(sidebar, row, context)
 
   const [target, maybelabelmin, maybelabelmax] = [
     maptovalue(args[0], ''),

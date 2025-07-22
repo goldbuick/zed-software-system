@@ -16,6 +16,7 @@ import {
 import { PanelItemProps, inputcolor, setuppanelitem, strsplice } from './common'
 
 export function PanelItemNumber({
+  sidebar,
   chip,
   row,
   active,
@@ -23,7 +24,7 @@ export function PanelItemNumber({
   args,
   context,
 }: PanelItemProps) {
-  setuppanelitem(row, context)
+  setuppanelitem(sidebar, row, context)
 
   const [target, maybemin, maybemax] = [
     maptovalue(args[0], ''),

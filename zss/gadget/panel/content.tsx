@@ -11,6 +11,7 @@ import {
 import { setuppanelitem } from './common'
 
 type PanelItemContentProps = {
+  sidebar: boolean
   item: string
   player: string
   row?: number
@@ -18,11 +19,12 @@ type PanelItemContentProps = {
 }
 
 export function PanelItemContent({
+  sidebar,
   item,
   row,
   context,
 }: PanelItemContentProps) {
-  setuppanelitem(row, context)
+  setuppanelitem(sidebar, row, context)
   const edge = textformatreadedges(context)
 
   // detect $CENTER

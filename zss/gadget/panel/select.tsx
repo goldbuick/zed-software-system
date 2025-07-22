@@ -11,6 +11,7 @@ import { UserInput, UserInputHandler } from '../userinput'
 import { PanelItemProps, inputcolor, setuppanelitem } from './common'
 
 export function PanelItemSelect({
+  sidebar,
   chip,
   row,
   active,
@@ -18,7 +19,7 @@ export function PanelItemSelect({
   args,
   context,
 }: PanelItemProps) {
-  setuppanelitem(row, context)
+  setuppanelitem(sidebar, row, context)
 
   const [target, ...pairs] = [maptovalue(args[0], ''), ...args.slice(1)]
 

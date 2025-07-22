@@ -62,6 +62,7 @@ export function Panel({
             row={inline ? undefined : index}
             item={item}
             active={index === selected}
+            sidebar={xmargin !== 0}
           />
         ))}
       </WriteTextContext.Provider>

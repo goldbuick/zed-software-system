@@ -7,6 +7,7 @@ import { UserInput } from '../userinput'
 import { PanelItemProps, inputcolor, setuppanelitem } from './common'
 
 export function PanelItemOpenIt({
+  sidebar,
   row,
   active,
   label,
@@ -28,7 +29,7 @@ export function PanelItemOpenIt({
   const tcolor = inputcolor(!!active)
 
   // render output
-  setuppanelitem(row, context)
+  setuppanelitem(sidebar, row, context)
   tokenizeandwritetextformat(
     `  $purple$16 $yellowOPENIT ${tcolor}${label}`,
     context,
