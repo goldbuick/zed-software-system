@@ -52,7 +52,6 @@ function LayoutRect({
       return (
         <group position-z={512}>
           <Panel
-            name={rect.name}
             width={rect.width}
             height={rect.height}
             color={14}
@@ -66,7 +65,6 @@ function LayoutRect({
     case RECT_TYPE.SCROLL:
       return (
         <Scroll
-          name={rect.name}
           width={rect.width}
           height={rect.height}
           color={14}

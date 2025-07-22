@@ -23,7 +23,7 @@ export function PanelItemZSSEdit({
   args,
   context,
 }: PanelItemProps) {
-  setuppanelitem(row, context)
+  setuppanelitem(false, row, context)
 
   const [target] = [maptovalue(args[0], '')]
 

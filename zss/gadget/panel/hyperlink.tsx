@@ -13,6 +13,7 @@ import {
 } from './common'
 
 export function PanelItemHyperlink({
+  sidebar,
   chip,
   row,
   active,
@@ -20,7 +21,7 @@ export function PanelItemHyperlink({
   args,
   context,
 }: PanelItemProps) {
-  setuppanelitem(row, context)
+  setuppanelitem(sidebar, row, context)
 
   const [target, data] = [maptovalue(args[0], ''), args[1]]
 

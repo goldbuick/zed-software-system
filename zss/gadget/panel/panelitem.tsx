@@ -2,7 +2,6 @@ import { registerreadplayer } from 'zss/device/register'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { useWriteText } from 'zss/gadget/hooks'
 import { isarray, isstring } from 'zss/mapping/types'
-import { writetextreset } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
 import { PanelItemCharEdit } from './charedit'
@@ -20,21 +19,28 @@ import { PanelItemText } from './text'
 import { PanelItemZSSEdit } from './zssedit'
 
 type PanelItemComponentProps = {
+  sidebar: boolean
   row?: number
   item: PANEL_ITEM
   active: boolean
 }
 
-export function PanelItem({ row, item, active }: PanelItemComponentProps) {
+export function PanelItem({
+  sidebar,
+  row,
+  item,
+  active,
+}: PanelItemComponentProps) {
   const player = registerreadplayer()
   const context = useWriteText()
 
-  setuppanelitem(row, context)
+  setuppanelitem(sidebar, row, context)
   context.iseven = context.y % 2 === 0
 
   if (typeof item === 'string') {
     return (
       <PanelItemContent
+        sidebar={sidebar}
         player={player}
         item={item}
         row={row}
@@ -53,6 +59,7 @@ export function PanelItem({ row, item, active }: PanelItemComponentProps) {
     }
 
     const props: PanelItemProps = {
+      sidebar,
       player,
       chip,
       row,

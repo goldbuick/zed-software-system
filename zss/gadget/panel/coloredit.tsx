@@ -31,13 +31,14 @@ function coords() {
 }
 
 export function PanelItemColorEdit({
+  sidebar,
   chip,
   row,
   label,
   args,
   context,
 }: PanelItemProps) {
-  setuppanelitem(row, context)
+  setuppanelitem(sidebar, row, context)
 
   const [target] = [maptovalue(args[0], '')]
 

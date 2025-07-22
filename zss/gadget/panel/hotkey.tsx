@@ -16,6 +16,7 @@ import {
 } from './common'
 
 export function PanelItemHotkey({
+  sidebar,
   chip,
   row,
   active,
@@ -23,11 +24,11 @@ export function PanelItemHotkey({
   args,
   context,
 }: PanelItemProps) {
-  setuppanelitem(row, context)
+  setuppanelitem(sidebar, row, context)
 
   const [target, shortcut, maybetext, maybenoclose] = [
     maptovalue(args[0], ''),
-    maptovalue(args[1], args[1]?.toString() ?? ''),
+    maptovalue(args[1], ''),
     maptovalue(args[2], ''),
     maptovalue(args[3], ''),
   ]
@@ -38,13 +39,11 @@ export function PanelItemHotkey({
   const cx = context.x - 0.25
   const cy = context.y - 0.25
 
-  tokenizeandwritetextformat(
-    `${
-      context.iseven ? '$black$onltgray' : '$black$ondkcyan'
-    }${text}${tcolor}$onclear ${label}${ispresent(row) ? `\n` : ``}`,
-    context,
-    true,
-  )
+  const content = `${
+    context.iseven ? '$black$onltgray' : '$black$ondkcyan'
+  }${text}${tcolor}$onclear ${label}${ispresent(row) ? `\n` : ``}`
+
+  tokenizeandwritetextformat(content, context, true)
 
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {

@@ -19,6 +19,7 @@ import { UserFocus, UserInput, UserInputMods } from '../userinput'
 import { PanelItemProps, inputcolor, setuppanelitem } from './common'
 
 export function PanelItemText({
+  sidebar,
   chip,
   row,
   active,
@@ -26,7 +27,7 @@ export function PanelItemText({
   args,
   context,
 }: PanelItemProps) {
-  setuppanelitem(row, context)
+  setuppanelitem(sidebar, row, context)
 
   const target = maptovalue(args[0], '')
 

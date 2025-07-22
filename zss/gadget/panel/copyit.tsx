@@ -17,6 +17,7 @@ import {
 } from './common'
 
 export function PanelItemCopyIt({
+  sidebar,
   row,
   active,
   label,
@@ -44,7 +45,7 @@ export function PanelItemCopyIt({
   const tcolor = inputcolor(!!active)
 
   // render output
-  setuppanelitem(row, context)
+  setuppanelitem(sidebar, row, context)
   tokenizeandwritetextformat(
     `  $purple$16 $yellowCOPYIT ${tcolor}${label}`,
     context,
