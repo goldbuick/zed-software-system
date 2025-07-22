@@ -81,7 +81,12 @@ const gadgetserver = createdevice(
 
     // get list of active players
     const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    const activelist = mainbook?.activelist ?? [memoryreadoperator()]
+    const activelist = [
+      ...new Set([
+        memoryreadoperator(),
+        ...(mainbook?.activelist ?? []),
+      ]).values(),
+    ]
 
     // only send deltas
     const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
