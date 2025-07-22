@@ -1,11 +1,11 @@
 import {
   CstNode,
   CstParser,
-  generateCstDts,
   IRuleConfig,
   IToken,
   ParserMethod,
   Rule,
+  generateCstDts,
 } from 'chevrotain'
 import { LANG_DEV, LANG_TYPES } from 'zss/config'
 

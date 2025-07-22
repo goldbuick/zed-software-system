@@ -2,10 +2,10 @@ import {
   Filter,
   Follower,
   Gain,
-  Oscillator,
-  ToneAudioNode,
   Noise,
   NoiseType,
+  Oscillator,
+  ToneAudioNode,
 } from 'tone'
 import { NonCustomOscillatorType } from 'tone/build/esm/source/oscillator/OscillatorInterface'
 

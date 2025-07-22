@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import { WRITE_TEXT_CONTEXT } from 'zss/words/textformat'
 import { WORD } from 'zss/words/types'
 

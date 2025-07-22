@@ -4,7 +4,7 @@ import {
 } from 'zss/words/textformat'
 
 import { PANEL_ITEM } from '../data/types'
-import { resetTiles, useTiles, WriteTextContext } from '../hooks'
+import { WriteTextContext, resetTiles, useTiles } from '../hooks'
 import { TilesData, TilesRender } from '../usetiles'
 
 import { PanelItem } from './panelitem'

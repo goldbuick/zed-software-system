@@ -1,17 +1,17 @@
 import {
-  synth_bpm,
-  synth_bgplayvolume,
-  synth_playvolume,
-  synth_play,
+  bridge_mediastart,
+  bridge_mediastop,
+  bridge_talkstart,
+  bridge_talkstop,
   synth_bgplay,
+  synth_bgplayvolume,
+  synth_bpm,
+  synth_play,
+  synth_playvolume,
   synth_tts,
   synth_ttsvolume,
   synth_voice,
   synth_voicefx,
-  bridge_talkstart,
-  bridge_talkstop,
-  bridge_mediastart,
-  bridge_mediastop,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'

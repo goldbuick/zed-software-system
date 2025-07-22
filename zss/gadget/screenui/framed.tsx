@@ -20,7 +20,7 @@ import { FlatGraphics } from '../graphics/flat'
 import { FPVGraphics } from '../graphics/fpv'
 import { IsoGraphics } from '../graphics/iso'
 import { Mode7Graphics } from '../graphics/mode7'
-import { modsfromevent, UserInput, UserInputMods } from '../userinput'
+import { UserInput, UserInputMods, modsfromevent } from '../userinput'
 
 function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   let bits = 0

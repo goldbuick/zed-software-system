@@ -1,7 +1,7 @@
 import { KademliaTable } from 'kademlia-table'
 import Peer, { DataConnection } from 'peerjs'
 import { hex2arr } from 'uint8-util'
-import { api_error, api_log, MESSAGE, vm_search } from 'zss/device/api'
+import { MESSAGE, api_error, api_log, vm_search } from 'zss/device/api'
 import {
   createforward,
   shouldforwardclienttoserver,
@@ -13,7 +13,7 @@ import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { doasync } from 'zss/mapping/func'
 import { createinfohash } from 'zss/mapping/guid'
-import { isarray, ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 
 type ROUTING_NODE = {
   peer: string

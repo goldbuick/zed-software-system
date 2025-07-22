@@ -2,8 +2,8 @@ import { useBlink, useWriteText } from 'zss/gadget/hooks'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import {
-  hascenter,
   HyperLinkText,
+  hascenter,
   textformatreadedges,
   tokenize,
   tokenizeandmeasuretextformat,

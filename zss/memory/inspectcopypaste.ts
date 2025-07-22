@@ -7,7 +7,7 @@ import {
   gadgettext,
 } from 'zss/gadget/data/api'
 import { pttoindex, ptwithin } from 'zss/mapping/2d'
-import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { CATEGORY, PT } from 'zss/words/types'
 
 import {

@@ -1,5 +1,5 @@
 import { useDetectGPU } from '@react-three/drei'
-import { addEffect, addAfterEffect, useThree } from '@react-three/fiber'
+import { addAfterEffect, addEffect, useThree } from '@react-three/fiber'
 import {
   Bloom,
   EffectComposer,

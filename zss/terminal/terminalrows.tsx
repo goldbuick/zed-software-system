@@ -2,13 +2,13 @@ import { useMemo } from 'react'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
 import { deepcopy } from 'zss/mapping/types'
 import {
+  WRITE_TEXT_CONTEXT,
   textformatreadedges,
   tokenizeandmeasuretextformat,
-  WRITE_TEXT_CONTEXT,
 } from 'zss/words/textformat'
 import { useShallow } from 'zustand/react/shallow'
 
-import { useWriteText, WriteTextContext } from '../gadget/hooks'
+import { WriteTextContext, useWriteText } from '../gadget/hooks'
 import { terminalsplit } from '../tape/common'
 
 import { TapeTerminalActiveItem, TapeTerminalItem } from './item'

@@ -9,8 +9,8 @@ import { useGadgetClient } from 'zss/gadget/data/state'
 import {
   LAYER,
   LAYER_TYPE,
-  layersreadcontrol,
   VIEWSCALE,
+  layersreadcontrol,
 } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'

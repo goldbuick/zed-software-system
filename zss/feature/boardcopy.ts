@@ -1,5 +1,5 @@
 import { ispid } from 'zss/mapping/guid'
-import { isnumber, ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryelementstatread, memorywritefromkind } from 'zss/memory'
 import {
   boardelementread,

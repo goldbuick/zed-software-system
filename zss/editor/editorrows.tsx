@@ -10,9 +10,9 @@ import { ROM_LOOKUP, romintolookup, romread } from 'zss/rom'
 import {
   BG_ACTIVE,
   BG_SELECTED,
-  bgcolor,
   EDITOR_CODE_ROW,
   FG_SELECTED,
+  bgcolor,
   setupeditoritem,
 } from 'zss/tape/common'
 import { statformat, stattypestring } from 'zss/words/stats'

@@ -4,7 +4,7 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { useWriteText } from '../gadget/hooks'
 import { inputcolor } from '../gadget/panel/common'
 import { UserInput } from '../gadget/userinput'
-import { setuplogitem, TapeTerminalItemInputProps } from '../tape/common'
+import { TapeTerminalItemInputProps, setuplogitem } from '../tape/common'
 
 export function TapeTerminalOpenIt({
   active,

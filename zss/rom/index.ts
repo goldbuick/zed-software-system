@@ -8,7 +8,7 @@ import {
   writeoption,
   writesection,
 } from 'zss/feature/writeui'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
 const romfiles = import.meta.glob('./**/*.txt', { eager: true, query: 'raw' })

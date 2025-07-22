@@ -2,7 +2,7 @@ import { FeedbackDelay } from 'tone'
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { clamp } from 'zss/mapping/number'
-import { isnumber, ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
 import { AUDIO_SYNTH } from './synth'
 import { ECHO_OFF, ECHO_ON } from './synthfx'

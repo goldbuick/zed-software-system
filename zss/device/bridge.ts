@@ -17,7 +17,7 @@ import {
 import { writecopyit, writeheader, writeoption } from 'zss/feature/writeui'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
-import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
 import {

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
+  WRITE_TEXT_CONTEXT,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
-  WRITE_TEXT_CONTEXT,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 

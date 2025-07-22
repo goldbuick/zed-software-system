@@ -1,5 +1,5 @@
 import { pttoindex } from 'zss/mapping/2d'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import { COLLISION, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'

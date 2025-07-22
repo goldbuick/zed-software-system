@@ -1,4 +1,4 @@
-import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 
 import { READ_CONTEXT } from './reader'
 import { COLOR, NAME, WORD } from './types'

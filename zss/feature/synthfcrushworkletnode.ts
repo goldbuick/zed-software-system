@@ -1,4 +1,4 @@
-import { getContext, optionsFromArguments, Param } from 'tone'
+import { Param, getContext, optionsFromArguments } from 'tone'
 import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect'
 
 import synthfcrushworkleturl from './synthfcrushworklet.js?url'

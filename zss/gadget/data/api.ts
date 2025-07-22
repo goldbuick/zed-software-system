@@ -8,7 +8,7 @@ import {
   modemwritevaluestring,
 } from 'zss/device/modem'
 import { createsid } from 'zss/mapping/guid'
-import { ispresent, isnumber, isstring, noop } from 'zss/mapping/types'
+import { isnumber, ispresent, isstring, noop } from 'zss/mapping/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { hascenter } from 'zss/words/textformat'
 import { NAME, WORD } from 'zss/words/types'

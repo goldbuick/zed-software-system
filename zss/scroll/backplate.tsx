@@ -1,7 +1,7 @@
 import {
+  WRITE_TEXT_CONTEXT,
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
-  WRITE_TEXT_CONTEXT,
 } from 'zss/words/textformat'
 
 import { useTilesData, writeTile } from '../gadget/hooks'

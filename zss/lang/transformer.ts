@@ -1,6 +1,6 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
-import { ispresent, MAYBE } from 'zss/mapping/types'
-import { tokenize, MaybeFlag } from 'zss/words/textformat'
+import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MaybeFlag, tokenize } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
 import { COMPARE, CodeNode, LITERAL, NODE, OPERATOR } from './visitor'

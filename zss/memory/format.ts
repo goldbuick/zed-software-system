@@ -1,7 +1,7 @@
-import { unpack, pack } from 'msgpackr'
+import { pack, unpack } from 'msgpackr'
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { deepcopy, ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 
 export type FORMAT_OBJECT = [string?, any?, ...FORMAT_OBJECT[]]
 

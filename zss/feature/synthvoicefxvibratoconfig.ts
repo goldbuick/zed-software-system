@@ -1,6 +1,6 @@
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { isnumber, ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
 import { AUDIO_SYNTH } from './synth'
 

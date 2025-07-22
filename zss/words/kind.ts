@@ -1,12 +1,12 @@
-import { isarray, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 import { memoryelementkindread } from 'zss/memory'
 
 import {
+  STR_COLOR,
   colortobg,
   readcolor,
   readstrbg,
   readstrcolor,
-  STR_COLOR,
 } from './color'
 import { READ_CONTEXT } from './reader'
 import { COLOR, WORD } from './types'

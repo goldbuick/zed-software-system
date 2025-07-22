@@ -1,11 +1,11 @@
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import {
+  MAYBE,
   isarray,
   isnumber,
   ispresent,
   isstring,
-  MAYBE,
 } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 

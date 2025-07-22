@@ -2,13 +2,13 @@ import { indextopt } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { readstrbg, readstrcolor, STR_COLOR } from 'zss/words/color'
+import { STR_COLOR, readstrbg, readstrcolor } from 'zss/words/color'
 import { ispt } from 'zss/words/dir'
 import {
+  STR_KIND,
   readstrkindbg,
   readstrkindcolor,
   readstrkindname,
-  STR_KIND,
 } from 'zss/words/kind'
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 

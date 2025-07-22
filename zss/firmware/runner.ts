@@ -1,6 +1,6 @@
 import { CHIP } from 'zss/chip'
 import { FIRMWARE, FIRMWARE_COMMAND } from 'zss/firmware'
-import { ispresent, MAYBE } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { AUDIO_FIRMWARE } from './audio'
 import { BOARD_FIRMWARE } from './board'

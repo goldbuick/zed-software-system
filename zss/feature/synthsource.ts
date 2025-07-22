@@ -1,13 +1,13 @@
 import {
-  Synth,
-  Sampler,
-  getContext,
-  FMSynth,
-  MetalSynth,
   BiquadFilter,
+  FMSynth,
   MembraneSynth,
+  MetalSynth,
+  Sampler,
+  Synth,
+  getContext,
 } from 'tone'
-import { deepcopy, MAYBE } from 'zss/mapping/types'
+import { MAYBE, deepcopy } from 'zss/mapping/types'
 
 export enum SOURCE_TYPE {
   SYNTH,

@@ -8,7 +8,7 @@ import {
   FILE_BYTES_PER_COLOR,
   PALETTE_COLORS,
 } from 'zss/gadget/data/types'
-import { isnumber, ispresent, isstring, MAYBE } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { bookensurecodepagewithtype } from 'zss/memory/book'
 import { codepagereaddata } from 'zss/memory/codepage'
 import { memoryloadercontent } from 'zss/memory/loader'

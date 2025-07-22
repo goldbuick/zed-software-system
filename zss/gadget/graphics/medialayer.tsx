@@ -2,10 +2,10 @@ import { useEffect } from 'react'
 import { usermediawritepeers } from 'zss/feature/usermedia'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import {
-  CHAR_HEIGHT,
-  CHAR_WIDTH,
   CHARS_PER_ROW,
   CHARS_TOTAL_ROWS,
+  CHAR_HEIGHT,
+  CHAR_WIDTH,
   FILE_BYTES_PER_COLOR,
   LAYER_TYPE,
   PALETTE_COLORS,
