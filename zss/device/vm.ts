@@ -1,6 +1,11 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
 import { parsewebfile } from 'zss/feature/parse/file'
+import {
+  MOSTLY_ZZT_META,
+  museumofzztrandom,
+  museumofzztsearch,
+} from 'zss/feature/url'
 import { DIVIDER } from 'zss/feature/writeui'
 import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
 import {
@@ -20,30 +25,30 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import {
-  memorycli,
-  memoryplayerlogin,
-  memoryreadbookbyaddress,
-  memoryreadbooklist,
-  memoryresetbooks,
-  memorytick,
-  memoryplayerscan,
-  memoryplayerlogout,
-  memoryreadflags,
-  memorymessage,
-  memoryreadbookbysoftware,
   MEMORY_LABEL,
-  memoryreadsession,
-  memorywriteoperator,
-  memoryreadoperator,
-  memoryreadplayeractive,
-  memorysendtoboards,
-  memorywritehalt,
-  memoryreadhalt,
-  memoryresetchipafteredit,
-  memoryrestartallchipsandflags,
-  memorysetbook,
+  memorycli,
   memoryclirepeatlast,
   memoryhasflags,
+  memorymessage,
+  memoryplayerlogin,
+  memoryplayerlogout,
+  memoryplayerscan,
+  memoryreadbookbyaddress,
+  memoryreadbookbysoftware,
+  memoryreadbooklist,
+  memoryreadflags,
+  memoryreadhalt,
+  memoryreadoperator,
+  memoryreadplayeractive,
+  memoryreadsession,
+  memoryresetbooks,
+  memoryresetchipafteredit,
+  memoryrestartallchipsandflags,
+  memorysendtoboards,
+  memorysetbook,
+  memorytick,
+  memorywritehalt,
+  memorywriteoperator,
 } from 'zss/memory'
 import { boardobjectread } from 'zss/memory/board'
 import {
@@ -74,19 +79,19 @@ import { dirconsts } from 'zss/words/dir'
 import { NAME, PT } from 'zss/words/types'
 
 import {
+  api_log,
   platform_ready,
   register_copy,
   register_copyjsonfile,
   register_forkmem,
+  register_itchiopublishmem,
+  register_loginfail,
   register_loginready,
   register_savemem,
-  api_log,
   vm_codeaddress,
   vm_flush,
-  vm_logout,
-  register_loginfail,
   vm_local,
-  register_itchiopublishmem,
+  vm_logout,
 } from './api'
 import { modemobservevaluestring } from './modem'
 
@@ -133,6 +138,33 @@ async function compressedbookstate() {
     return compressbooks(books)
   }
   return ''
+}
+
+const ZZT_BRIDGE = `$176$176$177$177`
+
+function writezztcontentwait(player: string) {
+  gadgettext(player, `Searching ...`)
+  const shared = gadgetstate(player)
+  shared.scrollname = ZZT_BRIDGE
+  shared.scroll = gadgetcheckqueue(player)
+}
+
+function writezztcontentlinks(list: MOSTLY_ZZT_META[], player: string) {
+  for (let i = 0; i < list.length; ++i) {
+    const entry = list[i]
+    const pubtag = `pub: ${new Date(entry.publish_date).toLocaleDateString()}`
+    const changedtag = `changed: ${new Date(entry.last_modified).toLocaleDateString()}`
+    gadgettext(player, `$white${entry.title}`)
+    gadgettext(player, `$purple${pubtag} $yellow${changedtag}`)
+    gadgethyperlink(player, 'zztbridge', entry.filename, [
+      'zztimport',
+      `"${entry.letter}/${entry.filename}"`,
+    ])
+    gadgettext(player, ' ')
+  }
+  const shared = gadgetstate(player)
+  shared.scrollname = ZZT_BRIDGE
+  shared.scroll = gadgetcheckqueue(player)
 }
 
 const vm = createdevice(
@@ -537,6 +569,32 @@ const vm = createdevice(
             await forkstate()
           })
         }
+        break
+      case 'zztsearch':
+        doasync(vm, message.player, async () => {
+          if (isarray(message.data)) {
+            const [field, text] = message.data as [string, string]
+            writezztcontentwait(message.player)
+            let offset = 0
+            const result: MOSTLY_ZZT_META[] = []
+            while (result.length < 256) {
+              const list = await museumofzztsearch(field, text, offset)
+              offset += list.length
+              result.push(...list)
+              if (list.length < 25) {
+                break
+              }
+            }
+            writezztcontentlinks(result, message.player)
+          }
+        })
+        break
+      case 'zztrandom':
+        doasync(vm, message.player, async () => {
+          writezztcontentwait(message.player)
+          const list = await museumofzztrandom()
+          writezztcontentlinks(list, message.player)
+        })
         break
       case 'itchiopublish':
         doasync(vm, message.player, async () => {

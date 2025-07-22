@@ -20,18 +20,34 @@ export function islocked() {
   return window.location.href.includes(`/locked/`)
 }
 
-export async function museumofzztsearch(text: string) {
-  const request = new Request(
-    `https://bridge.zed.cafe/api/v2/zfile/search/?q=${text}`,
-  )
-  const response = await fetch(request)
-  const data = await response.json()
-  console.info(data)
+export type MOSTLY_ZZT_META = {
+  title: string
+  letter: string
+  author: string[]
+  filename: string
+  publish_date: string
+  last_modified: string
 }
 
-export async function museumofzztrandom() {
+export async function museumofzztsearch(
+  field: string,
+  text: string,
+  offset: number,
+): Promise<MOSTLY_ZZT_META[]> {
+  const searchargs = `offset=${offset}&${field}=${text}`
+  const request = new Request(
+    `https://bridge.zed.cafe/api/v1/search/files/?${searchargs}`,
+  )
+  const response = await fetch(request)
+  const contentjson = await response.json()
+  const contentlist = contentjson.data.results as MOSTLY_ZZT_META[]
+  return contentlist
+}
+
+export async function museumofzztrandom(): Promise<MOSTLY_ZZT_META[]> {
   const request = new Request(`https://bridge.zed.cafe/api/v1/get/random-file/`)
   const response = await fetch(request)
-  const data = await response.json()
-  console.info(data)
+  const contentjson = await response.json()
+  const contentdata = contentjson.data
+  return [contentdata] as MOSTLY_ZZT_META[]
 }

@@ -13,14 +13,14 @@ import {
   register_inspector,
   register_nuke,
   register_share,
-  register_zztrandom,
-  register_zztsearch,
   vm_codeaddress,
   vm_flush,
   vm_fork,
   vm_itchiopublish,
   vm_loader,
   vm_restart,
+  vm_zztrandom,
+  vm_zztsearch,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
@@ -741,14 +741,17 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('zztsearch', (_, words) => {
-    const [text] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
-    if (isstring(text)) {
-      register_zztsearch(SOFTWARE, READ_CONTEXT.elementfocus, text)
-    }
+    const [maybefield, maybetext] = readargs(words, 0, [
+      ARG_TYPE.NAME,
+      ARG_TYPE.MAYBE_NAME,
+    ])
+    const field = ispresent(maybetext) ? maybefield : 'title'
+    const text = ispresent(maybetext) ? maybetext : maybefield
+    vm_zztsearch(SOFTWARE, READ_CONTEXT.elementfocus, field, text)
     return 0
   })
   .command('zztrandom', () => {
-    register_zztrandom(SOFTWARE, READ_CONTEXT.elementfocus)
+    vm_zztrandom(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   // -- multiplayer related commands

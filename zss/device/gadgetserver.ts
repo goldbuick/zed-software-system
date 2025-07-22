@@ -12,6 +12,7 @@ import {
   MEMORY_LABEL,
   memoryreadbookbysoftware,
   memoryreadgadgetlayers,
+  memoryreadoperator,
   memoryreadplayerboard,
 } from 'zss/memory'
 import { bookreadflags } from 'zss/memory/book'
@@ -80,7 +81,7 @@ const gadgetserver = createdevice(
 
     // get list of active players
     const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    const activelist = mainbook?.activelist ?? []
+    const activelist = mainbook?.activelist ?? [memoryreadoperator()]
 
     // only send deltas
     const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any

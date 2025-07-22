@@ -8,13 +8,7 @@ import { createdevice } from 'zss/device'
 import { itchiopublish } from 'zss/feature/itchiopublish'
 import { withclipboard } from 'zss/feature/keyboard'
 import { setup } from 'zss/feature/t9'
-import {
-  isjoin,
-  islocked,
-  museumofzztrandom,
-  museumofzztsearch,
-  shorturl,
-} from 'zss/feature/url'
+import { isjoin, islocked, shorturl } from 'zss/feature/url'
 import {
   writecopyit,
   writeheader,
@@ -776,16 +770,6 @@ const register = createdevice(
             }
           }
         })
-        break
-      case 'zztsearch':
-        doasync(register, message.player, async () => {
-          if (isstring(message.data)) {
-            await museumofzztsearch(message.data)
-          }
-        })
-        break
-      case 'zztrandom':
-        doasync(register, message.player, async () => await museumofzztrandom())
         break
     }
   },
