@@ -7,7 +7,8 @@ import {
 } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
-import { isarray } from 'zss/mapping/types'
+import { isarray, ispresent } from 'zss/mapping/types'
+import { mapstrdir } from 'zss/words/dir'
 
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 
@@ -62,7 +63,7 @@ export const command = createSimpleToken({
 
 let matchTextEnabled = false
 const probablynottext = `@#/?':!`
-const matchcomplexdir = /^(by|at|away|toward|find|flee|to)/i
+const matchweirdnotcommand = /[#\d]+/i
 function matchBasicText(text: string, startOffset: number) {
   if (!matchTextEnabled) {
     return null
@@ -71,17 +72,14 @@ function matchBasicText(text: string, startOffset: number) {
   // scan for possible text start
   let cursor = startOffset
 
-  // check leading char
-  if (probablynottext.includes(text[cursor - 1])) {
-    return null
-  }
-
   // scan forwards to determine if this is just whitespace
-  while (text[cursor] === ' ') {
-    cursor++
-  }
-  if (probablynottext.includes(text[cursor])) {
-    return null
+  if (text[cursor] === ' ') {
+    while (text[cursor] === ' ') {
+      cursor++
+    }
+    if (probablynottext.includes(text[cursor])) {
+      return null
+    }
   }
 
   // scan backwards to check what kind of spot we're in
@@ -92,19 +90,21 @@ function matchBasicText(text: string, startOffset: number) {
   switch (text[cursor]) {
     case '?':
     case '/': {
-      const maybecomplex = text.substring(cursor + 1, cursor + 4).toLowerCase()
       // not-okay
-      if (matchcomplexdir.test(maybecomplex)) {
-        return null
-      }
-      // okay
-      break
+      return null
     }
     case '\n':
       // okay
       break
+    case '#': {
+      const maybetext = text.substring(cursor + 1, cursor + 4).toLowerCase()
+      if (matchweirdnotcommand.test(maybetext) === false) {
+        // not-okay
+        return null
+      }
+      break
+    }
     case '@':
-    case '#':
     case `'`:
     case ':':
     case '!':
@@ -133,7 +133,7 @@ export const text = createSimpleToken({
   name: 'text',
   pattern: matchBasicText,
   line_breaks: false,
-  start_chars_hint: all_chars.filter((ch) => `@#/?':!`.includes(ch) === false),
+  start_chars_hint: all_chars,
 })
 
 export const comment = createSimpleToken({
@@ -449,8 +449,6 @@ export type LANG_ERROR = {
 
 function createTokenSet(primary: TokenType[]) {
   return [
-    // const and exprs
-    dir_down,
     // primary tokens
     ...primary,
     numberliteral,
@@ -515,6 +513,7 @@ function createTokenSet(primary: TokenType[]) {
     color_onclear,
     dir_idle,
     dir_up,
+    dir_down,
     dir_left,
     dir_right,
     dir_by,

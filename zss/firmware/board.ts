@@ -219,23 +219,29 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-    const [stat, ii] = readargs(words, 0, [ARG_TYPE.STRING])
+
     // teleport player to a board with given stat
+    const [stat, ii] = readargs(words, 0, [ARG_TYPE.STRING])
     const [maybex, maybey] = readargs(words, ii, [
       ARG_TYPE.MAYBE_NUMBER,
       ARG_TYPE.MAYBE_NUMBER,
     ])
+
     const targetboard = memoryboardread(stat)
-    if (ispresent(targetboard)) {
-      // ensure we can do named lookups
-      boardsetlookup(targetboard)
+    if (!ispresent(targetboard)) {
+      return 0
+    }
+    // ensure we can do named lookups
+    boardsetlookup(targetboard)
 
-      const destpt: PT = {
-        x: READ_CONTEXT.element?.x ?? maybex ?? Math.round(BOARD_WIDTH * 0.5),
-        y: READ_CONTEXT.element?.y ?? maybey ?? Math.round(BOARD_HEIGHT * 0.5),
-      }
+    // read entry pt
+    const destpt: PT = {
+      x: maybex ?? targetboard.startx ?? Math.round(BOARD_WIDTH * 0.5),
+      y: maybey ?? targetboard.starty ?? Math.round(BOARD_HEIGHT * 0.5),
+    }
 
-      const display = bookelementdisplayread(READ_CONTEXT.element)
+    const display = bookelementdisplayread(READ_CONTEXT.element)
+    if (display.name !== 'player') {
       const color = memoryelementstatread(READ_CONTEXT.element, 'color')
       const bg = memoryelementstatread(READ_CONTEXT.element, 'bg')
       const findcolor = mapcolortostrcolor(color, bg)
@@ -266,16 +272,17 @@ export const BOARD_FIRMWARE = createfirmware()
         destpt.x = gotoelement.x
         destpt.y = gotoelement.y
       }
-
-      // yolo
-      bookplayermovetoboard(
-        READ_CONTEXT.book,
-        READ_CONTEXT.elementfocus,
-        targetboard.id,
-        destpt,
-        true,
-      )
     }
+
+    // yolo
+    bookplayermovetoboard(
+      READ_CONTEXT.book,
+      READ_CONTEXT.elementfocus,
+      targetboard.id,
+      destpt,
+      true,
+    )
+
     return 0
   })
   .command('build', (chip, words) => {

@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.64.73",
+  "version": "0.64.75",
   "type": "module",
   "scripts": {
     "sloc": "npx sloc zss",
