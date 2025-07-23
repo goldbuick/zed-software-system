@@ -63,7 +63,7 @@ export function createsynth() {
   })
 
   // tape hiss
-  const hiss = new Noise({ type: 'pink', volume: -50 })
+  const hiss = new Noise({ type: 'pink', volume: -42 })
   const hissvolume = new Volume()
 
   // hiss mod

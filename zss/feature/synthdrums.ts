@@ -13,45 +13,83 @@ import {
 } from 'tone'
 
 export function createsynthdrums(drumvolume: Volume, drumaction: Volume) {
-  // drumtick
+  // drumhihat (closed)
 
-  const drumtick = new PolySynth().connect(drumvolume)
-  drumtick.maxPolyphony = 8
-  drumtick.set({
+  const drumhihateq = new EQ3(-6, 6, 10).connect(drumvolume)
+
+  const drumhihatfilter = new Filter(8000, 'highpass', -12)
+  drumhihatfilter.connect(drumhihateq)
+
+  const drumhihat = new NoiseSynth()
+  drumhihat.set({
     envelope: {
       attack: 0.001,
-      decay: 0.001,
+      decay: 0.05,
       sustain: 0.001,
-      release: 0.1,
-    },
-    oscillator: {
-      type: 'square',
+      release: 0.05,
     },
   })
+  drumhihat.connect(drumhihatfilter)
+
+  function hihattrigger(duration: string, time: number) {
+    drumhihat.triggerAttackRelease(duration, time)
+  }
+
+  // drumhihatopen (open hihat)
+
+  const drumhihatopeneq = new EQ3(-6, 3, 8).connect(drumvolume)
+
+  const drumhihatopenfilter = new Filter(6000, 'highpass', -12)
+  drumhihatopenfilter.connect(drumhihatopeneq)
+
+  const drumhihatopen = new NoiseSynth()
+  drumhihatopen.set({
+    envelope: {
+      attack: 0.001,
+      decay: 0.2,
+      sustain: 0.1,
+      release: 0.3,
+    },
+  })
+  drumhihatopen.connect(drumhihatopenfilter)
+
+  function hihatopentrigger(duration: string, time: number) {
+    drumhihatopen.triggerAttackRelease(duration, time)
+  }
+
+  // drumhihatpedal (foot hihat)
+
+  // const drumhihatpedaleq = new EQ3(-3, 0, 5).connect(drumvolume)
+
+  // const drumhihatpedalfilter = new Filter(4000, 'highpass', -12)
+  // drumhihatpedalfilter.connect(drumhihatpedaleq)
+
+  // const drumhihatpedal = new NoiseSynth()
+  // drumhihatpedal.set({
+  //   envelope: {
+  //     attack: 0.01,
+  //     decay: 0.1,
+  //     sustain: 0.001,
+  //     release: 0.1,
+  //   },
+  // })
+  // drumhihatpedal.connect(drumhihatpedalfilter)
+
+  // function hihatpedaltrigger(duration: string, time: number) {
+  //   drumhihatpedal.triggerAttackRelease(duration, time)
+  // }
+
+  // drumtick
 
   function ticktrigger(time: number) {
-    drumtick.triggerAttackRelease('C6', '1i', time)
+    hihattrigger('16n', time)
   }
 
   // drumtweet
 
-  const drumtweet = new Synth().connect(drumvolume)
-  drumtick.set({
-    envelope: {
-      attack: 0.001,
-      decay: 0.001,
-      sustain: 0.001,
-      release: 0.1,
-    },
-    oscillator: {
-      type: 'square',
-    },
-  })
-
   function tweettrigger(time: number) {
-    const ramp = Time('64n').toSeconds()
-    drumtweet.triggerAttackRelease('C6', '8n', time)
-    drumtweet.frequency.exponentialRampToValueAtTime('C11', ramp + time)
+    hihatopentrigger('8n', time)
+    // hihatpedaltrigger('8n', time)
   }
 
   // drumcowbell
