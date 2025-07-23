@@ -34,14 +34,18 @@ export function parsesend(words: WORD[]): SEND_META {
       ARG_TYPE.MAYBE_NAME, // maybe label name
     ])
     if (isstring(maybelabel) && maybelabel.startsWith(':')) {
+      // target:label
+      const labelparts = [maybelabel.substring(1).trim(), ...words.slice(ii)]
       return {
         targetname,
-        label: [maybelabel.substring(1).trim(), ...words.slice(ii)].join(' '),
+        label: labelparts.join(' '),
       }
     }
+    // only label
+    const labelparts = [targetname, ...words.slice(ii - 1)]
     return {
       targetname: 'self',
-      label: [targetname, ...words.slice(ii - 1)].join(' '),
+      label: labelparts.join(' '),
     }
   }
   return {

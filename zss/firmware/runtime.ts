@@ -20,10 +20,20 @@ import { SEND_META, parsesend } from 'zss/words/send'
 
 function handlesend(chip: CHIP, send: SEND_META) {
   if (ispresent(send.targetname)) {
+    const objectids = Object.keys(READ_CONTEXT.board?.objects ?? {})
     switch (send.targetname) {
       case 'all':
-        for (const id of Object.keys(READ_CONTEXT.board?.objects ?? {})) {
+        for (let i = 0; i < objectids.length; ++i) {
+          const id = objectids[i]
           chip.send(READ_CONTEXT.elementfocus, id, send.label)
+        }
+        break
+      case 'others':
+        for (let i = 0; i < objectids.length; ++i) {
+          const id = objectids[i]
+          if (id !== chip.id()) {
+            chip.send(READ_CONTEXT.elementfocus, id, send.label)
+          }
         }
         break
       case 'self':
@@ -34,13 +44,6 @@ function handlesend(chip: CHIP, send: SEND_META) {
           sender: chip.id(),
           target: send.label,
         })
-        break
-      case 'others':
-        for (const id of Object.keys(READ_CONTEXT.board?.objects ?? {})) {
-          if (id !== chip.id()) {
-            chip.send(READ_CONTEXT.elementfocus, id, send.label)
-          }
-        }
         break
       default: {
         // target named elements

@@ -461,6 +461,8 @@ export type LANG_ERROR = {
 
 function createTokenSet(primary: TokenType[]) {
   return [
+    // hack to ensure down / do matching order
+    dir_down,
     // primary tokens
     ...primary,
     numberliteral,
@@ -525,7 +527,6 @@ function createTokenSet(primary: TokenType[]) {
     color_onclear,
     dir_idle,
     dir_up,
-    dir_down,
     dir_left,
     dir_right,
     dir_by,
