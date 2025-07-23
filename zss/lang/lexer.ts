@@ -7,8 +7,7 @@ import {
 } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 import { range } from 'zss/mapping/array'
-import { isarray, ispresent } from 'zss/mapping/types'
-import { mapstrdir } from 'zss/words/dir'
+import { isarray } from 'zss/mapping/types'
 
 const all_chars = range(32, 126).map((char) => String.fromCharCode(char))
 
@@ -64,6 +63,7 @@ export const command = createSimpleToken({
 let matchTextEnabled = false
 const probablynottext = `@#/?':!`
 const matchweirdnotcommand = /[#\d]+/i
+const matchcomplexdir = /^[?/](by|at|away|toward|find|flee|to)/i
 function matchBasicText(text: string, startOffset: number) {
   if (!matchTextEnabled) {
     return null
@@ -71,6 +71,12 @@ function matchBasicText(text: string, startOffset: number) {
 
   // scan for possible text start
   let cursor = startOffset
+
+  // text can only start at 0, or after a newline or space
+  const previous = text[cursor - 1]
+  if (cursor > 0 && previous !== ' ' && previous !== '\n') {
+    return null
+  }
 
   // scan forwards to determine if this is just whitespace
   if (text[cursor] === ' ') {
@@ -90,18 +96,21 @@ function matchBasicText(text: string, startOffset: number) {
   switch (text[cursor]) {
     case '?':
     case '/': {
-      // not-okay
-      return null
-    }
-    case '\n':
+      const prefix = text.substring(cursor, startOffset + 1).toLowerCase()
+      if (!prefix.includes(' ') || matchcomplexdir.test(prefix)) {
+        // not-okay
+        return null
+      }
       // okay
       break
+    }
     case '#': {
       const maybetext = text.substring(cursor + 1, cursor + 4).toLowerCase()
       if (matchweirdnotcommand.test(maybetext) === false) {
         // not-okay
         return null
       }
+      // okay
       break
     }
     case '@':
@@ -110,6 +119,9 @@ function matchBasicText(text: string, startOffset: number) {
     case '!':
       // not-okay
       return null
+    case '\n':
+      // okay
+      break
   }
 
   // scan until EOL
