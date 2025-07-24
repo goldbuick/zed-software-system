@@ -21,6 +21,7 @@ import {
   BOOK_FLAGS,
   CODE_PAGE,
   CODE_PAGE_TYPE,
+  CODE_PAGE_TYPE_MAP,
 } from './types'
 
 // player state
@@ -174,17 +175,17 @@ export function bookreadcodepagesbytypeandstat(
   return result
 }
 
-export function bookreadcodepagedatabytype(
+export function bookreadcodepagedatabytype<T extends CODE_PAGE_TYPE>(
   book: MAYBE<BOOK>,
-  type: CODE_PAGE_TYPE,
-) {
+  type: T,
+): CODE_PAGE_TYPE_MAP[T][] {
   if (!ispresent(book)) {
     return []
   }
   return book.pages
     .filter((item) => codepagereadtype(item) === type)
     .map((page) => codepagereaddata(page))
-    .filter(ispresent)
+    .filter(ispresent) as CODE_PAGE_TYPE_MAP[T][]
 }
 
 export function bookreadsortedcodepages(book: MAYBE<BOOK>) {

@@ -7,22 +7,14 @@ import { boardelementisobject } from './boardelement'
 import { boardsetlookup } from './boardlookup'
 import { boardcheckblockedobject } from './boardops'
 import { bookreadflag, bookwriteflag } from './book'
-import { codepagereaddata } from './codepage'
-import { BOARD, BOOK, CODE_PAGE_TYPE } from './types'
+import { BOARD, BOOK } from './types'
 
 import {
   memoryboardread,
   memoryelementstatread,
-  memorypickcodepagewithtype,
   memoryreadplayerboard,
   memorysendinteraction,
 } from '.'
-
-export function bookplayerreadboard(book: MAYBE<BOOK>, player: string) {
-  const address = bookreadflag(book, player, 'board') as string
-  const codepage = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, address)
-  return codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
-}
 
 export function bookplayerreadactive(book: MAYBE<BOOK>, player: string) {
   return book?.activelist.includes(player) ?? false

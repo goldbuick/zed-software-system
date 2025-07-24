@@ -668,7 +668,7 @@ class ScriptVisitor
   command_if(ctx: Command_ifCstChildren, location: CstNodeLocation) {
     const [check] = this.createlogicnode(
       location,
-      tokenstring(ctx.token_if, 'if'),
+      tokenstring(ctx.token_if, 'if').toLowerCase(),
       '',
       this.go(ctx.words),
     )
@@ -1090,19 +1090,17 @@ class ScriptVisitor
 
   category(ctx: CategoryCstChildren, location: CstNodeLocation) {
     if (ctx.token_isterrain) {
-      const value = tokenstring(ctx.token_isterrain, '')
       return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value,
+        value: 'isterrain',
       })
     }
     if (ctx.token_isobject) {
-      const value = tokenstring(ctx.token_isobject, '')
       return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value,
+        value: 'isobject',
       })
     }
     return []
@@ -1110,75 +1108,66 @@ class ScriptVisitor
 
   collision(ctx: CollisionCstChildren, location: CstNodeLocation) {
     if (ctx.token_iswalkable) {
-      const value = tokenstring(ctx.token_iswalkable, '')
       return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value,
+        value: 'iswalkable',
       })
     }
     if (ctx.token_iswalking) {
-      const value = tokenstring(ctx.token_iswalking, '')
       return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value,
+        value: 'iswalking',
       })
     }
     if (ctx.token_iswalk) {
-      const value = tokenstring(ctx.token_iswalk, '')
       return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value,
+        value: 'iswalk',
       })
     }
     if (ctx.token_isswimmable) {
-      const value = tokenstring(ctx.token_isswimmable, '')
       return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value,
+        value: 'isswimmable',
       })
     }
     if (ctx.token_isswimming) {
-      const value = tokenstring(ctx.token_isswimming, '')
       return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value,
+        value: 'isswimming',
       })
     }
     if (ctx.token_isswim) {
-      const value = tokenstring(ctx.token_isswim, '')
       return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value,
+        value: 'isswim',
       })
     }
     if (ctx.token_issolid) {
-      const value = tokenstring(ctx.token_issolid, '')
       return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value,
+        value: 'issolid',
       })
     }
     if (ctx.token_isbullet) {
-      const value = tokenstring(ctx.token_isbullet, '')
       return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value,
+        value: 'isbullet',
       })
     }
     if (ctx.token_isghost) {
-      const value = tokenstring(ctx.token_isghost, '')
       return this.createcodenode(location, {
         type: NODE.LITERAL,
         literal: LITERAL.STRING,
-        value,
+        value: 'isghost',
       })
     }
     return []
