@@ -170,7 +170,7 @@ export function codepagereadstatsfromtext(content: string): CODE_PAGE_STATS {
       const [sourcewords, label] = source.split(';').map((str) => str.trim())
       const words = sourcewords.split(' ')
       const stat = statformat(isstring(label) ? label : '', words, isfirst)
-      const maybename = NAME(stat.values.join(' '))
+      const maybename = stat.values.join(' ')
       isfirst = false
       switch (stat.type) {
         case STAT_TYPE.LOADER:

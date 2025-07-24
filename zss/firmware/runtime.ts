@@ -99,7 +99,10 @@ export const RUNTIME_FIRMWARE = createfirmware({
       } else {
         // element sending a scroll to a player
         const shared = gadgetstate(READ_CONTEXT.elementfocus)
-        shared.scrollname = bookelementdisplayread(READ_CONTEXT.element).name
+        shared.scrollname =
+          READ_CONTEXT.element?.name ??
+          READ_CONTEXT.element?.kinddata?.name ??
+          ''
         shared.scroll = gadgetaddcenterpadding(queue)
       }
     }
