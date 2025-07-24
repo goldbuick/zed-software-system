@@ -73,7 +73,7 @@ function matchBasicText(text: string, startOffset: number) {
   let cursor = startOffset
 
   // text can only start at 0, or after a newline or space
-  const previous = text[cursor - 1]
+  const previous = text[cursor - 1] ?? ''
   if (cursor > 0 && previous !== ' ' && previous !== '\n') {
     return null
   }
@@ -459,12 +459,14 @@ export type LANG_ERROR = {
   message: string
 }
 
-function createTokenSet(primary: TokenType[]) {
+function createTokenSet(primary: TokenType[], secondary: TokenType[]) {
   return [
-    // hack to ensure down / do matching order
-    dir_down,
     // primary tokens
     ...primary,
+    // hack to ensure down / do matching order
+    dir_down,
+    // secondary tokens
+    ...secondary,
     numberliteral,
     // consts and exprs
     category_isterrain,
@@ -609,41 +611,45 @@ function createTokenSet(primary: TokenType[]) {
   ]
 }
 
-export const allTokens = createTokenSet([
-  // text output
-  text,
-  // commands
-  stat,
-  command_play,
-  command_toast,
-  command_ticker,
-  command,
-  // flow
-  comment,
-  label,
-  hyperlink,
-  hyperlinktext,
-  newline,
-  whitespace,
-  // core / structure commands
-  command_break,
-  command_continue,
-  command_done,
-  command_do,
-  command_else,
-  command_foreach,
-  command_if,
-  command_repeat,
-  command_waitfor,
-  command_while,
-])
+export const allTokens = createTokenSet(
+  [
+    // text output
+    text,
+    // commands
+    stat,
+    command_play,
+    command_toast,
+    command_ticker,
+    command,
+    // flow
+    comment,
+    label,
+    hyperlink,
+    hyperlinktext,
+    newline,
+    whitespace,
+  ],
+  [
+    // core / structure commands
+    command_break,
+    command_continue,
+    command_done,
+    command_do,
+    command_else,
+    command_foreach,
+    command_if,
+    command_repeat,
+    command_waitfor,
+    command_while,
+  ],
+)
 
 const scriptLexer = new Lexer(
   {
     defaultMode: 'use_newlines',
     modes: {
       use_newlines: allTokens,
-      ignore_newlines: createTokenSet([whitespaceandnewline]),
+      ignore_newlines: createTokenSet([whitespaceandnewline], []),
     },
   },
   {
