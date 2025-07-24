@@ -1,5 +1,7 @@
 // collection of enums and consts
 
+import { isstring } from 'zss/mapping/types'
+
 export enum COLOR {
   BLACK,
   DKBLUE,
@@ -112,6 +114,6 @@ export type PT = { x: number; y: number }
 export type WORD = string | number | undefined | WORD[]
 export type WORD_RESULT = 0 | 1
 
-export function NAME(name: string | undefined) {
-  return name?.toLowerCase().trim() ?? ''
+export function NAME(name: any) {
+  return isstring(name) ? name.toLowerCase().trim() : ''
 }
