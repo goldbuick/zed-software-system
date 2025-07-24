@@ -12,7 +12,7 @@ import {
 } from 'zss/words/kind'
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
-import { boardelementread, boardgetterrain, boardobjectread } from './board'
+import { boardelementread } from './board'
 import { bookelementdisplayread } from './book'
 import {
   BOARD,

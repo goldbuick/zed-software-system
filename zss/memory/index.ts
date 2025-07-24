@@ -35,18 +35,17 @@ import {
 import { boardmoveobject, boardtick } from './boardops'
 import {
   bookclearflags,
-  bookelementdisplayread,
   bookensurecodepagewithtype,
   bookhasflags,
   bookreadcodepagebyaddress,
   bookreadcodepagesbytypeandstat,
+  bookreadflag,
   bookreadflags,
   createbook,
 } from './book'
 import {
   bookplayermovetoboard,
   bookplayerreadactive,
-  bookplayerreadboard,
   bookplayerreadboards,
   bookplayersetboard,
 } from './bookplayer'
@@ -494,16 +493,23 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
-  // try to find existing element
-  const currentboard = memoryreadplayerboard(player)
+  // if we have a current board, and a player on said board
+  let currentboard = memoryreadplayerboard(player)
+  if (ispresent(currentboard?.objects[player])) {
+    return true
+  }
 
-  // place on a title board
-  const titleboardpage = memorypickcodepagewithtype(
-    CODE_PAGE_TYPE.BOARD,
-    MEMORY_LABEL.TITLE,
-  )
+  // fallback to placing on the title board
+  if (!ispresent(currentboard)) {
+    const titlepage = memorypickcodepagewithtype(
+      CODE_PAGE_TYPE.BOARD,
+      MEMORY_LABEL.TITLE,
+    )
+    currentboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(titlepage)
+  }
 
-  if (!ispresent(currentboard) && !ispresent(titleboardpage)) {
+  // unable to find board
+  if (!ispresent(currentboard)) {
     return api_error(
       SOFTWARE,
       player,
@@ -512,6 +518,7 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
+  // unable to find kind
   const playerkind = memorypickcodepagewithtype(
     CODE_PAGE_TYPE.OBJECT,
     MEMORY_LABEL.PLAYER,
@@ -525,28 +532,26 @@ export function memoryplayerlogin(player: string): boolean {
     )
   }
 
-  const titleboard = codepagereaddata<CODE_PAGE_TYPE.BOARD>(titleboardpage)
-  if (ispresent(titleboard)) {
-    const startx = codepagereadstat(titleboardpage, 'startx')
-    const starty = codepagereadstat(titleboardpage, 'starty')
-    const px = isnumber(startx) ? startx : Math.round(BOARD_WIDTH * 0.5)
-    const py = isnumber(starty) ? starty : Math.round(BOARD_HEIGHT * 0.5)
-    const obj = boardobjectcreatefromkind(
-      titleboard,
-      {
-        x: px,
-        y: py,
-      },
-      MEMORY_LABEL.PLAYER,
-      player,
-    )
-    if (ispresent(obj?.id)) {
-      // all players self-aggro
-      obj.player = player
-      // track current board
-      bookplayersetboard(mainbook, player, titleboard.id)
-      return true
-    }
+  // plotting a new player
+  const startx = currentboard.startx ?? 0
+  const starty = currentboard.starty ?? 0
+  const px = isnumber(startx) ? startx : Math.round(BOARD_WIDTH * 0.5)
+  const py = isnumber(starty) ? starty : Math.round(BOARD_HEIGHT * 0.5)
+  const obj = boardobjectcreatefromkind(
+    currentboard,
+    {
+      x: px,
+      y: py,
+    },
+    MEMORY_LABEL.PLAYER,
+    player,
+  )
+  if (ispresent(obj?.id)) {
+    // all players self-aggro
+    obj.player = player
+    // track current board
+    bookplayersetboard(mainbook, player, currentboard.id)
+    return true
   }
 
   return false
@@ -554,7 +559,7 @@ export function memoryplayerlogin(player: string): boolean {
 
 export function memoryplayerlogout(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const board = bookplayerreadboard(mainbook, player)
+  const board = memoryboardread(player)
   if (!ispresent(mainbook)) {
     return
   }
@@ -586,13 +591,15 @@ export function memoryplayerlogout(player: string) {
 
 export function memoryreadplayerboard(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  return bookplayerreadboard(mainbook, player)
+  const address = bookreadflag(mainbook, player, 'board') as string
+  const codepage = memorypickcodepagewithtype(CODE_PAGE_TYPE.BOARD, address)
+  return codepagereaddata<CODE_PAGE_TYPE.BOARD>(codepage)
 }
 
 export function memoryreadplayeractive(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const isactive = bookplayerreadactive(mainbook, player)
-  const board = bookplayerreadboard(mainbook, player)
+  const board = memoryreadplayerboard(player)
   const playerelement = boardobjectread(board, player)
   return isactive && ispresent(playerelement)
 }
@@ -1132,7 +1139,7 @@ export function memorycli(player: string, cli: string, tracking = true) {
   // write context
   READ_CONTEXT.timestamp = mainbook.timestamp
   READ_CONTEXT.book = mainbook
-  READ_CONTEXT.board = bookplayerreadboard(mainbook, player)
+  READ_CONTEXT.board = memoryreadplayerboard(player)
   READ_CONTEXT.element = boardobjectread(READ_CONTEXT.board, player)
   READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
   READ_CONTEXT.elementisplayer = true
@@ -1195,7 +1202,7 @@ export function memoryreadgadgetlayers(
   layers: LAYER[]
 } {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const playerboard = bookplayerreadboard(mainbook, player)
+  const playerboard = memoryreadplayerboard(player)
 
   const over: LAYER[] = []
   const under: LAYER[] = []

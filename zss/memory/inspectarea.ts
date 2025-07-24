@@ -18,7 +18,6 @@ import {
   MEMORY_LABEL,
   memoryensuresoftwarebook,
   memorypickcodepagewithtype,
-  memoryreadbookbyaddress,
   memoryreadplayerboard,
 } from '.'
 
