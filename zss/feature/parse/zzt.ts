@@ -121,17 +121,12 @@ export function parsezzt(player: string, content: Uint8Array) {
 
   function normalizedlines(str: string) {
     // check for inline $ text rows (thanks WiL)
-    // also check for inlined ascii chars UGHH
+    // also check for inlined ascii chars WHEE
     return str
       .replaceAll(/\r?\n|\r/g, '\n')
       .split('\n')
-      .map((line) => {
-        if (line.includes('$')) {
-          const [begin, ...inlinetext] = line.split('$')
-          return `${begin ?? ''}"$CENTER ${scrubinlinechars(inlinetext.join('$'))}"`
-        }
-        return scrubinlinechars(line)
-      })
+      .map((line) => line.replace('$', '$CENTER '))
+      .map(scrubinlinechars)
       .join('\n')
   }
 
