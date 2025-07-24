@@ -573,7 +573,8 @@ export function memoryconverttogadgetlayers(
       const y = object.y ?? 0
       const upper = y < BOARD_HEIGHT * 0.5
       tickercontext.x = x - Math.floor(width * 0.5)
-      tickercontext.y = y + (upper ? 1 : -1)
+      // offset from source
+      tickercontext.y = y + (upper ? 2 : -2)
       // clip placement
       if (tickercontext.x + width > BOARD_WIDTH) {
         tickercontext.x = BOARD_WIDTH - width

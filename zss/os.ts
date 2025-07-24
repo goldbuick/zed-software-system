@@ -87,14 +87,17 @@ export function createos() {
             .split('\n')
             .map((line, index) => [line, index])
 
-          codelines.slice(errorline - 5, errorline).forEach(([line, index]) => {
+          // show error context
+          const precode = codelines.slice(errorline - 2, errorline)
+          for (let i = 0; i < precode.length; ++i) {
+            const [line, index] = precode[i]
             api_error(
               SOFTWARE,
               memoryreadoperator(),
               'build',
               `$grey${index + 1} $grey${line}`,
             )
-          })
+          }
 
           const [hline, hindex] = codelines[errorline] ?? []
           if (isstring(hline) && ispresent(hindex)) {
@@ -112,10 +115,19 @@ export function createos() {
             )
           }
 
-          primary.message.split('\n').forEach((message) => {
-            api_error(SOFTWARE, memoryreadoperator(), 'build', message)
-          })
+          const postcode = codelines.slice(errorline + 1, errorline + 3)
+          for (let i = 0; i < postcode.length; ++i) {
+            const [line, index] = postcode[i]
+            api_error(
+              SOFTWARE,
+              memoryreadoperator(),
+              'build',
+              `$grey${index + 1} $grey${line}`,
+            )
+          }
 
+          const preamble = primary.message.split('\n').slice(0, 4).join(' ')
+          api_error(SOFTWARE, memoryreadoperator(), 'build', preamble)
           return false
         }
       }
