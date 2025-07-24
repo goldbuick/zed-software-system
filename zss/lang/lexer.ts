@@ -63,7 +63,7 @@ export const command = createSimpleToken({
 let matchTextEnabled = false
 const probablynottext = `@#/?':!`
 const matchweirdnotcommand = /[#\d]+/i
-const matchcomplexdir = /^[?/](by|at|away|toward|find|flee|to)/i
+const matchcomplexdir = /^(by|at|away|toward|find|flee|to|cw|ccw|opp|rndp)/i
 function matchBasicText(text: string, startOffset: number) {
   if (!matchTextEnabled) {
     return null
@@ -96,7 +96,7 @@ function matchBasicText(text: string, startOffset: number) {
   switch (text[cursor]) {
     case '?':
     case '/': {
-      const prefix = text.substring(cursor, startOffset + 1).toLowerCase()
+      const prefix = text.substring(cursor + 1, startOffset + 1).toLowerCase()
       if (!prefix.includes(' ') || matchcomplexdir.test(prefix)) {
         // not-okay
         return null
