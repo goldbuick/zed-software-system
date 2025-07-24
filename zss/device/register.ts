@@ -419,14 +419,10 @@ const register = createdevice(
         })
         break
       case 'acklogin':
-        doasync(register, message.player, async () => {
-          await writewikilink()
-          writepages()
-          // reset display
-          gadgetserver_desync(register, myplayerid)
-          // hide terminal
-          register_terminal_close(register, myplayerid)
-        })
+        // reset display
+        gadgetserver_desync(register, myplayerid)
+        // hide terminal
+        register_terminal_close(register, myplayerid)
         break
       case 'ackzsswords': {
         useGadgetClient.setState({
