@@ -94,7 +94,6 @@ export type Stmt_hyperlinkCstNode = {
 
 export type Stmt_hyperlinkCstChildren = {
   token_hyperlink: IToken[]
-  words?: WordsCstNode[]
   token_hyperlinktext: IToken[]
 }
 
