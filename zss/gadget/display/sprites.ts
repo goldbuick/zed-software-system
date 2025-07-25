@@ -33,6 +33,7 @@ const spritesMaterial = new ShaderMaterial({
     },
     rows: new Uniform(1),
     step: new Uniform(new Vector2()),
+    nudge: new Uniform(new Vector2()),
     flip: new Uniform(true),
   },
   // vertex shader
@@ -114,10 +115,6 @@ const spritesMaterial = new ShaderMaterial({
       animPosition *= pointSize;
       animPosition += pointSize * 0.5;
 
-      // animPosition = animPosition * pointSize;
-      // animPosition += pointSize * 0.5;
-      // animPosition.x += (pointSize.y - pointSize.x) * 0.5;
-
       vec4 mvPosition = modelViewMatrix * vec4(animPosition, 0.0, 1.0);
       gl_Position = projectionMatrix * mvPosition;
 
@@ -133,6 +130,7 @@ const spritesMaterial = new ShaderMaterial({
     uniform sampler2D alt;
     uniform float rows;
     uniform vec2 step;
+    uniform vec2 nudge;
     uniform vec2 pointSize;
     uniform bool flip;
 
@@ -157,13 +155,13 @@ const spritesMaterial = new ShaderMaterial({
       }
       vec2 idx = vec2(px, py);
       vec2 char = vec2(lookup.x * step.x, (rows - lookup.y) * step.y);
-      vec2 uv = idx * step + char;
+      vec2 uv = idx * step + char + nudge;
 
       bool useAlt = mod(time, interval * 2.0) > interval;
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
 
       if (blip.r == 0.0) {
-        if (vBg.a < 1.0) {
+        if (vBg.a < 0.001) {
           discard;
         } else {
           gl_FragColor = vBg;

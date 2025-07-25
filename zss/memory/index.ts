@@ -308,10 +308,14 @@ export function memoryelementstatread(
       return ''
     case 'cycle':
       return CYCLE_DEFAULT
+    case 'p1':
+    case 'p2':
+    case 'p3':
+    case 'p4':
+    case 'p5':
+    case 'p6':
     case 'item':
-      return 0
     case 'pushable':
-      return 0
     case 'breakable':
       return 0
     case 'collision':

@@ -320,6 +320,31 @@ export function codepageapplyelementstats(
     const key = keys[i]
     const value = stats[key]
     if (isarray(value)) {
+      // only set when element stat is undefined
+      const [input, ...args] = value
+      switch (input) {
+        case 'text':
+          if (!ispresent(element[key as keyof BOARD_ELEMENT])) {
+            element[key as keyof BOARD_ELEMENT] = ''
+          }
+          break
+        case 'range':
+          if (!ispresent(element[key as keyof BOARD_ELEMENT])) {
+            element[key as keyof BOARD_ELEMENT] = 4
+          }
+          break
+        case 'number':
+          if (!ispresent(element[key as keyof BOARD_ELEMENT])) {
+            element[key as keyof BOARD_ELEMENT] = 0
+          }
+          break
+        case 'select':
+          if (!ispresent(element[key as keyof BOARD_ELEMENT])) {
+            const [, firstvalue] = args
+            element[key as keyof BOARD_ELEMENT] = firstvalue
+          }
+          break
+      }
       // non-const stats here don't make sense
       continue
     }
@@ -340,10 +365,7 @@ export function codepageapplyelementstats(
       case 'shootx':
       case 'shooty':
       case 'displaychar':
-        // todo, set good defaults
-        // based on stat type @p1 range, default is 5 ??
-        // @ts-expect-error - we are doing this on purpose
-        element[key] = stats[key]
+        element[key as keyof BOARD_ELEMENT] = value
         break
       case 'color':
       case 'bg':
@@ -351,7 +373,7 @@ export function codepageapplyelementstats(
       case 'displaycolor':
       case 'displaybg':
         // @ts-expect-error - we are doing this on purpose
-        element[key] = mapstrtoconsts(stats[key]) ?? stats[key]
+        element[key] = mapstrtoconsts(value) ?? value
         break
       case 'isitem':
         element.item = 1
@@ -359,12 +381,10 @@ export function codepageapplyelementstats(
       case 'notitem':
         element.item = 0
         break
-      case 'ispushable': {
-        const value = stats[key]
+      case 'ispushable':
         // @ts-expect-error - we are doing this on purpose
         element.pushable = value === '' ? 1 : value
         break
-      }
       case 'notpushable':
         element.pushable = 0
         break
@@ -394,7 +414,6 @@ export function codepageapplyelementstats(
         element.breakable = 0
         break
       default:
-        // TODO: raise error for unknown stat
         break
     }
   }
