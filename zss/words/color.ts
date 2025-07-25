@@ -148,17 +148,7 @@ function readcolorconst(index: number): [STR_COLOR | undefined, number] {
 
 export function readcolor(index: number): [STR_COLOR | undefined, number] {
   const strcolor: STR_COLOR = []
-
   let next = index
-
-  // check for color copy
-  const colorcopy: MAYBE<WORD> = READ_CONTEXT.words[index]
-  if (isstring(colorcopy) && NAME(colorcopy) === 'color') {
-    return [
-      mapcolortostrcolor(READ_CONTEXT.element?.color ?? COLOR.WHITE, undefined),
-      index + 1,
-    ]
-  }
 
   // read a color
   const [maybecolor, ii] = readcolorconst(index)

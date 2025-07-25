@@ -128,6 +128,16 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
       return 0
     }
 
+    // get kind's collision type
+    const [kindname] = kind
+    const kindelement = memoryelementkindread({ kind: kindname })
+    const kindcollision = memoryelementstatread(kindelement, 'collision')
+    if (kindcollision === COLLISION.ISGHOST) {
+      // ghost elements have no collision
+      memorywritefromkind(READ_CONTEXT.board, kind, dir.destpt, id)
+      return 0
+    }
+
     // check if we are blocked by a pushable object element
     const target = boardelementread(READ_CONTEXT.board, dir.destpt)
     if (target?.category === CATEGORY.ISOBJECT && target?.pushable) {
@@ -140,10 +150,6 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
       boardmoveobject(READ_CONTEXT.board, target, pt)
     }
 
-    // get kind's collision type
-    const [kindname] = kind
-    const kindelement = memoryelementkindread({ kind: kindname })
-
     // handle terrain put
     if (!boardelementisobject(kindelement)) {
       memorywritefromkind(READ_CONTEXT.board, kind, dir.destpt, id)
@@ -151,12 +157,10 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
 
     // handle object put
     if (boardelementisobject(kindelement)) {
-      const collision = memoryelementstatread(kindelement, 'collision')
-
       // validate placement works
       const blocked = boardcheckblockedobject(
         READ_CONTEXT.board,
-        collision,
+        kindcollision,
         dir.destpt,
       )
 

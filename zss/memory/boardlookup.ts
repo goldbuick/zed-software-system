@@ -1,5 +1,5 @@
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-import { CATEGORY, NAME } from 'zss/words/types'
+import { CATEGORY, COLLISION, NAME } from 'zss/words/types'
 
 import { boardelementindex } from './board'
 import { bookelementdisplayread } from './book'
@@ -9,7 +9,7 @@ import {
 } from './codepage'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
-import { memoryelementkindread } from '.'
+import { memoryelementkindread, memoryelementstatread } from '.'
 
 // quick lookup utils
 
@@ -130,7 +130,10 @@ export function boardobjectlookupwrite(
     return
   }
   // update object lookup
-  if (!ispresent(object.removed)) {
+  if (
+    !ispresent(object.removed) &&
+    memoryelementstatread(object, 'collision') !== COLLISION.ISGHOST
+  ) {
     const x = object.x ?? 0
     const y = object.y ?? 0
     board.lookup[x + y * BOARD_WIDTH] = object.id

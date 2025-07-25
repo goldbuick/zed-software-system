@@ -14,7 +14,6 @@ import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { listelementsbyidnameorpts } from 'zss/memory/atomics'
 import { boardelementread } from 'zss/memory/board'
-import { bookelementdisplayread } from 'zss/memory/book'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { SEND_META, parsesend } from 'zss/words/send'
 

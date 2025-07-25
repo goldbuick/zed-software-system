@@ -243,6 +243,8 @@ export function Sprites({
     material.uniforms.rows.value = imageRows - 1
     material.uniforms.step.value.x = 1 / imageCols
     material.uniforms.step.value.y = 1 / imageRows
+    material.uniforms.nudge.value.x = -0.5 / imageWidth
+    material.uniforms.nudge.value.y = -0.5 / imageHeight
     material.uniforms.flip.value = fliptexture
     material.needsUpdate = true
   }, [

@@ -34,6 +34,10 @@ export function checkdoescollide(
 ) {
   const source = maybesource ?? COLLISION.ISWALK
   const dest = maybedest ?? COLLISION.ISWALK
+  if (source === COLLISION.ISGHOST || dest === COLLISION.ISGHOST) {
+    // ghost runs into nothing
+    return false
+  }
   switch (source) {
     case COLLISION.ISWALK:
       return dest !== COLLISION.ISWALK
@@ -43,8 +47,6 @@ export function checkdoescollide(
       return true // solid runs into everything
     case COLLISION.ISBULLET:
       return dest !== COLLISION.ISWALK && dest !== COLLISION.ISSWIM
-    case COLLISION.ISGHOST:
-      return false // ghost runs into nothing
   }
 }
 
