@@ -162,7 +162,7 @@ export const label = createSimpleToken({
 
 export const hyperlink = createSimpleToken({
   name: 'hyperlink',
-  pattern: /!/,
+  pattern: /![^;\n]*/,
   start_chars_hint: ['!'],
 })
 

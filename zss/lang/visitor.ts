@@ -187,7 +187,7 @@ type CodeNodeData =
     }
   | {
       type: NODE.HYPERLINK
-      link: CodeNode[]
+      link: string
       text: string
     }
   | {
@@ -593,7 +593,7 @@ class ScriptVisitor
       location,
       this.createcodenode(location, {
         type: NODE.HYPERLINK,
-        link: this.go(ctx.words),
+        link: tokenstring(ctx.token_hyperlink, '!').slice(1),
         text: tokenstring(ctx.token_hyperlinktext, ';').slice(1),
       }),
     )

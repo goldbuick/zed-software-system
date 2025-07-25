@@ -325,7 +325,10 @@ function transformNode(ast: CodeNode): SourceNode {
         `  `,
         writeApi(ast, `hyperlink`, [
           writeTemplateString(ast.text),
-          ...transformNodes(ast.link),
+          ...ast.link
+            .split(' ')
+            .filter((str) => str.length > 0)
+            .map(writestring),
         ]),
         `;\n`,
       ])
