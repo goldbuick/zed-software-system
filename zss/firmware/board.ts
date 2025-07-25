@@ -178,6 +178,9 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
       }
     } else {
       // use value as a list
+      // #put any within 10 red smoke
+      // #put any blocked n red smoke
+      // behavior here is a little different from change
     }
   }
   return 0
