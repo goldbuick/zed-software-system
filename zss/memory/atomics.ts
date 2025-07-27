@@ -93,7 +93,11 @@ export function listnamedelements(
   board: MAYBE<BOARD>,
   name: string,
 ): BOARD_ELEMENT[] {
-  const named = [...(board?.named?.[name]?.values() ?? [])]
+  const maybeset = board?.named?.[name]
+  if (!ispresent(maybeset)) {
+    return []
+  }
+  const named = [...maybeset.values()]
   return named
     .map((idorindex) => {
       if (typeof idorindex === 'string') {

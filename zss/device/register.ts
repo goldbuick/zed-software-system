@@ -384,7 +384,12 @@ const register = createdevice(
           // setup history buffer
           const historybuffer = await readhistorybuffer()
           if (ispresent(historybuffer)) {
-            useTapeTerminal.setState({ buffer: historybuffer })
+            useTapeTerminal.setState({
+              buffer: historybuffer.filter((line) => {
+                // may need to add other checks here
+                return line.includes('#broadcast') === false
+              }),
+            })
           }
           // signal init
           await waitfor(256)
