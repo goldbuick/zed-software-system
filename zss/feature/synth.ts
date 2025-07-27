@@ -3,6 +3,7 @@ import {
   AudioToGain,
   Chorus,
   Compressor,
+  Gain,
   Noise,
   Oscillator,
   Part,
@@ -45,6 +46,8 @@ export function createsynth() {
   mainvolume.connect(destination)
   mainvolume.connect(broadcastdestination)
 
+  const razzlegain = new Gain(10)
+
   const razzledazzle = new Vibrato({
     maxDelay: 0.005, // subtle pitch modulation
     frequency: 1.5, // speed of the warble
@@ -75,8 +78,7 @@ export function createsynth() {
 
   // setup
   hiss.chain(hissvolume, razzlechorus)
-  razzledazzle.connect(razzlechorus)
-  razzlechorus.connect(mainvolume)
+  razzledazzle.chain(razzlechorus, mainvolume)
 
   const maincompressor = new Compressor({
     threshold: -24,
@@ -85,7 +87,7 @@ export function createsynth() {
     release: 0.25,
     knee: 30,
   })
-  maincompressor.connect(razzledazzle)
+  razzlegain.chain(maincompressor, razzledazzle)
 
   const sidechaincompressor = new SidechainCompressor({
     threshold: -42,
@@ -95,7 +97,7 @@ export function createsynth() {
     mix: 0.777,
     makeupGain: 24,
   })
-  sidechaincompressor.connect(maincompressor)
+  sidechaincompressor.connect(razzlegain)
 
   const altaction = new Volume(-12)
   const drumaction = new Volume(-32)
@@ -104,14 +106,14 @@ export function createsynth() {
   playvolume.connect(sidechaincompressor)
 
   const drumvolume = new Volume(volumetodb(100))
-  drumvolume.connect(maincompressor)
+  drumvolume.connect(razzlegain)
 
   const bgplayvolume = new Volume()
-  bgplayvolume.connect(maincompressor)
+  bgplayvolume.connect(razzlegain)
   bgplayvolume.connect(altaction)
 
   const ttsvolume = new Volume()
-  ttsvolume.connect(maincompressor)
+  ttsvolume.connect(razzlegain)
   ttsvolume.connect(altaction)
 
   // side-chain input
