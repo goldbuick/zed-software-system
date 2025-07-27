@@ -436,7 +436,13 @@ export const command_if = createSimpleToken({
   pattern: /if|try|take|give/i,
   longer_alt: stringliteral,
 })
-export const command_do = createWordToken('do')
+export const command_do = createSimpleToken({
+  name: 'do',
+  pattern: /(?<!(#|zap |send |restore ))do/i,
+  start_chars_hint: ['d'],
+  longer_alt: stringliteral,
+})
+// export const command_do = createWordToken('do')
 export const command_done = createWordToken('done')
 export const command_else = createWordToken('else')
 export const command_while = createWordToken('while')

@@ -589,7 +589,7 @@ export function memoryconverttogadgetlayers(
       // render backdrop
       for (let s = 0; s < width; ++s) {
         const idx = pttoindex({ x: start.x + s, y: start.y }, BOARD_WIDTH)
-        lighting.alphas[idx] = Math.max(lighting.alphas[idx], 0.333)
+        lighting.alphas[idx] = Math.max(lighting.alphas[idx], 0.666)
       }
     }
   }
