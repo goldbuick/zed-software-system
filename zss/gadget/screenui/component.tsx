@@ -10,7 +10,7 @@ import { clamp } from 'zss/mapping/number'
 import { Scroll } from 'zss/scroll/component'
 
 import { StaticDither } from '../graphics/dither'
-import { useDeviceConfig } from '../hooks'
+import { useDeviceData } from '../hooks'
 import { ScrollContext } from '../panel/common'
 import { Panel } from '../panel/component'
 import { Rect } from '../rect'
@@ -84,7 +84,7 @@ const SIDEBAR_SIZE = 20
 export function ScreenUI() {
   const screensize = useScreenSize()
   const { islandscape, sidebaropen, insetrows, showtouchcontrols } =
-    useDeviceConfig()
+    useDeviceData()
 
   const scroll = useGadgetClient(useEqual((state) => state.gadget.scroll ?? []))
   const isscrollempty = scroll.length === 0

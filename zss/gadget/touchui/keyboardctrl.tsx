@@ -1,7 +1,7 @@
 import { deepcopy } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
-import { useDeviceConfig } from '../hooks'
+import { useDeviceData } from '../hooks'
 
 import { LIST_LEFT } from './common'
 import { NumKey } from './numkey'
@@ -13,7 +13,7 @@ type KeyboardCtrlProps = {
 }
 
 export function KeyboardCtrl({ width }: KeyboardCtrlProps) {
-  const { keyboardshift, wordlist } = useDeviceConfig()
+  const { keyboardshift, wordlist } = useDeviceData()
   const left = width - 18
   const mid = width - 12
   const right = width - 6
@@ -63,7 +63,7 @@ export function KeyboardCtrl({ width }: KeyboardCtrlProps) {
             y={5}
             letters="CTRL"
             onToggle={() =>
-              useDeviceConfig.setState({
+              useDeviceData.setState({
                 keyboardctrl: false,
               })
             }
@@ -73,7 +73,7 @@ export function KeyboardCtrl({ width }: KeyboardCtrlProps) {
             y={4}
             letters="alt"
             onToggle={() =>
-              useDeviceConfig.setState({
+              useDeviceData.setState({
                 keyboardctrl: false,
                 keyboardalt: true,
               })
@@ -87,7 +87,7 @@ export function KeyboardCtrl({ width }: KeyboardCtrlProps) {
             y={9}
             letters={keyboardshift ? 'SHIFT' : 'shift'}
             onToggle={() => {
-              useDeviceConfig.setState((state) => ({
+              useDeviceData.setState((state) => ({
                 keyboardshift: !state.keyboardshift,
               }))
             }}

@@ -192,12 +192,14 @@ export type MEDIA_DATA = {
   palette?: BITMAP
   charset?: BITMAP
   mood: string
+  viewimage: string
   screen: Record<string, HTMLVideoElement>
   altcharset?: BITMAP
   palettedata?: Color[]
   charsetdata?: CanvasTexture
   altcharsetdata?: CanvasTexture
   setmood: (mood: string) => void
+  setviewimage: (viewimage: string) => void
   setpalette: (palette: MAYBE<BITMAP>) => void
   setcharset: (charset: MAYBE<BITMAP>) => void
   setaltcharset: (altcharset: MAYBE<BITMAP>) => void
@@ -211,6 +213,7 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
   palette,
   charset,
   mood: '',
+  viewimage: '',
   screen: {},
   palettedata: convertpalettetocolors(palette),
   charsetdata: createbitmaptexture(charset),
@@ -220,6 +223,14 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
         return state
       }
       return { ...state, mood }
+    })
+  },
+  setviewimage(viewimage) {
+    set((state) => {
+      if (isequal(state.viewimage, viewimage)) {
+        return state
+      }
+      return { ...state, viewimage }
     })
   },
   setpalette(palette) {
@@ -260,13 +271,13 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
         screen: {
           ...state.screen,
           [peer]: screen,
-        },
+        } as Record<string, HTMLVideoElement>,
       }
     })
   },
 }))
 
-export type DEVICE_CONFIG = {
+export type DEVICE_DATA = {
   insetcols: number
   insetrows: number
   islowrez: boolean
@@ -281,7 +292,7 @@ export type DEVICE_CONFIG = {
   wordlistflag: string
 }
 
-export const useDeviceConfig = create<DEVICE_CONFIG>(() => ({
+export const useDeviceData = create<DEVICE_DATA>(() => ({
   insetcols: 20,
   insetrows: 20,
   islowrez: false,

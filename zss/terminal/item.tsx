@@ -23,6 +23,7 @@ import {
 import { TapeTerminalCopyIt } from './copyit'
 import { TapeTerminalHyperlink } from './hyperlink'
 import { TapeTerminalOpenIt } from './openit'
+import { TapeTerminalViewIt } from './viewit'
 
 export function TapeTerminalItem({ active, text, y }: TapeTerminalItemProps) {
   const context = useWriteText()
@@ -94,7 +95,7 @@ export function TapeTerminalItem({ active, text, y }: TapeTerminalItemProps) {
       case 'openit':
         return <TapeTerminalOpenIt {...props} words={words} />
       case 'viewit':
-        return <TapeTerminalOpenIt {...props} words={words} />
+        return <TapeTerminalViewIt {...props} words={words} />
       default:
       case 'hyperlink':
         return <TapeTerminalHyperlink {...props} words={words} />

@@ -1,11 +1,11 @@
 import { user } from 'zss/feature/keyboard'
 import { noop } from 'zss/mapping/types'
 
-import { useDeviceConfig } from '../hooks'
+import { useDeviceData } from '../hooks'
 
 export function handlestickdir(snapdir: number) {
   const { keyboardshift, keyboardctrl, keyboardalt } =
-    useDeviceConfig.getState()
+    useDeviceData.getState()
 
   let keypress = ''
   if (keyboardalt) {

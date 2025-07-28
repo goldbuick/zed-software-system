@@ -5,7 +5,7 @@ import { useThree } from '@react-three/fiber'
 import { PropsWithChildren, createContext, useContext, useEffect } from 'react'
 import { RUNTIME } from 'zss/config'
 
-import { useDeviceConfig } from './hooks'
+import { useDeviceData } from './hooks'
 import { TouchUI } from './touchui/component'
 
 // screensize in chars
@@ -20,7 +20,7 @@ type UserScreenProps = PropsWithChildren<any>
 export function UserScreen({ children }: UserScreenProps) {
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
-  const { islandscape, showtouchcontrols } = useDeviceConfig()
+  const { islandscape, showtouchcontrols } = useDeviceData()
 
   // cols
   const rcols = viewwidth / RUNTIME.DRAW_CHAR_WIDTH()
@@ -50,7 +50,7 @@ export function UserScreen({ children }: UserScreenProps) {
   }
 
   useEffect(() => {
-    useDeviceConfig.setState((state) => ({
+    useDeviceData.setState((state) => ({
       ...state,
       insetcols,
       insetrows,

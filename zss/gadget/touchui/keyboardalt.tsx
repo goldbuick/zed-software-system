@@ -1,7 +1,7 @@
 import { deepcopy } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
-import { useDeviceConfig } from '../hooks'
+import { useDeviceData } from '../hooks'
 
 import { LIST_LEFT } from './common'
 import { NumKey } from './numkey'
@@ -13,7 +13,7 @@ type KeyboardAltProps = {
 }
 
 export function KeyboardAlt({ width }: KeyboardAltProps) {
-  const { keyboardshift, wordlist } = useDeviceConfig()
+  const { keyboardshift, wordlist } = useDeviceData()
   const left = width - 18
   const mid = width - 12
   const right = width - 6
@@ -65,7 +65,7 @@ export function KeyboardAlt({ width }: KeyboardAltProps) {
             y={5}
             letters="ctrl"
             onToggle={() =>
-              useDeviceConfig.setState({
+              useDeviceData.setState({
                 keyboardctrl: true,
                 keyboardalt: false,
               })
@@ -76,7 +76,7 @@ export function KeyboardAlt({ width }: KeyboardAltProps) {
             y={4}
             letters="ALT"
             onToggle={() =>
-              useDeviceConfig.setState({
+              useDeviceData.setState({
                 keyboardalt: false,
               })
             }
@@ -89,7 +89,7 @@ export function KeyboardAlt({ width }: KeyboardAltProps) {
             y={9}
             letters={keyboardshift ? 'SHIFT' : 'shift'}
             onToggle={() => {
-              useDeviceConfig.setState((state) => ({
+              useDeviceData.setState((state) => ({
                 keyboardshift: !state.keyboardshift,
               }))
             }}

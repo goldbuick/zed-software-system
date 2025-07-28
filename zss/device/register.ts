@@ -23,7 +23,7 @@ import {
   useTape,
   useTapeTerminal,
 } from 'zss/gadget/data/state'
-import { useDeviceConfig } from 'zss/gadget/hooks'
+import { useDeviceData } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
@@ -749,10 +749,10 @@ const register = createdevice(
           if (isarray(message.data)) {
             const [checknumbers, wordlist] = message.data as [string, string[]]
             if (
-              checknumbers != useDeviceConfig.getState().checknumbers ||
-              isequal(wordlist, useDeviceConfig.getState().wordlist) === false
+              checknumbers != useDeviceData.getState().checknumbers ||
+              isequal(wordlist, useDeviceData.getState().wordlist) === false
             ) {
-              useDeviceConfig.setState(() => ({
+              useDeviceData.setState(() => ({
                 checknumbers,
                 wordlist,
               }))
@@ -764,8 +764,8 @@ const register = createdevice(
         doasync(register, message.player, async () => {
           await waitfor(1)
           if (isstring(message.data)) {
-            if (message.data != useDeviceConfig.getState().wordlistflag) {
-              useDeviceConfig.setState(() => ({
+            if (message.data != useDeviceData.getState().wordlistflag) {
+              useDeviceData.setState(() => ({
                 wordlistflag: message.data,
               }))
             }

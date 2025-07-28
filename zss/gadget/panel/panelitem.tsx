@@ -16,6 +16,7 @@ import { PanelItemOpenIt } from './openit'
 import { PanelItemRange } from './range'
 import { PanelItemSelect } from './select'
 import { PanelItemText } from './text'
+import { PanelItemViewIt } from './viewit'
 import { PanelItemZSSEdit } from './zssedit'
 
 type PanelItemComponentProps = {
@@ -94,6 +95,8 @@ export function PanelItem({
         return <PanelItemCopyIt {...props} />
       case 'openit':
         return <PanelItemOpenIt {...props} />
+      case 'viewit':
+        return <PanelItemViewIt {...props} />
       case 'zssedit':
         return <PanelItemZSSEdit {...props} />
       case 'charedit':
