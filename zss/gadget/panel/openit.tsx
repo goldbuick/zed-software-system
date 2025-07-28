@@ -17,13 +17,11 @@ export function PanelItemOpenIt({
   const invoke = useCallback(() => {
     const [, openmethod, ...values] = args
     const content = values.join(' ')
-    setTimeout(() => {
-      if (openmethod === 'inline') {
-        window.location.href = content
-      } else if (isstring(openmethod)) {
-        window.open(`${openmethod} ${content}`.trim(), '_blank')
-      }
-    }, 100)
+    if (openmethod === 'inline') {
+      window.location.href = content
+    } else if (isstring(openmethod)) {
+      window.open(`${openmethod} ${content}`.trim(), '_blank')
+    }
   }, [args])
 
   const tcolor = inputcolor(!!active)

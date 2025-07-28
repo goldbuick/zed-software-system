@@ -30,6 +30,7 @@ import { ScreenUI } from './screenui/component'
 import { TapeToast } from './toast'
 import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
+import { TapeViewImage } from './viewimage'
 
 // include all front-end devices
 import 'zss/userspace'
@@ -119,6 +120,7 @@ export function Engine() {
           <ScreenUI />
           <Tape />
           <TapeToast />
+          <TapeViewImage />
         </UserScreen>
       </UserFocus>
       {shouldcrt && (

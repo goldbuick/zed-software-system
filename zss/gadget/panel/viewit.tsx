@@ -18,7 +18,7 @@ export function PanelItemViewIt({
   const invoke = useCallback(() => {
     const [, ...values] = args
     const content = values.join(' ')
-    setTimeout(() => setviewimage(content), 100)
+    setviewimage(content)
   }, [setviewimage, args])
 
   const tcolor = inputcolor(!!active)
