@@ -93,6 +93,8 @@ export function TapeTerminalItem({ active, text, y }: TapeTerminalItemProps) {
         return <TapeTerminalCopyIt {...props} words={words} />
       case 'openit':
         return <TapeTerminalOpenIt {...props} words={words} />
+      case 'viewit':
+        return <TapeTerminalOpenIt {...props} words={words} />
       default:
       case 'hyperlink':
         return <TapeTerminalHyperlink {...props} words={words} />

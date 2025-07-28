@@ -164,7 +164,7 @@ function writezztcontentlinks(list: MOSTLY_ZZT_META[], player: string) {
     if (entry.screenshot) {
       gadgethyperlink(player, 'zztbridge', entry.screenshot, [
         'screenshot',
-        'openit',
+        'viewit',
         `https://museumofzzt.com/static/${entry.screenshot}`,
       ])
     }

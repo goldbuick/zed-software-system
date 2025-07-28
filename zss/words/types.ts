@@ -99,6 +99,7 @@ export enum STAT_TYPE {
   HOTKEY, //    @gorp hotkey g - we can associate hotkeys with objects
   COPYIT, //    only useful in hyperlinks, used to copy into the clipboard
   OPENIT, //    only useful in hyperlinks, used to open a url in a new tab
+  VIEWIT, //    only useful in hyperlinks, used to view a given url
   //            used in inspector
   ZSSEDIT, //   @code zssedit, affords the user to write local code
   CHAREDIT, //  @char charedit, affords the user to pick char

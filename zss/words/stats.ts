@@ -140,6 +140,8 @@ export function stattypestring(type: STAT_TYPE) {
       return 'copyit'
     case STAT_TYPE.OPENIT:
       return 'openit'
+    case STAT_TYPE.VIEWIT:
+      return 'viewit'
     case STAT_TYPE.ZSSEDIT:
       return 'zssedit'
     case STAT_TYPE.CHAREDIT:

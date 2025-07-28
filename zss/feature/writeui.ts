@@ -110,3 +110,12 @@ export function writeopenit(
 ) {
   write(device, player, `!openit ${content};${label}`)
 }
+
+export function writeviewit(
+  device: DEVICELIKE,
+  player: string,
+  content: string,
+  label: string,
+) {
+  write(device, player, `!viewit ${content};${label}`)
+}

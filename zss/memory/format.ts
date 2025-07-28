@@ -1,7 +1,8 @@
-import { pack, unpack } from 'msgpackr'
+import stringify from 'json-stable-stringify'
+import { unpack } from 'msgpackr'
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 
 export type FORMAT_OBJECT = [string?, any?, ...FORMAT_OBJECT[]]
 
@@ -86,33 +87,33 @@ export function unformatobject<T>(
 
 // read / write helpers
 
-/*
-
-compression thoughts idea:
-we have string lookup table for __all__ strings
-
-keys are base64 encoded index starting at 0,1,2, etc.. to create 
-the smallest keysize possible with a string ?
-
-so part of the pack process is de-duping strings
-
-*/
-
-export function packbinary(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
+export function packformat(entry: FORMAT_OBJECT): MAYBE<string> {
   try {
-    const data = deepcopy(entry)
-    return pack(data)
+    const data = stringify(entry)
+    return data
   } catch (err: any) {
     api_error(SOFTWARE, '', 'binary', err.message)
   }
 }
 
-export function unpackbinary(binary: Uint8Array): MAYBE<FORMAT_OBJECT> {
+export function unpackformat(
+  content: string | Uint8Array,
+): MAYBE<FORMAT_OBJECT> {
+  if (isstring(content)) {
+    try {
+      const data = JSON.parse(content)
+      // console.info('read', deepcopy(data))
+      return data
+    } catch (err: any) {
+      api_error(SOFTWARE, '', 'binary', err.message)
+    }
+    return undefined
+  }
   try {
-    const data = unpack(binary)
-    // console.info('read', deepcopy(data))
+    const data = unpack(content)
     return data
   } catch (err: any) {
     api_error(SOFTWARE, '', 'binary', err.message)
   }
+  return undefined
 }
