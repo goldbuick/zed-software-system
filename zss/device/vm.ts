@@ -5,6 +5,7 @@ import {
   MOSTLY_ZZT_META,
   museumofzztdownload,
   museumofzztrandom,
+  museumofzztscreenshoturl,
   museumofzztsearch,
 } from 'zss/feature/url'
 import { DIVIDER } from 'zss/feature/writeui'
@@ -164,8 +165,8 @@ function writezztcontentlinks(list: MOSTLY_ZZT_META[], player: string) {
     if (entry.screenshot) {
       gadgethyperlink(player, 'zztbridge', entry.screenshot, [
         'screenshot',
-        'openit',
-        `https://museumofzzt.com/static/${entry.screenshot}`,
+        'viewit',
+        museumofzztscreenshoturl(entry.screenshot),
       ])
     }
     gadgethyperlink(player, 'zztbridge', entry.filename, [

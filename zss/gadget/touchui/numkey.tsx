@@ -3,7 +3,7 @@ import { noop } from 'zss/mapping/types'
 import { ismac } from 'zss/words/system'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { useDeviceConfig, useWriteText } from '../hooks'
+import { useDeviceData, useWriteText } from '../hooks'
 
 import { TouchPlane } from './touchplane'
 
@@ -20,7 +20,7 @@ const CtrlKey = ismac ? 'Meta' : 'Ctrl'
 
 export function NumKey({ x, y, letters, digit, usealt, usectrl }: NumKeyProps) {
   const context = useWriteText()
-  const { keyboardshift, keyboardctrl, keyboardalt } = useDeviceConfig()
+  const { keyboardshift, keyboardctrl, keyboardalt } = useDeviceData()
 
   context.x = x
   context.y = y

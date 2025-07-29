@@ -1,7 +1,7 @@
 import { T9Search } from 't9-plus'
 import { register_t9words, register_t9wordsflag } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { useDeviceConfig } from 'zss/gadget/hooks'
+import { useDeviceData } from 'zss/gadget/hooks'
 
 import words from './t9words.json'
 
@@ -22,7 +22,7 @@ export function setup(dynamicwords: string[]) {
 }
 
 export function updateindex(index: string, player: string) {
-  if (useDeviceConfig.getState().wordlistflag !== 'typing') {
+  if (useDeviceData.getState().wordlistflag !== 'typing') {
     register_t9wordsflag(SOFTWARE, player, index)
   }
 }
@@ -33,7 +33,7 @@ export function checkforword(
   player: string,
 ): string {
   const { wordlistflag, keyboardalt, showtouchcontrols } =
-    useDeviceConfig.getState()
+    useDeviceData.getState()
   if (!showtouchcontrols || wordlistflag === 'typing') {
     return ''
   }

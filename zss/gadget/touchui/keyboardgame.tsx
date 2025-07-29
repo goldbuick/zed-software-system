@@ -2,7 +2,7 @@ import { user } from 'zss/feature/keyboard'
 import { noop } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { useDeviceConfig, useWriteText } from '../hooks'
+import { useDeviceData, useWriteText } from '../hooks'
 
 import { NumKey } from './numkey'
 import { ToggleKey } from './togglekey'
@@ -14,7 +14,7 @@ type KeyboardGameProps = {
 
 export function KeyboardGame({ width }: KeyboardGameProps) {
   const context = useWriteText()
-  const { keyboardalt, keyboardctrl, keyboardshift } = useDeviceConfig()
+  const { keyboardalt, keyboardctrl, keyboardshift } = useDeviceData()
   const left = width - 18
   const mid = width - 12
   const right = width - 6
@@ -49,7 +49,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
         y={0}
         letters={keyboardctrl ? 'CTRL' : 'ctrl'}
         onToggle={() => {
-          useDeviceConfig.setState({ keyboardctrl: !keyboardctrl })
+          useDeviceData.setState({ keyboardctrl: !keyboardctrl })
         }}
       />
       <ToggleKey
@@ -57,7 +57,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
         y={1}
         letters={keyboardalt ? 'ALT' : 'alt'}
         onToggle={() => {
-          useDeviceConfig.setState({ keyboardalt: !keyboardalt })
+          useDeviceData.setState({ keyboardalt: !keyboardalt })
         }}
       />
       <ToggleKey
@@ -65,7 +65,7 @@ export function KeyboardGame({ width }: KeyboardGameProps) {
         y={0}
         letters={keyboardshift ? 'SHIFT' : 'shift'}
         onToggle={() => {
-          useDeviceConfig.setState({ keyboardshift: !keyboardshift })
+          useDeviceData.setState({ keyboardshift: !keyboardshift })
         }}
       />
       <ToggleKey

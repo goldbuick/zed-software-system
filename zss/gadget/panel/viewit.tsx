@@ -1,12 +1,12 @@
 import { useCallback } from 'react'
-import { isstring } from 'zss/mapping/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
+import { useMedia } from '../hooks'
 import { UserInput } from '../userinput'
 
 import { PanelItemProps, inputcolor, setuppanelitem } from './common'
 
-export function PanelItemOpenIt({
+export function PanelItemViewIt({
   sidebar,
   row,
   active,
@@ -14,22 +14,19 @@ export function PanelItemOpenIt({
   args,
   context,
 }: PanelItemProps) {
+  const { setviewimage } = useMedia()
   const invoke = useCallback(() => {
-    const [, openmethod, ...values] = args
+    const [, ...values] = args
     const content = values.join(' ')
-    if (openmethod === 'inline') {
-      window.location.href = content
-    } else if (isstring(openmethod)) {
-      window.open(`${openmethod} ${content}`.trim(), '_blank')
-    }
-  }, [args])
+    setviewimage(content)
+  }, [setviewimage, args])
 
   const tcolor = inputcolor(!!active)
 
   // render output
   setuppanelitem(sidebar, row, context)
   tokenizeandwritetextformat(
-    `  $purple$16 $yellowOPENIT ${tcolor}${label}`,
+    `  $purple$16 $cyanVIEWIT ${tcolor}${label}`,
     context,
     true,
   )

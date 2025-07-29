@@ -2,7 +2,7 @@ import JSZip, { JSZipObject } from 'jszip'
 import { ispresent } from 'zss/mapping/types'
 
 import { exportbook, importbook } from './book'
-import { packbinary, unpackbinary } from './format'
+import { packformat, unpackformat } from './format'
 import { BOOK } from './types'
 
 // data encoding for urls
@@ -31,7 +31,7 @@ export async function compressbooks(books: BOOK[]) {
       const exportedbook = exportbook(book)
       if (exportedbook) {
         // convert to binary & compress book
-        const bin = packbinary(exportedbook)
+        const bin = packformat(exportedbook)
         if (ispresent(bin)) {
           zip.file(book.id, bin, { date: FIXED_DATE })
         }
@@ -65,12 +65,22 @@ export async function decompressbooks(base64bytes: string) {
         // unpack books
         for (let i = 0; i < files.length; ++i) {
           const file = files[i]
-          // uncompress book
           const bin = await file.async('uint8array')
-          // convert back to json
-          const book = importbook(unpackbinary(bin))
-          if (ispresent(book)) {
-            books.push(book)
+          const maybebookfrombin = unpackformat(bin)
+          if (ispresent(maybebookfrombin)) {
+            const book = importbook(maybebookfrombin)
+            if (ispresent(book)) {
+              books.push(book)
+            }
+          } else {
+            const str = await file.async('string')
+            const maybebookfromstr = unpackformat(str)
+            if (ispresent(maybebookfromstr)) {
+              const book = importbook(maybebookfromstr)
+              if (ispresent(book)) {
+                books.push(book)
+              }
+            }
           }
         }
         // return result

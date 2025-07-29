@@ -26,20 +26,18 @@ export function PanelItemCopyIt({
 }: PanelItemProps) {
   const scroll = useContext(ScrollContext)
   const invoke = useCallback(() => {
-    setTimeout(() => {
-      if (ispresent(withclipboard())) {
-        const words = [maptovalue(args[0], ''), args[1]]
-        const [, ...values] = words
-        const content = values.join(' ')
-        withclipboard()
-          .writeText(content)
-          .then(() => {
-            api_toast(SOFTWARE, registerreadplayer(), `copied! ${content}`)
-            scroll.sendclose()
-          })
-          .catch((err) => console.error(err))
-      }
-    }, 100)
+    if (ispresent(withclipboard())) {
+      const words = [maptovalue(args[0], ''), args[1]]
+      const [, ...values] = words
+      const content = values.join(' ')
+      withclipboard()
+        .writeText(content)
+        .then(() => {
+          api_toast(SOFTWARE, registerreadplayer(), `copied! ${content}`)
+          scroll.sendclose()
+        })
+        .catch((err) => console.error(err))
+    }
   }, [args, scroll])
 
   const tcolor = inputcolor(!!active)

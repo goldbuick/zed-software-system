@@ -57,6 +57,10 @@ export async function museumofzztrandom(): Promise<MOSTLY_ZZT_META[]> {
   return [contentdata] as MOSTLY_ZZT_META[]
 }
 
+export function museumofzztscreenshoturl(content: string) {
+  return `${BRIDGE_URL}/static/${content}`
+}
+
 export async function museumofzztdownload(
   player: string,
   content: string,

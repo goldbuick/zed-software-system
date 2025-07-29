@@ -3,7 +3,7 @@ import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
 import { useTape } from '../data/state'
-import { resetTiles, useDeviceConfig, useWriteText, writeTile } from '../hooks'
+import { resetTiles, useDeviceData, useWriteText, writeTile } from '../hooks'
 
 import { KeyboardAlt } from './keyboardalt'
 import { KeyboardCtrl } from './keyboardctrl'
@@ -28,7 +28,7 @@ export function Elements({ width, height, onReset }: ElementsProps) {
   const isopen = useTape(
     (state) => state.editor.open || state.terminal.open || state.quickterminal,
   )
-  const { keyboardalt, keyboardctrl } = useDeviceConfig()
+  const { keyboardalt, keyboardctrl } = useDeviceData()
 
   resetTiles(context, DECO, FG, BG)
 
@@ -49,7 +49,7 @@ export function Elements({ width, height, onReset }: ElementsProps) {
         height={3}
         onPointerDown={() => {
           // toggle sidebar
-          useDeviceConfig.setState((state) => ({
+          useDeviceData.setState((state) => ({
             ...state,
             sidebaropen: !state.sidebaropen,
           }))

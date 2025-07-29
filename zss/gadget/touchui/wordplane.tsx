@@ -6,7 +6,7 @@ import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { useDeviceConfig, useWriteText } from '../hooks'
+import { useDeviceData, useWriteText } from '../hooks'
 
 import { TouchPlane } from './touchplane'
 
@@ -19,7 +19,7 @@ type NumKeyProps = {
 export function WordPlane({ x, y, letters }: NumKeyProps) {
   const context = useWriteText()
   const player = registerreadplayer()
-  const { keyboardshift } = useDeviceConfig()
+  const { keyboardshift } = useDeviceData()
   const withletters = keyboardshift
     ? letters.toUpperCase()
     : letters.toLowerCase()
@@ -39,7 +39,7 @@ export function WordPlane({ x, y, letters }: NumKeyProps) {
           register_t9wordsflag(SOFTWARE, player, 'typing')
           register_t9words(SOFTWARE, player, '', [])
 
-          const erase = useDeviceConfig.getState().checknumbers.length
+          const erase = useDeviceData.getState().checknumbers.length
           let typing = '{Backspace}'.repeat(erase)
 
           if (keyboardshift) {

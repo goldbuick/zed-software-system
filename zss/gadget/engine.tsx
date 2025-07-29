@@ -25,11 +25,12 @@ import { doasync } from 'zss/mapping/func'
 import { Tape } from 'zss/tape/component'
 import { NAME } from 'zss/words/types'
 
-import { useDeviceConfig, useMedia } from './hooks'
+import { useDeviceData, useMedia } from './hooks'
 import { ScreenUI } from './screenui/component'
 import { TapeToast } from './toast'
 import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
+import { TapeViewImage } from './viewimage'
 
 // include all front-end devices
 import 'zss/userspace'
@@ -101,7 +102,7 @@ export function Engine() {
 
   // update device config
   useEffect(() => {
-    useDeviceConfig.setState((state) => {
+    useDeviceData.setState((state) => {
       return {
         ...state,
         islowrez,
@@ -119,6 +120,7 @@ export function Engine() {
           <ScreenUI />
           <Tape />
           <TapeToast />
+          <TapeViewImage />
         </UserScreen>
       </UserFocus>
       {shouldcrt && (
