@@ -29,14 +29,9 @@ import {
   parseplay,
 } from './playnotation'
 import { createsynthdrums } from './synthdrums'
-import { createfx } from './synthfx'
+import { createfx, createfxchannels, volumetodb } from './synthfx'
 import { SidechainCompressor } from './synthsidechainworkletnode'
 import { SOURCE_TYPE, createsource } from './synthsource'
-
-// 0 to 100
-function volumetodb(value: number) {
-  return 20 * Math.log10(value) - 35
-}
 
 export function createsynth() {
   const destination = getDestination()
@@ -133,10 +128,32 @@ export function createsynth() {
   ]
 
   // config fx
+  // single fx chain
+  const FXCHAIN = createfx()
+
   // 0 FX - play
   // 1 FX - play
   // 2 FX - bgplay
-  const FX = [createfx(), createfx(), createfx()]
+  // this affords controlling the wet 0/1 ratio sent to effects
+  const FX = [createfxchannels(), createfxchannels(), createfxchannels()]
+  for (let i = 0; i < FX.length; ++i) {
+    const f = FX[i]
+    f.fc.connect(FXCHAIN.fc)
+    f.echo.connect(FXCHAIN.echo)
+    f.reverb.connect(FXCHAIN.reverb)
+    f.phaser.connect(FXCHAIN.phaser)
+    f.vibrato.connect(FXCHAIN.vibrato)
+    f.distortion.connect(FXCHAIN.distortion)
+    f.autowah.connect(FXCHAIN.autowah)
+    const dest = i < 2 ? playvolume : bgplayvolume
+    FXCHAIN.fc.connect(dest)
+    FXCHAIN.echo.connect(dest)
+    FXCHAIN.reverb.connect(dest)
+    FXCHAIN.phaser.connect(dest)
+    FXCHAIN.vibrato.connect(dest)
+    FXCHAIN.distortion.connect(dest)
+    FXCHAIN.autowah.connect(dest)
+  }
 
   function mapindextofx(index: number) {
     return index < 4 ? Math.floor(index / 2) : 2
@@ -144,6 +161,9 @@ export function createsynth() {
 
   function connectsource(index: number) {
     const f = mapindextofx(index)
+    const dest = index < 4 ? playvolume : bgplayvolume
+
+    // everything not noise
     switch (SOURCE[index]?.source.type) {
       case SOURCE_TYPE.RETRO_NOISE:
       case SOURCE_TYPE.BUZZ_NOISE:
@@ -153,18 +173,11 @@ export function createsynth() {
         break
       default:
         // connect synth
-        SOURCE[index]?.source.synth.chain(
-          FX[f].fc,
-          FX[f].distortion,
-          FX[f].vibrato,
-          FX[f].phaser,
-          FX[f].autowah,
-          FX[f].echo,
-          FX[f].reverb,
-          index < 4 ? playvolume : bgplayvolume,
-        )
+        SOURCE[index]?.source.synth.chain(FX[f].sendtofx, dest)
         break
     }
+
+    // noise & bells
     switch (SOURCE[index]?.source.type) {
       case SOURCE_TYPE.RETRO_NOISE:
       case SOURCE_TYPE.BUZZ_NOISE:
@@ -174,28 +187,13 @@ export function createsynth() {
         SOURCE[index]?.source.synth.chain(
           SOURCE[index]?.source.filter1,
           SOURCE[index]?.source.filter2,
-          FX[f].fc,
-          FX[f].distortion,
-          FX[f].vibrato,
-          FX[f].phaser,
-          FX[f].autowah,
-          FX[f].echo,
-          FX[f].reverb,
-          index < 4 ? playvolume : bgplayvolume,
+          FX[f].sendtofx,
+          dest,
         )
         break
       case SOURCE_TYPE.BELLS: {
         // second synth
-        SOURCE[index]?.source.sparkle.chain(
-          FX[f].fc,
-          FX[f].distortion,
-          FX[f].vibrato,
-          FX[f].phaser,
-          FX[f].autowah,
-          FX[f].echo,
-          FX[f].reverb,
-          index < 4 ? playvolume : bgplayvolume,
-        )
+        SOURCE[index]?.source.sparkle.chain(FX[f].sendtofx, dest)
         break
       }
     }
@@ -250,10 +248,10 @@ export function createsynth() {
         const sduration = SOURCE[chan].source.synth.toSeconds(duration)
         const reset = '128n'
         const rampreset = SOURCE[chan].source.synth.toSeconds(reset)
-        FX[f].vibrato.depth.rampTo(1, '2n', time)
-        FX[f].vibrato.depth.rampTo(0, reset, time + sduration - rampreset)
-        FX[f].vibrato.frequency.rampTo(5, '4n', time)
-        FX[f].vibrato.frequency.rampTo(1, reset, time + sduration - rampreset)
+        FXCHAIN.vibrato.depth.rampTo(1, '2n', time)
+        FXCHAIN.vibrato.depth.rampTo(0, reset, time + sduration - rampreset)
+        FXCHAIN.vibrato.frequency.rampTo(5, '4n', time)
+        FXCHAIN.vibrato.frequency.rampTo(1, reset, time + sduration - rampreset)
       }
     }
     if (isnumber(note)) {
@@ -409,6 +407,7 @@ export function createsynth() {
     setttsvolume,
     SOURCE,
     FX,
+    FXCHAIN,
     changesource,
   }
 }

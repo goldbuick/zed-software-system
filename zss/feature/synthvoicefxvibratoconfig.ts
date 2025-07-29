@@ -18,7 +18,7 @@ export function synthvoicefxvibratoconfig(
     api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const vibrato = synth.FX[index].vibrato
+  const vibrato = synth.FXCHAIN.vibrato
   switch (config) {
     case 'maxdelay':
       if (isnumber(value)) {

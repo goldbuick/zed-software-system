@@ -15,7 +15,7 @@ export function synthvoicefxechoconfig(
     api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const echo = synth.FX[index].echo
+  const echo = synth.FXCHAIN.echo
   switch (config) {
     case 'delaytime':
       if (isnumber(value)) {

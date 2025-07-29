@@ -15,7 +15,7 @@ export function synthvoicefxreverbconfig(
     api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const reverb = synth.FX[index].reverb
+  const reverb = synth.FXCHAIN.reverb
   switch (config) {
     case 'decay':
       if (isnumber(value)) {

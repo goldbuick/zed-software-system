@@ -53,7 +53,7 @@ export function boardsetlookup(board: MAYBE<BOARD>) {
       }
 
       // update named lookup
-      const display = bookelementdisplayread(memoryelementkindread(object))
+      const display = bookelementdisplayread(object)
       if (!named[display.name]) {
         named[display.name] = new Set<string>()
       }

@@ -15,7 +15,7 @@ export function synthvoicefxphaserconfig(
     api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const phaser = synth.FX[index].phaser
+  const phaser = synth.FXCHAIN.phaser
   switch (config) {
     case 'q':
       if (isnumber(value)) {

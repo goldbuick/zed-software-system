@@ -89,7 +89,7 @@ function matchBasicText(text: string, startOffset: number) {
   }
 
   // scan backwards to check what kind of spot we're in
-  while (cursor > 0 && `@#':!/?\n`.includes(text[cursor]) === false) {
+  while (cursor > 0 && `$@#':!/?\n`.includes(text[cursor]) === false) {
     cursor--
   }
 
