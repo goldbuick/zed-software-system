@@ -1,11 +1,9 @@
-import { FeedbackDelay } from 'tone'
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { clamp } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
 import { AUDIO_SYNTH } from './synth'
-import { ECHO_OFF, ECHO_ON } from './synthfx'
+import { volumetodb } from './synthfx'
 import { synthvoicefxautowahconfig } from './synthvoicefxautowah'
 import { synthvoicefxdistortionconfig } from './synthvoicefxdistortconfig'
 import { synthvoicefxechoconfig } from './synthvoicefxechoconfig'
@@ -40,20 +38,21 @@ export function synthvoicefxconfig(
         // default on value(s)
         switch (fxname) {
           case 'vibrato':
-            fx.wet.value = 0.8
+            fx.volume.value = volumetodb(80)
             break
           default:
-            fx.wet.value = 0.2
+            fx.volume.value = volumetodb(20)
             break
         }
         break
       case 'off':
-        fx.wet.value = 0.0
+        fx.volume.value = volumetodb(0)
         break
       default:
         if (isnumber(config)) {
           // specify wet in terms of percent
-          fx.wet.value = clamp(0.01 * config, 0, 1)
+          fx.volume.value = volumetodb(config)
+          // fx.wet.value = clamp(0.01 * config, 0, 1)
         } else {
           switch (fxname) {
             case 'fc':
@@ -82,14 +81,6 @@ export function synthvoicefxconfig(
           }
         }
         break
-    }
-    // edge case for echo
-    if (fx instanceof FeedbackDelay) {
-      if (fx.wet.value === 0) {
-        fx.set({ delayTime: ECHO_OFF })
-      } else if (fx.get().delayTime === ECHO_OFF) {
-        fx.set({ delayTime: ECHO_ON })
-      }
     }
     return
   }

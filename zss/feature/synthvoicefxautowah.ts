@@ -18,7 +18,7 @@ export function synthvoicefxautowahconfig(
     api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const autowah = synth.FX[index].autowah
+  const autowah = synth.FXCHAIN.autowah
   switch (config) {
     case 'basefrequency':
       if (isnumber(value)) {

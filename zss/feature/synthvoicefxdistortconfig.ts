@@ -15,7 +15,7 @@ export function synthvoicefxdistortionconfig(
     api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const distortion = synth.FX[index].distortion
+  const distortion = synth.FXCHAIN.distortion
   switch (config) {
     case 'distortion':
       if (isnumber(value)) {

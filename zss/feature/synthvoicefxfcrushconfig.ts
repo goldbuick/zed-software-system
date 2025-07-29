@@ -15,7 +15,7 @@ export function synthvoicefxfcrushconfig(
     api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const fcrush = synth.FX[index].fcrush
+  const fcrush = synth.FXCHAIN.fcrush
   switch (config) {
     case 'rate':
       if (isnumber(value)) {
