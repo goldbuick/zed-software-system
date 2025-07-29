@@ -438,7 +438,7 @@ export const command_if = createSimpleToken({
 })
 export const command_do = createSimpleToken({
   name: 'do',
-  pattern: /(?<!(#|zap |send |restore ))do/i,
+  pattern: /(?<!(zap |send |restore ))(?<=\s)do/i,
   start_chars_hint: ['d'],
   longer_alt: stringliteral,
 })
