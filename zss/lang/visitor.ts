@@ -37,6 +37,9 @@ import {
   FactorCstChildren,
   ICstNodeVisitor,
   InlineCstChildren,
+  Inline_commandCstChildren,
+  Inline_goCstChildren,
+  Inline_tryCstChildren,
   KindCstChildren,
   LineCstChildren,
   Not_testCstChildren,
@@ -517,32 +520,66 @@ class ScriptVisitor
     return []
   }
 
+  inline_go(ctx: Inline_goCstChildren) {
+    const values: CodeNode[] = []
+    if (ctx.short_go) {
+      values.push(...this.go(ctx.short_go))
+    }
+    if (ctx.inline) {
+      values.push(...this.go(ctx.inline))
+    }
+    return values
+  }
+
+  inline_try(ctx: Inline_tryCstChildren) {
+    const values: CodeNode[] = []
+    if (ctx.short_try) {
+      values.push(...this.go(ctx.short_try))
+    }
+    if (ctx.inline) {
+      values.push(...this.go(ctx.inline))
+    }
+    return values
+  }
+
+  inline_command(ctx: Inline_commandCstChildren) {
+    const values: CodeNode[] = []
+    if (ctx.stmt_command) {
+      values.push(...this.go(ctx.stmt_command))
+    }
+    if (ctx.inline) {
+      values.push(...this.go(ctx.inline))
+    }
+    return values
+  }
+
   inline(ctx: InlineCstChildren) {
+    const values: CodeNode[] = []
     if (ctx.stmt_stat) {
-      return this.go(ctx.stmt_stat)
+      values.push(...this.go(ctx.stmt_stat))
     }
     if (ctx.stmt_text) {
-      return this.go(ctx.stmt_text)
+      values.push(...this.go(ctx.stmt_text))
     }
     if (ctx.stmt_comment) {
-      return this.go(ctx.stmt_comment)
+      values.push(...this.go(ctx.stmt_comment))
     }
     if (ctx.stmt_hyperlink) {
-      return this.go(ctx.stmt_hyperlink)
+      values.push(...this.go(ctx.stmt_hyperlink))
     }
-    if (ctx.stmt_command) {
-      return this.go(ctx.stmt_command)
+    if (ctx.inline_go) {
+      values.push(...this.go(ctx.inline_go))
     }
-    if (ctx.short_go) {
-      return this.go(ctx.short_go)
+    if (ctx.inline_try) {
+      values.push(...this.go(ctx.inline_try))
     }
-    if (ctx.short_try) {
-      return this.go(ctx.short_try)
+    if (ctx.inline_command) {
+      values.push(...this.go(ctx.inline_command))
     }
     if (ctx.structured_cmd) {
-      return this.go(ctx.structured_cmd)
+      values.push(...this.go(ctx.structured_cmd))
     }
-    return []
+    return values
   }
 
   stmt_label(ctx: Stmt_labelCstChildren, location: CstNodeLocation) {
@@ -985,10 +1022,15 @@ class ScriptVisitor
   }
 
   arith_expr(ctx: Arith_exprCstChildren, location: CstNodeLocation) {
+    if (ctx.token_expr) {
+      return this.go(ctx.token_expr)
+    }
+
     const term = this.go(ctx.term)
     if (!ctx.arith_expr_item) {
       return term
     }
+
     return this.createcodenode(location, {
       type: NODE.OPERATOR,
       lhs: term[0],
@@ -1849,25 +1891,19 @@ class ScriptVisitor
   }
 
   token_expr(ctx: Token_exprCstChildren, location: CstNodeLocation) {
-    const values: CodeNode[] = []
-
     if (ctx.token_expr_aligned) {
-      values.push(
-        ...this.createcodenode(location, {
-          type: NODE.LITERAL,
-          literal: LITERAL.STRING,
-          value: 'aligned',
-        }),
-      )
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'aligned',
+      })
     }
     if (ctx.token_contact) {
-      values.push(
-        ...this.createcodenode(location, {
-          type: NODE.LITERAL,
-          literal: LITERAL.STRING,
-          value: 'contact',
-        }),
-      )
+      return this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'contact',
+      })
     }
     if (ctx.token_expr_any) {
       return this.go(ctx.token_expr_any)
@@ -1914,7 +1950,7 @@ class ScriptVisitor
     if (ctx.token_expr_runwith) {
       return this.go(ctx.token_expr_runwith)
     }
-    return values
+    return []
   }
 
   string_token(ctx: String_tokenCstChildren, location: CstNodeLocation) {
@@ -2011,9 +2047,6 @@ class ScriptVisitor
     }
     if (ctx.dir) {
       return this.go(ctx.dir)
-    }
-    if (ctx.token_expr) {
-      return this.go(ctx.token_expr)
     }
     if (ctx.command_play) {
       return this.go(ctx.command_play)

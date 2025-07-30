@@ -35,6 +35,36 @@ export type StmtCstChildren = {
   short_try?: Short_tryCstNode[]
 }
 
+export type Inline_goCstNode = {
+  name: 'inline_go'
+  children: Inline_goCstChildren
+} & CstNode
+
+export type Inline_goCstChildren = {
+  short_go: Short_goCstNode[]
+  inline?: InlineCstNode[]
+}
+
+export type Inline_tryCstNode = {
+  name: 'inline_try'
+  children: Inline_tryCstChildren
+} & CstNode
+
+export type Inline_tryCstChildren = {
+  short_try: Short_tryCstNode[]
+  inline?: InlineCstNode[]
+}
+
+export type Inline_commandCstNode = {
+  name: 'inline_command'
+  children: Inline_commandCstChildren
+} & CstNode
+
+export type Inline_commandCstChildren = {
+  stmt_command: Stmt_commandCstNode[]
+  inline?: InlineCstNode[]
+}
+
 export type InlineCstNode = {
   name: 'inline'
   children: InlineCstChildren
@@ -45,10 +75,10 @@ export type InlineCstChildren = {
   stmt_text?: Stmt_textCstNode[]
   stmt_comment?: Stmt_commentCstNode[]
   stmt_hyperlink?: Stmt_hyperlinkCstNode[]
-  stmt_command?: Stmt_commandCstNode[]
-  short_go?: Short_goCstNode[]
-  short_try?: Short_tryCstNode[]
   structured_cmd?: Structured_cmdCstNode[]
+  inline_go?: Inline_goCstNode[]
+  inline_try?: Inline_tryCstNode[]
+  inline_command?: Inline_commandCstNode[]
 }
 
 export type Stmt_labelCstNode = {
@@ -402,7 +432,8 @@ export type Arith_exprCstNode = {
 } & CstNode
 
 export type Arith_exprCstChildren = {
-  term: TermCstNode[]
+  token_expr?: Token_exprCstNode[]
+  term?: TermCstNode[]
   arith_expr_item?: Arith_expr_itemCstNode[]
 }
 
@@ -861,7 +892,6 @@ export type TokenCstChildren = {
   collision?: CollisionCstNode[]
   color?: ColorCstNode[]
   dir?: DirCstNode[]
-  token_expr?: Token_exprCstNode[]
   command_play?: Command_playCstNode[]
   command_toast?: Command_toastCstNode[]
   command_ticker?: Command_tickerCstNode[]
@@ -879,6 +909,9 @@ export type ICstNodeVisitor<IN, OUT> = {
   program(children: ProgramCstChildren, param?: IN): OUT
   line(children: LineCstChildren, param?: IN): OUT
   stmt(children: StmtCstChildren, param?: IN): OUT
+  inline_go(children: Inline_goCstChildren, param?: IN): OUT
+  inline_try(children: Inline_tryCstChildren, param?: IN): OUT
+  inline_command(children: Inline_commandCstChildren, param?: IN): OUT
   inline(children: InlineCstChildren, param?: IN): OUT
   stmt_label(children: Stmt_labelCstChildren, param?: IN): OUT
   stmt_stat(children: Stmt_statCstChildren, param?: IN): OUT
