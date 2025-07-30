@@ -88,16 +88,32 @@ class ScriptParser extends CstParser {
     ])
   })
 
+  inline_go = this.RULED('inline_go', () => {
+    this.SUBRULE(this.short_go)
+    this.OPTION(() => this.SUBRULE(this.inline))
+  })
+
+  inline_try = this.RULED('inline_try', () => {
+    this.SUBRULE(this.short_try)
+    this.OPTION(() => this.SUBRULE(this.inline))
+  })
+
+  inline_command = this.RULED('inline_command', () => {
+    this.SUBRULE(this.stmt_command)
+    this.OPTION(() => this.SUBRULE(this.inline))
+  })
+
   inline = this.RULED('inline', () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.stmt_stat) },
       { ALT: () => this.SUBRULE(this.stmt_text) },
       { ALT: () => this.SUBRULE(this.stmt_comment) },
       { ALT: () => this.SUBRULE(this.stmt_hyperlink) },
-      { ALT: () => this.SUBRULE(this.stmt_command) },
-      { ALT: () => this.SUBRULE(this.short_go) },
-      { ALT: () => this.SUBRULE(this.short_try) },
       { ALT: () => this.SUBRULE(this.structured_cmd) },
+      // we should be able to stack short_go _try, and stmt_command
+      { ALT: () => this.SUBRULE(this.inline_go) },
+      { ALT: () => this.SUBRULE(this.inline_try) },
+      { ALT: () => this.SUBRULE(this.inline_command) },
     ])
   })
 
@@ -363,8 +379,15 @@ class ScriptParser extends CstParser {
   })
 
   arith_expr = this.RULED('arith_expr', () => {
-    this.SUBRULE1(this.term)
-    this.MANY(() => this.SUBRULE2(this.arith_expr_item))
+    this.OR([
+      { ALT: () => this.SUBRULE(this.token_expr) },
+      {
+        ALT: () => {
+          this.SUBRULE1(this.term)
+          this.MANY(() => this.SUBRULE2(this.arith_expr_item))
+        },
+      },
+    ])
   })
 
   arith_expr_item = this.RULED('arith_expr_item', () => {
@@ -688,28 +711,26 @@ class ScriptParser extends CstParser {
   })
 
   token_expr = this.RULED('token_expr', () => {
-    this.AT_LEAST_ONE(() => {
-      this.OR([
-        { ALT: () => this.CONSUME(lexer.expr_aligned) },
-        { ALT: () => this.CONSUME(lexer.expr_contact) },
-        { ALT: () => this.SUBRULE(this.token_expr_any) },
-        { ALT: () => this.SUBRULE(this.token_expr_count) },
-        { ALT: () => this.SUBRULE(this.token_expr_blocked) },
-        { ALT: () => this.SUBRULE(this.token_expr_abs) },
-        { ALT: () => this.SUBRULE(this.token_expr_intceil) },
-        { ALT: () => this.SUBRULE(this.token_expr_intfloor) },
-        { ALT: () => this.SUBRULE(this.token_expr_intround) },
-        { ALT: () => this.SUBRULE(this.token_expr_clamp) },
-        { ALT: () => this.SUBRULE(this.token_expr_min) },
-        { ALT: () => this.SUBRULE(this.token_expr_max) },
-        { ALT: () => this.SUBRULE(this.token_expr_pick) },
-        { ALT: () => this.SUBRULE(this.token_expr_pickwith) },
-        { ALT: () => this.SUBRULE(this.token_expr_random) },
-        { ALT: () => this.SUBRULE(this.token_expr_randomwith) },
-        { ALT: () => this.SUBRULE(this.token_expr_run) },
-        { ALT: () => this.SUBRULE(this.token_expr_runwith) },
-      ])
-    })
+    this.OR([
+      { ALT: () => this.CONSUME(lexer.expr_aligned) },
+      { ALT: () => this.CONSUME(lexer.expr_contact) },
+      { ALT: () => this.SUBRULE(this.token_expr_any) },
+      { ALT: () => this.SUBRULE(this.token_expr_count) },
+      { ALT: () => this.SUBRULE(this.token_expr_blocked) },
+      { ALT: () => this.SUBRULE(this.token_expr_abs) },
+      { ALT: () => this.SUBRULE(this.token_expr_intceil) },
+      { ALT: () => this.SUBRULE(this.token_expr_intfloor) },
+      { ALT: () => this.SUBRULE(this.token_expr_intround) },
+      { ALT: () => this.SUBRULE(this.token_expr_clamp) },
+      { ALT: () => this.SUBRULE(this.token_expr_min) },
+      { ALT: () => this.SUBRULE(this.token_expr_max) },
+      { ALT: () => this.SUBRULE(this.token_expr_pick) },
+      { ALT: () => this.SUBRULE(this.token_expr_pickwith) },
+      { ALT: () => this.SUBRULE(this.token_expr_random) },
+      { ALT: () => this.SUBRULE(this.token_expr_randomwith) },
+      { ALT: () => this.SUBRULE(this.token_expr_run) },
+      { ALT: () => this.SUBRULE(this.token_expr_runwith) },
+    ])
   })
 
   string_token = this.RULED('string_token', () => {
@@ -737,7 +758,6 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.collision) },
       { ALT: () => this.SUBRULE(this.color) },
       { ALT: () => this.SUBRULE(this.dir) },
-      { ALT: () => this.SUBRULE(this.token_expr) },
       { ALT: () => this.SUBRULE(this.command_play) },
       { ALT: () => this.SUBRULE(this.command_toast) },
       { ALT: () => this.SUBRULE(this.command_ticker) },

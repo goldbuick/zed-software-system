@@ -97,7 +97,8 @@ function matchBasicText(text: string, startOffset: number) {
     case '?':
     case '/': {
       const prefix = text.substring(cursor + 1, startOffset + 1).toLowerCase()
-      if (!prefix.includes(' ') || matchcomplexdir.test(prefix)) {
+      const spaceatchar = prefix.indexOf(' ')
+      if (spaceatchar < 1 || matchcomplexdir.test(prefix)) {
         // not-okay
         return null
       }
