@@ -468,10 +468,10 @@ export type LANG_ERROR = {
 
 function createTokenSet(primary: TokenType[], secondary: TokenType[]) {
   return [
-    // primary tokens
-    ...primary,
     // hack to ensure down / do matching order
     dir_down,
+    // primary tokens
+    ...primary,
     // secondary tokens
     ...secondary,
     numberliteral,
@@ -620,6 +620,7 @@ function createTokenSet(primary: TokenType[], secondary: TokenType[]) {
 
 export const allTokens = createTokenSet(
   [
+    command_do,
     // text output
     text,
     // commands
@@ -641,7 +642,6 @@ export const allTokens = createTokenSet(
     command_break,
     command_continue,
     command_done,
-    command_do,
     command_else,
     command_foreach,
     command_if,
