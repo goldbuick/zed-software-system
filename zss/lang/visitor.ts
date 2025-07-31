@@ -1625,6 +1625,15 @@ class ScriptVisitor
         }),
       )
     }
+    if (ctx.token_seek) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: 'seek',
+        }),
+      )
+    }
 
     if (ctx.token_by) {
       values.push(
