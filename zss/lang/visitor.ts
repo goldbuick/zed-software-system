@@ -460,6 +460,19 @@ class ScriptVisitor
     })
   }
 
+  createexprnodeondemand(
+    nodes: CodeNode[],
+    location: CstNodeLocation,
+  ): CodeNode {
+    if (nodes.length === 1) {
+      return nodes[0]
+    }
+    return this.createcodenode(location, {
+      type: NODE.EXPR,
+      words: nodes,
+    })[0]
+  }
+
   go(node: any): CodeNode[] {
     if (Array.isArray(node)) {
       return node.map((item) => this.visit(item)).flat()
@@ -902,50 +915,55 @@ class ScriptVisitor
   }
 
   expr(ctx: ExprCstChildren, location: CstNodeLocation) {
-    if (ctx.and_test.length === 1) {
-      return this.go(ctx.and_test)
+    if (ctx.RHS) {
+      return this.createcodenode(location, {
+        type: NODE.OR,
+        items: [
+          this.createexprnodeondemand(this.go(ctx.LHS), location),
+          this.createexprnodeondemand(this.go(ctx.RHS), location),
+        ],
+      })
     }
-    return this.createcodenode(location, {
-      type: NODE.OR,
-      items: this.go(ctx.and_test),
-    })
+    return this.go(ctx.LHS)
   }
 
   and_test(ctx: And_testCstChildren, location: CstNodeLocation) {
-    if (ctx.not_test.length === 1) {
-      return this.go(ctx.not_test)
+    if (ctx.RHS) {
+      return this.createcodenode(location, {
+        type: NODE.AND,
+        items: [
+          this.createexprnodeondemand(this.go(ctx.LHS), location),
+          this.createexprnodeondemand(this.go(ctx.RHS), location),
+        ],
+      })
     }
-    return this.createcodenode(location, {
-      type: NODE.AND,
-      items: this.go(ctx.not_test),
-    })
+    return this.go(ctx.LHS)
   }
 
   not_test(ctx: Not_testCstChildren, location: CstNodeLocation) {
     if (ctx.comparison) {
       return this.go(ctx.comparison)
     }
-    if (ctx.not_test) {
+    if (ctx.LHS) {
       return this.createcodenode(location, {
         type: NODE.NOT,
-        items: this.go(ctx.not_test),
+        items: this.go(ctx.LHS),
       })
     }
     return []
   }
 
   comparison(ctx: ComparisonCstChildren, location: CstNodeLocation) {
-    if (ctx.arith_expr.length === 1) {
-      return this.go(ctx.arith_expr)
+    if (ctx.RHS) {
+      const [compare] = this.go(ctx.comp_op)
+      return this.createcodenode(location, {
+        type: NODE.COMPARE,
+        compare,
+        lhs: this.createexprnodeondemand(this.go(ctx.LHS), location),
+        rhs: this.createexprnodeondemand(this.go(ctx.RHS), location),
+      })
     }
-    const [lhs, rhs] = this.go(ctx.arith_expr)
-    const [compare] = this.go(ctx.comp_op)
-    return this.createcodenode(location, {
-      type: NODE.COMPARE,
-      lhs,
-      compare,
-      rhs,
-    })
+    return this.go(ctx.LHS)
   }
 
   comp_op(ctx: Comp_opCstChildren, location: CstNodeLocation) {
@@ -989,52 +1007,58 @@ class ScriptVisitor
   }
 
   expr_value(ctx: Expr_valueCstChildren, location: CstNodeLocation) {
-    if (ctx.and_test_value.length === 1) {
-      return this.go(ctx.and_test_value)
+    if (ctx.RHS) {
+      return this.createcodenode(location, {
+        type: NODE.OR,
+        items: [
+          this.createexprnodeondemand(this.go(ctx.LHS), location),
+          this.createexprnodeondemand(this.go(ctx.RHS), location),
+        ],
+      })
     }
-    return this.createcodenode(location, {
-      type: NODE.OR,
-      items: this.go(ctx.and_test_value),
-    })
+    return this.go(ctx.LHS)
   }
 
   and_test_value(ctx: And_test_valueCstChildren, location: CstNodeLocation) {
-    if (ctx.not_test_value.length === 1) {
-      return this.go(ctx.not_test_value)
+    if (ctx.RHS) {
+      return this.createcodenode(location, {
+        type: NODE.AND,
+        items: [
+          this.createexprnodeondemand(this.go(ctx.LHS), location),
+          this.createexprnodeondemand(this.go(ctx.RHS), location),
+        ],
+      })
     }
-    return this.createcodenode(location, {
-      type: NODE.AND,
-      items: this.go(ctx.not_test_value),
-    })
+    return this.go(ctx.LHS)
   }
 
   not_test_value(ctx: Not_test_valueCstChildren, location: CstNodeLocation) {
     if (ctx.arith_expr) {
       return this.go(ctx.arith_expr)
     }
-    if (ctx.not_test_value) {
+    if (ctx.LHS) {
       return this.createcodenode(location, {
         type: NODE.NOT,
-        items: this.go(ctx.not_test_value),
+        items: this.go(ctx.LHS),
       })
     }
     return []
   }
 
   arith_expr(ctx: Arith_exprCstChildren, location: CstNodeLocation) {
-    if (ctx.token_expr) {
-      return this.go(ctx.token_expr)
+    if (ctx.LHS) {
+      return this.go(ctx.LHS)
     }
 
     const term = this.go(ctx.term)
-    if (!ctx.arith_expr_item) {
+    if (!ctx.RHS) {
       return term
     }
 
     return this.createcodenode(location, {
       type: NODE.OPERATOR,
       lhs: term[0],
-      items: this.go(ctx.arith_expr_item),
+      items: this.go(ctx.RHS),
     })
   }
 
@@ -1099,7 +1123,7 @@ class ScriptVisitor
       items: this.createcodenode(location, {
         type: NODE.OPERATOR_ITEM,
         operator,
-        rhs: this.go(ctx.factor)[0],
+        rhs: this.go(ctx.LHS)[0],
       }),
     })
   }
@@ -1601,6 +1625,15 @@ class ScriptVisitor
         }),
       )
     }
+    if (ctx.token_seek) {
+      values.push(
+        ...this.createcodenode(location, {
+          type: NODE.LITERAL,
+          literal: LITERAL.STRING,
+          value: 'seek',
+        }),
+      )
+    }
 
     if (ctx.token_by) {
       values.push(
@@ -2095,10 +2128,7 @@ class ScriptVisitor
     }
 
     if (ctx.token_lparen) {
-      return this.createcodenode(location, {
-        type: NODE.EXPR,
-        words: this.go(ctx.expr),
-      })
+      return this.go(ctx.expr)
     }
 
     if (ctx.token_stop) {

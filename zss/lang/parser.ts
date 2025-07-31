@@ -304,18 +304,18 @@ class ScriptParser extends CstParser {
 
   // expr root is or_test
   expr = this.RULED('expr', () => {
-    this.SUBRULE1(this.and_test)
+    this.SUBRULE1(this.and_test, { LABEL: 'LHS' })
     this.MANY(() => {
       this.CONSUME(lexer.or)
-      this.SUBRULE2(this.and_test)
+      this.SUBRULE2(this.and_test, { LABEL: 'RHS' })
     })
   })
 
   and_test = this.RULED('and_test', () => {
-    this.SUBRULE1(this.not_test)
+    this.SUBRULE1(this.not_test, { LABEL: 'LHS' })
     this.MANY(() => {
       this.CONSUME(lexer.and)
-      this.SUBRULE2(this.not_test)
+      this.SUBRULE2(this.not_test, { LABEL: 'RHS' })
     })
   })
 
@@ -324,7 +324,7 @@ class ScriptParser extends CstParser {
       {
         ALT: () => {
           this.CONSUME(lexer.not)
-          this.SUBRULE1(this.not_test)
+          this.SUBRULE1(this.not_test, { LABEL: 'LHS' })
         },
       },
       { ALT: () => this.SUBRULE2(this.comparison) },
@@ -332,10 +332,10 @@ class ScriptParser extends CstParser {
   })
 
   comparison = this.RULED('comparison', () => {
-    this.SUBRULE1(this.arith_expr)
+    this.SUBRULE1(this.arith_expr, { LABEL: 'LHS' })
     this.MANY(() => {
       this.SUBRULE(this.comp_op)
-      this.SUBRULE2(this.arith_expr)
+      this.SUBRULE2(this.arith_expr, { LABEL: 'RHS' })
     })
   })
 
@@ -351,18 +351,18 @@ class ScriptParser extends CstParser {
   })
 
   expr_value = this.RULED('expr_value', () => {
-    this.SUBRULE1(this.and_test_value)
+    this.SUBRULE1(this.and_test_value, { LABEL: 'LHS' })
     this.MANY(() => {
       this.CONSUME(lexer.or)
-      this.SUBRULE2(this.and_test_value)
+      this.SUBRULE2(this.and_test_value, { LABEL: 'RHS' })
     })
   })
 
   and_test_value = this.RULED('and_test_value', () => {
-    this.SUBRULE1(this.not_test_value)
+    this.SUBRULE1(this.not_test_value, { LABEL: 'LHS' })
     this.MANY(() => {
       this.CONSUME(lexer.and)
-      this.SUBRULE2(this.not_test_value)
+      this.SUBRULE2(this.not_test_value, { LABEL: 'RHS' })
     })
   })
 
@@ -371,7 +371,7 @@ class ScriptParser extends CstParser {
       {
         ALT: () => {
           this.CONSUME(lexer.not)
-          this.SUBRULE1(this.not_test_value)
+          this.SUBRULE1(this.not_test_value, { LABEL: 'LHS' })
         },
       },
       { ALT: () => this.SUBRULE2(this.arith_expr) },
@@ -380,11 +380,11 @@ class ScriptParser extends CstParser {
 
   arith_expr = this.RULED('arith_expr', () => {
     this.OR([
-      { ALT: () => this.SUBRULE(this.token_expr) },
+      { ALT: () => this.SUBRULE(this.token_expr, { LABEL: 'LHS' }) },
       {
         ALT: () => {
           this.SUBRULE1(this.term)
-          this.MANY(() => this.SUBRULE2(this.arith_expr_item))
+          this.MANY(() => this.SUBRULE2(this.arith_expr_item, { LABEL: 'RHS' }))
         },
       },
     ])
@@ -421,7 +421,7 @@ class ScriptParser extends CstParser {
             { ALT: () => this.CONSUME(lexer.plus) },
             { ALT: () => this.CONSUME(lexer.minus) },
           ])
-          this.SUBRULE(this.factor)
+          this.SUBRULE(this.factor, { LABEL: 'LHS' })
         },
       },
       { ALT: () => this.SUBRULE(this.power) },

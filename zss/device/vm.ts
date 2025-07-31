@@ -8,7 +8,6 @@ import {
   museumofzztscreenshoturl,
   museumofzztsearch,
 } from 'zss/feature/url'
-import { DIVIDER } from 'zss/feature/writeui'
 import { DRIVER_TYPE, firmwarelistcommands } from 'zss/firmware/runner'
 import {
   gadgetcheckqueue,
@@ -20,7 +19,6 @@ import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { randominteger } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
-import { waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,
   isarray,
@@ -551,8 +549,6 @@ const vm = createdevice(
         }
         break
       case 'refscroll': {
-        gadgettext(message.player, `stat refs`)
-        gadgettext(message.player, DIVIDER)
         gadgethyperlink(message.player, 'refscroll', `char:`, [
           'charscroll',
           'hk',

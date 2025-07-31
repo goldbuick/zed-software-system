@@ -346,8 +346,9 @@ export type ExprCstNode = {
 } & CstNode
 
 export type ExprCstChildren = {
-  and_test: And_testCstNode[]
+  LHS: And_testCstNode[]
   token_or?: IToken[]
+  RHS?: And_testCstNode[]
 }
 
 export type And_testCstNode = {
@@ -356,8 +357,9 @@ export type And_testCstNode = {
 } & CstNode
 
 export type And_testCstChildren = {
-  not_test: Not_testCstNode[]
+  LHS: Not_testCstNode[]
   token_and?: IToken[]
+  RHS?: Not_testCstNode[]
 }
 
 export type Not_testCstNode = {
@@ -367,7 +369,7 @@ export type Not_testCstNode = {
 
 export type Not_testCstChildren = {
   token_not?: IToken[]
-  not_test?: Not_testCstNode[]
+  LHS?: Not_testCstNode[]
   comparison?: ComparisonCstNode[]
 }
 
@@ -377,8 +379,9 @@ export type ComparisonCstNode = {
 } & CstNode
 
 export type ComparisonCstChildren = {
-  arith_expr: Arith_exprCstNode[]
+  LHS: Arith_exprCstNode[]
   comp_op?: Comp_opCstNode[]
+  RHS?: Arith_exprCstNode[]
 }
 
 export type Comp_opCstNode = {
@@ -401,8 +404,9 @@ export type Expr_valueCstNode = {
 } & CstNode
 
 export type Expr_valueCstChildren = {
-  and_test_value: And_test_valueCstNode[]
+  LHS: And_test_valueCstNode[]
   token_or?: IToken[]
+  RHS?: And_test_valueCstNode[]
 }
 
 export type And_test_valueCstNode = {
@@ -411,8 +415,9 @@ export type And_test_valueCstNode = {
 } & CstNode
 
 export type And_test_valueCstChildren = {
-  not_test_value: Not_test_valueCstNode[]
+  LHS: Not_test_valueCstNode[]
   token_and?: IToken[]
+  RHS?: Not_test_valueCstNode[]
 }
 
 export type Not_test_valueCstNode = {
@@ -422,7 +427,7 @@ export type Not_test_valueCstNode = {
 
 export type Not_test_valueCstChildren = {
   token_not?: IToken[]
-  not_test_value?: Not_test_valueCstNode[]
+  LHS?: Not_test_valueCstNode[]
   arith_expr?: Arith_exprCstNode[]
 }
 
@@ -432,9 +437,9 @@ export type Arith_exprCstNode = {
 } & CstNode
 
 export type Arith_exprCstChildren = {
-  token_expr?: Token_exprCstNode[]
+  LHS?: Token_exprCstNode[]
   term?: TermCstNode[]
-  arith_expr_item?: Arith_expr_itemCstNode[]
+  RHS?: Arith_expr_itemCstNode[]
 }
 
 export type Arith_expr_itemCstNode = {
@@ -479,7 +484,7 @@ export type FactorCstNode = {
 export type FactorCstChildren = {
   token_plus?: IToken[]
   token_minus?: IToken[]
-  factor?: FactorCstNode[]
+  LHS?: FactorCstNode[]
   power?: PowerCstNode[]
 }
 
