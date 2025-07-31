@@ -3,8 +3,14 @@ import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
 import { bookwritecodepage } from 'zss/memory/book'
-import { codepagereadname, createcodepage } from 'zss/memory/codepage'
+import {
+  codepagereadname,
+  codepagereadtypetostring,
+  createcodepage,
+} from 'zss/memory/codepage'
 import { NAME } from 'zss/words/types'
+
+import { write, writecopyit } from '../writeui'
 
 type ZZM_SONG = {
   order: number
@@ -115,14 +121,15 @@ export function parsezzm(player: string, content: string) {
 
 :touch
 "ALBUM: ${escapestring(album.title)}"
-"${escapestring(album.gendate)}"
-"${escapestring(album.gentime)}"
-${titles.map((title, index) => `!song_${index};${index + 1}${title}`).join('\n')}
+"$purple  ${escapestring(album.gendate)}"
+"$purple  ${escapestring(album.gentime)}"
+${titles.map((title, index) => `!song_${index};${index + 1} ${title || 'untitled'}`).join('\n')}
 #end
+
 ${album.songs
   .map(
     (song, index) => `:song_${index}
-${song.lines.join('\n')}
+${song.lines.map((line) => `#play ${line}`).join('\n')}
 #end
 `,
   )
@@ -137,43 +144,14 @@ ${song.lines.join('\n')}
     player,
     `imported zzt zzm file ${codepagename} into ${contentbook.name} book`,
   )
+  const name = codepagereadname(codepage)
+  const type = codepagereadtypetostring(codepage)
+  write(
+    SOFTWARE,
+    player,
+    `!pageopen ${codepage.id};$blue[${type}]$white ${name}`,
+  )
 
-  console.info(code)
+  const cmd = `#put n ${codepagename}`
+  writecopyit(SOFTWARE, player, cmd, cmd, false)
 }
-/*
-; ZZT Music File v1.0
-; $TITLE /frozen/~soundtrack~-~by~coolzx
-; $GENDATE 11-20-1999
-; $GENTIME 15:21:15
-; $SONGS BEGIN
-; $SONG TITLE 1 i2~i2~by:~coolzx
-; $SONG 1
-i-D#D#DDDC#C#C#DDDD#
-i-D#D#DDDC#C#C#D#D#D
-i-DC#C#D#D#DDC#C#D#D
-i-C#D#DC#D#DC#CCCCC
-i-CCF#CCCCCCCF#CCC
-i-CCCCF#CCCCCCCF#
-i-D#DC#D#DCCD#DC#D#D
-i-CCDDEEDDC#C#DDEE
-i-DDC#C#D#DC#D#DC#D#
-i-DCD#DCD#DC#D#DCD#
-i-DCD#D-B+D#D-A+D#D-B
-i-D#DCD#DC#D#DC#D#D-E
-i--EEEE
-; $SONG ENDS
-; $SONG TITLE 2 rock~n'roll~by:~coolzx
-; $SONG 2
-iA#A#A#A#AAG#G#A#A#A#
-iA#AAG#G#A#A#A#A#AAG#
-iG#A#A#A#A#AAG#G#G#G#
-iG#G#GGF#F#G#G#G#G#G
-iGF#F#G#G#G#G#GGG#G#
-iAAA#A#A#A#AAAG#G#G#
-iG#A#A#A#AAAG#G#G#G#
-iGGGGFFFFEEEED#D#
-iD#D#EEEEFFFFEEEE
-iD#D#D#D#EEEEF#F#FF
-iEEFFF#F#FFEEFF-GG
-; $SONG ENDS
-*/

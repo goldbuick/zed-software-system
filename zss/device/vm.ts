@@ -809,8 +809,6 @@ const vm = createdevice(
             doasync(vm, message.player, async () => {
               if (isstring(message.data)) {
                 await museumofzztdownload(message.player, message.data)
-                await waitfor(1000)
-                vm_logout(vm, message.player)
               }
             })
             break
