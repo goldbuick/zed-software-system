@@ -9,7 +9,7 @@ import {
 } from 'tone'
 import { deepcopy } from 'zss/mapping/types'
 
-import { FrequencyCrusher } from './synthfcrushworkletnode'
+import { FrequencyCrusher } from './fcrushworkletnode'
 
 // 0 to 100
 export function volumetodb(value: number) {

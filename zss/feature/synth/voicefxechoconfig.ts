@@ -2,9 +2,9 @@ import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
-import { AUDIO_SYNTH } from './synth'
+import { AUDIO_SYNTH } from '.'
 
-export function synthvoicefxfcrushconfig(
+export function synthvoicefxechoconfig(
   player: string,
   synth: MAYBE<AUDIO_SYNTH>,
   index: number,
@@ -15,16 +15,24 @@ export function synthvoicefxfcrushconfig(
     api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const fcrush = synth.FXCHAIN.fcrush
+  const echo = synth.FXCHAIN.echo
   switch (config) {
-    case 'rate':
+    case 'delaytime':
       if (isnumber(value)) {
-        fcrush.set({
-          rate: value,
+        echo.set({
+          delayTime: value,
+        })
+        return
+      }
+      break
+    case 'feedback':
+      if (isnumber(value)) {
+        echo.set({
+          feedback: value,
         })
         return
       }
       break
   }
-  api_error(SOFTWARE, player, `kind`, `unknown fcrush ${config} or ${value}`)
+  api_error(SOFTWARE, player, `kind`, `unknown echo ${config} or ${value}`)
 }

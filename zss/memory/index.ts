@@ -121,6 +121,13 @@ export function memoryreadfirstbook(): MAYBE<BOOK> {
   return first
 }
 
+export function memoryreadfirstcontentbook(): MAYBE<BOOK> {
+  const books = memoryreadbooklist()
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const [first] = books.filter((book) => book.id !== mainbook?.id)
+  return first ?? mainbook
+}
+
 export function memoryreadbookbyaddress(address: string): MAYBE<BOOK> {
   const laddress = NAME(address)
   return (

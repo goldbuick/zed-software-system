@@ -9,8 +9,8 @@ import {
 } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { AUDIO_SYNTH } from './synth'
-import { SOURCE_TYPE } from './synthsource'
+import { AUDIO_SYNTH } from '.'
+import { SOURCE_TYPE } from './source'
 
 const SYNTH_VARIANT_PARTIALS =
   /(am|fm|fat)*(sine|square|triangle|sawtooth|custom)[0-9]+/

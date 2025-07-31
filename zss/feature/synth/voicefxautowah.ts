@@ -2,7 +2,7 @@ import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
-import { AUDIO_SYNTH } from './synth'
+import { AUDIO_SYNTH } from '.'
 
 export function synthvoicefxautowahconfig(
   player: string,

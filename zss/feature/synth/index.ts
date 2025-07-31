@@ -21,6 +21,8 @@ import { SOFTWARE } from 'zss/device/session'
 import { randominteger } from 'zss/mapping/number'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 
+import { createsynthdrums } from './drums'
+import { createfx, createfxchannels, volumetodb } from './fx'
 import {
   SYNTH_INVOKE,
   SYNTH_NOTE_ON,
@@ -28,10 +30,8 @@ import {
   invokeplay,
   parseplay,
 } from './playnotation'
-import { createsynthdrums } from './synthdrums'
-import { createfx, createfxchannels, volumetodb } from './synthfx'
-import { SidechainCompressor } from './synthsidechainworkletnode'
-import { SOURCE_TYPE, createsource } from './synthsource'
+import { SidechainCompressor } from './sidechainworkletnode'
+import { SOURCE_TYPE, createsource } from './source'
 
 export function createsynth() {
   const destination = getDestination()
