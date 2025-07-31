@@ -67,7 +67,7 @@ export function importbitmap(bitmapentry: MAYBE<FORMAT_OBJECT>): MAYBE<BITMAP> {
 export function createcodepage(
   code: string,
   content: Partial<Omit<CODE_PAGE, 'id' | 'code'>>,
-) {
+): CODE_PAGE {
   return {
     id: createsid(),
     code,

@@ -1,10 +1,10 @@
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
-import { AUDIO_SYNTH } from './synth'
+import { AUDIO_SYNTH } from '.'
 
-export function synthvoicefxdistortionconfig(
+export function synthvoicefxreverbconfig(
   player: string,
   synth: MAYBE<AUDIO_SYNTH>,
   index: number,
@@ -15,29 +15,24 @@ export function synthvoicefxdistortionconfig(
     api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const distortion = synth.FXCHAIN.distortion
+  const reverb = synth.FXCHAIN.reverb
   switch (config) {
-    case 'distortion':
+    case 'decay':
       if (isnumber(value)) {
-        distortion.set({
-          distortion: value,
+        reverb.set({
+          decay: value,
         })
         return
       }
       break
-    case 'oversample':
-      if (isstring(value)) {
-        distortion.set({
-          oversample: value as OverSampleType,
+    case 'predelay':
+      if (isnumber(value)) {
+        reverb.set({
+          preDelay: value,
         })
         return
       }
       break
   }
-  api_error(
-    SOFTWARE,
-    player,
-    `kind`,
-    `unknown distortion ${config} or ${value}`,
-  )
+  api_error(SOFTWARE, player, `kind`, `unknown reverb ${config} or ${value}`)
 }

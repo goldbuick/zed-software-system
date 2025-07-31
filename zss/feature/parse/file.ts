@@ -7,6 +7,8 @@ import { ispresent } from 'zss/mapping/types'
 import { parsezzl } from './zzl'
 import { parsezzm } from './zzm'
 import { parsezzt } from './zzt'
+import { parsezztbrd } from './zztbrd'
+import { parsezztobj } from './zztobj'
 
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
   const bytes = [...filebytes.slice(0, 4)]
@@ -81,6 +83,12 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
     return
   }
   switch (type) {
+    case 'model/obj':
+      file
+        .text()
+        .then((content) => parsezztobj(player, content))
+        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+      break
     case 'text/plain':
       file
         .text()
@@ -124,16 +132,21 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
             parsezzt(player, new Uint8Array(arraybuffer))
           })
           .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
-      }
-      if (/.zzl$/i.test(file.name)) {
+      } else if (/.brd$/i.test(file.name)) {
+        file
+          .arrayBuffer()
+          .then((arraybuffer) => {
+            parsezztbrd(player, new Uint8Array(arraybuffer))
+          })
+          .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+      } else if (/.zzl$/i.test(file.name)) {
         file
           .text()
           .then((content) => {
             parsezzl(player, content)
           })
           .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
-      }
-      if (/.zzm$/i.test(file.name)) {
+      } else if (/.zzm$/i.test(file.name)) {
         file
           .text()
           .then((content) => {
@@ -143,82 +156,31 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
       }
       break
     default:
-      file
-        .arrayBuffer()
-        .then((arraybuffer) => {
-          const type = mimetypeofbytesread(
-            file.name,
-            new Uint8Array(arraybuffer),
-          )
-          if (type) {
-            handlefiletype(player, type, file)
-          } else {
-            return api_error(
-              SOFTWARE,
-              player,
-              'parsewebfile',
-              `unsupported file ${file.name}`,
+      if (!type) {
+        file
+          .arrayBuffer()
+          .then((arraybuffer) => {
+            const type = mimetypeofbytesread(
+              file.name,
+              new Uint8Array(arraybuffer),
             )
-          }
-        })
-        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+            if (type) {
+              handlefiletype(player, type, file)
+            } else {
+              return api_error(
+                SOFTWARE,
+                player,
+                'parsewebfile',
+                `unsupported file ${file.name}`,
+              )
+            }
+          })
+          .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+      }
       return
   }
 }
 
 export function parsewebfile(player: string, file: File | undefined) {
-  // function handlefiletype(type: string) {
-  //   if (!ispresent(file)) {
-  //     return
-  //   }
-  //   switch (type) {
-  //     case 'text/plain':
-
-  //       break
-  //     case 'application/json':
-  //       file
-  //         .text()
-  //         .then((content) =>
-  //           vm_loader(
-  //             SOFTWARE,
-  //             player,
-  //             undefined,
-  //             'json',
-  //             `file:${file.name}`,
-  //             content,
-  //           ),
-  //         )
-  //         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
-  //       break
-  //     case 'application/zip':
-
-  //       break
-  //     case 'application/rexpaint':
-  //       parsebinaryfile(file, player, (binaryfile) =>
-  //         vm_loader(
-  //           SOFTWARE,
-  //           player,
-  //           undefined,
-  //           'rexpaint',
-  //           `file:${file.name}`,
-  //           binaryfile,
-  //         ),
-  //       ).catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
-  //       break
-  //     case 'application/octet-stream':
-  //       parsebinaryfile(file, player, (binaryfile) =>
-  //         vm_loader(
-  //           SOFTWARE,
-  //           player,
-  //           undefined,
-  //           'binary',
-  //           `file:${file.name}`,
-  //           binaryfile,
-  //         ),
-  //       ).catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
-  //       break
-
-  //   }
-  // }
   handlefiletype(player, file?.type ?? '', file)
 }

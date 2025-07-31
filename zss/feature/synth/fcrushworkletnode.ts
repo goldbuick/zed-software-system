@@ -1,7 +1,7 @@
 import { Param, getContext, optionsFromArguments } from 'tone'
 import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect'
 
-import synthfcrushworkleturl from './synthfcrushworklet.js?url'
+import synthfcrushworkleturl from './fcrushworklet.js?url'
 
 type FrequencyCrusherOptions = {
   rate: number

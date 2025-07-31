@@ -2,15 +2,16 @@ import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 
-import { AUDIO_SYNTH } from './synth'
-import { volumetodb } from './synthfx'
-import { synthvoicefxautowahconfig } from './synthvoicefxautowah'
-import { synthvoicefxdistortionconfig } from './synthvoicefxdistortconfig'
-import { synthvoicefxechoconfig } from './synthvoicefxechoconfig'
-import { synthvoicefxfcrushconfig } from './synthvoicefxfcrushconfig'
-import { synthvoicefxphaserconfig } from './synthvoicefxphaserconfig'
-import { synthvoicefxreverbconfig } from './synthvoicefxreverbconfig'
-import { synthvoicefxvibratoconfig } from './synthvoicefxvibratoconfig'
+import { volumetodb } from './fx'
+import { synthvoicefxautowahconfig } from './voicefxautowah'
+import { synthvoicefxdistortionconfig } from './voicefxdistortconfig'
+import { synthvoicefxechoconfig } from './voicefxechoconfig'
+import { synthvoicefxfcrushconfig } from './voicefxfcrushconfig'
+import { synthvoicefxphaserconfig } from './voicefxphaserconfig'
+import { synthvoicefxreverbconfig } from './voicefxreverbconfig'
+import { synthvoicefxvibratoconfig } from './voicefxvibratoconfig'
+
+import { AUDIO_SYNTH } from '.'
 
 type FXSET = AUDIO_SYNTH['FX'][number]
 type JUSTFXSET = Omit<FXSET, 'applyreset'>

@@ -1,7 +1,7 @@
 import { Gain, Param, getContext, optionsFromArguments } from 'tone'
 import { Effect, EffectOptions } from 'tone/build/esm/effect/Effect'
 
-import synthsidechainworkleturl from './synthsidechainworklet.js?url'
+import synthsidechainworkleturl from './sidechainworklet.js?url'
 
 type SidechainCompressorOptions = {
   threshold: number
