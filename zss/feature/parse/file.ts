@@ -1,7 +1,8 @@
-import JSZip from 'jszip'
+import JSZip, { JSZipObject } from 'jszip'
 import mime from 'mime/lite'
 import { api_error, api_log, vm_loader } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { waitfor } from 'zss/mapping/tick'
 import { ispresent } from 'zss/mapping/types'
 
 import { parsezzl } from './zzl'
@@ -34,32 +35,49 @@ export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
 }
 
 // various handlers
-export async function parsezipfile(
-  player: string,
-  file: File,
-  onreadfile: (zipfile: File) => void,
-) {
+const zipfilelist: File[] = []
+
+export async function parsezipfile(player: string, file: File) {
   try {
     api_log(SOFTWARE, player, 'parsezipfile', file.name)
     const arraybuffer = await file.arrayBuffer()
     const ziplib = new JSZip()
     const zip = await ziplib.loadAsync(arraybuffer)
-    zip.forEach((filename, fileitem) => {
-      fileitem
-        .async('uint8array')
-        .then((bytes) => {
-          const mimetype = mimetypeofbytesread(filename, bytes)
-          const zipfile = new File([bytes], fileitem.name, {
-            type: mimetype,
-          })
-          onreadfile(zipfile)
-        })
-        .catch((err) => {
-          api_error(SOFTWARE, player, 'crash', err.message)
-        })
-    })
+    zipfilelist.length = 0
+    const templist: [string, JSZipObject][] = []
+    zip.forEach((filename, fileitem) => templist.push([filename, fileitem]))
+    for (let i = 0; i < templist.length; ++i) {
+      const [filename, fileitem] = templist[i]
+      const bytes = await fileitem.async('uint8array')
+      const mimetype = mimetypeofbytesread(filename, bytes)
+      const zipfile = new File([bytes], fileitem.name, { type: mimetype })
+      zipfilelist.push(zipfile)
+    }
+    console.info(zipfilelist)
   } catch (err: any) {
     api_error(SOFTWARE, player, 'crash', err.message)
+  }
+}
+
+export function readzipfilelist() {
+  const filelist: [string, string][] = []
+
+  for (let i = 0; i < zipfilelist.length; ++i) {
+    const file = zipfilelist[i]
+    filelist.push([file.type, file.name])
+  }
+
+  return filelist
+}
+
+export async function parsezipfilelist(player: string, items: number[]) {
+  for (let i = 0; i < items.length; ++i) {
+    const item = items[i]
+    const maybefile = zipfilelist[item]
+    if (ispresent(maybefile)) {
+      parsewebfile(player, maybefile)
+      await waitfor(2000)
+    }
   }
 }
 
@@ -120,8 +138,8 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break
     case 'application/zip':
-      parsezipfile(player, file, (ifile) => parsewebfile(player, ifile)).catch(
-        (err) => api_error(SOFTWARE, player, 'crash', err.message),
+      parsezipfile(player, file).catch((err) =>
+        api_error(SOFTWARE, player, 'crash', err.message),
       )
       break
     case 'application/octet-stream':
