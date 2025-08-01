@@ -570,12 +570,11 @@ export function memoryplayerlogin(player: string): boolean {
 
 export function memoryplayerlogout(player: string) {
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-  const board = memoryboardread(player)
   if (!ispresent(mainbook)) {
     return
   }
 
-  const removelist: string[] = [player]
+  const removelist: string[] = []
   for (let i = 0; i < mainbook.activelist.length; ++i) {
     const mayberemove = mainbook.activelist[i]
     if (mayberemove.startsWith(player)) {
@@ -583,6 +582,7 @@ export function memoryplayerlogout(player: string) {
     }
   }
 
+  const board = memoryreadplayerboard(player)
   for (let i = 0; i < removelist.length; ++i) {
     const remove = removelist[i]
     // clear from active list
@@ -624,9 +624,13 @@ export function memoryplayerscan(players: Record<string, number>) {
     for (let o = 0; o < objects.length; ++o) {
       const object = board.objects[objects[o]]
       const objectid = object.id
-      if (ispid(objectid) && ispresent(players[objectid]) === false) {
-        players[objectid] = 0
+      if (ispid(objectid)) {
+        // ensure marked location
         bookplayersetboard(mainbook, objectid, board.id)
+        // ensure tracking
+        if (!ispresent(players[objectid])) {
+          players[objectid] = 0
+        }
       }
     }
   }
