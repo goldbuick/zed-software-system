@@ -36,13 +36,22 @@ function handlesend(chip: CHIP, send: SEND_META) {
         }
         break
       case 'self':
-        chip.message({
-          session: SOFTWARE.session(),
-          player: READ_CONTEXT.elementfocus,
-          id: createsid(),
-          sender: chip.id(),
-          target: send.label,
-        })
+        if (READ_CONTEXT.elementid !== chip.id()) {
+          // detect messages from run & runwith
+          chip.send(
+            READ_CONTEXT.elementfocus,
+            READ_CONTEXT.elementid,
+            send.label,
+          )
+        } else {
+          chip.message({
+            session: SOFTWARE.session(),
+            player: READ_CONTEXT.elementfocus,
+            id: createsid(),
+            sender: READ_CONTEXT.elementid,
+            target: send.label,
+          })
+        }
         break
       default: {
         // target named elements
