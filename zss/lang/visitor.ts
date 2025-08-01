@@ -1944,6 +1944,9 @@ class ScriptVisitor
     if (ctx.token_expr_count) {
       return this.go(ctx.token_expr_count)
     }
+    if (ctx.token_expr_blocked) {
+      return this.go(ctx.token_expr_blocked)
+    }
     if (ctx.token_expr_abs) {
       return this.go(ctx.token_expr_abs)
     }
