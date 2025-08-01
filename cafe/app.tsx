@@ -88,3 +88,27 @@ window.addEventListener('drop', (event) => {
 export function App() {
   return <Engine />
 }
+
+// this will auto hide the mouse on idle
+document.addEventListener('DOMContentLoaded', () => {
+  let idleMouseTimer: ReturnType<typeof setTimeout>
+  let forceMouseHide = false
+
+  document.body.style.cursor = 'none'
+  document.body.addEventListener('mousemove', () => {
+    if (forceMouseHide) {
+      return
+    }
+
+    document.body.style.cursor = ''
+    clearTimeout(idleMouseTimer)
+
+    idleMouseTimer = setTimeout(() => {
+      document.body.style.cursor = 'none'
+      forceMouseHide = true
+      setTimeout(() => {
+        forceMouseHide = false
+      }, 200)
+    }, 3000)
+  })
+})
