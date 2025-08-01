@@ -32,7 +32,7 @@ export function compile(name: string, text: string): GeneratorBuild {
   }
 
   if (astResult.errors && astResult.errors.length > 0) {
-    console.info(text, astResult.errors)
+    console.info(text, astResult.tokens, astResult.errors)
     return astResult
   }
 

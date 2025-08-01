@@ -1,9 +1,14 @@
 import JSZip, { JSZipObject } from 'jszip'
 import mime from 'mime/lite'
-import { api_error, api_log, vm_loader } from 'zss/device/api'
+import {
+  api_error,
+  api_log,
+  vm_loader,
+  vm_readzipfilelist,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { waitfor } from 'zss/mapping/tick'
-import { ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { parsezzl } from './zzl'
 import { parsezzm } from './zzm'
@@ -34,8 +39,37 @@ export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
   return mime.getType(filename) ?? 'application/octet-stream'
 }
 
+export function mapfiletype(type: string, file: File | undefined) {
+  if (!ispresent(file)) {
+    return ''
+  }
+  switch (type) {
+    case 'model/obj':
+      return 'obj'
+    case 'text/plain':
+      return 'txt'
+    case 'application/json':
+      return 'json'
+    case 'application/zip':
+      return 'zip'
+    case 'application/octet-stream':
+      if (/.zzt$/i.test(file.name)) {
+        return 'zzt'
+      } else if (/.brd$/i.test(file.name)) {
+        return 'brd'
+      } else if (/.zzl$/i.test(file.name)) {
+        return 'zzl'
+      } else if (/.zzm$/i.test(file.name)) {
+        return 'zzm'
+      }
+      break
+  }
+  return ''
+}
+
 // various handlers
-const zipfilelist: File[] = []
+let zipfilelist: File[] = []
+let zipfilemarks: Record<string, boolean> = {}
 
 export async function parsezipfile(player: string, file: File) {
   try {
@@ -43,7 +77,8 @@ export async function parsezipfile(player: string, file: File) {
     const arraybuffer = await file.arrayBuffer()
     const ziplib = new JSZip()
     const zip = await ziplib.loadAsync(arraybuffer)
-    zipfilelist.length = 0
+    zipfilelist = []
+    zipfilemarks = {}
     const templist: [string, JSZipObject][] = []
     zip.forEach((filename, fileitem) => templist.push([filename, fileitem]))
     for (let i = 0; i < templist.length; ++i) {
@@ -53,7 +88,8 @@ export async function parsezipfile(player: string, file: File) {
       const zipfile = new File([bytes], fileitem.name, { type: mimetype })
       zipfilelist.push(zipfile)
     }
-    console.info(zipfilelist)
+    // signal scroll to open
+    vm_readzipfilelist(SOFTWARE, player)
   } catch (err: any) {
     api_error(SOFTWARE, player, 'crash', err.message)
   }
@@ -64,18 +100,26 @@ export function readzipfilelist() {
 
   for (let i = 0; i < zipfilelist.length; ++i) {
     const file = zipfilelist[i]
-    filelist.push([file.type, file.name])
+    filelist.push([mapfiletype(file.type, file), file.name])
   }
 
   return filelist
 }
 
-export async function parsezipfilelist(player: string, items: number[]) {
-  for (let i = 0; i < items.length; ++i) {
-    const item = items[i]
-    const maybefile = zipfilelist[item]
-    if (ispresent(maybefile)) {
-      parsewebfile(player, maybefile)
+export function markzipfilelistitem(filename: string, value: boolean) {
+  zipfilemarks[filename] = value
+}
+
+export function readzipfilelistitem(filename: string): MAYBE<boolean> {
+  return zipfilemarks[filename]
+}
+
+export async function parsezipfilelist(player: string) {
+  for (let i = 0; i < zipfilelist.length; ++i) {
+    const item = zipfilelist[i]
+    const marked = zipfilemarks[item.name]
+    if (marked) {
+      parsewebfile(player, item)
       await waitfor(2000)
     }
   }
@@ -96,18 +140,18 @@ export async function parsebinaryfile(
 }
 
 function handlefiletype(player: string, type: string, file: File | undefined) {
-  // console.info(type, file)
   if (!ispresent(file)) {
     return
   }
-  switch (type) {
-    case 'model/obj':
+  const filetype = mapfiletype(type, file)
+  switch (filetype) {
+    case 'obj':
       file
         .text()
         .then((content) => parsezztobj(player, content))
         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break
-    case 'text/plain':
+    case 'txt':
       file
         .text()
         .then((content) =>
@@ -122,7 +166,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         )
         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break
-    case 'application/json':
+    case 'json':
       file
         .text()
         .then((content) =>
@@ -137,41 +181,42 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         )
         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break
-    case 'application/zip':
+    case 'zip':
       parsezipfile(player, file).catch((err) =>
         api_error(SOFTWARE, player, 'crash', err.message),
       )
       break
-    case 'application/octet-stream':
-      if (/.zzt$/i.test(file.name)) {
-        file
-          .arrayBuffer()
-          .then((arraybuffer) => {
-            parsezzt(player, new Uint8Array(arraybuffer))
-          })
-          .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
-      } else if (/.brd$/i.test(file.name)) {
-        file
-          .arrayBuffer()
-          .then((arraybuffer) => {
-            parsezztbrd(player, new Uint8Array(arraybuffer))
-          })
-          .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
-      } else if (/.zzl$/i.test(file.name)) {
-        file
-          .text()
-          .then((content) => {
-            parsezzl(player, content)
-          })
-          .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
-      } else if (/.zzm$/i.test(file.name)) {
-        file
-          .text()
-          .then((content) => {
-            parsezzm(player, content)
-          })
-          .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
-      }
+    case 'zzt':
+      file
+        .arrayBuffer()
+        .then((arraybuffer) => {
+          parsezzt(player, new Uint8Array(arraybuffer))
+        })
+        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+      break
+    case 'brd':
+      file
+        .arrayBuffer()
+        .then((arraybuffer) => {
+          parsezztbrd(player, new Uint8Array(arraybuffer))
+        })
+        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+      break
+    case 'zzl':
+      file
+        .text()
+        .then((content) => {
+          parsezzl(player, content)
+        })
+        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+      break
+    case 'zzm':
+      file
+        .text()
+        .then((content) => {
+          parsezzm(player, content)
+        })
+        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break
     default:
       if (!type) {

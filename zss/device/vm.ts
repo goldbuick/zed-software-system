@@ -1,6 +1,12 @@
 import { objectKeys } from 'ts-extras'
 import { createdevice, parsetarget } from 'zss/device'
-import { parsewebfile } from 'zss/feature/parse/file'
+import {
+  markzipfilelistitem,
+  parsewebfile,
+  parsezipfilelist,
+  readzipfilelist,
+  readzipfilelistitem,
+} from 'zss/feature/parse/file'
 import {
   MOSTLY_ZZT_META,
   museumofzztdownload,
@@ -575,6 +581,34 @@ const vm = createdevice(
         shared.scroll = gadgetcheckqueue(message.player)
         break
       }
+      case 'readzipfilelist': {
+        const list = readzipfilelist()
+        gadgettext(message.player, `$CENTER Select Files`)
+        gadgethyperlink(message.player, 'zipfilelist', `import selected`, [
+          'importselectedfiles',
+        ])
+        for (let i = 0; i < list.length; ++i) {
+          const [type, filename] = list[i]
+          gadgethyperlink(
+            message.player,
+            'zipfilelist',
+            `[${type}] ${filename}`,
+            [NAME(filename), 'select', 'NO', '0', 'YES', '1'],
+            (name: string) => {
+              // console.info(name)
+              return readzipfilelistitem(name) ? 1 : 0
+            },
+            (name, value) => {
+              // console.info('set', name, value)
+              markzipfilelistitem(name, !!value)
+            },
+          )
+        }
+        const shared = gadgetstate(message.player)
+        shared.scrollname = 'zipfilelist'
+        shared.scroll = gadgetcheckqueue(message.player)
+        break
+      }
       case 'fork':
         if (message.player === operator) {
           doasync(vm, message.player, async () => {
@@ -806,6 +840,11 @@ const vm = createdevice(
               if (isstring(message.data)) {
                 await museumofzztdownload(message.player, message.data)
               }
+            })
+            break
+          case 'zipfilelist':
+            doasync(vm, message.player, async () => {
+              await parsezipfilelist(message.player)
             })
             break
           default: {
