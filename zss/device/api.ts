@@ -503,6 +503,10 @@ export function vm_refscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:refscroll')
 }
 
+export function vm_readzipfilelist(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:readzipfilelist')
+}
+
 export function vm_inspect(device: DEVICELIKE, player: string, p1: PT, p2: PT) {
   device.emit(player, 'vm:inspect', [p1, p2])
 }
