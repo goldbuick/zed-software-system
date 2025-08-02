@@ -149,10 +149,13 @@ function handledataconnection(dataconnection: DataConnection) {
           lastseen.delete(peer)
         } else {
           // forward message to peer
-          const [node] = routingtable.listClosestToId(hex2arr(peer), 1)
-          if (ispresent(node.dataconnection)) {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            node.dataconnection.send(msg)
+          const nodes = connectiontable.listClosestToId(hex2arr(peer), 3)
+          for (let i = 0; i < nodes.length; ++i) {
+            const node = nodes[i]
+            if (ispresent(node.dataconnection)) {
+              // eslint-disable-next-line @typescript-eslint/no-floating-promises
+              node.dataconnection.send(msg)
+            }
           }
         }
       }
@@ -176,10 +179,14 @@ function handledataconnection(dataconnection: DataConnection) {
         topicbridgeforward(msg.gme)
       } else {
         // forwards towards host peer
-        const [node] = connectiontable.listClosestToId(hex2arr(msg.topic), 1)
-        if (ispresent(node?.dataconnection)) {
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          node.dataconnection.send(msg)
+        // pick top 3 ?
+        const nodes = connectiontable.listClosestToId(hex2arr(msg.topic), 3)
+        for (let i = 0; i < nodes.length; ++i) {
+          const node = nodes[i]
+          if (ispresent(node?.dataconnection)) {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            node.dataconnection.send(msg)
+          }
         }
       }
     }
@@ -206,7 +213,8 @@ function netterminalcreate(topic: string) {
 
   // create peer
   const player = registerreadplayer()
-  networkpeer = new Peer(netterminaltopic(player), { debug: 2 })
+  const selftopic = netterminaltopic(player)
+  networkpeer = new Peer(selftopic, { debug: 2 })
 
   // attempt disconnect on page close
   window.addEventListener('unload', () => {
@@ -214,7 +222,8 @@ function netterminalcreate(topic: string) {
     networkpeer = undefined
   })
 
-  api_log(SOFTWARE, player, `starting netterminal for ${subscribetopic}`)
+  api_log(SOFTWARE, player, `starting netterminal ${selftopic}`)
+  api_log(SOFTWARE, player, `for topic ${subscribetopic}`)
 
   // start gathering peers
   netterminalseek()
@@ -288,15 +297,18 @@ export function netterminalhost() {
       shouldforwardservertoclient(message) &&
       shouldnotforwardonpeerserver(message) === false
     ) {
-      const [node] = connectiontable.listClosestToId(hex2arr(subscribetopic), 1)
-      if (ispresent(node?.dataconnection) && node.dataconnection.open) {
-        const netmsg = {
-          topic: subscribetopic,
-          pub: true,
-          gme: message,
+      const nodes = connectiontable.listClosestToId(hex2arr(subscribetopic), 3)
+      for (let i = 0; i < nodes.length; ++i) {
+        const node = nodes[i]
+        if (ispresent(node?.dataconnection) && node.dataconnection.open) {
+          const netmsg = {
+            topic: subscribetopic,
+            pub: true,
+            gme: message,
+          }
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          node.dataconnection.send(netmsg)
         }
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        node.dataconnection.send(netmsg)
       }
     }
   })
@@ -321,15 +333,18 @@ export function netterminaljoin(topic: string) {
       shouldforwardclienttoserver(message) &&
       shouldnotforwardonpeerclient(message) === false
     ) {
-      const [node] = connectiontable.listClosestToId(hex2arr(subscribetopic), 1)
-      if (ispresent(node?.dataconnection) && node.dataconnection.open) {
-        const netmsg = {
-          topic: subscribetopic,
-          sub: networkpeer.id,
-          gme: message,
+      const nodes = connectiontable.listClosestToId(hex2arr(subscribetopic), 3)
+      for (let i = 0; i < nodes.length; ++i) {
+        const node = nodes[i]
+        if (ispresent(node?.dataconnection) && node.dataconnection.open) {
+          const netmsg = {
+            topic: subscribetopic,
+            sub: networkpeer.id,
+            gme: message,
+          }
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          node.dataconnection.send(netmsg)
         }
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        node.dataconnection.send(netmsg)
       }
     }
   })
