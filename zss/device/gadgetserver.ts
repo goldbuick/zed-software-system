@@ -18,7 +18,7 @@ import {
 import { bookreadflags } from 'zss/memory/book'
 import { COLOR } from 'zss/words/types'
 
-import { gadgetclient_paint, gadgetclient_patch, synth_focus } from './api'
+import { gadgetclient_paint, gadgetclient_patch } from './api'
 
 gadgetstateprovider((element) => {
   if (ispid(element)) {
@@ -71,75 +71,63 @@ function readdecotickercolor(): COLOR {
   }
 }
 
-const gadgetserver = createdevice(
-  'gadgetserver',
-  ['tock', 'second'],
-  (message) => {
-    if (!gadgetserver.session(message)) {
-      return
-    }
+const gadgetserver = createdevice('gadgetserver', ['tock'], (message) => {
+  if (!gadgetserver.session(message)) {
+    return
+  }
 
-    // get list of active players
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    const activelist = [...(mainbook?.activelist ?? []), memoryreadoperator()]
-    const activelistvalues = [...new Set(activelist.values())]
+  // get list of active players
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const activelist = [...(mainbook?.activelist ?? []), memoryreadoperator()]
+  const activelistvalues = [...new Set(activelist.values())]
 
-    // only send deltas
-    const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
-    switch (message.target) {
-      case 'tock': {
-        const tickercolor = readdecotickercolor()
-        for (let i = 0; i < activelistvalues.length; ++i) {
-          const player = activelistvalues[i]
+  // only send deltas
+  const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC) as any
+  switch (message.target) {
+    case 'tock': {
+      const tickercolor = readdecotickercolor()
+      for (let i = 0; i < activelistvalues.length; ++i) {
+        const player = activelistvalues[i]
 
-          // update gadget layers from player's current board
-          const { over, under, layers } = memoryreadgadgetlayers(
-            player,
-            tickercolor,
-          )
-
-          // get current state
-          const gadget = gadgetstate(player)
-          gadget.over = over
-          gadget.under = under
-          gadget.layers = layers
-
-          // write patch
-          const previous = gadgetsync[player] ?? {}
-          const patch = compare(previous, gadget)
-          if (patch.length) {
-            gadgetsync[player] = deepcopy(gadget)
-            gadgetclient_patch(gadgetserver, player, patch)
-          }
-        }
-        break
-      }
-      case 'second':
-        for (let i = 0; i < activelistvalues.length; ++i) {
-          const player = activelistvalues[i]
-          const board = memoryreadplayerboard(player)
-          if (ispresent(board)) {
-            synth_focus(gadgetserver, player, board.id)
-          }
-        }
-        break
-      case 'desync':
-        gadgetclient_paint(
-          gadgetserver,
-          message.player,
-          gadgetstate(message.player),
+        // update gadget layers from player's current board
+        const { board, over, under, layers } = memoryreadgadgetlayers(
+          player,
+          tickercolor,
         )
-        break
-      case 'clearscroll':
-        gadgetclearscroll(message.player)
-        break
-      case 'clearplayer': {
-        const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE)
-        delete gadgetstore[message.player]
-        const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC)
-        delete gadgetsync[message.player]
-        break
+
+        // get current state
+        const gadget = gadgetstate(player)
+        gadget.board = board
+        gadget.over = over
+        gadget.under = under
+        gadget.layers = layers
+
+        // write patch
+        const previous = gadgetsync[player] ?? {}
+        const patch = compare(previous, gadget)
+        if (patch.length) {
+          gadgetsync[player] = deepcopy(gadget)
+          gadgetclient_patch(gadgetserver, player, patch)
+        }
       }
+      break
     }
-  },
-)
+    case 'desync':
+      gadgetclient_paint(
+        gadgetserver,
+        message.player,
+        gadgetstate(message.player),
+      )
+      break
+    case 'clearscroll':
+      gadgetclearscroll(message.player)
+      break
+    case 'clearplayer': {
+      const gadgetstore = bookreadflags(mainbook, MEMORY_LABEL.GADGETSTORE)
+      delete gadgetstore[message.player]
+      const gadgetsync = bookreadflags(mainbook, MEMORY_LABEL.GADGETSYNC)
+      delete gadgetsync[message.player]
+      break
+    }
+  }
+})

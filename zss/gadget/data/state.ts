@@ -52,6 +52,7 @@ export const useGadgetClient = create<{
   },
   gadget: {
     id: '',
+    board: '',
     layers: [],
     scrollname: '',
     scroll: [],

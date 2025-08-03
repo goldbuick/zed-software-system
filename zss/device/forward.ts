@@ -34,11 +34,11 @@ export function createforward(handler: (message: MESSAGE) => void) {
 
 // outbound message
 export function shouldnotforwardonpeerserver(message: MESSAGE): boolean {
-  // console.info('shouldnotforwardonpeerserver', message.target)
   switch (message.target) {
     case 'tick':
     case 'tock':
     case 'ready':
+      // console.info('shouldnotforwardonpeerserver', message.target)
       return true
   }
   return false
@@ -79,16 +79,19 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       break
     }
   }
-  // console.info('serv', message.target)
   return false
 }
 
 // outbound message
 export function shouldnotforwardonpeerclient(message: MESSAGE): boolean {
   switch (message.target) {
-    default:
-      return false
+    case 'tick':
+    case 'tock':
+    case 'second':
+      // console.info('shouldnotforwardonpeerclient', message.target)
+      return true
   }
+  return false
 }
 
 // create client -> server forward
@@ -106,6 +109,5 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'joinack':
       return true
   }
-  // console.info('cli', message.target, message.data)
   return false
 }

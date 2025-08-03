@@ -6,6 +6,7 @@ import { addsidechainmodule } from 'zss/feature/synth/sidechainworkletnode'
 import { synthvoiceconfig } from 'zss/feature/synth/voiceconfig'
 import { FXNAME, synthvoicefxconfig } from 'zss/feature/synth/voicefxconfig'
 import { ttsplay } from 'zss/feature/tts'
+import { useGadgetClient } from 'zss/gadget/data/state'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
@@ -73,7 +74,6 @@ export function enableaudio() {
 }
 
 let synth: MAYBE<AUDIO_SYNTH>
-let synthfocus = ''
 
 export function synthbroadcastdestination(): MAYBE<MediaStreamAudioDestinationNode> {
   return synth?.broadcastdestination
@@ -96,7 +96,6 @@ const synthdevice = createdevice('synth', [], (message) => {
   // player filter
   const player = registerreadplayer()
   switch (message.target) {
-    case 'focus':
     case 'audioenabled':
       if (message.player !== player) {
         return
@@ -104,6 +103,8 @@ const synthdevice = createdevice('synth', [], (message) => {
       break
   }
 
+  // use gadget state to get board filter for synth
+  const synthfocus = useGadgetClient.getState().gadget.board
   switch (message.target) {
     case 'audioenabled':
       api_log(synthdevice, message.player, 'audio is enabled!')
@@ -139,11 +140,6 @@ const synthdevice = createdevice('synth', [], (message) => {
     case 'ttsvolume':
       if (isnumber(message.data)) {
         synth.setttsvolume(message.data)
-      }
-      break
-    case 'focus':
-      if (isstring(message.data)) {
-        synthfocus = message.data
       }
       break
     case 'play':

@@ -1212,6 +1212,7 @@ export function memoryreadgadgetlayers(
   player: string,
   tickercolor: COLOR,
 ): {
+  board: string
   over: LAYER[]
   under: LAYER[]
   layers: LAYER[]
@@ -1223,7 +1224,7 @@ export function memoryreadgadgetlayers(
   const under: LAYER[] = []
   const layers: LAYER[] = []
   if (!ispresent(mainbook) || !ispresent(playerboard)) {
-    return { over, under, layers }
+    return { board: '', over, under, layers }
   }
 
   // read graphics mode
@@ -1265,5 +1266,5 @@ export function memoryreadgadgetlayers(
     ),
   )
 
-  return { over, under, layers }
+  return { board: playerboard.id, over, under, layers }
 }

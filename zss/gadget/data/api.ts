@@ -21,6 +21,7 @@ const panelshared: Record<string, PANEL_SHARED> = {}
 export function initstate(): GADGET_STATE {
   return {
     id: createsid(),
+    board: '',
     layers: [],
     scroll: [],
     sidebar: [],

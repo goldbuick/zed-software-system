@@ -12,24 +12,38 @@ import {
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { doasync } from 'zss/mapping/func'
-import { createinfohash } from 'zss/mapping/guid'
+import { createinfohash, createsid } from 'zss/mapping/guid'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 
 type ROUTING_NODE = {
   peer: string
-  node: Uint8Array
+  id: Uint8Array
   dataconnection?: DataConnection
 }
 
 type ROUTING_MESSAGE =
   | {
-      // server message
+      // connection ping message
+      id: string
       topic: string
-      pub: true
+      ping: string
+    }
+  | {
+      // connection ping message
+      id: string
+      topic: string
+      pong: string
+    }
+  | {
+      // server message
+      id: string
+      topic: string
+      pub: string
       gme: MESSAGE
     }
   | {
       // client message
+      id: string
       topic: string
       sub: string
       gme?: MESSAGE
@@ -44,12 +58,29 @@ const connectiontabletimers: Record<string, any> = {}
 const connectiontableblocklist = new Map<string, boolean>()
 const subscribelastseen = new Map<string, Map<string, number>>()
 
+function othernodeslist(peer: string) {
+  if (!ispresent(connectiontable)) {
+    return []
+  }
+  return connectiontable
+    .listClosestToId(hex2arr(peer), 1)
+    .filter((node) => node.peer !== networkpeer?.id)
+}
+
 export function netterminaltopic(player: string) {
   return createinfohash(player)
 }
 
 let searchping: any
 function uplinkstart() {
+  // already searching OR if we are the host, skip it
+  if (ispresent(searchping) || networkpeer?.id === subscribetopic) {
+    return
+  }
+
+  // drop seek rate once we have an open connection
+  seekrate = 128
+
   function searchpingmsg() {
     const player = registerreadplayer()
     vm_search(SOFTWARE, player)
@@ -60,11 +91,52 @@ function uplinkstart() {
   searchpingmsg()
 
   // create search pulse
-  searchping = setInterval(searchpingmsg, 2 * 1000)
+  searchping = setInterval(searchpingmsg, 5 * 1000)
 }
 
 function uplinkstop() {
   clearInterval(searchping)
+  searchping = undefined
+}
+
+function topicroutetowards(peer: string, netmsg: ROUTING_MESSAGE) {
+  if (!ispresent(networkpeer) || !ispresent(connectiontable)) {
+    return
+  }
+
+  // forward message to peer
+  const nodes = othernodeslist(peer)
+  for (let i = 0; i < nodes.length; ++i) {
+    const node = nodes[i]
+    if (node.peer !== networkpeer.id && node.dataconnection?.open) {
+      const pipe = node.dataconnection?.send(netmsg)
+      pipe?.catch((err) => console.error(err))
+    }
+  }
+}
+
+function topiclastseenforward(netmsg: ROUTING_MESSAGE) {
+  if (!ispresent(networkpeer) || !ispresent(connectiontable)) {
+    return
+  }
+
+  // current timestamp
+  const current = Date.now()
+  const lastseen =
+    subscribelastseen.get(subscribetopic) ?? new Map<string, number>()
+
+  // peers that care about this topic
+  for (const [peer, delay] of lastseen) {
+    // calc elapsed time
+    const delta = current - delay
+    if (delta > 1000 * 60) {
+      // filter out peers that no longer care about given topic
+      lastseen.delete(peer)
+    } else {
+      // forward message to peer
+      topicroutetowards(peer, netmsg)
+    }
+  }
 }
 
 function topicbridgeforward(message: MESSAGE) {
@@ -92,18 +164,27 @@ function handledataconnection(dataconnection: DataConnection) {
   }, CONNECTION_TIMEOUT)
 
   function handleopen() {
-    if (dataconnection.open) {
-      clearTimeout(connectiontabletimers[dataconnection.peer])
-      if (ispresent(connectiontable) && ispresent(networkpeer)) {
-        api_log(SOFTWARE, player, `connected to ${dataconnection.peer}`)
-        connectiontable.add({
-          peer: dataconnection.peer,
-          node: hex2arr(dataconnection.peer),
-          dataconnection,
-        })
+    if (
+      dataconnection.open &&
+      ispresent(connectiontable) &&
+      ispresent(networkpeer)
+    ) {
+      api_log(SOFTWARE, player, `connection ${dataconnection.peer} open`)
+      connectiontable.add({
+        peer: dataconnection.peer,
+        id: hex2arr(dataconnection.peer),
+        dataconnection,
+      })
+      // confirm connection
+      const ping: ROUTING_MESSAGE = {
+        id: createsid(),
+        topic: subscribetopic,
+        ping: networkpeer.id,
       }
-      // lower seek rate after first connection
-      seekrate = 128
+      const pipe = dataconnection.send(ping)
+      pipe?.catch((err) => console.error(err))
+      // start trying to join session
+      uplinkstart()
     }
   }
 
@@ -116,9 +197,11 @@ function handledataconnection(dataconnection: DataConnection) {
     }
   })
 
+  const syncids = new Set<string>()
   dataconnection.on('data', (netmsg) => {
     const msg = netmsg as ROUTING_MESSAGE
     if (
+      syncids.has(msg.id) ||
       !ispresent(networkpeer) ||
       !ispresent(routingtable) ||
       !ispresent(connectiontable)
@@ -126,61 +209,58 @@ function handledataconnection(dataconnection: DataConnection) {
       return
     }
 
-    // grab timestamp
+    // update sync ids
+    syncids.add(msg.id)
+
+    // current timestamp
     const current = Date.now()
-    // ensure we have a list of last seen peer for given topic
     const lastseen =
-      subscribelastseen.get(msg.topic) ?? new Map<string, number>()
+      subscribelastseen.get(subscribetopic) ?? new Map<string, number>()
 
     // handle message
-    if ('pub' in msg) {
-      // are we subscribed to this topic ?
-      if (msg.topic === subscribetopic && ispresent(msg.gme)) {
-        // console.info('pub', msg.gme)
+    if ('ping' in msg) {
+      if (msg.topic === subscribetopic && msg.ping !== networkpeer.id) {
+        const pong: ROUTING_MESSAGE = {
+          id: createsid(),
+          topic: subscribetopic,
+          pong: networkpeer.id,
+        }
+        const pipe = dataconnection.send(pong)
+        pipe?.catch((err) => console.error(err))
+      }
+    } else if ('pong' in msg) {
+      clearTimeout(connectiontabletimers[msg.pong])
+      api_log(SOFTWARE, player, `connected to ${dataconnection.peer}`)
+    } else if ('pub' in msg) {
+      // see if we care about the topic
+      if (msg.topic === subscribetopic) {
         topicbridgeforward(msg.gme)
       }
 
       // peers that care about this topic
-      for (const [peer, delay] of lastseen) {
-        // calc elapsed time
-        const delta = current - delay
-        if (delta > 1000 * 60) {
-          // filter out peers that no longer care about given topic
-          lastseen.delete(peer)
-        } else {
-          // forward message to peer
-          const [node] = routingtable.listClosestToId(hex2arr(peer), 1)
-          if (ispresent(node.dataconnection)) {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            node.dataconnection.send(msg)
-          }
-        }
-      }
+      topiclastseenforward(msg)
     } else if ('sub' in msg) {
       // track that this peer cares about this topic
       lastseen.set(msg.sub, current)
 
       // add seen peer to routingtable
-      const node = hex2arr(msg.sub)
-      if (!routingtable.has(node)) {
+      const id = hex2arr(msg.sub)
+      if (!routingtable.has(id)) {
         routingtable.add({
           peer: msg.sub,
-          node,
+          id,
           dataconnection: undefined,
         })
       }
 
       // are we the host to this topic ?
-      if (msg.topic === networkpeer.id && ispresent(msg.gme)) {
-        // console.info('sub', msg.gme)
-        topicbridgeforward(msg.gme)
+      if (msg.topic === networkpeer.id) {
+        if (ispresent(msg.gme)) {
+          topicbridgeforward(msg.gme)
+        }
       } else {
         // forwards towards host peer
-        const [node] = connectiontable.listClosestToId(hex2arr(msg.topic), 1)
-        if (ispresent(node?.dataconnection)) {
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          node.dataconnection.send(msg)
-        }
+        topicroutetowards(msg.topic, msg)
       }
     }
 
@@ -206,7 +286,8 @@ function netterminalcreate(topic: string) {
 
   // create peer
   const player = registerreadplayer()
-  networkpeer = new Peer(netterminaltopic(player), { debug: 2 })
+  const selftopic = netterminaltopic(player)
+  networkpeer = new Peer(selftopic, { debug: 2 })
 
   // attempt disconnect on page close
   window.addEventListener('unload', () => {
@@ -214,28 +295,27 @@ function netterminalcreate(topic: string) {
     networkpeer = undefined
   })
 
-  api_log(SOFTWARE, player, `starting netterminal for ${subscribetopic}`)
-
-  // start gathering peers
-  netterminalseek()
+  api_log(SOFTWARE, player, `netterminal for ${selftopic}`)
+  api_log(SOFTWARE, player, `session topic ${subscribetopic}`)
 
   // track possible peerids
-  const playernode = hex2arr(networkpeer.id)
-  routingtable = new KademliaTable<ROUTING_NODE>(playernode, {
+  routingtable = new KademliaTable<ROUTING_NODE>(hex2arr(networkpeer.id), {
     getId(node) {
-      return node.node
+      return node.id
     },
   })
 
   // track active connections
-  connectiontable = new KademliaTable<ROUTING_NODE>(playernode, {
+  connectiontable = new KademliaTable<ROUTING_NODE>(hex2arr(networkpeer.id), {
     getId(node) {
-      return node.node
+      return node.id
     },
   })
 
   networkpeer.on('open', () => {
     api_log(SOFTWARE, registerreadplayer(), `connected to netterminal`)
+    // start gathering peers
+    netterminalseek()
   })
 
   networkpeer.on('connection', handledataconnection)
@@ -266,7 +346,6 @@ function netterminalcreate(topic: string) {
       `netterminal`,
       `${networkpeer?.id} - ${JSON.stringify(err)}`,
     )
-    // netterminalhalt() ??? maybe ??:
   })
 }
 
@@ -288,16 +367,14 @@ export function netterminalhost() {
       shouldforwardservertoclient(message) &&
       shouldnotforwardonpeerserver(message) === false
     ) {
-      const [node] = connectiontable.listClosestToId(hex2arr(subscribetopic), 1)
-      if (ispresent(node?.dataconnection) && node.dataconnection.open) {
-        const netmsg = {
-          topic: subscribetopic,
-          pub: true,
-          gme: message,
-        }
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        node.dataconnection.send(netmsg)
+      // forward to topic subscribers
+      const netmsg: ROUTING_MESSAGE = {
+        id: createsid(),
+        topic: subscribetopic,
+        pub: networkpeer.id,
+        gme: message,
       }
+      topiclastseenforward(netmsg)
     }
   })
 }
@@ -307,8 +384,6 @@ export function netterminaljoin(topic: string) {
     api_log(SOFTWARE, registerreadplayer(), `netterminal already active`)
     return
   }
-  // clear search once we start getting messages we care about
-  // uplinkstop() - like acklogin
 
   // startup peerjs
   netterminalcreate(topic)
@@ -321,25 +396,27 @@ export function netterminaljoin(topic: string) {
       shouldforwardclienttoserver(message) &&
       shouldnotforwardonpeerclient(message) === false
     ) {
-      const [node] = connectiontable.listClosestToId(hex2arr(subscribetopic), 1)
-      if (ispresent(node?.dataconnection) && node.dataconnection.open) {
-        const netmsg = {
-          topic: subscribetopic,
-          sub: networkpeer.id,
-          gme: message,
+      // forwards towards host
+      const nodes = othernodeslist(subscribetopic)
+      for (let i = 0; i < nodes.length; ++i) {
+        const node = nodes[i]
+        if (node.dataconnection?.open) {
+          const netmsg: ROUTING_MESSAGE = {
+            id: createsid(),
+            topic: subscribetopic,
+            sub: networkpeer.id,
+            gme: message,
+          }
+          const pipe = node.dataconnection.send(netmsg, true)
+          pipe?.catch((err) => console.error(err))
         }
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        node.dataconnection.send(netmsg)
       }
     }
   })
-
-  // start uplink messages ...
-  uplinkstart()
 }
 
 let seektimer: any
-let seekrate = 10
+let seekrate = 16
 function netterminalseek() {
   doasync(SOFTWARE, registerreadplayer(), async () => {
     if (
@@ -369,16 +446,16 @@ function netterminalseek() {
       for (let i = 0; i < list.length; ++i) {
         // strip prefix
         const peer = list[i].replace('pid_', '')
-        const node = hex2arr(peer)
+        const id = hex2arr(peer)
         if (
           networkpeer.id != peer &&
-          routingtable.has(node) === false &&
+          routingtable.has(id) === false &&
           connectiontableblocklist.has(peer) === false
         ) {
           api_log(SOFTWARE, player, `adding ${peer}`)
           routingtable.add({
             peer,
-            node,
+            id,
             dataconnection: undefined,
           })
         }
@@ -390,17 +467,16 @@ function netterminalseek() {
 
     // lucky 7 top peers
     const CONNECTION_COUNT = 7
-    const connectto = routingtable.listClosestToId(
-      networknode,
-      CONNECTION_COUNT,
-    )
+    const connectto = routingtable
+      .listClosestToId(networknode, CONNECTION_COUNT)
+      .filter((node) => node.peer !== networkpeer?.id)
 
     // scan for new connections
     const activepeers = new Set<string>()
     for (let i = 0; i < connectto.length; ++i) {
       const entry = connectto[i]
       activepeers.add(entry.peer)
-      if (!connectiontable.has(entry.node)) {
+      if (!connectiontable.has(entry.id)) {
         handledataconnection(
           networkpeer.connect(entry.peer, {
             reliable: true,
@@ -410,10 +486,9 @@ function netterminalseek() {
     }
 
     // list *all* connections
-    const checkentries = connectiontable.listClosestToId(
-      networknode,
-      CONNECTION_COUNT * 2,
-    )
+    const checkentries = connectiontable
+      .listClosestToId(networknode, CONNECTION_COUNT * 2)
+      .filter((node) => node.peer !== networkpeer?.id)
 
     // scan for stale connections
     for (let i = 0; i < checkentries.length; ++i) {
@@ -421,10 +496,12 @@ function netterminalseek() {
       // we cannot find the entry in connectto, then drop it
       if (activepeers.has(entry.peer) === false) {
         entry.dataconnection?.close()
-        connectiontable.remove(entry.node)
+        connectiontable.remove(entry.id)
       }
     }
   })
+
+  // gather it up
   seektimer = setTimeout(netterminalseek, seekrate * 1000)
 }
 
