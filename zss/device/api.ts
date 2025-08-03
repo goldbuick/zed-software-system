@@ -284,10 +284,6 @@ export function synth_bgplay(
   device.emit(player, 'synth:bgplay', [board, buffer, quantize])
 }
 
-export function synth_focus(device: DEVICELIKE, player: string, board: string) {
-  device.emit(player, 'synth:focus', board)
-}
-
 export function synth_bpm(device: DEVICELIKE, player: string, bpm: number) {
   device.emit(player, 'synth:bpm', bpm)
 }
