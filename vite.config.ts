@@ -54,17 +54,17 @@ export default defineConfig(({ mode }) => {
         cafe: path.resolve(__dirname, './cafe'),
       },
     },
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks(id: string) {
-            if (id.includes(`node_modules`)) {
-              return 'foundation'
-            }
-            return null
-          },
-        },
-      },
-    },
+    // build: {
+    //   rollupOptions: {
+    //     output: {
+    //       manualChunks(id: string) {
+    //         if (id.includes(`node_modules`)) {
+    //           return 'foundation'
+    //         }
+    //         return null
+    //       },
+    //     },
+    //   },
+    // },
   }
 })
