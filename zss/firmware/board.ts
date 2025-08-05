@@ -75,8 +75,6 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     bullet.cycle = 1
     // write party info
     bullet.party = READ_CONTEXT.elementid
-    // bullets have P2 set to 100
-    bullet.p2 = 100
     // ensure correct collection type
     bullet.collision = COLLISION.ISBULLET
     // ensure breakable
