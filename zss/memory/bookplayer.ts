@@ -4,7 +4,12 @@ import { COLLISION, PT } from 'zss/words/types'
 
 import { boardelementindex, boardobjectread } from './board'
 import { boardelementisobject } from './boardelement'
-import { boardsetlookup } from './boardlookup'
+import {
+  boardnamedwrite,
+  boardobjectlookupwrite,
+  boardobjectnamedlookupdelete,
+  boardsetlookup,
+} from './boardlookup'
 import { boardcheckblockedobject } from './boardops'
 import { bookreadflag, bookwriteflag } from './book'
 import { BOARD, BOOK } from './types'
@@ -88,21 +93,19 @@ export function bookplayermovetoboard(
     }
   }
 
-  // remove from current board
+  // remove from current board lookups
+  boardobjectnamedlookupdelete(currentboard, element)
+  // hard remove player element
   delete currentboard.objects[element.id]
-  const startidx = boardelementindex(currentboard, element)
-  if (currentboard.lookup) {
-    currentboard.lookup[startidx] = undefined
-  }
 
   // add to dest board
   element.x = dest.x
   element.y = dest.y
   destboard.objects[element.id] = element
-  const destidx = boardelementindex(destboard, element)
-  if (destboard.lookup) {
-    destboard.lookup[destidx] = element.id
-  }
+
+  // add to dest board lookups
+  boardnamedwrite(destboard, element)
+  boardobjectlookupwrite(destboard, element)
 
   // updating tracking
   bookplayersetboard(book, player, destboard.id)

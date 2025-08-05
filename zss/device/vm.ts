@@ -25,6 +25,7 @@ import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { randominteger } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
+import { TICK_FPS } from 'zss/mapping/tick'
 import {
   MAYBE,
   isarray,
@@ -496,20 +497,31 @@ const vm = createdevice(
           memorywritehalt(message.data)
         }
         break
-      case 'tick':
+      case 'tick': {
         memorytick(memoryreadhalt())
+        const signals = objectKeys(synthdebounce)
+        for (let i = 0; i < signals.length; ++i) {
+          const key = signals[i]
+          --synthdebounce[key]
+        }
         break
+      }
       case 'synthsend':
         if (isstring(message.data)) {
-          const [target, label] = totarget(message.data)
-          // synthdebounce
-          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-          memorysendtoboards(
-            target,
-            label,
-            undefined,
-            bookplayerreadboards(mainbook),
-          )
+          const messagestr = message.data
+          // throttle synthsends because multipla players
+          const [target, label] = totarget(messagestr)
+          const signal = synthdebounce[messagestr]
+          if (!ispresent(signal) || signal <= 0) {
+            synthdebounce[messagestr] = 2
+            const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+            memorysendtoboards(
+              target,
+              label,
+              undefined,
+              bookplayerreadboards(mainbook),
+            )
+          }
         }
         break
       case 'second': {
