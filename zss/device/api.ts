@@ -333,6 +333,10 @@ export function synth_voicefx(
   device.emit(player, 'synth:voicefx', [idx, fx, config, value])
 }
 
+export function register_refresh(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:refresh')
+}
+
 export function register_config(
   device: DEVICELIKE,
   player: string,

@@ -12,7 +12,14 @@ import {
 } from 'react'
 import { objectKeys } from 'ts-extras'
 import { createdevice } from 'zss/device'
-import { api_log, vm_cli, vm_doot, vm_input, vm_local } from 'zss/device/api'
+import {
+  api_log,
+  register_refresh,
+  vm_cli,
+  vm_doot,
+  vm_input,
+  vm_local,
+} from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -273,7 +280,7 @@ document.addEventListener(
         break
       case 'r':
         if (mods.ctrl) {
-          window.location.reload()
+          register_refresh(SOFTWARE, player)
         }
         break
       case 's':

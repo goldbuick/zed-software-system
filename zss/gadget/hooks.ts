@@ -278,6 +278,7 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
 }))
 
 export type DEVICE_DATA = {
+  refresh: number
   insetcols: number
   insetrows: number
   islowrez: boolean
@@ -293,6 +294,7 @@ export type DEVICE_DATA = {
 }
 
 export const useDeviceData = create<DEVICE_DATA>(() => ({
+  refresh: 0,
   insetcols: 20,
   insetrows: 20,
   islowrez: false,

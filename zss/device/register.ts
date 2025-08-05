@@ -398,6 +398,9 @@ const register = createdevice(
         })
         break
       }
+      case 'refresh':
+        useDeviceData.setState((state) => ({ refresh: state.refresh + 1 }))
+        break
       case 'ackoperator':
         doasync(register, message.player, async () => {
           const urlcontent = await readurlcontent()

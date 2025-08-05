@@ -3,6 +3,7 @@ import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
 import { Engine } from 'zss/gadget/engine'
+import { useDeviceData } from 'zss/gadget/hooks'
 import { ispresent } from 'zss/mapping/types'
 import 'zss/platform'
 
@@ -86,7 +87,8 @@ window.addEventListener('drop', (event) => {
 })
 
 export function App() {
-  return <Engine />
+  const refresh = useDeviceData((state) => state.refresh)
+  return <Engine key={refresh} />
 }
 
 // this will auto hide the mouse on idle
