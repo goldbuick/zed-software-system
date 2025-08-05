@@ -4,6 +4,7 @@ import {
   api_error,
   api_log,
   vm_loader,
+  vm_logout,
   vm_readzipfilelist,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -124,6 +125,9 @@ export async function parsezipfilelist(player: string) {
       await waitfor(2000)
     }
   }
+  // re-login after import
+  await waitfor(2000)
+  vm_logout(SOFTWARE, player)
 }
 
 export async function parsebinaryfile(
