@@ -107,17 +107,18 @@ export function readzipfilelist() {
 }
 
 export function markzipfilelistitem(filename: string, value: boolean) {
-  zipfilemarks[filename] = value
+  zipfilemarks[filename.toLowerCase()] = value
 }
 
 export function readzipfilelistitem(filename: string): MAYBE<boolean> {
-  return zipfilemarks[filename]
+  return zipfilemarks[filename.toLowerCase()]
 }
 
 export async function parsezipfilelist(player: string) {
+  console.info('zipfilelist', player, zipfilelist, zipfilemarks)
   for (let i = 0; i < zipfilelist.length; ++i) {
     const item = zipfilelist[i]
-    const marked = zipfilemarks[item.name]
+    const marked = zipfilemarks[item.name.toLowerCase()]
     if (marked) {
       parsewebfile(player, item)
       await waitfor(2000)
