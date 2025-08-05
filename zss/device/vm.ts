@@ -25,7 +25,6 @@ import { INPUT, UNOBSERVE_FUNC } from 'zss/gadget/data/types'
 import { doasync } from 'zss/mapping/func'
 import { randominteger } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
-import { TICK_FPS } from 'zss/mapping/tick'
 import {
   MAYBE,
   isarray,
@@ -602,7 +601,7 @@ const vm = createdevice(
         const list = readzipfilelist()
         gadgettext(message.player, `$CENTER Select Files`)
         gadgethyperlink(message.player, 'zipfilelist', `import selected`, [
-          'importselectedfiles',
+          'importfiles',
         ])
         for (let i = 0; i < list.length; ++i) {
           const [type, filename] = list[i]
