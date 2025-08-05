@@ -2131,7 +2131,7 @@ class ScriptVisitor
     }
 
     if (ctx.token_lparen) {
-      return this.go(ctx.expr)
+      return [this.createexprnodeondemand(this.go(ctx.expr), location)]
     }
 
     if (ctx.token_stop) {
