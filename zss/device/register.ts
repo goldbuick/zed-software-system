@@ -21,9 +21,11 @@ import {
   TAPE_MAX_LINES,
   useGadgetClient,
   useTape,
+  useTapeEditor,
+  useTapeInspector,
   useTapeTerminal,
 } from 'zss/gadget/data/state'
-import { useDeviceData } from 'zss/gadget/hooks'
+import { useDeviceData, useMedia } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
@@ -36,7 +38,6 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { createplatform } from 'zss/platform'
 
 import {
   MESSAGE,
@@ -398,6 +399,25 @@ const register = createdevice(
         })
         break
       }
+      case 'refresh':
+        doasync(register, message.player, async () => {
+          // signal device not active
+          useDeviceData.setState({ active: false })
+          await waitfor(1000)
+          // reset state
+          useTape.getState().reset()
+          useMedia.getState().reset()
+          useTapeEditor.getState().reset()
+          useTapeTerminal.getState().reset()
+          useTapeInspector.getState().reset()
+          await waitfor(1000)
+          // signal refresh and resume active
+          useDeviceData.setState((state) => ({
+            active: true,
+            refresh: state.refresh + 1,
+          }))
+        })
+        break
       case 'ackoperator':
         doasync(register, message.player, async () => {
           const urlcontent = await readurlcontent()
@@ -775,7 +795,3 @@ const register = createdevice(
     }
   },
 )
-
-setTimeout(function () {
-  createplatform(isjoin())
-}, 100)

@@ -322,7 +322,8 @@ export function TapeTerminalInput({
                     invoke,
                     ...tapeterminal.buffer
                       .slice(1)
-                      .filter((item) => item !== invoke),
+                      .filter((item) => item !== invoke)
+                      .filter((item) => item.includes('#broadcast') === false),
                   ]
                   // cache history
                   writehistorybuffer(historybuffer).catch((err) =>

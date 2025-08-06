@@ -32,6 +32,10 @@ export function ismessage(value: any): value is MESSAGE {
   )
 }
 
+export function session_reset(device: DEVICELIKE) {
+  device.emit('', 'session_reset')
+}
+
 export function api_error(
   device: DEVICELIKE,
   player: string,
@@ -331,6 +335,10 @@ export function synth_voicefx(
   value: MAYBE<number | string>,
 ) {
   device.emit(player, 'synth:voicefx', [idx, fx, config, value])
+}
+
+export function register_refresh(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:refresh')
 }
 
 export function register_config(

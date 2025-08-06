@@ -62,7 +62,7 @@ export const useGadgetClient = create<{
 
 export type TAPE_ROW = [string, string, ...any[]]
 
-export const TAPE_MAX_LINES = 128
+export const TAPE_MAX_LINES = 1024
 
 export enum TAPE_DISPLAY {
   TOP,
@@ -91,7 +91,8 @@ export const useTape = create<{
     type: string
     title: string
   }
-}>(() => ({
+  reset: () => void
+}>((set) => ({
   layout: TAPE_DISPLAY.TOP,
   inspector: islocked(),
   quickterminal: false,
@@ -108,6 +109,26 @@ export const useTape = create<{
     type: '',
     title: '',
   },
+  reset() {
+    set({
+      layout: TAPE_DISPLAY.TOP,
+      inspector: islocked(),
+      quickterminal: false,
+      toast: '',
+      terminal: {
+        open: true,
+        info: [],
+        logs: [],
+      },
+      editor: {
+        open: false,
+        book: '',
+        path: [],
+        type: '',
+        title: '',
+      },
+    })
+  },
 }))
 
 export const useTapeTerminal = create<{
@@ -118,7 +139,8 @@ export const useTapeTerminal = create<{
   yselect: MAYBE<number>
   bufferindex: number
   buffer: string[]
-}>(() => ({
+  reset: () => void
+}>((set) => ({
   // scrolling offset
   scroll: 0,
   // cursor position & selection
@@ -129,30 +151,59 @@ export const useTapeTerminal = create<{
   // input history
   bufferindex: 0,
   buffer: [''],
+  reset() {
+    set({
+      // scrolling offset
+      scroll: 0,
+      // cursor position & selection
+      xcursor: 0,
+      ycursor: 0,
+      xselect: undefined,
+      yselect: undefined,
+      // input history
+      bufferindex: 0,
+      buffer: [''],
+    })
+  },
 }))
 
 export const useTapeEditor = create<{
-  id: string
   xscroll: number
   yscroll: number
   cursor: number
   select: MAYBE<number>
-}>(() => ({
-  // need an id for synced store
-  id: '',
+  reset: () => void
+}>((set) => ({
   // scrolling offset
   xscroll: 0,
   yscroll: 0,
   // cursor position & selection (text index)
   cursor: 0,
   select: undefined,
+  reset() {
+    set({
+      // scrolling offset
+      xscroll: 0,
+      yscroll: 0,
+      // cursor position & selection (text index)
+      cursor: 0,
+      select: undefined,
+    })
+  },
 }))
 
 export const useTapeInspector = create<{
   cursor: MAYBE<number>
   select: MAYBE<number>
-}>(() => ({
+  reset: () => void
+}>((set) => ({
   // cursor position & selection board indexes
   cursor: undefined,
   select: undefined,
+  reset() {
+    set({
+      cursor: undefined,
+      select: undefined,
+    })
+  },
 }))

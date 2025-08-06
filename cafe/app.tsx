@@ -1,10 +1,13 @@
+import { useEffect } from 'react'
 import { vm_loader } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { enableaudio } from 'zss/device/synth'
+import { isjoin } from 'zss/feature/url'
 import { Engine } from 'zss/gadget/engine'
+import { useDeviceData } from 'zss/gadget/hooks'
 import { ispresent } from 'zss/mapping/types'
-import 'zss/platform'
+import { createplatform, haltplatform } from 'zss/platform'
 
 document.addEventListener('keydown', () => {
   enableaudio()
@@ -85,10 +88,6 @@ window.addEventListener('drop', (event) => {
   }
 })
 
-export function App() {
-  return <Engine />
-}
-
 // this will auto hide the mouse on idle
 document.addEventListener('DOMContentLoaded', () => {
   let idleMouseTimer: ReturnType<typeof setTimeout>
@@ -112,3 +111,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 3000)
   })
 })
+
+export function App() {
+  const active = useDeviceData((state) => state.active)
+  const refresh = useDeviceData((state) => state.refresh)
+
+  useEffect(() => {
+    createplatform(isjoin())
+    return () => {
+      haltplatform()
+    }
+  }, [refresh])
+
+  return active && <Engine key={refresh} />
+}
