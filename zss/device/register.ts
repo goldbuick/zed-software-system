@@ -403,14 +403,14 @@ const register = createdevice(
         doasync(register, message.player, async () => {
           // signal device not active
           useDeviceData.setState({ active: false })
-          await waitfor(1000)
+          await waitfor(512)
           // reset state
           useTape.getState().reset()
           useMedia.getState().reset()
           useTapeEditor.getState().reset()
           useTapeTerminal.getState().reset()
           useTapeInspector.getState().reset()
-          await waitfor(1000)
+          await waitfor(512)
           // signal refresh and resume active
           useDeviceData.setState((state) => ({
             active: true,
