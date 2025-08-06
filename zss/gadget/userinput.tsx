@@ -372,7 +372,7 @@ document.addEventListener(
   { capture: true },
 )
 
-createdevice('userinput', ['tock'], (message) => {
+createdevice('userinput', [], (message) => {
   switch (message.target) {
     case 'up':
       if (isnumber(message.data)) {

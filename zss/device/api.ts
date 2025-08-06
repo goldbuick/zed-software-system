@@ -32,6 +32,10 @@ export function ismessage(value: any): value is MESSAGE {
   )
 }
 
+export function session_reset(device: DEVICELIKE) {
+  device.emit('', 'session_reset')
+}
+
 export function api_error(
   device: DEVICELIKE,
   player: string,

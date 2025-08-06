@@ -198,6 +198,7 @@ export type MEDIA_DATA = {
   palettedata?: Color[]
   charsetdata?: CanvasTexture
   altcharsetdata?: CanvasTexture
+  reset: () => void
   setmood: (mood: string) => void
   setviewimage: (viewimage: string) => void
   setpalette: (palette: MAYBE<BITMAP>) => void
@@ -217,6 +218,17 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
   screen: {},
   palettedata: convertpalettetocolors(palette),
   charsetdata: createbitmaptexture(charset),
+  reset() {
+    set({
+      palette,
+      charset,
+      mood: '',
+      viewimage: '',
+      screen: {},
+      palettedata: convertpalettetocolors(palette),
+      charsetdata: createbitmaptexture(charset),
+    })
+  },
   setmood(mood) {
     set((state) => {
       if (isequal(state.mood, mood)) {
@@ -278,6 +290,7 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
 }))
 
 export type DEVICE_DATA = {
+  active: boolean
   refresh: number
   insetcols: number
   insetrows: number
@@ -294,6 +307,7 @@ export type DEVICE_DATA = {
 }
 
 export const useDeviceData = create<DEVICE_DATA>(() => ({
+  active: true,
   refresh: 0,
   insetcols: 20,
   insetrows: 20,

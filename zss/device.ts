@@ -81,9 +81,9 @@ export function createdevice(
         session = message.session
       }
 
-      // we are bridging into a new session
-      if (itarget === 'bridge' && ispresent(message.session)) {
-        session = message.session
+      // we got a reset
+      if (itarget === 'session_reset') {
+        session = ''
       }
 
       // we match by topics
