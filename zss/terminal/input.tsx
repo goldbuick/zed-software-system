@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   api_error,
   register_terminal_close,
@@ -6,16 +6,21 @@ import {
   vm_cli,
   vm_loader,
 } from 'zss/device/api'
-import { registerreadplayer, writehistorybuffer } from 'zss/device/register'
+import {
+  readconfig,
+  registerreadplayer,
+  writehistorybuffer,
+} from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
-import { withclipboard } from 'zss/feature/keyboard'
+import { user, withclipboard } from 'zss/feature/keyboard'
+import { SpeechToText } from 'zss/feature/speechtotext'
 import { checkforword, updateindex } from 'zss/feature/t9'
-import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
+import { useTapeTerminal } from 'zss/gadget/data/state'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { UserInput, modsfromevent } from 'zss/gadget/userinput'
 import { clamp } from 'zss/mapping/number'
 import { stringsplice } from 'zss/mapping/string'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring, noop } from 'zss/mapping/types'
 import {
   applycolortoindexes,
   applystrtoindex,
@@ -29,17 +34,20 @@ import { useBlink, useWriteText } from '../gadget/hooks'
 import { bgcolor, setuplogitem } from '../tape/common'
 
 type TapeTerminalInputProps = {
+  quickterminal: boolean
+  voice2text: boolean
   tapeycursor: number
   logrowtotalheight: number
 }
 
 export function TapeTerminalInput({
+  quickterminal,
+  voice2text,
   tapeycursor,
   logrowtotalheight,
 }: TapeTerminalInputProps) {
   const blink = useBlink()
   const context = useWriteText()
-  const { quickterminal } = useTape()
   const tapeterminal = useTapeTerminal()
   const player = registerreadplayer()
   const edge = textformatreadedges(context)
@@ -71,11 +79,7 @@ export function TapeTerminalInput({
 
   // update state
   const inputstatesetsplice = useCallback(
-    function inputstatesetsplice(
-      index: number,
-      count: number,
-      insert?: string,
-    ) {
+    function (index: number, count: number, insert?: string) {
       // we are trying to modify historical entries
       if (tapeterminal.bufferindex > 0) {
         // blank inputslot and snap index to 0
@@ -91,6 +95,25 @@ export function TapeTerminalInput({
       })
     },
     [inputstate, tapeterminal.buffer, tapeterminal.bufferindex],
+  )
+
+  const inputstatereplace = useCallback(
+    function (replacewith: string) {
+      // we are trying to modify historical entries
+      if (tapeterminal.bufferindex > 0) {
+        // blank inputslot and snap index to 0
+        useTapeTerminal.setState({ bufferindex: 0 })
+      }
+      // write state
+      tapeterminal.buffer[0] = replacewith
+      useTapeTerminal.setState({
+        buffer: tapeterminal.buffer,
+        // clear selection
+        xselect: undefined,
+        xcursor: replacewith.length,
+      })
+    },
+    [tapeterminal.buffer, tapeterminal.bufferindex],
   )
 
   // navigate input history
@@ -230,6 +253,52 @@ export function TapeTerminalInput({
     inputstatesetsplice,
   ])
 
+  useEffect(() => {
+    let listener: MAYBE<SpeechToText>
+
+    // #config voice2text on, use # or T to open terminal to start
+    if (!voice2text || !quickterminal) {
+      return
+    }
+
+    // track starting input
+    const { buffer, bufferindex } = useTapeTerminal.getState()
+    const inputstart = buffer[bufferindex]
+
+    // handlers
+    function onFinalised(value: string) {
+      inputstatereplace(`${inputstart}${value}`)
+      setTimeout(() => {
+        user.keyboard('[Enter]').catch(noop)
+      }, 512)
+    }
+
+    function onEndEvent() {}
+
+    function onAnythingSaid(value: string) {
+      inputstatereplace(`${inputstart}${value}`)
+    }
+
+    // start
+    try {
+      const speechlistener = new SpeechToText(
+        onFinalised,
+        onEndEvent,
+        onAnythingSaid,
+      )
+      listener = speechlistener
+      listener?.startListening()
+    } catch (error: any) {
+      console.error(error.message)
+    }
+
+    // Cleanup function
+    return () => {
+      listener?.stopListening()
+      listener = undefined
+    }
+  }, [voice2text, quickterminal, inputstatereplace])
+
   return (
     <>
       <Scrollable
@@ -322,9 +391,8 @@ export function TapeTerminalInput({
                     invoke,
                     ...tapeterminal.buffer
                       .slice(1)
-                      .filter((item) => item !== invoke)
-                      .filter((item) => item.includes('#broadcast') === false),
-                  ]
+                      .filter((item) => item !== invoke),
+                  ].filter((item) => item.includes('#broadcast') === false)
                   // cache history
                   writehistorybuffer(historybuffer).catch((err) =>
                     api_error(SOFTWARE, player, 'terminalinput', err.message),

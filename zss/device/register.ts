@@ -1,7 +1,7 @@
 import humanid from 'human-id'
 import {
-  entries as idbentries,
   get as idbget,
+  getMany as idbgetmany,
   update as idbupdate,
 } from 'idb-keyval'
 import { createdevice } from 'zss/device'
@@ -292,7 +292,18 @@ async function writeurlcontent(
 
 export async function readconfig(name: string) {
   api_log(register, myplayerid, `reading config ${name}`)
-  return readidb<string>(`config_${name}`)
+  const value = await readidb<string>(`config_${name}`)
+
+  if (!value) {
+    switch (name) {
+      case 'crt':
+        return 'on'
+      default:
+        return 'off'
+    }
+  }
+
+  return value && value !== 'off' ? 'on' : 'off'
 }
 
 export async function writeconfig(name: string, value: string) {
@@ -301,12 +312,18 @@ export async function writeconfig(name: string, value: string) {
 }
 
 async function readconfigall() {
-  const all = await idbentries<string, string>()
-  return all
-    .filter(([key]) => key.startsWith('config_'))
-    .map(([key, value]) => {
-      return [key.replace('config_', ''), value]
-    })
+  const lookup = [
+    'config_crt',
+    'config_lowrez',
+    'config_selected',
+    'config_scanlines',
+    'config_voice2text',
+  ]
+  const configs = await idbgetmany<string>(lookup)
+  return configs.map((value, index) => {
+    const key = lookup[index]
+    return [key.replace('config_', ''), value && value !== 'off' ? 'on' : 'off']
+  })
 }
 
 export async function readhistorybuffer() {
@@ -403,14 +420,14 @@ const register = createdevice(
         doasync(register, message.player, async () => {
           // signal device not active
           useDeviceData.setState({ active: false })
-          await waitfor(1000)
+          await waitfor(512)
           // reset state
           useTape.getState().reset()
           useMedia.getState().reset()
           useTapeEditor.getState().reset()
           useTapeTerminal.getState().reset()
           useTapeInspector.getState().reset()
-          await waitfor(1000)
+          await waitfor(512)
           // signal refresh and resume active
           useDeviceData.setState((state) => ({
             active: true,
