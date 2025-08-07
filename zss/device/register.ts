@@ -290,17 +290,21 @@ async function writeurlcontent(
   }
 }
 
+function readconfigdefault(name: string) {
+  switch (name) {
+    case 'crt':
+      return 'on'
+    default:
+      return 'off'
+  }
+}
+
 export async function readconfig(name: string) {
   api_log(register, myplayerid, `reading config ${name}`)
   const value = await readidb<string>(`config_${name}`)
 
   if (!value) {
-    switch (name) {
-      case 'crt':
-        return 'on'
-      default:
-        return 'off'
-    }
+    return readconfigdefault(name)
   }
 
   return value && value !== 'off' ? 'on' : 'off'
@@ -322,7 +326,11 @@ async function readconfigall() {
   const configs = await idbgetmany<string>(lookup)
   return configs.map((value, index) => {
     const key = lookup[index]
-    return [key.replace('config_', ''), value && value !== 'off' ? 'on' : 'off']
+    const keyname = key.replace('config_', '')
+    if (!value) {
+      return [keyname, readconfigdefault(keyname)]
+    }
+    return [keyname, value && value !== 'off' ? 'on' : 'off']
   })
 }
 
