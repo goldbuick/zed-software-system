@@ -271,6 +271,7 @@ export const CLI_FIRMWARE = createfirmware()
     if (isstring(name) && isstring(value)) {
       register_config(SOFTWARE, READ_CONTEXT.elementfocus, name, value)
     } else {
+      console.info('show config ??')
       register_configshow(SOFTWARE, READ_CONTEXT.elementfocus)
     }
     return 0
@@ -478,38 +479,7 @@ export const CLI_FIRMWARE = createfirmware()
       })
     } else {
       write(SOFTWARE, READ_CONTEXT.elementfocus, ``)
-      writetext(SOFTWARE, READ_CONTEXT.elementfocus, `$white no pages found`)
-      writetext(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `$white use @ to create a page`,
-      )
-      writetext(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `$white @board name of board`,
-      )
-      writetext(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `$white @object name of object`,
-      )
-      writetext(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `$white @terrain name of terrain`,
-      )
-      writetext(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `$white You can omit the type and it will default to object`,
-      )
-      writetext(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `$white @object name of object`,
-      )
-      writetext(SOFTWARE, READ_CONTEXT.elementfocus, `$white @name of object`)
+      helpprint('nopages')
     }
 
     const booklist = memoryreadbooklist()

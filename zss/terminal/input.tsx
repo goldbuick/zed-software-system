@@ -1,3 +1,4 @@
+import { useSpeechRecognition } from '@lobehub/tts/react'
 import { useCallback, useEffect } from 'react'
 import {
   api_error,
@@ -43,6 +44,9 @@ export function TapeTerminalInput({
   const tapeterminal = useTapeTerminal()
   const player = registerreadplayer()
   const edge = textformatreadedges(context)
+  const { start, text, isLoading } = useSpeechRecognition(navigator.language, {
+    autoStop: true,
+  })
 
   // input & selection
   const inputstate = tapeterminal.buffer[tapeterminal.bufferindex]
@@ -229,6 +233,12 @@ export function TapeTerminalInput({
     tapeterminal.ycursor,
     inputstatesetsplice,
   ])
+
+  useEffect(() => {
+    if (quickterminal) {
+      start()
+    }
+  }, [start, quickterminal])
 
   return (
     <>

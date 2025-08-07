@@ -1,7 +1,7 @@
 import humanid from 'human-id'
 import {
-  entries as idbentries,
   get as idbget,
+  getMany as idbgetmany,
   update as idbupdate,
 } from 'idb-keyval'
 import { createdevice } from 'zss/device'
@@ -301,12 +301,18 @@ export async function writeconfig(name: string, value: string) {
 }
 
 async function readconfigall() {
-  const all = await idbentries<string, string>()
-  return all
-    .filter(([key]) => key.startsWith('config_'))
-    .map(([key, value]) => {
-      return [key.replace('config_', ''), value]
-    })
+  const lookup = [
+    'config_crt',
+    'config_lowrez',
+    'config_selected',
+    'config_scanlines',
+    'config_voice2text',
+  ]
+  const configs = await idbgetmany<string>(lookup)
+  return configs.map((value, index) => {
+    const key = lookup[index]
+    return [key.replace('config_', ''), value && value !== 'off' ? 'on' : 'off']
+  })
 }
 
 export async function readhistorybuffer() {
@@ -627,6 +633,7 @@ const register = createdevice(
         break
       case 'configshow':
         doasync(register, message.player, async () => {
+          console.info('?????')
           const all = await readconfigall()
           writeheader(register, message.player, 'config')
           for (let i = 0; i < all.length; ++i) {

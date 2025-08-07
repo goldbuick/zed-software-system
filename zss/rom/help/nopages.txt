@@ -1,0 +1,8 @@
+$white no pages found
+$white use @ to create a page
+$white @board name of board
+$white @object name of object
+$white @terrain name of terrain
+$white You can omit the type and it will default to object
+$white @object name of object
+$white @name of object
