@@ -116,7 +116,6 @@ export function readzipfilelistitem(filename: string): MAYBE<boolean> {
 }
 
 export async function parsezipfilelist(player: string) {
-  console.info('zipfilelist', player, zipfilelist, zipfilemarks)
   for (let i = 0; i < zipfilelist.length; ++i) {
     const item = zipfilelist[i]
     const marked = zipfilemarks[item.name.toLowerCase()]

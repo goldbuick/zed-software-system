@@ -292,7 +292,18 @@ async function writeurlcontent(
 
 export async function readconfig(name: string) {
   api_log(register, myplayerid, `reading config ${name}`)
-  return readidb<string>(`config_${name}`)
+  const value = await readidb<string>(`config_${name}`)
+
+  if (!value) {
+    switch (name) {
+      case 'crt':
+        return 'on'
+      default:
+        return 'off'
+    }
+  }
+
+  return value && value !== 'off' ? 'on' : 'off'
 }
 
 export async function writeconfig(name: string, value: string) {
@@ -633,7 +644,6 @@ const register = createdevice(
         break
       case 'configshow':
         doasync(register, message.player, async () => {
-          console.info('?????')
           const all = await readconfigall()
           writeheader(register, message.player, 'config')
           for (let i = 0; i < all.length; ++i) {

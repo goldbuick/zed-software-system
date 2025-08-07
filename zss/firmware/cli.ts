@@ -271,7 +271,6 @@ export const CLI_FIRMWARE = createfirmware()
     if (isstring(name) && isstring(value)) {
       register_config(SOFTWARE, READ_CONTEXT.elementfocus, name, value)
     } else {
-      console.info('show config ??')
       register_configshow(SOFTWARE, READ_CONTEXT.elementfocus)
     }
     return 0

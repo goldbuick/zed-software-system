@@ -23,7 +23,6 @@ import { SOFTWARE } from 'zss/device/session'
 import { CRTShape } from 'zss/gadget/fx/crt'
 import { doasync } from 'zss/mapping/func'
 import { Tape } from 'zss/tape/component'
-import { NAME } from 'zss/words/types'
 
 import { useDeviceData, useMedia } from './hooks'
 import { ScreenUI } from './screenui/component'
@@ -67,15 +66,15 @@ export function Engine() {
   useLayoutEffect(() => {
     doasync(SOFTWARE, registerreadplayer(), async () => {
       const lowrez = await readconfig('lowrez')
-      if (NAME(lowrez) === 'on') {
+      if (lowrez === 'on') {
         setforcelowrez(true)
       }
       const crt = await readconfig('crt')
-      if (NAME(crt) !== 'off') {
+      if (crt === 'on') {
         setcrt(true)
       }
       const scanlines = await readconfig('scanlines')
-      if (NAME(scanlines) === 'on') {
+      if (scanlines === 'on') {
         setscanlines(true)
       }
     })

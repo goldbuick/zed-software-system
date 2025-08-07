@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { vm_cli } from 'zss/device/api'
-import { registerreadplayer } from 'zss/device/register'
+import { readconfig, registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { useTape, useTapeTerminal } from 'zss/gadget/data/state'
+import { doasync } from 'zss/mapping/func'
 import { clamp } from 'zss/mapping/number'
 import { totarget } from 'zss/mapping/string'
 import {
@@ -28,9 +29,20 @@ function measurerow(item: string, width: number, height: number) {
 
 export function TapeTerminal() {
   const player = registerreadplayer()
+  const { quickterminal } = useTape()
   const [editoropen] = useTape(useShallow((state) => [state.editor.open]))
   const terminalinfo = useTape(useShallow((state) => state.terminal.info))
   const terminallogs = useTape(useShallow((state) => state.terminal.logs))
+
+  const [voice2text, setvoice2text] = useState(false)
+  useLayoutEffect(() => {
+    doasync(SOFTWARE, registerreadplayer(), async () => {
+      const voice2text = await readconfig('voice2text')
+      if (voice2text === 'on') {
+        setvoice2text(true)
+      }
+    })
+  }, [])
 
   const context = useWriteText()
   const tapeterminal = useTapeTerminal()
@@ -113,6 +125,8 @@ export function TapeTerminal() {
         <TerminalRows />
         {!editoropen && (
           <TapeTerminalInput
+            quickterminal={quickterminal}
+            voice2text={voice2text}
             tapeycursor={tapeycursor}
             logrowtotalheight={Math.max(inforowtotalheight, logsrowtotalheight)}
           />
