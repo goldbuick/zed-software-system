@@ -31,7 +31,6 @@ export function TapeTerminal() {
   const player = registerreadplayer()
   const { quickterminal } = useTape()
   const [editoropen] = useTape(useShallow((state) => [state.editor.open]))
-  const terminalinfo = useTape(useShallow((state) => state.terminal.info))
   const terminallogs = useTape(useShallow((state) => state.terminal.logs))
 
   const [voice2text, setvoice2text] = useState(false)
@@ -52,10 +51,6 @@ export function TapeTerminal() {
   const xstep = terminalsplit(context.width)
 
   // measure rows
-  const infosize = xstep - 1
-  const inforowheights: number[] = terminalinfo.map((item) => {
-    return measurerow(item, infosize, edge.height)
-  })
   const logssize = context.width - xstep - 1
   const logsrowheights: number[] = terminallogs.map((item) => {
     return measurerow(item, logssize, edge.height)
@@ -63,13 +58,6 @@ export function TapeTerminal() {
 
   // baseline
   const baseline = edge.bottom - edge.top - (editoropen ? 0 : 2)
-
-  // ycoords for rows
-  let inforowtotalheight = 0
-  inforowheights.forEach((rowheight) => {
-    inforowtotalheight += rowheight
-  })
-  ++inforowtotalheight
 
   // ycoords for rows
   let logsrowtotalheight = 0
@@ -80,7 +68,6 @@ export function TapeTerminal() {
 
   // calculate ycoord to render cursor
   const tapeycursor = edge.bottom - tapeterminal.ycursor + tapeterminal.scroll
-  const logrowtotalheight = Math.max(inforowtotalheight, logsrowtotalheight)
 
   // iterative scroll
   useEffect(() => {
@@ -94,14 +81,14 @@ export function TapeTerminal() {
         if (ycursor > edge.bottom - 10) {
           scroll--
         }
-        scroll = Math.round(clamp(scroll, 0, logrowtotalheight - baseline))
+        scroll = Math.round(clamp(scroll, 0, logsrowtotalheight - baseline))
         return { scroll }
       })
     }, 16)
   }, [
     baseline,
     edge.bottom,
-    logrowtotalheight,
+    logsrowtotalheight,
     tapeterminal.scroll,
     tapeterminal.ycursor,
   ])
@@ -128,7 +115,7 @@ export function TapeTerminal() {
             quickterminal={quickterminal}
             voice2text={voice2text}
             tapeycursor={tapeycursor}
-            logrowtotalheight={Math.max(inforowtotalheight, logsrowtotalheight)}
+            logrowtotalheight={logsrowtotalheight}
           />
         )}
       </TapeTerminalContext.Provider>
