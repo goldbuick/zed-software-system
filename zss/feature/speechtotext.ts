@@ -1,17 +1,19 @@
+// Get the SpeechRecognition object, while handling browser prefixes
+const SpeechRecognition =
+  // @ts-expect-error prefix
+  self.SpeechRecognition ??
+  // @ts-expect-error prefix
+  self.webkitSpeechRecognition ??
+  // @ts-expect-error prefix
+  self.mozSpeechRecognition ??
+  // @ts-expect-error prefix
+  self.msSpeechRecognition ??
+  // @ts-expect-error prefix
+  self.oSpeechRecognition
+
 export class SpeechToText {
   recognition: any
-  /*
-  This module is largely inspired by this article:
-  https://developers.google.com/web/updates/2013/01/Voice-Driven-Web-Apps-Introduction-to-the-Web-Speech-API
 
-  Arguments for the constructor:
-
-    - onFinalised - a callback that will be passed the finalised transcription from the cloud. Slow, but accurate.
-    - onEndEvent - a callback that will be called when the end event is fired (speech recognition engine disconnects).
-    - onAnythingSaid - a callback that will be passed interim transcriptions. Fairly immediate, but less accurate than finalised text.
-    - language - the language to interpret against. Default is US English.
-
-    */
   constructor(
     onFinalised: (value: string) => void,
     onEndEvent: () => void,
@@ -26,7 +28,6 @@ export class SpeechToText {
       )
     }
 
-    const SpeechRecognition = window.webkitSpeechRecognition
     this.recognition = new SpeechRecognition()
 
     // set interim results to be returned if a callback for it has been passed in
@@ -36,7 +37,7 @@ export class SpeechToText {
     let finalTranscript = ''
 
     // process both interim and finalised results
-    this.recognition.onresult = (event) => {
+    this.recognition.onresult = (event: any) => {
       let interimTranscript = ''
 
       // concatenate all the transcribed pieces together (SpeechRecognitionResult)
