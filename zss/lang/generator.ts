@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-implied-eval */
 import { CstNode, IToken } from 'chevrotain'
 import { SourceMapGenerator } from 'source-map'
 import { CHIP } from 'zss/chip'
@@ -8,7 +9,8 @@ import { LANG_ERROR } from './lexer'
 import { transformast } from './transformer'
 import { CodeNode } from './visitor'
 
-const GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor
+
+export type GeneratorFunc = (api: CHIP) => 0 | 1
 
 export type GeneratorBuild = {
   errors?: LANG_ERROR[]
@@ -17,7 +19,7 @@ export type GeneratorBuild = {
   ast?: CodeNode
   labels?: Record<string, number[]>
   map?: SourceMapGenerator
-  code?: (api: CHIP) => Generator<number>
+  code?: GeneratorFunc
   source?: string
 }
 
@@ -56,7 +58,7 @@ export function compile(name: string, text: string): GeneratorBuild {
         ...astResult,
         ...transformResult,
         source: transformResult.code,
-        code: new GeneratorFunction('api', transformResult.code),
+        code: new Function('api', transformResult.code) as GeneratorFunc,
       }
     } catch (error) {
       return {
@@ -70,7 +72,7 @@ export function compile(name: string, text: string): GeneratorBuild {
           },
         ],
         source: '',
-        code: new GeneratorFunction('api', ' '),
+        code: new Function('api', ' ') as GeneratorFunc,
       }
     }
   }
@@ -79,6 +81,6 @@ export function compile(name: string, text: string): GeneratorBuild {
     ...astResult,
     ...transformResult,
     source: '',
-    code: new GeneratorFunction('api', ' '),
+    code: new Function('api', ' ') as GeneratorFunc,
   }
 }

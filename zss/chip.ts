@@ -11,9 +11,10 @@ import {
   firmwareset,
   firmwaretick,
 } from './firmware/runner'
-import { GeneratorBuild } from './lang/generator'
+import { GeneratorBuild, GeneratorFunc } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
 import {
+  MAYBE,
   deepcopy,
   isarray,
   isequal,
@@ -121,7 +122,7 @@ export function createchip(
 
   // ref to generator instance
   // eslint-disable-next-line prefer-const
-  let logic: Generator<number> | undefined
+  let logic: MAYBE<GeneratorFunc>
 
   // create labels
   const labels = deepcopy(Object.entries(build.labels ?? {}))
@@ -214,8 +215,7 @@ export function createchip(
 
       // invoke generator
       try {
-        const result = logic?.next()
-        if (result?.done) {
+        if (!logic?.(chip)) {
           flags.es = 1
         }
       } catch (err: any) {
@@ -721,8 +721,8 @@ export function createchip(
     },
   }
 
-  // create generator instance for chip
-  logic = build.code?.(chip)
+  // track built function
+  logic = build.code
 
   return chip
 }
