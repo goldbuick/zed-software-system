@@ -116,7 +116,7 @@ export function EditorInput({
   }
 
   const strvaluesplice = useCallback(
-    function strvaluesplice(index: number, count: number, insert?: string) {
+    function (index: number, count: number, insert?: string) {
       if (count > 0) {
         codepage?.delete(index, count)
       }
@@ -126,6 +126,21 @@ export function EditorInput({
       useTapeEditor.setState({
         cursor: index + (insert ?? '').length,
         select: undefined,
+      })
+    },
+    [codepage],
+  )
+
+  const strvaluespliceonly = useCallback(
+    function (index: number, count: number, insert?: string) {
+      if (count > 0) {
+        codepage?.delete(index, count)
+      }
+      if (ispresent(insert)) {
+        codepage?.insert(index, insert)
+      }
+      useTapeEditor.setState({
+        cursor: index + (insert ?? '').length,
       })
     },
     [codepage],
@@ -149,6 +164,25 @@ export function EditorInput({
     }
   }
 
+  function strchangeindent(dec = true) {
+    if (hasselection) {
+      const lines = strvalueselected.split('\n')
+      for (let l = 0; l < lines.length; ++l) {
+        const line = lines[l]
+        if (dec) {
+          if (lines[l].startsWith(' ')) {
+            lines[l] = line.substring(1)
+          }
+        } else {
+          lines[l] = ` ${line}`
+        }
+      }
+      strvaluespliceonly(ii1, iic, lines.join('\n'))
+    } else {
+      // toggle single line
+    }
+  }
+
   function deleteselection() {
     if (hasselection) {
       useTapeEditor.setState({ cursor: ii1 })
@@ -161,7 +195,7 @@ export function EditorInput({
   }
 
   const movecursor = useCallback(
-    function movecursor(inc: number) {
+    function (inc: number) {
       const ycheck = Math.round(ycursor + inc)
       if (ycheck < 0) {
         useTapeEditor.setState({ cursor: 0 })
@@ -390,6 +424,8 @@ export function EditorInput({
                 if (hasselection) {
                   if (event.key === `'`) {
                     strtogglecomments()
+                  } else if (event.key === ' ') {
+                    strchangeindent(event.shiftKey)
                   } else {
                     strvaluesplice(ii1, iic, event.key)
                   }
