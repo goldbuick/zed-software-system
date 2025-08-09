@@ -122,7 +122,7 @@ export const RUNTIME_FIRMWARE = createfirmware({
     return 0
   })
   .command('send', (chip, words) => {
-    const send = parsesend(['send', ...words])
+    const send = parsesend(words, true)
     handlesend(chip, send)
     return 0
   })

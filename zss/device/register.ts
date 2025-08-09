@@ -171,23 +171,6 @@ function renderrow(maybelevel: string, content: string[]) {
   return `$onclear${level}${messagetext}`
 }
 
-function terminaladdinfo(message: MESSAGE) {
-  const { terminal } = useTape.getState()
-  const row = renderrow(message.target, message.data)
-
-  let info = [row, ...terminal.info]
-  if (info.length > TAPE_MAX_LINES) {
-    info = info.slice(0, TAPE_MAX_LINES)
-  }
-
-  useTape.setState((state) => ({
-    terminal: {
-      ...state.terminal,
-      info,
-    },
-  }))
-}
-
 const countregex = /\((\d+)\)/
 
 function terminaladdlog(message: MESSAGE) {
@@ -300,7 +283,6 @@ function readconfigdefault(name: string) {
 }
 
 export async function readconfig(name: string) {
-  api_log(register, myplayerid, `reading config ${name}`)
   const value = await readidb<string>(`config_${name}`)
 
   if (!value) {
@@ -642,11 +624,6 @@ const register = createdevice(
           if (isarray(message.data)) {
             const [name, value] = message.data as [string, string]
             await writeconfig(name, value)
-            api_log(
-              register,
-              message.player,
-              `updated config ${name} to ${value}`,
-            )
           }
         })
         break
@@ -692,10 +669,10 @@ const register = createdevice(
         terminaladdlog(message)
         break
       case 'info':
-        terminaladdinfo(message)
+        terminaladdlog(message)
         break
       case 'error':
-        terminaladdinfo(message)
+        terminaladdlog(message)
         break
       case 'toast':
         doasync(register, message.player, async () => {

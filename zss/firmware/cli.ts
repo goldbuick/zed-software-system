@@ -127,7 +127,7 @@ export const CLI_FIRMWARE = createfirmware()
     return 0
   })
   .command('send', (_, words) => {
-    const send = parsesend(['send', ...words])
+    const send = parsesend(words, true)
     handlesend(send)
     return 0
   })
