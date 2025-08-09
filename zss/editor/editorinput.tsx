@@ -149,6 +149,25 @@ export function EditorInput({
     }
   }
 
+  function strchangeindent(dec = true) {
+    if (hasselection) {
+      const lines = strvalueselected.split('\n')
+      for (let l = 0; l < lines.length; ++l) {
+        const line = lines[l]
+        if (dec) {
+          if (lines[l].startsWith(' ')) {
+            lines[l] = line.substring(1)
+          }
+        } else {
+          lines[l] = ` ${line}`
+        }
+      }
+      strvaluesplice(ii1, iic, lines.join('\n'))
+    } else {
+      // toggle single line
+    }
+  }
+
   function deleteselection() {
     if (hasselection) {
       useTapeEditor.setState({ cursor: ii1 })
@@ -390,6 +409,8 @@ export function EditorInput({
                 if (hasselection) {
                   if (event.key === `'`) {
                     strtogglecomments()
+                  } else if (event.key === ' ') {
+                    strchangeindent(event.shiftKey)
                   } else {
                     strvaluesplice(ii1, iic, event.key)
                   }
