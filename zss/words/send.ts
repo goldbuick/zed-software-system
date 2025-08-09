@@ -2,7 +2,7 @@ import { isstring } from 'zss/mapping/types'
 
 import { EVAL_DIR, isstrdir } from './dir'
 import { ARG_TYPE, readargs } from './reader'
-import { NAME, WORD } from './types'
+import { WORD } from './types'
 
 export type SEND_META = {
   targetdir?: EVAL_DIR
@@ -10,9 +10,9 @@ export type SEND_META = {
   label: string
 }
 
-export function parsesend(words: WORD[]): SEND_META {
-  const [first, second] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.ANY])
-  if (NAME(first) === 'send' && isstrdir(second)) {
+export function parsesend(words: WORD[], candirsend = false): SEND_META {
+  const [first] = readargs(words, 0, [ARG_TYPE.ANY])
+  if (candirsend && isstrdir(first)) {
     const [, targetdir, maybelabel, ii] = readargs(words, 0, [
       ARG_TYPE.NAME, // #send
       ARG_TYPE.DIR, // target

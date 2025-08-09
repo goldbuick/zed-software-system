@@ -296,11 +296,21 @@ export function parsezzt(player: string, content: Uint8Array) {
         break
       case 30:
         // transporter
-        writefromkind(board, ['transporter', strcolor], { x, y }, addstats)
+        writefromkind(
+          board,
+          ['transporter', strcolor],
+          { x, y },
+          {
+            ...addstats,
+            stepx: 0,
+            stepy: 0,
+            shootx: addstats.stepx ?? 0,
+            shooty: addstats.stepx ?? 0,
+          },
+        )
         break
       case 31:
         // line
-        // todo: re-write stepx & stepy into a dir
         writefromkind(board, ['line', strcolor], { x, y }, addstats)
         break
       case 32:
