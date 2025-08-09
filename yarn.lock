@@ -3215,6 +3215,11 @@ amazon-ivs-web-broadcast@^1.19.0:
     sdp-transform "^2.14.2"
     webrtc-adapter "^8.2.3"
 
+annyang@^2.6.1:
+  version "2.6.1"
+  resolved "https://registry.yarnpkg.com/annyang/-/annyang-2.6.1.tgz#93140d7014f268a9d6c4319505715b0469dec856"
+  integrity sha512-KfO6FVFmE7H7epXgAWRoGITShVqsDs6zLKuTxDiJHZmAVnpKeUAKiMUIr7hDXbNUOqRIB3RVTQQd/Yaf4ULauw==
+
 ansi-escapes@^4.2.1:
   version "4.3.2"
   resolved "https://registry.npmjs.org/ansi-escapes/-/ansi-escapes-4.3.2.tgz#6b2291d1db7d98b6521d5f1efa42d0f3a9feb65e"
