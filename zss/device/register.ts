@@ -283,7 +283,6 @@ function readconfigdefault(name: string) {
 }
 
 export async function readconfig(name: string) {
-  api_log(register, myplayerid, `reading config ${name}`)
   const value = await readidb<string>(`config_${name}`)
 
   if (!value) {
@@ -625,11 +624,6 @@ const register = createdevice(
           if (isarray(message.data)) {
             const [name, value] = message.data as [string, string]
             await writeconfig(name, value)
-            api_log(
-              register,
-              message.player,
-              `updated config ${name} to ${value}`,
-            )
           }
         })
         break

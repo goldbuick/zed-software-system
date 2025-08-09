@@ -723,6 +723,7 @@ export function memorymoveobject(
     const elementpartyisplayer = ispid(element.party ?? element.id)
     const elementisbullet =
       memoryelementstatread(element, 'collision') === COLLISION.ISBULLET
+    const elementiskind = element.kind ?? ''
 
     let elementplayer = ''
     if (element.party && elementpartyisplayer) {
@@ -736,6 +737,7 @@ export function memorymoveobject(
     const blockedpartyisplayer = ispid(blocked.party ?? blocked.id)
     const blockedisbullet =
       memoryelementstatread(blocked, 'collision') === COLLISION.ISBULLET
+    const blockedbykind = blocked.kind ?? ''
 
     const samemparty = elementpartyisplayer === blockedpartyisplayer
 
@@ -747,7 +749,7 @@ export function memorymoveobject(
       blockedplayer = blocked.id ?? ''
     }
 
-    if (elementisplayer && blocked.kind === 'edge') {
+    if (elementisplayer && blockedbykind === 'edge') {
       playerblockedbyedge(book, board, element, dest)
     } else if (elementisplayer) {
       if (blockedbyplayer) {
@@ -820,12 +822,27 @@ export function memorymoveobject(
           element,
           'thud',
         )
-        memorysendinteraction(
-          samemparty ? '' : elementplayer,
-          element,
-          blocked,
-          samemparty ? 'partyshot' : 'shot',
-        )
+        switch (blockedbykind) {
+          case 'object':
+          case 'scroll':
+            // object & scroll kinds can be shot by everything
+            memorysendinteraction(
+              samemparty ? '' : elementplayer,
+              element,
+              blocked,
+              'shot',
+            )
+            break
+          default:
+            // everything else handles shot differently
+            memorysendinteraction(
+              samemparty ? '' : elementplayer,
+              element,
+              blocked,
+              samemparty ? 'partyshot' : 'shot',
+            )
+            break
+        }
       }
     } else {
       if (blockedbyplayer) {
@@ -842,12 +859,27 @@ export function memorymoveobject(
           'bump',
         )
       } else if (blockedisbullet) {
-        memorysendinteraction(
-          samemparty ? '' : blockedplayer,
-          blocked,
-          element,
-          samemparty ? 'partyshot' : 'shot',
-        )
+        switch (elementiskind) {
+          case 'object':
+          case 'scroll':
+            // object & scroll kinds can be shot by everything
+            memorysendinteraction(
+              samemparty ? '' : elementplayer,
+              element,
+              blocked,
+              'shot',
+            )
+            break
+          default:
+            // everything else handles shot differently
+            memorysendinteraction(
+              samemparty ? '' : elementplayer,
+              element,
+              blocked,
+              samemparty ? 'partyshot' : 'shot',
+            )
+            break
+        }
         memorysendinteraction(
           samemparty ? '' : elementplayer,
           element,

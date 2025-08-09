@@ -89,7 +89,7 @@ function matchBasicText(text: string, startOffset: number) {
   }
 
   // scan backwards to check what kind of spot we're in
-  while (cursor > 0 && `$@#':!/?\n`.includes(text[cursor]) === false) {
+  while (cursor > 0 && `$"@#':!/?\n`.includes(text[cursor]) === false) {
     cursor--
   }
 
@@ -114,6 +114,19 @@ function matchBasicText(text: string, startOffset: number) {
       // okay
       break
     }
+    case '"': {
+      cursor--
+      while (cursor > 0 && text[cursor] === ' ') {
+        cursor--
+      }
+      if (cursor < 1 || text[cursor] === '\n') {
+        // is text
+      } else {
+        // not text
+        return null
+      }
+      break
+    }
     case '@':
     case `'`:
     case ':':
@@ -127,6 +140,9 @@ function matchBasicText(text: string, startOffset: number) {
 
   // scan until EOL
   let i = startOffset
+  if (text[i] === '"') {
+    ++i
+  }
   while (i < text.length && text[i] !== '\n') {
     i++
   }

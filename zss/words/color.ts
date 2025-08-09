@@ -1,4 +1,10 @@
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 
 import { READ_CONTEXT } from './reader'
 import { COLOR, NAME, WORD } from './types'
@@ -149,6 +155,12 @@ function readcolorconst(index: number): [STR_COLOR | undefined, number] {
 export function readcolor(index: number): [STR_COLOR | undefined, number] {
   const strcolor: STR_COLOR = []
   let next = index
+
+  // numeric color value ie: 12
+  const maybeintcolor = parseFloat(READ_CONTEXT.words[index] as any)
+  if (isnumber(maybeintcolor)) {
+    return [mapcolortostrcolor(maybeintcolor, undefined), index + 1]
+  }
 
   // read a color
   const [maybecolor, ii] = readcolorconst(index)
