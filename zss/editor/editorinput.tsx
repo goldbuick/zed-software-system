@@ -116,7 +116,7 @@ export function EditorInput({
   }
 
   const strvaluesplice = useCallback(
-    function strvaluesplice(index: number, count: number, insert?: string) {
+    function (index: number, count: number, insert?: string) {
       if (count > 0) {
         codepage?.delete(index, count)
       }
@@ -126,6 +126,21 @@ export function EditorInput({
       useTapeEditor.setState({
         cursor: index + (insert ?? '').length,
         select: undefined,
+      })
+    },
+    [codepage],
+  )
+
+  const strvaluespliceonly = useCallback(
+    function (index: number, count: number, insert?: string) {
+      if (count > 0) {
+        codepage?.delete(index, count)
+      }
+      if (ispresent(insert)) {
+        codepage?.insert(index, insert)
+      }
+      useTapeEditor.setState({
+        cursor: index + (insert ?? '').length,
       })
     },
     [codepage],
@@ -162,7 +177,7 @@ export function EditorInput({
           lines[l] = ` ${line}`
         }
       }
-      strvaluesplice(ii1, iic, lines.join('\n'))
+      strvaluespliceonly(ii1, iic, lines.join('\n'))
     } else {
       // toggle single line
     }
@@ -180,7 +195,7 @@ export function EditorInput({
   }
 
   const movecursor = useCallback(
-    function movecursor(inc: number) {
+    function (inc: number) {
       const ycheck = Math.round(ycursor + inc)
       if (ycheck < 0) {
         useTapeEditor.setState({ cursor: 0 })
