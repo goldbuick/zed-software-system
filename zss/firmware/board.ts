@@ -156,15 +156,15 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
       target = boardelementread(READ_CONTEXT.board, dir.destpt)
     }
 
-    // invoke safe delete
-    if (boardelementisobject(target)) {
-      boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
-    }
-
     // handle put empty case
     if (kindname === 'empty') {
       boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
       return 0
+    }
+
+    // invoke safe delete
+    if (boardelementisobject(target)) {
+      boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
     }
 
     // handle terrain put
