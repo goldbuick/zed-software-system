@@ -2,7 +2,7 @@ import { CHIP } from 'zss/chip'
 import { boardcopy } from 'zss/feature/boardcopy'
 import { createfirmware } from 'zss/firmware'
 import { clamp } from 'zss/mapping/number'
-import { isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import {
   memoryboardread,
@@ -128,8 +128,14 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
       return 0
     }
 
-    // get kind's collision type
+    // get kind we're putting
     const [kindname] = kind
+    const from: PT = {
+      x: READ_CONTEXT.element?.x ?? 0,
+      y: READ_CONTEXT.element?.y ?? 0,
+    }
+
+    // get kind's collision type
     const kindelement = memoryelementkindread({ kind: kindname })
     const kindcollision = memoryelementstatread(kindelement, 'collision')
     if (kindcollision === COLLISION.ISGHOST) {
@@ -139,15 +145,26 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     }
 
     // check if we are blocked by a pushable object element
-    const target = boardelementread(READ_CONTEXT.board, dir.destpt)
-    if (target?.category === CATEGORY.ISOBJECT && target?.pushable) {
-      const from: PT = {
-        x: READ_CONTEXT.element?.x ?? 0,
-        y: READ_CONTEXT.element?.y ?? 0,
-      }
+    let target = boardelementread(READ_CONTEXT.board, dir.destpt)
+    const targetpushable = memoryelementstatread(target, 'pushable')
+    if (targetpushable) {
       // attempt to shove it away
-      const pt = ptapplydir(dir.destpt, dirfrompts(from, dir.destpt))
+      const pivot = deepcopy(dir.destpt)
+      const pt = ptapplydir(pivot, dirfrompts(from, pivot))
       boardmoveobject(READ_CONTEXT.board, target, pt)
+      // grab new target
+      target = boardelementread(READ_CONTEXT.board, dir.destpt)
+    }
+
+    // invoke safe delete
+    if (boardelementisobject(target)) {
+      boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
+    }
+
+    // handle put empty case
+    if (kindname === 'empty') {
+      boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
+      return 0
     }
 
     // handle terrain put
@@ -178,6 +195,7 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
       }
     } else {
       // use value as a list
+      const [list, kind] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.KIND])
       // #put any within 10 red smoke
       // #put any blocked n red smoke
       // behavior here is a little different from change
