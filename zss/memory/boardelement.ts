@@ -60,6 +60,10 @@ enum BOARD_ELEMENT_KEYS {
   displaybg,
   shootx,
   shooty,
+  p7,
+  p8,
+  p9,
+  p10,
 }
 
 // safe to serialize copy of boardelement
