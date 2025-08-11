@@ -40,7 +40,7 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { CATEGORY, COLLISION, COLOR, DIR, PT, WORD } from 'zss/words/types'
+import { COLLISION, COLOR, DIR, PT, WORD } from 'zss/words/types'
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data
@@ -240,6 +240,38 @@ const p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
 const targetset = 'all'
 
 export const BOARD_FIRMWARE = createfirmware()
+  .command('build', (chip, words) => {
+    if (
+      !ispresent(READ_CONTEXT.book) ||
+      !ispresent(READ_CONTEXT.board) ||
+      !ispresent(READ_CONTEXT.element)
+    ) {
+      return 0
+    }
+
+    // creates a new board from an existing one or blank, and writes the id to the given stat
+    const [stat, maybesource] = readargs(words, 0, [
+      ARG_TYPE.NAME,
+      ARG_TYPE.MAYBE_STRING,
+    ])
+
+    const createdboard = createboard()
+    if (ispresent(createdboard)) {
+      // attempt to clone existing board
+      if (isstring(maybesource)) {
+        const sourceboard = memoryboardread(maybesource)
+        if (ispresent(sourceboard)) {
+          boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
+        }
+      }
+
+      // update stat with created board id
+      // todo, how do we write to board exit stats ??
+      chip.set(stat, createdboard.id)
+    }
+
+    return 0
+  })
   .command('goto', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
@@ -307,38 +339,6 @@ export const BOARD_FIRMWARE = createfirmware()
       destpt,
       true,
     )
-
-    return 0
-  })
-  .command('build', (chip, words) => {
-    if (
-      !ispresent(READ_CONTEXT.book) ||
-      !ispresent(READ_CONTEXT.board) ||
-      !ispresent(READ_CONTEXT.element)
-    ) {
-      return 0
-    }
-
-    // creates a new board from an existing one or blank, and writes the id to the given stat
-    const [stat, maybesource] = readargs(words, 0, [
-      ARG_TYPE.NAME,
-      ARG_TYPE.MAYBE_STRING,
-    ])
-
-    const createdboard = createboard()
-    if (ispresent(createdboard)) {
-      // attempt to clone existing board
-      if (isstring(maybesource)) {
-        const sourceboard = memoryboardread(maybesource)
-        if (ispresent(sourceboard)) {
-          boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
-        }
-      }
-
-      // update stat with created board id
-      // todo, how do we write to board exit stats ??
-      chip.set(stat, createdboard.id)
-    }
 
     return 0
   })
