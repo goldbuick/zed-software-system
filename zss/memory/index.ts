@@ -728,9 +728,10 @@ export function memorymoveobject(
   }
 
   let blocked = boardmoveobject(board, element, dest)
+  const collision = memoryelementstatread(element, 'collision')
 
-  // check pushable
-  if (ispresent(blocked)) {
+  // check pushable AND bullets can't PUSH
+  if (ispresent(blocked) && collision !== COLLISION.ISBULLET) {
     const elementisplayer = ispid(element?.id)
 
     // is blocked pushable ?

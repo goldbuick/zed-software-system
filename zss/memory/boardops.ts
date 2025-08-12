@@ -166,48 +166,6 @@ export function boardmoveobject(
 
     // for sending interaction messages
     return { ...maybeobject }
-
-    // // has a bullet hit a breakable element?
-    // const breakable = !!memoryelementstatread(maybeobject, 'breakable')
-    // if (movingelementisbullet && breakable) {
-    //   // update object location
-    //   movingelement.x = dest.x
-    //   movingelement.y = dest.y
-
-    //   // for sending interaction messages
-    //   return { ...maybeobject }
-    // }
-
-    // bullets can't PUSH
-    // if (movingelementcollision === COLLISION.ISBULLET) {
-    //   // for sending interaction messages
-    //   return { ...maybeobject }
-    // }
-
-    // // is element pushable ?
-    // const isitem = !!memoryelementstatread(maybeobject, 'item')
-    // const ispushable = memoryelementcheckpushable(movingelement, maybeobject)
-    // // player cannot push items
-    // if (ispushable && (!movingelementisplayer || !isitem)) {
-    //   const bumpdir = dirfrompts(
-    //     { x: movingelement.x, y: movingelement.y },
-    //     dest,
-    //   )
-    //   const bump = ptapplydir(
-    //     { x: maybeobject.x ?? 0, y: maybeobject.y ?? 0 },
-    //     bumpdir,
-    //   )
-    //   // is recursive move a good idea ??
-    //   const bonk = boardmoveobject(board, maybeobject, bump)
-    //   // only bail if the thing we are shoving ran into something
-    //   if (ispresent(bonk)) {
-    //     // for sending interaction messages
-    //     return { ...maybeobject }
-    //   }
-    // } else {
-    //   // for sending interaction messages
-    //   return { ...maybeobject }
-    // }
   }
 
   // blocked by terrain
