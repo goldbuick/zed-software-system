@@ -333,7 +333,7 @@ export const BOARD_FIRMWARE = createfirmware()
 
     return 0
   })
-  .command('transport', (chip, words) => {
+  .command('transport', (_, words) => {
     if (
       !ispresent(READ_CONTEXT.book) ||
       !ispresent(READ_CONTEXT.board) ||
@@ -342,7 +342,57 @@ export const BOARD_FIRMWARE = createfirmware()
       return 0
     }
 
-    console.info('???', chip.get('sender'))
+    const [target] = readargs(words, 0, [ARG_TYPE.STRING])
+    const maybeobject = boardobjectread(READ_CONTEXT.board, target)
+    if (
+      ispresent(READ_CONTEXT.element?.x) &&
+      ispresent(READ_CONTEXT.element.y) &&
+      ispresent(maybeobject?.x) &&
+      ispresent(maybeobject.y)
+    ) {
+      let placing = true
+      const scan: PT = {
+        x: READ_CONTEXT.element.x,
+        y: READ_CONTEXT.element.y,
+      }
+      const deltax = scan.x - maybeobject.x
+      const deltay = scan.y - maybeobject.y
+      while (placing) {
+        scan.x += deltax
+        scan.y += deltay
+        // scan until board edge
+        if (
+          scan.x < 0 &&
+          scan.x >= BOARD_WIDTH &&
+          scan.y < 0 &&
+          scan.y >= BOARD_HEIGHT
+        ) {
+          break
+        }
+        // scan until we find an opposite transporter
+        const maybetransporter = boardelementread(READ_CONTEXT.board, scan)
+        if (
+          maybetransporter?.kind === READ_CONTEXT.element.kind &&
+          memoryelementstatread(maybetransporter, 'shootx') === -deltax &&
+          memoryelementstatread(maybetransporter, 'shooty') === -deltay
+        ) {
+          // if we can move the object here, we're done!
+          if (
+            memorymoveobject(
+              READ_CONTEXT.book,
+              READ_CONTEXT.board,
+              maybeobject,
+              {
+                x: scan.x + deltax,
+                y: scan.y + deltay,
+              },
+            )
+          ) {
+            placing = false
+          }
+        }
+      }
+    }
 
     return 0
   })
