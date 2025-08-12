@@ -299,7 +299,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
         // return result
         if (STANDARD_STAT_NAMES.has(name)) {
           // check standard stat names
-          const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
+          const maybevalue = memoryelementstatread(
+            READ_CONTEXT.element,
+            name as keyof BOARD_ELEMENT,
+          )
           return [true, maybevalue ?? 0] // fallback to zero as default value from a stat
         }
         break

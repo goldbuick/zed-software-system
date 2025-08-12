@@ -2,7 +2,7 @@ import { unique } from 'zss/mapping/array'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { COLLISION, PT } from 'zss/words/types'
 
-import { boardelementindex, boardobjectread } from './board'
+import { boardobjectread } from './board'
 import { boardelementisobject } from './boardelement'
 import {
   boardnamedwrite,

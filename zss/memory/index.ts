@@ -11,7 +11,13 @@ import { createsid, ispid } from 'zss/mapping/guid'
 import { CYCLE_DEFAULT, TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { createos } from 'zss/os'
-import { dirfrompts, ispt, mapstrdir, mapstrdirtoconst } from 'zss/words/dir'
+import {
+  dirfrompts,
+  ispt,
+  mapstrdir,
+  mapstrdirtoconst,
+  ptapplydir,
+} from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
@@ -721,7 +727,25 @@ export function memorymoveobject(
     return false
   }
 
-  const blocked = boardmoveobject(board, element, dest)
+  let blocked = boardmoveobject(board, element, dest)
+
+  // check pushable
+  if (ispresent(blocked)) {
+    const elementisplayer = ispid(element?.id)
+
+    // is blocked pushable ?
+    const isitem = !!memoryelementstatread(blocked, 'item')
+    const ispushable = memoryelementcheckpushable(element, blocked)
+
+    // player cannot push items
+    if (ispushable && (!elementisplayer || !isitem)) {
+      const bumpdir = dirfrompts({ x: element.x ?? 0, y: element.y ?? 0 }, dest)
+      const bump = ptapplydir({ x: blocked.x ?? 0, y: blocked.y ?? 0 }, bumpdir)
+      memorymoveobject(book, board, blocked, bump)
+    }
+  }
+
+  blocked = boardmoveobject(board, element, dest)
   if (ispresent(blocked)) {
     const elementisplayer = ispid(element.id)
     const elementpartyisplayer = ispid(element.party ?? element.id)

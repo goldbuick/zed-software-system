@@ -22,7 +22,6 @@ import {
   createboard,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import { boardsetlookup } from 'zss/memory/boardlookup'
 import { boardcheckblockedobject, boardmoveobject } from 'zss/memory/boardops'
 import { bookelementdisplayread } from 'zss/memory/book'
 import { bookplayermovetoboard } from 'zss/memory/bookplayer'
@@ -107,9 +106,6 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     return 0
   }
 
-  // make sure lookup is created
-  boardsetlookup(READ_CONTEXT.board)
-
   // check kind of value given
   const [value] = readargs(READ_CONTEXT.words, 0, [ARG_TYPE.ANY])
 
@@ -151,7 +147,7 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
       // attempt to shove it away
       const pivot = deepcopy(dir.destpt)
       const pt = ptapplydir(pivot, dirfrompts(from, pivot))
-      boardmoveobject(READ_CONTEXT.board, target, pt)
+      memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
       // grab new target
       target = boardelementread(READ_CONTEXT.board, dir.destpt)
     }
@@ -208,9 +204,6 @@ function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
   if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
     return 0
   }
-
-  // make sure lookup is created
-  boardsetlookup(READ_CONTEXT.board)
 
   // duplicate target at dir, in the direction of the given dir
   const [dir, dupedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
@@ -288,8 +281,6 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(targetboard)) {
       return 0
     }
-    // ensure we can do named lookups
-    boardsetlookup(targetboard)
 
     // read entry pt
     const destpt: PT = {
@@ -342,13 +333,23 @@ export const BOARD_FIRMWARE = createfirmware()
 
     return 0
   })
+  .command('transport', (chip, words) => {
+    if (
+      !ispresent(READ_CONTEXT.book) ||
+      !ispresent(READ_CONTEXT.board) ||
+      !ispresent(READ_CONTEXT.element)
+    ) {
+      return 0
+    }
+
+    console.info('???', chip.get('sender'))
+
+    return 0
+  })
   .command('shove', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-
-    // make sure lookup is created
-    boardsetlookup(READ_CONTEXT.board)
 
     // shove target at dir, in the direction of the given dir
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
@@ -368,9 +369,6 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-
-    // make sure lookup is created
-    boardsetlookup(READ_CONTEXT.board)
 
     const [dir, strcolor, ii] = readargs(words, 0, [
       ARG_TYPE.DIR,
@@ -450,9 +448,6 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-
-    // make sure lookup is created
-    boardsetlookup(READ_CONTEXT.board)
 
     // read
     const [target, into] = readargs(words, 0, [ARG_TYPE.KIND, ARG_TYPE.KIND])

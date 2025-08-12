@@ -333,7 +333,7 @@ export function readexpr(index: number): [any, number] {
         return [Math.floor(a), iii]
       }
       case 'intround': {
-        // ROUND <a>
+        // INTROUND <a>
         const [a, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
         return [Math.round(a), iii]
       }
