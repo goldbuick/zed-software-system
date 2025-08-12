@@ -1,5 +1,4 @@
-import stringify from 'json-stable-stringify'
-import { unpack } from 'msgpackr'
+import { pack, unpack } from 'msgpackr'
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
@@ -81,18 +80,19 @@ export function unformatobject<T>(
 
     return obj as T
   } catch (err: any) {
-    api_error(SOFTWARE, '', 'binary', err.message)
+    api_error(SOFTWARE, '', 'format', err.message)
   }
 }
 
 // read / write helpers
 
-export function packformat(entry: FORMAT_OBJECT): MAYBE<string> {
+export function packformat(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
   try {
-    const data = stringify(entry)
+    const data = pack(entry)
+    // console.info('write', data)
     return data
   } catch (err: any) {
-    api_error(SOFTWARE, '', 'binary', err.message)
+    api_error(SOFTWARE, '', 'format', err.message)
   }
 }
 
@@ -102,10 +102,10 @@ export function unpackformat(
   if (isstring(content)) {
     try {
       const data = JSON.parse(content)
-      // console.info('read', deepcopy(data))
+      // console.info('read', deepcopy(unpacked))
       return data
     } catch (err: any) {
-      api_error(SOFTWARE, '', 'binary', err.message)
+      api_error(SOFTWARE, '', 'format', err.message)
     }
     return undefined
   }
@@ -113,7 +113,7 @@ export function unpackformat(
     const data = unpack(content)
     return data
   } catch (err: any) {
-    api_error(SOFTWARE, '', 'binary', err.message)
+    api_error(SOFTWARE, '', 'format', err.message)
   }
   return undefined
 }

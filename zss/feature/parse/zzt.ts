@@ -508,7 +508,7 @@ export function parsezzt(player: string, content: Uint8Array) {
   cursor = 512 // skip bytes
 
   const zztboards: ZZT_BOARD[] = []
-  for (let i = 0; i < numberofboards; ++i) {
+  for (let i = 0; i <= numberofboards; ++i) {
     const boardsize = readint16()
     const start = cursor
     const boardnamelength = readuint8()
