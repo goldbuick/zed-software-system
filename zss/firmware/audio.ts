@@ -186,61 +186,79 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('synth', (_, words) => {
-    for (let i = 0; i < 8; ++i) {
+    // multi-voice changes only apply to #play
+    for (let i = 0; i < 4; ++i) {
       handlesynthvoice(READ_CONTEXT.elementfocus, i, words)
     }
     return 0
   })
   .command('echo', (_, words) => {
-    for (let i = 0; i < 3; ++i) {
+    // multi-voice changes only apply to #play
+    for (let i = 0; i < 2; ++i) {
       handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'echo', words)
     }
     return 0
   })
   .command('fcrush', (_, words) => {
-    for (let i = 0; i < 3; ++i) {
+    // multi-voice changes only apply to #play
+    for (let i = 0; i < 2; ++i) {
       handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'fc', words)
     }
     return 0
   })
   .command('phaser', (_, words) => {
-    for (let i = 0; i < 3; ++i) {
+    // multi-voice changes only apply to #play
+    for (let i = 0; i < 2; ++i) {
       handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'phaser', words)
     }
     return 0
   })
   .command('reverb', (_, words) => {
-    for (let i = 0; i < 3; ++i) {
+    // multi-voice changes only apply to #play
+    for (let i = 0; i < 2; ++i) {
       handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'reverb', words)
     }
     return 0
   })
   .command('distort', (_, words) => {
-    for (let i = 0; i < 3; ++i) {
+    // multi-voice changes only apply to #play
+    for (let i = 0; i < 2; ++i) {
       handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'distort', words)
     }
     return 0
   })
   .command('vibrato', (_, words) => {
-    for (let i = 0; i < 3; ++i) {
+    // multi-voice changes only apply to #play
+    for (let i = 0; i < 2; ++i) {
       handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'vibrato', words)
     }
     return 0
   })
   .command('autowah', (_, words) => {
-    for (let i = 0; i < 3; ++i) {
+    // multi-voice changes only apply to #play
+    for (let i = 0; i < 2; ++i) {
       handlesynthvoicefx(READ_CONTEXT.elementfocus, i, 'autowah', words)
     }
     return 0
   })
 
-// handle synth voices
-for (let i = 0; i < 8; ++i) {
+// handle individual synth voices
+for (let i = 0; i < 4; ++i) {
   AUDIO_FIRMWARE.command(`synth${i + 1}`, (_, words) => {
     handlesynthvoice(READ_CONTEXT.elementfocus, i, words)
     return 0
   })
 }
+
+// handle bgplay synth voices
+AUDIO_FIRMWARE.command('synth5', (_, words) => {
+  // changes bgplay synth
+  for (let i = 4; i < 8; ++i) {
+    handlesynthvoice(READ_CONTEXT.elementfocus, i, words)
+  }
+  return 0
+})
+
 // handle synth fx configurations
 for (let i = 0; i < 3; ++i) {
   const idx = i + 1
