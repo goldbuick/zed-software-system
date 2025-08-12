@@ -72,6 +72,10 @@ const STANDARD_STAT_NAMES = new Set([
   'p4',
   'p5',
   'p6',
+  'p7',
+  'p8',
+  'p9',
+  'p10',
   'cycle',
   'stepx',
   'stepy',
@@ -295,7 +299,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
         // return result
         if (STANDARD_STAT_NAMES.has(name)) {
           // check standard stat names
-          const maybevalue = READ_CONTEXT.element?.[name as keyof BOARD_ELEMENT]
+          const maybevalue = memoryelementstatread(
+            READ_CONTEXT.element,
+            name as keyof BOARD_ELEMENT,
+          )
           return [true, maybevalue ?? 0] // fallback to zero as default value from a stat
         }
         break

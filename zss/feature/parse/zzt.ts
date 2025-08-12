@@ -213,7 +213,13 @@ export function parsezzt(player: string, content: Uint8Array) {
       }
       case 12:
         // duplicator
-        writefromkind(board, ['duplicator', strcolor], { x, y }, addstats)
+        writefromkind(board, ['duplicator', strcolor], { x, y }, {
+            ...addstats,
+            stepx: 0,
+            stepy: 0,
+            shootx: addstats.stepx ?? 0,
+            shooty: addstats.stepy ?? 0,
+          })
         break
       case 13:
         // bomb
@@ -290,7 +296,7 @@ export function parsezzt(player: string, content: Uint8Array) {
             stepx: 0,
             stepy: 0,
             shootx: addstats.stepx ?? 0,
-            shooty: addstats.stepx ?? 0,
+            shooty: addstats.stepy ?? 0,
           },
         )
         break
@@ -305,7 +311,7 @@ export function parsezzt(player: string, content: Uint8Array) {
             stepx: 0,
             stepy: 0,
             shootx: addstats.stepx ?? 0,
-            shooty: addstats.stepx ?? 0,
+            shooty: addstats.stepy ?? 0,
           },
         )
         break

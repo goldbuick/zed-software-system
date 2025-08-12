@@ -22,8 +22,7 @@ import {
   createboard,
 } from 'zss/memory/board'
 import { boardelementisobject } from 'zss/memory/boardelement'
-import { boardsetlookup } from 'zss/memory/boardlookup'
-import { boardcheckblockedobject, boardmoveobject } from 'zss/memory/boardops'
+import { boardcheckblockedobject } from 'zss/memory/boardops'
 import { bookelementdisplayread } from 'zss/memory/book'
 import { bookplayermovetoboard } from 'zss/memory/bookplayer'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -40,7 +39,7 @@ import {
   tokenizeandmeasuretextformat,
   tokenizeandwritetextformat,
 } from 'zss/words/textformat'
-import { CATEGORY, COLLISION, COLOR, DIR, PT, WORD } from 'zss/words/types'
+import { COLLISION, COLOR, DIR, PT, WORD } from 'zss/words/types'
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data
@@ -107,9 +106,6 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     return 0
   }
 
-  // make sure lookup is created
-  boardsetlookup(READ_CONTEXT.board)
-
   // check kind of value given
   const [value] = readargs(READ_CONTEXT.words, 0, [ARG_TYPE.ANY])
 
@@ -151,20 +147,20 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
       // attempt to shove it away
       const pivot = deepcopy(dir.destpt)
       const pt = ptapplydir(pivot, dirfrompts(from, pivot))
-      boardmoveobject(READ_CONTEXT.board, target, pt)
+      memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
       // grab new target
       target = boardelementread(READ_CONTEXT.board, dir.destpt)
-    }
-
-    // invoke safe delete
-    if (boardelementisobject(target)) {
-      boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
     }
 
     // handle put empty case
     if (kindname === 'empty') {
       boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
       return 0
+    }
+
+    // invoke safe delete
+    if (boardelementisobject(target)) {
+      boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
     }
 
     // handle terrain put
@@ -209,9 +205,6 @@ function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
     return 0
   }
 
-  // make sure lookup is created
-  boardsetlookup(READ_CONTEXT.board)
-
   // duplicate target at dir, in the direction of the given dir
   const [dir, dupedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
   const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
@@ -240,6 +233,38 @@ const p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
 const targetset = 'all'
 
 export const BOARD_FIRMWARE = createfirmware()
+  .command('build', (chip, words) => {
+    if (
+      !ispresent(READ_CONTEXT.book) ||
+      !ispresent(READ_CONTEXT.board) ||
+      !ispresent(READ_CONTEXT.element)
+    ) {
+      return 0
+    }
+
+    // creates a new board from an existing one or blank, and writes the id to the given stat
+    const [stat, maybesource] = readargs(words, 0, [
+      ARG_TYPE.NAME,
+      ARG_TYPE.MAYBE_STRING,
+    ])
+
+    const createdboard = createboard()
+    if (ispresent(createdboard)) {
+      // attempt to clone existing board
+      if (isstring(maybesource)) {
+        const sourceboard = memoryboardread(maybesource)
+        if (ispresent(sourceboard)) {
+          boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
+        }
+      }
+
+      // update stat with created board id
+      // todo, how do we write to board exit stats ??
+      chip.set(stat, createdboard.id)
+    }
+
+    return 0
+  })
   .command('goto', (_, words) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
@@ -256,8 +281,6 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(targetboard)) {
       return 0
     }
-    // ensure we can do named lookups
-    boardsetlookup(targetboard)
 
     // read entry pt
     const destpt: PT = {
@@ -310,7 +333,7 @@ export const BOARD_FIRMWARE = createfirmware()
 
     return 0
   })
-  .command('build', (chip, words) => {
+  .command('transport', (_, words) => {
     if (
       !ispresent(READ_CONTEXT.book) ||
       !ispresent(READ_CONTEXT.board) ||
@@ -319,25 +342,63 @@ export const BOARD_FIRMWARE = createfirmware()
       return 0
     }
 
-    // creates a new board from an existing one or blank, and writes the id to the given stat
-    const [stat, maybesource] = readargs(words, 0, [
-      ARG_TYPE.NAME,
-      ARG_TYPE.MAYBE_STRING,
-    ])
-
-    const createdboard = createboard()
-    if (ispresent(createdboard)) {
-      // attempt to clone existing board
-      if (isstring(maybesource)) {
-        const sourceboard = memoryboardread(maybesource)
-        if (ispresent(sourceboard)) {
-          boardcopy(sourceboard.id, createdboard.id, p1, p2, targetset)
+    const [target] = readargs(words, 0, [ARG_TYPE.STRING])
+    const maybeobject = boardobjectread(READ_CONTEXT.board, target)
+    if (
+      ispresent(READ_CONTEXT.element?.x) &&
+      ispresent(READ_CONTEXT.element.y) &&
+      ispresent(maybeobject?.x) &&
+      ispresent(maybeobject.y)
+    ) {
+      let placing = true
+      const scan: PT = {
+        x: READ_CONTEXT.element.x,
+        y: READ_CONTEXT.element.y,
+      }
+      const deltax = scan.x - maybeobject.x
+      const deltay = scan.y - maybeobject.y
+      if (
+        memoryelementstatread(READ_CONTEXT.element, 'shootx') !== deltax ||
+        memoryelementstatread(READ_CONTEXT.element, 'shooty') !== deltay
+      ) {
+        // transporters are one direction
+        return 0
+      }
+      while (placing) {
+        scan.x += deltax
+        scan.y += deltay
+        // scan until board edge
+        if (
+          scan.x < 0 &&
+          scan.x >= BOARD_WIDTH &&
+          scan.y < 0 &&
+          scan.y >= BOARD_HEIGHT
+        ) {
+          break
+        }
+        // scan until we find an opposite transporter
+        const maybetransporter = boardelementread(READ_CONTEXT.board, scan)
+        if (
+          maybetransporter?.kind === READ_CONTEXT.element.kind &&
+          memoryelementstatread(maybetransporter, 'shootx') === -deltax &&
+          memoryelementstatread(maybetransporter, 'shooty') === -deltay
+        ) {
+          // if we can move the object here, we're done!
+          if (
+            memorymoveobject(
+              READ_CONTEXT.book,
+              READ_CONTEXT.board,
+              maybeobject,
+              {
+                x: scan.x + deltax,
+                y: scan.y + deltay,
+              },
+            )
+          ) {
+            placing = false
+          }
         }
       }
-
-      // update stat with created board id
-      // todo, how do we write to board exit stats ??
-      chip.set(stat, createdboard.id)
     }
 
     return 0
@@ -346,9 +407,6 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-
-    // make sure lookup is created
-    boardsetlookup(READ_CONTEXT.board)
 
     // shove target at dir, in the direction of the given dir
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
@@ -368,9 +426,6 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-
-    // make sure lookup is created
-    boardsetlookup(READ_CONTEXT.board)
 
     const [dir, strcolor, ii] = readargs(words, 0, [
       ARG_TYPE.DIR,
@@ -450,9 +505,6 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-
-    // make sure lookup is created
-    boardsetlookup(READ_CONTEXT.board)
 
     // read
     const [target, into] = readargs(words, 0, [ARG_TYPE.KIND, ARG_TYPE.KIND])

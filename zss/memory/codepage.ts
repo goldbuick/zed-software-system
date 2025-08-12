@@ -359,6 +359,10 @@ export function codepageapplyelementstats(
       case 'p4':
       case 'p5':
       case 'p6':
+      case 'p7':
+      case 'p8':
+      case 'p9':
+      case 'p10':
       case 'cycle':
       case 'stepx':
       case 'stepy':

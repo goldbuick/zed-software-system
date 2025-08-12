@@ -15,6 +15,8 @@ import {
 
 import { PanelItemProps, inputcolor, setuppanelitem, strsplice } from './common'
 
+const maybedefault = -111111
+
 export function PanelItemNumber({
   sidebar,
   chip,
@@ -28,16 +30,16 @@ export function PanelItemNumber({
 
   const [target, maybemin, maybemax] = [
     maptovalue(args[0], ''),
-    maptonumber(args[1], -1),
-    maptonumber(args[2], -1),
+    maptonumber(args[1], maybedefault),
+    maptonumber(args[2], maybedefault),
   ]
 
   let min: number
   let max: number
-  if (maybemin === -1) {
+  if (maybemin === maybedefault) {
     min = 0
     max = 31
-  } else if (maybemax === -1) {
+  } else if (maybemax === maybedefault) {
     min = 0
     max = maybemin
   } else {
