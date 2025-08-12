@@ -357,6 +357,13 @@ export const BOARD_FIRMWARE = createfirmware()
       }
       const deltax = scan.x - maybeobject.x
       const deltay = scan.y - maybeobject.y
+      if (
+        memoryelementstatread(READ_CONTEXT.element, 'shootx') !== deltax ||
+        memoryelementstatread(READ_CONTEXT.element, 'shooty') !== deltay
+      ) {
+        // transporters are one direction
+        return 0
+      }
       while (placing) {
         scan.x += deltax
         scan.y += deltay
