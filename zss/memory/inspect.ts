@@ -236,9 +236,7 @@ export function memoryinspectcommand(path: string, player: string) {
       break
     case 'code':
       doasync(SOFTWARE, player, async () => {
-        const display = bookelementdisplayread(element)
         const pagetype = 'object'
-        api_log(SOFTWARE, player, `opened [${pagetype}] ${display.name}`)
 
         // edit path
         const path = [board.id, element.id]
