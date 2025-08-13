@@ -363,12 +363,6 @@ export const CLI_FIRMWARE = createfirmware()
 
     if (ispresent(codepage) && ispresent(codepagebook)) {
       const name = codepagereadname(codepage)
-      const pagetype = codepagereadtypetostring(codepage)
-      api_log(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        `opened [${pagetype}] ${name}`,
-      )
 
       // path
       const path = [codepage.id, maybeobject]
