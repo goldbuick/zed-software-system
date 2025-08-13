@@ -32,7 +32,7 @@ import {
   boardsetterrain,
   boardterrainsetfromkind,
 } from './board'
-import { boardelementapplycolor, boardelementisobject } from './boardelement'
+import { boardelementapplycolor } from './boardelement'
 import {
   boardnamedwrite,
   boardobjectlookupwrite,
