@@ -1,7 +1,6 @@
 import { ispid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { dirfrompts, ptapplydir } from 'zss/words/dir'
 import { COLLISION, PT } from 'zss/words/types'
 
 import { checkdoescollide } from './atomics'
@@ -18,11 +17,7 @@ import {
   CODE_PAGE_TYPE,
 } from './types'
 
-import {
-  memoryelementcheckpushable,
-  memoryelementkindread,
-  memoryelementstatread,
-} from '.'
+import { memoryelementkindread, memoryelementstatread } from '.'
 
 // object / terrain utils
 
@@ -156,14 +151,6 @@ export function boardmoveobject(
     // and we are both NOT players
     (!movingelementisplayer || !maybeobjectisplayer)
   ) {
-    // check groups
-    const groupa = memoryelementstatread(movingelement, 'group')
-    const groupb = memoryelementstatread(maybeobject, 'group')
-    if ((groupa || groupb) && groupa != groupb) {
-      // for sending interaction messages
-      return { ...maybeobject }
-    }
-
     // for sending interaction messages
     return { ...maybeobject }
   }

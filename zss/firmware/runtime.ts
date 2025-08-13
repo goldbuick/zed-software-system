@@ -82,7 +82,7 @@ export const RUNTIME_FIRMWARE = createfirmware({
     // return has unhandled
     return [false, undefined]
   },
-  everytick() {
+  aftertick() {
     const queue = gadgetcheckqueue(READ_CONTEXT.elementid)
     const [ticker] = queue
     if (queue.length === 1 && isstring(ticker)) {

@@ -136,16 +136,16 @@ export function firmwareset(
   return [false, undefined]
 }
 
-export function firmwaretick(driver: DRIVER_TYPE, chip: CHIP) {
-  const wares = getfimrwares(driver)
-  for (let i = 0; i < wares.length; ++i) {
-    wares[i].tick(chip)
-  }
-}
-
 export function firmwareeverytick(driver: DRIVER_TYPE, chip: CHIP) {
   const wares = getfimrwares(driver)
   for (let i = 0; i < wares.length; ++i) {
     wares[i].everytick(chip)
+  }
+}
+
+export function firmwareaftertick(driver: DRIVER_TYPE, chip: CHIP) {
+  const wares = getfimrwares(driver)
+  for (let i = 0; i < wares.length; ++i) {
+    wares[i].aftertick(chip)
   }
 }
