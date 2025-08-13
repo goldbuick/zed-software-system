@@ -69,6 +69,7 @@ export type CHIP = {
   try: (...words: WORD[]) => WORD_RESULT
   take: (...words: WORD[]) => WORD_RESULT
   give: (...words: WORD[]) => WORD_RESULT
+  duplicate: (...words: WORD[]) => WORD_RESULT
   repeatstart: (index: number, ...words: WORD[]) => void
   repeat: (index: number) => WORD_RESULT
   foreachstart: (index: number, ...words: WORD[]) => WORD_RESULT
@@ -509,6 +510,9 @@ export function createchip(
       // update flag
       chip.set(name, maptonumber(maybecurrent, 0) + value)
       return result
+    },
+    duplicate(...words) {
+      return chip.command('duplicate', ...words)
     },
     repeatstart(index, ...words) {
       const [value, ii] = readargs(words, 0, [ARG_TYPE.NUMBER])

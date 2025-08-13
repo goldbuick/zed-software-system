@@ -1,5 +1,5 @@
 import { CHIP } from 'zss/chip'
-import { boardcopy } from 'zss/feature/boardcopy'
+import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
 import { createfirmware } from 'zss/firmware'
 import { clamp } from 'zss/mapping/number'
 import { deepcopy, isnumber, ispresent, isstring } from 'zss/mapping/types'
@@ -202,29 +202,35 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
 
 function commanddupe(_: any, words: WORD[], arg?: WORD): 0 | 1 {
   if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
-    return 0
+    return 1
   }
 
   // duplicate target at dir, in the direction of the given dir
   const [dir, dupedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
   const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
-
-  // const element = bookboardwritefromkind(
-  //   READ_CONTEXT.book,
-  //   READ_CONTEXT.board,
-  //   kind,
-  //   dir.destpt,
-  //   id,
-  // )
-  // if (ispresent(element) && ispresent(arg)) {
-  //   element.arg = arg
-  // }
-
-  if (boardelementisobject(maybetarget)) {
-    // object
-  } else if (ispresent(maybetarget)) {
-    // terrain
+  if (ispresent(maybetarget) && ispresent(maybetarget.kind)) {
+    const collision = memoryelementstatread(maybetarget, 'collision')
+    const blocked = boardcheckblockedobject(
+      READ_CONTEXT.board,
+      collision,
+      dupedir.destpt,
+    )
+    if (ispresent(blocked)) {
+      return 1
+    }
+    const element = memorywritefromkind(
+      READ_CONTEXT.board,
+      [maybetarget.kind],
+      dupedir.destpt,
+    )
+    if (!ispresent(element)) {
+      return 1
+    }
+    mapelementcopy(element, maybetarget)
+  } else {
+    return 1
   }
+
   return 0
 }
 
@@ -407,17 +413,16 @@ export const BOARD_FIRMWARE = createfirmware()
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-
     // shove target at dir, in the direction of the given dir
     const [dir, movedir] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.DIR])
     const maybetarget = boardelementread(READ_CONTEXT.board, dir.destpt)
     if (boardelementisobject(maybetarget)) {
-      memorymoveobject(
-        READ_CONTEXT.book,
-        READ_CONTEXT.board,
-        maybetarget,
-        movedir.destpt,
-      )
+      const shovex = dir.destpt.x + (movedir.destpt.x - movedir.startpt.x)
+      const shovey = dir.destpt.y + (movedir.destpt.y - movedir.startpt.y)
+      memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybetarget, {
+        x: shovex,
+        y: shovey,
+      })
     }
     return 0
   })
