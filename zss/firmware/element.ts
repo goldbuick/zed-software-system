@@ -454,33 +454,21 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // handle walk movement
     if (
       !READ_CONTEXT.element?.removed &&
-      (ispresent(READ_CONTEXT.element?.stepx) ||
-        ispresent(READ_CONTEXT.element?.stepy))
+      ispresent(READ_CONTEXT.element?.x) &&
+      ispresent(READ_CONTEXT.element.y) &&
+      ispresent(READ_CONTEXT.element.stepx) &&
+      ispresent(READ_CONTEXT.element.stepy) &&
+      (READ_CONTEXT.element.stepx || READ_CONTEXT.element.stepy)
     ) {
-      const pt: PT = {
-        x: READ_CONTEXT.element?.x ?? 0,
-        y: READ_CONTEXT.element?.y ?? 0,
-      }
-      const didmove = memorymoveobject(
+      memorymoveobject(
         READ_CONTEXT.book,
         READ_CONTEXT.board,
         READ_CONTEXT.element,
         {
-          x: pt.x + (READ_CONTEXT.element.stepx ?? 0),
-          y: pt.y + (READ_CONTEXT.element.stepy ?? 0),
+          x: READ_CONTEXT.element.x + READ_CONTEXT.element.stepx,
+          y: READ_CONTEXT.element.y + READ_CONTEXT.element.stepy,
         },
       )
-      if (didmove === false) {
-        // walking breakables get bonked
-        if (memoryelementstatread(READ_CONTEXT.element, 'breakable')) {
-          // mark target for deletion
-          boardsafedelete(
-            READ_CONTEXT.board,
-            READ_CONTEXT.element,
-            READ_CONTEXT.timestamp,
-          )
-        }
-      }
     }
   },
 })

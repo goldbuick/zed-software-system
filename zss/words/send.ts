@@ -13,8 +13,7 @@ export type SEND_META = {
 export function parsesend(words: WORD[], candirsend = false): SEND_META {
   const [first] = readargs(words, 0, [ARG_TYPE.ANY])
   if (candirsend && isstrdir(first)) {
-    const [, targetdir, maybelabel, ii] = readargs(words, 0, [
-      ARG_TYPE.NAME, // #send
+    const [targetdir, maybelabel, ii] = readargs(words, 0, [
       ARG_TYPE.DIR, // target
       ARG_TYPE.MAYBE_NAME, // label
     ])

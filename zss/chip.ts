@@ -5,11 +5,11 @@ import { MESSAGE, api_error } from './device/api'
 import { SOFTWARE } from './device/session'
 import {
   DRIVER_TYPE,
+  firmwareaftertick,
   firmwareeverytick,
   firmwareget,
   firmwaregetcommand,
   firmwareset,
-  firmwaretick,
 } from './firmware/runner'
 import { GeneratorBuild, GeneratorFunc } from './lang/generator'
 import { GENERATED_FILENAME } from './lang/transformer'
@@ -197,35 +197,33 @@ export function createchip(
         return false
       }
 
+      // run regardless of tick
+      firmwareeverytick(driver, chip)
+
       // chip is yield / ended state
-      if (chip.shouldtick() === false) {
-        firmwareeverytick(driver, chip)
-        return false
-      }
+      const shouldtick = chip.shouldtick()
+      if (shouldtick) {
+        // reset state
+        flags.lc = 0
+        flags.ys = 0
 
-      // reset state
-      flags.lc = 0
-      flags.ys = 0
+        // setup read context get
+        READ_CONTEXT.get = chip.get
 
-      // setup read context get
-      READ_CONTEXT.get = chip.get
-
-      // invoke firmware tick
-      firmwaretick(driver, chip)
-
-      // invoke generator
-      try {
-        if (!logic?.(chip)) {
+        // invoke generator
+        try {
+          if (!logic?.(chip)) {
+            flags.es = 1
+          }
+        } catch (err: any) {
+          api_error(SOFTWARE, READ_CONTEXT.elementfocus, 'crash', err.message)
           flags.es = 1
         }
-      } catch (err: any) {
-        api_error(SOFTWARE, READ_CONTEXT.elementfocus, 'crash', err.message)
-        flags.es = 1
       }
 
       // cleanup
-      firmwareeverytick(driver, chip)
-      return true
+      firmwareaftertick(driver, chip)
+      return shouldtick
     },
     isended() {
       return flags.es === 1

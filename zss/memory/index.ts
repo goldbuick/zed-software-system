@@ -744,9 +744,11 @@ export function memorymoveobject(
       const bump = ptapplydir({ x: blocked.x ?? 0, y: blocked.y ?? 0 }, bumpdir)
       memorymoveobject(book, board, blocked, bump)
     }
+
+    // update blocked by element
+    blocked = boardmoveobject(board, element, dest)
   }
 
-  blocked = boardmoveobject(board, element, dest)
   if (ispresent(blocked)) {
     const elementisplayer = ispid(element.id)
     const elementpartyisplayer = ispid(element.party ?? element.id)
