@@ -81,6 +81,9 @@ export enum DIR {
   MID,
   OVER,
   UNDER,
+  // distance specifiers
+  WITHIN,
+  AWAYBY,
 }
 
 export enum STAT_TYPE {

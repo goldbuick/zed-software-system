@@ -379,11 +379,13 @@ export function memorywritefromkind(
     const object = boardobjectcreatefromkind(board, dest, name, id)
     if (ispresent(object)) {
       boardelementapplycolor(object, maybecolor)
-      // update lookup (only objects)
-      boardobjectlookupwrite(board, object)
       // update named (terrain & objects)
       memoryelementkindread(object)
-      boardnamedwrite(board, object)
+      if (memoryelementstatread(object, 'collision') !== COLLISION.ISGHOST) {
+        // update lookup (only objects)
+        boardobjectlookupwrite(board, object)
+        boardnamedwrite(board, object)
+      }
       return object
     }
   }
@@ -393,10 +395,10 @@ export function memorywritefromkind(
     const terrain = boardterrainsetfromkind(board, dest, name)
     if (ispresent(terrain)) {
       boardelementapplycolor(terrain, maybecolor)
-      // calc index
-      const idx = pttoindex(dest, BOARD_WIDTH)
       // update named (terrain & objects)
       memoryelementkindread(terrain)
+      // calc index
+      const idx = pttoindex(dest, BOARD_WIDTH)
       boardnamedwrite(board, terrain, idx)
       return terrain
     }

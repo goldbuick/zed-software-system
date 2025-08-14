@@ -393,7 +393,8 @@ export function memoryconverttogadgetlayers(
   // process objects
   for (let i = 0; i < boardobjects.length; ++i) {
     const object = boardobjects[i]
-    if (ispresent(object.removed)) {
+    const collision = memoryelementstatread(object, 'collision')
+    if (ispresent(object.removed) || collision === COLLISION.ISGHOST) {
       continue
     }
 
@@ -549,6 +550,27 @@ export function memoryconverttogadgetlayers(
       control.focusy = sprite.y
       control.focusid = id
     }
+  }
+
+  // process isghost objects
+  for (let i = 0; i < boardobjects.length; ++i) {
+    const object = boardobjects[i]
+    const collision = memoryelementstatread(object, 'collision')
+    if (ispresent(object.removed) || collision !== COLLISION.ISGHOST) {
+      continue
+    }
+
+    const id = object.id ?? ''
+    const display = bookelementdisplayread(object)
+    const sprite = createcachedsprite(player, objectindex, id, i)
+
+    // setup sprite
+    sprite.x = object.x ?? 0
+    sprite.y = object.y ?? 0
+    sprite.char = display.char
+    sprite.color = display.color
+    sprite.bg = display.bg
+    objects.sprites.push(sprite)
   }
 
   // process ticker messages
