@@ -96,7 +96,7 @@ export function createfx() {
   }
 }
 
-export function createfxchannels() {
+export function createfxchannels(index: number) {
   const fc = new Channel(volumetodb(0))
   const echo = new Channel(volumetodb(0))
   const reverb = new Channel(volumetodb(0))
@@ -104,22 +104,22 @@ export function createfxchannels() {
   const vibrato = new Channel(volumetodb(0))
   const distortion = new Channel(volumetodb(0))
   const autowah = new Channel(volumetodb(0))
-  fc.receive('fc')
-  echo.receive('echo')
-  reverb.receive('reverb')
-  phaser.receive('phaser')
-  vibrato.receive('vibrato')
-  distortion.receive('distortion')
-  autowah.receive('autowah')
+  fc.receive(`fc${index}`)
+  echo.receive(`echo${index}`)
+  reverb.receive(`reverb${index}`)
+  phaser.receive(`phaser${index}`)
+  vibrato.receive(`vibrato${index}`)
+  distortion.receive(`distortion${index}`)
+  autowah.receive(`autowah${index}`)
 
   const sendtofx = new Channel()
-  sendtofx.send('fc')
-  sendtofx.send('echo')
-  sendtofx.send('reverb')
-  sendtofx.send('phaser')
-  sendtofx.send('vibrato')
-  sendtofx.send('distortion')
-  sendtofx.send('autowah')
+  sendtofx.send(`fc${index}`)
+  sendtofx.send(`echo${index}`)
+  sendtofx.send(`reverb${index}`)
+  sendtofx.send(`phaser${index}`)
+  sendtofx.send(`vibrato${index}`)
+  sendtofx.send(`distortion${index}`)
+  sendtofx.send(`autowah${index}`)
 
   return {
     sendtofx,
