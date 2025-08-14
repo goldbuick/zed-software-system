@@ -1,4 +1,4 @@
-import { indextopt, ptwithin } from 'zss/mapping/2d'
+import { indextopt, ptdist, ptwithin } from 'zss/mapping/2d'
 import { pick } from 'zss/mapping/array'
 import { createsid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
@@ -324,7 +324,7 @@ export function boardevaldir(
 ): EVAL_DIR {
   const layer: DIR = DIR.MID
   if (!ispresent(board) || !ispresent(element)) {
-    return { dir, startpt, destpt: startpt, layer, within: 0, awayby: 0 }
+    return { dir, startpt, destpt: startpt, layer, targets: [] }
   }
 
   const pt: PT = {
@@ -416,6 +416,7 @@ export function boardevaldir(
           dir.slice(i + 1),
           startpt,
         )
+
         // reset to startpt
         pt.x = startpt.x
         pt.y = startpt.y
@@ -481,8 +482,9 @@ export function boardevaldir(
             }
             break
         }
+
         // result
-        return { dir, startpt, destpt: pt, layer, within: 0, awayby: 0 }
+        return { dir, startpt, destpt: pt, layer, targets: [] }
       }
       // pathfinding
       case DIR.FLEE: {
@@ -575,30 +577,94 @@ export function boardevaldir(
       }
       // distance specifiers
       case DIR.WITHIN: {
-        // WITHIN <number>
-        const [within] = dir.slice(i + 1)
-        // need to skip args
-        ++i
-        // result
-        if (isnumber(within)) {
-          return { dir, startpt, destpt: pt, layer, within, awayby: 0 }
+        const [amount] = dir.slice(i + 1)
+        const modeval = boardevaldir(
+          board,
+          element,
+          player,
+          dir.slice(i + 2),
+          startpt,
+        )
+
+        // process range
+        if (modeval.targets.length === 0 && isnumber(amount) && amount > 0) {
+          // add targets within range of
+          for (let y = -amount; y <= amount; ++y) {
+            for (let x = -amount; x <= amount; ++x) {
+              const maybept = {
+                x: modeval.destpt.x + x,
+                y: modeval.destpt.y + y,
+              }
+              const maybeelement = boardelementread(board, maybept)
+              if (ispresent(maybeelement)) {
+                modeval.targets.push(maybeelement)
+              }
+            }
+          }
         }
-        break
+
+        // add targets within range of
+        if (isnumber(amount) && amount > 0) {
+          return {
+            ...modeval,
+            targets: modeval.targets.filter((maybept) => {
+              if (ispt(maybept)) {
+                const dist = ptdist(maybept, modeval.destpt)
+                return dist <= amount
+              }
+              return false
+            }),
+          }
+        }
+
+        return modeval
       }
       case DIR.AWAYBY: {
-        // AWAYBY <number>
-        const [awayby] = dir.slice(i + 1)
-        // need to skip args
-        ++i
-        // result
-        if (isnumber(awayby)) {
-          return { dir, startpt, destpt: pt, layer, within: 0, awayby }
+        const [amount] = dir.slice(i + 1)
+        const modeval = boardevaldir(
+          board,
+          element,
+          player,
+          dir.slice(i + 2),
+          startpt,
+        )
+
+        // process range
+        if (modeval.targets.length === 0 && isnumber(amount) && amount > 0) {
+          // add targets within range of
+          for (let y = -amount; y <= amount; ++y) {
+            for (let x = -amount; x <= amount; ++x) {
+              const maybept = {
+                x: modeval.destpt.x + x,
+                y: modeval.destpt.y + y,
+              }
+              const maybeelement = boardelementread(board, maybept)
+              if (ispresent(maybeelement)) {
+                modeval.targets.push(maybeelement)
+              }
+            }
+          }
         }
-        break
+
+        // add targets within range of
+        if (isnumber(amount) && amount > 0) {
+          return {
+            ...modeval,
+            targets: modeval.targets.filter((maybept) => {
+              if (ispt(maybept)) {
+                const dist = ptdist(maybept, modeval.destpt)
+                return dist >= amount
+              }
+              return false
+            }),
+          }
+        }
+
+        return modeval
       }
     }
   }
 
   // result
-  return { dir, startpt, destpt: pt, layer, within: 0, awayby: 0 }
+  return { dir, startpt, destpt: pt, layer, targets: [] }
 }
