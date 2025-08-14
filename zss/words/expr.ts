@@ -10,6 +10,7 @@ import {
 import { boardelementread, boardgetterrain } from 'zss/memory/board'
 import { boardcheckmoveobject } from 'zss/memory/boardops'
 import { bookelementdisplayread } from 'zss/memory/book'
+import { BOARD_ELEMENT } from 'zss/memory/types'
 
 import { isstrcategory, mapstrcategory, readcategory } from './category'
 import { isstrcollision, mapstrcollision, readcollision } from './collision'
@@ -204,6 +205,19 @@ export function readexpr(index: number): [any, number] {
             ARG_TYPE.COLOR_OR_KIND,
           ])
 
+          if (dir.targets.length) {
+            const matchlist: BOARD_ELEMENT[] = []
+            for (let i = 0; i < dir.targets.length; ++i) {
+              const target = dir.targets[i]
+              const anyexpr = ['any', 'at', target.x, target.y, ...match]
+              const [found] = readargs(anyexpr, 0, [ARG_TYPE.ANY])
+              if (isarray(found) && found.length) {
+                matchlist.push(...found)
+              }
+            }
+            return [matchlist, iii]
+          }
+
           // grab dest element from DIR
           const maybelement =
             dir.layer === DIR.MID
@@ -231,6 +245,7 @@ export function readexpr(index: number): [any, number] {
               return [[maybelement], iii]
             }
           }
+
           return [[], iii]
         }
 
@@ -260,6 +275,19 @@ export function readexpr(index: number): [any, number] {
             ARG_TYPE.DIR,
             ARG_TYPE.COLOR_OR_KIND,
           ])
+
+          if (dir.targets.length) {
+            let matchcount = 0
+            for (let i = 0; i < dir.targets.length; ++i) {
+              const target = dir.targets[i]
+              const anyexpr = ['countof', 'at', target.x, target.y, ...match]
+              const [found] = readargs(anyexpr, 0, [ARG_TYPE.ANY])
+              if (isnumber(found)) {
+                matchcount += found
+              }
+            }
+            return [matchcount, iii]
+          }
 
           // grab dest element from DIR
           const maybelement =
