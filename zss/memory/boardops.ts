@@ -157,15 +157,14 @@ export function boardmoveobject(
 
   // blocked by terrain
   const mayberterrain = board.terrain[destidx]
-  if (ispresent(mayberterrain)) {
-    const terraincollision =
-      mayberterrain.collision ??
-      mayberterrain?.kinddata?.collision ??
-      COLLISION.ISWALK
-    if (checkdoescollide(movingelementcollision, terraincollision)) {
-      // for sending interaction messages
-      return { ...mayberterrain, x: dest.x, y: dest.y }
-    }
+  const terraincollision =
+    mayberterrain?.collision ??
+    mayberterrain?.kinddata?.collision ??
+    COLLISION.ISWALK
+  // if blocked by terrain, bail
+  if (checkdoescollide(movingelementcollision, terraincollision)) {
+    // for sending interaction messages
+    return { ...mayberterrain, x: dest.x, y: dest.y }
   }
 
   // update object location

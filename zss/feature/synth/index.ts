@@ -135,7 +135,7 @@ export function createsynth() {
   // 1 FX - play
   // 2 FX - bgplay
   // this affords controlling the wet 0/1 ratio sent to effects
-  const FX = [createfxchannels(), createfxchannels(), createfxchannels()]
+  const FX = [createfxchannels(1), createfxchannels(2), createfxchannels(3)]
   for (let i = 0; i < FX.length; ++i) {
     const f = FX[i]
     f.fc.connect(FXCHAIN.fc)
@@ -145,7 +145,8 @@ export function createsynth() {
     f.vibrato.connect(FXCHAIN.vibrato)
     f.distortion.connect(FXCHAIN.distortion)
     f.autowah.connect(FXCHAIN.autowah)
-    const dest = i < 2 ? playvolume : bgplayvolume
+    const isplay = i < 2
+    const dest = isplay ? playvolume : bgplayvolume
     FXCHAIN.fc.connect(dest)
     FXCHAIN.echo.connect(dest)
     FXCHAIN.reverb.connect(dest)
@@ -161,7 +162,8 @@ export function createsynth() {
 
   function connectsource(index: number) {
     const f = mapindextofx(index)
-    const dest = index < 4 ? playvolume : bgplayvolume
+    const isplay = index < 4
+    const dest = isplay ? playvolume : bgplayvolume
 
     // everything not noise
     switch (SOURCE[index]?.source.type) {
@@ -173,7 +175,8 @@ export function createsynth() {
         break
       default:
         // connect synth
-        SOURCE[index]?.source.synth.chain(FX[f].sendtofx, dest)
+        SOURCE[index]?.source.synth.connect(dest)
+        SOURCE[index]?.source.synth.connect(FX[f].sendtofx)
         break
     }
 
@@ -187,13 +190,18 @@ export function createsynth() {
         SOURCE[index]?.source.synth.chain(
           SOURCE[index]?.source.filter1,
           SOURCE[index]?.source.filter2,
-          FX[f].sendtofx,
           dest,
+        )
+        SOURCE[index]?.source.synth.chain(
+          SOURCE[index]?.source.filter1,
+          SOURCE[index]?.source.filter2,
+          FX[f].sendtofx,
         )
         break
       case SOURCE_TYPE.BELLS: {
         // second synth
-        SOURCE[index]?.source.sparkle.chain(FX[f].sendtofx, dest)
+        SOURCE[index]?.source.sparkle.connect(dest)
+        SOURCE[index]?.source.sparkle.connect(FX[f].sendtofx)
         break
       }
     }
