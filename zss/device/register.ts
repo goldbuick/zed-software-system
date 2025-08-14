@@ -18,7 +18,6 @@ import {
 } from 'zss/feature/writeui'
 import {
   TAPE_DISPLAY,
-  TAPE_MAX_LINES,
   useGadgetClient,
   useTape,
   useTapeEditor,
@@ -28,7 +27,6 @@ import {
 import { useDeviceData, useMedia } from 'zss/gadget/hooks'
 import { doasync } from 'zss/mapping/func'
 import { createpid } from 'zss/mapping/guid'
-import { randominteger } from 'zss/mapping/number'
 import { waitfor } from 'zss/mapping/tick'
 import {
   MAYBE,
@@ -125,6 +123,13 @@ async function readurlcontent(): Promise<string> {
     return urlcontent
   }
   return ''
+}
+
+function randominteger(a: number, b: number) {
+  const min = Math.min(a, b)
+  const max = Math.max(a, b)
+  const delta = max - min + 1
+  return min + Math.floor(Math.random() * delta)
 }
 
 async function writewikilink() {
