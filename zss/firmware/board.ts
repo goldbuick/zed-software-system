@@ -106,97 +106,87 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     return 0
   }
 
-  // check kind of value given
-  const [value] = readargs(READ_CONTEXT.words, 0, [ARG_TYPE.ANY])
-
   // read
-  if (isstrdir(value)) {
-    const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
+  const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
 
-    // check clipping
-    const { destpt } = dir
-    if (
-      destpt.x < 0 ||
-      destpt.x >= BOARD_WIDTH ||
-      destpt.y < 0 ||
-      destpt.y >= BOARD_HEIGHT
-    ) {
-      return 0
-    }
+  // check clipping
+  const { destpt } = dir
+  if (
+    destpt.x < 0 ||
+    destpt.x >= BOARD_WIDTH ||
+    destpt.y < 0 ||
+    destpt.y >= BOARD_HEIGHT
+  ) {
+    return 0
+  }
 
-    // get kind we're putting
-    const [kindname] = kind
-    const from: PT = {
-      x: READ_CONTEXT.element?.x ?? 0,
-      y: READ_CONTEXT.element?.y ?? 0,
-    }
+  // get kind we're putting
+  const [kindname] = kind
+  const from: PT = {
+    x: READ_CONTEXT.element?.x ?? 0,
+    y: READ_CONTEXT.element?.y ?? 0,
+  }
 
-    // get kind's collision type
-    const kindelement = memoryelementkindread({ kind: kindname })
-    const kindcollision = memoryelementstatread(kindelement, 'collision')
-    if (kindcollision === COLLISION.ISGHOST) {
-      // ghost elements have no collision
-      memorywritefromkind(READ_CONTEXT.board, kind, dir.destpt, id)
-      return 0
-    }
+  // get kind's collision type
+  const kindelement = memoryelementkindread({ kind: kindname })
+  const kindcollision = memoryelementstatread(kindelement, 'collision')
+  if (kindcollision === COLLISION.ISGHOST) {
+    // ghost elements have no collision
+    memorywritefromkind(READ_CONTEXT.board, kind, dir.destpt, id)
+    return 0
+  }
 
-    // check if we are blocked by a pushable object element
-    let target = boardelementread(READ_CONTEXT.board, dir.destpt)
-    const targetpushable = memoryelementstatread(target, 'pushable')
-    if (targetpushable) {
-      // attempt to shove it away
-      const pivot = deepcopy(dir.destpt)
-      const pt = ptapplydir(pivot, dirfrompts(from, pivot))
-      memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
-      // grab new target
-      target = boardelementread(READ_CONTEXT.board, dir.destpt)
-    }
+  // check if we are blocked by a pushable object element
+  let target = boardelementread(READ_CONTEXT.board, dir.destpt)
+  const targetpushable = memoryelementstatread(target, 'pushable')
+  if (targetpushable) {
+    // attempt to shove it away
+    const pivot = deepcopy(dir.destpt)
+    const pt = ptapplydir(pivot, dirfrompts(from, pivot))
+    memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, target, pt)
+    // grab new target
+    target = boardelementread(READ_CONTEXT.board, dir.destpt)
+  }
 
-    // handle put empty case
-    if (kindname === 'empty') {
-      boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
-      return 0
-    }
+  // handle put empty case
+  if (kindname === 'empty') {
+    boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
+    return 0
+  }
 
-    // invoke safe delete
-    if (boardelementisobject(target)) {
-      boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
-    }
+  // invoke safe delete
+  if (boardelementisobject(target)) {
+    boardsafedelete(READ_CONTEXT.board, target, READ_CONTEXT.timestamp)
+  }
 
-    // handle terrain put
-    if (!boardelementisobject(kindelement)) {
-      memorywritefromkind(READ_CONTEXT.board, kind, dir.destpt, id)
-    }
+  // handle terrain put
+  if (!boardelementisobject(kindelement)) {
+    memorywritefromkind(READ_CONTEXT.board, kind, dir.destpt, id)
+  }
 
-    // handle object put
-    if (boardelementisobject(kindelement)) {
-      // validate placement works
-      const blocked = boardcheckblockedobject(
+  // handle object put
+  if (boardelementisobject(kindelement)) {
+    // validate placement works
+    const blocked = boardcheckblockedobject(
+      READ_CONTEXT.board,
+      kindcollision,
+      dir.destpt,
+    )
+
+    // write new element
+    if (!ispresent(blocked)) {
+      const element = memorywritefromkind(
         READ_CONTEXT.board,
-        kindcollision,
+        kind,
         dir.destpt,
+        id,
       )
-
-      // write new element
-      if (!ispresent(blocked)) {
-        const element = memorywritefromkind(
-          READ_CONTEXT.board,
-          kind,
-          dir.destpt,
-          id,
-        )
-        if (ispresent(element) && ispresent(arg)) {
-          element.arg = arg
-        }
+      if (ispresent(element) && ispresent(arg)) {
+        element.arg = arg
       }
-    } else {
-      // use value as a list
-      const [list, kind] = readargs(words, 0, [ARG_TYPE.ANY, ARG_TYPE.KIND])
-      // #put any within 10 red smoke
-      // #put any blocked n red smoke
-      // behavior here is a little different from change
     }
   }
+
   return 0
 }
 

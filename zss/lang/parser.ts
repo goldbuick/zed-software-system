@@ -528,7 +528,59 @@ class ScriptParser extends CstParser {
       { ALT: () => this.CONSUME(lexer.dir_rndp) },
       { ALT: () => this.CONSUME(lexer.dir_over) },
       { ALT: () => this.CONSUME(lexer.dir_under) },
+      { ALT: () => this.SUBRULE(this.dir_within) },
+      { ALT: () => this.SUBRULE(this.dir_awayby) },
     ])
+  })
+
+  dir_by = this.RULED('dir_by', () => {
+    this.CONSUME(lexer.dir_by)
+    this.SUBRULE1(this.simple_token)
+    this.SUBRULE2(this.simple_token)
+  })
+
+  dir_at = this.RULED('dir_at', () => {
+    this.CONSUME(lexer.dir_at)
+    this.SUBRULE1(this.simple_token)
+    this.SUBRULE2(this.simple_token)
+  })
+
+  dir_away = this.RULED('dir_away', () => {
+    this.CONSUME(lexer.dir_away)
+    this.SUBRULE1(this.simple_token)
+    this.SUBRULE2(this.simple_token)
+  })
+
+  dir_toward = this.RULED('dir_toward', () => {
+    this.CONSUME(lexer.dir_toward)
+    this.SUBRULE1(this.simple_token)
+    this.SUBRULE2(this.simple_token)
+  })
+
+  dir_find = this.RULED('dir_find', () => {
+    this.CONSUME(lexer.dir_find)
+    this.SUBRULE1(this.kind)
+  })
+
+  dir_flee = this.RULED('dir_flee', () => {
+    this.CONSUME(lexer.dir_flee)
+    this.SUBRULE1(this.kind)
+  })
+
+  dir_to = this.RULED('dir_to', () => {
+    this.CONSUME(lexer.dir_to)
+    this.SUBRULE1(this.dir)
+    this.SUBRULE2(this.dir)
+  })
+
+  dir_within = this.RULED('dir_within', () => {
+    this.CONSUME(lexer.dir_within)
+    this.SUBRULE1(this.simple_token)
+  })
+
+  dir_awayby = this.RULED('dir_awayby', () => {
+    this.CONSUME(lexer.dir_awayby)
+    this.SUBRULE1(this.simple_token)
   })
 
   dir = this.RULED('dir', () => {
@@ -539,58 +591,18 @@ class ScriptParser extends CstParser {
       { ALT: () => this.CONSUME(lexer.dir_down) },
       { ALT: () => this.CONSUME(lexer.dir_left) },
       { ALT: () => this.CONSUME(lexer.dir_right) },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.dir_by)
-          this.SUBRULE1(this.simple_token)
-          this.SUBRULE2(this.simple_token)
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.dir_at)
-          this.SUBRULE3(this.simple_token)
-          this.SUBRULE4(this.simple_token)
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.dir_away)
-          this.SUBRULE5(this.simple_token)
-          this.SUBRULE6(this.simple_token)
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.dir_toward)
-          this.SUBRULE7(this.simple_token)
-          this.SUBRULE8(this.simple_token)
-        },
-      },
+      { ALT: () => this.SUBRULE(this.dir_by) },
+      { ALT: () => this.SUBRULE(this.dir_at) },
+      { ALT: () => this.SUBRULE(this.dir_away) },
+      { ALT: () => this.SUBRULE(this.dir_toward) },
       { ALT: () => this.CONSUME(lexer.dir_flow) },
       { ALT: () => this.CONSUME(lexer.dir_seek) },
       { ALT: () => this.CONSUME(lexer.dir_rndns) },
       { ALT: () => this.CONSUME(lexer.dir_rndne) },
       { ALT: () => this.CONSUME(lexer.dir_rnd) },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.dir_find)
-          this.SUBRULE1(this.kind)
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.dir_flee)
-          this.SUBRULE2(this.kind)
-        },
-      },
-      {
-        ALT: () => {
-          this.CONSUME(lexer.dir_to)
-          this.SUBRULE1(this.dir)
-          this.SUBRULE2(this.dir)
-        },
-      },
+      { ALT: () => this.SUBRULE(this.dir_find) },
+      { ALT: () => this.SUBRULE(this.dir_flee) },
+      { ALT: () => this.SUBRULE(this.dir_to) },
       { ALT: () => this.CONSUME(lexer.dir_i) },
       { ALT: () => this.CONSUME(lexer.dir_u) },
       { ALT: () => this.CONSUME(lexer.dir_north) },

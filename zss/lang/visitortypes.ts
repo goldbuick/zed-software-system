@@ -612,6 +612,98 @@ export type Dir_modCstChildren = {
   token_rndp?: IToken[]
   token_over?: IToken[]
   token_under?: IToken[]
+  dir_within?: Dir_withinCstNode[]
+  dir_awayby?: Dir_awaybyCstNode[]
+}
+
+export type Dir_byCstNode = {
+  name: 'dir_by'
+  children: Dir_byCstChildren
+} & CstNode
+
+export type Dir_byCstChildren = {
+  token_by: IToken[]
+  simple_token: Simple_tokenCstNode[]
+}
+
+export type Dir_atCstNode = {
+  name: 'dir_at'
+  children: Dir_atCstChildren
+} & CstNode
+
+export type Dir_atCstChildren = {
+  token_at: IToken[]
+  simple_token: Simple_tokenCstNode[]
+}
+
+export type Dir_awayCstNode = {
+  name: 'dir_away'
+  children: Dir_awayCstChildren
+} & CstNode
+
+export type Dir_awayCstChildren = {
+  token_away: IToken[]
+  simple_token: Simple_tokenCstNode[]
+}
+
+export type Dir_towardCstNode = {
+  name: 'dir_toward'
+  children: Dir_towardCstChildren
+} & CstNode
+
+export type Dir_towardCstChildren = {
+  token_toward: IToken[]
+  simple_token: Simple_tokenCstNode[]
+}
+
+export type Dir_findCstNode = {
+  name: 'dir_find'
+  children: Dir_findCstChildren
+} & CstNode
+
+export type Dir_findCstChildren = {
+  token_find: IToken[]
+  kind: KindCstNode[]
+}
+
+export type Dir_fleeCstNode = {
+  name: 'dir_flee'
+  children: Dir_fleeCstChildren
+} & CstNode
+
+export type Dir_fleeCstChildren = {
+  token_flee: IToken[]
+  kind: KindCstNode[]
+}
+
+export type Dir_toCstNode = {
+  name: 'dir_to'
+  children: Dir_toCstChildren
+} & CstNode
+
+export type Dir_toCstChildren = {
+  token_to: IToken[]
+  dir: DirCstNode[]
+}
+
+export type Dir_withinCstNode = {
+  name: 'dir_within'
+  children: Dir_withinCstChildren
+} & CstNode
+
+export type Dir_withinCstChildren = {
+  token_within: IToken[]
+  simple_token: Simple_tokenCstNode[]
+}
+
+export type Dir_awaybyCstNode = {
+  name: 'dir_awayby'
+  children: Dir_awaybyCstChildren
+} & CstNode
+
+export type Dir_awaybyCstChildren = {
+  token_awayby: IToken[]
+  simple_token: Simple_tokenCstNode[]
 }
 
 export type DirCstNode = {
@@ -626,21 +718,18 @@ export type DirCstChildren = {
   token_down?: IToken[]
   token_left?: IToken[]
   token_right?: IToken[]
-  token_by?: IToken[]
-  simple_token?: Simple_tokenCstNode[]
-  token_at?: IToken[]
-  token_away?: IToken[]
-  token_toward?: IToken[]
+  dir_by?: Dir_byCstNode[]
+  dir_at?: Dir_atCstNode[]
+  dir_away?: Dir_awayCstNode[]
+  dir_toward?: Dir_towardCstNode[]
   token_flow?: IToken[]
   token_seek?: IToken[]
   token_rndns?: IToken[]
   token_rndne?: IToken[]
   token_rnd?: IToken[]
-  token_find?: IToken[]
-  kind?: KindCstNode[]
-  token_flee?: IToken[]
-  token_to?: IToken[]
-  dir?: DirCstNode[]
+  dir_find?: Dir_findCstNode[]
+  dir_flee?: Dir_fleeCstNode[]
+  dir_to?: Dir_toCstNode[]
   token_i?: IToken[]
   token_u?: IToken[]
   token_north?: IToken[]
@@ -962,6 +1051,15 @@ export type ICstNodeVisitor<IN, OUT> = {
   collision(children: CollisionCstChildren, param?: IN): OUT
   color(children: ColorCstChildren, param?: IN): OUT
   dir_mod(children: Dir_modCstChildren, param?: IN): OUT
+  dir_by(children: Dir_byCstChildren, param?: IN): OUT
+  dir_at(children: Dir_atCstChildren, param?: IN): OUT
+  dir_away(children: Dir_awayCstChildren, param?: IN): OUT
+  dir_toward(children: Dir_towardCstChildren, param?: IN): OUT
+  dir_find(children: Dir_findCstChildren, param?: IN): OUT
+  dir_flee(children: Dir_fleeCstChildren, param?: IN): OUT
+  dir_to(children: Dir_toCstChildren, param?: IN): OUT
+  dir_within(children: Dir_withinCstChildren, param?: IN): OUT
+  dir_awayby(children: Dir_awaybyCstChildren, param?: IN): OUT
   dir(children: DirCstChildren, param?: IN): OUT
   expr_any(children: Expr_anyCstChildren, param?: IN): OUT
   token_expr_any(children: Token_expr_anyCstChildren, param?: IN): OUT

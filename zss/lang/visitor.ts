@@ -30,7 +30,16 @@ import {
   Comp_opCstChildren,
   ComparisonCstChildren,
   DirCstChildren,
+  Dir_atCstChildren,
+  Dir_awayCstChildren,
+  Dir_awaybyCstChildren,
+  Dir_byCstChildren,
+  Dir_findCstChildren,
+  Dir_fleeCstChildren,
   Dir_modCstChildren,
+  Dir_toCstChildren,
+  Dir_towardCstChildren,
+  Dir_withinCstChildren,
   ExprCstChildren,
   Expr_anyCstChildren,
   Expr_valueCstChildren,
@@ -1390,6 +1399,13 @@ class ScriptVisitor
   }
 
   dir_mod(ctx: Dir_modCstChildren, location: CstNodeLocation) {
+    if (ctx.dir_within) {
+      return this.go(ctx.dir_within)
+    }
+    if (ctx.dir_awayby) {
+      return this.go(ctx.dir_awayby)
+    }
+
     let value = 'ERROR'
     if (ctx.token_cw) {
       value = 'cw'
@@ -1414,6 +1430,105 @@ class ScriptVisitor
       literal: LITERAL.STRING,
       value,
     })
+  }
+
+  dir_by(ctx: Dir_byCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'by',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  dir_at(ctx: Dir_atCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'at',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  dir_away(ctx: Dir_awayCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'away',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  dir_toward(ctx: Dir_towardCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'toward',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  dir_find(ctx: Dir_findCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'find',
+      }),
+      ...this.go(ctx.kind),
+    ]
+  }
+
+  dir_flee(ctx: Dir_fleeCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'flee',
+      }),
+      ...this.go(ctx.kind),
+    ]
+  }
+
+  dir_to(ctx: Dir_toCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'to',
+      }),
+      ...this.go(ctx.dir),
+    ]
+  }
+
+  dir_within(ctx: Dir_withinCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'within',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
+  dir_awayby(ctx: Dir_awaybyCstChildren, location: CstNodeLocation) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'awayby',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
   }
 
   dir(ctx: DirCstChildren, location: CstNodeLocation) {
@@ -1635,78 +1750,26 @@ class ScriptVisitor
       )
     }
 
-    if (ctx.token_by) {
-      values.push(
-        ...this.createcodenode(location, {
-          type: NODE.LITERAL,
-          literal: LITERAL.STRING,
-          value: 'by',
-        }),
-        ...this.go(ctx.simple_token),
-      )
+    if (ctx.dir_by) {
+      values.push(...this.go(ctx.dir_by))
     }
-    if (ctx.token_at) {
-      values.push(
-        ...this.createcodenode(location, {
-          type: NODE.LITERAL,
-          literal: LITERAL.STRING,
-          value: 'at',
-        }),
-        ...this.go(ctx.simple_token),
-      )
+    if (ctx.dir_at) {
+      values.push(...this.go(ctx.dir_at))
     }
-    if (ctx.token_away) {
-      values.push(
-        ...this.createcodenode(location, {
-          type: NODE.LITERAL,
-          literal: LITERAL.STRING,
-          value: 'away',
-        }),
-        ...this.go(ctx.simple_token),
-      )
+    if (ctx.dir_away) {
+      values.push(...this.go(ctx.dir_away))
     }
-    if (ctx.token_toward) {
-      values.push(
-        ...this.createcodenode(location, {
-          type: NODE.LITERAL,
-          literal: LITERAL.STRING,
-          value: 'toward',
-        }),
-        ...this.go(ctx.simple_token),
-      )
+    if (ctx.dir_toward) {
+      values.push(...this.go(ctx.dir_toward))
     }
-
-    if (ctx.token_find) {
-      values.push(
-        ...this.createcodenode(location, {
-          type: NODE.LITERAL,
-          literal: LITERAL.STRING,
-          value: 'find',
-        }),
-        ...this.go(ctx.kind),
-      )
+    if (ctx.dir_find) {
+      values.push(...this.go(ctx.dir_find))
     }
-
-    if (ctx.token_flee) {
-      values.push(
-        ...this.createcodenode(location, {
-          type: NODE.LITERAL,
-          literal: LITERAL.STRING,
-          value: 'flee',
-        }),
-        ...this.go(ctx.kind),
-      )
+    if (ctx.dir_flee) {
+      values.push(...this.go(ctx.dir_flee))
     }
-
-    if (ctx.token_to) {
-      values.push(
-        ...this.createcodenode(location, {
-          type: NODE.LITERAL,
-          literal: LITERAL.STRING,
-          value: 'to',
-        }),
-        ...this.go(ctx.dir),
-      )
+    if (ctx.dir_to) {
+      values.push(...this.go(ctx.dir_to))
     }
 
     return values.flat()

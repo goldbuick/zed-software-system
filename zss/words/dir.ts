@@ -105,6 +105,8 @@ export type EVAL_DIR = {
   startpt: PT
   destpt: PT
   layer: DIR
+  within: number
+  awayby: number
 }
 
 export function isstrdir(value: any): value is STR_DIR {

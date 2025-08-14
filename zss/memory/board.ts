@@ -324,7 +324,7 @@ export function boardevaldir(
 ): EVAL_DIR {
   const layer: DIR = DIR.MID
   if (!ispresent(board) || !ispresent(element)) {
-    return { dir, startpt, destpt: startpt, layer }
+    return { dir, startpt, destpt: startpt, layer, within: 0, awayby: 0 }
   }
 
   const pt: PT = {
@@ -482,7 +482,7 @@ export function boardevaldir(
             break
         }
         // result
-        return { dir, startpt, destpt: pt, layer }
+        return { dir, startpt, destpt: pt, layer, within: 0, awayby: 0 }
       }
       // pathfinding
       case DIR.FLEE: {
@@ -573,9 +573,32 @@ export function boardevaldir(
         modeval.layer = dirconst
         return modeval
       }
+      // distance specifiers
+      case DIR.WITHIN: {
+        // WITHIN <number>
+        const [within] = dir.slice(i + 1)
+        // need to skip args
+        ++i
+        // result
+        if (isnumber(within)) {
+          return { dir, startpt, destpt: pt, layer, within, awayby: 0 }
+        }
+        break
+      }
+      case DIR.AWAYBY: {
+        // AWAYBY <number>
+        const [awayby] = dir.slice(i + 1)
+        // need to skip args
+        ++i
+        // result
+        if (isnumber(awayby)) {
+          return { dir, startpt, destpt: pt, layer, within: 0, awayby }
+        }
+        break
+      }
     }
   }
 
   // result
-  return { dir, startpt, destpt: pt, layer }
+  return { dir, startpt, destpt: pt, layer, within: 0, awayby: 0 }
 }
