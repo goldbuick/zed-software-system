@@ -55,7 +55,7 @@ const DOOT_RATE = 10 * 100
 const acc: Record<number, number> = {}
 let localtick = 0
 let previous = performance.now()
-export const INPUT_RATE = 100
+export const INPUT_RATE = 200
 
 const INPUT_OPS = [
   INPUT.MOVE_UP,
