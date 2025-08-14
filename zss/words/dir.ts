@@ -93,6 +93,9 @@ export const dirconsts = {
   // layer specifier
   over: 'OVER',
   under: 'UNDER',
+  // distance specifiers
+  within: 'WITHIN',
+  awayby: 'AWAYBY',
 } as const
 
 export type STR_DIR_TYPE = typeof dirconsts
@@ -214,10 +217,20 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
         ii = iii
         break
       }
+      case 'WITHIN':
+      case 'AWAYBY': {
+        const [amount, iii] = readargs(READ_CONTEXT.words, ii, [
+          ARG_TYPE.NUMBER,
+        ])
+        strdir.push(amount)
+        ii = iii
+        break
+      }
     }
 
     // if we consume a modifier we need to read more dir consts
     // if so, stop reading the direction
+    const nextii = ii
     switch (maybedir[0]) {
       case 'CW':
       case 'CCW':
@@ -225,13 +238,15 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
       case 'RNDP':
       case 'OVER':
       case 'UNDER':
+      case 'WITHIN':
+      case 'AWAYBY':
         break
       default:
         return [strdir, ii]
     }
 
     // get next item in list
-    const [maybenextdir, iii] = readdirconst(ii)
+    const [maybenextdir, iii] = readdirconst(nextii)
     maybedir = maybenextdir
     ii = iii
   }
