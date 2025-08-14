@@ -1,5 +1,4 @@
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
-import { BOARD_ELEMENT } from 'zss/memory/types'
 
 import { ARG_TYPE, READ_CONTEXT, readargs } from './reader'
 import { DIR, NAME, PT, WORD } from './types'
@@ -109,7 +108,7 @@ export type EVAL_DIR = {
   startpt: PT
   destpt: PT
   layer: DIR
-  targets: BOARD_ELEMENT[]
+  targets: PT[]
 }
 
 export function isstrdir(value: any): value is STR_DIR {

@@ -36,7 +36,8 @@ export function boardsetlookup(board: MAYBE<BOARD>) {
       ispresent(object.x) &&
       ispresent(object.y) &&
       ispresent(object.id) &&
-      !ispresent(object.removed)
+      !ispresent(object.removed) &&
+      memoryelementstatread(object, 'collision') !== COLLISION.ISGHOST
     ) {
       // add category
       object.category = CATEGORY.ISOBJECT

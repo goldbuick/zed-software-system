@@ -68,9 +68,24 @@ function handlesend(chip: CHIP, send: SEND_META) {
       }
     }
   } else if (ispresent(send.targetdir)) {
-    const element = boardelementread(READ_CONTEXT.board, send.targetdir.destpt)
-    if (ispresent(element?.id)) {
-      chip.send(READ_CONTEXT.elementfocus, element.id, send.label)
+    if (send.targetdir.targets.length) {
+      for (let i = 0; i < send.targetdir.targets.length; ++i) {
+        const element = boardelementread(
+          READ_CONTEXT.board,
+          send.targetdir.targets[i],
+        )
+        if (ispresent(element?.id)) {
+          chip.send(READ_CONTEXT.elementfocus, element.id, send.label)
+        }
+      }
+    } else {
+      const element = boardelementread(
+        READ_CONTEXT.board,
+        send.targetdir.destpt,
+      )
+      if (ispresent(element?.id)) {
+        chip.send(READ_CONTEXT.elementfocus, element.id, send.label)
+      }
     }
   }
 }

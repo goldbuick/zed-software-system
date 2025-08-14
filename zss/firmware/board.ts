@@ -109,6 +109,15 @@ function commandput(words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   // read
   const [dir, kind] = readargs(words, 0, [ARG_TYPE.DIR, ARG_TYPE.KIND])
 
+  // list of target points to put
+  if (dir.targets.length) {
+    for (let i = 0; i < dir.targets.length; ++i) {
+      const target = dir.targets[i]
+      commandput(['at', target.x, target.y, ...kind], id, arg)
+    }
+    return 0
+  }
+
   // check clipping
   const { destpt } = dir
   if (

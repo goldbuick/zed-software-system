@@ -591,13 +591,12 @@ export function boardevaldir(
           // add targets within range of
           for (let y = -amount; y <= amount; ++y) {
             for (let x = -amount; x <= amount; ++x) {
-              const maybept = {
+              const pt = {
                 x: modeval.destpt.x + x,
                 y: modeval.destpt.y + y,
               }
-              const maybeelement = boardelementread(board, maybept)
-              if (ispresent(maybeelement)) {
-                modeval.targets.push(maybeelement)
+              if (ptwithinboard(pt)) {
+                modeval.targets.push(pt)
               }
             }
           }
@@ -630,17 +629,16 @@ export function boardevaldir(
         )
 
         // process range
-        if (modeval.targets.length === 0 && isnumber(amount) && amount > 0) {
+        if (modeval.targets.length === 0) {
           // add targets within range of
-          for (let y = -amount; y <= amount; ++y) {
-            for (let x = -amount; x <= amount; ++x) {
-              const maybept = {
+          for (let y = -BOARD_WIDTH; y <= BOARD_WIDTH; ++y) {
+            for (let x = -BOARD_WIDTH; x <= BOARD_WIDTH; ++x) {
+              const pt = {
                 x: modeval.destpt.x + x,
                 y: modeval.destpt.y + y,
               }
-              const maybeelement = boardelementread(board, maybept)
-              if (ispresent(maybeelement)) {
-                modeval.targets.push(maybeelement)
+              if (ptwithinboard(pt)) {
+                modeval.targets.push(pt)
               }
             }
           }
