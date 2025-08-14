@@ -162,13 +162,14 @@ export function readcolor(index: number): [STR_COLOR | undefined, number] {
     return [mapcolortostrcolor(maybeintcolor, undefined), index + 1]
   }
 
-  // read a color
+  // check for color
   const [maybecolor, ii] = readcolorconst(index)
   if (isstrcolor(maybecolor)) {
     strcolor.push(...maybecolor)
     next = ii
   }
 
+  // check for bg
   const [maybebg, iii] = readcolorconst(ii)
   if (isbgstrcolor(maybebg)) {
     strcolor.push(...maybebg)

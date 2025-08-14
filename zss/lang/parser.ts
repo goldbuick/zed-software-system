@@ -679,23 +679,23 @@ class ScriptParser extends CstParser {
 
   token_expr_min = this.RULED('token_expr_min', () => {
     this.CONSUME(lexer.expr_min)
-    this.SUBRULE(this.simple_tokens)
+    this.AT_LEAST_ONE(() => this.SUBRULE1(this.simple_token))
   })
 
   token_expr_max = this.RULED('token_expr_max', () => {
     this.CONSUME(lexer.expr_max)
-    this.SUBRULE(this.simple_tokens)
+    this.AT_LEAST_ONE(() => this.SUBRULE1(this.simple_token))
   })
 
   token_expr_pick = this.RULED('token_expr_pick', () => {
     this.CONSUME(lexer.expr_pick)
-    this.SUBRULE(this.simple_tokens)
+    this.AT_LEAST_ONE(() => this.SUBRULE1(this.simple_token))
   })
 
   token_expr_pickwith = this.RULED('token_expr_pickwith', () => {
     this.CONSUME(lexer.expr_pickwith)
-    this.SUBRULE(this.simple_token)
-    this.SUBRULE(this.simple_tokens)
+    this.SUBRULE1(this.simple_token)
+    this.AT_LEAST_ONE(() => this.SUBRULE2(this.simple_token))
   })
 
   token_expr_random = this.RULED('token_expr_random', () => {
@@ -757,11 +757,8 @@ class ScriptParser extends CstParser {
       { ALT: () => this.CONSUME(lexer.numberliteral) },
       { ALT: () => this.CONSUME(lexer.stringliteral) },
       { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
+      { ALT: () => this.SUBRULE(this.color) },
     ])
-  })
-
-  simple_tokens = this.RULED('simple_tokens', () => {
-    this.AT_LEAST_ONE(this.simple_token)
   })
 
   token = this.RULED('token', () => {

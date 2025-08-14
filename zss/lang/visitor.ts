@@ -1,7 +1,7 @@
 import { CstNode, CstNodeLocation, IToken } from 'chevrotain'
 import { LANG_DEV } from 'zss/config'
 import { createsid } from 'zss/mapping/guid'
-import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
+import { MAYBE, deepcopy, isarray, ispresent } from 'zss/mapping/types'
 
 import { parser } from './parser'
 import {
@@ -58,7 +58,6 @@ import {
   Short_goCstChildren,
   Short_tryCstChildren,
   Simple_tokenCstChildren,
-  Simple_tokensCstChildren,
   StmtCstChildren,
   Stmt_commandCstChildren,
   Stmt_commentCstChildren,
@@ -1892,7 +1891,7 @@ class ScriptVisitor
         literal: LITERAL.STRING,
         value: 'min',
       }),
-      ...this.go(ctx.simple_tokens),
+      ...this.go(ctx.simple_token),
     ]
   }
 
@@ -1903,7 +1902,7 @@ class ScriptVisitor
         literal: LITERAL.STRING,
         value: 'max',
       }),
-      ...this.go(ctx.simple_tokens),
+      ...this.go(ctx.simple_token),
     ]
   }
 
@@ -1914,7 +1913,7 @@ class ScriptVisitor
         literal: LITERAL.STRING,
         value: 'pick',
       }),
-      ...this.go(ctx.simple_tokens),
+      ...this.go(ctx.simple_token),
     ]
   }
 
@@ -1928,7 +1927,7 @@ class ScriptVisitor
         literal: LITERAL.STRING,
         value: 'pickwith',
       }),
-      ...this.go(ctx.simple_tokens),
+      ...this.go(ctx.simple_token),
     ]
   }
 
@@ -2101,36 +2100,11 @@ class ScriptVisitor
         value,
       })
     }
-    return []
-  }
 
-  simple_tokens(ctx: Simple_tokensCstChildren, location: CstNodeLocation) {
-    if (ctx.token_stringliteraldouble) {
-      const value = tokenstring(ctx.token_stringliteraldouble, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.TEMPLATE,
-        value,
-      })
+    if (ctx.color) {
+      return this.go(ctx.color)
     }
 
-    if (ctx.token_stringliteral) {
-      const value = tokenstring(ctx.token_stringliteral, '')
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.STRING,
-        value,
-      })
-    }
-
-    if (ctx.token_numberliteral) {
-      const value = parseFloat(tokenstring(ctx.token_numberliteral, '0'))
-      return this.createcodenode(location, {
-        type: NODE.LITERAL,
-        literal: LITERAL.NUMBER,
-        value,
-      })
-    }
     return []
   }
 

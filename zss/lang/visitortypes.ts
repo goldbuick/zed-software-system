@@ -843,7 +843,7 @@ export type Token_expr_minCstNode = {
 
 export type Token_expr_minCstChildren = {
   token_min: IToken[]
-  simple_tokens: Simple_tokensCstNode[]
+  simple_token: Simple_tokenCstNode[]
 }
 
 export type Token_expr_maxCstNode = {
@@ -853,7 +853,7 @@ export type Token_expr_maxCstNode = {
 
 export type Token_expr_maxCstChildren = {
   token_max: IToken[]
-  simple_tokens: Simple_tokensCstNode[]
+  simple_token: Simple_tokenCstNode[]
 }
 
 export type Token_expr_pickCstNode = {
@@ -863,7 +863,7 @@ export type Token_expr_pickCstNode = {
 
 export type Token_expr_pickCstChildren = {
   token_pick: IToken[]
-  simple_tokens: Simple_tokensCstNode[]
+  simple_token: Simple_tokenCstNode[]
 }
 
 export type Token_expr_pickwithCstNode = {
@@ -874,7 +874,6 @@ export type Token_expr_pickwithCstNode = {
 export type Token_expr_pickwithCstChildren = {
   token_pickwith: IToken[]
   simple_token: Simple_tokenCstNode[]
-  simple_tokens: Simple_tokensCstNode[]
 }
 
 export type Token_expr_randomCstNode = {
@@ -963,17 +962,7 @@ export type Simple_tokenCstChildren = {
   token_numberliteral?: IToken[]
   token_stringliteral?: IToken[]
   token_stringliteraldouble?: IToken[]
-}
-
-export type Simple_tokensCstNode = {
-  name: 'simple_tokens'
-  children: Simple_tokensCstChildren
-} & CstNode
-
-export type Simple_tokensCstChildren = {
-  token_numberliteral?: IToken[]
-  token_stringliteral?: IToken[]
-  token_stringliteraldouble?: IToken[]
+  color?: ColorCstNode[]
 }
 
 export type TokenCstNode = {
@@ -1084,6 +1073,5 @@ export type ICstNodeVisitor<IN, OUT> = {
   token_expr(children: Token_exprCstChildren, param?: IN): OUT
   string_token(children: String_tokenCstChildren, param?: IN): OUT
   simple_token(children: Simple_tokenCstChildren, param?: IN): OUT
-  simple_tokens(children: Simple_tokensCstChildren, param?: IN): OUT
   token(children: TokenCstChildren, param?: IN): OUT
 } & ICstVisitor<IN, OUT>

@@ -2,7 +2,13 @@ import { MAYBE, isnumber, isstring } from 'zss/mapping/types'
 import { boardevaldir } from 'zss/memory/board'
 import { BOARD, BOARD_ELEMENT, BOOK } from 'zss/memory/types'
 
-import { STR_COLOR, isstrcolor, mapstrcolor, readcolor } from './color'
+import {
+  STR_COLOR,
+  isstrcolor,
+  mapcolortostrcolor,
+  mapstrcolor,
+  readcolor,
+} from './color'
 import { EVAL_DIR, STR_DIR, isstrdir, mapstrdir, readdir } from './dir'
 import { readexpr } from './expr'
 import { STR_KIND, isstrkind, readkind } from './kind'
@@ -122,6 +128,9 @@ export function readargs<T extends ARG_TYPES>(
           if (isstrcolor(value)) {
             ii = iii
             values.push(value)
+          } else if (isnumber(value)) {
+            ii = iii
+            values.push(mapcolortostrcolor(value, undefined))
           } else {
             didexpect('color', value, words)
           }
