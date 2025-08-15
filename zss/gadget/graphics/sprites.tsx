@@ -36,16 +36,20 @@ export function Sprites({
 }: SpritesProps) {
   const { viewport } = useThree()
   const palette = useMedia((state) => state.palettedata)
-  const charset = useMedia((state) => state.charsetdata)
-  const altcharset = useMedia((state) => state.altcharsetdata)
-  const material = useMemo(() => {
-    return withbillboards ? createBillboardsMaterial() : createSpritesMaterial()
-  }, [withbillboards])
+  const charset = useMedia((state) => state.spritecharsetdata)
+  const altcharset = useMedia((state) => state.spritealtcharsetdata)
+  const material = useMemo(
+    () =>
+      withbillboards ? createBillboardsMaterial() : createSpritesMaterial(),
+    [withbillboards],
+  )
 
   const bgRef = useRef<BufferGeometry>(null)
   const spritepool = useRef<SPRITE[]>([])
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charset?.image ?? {}
+
+  console.info({ charset, altcharset })
 
   useMemo(() => {
     // setup sprite pool
@@ -230,8 +234,10 @@ export function Sprites({
     if (!charset || !bgRef.current) {
       return
     }
-    const imageCols = Math.round(imageWidth / CHAR_WIDTH)
-    const imageRows = Math.round(imageHeight / CHAR_HEIGHT)
+    const padwidth = CHAR_WIDTH + 2
+    const padheight = CHAR_HEIGHT + 2
+    // const imageCols = Math.round(imageWidth / padwidth)
+    const imageRows = Math.round(imageHeight / padheight)
     material.uniforms.palette.value = palette
     material.uniforms.map.value = charset
     material.uniforms.alt.value = altcharset ?? charset
@@ -241,12 +247,13 @@ export function Sprites({
     material.uniforms.pointSize.value.x = RUNTIME.DRAW_CHAR_WIDTH()
     material.uniforms.pointSize.value.y = RUNTIME.DRAW_CHAR_HEIGHT()
     material.uniforms.rows.value = imageRows - 1
-    material.uniforms.step.value.x = 1 / imageCols
-    material.uniforms.step.value.y = 1 / imageRows
-    material.uniforms.nudge.value.x = 0
-    material.uniforms.nudge.value.y = 0
+    material.uniforms.step.value.x = padwidth
+    material.uniforms.step.value.y = padheight
+    material.uniforms.nudge.value.x = 1 / imageWidth
+    material.uniforms.nudge.value.y = 1 / imageHeight
     material.uniforms.flip.value = fliptexture
     material.needsUpdate = true
+    console.info(1)
   }, [
     palette,
     charset,

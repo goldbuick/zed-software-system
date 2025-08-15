@@ -155,7 +155,7 @@ const spritesMaterial = new ShaderMaterial({
       }
       vec2 idx = vec2(px, py);
       vec2 char = vec2(lookup.x * step.x, (rows - lookup.y) * step.y);
-      vec2 uv = idx * step + char + nudge;
+      vec2 uv = idx * (step * nudge);
 
       bool useAlt = mod(time, interval * 2.0) > interval;
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
