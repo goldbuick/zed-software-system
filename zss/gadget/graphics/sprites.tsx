@@ -49,8 +49,6 @@ export function Sprites({
   const { width: imageWidth = 0, height: imageHeight = 0 } =
     charset?.image ?? {}
 
-  console.info({ charset, altcharset })
-
   useMemo(() => {
     // setup sprite pool
     if (spritepool.current.length === 0) {
@@ -236,7 +234,6 @@ export function Sprites({
     }
     const padwidth = CHAR_WIDTH + 2
     const padheight = CHAR_HEIGHT + 2
-    // const imageCols = Math.round(imageWidth / padwidth)
     const imageRows = Math.round(imageHeight / padheight)
     material.uniforms.palette.value = palette
     material.uniforms.map.value = charset
@@ -244,16 +241,18 @@ export function Sprites({
     material.uniforms.dpr.value = 1
     material.uniforms.screenwidth.value = viewport.width
     material.uniforms.screenheight.value = viewport.height
-    material.uniforms.pointSize.value.x = RUNTIME.DRAW_CHAR_WIDTH()
-    material.uniforms.pointSize.value.y = RUNTIME.DRAW_CHAR_HEIGHT()
     material.uniforms.rows.value = imageRows - 1
     material.uniforms.step.value.x = padwidth
     material.uniforms.step.value.y = padheight
-    material.uniforms.nudge.value.x = 1 / imageWidth
-    material.uniforms.nudge.value.y = 1 / imageHeight
+    material.uniforms.size.value.x = CHAR_WIDTH
+    material.uniforms.size.value.y = CHAR_HEIGHT
+    material.uniforms.pixel.value.x = 1 / imageWidth
+    material.uniforms.pixel.value.y = 1 / imageHeight
+    material.uniforms.pointSize.value.x = RUNTIME.DRAW_CHAR_WIDTH()
+    material.uniforms.pointSize.value.y = RUNTIME.DRAW_CHAR_HEIGHT()
     material.uniforms.flip.value = fliptexture
     material.needsUpdate = true
-    console.info(1)
+    console.info()
   }, [
     palette,
     charset,

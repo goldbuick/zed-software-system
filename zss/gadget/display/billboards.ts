@@ -33,7 +33,8 @@ const billboardsMaterial = new ShaderMaterial({
     },
     rows: new Uniform(1),
     step: new Uniform(new Vector2()),
-    nudge: new Uniform(new Vector2()),
+    size: new Uniform(new Vector2()),
+    pixel: new Uniform(new Vector2()),
     flip: new Uniform(true),
   },
   // vertex shader
@@ -140,7 +141,8 @@ const billboardsMaterial = new ShaderMaterial({
     uniform sampler2D alt;
     uniform float rows;
     uniform vec2 step;
-    uniform vec2 nudge;
+    uniform vec2 size;
+    uniform vec2 pixel;
     uniform vec2 pointSize;
     uniform bool flip;
 
