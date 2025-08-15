@@ -1,3 +1,5 @@
+import { MAYBE, ispresent } from 'zss/mapping/types'
+
 export type BITMAP = {
   width: number
   height: number
@@ -54,4 +56,44 @@ export function createbitmapfromarray(
     size: width * height,
     bits: new Uint8Array(bits),
   }
+}
+
+export function createspritebitmapfrombitmap(
+  source: MAYBE<BITMAP>,
+  charwidth: number,
+  charheight: number,
+) {
+  if (!ispresent(source)) {
+    return undefined
+  }
+
+  const rows = Math.round(source.height / charheight)
+  const cols = Math.round(source.width / charwidth)
+  const padwidth = charwidth + 2
+  const padheight = charheight + 2
+  const sourcewidth = cols * charwidth
+  const spritewidth = cols * padwidth
+  const spriteheight = rows * padheight
+  const spritebitmap = createbitmap(spritewidth, spriteheight)
+
+  for (let y = 0; y < rows; ++y) {
+    for (let x = 0; x < cols; ++x) {
+      for (let py = 0; py < charheight; ++py) {
+        for (let px = 0; px < charwidth; ++px) {
+          const sx = x * charwidth + px
+          const sy = y * charheight + py
+          const dx = x * padwidth + px + 1
+          const dy = y * padheight + py + 1
+          const sourcebit = source.bits[sx + sy * sourcewidth]
+          const idx = dx + dy * spritewidth
+          spritebitmap.bits[idx] = sourcebit
+          spritebitmap.bits[idx + 1] = sourcebit
+          spritebitmap.bits[idx + spritewidth] = sourcebit
+          spritebitmap.bits[idx + spritewidth + 1] = sourcebit
+        }
+      }
+    }
+  }
+
+  return spritebitmap
 }
