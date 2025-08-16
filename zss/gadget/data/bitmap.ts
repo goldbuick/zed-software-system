@@ -1,5 +1,7 @@
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
+import { CHAR_HEIGHT, CHAR_WIDTH } from './types'
+
 export type BITMAP = {
   width: number
   height: number
@@ -82,14 +84,23 @@ export function createspritebitmapfrombitmap(
         for (let px = 0; px < charwidth; ++px) {
           const sx = x * charwidth + px
           const sy = y * charheight + py
+          const sourcebit = source.bits[sx + sy * sourcewidth]
           const dx = x * padwidth + px + 1
           const dy = y * padheight + py + 1
-          const sourcebit = source.bits[sx + sy * sourcewidth]
           const idx = dx + dy * spritewidth
           spritebitmap.bits[idx] = sourcebit
-          spritebitmap.bits[idx + 1] = sourcebit
-          spritebitmap.bits[idx + spritewidth] = sourcebit
-          spritebitmap.bits[idx + spritewidth + 1] = sourcebit
+          if (px === 0) {
+            spritebitmap.bits[idx - 1] = sourcebit
+          }
+          if (px === CHAR_WIDTH - 1) {
+            spritebitmap.bits[idx + 1] = sourcebit
+          }
+          if (py === 0) {
+            spritebitmap.bits[idx - spritewidth] = sourcebit
+          }
+          if (py === CHAR_HEIGHT - 1) {
+            spritebitmap.bits[idx + spritewidth] = sourcebit
+          }
         }
       }
     }

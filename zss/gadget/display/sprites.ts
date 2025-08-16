@@ -113,6 +113,7 @@ const spritesMaterial = new ShaderMaterial({
 
       animPosition *= pointSize;
       animPosition += pointSize * 0.5;
+      animPosition.x -= 1.0;
 
       vec4 mvPosition = modelViewMatrix * vec4(animPosition, 0.0, 1.0);
       gl_Position = projectionMatrix * mvPosition;
@@ -146,17 +147,14 @@ const spritesMaterial = new ShaderMaterial({
       if (vVisible == 0.0 || px < 0.0 || px > 1.0) {
         discard;
       }
-
-      vec2 lookup = vec2(vCharData.x, rows - vCharData.y);
-
       float py = gl_PointCoord.y;
       if (flip) {
         py = 1.0 - py;
       }
 
       vec2 idx = vec2(px, py) * size * pixel;
-      vec2 char = lookup * step;
-      vec2 uv = char + idx + vec2(pixel.x, -pixel.y);
+      vec2 lookup = vec2(vCharData.x, rows - vCharData.y) * step * pixel;
+      vec2 uv = lookup + idx + vec2(1.0, 1.0) * pixel;
 
       bool useAlt = mod(time, interval * 2.0) > interval;
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
