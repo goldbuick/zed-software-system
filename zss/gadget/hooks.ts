@@ -4,12 +4,12 @@ import { objectKeys } from 'ts-extras'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import { PALETTE } from 'zss/feature/palette'
-import { TILES } from 'zss/gadget/data/types'
+import { CHAR_HEIGHT, CHAR_WIDTH, TILES } from 'zss/gadget/data/types'
 import { MAYBE, isequal, ispresent } from 'zss/mapping/types'
 import { createwritetextcontext } from 'zss/words/textformat'
 import { StoreApi, create, createStore } from 'zustand'
 
-import { BITMAP } from './data/bitmap'
+import { BITMAP, createspritebitmapfrombitmap } from './data/bitmap'
 import { convertpalettetocolors } from './data/palette'
 import { createbitmaptexture } from './display/textures'
 
@@ -190,14 +190,18 @@ export function useTilesData() {
 
 export type MEDIA_DATA = {
   palette?: BITMAP
-  charset?: BITMAP
   mood: string
   viewimage: string
   screen: Record<string, HTMLVideoElement>
+  charset?: BITMAP
   altcharset?: BITMAP
   palettedata?: Color[]
   charsetdata?: CanvasTexture
   altcharsetdata?: CanvasTexture
+  spritecharset?: BITMAP
+  spritealtcharset?: BITMAP
+  spritecharsetdata?: CanvasTexture
+  spritealtcharsetdata?: CanvasTexture
   reset: () => void
   setmood: (mood: string) => void
   setviewimage: (viewimage: string) => void
@@ -216,17 +220,21 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
   mood: '',
   viewimage: '',
   screen: {},
-  palettedata: convertpalettetocolors(palette),
-  charsetdata: createbitmaptexture(charset),
   reset() {
+    const spritecharset = ispresent(charset)
+      ? createspritebitmapfrombitmap(charset, CHAR_WIDTH, CHAR_HEIGHT)
+      : undefined
+    console.info(spritecharset)
     set({
       palette,
-      charset,
       mood: '',
       viewimage: '',
       screen: {},
       palettedata: convertpalettetocolors(palette),
+      charset,
       charsetdata: createbitmaptexture(charset),
+      spritecharset,
+      spritecharsetdata: createbitmaptexture(spritecharset),
     })
   },
   setmood(mood) {
@@ -258,7 +266,16 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
       if (isequal(state.charset, charset)) {
         return state
       }
-      return { ...state, charset, charsetdata: createbitmaptexture(charset) }
+      const spritecharset = ispresent(charset)
+        ? createspritebitmapfrombitmap(charset, CHAR_WIDTH, CHAR_HEIGHT)
+        : undefined
+      return {
+        ...state,
+        charset,
+        charsetdata: createbitmaptexture(charset),
+        spritecharset,
+        spritecharsetdata: createbitmaptexture(spritecharset),
+      }
     })
   },
   setaltcharset(altcharset) {
@@ -266,10 +283,15 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
       if (isequal(state.altcharset, altcharset)) {
         return state
       }
+      const spritealtcharset = ispresent(altcharset)
+        ? createspritebitmapfrombitmap(altcharset, CHAR_WIDTH, CHAR_HEIGHT)
+        : undefined
       return {
         ...state,
         altcharset,
         altcharsetdata: createbitmaptexture(altcharset),
+        spritealtcharset,
+        spritealtcharsetdata: createbitmaptexture(spritealtcharset),
       }
     })
   },
@@ -288,6 +310,8 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
     })
   },
 }))
+
+useMedia.getState().reset()
 
 export type DEVICE_DATA = {
   active: boolean

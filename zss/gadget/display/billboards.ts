@@ -33,7 +33,8 @@ const billboardsMaterial = new ShaderMaterial({
     },
     rows: new Uniform(1),
     step: new Uniform(new Vector2()),
-    nudge: new Uniform(new Vector2()),
+    size: new Uniform(new Vector2()),
+    pixel: new Uniform(new Vector2()),
     flip: new Uniform(true),
   },
   // vertex shader
@@ -140,7 +141,8 @@ const billboardsMaterial = new ShaderMaterial({
     uniform sampler2D alt;
     uniform float rows;
     uniform vec2 step;
-    uniform vec2 nudge;
+    uniform vec2 size;
+    uniform vec2 pixel;
     uniform vec2 pointSize;
     uniform bool flip;
 
@@ -156,16 +158,14 @@ const billboardsMaterial = new ShaderMaterial({
       if (vVisible == 0.0 || px < 0.0 || px > 1.0) {
         discard;
       }
-
-      vec2 lookup = vec2(vCharData.x, vCharData.y);
-
       float py = gl_PointCoord.y;
       if (flip) {
         py = 1.0 - py;
       }
-      vec2 idx = vec2(px, py);
-      vec2 char = vec2(lookup.x * step.x, (rows - lookup.y) * step.y);
-      vec2 uv = idx * step + char + nudge;
+
+      vec2 idx = vec2(px, py) * size * pixel;
+      vec2 lookup = vec2(vCharData.x, rows - vCharData.y) * step * pixel;
+      vec2 uv = lookup + idx + vec2(1.0, 1.0) * pixel;
 
       bool useAlt = mod(time, interval * 2.0) > interval;
       vec3 blip = useAlt ? texture2D(alt, uv).rgb : texture2D(map, uv).rgb;
