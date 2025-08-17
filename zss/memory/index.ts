@@ -936,28 +936,28 @@ export function memorymoveobject(
     }
 
     // delete breakable elements
-    if (elementisbullet && memoryelementstatread(blocked, 'breakable')) {
-      if (ispresent(blocked?.id)) {
-        const maybeobject = boardelementread(board, {
-          x: blocked.x ?? -1,
-          y: blocked.y ?? -1,
-        })
-        if (ispresent(maybeobject)) {
-          // mark target for deletion
-          boardsafedelete(
-            READ_CONTEXT.board,
-            maybeobject,
-            READ_CONTEXT.timestamp,
-          )
-        }
-      } else {
-        // overwrite terrain with empty
-        boardsetterrain(board, { x: dest.x, y: dest.y })
-      }
+    // if (elementisbullet && memoryelementstatread(blocked, 'breakable')) {
+    //   if (ispresent(blocked?.id)) {
+    //     const maybeobject = boardelementread(board, {
+    //       x: blocked.x ?? -1,
+    //       y: blocked.y ?? -1,
+    //     })
+    //     if (ispresent(maybeobject)) {
+    //       // mark target for deletion
+    //       boardsafedelete(
+    //         READ_CONTEXT.board,
+    //         maybeobject,
+    //         READ_CONTEXT.timestamp,
+    //       )
+    //     }
+    //   } else {
+    //     // overwrite terrain with empty
+    //     boardsetterrain(board, { x: dest.x, y: dest.y })
+    //   }
 
-      //
-      return true
-    }
+    //   //
+    //   return true
+    // }
 
     // blocked
     return false
