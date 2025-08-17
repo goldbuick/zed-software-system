@@ -224,7 +224,6 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
     const spritecharset = ispresent(charset)
       ? createspritebitmapfrombitmap(charset, CHAR_WIDTH, CHAR_HEIGHT)
       : undefined
-    console.info(spritecharset)
     set({
       palette,
       mood: '',

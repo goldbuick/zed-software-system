@@ -954,9 +954,6 @@ export function memorymoveobject(
         // overwrite terrain with empty
         boardsetterrain(board, { x: dest.x, y: dest.y })
       }
-
-      //
-      return true
     }
 
     // blocked

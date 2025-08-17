@@ -12,10 +12,33 @@ import {
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
+import { memoryelementstatread } from 'zss/memory'
 import { listelementsbyidnameorpts } from 'zss/memory/atomics'
-import { boardelementread } from 'zss/memory/board'
+import {
+  boardelementread,
+  boardobjectread,
+  boardsafedelete,
+} from 'zss/memory/board'
+import { BOARD_ELEMENT } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { SEND_META, parsesend } from 'zss/words/send'
+
+function handlesendelement(chip: CHIP, element: BOARD_ELEMENT, label: string) {
+  if (!ispresent(READ_CONTEXT.board)) {
+    return
+  }
+  switch (label) {
+    case 'shot':
+    case 'bombed':
+      if (memoryelementstatread(element, 'breakable')) {
+        boardsafedelete(READ_CONTEXT.board, element, READ_CONTEXT.timestamp)
+      }
+      break
+  }
+  if (ispresent(element?.id)) {
+    chip.send(READ_CONTEXT.elementfocus, element.id, label)
+  }
+}
 
 function handlesend(chip: CHIP, send: SEND_META) {
   if (ispresent(send.targetname)) {
@@ -24,18 +47,23 @@ function handlesend(chip: CHIP, send: SEND_META) {
       case 'all':
         for (let i = 0; i < objectids.length; ++i) {
           const id = objectids[i]
-          chip.send(READ_CONTEXT.elementfocus, id, send.label)
+          const object = boardobjectread(READ_CONTEXT.board, id)
+          if (ispresent(object)) {
+            handlesendelement(chip, object, send.label)
+          }
         }
         break
       case 'others':
         for (let i = 0; i < objectids.length; ++i) {
           const id = objectids[i]
-          if (id !== chip.id()) {
-            chip.send(READ_CONTEXT.elementfocus, id, send.label)
+          const object = boardobjectread(READ_CONTEXT.board, id)
+          if (id !== chip.id() && ispresent(object)) {
+            handlesendelement(chip, object, send.label)
           }
         }
         break
       case 'self':
+        // check if we are sending shot / bombed to a breakable
         if (READ_CONTEXT.elementid !== chip.id()) {
           // detect messages from run & runwith
           chip.send(
@@ -60,8 +88,8 @@ function handlesend(chip: CHIP, send: SEND_META) {
         ])
         for (let i = 0; i < elements.length; ++i) {
           const element = elements[i]
-          if (ispresent(element.id)) {
-            chip.send(READ_CONTEXT.elementfocus, element.id, send.label)
+          if (ispresent(element)) {
+            handlesendelement(chip, element, send.label)
           }
         }
         break
@@ -74,8 +102,8 @@ function handlesend(chip: CHIP, send: SEND_META) {
           READ_CONTEXT.board,
           send.targetdir.targets[i],
         )
-        if (ispresent(element?.id)) {
-          chip.send(READ_CONTEXT.elementfocus, element.id, send.label)
+        if (ispresent(element)) {
+          handlesendelement(chip, element, send.label)
         }
       }
     } else {
@@ -83,8 +111,8 @@ function handlesend(chip: CHIP, send: SEND_META) {
         READ_CONTEXT.board,
         send.targetdir.destpt,
       )
-      if (ispresent(element?.id)) {
-        chip.send(READ_CONTEXT.elementfocus, element.id, send.label)
+      if (ispresent(element)) {
+        handlesendelement(chip, element, send.label)
       }
     }
   }
