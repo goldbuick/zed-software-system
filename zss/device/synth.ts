@@ -1,8 +1,6 @@
 import { Context, getTransport, setContext, start } from 'tone'
 import { createdevice } from 'zss/device'
-import { AUDIO_SYNTH, createsynth } from 'zss/feature/synth'
-import { addfcrushmodule } from 'zss/feature/synth/fcrushworkletnode'
-import { addsidechainmodule } from 'zss/feature/synth/sidechainworkletnode'
+import { AUDIO_SYNTH, createsynth, setupsynth } from 'zss/feature/synth'
 import { synthvoiceconfig } from 'zss/feature/synth/voiceconfig'
 import { FXNAME, synthvoicefxconfig } from 'zss/feature/synth/voicefxconfig'
 import { ttsplay } from 'zss/feature/tts'
@@ -55,16 +53,12 @@ export function enableaudio() {
           //
         }
         // add custom audio worklet modules
-        return addfcrushmodule()
-          .then(() => {
-            return addsidechainmodule()
-          })
-          .then(() => {
-            // lets rolling
-            locked = false
-            enabled = true
-            synth_audioenabled(synthdevice, registerreadplayer())
-          })
+        return setupsynth().then(() => {
+          // lets rolling
+          locked = false
+          enabled = true
+          synth_audioenabled(synthdevice, registerreadplayer())
+        })
       }
     })
     .catch((err: any) => {
@@ -199,6 +193,11 @@ const synthdevice = createdevice('synth', [], (message) => {
           config,
           value,
         )
+      }
+      break
+    case 'record':
+      if (isstring(message.data)) {
+        synth.synthrecord(message.data)
       }
       break
     case 'tts':

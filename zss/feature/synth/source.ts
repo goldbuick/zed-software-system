@@ -150,6 +150,17 @@ export function createsource(sourcetype: SOURCE_TYPE) {
     }
   }
 
+  function getreplay() {
+    return {
+      type: source?.type,
+      synth: source?.synth.get() as any,
+    }
+  }
+
+  function setreplay(replay: ReturnType<typeof getreplay>) {
+    source?.synth.set(replay.synth)
+  }
+
   switch (sourcetype) {
     case SOURCE_TYPE.SYNTH: {
       source = {
@@ -161,6 +172,8 @@ export function createsource(sourcetype: SOURCE_TYPE) {
       return {
         source,
         applyreset,
+        getreplay,
+        setreplay,
       }
     }
     case SOURCE_TYPE.RETRO_NOISE:
@@ -191,6 +204,8 @@ export function createsource(sourcetype: SOURCE_TYPE) {
       return {
         source,
         applyreset,
+        getreplay,
+        setreplay,
       }
     }
     case SOURCE_TYPE.BELLS: {
@@ -211,6 +226,8 @@ export function createsource(sourcetype: SOURCE_TYPE) {
       return {
         source,
         applyreset,
+        getreplay,
+        setreplay,
       }
     }
     case SOURCE_TYPE.DOOT: {
@@ -223,6 +240,8 @@ export function createsource(sourcetype: SOURCE_TYPE) {
       return {
         source,
         applyreset,
+        getreplay,
+        setreplay,
       }
     }
   }

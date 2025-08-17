@@ -463,6 +463,11 @@
   resolved "https://registry.npmjs.org/@braintree/sanitize-url/-/sanitize-url-7.1.1.tgz#15e19737d946559289b915e5dad3b4c28407735e"
   integrity sha512-i1L7noDNxtFyL5DmZafWy1wRVhGehQmzZaz1HiN5e7iylJMSZR7ekOV7NsIqa5qBldlLrsKv4HbgFUVlQrz8Mw==
 
+"@breezystack/lamejs@^1.2.7":
+  version "1.2.7"
+  resolved "https://registry.npmjs.org/@breezystack/lamejs/-/lamejs-1.2.7.tgz#c4779f7f0b6b685da675ebbaaff85e52187a51ad"
+  integrity sha512-6wc7ck65ctA75Hq7FYHTtTvGnYs6msgdxiSUICQ+A01nVOWg6rqouZB8IdyteRlfpYYiFovkf67dIeOgWIUzTA==
+
 "@bufbuild/protobuf@^2.0.0":
   version "2.6.3"
   resolved "https://registry.npmjs.org/@bufbuild/protobuf/-/protobuf-2.6.3.tgz#291dcd1cdfae453a16b40e0b50961e2a444f6d3c"
