@@ -9,7 +9,6 @@ import {
   Oscillator,
   Part,
   Player,
-  Reverb,
   Time,
   ToneAudioBuffer,
   Vibrato,
@@ -296,7 +295,7 @@ export function createsynth() {
         await waitfor(2000)
 
         // config & run
-        audio.setplayvolume(50)
+        audio.setplayvolume(40)
         audio.applyreplay(sourcereplay, fxchainreplay, fxreplay)
         audio.synthreplay(offlineticks)
 
