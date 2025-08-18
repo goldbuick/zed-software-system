@@ -296,7 +296,7 @@ export function createsynth() {
         await waitfor(2000)
 
         // config & run
-        audio.setplayvolume(60)
+        audio.setplayvolume(50)
         audio.applyreplay(sourcereplay, fxchainreplay, fxreplay)
         audio.synthreplay(offlineticks)
 
