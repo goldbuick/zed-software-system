@@ -161,6 +161,10 @@ export function createsource(sourcetype: SOURCE_TYPE) {
     source?.synth.set(replay.synth)
   }
 
+  function destroy() {
+    source?.synth.dispose()
+  }
+
   switch (sourcetype) {
     case SOURCE_TYPE.SYNTH: {
       source = {
@@ -174,6 +178,7 @@ export function createsource(sourcetype: SOURCE_TYPE) {
         applyreset,
         getreplay,
         setreplay,
+        destroy,
       }
     }
     case SOURCE_TYPE.RETRO_NOISE:
@@ -206,6 +211,7 @@ export function createsource(sourcetype: SOURCE_TYPE) {
         applyreset,
         getreplay,
         setreplay,
+        destroy,
       }
     }
     case SOURCE_TYPE.BELLS: {
@@ -228,6 +234,7 @@ export function createsource(sourcetype: SOURCE_TYPE) {
         applyreset,
         getreplay,
         setreplay,
+        destroy,
       }
     }
     case SOURCE_TYPE.DOOT: {
@@ -242,6 +249,7 @@ export function createsource(sourcetype: SOURCE_TYPE) {
         applyreset,
         getreplay,
         setreplay,
+        destroy,
       }
     }
   }

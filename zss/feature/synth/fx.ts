@@ -100,6 +100,15 @@ export function createfx() {
     distortion.set(replay.distortion)
   }
 
+  function destroy() {
+    fc.dispose()
+    echo.dispose()
+    reverb.dispose()
+    phaser.dispose()
+    vibrato.dispose()
+    distortion.dispose()
+  }
+
   applyreset()
 
   return {
@@ -116,6 +125,7 @@ export function createfx() {
     // aliases for fx
     fcrush: fc,
     distort: distortion,
+    destroy,
   }
 }
 
@@ -147,24 +157,35 @@ export function createfxchannels(index: number) {
 
   function getreplay() {
     return {
-      fc: fc.get(),
-      echo: echo.get(),
-      reverb: reverb.get(),
-      phaser: phaser.get(),
-      vibrato: vibrato.get(),
-      distortion: distortion.get(),
-      autowah: autowah.get(),
+      fc: fc.volume.value,
+      echo: echo.volume.value,
+      reverb: reverb.volume.value,
+      phaser: phaser.volume.value,
+      vibrato: vibrato.volume.value,
+      distortion: distortion.volume.value,
+      autowah: autowah.volume.value,
     }
   }
 
   function setreplay(replay: ReturnType<typeof getreplay>) {
-    fc.set(replay.fc)
-    echo.set(replay.echo)
-    reverb.set(replay.reverb)
-    phaser.set(replay.phaser)
-    vibrato.set(replay.vibrato)
-    distortion.set(replay.distortion)
-    autowah.set(replay.autowah)
+    fc.volume.value = replay.fc
+    echo.volume.value = replay.echo
+    reverb.volume.value = replay.reverb
+    phaser.volume.value = replay.phaser
+    vibrato.volume.value = replay.vibrato
+    distortion.volume.value = replay.distortion
+    autowah.volume.value = replay.autowah
+  }
+
+  function destroy() {
+    fc.dispose()
+    echo.dispose()
+    reverb.dispose()
+    phaser.dispose()
+    vibrato.dispose()
+    distortion.dispose()
+    autowah.dispose()
+    sendtofx.dispose()
   }
 
   return {
@@ -181,5 +202,6 @@ export function createfxchannels(index: number) {
     distort: distortion,
     getreplay,
     setreplay,
+    destroy,
   }
 }

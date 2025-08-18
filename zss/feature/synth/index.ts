@@ -285,18 +285,19 @@ export function createsynth() {
       const sourcereplay = SOURCE.map((item) => item.getreplay())
       const fxchainreplay = FXCHAIN.getreplay()
       const fxreplay = FX.map((item) => item.getreplay())
+      let audio: MAYBE<ReturnType<typeof createsynth>>
       Offline(async ({ transport }) => {
         write(SOFTWARE, player, 'setup synth')
         await setupsynth()
-
-        const audio = createsynth()
-        audio.setplayvolume(60)
-
-        audio.applyreplay(sourcereplay, fxchainreplay, fxreplay)
-        write(SOFTWARE, player, 'created synth waiting ...')
+        audio = createsynth()
 
         // wait for node setup
-        await waitfor(5000)
+        write(SOFTWARE, player, 'created synth waiting ...')
+        await waitfor(2000)
+
+        // config & run
+        audio.setplayvolume(60)
+        audio.applyreplay(sourcereplay, fxchainreplay, fxreplay)
         audio.synthreplay(offlineticks)
 
         // begin
@@ -306,6 +307,7 @@ export function createsynth() {
         .then((buffer) => {
           // Convert the buffer to MP3
           const mp3Data = converttomp3(buffer)
+
           // Create a download link
           const anchor = document.createElement('a')
           anchor.href = URL.createObjectURL(
@@ -314,9 +316,11 @@ export function createsynth() {
           anchor.download = `${filename || createnameid()}.mp3`
           anchor.click()
           write(SOFTWARE, player, `saving file ${anchor.download}`)
+
+          // clean up
+          audio?.destroy()
         })
         .catch((err) => {
-          // console.error(err)
           api_error(SOFTWARE, player, 'synthrecord', err)
         })
     }
@@ -512,7 +516,15 @@ export function createsynth() {
   setplayvolume(80)
   setbgplayvolume(100)
 
+  function destroy() {
+    SOURCE.forEach((item) => item.destroy())
+    FX.forEach((item) => item.destroy())
+    FXCHAIN.destroy()
+    mainvolume.dispose()
+  }
+
   return {
+    destroy,
     broadcastdestination,
     addplay,
     addbgplay,
