@@ -6,6 +6,7 @@ import {
   Phaser,
   Reverb,
   Vibrato,
+  getContext,
 } from 'tone'
 import { deepcopy } from 'zss/mapping/types'
 
@@ -79,6 +80,35 @@ export function createfx() {
     })
   }
 
+  function getreplay() {
+    return {
+      fc: fc.get(),
+      echo: echo.get(),
+      reverb: reverb.get(),
+      phaser: phaser.get(),
+      vibrato: vibrato.get(),
+      distortion: distortion.get(),
+    }
+  }
+
+  function setreplay(replay: ReturnType<typeof getreplay>) {
+    fc.set(replay.fc)
+    echo.set(replay.echo)
+    reverb.set(replay.reverb)
+    phaser.set(replay.phaser)
+    vibrato.set(replay.vibrato)
+    distortion.set(replay.distortion)
+  }
+
+  function destroy() {
+    fc.dispose()
+    echo.dispose()
+    reverb.dispose()
+    phaser.dispose()
+    vibrato.dispose()
+    distortion.dispose()
+  }
+
   applyreset()
 
   return {
@@ -89,14 +119,18 @@ export function createfx() {
     vibrato,
     distortion,
     applyreset,
+    getreplay,
+    setreplay,
     autowah,
     // aliases for fx
     fcrush: fc,
     distort: distortion,
+    destroy,
   }
 }
 
 export function createfxchannels(index: number) {
+  const prefix = getContext().isOffline ? 'offline' : ''
   const fc = new Channel(volumetodb(0))
   const echo = new Channel(volumetodb(0))
   const reverb = new Channel(volumetodb(0))
@@ -104,22 +138,55 @@ export function createfxchannels(index: number) {
   const vibrato = new Channel(volumetodb(0))
   const distortion = new Channel(volumetodb(0))
   const autowah = new Channel(volumetodb(0))
-  fc.receive(`fc${index}`)
-  echo.receive(`echo${index}`)
-  reverb.receive(`reverb${index}`)
-  phaser.receive(`phaser${index}`)
-  vibrato.receive(`vibrato${index}`)
-  distortion.receive(`distortion${index}`)
-  autowah.receive(`autowah${index}`)
+  fc.receive(`${prefix}fc${index}`)
+  echo.receive(`${prefix}echo${index}`)
+  reverb.receive(`${prefix}reverb${index}`)
+  phaser.receive(`${prefix}phaser${index}`)
+  vibrato.receive(`${prefix}vibrato${index}`)
+  distortion.receive(`${prefix}distortion${index}`)
+  autowah.receive(`${prefix}autowah${index}`)
 
   const sendtofx = new Channel()
-  sendtofx.send(`fc${index}`)
-  sendtofx.send(`echo${index}`)
-  sendtofx.send(`reverb${index}`)
-  sendtofx.send(`phaser${index}`)
-  sendtofx.send(`vibrato${index}`)
-  sendtofx.send(`distortion${index}`)
-  sendtofx.send(`autowah${index}`)
+  sendtofx.send(`${prefix}fc${index}`)
+  sendtofx.send(`${prefix}echo${index}`)
+  sendtofx.send(`${prefix}reverb${index}`)
+  sendtofx.send(`${prefix}phaser${index}`)
+  sendtofx.send(`${prefix}vibrato${index}`)
+  sendtofx.send(`${prefix}distortion${index}`)
+  sendtofx.send(`${prefix}autowah${index}`)
+
+  function getreplay() {
+    return {
+      fc: fc.volume.value,
+      echo: echo.volume.value,
+      reverb: reverb.volume.value,
+      phaser: phaser.volume.value,
+      vibrato: vibrato.volume.value,
+      distortion: distortion.volume.value,
+      autowah: autowah.volume.value,
+    }
+  }
+
+  function setreplay(replay: ReturnType<typeof getreplay>) {
+    fc.volume.value = replay.fc
+    echo.volume.value = replay.echo
+    reverb.volume.value = replay.reverb
+    phaser.volume.value = replay.phaser
+    vibrato.volume.value = replay.vibrato
+    distortion.volume.value = replay.distortion
+    autowah.volume.value = replay.autowah
+  }
+
+  function destroy() {
+    fc.dispose()
+    echo.dispose()
+    reverb.dispose()
+    phaser.dispose()
+    vibrato.dispose()
+    distortion.dispose()
+    autowah.dispose()
+    sendtofx.dispose()
+  }
 
   return {
     sendtofx,
@@ -133,5 +200,8 @@ export function createfxchannels(index: number) {
     // aliases for fx
     fcrush: fc,
     distort: distortion,
+    getreplay,
+    setreplay,
+    destroy,
   }
 }

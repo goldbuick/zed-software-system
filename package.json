@@ -1,7 +1,7 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "0.64.149",
+  "version": "0.64.151",
   "type": "module",
   "scripts": {
     "sloc": "npx sloc zss",
@@ -19,6 +19,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@breezystack/lamejs": "^1.2.7",
     "@jest/globals": "^29.7.0",
     "@lobehub/tts": "^1.25.8",
     "@metrichor/jmespath": "^0.3.1",

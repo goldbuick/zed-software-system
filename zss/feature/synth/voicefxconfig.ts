@@ -1,3 +1,4 @@
+import { Channel } from 'tone'
 import { api_error } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
@@ -32,7 +33,7 @@ export function synthvoicefxconfig(
     api_error(SOFTWARE, player, `synth`, `index ${index} out of bounds`)
     return
   }
-  const fx = synth.FX[index][fxname]
+  const fx = synth.FX[index][fxname] as Channel
   if (ispresent(fx)) {
     switch (config) {
       case 'on':

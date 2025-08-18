@@ -5,9 +5,11 @@ import {
   Compressor,
   Gain,
   Noise,
+  Offline,
   Oscillator,
   Part,
   Player,
+  Reverb,
   Time,
   ToneAudioBuffer,
   Vibrato,
@@ -16,30 +18,48 @@ import {
   getDestination,
   getDraw,
 } from 'tone'
-import { vm_synthsend } from 'zss/device/api'
+import { api_error, vm_synthsend } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { createnameid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
-import { isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { waitfor } from 'zss/mapping/tick'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+
+import { write } from '../writeui'
 
 import { createsynthdrums } from './drums'
+import { addfcrushmodule } from './fcrushworkletnode'
 import { createfx, createfxchannels, volumetodb } from './fx'
+import { converttomp3 } from './mp3'
 import {
   SYNTH_INVOKE,
+  SYNTH_NOTE_ENTRY,
   SYNTH_NOTE_ON,
   SYNTH_SFX_RESET,
   invokeplay,
   parseplay,
 } from './playnotation'
-import { SidechainCompressor } from './sidechainworkletnode'
+import { SidechainCompressor, addsidechainmodule } from './sidechainworkletnode'
 import { SOURCE_TYPE, createsource } from './source'
+
+export async function setupsynth() {
+  // add custom audio worklet modules
+  await addfcrushmodule()
+  await addsidechainmodule()
+}
 
 export function createsynth() {
   const destination = getDestination()
-  const broadcastdestination = getContext().createMediaStreamDestination()
 
   const mainvolume = new Volume()
   mainvolume.connect(destination)
-  mainvolume.connect(broadcastdestination)
+
+  let broadcastdestination: MAYBE<MediaStreamAudioDestinationNode>
+  if (!getContext().isOffline) {
+    broadcastdestination = getContext().createMediaStreamDestination()
+    mainvolume.connect(broadcastdestination)
+  }
 
   const razzlegain = new Gain(10)
 
@@ -225,11 +245,94 @@ export function createsynth() {
 
   // @ts-expect-error please ignore
   const pacer = new Part(synthtick)
+  let recordedticks: SYNTH_NOTE_ENTRY[] = []
+
+  function applyreplay(source: any[], fxchain: any, fx: any[]) {
+    source.forEach((item, index) => {
+      changesource(index, item.type)
+      SOURCE[index].setreplay(item)
+    })
+    FXCHAIN.setreplay(fxchain)
+    fx.forEach((item, index) => {
+      FX[index].setreplay(item)
+    })
+  }
+
+  function synthrecord(filename: string) {
+    if (recordedticks.length) {
+      const player = registerreadplayer()
+      // calc range
+      const times = recordedticks.map((item) => {
+        const [time] = item
+        return time
+      })
+
+      // give the first note a tenth of a second before starting
+      const mintime = Math.min(...times)
+      const maxtime = Math.max(...times)
+
+      // add 5 seconds after maxtime
+      const duration = Math.ceil(maxtime - mintime + 5.0)
+
+      // adjust time ticks
+      const offlineticks: SYNTH_NOTE_ENTRY[] = []
+      for (let i = 0; i < recordedticks.length; ++i) {
+        const [time, value] = recordedticks[i]
+        offlineticks.push([time - mintime + 0.1, value])
+      }
+
+      // grab source and fx state
+      const sourcereplay = SOURCE.map((item) => item.getreplay())
+      const fxchainreplay = FXCHAIN.getreplay()
+      const fxreplay = FX.map((item) => item.getreplay())
+      let audio: MAYBE<ReturnType<typeof createsynth>>
+      Offline(async ({ transport }) => {
+        write(SOFTWARE, player, 'setup synth')
+        await setupsynth()
+        audio = createsynth()
+
+        // wait for node setup
+        write(SOFTWARE, player, 'created synth waiting ...')
+        await waitfor(2000)
+
+        // config & run
+        audio.setplayvolume(60)
+        audio.applyreplay(sourcereplay, fxchainreplay, fxreplay)
+        audio.synthreplay(offlineticks)
+
+        // begin
+        write(SOFTWARE, player, 'rendering audio')
+        transport.start(0)
+      }, duration)
+        .then((buffer) => {
+          // Convert the buffer to MP3
+          const mp3Data = converttomp3(buffer)
+
+          // Create a download link
+          const anchor = document.createElement('a')
+          anchor.href = URL.createObjectURL(
+            new Blob([mp3Data], { type: 'audio/mp3' }),
+          )
+          anchor.download = `${filename || createnameid()}.mp3`
+          anchor.click()
+          write(SOFTWARE, player, `saving file ${anchor.download}`)
+
+          // clean up
+          audio?.destroy()
+        })
+        .catch((err) => {
+          api_error(SOFTWARE, player, 'synthrecord', err)
+        })
+    }
+    recordedticks = []
+  }
 
   function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
     if (value === null) {
       return
     }
+    // console.info('go', time, value)
+    recordedticks.push([time, value])
     const [chan, duration, note] = value
     const f = mapindextofx(chan)
     if (isstring(note) && ispresent(SOURCE[chan]) && ispresent(FX[f])) {
@@ -332,6 +435,15 @@ export function createsynth() {
     return endtime
   }
 
+  function synthreplay(pattern: SYNTH_NOTE_ENTRY[]) {
+    // write pattern to pacer
+    for (let p = 0; p < pattern.length; ++p) {
+      const [time, value] = pattern[p]
+      // console.info('rp', time, value)
+      pacer.add(time, value)
+    }
+  }
+
   let pacertime = -1
   let pacercount = 0
   let bgplayindex = SYNTH_SFX_RESET
@@ -404,11 +516,22 @@ export function createsynth() {
   setplayvolume(80)
   setbgplayvolume(100)
 
+  function destroy() {
+    SOURCE.forEach((item) => item.destroy())
+    FX.forEach((item) => item.destroy())
+    FXCHAIN.destroy()
+    mainvolume.dispose()
+  }
+
   return {
+    destroy,
     broadcastdestination,
     addplay,
     addbgplay,
     stopplay,
+    applyreplay,
+    synthrecord,
+    synthreplay,
     addttsaudiobuffer,
     setplayvolume,
     setbgplayvolume,

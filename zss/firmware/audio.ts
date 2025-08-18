@@ -8,6 +8,7 @@ import {
   synth_bpm,
   synth_play,
   synth_playvolume,
+  synth_record,
   synth_tts,
   synth_ttsvolume,
   synth_voice,
@@ -190,6 +191,11 @@ export const AUDIO_FIRMWARE = createfirmware()
     for (let i = 0; i < 4; ++i) {
       handlesynthvoice(READ_CONTEXT.elementfocus, i, words)
     }
+    return 0
+  })
+  .command('synthrecord', (_, words) => {
+    const [filename] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
+    synth_record(SOFTWARE, READ_CONTEXT.elementfocus, filename ?? '')
     return 0
   })
   .command('echo', (_, words) => {
