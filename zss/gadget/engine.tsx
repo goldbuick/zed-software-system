@@ -5,7 +5,6 @@ import {
   EffectComposer,
   Glitch,
   Noise,
-  Scanline,
   Vignette,
 } from '@react-three/postprocessing'
 import { deviceType, primaryInput } from 'detect-it'
@@ -24,6 +23,7 @@ import { CRTShape } from 'zss/gadget/fx/crt'
 import { doasync } from 'zss/mapping/func'
 import { Tape } from 'zss/tape/component'
 
+import { Scanlines } from './fx/scanlines'
 import { useDeviceData, useMedia } from './hooks'
 import { ScreenUI } from './screenui/component'
 import { TapeToast } from './toast'
@@ -151,9 +151,7 @@ export function Engine() {
                 />
               </Fragment>
             )}
-            {scanlines && (
-              <Scanline blendFunction={BlendFunction.OVERLAY} density={1.28} />
-            )}
+            {scanlines && <Scanlines />}
           </>
           <Vignette
             technique={VignetteTechnique.ESKIL}
