@@ -12,8 +12,8 @@ vec3 sample_(sampler2D tex, vec2 tc) {
 }
 
 vec3 blur(sampler2D tex, vec2 tc, float offs) {
-	vec4 xoffs = offs * vec4(-2.0, -1.0, 1.0, 2.0) * texelSize.x * 0.5;
-	vec4 yoffs = offs * vec4(-2.0, -1.0, 1.0, 2.0) * texelSize.y * 0.1;
+	vec4 xoffs = offs * vec4(-2.0, -1.0, 1.0, 2.0) * texelSize.x * 0.25;
+	vec4 yoffs = offs * vec4(-2.0, -1.0, 1.0, 2.0) * texelSize.y * 0.05;
 	
 	vec3 color = vec3(0.0, 0.0, 0.0);
 	color += sample_(tex, tc + vec2(xoffs.x, yoffs.x)) * 0.00366;
@@ -68,13 +68,13 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   col.g += 0.2 * blur(inputBuffer, vec2(uv.x + 0.000, uv.y - 0.0015), 1.75).y - 0.005;
   col.b += 0.2 * blur(inputBuffer, vec2(uv.x - 0.0015, uv.y + 0.000), 1.25).z - 0.005;
   
-  float ghs = 0.06;
+  float ghs = 0.05;
 	col.r += ghs * (1.0 - 0.299) * blur(inputBuffer, 0.75 * vec2(0.01, -0.027) + vec2(uv.x + 0.001, uv.y + 0.001), 7.0).x;
   col.g += ghs * (1.0 - 0.587) * blur(inputBuffer, 0.75 * vec2(-0.022, -0.02) + vec2(uv.x + 0.000, uv.y - 0.002), 5.0).y;
   col.b += ghs * (1.0 - 0.114) * blur(inputBuffer, 0.75 * vec2(-0.02, -0.0) + vec2(uv.x - 0.002, uv.y + 0.000), 3.0).z;
 
-  col = clamp(col * 0.4 + 0.6 * col * col * 1.0, 0.0, 1.0);
-	col = mix(col, col * col * col * col * col, 0.5) * 3.8;
+  col = clamp(col * 0.4 + 0.6 * col * 1.0, 0.0, 1.0);
+	col = mix(col, col * col * col * col * col * col, 0.5) * 3.8;
 
 	float scans = clamp(0.35 + 0.15 * sin(3.5 * (time * 0.125) + uv.y * resolution.y * 1.5), 0.0, 1.0);
 	float s = pow(scans, 0.999);
