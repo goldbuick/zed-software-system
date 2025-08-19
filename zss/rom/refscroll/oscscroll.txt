@@ -1,0 +1,40 @@
+section;sine, square, triangle, sawtooth
+#synth phase <degrees>
+$white The phase is the starting position within 
+$white the oscillator's cycle. For example a phase 
+$white of 180 would start halfway through the
+$white oscillator's cycle.
+section;amsine, amsquare, amtriangle, amsawtooth
+#synth harmonicity <number>
+$white Harmonicity is the frequency ratio between 
+$white the carrier and the modulator oscillators.
+$white A harmonicity of 1 gives both oscillators 
+$white the same frequency. Harmonicity = 2 
+$white means a change of an octave.
+#synth modtype <sine, square, triangle, sawtooth>
+#synth modenv <a> <d> <s> <r> - in seconds
+section;fmsine, fmsquare, fmtriangle, fmsawtooth
+#synth harmonicity <number>
+$white Harmonicity is the frequency ratio between 
+$white the carrier and the modulator oscillators.
+$white A harmonicity of 1 gives both oscillators 
+$white the same frequency. Harmonicity = 2 
+$white means a change of an octave.
+#synth modtype <sine, square, triangle, sawtooth>
+#synth modenv <a> <d> <s> <r> - in seconds
+#synth modindex <degrees>
+$white The modulation index which is in essence
+$white the depth or amount of the modulation.
+$white In other terms it is the ratio of the 
+$white frequency of the modulating signal (mf) 
+$white to the amplitude of the modulating signal 
+$white (ma) -- as in ma/mf
+#synth modenv <a> <d> <s> <r> - in seconds
+section;fatsine, fatsquare, fattriangle, fatsawtooth
+#synth phase <degrees>
+#synth count <number>
+$white This sets the number of oscillators to 
+$white spread along the given range.
+#synth spread <cents>
+$white This signals the number of cents between
+$white oscillators.

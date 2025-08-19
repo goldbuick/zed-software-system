@@ -286,12 +286,12 @@ export function createsynth() {
       const fxreplay = FX.map((item) => item.getreplay())
       let audio: MAYBE<ReturnType<typeof createsynth>>
       Offline(async ({ transport }) => {
-        write(SOFTWARE, player, 'setup synth')
+        write(SOFTWARE, player, 'create synth')
         await setupsynth()
         audio = createsynth()
 
         // wait for node setup
-        write(SOFTWARE, player, 'created synth waiting ...')
+        write(SOFTWARE, player, 'synth waiting for setup')
         await waitfor(2000)
 
         // config & run
@@ -304,6 +304,7 @@ export function createsynth() {
         transport.start(0)
       }, duration)
         .then((buffer) => {
+          write(SOFTWARE, player, 'rendering complete, exporting mp3')
           // Convert the buffer to MP3
           const mp3Data = converttomp3(buffer)
 

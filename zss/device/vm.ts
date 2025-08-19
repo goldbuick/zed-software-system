@@ -80,6 +80,7 @@ import { memoryinspectbatchcommand } from 'zss/memory/inspectbatch'
 import { memoryinspectremixcommand } from 'zss/memory/inspectremix'
 import { memoryloader } from 'zss/memory/loader'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import { romparse, romread, romscroll } from 'zss/rom'
 import { categoryconsts } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
 import { colorconsts } from 'zss/words/color'
@@ -575,27 +576,9 @@ const vm = createdevice(
         }
         break
       case 'refscroll': {
-        gadgethyperlink(message.player, 'refscroll', `char:`, [
-          'charscroll',
-          'hk',
-          'a',
-          ' A ',
-          'next',
-        ])
-        gadgethyperlink(message.player, 'refscroll', `color:`, [
-          'colorscroll',
-          'hk',
-          'c',
-          ' C ',
-          'next',
-        ])
-        gadgethyperlink(message.player, 'refscroll', `notes:`, [
-          'notesscroll',
-          'hk',
-          'n',
-          ' N ',
-          'next',
-        ])
+        romparse(romread(`refscroll:menu`), (line) =>
+          romscroll(message.player, line),
+        )
         const shared = gadgetstate(message.player)
         shared.scrollname = 'refscroll'
         shared.scroll = gadgetcheckqueue(message.player)
@@ -780,35 +763,12 @@ const vm = createdevice(
                 shared.scroll = gadgetcheckqueue(message.player)
                 break
               }
-              case 'notesscroll': {
-                gadgettext(
-                  message.player,
-                  'duration             cdefgab - notes ',
+              default: {
+                romparse(romread(`refscroll:${path}`), (line) =>
+                  romscroll(message.player, line),
                 )
-                gadgettext(message.player, 'y - 64th note        x - rest')
-                gadgettext(message.player, 't - 32nd note        ')
-                gadgettext(message.player, 's - 16th note.       drums')
-                gadgettext(message.player, 'i - eight note.      0 - tick')
-                gadgettext(message.player, 'q - quarter note     1 - tweet')
-                gadgettext(message.player, 'h - half note        2 - cowbell')
-                gadgettext(message.player, 'w - whole note       p - clap')
-                gadgettext(
-                  message.player,
-                  '                     4 - high snare',
-                )
-                gadgettext(
-                  message.player,
-                  'mods                 5 - high woodblock',
-                )
-                gadgettext(message.player, '3 - triplet          6 - low snare')
-                gadgettext(message.player, '. - time and a half  7 - low tom')
-                gadgettext(
-                  message.player,
-                  '# - sharp            8 - low woodblock',
-                )
-                gadgettext(message.player, '! - flat             9 - bass drum')
                 const shared = gadgetstate(message.player)
-                shared.scrollname = 'music notation'
+                shared.scrollname = path
                 shared.scroll = gadgetcheckqueue(message.player)
                 break
               }

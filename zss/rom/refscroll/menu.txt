@@ -1,0 +1,6 @@
+helper scrolls
+!charscroll hk a A next;char
+!colorscroll hk c C next;color
+!notesscroll hk n N next;notes
+!synthscroll hk s S next;synth
+!effectsscroll hk e E next;effects

@@ -19,17 +19,13 @@ export function synthvoicefxreverbconfig(
   switch (config) {
     case 'decay':
       if (isnumber(value)) {
-        reverb.set({
-          decay: value,
-        })
+        reverb.set({ decay: value })
         return
       }
       break
     case 'predelay':
       if (isnumber(value)) {
-        reverb.set({
-          preDelay: value,
-        })
+        reverb.set({ preDelay: value })
         return
       }
       break
