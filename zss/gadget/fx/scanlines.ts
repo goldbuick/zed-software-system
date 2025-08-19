@@ -69,9 +69,10 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   col.b += 0.2 * blur(inputBuffer, vec2(uv.x - 0.0015, uv.y + 0.000), 1.25).z - 0.005;
   
   float ghs = 0.05;
-	col.r += ghs * (1.0 - 0.299) * blur(inputBuffer, 0.75 * vec2(0.01, -0.027) + vec2(uv.x + 0.001, uv.y + 0.001), 7.0).x;
-  col.g += ghs * (1.0 - 0.587) * blur(inputBuffer, 0.75 * vec2(-0.022, -0.02) + vec2(uv.x + 0.000, uv.y - 0.002), 5.0).y;
-  col.b += ghs * (1.0 - 0.114) * blur(inputBuffer, 0.75 * vec2(-0.02, -0.0) + vec2(uv.x - 0.002, uv.y + 0.000), 3.0).z;
+	float gphase = 0.371 * sin(time * 0.1);
+	col.r += ghs * (1.0 - 0.299) * blur(inputBuffer, gphase * vec2(0.01, -0.027) + vec2(uv.x + 0.001, uv.y + 0.001), 7.0).x;
+  col.g += ghs * (1.0 - 0.587) * blur(inputBuffer, gphase * vec2(-0.022, -0.02) + vec2(uv.x + 0.000, uv.y - 0.002), 5.0).y;
+  col.b += ghs * (1.0 - 0.114) * blur(inputBuffer, gphase * vec2(-0.02, -0.0) + vec2(uv.x - 0.002, uv.y + 0.000), 3.0).z;
 
   col = clamp(col * 0.4 + 0.6 * col * 1.0, 0.0, 1.0);
 	col = mix(col, col * col * col * col * col * col, 0.5) * 3.8;
