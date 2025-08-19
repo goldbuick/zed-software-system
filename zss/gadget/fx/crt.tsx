@@ -77,7 +77,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   vec2 edge = bendy(xn, fz * n, -fz * n);
   vec2 bent = edge.xy * 0.5 + 0.5;
 
-  float edgetime = time * 0.1;
+  float edgetime = time * 0.3;
   float edgetime2 = time * 2.0;
   vec2 edgewiggle = vec2(cos(edgetime) * 0.1, sin(edgetime) * 0.096);
   vec2 edgewiggle2 = vec2(cos(edgetime2) * 0.005, sin(edgetime2) * 0.005);

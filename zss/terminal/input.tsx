@@ -1,16 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import {
   api_error,
   register_terminal_close,
   register_terminal_inclayout,
   vm_cli,
   vm_loader,
+  vm_refscroll,
 } from 'zss/device/api'
-import {
-  readconfig,
-  registerreadplayer,
-  writehistorybuffer,
-} from 'zss/device/register'
+import { registerreadplayer, writehistorybuffer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
 import { user, withclipboard } from 'zss/feature/keyboard'
 import { SpeechToText } from 'zss/feature/speechtotext'
@@ -450,6 +447,10 @@ export function TapeTerminalInput({
                 switch (lkey) {
                   case 'e':
                     vm_cli(SOFTWARE, player, '#export')
+                    break
+                  case 'k':
+                    // open ref scroll instead
+                    vm_refscroll(SOFTWARE, player)
                     break
                   case 'a':
                     useTapeTerminal.setState({
