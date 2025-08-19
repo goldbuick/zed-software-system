@@ -7481,10 +7481,10 @@ jszip@^3.10.1:
     readable-stream "~2.3.6"
     setimmediate "^1.0.5"
 
-kademlia-table@^2.0.5:
-  version "2.0.8"
-  resolved "https://registry.npmjs.org/kademlia-table/-/kademlia-table-2.0.8.tgz#e4091d642eb1a5985dcbb16aafe6204b8f978cf5"
-  integrity sha512-vtiA82lhKrb0YxR/kKN4i7zsB5d6AdTW0estqWjEJmrve11HevYQJBSffuESglNIlzSskZzpbGaOclTr+5RFOw==
+kademlia-table@^2.0.11:
+  version "2.0.11"
+  resolved "https://registry.yarnpkg.com/kademlia-table/-/kademlia-table-2.0.11.tgz#544344d02bf64b025d394afd00a7e7f44dfe1f0e"
+  integrity sha512-qAGLl8NafN1EwkaFohknU2LOnN8XOShox/IMbUe+uM7UZ4S86Qp4IKfd5eKGM+4LZY7F73nakqu7X840x4LlaQ==
   dependencies:
     uint8array-tools "^0.0.9"
 
@@ -9058,7 +9058,7 @@ peerjs-js-binarypack@^2.1.0:
 
 peerjs@^1.5.5:
   version "1.5.5"
-  resolved "https://registry.npmjs.org/peerjs/-/peerjs-1.5.5.tgz#71095595151961566688b9b79eafcb0ab93bcfc2"
+  resolved "https://registry.yarnpkg.com/peerjs/-/peerjs-1.5.5.tgz#71095595151961566688b9b79eafcb0ab93bcfc2"
   integrity sha512-viMUCPDL6CSfOu0ZqVcFqbWRXNHIbv2lPqNbrBIjbFYrflebOjItJ4hPfhjnuUCstqciHVu9vVJ7jFqqKi/EuQ==
   dependencies:
     "@msgpack/msgpack" "^2.8.0"
