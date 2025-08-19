@@ -19,9 +19,7 @@ export function synthvoicefxfcrushconfig(
   switch (config) {
     case 'rate':
       if (isnumber(value)) {
-        fcrush.set({
-          rate: value,
-        })
+        fcrush.set({ rate: value })
         return
       }
       break

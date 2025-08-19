@@ -22,41 +22,31 @@ export function synthvoicefxautowahconfig(
   switch (config) {
     case 'basefrequency':
       if (isnumber(value)) {
-        autowah.set({
-          baseFrequency: value,
-        })
+        autowah.set({ baseFrequency: value })
         return
       }
       break
     case 'octaves':
       if (isnumber(value)) {
-        autowah.set({
-          octaves: value,
-        })
+        autowah.set({ octaves: value })
         return
       }
       break
     case 'sensitivity':
       if (isnumber(value)) {
-        autowah.set({
-          sensitivity: value,
-        })
+        autowah.set({ sensitivity: value })
         return
       }
       break
     case 'gain':
       if (isnumber(value)) {
-        autowah.set({
-          gain: value,
-        })
+        autowah.set({ gain: value })
         return
       }
       break
     case 'follower':
       if (isnumber(value)) {
-        autowah.set({
-          follower: value,
-        })
+        autowah.set({ follower: value })
         return
       }
       break

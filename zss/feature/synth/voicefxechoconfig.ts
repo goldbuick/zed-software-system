@@ -19,17 +19,13 @@ export function synthvoicefxechoconfig(
   switch (config) {
     case 'delaytime':
       if (isnumber(value)) {
-        echo.set({
-          delayTime: value,
-        })
+        echo.set({ delayTime: value })
         return
       }
       break
     case 'feedback':
       if (isnumber(value)) {
-        echo.set({
-          feedback: value,
-        })
+        echo.set({ feedback: value })
         return
       }
       break

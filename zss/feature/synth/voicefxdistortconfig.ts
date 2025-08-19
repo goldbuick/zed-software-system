@@ -19,17 +19,13 @@ export function synthvoicefxdistortionconfig(
   switch (config) {
     case 'distortion':
       if (isnumber(value)) {
-        distortion.set({
-          distortion: value,
-        })
+        distortion.set({ distortion: value })
         return
       }
       break
     case 'oversample':
       if (isstring(value)) {
-        distortion.set({
-          oversample: value as OverSampleType,
-        })
+        distortion.set({ oversample: value as OverSampleType })
         return
       }
       break

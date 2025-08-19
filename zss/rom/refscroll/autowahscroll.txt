@@ -1,0 +1,17 @@
+section;#autowah on
+#autowah <number>
+$white 0-100, 0 is off, 100 is full volume
+#autowah basefrequency <frequency>
+$white The frequency the filter is set to at the
+$white low point of the wah.
+#autowah octaves <number>
+$white The number of octaves above the baseFrequency 
+$white the filter will sweep to when fully open.
+#autowah sensitivity <number>
+$white The decibel threshold sensitivity for 
+$white the incoming signal.
+$white Normal range of -40 to 0.
+#autowah gain <number>
+$white Controls the loudness of the effect.
+#autowah follower <seconds>
+$white Sets the smoothing time for the effect.

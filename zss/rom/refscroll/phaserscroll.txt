@@ -1,0 +1,9 @@
+section;#phaser on
+#phaser <number>
+$white 0-100, 0 is off, 100 is full volume
+#phaser frequency <frequency>
+$white The rate of oscilation of the effect.
+#phaser octaves <number>
+$white Controls the range of the effect.
+#phaser basefrequency <frequency>
+$white The base frequency of the filters.
