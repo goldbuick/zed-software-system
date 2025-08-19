@@ -1,0 +1,8 @@
+section;#reverb on
+#reverb <number>
+$white 0-100, 0 is off, 100 is full volume
+#reverb predelay <seconds>
+$white The amount of time before the reverb
+$white is fully ramped in.
+#reverb decay <seconds>
+$white The duration of the reverb.

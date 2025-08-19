@@ -12,8 +12,8 @@ vec3 sample_(sampler2D tex, vec2 tc) {
 }
 
 vec3 blur(sampler2D tex, vec2 tc, float offs) {
-	vec4 xoffs = offs * vec4(-2.0, -1.0, 1.0, 2.0) * texelSize.x * 0.25;
-	vec4 yoffs = offs * vec4(-2.0, -1.0, 1.0, 2.0) * texelSize.y * 0.05;
+	vec4 xoffs = offs * vec4(-2.0, -1.0, 1.0, 2.0) * texelSize.x * 0.01;
+	vec4 yoffs = offs * vec4(-2.0, -1.0, 1.0, 2.0) * texelSize.y * 0.001;
 	
 	vec3 color = vec3(0.0, 0.0, 0.0);
 	color += sample_(tex, tc + vec2(xoffs.x, yoffs.x)) * 0.00366;

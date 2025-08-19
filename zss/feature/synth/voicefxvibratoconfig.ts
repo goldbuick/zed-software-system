@@ -22,9 +22,7 @@ export function synthvoicefxvibratoconfig(
   switch (config) {
     case 'maxdelay':
       if (isnumber(value)) {
-        vibrato.set({
-          maxDelay: value,
-        })
+        vibrato.set({ maxDelay: value })
         return
       }
       break

@@ -17,26 +17,20 @@ export function synthvoicefxphaserconfig(
   }
   const phaser = synth.FXCHAIN.phaser
   switch (config) {
-    case 'q':
+    case 'frequency':
       if (isnumber(value)) {
-        phaser.set({
-          Q: value,
-        })
+        phaser.set({ frequency: value })
         return
       }
       break
     case 'octaves':
       if (isnumber(value)) {
-        phaser.set({
-          octaves: value,
-        })
+        phaser.set({ octaves: value })
         return
       }
       break
     case 'basefrequency':
-      phaser.set({
-        baseFrequency: value,
-      })
+      phaser.set({ baseFrequency: value })
       return
   }
   api_error(SOFTWARE, player, `kind`, `unknown phaser ${config} or ${value}`)

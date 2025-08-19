@@ -1,7 +1,7 @@
-!fcrushscroll hk 1 1 next;#fcrush on
-!echoscroll hk 2 2 next;#echo on
-!reverbscroll hk 3 3 next;#reverb on
-!phaserscroll hk 4 4 next;#phaser on
-!distortscroll hk 5 5 next;#distort on
-!vibratoscroll hk 6 6 next;#vibrato on
-!autowahscroll hk 7 7 next;#autowah on
+!fcrushscroll hk f F next;#fcrush on
+!echoscroll hk e E next;#echo on
+!reverbscroll hk r R next;#reverb on
+!phaserscroll hk p P next;#phaser on
+!distortscroll hk d D next;#distort on
+!vibratoscroll hk v V next;#vibrato on
+!autowahscroll hk a A next;#autowah on

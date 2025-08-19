@@ -1,0 +1,8 @@
+section;#echo on
+#echo <number>
+$white 0-100, 0 is off, 100 is full volume
+#echo delaytime <seconds>
+$white duration between echos.
+#echo feedback <number>
+$white A number that is between [0, 1]
+$white 1 is forever feedback and 0 is none.
