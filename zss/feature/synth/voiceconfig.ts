@@ -354,22 +354,6 @@ export function synthvoiceconfig(
             }
             return
           }
-          case SOURCE_TYPE.BELLS: {
-            switch (config) {
-              default:
-                // todo add config settings
-                return
-            }
-            break
-          }
-          case SOURCE_TYPE.DOOT: {
-            switch (config) {
-              default:
-                // todo add config settings
-                return
-            }
-            break
-          }
         }
 
         api_error(SOFTWARE, player, `synth`, `unknown config ${config}`)
