@@ -135,7 +135,7 @@ function randominteger(a: number, b: number) {
 async function writewikilink() {
   // write stk list
   const result = await fetch(
-    `https://raw.githubusercontent.com/wiki/goldbuick/zed-software-system/stklist.md?${randominteger(1111111, 9999999)}`,
+    `https://raw.githubusercontent.com/wiki/goldbuick/zed-software-system/stklist.md?q=${randominteger(1111111, 9999999)}`,
   )
   const markdowntext = await result.text()
   const lines = markdowntext.split('\n')
