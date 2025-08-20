@@ -128,7 +128,6 @@ export function romscroll(player: string, line: string[]) {
     default:
       if (op.trimStart().startsWith('!')) {
         const parts = op.trimStart().slice(1).split(' ')
-        // copyit
         const start = NAME(parts[0] ?? '')
         switch (start) {
           case 'copyit':
