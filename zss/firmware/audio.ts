@@ -76,8 +76,6 @@ function handlesynthvoice(player: string, idx: number, words: WORD[]) {
   }
 }
 
-let withvoice = 'en-US-GuyNeural'
-
 function handlebgplay(words: WORD[], quantize: string) {
   const [buffer] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
   synth_bgplay(
@@ -115,13 +113,14 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('tts', (_, words) => {
-    const phrase = words.map(maptostring).join('')
-    synth_tts(SOFTWARE, READ_CONTEXT.elementfocus, withvoice, phrase)
-    return 0
-  })
-  .command('ttsvoice', (_, words) => {
+    const [voice, ...phrase] = words
     // https://github.com/lobehub/lobe-tts/blob/master/src/core/data/voiceList.ts
-    withvoice = words.map(maptostring).join('')
+    synth_tts(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      maptostring(voice),
+      phrase.map(maptostring).join(''),
+    )
     return 0
   })
   .command('bpm', (_, words) => {
