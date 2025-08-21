@@ -18,6 +18,7 @@ import { bookplayerreadboards } from 'zss/memory/bookplayer'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { SEND_META, parsesend } from 'zss/words/send'
+import { WORD } from 'zss/words/types'
 
 import { loaderbinary } from './loaderbinary'
 import { loaderjson } from './loaderjson'
@@ -32,6 +33,9 @@ function handlesend(send: SEND_META) {
     memorysendtoboards(send.targetname, send.label, undefined, boards)
   }
 }
+
+// simple flags for loaders
+const loaderflags = new Map<string, WORD>()
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
@@ -73,7 +77,46 @@ export const LOADER_FIRMWARE = createfirmware({
         break
       }
     }
+    if (loaderflags.has(name)) {
+      return [true, loaderflags.get(name)]
+    }
     return [false, undefined]
+  },
+  set(chip, name, value) {
+    const type = memoryloaderformat(chip.id())
+    if (name === 'format') {
+      // return has unhandled
+      return [false, undefined]
+    }
+    switch (type) {
+      case 'text':
+        switch (name) {
+          case 'filename':
+          case 'cursor':
+          case 'lines':
+            // return has unhandled
+            return [false, undefined]
+        }
+        break
+      case 'json':
+        switch (name) {
+          case 'filename':
+            // return has unhandled
+            return [false, undefined]
+        }
+        break
+      case 'binary':
+        switch (name) {
+          case 'filename':
+          case 'cursor':
+          case 'bytes':
+            // return has unhandled
+            return [false, undefined]
+        }
+        break
+    }
+    loaderflags.set(name, value)
+    return [true, value]
   },
 })
   .command('shortsend', (_, words) => {
