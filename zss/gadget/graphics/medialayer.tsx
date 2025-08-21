@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { usermediawritepeers } from 'zss/feature/usermedia'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import {
   CHARS_PER_ROW,
@@ -71,7 +70,7 @@ export function MediaLayer({ id, from }: MediaLayerProps) {
         break
       case 'text/players':
         if (isstring(medialayer.media)) {
-          usermediawritepeers(medialayer.media.split(','))
+          //
         }
         break
     }
