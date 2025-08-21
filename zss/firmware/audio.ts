@@ -89,7 +89,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       ARG_TYPE.STRING,
       ARG_TYPE.STRING,
     ])
-    // https://github.com/lobehub/lobe-tts/blob/master/src/core/data/voiceList.ts
+    // look at voicescroll
     synth_tts(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
     return 0
   })
