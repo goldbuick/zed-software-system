@@ -66,8 +66,9 @@ async function handlenexttts(synth: MAYBE<AUDIO_SYNTH>) {
     Math.round(audiobuffer.duration * 1000) - 1000,
   )
 
-  await waitfor(waittime)
-  nextisactive = false
+  setTimeout(() => {
+    nextisactive = false
+  }, waittime)
 }
 
 export function ttsqueue(
