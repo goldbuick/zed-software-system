@@ -80,7 +80,10 @@ export function ttsqueue(
   if (!queueactive) {
     queueactive = true
     setInterval(() => {
-      handlenexttts(synth).catch((err) => console.info(err))
+      handlenexttts(synth).catch((err) => {
+        console.info(err)
+        nextisactive = false
+      })
     }, 1000)
   }
 }
