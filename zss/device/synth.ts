@@ -3,7 +3,7 @@ import { createdevice } from 'zss/device'
 import { AUDIO_SYNTH, createsynth, setupsynth } from 'zss/feature/synth'
 import { synthvoiceconfig } from 'zss/feature/synth/voiceconfig'
 import { FXNAME, synthvoicefxconfig } from 'zss/feature/synth/voicefxconfig'
-import { ttsplay } from 'zss/feature/tts'
+import { ttsplay, ttsqueue } from 'zss/feature/tts'
 import { useGadgetClient } from 'zss/gadget/data/state'
 import { setAltInterval } from 'zss/gadget/display/anim'
 import { doasync } from 'zss/mapping/func'
@@ -207,6 +207,12 @@ const synthdevice = createdevice('synth', [], (message) => {
           await ttsplay(synth, voice, phrase)
         }
       })
+      break
+    case 'ttsqueue':
+      if (isarray(message.data)) {
+        const [voice, phrase] = message.data as [string, string]
+        ttsqueue(synth, voice, phrase)
+      }
       break
   }
 })

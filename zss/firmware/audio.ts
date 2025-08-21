@@ -6,6 +6,7 @@ import {
   synth_playvolume,
   synth_record,
   synth_tts,
+  synth_ttsqueue,
   synth_ttsvolume,
   synth_voice,
   synth_voicefx,
@@ -91,6 +92,15 @@ export const AUDIO_FIRMWARE = createfirmware()
     ])
     // look at voicescroll
     synth_tts(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
+    return 0
+  })
+  .command('ttsqueue', (_, words) => {
+    const [voice, phrase] = readargs(words, 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.STRING,
+    ])
+    // look at voicescroll
+    synth_ttsqueue(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
     return 0
   })
   .command('bpm', (_, words) => {
