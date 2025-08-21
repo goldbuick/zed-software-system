@@ -29,39 +29,45 @@ export async function ttsplay(
 
 type TTSITEM = [string, string]
 
+let queueactive = false
 let nextisactive = false
 const nexttts: TTSITEM[] = []
 
 async function handlenexttts(synth: MAYBE<AUDIO_SYNTH>) {
-  // skip while queue
   if (nextisactive) {
     return
   }
 
+  nextisactive = true
+
   // grab next
   const [voice, input] = nexttts.shift() ?? []
-  if (!ispresent(synth) || !ispresent(voice) || !ispresent(input)) {
+  if (!ispresent(voice) || !ispresent(input)) {
+    nextisactive = false
     return
   }
 
   // generate audio
-  nextisactive = true
   if (!ispresent(tts)) {
     tts = new EdgeSpeechTTS({ locale: 'en-US' })
   }
+
   const audiobuffer = await tts.createAudio({
     input,
     options: { voice },
   })
 
   // play the audio
-  synth.addttsaudiobuffer(audiobuffer)
+  synth?.addttsaudiobuffer(audiobuffer)
 
   // wait until down
-  await waitfor(Math.round(audiobuffer.duration * 1000) + 1000)
+  const waittime = Math.max(
+    1000,
+    Math.round(audiobuffer.duration * 1000) - 1000,
+  )
 
+  await waitfor(waittime)
   nextisactive = false
-  handlenexttts(synth).catch((err) => console.info(err))
 }
 
 export function ttsqueue(
@@ -70,5 +76,10 @@ export function ttsqueue(
   input: string,
 ) {
   nexttts.push([voice, input])
-  handlenexttts(synth).catch((err) => console.info(err))
+  if (!queueactive) {
+    queueactive = true
+    setInterval(() => {
+      handlenexttts(synth).catch((err) => console.info(err))
+    }, 1000)
+  }
 }
