@@ -100,22 +100,6 @@ export function bridge_fetch(
   device.emit(player, 'bridge:fetch', [arg, label, url, method, words])
 }
 
-export function bridge_talkstart(device: DEVICELIKE, player: string) {
-  device.emit(player, 'bridge:talkstart', player)
-}
-
-export function bridge_talkstop(device: DEVICELIKE, player: string) {
-  device.emit(player, 'bridge:talkstop', player)
-}
-
-export function bridge_mediastart(device: DEVICELIKE, player: string) {
-  device.emit(player, 'bridge:mediastart', player)
-}
-
-export function bridge_mediastop(device: DEVICELIKE, player: string) {
-  device.emit(player, 'bridge:mediastop', player)
-}
-
 export function bridge_join(device: DEVICELIKE, player: string, topic: string) {
   device.emit(player, 'bridge:join', topic)
 }

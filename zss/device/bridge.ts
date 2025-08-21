@@ -9,12 +9,6 @@ import {
   netterminaltopic,
 } from 'zss/feature/netterminal'
 import { shorturl } from 'zss/feature/url'
-import {
-  userscreenstart,
-  userscreenstop,
-  uservoicestart,
-  uservoicestop,
-} from 'zss/feature/usermedia'
 import { writecopyit, writeheader, writeoption } from 'zss/feature/writeui'
 import { doasync } from 'zss/mapping/func'
 import { waitfor } from 'zss/mapping/tick'
@@ -176,18 +170,6 @@ const bridge = createdevice('bridge', [], (message) => {
           writecopyit(bridge, message.player, url, url)
         }
       })
-      break
-    case 'talkstart':
-      uservoicestart()
-      break
-    case 'talkstop':
-      uservoicestop()
-      break
-    case 'mediastart':
-      userscreenstart()
-      break
-    case 'mediastop':
-      userscreenstop()
       break
     case 'chatstart':
       if (ispresent(twitchchatclient)) {

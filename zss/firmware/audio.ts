@@ -1,8 +1,4 @@
 import {
-  bridge_mediastart,
-  bridge_mediastop,
-  bridge_talkstart,
-  bridge_talkstop,
   synth_bgplay,
   synth_bgplayvolume,
   synth_bpm,
@@ -88,39 +84,13 @@ function handlebgplay(words: WORD[], quantize: string) {
 }
 
 export const AUDIO_FIRMWARE = createfirmware()
-  .command('talk', (_, words) => {
-    const [arg] = readargs(words, 0, [ARG_TYPE.ANY])
-    switch (NAME(arg)) {
-      default:
-        bridge_talkstart(SOFTWARE, READ_CONTEXT.elementfocus)
-        break
-      case 'stop':
-        bridge_talkstop(SOFTWARE, READ_CONTEXT.elementfocus)
-        break
-    }
-    return 0
-  })
-  .command('media', (_, words) => {
-    const [arg] = readargs(words, 0, [ARG_TYPE.ANY])
-    switch (NAME(arg)) {
-      default:
-        bridge_mediastart(SOFTWARE, READ_CONTEXT.elementfocus)
-        break
-      case 'stop':
-        bridge_mediastop(SOFTWARE, READ_CONTEXT.elementfocus)
-        break
-    }
-    return 0
-  })
   .command('tts', (_, words) => {
-    const [voice, ...phrase] = words
+    const [voice, phrase] = readargs(words, 0, [
+      ARG_TYPE.STRING,
+      ARG_TYPE.STRING,
+    ])
     // https://github.com/lobehub/lobe-tts/blob/master/src/core/data/voiceList.ts
-    synth_tts(
-      SOFTWARE,
-      READ_CONTEXT.elementfocus,
-      maptostring(voice),
-      phrase.map(maptostring).join(''),
-    )
+    synth_tts(SOFTWARE, READ_CONTEXT.elementfocus, voice, phrase)
     return 0
   })
   .command('bpm', (_, words) => {
