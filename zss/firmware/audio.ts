@@ -14,7 +14,6 @@ import {
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import { isnumber } from 'zss/mapping/types'
-import { maptostring } from 'zss/mapping/value'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { NAME, WORD } from 'zss/words/types'
 
