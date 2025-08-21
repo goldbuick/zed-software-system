@@ -1,5 +1,4 @@
 import { EdgeSpeechTTS } from '@lobehub/tts'
-import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { AUDIO_SYNTH } from './synth'
@@ -22,9 +21,9 @@ export async function ttsplay(
     input,
     options: { voice },
   })
-
   // play the audio
   synth.addttsaudiobuffer(audiobuffer)
+  return audiobuffer
 }
 
 type TTSITEM = [string, string]
@@ -34,10 +33,6 @@ let nextisactive = false
 const nexttts: TTSITEM[] = []
 
 async function handlenexttts(synth: MAYBE<AUDIO_SYNTH>) {
-  if (nextisactive) {
-    return
-  }
-
   nextisactive = true
 
   // grab next
@@ -47,24 +42,17 @@ async function handlenexttts(synth: MAYBE<AUDIO_SYNTH>) {
     return
   }
 
-  // generate audio
-  if (!ispresent(tts)) {
-    tts = new EdgeSpeechTTS({ locale: 'en-US' })
-  }
+  const timeout = setTimeout(() => {
+    nextisactive = false
+  }, 5 * 1000)
 
-  const audiobuffer = await tts.createAudio({
-    input,
-    options: { voice },
-  })
-
-  // play the audio
-  synth?.addttsaudiobuffer(audiobuffer)
-
-  // wait until down
+  const audiobuffer = await ttsplay(synth, voice, input)
   const waittime = Math.max(
     1000,
-    Math.round(audiobuffer.duration * 1000) - 1000,
+    Math.round((audiobuffer?.duration ?? 0) * 1000) - 1000,
   )
+
+  clearTimeout(timeout)
 
   setTimeout(() => {
     nextisactive = false
@@ -80,10 +68,12 @@ export function ttsqueue(
   if (!queueactive) {
     queueactive = true
     setInterval(() => {
-      handlenexttts(synth).catch((err) => {
-        console.info(err)
-        nextisactive = false
-      })
+      if (!nextisactive) {
+        handlenexttts(synth).catch((err) => {
+          console.info(err)
+          nextisactive = false
+        })
+      }
     }, 1000)
   }
 }
