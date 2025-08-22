@@ -1,5 +1,6 @@
 import { parsetarget } from 'zss/device'
 import {
+  api_chat,
   api_error,
   api_log,
   bridge_start,
@@ -228,7 +229,7 @@ export const CLI_FIRMWARE = createfirmware()
       READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
       // log text
       const icon = bookelementdisplayread(READ_CONTEXT.element)
-      api_log(
+      api_chat(
         SOFTWARE,
         READ_CONTEXT.elementid,
         `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE ${text}`,
