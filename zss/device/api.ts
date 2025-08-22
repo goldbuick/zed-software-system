@@ -60,6 +60,15 @@ export function api_log(device: DEVICELIKE, player: string, ...message: any[]) {
   return true
 }
 
+export function api_chat(
+  device: DEVICELIKE,
+  player: string,
+  ...message: any[]
+) {
+  device.emit(player, 'chat', message)
+  return true
+}
+
 export function api_toast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
 }

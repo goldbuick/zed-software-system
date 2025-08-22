@@ -371,7 +371,7 @@ export function registerreadplayer() {
 
 const register = createdevice(
   'register',
-  ['ready', 'second', 'info', 'error', 'log', 'toast'],
+  ['ready', 'second', 'info', 'error', 'log', 'chat', 'toast'],
   function (message) {
     if (!register.session(message)) {
       return
@@ -380,6 +380,7 @@ const register = createdevice(
     // player filter
     switch (message.target) {
       case 'ready':
+      case 'chat':
       case 'toast':
       case 'second':
         // console.info(message)
@@ -671,6 +672,9 @@ const register = createdevice(
         })
         break
       case 'log':
+        terminaladdlog(message)
+        break
+      case 'chat':
         terminaladdlog(message)
         break
       case 'info':

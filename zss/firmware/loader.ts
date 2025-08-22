@@ -12,13 +12,14 @@ import {
   MEMORY_LABEL,
   memoryboardread,
   memoryreadbookbysoftware,
+  memoryreadflags,
+  memoryreadoperator,
   memorysendtoboards,
 } from 'zss/memory'
 import { bookplayerreadboards } from 'zss/memory/bookplayer'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
 import { ARG_TYPE, READ_CONTEXT, readargs } from 'zss/words/reader'
 import { SEND_META, parsesend } from 'zss/words/send'
-import { WORD } from 'zss/words/types'
 
 import { loaderbinary } from './loaderbinary'
 import { loaderjson } from './loaderjson'
@@ -33,9 +34,6 @@ function handlesend(send: SEND_META) {
     memorysendtoboards(send.targetname, send.label, undefined, boards)
   }
 }
-
-// simple flags for loaders
-const loaderflags = new Map<string, WORD>()
 
 export const LOADER_FIRMWARE = createfirmware({
   get(chip, name) {
@@ -77,10 +75,11 @@ export const LOADER_FIRMWARE = createfirmware({
         break
       }
     }
-    if (loaderflags.has(name)) {
-      return [true, loaderflags.get(name)]
-    }
-    return [false, undefined]
+
+    // we use operator flags
+    const player = memoryreadoperator()
+    const value = memoryreadflags(player)[name]
+    return [ispresent(value), value]
   },
   set(chip, name, value) {
     const type = memoryloaderformat(chip.id())
@@ -115,8 +114,17 @@ export const LOADER_FIRMWARE = createfirmware({
         }
         break
     }
-    loaderflags.set(name, value)
-    return [true, value]
+
+    // we use operator flags
+    const player = memoryreadoperator()
+    const flags = memoryreadflags(player)
+    if (ispresent(flags)) {
+      flags[name] = value
+      return [true, value]
+    }
+
+    // return has unhandled
+    return [false, undefined]
   },
 })
   .command('shortsend', (_, words) => {

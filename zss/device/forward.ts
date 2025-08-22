@@ -53,6 +53,7 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
     case 'tick':
     case 'tock':
     case 'ready':
+    case 'chat':
     case 'toast':
     case 'second':
       return true
