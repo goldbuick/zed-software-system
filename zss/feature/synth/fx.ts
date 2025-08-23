@@ -82,12 +82,12 @@ export function createfx() {
 
   function getreplay() {
     return {
-      fc: fc.get(),
-      echo: echo.get(),
-      reverb: reverb.get(),
-      phaser: phaser.get(),
-      vibrato: vibrato.get(),
-      distortion: distortion.get(),
+      fc: deepcopy(fc.get()),
+      echo: deepcopy(echo.get()),
+      reverb: deepcopy(reverb.get()),
+      phaser: deepcopy(phaser.get()),
+      vibrato: deepcopy(vibrato.get()),
+      distortion: deepcopy(distortion.get()),
     }
   }
 

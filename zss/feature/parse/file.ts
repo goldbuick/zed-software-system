@@ -11,6 +11,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
+import { parsechr } from './chr'
 import { parsezzl } from './zzl'
 import { parsezzm } from './zzm'
 import { parsezzt } from './zzt'
@@ -58,6 +59,8 @@ export function mapfiletype(type: string, file: File | undefined) {
         return 'zzt'
       } else if (/.brd$/i.test(file.name)) {
         return 'brd'
+      } else if (/.chr$/i.test(file.name)) {
+        return 'chr'
       } else if (/.zzl$/i.test(file.name)) {
         return 'zzl'
       } else if (/.zzm$/i.test(file.name)) {
@@ -203,6 +206,14 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
         .arrayBuffer()
         .then((arraybuffer) => {
           parsezztbrd(player, new Uint8Array(arraybuffer))
+        })
+        .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
+      break
+    case 'chr':
+      file
+        .arrayBuffer()
+        .then((arraybuffer) => {
+          parsechr(player, file.name, new Uint8Array(arraybuffer))
         })
         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break

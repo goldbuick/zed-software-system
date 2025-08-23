@@ -44,6 +44,7 @@ import {
   MEMORY_LABEL,
   memoryelementkindread,
   memoryelementstatread,
+  memorypickcodepagewithtype,
   memoryreadbookbysoftware,
   memoryreadflags,
 } from '.'
@@ -627,8 +628,7 @@ export function memoryconverttogadgetlayers(
 
   // check for palette
   if (isstring(bookflags.palette)) {
-    const codepage = bookreadcodepagewithtype(
-      mainbook,
+    const codepage = memorypickcodepagewithtype(
       CODE_PAGE_TYPE.PALETTE,
       bookflags.palette,
     )
@@ -647,8 +647,7 @@ export function memoryconverttogadgetlayers(
 
   // check for charset
   if (isstring(bookflags.charset)) {
-    const codepage = bookreadcodepagewithtype(
-      mainbook,
+    const codepage = memorypickcodepagewithtype(
       CODE_PAGE_TYPE.CHARSET,
       bookflags.charset,
     )
