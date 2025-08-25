@@ -1,4 +1,4 @@
-import { ChatClient } from '@twurple/chat'
+import { ChatClient, ChatMessage } from '@twurple/chat'
 import IVSBroadcastClient, { Callback } from 'amazon-ivs-web-broadcast'
 import { objectFromEntries } from 'ts-extras'
 import { createdevice } from 'zss/device'
@@ -100,6 +100,29 @@ function joinurlread(player: string) {
   return joinurl
 }
 
+function removeUrls(text: string) {
+  // Regular expression to match URLs
+  // This regex matches URLs starting with http, https, or ftp,
+  // and captures the rest of the URL until a space or end of string.
+  const urlRegex = /(?:https?|ftp):\/\/[\n\S]+/g
+
+  // Replace all matched URLs with an empty string
+  return text.replace(urlRegex, '')
+}
+
+function striptext(msg: ChatMessage) {
+  let plaintext = msg.text
+  const ranges = [...msg.emoteOffsets.values()]
+  for (let r = 0; r < ranges.length; ++r) {
+    const indexes = ranges[r].reverse()
+    for (let i = 0; i < indexes.length; ++i) {
+      const [start, end] = indexes[i].split('-').map(parseFloat)
+      plaintext = plaintext.substring(0, start) + plaintext.substring(end + 1)
+    }
+  }
+  return removeUrls(plaintext)
+}
+
 const bridge = createdevice('bridge', [], (message) => {
   if (!bridge.session(message)) {
     return
@@ -184,24 +207,26 @@ const bridge = createdevice('bridge', [], (message) => {
         twitchchatclient.onDisconnect(() => {
           api_log(bridge, message.player, 'disconnected')
         })
-        twitchchatclient.onMessage((_, user, text) => {
+        twitchchatclient.onMessage((_, user, __, msg) => {
+          const simpletext = striptext(msg)
           vm_loader(
             bridge,
             message.player,
             undefined,
             'text',
             `chat:message:${message.data}`,
-            `${user}:${text}`,
+            `${user}:${simpletext}`,
           )
         })
-        twitchchatclient.onAction((_, user, text) => {
+        twitchchatclient.onAction((_, user, __, msg) => {
+          const simpletext = striptext(msg)
           vm_loader(
             bridge,
             message.player,
             undefined,
             'text',
             `chat:action:${message.data}`,
-            `${user}:${text}`,
+            `${user}:${simpletext}`,
           )
         })
       }

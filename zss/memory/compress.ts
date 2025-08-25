@@ -28,6 +28,8 @@ export async function compressbooks(books: BOOK[]) {
     const zip = new JSZip()
     for (let i = 0; i < books.length; ++i) {
       const book = books[i]
+      // update to use zstd, and in the future add dictionary support
+      // https://github.com/OneIdentity/zstd-js?tab=readme-ov-file#use-cases-which-library-package-and-module-to-import
       const exportedbook = exportbook(book)
       if (exportedbook) {
         // convert to binary & compress book
