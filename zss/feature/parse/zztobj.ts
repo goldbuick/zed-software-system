@@ -3,15 +3,26 @@ import { SOFTWARE } from 'zss/device/session'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadfirstcontentbook } from 'zss/memory'
 import { bookwritecodepage } from 'zss/memory/book'
-import { codepagereadname, createcodepage } from 'zss/memory/codepage'
+import {
+  codepagereadname,
+  codepagereadstatsfromtext,
+  createcodepage,
+} from 'zss/memory/codepage'
 
-export function parsezztobj(player: string, content: string) {
+export function parsezztobj(player: string, filename: string, content: string) {
   const contentbook = memoryreadfirstcontentbook()
   if (!ispresent(contentbook)) {
     return
   }
 
-  const codepage = createcodepage(content, {})
+  // pre-parse for stats
+  const stats = codepagereadstatsfromtext(content)
+
+  const withcode = stats.name
+    ? content
+    : `@${filename.toLowerCase().replace('.obj', '')}\n${content}`
+
+  const codepage = createcodepage(withcode, {})
   const codepagename = codepagereadname(codepage)
 
   bookwritecodepage(contentbook, codepage)
