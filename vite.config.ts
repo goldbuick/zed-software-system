@@ -54,6 +54,12 @@ export default defineConfig(({ mode }) => {
         cafe: path.resolve(__dirname, './cafe'),
       },
     },
+    optimizeDeps: {
+      exclude: ['@bokuweb/zstd-wasm'],
+      esbuildOptions: {
+        target: 'es2020',
+      },
+    },
     // build: {
     //   rollupOptions: {
     //     output: {

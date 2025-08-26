@@ -1,9 +1,18 @@
+import { compress, decompress, init } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
 import { ispresent } from 'zss/mapping/types'
 
 import { exportbook, importbook } from './book'
 import { packformat, unpackformat } from './format'
 import { BOOK } from './types'
+
+let zstdenabled = false
+async function getzstdlib(): Promise<void> {
+  if (!zstdenabled) {
+    await init()
+    zstdenabled = true
+  }
+}
 
 // data encoding for urls
 function base64urltobase64(base64UrlString: string) {
@@ -23,71 +32,83 @@ function base64tobase64url(base64String: string) {
 const FIXED_DATE = new Date('1980/09/02')
 
 export async function compressbooks(books: BOOK[]) {
+  await getzstdlib()
+
   console.info('saved', books)
-  return new Promise<string>((resolve, reject) => {
-    const zip = new JSZip()
-    for (let i = 0; i < books.length; ++i) {
-      const book = books[i]
-      // update to use zstd, and in the future add dictionary support
-      // https://github.com/OneIdentity/zstd-js?tab=readme-ov-file#use-cases-which-library-package-and-module-to-import
-      const exportedbook = exportbook(book)
-      if (exportedbook) {
-        // convert to binary & compress book
-        const bin = packformat(exportedbook)
-        if (ispresent(bin)) {
-          zip.file(book.id, bin, { date: FIXED_DATE })
-        }
+  const zip = new JSZip()
+  for (let i = 0; i < books.length; ++i) {
+    const book = books[i]
+    const exportedbook = exportbook(book)
+    if (exportedbook) {
+      // convert to bin
+      const bin = packformat(exportedbook)
+      if (ispresent(bin)) {
+        const binsquash = compress(bin, 15)
+        zip.file(book.id, binsquash, { date: FIXED_DATE })
       }
     }
-    zip
-      .generateAsync({
-        type: 'base64',
-        compression: 'DEFLATE',
-        compressionOptions: { level: 9 },
-      })
-      .then((content) => {
-        resolve(base64tobase64url(content))
-      })
-      .catch(reject)
+  }
+
+  // TODO: do we need this still ??
+  const content = await zip.generateAsync({
+    type: 'base64',
+    compression: 'STORE',
   })
+
+  return base64tobase64url(content)
 }
 
 // import json into book
 export async function decompressbooks(base64bytes: string) {
-  return new Promise<BOOK[]>((resolve, reject) => {
-    const zip = new JSZip()
-    const content = base64urltobase64(base64bytes)
-    zip
-      .loadAsync(content, { base64: true })
-      .then(async () => {
-        const books: BOOK[] = []
-        // extract a normal list
-        const files: JSZipObject[] = []
-        zip.forEach((_path, file) => files.push(file))
-        // unpack books
-        for (let i = 0; i < files.length; ++i) {
-          const file = files[i]
-          const bin = await file.async('uint8array')
-          const maybebookfrombin = unpackformat(bin)
-          if (ispresent(maybebookfrombin)) {
-            const book = importbook(maybebookfrombin)
-            if (ispresent(book)) {
-              books.push(book)
-            }
-          } else {
-            const str = await file.async('string')
-            const maybebookfromstr = unpackformat(str)
-            if (ispresent(maybebookfromstr)) {
-              const book = importbook(maybebookfromstr)
-              if (ispresent(book)) {
-                books.push(book)
-              }
-            }
+  await getzstdlib()
+
+  const content = base64urltobase64(base64bytes)
+  const zip = await JSZip.loadAsync(content, { base64: true })
+
+  const books: BOOK[] = []
+
+  // extract a normal list
+  const files: JSZipObject[] = []
+  zip.forEach((_path, file) => files.push(file))
+
+  // unpack books
+  for (let i = 0; i < files.length; ++i) {
+    const file = files[i]
+
+    // first check is for binary
+    const maybebinsquash = await file.async('uint8array')
+    if (ispresent(maybebinsquash)) {
+      try {
+        const bin = decompress(maybebinsquash)
+        const maybebookfrombin = unpackformat(bin)
+        if (ispresent(maybebookfrombin)) {
+          const book = importbook(maybebookfrombin)
+          if (ispresent(book)) {
+            books.push(book)
           }
         }
-        // return result
-        resolve(books)
-      })
-      .catch(reject)
-  })
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error: any) {
+        // fallback to just msgpackr
+        const maybebookfrombin = unpackformat(maybebinsquash)
+        if (ispresent(maybebookfrombin)) {
+          const book = importbook(maybebookfrombin)
+          if (ispresent(book)) {
+            books.push(book)
+          }
+        }
+      }
+    } else {
+      const str = await file.async('string')
+      const maybebookfromstr = unpackformat(str)
+      if (ispresent(maybebookfromstr)) {
+        const book = importbook(maybebookfromstr)
+        if (ispresent(book)) {
+          books.push(book)
+        }
+      }
+    }
+  }
+
+  return books
 }
