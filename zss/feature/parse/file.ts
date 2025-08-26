@@ -155,7 +155,7 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
     case 'obj':
       file
         .text()
-        .then((content) => parsezztobj(player, content))
+        .then((content) => parsezztobj(player, file.name, content))
         .catch((err) => api_error(SOFTWARE, player, 'crash', err.message))
       break
     case 'txt':
