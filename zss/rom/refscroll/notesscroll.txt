@@ -1,14 +1,14 @@
-duration             cdefgab - notes 
-y - 64th note        x - rest
-t - 32nd note        
-s - 16th note.       drums
-i - eight note.      0 - hihat
-q - quarter note     1 - open hihat
-h - half note        2 - cowbell
-w - whole note       p - clap
-                     4 - high snare
-mods                 5 - high woodblock
-3 - triplet          6 - low snare
-. - time and a half  7 - low tom
-# - sharp            8 - low woodblock
+"duration             cdefgab - notes 
+"y - 64th note        x - rest
+"t - 32nd note        
+"s - 16th note.       drums
+"i - eight note.      0 - hihat
+"q - quarter note     1 - open hihat
+"h - half note        2 - cowbell
+"w - whole note       p - clap
+"                     4 - high snare
+"mods                 5 - high woodblock
+"3 - triplet          6 - low snare
+". - time and a half  7 - low tom
+"# - sharp            8 - low woodblock
 "! - flat             9 - bass drum

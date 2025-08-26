@@ -43,6 +43,7 @@ export async function compressbooks(books: BOOK[]) {
       // convert to bin
       const bin = packformat(exportedbook)
       if (ispresent(bin)) {
+        // https://github.com/bokuweb/zstd-wasm?tab=readme-ov-file#using-dictionary
         const binsquash = compress(bin, 15)
         zip.file(book.id, binsquash, { date: FIXED_DATE })
       }
