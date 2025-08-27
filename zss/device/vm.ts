@@ -592,10 +592,14 @@ const vm = createdevice(
         ])
         for (let i = 0; i < list.length; ++i) {
           const [type, filename] = list[i]
+          if (!type) {
+            continue
+          }
+          gadgettext(message.player, filename)
           gadgethyperlink(
             message.player,
             'zipfilelist',
-            `[${type}] ${filename}`,
+            `[${type}]`,
             [NAME(filename), 'select', 'NO', '0', 'YES', '1'],
             (name: string) => {
               // console.info(name)
