@@ -89,7 +89,9 @@ export async function parsezipfile(player: string, file: File) {
       const [filename, fileitem] = templist[i]
       const bytes = await fileitem.async('uint8array')
       const mimetype = mimetypeofbytesread(filename, bytes)
-      const zipfile = new File([bytes], fileitem.name, { type: mimetype })
+      const zipfile = new File([bytes as BlobPart], fileitem.name, {
+        type: mimetype,
+      })
       zipfilelist.push(zipfile)
     }
     // signal scroll to open
