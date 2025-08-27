@@ -257,6 +257,10 @@ export function createsynth() {
     })
   }
 
+  function synthflush() {
+    recordedticks = []
+  }
+
   function synthrecord(filename: string) {
     if (recordedticks.length) {
       const player = registerreadplayer()
@@ -324,7 +328,7 @@ export function createsynth() {
           api_error(SOFTWARE, player, 'synthrecord', err)
         })
     }
-    recordedticks = []
+    synthflush()
   }
 
   function synthtick(time: number, value: SYNTH_NOTE_ON | null) {
@@ -531,6 +535,7 @@ export function createsynth() {
     stopplay,
     applyreplay,
     synthrecord,
+    synthflush,
     synthreplay,
     addttsaudiobuffer,
     setplayvolume,
