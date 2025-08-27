@@ -244,6 +244,8 @@ export function createsynth() {
 
   // @ts-expect-error please ignore
   const pacer = new Part(synthtick)
+  let recordlastpercent = 0
+  let recordisrendering = 0
   let recordedticks: SYNTH_NOTE_ENTRY[] = []
 
   function applyreplay(source: any[], fxchain: any, fx: any[]) {
@@ -259,6 +261,8 @@ export function createsynth() {
 
   function synthflush() {
     recordedticks = []
+    recordlastpercent = 0
+    recordisrendering = 0
   }
 
   function synthrecord(filename: string) {
@@ -301,7 +305,7 @@ export function createsynth() {
         // config & run
         audio.setplayvolume(40)
         audio.applyreplay(sourcereplay, fxchainreplay, fxreplay)
-        audio.synthreplay(offlineticks)
+        audio.synthreplay(offlineticks, maxtime)
 
         // begin
         write(SOFTWARE, player, 'rendering audio')
@@ -311,15 +315,18 @@ export function createsynth() {
           write(SOFTWARE, player, 'rendering complete, exporting mp3')
           // Convert the buffer to MP3
           const mp3Data = converttomp3(buffer)
-
+          return mp3Data
+        })
+        .then((mp3Data) => {
           // Create a download link
           const anchor = document.createElement('a')
           anchor.href = URL.createObjectURL(
-            new Blob([mp3Data], { type: 'audio/mp3' }),
+            new Blob([mp3Data as BlobPart], { type: 'audio/mp3' }),
           )
           anchor.download = `${filename || createnameid()}.mp3`
-          anchor.click()
           write(SOFTWARE, player, `saving file ${anchor.download}`)
+
+          anchor.click()
 
           // clean up
           audio?.destroy()
@@ -328,6 +335,8 @@ export function createsynth() {
           api_error(SOFTWARE, player, 'synthrecord', err)
         })
     }
+
+    // reset recording state
     synthflush()
   }
 
@@ -335,8 +344,15 @@ export function createsynth() {
     if (value === null) {
       return
     }
-    // console.info('go', time, value)
-    recordedticks.push([time, value])
+    if (recordisrendering > 0) {
+      const currentpercent = Math.round((time / recordisrendering) * 100)
+      if (currentpercent !== recordlastpercent) {
+        recordlastpercent = currentpercent
+        write(SOFTWARE, registerreadplayer(), `${currentpercent}%`)
+      }
+    } else {
+      recordedticks.push([time, value])
+    }
     const [chan, duration, note] = value
     const f = mapindextofx(chan)
     if (isstring(note) && ispresent(SOURCE[chan]) && ispresent(FX[f])) {
@@ -439,11 +455,13 @@ export function createsynth() {
     return endtime
   }
 
-  function synthreplay(pattern: SYNTH_NOTE_ENTRY[]) {
+  function synthreplay(pattern: SYNTH_NOTE_ENTRY[], maxtime: number) {
+    // signal recording state
+    recordlastpercent = 0
+    recordisrendering = maxtime
     // write pattern to pacer
     for (let p = 0; p < pattern.length; ++p) {
       const [time, value] = pattern[p]
-      // console.info('rp', time, value)
       pacer.add(time, value)
     }
   }

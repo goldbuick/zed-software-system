@@ -2,11 +2,14 @@ import { Mp3Encoder } from '@breezystack/lamejs'
 import { ToneAudioBuffer } from 'tone'
 import { registerreadplayer } from 'zss/device/register'
 import { SOFTWARE } from 'zss/device/session'
+import { waitfor } from 'zss/mapping/tick'
 
 import { write } from '../writeui'
 
 // Convert AudioBuffer to MP3 using lamejs
-export function converttomp3(buffer: ToneAudioBuffer) {
+export async function converttomp3(
+  buffer: ToneAudioBuffer,
+): Promise<Uint8Array> {
   const player = registerreadplayer()
 
   // Get raw PCM data
@@ -40,6 +43,10 @@ export function converttomp3(buffer: ToneAudioBuffer) {
     if (mp3buf.length > 0) {
       mp3Data.push(mp3buf)
     }
+
+    if (mp3Data.length % 16 === 0) {
+      await waitfor(10)
+    }
   }
 
   // Finalize the encoding
@@ -49,6 +56,8 @@ export function converttomp3(buffer: ToneAudioBuffer) {
   }
 
   write(SOFTWARE, player, `total chunks ${mp3Data.length + 1}`)
+
+  await waitfor(100)
 
   // Combine all chunks
   return new Uint8Array(
