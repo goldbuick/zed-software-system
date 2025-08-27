@@ -2,6 +2,7 @@ import {
   synth_bgplay,
   synth_bgplayvolume,
   synth_bpm,
+  synth_flush,
   synth_play,
   synth_playvolume,
   synth_record,
@@ -174,6 +175,10 @@ export const AUDIO_FIRMWARE = createfirmware()
   .command('synthrecord', (_, words) => {
     const [filename] = readargs(words, 0, [ARG_TYPE.MAYBE_STRING])
     synth_record(SOFTWARE, READ_CONTEXT.elementfocus, filename ?? '')
+    return 0
+  })
+  .command('synthflush', () => {
+    synth_flush(SOFTWARE, READ_CONTEXT.elementfocus)
     return 0
   })
   .command('echo', (_, words) => {

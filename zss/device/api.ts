@@ -347,6 +347,10 @@ export function synth_record(
   device.emit(player, 'synth:record', filename)
 }
 
+export function synth_flush(device: DEVICELIKE, player: string) {
+  device.emit(player, 'synth:flush', filename)
+}
+
 export function register_refresh(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:refresh')
 }

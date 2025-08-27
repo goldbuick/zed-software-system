@@ -200,6 +200,9 @@ const synthdevice = createdevice('synth', [], (message) => {
         synth.synthrecord(message.data)
       }
       break
+    case 'flush':
+      synth.synthflush()
+      break
     case 'tts':
       doasync(synthdevice, message.player, async () => {
         if (isarray(message.data)) {
