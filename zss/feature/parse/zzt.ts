@@ -167,9 +167,12 @@ export function parsezzt(player: string, content: Uint8Array) {
       if (ispresent(elementstat.stepy)) {
         addstats.stepy = elementstat.stepy
       }
-      // follower?: number
-      // leader?: number
-      // bind?: number
+      if (ispresent(elementstat.bind) && elementstat.bind > 0) {
+        const maybecopy = stats[elementstat.bind]
+        if (ispresent(maybecopy?.code) && isstring(maybecopy.code)) {
+          addstats.code = normalizedlines(maybecopy.code)
+        }
+      }
     }
     switch (element.element) {
       case 0:

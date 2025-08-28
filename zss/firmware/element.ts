@@ -7,6 +7,7 @@ import {
   INPUT_CTRL,
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
+import { pick } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
 import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
@@ -18,7 +19,7 @@ import {
   memoryrun,
   memorywritefromkind,
 } from 'zss/memory'
-import { findplayerforelement } from 'zss/memory/atomics'
+import { findplayerforelement, listnamedelements } from 'zss/memory/atomics'
 import {
   boardelementread,
   boardelementreadbyidorindex,
@@ -520,8 +521,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
     chip.endofprogram()
     return 0
   })
-  .command('bind', () => {
-    // TODO, may not be needed
+  .command('bind', (_, words) => {
+    // zed cafe simply copies the code from the given named element
+    const [name] = readargs(words, 0, [ARG_TYPE.NAME])
+    const elements = listnamedelements(READ_CONTEXT.board, name)
+    if (ispresent(READ_CONTEXT.element) && elements.length > 0) {
+      READ_CONTEXT.element.code = pick(...elements).code ?? ''
+    }
     return 0
   })
   .command('char', (_, words) => {
